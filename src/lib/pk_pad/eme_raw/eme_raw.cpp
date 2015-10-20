@@ -4,13 +4,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pad_utils.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/eme_raw.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_EME_NAMED_NOARGS(EME_Raw, "Raw");
 
 secure_vector<byte> EME_Raw::pad(const byte in[], size_t in_length,
                                  size_t key_bits,

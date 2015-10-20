@@ -5,19 +5,16 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/stream_utils.h>
 #include <botan/ctr.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_NAMED_T(StreamCipher, "CTR-BE", CTR_BE, CTR_BE::make);
 
 CTR_BE* CTR_BE::make(const Spec& spec)
    {
    if(spec.algo_name() == "CTR-BE" && spec.arg_count() == 1)
       {
-      if(BlockCipher* c = get_block_cipher(spec.arg(0)))
-         return new CTR_BE(c);
+      if(auto c = BlockCipher::create(spec.arg(0)))
+         return new CTR_BE(c.release());
       }
    return nullptr;
    }

@@ -1,12 +1,12 @@
-SHARED_LIB_NAME = $(LIB_BASENAME).%{so_suffix}.%{so_abi_rev}.%{version_patch}
-SONAME          = $(LIB_BASENAME).%{so_suffix}.%{so_abi_rev}
-SYMLINK         = $(LIB_BASENAME).%{so_suffix}
+SONAME_PATCH    = %{soname_patch}
+SONAME_ABI      = %{soname_abi}
+SONAME_BASE     = %{soname_base}
 
-SHARED_LIB      = %{out_dir}/$(SHARED_LIB_NAME)
+SHARED_LIB      = %{out_dir}/$(SONAME_PATCH)
 
 $(SHARED_LIB): $(LIBOBJS)
 	$(LIB_LINK_CMD) $(LDFLAGS) $(LIBOBJS) $(LIB_LINKS_TO) -o $(SHARED_LIB)
-	$(LN) $(SHARED_LIB_NAME) %{out_dir}/$(SONAME)
-	$(LN) $(SHARED_LIB_NAME) %{out_dir}/$(SYMLINK)
+	$(LN) $(SONAME_PATCH) %{out_dir}/$(SONAME_ABI)
+	$(LN) $(SONAME_PATCH) %{out_dir}/$(SONAME_BASE)
 
 LIBRARIES += $(SHARED_LIB)

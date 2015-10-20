@@ -1,41 +1,12 @@
-Todos
+Projects
 ========================================
-
-These are features either requested by users or that seem like
-potentially useful things to have. Several are quite self-contained
-and could make a quick project.
 
 Request a new feature by opening a pull request to update this file.
 
-Symmetric Algorithms, Hashes, ...
+Commands
 ----------------------------------------
 
-* Bitsliced AES or Camellia
-* Camellia with AES-NI
-* Serpent using AVX2
-* Serpent using SSSE3 pshufb for sboxes
-* ChaCha20 using SSE2 or AVX2
-* SHA-512 using SSE2 (to access 64-bit math on x86-32)
-* scrypt
-* BLAKE2b
-* Skein-MAC
-* ARIA (Korean block cipher, RFCs 5794 and 6209)
-* Extend Cascade_Cipher to support arbitrary number of ciphers
-
-Public Key Crypto, Math
-----------------------------------------
-
-* EdDSA
-* Ed448-Goldilocks
-* FHMQV
-* Support mixed hashes and non-empty param strings in OAEP
-* Fast new implementations/algorithms for ECC point operations,
-  Montgomery multiplication, multi-exponentiation, ...
-* Some PK operations, especially RSA, have extensive computations per
-  operation setup but many of the computed values depend only on the
-  key and could be shared across operation objects.
-* Have BigInt '%' and '/' operators compute and cache the Barrett
-  reduction value on the BigInt.
+* `encrypt` / `decrypt` tools
 
 TLS
 ----------------------------------------
@@ -66,16 +37,10 @@ New Protocols
 * SSHv2 client and/or server
 * Cash schemes (such as Lucre, credlib, bitcoin?)
 
-Library Infrastructure
-----------------------------------------
-* Add logging callbacks
-* Add latency tracing framework
-* Compute cycles/byte estimates for benchmark output
-
-Accelerators / backends
+  Accelerators / backends
 ----------------------------------------
 
-* Extend OpenSSL provider (cipher modes, ECDH, ECDSA, HMAC)
+* Extend OpenSSL provider (cipher modes, ECDH, HMAC)
 * /dev/crypto
 * Windows CryptoAPI
 * Apple CommonCrypto
@@ -85,7 +50,44 @@ Accelerators / backends
 FFI (Python, OCaml)
 ----------------------------------------
 
+* Expose certificates
 * Expose TLS
+
+Symmetric Algorithms, Hashes, ...
+----------------------------------------
+
+* Bitsliced AES or Camellia
+* Camellia with AES-NI
+* Serpent using AVX2
+* Serpent using SSSE3 pshufb for sboxes
+* ChaCha20 using SSE2 or AVX2
+* scrypt
+* bcrypt PBKDF
+* BLAKE2b
+* Skein-MAC
+* ARIA (Korean block cipher, RFCs 5794 and 6209)
+* Extend Cascade_Cipher to support arbitrary number of ciphers
+
+Public Key Crypto, Math
+----------------------------------------
+
+* EdDSA (GH #283)
+* Ed448-Goldilocks
+* FHMQV
+* Support mixed hashes and non-empty param strings in OAEP
+* Fast new implementations/algorithms for ECC point operations,
+  Montgomery multiplication, multi-exponentiation, ...
+* Some PK operations, especially RSA, have extensive computations per
+  operation setup but many of the computed values depend only on the
+  key and could be shared across operation objects.
+* Have BigInt '%' and '/' operators compute and cache the Barrett
+  reduction value on the BigInt.
+
+Library Infrastructure
+----------------------------------------
+* Add logging callbacks
+* Add latency tracing framework
+* Compute cycles/byte estimates for benchmark output
 
 Build
 ----------------------------------------

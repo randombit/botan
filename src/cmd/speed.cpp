@@ -8,27 +8,17 @@
 
 #if defined(BOTAN_HAS_RUNTIME_BENCHMARKING)
 
-#include "speed.h"
+#include "implementation/speed.h"
+
 #include <iostream>
 #include <iomanip>
 
 #include <botan/benchmark.h>
 #include <botan/auto_rng.h>
-#include <botan/cipher_mode.h>
-#include <botan/parsing.h>
-#include <botan/symkey.h>
-#include <botan/transform.h>
-#include <botan/hex.h>
-
-#include <chrono>
-
-typedef std::chrono::high_resolution_clock benchmark_clock;
-
 
 using namespace Botan;
 
 namespace {
-
 const std::vector<std::string> default_benchmark_list = {
    /* Block ciphers */
    "AES-128",
@@ -90,7 +80,11 @@ const std::vector<std::string> default_benchmark_list = {
 
    /* MACs */
    "CMAC(AES-128)",
-   "HMAC(SHA-1)"
+   "HMAC(SHA-1)",
+
+   /* Misc */
+   "is_prime",
+   "random_prime"
 };
 
 void report_results(const std::string& algo,
@@ -123,84 +117,50 @@ void report_results(const std::string& algo,
    std::cout.flags(flags);
    }
 
-void time_transform(std::unique_ptr<Transform> tf,
-                    RandomNumberGenerator& rng)
-   {
-   const std::chrono::seconds runtime(2);
-
-   for(size_t buf_size : { 16, 64, 256, 1024, 8192 })
-      {
-      secure_vector<byte> buffer(buf_size);
-
-      std::chrono::nanoseconds time_used(0);
-
-      tf->start(rng.random_vec(tf->default_nonce_length()));
-
-      auto start = std::chrono::high_resolution_clock::now();
-
-      secure_vector<byte> buf(buf_size);
-      size_t reps = 0;
-      while(time_used < runtime)
-         {
-         tf->update(buf);
-         buf.resize(buf_size);
-         ++reps;
-         time_used = std::chrono::high_resolution_clock::now() - start;
-         }
-
-      const u64bit nsec_used = std::chrono::duration_cast<std::chrono::nanoseconds>(time_used).count();
-
-      const double seconds_used = static_cast<double>(nsec_used) / 1000000000;
-
-      const double Mbps = ((reps / seconds_used) * buf_size) / 1024 / 1024;
-
-      std::cout << tf->name() << " " << std::setprecision(4) << Mbps
-                << " MiB / sec with " << buf_size << " byte blocks" << std::endl;
-      }
-   }
-
-bool time_transform(const std::string& algo, RandomNumberGenerator& rng)
-   {
-   std::unique_ptr<Transform> tf;
-   tf.reset(get_cipher_mode(algo, ENCRYPTION));
-   if(!tf)
-      return false;
-
-   if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(tf.get()))
-      keyed->set_key(rng.random_vec(keyed->key_spec().maximum_keylength()));
-
-   time_transform(std::move(tf), rng);
-   return true;
-   }
-
 void bench_algo(const std::string& algo,
+                const std::string& provider,
                 RandomNumberGenerator& rng,
                 double seconds,
                 size_t buf_size)
    {
-   std::chrono::milliseconds ms(
-      static_cast<std::chrono::milliseconds::rep>(seconds * 1000));
+   std::chrono::milliseconds runtime(
+        static_cast<std::chrono::milliseconds::rep>(seconds * 1000));
 
-   if(time_transform(algo, rng))
+   if (algo == "random_prime")
+   {
+       auto speeds = benchmark_random_prime(rng, runtime);
+       report_results(algo, speeds);
+       return;
+   }
+
+   if (algo == "is_prime")
+   {
+       auto speeds = benchmark_is_prime(rng, runtime);
+       report_results(algo, speeds);
+       return;
+   }
+
+   // This does report itself
+   if (benchmark_transform(rng, algo, runtime))
       return;
 
-   std::map<std::string, double> speeds = algorithm_benchmark(algo, rng, ms, buf_size);
-
-   if(!speeds.empty())
+   try
       {
+      auto speeds = algorithm_benchmark(algo, rng, runtime, buf_size);
       report_results(algo, speeds);
-      return;
       }
-
-#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-   bench_pk(rng, algo, seconds);
-#endif
+   catch (No_Provider_Found)
+      {
+      #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+      benchmark_public_key(rng, algo, provider, seconds);
+      #endif
+      }
    }
 
 int speed(int argc, char* argv[])
    {
    BOTAN_UNUSED(argc);
-   OptionParser opts("seconds=|buf-size=");
+   OptionParser opts("seconds=|buf-size=|provider=");
    opts.parse(argv);
 
    double seconds = .5;
@@ -226,7 +186,9 @@ int speed(int argc, char* argv[])
          }
       }
 
-   auto args = opts.arguments();
+   const std::string provider = opts.value_if_set("provider");
+
+   std::vector<std::string> args = opts.arguments();
 
    if(args.empty())
       args = default_benchmark_list;
@@ -240,7 +202,9 @@ int speed(int argc, char* argv[])
    AutoSeeded_RNG rng;
 
    for(auto alg: args)
-      bench_algo(alg, rng, seconds, buf_size);
+      {
+      bench_algo(alg, provider, rng, seconds, buf_size);
+      }
 
    return 0;
    }

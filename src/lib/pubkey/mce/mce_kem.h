@@ -25,7 +25,7 @@ class BOTAN_DLL McEliece_KEM_Encryptor
       std::pair<secure_vector<byte>, secure_vector<byte>> encrypt(RandomNumberGenerator& rng);
 
    private:
-      McEliece_Public_Operation m_raw_pub_op;
+      const McEliece_PublicKey& m_key;
    };
 
 class BOTAN_DLL McEliece_KEM_Decryptor
@@ -45,10 +45,10 @@ class BOTAN_DLL McEliece_KEM_Decryptor
       secure_vector<Botan::byte> decrypt_vec(const std::vector<byte, Alloc>& v)
          {
          return decrypt(v.data(), v.size());
-
          }
+
    private:
-      McEliece_Private_Operation m_raw_priv_op;
+      const McEliece_PrivateKey& m_key;
   };
 }
 

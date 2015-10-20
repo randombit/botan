@@ -22,8 +22,6 @@ namespace Botan {
 class SIMD_Altivec
    {
    public:
-      static bool enabled() { return CPUID::has_altivec(); }
-
       SIMD_Altivec(const u32bit B[4])
          {
          m_reg = (__vector unsigned int){B[0], B[1], B[2], B[3]};

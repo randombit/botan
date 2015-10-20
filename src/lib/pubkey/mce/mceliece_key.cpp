@@ -9,15 +9,12 @@
  *
  */
 
-#include <botan/mceliece_key.h>
-#include <botan/internal/bit_ops.h>
-#include <botan/gf2m_small_m.h>
 #include <botan/mceliece.h>
-#include <botan/internal/code_based_key_gen.h>
-#include <botan/code_based_util.h>
+#include <botan/internal/mce_internal.h>
+#include <botan/internal/bit_ops.h>
+#include <botan/internal/code_based_util.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <botan/workfactor.h>
 
 namespace Botan {
 
@@ -42,10 +39,27 @@ McEliece_PrivateKey::McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code
    *this = generate_mceliece_key(rng, ext_deg, code_length, t);
    }
 
-unsigned McEliece_PublicKey::get_message_word_bit_length() const
+u32bit McEliece_PublicKey::get_message_word_bit_length() const
    {
    u32bit codimension = ceil_log2(m_code_length) * m_t;
    return m_code_length - codimension;
+   }
+
+secure_vector<byte> McEliece_PublicKey::random_plaintext_element(RandomNumberGenerator& rng) const
+   {
+   const size_t bits = get_message_word_bit_length();
+
+   secure_vector<byte> plaintext((bits+7)/8);
+   rng.randomize(plaintext.data(), plaintext.size());
+
+   // unset unused bits in the last plaintext byte
+   if(u32bit used = bits % 8)
+      {
+      const byte mask = (1 << used) - 1;
+      plaintext[plaintext.size() - 1] &= mask;
+      }
+
+   return plaintext;
    }
 
 AlgorithmIdentifier McEliece_PublicKey::algorithm_identifier() const
@@ -55,16 +69,15 @@ AlgorithmIdentifier McEliece_PublicKey::algorithm_identifier() const
 
 std::vector<byte> McEliece_PublicKey::x509_subject_public_key() const
    {
-   // encode the public key
-   return unlock(DER_Encoder()
-                 .start_cons(SEQUENCE)
-                 .start_cons(SEQUENCE)
-                 .encode(static_cast<size_t>(get_code_length()))
-                 .encode(static_cast<size_t>(get_t()))
-                 .end_cons()
-                 .encode(m_public_matrix, OCTET_STRING)
-                 .end_cons()
-                 .get_contents());
+   return DER_Encoder()
+      .start_cons(SEQUENCE)
+         .start_cons(SEQUENCE)
+         .encode(static_cast<size_t>(get_code_length()))
+         .encode(static_cast<size_t>(get_t()))
+         .end_cons()
+      .encode(m_public_matrix, OCTET_STRING)
+      .end_cons()
+      .get_contents_unlocked();
    }
 
 McEliece_PublicKey::McEliece_PublicKey(const McEliece_PublicKey & other) :
@@ -76,9 +89,7 @@ McEliece_PublicKey::McEliece_PublicKey(const McEliece_PublicKey & other) :
 
 size_t McEliece_PublicKey::estimated_strength() const
    {
-   const u32bit ext_deg = ceil_log2(m_code_length);
-   const size_t k = m_code_length - ext_deg * m_t;
-   return mceliece_work_factor(m_code_length, k, m_t);
+   return mceliece_work_factor(m_code_length, m_t);
    }
 
 McEliece_PublicKey::McEliece_PublicKey(const std::vector<byte>& key_bits)
@@ -135,19 +146,20 @@ secure_vector<byte> McEliece_PrivateKey::pkcs8_private_key() const
 
 bool McEliece_PrivateKey::check_key(RandomNumberGenerator& rng, bool) const
    {
-   McEliece_Private_Operation priv_op(*this);
-   McEliece_Public_Operation pub_op(*this, get_code_length());
+   const secure_vector<byte> plaintext = this->random_plaintext_element(rng);
 
-   secure_vector<byte> plaintext((this->get_message_word_bit_length()+7)/8);
-   rng.randomize(plaintext.data(), plaintext.size() - 1);
-   const secure_vector<gf2m> err_pos = create_random_error_positions(this->get_code_length(), this->get_t(), rng);
+   secure_vector<byte> ciphertext;
+   secure_vector<byte> errors;
+   mceliece_encrypt(ciphertext, errors, plaintext, *this, rng);
 
-   mceliece_message_parts parts(err_pos, plaintext, this->get_code_length());
-   secure_vector<byte> message_and_error_input = parts.get_concat();
-   secure_vector<byte> ciphertext = pub_op.encrypt(message_and_error_input.data(), message_and_error_input.size(), rng);
-   secure_vector<byte> message_and_error_output = priv_op.decrypt(ciphertext.data(), ciphertext.size());
+   secure_vector<byte> plaintext_out;
+   secure_vector<byte> errors_out;
+   mceliece_decrypt(plaintext_out, errors_out, ciphertext, *this);
 
-   return (message_and_error_input == message_and_error_output);
+   if(errors != errors_out || plaintext != plaintext_out)
+      return false;
+
+   return true;
    }
 
 McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<byte>& key_bits)
@@ -172,7 +184,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<byte>& key_bits)
    m_codimension = (ext_deg * t);
    m_dimension = (n - m_codimension);
 
-   std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field(new gf2m_small_m::Gf2m_Field(ext_deg));
+   std::shared_ptr<GF2m_Field> sp_field(new GF2m_Field(ext_deg));
    m_g = polyn_gf2m(g_enc, sp_field);
    if(m_g.get_degree() != static_cast<int>(t))
       {
@@ -230,7 +242,6 @@ McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<byte>& key_bits)
       }
 
    }
-
 
 bool McEliece_PrivateKey::operator==(const McEliece_PrivateKey & other) const
    {

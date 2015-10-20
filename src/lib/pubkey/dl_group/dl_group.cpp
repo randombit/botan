@@ -1,6 +1,6 @@
 /*
 * Discrete Logarithm Parameters
-* (C) 1999-2008 Jack Lloyd
+* (C) 1999-2008,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -42,7 +42,7 @@ DL_Group::DL_Group(const std::string& name)
 DL_Group::DL_Group(RandomNumberGenerator& rng,
                    PrimeType type, size_t pbits, size_t qbits)
    {
-   if(pbits < 512)
+   if(pbits < 1024)
       throw Invalid_Argument("DL_Group: prime size " + std::to_string(pbits) +
                              " is too small");
 

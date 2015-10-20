@@ -152,15 +152,14 @@ TEST_CASE("FFI PBKDF", "[ffi]")
                                 passphrase.c_str(), salt.data(), salt.size(), 100, &iters_100ms),
               Equals(0));
 
+   CHECK(iters_10ms >= 10000);
+
    /*
     * Tests deactivated due to consistetly failing in debug mode where -W0 is set
     * (./configure.py --build-mode=debug).
     * See also: https://github.com/randombit/botan/commit/30b0e3c88e94ba04c1843798f7ac74a008e01d9b
     */
-
    /*
-   CHECK(iters_10ms >= 10000);
-
    INFO("Iterations " << iters_10ms << " " << iters_100ms);
    const double ratio = static_cast<double>(iters_100ms) / iters_10ms;
    // Loose timing to avoid false positives on CI
@@ -194,7 +193,7 @@ TEST_CASE("FFI bcrypt", "[ffi]")
    CHECK_THAT(botan_bcrypt_generate(outbuf.data(), &ol, "password", rng, 10, 0), Equals(0));
    botan_rng_destroy(rng);
 
-   CHECK_THAT(botan_bcrypt_is_valid("wrong", reinterpret_cast<const char*>(outbuf.data())), Equals(1));
+   REQUIRE(botan_bcrypt_is_valid("wrong", reinterpret_cast<const char*>(outbuf.data())) < 0);
    CHECK_THAT(botan_bcrypt_is_valid("password", reinterpret_cast<const char*>(outbuf.data())), Equals(0));
    }
 
@@ -347,9 +346,9 @@ TEST_CASE("FFI ECDH", "[ffi]")
    botan_rng_init(&rng, "system");
 
    botan_privkey_t priv1;
-   CHECK_THAT(botan_privkey_create_ecdh(&priv1, rng, "secp256r1"), Equals(0));
+   REQUIRE_THAT(botan_privkey_create_ecdh(&priv1, rng, "secp256r1"), Equals(0));
    botan_privkey_t priv2;
-   CHECK_THAT(botan_privkey_create_ecdh(&priv2, rng, "secp256r1"), Equals(0));
+   REQUIRE_THAT(botan_privkey_create_ecdh(&priv2, rng, "secp256r1"), Equals(0));
 
    botan_pubkey_t pub1;
    CHECK_THAT(botan_privkey_export_pubkey(&pub1, priv1), Equals(0));
@@ -357,9 +356,9 @@ TEST_CASE("FFI ECDH", "[ffi]")
    CHECK_THAT(botan_privkey_export_pubkey(&pub2, priv2), Equals(0));
 
    botan_pk_op_ka_t ka1;
-   CHECK_THAT(botan_pk_op_key_agreement_create(&ka1, priv1, "KDF2(SHA-256)", 0), Equals(0));
+   REQUIRE_THAT(botan_pk_op_key_agreement_create(&ka1, priv1, "KDF2(SHA-256)", 0), Equals(0));
    botan_pk_op_ka_t ka2;
-   CHECK_THAT(botan_pk_op_key_agreement_create(&ka2, priv2, "KDF2(SHA-256)", 0), Equals(0));
+   REQUIRE_THAT(botan_pk_op_key_agreement_create(&ka2, priv2, "KDF2(SHA-256)", 0), Equals(0));
 
    std::vector<uint8_t> pubkey1(256); // length problem again
    size_t pubkey1_len = pubkey1.size();
@@ -372,7 +371,7 @@ TEST_CASE("FFI ECDH", "[ffi]")
    pubkey2.resize(pubkey2_len);
 
    std::vector<uint8_t> salt(32);
-   CHECK_THAT(botan_rng_get(rng, salt.data(), salt.size()), Equals(0));
+   REQUIRE_THAT(botan_rng_get(rng, salt.data(), salt.size()), Equals(0));
 
    const size_t shared_key_len = 64;
 

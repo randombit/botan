@@ -8,7 +8,6 @@
 
 #if defined(BOTAN_HAS_CODEC_FILTERS)
 
-#include <botan/lookup.h>
 #include <botan/filters.h>
 #include <iostream>
 #include <fstream>

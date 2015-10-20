@@ -8,12 +8,8 @@
 
 #if defined(BOTAN_HAS_MODES)
 
-#if defined(BOTAN_HAS_FILTERS)
-
 #include <botan/hex.h>
-#include <botan/lookup.h>
 #include <botan/cipher_mode.h>
-#include <botan/filters.h>
 #include <iostream>
 #include <fstream>
 #include <memory>
@@ -28,21 +24,16 @@ secure_vector<byte> run_mode(const std::string& algo,
                              const secure_vector<byte>& nonce,
                              const secure_vector<byte>& key)
    {
-#if 0
-   std::unique_ptr<Cipher_Mode> cipher(get_cipher(algo, dir));
+   std::unique_ptr<Cipher_Mode> cipher(get_cipher_mode(algo, dir));
+   if(!cipher)
+      throw std::runtime_error("No cipher " + algo + " enabled in build");
 
    cipher->set_key(key);
    cipher->start(nonce);
 
    secure_vector<byte> ct = pt;
    cipher->finish(ct);
-#endif
-
-   Pipe pipe(get_cipher(algo, SymmetricKey(key), InitializationVector(nonce), dir));
-
-   pipe.process_msg(pt);
-
-   return pipe.read_all();
+   return ct;
    }
 
 size_t mode_test(const std::string& algo,
@@ -100,12 +91,6 @@ size_t test_modes()
 
    return run_tests_in_dir(TEST_DATA_DIR "/modes", test);
    }
-
-#else
-
-UNTESTED_WARNING(modes);
-
-#endif // BOTAN_HAS_FILTERS
 
 #else
 

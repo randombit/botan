@@ -7,7 +7,7 @@
 
 #include <botan/cpuid.h>
 #include <botan/types.h>
-#include <botan/get_byte.h>
+#include <botan/loadstor.h>
 #include <botan/mem_ops.h>
 #include <ostream>
 
@@ -156,6 +156,19 @@ bool altivec_check_pvr_emul()
 #endif
 
 }
+
+bool CPUID::has_simd_32()
+   {
+#if defined(BOTAN_HAS_SIMD_SSE2)
+   return CPUID::has_sse2();
+#elif defined(BOTAN_HAS_SIMD_ALTIVEC)
+   return CPUID::has_altivec();
+#elif defined(BOTAN_HAS_SIMD_SCALAR)
+   return true;
+#else
+   return false;
+#endif
+   }
 
 void CPUID::print(std::ostream& o)
    {

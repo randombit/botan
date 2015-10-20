@@ -5,12 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pad_utils.h>
 #include <botan/emsa_raw.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_EMSA_NAMED_NOARGS(EMSA_Raw, "Raw");
 
 /*
 * EMSA-Raw Encode Operation

@@ -339,12 +339,10 @@ def process_command_line(args):
                            action='store_false', default=True,
                            help=optparse.SUPPRESS_HELP)
 
-    wrapper_group = optparse.OptionGroup(parser, 'Python FFI options')
-
-    wrapper_group.add_option('--with-python-version', dest='python_version',
-                             metavar='N.M',
-                             default='.'.join(map(str, sys.version_info[0:2])),
-                             help='set Python version (def %default)')
+    build_group.add_option('--with-python-versions', dest='python_version',
+                           metavar='N.M',
+                           default='.'.join(map(str, sys.version_info[0:2])),
+                           help='where to install botan.py (def %default)')
 
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
@@ -358,7 +356,9 @@ def process_command_line(args):
                           action='store_true',
                           help='list available modules')
     mods_group.add_option('--no-autoload', action='store_true', default=False,
-                          help='disable automatic loading')
+                          help=optparse.SUPPRESS_HELP)
+    mods_group.add_option('--minimized-build', action='store_true', dest='no_autoload',
+                          help='minimize build')
 
     # Should be derived from info.txt but this runs too early
     third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib']
@@ -400,7 +400,6 @@ def process_command_line(args):
     parser.add_option_group(target_group)
     parser.add_option_group(build_group)
     parser.add_option_group(mods_group)
-    parser.add_option_group(wrapper_group)
     parser.add_option_group(install_group)
 
     # These exist only for autoconf compatibility (requested by zw for mtn)
@@ -548,7 +547,7 @@ class ModuleInfo(object):
         lex_me_harder(infofile, self,
                       ['source', 'header:internal', 'header:public',
                        'requires', 'os', 'arch', 'cc', 'libs',
-                       'comment', 'warning'],
+                       'frameworks', 'comment', 'warning'],
                       {
                         'load_on': 'auto',
                         'define': [],
@@ -587,6 +586,7 @@ class ModuleInfo(object):
             return result
 
         self.libs = convert_lib_list(self.libs)
+        self.frameworks = convert_lib_list(self.frameworks)
 
         def add_dir_name(filename):
             if filename.count(':') == 0:
@@ -772,6 +772,7 @@ class CompilerInfo(object):
                         'add_include_dir_option': '-I',
                         'add_lib_dir_option': '-L',
                         'add_lib_option': '-l',
+                        'add_framework_option': '-framework ',
                         'compile_flags_release': '',
                         'compile_flags_debug': '',
                         'lib_opt_flags_release': '',
@@ -848,19 +849,17 @@ class CompilerInfo(object):
                 return 'all-debug'
             return 'all'
 
-        abi_link = set()
+        abi_link = list()
         for what in [all(), options.os, options.arch, options.cpu]:
             flag = self.mach_abi_linking.get(what)
-            if flag != None and flag != '':
-                abi_link.add(flag)
+            if flag != None and flag != '' and flag not in abi_link:
+                abi_link.append(flag)
 
-        for flag in options.cc_abi_flags.split(' '):
-            if flag != '':
-                abi_link.add(flag)
-
-        if len(abi_link) == 0:
-            return ''
-        abi_flags = ' '.join(sorted(list(abi_link)))
+        abi_flags = ''
+        if len(abi_link) > 0:
+            abi_flags += ' '.join(sorted(abi_link))
+        if options.cc_abi_flags != '':
+            abi_flags += ' ' + options.cc_abi_flags
 
         if options.build_mode == 'coverage':
             if self.coverage_flags == '':
@@ -962,7 +961,9 @@ class OsInfo(object):
                       { 'os_type': None,
                         'program_suffix': '',
                         'obj_suffix': 'o',
-                        'so_suffix': 'so',
+                        'soname_pattern_patch': '',
+                        'soname_pattern_abi': '',
+                        'soname_pattern_base': '',
                         'static_suffix': 'a',
                         'ar_command': 'ar crs',
                         'ar_needs_ranlib': False,
@@ -971,14 +972,14 @@ class OsInfo(object):
                         'bin_dir': 'bin',
                         'lib_dir': 'lib',
                         'doc_dir': 'share/doc',
-                        'build_shared': 'yes',
+                        'building_shared_supported': 'yes',
                         'install_cmd_data': 'install -m 644',
                         'install_cmd_exec': 'install -m 755'
                         })
 
         self.ar_needs_ranlib = bool(self.ar_needs_ranlib)
 
-        self.build_shared = (True if self.build_shared == 'yes' else False)
+        self.building_shared_supported = (True if self.building_shared_supported == 'yes' else False)
 
     def ranlib_command(self):
         return ('ranlib' if self.ar_needs_ranlib else 'true')
@@ -1173,9 +1174,18 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     Figure out what external libraries are needed based on selected modules
     """
     def link_to():
+        return do_link_to('libs')
+
+    """
+    Figure out what external frameworks are needed based on selected modules
+    """
+    def link_to_frameworks():
+        return do_link_to('frameworks')
+
+    def do_link_to(module_member_name):
         libs = set()
         for module in modules:
-            for (osname,link_to) in module.libs.items():
+            for (osname,link_to) in getattr(module, module_member_name).items():
                 if osname == 'all' or osname == osinfo.basename:
                     libs |= set(link_to)
                 else:
@@ -1306,7 +1316,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'app_link_cmd':  cc.binary_link_command_for(osinfo.basename, options),
         'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options),
 
-        'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()]),
+        'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()] + [cc.add_framework_option + fw for fw in link_to_frameworks()]),
 
         'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
 
@@ -1328,7 +1338,22 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'lib_prefix': 'lib' if options.os != 'windows' else '',
 
         'static_suffix': osinfo.static_suffix,
-        'so_suffix': osinfo.so_suffix,
+
+        'soname_base': osinfo.soname_pattern_base.format(
+                            version_major = build_config.version_major,
+                            version_minor = build_config.version_minor,
+                            version_patch = build_config.version_patch,
+                            abi_rev       = build_config.version_so_rev),
+        'soname_abi': osinfo.soname_pattern_abi.format(
+                            version_major = build_config.version_major,
+                            version_minor = build_config.version_minor,
+                            version_patch = build_config.version_patch,
+                            abi_rev       = build_config.version_so_rev),
+        'soname_patch': osinfo.soname_pattern_patch.format(
+                            version_major = build_config.version_major,
+                            version_minor = build_config.version_minor,
+                            version_patch = build_config.version_patch,
+                            abi_rev       = build_config.version_so_rev),
 
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
@@ -1337,8 +1362,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         }
 
     if options.os == 'darwin' and options.build_shared_lib:
-        vars['app_post_link_cmd']  = 'install_name_tool -change "/$(SONAME)" "@executable_path/$(SONAME)" $(APP)'
-        vars['test_post_link_cmd'] = 'install_name_tool -change "/$(SONAME)" "@executable_path/$(SONAME)" $(TEST)'
+        vars['app_post_link_cmd']  = 'install_name_tool -change "/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(APP)'
+        vars['test_post_link_cmd'] = 'install_name_tool -change "/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
     else:
         vars['app_post_link_cmd'] = ''
         vars['test_post_link_cmd'] = ''
@@ -1716,10 +1741,14 @@ def generate_amalgamation(build_config, options):
     for mod in build_config.modules:
         tgt = ''
 
-        if not options.single_amalgamation_file and mod.need_isa != []:
-            tgt = '_'.join(sorted(mod.need_isa))
-            if tgt == 'sse2' and options.arch == 'x86_64':
-                tgt = '' # SSE2 is always available on x86-64
+        if not options.single_amalgamation_file:
+            if mod.need_isa != []:
+                tgt = '_'.join(sorted(mod.need_isa))
+                if tgt == 'sse2' and options.arch == 'x86_64':
+                    tgt = '' # SSE2 is always available on x86-64
+
+            if options.arch == 'x86_32' and 'simd' in mod.requires:
+                tgt = 'sse2'
 
         if tgt not in botan_amalg_files:
             botan_amalg_files[tgt] = open_amalg_file(tgt)
@@ -1903,20 +1932,15 @@ def main(argv = None):
     if options.via_amalgamation:
         options.gen_amalgamation = True
 
-    if not options.build_shared_lib and not options.via_amalgamation:
-        raise Exception('Static build is only supported using amalgamation. '
-                'Add --via-amalgamation.')
+    if options.build_shared_lib and not osinfo.building_shared_supported:
+        raise Exception('Botan does not support building as shared library on the target os. '
+                'Build static using --disable-shared.')
 
     loaded_mods = choose_modules_to_use(modules, arch, cc, options)
 
     for m in loaded_mods:
         if modules[m].load_on == 'vendor':
             logging.info('Enabling use of external dependency %s' % (m))
-
-        if not osinfo.build_shared:
-            if options.build_shared_lib:
-                logging.info('Disabling shared lib on %s' % (options.os))
-                options.build_shared_lib = False
 
     using_mods = [modules[m] for m in loaded_mods]
 

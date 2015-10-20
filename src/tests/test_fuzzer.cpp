@@ -8,61 +8,72 @@
 #include <chrono>
 #include <iostream>
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
+#include <botan/internal/filesystem.h>
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 #include <botan/x509cert.h>
 #include <botan/x509_crl.h>
-#include <botan/internal/filesystem.h>
 #include <botan/base64.h>
-
 #endif
+
+using namespace Botan;
 
 namespace {
 
+const std::string TEST_DATA_DIR_FUZZ_X509 = TEST_DATA_DIR "/fuzz/x509";
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
 size_t test_x509_fuzz()
    {
    size_t fails = 0;
-
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-
    size_t tests = 0;
-   const std::string fuzz_data = TEST_DATA_DIR "/fuzz";
 
-   for(auto vec: Botan::get_files_recursive(fuzz_data + "/x509"))
+   try
       {
-      ++tests;
-
-      auto start = std::chrono::system_clock::now();
-      try
+      for(auto vec_file: get_files_recursive(TEST_DATA_DIR_FUZZ_X509))
          {
-         // TODO: check for memory consumption?
-         Botan::X509_Certificate cert(vec);
-         }
-      catch(std::exception& e)
-         {
-         //std::cout << e.what() << "\n";
-         }
-      auto end = std::chrono::system_clock::now();
+         ++tests;
 
-      uint64_t duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+         auto start = std::chrono::steady_clock::now();
+         try
+            {
+            // TODO: check for memory consumption?
+            X509_Certificate cert(vec_file);
+            }
+         catch(std::exception& e)
+            {
+            //std::cout << e.what() << "\n";
+            }
+         auto end = std::chrono::steady_clock::now();
 
-      if(duration > 100)
-         {
-         std::cout << "Fuzzer test " << vec << " took " << duration << " ms" << std::endl;
+         uint64_t duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+         if(duration > 100)
+            {
+            std::cout << "Fuzzer test " << vec_file << " took " << duration << " ms" << std::endl;
+            }
          }
+
+         test_report("Fuzzer checks", tests, fails);
       }
-
-   test_report("Fuzzer checks", tests, fails);
-#endif
+   catch(No_Filesystem_Access)
+      {
+      std::cout << "Warning: No filesystem access available to read test files in '"
+                << TEST_DATA_DIR_FUZZ_X509 << "'" << std::endl;
+      return 0;
+      }
 
    return fails;
    }
+#endif
 
 }
 
 size_t test_fuzzer()
    {
    size_t fails = 0;
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    fails += test_x509_fuzz();
+#endif
    return fails;
    }

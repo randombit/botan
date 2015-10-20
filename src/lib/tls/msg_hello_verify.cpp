@@ -7,7 +7,6 @@
 
 #include <botan/internal/tls_messages.h>
 #include <botan/mac.h>
-#include <botan/lookup.h>
 
 namespace Botan {
 
@@ -36,7 +35,7 @@ Hello_Verify_Request::Hello_Verify_Request(const std::vector<byte>& client_hello
                                            const std::string& client_identity,
                                            const SymmetricKey& secret_key)
    {
-   std::unique_ptr<MessageAuthenticationCode> hmac(get_mac("HMAC(SHA-256)"));
+   std::unique_ptr<MessageAuthenticationCode> hmac(MessageAuthenticationCode::create("HMAC(SHA-256)"));
    hmac->set_key(secret_key);
 
    hmac->update_be(client_hello_bits.size());

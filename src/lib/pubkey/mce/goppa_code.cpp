@@ -9,10 +9,8 @@
  *
  */
 
-#include <botan/goppa_code.h>
-
-#include <botan/gf2m_rootfind_dcmp.h>
-#include <botan/code_based_util.h>
+#include <botan/internal/mce_internal.h>
+#include <botan/internal/code_based_util.h>
 
 namespace Botan {
 
@@ -48,7 +46,7 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m & syndrom_polyn,
    u32bit code_length = Linv.size();
    u32bit t = g.get_degree();
 
-   std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field = g.get_sp_field();
+   std::shared_ptr<GF2m_Field> sp_field = g.get_sp_field();
 
    std::pair<polyn_gf2m, polyn_gf2m> h__aux = polyn_gf2m::eea_with_coefficients( syndrom_polyn, g, 1);
    polyn_gf2m & h = h__aux.first;
@@ -125,6 +123,37 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m & syndrom_polyn,
    }
 }
 
+void mceliece_decrypt(secure_vector<byte>& plaintext_out,
+                      secure_vector<byte>& error_mask_out,
+                      const secure_vector<byte>& ciphertext,
+                      const McEliece_PrivateKey& key)
+   {
+   mceliece_decrypt(plaintext_out, error_mask_out, ciphertext.data(), ciphertext.size(), key);
+   }
+
+void mceliece_decrypt(
+   secure_vector<byte>& plaintext,
+   secure_vector<byte> & error_mask,
+   const byte ciphertext[],
+   size_t ciphertext_len,
+   const McEliece_PrivateKey & key)
+   {
+   secure_vector<gf2m> error_pos;
+   plaintext = mceliece_decrypt(error_pos, ciphertext, ciphertext_len, key);
+
+   const size_t code_length = key.get_code_length();
+   secure_vector<byte> result((code_length+7)/8);
+   for(auto&& pos : error_pos)
+      {
+      if(pos > code_length)
+         {
+         throw std::invalid_argument("error position larger than code size");
+         }
+      result[pos / 8] |= (1 << (pos % 8));
+      }
+
+   error_mask = result;
+   }
 
 /**
 * @param p_err_pos_len must point to the available length of err_pos on input, the
@@ -154,29 +183,26 @@ secure_vector<byte> mceliece_decrypt(
       throw Invalid_Argument("mce-decryption: wrong length of cleartext buffer");
       }
 
-
    secure_vector<u32bit> syndrome_vec(bit_size_to_32bit_size(codimension));
-   matrix_arr_mul(
-      key.get_H_coeffs(),
-      key.get_code_length(),
-      bit_size_to_32bit_size(codimension),
-      ciphertext,
-      syndrome_vec.data(), syndrome_vec.size() );
+   matrix_arr_mul(key.get_H_coeffs(),
+                  key.get_code_length(),
+                  bit_size_to_32bit_size(codimension),
+                  ciphertext,
+                  syndrome_vec.data(), syndrome_vec.size());
+
    secure_vector<byte> syndrome_byte_vec(bit_size_to_byte_size(codimension));
    u32bit syndrome_byte_vec_size = syndrome_byte_vec.size();
    for(u32bit i = 0; i < syndrome_byte_vec_size; i++)
       {
       syndrome_byte_vec[i] = syndrome_vec[i/4] >> (8* (i % 4));
       }
+
    syndrome_polyn = polyn_gf2m(t-1, syndrome_byte_vec.data(), bit_size_to_byte_size(codimension), key.get_goppa_polyn().get_sp_field());
-
-
 
    syndrome_polyn.get_degree();
    error_pos = goppa_decode(syndrome_polyn, key.get_goppa_polyn(), key.get_sqrtmod(), key.get_Linv());
 
    u32bit nb_err = error_pos.size();
-
 
    secure_vector<byte> cleartext(cleartext_len);
    copy_mem(cleartext.data(), ciphertext, cleartext_len);
@@ -192,6 +218,7 @@ secure_vector<byte> mceliece_decrypt(
          }
       cleartext[current / 8] ^= (1 << (current % 8));
       }
+
    if(unused_pt_bits)
       {
       cleartext[cleartext_len - 1] &= unused_pt_bits_mask;

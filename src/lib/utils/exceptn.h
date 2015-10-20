@@ -113,6 +113,16 @@ struct BOTAN_DLL Algorithm_Not_Found : public Lookup_Error
    };
 
 /**
+* No_Provider_Found Exception
+*/
+struct BOTAN_DLL No_Provider_Found : public Exception
+   {
+   No_Provider_Found(const std::string& name) :
+      Exception("Could not find any provider for algorithm named \"" + name + "\"")
+      {}
+   };
+
+/**
 * Invalid_Algorithm_Name Exception
 */
 struct BOTAN_DLL Invalid_Algorithm_Name : public Invalid_Argument

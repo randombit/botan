@@ -87,14 +87,14 @@ class RSA_Private_Operation
 
       BigInt blinded_private_op(const BigInt& m) const
          {
+         if(m >= n)
+            throw Invalid_Argument("RSA private op - input is too large");
+
          return m_blinder.unblind(private_op(m_blinder.blind(m)));
          }
 
       BigInt private_op(const BigInt& m) const
          {
-         if(m >= n)
-            throw Invalid_Argument("RSA private op - input is too large");
-
          auto future_j1 = std::async(std::launch::async, m_powermod_d1_p, m);
          BigInt j2 = m_powermod_d2_q(m);
          BigInt j1 = future_j1.get();
@@ -131,7 +131,8 @@ class RSA_Signature_Operation : public PK_Ops::Signature_with_EMSA,
          {
          const BigInt m(msg, msg_len);
          const BigInt x = blinded_private_op(m);
-         BOTAN_ASSERT(m == m_powermod_e_n(x), "RSA sign consistency check");
+         const BigInt c = m_powermod_e_n(x);
+         BOTAN_ASSERT(m == c, "RSA sign consistency check");
          return BigInt::encode_1363(x, n.bytes());
          }
    };
@@ -154,7 +155,8 @@ class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
          {
          const BigInt m(msg, msg_len);
          const BigInt x = blinded_private_op(m);
-         BOTAN_ASSERT(m == m_powermod_e_n(x), "RSA decrypt consistency check");
+         const BigInt c = m_powermod_e_n(x);
+         BOTAN_ASSERT(m == c, "RSA sign consistency check");
          return BigInt::encode_locked(x);
          }
    };

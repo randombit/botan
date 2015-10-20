@@ -1,7 +1,6 @@
 define ECC_PUBLIC_KEY_CRYPTO 20131128
 
 <requires>
-alloc
 asn1
 bigint
 ec_gfp

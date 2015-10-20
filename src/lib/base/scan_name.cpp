@@ -29,7 +29,7 @@ std::string make_arg(
 
       if(name[i].first > level)
          {
-         output += '(' + name[i].second;
+         output += "(" + name[i].second;
          ++paren_depth;
          }
       else if(name[i].first < level)
@@ -48,7 +48,7 @@ std::string make_arg(
       }
 
    for(size_t i = 0; i != paren_depth; ++i)
-      output += ')';
+      output += ")";
 
    return output;
    }
@@ -141,14 +141,14 @@ std::string SCAN_Name::all_arguments() const
    std::string out;
    if(arg_count())
       {
-      out += '(';
+      out += "(";
       for(size_t i = 0; i != arg_count(); ++i)
          {
          out += arg(i);
          if(i != arg_count() - 1)
-            out += ',';
+            out += ",";
          }
-      out += ')';
+      out += ")";
       }
    return out;
    }

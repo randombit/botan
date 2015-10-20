@@ -9,7 +9,6 @@
 #if defined(BOTAN_HAS_KDF_BASE)
 
 #include <botan/kdf.h>
-#include <botan/lookup.h>
 #include <botan/hex.h>
 #include <iostream>
 #include <fstream>

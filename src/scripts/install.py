@@ -69,6 +69,15 @@ def makedirs(dirname, exist_ok = True):
         if e.errno != errno.EEXIST or not exist_ok:
             raise e
 
+# Clear link and create new one
+def force_symlink(target, linkname):
+    try:
+        os.unlink(linkname)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise e
+    os.symlink(target, linkname)
+
 def main(args = None):
     if args is None:
         args = sys.argv
@@ -143,36 +152,23 @@ def main(args = None):
 
     if bool(cfg['build_shared_lib']):
         if str(cfg['os']) == "windows":
-            shared_lib = process_template('%{lib_prefix}%{libname}.%{so_suffix}') # botan.dll
-            copy_executable(os.path.join(out_dir, shared_lib),
-                            os.path.join(lib_dir, os.path.basename(shared_lib)))
+            soname_base = process_template('%{soname_base}') # botan.dll
+            copy_executable(os.path.join(out_dir, soname_base),
+                            os.path.join(lib_dir, soname_base))
         else:
-            shared_lib = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}.%{version_patch}')
-            soname = process_template('%{lib_prefix}%{libname}.%{so_suffix}.%{so_abi_rev}')
-            baselib = process_template('%{lib_prefix}%{libname}.%{so_suffix}')
+            soname_patch = process_template('%{soname_patch}')
+            soname_abi   = process_template('%{soname_abi}')
+            soname_base  = process_template('%{soname_base}')
 
-            copy_executable(os.path.join(out_dir, shared_lib),
-                            os.path.join(lib_dir, os.path.basename(shared_lib)))
+            copy_executable(os.path.join(out_dir, soname_patch),
+                            os.path.join(lib_dir, soname_patch))
 
             prev_cwd = os.getcwd()
 
             try:
                 os.chdir(lib_dir)
-
-                try:
-                    os.unlink(soname)
-                except OSError as e:
-                    if e.errno != errno.ENOENT:
-                        raise e
-
-                try:
-                    os.unlink(baselib)
-                except OSError as e:
-                    if e.errno != errno.ENOENT:
-                        raise e
-
-                os.symlink(shared_lib, soname)
-                os.symlink(soname, baselib)
+                force_symlink(soname_patch, soname_abi)
+                force_symlink(soname_patch, soname_base)
             finally:
                 os.chdir(prev_cwd)
 
@@ -185,11 +181,12 @@ def main(args = None):
                   os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig'])))
 
     if 'ffi' in cfg['mod_list'].split('\n'):
-        py_lib_path = os.path.join(lib_dir, 'python%s' % (cfg['python_version']), 'site-packages')
-        logging.debug('Installing python module to %s' % (py_lib_path))
-        makedirs(py_lib_path)
-        for py in ['botan.py']:
-            copy_file(os.path.join(cfg['python_dir'], py), os.path.join(py_lib_path, py))
+        for ver in cfg['python_version'].split(','):
+            py_lib_path = os.path.join(lib_dir, 'python%s' % (ver), 'site-packages')
+            logging.debug('Installing python module to %s' % (py_lib_path))
+            makedirs(py_lib_path)
+            for py in ['botan.py']:
+                copy_file(os.path.join(cfg['python_dir'], py), os.path.join(py_lib_path, py))
 
     shutil.rmtree(target_doc_dir, True)
     shutil.copytree(cfg['doc_output_dir'], target_doc_dir)

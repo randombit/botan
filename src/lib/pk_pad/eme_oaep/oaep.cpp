@@ -1,15 +1,13 @@
 /*
 * OAEP
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pad_utils.h>
 #include <botan/oaep.h>
 #include <botan/mgf1.h>
-#include <botan/mem_ops.h>
-
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -20,16 +18,13 @@ OAEP* OAEP::make(const Spec& request)
       if(request.arg_count() == 1 ||
          (request.arg_count() == 2 && request.arg(1) == "MGF1"))
          {
-         if(HashFunction* hash = get_hash_function(request.arg(0)))
-            return new OAEP(hash);
+         if(auto hash = HashFunction::create(request.arg(0)))
+            return new OAEP(hash.release());
          }
       }
 
    return nullptr;
    }
-
-BOTAN_REGISTER_NAMED_T(EME, "OAEP", OAEP, OAEP::make);
-
 
 /*
 * OAEP Pad Operation
@@ -66,7 +61,7 @@ secure_vector<byte> OAEP::pad(const byte in[], size_t in_length,
 * OAEP Unpad Operation
 */
 secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
-                               size_t key_length) const
+                                size_t key_length) const
    {
    /*
    Must be careful about error messages here; if an attacker can
@@ -89,41 +84,43 @@ secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
    secure_vector<byte> input(key_length);
    buffer_insert(input, key_length - in_length, in, in_length);
 
-   mgf1_mask(*m_hash,
-             &input[m_Phash.size()], input.size() - m_Phash.size(),
-             input.data(), m_Phash.size());
+   BOTAN_CONST_TIME_POISON(input.data(), input.size());
+
+   const size_t hlen = m_Phash.size();
 
    mgf1_mask(*m_hash,
-             input.data(), m_Phash.size(),
-             &input[m_Phash.size()], input.size() - m_Phash.size());
+             &input[hlen], input.size() - hlen,
+             input.data(), hlen);
 
-   bool waiting_for_delim = true;
-   bool bad_input = false;
-   size_t delim_idx = 2 * m_Phash.size();
+   mgf1_mask(*m_hash,
+             input.data(), hlen,
+             &input[hlen], input.size() - hlen);
 
-   /*
-   * GCC 4.5 on x86-64 compiles this in a way that is still vunerable
-   * to timing analysis. Other compilers, or GCC on other platforms,
-   * may or may not.
-   */
+   size_t delim_idx = 2 * hlen;
+   byte waiting_for_delim = 0xFF;
+   byte bad_input = 0;
+
    for(size_t i = delim_idx; i < input.size(); ++i)
       {
-      const bool zero_p = !input[i];
-      const bool one_p = input[i] == 0x01;
+      const byte zero_m = ct_is_zero_8(input[i]);
+      const byte one_m = ct_is_equal_8(input[i], 1);
 
-      const bool add_1 = waiting_for_delim && zero_p;
+      const byte add_m = waiting_for_delim & zero_m;
 
-      bad_input |= waiting_for_delim && !(zero_p || one_p);
+      bad_input |= waiting_for_delim & ~(zero_m | one_m);
 
-      delim_idx += add_1;
+      delim_idx += ct_select_mask_8(add_m, 1, 0);
 
-      waiting_for_delim &= zero_p;
+      waiting_for_delim &= zero_m;
       }
 
    // If we never saw any non-zero byte, then it's not valid input
    bad_input |= waiting_for_delim;
+   bad_input |= ct_expand_mask_8(!same_mem(&input[hlen], m_Phash.data(), hlen));
 
-   bad_input |= !same_mem(&input[m_Phash.size()], m_Phash.data(), m_Phash.size());
+   BOTAN_CONST_TIME_UNPOISON(input.data(), input.size());
+   BOTAN_CONST_TIME_UNPOISON(&bad_input, sizeof(bad_input));
+   BOTAN_CONST_TIME_UNPOISON(&delim_idx, sizeof(delim_idx));
 
    if(bad_input)
       throw Decoding_Error("Invalid OAEP encoding");

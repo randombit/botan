@@ -7,7 +7,6 @@
 
 #include <botan/pbes2.h>
 #include <botan/cipher_mode.h>
-#include <botan/lookup.h>
 #include <botan/pbkdf.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -82,6 +81,9 @@ pbes2_encrypt(const secure_vector<byte>& key_bits,
 
    std::unique_ptr<Cipher_Mode> enc(get_cipher_mode(cipher, ENCRYPTION));
 
+   if(!enc)
+      throw Decoding_Error("PBE-PKCS5 cannot encrypt no cipher " + cipher);
+
    std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
 
    const size_t key_length = enc->key_spec().maximum_keylength();
@@ -155,6 +157,8 @@ pbes2_decrypt(const secure_vector<byte>& key_bits,
    std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
 
    std::unique_ptr<Cipher_Mode> dec(get_cipher_mode(cipher, DECRYPTION));
+   if(!dec)
+      throw Decoding_Error("PBE-PKCS5 cannot decrypt no cipher " + cipher);
 
    if(key_length == 0)
       key_length = dec->key_spec().maximum_keylength();

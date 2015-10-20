@@ -18,32 +18,41 @@ os:
   - linux
   - osx
 
+osx_image: xcode7
+
 compiler:
   - clang
   - gcc
 
 env:
   matrix:
-    - MODULES="all" BUILD_MODE="shared"
-    - MODULES="all" BUILD_MODE="static"
-    - MODULES="all" BUILD_MODE="coverage"
-    - MODULES="all" BUILD_MODE="sanitizer"
+    - TARGETOS="desktop" MODULES="all" BUILD_MODE="shared"
+    - TARGETOS="desktop" MODULES="all" BUILD_MODE="static"
+    - TARGETOS="desktop" MODULES="all" BUILD_MODE="coverage"
+    - TARGETOS="desktop" MODULES="all" BUILD_MODE="sanitizer"
 
-    - MODULES="min" BUILD_MODE="shared"
-    - MODULES="min" BUILD_MODE="static"
+    - TARGETOS="desktop" MODULES="min" BUILD_MODE="shared"
+    - TARGETOS="desktop" MODULES="min" BUILD_MODE="static"
+
+    - TARGETOS="ios32" MODULES="all" BUILD_MODE="static"
+    - TARGETOS="ios64" MODULES="all" BUILD_MODE="static"
 
 matrix:
   exclude:
     - os: osx
       compiler: gcc
     - compiler: clang
-      env: MODULES="all" BUILD_MODE="coverage"
+      env: TARGETOS="desktop" MODULES="all" BUILD_MODE="coverage"
     - compiler: clang
-      env: MODULES="all" BUILD_MODE="sanitizer"
+      env: TARGETOS="desktop" MODULES="all" BUILD_MODE="sanitizer"
     - compiler: clang
-      env: MODULES="min" BUILD_MODE="shared"
+      env: TARGETOS="desktop" MODULES="min" BUILD_MODE="shared"
     - compiler: clang
-      env: MODULES="min" BUILD_MODE="static"
+      env: TARGETOS="desktop" MODULES="min" BUILD_MODE="static"
+    - os: linux
+      env: TARGETOS="ios32" MODULES="all" BUILD_MODE="static"
+    - os: linux
+      env: TARGETOS="ios64" MODULES="all" BUILD_MODE="static"
 # END BUILD MATRIX
 
 cache:
@@ -51,13 +60,13 @@ cache:
     - $HOME/.ccache
 
 install:
-  - ./src/scripts/ci/install.sh
+  - ./src/scripts/ci/travis/install.sh
 
 script:
-  - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci/build.sh ; fi
+  - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci/travis/build.sh ; fi
 
 after_success:
-  - ./src/scripts/ci/after_success.sh
+  - ./src/scripts/ci/travis/after_success.sh
 
 notifications:
   email: botan-commits@lists.randombit.net
@@ -72,6 +81,8 @@ addons:
     - libssl-dev
     - libsqlite3-dev
     - zlib1g-dev
+    - libbz2-dev
+    - liblzma-dev
 
   coverity_scan:
     project:

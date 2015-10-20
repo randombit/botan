@@ -16,8 +16,8 @@ shared_flags "-fPIC"
 makefile_style gmake
 
 <so_link_commands>
-linux   -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME)"
-solaris -> "$(CXX) -G -fPIC -Wl,-h,$(SONAME)"
+linux   -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME_ABI)"
+solaris -> "$(CXX) -G -fPIC -Wl,-h,$(SONAME_ABI)"
 </so_link_commands>
 
 <mach_opt>

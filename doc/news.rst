@@ -1,6 +1,119 @@
 Release Notes
 ========================================
 
+Version 1.11.22, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* The routines for decoding PKCS #1 encryption and OAEP blocks have been
+  rewritten to run without secret indexes or branches. These cryptographic
+  operations are vulnerable to oracle attacks, including via side channels such
+  as timing or cache-based analysis. In theory it would be possible to attack
+  the previous implementations using such a side channel, which could allow
+  an attacker to mount a plaintext recovery attack.
+
+  By writing the code such that it does not depend on secret inputs for branch
+  or memory indexes, such a side channel would be much less likely to exist.
+
+* Add support for using ctgrind (https://github.com/agl/ctgrind) to test that
+  sections of code do not use secret inputs to decide branches or memory indexes.
+  The testing relies on dynamic checking using valgrind.
+
+  So far PKCS #1 decoding, OAEP decoding, IDEA, and Curve25519 have been notated
+  and confirmed to be constant time.
+
+* Public key operations can now be used with specified providers by passing an
+  additional parameter to the constructor of the PK operation.
+
+* OpenSSL RSA provider now supports signature creation and verification.
+
+* The blinding code used for RSA, Diffie-Hellman, ElGamal and Rabin-Williams now
+  periodically reinitializes the sequence of blinding values instead of always
+  deriving the next value by squaring the previous ones. The reinitializion
+  interval can be controlled by the build.h parameter BOTAN_BLINDING_REINIT_INTERVAL.
+
+* DL_Group now prohibits creating a group smaller than 1024 bits.
+
+* Add System_RNG type. Previously the global system RNG was only accessible via
+  `system_rng` which returned a reference to the object. However is at times
+  useful to have a unique_ptr<RandomNumberGenerator> which will be either the
+  system RNG or an AutoSeeded_RNG, depending on availability, which this
+  additional type allows.
+
+* New command line tools `dl_group` and `prime`
+
+* The `configure.py` option `--no-autoload` is now also available
+  under the more understandable name `--minimized-build`.
+
+Version 1.11.21, 2015-10-11
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add new methods for creating types such as BlockCiphers or HashFunctions,
+  T::providers() returning list of provider for a type, and T::create() creating
+  a new object of a specified provider. The functions in lookup.h forward to
+  these new APIs. A change to the lookup system in 1.11.14 had caused problems
+  with static libraries (GH #52). These problems have been fixed as part of these
+  changes. GH #279
+
+* Fix loading McEliece public or private keys with PKCS::load_key / X509::load_key
+
+* Add `mce` command line tool for McEliece key generation and file encryption
+
+* Add Darwin_SecRandom entropy source which uses `SecRandomCopyBytes`
+  API call for OS X and iOS, as this call is accessible even from a
+  sandboxed application. GH #288
+
+* Add new HMAC_DRBG constructor taking a name for the MAC to use, rather
+  than a pointer to an object.
+
+* The OCaml module is now a separate project at
+  https://github.com/randombit/botan-ocaml
+
+* The encrypted sqlite database support in contrib has moved to
+  https://github.com/randombit/botan-sqlite
+
+* The Perl XS module has been removed as it was no longer maintained.
+
+Version 1.11.20, 2015-09-07
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Additional countermeasures were added to ECC point multiplications
+  including exponent blinding and randomization of the point
+  representation to help protect against side channel attacks.
+
+* An ECDSA provider using OpenSSL has been added.
+
+* The ordering of algorithm priorities has been reversed. Previously
+  255 was the lowest priority and 0 was the highest priority. Now it
+  is the reverse, with 0 being lowest priority and 255 being highest.
+  The default priority for the base algorithms is 100. This only
+  affects external providers or applications which directly set
+  provider preferences.
+
+* On OS X, rename libs to avoid trailing version numbers, e.g.
+  libbotan-1.11.dylib.19 -> libbotan-1.11.19.dylib. This was requested
+  by the Homebrew project package audit. GH #241, #260
+
+* Enable use of CPUID interface with clang. GH #232
+
+* Add support for MSVC 2015 debug builds by satisfying C++ allocator
+  requirements. SO 31802806, GH #236
+
+* Make `X509_Time` string parsing and `to_u32bit()` more strict to avoid
+  integer overflows and other potentially dangerous misinterpretations.
+  GH #240, #243
+
+* Remove all 'extern "C"' declarations from src/lib/math/mp/ because some
+  of those did throw exceptions and thus cannot be C methods. GH #249
+
+* Fix build configuration for clang debug on Linux. GH #250
+
+* Fix zlib error when compressing an empty buffer. GH #265
+
+* Fix iOS builds by allowing multiple compiler flags with the same name.
+  GH #266
+
+* Fix Solaris build issue caused by `RLIMIT_MEMLOCK`. GH #262
+
 Version 1.11.19, 2015-08-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -28,6 +141,22 @@ Version 1.11.19, 2015-08-03
 
 * BigInt::to_u32bit would fail if the value was exactly 32 bits.
   GH #220
+
+* Botan is now fully compaitible with _GLIBCXX_DEBUG. GH #73
+
+* BigInt::random_integer distribution was not uniform. GH #108
+
+* Added unit testing framework Catch. GH #169
+
+* Fix `make install`. GH #181, #186
+
+* Public header `fs.h` moved to `internal/filesystem.h`. Added filesystem
+  support for MSVC 2013 when boost is not available, allowing tests to run on
+  those systems. GH #198, #199
+
+* Added os "android" and fix Android compilation issues. GH #203
+
+* Drop support for Python 2.6 for all Botan Python scripts. GH #217
 
 Version 1.10.10, 2015-08-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

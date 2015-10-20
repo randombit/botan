@@ -8,7 +8,6 @@
 #include "tests.h"
 
 #include <botan/hex.h>
-#include <botan/lookup.h>
 #include <iostream>
 #include <fstream>
 
@@ -47,12 +46,13 @@ RandomNumberGenerator* get_rng(const std::string& algo_str, const std::string& i
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
    if(rng_name == "HMAC_DRBG")
-      return new HMAC_DRBG(get_mac("HMAC(" + algo_name[1] + ")"), new AllOnce_RNG(ikm));
+      return new HMAC_DRBG(MessageAuthenticationCode::create("HMAC(" + algo_name[1] + ")").release(),
+                           new AllOnce_RNG(ikm));
 #endif
 
 #if defined(BOTAN_HAS_X931_RNG)
    if(rng_name == "X9.31-RNG")
-      return new ANSI_X931_RNG(get_block_cipher(algo_name[1]),
+      return new ANSI_X931_RNG(BlockCipher::create(algo_name[1]).release(),
                                new Fixed_Output_RNG(ikm));
 #endif
 
@@ -67,7 +67,10 @@ size_t x931_test(const std::string& algo,
    std::unique_ptr<RandomNumberGenerator> rng(get_rng(algo, ikm));
 
    if(!rng)
-      throw std::runtime_error("Unknown RNG " + algo);
+      {
+      std::cout << "Unknown RNG " + algo + " skipping test\n";
+      return 0;
+      }
 
    const std::string got = hex_encode(rng->random_vec(L));
 
@@ -87,7 +90,10 @@ size_t hmac_drbg_test(std::map<std::string, std::string> m)
 
    std::unique_ptr<RandomNumberGenerator> rng(get_rng(algo, ikm));
    if(!rng)
-      throw std::runtime_error("Unknown RNG " + algo);
+      {
+      std::cout << "Unknown RNG " + algo + " skipping test\n";
+      return 0;
+      }
 
    rng->reseed(0); // force initialization
 

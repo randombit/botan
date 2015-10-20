@@ -7,7 +7,6 @@
 
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/tls_exceptn.h>
-#include <botan/lookup.h>
 #include <botan/hash.h>
 
 namespace Botan {
@@ -29,7 +28,7 @@ secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
       return mac_algo.c_str();
    };
 
-   std::unique_ptr<HashFunction> hash(make_hash_function(choose_hash()));
+   std::unique_ptr<HashFunction> hash(HashFunction::create(choose_hash()));
    hash->update(data);
    return hash->final();
    }

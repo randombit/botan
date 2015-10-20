@@ -15,19 +15,26 @@ namespace Botan {
 namespace {
 
 template<typename T, typename Key>
-T* get_pk_op(const std::string& what, const Key& key, const std::string& pad)
+T* get_pk_op(const std::string& what, const Key& key, const std::string& pad,
+             const std::string& provider = "")
    {
-   T* p = Algo_Registry<T>::global_registry().make(typename T::Spec(key, pad));
-   if(!p)
-      throw Lookup_Error(what + " with " + key.algo_name() + "/" + pad + " not supported");
-   return p;
+   if(T* p = Algo_Registry<T>::global_registry().make(typename T::Spec(key, pad), provider))
+      return p;
+
+   const std::string err = what + " with " + key.algo_name() + "/" + pad + " not supported";
+   if(provider != "")
+      throw Lookup_Error(err + " with provider " + provider);
+   else
+      throw Lookup_Error(err);
    }
 
 }
 
-PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key, const std::string& eme)
+PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
+                                   const std::string& padding,
+                                   const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::Encryption>("Encryption", key, eme));
+   m_op.reset(get_pk_op<PK_Ops::Encryption>("Encryption", key, padding, provider));
    }
 
 std::vector<byte>
@@ -41,9 +48,10 @@ size_t PK_Encryptor_EME::maximum_input_size() const
    return m_op->max_input_bits() / 8;
    }
 
-PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key, const std::string& eme)
+PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key, const std::string& padding,
+                                   const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::Decryption>("Decryption", key, eme));
+   m_op.reset(get_pk_op<PK_Ops::Decryption>("Decryption", key, padding, provider));
    }
 
 secure_vector<byte> PK_Decryptor_EME::dec(const byte msg[], size_t length) const
@@ -108,9 +116,10 @@ std::vector<byte> der_decode_signature(const byte sig[], size_t len,
 
 PK_Signer::PK_Signer(const Private_Key& key,
                      const std::string& emsa,
-                     Signature_Format format)
+                     Signature_Format format,
+                     const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::Signature>("Signing", key, emsa));
+   m_op.reset(get_pk_op<PK_Ops::Signature>("Signing", key, emsa, provider));
    m_sig_format = format;
    }
 
@@ -135,9 +144,10 @@ std::vector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
 
 PK_Verifier::PK_Verifier(const Public_Key& key,
                          const std::string& emsa_name,
-                         Signature_Format format)
+                         Signature_Format format,
+                         const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::Verification>("Verification", key, emsa_name));
+   m_op.reset(get_pk_op<PK_Ops::Verification>("Verification", key, emsa_name, provider));
    m_sig_format = format;
    }
 

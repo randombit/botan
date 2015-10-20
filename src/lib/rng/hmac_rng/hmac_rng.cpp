@@ -6,9 +6,7 @@
 */
 
 #include <botan/hmac_rng.h>
-#include <botan/get_byte.h>
 #include <botan/entropy_src.h>
-#include <botan/internal/xor_buf.h>
 #include <algorithm>
 #include <chrono>
 

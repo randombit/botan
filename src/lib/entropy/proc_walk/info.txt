@@ -24,7 +24,3 @@ openbsd
 qnx
 solaris
 </os>
-
-<requires>
-alloc
-</requires>

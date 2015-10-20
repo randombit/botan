@@ -10,14 +10,12 @@
  */
 
 #include <botan/polyn_gf2m.h>
-#include <botan/gf2m_rootfind_dcmp.h>
-#include <botan/code_based_util.h>
-#include <botan/gf2m_small_m.h>
+#include <botan/internal/code_based_util.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/rng.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
-
-using namespace Botan::gf2m_small_m;
 
 namespace {
 
@@ -39,8 +37,6 @@ unsigned nlz_16bit(u16bit x)
    return n;
    }
 }
-
-using namespace Botan::gf2m_small_m;
 
 int polyn_gf2m::calc_degree_secure() const
    {
@@ -86,7 +82,7 @@ polyn_gf2m::polyn_gf2m(polyn_gf2m const& other)
     msp_field(other.msp_field)
    { }
 
-polyn_gf2m::polyn_gf2m(   int d, std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field)
+polyn_gf2m::polyn_gf2m(   int d, std::shared_ptr<GF2m_Field> sp_field)
    :m_deg(-1),
     coeff(d+1),
     msp_field(sp_field)
@@ -115,7 +111,7 @@ void polyn_gf2m::realloc(u32bit new_size)
    this->coeff = secure_vector<gf2m>(new_size);
    }
 
-polyn_gf2m::polyn_gf2m(const byte* mem, u32bit mem_len, std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field)
+polyn_gf2m::polyn_gf2m(const byte* mem, u32bit mem_len, std::shared_ptr<GF2m_Field> sp_field)
    :msp_field(sp_field)
    {
    if(mem_len % sizeof(gf2m))
@@ -128,7 +124,7 @@ polyn_gf2m::polyn_gf2m(const byte* mem, u32bit mem_len, std::shared_ptr<gf2m_sma
    this->m_deg = -1;
    for(u32bit i = 0; i < size; i++)
       {
-      this->coeff[i] = gf2m_small_m::decode_gf2m(mem);
+      this->coeff[i] = decode_gf2m(mem);
       mem += sizeof(this->coeff[0]);
       }
    for(u32bit i = 0; i < size; i++)
@@ -142,13 +138,13 @@ polyn_gf2m::polyn_gf2m(const byte* mem, u32bit mem_len, std::shared_ptr<gf2m_sma
    }
 
 
-polyn_gf2m::polyn_gf2m( std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field )
+polyn_gf2m::polyn_gf2m( std::shared_ptr<GF2m_Field> sp_field )
    : m_deg(-1),
      coeff(1),
      msp_field(sp_field)
    {}
 
-polyn_gf2m::polyn_gf2m(int degree, const unsigned  char* mem, u32bit mem_byte_len, std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field)
+polyn_gf2m::polyn_gf2m(int degree, const unsigned  char* mem, u32bit mem_byte_len, std::shared_ptr<GF2m_Field> sp_field)
    :msp_field(sp_field)
    {
    u32bit j, k, l;
@@ -229,7 +225,7 @@ int polyn_gf2m::get_degree() const
    }
 
 
-static gf2m eval_aux(const gf2m * /*restrict*/ coeff, gf2m a, int d, std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field)
+static gf2m eval_aux(const gf2m * /*restrict*/ coeff, gf2m a, int d, std::shared_ptr<GF2m_Field> sp_field)
    {
    gf2m b;
    b = coeff[d--];
@@ -255,7 +251,7 @@ gf2m polyn_gf2m::eval(gf2m a)
 void polyn_gf2m::remainder(polyn_gf2m &p, const polyn_gf2m & g)
    {
    int i, j, d;
-   std::shared_ptr<gf2m_small_m::Gf2m_Field> msp_field = g.msp_field;
+   std::shared_ptr<GF2m_Field> msp_field = g.msp_field;
    d = p.get_degree() - g.get_degree();
    if (d >= 0) {
    gf2m la = msp_field->gf_inv_rn(g.get_lead_coef());
@@ -314,7 +310,7 @@ polyn_gf2m polyn_gf2m::sqmod( const std::vector<polyn_gf2m> & sq, int d)
    {
    int i, j;
    gf2m la;
-   std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field = this->msp_field;
+   std::shared_ptr<GF2m_Field> sp_field = this->msp_field;
 
    polyn_gf2m result(d - 1, sp_field);
    // terms of low degree
@@ -438,7 +434,7 @@ void polyn_gf2m::patchup_deg_secure( u32bit trgt_deg, volatile gf2m patch_elem)
 std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn_gf2m & p, const polyn_gf2m & g, int break_deg)
    {
 
-   std::shared_ptr<gf2m_small_m::Gf2m_Field> msp_field = g.msp_field;
+   std::shared_ptr<GF2m_Field> msp_field = g.msp_field;
    int i, j, dr, du, delta;
    gf2m a;
    polyn_gf2m aux;
@@ -512,7 +508,7 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
          else
             {
             /* t odd */
-            cond1 =  r0.get_degree() <= break_deg - 1;
+            cond1 =  r0.get_degree() < break_deg;
             cond2 =  u0.get_degree() < break_deg - 1;
             cond1 &= cond2;
             }
@@ -625,7 +621,7 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
    return std::make_pair(u1,r1); // coefficients u,v
    }
 
-polyn_gf2m::polyn_gf2m(int t, Botan::RandomNumberGenerator& rng, std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field)
+polyn_gf2m::polyn_gf2m(int t, Botan::RandomNumberGenerator& rng, std::shared_ptr<GF2m_Field> sp_field)
    :m_deg(t),
     coeff(t+1),
     msp_field(sp_field)
@@ -655,7 +651,7 @@ void polyn_gf2m::poly_shiftmod( const polyn_gf2m & g)
       {
       throw Invalid_Argument("shiftmod cannot be called on polynomials of degree 0 or less");
       }
-   std::shared_ptr<gf2m_small_m::Gf2m_Field> msp_field = g.msp_field;
+   std::shared_ptr<GF2m_Field> msp_field = g.msp_field;
 
    t = g.get_degree();
    a = msp_field->gf_div(this->coeff[t-1], g.coeff[t]);
@@ -670,7 +666,7 @@ std::vector<polyn_gf2m> polyn_gf2m::sqrt_mod_init(const polyn_gf2m & g)
    {
    u32bit i, t;
    u32bit nb_polyn_sqrt_mat;
-   std::shared_ptr<gf2m_small_m::Gf2m_Field> msp_field = g.msp_field;
+   std::shared_ptr<GF2m_Field> msp_field = g.msp_field;
    std::vector<polyn_gf2m> result;
    t = g.get_degree();
    nb_polyn_sqrt_mat = t/2;
@@ -717,7 +713,7 @@ std::vector<polyn_gf2m> syndrome_init(polyn_gf2m const& generator, std::vector<g
    gf2m a;
 
 
-   std::shared_ptr<gf2m_small_m::Gf2m_Field> msp_field = generator.msp_field;
+   std::shared_ptr<GF2m_Field> msp_field = generator.msp_field;
 
    std::vector<polyn_gf2m> result;
    t = generator.get_degree();
@@ -744,7 +740,7 @@ std::vector<polyn_gf2m> syndrome_init(polyn_gf2m const& generator, std::vector<g
    return result;
    }
 
-polyn_gf2m::polyn_gf2m(const secure_vector<byte>& encoded, std::shared_ptr<gf2m_small_m::Gf2m_Field> sp_field )
+polyn_gf2m::polyn_gf2m(const secure_vector<byte>& encoded, std::shared_ptr<GF2m_Field> sp_field )
    :msp_field(sp_field)
    {
    if(encoded.size() % 2)

@@ -5,12 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mac_utils.h>
 #include <botan/x919_mac.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_MAC_NAMED_NOARGS(ANSI_X919_MAC, "X9.19-MAC");
 
 /*
 * Update an ANSI X9.19 MAC Calculation
@@ -88,10 +85,11 @@ MessageAuthenticationCode* ANSI_X919_MAC::clone() const
 /*
 * ANSI X9.19 MAC Constructor
 */
-ANSI_X919_MAC::ANSI_X919_MAC() : m_state(8), m_position(0)
+ANSI_X919_MAC::ANSI_X919_MAC() :
+   m_des1(BlockCipher::create("DES")),
+   m_des2(BlockCipher::create("DES")),
+   m_state(8), m_position(0)
    {
-   m_des1.reset(get_block_cipher("DES"));
-   m_des2.reset(m_des1->clone());
    }
 
 }

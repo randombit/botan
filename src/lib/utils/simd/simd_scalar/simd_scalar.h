@@ -21,8 +21,6 @@ template<typename T, size_t N>
 class SIMD_Scalar
    {
    public:
-      static bool enabled() { return true; }
-
       static size_t size() { return N; }
 
       SIMD_Scalar() { /* uninitialized */ }

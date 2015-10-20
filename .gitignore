@@ -2,6 +2,7 @@ Makefile*
 libbotan*.so.*
 *.a
 *.so
+*.dylib
 *.exp
 *.lib
 *.dll
@@ -17,14 +18,19 @@ botan-test
 \#*\#
 .\#*
 
+# Logs
+*.log
+
 # Patch files
 *.patch
 *.diff
 *.orig
 *.rej
 
-# Python cache
+# Cache and temporary files
 *.pyc
+.DS_Store
+*.swp
 
 # Amalgamation code
 botan_all.h
@@ -35,6 +41,10 @@ botan_all_*.cpp
 # Coverage output
 coverage.info
 coverage/
+
+# Profiler outputs
+cachegrind.*
+callgrind.*
 
 # Test output
 src/tests/outdata/*.pem

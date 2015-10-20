@@ -1,0 +1,45 @@
+endian little
+family arm
+
+<aliases>
+arm
+armel # For Debian
+armhf # For Debian
+evbarm # For NetBSD
+</aliases>
+
+<submodels>
+armv2
+armv2a
+armv3
+armv3m
+armv4
+armv5
+armv5e
+armv5te
+armv6
+armv6j
+armv6t2
+armv6z
+armv6zk
+armv6-m
+armv7
+armv7-a
+armv7-r
+armv7-m
+iwmmxt
+iwmmxt2
+ep9312
+</submodels>
+
+<submodel_aliases>
+strongarm -> armv4
+xscale -> armv5te
+cortex-a8 -> armv7-a
+cortex-a9 -> armv7-a
+</submodel_aliases>
+
+<isa_extensions>
+neon
+</isa_extensions>
+

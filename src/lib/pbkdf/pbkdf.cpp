@@ -6,9 +6,42 @@
 */
 
 #include <botan/pbkdf.h>
+#include <botan/internal/algo_registry.h>
 #include <stdexcept>
 
+#if defined(BOTAN_HAS_PBKDF1)
+#include <botan/pbkdf1.h>
+#endif
+
+#if defined(BOTAN_HAS_PBKDF2)
+#include <botan/pbkdf2.h>
+#endif
+
 namespace Botan {
+
+#define BOTAN_REGISTER_PBKDF_1HASH(type, name)                          \
+   BOTAN_REGISTER_NAMED_T(PBKDF, name, type, (make_new_T_1X<type, HashFunction>))
+
+#if defined(BOTAN_HAS_PBKDF1)
+BOTAN_REGISTER_PBKDF_1HASH(PKCS5_PBKDF1, "PBKDF1");
+#endif
+
+#if defined(BOTAN_HAS_PBKDF2)
+BOTAN_REGISTER_NAMED_T(PBKDF, "PBKDF2", PKCS5_PBKDF2, PKCS5_PBKDF2::make);
+#endif
+
+PBKDF::~PBKDF() {}
+
+std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
+                                     const std::string& provider)
+   {
+   return std::unique_ptr<PBKDF>(make_a<PBKDF>(algo_spec, provider));
+   }
+
+std::vector<std::string> PBKDF::providers(const std::string& algo_spec)
+   {
+   return providers_of<PBKDF>(PBKDF::Spec(algo_spec));
+   }
 
 void PBKDF::pbkdf_timed(byte out[], size_t out_len,
                         const std::string& passphrase,

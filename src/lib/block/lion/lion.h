@@ -39,6 +39,8 @@ class BOTAN_DLL Lion : public BlockCipher
       std::string name() const override;
       BlockCipher* clone() const override;
 
+      static Lion* make(const Spec&);
+
       /**
       * @param hash the hash to use internally
       * @param cipher the stream cipher to use internally

@@ -10,11 +10,6 @@
 #include <botan/pkcs8.h>
 #include <botan/credentials_manager.h>
 #include <botan/x509self.h>
-#include <botan/rsa.h>
-#include <botan/dsa.h>
-#include <botan/srp6.h>
-#include <botan/srp6_files.h>
-#include <botan/ecdsa.h>
 #include <iostream>
 #include <fstream>
 #include <memory>

@@ -6,7 +6,6 @@
 */
 
 #include <botan/dlies.h>
-#include <botan/internal/xor_buf.h>
 
 namespace Botan {
 

@@ -9,7 +9,7 @@
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <botan/charset.h>
-#include <botan/get_byte.h>
+#include <botan/loadstor.h>
 #include <limits>
 #include <set>
 #include <stdexcept>

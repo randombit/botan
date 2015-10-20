@@ -22,6 +22,7 @@
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
 #include <botan/pubkey.h>
+#include <botan/hex.h>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
@@ -64,8 +65,8 @@
   #include <botan/kdf.h>
 #endif
 
-#include <botan/filters.h>
 #include <botan/numthry.h>
+
 using namespace Botan;
 
 namespace {
@@ -73,12 +74,8 @@ namespace {
 void dump_data(const std::vector<byte>& out,
                const std::vector<byte>& expected)
    {
-   Pipe pipe(new Hex_Encoder);
-
-   pipe.process_msg(out);
-   pipe.process_msg(expected);
-   std::cout << "Got: " << pipe.read_all_as_string(0) << std::endl;
-   std::cout << "Exp: " << pipe.read_all_as_string(1) << std::endl;
+   std::cout << "Got: " << hex_encode(out) << std::endl;
+   std::cout << "Exp: " << hex_encode(expected) << std::endl;
    }
 
 size_t validate_save_and_load(const Private_Key* priv_key,
@@ -253,11 +250,7 @@ size_t validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
 
    PK_TEST(v.verify_message(message, sig), "Correct signature is valid");
 
-   zero_mem(sig.data(), sig.size());
-
-   PK_TEST(!v.verify_message(message, sig), "All-zero signature is invalid");
-
-   for(size_t i = 0; i != 3; ++i)
+   for(size_t i = 0; i != 5; ++i)
       {
       auto bad_sig = sig;
 
@@ -266,6 +259,10 @@ size_t validate_signature(PK_Verifier& v, PK_Signer& s, const std::string& algo,
 
       PK_TEST(!v.verify_message(message, bad_sig), "Incorrect signature is invalid");
       }
+
+   zero_mem(sig.data(), sig.size());
+
+   PK_TEST(!v.verify_message(message, sig), "All-zero signature is invalid");
 
    return fails;
    }

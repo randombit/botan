@@ -6,7 +6,7 @@
 */
 
 #include <botan/benchmark.h>
-#include <botan/lookup.h>
+#include <botan/exceptn.h>
 #include <botan/buf_comp.h>
 #include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>
@@ -55,10 +55,8 @@ time_algorithm_ops(const std::string& name,
 
    const double mb_mult = buffer.size() / static_cast<double>(Mebibyte);
 
-   if(BlockCipher* p = get_block_cipher(name, provider))
+   if(auto bc = BlockCipher::create(name, provider))
       {
-      std::unique_ptr<BlockCipher> bc(p);
-
       const SymmetricKey key(rng, bc->maximum_keylength());
 
       return std::map<std::string, double>({
@@ -67,10 +65,8 @@ time_algorithm_ops(const std::string& name,
             { "decrypt", mb_mult * time_op(runtime / 2, [&]() { bc->decrypt(buffer); }) },
          });
       }
-   else if(StreamCipher* p = get_stream_cipher(name, provider))
+   else if(auto sc = StreamCipher::create(name, provider))
       {
-      std::unique_ptr<StreamCipher> sc(p);
-
       const SymmetricKey key(rng, sc->maximum_keylength());
 
       return std::map<std::string, double>({
@@ -78,18 +74,14 @@ time_algorithm_ops(const std::string& name,
             { "", mb_mult * time_op(runtime, [&]() { sc->encipher(buffer); }) },
          });
       }
-   else if(HashFunction* p = get_hash_function(name, provider))
+   else if(auto h = HashFunction::create(name, provider))
       {
-      std::unique_ptr<HashFunction> h(p);
-
       return std::map<std::string, double>({
             { "", mb_mult * time_op(runtime, [&]() { h->update(buffer); }) },
          });
       }
-   else if(MessageAuthenticationCode* p = get_mac(name, provider))
+   else if(auto mac = MessageAuthenticationCode::create(name, provider))
       {
-      std::unique_ptr<MessageAuthenticationCode> mac(p);
-
       const SymmetricKey key(rng, mac->maximum_keylength());
 
       return std::map<std::string, double>({
@@ -136,10 +128,10 @@ std::set<std::string> get_all_providers_of(const std::string& algo)
 
    auto add_to_set = [&provs](const std::vector<std::string>& str) { for(auto&& s : str) { provs.insert(s); } };
 
-   add_to_set(get_block_cipher_providers(algo));
-   add_to_set(get_stream_cipher_providers(algo));
-   add_to_set(get_hash_function_providers(algo));
-   add_to_set(get_mac_providers(algo));
+   add_to_set(BlockCipher::providers(algo));
+   add_to_set(StreamCipher::providers(algo));
+   add_to_set(HashFunction::providers(algo));
+   add_to_set(MessageAuthenticationCode::providers(algo));
 
    return provs;
    }
@@ -153,19 +145,18 @@ algorithm_benchmark(const std::string& name,
                     size_t buf_size)
    {
    //Algorithm_Factory& af = global_state().algorithm_factory();
-   const auto providers = get_all_providers_of(name);
+   const auto provider_names = get_all_providers_of(name);
+   if (provider_names.empty())
+      throw No_Provider_Found(name);
 
    std::map<std::string, double> all_results; // provider -> ops/sec
 
-   if(!providers.empty())
-      {
-      const std::chrono::nanoseconds ns_per_provider = milliseconds / providers.size();
+   const std::chrono::nanoseconds ns_per_provider = milliseconds / provider_names.size();
 
-      for(auto provider : providers)
-         {
-         auto results = time_algorithm_ops(name, provider, rng, ns_per_provider, buf_size);
-         all_results[provider] = find_first_in(results, { "", "update", "encrypt" });
-         }
+   for(auto provider : provider_names)
+      {
+      auto results = time_algorithm_ops(name, provider, rng, ns_per_provider, buf_size);
+      all_results[provider] = find_first_in(results, { "", "update", "encrypt" });
       }
 
    return all_results;

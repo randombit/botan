@@ -5,16 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/block_utils.h>
 #include <botan/aes_ni.h>
+#include <botan/loadstor.h>
 #include <botan/cpuid.h>
 #include <wmmintrin.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_aes_ni(), AES_128_NI, "AES-128", "aes_ni", 16);
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_aes_ni(), AES_192_NI, "AES-192", "aes_ni", 16);
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_aes_ni(), AES_256_NI, "AES-256", "aes_ni", 16);
 
 namespace {
 

@@ -6,7 +6,6 @@
 */
 
 #include <botan/x931_rng.h>
-#include <botan/internal/xor_buf.h>
 #include <algorithm>
 
 namespace Botan {

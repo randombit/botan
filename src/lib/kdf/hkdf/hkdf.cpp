@@ -5,20 +5,17 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/kdf_utils.h>
 #include <botan/hkdf.h>
 
 namespace Botan {
 
-BOTAN_REGISTER_NAMED_T(KDF, "HKDF", HKDF, HKDF::make);
-
 HKDF* HKDF::make(const Spec& spec)
    {
-   if(auto mac = get_mac(spec.arg(0)))
-      return new HKDF(mac);
+   if(auto mac = MessageAuthenticationCode::create(spec.arg(0)))
+      return new HKDF(mac.release());
 
-   if(auto mac = get_mac("HMAC(" + spec.arg(0) + ")"))
-      return new HKDF(mac);
+   if(auto mac = MessageAuthenticationCode::create("HMAC(" + spec.arg(0) + ")"))
+      return new HKDF(mac.release());
 
    return nullptr;
    }

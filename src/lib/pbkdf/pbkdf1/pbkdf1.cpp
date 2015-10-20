@@ -5,13 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pbkdf_utils.h>
 #include <botan/pbkdf1.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_PBKDF_1HASH(PKCS5_PBKDF1, "PBKDF1");
 
 size_t PKCS5_PBKDF1::pbkdf(byte output_buf[], size_t output_len,
                            const std::string& passphrase,

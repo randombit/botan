@@ -47,7 +47,7 @@ $(STATIC_LIB): $(LIBOBJS)
 	$(RANLIB) $(STATIC_LIB)
 
 # Fake targets
-.PHONY = clean distclean docs install valgrind lcov
+.PHONY: clean distclean docs install valgrind lcov
 
 %{gmake_coverage_in}
 

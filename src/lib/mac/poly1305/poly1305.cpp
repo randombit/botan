@@ -8,15 +8,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mac_utils.h>
 #include <botan/poly1305.h>
 #include <botan/loadstor.h>
 #include <botan/mul128.h>
 #include <botan/internal/donna128.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_MAC_NOARGS(Poly1305);
 
 namespace {
 
