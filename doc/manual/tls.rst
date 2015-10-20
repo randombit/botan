@@ -744,7 +744,7 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
 .. cpp:class:: TLS::Protocol_Version
 
- .. cpp:type:: enum Version_Code
+ .. cpp:enum:: Version_Code
 
      ``TLS_V10``, ``TLS_V11``, ``TLS_V12``, ``DTLS_V10``, ``DTLS_V12``
 
