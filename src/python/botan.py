@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 """
 Python wrapper of the botan crypto library
@@ -26,7 +26,7 @@ else:
 expected_api_rev = 20150210
 botan_api_rev = botan.botan_ffi_api_version()
 
-if botan_api_rev != expected_api_rev:
+if botan_api_rev < expected_api_rev:
     raise Exception("Bad botan API rev got %d expected %d" % (botan_api_rev, expected_api_rev))
 
 # Internal utilities
@@ -542,18 +542,35 @@ MCEIES encryption
 Must be used with McEliece keys
 """
 def mceies_encrypt(mce, rng, aead, pt, ad):
-    botan.botan_mceies_encrypt.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_char), c_size_t,
-                                           POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)]
+    botan.botan_mceies_encrypt.argtypes = [c_void_p, c_void_p, c_char_p,
+                                           POINTER(c_char), c_size_t,
+                                           POINTER(c_char), c_size_t,
+                                           POINTER(c_char), POINTER(c_size_t)]
 
+    #    rc = botan.botan_mceies_encrypt(mce.pubkey, rng.rng, aead,
+    #                                    pt, len(pt), ad, len(ad), ct, lct)
+    #    return rc
+    lpt = len(pt)
+    if sys.version_info[0] > 2:
+        pt = cast(pt, c_char_p)
     return _call_fn_returning_string(0, lambda b,bl:
-                                     botan.botan_mceies_encrypt(mce.pubkey, rng.rng, aead, pt, len(pt), ad, len(ad), b, bl))
+                                     botan.botan_mceies_encrypt(mce.pubkey, rng.rng, aead,
+                                                                pt, lpt,
+                                                                ad, len(ad),
+                                                                b, bl))
 
-def mceies_decrypt(mce, aead, pt, ad):
-    botan.botan_mceies_decrypt.argtypes = [c_void_p, c_char_p, POINTER(c_char), c_size_t,
-                                           POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)]
-
+def mceies_decrypt(mce, aead, ct, ad):
+    botan.botan_mceies_decrypt.argtypes = [c_void_p, c_char_p,
+                                           POINTER(c_char), c_size_t,
+                                           POINTER(c_char), c_size_t,
+                                           POINTER(c_char), POINTER(c_size_t)]
+    lct = len(ct)
+    if sys.version_info[0] > 2:
+        ct = cast(ct, c_char_p)
     return _call_fn_returning_string(0, lambda b,bl:
-                                     botan.botan_mceies_decrypt(mce.privkey, aead, pt, len(pt), ad, len(ad), b, bl))
+                                     botan.botan_mceies_decrypt(mce.privkey, aead,
+                                                                ct, lct,
+                                                                ad, len(ad), b, bl))
 
 class pk_op_key_agreement(object):
     def __init__(self, key, kdf):
@@ -695,7 +712,8 @@ def test():
     h.update('i'.encode('utf-8'))
     print("md5 hash: %s\n" % (hexlify(h.final())).decode('utf-8'))
 
-
+    
+    # =========== AEAD Symmetric Ciphers ===========
     gcm = cipher('AES-128/GCM')
     print("AES-128/GCM: default nonce=%d update_size=%d" %
           (gcm.default_nonce_length(), gcm.update_granularity()))
@@ -736,30 +754,44 @@ def test():
     print("OCB pt %s %d"   % (hexlify(pt).decode('utf-8'),  len(pt)))
     print("OCB de %s %d\n" % (hexlify(dec).decode('utf-8'), len(dec)))
 
+    
+    # =========== McEliece =============
+    # CANNOT RUN UNDER Python3 YET!
+    if sys.version_info[0] > 2:
+        print("McEliece tests cannot run under Python3 yet... Sorry!\n")
+    else:
+        mce_priv = private_key('mce', [2960,57], r)
+        mce_pub = mce_priv.get_public_key()
 
-    mce_priv = private_key('mce', [2960,57], r)
-    mce_pub = mce_priv.get_public_key()
+        mce_plaintext = 'mce plaintext'.encode('utf-8')
+        mce_ad = 'mce AD'
+        mce_ciphertext = mceies_encrypt(mce_pub, r, 'ChaCha20Poly1305',
+                                        mce_plaintext, mce_ad)
 
-    mce_plaintext = 'mce plaintext'
-    mce_ad = 'mce AD'
-    mce_ciphertext = mceies_encrypt(mce_pub, r, 'ChaCha20Poly1305', mce_plaintext, mce_ad)
+        print("mce: len(pt)=%d  len(ct)=%d" % ( len(mce_plaintext), len(mce_ciphertext) ) )
 
-    print "mce", len(mce_plaintext), len(mce_ciphertext)
+        mce_decrypt = mceies_decrypt(mce_priv, 'ChaCha20Poly1305',
+                                     mce_ciphertext,
+                                     mce_ad)
+        print("mce: plaintext    \'%s\'" % mce_plaintext)
+        print("mce: decrypted pt \'%s\'" % mce_decrypt.decode('utf-8'))
 
-    mce_decrypt = mceies_decrypt(mce_priv, 'ChaCha20Poly1305', mce_ciphertext, mce_ad)
+        print("mce_pub (len %d)  %s/SHA-1 fingerprint: %s\n(estimated strength %s bits)\n" %
+              (
+                  len(mce_pub.encoding()),
+                  mce_pub.algo_name().decode('utf-8'),
+                  mce_pub.fingerprint("SHA-1").decode('utf-8'),
+                  mce_pub.estimated_strength()
+              )
+        )
 
-    print("mce_pub %s/SHA-1 fingerprint: %s (estimated strength %s) (len %d)" %
-          (mce_pub.algo_name().decode('utf-8'), mce_pub.fingerprint("SHA-1").decode('utf-8'),
-           mce_pub.estimated_strength(), len(mce_pub.encoding())
-          )
-    )
-
+    # ============== RSA ==============
     rsapriv = private_key('rsa', 1536, r)
 
     rsapub = rsapriv.get_public_key()
 
     print("rsapub %s SHA-1 fingerprint: %s estimated strength %d len %d" %
-          (rsapub.algo_name().decode('utf-8'), rsapub.fingerprint("SHA-1").decode('utf-8'),
+          (rsapub.algo_name(), rsapub.fingerprint("SHA-1").decode('utf-8'),
            rsapub.estimated_strength(), len(rsapub.encoding())
           )
     )
@@ -790,47 +822,56 @@ def test():
 
     verify.update('mess of things'.encode('utf-8'))
     verify.update('age'.encode('utf-8'))
-    print("bad sig accepted? %s" % verify.check_signature(sig))
+    print("bad sig accepted?  %s" % verify.check_signature(sig))
 
     verify.update('message'.encode('utf-8'))
     print("good sig accepted? %s\n" % verify.check_signature(sig))
 
-    for dh_grps in ['secp256r1', 'curve25519']:
-        dh_grp = dh_grps.encode('utf-8')
-        dh_kdf = 'KDF2(SHA-384)'.encode('utf-8')
-        a_dh_priv = private_key('ecdh', dh_grp, r)
-        a_dh_pub = a_dh_priv.get_public_key()
+    if sys.version_info[0] > 2:
+        print("ECDH tests currently do not run under Python3, sorry!\n")
+    else:
+        for dh_grps in ['secp256r1', 'curve25519']:
+            dh_grp = dh_grps.encode('utf-8')
+            dh_kdf = 'KDF2(SHA-384)'.encode('utf-8')
+            a_dh_priv = private_key('ecdh', dh_grp, r)
+            a_dh_pub = a_dh_priv.get_public_key()
 
-        b_dh_priv = private_key('ecdh', dh_grp, r)
-        b_dh_pub = b_dh_priv.get_public_key()
+            b_dh_priv = private_key('ecdh', dh_grp, r)
+            b_dh_pub = b_dh_priv.get_public_key()
 
-        a_dh = pk_op_key_agreement(a_dh_priv, dh_kdf)
-        b_dh = pk_op_key_agreement(b_dh_priv, dh_kdf)
+            a_dh = pk_op_key_agreement(a_dh_priv, dh_kdf)
+            b_dh = pk_op_key_agreement(b_dh_priv, dh_kdf)
 
-        print("ecdh %s pubs:\n  %s\n  %s\n" %
-              (dh_grps,
-               hexlify(a_dh.public_value()).decode('utf-8'),
-               hexlify(b_dh.public_value()).decode('utf-8')))
 
-        a_key = a_dh.agree(b_dh.public_value(), 20, 'salt'.encode('utf-8'))
-        b_key = b_dh.agree(a_dh.public_value(), 20, 'salt'.encode('utf-8'))
+            print("ecdh %s pubs:\n  %s\n  %s\n" %
+                  (dh_grps,
+                   hexlify(a_dh.public_value()).decode('utf-8'),
+                   hexlify(b_dh.public_value()).decode('utf-8')))
+            
+            a_key = a_dh.agree(b_dh.public_value(), 20, 'salt'.encode('utf-8'))
+            b_key = b_dh.agree(a_dh.public_value(), 20, 'salt'.encode('utf-8'))
 
-        print("ecdh %s shared:\n  %s\n  %s\n" %
-              (dh_grps, hexlify(a_key).decode('utf-8'), hexlify(b_key).decode('utf-8')))
+            print("ecdh %s shared:\n  %s\n  %s\n" %
+                  (dh_grps, hexlify(a_key).decode('utf-8'), hexlify(b_key).decode('utf-8')))
 
-    cert = x509_cert("src/tests/data/ecc/CSCA.CSCA.csca-germany.1.crt")
-    print(cert.fingerprint("SHA-1"))
-    print("32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9")
+    # ========== X509 stuff ============
+    if sys.version_info[0] > 2:
+        print("Certificate parsing tests currently do not run under Python3, sorry!\n")
+    else:
+        print("CSCA (Germany) Certificate\nDetails:")
+        cert = x509_cert("src/tests/data/ecc/CSCA.CSCA.csca-germany.1.crt")
+        print("SHA-1 fingerprint: %s" % cert.fingerprint("SHA-1"))
+        print("Expected:          32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9\n")
 
-    print(cert.time_starts())
-    print(cert.time_expires())
+        print("Not before:        %s" % cert.time_starts())
+        print("Not after:         %s" % cert.time_expires())
 
-    print(hexlify(cert.serial_number()))
-    print(hexlify(cert.authority_key_id()))
-    print(hexlify(cert.subject_key_id()))
-    print(hexlify(cert.subject_public_key_bits()))
+        print("Serial number:     %s" % hexlify(cert.serial_number()))
+        print("Subject   Key ID:  %s" % hexlify(cert.subject_key_id()))
+        print("Authority Key ID:  %s\n" % hexlify(cert.authority_key_id()))
+        print("Public key bits:\n%s\n"    % hexlify(cert.subject_public_key_bits()))
 
-    print(cert.to_string())
+        print(cert.to_string())
 
     return
 
