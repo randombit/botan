@@ -748,16 +748,6 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
      ``TLS_V10``, ``TLS_V11``, ``TLS_V12``, ``DTLS_V10``, ``DTLS_V12``
 
- .. cpp:function:: static Protocol_Version latest_tls_version()
-
-      Returns the latest version of TLS supported by this implementation
-      (currently TLS v1.2)
-
- .. cpp:function:: static Protocol_Version latest_dtls_version()
-
-      Returns the latest version of DTLS supported by this implementation
-      (currently DTLS v1.2)
-
  .. cpp:function:: Protocol_Version(Version_Code named_version)
 
       Create a specific version
