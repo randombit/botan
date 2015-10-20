@@ -300,7 +300,6 @@ set(BOTAN_SRC
     utils/parsing.cpp
     utils/read_cfg.cpp
     utils/semaphore.cpp
-    utils/ta_utils.cpp
     utils/version.cpp
     utils/zero_mem.cpp
 )
