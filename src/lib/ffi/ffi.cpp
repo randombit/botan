@@ -429,6 +429,16 @@ int botan_cipher_clear(botan_cipher_t cipher)
    return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, { cipher.clear(); });
    }
 
+int botan_cipher_query_keylen(botan_cipher_t cipher,
+                              size_t* out_minimum_keylength,
+                              size_t* out_maximum_keylength)
+   {
+   return BOTAN_FFI_DO(Botan::Cipher_Mode, cipher, {
+      *out_minimum_keylength = cipher.key_spec().minimum_keylength();
+      *out_maximum_keylength = cipher.key_spec().maximum_keylength();
+      });
+   }
+
 int botan_cipher_set_key(botan_cipher_t cipher,
                          const uint8_t* key, size_t key_len)
    {
