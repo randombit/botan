@@ -5,10 +5,14 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/build.h>
+
+#if defined(BOTAN_HAS_OPENSSL)
+
 #include <botan/internal/openssl.h>
 #include <openssl/x509.h>
 
-#if defined(BOTAN_HAS_ECDSA) && !defined(OPENSSL_NO_ECDSA)
+#if !defined(OPENSSL_NO_ECDSA)
 
 #include <botan/der_enc.h>
 #include <botan/ecdsa.h>
@@ -204,4 +208,6 @@ BOTAN_REGISTER_TYPE(PK_Ops::Signature, OpenSSL_ECDSA_Signing_Operation, "ECDSA",
 
 }
 
-#endif // BOTAN_HAS_ECDSA && !OPENSSL_NO_ECDSA
+#endif
+
+#endif

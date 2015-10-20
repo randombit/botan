@@ -34,8 +34,8 @@ size_t ecdsa_sig_kat(const std::string& group_id,
 
    const std::string padding = "EMSA1(" + hash + ")";
 
-   PK_Verifier verify(ecdsa, padding);
-   PK_Signer sign(ecdsa, padding);
+   PK_Verifier verify(ecdsa, padding, IEEE_1363, "base");
+   PK_Signer sign(ecdsa, padding, IEEE_1363, "base");
 
    return validate_signature(verify, sign, "ECDSA/" + group_id + "/" + hash,
                              msg, rng, signature);

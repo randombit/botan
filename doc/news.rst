@@ -4,6 +4,23 @@ Release Notes
 Version 1.11.22, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* The routines for decoding PKCS #1 encryption and OAEP blocks have been
+  rewritten to run without secret indexes or branches. These cryptographic
+  operations are vulnerable to oracle attacks, including via side channels such
+  as timing or cache-based analysis. In theory it would be possible to attack
+  the previous implementations using such a side channel, which could allow
+  an attacker to mount a plaintext recovery attack.
+
+  By writing the code such that it does not depend on secret inputs for branch
+  or memory indexes, such a side channel would be much less likely to exist.
+
+* Add support for using ctgrind (https://github.com/agl/ctgrind) to test that
+  sections of code do not use secret inputs to decide branches or memory indexes.
+  The testing relies on dynamic checking using valgrind.
+
+  So far PKCS #1 decoding, OAEP decoding, IDEA, and Curve25519 have been notated
+  and confirmed to be constant time.
+
 * Public key operations can now be used with specified providers by passing an
   additional parameter to the constructor of the PK operation.
 
