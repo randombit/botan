@@ -194,19 +194,20 @@ TLS Clients
 
 .. cpp:class:: TLS::Client
 
-   .. cpp:function:: TLS::Client( \
-                     output_fn output, \
-                     data_cb data, \
-                     alert_cb alert, \
-                     handshake_cb handshake_complete, \
-                     TLS::Session_Manager& session_manager, \
-                     Credentials_Manager& credendials_manager, \
-                     const TLS::Policy& policy, \
-                     RandomNumberGenerator& rng, \
-                     const Server_Information& server_info, \
-                     const Protocol_Version offer_version, \
-                     const std::vector<std::string>& app_protocols,
-                     size_t reserved_io_buffer_size)
+   .. cpp:function:: Client( \
+         output_fn out, \
+         data_cb app_data_cb, \
+         alert_cb alert_cb, \
+         handshake_cb hs_cb, \
+         Session_Manager& session_manager, \
+         Credentials_Manager& creds, \
+         const Policy& policy, \
+         RandomNumberGenerator& rng, \
+         const Server_Information& server_info = Server_Information(), \
+         const Protocol_Version offer_version = Protocol_Version::latest_tls_version(), \
+         const std::vector<std::string>& next_protocols = {}, \
+         size_t reserved_io_buffer_size = 16*1024 \
+         )
 
    Initialize a new TLS client. The constructor will immediately
    initiate a new session.
