@@ -25,7 +25,7 @@ else:
 expected_api_rev = 20151015
 botan_api_rev = botan.botan_ffi_api_version()
 
-if botan_api_rev < expected_api_rev:
+if botan_api_rev != expected_api_rev:
     raise Exception("Bad botan API rev got %d expected %d" % (botan_api_rev, expected_api_rev))
 
 # Internal utilities
