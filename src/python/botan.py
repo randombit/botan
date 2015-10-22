@@ -710,13 +710,13 @@ def test():
             key = rng().get(kmax)
             pt = rng().get(21)
 
-            print("  plaintext %s %d"   % (hex_encode(pt), len(pt)))
+            print("  plaintext %s (%d)"   % (hex_encode(pt), len(pt)))
 
             enc.set_key(key)
             enc.start(iv)
             assert len(enc.update('')) == 0
             ct = enc.finish(pt)
-            print("  ciphertext %s %d" % (hex_encode(ct), len(ct)))
+            print("  ciphertext %s (%d)" % (hex_encode(ct), len(ct)))
 
             dec = cipher(mode, encrypt=False)
             dec.set_key(key)
@@ -734,11 +734,11 @@ def test():
         mce_ad = 'mce AD'
         mce_ciphertext = mceies_encrypt(mce_pub, rng(), 'ChaCha20Poly1305', mce_plaintext, mce_ad)
 
-        print("mce", len(mce_plaintext), len(mce_ciphertext))
+        print("mceies len(pt)=%d  len(ct)=%d", (len(mce_plaintext), len(mce_ciphertext)))
 
         mce_decrypt = mceies_decrypt(mce_priv, 'ChaCha20Poly1305', mce_ciphertext, mce_ad)
 
-        print("mce_pub %s/SHA-1 fingerprint: %s (estimated strength %s) (len %d)" %
+        print("mce_pub %s/SHA-1 fingerprint: %s\nEstimated strength %s bits (len %d)\n" %
               (mce_pub.algo_name(), mce_pub.fingerprint("SHA-1"),
                mce_pub.estimated_strength(), len(mce_pub.encoding())
               )
@@ -746,10 +746,9 @@ def test():
 
     def test_rsa():
         rsapriv = private_key('rsa', 1536, rng())
-
         rsapub = rsapriv.get_public_key()
 
-        print("rsapub %s SHA-1 fingerprint: %s estimated strength %d len %d" %
+        print("rsapub %s SHA-1 fingerprint: %s estimated strength %d (len %d)" %
               (rsapub.algo_name(), rsapub.fingerprint("SHA-1"),
                rsapub.estimated_strength(), len(rsapub.encoding())
               )
@@ -781,7 +780,7 @@ def test():
 
         verify.update('mess of things')
         verify.update('age')
-        print("bad sig accepted? %s" % verify.check_signature(sig))
+        print("bad sig accepted?  %s" % verify.check_signature(sig))
 
         verify.update('message')
         print("good sig accepted? %s\n" % verify.check_signature(sig))
@@ -819,16 +818,17 @@ def test():
 
     def test_certs():
         cert = x509_cert("src/tests/data/ecc/CSCA.CSCA.csca-germany.1.crt")
-        print(cert.fingerprint("SHA-1"))
-        print("32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9")
+        print("CSCA (Germany) Certificate\nDetails:")
+        print("SHA-1 fingerprint: %s" % cert.fingerprint("SHA-1"))
+        print("Expected:          32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9")
 
-        print(cert.time_starts())
-        print(cert.time_expires())
+        print("Not before:        %s" % cert.time_starts())
+        print("Not after:         %s" % cert.time_expires())
 
-        print(hex_encode(cert.serial_number()))
-        print(hex_encode(cert.authority_key_id()))
-        print(hex_encode(cert.subject_key_id()))
-        print(hex_encode(cert.subject_public_key_bits()))
+        print("Serial number:     %s" % hex_encode(cert.serial_number()))
+        print("Authority Key ID:  %s" % hex_encode(cert.authority_key_id()))
+        print("Subject   Key ID:  %s" % hex_encode(cert.subject_key_id()))
+        print("Public key bits:\n%s\n" % hex_encode(cert.subject_public_key_bits()))
 
         print(cert.to_string())
 
