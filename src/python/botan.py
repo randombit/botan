@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 
-"""
-Python wrapper of the botan crypto library
+"""Python wrapper of the botan crypto library
 http://botan.randombit.net
 
 (C) 2015 Jack Lloyd
 (C) 2015 Uri  Blumenthal (extensions and patches)
 
 Botan is released under the Simplified BSD License (see license.txt)
+
+This module uses the ctypes module and is usable by programs running
+under at least CPython 2.7, CPython 3.4 and 3.5, or PyPy.
+
+It uses botan's ffi module, which exposes a C API. Right now the C API
+is versioned but as it is still in evolution, no provisions are made
+for handling more than a single API version in this module. So this
+module should be used only with the library version it accompanied.
 """
 
 import sys
@@ -80,7 +87,7 @@ def hex_encode(buf):
     return hexlify(buf).decode('ascii')
 
 def hex_decode(buf):
-    return unhexlify(buf)
+    return unhexlify(buf.encode('ascii'))
 
 """
 Versions
@@ -279,7 +286,7 @@ class cipher(object):
 
         botan.botan_cipher_update(self.cipher, flags,
                                   out, out_sz, byref(out_written),
-                                  cast(inp, c_char_p), inp_sz, byref(inp_consumed))
+                                  _ctype_bits(inp), inp_sz, byref(inp_consumed))
 
         # buffering not supported yet
         assert inp_consumed.value == inp_sz.value
@@ -642,8 +649,10 @@ Tests and examples
 def test():
 
     def test_version():
+
         print("\n%s" % version_string())
         print("v%d.%d.%d\n" % (version_major(), version_minor(), version_patch()))
+        print("\nPython %s\n" % sys.version.replace('\n', ' '))
 
     def test_kdf():
         print("KDF2(SHA-1)   %s" %
