@@ -87,7 +87,7 @@ def hex_encode(buf):
     return hexlify(buf).decode('ascii')
 
 def hex_decode(buf):
-    return unhexlify(buf)
+    return unhexlify(buf.encode('ascii'))
 
 """
 Versions
