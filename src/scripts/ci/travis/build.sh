@@ -60,4 +60,12 @@ if [ "$MODULES" != "min" ] && [ "${TARGETOS:0:3}" != "ios" ]; then
     ./botan-test
 fi
 
+if [ "$MODULES" != "min" ] && [ "$BUILD_MODE" = "shared" ] && [ "$TARGETOS" = "desktop" ]
+then
+    python2 --version
+    python3 --version
+    LD_LIBRARY_PATH=. python2 src/python/botan.py
+    LD_LIBRARY_PATH=. python3 src/python/botan.py
+fi
+
 make install
