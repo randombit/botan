@@ -747,8 +747,13 @@ def test():
 
         mce_decrypt = mceies_decrypt(mce_priv, 'ChaCha20Poly1305', mce_ciphertext, mce_ad)
         print("  mceies plaintext  \'%s\' (%d)" % (mce_plaintext, len(mce_plaintext)))
-        # Since mceies_decrypt() returns bytes in Python3, need .decode('utf-8') to
-        # convert it to a text string (Unicode)
+        
+        # Since mceies_decrypt() returns bytes in Python3, the following line
+        # needs .decode('utf-8') to convert mce_decrypt from bytes to a
+        # text string (Unicode).
+        # You don't need to add .decode() if
+        # (a) your expected output is bytes rather than a text string, or
+        # (b) you are using Python2 rather than Python3.
         print("  mceies decrypted  \'%s\' (%d)" % (mce_decrypt.decode('utf-8'), len(mce_decrypt)))
 
         print("mce_pub %s/SHA-1 fingerprint: %s\nEstimated strength %s bits (len %d)\n" %
