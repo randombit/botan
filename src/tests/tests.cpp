@@ -38,10 +38,10 @@ size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std:
    try
       {
       auto files = get_files_recursive(dir);
-      
+
       if (files.empty())
          std::cout << "Warning: No test files found in '" << dir << "'" << std::endl;
-      
+
       for(const auto file: files)
          fails += fn(file);
       }
@@ -312,6 +312,7 @@ int main(int argc, char* argv[])
    DEF_TEST(pk_keygen);
    DEF_TEST(cvc);
    DEF_TEST(x509);
+   DEF_TEST(x509_x509test);
    DEF_TEST(nist_x509);
    DEF_TEST(tls);
    DEF_TEST(compression);

@@ -1,6 +1,6 @@
 /*
 * Various string utils and parsing functions
-* (C) 1999-2007,2013,2014 Jack Lloyd
+* (C) 1999-2007,2013,2014,2015 Jack Lloyd
 * (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -331,6 +331,27 @@ std::string replace_char(const std::string& str, char from_char, char to_char)
          out[i] = to_char;
 
    return out;
+   }
+
+bool host_wildcard_match(const std::string& issued, const std::string& host)
+   {
+   if(issued == host)
+      return true;
+
+   if(issued.size() > 2 && issued[0] == '*' && issued[1] == '.')
+      {
+      size_t host_i = host.find('.');
+      if(host_i == std::string::npos || host_i == host.size() - 1)
+         return false;
+
+      const std::string host_base = host.substr(host_i + 1);
+      const std::string issued_base = issued.substr(2);
+
+      if(host_base == issued_base)
+         return true;
+         }
+
+   return false;
    }
 
 }

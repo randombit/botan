@@ -1,0 +1,41 @@
+InvalidExtendedKeyUsage.pem:Invalid usage
+InvalidIntCAFlag.pem:CA certificate not allowed to issue certs
+InvalidIntCAKeyUsage.pem:CA certificate not allowed to issue certs
+InvalidIntCALen.pem:Certificate chain too long
+InvalidIntCALoop.pem:Loop in certificate chain
+InvalidIntCASelfSign.pem:Cannot establish trust
+InvalidIntCAVersionOne.pem:CA certificate not allowed to issue certs
+InvalidIntCAVersionTwo.pem:CA certificate not allowed to issue certs
+InvalidKeyUsage.pem:Invalid usage
+InvalidName.pem:Certificate does not match provided name
+InvalidNameAltName.pem:Certificate does not match provided name
+InvalidNameAltNameWithSubj.pem:Certificate does not match provided name
+InvalidNotAfter.pem:Certificate has expired
+InvalidNotAfterChained.pem:Certificate has expired
+InvalidNotBefore.pem:Certificate is not yet valid
+InvalidNotBeforeChained.pem:Certificate is not yet valid
+InvalidSelfSign.pem:Cannot establish trust
+InvalidWildcardAll.pem:Certificate does not match provided name
+InvalidWildcardAllAltName.pem:Certificate does not match provided name
+InvalidWildcardLeft.pem:Certificate does not match provided name
+InvalidWildcardLeftAltName.pem:Certificate does not match provided name
+InvalidWildcardMid.pem:Certificate does not match provided name
+InvalidWildcardMidAltName.pem:Certificate does not match provided name
+InvalidWildcardMidMixed.pem:Certificate does not match provided name
+InvalidWildcardMidMixedAltName.pem:Certificate does not match provided name
+InvalidWildcardSingle.pem:Certificate does not match provided name
+InvalidWildcardSingleAltName.pem:Certificate does not match provided name
+MissingIntCABasicConstraintWithCertSign.pem:CA certificate not allowed to issue certs
+MissingIntCAExtensions.pem:CA certificate not allowed to issue certs
+ValidAltName.pem:Verified
+ValidCert.pem:Verified
+ValidChained.pem:Verified
+ValidIntCALen.pem:Verified
+ValidWildcard.pem:Verified
+
+# Missing name constraints
+InvalidNameConstraintExclude.pem:Certificate issuer not found
+InvalidNameConstraintPermit.pem:Certificate issuer not found
+InvalidNameConstraintPermitRight.pem:Certificate issuer not found
+InvalidNameConstraintPermitThenExclude.pem:Certificate issuer not found
+ValidNameConstraint.pem:Certificate issuer not found
