@@ -420,8 +420,8 @@ crecip(felem out, const felem z) {
 int
 curve25519_donna(u8 *mypublic, const u8 *secret, const u8 *basepoint) {
 
-  BOTAN_CONST_TIME_POISON(secret, 32);
-  BOTAN_CONST_TIME_POISON(basepoint, 32);
+  CT::poison(secret, 32);
+  CT::poison(basepoint, 32);
 
   limb bp[5], x[5], z[5], zmone[5];
   uint8_t e[32];
@@ -438,9 +438,9 @@ curve25519_donna(u8 *mypublic, const u8 *secret, const u8 *basepoint) {
   fmul(z, x, zmone);
   fcontract(mypublic, z);
 
-  BOTAN_CONST_TIME_UNPOISON(secret, 32);
-  BOTAN_CONST_TIME_UNPOISON(basepoint, 32);
-  BOTAN_CONST_TIME_UNPOISON(mypublic, 32);
+  CT::unpoison(secret, 32);
+  CT::unpoison(basepoint, 32);
+  CT::unpoison(mypublic, 32);
   return 0;
 }
 

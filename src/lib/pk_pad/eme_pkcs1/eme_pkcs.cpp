@@ -44,29 +44,29 @@ secure_vector<byte> EME_PKCS1v15::unpad(const byte in[], size_t inlen,
    if(inlen != key_len / 8 || inlen < 10)
       throw Decoding_Error("PKCS1::unpad");
 
-   BOTAN_CONST_TIME_POISON(in, inlen);
+   CT::poison(in, inlen);
 
    byte bad_input_m = 0;
    byte seen_zero_m = 0;
    size_t delim_idx = 0;
 
-   bad_input_m |= ~ct_is_equal_8(in[0], 2);
+   bad_input_m |= ~CT::is_equal<byte>(in[0], 2);
 
    for(size_t i = 1; i != inlen; ++i)
       {
-      const byte is_zero_m = ct_is_zero_8(in[i]);
+      const byte is_zero_m = CT::is_zero<byte>(in[i]);
 
-      delim_idx += ct_select_mask_8(~seen_zero_m, 1, 0);
+      delim_idx += CT::select<byte>(~seen_zero_m, 1, 0);
 
-      bad_input_m |= is_zero_m & ct_expand_mask_8(i < 9);
+      bad_input_m |= is_zero_m & CT::expand_mask<byte>(i < 9);
       seen_zero_m |= is_zero_m;
       }
 
    bad_input_m |= ~seen_zero_m;
 
-   BOTAN_CONST_TIME_UNPOISON(in, inlen);
-   BOTAN_CONST_TIME_UNPOISON(&bad_input_m, sizeof(bad_input_m));
-   BOTAN_CONST_TIME_UNPOISON(&delim_idx, sizeof(delim_idx));
+   CT::unpoison(in, inlen);
+   CT::unpoison(&bad_input_m, 1);
+   CT::unpoison(&delim_idx, 1);
 
    if(bad_input_m)
       throw Decoding_Error("Invalid PKCS #1 v1.5 encryption padding");

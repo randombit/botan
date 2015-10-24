@@ -14,12 +14,16 @@ Version 1.11.22, Not Yet Released
   By writing the code such that it does not depend on secret inputs for branch
   or memory indexes, such a side channel would be much less likely to exist.
 
+  The OAEP code has previously made an attempt at constant time operation, but
+  it used a construct which many compilers converted into a conditional jump.
+
 * Add support for using ctgrind (https://github.com/agl/ctgrind) to test that
   sections of code do not use secret inputs to decide branches or memory indexes.
   The testing relies on dynamic checking using valgrind.
 
-  So far PKCS #1 decoding, OAEP decoding, IDEA, and Curve25519 have been notated
-  and confirmed to be constant time.
+  So far PKCS #1 decoding, OAEP decoding, Montgomery reduction, IDEA, and
+  Curve25519 have been notated and confirmed to be constant time on Linux/x86-64
+  when compiled by gcc.
 
 * Public key operations can now be used with specified providers by passing an
   additional parameter to the constructor of the PK operation.
