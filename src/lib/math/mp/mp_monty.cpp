@@ -9,6 +9,7 @@
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_madd.h>
 #include <botan/internal/mp_asmi.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/mem_ops.h>
 
 namespace Botan {
@@ -21,6 +22,10 @@ void bigint_monty_redc(word z[],
                        word p_dash, word ws[])
    {
    const size_t z_size = 2*(p_size+1);
+
+   CT::poison(z, z_size);
+   CT::poison(p, p_size);
+   CT::poison(ws, 2*(p_size+1));
 
    const size_t blocks_of_8 = p_size - (p_size % 8);
 
@@ -47,10 +52,10 @@ void bigint_monty_redc(word z[],
       carry = (z_sum < z_i[p_size]);
       z_i[p_size] = z_sum;
 
-      for(size_t j = p_size + 1; carry && j != z_size - i; ++j)
+      for(size_t j = p_size + 1; j < z_size - i; ++j)
          {
-         ++z_i[j];
-         carry = !z_i[j];
+         z_i[j] += carry;
+         carry = carry & !z_i[j];
          }
       }
 
@@ -73,12 +78,18 @@ void bigint_monty_redc(word z[],
 
    ws[p_size] = word_sub(z[p_size+p_size], 0, &borrow);
 
-   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow");
-
    copy_mem(ws + p_size + 1, z + p_size, p_size + 1);
 
-   copy_mem(z, ws + borrow*(p_size+1), p_size + 1);
+   CT::conditional_copy_mem(borrow, z, ws + (p_size + 1), ws, (p_size + 1));
    clear_mem(z + p_size + 1, z_size - p_size - 1);
+
+   CT::unpoison(z, z_size);
+   CT::unpoison(p, p_size);
+   CT::unpoison(ws, 2*(p_size+1));
+
+   // This check comes after we've used it but that's ok here
+   CT::unpoison(&borrow, 1);
+   BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow");
    }
 
 void bigint_monty_mul(word z[], size_t z_size,
