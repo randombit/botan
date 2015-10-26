@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 1.11.22, 2015-10-26
+Version 1.11.23, 2015-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * CVE-2015-7824: An information leak allowed padding oracle attacks against
@@ -61,6 +61,11 @@ Version 1.11.22, 2015-10-26
 
 * The `configure.py` option `--no-autoload` is now also available
   under the more understandable name `--minimized-build`.
+
+* Note: 1.11.22 was briefly released on 2015-10-26. The only difference between
+  the two was a fix for a compilation problem in the OpenSSL RSA code.  As the
+  1.11.22 release had already been tagged it was simpler to immediately release
+  1.11.23 rather than redo the release.
 
 Version 1.11.21, 2015-10-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
