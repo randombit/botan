@@ -165,6 +165,7 @@ size_t test_ecdsa_unit();
 size_t test_ecdh_unit();
 
 size_t test_x509();
+size_t test_x509_x509test();
 size_t test_cvc();
 
 size_t test_tls();
