@@ -131,9 +131,9 @@ void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
 */
 void idea_op_8(const byte in[64], byte out[64], const u16bit EK[52])
    {
-   BOTAN_CONST_TIME_POISON(in, 64);
-   BOTAN_CONST_TIME_POISON(out, 64);
-   BOTAN_CONST_TIME_POISON(EK, 52*2);
+   CT::poison(in, 64);
+   CT::poison(out, 64);
+   CT::poison(EK, 52);
 
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
 
@@ -195,9 +195,9 @@ void idea_op_8(const byte in[64], byte out[64], const u16bit EK[52])
    _mm_storeu_si128(out_mm + 2, B1);
    _mm_storeu_si128(out_mm + 3, B3);
 
-   BOTAN_CONST_TIME_UNPOISON(in, 64);
-   BOTAN_CONST_TIME_UNPOISON(out, 64);
-   BOTAN_CONST_TIME_UNPOISON(EK, 52*2);
+   CT::unpoison(in, 64);
+   CT::unpoison(out, 64);
+   CT::unpoison(EK, 52);
    }
 
 }

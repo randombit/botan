@@ -84,7 +84,7 @@ secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
    secure_vector<byte> input(key_length);
    buffer_insert(input, key_length - in_length, in, in_length);
 
-   BOTAN_CONST_TIME_POISON(input.data(), input.size());
+   CT::poison(input.data(), input.size());
 
    const size_t hlen = m_Phash.size();
 
@@ -102,25 +102,25 @@ secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
 
    for(size_t i = delim_idx; i < input.size(); ++i)
       {
-      const byte zero_m = ct_is_zero_8(input[i]);
-      const byte one_m = ct_is_equal_8(input[i], 1);
+      const byte zero_m = CT::is_zero<byte>(input[i]);
+      const byte one_m = CT::is_equal<byte>(input[i], 1);
 
       const byte add_m = waiting_for_delim & zero_m;
 
       bad_input |= waiting_for_delim & ~(zero_m | one_m);
 
-      delim_idx += ct_select_mask_8(add_m, 1, 0);
+      delim_idx += CT::select<byte>(add_m, 1, 0);
 
       waiting_for_delim &= zero_m;
       }
 
    // If we never saw any non-zero byte, then it's not valid input
    bad_input |= waiting_for_delim;
-   bad_input |= ct_expand_mask_8(!same_mem(&input[hlen], m_Phash.data(), hlen));
+   bad_input |= CT::expand_mask<byte>(!same_mem(&input[hlen], m_Phash.data(), hlen));
 
-   BOTAN_CONST_TIME_UNPOISON(input.data(), input.size());
-   BOTAN_CONST_TIME_UNPOISON(&bad_input, sizeof(bad_input));
-   BOTAN_CONST_TIME_UNPOISON(&delim_idx, sizeof(delim_idx));
+   CT::unpoison(input.data(), input.size());
+   CT::unpoison(&bad_input, 1);
+   CT::unpoison(&delim_idx, 1);
 
    if(bad_input)
       throw Decoding_Error("Invalid OAEP encoding");
