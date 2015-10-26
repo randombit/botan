@@ -1,5 +1,5 @@
 # Where ./configure.py puts them
-set(INCLUDE_DIR "../../build/include")
+set(INCLUDE_DIR "${CMAKE_SOURCE_DIR}/build/include")
 include_directories(${INCLUDE_DIR})
 
 # libbotan
