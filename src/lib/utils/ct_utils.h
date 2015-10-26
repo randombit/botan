@@ -138,6 +138,22 @@ inline T min(T a, T b)
    return select(expand_top_bit(b), b, a);
    }
 
+template<typename T, typename Alloc>
+std::vector<T, Alloc> strip_leading_zeros(const std::vector<T, Alloc>& input)
+   {
+   size_t leading_zeros = 0;
+
+   uint8_t only_zeros = 0xFF;
+
+   for(size_t i = 0; i != input.size(); ++i)
+      {
+      only_zeros &= CT::is_zero(input[i]);
+      leading_zeros += CT::select<uint8_t>(only_zeros, 1, 0);
+      }
+
+   return secure_vector<byte>(input.begin() + leading_zeros, input.end());
+   }
+
 }
 
 }
