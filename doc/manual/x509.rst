@@ -20,13 +20,13 @@ in the :doc:`tls` protocol. A X.509 certificate is represented by
 
      Returns the public key of the subject
 
+ .. cpp:function:: X509_DN issuer_dn() const
+
+     Returns the distinguished name (DN) of the certificate's issuer
+
  .. cpp:function:: X509_DN subject_dn() const
 
-     Returns the distinguished name of the issuer
-
- .. cpp:function:: X509_DN subject_dn() const
-
-     Returns the distinguished name of the issuer
+     Returns the distinguished name (DN) of the certificate's subject
 
  .. cpp:function:: std::string start_time() const
 

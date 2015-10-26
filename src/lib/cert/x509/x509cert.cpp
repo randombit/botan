@@ -310,9 +310,6 @@ std::vector<byte> X509_Certificate::serial_number() const
    return subject.get1_memvec("X509.Certificate.serial");
    }
 
-/*
-* Return the distinguished name of the issuer
-*/
 X509_DN X509_Certificate::issuer_dn() const
    {
    return create_dn(issuer);
@@ -323,9 +320,6 @@ std::vector<byte> X509_Certificate::raw_issuer_dn() const
    return issuer.get1_memvec("X509.Certificate.dn_bits");
    }
 
-/*
-* Return the distinguished name of the subject
-*/
 X509_DN X509_Certificate::subject_dn() const
    {
    return create_dn(subject);

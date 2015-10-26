@@ -194,19 +194,20 @@ TLS Clients
 
 .. cpp:class:: TLS::Client
 
-   .. cpp:function:: TLS::Client( \
-                     output_fn output, \
-                     data_cb data, \
-                     alert_cb alert, \
-                     handshake_cb handshake_complete, \
-                     TLS::Session_Manager& session_manager, \
-                     Credentials_Manager& credendials_manager, \
-                     const TLS::Policy& policy, \
-                     RandomNumberGenerator& rng, \
-                     const Server_Information& server_info, \
-                     const Protocol_Version offer_version, \
-                     const std::vector<std::string>& app_protocols,
-                     size_t reserved_io_buffer_size)
+   .. cpp:function:: Client( \
+         output_fn out, \
+         data_cb app_data_cb, \
+         alert_cb alert_cb, \
+         handshake_cb hs_cb, \
+         Session_Manager& session_manager, \
+         Credentials_Manager& creds, \
+         const Policy& policy, \
+         RandomNumberGenerator& rng, \
+         const Server_Information& server_info = Server_Information(), \
+         const Protocol_Version offer_version = Protocol_Version::latest_tls_version(), \
+         const std::vector<std::string>& next_protocols = {}, \
+         size_t reserved_io_buffer_size = 16*1024 \
+         )
 
    Initialize a new TLS client. The constructor will immediately
    initiate a new session.
@@ -284,20 +285,21 @@ TLS Servers
 
 .. cpp:class:: TLS::Server
 
-   .. cpp:function:: TLS::Server( \
-          std::function<void, const byte*, size_t> output_fn, \
-          std::function<void, const byte*, size_t> data_cb, \
-          std::function<TLS::Alert, const byte*, size_t> alert_cb, \
-          TLS::Session_Manager& session_manager, \
-          Credentials_Manager& creds, \
-          const TLS::Policy& policy, \
-          RandomNumberGenerator& rng, \
-          std::function<std::string, std::vector<std::string> > proto_chooser,
-          const std::vector<std::string>& protocols, \
-          bool is_datagram = false, \
-          bool reserved_io_buffer_size)
+   .. cpp:function:: Server( \
+         output_fn output, \
+         data_cb data_cb, \
+         alert_cb alert_cb, \
+         handshake_cb handshake_cb, \
+         Session_Manager& session_manager, \
+         Credentials_Manager& creds, \
+         const Policy& policy, \
+         RandomNumberGenerator& rng, \
+         next_protocol_fn next_proto = next_protocol_fn(), \
+         bool is_datagram = false, \
+         size_t reserved_io_buffer_size = 16*1024 \
+         )
 
-The first 7 arguments as well as the final argument
+The first 8 arguments as well as the final argument
 *reserved_io_buffer_size*, are treated similiarly to the :ref:`client
 <tls_client>`.
 
@@ -742,19 +744,9 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
 .. cpp:class:: TLS::Protocol_Version
 
- .. cpp:type:: enum Version_Code
+ .. cpp:enum:: Version_Code
 
      ``TLS_V10``, ``TLS_V11``, ``TLS_V12``, ``DTLS_V10``, ``DTLS_V12``
-
- .. cpp:function:: static Protocol_Version latest_tls_version()
-
-      Returns the latest version of TLS supported by this implementation
-      (currently TLS v1.2)
-
- .. cpp:function:: static Protocol_Version latest_dtls_version()
-
-      Returns the latest version of DTLS supported by this implementation
-      (currently DTLS v1.2)
 
  .. cpp:function:: Protocol_Version(Version_Code named_version)
 

@@ -37,13 +37,13 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::vector<byte> subject_public_key_bits() const;
 
       /**
-      * Get the issuer certificate DN.
+      * Get the certificate's issuer distinguished name (DN).
       * @return issuer DN of this certificate
       */
       X509_DN issuer_dn() const;
 
       /**
-      * Get the subject certificate DN.
+      * Get the certificate's subject distinguished name (DN).
       * @return subject DN of this certificate
       */
       X509_DN subject_dn() const;
