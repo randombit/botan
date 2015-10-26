@@ -316,13 +316,17 @@ set_source_files_properties(block/aes_ssse3/aes_ssse3.cpp PROPERTIES COMPILE_FLA
 set_source_files_properties(block/aes_ni/aes_ni.cpp        PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
 set_source_files_properties(modes/aead/gcm/clmul/clmul.cpp PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
 
-find_package( LZMA )
-if ( LZMA_FOUND )
-    include_directories(${LZMA_INCLUDE_DIR})
-    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${LZMA_LIBRARIES})
-    set(BOTAN_SRC ${BOTAN_SRC}
-        compression/lzma/lzma.cpp)
-endif( LZMA_FOUND )
+if ( WITH_LZMA )
+    find_package( LZMA )
+    if ( LZMA_FOUND )
+        include_directories(${LZMA_INCLUDE_DIR})
+        set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${LZMA_LIBRARIES})
+        set(BOTAN_SRC ${BOTAN_SRC}
+            compression/lzma/lzma.cpp)
+    endif( LZMA_FOUND )
+endif ( WITH_LZMA )
+add_custom_command(TARGET Botan-help
+    COMMAND echo "  To build with lzma support use: cmake -DWITH_LZMA=1")
 
 if ( WITH_BZIP2 )
     find_package( BZip2 )
