@@ -773,12 +773,9 @@ class CompilerInfo(object):
                         'add_lib_dir_option': '-L',
                         'add_lib_option': '-l',
                         'add_framework_option': '-framework ',
-                        'compile_flags_release': '',
-                        'compile_flags_debug': '',
-                        'lib_opt_flags_release': '',
-                        'lib_opt_flags_debug': '',
-                        'app_opt_flags_release': '',
-                        'app_opt_flags_debug': '',
+                        'compile_flags': '',
+                        'debug_info_flags': '',
+                        'optimization_flags': '',
                         'coverage_flags': '',
                         'sanitizer_flags': '',
                         'shared_flags': '',
@@ -872,33 +869,23 @@ class CompilerInfo(object):
 
         return ' ' + abi_flags
 
-    """
-    Return the optimization flags to use
-    """
-    def opt_flags(self, who, options):
+    def cc_warning_flags(self, options):
         def gen_flags():
-            if options.build_mode in ['debug', 'coverage']:
-                yield self.compile_flags_debug
-            else:
-                yield self.compile_flags_release
+            yield self.warning_flags
+            if options.maintainer_mode:
+                yield self.maintainer_warning_flags
 
-            if options.no_optimizations or options.build_mode == 'coverage':
-                return
+        return (' '.join(gen_flags())).strip()
 
-            if who == 'app':
-                if options.build_mode == 'release':
-                    yield self.app_opt_flags_release
-                else:
-                    yield self.app_opt_flags_debug
-                return
-            elif who == 'lib':
-                if options.build_mode == 'release':
-                    yield self.lib_opt_flags_release
-                else:
-                    yield self.lib_opt_flags_debug
-                return
-            else:
-                raise Exception("Invalid value of parameter 'who'.")
+    def cc_compile_flags(self, options):
+        def gen_flags():
+            yield self.lang_flags
+
+            if options.build_mode in ['debug', 'coverage', 'analyzer']:
+                yield self.debug_info_flags
+
+            if not options.no_optimizations:
+                yield self.optimization_flags
 
             def submodel_fixup(flags, tup):
                 return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))
@@ -1146,12 +1133,13 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     """
     def build_commands(sources, obj_dir, flags):
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s %s$@\n' % (
+            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s %s %s$@\n' % (
                 obj_file, src,
                 isa_specific_flags(cc, src),
                 flags,
                 cc.add_include_dir_option,
                 build_config.include_dir,
+                cc.compile_flags,
                 src,
                 cc.output_to_option)
 
@@ -1215,14 +1203,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         if options.with_build_dir != None:
             return os.path.join(options.with_build_dir, path)
         return path
-
-    def warning_flags(normal_flags,
-                      maintainer_flags,
-                      maintainer_mode):
-        if maintainer_mode and maintainer_flags != '':
-            return normal_flags + ' ' + maintainer_flags
-        else:
-            return normal_flags
 
     def innosetup_arch(os, arch):
         if os == 'windows':
@@ -1298,12 +1278,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'cxx': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options),
         'linker': cc.linker_name or '$(CXX)',
 
-        'lib_opt': cc.opt_flags('lib', options),
-        'app_opt': cc.opt_flags('app', options),
-        'lang_flags': cc.lang_flags,
-        'warn_flags': warning_flags(cc.warning_flags,
-                                    cc.maintainer_warning_flags,
-                                    options.maintainer_mode),
+        'cc_compile_flags': cc.cc_compile_flags(options),
+        'cc_warning_flags': cc.cc_warning_flags(options),
 
         'shared_flags': cc.gen_shared_flags(options),
         'visibility_attribute': cc.gen_visibility_attribute(options),
