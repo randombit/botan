@@ -304,6 +304,10 @@ set(BOTAN_SRC
     utils/zero_mem.cpp
 )
 
+# add a new target to show help for options that we add
+# use add_custom_command(TARGET Botan-help ...) to extend the help text
+add_custom_target(Botan-help)
+
 # AVX2
 set_source_files_properties(block/threefish_avx2/threefish_avx2.cpp PROPERTIES COMPILE_FLAGS "-mavx2")
 # SSSE3
@@ -328,22 +332,22 @@ if ( BZIP2_FOUND )
         compression/bzip2/bzip2.cpp)
 endif( BZIP2_FOUND )
 
-find_package( ZLIB )
-if ( ZLIB_FOUND )
-    include_directories(${ZLIB_INCLUDE_DIRS})
-    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${ZLIB_LIBRARIES})
-    set(BOTAN_SRC ${BOTAN_SRC}
-        compression/zlib/zlib.cpp)
-endif( ZLIB_FOUND )
+if ( WITH_ZLIB )
+    find_package( ZLIB )
+    if ( ZLIB_FOUND )
+        include_directories(${ZLIB_INCLUDE_DIRS})
+        set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${ZLIB_LIBRARIES})
+        set(BOTAN_SRC ${BOTAN_SRC}
+            compression/zlib/zlib.cpp)
+    endif( ZLIB_FOUND )
+endif ( WITH_ZLIB )
+add_custom_command(TARGET Botan-help
+    COMMAND echo "  To build with zlib support use: cmake -DWITH_ZLIB=1")
 
 set(extra_link_libraries)
 if(NOT WIN32)
     list(APPEND extra_link_libraries rt dl pthread)
 endif()
-
-# add a new target to show help for options that we add
-# use add_custom_command(TARGET Botan-help ...) to extend the help text
-add_custom_target(Botan-help)
 
 if (NOT LIB_TYPE)
     set(LIB_TYPE STATIC)
