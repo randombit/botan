@@ -376,6 +376,7 @@ std::map<size_t, Path_Validation_Result::Code> get_expected()
 
 #else
 
+size_t test_x509_x509test() { return 0; }
 size_t test_nist_x509() { return 0; }
 
 #endif
