@@ -1,5 +1,5 @@
 # Compiler Options
-CXX            = %{cxx}
+CXX            = %{cxx} %{cxx_abi_flags}
 LINKER         = %{linker}
 
 CXXFLAGS       = %{cc_compile_flags}

@@ -155,8 +155,7 @@ TEST_CASE("FFI PBKDF", "[ffi]")
    CHECK(iters_10ms >= 10000);
 
    /*
-    * Tests deactivated due to consistetly failing in debug mode where -W0 is set
-    * (./configure.py --build-mode=debug).
+    * Tests deactivated due to consistently failing when optimizations are disabled
     * See also: https://github.com/randombit/botan/commit/30b0e3c88e94ba04c1843798f7ac74a008e01d9b
     */
    /*

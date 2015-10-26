@@ -6,7 +6,7 @@
 * %{user}@%{hostname} running '%{command_line}'
 *
 * Target
-*  - Compiler: %{cxx} %{cc_compile_flags}
+*  - Compiler: %{cxx} %{cxx_abi_flags} %{cc_compile_flags}
 *  - Arch: %{submodel}/%{arch}
 *  - OS: %{os}
 */

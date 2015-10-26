@@ -7,10 +7,9 @@ if [ "$BUILD_MODE" = "static" ]; then
 elif [ "$BUILD_MODE" = "shared" ]; then
     CFG_FLAGS=()
 elif [ "$BUILD_MODE" = "coverage" ]; then
-    # lcov gets confused by symlinks
-    CFG_FLAGS=(--build-mode=coverage --link-method=copy)
+    CFG_FLAGS=(--with-coverage)
 elif [ "$BUILD_MODE" = "sanitizer" ]; then
-    CFG_FLAGS=(--build-mode=sanitizer)
+    CFG_FLAGS=(--with-sanitizer)
 fi
 
 if [ "$MODULES" = "min" ]; then
