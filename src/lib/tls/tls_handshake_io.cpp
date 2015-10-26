@@ -1,6 +1,6 @@
 /*
 * TLS Handshake IO
-* (C) 2012,2014 Jack Lloyd
+* (C) 2012,2014,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -31,6 +31,24 @@ void store_be24(byte out[3], size_t val)
    out[0] = get_byte<u32bit>(1, val);
    out[1] = get_byte<u32bit>(2, val);
    out[2] = get_byte<u32bit>(3, val);
+   }
+
+u64bit steady_clock_ms()
+   {
+   return std::chrono::duration_cast<std::chrono::milliseconds>(
+      std::chrono::steady_clock::now().time_since_epoch()).count();
+   }
+
+size_t split_for_mtu(size_t mtu, size_t msg_size)
+   {
+   const size_t DTLS_HEADERS_SIZE = 25; // DTLS record+handshake headers
+
+   const size_t parts = (msg_size + mtu) / mtu;
+
+   if(parts + DTLS_HEADERS_SIZE > mtu)
+      return parts + 1;
+
+   return parts;
    }
 
 }
@@ -123,41 +141,15 @@ Protocol_Version Datagram_Handshake_IO::initial_record_version() const
    return Protocol_Version::DTLS_V10;
    }
 
-namespace {
-
-// 1 second initial timeout, 60 second max - see RFC 6347 sec 4.2.4.1
-const u64bit INITIAL_TIMEOUT = 1*1000;
-const u64bit MAXIMUM_TIMEOUT = 60*1000;
-
-u64bit steady_clock_ms()
+void Datagram_Handshake_IO::retransmit_last_flight()
    {
-   return std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::steady_clock::now().time_since_epoch()).count();
+   const size_t flight_idx = (m_flights.size() == 1) ? 0 : (m_flights.size() - 2);
+   retransmit_flight(flight_idx);
    }
 
-}
-
-bool Datagram_Handshake_IO::timeout_check()
+void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx)
    {
-   if(m_last_write == 0 || (m_flights.size() > 1 && !m_flights.rbegin()->empty()))
-      {
-      /*
-      If we haven't written anything yet obviously no timeout.
-      Also no timeout possible if we are mid-flight,
-      */
-      return false;
-      }
-
-   const u64bit ms_since_write = steady_clock_ms() - m_last_write;
-
-   if(ms_since_write < m_next_timeout)
-      return false;
-
-   std::vector<u16bit> flight;
-   if(m_flights.size() == 1)
-      flight = m_flights.at(0); // lost initial client hello
-   else
-      flight = m_flights.at(m_flights.size() - 2);
+   const std::vector<u16bit>& flight = m_flights.at(flight_idx);
 
    BOTAN_ASSERT(flight.size() > 0, "Nonempty flight to retransmit");
 
@@ -177,8 +169,27 @@ bool Datagram_Handshake_IO::timeout_check()
       send_message(msg_seq, msg.epoch, msg.msg_type, msg.msg_bits);
       epoch = msg.epoch;
       }
+   }
 
-   m_next_timeout = std::min(2 * m_next_timeout, MAXIMUM_TIMEOUT);
+bool Datagram_Handshake_IO::timeout_check()
+   {
+   if(m_last_write == 0 || (m_flights.size() > 1 && !m_flights.rbegin()->empty()))
+      {
+      /*
+      If we haven't written anything yet obviously no timeout.
+      Also no timeout possible if we are mid-flight,
+      */
+      return false;
+      }
+
+   const u64bit ms_since_write = steady_clock_ms() - m_last_write;
+
+   if(ms_since_write < m_next_timeout)
+      return false;
+
+   retransmit_last_flight();
+
+   m_next_timeout = std::min(2 * m_next_timeout, m_max_timeout);
    return true;
    }
 
@@ -251,7 +262,6 @@ Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
          if(m_ccs_epochs.count(current_epoch))
             return std::make_pair(HANDSHAKE_CCS, std::vector<byte>());
          }
-
       return std::make_pair(HANDSHAKE_NONE, std::vector<byte>());
       }
 
@@ -376,21 +386,6 @@ Datagram_Handshake_IO::format(const std::vector<byte>& msg,
    return format_w_seq(msg, type, m_in_message_seq - 1);
    }
 
-namespace {
-
-size_t split_for_mtu(size_t mtu, size_t msg_size)
-   {
-   const size_t DTLS_HEADERS_SIZE = 25; // DTLS record+handshake headers
-
-   const size_t parts = (msg_size + mtu) / mtu;
-
-   if(parts + DTLS_HEADERS_SIZE > mtu)
-      return parts + 1;
-
-   return parts;
-   }
-
-}
 
 std::vector<byte>
 Datagram_Handshake_IO::send(const Handshake_Message& msg)
@@ -411,7 +406,7 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
 
    m_out_message_seq += 1;
    m_last_write = steady_clock_ms();
-   m_next_timeout = INITIAL_TIMEOUT;
+   m_next_timeout = m_initial_timeout;
 
    return send_message(m_out_message_seq - 1, epoch, msg_type, msg_bits);
    }
@@ -425,7 +420,9 @@ std::vector<byte> Datagram_Handshake_IO::send_message(u16bit msg_seq,
       format_w_seq(msg_bits, msg_type, msg_seq);
 
    if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu)
+      {
       m_send_hs(epoch, HANDSHAKE, no_fragment);
+      }
    else
       {
       const size_t parts = split_for_mtu(m_mtu, msg_bits.size());

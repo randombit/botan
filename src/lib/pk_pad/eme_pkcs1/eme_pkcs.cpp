@@ -28,8 +28,7 @@ secure_vector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
 
    out[0] = 0x02;
    for(size_t j = 1; j != olen - inlen - 1; ++j)
-      while(out[j] == 0)
-         out[j] = rng.next_byte();
+      out[j] = rng.next_nonzero_byte();
    buffer_insert(out, olen - inlen, in, inlen);
 
    return out;

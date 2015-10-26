@@ -23,17 +23,21 @@ Channel::Channel(output_fn output_fn,
                  data_cb data_cb,
                  alert_cb alert_cb,
                  handshake_cb handshake_cb,
+                 handshake_msg_cb handshake_msg_cb,
                  Session_Manager& session_manager,
                  RandomNumberGenerator& rng,
+                 const Policy& policy,
                  bool is_datagram,
                  size_t reserved_io_buffer_size) :
    m_is_datagram(is_datagram),
-   m_handshake_cb(handshake_cb),
    m_data_cb(data_cb),
    m_alert_cb(alert_cb),
    m_output_fn(output_fn),
-   m_rng(rng),
-   m_session_manager(session_manager)
+   m_handshake_cb(handshake_cb),
+   m_handshake_msg_cb(handshake_msg_cb),
+   m_session_manager(session_manager),
+   m_policy(policy),
+   m_rng(rng)
    {
    /* epoch 0 is plaintext, thus null cipher state */
    m_write_cipher_states[0] = nullptr;
@@ -66,20 +70,16 @@ Connection_Sequence_Numbers& Channel::sequence_numbers() const
 std::shared_ptr<Connection_Cipher_State> Channel::read_cipher_state_epoch(u16bit epoch) const
    {
    auto i = m_read_cipher_states.find(epoch);
-
-   BOTAN_ASSERT(i != m_read_cipher_states.end(),
-                "Have a cipher state for the specified epoch");
-
+   if(i == m_read_cipher_states.end())
+      throw Internal_Error("TLS::Channel No read cipherstate for epoch " + std::to_string(epoch));
    return i->second;
    }
 
 std::shared_ptr<Connection_Cipher_State> Channel::write_cipher_state_epoch(u16bit epoch) const
    {
    auto i = m_write_cipher_states.find(epoch);
-
-   BOTAN_ASSERT(i != m_write_cipher_states.end(),
-                "Have a cipher state for the specified epoch");
-
+   if(i == m_write_cipher_states.end())
+      throw Internal_Error("TLS::Channel No write cipherstate for epoch " + std::to_string(epoch));
    return i->second;
    }
 
@@ -120,17 +120,17 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
    std::unique_ptr<Handshake_IO> io;
    if(version.is_datagram_protocol())
       {
-      // default MTU is IPv6 min MTU minus UDP/IP headers (TODO: make configurable)
-      const u16bit mtu = 1280 - 40 - 8;
-
       io.reset(new Datagram_Handshake_IO(
                   std::bind(&Channel::send_record_under_epoch, this, _1, _2, _3),
                   sequence_numbers(),
-                  mtu));
+                  m_policy.dtls_default_mtu(),
+                  m_policy.dtls_initial_timeout(),
+                  m_policy.dtls_maximum_timeout()));
       }
    else
-      io.reset(new Stream_Handshake_IO(
-                  std::bind(&Channel::send_record, this, _1, _2)));
+      {
+      io.reset(new Stream_Handshake_IO(std::bind(&Channel::send_record, this, _1, _2)));
+      }
 
    m_pending_state.reset(new_handshake_state(io.release()));
 
@@ -333,12 +333,13 @@ size_t Channel::received_data(const byte input[], size_t input_size)
 
          if(record.size() > max_fragment_size)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                                "Plaintext record is too large");
+                                "TLS input record is larger than allowed maximum");
 
          if(record_type == HANDSHAKE || record_type == CHANGE_CIPHER_SPEC)
             {
             if(!m_pending_state)
                {
+               // No pending handshake, possibly new:
                if(record_version.is_datagram_protocol())
                   {
                   if(m_sequence_numbers)
@@ -374,6 +375,7 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                   }
                }
 
+            // May have been created in above conditional
             if(m_pending_state)
                {
                m_pending_state->handshake_io().add_record(unlock(record),

@@ -519,7 +519,9 @@ policy settings from a file.
      authentication, sending data in cleartext) are also not supported
      by the implementation and cannot be negotiated.
 
-     Default value: "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM",
+     Values without an explicit mode use old-style CBC with HMAC encryption.
+
+     Default value: "AES-256/GCM", "AES-128/GCM", "ChaCha20Poly1305",
      "AES-256/CCM", "AES-128/CCM", "AES-256/CCM-8", "AES-128/CCM-8",
      "AES-256", "AES-128"
 
@@ -572,7 +574,7 @@ policy settings from a file.
 
      Default: "ECDSA", "RSA", "DSA"
 
-     Also allowed: "" (meaning anonymous)
+     Also allowed (disabled by default): "" (meaning anonymous)
 
  .. cpp:function:: std::vector<std::string> allowed_ecc_curves() const
 
