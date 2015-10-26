@@ -35,6 +35,8 @@ Version 1.11.22, Not Yet Released
   deriving the next value by squaring the previous ones. The reinitializion
   interval can be controlled by the build.h parameter BOTAN_BLINDING_REINIT_INTERVAL.
 
+* A bug decoding DTLS client hellos prevented session resumption for suceeding.
+
 * DL_Group now prohibits creating a group smaller than 1024 bits.
 
 * Add System_RNG type. Previously the global system RNG was only accessible via

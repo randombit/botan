@@ -51,6 +51,12 @@ inline void unpoison(T* p, size_t n)
 #endif
    }
 
+template<typename T>
+inline void unpoison(T& p)
+   {
+   unpoison(&p, 1);
+   }
+
 /*
 * T should be an unsigned machine integer type
 * Expand to a mask used for other operations
@@ -90,6 +96,16 @@ inline T is_equal(T x, T y)
    }
 
 template<typename T>
+inline T is_less(T x, T y)
+   {
+   /*
+   This expands to a constant time sequence with GCC 5.2.0 on x86-64
+   but something more complicated may be needed for portable const time.
+   */
+   return expand_mask<T>(x < y);
+   }
+
+template<typename T>
 inline void conditional_copy_mem(T value,
                                  T* to,
                                  const T* from0,
@@ -100,6 +116,26 @@ inline void conditional_copy_mem(T value,
 
    for(size_t i = 0; i != bytes; ++i)
       to[i] = CT::select(mask, from0[i], from1[i]);
+   }
+
+template<typename T>
+inline T expand_top_bit(T a)
+   {
+   return expand_mask<T>(a >> (sizeof(T)*8-1));
+   }
+
+template<typename T>
+inline T max(T a, T b)
+   {
+   const T a_larger = b - a; // negative if a is larger
+   return select(expand_top_bit(a), a, b);
+   }
+
+template<typename T>
+inline T min(T a, T b)
+   {
+   const T a_larger = b - a; // negative if a is larger
+   return select(expand_top_bit(b), b, a);
    }
 
 }

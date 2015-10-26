@@ -12,6 +12,7 @@
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/tls_session_key.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/rng.h>
 
 namespace Botan {
@@ -284,31 +285,26 @@ size_t fill_buffer_to(secure_vector<byte>& readbuf,
 *
 * Returning 0 in the error case should ensure the MAC check will fail.
 * This approach is suggested in section 6.2.3.2 of RFC 5246.
-*
-* Also returns 0 if block_size == 0, so can be safely called with a
-* stream cipher in use.
-*
-* @fixme This should run in constant time
 */
-size_t tls_padding_check(const byte record[], size_t record_len)
+u16bit tls_padding_check(const byte record[], size_t record_len)
    {
-   const size_t padding_length = record[(record_len-1)];
-
-   if(padding_length >= record_len)
-      return 0;
-
    /*
    * TLS v1.0 and up require all the padding bytes be the same value
    * and allows up to 255 bytes.
    */
-   const size_t pad_start = record_len - padding_length - 1;
 
-   volatile size_t cmp = 0;
+   const byte pad_byte = record[(record_len-1)];
 
-   for(size_t i = 0; i != padding_length; ++i)
-      cmp += record[pad_start + i] ^ padding_length;
+   byte pad_invalid = 0;
+   for(size_t i = 0; i != record_len; ++i)
+      {
+      const size_t left = record_len - i - 2;
+      const byte delim_mask = CT::is_less<u16bit>(left, pad_byte) & 0xFF;
+      pad_invalid |= (delim_mask & (record[i] ^ pad_byte));
+      }
 
-   return cmp ? 0 : padding_length + 1;
+   u16bit pad_invalid_mask = CT::expand_mask<u16bit>(pad_invalid);
+   return CT::select<u16bit>(pad_invalid_mask, 0, pad_byte + 1);
    }
 
 void cbc_decrypt_record(byte record_contents[], size_t record_len,
@@ -375,38 +371,39 @@ void decrypt_record(secure_vector<byte>& output,
    else
       {
       // GenericBlockCipher case
-
-      volatile bool padding_bad = false;
-      size_t pad_size = 0;
-
-      if(BlockCipher* bc = cs.block_cipher())
-         {
-         cbc_decrypt_record(record_contents, record_len, cs, *bc);
-
-         pad_size = tls_padding_check(record_contents, record_len);
-
-         padding_bad = (pad_size == 0);
-         }
-      else
-         {
-         throw Internal_Error("No cipher state set but needed to decrypt");
-         }
+      BlockCipher* bc = cs.block_cipher();
+      BOTAN_ASSERT(bc != nullptr, "No cipher state set but needed to decrypt");
 
       const size_t mac_size = cs.mac_size();
       const size_t iv_size = cs.iv_size();
 
-      const size_t mac_pad_iv_size = mac_size + pad_size + iv_size;
-
-      if(record_len < mac_pad_iv_size)
+      // This early exit does not leak info because all the values are public
+      if((record_len < mac_size + iv_size) || (record_len % cs.block_size() != 0))
          throw Decoding_Error("Record sent with invalid length");
 
+      CT::poison(record_contents, record_len);
+
+      cbc_decrypt_record(record_contents, record_len, cs, *bc);
+
+      // 0 if padding was invalid, otherwise 1 + padding_bytes
+      u16bit pad_size = tls_padding_check(record_contents, record_len);
+
+      // This mask is zero if there is not enough room in the packet
+      const u16bit size_ok_mask = CT::is_less<u16bit>(mac_size + pad_size + iv_size, record_len);
+      pad_size &= size_ok_mask;
+
+      CT::unpoison(record_contents, record_len);
+
+      /*
+      This is unpoisoned sooner than it should. The pad_size leaks to plaintext_length and
+      then to the timing channel in the MAC computation described in the Lucky 13 paper.
+      */
+      CT::unpoison(pad_size);
+
       const byte* plaintext_block = &record_contents[iv_size];
-      const u16bit plaintext_length = record_len - mac_pad_iv_size;
+      const u16bit plaintext_length = record_len - mac_size - iv_size - pad_size;
 
-      cs.mac()->update(
-         cs.format_ad(record_sequence, record_type, record_version, plaintext_length)
-         );
-
+      cs.mac()->update(cs.format_ad(record_sequence, record_type, record_version, plaintext_length));
       cs.mac()->update(plaintext_block, plaintext_length);
 
       std::vector<byte> mac_buf(mac_size);
@@ -414,12 +411,16 @@ void decrypt_record(secure_vector<byte>& output,
 
       const size_t mac_offset = record_len - (mac_size + pad_size);
 
-      const bool mac_bad = !same_mem(&record_contents[mac_offset], mac_buf.data(), mac_size);
+      const bool mac_ok = same_mem(&record_contents[mac_offset], mac_buf.data(), mac_size);
 
-      if(mac_bad || padding_bad)
+      const u16bit ok_mask = size_ok_mask & CT::expand_mask<u16bit>(mac_ok) & CT::expand_mask<u16bit>(pad_size);
+
+      CT::unpoison(ok_mask);
+
+      if(ok_mask)
+         output.assign(plaintext_block, plaintext_block + plaintext_length);
+      else
          throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
-
-      output.assign(plaintext_block, plaintext_block + plaintext_length);
       }
    }
 

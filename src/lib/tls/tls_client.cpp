@@ -1,6 +1,6 @@
 /*
 * TLS Client
-* (C) 2004-2011,2012 Jack Lloyd
+* (C) 2004-2011,2012,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -23,8 +23,7 @@ class Client_Handshake_State : public Handshake_State
    public:
       // using Handshake_State::Handshake_State;
 
-      Client_Handshake_State(Handshake_IO* io, hs_msg_cb cb = hs_msg_cb()) :
-         Handshake_State(io, cb) {}
+      Client_Handshake_State(Handshake_IO* io, handshake_msg_cb cb) : Handshake_State(io, cb) {}
 
       const Public_Key& get_server_public_Key() const
          {
@@ -55,9 +54,31 @@ Client::Client(output_fn output_fn,
                const Protocol_Version offer_version,
                const std::vector<std::string>& next_protos,
                size_t io_buf_sz) :
-   Channel(output_fn, proc_cb, alert_cb, handshake_cb, session_manager, rng,
-           offer_version.is_datagram_protocol(), io_buf_sz),
-   m_policy(policy),
+   Channel(output_fn, proc_cb, alert_cb, handshake_cb, Channel::handshake_msg_cb(),
+           session_manager, rng, policy, offer_version.is_datagram_protocol(), io_buf_sz),
+   m_creds(creds),
+   m_info(info)
+   {
+   const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
+
+   Handshake_State& state = create_handshake_state(offer_version);
+   send_client_hello(state, false, offer_version, srp_identifier, next_protos);
+   }
+
+Client::Client(output_fn output_fn,
+               data_cb proc_cb,
+               alert_cb alert_cb,
+               handshake_cb handshake_cb,
+               handshake_msg_cb hs_msg_cb,
+               Session_Manager& session_manager,
+               Credentials_Manager& creds,
+               const Policy& policy,
+               RandomNumberGenerator& rng,
+               const Server_Information& info,
+               const Protocol_Version offer_version,
+               const std::vector<std::string>& next_protos) :
+   Channel(output_fn, proc_cb, alert_cb, handshake_cb, hs_msg_cb,
+           session_manager, rng, policy, offer_version.is_datagram_protocol()),
    m_creds(creds),
    m_info(info)
    {
@@ -69,7 +90,7 @@ Client::Client(output_fn output_fn,
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)
    {
-   return new Client_Handshake_State(io); // , m_hs_msg_cb);
+   return new Client_Handshake_State(io, get_handshake_msg_cb());
    }
 
 std::vector<X509_Certificate>
@@ -111,7 +132,7 @@ void Client::send_client_hello(Handshake_State& state_base,
             state.client_hello(new Client_Hello(
                state.handshake_io(),
                state.hash(),
-               m_policy,
+               policy(),
                rng(),
                secure_renegotiation_data_for_client_hello(),
                session_info,
@@ -128,7 +149,7 @@ void Client::send_client_hello(Handshake_State& state_base,
          state.handshake_io(),
          state.hash(),
          version,
-         m_policy,
+         policy(),
          rng(),
          secure_renegotiation_data_for_client_hello(),
          next_protocols,
@@ -157,9 +178,9 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       if(state.client_hello())
          return;
 
-      if(m_policy.allow_server_initiated_renegotiation())
+      if(policy().allow_server_initiated_renegotiation())
          {
-         if(!secure_renegotiation_supported() && m_policy.allow_insecure_renegotiation() == false)
+         if(!secure_renegotiation_supported() && policy().allow_insecure_renegotiation() == false)
             send_warning_alert(Alert::NO_RENEGOTIATION);
          else
             this->initiate_handshake(state, false);
@@ -263,7 +284,9 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          if(state.server_hello()->supports_session_ticket())
             state.set_expected_next(NEW_SESSION_TICKET);
          else
+            {
             state.set_expected_next(HANDSHAKE_CCS);
+            }
          }
       else
          {
@@ -282,7 +305,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                 "Server replied with later version than in hello");
             }
 
-         if(!m_policy.acceptable_protocol_version(state.version()))
+         if(!policy().acceptable_protocol_version(state.version()))
             {
             throw TLS_Exception(Alert::PROTOCOL_VERSION,
                                 "Server version " + state.version().to_string() +
@@ -406,7 +429,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       state.client_kex(
          new Client_Key_Exchange(state.handshake_io(),
                                  state,
-                                 m_policy,
+                                 policy(),
                                  m_creds,
                                  state.server_public_key.get(),
                                  m_info.hostname(),
@@ -426,7 +449,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          state.client_verify(
             new Certificate_Verify(state.handshake_io(),
                                    state,
-                                   m_policy,
+                                   policy(),
                                    rng(),
                                    private_key)
             );
@@ -477,7 +500,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       const std::vector<byte>& session_ticket = state.session_ticket();
 
       if(session_id.empty() && !session_ticket.empty())
-         session_id = make_hello_random(rng(), m_policy);
+         session_id = make_hello_random(rng(), policy());
 
       Session session_info(
          session_id,
