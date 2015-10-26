@@ -14,7 +14,7 @@
 #ifndef BOTAN_TIMING_ATTACK_CM_H__
 #define BOTAN_TIMING_ATTACK_CM_H__
 
-#include <botan/types.h>
+#include <botan/secmem.h>
 #include <vector>
 
 #if defined(BOTAN_USE_CTGRIND)
