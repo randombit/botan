@@ -205,7 +205,7 @@ class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
          if(rc < 0)
             throw Invalid_Argument("RSA_public_decrypt");
 
-         return strip_leading_zeros(outbuf);
+         return CT::strip_leading_zeros(outbuf);
          }
    private:
       std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;
