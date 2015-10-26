@@ -324,13 +324,17 @@ if ( LZMA_FOUND )
         compression/lzma/lzma.cpp)
 endif( LZMA_FOUND )
 
-find_package( BZip2 )
-if ( BZIP2_FOUND )
-    include_directories(${BZIP_INCLUDE_DIRS})
-    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${BZIP2_LIBRARIES})
-    set(BOTAN_SRC ${BOTAN_SRC}
-        compression/bzip2/bzip2.cpp)
-endif( BZIP2_FOUND )
+if ( WITH_BZIP2 )
+    find_package( BZip2 )
+    if ( BZIP2_FOUND )
+        include_directories(${BZIP_INCLUDE_DIRS})
+        set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${BZIP2_LIBRARIES})
+        set(BOTAN_SRC ${BOTAN_SRC}
+            compression/bzip2/bzip2.cpp)
+    endif( BZIP2_FOUND )
+endif ( WITH_BZIP2 )
+add_custom_command(TARGET Botan-help
+    COMMAND echo "  To build with bzip2 support use: cmake -DWITH_BZIP2=1")
 
 if ( WITH_ZLIB )
     find_package( ZLIB )
