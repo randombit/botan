@@ -72,6 +72,9 @@ There is also a third party open source implementation of
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+See the `change notes <http://botan.randombit.net/news.html>`_ and
+`security page <http://botan.randombit.net/security.html>`_
+
 All releases are signed with a
 `PGP key <http://botan.randombit.net/pgpkey.txt>`_::
 
@@ -100,9 +103,9 @@ later, Clang 3.4 and later, and MSVC 2013 are regularly tested.
 A new development release is made on the first Monday of every month.
 
 The latest development release is
-`1.11.21 <http://botan.randombit.net/releases/Botan-1.11.21.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.21.tgz.asc>`_
-released on 2015-10-11
+`1.11.22 <http://botan.randombit.net/releases/Botan-1.11.22.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.22.tgz.asc>`_
+released on 2015-10-26
 
 Old Stable Series (1.10)
 ----------------------------------------

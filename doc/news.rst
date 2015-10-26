@@ -1,15 +1,27 @@
 Release Notes
 ========================================
 
-Version 1.11.22, Not Yet Released
+Version 1.11.22, 2015-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* The routines for decoding PKCS #1 encryption and OAEP blocks have been
-  rewritten to run without secret indexes or branches. These cryptographic
-  operations are vulnerable to oracle attacks, including via side channels such
-  as timing or cache-based analysis. In theory it would be possible to attack
-  the previous implementations using such a side channel, which could allow
-  an attacker to mount a plaintext recovery attack.
+* CVE-2015-7824: An information leak allowed padding oracle attacks against
+  TLS CBC decryption. Found in a review by Sirrix AG and 3curity GmbH.
+
+* CVE-2015-7825: Validating a malformed certificate chain could cause an
+  infinite loop. Found in a review by Sirrix AG and 3curity GmbH.
+
+* CVE-2015-7826: X.509 path validation violated RFC 6125 and would accept
+  certificates which should not validate under those rules. In particular botan
+  would accept wildcard certificates as matching in situations where it should
+  not (for example it would erronously accept '*.example.com' as a valid
+  wildcard for 'foo.bar.example.com')
+
+* CVE-2015-7827: The routines for decoding PKCS #1 encryption and OAEP blocks
+  have been rewritten to run without secret indexes or branches. These
+  cryptographic operations are vulnerable to oracle attacks, including via side
+  channels such as timing or cache-based analysis. In theory it would be
+  possible to attack the previous implementations using such a side channel,
+  which could allow an attacker to mount a plaintext recovery attack.
 
   By writing the code such that it does not depend on secret inputs for branch
   or memory indexes, such a side channel would be much less likely to exist.
