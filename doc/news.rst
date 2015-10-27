@@ -8,6 +8,12 @@ Version 1.11.24, Not Yet Released
   keys to be generated differently on big and little endian systems,
   even when using a deterministic PRNG with the same seed.
 
+* In `configure,py`, the flags for controlling use of debug, sanitizer, and
+  converage information have been split out into individual options
+  `--with-debug-info`, `--with-sanitizers`, and `--with-coverage`. These allow
+  enabling more than one in a build in a controlled way. The `--build-mode` flag
+  added in 1.11.17 has been removed.
+
 Version 1.11.23, 2015-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
