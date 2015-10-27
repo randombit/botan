@@ -1,6 +1,13 @@
 Release Notes
 ========================================
 
+Version 1.11.24, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fixed an endian dependency in McEliece key generation which caused
+  keys to be generated differently on big and little endian systems,
+  even when using a deterministic PRNG with the same seed.
+
 Version 1.11.23, 2015-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
