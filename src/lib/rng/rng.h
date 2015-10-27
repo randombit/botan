@@ -75,6 +75,14 @@ class BOTAN_DLL RandomNumberGenerator
       */
       byte next_byte() { return get_random<byte>(); }
 
+      byte next_nonzero_byte()
+         {
+         byte b = next_byte();
+         while(b == 0)
+            b = next_byte();
+         return b;
+         }
+
       /**
       * Check whether this RNG is seeded.
       * @return true if this RNG was already seeded, false otherwise.

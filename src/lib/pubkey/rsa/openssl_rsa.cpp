@@ -11,6 +11,7 @@
 
 #include <botan/internal/openssl.h>
 #include <botan/internal/pk_utils.h>
+#include <botan/internal/ct_utils.h>
 #include <functional>
 #include <memory>
 
@@ -33,22 +34,6 @@ std::pair<int, size_t> get_openssl_enc_pad(const std::string& eme)
       return std::make_pair(RSA_PKCS1_OAEP_PADDING, 41);
    else
       throw Lookup_Error("OpenSSL RSA does not support EME " + eme);
-   }
-
-secure_vector<byte> strip_leading_zeros(const secure_vector<byte>& input)
-   {
-   size_t leading_zeros = 0;
-
-   for(size_t i = 0; i != input.size(); ++i)
-      {
-      if(input[i] != 0)
-         break;
-      ++leading_zeros;
-      }
-
-   secure_vector<byte> output(&input[leading_zeros],
-                              &input[input.size()]);
-   return output;
    }
 
 class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
@@ -164,8 +149,9 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
 
          if(m_padding == RSA_NO_PADDING)
             {
-            return strip_leading_zeros(buf);
+            return CT::strip_leading_zeros(buf);
             }
+
          return buf;
          }
 
@@ -219,7 +205,7 @@ class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
          if(rc < 0)
             throw Invalid_Argument("RSA_public_decrypt");
 
-         return strip_leading_zeros(outbuf);
+         return CT::strip_leading_zeros(outbuf);
          }
    private:
       std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;

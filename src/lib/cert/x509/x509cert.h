@@ -1,6 +1,6 @@
 /*
 * X.509 Certificates
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -17,6 +17,15 @@
 #include <map>
 
 namespace Botan {
+
+enum class Usage_Type
+   {
+   UNSPECIFIED, // no restrictions
+   TLS_SERVER_AUTH,
+   TLS_CLIENT_AUTH,
+   CERTIFICATE_AUTHORITY,
+   OCSP_RESPONDER
+   };
 
 /**
 * This class represents X.509 Certificate
@@ -37,13 +46,13 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::vector<byte> subject_public_key_bits() const;
 
       /**
-      * Get the issuer certificate DN.
+      * Get the certificate's issuer distinguished name (DN).
       * @return issuer DN of this certificate
       */
       X509_DN issuer_dn() const;
 
       /**
-      * Get the subject certificate DN.
+      * Get the certificate's subject distinguished name (DN).
       * @return subject DN of this certificate
       */
       X509_DN subject_dn() const;
@@ -136,6 +145,8 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * key extension.
       */
       bool allowed_usage(const std::string& usage) const;
+
+      bool allowed_usage(Usage_Type usage) const;
 
       /**
       * Get the path limit as defined in the BasicConstraints extension of

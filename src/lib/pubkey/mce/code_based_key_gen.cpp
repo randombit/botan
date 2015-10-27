@@ -4,12 +4,14 @@
  *
  * (C) 2014 cryptosource GmbH
  * (C) 2014 Falko Strenzke fstrenzke@cryptosource.de
+ * (C) 2015 Jack Lloyd
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  *
  */
 
 #include <botan/mceliece.h>
+#include <botan/internal/mce_internal.h>
 #include <botan/internal/code_based_util.h>
 #include <botan/loadstor.h>
 
@@ -133,21 +135,14 @@ secure_vector<int> binary_matrix::row_reduced_echelon_form()
    return perm;
    }
 
-void randomize_support(u32bit n, std::vector<gf2m> & L, RandomNumberGenerator & rng)
+void randomize_support(std::vector<gf2m>& L, RandomNumberGenerator& rng)
    {
-   unsigned int i, j;
-   gf2m tmp;
-
-   for (i = 0; i < n; ++i)
+   for(u32bit i = 0; i != L.size(); ++i)
       {
+      gf2m rnd = random_gf2m(rng);
 
-      gf2m rnd;
-      rng.randomize(reinterpret_cast<byte*>(&rnd), sizeof(rnd));
-      j = rnd % n; // no rejection sampling, but for useful code-based parameters with n <= 13 this seem tolerable
-
-      tmp = L[j];
-      L[j] = L[i];
-      L[i] = tmp;
+       // no rejection sampling, but for useful code-based parameters with n <= 13 this seem tolerable
+      std::swap(L[i], L[rnd % L.size()]);
       }
    }
 
@@ -234,7 +229,7 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, u32bit e
       {
       L[i]=i;
       }
-   randomize_support(code_length,L,rng);
+   randomize_support(L, rng);
    polyn_gf2m g(sp_field); // create as zero
    bool success = false;
    do

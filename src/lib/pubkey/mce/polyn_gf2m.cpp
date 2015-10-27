@@ -4,6 +4,7 @@
  *
  * (C) 2014 cryptosource GmbH
  * (C) 2014 Falko Strenzke fstrenzke@cryptosource.de
+ * (C) 2015 Jack Lloyd
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  *
@@ -14,6 +15,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/rng.h>
 #include <botan/exceptn.h>
+#include <botan/loadstor.h>
 
 namespace Botan {
 
@@ -25,6 +27,9 @@ gf2m generate_gf2m_mask(gf2m a)
    return ~(result - 1);
    }
 
+/**
+* number of leading zeros
+*/
 unsigned nlz_16bit(u16bit x)
    {
    unsigned n;
@@ -55,24 +60,31 @@ int polyn_gf2m::calc_degree_secure() const
    const_cast<polyn_gf2m*>(this)->m_deg = result;
    return result;
    }
-/**
-* number of leading zeros
-*/
 
-gf2m random_code_element(unsigned code_length, Botan::RandomNumberGenerator& rng)
+gf2m random_gf2m(RandomNumberGenerator& rng)
+   {
+   byte b[2];
+   rng.randomize(b, sizeof(b));
+   return make_u16bit(b[1], b[0]);
+   }
+
+gf2m random_code_element(unsigned code_length, RandomNumberGenerator& rng)
    {
    if(code_length == 0)
       {
       throw Invalid_Argument("random_code_element() was supplied a code length of zero");
       }
-   unsigned nlz = nlz_16bit(code_length-1);
-   gf2m mask = (1 << (16-nlz)) -1;
+   const unsigned nlz = nlz_16bit(code_length-1);
+   const gf2m mask = (1 << (16-nlz)) -1;
+
    gf2m result;
+
    do
       {
-      rng.randomize(reinterpret_cast<byte*>(&result), sizeof(result));
+      result = random_gf2m(rng);
       result &= mask;
       } while(result >= code_length); // rejection sampling
+
    return result;
    }
 

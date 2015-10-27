@@ -1,6 +1,6 @@
 /*
 * X.509 Certificates
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -224,7 +224,7 @@ bool X509_Certificate::is_CA_cert() const
    if(!subject.get1_u32bit("X509v3.BasicConstraints.is_ca"))
       return false;
 
-   return allowed_usage(KEY_CERT_SIGN);
+   return allowed_usage(Key_Constraints(KEY_CERT_SIGN));
    }
 
 bool X509_Certificate::allowed_usage(Key_Constraints usage) const
@@ -236,9 +236,36 @@ bool X509_Certificate::allowed_usage(Key_Constraints usage) const
 
 bool X509_Certificate::allowed_usage(const std::string& usage) const
    {
-   for(auto constraint : ex_constraints())
-      if(constraint == usage)
+   const std::vector<std::string> ex = ex_constraints();
+
+   if(ex.empty())
+      return true;
+
+   if(std::find(ex.begin(), ex.end(), usage) != ex.end())
+      return true;
+
+   return false;
+   }
+
+bool X509_Certificate::allowed_usage(Usage_Type usage) const
+   {
+   switch(usage)
+      {
+      case Usage_Type::UNSPECIFIED:
          return true;
+
+      case Usage_Type::TLS_SERVER_AUTH:
+         return allowed_usage(Key_Constraints(DATA_ENCIPHERMENT | KEY_ENCIPHERMENT | DIGITAL_SIGNATURE)) && allowed_usage("PKIX.ServerAuth");
+
+      case Usage_Type::TLS_CLIENT_AUTH:
+         return allowed_usage(Key_Constraints(DIGITAL_SIGNATURE | NON_REPUDIATION)) && allowed_usage("PKIX.ClientAuth");
+
+      case Usage_Type::OCSP_RESPONDER:
+         return allowed_usage(Key_Constraints(DIGITAL_SIGNATURE | NON_REPUDIATION)) && allowed_usage("PKIX.OCSPSigning");
+
+      case Usage_Type::CERTIFICATE_AUTHORITY:
+         return is_CA_cert();
+      }
 
    return false;
    }
@@ -310,9 +337,6 @@ std::vector<byte> X509_Certificate::serial_number() const
    return subject.get1_memvec("X509.Certificate.serial");
    }
 
-/*
-* Return the distinguished name of the issuer
-*/
 X509_DN X509_Certificate::issuer_dn() const
    {
    return create_dn(issuer);
@@ -323,9 +347,6 @@ std::vector<byte> X509_Certificate::raw_issuer_dn() const
    return issuer.get1_memvec("X509.Certificate.dn_bits");
    }
 
-/*
-* Return the distinguished name of the subject
-*/
 X509_DN X509_Certificate::subject_dn() const
    {
    return create_dn(subject);
@@ -335,36 +356,6 @@ std::vector<byte> X509_Certificate::raw_subject_dn() const
    {
    return subject.get1_memvec("X509.Certificate.dn_bits");
    }
-
-namespace {
-
-bool cert_subject_dns_match(const std::string& name,
-                            const std::vector<std::string>& cert_names)
-   {
-   for(size_t i = 0; i != cert_names.size(); ++i)
-      {
-      const std::string cn = cert_names[i];
-
-      if(cn == name)
-         return true;
-
-      /*
-      * Possible wildcard match. We only support the most basic form of
-      * cert wildcarding ala RFC 2595
-      */
-      if(cn.size() > 2 && cn[0] == '*' && cn[1] == '.' && name.size() > cn.size())
-         {
-         const std::string base = cn.substr(1, std::string::npos);
-
-         if(name.compare(name.size() - base.size(), base.size(), base) == 0)
-            return true;
-         }
-      }
-
-   return false;
-   }
-
-}
 
 std::string X509_Certificate::fingerprint(const std::string& hash_name) const
    {
@@ -391,11 +382,17 @@ bool X509_Certificate::matches_dns_name(const std::string& name) const
    if(name == "")
       return false;
 
-   if(cert_subject_dns_match(name, subject_info("DNS")))
-      return true;
+   std::vector<std::string> issued_names = subject_info("DNS");
 
-   if(cert_subject_dns_match(name, subject_info("Name")))
-      return true;
+   // Fall back to CN only if no DNS names are set (RFC 6125 sec 6.4.4)
+   if(issued_names.empty())
+      issued_names = subject_info("Name");
+
+   for(size_t i = 0; i != issued_names.size(); ++i)
+      {
+      if(host_wildcard_match(issued_names[i], name))
+         return true;
+      }
 
    return false;
    }
@@ -436,45 +433,36 @@ bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2)
 
 std::string X509_Certificate::to_string() const
    {
-   const char* dn_fields[] = { "Name",
-                               "Email",
-                               "Organization",
-                               "Organizational Unit",
-                               "Locality",
-                               "State",
-                               "Country",
-                               "IP",
-                               "DNS",
-                               "URI",
-                               "PKIX.XMPPAddr",
-                               nullptr };
+   const std::vector<std::string> dn_fields{
+      "Name",
+      "Email",
+      "Organization",
+      "Organizational Unit",
+      "Locality",
+      "State",
+      "Country",
+      "IP",
+      "DNS",
+      "URI",
+      "PKIX.XMPPAddr"
+      };
 
    std::ostringstream out;
 
-   for(size_t i = 0; dn_fields[i]; ++i)
+   for(auto&& field : dn_fields)
       {
-      const std::vector<std::string> vals = this->subject_info(dn_fields[i]);
-
-      if(vals.empty())
-         continue;
-
-      out << "Subject " << dn_fields[i] << ":";
-      for(size_t j = 0; j != vals.size(); ++j)
-         out << " " << vals[j];
-      out << "\n";
+      for(auto&& val : subject_info(field))
+         {
+         out << "Subject " << field << ": " << val << "\n";
+         }
       }
 
-   for(size_t i = 0; dn_fields[i]; ++i)
+   for(auto&& field : dn_fields)
       {
-      const std::vector<std::string> vals = this->issuer_info(dn_fields[i]);
-
-      if(vals.empty())
-         continue;
-
-      out << "Issuer " << dn_fields[i] << ":";
-      for(size_t j = 0; j != vals.size(); ++j)
-         out << " " << vals[j];
-      out << "\n";
+      for(auto&& val : issuer_info(field))
+         {
+         out << "Issuer " << field << ": " << val << "\n";
+         }
       }
 
    out << "Version: " << this->x509_version() << "\n";

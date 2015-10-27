@@ -20,9 +20,9 @@ std::vector<std::string> Policy::allowed_ciphers() const
    return {
       //"AES-256/OCB(12)",
       //"AES-128/OCB(12)",
-      "ChaCha20Poly1305",
       "AES-256/GCM",
       "AES-128/GCM",
+      "ChaCha20Poly1305",
       "AES-256/CCM",
       "AES-128/CCM",
       "AES-256/CCM(8)",
@@ -35,7 +35,6 @@ std::vector<std::string> Policy::allowed_ciphers() const
       //"Camellia-128",
       //"SEED"
       //"3DES",
-      //"RC4",
       };
    }
 
@@ -174,6 +173,16 @@ bool Policy::allow_insecure_renegotiation() const { return false; }
 bool Policy::include_time_in_hello_random() const { return true; }
 bool Policy::hide_unknown_users() const { return false; }
 bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
+
+// 1 second initial timeout, 60 second max - see RFC 6347 sec 4.2.4.1
+size_t Policy::dtls_initial_timeout() const { return 1*1000; }
+size_t Policy::dtls_maximum_timeout() const { return 60*1000; }
+
+size_t Policy::dtls_default_mtu() const
+   {
+   // default MTU is IPv6 min MTU minus UDP/IP headers
+   return 1280 - 40 - 8;
+   }
 
 std::vector<u16bit> Policy::srtp_profiles() const
    {

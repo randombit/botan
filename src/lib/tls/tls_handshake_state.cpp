@@ -1,6 +1,6 @@
 /*
 * TLS Handshaking
-* (C) 2004-2006,2011,2012 Jack Lloyd
+* (C) 2004-2006,2011,2012,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,6 +12,67 @@
 namespace Botan {
 
 namespace TLS {
+
+std::string Handshake_Message::type_string() const
+   {
+   return handshake_type_to_string(type());
+   }
+
+const char* handshake_type_to_string(Handshake_Type type)
+   {
+   switch(type)
+      {
+      case HELLO_VERIFY_REQUEST:
+         return "hello_verify_request";
+
+      case HELLO_REQUEST:
+         return "hello_request";
+
+      case CLIENT_HELLO:
+         return "client_hello";
+
+      case SERVER_HELLO:
+         return "server_hello";
+
+      case CERTIFICATE:
+         return "certificate";
+
+      case CERTIFICATE_URL:
+         return "certificate_url";
+
+      case CERTIFICATE_STATUS:
+         return "certificate_status";
+
+      case SERVER_KEX:
+         return "server_key_exchange";
+
+      case CERTIFICATE_REQUEST:
+         return "certificate_request";
+
+      case SERVER_HELLO_DONE:
+         return "server_hello_done";
+
+      case CERTIFICATE_VERIFY:
+         return "certificate_verify";
+
+      case CLIENT_KEX:
+         return "client_key_exchange";
+
+      case NEW_SESSION_TICKET:
+         return "new_session_ticket";
+
+      case HANDSHAKE_CCS:
+         return "change_cipher_spec";
+
+      case FINISHED:
+         return "finished";
+
+      case HANDSHAKE_NONE:
+         return "invalid";
+      }
+
+   throw Internal_Error("Unknown TLS handshake message type " + std::to_string(type));
+   }
 
 namespace {
 
@@ -25,9 +86,6 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
       case HELLO_REQUEST:
          return (1 << 1);
 
-      /*
-      * Same code point for both client hello styles
-      */
       case CLIENT_HELLO:
          return (1 << 2);
 
@@ -75,12 +133,48 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
    throw Internal_Error("Unknown handshake type " + std::to_string(type));
    }
 
+std::string handshake_mask_to_string(u32bit mask)
+   {
+   const Handshake_Type types[] = {
+      HELLO_VERIFY_REQUEST,
+      HELLO_REQUEST,
+      CLIENT_HELLO,
+      CERTIFICATE,
+      CERTIFICATE_URL,
+      CERTIFICATE_STATUS,
+      SERVER_KEX,
+      CERTIFICATE_REQUEST,
+      SERVER_HELLO_DONE,
+      CERTIFICATE_VERIFY,
+      CLIENT_KEX,
+      NEW_SESSION_TICKET,
+      HANDSHAKE_CCS,
+      FINISHED
+   };
+
+   std::ostringstream o;
+   bool empty = true;
+
+   for(auto&& t : types)
+      {
+      if(mask & bitmask_for_handshake_type(t))
+         {
+         if(!empty)
+            o << ",";
+         o << handshake_type_to_string(t);
+         empty = false;
+         }
+      }
+
+   return o.str();
+   }
+
 }
 
 /*
 * Initialize the SSL/TLS Handshake State
 */
-Handshake_State::Handshake_State(Handshake_IO* io, hs_msg_cb cb) :
+Handshake_State::Handshake_State(Handshake_IO* io, handshake_msg_cb cb) :
    m_msg_callback(cb),
    m_handshake_io(io),
    m_version(m_handshake_io->initial_record_version())
@@ -196,10 +290,10 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    const bool ok = (m_hand_expecting_mask & mask); // overlap?
 
    if(!ok)
-      throw Unexpected_Message("Unexpected state transition in handshake, got " +
+      throw Unexpected_Message("Unexpected state transition in handshake, got type " +
                                std::to_string(handshake_msg) +
-                               " expected " + std::to_string(m_hand_expecting_mask) +
-                               " received " + std::to_string(m_hand_received_mask));
+                               " expected " + handshake_mask_to_string(m_hand_expecting_mask) +
+                               " received " + handshake_mask_to_string(m_hand_received_mask));
 
    /* We don't know what to expect next, so force a call to
       set_expected_next; if it doesn't happen, the next transition

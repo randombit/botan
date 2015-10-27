@@ -17,30 +17,11 @@
 #include <botan/srp6.h>
 #include <botan/rng.h>
 #include <botan/loadstor.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
 namespace TLS {
-
-namespace {
-
-secure_vector<byte> strip_leading_zeros(const secure_vector<byte>& input)
-   {
-   size_t leading_zeros = 0;
-
-   for(size_t i = 0; i != input.size(); ++i)
-      {
-      if(input[i] != 0)
-         break;
-      ++leading_zeros;
-      }
-
-   secure_vector<byte> output(&input[leading_zeros],
-                              &input[input.size()]);
-   return output;
-   }
-
-}
 
 /*
 * Create a new Client Key Exchange message
@@ -134,7 +115,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          PK_Key_Agreement ka(priv_key, "Raw");
 
-         secure_vector<byte> dh_secret = strip_leading_zeros(
+         secure_vector<byte> dh_secret = CT::strip_leading_zeros(
             ka.derive_key(0, counterparty_key.public_value()).bits_of());
 
          if(kex_algo == "DH")
@@ -373,7 +354,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
             secure_vector<byte> shared_secret = ka.derive_key(0, client_pubkey).bits_of();
 
             if(ka_key->algo_name() == "DH")
-               shared_secret = strip_leading_zeros(shared_secret);
+               shared_secret = CT::strip_leading_zeros(shared_secret);
 
             if(kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
                {

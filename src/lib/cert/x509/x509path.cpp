@@ -214,13 +214,22 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
 Path_Validation_Result x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
    const Path_Validation_Restrictions& restrictions,
-   const std::vector<Certificate_Store*>& certstores)
+   const std::vector<Certificate_Store*>& certstores,
+   const std::string& hostname,
+   Usage_Type usage)
    {
    if(end_certs.empty())
       throw std::invalid_argument("x509_path_validate called with no subjects");
 
    std::vector<X509_Certificate> cert_path;
    cert_path.push_back(end_certs[0]);
+
+   /*
+   * This is an inelegant but functional way of preventing path loops
+   * (where C1 -> C2 -> C3 -> C1). We store a set of all the certificate
+   * fingerprints in the path. If there is a duplicate, we error out.
+   */
+   std::set<std::string> certs_seen;
 
    Certificate_Store_Overlay extra(end_certs);
 
@@ -231,38 +240,55 @@ Path_Validation_Result x509_path_validate(
       if(!cert)
          return Path_Validation_Result(Certificate_Status_Code::CERT_ISSUER_NOT_FOUND);
 
+      const std::string fprint = cert->fingerprint("SHA-256");
+      if(certs_seen.count(fprint) > 0)
+         return Path_Validation_Result(Certificate_Status_Code::CERT_CHAIN_LOOP);
+      certs_seen.insert(fprint);
       cert_path.push_back(*cert);
       }
 
-   return Path_Validation_Result(check_chain(cert_path, restrictions, certstores),
-                                 std::move(cert_path));
+   std::vector<std::set<Certificate_Status_Code>> res = check_chain(cert_path, restrictions, certstores);
+
+   if(hostname != "" && !cert_path[0].matches_dns_name(hostname))
+      res[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
+
+   if(!cert_path[0].allowed_usage(usage))
+      res[0].insert(Certificate_Status_Code::INVALID_USAGE);
+
+   return Path_Validation_Result(res, std::move(cert_path));
    }
 
 Path_Validation_Result x509_path_validate(
    const X509_Certificate& end_cert,
    const Path_Validation_Restrictions& restrictions,
-   const std::vector<Certificate_Store*>& certstores)
+   const std::vector<Certificate_Store*>& certstores,
+   const std::string& hostname,
+   Usage_Type usage)
    {
    std::vector<X509_Certificate> certs;
    certs.push_back(end_cert);
-   return x509_path_validate(certs, restrictions, certstores);
+   return x509_path_validate(certs, restrictions, certstores, hostname, usage);
    }
 
 Path_Validation_Result x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
    const Path_Validation_Restrictions& restrictions,
-   const Certificate_Store& store)
+   const Certificate_Store& store,
+   const std::string& hostname,
+   Usage_Type usage)
    {
    std::vector<Certificate_Store*> certstores;
    certstores.push_back(const_cast<Certificate_Store*>(&store));
 
-   return x509_path_validate(end_certs, restrictions, certstores);
+   return x509_path_validate(end_certs, restrictions, certstores, hostname, usage);
    }
 
 Path_Validation_Result x509_path_validate(
    const X509_Certificate& end_cert,
    const Path_Validation_Restrictions& restrictions,
-   const Certificate_Store& store)
+   const Certificate_Store& store,
+   const std::string& hostname,
+   Usage_Type usage)
    {
    std::vector<X509_Certificate> certs;
    certs.push_back(end_cert);
@@ -270,7 +296,7 @@ Path_Validation_Result x509_path_validate(
    std::vector<Certificate_Store*> certstores;
    certstores.push_back(const_cast<Certificate_Store*>(&store));
 
-   return x509_path_validate(certs, restrictions, certstores);
+   return x509_path_validate(certs, restrictions, certstores, hostname, usage);
    }
 
 Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
@@ -310,6 +336,9 @@ Path_Validation_Result::Path_Validation_Result(std::vector<std::set<Certificate_
 
 const X509_Certificate& Path_Validation_Result::trust_root() const
    {
+   if(m_cert_path.empty())
+      throw std::runtime_error("Path_Validation_Result::trust_root no path set");
+
    return m_cert_path[m_cert_path.size()-1];
    }
 
@@ -366,6 +395,8 @@ const char* Path_Validation_Result::status_string(Certificate_Status_Code code)
          return "Certificate issuer not found";
       case Certificate_Status_Code::CANNOT_ESTABLISH_TRUST:
          return "Cannot establish trust";
+      case Certificate_Status_Code::CERT_CHAIN_LOOP:
+         return "Loop in certificate chain";
 
       case Certificate_Status_Code::POLICY_ERROR:
          return "Policy error";
@@ -381,6 +412,8 @@ const char* Path_Validation_Result::status_string(Certificate_Status_Code code)
          return "OCSP cert not listed";
       case Certificate_Status_Code::OCSP_BAD_STATUS:
          return "OCSP bad status";
+      case Certificate_Status_Code::CERT_NAME_NOMATCH:
+         return "Certificate does not match provided name";
 
       case Certificate_Status_Code::CERT_IS_REVOKED:
          return "Certificate is revoked";
@@ -388,9 +421,10 @@ const char* Path_Validation_Result::status_string(Certificate_Status_Code code)
          return "CRL bad signature";
       case Certificate_Status_Code::SIGNATURE_ERROR:
          return "Signature error";
-      default:
-         return "Unknown error";
+         // intentionally no default so we are warned
       }
+
+   return "Unknown error";
    }
 
 }
