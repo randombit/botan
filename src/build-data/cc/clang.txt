@@ -13,10 +13,9 @@ lang_flags "-std=c++11 -D_REENTRANT -fstack-protector"
 warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wunreachable-code"
 maintainer_warning_flags "-Qunused-arguments -Werror -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=unreachable-code"
 
-compile_flags_release "-c"
-compile_flags_debug   "-c -g"
-lib_opt_flags_release "-O3"
-app_opt_flags_release "-O2"
+compile_flags "-c"
+debug_info_flags "-g"
+optimization_flags "-O3"
 
 shared_flags "-fPIC"
 coverage_flags "--coverage"

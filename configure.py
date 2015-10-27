@@ -260,16 +260,19 @@ def process_command_line(args):
 
     build_group = optparse.OptionGroup(parser, 'Build options')
 
-    build_modes = ['release', 'debug', 'coverage', 'sanitizer']
-    build_group.add_option('--build-mode', default='release', metavar='MODE',
-                           choices=build_modes,
-                           help="Build mode (one of %s; default %%default)" % (', '.join(build_modes)))
+    build_group.add_option('--with-debug-info', action='store_true', default=False, dest='with_debug_info',
+                           help='enable debug info')
+    # For compat and convenience:
+    build_group.add_option('--debug-mode', action='store_true', default=False, dest='with_debug_info',
+                           help=optparse.SUPPRESS_HELP)
 
-    build_group.add_option('--debug-mode', action='store_const',
-                           const='debug', dest='build_mode',
-                           help='enable debugging build')
+    build_group.add_option('--with-sanitizers', action='store_true', default=False, dest='with_sanitizers',
+                           help='enable runtime checks')
 
-    build_group.add_option('--enable-shared', dest='build_shared_lib',
+    build_group.add_option('--with-coverage', action='store_true', default=False, dest='with_coverage',
+                           help='enable coverage checking')
+
+    build_group.add_option('--enable-shared-library', dest='build_shared_lib',
                            action='store_true', default=True,
                            help=optparse.SUPPRESS_HELP)
     build_group.add_option('--disable-shared', dest='build_shared_lib',
@@ -278,7 +281,7 @@ def process_command_line(args):
 
     build_group.add_option('--no-optimizations', dest='no_optimizations',
                            action='store_true', default=False,
-                           help=optparse.SUPPRESS_HELP)
+                           help='disable all optimizations (for debugging)')
 
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
@@ -446,6 +449,9 @@ def process_command_line(args):
     options.without_os_features = parse_multiple_enable(options.without_os_features)
 
     options.disable_intrinsics = parse_multiple_enable(options.disable_intrinsics)
+
+    if options.maintainer_mode:
+        options.with_sanitizers = True
 
     return options
 
@@ -773,12 +779,9 @@ class CompilerInfo(object):
                         'add_lib_dir_option': '-L',
                         'add_lib_option': '-l',
                         'add_framework_option': '-framework ',
-                        'compile_flags_release': '',
-                        'compile_flags_debug': '',
-                        'lib_opt_flags_release': '',
-                        'lib_opt_flags_debug': '',
-                        'app_opt_flags_release': '',
-                        'app_opt_flags_debug': '',
+                        'compile_flags': '',
+                        'debug_info_flags': '',
+                        'optimization_flags': '',
                         'coverage_flags': '',
                         'sanitizer_flags': '',
                         'shared_flags': '',
@@ -845,7 +848,7 @@ class CompilerInfo(object):
     """
     def mach_abi_link_flags(self, options):
         def all():
-            if 'all-debug' in self.mach_abi_linking and options.build_mode == 'debug':
+            if options.with_debug_info and 'all-debug' in self.mach_abi_linking:
                 return 'all-debug'
             return 'all'
 
@@ -855,50 +858,42 @@ class CompilerInfo(object):
             if flag != None and flag != '' and flag not in abi_link:
                 abi_link.append(flag)
 
-        abi_flags = ''
-        if len(abi_link) > 0:
-            abi_flags += ' '.join(sorted(abi_link))
+        if options.with_coverage:
+            if self.coverage_flags == '':
+                raise Exception('No coverage handling for %s' % (self.basename))
+            abi_link.append(self.coverage_flags)
+
+        if options.with_sanitizers:
+            if self.sanitizer_flags == '':
+                raise Exception('No sanitizer handling for %s' % (self.basename))
+            abi_link.append(self.sanitizer_flags)
+
+        abi_flags = ' '.join(sorted(abi_link))
+
         if options.cc_abi_flags != '':
             abi_flags += ' ' + options.cc_abi_flags
 
-        if options.build_mode == 'coverage':
-            if self.coverage_flags == '':
-                raise Exception('No coverage handling for %s' % (self.basename))
-            return ' ' + self.coverage_flags + ' ' + abi_flags
-        elif options.build_mode == 'sanitizer':
-            if self.sanitizer_flags == '':
-                raise Exception('No sanitizer handling for %s' % (self.basename))
-            return ' ' + self.sanitizer_flags + ' ' + abi_flags
+        if abi_flags != '':
+            return ' ' + abi_flags
+        return ''
 
-        return ' ' + abi_flags
-
-    """
-    Return the optimization flags to use
-    """
-    def opt_flags(self, who, options):
+    def cc_warning_flags(self, options):
         def gen_flags():
-            if options.build_mode in ['debug', 'coverage']:
-                yield self.compile_flags_debug
-            else:
-                yield self.compile_flags_release
+            yield self.warning_flags
+            if options.maintainer_mode:
+                yield self.maintainer_warning_flags
 
-            if options.no_optimizations or options.build_mode == 'coverage':
-                return
+        return (' '.join(gen_flags())).strip()
 
-            if who == 'app':
-                if options.build_mode == 'release':
-                    yield self.app_opt_flags_release
-                else:
-                    yield self.app_opt_flags_debug
-                return
-            elif who == 'lib':
-                if options.build_mode == 'release':
-                    yield self.lib_opt_flags_release
-                else:
-                    yield self.lib_opt_flags_debug
-                return
-            else:
-                raise Exception("Invalid value of parameter 'who'.")
+    def cc_compile_flags(self, options):
+        def gen_flags():
+            yield self.lang_flags
+
+            if options.with_debug_info:
+                yield self.debug_info_flags
+
+            if not options.no_optimizations:
+                yield self.optimization_flags
 
             def submodel_fixup(flags, tup):
                 return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))
@@ -916,16 +911,17 @@ class CompilerInfo(object):
 
         return (' '.join(gen_flags())).strip()
 
+    def _so_link_search(self, osname, debug_info):
+        if debug_info:
+            return [osname + '-debug', 'default-debug']
+        else:
+            return [osname, 'default']
+
     """
     Return the command needed to link a shared object
     """
     def so_link_command_for(self, osname, options):
-        if options.build_mode == 'debug':
-            search_for = [osname + "-debug", 'default-debug']
-        else:
-            search_for = [osname, 'default']
-
-        for s in search_for:
+        for s in self._so_link_search(osname, options.with_debug_info):
             if s in self.so_link_commands:
                 return self.so_link_commands[s]
 
@@ -936,12 +932,7 @@ class CompilerInfo(object):
     Return the command needed to link an app/test object
     """
     def binary_link_command_for(self, osname, options):
-        if options.build_mode == 'debug':
-            search_for = [osname + "-debug", 'default-debug']
-        else:
-            search_for = [osname, 'default']
-
-        for s in search_for:
+        for s in self._so_link_search(osname, options.with_debug_info):
             if s in self.binary_link_commands:
                 return self.binary_link_commands[s]
 
@@ -1146,12 +1137,13 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     """
     def build_commands(sources, obj_dir, flags):
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s %s$@\n' % (
+            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s %s %s$@\n' % (
                 obj_file, src,
                 isa_specific_flags(cc, src),
                 flags,
                 cc.add_include_dir_option,
                 build_config.include_dir,
+                cc.compile_flags,
                 src,
                 cc.output_to_option)
 
@@ -1215,14 +1207,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         if options.with_build_dir != None:
             return os.path.join(options.with_build_dir, path)
         return path
-
-    def warning_flags(normal_flags,
-                      maintainer_flags,
-                      maintainer_mode):
-        if maintainer_mode and maintainer_flags != '':
-            return normal_flags + ' ' + maintainer_flags
-        else:
-            return normal_flags
 
     def innosetup_arch(os, arch):
         if os == 'windows':
@@ -1295,15 +1279,12 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'mp_bits': choose_mp_bits(),
 
-        'cxx': (options.compiler_binary or cc.binary_name) + cc.mach_abi_link_flags(options),
+        'cxx': (options.compiler_binary or cc.binary_name),
+        'cxx_abi_flags': cc.mach_abi_link_flags(options),
         'linker': cc.linker_name or '$(CXX)',
 
-        'lib_opt': cc.opt_flags('lib', options),
-        'app_opt': cc.opt_flags('app', options),
-        'lang_flags': cc.lang_flags,
-        'warn_flags': warning_flags(cc.warning_flags,
-                                    cc.maintainer_warning_flags,
-                                    options.maintainer_mode),
+        'cc_compile_flags': cc.cc_compile_flags(options),
+        'cc_warning_flags': cc.cc_warning_flags(options),
 
         'shared_flags': cc.gen_shared_flags(options),
         'visibility_attribute': cc.gen_visibility_attribute(options),
@@ -1381,7 +1362,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         vars["gmake_dso_in"]      = process_template('src/build-data/makefile/gmake_dso.in', vars) \
                                     if options.build_shared_lib else ''
         vars["gmake_coverage_in"] = process_template('src/build-data/makefile/gmake_coverage.in', vars) \
-                                    if options.build_mode == 'coverage' else ''
+                                    if options.with_coverage else ''
 
     return vars
 
