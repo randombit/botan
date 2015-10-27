@@ -152,6 +152,7 @@ struct polyn_gf2m
       std::shared_ptr<GF2m_Field> msp_field;
    };
 
+gf2m random_gf2m(RandomNumberGenerator& rng);
 gf2m random_code_element(unsigned code_length, RandomNumberGenerator& rng);
 
 std::vector<polyn_gf2m> syndrome_init(polyn_gf2m const& generator, std::vector<gf2m> const& support, int n);
