@@ -83,7 +83,7 @@ addons:
     - liblzma-dev
     - python2
     - python3
-    - g++-4.9-arm-linux-gnueabi
+    - g++-arm-linux-gnueabihf
 
   coverity_scan:
     project:
