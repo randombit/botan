@@ -11,6 +11,11 @@ if [ "$BUILD_MODE" = "coverage" ]; then
     pip install --user codecov
 fi
 
-if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$TARGETOS" != "ios" ]; then
-    ./src/scripts/ci/travis/install_osx_packages.sh
+if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$TARGET" = "native" ]; then
+    # Workaround for https://github.com/Homebrew/homebrew/issues/42553
+    brew update || brew update
+
+    brew install xz
+    brew install python # python2
+    brew install python3
 fi

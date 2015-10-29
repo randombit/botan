@@ -3,19 +3,6 @@
 set -ev
 which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if available
 
-if [ "$BUILD_MODE" = "static" ]; then
-    CFG_FLAGS=(--disable-shared --via-amalgamation)
-elif [ "$BUILD_MODE" = "shared" ]; then
-    CFG_FLAGS=()
-elif [ "$BUILD_MODE" = "coverage" ]; then
-    CFG_FLAGS=(--with-coverage)
-elif [ "$BUILD_MODE" = "sanitizer" ]; then
-    CFG_FLAGS=(--with-sanitizer)
-fi
-
-if [ "$MODULES" = "min" ]; then
-    CFG_FLAGS+=(--minimized-build)
-fi
 
 # Workaround for missing update-alternatives
 # https://github.com/travis-ci/travis-ci/issues/3668
@@ -31,11 +18,23 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     export CXX="ccache $CXX"
 fi
 
-# choose configure flags
-
 MAKE_COMMAND="make -j 2"
 INSTALL_DIR="/tmp/botan-installation"
-CFG="./configure.py ${CFG_FLAGS[@]} --prefix=$INSTALL_DIR"
+CFG="./configure.py --prefix=$INSTALL_DIR"
+
+# choose configure flags
+
+if [ "$BUILD_MODE" = "static" ]; then
+    CFG="$CFG --disable-shared --via-amalgamation"
+elif [ "$BUILD_MODE" = "coverage" ]; then
+    CFG="$CFG --with-coverage --with-debug-info"
+elif [ "$BUILD_MODE" = "sanitizer" ]; then
+    CFG="$CFG --with-sanitizer --with-debug-info"
+fi
+
+if [ "$MODULES" = "min" ]; then
+    CFG="$CFG --minimized-build"
+fi
 
 if [ $TARGET = "native" ]; then
     $CXX --version
