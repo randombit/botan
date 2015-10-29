@@ -26,33 +26,31 @@ compiler:
 
 env:
   matrix:
-    - TARGETOS="desktop" MODULES="all" BUILD_MODE="shared"
-    - TARGETOS="desktop" MODULES="all" BUILD_MODE="static"
-    - TARGETOS="desktop" MODULES="all" BUILD_MODE="coverage"
-    - TARGETOS="desktop" MODULES="all" BUILD_MODE="sanitizer"
+    - TARGET="native" MODULES="all" BUILD_MODE="shared"
+    - TARGET="native" MODULES="all" BUILD_MODE="static"
+    - TARGET="native" MODULES="all" BUILD_MODE="coverage"
+    - TARGET="native" MODULES="all" BUILD_MODE="sanitizer"
 
-    - TARGETOS="desktop" MODULES="min" BUILD_MODE="shared"
-    - TARGETOS="desktop" MODULES="min" BUILD_MODE="static"
+    - TARGET="native" MODULES="min" BUILD_MODE="shared"
+    - TARGET="native" MODULES="min" BUILD_MODE="static"
 
-    - TARGETOS="ios32" MODULES="all" BUILD_MODE="static"
-    - TARGETOS="ios64" MODULES="all" BUILD_MODE="static"
+    - TARGET="arm32" MODULES="all" BUILD_MODE="static"
+    - TARGET="arm64" MODULES="all" BUILD_MODE="static"
 
 matrix:
   exclude:
     - os: osx
       compiler: gcc
     - compiler: clang
-      env: TARGETOS="desktop" MODULES="all" BUILD_MODE="coverage"
+      env: TARGET="native" MODULES="all" BUILD_MODE="coverage"
     - compiler: clang
-      env: TARGETOS="desktop" MODULES="all" BUILD_MODE="sanitizer"
+      env: TARGET="native" MODULES="all" BUILD_MODE="sanitizer"
     - compiler: clang
-      env: TARGETOS="desktop" MODULES="min" BUILD_MODE="shared"
+      env: TARGET="native" MODULES="min" BUILD_MODE="shared"
     - compiler: clang
-      env: TARGETOS="desktop" MODULES="min" BUILD_MODE="static"
+      env: TARGET="native" MODULES="min" BUILD_MODE="static"
     - os: linux
-      env: TARGETOS="ios32" MODULES="all" BUILD_MODE="static"
-    - os: linux
-      env: TARGETOS="ios64" MODULES="all" BUILD_MODE="static"
+      env: TARGET="arm64" MODULES="all" BUILD_MODE="static"
 # END BUILD MATRIX
 
 cache:
@@ -85,6 +83,8 @@ addons:
     - liblzma-dev
     - python2
     - python3
+    - gcc-arm-linux-gnueabi
+    - binutils-arm-linux-gnueabi
 
   coverity_scan:
     project:
