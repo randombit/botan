@@ -18,58 +18,35 @@ using namespace Botan;
 
 namespace {
 
-secure_vector<byte> run_mode(const std::string& algo,
-                             Cipher_Dir dir,
-                             const secure_vector<byte>& pt,
-                             const secure_vector<byte>& nonce,
-                             const secure_vector<byte>& key)
-   {
-   std::unique_ptr<Cipher_Mode> cipher(get_cipher_mode(algo, dir));
-   if(!cipher)
-      throw std::runtime_error("No cipher " + algo + " enabled in build");
-
-   cipher->set_key(key);
-   cipher->start(nonce);
-
-   secure_vector<byte> ct = pt;
-   cipher->finish(ct);
-   return ct;
-   }
-
 size_t mode_test(const std::string& algo,
-                 const std::string& pt,
-                 const std::string& ct,
-                 const std::string& key_hex,
-                 const std::string& nonce_hex)
+                 const std::vector<byte>& pt,
+                 const std::vector<byte>& ct,
+                 const std::vector<byte>& key,
+                 const std::vector<byte>& nonce)
    {
-   auto nonce = hex_decode_locked(nonce_hex);
-   auto key = hex_decode_locked(key_hex);
-
    size_t fails = 0;
 
-   const std::string ct2 = hex_encode(run_mode(algo,
-                                               ENCRYPTION,
-                                               hex_decode_locked(pt),
-                                               nonce,
-                                               key));
+   std::unique_ptr<Cipher_Mode> enc(get_cipher_mode(algo, ENCRYPTION));
+   std::unique_ptr<Cipher_Mode> dec(get_cipher_mode(algo, DECRYPTION));
 
-   if(ct != ct2)
-      {
-      std::cout << algo << " got ct " << ct2 << " expected " << ct << std::endl;
-      ++fails;
-      }
+   if(!enc || !dec)
+      return warn_about_missing(algo);
 
-   const std::string pt2 = hex_encode(run_mode(algo,
-                                               DECRYPTION,
-                                               hex_decode_locked(ct),
-                                               nonce,
-                                               key));
+   enc->set_key(key);
+   enc->start(nonce);
 
-   if(pt != pt2)
-      {
-      std::cout << algo << " got pt " << pt2 << " expected " << pt << std::endl;
-      ++fails;
-      }
+   dec->set_key(key);
+   dec->start(nonce);
+
+   secure_vector<byte> buf;
+
+   buf.assign(pt.begin(), pt.end());
+   enc->finish(buf);
+   fails += test_buffers_equal(algo, "encrypt", buf, ct);
+
+   buf.assign(ct.begin(), ct.end());
+   dec->finish(buf);
+   fails += test_buffers_equal(algo, "decrypt", buf, pt);
 
    return fails;
    }
@@ -85,7 +62,11 @@ size_t test_modes()
       return run_tests_bb(vec, "Mode", "Out", true,
              [](std::map<std::string, std::string> m)
              {
-             return mode_test(m["Mode"], m["In"], m["Out"], m["Key"], m["Nonce"]);
+             return mode_test(m["Mode"],
+                              hex_decode(m["In"]),
+                              hex_decode(m["Out"]),
+                              hex_decode(m["Key"]),
+                              hex_decode(m["Nonce"]));
              });
       };
 

@@ -18,46 +18,36 @@ using namespace Botan;
 
 namespace {
 
+#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
 size_t keywrap_test(const char* key_str,
-                    const char* expected_str,
+                    const char* expected_hex,
                     const char* kek_str)
    {
    size_t fail = 0;
 
-#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
    try
       {
       SymmetricKey key(key_str);
-      SymmetricKey expected(expected_str);
+      SymmetricKey expected(expected_hex);
       SymmetricKey kek(kek_str);
 
       secure_vector<byte> enc = rfc3394_keywrap(key.bits_of(), kek);
 
-      if(enc != expected.bits_of())
-         {
-         std::cout << "NIST key wrap encryption failure: "
-                   << hex_encode(enc) << " != " << hex_encode(expected.bits_of()) << std::endl;
-         fail++;
-         }
+      fail += test_buffers_equal("NIST key wrap", "encryption", enc, expected.bits_of());
 
       secure_vector<byte> dec = rfc3394_keyunwrap(expected.bits_of(), kek);
 
-      if(dec != key.bits_of())
-         {
-         std::cout << "NIST key wrap decryption failure: "
-                   << hex_encode(dec) << " != " << hex_encode(key.bits_of()) << std::endl;
-         fail++;
-         }
+      fail += test_buffers_equal("NIST key wrap", "decryption", dec, key.bits_of());
       }
    catch(std::exception& e)
       {
       std::cout << e.what() << std::endl;
       fail++;
       }
-#endif
 
    return fail;
    }
+#endif
 
 }
 
@@ -65,6 +55,7 @@ size_t test_keywrap()
    {
    size_t fails = 0;
 
+#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
    fails += keywrap_test("00112233445566778899AABBCCDDEEFF",
                          "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5",
                          "000102030405060708090A0B0C0D0E0F");
@@ -88,6 +79,9 @@ size_t test_keywrap()
    fails += keywrap_test("00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F",
                          "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21",
                          "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
+
+   test_report("NIST keywrap", 6, fails);
+#endif
 
    return fails;
    }

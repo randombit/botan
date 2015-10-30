@@ -16,18 +16,15 @@ using namespace Botan;
 namespace {
 
 size_t hash_test(const std::string& algo,
-                 const std::string& in_hex,
-                 const std::string& out_hex)
+                 const std::vector<byte>& input,
+                 const std::vector<byte>& expected)
    {
-   size_t fails = 0;
-
    const std::vector<std::string> providers = HashFunction::providers(algo);
 
    if(providers.empty())
-      {
-      std::cout << "Unknown hash '" << algo << "'" << std::endl;
-      return 0;
-      }
+      return warn_about_missing("hash " + algo);
+
+   size_t fails = 0;
 
    for(auto provider: providers)
       {
@@ -35,50 +32,28 @@ size_t hash_test(const std::string& algo,
 
       if(!hash)
          {
-         std::cout << "Unable to get " << algo << " from " << provider << std::endl;
-         ++fails;
+         fails += warn_about_missing(algo + " from " + provider);
          continue;
          }
 
-      const std::vector<byte> in = hex_decode(in_hex);
+      hash->update(input);
 
-      hash->update(in);
-
-      auto h = hash->final();
-
-      if(h != hex_decode_locked(out_hex))
-         {
-         std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex << std::endl;
-         ++fails;
-         }
+      fails += test_buffers_equal(algo, provider, "hashing", hash->final(), expected);
 
       // Test to make sure clear() resets what we need it to
       hash->update("some discarded input");
       hash->clear();
+      hash->update(nullptr, 0); // this should be effectively ignored
+      hash->update(input);
 
-      hash->update(in);
+      fails += test_buffers_equal(algo, provider, "hashing after clear", hash->final(), expected);
 
-      h = hash->final();
-
-      if(h != hex_decode_locked(out_hex))
+      if(input.size() > 1)
          {
-         std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex
-                   << " (with discarded input)" << std::endl;
-         ++fails;
-         }
+         hash->update(input[0]);
+         hash->update(&input[1], input.size() - 1);
 
-      if(in.size() > 1)
-         {
-         hash->update(in[0]);
-         hash->update(&in[1], in.size() - 1);
-         h = hash->final();
-
-         if(h != hex_decode_locked(out_hex))
-            {
-            std::cout << algo << " " << provider << " got " << hex_encode(h) << " != " << out_hex
-                      << " (with offset input)" << std::endl;
-            ++fails;
-            }
+         fails += test_buffers_equal(algo, provider, "hashing split", hash->final(), expected);
          }
       }
 
@@ -96,7 +71,8 @@ size_t test_hash()
       return run_tests_bb(vec, "Hash", "Out", true,
              [](std::map<std::string, std::string> m) -> size_t
              {
-             return hash_test(m["Hash"], m["In"], m["Out"]);
+             return hash_test(m["Hash"], hex_decode(m["In"]),
+                              hex_decode(m["Out"]));
              });
       };
 

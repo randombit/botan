@@ -135,21 +135,21 @@ size_t test_mceies(const McEliece_PrivateKey& sk,
          {
          bad_ct = ct;
 
-         byte nonzero = 0;
-         while(nonzero == 0)
-            nonzero = rng.next_byte();
+         const byte offset = rng.next_byte() % bad_ct.size();
+         const byte mask = rng.next_nonzero_byte();
 
-         bad_ct[rng.next_byte() % bad_ct.size()] ^= nonzero;
+         bad_ct[offset] ^= mask;
 
          try
             {
             mceies_decrypt(sk, bad_ct.data(), bad_ct.size(), ad, ad_len);
-            std::cout << "Successfully decrypted manipulated ciphertext!" << std::endl;
+            std::cout << "Successfully decrypted manipulated ciphertext using mask "
+                      << mask << " offset " << offset << std::endl;
             ++fails;
             }
          catch(std::exception& e) { /* Yay */ }
 
-         bad_ct[i] ^= nonzero;
+         bad_ct[offset] ^= mask;
          }
       }
 

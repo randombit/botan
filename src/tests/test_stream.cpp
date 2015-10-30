@@ -27,15 +27,13 @@ size_t stream_test(const std::string& algo,
    const secure_vector<byte> pt = hex_decode_locked(in_hex);
    const secure_vector<byte> ct = hex_decode_locked(out_hex);
    const secure_vector<byte> nonce = hex_decode_locked(nonce_hex);
+   const std::vector<byte> expected = hex_decode(out_hex);
 
    const std::vector<std::string> providers = StreamCipher::providers(algo);
    size_t fails = 0;
 
    if(providers.empty())
-      {
-      std::cout << "Unknown stream cipher " << algo << std::endl;
-      return 0;
-      }
+      return warn_about_missing("stream cipher " + algo);
 
    for(auto provider: providers)
       {
@@ -43,8 +41,7 @@ size_t stream_test(const std::string& algo,
 
       if(!cipher)
          {
-         std::cout << "Unable to get " << algo << " from " << provider << std::endl;
-         ++fails;
+         fails += warn_about_missing("stream cipher " + algo + " from " + provider);
          continue;
          }
 
@@ -54,14 +51,9 @@ size_t stream_test(const std::string& algo,
          cipher->set_iv(nonce.data(), nonce.size());
 
       secure_vector<byte> buf = pt;
-
       cipher->encrypt(buf);
 
-      if(buf != ct)
-         {
-         std::cout << algo << " " << provider << " enc " << hex_encode(buf) << " != " << out_hex << std::endl;
-         ++fails;
-         }
+      fails += test_buffers_equal(algo, provider, "encrypt", buf, expected);
       }
 
    return fails;

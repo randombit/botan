@@ -8,7 +8,9 @@
 #include <iostream>
 #include <fstream>
 #include <botan/auto_rng.h>
+#include <botan/hex.h>
 #include <botan/internal/filesystem.h>
+#include <botan/internal/bit_ops.h>
 
 #define CATCH_CONFIG_RUNNER
 #define CATCH_CONFIG_CONSOLE_WIDTH 60
@@ -29,6 +31,74 @@ Botan::RandomNumberGenerator& test_rng()
    static Botan::AutoSeeded_RNG rng;
    return rng;
 #endif
+   }
+
+size_t warn_about_missing(const std::string& whatever)
+   {
+   static std::set<std::string> s_already_seen;
+
+   if(s_already_seen.count(whatever) == 0)
+      {
+      std::cout << "Skipping tests due to missing " << whatever << "\n";
+      s_already_seen.insert(whatever);
+      }
+
+   return 0;
+   }
+
+size_t test_buffers_equal(const std::string& who,
+                          const char* provider,
+                          const char* what,
+                          const byte produced[],
+                          size_t produced_size,
+                          const byte expected[],
+                          size_t expected_size)
+   {
+   if(produced_size == expected_size && same_mem(produced, expected, expected_size))
+      return 0;
+
+   std::ostringstream err;
+
+   err << who;
+
+   if(provider)
+      {
+      err << " provider " << provider;
+      }
+   if(what)
+      {
+      err << " " << what;
+      }
+
+   err << " unexpected result";
+
+   if(produced_size != expected_size)
+      {
+      err << " produced " << produced_size << " bytes expected " << expected_size;
+      }
+
+   err << "\n";
+
+   std::vector<byte> xor_diff(std::min(produced_size, expected_size));
+   size_t bits_different = 0;
+
+   for(size_t i = 0; i != xor_diff.size(); ++i)
+      {
+      xor_diff[i] = produced[i] ^ expected[i];
+      bits_different += hamming_weight(xor_diff[i]);
+      }
+
+   err << "Produced: " << hex_encode(produced, produced_size) << "\n";
+   err << "Expected: " << hex_encode(expected, expected_size) << "\n";
+   if(bits_different > 0)
+      {
+      err << "XOR Diff: " << hex_encode(xor_diff)
+          << " (" << bits_different << " bits different)\n";
+      }
+
+   std::cout << err.str();
+
+   return 1;
    }
 
 size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std::string&)> fn)

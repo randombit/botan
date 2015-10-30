@@ -26,10 +26,7 @@ size_t mac_test(const std::string& algo,
    size_t fails = 0;
 
    if(providers.empty())
-      {
-      std::cout << "Unknown algo " << algo << std::endl;
-      return 0;
-      }
+      return warn_about_missing("MAC " + algo);
 
    for(auto provider: providers)
       {
@@ -37,8 +34,7 @@ size_t mac_test(const std::string& algo,
 
       if(!mac)
          {
-         std::cout << "Unable to get " << algo << " from " << provider << std::endl;
-         ++fails;
+         fails += warn_about_missing("MAC " + algo + " from " + provider);
          continue;
          }
 
@@ -49,13 +45,7 @@ size_t mac_test(const std::string& algo,
 
       mac->update(in);
 
-      const std::vector<byte> out = unlock(mac->final());
-
-      if(out != exp)
-         {
-         std::cout << algo << " " << provider << " got " << hex_encode(out) << " != " << hex_encode(exp) << std::endl;
-         ++fails;
-         }
+      fails += test_buffers_equal(algo, provider, "mac", mac->final(), exp);
 
       if(in.size() > 2)
          {
@@ -64,13 +54,7 @@ size_t mac_test(const std::string& algo,
          mac->update(&in[1], in.size() - 2);
          mac->update(in[in.size()-1]);
 
-         const std::vector<byte> out2 = unlock(mac->final());
-
-         if(out2 != exp)
-            {
-            std::cout << algo << " " << provider << " got " << hex_encode(out2) << " != " << hex_encode(exp) << std::endl;
-            ++fails;
-            }
+         fails += test_buffers_equal(algo, provider, "mac2", mac->final(), exp);
          }
       }
 

@@ -31,13 +31,7 @@ size_t curve25519_scalar_kat(const std::string& secret_h,
    std::vector<byte> got(32);
    curve25519_donna(got.data(), secret.data(), basepoint.data());
 
-   if(got != out)
-      {
-      std::cout << "Got " << hex_encode(got) << " exp " << hex_encode(out) << std::endl;
-      return 1;
-      }
-
-   return 0;
+   return test_buffers_equal("Curve25519", "basemult", got, out);
    }
 
 size_t c25519_roundtrip()
@@ -85,16 +79,13 @@ size_t c25519_roundtrip()
       SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value(), context);
       SymmetricKey b_key = b_ka.derive_key(32, a_pub_key->public_value(), context);
 
-      if(a_key != b_key)
-         return 1;
+      return test_buffers_equal("Curve25519", "agreement", a_key.bits_of(), b_key.bits_of());
       }
    catch(std::exception& e)
       {
       std::cout << "C25519 rt fail: " << e.what() << std::endl;
       return 1;
       }
-
-   return 0;
    }
 
 

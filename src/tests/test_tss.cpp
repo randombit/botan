@@ -29,23 +29,10 @@ size_t test_tss()
    std::vector<RTSS_Share> shares =
       RTSS_Share::split(2, 4, S.data(), S.size(), id, rng);
 
-   auto back = RTSS_Share::reconstruct(shares);
-
-   if(S != back)
-      {
-      std::cout << "TSS-0: " << hex_encode(S) << " != " << hex_encode(back) << std::endl;
-      ++fails;
-      }
+   fails += test_buffers_equal("TSS", "test 1", RTSS_Share::reconstruct(shares), S);
 
    shares.resize(shares.size()-1);
-
-   back = RTSS_Share::reconstruct(shares);
-
-   if(S != back)
-      {
-      std::cout << "TSS-1: " << hex_encode(S) << " != " << hex_encode(back) << std::endl;
-      ++fails;
-      }
+   fails += test_buffers_equal("TSS", "test 2", RTSS_Share::reconstruct(shares), S);
 
    test_report("TSS", 2, fails);
 

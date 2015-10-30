@@ -16,22 +16,16 @@ using namespace Botan;
 namespace {
 
 size_t block_test(const std::string& algo,
-                  const std::string& key_hex,
-                  const std::string& in_hex,
-                  const std::string& out_hex)
+                  const std::vector<byte>& key,
+                  const std::vector<byte>& input,
+                  const std::vector<byte>& expected)
    {
-   const secure_vector<byte> key = hex_decode_locked(key_hex);
-   const secure_vector<byte> pt = hex_decode_locked(in_hex);
-   const secure_vector<byte> ct = hex_decode_locked(out_hex);
-
    const std::vector<std::string> providers = BlockCipher::providers(algo);
-   size_t fails = 0;
 
    if(providers.empty())
-      {
-      std::cout << "Unknown block cipher " + algo + " skipping test\n";
-      return 0;
-      }
+      return warn_about_missing("block cipher " + algo);
+
+   size_t fails = 0;
 
    for(auto provider: providers)
       {
@@ -39,30 +33,22 @@ size_t block_test(const std::string& algo,
 
       if(!cipher)
          {
-         std::cout << "Unable to get " << algo << " from " << provider << std::endl;
-         ++fails;
+         fails += warn_about_missing(algo + " from " + provider);
          continue;
          }
 
       cipher->set_key(key);
-      secure_vector<byte> buf = pt;
+      std::vector<byte> buf = input;
 
       cipher->encrypt(buf);
 
-      if(buf != ct)
-         {
-         std::cout << algo << " " << provider << " enc " << hex_encode(buf) << " != " << out_hex << std::endl;
-         ++fails;
-         buf = ct;
-         }
+      fails += test_buffers_equal(algo + " " + provider, "encrypt", buf, expected);
 
+      // always decrypt expected ciphertext vs what we produced above
+      buf = expected;
       cipher->decrypt(buf);
 
-      if(buf != pt)
-         {
-         std::cout << algo << " " << provider << " dec " << hex_encode(buf) << " != " << out_hex << std::endl;
-         ++fails;
-         }
+      fails += test_buffers_equal(algo + " " + provider, "decrypt", buf, input);
       }
 
    return fails;
@@ -79,7 +65,9 @@ size_t test_block()
       return run_tests_bb(vec, "BlockCipher", "Out", true,
                           [](std::map<std::string, std::string> m) -> size_t
                           {
-                          return block_test(m["BlockCipher"], m["Key"], m["In"], m["Out"]);
+                          return block_test(m["BlockCipher"], hex_decode(m["Key"]),
+                                            hex_decode(m["In"]),
+                                            hex_decode(m["Out"]));
                           });
       };
 

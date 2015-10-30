@@ -53,28 +53,21 @@ size_t aead_test(const std::string& algo,
    // should first update if possible
    enc->finish(vec);
 
-   if(vec != expected_ct)
-      {
-      std::cout << algo << " got ct " << hex_encode(vec) << " expected " << expected << std::endl;
-      ++fail;
-      }
+   fail += test_buffers_equal(algo, "encrypt", vec, expected_ct);
 
    vec = expected_ct;
 
    dec->start(nonce);
    dec->finish(vec);
 
-   if(vec != pt)
-      {
-      std::cout << algo << " got pt " << hex_encode(vec) << " expected " << input << std::endl;
-      ++fail;
-      }
+   fail += test_buffers_equal(algo, "encrypt", vec, pt);
 
    if(enc->authenticated())
       {
       vec = expected_ct;
       vec[0] ^= 1;
       dec->start(nonce);
+
       try
          {
          dec->finish(vec);
