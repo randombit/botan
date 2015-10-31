@@ -7,78 +7,79 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_STREAM_CIPHER)
-
 #include <botan/stream_cipher.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
+#endif
 
-using namespace Botan;
+namespace Botan_Tests {
 
-namespace {
+#if defined(BOTAN_HAS_STREAM_CIPHER)
 
-size_t stream_test(const std::string& algo,
-                   const std::string& key_hex,
-                   const std::string& in_hex,
-                   const std::string& out_hex,
-                   const std::string& nonce_hex)
+class Stream_Cipher_Tests : public Text_Based_Test
    {
-   const secure_vector<byte> key = hex_decode_locked(key_hex);
-   const secure_vector<byte> pt = hex_decode_locked(in_hex);
-   const secure_vector<byte> ct = hex_decode_locked(out_hex);
-   const secure_vector<byte> nonce = hex_decode_locked(nonce_hex);
-   const std::vector<byte> expected = hex_decode(out_hex);
+   public:
+      Stream_Cipher_Tests(const std::string& data_dir) :
+         Text_Based_Test(data_dir, {"Key", "In", "Out"}, {"Nonce"}) {}
 
-   const std::vector<std::string> providers = StreamCipher::providers(algo);
-   size_t fails = 0;
-
-   if(providers.empty())
-      return warn_about_missing("stream cipher " + algo);
-
-   for(auto provider: providers)
-      {
-      std::unique_ptr<StreamCipher> cipher(StreamCipher::create(algo, provider));
-
-      if(!cipher)
+      Test::Result run_one_test(const std::string& algo,
+                                const std::map<std::string, std::string>& vars) override
          {
-         fails += warn_about_missing("stream cipher " + algo + " from " + provider);
-         continue;
+         const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
+         const std::vector<uint8_t> input    = get_req_bin(vars, "In");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> nonce    = get_opt_bin(vars, "Nonce");
+
+         Test::Result result(algo);
+
+         const std::vector<std::string> providers = Botan::StreamCipher::providers(algo);
+
+         if(providers.empty())
+            {
+            warn_about_missing("block cipher " + algo);
+            return result;
+            }
+
+         for(auto&& provider: providers)
+            {
+            std::unique_ptr<Botan::StreamCipher> cipher(Botan::StreamCipher::create(algo, provider));
+
+            if(!cipher)
+               {
+               warn_about_missing(algo + " from " + provider);
+               continue;
+               }
+
+            cipher->set_key(key);
+
+            if(nonce.size())
+               cipher->set_iv(nonce.data(), nonce.size());
+
+            std::vector<uint8_t> buf = input;
+            cipher->encrypt(buf);
+
+            result.test_eq("encrypt", buf, expected);
+            }
+
+         return result;
          }
+   };
 
-      cipher->set_key(key);
+BOTAN_REGISTER_TEST("stream", Stream_Cipher_Tests(TEST_DATA_DIR "/stream"));
 
-      if(nonce.size())
-         cipher->set_iv(nonce.data(), nonce.size());
-
-      secure_vector<byte> buf = pt;
-      cipher->encrypt(buf);
-
-      fails += test_buffers_equal(algo, provider, "encrypt", buf, expected);
-      }
-
-   return fails;
-   }
+#endif
 
 }
 
+
 size_t test_stream()
    {
-   auto test = [](const std::string& input)
-      {
-      std::ifstream vec(input);
+   using namespace Botan_Tests;
 
-      return run_tests_bb(vec, "StreamCipher", "Out", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return stream_test(m["StreamCipher"], m["Key"], m["In"], m["Out"], m["Nonce"]);
-             });
-      };
+   std::vector<Test::Result> results = Test::run_test("stream");
 
-   return run_tests_in_dir(TEST_DATA_DIR "/stream", test);
+   std::string report;
+   size_t fail_cnt = 0;
+   Test::summarize(results, report, fail_cnt);
+
+   std::cout << report;
+   return fail_cnt;
    }
-
-#else
-
-SKIP_TEST(stream);
-
-#endif // BOTAN_HAS_STREAM_CIPHER

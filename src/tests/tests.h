@@ -17,7 +17,133 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <sstream>
+
+namespace Botan_Tests {
+
+class Test
+   {
+   public:
+      class Result
+         {
+         public:
+            Result(const std::string& who = "") : m_who(who) {}
+
+            size_t tests_passed() const { return m_tests_passed; }
+            size_t tests_failed() const { return m_fail_log.size(); }
+            size_t tests_run() const { return tests_passed() + tests_failed(); }
+            bool any_results() const { return tests_run() > 0; }
+
+            const std::string& who() const { return m_who; }
+            std::string result_string() const;
+
+            static Result Failure(const std::string& who,
+                                  const std::string& what)
+               {
+               Result r(who);
+               r.test_failure(what);
+               return r;
+               }
+
+            void merge(const Result& other);
+
+            void test_note(const std::string& note);
+
+            bool test_success();
+
+            bool test_failure(const std::string& err);
+
+            bool test_failure(std::ostringstream& oss)
+               {
+               return test_failure(oss.str());
+               }
+
+            bool test_eq(const char* what, size_t produced, size_t expected);
+
+            bool test_eq(const char* what,
+                         const uint8_t produced[], size_t produced_len,
+                         const uint8_t expected[], size_t expected_len);
+
+            template<typename Alloc1, typename Alloc2>
+            bool test_eq(const char* what,
+                         const std::vector<uint8_t, Alloc1>& produced,
+                         const std::vector<uint8_t, Alloc2>& expected)
+               {
+               return test_eq(what,
+                              produced.data(), produced.size(),
+                              expected.data(), expected.size());
+               }
+
+         private:
+            std::string m_who;
+            size_t m_tests_passed = 0;
+            std::vector<std::string> m_fail_log;
+            std::vector<std::string> m_log;
+         };
+
+      class Registration
+         {
+         public:
+            Registration(const std::string& name, Test* test)
+               {
+               // TODO: check for dups
+               Test::global_registry().insert(std::make_pair(name, test));
+               }
+         };
+
+      virtual std::vector<Test::Result> run() = 0;
+      virtual ~Test() {}
+
+      static void summarize(const std::vector<Test::Result>& results,
+                            std::string& out_report, size_t& out_fail_cnt);
+
+      static std::map<std::string, Test*>& global_registry();
+
+      static Test* get_test(const std::string& test_name);
+
+      static std::vector<Test::Result> run_test(const std::string& what);
+   };
+
+#define BOTAN_REGISTER_TEST(type, Test_Class) namespace { Test::Registration test_reg(type, new Test_Class); }
+
+class Text_Based_Test : public Test
+   {
+   public:
+      Text_Based_Test(const std::string& data_dir,
+                      const std::vector<std::string>& required_keys,
+                      const std::vector<std::string>& optional_keys = {},
+                      bool clear_between = true);
+
+      std::vector<Test::Result> run() override;
+   protected:
+      std::string get_next_line();
+
+      virtual Test::Result run_one_test(const std::string& algo,
+                                        const std::map<std::string, std::string>& vars) = 0;
+
+      std::vector<uint8_t> get_req_bin(const std::map<std::string, std::string>& vars,
+                                       const std::string& key);
+
+      std::vector<uint8_t> get_opt_bin(const std::map<std::string, std::string>& vars,
+                                       const std::string& key);
+   private:
+      std::string m_data_dir;
+      std::set<std::string> m_required_keys;
+      std::set<std::string> m_optional_keys;
+      std::string m_output_key;
+      bool m_clear_between_cb = false;
+
+      bool m_first = true;
+      std::unique_ptr<std::ifstream> m_cur;
+      std::deque<std::string> m_srcs;
+   };
+
+}
+
+
+
+
 
 Botan::RandomNumberGenerator& test_rng();
 
@@ -44,13 +170,13 @@ size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std:
 size_t warn_about_missing(const std::string& whatever);
 
 
-size_t test_buffers_equal(const std::string& algo,
-                          const char* provider,
-                          const char* what,
-                          const uint8_t produced[],
-                          size_t produced_size,
-                          const uint8_t expected[],
-                          size_t expected_size);
+std::string test_buffers_equal(const std::string& algo,
+                               const char* provider,
+                               const char* what,
+                               const uint8_t produced[],
+                               size_t produced_size,
+                               const uint8_t expected[],
+                               size_t expected_size);
 
 template<typename Alloc1, typename Alloc2>
 size_t test_buffers_equal(const std::string& algo,
@@ -59,9 +185,10 @@ size_t test_buffers_equal(const std::string& algo,
                           const std::vector<uint8_t, Alloc1>& produced,
                           const std::vector<uint8_t, Alloc2>& expected)
    {
-   return test_buffers_equal(algo, provider.c_str(), what,
-                             produced.data(), produced.size(),
-                             expected.data(), expected.size());
+   const std::string res = test_buffers_equal(algo, provider.c_str(), what,
+                                              produced.data(), produced.size(),
+                                              expected.data(), expected.size());
+   return res.size() > 0;
    }
 
 template<typename Alloc1, typename Alloc2>
@@ -70,9 +197,10 @@ size_t test_buffers_equal(const std::string& algo,
                           const std::vector<uint8_t, Alloc1>& produced,
                           const std::vector<uint8_t, Alloc2>& expected)
    {
-   return test_buffers_equal(algo, nullptr, what,
-                             produced.data(), produced.size(),
-                             expected.data(), expected.size());
+   const std::string res = test_buffers_equal(algo, nullptr, what,
+                                            produced.data(), produced.size(),
+                                            expected.data(), expected.size());
+   return res.size() > 0;
    }
 
 // Run a list of tests
