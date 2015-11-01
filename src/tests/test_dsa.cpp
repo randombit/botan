@@ -23,11 +23,8 @@ class DSA_KAT_Tests : public Text_Based_Test
    public:
       DSA_KAT_Tests() : Text_Based_Test(Test::data_file("pubkey/dsa.vec"), {"P", "Q", "G", "X", "Hash", "Msg", "Signature"}, {}, false) {}
 
-      size_t soak_level() const { return 5; }
-
       void check_invalid_signatures(Result& result,
                                     Botan::PK_Verifier& verifier,
-                                    Botan::RandomNumberGenerator& rng,
                                     const std::vector<byte>& message,
                                     const std::vector<byte>& signature) const
          {
@@ -35,10 +32,10 @@ class DSA_KAT_Tests : public Text_Based_Test
          result.test_eq("all zero signature invalid", verifier.verify_message(message, zero_sig), false);
 
          std::vector<byte> bad_sig = signature;
-         for(size_t i = 0; i <= soak_level(); ++i)
+         for(size_t i = 0; i <= Test::soak_level(); ++i)
             {
-            size_t offset = rng.get_random<uint16_t>() % bad_sig.size();
-            bad_sig[offset] ^= rng.next_nonzero_byte();
+            size_t offset = test_rng().get_random<uint16_t>() % bad_sig.size();
+            bad_sig[offset] ^= test_rng().next_nonzero_byte();
 
             if(!result.test_eq("incorrect signature invalid", verifier.verify_message(message, bad_sig), false))
                {
@@ -47,7 +44,7 @@ class DSA_KAT_Tests : public Text_Based_Test
             }
          }
 
-      Test::Result run_one_test(const std::string& algo,
+      Test::Result run_one_test(const std::string&,
                                 const std::map<std::string, std::string>& vars) override
          {
          const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
@@ -61,7 +58,7 @@ class DSA_KAT_Tests : public Text_Based_Test
          const std::string hash = get_req_str(vars, "Hash");
          const std::vector<uint8_t> msg = get_req_bin(vars, "Msg");
 
-         Botan::RandomNumberGenerator& rng = test_rng();
+         Botan::RandomNumberGenerator& rng = Test::rng();
 
          Test::Result result("DSA/" + hash);
 
@@ -79,13 +76,13 @@ class DSA_KAT_Tests : public Text_Based_Test
          result.test_eq("generated signature valid", verifier.verify_message(message, generated_signature), true);
          result.test_eq("generated signature matches KAT", generated_signature, signature);
 
-         check_invalid_signatures(result, verifier, rng, message, signature);
+         check_invalid_signatures(result, verifier, message, signature);
 
          return result;
          }
    };
 
-BOTAN_REGISTER_TEST("dsa", DSA_KAT_Tests);
+BOTAN_REGISTER_TEST("dsa_kat", DSA_KAT_Tests);
 
 #endif
 
@@ -97,7 +94,7 @@ size_t test_dsa()
    {
    using namespace Botan_Tests;
 
-   std::vector<Test::Result> results = Test::run_test("dsa");
+   std::vector<Test::Result> results = Test::run_test("dsa_kat");
 
    std::string report;
    size_t fail_cnt = 0;

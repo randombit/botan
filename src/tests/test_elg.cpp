@@ -7,68 +7,111 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ELGAMAL)
-
-#include "test_pubkey.h"
-
+  #include <botan/elgamal.h>
+  #include <botan/pubkey.h>
+  #include "test_rng.h"
 #include <botan/hex.h>
-#include <botan/elgamal.h>
-#include <botan/pubkey.h>
-#include <botan/dl_group.h>
-#include <iostream>
-#include <fstream>
+#endif
 
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t elgamal_kat(const std::string& p,
-                   const std::string& g,
-                   const std::string& x,
-                   const std::string& msg,
-                   std::string padding,
-                   const std::string& nonce,
-                   const std::string& ciphertext)
+#if defined(BOTAN_HAS_ELGAMAL)
+
+class ElGamal_KAT_Tests : public Text_Based_Test
    {
-   auto& rng = test_rng();
+   public:
+      ElGamal_KAT_Tests() : Text_Based_Test(Test::data_file("pubkey/elgamal.vec"),
+                                        {"P", "G", "X", "Msg", "Nonce", "Ciphertext"},
+                                        {"Padding"},
+                                        false)
+         {}
 
-   const BigInt p_bn = BigInt(p);
-   const BigInt g_bn = BigInt(g);
-   const BigInt x_bn = BigInt(x);
+      void check_invalid_ciphertexts(Result& result,
+                                     Botan::PK_Decryptor& decryptor,
+                                     const std::vector<byte>& plaintext,
+                                     const std::vector<byte>& ciphertext) const
+         {
+         std::vector<byte> bad_ctext = ciphertext;
 
-   DL_Group group(p_bn, g_bn);
-   ElGamal_PrivateKey privkey(rng, group, x_bn);
+         size_t ciphertext_accepted = 0, ciphertext_rejected = 0;
 
-   ElGamal_PublicKey pubkey = privkey;
+         for(size_t i = 0; i <= Test::soak_level(); ++i)
+            {
+            size_t offset = test_rng().get_random<uint16_t>() % bad_ctext.size();
+            bad_ctext[offset] ^= test_rng().next_nonzero_byte();
 
-   if(padding == "")
-      padding = "Raw";
+            try
+               {
+               const Botan::secure_vector<byte> decrypted = decryptor.decrypt(bad_ctext);
+               ++ciphertext_accepted;
 
-   PK_Encryptor_EME enc(pubkey, padding);
-   PK_Decryptor_EME dec(privkey, padding);
+               if(!result.test_ne("incorrect ciphertext different", decrypted, plaintext))
+                  {
+                  result.test_note("used corrupted ciphertext " + Botan::hex_encode(bad_ctext));
+                  }
 
-   return validate_encryption(enc, dec, "ElGamal/" + padding, msg, nonce, ciphertext);
-   }
+               }
+            catch(std::exception& e)
+               {
+               ++ciphertext_rejected;
+               }
+            }
+
+         result.test_note("Accepted " + std::to_string(ciphertext_accepted) +
+                          " invalid ciphertexts, rejected " + std::to_string(ciphertext_rejected));
+         }
+
+      Test::Result run_one_test(const std::string&,
+                                const std::map<std::string, std::string>& vars) override
+         {
+         const std::vector<uint8_t> plaintext  = get_req_bin(vars, "Msg");
+         const std::vector<uint8_t> ciphertext = get_req_bin(vars, "Ciphertext");
+
+         const BigInt p = get_req_bn(vars, "P");
+         const BigInt g = get_req_bn(vars, "G");
+         const BigInt x = get_req_bn(vars, "X");
+
+         const std::string padding = get_opt_str(vars, "Padding", "Raw");
+         Fixed_Output_RNG kat_rng(get_req_bin(vars, "Nonce"));
+
+         Test::Result result("ElGamal");
+
+         const Botan::DL_Group group(p, g);
+         const Botan::ElGamal_PrivateKey privkey(Test::rng(), group, x);
+         const Botan::ElGamal_PublicKey pubkey = privkey;
+
+         Botan::PK_Encryptor_EME encryptor(pubkey, padding);
+         Botan::PK_Decryptor_EME decryptor(privkey, padding);
+
+         result.test_eq("encryption", encryptor.encrypt(plaintext, kat_rng), ciphertext);
+         result.test_eq("decryption", decryptor.decrypt(ciphertext), plaintext);
+
+         check_invalid_ciphertexts(result, decryptor, plaintext, ciphertext);
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("elgamal_kat", ElGamal_KAT_Tests);
+
+#endif
+
+}
 
 }
 
 size_t test_elgamal()
    {
-   size_t fails = 0;
+   using namespace Botan_Tests;
 
-   std::ifstream elgamal_enc(TEST_DATA_DIR_PK "/elgamal.vec");
+   std::vector<Test::Result> results = Test::run_test("elgamal_kat");
 
-   fails += run_tests_bb(elgamal_enc, "ElGamal Encryption", "Ciphertext", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return elgamal_kat(m["P"], m["G"], m["X"], m["Msg"],
-                              m["Padding"], m["Nonce"], m["Ciphertext"]);
-             });
+   std::string report;
+   size_t fail_cnt = 0;
+   Test::summarize(results, report, fail_cnt);
 
-   return fails;
+   std::cout << report;
+   return fail_cnt;
    }
-
-#else
-
-SKIP_TEST(elgamal);
-
-#endif // BOTAN_HAS_ELGAMAL

@@ -11,12 +11,17 @@
 
 #include <botan/build.h>
 #include <botan/rng.h>
-#include <botan/bigint.h>
+
+#if defined(BOTAN_HAS_BIGINT)
+  #include <botan/bigint.h>
+#endif
+
 #include <functional>
 #include <istream>
 #include <map>
 #include <string>
 #include <vector>
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -70,6 +75,10 @@ class Test
                          const uint8_t produced[], size_t produced_len,
                          const uint8_t expected[], size_t expected_len);
 
+            bool test_ne(const char* what,
+                         const uint8_t produced[], size_t produced_len,
+                         const uint8_t expected[], size_t expected_len);
+
             template<typename Alloc1, typename Alloc2>
             bool test_eq(const char* what,
                          const std::vector<uint8_t, Alloc1>& produced,
@@ -89,6 +98,17 @@ class Test
                               produced.data(), produced.size(),
                               expected.data(), expected.size());
                }
+
+            template<typename Alloc1, typename Alloc2>
+            bool test_ne(const char* what,
+                         const std::vector<uint8_t, Alloc1>& produced,
+                         const std::vector<uint8_t, Alloc2>& expected)
+               {
+               return test_ne(what,
+                              produced.data(), produced.size(),
+                              expected.data(), expected.size());
+               }
+
 
          private:
             std::string m_who;
@@ -121,6 +141,10 @@ class Test
 
       static std::string data_dir(const std::string& what);
       static std::string data_file(const std::string& what);
+
+      static size_t soak_level();
+
+      static Botan::RandomNumberGenerator& rng();
    };
 
 #define BOTAN_REGISTER_TEST(type, Test_Class) namespace { Test::Registration test_reg(type, new Test_Class); }
@@ -141,14 +165,19 @@ class Text_Based_Test : public Test
                                         const std::map<std::string, std::string>& vars) = 0;
 
       std::vector<uint8_t> get_req_bin(const std::map<std::string, std::string>& vars,
-                                       const std::string& key);
+                                       const std::string& key) const;
 
-      Botan::BigInt get_req_bn(const std::map<std::string, std::string>& vars, const std::string& key);
+#if defined(BOTAN_HAS_BIGINT)
+      Botan::BigInt get_req_bn(const std::map<std::string, std::string>& vars, const std::string& key) const;
+#endif
 
-      std::string get_req_str(const std::map<std::string, std::string>& vars, const std::string& key);
+      std::string get_req_str(const std::map<std::string, std::string>& vars, const std::string& key) const;
 
       std::vector<uint8_t> get_opt_bin(const std::map<std::string, std::string>& vars,
-                                       const std::string& key);
+                                       const std::string& key) const;
+
+      std::string get_opt_str(const std::map<std::string, std::string>& vars,
+                              const std::string& key, const std::string& def_value) const;
    private:
       std::string m_data_dir;
       std::set<std::string> m_required_keys;

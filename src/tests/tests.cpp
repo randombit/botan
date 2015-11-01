@@ -53,6 +53,15 @@ bool Test::Result::test_failure(const std::string& err)
    return false;
    }
 
+bool Test::Result::test_ne(const char* what,
+                           const uint8_t produced[], size_t produced_len,
+                           const uint8_t expected[], size_t expected_len)
+   {
+   if(produced_len == expected_len && same_mem(produced, expected, expected_len))
+      return test_failure(who() + " " + what + " produced matching");
+   return test_success();
+   }
+
 bool Test::Result::test_eq(const char* producer, const char* what,
                            const uint8_t produced[], size_t produced_len,
                            const uint8_t expected[], size_t expected_len)
@@ -113,6 +122,11 @@ std::string Test::Result::result_string() const
 
    report << "\n";
 
+   for(size_t i = 0; i != m_log.size(); ++i)
+      {
+      report << "Note " << (i+1) << ": " << m_log[i] << "\n";
+      }
+
    for(size_t i = 0; i != m_fail_log.size(); ++i)
       {
       report << "Failure " << (i+1) << ": " << m_fail_log[i] << "\n";
@@ -155,9 +169,28 @@ std::string Test::data_dir(const std::string& what)
    return std::string(TEST_DATA_DIR) + "/" + what;
    }
 
+//static
 std::string Test::data_file(const std::string& what)
    {
    return std::string(TEST_DATA_DIR) + "/" + what;
+   }
+
+//static
+size_t Test::soak_level()
+   {
+   return 5;
+   }
+
+//static
+Botan::RandomNumberGenerator& Test::rng()
+   {
+   // TODO: replace by HMAC_DRBG with fixed seed
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   return Botan::system_rng();
+#else
+   static Botan::AutoSeeded_RNG rng;
+   return rng;
+#endif
    }
 
 //static
@@ -208,7 +241,7 @@ Text_Based_Test::Text_Based_Test(const std::string& data_dir,
    }
 
 std::vector<uint8_t> Text_Based_Test::get_req_bin(const std::map<std::string, std::string>& vars,
-                                                  const std::string& key)
+                                                  const std::string& key) const
       {
       auto i = vars.find(key);
       if(i == vars.end())
@@ -224,8 +257,18 @@ std::vector<uint8_t> Text_Based_Test::get_req_bin(const std::map<std::string, st
          }
       }
 
+std::string Text_Based_Test::get_opt_str(const std::map<std::string, std::string>& vars,
+                                         const std::string& key, const std::string& def_value) const
+
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      return def_value;
+   return i->second;
+   }
+
 std::vector<uint8_t> Text_Based_Test::get_opt_bin(const std::map<std::string, std::string>& vars,
-                                                  const std::string& key)
+                                                  const std::string& key) const
    {
    auto i = vars.find(key);
    if(i == vars.end())
@@ -241,7 +284,7 @@ std::vector<uint8_t> Text_Based_Test::get_opt_bin(const std::map<std::string, st
       }
    }
 
-std::string Text_Based_Test::get_req_str(const std::map<std::string, std::string>& vars, const std::string& key)
+std::string Text_Based_Test::get_req_str(const std::map<std::string, std::string>& vars, const std::string& key) const
    {
    auto i = vars.find(key);
    if(i == vars.end())
@@ -249,8 +292,9 @@ std::string Text_Based_Test::get_req_str(const std::map<std::string, std::string
    return i->second;
    }
 
+#if defined(BOTAN_HAS_BIGINT)
 Botan::BigInt Text_Based_Test::get_req_bn(const std::map<std::string, std::string>& vars,
-                                          const std::string& key)
+                                          const std::string& key) const
    {
    auto i = vars.find(key);
    if(i == vars.end())
@@ -258,13 +302,14 @@ Botan::BigInt Text_Based_Test::get_req_bn(const std::map<std::string, std::strin
 
    try
       {
-      return Botan::BigInt("0x" + i->second);
+      return Botan::BigInt(i->second);
       }
    catch(std::exception& e)
       {
       throw std::runtime_error("Test invalid bigint input " + key);
       }
    }
+#endif
 
 std::string Text_Based_Test::get_next_line()
    {
@@ -382,12 +427,7 @@ std::vector<Test::Result> Text_Based_Test::run()
 
 Botan::RandomNumberGenerator& test_rng()
    {
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   return Botan::system_rng();
-#else
-   static Botan::AutoSeeded_RNG rng;
-   return rng;
-#endif
+   return Botan_Tests::Test::rng();
    }
 
 size_t warn_about_missing(const std::string& whatever)
