@@ -17,8 +17,7 @@ namespace Botan_Tests {
 class Stream_Cipher_Tests : public Text_Based_Test
    {
    public:
-      Stream_Cipher_Tests(const std::string& data_dir) :
-         Text_Based_Test(data_dir, {"Key", "In", "Out"}, {"Nonce"}) {}
+      Stream_Cipher_Tests(): Text_Based_Test(Test::data_dir("stream"), {"Key", "In", "Out"}, {"Nonce"}) {}
 
       Test::Result run_one_test(const std::string& algo,
                                 const std::map<std::string, std::string>& vars) override
@@ -56,14 +55,14 @@ class Stream_Cipher_Tests : public Text_Based_Test
             std::vector<uint8_t> buf = input;
             cipher->encrypt(buf);
 
-            result.test_eq("encrypt", buf, expected);
+            result.test_eq(provider, "encrypt", buf, expected);
             }
 
          return result;
          }
    };
 
-BOTAN_REGISTER_TEST("stream", Stream_Cipher_Tests(TEST_DATA_DIR "/stream"));
+BOTAN_REGISTER_TEST("stream", Stream_Cipher_Tests);
 
 #endif
 

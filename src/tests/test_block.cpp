@@ -12,8 +12,7 @@ namespace Botan_Tests {
 class Block_Cipher_Tests : public Text_Based_Test
    {
    public:
-      Block_Cipher_Tests(const std::string& data_dir) :
-         Text_Based_Test(data_dir, {"Key", "In", "Out"}) {}
+      Block_Cipher_Tests() : Text_Based_Test(Test::data_dir("block"), {"Key", "In", "Out"}) {}
 
       Test::Result run_one_test(const std::string& algo,
                                 const std::map<std::string, std::string>& vars) override
@@ -47,13 +46,13 @@ class Block_Cipher_Tests : public Text_Based_Test
 
             cipher->encrypt(buf);
 
-            result.test_eq("encrypt", buf, expected);
+            result.test_eq(provider, "encrypt", buf, expected);
 
             // always decrypt expected ciphertext vs what we produced above
             buf = expected;
             cipher->decrypt(buf);
 
-            result.test_eq("decrypt", buf, input);
+            result.test_eq(provider, "decrypt", buf, input);
             }
 
          return result;
@@ -61,7 +60,7 @@ class Block_Cipher_Tests : public Text_Based_Test
 
    };
 
-BOTAN_REGISTER_TEST("block", Block_Cipher_Tests(TEST_DATA_DIR "/block"));
+BOTAN_REGISTER_TEST("block", Block_Cipher_Tests);
 
 }
 

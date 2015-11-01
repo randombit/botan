@@ -7,80 +7,87 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_MAC)
+  #include <botan/mac.h>
+#endif
 
-#include <botan/mac.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t mac_test(const std::string& algo,
-                const std::string& key_hex,
-                const std::string& in_hex,
-                const std::string& out_hex)
+#if defined(BOTAN_HAS_MAC)
+
+class Message_Auth_Tests : public Text_Based_Test
    {
-   const std::vector<std::string> providers = MessageAuthenticationCode::providers(algo);
-   size_t fails = 0;
+   public:
+      Message_Auth_Tests(const std::string& data_dir) :
+         Text_Based_Test(data_dir, {"Key", "In", "Out"}) {}
 
-   if(providers.empty())
-      return warn_about_missing("MAC " + algo);
-
-   for(auto provider: providers)
-      {
-      std::unique_ptr<MessageAuthenticationCode> mac(MessageAuthenticationCode::create(algo, provider));
-
-      if(!mac)
+      Test::Result run_one_test(const std::string& algo,
+                                const std::map<std::string, std::string>& vars) override
          {
-         fails += warn_about_missing("MAC " + algo + " from " + provider);
-         continue;
+         const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
+         const std::vector<uint8_t> input    = get_req_bin(vars, "In");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+
+         Test::Result result(algo);
+
+         const std::vector<std::string> providers = Botan::MessageAuthenticationCode::providers(algo);
+
+         if(providers.empty())
+            {
+            warn_about_missing("block cipher " + algo);
+            return result;
+            }
+
+         for(auto&& provider: providers)
+            {
+            std::unique_ptr<Botan::MessageAuthenticationCode> mac(Botan::MessageAuthenticationCode::create(algo, provider));
+
+            if(!mac)
+               {
+               warn_about_missing(algo + " from " + provider);
+               continue;
+               }
+
+            mac->set_key(key);
+
+            mac->update(input);
+
+            result.test_eq(provider, "correct mac", mac->final(), expected);
+
+            if(input.size() > 2)
+               {
+               mac->set_key(key); // for poly1305
+               mac->update(input[0]);
+               mac->update(&input[1], input.size() - 2);
+               mac->update(input[input.size()-1]);
+
+               result.test_eq(provider, "split mac", mac->final(), expected);
+               }
+            }
+
+         return result;
          }
+   };
 
-      const std::vector<byte> in = hex_decode(in_hex);
-      const std::vector<byte> exp = hex_decode(out_hex);
+BOTAN_REGISTER_TEST("mac", Message_Auth_Tests(TEST_DATA_DIR "/mac"));
 
-      mac->set_key(hex_decode(key_hex));
+#endif
 
-      mac->update(in);
-
-      fails += test_buffers_equal(algo, provider, "mac", mac->final(), exp);
-
-      if(in.size() > 2)
-         {
-         mac->set_key(hex_decode(key_hex));
-         mac->update(in[0]);
-         mac->update(&in[1], in.size() - 2);
-         mac->update(in[in.size()-1]);
-
-         fails += test_buffers_equal(algo, provider, "mac2", mac->final(), exp);
-         }
-      }
-
-   return fails;
-   }
+}
 
 }
 
 size_t test_mac()
    {
-   auto test = [](const std::string& input)
-      {
-      std::ifstream vec(input);
+   using namespace Botan_Tests;
 
-      return run_tests_bb(vec, "Mac", "Out", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return mac_test(m["Mac"], m["Key"], m["In"], m["Out"]);
-             });
-      };
+   std::vector<Test::Result> results = Test::run_test("mac");
 
-   return run_tests_in_dir(TEST_DATA_DIR "/mac", test);
+   std::string report;
+   size_t fail_cnt = 0;
+   Test::summarize(results, report, fail_cnt);
+
+   std::cout << report;
+   return fail_cnt;
    }
-
-#else
-
-SKIP_TEST(mac);
-
-#endif // BOTAN_HAS_MAC

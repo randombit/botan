@@ -11,6 +11,7 @@
 
 #include <botan/build.h>
 #include <botan/rng.h>
+#include <botan/bigint.h>
 #include <functional>
 #include <istream>
 #include <map>
@@ -21,6 +22,8 @@
 #include <sstream>
 
 namespace Botan_Tests {
+
+using Botan::BigInt;
 
 class Test
    {
@@ -59,9 +62,11 @@ class Test
                return test_failure(oss.str());
                }
 
+            bool test_eq(const char* what, bool produced, bool expected);
+
             bool test_eq(const char* what, size_t produced, size_t expected);
 
-            bool test_eq(const char* what,
+            bool test_eq(const char* producer, const char* what,
                          const uint8_t produced[], size_t produced_len,
                          const uint8_t expected[], size_t expected_len);
 
@@ -70,7 +75,17 @@ class Test
                          const std::vector<uint8_t, Alloc1>& produced,
                          const std::vector<uint8_t, Alloc2>& expected)
                {
-               return test_eq(what,
+               return test_eq(nullptr, what,
+                              produced.data(), produced.size(),
+                              expected.data(), expected.size());
+               }
+
+            template<typename Alloc1, typename Alloc2>
+            bool test_eq(const std::string& producer, const char* what,
+                         const std::vector<uint8_t, Alloc1>& produced,
+                         const std::vector<uint8_t, Alloc2>& expected)
+               {
+               return test_eq(producer.c_str(), what,
                               produced.data(), produced.size(),
                               expected.data(), expected.size());
                }
@@ -103,6 +118,9 @@ class Test
       static Test* get_test(const std::string& test_name);
 
       static std::vector<Test::Result> run_test(const std::string& what);
+
+      static std::string data_dir(const std::string& what);
+      static std::string data_file(const std::string& what);
    };
 
 #define BOTAN_REGISTER_TEST(type, Test_Class) namespace { Test::Registration test_reg(type, new Test_Class); }
@@ -110,7 +128,7 @@ class Test
 class Text_Based_Test : public Test
    {
    public:
-      Text_Based_Test(const std::string& data_dir,
+      Text_Based_Test(const std::string& input_file,
                       const std::vector<std::string>& required_keys,
                       const std::vector<std::string>& optional_keys = {},
                       bool clear_between = true);
@@ -124,6 +142,10 @@ class Text_Based_Test : public Test
 
       std::vector<uint8_t> get_req_bin(const std::map<std::string, std::string>& vars,
                                        const std::string& key);
+
+      Botan::BigInt get_req_bn(const std::map<std::string, std::string>& vars, const std::string& key);
+
+      std::string get_req_str(const std::map<std::string, std::string>& vars, const std::string& key);
 
       std::vector<uint8_t> get_opt_bin(const std::map<std::string, std::string>& vars,
                                        const std::string& key);

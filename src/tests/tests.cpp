@@ -53,11 +53,11 @@ bool Test::Result::test_failure(const std::string& err)
    return false;
    }
 
-bool Test::Result::test_eq(const char* what,
+bool Test::Result::test_eq(const char* producer, const char* what,
                            const uint8_t produced[], size_t produced_len,
                            const uint8_t expected[], size_t expected_len)
    {
-   const std::string res = test_buffers_equal(m_who, nullptr, what,
+   const std::string res = test_buffers_equal(m_who, producer, what,
                                               produced, produced_len,
                                               expected, expected_len);
 
@@ -69,7 +69,22 @@ bool Test::Result::test_eq(const char* what,
 
 bool Test::Result::test_eq(const char* what, size_t produced, size_t expected)
    {
-   if(expected != produced)
+   if(produced != expected)
+      {
+      std::ostringstream err;
+      err << m_who;
+      if(what)
+         err << " " << what;
+      err << " unexpected result produced " << produced << " expected " << expected << "\n";
+      return test_failure(err);
+      }
+
+   return test_success();
+   }
+
+bool Test::Result::test_eq(const char* what, bool produced, bool expected)
+   {
+   if(produced != expected)
       {
       std::ostringstream err;
       err << m_who;
@@ -129,7 +144,20 @@ std::vector<Test::Result> Test::run_test(const std::string& what)
    if(Test* test = get_test(what))
       return test->run();
 
-   return {Test::Result::Failure("test", "No test found named '" + what + "'")};
+   Test::Result missing(what);
+   missing.test_note("No test found, possibly compiled out?");
+   return std::vector<Test::Result>{missing};
+   }
+
+//static
+std::string Test::data_dir(const std::string& what)
+   {
+   return std::string(TEST_DATA_DIR) + "/" + what;
+   }
+
+std::string Test::data_file(const std::string& what)
+   {
+   return std::string(TEST_DATA_DIR) + "/" + what;
    }
 
 //static
@@ -154,6 +182,9 @@ void Test::summarize(const std::vector<Test::Result>& results, std::string& repo
    for(auto&& result : combined)
       {
       report << result.second.result_string();
+
+      // ADD test notes
+      //report << result.second.result_string();
       failures += result.second.tests_failed();
       }
 
@@ -195,21 +226,45 @@ std::vector<uint8_t> Text_Based_Test::get_req_bin(const std::map<std::string, st
 
 std::vector<uint8_t> Text_Based_Test::get_opt_bin(const std::map<std::string, std::string>& vars,
                                                   const std::string& key)
-      {
-      
-      auto i = vars.find(key);
-      if(i == vars.end())
-         return std::vector<uint8_t>();
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      return std::vector<uint8_t>();
 
-      try
-         {
-         return Botan::hex_decode(i->second);
-         }
-      catch(std::exception& e)
-         {
-         throw std::runtime_error("Test invalid hex input " + key);
-         }
+   try
+      {
+      return Botan::hex_decode(i->second);
       }
+   catch(std::exception& e)
+      {
+      throw std::runtime_error("Test invalid hex input " + key);
+      }
+   }
+
+std::string Text_Based_Test::get_req_str(const std::map<std::string, std::string>& vars, const std::string& key)
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      throw std::runtime_error("Test missing variable " + key);
+   return i->second;
+   }
+
+Botan::BigInt Text_Based_Test::get_req_bn(const std::map<std::string, std::string>& vars,
+                                          const std::string& key)
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      throw std::runtime_error("Test missing variable " + key);
+
+   try
+      {
+      return Botan::BigInt("0x" + i->second);
+      }
+   catch(std::exception& e)
+      {
+      throw std::runtime_error("Test invalid bigint input " + key);
+      }
+   }
 
 std::string Text_Based_Test::get_next_line()
    {
@@ -222,9 +277,12 @@ std::string Text_Based_Test::get_next_line()
             if(m_first)
                {
                std::vector<std::string> fs = Botan::get_files_recursive(m_data_dir);
+
                if(fs.empty())
-                  throw std::runtime_error("No test files found in " + m_data_dir);
-               m_srcs.assign(fs.begin(), fs.end());
+                  m_srcs.push_back(m_data_dir);
+               else
+                  m_srcs.assign(fs.begin(), fs.end());
+
                m_first = false;
                }
             else

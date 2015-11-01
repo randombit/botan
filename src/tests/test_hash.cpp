@@ -7,74 +7,82 @@
 #include "tests.h"
 
 #include <botan/hash.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
 
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t hash_test(const std::string& algo,
-                 const std::vector<byte>& input,
-                 const std::vector<byte>& expected)
+class Hash_Function_Tests : public Text_Based_Test
    {
-   const std::vector<std::string> providers = HashFunction::providers(algo);
+   public:
+      Hash_Function_Tests() : Text_Based_Test(Test::data_dir("hash"), {"In", "Out"}) {}
 
-   if(providers.empty())
-      return warn_about_missing("hash " + algo);
-
-   size_t fails = 0;
-
-   for(auto provider: providers)
-      {
-      std::unique_ptr<HashFunction> hash(HashFunction::create(algo, provider));
-
-      if(!hash)
+      Test::Result run_one_test(const std::string& algo,
+                                const std::map<std::string, std::string>& vars) override
          {
-         fails += warn_about_missing(algo + " from " + provider);
-         continue;
+         const std::vector<uint8_t> input    = get_req_bin(vars, "In");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+
+         Test::Result result(algo);
+
+         const std::vector<std::string> providers = Botan::HashFunction::providers(algo);
+
+         if(providers.empty())
+            {
+            warn_about_missing("block cipher " + algo);
+            return result;
+            }
+
+         for(auto&& provider: providers)
+            {
+            std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(algo, provider));
+
+            if(!hash)
+               {
+               warn_about_missing(algo + " from " + provider);
+               continue;
+               }
+
+            hash->update(input);
+
+            result.test_eq(provider, "hashing", hash->final(), expected);
+
+            // Test to make sure clear() resets what we need it to
+            hash->update("some discarded input");
+            hash->clear();
+            hash->update(nullptr, 0); // this should be effectively ignored
+            hash->update(input);
+
+            result.test_eq(provider, "hashing after clear", hash->final(), expected);
+
+            if(input.size() > 1)
+               {
+               hash->update(input[0]);
+               hash->update(&input[1], input.size() - 1);
+               result.test_eq(provider, "hashing split", hash->final(), expected);
+               }
+            }
+
+         return result;
          }
 
-      hash->update(input);
+   };
 
-      fails += test_buffers_equal(algo, provider, "hashing", hash->final(), expected);
+BOTAN_REGISTER_TEST("hash", Hash_Function_Tests);
 
-      // Test to make sure clear() resets what we need it to
-      hash->update("some discarded input");
-      hash->clear();
-      hash->update(nullptr, 0); // this should be effectively ignored
-      hash->update(input);
-
-      fails += test_buffers_equal(algo, provider, "hashing after clear", hash->final(), expected);
-
-      if(input.size() > 1)
-         {
-         hash->update(input[0]);
-         hash->update(&input[1], input.size() - 1);
-
-         fails += test_buffers_equal(algo, provider, "hashing split", hash->final(), expected);
-         }
-      }
-
-   return fails;
-   }
-
+}
 }
 
 size_t test_hash()
    {
-   auto test = [](const std::string& input)
-      {
-      std::ifstream vec(input);
+   using namespace Botan_Tests;
 
-      return run_tests_bb(vec, "Hash", "Out", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return hash_test(m["Hash"], hex_decode(m["In"]),
-                              hex_decode(m["Out"]));
-             });
-      };
+   std::vector<Test::Result> results = Test::run_test("hash");
 
-   return run_tests_in_dir(TEST_DATA_DIR "/hash", test);
+   std::string report;
+   size_t fail_cnt = 0;
+   Test::summarize(results, report, fail_cnt);
+
+   std::cout << report;
+   return fail_cnt;
    }
