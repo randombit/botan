@@ -7,140 +7,133 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_AEAD_MODES)
-
-#include <botan/hex.h>
 #include <botan/aead.h>
-#include <iostream>
-#include <fstream>
-#include <memory>
+#endif
 
-using namespace Botan;
+namespace Botan_Tests {
 
-namespace {
+#if defined(BOTAN_HAS_AEAD_MODES)
 
-size_t aead_test(const std::string& algo,
-                 const std::string& input,
-                 const std::string& expected,
-                 const std::string& nonce_hex,
-                 const std::string& ad_hex,
-                 const std::string& key_hex)
+class AEAD_Tests : public Text_Based_Test
    {
-   const auto nonce = hex_decode_locked(nonce_hex);
-   const auto ad = hex_decode_locked(ad_hex);
-   const auto key = hex_decode_locked(key_hex);
+   public:
+      AEAD_Tests() :
+         Text_Based_Test(Test::data_dir("aead"), {"Key", "Nonce", "In", "Out"}, {"AD"})
+         {}
 
-   std::unique_ptr<Cipher_Mode> enc(get_aead(algo, ENCRYPTION));
-   std::unique_ptr<Cipher_Mode> dec(get_aead(algo, DECRYPTION));
-
-   if(!enc || !dec)
-      throw std::runtime_error("Unknown AEAD '" + algo + "'");
-
-   enc->set_key(key);
-   dec->set_key(key);
-
-   if(auto aead_enc = dynamic_cast<AEAD_Mode*>(enc.get()))
-      aead_enc->set_associated_data_vec(ad);
-   if(auto aead_dec = dynamic_cast<AEAD_Mode*>(dec.get()))
-      aead_dec->set_associated_data_vec(ad);
-
-   size_t fail = 0;
-
-   const auto pt = hex_decode_locked(input);
-   const auto expected_ct = hex_decode_locked(expected);
-
-   auto vec = pt;
-   enc->start(nonce);
-   // should first update if possible
-   enc->finish(vec);
-
-   fail += test_buffers_equal(algo, "encrypt", vec, expected_ct);
-
-   vec = expected_ct;
-
-   dec->start(nonce);
-   dec->finish(vec);
-
-   fail += test_buffers_equal(algo, "encrypt", vec, pt);
-
-   if(enc->authenticated())
-      {
-      vec = expected_ct;
-      vec[0] ^= 1;
-      dec->start(nonce);
-
-      try
+      Test::Result run_one_test(const std::string& algo,
+                                const std::map<std::string, std::string>& vars) override
          {
-         dec->finish(vec);
-         std::cout << algo << " accepted message with modified message" << std::endl;
-         ++fail;
-         }
-      catch(...) {}
+         const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
+         const std::vector<uint8_t> nonce    = get_opt_bin(vars, "Nonce");
+         const std::vector<uint8_t> input    = get_req_bin(vars, "In");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> ad       = get_opt_bin(vars, "AD");
 
-      if(nonce.size())
-         {
-         auto bad_nonce = nonce;
-         bad_nonce[0] ^= 1;
-         vec = expected_ct;
+         Test::Result result(algo);
 
-         dec->start(bad_nonce);
+         std::unique_ptr<Botan::AEAD_Mode> enc(Botan::get_aead(algo, Botan::ENCRYPTION));
+         std::unique_ptr<Botan::AEAD_Mode> dec(Botan::get_aead(algo, Botan::DECRYPTION));
 
-         try
+         if(!enc || !dec)
             {
-            dec->finish(vec);
-            std::cout << algo << " accepted message with modified nonce" << std::endl;
-            ++fail;
+            warn_about_missing(algo);
+            return result;
             }
-         catch(...) {}
-         }
 
-      if(auto aead_dec = dynamic_cast<AEAD_Mode*>(dec.get()))
-         {
-         auto bad_ad = ad;
+         enc->set_key(key);
+         enc->set_associated_data_vec(ad);
+         enc->start(nonce);
 
-         if(ad.size())
-            bad_ad[0] ^= 1;
-         else
-            bad_ad.push_back(0);
+         Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
+         // TODO: should first update if possible
+         enc->finish(buf);
 
-         aead_dec->set_associated_data_vec(bad_ad);
+         result.test_eq("encrypt", buf, expected);
 
-         vec = expected_ct;
+         buf.assign(expected.begin(), expected.end());
+
+         dec->set_key(key);
+         dec->set_associated_data_vec(ad);
+         dec->start(nonce);
+         dec->finish(buf);
+
+         if(enc->authenticated())
+            {
+            const std::vector<byte> mutated_input = mutate_vec(expected, true);
+            buf.assign(mutated_input.begin(), mutated_input.end());
+
+            dec->start(nonce);
+
+            try
+               {
+               dec->finish(buf);
+               result.test_failure("accepted modified message", mutated_input);
+               }
+            catch(Botan::Integrity_Failure& e)
+               {
+               result.test_note("correctly rejected modified message");
+               }
+            catch(std::exception& e)
+               {
+               result.test_failure("unexpected error while rejecting modified message", e.what());
+               }
+            }
+
+         if(nonce.size() > 0)
+            {
+            buf.assign(expected.begin(), expected.end());
+            std::vector<byte> bad_nonce = mutate_vec(nonce);
+
+            dec->start(bad_nonce);
+
+            try
+               {
+               dec->finish(buf);
+               result.test_failure("accepted message with modified nonce", bad_nonce);
+               }
+            catch(Botan::Integrity_Failure& e)
+               {
+               result.test_note("correctly rejected modified nonce");
+               }
+            catch(std::exception& e)
+               {
+               result.test_failure("unexpected error while rejecting modified nonce", e.what());
+               }
+            }
+
+         const std::vector<byte> bad_ad = mutate_vec(ad, true);
+
+         dec->set_associated_data_vec(bad_ad);
+
          dec->start(nonce);
 
          try
             {
-            dec->finish(vec);
-            std::cout << algo << " accepted message with modified AD" << std::endl;
-            ++fail;
+            buf.assign(expected.begin(), expected.end());
+            dec->finish(buf);
+            result.test_failure("accepted message with modified ad", bad_ad);
             }
-         catch(...) {}
-         }
-      }
+         catch(Botan::Integrity_Failure& e)
+            {
+            result.test_note("correctly rejected modified ad");
+            }
+         catch(std::exception& e)
+            {
+            result.test_failure("unexpected error while rejecting modified nonce", e.what());
+            }
 
-   return fail;
-   }
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("aead", AEAD_Tests);
+
+#endif
 
 }
 
 size_t test_aead()
    {
-   auto test = [](const std::string& input)
-      {
-      std::ifstream vec(input);
-
-      return run_tests_bb(vec, "AEAD", "Out", true,
-             [](std::map<std::string, std::string> m)
-             {
-             return aead_test(m["AEAD"], m["In"], m["Out"],
-                              m["Nonce"], m["AD"], m["Key"]);
-             });
-      };
-
-   return run_tests_in_dir(TEST_DATA_DIR "/aead", test);
+   return Botan_Tests::basic_error_report("aead");
    }
-
-#else
-
-SKIP_TEST(aead);
-
-#endif // BOTAN_HAS_AEAD_MODES

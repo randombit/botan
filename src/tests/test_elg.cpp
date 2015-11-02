@@ -10,7 +10,6 @@
   #include <botan/elgamal.h>
   #include <botan/pubkey.h>
   #include "test_rng.h"
-#include <botan/hex.h>
 #endif
 
 namespace Botan_Tests {
@@ -27,41 +26,6 @@ class ElGamal_KAT_Tests : public Text_Based_Test
                                         {"Padding"},
                                         false)
          {}
-
-      void check_invalid_ciphertexts(Result& result,
-                                     Botan::PK_Decryptor& decryptor,
-                                     const std::vector<byte>& plaintext,
-                                     const std::vector<byte>& ciphertext) const
-         {
-         std::vector<byte> bad_ctext = ciphertext;
-
-         size_t ciphertext_accepted = 0, ciphertext_rejected = 0;
-
-         for(size_t i = 0; i <= Test::soak_level(); ++i)
-            {
-            size_t offset = test_rng().get_random<uint16_t>() % bad_ctext.size();
-            bad_ctext[offset] ^= test_rng().next_nonzero_byte();
-
-            try
-               {
-               const Botan::secure_vector<byte> decrypted = decryptor.decrypt(bad_ctext);
-               ++ciphertext_accepted;
-
-               if(!result.test_ne("incorrect ciphertext different", decrypted, plaintext))
-                  {
-                  result.test_note("used corrupted ciphertext " + Botan::hex_encode(bad_ctext));
-                  }
-
-               }
-            catch(std::exception& e)
-               {
-               ++ciphertext_rejected;
-               }
-            }
-
-         result.test_note("Accepted " + std::to_string(ciphertext_accepted) +
-                          " invalid ciphertexts, rejected " + std::to_string(ciphertext_rejected));
-         }
 
       Test::Result run_one_test(const std::string&,
                                 const std::map<std::string, std::string>& vars) override
@@ -106,12 +70,5 @@ size_t test_elgamal()
    {
    using namespace Botan_Tests;
 
-   std::vector<Test::Result> results = Test::run_test("elgamal_kat");
-
-   std::string report;
-   size_t fail_cnt = 0;
-   Test::summarize(results, report, fail_cnt);
-
-   std::cout << report;
-   return fail_cnt;
+   return basic_error_report("elgamal_kat");
    }

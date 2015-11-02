@@ -24,6 +24,8 @@ class DSA_KAT_Tests : public Text_Based_Test
       DSA_KAT_Tests() : Text_Based_Test(Test::data_file("pubkey/dsa.vec"), {"P", "Q", "G", "X", "Hash", "Msg", "Signature"}, {}, false) {}
 
       void check_invalid_signatures(Result& result,
+                                    size_t soak_level,
+                                    Botan::RandomNumberGenerator& rng,
                                     Botan::PK_Verifier& verifier,
                                     const std::vector<byte>& message,
                                     const std::vector<byte>& signature) const
@@ -32,10 +34,10 @@ class DSA_KAT_Tests : public Text_Based_Test
          result.test_eq("all zero signature invalid", verifier.verify_message(message, zero_sig), false);
 
          std::vector<byte> bad_sig = signature;
-         for(size_t i = 0; i <= Test::soak_level(); ++i)
+         for(size_t i = 0; i <= soak_level; ++i)
             {
-            size_t offset = test_rng().get_random<uint16_t>() % bad_sig.size();
-            bad_sig[offset] ^= test_rng().next_nonzero_byte();
+            size_t offset = rng.get_random<uint16_t>() % bad_sig.size();
+            bad_sig[offset] ^= rng.next_nonzero_byte();
 
             if(!result.test_eq("incorrect signature invalid", verifier.verify_message(message, bad_sig), false))
                {
@@ -76,7 +78,7 @@ class DSA_KAT_Tests : public Text_Based_Test
          result.test_eq("generated signature valid", verifier.verify_message(message, generated_signature), true);
          result.test_eq("generated signature matches KAT", generated_signature, signature);
 
-         check_invalid_signatures(result, verifier, message, signature);
+         check_invalid_signatures(result, Test::soak_level(), Test::rng(), verifier, message, signature);
 
          return result;
          }
@@ -92,14 +94,5 @@ BOTAN_REGISTER_TEST("dsa_kat", DSA_KAT_Tests);
 
 size_t test_dsa()
    {
-   using namespace Botan_Tests;
-
-   std::vector<Test::Result> results = Test::run_test("dsa_kat");
-
-   std::string report;
-   size_t fail_cnt = 0;
-   Test::summarize(results, report, fail_cnt);
-
-   std::cout << report;
-   return fail_cnt;
+   return Botan_Tests::basic_error_report("dsa_kat");
    }

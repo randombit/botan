@@ -22,6 +22,7 @@
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
 #include <botan/pubkey.h>
+#include <botan/numthry.h>
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_RSA)
@@ -64,8 +65,6 @@
   #include <botan/dlies.h>
   #include <botan/kdf.h>
 #endif
-
-#include <botan/numthry.h>
 
 using namespace Botan;
 

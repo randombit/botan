@@ -75,14 +75,5 @@ BOTAN_REGISTER_TEST("hash", Hash_Function_Tests);
 
 size_t test_hash()
    {
-   using namespace Botan_Tests;
-
-   std::vector<Test::Result> results = Test::run_test("hash");
-
-   std::string report;
-   size_t fail_cnt = 0;
-   Test::summarize(results, report, fail_cnt);
-
-   std::cout << report;
-   return fail_cnt;
+   return Botan_Tests::basic_error_report("hash");
    }

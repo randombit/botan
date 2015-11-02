@@ -66,14 +66,5 @@ BOTAN_REGISTER_TEST("block", Block_Cipher_Tests);
 
 size_t test_block()
    {
-   using namespace Botan_Tests;
-
-   std::vector<Test::Result> results = Test::run_test("block");
-
-   std::string report;
-   size_t fail_cnt = 0;
-   Test::summarize(results, report, fail_cnt);
-
-   std::cout << report;
-   return fail_cnt;
+   return Botan_Tests::basic_error_report("block");
    }

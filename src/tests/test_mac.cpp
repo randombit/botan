@@ -19,8 +19,8 @@ namespace {
 class Message_Auth_Tests : public Text_Based_Test
    {
    public:
-      Message_Auth_Tests(const std::string& data_dir) :
-         Text_Based_Test(data_dir, {"Key", "In", "Out"}) {}
+      Message_Auth_Tests() :
+         Text_Based_Test(Test::data_dir("mac"), {"Key", "In", "Out"}) {}
 
       Test::Result run_one_test(const std::string& algo,
                                 const std::map<std::string, std::string>& vars) override
@@ -57,7 +57,7 @@ class Message_Auth_Tests : public Text_Based_Test
 
             if(input.size() > 2)
                {
-               mac->set_key(key); // for poly1305
+               mac->set_key(key); // Poly1305 requires the re-key
                mac->update(input[0]);
                mac->update(&input[1], input.size() - 2);
                mac->update(input[input.size()-1]);
@@ -70,7 +70,7 @@ class Message_Auth_Tests : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("mac", Message_Auth_Tests(TEST_DATA_DIR "/mac"));
+      BOTAN_REGISTER_TEST("mac", Message_Auth_Tests);
 
 #endif
 
@@ -80,14 +80,5 @@ BOTAN_REGISTER_TEST("mac", Message_Auth_Tests(TEST_DATA_DIR "/mac"));
 
 size_t test_mac()
    {
-   using namespace Botan_Tests;
-
-   std::vector<Test::Result> results = Test::run_test("mac");
-
-   std::string report;
-   size_t fail_cnt = 0;
-   Test::summarize(results, report, fail_cnt);
-
-   std::cout << report;
-   return fail_cnt;
+   return Botan_Tests::basic_error_report("mac");
    }

@@ -7,82 +7,93 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_RW)
+  #include <botan/rw.h>
+  #include <botan/pubkey.h>
+  #include "test_pubkey.h"
+#endif
 
-#include "test_pubkey.h"
-
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
-#include <botan/pubkey.h>
-#include <botan/rw.h>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-const std::string padding = "EMSA2(SHA-1)";
+#if defined(BOTAN_HAS_RW)
 
-size_t rw_sig_kat(const std::string& e,
-                 const std::string& p,
-                 const std::string& q,
-                 const std::string& msg,
-                 const std::string& signature)
+class RW_KAT_Tests : public Text_Based_Test
    {
-   auto& rng = test_rng();
+   public:
+      RW_KAT_Tests() : Text_Based_Test(Test::data_file("pubkey/rw_sig.vec"), {"E", "P", "Q", "Msg", "Signature"}, {}, false) {}
 
-   RW_PrivateKey privkey(rng, BigInt(p), BigInt(q), BigInt(e));
+      Test::Result run_one_test(const std::string&,
+                                const std::map<std::string, std::string>& vars) override
+         {
+         const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
+         const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
 
-   RW_PublicKey pubkey = privkey;
+         const BigInt p = get_req_bn(vars, "P");
+         const BigInt q = get_req_bn(vars, "Q");
+         const BigInt e = get_req_bn(vars, "E");
 
-   PK_Verifier verify(pubkey, padding);
-   PK_Signer sign(privkey, padding);
+         Test::Result result("Rabin-Williams");
 
-   return validate_signature(verify, sign, "RW/" + padding, msg, rng, signature);
-   }
+         const Botan::RW_PrivateKey privkey(Test::rng(), p, q, e);
+         const Botan::RW_PublicKey pubkey = privkey;
+         const std::string padding = "EMSA2(SHA-1)";
 
-size_t rw_sig_verify(const std::string& e,
-                      const std::string& n,
-                      const std::string& msg,
-                      const std::string& signature)
+         Botan::PK_Signer signer(privkey, padding);
+         Botan::PK_Verifier verifier(pubkey, padding);
+
+         const std::vector<byte> generated_signature = signer.sign_message(message, Test::rng());
+         result.test_eq("generated signature matches KAT", generated_signature, signature);
+
+         result.test_eq("generated signature valid", verifier.verify_message(message, generated_signature), true);
+         check_invalid_signatures(result, verifier, message, signature);
+         result.test_eq("correct signature valid", verifier.verify_message(message, signature), true);
+
+         return result;
+         }
+   };
+
+class RW_Verify_Tests : public Text_Based_Test
    {
-   BigInt e_bn(e);
-   BigInt n_bn(n);
+   public:
+      RW_Verify_Tests() : Text_Based_Test(Test::data_file("pubkey/rw_verify.vec"), {"E", "N", "Msg", "Signature"}, {}, false) {}
 
-   RW_PublicKey key(n_bn, e_bn);
+      Test::Result run_one_test(const std::string&,
+                                const std::map<std::string, std::string>& vars) override
+         {
+         const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
+         const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
 
-   PK_Verifier verify(key, padding);
+         const BigInt n = get_req_bn(vars, "N");
+         const BigInt e = get_req_bn(vars, "E");
 
-   if(!verify.verify_message(hex_decode(msg), hex_decode(signature)))
-      return 1;
-   return 0;
-   }
+         Test::Result result("Rabin-Williams Verification");
+
+         const Botan::RW_PublicKey pubkey(n, e);
+         const std::string padding = "EMSA2(SHA-1)";
+
+         Botan::PK_Verifier verifier(pubkey, padding);
+
+         result.test_eq("correct signature valid", verifier.verify_message(message, signature), true);
+
+         check_invalid_signatures(result, verifier, message, signature);
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("rw_kat", RW_KAT_Tests);
+BOTAN_REGISTER_TEST("rw_verify", RW_Verify_Tests);
+
+#endif
+
+}
 
 }
 
 size_t test_rw()
    {
-   size_t fails = 0;
+   using namespace Botan_Tests;
 
-   std::ifstream rw_sig(TEST_DATA_DIR_PK "/rw_sig.vec");
-   std::ifstream rw_verify(TEST_DATA_DIR_PK "/rw_verify.vec");
-
-   fails += run_tests_bb(rw_sig, "RW Signature", "Signature", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return rw_sig_kat(m["E"], m["P"], m["Q"], m["Msg"], m["Signature"]);
-             });
-
-   fails += run_tests_bb(rw_verify, "RW Verify", "Signature", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return rw_sig_verify(m["E"], m["N"], m["Msg"], m["Signature"]);
-             });
-
-   return fails;
+   return basic_error_report("rw_kat") + basic_error_report("rw_verify");
    }
-
-#else
-
-SKIP_TEST(rw);
-
-#endif // BOTAN_HAS_RW

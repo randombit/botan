@@ -16,6 +16,10 @@
   #include <botan/bigint.h>
 #endif
 
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+  #include <botan/pubkey.h>
+#endif
+
 #include <functional>
 #include <istream>
 #include <map>
@@ -28,7 +32,11 @@
 
 namespace Botan_Tests {
 
+using Botan::byte;
+
+#if defined(BOTAN_HAS_BIGINT)
 using Botan::BigInt;
+#endif
 
 class Test
    {
@@ -61,6 +69,16 @@ class Test
             bool test_success();
 
             bool test_failure(const std::string& err);
+
+            bool test_failure(const char* what, const char* error);
+
+            void test_failure(const char* what, const uint8_t buf[], size_t buf_len);
+
+            template<typename Alloc>
+            void test_failure(const char* what, const std::vector<uint8_t, Alloc>& buf)
+               {
+               test_failure(what, buf.data(), buf.size());
+               }
 
             bool test_failure(std::ostringstream& oss)
                {
@@ -109,9 +127,11 @@ class Test
                               expected.data(), expected.size());
                }
 
+            void set_test_number(size_t n) { m_test_number = n; }
 
          private:
             std::string m_who;
+            size_t m_test_number = 0;
             size_t m_tests_passed = 0;
             std::vector<std::string> m_fail_log;
             std::vector<std::string> m_log;
@@ -142,12 +162,35 @@ class Test
       static std::string data_dir(const std::string& what);
       static std::string data_file(const std::string& what);
 
+      template<typename Alloc>
+      static std::vector<uint8_t, Alloc> mutate_vec(const std::vector<uint8_t, Alloc>& v, bool maybe_resize = false)
+         {
+         auto& rng = Test::rng();
+
+         std::vector<uint8_t, Alloc> r = v;
+
+         if(maybe_resize && (r.empty() || rng.next_byte() < 32))
+            {
+            // TODO: occasionally truncate, insert at random index
+            const size_t add = 1 + (rng.next_byte() % 16);
+            r.resize(r.size() + add);
+            rng.randomize(&r[r.size() - add], add);
+            }
+
+         const size_t offset = rng.get_random<uint16_t>() % r.size();
+         r[offset] ^= rng.next_nonzero_byte();
+
+         return r;
+         }
+
       static size_t soak_level();
 
       static Botan::RandomNumberGenerator& rng();
    };
 
-#define BOTAN_REGISTER_TEST(type, Test_Class) namespace { Test::Registration test_reg(type, new Test_Class); }
+size_t basic_error_report(const std::string& test);
+
+#define BOTAN_REGISTER_TEST(type, Test_Class) namespace { Test::Registration reg_ ## Test_Class ## _tests(type, new Test_Class); }
 
 class Text_Based_Test : public Test
    {
@@ -190,10 +233,20 @@ class Text_Based_Test : public Test
       std::deque<std::string> m_srcs;
    };
 
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+void check_invalid_signatures(Test::Result& result,
+                              Botan::PK_Verifier& verifier,
+                              const std::vector<uint8_t>& message,
+                              const std::vector<uint8_t>& signature);
+
+void check_invalid_ciphertexts(Test::Result& result,
+                               Botan::PK_Decryptor& decryptor,
+                               const std::vector<uint8_t>& plaintext,
+                               const std::vector<uint8_t>& ciphertext);
+
+#endif
+
 }
-
-
-
 
 
 Botan::RandomNumberGenerator& test_rng();

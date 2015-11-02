@@ -38,13 +38,25 @@ void Test::Result::merge(const Result& other)
 
 void Test::Result::test_note(const std::string& note)
    {
-   m_log.push_back(note);
+   m_log.push_back(who() + " " + note);
    }
 
 bool Test::Result::test_success()
    {
    ++m_tests_passed;
    return true;
+   }
+
+bool Test::Result::test_failure(const char* what, const char* error)
+   {
+   return test_failure(who() + " " + what + " with error " + error);
+   }
+
+void Test::Result::test_failure(const char* what, const uint8_t buf[], size_t buf_len)
+   {
+   test_failure(who() + ": " + what +
+                " buf len " + std::to_string(buf_len) +
+                " value " + Botan::hex_encode(buf, buf_len));
    }
 
 bool Test::Result::test_failure(const std::string& err)
@@ -58,7 +70,7 @@ bool Test::Result::test_ne(const char* what,
                            const uint8_t expected[], size_t expected_len)
    {
    if(produced_len == expected_len && same_mem(produced, expected, expected_len))
-      return test_failure(who() + " " + what + " produced matching");
+      return test_failure(who() + ":" + what + " produced matching");
    return test_success();
    }
 
@@ -122,14 +134,17 @@ std::string Test::Result::result_string() const
 
    report << "\n";
 
-   for(size_t i = 0; i != m_log.size(); ++i)
-      {
-      report << "Note " << (i+1) << ": " << m_log[i] << "\n";
-      }
-
    for(size_t i = 0; i != m_fail_log.size(); ++i)
       {
       report << "Failure " << (i+1) << ": " << m_fail_log[i] << "\n";
+      }
+
+   if(m_fail_log.size() > 0)
+      {
+      for(size_t i = 0; i != m_log.size(); ++i)
+         {
+         report << "Note " << (i+1) << ": " << m_log[i] << "\n";
+         }
       }
 
    return report.str();
@@ -398,10 +413,11 @@ std::vector<Test::Result> Text_Based_Test::run()
             ++test_cnt;
 
             Test::Result result = run_one_test(who, vars);
+            result.set_test_number(test_cnt);
 
             if(result.tests_failed() > 0)
                {
-               result.test_note(who + " test " + std::to_string(test_cnt) + " failed");
+               //result.test_note(who + " test " + std::to_string(test_cnt) + " failed");
                }
 
             results.push_back(result);
@@ -420,6 +436,77 @@ std::vector<Test::Result> Text_Based_Test::run()
 
    return results;
    }
+
+size_t basic_error_report(const std::string& test)
+   {
+   std::vector<Test::Result> results = Test::run_test(test);
+
+   std::string report;
+   size_t fail_cnt = 0;
+   Test::summarize(results, report, fail_cnt);
+
+   std::cout << report;
+   return fail_cnt;
+   }
+
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+
+void check_invalid_signatures(Test::Result& result,
+                              Botan::PK_Verifier& verifier,
+                              const std::vector<uint8_t>& message,
+                              const std::vector<uint8_t>& signature)
+   {
+   const std::vector<uint8_t> zero_sig(signature.size());
+   result.test_eq("all zero signature invalid", verifier.verify_message(message, zero_sig), false);
+
+   std::vector<uint8_t> bad_sig = signature;
+   for(size_t i = 0; i <= Test::soak_level(); ++i)
+      {
+      size_t offset = Test::rng().get_random<uint16_t>() % bad_sig.size();
+      bad_sig[offset] ^= Test::rng().next_nonzero_byte();
+
+      if(!result.test_eq("incorrect signature invalid", verifier.verify_message(message, bad_sig), false))
+         {
+         result.test_note("Accepted invalid signature " + Botan::hex_encode(bad_sig));
+         }
+      }
+   }
+
+void check_invalid_ciphertexts(Test::Result& result,
+                               Botan::PK_Decryptor& decryptor,
+                               const std::vector<uint8_t>& plaintext,
+                               const std::vector<uint8_t>& ciphertext)
+   {
+   std::vector<uint8_t> bad_ctext = ciphertext;
+
+   size_t ciphertext_accepted = 0, ciphertext_rejected = 0;
+
+   for(size_t i = 0; i <= Test::soak_level(); ++i)
+      {
+      size_t offset = Test::rng().get_random<uint16_t>() % bad_ctext.size();
+      bad_ctext[offset] ^= Test::rng().next_nonzero_byte();
+
+      try
+         {
+         const Botan::secure_vector<uint8_t> decrypted = decryptor.decrypt(bad_ctext);
+         ++ciphertext_accepted;
+
+         if(!result.test_ne("incorrect ciphertext different", decrypted, plaintext))
+            {
+            result.test_note("used corrupted ciphertext " + Botan::hex_encode(bad_ctext));
+            }
+
+         }
+      catch(std::exception& e)
+         {
+         ++ciphertext_rejected;
+         }
+      }
+
+   result.test_note("Accepted " + std::to_string(ciphertext_accepted) +
+                    " invalid ciphertexts, rejected " + std::to_string(ciphertext_rejected));
+   }
+#endif
 
 }
 
@@ -733,7 +820,7 @@ int main(int argc, char* argv[])
    // unittesting framework in sub-folder tests/catchy
    DEF_TEST(catchy);
 
-   DEF_TEST(block);
+   //DEF_TEST(block);
    DEF_TEST(modes);
    DEF_TEST(aead);
    DEF_TEST(ocb);
