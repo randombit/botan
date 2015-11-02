@@ -357,6 +357,8 @@ if(NOT WIN32)
     list(APPEND extra_link_libraries rt dl pthread)
 endif()
 
+set(CMAKE_DEBUG_POSTFIX "d")
+
 if (NOT LIB_TYPE)
     set(LIB_TYPE STATIC)
 endif()
@@ -368,4 +370,11 @@ message(STATUS "Building with LIB_TYPE=${LIB_TYPE}")
 add_library(botan ${LIB_TYPE} ${BOTAN_SRC})
 
 target_link_libraries(botan ${BOTAN_LIBRARIES} ${extra_link_libraries})
+
+file(GLOB include_install_files "${INCLUDE_DIR}/botan/*.h")
+foreach (include_install_file ${include_install_files})
+    get_filename_component(full_include_install_file ${include_install_file} REALPATH)
+    install(FILES ${full_include_install_file} DESTINATION "include/botan-1.11/botan/")
+endforeach (include_install_file ${include_instal_files})
+install(TARGETS botan ARCHIVE DESTINATION "lib/botan")
 
