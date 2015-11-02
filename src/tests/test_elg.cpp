@@ -8,8 +8,7 @@
 
 #if defined(BOTAN_HAS_ELGAMAL)
   #include <botan/elgamal.h>
-  #include <botan/pubkey.h>
-  #include "test_rng.h"
+  #include "test_pubkey.h"
 #endif
 
 namespace Botan_Tests {
@@ -18,43 +17,26 @@ namespace {
 
 #if defined(BOTAN_HAS_ELGAMAL)
 
-class ElGamal_KAT_Tests : public Text_Based_Test
+class ElGamal_KAT_Tests : public PK_Encryption_Decryption_Test
    {
    public:
-      ElGamal_KAT_Tests() : Text_Based_Test(Test::data_file("pubkey/elgamal.vec"),
-                                        {"P", "G", "X", "Msg", "Nonce", "Ciphertext"},
-                                        {"Padding"},
-                                        false)
+      ElGamal_KAT_Tests() : PK_Encryption_Decryption_Test(
+         "ElGamal",
+         Test::data_file("pubkey/elgamal.vec"),
+         {"P", "G", "X", "Msg", "Nonce", "Ciphertext"},
+         {"Padding"})
          {}
 
-      Test::Result run_one_test(const std::string&,
-                                const std::map<std::string, std::string>& vars) override
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const std::vector<uint8_t> plaintext  = get_req_bin(vars, "Msg");
-         const std::vector<uint8_t> ciphertext = get_req_bin(vars, "Ciphertext");
-
          const BigInt p = get_req_bn(vars, "P");
          const BigInt g = get_req_bn(vars, "G");
          const BigInt x = get_req_bn(vars, "X");
 
-         const std::string padding = get_opt_str(vars, "Padding", "Raw");
-         Fixed_Output_RNG kat_rng(get_req_bin(vars, "Nonce"));
+         const DL_Group grp(p, g);
 
-         Test::Result result("ElGamal");
-
-         const Botan::DL_Group group(p, g);
-         const Botan::ElGamal_PrivateKey privkey(Test::rng(), group, x);
-         const Botan::ElGamal_PublicKey pubkey = privkey;
-
-         Botan::PK_Encryptor_EME encryptor(pubkey, padding);
-         Botan::PK_Decryptor_EME decryptor(privkey, padding);
-
-         result.test_eq("encryption", encryptor.encrypt(plaintext, kat_rng), ciphertext);
-         result.test_eq("decryption", decryptor.decrypt(ciphertext), plaintext);
-
-         check_invalid_ciphertexts(result, decryptor, plaintext, ciphertext);
-
-         return result;
+         std::unique_ptr<Botan::Private_Key> key(new Botan::ElGamal_PrivateKey(Test::rng(), grp, x));
+         return key;
          }
    };
 
@@ -68,7 +50,5 @@ BOTAN_REGISTER_TEST("elgamal_kat", ElGamal_KAT_Tests);
 
 size_t test_elgamal()
    {
-   using namespace Botan_Tests;
-
-   return basic_error_report("elgamal_kat");
+   return Botan_Tests::basic_error_report("elgamal_kat");
    }

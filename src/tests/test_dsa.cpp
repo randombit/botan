@@ -8,8 +8,7 @@
 
 #if defined(BOTAN_HAS_DSA)
   #include <botan/dsa.h>
-  #include <botan/pubkey.h>
-  #include "test_rng.h"
+  #include "test_pubkey.h"
 #endif
 
 namespace Botan_Tests {
@@ -18,69 +17,31 @@ namespace {
 
 #if defined(BOTAN_HAS_DSA)
 
-class DSA_KAT_Tests : public Text_Based_Test
+class DSA_KAT_Tests : public PK_Signature_Generation_Test
    {
    public:
-      DSA_KAT_Tests() : Text_Based_Test(Test::data_file("pubkey/dsa.vec"), {"P", "Q", "G", "X", "Hash", "Msg", "Signature"}, {}, false) {}
+      DSA_KAT_Tests() : PK_Signature_Generation_Test(
+         "DSA",
+         Test::data_file("pubkey/dsa.vec"),
+         {"P", "Q", "G", "X", "Hash", "Msg", "Signature"}, {}, false)
+         {}
 
-      void check_invalid_signatures(Result& result,
-                                    size_t soak_level,
-                                    Botan::RandomNumberGenerator& rng,
-                                    Botan::PK_Verifier& verifier,
-                                    const std::vector<byte>& message,
-                                    const std::vector<byte>& signature) const
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const std::vector<byte> zero_sig(signature.size());
-         result.test_eq("all zero signature invalid", verifier.verify_message(message, zero_sig), false);
-
-         std::vector<byte> bad_sig = signature;
-         for(size_t i = 0; i <= soak_level; ++i)
-            {
-            size_t offset = rng.get_random<uint16_t>() % bad_sig.size();
-            bad_sig[offset] ^= rng.next_nonzero_byte();
-
-            if(!result.test_eq("incorrect signature invalid", verifier.verify_message(message, bad_sig), false))
-               {
-               result.test_note("Accepted invalid signature " + Botan::hex_encode(bad_sig));
-               }
-            }
-         }
-
-      Test::Result run_one_test(const std::string&,
-                                const std::map<std::string, std::string>& vars) override
-         {
-         const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
-         const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
-
          const BigInt p = get_req_bn(vars, "P");
          const BigInt q = get_req_bn(vars, "Q");
          const BigInt g = get_req_bn(vars, "G");
          const BigInt x = get_req_bn(vars, "X");
 
-         const std::string hash = get_req_str(vars, "Hash");
-         const std::vector<uint8_t> msg = get_req_bin(vars, "Msg");
+         const DL_Group grp(p, q, g);
 
-         Botan::RandomNumberGenerator& rng = Test::rng();
+         std::unique_ptr<Botan::Private_Key> key(new Botan::DSA_PrivateKey(Test::rng(), grp, x));
+         return key;
+         }
 
-         Test::Result result("DSA/" + hash);
-
-         const Botan::DL_Group group(p, q, g);
-         const Botan::DSA_PrivateKey privkey(rng, group, x);
-         const Botan::DSA_PublicKey pubkey = privkey;
-         const std::string padding = "EMSA1(" + hash + ")";
-
-         Botan::PK_Verifier verifier(pubkey, padding);
-         Botan::PK_Signer signer(privkey, padding);
-
-         result.test_eq("correct signature valid", verifier.verify_message(message, signature), true);
-
-         const std::vector<byte> generated_signature = signer.sign_message(message, rng);
-         result.test_eq("generated signature valid", verifier.verify_message(message, generated_signature), true);
-         result.test_eq("generated signature matches KAT", generated_signature, signature);
-
-         check_invalid_signatures(result, Test::soak_level(), Test::rng(), verifier, message, signature);
-
-         return result;
+      std::string default_padding(const VarMap& vars) const override
+         {
+         return "EMSA1(" + get_req_str(vars, "Hash") + ")";
          }
    };
 

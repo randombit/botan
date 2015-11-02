@@ -7,122 +7,94 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_RSA)
+  #include <botan/rsa.h>
+  #include "test_pubkey.h"
+#endif
 
-#include "test_pubkey.h"
-
-#include <botan/pubkey.h>
-#include <botan/rsa.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t rsaes_kat(const std::string& e,
-                 const std::string& p,
-                 const std::string& q,
-                 const std::string& msg,
-                 std::string padding,
-                 const std::string& nonce,
-                 const std::string& output)
+#if defined(BOTAN_HAS_RSA)
+
+class RSA_ES_KAT_Tests : public PK_Encryption_Decryption_Test
    {
-   auto& rng = test_rng();
+   public:
+      RSA_ES_KAT_Tests() : PK_Encryption_Decryption_Test(
+         "RSA",
+         Test::data_file("pubkey/rsaes.vec"),
+         {"E", "P", "Q", "Msg", "Ciphertext"},
+         {"Padding", "Nonce"})
+         {}
 
-   RSA_PrivateKey privkey(rng, BigInt(p), BigInt(q), BigInt(e));
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
+         {
+         const BigInt p = get_req_bn(vars, "P");
+         const BigInt q = get_req_bn(vars, "Q");
+         const BigInt e = get_req_bn(vars, "E");
 
-   RSA_PublicKey pubkey = privkey;
+         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(Test::rng(), p, q, e));
+         return key;
+         }
+   };
 
-   if(padding == "")
-      padding = "Raw";
-
-   PK_Encryptor_EME enc(pubkey, padding, "base");
-   PK_Decryptor_EME dec(privkey, padding);
-
-   return validate_encryption(enc, dec, "RSAES/" + padding, msg, nonce, output);
-   }
-
-size_t rsa_sig_kat(const std::string& e,
-                 const std::string& p,
-                 const std::string& q,
-                 const std::string& msg,
-                 std::string padding,
-                 const std::string& nonce,
-                 const std::string& output)
+class RSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
    {
-   auto& rng = test_rng();
+   public:
+      RSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
+         "RSA",
+         Test::data_file("pubkey/rsa_sig.vec"),
+         {"E", "P", "Q", "Msg", "Signature"},
+         {"Padding", "Nonce"})
+         {}
 
-   RSA_PrivateKey privkey(rng, BigInt(p), BigInt(q), BigInt(e));
+      std::string default_padding(const VarMap&) const override { return "Raw"; }
 
-   RSA_PublicKey pubkey = privkey;
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
+         {
+         const BigInt p = get_req_bn(vars, "P");
+         const BigInt q = get_req_bn(vars, "Q");
+         const BigInt e = get_req_bn(vars, "E");
 
-   if(padding == "")
-      padding = "Raw";
+         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(Test::rng(), p, q, e));
+         return key;
+         }
+   };
 
-   PK_Verifier verify(pubkey, padding);
-   PK_Signer sign(privkey, padding, IEEE_1363, "base");
-
-   return validate_signature(verify, sign, "RSA/" + padding, msg, rng, nonce, output);
-   }
-
-size_t rsa_sig_verify(const std::string& e,
-                      const std::string& n,
-                      const std::string& msg,
-                      std::string padding,
-                      const std::string& signature)
+class RSA_Signature_Verify_Tests : public PK_Signature_Verification_Test
    {
-   BigInt e_bn(e);
-   BigInt n_bn(n);
+   public:
+      RSA_Signature_Verify_Tests() : PK_Signature_Verification_Test(
+         "RSA",
+         Test::data_file("pubkey/rsa_verify.vec"),
+         {"E", "N", "Msg", "Signature"},
+         {"Padding"})
+         {}
 
-   RSA_PublicKey key(n_bn, e_bn);
+      std::string default_padding(const VarMap&) const override { return "Raw"; }
 
-   if(padding == "")
-      padding = "Raw";
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
+         {
+         const BigInt n = get_req_bn(vars, "N");
+         const BigInt e = get_req_bn(vars, "E");
 
-   PK_Verifier verify(key, padding);
+         std::unique_ptr<Botan::Public_Key> key(new Botan::RSA_PublicKey(n, e));
+         return key;
+         }
+   };
 
-   if(!verify.verify_message(hex_decode(msg), hex_decode(signature)))
-      return 1;
-   return 0;
-   }
+BOTAN_REGISTER_TEST("rsa_enc", RSA_ES_KAT_Tests);
+BOTAN_REGISTER_TEST("rsa_sig", RSA_Signature_KAT_Tests);
+BOTAN_REGISTER_TEST("rsa_ver", RSA_Signature_Verify_Tests);
 
+#endif
+
+}
 }
 
 size_t test_rsa()
    {
-   std::ifstream rsa_enc(TEST_DATA_DIR_PK "/rsaes.vec");
-   std::ifstream rsa_sig(TEST_DATA_DIR_PK "/rsa_sig.vec");
-   std::ifstream rsa_verify(TEST_DATA_DIR_PK "/rsa_verify.vec");
+   using namespace Botan_Tests;
 
-   size_t fails = 0;
-
-   fails += run_tests_bb(rsa_enc, "RSA Encryption", "Ciphertext", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return rsaes_kat(m["E"], m["P"], m["Q"], m["Msg"],
-                              m["Padding"], m["Nonce"], m["Ciphertext"]);
-             });
-
-   fails += run_tests_bb(rsa_sig, "RSA Signature", "Signature", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return rsa_sig_kat(m["E"], m["P"], m["Q"], m["Msg"],
-                                m["Padding"], m["Nonce"], m["Signature"]);
-             });
-
-   fails += run_tests_bb(rsa_verify, "RSA Verify", "Signature", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return rsa_sig_verify(m["E"], m["N"], m["Msg"],
-                                   m["Padding"], m["Signature"]);
-             });
-
-   return fails;
+   return basic_error_report("rsa_enc") + basic_error_report("rsa_sig") + basic_error_report("rsa_ver");
    }
-
-#else
-
-SKIP_TEST(rsa);
-
-#endif // BOTAN_HAS_RSA

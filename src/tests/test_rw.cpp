@@ -18,19 +18,19 @@ namespace {
 
 #if defined(BOTAN_HAS_RW)
 
-class RW_KAT_Tests : public PK_Deterministic_Signature_Generation_Test
+class RW_KAT_Tests : public PK_Signature_Generation_Test
    {
    public:
-      RW_KAT_Tests() : PK_Deterministic_Signature_Generation_Test(
+      RW_KAT_Tests() : PK_Signature_Generation_Test(
          "Rabin-Williams",
          Test::data_file("pubkey/rw_sig.vec"),
          {"E", "P", "Q", "Msg", "Signature"},
          {"Padding"},
          false) {}
 
-      std::string default_padding() const override { return "EMSA2(SHA-1)"; }
+      std::string default_padding(const VarMap&) const override { return "EMSA2(SHA-1)"; }
 
-      std::unique_ptr<Botan::Private_Key> load_private_key(const std::map<std::string, std::string>& vars) override
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
          const BigInt p = get_req_bn(vars, "P");
          const BigInt q = get_req_bn(vars, "Q");
@@ -51,9 +51,9 @@ class RW_Verify_Tests : public PK_Signature_Verification_Test
          {"E", "N", "Msg", "Signature"}, {}, false)
          {}
 
-      std::string default_padding() const override { return "EMSA2(SHA-1)"; }
+      std::string default_padding(const VarMap&) const override { return "EMSA2(SHA-1)"; }
 
-      std::unique_ptr<Botan::Public_Key> load_public_key(const std::map<std::string, std::string>& vars) override
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
          const BigInt n = get_req_bn(vars, "N");
          const BigInt e = get_req_bn(vars, "E");

@@ -7,59 +7,53 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ECDSA)
+  #include "test_pubkey.h"
+  #include <botan/ecdsa.h>
+  #include <botan/oids.h>
+#endif
 
-#include "test_pubkey.h"
-
-#include <botan/pubkey.h>
-#include <botan/ecdsa.h>
-#include <botan/oids.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t ecdsa_sig_kat(const std::string& group_id,
-                     const std::string& x,
-                     const std::string& hash,
-                     const std::string& msg,
-                     const std::string& signature)
+#if defined(BOTAN_HAS_ECDSA)
+
+class ECDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
    {
-   auto& rng = test_rng();
+   public:
+      ECDSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
+         "ECDSA",
+         Test::data_file("pubkey/ecdsa.vec"),
+         {"Group", "X", "Hash", "Msg", "Signature"},
+         {},
+         false)
+         {}
 
-   EC_Group group(OIDS::lookup(group_id));
-   ECDSA_PrivateKey ecdsa(rng, group, BigInt(x));
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
+         {
+         const std::string group_id = get_req_str(vars, "Group");
+         const BigInt x = get_req_bn(vars, "X");
+         Botan::EC_Group group(OIDS::lookup(group_id));
 
-   const std::string padding = "EMSA1(" + hash + ")";
+         std::unique_ptr<Botan::Private_Key> key(new Botan::ECDSA_PrivateKey(Test::rng(), group, x));
+         return key;
+         }
 
-   PK_Verifier verify(ecdsa, padding, IEEE_1363, "base");
-   PK_Signer sign(ecdsa, padding, IEEE_1363, "base");
+      std::string default_padding(const VarMap& vars) const override
+         {
+         return "EMSA1(" + get_req_str(vars, "Hash") + ")";
+         }
+   };
 
-   return validate_signature(verify, sign, "ECDSA/" + group_id + "/" + hash,
-                             msg, rng, signature);
-   }
+BOTAN_REGISTER_TEST("ecdsa", ECDSA_Signature_KAT_Tests);
+
+#endif
+
+}
 
 }
 
 size_t test_ecdsa()
    {
-   size_t fails = 0;
-
-   std::ifstream ecdsa_sig(TEST_DATA_DIR_PK "/ecdsa.vec");
-
-   fails += run_tests_bb(ecdsa_sig, "ECDSA Signature", "Signature", false,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return ecdsa_sig_kat(m["Group"], m["X"], m["Hash"], m["Msg"], m["Signature"]);
-             });
-
-   return fails;
+   return Botan_Tests::basic_error_report("ecdsa");
    }
-
-#else
-
-SKIP_TEST(ecdsa);
-
-#endif // BOTAN_HAS_ECDSA

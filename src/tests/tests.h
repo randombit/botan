@@ -208,25 +208,25 @@ class Text_Based_Test : public Test
 
       std::vector<Test::Result> run() override;
    protected:
+      typedef std::map<std::string, std::string> VarMap;
       std::string get_next_line();
 
       virtual Test::Result run_one_test(const std::string& algo,
-                                        const std::map<std::string, std::string>& vars) = 0;
+                                        const VarMap& vars) = 0;
 
-      std::vector<uint8_t> get_req_bin(const std::map<std::string, std::string>& vars,
+      std::vector<uint8_t> get_req_bin(const VarMap& vars,
                                        const std::string& key) const;
 
 #if defined(BOTAN_HAS_BIGINT)
-      Botan::BigInt get_req_bn(const std::map<std::string, std::string>& vars, const std::string& key) const;
+      Botan::BigInt get_req_bn(const VarMap& vars, const std::string& key) const;
 #endif
 
-      std::string get_req_str(const std::map<std::string, std::string>& vars, const std::string& key) const;
+      std::string get_req_str(const VarMap& vars, const std::string& key) const;
 
-      std::vector<uint8_t> get_opt_bin(const std::map<std::string, std::string>& vars,
+      std::vector<uint8_t> get_opt_bin(const VarMap& vars,
                                        const std::string& key) const;
 
-      std::string get_opt_str(const std::map<std::string, std::string>& vars,
-                              const std::string& key, const std::string& def_value) const;
+      std::string get_opt_str(const VarMap& vars, const std::string& key, const std::string& def_value) const;
 
       std::string algo_name() const { return m_algo; }
    private:

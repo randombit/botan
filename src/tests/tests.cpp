@@ -272,7 +272,7 @@ Text_Based_Test::Text_Based_Test(const std::string& algo,
    m_output_key = required_keys.at(required_keys.size() - 1);
    }
 
-std::vector<uint8_t> Text_Based_Test::get_req_bin(const std::map<std::string, std::string>& vars,
+std::vector<uint8_t> Text_Based_Test::get_req_bin(const VarMap& vars,
                                                   const std::string& key) const
       {
       auto i = vars.find(key);
@@ -289,7 +289,7 @@ std::vector<uint8_t> Text_Based_Test::get_req_bin(const std::map<std::string, st
          }
       }
 
-std::string Text_Based_Test::get_opt_str(const std::map<std::string, std::string>& vars,
+std::string Text_Based_Test::get_opt_str(const VarMap& vars,
                                          const std::string& key, const std::string& def_value) const
 
    {
@@ -299,7 +299,7 @@ std::string Text_Based_Test::get_opt_str(const std::map<std::string, std::string
    return i->second;
    }
 
-std::vector<uint8_t> Text_Based_Test::get_opt_bin(const std::map<std::string, std::string>& vars,
+std::vector<uint8_t> Text_Based_Test::get_opt_bin(const VarMap& vars,
                                                   const std::string& key) const
    {
    auto i = vars.find(key);
@@ -316,7 +316,7 @@ std::vector<uint8_t> Text_Based_Test::get_opt_bin(const std::map<std::string, st
       }
    }
 
-std::string Text_Based_Test::get_req_str(const std::map<std::string, std::string>& vars, const std::string& key) const
+std::string Text_Based_Test::get_req_str(const VarMap& vars, const std::string& key) const
    {
    auto i = vars.find(key);
    if(i == vars.end())
@@ -325,7 +325,7 @@ std::string Text_Based_Test::get_req_str(const std::map<std::string, std::string
    }
 
 #if defined(BOTAN_HAS_BIGINT)
-Botan::BigInt Text_Based_Test::get_req_bn(const std::map<std::string, std::string>& vars,
+Botan::BigInt Text_Based_Test::get_req_bn(const VarMap& vars,
                                           const std::string& key) const
    {
    auto i = vars.find(key);
@@ -397,7 +397,7 @@ std::vector<Test::Result> Text_Based_Test::run()
    std::vector<Test::Result> results;
 
    std::string who;
-   std::map<std::string, std::string> vars;
+   VarMap vars;
    size_t test_cnt = 0;
 
    while(true)
@@ -476,11 +476,10 @@ void check_invalid_signatures(Test::Result& result,
    const std::vector<uint8_t> zero_sig(signature.size());
    result.test_eq("all zero signature invalid", verifier.verify_message(message, zero_sig), false);
 
-   std::vector<uint8_t> bad_sig = signature;
+   std::vector<uint8_t> bad_sig;
    for(size_t i = 0; i <= Test::soak_level(); ++i)
       {
-      size_t offset = Test::rng().get_random<uint16_t>() % bad_sig.size();
-      bad_sig[offset] ^= Test::rng().next_nonzero_byte();
+      bad_sig = Test::mutate_vec(signature);
 
       if(!result.test_eq("incorrect signature invalid", verifier.verify_message(message, bad_sig), false))
          {

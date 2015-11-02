@@ -69,14 +69,19 @@
 namespace Botan_Tests {
 
 Test::Result
-PK_Deterministic_Signature_Generation_Test::run_one_test(const std::string&,
-                                                         const std::map<std::string, std::string>& vars)
+PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& vars)
    {
    const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
    const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
-   const std::string padding = get_opt_str(vars, "Padding", default_padding());
+   const std::string padding = get_opt_str(vars, "Padding", default_padding(vars));
 
-   Test::Result result(algo_name() + "/" + padding);
+   std::unique_ptr<RandomNumberGenerator> rng;
+   if(vars.count("Nonce"))
+      {
+      rng.reset(new Fixed_Output_RNG(get_req_bin(vars, "Nonce")));
+      }
+
+   Test::Result result(algo_name() + "/" + padding + " signature generation");
 
    std::unique_ptr<Private_Key> privkey = load_private_key(vars);
    std::unique_ptr<Public_Key> pubkey(X509::load_key(X509::BER_encode(*privkey)));
@@ -84,7 +89,7 @@ PK_Deterministic_Signature_Generation_Test::run_one_test(const std::string&,
    Botan::PK_Signer signer(*privkey, padding);
    Botan::PK_Verifier verifier(*pubkey, padding);
 
-   const std::vector<byte> generated_signature = signer.sign_message(message, Test::rng());
+   const std::vector<byte> generated_signature = signer.sign_message(message, rng ? *rng : Test::rng());
    result.test_eq("generated signature matches KAT", generated_signature, signature);
 
    result.test_eq("generated signature valid", verifier.verify_message(message, generated_signature), true);
@@ -95,15 +100,14 @@ PK_Deterministic_Signature_Generation_Test::run_one_test(const std::string&,
    }
 
 Test::Result
-PK_Signature_Verification_Test::run_one_test(const std::string&,
-                                             const std::map<std::string, std::string>& vars)
+PK_Signature_Verification_Test::run_one_test(const std::string&, const VarMap& vars)
    {
    const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
    const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
-   const std::string padding = get_opt_str(vars, "Padding", default_padding());
+   const std::string padding = get_opt_str(vars, "Padding", default_padding(vars));
    std::unique_ptr<Public_Key> pubkey = load_public_key(vars);
 
-   Test::Result result(algo_name() + "/" + padding);
+   Test::Result result(algo_name() + "/" + padding + " signature verification");
 
    Botan::PK_Verifier verifier(*pubkey, padding);
 
@@ -114,13 +118,37 @@ PK_Signature_Verification_Test::run_one_test(const std::string&,
    return result;
    }
 
+Test::Result
+PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& vars)
+   {
+   const std::vector<uint8_t> plaintext  = get_req_bin(vars, "Msg");
+   const std::vector<uint8_t> ciphertext = get_req_bin(vars, "Ciphertext");
+
+   const std::string padding = get_opt_str(vars, "Padding", default_padding(vars));
+
+   std::unique_ptr<RandomNumberGenerator> kat_rng;
+   if(vars.count("Nonce"))
+      {
+      kat_rng.reset(new Fixed_Output_RNG(get_req_bin(vars, "Nonce")));
+      }
+
+   Test::Result result(algo_name() + "/" + padding + " encryption/decryption");
+
+   std::unique_ptr<Private_Key> privkey = load_private_key(vars);
+   //std::unique_ptr<Public_Key> pubkey(X509::load_key(X509::BER_encode(*privkey)));
+
+   Botan::PK_Encryptor_EME encryptor(*privkey, padding);
+   result.test_eq("encryption", encryptor.encrypt(plaintext, kat_rng ? *kat_rng : Test::rng()), ciphertext);
+
+   Botan::PK_Decryptor_EME decryptor(*privkey, padding);
+   result.test_eq("decryption", decryptor.decrypt(ciphertext), plaintext);
+
+   check_invalid_ciphertexts(result, decryptor, plaintext, ciphertext);
+
+   return result;
+   }
 
 }
-
-
-
-
-
 
 
 using namespace Botan;

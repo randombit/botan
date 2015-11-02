@@ -12,25 +12,24 @@
 
 namespace Botan_Tests {
 
-class PK_Deterministic_Signature_Generation_Test : public Text_Based_Test
+class PK_Signature_Generation_Test : public Text_Based_Test
    {
    public:
-      PK_Deterministic_Signature_Generation_Test(const std::string& algo,
+      PK_Signature_Generation_Test(const std::string& algo,
                                                  const std::string& test_src,
                                                  const std::vector<std::string>& required_keys,
                                                  const std::vector<std::string>& optional_keys = {},
                                                  bool clear_between = true) :
          Text_Based_Test(algo, test_src, required_keys, optional_keys, clear_between) {}
 
-      virtual std::string default_padding() const
+      virtual std::string default_padding(const VarMap&) const
          {
          throw std::runtime_error("No default padding scheme set for " + algo_name());
          }
 
-      virtual std::unique_ptr<Botan::Private_Key> load_private_key(const std::map<std::string, std::string>& vars) = 0;
+      virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) = 0;
 
-      Test::Result run_one_test(const std::string&,
-                                const std::map<std::string, std::string>& vars) override;
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override;
    };
 
 class PK_Signature_Verification_Test : public Text_Based_Test
@@ -43,16 +42,32 @@ class PK_Signature_Verification_Test : public Text_Based_Test
                                      bool clear_between = true) :
          Text_Based_Test(algo, test_src, required_keys, optional_keys, clear_between) {}
 
-      virtual std::string default_padding() const
+      virtual std::string default_padding(const VarMap&) const
          {
          throw std::runtime_error("No default padding scheme set for " + algo_name());
          }
 
-      virtual std::unique_ptr<Botan::Public_Key> load_public_key(const std::map<std::string, std::string>& vars) = 0;
+      virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) = 0;
 
-      Test::Result run_one_test(const std::string&,
-                                const std::map<std::string, std::string>& vars) override;
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override;
    };
+
+class PK_Encryption_Decryption_Test : public Text_Based_Test
+   {
+   public:
+      PK_Encryption_Decryption_Test(const std::string& algo,
+                                    const std::string& test_src,
+                                    const std::vector<std::string>& required_keys,
+                                    const std::vector<std::string>& optional_keys = {},
+                                    bool clear_between = true) :
+         Text_Based_Test(algo, test_src, required_keys, optional_keys, clear_between) {}
+
+      virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) = 0;
+
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override;
+
+      virtual std::string default_padding(const VarMap&) const { return "Raw"; }
+};
 
 
 
