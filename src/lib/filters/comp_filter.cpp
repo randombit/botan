@@ -25,7 +25,12 @@ Compression_Decompression_Filter::Compression_Decompression_Filter(Transform* tr
    {
    m_transform.reset(dynamic_cast<Compressor_Transform*>(transform));
    if(!m_transform)
-      throw std::invalid_argument("Transform " + transform->name() + " is not a compressor");
+      {
+      if (transform)
+         throw std::invalid_argument("Transform " + transform->name() + " is not a compressor");
+      else
+         throw std::invalid_argument("Transform is null");
+      }
    }
 
 std::string Compression_Decompression_Filter::name() const
