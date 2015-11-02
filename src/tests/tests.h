@@ -200,6 +200,12 @@ class Text_Based_Test : public Test
                       const std::vector<std::string>& optional_keys = {},
                       bool clear_between = true);
 
+      Text_Based_Test(const std::string& algo,
+                      const std::string& input_file,
+                      const std::vector<std::string>& required_keys,
+                      const std::vector<std::string>& optional_keys = {},
+                      bool clear_between = true);
+
       std::vector<Test::Result> run() override;
    protected:
       std::string get_next_line();
@@ -221,7 +227,10 @@ class Text_Based_Test : public Test
 
       std::string get_opt_str(const std::map<std::string, std::string>& vars,
                               const std::string& key, const std::string& def_value) const;
+
+      std::string algo_name() const { return m_algo; }
    private:
+      std::string m_algo;
       std::string m_data_dir;
       std::set<std::string> m_required_keys;
       std::set<std::string> m_optional_keys;

@@ -18,68 +18,50 @@ namespace {
 
 #if defined(BOTAN_HAS_RW)
 
-class RW_KAT_Tests : public Text_Based_Test
+class RW_KAT_Tests : public PK_Deterministic_Signature_Generation_Test
    {
    public:
-      RW_KAT_Tests() : Text_Based_Test(Test::data_file("pubkey/rw_sig.vec"), {"E", "P", "Q", "Msg", "Signature"}, {}, false) {}
+      RW_KAT_Tests() : PK_Deterministic_Signature_Generation_Test(
+         "Rabin-Williams",
+         Test::data_file("pubkey/rw_sig.vec"),
+         {"E", "P", "Q", "Msg", "Signature"},
+         {"Padding"},
+         false) {}
 
-      Test::Result run_one_test(const std::string&,
-                                const std::map<std::string, std::string>& vars) override
+      std::string default_padding() const override { return "EMSA2(SHA-1)"; }
+
+      std::unique_ptr<Botan::Private_Key> load_private_key(const std::map<std::string, std::string>& vars) override
          {
-         const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
-         const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
-
          const BigInt p = get_req_bn(vars, "P");
          const BigInt q = get_req_bn(vars, "Q");
          const BigInt e = get_req_bn(vars, "E");
 
-         Test::Result result("Rabin-Williams");
-
-         const Botan::RW_PrivateKey privkey(Test::rng(), p, q, e);
-         const Botan::RW_PublicKey pubkey = privkey;
-         const std::string padding = "EMSA2(SHA-1)";
-
-         Botan::PK_Signer signer(privkey, padding);
-         Botan::PK_Verifier verifier(pubkey, padding);
-
-         const std::vector<byte> generated_signature = signer.sign_message(message, Test::rng());
-         result.test_eq("generated signature matches KAT", generated_signature, signature);
-
-         result.test_eq("generated signature valid", verifier.verify_message(message, generated_signature), true);
-         check_invalid_signatures(result, verifier, message, signature);
-         result.test_eq("correct signature valid", verifier.verify_message(message, signature), true);
-
-         return result;
+         std::unique_ptr<Botan::Private_Key> key(new Botan::RW_PrivateKey(Test::rng(), p, q, e));
+         return key;
          }
+
    };
 
-class RW_Verify_Tests : public Text_Based_Test
+class RW_Verify_Tests : public PK_Signature_Verification_Test
    {
    public:
-      RW_Verify_Tests() : Text_Based_Test(Test::data_file("pubkey/rw_verify.vec"), {"E", "N", "Msg", "Signature"}, {}, false) {}
+      RW_Verify_Tests() : PK_Signature_Verification_Test(
+         "Rabin-Williams",
+         Test::data_file("pubkey/rw_verify.vec"),
+         {"E", "N", "Msg", "Signature"}, {}, false)
+         {}
 
-      Test::Result run_one_test(const std::string&,
-                                const std::map<std::string, std::string>& vars) override
+      std::string default_padding() const override { return "EMSA2(SHA-1)"; }
+
+      std::unique_ptr<Botan::Public_Key> load_public_key(const std::map<std::string, std::string>& vars) override
          {
-         const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
-         const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
-
          const BigInt n = get_req_bn(vars, "N");
          const BigInt e = get_req_bn(vars, "E");
 
-         Test::Result result("Rabin-Williams Verification");
-
-         const Botan::RW_PublicKey pubkey(n, e);
-         const std::string padding = "EMSA2(SHA-1)";
-
-         Botan::PK_Verifier verifier(pubkey, padding);
-
-         result.test_eq("correct signature valid", verifier.verify_message(message, signature), true);
-
-         check_invalid_signatures(result, verifier, message, signature);
-
-         return result;
+         std::unique_ptr<Botan::Public_Key> key(new Botan::RW_PublicKey(n, e));
+         return key;
          }
+
    };
 
 BOTAN_REGISTER_TEST("rw_kat", RW_KAT_Tests);

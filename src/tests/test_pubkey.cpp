@@ -1,5 +1,5 @@
 /*
-* (C) 2009 Jack Lloyd
+* (C) 2009,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -65,6 +65,63 @@
   #include <botan/dlies.h>
   #include <botan/kdf.h>
 #endif
+
+namespace Botan_Tests {
+
+Test::Result
+PK_Deterministic_Signature_Generation_Test::run_one_test(const std::string&,
+                                                         const std::map<std::string, std::string>& vars)
+   {
+   const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
+   const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
+   const std::string padding = get_opt_str(vars, "Padding", default_padding());
+
+   Test::Result result(algo_name() + "/" + padding);
+
+   std::unique_ptr<Private_Key> privkey = load_private_key(vars);
+   std::unique_ptr<Public_Key> pubkey(X509::load_key(X509::BER_encode(*privkey)));
+
+   Botan::PK_Signer signer(*privkey, padding);
+   Botan::PK_Verifier verifier(*pubkey, padding);
+
+   const std::vector<byte> generated_signature = signer.sign_message(message, Test::rng());
+   result.test_eq("generated signature matches KAT", generated_signature, signature);
+
+   result.test_eq("generated signature valid", verifier.verify_message(message, generated_signature), true);
+   check_invalid_signatures(result, verifier, message, signature);
+   result.test_eq("correct signature valid", verifier.verify_message(message, signature), true);
+
+   return result;
+   }
+
+Test::Result
+PK_Signature_Verification_Test::run_one_test(const std::string&,
+                                             const std::map<std::string, std::string>& vars)
+   {
+   const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
+   const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
+   const std::string padding = get_opt_str(vars, "Padding", default_padding());
+   std::unique_ptr<Public_Key> pubkey = load_public_key(vars);
+
+   Test::Result result(algo_name() + "/" + padding);
+
+   Botan::PK_Verifier verifier(*pubkey, padding);
+
+   result.test_eq("correct signature valid", verifier.verify_message(message, signature), true);
+
+   check_invalid_signatures(result, verifier, message, signature);
+
+   return result;
+   }
+
+
+}
+
+
+
+
+
+
 
 using namespace Botan;
 

@@ -255,6 +255,23 @@ Text_Based_Test::Text_Based_Test(const std::string& data_dir,
    m_output_key = required_keys.at(required_keys.size() - 1);
    }
 
+Text_Based_Test::Text_Based_Test(const std::string& algo,
+                                 const std::string& data_dir,
+                                 const std::vector<std::string>& required_keys,
+                                 const std::vector<std::string>& optional_keys,
+                                 bool clear_between) :
+   m_algo(algo),
+   m_data_dir(data_dir),
+   m_clear_between_cb(clear_between)
+   {
+   if(required_keys.empty())
+      throw std::runtime_error("Invalid test spec");
+
+   m_required_keys.insert(required_keys.begin(), required_keys.end());
+   m_optional_keys.insert(optional_keys.begin(), optional_keys.end());
+   m_output_key = required_keys.at(required_keys.size() - 1);
+   }
+
 std::vector<uint8_t> Text_Based_Test::get_req_bin(const std::map<std::string, std::string>& vars,
                                                   const std::string& key) const
       {
