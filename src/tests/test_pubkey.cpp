@@ -148,6 +148,25 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
    return result;
    }
 
+Test::Result PK_Key_Agreement_Test::run_one_test(const std::string&, const VarMap& vars)
+   {
+   const std::vector<uint8_t> shared = get_req_bin(vars, "K");
+   const std::string kdf = get_opt_str(vars, "KDF", default_kdf(vars));
+
+   Test::Result result(algo_name() + "/" + kdf + " key agreement");
+
+   std::unique_ptr<Private_Key> privkey = load_our_key(vars);
+   const std::vector<byte> pubkey = load_their_key(vars);
+
+   const size_t key_len = get_opt_sz(vars, "OutLen", 0);
+
+   PK_Key_Agreement kas(*privkey, kdf);
+
+   result.test_eq("agreement", kas.derive_key(key_len, pubkey).bits_of(), shared);
+
+   return result;
+   }
+
 }
 
 

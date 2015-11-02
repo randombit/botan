@@ -7,109 +7,108 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_CURVE_25519)
+  #include "test_pubkey.h"
+  #include <botan/curve25519.h>
+  #include <botan/pkcs8.h>
+#endif
 
-#include "test_pubkey.h"
+namespace Botan_Tests {
 
-#include <botan/curve25519.h>
-#include <botan/pkcs8.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
+#if defined(BOTAN_HAS_CURVE_25519)
 
-using namespace Botan;
-
-namespace {
-
-size_t curve25519_scalar_kat(const std::string& secret_h,
-                             const std::string& basepoint_h,
-                             const std::string& out_h)
+class Curve25519_Sclarmult_Tests : public Text_Based_Test
    {
-   const std::vector<byte> secret = hex_decode(secret_h);
-   const std::vector<byte> basepoint = hex_decode(basepoint_h);
-   const std::vector<byte> out = hex_decode(out_h);
+   public:
+      Curve25519_Sclarmult_Tests() : Text_Based_Test(
+         Test::data_file("pubkey/c25519_scalar.vec"),
+         {"Secret","Basepoint","Out"})
+         {}
 
-   std::vector<byte> got(32);
-   curve25519_donna(got.data(), secret.data(), basepoint.data());
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         const std::vector<uint8_t> secret    = get_req_bin(vars, "Secret");
+         const std::vector<uint8_t> basepoint = get_req_bin(vars, "Basepoint");
+         const std::vector<uint8_t> expected  = get_req_bin(vars, "Out");
 
-   return test_buffers_equal("Curve25519", "basemult", got, out);
-   }
+         std::vector<byte> got(32);
+         curve25519_donna(got.data(), secret.data(), basepoint.data());
 
-size_t c25519_roundtrip()
+         Test::Result result("Curve25519 scalarmult");
+         result.test_eq("basemult", got, expected);
+         return result;
+         }
+   };
+
+class Curve25519_Roundtrip_Test : public Test
    {
-   auto& rng = test_rng();
+   public:
+      std::vector<Test::Result> run()
+         {
+         std::vector<Test::Result> results;
 
-   try
-      {
-      // First create keys
-      Curve25519_PrivateKey a_priv_gen(rng);
-      Curve25519_PrivateKey b_priv_gen(rng);
+         for(size_t i = 0; i <= Test::soak_level(); ++i)
+            {
+            Test::Result result("Curve25519 roundtrip");
 
-      const std::string a_pass = "alice pass";
-      const std::string b_pass = "bob pass";
+            Botan::Curve25519_PrivateKey a_priv_gen(Test::rng());
+            Botan::Curve25519_PrivateKey b_priv_gen(Test::rng());
 
-      // Then serialize to encrypted storage
-      const auto pbe_time = std::chrono::milliseconds(10);
-      const std::string a_priv_pem = PKCS8::PEM_encode(a_priv_gen, rng, a_pass, pbe_time);
-      const std::string b_priv_pem = PKCS8::PEM_encode(b_priv_gen, rng, b_pass, pbe_time);
+            const std::string a_pass = "alice pass";
+            const std::string b_pass = "bob pass";
 
-      // Reload back into memory
-      DataSource_Memory a_priv_ds(a_priv_pem);
-      DataSource_Memory b_priv_ds(b_priv_pem);
+            // Then serialize to encrypted storage
+            const auto pbe_time = std::chrono::milliseconds(10);
+            const std::string a_priv_pem = Botan::PKCS8::PEM_encode(a_priv_gen, Test::rng(), a_pass, pbe_time);
+            const std::string b_priv_pem = Botan::PKCS8::PEM_encode(b_priv_gen, Test::rng(), b_pass, pbe_time);
 
-      std::unique_ptr<Private_Key> a_priv(PKCS8::load_key(a_priv_ds, rng, [a_pass]() { return a_pass; }));
-      std::unique_ptr<Private_Key> b_priv(PKCS8::load_key(b_priv_ds, rng, b_pass));
+            // Reload back into memory
+            Botan::DataSource_Memory a_priv_ds(a_priv_pem);
+            Botan::DataSource_Memory b_priv_ds(b_priv_pem);
 
-      // Export public keys as PEM
-      const std::string a_pub_pem = X509::PEM_encode(*a_priv);
-      const std::string b_pub_pem = X509::PEM_encode(*b_priv);
+            std::unique_ptr<Botan::Private_Key> a_priv(Botan::PKCS8::load_key(a_priv_ds, Test::rng(), [a_pass]() { return a_pass; }));
+            std::unique_ptr<Botan::Private_Key> b_priv(Botan::PKCS8::load_key(b_priv_ds, Test::rng(), b_pass));
 
-      DataSource_Memory a_pub_ds(a_pub_pem);
-      DataSource_Memory b_pub_ds(b_pub_pem);
+            // Export public keys as PEM
+            const std::string a_pub_pem = Botan::X509::PEM_encode(*a_priv);
+            const std::string b_pub_pem = Botan::X509::PEM_encode(*b_priv);
 
-      std::unique_ptr<Public_Key> a_pub(X509::load_key(a_pub_ds));
-      std::unique_ptr<Public_Key> b_pub(X509::load_key(b_pub_ds));
+            Botan::DataSource_Memory a_pub_ds(a_pub_pem);
+            Botan::DataSource_Memory b_pub_ds(b_pub_pem);
 
-      Curve25519_PublicKey* a_pub_key = dynamic_cast<Curve25519_PublicKey*>(a_pub.get());
-      Curve25519_PublicKey* b_pub_key = dynamic_cast<Curve25519_PublicKey*>(b_pub.get());
+            std::unique_ptr<Public_Key> a_pub(Botan::X509::load_key(a_pub_ds));
+            std::unique_ptr<Public_Key> b_pub(Botan::X509::load_key(b_pub_ds));
 
-      PK_Key_Agreement a_ka(*a_priv, "KDF2(SHA-256)");
-      PK_Key_Agreement b_ka(*b_priv, "KDF2(SHA-256)");
+            Botan::Curve25519_PublicKey* a_pub_key = dynamic_cast<Botan::Curve25519_PublicKey*>(a_pub.get());
+            Botan::Curve25519_PublicKey* b_pub_key = dynamic_cast<Botan::Curve25519_PublicKey*>(b_pub.get());
 
-      const std::string context = "shared context value";
-      SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value(), context);
-      SymmetricKey b_key = b_ka.derive_key(32, a_pub_key->public_value(), context);
+            Botan::PK_Key_Agreement a_ka(*a_priv, "KDF2(SHA-256)");
+            Botan::PK_Key_Agreement b_ka(*b_priv, "KDF2(SHA-256)");
 
-      return test_buffers_equal("Curve25519", "agreement", a_key.bits_of(), b_key.bits_of());
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "C25519 rt fail: " << e.what() << std::endl;
-      return 1;
-      }
-   }
+            const std::string context = "shared context value";
+            Botan::SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value(), context);
+            Botan::SymmetricKey b_key = b_ka.derive_key(32, a_pub_key->public_value(), context);
 
+            if(!result.test_eq("key agreement", a_key.bits_of(), b_key.bits_of()))
+               {
+               result.test_note(a_priv_pem);
+               result.test_note(b_priv_pem);
+               }
+
+            results.push_back(result);
+            }
+
+         return results;
+         }
+   };
+
+BOTAN_REGISTER_TEST("curve25519_scalar", Curve25519_Sclarmult_Tests);
+BOTAN_REGISTER_TEST("curve25519_rt", Curve25519_Roundtrip_Test);
+
+#endif
 
 }
 
 size_t test_curve25519()
    {
-   test_report("Curve25519", 1, c25519_roundtrip());
-
-   size_t fails = 0;
-
-   std::ifstream c25519_scalar(TEST_DATA_DIR_PK "/c25519_scalar.vec");
-
-   fails += run_tests_bb(c25519_scalar, "Curve25519 ScalarMult", "Out", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return curve25519_scalar_kat(m["Secret"], m["Basepoint"], m["Out"]);
-             });
-
-   return fails;
+   return Botan_Tests::basic_error_report("curve25519_scalar") + Botan_Tests::basic_error_report("curve25519_rt");
    }
-
-#else
-
-SKIP_TEST(curve25519);
-
-#endif // BOTAN_HAS_CURVE_25519

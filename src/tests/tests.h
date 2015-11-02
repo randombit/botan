@@ -228,6 +228,8 @@ class Text_Based_Test : public Test
 
       std::string get_opt_str(const VarMap& vars, const std::string& key, const std::string& def_value) const;
 
+      size_t get_opt_sz(const VarMap& vars, const std::string& key, const size_t def_value) const;
+
       std::string algo_name() const { return m_algo; }
    private:
       std::string m_algo;
