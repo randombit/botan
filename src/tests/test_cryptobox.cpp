@@ -54,11 +54,11 @@ class Cryptobox_Tests : public Test
 
 BOTAN_REGISTER_TEST("cryptobox", Cryptobox_Tests);
 
-}
-
-}
-
 #endif
+
+}
+
+}
 
 size_t test_cryptobox()
    {

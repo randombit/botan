@@ -224,179 +224,135 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string&, const VarMa
    return result;
    }
 
-}
-
-using namespace Botan;
-
 namespace {
 
-size_t validate_save_and_load(const Private_Key* priv_key,
-                              RandomNumberGenerator& rng)
+class PK_Keygen_Tests : public Test
    {
-   std::string name = priv_key->algo_name();
-
-   size_t fails = 0;
-   std::string pub_pem = X509::PEM_encode(*priv_key);
-
-   try
-      {
-      DataSource_Memory input_pub(pub_pem);
-      std::unique_ptr<Public_Key> restored_pub(X509::load_key(input_pub));
-
-      if(!restored_pub.get())
+   public:
+      std::vector<Test::Result> run() override
          {
-         std::cout << "Could not recover " << name << " public key" << std::endl;
-         ++fails;
-         }
-      else if(restored_pub->check_key(rng, true) == false)
-         {
-         std::cout << "Restored pubkey failed self tests " << name << std::endl;
-         ++fails;
-         }
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "Exception during load of " << name
-                << " key: " << e.what() << std::endl;
-      std::cout << "PEM for pubkey was:\n" << pub_pem << std::endl;
-      ++fails;
-      }
+         const std::vector<std::string> modp_groups = { "modp/ietf/1024",
+                                                        "modp/ietf/2048",
+                                                        "dsa/jce/1024" };
+         const std::vector<std::string> dsa_groups = { "dsa/jce/1024", "dsa/botan/2048" };
 
-   std::string priv_pem = PKCS8::PEM_encode(*priv_key);
+         const std::vector<std::string> ecdsa_groups = { "secp256r1", "secp256k1", "secp384r1", "secp521r1" };
+         const std::vector<std::string> gost_groups = { "gost_256A", "secp256r1" };
 
-   try
-      {
-      DataSource_Memory input_priv(priv_pem);
-      std::unique_ptr<Private_Key> restored_priv(
-         PKCS8::load_key(input_priv, rng));
-
-      if(!restored_priv.get())
-         {
-         std::cout << "Could not recover " << name << " privlic key" << std::endl;
-         ++fails;
-         }
-      else if(restored_priv->check_key(rng, true) == false)
-         {
-         std::cout << "Restored privkey failed self tests " << name << std::endl;
-         ++fails;
-         }
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "Exception during load of " << name
-                << " key: " << e.what() << std::endl;
-      std::cout << "PEM for privkey was:\n" << priv_pem << std::endl;
-      ++fails;
-      }
-
-   return fails;
-   }
-
-}
-
-
-size_t test_pk_keygen()
-   {
-   auto& rng = test_rng();
-
-   size_t tests = 0;
-   size_t fails = 0;
-
-#define DL_KEY(TYPE, GROUP)                             \
-   {                                                    \
-   TYPE key(rng, DL_Group(GROUP));                      \
-   key.check_key(rng, true);                            \
-   ++tests;                                             \
-   fails += validate_save_and_load(&key, rng);          \
-   }
-
-#define EC_KEY(TYPE, GROUP)                             \
-   {                                                    \
-   TYPE key(rng, EC_Group(OIDS::lookup(GROUP)));        \
-   key.check_key(rng, true);                            \
-   ++tests;                                             \
-   fails += validate_save_and_load(&key, rng);          \
-   }
+         std::vector<Test::Result> results;
 
 #if defined(BOTAN_HAS_RSA)
-      {
-      RSA_PrivateKey rsa1024(rng, 1024);
-      rsa1024.check_key(rng, true);
-      ++tests;
-      fails += validate_save_and_load(&rsa1024, rng);
-
-      RSA_PrivateKey rsa2048(rng, 2048);
-      rsa2048.check_key(rng, true);
-      ++tests;
-      fails += validate_save_and_load(&rsa2048, rng);
-      }
+         results.push_back(test_key("RSA 1024", new Botan::RSA_PrivateKey(Test::rng(), 1024)));
 #endif
 
 #if defined(BOTAN_HAS_RW)
-      {
-      RW_PrivateKey rw1024(rng, 1024);
-      rw1024.check_key(rng, true);
-      ++tests;
-      fails += validate_save_and_load(&rw1024, rng);
-      }
+         results.push_back(test_key("RW 1024", new Botan::RW_PrivateKey(Test::rng(), 1024)));
 #endif
 
-#if defined(BOTAN_HAS_DSA)
-   DL_KEY(DSA_PrivateKey, "dsa/jce/1024");
-   DL_KEY(DSA_PrivateKey, "dsa/botan/2048");
-   DL_KEY(DSA_PrivateKey, "dsa/botan/3072");
-#endif
-
+         for(auto&& group_name : modp_groups)
+            {
+            Botan::DL_Group group(group_name);
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-   DL_KEY(DH_PrivateKey, "modp/ietf/1024");
-   DL_KEY(DH_PrivateKey, "modp/ietf/2048");
-   DL_KEY(DH_PrivateKey, "modp/ietf/4096");
-   DL_KEY(DH_PrivateKey, "dsa/jce/1024");
+            results.push_back(test_key("DH " + group_name, new Botan::DH_PrivateKey(Test::rng(), group)));
 #endif
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-   DL_KEY(NR_PrivateKey, "dsa/jce/1024");
-   DL_KEY(NR_PrivateKey, "dsa/botan/2048");
-   DL_KEY(NR_PrivateKey, "dsa/botan/3072");
+            results.push_back(test_key("NR " + group_name, new Botan::NR_PrivateKey(Test::rng(), group)));
+#endif
+            }
+
+#if defined(BOTAN_HAS_DSA)
+         for(auto&& group_name : dsa_groups)
+            {
+            Botan::DL_Group group(group_name);
+            results.push_back(test_key("DSA " + group_name,
+                                       new Botan::DSA_PrivateKey(Test::rng(), group)));
+            }
 #endif
 
-#if defined(BOTAN_HAS_ELGAMAL)
-   DL_KEY(ElGamal_PrivateKey, "modp/ietf/1024");
-   DL_KEY(ElGamal_PrivateKey, "dsa/jce/1024");
-   DL_KEY(ElGamal_PrivateKey, "dsa/botan/2048");
-   DL_KEY(ElGamal_PrivateKey, "dsa/botan/3072");
-#endif
+         for(auto&& group_name : ecdsa_groups)
+            {
+            Botan::EC_Group group(group_name);
 
 #if defined(BOTAN_HAS_ECDSA)
-   EC_KEY(ECDSA_PrivateKey, "secp112r1");
-   EC_KEY(ECDSA_PrivateKey, "secp128r1");
-   EC_KEY(ECDSA_PrivateKey, "secp160r1");
-   EC_KEY(ECDSA_PrivateKey, "secp192r1");
-   EC_KEY(ECDSA_PrivateKey, "secp224r1");
-   EC_KEY(ECDSA_PrivateKey, "secp256r1");
-   EC_KEY(ECDSA_PrivateKey, "secp384r1");
-   EC_KEY(ECDSA_PrivateKey, "secp521r1");
+            results.push_back(test_key("ECDSA " + group_name,
+                                       new Botan::ECDSA_PrivateKey(Test::rng(), group)));
 #endif
+
+#if defined(BOTAN_HAS_ECDH)
+            results.push_back(test_key("ECDH " + group_name,
+                                       new Botan::ECDH_PrivateKey(Test::rng(), group)));
+#endif
+            }
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
-   EC_KEY(GOST_3410_PrivateKey, "gost_256A");
-   EC_KEY(GOST_3410_PrivateKey, "secp112r1");
-   EC_KEY(GOST_3410_PrivateKey, "secp128r1");
-   EC_KEY(GOST_3410_PrivateKey, "secp160r1");
-   EC_KEY(GOST_3410_PrivateKey, "secp192r1");
-   EC_KEY(GOST_3410_PrivateKey, "secp224r1");
-   EC_KEY(GOST_3410_PrivateKey, "secp256r1");
-   EC_KEY(GOST_3410_PrivateKey, "secp384r1");
-   EC_KEY(GOST_3410_PrivateKey, "secp521r1");
+         for(auto&& group_name : gost_groups)
+            {
+            results.push_back(test_key("GOST 34.10 " + group_name,
+                                       new Botan::GOST_3410_PrivateKey(Test::rng(), Botan::EC_Group(group_name))));
+            }
 #endif
 
-   test_report("PK keygen", tests, fails);
+         return results;
+         }
 
-   return fails;
+   private:
+         Test::Result test_key(const std::string& algo, Botan::Private_Key* keyp)
+         {
+         std::unique_ptr<Botan::Private_Key> key(keyp); // assume ownership
+
+         Test::Result result(algo + " keygen");
+
+         const std::string pub_pem = Botan::X509::PEM_encode(*key);
+
+         try
+            {
+            Botan::DataSource_Memory input_pub(pub_pem);
+            std::unique_ptr<Botan::Public_Key> restored_pub(Botan::X509::load_key(input_pub));
+
+            result.test_eq("recovered public key from private", restored_pub.get(), true);
+
+            result.test_eq("public key has same type", restored_pub->algo_name(), key->algo_name());
+
+            result.test_eq("public key passes checks", restored_pub->check_key(Test::rng(), false), true);
+            }
+         catch(std::exception& e)
+            {
+            result.test_failure("roundtrip public key", e.what());
+            }
+
+         const std::string priv_pem = Botan::PKCS8::PEM_encode(*key);
+
+         try
+            {
+            Botan::DataSource_Memory input_priv(priv_pem);
+            std::unique_ptr<Botan::Private_Key> restored_priv(
+               Botan::PKCS8::load_key(input_priv, Test::rng()));
+
+            result.test_eq("recovered private key from blob", restored_priv.get(), true);
+
+            result.test_eq("reloaded key has same type", restored_priv->algo_name(), key->algo_name());
+
+            result.test_eq("private key passes checks", restored_priv->check_key(Test::rng(), false), true);
+            }
+         catch(std::exception& e)
+            {
+            result.test_failure("roundtrip private key", e.what());
+            }
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("pk_keygen", PK_Keygen_Tests);
+
+}
+
+}
+
+#endif
+
+size_t test_pk_keygen()
+   {
+   return Botan_Tests::basic_error_report("pk_keygen");
    }
-
-#else
-
-SKIP_TEST(pk_keygen);
-
-#endif // BOTAN_HAS_PUBLIC_KEY_CRYPTO

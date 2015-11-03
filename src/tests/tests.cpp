@@ -88,6 +88,21 @@ bool Test::Result::test_eq(const char* producer, const char* what,
    return test_success();
    }
 
+bool Test::Result::test_eq(const char* what, const std::string& produced, const std::string& expected)
+   {
+   if(produced != expected)
+      {
+      std::ostringstream err;
+      err << m_who;
+      if(what)
+         err << " " << what;
+      err << " unexpected result produced " << produced << " expected " << expected << "\n";
+      return test_failure(err);
+      }
+
+   return test_success();
+   }
+
 bool Test::Result::test_eq(const char* what, size_t produced, size_t expected)
    {
    if(produced != expected)
@@ -141,6 +156,16 @@ bool Test::Result::test_eq(const char* what, const BigInt& produced, const BigIn
 
    std::ostringstream err;
    err << who() << " " << what << " produced " << produced << " expected " << expected;
+   return test_failure(err.str());
+   }
+
+bool Test::Result::test_ne(const char* what, const BigInt& produced, const BigInt& expected)
+   {
+   if(produced != expected)
+      return test_success();
+
+   std::ostringstream err;
+   err << who() << " " << what << " produced " << produced << " prohibited value";
    return test_failure(err.str());
    }
 #endif
@@ -606,28 +631,6 @@ std::string test_buffers_equal(const std::string& who,
       }
 
    return err.str();
-   }
-
-size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std::string&)> fn)
-   {
-   size_t fails = 0;
-
-   try
-      {
-      auto files = get_files_recursive(dir);
-
-      if (files.empty())
-         std::cout << "Warning: No test files found in '" << dir << "'" << std::endl;
-
-      for(const auto file: files)
-         fails += fn(file);
-      }
-   catch(No_Filesystem_Access)
-      {
-      std::cout << "Warning: No filesystem access available to read test files in '" << dir << "'" << std::endl;
-      }
-
-   return fails;
    }
 
 size_t run_tests(const std::vector<std::pair<std::string, test_fn>>& tests)

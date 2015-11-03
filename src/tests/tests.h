@@ -85,6 +85,7 @@ class Test
                return test_failure(oss.str());
                }
 
+            bool test_eq(const char* what, const std::string& produced, const std::string& expected);
             bool test_eq(const char* what, bool produced, bool expected);
 
             bool test_eq(const char* what, size_t produced, size_t expected);
@@ -93,6 +94,7 @@ class Test
 
 #if defined(BOTAN_HAS_BIGINT)
             bool test_eq(const char* what, const BigInt& produced, const BigInt& expected);
+            bool test_ne(const char* what, const BigInt& produced, const BigInt& expected);
 #endif
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
@@ -255,8 +257,6 @@ class Text_Based_Test : public Test
 
 
 Botan::RandomNumberGenerator& test_rng();
-
-size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std::string&)> fn);
 
 size_t warn_about_missing(const std::string& whatever);
 

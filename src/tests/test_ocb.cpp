@@ -7,133 +7,123 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_AEAD_OCB)
+  #include <botan/ocb.h>
+  #include <botan/loadstor.h>
+#endif
 
-#if defined(BOTAN_HAS_AES)
-
-#include <iostream>
-#include <botan/ocb.h>
-#include <botan/hex.h>
-#include <botan/sha2_32.h>
-#include <botan/aes.h>
-#include <botan/loadstor.h>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-std::vector<byte> ocb_encrypt(OCB_Encryption& enc,
-                              OCB_Decryption& dec,
-                              const std::vector<byte>& nonce,
-                              const std::vector<byte>& pt,
-                              const std::vector<byte>& ad)
+#if defined(BOTAN_HAS_AEAD_OCB)
+
+class OCB_Long_KAT_Tests : public Text_Based_Test
    {
-   enc.set_associated_data(ad.data(), ad.size());
+   public:
+      OCB_Long_KAT_Tests() : Text_Based_Test(Test::data_file("aead/ocb_long.vec"),
+                                             {"Keylen", "Taglen", "Output"}) {}
 
-   enc.start(nonce.data(), nonce.size());
+      Test::Result run_one_test(const std::string&, const VarMap& vars)
+         {
+         const size_t keylen = get_req_sz(vars, "Keylen");
+         const size_t taglen = get_req_sz(vars, "Taglen");
+         const std::vector<byte> expected = get_req_bin(vars, "Output");
 
-   secure_vector<byte> buf(pt.begin(), pt.end());
-   enc.finish(buf, 0);
+         // Test from RFC 7253 Appendix A
 
-   try
-      {
-      secure_vector<byte> ct = buf;
+         const std::string algo = "AES-" + std::to_string(keylen);
 
-      dec.set_associated_data(ad.data(), ad.size());
+         Test::Result result("OCB long");
 
-      dec.start(nonce.data(), nonce.size());
+         std::unique_ptr<Botan::BlockCipher> aes(Botan::BlockCipher::create(algo));
+         if(!aes)
+            {
+            warn_about_missing(algo);
+            return result;
+            }
 
-      dec.finish(ct, 0);
+         Botan::OCB_Encryption enc(aes->clone(), taglen / 8);
+         Botan::OCB_Decryption dec(aes->clone(), taglen / 8);
 
-      if(ct != pt)
-         std::cout << "OCB failed to decrypt correctly" << std::endl;
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "OCB round trip error - " << e.what() << std::endl;
-      }
+         std::vector<byte> key(keylen/8);
+         key[keylen/8-1] = taglen;
 
-   return unlock(buf);
-   }
+         enc.set_key(key);
+         dec.set_key(key);
 
-size_t test_ocb_long(size_t keylen, size_t taglen,
-                     const std::string &expected)
-   {
-   // Test from RFC 7253 Appendix A
+         const std::vector<byte> empty;
+         std::vector<byte> N(12);
+         std::vector<byte> C;
 
-   const std::string algo = "AES-" + std::to_string(keylen);
+         for(size_t i = 0; i != 128; ++i)
+            {
+            const std::vector<byte> S(i);
 
-   std::unique_ptr<BlockCipher> aes(BlockCipher::create(algo));
-   if(!aes)
-      throw Algorithm_Not_Found(algo);
+            Botan::store_be(static_cast<uint32_t>(3*i+1), &N[8]);
 
-   OCB_Encryption enc(aes->clone(), taglen / 8);
-   OCB_Decryption dec(aes->clone(), taglen / 8);
+            ocb_encrypt(C, enc, dec, N, S, S);
+            Botan::store_be(static_cast<uint32_t>(3*i+2), &N[8]);
+            ocb_encrypt(C, enc, dec, N, S, empty);
+            Botan::store_be(static_cast<uint32_t>(3*i+3), &N[8]);
+            ocb_encrypt(C, enc, dec, N, empty, S);
+            }
 
-   std::vector<byte> key(keylen/8);
-   key[keylen/8-1] = taglen;
+         Botan::store_be(static_cast<uint32_t>(385), &N[8]);
+         std::vector<byte> final_result;
+         ocb_encrypt(final_result, enc, dec, N, empty, C);
 
-   enc.set_key(key);
-   dec.set_key(key);
+         result.test_eq("correct value", final_result, expected);
 
-   const std::vector<byte> empty;
-   std::vector<byte> N(12);
-   std::vector<byte> C;
+         return result;
+         }
+   private:
+      void ocb_encrypt(std::vector<byte>& output_to,
+                       Botan::OCB_Encryption& enc,
+                       Botan::OCB_Decryption& dec,
+                       const std::vector<byte>& nonce,
+                       const std::vector<byte>& pt,
+                       const std::vector<byte>& ad)
+         {
+         enc.set_associated_data(ad.data(), ad.size());
 
-   for(size_t i = 0; i != 128; ++i)
-      {
-      const std::vector<byte> S(i);
+         enc.start(nonce.data(), nonce.size());
 
-      store_be(static_cast<u32bit>(3*i+1), &N[8]);
-      C += ocb_encrypt(enc, dec, N, S, S);
-      store_be(static_cast<u32bit>(3*i+2), &N[8]);
-      C += ocb_encrypt(enc, dec, N, S, empty);
-      store_be(static_cast<u32bit>(3*i+3), &N[8]);
-      C += ocb_encrypt(enc, dec, N, empty, S);
-      }
+         Botan::secure_vector<byte> buf(pt.begin(), pt.end());
+         enc.finish(buf, 0);
 
-   store_be(static_cast<u32bit>(385), &N[8]);
-   const std::vector<byte> cipher = ocb_encrypt(enc, dec, N, empty, C);
+         try
+            {
+            Botan::secure_vector<byte> ct = buf;
 
-   const std::string cipher_hex = hex_encode(cipher);
+            dec.set_associated_data(ad.data(), ad.size());
 
-   if(cipher_hex != expected)
-      {
-      std::cout << "OCB " << algo << " long test mistmatch "
-                << cipher_hex << " != " << expected << std::endl;
-      return 1;
-      }
+            dec.start(nonce.data(), nonce.size());
 
-   return 0;
-   }
+            dec.finish(ct, 0);
+
+            if(ct != pt)
+               std::cout << "OCB failed to decrypt correctly" << std::endl;
+            }
+         catch(std::exception& e)
+            {
+            std::cout << "OCB round trip error - " << e.what() << std::endl;
+            }
+
+         output_to.insert(output_to.end(), buf.begin(), buf.end());
+         }
+   };
+
+BOTAN_REGISTER_TEST("ocb_long", OCB_Long_KAT_Tests);
+
+#endif
+
+}
 
 }
 
 size_t test_ocb()
    {
-   size_t fails = 0;
-
-   fails += test_ocb_long(128, 128, "67E944D23256C5E0B6C61FA22FDF1EA2");
-   fails += test_ocb_long(192, 128, "F673F2C3E7174AAE7BAE986CA9F29E17");
-   fails += test_ocb_long(256, 128, "D90EB8E9C977C88B79DD793D7FFA161C");
-   fails += test_ocb_long(128, 96, "77A3D8E73589158D25D01209");
-   fails += test_ocb_long(192, 96, "05D56EAD2752C86BE6932C5E");
-   fails += test_ocb_long(256, 96, "5458359AC23B0CBA9E6330DD");
-   fails += test_ocb_long(128, 64, "192C9B7BD90BA06A");
-   fails += test_ocb_long(192, 64, "0066BC6E0EF34E24");
-   fails += test_ocb_long(256, 64, "7D4EA5D445501CBE");
-   test_report("OCB long", 9, fails);
-
-   return fails;
+   return Botan_Tests::basic_error_report("ocb_long");
    }
 
-#else
 
-UNTESTED_WARNING(ocb);
-
-#endif // BOTAN_HAS_AES
-
-#else
-
-SKIP_TEST(ocb);
-
-#endif // BOTAN_HAS_AEAD_OCB
