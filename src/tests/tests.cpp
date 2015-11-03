@@ -307,6 +307,14 @@ std::string Text_Based_Test::get_opt_str(const VarMap& vars,
    return i->second;
    }
 
+size_t Text_Based_Test::get_req_sz(const VarMap& vars, const std::string& key) const
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      throw std::runtime_error("Test missing variable " + key);
+   return Botan::to_u32bit(i->second);
+   }
+
 size_t Text_Based_Test::get_opt_sz(const VarMap& vars, const std::string& key, const size_t def_value) const
    {
    auto i = vars.find(key);

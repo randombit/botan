@@ -218,20 +218,17 @@ class Text_Based_Test : public Test
       virtual Test::Result run_one_test(const std::string& algo,
                                         const VarMap& vars) = 0;
 
-      std::vector<uint8_t> get_req_bin(const VarMap& vars,
-                                       const std::string& key) const;
+      std::vector<uint8_t> get_req_bin(const VarMap& vars, const std::string& key) const;
+      std::vector<uint8_t> get_opt_bin(const VarMap& vars, const std::string& key) const;
 
 #if defined(BOTAN_HAS_BIGINT)
       Botan::BigInt get_req_bn(const VarMap& vars, const std::string& key) const;
 #endif
 
       std::string get_req_str(const VarMap& vars, const std::string& key) const;
-
-      std::vector<uint8_t> get_opt_bin(const VarMap& vars,
-                                       const std::string& key) const;
-
       std::string get_opt_str(const VarMap& vars, const std::string& key, const std::string& def_value) const;
 
+      size_t get_req_sz(const VarMap& vars, const std::string& key) const;
       size_t get_opt_sz(const VarMap& vars, const std::string& key, const size_t def_value) const;
 
       std::string algo_name() const { return m_algo; }

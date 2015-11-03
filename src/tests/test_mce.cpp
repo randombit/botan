@@ -7,98 +7,92 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_MCELIECE)
-
 #include <botan/mceliece.h>
 #include <botan/mce_kem.h>
 #include <botan/hmac_drbg.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
-#include <iostream>
-#include <fstream>
+#endif
 
-using namespace Botan;
+#include <iostream>
+#include <botan/hex.h>
+
+namespace Botan_Tests {
 
 namespace {
 
-std::string hash_bytes(const byte b[], size_t len)
+std::vector<byte> hash_bytes(const byte b[], size_t len, const std::string& hash_fn = "SHA-256")
    {
-   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-256"));
+   std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_fn));
    hash->update(b, len);
-   return hex_encode(hash->final());
+   std::vector<byte> r(hash->output_length());
+   hash->final(r.data());
+   return r;
    }
 
 template<typename A>
-std::string hash_bytes(const std::vector<byte, A>& v)
+std::vector<byte> hash_bytes(const std::vector<byte, A>& v)
    {
    return hash_bytes(v.data(), v.size());
    }
 
-size_t mce_test(const std::string& key_seed_hex,
-                size_t n, size_t t,
-                const std::string& exp_fingerprint_pub,
-                const std::string& exp_fingerprint_priv,
-                const std::string& encrypt_rng_seed_hex,
-                const std::string& ct_hex,
-                const std::string& shared_key_hex)
+#if defined(BOTAN_HAS_MCELIECE)
+class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
    {
-   const secure_vector<byte> keygen_seed = hex_decode_locked(key_seed_hex);
-   const secure_vector<byte> encrypt_seed = hex_decode_locked(encrypt_rng_seed_hex);
+   public:
+      McEliece_Keygen_Encrypt_Test() :
+         Text_Based_Test("McEliece",
+                         Test::data_file("pubkey/mce.vec"),
+                         {"McElieceSeed", "KeyN","KeyT","PublicKeyFingerprint",
+                          "PrivateKeyFingerprint", "EncryptPRNGSeed",
+                            "SharedKey", "Ciphertext" })
+         {}
 
-   Test_State _test;
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         const std::vector<byte> keygen_seed  = get_req_bin(vars, "McElieceSeed");
+         const std::vector<byte> fprint_pub   = get_req_bin(vars, "PublicKeyFingerprint");
+         const std::vector<byte> fprint_priv  = get_req_bin(vars, "PrivateKeyFingerprint");
+         const std::vector<byte> encrypt_seed = get_req_bin(vars, "EncryptPRNGSeed");
+         const std::vector<byte> ciphertext   = get_req_bin(vars, "Ciphertext");
+         const std::vector<byte> shared_key   = get_req_bin(vars, "SharedKey");
+         const size_t keygen_n = get_req_sz(vars, "KeyN");
+         const size_t keygen_t = get_req_sz(vars, "KeyT");
 
-   HMAC_DRBG rng("HMAC(SHA-384)");
+         Botan::HMAC_DRBG rng("HMAC(SHA-384)");
 
-   rng.add_entropy(keygen_seed.data(), keygen_seed.size());
+         rng.add_entropy(keygen_seed.data(), keygen_seed.size());
+         Botan::McEliece_PrivateKey mce_priv(rng, keygen_n, keygen_t);
 
-   McEliece_PrivateKey mce_priv(rng, n, t);
+         Test::Result result("McEliece keygen");
 
-   const std::string f_pub = hash_bytes(mce_priv.x509_subject_public_key());
-   const std::string f_priv = hash_bytes(mce_priv.pkcs8_private_key());
+         result.test_eq("public key fingerprint", hash_bytes(mce_priv.x509_subject_public_key()), fprint_pub);
+         result.test_eq("private key fingerprint", hash_bytes(mce_priv.pkcs8_private_key()), fprint_priv);
 
-   BOTAN_TEST(f_pub, exp_fingerprint_pub, "Public fingerprint");
-   BOTAN_TEST(f_priv, exp_fingerprint_priv, "Private fingerprint");
+         rng.clear();
+         rng.add_entropy(encrypt_seed.data(), encrypt_seed.size());
 
-   rng.clear();
-   rng.add_entropy(encrypt_seed.data(), encrypt_seed.size());
+         Botan::McEliece_KEM_Encryptor kem_enc(mce_priv);
+         Botan::McEliece_KEM_Decryptor kem_dec(mce_priv);
 
-   McEliece_KEM_Encryptor kem_enc(mce_priv);
-   McEliece_KEM_Decryptor kem_dec(mce_priv);
+         const auto kem = kem_enc.encrypt(rng);
+         result.test_eq("ciphertext", kem.first, ciphertext);
+         result.test_eq("encrypt shared", kem.second, shared_key);
+         result.test_eq("decrypt shared", kem_dec.decrypt_vec(kem.first), shared_key);
+         return result;
+         }
 
-   const std::pair<secure_vector<byte>,secure_vector<byte> > ciphertext__sym_key = kem_enc.encrypt(rng);
-   const secure_vector<byte>& ciphertext = ciphertext__sym_key.first;
-   const secure_vector<byte>& sym_key_encr = ciphertext__sym_key.second;
+   };
 
-   const secure_vector<byte> sym_key_decr = kem_dec.decrypt(ciphertext.data(), ciphertext.size());
-
-   BOTAN_TEST(ct_hex, hex_encode(ciphertext), "Ciphertext");
-   BOTAN_TEST(hex_encode(sym_key_encr), shared_key_hex, "Encrypted key");
-   BOTAN_TEST(hex_encode(sym_key_decr), shared_key_hex, "Decrypted key");
-
-   return _test.failed();
-   }
+BOTAN_REGISTER_TEST("mce_keygen", McEliece_Keygen_Encrypt_Test);
 
 }
 
-size_t test_mce()
-   {
-
-   std::ifstream vec(TEST_DATA_DIR "/pubkey/mce.vec");
-   return run_tests_bb(vec, "McElieceSeed", "Ciphertext", true,
-                       [](std::map<std::string, std::string> m) -> size_t
-                       {
-                       return mce_test(m["McElieceSeed"],
-                                       to_u32bit(m["KeyN"]),
-                                       to_u32bit(m["KeyT"]),
-                                       m["PublicKeyFingerprint"],
-                                       m["PrivateKeyFingerprint"],
-                                       m["EncryptPRNGSeed"],
-                                       m["Ciphertext"],
-                                       m["SharedKey"]);
-                       });
-   }
-
-#else
-
-SKIP_TEST(mce);
+}
 
 #endif
+
+size_t test_mce()
+   {
+   return Botan_Tests::basic_error_report("mce_keygen");
+   }

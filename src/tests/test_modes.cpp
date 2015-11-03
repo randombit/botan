@@ -7,74 +7,68 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_MODES)
+  #include <botan/cipher_mode.h>
+#endif
 
-#include <botan/hex.h>
-#include <botan/cipher_mode.h>
-#include <iostream>
-#include <fstream>
-#include <memory>
+namespace Botan_Tests {
 
-using namespace Botan;
+#if defined(BOTAN_HAS_MODES)
 
-namespace {
-
-size_t mode_test(const std::string& algo,
-                 const std::vector<byte>& pt,
-                 const std::vector<byte>& ct,
-                 const std::vector<byte>& key,
-                 const std::vector<byte>& nonce)
+class Cipher_Mode_Tests : public Text_Based_Test
    {
-   size_t fails = 0;
+   public:
+      Cipher_Mode_Tests() :
+         Text_Based_Test(Test::data_dir("modes"), {"Key", "Nonce", "In", "Out"})
+         {}
 
-   std::unique_ptr<Cipher_Mode> enc(get_cipher_mode(algo, ENCRYPTION));
-   std::unique_ptr<Cipher_Mode> dec(get_cipher_mode(algo, DECRYPTION));
+      Test::Result run_one_test(const std::string& algo,
+                                const std::map<std::string, std::string>& vars) override
+         {
+         const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
+         const std::vector<uint8_t> nonce    = get_opt_bin(vars, "Nonce");
+         const std::vector<uint8_t> input    = get_req_bin(vars, "In");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
 
-   if(!enc || !dec)
-      return warn_about_missing(algo);
+         Test::Result result(algo);
 
-   enc->set_key(key);
-   enc->start(nonce);
+         std::unique_ptr<Botan::Cipher_Mode> enc(Botan::get_cipher_mode(algo, Botan::ENCRYPTION));
+         std::unique_ptr<Botan::Cipher_Mode> dec(Botan::get_cipher_mode(algo, Botan::DECRYPTION));
 
-   dec->set_key(key);
-   dec->start(nonce);
+         if(!enc || !dec)
+            {
+            warn_about_missing(algo);
+            return result;
+            }
 
-   secure_vector<byte> buf;
+         result.test_eq("mode not authenticated", enc->authenticated(), false);
 
-   buf.assign(pt.begin(), pt.end());
-   enc->finish(buf);
-   fails += test_buffers_equal(algo, "encrypt", buf, ct);
+         enc->set_key(key);
+         enc->start(nonce);
 
-   buf.assign(ct.begin(), ct.end());
-   dec->finish(buf);
-   fails += test_buffers_equal(algo, "decrypt", buf, pt);
+         Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
+         // TODO: should first update if possible
+         enc->finish(buf);
 
-   return fails;
-   }
+         result.test_eq("encrypt", buf, expected);
+
+         buf.assign(expected.begin(), expected.end());
+
+         dec->set_key(key);
+         dec->start(nonce);
+         dec->finish(buf);
+         result.test_eq("decrypt", buf, input);
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("modes", Cipher_Mode_Tests);
+
+#endif
 
 }
 
 size_t test_modes()
    {
-   auto test = [](const std::string& input)
-      {
-      std::ifstream vec(input);
-
-      return run_tests_bb(vec, "Mode", "Out", true,
-             [](std::map<std::string, std::string> m)
-             {
-             return mode_test(m["Mode"],
-                              hex_decode(m["In"]),
-                              hex_decode(m["Out"]),
-                              hex_decode(m["Key"]),
-                              hex_decode(m["Nonce"]));
-             });
-      };
-
-   return run_tests_in_dir(TEST_DATA_DIR "/modes", test);
+   return Botan_Tests::basic_error_report("modes");
    }
-
-#else
-
-SKIP_TEST(modes);
-
-#endif // BOTAN_HAS_MODES

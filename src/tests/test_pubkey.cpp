@@ -132,7 +132,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
       kat_rng.reset(new Fixed_Output_RNG(get_req_bin(vars, "Nonce")));
       }
 
-   Test::Result result(algo_name() + "/" + padding + " encryption/decryption");
+   Test::Result result(algo_name() + "/" + padding + " decryption");
 
    std::unique_ptr<Private_Key> privkey = load_private_key(vars);
    //std::unique_ptr<Public_Key> pubkey(X509::load_key(X509::BER_encode(*privkey)));
