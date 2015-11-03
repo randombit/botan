@@ -16,6 +16,10 @@
   #include <botan/bigint.h>
 #endif
 
+#if defined(BOTAN_HAS_EC_CURVE_GFP)
+  #include <botan/point_gfp.h>
+#endif
+
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
   #include <botan/pubkey.h>
 #endif
@@ -91,6 +95,10 @@ class Test
 
 #if defined(BOTAN_HAS_BIGINT)
             bool test_eq(const char* what, const BigInt& produced, const BigInt& expected);
+#endif
+
+#if defined(BOTAN_HAS_EC_CURVE_GFP)
+            bool test_eq(const char* what, const Botan::PointGFp& a, const Botan::PointGFp& b);
 #endif
 
             bool test_eq(const char* producer, const char* what,

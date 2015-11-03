@@ -7,53 +7,177 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ECC_GROUP)
+  #include <botan/bigint.h>
+  #include <botan/numthry.h>
+  #include <botan/curve_gfp.h>
+  #include <botan/point_gfp.h>
+  #include <botan/ec_group.h>
+  #include <botan/reducer.h>
+  #include <botan/oids.h>
+#endif
 
-#include <iostream>
-#include <memory>
-#include <botan/bigint.h>
 #include <botan/hex.h>
-#include <botan/numthry.h>
-#include <botan/curve_gfp.h>
-#include <botan/point_gfp.h>
-#include <botan/ec_group.h>
-#include <botan/reducer.h>
-#include <botan/oids.h>
+
+namespace Botan_Tests {
+
+namespace {
+
+const std::vector<std::string> ec_groups = {
+      "brainpool160r1",
+      "brainpool192r1",
+      "brainpool224r1",
+      "brainpool256r1",
+      "brainpool320r1",
+      "brainpool384r1",
+      "brainpool512r1",
+      "gost_256A",
+      "secp112r1",
+      "secp112r2",
+      "secp128r1",
+      "secp128r2",
+      "secp160k1",
+      "secp160r1",
+      "secp160r2",
+      "secp192k1",
+      "secp192r1",
+      "secp224k1",
+      "secp224r1",
+      "secp256k1",
+      "secp256r1",
+      "secp384r1",
+      "secp521r1",
+      "x962_p192v2",
+      "x962_p192v3",
+      "x962_p239v1",
+      "x962_p239v2",
+      "x962_p239v3"
+   };
+
+Botan::PointGFp create_random_point(Botan::RandomNumberGenerator& rng,
+                                    const Botan::CurveGFp& curve)
+   {
+   const Botan::BigInt& p = curve.get_p();
+
+   Botan::Modular_Reducer mod_p(p);
+
+   while(true)
+      {
+      const Botan::BigInt x = Botan::BigInt::random_integer(rng, 1, p);
+      const Botan::BigInt x3 = mod_p.multiply(x, mod_p.square(x));
+      const Botan::BigInt ax = mod_p.multiply(curve.get_a(), x);
+      const Botan::BigInt y = mod_p.reduce(x3 + ax + curve.get_b());
+      const Botan::BigInt sqrt_y = ressol(y, p);
+
+      if(sqrt_y > 1)
+         {
+         BOTAN_ASSERT_EQUAL(mod_p.square(sqrt_y), y, "Square root is correct");
+         Botan::PointGFp point(curve, x, sqrt_y);
+         return point;
+         }
+      }
+   }
+
+class ECC_Unit_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+
+         //results.push_back(ecc_randomized());
+
+         return results;
+         }
+
+   private:
+      Test::Result ecc_randomized();
+   };
+
+class ECC_Randomized_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override;
+   };
+
+std::vector<Test::Result> ECC_Randomized_Tests::run()
+   {
+   std::vector<Test::Result> results;
+   for(auto&& group_name : ec_groups)
+      {
+      Test::Result result("ECC randomized " + group_name);
+
+      Botan::EC_Group group(group_name);
+
+      const Botan::PointGFp& base_point = group.get_base_point();
+      const Botan::BigInt& group_order = group.get_order();
+
+      const Botan::PointGFp inf = base_point * group_order;
+      result.test_eq("infinite order correct", inf.is_zero(), true);
+      result.test_eq("infinity on the curve", inf.on_the_curve(), true);
+
+      try
+         {
+         for(size_t i = 0; i <= Test::soak_level(); ++i)
+            {
+            const size_t h = 1 + (Test::rng().next_byte() % 8);
+            Botan::Blinded_Point_Multiply blind(base_point, group_order, h);
+
+            const Botan::BigInt a = Botan::BigInt::random_integer(Test::rng(), 2, group_order);
+            const Botan::BigInt b = Botan::BigInt::random_integer(Test::rng(), 2, group_order);
+            const Botan::BigInt c = a + b;
+
+            const Botan::PointGFp P = base_point * a;
+            const Botan::PointGFp Q = base_point * b;
+            const Botan::PointGFp R = base_point * c;
+
+            const Botan::PointGFp P1 = blind.blinded_multiply(a, Test::rng());
+            const Botan::PointGFp Q1 = blind.blinded_multiply(b, Test::rng());
+            const Botan::PointGFp R1 = blind.blinded_multiply(c, Test::rng());
+
+            const Botan::PointGFp A1 = P + Q;
+            const Botan::PointGFp A2 = Q + P;
+
+            result.test_eq("p + q", A1, R);
+            result.test_eq("q + p", A2, R);
+
+            result.test_eq("p on the curve", P.on_the_curve(), true);
+            result.test_eq("q on the curve", Q.on_the_curve(), true);
+            result.test_eq("r on the curve", R.on_the_curve(), true);
+            result.test_eq("a1 on the curve", A1.on_the_curve(), true);
+            result.test_eq("a2 on the curve", A2.on_the_curve(), true);
+
+            result.test_eq("P1", P1, P);
+            result.test_eq("Q1", Q1, Q);
+            result.test_eq("R1", R1, R);
+            }
+         }
+      catch(std::exception& e)
+         {
+         result.test_failure(group_name.c_str(), e.what());
+         }
+      results.push_back(result);
+      }
+
+   return results;
+   }
+
+BOTAN_REGISTER_TEST("ecc_randomized", ECC_Randomized_Tests);
+
+}
+
+}
+
+namespace {
 
 using namespace Botan;
 
 #define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << "FAILURE: " << print << std::endl; }} catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
 #define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << "FAILURE: " << #expr << std::endl; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
 
-namespace {
-
 std::ostream& operator<<(std::ostream& out, const PointGFp& point)
    {
    out << "(" << point.get_affine_x() << " " << point.get_affine_y() << ")";
    return out;
-   }
-
-PointGFp create_random_point(RandomNumberGenerator& rng,
-                             const CurveGFp& curve)
-   {
-   const BigInt& p = curve.get_p();
-
-   Modular_Reducer mod_p(p);
-
-   while(true)
-      {
-      const BigInt x = BigInt::random_integer(rng, 1, p);
-      const BigInt x3 = mod_p.multiply(x, mod_p.square(x));
-      const BigInt ax = mod_p.multiply(curve.get_a(), x);
-      const BigInt y = mod_p.reduce(x3 + ax + curve.get_b());
-      const BigInt sqrt_y = ressol(y, p);
-
-      if(sqrt_y > 1)
-         {
-         BOTAN_ASSERT_EQUAL(mod_p.square(sqrt_y), y, "Square root is correct");
-         PointGFp point(curve, x, sqrt_y);
-         return point;
-         }
-      }
    }
 
 size_t test_point_turn_on_sp_red_mul()
@@ -753,8 +877,8 @@ size_t test_point_swap()
 
    auto& rng = test_rng();
 
-   PointGFp a(create_random_point(rng, dom_pars.get_curve()));
-   PointGFp b(create_random_point(rng, dom_pars.get_curve()));
+   PointGFp a(Botan_Tests::create_random_point(rng, dom_pars.get_curve()));
+   PointGFp b(Botan_Tests::create_random_point(rng, dom_pars.get_curve()));
    b *= BigInt(rng, 20);
 
    PointGFp c(a);
@@ -782,7 +906,7 @@ size_t test_mult_sec_mass()
       {
       try
          {
-         PointGFp a(create_random_point(rng, dom_pars.get_curve()));
+         PointGFp a(Botan_Tests::create_random_point(rng, dom_pars.get_curve()));
          BigInt scal(BigInt(rng, 40));
          PointGFp b = a * scal;
          PointGFp c(a);
@@ -816,104 +940,12 @@ size_t test_curve_cp_ctor()
    return 0;
    }
 
-namespace {
-
-const std::vector<std::string> ec_groups = {
-      "brainpool160r1",
-      "brainpool192r1",
-      "brainpool224r1",
-      "brainpool256r1",
-      "brainpool320r1",
-      "brainpool384r1",
-      "brainpool512r1",
-      "gost_256A",
-      "secp112r1",
-      "secp112r2",
-      "secp128r1",
-      "secp128r2",
-      "secp160k1",
-      "secp160r1",
-      "secp160r2",
-      "secp192k1",
-      "secp192r1",
-      "secp224k1",
-      "secp224r1",
-      "secp256k1",
-      "secp256r1",
-      "secp384r1",
-      "secp521r1",
-      "x962_p192v2",
-      "x962_p192v3",
-      "x962_p239v1",
-      "x962_p239v2",
-      "x962_p239v3"
-   };
-
 }
 
-}
-
-BOTAN_TEST_CASE(ecc_randomized, "ECC Randomized", {
-   auto& rng = test_rng();
-   size_t fails = 0;
-   size_t tests = 0;
-
-   for(auto&& group_name : ec_groups)
-      {
-      EC_Group group(group_name);
-
-      const PointGFp& base_point = group.get_base_point();
-      const BigInt& group_order = group.get_order();
-
-      const PointGFp inf = base_point * group_order;
-      BOTAN_CONFIRM(inf.is_zero(), "Group math ok");
-      BOTAN_CONFIRM(inf.on_the_curve(), "Infinity still on the curve");
-
-      try
-         {
-         for(size_t i = 0; i != 10; ++i)
-            {
-            ++tests;
-
-            const size_t h = 1 + (rng.next_byte() % 8);
-            Blinded_Point_Multiply blind(base_point, group_order, h);
-
-            const BigInt a = BigInt::random_integer(rng, 2, group_order);
-            const BigInt b = BigInt::random_integer(rng, 2, group_order);
-            const BigInt c = a + b;
-
-            const PointGFp P = base_point * a;
-            const PointGFp Q = base_point * b;
-            const PointGFp R = base_point * c;
-
-            const PointGFp P1 = blind.blinded_multiply(a, rng);
-            const PointGFp Q1 = blind.blinded_multiply(b, rng);
-            const PointGFp R1 = blind.blinded_multiply(c, rng);
-
-            const PointGFp A1 = P + Q;
-            const PointGFp A2 = Q + P;
-
-            BOTAN_TEST(A1, R, "Addition");
-            BOTAN_TEST(A2, R, "Addition");
-            BOTAN_CONFIRM(P.on_the_curve(), "On the curve");
-            BOTAN_CONFIRM(Q.on_the_curve(), "On the curve");
-            BOTAN_CONFIRM(R.on_the_curve(), "On the curve");
-            BOTAN_CONFIRM(A1.on_the_curve(), "On the curve");
-            BOTAN_CONFIRM(A2.on_the_curve(), "On the curve");
-
-            BOTAN_TEST(P, P1, "P1");
-            BOTAN_TEST(Q, Q1, "Q1");
-            BOTAN_TEST(R, R1, "R1");
-            }
-         }
-      catch(std::exception& e)
-         {
-         std::cout << "Testing " << group_name << " failed: " << e.what() << std::endl;
-         ++fails;
-         }
-      }
-   });
-
+size_t test_ecc_randomized()
+   {
+   return Botan_Tests::basic_error_report("ecc_randomized");
+   }
 
 size_t test_ecc_unit()
    {
@@ -948,10 +980,3 @@ size_t test_ecc_unit()
 
    return fails;
    }
-
-#else
-
-SKIP_TEST(ecc_unit);
-SKIP_TEST(ecc_randomized);
-
-#endif // BOTAN_HAS_ECC_GROUP

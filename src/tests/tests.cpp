@@ -115,6 +115,19 @@ bool Test::Result::test_eq(const char* what, const BigInt& produced, const BigIn
    }
 #endif
 
+#if defined(BOTAN_HAS_EC_CURVE_GFP)
+bool Test::Result::test_eq(const char* what, const Botan::PointGFp& a, const Botan::PointGFp& b)
+   {
+   if(a == b)
+      return test_success();
+
+   std::ostringstream err;
+   err << who() << " " << what << " a=(" << a.get_affine_x() << "," << a.get_affine_y() << ")"
+       << " b=(" << b.get_affine_x() << "," << b.get_affine_y();
+   return test_failure(err.str());
+   }
+#endif
+
 bool Test::Result::test_eq(const char* what, bool produced, bool expected)
    {
    if(produced != expected)
