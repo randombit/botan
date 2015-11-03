@@ -689,133 +689,6 @@ void test_report(const std::string& name, size_t ran, size_t failed)
       std::cout << " all ok" << std::endl;
    }
 
-size_t run_tests_bb(std::istream& src,
-                    const std::string& name_key,
-                    const std::string& output_key,
-                    bool clear_between_cb,
-                    std::function<size_t (std::map<std::string, std::string>)> cb)
-   {
-   if(!src.good())
-      {
-      std::cout << "Could not open input file for " << name_key << std::endl;
-      return 1;
-      }
-
-   std::map<std::string, std::string> vars;
-   size_t test_fails = 0, algo_fail = 0;
-   size_t test_count = 0, algo_count = 0;
-
-   std::string fixed_name;
-
-   while(src.good())
-      {
-      std::string line;
-      std::getline(src, line);
-
-      if(line == "")
-         continue;
-
-      if(line[0] == '#')
-         continue;
-
-      if(line[0] == '[' && line[line.size()-1] == ']')
-         {
-         if(fixed_name != "")
-            test_report(fixed_name, algo_count, algo_fail);
-
-         test_count += algo_count;
-         test_fails += algo_fail;
-         algo_count = 0;
-         algo_fail = 0;
-         fixed_name = line.substr(1, line.size() - 2);
-         vars[name_key] = fixed_name;
-         continue;
-         }
-
-      const std::string key = line.substr(0, line.find_first_of(' '));
-      const std::string val = line.substr(line.find_last_of(' ') + 1, std::string::npos);
-
-      vars[key] = val;
-
-      if(key == name_key)
-         fixed_name.clear();
-
-      if(key == output_key)
-         {
-         //std::cout << vars[name_key] << " " << algo_count << std::endl;
-         ++algo_count;
-         try
-            {
-            const size_t fails = cb(vars);
-
-            if(fails)
-               {
-               std::cout << vars[name_key] << " test " << algo_count << ": " << fails << " failure" << std::endl;
-               algo_fail += fails;
-               }
-            }
-         catch(std::exception& e)
-            {
-            std::cout << vars[name_key] << " test " << algo_count << " failed: " << e.what() << std::endl;
-            ++algo_fail;
-            }
-
-         if(clear_between_cb)
-            {
-            vars.clear();
-            vars[name_key] = fixed_name;
-            }
-         }
-      }
-
-   test_count += algo_count;
-   test_fails += algo_fail;
-
-   if(fixed_name != "" && (algo_count > 0 || algo_fail > 0))
-      test_report(fixed_name, algo_count, algo_fail);
-   else
-      test_report(name_key, test_count, test_fails);
-
-   return test_fails;
-   }
-
-size_t run_tests(const std::string& filename,
-                 const std::string& name_key,
-                 const std::string& output_key,
-                 bool clear_between_cb,
-                 std::function<std::string (std::map<std::string, std::string>)> cb)
-   {
-   std::ifstream vec(filename);
-
-   if(!vec)
-      {
-      std::cout << "Failure opening " << filename << std::endl;
-      return 1;
-      }
-
-   return run_tests(vec, name_key, output_key, clear_between_cb, cb);
-   }
-
-size_t run_tests(std::istream& src,
-                 const std::string& name_key,
-                 const std::string& output_key,
-                 bool clear_between_cb,
-                 std::function<std::string (std::map<std::string, std::string>)> cb)
-   {
-   return run_tests_bb(src, name_key, output_key, clear_between_cb,
-                [name_key,output_key,cb](std::map<std::string, std::string> vars)
-                {
-                const std::string got = cb(vars);
-                if(got != vars[output_key])
-                   {
-                   std::cout << name_key << ' ' << vars[name_key] << " got " << got
-                             << " expected " << vars[output_key] << std::endl;
-                   return 1;
-                   }
-                return 0;
-                });
-   }
-
 namespace {
 
 int help(char* argv0)
@@ -860,7 +733,7 @@ int main(int argc, char* argv[])
    // unittesting framework in sub-folder tests/catchy
    DEF_TEST(catchy);
 
-   //DEF_TEST(block);
+   DEF_TEST(block);
    DEF_TEST(modes);
    DEF_TEST(aead);
    DEF_TEST(ocb);
@@ -871,7 +744,6 @@ int main(int argc, char* argv[])
    DEF_TEST(pbkdf);
    DEF_TEST(kdf);
    DEF_TEST(keywrap);
-   DEF_TEST(transform);
    DEF_TEST(rngs);
    DEF_TEST(passhash9);
    DEF_TEST(bcrypt);

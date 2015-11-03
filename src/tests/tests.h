@@ -263,24 +263,6 @@ void check_invalid_ciphertexts(Test::Result& result,
 
 Botan::RandomNumberGenerator& test_rng();
 
-size_t run_tests_bb(std::istream& src,
-                    const std::string& name_key,
-                    const std::string& output_key,
-                    bool clear_between_cb,
-                    std::function<size_t (std::map<std::string, std::string>)> cb);
-
-size_t run_tests(std::istream& src,
-                 const std::string& name_key,
-                 const std::string& output_key,
-                 bool clear_between_cb,
-                 std::function<std::string (std::map<std::string, std::string>)> cb);
-
-size_t run_tests(const std::string& filename,
-                 const std::string& name_key,
-                 const std::string& output_key,
-                 bool clear_between_cb,
-                 std::function<std::string (std::map<std::string, std::string>)> cb);
-
 size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std::string&)> fn);
 
 size_t warn_about_missing(const std::string& whatever);
@@ -407,7 +389,6 @@ size_t test_rngs();
 size_t test_pbkdf();
 size_t test_kdf();
 size_t test_aead();
-size_t test_transform();
 
 size_t test_rsa();
 size_t test_rw();
