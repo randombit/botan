@@ -30,7 +30,7 @@ class GOST_3410_2001_Verification_Tests : public PK_Signature_Verification_Test
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
          const std::string group_id = get_req_str(vars, "Group");
-         Botan::EC_Group group(OIDS::lookup(group_id));
+         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
          const Botan::PointGFp public_point = Botan::OS2ECP(get_req_bin(vars, "Pubkey"), group.get_curve());
 
          std::unique_ptr<Botan::Public_Key> key(new Botan::GOST_3410_PublicKey(group, public_point));

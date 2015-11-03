@@ -20,10 +20,6 @@
   #include <botan/point_gfp.h>
 #endif
 
-#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-  #include <botan/pubkey.h>
-#endif
-
 #include <functional>
 #include <istream>
 #include <map>
@@ -92,6 +88,8 @@ class Test
             bool test_eq(const char* what, bool produced, bool expected);
 
             bool test_eq(const char* what, size_t produced, size_t expected);
+            bool test_lt(const char* what, size_t produced, size_t expected);
+            bool test_gte(const char* what, size_t produced, size_t expected);
 
 #if defined(BOTAN_HAS_BIGINT)
             bool test_eq(const char* what, const BigInt& produced, const BigInt& expected);
@@ -252,19 +250,6 @@ class Text_Based_Test : public Test
       std::unique_ptr<std::ifstream> m_cur;
       std::deque<std::string> m_srcs;
    };
-
-#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-void check_invalid_signatures(Test::Result& result,
-                              Botan::PK_Verifier& verifier,
-                              const std::vector<uint8_t>& message,
-                              const std::vector<uint8_t>& signature);
-
-void check_invalid_ciphertexts(Test::Result& result,
-                               Botan::PK_Decryptor& decryptor,
-                               const std::vector<uint8_t>& plaintext,
-                               const std::vector<uint8_t>& ciphertext);
-
-#endif
 
 }
 

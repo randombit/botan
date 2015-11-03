@@ -1,5 +1,5 @@
 /*
-* (C) 2009 Jack Lloyd
+* (C) 2009,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,6 +10,7 @@
   #include <botan/bigint.h>
   #include <botan/numthry.h>
   #include <botan/curve_gfp.h>
+  #include <botan/curve_nistp.h>
   #include <botan/point_gfp.h>
   #include <botan/ec_group.h>
   #include <botan/reducer.h>
@@ -53,6 +54,50 @@ const std::vector<std::string> ec_groups = {
       "x962_p239v3"
    };
 
+Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, BigInt max)
+   {
+   /*
+   Produces integers with long runs of ones and zeros, for testing for
+   carry handling problems.
+   */
+   Botan::BigInt x = 0;
+
+   auto flip_prob = [](size_t i) {
+      if(i % 64 == 0)
+         return .5;
+      if(i % 32 == 0)
+         return .4;
+      if(i % 8 == 0)
+         return .05;
+      return .01;
+   };
+
+   bool active = rng.next_byte() % 2;
+   for(size_t i = 0; i != bits; ++i)
+      {
+      x <<= 1;
+      x += static_cast<int>(active);
+
+      const double prob = flip_prob(i);
+      const double sample = double(rng.next_byte() % 100) / 100.0; // biased
+
+      if(sample < prob)
+         active = !active;
+      }
+
+   if(max > 0)
+      {
+      while(x >= max)
+         {
+         const size_t b = x.bits() - 1;
+         BOTAN_ASSERT(x.get_bit(b) == true, "Set");
+         x.clear_bit(b);
+         }
+      }
+
+   return x;
+   }
+
 Botan::PointGFp create_random_point(Botan::RandomNumberGenerator& rng,
                                     const Botan::CurveGFp& curve)
    {
@@ -76,22 +121,6 @@ Botan::PointGFp create_random_point(Botan::RandomNumberGenerator& rng,
          }
       }
    }
-
-class ECC_Unit_Tests : public Test
-   {
-   public:
-      std::vector<Test::Result> run() override
-         {
-         std::vector<Test::Result> results;
-
-         //results.push_back(ecc_randomized());
-
-         return results;
-         }
-
-   private:
-      Test::Result ecc_randomized();
-   };
 
 class ECC_Randomized_Tests : public Test
    {
@@ -163,6 +192,79 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
 
 BOTAN_REGISTER_TEST("ecc_randomized", ECC_Randomized_Tests);
 
+
+class NIST_Curve_Reduction_Tests : public Test
+   {
+   public:
+      typedef std::function<void (Botan::BigInt&, Botan::secure_vector<Botan::word>&)> reducer_fn;
+      std::vector<Test::Result> run()
+         {
+         std::vector<Test::Result> results;
+
+#if defined(BOTAN_HAS_NIST_PRIME_REDUCERS_W32)
+         results.push_back(random_redc_test("P-192", Botan::prime_p192(), Botan::redc_p192));
+         results.push_back(random_redc_test("P-224", Botan::prime_p224(), Botan::redc_p224));
+         results.push_back(random_redc_test("P-256", Botan::prime_p256(), Botan::redc_p256));
+         results.push_back(random_redc_test("P-384", Botan::prime_p384(), Botan::redc_p384));
+#endif
+         results.push_back(random_redc_test("P-521", Botan::prime_p521(), Botan::redc_p521));
+         return results;
+         }
+
+      Test::Result random_redc_test(const std::string& prime_name,
+                                    const Botan::BigInt& p,
+                                    reducer_fn redc_fn)
+         {
+         const Botan::BigInt p2 = p*p;
+         const size_t trials = 100;
+         const size_t p_bits = p.bits();
+
+         Botan::Modular_Reducer p_redc(p);
+         Botan::secure_vector<Botan::word> ws;
+
+         Test::Result result("NIST " + prime_name + " reduction");
+
+         for(size_t i = 0; i <= 10 * Test::soak_level(); ++i)
+            {
+            const Botan::BigInt x = test_integer(Test::rng(), 2*p_bits, p2);
+
+            // TODO: time and report all three approaches
+            const Botan::BigInt v1 = x % p;
+            const Botan::BigInt v2 = p_redc.reduce(x);
+
+            Botan::BigInt v3 = x;
+            redc_fn(v3, ws);
+
+            if(!result.test_eq("reference redc", v1, v2) ||
+               !result.test_eq("specialized redc", v2, v3))
+               {
+               result.test_note("failing input" + Botan::hex_encode(Botan::BigInt::encode(x)));
+               }
+            }
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("nist_redc", NIST_Curve_Reduction_Tests);
+
+class ECC_Unit_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+
+         //results.push_back(ecc_randomized());
+
+         return results;
+         }
+
+   private:
+      Test::Result ecc_randomized();
+   };
+
+
 }
 
 }
@@ -184,25 +286,14 @@ size_t test_point_turn_on_sp_red_mul()
    {
    size_t fails = 0;
 
-   // setting up expected values
-   BigInt exp_Qx(std::string("466448783855397898016055842232266600516272889280"));
-   BigInt exp_Qy(std::string("1110706324081757720403272427311003102474457754220"));
-   BigInt exp_Qz(1);
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   CurveGFp curve = secp160r1.get_curve();
+   const PointGFp& p_G = secp160r1.get_base_point();
 
-   // performing calculation to test
-   std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
-   std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
-   std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
-   std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   std::vector<byte> sv_p_secp = hex_decode(p_secp);
-   std::vector<byte> sv_a_secp = hex_decode(a_secp);
-   std::vector<byte> sv_b_secp = hex_decode(b_secp);
-   std::vector<byte> sv_G_secp_comp = hex_decode(G_secp_comp);
-   BigInt bi_p_secp = BigInt::decode(sv_p_secp.data(), sv_p_secp.size());
-   BigInt bi_a_secp = BigInt::decode(sv_a_secp.data(), sv_a_secp.size());
-   BigInt bi_b_secp = BigInt::decode(sv_b_secp.data(), sv_b_secp.size());
-   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
-   PointGFp p_G = OS2ECP(sv_G_secp_comp, secp160r1);
+   // setting up expected values
+   const BigInt exp_Qx(std::string("466448783855397898016055842232266600516272889280"));
+   const BigInt exp_Qy(std::string("1110706324081757720403272427311003102474457754220"));
+   const BigInt exp_Qz(1);
 
    BigInt d("459183204582304");
 
@@ -254,23 +345,12 @@ size_t test_coordinates()
    BigInt exp_affine_y(std::string("1373093393927139016463695321221277758035357890939"));
 
    // precalculation
-   std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
-   std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
-   std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
-   std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   std::vector<byte> sv_p_secp = hex_decode ( p_secp );
-   std::vector<byte> sv_a_secp = hex_decode ( a_secp );
-   std::vector<byte> sv_b_secp = hex_decode ( b_secp );
-   std::vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.data(), sv_b_secp.size() );
-   CurveGFp secp160r1 (bi_p_secp, bi_a_secp, bi_b_secp);
-   PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   const CurveGFp& curve = secp160r1.get_curve();
+   const PointGFp& p_G = secp160r1.get_base_point();
    PointGFp p0 = p_G;
    PointGFp p1 = p_G * 2;
-   PointGFp point_exp(secp160r1, exp_affine_x, exp_affine_y);
+   PointGFp point_exp(curve, exp_affine_x, exp_affine_y);
    if(!point_exp.on_the_curve())
       throw Internal_Error("Point not on the curve");
 
@@ -313,12 +393,7 @@ size_t test_point_mult ()
    size_t fails = 0;
 
    EC_Group secp160r1(OIDS::lookup("secp160r1"));
-
-   const CurveGFp& curve = secp160r1.get_curve();
-
-   std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   std::vector<byte> sv_G_secp_comp = hex_decode(G_secp_comp);
-   PointGFp p_G = OS2ECP(sv_G_secp_comp, curve);
+   const PointGFp& p_G = secp160r1.get_base_point();
 
    BigInt d_U("0xaa374ffc3ce144e6b073307972cb6d57b2a4e982");
    PointGFp Q_U = d_U * p_G;
@@ -333,26 +408,16 @@ size_t test_point_negative()
    size_t fails = 0;
 
    // performing calculation to test
-   std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
-   std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
-   std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
-   std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   std::vector<byte> sv_p_secp = hex_decode ( p_secp );
-   std::vector<byte> sv_a_secp = hex_decode ( a_secp );
-   std::vector<byte> sv_b_secp = hex_decode ( b_secp );
-   std::vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.data(), sv_b_secp.size() );
-   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
-   PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   //const CurveGFp& curve = secp160r1.get_curve();
+   const PointGFp& p_G = secp160r1.get_base_point();
 
-   PointGFp p1 = p_G *= 2;
+   const PointGFp p1 = p_G * 2;
 
    CHECK(p1.get_affine_x() == BigInt("16984103820118642236896513183038186009872590470"));
    CHECK(p1.get_affine_y() == BigInt("1373093393927139016463695321221277758035357890939"));
 
-   PointGFp p1_neg = p1.negate();
+   const PointGFp p1_neg = -p1;
 
    CHECK(p1_neg.get_affine_x() == BigInt("16984103820118642236896513183038186009872590470"));
    CHECK(p1_neg.get_affine_y() == BigInt("88408243403763901739989511495005261618427168388"));
@@ -363,14 +428,10 @@ size_t test_zeropoint()
    {
    size_t fails = 0;
 
-   std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   std::vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
-   BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
-   BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   const CurveGFp& curve = secp160r1.get_curve();
 
-   PointGFp p1(secp160r1,
+   PointGFp p1(curve,
                BigInt("16984103820118642236896513183038186009872590470"),
                BigInt("1373093393927139016463695321221277758035357890939"));
 
@@ -386,10 +447,8 @@ size_t test_zeropoint_enc_dec()
    {
    size_t fails = 0;
 
-   BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
-   BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
-   BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   const CurveGFp& curve = secp160r1.get_curve();
 
    PointGFp p(curve);
    CHECK_MESSAGE(  p.is_zero(), "by constructor created zeropoint is no zeropoint!");
@@ -413,12 +472,8 @@ size_t test_calc_with_zeropoint()
    {
    size_t fails = 0;
 
-   std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   std::vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp("0xffffffffffffffffffffffffffffffff7fffffff");
-   BigInt bi_a_secp("0xffffffffffffffffffffffffffffffff7ffffffc");
-   BigInt bi_b_secp("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   const CurveGFp& curve = secp160r1.get_curve();
 
    PointGFp p(curve,
               BigInt("16984103820118642236896513183038186009872590470"),
@@ -447,26 +502,16 @@ size_t test_add_point()
    size_t fails = 0;
 
    // precalculation
-   std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
-   std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
-   std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
-   std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   std::vector<byte> sv_p_secp = hex_decode ( p_secp );
-   std::vector<byte> sv_a_secp = hex_decode ( a_secp );
-   std::vector<byte> sv_b_secp = hex_decode ( b_secp );
-   std::vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.data(), sv_b_secp.size() );
-   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
-   PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   const CurveGFp& curve = secp160r1.get_curve();
+   const PointGFp& p_G = secp160r1.get_base_point();
 
    PointGFp p0 = p_G;
-   PointGFp p1 = p_G *= 2;
+   PointGFp p1 = p_G * 2;
 
    p1 += p0;
 
-   PointGFp expected(secp160r1,
+   PointGFp expected(curve,
                      BigInt("704859595002530890444080436569091156047721708633"),
                      BigInt("1147993098458695153857594941635310323215433166682"));
 
@@ -484,26 +529,16 @@ size_t test_sub_point()
    BigInt exp_sub_z(std::string("562006223742588575209908669014372619804457947208"));
 
    // precalculation
-   std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
-   std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
-   std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
-   std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   std::vector<byte> sv_p_secp = hex_decode ( p_secp );
-   std::vector<byte> sv_a_secp = hex_decode ( a_secp );
-   std::vector<byte> sv_b_secp = hex_decode ( b_secp );
-   std::vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.data(), sv_b_secp.size() );
-   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
-   PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   const CurveGFp& curve = secp160r1.get_curve();
+   const PointGFp& p_G = secp160r1.get_base_point();
 
    PointGFp p0 = p_G;
-   PointGFp p1 = p_G *= 2;
+   PointGFp p1 = p_G * 2;
 
    p1 -= p0;
 
-   PointGFp expected(secp160r1,
+   PointGFp expected(curve,
                      BigInt("425826231723888350446541592701409065913635568770"),
                      BigInt("203520114162904107873991457957346892027982641970"));
 
@@ -520,26 +555,16 @@ size_t test_mult_point()
    BigInt exp_mult_y(std::string("512319768365374654866290830075237814703869061656"));
 
    // precalculation
-   std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
-   std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
-   std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
-   std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   std::vector<byte> sv_p_secp = hex_decode ( p_secp );
-   std::vector<byte> sv_a_secp = hex_decode ( a_secp );
-   std::vector<byte> sv_b_secp = hex_decode ( b_secp );
-   std::vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.data(), sv_b_secp.size() );
-   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
-   PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   const CurveGFp& curve = secp160r1.get_curve();
+   const PointGFp& p_G = secp160r1.get_base_point();
 
    PointGFp p0 = p_G;
-   PointGFp p1 = p_G *= 2;
+   PointGFp p1 = p_G * 2;
 
    p1 *= p0.get_affine_x();
 
-   PointGFp expected(secp160r1, exp_mult_x, exp_mult_y);
+   PointGFp expected(curve, exp_mult_x, exp_mult_y);
 
    CHECK(p1 == expected);
    return fails;
@@ -550,43 +575,32 @@ size_t test_basic_operations()
    size_t fails = 0;
 
    // precalculation
-   std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
-   std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffc";
-   std::string b_secp = "1c97befc54bd7a8b65acf89f81d4d4adc565fa45";
-   std::string G_secp_comp = "024a96b5688ef573284664698968c38bb913cbfc82";
-   std::vector<byte> sv_p_secp = hex_decode ( p_secp );
-   std::vector<byte> sv_a_secp = hex_decode ( a_secp );
-   std::vector<byte> sv_b_secp = hex_decode ( b_secp );
-   std::vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.data(), sv_b_secp.size() );
-   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
-
-   PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   const CurveGFp& curve = secp160r1.get_curve();
+   const PointGFp& p_G = secp160r1.get_base_point();
 
    PointGFp p0 = p_G;
 
-   PointGFp expected(secp160r1,
+   PointGFp expected(curve,
                      BigInt("425826231723888350446541592701409065913635568770"),
                      BigInt("203520114162904107873991457957346892027982641970"));
 
    CHECK(p0 == expected);
 
-   PointGFp p1 = p_G *= 2;
+   PointGFp p1 = p_G * 2;
 
    CHECK(p1.get_affine_x() == BigInt("16984103820118642236896513183038186009872590470"));
    CHECK(p1.get_affine_y() == BigInt("1373093393927139016463695321221277758035357890939"));
 
    PointGFp simplePlus= p1 + p0;
-   PointGFp exp_simplePlus(secp160r1,
+   PointGFp exp_simplePlus(curve,
                            BigInt("704859595002530890444080436569091156047721708633"),
                            BigInt("1147993098458695153857594941635310323215433166682"));
    if(simplePlus != exp_simplePlus)
       std::cout << simplePlus << " != " << exp_simplePlus << std::endl;
 
    PointGFp simpleMinus= p1 - p0;
-   PointGFp exp_simpleMinus(secp160r1,
+   PointGFp exp_simpleMinus(curve,
                             BigInt("425826231723888350446541592701409065913635568770"),
                             BigInt("203520114162904107873991457957346892027982641970"));
 
@@ -611,27 +625,16 @@ size_t test_enc_dec_compressed_160()
    size_t fails = 0;
 
    // Test for compressed conversion (02/03) 160bit
-   std::string p_secp = "ffffffffffffffffffffffffffffffff7fffffff";
-   std::string a_secp = "ffffffffffffffffffffffffffffffff7ffffffC";
-   std::string b_secp = "1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45";
-   std::string G_secp_comp = "024A96B5688EF573284664698968C38BB913CBFC82";
-   std::string G_order_secp_comp = "0100000000000000000001F4C8F927AED3CA752257";
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   const CurveGFp& curve = secp160r1.get_curve();
 
-   std::vector<byte> sv_p_secp = hex_decode ( p_secp );
-   std::vector<byte> sv_a_secp = hex_decode ( a_secp );
-   std::vector<byte> sv_b_secp = hex_decode ( b_secp );
-   std::vector<byte> sv_G_secp_comp = hex_decode ( G_secp_comp );
+   const std::vector<byte> G_comp = hex_decode("024A96B5688EF573284664698968C38BB913CBFC82");
 
-   BigInt bi_p_secp = BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.data(), sv_b_secp.size() );
+   const PointGFp p = OS2ECP(G_comp, curve);
 
-   CurveGFp secp160r1(bi_p_secp, bi_a_secp, bi_b_secp);
+   std::vector<byte> sv_result = unlock(EC2OSP(p, PointGFp::COMPRESSED));
 
-   PointGFp p_G = OS2ECP ( sv_G_secp_comp, secp160r1 );
-   std::vector<byte> sv_result = unlock(EC2OSP(p_G, PointGFp::COMPRESSED));
-
-   CHECK( sv_result == sv_G_secp_comp);
+   CHECK( sv_result == G_comp);
    return fails;
    }
 
@@ -819,12 +822,12 @@ size_t test_more_zeropoint()
 
    // by Falko
 
+
+   EC_Group secp160r1(OIDS::lookup("secp160r1"));
+   const CurveGFp& curve = secp160r1.get_curve();
+
    std::string G = "024a96b5688ef573284664698968c38bb913cbfc82";
    std::vector<byte> sv_G_secp_comp = hex_decode ( G );
-   BigInt bi_p("0xffffffffffffffffffffffffffffffff7fffffff");
-   BigInt bi_a("0xffffffffffffffffffffffffffffffff7ffffffc");
-   BigInt bi_b("0x1c97befc54bd7a8b65acf89f81d4d4adc565fa45");
-   CurveGFp curve(bi_p, bi_a, bi_b);
 
    PointGFp p1(curve,
                BigInt("16984103820118642236896513183038186009872590470"),

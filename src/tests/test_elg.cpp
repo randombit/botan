@@ -29,11 +29,11 @@ class ElGamal_KAT_Tests : public PK_Encryption_Decryption_Test
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
-         const BigInt p = get_req_bn(vars, "P");
-         const BigInt g = get_req_bn(vars, "G");
-         const BigInt x = get_req_bn(vars, "X");
+         const Botan::BigInt p = get_req_bn(vars, "P");
+         const Botan::BigInt g = get_req_bn(vars, "G");
+         const Botan::BigInt x = get_req_bn(vars, "X");
 
-         const DL_Group grp(p, g);
+         const Botan::DL_Group grp(p, g);
 
          std::unique_ptr<Botan::Private_Key> key(new Botan::ElGamal_PrivateKey(Test::rng(), grp, x));
          return key;

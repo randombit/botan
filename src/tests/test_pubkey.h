@@ -84,41 +84,16 @@ class PK_Key_Agreement_Test : public Text_Based_Test
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override;
    };
 
+void check_invalid_signatures(Test::Result& result,
+                              Botan::PK_Verifier& verifier,
+                              const std::vector<uint8_t>& message,
+                              const std::vector<uint8_t>& signature);
+
+void check_invalid_ciphertexts(Test::Result& result,
+                               Botan::PK_Decryptor& decryptor,
+                               const std::vector<uint8_t>& plaintext,
+                               const std::vector<uint8_t>& ciphertext);
 
 }
-
-using namespace Botan;
-
-size_t validate_encryption(Botan::PK_Encryptor& e, Botan::PK_Decryptor& d,
-                           const std::string& algo,
-                           const std::string& input,
-                           const std::string& random,
-                           const std::string& expected);
-
-size_t validate_signature(PK_Verifier& v, PK_Signer& s,
-                          const std::string& algo,
-                          const std::string& input,
-                          RandomNumberGenerator& signer_rng,
-                          RandomNumberGenerator& test_rng,
-                          const std::string& exp);
-
-size_t validate_signature(PK_Verifier& v, PK_Signer& s,
-                          const std::string& algo,
-                          const std::string& input,
-                          RandomNumberGenerator& rng,
-                          const std::string& exp);
-
-size_t validate_signature(PK_Verifier& v, PK_Signer& s,
-                          const std::string& algo,
-                          const std::string& input,
-                          RandomNumberGenerator& rng,
-                          const std::string& random,
-                          const std::string& exp);
-
-size_t validate_kas(PK_Key_Agreement& kas,
-                    const std::string& algo,
-                    const std::vector<byte>& pubkey,
-                    const std::string& output,
-                    size_t keylen);
 
 #endif

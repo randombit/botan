@@ -31,7 +31,7 @@ class Curve25519_Sclarmult_Tests : public Text_Based_Test
          const std::vector<uint8_t> expected  = get_req_bin(vars, "Out");
 
          std::vector<byte> got(32);
-         curve25519_donna(got.data(), secret.data(), basepoint.data());
+         Botan::curve25519_donna(got.data(), secret.data(), basepoint.data());
 
          Test::Result result("Curve25519 scalarmult");
          result.test_eq("basemult", got, expected);
@@ -75,8 +75,8 @@ class Curve25519_Roundtrip_Test : public Test
             Botan::DataSource_Memory a_pub_ds(a_pub_pem);
             Botan::DataSource_Memory b_pub_ds(b_pub_pem);
 
-            std::unique_ptr<Public_Key> a_pub(Botan::X509::load_key(a_pub_ds));
-            std::unique_ptr<Public_Key> b_pub(Botan::X509::load_key(b_pub_ds));
+            std::unique_ptr<Botan::Public_Key> a_pub(Botan::X509::load_key(a_pub_ds));
+            std::unique_ptr<Botan::Public_Key> b_pub(Botan::X509::load_key(b_pub_ds));
 
             Botan::Curve25519_PublicKey* a_pub_key = dynamic_cast<Botan::Curve25519_PublicKey*>(a_pub.get());
             Botan::Curve25519_PublicKey* b_pub_key = dynamic_cast<Botan::Curve25519_PublicKey*>(b_pub.get());

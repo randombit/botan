@@ -103,6 +103,36 @@ bool Test::Result::test_eq(const char* what, size_t produced, size_t expected)
    return test_success();
    }
 
+bool Test::Result::test_lt(const char* what, size_t produced, size_t expected)
+   {
+   if(produced >= expected)
+      {
+      std::ostringstream err;
+      err << m_who;
+      if(what)
+         err << " " << what;
+      err << " unexpected result " << produced << " >= " << expected << "\n";
+      return test_failure(err);
+      }
+
+   return test_success();
+   }
+
+bool Test::Result::test_gte(const char* what, size_t produced, size_t expected)
+   {
+   if(produced < expected)
+      {
+      std::ostringstream err;
+      err << m_who;
+      if(what)
+         err << " " << what;
+      err << " unexpected result " << produced << " < " << expected << "\n";
+      return test_failure(err);
+      }
+
+   return test_success();
+   }
+
 #if defined(BOTAN_HAS_BIGINT)
 bool Test::Result::test_eq(const char* what, const BigInt& produced, const BigInt& expected)
    {
@@ -502,64 +532,6 @@ size_t basic_error_report(const std::string& test)
    std::cout << report;
    return fail_cnt;
    }
-
-#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-
-void check_invalid_signatures(Test::Result& result,
-                              Botan::PK_Verifier& verifier,
-                              const std::vector<uint8_t>& message,
-                              const std::vector<uint8_t>& signature)
-   {
-   const std::vector<uint8_t> zero_sig(signature.size());
-   result.test_eq("all zero signature invalid", verifier.verify_message(message, zero_sig), false);
-
-   std::vector<uint8_t> bad_sig;
-   for(size_t i = 0; i <= Test::soak_level(); ++i)
-      {
-      bad_sig = Test::mutate_vec(signature);
-
-      if(!result.test_eq("incorrect signature invalid", verifier.verify_message(message, bad_sig), false))
-         {
-         result.test_note("Accepted invalid signature " + Botan::hex_encode(bad_sig));
-         }
-      }
-   }
-
-void check_invalid_ciphertexts(Test::Result& result,
-                               Botan::PK_Decryptor& decryptor,
-                               const std::vector<uint8_t>& plaintext,
-                               const std::vector<uint8_t>& ciphertext)
-   {
-   std::vector<uint8_t> bad_ctext = ciphertext;
-
-   size_t ciphertext_accepted = 0, ciphertext_rejected = 0;
-
-   for(size_t i = 0; i <= Test::soak_level(); ++i)
-      {
-      size_t offset = Test::rng().get_random<uint16_t>() % bad_ctext.size();
-      bad_ctext[offset] ^= Test::rng().next_nonzero_byte();
-
-      try
-         {
-         const Botan::secure_vector<uint8_t> decrypted = decryptor.decrypt(bad_ctext);
-         ++ciphertext_accepted;
-
-         if(!result.test_ne("incorrect ciphertext different", decrypted, plaintext))
-            {
-            result.test_note("used corrupted ciphertext " + Botan::hex_encode(bad_ctext));
-            }
-
-         }
-      catch(std::exception& e)
-         {
-         ++ciphertext_rejected;
-         }
-      }
-
-   result.test_note("Accepted " + std::to_string(ciphertext_accepted) +
-                    " invalid ciphertexts, rejected " + std::to_string(ciphertext_rejected));
-   }
-#endif
 
 }
 

@@ -32,11 +32,11 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
 
       std::unique_ptr<Botan::Private_Key> load_our_key(const VarMap& vars) override
          {
-         const BigInt p = get_req_bn(vars, "P");
-         const BigInt g = get_req_bn(vars, "G");
-         const BigInt x = get_req_bn(vars, "X");
+         const Botan::BigInt p = get_req_bn(vars, "P");
+         const Botan::BigInt g = get_req_bn(vars, "G");
+         const Botan::BigInt x = get_req_bn(vars, "X");
 
-         const DL_Group grp(p, g);
+         const Botan::DL_Group grp(p, g);
 
          std::unique_ptr<Botan::Private_Key> key(new Botan::DH_PrivateKey(Test::rng(), grp, x));
          return key;
@@ -44,10 +44,10 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
 
       std::vector<uint8_t> load_their_key(const VarMap& vars) override
          {
-         const BigInt p = get_req_bn(vars, "P");
-         const BigInt g = get_req_bn(vars, "G");
-         const BigInt y = get_req_bn(vars, "Y");
-         const DL_Group grp(p, g);
+         const Botan::BigInt p = get_req_bn(vars, "P");
+         const Botan::BigInt g = get_req_bn(vars, "G");
+         const Botan::BigInt y = get_req_bn(vars, "Y");
+         const Botan::DL_Group grp(p, g);
 
          Botan::DH_PublicKey key(grp, y);
          return key.public_value();

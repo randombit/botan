@@ -29,18 +29,18 @@ class DLIES_KAT_Tests : public Text_Based_Test
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
-         const BigInt p = get_req_bn(vars, "P");
-         const BigInt g = get_req_bn(vars, "G");
-         const BigInt x1 = get_req_bn(vars, "X1");
-         const BigInt x2 = get_req_bn(vars, "X2");
+         const Botan::BigInt p = get_req_bn(vars, "P");
+         const Botan::BigInt g = get_req_bn(vars, "G");
+         const Botan::BigInt x1 = get_req_bn(vars, "X1");
+         const Botan::BigInt x2 = get_req_bn(vars, "X2");
 
          const std::vector<uint8_t> input    = get_req_bin(vars, "Msg");
          const std::vector<uint8_t> expected = get_req_bin(vars, "Ciphertext");
 
-         DL_Group domain(p, g);
+         Botan::DL_Group domain(p, g);
 
-         DH_PrivateKey from(Test::rng(), domain, x1);
-         DH_PrivateKey to(Test::rng(), domain, x2);
+         Botan::DH_PrivateKey from(Test::rng(), domain, x1);
+         Botan::DH_PrivateKey to(Test::rng(), domain, x2);
 
          const std::string kdf = "KDF2(SHA-1)";
          const std::string mac = "HMAC(SHA-1)";
@@ -48,15 +48,15 @@ class DLIES_KAT_Tests : public Text_Based_Test
 
          Test::Result result("DLIES");
 
-         DLIES_Encryptor encryptor(from,
-                                   KDF::create(kdf).release(),
-                                   MessageAuthenticationCode::create(mac).release(),
-                                   mac_key_len);
+         Botan::DLIES_Encryptor encryptor(from,
+                                          Botan::KDF::create(kdf).release(),
+                                          Botan::MessageAuthenticationCode::create(mac).release(),
+                                          mac_key_len);
 
-         DLIES_Decryptor decryptor(to,
-                                   KDF::create(kdf).release(),
-                                   MessageAuthenticationCode::create(mac).release(),
-                                   mac_key_len);
+         Botan::DLIES_Decryptor decryptor(to,
+                                          Botan::KDF::create(kdf).release(),
+                                          Botan::MessageAuthenticationCode::create(mac).release(),
+                                          mac_key_len);
 
          encryptor.set_other_key(to.public_value());
 

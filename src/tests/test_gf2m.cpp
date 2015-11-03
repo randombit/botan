@@ -29,7 +29,7 @@ class GF2m_Tests : public Test
    private:
       Test::Result test_gf_overflow()
          {
-         Test::Result result;
+         Test::Result result("GF2m");
 
          for(size_t degree = 2; degree <= 16; ++degree)
             {
@@ -55,8 +55,7 @@ class GF2m_Tests : public Test
                   xl_j_tt_5 = field.gf_mul_rrr(xl_j_tt_5, xl_gray_tt_3);
                   gf2m s = field.gf_mul_nrr(xl_gray_tt_3, field.gf_ord());
 
-                  if(s >= field.gf_ord())
-                     result.test_failure("Value greater than order");
+                  result.test_gte("Value less than order", field.gf_ord(), s);
                   }
                }
             }
