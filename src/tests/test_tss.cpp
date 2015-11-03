@@ -7,40 +7,51 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_THRESHOLD_SECRET_SHARING)
+  #include <botan/tss.h>
+  #include <botan/hex.h>
+#endif
 
-#include <iostream>
-#include <botan/hex.h>
-#include <botan/tss.h>
+namespace Botan_Tests {
+
+namespace {
+
+#if defined(BOTAN_HAS_THRESHOLD_SECRET_SHARING)
+
+class TSS_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+
+         Test::Result result("TSS");
+         byte id[16];
+         for(int i = 0; i != 16; ++i)
+            id[i] = i;
+
+         const std::vector<byte> S = Botan::hex_decode("7465737400");
+
+         std::vector<Botan::RTSS_Share> shares =
+            Botan::RTSS_Share::split(2, 4, S.data(), S.size(), id, Test::rng());
+
+         result.test_eq("reconstruction", Botan::RTSS_Share::reconstruct(shares), S);
+         shares.resize(shares.size()-1);
+         result.test_eq("reconstruction after removal", Botan::RTSS_Share::reconstruct(shares), S);
+
+         results.push_back(result);
+         return results;
+         }
+   };
+
+BOTAN_REGISTER_TEST("tss", TSS_Tests);
+
+#endif // BOTAN_HAS_THRESHOLD_SECRET_SHARING
+
+}
+
+}
 
 size_t test_tss()
    {
-   using namespace Botan;
-
-   auto& rng = test_rng();
-
-   size_t fails = 0;
-
-   byte id[16];
-   for(int i = 0; i != 16; ++i)
-      id[i] = i;
-
-   const secure_vector<byte> S = hex_decode_locked("7465737400");
-
-   std::vector<RTSS_Share> shares =
-      RTSS_Share::split(2, 4, S.data(), S.size(), id, rng);
-
-   fails += test_buffers_equal("TSS", "test 1", RTSS_Share::reconstruct(shares), S);
-
-   shares.resize(shares.size()-1);
-   fails += test_buffers_equal("TSS", "test 2", RTSS_Share::reconstruct(shares), S);
-
-   test_report("TSS", 2, fails);
-
-   return fails;
+   return Botan_Tests::basic_error_report("tss");
    }
-
-#else
-
-SKIP_TEST(tss);
-
-#endif // BOTAN_HAS_THRESHOLD_SECRET_SHARING
