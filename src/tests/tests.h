@@ -89,6 +89,10 @@ class Test
 
             bool test_eq(const char* what, size_t produced, size_t expected);
 
+#if defined(BOTAN_HAS_BIGINT)
+            bool test_eq(const char* what, const BigInt& produced, const BigInt& expected);
+#endif
+
             bool test_eq(const char* producer, const char* what,
                          const uint8_t produced[], size_t produced_len,
                          const uint8_t expected[], size_t expected_len);
@@ -197,14 +201,14 @@ class Text_Based_Test : public Test
    public:
       Text_Based_Test(const std::string& input_file,
                       const std::vector<std::string>& required_keys,
-                      const std::vector<std::string>& optional_keys = {},
-                      bool clear_between = true);
+                      const std::vector<std::string>& optional_keys = {});
 
       Text_Based_Test(const std::string& algo,
                       const std::string& input_file,
                       const std::vector<std::string>& required_keys,
-                      const std::vector<std::string>& optional_keys = {},
-                      bool clear_between = true);
+                      const std::vector<std::string>& optional_keys = {});
+
+      virtual bool clear_between_callbacks() const { return true; }
 
       std::vector<Test::Result> run() override;
    protected:

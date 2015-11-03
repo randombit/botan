@@ -23,8 +23,10 @@ class DSA_KAT_Tests : public PK_Signature_Generation_Test
       DSA_KAT_Tests() : PK_Signature_Generation_Test(
          "DSA",
          Test::data_file("pubkey/dsa.vec"),
-         {"P", "Q", "G", "X", "Hash", "Msg", "Signature"}, {}, false)
+         {"P", "Q", "G", "X", "Hash", "Msg", "Signature"})
          {}
+
+      bool clear_between_callbacks() const override { return false; }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {

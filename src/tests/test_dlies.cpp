@@ -6,93 +6,78 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_DLIES)
+#if defined(BOTAN_HAS_DLIES) && defined(BOTAN_HAS_DIFFIE_HELLMAN)
+  #include "test_pubkey.h"
+  #include <botan/dlies.h>
+  #include <botan/dh.h>
+  #include <botan/pubkey.h>
+#endif
 
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-
-#include "test_pubkey.h"
-
-#include <iostream>
-#include <fstream>
-
-#include <botan/dlies.h>
-#include <botan/dh.h>
-#include <botan/hex.h>
-#include <botan/pubkey.h>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t dlies_kat(const std::string& p,
-                 const std::string& g,
-                 const std::string& x1,
-                 const std::string& x2,
-                 const std::string& msg,
-                 const std::string& ciphertext)
+#if defined(BOTAN_HAS_DLIES) && defined(BOTAN_HAS_DIFFIE_HELLMAN)
+
+class DLIES_KAT_Tests : public Text_Based_Test
    {
-   auto& rng = test_rng();
+   public:
+      DLIES_KAT_Tests() : Text_Based_Test(
+         Test::data_file("pubkey/dlies.vec"),
+         {"P", "G", "X1", "X2", "Msg", "Ciphertext"})
+         {}
 
-   BigInt p_bn(p);
-   BigInt g_bn(g);
-   BigInt x1_bn(x1);
-   BigInt x2_bn(x2);
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         const BigInt p = get_req_bn(vars, "P");
+         const BigInt g = get_req_bn(vars, "G");
+         const BigInt x1 = get_req_bn(vars, "X1");
+         const BigInt x2 = get_req_bn(vars, "X2");
 
-   DL_Group domain(p_bn, g_bn);
+         const std::vector<uint8_t> input    = get_req_bin(vars, "Msg");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Ciphertext");
 
-   DH_PrivateKey from(rng, domain, x1_bn);
-   DH_PrivateKey to(rng, domain, x2_bn);
+         DL_Group domain(p, g);
 
-   const std::string opt_str = "KDF2(SHA-1)/HMAC(SHA-1)/16";
+         DH_PrivateKey from(Test::rng(), domain, x1);
+         DH_PrivateKey to(Test::rng(), domain, x2);
 
-   std::vector<std::string> options = split_on(opt_str, '/');
+         const std::string kdf = "KDF2(SHA-1)";
+         const std::string mac = "HMAC(SHA-1)";
+         const size_t mac_key_len = 16;
 
-   if(options.size() != 3)
-      throw std::runtime_error("DLIES needs three options: " + opt_str);
+         Test::Result result("DLIES");
 
-   const size_t mac_key_len = to_u32bit(options[2]);
+         DLIES_Encryptor encryptor(from,
+                                   KDF::create(kdf).release(),
+                                   MessageAuthenticationCode::create(mac).release(),
+                                   mac_key_len);
 
-   DLIES_Encryptor e(from,
-                     KDF::create(options[0]).release(),
-                     MessageAuthenticationCode::create(options[1]).release(),
-                     mac_key_len);
+         DLIES_Decryptor decryptor(to,
+                                   KDF::create(kdf).release(),
+                                   MessageAuthenticationCode::create(mac).release(),
+                                   mac_key_len);
 
-   DLIES_Decryptor d(to,
-                     KDF::create(options[0]).release(),
-                     MessageAuthenticationCode::create(options[1]).release(),
-                     mac_key_len);
+         encryptor.set_other_key(to.public_value());
 
-   e.set_other_key(to.public_value());
+         result.test_eq("encryption", encryptor.encrypt(input, Test::rng()), expected);
+         result.test_eq("decryption", decryptor.decrypt(expected), input);
 
-   const std::string empty = "";
-   return validate_encryption(e, d, "DLIES", msg, empty, ciphertext);
-   }
+         check_invalid_ciphertexts(result, decryptor, input, expected);
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("dlies", DLIES_KAT_Tests);
+
+#endif
+
+}
 
 }
 
 size_t test_dlies()
    {
-   size_t fails = 0;
-
-   std::ifstream dlies(TEST_DATA_DIR_PK "/dlies.vec");
-
-   fails += run_tests_bb(dlies, "DLIES Encryption", "Ciphertext", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return dlies_kat(m["P"], m["G"], m["X1"], m["X2"], m["Msg"], m["Ciphertext"]);
-             });
-
-   return fails;
+   return Botan_Tests::basic_error_report("dlies");
    }
-
-#else
-
-UNTESTED_WARNING(dlies);
-
-#endif // BOTAN_HAS_DIFFIE_HELLMAN
-
-#else
-
-SKIP_TEST(dlies);
-
-#endif // BOTAN_HAS_DLIES

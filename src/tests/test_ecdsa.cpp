@@ -24,10 +24,10 @@ class ECDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
       ECDSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
          "ECDSA",
          Test::data_file("pubkey/ecdsa.vec"),
-         {"Group", "X", "Hash", "Msg", "Signature"},
-         {},
-         false)
+         {"Group", "X", "Hash", "Msg", "Signature"})
          {}
+
+      bool clear_between_callbacks() const override { return false; }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {

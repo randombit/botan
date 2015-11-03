@@ -23,7 +23,7 @@ class NR_KAT_Tests : public PK_Signature_Generation_Test
       NR_KAT_Tests() : PK_Signature_Generation_Test(
          "Nyberg-Rueppel",
          Test::data_file("pubkey/nr.vec"),
-         {"P", "Q", "G", "X", "Hash", "Nonce", "Msg", "Signature"}, {}, false)
+         {"P", "Q", "G", "X", "Hash", "Nonce", "Msg", "Signature"})
          {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override

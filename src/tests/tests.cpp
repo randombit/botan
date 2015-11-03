@@ -103,6 +103,18 @@ bool Test::Result::test_eq(const char* what, size_t produced, size_t expected)
    return test_success();
    }
 
+#if defined(BOTAN_HAS_BIGINT)
+bool Test::Result::test_eq(const char* what, const BigInt& produced, const BigInt& expected)
+   {
+   if(produced == expected)
+      return test_success();
+
+   std::ostringstream err;
+   err << who() << " " << what << " produced " << produced << " expected " << expected;
+   return test_failure(err.str());
+   }
+#endif
+
 bool Test::Result::test_eq(const char* what, bool produced, bool expected)
    {
    if(produced != expected)
@@ -242,10 +254,8 @@ void Test::summarize(const std::vector<Test::Result>& results, std::string& repo
 
 Text_Based_Test::Text_Based_Test(const std::string& data_dir,
                                  const std::vector<std::string>& required_keys,
-                                 const std::vector<std::string>& optional_keys,
-                                 bool clear_between) :
-   m_data_dir(data_dir),
-   m_clear_between_cb(clear_between)
+                                 const std::vector<std::string>& optional_keys) :
+   m_data_dir(data_dir)
    {
    if(required_keys.empty())
       throw std::runtime_error("Invalid test spec");
@@ -258,11 +268,9 @@ Text_Based_Test::Text_Based_Test(const std::string& data_dir,
 Text_Based_Test::Text_Based_Test(const std::string& algo,
                                  const std::string& data_dir,
                                  const std::vector<std::string>& required_keys,
-                                 const std::vector<std::string>& optional_keys,
-                                 bool clear_between) :
+                                 const std::vector<std::string>& optional_keys) :
    m_algo(algo),
-   m_data_dir(data_dir),
-   m_clear_between_cb(clear_between)
+   m_data_dir(data_dir)
    {
    if(required_keys.empty())
       throw std::runtime_error("Invalid test spec");
@@ -452,7 +460,7 @@ std::vector<Test::Result> Text_Based_Test::run()
             results.push_back(Test::Result::Failure(who, "test " + std::to_string(test_cnt) + " failed with exception '" + e.what() + "'"));
             }
 
-         if(m_clear_between_cb)
+         if(clear_between_callbacks())
             {
             vars.clear();
             }

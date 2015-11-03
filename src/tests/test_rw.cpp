@@ -25,8 +25,8 @@ class RW_KAT_Tests : public PK_Signature_Generation_Test
          "Rabin-Williams",
          Test::data_file("pubkey/rw_sig.vec"),
          {"E", "P", "Q", "Msg", "Signature"},
-         {"Padding"},
-         false) {}
+         {"Padding"})
+         {}
 
       std::string default_padding(const VarMap&) const override { return "EMSA2(SHA-1)"; }
 
@@ -48,7 +48,7 @@ class RW_Verify_Tests : public PK_Signature_Verification_Test
       RW_Verify_Tests() : PK_Signature_Verification_Test(
          "Rabin-Williams",
          Test::data_file("pubkey/rw_verify.vec"),
-         {"E", "N", "Msg", "Signature"}, {}, false)
+         {"E", "N", "Msg", "Signature"})
          {}
 
       std::string default_padding(const VarMap&) const override { return "EMSA2(SHA-1)"; }
