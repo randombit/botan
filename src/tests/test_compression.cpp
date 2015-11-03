@@ -94,10 +94,10 @@ class Compression_Tests : public Test
                result.test_gte("Empty input L1 compresses to non-empty output", c1_e, 1);
                result.test_gte("Empty input L9 compresses to non-empty output", c9_e, 1);
 
-               result.test_lt("Level 9 compresses empty at least as well as level 1", c9_e, c1_e);
-               result.test_lt("Level 9 compresses zeros at least as well as level 1", c9_z, c1_z);
-               result.test_lt("Level 9 compresses random at least as well as level 1", c9_r, c1_r);
-               result.test_lt("Level 9 compresses text at least as well as level 1", c9_t, c1_t);
+               result.test_gte("Level 9 compresses empty at least as well as level 1", c1_e, c9_e);
+               result.test_gte("Level 9 compresses zeros at least as well as level 1", c1_z, c9_z);
+               result.test_gte("Level 9 compresses random at least as well as level 1", c1_r, c9_r);
+               result.test_gte("Level 9 compresses text at least as well as level 1", c1_t, c9_t);
 
                result.test_lt("Zeros compresses much better than text", c1_z / 8, c1_t);
                result.test_lt("Text compresses much better than random", c1_t / 2, c1_r);
