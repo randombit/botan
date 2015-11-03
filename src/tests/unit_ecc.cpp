@@ -216,7 +216,6 @@ class NIST_Curve_Reduction_Tests : public Test
                                     reducer_fn redc_fn)
          {
          const Botan::BigInt p2 = p*p;
-         const size_t trials = 100;
          const size_t p_bits = p.bits();
 
          Botan::Modular_Reducer p_redc(p);

@@ -23,17 +23,53 @@
 #include <botan/numthry.h>
 #include <botan/reducer.h>
 
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-BOTAN_TEST_CASE(bigint_to_u32bit, "BigInt to_u32bit", {
-   for(size_t i = 0; i != 32; ++i)
-      {
-      const u32bit in = 1 << i;
-      BOTAN_TEST(in, BigInt(in).to_u32bit(), "in range round trips");
-      }
-   });
+class BigInt_Unit_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+
+         results.push_back(test_to_u32bit());
+
+         return results;
+         }
+   private:
+      Test::Result test_to_u32bit()
+         {
+         Test::Result result("BigInt::to_u32bit");
+
+         for(size_t i = 0; i < 32; ++i)
+            {
+            const size_t in = static_cast<size_t>(1) << i;
+
+            try
+               {
+               const size_t out = Botan::BigInt(in).to_u32bit();
+               result.test_eq("in range to_u32bit round trips", in, out);
+               }
+            catch(std::exception& e)
+               {
+               result.test_failure("rejected input " + std::to_string(in) + " " + e.what());
+               }
+            }
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("bigint_unit", BigInt_Unit_Tests);
+
+}
+
+}
+
+namespace {
+
+using namespace Botan;
 
 void strip_comments(std::string& line)
    {
@@ -390,7 +426,7 @@ size_t test_bigint()
                    << std::dec << alg_count << std::endl;
       }
 
-   total_errors += test_bigint_to_u32bit();
+   total_errors += Botan_Tests::basic_error_report("bigint_unit");
 
    return total_errors;
    }
