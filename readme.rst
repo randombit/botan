@@ -87,7 +87,7 @@ Botan may already be included in your favorite distribution, such as
 `EPEL <http://dl.fedoraproject.org/pub/epel/7/SRPMS/repoview/botan.html>`_ (for RHEL/CentOS),
 `Debian <http://packages.debian.org/search?keywords=libbotan>`_,
 `Ubuntu <http://packages.ubuntu.com/search?keywords=botan>`_,
-`Gentoo <http://packages.gentoo.org/package/botan>`_,
+`Gentoo <https://packages.gentoo.org/packages/dev-libs/botan>`_,
 `Arch <http://www.archlinux.org/packages/community/x86_64/botan/>`_,
 `Slackbuild <http://slackbuilds.org/result/?search=Botan>`_,
 `FreeBSD ports <http://www.freshports.org/security/botan110>`_, or
