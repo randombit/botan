@@ -137,6 +137,8 @@ void Credentials_Manager::verify_certificate_chain(
 
    if(!cert_in_some_store(trusted_CAs, result.trust_root()))
       throw std::runtime_error("Certificate chain roots in unknown/untrusted CA");
+   if(!result.successful_validation())
+     throw std::runtime_error(result.result_string());
    }
 
 }
