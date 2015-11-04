@@ -194,8 +194,11 @@ class Test
             rng.randomize(&r[r.size() - add], add);
             }
 
-         const size_t offset = rng.get_random<uint16_t>() % r.size();
-         r[offset] ^= rng.next_nonzero_byte();
+         if(r.size() > 0)
+            {
+            const size_t offset = rng.get_random<uint16_t>() % r.size();
+            r[offset] ^= rng.next_nonzero_byte();
+            }
 
          return r;
          }
