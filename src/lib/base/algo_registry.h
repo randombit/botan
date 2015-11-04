@@ -28,7 +28,7 @@ namespace Botan {
 class WinCS_Mutex
    {
    public:
-       WinCS_Mutex(CRITICAL_SECTION& cs): m_cs(cs)
+       WinCS_Mutex()
           {
           InitializeCriticalSection(&m_cs);
           }
