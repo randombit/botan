@@ -36,7 +36,10 @@ inclusion into external build systems.
 If you need help or have questions, send a mail to the
 `mailing list <http://lists.randombit.net/mailman/listinfo/botan-devel/>`_
 or open a ticket on
-`GitHub Issues <https://github.com/randombit/botan/issues>`_.
+`GitHub Issues <https://github.com/randombit/botan/issues>`_. If you
+think you've found a security bug, read the
+`security page <http://botan.randombit.net/security.html>`_
+for contact information and procedures.
 
 The `GitHub wiki <https://github.com/randombit/botan/wiki>`_
 and `Doxygen docs <https://botan.randombit.net/doxygen>`_
@@ -103,9 +106,9 @@ later, Clang 3.4 and later, and MSVC 2013 are regularly tested.
 A new development release is made on the first Monday of every month.
 
 The latest development release is
-`1.11.23 <http://botan.randombit.net/releases/Botan-1.11.23.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.23.tgz.asc>`_
-released on 2015-10-26
+`1.11.24 <http://botan.randombit.net/releases/Botan-1.11.24.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.24.tgz.asc>`_
+released on 2015-11-04
 
 Old Stable Series (1.10)
 ----------------------------------------
