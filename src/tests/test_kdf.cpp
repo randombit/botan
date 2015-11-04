@@ -30,7 +30,7 @@ class KDF_KAT_Tests : public Text_Based_Test
 
          if(!kdf)
             {
-            warn_about_missing(kdf_name);
+            result.note_missing(kdf_name);
             return result;
             }
 

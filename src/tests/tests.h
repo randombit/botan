@@ -20,16 +20,12 @@
   #include <botan/point_gfp.h>
 #endif
 
-#include <functional>
-#include <istream>
 #include <map>
 #include <string>
 #include <vector>
 #include <set>
-
-#include <iostream>
+#include <memory>
 #include <fstream>
-#include <sstream>
 
 namespace Botan_Tests {
 
@@ -67,6 +63,8 @@ class Test
 
             void test_note(const std::string& note);
 
+            void note_missing(const std::string& thing);
+
             bool test_success();
 
             bool test_failure(const std::string& err);
@@ -79,11 +77,6 @@ class Test
             void test_failure(const char* what, const std::vector<uint8_t, Alloc>& buf)
                {
                test_failure(what, buf.data(), buf.size());
-               }
-
-            bool test_failure(std::ostringstream& oss)
-               {
-               return test_failure(oss.str());
                }
 
             bool confirm(const char* what, bool expr)
@@ -267,14 +260,10 @@ class Text_Based_Test : public Test
 
 }
 
-size_t warn_about_missing(const std::string& whatever);
-
 #define TEST_DATA_DIR     "src/tests/data"
 #define TEST_DATA_DIR_PK  "src/tests/data/pubkey"
 #define TEST_DATA_DIR_ECC "src/tests/data/ecc"
 
 #define TEST_OUTDATA_DIR  "src/tests/outdata"
-
-size_t test_cvc();
 
 #endif

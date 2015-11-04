@@ -36,7 +36,7 @@ class Cipher_Mode_Tests : public Text_Based_Test
 
          if(!enc || !dec)
             {
-            warn_about_missing(algo);
+            result.note_missing(algo);
             return result;
             }
 

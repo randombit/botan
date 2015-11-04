@@ -38,7 +38,7 @@ class OCB_Long_KAT_Tests : public Text_Based_Test
          std::unique_ptr<Botan::BlockCipher> aes(Botan::BlockCipher::create(algo));
          if(!aes)
             {
-            warn_about_missing(algo);
+            result.note_missing(algo);
             return result;
             }
 

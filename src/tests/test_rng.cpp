@@ -102,7 +102,7 @@ class HMAC_DRBG_Tests : public Text_Based_Test
          std::unique_ptr<Botan::RandomNumberGenerator> rng(get_rng(algo, seed_input));
          if(!rng)
             {
-            warn_about_missing("RNG " + algo);
+            result.note_missing("RNG " + algo);
             return result;
             }
 

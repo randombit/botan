@@ -5,13 +5,6 @@
 */
 
 #include "tests.h"
-#include <vector>
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <cstdlib>
-#include <iterator>
-#include <sstream>
 
 #if defined(BOTAN_HAS_BIGINT)
   #include <botan/bigint.h>

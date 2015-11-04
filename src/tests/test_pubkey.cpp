@@ -11,13 +11,6 @@
 #include "test_rng.h"
 #include "test_pubkey.h"
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <cstdlib>
-#include <memory>
-
 #include <botan/oids.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
@@ -63,7 +56,6 @@
 
 #if defined(BOTAN_HAS_DLIES)
   #include <botan/dlies.h>
-  #include <botan/kdf.h>
 #endif
 
 namespace Botan_Tests {

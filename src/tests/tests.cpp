@@ -6,7 +6,7 @@
 
 #include "tests.h"
 #include <iostream>
-#include <fstream>
+#include <sstream>
 #include <botan/auto_rng.h>
 #include <botan/hex.h>
 #include <botan/internal/filesystem.h>
@@ -31,6 +31,17 @@ void Test::Result::merge(const Result& other)
 void Test::Result::test_note(const std::string& note)
    {
    m_log.push_back(who() + " " + note);
+   }
+
+void Test::Result::note_missing(const std::string& whatever)
+   {
+   static std::set<std::string> s_already_seen;
+
+   if(s_already_seen.count(whatever) == 0)
+      {
+      test_note("Skipping tests due to missing " + whatever);
+      s_already_seen.insert(whatever);
+      }
    }
 
 bool Test::Result::test_success()
@@ -112,7 +123,7 @@ bool Test::Result::test_eq(const char* producer, const char* what,
           << " (" << bits_different << " bits different)\n";
       }
 
-   return test_failure(err);
+   return test_failure(err.str());
    }
 
 bool Test::Result::test_eq(const char* what, const std::string& produced, const std::string& expected)
@@ -124,7 +135,7 @@ bool Test::Result::test_eq(const char* what, const std::string& produced, const 
       if(what)
          err << " " << what;
       err << " unexpected result produced " << produced << " expected " << expected << "\n";
-      return test_failure(err);
+      return test_failure(err.str());
       }
 
    return test_success();
@@ -139,7 +150,7 @@ bool Test::Result::test_eq(const char* what, size_t produced, size_t expected)
       if(what)
          err << " " << what;
       err << " unexpected result produced " << produced << " expected " << expected << "\n";
-      return test_failure(err);
+      return test_failure(err.str());
       }
 
    return test_success();
@@ -154,7 +165,7 @@ bool Test::Result::test_lt(const char* what, size_t produced, size_t expected)
       if(what)
          err << " " << what;
       err << " unexpected result " << produced << " >= " << expected << "\n";
-      return test_failure(err);
+      return test_failure(err.str());
       }
 
    return test_success();
@@ -169,7 +180,7 @@ bool Test::Result::test_gte(const char* what, size_t produced, size_t expected)
       if(what)
          err << " " << what;
       err << " unexpected result " << produced << " < " << expected << "\n";
-      return test_failure(err);
+      return test_failure(err.str());
       }
 
    return test_success();
@@ -219,7 +230,7 @@ bool Test::Result::test_eq(const char* what, bool produced, bool expected)
       if(what)
          err << " " << what;
       err << " unexpected result produced " << produced << " expected " << expected << "\n";
-      return test_failure(err);
+      return test_failure(err.str());
       }
 
    return test_success();
@@ -319,6 +330,7 @@ std::vector<Test::Result> Test::run_test(const std::string& what)
 size_t Test::run_tests(const std::set<std::string>& requested,
                        std::ostream& out)
    {
+
    size_t fail_cnt = 0;
 
    for(auto&& test_name : requested)
@@ -354,7 +366,6 @@ size_t Test::run_tests(const std::set<std::string>& requested,
       out << report;
       fail_cnt += failed;
       }
-
    return fail_cnt;
    }
 
@@ -650,19 +661,6 @@ std::vector<Test::Result> Text_Based_Test::run()
 
 }
 
-size_t warn_about_missing(const std::string& whatever)
-   {
-   static std::set<std::string> s_already_seen;
-
-   if(s_already_seen.count(whatever) == 0)
-      {
-      std::cout << "Skipping tests due to missing " << whatever << "\n";
-      s_already_seen.insert(whatever);
-      }
-
-   return 0;
-   }
-
 namespace {
 
 int help(std::ostream& out, const std::set<std::string>& all_tests, char* argv0)
@@ -701,9 +699,18 @@ int main(int argc, char* argv[])
       req = all_tests;
       }
 
-   size_t failed = Botan_Tests::Test::run_tests(req, std::cout);
+   const size_t failed = Botan_Tests::Test::run_tests(req, std::cout);
 
-   std::cout << "Botan test suite complete, " << failed << " tests failed\n";
+   std::cout << "Botan test suite complete ";
+
+   if(failed)
+      {
+      std::cout << failed << " tests failed\n";
+      }
+   else
+      {
+      std::cout << "all tests ok\n";
+      }
 
    if(failed)
       return 2;

@@ -8,12 +8,6 @@
 */
 
 #include "tests.h"
-#include <iostream>
-#include <iterator>
-#include <algorithm>
-#include <fstream>
-#include <vector>
-#include <memory>
 
 #if defined(BOTAN_HAS_CARD_VERIFIABLE_CERTIFICATES)
 

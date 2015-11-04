@@ -29,7 +29,7 @@ class PBKDF_KAT_Tests : public Text_Based_Test
 
          if(!pbkdf)
             {
-            warn_about_missing(pbkdf_name);
+            result.note_missing(pbkdf_name);
             return result;
             }
 

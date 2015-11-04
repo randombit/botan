@@ -26,7 +26,7 @@ class Block_Cipher_Tests : public Text_Based_Test
 
          if(providers.empty())
             {
-            warn_about_missing("block cipher " + algo);
+            result.note_missing("block cipher " + algo);
             return result;
             }
 
@@ -36,7 +36,7 @@ class Block_Cipher_Tests : public Text_Based_Test
 
             if(!cipher)
                {
-               warn_about_missing(algo + " from " + provider);
+               result.note_missing(algo + " from " + provider);
                continue;
                }
 

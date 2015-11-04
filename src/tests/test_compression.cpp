@@ -63,17 +63,17 @@ class Compression_Tests : public Test
             {
             try
                {
+               Test::Result result(algo + " compression");
+
                std::unique_ptr<Botan::Compressor_Transform> c1(Botan::make_compressor(algo, 1));
                std::unique_ptr<Botan::Compressor_Transform> c9(Botan::make_compressor(algo, 9));
                std::unique_ptr<Botan::Compressor_Transform> d(Botan::make_decompressor(algo));
 
                if(!c1 || !c9 || !d)
                   {
-                  warn_about_missing(algo);
+                  result.note_missing(algo);
                   continue;
                   }
-
-               Test::Result result(algo + " compression");
 
                const size_t text_len = strlen(text_str);
 

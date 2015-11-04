@@ -47,7 +47,7 @@ class Fuzzer_Input_Tests : public Test
             }
          catch(Botan::No_Filesystem_Access)
             {
-            warn_about_missing("Filesystem access");
+            result.note_missing("Filesystem access");
             return result;
             }
 

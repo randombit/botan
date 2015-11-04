@@ -81,16 +81,9 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
          const std::string& purported_hostname,
          const std::vector<Botan::X509_Certificate>& cert_chain) override
          {
-         try
-            {
-            Credentials_Manager::verify_certificate_chain(type,
-                                                          purported_hostname,
-                                                          cert_chain);
-            }
-         catch(std::exception& e)
-            {
-            std::cout << "Certificate verification failed - " << e.what() << " - but will ignore" << std::endl;
-            }
+         Credentials_Manager::verify_certificate_chain(type,
+                                                       purported_hostname,
+                                                       cert_chain);
          }
 
       Botan::Private_Key* private_key_for(const Botan::X509_Certificate&,
