@@ -128,7 +128,6 @@ Test::Result test_enc_gen_selfsigned()
    result.test_gte("size", sv1.size(), 10);
    result.test_ne("reencoded file of cert without domain parameters is different from original", sv1, sv2);
 
-   //cout << "reading cert again" << std::endl;
    result.test_eq("car", cert_in.get_car().value(), "my_opt_car");
    result.test_eq("chr", cert_in.get_chr().value(), "my_opt_car");
    result.test_eq("ced", cert_in.get_ced().as_string(), "20100727");
@@ -158,7 +157,7 @@ Test::Result test_enc_gen_selfsigned()
 
    try
       {
-      std::cout << "order = " << p_ecdsa_pk->domain().get_order() << std::endl;
+      const BigInt order = p_ecdsa_pk->domain().get_order();
       result.test_failure("Expected accessing domain to fail");
       }
    catch (Invalid_State) {}
@@ -233,7 +232,6 @@ Test::Result test_cvc_ado_creation()
 
    // creating a non sense selfsigned cert w/o dom pars
    EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.11"));
-   //cout << "mod = " << hex << dom_pars.get_curve().get_p() << std::endl;
    ECDSA_PrivateKey req_key(Test::rng(), dom_pars);
    req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    //EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts);
@@ -504,7 +502,6 @@ Test::Result test_cvc_chain()
    ECDSA_PublicKey* cert_pk = dynamic_cast<ECDSA_PublicKey*>(ap_pk.get());
 
    //cert_pk->set_domain_parameters(dom_pars);
-   //std::cout << "dvca_cert.public_point.size() = " << ec::EC2OSP(cert_pk->get_public_point(), ec::PointGFp::COMPRESSED).size() << std::endl;
    EAC1_1_CVC dvca_cert1_reread(CVC_TEST_DATA_DIR "/cvc_chain_cvca.cer");
    result.confirm("signature valid", dvca_ado2.check_signature(*cert_pk));
    result.confirm("signature valid", dvca_ado2.check_signature(dvca_priv_key)); // must also work

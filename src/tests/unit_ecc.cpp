@@ -734,8 +734,8 @@ Test::Result test_point_swap()
 
    Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
 
-   Botan::PointGFp a(Botan_Tests::create_random_point(Test::rng(), dom_pars.get_curve()));
-   Botan::PointGFp b(Botan_Tests::create_random_point(Test::rng(), dom_pars.get_curve()));
+   Botan::PointGFp a(create_random_point(Test::rng(), dom_pars.get_curve()));
+   Botan::PointGFp b(create_random_point(Test::rng(), dom_pars.get_curve()));
    b *= Botan::BigInt(Test::rng(), 20);
 
    Botan::PointGFp c(a);
@@ -761,7 +761,7 @@ Test::Result test_mult_sec_mass()
       {
       try
          {
-         Botan::PointGFp a(Botan_Tests::create_random_point(Test::rng(), dom_pars.get_curve()));
+         Botan::PointGFp a(create_random_point(Test::rng(), dom_pars.get_curve()));
          Botan::BigInt scal(Botan::BigInt(Test::rng(), 40));
          Botan::PointGFp b = a * scal;
          Botan::PointGFp c(a);

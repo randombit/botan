@@ -38,10 +38,6 @@
   #include <botan/rw.h>
 #endif
 
-#if defined(BOTAN_HAS_ELGAMAL)
-  #include <botan/elgamal.h>
-#endif
-
 #if defined(BOTAN_HAS_ECDSA)
   #include <botan/ecdsa.h>
 #endif
@@ -52,10 +48,6 @@
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
   #include <botan/gost_3410.h>
-#endif
-
-#if defined(BOTAN_HAS_DLIES)
-  #include <botan/dlies.h>
 #endif
 
 namespace Botan_Tests {

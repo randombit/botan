@@ -154,9 +154,8 @@ std::function<void (const byte[], size_t)> queue_inserter(std::vector<byte>& q)
    return [&](const byte buf[], size_t sz) { q.insert(q.end(), buf, buf + sz); };
    }
 
-void print_alert(Botan::TLS::Alert alert, const byte[], size_t)
+void print_alert(Botan::TLS::Alert, const byte[], size_t)
    {
-   //std::cout << "Alert " << alert.type_string() << std::endl;
    };
 
 Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
@@ -177,10 +176,9 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
       auto handshake_complete = [&](const Botan::TLS::Session& session) -> bool {
          handshake_done = true;
 
-         /*
-         std::cout << "Session established " << session.version().to_string() << " "
-         << session.ciphersuite().to_string() << " " << hex_encode(session.session_id()) << "\n";
-         */
+         result.test_note("Session established " + session.version().to_string() + " " +
+                          session.ciphersuite().to_string() + " " +
+                          Botan::hex_encode(session.session_id()));
 
          if(session.version() != offer_version)
             {
@@ -424,7 +422,6 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                client_sent = unlock(rng.random_vec(c_len));
 
                // TODO send multiple parts
-               //std::cout << "Sending " << client_sent.size() << " bytes to server\n";
                client.send(client_sent);
                }
 
