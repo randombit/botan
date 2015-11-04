@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 1.11.24, Not Yet Released
+Version 1.11.24, 2015-11-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * When the bugs affecting X.509 path validation were fixed in 1.11.23, a check
