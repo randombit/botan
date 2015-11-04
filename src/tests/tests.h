@@ -85,6 +85,11 @@ class Test
                return test_failure(oss.str());
                }
 
+            bool confirm(const char* what, bool expr)
+               {
+               return test_eq(what, expr, true);
+               }
+
             bool test_eq(const char* what, const std::string& produced, const std::string& expected);
             bool test_eq(const char* what, bool produced, bool expected);
 
@@ -260,39 +265,6 @@ Botan::RandomNumberGenerator& test_rng();
 
 size_t warn_about_missing(const std::string& whatever);
 
-
-std::string test_buffers_equal(const std::string& algo,
-                               const char* provider,
-                               const char* what,
-                               const uint8_t produced[],
-                               size_t produced_size,
-                               const uint8_t expected[],
-                               size_t expected_size);
-
-template<typename Alloc1, typename Alloc2>
-size_t test_buffers_equal(const std::string& algo,
-                          const std::string& provider,
-                          const char* what,
-                          const std::vector<uint8_t, Alloc1>& produced,
-                          const std::vector<uint8_t, Alloc2>& expected)
-   {
-   const std::string res = test_buffers_equal(algo, provider.c_str(), what,
-                                              produced.data(), produced.size(),
-                                              expected.data(), expected.size());
-   return res.size() > 0;
-   }
-
-template<typename Alloc1, typename Alloc2>
-size_t test_buffers_equal(const std::string& algo,
-                          const char* what,
-                          const std::vector<uint8_t, Alloc1>& produced,
-                          const std::vector<uint8_t, Alloc2>& expected)
-   {
-   const std::string res = test_buffers_equal(algo, nullptr, what,
-                                            produced.data(), produced.size(),
-                                            expected.data(), expected.size());
-   return res.size() > 0;
-   }
 
 // Run a list of tests
 typedef std::function<size_t ()> test_fn;

@@ -75,17 +75,52 @@ bool Test::Result::test_ne(const char* what,
    }
 
 bool Test::Result::test_eq(const char* producer, const char* what,
-                           const uint8_t produced[], size_t produced_len,
-                           const uint8_t expected[], size_t expected_len)
+                           const uint8_t produced[], size_t produced_size,
+                           const uint8_t expected[], size_t expected_size)
    {
-   const std::string res = test_buffers_equal(m_who, producer, what,
-                                              produced, produced_len,
-                                              expected, expected_len);
+   if(produced_size == expected_size && same_mem(produced, expected, expected_size))
+      return test_success();
 
-   if(!res.empty())
-      return test_failure(res);
+   std::ostringstream err;
 
-   return test_success();
+   err << who();
+
+   if(producer)
+      {
+      err << " producer " << producer;
+      }
+   if(what)
+      {
+      err << " " << what;
+      }
+
+   err << " unexpected result";
+
+   if(produced_size != expected_size)
+      {
+      err << " produced " << produced_size << " bytes expected " << expected_size;
+      }
+
+   err << "\n";
+
+   std::vector<uint8_t> xor_diff(std::min(produced_size, expected_size));
+   size_t bits_different = 0;
+
+   for(size_t i = 0; i != xor_diff.size(); ++i)
+      {
+      xor_diff[i] = produced[i] ^ expected[i];
+      bits_different += hamming_weight(xor_diff[i]);
+      }
+
+   err << "Produced: " << hex_encode(produced, produced_size) << "\n";
+   err << "Expected: " << hex_encode(expected, expected_size) << "\n";
+   if(bits_different > 0)
+      {
+      err << "XOR Diff: " << hex_encode(xor_diff)
+          << " (" << bits_different << " bits different)\n";
+      }
+
+   return test_failure(err);
    }
 
 bool Test::Result::test_eq(const char* what, const std::string& produced, const std::string& expected)
@@ -273,7 +308,7 @@ std::string Test::data_file(const std::string& what)
 //static
 size_t Test::soak_level()
    {
-   return 5;
+   return 1;
    }
 
 //static
@@ -578,59 +613,6 @@ size_t warn_about_missing(const std::string& whatever)
       }
 
    return 0;
-   }
-
-std::string test_buffers_equal(const std::string& who,
-                               const char* provider,
-                               const char* what,
-                               const uint8_t produced[],
-                               size_t produced_size,
-                               const uint8_t expected[],
-                               size_t expected_size)
-   {
-   if(produced_size == expected_size && same_mem(produced, expected, expected_size))
-      return "";
-
-   std::ostringstream err;
-
-   err << who;
-
-   if(provider)
-      {
-      err << " provider " << provider;
-      }
-   if(what)
-      {
-      err << " " << what;
-      }
-
-   err << " unexpected result";
-
-   if(produced_size != expected_size)
-      {
-      err << " produced " << produced_size << " bytes expected " << expected_size;
-      }
-
-   err << "\n";
-
-   std::vector<uint8_t> xor_diff(std::min(produced_size, expected_size));
-   size_t bits_different = 0;
-
-   for(size_t i = 0; i != xor_diff.size(); ++i)
-      {
-      xor_diff[i] = produced[i] ^ expected[i];
-      bits_different += hamming_weight(xor_diff[i]);
-      }
-
-   err << "Produced: " << hex_encode(produced, produced_size) << "\n";
-   err << "Expected: " << hex_encode(expected, expected_size) << "\n";
-   if(bits_different > 0)
-      {
-      err << "XOR Diff: " << hex_encode(xor_diff)
-          << " (" << bits_different << " bits different)\n";
-      }
-
-   return err.str();
    }
 
 size_t run_tests(const std::vector<std::pair<std::string, test_fn>>& tests)

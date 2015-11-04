@@ -9,499 +9,429 @@
 */
 
 #include "tests.h"
+#include <botan/hex.h>
 
 #if defined(BOTAN_HAS_ECDSA)
-
-#if defined(BOTAN_HAS_RSA)
-
-#include <botan/hex.h>
-#include <botan/pkcs8.h>
-#include <botan/pubkey.h>
-#include <botan/ecdsa.h>
-#include <botan/rsa.h>
-#include <botan/oids.h>
-
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-#include <botan/x509cert.h>
+  #include <botan/pubkey.h>
+  #include <botan/ecdsa.h>
+  #include <botan/oids.h>
+  #include <botan/pkcs8.h>
 #endif
 
-#include <iostream>
-#include <fstream>
-#include <memory>
+#if defined(BOTAN_HAS_RSA)
+  #include <botan/rsa.h>
+#endif
 
-using namespace Botan;
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+  #include <botan/x509cert.h>
+#endif
 
-#define CHECK_MESSAGE(expr, print) try { if(!(expr)) { ++fails; std::cout << print << std::endl; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
-#define CHECK(expr) try { if(!(expr)) { ++fails; std::cout << #expr << std::endl; } } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
+namespace Botan_Tests {
 
 namespace {
 
 /**
-
 * Tests whether the the signing routine will work correctly in case
 * the integer e that is constructed from the message (thus the hash
 * value) is larger than n, the order of the base point.  Tests the
-* signing function of the pk signer object */
-
-size_t test_hash_larger_than_n(RandomNumberGenerator& rng)
+* signing function of the pk signer object
+*/
+Test::Result test_hash_larger_than_n()
    {
-   EC_Group dom_pars(OID("1.3.132.0.8")); // secp160r1
+   Test::Result result("ECDSA Unit");
+
+   Botan::EC_Group dom_pars(Botan::OIDS::lookup("1.3.132.0.8")); // secp160r1
    // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
    // -> shouldn't work with SHA224 which outputs 28 bytes
 
-   size_t fails = 0;
-   ECDSA_PrivateKey priv_key(rng, dom_pars);
+   Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
 
    std::vector<byte> message(20);
    for(size_t i = 0; i != message.size(); ++i)
       message[i] = i;
 
-   PK_Signer pk_signer_160(priv_key, "EMSA1_BSI(SHA-1)");
-   PK_Verifier pk_verifier_160(priv_key, "EMSA1_BSI(SHA-1)");
+   Botan::PK_Signer pk_signer_160(priv_key, "EMSA1_BSI(SHA-1)");
+   Botan::PK_Verifier pk_verifier_160(priv_key, "EMSA1_BSI(SHA-1)");
 
-   PK_Signer pk_signer_224(priv_key, "EMSA1_BSI(SHA-224)");
+   Botan::PK_Signer pk_signer_224(priv_key, "EMSA1_BSI(SHA-224)");
 
    // Verify we can sign and verify with SHA-160
-   std::vector<byte> signature_160 = pk_signer_160.sign_message(message, rng);
+   std::vector<byte> signature_160 = pk_signer_160.sign_message(message, Test::rng());
 
-   CHECK(pk_verifier_160.verify_message(message, signature_160));
+   result.test_eq("message verifies", pk_verifier_160.verify_message(message, signature_160), true);
 
-   bool signature_failed = false;
    try
       {
-      std::vector<byte> signature_224 = pk_signer_224.sign_message(message, rng);
+      std::vector<byte> signature_224 = pk_signer_224.sign_message(message, Test::rng());
+      result.test_failure("bad key/hash combination not rejected");
       }
-   catch(Encoding_Error)
+   catch(Botan::Encoding_Error)
       {
-      signature_failed = true;
+      result.test_note("bad key/hash combination rejected");
       }
-
-   CHECK(signature_failed);
 
    // now check that verification alone fails
 
    // sign it with the normal EMSA1
-   PK_Signer pk_signer(priv_key, "EMSA1(SHA-224)");
-   std::vector<byte> signature = pk_signer.sign_message(message, rng);
+   Botan::PK_Signer pk_signer(priv_key, "EMSA1(SHA-224)");
+   std::vector<byte> signature = pk_signer.sign_message(message, Test::rng());
 
-   PK_Verifier pk_verifier(priv_key, "EMSA1_BSI(SHA-224)");
+   Botan::PK_Verifier pk_verifier(priv_key, "EMSA1_BSI(SHA-224)");
 
-   // verify against EMSA1_BSI
-   if(pk_verifier.verify_message(message, signature))
-      {
-      std::cout << "Corrupt ECDSA signature verified, should not have" << std::endl;
-      ++fails;
-      }
+   result.test_eq("corrupt message does not verify", pk_verifier.verify_message(message, signature), false);
 
-   return fails;
+   return result;
    }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-size_t test_decode_ecdsa_X509()
+Test::Result test_decode_ecdsa_X509()
    {
-   X509_Certificate cert(TEST_DATA_DIR_ECC "/CSCA.CSCA.csca-germany.1.crt");
-   size_t fails = 0;
+   Test::Result result("ECDSA Unit");
+   Botan::X509_Certificate cert(TEST_DATA_DIR_ECC "/CSCA.CSCA.csca-germany.1.crt");
 
-   CHECK_MESSAGE(OIDS::lookup(cert.signature_algorithm().oid) == "ECDSA/EMSA1(SHA-224)", "error reading signature algorithm from x509 ecdsa certificate");
+   result.test_eq("correct signature oid", Botan::OIDS::lookup(cert.signature_algorithm().oid), "ECDSA/EMSA1(SHA-224)");
 
-   CHECK_MESSAGE(hex_encode(cert.serial_number()) == "01", "error reading serial from x509 ecdsa certificate");
-   CHECK_MESSAGE(hex_encode(cert.authority_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading authority key id from x509 ecdsa certificate");
-   CHECK_MESSAGE(hex_encode(cert.subject_key_id()) == "0096452DE588F966C4CCDF161DD1F3F5341B71E7", "error reading Subject key id from x509 ecdsa certificate");
-   CHECK_MESSAGE(cert.fingerprint("SHA-1") == "32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9", "Incorrect fingerprint");
+   result.test_eq("serial number", cert.serial_number(), Botan::hex_decode("01"));
+   result.test_eq("authority key id", cert.authority_key_id(), cert.subject_key_id());
+   result.test_eq("key fingerprint", cert.fingerprint("SHA-1"), "32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9");
 
-   std::unique_ptr<X509_PublicKey> pubkey(cert.subject_public_key());
-   bool ver_ec = cert.check_signature(*pubkey);
-   CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned x509-ecdsa certificate");
+   std::unique_ptr<Botan::Public_Key> pubkey(cert.subject_public_key());
+   result.test_eq("verify self-signed signature", cert.check_signature(*pubkey), true);
 
-   return fails;
+   return result;
    }
 
-size_t test_decode_ver_link_SHA256()
+Test::Result test_decode_ver_link_SHA256()
    {
-   X509_Certificate root_cert(TEST_DATA_DIR_ECC "/root2_SHA256.cer");
-   X509_Certificate link_cert(TEST_DATA_DIR_ECC "/link_SHA256.cer");
+   Test::Result result("ECDSA Unit");
+   Botan::X509_Certificate root_cert(TEST_DATA_DIR_ECC "/root2_SHA256.cer");
+   Botan::X509_Certificate link_cert(TEST_DATA_DIR_ECC "/link_SHA256.cer");
 
-   size_t fails = 0;
-   std::unique_ptr<X509_PublicKey> pubkey(root_cert.subject_public_key());
-   bool ver_ec = link_cert.check_signature(*pubkey);
-   CHECK_MESSAGE(ver_ec, "could not positively verify correct SHA256 link x509-ecdsa certificate");
-   return fails;
+   std::unique_ptr<Botan::Public_Key> pubkey(root_cert.subject_public_key());
+   result.confirm("verified self-signed signature", link_cert.check_signature(*pubkey));
+   return result;
    }
 
-size_t test_decode_ver_link_SHA1()
+Test::Result test_decode_ver_link_SHA1()
    {
-   X509_Certificate root_cert(TEST_DATA_DIR_ECC "/root_SHA1.163.crt");
-   X509_Certificate link_cert(TEST_DATA_DIR_ECC "/link_SHA1.166.crt");
+   Botan::X509_Certificate root_cert(TEST_DATA_DIR_ECC "/root_SHA1.163.crt");
+   Botan::X509_Certificate link_cert(TEST_DATA_DIR_ECC "/link_SHA1.166.crt");
 
-   size_t fails = 0;
-   std::unique_ptr<X509_PublicKey> pubkey(root_cert.subject_public_key());
-   bool ver_ec = link_cert.check_signature(*pubkey);
-   CHECK_MESSAGE(ver_ec, "could not positively verify correct SHA1 link x509-ecdsa certificate");
-   return fails;
+   Test::Result result("ECDSA Unit");
+   std::unique_ptr<Botan::Public_Key> pubkey(root_cert.subject_public_key());
+   result.confirm("verified self-signed signature", link_cert.check_signature(*pubkey));
+   return result;
    }
 #endif
 
-size_t test_sign_then_ver(RandomNumberGenerator& rng)
+Test::Result test_sign_then_ver()
    {
-   EC_Group dom_pars(OID("1.3.132.0.8"));
-   ECDSA_PrivateKey ecdsa(rng, dom_pars);
+   Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+   Botan::ECDSA_PrivateKey ecdsa(Test::rng(), dom_pars);
 
-   size_t fails = 0;
-   PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
+   Test::Result result("ECDSA Unit");
+   Botan::PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
 
-   auto msg = hex_decode("12345678901234567890abcdef12");
-   std::vector<byte> sig = signer.sign_message(msg, rng);
+   auto msg = Botan::hex_decode("12345678901234567890abcdef12");
+   std::vector<byte> sig = signer.sign_message(msg, Test::rng());
 
-   PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
+   Botan::PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
 
-   bool ok = verifier.verify_message(msg, sig);
+   result.confirm("signature verifies", verifier.verify_message(msg, sig));
 
-   if(!ok)
-      {
-      std::cout << "ERROR: Could not verify ECDSA signature" << std::endl;
-      fails++;
-      }
+   result.confirm("invalid signature rejected", !verifier.verify_message(msg, Test::mutate_vec(sig)));
 
-   sig[0]++;
-   ok = verifier.verify_message(msg, sig);
-
-   if(ok)
-      {
-      std::cout << "ERROR: Bogus ECDSA signature verified anyway" << std::endl;
-      fails++;
-      }
-
-   return fails;
+   return result;
    }
 
-size_t test_ec_sign(RandomNumberGenerator& rng)
+Test::Result test_ec_sign()
    {
-   size_t fails = 0;
+   Test::Result result("ECDSA Unit");
 
    try
       {
-      EC_Group dom_pars(OID("1.3.132.0.8"));
-      ECDSA_PrivateKey priv_key(rng, dom_pars);
-      std::string pem_encoded_key = PKCS8::PEM_encode(priv_key);
+      Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+      Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
+      std::string pem_encoded_key = Botan::PKCS8::PEM_encode(priv_key);
 
-      PK_Signer signer(priv_key, "EMSA1(SHA-224)");
-      PK_Verifier verifier(priv_key, "EMSA1(SHA-224)");
+      Botan::PK_Signer signer(priv_key, "EMSA1(SHA-224)");
+      Botan::PK_Verifier verifier(priv_key, "EMSA1(SHA-224)");
 
       for(size_t i = 0; i != 256; ++i)
-         signer.update(static_cast<byte>(i));
-      std::vector<byte> sig = signer.signature(rng);
-
-      for(u32bit i = 0; i != 256; ++i)
-         verifier.update(static_cast<byte>(i));
-      if(!verifier.check_signature(sig))
          {
-         std::cout << "ECDSA self-test failed!";
-         ++fails;
+         signer.update(static_cast<byte>(i));
          }
+      std::vector<byte> sig = signer.signature(Test::rng());
+
+      for(size_t i = 0; i != 256; ++i)
+         {
+         verifier.update(static_cast<byte>(i));
+         }
+
+      result.test_eq("ECDSA signature valid", verifier.check_signature(sig), true);
 
       // now check valid signature, different input
-      for(u32bit i = 1; i != 256; ++i) //starting from 1
-         verifier.update(static_cast<byte>(i));
-
-      if(verifier.check_signature(sig))
+      for(size_t i = 1; i != 256; ++i) //starting from 1
          {
-         std::cout << "ECDSA with bad input passed validation";
-         ++fails;
+         verifier.update(static_cast<byte>(i));
          }
+
+      result.test_eq("invalid ECDSA signature invalid", verifier.check_signature(sig), false);
 
       // now check with original input, modified signature
 
       sig[sig.size()/2]++;
-      for(u32bit i = 0; i != 256; ++i)
+      for(size_t i = 0; i != 256; ++i)
          verifier.update(static_cast<byte>(i));
 
-      if(verifier.check_signature(sig))
-         {
-         std::cout << "ECDSA with bad signature passed validation";
-         ++fails;
-         }
+      result.test_eq("invalid ECDSA signature invalid", verifier.check_signature(sig), false);
       }
    catch (std::exception& e)
       {
-      std::cout << "Exception in test_ec_sign - " << e.what() << std::endl;
-      ++fails;
+      result.test_failure("test_ec_sign", e.what());
       }
 
-   return fails;
+   return result;
    }
 
 
-size_t test_create_pkcs8(RandomNumberGenerator& rng)
+Test::Result test_create_pkcs8()
    {
-   size_t fails = 0;
+   Test::Result result("ECDSA Unit");
 
    try
       {
-      RSA_PrivateKey rsa_key(rng, 1024);
-      //RSA_PrivateKey rsa_key2(1024);
-      //cout << "\nequal: " <<  (rsa_key == rsa_key2) << std::endl;
-      //DSA_PrivateKey key(DL_Group("dsa/jce/1024"));
+      Botan::RSA_PrivateKey rsa_key(Test::rng(), 1024);
 
       std::ofstream rsa_priv_key(TEST_OUTDATA_DIR "/rsa_private.pkcs8.pem");
-      rsa_priv_key << PKCS8::PEM_encode(rsa_key);
+      rsa_priv_key << Botan::PKCS8::PEM_encode(rsa_key);
 
-      EC_Group dom_pars(OID("1.3.132.0.8"));
-      ECDSA_PrivateKey key(rng, dom_pars);
+      Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+      Botan::ECDSA_PrivateKey key(Test::rng(), dom_pars);
 
       // later used by other tests :(
       std::ofstream priv_key(TEST_OUTDATA_DIR "/wo_dompar_private.pkcs8.pem");
-      priv_key << PKCS8::PEM_encode(key);
+      priv_key << Botan::PKCS8::PEM_encode(key);
       }
    catch (std::exception& e)
       {
-      std::cout << "Exception: " << e.what() << std::endl;
-      ++fails;
+      result.test_failure("create_pkcs8", e.what());
       }
 
-   return fails;
+   return result;
    }
 
-size_t test_create_and_verify(RandomNumberGenerator& rng)
+Test::Result test_create_and_verify()
    {
-   size_t fails = 0;
+   Test::Result result("ECDSA Unit");
 
-   EC_Group dom_pars(OID("1.3.132.0.8"));
-   ECDSA_PrivateKey key(rng, dom_pars);
+   Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
+   Botan::ECDSA_PrivateKey key(Test::rng(), dom_pars);
    std::ofstream priv_key(TEST_OUTDATA_DIR "/dompar_private.pkcs8.pem");
-   priv_key << PKCS8::PEM_encode(key);
+   priv_key << Botan::PKCS8::PEM_encode(key);
 
-   std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_OUTDATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
-   ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
-   CHECK_MESSAGE(loaded_ec_key, "the loaded key could not be converted into an ECDSA_PrivateKey");
+   std::unique_ptr<Botan::Private_Key> loaded_key(Botan::PKCS8::load_key(TEST_OUTDATA_DIR "/wo_dompar_private.pkcs8.pem", Test::rng()));
+   Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
+   result.confirm("the loaded key could not be converted into an ECDSA_PrivateKey", loaded_ec_key);
 
-   std::unique_ptr<PKCS8_PrivateKey> loaded_key_1(PKCS8::load_key(TEST_OUTDATA_DIR "/rsa_private.pkcs8.pem", rng));
-   ECDSA_PrivateKey* loaded_rsa_key = dynamic_cast<ECDSA_PrivateKey*>(loaded_key_1.get());
-   CHECK_MESSAGE(!loaded_rsa_key, "the loaded key is ECDSA_PrivateKey -> shouldn't be, is a RSA-Key");
+   std::unique_ptr<Botan::Private_Key> loaded_key_1(Botan::PKCS8::load_key(TEST_OUTDATA_DIR "/rsa_private.pkcs8.pem", Test::rng()));
+   Botan::ECDSA_PrivateKey* loaded_rsa_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key_1.get());
+   result.test_eq("loaded key type corrected", loaded_key_1->algo_name(), "RSA");
+   result.confirm("RSA key cannot be casted to ECDSA", !loaded_rsa_key);
 
    //calc a curve which is not in the registry
 
-   // 	string p_secp = "2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809";
-   std::string a_secp = "0a377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe";
-   std::string b_secp = "0a9acf8c8ba617777e248509bcb4717d4db346202bf9e352cd5633731dd92a51b72a4dc3b3d17c823fcc8fbda4da08f25dea89046087342595a7";
-   std::string G_secp_comp = "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
-   std::string order_g = "0e1a16196e6000000000bc7f1618d867b15bb86474418f";
+   const std::string G_secp_comp = "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
+   const Botan::BigInt bi_p_secp("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
+   const Botan::BigInt bi_a_secp("0x0a377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe");
+   const Botan::BigInt bi_b_secp("0x0a9acf8c8ba617777e248509bcb4717d4db346202bf9e352cd5633731dd92a51b72a4dc3b3d17c823fcc8fbda4da08f25dea89046087342595a7");
+   Botan::BigInt bi_order_g("0x0e1a16196e6000000000bc7f1618d867b15bb86474418f");
+   Botan::CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
+   Botan::PointGFp p_G = Botan::OS2ECP(Botan::hex_decode(G_secp_comp), curve);
 
-   //	::std::vector<byte> sv_p_secp = hex_decode ( p_secp );
-   auto sv_a_secp = hex_decode ( a_secp );
-   auto sv_b_secp = hex_decode ( b_secp );
-   auto sv_G_secp_comp = hex_decode ( G_secp_comp );
-   auto sv_order_g = hex_decode ( order_g );
+   Botan::EC_Group dom_params(curve, p_G, bi_order_g, Botan::BigInt(1));
+   if(!result.confirm("point is on curve", p_G.on_the_curve()))
+      return result;
 
-   //	BigInt bi_p_secp = BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
-   BigInt bi_p_secp("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
-   BigInt bi_a_secp = BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
-   BigInt bi_b_secp = BigInt::decode ( sv_b_secp.data(), sv_b_secp.size() );
-   BigInt bi_order_g = BigInt::decode ( sv_order_g.data(), sv_order_g.size() );
-   CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
-   PointGFp p_G = OS2ECP ( sv_G_secp_comp, curve );
+   Botan::ECDSA_PrivateKey key_odd_oid(Test::rng(), dom_params);
+   std::string key_odd_oid_str = Botan::PKCS8::PEM_encode(key_odd_oid);
 
-   EC_Group dom_params(curve, p_G, bi_order_g, BigInt(1));
-   if(!p_G.on_the_curve())
-      throw Internal_Error("Point not on the curve");
+   Botan::DataSource_Memory key_data_src(key_odd_oid_str);
+   std::unique_ptr<Botan::Private_Key> loaded_key2(Botan::PKCS8::load_key(key_data_src, Test::rng()));
 
-   ECDSA_PrivateKey key_odd_oid(rng, dom_params);
-   std::string key_odd_oid_str = PKCS8::PEM_encode(key_odd_oid);
+   result.confirm("reloaded key", loaded_key.get());
 
-   DataSource_Memory key_data_src(key_odd_oid_str);
-   std::unique_ptr<PKCS8_PrivateKey> loaded_key2(PKCS8::load_key(key_data_src, rng));
-
-   if(!dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get()))
-      {
-      std::cout << "Failed to reload an ECDSA key with unusual parameter set" << std::endl;
-      ++fails;
-      }
-
-   return fails;
+   return result;
    }
 
-size_t test_curve_registry(RandomNumberGenerator& rng)
+Test::Result test_curve_registry()
    {
-   std::vector<std::string> oids;
-   oids.push_back("1.3.132.0.8");
-   oids.push_back("1.2.840.10045.3.1.1");
-   oids.push_back("1.2.840.10045.3.1.2");
-   oids.push_back("1.2.840.10045.3.1.3");
-   oids.push_back("1.2.840.10045.3.1.4");
-   oids.push_back("1.2.840.10045.3.1.5");
-   oids.push_back("1.2.840.10045.3.1.6");
-   oids.push_back("1.2.840.10045.3.1.7");
-   oids.push_back("1.3.132.0.6");
-   oids.push_back("1.3.132.0.7");
-   oids.push_back("1.3.132.0.28");
-   oids.push_back("1.3.132.0.29");
-   oids.push_back("1.3.132.0.9");
-   oids.push_back("1.3.132.0.30");
-   oids.push_back("1.3.132.0.31");
-   oids.push_back("1.3.132.0.32");
-   oids.push_back("1.3.132.0.33");
-   oids.push_back("1.3.132.0.10");
-   oids.push_back("1.3.132.0.34");
-   oids.push_back("1.3.132.0.35");
-   //oids.push_back("1.3.6.1.4.1.8301.3.1.2.9.0.38");
-   oids.push_back("1.3.36.3.3.2.8.1.1.1");
-   oids.push_back("1.3.36.3.3.2.8.1.1.3");
-   oids.push_back("1.3.36.3.3.2.8.1.1.5");
-   oids.push_back("1.3.36.3.3.2.8.1.1.7");
-   oids.push_back("1.3.36.3.3.2.8.1.1.9");
-   oids.push_back("1.3.36.3.3.2.8.1.1.11");
-   oids.push_back("1.3.36.3.3.2.8.1.1.13");
+   const std::vector<std::string> oids = {
+      "1.3.132.0.8",
+      "1.2.840.10045.3.1.1",
+      "1.2.840.10045.3.1.2",
+      "1.2.840.10045.3.1.3",
+      "1.2.840.10045.3.1.4",
+      "1.2.840.10045.3.1.5",
+      "1.2.840.10045.3.1.6",
+      "1.2.840.10045.3.1.7",
+      "1.3.132.0.6",
+      "1.3.132.0.7",
+      "1.3.132.0.28",
+      "1.3.132.0.29",
+      "1.3.132.0.9",
+      "1.3.132.0.30",
+      "1.3.132.0.31",
+      "1.3.132.0.32",
+      "1.3.132.0.33",
+      "1.3.132.0.10",
+      "1.3.132.0.34",
+      "1.3.132.0.35",
+      "1.3.36.3.3.2.8.1.1.1",
+      "1.3.36.3.3.2.8.1.1.3",
+      "1.3.36.3.3.2.8.1.1.5",
+      "1.3.36.3.3.2.8.1.1.7",
+      "1.3.36.3.3.2.8.1.1.9",
+      "1.3.36.3.3.2.8.1.1.11",
+      "1.3.36.3.3.2.8.1.1.13",
+      };
 
-   size_t fails = 0;
+   Test::Result result("ECDSA Unit");
 
-   unsigned int i;
-   for (i = 0; i < oids.size(); i++)
+   for(auto&& oid_str : oids)
       {
       try
          {
-         OID oid(oids[i]);
-         EC_Group dom_pars(oid);
-         ECDSA_PrivateKey ecdsa(rng, dom_pars);
+         Botan::OID oid(oid_str);
+         Botan::EC_Group dom_pars(oid);
+         Botan::ECDSA_PrivateKey ecdsa(Test::rng(), dom_pars);
 
-         PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
-         PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
+         Botan::PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
+         Botan::PK_Verifier verifier(ecdsa, "EMSA1(SHA-1)");
 
-         auto msg = hex_decode("12345678901234567890abcdef12");
-         std::vector<byte> sig = signer.sign_message(msg, rng);
+         auto msg = Botan::hex_decode("12345678901234567890abcdef12");
+         std::vector<byte> sig = signer.sign_message(msg, Test::rng());
 
-         if(!verifier.verify_message(msg, sig))
-            {
-            std::cout << "Failed testing ECDSA sig for curve " << oids[i] << std::endl;
-            ++fails;
-            }
+         result.confirm("verified signature", verifier.verify_message(msg, sig));
          }
-      catch(Invalid_Argument& e)
+      catch(Botan::Invalid_Argument& e)
          {
-         std::cout << "Error testing curve " << oids[i] << " - " << e.what() << std::endl;
-         ++fails;
+         result.test_failure("testing " + oid_str + ": " + e.what());
          }
       }
-   return fails;
+
+   return result;
    }
 
-size_t test_read_pkcs8(RandomNumberGenerator& rng)
+Test::Result test_read_pkcs8()
    {
-   auto msg = hex_decode("12345678901234567890abcdef12");
-   size_t fails = 0;
+   Test::Result result("ECDSA Unit");
+
+   const std::vector<byte> msg = Botan::hex_decode("12345678901234567890abcdef12");
 
    try
       {
-      std::unique_ptr<PKCS8_PrivateKey> loaded_key(PKCS8::load_key(TEST_OUTDATA_DIR "/wo_dompar_private.pkcs8.pem", rng));
-      ECDSA_PrivateKey* ecdsa = dynamic_cast<ECDSA_PrivateKey*>(loaded_key.get());
-      CHECK_MESSAGE(ecdsa, "the loaded key could not be converted into an ECDSA_PrivateKey");
+      std::unique_ptr<Botan::Private_Key> loaded_key(Botan::PKCS8::load_key(TEST_OUTDATA_DIR "/wo_dompar_private.pkcs8.pem", Test::rng()));
+      Botan::ECDSA_PrivateKey* ecdsa = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
+      result.confirm("key loaded", ecdsa);
 
-      PK_Signer signer(*ecdsa, "EMSA1(SHA-1)");
+      Botan::PK_Signer signer(*ecdsa, "EMSA1(SHA-1)");
 
-      std::vector<byte> sig = signer.sign_message(msg, rng);
+      std::vector<byte> sig = signer.sign_message(msg, Test::rng());
 
-      PK_Verifier verifier(*ecdsa, "EMSA1(SHA-1)");
+      Botan::PK_Verifier verifier(*ecdsa, "EMSA1(SHA-1)");
 
-      CHECK_MESSAGE(verifier.verify_message(msg, sig),
-                    "generated sig could not be verified positively");
+      result.confirm("generated signature valid", verifier.verify_message(msg, sig));
       }
    catch (std::exception& e)
       {
-      ++fails;
-      std::cout << "Exception in test_read_pkcs8 - " << e.what() << std::endl;
+      result.test_failure("read_pkcs8", e.what());
       }
 
    try
       {
-      std::unique_ptr<PKCS8_PrivateKey> loaded_key_nodp(PKCS8::load_key(TEST_DATA_DIR_ECC "/nodompar_private.pkcs8.pem", rng));
+      std::unique_ptr<Botan::Private_Key> loaded_key_nodp(Botan::PKCS8::load_key(TEST_DATA_DIR_ECC "/nodompar_private.pkcs8.pem", Test::rng()));
       // anew in each test with unregistered domain-parameters
-      ECDSA_PrivateKey* ecdsa_nodp = dynamic_cast<ECDSA_PrivateKey*>(loaded_key_nodp.get());
-      CHECK_MESSAGE(ecdsa_nodp, "the loaded key could not be converted into an ECDSA_PrivateKey");
+      Botan::ECDSA_PrivateKey* ecdsa_nodp = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key_nodp.get());
+      result.confirm("key loaded", ecdsa_nodp);
 
-      PK_Signer signer(*ecdsa_nodp, "EMSA1(SHA-1)");
-      PK_Verifier verifier(*ecdsa_nodp, "EMSA1(SHA-1)");
+      Botan::PK_Signer signer(*ecdsa_nodp, "EMSA1(SHA-1)");
+      Botan::PK_Verifier verifier(*ecdsa_nodp, "EMSA1(SHA-1)");
 
-      std::vector<byte> signature_nodp = signer.sign_message(msg, rng);
+      std::vector<byte> signature_nodp = signer.sign_message(msg, Test::rng());
 
-      CHECK_MESSAGE(verifier.verify_message(msg, signature_nodp),
-                    "generated signature could not be verified positively (no_dom)");
+      result.confirm("signature valid", verifier.verify_message(msg, signature_nodp));
 
       try
          {
-         std::unique_ptr<PKCS8_PrivateKey> loaded_key_withdp(
-            PKCS8::load_key(TEST_DATA_DIR_ECC "/withdompar_private.pkcs8.pem", rng));
+         std::unique_ptr<Botan::Private_Key> loaded_key_withdp(
+            Botan::PKCS8::load_key(TEST_DATA_DIR_ECC "/withdompar_private.pkcs8.pem", Test::rng()));
 
-         std::cout << "Unexpected success: loaded key with unknown OID" << std::endl;
-         ++fails;
+         result.test_failure("loaded key with unknown OID");
          }
-      catch (std::exception) { /* OK */ }
+      catch (std::exception& e)
+         {
+         result.test_note("rejected key with unknown OID");
+         }
       }
    catch (std::exception& e)
       {
-      std::cout << "Exception in test_read_pkcs8 - " << e.what() << std::endl;
-      ++fails;
+      result.test_failure("read_pkcs8", e.what());
       }
 
-   return fails;
+   return result;
    }
 
-size_t test_ecc_key_with_rfc5915_extensions(RandomNumberGenerator& rng)
+Test::Result test_ecc_key_with_rfc5915_extensions()
    {
-   size_t fails = 0;
+   Test::Result result("ECDSA Unit");
 
    try
       {
-      std::unique_ptr<PKCS8_PrivateKey> pkcs8(
-         PKCS8::load_key(TEST_DATA_DIR_ECC "/ecc_private_with_rfc5915_ext.pem", rng));
+      std::unique_ptr<Botan::Private_Key> pkcs8(
+         Botan::PKCS8::load_key(TEST_DATA_DIR_ECC "/ecc_private_with_rfc5915_ext.pem", Test::rng()));
 
-      if(!dynamic_cast<ECDSA_PrivateKey*>(pkcs8.get()))
-         {
-         std::cout << "Loaded RFC 5915 key, but got something other than an ECDSA key" << std::endl;
-         ++fails;
-         }
+      result.confirm("loaded RFC 5914 key", pkcs8.get());
+      result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
+      result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()));
       }
    catch(std::exception& e)
       {
-      std::cout << "Exception in " << BOTAN_CURRENT_FUNCTION << " - " << e.what() << std::endl;
-      ++fails;
+      result.test_failure("load_rfc5915", e.what());
       }
 
-   return fails;
+   return result;
    }
+
+
+class ECDSA_Unit_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+         results.push_back(test_hash_larger_than_n());
+         results.push_back(test_decode_ecdsa_X509());
+         results.push_back(test_decode_ver_link_SHA256());
+         results.push_back(test_decode_ver_link_SHA1());
+         results.push_back(test_sign_then_ver());
+         results.push_back(test_ec_sign());
+         results.push_back(test_create_pkcs8());
+         results.push_back(test_create_and_verify());
+         results.push_back(test_curve_registry());
+         results.push_back(test_read_pkcs8());
+         results.push_back(test_ecc_key_with_rfc5915_extensions());
+         return results;
+         }
+   };
+
+BOTAN_REGISTER_TEST("ecdsa_unit", ECDSA_Unit_Tests);
+
+}
 
 }
 
 size_t test_ecdsa_unit()
    {
-   size_t fails = 0;
-
-   auto& rng = test_rng();
-
-   fails += test_hash_larger_than_n(rng);
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-   fails += test_decode_ecdsa_X509();
-   fails += test_decode_ver_link_SHA256();
-   fails += test_decode_ver_link_SHA1();
-#endif
-   fails += test_sign_then_ver(rng);
-   fails += test_ec_sign(rng);
-   fails += test_create_pkcs8(rng);
-   fails += test_create_and_verify(rng);
-   fails += test_curve_registry(rng);
-   fails += test_read_pkcs8(rng);
-   fails += test_ecc_key_with_rfc5915_extensions(rng);
-
-   test_report("ECDSA", 11, fails);
-
-   return fails;
+   return Botan_Tests::basic_error_report("ecdsa_unit");
    }
-
-#else
-
-UNTESTED_WARNING(ecdsa_unit);
-
-#endif // BOTAN_HAS_RSA
-
-#else
-
-SKIP_TEST(ecdsa_unit);
-
-#endif // BOTAN_HAS_ECDSA

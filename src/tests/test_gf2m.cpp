@@ -14,6 +14,8 @@ namespace Botan_Tests {
 
 namespace {
 
+#if defined(BOTAN_HAS_MCELIECE)
+
 class GF2m_Tests : public Test
    {
    public:
@@ -64,6 +66,8 @@ class GF2m_Tests : public Test
    };
 
 BOTAN_REGISTER_TEST("gf2m", GF2m_Tests);
+
+#endif
 
 }
 
