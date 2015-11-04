@@ -79,6 +79,8 @@ class Fuzzer_Input_Tests : public Test
    };
 #endif
 
+BOTAN_REGISTER_TEST("fuzzer", Fuzzer_Input_Tests);
+
 }
 
 }

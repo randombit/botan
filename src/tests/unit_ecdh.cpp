@@ -65,6 +65,8 @@ class ECDH_Unit_Tests : public Test
 
    };
 
+BOTAN_REGISTER_TEST("ecdh_unit", ECDH_Unit_Tests);
+
 #endif
 
 }

@@ -236,7 +236,17 @@ bool Test::Result::test_eq(const char* what, bool produced, bool expected)
 std::string Test::Result::result_string() const
    {
    std::ostringstream report;
-   report << who() << " ran " << tests_run() << " tests";
+   report << who() << " ran ";
+
+   if(tests_run() == 0)
+      {
+      report << "ZERO";
+      }
+   else
+      {
+      report << tests_run();
+      }
+   report << " tests";
 
    if(tests_failed())
       {
@@ -308,7 +318,7 @@ std::string Test::data_file(const std::string& what)
 //static
 size_t Test::soak_level()
    {
-   return 1;
+   return 5;
    }
 
 //static
@@ -345,9 +355,6 @@ void Test::summarize(const std::vector<Test::Result>& results, std::string& repo
    for(auto&& result : combined)
       {
       report << result.second.result_string();
-
-      // ADD test notes
-      //report << result.second.result_string();
       failures += result.second.tests_failed();
       }
 

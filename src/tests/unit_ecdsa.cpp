@@ -194,17 +194,18 @@ Test::Result test_ec_sign()
    return result;
    }
 
-
 Test::Result test_create_pkcs8()
    {
    Test::Result result("ECDSA Unit");
 
    try
       {
+#if defined(BOTAN_HAS_RSA)
       Botan::RSA_PrivateKey rsa_key(Test::rng(), 1024);
 
       std::ofstream rsa_priv_key(TEST_OUTDATA_DIR "/rsa_private.pkcs8.pem");
       rsa_priv_key << Botan::PKCS8::PEM_encode(rsa_key);
+#endif
 
       Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
       Botan::ECDSA_PrivateKey key(Test::rng(), dom_pars);
@@ -234,13 +235,14 @@ Test::Result test_create_and_verify()
    Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
    result.confirm("the loaded key could not be converted into an ECDSA_PrivateKey", loaded_ec_key);
 
+#if defined(BOTAN_HAS_RSA)
    std::unique_ptr<Botan::Private_Key> loaded_key_1(Botan::PKCS8::load_key(TEST_OUTDATA_DIR "/rsa_private.pkcs8.pem", Test::rng()));
    Botan::ECDSA_PrivateKey* loaded_rsa_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key_1.get());
    result.test_eq("loaded key type corrected", loaded_key_1->algo_name(), "RSA");
    result.confirm("RSA key cannot be casted to ECDSA", !loaded_rsa_key);
+#endif
 
    //calc a curve which is not in the registry
-
    const std::string G_secp_comp = "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
    const Botan::BigInt bi_p_secp("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
    const Botan::BigInt bi_a_secp("0x0a377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe");
