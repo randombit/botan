@@ -47,8 +47,3 @@ BOTAN_REGISTER_TEST("srp6", SRP6_Unit_Tests);
 }
 
 }
-
-size_t test_srp6()
-   {
-   return Botan_Tests::basic_error_report("srp6");
-   }

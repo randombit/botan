@@ -23,6 +23,8 @@ namespace Botan_Tests {
 
 namespace {
 
+#if defined(BOTAN_HAS_BIGINT)
+
 class BigInt_Unit_Tests : public Test
    {
    public:
@@ -184,7 +186,7 @@ class BigInt_KAT_Tests : public Text_Based_Test
             const BigInt modulus = get_req_bn(vars, "Modulus");
             const BigInt output = get_req_bn(vars, "Output");
 
-            result.test_eq("power_mod", power_mod(value, exponent, modulus), output);
+            result.test_eq("power_mod", Botan::power_mod(value, exponent, modulus), output);
             }
          else if(algo == "PrimeTest")
             {
@@ -205,11 +207,8 @@ class BigInt_KAT_Tests : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("bigint_kat", BigInt_KAT_Tests);
 
-}
+#endif
 
 }
 
-size_t test_bigint()
-   {
-   return Botan_Tests::basic_error_report("bigint_kat");
-   }
+}

@@ -199,10 +199,9 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
       };
 
       auto next_protocol_chooser = [&](std::vector<std::string> protos) {
-         if(protos.size() != 2)
-            std::cout << "Bad protocol size" << std::endl;
-         if(protos[0] != "test/1" || protos[1] != "test/2")
-            std::cout << "Bad protocol values" << std::endl;
+         result.test_eq("protocol count", protos.size(), 2);
+         result.test_eq("protocol[0]", protos[0], "test/1");
+         result.test_eq("protocol[1]", protos[1], "test/2");
          return "test/3";
       };
 
@@ -373,10 +372,9 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
       };
 
       auto next_protocol_chooser = [&](std::vector<std::string> protos) {
-         if(protos.size() != 2)
-            std::cout << "Bad protocol size" << std::endl;
-         if(protos[0] != "test/1" || protos[1] != "test/2")
-            std::cout << "Bad protocol values" << std::endl;
+         result.test_eq("protocol count", protos.size(), 2);
+         result.test_eq("protocol[0]", protos[0], "test/1");
+         result.test_eq("protocol[1]", protos[1], "test/2");
          return "test/3";
       };
 
@@ -590,8 +588,3 @@ BOTAN_REGISTER_TEST("unit_tls", TLS_Unit_Tests);
 }
 
 }
-
-size_t test_tls()
-   {
-   return Botan_Tests::basic_error_report("unit_tls");
-   }

@@ -72,9 +72,3 @@ BOTAN_REGISTER_TEST("ecdh_unit", ECDH_Unit_Tests);
 }
 
 }
-
-
-size_t test_ecdh_unit()
-   {
-   return Botan_Tests::basic_error_report("ecdh_unit");
-   }

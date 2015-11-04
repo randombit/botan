@@ -76,8 +76,3 @@ BOTAN_REGISTER_TEST("dlies", DLIES_KAT_Tests);
 }
 
 }
-
-size_t test_dlies()
-   {
-   return Botan_Tests::basic_error_report("dlies");
-   }

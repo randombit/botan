@@ -837,13 +837,3 @@ BOTAN_REGISTER_TEST("ecc_unit", ECC_Unit_Tests);
 }
 
 }
-
-size_t test_ecc_randomized()
-   {
-   return Botan_Tests::basic_error_report("ecc_randomized");
-   }
-
-size_t test_ecc_unit()
-   {
-   return Botan_Tests::basic_error_report("ecc_unit");
-   }

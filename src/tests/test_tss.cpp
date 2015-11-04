@@ -50,8 +50,3 @@ BOTAN_REGISTER_TEST("tss", TSS_Tests);
 }
 
 }
-
-size_t test_tss()
-   {
-   return Botan_Tests::basic_error_report("tss");
-   }

@@ -16,6 +16,7 @@ namespace Botan_Tests {
 
 namespace {
 
+#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
 class RFC3394_Keywrap_Tests : public Text_Based_Test
    {
    public:
@@ -51,12 +52,8 @@ class RFC3394_Keywrap_Tests : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("rfc3394", RFC3394_Keywrap_Tests);
+#endif
 
 }
 
 }
-
-size_t test_keywrap()
-   {
-   return Botan_Tests::basic_error_report("rfc3394");
-   }

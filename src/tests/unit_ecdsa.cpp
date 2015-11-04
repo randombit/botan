@@ -14,6 +14,7 @@
 #if defined(BOTAN_HAS_ECDSA)
   #include <botan/pubkey.h>
   #include <botan/ecdsa.h>
+  #include <botan/ec_group.h>
   #include <botan/oids.h>
   #include <botan/pkcs8.h>
 #endif
@@ -29,6 +30,8 @@
 namespace Botan_Tests {
 
 namespace {
+
+#if defined(BOTAN_HAS_ECDSA)
 
 /**
 * Tests whether the the signing routine will work correctly in case
@@ -428,12 +431,8 @@ class ECDSA_Unit_Tests : public Test
    };
 
 BOTAN_REGISTER_TEST("ecdsa_unit", ECDSA_Unit_Tests);
+#endif
 
 }
 
 }
-
-size_t test_ecdsa_unit()
-   {
-   return Botan_Tests::basic_error_report("ecdsa_unit");
-   }

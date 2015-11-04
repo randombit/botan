@@ -67,8 +67,3 @@ BOTAN_REGISTER_TEST("modes", Cipher_Mode_Tests);
 #endif
 
 }
-
-size_t test_modes()
-   {
-   return Botan_Tests::basic_error_report("modes");
-   }

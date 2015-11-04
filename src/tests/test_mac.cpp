@@ -77,8 +77,3 @@ class Message_Auth_Tests : public Text_Based_Test
 }
 
 }
-
-size_t test_mac()
-   {
-   return Botan_Tests::basic_error_report("mac");
-   }

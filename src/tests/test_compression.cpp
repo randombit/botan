@@ -50,6 +50,8 @@ const char* text_str =
    "All mimsy were the borogoves,"
    "And the mome raths outgrabe.";
 
+#if defined(BOTAN_HAS_COMPRESSION)
+
 class Compression_Tests : public Test
    {
    public:
@@ -139,12 +141,8 @@ class Compression_Tests : public Test
 
 BOTAN_REGISTER_TEST("compression", Compression_Tests);
 
-}
+#endif
 
 }
 
-size_t test_compression()
-   {
-   return Botan_Tests::basic_error_report("compression");
-
-   }
+}

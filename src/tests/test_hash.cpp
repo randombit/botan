@@ -71,9 +71,5 @@ class Hash_Function_Tests : public Text_Based_Test
 BOTAN_REGISTER_TEST("hash", Hash_Function_Tests);
 
 }
-}
 
-size_t test_hash()
-   {
-   return Botan_Tests::basic_error_report("hash");
-   }
+}

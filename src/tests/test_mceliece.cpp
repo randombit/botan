@@ -71,7 +71,10 @@ class McEliece_Tests : public Test
          for(size_t i = 0; i < sizeof(params__n__t_min_max)/sizeof(params__n__t_min_max[0]); i+=3)
             {
             const size_t code_length = params__n__t_min_max[i];
-            for(size_t t = params__n__t_min_max[i+1]; t <= params__n__t_min_max[i+2]; t++)
+            const size_t min_t = params__n__t_min_max[i+1];
+            const size_t max_t = params__n__t_min_max[i+2];
+
+            for(size_t t = min_t; t <= max_t; ++t)
                {
                Botan::McEliece_PrivateKey sk1(Test::rng(), code_length, t);
                const Botan::McEliece_PublicKey& pk1 = sk1;
@@ -153,6 +156,7 @@ class McEliece_Tests : public Test
                   {
                   mceies_decrypt(sk, bad_ct.data(), bad_ct.size(), ad, ad_len);
                   result.test_failure("AEAD decrypted manipulated ciphertext");
+                  result.test_note("Manipulated text was " + Botan::hex_encode(bad_ct));
                   }
                catch(Botan::Integrity_Failure& e)
                   {
@@ -178,8 +182,3 @@ BOTAN_REGISTER_TEST("mceliece", McEliece_Tests);
 }
 
 }
-
-size_t test_mceliece()
-   {
-   return Botan_Tests::basic_error_report("mceliece");
-   }

@@ -120,13 +120,9 @@ class HMAC_DRBG_Tests : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("hmac_drbg", HMAC_DRBG_Tests);
+
 #endif
 
 }
 
 }
-
-size_t test_rngs()
-   {
-   return Botan_Tests::basic_error_report("x931_rng") + Botan_Tests::basic_error_report("hmac_drbg");
-   }

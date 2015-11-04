@@ -72,8 +72,3 @@ BOTAN_REGISTER_TEST("gf2m", GF2m_Tests);
 }
 
 }
-
-size_t test_gf2m()
-   {
-   return Botan_Tests::basic_error_report("gf2m");
-   }

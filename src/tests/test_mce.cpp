@@ -14,12 +14,11 @@
 #include <botan/hex.h>
 #endif
 
-#include <iostream>
-#include <botan/hex.h>
-
 namespace Botan_Tests {
 
 namespace {
+
+#if defined(BOTAN_HAS_MCELIECE)
 
 std::vector<byte> hash_bytes(const byte b[], size_t len, const std::string& hash_fn = "SHA-256")
    {
@@ -36,7 +35,6 @@ std::vector<byte> hash_bytes(const std::vector<byte, A>& v)
    return hash_bytes(v.data(), v.size());
    }
 
-#if defined(BOTAN_HAS_MCELIECE)
 class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
    {
    public:
@@ -86,13 +84,8 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("mce_keygen", McEliece_Keygen_Encrypt_Test);
 
-}
-
-}
-
 #endif
 
-size_t test_mce()
-   {
-   return Botan_Tests::basic_error_report("mce_keygen");
-   }
+}
+
+}

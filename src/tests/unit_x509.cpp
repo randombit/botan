@@ -223,8 +223,3 @@ BOTAN_REGISTER_TEST("unit_x509", X509_Cert_Unit_Tests);
 }
 
 }
-
-size_t test_x509()
-   {
-   return Botan_Tests::basic_error_report("unit_x509");
-   }

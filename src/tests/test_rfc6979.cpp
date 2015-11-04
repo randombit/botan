@@ -50,8 +50,3 @@ BOTAN_REGISTER_TEST("rfc6979", RFC6979_KAT_Tests);
 }
 
 }
-
-size_t test_rfc6979()
-   {
-   return Botan_Tests::basic_error_report("rfc6979");
-   }

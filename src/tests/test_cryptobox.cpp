@@ -59,8 +59,3 @@ BOTAN_REGISTER_TEST("cryptobox", Cryptobox_Tests);
 }
 
 }
-
-size_t test_cryptobox()
-   {
-   return Botan_Tests::basic_error_report("cryptobox");
-   }

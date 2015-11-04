@@ -67,18 +67,3 @@ BOTAN_REGISTER_TEST("stream", Stream_Cipher_Tests);
 #endif
 
 }
-
-
-size_t test_stream()
-   {
-   using namespace Botan_Tests;
-
-   std::vector<Test::Result> results = Test::run_test("stream");
-
-   std::string report;
-   size_t fail_cnt = 0;
-   Test::summarize(results, report, fail_cnt);
-
-   std::cout << report;
-   return fail_cnt;
-   }

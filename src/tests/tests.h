@@ -25,6 +25,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <set>
 
 #include <iostream>
 #include <fstream>
@@ -167,10 +168,15 @@ class Test
       virtual std::vector<Test::Result> run() = 0;
       virtual ~Test() {}
 
+      static size_t run_tests(const std::set<std::string>& requested,
+                              std::ostream& out);
+
       static void summarize(const std::vector<Test::Result>& results,
                             std::string& out_report, size_t& out_fail_cnt);
 
       static std::map<std::string, Test*>& global_registry();
+
+      static std::set<std::string> registered_tests();
 
       static Test* get_test(const std::string& test_name);
 
@@ -207,8 +213,6 @@ class Test
 
       static Botan::RandomNumberGenerator& rng();
    };
-
-size_t basic_error_report(const std::string& test);
 
 #define BOTAN_REGISTER_TEST(type, Test_Class) namespace { Test::Registration reg_ ## Test_Class ## _tests(type, new Test_Class); }
 
@@ -263,17 +267,7 @@ class Text_Based_Test : public Test
 
 }
 
-
-Botan::RandomNumberGenerator& test_rng();
-
 size_t warn_about_missing(const std::string& whatever);
-
-
-// Run a list of tests
-typedef std::function<size_t ()> test_fn;
-
-size_t run_tests(const std::vector<std::pair<std::string, test_fn>>& tests);
-void test_report(const std::string& name, size_t ran, size_t failed);
 
 #define TEST_DATA_DIR     "src/tests/data"
 #define TEST_DATA_DIR_PK  "src/tests/data/pubkey"
@@ -281,91 +275,6 @@ void test_report(const std::string& name, size_t ran, size_t failed);
 
 #define TEST_OUTDATA_DIR  "src/tests/outdata"
 
-int test_main(int argc, char* argv[]);
-
-// Tests using reader framework above
-size_t test_block();
-size_t test_stream();
-size_t test_hash();
-size_t test_mac();
-size_t test_modes();
-size_t test_rngs();
-size_t test_pbkdf();
-size_t test_kdf();
-size_t test_aead();
-
-size_t test_rsa();
-size_t test_rw();
-size_t test_dsa();
-size_t test_nr();
-size_t test_dh();
-size_t test_dlies();
-size_t test_elgamal();
-size_t test_ecc_pointmul();
-size_t test_ecc_random();
-size_t test_ecdsa();
-size_t test_gost_3410();
-size_t test_curve25519();
-size_t test_gf2m();
-size_t test_mceliece();
-size_t test_mce();
-
-// One off tests
-size_t test_ocb();
-size_t test_keywrap();
-size_t test_bcrypt();
-size_t test_passhash9();
-size_t test_cryptobox();
-size_t test_tss();
-size_t test_rfc6979();
-
-size_t test_pk_keygen();
-
-size_t test_bigint();
-
-size_t test_ecc_unit();
-size_t test_ecc_randomized();
-size_t test_ecdsa_unit();
-size_t test_ecdh_unit();
-
-size_t test_x509();
-size_t test_x509_x509test();
 size_t test_cvc();
-
-size_t test_tls();
-
-size_t test_nist_x509();
-
-size_t test_srp6();
-size_t test_compression();
-
-size_t test_fuzzer();
-
-#define SKIP_TEST(testname) \
-   size_t test_ ## testname() {                                    \
-      std::cout << "Skipping tests: " << # testname  << std::endl; \
-      return 0; \
-   } \
-
-/*
- * Warn if a test requires loading more modules than necessary to build
- * the lib. E.g.
- *    $ ./configure.py --no-autoload --enable-modules='ocb'
- *    $ make
- *    $ ./botan-test ocb
- * warns the user whereas 
- *    $ ./configure.py --no-autoload --enable-modules='ocb,aes'
- *    $ make
- *    $ ./botan-test ocb
- * runs the test.
- */
-#define UNTESTED_WARNING(testname) \
-   size_t test_ ## testname() {                                       \
-      std::cout << "Skipping tests: " << # testname << std::endl;     \
-      std::cout << "WARNING: " << # testname << " has been compiled " \
-                << "but is not tested due to other missing modules."  \
-                << std::endl; \
-      return 0; \
-   } \
 
 #endif

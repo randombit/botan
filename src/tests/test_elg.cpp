@@ -47,8 +47,3 @@ BOTAN_REGISTER_TEST("elgamal_kat", ElGamal_KAT_Tests);
 }
 
 }
-
-size_t test_elgamal()
-   {
-   return Botan_Tests::basic_error_report("elgamal_kat");
-   }

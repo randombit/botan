@@ -55,8 +55,3 @@ BOTAN_REGISTER_TEST("ecc_pointmul", ECC_Pointmult_Tests);
 }
 
 }
-
-size_t test_ecc_pointmul()
-   {
-   return Botan_Tests::basic_error_report("ecc_pointmul");
-   }

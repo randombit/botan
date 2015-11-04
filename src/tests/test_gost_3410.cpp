@@ -50,8 +50,3 @@ BOTAN_REGISTER_TEST("gost_3410_verify", GOST_3410_2001_Verification_Tests);
 }
 
 }
-
-size_t test_gost_3410()
-   {
-   return Botan_Tests::basic_error_report("gost_3410_verify");
-   }

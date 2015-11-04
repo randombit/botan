@@ -52,8 +52,3 @@ BOTAN_REGISTER_TEST("ecdsa", ECDSA_Signature_KAT_Tests);
 }
 
 }
-
-size_t test_ecdsa()
-   {
-   return Botan_Tests::basic_error_report("ecdsa");
-   }

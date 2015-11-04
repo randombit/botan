@@ -62,8 +62,3 @@ class Block_Cipher_Tests : public Text_Based_Test
 BOTAN_REGISTER_TEST("block", Block_Cipher_Tests);
 
 }
-
-size_t test_block()
-   {
-   return Botan_Tests::basic_error_report("block");
-   }

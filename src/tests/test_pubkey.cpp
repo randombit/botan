@@ -351,8 +351,3 @@ BOTAN_REGISTER_TEST("pk_keygen", PK_Keygen_Tests);
 }
 
 #endif
-
-size_t test_pk_keygen()
-   {
-   return Botan_Tests::basic_error_report("pk_keygen");
-   }

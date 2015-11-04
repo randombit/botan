@@ -53,8 +53,3 @@ BOTAN_REGISTER_TEST("kdf", KDF_KAT_Tests);
 }
 
 }
-
-size_t test_kdf()
-   {
-   return Botan_Tests::basic_error_report("kdf");
-   }

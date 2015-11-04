@@ -72,10 +72,3 @@ BOTAN_REGISTER_TEST("rw_verify", RW_Verify_Tests);
 }
 
 }
-
-size_t test_rw()
-   {
-   using namespace Botan_Tests;
-
-   return basic_error_report("rw_kat") + basic_error_report("rw_verify");
-   }

@@ -61,23 +61,24 @@ class OCB_Long_KAT_Tests : public Text_Based_Test
 
             Botan::store_be(static_cast<uint32_t>(3*i+1), &N[8]);
 
-            ocb_encrypt(C, enc, dec, N, S, S);
+            ocb_encrypt(result, C, enc, dec, N, S, S);
             Botan::store_be(static_cast<uint32_t>(3*i+2), &N[8]);
-            ocb_encrypt(C, enc, dec, N, S, empty);
+            ocb_encrypt(result, C, enc, dec, N, S, empty);
             Botan::store_be(static_cast<uint32_t>(3*i+3), &N[8]);
-            ocb_encrypt(C, enc, dec, N, empty, S);
+            ocb_encrypt(result, C, enc, dec, N, empty, S);
             }
 
          Botan::store_be(static_cast<uint32_t>(385), &N[8]);
          std::vector<byte> final_result;
-         ocb_encrypt(final_result, enc, dec, N, empty, C);
+         ocb_encrypt(result, final_result, enc, dec, N, empty, C);
 
          result.test_eq("correct value", final_result, expected);
 
          return result;
          }
    private:
-      void ocb_encrypt(std::vector<byte>& output_to,
+      void ocb_encrypt(Test::Result& result,
+                       std::vector<byte>& output_to,
                        Botan::OCB_Encryption& enc,
                        Botan::OCB_Decryption& dec,
                        const std::vector<byte>& nonce,
@@ -90,26 +91,23 @@ class OCB_Long_KAT_Tests : public Text_Based_Test
 
          Botan::secure_vector<byte> buf(pt.begin(), pt.end());
          enc.finish(buf, 0);
+         output_to.insert(output_to.end(), buf.begin(), buf.end());
 
          try
             {
-            Botan::secure_vector<byte> ct = buf;
-
             dec.set_associated_data(ad.data(), ad.size());
 
             dec.start(nonce.data(), nonce.size());
 
-            dec.finish(ct, 0);
+            dec.finish(buf, 0);
 
-            if(ct != pt)
-               std::cout << "OCB failed to decrypt correctly" << std::endl;
+            result.test_eq("OCB round tripped", buf, pt);
             }
          catch(std::exception& e)
             {
-            std::cout << "OCB round trip error - " << e.what() << std::endl;
+            result.test_failure("OCB round trip error", e.what());
             }
 
-         output_to.insert(output_to.end(), buf.begin(), buf.end());
          }
    };
 
@@ -120,10 +118,4 @@ BOTAN_REGISTER_TEST("ocb_long", OCB_Long_KAT_Tests);
 }
 
 }
-
-size_t test_ocb()
-   {
-   return Botan_Tests::basic_error_report("ocb_long");
-   }
-
 

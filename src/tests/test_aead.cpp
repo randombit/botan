@@ -132,8 +132,3 @@ BOTAN_REGISTER_TEST("aead", AEAD_Tests);
 #endif
 
 }
-
-size_t test_aead()
-   {
-   return Botan_Tests::basic_error_report("aead");
-   }

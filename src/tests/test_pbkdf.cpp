@@ -56,8 +56,3 @@ BOTAN_REGISTER_TEST("pbkdf", PBKDF_KAT_Tests);
 }
 
 }
-
-size_t test_pbkdf()
-   {
-   return Botan_Tests::basic_error_report("pbkdf");
-   }

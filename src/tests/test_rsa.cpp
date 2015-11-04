@@ -90,11 +90,5 @@ BOTAN_REGISTER_TEST("rsa_ver", RSA_Signature_Verify_Tests);
 #endif
 
 }
+
 }
-
-size_t test_rsa()
-   {
-   using namespace Botan_Tests;
-
-   return basic_error_report("rsa_enc") + basic_error_report("rsa_sig") + basic_error_report("rsa_ver");
-   }

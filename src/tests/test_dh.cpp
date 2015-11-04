@@ -61,8 +61,3 @@ BOTAN_REGISTER_TEST("dh_kat", Diffie_Hellman_KAT_Tests);
 }
 
 }
-
-size_t test_dh()
-   {
-   return Botan_Tests::basic_error_report("dh_kat");
-   }

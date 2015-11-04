@@ -52,8 +52,3 @@ BOTAN_REGISTER_TEST("nr_kat", NR_KAT_Tests);
 }
 
 }
-
-size_t test_nr()
-   {
-   return Botan_Tests::basic_error_report("nr_kat");
-   }

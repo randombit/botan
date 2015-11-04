@@ -54,8 +54,3 @@ BOTAN_REGISTER_TEST("dsa_kat", DSA_KAT_Tests);
 }
 
 }
-
-size_t test_dsa()
-   {
-   return Botan_Tests::basic_error_report("dsa_kat");
-   }

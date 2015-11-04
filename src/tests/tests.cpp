@@ -12,17 +12,9 @@
 #include <botan/internal/filesystem.h>
 #include <botan/internal/bit_ops.h>
 
-#define CATCH_CONFIG_RUNNER
-#define CATCH_CONFIG_CONSOLE_WIDTH 60
-#define CATCH_CONFIG_COLOUR_NONE
-#include "catchy/catch.hpp"
-
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
 #endif
-
-using namespace Botan;
-
 
 namespace Botan_Tests {
 
@@ -69,7 +61,7 @@ bool Test::Result::test_ne(const char* what,
                            const uint8_t produced[], size_t produced_len,
                            const uint8_t expected[], size_t expected_len)
    {
-   if(produced_len == expected_len && same_mem(produced, expected, expected_len))
+   if(produced_len == expected_len && Botan::same_mem(produced, expected, expected_len))
       return test_failure(who() + ":" + what + " produced matching");
    return test_success();
    }
@@ -78,7 +70,7 @@ bool Test::Result::test_eq(const char* producer, const char* what,
                            const uint8_t produced[], size_t produced_size,
                            const uint8_t expected[], size_t expected_size)
    {
-   if(produced_size == expected_size && same_mem(produced, expected, expected_size))
+   if(produced_size == expected_size && Botan::same_mem(produced, expected, expected_size))
       return test_success();
 
    std::ostringstream err;
@@ -109,14 +101,14 @@ bool Test::Result::test_eq(const char* producer, const char* what,
    for(size_t i = 0; i != xor_diff.size(); ++i)
       {
       xor_diff[i] = produced[i] ^ expected[i];
-      bits_different += hamming_weight(xor_diff[i]);
+      bits_different += Botan::hamming_weight(xor_diff[i]);
       }
 
-   err << "Produced: " << hex_encode(produced, produced_size) << "\n";
-   err << "Expected: " << hex_encode(expected, expected_size) << "\n";
+   err << "Produced: " << Botan::hex_encode(produced, produced_size) << "\n";
+   err << "Expected: " << Botan::hex_encode(expected, expected_size) << "\n";
    if(bits_different > 0)
       {
-      err << "XOR Diff: " << hex_encode(xor_diff)
+      err << "XOR Diff: " << Botan::hex_encode(xor_diff)
           << " (" << bits_different << " bits different)\n";
       }
 
@@ -283,6 +275,26 @@ std::map<std::string, Test*>& Test::global_registry()
    return g_test_registry;
    }
 
+namespace {
+
+template<typename K, typename V>
+std::set<K> map_keys_as_set(const std::map<K, V>& kv)
+   {
+   std::set<K> s;
+   for(auto&& i : kv)
+      {
+      s.insert(i.first);
+      }
+   return s;
+   }
+
+}
+
+std::set<std::string> Botan_Tests::Test::registered_tests()
+   {
+   return map_keys_as_set(Test::global_registry());
+   }
+
 //static
 Test* Test::get_test(const std::string& test_name)
    {
@@ -304,6 +316,49 @@ std::vector<Test::Result> Test::run_test(const std::string& what)
    }
 
 //static
+size_t Test::run_tests(const std::set<std::string>& requested,
+                       std::ostream& out)
+   {
+   size_t fail_cnt = 0;
+
+   for(auto&& test_name : requested)
+      {
+      std::vector<Test::Result> results;
+
+      try
+         {
+         Test* test = get_test(test_name);
+
+         if(!test)
+            {
+            results.push_back(Test::Result::Failure(test_name, "missing"));
+            }
+         else
+            {
+            std::vector<Test::Result> r = test->run();
+            results.insert(results.end(), r.begin(), r.end());
+            }
+         }
+      catch(std::exception& e)
+         {
+         results.push_back(Test::Result::Failure(test_name, e.what()));
+         }
+      catch(...)
+         {
+         results.push_back(Test::Result::Failure(test_name, "unknown exception"));
+         }
+
+      std::string report;
+      size_t failed = 0;
+      Test::summarize(results, report, fail_cnt);
+      out << report;
+      fail_cnt += failed;
+      }
+
+   return fail_cnt;
+   }
+
+//static
 std::string Test::data_dir(const std::string& what)
    {
    return std::string(TEST_DATA_DIR) + "/" + what;
@@ -318,6 +373,7 @@ std::string Test::data_file(const std::string& what)
 //static
 size_t Test::soak_level()
    {
+   // TODO: make configurable
    return 5;
    }
 
@@ -489,10 +545,14 @@ std::string Text_Based_Test::get_next_line()
                {
                std::vector<std::string> fs = Botan::get_files_recursive(m_data_dir);
 
-               if(fs.empty())
+               if(fs.empty() && m_data_dir.find(".vec") != std::string::npos)
+                  {
                   m_srcs.push_back(m_data_dir);
+                  }
                else
+                  {
                   m_srcs.assign(fs.begin(), fs.end());
+                  }
 
                m_first = false;
                }
@@ -588,26 +648,7 @@ std::vector<Test::Result> Text_Based_Test::run()
    return results;
    }
 
-size_t basic_error_report(const std::string& test)
-   {
-   std::vector<Test::Result> results = Test::run_test(test);
-
-   std::string report;
-   size_t fail_cnt = 0;
-   Test::summarize(results, report, fail_cnt);
-
-   std::cout << report;
-   return fail_cnt;
-   }
-
 }
-
-
-
-Botan::RandomNumberGenerator& test_rng()
-   {
-   return Botan_Tests::Test::rng();
-   }
 
 size_t warn_about_missing(const std::string& whatever)
    {
@@ -622,148 +663,49 @@ size_t warn_about_missing(const std::string& whatever)
    return 0;
    }
 
-size_t run_tests(const std::vector<std::pair<std::string, test_fn>>& tests)
-   {
-   size_t fails = 0;
-
-   for(const auto& row : tests)
-      {
-      auto name = row.first;
-      auto test = row.second;
-      try
-         {
-         fails += test();
-         }
-      catch(std::exception& e)
-         {
-         std::cout << name << ": Exception escaped test: " << e.what() << std::endl;
-         ++fails;
-         }
-      catch(...)
-         {
-         std::cout << name << ": Exception escaped test" << std::endl;
-         ++fails;
-         }
-      }
-
-   // Summary for test suite
-   std::cout << "===============" << std::endl;
-   test_report("Tests", 0, fails);
-
-   return fails;
-   }
-
-void test_report(const std::string& name, size_t ran, size_t failed)
-   {
-   std::cout << name;
-
-   if(ran > 0)
-      std::cout << " " << ran << " tests";
-
-   if(failed)
-      std::cout << " " << failed << " FAILs" << std::endl;
-   else
-      std::cout << " all ok" << std::endl;
-   }
-
 namespace {
 
-int help(char* argv0)
+int help(std::ostream& out, const std::set<std::string>& all_tests, char* argv0)
    {
-   std::cout << "Usage: " << argv0 << " [suite]" << std::endl;
-   std::cout << "Suites: all (default), block, hash, bigint, rsa, ecdsa, ..." << std::endl;
-   return 1;
-   }
+   std::ostringstream err;
 
-int test_catchy()
-   {
-   // drop arc and arv for now
-   int catchy_result = Catch::Session().run();
-   if (catchy_result != 0)
+   err << "Usage:\n"
+       << argv0 << " test1 test2 ...\n"
+       << "Available tests: ";
+
+   for(auto&& test : all_tests)
       {
-      std::exit(EXIT_FAILURE);
+      err << test << " ";
       }
-   return 0;
+   err << "\n";
+
+   out << err.str();
+   return 1;
    }
 
 }
 
 int main(int argc, char* argv[])
    {
-   if(argc != 1 && argc != 2)
-      return help(argv[0]);
+   const std::set<std::string> all_tests = Botan_Tests::Test::registered_tests();
 
-   std::string target = "all";
+   std::set<std::string> req(argv + 1, argv + argc);
 
-   if(argc == 2)
-      target = argv[1];
-
-   if(target == "-h" || target == "--help" || target == "help")
-      return help(argv[0]);
-
-   std::vector<std::pair<std::string, test_fn>> tests;
-
-#define DEF_TEST(test) do { if(target == "all" || target == #test) \
-      tests.push_back(std::make_pair(#test, test_ ## test));       \
-   } while(0)
-
-   // unittesting framework in sub-folder tests/catchy
-   DEF_TEST(catchy);
-
-   DEF_TEST(block);
-   DEF_TEST(modes);
-   DEF_TEST(aead);
-   DEF_TEST(ocb);
-
-   DEF_TEST(stream);
-   DEF_TEST(hash);
-   DEF_TEST(mac);
-   DEF_TEST(pbkdf);
-   DEF_TEST(kdf);
-   DEF_TEST(keywrap);
-   DEF_TEST(rngs);
-   DEF_TEST(passhash9);
-   DEF_TEST(bcrypt);
-   DEF_TEST(cryptobox);
-   DEF_TEST(tss);
-   DEF_TEST(rfc6979);
-   DEF_TEST(srp6);
-
-   DEF_TEST(bigint);
-
-   DEF_TEST(rsa);
-   DEF_TEST(rw);
-   DEF_TEST(dsa);
-   DEF_TEST(nr);
-   DEF_TEST(dh);
-   DEF_TEST(dlies);
-   DEF_TEST(elgamal);
-   DEF_TEST(ecc_pointmul);
-   DEF_TEST(ecdsa);
-   DEF_TEST(gost_3410);
-   DEF_TEST(curve25519);
-   DEF_TEST(gf2m);
-   DEF_TEST(mceliece);
-   DEF_TEST(mce);
-
-   DEF_TEST(ecc_unit);
-   DEF_TEST(ecc_randomized);
-   DEF_TEST(ecdsa_unit);
-   DEF_TEST(ecdh_unit);
-   DEF_TEST(pk_keygen);
-   DEF_TEST(cvc);
-   DEF_TEST(x509);
-   DEF_TEST(x509_x509test);
-   DEF_TEST(nist_x509);
-   DEF_TEST(tls);
-   DEF_TEST(compression);
-   DEF_TEST(fuzzer);
-
-   if(tests.empty())
+   if(req.count("help") || req.count("--help") || req.count("-h"))
       {
-      std::cout << "No tests selected by target '" << target << "'" << std::endl;
-      return 1;
+      return help(std::cout, all_tests, argv[0]);
       }
 
-   return run_tests(tests);
+   if(req.empty())
+      {
+      req = all_tests;
+      }
+
+   size_t failed = Botan_Tests::Test::run_tests(req, std::cout);
+
+   std::cout << "Botan test suite complete, " << failed << " tests failed\n";
+
+   if(failed)
+      return 2;
+   return 0;
    }

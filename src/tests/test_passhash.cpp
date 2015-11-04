@@ -102,13 +102,3 @@ BOTAN_REGISTER_TEST("passhash9", Passhash9_Tests);
 }
 
 }
-
-size_t test_bcrypt()
-   {
-   return Botan_Tests::basic_error_report("bcrypt");
-   }
-
-size_t test_passhash9()
-   {
-   return Botan_Tests::basic_error_report("passhash9");
-   }

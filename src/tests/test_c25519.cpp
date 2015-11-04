@@ -107,8 +107,3 @@ BOTAN_REGISTER_TEST("curve25519_rt", Curve25519_Roundtrip_Test);
 #endif
 
 }
-
-size_t test_curve25519()
-   {
-   return Botan_Tests::basic_error_report("curve25519_scalar") + Botan_Tests::basic_error_report("curve25519_rt");
-   }

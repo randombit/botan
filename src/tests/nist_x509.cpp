@@ -298,7 +298,10 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
 
          const std::vector<std::string> all_files = Botan::get_files_recursive(test_dir);
          if (all_files.empty())
-            std::cout << "Warning: No test files found in '" << test_dir << "'" << std::endl;
+            {
+            result.test_failure("No test files found in " + test_dir);
+            continue;
+            }
 
          std::vector<std::string> certs, crls;
          std::string root_cert, to_verify;
@@ -367,14 +370,3 @@ BOTAN_REGISTER_TEST("nist_x509", NIST_Path_Validation_Tests);
 }
 
 }
-
-size_t test_x509_x509test()
-   {
-   return Botan_Tests::basic_error_report("x509test");
-   }
-
-size_t test_nist_x509()
-   {
-   return Botan_Tests::basic_error_report("nist_x509");
-   }
-
