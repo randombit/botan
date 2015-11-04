@@ -129,11 +129,14 @@ void Credentials_Manager::verify_certificate_chain(
 
    Path_Validation_Restrictions restrictions;
 
-   auto result = x509_path_validate(cert_chain,
-                                    restrictions,
-                                    trusted_CAs,
-                                    purported_hostname,
-                                    choose_leaf_usage(type));
+   Path_Validation_Result result = x509_path_validate(cert_chain,
+                                                      restrictions,
+                                                      trusted_CAs,
+                                                      purported_hostname,
+                                                      choose_leaf_usage(type));
+
+   if(!result.successful_validation())
+      throw std::runtime_error("Certificate validation failure: " + result.result_string());
 
    if(!cert_in_some_store(trusted_CAs, result.trust_root()))
       throw std::runtime_error("Certificate chain roots in unknown/untrusted CA");

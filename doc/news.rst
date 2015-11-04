@@ -4,6 +4,12 @@ Release Notes
 Version 1.11.24, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* When the bugs affecting X.509 path validation were fixed in 1.11.23, a check
+  in Credentials_Manager::verify_certificate_chain was accidentally removed
+  which caused path validation failures not to be signaled to the TLS layer.
+  Thus in 1.11.23 certificate authentication in TLS is bypassed.
+  Reported by Florent Le Coz in GH #324
+
 * Fixed an endian dependency in McEliece key generation which caused
   keys to be generated differently on big and little endian systems,
   even when using a deterministic PRNG with the same seed.
