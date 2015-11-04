@@ -17,34 +17,47 @@
 #include <unordered_map>
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1800)
-    #define NOMINMAX 1
-    #define WIN32_LEAN_AND_MEAN 1
-    #include <Windows.h>
+
+   #define BOTAN_WORKAROUND_GH_321
+   #define NOMINMAX 1
+   #define WIN32_LEAN_AND_MEAN 1
+   #include <Windows.h>
+
+namespace Botan {
+
+class WinCS_Mutex
+   {
+   public:
+       WinCS_Mutex(CRITICAL_SECTION& cs): m_cs(cs)
+          {
+          InitializeCriticalSection(&m_cs);
+          }
+          
+       ~WinCS_Mutex()
+          {
+          DeleteCriticalSection(&m_cs);
+          }
+
+       void lock()
+          {
+          EnterCriticalSection(&m_cs);
+          }
+
+       void unlock()
+          {
+          LeaveCriticalSection(&m_cs);
+          }
+
+    private:
+        CRITICAL_SECTION   m_cs;
+   };
+
+} // namespace
+
 #endif
 
 namespace Botan {
 
-#if defined(_MSC_VER) && (_MSC_VER <= 1800)
-class Windows_Lock
-   {
-   public:
-       Windows_Lock(CRITICAL_SECTION& cs): m_cs(cs)
-          {
-          EnterCriticalSection(&m_cs);
-          }
-          
-       ~Windows_Lock()
-          {
-          LeaveCriticalSection(&m_cs);
-          }
-    private:
-        CRITICAL_SECTION&   m_cs;
-   };
-
-   #define ALGO_REGISTRY_LOCK(_x) Windows_Lock lock(_x)
-#else
-   #define ALGO_REGISTRY_LOCK(_x) std::unique_lock<std::mutex> lock(_x)
-#endif
 
 template<typename T>
 class Algo_Registry
@@ -62,14 +75,14 @@ class Algo_Registry
 
       void add(const std::string& name, const std::string& provider, maker_fn fn, byte pref)
          {
-         ALGO_REGISTRY_LOCK(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          if(!m_algo_info[name].add_provider(provider, fn, pref))
             throw std::runtime_error("Duplicated registration of " + name + "/" + provider);
          }
 
       std::vector<std::string> providers_of(const Spec& spec)
          {
-         ALGO_REGISTRY_LOCK(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          auto i = m_algo_info.find(spec.algo_name());
          if(i != m_algo_info.end())
             return i->second.providers();
@@ -78,7 +91,7 @@ class Algo_Registry
 
       void set_provider_preference(const Spec& spec, const std::string& provider, byte pref)
          {
-         ALGO_REGISTRY_LOCK(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          auto i = m_algo_info.find(spec.algo_name());
          if(i != m_algo_info.end())
             i->second.set_pref(provider, pref);
@@ -120,23 +133,18 @@ class Algo_Registry
          };
 
    private:
-      Algo_Registry()
-         {
-#if defined(_MSC_VER) && (_MSC_VER <= 1800)
-         InitializeCriticalSection(&m_mutex);
+
+#if defined(BOTAN_WORKAROUND_GH_321)
+      using mutex = WinCS_Mutex;
+#else
+      using mutex = std::mutex;
 #endif
-         }
-         
-#if defined(_MSC_VER) && (_MSC_VER <= 1800)
-      ~Algo_Registry()
-         {
-         DeleteCriticalSection(&m_mutex);
-         }
-#endif
+
+      Algo_Registry()  { }
 
       std::vector<maker_fn> get_makers(const Spec& spec, const std::string& provider)
          {
-         ALGO_REGISTRY_LOCK(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          return m_algo_info[spec.algo_name()].get_makers(provider);
          }
 
@@ -198,11 +206,7 @@ class Algo_Registry
             std::unordered_map<std::string, maker_fn> m_maker_fns;
          };
 
-#if defined(_MSC_VER) && (_MSC_VER <= 1800)
-      CRITICAL_SECTION m_mutex;
-#else
-      std::mutex m_mutex;
-#endif
+      mutex m_mutex;
       std::unordered_map<std::string, Algo_Info> m_algo_info;
    };
 
