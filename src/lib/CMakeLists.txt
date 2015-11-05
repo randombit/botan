@@ -1,5 +1,5 @@
 # Where ./configure.py puts them
-set(INCLUDE_DIR "../../build/include")
+set(INCLUDE_DIR "${CMAKE_SOURCE_DIR}/build/include")
 include_directories(${INCLUDE_DIR})
 
 # libbotan
@@ -304,6 +304,10 @@ set(BOTAN_SRC
     utils/zero_mem.cpp
 )
 
+# add a new target to show help for options that we add
+# use add_custom_command(TARGET Botan-help ...) to extend the help text
+add_custom_target(Botan-help)
+
 # AVX2
 set_source_files_properties(block/threefish_avx2/threefish_avx2.cpp PROPERTIES COMPILE_FLAGS "-mavx2")
 # SSSE3
@@ -312,38 +316,48 @@ set_source_files_properties(block/aes_ssse3/aes_ssse3.cpp PROPERTIES COMPILE_FLA
 set_source_files_properties(block/aes_ni/aes_ni.cpp        PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
 set_source_files_properties(modes/aead/gcm/clmul/clmul.cpp PROPERTIES COMPILE_FLAGS "-maes -mpclmul -mssse3")
 
-find_package( LZMA )
-if ( LZMA_FOUND )
-    include_directories(${LZMA_INCLUDE_DIR})
-    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${LZMA_LIBRARIES})
-    set(BOTAN_SRC ${BOTAN_SRC}
-        compression/lzma/lzma.cpp)
-endif( LZMA_FOUND )
+if ( WITH_LZMA )
+    find_package( LZMA )
+    if ( LZMA_FOUND )
+        include_directories(${LZMA_INCLUDE_DIR})
+        set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${LZMA_LIBRARIES})
+        set(BOTAN_SRC ${BOTAN_SRC}
+            compression/lzma/lzma.cpp)
+    endif( LZMA_FOUND )
+endif ( WITH_LZMA )
+add_custom_command(TARGET Botan-help
+    COMMAND echo "  To build with lzma support use: cmake -DWITH_LZMA=1")
 
-find_package( BZip2 )
-if ( BZIP2_FOUND )
-    include_directories(${BZIP_INCLUDE_DIRS})
-    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${BZIP2_LIBRARIES})
-    set(BOTAN_SRC ${BOTAN_SRC}
-        compression/bzip2/bzip2.cpp)
-endif( BZIP2_FOUND )
+if ( WITH_BZIP2 )
+    find_package( BZip2 )
+    if ( BZIP2_FOUND )
+        include_directories(${BZIP_INCLUDE_DIRS})
+        set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${BZIP2_LIBRARIES})
+        set(BOTAN_SRC ${BOTAN_SRC}
+            compression/bzip2/bzip2.cpp)
+    endif( BZIP2_FOUND )
+endif ( WITH_BZIP2 )
+add_custom_command(TARGET Botan-help
+    COMMAND echo "  To build with bzip2 support use: cmake -DWITH_BZIP2=1")
 
-find_package( ZLIB )
-if ( ZLIB_FOUND )
-    include_directories(${ZLIB_INCLUDE_DIRS})
-    set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${ZLIB_LIBRARIES})
-    set(BOTAN_SRC ${BOTAN_SRC}
-        compression/zlib/zlib.cpp)
-endif( ZLIB_FOUND )
+if ( WITH_ZLIB )
+    find_package( ZLIB )
+    if ( ZLIB_FOUND )
+        include_directories(${ZLIB_INCLUDE_DIRS})
+        set(BOTAN_LIBRARIES ${BOTAN_LIBRARIES} ${ZLIB_LIBRARIES})
+        set(BOTAN_SRC ${BOTAN_SRC}
+            compression/zlib/zlib.cpp)
+    endif( ZLIB_FOUND )
+endif ( WITH_ZLIB )
+add_custom_command(TARGET Botan-help
+    COMMAND echo "  To build with zlib support use: cmake -DWITH_ZLIB=1")
 
 set(extra_link_libraries)
 if(NOT WIN32)
     list(APPEND extra_link_libraries rt dl pthread)
 endif()
 
-# add a new target to show help for options that we add
-# use add_custom_command(TARGET Botan-help ...) to extend the help text
-add_custom_target(Botan-help)
+set(CMAKE_DEBUG_POSTFIX "d")
 
 if (NOT LIB_TYPE)
     set(LIB_TYPE STATIC)
@@ -356,4 +370,11 @@ message(STATUS "Building with LIB_TYPE=${LIB_TYPE}")
 add_library(botan ${LIB_TYPE} ${BOTAN_SRC})
 
 target_link_libraries(botan ${BOTAN_LIBRARIES} ${extra_link_libraries})
+
+file(GLOB include_install_files "${INCLUDE_DIR}/botan/*.h")
+foreach (include_install_file ${include_install_files})
+    get_filename_component(full_include_install_file ${include_install_file} REALPATH)
+    install(FILES ${full_include_install_file} DESTINATION "include/botan-1.11/botan/")
+endforeach (include_install_file ${include_instal_files})
+install(TARGETS botan ARCHIVE DESTINATION "lib/botan")
 
