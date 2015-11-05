@@ -104,6 +104,17 @@ bool cert_in_some_store(const std::vector<Certificate_Store*>& trusted_CAs,
    return false;
    }
 
+Usage_Type choose_leaf_usage(const std::string& ctx)
+   {
+   // These are reversed because ctx is denoting the current perspective
+   if(ctx == "tls-client")
+      return Usage_Type::TLS_SERVER_AUTH;
+   else if(ctx == "tls-server")
+      return Usage_Type::TLS_CLIENT_AUTH;
+   else
+      return Usage_Type::UNSPECIFIED;
+   }
+
 }
 
 void Credentials_Manager::verify_certificate_chain(
@@ -118,18 +129,17 @@ void Credentials_Manager::verify_certificate_chain(
 
    Path_Validation_Restrictions restrictions;
 
-   auto result = x509_path_validate(cert_chain,
-                                    restrictions,
-                                    trusted_CAs);
+   Path_Validation_Result result = x509_path_validate(cert_chain,
+                                                      restrictions,
+                                                      trusted_CAs,
+                                                      purported_hostname,
+                                                      choose_leaf_usage(type));
 
    if(!result.successful_validation())
       throw std::runtime_error("Certificate validation failure: " + result.result_string());
 
    if(!cert_in_some_store(trusted_CAs, result.trust_root()))
       throw std::runtime_error("Certificate chain roots in unknown/untrusted CA");
-
-   if(purported_hostname != "" && !cert_chain[0].matches_dns_name(purported_hostname))
-      throw std::runtime_error("Certificate did not match hostname");
    }
 
 }

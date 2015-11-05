@@ -220,6 +220,10 @@ BOTAN_DLL int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tag_siz
 BOTAN_DLL int botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl);
 BOTAN_DLL int botan_cipher_get_update_granularity(botan_cipher_t cipher, size_t* ug);
 
+BOTAN_DLL int botan_cipher_query_keylen(botan_cipher_t,
+                                        size_t* out_minimum_keylength,
+                                        size_t* out_maximum_keylength);
+
 BOTAN_DLL int botan_cipher_set_key(botan_cipher_t cipher,
                                    const uint8_t* key, size_t key_len);
 

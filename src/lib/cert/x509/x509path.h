@@ -84,7 +84,8 @@ class BOTAN_DLL Path_Validation_Result
       std::set<std::string> trusted_hashes() const;
 
       /**
-      * @return the trust root of the validation
+      * @return the trust root of the validation if successful
+      * throws an exception if the validation failed
       */
       const X509_Certificate& trust_root() const;
 
@@ -132,29 +133,6 @@ class BOTAN_DLL Path_Validation_Result
       std::vector<X509_Certificate> m_cert_path;
    };
 
-/**
-* PKIX Path Validation
-*/
-Path_Validation_Result BOTAN_DLL x509_path_validate(
-   const std::vector<X509_Certificate>& end_certs,
-   const Path_Validation_Restrictions& restrictions,
-   const std::vector<Certificate_Store*>& certstores);
-
-/**
-* PKIX Path Validation
-*/
-Path_Validation_Result BOTAN_DLL x509_path_validate(
-   const X509_Certificate& end_cert,
-   const Path_Validation_Restrictions& restrictions,
-   const std::vector<Certificate_Store*>& certstores);
-
-/**
-* PKIX Path Validation
-*/
-Path_Validation_Result BOTAN_DLL x509_path_validate(
-   const X509_Certificate& end_cert,
-   const Path_Validation_Restrictions& restrictions,
-   const Certificate_Store& store);
 
 /**
 * PKIX Path Validation
@@ -162,7 +140,39 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
 Path_Validation_Result BOTAN_DLL x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
    const Path_Validation_Restrictions& restrictions,
-   const Certificate_Store& store);
+   const std::vector<Certificate_Store*>& certstores,
+   const std::string& hostname = "",
+   Usage_Type usage = Usage_Type::UNSPECIFIED);
+
+/**
+* PKIX Path Validation
+*/
+Path_Validation_Result BOTAN_DLL x509_path_validate(
+   const X509_Certificate& end_cert,
+   const Path_Validation_Restrictions& restrictions,
+   const std::vector<Certificate_Store*>& certstores,
+   const std::string& hostname = "",
+   Usage_Type usage = Usage_Type::UNSPECIFIED);
+
+/**
+* PKIX Path Validation
+*/
+Path_Validation_Result BOTAN_DLL x509_path_validate(
+   const X509_Certificate& end_cert,
+   const Path_Validation_Restrictions& restrictions,
+   const Certificate_Store& store,
+   const std::string& hostname = "",
+   Usage_Type usage = Usage_Type::UNSPECIFIED);
+
+/**
+* PKIX Path Validation
+*/
+Path_Validation_Result BOTAN_DLL x509_path_validate(
+   const std::vector<X509_Certificate>& end_certs,
+   const Path_Validation_Restrictions& restrictions,
+   const Certificate_Store& store,
+   const std::string& hostname = "",
+   Usage_Type usage = Usage_Type::UNSPECIFIED);
 
 }
 

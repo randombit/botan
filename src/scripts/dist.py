@@ -42,8 +42,15 @@ def run_git(args):
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return check_subprocess_results(proc, 'git')
 
+def maybe_gpg(val):
+    # TODO: verify signatures
+    if 'BEGIN PGP SIGNATURE' in val:
+        return val.split('\n')[-2]
+    else:
+        return val.strip()
+
 def datestamp(tag):
-    ts = run_git(['show', '--no-patch', '--format=%ai', tag])
+    ts = maybe_gpg(run_git(['show', '--no-patch', '--format=%ai', tag]))
 
     ts_matcher = re.compile('^(\d{4})-(\d{2})-(\d{2}) \d{2}:\d{2}:\d{2} .*')
     match = ts_matcher.match(ts)
@@ -55,7 +62,7 @@ def datestamp(tag):
     return int(match.group(1) + match.group(2) + match.group(3))
 
 def revision_of(tag):
-    return run_git(['show', '--no-patch', '--format=%H', tag]).strip()
+    return maybe_gpg(run_git(['show', '--no-patch', '--format=%H', tag]))
 
 def extract_revision(revision, to):
     tar_val = run_git(['archive', '--format=tar', '--prefix=%s/' % (to), revision])
@@ -186,13 +193,15 @@ def main(args = None):
         else:
             return 'Botan-' + args[0]
 
-    logging.info('Creating release for version %s' % (target_version))
-
     rev_id = revision_of(target_version)
-    rel_date = datestamp(target_version)
 
     if rev_id == '':
         logging.error('No tag matching %s found' % (target_version))
+        return 2
+
+    rel_date = datestamp(target_version)
+    if rel_date == 0:
+        logging.error('No date found for version')
         return 2
 
     logging.info('Found %s at revision id %s released %d' % (target_version, rev_id, rel_date))

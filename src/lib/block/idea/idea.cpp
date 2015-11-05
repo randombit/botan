@@ -20,7 +20,7 @@ inline u16bit mul(u16bit x, u16bit y)
    {
    const u32bit P = static_cast<u32bit>(x) * y;
 
-   const u16bit Z_mask = static_cast<u16bit>(ct_expand_mask_32(P) & 0xFFFF);
+   const u16bit Z_mask = static_cast<u16bit>(CT::expand_mask(P) & 0xFFFF);
 
    const u32bit P_hi = P >> 16;
    const u32bit P_lo = P & 0xFFFF;
@@ -28,7 +28,7 @@ inline u16bit mul(u16bit x, u16bit y)
    const u16bit r_1 = (P_lo - P_hi) + (P_lo < P_hi);
    const u16bit r_2 = 1 - x - y;
 
-   return ct_select_mask_16(Z_mask, r_1, r_2);
+   return CT::select(Z_mask, r_1, r_2);
    }
 
 /*
@@ -62,9 +62,9 @@ void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
    {
    const size_t BLOCK_SIZE = 8;
 
-   BOTAN_CONST_TIME_POISON(in, blocks * 8);
-   BOTAN_CONST_TIME_POISON(out, blocks * 8);
-   BOTAN_CONST_TIME_POISON(K, 52 * 2);
+   CT::poison(in, blocks * 8);
+   CT::poison(out, blocks * 8);
+   CT::poison(K, 52);
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -101,9 +101,9 @@ void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
       store_be(out + BLOCK_SIZE*i, X1, X3, X2, X4);
       }
 
-   BOTAN_CONST_TIME_UNPOISON(in, blocks * 8);
-   BOTAN_CONST_TIME_UNPOISON(out, blocks * 8);
-   BOTAN_CONST_TIME_UNPOISON(K, 52 * 2);
+   CT::unpoison(in, blocks * 8);
+   CT::unpoison(out, blocks * 8);
+   CT::unpoison(K, 52);
    }
 
 }
@@ -132,9 +132,9 @@ void IDEA::key_schedule(const byte key[], size_t)
    EK.resize(52);
    DK.resize(52);
 
-   BOTAN_CONST_TIME_POISON(key, 16);
-   BOTAN_CONST_TIME_POISON(EK.data(), 52 * 2);
-   BOTAN_CONST_TIME_POISON(DK.data(), 52 * 2);
+   CT::poison(key, 16);
+   CT::poison(EK.data(), 52);
+   CT::poison(DK.data(), 52);
 
    for(size_t i = 0; i != 8; ++i)
       EK[i] = load_be<u16bit>(key, i);
@@ -168,9 +168,9 @@ void IDEA::key_schedule(const byte key[], size_t)
    DK[1] = -EK[49];
    DK[0] = mul_inv(EK[48]);
 
-   BOTAN_CONST_TIME_UNPOISON(key, 16);
-   BOTAN_CONST_TIME_UNPOISON(EK.data(), 52 * 2);
-   BOTAN_CONST_TIME_UNPOISON(DK.data(), 52 * 2);
+   CT::unpoison(key, 16);
+   CT::unpoison(EK.data(), 52);
+   CT::unpoison(DK.data(), 52);
    }
 
 void IDEA::clear()

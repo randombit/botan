@@ -14,7 +14,7 @@
 #ifndef BOTAN_TIMING_ATTACK_CM_H__
 #define BOTAN_TIMING_ATTACK_CM_H__
 
-#include <botan/types.h>
+#include <botan/secmem.h>
 #include <vector>
 
 #if defined(BOTAN_USE_CTGRIND)
@@ -27,105 +27,134 @@ extern "C" void ct_unpoison(const void* address, size_t length);
 
 namespace Botan {
 
+namespace CT {
+
+template<typename T>
+inline void poison(T* p, size_t n)
+   {
 #if defined(BOTAN_USE_CTGRIND)
-
-#define BOTAN_CONST_TIME_POISON(p, l) ct_poison(p, l)
-#define BOTAN_CONST_TIME_UNPOISON(p, l) ct_unpoison(p, l)
-
+   ct_poison(p, sizeof(T)*n);
 #else
-
-#define BOTAN_CONST_TIME_POISON(p, l)
-#define BOTAN_CONST_TIME_UNPOISON(p, l)
-
+   BOTAN_UNUSED(p);
+   BOTAN_UNUSED(n);
 #endif
+   }
+
+template<typename T>
+inline void unpoison(T* p, size_t n)
+   {
+#if defined(BOTAN_USE_CTGRIND)
+   ct_unpoison(p, sizeof(T)*n);
+#else
+   BOTAN_UNUSED(p);
+   BOTAN_UNUSED(n);
+#endif
+   }
+
+template<typename T>
+inline void unpoison(T& p)
+   {
+   unpoison(&p, 1);
+   }
 
 /*
+* T should be an unsigned machine integer type
 * Expand to a mask used for other operations
 * @param in an integer
-* @return 0 if in == 0 else 0xFFFFFFFF
+* @return If n is zero, returns zero. Otherwise
+* returns a T with all bits set for use as a mask with
+* select.
 */
-inline uint32_t ct_expand_mask_32(uint32_t x)
+template<typename T>
+inline T expand_mask(T x)
    {
-   // First fold x down to a single bit:
-   uint32_t r = x;
-   r |= r >> 16;
-   r |= r >> 8;
-   r |= r >> 4;
-   r |= r >> 2;
-   r |= r >> 1;
-   r &= 1;
-   // assumes 2s complement signed representation
-   r = ~(r - 1);
-   return r;
-   }
-
-inline uint32_t ct_select_mask_32(uint32_t mask, uint32_t a, uint32_t b)
-   {
-   return (a & mask) | (b & ~mask);
-   }
-
-inline uint32_t ct_is_zero_32(uint32_t x)
-   {
-   return ~ct_expand_mask_32(x);
-   }
-
-inline uint32_t ct_is_equal_32(uint32_t x, uint32_t y)
-   {
-   return ct_is_zero_32(x ^ y);
-   }
-
-inline uint16_t ct_expand_mask_16(uint16_t x)
-   {
-   uint16_t r = x;
-   r |= r >> 8;
-   r |= r >> 4;
-   r |= r >> 2;
-   r |= r >> 1;
+   T r = x;
+   // First fold r down to a single bit
+   for(size_t i = 1; i != sizeof(T)*8; i *= 2)
+      r |= r >> i;
    r &= 1;
    r = ~(r - 1);
    return r;
    }
 
-inline uint16_t ct_select_mask_16(uint16_t mask, uint16_t a, uint16_t b)
+template<typename T>
+inline T select(T mask, T from0, T from1)
    {
-   return (a & mask) | (b & ~mask);
+   return (from0 & mask) | (from1 & ~mask);
    }
 
-inline uint16_t ct_is_zero_16(uint16_t x)
+template<typename T>
+inline T is_zero(T x)
    {
-   return ~ct_expand_mask_16(x);
+   return ~expand_mask(x);
    }
 
-inline uint16_t ct_is_equal_16(uint16_t x, uint16_t y)
+template<typename T>
+inline T is_equal(T x, T y)
    {
-   return ct_is_zero_16(x ^ y);
+   return is_zero(x ^ y);
    }
 
-inline uint8_t ct_expand_mask_8(uint8_t x)
+template<typename T>
+inline T is_less(T x, T y)
    {
-   uint8_t r = x;
-   r |= r >> 4;
-   r |= r >> 2;
-   r |= r >> 1;
-   r &= 1;
-   r = ~(r - 1);
-   return r;
+   /*
+   This expands to a constant time sequence with GCC 5.2.0 on x86-64
+   but something more complicated may be needed for portable const time.
+   */
+   return expand_mask<T>(x < y);
    }
 
-inline uint8_t ct_select_mask_8(uint8_t mask, uint8_t a, uint8_t b)
+template<typename T>
+inline void conditional_copy_mem(T value,
+                                 T* to,
+                                 const T* from0,
+                                 const T* from1,
+                                 size_t bytes)
    {
-   return (a & mask) | (b & ~mask);
+   const T mask = CT::expand_mask(value);
+
+   for(size_t i = 0; i != bytes; ++i)
+      to[i] = CT::select(mask, from0[i], from1[i]);
    }
 
-inline uint8_t ct_is_zero_8(uint8_t x)
+template<typename T>
+inline T expand_top_bit(T a)
    {
-   return ~ct_expand_mask_8(x);
+   return expand_mask<T>(a >> (sizeof(T)*8-1));
    }
 
-inline uint8_t ct_is_equal_8(uint8_t x, uint8_t y)
+template<typename T>
+inline T max(T a, T b)
    {
-   return ct_is_zero_8(x ^ y);
+   const T a_larger = b - a; // negative if a is larger
+   return select(expand_top_bit(a), a, b);
    }
+
+template<typename T>
+inline T min(T a, T b)
+   {
+   const T a_larger = b - a; // negative if a is larger
+   return select(expand_top_bit(b), b, a);
+   }
+
+template<typename T, typename Alloc>
+std::vector<T, Alloc> strip_leading_zeros(const std::vector<T, Alloc>& input)
+   {
+   size_t leading_zeros = 0;
+
+   uint8_t only_zeros = 0xFF;
+
+   for(size_t i = 0; i != input.size(); ++i)
+      {
+      only_zeros &= CT::is_zero(input[i]);
+      leading_zeros += CT::select<uint8_t>(only_zeros, 1, 0);
+      }
+
+   return secure_vector<byte>(input.begin() + leading_zeros, input.end());
+   }
+
+}
 
 }
 

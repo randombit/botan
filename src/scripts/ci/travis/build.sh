@@ -7,10 +7,9 @@ if [ "$BUILD_MODE" = "static" ]; then
 elif [ "$BUILD_MODE" = "shared" ]; then
     CFG_FLAGS=()
 elif [ "$BUILD_MODE" = "coverage" ]; then
-    # lcov gets confused by symlinks
-    CFG_FLAGS=(--build-mode=coverage --link-method=copy)
+    CFG_FLAGS=(--with-coverage)
 elif [ "$BUILD_MODE" = "sanitizer" ]; then
-    CFG_FLAGS=(--build-mode=sanitizer)
+    CFG_FLAGS=(--with-sanitizer)
 fi
 
 if [ "$MODULES" = "min" ]; then
@@ -58,6 +57,14 @@ fi
 
 if [ "$MODULES" != "min" ] && [ "${TARGETOS:0:3}" != "ios" ]; then
     ./botan-test
+fi
+
+if [ "$MODULES" != "min" ] && [ "$BUILD_MODE" = "shared" ] && [ "$TARGETOS" = "desktop" ]
+then
+    python2 --version
+    python3 --version
+    LD_LIBRARY_PATH=. python2 src/python/botan.py
+    LD_LIBRARY_PATH=. python3 src/python/botan.py
 fi
 
 make install

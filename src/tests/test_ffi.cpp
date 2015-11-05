@@ -155,8 +155,7 @@ TEST_CASE("FFI PBKDF", "[ffi]")
    CHECK(iters_10ms >= 10000);
 
    /*
-    * Tests deactivated due to consistetly failing in debug mode where -W0 is set
-    * (./configure.py --build-mode=debug).
+    * Tests deactivated due to consistently failing when optimizations are disabled
     * See also: https://github.com/randombit/botan/commit/30b0e3c88e94ba04c1843798f7ac74a008e01d9b
     */
    /*
@@ -190,7 +189,7 @@ TEST_CASE("FFI bcrypt", "[ffi]")
    std::vector<uint8_t> outbuf(62);
    size_t ol = outbuf.size();
 
-   CHECK_THAT(botan_bcrypt_generate(outbuf.data(), &ol, "password", rng, 10, 0), Equals(0));
+   CHECK_THAT(botan_bcrypt_generate(outbuf.data(), &ol, "password", rng, 3, 0), Equals(0));
    botan_rng_destroy(rng);
 
    REQUIRE(botan_bcrypt_is_valid("wrong", reinterpret_cast<const char*>(outbuf.data())) < 0);
@@ -203,7 +202,7 @@ TEST_CASE("FFI RSA", "[ffi]")
    botan_rng_init(&rng, "system");
 
    botan_privkey_t priv;
-   REQUIRE_THAT(botan_privkey_create_rsa(&priv, rng, 2048), Equals(0));
+   REQUIRE_THAT(botan_privkey_create_rsa(&priv, rng, 1024), Equals(0));
 
    botan_pubkey_t pub;
    CHECK_THAT(botan_privkey_export_pubkey(&pub, priv), Equals(0));

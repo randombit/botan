@@ -1,25 +1,65 @@
 Release Notes
 ========================================
 
-Version 1.11.22, Not Yet Released
+Version 1.11.25, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* The routines for decoding PKCS #1 encryption and OAEP blocks have been
-  rewritten to run without secret indexes or branches. These cryptographic
-  operations are vulnerable to oracle attacks, including via side channels such
-  as timing or cache-based analysis. In theory it would be possible to attack
-  the previous implementations using such a side channel, which could allow
-  an attacker to mount a plaintext recovery attack.
+
+
+Version 1.11.24, 2015-11-04
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* When the bugs affecting X.509 path validation were fixed in 1.11.23, a check
+  in Credentials_Manager::verify_certificate_chain was accidentally removed
+  which caused path validation failures not to be signaled to the TLS layer.
+  Thus in 1.11.23 certificate authentication in TLS is bypassed.
+  Reported by Florent Le Coz in GH #324
+
+* Fixed an endian dependency in McEliece key generation which caused
+  keys to be generated differently on big and little endian systems,
+  even when using a deterministic PRNG with the same seed.
+
+* In `configure,py`, the flags for controlling use of debug, sanitizer, and
+  converage information have been split out into individual options
+  `--with-debug-info`, `--with-sanitizers`, and `--with-coverage`. These allow
+  enabling more than one in a build in a controlled way. The `--build-mode` flag
+  added in 1.11.17 has been removed.
+
+Version 1.11.23, 2015-10-26
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* CVE-2015-7824: An information leak allowed padding oracle attacks against
+  TLS CBC decryption. Found in a review by Sirrix AG and 3curity GmbH.
+
+* CVE-2015-7825: Validating a malformed certificate chain could cause an
+  infinite loop. Found in a review by Sirrix AG and 3curity GmbH.
+
+* CVE-2015-7826: X.509 path validation violated RFC 6125 and would accept
+  certificates which should not validate under those rules. In particular botan
+  would accept wildcard certificates as matching in situations where it should
+  not (for example it would erronously accept '*.example.com' as a valid
+  wildcard for 'foo.bar.example.com')
+
+* CVE-2015-7827: The routines for decoding PKCS #1 encryption and OAEP blocks
+  have been rewritten to run without secret indexes or branches. These
+  cryptographic operations are vulnerable to oracle attacks, including via side
+  channels such as timing or cache-based analysis. In theory it would be
+  possible to attack the previous implementations using such a side channel,
+  which could allow an attacker to mount a plaintext recovery attack.
 
   By writing the code such that it does not depend on secret inputs for branch
   or memory indexes, such a side channel would be much less likely to exist.
+
+  The OAEP code has previously made an attempt at constant time operation, but
+  it used a construct which many compilers converted into a conditional jump.
 
 * Add support for using ctgrind (https://github.com/agl/ctgrind) to test that
   sections of code do not use secret inputs to decide branches or memory indexes.
   The testing relies on dynamic checking using valgrind.
 
-  So far PKCS #1 decoding, OAEP decoding, IDEA, and Curve25519 have been notated
-  and confirmed to be constant time.
+  So far PKCS #1 decoding, OAEP decoding, Montgomery reduction, IDEA, and
+  Curve25519 have been notated and confirmed to be constant time on Linux/x86-64
+  when compiled by gcc.
 
 * Public key operations can now be used with specified providers by passing an
   additional parameter to the constructor of the PK operation.
@@ -30,6 +70,8 @@ Version 1.11.22, Not Yet Released
   periodically reinitializes the sequence of blinding values instead of always
   deriving the next value by squaring the previous ones. The reinitializion
   interval can be controlled by the build.h parameter BOTAN_BLINDING_REINIT_INTERVAL.
+
+* A bug decoding DTLS client hellos prevented session resumption for suceeding.
 
 * DL_Group now prohibits creating a group smaller than 1024 bits.
 
@@ -43,6 +85,11 @@ Version 1.11.22, Not Yet Released
 
 * The `configure.py` option `--no-autoload` is now also available
   under the more understandable name `--minimized-build`.
+
+* Note: 1.11.22 was briefly released on 2015-10-26. The only difference between
+  the two was a fix for a compilation problem in the OpenSSL RSA code.  As the
+  1.11.22 release had already been tagged it was simpler to immediately release
+  1.11.23 rather than redo the release.
 
 Version 1.11.21, 2015-10-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
