@@ -8,6 +8,9 @@
 #define BOTAN_TEST_PUBKEY_H__
 
 #include "tests.h"
+
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+
 #include <botan/pubkey.h>
 
 namespace Botan_Tests {
@@ -84,6 +87,19 @@ class PK_Key_Agreement_Test : public Text_Based_Test
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override;
    };
 
+class PK_Key_Generation_Test : public Test
+   {
+   protected:
+      std::vector<Test::Result> run() override;
+
+      virtual std::vector<std::string> keygen_params() const = 0;
+
+      virtual std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
+                                                           const std::string& param) const = 0;
+   private:
+      Test::Result test_key(const std::string& algo, const Botan::Private_Key& key);
+   };
+
 void check_invalid_signatures(Test::Result& result,
                               Botan::PK_Verifier& verifier,
                               const std::vector<uint8_t>& message,
@@ -95,5 +111,7 @@ void check_invalid_ciphertexts(Test::Result& result,
                                const std::vector<uint8_t>& ciphertext);
 
 }
+
+#endif
 
 #endif

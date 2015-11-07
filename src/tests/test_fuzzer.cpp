@@ -59,12 +59,12 @@ class Fuzzer_Input_Tests : public Test
                {
                // TODO: check for memory consumption?
                Botan::X509_Certificate cert(vec_file);
-               //result.test_failure("Accepted invalid certificate");
                }
             catch(std::exception& e)
                {
-               result.test_note("Rejected invalid certificate");
                }
+
+            result.test_success();
 
             auto end = std::chrono::steady_clock::now();
 

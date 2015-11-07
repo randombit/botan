@@ -45,7 +45,22 @@ class NR_KAT_Tests : public PK_Signature_Generation_Test
          }
    };
 
+class NR_Keygen_Tests : public PK_Key_Generation_Test
+   {
+   public:
+      std::vector<std::string> keygen_params() const override { return { "dsa/jce/1024", "dsa/botan/2048" }; }
+
+      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
+                                                   const std::string& param) const override
+         {
+         Botan::DL_Group group(param);
+         std::unique_ptr<Botan::Private_Key> key(new Botan::NR_PrivateKey(rng, group));
+         return key;
+         }
+   };
+
 BOTAN_REGISTER_TEST("nr_kat", NR_KAT_Tests);
+BOTAN_REGISTER_TEST("nr_keygen", NR_Keygen_Tests);
 
 #endif
 

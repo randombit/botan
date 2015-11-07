@@ -4,51 +4,17 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "tests.h"
+#include "test_pubkey.h"
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
 
 #include "test_rng.h"
-#include "test_pubkey.h"
 
-#include <botan/oids.h>
+#include <botan/pubkey.h>
 #include <botan/x509_key.h>
 #include <botan/pkcs8.h>
-#include <botan/pubkey.h>
-#include <botan/numthry.h>
+#include <botan/oids.h>
 #include <botan/hex.h>
-
-#if defined(BOTAN_HAS_RSA)
-  #include <botan/rsa.h>
-#endif
-
-#if defined(BOTAN_HAS_DSA)
-  #include <botan/dsa.h>
-#endif
-
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-  #include <botan/dh.h>
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-  #include <botan/nr.h>
-#endif
-
-#if defined(BOTAN_HAS_RW)
-  #include <botan/rw.h>
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ecdsa.h>
-#endif
-
-#if defined(BOTAN_HAS_ECDH)
-  #include <botan/ecdh.h>
-#endif
-
-#if defined(BOTAN_HAS_GOST_34_10_2001)
-  #include <botan/gost_3410.h>
-#endif
 
 namespace Botan_Tests {
 
@@ -208,136 +174,77 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string&, const VarMa
    return result;
    }
 
-namespace {
-
-class PK_Keygen_Tests : public Test
+std::vector<Test::Result> PK_Key_Generation_Test::run()
    {
-   public:
-      std::vector<Test::Result> run() override
-         {
-         const std::vector<std::string> modp_groups = { "modp/ietf/1024",
-                                                        "modp/ietf/2048",
-                                                        "dsa/jce/1024" };
-         const std::vector<std::string> dsa_groups = { "dsa/jce/1024", "dsa/botan/2048" };
+   std::vector<Test::Result> results;
 
-         const std::vector<std::string> ecdsa_groups = { "secp256r1", "secp256k1", "secp384r1", "secp521r1" };
-         const std::vector<std::string> gost_groups = { "gost_256A", "secp256r1" };
+   for(auto&& param : keygen_params())
+      {
+      std::unique_ptr<Botan::Private_Key> key = make_key(Test::rng(), param);
 
-         std::vector<Test::Result> results;
+      results.push_back(test_key(key->algo_name() + " " + param, *key));
+      }
+   return results;
+   }
 
-#if defined(BOTAN_HAS_RSA)
-         results.push_back(test_key("RSA 1024", new Botan::RSA_PrivateKey(Test::rng(), 1024)));
-#endif
+Test::Result
+PK_Key_Generation_Test::test_key(const std::string& algo, const Botan::Private_Key& key)
+   {
+   Test::Result result(algo + " keygen");
 
-#if defined(BOTAN_HAS_RW)
-         results.push_back(test_key("RW 1024", new Botan::RW_PrivateKey(Test::rng(), 1024)));
-#endif
+   const std::string pub_pem = Botan::X509::PEM_encode(key);
 
+   try
+      {
+      Botan::DataSource_Memory input_pub(pub_pem);
+      std::unique_ptr<Botan::Public_Key> restored_pub(Botan::X509::load_key(input_pub));
 
-#if defined(BOTAN_HAS_DL_GROUP)
-         for(auto&& group_name : modp_groups)
-            {
-            Botan::DL_Group group(group_name);
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-            results.push_back(test_key("DH " + group_name, new Botan::DH_PrivateKey(Test::rng(), group)));
-#endif
+      result.test_eq("recovered public key from private", restored_pub.get(), true);
+      result.test_eq("public key has same type", restored_pub->algo_name(), key.algo_name());
+      result.test_eq("public key passes checks", restored_pub->check_key(Test::rng(), false), true);
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure("roundtrip public key", e.what());
+      }
 
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-            results.push_back(test_key("NR " + group_name, new Botan::NR_PrivateKey(Test::rng(), group)));
-#endif
-            }
+   const std::string priv_pem = Botan::PKCS8::PEM_encode(key);
 
-#if defined(BOTAN_HAS_DSA)
-         for(auto&& group_name : dsa_groups)
-            {
-            Botan::DL_Group group(group_name);
-            results.push_back(test_key("DSA " + group_name,
-                                       new Botan::DSA_PrivateKey(Test::rng(), group)));
-            }
-#endif
+   try
+      {
+      Botan::DataSource_Memory input_priv(priv_pem);
+      std::unique_ptr<Botan::Private_Key> restored_priv(
+         Botan::PKCS8::load_key(input_priv, Test::rng()));
 
-#endif
+      result.test_eq("recovered private key from blob", restored_priv.get(), true);
+      result.test_eq("reloaded key has same type", restored_priv->algo_name(), key.algo_name());
+      result.test_eq("private key passes checks", restored_priv->check_key(Test::rng(), false), true);
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure("roundtrip private key", e.what());
+      }
 
-#if defined(BOTAN_HAS_ECC_GROUP)
-         for(auto&& group_name : ecdsa_groups)
-            {
-            Botan::EC_Group group(group_name);
+   const std::string passphrase = Test::random_password();
+   const std::string enc_priv_pem = Botan::PKCS8::PEM_encode(key, Test::rng(), passphrase,
+                                                             std::chrono::milliseconds(10));
+   try
+      {
+      Botan::DataSource_Memory input_priv(priv_pem);
+      std::unique_ptr<Botan::Private_Key> restored_priv(
+         Botan::PKCS8::load_key(input_priv, Test::rng(), passphrase));
 
-#if defined(BOTAN_HAS_ECDSA)
-            results.push_back(test_key("ECDSA " + group_name,
-                                       new Botan::ECDSA_PrivateKey(Test::rng(), group)));
-#endif
+      result.test_eq("recovered private key from encrypted blob", restored_priv.get(), true);
+      result.test_eq("reloaded key has same type", restored_priv->algo_name(), key.algo_name());
+      result.test_eq("private key passes checks", restored_priv->check_key(Test::rng(), false), true);
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure("roundtrip private key", e.what());
+      }
 
-#if defined(BOTAN_HAS_ECDH)
-            results.push_back(test_key("ECDH " + group_name,
-                                       new Botan::ECDH_PrivateKey(Test::rng(), group)));
-#endif
-            }
-
-#if defined(BOTAN_HAS_GOST_34_10_2001)
-         for(auto&& group_name : gost_groups)
-            {
-            results.push_back(test_key("GOST 34.10 " + group_name,
-                                       new Botan::GOST_3410_PrivateKey(Test::rng(), Botan::EC_Group(group_name))));
-            }
-#endif
-
-#endif
-
-         return results;
-         }
-
-   private:
-      Test::Result test_key(const std::string& algo, Botan::Private_Key* keyp)
-         {
-         std::unique_ptr<Botan::Private_Key> key(keyp); // assume ownership
-
-         Test::Result result(algo + " keygen");
-
-         const std::string pub_pem = Botan::X509::PEM_encode(*key);
-
-         try
-            {
-            Botan::DataSource_Memory input_pub(pub_pem);
-            std::unique_ptr<Botan::Public_Key> restored_pub(Botan::X509::load_key(input_pub));
-
-            result.test_eq("recovered public key from private", restored_pub.get(), true);
-
-            result.test_eq("public key has same type", restored_pub->algo_name(), key->algo_name());
-
-            result.test_eq("public key passes checks", restored_pub->check_key(Test::rng(), false), true);
-            }
-         catch(std::exception& e)
-            {
-            result.test_failure("roundtrip public key", e.what());
-            }
-
-         const std::string priv_pem = Botan::PKCS8::PEM_encode(*key);
-
-         try
-            {
-            Botan::DataSource_Memory input_priv(priv_pem);
-            std::unique_ptr<Botan::Private_Key> restored_priv(
-               Botan::PKCS8::load_key(input_priv, Test::rng()));
-
-            result.test_eq("recovered private key from blob", restored_priv.get(), true);
-
-            result.test_eq("reloaded key has same type", restored_priv->algo_name(), key->algo_name());
-
-            result.test_eq("private key passes checks", restored_priv->check_key(Test::rng(), false), true);
-            }
-         catch(std::exception& e)
-            {
-            result.test_failure("roundtrip private key", e.what());
-            }
-
-         return result;
-         }
-   };
-
-BOTAN_REGISTER_TEST("pk_keygen", PK_Keygen_Tests);
-
-}
+   return result;
+   }
 
 }
 

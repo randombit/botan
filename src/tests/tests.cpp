@@ -475,6 +475,12 @@ Botan::RandomNumberGenerator& Test::rng()
 #endif
    }
 
+std::string Test::random_password()
+   {
+   const size_t len = 1 + Test::rng().next_byte() % 32;
+   return Botan::hex_encode(Test::rng().random_vec(len));
+   }
+
 Text_Based_Test::Text_Based_Test(const std::string& data_dir,
                                  const std::vector<std::string>& required_keys,
                                  const std::vector<std::string>& optional_keys) :

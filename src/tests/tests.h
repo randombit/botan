@@ -211,6 +211,7 @@ class Test
       static size_t soak_level();
 
       static Botan::RandomNumberGenerator& rng();
+      static std::string random_password();
    };
 
 #define BOTAN_REGISTER_TEST(type, Test_Class) namespace { Test::Registration reg_ ## Test_Class ## _tests(type, new Test_Class); }

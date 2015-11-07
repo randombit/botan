@@ -83,9 +83,24 @@ class RSA_Signature_Verify_Tests : public PK_Signature_Verification_Test
          }
    };
 
-BOTAN_REGISTER_TEST("rsa_enc", RSA_ES_KAT_Tests);
-BOTAN_REGISTER_TEST("rsa_sig", RSA_Signature_KAT_Tests);
-BOTAN_REGISTER_TEST("rsa_ver", RSA_Signature_Verify_Tests);
+class RSA_Keygen_Tests : public PK_Key_Generation_Test
+   {
+   public:
+      std::vector<std::string> keygen_params() const override { return { "1024", "1280" }; }
+
+      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
+                                                   const std::string& param) const override
+         {
+         size_t bits = Botan::to_u32bit(param);
+         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(rng, bits));
+         return key;
+         }
+   };
+
+BOTAN_REGISTER_TEST("rsa_encrypt", RSA_ES_KAT_Tests);
+BOTAN_REGISTER_TEST("rsa_sign", RSA_Signature_KAT_Tests);
+BOTAN_REGISTER_TEST("rsa_verify", RSA_Signature_Verify_Tests);
+BOTAN_REGISTER_TEST("rsa_keygen", RSA_Keygen_Tests);
 
 #endif
 
