@@ -49,6 +49,8 @@ class Message_Auth_Tests : public Text_Based_Test
                continue;
                }
 
+            result.test_eq(provider.c_str(), mac->name(), algo);
+
             mac->set_key(key);
 
             mac->update(input);

@@ -60,7 +60,7 @@ class BOTAN_DLL SHA_512 : public MDx_HashFunction
 class BOTAN_DLL SHA_512_256 : public MDx_HashFunction
    {
    public:
-      std::string name() const override { return "SHA-512/256"; }
+      std::string name() const override { return "SHA-512-256"; }
       size_t output_length() const override { return 32; }
       HashFunction* clone() const override { return new SHA_512_256; }
 

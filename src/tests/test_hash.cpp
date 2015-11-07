@@ -43,6 +43,8 @@ class Hash_Function_Tests : public Text_Based_Test
                continue;
                }
 
+            result.test_eq(provider.c_str(), hash->name(), algo);
+
             hash->update(input);
 
             result.test_eq(provider, "hashing", hash->final(), expected);

@@ -40,6 +40,11 @@ class Block_Cipher_Tests : public Text_Based_Test
                continue;
                }
 
+            result.test_eq(provider.c_str(), cipher->name(), algo);
+            result.test_gte(provider.c_str(), cipher->parallelism(), 1);
+            result.test_gte(provider.c_str(), cipher->block_size(), 8);
+            result.test_gte(provider.c_str(), cipher->parallel_bytes(), cipher->block_size() * cipher->parallelism());
+
             cipher->set_key(key);
             std::vector<uint8_t> buf = input;
 
