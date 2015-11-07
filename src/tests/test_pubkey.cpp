@@ -233,6 +233,8 @@ class PK_Keygen_Tests : public Test
          results.push_back(test_key("RW 1024", new Botan::RW_PrivateKey(Test::rng(), 1024)));
 #endif
 
+
+#if defined(BOTAN_HAS_DL_GROUP)
          for(auto&& group_name : modp_groups)
             {
             Botan::DL_Group group(group_name);
@@ -254,6 +256,9 @@ class PK_Keygen_Tests : public Test
             }
 #endif
 
+#endif
+
+#if defined(BOTAN_HAS_ECC_GROUP)
          for(auto&& group_name : ecdsa_groups)
             {
             Botan::EC_Group group(group_name);
@@ -277,11 +282,13 @@ class PK_Keygen_Tests : public Test
             }
 #endif
 
+#endif
+
          return results;
          }
 
    private:
-         Test::Result test_key(const std::string& algo, Botan::Private_Key* keyp)
+      Test::Result test_key(const std::string& algo, Botan::Private_Key* keyp)
          {
          std::unique_ptr<Botan::Private_Key> key(keyp); // assume ownership
 

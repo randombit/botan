@@ -114,7 +114,7 @@ class X509test_Path_Validation_Tests : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("x509test", X509test_Path_Validation_Tests);
+BOTAN_REGISTER_TEST("x509_path_x509test", X509test_Path_Validation_Tests);
 
 class NIST_Path_Validation_Tests : public Test
    {
@@ -362,7 +362,7 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
    return results;
    }
 
-BOTAN_REGISTER_TEST("nist_x509", NIST_Path_Validation_Tests);
+BOTAN_REGISTER_TEST("x509_path_nist", NIST_Path_Validation_Tests);
 
 #endif
 

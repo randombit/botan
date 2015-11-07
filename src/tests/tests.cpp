@@ -6,6 +6,7 @@
 
 #include "tests.h"
 #include <sstream>
+#include <iomanip>
 #include <botan/auto_rng.h>
 #include <botan/hex.h>
 #include <botan/internal/filesystem.h>
@@ -22,6 +23,7 @@ void Test::Result::merge(const Result& other)
    if(who() != other.who())
       throw std::runtime_error("Merging tests from different sources");
 
+   m_ns_taken += other.m_ns_taken;
    m_tests_passed += other.m_tests_passed;
    m_fail_log.insert(m_fail_log.end(), other.m_fail_log.begin(), other.m_fail_log.end());
    m_log.insert(m_log.end(), other.m_log.begin(), other.m_log.end());
@@ -89,14 +91,15 @@ bool Test::Result::test_eq(const char* producer, const char* what,
 
    if(producer)
       {
-      err << " producer " << producer;
-      }
-   if(what)
-      {
-      err << " " << what;
+      err << " producer '" << producer << "'";
       }
 
    err << " unexpected result";
+
+   if(what)
+      {
+      err << " for " << what;
+      }
 
    if(produced_size != expected_size)
       {
@@ -235,6 +238,26 @@ bool Test::Result::test_eq(const char* what, bool produced, bool expected)
    return test_success();
    }
 
+namespace {
+
+std::string format_time(uint64_t ns)
+   {
+   std::ostringstream o;
+
+   if(ns > 1000000000)
+      {
+      o << std::setprecision(2) << std::fixed << ns/1000000000.0 << " sec";
+      }
+   else
+      {
+      o << std::setprecision(2) << std::fixed << ns/1000000.0 << " msec";
+      }
+
+   return o.str();
+   }
+
+}
+
 std::string Test::Result::result_string() const
    {
    std::ostringstream report;
@@ -249,6 +272,11 @@ std::string Test::Result::result_string() const
       report << tests_run();
       }
    report << " tests";
+
+   if(m_ns_taken > 0)
+      {
+      report << " in " << format_time(m_ns_taken);
+      }
 
    if(tests_failed())
       {
@@ -266,7 +294,7 @@ std::string Test::Result::result_string() const
       report << "Failure " << (i+1) << ": " << m_fail_log[i] << "\n";
       }
 
-   if(m_fail_log.size() > 0)
+   if(m_fail_log.size() > 0 || tests_run() == 0)
       {
       for(size_t i = 0; i != m_log.size(); ++i)
          {
@@ -298,6 +326,12 @@ std::set<K> map_keys_as_set(const std::map<K, V>& kv)
    return s;
    }
 
+uint64_t timestamp()
+   {
+   auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+   return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+   }
+
 }
 
 std::set<std::string> Botan_Tests::Test::registered_tests()
@@ -315,57 +349,99 @@ Test* Test::get_test(const std::string& test_name)
    }
 
 //static
-std::vector<Test::Result> Test::run_test(const std::string& what)
+std::vector<Test::Result> Test::run_test(const std::string& test_name, bool fail_if_missing)
    {
-   if(Test* test = get_test(what))
-      return test->run();
+   std::vector<Test::Result> results;
 
-   Test::Result missing(what);
-   missing.test_note("No test found, possibly compiled out?");
-   return std::vector<Test::Result>{missing};
+   try
+      {
+      if(Test* test = get_test(test_name))
+         {
+         std::vector<Test::Result> test_results = test->run();
+         results.insert(results.end(), test_results.begin(), test_results.end());
+         }
+      else
+         {
+         Test::Result result(test_name);
+         if(fail_if_missing)
+            result.test_failure("Test missing or unavailable");
+         else
+            result.test_note("Test missing or unavailable");
+         results.push_back(result);
+         }
+      }
+   catch(std::exception& e)
+      {
+      results.push_back(Test::Result::Failure(test_name, e.what()));
+      }
+   catch(...)
+      {
+      results.push_back(Test::Result::Failure(test_name, "unknown exception"));
+      }
+
+   return results;
    }
 
 //static
-size_t Test::run_tests(const std::set<std::string>& requested,
+size_t Test::run_tests(const std::vector<std::string>& requested,
+                       bool run_all_tests,
                        std::ostream& out)
    {
+   std::vector<std::string> tests_to_run = requested;
+   size_t tests_ran = 0, tests_failed = 0;
 
-   size_t fail_cnt = 0;
-
-   for(auto&& test_name : requested)
+   if(run_all_tests)
       {
-      std::vector<Test::Result> results;
+      std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
 
-      try
-         {
-         Test* test = get_test(test_name);
+      for(auto r : requested)
+         all_others.erase(r);
 
-         if(!test)
-            {
-            results.push_back(Test::Result::Failure(test_name, "missing"));
-            }
-         else
-            {
-            std::vector<Test::Result> r = test->run();
-            results.insert(results.end(), r.begin(), r.end());
-            }
-         }
-      catch(std::exception& e)
-         {
-         results.push_back(Test::Result::Failure(test_name, e.what()));
-         }
-      catch(...)
-         {
-         results.push_back(Test::Result::Failure(test_name, "unknown exception"));
-         }
-
-      std::string report;
-      size_t failed = 0;
-      Test::summarize(results, report, fail_cnt);
-      out << report;
-      fail_cnt += failed;
+      tests_to_run.insert(tests_to_run.end(), all_others.begin(), all_others.end());
       }
-   return fail_cnt;
+
+   for(auto&& test_name : tests_to_run)
+      {
+      std::vector<Test::Result> results = Test::run_test(test_name, false);
+
+      std::map<std::string, Test::Result> combined;
+      for(auto&& result : results)
+         {
+         const std::string who = result.who();
+         auto i = combined.find(who);
+         if(i == combined.end())
+            {
+            combined[who] = Test::Result(who);
+            i = combined.find(who);
+            }
+
+         i->second.merge(result);
+         }
+
+      for(auto&& result : combined)
+         {
+         out << result.second.result_string();
+         tests_failed += result.second.tests_failed();
+         tests_ran += result.second.tests_run();
+         }
+
+      out << std::flush; // Nice when output is redirected to file
+      }
+
+   out << "Tests complete ran " << tests_ran << " tests ";
+
+   if(tests_failed > 0)
+      {
+      out << tests_failed << " tests failed";
+      }
+   else if(tests_ran > 0)
+      {
+      out << "all tests ok";
+      }
+
+   out << std::endl;
+
+   return tests_failed;
    }
 
 //static
@@ -397,35 +473,6 @@ Botan::RandomNumberGenerator& Test::rng()
    static Botan::AutoSeeded_RNG rng;
    return rng;
 #endif
-   }
-
-//static
-void Test::summarize(const std::vector<Test::Result>& results, std::string& report_out, size_t& fail_cnt)
-   {
-   std::map<std::string, Test::Result> combined;
-   for(auto&& result : results)
-      {
-      const std::string who = result.who();
-      auto i = combined.find(who);
-      if(i == combined.end())
-         {
-         combined[who] = Test::Result(who);
-         i = combined.find(who);
-         }
-
-      i->second.merge(result);
-      }
-
-   size_t failures = 0;
-   std::ostringstream report;
-   for(auto&& result : combined)
-      {
-      report << result.second.result_string();
-      failures += result.second.tests_failed();
-      }
-
-   fail_cnt = failures;
-   report_out = report.str();
    }
 
 Text_Based_Test::Text_Based_Test(const std::string& data_dir,
@@ -633,14 +680,12 @@ std::vector<Test::Result> Text_Based_Test::run()
             {
             ++test_cnt;
 
+            uint64_t start = timestamp();
             Test::Result result = run_one_test(who, vars);
-            result.set_test_number(test_cnt);
+            result.set_ns_consumed(timestamp() - start);
 
-            if(result.tests_failed() > 0)
-               {
-               //result.test_note(who + " test " + std::to_string(test_cnt) + " failed");
-               }
-
+            if(result.tests_failed())
+               result.test_note("Test #" + std::to_string(test_cnt) + " failed");
             results.push_back(result);
             }
          catch(std::exception& e)

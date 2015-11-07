@@ -59,6 +59,14 @@ class Test
                return r;
                }
 
+            static Result Note(const std::string& who,
+                               const std::string& what)
+               {
+               Result r(who);
+               r.test_note(what);
+               return r;
+               }
+
             void merge(const Result& other);
 
             void test_note(const std::string& note);
@@ -138,11 +146,11 @@ class Test
                               expected.data(), expected.size());
                }
 
-            void set_test_number(size_t n) { m_test_number = n; }
+            void set_ns_consumed(uint64_t ns) { m_ns_taken = ns; }
 
          private:
             std::string m_who;
-            size_t m_test_number = 0;
+            uint64_t m_ns_taken = 0;
             size_t m_tests_passed = 0;
             std::vector<std::string> m_fail_log;
             std::vector<std::string> m_log;
@@ -161,19 +169,17 @@ class Test
       virtual std::vector<Test::Result> run() = 0;
       virtual ~Test() {}
 
-      static size_t run_tests(const std::set<std::string>& requested,
-                              std::ostream& out);
+      static std::vector<Test::Result> run_test(const std::string& what, bool fail_if_missing);
 
-      static void summarize(const std::vector<Test::Result>& results,
-                            std::string& out_report, size_t& out_fail_cnt);
+      static size_t run_tests(const std::vector<std::string>& requested,
+                              bool run_all_others,
+                              std::ostream& out);
 
       static std::map<std::string, Test*>& global_registry();
 
       static std::set<std::string> registered_tests();
 
       static Test* get_test(const std::string& test_name);
-
-      static std::vector<Test::Result> run_test(const std::string& what);
 
       static std::string data_dir(const std::string& what);
       static std::string data_file(const std::string& what);

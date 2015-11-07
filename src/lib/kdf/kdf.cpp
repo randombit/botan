@@ -6,6 +6,7 @@
 */
 
 #include <botan/kdf.h>
+#include <botan/exceptn.h>
 #include <botan/internal/algo_registry.h>
 
 #if defined(BOTAN_HAS_HKDF)
