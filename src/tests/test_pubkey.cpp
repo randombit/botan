@@ -182,7 +182,9 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
       {
       std::unique_ptr<Botan::Private_Key> key = make_key(Test::rng(), param);
 
-      results.push_back(test_key(key->algo_name() + " " + param, *key));
+      const std::string report_name = key->algo_name() + (param.empty() ? param : " " + param);
+
+      results.push_back(test_key(report_name, *key));
       }
    return results;
    }

@@ -11,6 +11,7 @@
 
 #include <botan/build.h>
 #include <botan/rng.h>
+#include <botan/hex.h>
 
 #if defined(BOTAN_HAS_BIGINT)
   #include <botan/bigint.h>
@@ -26,6 +27,7 @@
 #include <set>
 #include <memory>
 #include <fstream>
+#include <sstream>
 
 namespace Botan_Tests {
 
@@ -92,12 +94,34 @@ class Test
                return test_eq(what, expr, true);
                }
 
+            template<typename T>
+            bool test_is_eq(const char* what, const T& produced, const T& expected)
+               {
+               if(produced != expected)
+                  {
+                  std::ostringstream err;
+                  err << m_who;
+                  if(what)
+                     err << " " << what;
+                  err << " produced unexpected result " << produced << " expected " << expected << "\n";
+                  return test_failure(err.str());
+                  }
+
+               return test_success();
+               }
+
+            bool test_eq(const char* what, const char* produced, const char* expected);
             bool test_eq(const char* what, const std::string& produced, const std::string& expected);
             bool test_eq(const char* what, bool produced, bool expected);
+
+            bool test_eq(const char* what, uint32_t produced, uint32_t expected);
 
             bool test_eq(const char* what, size_t produced, size_t expected);
             bool test_lt(const char* what, size_t produced, size_t expected);
             bool test_gte(const char* what, size_t produced, size_t expected);
+
+            bool test_rc_ok(const char* func, int rc);
+            bool test_rc_fail(const char* func, const char* why, int rc);
 
 #if defined(BOTAN_HAS_BIGINT)
             bool test_eq(const char* what, const BigInt& produced, const BigInt& expected);
@@ -132,6 +156,17 @@ class Test
                          const std::vector<uint8_t, Alloc2>& expected)
                {
                return test_eq(producer.c_str(), what,
+                              produced.data(), produced.size(),
+                              expected.data(), expected.size());
+               }
+
+            template<typename Alloc>
+            bool test_eq(const char* what,
+                         const std::vector<uint8_t, Alloc>& produced,
+                         const char* expected_hex)
+               {
+               const std::vector<byte> expected = Botan::hex_decode(expected_hex);
+               return test_eq(nullptr, what,
                               produced.data(), produced.size(),
                               expected.data(), expected.size());
                }

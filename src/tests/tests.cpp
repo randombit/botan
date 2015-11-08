@@ -130,32 +130,22 @@ bool Test::Result::test_eq(const char* producer, const char* what,
 
 bool Test::Result::test_eq(const char* what, const std::string& produced, const std::string& expected)
    {
-   if(produced != expected)
-      {
-      std::ostringstream err;
-      err << m_who;
-      if(what)
-         err << " " << what;
-      err << " unexpected result produced " << produced << " expected " << expected << "\n";
-      return test_failure(err.str());
-      }
+   return test_is_eq(what, produced, expected);
+   }
 
-   return test_success();
+bool Test::Result::test_eq(const char* what, const char* produced, const char* expected)
+   {
+   return test_is_eq(what, std::string(produced), std::string(expected));
+   }
+
+bool Test::Result::test_eq(const char* what, uint32_t produced, uint32_t expected)
+   {
+   return test_is_eq(what, produced, expected);
    }
 
 bool Test::Result::test_eq(const char* what, size_t produced, size_t expected)
    {
-   if(produced != expected)
-      {
-      std::ostringstream err;
-      err << m_who;
-      if(what)
-         err << " " << what;
-      err << " unexpected result produced " << produced << " expected " << expected << "\n";
-      return test_failure(err.str());
-      }
-
-   return test_success();
+   return test_is_eq(what, produced, expected);
    }
 
 bool Test::Result::test_lt(const char* what, size_t produced, size_t expected)
@@ -191,12 +181,7 @@ bool Test::Result::test_gte(const char* what, size_t produced, size_t expected)
 #if defined(BOTAN_HAS_BIGINT)
 bool Test::Result::test_eq(const char* what, const BigInt& produced, const BigInt& expected)
    {
-   if(produced == expected)
-      return test_success();
-
-   std::ostringstream err;
-   err << who() << " " << what << " produced " << produced << " expected " << expected;
-   return test_failure(err.str());
+   return test_is_eq(what, produced, expected);
    }
 
 bool Test::Result::test_ne(const char* what, const BigInt& produced, const BigInt& expected)
@@ -213,6 +198,7 @@ bool Test::Result::test_ne(const char* what, const BigInt& produced, const BigIn
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
 bool Test::Result::test_eq(const char* what, const Botan::PointGFp& a, const Botan::PointGFp& b)
    {
+   //return test_is_eq(what, a, b);
    if(a == b)
       return test_success();
 
@@ -225,13 +211,35 @@ bool Test::Result::test_eq(const char* what, const Botan::PointGFp& a, const Bot
 
 bool Test::Result::test_eq(const char* what, bool produced, bool expected)
    {
-   if(produced != expected)
+   return test_is_eq(what, produced, expected);
+   }
+
+bool Test::Result::test_rc_ok(const char* what, int rc)
+   {
+   if(rc != 0)
       {
       std::ostringstream err;
       err << m_who;
       if(what)
          err << " " << what;
-      err << " unexpected result produced " << produced << " expected " << expected << "\n";
+      err << " unexpectedly failed with error code " << rc << "\n";
+      return test_failure(err.str());
+      }
+
+   return test_success();
+   }
+
+bool Test::Result::test_rc_fail(const char* func, const char* why, int rc)
+   {
+   if(rc == 0)
+      {
+      std::ostringstream err;
+      err << m_who;
+      if(func)
+         err << " call to " << func << " unexpectedly succeeded";
+      if(why)
+         err << " expecting failure because " << why;
+      err << "\n";
       return test_failure(err.str());
       }
 
