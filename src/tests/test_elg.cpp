@@ -40,7 +40,23 @@ class ElGamal_KAT_Tests : public PK_Encryption_Decryption_Test
          }
    };
 
+class ElGamal_Keygen_Tests : public PK_Key_Generation_Test
+   {
+   public:
+      std::vector<std::string> keygen_params() const override { return { "modp/ietf/1024", "modp/ietf/2048" }; }
+
+      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
+                                                   const std::string& param) const override
+         {
+         Botan::DL_Group group(param);
+         std::unique_ptr<Botan::Private_Key> key(new Botan::ElGamal_PrivateKey(rng, group));
+         return key;
+         }
+
+   };
+
 BOTAN_REGISTER_TEST("elgamal_kat", ElGamal_KAT_Tests);
+BOTAN_REGISTER_TEST("elgamal_keygen", ElGamal_Keygen_Tests);
 
 #endif
 
