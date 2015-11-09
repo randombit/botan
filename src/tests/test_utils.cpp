@@ -7,8 +7,11 @@
 #include "tests.h"
 #include <functional>
 #include <botan/loadstor.h>
-#include <botan/base64.h>
 #include <botan/internal/rounding.h>
+
+#if defined(BOTAN_HAS_BASE64_CODEC)
+  #include <botan/base64.h>
+#endif
 
 namespace Botan_Tests {
 
@@ -62,6 +65,8 @@ class Utility_Function_Tests : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("util", Utility_Function_Tests);
+
+#if defined(BOTAN_HAS_BASE64_CODEC)
 
 class Base64_Tests : public Text_Based_Test
    {
@@ -141,6 +146,8 @@ class Base64_Tests : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("base64", Base64_Tests);
+
+#endif
 
 }
 
