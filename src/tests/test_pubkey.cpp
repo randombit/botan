@@ -26,10 +26,12 @@ void check_invalid_signatures(Test::Result& result,
    const std::vector<uint8_t> zero_sig(signature.size());
    result.test_eq("all zero signature invalid", verifier.verify_message(message, zero_sig), false);
 
-   std::vector<uint8_t> bad_sig;
+   std::vector<uint8_t> bad_sig = signature;
+
    for(size_t i = 0; i <= Test::soak_level(); ++i)
       {
-      bad_sig = Test::mutate_vec(signature);
+      while(bad_sig == signature)
+         bad_sig = Test::mutate_vec(bad_sig, true);
 
       if(!result.test_eq("incorrect signature invalid", verifier.verify_message(message, bad_sig), false))
          {
@@ -49,8 +51,8 @@ void check_invalid_ciphertexts(Test::Result& result,
 
    for(size_t i = 0; i <= Test::soak_level(); ++i)
       {
-      size_t offset = Test::rng().get_random<uint16_t>() % bad_ctext.size();
-      bad_ctext[offset] ^= Test::rng().next_nonzero_byte();
+      while(bad_ctext == ciphertext)
+         bad_ctext = Test::mutate_vec(bad_ctext, true);
 
       try
          {
@@ -59,9 +61,8 @@ void check_invalid_ciphertexts(Test::Result& result,
 
          if(!result.test_ne("incorrect ciphertext different", decrypted, plaintext))
             {
-            result.test_note("used corrupted ciphertext " + Botan::hex_encode(bad_ctext));
+            result.test_eq("used corrupted ciphertext", bad_ctext, ciphertext);
             }
-
          }
       catch(std::exception& e)
          {
