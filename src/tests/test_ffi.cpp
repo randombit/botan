@@ -34,10 +34,10 @@ class FFI_Unit_Tests : public Test
          {
          Test::Result result("FFI");
 
-         result.test_eq("FFI API version", botan_ffi_api_version(), uint32_t(BOTAN_HAS_FFI));
-         result.test_eq("Major version", botan_version_major(), Botan::version_major());
-         result.test_eq("Minor version", botan_version_minor(), Botan::version_minor());
-         result.test_eq("Patch version", botan_version_patch(), Botan::version_patch());
+         result.test_is_eq("FFI API version", botan_ffi_api_version(), uint32_t(BOTAN_HAS_FFI));
+         result.test_is_eq("Major version", botan_version_major(), Botan::version_major());
+         result.test_is_eq("Minor version", botan_version_minor(), Botan::version_minor());
+         result.test_is_eq("Patch version", botan_version_patch(), Botan::version_patch());
 
          const std::vector<uint8_t> bin = { 0xAA, 0xDE, 0x01 };
          const char* input_str = "ABC";

@@ -14,35 +14,6 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 using namespace Botan;
 
-TEST_CASE("round_up strictly positive", "[utils]")
-   {
-   CHECK_THAT(round_up( 1, 10), Equals(10));
-   CHECK_THAT(round_up( 3, 10), Equals(10));
-   CHECK_THAT(round_up( 9, 10), Equals(10));
-   CHECK_THAT(round_up(10, 10), Equals(10));
-
-   CHECK_THAT(round_up( 1, 4), Equals( 4));
-   CHECK_THAT(round_up( 3, 4), Equals( 4));
-   CHECK_THAT(round_up( 4, 4), Equals( 4));
-   CHECK_THAT(round_up( 9, 4), Equals(12));
-   CHECK_THAT(round_up(10, 4), Equals(12));
-   }
-
-TEST_CASE("round_up zero", "[utils]")
-   {
-   CHECK_THAT(round_up(0, 2),       Equals(0));
-   CHECK_THAT(round_up(0, 10),      Equals(0));
-   CHECK_THAT(round_up(0, 1000),    Equals(0));
-   CHECK_THAT(round_up(0, 99999),   Equals(0));
-   CHECK_THAT(round_up(0, 2222222), Equals(0));
-   }
-
-TEST_CASE("round_up invalid input", "[utils]")
-   {
-   CHECK_THROWS(round_up(3, 0));
-   CHECK_THROWS(round_up(5, 0));
-   }
-
 TEST_CASE("calendar_point constructor works", "[utils]")
    {
       {

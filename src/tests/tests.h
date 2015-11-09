@@ -22,6 +22,7 @@
 #endif
 
 #include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 #include <set>
@@ -37,9 +38,20 @@ using Botan::byte;
 using Botan::BigInt;
 #endif
 
+/*
+* A generic test which retuns a set of results when run.
+* The tests may not all have the same type (for example test
+* "block" returns results for "AES-128" and "AES-256").
+*
+* For most test cases you want Text_Based_Test derived below
+*/
 class Test
    {
    public:
+
+      /*
+      * Some number of test results, all associated with who()
+      */
       class Result
          {
          public:
@@ -75,7 +87,7 @@ class Test
 
             void note_missing(const std::string& thing);
 
-            bool test_success();
+            bool test_success(const std::string& note = "");
 
             bool test_failure(const std::string& err);
 
@@ -97,24 +109,26 @@ class Test
             template<typename T>
             bool test_is_eq(const char* what, const T& produced, const T& expected)
                {
-               if(produced != expected)
-                  {
-                  std::ostringstream err;
-                  err << m_who;
-                  if(what)
-                     err << " " << what;
-                  err << " produced unexpected result " << produced << " expected " << expected << "\n";
-                  return test_failure(err.str());
-                  }
+               std::ostringstream out;
+               out << m_who;
+               if(what)
+                  out << " " << what;
 
-               return test_success();
+               if(produced == expected)
+                  {
+                  out << " produced expected result " << produced;
+                  return test_success(out.str());
+                  }
+               else
+                  {
+                  out << " produced unexpected result " << produced << " expected " << expected;
+                  return test_failure(out.str());
+                  }
                }
 
             bool test_eq(const char* what, const char* produced, const char* expected);
             bool test_eq(const char* what, const std::string& produced, const std::string& expected);
             bool test_eq(const char* what, bool produced, bool expected);
-
-            bool test_eq(const char* what, uint32_t produced, uint32_t expected);
 
             bool test_eq(const char* what, size_t produced, size_t expected);
             bool test_lt(const char* what, size_t produced, size_t expected);
@@ -197,7 +211,7 @@ class Test
             Registration(const std::string& name, Test* test)
                {
                // TODO: check for dups
-               Test::global_registry().insert(std::make_pair(name, test));
+               Test::global_registry().insert(std::make_pair(name, std::unique_ptr<Test>(test)));
                }
          };
 
@@ -210,7 +224,7 @@ class Test
                               bool run_all_others,
                               std::ostream& out);
 
-      static std::map<std::string, Test*>& global_registry();
+      static std::map<std::string, std::unique_ptr<Test>>& global_registry();
 
       static std::set<std::string> registered_tests();
 
@@ -244,13 +258,32 @@ class Test
          }
 
       static size_t soak_level();
+      static bool log_success();
 
       static Botan::RandomNumberGenerator& rng();
       static std::string random_password();
    };
 
+/*
+* Register the test with the runner
+*/
 #define BOTAN_REGISTER_TEST(type, Test_Class) namespace { Test::Registration reg_ ## Test_Class ## _tests(type, new Test_Class); }
 
+/*
+* A test based on reading an input file which contains key/value pairs
+* Special note: the last value in required_key (there must be at least
+* one), is the output key. This triggers the callback.
+*
+* Calls run_one_test with the variables set. If an ini-style [header]
+* is used in the file, then header will be set to that value. This allows
+* splitting up tests between [valid] and [invalid] tests, or different
+* related algorithms tested in the same file. Use the protected get_XXX
+* functions to retrieve formatted values from the VarMap
+*
+* If most of your tests are text-based but you find yourself with a few
+* odds-and-ends tests that you want to do, override run_final_tests which
+* can test whatever it likes and returns a vector of Results.
+*/
 class Text_Based_Test : public Test
    {
    public:
@@ -267,11 +300,13 @@ class Text_Based_Test : public Test
 
       std::vector<Test::Result> run() override;
    protected:
-      typedef std::map<std::string, std::string> VarMap;
+      typedef std::unordered_map<std::string, std::string> VarMap;
       std::string get_next_line();
 
-      virtual Test::Result run_one_test(const std::string& algo,
+      virtual Test::Result run_one_test(const std::string& header,
                                         const VarMap& vars) = 0;
+
+      virtual std::vector<Test::Result> run_final_tests() { return std::vector<Test::Result>(); }
 
       std::vector<uint8_t> get_req_bin(const VarMap& vars, const std::string& key) const;
       std::vector<uint8_t> get_opt_bin(const VarMap& vars, const std::string& key) const;

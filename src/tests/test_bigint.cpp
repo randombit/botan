@@ -25,29 +25,93 @@ class BigInt_Unit_Tests : public Test
          {
          std::vector<Test::Result> results;
 
-         results.push_back(test_to_u32bit());
+         results.push_back(test_bigint_sizes());
+         results.push_back(test_random_integer());
 
          return results;
          }
    private:
-      Test::Result test_to_u32bit()
+      Test::Result test_bigint_sizes()
          {
-         Test::Result result("BigInt::to_u32bit");
+         Test::Result result("BigInt size functions");
 
-         for(size_t i = 0; i < 32; ++i)
+         for(size_t bit : { 1, 8, 16, 31, 32, 64, 97, 128, 179, 192, 512, 521 })
             {
-            const size_t in = static_cast<size_t>(1) << i;
+            BigInt a;
 
-            try
+            a.set_bit(bit);
+
+            // Test 2^n and 2^n-1
+            for(size_t i = 0; i != 2; ++i)
                {
-               const size_t out = Botan::BigInt(in).to_u32bit();
-               result.test_eq("in range to_u32bit round trips", in, out);
-               }
-            catch(std::exception& e)
-               {
-               result.test_failure("rejected input " + std::to_string(in) + " " + e.what());
+               const size_t exp_bits = bit + 1 - i;
+               result.test_eq("BigInt::bits", a.bits(), exp_bits);
+               result.test_eq("BigInt::bytes", a.bytes(),
+                              (exp_bits % 8 == 0) ? (exp_bits / 8) : (exp_bits + 8 - exp_bits % 8) / 8);
+
+               if(bit == 1 && i == 1)
+                  {
+                  result.test_is_eq("BigInt::to_u32bit zero", a.to_u32bit(), static_cast<uint32_t>(1));
+                  }
+               else if(bit <= 31 || (bit == 32 && i == 1))
+                  {
+                  result.test_is_eq("BigInt::to_u32bit", a.to_u32bit(), static_cast<uint32_t>((uint64_t(1) << bit) - i));
+                  }
+               else
+                  {
+                  try {
+                     a.to_u32bit();
+                     result.test_failure("BigInt::to_u32bit roundtripped out of range value");
+                  }
+                  catch(std::exception& e)
+                     {
+                     result.test_success("BigInt::to_u32bit rejected out of range");
+                     }
+                  }
+
+               a--;
                }
             }
+
+         return result;
+         }
+
+      Test::Result test_random_integer()
+         {
+         Test::Result result("BigInt::random_integer");
+
+         const size_t ITERATIONS = 1000;
+
+         for(size_t range_min : { 0, 10, 100 })
+            {
+            for(size_t range_max : { 0, 10, 100 })
+               {
+               if(range_min >= range_max)
+                  continue;
+
+               std::vector<size_t> counts(range_max - range_min);
+
+               for(size_t i = 0; i != counts.size() * ITERATIONS; ++i)
+                  {
+                  uint32_t r = BigInt::random_integer(Test::rng(), range_min, range_max).to_u32bit();
+                  result.test_gte("random_integer", r, range_min);
+                  result.test_lt("random_integer", r, range_max);
+                  counts[r - range_min] += 1;
+                  }
+
+               for(size_t i = 0; i != counts.size(); ++i)
+                  {
+                  double ratio = static_cast<double>(counts[i]) / ITERATIONS;
+                  double dev = std::min(ratio, std::fabs(1.0 - ratio));
+
+                  if(dev > .15)
+                     {
+                     result.test_failure("random_integer distribution" + std::to_string(dev));
+                     }
+                  }
+               }
+            }
+
          return result;
          }
    };

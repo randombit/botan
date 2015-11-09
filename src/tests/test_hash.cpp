@@ -17,8 +17,7 @@ class Hash_Function_Tests : public Text_Based_Test
    public:
       Hash_Function_Tests() : Text_Based_Test(Test::data_dir("hash"), {"In", "Out"}) {}
 
-      Test::Result run_one_test(const std::string& algo,
-                                const std::map<std::string, std::string>& vars) override
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          const std::vector<uint8_t> input    = get_req_bin(vars, "In");
          const std::vector<uint8_t> expected = get_req_bin(vars, "Out");

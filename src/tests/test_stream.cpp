@@ -19,8 +19,7 @@ class Stream_Cipher_Tests : public Text_Based_Test
    public:
       Stream_Cipher_Tests(): Text_Based_Test(Test::data_dir("stream"), {"Key", "In", "Out"}, {"Nonce"}) {}
 
-      Test::Result run_one_test(const std::string& algo,
-                                const std::map<std::string, std::string>& vars) override
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
          const std::vector<uint8_t> input    = get_req_bin(vars, "In");

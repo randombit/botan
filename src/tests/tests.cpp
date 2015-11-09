@@ -5,8 +5,7 @@
 */
 
 #include "tests.h"
-#include <sstream>
-#include <iomanip>
+
 #include <botan/auto_rng.h>
 #include <botan/hex.h>
 #include <botan/internal/filesystem.h>
@@ -15,6 +14,10 @@
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
 #endif
+
+#include <sstream>
+#include <iomanip>
+#include <memory.h>
 
 namespace Botan_Tests {
 
@@ -31,7 +34,10 @@ void Test::Result::merge(const Result& other)
 
 void Test::Result::test_note(const std::string& note)
    {
-   m_log.push_back(who() + " " + note);
+   if(note != "")
+      {
+      m_log.push_back(who() + " " + note);
+      }
    }
 
 void Test::Result::note_missing(const std::string& whatever)
@@ -45,8 +51,12 @@ void Test::Result::note_missing(const std::string& whatever)
       }
    }
 
-bool Test::Result::test_success()
+bool Test::Result::test_success(const std::string& note)
    {
+   if(Test::log_success())
+      {
+      test_note(note);
+      }
    ++m_tests_passed;
    return true;
    }
@@ -106,8 +116,6 @@ bool Test::Result::test_eq(const char* producer, const char* what,
       err << " produced " << produced_size << " bytes expected " << expected_size;
       }
 
-   err << "\n";
-
    std::vector<uint8_t> xor_diff(std::min(produced_size, expected_size));
    size_t bits_different = 0;
 
@@ -117,12 +125,13 @@ bool Test::Result::test_eq(const char* producer, const char* what,
       bits_different += Botan::hamming_weight(xor_diff[i]);
       }
 
-   err << "Produced: " << Botan::hex_encode(produced, produced_size) << "\n";
-   err << "Expected: " << Botan::hex_encode(expected, expected_size) << "\n";
+   err << "Produced: " << Botan::hex_encode(produced, produced_size) << "\n"
+       << "Expected: " << Botan::hex_encode(expected, expected_size);
+
    if(bits_different > 0)
       {
-      err << "XOR Diff: " << Botan::hex_encode(xor_diff)
-          << " (" << bits_different << " bits different)\n";
+      err << "\nXOR Diff: " << Botan::hex_encode(xor_diff)
+          << " (" << bits_different << " bits different)";
       }
 
    return test_failure(err.str());
@@ -138,11 +147,6 @@ bool Test::Result::test_eq(const char* what, const char* produced, const char* e
    return test_is_eq(what, std::string(produced), std::string(expected));
    }
 
-bool Test::Result::test_eq(const char* what, uint32_t produced, uint32_t expected)
-   {
-   return test_is_eq(what, produced, expected);
-   }
-
 bool Test::Result::test_eq(const char* what, size_t produced, size_t expected)
    {
    return test_is_eq(what, produced, expected);
@@ -156,7 +160,7 @@ bool Test::Result::test_lt(const char* what, size_t produced, size_t expected)
       err << m_who;
       if(what)
          err << " " << what;
-      err << " unexpected result " << produced << " >= " << expected << "\n";
+      err << " unexpected result " << produced << " >= " << expected;
       return test_failure(err.str());
       }
 
@@ -171,7 +175,7 @@ bool Test::Result::test_gte(const char* what, size_t produced, size_t expected)
       err << m_who;
       if(what)
          err << " " << what;
-      err << " unexpected result " << produced << " < " << expected << "\n";
+      err << " unexpected result " << produced << " < " << expected;
       return test_failure(err.str());
       }
 
@@ -222,7 +226,7 @@ bool Test::Result::test_rc_ok(const char* what, int rc)
       err << m_who;
       if(what)
          err << " " << what;
-      err << " unexpectedly failed with error code " << rc << "\n";
+      err << " unexpectedly failed with error code " << rc;
       return test_failure(err.str());
       }
 
@@ -239,7 +243,6 @@ bool Test::Result::test_rc_fail(const char* func, const char* why, int rc)
          err << " call to " << func << " unexpectedly succeeded";
       if(why)
          err << " expecting failure because " << why;
-      err << "\n";
       return test_failure(err.str());
       }
 
@@ -315,9 +318,9 @@ std::string Test::Result::result_string() const
 
 // static Test:: functions
 //static
-std::map<std::string, Test*>& Test::global_registry()
+std::map<std::string, std::unique_ptr<Test>>& Test::global_registry()
    {
-   static std::map<std::string, Test*> g_test_registry;
+   static std::map<std::string, std::unique_ptr<Test>> g_test_registry;
    return g_test_registry;
    }
 
@@ -352,7 +355,7 @@ Test* Test::get_test(const std::string& test_name)
    {
    auto i = Test::global_registry().find(test_name);
    if(i != Test::global_registry().end())
-      return i->second;
+      return i->second.get();
    return nullptr;
    }
 
@@ -472,6 +475,12 @@ size_t Test::soak_level()
    }
 
 //static
+bool Test::log_success()
+   {
+   return false;
+   }
+
+//static
 Botan::RandomNumberGenerator& Test::rng()
    {
    // TODO: replace by HMAC_DRBG with fixed seed
@@ -530,7 +539,8 @@ std::vector<uint8_t> Text_Based_Test::get_req_bin(const VarMap& vars,
          }
       catch(std::exception& e)
          {
-         throw std::runtime_error("Test invalid hex input " + key);
+         throw std::runtime_error("Test invalid hex input '" + i->second + "'" +
+                                  + " for key " + key);
          }
       }
 
@@ -573,7 +583,8 @@ std::vector<uint8_t> Text_Based_Test::get_opt_bin(const VarMap& vars,
       }
    catch(std::exception& e)
       {
-      throw std::runtime_error("Test invalid hex input " + key);
+      throw std::runtime_error("Test invalid hex input '" + i->second + "'" +
+                               + " for key " + key);
       }
    }
 
@@ -713,6 +724,9 @@ std::vector<Test::Result> Text_Based_Test::run()
             }
          }
       }
+
+   std::vector<Test::Result> final_tests = run_final_tests();
+   results.insert(results.end(), final_tests.begin(), final_tests.end());
 
    return results;
    }
