@@ -130,8 +130,8 @@ class AEAD_Tests : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("aead", AEAD_Tests);
 
-}
-
 #endif
+
+}
 
 }
