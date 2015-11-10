@@ -626,7 +626,7 @@ Botan::BigInt Text_Based_Test::get_req_bn(const VarMap& vars,
       }
    catch(std::exception& e)
       {
-      throw std::runtime_error("Test invalid bigint input " + key);
+      throw std::runtime_error("Test invalid bigint input '" + i->second + "' for key " + key);
       }
    }
 #endif
@@ -684,6 +684,24 @@ std::string Text_Based_Test::get_next_line()
       }
    }
 
+namespace {
+
+// strips leading and trailing but not internal whitespace
+std::string strip_ws(const std::string& in)
+   {
+   const char* whitespace = " ";
+
+   const auto first_c = in.find_first_not_of(whitespace);
+   if(first_c == std::string::npos)
+      return "";
+
+   const auto last_c = in.find_last_not_of(whitespace);
+
+   return in.substr(first_c, last_c - first_c + 1);
+   }
+
+}
+
 std::vector<Test::Result> Text_Based_Test::run()
    {
    std::vector<Test::Result> results;
@@ -694,8 +712,8 @@ std::vector<Test::Result> Text_Based_Test::run()
 
    while(true)
       {
-      std::string line = get_next_line();
-      if(line == "")
+      const std::string line = get_next_line();
+      if(line == "") // EOF
          break;
 
       if(line[0] == '[' && line[line.size()-1] == ']')
@@ -707,8 +725,16 @@ std::vector<Test::Result> Text_Based_Test::run()
 
       const std::string test_id = "test " + std::to_string(test_cnt);
 
-      const std::string key = line.substr(0, line.find_first_of(' '));
-      const std::string val = line.substr(line.find_last_of(' ') + 1, std::string::npos);
+      auto equal_i = line.find_first_of('=');
+
+      if(equal_i == std::string::npos)
+         {
+         results.push_back(Test::Result::Failure(who, "invalid input '" + line + "'"));
+         continue;
+         }
+
+      std::string key = strip_ws(std::string(line.begin(), line.begin() + equal_i - 1));
+      std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
 
       if(m_required_keys.count(key) == 0 && m_optional_keys.count(key) == 0)
          results.push_back(Test::Result::Failure(who, test_id + " failed unknown key " + key));
