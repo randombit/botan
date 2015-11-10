@@ -217,11 +217,7 @@ class Test
       class Registration
          {
          public:
-            Registration(const std::string& name, Test* test)
-               {
-               // TODO: check for dups
-               Test::global_registry().insert(std::make_pair(name, std::unique_ptr<Test>(test)));
-               }
+            Registration(const std::string& name, Test* test);
          };
 
       virtual std::vector<Test::Result> run() = 0;

@@ -14,6 +14,18 @@
 
 namespace Botan_Tests {
 
+Test::Registration::Registration(const std::string& name, Test* test)
+   {
+   if(Test::global_registry().count(name) == 0)
+      {
+      Test::global_registry().insert(std::make_pair(name, std::unique_ptr<Test>(test)));
+      }
+   else
+      {
+      throw std::runtime_error("Duplicate registration of test '" + name + "'");
+      }
+   }
+
 void Test::Result::merge(const Result& other)
    {
    if(who() != other.who())
