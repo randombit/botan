@@ -204,12 +204,12 @@ class Date_Format_Tests : public Text_Based_Test
          if(type == "valid" || type == "valid.not_std")
             {
             Botan::calendar_point c(d[0], d[1], d[2], d[3], d[4], d[5]);
-            result.test_is_eq(c.year, d[0], "year");
-            result.test_is_eq(c.month, d[1], "month");
-            result.test_is_eq(c.day, d[2], "day");
-            result.test_is_eq(c.hour, d[3], "hour");
-            result.test_is_eq(c.minutes, d[4], "minute");
-            result.test_is_eq(c.seconds, d[5], "second");
+            result.test_is_eq("year", c.year, d[0]);
+            result.test_is_eq("month", c.month, d[1]);
+            result.test_is_eq("day", c.day, d[2]);
+            result.test_is_eq("hour", c.hour, d[3]);
+            result.test_is_eq("minute", c.minutes, d[4]);
+            result.test_is_eq("second", c.seconds, d[5]);
 
             if(type == "valid.not_std")
                {
@@ -218,12 +218,12 @@ class Date_Format_Tests : public Text_Based_Test
             else
                {
                Botan::calendar_point c2 = Botan::calendar_value(c.to_std_timepoint());
-               result.test_is_eq(c2.year, d[0], "year");
-               result.test_is_eq(c2.month, d[1], "month");
-               result.test_is_eq(c2.day, d[2], "day");
-               result.test_is_eq(c2.hour, d[3], "hour");
-               result.test_is_eq(c2.minutes, d[4], "minute");
-               result.test_is_eq(c2.seconds, d[5], "second");
+               result.test_is_eq("year", c2.year, d[0]);
+               result.test_is_eq("month", c2.month, d[1]);
+               result.test_is_eq("day", c2.day, d[2]);
+               result.test_is_eq("hour", c2.hour, d[3]);
+               result.test_is_eq("minute", c2.minutes, d[4]);
+               result.test_is_eq("second", c2.seconds, d[5]);
                }
             }
          else if(type == "invalid")
