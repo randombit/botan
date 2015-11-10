@@ -229,10 +229,6 @@ class Test
 
       static std::vector<Test::Result> run_test(const std::string& what, bool fail_if_missing);
 
-      static size_t run_tests(const std::vector<std::string>& requested,
-                              bool run_all_others,
-                              std::ostream& out);
-
       static std::map<std::string, std::unique_ptr<Test>>& global_registry();
 
       static std::set<std::string> registered_tests();
@@ -266,11 +262,19 @@ class Test
          return r;
          }
 
+      static void setup_tests(size_t soak, bool log_succcss, Botan::RandomNumberGenerator* rng);
+
       static size_t soak_level();
       static bool log_success();
 
       static Botan::RandomNumberGenerator& rng();
       static std::string random_password();
+      static uint64_t timestamp(); // nanoseconds arbitrary epoch
+
+   private:
+      static Botan::RandomNumberGenerator* m_test_rng;
+      static size_t m_soak_level;
+      static bool m_log_success;
    };
 
 /*

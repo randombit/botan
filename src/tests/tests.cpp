@@ -6,18 +6,11 @@
 
 #include "tests.h"
 
-#include <botan/auto_rng.h>
+#include <sstream>
+#include <iomanip>
 #include <botan/hex.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/bit_ops.h>
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
-#endif
-
-#include <sstream>
-#include <iomanip>
-#include <memory.h>
 
 namespace Botan_Tests {
 
@@ -353,15 +346,17 @@ std::set<K> map_keys_as_set(const std::map<K, V>& kv)
    return s;
    }
 
-uint64_t timestamp()
+}
+
+//static
+uint64_t Test::timestamp()
    {
    auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
    }
 
-}
-
-std::set<std::string> Botan_Tests::Test::registered_tests()
+//static
+std::set<std::string> Test::registered_tests()
    {
    return map_keys_as_set(Test::global_registry());
    }
@@ -410,68 +405,6 @@ std::vector<Test::Result> Test::run_test(const std::string& test_name, bool fail
    }
 
 //static
-size_t Test::run_tests(const std::vector<std::string>& requested,
-                       bool run_all_tests,
-                       std::ostream& out)
-   {
-   std::vector<std::string> tests_to_run = requested;
-   size_t tests_ran = 0, tests_failed = 0;
-
-   if(run_all_tests)
-      {
-      std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
-
-      for(auto r : requested)
-         all_others.erase(r);
-
-      tests_to_run.insert(tests_to_run.end(), all_others.begin(), all_others.end());
-      }
-
-   for(auto&& test_name : tests_to_run)
-      {
-      std::vector<Test::Result> results = Test::run_test(test_name, false);
-
-      std::map<std::string, Test::Result> combined;
-      for(auto&& result : results)
-         {
-         const std::string who = result.who();
-         auto i = combined.find(who);
-         if(i == combined.end())
-            {
-            combined[who] = Test::Result(who);
-            i = combined.find(who);
-            }
-
-         i->second.merge(result);
-         }
-
-      for(auto&& result : combined)
-         {
-         out << result.second.result_string();
-         tests_failed += result.second.tests_failed();
-         tests_ran += result.second.tests_run();
-         }
-
-      out << std::flush; // Nice when output is redirected to file
-      }
-
-   out << "Tests complete ran " << tests_ran << " tests ";
-
-   if(tests_failed > 0)
-      {
-      out << tests_failed << " tests failed";
-      }
-   else if(tests_ran > 0)
-      {
-      out << "all tests ok";
-      }
-
-   out << std::endl;
-
-   return tests_failed;
-   }
-
-//static
 std::string Test::data_dir(const std::string& what)
    {
    return std::string(TEST_DATA_DIR) + "/" + what;
@@ -483,29 +416,37 @@ std::string Test::data_file(const std::string& what)
    return std::string(TEST_DATA_DIR) + "/" + what;
    }
 
+// static member variables of Test
+Botan::RandomNumberGenerator* Test::m_test_rng = nullptr;
+size_t Test::m_soak_level = 0;
+bool Test::m_log_success = false;
+
+//static
+void Test::setup_tests(size_t soak, bool log_success, Botan::RandomNumberGenerator* rng)
+   {
+   m_soak_level = soak;
+   m_log_success = log_success;
+   m_test_rng = rng;
+   }
+
 //static
 size_t Test::soak_level()
    {
-   // TODO: make configurable
-   return 5;
+   return m_soak_level;
    }
 
 //static
 bool Test::log_success()
    {
-   return false;
+   return m_log_success;
    }
 
 //static
 Botan::RandomNumberGenerator& Test::rng()
    {
-   // TODO: replace by HMAC_DRBG with fixed seed
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   return Botan::system_rng();
-#else
-   static Botan::AutoSeeded_RNG rng;
-   return rng;
-#endif
+   if(!m_test_rng)
+      throw std::runtime_error("Test RNG not initialized");
+   return *m_test_rng;
    }
 
 std::string Test::random_password()
@@ -747,9 +688,9 @@ std::vector<Test::Result> Text_Based_Test::run()
             {
             ++test_cnt;
 
-            uint64_t start = timestamp();
+            uint64_t start = Test::timestamp();
             Test::Result result = run_one_test(who, vars);
-            result.set_ns_consumed(timestamp() - start);
+            result.set_ns_consumed(Test::timestamp() - start);
 
             if(result.tests_failed())
                result.test_note("Test #" + std::to_string(test_cnt) + " failed");
