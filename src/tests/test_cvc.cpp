@@ -69,6 +69,40 @@ bool helper_files_equal(const std::string& file_path1, const std::string& file_p
    return sv1 == sv2;
    }
 
+Test::Result test_cvc_times()
+   {
+   Test::Result result("CVC");
+
+   auto time1 = Botan::EAC_Time("2008-02-01");
+   auto time2 = Botan::EAC_Time("2008/02/28");
+   auto time3 = Botan::EAC_Time("2004-06-14");
+
+   result.confirm("time1 set", time1.time_is_set());
+   result.confirm("time2 set", time2.time_is_set());
+   result.confirm("time3 set", time3.time_is_set());
+
+   result.test_eq("time1 readable_string", time1.readable_string(), "2008/02/01");
+   result.test_eq("time2 readable_string", time1.readable_string(), "2008/02/28");
+   result.test_eq("time3 readable_string", time1.readable_string(), "2004/06/14");
+
+   result.test_eq("not set", Botan::EAC_Time("").time_is_set(), false);
+
+   const std::vector<std::string> invalid = {
+      " ",
+      "2008`02-01",
+      "9999-02-01",
+      "2000-02-01 17",
+      "999921"
+   };
+
+   for(auto&& v : invalid)
+      {
+      result.test_throws([v]() { Botan::EAC_Time(v); });
+      }
+
+   return result;
+   }
+
 Test::Result test_enc_gen_selfsigned()
    {
    Test::Result result("CVC");

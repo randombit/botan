@@ -109,6 +109,112 @@ class X509_Cert_Unit_Tests : public Test
    {
    public:
       std::vector<Test::Result> run() override;
+
+   private:
+      Test::Result test_x509_dates()
+         {
+         Test::Result result("X509_Time");
+
+         Botan::X509_Time time;
+         result.confirm("unset time not set", !time.time_is_set());
+         time = Botan::X509_Time("0802011822Z", Botan::ASN1_Tag::UTC_TIME);
+         result.confirm("time set after construction", time.time_is_set());
+         result.test_eq("time readable_string", time.readable_string(), "2008/02/01 18:22:00 UTC");
+
+         const std::vector<std::string> valid = {
+            "0802010000Z",
+            "0802011724Z",
+            "0406142334Z",
+            "9906142334Z",
+            "0006142334Z",
+
+            "080201000000Z",
+            "080201172412Z",
+            "040614233433Z",
+            "990614233444Z",
+            "000614233455Z",
+         };
+
+         // Dates that are valid per X.500 but rejected as unsupported
+         const std::vector<std::string> valid_but_unsup = {
+            "0802010000-0000",
+            "0802011724+0000",
+            "0406142334-0500",
+            "9906142334+0500",
+            "0006142334-0530",
+            "0006142334+0530",
+
+            "080201000000-0000",
+            "080201172412+0000",
+            "040614233433-0500",
+            "990614233444+0500",
+            "000614233455-0530",
+            "000614233455+0530",
+         };
+
+         const std::vector<std::string> invalid = {
+            "",
+            " ",
+            "2008`02-01",
+            "9999-02-01",
+            "2000-02-01 17",
+            "999921",
+
+            // valid length 13 -> range check
+            "080201000061Z", // seconds too big (61)
+            "080201000060Z", // seconds too big (60, leap seconds not covered by the standard)
+            "0802010000-1Z", // seconds too small (-1)
+            "080201006000Z", // minutes too big (60)
+            "080201240000Z", // hours too big (24:00)
+
+            // valid length 13 -> invalid numbers
+            "08020123112 Z",
+            "08020123112!Z",
+            "08020123112,Z",
+            "08020123112\nZ",
+            "080201232 33Z",
+            "080201232!33Z",
+            "080201232,33Z",
+            "080201232\n33Z",
+            "0802012 3344Z",
+            "0802012!3344Z",
+            "0802012,3344Z",
+            "08022\n334455Z",
+            "08022 334455Z",
+            "08022!334455Z",
+            "08022,334455Z",
+            "08022\n334455Z",
+            "082 33445511Z",
+            "082!33445511Z",
+            "082,33445511Z",
+            "082\n33445511Z",
+            "2 2211221122Z",
+            "2!2211221122Z",
+            "2,2211221122Z",
+            "2\n2211221122Z",
+
+            // wrong time zone
+            "0802010000",
+            "0802010000z"
+         };
+
+         for(auto&& v : valid)
+            {
+            Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME);
+            }
+
+         for(auto&& v : valid_but_unsup)
+            {
+            result.test_throws("valid but unsupported", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME); });
+            }
+
+         for(auto&& v : invalid)
+            {
+            result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME); });
+            }
+
+         return result;
+         }
    };
 
 std::vector<Test::Result> X509_Cert_Unit_Tests::run()
@@ -213,6 +319,7 @@ std::vector<Test::Result> X509_Cert_Unit_Tests::run()
    result.test_eq("user 2 still revoked", result_u2.result_string(), revoked_str);
 
    results.push_back(result);
+   results.push_back(test_x509_dates());
    return results;
    }
 

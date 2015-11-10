@@ -10,11 +10,6 @@
 #include <string>
 #include <set>
 
-#define CATCH_CONFIG_RUNNER
-#define CATCH_CONFIG_CONSOLE_WIDTH 60
-#define CATCH_CONFIG_COLOUR_NONE
-#include "catchy/catch.hpp"
-
 namespace {
 
 int help(std::ostream& out, char* argv0)
@@ -35,18 +30,6 @@ int help(std::ostream& out, char* argv0)
    return 1;
    }
 
-template<typename T, typename R>
-bool vector_remove(std::vector<T>& v,  const R& r)
-   {
-   auto i = std::find(v.begin(), v.end(), r);
-
-   if(i == v.end())
-      return false;
-
-   v.erase(i);
-   return true;
-   }
-
 }
 
 int main(int argc, char* argv[])
@@ -58,25 +41,15 @@ int main(int argc, char* argv[])
 
    std::vector<std::string> req(argv + 1, argv + argc);
 
-   bool run_catch = false;
    bool run_all = false;
 
    if(req.empty())
       {
       req = {"block", "stream", "hash", "mac", "modes", "aead", "kdf", "pbkdf", "hmac_drbg", "x931_rng"};
       run_all = true;
-      run_catch = true;
       }
-
-   run_catch = run_catch || vector_remove(req, "catch");
 
    size_t failed = Botan_Tests::Test::run_tests(req, run_all, std::cout);
-
-   if(run_catch)
-      {
-      std::cout << "CATCH unit test results:\n";
-      failed += Catch::Session().run();
-      }
 
    if(failed)
       return 2;

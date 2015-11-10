@@ -108,7 +108,13 @@ class Test
                }
 
             template<typename T>
-            bool test_is_eq(const T& produced, const T& expected, const char* what = nullptr)
+            bool test_is_eq(const T& produced, const T& expected)
+               {
+               return test_is_eq(nullptr, produced, expected);
+               }
+
+            template<typename T>
+            bool test_is_eq(const char* what, const T& produced, const T& expected)
                {
                std::ostringstream out;
                out << m_who;
