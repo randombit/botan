@@ -21,14 +21,15 @@
   #include <botan/point_gfp.h>
 #endif
 
-#include <map>
-#include <unordered_map>
-#include <string>
-#include <vector>
-#include <set>
-#include <memory>
 #include <fstream>
+#include <functional>
+#include <map>
+#include <memory>
+#include <set>
 #include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace Botan_Tests {
 
@@ -194,6 +195,8 @@ class Test
                               produced.data(), produced.size(),
                               expected.data(), expected.size());
                }
+
+            bool test_throws(const std::string& what, std::function<void ()> fn);
 
             void set_ns_consumed(uint64_t ns) { m_ns_taken = ns; }
 

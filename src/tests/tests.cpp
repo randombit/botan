@@ -51,6 +51,22 @@ void Test::Result::note_missing(const std::string& whatever)
       }
    }
 
+bool Test::Result::test_throws(const std::string& what, std::function<void ()> fn)
+   {
+   try {
+      fn();
+      return test_failure(what + " failed to throw expected exception");
+   }
+   catch(std::exception& e)
+      {
+      return test_success(what + " threw exception " + e.what());
+      }
+   catch(...)
+      {
+      return test_success(what + " threw unknown exception");
+      }
+   }
+
 bool Test::Result::test_success(const std::string& note)
    {
    if(Test::log_success())
