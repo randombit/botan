@@ -2,7 +2,7 @@
 * CVC EAC1.1 tests
 *
 * (C) 2008 Falko Strenzke (strenzke@flexsecure.de)
-*     2008 Jack Lloyd
+*     2008,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -82,8 +82,8 @@ Test::Result test_cvc_times()
    result.confirm("time3 set", time3.time_is_set());
 
    result.test_eq("time1 readable_string", time1.readable_string(), "2008/02/01");
-   result.test_eq("time2 readable_string", time1.readable_string(), "2008/02/28");
-   result.test_eq("time3 readable_string", time1.readable_string(), "2004/06/14");
+   result.test_eq("time2 readable_string", time2.readable_string(), "2008/02/28");
+   result.test_eq("time3 readable_string", time3.readable_string(), "2004/06/14");
 
    result.test_eq("not set", Botan::EAC_Time("").time_is_set(), false);
 
@@ -97,7 +97,7 @@ Test::Result test_cvc_times()
 
    for(auto&& v : invalid)
       {
-      result.test_throws([v]() { Botan::EAC_Time(v); });
+      result.test_throws("invalid time " + v, [v]() { Botan::EAC_Time w(v); });
       }
 
    return result;
@@ -572,17 +572,32 @@ class CVC_Unit_Tests : public Test
          {
          std::vector<Test::Result> results;
 
-         results.push_back(test_enc_gen_selfsigned());
-         results.push_back(test_enc_gen_req());
-         results.push_back(test_cvc_req_ext());
-         results.push_back(test_cvc_ado_creation());
-         results.push_back(test_cvc_ado_comparison());
-         results.push_back(test_eac_time());
-         results.push_back(test_ver_cvca());
-         results.push_back(test_copy_and_assignment());
-         results.push_back(test_eac_str_illegal_values());
-         results.push_back(test_tmp_eac_str_enc());
-         results.push_back(test_cvc_chain());
+         std::vector<std::function<Test::Result()>> fns = {
+              test_cvc_times,
+              test_enc_gen_selfsigned,
+              test_enc_gen_req,
+              test_cvc_req_ext,
+              test_cvc_ado_creation,
+              test_cvc_ado_comparison,
+              test_eac_time,
+              test_ver_cvca,
+              test_copy_and_assignment,
+              test_eac_str_illegal_values,
+              test_tmp_eac_str_enc,
+              test_cvc_chain
+         };
+
+         for(size_t i = 0; i != fns.size(); ++i)
+            {
+            try
+               {
+               results.push_back(fns[i]());
+               }
+            catch(std::exception& e)
+               {
+               results.push_back(Test::Result::Failure("CVC test " + std::to_string(i), e.what()));
+               }
+            }
 
          return results;
          }
