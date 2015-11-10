@@ -59,9 +59,116 @@ class Utility_Function_Tests : public Text_Based_Test
          {
          std::vector<Test::Result> results;
 
+         results.push_back(test_loadstore());
 
          return results;
+         }
 
+      Test::Result test_loadstore()
+         {
+         Test::Result result("Util load/store");
+
+         const std::vector<uint8_t> membuf =
+            Botan::hex_decode("00112233445566778899AABBCCDDEEFF");
+         const uint8_t* mem = membuf.data();
+
+         const uint16_t in16 = 0x1234;
+         const uint32_t in32 = 0xA0B0C0D0;
+         const uint64_t in64 = 0xABCDEF0123456789;
+
+         result.test_is_eq<uint8_t>(Botan::get_byte(0, in32), 0xA0);
+         result.test_is_eq<uint8_t>(Botan::get_byte(1, in32), 0xB0);
+         result.test_is_eq<uint8_t>(Botan::get_byte(2, in32), 0xC0);
+         result.test_is_eq<uint8_t>(Botan::get_byte(3, in32), 0xD0);
+
+         result.test_is_eq<uint16_t>(Botan::make_u16bit(0xAA, 0xBB), 0xAABB);
+         result.test_is_eq<uint32_t>(Botan::make_u32bit(0x01, 0x02, 0x03, 0x04), 0x01020304);
+
+         result.test_is_eq<uint16_t>(Botan::load_be<uint16_t>(mem, 0), 0x0011);
+         result.test_is_eq<uint16_t>(Botan::load_be<uint16_t>(mem, 1), 0x2233);
+         result.test_is_eq<uint16_t>(Botan::load_be<uint16_t>(mem, 2), 0x4455);
+         result.test_is_eq<uint16_t>(Botan::load_be<uint16_t>(mem, 3), 0x6677);
+
+         result.test_is_eq<uint16_t>(Botan::load_le<uint16_t>(mem, 0), 0x1100);
+         result.test_is_eq<uint16_t>(Botan::load_le<uint16_t>(mem, 1), 0x3322);
+         result.test_is_eq<uint16_t>(Botan::load_le<uint16_t>(mem, 2), 0x5544);
+         result.test_is_eq<uint16_t>(Botan::load_le<uint16_t>(mem, 3), 0x7766);
+
+         result.test_is_eq<uint32_t>(Botan::load_be<uint32_t>(mem, 0), 0x00112233);
+         result.test_is_eq<uint32_t>(Botan::load_be<uint32_t>(mem, 1), 0x44556677);
+         result.test_is_eq<uint32_t>(Botan::load_be<uint32_t>(mem, 2), 0x8899AABB);
+         result.test_is_eq<uint32_t>(Botan::load_be<uint32_t>(mem, 3), 0xCCDDEEFF);
+
+         result.test_is_eq<uint32_t>(Botan::load_le<uint32_t>(mem, 0), 0x33221100);
+         result.test_is_eq<uint32_t>(Botan::load_le<uint32_t>(mem, 1), 0x77665544);
+         result.test_is_eq<uint32_t>(Botan::load_le<uint32_t>(mem, 2), 0xBBAA9988);
+         result.test_is_eq<uint32_t>(Botan::load_le<uint32_t>(mem, 3), 0xFFEEDDCC);
+
+         result.test_is_eq<uint64_t>(Botan::load_be<uint64_t>(mem, 0), 0x0011223344556677);
+         result.test_is_eq<uint64_t>(Botan::load_be<uint64_t>(mem, 1), 0x8899AABBCCDDEEFF);
+
+         result.test_is_eq<uint64_t>(Botan::load_le<uint64_t>(mem, 0), 0x7766554433221100);
+         result.test_is_eq<uint64_t>(Botan::load_le<uint64_t>(mem, 1), 0xFFEEDDCCBBAA9988);
+
+         // Check misaligned loads:
+         result.test_is_eq<uint16_t>(Botan::load_be<uint16_t>(mem + 1, 0), 0x1122);
+         result.test_is_eq<uint16_t>(Botan::load_le<uint16_t>(mem + 3, 0), 0x4433);
+
+         result.test_is_eq<uint32_t>(Botan::load_be<uint32_t>(mem + 1, 1), 0x55667788);
+         result.test_is_eq<uint32_t>(Botan::load_le<uint32_t>(mem + 3, 1), 0xAA998877);
+
+         result.test_is_eq<uint64_t>(Botan::load_be<uint64_t>(mem + 1, 0), 0x1122334455667788);
+         result.test_is_eq<uint64_t>(Botan::load_le<uint64_t>(mem + 7, 0), 0xEEDDCCBBAA998877);
+         result.test_is_eq<uint64_t>(Botan::load_le<uint64_t>(mem + 5, 0), 0xCCBBAA9988776655);
+
+         byte outbuf[16] = { 0 };
+
+         for(size_t offset = 0; offset != 7; ++offset)
+            {
+            byte* out = outbuf + offset;
+
+            Botan::store_be(in16, out);
+            result.test_is_eq<uint8_t>(out[0], 0x12);
+            result.test_is_eq<uint8_t>(out[1], 0x34);
+
+            Botan::store_le(in16, out);
+            result.test_is_eq<uint8_t>(out[0], 0x34);
+            result.test_is_eq<uint8_t>(out[1], 0x12);
+
+            Botan::store_be(in32, out);
+            result.test_is_eq<uint8_t>(out[0], 0xA0);
+            result.test_is_eq<uint8_t>(out[1], 0xB0);
+            result.test_is_eq<uint8_t>(out[2], 0xC0);
+            result.test_is_eq<uint8_t>(out[3], 0xD0);
+
+            Botan::store_le(in32, out);
+            result.test_is_eq<uint8_t>(out[0], 0xD0);
+            result.test_is_eq<uint8_t>(out[1], 0xC0);
+            result.test_is_eq<uint8_t>(out[2], 0xB0);
+            result.test_is_eq<uint8_t>(out[3], 0xA0);
+
+            Botan::store_be(in64, out);
+            result.test_is_eq<uint8_t>(out[0], 0xAB);
+            result.test_is_eq<uint8_t>(out[1], 0xCD);
+            result.test_is_eq<uint8_t>(out[2], 0xEF);
+            result.test_is_eq<uint8_t>(out[3], 0x01);
+            result.test_is_eq<uint8_t>(out[4], 0x23);
+            result.test_is_eq<uint8_t>(out[5], 0x45);
+            result.test_is_eq<uint8_t>(out[6], 0x67);
+            result.test_is_eq<uint8_t>(out[7], 0x89);
+
+            Botan::store_le(in64, out);
+            result.test_is_eq<uint8_t>(out[0], 0x89);
+            result.test_is_eq<uint8_t>(out[1], 0x67);
+            result.test_is_eq<uint8_t>(out[2], 0x45);
+            result.test_is_eq<uint8_t>(out[3], 0x23);
+            result.test_is_eq<uint8_t>(out[4], 0x01);
+            result.test_is_eq<uint8_t>(out[5], 0xEF);
+            result.test_is_eq<uint8_t>(out[6], 0xCD);
+            result.test_is_eq<uint8_t>(out[7], 0xAB);
+            }
+
+         return result;
          }
    };
 
@@ -97,12 +204,12 @@ class Date_Format_Tests : public Text_Based_Test
          if(type == "valid" || type == "valid.not_std")
             {
             Botan::calendar_point c(d[0], d[1], d[2], d[3], d[4], d[5]);
-            result.test_is_eq("year", c.year, d[0]);
-            result.test_is_eq("month", c.month, d[1]);
-            result.test_is_eq("day", c.day, d[2]);
-            result.test_is_eq("hour", c.hour, d[3]);
-            result.test_is_eq("minute", c.minutes, d[4]);
-            result.test_is_eq("second", c.seconds, d[5]);
+            result.test_is_eq(c.year, d[0], "year");
+            result.test_is_eq(c.month, d[1], "month");
+            result.test_is_eq(c.day, d[2], "day");
+            result.test_is_eq(c.hour, d[3], "hour");
+            result.test_is_eq(c.minutes, d[4], "minute");
+            result.test_is_eq(c.seconds, d[5], "second");
 
             if(type == "valid.not_std")
                {
@@ -111,12 +218,12 @@ class Date_Format_Tests : public Text_Based_Test
             else
                {
                Botan::calendar_point c2 = Botan::calendar_value(c.to_std_timepoint());
-               result.test_is_eq("year", c2.year, d[0]);
-               result.test_is_eq("month", c2.month, d[1]);
-               result.test_is_eq("day", c2.day, d[2]);
-               result.test_is_eq("hour", c2.hour, d[3]);
-               result.test_is_eq("minute", c2.minutes, d[4]);
-               result.test_is_eq("second", c2.seconds, d[5]);
+               result.test_is_eq(c2.year, d[0], "year");
+               result.test_is_eq(c2.month, d[1], "month");
+               result.test_is_eq(c2.day, d[2], "day");
+               result.test_is_eq(c2.hour, d[3], "hour");
+               result.test_is_eq(c2.minutes, d[4], "minute");
+               result.test_is_eq(c2.seconds, d[5], "second");
                }
             }
          else if(type == "invalid")

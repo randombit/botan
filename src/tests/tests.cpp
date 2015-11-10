@@ -155,17 +155,17 @@ bool Test::Result::test_eq(const char* producer, const char* what,
 
 bool Test::Result::test_eq(const char* what, const std::string& produced, const std::string& expected)
    {
-   return test_is_eq(what, produced, expected);
+   return test_is_eq(produced, expected, what);
    }
 
 bool Test::Result::test_eq(const char* what, const char* produced, const char* expected)
    {
-   return test_is_eq(what, std::string(produced), std::string(expected));
+   return test_is_eq(std::string(produced), std::string(expected), what);
    }
 
 bool Test::Result::test_eq(const char* what, size_t produced, size_t expected)
    {
-   return test_is_eq(what, produced, expected);
+   return test_is_eq(produced, expected, what);
    }
 
 bool Test::Result::test_lt(const char* what, size_t produced, size_t expected)
@@ -201,7 +201,7 @@ bool Test::Result::test_gte(const char* what, size_t produced, size_t expected)
 #if defined(BOTAN_HAS_BIGINT)
 bool Test::Result::test_eq(const char* what, const BigInt& produced, const BigInt& expected)
    {
-   return test_is_eq(what, produced, expected);
+   return test_is_eq(produced, expected, what);
    }
 
 bool Test::Result::test_ne(const char* what, const BigInt& produced, const BigInt& expected)
@@ -231,7 +231,7 @@ bool Test::Result::test_eq(const char* what, const Botan::PointGFp& a, const Bot
 
 bool Test::Result::test_eq(const char* what, bool produced, bool expected)
    {
-   return test_is_eq(what, produced, expected);
+   return test_is_eq(produced, expected, what);
    }
 
 bool Test::Result::test_rc_ok(const char* what, int rc)
