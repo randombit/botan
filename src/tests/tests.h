@@ -337,7 +337,7 @@ class Text_Based_Test : public Test
       std::string algo_name() const { return m_algo; }
    private:
       std::string m_algo;
-      std::string m_data_dir;
+      std::string m_data_src;
       std::set<std::string> m_required_keys;
       std::set<std::string> m_optional_keys;
       std::string m_output_key;

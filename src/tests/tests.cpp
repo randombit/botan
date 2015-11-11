@@ -484,10 +484,10 @@ std::string Test::random_password()
    return Botan::hex_encode(Test::rng().random_vec(len));
    }
 
-Text_Based_Test::Text_Based_Test(const std::string& data_dir,
+Text_Based_Test::Text_Based_Test(const std::string& data_src,
                                  const std::vector<std::string>& required_keys,
                                  const std::vector<std::string>& optional_keys) :
-   m_data_dir(data_dir)
+   m_data_src(data_src)
    {
    if(required_keys.empty())
       throw std::runtime_error("Invalid test spec");
@@ -498,11 +498,11 @@ Text_Based_Test::Text_Based_Test(const std::string& data_dir,
    }
 
 Text_Based_Test::Text_Based_Test(const std::string& algo,
-                                 const std::string& data_dir,
+                                 const std::string& data_src,
                                  const std::vector<std::string>& required_keys,
                                  const std::vector<std::string>& optional_keys) :
    m_algo(algo),
-   m_data_dir(data_dir)
+   m_data_src(data_src)
    {
    if(required_keys.empty())
       throw std::runtime_error("Invalid test spec");
@@ -611,15 +611,16 @@ std::string Text_Based_Test::get_next_line()
             {
             if(m_first)
                {
-               std::vector<std::string> fs = Botan::get_files_recursive(m_data_dir);
-
-               if(fs.empty() && m_data_dir.find(".vec") != std::string::npos)
+               if(m_data_src.find(".vec") != std::string::npos)
                   {
-                  m_srcs.push_back(m_data_dir);
+                  m_srcs.push_back(m_data_src);
                   }
                else
                   {
+                  const auto fs = Botan::get_files_recursive(m_data_src);
                   m_srcs.assign(fs.begin(), fs.end());
+                  if(m_srcs.empty())
+                     throw std::runtime_error("Error reading test data dir " + m_data_src);
                   }
 
                m_first = false;
