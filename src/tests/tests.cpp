@@ -37,6 +37,23 @@ void Test::Result::merge(const Result& other)
    m_log.insert(m_log.end(), other.m_log.begin(), other.m_log.end());
    }
 
+void Test::Result::start_timer()
+   {
+   if(m_started == 0)
+      {
+      m_started = Test::timestamp();
+      }
+   }
+
+void Test::Result::end_timer()
+   {
+   if(m_started > 0)
+      {
+      m_ns_taken += Test::timestamp() - m_started;
+      m_started = 0;
+      }
+   }
+
 void Test::Result::test_note(const std::string& note)
    {
    if(note != "")

@@ -80,11 +80,29 @@ class BigInt_Unit_Tests : public Test
          {
          Test::Result result("BigInt::random_integer");
 
-         const size_t ITERATIONS = 1000;
+         result.start_timer();
 
-         for(size_t range_min : { 0, 10, 100 })
+         const size_t ITERATIONS = 5000;
+
+         std::vector<size_t> min_ranges{ 0 };
+         std::vector<size_t> max_ranges{ 10 };
+
+         // This gets slow quickly:
+         if(Test::soak_level() > 10)
             {
-            for(size_t range_max : { 0, 10, 100 })
+            min_ranges.push_back(10);
+            max_ranges.push_back(100);
+
+            if(Test::soak_level() > 50)
+               {
+               min_ranges.push_back(79);
+               max_ranges.push_back(293);
+               }
+            }
+
+         for(size_t range_min : min_ranges)
+            {
+            for(size_t range_max : max_ranges)
                {
                if(range_min >= range_max)
                   continue;
@@ -104,13 +122,21 @@ class BigInt_Unit_Tests : public Test
                   double ratio = static_cast<double>(counts[i]) / ITERATIONS;
                   double dev = std::min(ratio, std::fabs(1.0 - ratio));
 
-                  if(dev > .15)
+                  if(dev < .15)
                      {
-                     result.test_failure("random_integer distribution" + std::to_string(dev));
+                     result.test_success("distribution within expected range");
+                     }
+                  else
+                     {
+                     result.test_failure("distribution " + std::to_string(dev) +
+                                         " outside expected range with count" +
+                                         std::to_string(counts[i]));
                      }
                   }
                }
             }
+
+         result.end_timer();
 
          return result;
          }

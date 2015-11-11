@@ -173,6 +173,8 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
       {
       bool handshake_done = false;
 
+      result.test_note("Test round " + std::to_string(r));
+
       auto handshake_complete = [&](const Botan::TLS::Session& session) -> bool {
          handshake_done = true;
 
@@ -279,7 +281,14 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                }
             catch(std::exception& e)
                {
-               result.test_failure("server error", e.what());
+               if(corrupt_server_data)
+                  {
+                  result.test_note("corruption caused server exception");
+                  }
+               else
+                  {
+                  result.test_failure("server error", e.what());
+                  }
                continue;
                }
 
@@ -294,7 +303,14 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                }
             catch(std::exception& e)
                {
-               result.test_failure("client error", e.what());
+               if(corrupt_client_data)
+                  {
+                  result.test_note("corruption caused client exception");
+                  }
+               else
+                  {
+                  result.test_failure("client error", e.what());
+                  }
                continue;
                }
 

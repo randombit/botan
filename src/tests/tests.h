@@ -206,8 +206,12 @@ class Test
 
             void set_ns_consumed(uint64_t ns) { m_ns_taken = ns; }
 
+            void start_timer();
+            void end_timer();
+
          private:
             std::string m_who;
+            uint64_t m_started = 0;
             uint64_t m_ns_taken = 0;
             size_t m_tests_passed = 0;
             std::vector<std::string> m_fail_log;
