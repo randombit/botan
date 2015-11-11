@@ -44,7 +44,7 @@ class BOTAN_DLL Bzip2_Decompression : public Stream_Decompression
    public:
       std::string name() const override { return "Bzip2_Decompression"; }
    private:
-      Compression_Stream* make_stream() const;
+      Compression_Stream* make_stream() const override;
    };
 
 }
