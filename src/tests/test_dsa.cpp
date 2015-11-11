@@ -7,64 +7,65 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_DSA)
+  #include <botan/dsa.h>
+  #include "test_pubkey.h"
+#endif
 
-#include "test_pubkey.h"
-
-#include <botan/pubkey.h>
-#include <botan/dsa.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t dsa_sig_kat(const std::string& p,
-                   const std::string& q,
-                   const std::string& g,
-                   const std::string& x,
-                   const std::string& hash,
-                   const std::string& msg,
-                   const std::string& nonce,
-                   const std::string& signature)
+#if defined(BOTAN_HAS_DSA)
+
+class DSA_KAT_Tests : public PK_Signature_Generation_Test
    {
-   auto& rng = test_rng();
+   public:
+      DSA_KAT_Tests() : PK_Signature_Generation_Test(
+         "DSA",
+         Test::data_file("pubkey/dsa.vec"),
+         {"P", "Q", "G", "X", "Hash", "Msg", "Signature"})
+         {}
 
-   BigInt p_bn("0x" + p), q_bn("0x" + q), g_bn("0x" + g), x_bn("0x" + x);
+      bool clear_between_callbacks() const override { return false; }
 
-   DL_Group group(p_bn, q_bn, g_bn);
-   DSA_PrivateKey privkey(rng, group, x_bn);
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
+         {
+         const Botan::BigInt p = get_req_bn(vars, "P");
+         const Botan::BigInt q = get_req_bn(vars, "Q");
+         const Botan::BigInt g = get_req_bn(vars, "G");
+         const Botan::BigInt x = get_req_bn(vars, "X");
 
-   DSA_PublicKey pubkey = privkey;
+         const Botan::DL_Group grp(p, q, g);
 
-   const std::string padding = "EMSA1(" + hash + ")";
+         std::unique_ptr<Botan::Private_Key> key(new Botan::DSA_PrivateKey(Test::rng(), grp, x));
+         return key;
+         }
 
-   PK_Verifier verify(pubkey, padding);
-   PK_Signer sign(privkey, padding);
+      std::string default_padding(const VarMap& vars) const override
+         {
+         return "EMSA1(" + get_req_str(vars, "Hash") + ")";
+         }
+   };
 
-   return validate_signature(verify, sign, "DSA/" + hash, msg, rng, nonce, signature);
-   }
+class DSA_Keygen_Tests : public PK_Key_Generation_Test
+   {
+   public:
+      std::vector<std::string> keygen_params() const override { return { "dsa/jce/1024", "dsa/botan/2048" }; }
+
+      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
+                                                   const std::string& param) const override
+         {
+         Botan::DL_Group group(param);
+         std::unique_ptr<Botan::Private_Key> key(new Botan::DSA_PrivateKey(rng, group));
+         return key;
+         }
+   };
+
+BOTAN_REGISTER_TEST("dsa_kat", DSA_KAT_Tests);
+BOTAN_REGISTER_TEST("dsa_keygen", DSA_Keygen_Tests);
+
+#endif
 
 }
 
-size_t test_dsa()
-   {
-   size_t fails = 0;
-
-   std::ifstream dsa_sig(TEST_DATA_DIR_PK "/dsa.vec");
-
-   fails += run_tests_bb(dsa_sig, "DSA Signature", "Signature", false,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return dsa_sig_kat(m["P"], m["Q"], m["G"], m["X"], m["Hash"], m["Msg"], m["Nonce"], m["Signature"]);
-             });
-
-   return fails;
-   }
-
-#else
-
-SKIP_TEST(dsa);
-
-#endif // BOTAN_HAS_DSA
+}

@@ -2,7 +2,7 @@
 * CVC EAC1.1 tests
 *
 * (C) 2008 Falko Strenzke (strenzke@flexsecure.de)
-*     2008 Jack Lloyd
+*     2008,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,20 +11,7 @@
 
 #if defined(BOTAN_HAS_CARD_VERIFIABLE_CERTIFICATES)
 
-#if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_RSA)
-
-#include <iosfwd>
-#include <iostream>
-#include <iterator>
-#include <algorithm>
-#include <fstream>
-#include <vector>
-#include <memory>
-
-
 #include <botan/ecdsa.h>
-#include <botan/rsa.h>
-
 #include <botan/x509cert.h>
 #include <botan/x509self.h>
 #include <botan/oids.h>
@@ -34,15 +21,18 @@
 
 #define CVC_TEST_DATA_DIR TEST_DATA_DIR "/ecc"
 
-using namespace Botan;
+#endif
 
-#define CHECK_MESSAGE(expr, print) try { if(!(expr)) std::cout << print << std::endl; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
-#define CHECK(expr) try { if(!(expr)) std::cout << #expr << std::endl; } catch(std::exception& e) { std::cout << __FUNCTION__ << ": " << e.what() << std::endl; }
+namespace Botan_Tests {
 
 namespace {
 
+#if defined(BOTAN_HAS_CARD_VERIFIABLE_CERTIFICATES)
+
+using namespace Botan;
+
 // helper functions
-void helper_write_file(EAC_Signed_Object const& to_write, std::string const& file_path)
+void helper_write_file(EAC_Signed_Object const& to_write, const std::string& file_path)
    {
    std::vector<byte> sv = to_write.BER_encode();
    std::ofstream cert_file(file_path, std::ios::binary);
@@ -50,7 +40,7 @@ void helper_write_file(EAC_Signed_Object const& to_write, std::string const& fil
    cert_file.close();
    }
 
-bool helper_files_equal(std::string const& file_path1, std::string const& file_path2)
+bool helper_files_equal(const std::string& file_path1, const std::string& file_path2)
    {
    std::ifstream cert_1_in(file_path1);
    std::ifstream cert_2_in(file_path2);
@@ -79,8 +69,44 @@ bool helper_files_equal(std::string const& file_path1, std::string const& file_p
    return sv1 == sv2;
    }
 
-void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
+Test::Result test_cvc_times()
    {
+   Test::Result result("CVC");
+
+   auto time1 = Botan::EAC_Time("2008-02-01");
+   auto time2 = Botan::EAC_Time("2008/02/28");
+   auto time3 = Botan::EAC_Time("2004-06-14");
+
+   result.confirm("time1 set", time1.time_is_set());
+   result.confirm("time2 set", time2.time_is_set());
+   result.confirm("time3 set", time3.time_is_set());
+
+   result.test_eq("time1 readable_string", time1.readable_string(), "2008/02/01");
+   result.test_eq("time2 readable_string", time2.readable_string(), "2008/02/28");
+   result.test_eq("time3 readable_string", time3.readable_string(), "2004/06/14");
+
+   result.test_eq("not set", Botan::EAC_Time("").time_is_set(), false);
+
+   const std::vector<std::string> invalid = {
+      " ",
+      "2008`02-01",
+      "9999-02-01",
+      "2000-02-01 17",
+      "999921"
+   };
+
+   for(auto&& v : invalid)
+      {
+      result.test_throws("invalid time " + v, [v]() { Botan::EAC_Time w(v); });
+      }
+
+   return result;
+   }
+
+Test::Result test_enc_gen_selfsigned()
+   {
+   Test::Result result("CVC");
+
    EAC1_1_CVC_Options opts;
    //opts.cpi = 0;
    opts.chr = ASN1_Chr("my_opt_chr"); // not used
@@ -92,37 +118,37 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
 
    // creating a non sense selfsigned cert w/o dom pars
    EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.11"));
-   ECDSA_PrivateKey key(rng, dom_pars);
+   ECDSA_PrivateKey key(Test::rng(), dom_pars);
    key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
-   EAC1_1_CVC cert = CVC_EAC::create_self_signed_cert(key, opts, rng);
+   EAC1_1_CVC cert = CVC_EAC::create_self_signed_cert(key, opts, Test::rng());
 
    std::vector<byte> der(cert.BER_encode());
    std::ofstream cert_file;
    cert_file.open(CVC_TEST_DATA_DIR "/my_cv_cert.ber", std::ios::binary);
-   //cert_file << der; // this is bad !!!
    cert_file.write((char*)der.data(), der.size());
    cert_file.close();
 
    EAC1_1_CVC cert_in(CVC_TEST_DATA_DIR "/my_cv_cert.ber");
-   CHECK(cert == cert_in);
+   result.confirm("reloaded cert matches", cert_in == cert);
+
    // encoding it again while it has no dp
    std::vector<byte> der2(cert_in.BER_encode());
    std::ofstream cert_file2(CVC_TEST_DATA_DIR "/my_cv_cert2.ber", std::ios::binary);
    cert_file2.write((char*)der2.data(), der2.size());
    cert_file2.close();
+
    // read both and compare them
    std::ifstream cert_1_in(CVC_TEST_DATA_DIR "/my_cv_cert.ber");
    std::ifstream cert_2_in(CVC_TEST_DATA_DIR "/my_cv_cert2.ber");
    std::vector<byte> sv1;
    std::vector<byte> sv2;
-   if (!cert_1_in || !cert_2_in)
+   if (!cert_1_in || cert_2_in)
       {
-      CHECK_MESSAGE(false, "could not read certificate files");
+      result.test_failure("Unable to reread cert files");
       }
    while (!cert_1_in.eof())
       {
       char now;
-
       cert_1_in.read(&now, 1);
       sv1.push_back(now);
       }
@@ -132,66 +158,61 @@ void test_enc_gen_selfsigned(RandomNumberGenerator& rng)
       cert_2_in.read(&now, 1);
       sv2.push_back(now);
       }
-   CHECK(sv1.size() > 10);
-   CHECK_MESSAGE(sv1 == sv2, "reencoded file of cert without domain parameters is different from original");
 
-   //cout << "reading cert again" << std::endl;
-   CHECK(cert_in.get_car().value() == "my_opt_car");
-   CHECK(cert_in.get_chr().value() == "my_opt_car");
-   CHECK(cert_in.get_ced().as_string() == "20100727");
-   CHECK(cert_in.get_ced().readable_string() == "2010/07/27 ");
+   result.test_gte("size", sv1.size(), 10);
+   result.test_ne("reencoded file of cert without domain parameters is different from original", sv1, sv2);
 
-   bool ill_date_exc = false;
+   result.test_eq("car", cert_in.get_car().value(), "my_opt_car");
+   result.test_eq("chr", cert_in.get_chr().value(), "my_opt_car");
+   result.test_eq("ced", cert_in.get_ced().as_string(), "20100727");
+   result.test_eq("ced", cert_in.get_ced().readable_string(), "2010/07/27");
+
    try
       {
-      ASN1_Ced("1999 01 01");
+      ASN1_Ced invalid("1999 01 01");
+      result.test_failure("Allowed creation of invalid 1999 ASN1_Ced");
       }
-   catch (...)
-      {
-      ill_date_exc = true;
-      }
-   CHECK(ill_date_exc);
+   catch(...) {}
 
-   bool ill_date_exc2 = false;
    try
       {
       ASN1_Ced("2100 01 01");
+      result.test_failure("Allowed creation of invalid 2100 ASN1_Ced");
       }
-   catch (...)
-      {
-      ill_date_exc2 = true;
-      }
-   CHECK(ill_date_exc2);
-   //cout << "readable = '" << cert_in.get_ced().readable_string() << "'" << std::endl;
+   catch(...) {}
+
    std::unique_ptr<Public_Key> p_pk(cert_in.subject_public_key());
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
 
-   // let´s see if encoding is truely implicitca, because this is what the key should have
+   // let's see if encoding is truely implicitca, because this is what the key should have
    // been set to when decoding (see above)(because it has no domain params):
 
-   CHECK(p_ecdsa_pk->domain_format() == EC_DOMPAR_ENC_IMPLICITCA);
-   bool exc = false;
+   result.confirm("implicit CA", p_ecdsa_pk->domain_format() == EC_DOMPAR_ENC_IMPLICITCA);
+
    try
       {
-      std::cout << "order = " << p_ecdsa_pk->domain().get_order() << std::endl;
+      const BigInt order = p_ecdsa_pk->domain().get_order();
+      result.test_failure("Expected accessing domain to fail");
       }
-   catch (Invalid_State)
+   catch (Invalid_State) {}
       {
-      exc = true;
       }
-   CHECK(exc);
+
    // set them and try again
    //cert_in.set_domain_parameters(dom_pars);
    std::unique_ptr<Public_Key> p_pk2(cert_in.subject_public_key());
    ECDSA_PublicKey* p_ecdsa_pk2 = dynamic_cast<ECDSA_PublicKey*>(p_pk2.get());
    //p_ecdsa_pk2->set_domain_parameters(dom_pars);
-   CHECK(p_ecdsa_pk2->domain().get_order() == dom_pars.get_order());
-   bool ver_ec = cert_in.check_signature(*p_pk2);
-   CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned cvc certificate");
+   result.test_eq("order", p_ecdsa_pk2->domain().get_order(), dom_pars.get_order());
+   result.confirm("verified signature", cert_in.check_signature(*p_pk2));
+
+   return result;
    }
 
-void test_enc_gen_req(RandomNumberGenerator& rng)
+Test::Result test_enc_gen_req()
    {
+   Test::Result result("CVC");
+
    EAC1_1_CVC_Options opts;
 
    //opts.cpi = 0;
@@ -200,9 +221,9 @@ void test_enc_gen_req(RandomNumberGenerator& rng)
 
    // creating a non sense selfsigned cert w/o dom pars
    EC_Group dom_pars(OID("1.3.132.0.8"));
-   ECDSA_PrivateKey key(rng, dom_pars);
+   ECDSA_PrivateKey key(Test::rng(), dom_pars);
    key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
-   EAC1_1_Req req = CVC_EAC::create_cvc_req(key, opts.chr, opts.hash_alg, rng);
+   EAC1_1_Req req = CVC_EAC::create_cvc_req(key, opts.chr, opts.hash_alg, Test::rng());
    std::vector<byte> der(req.BER_encode());
    std::ofstream req_file(CVC_TEST_DATA_DIR "/my_cv_req.ber", std::ios::binary);
    req_file.write((char*)der.data(), der.size());
@@ -214,34 +235,30 @@ void test_enc_gen_req(RandomNumberGenerator& rng)
    std::unique_ptr<Public_Key> p_pk(req_in.subject_public_key());
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
    //p_ecdsa_pk->set_domain_parameters(dom_pars);
-   CHECK(p_ecdsa_pk->domain().get_order() == dom_pars.get_order());
-   bool ver_ec = req_in.check_signature(*p_pk);
-   CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned (created by myself) cvc request");
+   result.test_eq("order", p_ecdsa_pk->domain().get_order(), dom_pars.get_order());
+   result.confirm("signature valid on CVC request", req_in.check_signature(*p_pk));
+
+   return result;
    }
 
-void test_cvc_req_ext(RandomNumberGenerator&)
+Test::Result test_cvc_req_ext()
    {
    EAC1_1_Req req_in(CVC_TEST_DATA_DIR "/DE1_flen_chars_cvcRequest_ECDSA.der");
    EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    //req_in.set_domain_parameters(dom_pars);
    std::unique_ptr<Public_Key> p_pk(req_in.subject_public_key());
    ECDSA_PublicKey* p_ecdsa_pk = dynamic_cast<ECDSA_PublicKey*>(p_pk.get());
-   //p_ecdsa_pk->set_domain_parameters(dom_pars);
-   CHECK(p_ecdsa_pk->domain().get_order() == dom_pars.get_order());
-   bool ver_ec = req_in.check_signature(*p_pk);
-   CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned (external testdata) cvc request");
+
+   Test::Result result("CVC");
+   result.test_eq("order", p_ecdsa_pk->domain().get_order(), dom_pars.get_order());
+   result.confirm("signature valid on CVC request", req_in.check_signature(*p_pk));
+   return result;
    }
 
-void test_cvc_ado_ext(RandomNumberGenerator&)
+Test::Result test_cvc_ado_creation()
    {
-   EAC1_1_ADO req_in(CVC_TEST_DATA_DIR "/ado.cvcreq");
-   EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
-   //cout << "car = " << req_in.get_car().value() << std::endl;
-   //req_in.set_domain_parameters(dom_pars);
-   }
+   Test::Result result("CVC");
 
-void test_cvc_ado_creation(RandomNumberGenerator& rng)
-   {
    EAC1_1_CVC_Options opts;
    //opts.cpi = 0;
    opts.chr = ASN1_Chr("my_opt_chr");
@@ -249,25 +266,24 @@ void test_cvc_ado_creation(RandomNumberGenerator& rng)
 
    // creating a non sense selfsigned cert w/o dom pars
    EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.11"));
-   //cout << "mod = " << hex << dom_pars.get_curve().get_p() << std::endl;
-   ECDSA_PrivateKey req_key(rng, dom_pars);
+   ECDSA_PrivateKey req_key(Test::rng(), dom_pars);
    req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    //EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts);
-   EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts.chr, opts.hash_alg, rng);
+   EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts.chr, opts.hash_alg, Test::rng());
    std::vector<byte> der(req.BER_encode());
    std::ofstream req_file(CVC_TEST_DATA_DIR "/my_cv_req.ber", std::ios::binary);
    req_file.write((char*)der.data(), der.size());
    req_file.close();
 
    // create an ado with that req
-   ECDSA_PrivateKey ado_key(rng, dom_pars);
+   ECDSA_PrivateKey ado_key(Test::rng(), dom_pars);
    EAC1_1_CVC_Options ado_opts;
    ado_opts.car = ASN1_Car("my_ado_car");
-   ado_opts.hash_alg = "SHA-256"; // must be equal to req´s hash alg, because ado takes his sig_algo from it´s request
+   ado_opts.hash_alg = "SHA-256"; // must be equal to req's hash alg, because ado takes his sig_algo from it's request
 
    //EAC1_1_ADO ado = CVC_EAC::create_ado_req(ado_key, req, ado_opts);
-   EAC1_1_ADO ado = CVC_EAC::create_ado_req(ado_key, req, ado_opts.car, rng);
-   CHECK_MESSAGE(ado.check_signature(ado_key), "failure of ado verification after creation");
+   EAC1_1_ADO ado = CVC_EAC::create_ado_req(ado_key, req, ado_opts.car, Test::rng());
+   result.confirm("ADO signature verifies", ado.check_signature(ado_key));
 
    std::ofstream ado_file(CVC_TEST_DATA_DIR "/ado", std::ios::binary);
    std::vector<byte> ado_der(ado.BER_encode());
@@ -275,15 +291,17 @@ void test_cvc_ado_creation(RandomNumberGenerator& rng)
    ado_file.close();
    // read it again and check the signature
    EAC1_1_ADO ado2(CVC_TEST_DATA_DIR "/ado");
-   CHECK(ado == ado2);
-   //ECDSA_PublicKey* p_ado_pk = dynamic_cast<ECDSA_PublicKey*>(&ado_key);
-   //bool ver = ado2.check_signature(*p_ado_pk);
-   bool ver = ado2.check_signature(ado_key);
-   CHECK_MESSAGE(ver, "failure of ado verification after reloading");
+   result.confirm("ADOs match", ado == ado2);
+
+   result.confirm("ADO signature valid", ado2.check_signature(ado_key));
+
+   return result;
    }
 
-void test_cvc_ado_comparison(RandomNumberGenerator& rng)
+Test::Result test_cvc_ado_comparison()
    {
+   Test::Result result("CVC");
+
    EAC1_1_CVC_Options opts;
    //opts.cpi = 0;
    opts.chr = ASN1_Chr("my_opt_chr");
@@ -291,38 +309,38 @@ void test_cvc_ado_comparison(RandomNumberGenerator& rng)
 
    // creating a non sense selfsigned cert w/o dom pars
    EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.11"));
-   ECDSA_PrivateKey req_key(rng, dom_pars);
+   ECDSA_PrivateKey req_key(Test::rng(), dom_pars);
    req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
    //EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts);
-   EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts.chr, opts.hash_alg, rng);
+   EAC1_1_Req req = CVC_EAC::create_cvc_req(req_key, opts.chr, opts.hash_alg, Test::rng());
 
 
    // create an ado with that req
-   ECDSA_PrivateKey ado_key(rng, dom_pars);
+   ECDSA_PrivateKey ado_key(Test::rng(), dom_pars);
    EAC1_1_CVC_Options ado_opts;
    ado_opts.car = ASN1_Car("my_ado_car1");
    ado_opts.hash_alg = "SHA-224"; // must be equal to req's hash alg, because ado takes his sig_algo from it's request
    //EAC1_1_ADO ado = CVC_EAC::create_ado_req(ado_key, req, ado_opts);
-   EAC1_1_ADO ado = CVC_EAC::create_ado_req(ado_key, req, ado_opts.car, rng);
-   CHECK_MESSAGE(ado.check_signature(ado_key), "failure of ado verification after creation");
+   EAC1_1_ADO ado = CVC_EAC::create_ado_req(ado_key, req, ado_opts.car, Test::rng());
+   result.confirm("ADO signature valid", ado.check_signature(ado_key));
    // make a second one for comparison
    EAC1_1_CVC_Options opts2;
    //opts2.cpi = 0;
    opts2.chr = ASN1_Chr("my_opt_chr");
    opts2.hash_alg = "SHA-160"; // this is the only difference
-   ECDSA_PrivateKey req_key2(rng, dom_pars);
+   ECDSA_PrivateKey req_key2(Test::rng(), dom_pars);
    req_key.set_parameter_encoding(EC_DOMPAR_ENC_IMPLICITCA);
-   //EAC1_1_Req req2 = CVC_EAC::create_cvc_req(req_key2, opts2, rng);
-   EAC1_1_Req req2 = CVC_EAC::create_cvc_req(req_key2, opts2.chr, opts2.hash_alg, rng);
-   ECDSA_PrivateKey ado_key2(rng, dom_pars);
+   //EAC1_1_Req req2 = CVC_EAC::create_cvc_req(req_key2, opts2, Test::rng());
+   EAC1_1_Req req2 = CVC_EAC::create_cvc_req(req_key2, opts2.chr, opts2.hash_alg, Test::rng());
+   ECDSA_PrivateKey ado_key2(Test::rng(), dom_pars);
    EAC1_1_CVC_Options ado_opts2;
    ado_opts2.car = ASN1_Car("my_ado_car1");
    ado_opts2.hash_alg = "SHA-160"; // must be equal to req's hash alg, because ado takes his sig_algo from it's request
 
-   EAC1_1_ADO ado2 = CVC_EAC::create_ado_req(ado_key2, req2, ado_opts2.car, rng);
-   CHECK_MESSAGE(ado2.check_signature(ado_key2), "failure of ado verification after creation");
+   EAC1_1_ADO ado2 = CVC_EAC::create_ado_req(ado_key2, req2, ado_opts2.car, Test::rng());
+   result.confirm("ADO signature after creation", ado2.check_signature(ado_key2));
 
-   CHECK_MESSAGE(ado != ado2, "ado's found to be equal where they are not");
+   result.confirm("ADOs should not be equal", ado != ado2);
    //     std::ofstream ado_file(CVC_TEST_DATA_DIR "/ado");
    //     std::vector<byte> ado_der(ado.BER_encode());
    //     ado_file.write((char*)ado_der.data(), ado_der.size());
@@ -334,185 +352,182 @@ void test_cvc_ado_comparison(RandomNumberGenerator& rng)
    //    //bool ver = ado2.check_signature(*p_ado_pk);
    //    bool ver = ado2.check_signature(ado_key);
    //    CHECK_MESSAGE(ver, "failure of ado verification after reloading");
+
+   return result;
    }
 
-void test_eac_time(RandomNumberGenerator&)
+void confirm_cex_time(Test::Result& result,
+                      const ASN1_Cex& cex,
+                      size_t exp_year,
+                      size_t exp_month)
    {
-   EAC_Time time(std::chrono::system_clock::now());
-   //     std::cout << "time as std::string = " << time.as_string() << std::endl;
+   result.test_eq("year", cex.get_year(), exp_year);
+   result.test_eq("month", cex.get_month(), exp_month);
+   }
+
+Test::Result test_eac_time()
+   {
+   Test::Result result("CVC");
+
    EAC_Time sooner("", ASN1_Tag(99));
-   //X509_Time sooner("", ASN1_Tag(99));
    sooner.set_to("2007 12 12");
-   //     std::cout << "sooner as std::string = " << sooner.as_string() << std::endl;
    EAC_Time later("2007 12 13");
-   //X509_Time later("2007 12 13");
-   //     std::cout << "later as std::string = " << later.as_string() << std::endl;
-   CHECK(sooner <= later);
-   CHECK(sooner == sooner);
+
+   result.confirm("sooner < later", sooner < later);
+   result.confirm("self-equal", sooner == sooner);
 
    ASN1_Cex my_cex("2007 08 01");
    my_cex.add_months(12);
-   CHECK(my_cex.get_year() == 2008);
-   CHECK_MESSAGE(my_cex.get_month() == 8, "shoult be 8, was " << my_cex.get_month());
+   confirm_cex_time(result, my_cex, 2008, 8);
 
    my_cex.add_months(4);
-   CHECK(my_cex.get_year() == 2008);
-   CHECK(my_cex.get_month() == 12);
+   confirm_cex_time(result, my_cex, 2008, 12);
 
    my_cex.add_months(4);
-   CHECK(my_cex.get_year() == 2009);
-   CHECK(my_cex.get_month() == 4);
+   confirm_cex_time(result, my_cex, 2009, 4);
 
    my_cex.add_months(41);
-   CHECK(my_cex.get_year() == 2012);
-   CHECK(my_cex.get_month() == 9);
+   confirm_cex_time(result, my_cex, 2012, 9);
 
-
-
+   return result;
    }
 
-void test_ver_cvca(RandomNumberGenerator&)
+Test::Result test_ver_cvca()
    {
-   EAC1_1_CVC req_in(CVC_TEST_DATA_DIR "/cvca01.cv.crt");
+   Test::Result result("CVC");
 
-   bool exc = false;
+   EAC1_1_CVC cvc(CVC_TEST_DATA_DIR "/cvca01.cv.crt");
 
-   std::unique_ptr<Public_Key> p_pk2(req_in.subject_public_key());
-   ECDSA_PublicKey* p_ecdsa_pk2 = dynamic_cast<ECDSA_PublicKey*>(p_pk2.get());
-   bool ver_ec = req_in.check_signature(*p_pk2);
-   CHECK_MESSAGE(ver_ec, "could not positively verify correct selfsigned cvca certificate");
+   std::unique_ptr<Public_Key> p_pk2(cvc.subject_public_key());
+   result.confirm("verified CVCA cert", cvc.check_signature(*p_pk2));
 
    try
       {
+      ECDSA_PublicKey* p_ecdsa_pk2 = dynamic_cast<ECDSA_PublicKey*>(p_pk2.get());
       p_ecdsa_pk2->domain().get_order();
+      result.test_failure("Expected failure");
       }
-   catch (Invalid_State)
+   catch(Invalid_State)
       {
-      exc = true;
+      result.test_note("Accessing order failed");
       }
-   CHECK(!exc);
+
+   return result;
    }
 
-void test_copy_and_assignment(RandomNumberGenerator&)
+Test::Result test_copy_and_assignment()
    {
+   Test::Result result("CVC");
+
    EAC1_1_CVC cert_in(CVC_TEST_DATA_DIR "/cvca01.cv.crt");
    EAC1_1_CVC cert_cp(cert_in);
    EAC1_1_CVC cert_ass = cert_in;
-   CHECK(cert_in == cert_cp);
-   CHECK(cert_in == cert_ass);
+
+   result.confirm("same cert", cert_in == cert_cp);
+   result.confirm("same cert", cert_in == cert_ass);
 
    EAC1_1_ADO ado_in(CVC_TEST_DATA_DIR "/ado.cvcreq");
-   //EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    EAC1_1_ADO ado_cp(ado_in);
    EAC1_1_ADO ado_ass = ado_in;
-   CHECK(ado_in == ado_cp);
-   CHECK(ado_in == ado_ass);
+   result.confirm("same", ado_in == ado_cp);
+   result.confirm("same", ado_in == ado_ass);
 
    EAC1_1_Req req_in(CVC_TEST_DATA_DIR "/DE1_flen_chars_cvcRequest_ECDSA.der");
-   //EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
    EAC1_1_Req req_cp(req_in);
    EAC1_1_Req req_ass = req_in;
-   CHECK(req_in == req_cp);
-   CHECK(req_in == req_ass);
+   result.confirm("same", req_in == req_cp);
+   result.confirm("same", req_in == req_ass);
+
+   return result;
    }
 
-void test_eac_str_illegal_values(RandomNumberGenerator&)
+Test::Result test_eac_str_illegal_values()
    {
-   bool exc = false;
+   Test::Result result("CVC");
+
    try
       {
       EAC1_1_CVC(CVC_TEST_DATA_DIR "/cvca_illegal_chars.cv.crt");
-
+      result.test_failure("Accepted invalid EAC 1.1 CVC");
       }
-   catch (Decoding_Error)
-      {
-      exc = true;
-      }
-   CHECK(exc);
+   catch (Decoding_Error) {}
 
-   bool exc2 = false;
    try
       {
       EAC1_1_CVC(CVC_TEST_DATA_DIR "/cvca_illegal_chars2.cv.crt");
+      result.test_failure("Accepted invalid EAC 1.1 CVC #2");
+      }
+   catch (Decoding_Error) {}
 
-      }
-   catch (Decoding_Error)
-      {
-      exc2 = true;
-      }
-   CHECK(exc2);
+   return result;
    }
 
-void test_tmp_eac_str_enc(RandomNumberGenerator&)
+Test::Result test_tmp_eac_str_enc()
    {
-   bool exc = false;
+   Test::Result result("CVC");
    try
       {
       ASN1_Car("abc!+-µ\n");
+      result.test_failure("Accepted invalid EAC string");
       }
-   catch (Invalid_Argument)
-      {
-      exc = true;
-      }
-   CHECK(exc);
-   //     std::string val = car.iso_8859();
-   //     std::cout << "car 8859 = " << val << std::endl;
-   //     std::cout << hex <<(unsigned char)val[1] << std::endl;
+   catch(Invalid_Argument) {}
 
-
+   return result;
    }
 
-void test_cvc_chain(RandomNumberGenerator& rng)
+Test::Result test_cvc_chain()
    {
+   Test::Result result("CVC");
+
    EC_Group dom_pars(OID("1.3.36.3.3.2.8.1.1.5")); // "german curve"
-   ECDSA_PrivateKey cvca_privk(rng, dom_pars);
+   ECDSA_PrivateKey cvca_privk(Test::rng(), dom_pars);
    std::string hash("SHA-224");
    ASN1_Car car("DECVCA00001");
-   EAC1_1_CVC cvca_cert = DE_EAC::create_cvca(cvca_privk, hash, car, true, true, 12, rng);
+   EAC1_1_CVC cvca_cert = DE_EAC::create_cvca(cvca_privk, hash, car, true, true, 12, Test::rng());
    std::ofstream cvca_file(CVC_TEST_DATA_DIR "/cvc_chain_cvca.cer", std::ios::binary);
    std::vector<byte> cvca_sv = cvca_cert.BER_encode();
    cvca_file.write((char*)cvca_sv.data(), cvca_sv.size());
    cvca_file.close();
 
-   ECDSA_PrivateKey cvca_privk2(rng, dom_pars);
+   ECDSA_PrivateKey cvca_privk2(Test::rng(), dom_pars);
    ASN1_Car car2("DECVCA00002");
-   EAC1_1_CVC cvca_cert2 = DE_EAC::create_cvca(cvca_privk2, hash, car2, true, true, 12, rng);
-   EAC1_1_CVC link12 = DE_EAC::link_cvca(cvca_cert, cvca_privk, cvca_cert2, rng);
+   EAC1_1_CVC cvca_cert2 = DE_EAC::create_cvca(cvca_privk2, hash, car2, true, true, 12, Test::rng());
+   EAC1_1_CVC link12 = DE_EAC::link_cvca(cvca_cert, cvca_privk, cvca_cert2, Test::rng());
    std::vector<byte> link12_sv = link12.BER_encode();
    std::ofstream link12_file(CVC_TEST_DATA_DIR "/cvc_chain_link12.cer", std::ios::binary);
    link12_file.write((char*)link12_sv.data(), link12_sv.size());
    link12_file.close();
 
    // verify the link
-   CHECK(link12.check_signature(cvca_privk));
+   result.confirm("signature valid", link12.check_signature(cvca_privk));
    EAC1_1_CVC link12_reloaded(CVC_TEST_DATA_DIR "/cvc_chain_link12.cer");
    EAC1_1_CVC cvca1_reloaded(CVC_TEST_DATA_DIR "/cvc_chain_cvca.cer");
    std::unique_ptr<Public_Key> cvca1_rel_pk(cvca1_reloaded.subject_public_key());
-   CHECK(link12_reloaded.check_signature(*cvca1_rel_pk));
+   result.confirm("signature valid", link12_reloaded.check_signature(*cvca1_rel_pk));
 
    // create first round dvca-req
-   ECDSA_PrivateKey dvca_priv_key(rng, dom_pars);
-   EAC1_1_Req dvca_req = DE_EAC::create_cvc_req(dvca_priv_key, ASN1_Chr("DEDVCAEPASS"), hash, rng);
+   ECDSA_PrivateKey dvca_priv_key(Test::rng(), dom_pars);
+   EAC1_1_Req dvca_req = DE_EAC::create_cvc_req(dvca_priv_key, ASN1_Chr("DEDVCAEPASS"), hash, Test::rng());
    std::ofstream dvca_file(CVC_TEST_DATA_DIR "/cvc_chain_dvca_req.cer", std::ios::binary);
    std::vector<byte> dvca_sv = dvca_req.BER_encode();
    dvca_file.write((char*)dvca_sv.data(), dvca_sv.size());
    dvca_file.close();
 
    // sign the dvca_request
-   EAC1_1_CVC dvca_cert1 = DE_EAC::sign_request(cvca_cert, cvca_privk, dvca_req, 1, 5, true, 3, 1, rng);
-   CHECK(dvca_cert1.get_car().iso_8859() == "DECVCA00001");
-   CHECK(dvca_cert1.get_chr().iso_8859() == "DEDVCAEPASS00001");
+   EAC1_1_CVC dvca_cert1 = DE_EAC::sign_request(cvca_cert, cvca_privk, dvca_req, 1, 5, true, 3, 1, Test::rng());
+   result.test_eq("DVCA car", dvca_cert1.get_car().iso_8859(), "DECVCA00001");
+   result.test_eq("DVCA chr", dvca_cert1.get_chr().iso_8859(), "DEDVCAEPASS00001");
    helper_write_file(dvca_cert1, CVC_TEST_DATA_DIR "/cvc_chain_dvca_cert1.cer");
 
    // make a second round dvca ado request
-   ECDSA_PrivateKey dvca_priv_key2(rng, dom_pars);
-   EAC1_1_Req dvca_req2 = DE_EAC::create_cvc_req(dvca_priv_key2, ASN1_Chr("DEDVCAEPASS"), hash, rng);
+   ECDSA_PrivateKey dvca_priv_key2(Test::rng(), dom_pars);
+   EAC1_1_Req dvca_req2 = DE_EAC::create_cvc_req(dvca_priv_key2, ASN1_Chr("DEDVCAEPASS"), hash, Test::rng());
    std::ofstream dvca_file2(CVC_TEST_DATA_DIR "/cvc_chain_dvca_req2.cer", std::ios::binary);
    std::vector<byte> dvca_sv2 = dvca_req2.BER_encode();
    dvca_file2.write((char*)dvca_sv2.data(), dvca_sv2.size());
    dvca_file2.close();
    EAC1_1_ADO dvca_ado2 = CVC_EAC::create_ado_req(dvca_priv_key, dvca_req2,
-                                                  ASN1_Car(dvca_cert1.get_chr().iso_8859()), rng);
+                                                  ASN1_Car(dvca_cert1.get_chr().iso_8859()), Test::rng());
    helper_write_file(dvca_ado2, CVC_TEST_DATA_DIR "/cvc_chain_dvca_ado2.cer");
 
    // verify the ado and sign the request too
@@ -521,66 +536,78 @@ void test_cvc_chain(RandomNumberGenerator& rng)
    ECDSA_PublicKey* cert_pk = dynamic_cast<ECDSA_PublicKey*>(ap_pk.get());
 
    //cert_pk->set_domain_parameters(dom_pars);
-   //std::cout << "dvca_cert.public_point.size() = " << ec::EC2OSP(cert_pk->get_public_point(), ec::PointGFp::COMPRESSED).size() << std::endl;
    EAC1_1_CVC dvca_cert1_reread(CVC_TEST_DATA_DIR "/cvc_chain_cvca.cer");
-   CHECK(dvca_ado2.check_signature(*cert_pk));
-
-   CHECK(dvca_ado2.check_signature(dvca_priv_key)); // must also work
+   result.confirm("signature valid", dvca_ado2.check_signature(*cert_pk));
+   result.confirm("signature valid", dvca_ado2.check_signature(dvca_priv_key)); // must also work
 
    EAC1_1_Req dvca_req2b = dvca_ado2.get_request();
    helper_write_file(dvca_req2b, CVC_TEST_DATA_DIR "/cvc_chain_dvca_req2b.cer");
-   CHECK(helper_files_equal(CVC_TEST_DATA_DIR "/cvc_chain_dvca_req2b.cer", CVC_TEST_DATA_DIR "/cvc_chain_dvca_req2.cer"));
-   EAC1_1_CVC dvca_cert2 = DE_EAC::sign_request(cvca_cert, cvca_privk, dvca_req2b, 2, 5, true, 3, 1, rng);
-   CHECK(dvca_cert2.get_car().iso_8859() == "DECVCA00001");
-   CHECK_MESSAGE(dvca_cert2.get_chr().iso_8859() == "DEDVCAEPASS00002",
-                 "chr = " << dvca_cert2.get_chr().iso_8859());
+   result.confirm("files match", helper_files_equal(CVC_TEST_DATA_DIR "/cvc_chain_dvca_req2b.cer", CVC_TEST_DATA_DIR "/cvc_chain_dvca_req2.cer"));
+   EAC1_1_CVC dvca_cert2 = DE_EAC::sign_request(cvca_cert, cvca_privk, dvca_req2b, 2, 5, true, 3, 1, Test::rng());
+   result.test_eq("DVCA car", dvca_cert2.get_car().iso_8859(), "DECVCA00001");
+   result.test_eq("DVCA chr", dvca_cert2.get_chr().iso_8859(), "DEDVCAEPASS00002");
 
    // make a first round IS request
-   ECDSA_PrivateKey is_priv_key(rng, dom_pars);
-   EAC1_1_Req is_req = DE_EAC::create_cvc_req(is_priv_key, ASN1_Chr("DEIS"), hash, rng);
+   ECDSA_PrivateKey is_priv_key(Test::rng(), dom_pars);
+   EAC1_1_Req is_req = DE_EAC::create_cvc_req(is_priv_key, ASN1_Chr("DEIS"), hash, Test::rng());
    helper_write_file(is_req, CVC_TEST_DATA_DIR "/cvc_chain_is_req.cer");
 
    // sign the IS request
    //dvca_cert1.set_domain_parameters(dom_pars);
-   EAC1_1_CVC is_cert1 = DE_EAC::sign_request(dvca_cert1, dvca_priv_key, is_req, 1, 5, true, 3, 1, rng);
-   CHECK_MESSAGE(is_cert1.get_car().iso_8859() == "DEDVCAEPASS00001", "car = " << is_cert1.get_car().iso_8859());
-   CHECK(is_cert1.get_chr().iso_8859() == "DEIS00001");
+   EAC1_1_CVC is_cert1 = DE_EAC::sign_request(dvca_cert1, dvca_priv_key, is_req, 1, 5, true, 3, 1, Test::rng());
+   result.test_eq("EAC 1.1 CVC car", is_cert1.get_car().iso_8859(), "DEDVCAEPASS00001");
+   result.test_eq("EAC 1.1 CVC chr", is_cert1.get_chr().iso_8859(), "DEIS00001");
    helper_write_file(is_cert1, CVC_TEST_DATA_DIR "/cvc_chain_is_cert.cer");
 
    // verify the signature of the certificate
-   CHECK(is_cert1.check_signature(dvca_priv_key));
+   result.confirm("valid signature", is_cert1.check_signature(dvca_priv_key));
+
+   return result;
    }
+
+class CVC_Unit_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+
+         std::vector<std::function<Test::Result()>> fns = {
+              test_cvc_times,
+              test_enc_gen_selfsigned,
+              test_enc_gen_req,
+              test_cvc_req_ext,
+              test_cvc_ado_creation,
+              test_cvc_ado_comparison,
+              test_eac_time,
+              test_ver_cvca,
+              test_copy_and_assignment,
+              test_eac_str_illegal_values,
+              test_tmp_eac_str_enc,
+              test_cvc_chain
+         };
+
+         for(size_t i = 0; i != fns.size(); ++i)
+            {
+            try
+               {
+               results.push_back(fns[i]());
+               }
+            catch(std::exception& e)
+               {
+               results.push_back(Test::Result::Failure("CVC test " + std::to_string(i), e.what()));
+               }
+            }
+
+         return results;
+         }
+
+   };
+
+BOTAN_REGISTER_TEST("cvc", CVC_Unit_Tests);
+
+#endif
 
 }
 
-size_t test_cvc()
-   {
-   auto& rng = test_rng();
-
-   test_enc_gen_selfsigned(rng);
-   test_enc_gen_req(rng);
-   test_cvc_req_ext(rng);
-   test_cvc_ado_ext(rng);
-   test_cvc_ado_creation(rng);
-   test_cvc_ado_comparison(rng);
-   test_eac_time(rng);
-   test_ver_cvca(rng);
-   test_copy_and_assignment(rng);
-   test_eac_str_illegal_values(rng);
-   test_tmp_eac_str_enc(rng);
-   test_cvc_chain(rng);
-
-   return 0;
-   }
-
-#else
-
-UNTESTED_WARNING(cvc);
-
-#endif // BOTAN_HAS_ECDSA && BOTAN_HAS_RSA
-
-#else
-
-SKIP_TEST(cvc);
-
-#endif // BOTAN_HAS_CARD_VERIFIABLE_CERTIFICATES
+}

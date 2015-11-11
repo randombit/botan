@@ -4,7 +4,18 @@ Release Notes
 Version 1.11.25, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* In this release the test suite has been largely rewritten. Previously the
+  tests had internally used several different test helper frameworks created or
+  adopted over time, each of which was insufficient on its own for testing the
+  entire library. These have been fully converged on a new framework which
+  suffices for all of the tests. There should be no user-visible change as a
+  result of this.
 
+* The OpenSSL implementation of RC4 would return the wrong value from `name` if
+  leading bytes of the keystream had been skipped in the output.
+
+* Fixed the signature of botan_pubkey_destroy which took the wrong type and was
+  not usable.
 
 Version 1.11.24, 2015-11-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -37,7 +48,7 @@ Version 1.11.23, 2015-10-26
 * CVE-2015-7826: X.509 path validation violated RFC 6125 and would accept
   certificates which should not validate under those rules. In particular botan
   would accept wildcard certificates as matching in situations where it should
-  not (for example it would erronously accept '*.example.com' as a valid
+  not (for example it would erroneously accept '*.example.com' as a valid
   wildcard for 'foo.bar.example.com')
 
 * CVE-2015-7827: The routines for decoding PKCS #1 encryption and OAEP blocks
@@ -71,7 +82,7 @@ Version 1.11.23, 2015-10-26
   deriving the next value by squaring the previous ones. The reinitializion
   interval can be controlled by the build.h parameter BOTAN_BLINDING_REINIT_INTERVAL.
 
-* A bug decoding DTLS client hellos prevented session resumption for suceeding.
+* A bug decoding DTLS client hellos prevented session resumption for succeeding.
 
 * DL_Group now prohibits creating a group smaller than 1024 bits.
 

@@ -1,0 +1,18 @@
+
+[valid]
+Date = 1970,01,01,0,0,0
+Date = 1998,04,23,14,37,28
+Date = 2037,12,31,23,59,59
+
+[valid.not_std]
+# these dates are valid but not representable as a std::system_clock::time_point
+Date = 1800,01,01,0,0,0
+Date = 1969,12,31,23,59,58
+Date = 1969,12,31,23,59,59
+Date = 2038,01,01,0,0,0
+Date = 2083,05,20,8,30,9
+
+[invalid]
+#Date = 2037,12,32,24,59,59
+#Date = 1998,10,31,22,61,0
+#Date = 1998,10,31,22,60,60

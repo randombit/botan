@@ -7,68 +7,59 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ELGAMAL)
+  #include <botan/elgamal.h>
+  #include "test_pubkey.h"
+#endif
 
-#include "test_pubkey.h"
-
-#include <botan/hex.h>
-#include <botan/elgamal.h>
-#include <botan/pubkey.h>
-#include <botan/dl_group.h>
-#include <iostream>
-#include <fstream>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t elgamal_kat(const std::string& p,
-                   const std::string& g,
-                   const std::string& x,
-                   const std::string& msg,
-                   std::string padding,
-                   const std::string& nonce,
-                   const std::string& ciphertext)
+#if defined(BOTAN_HAS_ELGAMAL)
+
+class ElGamal_KAT_Tests : public PK_Encryption_Decryption_Test
    {
-   auto& rng = test_rng();
+   public:
+      ElGamal_KAT_Tests() : PK_Encryption_Decryption_Test(
+         "ElGamal",
+         Test::data_file("pubkey/elgamal.vec"),
+         {"P", "G", "X", "Msg", "Nonce", "Ciphertext"},
+         {"Padding"})
+         {}
 
-   const BigInt p_bn = BigInt(p);
-   const BigInt g_bn = BigInt(g);
-   const BigInt x_bn = BigInt(x);
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
+         {
+         const Botan::BigInt p = get_req_bn(vars, "P");
+         const Botan::BigInt g = get_req_bn(vars, "G");
+         const Botan::BigInt x = get_req_bn(vars, "X");
 
-   DL_Group group(p_bn, g_bn);
-   ElGamal_PrivateKey privkey(rng, group, x_bn);
+         const Botan::DL_Group grp(p, g);
 
-   ElGamal_PublicKey pubkey = privkey;
+         std::unique_ptr<Botan::Private_Key> key(new Botan::ElGamal_PrivateKey(Test::rng(), grp, x));
+         return key;
+         }
+   };
 
-   if(padding == "")
-      padding = "Raw";
+class ElGamal_Keygen_Tests : public PK_Key_Generation_Test
+   {
+   public:
+      std::vector<std::string> keygen_params() const override { return { "modp/ietf/1024", "modp/ietf/2048" }; }
 
-   PK_Encryptor_EME enc(pubkey, padding);
-   PK_Decryptor_EME dec(privkey, padding);
+      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
+                                                   const std::string& param) const override
+         {
+         Botan::DL_Group group(param);
+         std::unique_ptr<Botan::Private_Key> key(new Botan::ElGamal_PrivateKey(rng, group));
+         return key;
+         }
 
-   return validate_encryption(enc, dec, "ElGamal/" + padding, msg, nonce, ciphertext);
-   }
+   };
+
+BOTAN_REGISTER_TEST("elgamal_kat", ElGamal_KAT_Tests);
+BOTAN_REGISTER_TEST("elgamal_keygen", ElGamal_Keygen_Tests);
+
+#endif
 
 }
 
-size_t test_elgamal()
-   {
-   size_t fails = 0;
-
-   std::ifstream elgamal_enc(TEST_DATA_DIR_PK "/elgamal.vec");
-
-   fails += run_tests_bb(elgamal_enc, "ElGamal Encryption", "Ciphertext", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return elgamal_kat(m["P"], m["G"], m["X"], m["Msg"],
-                              m["Padding"], m["Nonce"], m["Ciphertext"]);
-             });
-
-   return fails;
-   }
-
-#else
-
-SKIP_TEST(elgamal);
-
-#endif // BOTAN_HAS_ELGAMAL
+}

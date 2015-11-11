@@ -5,324 +5,726 @@
 */
 
 #include "tests.h"
-#include <iostream>
-#include <fstream>
-#include <botan/auto_rng.h>
+
+#include <sstream>
+#include <iomanip>
+#include <botan/hex.h>
 #include <botan/internal/filesystem.h>
+#include <botan/internal/bit_ops.h>
 
-#define CATCH_CONFIG_RUNNER
-#define CATCH_CONFIG_CONSOLE_WIDTH 60
-#define CATCH_CONFIG_COLOUR_NONE
-#include "catchy/catch.hpp"
+namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
+Test::Registration::Registration(const std::string& name, Test* test)
+   {
+   if(Test::global_registry().count(name) == 0)
+      {
+      Test::global_registry().insert(std::make_pair(name, std::unique_ptr<Test>(test)));
+      }
+   else
+      {
+      throw std::runtime_error("Duplicate registration of test '" + name + "'");
+      }
+   }
+
+void Test::Result::merge(const Result& other)
+   {
+   if(who() != other.who())
+      throw std::runtime_error("Merging tests from different sources");
+
+   m_ns_taken += other.m_ns_taken;
+   m_tests_passed += other.m_tests_passed;
+   m_fail_log.insert(m_fail_log.end(), other.m_fail_log.begin(), other.m_fail_log.end());
+   m_log.insert(m_log.end(), other.m_log.begin(), other.m_log.end());
+   }
+
+void Test::Result::test_note(const std::string& note)
+   {
+   if(note != "")
+      {
+      m_log.push_back(who() + " " + note);
+      }
+   }
+
+void Test::Result::note_missing(const std::string& whatever)
+   {
+   static std::set<std::string> s_already_seen;
+
+   if(s_already_seen.count(whatever) == 0)
+      {
+      test_note("Skipping tests due to missing " + whatever);
+      s_already_seen.insert(whatever);
+      }
+   }
+
+bool Test::Result::test_throws(const std::string& what, std::function<void ()> fn)
+   {
+   try {
+      fn();
+      return test_failure(what + " failed to throw expected exception");
+   }
+   catch(std::exception& e)
+      {
+      return test_success(what + " threw exception " + e.what());
+      }
+   catch(...)
+      {
+      return test_success(what + " threw unknown exception");
+      }
+   }
+
+bool Test::Result::test_success(const std::string& note)
+   {
+   if(Test::log_success())
+      {
+      test_note(note);
+      }
+   ++m_tests_passed;
+   return true;
+   }
+
+bool Test::Result::test_failure(const char* what, const char* error)
+   {
+   return test_failure(who() + " " + what + " with error " + error);
+   }
+
+void Test::Result::test_failure(const char* what, const uint8_t buf[], size_t buf_len)
+   {
+   test_failure(who() + ": " + what +
+                " buf len " + std::to_string(buf_len) +
+                " value " + Botan::hex_encode(buf, buf_len));
+   }
+
+bool Test::Result::test_failure(const std::string& err)
+   {
+   m_fail_log.push_back(err);
+   return false;
+   }
+
+bool Test::Result::test_ne(const char* what,
+                           const uint8_t produced[], size_t produced_len,
+                           const uint8_t expected[], size_t expected_len)
+   {
+   if(produced_len == expected_len && Botan::same_mem(produced, expected, expected_len))
+      return test_failure(who() + ":" + what + " produced matching");
+   return test_success();
+   }
+
+bool Test::Result::test_eq(const char* producer, const char* what,
+                           const uint8_t produced[], size_t produced_size,
+                           const uint8_t expected[], size_t expected_size)
+   {
+   if(produced_size == expected_size && Botan::same_mem(produced, expected, expected_size))
+      return test_success();
+
+   std::ostringstream err;
+
+   err << who();
+
+   if(producer)
+      {
+      err << " producer '" << producer << "'";
+      }
+
+   err << " unexpected result";
+
+   if(what)
+      {
+      err << " for " << what;
+      }
+
+   if(produced_size != expected_size)
+      {
+      err << " produced " << produced_size << " bytes expected " << expected_size;
+      }
+
+   std::vector<uint8_t> xor_diff(std::min(produced_size, expected_size));
+   size_t bits_different = 0;
+
+   for(size_t i = 0; i != xor_diff.size(); ++i)
+      {
+      xor_diff[i] = produced[i] ^ expected[i];
+      bits_different += Botan::hamming_weight(xor_diff[i]);
+      }
+
+   err << "Produced: " << Botan::hex_encode(produced, produced_size) << "\n"
+       << "Expected: " << Botan::hex_encode(expected, expected_size);
+
+   if(bits_different > 0)
+      {
+      err << "\nXOR Diff: " << Botan::hex_encode(xor_diff)
+          << " (" << bits_different << " bits different)";
+      }
+
+   return test_failure(err.str());
+   }
+
+bool Test::Result::test_eq(const char* what, const std::string& produced, const std::string& expected)
+   {
+   return test_is_eq(what, produced, expected);
+   }
+
+bool Test::Result::test_eq(const char* what, const char* produced, const char* expected)
+   {
+   return test_is_eq(what, std::string(produced), std::string(expected));
+   }
+
+bool Test::Result::test_eq(const char* what, size_t produced, size_t expected)
+   {
+   return test_is_eq(what, produced, expected);
+   }
+
+bool Test::Result::test_lt(const char* what, size_t produced, size_t expected)
+   {
+   if(produced >= expected)
+      {
+      std::ostringstream err;
+      err << m_who;
+      if(what)
+         err << " " << what;
+      err << " unexpected result " << produced << " >= " << expected;
+      return test_failure(err.str());
+      }
+
+   return test_success();
+   }
+
+bool Test::Result::test_gte(const char* what, size_t produced, size_t expected)
+   {
+   if(produced < expected)
+      {
+      std::ostringstream err;
+      err << m_who;
+      if(what)
+         err << " " << what;
+      err << " unexpected result " << produced << " < " << expected;
+      return test_failure(err.str());
+      }
+
+   return test_success();
+   }
+
+#if defined(BOTAN_HAS_BIGINT)
+bool Test::Result::test_eq(const char* what, const BigInt& produced, const BigInt& expected)
+   {
+   return test_is_eq(what, produced, expected);
+   }
+
+bool Test::Result::test_ne(const char* what, const BigInt& produced, const BigInt& expected)
+   {
+   if(produced != expected)
+      return test_success();
+
+   std::ostringstream err;
+   err << who() << " " << what << " produced " << produced << " prohibited value";
+   return test_failure(err.str());
+   }
 #endif
 
-using namespace Botan;
-
-Botan::RandomNumberGenerator& test_rng()
+#if defined(BOTAN_HAS_EC_CURVE_GFP)
+bool Test::Result::test_eq(const char* what, const Botan::PointGFp& a, const Botan::PointGFp& b)
    {
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   return Botan::system_rng();
-#else
-   static Botan::AutoSeeded_RNG rng;
-   return rng;
+   //return test_is_eq(what, a, b);
+   if(a == b)
+      return test_success();
+
+   std::ostringstream err;
+   err << who() << " " << what << " a=(" << a.get_affine_x() << "," << a.get_affine_y() << ")"
+       << " b=(" << b.get_affine_x() << "," << b.get_affine_y();
+   return test_failure(err.str());
+   }
 #endif
+
+bool Test::Result::test_eq(const char* what, bool produced, bool expected)
+   {
+   return test_is_eq(what, produced, expected);
    }
 
-size_t run_tests_in_dir(const std::string& dir, std::function<size_t (const std::string&)> fn)
+bool Test::Result::test_rc_ok(const char* what, int rc)
    {
-   size_t fails = 0;
-
-   try
+   if(rc != 0)
       {
-      auto files = get_files_recursive(dir);
-
-      if (files.empty())
-         std::cout << "Warning: No test files found in '" << dir << "'" << std::endl;
-
-      for(const auto file: files)
-         fails += fn(file);
-      }
-   catch(No_Filesystem_Access)
-      {
-      std::cout << "Warning: No filesystem access available to read test files in '" << dir << "'" << std::endl;
+      std::ostringstream err;
+      err << m_who;
+      if(what)
+         err << " " << what;
+      err << " unexpectedly failed with error code " << rc;
+      return test_failure(err.str());
       }
 
-   return fails;
+   return test_success();
    }
 
-size_t run_tests(const std::vector<std::pair<std::string, test_fn>>& tests)
+bool Test::Result::test_rc_fail(const char* func, const char* why, int rc)
    {
-   size_t fails = 0;
-
-   for(const auto& row : tests)
+   if(rc == 0)
       {
-      auto name = row.first;
-      auto test = row.second;
-      try
-         {
-         fails += test();
-         }
-      catch(std::exception& e)
-         {
-         std::cout << name << ": Exception escaped test: " << e.what() << std::endl;
-         ++fails;
-         }
-      catch(...)
-         {
-         std::cout << name << ": Exception escaped test" << std::endl;
-         ++fails;
-         }
+      std::ostringstream err;
+      err << m_who;
+      if(func)
+         err << " call to " << func << " unexpectedly succeeded";
+      if(why)
+         err << " expecting failure because " << why;
+      return test_failure(err.str());
       }
 
-   // Summary for test suite
-   std::cout << "===============" << std::endl;
-   test_report("Tests", 0, fails);
-
-   return fails;
-   }
-
-void test_report(const std::string& name, size_t ran, size_t failed)
-   {
-   std::cout << name;
-
-   if(ran > 0)
-      std::cout << " " << ran << " tests";
-
-   if(failed)
-      std::cout << " " << failed << " FAILs" << std::endl;
-   else
-      std::cout << " all ok" << std::endl;
-   }
-
-size_t run_tests_bb(std::istream& src,
-                    const std::string& name_key,
-                    const std::string& output_key,
-                    bool clear_between_cb,
-                    std::function<size_t (std::map<std::string, std::string>)> cb)
-   {
-   if(!src.good())
-      {
-      std::cout << "Could not open input file for " << name_key << std::endl;
-      return 1;
-      }
-
-   std::map<std::string, std::string> vars;
-   size_t test_fails = 0, algo_fail = 0;
-   size_t test_count = 0, algo_count = 0;
-
-   std::string fixed_name;
-
-   while(src.good())
-      {
-      std::string line;
-      std::getline(src, line);
-
-      if(line == "")
-         continue;
-
-      if(line[0] == '#')
-         continue;
-
-      if(line[0] == '[' && line[line.size()-1] == ']')
-         {
-         if(fixed_name != "")
-            test_report(fixed_name, algo_count, algo_fail);
-
-         test_count += algo_count;
-         test_fails += algo_fail;
-         algo_count = 0;
-         algo_fail = 0;
-         fixed_name = line.substr(1, line.size() - 2);
-         vars[name_key] = fixed_name;
-         continue;
-         }
-
-      const std::string key = line.substr(0, line.find_first_of(' '));
-      const std::string val = line.substr(line.find_last_of(' ') + 1, std::string::npos);
-
-      vars[key] = val;
-
-      if(key == name_key)
-         fixed_name.clear();
-
-      if(key == output_key)
-         {
-         //std::cout << vars[name_key] << " " << algo_count << std::endl;
-         ++algo_count;
-         try
-            {
-            const size_t fails = cb(vars);
-
-            if(fails)
-               {
-               std::cout << vars[name_key] << " test " << algo_count << ": " << fails << " failure" << std::endl;
-               algo_fail += fails;
-               }
-            }
-         catch(std::exception& e)
-            {
-            std::cout << vars[name_key] << " test " << algo_count << " failed: " << e.what() << std::endl;
-            ++algo_fail;
-            }
-
-         if(clear_between_cb)
-            {
-            vars.clear();
-            vars[name_key] = fixed_name;
-            }
-         }
-      }
-
-   test_count += algo_count;
-   test_fails += algo_fail;
-
-   if(fixed_name != "" && (algo_count > 0 || algo_fail > 0))
-      test_report(fixed_name, algo_count, algo_fail);
-   else
-      test_report(name_key, test_count, test_fails);
-
-   return test_fails;
-   }
-
-size_t run_tests(const std::string& filename,
-                 const std::string& name_key,
-                 const std::string& output_key,
-                 bool clear_between_cb,
-                 std::function<std::string (std::map<std::string, std::string>)> cb)
-   {
-   std::ifstream vec(filename);
-
-   if(!vec)
-      {
-      std::cout << "Failure opening " << filename << std::endl;
-      return 1;
-      }
-
-   return run_tests(vec, name_key, output_key, clear_between_cb, cb);
-   }
-
-size_t run_tests(std::istream& src,
-                 const std::string& name_key,
-                 const std::string& output_key,
-                 bool clear_between_cb,
-                 std::function<std::string (std::map<std::string, std::string>)> cb)
-   {
-   return run_tests_bb(src, name_key, output_key, clear_between_cb,
-                [name_key,output_key,cb](std::map<std::string, std::string> vars)
-                {
-                const std::string got = cb(vars);
-                if(got != vars[output_key])
-                   {
-                   std::cout << name_key << ' ' << vars[name_key] << " got " << got
-                             << " expected " << vars[output_key] << std::endl;
-                   return 1;
-                   }
-                return 0;
-                });
+   return test_success();
    }
 
 namespace {
 
-int help(char* argv0)
+std::string format_time(uint64_t ns)
    {
-   std::cout << "Usage: " << argv0 << " [suite]" << std::endl;
-   std::cout << "Suites: all (default), block, hash, bigint, rsa, ecdsa, ..." << std::endl;
-   return 1;
-   }
+   std::ostringstream o;
 
-int test_catchy()
-   {
-   // drop arc and arv for now
-   int catchy_result = Catch::Session().run();
-   if (catchy_result != 0)
+   if(ns > 1000000000)
       {
-      std::exit(EXIT_FAILURE);
+      o << std::setprecision(2) << std::fixed << ns/1000000000.0 << " sec";
       }
-   return 0;
+   else
+      {
+      o << std::setprecision(2) << std::fixed << ns/1000000.0 << " msec";
+      }
+
+   return o.str();
    }
 
 }
 
-int main(int argc, char* argv[])
+std::string Test::Result::result_string() const
    {
-   if(argc != 1 && argc != 2)
-      return help(argv[0]);
+   std::ostringstream report;
+   report << who() << " ran ";
 
-   std::string target = "all";
-
-   if(argc == 2)
-      target = argv[1];
-
-   if(target == "-h" || target == "--help" || target == "help")
-      return help(argv[0]);
-
-   std::vector<std::pair<std::string, test_fn>> tests;
-
-#define DEF_TEST(test) do { if(target == "all" || target == #test) \
-      tests.push_back(std::make_pair(#test, test_ ## test));       \
-   } while(0)
-
-   // unittesting framework in sub-folder tests/catchy
-   DEF_TEST(catchy);
-
-   DEF_TEST(block);
-   DEF_TEST(modes);
-   DEF_TEST(aead);
-   DEF_TEST(ocb);
-
-   DEF_TEST(stream);
-   DEF_TEST(hash);
-   DEF_TEST(mac);
-   DEF_TEST(pbkdf);
-   DEF_TEST(kdf);
-   DEF_TEST(keywrap);
-   DEF_TEST(transform);
-   DEF_TEST(rngs);
-   DEF_TEST(passhash9);
-   DEF_TEST(bcrypt);
-   DEF_TEST(cryptobox);
-   DEF_TEST(tss);
-   DEF_TEST(rfc6979);
-   DEF_TEST(srp6);
-
-   DEF_TEST(bigint);
-
-   DEF_TEST(rsa);
-   DEF_TEST(rw);
-   DEF_TEST(dsa);
-   DEF_TEST(nr);
-   DEF_TEST(dh);
-   DEF_TEST(dlies);
-   DEF_TEST(elgamal);
-   DEF_TEST(ecc_pointmul);
-   DEF_TEST(ecdsa);
-   DEF_TEST(gost_3410);
-   DEF_TEST(curve25519);
-   DEF_TEST(gf2m);
-   DEF_TEST(mceliece);
-   DEF_TEST(mce);
-
-   DEF_TEST(ecc_unit);
-   DEF_TEST(ecc_randomized);
-   DEF_TEST(ecdsa_unit);
-   DEF_TEST(ecdh_unit);
-   DEF_TEST(pk_keygen);
-   DEF_TEST(cvc);
-   DEF_TEST(x509);
-   DEF_TEST(x509_x509test);
-   DEF_TEST(nist_x509);
-   DEF_TEST(tls);
-   DEF_TEST(compression);
-   DEF_TEST(fuzzer);
-
-   if(tests.empty())
+   if(tests_run() == 0)
       {
-      std::cout << "No tests selected by target '" << target << "'" << std::endl;
-      return 1;
+      report << "ZERO";
+      }
+   else
+      {
+      report << tests_run();
+      }
+   report << " tests";
+
+   if(m_ns_taken > 0)
+      {
+      report << " in " << format_time(m_ns_taken);
       }
 
-   return run_tests(tests);
+   if(tests_failed())
+      {
+      report << " " << tests_failed() << " FAILED";
+      }
+   else
+      {
+      report << " all ok";
+      }
+
+   report << "\n";
+
+   for(size_t i = 0; i != m_fail_log.size(); ++i)
+      {
+      report << "Failure " << (i+1) << ": " << m_fail_log[i] << "\n";
+      }
+
+   if(m_fail_log.size() > 0 || tests_run() == 0)
+      {
+      for(size_t i = 0; i != m_log.size(); ++i)
+         {
+         report << "Note " << (i+1) << ": " << m_log[i] << "\n";
+         }
+      }
+
+   return report.str();
    }
+
+// static Test:: functions
+//static
+std::map<std::string, std::unique_ptr<Test>>& Test::global_registry()
+   {
+   static std::map<std::string, std::unique_ptr<Test>> g_test_registry;
+   return g_test_registry;
+   }
+
+namespace {
+
+template<typename K, typename V>
+std::set<K> map_keys_as_set(const std::map<K, V>& kv)
+   {
+   std::set<K> s;
+   for(auto&& i : kv)
+      {
+      s.insert(i.first);
+      }
+   return s;
+   }
+
+}
+
+//static
+uint64_t Test::timestamp()
+   {
+   auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+   return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+   }
+
+//static
+std::set<std::string> Test::registered_tests()
+   {
+   return map_keys_as_set(Test::global_registry());
+   }
+
+//static
+Test* Test::get_test(const std::string& test_name)
+   {
+   auto i = Test::global_registry().find(test_name);
+   if(i != Test::global_registry().end())
+      return i->second.get();
+   return nullptr;
+   }
+
+//static
+std::vector<Test::Result> Test::run_test(const std::string& test_name, bool fail_if_missing)
+   {
+   std::vector<Test::Result> results;
+
+   try
+      {
+      if(Test* test = get_test(test_name))
+         {
+         std::vector<Test::Result> test_results = test->run();
+         results.insert(results.end(), test_results.begin(), test_results.end());
+         }
+      else
+         {
+         Test::Result result(test_name);
+         if(fail_if_missing)
+            result.test_failure("Test missing or unavailable");
+         else
+            result.test_note("Test missing or unavailable");
+         results.push_back(result);
+         }
+      }
+   catch(std::exception& e)
+      {
+      results.push_back(Test::Result::Failure(test_name, e.what()));
+      }
+   catch(...)
+      {
+      results.push_back(Test::Result::Failure(test_name, "unknown exception"));
+      }
+
+   return results;
+   }
+
+//static
+std::string Test::data_dir(const std::string& what)
+   {
+   return std::string(TEST_DATA_DIR) + "/" + what;
+   }
+
+//static
+std::string Test::data_file(const std::string& what)
+   {
+   return std::string(TEST_DATA_DIR) + "/" + what;
+   }
+
+// static member variables of Test
+Botan::RandomNumberGenerator* Test::m_test_rng = nullptr;
+size_t Test::m_soak_level = 0;
+bool Test::m_log_success = false;
+
+//static
+void Test::setup_tests(size_t soak, bool log_success, Botan::RandomNumberGenerator* rng)
+   {
+   m_soak_level = soak;
+   m_log_success = log_success;
+   m_test_rng = rng;
+   }
+
+//static
+size_t Test::soak_level()
+   {
+   return m_soak_level;
+   }
+
+//static
+bool Test::log_success()
+   {
+   return m_log_success;
+   }
+
+//static
+Botan::RandomNumberGenerator& Test::rng()
+   {
+   if(!m_test_rng)
+      throw std::runtime_error("Test RNG not initialized");
+   return *m_test_rng;
+   }
+
+std::string Test::random_password()
+   {
+   const size_t len = 1 + Test::rng().next_byte() % 32;
+   return Botan::hex_encode(Test::rng().random_vec(len));
+   }
+
+Text_Based_Test::Text_Based_Test(const std::string& data_dir,
+                                 const std::vector<std::string>& required_keys,
+                                 const std::vector<std::string>& optional_keys) :
+   m_data_dir(data_dir)
+   {
+   if(required_keys.empty())
+      throw std::runtime_error("Invalid test spec");
+
+   m_required_keys.insert(required_keys.begin(), required_keys.end());
+   m_optional_keys.insert(optional_keys.begin(), optional_keys.end());
+   m_output_key = required_keys.at(required_keys.size() - 1);
+   }
+
+Text_Based_Test::Text_Based_Test(const std::string& algo,
+                                 const std::string& data_dir,
+                                 const std::vector<std::string>& required_keys,
+                                 const std::vector<std::string>& optional_keys) :
+   m_algo(algo),
+   m_data_dir(data_dir)
+   {
+   if(required_keys.empty())
+      throw std::runtime_error("Invalid test spec");
+
+   m_required_keys.insert(required_keys.begin(), required_keys.end());
+   m_optional_keys.insert(optional_keys.begin(), optional_keys.end());
+   m_output_key = required_keys.at(required_keys.size() - 1);
+   }
+
+std::vector<uint8_t> Text_Based_Test::get_req_bin(const VarMap& vars,
+                                                  const std::string& key) const
+      {
+      auto i = vars.find(key);
+      if(i == vars.end())
+         throw std::runtime_error("Test missing variable " + key);
+
+      try
+         {
+         return Botan::hex_decode(i->second);
+         }
+      catch(std::exception& e)
+         {
+         throw std::runtime_error("Test invalid hex input '" + i->second + "'" +
+                                  + " for key " + key);
+         }
+      }
+
+std::string Text_Based_Test::get_opt_str(const VarMap& vars,
+                                         const std::string& key, const std::string& def_value) const
+
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      return def_value;
+   return i->second;
+   }
+
+size_t Text_Based_Test::get_req_sz(const VarMap& vars, const std::string& key) const
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      throw std::runtime_error("Test missing variable " + key);
+   return Botan::to_u32bit(i->second);
+   }
+
+size_t Text_Based_Test::get_opt_sz(const VarMap& vars, const std::string& key, const size_t def_value) const
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      return def_value;
+   return Botan::to_u32bit(i->second);
+   }
+
+std::vector<uint8_t> Text_Based_Test::get_opt_bin(const VarMap& vars,
+                                                  const std::string& key) const
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      return std::vector<uint8_t>();
+
+   try
+      {
+      return Botan::hex_decode(i->second);
+      }
+   catch(std::exception& e)
+      {
+      throw std::runtime_error("Test invalid hex input '" + i->second + "'" +
+                               + " for key " + key);
+      }
+   }
+
+std::string Text_Based_Test::get_req_str(const VarMap& vars, const std::string& key) const
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      throw std::runtime_error("Test missing variable " + key);
+   return i->second;
+   }
+
+#if defined(BOTAN_HAS_BIGINT)
+Botan::BigInt Text_Based_Test::get_req_bn(const VarMap& vars,
+                                          const std::string& key) const
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      throw std::runtime_error("Test missing variable " + key);
+
+   try
+      {
+      return Botan::BigInt(i->second);
+      }
+   catch(std::exception& e)
+      {
+      throw std::runtime_error("Test invalid bigint input '" + i->second + "' for key " + key);
+      }
+   }
+#endif
+
+std::string Text_Based_Test::get_next_line()
+   {
+   while(true)
+      {
+      if(m_cur == nullptr || m_cur->good() == false)
+         {
+         if(m_srcs.empty())
+            {
+            if(m_first)
+               {
+               std::vector<std::string> fs = Botan::get_files_recursive(m_data_dir);
+
+               if(fs.empty() && m_data_dir.find(".vec") != std::string::npos)
+                  {
+                  m_srcs.push_back(m_data_dir);
+                  }
+               else
+                  {
+                  m_srcs.assign(fs.begin(), fs.end());
+                  }
+
+               m_first = false;
+               }
+            else
+               {
+               return ""; // done
+               }
+            }
+
+         m_cur.reset(new std::ifstream(m_srcs[0]));
+
+         if(!m_cur->good())
+            throw std::runtime_error("Could not open input file '" + m_srcs[0]);
+
+         m_srcs.pop_front();
+         }
+
+      while(m_cur->good())
+         {
+         std::string line;
+         std::getline(*m_cur, line);
+
+         if(line == "")
+            continue;
+
+         if(line[0] == '#')
+            continue;
+
+         return line;
+         }
+      }
+   }
+
+namespace {
+
+// strips leading and trailing but not internal whitespace
+std::string strip_ws(const std::string& in)
+   {
+   const char* whitespace = " ";
+
+   const auto first_c = in.find_first_not_of(whitespace);
+   if(first_c == std::string::npos)
+      return "";
+
+   const auto last_c = in.find_last_not_of(whitespace);
+
+   return in.substr(first_c, last_c - first_c + 1);
+   }
+
+}
+
+std::vector<Test::Result> Text_Based_Test::run()
+   {
+   std::vector<Test::Result> results;
+
+   std::string who;
+   VarMap vars;
+   size_t test_cnt = 0;
+
+   while(true)
+      {
+      const std::string line = get_next_line();
+      if(line == "") // EOF
+         break;
+
+      if(line[0] == '[' && line[line.size()-1] == ']')
+         {
+         who = line.substr(1, line.size() - 2);
+         test_cnt = 0;
+         continue;
+         }
+
+      const std::string test_id = "test " + std::to_string(test_cnt);
+
+      auto equal_i = line.find_first_of('=');
+
+      if(equal_i == std::string::npos)
+         {
+         results.push_back(Test::Result::Failure(who, "invalid input '" + line + "'"));
+         continue;
+         }
+
+      std::string key = strip_ws(std::string(line.begin(), line.begin() + equal_i - 1));
+      std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
+
+      if(m_required_keys.count(key) == 0 && m_optional_keys.count(key) == 0)
+         results.push_back(Test::Result::Failure(who, test_id + " failed unknown key " + key));
+
+      vars[key] = val;
+
+      if(key == m_output_key)
+         {
+         try
+            {
+            ++test_cnt;
+
+            uint64_t start = Test::timestamp();
+            Test::Result result = run_one_test(who, vars);
+            result.set_ns_consumed(Test::timestamp() - start);
+
+            if(result.tests_failed())
+               result.test_note("Test #" + std::to_string(test_cnt) + " failed");
+            results.push_back(result);
+            }
+         catch(std::exception& e)
+            {
+            results.push_back(Test::Result::Failure(who, "test " + std::to_string(test_cnt) + " failed with exception '" + e.what() + "'"));
+            }
+
+         if(clear_between_callbacks())
+            {
+            vars.clear();
+            }
+         }
+      }
+
+   std::vector<Test::Result> final_tests = run_final_tests();
+   results.insert(results.end(), final_tests.begin(), final_tests.end());
+
+   return results;
+   }
+
+}
+

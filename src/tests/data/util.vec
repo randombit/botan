@@ -1,0 +1,58 @@
+
+[round_up]
+In1 = 1
+In2 = 10
+Out = 10
+
+In1 = 3
+In2 = 10
+Out = 10
+
+In1 = 9
+In2 = 10
+Out = 10
+
+In1 = 10
+In2 = 10
+Out = 10
+
+In1 = 1
+In2 = 4
+Out = 4
+
+In1 = 3
+In2 = 4
+Out = 4
+
+In1 = 4
+In2 = 4
+Out = 4
+
+In1 = 9
+In2 = 4
+Out = 12
+
+In1 = 11
+In2 = 4
+Out = 12
+
+In1 = 0
+In2 = 2
+Out = 0
+
+In1 = 0
+In2 = 10000
+Out = 0
+
+[round_down]
+In1 = 9
+In2 = 10
+Out = 0
+
+In1 = 10
+In2 = 10
+Out = 10
+
+In1 = 11
+In2 = 10
+Out = 10

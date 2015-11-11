@@ -4,12 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "test_rng.h"
 #include "tests.h"
-
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
+#include "test_rng.h"
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
   #include <botan/hmac_drbg.h>
@@ -19,11 +15,11 @@
   #include <botan/x931_rng.h>
 #endif
 
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-RandomNumberGenerator* get_rng(const std::string& algo_str, const std::string& ikm_hex)
+Botan::RandomNumberGenerator* get_rng(const std::string& algo_str, const std::vector<byte>& ikm)
    {
    class AllOnce_RNG : public Fixed_Output_RNG
       {
@@ -38,102 +34,95 @@ RandomNumberGenerator* get_rng(const std::string& algo_str, const std::string& i
             }
       };
 
-   const auto ikm = hex_decode(ikm_hex);
-
-   const auto algo_name = parse_algorithm_name(algo_str);
+   const std::vector<std::string> algo_name = Botan::parse_algorithm_name(algo_str);
 
    const std::string rng_name = algo_name[0];
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
    if(rng_name == "HMAC_DRBG")
-      return new HMAC_DRBG(MessageAuthenticationCode::create("HMAC(" + algo_name[1] + ")").release(),
-                           new AllOnce_RNG(ikm));
+      return new Botan::HMAC_DRBG(
+         Botan::MessageAuthenticationCode::create("HMAC(" + algo_name[1] + ")").release(),
+         new AllOnce_RNG(ikm));
 #endif
 
 #if defined(BOTAN_HAS_X931_RNG)
    if(rng_name == "X9.31-RNG")
-      return new ANSI_X931_RNG(BlockCipher::create(algo_name[1]).release(),
-                               new Fixed_Output_RNG(ikm));
+      return new Botan::ANSI_X931_RNG(Botan::BlockCipher::create(algo_name[1]).release(),
+                                      new Fixed_Output_RNG(ikm));
 #endif
 
    return nullptr;
    }
 
-size_t x931_test(const std::string& algo,
-                 const std::string& ikm,
-                 const std::string& out,
-                 size_t L)
+#if defined(BOTAN_HAS_X931_RNG)
+class X931_RNG_Tests : public Text_Based_Test
    {
-   std::unique_ptr<RandomNumberGenerator> rng(get_rng(algo, ikm));
+   public:
+      X931_RNG_Tests() : Text_Based_Test(Test::data_file("x931.vec"), {"IKM", "L", "Out"}) {}
 
-   if(!rng)
-      {
-      std::cout << "Unknown RNG " + algo + " skipping test\n";
-      return 0;
-      }
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
+         {
+         const std::vector<uint8_t> ikm      = get_req_bin(vars, "IKM");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
 
-   const std::string got = hex_encode(rng->random_vec(L));
+         const size_t L = get_req_sz(vars, "L");
 
-   if(got != out)
-      {
-      std::cout << "X9.31 " << got << " != " << out << std::endl;
-      return 1;
-      }
+         Test::Result result(algo);
 
-   return 0;
-   }
+         result.test_eq("length", L, expected.size());
 
-size_t hmac_drbg_test(std::map<std::string, std::string> m)
+         std::unique_ptr<Botan::RandomNumberGenerator> rng(get_rng(algo, ikm));
+
+         result.test_eq("rng", rng->random_vec(L), expected);
+
+         return result;
+         }
+
+   };
+
+BOTAN_REGISTER_TEST("x931_rng", X931_RNG_Tests);
+#endif
+
+#if defined(BOTAN_HAS_HMAC_DRBG)
+
+class HMAC_DRBG_Tests : public Text_Based_Test
    {
-   const std::string algo = m["RNG"];
-   const std::string ikm = m["EntropyInput"];
+   public:
+      HMAC_DRBG_Tests() : Text_Based_Test(Test::data_file("hmac_drbg.vec"),
+                                          {"EntropyInput", "EntropyInputReseed", "Out"}) {}
 
-   std::unique_ptr<RandomNumberGenerator> rng(get_rng(algo, ikm));
-   if(!rng)
-      {
-      std::cout << "Unknown RNG " + algo + " skipping test\n";
-      return 0;
-      }
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
+         {
+         const std::vector<byte> seed_input   = get_req_bin(vars, "EntropyInput");
+         const std::vector<byte> reseed_input = get_req_bin(vars, "EntropyInputReseed");
+         const std::vector<byte> expected     = get_req_bin(vars, "Out");
 
-   rng->reseed(0); // force initialization
+         Test::Result result(algo);
 
-   // now reseed
-   const auto reseed_input = hex_decode(m["EntropyInputReseed"]);
-   rng->add_entropy(reseed_input.data(), reseed_input.size());
+         std::unique_ptr<Botan::RandomNumberGenerator> rng(get_rng(algo, seed_input));
+         if(!rng)
+            {
+            result.note_missing("RNG " + algo);
+            return result;
+            }
 
-   const std::string out = m["Out"];
+         rng->reseed(0); // force initialization
 
-   const size_t out_len = out.size() / 2;
+         // now reseed
+         rng->add_entropy(reseed_input.data(), reseed_input.size());
 
-   rng->random_vec(out_len); // gen 1st block (discarded)
+         rng->random_vec(expected.size()); // discard 1st block
 
-   const std::string got = hex_encode(rng->random_vec(out_len));
+         result.test_eq("rng", rng->random_vec(expected.size()), expected);
+         return result;
+         }
 
-   if(got != out)
-      {
-      std::cout << algo << " " << got << " != " << out << std::endl;
-      return 1;
-      }
+   };
 
-   return 0;
-   }
+BOTAN_REGISTER_TEST("hmac_drbg", HMAC_DRBG_Tests);
+
+#endif
 
 }
 
-size_t test_rngs()
-   {
-   std::ifstream hmac_drbg_vec(TEST_DATA_DIR "/hmac_drbg.vec");
-   std::ifstream x931_vec(TEST_DATA_DIR "/x931.vec");
-
-   size_t fails = 0;
-
-   fails += run_tests_bb(hmac_drbg_vec, "RNG", "Out", true, hmac_drbg_test);
-
-   fails += run_tests_bb(x931_vec, "RNG", "Out", true,
-                         [](std::map<std::string, std::string> m) -> size_t
-                         {
-                         return x931_test(m["RNG"], m["IKM"], m["Out"], to_u32bit(m["L"]));
-                         });
-
-   return fails;
-   }
+}

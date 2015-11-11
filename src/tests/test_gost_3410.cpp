@@ -7,60 +7,61 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
+  #include <botan/gost_3410.h>
+  #include <botan/oids.h>
+  #include "test_pubkey.h"
+#endif
 
-#include "test_pubkey.h"
-
-#include <botan/pubkey.h>
-#include <botan/gost_3410.h>
-#include <botan/oids.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t gost_verify(const std::string& group_id,
-                   const std::string& x,
-                   const std::string& hash,
-                   const std::string& msg,
-                   const std::string& signature)
+#if defined(BOTAN_HAS_GOST_34_10_2001)
+
+class GOST_3410_2001_Verification_Tests : public PK_Signature_Verification_Test
    {
-   EC_Group group(OIDS::lookup(group_id));
-   PointGFp public_point = OS2ECP(hex_decode(x), group.get_curve());
+   public:
+      GOST_3410_2001_Verification_Tests() : PK_Signature_Verification_Test(
+         "GOST 34.10-2001",
+         Test::data_file("pubkey/gost_3410.vec"),
+         {"Group", "Pubkey", "Hash", "Msg", "Signature"})
+         {}
 
-   GOST_3410_PublicKey gost(group, public_point);
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
+         {
+         const std::string group_id = get_req_str(vars, "Group");
+         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
+         const Botan::PointGFp public_point = Botan::OS2ECP(get_req_bin(vars, "Pubkey"), group.get_curve());
 
-   const std::string padding = "EMSA1(" + hash + ")";
+         std::unique_ptr<Botan::Public_Key> key(new Botan::GOST_3410_PublicKey(group, public_point));
+         return key;
+         }
 
-   PK_Verifier v(gost, padding);
+      std::string default_padding(const VarMap& vars) const override
+         {
+         return "EMSA1(" + get_req_str(vars, "Hash") + ")";
+         }
+   };
 
-   if(!v.verify_message(hex_decode(msg), hex_decode(signature)))
-      return 1;
+class GOST_3410_2001_Keygen_Tests : public PK_Key_Generation_Test
+   {
+   public:
+      std::vector<std::string> keygen_params() const override { return { "gost_256A", "secp256r1" }; }
 
-   return 0;
-   }
+      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
+                                                   const std::string& param) const override
+         {
+         Botan::EC_Group group(param);
+         std::unique_ptr<Botan::Private_Key> key(new Botan::GOST_3410_PrivateKey(rng, group));
+         return key;
+         }
+   };
+
+BOTAN_REGISTER_TEST("gost_3410_verify", GOST_3410_2001_Verification_Tests);
+BOTAN_REGISTER_TEST("gost_3410_keygen", GOST_3410_2001_Keygen_Tests);
+
+#endif
 
 }
 
-size_t test_gost_3410()
-   {
-   size_t fails = 0;
-
-   std::ifstream ecdsa_sig(TEST_DATA_DIR_PK "/gost_3410.vec");
-
-   fails += run_tests_bb(ecdsa_sig, "GOST-34.10 Signature", "Signature", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return gost_verify(m["Group"], m["Pubkey"], m["Hash"], m["Msg"], m["Signature"]);
-             });
-
-   return fails;
-   }
-
-#else
-
-SKIP_TEST(gost_3410);
-
-#endif // BOTAN_HAS_GOST_34_10_2001
+}
