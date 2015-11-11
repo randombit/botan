@@ -18,6 +18,15 @@
 
 namespace Botan_Tests {
 
+namespace {
+
+std::vector<std::string> possible_pk_providers()
+   {
+   return { "base", "openssl", "tpm" };
+   }
+
+}
+
 void check_invalid_signatures(Test::Result& result,
                               Botan::PK_Verifier& verifier,
                               const std::vector<uint8_t>& message,
@@ -81,26 +90,61 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
    const std::vector<uint8_t> signature = get_req_bin(vars, "Signature");
    const std::string padding = get_opt_str(vars, "Padding", default_padding(vars));
 
-   std::unique_ptr<Botan::RandomNumberGenerator> rng;
-   if(vars.count("Nonce"))
-      {
-      rng.reset(new Fixed_Output_RNG(get_req_bin(vars, "Nonce")));
-      }
-
    Test::Result result(algo_name() + "/" + padding + " signature generation");
 
    std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
    std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
 
-   Botan::PK_Signer signer(*privkey, padding);
-   Botan::PK_Verifier verifier(*pubkey, padding);
+   for(auto&& sign_provider : possible_pk_providers())
+      {
+      std::unique_ptr<Botan::PK_Signer> signer;
 
-   const std::vector<uint8_t> generated_signature = signer.sign_message(message, rng ? *rng : Test::rng());
-   result.test_eq("generated signature matches KAT", generated_signature, signature);
+      try
+         {
+         signer.reset(new Botan::PK_Signer(*privkey, padding, Botan::IEEE_1363, sign_provider));
+         }
+      catch(Botan::Lookup_Error)
+         {
+         //result.test_note("Skipping signing with " + sign_provider);
+         continue;
+         }
 
-   result.test_eq("generated signature valid", verifier.verify_message(message, generated_signature), true);
-   check_invalid_signatures(result, verifier, message, signature);
-   result.test_eq("correct signature valid", verifier.verify_message(message, signature), true);
+      std::unique_ptr<Botan::RandomNumberGenerator> rng;
+      if(vars.count("Nonce"))
+         {
+         rng.reset(new Fixed_Output_RNG(get_req_bin(vars, "Nonce")));
+         }
+
+      const std::vector<uint8_t> generated_signature = signer->sign_message(message, rng ? *rng : Test::rng());
+
+      if(sign_provider == "base")
+         {
+         result.test_eq("generated signature matches KAT", generated_signature, signature);
+         }
+
+      for(auto&& verify_provider : possible_pk_providers())
+         {
+         std::unique_ptr<Botan::PK_Verifier> verifier;
+
+         try
+            {
+            verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
+            }
+         catch(Botan::Lookup_Error)
+            {
+            //result.test_note("Skipping verifying with " + verify_provider);
+            continue;
+            }
+
+         if(!result.test_eq("generated signature valid", verifier->verify_message(message, generated_signature), true))
+            {
+            result.test_failure("generated signature", generated_signature);
+            }
+
+         check_invalid_signatures(result, *verifier, message, signature);
+         result.test_eq("KAT signature valid", verifier->verify_message(message, signature), true);
+         }
+      }
 
    return result;
    }
@@ -132,12 +176,6 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
 
    const std::string padding = get_opt_str(vars, "Padding", default_padding(vars));
 
-   std::unique_ptr<Botan::RandomNumberGenerator> kat_rng;
-   if(vars.count("Nonce"))
-      {
-      kat_rng.reset(new Fixed_Output_RNG(get_req_bin(vars, "Nonce")));
-      }
-
    Test::Result result(algo_name() + "/" + padding + " decryption");
 
    std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
@@ -145,13 +183,54 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
    // instead slice the private key to work around elgamal test inputs
    //std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
 
-   Botan::PK_Encryptor_EME encryptor(*privkey, padding);
-   result.test_eq("encryption", encryptor.encrypt(plaintext, kat_rng ? *kat_rng : Test::rng()), ciphertext);
+   for(auto&& enc_provider : possible_pk_providers())
+      {
+      std::unique_ptr<Botan::PK_Encryptor> encryptor;
 
-   Botan::PK_Decryptor_EME decryptor(*privkey, padding);
-   result.test_eq("decryption", decryptor.decrypt(ciphertext), plaintext);
+      try
+         {
+         encryptor.reset(new Botan::PK_Encryptor_EME(*privkey, padding, enc_provider));
+         }
+      catch(Botan::Lookup_Error)
+         {
+         //result.test_note("Skipping encryption with provider " + enc_provider);
+         continue;
+         }
 
-   check_invalid_ciphertexts(result, decryptor, plaintext, ciphertext);
+      std::unique_ptr<Botan::RandomNumberGenerator> kat_rng;
+      if(vars.count("Nonce"))
+         {
+         kat_rng.reset(new Fixed_Output_RNG(get_req_bin(vars, "Nonce")));
+         }
+
+      const std::vector<uint8_t> generated_ciphertext =
+         encryptor->encrypt(plaintext, kat_rng ? *kat_rng : Test::rng());
+
+      if(enc_provider == "base")
+         {
+         result.test_eq("generated ciphertext matches KAT", generated_ciphertext, ciphertext);
+         }
+
+      for(auto&& dec_provider : possible_pk_providers())
+         {
+         std::unique_ptr<Botan::PK_Decryptor> decryptor;
+
+         try
+            {
+            decryptor.reset(new Botan::PK_Decryptor_EME(*privkey, padding, dec_provider));
+            }
+         catch(Botan::Lookup_Error)
+            {
+            //result.test_note("Skipping decryption with provider " + dec_provider);
+            continue;
+            }
+
+         result.test_eq("decryption of KAT", decryptor->decrypt(ciphertext), plaintext);
+         check_invalid_ciphertexts(result, *decryptor, plaintext, ciphertext);
+         result.test_eq("decryption of generated ciphertext",
+                        decryptor->decrypt(generated_ciphertext), plaintext);
+         }
+      }
 
    return result;
    }
