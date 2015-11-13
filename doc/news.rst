@@ -25,6 +25,8 @@ Version 1.11.25, Not Yet Released
 * Support for negotiating use of SHA-224 in TLS has been disabled in the
   default policy.
 
+* Added `remove_all` function to the `TLS::Session_Manager` interface
+
 Version 1.11.24, 2015-11-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

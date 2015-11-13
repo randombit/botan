@@ -55,6 +55,11 @@ class BOTAN_DLL Session_Manager
       virtual void remove_entry(const std::vector<byte>& session_id) = 0;
 
       /**
+      * Remove all sessions from the cache, return number of sessions deleted
+      */
+      virtual size_t remove_all() = 0;
+
+      /**
       * Save a session on a best effort basis; the manager may not in
       * fact be able to save the session for whatever reason; this is
       * not an error. Caller cannot assume that calling save followed
@@ -89,6 +94,8 @@ class BOTAN_DLL Session_Manager_Noop : public Session_Manager
 
       void remove_entry(const std::vector<byte>&) override {}
 
+      size_t remove_all() override { return 0; }
+
       void save(const Session&) override {}
 
       std::chrono::seconds session_lifetime() const override
@@ -120,6 +127,8 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
 
       void remove_entry(const std::vector<byte>& session_id) override;
 
+      size_t remove_all();
+
       void save(const Session& session_data) override;
 
       std::chrono::seconds session_lifetime() const override
@@ -136,7 +145,7 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       std::chrono::seconds m_session_lifetime;
 
       RandomNumberGenerator& m_rng;
-      SymmetricKey m_session_key;
+      secure_vector<byte> m_session_key;
 
       std::map<std::string, std::vector<byte>> m_sessions; // hex(session_id) -> session
       std::map<Server_Information, std::string> m_info_sessions;
