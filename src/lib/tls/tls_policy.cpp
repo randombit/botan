@@ -1,6 +1,6 @@
 /*
 * Policies for TLS
-* (C) 2004-2010,2012 Jack Lloyd
+* (C) 2004-2010,2012,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -44,7 +44,7 @@ std::vector<std::string> Policy::allowed_signature_hashes() const
       "SHA-512",
       "SHA-384",
       "SHA-256",
-      "SHA-224",
+      //"SHA-224",
       //"SHA-1",
       //"MD5",
       };
@@ -280,9 +280,6 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
          continue;
 
       if(!have_srp && suite.kex_algo() == "SRP_SHA")
-         continue;
-
-      if(version.is_datagram_protocol() && suite.cipher_algo() == "RC4")
          continue;
 
       if(!version.supports_aead_modes() && suite.mac_algo() == "AEAD")

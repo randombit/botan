@@ -17,6 +17,14 @@ Version 1.11.25, Not Yet Released
 * Fixed the signature of botan_pubkey_destroy which took the wrong type and was
   not usable.
 
+* The TLS client would erronously reject any server key exchange
+  packet smaller than 6 bytes. This prevented negotiating a plain PSK
+  TLS ciphersuite with an empty identity hint. ECDHE_PSK and DHE_PSK
+  suites were not affected.
+
+* Support for negotiating use of SHA-224 in TLS has been disabled in the
+  default policy.
+
 Version 1.11.24, 2015-11-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -1,6 +1,6 @@
 /*
 * Server Key Exchange Message
-* (C) 2004-2010,2012 Jack Lloyd
+* (C) 2004-2010,2012,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -145,9 +145,6 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
                                          Protocol_Version version) :
    m_kex_key(nullptr), m_srp_params(nullptr)
    {
-   if(buf.size() < 6)
-      throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
-
    TLS_Data_Reader reader("ServerKeyExchange", buf);
 
    /*

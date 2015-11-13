@@ -3,7 +3,7 @@
 """
 Used to generate lib/tls/tls_suite_info.cpp from IANA params
 
-(C) 2011, 2012, 2013, 2014 Jack Lloyd
+(C) 2011, 2012, 2013, 2014, 2015 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -53,7 +53,6 @@ def to_ciphersuite_info(code, name):
         mac_algo = 'SHA256'
 
     cipher_info = {
-        'RC4': ('RC4',None),
         'CHACHA20': ('ChaCha',32),
         'IDEA': ('IDEA',16),
         'DES': ('DES',8),
@@ -72,7 +71,6 @@ def to_ciphersuite_info(code, name):
         'SHA384': 'SHA-384',
         'SHA512': 'SHA-512',
 
-        'RC4': 'RC4',
         'CHACHA': 'ChaCha',
         '3DES': 'TripleDES',
 
@@ -122,28 +120,26 @@ def to_ciphersuite_info(code, name):
         return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, %d, "AEAD", %d, "%s")' % (
             code, sig_algo, kex_algo, "ChaCha20Poly1305", cipher_keylen, iv_len, 0, 0, mac_algo)
 
-    stream_ciphers = ['RC4']
+    mode = cipher[-1]
+    if mode not in ['CBC', 'GCM', 'CCM(8)', 'CCM', 'OCB']:
+        print "#warning Unknown mode %s" % (' '.join(cipher))
 
-    if cipher_algo not in stream_ciphers:
-        mode = cipher[-1]
-        if mode not in ['CBC', 'GCM', 'CCM(8)', 'CCM', 'OCB']:
-            print "#warning Unknown mode %s" % (' '.join(cipher))
+    ivlen = 8 if cipher_algo == '3DES' else 16
 
-        ivlen = 8 if cipher_algo == '3DES' else 16
+    if mode != 'CBC':
+        if mode == 'OCB':
+            cipher_algo += '/OCB(12)'
+        else:
+            cipher_algo += '/' + mode
 
-        if mode != 'CBC':
-            if mode == 'OCB':
-                cipher_algo += '/OCB(12)'
-            else:
-                cipher_algo += '/' + mode
-
-    if cipher_algo in stream_ciphers or mode == 'CBC':
+    if mode == 'CBC':
         return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, 0, "%s", %d)' % (
             code, sig_algo, kex_algo, cipher_algo, cipher_keylen, ivlen, mac_algo, mac_keylen[mac_algo])
-    elif mode == 'OCB':
 
+    elif mode == 'OCB':
         return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, %d, "AEAD", %d, "%s")' % (
             code, sig_algo, kex_algo, cipher_algo, cipher_keylen, 4, 0, 0, mac_algo)
+
     else:
         iv_bytes_from_hs = 4
         iv_bytes_from_rec = 8
@@ -241,9 +237,6 @@ def main(args = None):
 
     def define_custom_ciphersuite(name, code):
         suites[name] = (code, to_ciphersuite_info(code, name))
-
-    # From http://tools.ietf.org/html/draft-ietf-tls-56-bit-ciphersuites-01
-    define_custom_ciphersuite('DHE_DSS_WITH_RC4_128_SHA', '0066')
 
     if options.with_chacha:
         # Google servers - draft-agl-tls-chacha20poly1305-04

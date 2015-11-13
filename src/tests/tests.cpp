@@ -163,8 +163,8 @@ bool Test::Result::test_eq(const char* producer, const char* what,
       bits_different += Botan::hamming_weight(xor_diff[i]);
       }
 
-   err << "Produced: " << Botan::hex_encode(produced, produced_size) << "\n"
-       << "Expected: " << Botan::hex_encode(expected, expected_size);
+   err << "\nProduced: " << Botan::hex_encode(produced, produced_size)
+       << "\nExpected: " << Botan::hex_encode(expected, expected_size);
 
    if(bits_different > 0)
       {
