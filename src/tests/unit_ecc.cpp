@@ -286,7 +286,7 @@ Test::Result test_point_transformation ()
 
    // get a valid point
    Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
-   Botan::PointGFp p = dom_pars.get_base_point() * Test::rng().next_byte();
+   Botan::PointGFp p = dom_pars.get_base_point() * Test::rng().next_nonzero_byte();
 
    // get a copy
    Botan::PointGFp q = p;
