@@ -34,6 +34,8 @@ class TLS_Data_Reader
             throw decode_error("Extra bytes at end of message");
          }
 
+      size_t read_so_far() const { return m_offset; }
+
       size_t remaining_bytes() const { return m_buf.size() - m_offset; }
 
       bool has_remaining() const { return (remaining_bytes() > 0); }

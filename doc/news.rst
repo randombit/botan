@@ -22,6 +22,10 @@ Version 1.11.25, Not Yet Released
   TLS ciphersuite with an empty identity hint. ECDHE_PSK and DHE_PSK
   suites were not affected.
 
+* Fixed a bug that would cause the TLS client to occasionally reject a
+  valid server key exchange message as having an invalid signature.
+  This only affected DHE ciphersuites.
+
 * Support for negotiating use of SHA-224 in TLS has been disabled in the
   default policy.
 
