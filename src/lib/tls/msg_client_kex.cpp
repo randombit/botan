@@ -106,8 +106,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          DL_Group group(p, g);
 
-         if(!group.verify_group(rng, true))
-            throw Internal_Error("DH group failed validation, possible attack");
+         if(!group.verify_group(rng, false))
+            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+                                "DH group validation failed");
 
          DH_PublicKey counterparty_key(group, Y);
 
