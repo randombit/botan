@@ -176,6 +176,8 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
 
    Test::Result result(offer_version.to_string());
 
+   result.start_timer();
+
    for(size_t r = 1; r <= 4; ++r)
       {
       bool handshake_done = false;
@@ -184,7 +186,6 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
 
       auto handshake_complete = [&](const Botan::TLS::Session& session) -> bool {
          handshake_done = true;
-
 
          result.test_note("Session established " + session.version().to_string() + " " +
                           session.ciphersuite().to_string() + " " +
@@ -196,7 +197,9 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                                 " got " + session.version().to_string());
             }
 
-         return true;
+         if(r <= 2)
+            return true;
+         return false;
       };
 
       auto next_protocol_chooser = [&](std::vector<std::string> protos) {
@@ -288,22 +291,19 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
 
                if(corrupt_server_data)
                   {
-                  try
-                     {
-                     input = Test::mutate_vec(input, true);
-                     size_t needed = server.received_data(input.data(), input.size());
+                  input = Test::mutate_vec(input, true);
+                  size_t needed = server.received_data(input.data(), input.size());
 
-                     if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
-                        {
-                        input.resize(needed);
-                        Test::rng().randomize(input.data(), input.size());
-                        needed = server.received_data(input.data(), input.size());
-                        result.test_eq("no more data needed now", needed, 0);
-                        }
-                     }
-                  catch(std::exception& e)
+                  size_t total_consumed = needed;
+
+                  while(needed > 0 &&
+                        result.test_lt("Never requesting more than max protocol len", needed, 18*1024) &&
+                        result.test_lt("Total requested is readonable", total_consumed, 128*1024))
                      {
-                     result.test_note("corruption caused server exception");
+                     input.resize(needed);
+                     Test::rng().randomize(input.data(), input.size());
+                     needed = server.received_data(input.data(), input.size());
+                     total_consumed += needed;
                      }
                   }
                else
@@ -322,22 +322,18 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
 
                if(corrupt_client_data)
                   {
-                  try
-                     {
-                     input = Test::mutate_vec(input, true);
-                     size_t needed = client.received_data(input.data(), input.size());
+                  input = Test::mutate_vec(input, true);
+                  size_t needed = client.received_data(input.data(), input.size());
 
-                     if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
-                        {
-                        input.resize(needed);
-                        Test::rng().randomize(input.data(), input.size());
-                        needed = client.received_data(input.data(), input.size());
-                        result.test_eq("no more data needed now", needed, 0);
-                        }
-                     }
-                  catch(std::exception& e)
+                  size_t total_consumed = 0;
+
+                  while(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
                      {
-                     result.test_note("corruption caused client exception");
+                     input.resize(needed);
+                     Test::rng().randomize(input.data(), input.size());
+                     needed = client.received_data(input.data(), input.size());
+                     result.test_eq("no more data needed now", needed, 0);
+                     total_consumed += needed;
                      }
                   }
                else
@@ -397,6 +393,8 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
          }
       }
 
+   result.end_timer();
+
    return result;
    }
 
@@ -413,6 +411,8 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
 
    Test::Result result(offer_version.to_string());
 
+   result.start_timer();
+
    for(size_t r = 1; r <= 2; ++r)
       {
       bool handshake_done = false;
@@ -425,6 +425,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
             result.test_failure("Offered " + offer_version.to_string() +
                                 " got " + session.version().to_string());
             }
+
          return true;
       };
 
@@ -639,6 +640,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
          }
       }
 
+   result.end_timer();
    return result;
    }
 
