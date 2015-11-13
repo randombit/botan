@@ -13,6 +13,7 @@
 #include <thread>
 #include <future>
 
+#include <botan/version.h>
 #include <botan/auto_rng.h>
 #include <botan/loadstor.h>
 
@@ -143,6 +144,7 @@ size_t run_tests(const std::vector<std::string>& tests_to_run,
 std::unique_ptr<Botan::RandomNumberGenerator>
 setup_tests(std::ostream& out, size_t threads, size_t soak_level, bool log_success, std::string drbg_seed)
    {
+   out << "Testing " << Botan::version_string() << "\n";
    out << "Starting tests";
 
    if(threads > 1)
