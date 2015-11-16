@@ -84,6 +84,10 @@ snail-mail address (S), and Bitcoin address (B).
   D: x86/amd64 assembler, BigInt optimizations, Win32 mutex module
   S: Italy
 
+  N: Daniel Seither
+  E: post@tiwoc.de
+  D: iOS support, improved Android support, improved MSVC support
+
   N: Falko Strenzke
   E: fstrenzke@cryptosource.de
   W: http://www.cryptosource.de
