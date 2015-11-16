@@ -1,6 +1,6 @@
 /*
 * 64x64->128 bit multiply operation
-* (C) 2013 Jack Lloyd
+* (C) 2013,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,13 +12,13 @@
 
 namespace Botan {
 
-#if defined(__SIZEOF_INT128__)
-   #define BOTAN_TARGET_HAS_NATIVE_UINT128
-   typedef unsigned __int128 uint128_t;
-
-#elif (BOTAN_GCC_VERSION > 440) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
+// Prefer TI mode over __int128 as GCC rejects the latter in pendantic mode
+#if (BOTAN_GCC_VERSION > 440) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
    #define BOTAN_TARGET_HAS_NATIVE_UINT128
    typedef unsigned int uint128_t __attribute__((mode(TI)));
+#elif defined(__SIZEOF_INT128__)
+   #define BOTAN_TARGET_HAS_NATIVE_UINT128
+   typedef unsigned __int128 uint128_t;
 #endif
 
 }
