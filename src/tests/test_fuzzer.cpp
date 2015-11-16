@@ -35,15 +35,13 @@ class Fuzzer_Input_Tests : public Test
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
       Test::Result test_x509_fuzz()
          {
-         const std::string TEST_DATA_DIR_FUZZ_X509 = TEST_DATA_DIR "/fuzz/x509";
-
          Test::Result result("X.509 fuzzing");
 
          std::vector<std::string> files;
 
          try
             {
-            files = Botan::get_files_recursive(TEST_DATA_DIR_FUZZ_X509);
+            files = Botan::get_files_recursive(Test::data_dir("fuzz/x509"));
             }
          catch(Botan::No_Filesystem_Access)
             {

@@ -14,6 +14,9 @@
 
 namespace Botan_Tests {
 
+#define TEST_DATA_DIR     "src/tests/data"
+#define TEST_OUTDATA_DIR  "src/tests/outdata"
+
 Test::Registration::Registration(const std::string& name, Test* test)
    {
    if(Test::global_registry().count(name) == 0)
@@ -54,11 +57,15 @@ void Test::Result::end_timer()
       }
    }
 
-void Test::Result::test_note(const std::string& note)
+void Test::Result::test_note(const std::string& note, const char* extra)
    {
    if(note != "")
       {
-      m_log.push_back(who() + " " + note);
+      std::ostringstream out;
+      out << who() << " " << note;
+      if(extra)
+         out << ": " << extra;
+      m_log.push_back(out.str());
       }
    }
 
@@ -443,6 +450,12 @@ std::string Test::data_dir(const std::string& what)
 std::string Test::data_file(const std::string& what)
    {
    return std::string(TEST_DATA_DIR) + "/" + what;
+   }
+
+//static
+std::string Test::full_path_for_output_file(const std::string& base)
+   {
+   return std::string(TEST_OUTDATA_DIR) + "/" + base;
    }
 
 // static member variables of Test

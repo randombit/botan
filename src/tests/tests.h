@@ -82,9 +82,31 @@ class Test
                return r;
                }
 
+            static Result OfExpectedFailure(bool expecting_failure,
+                                            const Test::Result& result)
+               {
+               if(!expecting_failure)
+                  {
+                  return result;
+                  }
+
+               if(result.tests_failed() == 0)
+                  {
+                  Result r = result;
+                  r.test_failure("Expected this test to fail, but it did not");
+                  return r;
+                  }
+               else
+                  {
+                  Result r(result.who());
+                  r.test_note("Got expected failure " + result.result_string());
+                  return r;
+                  }
+               }
+
             void merge(const Result& other);
 
-            void test_note(const std::string& note);
+            void test_note(const std::string& note, const char* extra = nullptr);
 
             void note_missing(const std::string& thing);
 
@@ -119,7 +141,9 @@ class Test
                std::ostringstream out;
                out << m_who;
                if(what)
+                  {
                   out << " " << what;
+                  }
 
                if(produced == expected)
                   {
@@ -237,6 +261,7 @@ class Test
 
       static std::string data_dir(const std::string& what);
       static std::string data_file(const std::string& what);
+      static std::string full_path_for_output_file(const std::string& base);
 
       template<typename Alloc>
       static std::vector<uint8_t, Alloc> mutate_vec(const std::vector<uint8_t, Alloc>& v, bool maybe_resize = false)
@@ -349,11 +374,5 @@ class Text_Based_Test : public Test
    };
 
 }
-
-#define TEST_DATA_DIR     "src/tests/data"
-#define TEST_DATA_DIR_PK  "src/tests/data/pubkey"
-#define TEST_DATA_DIR_ECC "src/tests/data/ecc"
-
-#define TEST_OUTDATA_DIR  "src/tests/outdata"
 
 #endif
