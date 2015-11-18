@@ -93,3 +93,9 @@ snail-mail address (S), and Bitcoin address (B).
   W: http://www.cryptosource.de
   D: McEliece, GF(p) arithmetic, CVC, Shanks-Tonelli algorithm
   S: Darmstadt, Germany
+
+  N: Simon Warta
+  E: simon@kullo.net
+  W: https://www.kullo.net
+  D: Build system
+  S: Germany
