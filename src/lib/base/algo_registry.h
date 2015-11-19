@@ -23,7 +23,11 @@
    #define WIN32_LEAN_AND_MEAN 1
    #include <Windows.h>
 
+#endif
+
 namespace Botan {
+
+#if defined(BOTAN_WORKAROUND_GH_321)
 
 class WinCS_Mutex
    {
@@ -52,12 +56,7 @@ class WinCS_Mutex
         CRITICAL_SECTION   m_cs;
    };
 
-} // namespace
-
 #endif
-
-namespace Botan {
-
 
 template<typename T>
 class Algo_Registry
