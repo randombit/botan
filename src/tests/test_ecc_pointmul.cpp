@@ -6,78 +6,52 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_ECC_GROUP)
-
 #if defined(BOTAN_HAS_ECDSA)
+  #include "test_pubkey.h"
+  #include <botan/pubkey.h>
+  #include <botan/ecdsa.h>
+  #include <botan/oids.h>
+#endif
 
-#include "test_pubkey.h"
-
-#include <botan/pubkey.h>
-#include <botan/ecdsa.h>
-#include <botan/oids.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t ecc_point_mul(const std::string& group_id,
-                     const std::string& m_s,
-                     const std::string& X_s,
-                     const std::string& Y_s)
+#if defined(BOTAN_HAS_ECDSA)
+class ECC_Pointmult_Tests : public Text_Based_Test
    {
-   EC_Group group(OIDS::lookup(group_id));
+   public:
+      ECC_Pointmult_Tests() : Text_Based_Test(
+         Test::data_file("pubkey/ecc.vec"),
+         {"Group", "m", "X", "Y"})
+         {}
 
-   const BigInt m(m_s);
-   const BigInt X(X_s);
-   const BigInt Y(Y_s);
+      bool clear_between_callbacks() const override { return false; }
 
-   PointGFp p = group.get_base_point() * m;
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         const std::string group_id = get_req_str(vars, "Group");
 
-   size_t fails = 0;
+         const Botan::BigInt m = get_req_bn(vars, "m");
+         const Botan::BigInt X = get_req_bn(vars, "X");
+         const Botan::BigInt Y = get_req_bn(vars, "Y");
 
-   if(p.get_affine_x() != X)
-      {
-      std::cout << p.get_affine_x() << " != " << X << std::endl;
-      ++fails;
-      }
+         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
 
-   if(p.get_affine_y() != Y)
-      {
-      std::cout << p.get_affine_y() << " != " << Y << std::endl;
-      ++fails;
-      }
+         const Botan::PointGFp p = group.get_base_point() * m;
 
-   return fails;
-   }
+         Test::Result result("ECC Scalarmult");
+         result.test_eq("affine X", p.get_affine_x(), X);
+         result.test_eq("affine Y", p.get_affine_y(), Y);
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("ecc_pointmul", ECC_Pointmult_Tests);
+
+#endif
 
 }
 
-size_t test_ecc_pointmul()
-   {
-   size_t fails = 0;
-
-   std::ifstream ecc_mul(TEST_DATA_DIR_PK "/ecc.vec");
-
-   fails += run_tests_bb(ecc_mul, "ECC Point Mult", "Y", false,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return ecc_point_mul(m["Group"], m["m"], m["X"], m["Y"]);
-             });
-
-   return fails;
-   }
-
-#else
-
-UNTESTED_WARNING(ecc_pointmul);
-
-#endif // BOTAN_HAS_ECDSA
-
-#else
-
-SKIP_TEST(ecc_pointmul);
-
-#endif // BOTAN_HAS_ECC_GROUP
+}

@@ -1,6 +1,6 @@
 /*
 * Server Key Exchange Message
-* (C) 2004-2010,2012 Jack Lloyd
+* (C) 2004-2010,2012,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -145,21 +145,17 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
                                          Protocol_Version version) :
    m_kex_key(nullptr), m_srp_params(nullptr)
    {
-   if(buf.size() < 6)
-      throw Decoding_Error("Server_Key_Exchange: Packet corrupted");
-
    TLS_Data_Reader reader("ServerKeyExchange", buf);
 
    /*
-   * We really are just serializing things back to what they were
-   * before, but unfortunately to know where the signature is we need
-   * to be able to parse the whole thing anyway.
+   * Here we are deserializing enough to find out what offset the
+   * signature is at. All processing is done when the Client Key Exchange
+   * is prepared.
    */
 
    if(kex_algo == "PSK" || kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
       {
-      const std::string identity_hint = reader.get_string(2, 0, 65535);
-      append_tls_length_value(m_params, identity_hint, 2);
+      reader.get_string(2, 0, 65535); // identity hint
       }
 
    if(kex_algo == "DH" || kex_algo == "DHE_PSK")
@@ -168,48 +164,28 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
 
       for(size_t i = 0; i != 3; ++i)
          {
-         BigInt v = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-         append_tls_length_value(m_params, BigInt::encode(v), 2);
+         reader.get_range<byte>(2, 1, 65535);
          }
       }
    else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
       {
-      const byte curve_type = reader.get_byte();
-
-      if(curve_type != 3)
-         throw Decoding_Error("Server_Key_Exchange: Server sent non-named ECC curve");
-
-      const u16bit curve_id = reader.get_u16bit();
-
-      const std::string name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
-
-      std::vector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
-
-      if(name == "")
-         throw Decoding_Error("Server_Key_Exchange: Server sent unknown named curve " +
-                              std::to_string(curve_id));
-
-      m_params.push_back(curve_type);
-      m_params.push_back(get_byte(0, curve_id));
-      m_params.push_back(get_byte(1, curve_id));
-      append_tls_length_value(m_params, ecdh_key, 1);
+      reader.get_byte(); // curve type
+      reader.get_u16bit(); // curve id
+      reader.get_range<byte>(1, 1, 255); // public key
       }
    else if(kex_algo == "SRP_SHA")
       {
       // 2 bigints (N,g) then salt, then server B
 
-      const BigInt N = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-      const BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-      std::vector<byte> salt = reader.get_range<byte>(1, 1, 255);
-      const BigInt B = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-
-      append_tls_length_value(m_params, BigInt::encode(N), 2);
-      append_tls_length_value(m_params, BigInt::encode(g), 2);
-      append_tls_length_value(m_params, salt, 1);
-      append_tls_length_value(m_params, BigInt::encode(B), 2);
+      reader.get_range<byte>(2, 1, 65535);
+      reader.get_range<byte>(2, 1, 65535);
+      reader.get_range<byte>(1, 1, 255);
+      reader.get_range<byte>(2, 1, 65535);
       }
    else if(kex_algo != "PSK")
       throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " + kex_algo);
+
+   m_params.assign(buf.data(), buf.data() + reader.read_so_far());
 
    if(sig_algo != "")
       {

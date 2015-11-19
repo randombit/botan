@@ -58,7 +58,7 @@ std::time_t boost_timegm(std::tm *tm)
       using namespace boost::posix_time;
       using namespace boost::gregorian;
       const auto epoch = ptime(date(1970, 01, 01));
-      const auto time = ptime(date(year, mon, day), 
+      const auto time = ptime(date(year, mon, day),
                               hours(hour) + minutes(min) + seconds(sec));
       const time_duration diff(time - epoch);
       out = diff.ticks() / diff.ticks_per_second();
@@ -88,7 +88,7 @@ std::time_t fallback_timegm(std::tm *tm)
    // Clear value of TZ
    ::setenv("TZ", "", 1);
    ::tzset();
-   
+
    out = ::mktime(tm);
 
    // Restore TZ
@@ -113,10 +113,10 @@ std::time_t fallback_timegm(std::tm *tm)
 
 }
 
-std::chrono::system_clock::time_point calendar_point::to_std_timepoint()
+std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const
    {
    if (year < 1970)
-      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years before 1990.");
+      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years before 1970.");
 
    // 32 bit time_t ends at January 19, 2038
    // https://msdn.microsoft.com/en-us/library/2093ets1.aspx

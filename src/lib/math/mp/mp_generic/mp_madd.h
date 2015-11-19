@@ -13,6 +13,27 @@
 
 namespace Botan {
 
+#if (BOTAN_MP_WORD_BITS == 8)
+  typedef u16bit dword;
+  #define BOTAN_HAS_MP_DWORD
+#elif (BOTAN_MP_WORD_BITS == 16)
+  typedef u32bit dword;
+  #define BOTAN_HAS_MP_DWORD
+#elif (BOTAN_MP_WORD_BITS == 32)
+  typedef u64bit dword;
+  #define BOTAN_HAS_MP_DWORD
+#elif (BOTAN_MP_WORD_BITS == 64)
+
+  #include <botan/mul128.h>
+
+  #if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
+    typedef uint128_t dword;
+    #define BOTAN_HAS_MP_DWORD
+  #endif
+#else
+  #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
+#endif
+
 /*
 * Word Multiply/Add
 */

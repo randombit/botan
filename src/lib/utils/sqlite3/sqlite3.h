@@ -39,7 +39,7 @@ class BOTAN_DLL Sqlite3_Database  : public SQL_Database
             std::pair<const byte*, size_t> get_blob(int column) override;
             size_t get_size_t(int column) override;
 
-            void spin() override;
+            size_t spin() override;
             bool step() override;
 
             Sqlite3_Statement(sqlite3* db, const std::string& base_sql);

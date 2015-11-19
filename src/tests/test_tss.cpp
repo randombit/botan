@@ -7,53 +7,46 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_THRESHOLD_SECRET_SHARING)
+  #include <botan/tss.h>
+  #include <botan/hex.h>
+#endif
 
-#include <iostream>
-#include <botan/hex.h>
-#include <botan/tss.h>
+namespace Botan_Tests {
 
-size_t test_tss()
+namespace {
+
+#if defined(BOTAN_HAS_THRESHOLD_SECRET_SHARING)
+
+class TSS_Tests : public Test
    {
-   using namespace Botan;
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
 
-   auto& rng = test_rng();
+         Test::Result result("TSS");
+         byte id[16];
+         for(int i = 0; i != 16; ++i)
+            id[i] = i;
 
-   size_t fails = 0;
+         const std::vector<byte> S = Botan::hex_decode("7465737400");
 
-   byte id[16];
-   for(int i = 0; i != 16; ++i)
-      id[i] = i;
+         std::vector<Botan::RTSS_Share> shares =
+            Botan::RTSS_Share::split(2, 4, S.data(), S.size(), id, Test::rng());
 
-   const secure_vector<byte> S = hex_decode_locked("7465737400");
+         result.test_eq("reconstruction", Botan::RTSS_Share::reconstruct(shares), S);
+         shares.resize(shares.size()-1);
+         result.test_eq("reconstruction after removal", Botan::RTSS_Share::reconstruct(shares), S);
 
-   std::vector<RTSS_Share> shares =
-      RTSS_Share::split(2, 4, S.data(), S.size(), id, rng);
+         results.push_back(result);
+         return results;
+         }
+   };
 
-   auto back = RTSS_Share::reconstruct(shares);
-
-   if(S != back)
-      {
-      std::cout << "TSS-0: " << hex_encode(S) << " != " << hex_encode(back) << std::endl;
-      ++fails;
-      }
-
-   shares.resize(shares.size()-1);
-
-   back = RTSS_Share::reconstruct(shares);
-
-   if(S != back)
-      {
-      std::cout << "TSS-1: " << hex_encode(S) << " != " << hex_encode(back) << std::endl;
-      ++fails;
-      }
-
-   test_report("TSS", 2, fails);
-
-   return fails;
-   }
-
-#else
-
-SKIP_TEST(tss);
+BOTAN_REGISTER_TEST("tss", TSS_Tests);
 
 #endif // BOTAN_HAS_THRESHOLD_SECRET_SHARING
+
+}
+
+}

@@ -43,7 +43,7 @@ class BOTAN_DLL LZMA_Decompression : public Stream_Decompression
    public:
       std::string name() const override { return "LZMA_Decompression"; }
    private:
-      Compression_Stream* make_stream() const;
+      Compression_Stream* make_stream() const override;
    };
 
 }

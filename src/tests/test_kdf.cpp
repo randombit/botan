@@ -7,38 +7,49 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_KDF_BASE)
+  #include <botan/kdf.h>
+#endif
 
-#include <botan/kdf.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
+namespace Botan_Tests {
 
-using namespace Botan;
+namespace {
 
-size_t test_kdf()
+#if defined(BOTAN_HAS_KDF_BASE)
+class KDF_KAT_Tests : public Text_Based_Test
    {
-   auto test = [](const std::string& input)
-      {
-      return run_tests(input, "KDF", "Output", true,
-             [](std::map<std::string, std::string> vec)
-             {
-             std::unique_ptr<KDF> kdf(get_kdf(vec["KDF"]));
+   public:
+      KDF_KAT_Tests() : Text_Based_Test(Test::data_dir("kdf"),
+                                        {"OutputLen", "Salt", "Secret", "Output"},
+                                        {"IKM","XTS"})
+         {}
 
-             const size_t outlen = to_u32bit(vec["OutputLen"]);
-             const auto salt = hex_decode(vec["Salt"]);
-             const auto secret = hex_decode(vec["Secret"]);
+      Test::Result run_one_test(const std::string& kdf_name, const VarMap& vars)
+         {
+         Test::Result result(kdf_name);
+         std::unique_ptr<Botan::KDF> kdf(Botan::get_kdf(kdf_name));
 
-             const auto key = kdf->derive_key(outlen, secret, salt);
+         if(!kdf)
+            {
+            result.note_missing(kdf_name);
+            return result;
+            }
 
-             return hex_encode(key);
-             });
-      };
+         const size_t outlen = get_req_sz(vars, "OutputLen");
+         const std::vector<uint8_t> salt = get_opt_bin(vars, "Salt");
+         const std::vector<uint8_t> secret = get_req_bin(vars, "Secret");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
 
-   return run_tests_in_dir(TEST_DATA_DIR "/kdf", test);
-   }
+         result.test_eq("derived key", kdf->derive_key(outlen, secret, salt), expected);
 
-#else
+         return result;
+         }
 
-SKIP_TEST(kdf);
+   };
 
-#endif // BOTAN_HAS_KDF_BASE
+BOTAN_REGISTER_TEST("kdf", KDF_KAT_Tests);
+
+#endif
+
+}
+
+}

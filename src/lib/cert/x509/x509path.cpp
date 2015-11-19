@@ -338,6 +338,8 @@ const X509_Certificate& Path_Validation_Result::trust_root() const
    {
    if(m_cert_path.empty())
       throw std::runtime_error("Path_Validation_Result::trust_root no path set");
+   if(result() != Certificate_Status_Code::VERIFIED)
+      throw std::runtime_error("Path_Validation_Result::trust_root meaningless with invalid status");
 
    return m_cert_path[m_cert_path.size()-1];
    }

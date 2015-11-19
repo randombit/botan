@@ -7,40 +7,52 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PBKDF)
+  #include <botan/pbkdf.h>
+#endif
 
-#include <botan/pbkdf.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
+namespace Botan_Tests {
 
-using namespace Botan;
+namespace {
 
-size_t test_pbkdf()
+#if defined(BOTAN_HAS_PBKDF)
+class PBKDF_KAT_Tests : public Text_Based_Test
    {
-   auto test = [](const std::string& input)
-      {
-      return run_tests(input, "PBKDF", "Output", true,
-             [](std::map<std::string, std::string> vec)
-             {
-             std::unique_ptr<PBKDF> pbkdf(get_pbkdf(vec["PBKDF"]));
+   public:
+      PBKDF_KAT_Tests() : Text_Based_Test(Test::data_dir("pbkdf"),
+                                          {"OutputLen", "Iterations", "Salt", "Passphrase", "Output"})
+         {}
 
-             const size_t iterations = to_u32bit(vec["Iterations"]);
-             const size_t outlen = to_u32bit(vec["OutputLen"]);
-             const auto salt = hex_decode(vec["Salt"]);
-             const std::string pass = vec["Passphrase"];
+      Test::Result run_one_test(const std::string& pbkdf_name, const VarMap& vars)
+         {
+         Test::Result result(pbkdf_name);
+         std::unique_ptr<Botan::PBKDF> pbkdf(Botan::get_pbkdf(pbkdf_name));
 
-             const auto key = pbkdf->derive_key(outlen, pass,
-                                                salt.data(), salt.size(),
-                                                iterations).bits_of();
-             return hex_encode(key);
-             });
-      };
+         if(!pbkdf)
+            {
+            result.note_missing(pbkdf_name);
+            return result;
+            }
 
-   return run_tests_in_dir(TEST_DATA_DIR "/pbkdf", test);
-   }
+         const size_t outlen = get_req_sz(vars, "OutputLen");
+         const size_t iterations = get_req_sz(vars, "Iterations");
+         const std::vector<uint8_t> salt = get_req_bin(vars, "Salt");
+         const std::string passphrase = get_req_str(vars, "Passphrase");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
 
-#else
+         const Botan::secure_vector<byte> derived =
+            pbkdf->derive_key(outlen, passphrase, salt.data(), salt.size(), iterations).bits_of();
 
-SKIP_TEST(pbkdf);
+         result.test_eq("derived key", derived, expected);
 
-#endif // BOTAN_HAS_PBKDF
+         return result;
+         }
+
+   };
+
+BOTAN_REGISTER_TEST("pbkdf", PBKDF_KAT_Tests);
+
+#endif
+
+}
+
+}

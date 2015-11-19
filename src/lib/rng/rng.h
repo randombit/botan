@@ -183,6 +183,7 @@ class BOTAN_DLL Serialized_RNG : public RandomNumberGenerator
          }
 
       Serialized_RNG() : m_rng(RandomNumberGenerator::make_rng()) {}
+      Serialized_RNG(RandomNumberGenerator* rng) : m_rng(rng) {}
    private:
       mutable std::mutex m_mutex;
       std::unique_ptr<RandomNumberGenerator> m_rng;

@@ -449,8 +449,6 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
 BigInt PointGFp::get_affine_x() const
    {
    if(is_zero())
-      abort();
-   if(is_zero())
       throw Illegal_Transformation("Cannot convert zero point to affine");
 
    BigInt z2 = curve_sqr(m_coord_z);
@@ -462,8 +460,6 @@ BigInt PointGFp::get_affine_x() const
 
 BigInt PointGFp::get_affine_y() const
    {
-   if(is_zero())
-      abort();
    if(is_zero())
       throw Illegal_Transformation("Cannot convert zero point to affine");
 

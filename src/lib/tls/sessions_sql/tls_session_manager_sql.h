@@ -56,6 +56,8 @@ class BOTAN_DLL Session_Manager_SQL : public Session_Manager
 
       void remove_entry(const std::vector<byte>& session_id) override;
 
+      size_t remove_all() override;
+
       void save(const Session& session_data) override;
 
       std::chrono::seconds session_lifetime() const override
@@ -65,7 +67,7 @@ class BOTAN_DLL Session_Manager_SQL : public Session_Manager
       void prune_session_cache();
 
       std::shared_ptr<SQL_Database> m_db;
-      SymmetricKey m_session_key;
+      secure_vector<byte> m_session_key;
       RandomNumberGenerator& m_rng;
       size_t m_max_sessions;
       std::chrono::seconds m_session_lifetime;

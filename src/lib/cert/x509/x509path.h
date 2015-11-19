@@ -84,7 +84,8 @@ class BOTAN_DLL Path_Validation_Result
       std::set<std::string> trusted_hashes() const;
 
       /**
-      * @return the trust root of the validation
+      * @return the trust root of the validation if successful
+      * throws an exception if the validation failed
       */
       const X509_Certificate& trust_root() const;
 

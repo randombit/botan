@@ -125,9 +125,15 @@ size_t Sqlite3_Database::Sqlite3_Statement::get_size_t(int column)
    return static_cast<size_t>(sessions_int);
    }
 
-void Sqlite3_Database::Sqlite3_Statement::spin()
+size_t Sqlite3_Database::Sqlite3_Statement::spin()
    {
-   while(step()) {}
+   size_t steps = 0;
+   while(step())
+      {
+      ++steps;
+      }
+
+   return steps;
    }
 
 bool Sqlite3_Database::Sqlite3_Statement::step()

@@ -1,0 +1,73 @@
+
+[valid]
+# empty string
+Binary = 
+Base64 = 
+
+Binary = 66
+Base64 = Zg==
+
+Binary = 666F
+Base64 = Zm8=
+
+Binary = 666F6F
+Base64 = Zm9v
+
+Binary = 68656C6C6F20776F726C64
+Base64 = aGVsbG8gd29ybGQ=
+
+Binary = 68656C6C6F20776F726C6421
+Base64 = aGVsbG8gd29ybGQh
+
+Binary = 48656C6C6F2C20776F726C642E
+Base64 = SGVsbG8sIHdvcmxkLg==
+
+Binary = 546865203132206368617273
+Base64 = VGhlIDEyIGNoYXJz
+
+Binary = 5468652031332063686172732E
+Base64 = VGhlIDEzIGNoYXJzLg==
+
+Binary = 5468652031342063686172732E2E
+Base64 = VGhlIDE0IGNoYXJzLi4=
+
+Binary = 5468652031352063686172732E2E2E
+Base64 = VGhlIDE1IGNoYXJzLi4u
+
+Binary = 416E205554462D382075756D6C3A20C3BC
+Base64 = QW4gVVRGLTggdXVtbDogw7w=
+
+Binary = 5765697264204765726D616E20322062797465207468696E673A20C39F2E
+Base64 = V2VpcmQgR2VybWFuIDIgYnl0ZSB0aGluZzogw58u
+
+Binary = 9B
+Base64 = mw==
+
+Binary = 1C60
+Base64 = HGA=
+
+Binary = 8134BD
+Base64 = gTS9
+
+Binary = 5E6CFFDE
+Base64 = Xmz/3g==
+
+Binary = b2cdf0dc7f
+Base64 = ss3w3H8=
+
+Binary = fc562ddad40e
+Base64 = /FYt2tQO
+
+Binary = 29b2322e8841e8
+Base64 = KbIyLohB6A==
+
+Binary = 0f0fced9497aaf92
+Base64 = Dw/O2Ul6r5I=
+
+Binary = 270fb18982800da640
+Base64 = Jw+xiYKADaZA
+
+[invalid]
+Base64 = ZOOL!isnotvalidbase64
+
+Base64 = Neitheris:this?

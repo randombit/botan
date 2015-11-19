@@ -20,7 +20,7 @@ Session_Manager_In_Memory::Session_Manager_In_Memory(
    m_max_sessions(max_sessions),
    m_session_lifetime(session_lifetime),
    m_rng(rng),
-   m_session_key(m_rng, 32)
+   m_session_key(m_rng.random_vec(32))
    {}
 
 bool Session_Manager_In_Memory::load_from_session_str(
@@ -93,6 +93,15 @@ void Session_Manager_In_Memory::remove_entry(
 
    if(i != m_sessions.end())
       m_sessions.erase(i);
+   }
+
+size_t Session_Manager_In_Memory::remove_all()
+   {
+   const size_t removed = m_sessions.size();
+   m_info_sessions.clear();
+   m_sessions.clear();
+   m_session_key = m_rng.random_vec(32);
+   return removed;
    }
 
 void Session_Manager_In_Memory::save(const Session& session)

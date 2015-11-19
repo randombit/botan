@@ -36,7 +36,10 @@ inclusion into external build systems.
 If you need help or have questions, send a mail to the
 `mailing list <http://lists.randombit.net/mailman/listinfo/botan-devel/>`_
 or open a ticket on
-`GitHub Issues <https://github.com/randombit/botan/issues>`_.
+`GitHub Issues <https://github.com/randombit/botan/issues>`_. If you
+think you've found a security bug, read the
+`security page <http://botan.randombit.net/security.html>`_
+for contact information and procedures.
 
 The `GitHub wiki <https://github.com/randombit/botan/wiki>`_
 and `Doxygen docs <https://botan.randombit.net/doxygen>`_
@@ -87,7 +90,7 @@ Botan may already be included in your favorite distribution, such as
 `EPEL <http://dl.fedoraproject.org/pub/epel/7/SRPMS/repoview/botan.html>`_ (for RHEL/CentOS),
 `Debian <http://packages.debian.org/search?keywords=libbotan>`_,
 `Ubuntu <http://packages.ubuntu.com/search?keywords=botan>`_,
-`Gentoo <http://packages.gentoo.org/package/botan>`_,
+`Gentoo <https://packages.gentoo.org/packages/dev-libs/botan>`_,
 `Arch <http://www.archlinux.org/packages/community/x86_64/botan/>`_,
 `Slackbuild <http://slackbuilds.org/result/?search=Botan>`_,
 `FreeBSD ports <http://www.freshports.org/security/botan110>`_, or
@@ -103,9 +106,9 @@ later, Clang 3.4 and later, and MSVC 2013 are regularly tested.
 A new development release is made on the first Monday of every month.
 
 The latest development release is
-`1.11.23 <http://botan.randombit.net/releases/Botan-1.11.23.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.23.tgz.asc>`_
-released on 2015-10-26
+`1.11.24 <http://botan.randombit.net/releases/Botan-1.11.24.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.24.tgz.asc>`_
+released on 2015-11-04
 
 Old Stable Series (1.10)
 ----------------------------------------

@@ -560,8 +560,9 @@ policy settings from a file.
      Returns the list of algorithms we are willing to use for
      public key signatures, in order of preference.
 
-     Default: "SHA-512", "SHA-384", "SHA-256", "SHA-224"
+     Default: "SHA-512", "SHA-384", "SHA-256"
 
+     Also allowed: "SHA-224"
      Also allowed (although **not recommended**): "MD5", "SHA-1"
 
      .. note::
