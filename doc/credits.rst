@@ -55,6 +55,11 @@ snail-mail address (S), and Bitcoin address (B).
   D: LZMA compression module
   S: Czech Republic
 
+  N: Matej Kenda
+  E: matej.kenda@topit.si
+  D: Locking in Algo_Registry for Windows OS
+  S: Slovenia
+
   N: Adam Langley
   E: agl@imperialviolet.org
   D: Curve25519
