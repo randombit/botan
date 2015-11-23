@@ -49,83 +49,140 @@
 
 namespace Botan {
 
-namespace {
-
-std::vector<std::unique_ptr<EntropySource>> get_default_entropy_sources()
+std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    {
-   std::vector<std::unique_ptr<EntropySource>> sources;
-
+   if(name == "timestamp")
+      {
 #if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
-   sources.push_back(std::unique_ptr<EntropySource>(new High_Resolution_Timestamp));
+   return std::unique_ptr<Entropy_Source>(new High_Resolution_Timestamp);
 #endif
+      }
 
+   if(name == "rdrand")
+      {
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
-   sources.push_back(std::unique_ptr<EntropySource>(new Intel_Rdrand));
+      return std::unique_ptr<Entropy_Source>(new Intel_Rdrand);
 #endif
+      }
 
+   if(name == "proc_info")
+      {
 #if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER)
-   sources.push_back(std::unique_ptr<EntropySource>(new UnixProcessInfo_EntropySource));
+   return std::unique_ptr<Entropy_Source>(new UnixProcessInfo_EntropySource);
 #endif
+      }
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
-   sources.push_back(std::unique_ptr<EntropySource>(new Device_EntropySource(
-      { "/dev/random", "/dev/srandom", "/dev/urandom" }
-   )));
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
-   sources.push_back(std::unique_ptr<EntropySource>(new Win32_CAPI_EntropySource));
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
-   sources.push_back(std::unique_ptr<EntropySource>(new ProcWalking_EntropySource("/proc")));
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
-   sources.push_back(std::unique_ptr<EntropySource>(new Win32_EntropySource));
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_BEOS)
-   sources.push_back(std::unique_ptr<EntropySource>(new BeOS_EntropySource));
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER)
-   sources.push_back(std::unique_ptr<EntropySource>(new Unix_EntropySource(
-         { "/bin", "/sbin", "/usr/bin", "/usr/sbin" }
-      )));
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_EGD)
-   sources.push_back(std::unique_ptr<EntropySource>(
-      new EGD_EntropySource({ "/var/run/egd-pool", "/dev/egd-pool" })
-      ));
-#endif
-
+   if(name == "darwin_secrandom")
+      {
 #if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
-   sources.push_back(std::unique_ptr<EntropySource>(new Darwin_SecRandom));
+      return std::unique_ptr<Entropy_Source>(new Darwin_SecRandom);
 #endif
+      }
 
+   if(name == "dev_random")
+      {
+#if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
+      return std::unique_ptr<Entropy_Source>(new Device_EntropySource(BOTAN_SYSTEM_RNG_POLL_DEVICES));
+      }
+
+   if(name == "win32_cryptoapi")
+      {
+#elif defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
+      return std::unique_ptr<Entropy_Source>(new Win32_CAPI_EntropySource);
+#endif
+      }
+
+   if(name == "proc_walk")
+      {
+#if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
+      return std::unique_ptr<Entropy_Source>(new ProcWalking_EntropySource("/proc"));
+#endif
+      }
+
+   if(name == "system_stats")
+      {
+#if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
+      return std::unique_ptr<Entropy_Source>(new Win32_EntropySource);
+#elif defined(BOTAN_HAS_ENTROPY_SRC_BEOS)
+   return std::unique_ptr<Entropy_Source>(new BeOS_EntropySource);
+#endif
+      }
+
+   if(name == "unix_procs")
+      {
+#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER) || 1
+      return std::unique_ptr<Entropy_Source>(new Unix_EntropySource(BOTAN_ENTROPY_SAFE_PATHS));
+#endif
+      }
+
+   if(name == "egd")
+      {
+#if defined(BOTAN_HAS_ENTROPY_SRC_EGD)
+      return std::unique_ptr<Entropy_Source>(new EGD_EntropySource(BOTAN_ENTROPY_EGD_PATHS));
+#endif
+      }
+
+   return std::unique_ptr<Entropy_Source>();
+   }
+
+void Entropy_Sources::add_source(std::unique_ptr<Entropy_Source> src)
+   {
+   m_srcs.push_back(std::move(src));
+   }
+
+std::vector<std::string> Entropy_Sources::enabled_sources() const
+   {
+   std::vector<std::string> sources;
+   for(size_t i = 0; i != m_srcs.size(); ++i)
+      {
+      sources.push_back(m_srcs[i]->name());
+      }
    return sources;
    }
 
-}
-
-//static
-void EntropySource::poll_available_sources(class Entropy_Accumulator& accum)
+void Entropy_Sources::poll(Entropy_Accumulator& accum)
    {
-   static std::vector<std::unique_ptr<EntropySource>> g_sources(get_default_entropy_sources());
-
-   if(g_sources.empty())
-      throw std::runtime_error("No entropy sources enabled at build time, RNG poll failed");
-
-   size_t poll_attempt = 0;
-
-   while(!accum.polling_finished() && poll_attempt < 16)
+   for(size_t i = 0; i != m_srcs.size(); ++i)
       {
-      const size_t src_idx = poll_attempt % g_sources.size();
-      g_sources[src_idx]->poll(accum);
-      ++poll_attempt;
+      m_srcs[i]->poll(accum);
+      if(accum.polling_goal_achieved())
+         break;
       }
+   }
+
+bool Entropy_Sources::poll_just(Entropy_Accumulator& accum, const std::string& the_src)
+   {
+   for(size_t i = 0; i != m_srcs.size(); ++i)
+      {
+      if(m_srcs[i]->name() == the_src)
+         {
+         m_srcs[i]->poll(accum);
+         return true;
+         }
+      }
+
+   printf("NO %s\n", the_src.c_str());
+   return false;
+   }
+
+Entropy_Sources::Entropy_Sources(const std::vector<std::string>& sources)
+   {
+   for(auto&& src_name : sources)
+      {
+      std::unique_ptr<Entropy_Source> src(Entropy_Source::create(src_name));
+
+      if(src)
+         {
+         m_srcs.push_back(std::move(src));
+         }
+      }
+   }
+
+Entropy_Sources& Entropy_Sources::global_sources()
+   {
+   static Entropy_Sources global_entropy_sources(BOTAN_ENTROPY_DEFAULT_SOURCES);
+
+   return global_entropy_sources;
    }
 
 }

@@ -18,10 +18,10 @@ namespace Botan {
 * @note Any results from timers are marked as not contributing entropy
 * to the poll, as a local attacker could observe them directly.
 */
-class High_Resolution_Timestamp : public EntropySource
+class High_Resolution_Timestamp : public Entropy_Source
    {
    public:
-      std::string name() const override { return "High Resolution Timestamp"; }
+      std::string name() const override { return "timestamp"; }
       void poll(Entropy_Accumulator& accum) override;
    };
 

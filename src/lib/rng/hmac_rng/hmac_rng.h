@@ -32,9 +32,9 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
       void clear() override;
       std::string name() const override;
 
-      void reseed(size_t poll_bits) override;
-
-      void reseed_with_timeout(size_t poll_bits, std::chrono::milliseconds ms);
+      size_t reseed_with_sources(Entropy_Sources& srcs,
+                                 size_t poll_bits,
+                                 std::chrono::milliseconds poll_timeout) override;
 
       void add_entropy(const byte[], size_t) override;
 

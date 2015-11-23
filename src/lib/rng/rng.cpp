@@ -7,8 +7,16 @@
 
 #include <botan/rng.h>
 #include <botan/hmac_rng.h>
+#include <botan/entropy_src.h>
 
 namespace Botan {
+
+void RandomNumberGenerator::reseed(size_t bits_to_collect)
+   {
+   this->reseed_with_sources(Entropy_Sources::global_sources(),
+                             bits_to_collect,
+                             BOTAN_RNG_RESEED_DEFAULT_TIMEOUT);
+   }
 
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {

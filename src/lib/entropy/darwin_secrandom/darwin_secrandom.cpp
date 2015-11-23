@@ -16,12 +16,12 @@ namespace Botan {
 void Darwin_SecRandom::poll(Entropy_Accumulator& accum)
    {
    const size_t ENTROPY_BITS_PER_BYTE = 8;
-   const size_t BUF_SIZE = 256;
 
-   m_buf.resize(BUF_SIZE);
-   if (0 == SecRandomCopyBytes(kSecRandomDefault, m_buf.size(), m_buf.data()))
+   secure_vector<byte>& buf = accum.get_io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
+
+   if(0 == SecRandomCopyBytes(kSecRandomDefault, buf.size(), buf.data()))
       {
-      accum.add(m_buf.data(), m_buf.size(), ENTROPY_BITS_PER_BYTE);
+      accum.add(buf.data(), buf.size(), ENTROPY_BITS_PER_BYTE);
       }
    }
 
