@@ -29,21 +29,20 @@ namespace {
 
 using Botan_Tests::Test;
 
-int help(std::ostream& out, char* argv0)
+int help(std::ostream& out, const std::string binary_name)
    {
    std::ostringstream err;
 
    err << "Usage:\n"
-       << argv0 << " test1 test2 ...\n"
+       << binary_name << " test1 test2 ...\n"
        << "Available tests: ";
 
    for(auto&& test : Test::registered_tests())
       {
       err << test << " ";
       }
-   err << "\n";
 
-   out << err.str();
+   out << err.str() << std::endl;
    return 1;
    }
 
@@ -191,15 +190,13 @@ setup_tests(std::ostream& out, size_t threads, size_t soak_level, bool log_succe
    return rng;
    }
 
-}
-
-int main(int argc, char* argv[])
+int cpp_main(const std::vector<std::string> args)
    {
    try
       {
-      if(argc == 2 && (std::string(argv[1]) == "--help" || std::string(argv[1])== "help"))
+      if(args.size() == 2 && (args[1] == "--help" || args[1] == "help"))
          {
-         return help(std::cout, argv[0]);
+         return help(std::cout, args[0]);
          }
 
       size_t threads = 0;//std::thread::hardware_concurrency();
@@ -207,7 +204,7 @@ int main(int argc, char* argv[])
       const std::string drbg_seed = "";
       bool log_success = false;
 
-      std::vector<std::string> req(argv + 1, argv + argc);
+      std::vector<std::string> req(args.begin()+1, args.end());
 
       if(req.empty())
          {
@@ -241,4 +238,12 @@ int main(int argc, char* argv[])
       std::cout << "Unknown exception caused test abort" << std::endl;
       return 3;
       }
+   }
+
+}
+
+int main(int argc, char* argv[])
+   {
+   std::vector<std::string> args(argv, argv + argc);
+   return cpp_main(args);
    }
