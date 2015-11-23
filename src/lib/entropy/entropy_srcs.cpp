@@ -110,7 +110,7 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
 
    if(name == "unix_procs")
       {
-#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER) || 1
+#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER)
       return std::unique_ptr<Entropy_Source>(new Unix_EntropySource(BOTAN_ENTROPY_SAFE_PATHS));
 #endif
       }
