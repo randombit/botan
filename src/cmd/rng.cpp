@@ -49,7 +49,7 @@ int rng(int argc, char* argv[])
             return total_collected >= amt;
             });
 
-         EntropySource::poll_available_sources(accum);
+         Entropy_Sources::global_sources().poll(accum);
          }
       }
    catch(std::exception& e)

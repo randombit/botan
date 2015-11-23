@@ -6,7 +6,6 @@
 
 #include "tests.h"
 #include <botan/entropy_src.h>
-#include <iostream>
 
 #if defined(BOTAN_HAS_COMPRESSION)
   #include <botan/compression.h>
@@ -61,9 +60,6 @@ class Entropy_Source_Tests : public Test
 
             result.confirm("polled source", srcs.poll_just(accum, src_name));
 
-            std::cout << src_name << " got " << samples << " samples "
-                      << " total size " << entropy.size()
-                      << " entropy estimate " << entropy_estimate << "\n";
             result.test_note("saw " + std::to_string(samples) +
                              " samples with total estimated entropy " +
                              std::to_string(entropy_estimate));
@@ -87,8 +83,6 @@ class Entropy_Source_Tests : public Test
 
                      result.test_gte("compressed entropy better than advertised",
                                      compressed.size() * 8, entropy_estimate);
-
-                     std::cout << "Compressed to " << compressed.size() * 8 << " bits\n";
 
                      // TODO: perform 2nd poll and check compression differential
                      }

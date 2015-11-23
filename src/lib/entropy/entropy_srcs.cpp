@@ -161,7 +161,6 @@ bool Entropy_Sources::poll_just(Entropy_Accumulator& accum, const std::string& t
          }
       }
 
-   printf("NO %s\n", the_src.c_str());
    return false;
    }
 
