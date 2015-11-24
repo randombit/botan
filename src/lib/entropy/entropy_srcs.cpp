@@ -127,7 +127,10 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
 
 void Entropy_Sources::add_source(std::unique_ptr<Entropy_Source> src)
    {
-   m_srcs.push_back(std::move(src));
+   if(src.get())
+      {
+      m_srcs.push_back(src.release());
+      }
    }
 
 std::vector<std::string> Entropy_Sources::enabled_sources() const
@@ -168,13 +171,18 @@ Entropy_Sources::Entropy_Sources(const std::vector<std::string>& sources)
    {
    for(auto&& src_name : sources)
       {
-      std::unique_ptr<Entropy_Source> src(Entropy_Source::create(src_name));
-
-      if(src)
-         {
-         m_srcs.push_back(std::move(src));
-         }
+      add_source(Entropy_Source::create(src_name));
       }
+   }
+
+Entropy_Sources::~Entropy_Sources()
+   {
+   for(size_t i = 0; i != m_srcs.size(); ++i)
+      {
+      delete m_srcs[i];
+      m_srcs[i] = nullptr;
+      }
+   m_srcs.clear();
    }
 
 Entropy_Sources& Entropy_Sources::global_sources()

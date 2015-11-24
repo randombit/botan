@@ -116,8 +116,10 @@ class BOTAN_DLL Entropy_Sources
 
       Entropy_Sources() {}
       Entropy_Sources(const std::vector<std::string>& sources);
+
+      ~Entropy_Sources();
    private:
-      std::vector<std::unique_ptr<Entropy_Source>> m_srcs;
+      std::vector<Entropy_Source*> m_srcs;
    };
 
 }
