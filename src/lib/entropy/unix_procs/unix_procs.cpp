@@ -43,8 +43,8 @@ size_t concurrent_processes(size_t user_request)
    const size_t DEFAULT_CONCURRENT = 2;
    const size_t MAX_CONCURRENT = 8;
 
-   if(user_request > 0 && user_request < MAX_CONCURRENT)
-      return user_request;
+   if(user_request > 0)
+      return std::min(user_request, MAX_CONCURRENT);
 
    const long online_cpus = ::sysconf(_SC_NPROCESSORS_ONLN);
 
@@ -72,9 +72,6 @@ void UnixProcessInfo_EntropySource::poll(Entropy_Accumulator& accum)
    accum.add(::getppid(), 0.0);
    accum.add(::getuid(),  0.0);
    accum.add(::getgid(),  0.0);
-#if defined(BOTAN_TARGET_OS_HAS_GETSID)
-   accum.add(::getsid(0),  0.0);
-#endif
    accum.add(::getpgrp(), 0.0);
 
    struct ::rusage usage;

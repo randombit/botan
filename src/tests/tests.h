@@ -99,7 +99,7 @@ class Test
                else
                   {
                   Result r(result.who());
-                  r.test_note("Got expected failure " + result.result_string());
+                  r.test_note("Got expected failure");
                   return r;
                   }
                }
@@ -107,6 +107,13 @@ class Test
             void merge(const Result& other);
 
             void test_note(const std::string& note, const char* extra = nullptr);
+
+            template<typename Alloc>
+            void test_note(const std::string& who, const std::vector<uint8_t, Alloc>& vec)
+               {
+               const std::string hex = Botan::hex_encode(vec);
+               return test_note(who, hex.c_str());
+               }
 
             void note_missing(const std::string& thing);
 

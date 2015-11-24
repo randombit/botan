@@ -40,8 +40,18 @@ class System_RNG_Impl : public RandomNumberGenerator
       void clear() override {}
       std::string name() const override { return "system"; }
 
-      void reseed(size_t) override {}
-      void add_entropy(const byte[], size_t) override {}
+      size_t reseed_with_sources(Entropy_Sources& srcs,
+                                 size_t poll_bits,
+                                 std::chrono::milliseconds poll_timeout) override
+         {
+         return 0;
+         }
+
+      void add_entropy(const byte[], size_t) override
+         {
+         // We could write this back to /dev/urandom to help seed the PRNG
+         // Unclear if this is valuable on current systems
+         }
    private:
 
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
@@ -55,14 +65,18 @@ System_RNG_Impl::System_RNG_Impl()
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
-   if(!CryptAcquireContext(&m_prov, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+   if(!CryptAcquireContext(&m_prov, 0, 0, BOTAN_SYSTEM_RNG_CRYPTOAPI_PROV_TYPE, CRYPT_VERIFYCONTEXT))
       throw std::runtime_error("System_RNG failed to acquire crypto provider");
 
 #else
 
-   m_fd = ::open("/dev/urandom", O_RDONLY);
+#ifndef O_NOCTTY
+  #define O_NOCTTY 0
+#endif
+
+   m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDONLY | O_NOCTTY);
    if(m_fd < 0)
-      throw std::runtime_error("System_RNG failed to open /dev/urandom");
+      throw std::runtime_error("System_RNG failed to open RNG device");
 #endif
    }
 

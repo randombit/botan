@@ -17,10 +17,10 @@ namespace Botan {
 /**
 * Entropy source reading from kernel devices like /dev/random
 */
-class Device_EntropySource : public EntropySource
+class Device_EntropySource : public Entropy_Source
    {
    public:
-      std::string name() const override { return "RNG Device Reader"; }
+      std::string name() const override { return "dev_random"; }
 
       void poll(Entropy_Accumulator& accum) override;
 
@@ -28,8 +28,6 @@ class Device_EntropySource : public EntropySource
       ~Device_EntropySource();
    private:
       typedef int fd_type;
-
-      secure_vector<byte> m_buf;
       std::vector<fd_type> m_devices;
    };
 
