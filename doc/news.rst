@@ -14,17 +14,16 @@ Version 1.11.25, Not Yet Released
 * The OpenSSL implementation of RC4 would return the wrong value from `name` if
   leading bytes of the keystream had been skipped in the output.
 
-* Fixed the signature of botan_pubkey_destroy which took the wrong type and was
-  not usable.
+* Fixed the signature of the FFI function botan_pubkey_destroy, which took the
+  wrong type and was not usable.
 
-* The TLS client would erronously reject any server key exchange
-  packet smaller than 6 bytes. This prevented negotiating a plain PSK
-  TLS ciphersuite with an empty identity hint. ECDHE_PSK and DHE_PSK
-  suites were not affected.
+* The TLS client would erronously reject any server key exchange packet smaller
+  than 6 bytes. This prevented negotiating a plain PSK TLS ciphersuite with an
+  empty identity hint. ECDHE_PSK and DHE_PSK suites were not affected.
 
-* Fixed a bug that would cause the TLS client to occasionally reject a
-  valid server key exchange message as having an invalid signature.
-  This only affected DHE ciphersuites.
+* Fixed a bug that would cause the TLS client to occasionally reject a valid
+  server key exchange message as having an invalid signature. This only affected
+  DHE and SRP ciphersuites.
 
 * Support for negotiating use of SHA-224 in TLS has been disabled in the
   default policy.
