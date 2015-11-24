@@ -107,11 +107,21 @@ class BOTAN_DLL RandomNumberGenerator
       * @param bits_to_collect is the number of bits of entropy to
                attempt to gather from the entropy sources
       */
-      void reseed(size_t bits_to_collect);
+      size_t reseed(size_t bits_to_collect);
+
+      /**
+      * Seed this RNG using the global entropy sources
+      * @param bits_to_collect is the number of bits of entropy to
+               attempt to gather from the entropy sources
+      * @param poll_timeout try not to run longer than this, no matter what
+      */
+      size_t reseed_with_timeout(size_t bits_to_collect,
+                                 std::chrono::milliseconds poll_timeout);
 
       /**
       * Poll provided sources for up to poll_bits bits of entropy
-      * or until the timeout expires.
+      * or until the timeout expires. Returns estimate of the number
+      * of bits collected.
       */
       virtual size_t reseed_with_sources(Entropy_Sources& srcs,
                                          size_t poll_bits,

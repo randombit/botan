@@ -11,11 +11,18 @@
 
 namespace Botan {
 
-void RandomNumberGenerator::reseed(size_t bits_to_collect)
+size_t RandomNumberGenerator::reseed(size_t bits_to_collect)
    {
-   this->reseed_with_sources(Entropy_Sources::global_sources(),
-                             bits_to_collect,
-                             BOTAN_RNG_RESEED_DEFAULT_TIMEOUT);
+   return this->reseed_with_timeout(bits_to_collect,
+                                    BOTAN_RNG_RESEED_DEFAULT_TIMEOUT);
+   }
+
+size_t RandomNumberGenerator::reseed_with_timeout(size_t bits_to_collect,
+                                                  std::chrono::milliseconds timeout)
+   {
+   return this->reseed_with_sources(Entropy_Sources::global_sources(),
+                                    bits_to_collect,
+                                    timeout);
    }
 
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
