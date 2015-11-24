@@ -47,4 +47,4 @@ cachegrind.*
 callgrind.*
 
 # Test output
-src/tests/outdata/*.pem
+src/tests/outdata
