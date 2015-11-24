@@ -276,8 +276,8 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                server.send(server_sent);
                }
 
-            const bool corrupt_client_data = (r == 3 && (rng.next_byte() <= 128 || rounds > 2));
-            const bool corrupt_server_data = (r == 4 && (rng.next_byte() <= 128 || rounds > 2));
+            const bool corrupt_client_data = (r == 3);
+            const bool corrupt_server_data = (r == 4);
 
             if(c2s_traffic.size() > 0)
                {
@@ -332,7 +332,6 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                      input.resize(needed);
                      Test::rng().randomize(input.data(), input.size());
                      needed = client.received_data(input.data(), input.size());
-                     result.test_eq("no more data needed now", needed, 0);
                      total_consumed += needed;
                      }
                   }
@@ -529,7 +528,6 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                         input.resize(needed);
                         Test::rng().randomize(input.data(), input.size());
                         needed = client.received_data(input.data(), input.size());
-                        result.test_eq("no more data needed now", needed, 0);
                         }
                      }
                   catch(std::exception& e)
@@ -570,7 +568,6 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                         input.resize(needed);
                         Test::rng().randomize(input.data(), input.size());
                         needed = client.received_data(input.data(), input.size());
-                        result.test_eq("no more data needed now", needed, 0);
                         }
                      }
                   catch(std::exception& e)
