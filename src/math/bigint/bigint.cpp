@@ -190,7 +190,7 @@ u32bit BigInt::to_u32bit() const
    {
    if(is_negative())
       throw Encoding_Error("BigInt::to_u32bit: Number is negative");
-   if(bits() >= 32)
+   if(bits() > 32)
       throw Encoding_Error("BigInt::to_u32bit: Number is too big to convert");
 
    u32bit out = 0;
