@@ -46,7 +46,7 @@ class Stream_Cipher_Tests : public Text_Based_Test
                continue;
                }
 
-            result.test_eq(provider.c_str(), cipher->name(), algo);
+            result.test_eq(provider, cipher->name(), algo);
             cipher->set_key(key);
 
             if(nonce.size())

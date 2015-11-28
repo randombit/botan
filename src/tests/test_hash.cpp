@@ -42,7 +42,7 @@ class Hash_Function_Tests : public Text_Based_Test
                continue;
                }
 
-            result.test_eq(provider.c_str(), hash->name(), algo);
+            result.test_eq(provider, hash->name(), algo);
 
             hash->update(input);
 

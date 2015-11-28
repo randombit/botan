@@ -106,12 +106,12 @@ bool Test::Result::test_success(const std::string& note)
    return true;
    }
 
-bool Test::Result::test_failure(const char* what, const char* error)
+bool Test::Result::test_failure(const std::string& what, const std::string& error)
    {
    return test_failure(who() + " " + what + " with error " + error);
    }
 
-void Test::Result::test_failure(const char* what, const uint8_t buf[], size_t buf_len)
+void Test::Result::test_failure(const std::string& what, const uint8_t buf[], size_t buf_len)
    {
    test_failure(who() + ": " + what +
                 " buf len " + std::to_string(buf_len) +
@@ -124,7 +124,7 @@ bool Test::Result::test_failure(const std::string& err)
    return false;
    }
 
-bool Test::Result::test_ne(const char* what,
+bool Test::Result::test_ne(const std::string& what,
                            const uint8_t produced[], size_t produced_len,
                            const uint8_t expected[], size_t expected_len)
    {
@@ -133,7 +133,7 @@ bool Test::Result::test_ne(const char* what,
    return test_success();
    }
 
-bool Test::Result::test_eq(const char* producer, const char* what,
+bool Test::Result::test_eq(const char* producer, const std::string& what,
                            const uint8_t produced[], size_t produced_size,
                            const uint8_t expected[], size_t expected_size)
    {
@@ -149,12 +149,7 @@ bool Test::Result::test_eq(const char* producer, const char* what,
       err << " producer '" << producer << "'";
       }
 
-   err << " unexpected result";
-
-   if(what)
-      {
-      err << " for " << what;
-      }
+   err << " unexpected result for " << what;
 
    if(produced_size != expected_size)
       {
@@ -182,29 +177,27 @@ bool Test::Result::test_eq(const char* producer, const char* what,
    return test_failure(err.str());
    }
 
-bool Test::Result::test_eq(const char* what, const std::string& produced, const std::string& expected)
+bool Test::Result::test_eq(const std::string& what, const std::string& produced, const std::string& expected)
    {
    return test_is_eq(what, produced, expected);
    }
 
-bool Test::Result::test_eq(const char* what, const char* produced, const char* expected)
+bool Test::Result::test_eq(const std::string& what, const char* produced, const char* expected)
    {
    return test_is_eq(what, std::string(produced), std::string(expected));
    }
 
-bool Test::Result::test_eq(const char* what, size_t produced, size_t expected)
+bool Test::Result::test_eq(const std::string& what, size_t produced, size_t expected)
    {
    return test_is_eq(what, produced, expected);
    }
 
-bool Test::Result::test_lt(const char* what, size_t produced, size_t expected)
+bool Test::Result::test_lt(const std::string& what, size_t produced, size_t expected)
    {
    if(produced >= expected)
       {
       std::ostringstream err;
-      err << m_who;
-      if(what)
-         err << " " << what;
+      err << m_who << " " << what;
       err << " unexpected result " << produced << " >= " << expected;
       return test_failure(err.str());
       }
@@ -212,14 +205,13 @@ bool Test::Result::test_lt(const char* what, size_t produced, size_t expected)
    return test_success();
    }
 
-bool Test::Result::test_gte(const char* what, size_t produced, size_t expected)
+bool Test::Result::test_gte(const std::string& what, size_t produced, size_t expected)
    {
    if(produced < expected)
       {
       std::ostringstream err;
       err << m_who;
-      if(what)
-         err << " " << what;
+      err << " " << what;
       err << " unexpected result " << produced << " < " << expected;
       return test_failure(err.str());
       }
@@ -228,12 +220,12 @@ bool Test::Result::test_gte(const char* what, size_t produced, size_t expected)
    }
 
 #if defined(BOTAN_HAS_BIGINT)
-bool Test::Result::test_eq(const char* what, const BigInt& produced, const BigInt& expected)
+bool Test::Result::test_eq(const std::string& what, const BigInt& produced, const BigInt& expected)
    {
    return test_is_eq(what, produced, expected);
    }
 
-bool Test::Result::test_ne(const char* what, const BigInt& produced, const BigInt& expected)
+bool Test::Result::test_ne(const std::string& what, const BigInt& produced, const BigInt& expected)
    {
    if(produced != expected)
       return test_success();
@@ -245,7 +237,7 @@ bool Test::Result::test_ne(const char* what, const BigInt& produced, const BigIn
 #endif
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
-bool Test::Result::test_eq(const char* what, const Botan::PointGFp& a, const Botan::PointGFp& b)
+bool Test::Result::test_eq(const std::string& what, const Botan::PointGFp& a, const Botan::PointGFp& b)
    {
    //return test_is_eq(what, a, b);
    if(a == b)
@@ -258,19 +250,18 @@ bool Test::Result::test_eq(const char* what, const Botan::PointGFp& a, const Bot
    }
 #endif
 
-bool Test::Result::test_eq(const char* what, bool produced, bool expected)
+bool Test::Result::test_eq(const std::string& what, bool produced, bool expected)
    {
    return test_is_eq(what, produced, expected);
    }
 
-bool Test::Result::test_rc_ok(const char* what, int rc)
+bool Test::Result::test_rc_ok(const std::string& what, int rc)
    {
    if(rc != 0)
       {
       std::ostringstream err;
       err << m_who;
-      if(what)
-         err << " " << what;
+      err << " " << what;
       err << " unexpectedly failed with error code " << rc;
       return test_failure(err.str());
       }
@@ -278,16 +269,14 @@ bool Test::Result::test_rc_ok(const char* what, int rc)
    return test_success();
    }
 
-bool Test::Result::test_rc_fail(const char* func, const char* why, int rc)
+bool Test::Result::test_rc_fail(const std::string& func, const std::string& why, int rc)
    {
    if(rc == 0)
       {
       std::ostringstream err;
       err << m_who;
-      if(func)
-         err << " call to " << func << " unexpectedly succeeded";
-      if(why)
-         err << " expecting failure because " << why;
+      err << " call to " << func << " unexpectedly succeeded";
+      err << " expecting failure because " << why;
       return test_failure(err.str());
       }
 

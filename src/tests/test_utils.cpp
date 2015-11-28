@@ -34,7 +34,7 @@ class Utility_Function_Tests : public Text_Based_Test
             const size_t x = get_req_sz(vars, "In1");
             const size_t to = get_req_sz(vars, "In2");
 
-            result.test_eq(algo.c_str(), Botan::round_up(x, to), get_req_sz(vars, "Out"));
+            result.test_eq(algo, Botan::round_up(x, to), get_req_sz(vars, "Out"));
 
             try
                {
@@ -48,8 +48,8 @@ class Utility_Function_Tests : public Text_Based_Test
             const size_t x = get_req_sz(vars, "In1");
             const size_t to = get_req_sz(vars, "In2");
 
-            result.test_eq(algo.c_str(), Botan::round_down<size_t>(x, to), get_req_sz(vars, "Out"));
-            result.test_eq(algo.c_str(), Botan::round_down<size_t>(x, 0), x);
+            result.test_eq(algo, Botan::round_down<size_t>(x, to), get_req_sz(vars, "Out"));
+            result.test_eq(algo, Botan::round_down<size_t>(x, 0), x);
             }
 
          return result;
@@ -313,7 +313,7 @@ class Base64_Tests : public Text_Based_Test
                   }
                catch(std::exception& e)
                   {
-                  result.test_failure(b64_ws.c_str(), e.what());
+                  result.test_failure(b64_ws, e.what());
                   }
                }
             }

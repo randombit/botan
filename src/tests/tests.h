@@ -121,17 +121,17 @@ class Test
 
             bool test_failure(const std::string& err);
 
-            bool test_failure(const char* what, const char* error);
+            bool test_failure(const std::string& what, const std::string& error);
 
-            void test_failure(const char* what, const uint8_t buf[], size_t buf_len);
+            void test_failure(const std::string& what, const uint8_t buf[], size_t buf_len);
 
             template<typename Alloc>
-            void test_failure(const char* what, const std::vector<uint8_t, Alloc>& buf)
+            void test_failure(const std::string& what, const std::vector<uint8_t, Alloc>& buf)
                {
                test_failure(what, buf.data(), buf.size());
                }
 
-            bool confirm(const char* what, bool expr)
+            bool confirm(const std::string& what, bool expr)
                {
                return test_eq(what, expr, true);
                }
@@ -139,18 +139,14 @@ class Test
             template<typename T>
             bool test_is_eq(const T& produced, const T& expected)
                {
-               return test_is_eq(nullptr, produced, expected);
+               return test_is_eq("comparison", produced, expected);
                }
 
             template<typename T>
-            bool test_is_eq(const char* what, const T& produced, const T& expected)
+            bool test_is_eq(const std::string& what, const T& produced, const T& expected)
                {
                std::ostringstream out;
-               out << m_who;
-               if(what)
-                  {
-                  out << " " << what;
-                  }
+               out << m_who << " " << what;
 
                if(produced == expected)
                   {
@@ -164,36 +160,36 @@ class Test
                   }
                }
 
-            bool test_eq(const char* what, const char* produced, const char* expected);
-            bool test_eq(const char* what, const std::string& produced, const std::string& expected);
-            bool test_eq(const char* what, bool produced, bool expected);
+            bool test_eq(const std::string& what, const char* produced, const char* expected);
+            bool test_eq(const std::string& what, const std::string& produced, const std::string& expected);
+            bool test_eq(const std::string& what, bool produced, bool expected);
 
-            bool test_eq(const char* what, size_t produced, size_t expected);
-            bool test_lt(const char* what, size_t produced, size_t expected);
-            bool test_gte(const char* what, size_t produced, size_t expected);
+            bool test_eq(const std::string& what, size_t produced, size_t expected);
+            bool test_lt(const std::string& what, size_t produced, size_t expected);
+            bool test_gte(const std::string& what, size_t produced, size_t expected);
 
-            bool test_rc_ok(const char* func, int rc);
-            bool test_rc_fail(const char* func, const char* why, int rc);
+            bool test_rc_ok(const std::string& func, int rc);
+            bool test_rc_fail(const std::string& func, const std::string& why, int rc);
 
 #if defined(BOTAN_HAS_BIGINT)
-            bool test_eq(const char* what, const BigInt& produced, const BigInt& expected);
-            bool test_ne(const char* what, const BigInt& produced, const BigInt& expected);
+            bool test_eq(const std::string& what, const BigInt& produced, const BigInt& expected);
+            bool test_ne(const std::string& what, const BigInt& produced, const BigInt& expected);
 #endif
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
-            bool test_eq(const char* what, const Botan::PointGFp& a, const Botan::PointGFp& b);
+            bool test_eq(const std::string& what, const Botan::PointGFp& a, const Botan::PointGFp& b);
 #endif
 
-            bool test_eq(const char* producer, const char* what,
+            bool test_eq(const char* producer, const std::string& what,
                          const uint8_t produced[], size_t produced_len,
                          const uint8_t expected[], size_t expected_len);
 
-            bool test_ne(const char* what,
+            bool test_ne(const std::string& what,
                          const uint8_t produced[], size_t produced_len,
                          const uint8_t expected[], size_t expected_len);
 
             template<typename Alloc1, typename Alloc2>
-            bool test_eq(const char* what,
+            bool test_eq(const std::string& what,
                          const std::vector<uint8_t, Alloc1>& produced,
                          const std::vector<uint8_t, Alloc2>& expected)
                {
@@ -203,7 +199,7 @@ class Test
                }
 
             template<typename Alloc1, typename Alloc2>
-            bool test_eq(const std::string& producer, const char* what,
+            bool test_eq(const std::string& producer, const std::string& what,
                          const std::vector<uint8_t, Alloc1>& produced,
                          const std::vector<uint8_t, Alloc2>& expected)
                {
@@ -213,7 +209,7 @@ class Test
                }
 
             template<typename Alloc>
-            bool test_eq(const char* what,
+            bool test_eq(const std::string& what,
                          const std::vector<uint8_t, Alloc>& produced,
                          const char* expected_hex)
                {
@@ -224,7 +220,7 @@ class Test
                }
 
             template<typename Alloc1, typename Alloc2>
-            bool test_ne(const char* what,
+            bool test_ne(const std::string& what,
                          const std::vector<uint8_t, Alloc1>& produced,
                          const std::vector<uint8_t, Alloc2>& expected)
                {

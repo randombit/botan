@@ -183,7 +183,7 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
          }
       catch(std::exception& e)
          {
-         result.test_failure(group_name.c_str(), e.what());
+         result.test_failure(group_name, e.what());
          }
       results.push_back(result);
       }
