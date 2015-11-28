@@ -76,7 +76,7 @@ void UnixProcessInfo_EntropySource::poll(Entropy_Accumulator& accum)
 
    struct ::rusage usage;
    ::getrusage(RUSAGE_SELF, &usage);
-   accum.add(usage, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
+   accum.add(usage, BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
    }
 
 void Unix_EntropySource::Unix_Process::spawn(const std::vector<std::string>& args)

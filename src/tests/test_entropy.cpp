@@ -36,63 +36,109 @@ class Entropy_Source_Tests : public Test
 
             result.start_timer();
 
-            std::vector<uint8_t> entropy;
-            size_t samples = 0;
-            size_t entropy_estimate = 0;
-
-            // TODO: add a timeout
-
-            Botan::Entropy_Accumulator accum([&](const uint8_t buf[], size_t buf_len, size_t buf_entropy) -> bool
+            try
                {
-                  entropy.insert(entropy.end(), buf, buf + buf_len);
-                  entropy_estimate += buf_entropy;
-                  ++samples;
+               std::vector<uint8_t> entropy;
+               size_t samples = 0;
+               size_t entropy_estimate = 0;
 
-                  result.test_note("sample " + std::to_string(samples) + " " +
-                                   Botan::hex_encode(buf, buf_len) + " " + std::to_string(buf_entropy));
+               Botan::Entropy_Accumulator accum(
+                  [&](const uint8_t buf[], size_t buf_len, size_t buf_entropy) -> bool {
+                     entropy.insert(entropy.end(), buf, buf + buf_len);
+                     entropy_estimate += buf_entropy;
+                     ++samples;
 
-                  result.test_gte("impossible entropy", buf_len * 8, buf_entropy);
+                     result.test_note("sample " + std::to_string(samples) + " " +
+                                      Botan::hex_encode(buf, buf_len) + " " + std::to_string(buf_entropy));
 
-                  return (entropy_estimate > MAX_ENTROPY ||
-                          samples > MAX_SAMPLES ||
-                          entropy.size() > MAX_ENTROPY_BYTES);
-               });
+                     result.test_gte("impossible entropy", buf_len * 8, buf_entropy);
 
-            result.confirm("polled source", srcs.poll_just(accum, src_name));
+                     return (entropy_estimate > MAX_ENTROPY ||
+                             samples > MAX_SAMPLES ||
+                             entropy.size() > MAX_ENTROPY_BYTES);
+                  });
 
-            result.test_note("saw " + std::to_string(samples) +
-                             " samples with total estimated entropy " +
-                             std::to_string(entropy_estimate));
+               result.confirm("polled source", srcs.poll_just(accum, src_name));
 
-            //result.test_gte("impossible entropy", entropy.size() * 8, entropy_estimate);
+               result.test_note("saw " + std::to_string(samples) +
+                                " samples with total estimated entropy " +
+                                std::to_string(entropy_estimate));
+               result.test_note("poll result", entropy);
 
-            if(!entropy.empty())
-               {
 #if defined(BOTAN_HAS_COMPRESSION)
-               for(auto comp_algo : { "zlib", "bzip2", "lzma" })
+               if(!entropy.empty())
                   {
-                  std::unique_ptr<Botan::Compressor_Transform> comp(Botan::make_compressor(comp_algo, 9));
-
-                  if(comp)
+                  for(const std::string comp_algo : { "zlib", "bzip2", "lzma" })
                      {
-                     Botan::secure_vector<byte> compressed;
-                     compressed.assign(entropy.begin(), entropy.end());
+                     std::unique_ptr<Botan::Compressor_Transform> comp(Botan::make_compressor(comp_algo, 9));
 
-                     comp->start();
-                     comp->finish(compressed);
+                     if(comp)
+                        {
+                        size_t comp1_size = 0;
 
-                     result.test_gte("compressed entropy better than advertised",
-                                     compressed.size() * 8, entropy_estimate);
+                        try
+                           {
+                           Botan::secure_vector<byte> compressed;
+                           compressed.assign(entropy.begin(), entropy.end());
+                           comp->start();
+                           comp->finish(compressed);
 
-                     // TODO: perform 2nd poll and check compression differential
+                           comp1_size = compressed.size();
+
+                           result.test_gte(comp_algo + " compressed entropy better than advertised",
+                                           compressed.size() * 8, entropy_estimate);
+                           }
+                        catch(std::exception& e)
+                           {
+                           result.test_failure(comp_algo + " exception while compressing", e.what());
+                           }
+
+                        std::vector<uint8_t> entropy2;
+                        size_t entropy_estimate2 = 0;
+                        Botan::Entropy_Accumulator accum2(
+                           [&](const uint8_t buf[], size_t buf_len, size_t buf_entropy) -> bool {
+                           entropy2.insert(entropy2.end(), buf, buf + buf_len);
+                           entropy_estimate2 += buf_entropy;
+                           return entropy2.size() >= entropy.size();
+                           });
+
+                        result.confirm("polled source", srcs.poll_just(accum2, src_name));
+                        result.test_note("poll 2 result", entropy2);
+
+                        try
+                           {
+                           Botan::secure_vector<byte> compressed;
+                           compressed.insert(compressed.end(), entropy.begin(), entropy.end());
+                           compressed.insert(compressed.end(), entropy2.begin(), entropy2.end());
+
+                           comp->start();
+                           comp->finish(compressed);
+
+                           size_t comp2_size = compressed.size();
+
+                           result.test_lt("Two blocks of entropy are larger than one",
+                                          comp1_size, comp2_size);
+
+                           size_t comp_diff = comp2_size - comp1_size;
+
+                           result.test_gte(comp_algo + " diff compressed entropy better than advertised",
+                                           comp_diff*8, entropy_estimate2);
+                           }
+                        catch(std::exception& e)
+                           {
+                           result.test_failure(comp_algo + " exception while compressing", e.what());
+                           }
+                        }
                      }
-
                   }
-#endif
                }
+            catch(std::exception& e)
+               {
+               result.test_failure("during entropy collection test", e.what());
+               }
+#endif
 
             result.end_timer();
-
             results.push_back(result);
             }
 
