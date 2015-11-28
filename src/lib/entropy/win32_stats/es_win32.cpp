@@ -20,31 +20,32 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
    First query a bunch of basic statistical stuff, though
    don't count it for much in terms of contributed entropy.
    */
-   accum.add(GetTickCount(), 0);
-   accum.add(GetMessagePos(), 0);
-   accum.add(GetMessageTime(), 0);
-   accum.add(GetInputState(), 0);
-   accum.add(GetCurrentProcessId(), 0);
-   accum.add(GetCurrentThreadId(), 0);
+   accum.add(GetTickCount(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
+   accum.add(GetMessagePos(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
+   accum.add(GetMessageTime(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
+   accum.add(GetInputState(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
+
+   accum.add(GetCurrentProcessId(), BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
+   accum.add(GetCurrentThreadId(), BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
 
    SYSTEM_INFO sys_info;
    GetSystemInfo(&sys_info);
-   accum.add(sys_info, 1);
+   accum.add(sys_info, BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
 
    MEMORYSTATUS mem_info;
    GlobalMemoryStatus(&mem_info);
-   accum.add(mem_info, 1);
+   accum.add(mem_info, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
 
    POINT point;
    GetCursorPos(&point);
-   accum.add(point, 1);
+   accum.add(point, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
 
    GetCaretPos(&point);
-   accum.add(point, 1);
+   accum.add(point, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
 
    LARGE_INTEGER perf_counter;
    QueryPerformanceCounter(&perf_counter);
-   accum.add(perf_counter, 0);
+   accum.add(perf_counter, BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS);
 
    /*
    Now use the Tooltip library to iterate throug various objects on
@@ -53,18 +54,18 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
 
    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, 0);
 
-#define TOOLHELP32_ITER(DATA_TYPE, FUNC_FIRST, FUNC_NEXT) \
-   if(!accum.polling_finished())                     \
-      {                                                   \
-      DATA_TYPE info;                                     \
-      info.dwSize = sizeof(DATA_TYPE);                    \
-      if(FUNC_FIRST(snapshot, &info))                     \
-         {                                                \
-         do                                               \
-            {                                             \
-            accum.add(info, 1);                           \
-            } while(FUNC_NEXT(snapshot, &info));          \
-         }                                                \
+#define TOOLHELP32_ITER(DATA_TYPE, FUNC_FIRST, FUNC_NEXT)        \
+   if(!accum.polling_finished())                                 \
+      {                                                          \
+      DATA_TYPE info;                                            \
+      info.dwSize = sizeof(DATA_TYPE);                           \
+      if(FUNC_FIRST(snapshot, &info))                            \
+         {                                                       \
+         do                                                      \
+            {                                                    \
+            accum.add(info, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA); \
+            } while(FUNC_NEXT(snapshot, &info));                 \
+         }                                                       \
       }
 
    TOOLHELP32_ITER(MODULEENTRY32, Module32First, Module32Next);
@@ -86,7 +87,7 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
          {
          do
             {
-            accum.add(heap_list, 1);
+            accum.add(heap_list, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
 
             if(++heap_lists_found > HEAP_LISTS_MAX)
                break;
@@ -101,7 +102,7 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
                   {
                   if(heap_objs_found++ > HEAP_OBJS_PER_LIST)
                      break;
-                  accum.add(heap_entry, 1);
+                  accum.add(heap_entry, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
                   } while(Heap32Next(&heap_entry));
                }
 

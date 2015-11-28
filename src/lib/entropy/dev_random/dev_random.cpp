@@ -59,8 +59,6 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
    if(m_devices.empty())
       return;
 
-   const size_t ENTROPY_BITS_PER_BYTE = 8;
-
    fd_type max_fd = m_devices[0];
    fd_set read_set;
    FD_ZERO(&read_set);
@@ -86,7 +84,7 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
          {
          const ssize_t got = ::read(m_devices[i], buf.data(), buf.size());
          if(got > 0)
-            accum.add(buf.data(), got, ENTROPY_BITS_PER_BYTE);
+            accum.add(buf.data(), got, BOTAN_ENTROPY_ESTIMATE_STRONG_RNG);
          }
       }
    }

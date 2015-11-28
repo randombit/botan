@@ -139,6 +139,29 @@
 #define BOTAN_ENTROPY_PROC_FS_PATH "/proc"
 #define BOTAN_ENTROPY_SAFE_PATHS { "/bin", "/sbin", "/usr/bin", "/usr/sbin" }
 
+/*
+* Defines the static entropy estimates which each type of source uses.
+* These values are expressed as the bits of entropy per byte of
+* output (in double format) and should be conservative. These are used
+* unless an entropy source has some more specific opinion on the entropy
+* of the underlying source.
+*/
+
+// We include some high resolution timestamps because it can't hurt
+#define BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS 0
+
+// Data which is system or process specific, but otherwise static
+#define BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA 0
+
+// Binary system data of some kind
+#define BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA 0.5
+
+// Human readable text which has entropy
+#define BOTAN_ENTROPY_ESTIMATE_SYSTEM_TEXT (1.0 / 64)
+
+// The output of a PRNG we are trusting to be strong
+#define BOTAN_ENTROPY_ESTIMATE_STRONG_RNG 7.0
+
 /* Should we use GCC-style inline assembler? */
 #if !defined(BOTAN_USE_GCC_INLINE_ASM) && defined(__GNUG__)
   #define BOTAN_USE_GCC_INLINE_ASM 1

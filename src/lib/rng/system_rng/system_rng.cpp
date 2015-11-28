@@ -40,17 +40,17 @@ class System_RNG_Impl : public RandomNumberGenerator
       void clear() override {}
       std::string name() const override { return "system"; }
 
-      size_t reseed_with_sources(Entropy_Sources& srcs,
-                                 size_t poll_bits,
-                                 std::chrono::milliseconds poll_timeout) override
+      size_t reseed_with_sources(Entropy_Sources&,
+                                 size_t /*poll_bits*/,
+                                 std::chrono::milliseconds /*timeout*/) override
          {
+         // We ignore it and assert the PRNG is seeded.
+         // TODO: could poll and write it to /dev/urandom to help seed it
          return 0;
          }
 
       void add_entropy(const byte[], size_t) override
          {
-         // We could write this back to /dev/urandom to help seed the PRNG
-         // Unclear if this is valuable on current systems
          }
    private:
 

@@ -113,7 +113,6 @@ int Directory_Walker::next_fd()
 void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
    {
    const size_t MAX_FILES_READ_PER_POLL = 2048;
-   const double ENTROPY_ESTIMATE = 1.0 / 128;
 
    std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -137,7 +136,7 @@ void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
       ::close(fd);
 
       if(got > 0)
-         accum.add(m_buf.data(), got, ENTROPY_ESTIMATE);
+         accum.add(m_buf.data(), got, BOTAN_ENTROPY_ESTIMATE_SYSTEM_TEXT);
 
       if(accum.polling_finished())
          break;

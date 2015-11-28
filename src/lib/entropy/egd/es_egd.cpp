@@ -137,8 +137,6 @@ EGD_EntropySource::~EGD_EntropySource()
 */
 void EGD_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   const size_t ENTROPY_BITS_PER_BYTE = 8;
-
    std::lock_guard<std::mutex> lock(m_mutex);
 
    secure_vector<byte>& buf = accum.get_io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
@@ -149,7 +147,7 @@ void EGD_EntropySource::poll(Entropy_Accumulator& accum)
 
       if(got)
          {
-         accum.add(buf.data(), got, ENTROPY_BITS_PER_BYTE);
+         accum.add(buf.data(), got, BOTAN_ENTROPY_ESTIMATE_STRONG_RNG);
          break;
          }
       }
