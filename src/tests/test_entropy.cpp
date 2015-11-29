@@ -131,12 +131,12 @@ class Entropy_Source_Tests : public Test
                         }
                      }
                   }
+#endif
                }
             catch(std::exception& e)
                {
                result.test_failure("during entropy collection test", e.what());
                }
-#endif
 
             result.end_timer();
             results.push_back(result);
