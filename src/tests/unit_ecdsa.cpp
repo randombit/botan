@@ -416,9 +416,11 @@ class ECDSA_Unit_Tests : public Test
          {
          std::vector<Test::Result> results;
          results.push_back(test_hash_larger_than_n());
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
          results.push_back(test_decode_ecdsa_X509());
          results.push_back(test_decode_ver_link_SHA256());
          results.push_back(test_decode_ver_link_SHA1());
+#endif
          results.push_back(test_sign_then_ver());
          results.push_back(test_ec_sign());
          results.push_back(test_create_pkcs8());
