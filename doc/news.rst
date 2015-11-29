@@ -9,7 +9,11 @@ Version 1.11.25, Not Yet Released
   adopted over time, each of which was insufficient on its own for testing the
   entire library. These have been fully converged on a new framework which
   suffices for all of the tests. There should be no user-visible change as a
-  result of this.
+  result of this, except that the output format of `botan-test` has changed.
+
+* Improved side channel countermeasures for the table based AES implementation,
+  by ensuring the table is loaded into memory at start and computing the table
+  at runtime to avoid flush+reload based attacks due to shared VMM mappings.
 
 * The OpenSSL implementation of RC4 would return the wrong value from `name` if
   leading bytes of the keystream had been skipped in the output.
@@ -29,6 +33,8 @@ Version 1.11.25, Not Yet Released
   default policy.
 
 * Added `remove_all` function to the `TLS::Session_Manager` interface
+
+* Avoid GCC warning in pedantic mode when including bigint.h GH #330
 
 Version 1.11.24, 2015-11-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
