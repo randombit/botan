@@ -43,7 +43,7 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
    if(x == 0)
       {
       const BigInt& p = group_p();
-      x.randomize(rng, 2 * dl_work_factor(p.bits()));
+      x.randomize(rng, dl_exponent_size(p.bits()));
       }
 
    if(y == 0)
