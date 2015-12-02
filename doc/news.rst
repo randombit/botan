@@ -15,6 +15,9 @@ Version 1.11.25, Not Yet Released
   by ensuring the table is loaded into memory at start and computing the table
   at runtime to avoid flush+reload based attacks due to shared VMM mappings.
 
+* Support for the insecure ECC groups secp112r1, secp112r2, secp128r1, and
+  secp128r2 has been removed.
+
 * The OpenSSL implementation of RC4 would return the wrong value from `name` if
   leading bytes of the keystream had been skipped in the output.
 

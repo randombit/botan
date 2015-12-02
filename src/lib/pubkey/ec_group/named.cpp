@@ -11,38 +11,6 @@ namespace Botan {
 
 const char* EC_Group::PEM_for_named_group(const std::string& name)
    {
-   if(name == "secp112r1")
-      return
-         "-----BEGIN EC PARAMETERS-----"
-         "MHQCAQEwGgYHKoZIzj0BAQIPANt8Kr9i415mgHa+rSCLMCAEDtt8Kr9i415mgHa+"
-         "rSCIBA5lnvi6BDkW7t6JEXArIgQdBAlIcjmZWl7na1X5wvCYqJzlr4ckwKI+Dg/3"
-         "dQACDwDbfCq/YuNedijfrGVhxQIBAQ=="
-         "-----END EC PARAMETERS-----";
-
-   if(name == "secp112r2")
-      return
-         "-----BEGIN EC PARAMETERS-----"
-         "MHMCAQEwGgYHKoZIzj0BAQIPANt8Kr9i415mgHa+rSCLMCAEDmEnwkwF84oKqvZc"
-         "DvAsBA5R3vGBXbXtdPzDTIXXCQQdBEujCrXokrThZJ3QkoZDrc1G9YguN0fe826V"
-         "bpcCDjbfCq/YuNdZfKEFINBLAgEB"
-         "-----END EC PARAMETERS-----";
-
-   if(name == "secp128r1")
-      return
-         "-----BEGIN EC PARAMETERS-----"
-         "MIGAAgEBMBwGByqGSM49AQECEQD////9////////////////MCQEEP////3/////"
-         "//////////wEEOh1ecEQefQ92CSZPCzuXtMEIQQWH/dSi4mbLQwoYHylLFuGz1rI"
-         "OVuv6xPALaKS3e16gwIRAP////4AAAAAdaMNG5A4oRUCAQE="
-         "-----END EC PARAMETERS-----";
-
-   if(name == "secp128r2")
-      return
-         "-----BEGIN EC PARAMETERS-----"
-         "MH8CAQEwHAYHKoZIzj0BAQIRAP////3///////////////8wJAQQ1gMZmNGzu/6/"
-         "Wcybv/mu4QQQXu78o4DQKRncLGVYu22KXQQhBHtqpdheVymD5vsyp83rwUAntpFq"
-         "iU067nEG/oBfw0tEAhA/////f////74AJHIGE7WjAgEE"
-         "-----END EC PARAMETERS-----";
-
    if(name == "secp160k1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -141,20 +109,6 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "-----END EC PARAMETERS-----";
 
    if(name == "secp521r1")
-      return
-         "-----BEGIN EC PARAMETERS-----"
-         "MIIBrAIBATBNBgcqhkjOPQEBAkIB////////////////////////////////////"
-         "//////////////////////////////////////////////////8wgYgEQgH/////"
-         "////////////////////////////////////////////////////////////////"
-         "/////////////////ARCAFGVPrlhjhyaH5KaIaC2hUDuotpyW5mzFfO4tImRjvEJ"
-         "4VYZOVHsfpN7FlLAvTuxvwc1c9+IPSw08e9FH9RrUD8ABIGFBADGhY4GtwQE6c2e"
-         "PstmI5W0QpxkgTkFP7Uh+CivYGtNPbqhS1537+dZKP4dwSei/6jeM0izwYVqQpv5"
-         "fn4xwuW9ZgEYOSlqeJo7wARcil+0LH0b2Zj1RElXm0RoF6+9Fyc+ZiyX7nKZXvQm"
-         "QMVQuQE/rQdhNTxwhqJywkCIvpR2n9FmUAJCAf//////////////////////////"
-         "////////////////+lGGh4O/L5Zrf8wBSPcJpdA7tcm4iZxHrrtvtx6ROGQJAgEB"
-         "-----END EC PARAMETERS-----";
-
-   if(name == "1.3.6.1.4.1.8301.3.1.2.9.0.38")
       return
          "-----BEGIN EC PARAMETERS-----"
          "MIIBrAIBATBNBgcqhkjOPQEBAkIB////////////////////////////////////"
