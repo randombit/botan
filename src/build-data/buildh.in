@@ -184,6 +184,17 @@
   #define BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS
 #endif
 
+/*
+* If no way of dynamically determining the cache line size for the
+* system exists, this value is used as the default. Used by the side
+* channel countermeasures rather than for alignment purposes, so it is
+* better to be on the smaller side if the exact value cannot be
+* determined. Typically 32 or 64 bytes on modern CPUs.
+*/
+#if !defined(BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE)
+  #define BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE 32
+#endif
+
 %{target_compiler_defines}
 
 #if defined(_MSC_VER)
