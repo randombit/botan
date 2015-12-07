@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 1.11.25, Not Yet Released
+Version 1.11.25, 2015-12-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * In this release the test suite has been largely rewritten. Previously the
@@ -11,12 +11,22 @@ Version 1.11.25, Not Yet Released
   suffices for all of the tests. There should be no user-visible change as a
   result of this, except that the output format of `botan-test` has changed.
 
-* Improved side channel countermeasures for the table based AES implementation,
-  by ensuring the table is loaded into memory at start and computing the table
-  at runtime to avoid flush+reload based attacks due to shared VMM mappings.
+* Improved side channel countermeasures for the table based AES implementation.
+  The 4K T tables are computed (once) at runtime to avoid various cache based
+  attacks which are possible due to shared VMM mappings of read only tables.
+  Additionally every cache line of the table is read from prior to processing
+  the block(s).
 
 * Support for the insecure ECC groups secp112r1, secp112r2, secp128r1, and
   secp128r2 has been removed.
+
+* The portable version of GCM has been changed to run using only
+  constant time operations.
+
+* Work around a bug in MSVC 2013 std::mutex which on some Windows
+  versions can result in a deadlock during static initialization. On
+  Windows a CriticalSection is used instead. Analysis and patch from
+  Matej Kenda (TopIT d.o.o.). GH #321
 
 * The OpenSSL implementation of RC4 would return the wrong value from `name` if
   leading bytes of the keystream had been skipped in the output.
