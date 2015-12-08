@@ -28,6 +28,8 @@ add_executable(${PROJECT_NAME}
     ./mce.cpp
     ./ocsp.cpp
     ./pkcs10.cpp
+    ./pkcs8.cpp
+    ./prime.cpp
     ./rng.cpp
     ./self_sig.cpp
     ./speed.cpp
