@@ -24,7 +24,10 @@ class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
       void clear() override;
       std::string name() const override;
 
-      void reseed(size_t poll_bits) override;
+      size_t reseed_with_sources(Entropy_Sources& srcs,
+                                 size_t poll_bits,
+                                 std::chrono::milliseconds poll_timeout) override;
+
       void add_entropy(const byte[], size_t) override;
 
       /**

@@ -9,7 +9,7 @@ elif [ "$BUILD_MODE" = "shared" ]; then
 elif [ "$BUILD_MODE" = "coverage" ]; then
     CFG_FLAGS=(--with-coverage)
 elif [ "$BUILD_MODE" = "sanitizer" ]; then
-    CFG_FLAGS=(--with-sanitizer)
+    CFG_FLAGS=(--with-sanitizers)
 fi
 
 if [ "$MODULES" = "min" ]; then

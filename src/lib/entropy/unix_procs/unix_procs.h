@@ -20,10 +20,10 @@ namespace Botan {
 * effective against local attackers as they can sample from the same
 * distribution.
 */
-class Unix_EntropySource : public EntropySource
+class Unix_EntropySource : public Entropy_Source
    {
    public:
-      std::string name() const override { return "Unix Process Runner"; }
+      std::string name() const override { return "unix_procs"; }
 
       void poll(Entropy_Accumulator& accum) override;
 
@@ -78,10 +78,10 @@ class Unix_EntropySource : public EntropySource
       secure_vector<byte> m_buf;
    };
 
-class UnixProcessInfo_EntropySource : public EntropySource
+class UnixProcessInfo_EntropySource : public Entropy_Source
    {
    public:
-      std::string name() const override { return "Unix Process Info"; }
+      std::string name() const override { return "proc_info"; }
 
       void poll(Entropy_Accumulator& accum) override;
    };

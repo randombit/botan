@@ -22,6 +22,9 @@ Copyright (C) 1999-2013,2014,2015 Jack Lloyd
               2013 Joel Low
               2014 cryptosource GmbH
               2014 Andrew Moon
+              2015 Daniel Seither (Kullo GmbH)
+              2015 Simon Warta (Kullo GmbH)
+              2015 Matej Kenda (TopIT d.o.o.)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

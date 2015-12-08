@@ -297,9 +297,11 @@ set(BOTAN_SRC
     utils/filesystem.cpp
     utils/http_util/http_util.cpp
     utils/locking_allocator/locking_allocator.cpp
+    utils/os_utils.cpp
     utils/parsing.cpp
     utils/read_cfg.cpp
     utils/semaphore.cpp
+    # utils/sqlite3/sqlite3.cpp
     utils/version.cpp
     utils/zero_mem.cpp
 )

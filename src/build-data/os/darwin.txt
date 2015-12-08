@@ -16,7 +16,6 @@ gettimeofday
 gmtime_r
 memset_s
 readdir
-getsid
 timegm
 </target_features>
 

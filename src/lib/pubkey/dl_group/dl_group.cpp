@@ -55,7 +55,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
    else if(type == Prime_Subgroup)
       {
       if(!qbits)
-         qbits = 2 * dl_work_factor(pbits);
+         qbits = dl_exponent_size(pbits);
 
       q = random_prime(rng, qbits);
       BigInt X;

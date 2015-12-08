@@ -7,67 +7,73 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+  #include "test_pubkey.h"
+  #include <botan/pubkey.h>
+  #include <botan/dh.h>
+#endif
 
-#include "test_pubkey.h"
-
-#include <botan/pubkey.h>
-#include <botan/dh.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t dh_sig_kat(const std::string& p,
-                  const std::string& g,
-                  const std::string& x,
-                  const std::string& y,
-                  std::string kdf,
-                  const std::string& outlen,
-                  const std::string& key)
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+
+class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
    {
-   auto& rng = test_rng();
+   public:
+      Diffie_Hellman_KAT_Tests() : PK_Key_Agreement_Test(
+         "Diffie-Hellman",
+         Test::data_file("pubkey/dh.vec"),
+         {"P", "G", "X", "Y", "Msg", "OutLen", "K"},
+         {"KDF"})
+         {}
 
-   BigInt p_bn(p), g_bn(g), x_bn(x), y_bn(y);
+      std::string default_kdf(const VarMap&) { return "Raw"; }
 
-   DL_Group domain(p_bn, g_bn);
+      std::unique_ptr<Botan::Private_Key> load_our_key(const VarMap& vars) override
+         {
+         const Botan::BigInt p = get_req_bn(vars, "P");
+         const Botan::BigInt g = get_req_bn(vars, "G");
+         const Botan::BigInt x = get_req_bn(vars, "X");
 
-   DH_PrivateKey mykey(rng, domain, x_bn);
-   DH_PublicKey otherkey(domain, y_bn);
+         const Botan::DL_Group grp(p, g);
 
-   if(kdf == "")
-      kdf = "Raw";
+         std::unique_ptr<Botan::Private_Key> key(new Botan::DH_PrivateKey(Test::rng(), grp, x));
+         return key;
+         }
 
-   size_t keylen = 0;
-   if(outlen != "")
-      keylen = to_u32bit(outlen);
+      std::vector<uint8_t> load_their_key(const VarMap& vars) override
+         {
+         const Botan::BigInt p = get_req_bn(vars, "P");
+         const Botan::BigInt g = get_req_bn(vars, "G");
+         const Botan::BigInt y = get_req_bn(vars, "Y");
+         const Botan::DL_Group grp(p, g);
 
-   PK_Key_Agreement kas(mykey, kdf);
+         Botan::DH_PublicKey key(grp, y);
+         return key.public_value();
+         }
+   };
 
-   return validate_kas(kas, "DH/" + kdf, otherkey.public_value(), key, keylen);
-   }
+class Diffie_Hellman_Keygen_Tests : public PK_Key_Generation_Test
+   {
+   public:
+      std::vector<std::string> keygen_params() const override { return { "modp/ietf/1024", "modp/ietf/2048" }; }
+
+      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
+                                                   const std::string& param) const override
+         {
+         Botan::DL_Group group(param);
+         std::unique_ptr<Botan::Private_Key> key(new Botan::DH_PrivateKey(rng, group));
+         return key;
+         }
+   };
+
+
+BOTAN_REGISTER_TEST("dh_kat", Diffie_Hellman_KAT_Tests);
+BOTAN_REGISTER_TEST("dh_keygen", Diffie_Hellman_Keygen_Tests);
+
+#endif
 
 }
 
-size_t test_dh()
-   {
-   size_t fails = 0;
-
-   std::ifstream dh_sig(TEST_DATA_DIR_PK "/dh.vec");
-
-   fails += run_tests_bb(dh_sig, "DH Kex", "K", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return dh_sig_kat(m["P"], m["G"], m["X"], m["Y"], m["KDF"], m["OutLen"], m["K"]);
-             });
-
-   return fails;
-   }
-
-#else
-
-SKIP_TEST(dh);
-
-#endif // BOTAN_HAS_DIFFIE_HELLMAN
+}

@@ -7,66 +7,63 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_NYBERG_RUEPPEL)
+  #include <botan/nr.h>
+  #include "test_pubkey.h"
+#endif
 
-#include "test_pubkey.h"
-
-#include <botan/hex.h>
-#include <botan/nr.h>
-#include <botan/pubkey.h>
-#include <botan/dl_group.h>
-#include <iostream>
-#include <fstream>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t nr_sig_kat(const std::string& p,
-                   const std::string& q,
-                   const std::string& g,
-                   const std::string& x,
-                   const std::string& hash,
-                   const std::string& msg,
-                   const std::string& nonce,
-                   const std::string& signature)
+#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
+
+class NR_KAT_Tests : public PK_Signature_Generation_Test
    {
-   auto& rng = test_rng();
+   public:
+      NR_KAT_Tests() : PK_Signature_Generation_Test(
+         "Nyberg-Rueppel",
+         Test::data_file("pubkey/nr.vec"),
+         {"P", "Q", "G", "X", "Hash", "Nonce", "Msg", "Signature"})
+         {}
 
-   BigInt p_bn(p), q_bn(q), g_bn(g), x_bn(x);
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
+         {
+         const Botan::BigInt p = get_req_bn(vars, "P");
+         const Botan::BigInt q = get_req_bn(vars, "Q");
+         const Botan::BigInt g = get_req_bn(vars, "G");
+         const Botan::BigInt x = get_req_bn(vars, "X");
 
-   DL_Group group(p_bn, q_bn, g_bn);
+         const Botan::DL_Group grp(p, q, g);
 
-   NR_PrivateKey privkey(rng, group, x_bn);
+         std::unique_ptr<Botan::Private_Key> key(new Botan::NR_PrivateKey(Test::rng(), grp, x));
+         return key;
+         }
 
-   NR_PublicKey pubkey = privkey;
+      std::string default_padding(const VarMap& vars) const override
+         {
+         return "EMSA1(" + get_req_str(vars, "Hash") + ")";
+         }
+   };
 
-   const std::string padding = "EMSA1(" + hash + ")";
+class NR_Keygen_Tests : public PK_Key_Generation_Test
+   {
+   public:
+      std::vector<std::string> keygen_params() const override { return { "dsa/jce/1024", "dsa/botan/2048" }; }
 
-   PK_Verifier verify(pubkey, padding);
-   PK_Signer sign(privkey, padding);
+      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
+                                                   const std::string& param) const override
+         {
+         Botan::DL_Group group(param);
+         std::unique_ptr<Botan::Private_Key> key(new Botan::NR_PrivateKey(rng, group));
+         return key;
+         }
+   };
 
-   return validate_signature(verify, sign, "nr/" + hash, msg, rng, nonce, signature);
-   }
+BOTAN_REGISTER_TEST("nr_kat", NR_KAT_Tests);
+BOTAN_REGISTER_TEST("nr_keygen", NR_Keygen_Tests);
+
+#endif
 
 }
 
-size_t test_nr()
-   {
-   size_t fails = 0;
-
-   std::ifstream nr_sig(TEST_DATA_DIR_PK "/nr.vec");
-
-   fails += run_tests_bb(nr_sig, "NR Signature", "Signature", true,
-             [](std::map<std::string, std::string> m) -> size_t
-             {
-             return nr_sig_kat(m["P"], m["Q"], m["G"], m["X"], m["Hash"], m["Msg"], m["Nonce"], m["Signature"]);
-             });
-
-   return fails;
-   }
-
-#else
-
-SKIP_TEST(nr);
-
-#endif // BOTAN_HAS_NYBERG_RUEPPEL
+}

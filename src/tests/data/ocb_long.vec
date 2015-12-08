@@ -1,0 +1,36 @@
+
+Keylen = 128
+Taglen = 128
+Output = 67E944D23256C5E0B6C61FA22FDF1EA2
+
+Keylen = 192
+Taglen = 128
+Output = F673F2C3E7174AAE7BAE986CA9F29E17
+
+Keylen = 256
+Taglen = 128
+Output = D90EB8E9C977C88B79DD793D7FFA161C
+
+Keylen = 128
+Taglen = 96
+Output = 77A3D8E73589158D25D01209
+
+Keylen = 192
+Taglen = 96
+Output = 05D56EAD2752C86BE6932C5E
+
+Keylen = 256
+Taglen = 96
+Output = 5458359AC23B0CBA9E6330DD
+
+Keylen = 128
+Taglen = 64
+Output = 192C9B7BD90BA06A
+
+Keylen = 192
+Taglen = 64
+Output = 0066BC6E0EF34E24
+
+Keylen = 256
+Taglen = 64
+Output = 7D4EA5D445501CBE

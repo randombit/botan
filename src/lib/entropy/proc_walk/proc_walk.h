@@ -23,10 +23,10 @@ class File_Descriptor_Source
 /**
 * File Tree Walking Entropy Source
 */
-class ProcWalking_EntropySource : public EntropySource
+class ProcWalking_EntropySource : public Entropy_Source
    {
    public:
-      std::string name() const override { return "Proc Walker"; }
+      std::string name() const override { return "proc_walk"; }
 
       void poll(Entropy_Accumulator& accum) override;
 

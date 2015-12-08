@@ -1,141 +1,148 @@
+/*
+* (C) 2015 Jack Lloyd
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
 #include "tests.h"
 
 #if defined(BOTAN_HAS_COMPRESSION)
+  #include <botan/compression.h>
+#endif
 
-#include <botan/compression.h>
-#include <botan/hex.h>
-#include <iostream>
+namespace Botan_Tests {
 
 namespace {
 
-using namespace Botan;
+const char* text_str =
+   "'Twas brillig, and the slithy toves"
+   "Did gyre and gimble in the wabe:"
+   "All mimsy were the borogoves,"
+   "And the mome raths outgrabe."
 
-// Returns # of bytes of compressed message
-size_t run_compression(Compressor_Transform& c, Transform& d,
-                       const secure_vector<byte>& msg)
+   "'Beware the Jabberwock, my son!"
+   "The jaws that bite, the claws that catch!"
+   "Beware the Jubjub bird, and shun"
+   "The frumious Bandersnatch!'"
+
+   "He took his vorpal sword in hand;"
+   "Long time the manxome foe he sought—"
+   "So rested he by the Tumtum tree"
+   "And stood awhile in thought."
+
+   "And, as in uffish thought he stood,"
+   "The Jabberwock, with eyes of flame,"
+   "Came whiffling through the tulgey wood,"
+   "And burbled as it came!"
+
+   "One, two! One, two! And through and through"
+   "The vorpal blade went snicker-snack!"
+   "He left it dead, and with its head"
+   "He went galumphing back."
+
+   "'And hast thou slain the Jabberwock?"
+   "Come to my arms, my beamish boy!"
+   "O frabjous day! Callooh! Callay!'"
+   "He chortled in his joy."
+
+   "’Twas brillig, and the slithy toves"
+   "Did gyre and gimble in the wabe:"
+   "All mimsy were the borogoves,"
+   "And the mome raths outgrabe.";
+
+#if defined(BOTAN_HAS_COMPRESSION)
+
+class Compression_Tests : public Test
    {
-   secure_vector<byte> compressed = msg;
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
 
-   c.start();
-   c.finish(compressed);
+         for(std::string algo : { "zlib", "deflate", "gzip", "bz2", "lzma" })
+            {
+            try
+               {
+               Test::Result result(algo + " compression");
 
-   const size_t c_size = compressed.size();
+               std::unique_ptr<Botan::Compressor_Transform> c1(Botan::make_compressor(algo, 1));
+               std::unique_ptr<Botan::Compressor_Transform> c9(Botan::make_compressor(algo, 9));
+               std::unique_ptr<Botan::Compressor_Transform> d(Botan::make_decompressor(algo));
 
-   secure_vector<byte> decompressed = compressed;
-   d.start();
-   d.finish(decompressed);
+               if(!c1 || !c9 || !d)
+                  {
+                  result.note_missing(algo);
+                  continue;
+                  }
 
-   if(msg != decompressed)
-      {
-      std::cout << hex_encode(msg) << " compressed to " << hex_encode(compressed)
-                << " but did not roundtrip - " << hex_encode(decompressed) << std::endl;
-      }
+               const size_t text_len = strlen(text_str);
 
-   return c_size;
-   }
+               const Botan::secure_vector<uint8_t> empty;
+               const Botan::secure_vector<uint8_t> all_zeros(text_len, 0);
+               const Botan::secure_vector<uint8_t> random_binary = Test::rng().random_vec(text_len);
+
+               const uint8_t* textb = reinterpret_cast<const uint8_t*>(text_str);
+               const Botan::secure_vector<uint8_t> text(textb, textb + text_len);
+
+               const size_t c1_e = run_compression(result, *c1, *d, empty);
+               const size_t c9_e = run_compression(result, *c9, *d, empty);
+               const size_t c1_z = run_compression(result, *c1, *d, all_zeros);
+               const size_t c9_z = run_compression(result, *c9, *d, all_zeros);
+               const size_t c1_r = run_compression(result, *c1, *d, random_binary);
+               const size_t c9_r = run_compression(result, *c9, *d, random_binary);
+               const size_t c1_t = run_compression(result, *c1, *d, text);
+               const size_t c9_t = run_compression(result, *c9, *d, text);
+
+               result.test_gte("Empty input L1 compresses to non-empty output", c1_e, 1);
+               result.test_gte("Empty input L9 compresses to non-empty output", c9_e, 1);
+
+               result.test_gte("Level 9 compresses empty at least as well as level 1", c1_e, c9_e);
+               result.test_gte("Level 9 compresses zeros at least as well as level 1", c1_z, c9_z);
+               result.test_gte("Level 9 compresses random at least as well as level 1", c1_r, c9_r);
+               result.test_gte("Level 9 compresses text at least as well as level 1", c1_t, c9_t);
+
+               result.test_lt("Zeros compresses much better than text", c1_z / 8, c1_t);
+               result.test_lt("Text compresses much better than random", c1_t / 2, c1_r);
+
+               results.push_back(result);
+               }
+            catch(std::exception& e)
+               {
+               results.push_back(Test::Result::Failure("testing " + algo, e.what()));
+               }
+            }
+
+         return results;
+         }
+
+   private:
+
+      // Returns # of bytes of compressed message
+      size_t run_compression(Test::Result& result,
+                             Botan::Compressor_Transform& c,
+                             Botan::Transform& d,
+                             const Botan::secure_vector<uint8_t>& msg)
+         {
+         Botan::secure_vector<uint8_t> compressed = msg;
+
+         c.start();
+         c.finish(compressed);
+
+         const size_t c_size = compressed.size();
+
+         Botan::secure_vector<uint8_t> decompressed = compressed;
+         d.start();
+         d.finish(decompressed);
+
+         result.test_eq("compression round tripped", msg, decompressed);
+         return c_size;
+         }
+   };
+
+BOTAN_REGISTER_TEST("compression", Compression_Tests);
+
+#endif
 
 }
 
-size_t test_compression()
-   {
-   using namespace Botan;
-
-   size_t fails = 0, tests = 0;
-
-   for(auto&& algo : { "zlib", "deflate", "gzip", "bz2", "lzma" })
-      {
-      try
-         {
-         std::unique_ptr<Compressor_Transform> c1(make_compressor(algo, 1));
-         std::unique_ptr<Compressor_Transform> c9(make_compressor(algo, 9));
-         std::unique_ptr<Compressor_Transform> d(make_decompressor(algo));
-
-         if(!c1 || !c9 || !d)
-            continue;
-
-         ++tests;
-
-         const char* text_str =
-            "'Twas brillig, and the slithy toves"
-            "Did gyre and gimble in the wabe:"
-            "All mimsy were the borogoves,"
-            "And the mome raths outgrabe."
-
-            "'Beware the Jabberwock, my son!"
-            "The jaws that bite, the claws that catch!"
-            "Beware the Jubjub bird, and shun"
-            "The frumious Bandersnatch!'"
-
-            "He took his vorpal sword in hand;"
-            "Long time the manxome foe he sought—"
-            "So rested he by the Tumtum tree"
-            "And stood awhile in thought."
-
-            "And, as in uffish thought he stood,"
-            "The Jabberwock, with eyes of flame,"
-            "Came whiffling through the tulgey wood,"
-            "And burbled as it came!"
-
-            "One, two! One, two! And through and through"
-            "The vorpal blade went snicker-snack!"
-            "He left it dead, and with its head"
-            "He went galumphing back."
-
-            "'And hast thou slain the Jabberwock?"
-            "Come to my arms, my beamish boy!"
-            "O frabjous day! Callooh! Callay!'"
-            "He chortled in his joy."
-
-            "’Twas brillig, and the slithy toves"
-            "Did gyre and gimble in the wabe:"
-            "All mimsy were the borogoves,"
-            "And the mome raths outgrabe.";
-
-         const size_t text_len = strlen(text_str);
-
-         const secure_vector<byte> empty;
-         const secure_vector<byte> all_zeros(text_len, 0);
-         const secure_vector<byte> random_binary = test_rng().random_vec(text_len);
-
-         const byte* textb = reinterpret_cast<const byte*>(text_str);
-         const secure_vector<byte> text(textb, textb + text_len);
-
-         const size_t c1_e = run_compression(*c1, *d, empty);
-         const size_t c9_e = run_compression(*c9, *d, empty);
-         const size_t c1_z = run_compression(*c1, *d, all_zeros);
-         const size_t c9_z = run_compression(*c9, *d, all_zeros);
-         const size_t c1_r = run_compression(*c1, *d, random_binary);
-         const size_t c9_r = run_compression(*c9, *d, random_binary);
-         const size_t c1_t = run_compression(*c1, *d, text);
-         const size_t c9_t = run_compression(*c9, *d, text);
-
-#define BOTAN_TEST_GTE(x, y, msg) if(x < y) { ++fails; std::cout << "FAIL: " << x << " " << y << " " << msg << std::endl; }
-
-         BOTAN_TEST_GTE(c1_e, 1, "Empty input compresses to non-empty output");
-         BOTAN_TEST_GTE(c9_e, 1, "Empty input compresses to non-empty output");
-
-         BOTAN_TEST_GTE(c1_e, c9_e, "Level 9 compresses at least as well as level 1");
-         BOTAN_TEST_GTE(c1_z, c9_z, "Level 9 compresses at least as well as level 1");
-         BOTAN_TEST_GTE(c1_t, c9_t, "Level 9 compresses at least as well as level 1");
-         BOTAN_TEST_GTE(c1_r, c9_r, "Level 9 compresses at least as well as level 1");
-
-         BOTAN_TEST_GTE(c1_t, c1_z/8, "Zeros compress much better than text");
-         BOTAN_TEST_GTE(c1_r, c1_t/2, "Text compress better than random");
-         }
-      catch(std::exception& e)
-         {
-         std::cout << "Failure testing " << algo << " - " << e.what() << std::endl;
-         ++fails;
-         }
-      }
-
-   test_report("Compression", tests, fails);
-
-   return fails;
-   }
-
-#else
-
-SKIP_TEST(compression);
-
-#endif // BOTAN_HAS_COMPRESSION
+}

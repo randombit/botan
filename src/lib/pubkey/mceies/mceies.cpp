@@ -99,6 +99,10 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
       aead->finish(pt, 0);
       return pt;
       }
+   catch(Integrity_Failure)
+      {
+      throw;
+      }
    catch(std::exception& e)
       {
       throw std::runtime_error("mce_decrypt failed: " + std::string(e.what()));

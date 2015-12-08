@@ -26,16 +26,13 @@ namespace Botan {
 */
 void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    {
-   // Don't count any timestamps as contributing any entropy
-   const double ESTIMATED_ENTROPY_PER_BYTE = 0.0;
-
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
 
-#define CLOCK_GETTIME_POLL(src)                              \
-   do {                                                      \
-     struct timespec ts;                                     \
-     ::clock_gettime(src, &ts);                              \
-     accum.add(&ts, sizeof(ts), ESTIMATED_ENTROPY_PER_BYTE); \
+#define CLOCK_GETTIME_POLL(src)                                     \
+   do {                                                             \
+     struct timespec ts;                                            \
+     ::clock_gettime(src, &ts);                                     \
+     accum.add(&ts, sizeof(ts), BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS); \
    } while(0)
 
 #if defined(CLOCK_REALTIME)
@@ -65,7 +62,7 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
 #define STD_CHRONO_POLL(clock)                                  \
    do {                                                         \
       auto timestamp = clock::now().time_since_epoch().count(); \
-      accum.add(timestamp, ESTIMATED_ENTROPY_PER_BYTE);         \
+      accum.add(timestamp, BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS);         \
    } while(0)
 
   STD_CHRONO_POLL(std::chrono::high_resolution_clock);
@@ -109,7 +106,7 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
 
 #endif
 
-   accum.add(rtc, ESTIMATED_ENTROPY_PER_BYTE);
+   accum.add(rtc, BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS);
 
 #endif
 
@@ -117,7 +114,7 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    {
    LARGE_INTEGER tv;
    ::QueryPerformanceCounter(&tv);
-   accum.add(tv.QuadPart, ESTIMATED_ENTROPY_PER_BYTE);
+   accum.add(tv.QuadPart, BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS);
    }
 #endif
    }

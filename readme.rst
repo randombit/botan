@@ -1,15 +1,14 @@
 Botan: Crypto and TLS for C++11
 ========================================
 
-Botan (Japanese for peony) is a C++ cryptography library released
-under the permissive `Simplified BSD
+Botan (Japanese for peony) is a cryptography library written in C++11
+and released under the permissive `Simplified BSD
 <http://botan.randombit.net/license.txt>`_ license.
 
-It provides TLS, X.509 certificates, OCSP, ECDSA, AES, GCM,
-ChaCha20Poly1305, McEliece, bcrypt, and quite a few other things. It
-also provides a `botan` command line tool for various cryptographic
-operations, the source for which also helps demonstrate usage of the
-library.
+It provides TLS, X.509 certificates, OCSP, ECDSA, AES, GCM, ChaCha20Poly1305,
+McEliece, bcrypt, and quite a few other things. It also provides a `botan`
+command line tool for various cryptographic operations, the source for which
+also helps demonstrate usage of the library.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
 and contributions are welcome. Read `doc/hacking.rst` for more
@@ -47,9 +46,9 @@ may also prove useful resources.
 
 In addition to C++, botan has a C89 API specifically designed to be easy
 to call from other languages. A Python binding using ctypes is included,
-there are also bindings for
+there are also partial bindings for
 `Node.js <https://github.com/justinfreitag/node-botan>`_ and
-`OCaml <https://github.com/randombit/botan-ocaml>`_
+`OCaml <https://github.com/randombit/botan-ocaml>`_ among others.
 
 There is also a third party open source implementation of
 `SSHv2 <https://github.com/cdesjardins/cppssh>`_ using the library.
@@ -106,9 +105,9 @@ later, Clang 3.4 and later, and MSVC 2013 are regularly tested.
 A new development release is made on the first Monday of every month.
 
 The latest development release is
-`1.11.24 <http://botan.randombit.net/releases/Botan-1.11.24.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.24.tgz.asc>`_
-released on 2015-11-04
+`1.11.25 <http://botan.randombit.net/releases/Botan-1.11.25.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.25.tgz.asc>`_
+released on 2015-12-07
 
 Old Stable Series (1.10)
 ----------------------------------------
@@ -151,27 +150,27 @@ the very least ask for review/input on a mailing list such as the
 crypto lists. And (if possible) pay a professional cryptographer or
 security company to review your design and code.
 
-Supported Algorithms/Protocols/RFCs
+Find Enclosed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 TLS/Public Key Infrastructure
 ----------------------------------------
 
-* TLS/DTLS (v1.0 to v1.2), including using preshared keys (TLS-PSK)
-  or passwords (TLS-SRP) and most important extensions (including
-  secure renegotiation, session tickets, SNI, and ALPN)
-* X.509 certificates (including generating new self-signed and CA
-  certs) and CRLs
-* PKIX certificate path validation, OCSP requests, PKCS #10 CSRs
+* TLS and DTLS (v1.0 to v1.2), including using preshared keys
+  (TLS-PSK) and passwords (TLS-SRP) and most important extensions,
+  such as session tickets, SNI, and ALPN.
+* X.509v3 certificates and CRLs
+* PKIX certificate path validation with multiple test suites for same
+* OCSP requests
+* PKCS #10 certificate requests
 
 Public Key Cryptography
 ----------------------------------------
 
-* Encryption algorithms RSA and ElGamal (with OAEP or PKCS #1 v1.5)
-* Signature algorithms RSA, DSA, ECDSA, GOST 34.10-2001, Nyberg-Rueppel,
-  Rabin-Williams (with PSS, PKCS #1 v1.5, or X9.31)
-* Diffie-Hellman, ECDH using NIST/Brainpool prime groups, Curve25519
-* McEliece code based encryption providing a KEM scheme
+* Encryption with RSA and ElGamal
+* Signatures with RSA, DSA, ECDSA, GOST 34.10-2001, Nyberg-Rueppel, Rabin-Williams
+* Key agreement with Diffie-Hellman, ECDH, Curve25519, and McEliece
+* Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
 Ciphers and cipher modes
 ----------------------------------------
@@ -204,8 +203,12 @@ Other Useful Things
 ----------------------------------------
 
 * Key derivation functions for passwords, including PBKDF2
-* Password hashing functions, including bcrypt
+* Password hashing functions, including bcrypt and a PBKDF based scheme
 * General key derivation functions KDF1 and KDF2 from IEEE 1363
+* Format preserving encryption scheme FE1
+* Threshold secret sharing
+* RFC 3394 keywrapping
+* Rivest's all or nothing transform
 
 Recommended Algorithms
 ----------------------------------------
@@ -228,3 +231,4 @@ currently recommend using:
   or ECDSA with P-256/SHA-256 or P-384/SHA-384
 
 * Key Agreement: ECDH P-256 or Curve25519, with KDF2(SHA-256)
+  Or McEliece if you are concerned about attacks by quantum computers.

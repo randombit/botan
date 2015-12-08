@@ -584,7 +584,14 @@ class ModuleInfo(object):
 
         # Coerce to more useful types
         def convert_lib_list(l):
+            if len(l) % 3 != 0:
+                raise Exception("Bad <libs> in module %s" % (self.basename))
             result = {}
+
+            for sep in l[1::3]:
+                if(sep != '->'):
+                    raise Exception("Bad <libs> in module %s" % (self.basename))
+
             for (targetlist, vallist) in zip(l[::3], l[2::3]):
                 vals = vallist.split(',')
                 for target in targetlist.split(','):

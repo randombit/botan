@@ -2,8 +2,8 @@
 * TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* (tls-parameters.txt hash 4bc98b6f75ad5b63952b5f457fa7adbfef60f095)
-* by ./src/scripts/tls_suite_info.py on 2015-05-11
+* (tls-parameters.txt hash 6a934405ed41aa4d6113dad17f815867741430ac)
+* by ./src/scripts/tls_suite_info.py on 2015-11-13
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -56,9 +56,6 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
 
       case 0xC081: // DHE_DSS_WITH_CAMELLIA_256_GCM_SHA384
          return Ciphersuite(0xC081, "DSA", "DH", "Camellia-256/GCM", 32, 4, 8, "AEAD", 0, "SHA-384");
-
-      case 0x0066: // DHE_DSS_WITH_RC4_128_SHA
-         return Ciphersuite(0x0066, "DSA", "DH", "RC4", 16, 0, 0, "SHA-1", 20);
 
       case 0x0099: // DHE_DSS_WITH_SEED_CBC_SHA
          return Ciphersuite(0x0099, "DSA", "DH", "SEED", 16, 16, 0, "SHA-1", 20);

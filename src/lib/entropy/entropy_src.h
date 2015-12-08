@@ -66,18 +66,27 @@ class BOTAN_DLL Entropy_Accumulator
          {
          add(&v, sizeof(T), entropy_bits_per_byte);
          }
+
+      secure_vector<byte>& get_io_buf(size_t sz) { m_io_buf.resize(sz); return m_io_buf; }
    private:
       std::function<bool (const byte[], size_t, double)> m_accum_fn;
+      secure_vector<byte> m_io_buf;
       bool m_done = false;
    };
 
 /**
 * Abstract interface to a source of entropy
 */
-class BOTAN_DLL EntropySource
+class BOTAN_DLL Entropy_Source
    {
    public:
-      static void poll_available_sources(class Entropy_Accumulator& accum);
+      /*
+      * Return a new entropy source of a particular type, or null
+      * Each entropy source may require substantial resources (eg, a file handle
+      * or socket instance), so try to share them among multiple RNGs, or just
+      * use the preconfigured global list accessed by global_entropy_sources()
+      */
+      static std::unique_ptr<Entropy_Source> create(const std::string& type);
 
       /**
       * @return name identifying this entropy source
@@ -90,7 +99,27 @@ class BOTAN_DLL EntropySource
       */
       virtual void poll(Entropy_Accumulator& accum) = 0;
 
-      virtual ~EntropySource() {}
+      virtual ~Entropy_Source() {}
+   };
+
+class BOTAN_DLL Entropy_Sources
+   {
+   public:
+      static Entropy_Sources& global_sources();
+
+      void add_source(std::unique_ptr<Entropy_Source> src);
+
+      std::vector<std::string> enabled_sources() const;
+
+      void poll(Entropy_Accumulator& accum);
+      bool poll_just(Entropy_Accumulator& accum, const std::string& src);
+
+      Entropy_Sources() {}
+      Entropy_Sources(const std::vector<std::string>& sources);
+
+      ~Entropy_Sources();
+   private:
+      std::vector<Entropy_Source*> m_srcs;
    };
 
 }

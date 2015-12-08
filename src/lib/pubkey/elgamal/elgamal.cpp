@@ -34,7 +34,7 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
    x = x_arg;
 
    if(x == 0)
-      x.randomize(rng, 2 * dl_work_factor(group_p().bits()));
+      x.randomize(rng, dl_exponent_size(group_p().bits()));
 
    y = power_mod(group_g(), x, group_p());
 
@@ -112,7 +112,7 @@ ElGamal_Encryption_Operation::raw_encrypt(const byte msg[], size_t msg_len,
    if(m >= p)
       throw Invalid_Argument("ElGamal encryption: Input is too large");
 
-   BigInt k(rng, 2 * dl_work_factor(p.bits()));
+   BigInt k(rng, dl_exponent_size(p.bits()));
 
    BigInt a = powermod_g_p(k);
    BigInt b = mod_p.multiply(m, powermod_y_p(k));

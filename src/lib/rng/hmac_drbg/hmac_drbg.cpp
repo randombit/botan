@@ -78,11 +78,13 @@ void HMAC_DRBG::update(const byte input[], size_t input_len)
       }
    }
 
-void HMAC_DRBG::reseed(size_t poll_bits)
+size_t HMAC_DRBG::reseed_with_sources(Entropy_Sources& srcs,
+                                      size_t poll_bits,
+                                      std::chrono::milliseconds poll_timeout)
    {
    if(m_prng)
       {
-      m_prng->reseed(poll_bits);
+      size_t bits = m_prng->reseed_with_sources(srcs, poll_bits, poll_timeout);
 
       if(m_prng->is_seeded())
          {
@@ -90,7 +92,11 @@ void HMAC_DRBG::reseed(size_t poll_bits)
          update(input.data(), input.size());
          m_reseed_counter = 1;
          }
+
+      return bits;
       }
+
+   return 0;
    }
 
 void HMAC_DRBG::add_entropy(const byte input[], size_t length)

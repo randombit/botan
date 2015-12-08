@@ -8,14 +8,7 @@ endif()
 
 # botan-tests
 add_executable(${PROJECT_NAME}-tests
-    ./catchy/test_base.cpp
-    ./catchy/test_base64.cpp
-    ./catchy/test_bigint.cpp
-    ./catchy/test_cvc.cpp
-    ./catchy/test_stl_util.cpp
-    ./catchy/test_utils.cpp
-    ./catchy/test_x509.cpp
-    ./nist_x509.cpp
+    ./main.cpp
     ./test_aead.cpp
     ./test_bigint.cpp
     ./test_block.cpp
@@ -29,6 +22,7 @@ add_executable(${PROJECT_NAME}-tests
     ./test_ecc_pointmul.cpp
     ./test_ecdsa.cpp
     ./test_elg.cpp
+    ./test_entropy.cpp
     ./test_ffi.cpp
     ./test_fuzzer.cpp
     ./test_gf2m.cpp
@@ -37,7 +31,6 @@ add_executable(${PROJECT_NAME}-tests
     ./test_kdf.cpp
     ./test_keywrap.cpp
     ./test_mac.cpp
-    ./test_mce.cpp
     ./test_mceliece.cpp
     ./test_modes.cpp
     ./test_nr.cpp
@@ -52,8 +45,9 @@ add_executable(${PROJECT_NAME}-tests
     ./tests.cpp
     ./test_srp6.cpp
     ./test_stream.cpp
-    ./test_transform.cpp
     ./test_tss.cpp
+    ./test_utils.cpp
+    ./test_x509_path.cpp
     ./unit_ecc.cpp
     ./unit_ecdh.cpp
     ./unit_ecdsa.cpp

@@ -134,7 +134,7 @@ class BOTAN_DLL PK_Signer
                 const std::string& provider = "");
 
       /**
-      * Sign a message.
+      * Sign a message all in one go
       * @param in the message to sign as a byte array
       * @param length the length of the above byte array
       * @param rng the rng to use
@@ -179,6 +179,15 @@ class BOTAN_DLL PK_Signer
       * @param in the message part to add
       */
       void update(const std::vector<byte>& in) { update(in.data(), in.size()); }
+
+      /**
+      * Add a message part.
+      * @param in the message part to add
+      */
+      void update(const std::string& in)
+         {
+         update(reinterpret_cast<const byte*>(in.data()), in.size());
+         }
 
       /**
       * Get the signature of the so far processed message (provided by the
@@ -263,6 +272,15 @@ class BOTAN_DLL PK_Verifier
       */
       void update(const std::vector<byte>& in)
          { update(in.data(), in.size()); }
+
+      /**
+      * Add a message part of the message corresponding to the
+      * signature to be verified.
+      */
+      void update(const std::string& in)
+         {
+         update(reinterpret_cast<const byte*>(in.data()), in.size());
+         }
 
       /**
       * Check the signature of the buffered message, i.e. the one build

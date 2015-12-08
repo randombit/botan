@@ -36,7 +36,7 @@ class BOTAN_DLL SQL_Database
             virtual size_t get_size_t(int column) = 0;
 
             /* Run to completion */
-            virtual void spin() = 0;
+            virtual size_t spin() = 0;
 
             /* Maybe update */
             virtual bool step() = 0;

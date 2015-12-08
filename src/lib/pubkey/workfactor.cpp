@@ -16,40 +16,42 @@ size_t ecp_work_factor(size_t bits)
    return bits / 2;
    }
 
-size_t dl_work_factor(size_t bits)
+size_t if_work_factor(size_t bits)
    {
-   /*
-   Based on GNFS work factors. Constant is 1.43 times the asymptotic
-   value; I'm not sure but I believe that came from a paper on 'real
-   world' runtimes, but I don't remember where now.
-
-   Sample return values:
-      |512|  -> 64
-      |1024| -> 86
-      |1536| -> 102
-      |2048| -> 116
-      |3072| -> 138
-      |4096| -> 155
-      |8192| -> 206
-
-   For DL algos, we use an exponent of twice the size of the result;
-   the assumption is that an arbitrary discrete log on a group of size
-   bits would take about 2^n effort, and thus using an exponent of
-   size 2^(2*n) implies that all available attacks are about as easy
-   (as e.g Pollard's kangaroo algorithm can compute the DL in sqrt(x)
-   operations) while minimizing the exponent size for performance
-   reasons.
-   */
-
-   const size_t MIN_WORKFACTOR = 64;
+   // RFC 3766: k * e^((1.92 + o(1)) * cubrt(ln(n) * (ln(ln(n)))^2))
+   // It estimates k at .02 and o(1) to be effectively zero for sizes of interest
+   const double k = .02;
 
    // approximates natural logarithm of p
-   const double log_p = bits / 1.4426;
+   const double log2_e = std::log2(std::exp(1));
+   const double log_p = bits / log2_e;
 
-   const double strength =
-      2.76 * std::pow(log_p, 1.0/3.0) * std::pow(std::log(log_p), 2.0/3.0);
+   const double est = 1.92 * std::pow(log_p * std::log(log_p) * std::log(log_p), 1.0/3.0);
 
-   return std::max(static_cast<size_t>(strength), MIN_WORKFACTOR);
+   return static_cast<size_t>(std::log2(k) + log2_e * est);
+   }
+
+size_t dl_work_factor(size_t bits)
+   {
+   // Lacking better estimates...
+   return if_work_factor(bits);
+   }
+
+size_t dl_exponent_size(size_t bits)
+   {
+   /*
+   This uses a slightly tweaked version of the standard work factor
+   function above. It assumes k is 1 (thus overestimating the strength
+   of the prime group by 5-6 bits), and always returns at least 128 bits
+   (this only matters for very small primes).
+   */
+   const size_t MIN_WORKFACTOR = 64;
+   const double log2_e = std::log2(std::exp(1));
+   const double log_p = bits / log2_e;
+
+   const double strength = 1.92 * std::pow(log_p, 1.0/3.0) * std::pow(std::log(log_p), 2.0/3.0);
+
+   return 2 * std::max<size_t>(MIN_WORKFACTOR, log2_e * strength);
    }
 
 }

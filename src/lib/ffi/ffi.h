@@ -351,7 +351,7 @@ BOTAN_DLL int botan_pubkey_estimated_strength(botan_pubkey_t key, size_t* estima
 BOTAN_DLL int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash,
                                        uint8_t out[], size_t* out_len);
 
-BOTAN_DLL int botan_pubkey_destroy(botan_privkey_t key);
+BOTAN_DLL int botan_pubkey_destroy(botan_pubkey_t key);
 
 
 /*

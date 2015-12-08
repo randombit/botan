@@ -876,7 +876,7 @@ int botan_privkey_destroy(botan_privkey_t key)
    return 0;
    }
 
-int botan_pubkey_destroy(botan_privkey_t key)
+int botan_pubkey_destroy(botan_pubkey_t key)
    {
    delete key;
    return 0;

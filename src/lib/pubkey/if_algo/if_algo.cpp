@@ -15,7 +15,7 @@ namespace Botan {
 
 size_t IF_Scheme_PublicKey::estimated_strength() const
    {
-   return dl_work_factor(n.bits());
+   return if_work_factor(n.bits());
    }
 
 AlgorithmIdentifier IF_Scheme_PublicKey::algorithm_identifier() const

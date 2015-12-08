@@ -72,10 +72,13 @@ void ANSI_X931_RNG::rekey()
       }
    }
 
-void ANSI_X931_RNG::reseed(size_t poll_bits)
+size_t ANSI_X931_RNG::reseed_with_sources(Entropy_Sources& srcs,
+                                          size_t poll_bits,
+                                          std::chrono::milliseconds poll_timeout)
    {
-   m_prng->reseed(poll_bits);
+   size_t bits = m_prng->reseed_with_sources(srcs, poll_bits, poll_timeout);
    rekey();
+   return bits;
    }
 
 void ANSI_X931_RNG::add_entropy(const byte input[], size_t length)
