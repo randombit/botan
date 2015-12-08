@@ -15,34 +15,35 @@
 
 using namespace Botan;
 
-typedef std::function<int (int, char*[])> main_fn;
+typedef std::function<int (std::vector<std::string>)> app_fn;
 
 class AppRegistrations
    {
    public:
-      void add(const std::string& name, main_fn fn)
+      void add(const std::string& name, app_fn fn)
          {
-         m_cmds[name] = fn;
+         m_apps[name] = fn;
          }
 
       bool has(const std::string& cmd) const
          {
-         return m_cmds.count(cmd) > 0;
+         return m_apps.count(cmd) > 0;
          }
 
-      std::set<std::string> all_apps() const
+      std::set<std::string> all_appnames() const
          {
          std::set<std::string> apps;
-         for(auto i : m_cmds)
+         for(auto i : m_apps)
             apps.insert(i.first);
          return apps;
          }
 
-      int run(const std::string& cmd, int argc, char* argv[]) const
+      // TODO: Remove redundancy cmd == args[0]
+      int run(const std::string& cmd, std::vector<std::string> args) const
          {
-         auto i = m_cmds.find(cmd);
-         if(i != m_cmds.end())
-            return i->second(argc, argv);
+         const auto app = m_apps.find(cmd);
+         if(app != m_apps.end())
+            return app->second(args);
          return -1;
          }
 
@@ -55,7 +56,7 @@ class AppRegistrations
       class AppRegistration
          {
          public:
-            AppRegistration(const std::string& name, main_fn fn)
+            AppRegistration(const std::string& name, app_fn fn)
                {
                AppRegistrations::instance().add(name, fn);
                }
@@ -64,7 +65,7 @@ class AppRegistrations
    private:
       AppRegistrations() {}
 
-      std::map<std::string, main_fn> m_cmds;
+      std::map<std::string, app_fn> m_apps;
    };
 
 #define REGISTER_APP(nm) AppRegistrations::AppRegistration g_ ## nm ## _registration(#nm, nm)

@@ -18,11 +18,11 @@ using namespace Botan;
 
 namespace {
 
-int pkcs10(int argc, char* argv[])
+int pkcs10(const std::vector<std::string> &args)
    {
-   if(argc != 6)
+   if(args.size() != 6)
       {
-      std::cout << "Usage: " << argv[0]
+      std::cout << "Usage: " << args[0]
                 << " passphrase name country_code organization email" << std::endl;
       return 1;
       }
@@ -34,14 +34,14 @@ int pkcs10(int argc, char* argv[])
       RSA_PrivateKey priv_key(rng, 1024);
 
       std::ofstream key_file("private.pem");
-      key_file << PKCS8::PEM_encode(priv_key, rng, argv[1]);
+      key_file << PKCS8::PEM_encode(priv_key, rng, args[1]);
 
       X509_Cert_Options opts;
 
-      opts.common_name = argv[2];
-      opts.country = argv[3];
-      opts.organization = argv[4];
-      opts.email = argv[5];
+      opts.common_name  = args[2];
+      opts.country      = args[3];
+      opts.organization = args[4];
+      opts.email        = args[5];
 
       PKCS10_Request req = X509::create_cert_req(opts, priv_key,
                                                  "SHA-256", rng);

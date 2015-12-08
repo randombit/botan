@@ -48,18 +48,18 @@ class Fuzzer_Creds : public Credentials_Manager
 
 #endif
 
-int fuzzer(int argc, char* argv[])
+int fuzzer(const std::vector<std::string> &args)
    {
-   if(argc != 3)
+   if(args.size() != 3)
       {
-      std::cout << "Usage: " << argv[0] << " [type] [input_file]\n";
-      std::cout << "Hook for fuzzers such as afl (produces no output)\n";
-      std::cout << "Types: cert crl privkey tls_client\n";
+      std::cout << "Usage: " << args[0] << " [type] [input_file]\n"
+                << "Hook for fuzzers such as afl (produces no output)\n"
+                << "Types: cert crl privkey tls_client" << std::endl;
       return 1;
       }
 
-   const std::string type = argv[1];
-   const std::string input = argv[2];
+   const std::string type = args[1];
+   const std::string input = args[2];
 
    AutoSeeded_RNG rng;
 
@@ -132,7 +132,7 @@ int fuzzer(int argc, char* argv[])
       }
 #endif
 
-   std::cout << "Unknown type '" << type << "'\n";
+   std::cout << "Unknown type '" << type << "'" << std::endl;
    return 1;
    }
 

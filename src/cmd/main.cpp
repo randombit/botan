@@ -13,7 +13,6 @@
 #include <limits>
 #include <memory>
 
-#include <botan/init.h>
 #include <botan/version.h>
 #include <botan/cpuid.h>
 
@@ -27,11 +26,11 @@ using namespace Botan;
 
 namespace {
 
-int help(int , char* argv[])
+int help(const std::vector<std::string> &args)
    {
-   std::cout << "Usage: " << argv[0] << " [subcommand] [subcommand-options]" << std::endl;
+   std::cout << "Usage: " << args[0] << " [subcommand] [subcommand-options]" << std::endl;
 
-   std::set<std::string> apps = AppRegistrations::instance().all_apps();
+   std::set<std::string> apps = AppRegistrations::instance().all_appnames();
 
    std::cout << "Available commands:" << std::endl;
 
@@ -52,11 +51,11 @@ int help(int , char* argv[])
    return 1;
    }
 
-int config(int argc, char* argv[])
+int config(const std::vector<std::string> &args)
    {
-   if(argc != 2)
+   if(args.size() != 2)
       {
-      std::cout << "Usage: " << argv[0] << " <what>\n"
+      std::cout << "Usage: " << args[0] << " <what>\n"
                 << "   prefix: Print install prefix\n"
                 << "   cflags: Print include params\n"
                 << "   ldflags: Print linker params\n"
@@ -64,7 +63,7 @@ int config(int argc, char* argv[])
       return 1;
       }
 
-   const std::string arg = argv[1];
+   const std::string arg = args[1];
 
    if(arg == "prefix")
       std::cout << BOTAN_INSTALL_PREFIX << std::endl;
@@ -89,7 +88,7 @@ int config(int argc, char* argv[])
    }
 REGISTER_APP(config);
 
-int version(int argc, char* argv[])
+int version(const std::vector<std::string> &args)
    {
    if(BOTAN_VERSION_MAJOR != version_major() ||
       BOTAN_VERSION_MINOR != version_minor() ||
@@ -105,19 +104,19 @@ int version(int argc, char* argv[])
                 << BOTAN_VERSION_PATCH << ")" << std::endl;
       }
 
-   if(argc == 1)
+   if(args.size() == 1)
       {
       std::cout << Botan::version_major() << "."
                 << Botan::version_minor() << "."
                 << Botan::version_patch() << std::endl;
       }
-   else if(argc == 2 && std::string(argv[1]) == "--full")
+   else if(args.size() == 2 && args[1] == "--full")
       {
       std::cout << Botan::version_string() << std::endl;
       }
    else
       {
-      std::cout << "Usage: " << argv[0] << " version [--full]" << std::endl;
+      std::cout << "Usage: " << args[0] << " version [--full]" << std::endl;
       return 1;
       }
 
@@ -125,23 +124,24 @@ int version(int argc, char* argv[])
    }
 REGISTER_APP(version);
 
-int cpuid(int, char*[])
+int cpuid(const std::vector<std::string> &args)
    {
+   BOTAN_UNUSED(args);
    CPUID::print(std::cout);
    return 0;
    }
 REGISTER_APP(cpuid);
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
-int http_get(int argc, char* argv[])
+int http_get(const std::vector<std::string> &args)
    {
-   if(argc != 2)
+   if(args.size() != 2)
       {
-      std::cout << "Usage " << argv[0] << " <url>" << std::endl;
+      std::cout << "Usage " << args[0] << " <url>" << std::endl;
       return 1;
       }
 
-   auto resp = HTTP::GET_sync(argv[2]);
+   auto resp = HTTP::GET_sync(args[1]);
    std::cout << resp << std::endl;
    return 0;
    }
@@ -153,24 +153,24 @@ REGISTER_APP(http_get);
 
 int main(int argc, char* argv[])
    {
+   const std::vector<std::string> args(argv, argv + argc);
+
    try
       {
-      if(argc < 2)
-         return help(argc, argv);
+      if(args.size() < 2)
+         return help(args);
 
-      const std::string cmd = argv[1];
+      const std::string cmd = args[1];
 
       if(cmd == "help" || cmd == "-h")
-         return help(argc, argv);
-
-      Botan::LibraryInitializer init;
+         return help(args);
 
       AppRegistrations& apps = AppRegistrations::instance();
       if(apps.has(cmd))
-         return apps.run(cmd, argc - 1, argv + 1);
+         return apps.run(cmd, std::vector<std::string>(args.begin()+1, args.end()));
 
       std::cerr << "Unknown command " << cmd << std::endl;
-      return help(argc, argv);
+      return help(args);
       }
    catch(std::exception& e)
       {

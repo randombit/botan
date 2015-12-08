@@ -134,11 +134,11 @@ void process_data(const byte buf[], size_t buf_size)
       std::cout << buf[i];
    }
 
-int tls_client(int argc, char* argv[])
+int tls_client(const std::vector<std::string> &args)
    {
-   if(argc != 2 && argc != 3 && argc != 4)
+   if(args.size() != 2 && args.size() != 3 && args.size() != 4)
       {
-      std::cout << "Usage " << argv[0] << " host [port] [udp|tcp]" << std::endl;
+      std::cout << "Usage " << args[0] << " host [port] [udp|tcp]" << std::endl;
       return 1;
       }
 
@@ -160,9 +160,9 @@ int tls_client(int argc, char* argv[])
 
       Basic_Credentials_Manager creds;
 
-      std::string host = argv[1];
-      u32bit port = argc >= 3 ? Botan::to_u32bit(argv[2]) : 443;
-      const std::string transport = argc >= 4 ? argv[3] : "tcp";
+      const std::string host = args[1];
+      const u32bit port = args.size() >= 3 ? Botan::to_u32bit(args[2]) : 443;
+      const std::string transport = args.size() >= 4 ? args[3] : "tcp";
 
       const bool use_tcp = (transport == "tcp");
 

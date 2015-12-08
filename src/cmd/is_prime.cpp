@@ -12,20 +12,20 @@
 
 namespace {
 
-int is_prime(int argc, char* argv[])
+int is_prime(const std::vector<std::string> &args)
    {
-   if(argc != 2 && argc != 3)
+   if(args.size() != 2 && args.size() != 3)
       {
-      std::cerr << "Usage: " << argv[0] << " n <prob>" << std::endl;
+      std::cerr << "Usage: " << args[0] << " n <prob>" << std::endl;
       return 2;
       }
 
-   BigInt n(argv[1]);
+   BigInt n(args[1]);
 
    size_t prob = 56;
 
-   if(argc == 3)
-      prob = to_u32bit(argv[2]);
+   if(args.size() == 3)
+      prob = to_u32bit(args[2]);
 
    AutoSeeded_RNG rng;
 
