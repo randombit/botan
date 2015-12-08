@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}
     ./ca.cpp
     ./cert_verify.cpp
     ./compress.cpp
+    ./dl_group.cpp
     ./dsa_sign.cpp
     ./dsa_ver.cpp
     ./factor.cpp
