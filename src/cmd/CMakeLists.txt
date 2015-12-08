@@ -25,6 +25,7 @@ add_executable(${PROJECT_NAME}
     ./is_prime.cpp
     ./keygen.cpp
     ./main.cpp
+    ./mce.cpp
     ./ocsp.cpp
     ./pkcs10.cpp
     ./rng.cpp
