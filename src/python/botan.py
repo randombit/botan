@@ -19,7 +19,7 @@ module should be used only with the library version it accompanied.
 
 import sys
 from ctypes import *
-from binascii import hexlify, unhexlify
+from binascii import hexlify, unhexlify, b2a_base64
 
 """
 Module initialization
@@ -719,7 +719,7 @@ def test():
             key = rng().get(kmax)
             pt = rng().get(21)
 
-            print("  plaintext %s (%d)"   % (hex_encode(pt), len(pt)))
+            print("  plaintext  %s (%d)"   % (hex_encode(pt), len(pt)))
 
             enc.set_key(key)
             enc.start(iv)
@@ -732,7 +732,7 @@ def test():
             dec.start(iv)
             decrypted = dec.finish(ct)
 
-            print("  decrypted %s %d\n" % (hex_encode(decrypted), len(decrypted)))
+            print("  decrypted  %s (%d)\n" % (hex_encode(decrypted), len(decrypted)))
 
 
     def test_mceliece():
@@ -743,9 +743,18 @@ def test():
         mce_ad = 'mce AD'
         mce_ciphertext = mceies_encrypt(mce_pub, rng(), 'ChaCha20Poly1305', mce_plaintext, mce_ad)
 
-        print("mceies len(pt)=%d  len(ct)=%d", (len(mce_plaintext), len(mce_ciphertext)))
+        print("mceies len(pt)=%d  len(ct)=%d" % (len(mce_plaintext), len(mce_ciphertext)))
 
         mce_decrypt = mceies_decrypt(mce_priv, 'ChaCha20Poly1305', mce_ciphertext, mce_ad)
+        print("  mceies plaintext  \'%s\' (%d)" % (mce_plaintext, len(mce_plaintext)))
+        
+        # Since mceies_decrypt() returns bytes in Python3, the following line
+        # needs .decode('utf-8') to convert mce_decrypt from bytes to a
+        # text string (Unicode).
+        # You don't need to add .decode() if
+        # (a) your expected output is bytes rather than a text string, or
+        # (b) you are using Python2 rather than Python3.
+        print("  mceies decrypted  \'%s\' (%d)" % (mce_decrypt.decode('utf-8'), len(mce_decrypt)))
 
         print("mce_pub %s/SHA-1 fingerprint: %s\nEstimated strength %s bits (len %d)\n" %
               (mce_pub.algo_name(), mce_pub.fingerprint("SHA-1"),
@@ -769,9 +778,10 @@ def test():
         sys_rng = rng()
         symkey = sys_rng.get(32)
         ctext = enc.encrypt(symkey, sys_rng)
-        print("ptext  \'%s\'" % hex_encode(symkey))
-        print("ctext   \'%s\'" % hex_encode(ctext))
-        print("decrypt \'%s\'\n" % hex_encode(dec.decrypt(ctext)))
+        print("ptext   \'%s\' (%d)" % (hex_encode(symkey), len(symkey)))
+        print("ctext   \'%s\' (%d)" % (hex_encode(ctext), len(ctext)))
+        print("decrypt \'%s\' (%d)\n" % (hex_encode(dec.decrypt(ctext)),
+                                         len(dec.decrypt(ctext))))
 
         signer = pk_op_sign(rsapriv, 'EMSA4(SHA-384)')
 
@@ -837,7 +847,7 @@ def test():
         print("Serial number:     %s" % hex_encode(cert.serial_number()))
         print("Authority Key ID:  %s" % hex_encode(cert.authority_key_id()))
         print("Subject   Key ID:  %s" % hex_encode(cert.subject_key_id()))
-        print("Public key bits:\n%s\n" % hex_encode(cert.subject_public_key_bits()))
+        print("Public key bits:\n%s\n" % b2a_base64(cert.subject_public_key_bits()))
 
         print(cert.to_string())
 
