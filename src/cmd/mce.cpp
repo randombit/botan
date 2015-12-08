@@ -15,23 +15,24 @@
 
 namespace {
 
-int mce(int argc, char* argv[])
+int mce(const std::vector<std::string> &args)
    {
-   if(argc < 4)
+   if(args.size() < 4)
       {
-      std::cout << "Usage: " << argv[0] << " [keygen n t pass|keybits n t|encrypt file key|decrypt file key pass]\n";
+      std::cout << "Usage: " << args[0] << " [keygen n t pass|keybits n t|encrypt file key|decrypt file key pass]"
+                << std::endl;
       return 1;
       }
 
-   const std::string cmd = argv[1];
+   const std::string cmd = args[1];
 
    AutoSeeded_RNG rng;
 
    if(cmd == "keygen")
       {
-      const size_t n = std::stol(argv[2]);
-      const size_t t = std::stol(argv[3]);
-      const std::string pass = argv[4];
+      const u32bit n = to_u32bit(args[2]);
+      const u32bit t = to_u32bit(args[3]);
+      const std::string pass = args[4];
 
       McEliece_PrivateKey pk(rng, n, t);
 
@@ -59,14 +60,14 @@ int mce(int argc, char* argv[])
       }
    else if(cmd == "keybits")
       {
-      const size_t n = std::stol(argv[2]);
-      const size_t t = std::stol(argv[3]);
+      const u32bit n = to_u32bit(args[2]);
+      const u32bit t = to_u32bit(args[3]);
       std::cout << "McEliece key with params (" << n << "," << t << ") has "
                 << mceliece_work_factor(n, t) << " bit security\n";
       }
    else if(cmd == "encrypt")
       {
-      std::unique_ptr<Public_Key> p8(X509::load_key(argv[3]));
+      std::unique_ptr<Public_Key> p8(X509::load_key(args[3]));
       const McEliece_PublicKey* key = dynamic_cast<McEliece_PublicKey*>(p8.get());
 
       if(!key)
@@ -74,7 +75,7 @@ int mce(int argc, char* argv[])
          throw std::runtime_error("Loading McEliece public key failed");
          }
 
-      const std::string input_path = argv[2];
+      const std::string input_path = args[2];
       std::ifstream in(input_path, std::ios::binary);
       std::string pt((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 
@@ -83,7 +84,7 @@ int mce(int argc, char* argv[])
                                               pt.size(),
                                               nullptr, 0, rng, "AES-128/GCM");
 
-      std::cout << pt.size() << " -> " << ct.size() << "\n";
+      std::cout << pt.size() << " -> " << ct.size() << std::endl;
 
       std::ofstream out(std::string(input_path) + ".ct", std::ios::binary);
       out.write(reinterpret_cast<const char*>(ct.data()), ct.size());
@@ -91,8 +92,8 @@ int mce(int argc, char* argv[])
       }
    else if(cmd == "decrypt")
       {
-      const std::string key_file = argv[3];
-      const std::string pass = argv[4];
+      const std::string key_file = args[3];
+      const std::string pass = args[4];
       std::unique_ptr<Private_Key> p8(PKCS8::load_key(key_file, rng, pass));
       const McEliece_PrivateKey* key = dynamic_cast<McEliece_PrivateKey*>(p8.get());
 
@@ -101,7 +102,7 @@ int mce(int argc, char* argv[])
          throw std::runtime_error("Loading McEliece private key failed");
          }
 
-      std::ifstream in(argv[2], std::ios::binary);
+      std::ifstream in(args[2], std::ios::binary);
       std::string ct((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 
       secure_vector<byte> pt = mceies_decrypt(*key,

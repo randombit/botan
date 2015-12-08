@@ -157,11 +157,10 @@ void bench_algo(const std::string& algo,
       }
    }
 
-int speed(int argc, char* argv[])
+int speed(const std::vector<std::string> &args)
    {
-   BOTAN_UNUSED(argc);
    OptionParser opts("seconds=|buf-size=|provider=");
-   opts.parse(argv);
+   opts.parse(args);
 
    double seconds = .5;
    u32bit buf_size = 16;
@@ -188,20 +187,20 @@ int speed(int argc, char* argv[])
 
    const std::string provider = opts.value_if_set("provider");
 
-   std::vector<std::string> args = opts.arguments();
+   std::vector<std::string> opt_args = opts.arguments();
 
-   if(args.empty())
-      args = default_benchmark_list;
+   if(opt_args.empty())
+      opt_args = default_benchmark_list;
 
-   if(args[0] == "help" || args[0] == "-h")
+   if(opt_args[0] == "help" || opt_args[0] == "-h")
       {
-      std::cout << "Usage: " << argv[0] << " [algo name...]" << std::endl;
+      std::cout << "Usage: " << args[0] << " [algo name...]" << std::endl;
       return 1;
       }
 
    AutoSeeded_RNG rng;
 
-   for(auto alg: args)
+   for(auto alg: opt_args)
       {
       bench_algo(alg, provider, rng, seconds, buf_size);
       }

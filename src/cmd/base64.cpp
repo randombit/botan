@@ -19,11 +19,11 @@
 
 namespace {
 
-int base64(int argc, char* argv[])
+int base64(const std::vector<std::string> &args)
    {
-   if(argc < 2)
+   if(args.size() < 2)
       {
-      std::cout << "Usage: " << argv[0] << " [-w] [-c n] [-e|-d] files...\n"
+      std::cout << "Usage: " << args[0] << " [-w] [-c n] [-e|-d] files...\n"
                    "   -e  : Encode input to base64 strings (default)\n"
                    "   -d  : Decode base64 input\n"
                    "   -w  : Wrap lines\n"
@@ -31,14 +31,14 @@ int base64(int argc, char* argv[])
       return 1;
       }
 
-   int column = 78;
+   u32bit column = 78;
    bool wrap = false;
    bool encoding = true;
    std::vector<std::string> files;
 
-   for(int j = 1; argv[j] != nullptr; j++)
+   for(int j = 1; j < args.size(); j++)
       {
-      std::string this_arg = argv[j];
+      const std::string this_arg = args[j];
 
       if(this_arg == "-w")
          wrap = true;
@@ -47,15 +47,18 @@ int base64(int argc, char* argv[])
          encoding = false;
       else if(this_arg == "-c")
          {
-         if(argv[j+1])
-            { column = atoi(argv[j+1]); j++; }
+         if(j+1 < args.size())
+            {
+            column = to_u32bit(args[j+1]);
+            j++;
+            }
          else
             {
             std::cout << "No argument for -c option" << std::endl;
             return 1;
             }
          }
-      else files.push_back(argv[j]);
+      else files.push_back(args[j]);
       }
 
    for(unsigned int j = 0; j != files.size(); j++)

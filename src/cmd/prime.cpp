@@ -15,26 +15,26 @@
 
 namespace {
 
-int prime(int argc, char* argv[])
+int prime(const std::vector<std::string> &args)
    {
-   if(argc < 2)
+   if(args.size() < 2)
       {
-      std::cout << "Usage: " << argv[0] << " bits count" << std::endl;
+      std::cout << "Usage: " << args[0] << " bits count" << std::endl;
       return 1;
       }
 
    AutoSeeded_RNG rng;
-   const size_t bits = to_u32bit(argv[1]);
-   const size_t cnt = argv[2] != nullptr ? to_u32bit(argv[2]) : 1;
+   const size_t bits = to_u32bit(args[1]);
+   const size_t cnt = args.size() >= 3 ? to_u32bit(args[2]) : 1;
 
    for(size_t i = 0; i != cnt; ++i)
       {
       const BigInt p = random_prime(rng, bits);
-      std::cout << p << "\n";
+      std::cout << p << std::endl;
 
       if(p.bits() != bits)
          {
-         std::cout << "Result not exactly requested bit size, got " << p.bits() << "\n";
+         std::cout << "Result not exactly requested bit size, got " << p.bits() << std::endl;
          }
       }
 

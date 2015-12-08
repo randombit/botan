@@ -16,15 +16,15 @@ using namespace Botan;
 
 namespace {
 
-int hash(int argc, char* argv[])
+int hash(const std::vector<std::string> &args)
    {
-   if(argc < 3)
+   if(args.size() < 3)
       {
-      std::cout << "Usage: " << argv[0] << " digest <filenames>" << std::endl;
+      std::cout << "Usage: " << args[0] << " digest <filenames>" << std::endl;
       return 1;
       }
 
-   std::string hash = argv[1];
+   std::string hash = args[1];
    /* a couple of special cases, kind of a crock */
    if(hash == "sha1") hash = "SHA-1";
    if(hash == "md5")  hash = "MD5";
@@ -33,12 +33,12 @@ int hash(int argc, char* argv[])
       Pipe pipe(new Hash_Filter(hash), new Hex_Encoder);
 
       int skipped = 0;
-      for(int j = 2; argv[j] != nullptr; j++)
+      for(int j = 2; j < args.size(); j++)
          {
-         std::ifstream file(argv[j], std::ios::binary);
+         std::ifstream file(args[j], std::ios::binary);
          if(!file)
             {
-            std::cout << "ERROR: could not open " << argv[j] << std::endl;
+            std::cout << "ERROR: could not open " << args[j] << std::endl;
             skipped++;
             continue;
             }
@@ -46,7 +46,7 @@ int hash(int argc, char* argv[])
          file >> pipe;
          pipe.end_msg();
          pipe.set_default_msg(j-2-skipped);
-         std::cout << pipe << "  " << argv[j] << std::endl;
+         std::cout << pipe << "  " << args[j] << std::endl;
          }
    }
    catch(std::exception& e)

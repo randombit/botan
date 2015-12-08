@@ -16,30 +16,30 @@
 
 namespace {
 
-int dsa_sign(int argc, char* argv[])
+int dsa_sign(const std::vector<std::string> &args)
    {
    using namespace Botan;
 
    const std::string SUFFIX = ".sig";
 
-   if(argc != 4)
+   if(args.size() != 4)
       {
-      std::cout << "Usage: " << argv[0] << " keyfile messagefile passphrase"
+      std::cout << "Usage: " << args[0] << " keyfile messagefile passphrase"
                 << std::endl;
       return 1;
       }
 
    try {
-      std::string passphrase(argv[3]);
+      std::string passphrase(args[3]);
 
-      std::ifstream message(argv[2], std::ios::binary);
+      std::ifstream message(args[2], std::ios::binary);
       if(!message)
          {
          std::cout << "Couldn't read the message file." << std::endl;
          return 1;
          }
 
-      std::string outfile = argv[2] + SUFFIX;
+      std::string outfile = args[2] + SUFFIX;
       std::ofstream sigfile(outfile);
       if(!sigfile)
          {
@@ -51,7 +51,7 @@ int dsa_sign(int argc, char* argv[])
       AutoSeeded_RNG rng;
 
       std::unique_ptr<PKCS8_PrivateKey> key(
-         PKCS8::load_key(argv[1], rng, passphrase)
+         PKCS8::load_key(args[1], rng, passphrase)
          );
 
       DSA_PrivateKey* dsakey = dynamic_cast<DSA_PrivateKey*>(key.get());

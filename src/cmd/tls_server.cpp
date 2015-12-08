@@ -122,18 +122,18 @@ void alert_received(TLS::Alert alert, const byte[], size_t)
    std::cout << "Alert: " << alert.type_string() << std::endl;
    }
 
-int tls_server(int argc, char* argv[])
+int tls_server(const std::vector<std::string> &args)
    {
-   if(argc != 4 && argc != 5)
+   if(args.size() != 4 && args.size() != 5)
       {
-      std::cout << "Usage: " << argv[0] << " server.crt server.key port [tcp|udp]" << std::endl;
+      std::cout << "Usage: " << args[0] << " server.crt server.key port [tcp|udp]" << std::endl;
       return 1;
       }
 
-   const std::string server_crt = argv[1];
-   const std::string server_key = argv[2];
-   const int port = to_u32bit(argv[3]);
-   const std::string transport = (argc >= 5) ? argv[4] : "tcp";
+   const std::string server_crt = args[1];
+   const std::string server_key = args[2];
+   const int port = to_u32bit(args[3]);
+   const std::string transport = (args.size() >= 5) ? args[4] : "tcp";
 
    const bool is_tcp = (transport == "tcp");
 

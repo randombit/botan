@@ -13,24 +13,24 @@
 
 namespace {
 
-int ca(int argc, char* argv[])
+int ca(const std::vector<std::string> &args)
    {
    using namespace Botan;
 
-   if(argc != 5)
+   if(args.size() != 5)
       {
-      std::cout << "Usage: " << argv[0] << " <passphrase> "
+      std::cout << "Usage: " << args[0] << " <passphrase> "
                 << "<ca cert> <ca key> <pkcs10>" << std::endl;
       return 1;
       }
 
+   const std::string arg_passphrase = args[1];
+   const std::string arg_ca_cert    = args[2];
+   const std::string arg_ca_key     = args[3];
+   const std::string arg_req_file   = args[4];
+
    try
       {
-      const std::string arg_passphrase = argv[1];
-      const std::string arg_ca_cert = argv[2];
-      const std::string arg_ca_key = argv[3];
-      const std::string arg_req_file = argv[4];
-
       AutoSeeded_RNG rng;
 
       X509_Certificate ca_cert(arg_ca_cert);
