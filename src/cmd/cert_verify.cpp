@@ -13,22 +13,24 @@
 
 namespace {
 
-int cert_verify(int argc, char* argv[])
+int cert_verify(const std::vector<std::string> &args)
    {
    using namespace Botan;
 
-   if(argc <= 2)
+   if(args.size() <= 2)
       {
-      std::cout << "Usage: " << argv[0] << " subject.pem [CA certificates...]" << std::endl;
+      std::cout << "Usage: " << args[0] << " subject.pem [CA certificates...]" << std::endl;
       return 1;
       }
 
-   X509_Certificate subject_cert(argv[1]);
+   X509_Certificate subject_cert(args[1]);
 
    Certificate_Store_In_Memory certs;
 
-   for(size_t i = 2; argv[i]; ++i)
-      certs.add_certificate(X509_Certificate(argv[i]));
+   for(const auto certfile : std::vector<std::string>(args.begin()+2, args.end()))
+      {
+      certs.add_certificate(X509_Certificate(certfile));
+      }
 
    Path_Validation_Restrictions restrictions;
 

@@ -35,15 +35,15 @@ void do_compress(Transform& comp, std::ifstream& in, std::ostream& out)
    out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
    }
 
-int compress(int argc, char* argv[])
+int compress(const std::vector<std::string> &args)
    {
-   if(argc != 2 && argc != 3 && argc != 4)
+   if(args.size() != 2 && args.size() != 3 && args.size() != 4)
       {
-      std::cout << "Usage: " << argv[0] << " input [type] [level]" << std::endl;
+      std::cout << "Usage: " << args[0] << " input [type] [level]" << std::endl;
       return 1;
       }
 
-   const std::string in_file = argv[1];
+   const std::string in_file = args[1];
    std::ifstream in(in_file);
 
    if(!in.good())
@@ -52,8 +52,8 @@ int compress(int argc, char* argv[])
       return 1;
       }
 
-   const std::string suffix = argc >= 3 ? argv[2] : "gz";
-   const size_t level = argc >= 4 ? to_u32bit(argv[3]) : 9;
+   const std::string suffix = args.size() >= 3 ? args[2] : "gz";
+   const size_t level = args.size() >= 4 ? to_u32bit(args[3]) : 9;
 
    std::unique_ptr<Transform> compress(make_compressor(suffix, level));
 
@@ -83,20 +83,20 @@ void parse_extension(const std::string& in_file,
    suffix = in_file.substr(last_dot+1, std::string::npos);
    }
 
-int uncompress(int argc, char* argv[])
+int uncompress(const std::vector<std::string> &args)
    {
-   if(argc != 2)
+   if(args.size() != 2)
       {
-      std::cout << "Usage: " << argv[0] << " <file>" << std::endl;
+      std::cout << "Usage: " << args[0] << " <file>" << std::endl;
       return 1;
       }
 
-   const std::string in_file = argv[1];
+   const std::string in_file = args[1];
    std::ifstream in(in_file);
 
    if(!in.good())
       {
-      std::cout << "Couldn't read '" << argv[1] << "'" << std::endl;
+      std::cout << "Couldn't read '" << args[1] << "'" << std::endl;
       return 1;
       }
 

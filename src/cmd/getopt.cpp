@@ -7,18 +7,17 @@
 #include "getopt.h"
 #include <iostream>
 
-void OptionParser::parse(char* argv[])
+void OptionParser::parse(const std::vector<std::string> &args)
    {
-   std::vector<std::string> args;
-   for(int j = 1; argv[j]; j++)
-      args.push_back(argv[j]);
+   const std::string appname = args[0];
 
-   for(size_t j = 0; j != args.size(); j++)
+   // ship first, args[0] is the app name
+   for(size_t j = 1; j != args.size(); j++)
       {
       std::string arg = args[j];
 
       if(arg == "help" || arg == "--help" || arg == "-h")
-         return help(std::cout, argv[0]);
+         return help(std::cout, appname);
 
       if(arg.size() > 2 && arg[0] == '-' && arg[1] == '-')
          {
@@ -43,8 +42,7 @@ void OptionParser::parse(char* argv[])
          else
             {
             if(mark != std::string::npos)
-               throw std::runtime_error("Option " + opt_name +
-                                        " does not take an argument");
+               throw std::runtime_error("Option " + opt_name + " does not take an argument");
 
             options[arg] = "";
             }
@@ -53,4 +51,3 @@ void OptionParser::parse(char* argv[])
          leftover.push_back(arg);
       }
    }
-

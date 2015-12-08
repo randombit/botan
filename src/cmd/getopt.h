@@ -48,11 +48,9 @@ class OptionParser
          return is_set(key) ? Botan::to_u32bit(value(key)) : or_else;
          }
 
-      void help(std::ostream& o, const char* cmd = nullptr)
+      void help(std::ostream& o, const std::string &appname)
          {
-         o << "Usage: ";
-         if(cmd)
-            o << cmd << " ";
+         o << "Usage: " << appname << " ";
 
          for(auto flag : flags)
             {
@@ -62,10 +60,10 @@ class OptionParser
             o << " ";
             }
 
-         o << "\n";
+         o << std::endl;
          }
 
-      void parse(char* argv[]);
+      void parse(const std::vector<std::string> &args);
 
       OptionParser(const std::string& opt_string)
          {

@@ -36,20 +36,20 @@ std::string read_file_contents(const std::string& filename)
    return res;
    }
 
-int dl_group(int argc, char* argv[])
+int dl_group(const std::vector<std::string> &args)
    {
-   if(argc < 2)
+   if(args.size() < 2)
       {
-      std::cout << "Usage: " << argv[0] << " [create bits|info file]" << std::endl;
+      std::cout << "Usage: " << args[0] << " [create bits|info file]" << std::endl;
       return 1;
       }
 
-   const std::string cmd = argv[1];
+   const std::string cmd = args[1];
 
    if(cmd == "create")
       {
       AutoSeeded_RNG rng;
-      const size_t bits = to_u32bit(argv[2]);
+      const size_t bits = to_u32bit(args[2]);
 
       const DL_Group::PrimeType prime_type = DL_Group::Strong;
       //const DL_Group::PrimeType prime_type = DL_Group::Prime_Subgroup;
@@ -61,7 +61,7 @@ int dl_group(int argc, char* argv[])
    else if(cmd == "info")
       {
       DL_Group grp;
-      std::string pem = read_file_contents(argv[2]);
+      std::string pem = read_file_contents(args[2]);
       std::cout << pem << "\n";
 
       std::cout << "DL_Group " << grp.get_p().bits() << " bits\n";

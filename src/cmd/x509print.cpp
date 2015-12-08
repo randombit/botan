@@ -10,15 +10,15 @@
 
 namespace {
 
-int x509print(int argc, char* argv[])
+int x509print(const std::vector<std::string> &args)
    {
-   if(argc < 1)
+   if(args.size() != 1)
       {
-      std::cout << "Usage: " << argv[0] << " cert.pem" << std::endl;
+      std::cout << "Usage: " << args[0] << " cert.pem" << std::endl;
       return 1;
       }
 
-   X509_Certificate cert(argv[1]);
+   X509_Certificate cert(args[1]);
 
    std::cout << cert.to_string() << std::endl;
 

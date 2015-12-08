@@ -17,25 +17,25 @@ using namespace Botan;
 
 namespace {
 
-int dsa_verify(int argc, char* argv[])
+int dsa_verify(const std::vector<std::string> &args)
    {
-   if(argc != 4)
+   if(args.size() != 4)
       {
-      std::cout << "Usage: " << argv[0]
+      std::cout << "Usage: " << args[0]
                 << " keyfile messagefile sigfile" << std::endl;
       return 1;
       }
 
 
    try {
-      std::ifstream message(argv[2], std::ios::binary);
+      std::ifstream message(args[2], std::ios::binary);
       if(!message)
          {
          std::cout << "Couldn't read the message file." << std::endl;
          return 1;
          }
 
-      std::ifstream sigfile(argv[3]);
+      std::ifstream sigfile(args[3]);
       if(!sigfile)
          {
          std::cout << "Couldn't read the signature file." << std::endl;
@@ -45,7 +45,7 @@ int dsa_verify(int argc, char* argv[])
       std::string sigstr;
       getline(sigfile, sigstr);
 
-      std::unique_ptr<X509_PublicKey> key(X509::load_key(argv[1]));
+      std::unique_ptr<X509_PublicKey> key(X509::load_key(args[1]));
       DSA_PublicKey* dsakey = dynamic_cast<DSA_PublicKey*>(key.get());
 
       if(!dsakey)

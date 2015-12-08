@@ -79,11 +79,10 @@ Private_Key* gen_key(RandomNumberGenerator& rng, const std::string& algo, size_t
    }
 
 
-int keygen(int argc, char* argv[])
+int keygen(const std::vector<std::string> &args)
    {
-   BOTAN_UNUSED(argc);
    OptionParser opts("algo=|bits=|passphrase=|pbe=");
-   opts.parse(argv);
+   opts.parse(args);
 
    const std::string algo = opts.value_or_else("algo", "rsa");
    const size_t bits = opts.int_value_or_else("bits", 2048);

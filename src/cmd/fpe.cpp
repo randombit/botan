@@ -107,17 +107,17 @@ u64bit decrypt_cc_number(u64bit enc_cc,
    return cc_derank(dec_cc);
    }
 
-int fpe(int argc, char* argv[])
+int fpe(const std::vector<std::string> &args)
    {
-   if(argc != 4)
+   if(args.size() != 4)
       {
-      std::cout << "Usage: " << argv[0] << " cc-number acct-name passwd" << std::endl;
+      std::cout << "Usage: " << args[0] << " cc-number acct-name passwd" << std::endl;
       return 1;
       }
 
-   u64bit cc_number = atoll(argv[1]);
-   std::string acct_name = argv[2];
-   std::string passwd = argv[3];
+   u64bit cc_number = atoll(args[1].c_str());
+   std::string acct_name = args[2];
+   std::string passwd = args[3];
 
    std::cout << "Input was: " << cc_number << ' '
              << luhn_check(cc_number) << std::endl;

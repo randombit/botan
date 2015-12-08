@@ -317,16 +317,16 @@ void decode(BER_Decoder& decoder, size_t level)
       }
    }
 
-int asn1(int argc, char* argv[])
+int asn1(const std::vector<std::string> &args)
    {
-   if(argc != 2)
+   if(args.size() != 2)
       {
-      std::cout << "Usage: " << argv[0] << " <file>" << std::endl;
+      std::cout << "Usage: " << args[0] << " <file>" << std::endl;
       return 1;
       }
 
    try {
-      DataSource_Stream in(argv[1]);
+      DataSource_Stream in(args[1]);
 
       if(!PEM_Code::matches(in))
          {

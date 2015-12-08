@@ -17,16 +17,16 @@ using namespace Botan;
 
 namespace {
 
-int ocsp_check(int argc, char* argv[])
+int ocsp_check(const std::vector<std::string> &args)
    {
-   if(argc != 2)
+   if(args.size() != 2)
       {
-      std::cout << "Usage: ocsp subject.pem issuer.pem";
+      std::cout << "Usage: " << args[0] << " subject.pem issuer.pem" << std::endl;
       return 2;
       }
 
-   X509_Certificate subject(argv[1]);
-   X509_Certificate issuer(argv[2]);
+   X509_Certificate subject(args[1]);
+   X509_Certificate issuer(args[2]);
 
    Certificate_Store_In_Memory cas;
    cas.add_certificate(issuer);

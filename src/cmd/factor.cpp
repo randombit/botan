@@ -122,17 +122,17 @@ std::vector<BigInt> factorize(const BigInt& n_in,
    return factors;
    }
 
-int factor(int argc, char* argv[])
+int factor(const std::vector<std::string> &args)
    {
-   if(argc != 2)
+   if(args.size() != 2)
       {
-      std::cout << "Usage: " << argv[0] << " <integer>" << std::endl;
+      std::cout << "Usage: " << args[0] << " <integer>" << std::endl;
       return 1;
       }
 
    try
       {
-      BigInt n(argv[1]);
+      BigInt n(args[1]);
 
       AutoSeeded_RNG rng;
 

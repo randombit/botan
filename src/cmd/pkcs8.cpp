@@ -20,19 +20,18 @@ using namespace Botan;
 
 namespace {
 
-int pkcs8(int argc, char* argv[])
+int pkcs8(const std::vector<std::string> &args)
    {
-   BOTAN_UNUSED(argc);
    OptionParser opts("in=|out=|passin=|passout=|pbe=|pubout");
-   opts.parse(argv);
+   opts.parse(args);
 
    const std::string passin = opts.value_or_else("passin", "");
    const std::string passout = opts.value_or_else("passout", "");
    const std::string pbe = opts.value_or_else("pbe", "");
 
-   if(argc < 3)
+   if(args.size() < 3)
       {
-      opts.help( std::cout, "pkcs8" );
+      opts.help(std::cout, "pkcs8");
       return 1;
       }
 

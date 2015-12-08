@@ -12,21 +12,21 @@
 
 namespace {
 
-int bcrypt(int argc, char* argv[])
+int bcrypt(const std::vector<std::string> &args)
    {
-   if(argc == 2)
+   if(args.size() == 2)
       {
       AutoSeeded_RNG rng;
 
-      const std::string password = argv[1];
+      const std::string password = args[1];
 
       std::cout << generate_bcrypt(password, rng, 12) << std::endl;
       return 0;
       }
-   else if(argc == 3)
+   else if(args.size() == 3)
       {
-      const std::string password = argv[1];
-      const std::string hash = argv[2];
+      const std::string password = args[1];
+      const std::string hash = args[2];
 
       if(hash.length() != 60)
          std::cout << "Note: bcrypt '" << hash << "' has wrong length and cannot be valid" << std::endl;
@@ -37,8 +37,8 @@ int bcrypt(int argc, char* argv[])
       return (ok ? 0 : 1);
       }
 
-   std::cout << "Usage: " << argv[0] << " password\n"
-             << "       " << argv[0] << " password passhash" << std::endl;
+   std::cout << "Usage: " << args[0] << " password\n"
+             << "       " << args[0] << " password passhash" << std::endl;
    return 1;
    }
 

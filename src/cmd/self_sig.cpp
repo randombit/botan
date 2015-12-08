@@ -18,17 +18,17 @@ using namespace Botan;
 
 namespace {
 
-int self_sig(int argc, char* argv[])
+int self_sig(const std::vector<std::string> &args)
    {
-   if(argc != 7)
+   if(args.size() != 7)
       {
-      std::cout << "Usage: " << argv[0]
+      std::cout << "Usage: " << args[0]
                 << " passphrase [CA|user] name country_code organization email"
                 << std::endl;
       return 1;
       }
 
-   std::string CA_flag = argv[2];
+   std::string CA_flag = args[2];
    bool do_CA = false;
 
    if(CA_flag == "CA") do_CA = true;
@@ -48,14 +48,13 @@ int self_sig(int argc, char* argv[])
 
 
       std::ofstream priv_key("private.pem");
-      priv_key << PKCS8::PEM_encode(key, rng, argv[1]);
+      priv_key << PKCS8::PEM_encode(key, rng, args[1]);
 
       X509_Cert_Options opts;
-
-      opts.common_name = argv[3];
-      opts.country = argv[4];
-      opts.organization = argv[5];
-      opts.email = argv[6];
+      opts.common_name  = args[3];
+      opts.country      = args[4];
+      opts.organization = args[5];
+      opts.email        = args[6];
       /* Fill in other values of opts here */
 
       //opts.xmpp = "lloyd@randombit.net";
