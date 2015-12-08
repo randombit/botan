@@ -13,7 +13,6 @@
 #include <limits>
 #include <memory>
 
-#include <botan/init.h>
 #include <botan/version.h>
 #include <botan/cpuid.h>
 
@@ -162,8 +161,6 @@ int main(int argc, char* argv[])
 
       if(cmd == "help" || cmd == "-h")
          return help(argc, argv);
-
-      Botan::LibraryInitializer init;
 
       AppRegistrations& apps = AppRegistrations::instance();
       if(apps.has(cmd))
