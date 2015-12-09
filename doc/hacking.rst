@@ -5,7 +5,7 @@ Source Code Layout
 Under `src` there are directories
 
 * `lib` is the library itself, more on that below
-* `cmd` is the implementation of the command line application.
+* `cli` (command line interface) is the implementation of the command line application.
   It is structed as a multicall binary so each program is relatively
   independent.
 * `tests` contain what you would expect. Input files go under `tests/data`.

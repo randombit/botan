@@ -104,8 +104,8 @@ class BuildConfigurationInformation(object):
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
         self.obj_dir = os.path.join(self.build_dir, 'obj')
-        self.appobj_dir = os.path.join(self.obj_dir, 'app')
         self.libobj_dir = os.path.join(self.obj_dir, 'lib')
+        self.cliobj_dir = os.path.join(self.obj_dir, 'cli')
         self.testobj_dir = os.path.join(self.obj_dir, 'test')
 
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
@@ -134,7 +134,7 @@ class BuildConfigurationInformation(object):
                     if filename.endswith('.cpp') and not filename.startswith('.'):
                         yield os.path.join(dirpath, filename)
 
-        self.app_sources = list(find_sources_in(self.src_dir, 'cmd'))
+        self.cli_sources = list(find_sources_in(self.src_dir, 'cli'))
         self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
 
         self.python_dir = os.path.join(options.src_dir, 'python')
@@ -166,7 +166,7 @@ class BuildConfigurationInformation(object):
 
         def build_dirs():
             yield self.libobj_dir
-            yield self.appobj_dir
+            yield self.cliobj_dir
             yield self.testobj_dir
             yield self.botan_include_dir
             yield self.internal_include_dir
@@ -180,8 +180,8 @@ class BuildConfigurationInformation(object):
     def src_info(self, typ):
         if typ == 'lib':
             return (self.build_sources, self.libobj_dir)
-        elif typ == 'app':
-            return (self.app_sources, self.appobj_dir)
+        elif typ == 'cli':
+            return (self.cli_sources, self.cliobj_dir)
         elif typ == 'test':
             return (self.test_sources, self.testobj_dir)
 
@@ -1155,7 +1155,7 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
                 cc.output_to_option)
 
 
-    for t in ['lib', 'app', 'test']:
+    for t in ['lib', 'cli', 'test']:
         obj_key = '%s_objs' % (t)
         src_list, src_dir = build_config.src_info(t)
         var[obj_key] = makefile_list(objectfile_list(src_list, src_dir))
@@ -1267,8 +1267,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'build_shared_lib': options.build_shared_lib,
 
-        'appobj_dir': build_config.appobj_dir,
         'libobj_dir': build_config.libobj_dir,
+        'cliobj_dir': build_config.cliobj_dir,
         'testobj_dir': build_config.testobj_dir,
 
         'doc_output_dir': build_config.doc_output_dir,
@@ -1301,7 +1301,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'libname': 'botan' if options.os == 'windows' else 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
 
         'lib_link_cmd':  cc.so_link_command_for(osinfo.basename, options),
-        'app_link_cmd':  cc.binary_link_command_for(osinfo.basename, options),
+        'cli_link_cmd':  cc.binary_link_command_for(osinfo.basename, options),
         'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options),
 
         'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()] + [cc.add_framework_option + fw for fw in link_to_frameworks()]),
@@ -1350,10 +1350,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         }
 
     if options.os == 'darwin' and options.build_shared_lib:
-        vars['app_post_link_cmd']  = 'install_name_tool -change "/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(APP)'
+        vars['cli_post_link_cmd']  = 'install_name_tool -change "/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(CLI)'
         vars['test_post_link_cmd'] = 'install_name_tool -change "/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
     else:
-        vars['app_post_link_cmd'] = ''
+        vars['cli_post_link_cmd'] = ''
         vars['test_post_link_cmd'] = ''
 
     gen_makefile_lists(vars, build_config, options, modules, cc, arch, osinfo)
