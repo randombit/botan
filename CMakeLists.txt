@@ -28,8 +28,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/src/cmake")
 # libbotan
 add_subdirectory("src/lib")
 
-# cmd
-add_subdirectory("src/cmd")
+# cli
+add_subdirectory("src/cli")
 
 # tests
 add_subdirectory("src/tests")
