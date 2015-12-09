@@ -392,20 +392,20 @@ size_t choose_thread_count()
    return 2;
    }
 
-int tls_proxy(int argc, char* argv[])
+int tls_proxy(const std::vector<std::string> &args)
    {
-   if(argc != 6)
+   if(args.size() != 6)
       {
-      std::cout << "Usage: " << argv[0] << " listen_port target_host target_port server_cert server_key" << std::endl;
+      std::cout << "Usage: " << args[0] << " listen_port target_host target_port server_cert server_key" << std::endl;
       return 1;
       }
 
-   const size_t listen_port = to_u32bit(argv[1]);
-   const std::string target = argv[2];
-   const std::string target_port = argv[3];
+   const size_t listen_port = to_u32bit(args[1]);
+   const std::string target = args[2];
+   const std::string target_port = args[3];
 
-   const std::string server_crt = argv[4];
-   const std::string server_key = argv[5];
+   const std::string server_crt = args[4];
+   const std::string server_key = args[5];
 
    const size_t num_threads = choose_thread_count(); // make configurable
 
