@@ -28,7 +28,7 @@ class OptionParser
          {
          std::map<std::string, std::string>::const_iterator i = options.find(key);
          if(i == options.end())
-            throw std::runtime_error("Option " + key + " not found");
+            throw std::runtime_error("Option '" + key + "' not set");
          return i->second;
          }
 
