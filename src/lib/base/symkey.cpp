@@ -18,7 +18,7 @@ namespace Botan {
 OctetString::OctetString(RandomNumberGenerator& rng,
                          size_t length)
    {
-   bits = rng.random_vec(length);
+   m_data = rng.random_vec(length);
    }
 
 /*
@@ -26,8 +26,8 @@ OctetString::OctetString(RandomNumberGenerator& rng,
 */
 OctetString::OctetString(const std::string& hex_string)
    {
-   bits.resize(1 + hex_string.length() / 2);
-   bits.resize(hex_decode(bits.data(), hex_string));
+   m_data.resize(1 + hex_string.length() / 2);
+   m_data.resize(hex_decode(m_data.data(), hex_string));
    }
 
 /*
@@ -35,7 +35,7 @@ OctetString::OctetString(const std::string& hex_string)
 */
 OctetString::OctetString(const byte in[], size_t n)
    {
-   bits.assign(in, in + n);
+   m_data.assign(in, in + n);
    }
 
 /*
@@ -67,8 +67,8 @@ void OctetString::set_odd_parity()
       0xF1, 0xF1, 0xF2, 0xF2, 0xF4, 0xF4, 0xF7, 0xF7, 0xF8, 0xF8, 0xFB, 0xFB,
       0xFD, 0xFD, 0xFE, 0xFE };
 
-   for(size_t j = 0; j != bits.size(); ++j)
-      bits[j] = ODD_PARITY[bits[j]];
+   for(size_t j = 0; j != m_data.size(); ++j)
+      m_data[j] = ODD_PARITY[m_data[j]];
    }
 
 /*
@@ -76,7 +76,7 @@ void OctetString::set_odd_parity()
 */
 std::string OctetString::as_string() const
    {
-   return hex_encode(bits.data(), bits.size());
+   return hex_encode(m_data.data(), m_data.size());
    }
 
 /*
@@ -84,8 +84,8 @@ std::string OctetString::as_string() const
 */
 OctetString& OctetString::operator^=(const OctetString& k)
    {
-   if(&k == this) { zeroise(bits); return (*this); }
-   xor_buf(bits.data(), k.begin(), std::min(length(), k.length()));
+   if(&k == this) { zeroise(m_data); return (*this); }
+   xor_buf(m_data.data(), k.begin(), std::min(length(), k.length()));
    return (*this);
    }
 
@@ -121,11 +121,11 @@ OctetString operator+(const OctetString& k1, const OctetString& k2)
 */
 OctetString operator^(const OctetString& k1, const OctetString& k2)
    {
-   secure_vector<byte> ret(std::max(k1.length(), k2.length()));
+   secure_vector<byte> out(std::max(k1.length(), k2.length()));
 
-   copy_mem(ret.data(), k1.begin(), k1.length());
-   xor_buf(ret.data(), k2.begin(), k2.length());
-   return OctetString(ret);
+   copy_mem(out.data(), k1.begin(), k1.length());
+   xor_buf(out.data(), k2.begin(), k2.length());
+   return OctetString(out);
    }
 
 }
