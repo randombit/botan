@@ -16,6 +16,10 @@ if [ "$MODULES" = "min" ]; then
     CFG_FLAGS+=(--minimized-build --enable-modules=base)
 fi
 
+if [ "$BOOST" = "y" ]; then
+    CFG_FLAGS+=(--with-boost)
+fi
+
 # Workaround for missing update-alternatives
 # https://github.com/travis-ci/travis-ci/issues/3668
 if [ "$CXX" = "g++" ]; then
@@ -59,7 +63,7 @@ if [ "$MODULES" != "min" ] && [ "${TARGETOS:0:3}" != "ios" ]; then
     ./botan-test
 fi
 
-if [ "$MODULES" != "min" ] && [ "$BUILD_MODE" = "shared" ] && [ "$TARGETOS" = "desktop" ]
+if [ "$MODULES" != "min" ] && [ "$BUILD_MODE" = "shared" ] && [ "$TARGETOS" = "native" ]
 then
     python2 --version
     python3 --version

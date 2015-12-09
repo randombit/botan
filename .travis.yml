@@ -26,33 +26,66 @@ compiler:
 
 env:
   matrix:
-    - TARGETOS="desktop" MODULES="all" BUILD_MODE="shared"
-    - TARGETOS="desktop" MODULES="all" BUILD_MODE="static"
-    - TARGETOS="desktop" MODULES="all" BUILD_MODE="coverage"
-    - TARGETOS="desktop" MODULES="all" BUILD_MODE="sanitizer"
+    - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="shared"
+    - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="static"
+    - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="coverage"
+    - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="sanitizer"
+    - TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="shared"
+    - TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="static"
+    - TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="coverage"
+    - TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="sanitizer"
 
-    - TARGETOS="desktop" MODULES="min" BUILD_MODE="shared"
-    - TARGETOS="desktop" MODULES="min" BUILD_MODE="static"
+    - TARGETOS="native" MODULES="min" BOOST="n" BUILD_MODE="shared"
+    - TARGETOS="native" MODULES="min" BOOST="n" BUILD_MODE="static"
+    - TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="shared"
+    - TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="static"
 
-    - TARGETOS="ios32" MODULES="all" BUILD_MODE="static"
-    - TARGETOS="ios64" MODULES="all" BUILD_MODE="static"
+    - TARGETOS="ios32" MODULES="all" BOOST="n" BUILD_MODE="static"
+    - TARGETOS="ios64" MODULES="all" BOOST="n" BUILD_MODE="static"
 
 matrix:
   exclude:
     - os: osx
       compiler: gcc
-    - compiler: clang
-      env: TARGETOS="desktop" MODULES="all" BUILD_MODE="coverage"
-    - compiler: clang
-      env: TARGETOS="desktop" MODULES="all" BUILD_MODE="sanitizer"
-    - compiler: clang
-      env: TARGETOS="desktop" MODULES="min" BUILD_MODE="shared"
-    - compiler: clang
-      env: TARGETOS="desktop" MODULES="min" BUILD_MODE="static"
+
+    # No boost on Linux because installing Boost is easier on OS X
     - os: linux
-      env: TARGETOS="ios32" MODULES="all" BUILD_MODE="static"
+      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="shared"
     - os: linux
-      env: TARGETOS="ios64" MODULES="all" BUILD_MODE="static"
+      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="static"
+    - os: linux
+      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="coverage"
+    - os: linux
+      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="sanitizer"
+    - os: linux
+      env: TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="shared"
+    - os: linux
+      env: TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="static"
+
+    # No coverage and sanitizer on clang
+    - compiler: clang
+      env: TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="coverage"
+    - compiler: clang
+      env: TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="sanitizer"
+    - compiler: clang
+      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="coverage"
+    - compiler: clang
+      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="sanitizer"
+
+    # No minimal builds on clang
+    - compiler: clang
+      env: TARGETOS="native" MODULES="min" BOOST="n" BUILD_MODE="shared"
+    - compiler: clang
+      env: TARGETOS="native" MODULES="min" BOOST="n" BUILD_MODE="static"
+    - compiler: clang
+      env: TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="shared"
+    - compiler: clang
+      env: TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="static"
+
+    - os: linux
+      env: TARGETOS="ios32" MODULES="all" BOOST="n" BUILD_MODE="static"
+    - os: linux
+      env: TARGETOS="ios64" MODULES="all" BOOST="n" BUILD_MODE="static"
 # END BUILD MATRIX
 
 cache:

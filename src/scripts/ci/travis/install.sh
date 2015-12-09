@@ -12,5 +12,13 @@ if [ "$BUILD_MODE" = "coverage" ]; then
 fi
 
 if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$TARGETOS" != "ios" ]; then
-    ./src/scripts/ci/travis/install_osx_packages.sh
+    # Workaround for https://github.com/Homebrew/homebrew/issues/42553
+    brew update || brew update
+
+    brew install xz
+    brew install python # python2
+    brew install python3
+
+    # Boost 1.58 is installed on Travis OS X images
+    # brew install boost
 fi
