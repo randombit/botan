@@ -7,7 +7,7 @@ if(NOT WIN32)
 endif()
 
 # botan-tests
-add_executable(${PROJECT_NAME}-tests
+add_executable(botan-tests
     ./main.cpp
     ./test_aead.cpp
     ./test_bigint.cpp
@@ -74,5 +74,5 @@ add_executable(${PROJECT_NAME}-tests
 #    target_link_libraries(${PROJECT_NAME}-tests ${ZLIB_LIBRARIES})
 #endif( ZLIB_FOUND )
 
-target_link_libraries(${PROJECT_NAME}-tests botan ${extra_link_libraries})
+target_link_libraries(botan-tests botan ${extra_link_libraries})
 

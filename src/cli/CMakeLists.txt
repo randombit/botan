@@ -6,8 +6,8 @@ if(NOT WIN32)
 #    list(APPEND extra_link_libraries dl pthread)
 endif()
 
-# botan-tests
-add_executable(${PROJECT_NAME}
+# botan-cli
+add_executable(botan-cli
     ./asn1.cpp
     ./base64.cpp
     ./bcrypt.cpp
@@ -61,6 +61,6 @@ add_executable(${PROJECT_NAME}
 #    target_link_libraries(${PROJECT_NAME}-tests ${ZLIB_LIBRARIES})
 #endif( ZLIB_FOUND )
 
-target_link_libraries(${PROJECT_NAME} botan ${extra_link_libraries})
+target_link_libraries(botan-cli botan ${extra_link_libraries})
 
 

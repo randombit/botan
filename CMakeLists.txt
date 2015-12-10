@@ -34,4 +34,4 @@ add_subdirectory("src/cli")
 # tests
 add_subdirectory("src/tests")
 
-add_dependencies(Botan-tests botan)
+add_dependencies(botan-tests botan)
