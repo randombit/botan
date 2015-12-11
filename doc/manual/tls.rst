@@ -1,4 +1,3 @@
-
 Transport Layer Security (TLS)
 ========================================
 
@@ -278,7 +277,7 @@ TLS Clients
    resized as needed to process inputs). Otherwise some reasonable
    default is used.
 
-Code for a TLS client using BSD sockets is in `src/cmd/tls_client.cpp`
+Code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
 
 TLS Servers
 ----------------------------------------
@@ -315,7 +314,7 @@ server; unlike clients, which know what type of protocol (TLS vs DTLS)
 they are negotiating from the start via the *offer_version*, servers
 would not until they actually received a hello without this parameter.
 
-Code for a TLS server using asio is in `src/cmd/tls_proxy.cpp`.
+Code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
 
 .. _tls_sessions:
 
@@ -777,4 +776,3 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 
       Returns the latest version of the DTLS protocol known to the
       library (currently DTLS v1.2)
-
