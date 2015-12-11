@@ -12,7 +12,15 @@
 #include <sstream>
 
 #if defined(BOTAN_HAS_BOOST_ASIO)
-#include <boost/asio.hpp>
+
+  /*
+  * We don't need serial port support anyway, and asking for it
+  * causes macro conflicts with Darwin's termios.h when this
+  * file is included in the amalgamation. GH #350
+  */
+  #define BOOST_ASIO_DISABLE_SERIAL_PORT
+  #include <boost/asio.hpp>
+
 #endif
 
 namespace Botan {
