@@ -16,7 +16,7 @@ namespace {
 
 int rng(const std::vector<std::string> &args)
    {
-   if(args.size() == 1)
+   if(args.size() < 2 || args.size() > 3)
       {
       std::cout << "Usage: " << args[0] << " [--raw-entropy] n\n"
                 << "n: number of bytes"

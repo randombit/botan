@@ -37,7 +37,7 @@ void do_compress(Transform& comp, std::ifstream& in, std::ostream& out)
 
 int compress(const std::vector<std::string> &args)
    {
-   if(args.size() != 2 && args.size() != 3 && args.size() != 4)
+   if(args.size() < 2 || args.size() > 4)
       {
       std::cout << "Usage: " << args[0] << " input [type] [level]" << std::endl;
       return 1;

@@ -22,8 +22,8 @@ int pkcs10(const std::vector<std::string> &args)
    {
    if(args.size() != 6)
       {
-      std::cout << "Usage: " << args[0]
-                << " passphrase name country_code organization email" << std::endl;
+      std::cout << "Usage: " << args[0] << " "
+                << "passphrase name country_code organization email" << std::endl;
       return 1;
       }
 
