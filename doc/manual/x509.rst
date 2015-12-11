@@ -1,4 +1,3 @@
-
 .. _x509_certificates:
 
 X.509 Certificates and CRLs
@@ -349,7 +348,7 @@ new certificate:
 
 Here's an example:
 
-.. literalinclude ../../src/cmd/ca.cpp
+.. literalinclude ../../src/cli/ca.cpp
 
 Generating CRLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -416,7 +415,7 @@ protocols. The library provides a utility function for this:
 
 An example:
 
-.. literalinclude:: ../../src/cmd/self_sig.cpp
+.. literalinclude:: ../../src/cli/self_sig.cpp
 
 Creating PKCS #10 Requests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -435,7 +434,7 @@ certificate.
 
 An example:
 
-.. literalinclude:: ../../src/cmd/pkcs10.cpp
+.. literalinclude:: ../../src/cli/pkcs10.cpp
 
 Certificate Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
