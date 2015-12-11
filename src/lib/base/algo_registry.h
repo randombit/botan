@@ -9,8 +9,8 @@
 #define BOTAN_ALGO_REGISTRY_H__
 
 #include <botan/types.h>
+#include <botan/exceptn.h>
 #include <functional>
-#include <stdexcept>
 #include <mutex>
 #include <vector>
 #include <map>

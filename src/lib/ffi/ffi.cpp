@@ -6,6 +6,7 @@
 
 #include <botan/ffi.h>
 #include <botan/system_rng.h>
+#include <botan/exceptn.h>
 #include <botan/auto_rng.h>
 #include <botan/aead.h>
 #include <botan/hash.h>
@@ -59,7 +60,13 @@
 namespace {
 
 #define BOTAN_ASSERT_ARG_NON_NULL(p) \
-   do { if(!p) throw Invalid_Argument("Argument " #p " is null"); } while(0)
+   do { if(!p) throw Botan::Invalid_Argument("Argument " #p " is null"); } while(0)
+
+class FFI_Error : public Botan::Exception
+   {
+   public:
+      FFI_Error(const std::string& what) : Exception("FFI error", what) {}
+   };
 
 template<typename T, uint32_t MAGIC>
 struct botan_struct
@@ -71,8 +78,8 @@ struct botan_struct
       T* get() const
          {
          if(m_magic != MAGIC)
-            throw Exception("Bad magic " + std::to_string(m_magic) +
-                                     " in ffi object expected " + std::to_string(MAGIC));
+            throw FFI_Error("Bad magic " + std::to_string(m_magic) +
+                            " in ffi object expected " + std::to_string(MAGIC));
          return m_obj.get();
          }
    private:
@@ -95,10 +102,10 @@ template<typename T, uint32_t M>
 T& safe_get(botan_struct<T,M>* p)
    {
    if(!p)
-      throw Exception("Null pointer argument");
+      throw FFI_Error("Null pointer argument");
    if(T* t = p->get())
       return *t;
-   throw Exception("Invalid object pointer");
+   throw FFI_Error("Invalid object pointer");
    }
 
 template<typename T, uint32_t M, typename F>
@@ -107,7 +114,7 @@ int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
    try
       {
       if(!o)
-         throw Exception("Null object to " + std::string(func_name));
+         throw FFI_Error("Null object to " + std::string(func_name));
       if(T* t = o->get())
          return func(*t);
       }
@@ -677,7 +684,7 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
       if(wf < 2 || wf > 30)
-         throw Exception("Bad bcrypt work factor " + std::to_string(wf));
+         throw FFI_Error("Bad bcrypt work factor " + std::to_string(wf));
 
 #if defined(BOTAN_HAS_BCRYPT)
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);

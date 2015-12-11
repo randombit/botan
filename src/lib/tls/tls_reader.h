@@ -13,7 +13,6 @@
 #include <botan/loadstor.h>
 #include <string>
 #include <vector>
-#include <stdexcept>
 
 namespace Botan {
 

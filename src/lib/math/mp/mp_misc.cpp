@@ -7,7 +7,7 @@
 
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_madd.h>
-#include <stdexcept>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -43,7 +43,7 @@ s32bit bigint_cmp(const word x[], size_t x_size,
 word bigint_divop(word n1, word n0, word d)
    {
    if(d == 0)
-      throw Exception("bigint_divop divide by zero");
+      throw Invalid_Argument("bigint_divop divide by zero");
 
    word high = n1 % d, quotient = 0;
 

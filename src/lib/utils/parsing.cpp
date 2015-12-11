@@ -12,7 +12,6 @@
 #include <botan/loadstor.h>
 #include <limits>
 #include <set>
-#include <stdexcept>
 
 namespace Botan {
 

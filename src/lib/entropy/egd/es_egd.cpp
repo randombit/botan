@@ -9,7 +9,6 @@
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
-#include <stdexcept>
 
 #include <sys/types.h>
 #include <sys/stat.h>

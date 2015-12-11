@@ -6,7 +6,7 @@
 */
 
 #include <botan/parsing.h>
-#include <stdexcept>
+#include <botan/exceptn.h>
 
 namespace Botan {
 

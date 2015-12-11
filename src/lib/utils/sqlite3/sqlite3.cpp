@@ -6,7 +6,6 @@
 */
 
 #include <botan/sqlite3.h>
-#include <stdexcept>
 #include <sqlite3.h>
 
 namespace Botan {

@@ -11,7 +11,6 @@
 #include <botan/types.h>
 #include <botan/parsing.h>
 #include <exception>
-#include <stdexcept>
 #include <string>
 
 namespace Botan {
@@ -24,7 +23,8 @@ class BOTAN_DLL Exception : public std::exception
    public:
       Exception(const std::string& what) : m_what(what) {}
       Exception(const char* prefix, const std::string& what) : m_what(std::string(prefix) + " " + what) {}
-      const char* what() const override { return m_what.c_str(); }
+      //const char* what() const override BOTAN_NOEXCEPT { return m_what.c_str(); }
+      const char* what() const BOTAN_NOEXCEPT override { return m_what.c_str(); }
    private:
       std::string m_what;
    };

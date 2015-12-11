@@ -8,7 +8,7 @@
 #include <botan/buf_filt.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/rounding.h>
-#include <stdexcept>
+#include <botan/exceptn.h>
 
 namespace Botan {
 

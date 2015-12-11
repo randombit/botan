@@ -9,6 +9,7 @@
 #define BOTAN_UTILS_URLGET_H__
 
 #include <botan/types.h>
+#include <botan/exceptn.h>
 #include <future>
 #include <vector>
 #include <map>

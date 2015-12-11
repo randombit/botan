@@ -12,7 +12,6 @@
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <sstream>
-#include <stdexcept>
 
 namespace Botan {
 

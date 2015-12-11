@@ -9,6 +9,7 @@
 */
 
 #include <botan/internal/unix_procs.h>
+#include <botan/exceptn.h>
 #include <botan/parsing.h>
 #include <algorithm>
 #include <atomic>

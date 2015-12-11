@@ -7,7 +7,6 @@
 
 #include <botan/internal/dyn_load.h>
 #include <botan/build.h>
-#include <stdexcept>
 
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
   #include <dlfcn.h>

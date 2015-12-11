@@ -6,7 +6,7 @@
 */
 
 #include <botan/comb4p.h>
-#include <stdexcept>
+#include <botan/exceptn.h>
 
 namespace Botan {
 

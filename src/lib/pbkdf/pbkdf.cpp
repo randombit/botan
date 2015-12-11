@@ -7,7 +7,6 @@
 
 #include <botan/pbkdf.h>
 #include <botan/internal/algo_registry.h>
-#include <stdexcept>
 
 #if defined(BOTAN_HAS_PBKDF1)
 #include <botan/pbkdf1.h>
