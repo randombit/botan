@@ -20,7 +20,7 @@ Sqlite3_Database::Sqlite3_Database(const std::string& db_filename)
       const std::string err_msg = ::sqlite3_errmsg(m_db);
       ::sqlite3_close(m_db);
       m_db = nullptr;
-      throw std::runtime_error("sqlite3_open failed - " + err_msg);
+      throw Exception("sqlite3_open failed - " + err_msg);
       }
    }
 
@@ -43,7 +43,7 @@ size_t Sqlite3_Database::row_count(const std::string& table_name)
    if(stmt->step())
       return stmt->get_size_t(0);
    else
-      throw std::runtime_error("Querying size of table " + table_name + " failed");
+      throw Exception("Querying size of table " + table_name + " failed");
    }
 
 void Sqlite3_Database::create_table(const std::string& table_schema)
@@ -57,7 +57,7 @@ void Sqlite3_Database::create_table(const std::string& table_schema)
       ::sqlite3_free(errmsg);
       ::sqlite3_close(m_db);
       m_db = nullptr;
-      throw std::runtime_error("sqlite3_exec for table failed - " + err_msg);
+      throw Exception("sqlite3_exec for table failed - " + err_msg);
       }
    }
 
@@ -66,7 +66,7 @@ Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, const std::s
    int rc = ::sqlite3_prepare_v2(db, base_sql.c_str(), -1, &m_stmt, nullptr);
 
    if(rc != SQLITE_OK)
-      throw std::runtime_error("sqlite3_prepare failed " + base_sql +
+      throw Exception("sqlite3_prepare failed " + base_sql +
                                ", code " + std::to_string(rc));
    }
 
@@ -74,16 +74,16 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::string& va
    {
    int rc = ::sqlite3_bind_text(m_stmt, column, val.c_str(), -1, SQLITE_TRANSIENT);
    if(rc != SQLITE_OK)
-      throw std::runtime_error("sqlite3_bind_text failed, code " + std::to_string(rc));
+      throw Exception("sqlite3_bind_text failed, code " + std::to_string(rc));
    }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, size_t val)
    {
    if(val != static_cast<size_t>(static_cast<int>(val))) // is this legit?
-      throw std::runtime_error("sqlite3 cannot store " + std::to_string(val) + " without truncation");
+      throw Exception("sqlite3 cannot store " + std::to_string(val) + " without truncation");
    int rc = ::sqlite3_bind_int(m_stmt, column, val);
    if(rc != SQLITE_OK)
-      throw std::runtime_error("sqlite3_bind_int failed, code " + std::to_string(rc));
+      throw Exception("sqlite3_bind_int failed, code " + std::to_string(rc));
    }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::chrono::system_clock::time_point time)
@@ -96,7 +96,7 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::vector<byt
    {
    int rc = ::sqlite3_bind_blob(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT);
    if(rc != SQLITE_OK)
-      throw std::runtime_error("sqlite3_bind_text failed, code " + std::to_string(rc));
+      throw Exception("sqlite3_bind_text failed, code " + std::to_string(rc));
    }
 
 std::pair<const byte*, size_t> Sqlite3_Database::Sqlite3_Statement::get_blob(int column)

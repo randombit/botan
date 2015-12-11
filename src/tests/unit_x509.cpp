@@ -102,7 +102,7 @@ std::unique_ptr<Botan::Private_Key> make_a_private_key()
    return std::unique_ptr<Botan::Private_Key>(new Botan::ECDSA_PrivateKey(Test::rng(), grp));
 #endif
 
-   throw std::runtime_error("Skipping X.509 cert test due to missing algos");
+   throw Test_Error("Skipping X.509 cert test due to missing algos");
    }
 
 class X509_Cert_Unit_Tests : public Test

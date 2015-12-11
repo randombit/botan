@@ -22,7 +22,7 @@ namespace {
 void raise_runtime_loader_exception(const std::string& lib_name,
                                     const char* msg)
    {
-   throw std::runtime_error("Failed to load " + lib_name + ": " +
+   throw Exception("Failed to load " + lib_name + ": " +
                             (msg ? msg : "Unknown error"));
    }
 
@@ -70,7 +70,7 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
 #endif
 
    if(!addr)
-      throw std::runtime_error("Failed to resolve symbol " + symbol +
+      throw Exception("Failed to resolve symbol " + symbol +
                                " in " + lib_name);
 
    return addr;

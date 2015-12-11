@@ -30,7 +30,7 @@ std::string http_transact_asio(const std::string& hostname,
    tcp.connect(hostname, "http");
 
    if(!tcp)
-      throw std::runtime_error("HTTP connection to " + hostname + " failed");
+      throw Exception("HTTP connection to " + hostname + " failed");
 
    tcp << message;
    tcp.flush();
@@ -45,7 +45,7 @@ std::string http_transact_asio(const std::string& hostname,
 std::string http_transact_fail(const std::string& hostname,
                                const std::string&)
    {
-   throw std::runtime_error("Cannot connect to " + hostname +
+   throw Exception("Cannot connect to " + hostname +
                             ": network code disabled in build");
    }
 
@@ -89,7 +89,7 @@ Response http_sync(http_exch_fn http_transact,
    {
    const auto protocol_host_sep = url.find("://");
    if(protocol_host_sep == std::string::npos)
-      throw std::runtime_error("Invalid URL " + url);
+      throw Exception("Invalid URL " + url);
    const std::string protocol = url.substr(0, protocol_host_sep);
 
    const auto host_loc_sep = url.find('/', protocol_host_sep + 3);
@@ -130,7 +130,7 @@ Response http_sync(http_exch_fn http_transact,
    std::string line1;
    std::getline(io, line1);
    if(!io || line1.empty())
-      throw std::runtime_error("No response");
+      throw Exception("No response");
 
    std::stringstream response_stream(line1);
    std::string http_version;
@@ -142,7 +142,7 @@ Response http_sync(http_exch_fn http_transact,
    std::getline(response_stream, status_message);
 
    if(!response_stream || http_version.substr(0,5) != "HTTP/")
-      throw std::runtime_error("Not an HTTP response");
+      throw Exception("Not an HTTP response");
 
    std::map<std::string, std::string> headers;
    std::string header_line;
@@ -150,7 +150,7 @@ Response http_sync(http_exch_fn http_transact,
       {
       auto sep = header_line.find(": ");
       if(sep == std::string::npos || sep > header_line.size() - 2)
-         throw std::runtime_error("Invalid HTTP header " + header_line);
+         throw Exception("Invalid HTTP header " + header_line);
       const std::string key = header_line.substr(0, sep);
 
       if(sep + 2 < header_line.size() - 1)
@@ -163,7 +163,7 @@ Response http_sync(http_exch_fn http_transact,
    if(status_code == 301 && headers.count("Location"))
       {
       if(allowable_redirects == 0)
-         throw std::runtime_error("HTTP redirection count exceeded");
+         throw Exception("HTTP redirection count exceeded");
       return GET_sync(headers["Location"], allowable_redirects - 1);
       }
 
@@ -180,7 +180,7 @@ Response http_sync(http_exch_fn http_transact,
    if(header_size != "")
       {
       if(resp_body.size() != to_u32bit(header_size))
-         throw std::runtime_error("Content-Length disagreement, header says " +
+         throw Exception("Content-Length disagreement, header says " +
                                   header_size + " got " + std::to_string(resp_body.size()));
       }
 

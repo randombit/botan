@@ -120,7 +120,7 @@ void OID_Map::read_cfg(std::istream& cfg, const std::string& source)
       auto eq = s.find("=");
 
       if(eq == std::string::npos || eq == 0 || eq == s.size() - 1)
-         throw std::runtime_error("Bad config line '" + s + "' in " + source + " line " + std::to_string(line));
+         throw Exception("Bad config line '" + s + "' in " + source + " line " + std::to_string(line));
 
       const std::string oid = clean_ws(s.substr(0, eq));
       const std::string name = clean_ws(s.substr(eq + 1, std::string::npos));

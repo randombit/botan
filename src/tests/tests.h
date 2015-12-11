@@ -39,6 +39,12 @@ using Botan::byte;
 using Botan::BigInt;
 #endif
 
+class Test_Error : public Botan::Exception
+   {
+   public:
+      Test_Error(const std::string& what) : Exception("Test error", what) {}
+   };
+
 /*
 * A generic test which retuns a set of results when run.
 * The tests may not all have the same type (for example test

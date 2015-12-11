@@ -59,7 +59,7 @@ const std::vector<gf2m>& exp_table(size_t deg)
    static std::vector<gf2m> tabs[MAX_EXT_DEG + 1];
 
    if(deg < 2 || deg > MAX_EXT_DEG)
-      throw std::runtime_error("GF2m_Field does not support degree " + std::to_string(deg));
+      throw Exception("GF2m_Field does not support degree " + std::to_string(deg));
 
    if(tabs[deg].empty())
       tabs[deg] = gf_exp_table(deg, prim_poly[deg]);
@@ -84,7 +84,7 @@ const std::vector<gf2m>& log_table(size_t deg)
    static std::vector<gf2m> tabs[MAX_EXT_DEG + 1];
 
    if(deg < 2 || deg > MAX_EXT_DEG)
-      throw std::runtime_error("GF2m_Field does not support degree " + std::to_string(deg));
+      throw Exception("GF2m_Field does not support degree " + std::to_string(deg));
 
    if(tabs[deg].empty())
       tabs[deg] = gf_log_table(deg, exp_table(deg));

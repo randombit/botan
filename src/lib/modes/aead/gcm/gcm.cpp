@@ -163,7 +163,7 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
    m_cipher_name(cipher->name())
    {
    if(cipher->block_size() != BS)
-      throw std::invalid_argument("GCM requires a 128 bit cipher so cannot be used with " +
+      throw Invalid_Argument("GCM requires a 128 bit cipher so cannot be used with " +
                                   cipher->name());
 
    m_ghash.reset(new GHASH);

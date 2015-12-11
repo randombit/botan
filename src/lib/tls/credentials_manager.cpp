@@ -123,7 +123,7 @@ void Credentials_Manager::verify_certificate_chain(
    const std::vector<X509_Certificate>& cert_chain)
    {
    if(cert_chain.empty())
-      throw std::invalid_argument("Certificate chain was empty");
+      throw Invalid_Argument("Certificate chain was empty");
 
    auto trusted_CAs = trusted_certificate_authorities(type, purported_hostname);
 
@@ -136,10 +136,10 @@ void Credentials_Manager::verify_certificate_chain(
                                                       choose_leaf_usage(type));
 
    if(!result.successful_validation())
-      throw std::runtime_error("Certificate validation failure: " + result.result_string());
+      throw Exception("Certificate validation failure: " + result.result_string());
 
    if(!cert_in_some_store(trusted_CAs, result.trust_root()))
-      throw std::runtime_error("Certificate chain roots in unknown/untrusted CA");
+      throw Exception("Certificate chain roots in unknown/untrusted CA");
    }
 
 }

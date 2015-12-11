@@ -52,7 +52,7 @@ class X509test_Path_Validation_Tests : public Test
             std::vector<Botan::X509_Certificate> certs = load_cert_file(test_dir + "/" + fsname);
 
             if(certs.empty())
-               throw std::runtime_error("Failed to read certs from " + fsname);
+               throw Test_Error("Failed to read certs from " + fsname);
 
             Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
                certs, default_restrictions, trusted,
@@ -90,7 +90,7 @@ class X509test_Path_Validation_Tests : public Test
          {
          std::ifstream in(results_file);
          if(!in.good())
-            throw std::runtime_error("Failed reading " + results_file);
+            throw Test_Error("Failed reading " + results_file);
 
          std::map<std::string, std::string> m;
          std::string line;
@@ -105,7 +105,7 @@ class X509test_Path_Validation_Tests : public Test
             std::vector<std::string> parts = Botan::split_on(line, ':');
 
             if(parts.size() != 2)
-               throw std::runtime_error("Invalid line " + line);
+               throw Test_Error("Invalid line " + line);
 
             m[parts[0]] = parts[1];
             }

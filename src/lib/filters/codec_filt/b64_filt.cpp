@@ -177,7 +177,7 @@ void Base64_Decoder::end_msg()
    position = 0;
 
    if(not_full_bytes)
-      throw std::invalid_argument("Base64_Decoder: Input not full bytes");
+      throw Invalid_Argument("Base64_Decoder: Input not full bytes");
    }
 
 }

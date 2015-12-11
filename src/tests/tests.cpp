@@ -25,14 +25,14 @@ Test::Registration::Registration(const std::string& name, Test* test)
       }
    else
       {
-      throw std::runtime_error("Duplicate registration of test '" + name + "'");
+      throw Test_Error("Duplicate registration of test '" + name + "'");
       }
    }
 
 void Test::Result::merge(const Result& other)
    {
    if(who() != other.who())
-      throw std::runtime_error("Merging tests from different sources");
+      throw Test_Error("Merging tests from different sources");
 
    m_ns_taken += other.m_ns_taken;
    m_tests_passed += other.m_tests_passed;
@@ -476,7 +476,7 @@ bool Test::log_success()
 Botan::RandomNumberGenerator& Test::rng()
    {
    if(!m_test_rng)
-      throw std::runtime_error("Test RNG not initialized");
+      throw Test_Error("Test RNG not initialized");
    return *m_test_rng;
    }
 
@@ -492,7 +492,7 @@ Text_Based_Test::Text_Based_Test(const std::string& data_src,
    m_data_src(data_src)
    {
    if(required_keys.empty())
-      throw std::runtime_error("Invalid test spec");
+      throw Test_Error("Invalid test spec");
 
    m_required_keys.insert(required_keys.begin(), required_keys.end());
    m_optional_keys.insert(optional_keys.begin(), optional_keys.end());
@@ -507,7 +507,7 @@ Text_Based_Test::Text_Based_Test(const std::string& algo,
    m_data_src(data_src)
    {
    if(required_keys.empty())
-      throw std::runtime_error("Invalid test spec");
+      throw Test_Error("Invalid test spec");
 
    m_required_keys.insert(required_keys.begin(), required_keys.end());
    m_optional_keys.insert(optional_keys.begin(), optional_keys.end());
@@ -519,7 +519,7 @@ std::vector<uint8_t> Text_Based_Test::get_req_bin(const VarMap& vars,
       {
       auto i = vars.find(key);
       if(i == vars.end())
-         throw std::runtime_error("Test missing variable " + key);
+         throw Test_Error("Test missing variable " + key);
 
       try
          {
@@ -527,7 +527,7 @@ std::vector<uint8_t> Text_Based_Test::get_req_bin(const VarMap& vars,
          }
       catch(std::exception& e)
          {
-         throw std::runtime_error("Test invalid hex input '" + i->second + "'" +
+         throw Test_Error("Test invalid hex input '" + i->second + "'" +
                                   + " for key " + key);
          }
       }
@@ -546,7 +546,7 @@ size_t Text_Based_Test::get_req_sz(const VarMap& vars, const std::string& key) c
    {
    auto i = vars.find(key);
    if(i == vars.end())
-      throw std::runtime_error("Test missing variable " + key);
+      throw Test_Error("Test missing variable " + key);
    return Botan::to_u32bit(i->second);
    }
 
@@ -571,7 +571,7 @@ std::vector<uint8_t> Text_Based_Test::get_opt_bin(const VarMap& vars,
       }
    catch(std::exception& e)
       {
-      throw std::runtime_error("Test invalid hex input '" + i->second + "'" +
+      throw Test_Error("Test invalid hex input '" + i->second + "'" +
                                + " for key " + key);
       }
    }
@@ -580,7 +580,7 @@ std::string Text_Based_Test::get_req_str(const VarMap& vars, const std::string& 
    {
    auto i = vars.find(key);
    if(i == vars.end())
-      throw std::runtime_error("Test missing variable " + key);
+      throw Test_Error("Test missing variable " + key);
    return i->second;
    }
 
@@ -590,7 +590,7 @@ Botan::BigInt Text_Based_Test::get_req_bn(const VarMap& vars,
    {
    auto i = vars.find(key);
    if(i == vars.end())
-      throw std::runtime_error("Test missing variable " + key);
+      throw Test_Error("Test missing variable " + key);
 
    try
       {
@@ -598,7 +598,7 @@ Botan::BigInt Text_Based_Test::get_req_bn(const VarMap& vars,
       }
    catch(std::exception& e)
       {
-      throw std::runtime_error("Test invalid bigint input '" + i->second + "' for key " + key);
+      throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key);
       }
    }
 #endif
@@ -622,7 +622,7 @@ std::string Text_Based_Test::get_next_line()
                   const auto fs = Botan::get_files_recursive(m_data_src);
                   m_srcs.assign(fs.begin(), fs.end());
                   if(m_srcs.empty())
-                     throw std::runtime_error("Error reading test data dir " + m_data_src);
+                     throw Test_Error("Error reading test data dir " + m_data_src);
                   }
 
                m_first = false;
@@ -636,7 +636,7 @@ std::string Text_Based_Test::get_next_line()
          m_cur.reset(new std::ifstream(m_srcs[0]));
 
          if(!m_cur->good())
-            throw std::runtime_error("Could not open input file '" + m_srcs[0]);
+            throw Test_Error("Could not open input file '" + m_srcs[0]);
 
          m_srcs.pop_front();
          }

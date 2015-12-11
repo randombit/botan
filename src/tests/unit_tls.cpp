@@ -106,7 +106,7 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
          if(context == "server.example.com" && type == "tls-server")
             return Botan::SymmetricKey("20B602D1475F2DF888FCB60D2AE03AFD");
 
-         throw std::runtime_error("No PSK set for " + type + "/" + context);
+         throw Test_Error("No PSK set for " + type + "/" + context);
          }
 
    public:

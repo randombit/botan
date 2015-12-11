@@ -26,7 +26,7 @@ class PK_Signature_Generation_Test : public Text_Based_Test
 
       virtual std::string default_padding(const VarMap&) const
          {
-         throw std::runtime_error("No default padding scheme set for " + algo_name());
+         throw Test_Error("No default padding scheme set for " + algo_name());
          }
 
       virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) = 0;
@@ -45,7 +45,7 @@ class PK_Signature_Verification_Test : public Text_Based_Test
 
       virtual std::string default_padding(const VarMap&) const
          {
-         throw std::runtime_error("No default padding scheme set for " + algo_name());
+         throw Test_Error("No default padding scheme set for " + algo_name());
          }
 
       virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) = 0;

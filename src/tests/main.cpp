@@ -170,7 +170,7 @@ setup_tests(std::ostream& out, size_t threads, size_t soak_level, bool log_succe
 #else
 
    if(drbg_seed != "")
-      throw std::runtime_error("HMAC_DRBG disabled in build, cannot specify DRBG seed");
+      throw Test_Error("HMAC_DRBG disabled in build, cannot specify DRBG seed");
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    out << " rng:system";

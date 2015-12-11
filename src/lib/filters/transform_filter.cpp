@@ -63,7 +63,7 @@ void Transform_Filter::set_key(const SymmetricKey& key)
    if(Keyed_Transform* keyed = dynamic_cast<Keyed_Transform*>(m_transform.get()))
       keyed->set_key(key);
    else if(key.length() != 0)
-      throw std::runtime_error("Transform " + name() + " does not accept keys");
+      throw Exception("Transform " + name() + " does not accept keys");
    }
 
 Key_Length_Specification Transform_Filter::key_spec() const

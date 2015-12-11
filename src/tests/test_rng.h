@@ -23,7 +23,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
       byte random()
          {
          if(!is_seeded())
-            throw std::runtime_error("Out of bytes");
+            throw Test_Error("Out of bytes");
 
          byte out = buf.front();
          buf.pop_front();

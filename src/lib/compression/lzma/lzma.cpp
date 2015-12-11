@@ -43,7 +43,7 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, byte>
          if(rc == LZMA_MEM_ERROR)
             throw std::bad_alloc();
          else if (rc != LZMA_OK && rc != LZMA_STREAM_END)
-            throw std::runtime_error("Lzma error");
+            throw Exception("Lzma error");
 
          return (rc == LZMA_STREAM_END);
          }
@@ -63,7 +63,7 @@ class LZMA_Compression_Stream : public LZMA_Stream
          if(rc == LZMA_MEM_ERROR)
             throw std::bad_alloc();
          else if(rc != LZMA_OK)
-            throw std::runtime_error("lzma compress initialization failed");
+            throw Exception("lzma compress initialization failed");
          }
    };
 
@@ -78,7 +78,7 @@ class LZMA_Decompression_Stream : public LZMA_Stream
          if(rc == LZMA_MEM_ERROR)
             throw std::bad_alloc();
          else if(rc != LZMA_OK)
-            throw std::runtime_error("Bad setting in lzma_stream_decoder");
+            throw Exception("Bad setting in lzma_stream_decoder");
          }
    };
 

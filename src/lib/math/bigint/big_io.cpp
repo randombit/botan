@@ -19,7 +19,7 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
    if(stream.flags() & std::ios::hex)
       base = BigInt::Hexadecimal;
    else if(stream.flags() & std::ios::oct)
-      throw std::runtime_error("Octal output of BigInt not supported");
+      throw Exception("Octal output of BigInt not supported");
 
    if(n == 0)
       stream.write("0", 1);

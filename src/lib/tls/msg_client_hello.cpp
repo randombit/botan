@@ -155,7 +155,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 void Client_Hello::update_hello_cookie(const Hello_Verify_Request& hello_verify)
    {
    if(!m_version.is_datagram_protocol())
-      throw std::runtime_error("Cannot use hello cookie with stream protocol");
+      throw Exception("Cannot use hello cookie with stream protocol");
 
    m_hello_cookie = hello_verify.cookie();
    }

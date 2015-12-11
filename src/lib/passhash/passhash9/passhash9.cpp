@@ -104,7 +104,7 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
       return false;
 
    if(work_factor > 512)
-      throw std::invalid_argument("Requested Bcrypt work factor " +
+      throw Invalid_Argument("Requested Bcrypt work factor " +
                                   std::to_string(work_factor) + " too large");
 
    const size_t kdf_iterations = WORK_FACTOR_SCALE * work_factor;

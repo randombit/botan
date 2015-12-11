@@ -53,7 +53,7 @@ class Zlib_Compression_Stream : public Zlib_Stream
          int rc = deflateInit2(streamp(), level, Z_DEFLATED, wbits,
                                8, Z_DEFAULT_STRATEGY);
          if(rc != Z_OK)
-            throw std::runtime_error("zlib deflate initialization failed");
+            throw Exception("zlib deflate initialization failed");
          }
 
       ~Zlib_Compression_Stream()
@@ -68,7 +68,7 @@ class Zlib_Compression_Stream : public Zlib_Stream
          if(rc == Z_MEM_ERROR)
             throw std::bad_alloc();
          else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
-            throw std::runtime_error("zlib deflate error " + std::to_string(rc));
+            throw Exception("zlib deflate error " + std::to_string(rc));
 
          return (rc == Z_STREAM_END);
          }
@@ -84,7 +84,7 @@ class Zlib_Decompression_Stream : public Zlib_Stream
          if(rc == Z_MEM_ERROR)
             throw std::bad_alloc();
          else if(rc != Z_OK)
-            throw std::runtime_error("zlib inflate initialization failed");
+            throw Exception("zlib inflate initialization failed");
          }
 
       ~Zlib_Decompression_Stream()
@@ -99,7 +99,7 @@ class Zlib_Decompression_Stream : public Zlib_Stream
          if(rc == Z_MEM_ERROR)
             throw std::bad_alloc();
          else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
-            throw std::runtime_error("zlib inflate error " + std::to_string(rc));
+            throw Exception("zlib inflate error " + std::to_string(rc));
 
          return (rc == Z_STREAM_END);
          }
@@ -130,7 +130,7 @@ class Gzip_Compression_Stream : public Zlib_Compression_Stream
 
          int rc = deflateSetHeader(streamp(), &m_header);
          if(rc != Z_OK)
-            throw std::runtime_error("setting gzip header failed");
+            throw Exception("setting gzip header failed");
          }
 
    private:

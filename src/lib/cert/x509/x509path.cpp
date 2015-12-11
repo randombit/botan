@@ -219,7 +219,7 @@ Path_Validation_Result x509_path_validate(
    Usage_Type usage)
    {
    if(end_certs.empty())
-      throw std::invalid_argument("x509_path_validate called with no subjects");
+      throw Invalid_Argument("x509_path_validate called with no subjects");
 
    std::vector<X509_Certificate> cert_path;
    cert_path.push_back(end_certs[0]);
@@ -337,9 +337,9 @@ Path_Validation_Result::Path_Validation_Result(std::vector<std::set<Certificate_
 const X509_Certificate& Path_Validation_Result::trust_root() const
    {
    if(m_cert_path.empty())
-      throw std::runtime_error("Path_Validation_Result::trust_root no path set");
+      throw Exception("Path_Validation_Result::trust_root no path set");
    if(result() != Certificate_Status_Code::VERIFIED)
-      throw std::runtime_error("Path_Validation_Result::trust_root meaningless with invalid status");
+      throw Exception("Path_Validation_Result::trust_root meaningless with invalid status");
 
    return m_cert_path[m_cert_path.size()-1];
    }

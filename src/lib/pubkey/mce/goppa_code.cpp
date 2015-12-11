@@ -147,7 +147,7 @@ void mceliece_decrypt(
       {
       if(pos > code_length)
          {
-         throw std::invalid_argument("error position larger than code size");
+         throw Invalid_Argument("error position larger than code size");
          }
       result[pos / 8] |= (1 << (pos % 8));
       }

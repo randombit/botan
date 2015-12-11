@@ -45,7 +45,7 @@ u32bit to_u32bit(const std::string& str)
       auto message = std::string("Could not read '" + str + "' as decimal string");
       auto exceptionMessage = std::string(e.what());
       if (!exceptionMessage.empty()) message += ": " + exceptionMessage;
-      throw std::runtime_error(message);
+      throw Exception(message);
       }
    }
 

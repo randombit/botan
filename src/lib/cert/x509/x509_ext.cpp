@@ -627,7 +627,7 @@ void CRL_ReasonCode::contents_to(Data_Store& info, Data_Store&) const
 
 std::vector<byte> CRL_Distribution_Points::encode_inner() const
    {
-   throw std::runtime_error("CRL_Distribution_Points encoding not implemented");
+   throw Exception("CRL_Distribution_Points encoding not implemented");
    }
 
 void CRL_Distribution_Points::decode_inner(const std::vector<byte>& buf)
@@ -650,7 +650,7 @@ void CRL_Distribution_Points::contents_to(Data_Store& info, Data_Store&) const
 
 void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder&) const
    {
-   throw std::runtime_error("CRL_Distribution_Points encoding not implemented");
+   throw Exception("CRL_Distribution_Points encoding not implemented");
    }
 
 void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder& ber)

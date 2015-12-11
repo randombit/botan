@@ -49,7 +49,7 @@ std::map<std::string, std::string> read_cfg(std::istream& is)
       auto eq = s.find("=");
 
       if(eq == std::string::npos || eq == 0 || eq == s.size() - 1)
-         throw std::runtime_error("Bad read_cfg input '" + s + "' on line " + std::to_string(line));
+         throw Exception("Bad read_cfg input '" + s + "' on line " + std::to_string(line));
 
       const std::string key = clean_ws(s.substr(0, eq));
       const std::string val = clean_ws(s.substr(eq + 1, std::string::npos));

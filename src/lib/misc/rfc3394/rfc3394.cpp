@@ -16,10 +16,10 @@ secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
                                     const SymmetricKey& kek)
    {
    if(key.size() % 8 != 0)
-      throw std::invalid_argument("Bad input key size for NIST key wrap");
+      throw Invalid_Argument("Bad input key size for NIST key wrap");
 
    if(kek.size() != 16 && kek.size() != 24 && kek.size() != 32)
-      throw std::invalid_argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key wrap");
+      throw Invalid_Argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key wrap");
 
    const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
    std::unique_ptr<BlockCipher> aes(BlockCipher::create(cipher_name));
@@ -63,10 +63,10 @@ secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
                                       const SymmetricKey& kek)
    {
    if(key.size() < 16 || key.size() % 8 != 0)
-      throw std::invalid_argument("Bad input key size for NIST key unwrap");
+      throw Invalid_Argument("Bad input key size for NIST key unwrap");
 
    if(kek.size() != 16 && kek.size() != 24 && kek.size() != 32)
-      throw std::invalid_argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key unwrap");
+      throw Invalid_Argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key unwrap");
 
    const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
    std::unique_ptr<BlockCipher> aes(BlockCipher::create(cipher_name));

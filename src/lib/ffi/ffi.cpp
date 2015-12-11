@@ -59,7 +59,7 @@
 namespace {
 
 #define BOTAN_ASSERT_ARG_NON_NULL(p) \
-   do { if(!p) throw std::invalid_argument("Argument " #p " is null"); } while(0)
+   do { if(!p) throw Invalid_Argument("Argument " #p " is null"); } while(0)
 
 template<typename T, uint32_t MAGIC>
 struct botan_struct
@@ -71,7 +71,7 @@ struct botan_struct
       T* get() const
          {
          if(m_magic != MAGIC)
-            throw std::runtime_error("Bad magic " + std::to_string(m_magic) +
+            throw Exception("Bad magic " + std::to_string(m_magic) +
                                      " in ffi object expected " + std::to_string(MAGIC));
          return m_obj.get();
          }
@@ -95,10 +95,10 @@ template<typename T, uint32_t M>
 T& safe_get(botan_struct<T,M>* p)
    {
    if(!p)
-      throw std::runtime_error("Null pointer argument");
+      throw Exception("Null pointer argument");
    if(T* t = p->get())
       return *t;
-   throw std::runtime_error("Invalid object pointer");
+   throw Exception("Invalid object pointer");
    }
 
 template<typename T, uint32_t M, typename F>
@@ -107,7 +107,7 @@ int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
    try
       {
       if(!o)
-         throw std::runtime_error("Null object to " + std::string(func_name));
+         throw Exception("Null object to " + std::string(func_name));
       if(T* t = o->get())
          return func(*t);
       }
@@ -677,7 +677,7 @@ int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
       if(wf < 2 || wf > 30)
-         throw std::runtime_error("Bad bcrypt work factor " + std::to_string(wf));
+         throw Exception("Bad bcrypt work factor " + std::to_string(wf));
 
 #if defined(BOTAN_HAS_BCRYPT)
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);

@@ -58,7 +58,7 @@ void PBKDF::pbkdf_iterations(byte out[], size_t out_len,
                              size_t iterations) const
    {
    if(iterations == 0)
-      throw std::invalid_argument(name() + ": Invalid iteration count");
+      throw Invalid_Argument(name() + ": Invalid iteration count");
 
    const size_t iterations_run = pbkdf(out, out_len, passphrase,
                                        salt, salt_len, iterations,

@@ -43,7 +43,7 @@ struct Response
       void throw_unless_ok()
          {
          if(status_code() != 200)
-            throw std::runtime_error("HTTP error: " + status_message());
+            throw Exception("HTTP error: " + status_message());
          }
 
    private:

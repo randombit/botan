@@ -77,7 +77,7 @@ class Algo_Registry
          {
          std::lock_guard<mutex> lock(m_mutex);
          if(!m_algo_info[name].add_provider(provider, fn, pref))
-            throw std::runtime_error("Duplicated registration of " + name + "/" + provider);
+            throw Exception("Duplicated registration of " + name + "/" + provider);
          }
 
       std::vector<std::string> providers_of(const Spec& spec)
@@ -111,7 +111,7 @@ class Algo_Registry
             }
          catch(std::exception& e)
             {
-            throw std::runtime_error("Creating '" + spec.as_string() + "' failed: " + e.what());
+            throw Exception("Creating '" + spec.as_string() + "' failed: " + e.what());
             }
 
          return nullptr;
@@ -258,7 +258,7 @@ make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
    {
    std::unique_ptr<X> x(Algo_Registry<X>::global_registry().make(spec.arg(0)));
    if(!x)
-      throw std::runtime_error(spec.arg(0));
+      throw Exception(spec.arg(0));
    return new T(x.release());
    }
 

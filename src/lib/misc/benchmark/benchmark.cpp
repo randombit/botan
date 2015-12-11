@@ -119,7 +119,7 @@ double find_first_in(const std::map<std::string, double>& m,
          return i->second;
       }
 
-   throw std::runtime_error("In algo benchmark no usable keys found in result");
+   throw Exception("In algo benchmark no usable keys found in result");
    }
 
 std::set<std::string> get_all_providers_of(const std::string& algo)
