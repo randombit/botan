@@ -1,6 +1,14 @@
 Release Notes
 ========================================
 
+Version 1.11.26, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Root all exceptions thrown by the library in the `Botan::Exception` class.
+  Previously the library would in many cases throw `std::runtime_error`
+  or `std::invalid_argument` exceptions which would make it hard to determine
+  the source of the error in some cases.
+
 Version 1.11.25, 2015-12-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
