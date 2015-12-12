@@ -20,7 +20,7 @@ int hash(const std::vector<std::string> &args)
    {
    if(args.size() < 3)
       {
-      std::cout << "Usage: " << args[0] << " digest <filenames>" << std::endl;
+      std::cout << "Usage: " << args[0] << " algorithm filename [filename ...]" << std::endl;
       return 1;
       }
 

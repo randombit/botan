@@ -17,9 +17,10 @@ int cert_verify(const std::vector<std::string> &args)
    {
    using namespace Botan;
 
-   if(args.size() <= 2)
+   if(args.size() < 3)
       {
-      std::cout << "Usage: " << args[0] << " subject.pem [CA certificates...]" << std::endl;
+      std::cout << "Usage: " << args[0] << " subject.pem CA_certificate [CA_certificate ...]"
+                << std::endl;
       return 1;
       }
 

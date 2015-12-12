@@ -16,8 +16,14 @@ void OptionParser::parse(const std::vector<std::string> &args)
       {
       std::string arg = args[j];
 
+      // FIXME: cli app must manually query if user requested help
+      // in order to be able to stop the cpp. At the moment e.g.
+      // `./botan keygen --help` generates keys.
       if(arg == "help" || arg == "--help" || arg == "-h")
-         return help(std::cout, appname);
+         {
+         help(std::cout, appname);
+         return;
+         }
 
       if(arg.size() > 2 && arg[0] == '-' && arg[1] == '-')
          {

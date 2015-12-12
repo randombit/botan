@@ -22,8 +22,8 @@ int self_sig(const std::vector<std::string> &args)
    {
    if(args.size() != 7)
       {
-      std::cout << "Usage: " << args[0]
-                << " passphrase [CA|user] name country_code organization email"
+      std::cout << "Usage: " << args[0] << " "
+                << "passphrase [CA|user] name country_code organization email"
                 << std::endl;
       return 1;
       }

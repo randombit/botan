@@ -12,7 +12,7 @@ namespace {
 
 int x509print(const std::vector<std::string> &args)
    {
-   if(args.size() != 1)
+   if(args.size() != 2)
       {
       std::cout << "Usage: " << args[0] << " cert.pem" << std::endl;
       return 1;

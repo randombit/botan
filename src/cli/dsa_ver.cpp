@@ -21,8 +21,9 @@ int dsa_verify(const std::vector<std::string> &args)
    {
    if(args.size() != 4)
       {
-      std::cout << "Usage: " << args[0]
-                << " keyfile messagefile sigfile" << std::endl;
+      std::cout << "Usage: " << args[0] << " "
+                << "keyfile messagefile sigfile"
+                << std::endl;
       return 1;
       }
 
