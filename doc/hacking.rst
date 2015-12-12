@@ -130,6 +130,57 @@ Also, try building and testing it on whatever hardware you have handy,
 especially non-x86 platforms, or especially C++11 compilers other
 than the regularly tested GCC, Clang, and Visual Studio compilers.
 
+External Dependencies
+========================================
+
+The library should always be as functional as possible when compiled
+with just C++11. However, feel free to use the C++11 language. Little
+mercy is given to sub-par C++11 compilers that don't actually implement
+the language (some temporary concessions are made for MSVC 2013).
+
+Use of compiler extensions is fine whenever appropriate; this is
+typically restricted to a single file or an internal header. Compiler
+extensions used currently include native uint128_t, SIMD intrinsics,
+inline asm syntax and so on, so there are some existing examples of
+appropriate use.
+
+If you're adding a small OS dependency in some larger piece of code,
+try to contain the actual non-portable operations to utils/os_utils.*
+and then call them from there.
+
+Any external library dependency - even optional ones - is met with as
+one PR submitter put it "great skepticism".
+
+At every API boundary there is potential for confusion that does not
+exist when the call stack is all contained within the boundary.  So
+the additional API really needs to pull its weight. For example a
+simple text parser or such which can be trivially implemented is not
+really for consideration. As a rough idea, I (Jack) equate the cost of
+an external dependency as equal to at least 1000 additional lines of
+code in the library. That is, if the library really does need this
+functionality, and it can be done in the library for less than that,
+then it makes sense to just write the code. Yup.
+
+Given the entire library is (accoriding to SLOCcount) 62K lines of
+code, that may give some estimate of the bar - you can do pretty much
+anything in 1000 lines of well written C++11 (the implementations of
+*all* of the message authentication codes is much less than 1K SLOC).
+
+Current (all optional) external dependencies of the library are
+OpenSSL (for accessing their fast RSA and ECDSA impls, not the
+handshake code!), zlib, bzip2, lzma, sqlite3, plus various operating
+system utilities like basic filesystem operations. These are hugely
+useful libraries that provide serious value, and are worth the trouble
+of maintaining an integration with. And importantly their API contract
+doesn't change often: code calling zlib doesn't bitrot much.
+
+Examples of external dependencies that would be appropriate include
+integration with system crypto (PKCS #11, TPM, CommonCrypto, CryptoAPI
+algorithms), potentially a parallelism framework such as Cilk (as part
+of a larger design for parallel message processing, say), or
+hypothentically use of a safe ASN.1 parser (that is, one written in
+Rust or OCaml providing a C API).
+
 Build Tools and Hints
 ========================================
 
