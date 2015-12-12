@@ -39,7 +39,7 @@ void ChaCha20Poly1305_Mode::key_schedule(const byte key[], size_t length)
 void ChaCha20Poly1305_Mode::set_associated_data(const byte ad[], size_t length)
    {
    if(m_ctext_len)
-      throw std::runtime_error("Too late to set AD for ChaCha20Poly1305");
+      throw Exception("Too late to set AD for ChaCha20Poly1305");
    m_ad.assign(ad, ad + length);
    }
 

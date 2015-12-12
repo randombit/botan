@@ -9,7 +9,6 @@
 #include <botan/numthry.h>
 #include <botan/hmac.h>
 #include <botan/sha2_32.h>
-#include <stdexcept>
 
 namespace Botan {
 
@@ -57,7 +56,7 @@ void factor(BigInt n, BigInt& a, BigInt& b)
       std::swap(a, b);
 
    if(a <= 1 || b <= 1)
-      throw std::runtime_error("Could not factor n for use in FPE");
+      throw Exception("Could not factor n for use in FPE");
    }
 
 /*
@@ -100,7 +99,7 @@ FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
    std::vector<byte> n_bin = BigInt::encode(n);
 
    if(n_bin.size() > MAX_N_BYTES)
-      throw std::runtime_error("N is too large for FPE encryption");
+      throw Exception("N is too large for FPE encryption");
 
    mac->update_be(static_cast<u32bit>(n_bin.size()));
    mac->update(n_bin.data(), n_bin.size());

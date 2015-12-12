@@ -10,7 +10,6 @@
 
 #include <botan/fpe_fe1.h>
 #include <botan/sha160.h>
-#include <stdexcept>
 
 using namespace Botan;
 

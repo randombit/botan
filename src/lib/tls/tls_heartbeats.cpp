@@ -43,9 +43,9 @@ Heartbeat_Message::Heartbeat_Message(Type type,
    m_padding(padding)
    {
    if(payload_len >= 64*1024)
-      throw std::runtime_error("Heartbeat payload too long");
+      throw Exception("Heartbeat payload too long");
    if(m_padding.size() < 16)
-      throw std::runtime_error("Invalid heartbeat padding length");
+      throw Exception("Invalid heartbeat padding length");
    }
 
 std::vector<byte> Heartbeat_Message::contents() const

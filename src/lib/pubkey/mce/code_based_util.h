@@ -13,7 +13,6 @@
 #define BOTAN_CODE_BASED_UTIL_H__
 
 #include <botan/gf2m_small_m.h>
-#include <stdexcept>
 
 namespace Botan {
 

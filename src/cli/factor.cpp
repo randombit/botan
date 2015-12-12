@@ -126,7 +126,7 @@ int factor(const std::vector<std::string> &args)
    {
    if(args.size() != 2)
       {
-      std::cout << "Usage: " << args[0] << " <integer>" << std::endl;
+      std::cout << "Usage: " << args[0] << " integer" << std::endl;
       return 1;
       }
 

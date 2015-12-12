@@ -42,7 +42,7 @@ pbkdf2(MessageAuthenticationCode& prf,
       }
    catch(Invalid_Key_Length)
       {
-      throw std::runtime_error("PBKDF2 with " + prf.name() +
+      throw Exception("PBKDF2 with " + prf.name() +
                                " cannot accept passphrases of length " +
                                std::to_string(passphrase.size()));
       }

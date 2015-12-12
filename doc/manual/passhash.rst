@@ -1,4 +1,3 @@
-
 Password Hashing
 ========================================
 
@@ -97,7 +96,7 @@ outputs that look like this::
 
 Here is an example of using bcrypt:
 
-.. literalinclude:: ../../src/cmd/bcrypt.cpp
+.. literalinclude:: ../../src/cli/bcrypt.cpp
 
 .. _passhash9:
 

@@ -185,7 +185,7 @@ class Date_Format_Tests : public Text_Based_Test
          {
          const std::vector<std::string> parts = Botan::split_on(s, ',');
          if(parts.size() != 6)
-            throw std::runtime_error("Bad date format '" + s + "'");
+            throw Test_Error("Bad date format '" + s + "'");
 
          std::vector<uint32_t> u32s;
          for(auto&& sub : parts)
@@ -233,7 +233,7 @@ class Date_Format_Tests : public Text_Based_Test
             }
          else
             {
-            throw std::runtime_error("Unexpected header '" + type + "' in date format tests");
+            throw Test_Error("Unexpected header '" + type + "' in date format tests");
             }
 
          return result;

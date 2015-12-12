@@ -15,7 +15,7 @@ ECB_Mode::ECB_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
    m_padding(padding)
    {
    if(!m_padding->valid_blocksize(cipher->block_size()))
-      throw std::invalid_argument("Padding " + m_padding->name() +
+      throw Invalid_Argument("Padding " + m_padding->name() +
                                   " cannot be used with " +
                                   cipher->name() + "/ECB");
    }
@@ -102,7 +102,7 @@ void ECB_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    padding().add_padding(buffer, bytes_in_final_block, BS);
 
    if(buffer.size() % BS)
-      throw std::runtime_error("Did not pad to full block size in " + name());
+      throw Exception("Did not pad to full block size in " + name());
 
    update(buffer, offset);
    }

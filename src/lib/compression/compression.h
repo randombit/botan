@@ -28,7 +28,7 @@ class BOTAN_DLL Compressor_Transform : public Transform
 
       size_t output_length(size_t) const override final
          {
-         throw std::runtime_error(name() + " output length indeterminate");
+         throw Exception(name() + " output length indeterminate");
          }
    };
 

@@ -103,7 +103,7 @@ class McEliece_Tests : public Test
          {
          std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_algo));
          if(!hash)
-            throw std::runtime_error("Hash " + hash_algo + " not available");
+            throw Test_Error("Hash " + hash_algo + " not available");
 
          hash->update(key.pkcs8_private_key());
          return Botan::hex_encode(hash->final());
@@ -113,7 +113,7 @@ class McEliece_Tests : public Test
          {
          std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_algo));
          if(!hash)
-            throw std::runtime_error("Hash " + hash_algo + " not available");
+            throw Test_Error("Hash " + hash_algo + " not available");
 
          hash->update(key.x509_subject_public_key());
          return Botan::hex_encode(hash->final());

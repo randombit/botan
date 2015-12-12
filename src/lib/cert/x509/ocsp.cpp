@@ -55,7 +55,7 @@ void check_signature(const std::vector<byte>& tbs_response,
       split_on(OIDS::lookup(sig_algo.oid), '/');
 
    if(sig_info.size() != 2 || sig_info[0] != pub_key->algo_name())
-      throw std::runtime_error("Information in OCSP response does not match cert");
+      throw Exception("Information in OCSP response does not match cert");
 
    std::string padding = sig_info[1];
    Signature_Format format =
@@ -64,7 +64,7 @@ void check_signature(const std::vector<byte>& tbs_response,
    PK_Verifier verifier(*pub_key, padding, format);
 
    if(!verifier.verify_message(ASN1::put_in_sequence(tbs_response), signature))
-      throw std::runtime_error("Signature on OCSP response does not verify");
+      throw Exception("Signature on OCSP response does not verify");
    }
 
 void check_signature(const std::vector<byte>& tbs_response,
@@ -74,7 +74,7 @@ void check_signature(const std::vector<byte>& tbs_response,
                      const std::vector<X509_Certificate>& certs)
    {
    if(certs.size() < 1)
-      throw std::invalid_argument("Short cert chain for check_signature");
+      throw Invalid_Argument("Short cert chain for check_signature");
 
    if(trusted_roots.certificate_known(certs[0]))
       return check_signature(tbs_response, sig_algo, signature, certs[0]);
@@ -82,15 +82,15 @@ void check_signature(const std::vector<byte>& tbs_response,
    // Otherwise attempt to chain the signing cert to a trust root
 
    if(!certs[0].allowed_usage("PKIX.OCSPSigning"))
-      throw std::runtime_error("OCSP response cert does not allow OCSP signing");
+      throw Exception("OCSP response cert does not allow OCSP signing");
 
    auto result = x509_path_validate(certs, Path_Validation_Restrictions(), trusted_roots);
 
    if(!result.successful_validation())
-      throw std::runtime_error("Certificate validation failure: " + result.result_string());
+      throw Exception("Certificate validation failure: " + result.result_string());
 
    if(!trusted_roots.certificate_known(result.trust_root())) // not needed anymore?
-      throw std::runtime_error("Certificate chain roots in unknown/untrusted CA");
+      throw Exception("Certificate chain roots in unknown/untrusted CA");
 
    const std::vector<X509_Certificate>& cert_path = result.cert_path();
 
@@ -132,7 +132,7 @@ Response::Response(const Certificate_Store& trusted_roots,
    response_outer.decode(resp_status, ENUMERATED, UNIVERSAL);
 
    if(resp_status != 0)
-      throw std::runtime_error("OCSP response status " + std::to_string(resp_status));
+      throw Exception("OCSP response status " + std::to_string(resp_status));
 
    if(response_outer.more_items())
       {
@@ -185,7 +185,7 @@ Response::Response(const Certificate_Store& trusted_roots,
          if(auto cert = trusted_roots.find_cert(name, std::vector<byte>()))
             certs.push_back(*cert);
          else
-            throw std::runtime_error("Could not find certificate that signed OCSP response");
+            throw Exception("Could not find certificate that signed OCSP response");
          }
 
       check_signature(tbs_bits, sig_algo, signature, trusted_roots, certs);
@@ -229,7 +229,7 @@ Response online_check(const X509_Certificate& issuer,
    const std::string responder_url = subject.ocsp_responder();
 
    if(responder_url == "")
-      throw std::runtime_error("No OCSP responder specified");
+      throw Exception("No OCSP responder specified");
 
    OCSP::Request req(issuer, subject);
 

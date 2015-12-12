@@ -9,7 +9,6 @@
 
 #include <string>
 #include <vector>
-#include <stdexcept>
 #include <map>
 
 #include <botan/parsing.h>

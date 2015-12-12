@@ -17,9 +17,9 @@ namespace {
 
 int prime(const std::vector<std::string> &args)
    {
-   if(args.size() < 2)
+   if(args.size() < 2 || args.size() > 3)
       {
-      std::cout << "Usage: " << args[0] << " bits count" << std::endl;
+      std::cout << "Usage: " << args[0] << " bits [count]" << std::endl;
       return 1;
       }
 

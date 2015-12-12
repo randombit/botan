@@ -68,14 +68,14 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
          m_session_key.assign(x.begin() + 2, x.end());
 
          if(check_val_created != check_val_db)
-            throw std::runtime_error("Session database password not valid");
+            throw Exception("Session database password not valid");
          }
       }
    else
       {
       // maybe just zap the salts + sessions tables in this case?
       if(salts != 0)
-         throw std::runtime_error("Seemingly corrupted database, multiple salts found");
+         throw Exception("Seemingly corrupted database, multiple salts found");
 
       // new database case
 

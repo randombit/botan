@@ -177,7 +177,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
 word monty_inverse(word input)
    {
    if(input == 0)
-      throw std::runtime_error("monty_inverse: divide by zero");
+      throw Exception("monty_inverse: divide by zero");
 
    word b = input;
    word x2 = 1, x1 = 0, y2 = 0, y1 = 1;

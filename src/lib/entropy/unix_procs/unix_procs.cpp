@@ -9,6 +9,7 @@
 */
 
 #include <botan/internal/unix_procs.h>
+#include <botan/exceptn.h>
 #include <botan/parsing.h>
 #include <algorithm>
 #include <atomic>
@@ -82,7 +83,7 @@ void UnixProcessInfo_EntropySource::poll(Entropy_Accumulator& accum)
 void Unix_EntropySource::Unix_Process::spawn(const std::vector<std::string>& args)
    {
    if(args.empty())
-      throw std::invalid_argument("Cannot spawn process without path");
+      throw Invalid_Argument("Cannot spawn process without path");
 
    shutdown();
 

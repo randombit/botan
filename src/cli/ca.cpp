@@ -19,8 +19,9 @@ int ca(const std::vector<std::string> &args)
 
    if(args.size() != 5)
       {
-      std::cout << "Usage: " << args[0] << " <passphrase> "
-                << "<ca cert> <ca key> <pkcs10>" << std::endl;
+      std::cout << "Usage: " << args[0] << " "
+                << "passphrase ca_cert ca_key pkcs10"
+                << std::endl;
       return 1;
       }
 

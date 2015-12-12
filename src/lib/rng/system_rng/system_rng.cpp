@@ -66,7 +66,7 @@ System_RNG_Impl::System_RNG_Impl()
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
    if(!CryptAcquireContext(&m_prov, 0, 0, BOTAN_SYSTEM_RNG_CRYPTOAPI_PROV_TYPE, CRYPT_VERIFYCONTEXT))
-      throw std::runtime_error("System_RNG failed to acquire crypto provider");
+      throw Exception("System_RNG failed to acquire crypto provider");
 
 #else
 
@@ -76,7 +76,7 @@ System_RNG_Impl::System_RNG_Impl()
 
    m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDONLY | O_NOCTTY);
    if(m_fd < 0)
-      throw std::runtime_error("System_RNG failed to open RNG device");
+      throw Exception("System_RNG failed to open RNG device");
 #endif
    }
 
@@ -103,10 +103,10 @@ void System_RNG_Impl::randomize(byte buf[], size_t len)
          {
          if(errno == EINTR)
             continue;
-         throw std::runtime_error("System_RNG read failed error " + std::to_string(errno));
+         throw Exception("System_RNG read failed error " + std::to_string(errno));
          }
       if(got == 0)
-         throw std::runtime_error("System_RNG EOF on device"); // ?!?
+         throw Exception("System_RNG EOF on device"); // ?!?
 
       buf += got;
       len -= got;

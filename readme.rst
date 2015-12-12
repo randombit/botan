@@ -138,6 +138,7 @@ Especially recommended are:
 
 - *Security Engineering -- A Guide to Building Dependable Distributed Systems*
   by Ross Anderson
+  (`available online <https://www.cl.cam.ac.uk/~rja14/book.html>`_)
 
 - *Handbook of Applied Cryptography*
   by Alfred J. Menezes, Paul C. Van Oorschot, and Scott A. Vanstone

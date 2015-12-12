@@ -9,6 +9,7 @@
 #define BOTAN_UTILS_URLGET_H__
 
 #include <botan/types.h>
+#include <botan/exceptn.h>
 #include <future>
 #include <vector>
 #include <map>
@@ -43,7 +44,7 @@ struct Response
       void throw_unless_ok()
          {
          if(status_code() != 200)
-            throw std::runtime_error("HTTP error: " + status_message());
+            throw Exception("HTTP error: " + status_message());
          }
 
    private:
