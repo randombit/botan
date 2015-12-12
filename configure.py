@@ -984,13 +984,21 @@ class OsInfo(object):
 
     def defines(self, options):
         r = []
-        for feat in self.target_features:
-            if feat not in options.without_os_features:
-                r += ['TARGET_OS_HAS_' + feat.upper()]
-        for feat in options.with_os_features:
-            if feat not in self.target_features:
-                r += ['TARGET_OS_HAS_' + feat.upper()]
-        return ['TARGET_OS_IS_%s' % (self.basename.upper())] + sorted(r)
+        r += ['TARGET_OS_IS_%s' % (self.basename.upper())]
+
+        if self.os_type != None:
+            r += ['TARGET_OS_TYPE_IS_%s' % (self.os_type.upper())]
+
+        def feat_macros():
+            for feat in self.target_features:
+                if feat not in options.without_os_features:
+                    yield 'TARGET_OS_HAS_' + feat.upper()
+            for feat in options.with_os_features:
+                if feat not in self.target_features:
+                    yield 'TARGET_OS_HAS_' + feat.upper()
+
+        r += sorted(feat_macros())
+        return r
 
 def fixup_proc_name(proc):
     proc = proc.lower().replace(' ', '')
