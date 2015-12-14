@@ -7,14 +7,17 @@ if [ "$BUILD_MODE" = "static" ]; then
 elif [ "$BUILD_MODE" = "shared" ]; then
     CFG_FLAGS=()
 elif [ "$BUILD_MODE" = "coverage" ]; then
-    # lcov gets confused by symlinks
-    CFG_FLAGS=(--build-mode=coverage --link-method=copy)
+    CFG_FLAGS=(--with-coverage)
 elif [ "$BUILD_MODE" = "sanitizer" ]; then
-    CFG_FLAGS=(--build-mode=sanitizer)
+    CFG_FLAGS=(--with-sanitizers)
 fi
 
 if [ "$MODULES" = "min" ]; then
     CFG_FLAGS+=(--minimized-build --enable-modules=base)
+fi
+
+if [ "$BOOST" = "y" ]; then
+    CFG_FLAGS+=(--with-boost)
 fi
 
 # Workaround for missing update-alternatives
@@ -60,7 +63,7 @@ if [ "$MODULES" != "min" ] && [ "${TARGETOS:0:3}" != "ios" ]; then
     ./botan-test
 fi
 
-if [ "$MODULES" != "min" ] && [ "$BUILD_MODE" = "shared" ] && [ "$TARGETOS" = "desktop" ]
+if [ "$MODULES" != "min" ] && [ "$BUILD_MODE" = "shared" ] && [ "$TARGETOS" = "native" ]
 then
     python2 --version
     python3 --version

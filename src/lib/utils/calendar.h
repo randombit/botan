@@ -1,6 +1,6 @@
 /*
 * Calendar Functions
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2009,2015 Jack Lloyd
 * (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -55,7 +55,7 @@ struct BOTAN_DLL calendar_point
    /**
    * Returns an STL timepoint object
    */
-   std::chrono::system_clock::time_point to_std_timepoint();
+   std::chrono::system_clock::time_point to_std_timepoint() const;
 
    /**
    * Returns a human readable string of the struct's components.

@@ -1,12 +1,13 @@
 /*
 * GCM Mode Encryption
-* (C) 2013 Jack Lloyd
+* (C) 2013,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/gcm.h>
 #include <botan/internal/mode_utils.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/ctr.h>
 
 #if defined(BOTAN_HAS_GCM_CLMUL)
@@ -32,28 +33,34 @@ void GHASH::gcm_multiply(secure_vector<byte>& x) const
 
    u64bit Z[2] = { 0, 0 };
 
+   CT::poison(H, 2);
+   CT::poison(Z, 2);
+   CT::poison(x.data(), x.size());
+
    // SSE2 might be useful here
 
    for(size_t i = 0; i != 2; ++i)
       {
       const u64bit X = load_be<u64bit>(x.data(), i);
 
+      u64bit mask = 0x8000000000000000;
       for(size_t j = 0; j != 64; ++j)
          {
-         if((X >> (63-j)) & 1)
-            {
-            Z[0] ^= H[0];
-            Z[1] ^= H[1];
-            }
+         const u64bit XMASK = CT::expand_mask<u64bit>(X & mask);
+         mask >>= 1;
+         Z[0] ^= H[0] & XMASK;
+         Z[1] ^= H[1] & XMASK;
 
-         const u64bit r = (H[1] & 1) ? R : 0;
+         // GCM's bit ops are reversed so we carry out of the bottom
+         const u64bit carry = R & CT::expand_mask<u64bit>(H[1] & 1);
 
-         H[1] = (H[0] << 63) | (H[1] >> 1);
-         H[0] = (H[0] >> 1) ^ r;
+         H[1] = (H[1] >> 1) | (H[0] << 63);
+         H[0] = (H[0] >> 1) ^ carry;
          }
       }
 
    store_be<u64bit>(x.data(), Z[0], Z[1]);
+   CT::unpoison(x.data(), x.size());
    }
 
 void GHASH::ghash_update(secure_vector<byte>& ghash,
@@ -156,7 +163,7 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
    m_cipher_name(cipher->name())
    {
    if(cipher->block_size() != BS)
-      throw std::invalid_argument("GCM requires a 128 bit cipher so cannot be used with " +
+      throw Invalid_Argument("GCM requires a 128 bit cipher so cannot be used with " +
                                   cipher->name());
 
    m_ghash.reset(new GHASH);

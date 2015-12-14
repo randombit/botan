@@ -354,7 +354,7 @@ class BOTAN_DLL Text_Policy : public Policy
          else if(v == "false" || v == "False")
             return false;
          else
-            throw std::runtime_error("Invalid boolean '" + v + "'");
+            throw Exception("Invalid boolean '" + v + "'");
          }
 
       std::string get_str(const std::string& key, const std::string& def = "") const

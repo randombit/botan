@@ -12,82 +12,48 @@
   #include <botan/rfc3394.h>
 #endif
 
-#include <iostream>
-
-using namespace Botan;
+namespace Botan_Tests {
 
 namespace {
 
-size_t keywrap_test(const char* key_str,
-                    const char* expected_str,
-                    const char* kek_str)
-   {
-   size_t fail = 0;
-
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)
-   try
-      {
-      SymmetricKey key(key_str);
-      SymmetricKey expected(expected_str);
-      SymmetricKey kek(kek_str);
+class RFC3394_Keywrap_Tests : public Text_Based_Test
+   {
+   public:
+      RFC3394_Keywrap_Tests() : Text_Based_Test(Test::data_file("rfc3394.vec"),
+                                                {"Key", "KEK", "Output"})
+         {}
 
-      secure_vector<byte> enc = rfc3394_keywrap(key.bits_of(), kek);
-
-      if(enc != expected.bits_of())
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
-         std::cout << "NIST key wrap encryption failure: "
-                   << hex_encode(enc) << " != " << hex_encode(expected.bits_of()) << std::endl;
-         fail++;
+         Test::Result result("RFC3394 keywrap");
+
+         try
+            {
+            const std::vector<byte> expected = get_req_bin(vars, "Output");
+            const std::vector<byte> key = get_req_bin(vars, "Key");
+            const std::vector<byte> kek = get_req_bin(vars, "KEK");
+
+            const Botan::SymmetricKey kek_sym(kek);
+            const Botan::secure_vector<uint8_t> key_l(key.begin(), key.end());
+            const Botan::secure_vector<uint8_t> exp_l(expected.begin(), expected.end());
+
+            result.test_eq("encryption", Botan::rfc3394_keywrap(key_l, kek_sym), expected);
+            result.test_eq("decryption", Botan::rfc3394_keyunwrap(exp_l, kek_sym), key);
+            }
+         catch(std::exception& e)
+            {
+            result.test_failure("", e.what());
+            }
+
+         return result;
          }
 
-      secure_vector<byte> dec = rfc3394_keyunwrap(expected.bits_of(), kek);
+   };
 
-      if(dec != key.bits_of())
-         {
-         std::cout << "NIST key wrap decryption failure: "
-                   << hex_encode(dec) << " != " << hex_encode(key.bits_of()) << std::endl;
-         fail++;
-         }
-      }
-   catch(std::exception& e)
-      {
-      std::cout << e.what() << std::endl;
-      fail++;
-      }
+BOTAN_REGISTER_TEST("rfc3394", RFC3394_Keywrap_Tests);
 #endif
-
-   return fail;
-   }
 
 }
 
-size_t test_keywrap()
-   {
-   size_t fails = 0;
-
-   fails += keywrap_test("00112233445566778899AABBCCDDEEFF",
-                         "1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5",
-                         "000102030405060708090A0B0C0D0E0F");
-
-   fails += keywrap_test("00112233445566778899AABBCCDDEEFF",
-                         "96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D",
-                         "000102030405060708090A0B0C0D0E0F1011121314151617");
-
-   fails += keywrap_test("00112233445566778899AABBCCDDEEFF",
-                         "64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7",
-                         "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
-
-   fails += keywrap_test("00112233445566778899AABBCCDDEEFF0001020304050607",
-                         "031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2",
-                         "000102030405060708090A0B0C0D0E0F1011121314151617");
-
-   fails += keywrap_test("00112233445566778899AABBCCDDEEFF0001020304050607",
-                         "A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1",
-                         "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
-
-   fails += keywrap_test("00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F",
-                         "28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21",
-                         "000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
-
-   return fails;
-   }
+}

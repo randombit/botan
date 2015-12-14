@@ -123,10 +123,10 @@ OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size) :
    m_tag_size(tag_size)
    {
    if(BS() != 16)
-      throw std::invalid_argument("OCB is not compatible with " + m_cipher->name());
+      throw Invalid_Argument("OCB is not compatible with " + m_cipher->name());
 
    if(m_tag_size % 4 != 0 || m_tag_size < 8 || m_tag_size > BS())
-      throw std::invalid_argument("OCB cannot produce a " + std::to_string(m_tag_size) +
+      throw Invalid_Argument("OCB cannot produce a " + std::to_string(m_tag_size) +
                                   " byte tag");
 
    }

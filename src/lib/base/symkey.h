@@ -22,23 +22,23 @@ class BOTAN_DLL OctetString
       /**
       * @return size of this octet string in bytes
       */
-      size_t length() const { return bits.size(); }
-      size_t size() const { return bits.size(); }
+      size_t length() const { return m_data.size(); }
+      size_t size() const { return m_data.size(); }
 
       /**
       * @return this object as a secure_vector<byte>
       */
-      secure_vector<byte> bits_of() const { return bits; }
+      secure_vector<byte> bits_of() const { return m_data; }
 
       /**
       * @return start of this string
       */
-      const byte* begin() const { return bits.data(); }
+      const byte* begin() const { return m_data.data(); }
 
       /**
       * @return end of this string
       */
-      const byte* end() const   { return begin() + bits.size(); }
+      const byte* end() const   { return begin() + m_data.size(); }
 
       /**
       * @return this encoded as hex
@@ -81,15 +81,16 @@ class BOTAN_DLL OctetString
       * Create a new OctetString
       * @param in a bytestring
       */
-      OctetString(const secure_vector<byte>& in) : bits(in) {}
+      OctetString(const secure_vector<byte>& in) : m_data(in) {}
 
       /**
       * Create a new OctetString
       * @param in a bytestring
       */
-      OctetString(const std::vector<byte>& in) : bits(in.begin(), in.end()) {}
+      OctetString(const std::vector<byte>& in) : m_data(in.begin(), in.end()) {}
+
    private:
-      secure_vector<byte> bits;
+      secure_vector<byte> m_data;
    };
 
 /**
@@ -132,12 +133,12 @@ BOTAN_DLL OctetString operator^(const OctetString& x,
 /**
 * Alternate name for octet string showing intent to use as a key
 */
-typedef OctetString SymmetricKey;
+using SymmetricKey = OctetString;
 
 /**
 * Alternate name for octet string showing intent to use as an IV
 */
-typedef OctetString InitializationVector;
+using InitializationVector = OctetString;
 
 }
 

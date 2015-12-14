@@ -57,15 +57,15 @@ class CSP_Handle
 */
 void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   m_buf.resize(32);
+   secure_vector<byte>& buf = accum.get_io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
 
    for(size_t i = 0; i != prov_types.size(); ++i)
       {
       CSP_Handle csp(prov_types[i]);
 
-      if(size_t got = csp.gen_random(m_buf.data(), m_buf.size()))
+      if(size_t got = csp.gen_random(buf.data(), buf.size()))
          {
-         accum.add(m_buf.data(), got, 6);
+         accum.add(buf.data(), got, BOTAN_ENTROPY_ESTIMATE_STRONG_RNG);
          break;
          }
       }

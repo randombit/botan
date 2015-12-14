@@ -8,7 +8,7 @@
 #include <botan/buf_filt.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/rounding.h>
-#include <stdexcept>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -19,10 +19,10 @@ Buffered_Filter::Buffered_Filter(size_t b, size_t f) :
    main_block_mod(b), final_minimum(f)
    {
    if(main_block_mod == 0)
-      throw std::invalid_argument("main_block_mod == 0");
+      throw Invalid_Argument("main_block_mod == 0");
 
    if(final_minimum > main_block_mod)
-      throw std::invalid_argument("final_minimum > main_block_mod");
+      throw Invalid_Argument("final_minimum > main_block_mod");
 
    buffer.resize(2 * main_block_mod);
    buffer_pos = 0;
@@ -82,7 +82,7 @@ void Buffered_Filter::write(const byte input[], size_t input_size)
 void Buffered_Filter::end_msg()
    {
    if(buffer_pos < final_minimum)
-      throw std::runtime_error("Buffered filter end_msg without enough input");
+      throw Exception("Buffered filter end_msg without enough input");
 
    size_t spare_blocks = (buffer_pos - final_minimum) / main_block_mod;
 

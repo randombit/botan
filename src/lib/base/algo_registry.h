@@ -1,5 +1,6 @@
 /*
 * (C) 2014,2015 Jack Lloyd
+* (C) 2015 Matej Kenda
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,15 +9,55 @@
 #define BOTAN_ALGO_REGISTRY_H__
 
 #include <botan/types.h>
+#include <botan/exceptn.h>
 #include <functional>
-#include <stdexcept>
 #include <mutex>
 #include <vector>
 #include <map>
 #include <string>
 #include <unordered_map>
 
+#if defined(_MSC_VER) && (_MSC_VER <= 1800)
+
+   #define BOTAN_WORKAROUND_GH_321
+   #define NOMINMAX 1
+   #define WIN32_LEAN_AND_MEAN 1
+   #include <Windows.h>
+
+#endif
+
 namespace Botan {
+
+#if defined(BOTAN_WORKAROUND_GH_321)
+
+class WinCS_Mutex
+   {
+   public:
+       WinCS_Mutex()
+          {
+          InitializeCriticalSection(&m_cs);
+          }
+          
+       ~WinCS_Mutex()
+          {
+          DeleteCriticalSection(&m_cs);
+          }
+
+       void lock()
+          {
+          EnterCriticalSection(&m_cs);
+          }
+
+       void unlock()
+          {
+          LeaveCriticalSection(&m_cs);
+          }
+
+    private:
+        CRITICAL_SECTION   m_cs;
+   };
+
+#endif
 
 template<typename T>
 class Algo_Registry
@@ -34,14 +75,14 @@ class Algo_Registry
 
       void add(const std::string& name, const std::string& provider, maker_fn fn, byte pref)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          if(!m_algo_info[name].add_provider(provider, fn, pref))
-            throw std::runtime_error("Duplicated registration of " + name + "/" + provider);
+            throw Exception("Duplicated registration of " + name + "/" + provider);
          }
 
       std::vector<std::string> providers_of(const Spec& spec)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          auto i = m_algo_info.find(spec.algo_name());
          if(i != m_algo_info.end())
             return i->second.providers();
@@ -50,7 +91,7 @@ class Algo_Registry
 
       void set_provider_preference(const Spec& spec, const std::string& provider, byte pref)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          auto i = m_algo_info.find(spec.algo_name());
          if(i != m_algo_info.end())
             i->second.set_pref(provider, pref);
@@ -70,7 +111,7 @@ class Algo_Registry
             }
          catch(std::exception& e)
             {
-            throw std::runtime_error("Creating '" + spec.as_string() + "' failed: " + e.what());
+            throw Exception("Creating '" + spec.as_string() + "' failed: " + e.what());
             }
 
          return nullptr;
@@ -92,11 +133,18 @@ class Algo_Registry
          };
 
    private:
-      Algo_Registry() {}
+
+#if defined(BOTAN_WORKAROUND_GH_321)
+      using mutex = WinCS_Mutex;
+#else
+      using mutex = std::mutex;
+#endif
+
+      Algo_Registry()  { }
 
       std::vector<maker_fn> get_makers(const Spec& spec, const std::string& provider)
          {
-         std::unique_lock<std::mutex> lock(m_mutex);
+         std::lock_guard<mutex> lock(m_mutex);
          return m_algo_info[spec.algo_name()].get_makers(provider);
          }
 
@@ -158,7 +206,7 @@ class Algo_Registry
             std::unordered_map<std::string, maker_fn> m_maker_fns;
          };
 
-      std::mutex m_mutex;
+      mutex m_mutex;
       std::unordered_map<std::string, Algo_Info> m_algo_info;
    };
 
@@ -210,7 +258,7 @@ make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
    {
    std::unique_ptr<X> x(Algo_Registry<X>::global_registry().make(spec.arg(0)));
    if(!x)
-      throw std::runtime_error(spec.arg(0));
+      throw Exception(spec.arg(0));
    return new T(x.release());
    }
 

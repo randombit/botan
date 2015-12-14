@@ -19,6 +19,17 @@ Advisories
 2015
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2015-11-04: TLS certificate authentication bypass
+
+  When the bugs affecting X.509 path validation were fixed in 1.11.22, a check
+  in Credentials_Manager::verify_certificate_chain was accidentally removed
+  which caused path validation failures not to be signaled to the TLS layer.  So
+  for affected versions, certificate authentication in TLS is bypassed. As a
+  workaround, applications can override the call and implement the correct
+  check. Reported by Florent Le Coz in GH #324
+
+  Introduced in 1.11.22, fixed in 1.11.24
+
 * 2015-10-26 (CVE-2015-7824): Padding oracle attack on TLS
 
   A padding oracle attack was possible against TLS CBC ciphersuites because if a

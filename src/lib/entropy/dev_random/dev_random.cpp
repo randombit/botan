@@ -6,7 +6,6 @@
 */
 
 #include <botan/internal/dev_random.h>
-#include <botan/internal/rounding.h>
 
 #include <sys/types.h>
 #include <sys/select.h>
@@ -60,11 +59,7 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
    if(m_devices.empty())
       return;
 
-   const size_t ENTROPY_BITS_PER_BYTE = 8;
-   const size_t MS_WAIT_TIME = 32;
-   const size_t READ_ATTEMPT = 32;
-
-   int max_fd = m_devices[0];
+   fd_type max_fd = m_devices[0];
    fd_set read_set;
    FD_ZERO(&read_set);
    for(size_t i = 0; i != m_devices.size(); ++i)
@@ -75,21 +70,21 @@ void Device_EntropySource::poll(Entropy_Accumulator& accum)
 
    struct ::timeval timeout;
 
-   timeout.tv_sec = (MS_WAIT_TIME / 1000);
-   timeout.tv_usec = (MS_WAIT_TIME % 1000) * 1000;
+   timeout.tv_sec = (BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS / 1000);
+   timeout.tv_usec = (BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS % 1000) * 1000;
 
    if(::select(max_fd + 1, &read_set, nullptr, nullptr, &timeout) < 0)
       return;
 
-   m_buf.resize(READ_ATTEMPT);
+   secure_vector<byte>& buf = accum.get_io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
 
    for(size_t i = 0; i != m_devices.size(); ++i)
       {
       if(FD_ISSET(m_devices[i], &read_set))
          {
-         const ssize_t got = ::read(m_devices[i], m_buf.data(), m_buf.size());
+         const ssize_t got = ::read(m_devices[i], buf.data(), buf.size());
          if(got > 0)
-            accum.add(m_buf.data(), got, ENTROPY_BITS_PER_BYTE);
+            accum.add(buf.data(), got, BOTAN_ENTROPY_ESTIMATE_STRONG_RNG);
          }
       }
    }

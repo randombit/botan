@@ -16,27 +16,6 @@ namespace Botan {
 
 namespace TLS {
 
-namespace {
-
-SymmetricKey derive_key(const std::string& passphrase,
-                        const byte salt[],
-                        size_t salt_len,
-                        size_t iterations,
-                        size_t& check_val)
-   {
-   std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-512)"));
-
-   secure_vector<byte> x = pbkdf->derive_key(32 + 2,
-                                             passphrase,
-                                             salt, salt_len,
-                                             iterations).bits_of();
-
-   check_val = make_u16bit(x[0], x[1]);
-   return SymmetricKey(&x[2], x.size() - 2);
-   }
-
-}
-
 Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                                          const std::string& passphrase,
                                          RandomNumberGenerator& rng,
@@ -67,6 +46,8 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
 
    const size_t salts = m_db->row_count("tls_sessions_metadata");
 
+   std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(SHA-512)"));
+
    if(salts == 1)
       {
       // existing db
@@ -78,31 +59,38 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
          const size_t iterations = stmt->get_size_t(1);
          const size_t check_val_db = stmt->get_size_t(2);
 
-         size_t check_val_created;
-         m_session_key = derive_key(passphrase,
-                                    salt.first,
-                                    salt.second,
-                                    iterations,
-                                    check_val_created);
+         secure_vector<byte> x = pbkdf->pbkdf_iterations(32 + 2,
+                                                         passphrase,
+                                                         salt.first, salt.second,
+                                                         iterations);
+
+         const size_t check_val_created = make_u16bit(x[0], x[1]);
+         m_session_key.assign(x.begin() + 2, x.end());
 
          if(check_val_created != check_val_db)
-            throw std::runtime_error("Session database password not valid");
+            throw Exception("Session database password not valid");
          }
       }
    else
       {
       // maybe just zap the salts + sessions tables in this case?
       if(salts != 0)
-         throw std::runtime_error("Seemingly corrupted database, multiple salts found");
+         throw Exception("Seemingly corrupted database, multiple salts found");
 
       // new database case
 
       std::vector<byte> salt = unlock(rng.random_vec(16));
-      const size_t iterations = 256 * 1024;
-      size_t check_val = 0;
+      size_t iterations = 0;
 
-      m_session_key = derive_key(passphrase, salt.data(), salt.size(),
-                                 iterations, check_val);
+      secure_vector<byte> x = pbkdf->pbkdf_timed(32 + 2,
+                                                 passphrase,
+                                                 salt.data(), salt.size(),
+                                                 std::chrono::milliseconds(100),
+                                                 iterations);
+
+      printf("pbkdf iter %d\n", iterations);
+      size_t check_val = make_u16bit(x[0], x[1]);
+      m_session_key.assign(x.begin() + 2, x.end());
 
       auto stmt = m_db->new_statement("insert into tls_sessions_metadata values(?1, ?2, ?3)");
 
@@ -172,6 +160,12 @@ void Session_Manager_SQL::remove_entry(const std::vector<byte>& session_id)
    stmt->bind(1, hex_encode(session_id));
 
    stmt->spin();
+   }
+
+size_t Session_Manager_SQL::remove_all()
+   {
+   auto stmt = m_db->new_statement("delete from tls_sessions");
+   return stmt->spin();
    }
 
 void Session_Manager_SQL::save(const Session& session)

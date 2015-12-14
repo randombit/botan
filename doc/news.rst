@@ -1,12 +1,80 @@
 Release Notes
 ========================================
 
-Version 1.11.24, Not Yet Released
+Version 1.11.26, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Root all exceptions thrown by the library in the `Botan::Exception` class.
+  Previously the library would in many cases throw `std::runtime_error`
+  or `std::invalid_argument` exceptions which would make it hard to determine
+  the source of the error in some cases.
+
+Version 1.11.25, 2015-12-07
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* In this release the test suite has been largely rewritten. Previously the
+  tests had internally used several different test helper frameworks created or
+  adopted over time, each of which was insufficient on its own for testing the
+  entire library. These have been fully converged on a new framework which
+  suffices for all of the tests. There should be no user-visible change as a
+  result of this, except that the output format of `botan-test` has changed.
+
+* Improved side channel countermeasures for the table based AES implementation.
+  The 4K T tables are computed (once) at runtime to avoid various cache based
+  attacks which are possible due to shared VMM mappings of read only tables.
+  Additionally every cache line of the table is read from prior to processing
+  the block(s).
+
+* Support for the insecure ECC groups secp112r1, secp112r2, secp128r1, and
+  secp128r2 has been removed.
+
+* The portable version of GCM has been changed to run using only
+  constant time operations.
+
+* Work around a bug in MSVC 2013 std::mutex which on some Windows
+  versions can result in a deadlock during static initialization. On
+  Windows a CriticalSection is used instead. Analysis and patch from
+  Matej Kenda (TopIT d.o.o.). GH #321
+
+* The OpenSSL implementation of RC4 would return the wrong value from `name` if
+  leading bytes of the keystream had been skipped in the output.
+
+* Fixed the signature of the FFI function botan_pubkey_destroy, which took the
+  wrong type and was not usable.
+
+* The TLS client would erronously reject any server key exchange packet smaller
+  than 6 bytes. This prevented negotiating a plain PSK TLS ciphersuite with an
+  empty identity hint. ECDHE_PSK and DHE_PSK suites were not affected.
+
+* Fixed a bug that would cause the TLS client to occasionally reject a valid
+  server key exchange message as having an invalid signature. This only affected
+  DHE and SRP ciphersuites.
+
+* Support for negotiating use of SHA-224 in TLS has been disabled in the
+  default policy.
+
+* Added `remove_all` function to the `TLS::Session_Manager` interface
+
+* Avoid GCC warning in pedantic mode when including bigint.h GH #330
+
+Version 1.11.24, 2015-11-04
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* When the bugs affecting X.509 path validation were fixed in 1.11.23, a check
+  in Credentials_Manager::verify_certificate_chain was accidentally removed
+  which caused path validation failures not to be signaled to the TLS layer.
+  Thus in 1.11.23 certificate authentication in TLS is bypassed.
+  Reported by Florent Le Coz in GH #324
 
 * Fixed an endian dependency in McEliece key generation which caused
   keys to be generated differently on big and little endian systems,
   even when using a deterministic PRNG with the same seed.
+
+* In `configure,py`, the flags for controlling use of debug, sanitizer, and
+  converage information have been split out into individual options
+  `--with-debug-info`, `--with-sanitizers`, and `--with-coverage`. These allow
+  enabling more than one in a build in a controlled way. The `--build-mode` flag
+  added in 1.11.17 has been removed.
 
 Version 1.11.23, 2015-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -20,7 +88,7 @@ Version 1.11.23, 2015-10-26
 * CVE-2015-7826: X.509 path validation violated RFC 6125 and would accept
   certificates which should not validate under those rules. In particular botan
   would accept wildcard certificates as matching in situations where it should
-  not (for example it would erronously accept '*.example.com' as a valid
+  not (for example it would erroneously accept '*.example.com' as a valid
   wildcard for 'foo.bar.example.com')
 
 * CVE-2015-7827: The routines for decoding PKCS #1 encryption and OAEP blocks
@@ -54,7 +122,7 @@ Version 1.11.23, 2015-10-26
   deriving the next value by squaring the previous ones. The reinitializion
   interval can be controlled by the build.h parameter BOTAN_BLINDING_REINIT_INTERVAL.
 
-* A bug decoding DTLS client hellos prevented session resumption for suceeding.
+* A bug decoding DTLS client hellos prevented session resumption for succeeding.
 
 * DL_Group now prohibits creating a group smaller than 1024 bits.
 

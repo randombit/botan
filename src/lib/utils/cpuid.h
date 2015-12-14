@@ -27,12 +27,27 @@ class BOTAN_DLL CPUID
       /**
       * Return a best guess of the cache line size
       */
-      static size_t cache_line_size() { initialize(); return g_cache_line_size; }
+      static size_t cache_line_size()
+         {
+         if(!g_initialized)
+            {
+            initialize();
+            }
+         return g_cache_line_size;
+         }
 
       /**
       * Check if the processor supports AltiVec/VMX
       */
-      static bool has_altivec() { initialize(); return g_altivec_capable; }
+      static bool has_altivec()
+         {
+         if(!g_initialized)
+            {
+            initialize();
+            }
+
+         return g_altivec_capable;
+         }
 
       /**
       * Check if the processor supports RDTSC

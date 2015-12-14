@@ -6,5 +6,4 @@ gettimeofday
 posix_mlock
 gmtime_r
 dlopen
-getsid
 </target_features>

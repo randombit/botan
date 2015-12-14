@@ -44,7 +44,7 @@ class Bzip2_Compression_Stream : public Bzip2_Stream
          if(rc == BZ_MEM_ERROR)
             throw std::bad_alloc();
          else if(rc != BZ_OK)
-            throw std::runtime_error("bzip compress initialization failed");
+            throw Exception("bzip compress initialization failed");
          }
 
       ~Bzip2_Compression_Stream()
@@ -59,7 +59,7 @@ class Bzip2_Compression_Stream : public Bzip2_Stream
          if(rc == BZ_MEM_ERROR)
             throw std::bad_alloc();
          else if(rc < 0)
-            throw std::runtime_error("bzip compress error");
+            throw Exception("bzip compress error");
 
          return (rc == BZ_STREAM_END);
          }
@@ -75,7 +75,7 @@ class Bzip2_Decompression_Stream : public Bzip2_Stream
          if(rc == BZ_MEM_ERROR)
             throw std::bad_alloc();
          else if(rc != BZ_OK)
-            throw std::runtime_error("bzip decompress initialization failed");
+            throw Exception("bzip decompress initialization failed");
          }
 
       ~Bzip2_Decompression_Stream()
@@ -90,7 +90,7 @@ class Bzip2_Decompression_Stream : public Bzip2_Stream
          if(rc == BZ_MEM_ERROR)
             throw std::bad_alloc();
          else if(rc != BZ_OK && rc != BZ_STREAM_END)
-            throw std::runtime_error("bzip decompress error");
+            throw Exception("bzip decompress error");
 
          return (rc == BZ_STREAM_END);
          }

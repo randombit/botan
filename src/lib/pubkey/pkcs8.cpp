@@ -81,7 +81,7 @@ secure_vector<byte> PKCS8_decode(
       if(is_encrypted)
          {
          if(OIDS::lookup(pbe_alg_id.oid) != "PBE-PKCS5v20")
-            throw std::runtime_error("Unknown PBE type " + pbe_alg_id.oid.as_string());
+            throw Exception("Unknown PBE type " + pbe_alg_id.oid.as_string());
          key = pbes2_decrypt(key_data, get_passphrase(), pbe_alg_id.parameters);
          }
       else
@@ -144,7 +144,7 @@ choose_pbe_params(const std::string& pbe_algo, const std::string& key_algo)
 
    SCAN_Name request(pbe_algo);
    if(request.algo_name() != "PBE-PKCS5v20" || request.arg_count() != 2)
-      throw std::runtime_error("Unsupported PBE " + pbe_algo);
+      throw Exception("Unsupported PBE " + pbe_algo);
    return std::make_pair(request.arg(1), request.arg(0));
    }
 

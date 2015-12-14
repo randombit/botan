@@ -69,7 +69,7 @@ class SIMD_Altivec
 
       void store_le(byte out[]) const
          {
-         __vector unsigned char perm = vec_lvsl(0, (u32bit*)0);
+         __vector unsigned char perm = vec_lvsl(0, static_cast<u32bit*>(nullptr));
 
          perm = vec_xor(perm, vec_splat_u8(3));
 
@@ -179,7 +179,7 @@ class SIMD_Altivec
 
       SIMD_Altivec bswap() const
          {
-         __vector unsigned char perm = vec_lvsl(0, (u32bit*)0);
+         __vector unsigned char perm = vec_lvsl(0, static_cast<u32bit*>(nullptr));
 
          perm = vec_xor(perm, vec_splat_u8(3));
 

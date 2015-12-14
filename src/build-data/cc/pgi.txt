@@ -7,10 +7,9 @@ add_include_dir_option -I
 add_lib_dir_option -L
 add_lib_option -l
 
-compile_flags_release "-c"
-compile_flags_debug "-c"
-lib_opt_flags_release "-fast -Minline"
-app_opt_flags_release "-fast"
+compile_flags "-c"
+debug_info_flags "-g"
+optimization_flags "-fast -Minline"
 shared_flags "-fPIC"
 
 makefile_style gmake

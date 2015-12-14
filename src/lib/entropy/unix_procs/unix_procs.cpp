@@ -9,6 +9,7 @@
 */
 
 #include <botan/internal/unix_procs.h>
+#include <botan/exceptn.h>
 #include <botan/parsing.h>
 #include <algorithm>
 #include <atomic>
@@ -43,8 +44,8 @@ size_t concurrent_processes(size_t user_request)
    const size_t DEFAULT_CONCURRENT = 2;
    const size_t MAX_CONCURRENT = 8;
 
-   if(user_request > 0 && user_request < MAX_CONCURRENT)
-      return user_request;
+   if(user_request > 0)
+      return std::min(user_request, MAX_CONCURRENT);
 
    const long online_cpus = ::sysconf(_SC_NPROCESSORS_ONLN);
 
@@ -68,24 +69,21 @@ Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& trusted_p
 
 void UnixProcessInfo_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   accum.add(::getpid(), 0.0);
-   accum.add(::getppid(), 0.0);
-   accum.add(::getuid(),  0.0);
-   accum.add(::getgid(),  0.0);
-#if defined(BOTAN_TARGET_OS_HAS_GETSID)
-   accum.add(::getsid(0),  0.0);
-#endif
-   accum.add(::getpgrp(), 0.0);
+   accum.add(::getpid(), BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
+   accum.add(::getppid(), BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
+   accum.add(::getuid(),  BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
+   accum.add(::getgid(),  BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
+   accum.add(::getpgrp(), BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
 
    struct ::rusage usage;
    ::getrusage(RUSAGE_SELF, &usage);
-   accum.add(usage, 0.0);
+   accum.add(usage, BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
    }
 
 void Unix_EntropySource::Unix_Process::spawn(const std::vector<std::string>& args)
    {
    if(args.empty())
-      throw std::invalid_argument("Cannot spawn process without path");
+      throw Invalid_Argument("Cannot spawn process without path");
 
    shutdown();
 
@@ -197,7 +195,6 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
       return; // still empty, really nothing to try
 
    const size_t MS_WAIT_TIME = 32;
-   const double ENTROPY_ESTIMATE = 1.0 / 1024;
 
    m_buf.resize(4096);
 
@@ -241,7 +238,7 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
             {
             const ssize_t got = ::read(fd, m_buf.data(), m_buf.size());
             if(got > 0)
-               accum.add(m_buf.data(), got, ENTROPY_ESTIMATE);
+               accum.add(m_buf.data(), got, BOTAN_ENTROPY_ESTIMATE_SYSTEM_TEXT);
             else
                proc.spawn(next_source());
             }

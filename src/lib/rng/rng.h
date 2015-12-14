@@ -8,12 +8,15 @@
 #ifndef BOTAN_RANDOM_NUMBER_GENERATOR_H__
 #define BOTAN_RANDOM_NUMBER_GENERATOR_H__
 
-#include <botan/entropy_src.h>
+#include <botan/secmem.h>
 #include <botan/exceptn.h>
+#include <chrono>
 #include <string>
 #include <mutex>
 
 namespace Botan {
+
+class Entropy_Sources;
 
 /**
 * This class represents a random number (RNG) generator object.
@@ -63,7 +66,7 @@ class BOTAN_DLL RandomNumberGenerator
       u64bit gen_mask(size_t bits)
          {
          if(bits == 0 || bits > 64)
-            throw std::invalid_argument("RandomNumberGenerator::gen_mask invalid argument");
+            throw Invalid_Argument("RandomNumberGenerator::gen_mask invalid argument");
 
          const u64bit mask = ((1 << bits) - 1);
          return this->get_random<u64bit>() & mask;
@@ -100,11 +103,29 @@ class BOTAN_DLL RandomNumberGenerator
       virtual std::string name() const = 0;
 
       /**
-      * Seed this RNG using the entropy sources it contains.
+      * Seed this RNG using the global entropy sources and default timeout
       * @param bits_to_collect is the number of bits of entropy to
                attempt to gather from the entropy sources
       */
-      virtual void reseed(size_t bits_to_collect) = 0;
+      size_t reseed(size_t bits_to_collect);
+
+      /**
+      * Seed this RNG using the global entropy sources
+      * @param bits_to_collect is the number of bits of entropy to
+               attempt to gather from the entropy sources
+      * @param poll_timeout try not to run longer than this, no matter what
+      */
+      size_t reseed_with_timeout(size_t bits_to_collect,
+                                 std::chrono::milliseconds poll_timeout);
+
+      /**
+      * Poll provided sources for up to poll_bits bits of entropy
+      * or until the timeout expires. Returns estimate of the number
+      * of bits collected.
+      */
+      virtual size_t reseed_with_sources(Entropy_Sources& srcs,
+                                         size_t poll_bits,
+                                         std::chrono::milliseconds poll_timeout) = 0;
 
       /**
       * Add entropy to this RNG.
@@ -135,7 +156,12 @@ class BOTAN_DLL Null_RNG : public RandomNumberGenerator
 
       std::string name() const override { return "Null_RNG"; }
 
-      void reseed(size_t) override {}
+      size_t reseed_with_sources(Entropy_Sources&, size_t,
+                                 std::chrono::milliseconds) override
+         {
+         return 0;
+         }
+
       bool is_seeded() const override { return false; }
       void add_entropy(const byte[], size_t) override {}
    };
@@ -170,10 +196,12 @@ class BOTAN_DLL Serialized_RNG : public RandomNumberGenerator
          return m_rng->name();
          }
 
-      void reseed(size_t poll_bits) override
+      size_t reseed_with_sources(Entropy_Sources& src,
+                                 size_t bits,
+                                 std::chrono::milliseconds msec) override
          {
          std::lock_guard<std::mutex> lock(m_mutex);
-         m_rng->reseed(poll_bits);
+         return m_rng->reseed_with_sources(src, bits, msec);
          }
 
       void add_entropy(const byte in[], size_t len) override
@@ -183,6 +211,7 @@ class BOTAN_DLL Serialized_RNG : public RandomNumberGenerator
          }
 
       Serialized_RNG() : m_rng(RandomNumberGenerator::make_rng()) {}
+      Serialized_RNG(RandomNumberGenerator* rng) : m_rng(rng) {}
    private:
       mutable std::mutex m_mutex;
       std::unique_ptr<RandomNumberGenerator> m_rng;

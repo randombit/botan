@@ -10,238 +10,239 @@
 
 #if defined(BOTAN_HAS_MCELIECE)
 
+#include <botan/mceliece.h>
+#include <botan/mce_kem.h>
 #include <botan/pubkey.h>
 #include <botan/oids.h>
-#include <botan/mceliece.h>
-#include <botan/internal/code_based_util.h>
-#include <botan/mce_kem.h>
+#include <botan/hmac_drbg.h>
 #include <botan/loadstor.h>
+#include <botan/hash.h>
 #include <botan/hex.h>
-#include <iostream>
-#include <memory>
 
 #if defined(BOTAN_HAS_MCEIES)
 #include <botan/mceies.h>
 #endif
 
-using namespace Botan;
+#endif
 
-#define CHECK_MESSAGE(expr, print)  do {if(!(expr)) {std::cout << print << std::endl; return 1;} }while(0)
-#define CHECK(expr) do {if(!(expr)) { std::cout << #expr << std::endl; return 1; } }while(0)
+namespace Botan_Tests {
 
 namespace {
 
-const size_t MCE_RUNS = 5;
+#if defined(BOTAN_HAS_MCELIECE)
 
-size_t test_mceliece_kem(const McEliece_PrivateKey& sk,
-                         const McEliece_PublicKey& pk,
-                         RandomNumberGenerator& rng)
+std::vector<byte> hash_bytes(const byte b[], size_t len, const std::string& hash_fn = "SHA-256")
    {
-   size_t fails = 0;
-
-   McEliece_KEM_Encryptor pub_op(pk);
-   McEliece_KEM_Decryptor priv_op(sk);
-
-   for(size_t i = 0; i != MCE_RUNS; i++)
-      {
-      const std::pair<secure_vector<byte>,secure_vector<byte> > ciphertext__sym_key = pub_op.encrypt(rng);
-      const secure_vector<byte>& ciphertext = ciphertext__sym_key.first;
-      const secure_vector<byte>& sym_key_encr = ciphertext__sym_key.second;
-
-      const secure_vector<byte> sym_key_decr = priv_op.decrypt(ciphertext.data(), ciphertext.size());
-
-      if(sym_key_encr != sym_key_decr)
-         {
-         std::cout << "mce KEM test failed, error during encryption/decryption" << std::endl;
-         ++fails;
-         }
-      }
-
-   return fails;
+   std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_fn));
+   hash->update(b, len);
+   std::vector<byte> r(hash->output_length());
+   hash->final(r.data());
+   return r;
    }
 
-/*
-size_t test_mceliece_raw(const McEliece_PrivateKey& sk,
-                         const McEliece_PublicKey& pk,
-                         RandomNumberGenerator& rng)
+template<typename A>
+std::vector<byte> hash_bytes(const std::vector<byte, A>& v)
    {
-   const size_t code_length = pk.get_code_length();
-   McEliece_Private_Operation priv_op(sk);
-   McEliece_Public_Operation pub_op(pk);
-   size_t err_cnt = 0;
-
-   for(size_t i = 0; i != MCE_RUNS; i++)
-      {
-      const secure_vector<byte> plaintext = pk.random_plaintext_element(rng);
-      secure_vector<gf2m> err_pos = create_random_error_positions(code_length, pk.get_t(), rng);
-
-      mceliece_message_parts parts(err_pos, plaintext, code_length);
-      secure_vector<byte> message_and_error_input = parts.get_concat();
-      secure_vector<byte> ciphertext = pub_op.encrypt(message_and_error_input.data(), message_and_error_input.size(), rng);
-      //std::cout << "ciphertext byte length = " << ciphertext.size() << std::endl;
-      secure_vector<byte> message_and_error_output = priv_op.decrypt(ciphertext.data(), ciphertext.size() );
-      if(message_and_error_input != message_and_error_output)
-         {
-         mceliece_message_parts combined(message_and_error_input.data(), message_and_error_input.size(), code_length);
-         secure_vector<byte> orig_pt = combined.get_message_word();
-         secure_vector<byte> orig_ev = combined.get_error_vector();
-
-         mceliece_message_parts decr_combined(message_and_error_output.data(), message_and_error_output.size(), code_length);
-         secure_vector<byte> decr_pt = decr_combined.get_message_word();
-         secure_vector<byte> decr_ev = decr_combined.get_error_vector();
-         std::cout << "ciphertext = " << hex_encode(ciphertext) << std::endl;
-         std::cout << "original      plaintext = " << hex_encode(orig_pt) << std::endl;
-         std::cout << "original   error vector = " << hex_encode(orig_ev) << std::endl;
-         std::cout << "decrypted     plaintext = " << hex_encode(decr_pt) << std::endl;
-         std::cout << "decrypted  error vector = " << hex_encode(decr_ev) << std::endl;
-         err_cnt++;
-         std::cout << "mce test failed, error during encryption/decryption" << std::endl;
-         std::cout << "err pos during encryption = ";
-         for(size_t j = 0; j < err_pos.size(); j++) std::printf("%u, ", err_pos[j]);
-         printf("\n");
-         return 1;
-         }
-      }
-
-   return err_cnt;
+   return hash_bytes(v.data(), v.size());
    }
-*/
+
+class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
+   {
+   public:
+      McEliece_Keygen_Encrypt_Test() :
+         Text_Based_Test("McEliece",
+                         Test::data_file("pubkey/mce.vec"),
+                         {"McElieceSeed", "KeyN","KeyT","PublicKeyFingerprint",
+                          "PrivateKeyFingerprint", "EncryptPRNGSeed",
+                            "SharedKey", "Ciphertext" })
+         {}
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         const std::vector<byte> keygen_seed  = get_req_bin(vars, "McElieceSeed");
+         const std::vector<byte> fprint_pub   = get_req_bin(vars, "PublicKeyFingerprint");
+         const std::vector<byte> fprint_priv  = get_req_bin(vars, "PrivateKeyFingerprint");
+         const std::vector<byte> encrypt_seed = get_req_bin(vars, "EncryptPRNGSeed");
+         const std::vector<byte> ciphertext   = get_req_bin(vars, "Ciphertext");
+         const std::vector<byte> shared_key   = get_req_bin(vars, "SharedKey");
+         const size_t keygen_n = get_req_sz(vars, "KeyN");
+         const size_t keygen_t = get_req_sz(vars, "KeyT");
+
+         Botan::HMAC_DRBG rng("HMAC(SHA-384)");
+
+         rng.add_entropy(keygen_seed.data(), keygen_seed.size());
+         Botan::McEliece_PrivateKey mce_priv(rng, keygen_n, keygen_t);
+
+         Test::Result result("McEliece keygen");
+
+         result.test_eq("public key fingerprint", hash_bytes(mce_priv.x509_subject_public_key()), fprint_pub);
+         result.test_eq("private key fingerprint", hash_bytes(mce_priv.pkcs8_private_key()), fprint_priv);
+
+         rng.clear();
+         rng.add_entropy(encrypt_seed.data(), encrypt_seed.size());
+
+         Botan::McEliece_KEM_Encryptor kem_enc(mce_priv);
+         Botan::McEliece_KEM_Decryptor kem_dec(mce_priv);
+
+         const auto kem = kem_enc.encrypt(rng);
+         result.test_eq("ciphertext", kem.first, ciphertext);
+         result.test_eq("encrypt shared", kem.second, shared_key);
+         result.test_eq("decrypt shared", kem_dec.decrypt_vec(kem.first), shared_key);
+         return result;
+         }
+
+   };
+
+BOTAN_REGISTER_TEST("mce_keygen", McEliece_Keygen_Encrypt_Test);
+
+class McEliece_Tests : public Test
+   {
+   public:
+
+      std::string fingerprint(const Botan::Private_Key& key, const std::string& hash_algo = "SHA-256")
+         {
+         std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_algo));
+         if(!hash)
+            throw Test_Error("Hash " + hash_algo + " not available");
+
+         hash->update(key.pkcs8_private_key());
+         return Botan::hex_encode(hash->final());
+         }
+
+      std::string fingerprint(const Botan::Public_Key& key, const std::string& hash_algo = "SHA-256")
+         {
+         std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_algo));
+         if(!hash)
+            throw Test_Error("Hash " + hash_algo + " not available");
+
+         hash->update(key.x509_subject_public_key());
+         return Botan::hex_encode(hash->final());
+         }
+
+      std::vector<Test::Result> run() override
+         {
+         size_t params__n__t_min_max[] = {
+            256, 5, 15,
+            512, 5, 33,
+            1024, 15, 35,
+            2048, 33, 50,
+            2960, 50, 56,
+            6624, 110, 115
+         };
+
+         std::vector<Test::Result> results;
+
+         for(size_t i = 0; i < sizeof(params__n__t_min_max)/sizeof(params__n__t_min_max[0]); i+=3)
+            {
+            const size_t code_length = params__n__t_min_max[i];
+            const size_t min_t = params__n__t_min_max[i+1];
+            const size_t max_t = params__n__t_min_max[i+2];
+
+            for(size_t t = min_t; t <= max_t; ++t)
+               {
+               Botan::McEliece_PrivateKey sk1(Test::rng(), code_length, t);
+               const Botan::McEliece_PublicKey& pk1 = sk1;
+
+               const std::vector<byte> pk_enc = pk1.x509_subject_public_key();
+               const Botan::secure_vector<byte> sk_enc = sk1.pkcs8_private_key();
+
+               Botan::McEliece_PublicKey pk(pk_enc);
+               Botan::McEliece_PrivateKey sk(sk_enc);
+
+               Test::Result result("McEliece keygen");
+
+               result.test_eq("decoded public key equals original", fingerprint(pk1), fingerprint(pk));
+
+               result.test_eq("decoded private key equals original", fingerprint(sk1), fingerprint(sk));
+
+               result.test_eq("key validation passes", sk.check_key(Test::rng(), false), true);
+
+               results.push_back(result);
+
+               results.push_back(test_kem(sk, pk));
 
 #if defined(BOTAN_HAS_MCEIES)
-size_t test_mceies(const McEliece_PrivateKey& sk,
-                   const McEliece_PublicKey& pk,
-                   RandomNumberGenerator& rng)
-   {
-   size_t fails = 0;
-
-   for(size_t i = 0; i != 5; ++i)
-      {
-      byte ad[8];
-      store_be(static_cast<u64bit>(i), ad);
-      const size_t ad_len = sizeof(ad);
-
-      const secure_vector<byte> pt = rng.random_vec(rng.next_byte());
-      const secure_vector<byte> ct = mceies_encrypt(pk, pt.data(), pt.size(), ad, ad_len, rng);
-      const secure_vector<byte> dec = mceies_decrypt(sk, ct.data(), ct.size(), ad, ad_len);
-
-      if(pt != dec)
-         {
-         std::cout << "MCEIES " << hex_encode(pt) << " != " << hex_encode(dec) << std::endl;
-         ++fails;
-         }
-
-      secure_vector<byte> bad_ct = ct;
-      for(size_t j = 0; j != 2; ++j)
-         {
-         bad_ct = ct;
-
-         byte nonzero = 0;
-         while(nonzero == 0)
-            nonzero = rng.next_byte();
-
-         bad_ct[rng.next_byte() % bad_ct.size()] ^= nonzero;
-
-         try
-            {
-            mceies_decrypt(sk, bad_ct.data(), bad_ct.size(), ad, ad_len);
-            std::cout << "Successfully decrypted manipulated ciphertext!" << std::endl;
-            ++fails;
+               results.push_back(test_mceies(sk, pk));
+#endif
+               }
             }
-         catch(std::exception& e) { /* Yay */ }
 
-         bad_ct[i] ^= nonzero;
+         return results;
          }
-      }
 
-   return fails;
-   }
-#endif // BOTAN_HAS_MCEIES
+   private:
+      Test::Result test_kem(const Botan::McEliece_PrivateKey& sk,
+                            const Botan::McEliece_PublicKey& pk)
+         {
+         Test::Result result("McEliece KEM");
+
+         Botan::McEliece_KEM_Encryptor pub_op(pk);
+         Botan::McEliece_KEM_Decryptor priv_op(sk);
+
+         for(size_t i = 0; i <= Test::soak_level(); i++)
+            {
+            const std::pair<Botan::secure_vector<byte>,Botan::secure_vector<byte> > ciphertext__sym_key = pub_op.encrypt(Test::rng());
+            const Botan::secure_vector<byte>& ciphertext = ciphertext__sym_key.first;
+            const Botan::secure_vector<byte>& sym_key_encr = ciphertext__sym_key.second;
+
+            const Botan::secure_vector<byte> sym_key_decr = priv_op.decrypt(ciphertext.data(), ciphertext.size());
+
+            result.test_eq("same key", sym_key_decr, sym_key_encr);
+            }
+         return result;
+         }
+
+#if defined(BOTAN_HAS_MCEIES)
+      Test::Result test_mceies(const Botan::McEliece_PrivateKey& sk,
+                               const Botan::McEliece_PublicKey& pk)
+         {
+         Test::Result result("McEliece IES");
+
+         for(size_t i = 0; i <= Test::soak_level(); ++i)
+            {
+            uint8_t ad[8];
+            Botan::store_be(static_cast<Botan::u64bit>(i), ad);
+            const size_t ad_len = sizeof(ad);
+
+            const Botan::secure_vector<byte> pt = Test::rng().random_vec(Test::rng().next_byte());
+
+            const Botan::secure_vector<byte> ct = mceies_encrypt(pk, pt.data(), pt.size(), ad, ad_len, Test::rng());
+            const Botan::secure_vector<byte> dec = mceies_decrypt(sk, ct.data(), ct.size(), ad, ad_len);
+
+            result.test_eq("decrypted ok", dec, pt);
+
+            Botan::secure_vector<byte> bad_ct = ct;
+            for(size_t j = 0; j != 3; ++j)
+               {
+               bad_ct = mutate_vec(ct, true);
+
+               try
+                  {
+                  mceies_decrypt(sk, bad_ct.data(), bad_ct.size(), ad, ad_len);
+                  result.test_failure("AEAD decrypted manipulated ciphertext");
+                  result.test_note("Manipulated text was " + Botan::hex_encode(bad_ct));
+                  }
+               catch(Botan::Integrity_Failure& e)
+                  {
+                  result.test_note("AEAD rejected manipulated ciphertext");
+                  }
+               catch(std::exception& e)
+                  {
+                  result.test_failure("AEAD rejected manipulated ciphertext with unexpected error", e.what());
+                  }
+               }
+            }
+
+         return result;
+         }
+#endif
+
+   };
+
+BOTAN_REGISTER_TEST("mceliece", McEliece_Tests);
+
+#endif
 
 }
 
-size_t test_mceliece()
-   {
-   auto& rng = test_rng();
-
-   size_t fails = 0;
-   size_t params__n__t_min_max[] = {
-      256, 5, 15,
-      512, 5, 33,
-      1024, 15, 35,
-      2048, 33, 50,
-      2960, 50, 56,
-      6624, 110, 115
-   };
-
-   size_t tests = 0;
-
-   for(size_t i = 0; i < sizeof(params__n__t_min_max)/sizeof(params__n__t_min_max[0]); i+=3)
-      {
-      size_t code_length = params__n__t_min_max[i];
-      for(size_t t = params__n__t_min_max[i+1]; t <= params__n__t_min_max[i+2]; t++)
-         {
-         //std::cout << "testing parameters n = " << code_length << ", t = " << t << std::endl;
-
-         McEliece_PrivateKey sk1(rng, code_length, t);
-         const McEliece_PublicKey& pk1 = sk1;
-
-         const std::vector<byte> pk_enc = pk1.x509_subject_public_key();
-         const secure_vector<byte> sk_enc = sk1.pkcs8_private_key();
-
-         McEliece_PublicKey pk(pk_enc);
-         McEliece_PrivateKey sk(sk_enc);
-
-         if(pk1 != pk)
-            {
-            std::cout << "Decoded McEliece public key differs from original one" << std::endl;
-            ++fails;
-            }
-
-         if(sk1 != sk)
-            {
-            std::cout << "Decoded McEliece private key differs from original one" << std::endl;
-            ++fails;
-            }
-
-         if(!sk.check_key(rng, false))
-            {
-            std::cout << "Error calling check key on McEliece key" << std::endl;
-            ++fails;
-            }
-
-         try
-            {
-            fails += test_mceliece_kem(sk, pk, rng);
-            }
-         catch(std::exception& e)
-            {
-            std::cout << e.what() << std::endl;
-            fails++;
-            }
-         tests += 1;
-
-#if defined(BOTAN_HAS_MCEIES)
-         try
-            {
-            fails += test_mceies(sk, pk, rng);
-            }
-         catch(std::exception& e)
-            {
-            std::cout << e.what() << std::endl;
-            fails++;
-            }
-         tests += 1;
-#endif // BOTAN_HAS_MCEIES
-
-         }
-      }
-
-   test_report("McEliece", tests, fails);
-   return fails;
-   }
-
-#else
-
-SKIP_TEST(mceliece);
-
-#endif // BOTAN_HAS_MCELIECE
+}

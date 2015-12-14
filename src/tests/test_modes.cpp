@@ -7,93 +7,62 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_MODES)
+  #include <botan/cipher_mode.h>
+#endif
 
-#include <botan/hex.h>
-#include <botan/cipher_mode.h>
-#include <iostream>
-#include <fstream>
-#include <memory>
+namespace Botan_Tests {
 
-using namespace Botan;
+#if defined(BOTAN_HAS_MODES)
 
-namespace {
-
-secure_vector<byte> run_mode(const std::string& algo,
-                             Cipher_Dir dir,
-                             const secure_vector<byte>& pt,
-                             const secure_vector<byte>& nonce,
-                             const secure_vector<byte>& key)
+class Cipher_Mode_Tests : public Text_Based_Test
    {
-   std::unique_ptr<Cipher_Mode> cipher(get_cipher_mode(algo, dir));
-   if(!cipher)
-      throw std::runtime_error("No cipher " + algo + " enabled in build");
+   public:
+      Cipher_Mode_Tests() :
+         Text_Based_Test(Test::data_dir("modes"), {"Key", "Nonce", "In", "Out"})
+         {}
 
-   cipher->set_key(key);
-   cipher->start(nonce);
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
+         {
+         const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
+         const std::vector<uint8_t> nonce    = get_opt_bin(vars, "Nonce");
+         const std::vector<uint8_t> input    = get_req_bin(vars, "In");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
 
-   secure_vector<byte> ct = pt;
-   cipher->finish(ct);
-   return ct;
-   }
+         Test::Result result(algo);
 
-size_t mode_test(const std::string& algo,
-                 const std::string& pt,
-                 const std::string& ct,
-                 const std::string& key_hex,
-                 const std::string& nonce_hex)
-   {
-   auto nonce = hex_decode_locked(nonce_hex);
-   auto key = hex_decode_locked(key_hex);
+         std::unique_ptr<Botan::Cipher_Mode> enc(Botan::get_cipher_mode(algo, Botan::ENCRYPTION));
+         std::unique_ptr<Botan::Cipher_Mode> dec(Botan::get_cipher_mode(algo, Botan::DECRYPTION));
 
-   size_t fails = 0;
+         if(!enc || !dec)
+            {
+            result.note_missing(algo);
+            return result;
+            }
 
-   const std::string ct2 = hex_encode(run_mode(algo,
-                                               ENCRYPTION,
-                                               hex_decode_locked(pt),
-                                               nonce,
-                                               key));
+         result.test_eq("mode not authenticated", enc->authenticated(), false);
 
-   if(ct != ct2)
-      {
-      std::cout << algo << " got ct " << ct2 << " expected " << ct << std::endl;
-      ++fails;
-      }
+         enc->set_key(key);
+         enc->start(nonce);
 
-   const std::string pt2 = hex_encode(run_mode(algo,
-                                               DECRYPTION,
-                                               hex_decode_locked(ct),
-                                               nonce,
-                                               key));
+         Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
+         // TODO: should first update if possible
+         enc->finish(buf);
 
-   if(pt != pt2)
-      {
-      std::cout << algo << " got pt " << pt2 << " expected " << pt << std::endl;
-      ++fails;
-      }
+         result.test_eq("encrypt", buf, expected);
 
-   return fails;
-   }
+         buf.assign(expected.begin(), expected.end());
+
+         dec->set_key(key);
+         dec->start(nonce);
+         dec->finish(buf);
+         result.test_eq("decrypt", buf, input);
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("modes", Cipher_Mode_Tests);
+
+#endif
 
 }
-
-size_t test_modes()
-   {
-   auto test = [](const std::string& input)
-      {
-      std::ifstream vec(input);
-
-      return run_tests_bb(vec, "Mode", "Out", true,
-             [](std::map<std::string, std::string> m)
-             {
-             return mode_test(m["Mode"], m["In"], m["Out"], m["Key"], m["Nonce"]);
-             });
-      };
-
-   return run_tests_in_dir(TEST_DATA_DIR "/modes", test);
-   }
-
-#else
-
-SKIP_TEST(modes);
-
-#endif // BOTAN_HAS_MODES

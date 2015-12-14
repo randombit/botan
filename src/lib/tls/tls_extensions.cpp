@@ -228,7 +228,7 @@ std::vector<byte> Maximum_Fragment_Length::serialize() const
       case 4096:
          return std::vector<byte>(1, 4);
       default:
-         throw std::invalid_argument("Bad setting " +
+         throw Invalid_Argument("Bad setting " +
                                      std::to_string(m_max_fragment) +
                                      " for maximum fragment size");
       }

@@ -95,7 +95,11 @@ void HMAC_RNG::randomize(byte out[], size_t length)
    m_output_since_reseed += length;
 
    if(m_output_since_reseed >= BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED)
-      reseed_with_timeout(BOTAN_RNG_RESEED_POLL_BITS, BOTAN_RNG_AUTO_RESEED_TIMEOUT);
+      {
+      reseed_with_sources(Entropy_Sources::global_sources(),
+                          BOTAN_RNG_RESEED_POLL_BITS,
+                          BOTAN_RNG_AUTO_RESEED_TIMEOUT);
+      }
 
    /*
     HMAC KDF as described in E-t-E, using a CTXinfo of "rng"
@@ -112,15 +116,9 @@ void HMAC_RNG::randomize(byte out[], size_t length)
       }
    }
 
-/*
-* Poll for entropy and reset the internal keys
-*/
-void HMAC_RNG::reseed(size_t poll_bits)
-   {
-   reseed_with_timeout(poll_bits, BOTAN_RNG_RESEED_DEFAULT_TIMEOUT);
-   }
-
-void HMAC_RNG::reseed_with_timeout(size_t poll_bits, std::chrono::milliseconds timeout)
+size_t HMAC_RNG::reseed_with_sources(Entropy_Sources& srcs,
+                                     size_t poll_bits,
+                                     std::chrono::milliseconds timeout)
    {
    /*
    Using the terminology of E-t-E, XTR is the MAC function (normally
@@ -130,20 +128,18 @@ void HMAC_RNG::reseed_with_timeout(size_t poll_bits, std::chrono::milliseconds t
    a bad poll doesn't wipe us out.
    */
 
-   double bits_collected = 0;
-
-   typedef std::chrono::high_resolution_clock clock;
+   typedef std::chrono::system_clock clock;
    auto deadline = clock::now() + timeout;
 
-   Entropy_Accumulator accum(
-      [&](const byte in[], size_t in_len, double entropy_estimate)
-      {
+   double bits_collected = 0;
+
+   Entropy_Accumulator accum([&](const byte in[], size_t in_len, double entropy_estimate) {
       m_extractor->update(in, in_len);
       bits_collected += entropy_estimate;
       return (bits_collected >= poll_bits || clock::now() > deadline);
       });
 
-   EntropySource::poll_available_sources(accum);
+   srcs.poll(accum);
 
    /*
    * It is necessary to feed forward poll data. Otherwise, a good poll
@@ -172,6 +168,8 @@ void HMAC_RNG::reseed_with_timeout(size_t poll_bits, std::chrono::milliseconds t
                        m_extractor->output_length() * 8);
 
    m_output_since_reseed = 0;
+
+   return static_cast<size_t>(bits_collected);
    }
 
 bool HMAC_RNG::is_seeded() const
@@ -180,12 +178,16 @@ bool HMAC_RNG::is_seeded() const
    }
 
 /*
-* Add user-supplied entropy to the extractor input
+* Add user-supplied entropy to the extractor input then reseed
+* to incorporate it into the state
 */
 void HMAC_RNG::add_entropy(const byte input[], size_t length)
    {
    m_extractor->update(input, length);
-   reseed_with_timeout(BOTAN_RNG_RESEED_POLL_BITS, BOTAN_RNG_AUTO_RESEED_TIMEOUT);
+
+   reseed_with_sources(Entropy_Sources::global_sources(),
+                       BOTAN_RNG_RESEED_POLL_BITS,
+                       BOTAN_RNG_RESEED_DEFAULT_TIMEOUT);
    }
 
 /*

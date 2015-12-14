@@ -100,7 +100,7 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
       Protocol_Version active_version = active->version();
 
       if(active_version.is_datagram_protocol() != version.is_datagram_protocol())
-         throw std::runtime_error("Active state using version " +
+         throw Exception("Active state using version " +
                                   active_version.to_string() +
                                   " cannot change to " +
                                   version.to_string() +
@@ -158,7 +158,7 @@ void Channel::renegotiate(bool force_full_renegotiation)
       initiate_handshake(create_handshake_state(active->version()),
                          force_full_renegotiation);
    else
-      throw std::runtime_error("Cannot renegotiate on inactive connection");
+      throw Exception("Cannot renegotiate on inactive connection");
    }
 
 size_t Channel::maximum_fragment_size() const
@@ -571,7 +571,7 @@ void Channel::send_record_under_epoch(u16bit epoch, byte record_type,
 void Channel::send(const byte buf[], size_t buf_size)
    {
    if(!is_active())
-      throw std::runtime_error("Data cannot be sent on inactive TLS connection");
+      throw Exception("Data cannot be sent on inactive TLS connection");
 
    send_record_array(sequence_numbers().current_write_epoch(),
                      APPLICATION_DATA, buf, buf_size);
@@ -701,7 +701,7 @@ SymmetricKey Channel::key_material_export(const std::string& label,
          {
          size_t context_size = context.length();
          if(context_size > 0xFFFF)
-            throw std::runtime_error("key_material_export context is too long");
+            throw Exception("key_material_export context is too long");
          salt.push_back(get_byte<u16bit>(0, context_size));
          salt.push_back(get_byte<u16bit>(1, context_size));
          salt += to_byte_vector(context);
@@ -710,7 +710,7 @@ SymmetricKey Channel::key_material_export(const std::string& label,
       return prf->derive_key(length, master_secret, salt);
       }
    else
-      throw std::runtime_error("Channel::key_material_export connection not active");
+      throw Exception("Channel::key_material_export connection not active");
    }
 
 }

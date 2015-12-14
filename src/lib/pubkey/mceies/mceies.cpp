@@ -48,7 +48,7 @@ mceies_encrypt(const McEliece_PublicKey& pubkey,
 
    std::unique_ptr<AEAD_Mode> aead(get_aead(algo, ENCRYPTION));
    if(!aead)
-      throw std::runtime_error("mce_encrypt unable to create AEAD instance '" + algo + "'");
+      throw Exception("mce_encrypt unable to create AEAD instance '" + algo + "'");
 
    const size_t nonce_len = aead->default_nonce_length();
 
@@ -81,12 +81,12 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
 
       std::unique_ptr<AEAD_Mode> aead(get_aead(algo, DECRYPTION));
       if(!aead)
-         throw std::runtime_error("Unable to create AEAD instance '" + algo + "'");
+         throw Exception("Unable to create AEAD instance '" + algo + "'");
 
       const size_t nonce_len = aead->default_nonce_length();
 
       if(ct_len < mce_code_bytes + nonce_len + aead->tag_size())
-         throw std::runtime_error("Input message too small to be valid");
+         throw Exception("Input message too small to be valid");
 
       const secure_vector<byte> mce_key = kem_op.decrypt(ct, mce_code_bytes);
 
@@ -99,9 +99,13 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
       aead->finish(pt, 0);
       return pt;
       }
+   catch(Integrity_Failure)
+      {
+      throw;
+      }
    catch(std::exception& e)
       {
-      throw std::runtime_error("mce_decrypt failed: " + std::string(e.what()));
+      throw Exception("mce_decrypt failed: " + std::string(e.what()));
       }
    }
 

@@ -11,13 +11,33 @@
 #include <botan/types.h>
 #include <botan/parsing.h>
 #include <exception>
-#include <stdexcept>
 #include <string>
 
 namespace Botan {
 
-typedef std::runtime_error Exception;
-typedef std::invalid_argument Invalid_Argument;
+/**
+* Base class for all exceptions thrown by the library
+*/
+class BOTAN_DLL Exception : public std::exception
+   {
+   public:
+      Exception(const std::string& what) : m_what(what) {}
+      Exception(const char* prefix, const std::string& what) : m_what(std::string(prefix) + " " + what) {}
+      //const char* what() const override BOTAN_NOEXCEPT { return m_what.c_str(); }
+      const char* what() const BOTAN_NOEXCEPT override { return m_what.c_str(); }
+   private:
+      std::string m_what;
+   };
+
+/**
+* An invalid argument which caused
+*/
+class BOTAN_DLL Invalid_Argument : public Exception
+   {
+   public:
+      Invalid_Argument(const std::string& what) :
+         Exception("Invalid argument",  what) {}
+   };
 
 /**
 * Unsupported_Argument Exception
@@ -194,15 +214,6 @@ struct BOTAN_DLL Self_Test_Failure : public Internal_Error
    Self_Test_Failure(const std::string& err) :
       Internal_Error("Self test failed: " + err)
       {}
-   };
-
-/**
-* Memory Allocation Exception
-*/
-struct BOTAN_DLL Memory_Exhaustion : public std::bad_alloc
-   {
-   const char* what() const BOTAN_NOEXCEPT override
-      { return "Ran out of memory, allocation failed"; }
    };
 
 }

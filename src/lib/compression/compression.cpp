@@ -28,7 +28,7 @@ void Compression_Alloc_Info::do_free(void* ptr)
       auto i = m_current_allocs.find(ptr);
 
       if(i == m_current_allocs.end())
-         throw std::runtime_error("Compression_Alloc_Info::free got pointer not allocated by us");
+         throw Exception("Compression_Alloc_Info::free got pointer not allocated by us");
 
       zero_mem(ptr, i->second);
       std::free(ptr);
@@ -64,7 +64,7 @@ Compressor_Transform* do_make_compressor(const std::string& type, const std::str
 
    Compressor_Transform* r = dynamic_cast<Compressor_Transform*>(t.get());
    if(!r)
-      throw std::runtime_error("Bad cast of compression object " + t_name);
+      throw Exception("Bad cast of compression object " + t_name);
 
    t.release();
    return r;
@@ -228,7 +228,7 @@ void Stream_Decompression::finish(secure_vector<byte>& buf, size_t offset)
       process(buf, offset, m_stream->finish_flag());
 
    if(m_stream.get())
-      throw std::runtime_error(name() + " finished but not at stream end");
+      throw Exception(name() + " finished but not at stream end");
    }
 
 }

@@ -221,7 +221,7 @@ void Threefish_512::decrypt_n(const byte in[], byte out[], size_t blocks) const
 void Threefish_512::set_tweak(const byte tweak[], size_t len)
    {
    if(len != 16)
-      throw std::runtime_error("Unsupported twofish tweak length");
+      throw Exception("Unsupported twofish tweak length");
    m_T.resize(3);
    m_T[0] = load_le<u64bit>(tweak, 0);
    m_T[1] = load_le<u64bit>(tweak, 1);

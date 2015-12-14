@@ -35,7 +35,7 @@ secure_vector<byte> PK_Ops::Encryption_with_EME::encrypt(const byte msg[], size_
    const std::vector<byte> encoded = unlock(m_eme->encode(msg, msg_len, max_raw, rng));
 
    if(8*(encoded.size() - 1) + high_bit(encoded[0]) > max_raw)
-      throw std::runtime_error("Input is too large to encrypt with this key");
+      throw Exception("Input is too large to encrypt with this key");
 
    return raw_encrypt(encoded.data(), encoded.size(), rng);
    }

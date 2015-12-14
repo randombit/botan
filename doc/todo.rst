@@ -57,6 +57,7 @@ Symmetric Algorithms, Hashes, ...
 ----------------------------------------
 
 * Bitsliced AES or Camellia
+* Compressed tables for AES
 * Camellia with AES-NI
 * Serpent using AVX2
 * Serpent using SSSE3 pshufb for sboxes

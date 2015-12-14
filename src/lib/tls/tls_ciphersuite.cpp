@@ -12,7 +12,6 @@
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <sstream>
-#include <stdexcept>
 
 namespace Botan {
 
@@ -208,7 +207,7 @@ bool Ciphersuite::valid() const
 std::string Ciphersuite::to_string() const
    {
    if(m_cipher_keylen == 0)
-      throw std::runtime_error("Ciphersuite::to_string - no value set");
+      throw Exception("Ciphersuite::to_string - no value set");
 
    std::ostringstream out;
 

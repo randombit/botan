@@ -5,83 +5,65 @@
 */
 
 #include "tests.h"
-
 #include <botan/block_cipher.h>
-#include <botan/hex.h>
-#include <iostream>
-#include <fstream>
 
-using namespace Botan;
+namespace Botan_Tests {
 
-namespace {
-
-size_t block_test(const std::string& algo,
-                  const std::string& key_hex,
-                  const std::string& in_hex,
-                  const std::string& out_hex)
+class Block_Cipher_Tests : public Text_Based_Test
    {
-   const secure_vector<byte> key = hex_decode_locked(key_hex);
-   const secure_vector<byte> pt = hex_decode_locked(in_hex);
-   const secure_vector<byte> ct = hex_decode_locked(out_hex);
+   public:
+      Block_Cipher_Tests() : Text_Based_Test(Test::data_dir("block"), {"Key", "In", "Out"}) {}
 
-   const std::vector<std::string> providers = BlockCipher::providers(algo);
-   size_t fails = 0;
-
-   if(providers.empty())
-      {
-      std::cout << "Unknown block cipher " + algo + " skipping test\n";
-      return 0;
-      }
-
-   for(auto provider: providers)
-      {
-      std::unique_ptr<BlockCipher> cipher(BlockCipher::create(algo, provider));
-
-      if(!cipher)
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
-         std::cout << "Unable to get " << algo << " from " << provider << std::endl;
-         ++fails;
-         continue;
+         const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
+         const std::vector<uint8_t> input    = get_req_bin(vars, "In");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+
+         Test::Result result(algo);
+
+         const std::vector<std::string> providers = Botan::BlockCipher::providers(algo);
+
+         if(providers.empty())
+            {
+            result.note_missing("block cipher " + algo);
+            return result;
+            }
+
+         for(auto&& provider: providers)
+            {
+            std::unique_ptr<Botan::BlockCipher> cipher(Botan::BlockCipher::create(algo, provider));
+
+            if(!cipher)
+               {
+               result.note_missing(algo + " from " + provider);
+               continue;
+               }
+
+            result.test_eq(provider, cipher->name(), algo);
+            result.test_gte(provider, cipher->parallelism(), 1);
+            result.test_gte(provider, cipher->block_size(), 8);
+            result.test_gte(provider, cipher->parallel_bytes(), cipher->block_size() * cipher->parallelism());
+
+            cipher->set_key(key);
+            std::vector<uint8_t> buf = input;
+
+            cipher->encrypt(buf);
+
+            result.test_eq(provider, "encrypt", buf, expected);
+
+            // always decrypt expected ciphertext vs what we produced above
+            buf = expected;
+            cipher->decrypt(buf);
+
+            result.test_eq(provider, "decrypt", buf, input);
+            }
+
+         return result;
          }
 
-      cipher->set_key(key);
-      secure_vector<byte> buf = pt;
+   };
 
-      cipher->encrypt(buf);
-
-      if(buf != ct)
-         {
-         std::cout << algo << " " << provider << " enc " << hex_encode(buf) << " != " << out_hex << std::endl;
-         ++fails;
-         buf = ct;
-         }
-
-      cipher->decrypt(buf);
-
-      if(buf != pt)
-         {
-         std::cout << algo << " " << provider << " dec " << hex_encode(buf) << " != " << out_hex << std::endl;
-         ++fails;
-         }
-      }
-
-   return fails;
-   }
+BOTAN_REGISTER_TEST("block", Block_Cipher_Tests);
 
 }
-
-size_t test_block()
-   {
-   auto test_bc = [](const std::string& input)
-      {
-      std::ifstream vec(input);
-
-      return run_tests_bb(vec, "BlockCipher", "Out", true,
-                          [](std::map<std::string, std::string> m) -> size_t
-                          {
-                          return block_test(m["BlockCipher"], m["Key"], m["In"], m["Out"]);
-                          });
-      };
-
-   return run_tests_in_dir(TEST_DATA_DIR "/block", test_bc);
-   }

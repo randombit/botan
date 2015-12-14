@@ -23,7 +23,19 @@ class OpenSSL_RC4 : public StreamCipher
    public:
       void clear() { clear_mem(&m_rc4, 1); }
 
-      std::string name() const { return "RC4"; }
+      std::string name() const
+         {
+         switch(m_skip)
+            {
+            case 0:
+               return "RC4";
+            case 256:
+               return "MARK-4";
+            default:
+               return "RC4_skip(" + std::to_string(m_skip) + ")";
+            }
+         }
+
       StreamCipher* clone() const { return new OpenSSL_RC4; }
 
       Key_Length_Specification key_spec() const

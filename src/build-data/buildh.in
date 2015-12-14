@@ -6,7 +6,7 @@
 * %{user}@%{hostname} running '%{command_line}'
 *
 * Target
-*  - Compiler: %{cxx} %{lib_opt}
+*  - Compiler: %{cxx} %{cxx_abi_flags} %{cc_compile_flags}
 *  - Arch: %{submodel}/%{arch}
 *  - OS: %{os}
 */
@@ -40,6 +40,12 @@
 */
 #define BOTAN_MLOCK_ALLOCATOR_MIN_ALLOCATION 16
 #define BOTAN_MLOCK_ALLOCATOR_MAX_ALLOCATION 128
+
+/*
+* Total maximum amount of RAM (in KiB) we will lock into memory, even
+* if the OS would let us lock more
+*/
+#define BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB 512
 
 /* Multiplier on a block cipher's native parallelism */
 #define BOTAN_BLOCK_CIPHER_PAR_MULT 4
@@ -101,10 +107,66 @@
 * RNGs will automatically poll the system for additional seed material
 * after producing this many bytes of output.
 */
-#define BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED 512
+#define BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED 4096
 #define BOTAN_RNG_RESEED_POLL_BITS 128
 #define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
-#define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(100)
+#define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
+
+/*
+* Specifies (in order) the list of entropy sources that will be used
+* to seed an in-memory RNG. The first few in the default list
+* ("timer", "proc_info", etc) do not count as contributing any entropy
+* but are included as they are fast and help protect against a
+* seriously broken system RNG.
+*/
+#define BOTAN_ENTROPY_DEFAULT_SOURCES \
+   { "timestamp", "rdrand", "proc_info", \
+   "darwin_secrandom", "dev_random", "win32_cryptoapi", "egd", \
+   "proc_walk", "system_stats", "unix_procs" }
+
+/*
+* These control the RNG used by the system RNG interface
+*/
+#define BOTAN_SYSTEM_RNG_DEVICE "/dev/urandom"
+#define BOTAN_SYSTEM_RNG_CRYPTOAPI_PROV_TYPE PROV_RSA_FULL
+
+/*
+* These paramaters control how many bytes to read from the system
+* PRNG, and how long to block if applicable.
+*
+* Timeout is ignored on Windows as CryptGenRandom doesn't block
+*/
+#define BOTAN_SYSTEM_RNG_POLL_DEVICES { "/dev/urandom", "/dev/random", "/dev/srandom" }
+
+#define BOTAN_SYSTEM_RNG_POLL_REQUEST 64
+#define BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS 20
+
+#define BOTAN_ENTROPY_EGD_PATHS { "/var/run/egd-pool", "/dev/egd-pool" }
+#define BOTAN_ENTROPY_PROC_FS_PATH "/proc"
+#define BOTAN_ENTROPY_SAFE_PATHS { "/bin", "/sbin", "/usr/bin", "/usr/sbin" }
+
+/*
+* Defines the static entropy estimates which each type of source uses.
+* These values are expressed as the bits of entropy per byte of
+* output (in double format) and should be conservative. These are used
+* unless an entropy source has some more specific opinion on the entropy
+* of the underlying source.
+*/
+
+// We include some high resolution timestamps because it can't hurt
+#define BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS 0
+
+// Data which is system or process specific, but otherwise static
+#define BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA 0
+
+// Binary system data of some kind
+#define BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA 0.5
+
+// Human readable text which has entropy
+#define BOTAN_ENTROPY_ESTIMATE_SYSTEM_TEXT (1.0 / 64)
+
+// The output of a PRNG we are trusting to be strong
+#define BOTAN_ENTROPY_ESTIMATE_STRONG_RNG 7.0
 
 /* Should we use GCC-style inline assembler? */
 #if !defined(BOTAN_USE_GCC_INLINE_ASM) && defined(__GNUG__)
@@ -126,6 +188,17 @@
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN) || \
     defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
   #define BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS
+#endif
+
+/*
+* If no way of dynamically determining the cache line size for the
+* system exists, this value is used as the default. Used by the side
+* channel countermeasures rather than for alignment purposes, so it is
+* better to be on the smaller side if the exact value cannot be
+* determined. Typically 32 or 64 bytes on modern CPUs.
+*/
+#if !defined(BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE)
+  #define BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE 32
 #endif
 
 %{target_compiler_defines}

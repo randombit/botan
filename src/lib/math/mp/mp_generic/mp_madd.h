@@ -10,8 +10,30 @@
 #define BOTAN_MP_WORD_MULADD_H__
 
 #include <botan/mp_types.h>
+#include <botan/mul128.h>
 
 namespace Botan {
+
+#if (BOTAN_MP_WORD_BITS == 8)
+  typedef u16bit dword;
+  #define BOTAN_HAS_MP_DWORD
+#elif (BOTAN_MP_WORD_BITS == 16)
+  typedef u32bit dword;
+  #define BOTAN_HAS_MP_DWORD
+#elif (BOTAN_MP_WORD_BITS == 32)
+  typedef u64bit dword;
+  #define BOTAN_HAS_MP_DWORD
+#elif (BOTAN_MP_WORD_BITS == 64)
+  #if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
+    typedef uint128_t dword;
+    #define BOTAN_HAS_MP_DWORD
+  #else
+    // No native 128 bit integer type; use mul64x64_128 instead
+  #endif
+
+#else
+  #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
+#endif
 
 /*
 * Word Multiply/Add

@@ -1,6 +1,7 @@
 /*
 * Filter interface for compression
 * (C) 2014,2015 Jack Lloyd
+* (C) 2015 Matej Kenda
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -23,9 +24,15 @@ Decompression_Filter::Decompression_Filter(const std::string& type, size_t bs) :
 Compression_Decompression_Filter::Compression_Decompression_Filter(Transform* transform, size_t bs) :
    m_buffersize(std::max<size_t>(256, bs)), m_buffer(m_buffersize)
    {
+   if (!transform)
+      {
+         throw Invalid_Argument("Transform is null");
+      }
    m_transform.reset(dynamic_cast<Compressor_Transform*>(transform));
    if(!m_transform)
-      throw std::invalid_argument("Transform " + transform->name() + " is not a compressor");
+      {
+      throw Invalid_Argument("Transform " + transform->name() + " is not a compressor");
+      }
    }
 
 std::string Compression_Decompression_Filter::name() const

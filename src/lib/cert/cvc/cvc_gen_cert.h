@@ -77,7 +77,7 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
          const std::vector<byte>& tbs_bits,
          RandomNumberGenerator& rng);
 
-      EAC1_1_gen_CVC() { m_pk = 0; }
+      EAC1_1_gen_CVC() { m_pk = nullptr; }
 
       virtual ~EAC1_1_gen_CVC<Derived>()
          { delete m_pk; }

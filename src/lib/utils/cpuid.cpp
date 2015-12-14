@@ -74,7 +74,7 @@
 namespace Botan {
 
 u64bit CPUID::g_x86_processor_flags[2] = { 0, 0 };
-size_t CPUID::g_cache_line_size = 0;
+size_t CPUID::g_cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
 bool CPUID::g_altivec_capable = false;
 bool CPUID::g_initialized = false;
 

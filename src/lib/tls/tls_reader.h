@@ -13,7 +13,6 @@
 #include <botan/loadstor.h>
 #include <string>
 #include <vector>
-#include <stdexcept>
 
 namespace Botan {
 
@@ -33,6 +32,8 @@ class TLS_Data_Reader
          if(has_remaining())
             throw decode_error("Extra bytes at end of message");
          }
+
+      size_t read_so_far() const { return m_offset; }
 
       size_t remaining_bytes() const { return m_buf.size() - m_offset; }
 
@@ -190,11 +191,11 @@ void append_tls_length_value(std::vector<byte, Alloc>& buf,
    const size_t val_bytes = T_size * vals_size;
 
    if(tag_size != 1 && tag_size != 2)
-      throw std::invalid_argument("append_tls_length_value: invalid tag size");
+      throw Invalid_Argument("append_tls_length_value: invalid tag size");
 
    if((tag_size == 1 && val_bytes > 255) ||
       (tag_size == 2 && val_bytes > 65535))
-      throw std::invalid_argument("append_tls_length_value: value too large");
+      throw Invalid_Argument("append_tls_length_value: value too large");
 
    for(size_t i = 0; i != tag_size; ++i)
       buf.push_back(get_byte(sizeof(val_bytes)-tag_size+i, val_bytes));

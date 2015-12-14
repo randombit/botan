@@ -14,7 +14,7 @@ RM_R          = $(RM) /S
 RMDIR         = @rmdir
 
 # Executable targets
-APP           = %{out_dir}\botan%{program_suffix}
+CLI           = %{out_dir}\botan%{program_suffix}
 TEST          = %{out_dir}\botan-test%{program_suffix}
 
 # Library targets
@@ -37,24 +37,24 @@ LIBRARIES     = $(SO_FILENAME)
 # File Lists
 LIBOBJS       = %{lib_objs}
 
-APPOBJS       = %{app_objs}
+CLIOBJS       = %{cli_objs}
 
 TESTOBJS      = %{test_objs}
 
 # First make target. Will be used by default
-all: $(APP) $(TEST)
+all: $(CLI) $(TEST)
 
 # Build Commands
 %{lib_build_cmds}
 
-%{app_build_cmds}
+%{cli_build_cmds}
 
 %{test_build_cmds}
 
 # Link Commands
-$(APP): $(LIBRARIES) $(APPOBJS)
-	$(APP_LINK_CMD) /OUT:$@ $(APPOBJS) $(LIB_FILENAME) $(APP_LINKS_TO)
-	$(APP_POST_LINK_CMD)
+$(CLI): $(LIBRARIES) $(CLIOBJS)
+	$(CLI_LINK_CMD) /OUT:$@ $(CLIOBJS) $(LIB_FILENAME) $(CLI_LINKS_TO)
+	$(CLI_POST_LINK_CMD)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(TEST_LINK_CMD) /OUT:$@ $(TESTOBJS) $(LIB_FILENAME) $(TEST_LINKS_TO)
@@ -81,12 +81,12 @@ docs:
 
 clean:
 	-$(RM) %{libobj_dir}\*
+	-$(RM) %{cliobj_dir}\*
 	-$(RM) %{testobj_dir}\*
-	-$(RM) %{appobj_dir}\*
 	-$(RM) %{out_dir}\*.manifest
 	-$(RM) %{out_dir}\*.exp
 	-$(RM) %{out_dir}\*.dll
-	-$(RM) $(LIBRARIES) $(APP) $(TEST)
+	-$(RM) $(LIBRARIES) $(CLI) $(TEST)
 
 distclean: clean
 	$(RM_R) %{build_dir}
@@ -95,7 +95,7 @@ distclean: clean
 	$(RMDIR) %{build_dir}\include
 	$(RMDIR) %{build_dir}\lib %{build_dir}\tests
 	$(RMDIR) %{build_dir}
-	$(RM) Makefile $(LIB_BASENAME).* $(APP).*
+	$(RM) Makefile $(LIB_BASENAME).* $(CLI).*
 
-install: $(APP) docs
+install: $(CLI) docs
 	$(SCRIPTS_DIR)\install.py --destdir=%{destdir} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}

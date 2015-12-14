@@ -323,7 +323,7 @@ Blinded_Point_Multiply::Blinded_Point_Multiply(const PointGFp& base, const BigIn
    {
    // Upper bound is a sanity check rather than hard limit
    if(m_h < 1 || m_h > 8)
-      throw std::invalid_argument("Blinded_Point_Multiply invalid h param");
+      throw Invalid_Argument("Blinded_Point_Multiply invalid h param");
 
    const CurveGFp& curve = base.get_curve();
 
@@ -362,7 +362,7 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
                                                   RandomNumberGenerator& rng)
    {
    if(scalar_in.is_negative())
-      throw std::invalid_argument("Blinded_Point_Multiply scalar must be positive");
+      throw Invalid_Argument("Blinded_Point_Multiply scalar must be positive");
 
 #if BOTAN_POINTGFP_SCALAR_BLINDING_BITS > 0
    // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
@@ -449,8 +449,6 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
 BigInt PointGFp::get_affine_x() const
    {
    if(is_zero())
-      abort();
-   if(is_zero())
       throw Illegal_Transformation("Cannot convert zero point to affine");
 
    BigInt z2 = curve_sqr(m_coord_z);
@@ -462,8 +460,6 @@ BigInt PointGFp::get_affine_x() const
 
 BigInt PointGFp::get_affine_y() const
    {
-   if(is_zero())
-      abort();
    if(is_zero())
       throw Illegal_Transformation("Cannot convert zero point to affine");
 

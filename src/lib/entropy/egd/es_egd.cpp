@@ -9,7 +9,6 @@
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
-#include <stdexcept>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -44,7 +43,7 @@ int EGD_EntropySource::EGD_Socket::open_socket(const std::string& path)
       addr.sun_family = PF_LOCAL;
 
       if(path.length() >= sizeof(addr.sun_path))
-         throw std::invalid_argument("EGD socket path is too long");
+         throw Invalid_Argument("EGD socket path is too long");
 
       std::strncpy(addr.sun_path, path.c_str(), sizeof(addr.sun_path));
 
@@ -82,19 +81,19 @@ size_t EGD_EntropySource::EGD_Socket::read(byte outbuf[], size_t length)
          1, static_cast<byte>(std::min<size_t>(length, 255)) };
 
       if(::write(m_fd, egd_read_command, 2) != 2)
-         throw std::runtime_error("Writing entropy read command to EGD failed");
+         throw Exception("Writing entropy read command to EGD failed");
 
       byte out_len = 0;
       if(::read(m_fd, &out_len, 1) != 1)
-         throw std::runtime_error("Reading response length from EGD failed");
+         throw Exception("Reading response length from EGD failed");
 
       if(out_len > egd_read_command[1])
-         throw std::runtime_error("Bogus length field received from EGD");
+         throw Exception("Bogus length field received from EGD");
 
       ssize_t count = ::read(m_fd, outbuf, out_len);
 
       if(count != out_len)
-         throw std::runtime_error("Reading entropy result from EGD failed");
+         throw Exception("Reading entropy result from EGD failed");
 
       return static_cast<size_t>(count);
       }
@@ -137,19 +136,17 @@ EGD_EntropySource::~EGD_EntropySource()
 */
 void EGD_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   const size_t READ_ATTEMPT = 32;
-
    std::lock_guard<std::mutex> lock(m_mutex);
 
-   m_buf.resize(READ_ATTEMPT);
+   secure_vector<byte>& buf = accum.get_io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
 
    for(size_t i = 0; i != sockets.size(); ++i)
       {
-      size_t got = sockets[i].read(m_buf.data(), m_buf.size());
+      size_t got = sockets[i].read(buf.data(), buf.size());
 
       if(got)
          {
-         accum.add(m_buf.data(), got, 6);
+         accum.add(buf.data(), got, BOTAN_ENTROPY_ESTIMATE_STRONG_RNG);
          break;
          }
       }

@@ -1,71 +1,21 @@
 /*
 * Mlock Allocator
-* (C) 2012,2014 Jack Lloyd
+* (C) 2012,2014,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/locking_allocator.h>
+#include <botan/internal/os_utils.h>
 #include <botan/mem_ops.h>
 #include <algorithm>
 #include <cstdlib>
 #include <string>
-
-#include <sys/mman.h>
-#include <sys/resource.h>
+#include <mutex>
 
 namespace Botan {
 
 namespace {
-
-size_t reset_mlock_limit(size_t max_req)
-   {
-#if defined(RLIMIT_MEMLOCK)
-   struct rlimit limits;
-
-   ::getrlimit(RLIMIT_MEMLOCK, &limits);
-
-   if(limits.rlim_cur < limits.rlim_max)
-      {
-      limits.rlim_cur = limits.rlim_max;
-      ::setrlimit(RLIMIT_MEMLOCK, &limits);
-      ::getrlimit(RLIMIT_MEMLOCK, &limits);
-      }
-
-   return std::min<size_t>(limits.rlim_cur, max_req);
-#endif
-
-   return 0;
-   }
-
-size_t mlock_limit()
-   {
-   /*
-   * Linux defaults to only 64 KiB of mlockable memory per process
-   * (too small) but BSDs offer a small fraction of total RAM (more
-   * than we need). Bound the total mlock size to 512 KiB which is
-   * enough to run the entire test suite without spilling to non-mlock
-   * memory (and thus presumably also enough for many useful
-   * programs), but small enough that we should not cause problems
-   * even if many processes are mlocking on the same machine.
-   */
-   size_t mlock_requested = 512;
-
-   /*
-   * Allow override via env variable
-   */
-   if(const char* env = ::getenv("BOTAN_MLOCK_POOL_SIZE"))
-      {
-      try
-         {
-         const size_t user_req = std::stoul(env, nullptr);
-         mlock_requested = std::min(user_req, mlock_requested);
-         }
-      catch(std::exception&) { /* ignore it */ }
-      }
-
-   return reset_mlock_limit(mlock_requested*1024);
-   }
 
 bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
                  const void* buf_ptr, size_t bufsize)
@@ -240,47 +190,25 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
    return true;
    }
 
-mlock_allocator::mlock_allocator() :
-   m_poolsize(mlock_limit()),
-   m_pool(nullptr)
+mlock_allocator::mlock_allocator()
    {
-#if !defined(MAP_NOCORE)
-   #define MAP_NOCORE 0
-#endif
+   const size_t mem_to_lock = OS::get_memory_locking_limit();
 
-#if !defined(MAP_ANONYMOUS)
-   #define MAP_ANONYMOUS MAP_ANON
-#endif
+   /*
+   TODO: split into multiple single page allocations to
+   help ASLR and guard pages to help reduce the damage of
+   a wild reads or write by the application.
+   */
 
-   if(m_poolsize)
+   if(mem_to_lock)
       {
-      m_pool = static_cast<byte*>(
-         ::mmap(
-            nullptr, m_poolsize,
-            PROT_READ | PROT_WRITE,
-            MAP_ANONYMOUS | MAP_SHARED | MAP_NOCORE,
-            -1, 0));
+      m_pool = static_cast<byte*>(OS::allocate_locked_pages(mem_to_lock));
 
-      if(m_pool == static_cast<byte*>(MAP_FAILED))
+      if(m_pool != nullptr)
          {
-         m_pool = nullptr;
-         throw std::runtime_error("Failed to mmap locking_allocator pool");
+         m_poolsize = mem_to_lock;
+         m_freelist.push_back(std::make_pair(0, m_poolsize));
          }
-
-      clear_mem(m_pool, m_poolsize);
-
-      if(::mlock(m_pool, m_poolsize) != 0)
-         {
-         ::munmap(m_pool, m_poolsize);
-         m_pool = nullptr;
-         throw std::runtime_error("Could not mlock " + std::to_string(m_poolsize) + " bytes");
-         }
-
-#if defined(MADV_DONTDUMP)
-      ::madvise(m_pool, m_poolsize, MADV_DONTDUMP);
-#endif
-
-      m_freelist.push_back(std::make_pair(0, m_poolsize));
       }
    }
 
@@ -288,9 +216,8 @@ mlock_allocator::~mlock_allocator()
    {
    if(m_pool)
       {
-      clear_mem(m_pool, m_poolsize);
-      ::munlock(m_pool, m_poolsize);
-      ::munmap(m_pool, m_poolsize);
+      zero_mem(m_pool, m_poolsize);
+      OS::free_locked_pages(m_pool, m_poolsize);
       m_pool = nullptr;
       }
    }
