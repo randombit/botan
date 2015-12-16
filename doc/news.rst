@@ -8,6 +8,8 @@ Version 1.11.26, Not Yet Released
   Previously the library would in many cases throw `std::runtime_error`
   or `std::invalid_argument` exceptions which would make it hard to determine
   the source of the error in some cases.
+  
+* Enable RdRand entropy source on Windows/MSVC.
 
 Version 1.11.25, 2015-12-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
