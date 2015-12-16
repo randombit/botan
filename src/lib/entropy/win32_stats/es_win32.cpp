@@ -20,7 +20,7 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
    First query a bunch of basic statistical stuff, though
    don't count it for much in terms of contributed entropy.
    */
-   accum.add(GetTickCount(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
+   accum.add(GetTickCount64(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
    accum.add(GetMessagePos(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
    accum.add(GetMessageTime(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
    accum.add(GetInputState(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
@@ -32,8 +32,8 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
    GetSystemInfo(&sys_info);
    accum.add(sys_info, BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
 
-   MEMORYSTATUS mem_info;
-   GlobalMemoryStatus(&mem_info);
+   MEMORYSTATUSEX mem_info;
+   GlobalMemoryStatusEx(&mem_info);
    accum.add(mem_info, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
 
    POINT point;
