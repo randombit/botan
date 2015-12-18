@@ -1948,11 +1948,11 @@ def main(argv = None):
                 shutil.rmtree(path)
                 return
             except OSError, e:
-                time.sleep(i)
+                time.sleep(0.1)
 
         # Final attempt, pass any Exceptions up to caller.
         shutil.rmtree(path)
-		
+
     def robust_makedirs(dir, max_retries=5):
         for i in range(max_retries):
             try:
@@ -1960,9 +1960,9 @@ def main(argv = None):
                 return
             except OSError, e:
                 if e.errno == errno.EEXIST:
-				    return
+                    return
                 else:
-                    time.sleep(i)
+                    time.sleep(0.1)
 
         # Final attempt, pass any Exceptions up to caller.
         os.makedirs(dir)
