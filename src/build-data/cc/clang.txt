@@ -50,6 +50,7 @@ avx2   -> "-mavx2"
 bmi2   -> "-mbmi2"
 aesni  -> "-maes -mpclmul -mssse3"
 rdrand -> "-mrdrnd"
+rdseed -> "-mrdseed"
 sha    -> "-msha"
 altivec -> "-maltivec"
 </isa_flags>

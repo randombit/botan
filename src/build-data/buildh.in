@@ -120,7 +120,7 @@
 * seriously broken system RNG.
 */
 #define BOTAN_ENTROPY_DEFAULT_SOURCES \
-   { "timestamp", "rdrand", "proc_info", \
+   { "timestamp", "rdseed", "rdrand", "proc_info", \
    "darwin_secrandom", "dev_random", "win32_cryptoapi", "egd", \
    "proc_walk", "system_stats", "unix_procs" }
 
