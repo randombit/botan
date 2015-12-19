@@ -22,16 +22,6 @@ void Intel_Rdseed::poll(Entropy_Accumulator& accum)
    if(!CPUID::has_rdseed())
       return;
 
-   /*
-   Don't consider rdseed as contributing any entropy to the poll. It doesn't
-   make sense to trust uninspectible hardware.
-
-   Even if backdoored, rdseed cannot harm us because the HMAC_RNG poll process
-   is designed to handle arbitrarily large amounts of attacker known/chosen
-   input (or even a reseed where every bit we reseeded with was attacker chosen),
-   as long as at least one seed occurred with enough unknown-to-attacker entropy.
-   */
-   const double ENTROPY_ESTIMATE = 0.0;
    const size_t RDSEED_POLLS = 32;
 
    for(size_t i = 0; i != RDSEED_POLLS; ++i)
@@ -49,7 +39,7 @@ void Intel_Rdseed::poll(Entropy_Accumulator& accum)
 #endif
 
       if(cf == 1)
-         accum.add(r, ENTROPY_ESTIMATE);
+         accum.add(r, BOTAN_ENTROPY_ESTIMATE_HARDWARE_RNG);
       }
    }
 

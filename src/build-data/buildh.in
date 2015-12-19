@@ -165,8 +165,21 @@
 // Human readable text which has entropy
 #define BOTAN_ENTROPY_ESTIMATE_SYSTEM_TEXT (1.0 / 64)
 
+/*
+The output of a hardware RNG such as RDRAND / RDSEED
+
+By default such RNGs are used but not trusted, so that the standard
+softare-based entropy polling is still used.
+*/
+#define BOTAN_ENTROPY_ESTIMATE_HARDWARE_RNG 0.0
+
 // The output of a PRNG we are trusting to be strong
 #define BOTAN_ENTROPY_ESTIMATE_STRONG_RNG 7.0
+
+
+/*
+* Compiler and target specific flags
+*/
 
 /* Should we use GCC-style inline assembler? */
 #if !defined(BOTAN_USE_GCC_INLINE_ASM) && defined(__GNUG__)
