@@ -5,13 +5,14 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/rsa.h>
-
-#if defined(BOTAN_HAS_OPENSSL)
-
 #include <botan/internal/openssl.h>
+
+#if defined(BOTAN_HAS_RSA)
+
+#include <botan/rsa.h>
 #include <botan/internal/pk_utils.h>
 #include <botan/internal/ct_utils.h>
+
 #include <functional>
 #include <memory>
 
@@ -280,4 +281,4 @@ BOTAN_REGISTER_TYPE(PK_Ops::Decryption, OpenSSL_RSA_Decryption_Operation, "RSA",
 
 }
 
-#endif // BOTAN_HAS_OPENSSL
+#endif // BOTAN_HAS_RSA

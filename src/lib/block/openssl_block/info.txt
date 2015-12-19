@@ -1,5 +1,0 @@
-define OPENSSL_BLOCK_CIPHER 20151019
-
-<requires>
-openssl
-</requires>
