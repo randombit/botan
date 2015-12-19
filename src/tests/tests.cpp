@@ -11,6 +11,7 @@
 #include <botan/hex.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan_Tests {
 
@@ -237,7 +238,8 @@ bool Test::Result::test_ne(const std::string& what, const BigInt& produced, cons
 #endif
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
-bool Test::Result::test_eq(const std::string& what, const Botan::PointGFp& a, const Botan::PointGFp& b)
+bool Test::Result::test_eq(const std::string& what,
+                           const Botan::PointGFp& a, const Botan::PointGFp& b)
    {
    //return test_is_eq(what, a, b);
    if(a == b)
@@ -358,21 +360,6 @@ std::map<std::string, std::unique_ptr<Test>>& Test::global_registry()
    return g_test_registry;
    }
 
-namespace {
-
-template<typename K, typename V>
-std::set<K> map_keys_as_set(const std::map<K, V>& kv)
-   {
-   std::set<K> s;
-   for(auto&& i : kv)
-      {
-      s.insert(i.first);
-      }
-   return s;
-   }
-
-}
-
 //static
 uint64_t Test::timestamp()
    {
@@ -383,7 +370,7 @@ uint64_t Test::timestamp()
 //static
 std::set<std::string> Test::registered_tests()
    {
-   return map_keys_as_set(Test::global_registry());
+   return Botan::map_keys_as_set(Test::global_registry());
    }
 
 //static
@@ -730,7 +717,8 @@ std::vector<Test::Result> Text_Based_Test::run()
             }
          catch(std::exception& e)
             {
-            results.push_back(Test::Result::Failure(who, "test " + std::to_string(test_cnt) + " failed with exception '" + e.what() + "'"));
+            results.push_back(Test::Result::Failure(who, "test " + std::to_string(test_cnt) +
+                                                    " failed with exception '" + e.what() + "'"));
             }
 
          if(clear_between_callbacks())

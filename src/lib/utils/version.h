@@ -1,6 +1,6 @@
 /*
 * Version Information
-* (C) 1999-2011 Jack Lloyd
+* (C) 1999-2011,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -53,6 +53,17 @@ BOTAN_DLL u32bit version_minor();
 * @return patch number
 */
 BOTAN_DLL u32bit version_patch();
+
+/**
+* Usable for checking that the DLL version loaded at runtime exactly
+* matches the compile-time version. Call using BOTAN_VERSION_* macro
+* values. Returns the empty string if an exact match, otherwise an
+* appropriate message. @added 1.11.26
+*/
+BOTAN_DLL std::string
+runtime_version_check(u32bit major,
+                      u32bit minor,
+                      u32bit patch);
 
 /*
 * Macros for compile-time version checks

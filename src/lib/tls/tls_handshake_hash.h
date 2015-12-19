@@ -16,8 +16,6 @@ namespace Botan {
 
 namespace TLS {
 
-using namespace Botan;
-
 /**
 * TLS Handshake Hash
 */

@@ -4,4 +4,5 @@ os_type unix
 clock_gettime
 gettimeofday
 posix_mlock
+sockets
 </target_features>

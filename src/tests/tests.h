@@ -1,4 +1,3 @@
-
 /*
 * (C) 2014,2015 Jack Lloyd
 * (C) 2015 Simon Warta (Kullo GmbH)
@@ -167,7 +166,11 @@ class Test
                }
 
             bool test_eq(const std::string& what, const char* produced, const char* expected);
-            bool test_eq(const std::string& what, const std::string& produced, const std::string& expected);
+
+            bool test_eq(const std::string& what,
+                         const std::string& produced,
+                         const std::string& expected);
+
             bool test_eq(const std::string& what, bool produced, bool expected);
 
             bool test_eq(const std::string& what, size_t produced, size_t expected);
@@ -183,7 +186,9 @@ class Test
 #endif
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
-            bool test_eq(const std::string& what, const Botan::PointGFp& a, const Botan::PointGFp& b);
+            bool test_eq(const std::string& what,
+                         const Botan::PointGFp& a,
+                         const Botan::PointGFp& b);
 #endif
 
             bool test_eq(const char* producer, const std::string& what,
@@ -273,7 +278,8 @@ class Test
       static std::string full_path_for_output_file(const std::string& base);
 
       template<typename Alloc>
-      static std::vector<uint8_t, Alloc> mutate_vec(const std::vector<uint8_t, Alloc>& v, bool maybe_resize = false)
+      static std::vector<uint8_t, Alloc>
+      mutate_vec(const std::vector<uint8_t, Alloc>& v, bool maybe_resize = false)
          {
          auto& rng = Test::rng();
 
@@ -314,7 +320,8 @@ class Test
 /*
 * Register the test with the runner
 */
-#define BOTAN_REGISTER_TEST(type, Test_Class) namespace { Test::Registration reg_ ## Test_Class ## _tests(type, new Test_Class); }
+#define BOTAN_REGISTER_TEST(type, Test_Class) \
+   namespace { Test::Registration reg_ ## Test_Class ## _tests(type, new Test_Class); }
 
 /*
 * A test based on reading an input file which contains key/value pairs
@@ -363,7 +370,9 @@ class Text_Based_Test : public Test
 #endif
 
       std::string get_req_str(const VarMap& vars, const std::string& key) const;
-      std::string get_opt_str(const VarMap& vars, const std::string& key, const std::string& def_value) const;
+      std::string get_opt_str(const VarMap& vars,
+                              const std::string& key,
+                              const std::string& def_value) const;
 
       size_t get_req_sz(const VarMap& vars, const std::string& key) const;
       size_t get_opt_sz(const VarMap& vars, const std::string& key, const size_t def_value) const;

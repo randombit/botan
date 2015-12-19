@@ -12,6 +12,7 @@ gmtime_r
 dlopen
 readdir
 timegm
+sockets
 </target_features>
 
 <aliases>

@@ -1,12 +1,13 @@
 /*
 * Version Information
-* (C) 1999-2013 Jack Lloyd
+* (C) 1999-2013,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/version.h>
 #include <botan/parsing.h>
+#include <sstream>
 
 namespace Botan {
 
@@ -56,5 +57,26 @@ u32bit version_datestamp() { return BOTAN_VERSION_DATESTAMP; }
 u32bit version_major() { return BOTAN_VERSION_MAJOR; }
 u32bit version_minor() { return BOTAN_VERSION_MINOR; }
 u32bit version_patch() { return BOTAN_VERSION_PATCH; }
+
+std::string runtime_version_check(u32bit major,
+                                  u32bit minor,
+                                  u32bit patch)
+   {
+   std::ostringstream oss;
+
+   if(major != version_major() ||
+      minor != version_minor() ||
+      patch != version_patch())
+      {
+      oss << "Warning: linked version ("
+          << Botan::version_major() << '.'
+          << Botan::version_minor() << '.'
+          << Botan::version_patch()
+          << ") does not match version built against ("
+          << major << '.' << minor << '.' << patch << ")\n";
+      }
+
+   return oss.str();
+   }
 
 }

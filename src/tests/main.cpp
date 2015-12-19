@@ -4,6 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "../cli/cli.h"
 #include "tests.h"
 #include <iostream>
 #include <sstream>
@@ -28,23 +29,6 @@
 namespace {
 
 using Botan_Tests::Test;
-
-int help(std::ostream& out, const std::string binary_name)
-   {
-   std::ostringstream err;
-
-   err << "Usage:\n"
-       << binary_name << " test1 test2 ...\n"
-       << "Available tests: ";
-
-   for(auto&& test : Test::registered_tests())
-      {
-      err << test << " ";
-      }
-
-   out << err.str() << std::endl;
-   return 1;
-   }
 
 std::string report_out(const std::vector<Test::Result>& results,
                        size_t& tests_failed,
@@ -76,72 +60,11 @@ std::string report_out(const std::vector<Test::Result>& results,
    return out.str();
    }
 
-size_t run_tests(const std::vector<std::string>& tests_to_run,
-                 std::ostream& out,
-                 size_t threads)
-   {
-   size_t tests_ran = 0, tests_failed = 0;
-
-   if(threads <= 1)
-      {
-      for(auto&& test_name : tests_to_run)
-         {
-         std::vector<Test::Result> results = Test::run_test(test_name, false);
-         out << report_out(results, tests_failed, tests_ran) << std::flush;
-         }
-      }
-   else
-      {
-
-      /*
-      We're not doing this in a particularly nice way, and variance in time is
-      high so commonly we'll 'run dry' by blocking on the first future. But
-      plain C++11 <thread> is missing a lot of tools we'd need (like
-      wait_for_any on a set of futures) and there is no point pulling in an
-      additional dependency just for this. In any case it helps somewhat
-      (50-100% speedup) and provides a proof of concept for parallel testing.
-      */
-
-      typedef std::future<std::vector<Test::Result>> FutureResults;
-      std::deque<FutureResults> fut_results;
-
-      for(auto&& test_name : tests_to_run)
-         {
-         fut_results.push_back(std::async(std::launch::async,
-                                          [test_name]() { return Test::run_test(test_name, false); }));
-
-         while(fut_results.size() > threads)
-            {
-            out << report_out(fut_results[0].get(), tests_failed, tests_ran) << std::flush;
-            fut_results.pop_front();
-            }
-         }
-
-      while(fut_results.size() > 0)
-         {
-         out << report_out(fut_results[0].get(), tests_failed, tests_ran) << std::flush;
-         fut_results.pop_front();
-         }
-      }
-
-   out << "Tests complete ran " << tests_ran << " tests ";
-
-   if(tests_failed > 0)
-      {
-      out << tests_failed << " tests failed";
-      }
-   else if(tests_ran > 0)
-      {
-      out << "all tests ok";
-      }
-
-   out << std::endl;
-
-   return tests_failed;
-   }
-
 std::unique_ptr<Botan::RandomNumberGenerator>
-setup_tests(std::ostream& out, size_t threads, size_t soak_level, bool log_success, std::string drbg_seed)
+setup_tests(std::ostream& out, size_t threads,
+            size_t soak_level,
+            bool log_success,
+            std::string drbg_seed)
    {
    out << "Testing " << Botan::version_string() << "\n";
    out << "Starting tests";
@@ -190,60 +113,166 @@ setup_tests(std::ostream& out, size_t threads, size_t soak_level, bool log_succe
    return rng;
    }
 
-int cpp_main(const std::vector<std::string> args)
+class Test_Runner : public Botan_CLI::Command
    {
-   try
-      {
-      if(args.size() == 2 && (args[1] == "--help" || args[1] == "help"))
+   public:
+      Test_Runner() : Command("test --threads=0 --soak=5 --drbg-seed= --log-success *suites") {}
+
+      std::string help_text() const override
          {
-         return help(std::cout, args[0]);
+         std::ostringstream err;
+
+         err << "Usage: botan-test [--drbg-seed=] [--threads=N] [--log-success] "
+             << "suite suite ...\n\n"
+             << "Available suites\n"
+             << "----------------\n";
+
+         size_t line_len = 0;
+
+         for(auto&& test : Test::registered_tests())
+            {
+            err << test << " ";
+            line_len += test.size() + 1;
+
+            if(line_len > 64)
+               {
+               err << "\n";
+               line_len = 0;
+               }
+            }
+
+         if(line_len > 0)
+            {
+            err << "\n";
+            }
+
+         return err.str();
          }
 
-      size_t threads = 0;//std::thread::hardware_concurrency();
-      size_t soak = 5;
-      const std::string drbg_seed = "";
-      bool log_success = false;
-
-      std::vector<std::string> req(args.begin()+1, args.end());
-
-      if(req.empty())
+      void go() override
          {
-         req = {"block", "stream", "hash", "mac", "modes", "aead", "kdf", "pbkdf", "hmac_drbg", "x931_rng", "util"};
+         const size_t threads = get_arg_sz("threads");
+         const size_t soak = get_arg_sz("soak");
+         const std::string drbg_seed = get_arg("drbg-seed");
+         bool log_success = flag_set("log-success");
 
-         std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
+         std::vector<std::string> req = get_arg_list("suites");
 
-         for(auto f : req)
-            all_others.erase(f);
+         if(req.empty())
+            {
+            /*
+            If nothing was requested on the command line, run everything. First
+            run the "essentials" to smoke test, then everything else in
+            alphabetical order.
+            */
+            req = {"block", "stream", "hash", "mac", "modes", "aead"
+                   "kdf", "pbkdf", "hmac_drbg", "x931_rng", "util"};
 
-         req.insert(req.end(), all_others.begin(), all_others.end());
+            std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
+
+            for(auto f : req)
+               {
+               all_others.erase(f);
+               }
+
+            req.insert(req.end(), all_others.begin(), all_others.end());
+            }
+
+         std::unique_ptr<Botan::RandomNumberGenerator> rng =
+            setup_tests(std::cout, threads, soak, log_success, drbg_seed);
+
+         size_t failed = run_tests(req, std::cout, threads);
+
+         // Throw so main returns an error
+         if(failed)
+            throw Botan_Tests::Test_Error("Test suite failure");
+         }
+   private:
+      size_t run_tests(const std::vector<std::string>& tests_to_run,
+                       std::ostream& out,
+                       size_t threads)
+         {
+         size_t tests_ran = 0, tests_failed = 0;
+
+         if(threads <= 1)
+            {
+            for(auto&& test_name : tests_to_run)
+               {
+               std::vector<Test::Result> results = Test::run_test(test_name, false);
+               out << report_out(results, tests_failed, tests_ran) << std::flush;
+               }
+            }
+         else
+            {
+
+            /*
+            We're not doing this in a particularly nice way, and variance in time is
+            high so commonly we'll 'run dry' by blocking on the first future. But
+            plain C++11 <thread> is missing a lot of tools we'd need (like
+            wait_for_any on a set of futures) and there is no point pulling in an
+            additional dependency just for this. In any case it helps somewhat
+            (50-100% speedup) and provides a proof of concept for parallel testing.
+            */
+
+            typedef std::future<std::vector<Test::Result>> FutureResults;
+            std::deque<FutureResults> fut_results;
+
+            for(auto&& test_name : tests_to_run)
+               {
+               fut_results.push_back(std::async(std::launch::async,
+                                                [test_name]() { return Test::run_test(test_name, false); }));
+
+               while(fut_results.size() > threads)
+                  {
+                  out << report_out(fut_results[0].get(), tests_failed, tests_ran) << std::flush;
+                  fut_results.pop_front();
+                  }
+               }
+
+            while(fut_results.size() > 0)
+               {
+               out << report_out(fut_results[0].get(), tests_failed, tests_ran) << std::flush;
+               fut_results.pop_front();
+               }
+            }
+
+         out << "Tests complete ran " << tests_ran << " tests ";
+
+         if(tests_failed > 0)
+            {
+            out << tests_failed << " tests failed";
+            }
+         else if(tests_ran > 0)
+            {
+            out << "all tests ok";
+            }
+
+         out << std::endl;
+
+         return tests_failed;
          }
 
-      std::unique_ptr<Botan::RandomNumberGenerator> rng =
-         setup_tests(std::cout, threads, soak, log_success, drbg_seed);
 
-      size_t failed = run_tests(req, std::cout, threads);
+   };
 
-      if(failed)
-         return 2;
-
-      return 0;
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "Exception caused test abort: " << e.what() << std::endl;
-      return 3;
-      }
-   catch(...)
-      {
-      std::cout << "Unknown exception caused test abort" << std::endl;
-      return 3;
-      }
-   }
+BOTAN_REGISTER_COMMAND(Test_Runner);
 
 }
 
 int main(int argc, char* argv[])
    {
-   std::vector<std::string> args(argv, argv + argc);
-   return cpp_main(args);
+   std::cerr << Botan::runtime_version_check(BOTAN_VERSION_MAJOR,
+                                             BOTAN_VERSION_MINOR,
+                                             BOTAN_VERSION_PATCH);
+
+   Botan_CLI::Command* cmd = Botan_CLI::Command::get_cmd("test");
+
+   if(!cmd)
+      {
+      std::cout << "Unable to retrieve testing helper (program bug)\n"; // WTF
+      return 1;
+      }
+
+   std::vector<std::string> args(argv + 1, argv + argc);
+   return cmd->run(args);
    }

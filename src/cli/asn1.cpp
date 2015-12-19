@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "apps.h"
+#include "cli.h"
 
 #if defined(BOTAN_HAS_ASN1) && defined(BOTAN_HAS_PEM_CODEC)
 
@@ -17,7 +17,6 @@
 #include <botan/oids.h>
 #include <botan/pem.h>
 #include <botan/charset.h>
-using namespace Botan;
 
 #include <iostream>
 #include <iomanip>
@@ -34,9 +33,11 @@ using namespace Botan;
 */
 #define INITIAL_LEVEL 0
 
+namespace Botan_CLI {
+
 namespace {
 
-std::string url_encode(const std::vector<byte>& in)
+std::string url_encode(const std::vector<uint8_t>& in)
    {
    std::ostringstream out;
 
@@ -55,7 +56,7 @@ std::string url_encode(const std::vector<byte>& in)
       }
 
    if(unprintable >= in.size() / 4)
-      return hex_encode(in);
+      return Botan::hex_encode(in);
 
    return out.str();
    }
@@ -95,57 +96,89 @@ void emit(const std::string& type, size_t level, size_t length, const std::strin
    std::cout << out.str() << std::endl;
    }
 
-std::string type_name(ASN1_Tag type)
+std::string type_name(Botan::ASN1_Tag type)
    {
-   if(type == PRINTABLE_STRING) return "PRINTABLE STRING";
-   if(type == NUMERIC_STRING)   return "NUMERIC STRING";
-   if(type == IA5_STRING)       return "IA5 STRING";
-   if(type == T61_STRING)       return "T61 STRING";
-   if(type == UTF8_STRING)      return "UTF8 STRING";
-   if(type == VISIBLE_STRING)   return "VISIBLE STRING";
-   if(type == BMP_STRING)       return "BMP STRING";
+   switch(type)
+      {
+      case Botan::PRINTABLE_STRING:
+         return "PRINTABLE STRING";
 
-   if(type == UTC_TIME)         return "UTC TIME";
-   if(type == GENERALIZED_TIME) return "GENERALIZED TIME";
+      case Botan::NUMERIC_STRING:
+         return "NUMERIC STRING";
 
-   if(type == OCTET_STRING)     return "OCTET STRING";
-   if(type == BIT_STRING)       return "BIT STRING";
+      case Botan::IA5_STRING:
+         return "IA5 STRING";
 
-   if(type == ENUMERATED)       return "ENUMERATED";
-   if(type == INTEGER)          return "INTEGER";
-   if(type == NULL_TAG)         return "NULL";
-   if(type == OBJECT_ID)        return "OBJECT";
-   if(type == BOOLEAN)          return "BOOLEAN";
+      case Botan::T61_STRING:
+         return "T61 STRING";
+
+      case Botan::UTF8_STRING:
+         return "UTF8 STRING";
+
+      case Botan::VISIBLE_STRING:
+         return "VISIBLE STRING";
+
+      case Botan::BMP_STRING:
+         return "BMP STRING";
+
+      case Botan::UTC_TIME:
+         return "UTC TIME";
+
+      case Botan::GENERALIZED_TIME:
+         return "GENERALIZED TIME";
+
+      case Botan::OCTET_STRING:
+         return "OCTET STRING";
+
+      case Botan::BIT_STRING:
+         return "BIT STRING";
+
+      case Botan::ENUMERATED:
+         return "ENUMERATED";
+
+      case Botan::INTEGER:
+         return "INTEGER";
+
+      case Botan::NULL_TAG:
+         return "NULL";
+
+      case Botan::OBJECT_ID:
+         return "OBJECT";
+
+      case Botan::BOOLEAN:
+         return "BOOLEAN";
+      }
+
    return "(UNKNOWN)";
    }
 
-void decode(BER_Decoder& decoder, size_t level)
+void decode(Botan::BER_Decoder& decoder, size_t level)
    {
-   BER_Object obj = decoder.get_next_object();
+   Botan::BER_Object obj = decoder.get_next_object();
 
-   while(obj.type_tag != NO_OBJECT)
+   while(obj.type_tag != Botan::NO_OBJECT)
       {
-      const ASN1_Tag type_tag = obj.type_tag;
-      const ASN1_Tag class_tag = obj.class_tag;
+      const Botan::ASN1_Tag type_tag = obj.type_tag;
+      const Botan::ASN1_Tag class_tag = obj.class_tag;
       const size_t length = obj.value.size();
 
       /* hack to insert the tag+length back in front of the stuff now
          that we've gotten the type info */
-      DER_Encoder encoder;
+      Botan::DER_Encoder encoder;
       encoder.add_object(type_tag, class_tag, obj.value);
-      std::vector<byte> bits = encoder.get_contents_unlocked();
+      std::vector<uint8_t> bits = encoder.get_contents_unlocked();
 
-      BER_Decoder data(bits);
+      Botan::BER_Decoder data(bits);
 
-      if(class_tag & CONSTRUCTED)
+      if(class_tag & Botan::CONSTRUCTED)
          {
-         BER_Decoder cons_info(obj.value);
-         if(type_tag == SEQUENCE)
+         Botan::BER_Decoder cons_info(obj.value);
+         if(type_tag == Botan::SEQUENCE)
             {
             emit("SEQUENCE", level, length);
             decode(cons_info, level+1);
             }
-         else if(type_tag == SET)
+         else if(type_tag == Botan::SET)
             {
             emit("SET", level, length);
             decode(cons_info, level+1);
@@ -154,13 +187,13 @@ void decode(BER_Decoder& decoder, size_t level)
             {
             std::string name;
 
-            if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC))
+            if((class_tag & Botan::APPLICATION) || (class_tag & Botan::CONTEXT_SPECIFIC))
                {
                name = "cons [" + std::to_string(type_tag) + "]";
 
-               if(class_tag & APPLICATION)
+               if(class_tag & Botan::APPLICATION)
                   name += " appl";
-               if(class_tag & CONTEXT_SPECIFIC)
+               if(class_tag & Botan::CONTEXT_SPECIFIC)
                   name += " context";
                }
             else
@@ -170,15 +203,15 @@ void decode(BER_Decoder& decoder, size_t level)
             decode(cons_info, level+1);
             }
          }
-      else if((class_tag & APPLICATION) || (class_tag & CONTEXT_SPECIFIC))
+      else if((class_tag & Botan::APPLICATION) || (class_tag & Botan::CONTEXT_SPECIFIC))
          {
 #if 0
-         std::vector<byte> bits;
+         std::vector<uint8_t> bits;
          data.decode(bits, type_tag);
 
          try
             {
-            BER_Decoder inner(bits);
+            Botan::BER_Decoder inner(bits);
             decode(inner, level + 1);
             }
          catch(...)
@@ -191,33 +224,33 @@ void decode(BER_Decoder& decoder, size_t level)
               url_encode(bits));
 #endif
          }
-      else if(type_tag == OBJECT_ID)
+      else if(type_tag == Botan::OBJECT_ID)
          {
-         OID oid;
+         Botan::OID oid;
          data.decode(oid);
 
-         std::string out = OIDS::lookup(oid);
+         std::string out = Botan::OIDS::lookup(oid);
          if(out != oid.as_string())
             out += " [" + oid.as_string() + "]";
 
          emit(type_name(type_tag), level, length, out);
          }
-      else if(type_tag == INTEGER || type_tag == ENUMERATED)
+      else if(type_tag == Botan::INTEGER || type_tag == Botan::ENUMERATED)
          {
-         BigInt number;
+         Botan::BigInt number;
 
-         if(type_tag == INTEGER)
+         if(type_tag == Botan::INTEGER)
             data.decode(number);
-         else if(type_tag == ENUMERATED)
-            data.decode(number, ENUMERATED, class_tag);
+         else if(type_tag == Botan::ENUMERATED)
+            data.decode(number, Botan::ENUMERATED, class_tag);
 
-         std::vector<byte> rep;
+         std::vector<uint8_t> rep;
 
          /* If it's small, it's probably a number, not a hash */
          if(number.bits() <= 20)
-            rep = BigInt::encode(number, BigInt::Decimal);
+            rep = Botan::BigInt::encode(number, Botan::BigInt::Decimal);
          else
-            rep = BigInt::encode(number, BigInt::Hexadecimal);
+            rep = Botan::BigInt::encode(number, Botan::BigInt::Hexadecimal);
 
          std::string str;
          for(size_t i = 0; i != rep.size(); ++i)
@@ -225,25 +258,25 @@ void decode(BER_Decoder& decoder, size_t level)
 
          emit(type_name(type_tag), level, length, str);
          }
-      else if(type_tag == BOOLEAN)
+      else if(type_tag == Botan::BOOLEAN)
          {
          bool boolean;
          data.decode(boolean);
          emit(type_name(type_tag),
               level, length, (boolean ? "true" : "false"));
          }
-      else if(type_tag == NULL_TAG)
+      else if(type_tag == Botan::NULL_TAG)
          {
          emit(type_name(type_tag), level, length);
          }
-      else if(type_tag == OCTET_STRING)
+      else if(type_tag == Botan::OCTET_STRING)
          {
-         std::vector<byte> bits;
+         std::vector<uint8_t> bits;
          data.decode(bits, type_tag);
 
          try
             {
-            BER_Decoder inner(bits);
+            Botan::BER_Decoder inner(bits);
             decode(inner, level + 1);
             }
          catch(...)
@@ -252,9 +285,9 @@ void decode(BER_Decoder& decoder, size_t level)
                  url_encode(bits));
             }
          }
-      else if(type_tag == BIT_STRING)
+      else if(type_tag == Botan::BIT_STRING)
          {
-         std::vector<byte> bits;
+         std::vector<uint8_t> bits;
          data.decode(bits, type_tag);
 
          std::vector<bool> bit_set;
@@ -278,30 +311,31 @@ void decode(BER_Decoder& decoder, size_t level)
 
          emit(type_name(type_tag), level, length, bit_str);
          }
-      else if(type_tag == PRINTABLE_STRING ||
-              type_tag == NUMERIC_STRING ||
-              type_tag == IA5_STRING ||
-              type_tag == T61_STRING ||
-              type_tag == VISIBLE_STRING ||
-              type_tag == UTF8_STRING ||
-              type_tag == BMP_STRING)
+      else if(type_tag == Botan::PRINTABLE_STRING ||
+              type_tag == Botan::NUMERIC_STRING ||
+              type_tag == Botan::IA5_STRING ||
+              type_tag == Botan::T61_STRING ||
+              type_tag == Botan::VISIBLE_STRING ||
+              type_tag == Botan::UTF8_STRING ||
+              type_tag == Botan::BMP_STRING)
          {
-         ASN1_String str;
+         Botan::ASN1_String str;
          data.decode(str);
          if(UTF8_TERMINAL)
             {
             emit(type_name(type_tag), level, length,
-                 Charset::transcode(str.iso_8859(),
-                                    LATIN1_CHARSET, UTF8_CHARSET));
+                 Botan::Charset::transcode(str.iso_8859(),
+                                           Botan::LATIN1_CHARSET,
+                                           Botan::UTF8_CHARSET));
             }
          else
             {
             emit(type_name(type_tag), level, length, str.iso_8859());
             }
          }
-      else if(type_tag == UTC_TIME || type_tag == GENERALIZED_TIME)
+      else if(type_tag == Botan::UTC_TIME || type_tag == Botan::GENERALIZED_TIME)
          {
-         X509_Time time;
+         Botan::X509_Time time;
          data.decode(time);
          emit(type_name(type_tag), level, length, time.readable_string());
          }
@@ -317,39 +351,32 @@ void decode(BER_Decoder& decoder, size_t level)
       }
    }
 
-int asn1(const std::vector<std::string> &args)
+}
+
+class ASN1_Printer : public Command
    {
-   if(args.size() != 2)
-      {
-      std::cout << "Usage: " << args[0] << " <file>" << std::endl;
-      return 1;
-      }
+   public:
+      ASN1_Printer() : Command("asn1print file") {}
 
-   try {
-      DataSource_Stream in(args[1]);
-
-      if(!PEM_Code::matches(in))
+      void go()
          {
-         BER_Decoder decoder(in);
-         decode(decoder, INITIAL_LEVEL);
-         }
-      else
-         {
-         std::string label; // ignored
-         BER_Decoder decoder(PEM_Code::decode(in, label));
-         decode(decoder, INITIAL_LEVEL);
-         }
-   }
-   catch(std::exception& e)
-      {
-      std::cout << "Error: " << e.what() << std::endl;
-      return 2;
-      }
+         Botan::DataSource_Stream in(get_arg("file"));
 
-   return 0;
-   }
+         if(!Botan::PEM_Code::matches(in))
+            {
+            Botan::BER_Decoder decoder(in);
+            decode(decoder, INITIAL_LEVEL);
+            }
+         else
+            {
+            std::string label; // ignored
+            Botan::BER_Decoder decoder(Botan::PEM_Code::decode(in, label));
+            decode(decoder, INITIAL_LEVEL);
+            }
+         }
+   };
 
-REGISTER_APP(asn1);
+BOTAN_REGISTER_COMMAND(ASN1_Printer);
 
 }
 
