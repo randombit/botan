@@ -68,7 +68,7 @@ void factor(BigInt n, BigInt& a, BigInt& b)
 size_t rounds(const BigInt& a, const BigInt& b)
    {
    if(a < b)
-      throw std::logic_error("FPE rounds: a < b");
+      throw Internal_Error("FPE rounds: a < b");
    return 3;
    }
 

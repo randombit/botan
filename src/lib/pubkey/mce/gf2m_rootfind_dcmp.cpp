@@ -9,6 +9,7 @@
 #include <botan/polyn_gf2m.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/code_based_util.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -102,7 +103,7 @@ gf2m_decomp_rootfind_state::gf2m_decomp_rootfind_state(const polyn_gf2m & polyn,
    int deg_sigma = polyn.get_degree();
    if(deg_sigma <= 3)
       {
-      throw std::exception();
+      throw Internal_Error("Unexpected degree in gf2m_decomp_rootfind_state");
       }
    this->m_j = 0;
    coeff_3 = polyn.get_coef( 3);

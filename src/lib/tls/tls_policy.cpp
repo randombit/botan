@@ -306,7 +306,7 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
       }
 
    if(ciphersuites.empty())
-      throw std::logic_error("Policy does not allow any available cipher suite");
+      throw Exception("Policy does not allow any available cipher suite");
 
    std::vector<u16bit> ciphersuite_codes;
    for(auto i : ciphersuites)

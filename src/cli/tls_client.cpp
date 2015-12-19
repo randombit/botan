@@ -198,16 +198,16 @@ class TLS_Client : public Command
          hostent* host_addr = ::gethostbyname(host.c_str());
 
          if(!host_addr)
-            throw std::runtime_error("gethostbyname failed for " + host);
+            throw CLI_Error("gethostbyname failed for " + host);
 
          if(host_addr->h_addrtype != AF_INET) // FIXME
-            throw std::runtime_error(host + " has IPv6 address, not supported");
+            throw CLI_Error(host + " has IPv6 address, not supported");
 
          int type = tcp ? SOCK_STREAM : SOCK_DGRAM;
 
          int fd = ::socket(PF_INET, type, 0);
          if(fd == -1)
-            throw std::runtime_error("Unable to acquire socket");
+            throw CLI_Error("Unable to acquire socket");
 
          sockaddr_in socket_info;
          ::memset(&socket_info, 0, sizeof(socket_info));
@@ -223,7 +223,7 @@ class TLS_Client : public Command
          if(::connect(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
             {
             ::close(fd);
-            throw std::runtime_error("connect failed");
+            throw CLI_Error("connect failed");
             }
 
          return fd;
@@ -248,7 +248,7 @@ class TLS_Client : public Command
          int r = send(sockfd, buf, length, MSG_NOSIGNAL);
 
          if(r == -1)
-            throw std::runtime_error("Socket write failed errno=" + std::to_string(errno));
+            throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
          }
 
       static void stream_socket_write(int sockfd, const uint8_t buf[], size_t length)
@@ -265,7 +265,7 @@ class TLS_Client : public Command
                if(errno == EINTR)
                   sent = 0;
                else
-                  throw std::runtime_error("Socket write failed errno=" + std::to_string(errno));
+                  throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
                }
 
             offset += sent;

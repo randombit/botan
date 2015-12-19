@@ -41,7 +41,7 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, byte>
          lzma_ret rc = ::lzma_code(streamp(), static_cast<lzma_action>(flags));
 
          if(rc == LZMA_MEM_ERROR)
-            throw std::bad_alloc();
+            throw Exception("lzma memory allocation failed");
          else if (rc != LZMA_OK && rc != LZMA_STREAM_END)
             throw Exception("Lzma error");
 
@@ -61,7 +61,7 @@ class LZMA_Compression_Stream : public LZMA_Stream
          lzma_ret rc = ::lzma_easy_encoder(streamp(), level, LZMA_CHECK_CRC64);
 
          if(rc == LZMA_MEM_ERROR)
-            throw std::bad_alloc();
+            throw Exception("lzma memory allocation failed");
          else if(rc != LZMA_OK)
             throw Exception("lzma compress initialization failed");
          }
@@ -76,7 +76,7 @@ class LZMA_Decompression_Stream : public LZMA_Stream
                                              LZMA_TELL_UNSUPPORTED_CHECK);
 
          if(rc == LZMA_MEM_ERROR)
-            throw std::bad_alloc();
+            throw Exception("lzma memory allocation failed");
          else if(rc != LZMA_OK)
             throw Exception("Bad setting in lzma_stream_decoder");
          }

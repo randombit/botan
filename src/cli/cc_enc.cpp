@@ -75,7 +75,7 @@ uint64_t encrypt_cc_number(uint64_t cc_number,
    const Botan::BigInt c = Botan::FPE::fe1_encrypt(n, cc_ranked, key, tweak);
 
    if(c.bits() > 50)
-      throw std::runtime_error("FPE produced a number too large");
+      throw Botan::Internal_Error("FPE produced a number too large");
 
    uint64_t enc_cc = 0;
    for(size_t i = 0; i != 7; ++i)

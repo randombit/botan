@@ -9,6 +9,8 @@
 
 #include <botan/build.h>
 #include <botan/parsing.h>
+#include <botan/rng.h>
+
 #include <fstream>
 #include <iostream>
 #include <functional>
@@ -492,10 +494,11 @@ class Command
 
                if(reg.count(name) > 0)
                   {
-                  throw std::logic_error("Duplicated registration of command " + name);
+                  throw CLI_Error("Duplicated registration of command " + name);
                   }
 
-               Command::global_registry().insert(std::make_pair(name, std::unique_ptr<Command>(cmd)));
+               Command::global_registry().insert(
+                  std::make_pair(name, std::unique_ptr<Command>(cmd)));
                }
          };
    };
