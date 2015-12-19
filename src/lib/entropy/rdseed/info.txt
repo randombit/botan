@@ -1,0 +1,23 @@
+define ENTROPY_SRC_RDSEED 20151218
+
+need_isa rdseed
+
+<source>
+rdseed.cpp
+</source>
+
+<header:internal>
+rdseed.h
+</header:internal>
+
+<arch>
+x86_32
+x86_64
+</arch>
+
+<cc>
+gcc
+clang
+icc
+msvc
+</cc>

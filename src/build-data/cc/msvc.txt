@@ -38,6 +38,7 @@ bmi2   -> ""
 aesni  -> ""
 clmul  -> ""
 rdrand -> ""
+rdseed -> ""
 </isa_flags>
 
 <so_link_commands>

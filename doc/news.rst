@@ -15,6 +15,8 @@ Version 1.11.26, Not Yet Released
 
 * Enable RdRand entropy source on Windows/MSVC. GH #364
 
+* Add Intel's RdSeed as entropy source
+
 Version 1.11.25, 2015-12-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
