@@ -18,6 +18,10 @@ botan-test
 \#*\#
 .\#*
 
+# Archive files
+*.tgz
+*.tar
+
 # Logs
 *.log
 
