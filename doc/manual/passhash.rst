@@ -94,10 +94,6 @@ outputs that look like this::
    password is the same as the one that was used to generate the
    bcrypt hash.
 
-Here is an example of using bcrypt:
-
-.. literalinclude:: ../../src/cli/bcrypt.cpp
-
 .. _passhash9:
 
 Passhash9
