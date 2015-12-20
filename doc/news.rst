@@ -15,7 +15,11 @@ Version 1.11.26, Not Yet Released
 
 * Enable RdRand entropy source on Windows/MSVC. GH #364
 
-* Add Intel's RdSeed as entropy source
+* Add Intel's RdSeed as entropy source. GH #370
+
+* Add preliminary support for accessing TPM v1.2 devices. Currently
+  random number generation, RSA key generation, and signing are
+  supported. Tested using Trousers and an ST TPM
 
 Version 1.11.25, 2015-12-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
