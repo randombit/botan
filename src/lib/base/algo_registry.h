@@ -22,7 +22,7 @@
    #define BOTAN_WORKAROUND_GH_321
    #define NOMINMAX 1
    #define WIN32_LEAN_AND_MEAN 1
-   #include <Windows.h>
+   #include <windows.h>
 
 #endif
 
@@ -33,28 +33,28 @@ namespace Botan {
 class WinCS_Mutex
    {
    public:
-       WinCS_Mutex()
-          {
-          InitializeCriticalSection(&m_cs);
-          }
-          
-       ~WinCS_Mutex()
-          {
-          DeleteCriticalSection(&m_cs);
-          }
+      WinCS_Mutex()
+         {
+         ::InitializeCriticalSection(&m_cs);
+         }
 
-       void lock()
-          {
-          EnterCriticalSection(&m_cs);
-          }
+      ~WinCS_Mutex()
+         {
+         ::DeleteCriticalSection(&m_cs);
+         }
 
-       void unlock()
-          {
-          LeaveCriticalSection(&m_cs);
-          }
+      void lock()
+         {
+         ::EnterCriticalSection(&m_cs);
+         }
 
-    private:
-        CRITICAL_SECTION   m_cs;
+      void unlock()
+         {
+         ::LeaveCriticalSection(&m_cs);
+         }
+
+   private:
+      CRITICAL_SECTION m_cs;
    };
 
 #endif
@@ -111,7 +111,7 @@ class Algo_Registry
             }
          catch(std::exception& e)
             {
-            throw Exception("Creating '" + spec.as_string() + "' failed: " + e.what());
+            throw Lookup_Error("Creating '" + spec.as_string() + "' failed: " + e.what());
             }
 
          return nullptr;

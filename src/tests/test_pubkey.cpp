@@ -104,7 +104,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
          {
          signer.reset(new Botan::PK_Signer(*privkey, padding, Botan::IEEE_1363, sign_provider));
          }
-      catch(...)
+      catch(Botan::Lookup_Error&)
          {
          //result.test_note("Skipping signing with " + sign_provider);
          continue;
@@ -131,7 +131,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
             {
             verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
             }
-         catch(...)
+         catch(Botan::Lookup_Error&)
             {
             //result.test_note("Skipping verifying with " + verify_provider);
             continue;
@@ -193,7 +193,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
          {
          encryptor.reset(new Botan::PK_Encryptor_EME(*privkey, padding, enc_provider));
          }
-      catch(Botan::Lookup_Error)
+      catch(Botan::Lookup_Error&)
          {
          //result.test_note("Skipping encryption with provider " + enc_provider);
          continue;
@@ -221,7 +221,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
             {
             decryptor.reset(new Botan::PK_Decryptor_EME(*privkey, padding, dec_provider));
             }
-         catch(Botan::Lookup_Error)
+         catch(Botan::Lookup_Error&)
             {
             //result.test_note("Skipping decryption with provider " + dec_provider);
             continue;
