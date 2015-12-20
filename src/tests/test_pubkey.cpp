@@ -42,7 +42,8 @@ void check_invalid_signatures(Test::Result& result,
       while(bad_sig == signature)
          bad_sig = Test::mutate_vec(bad_sig, true);
 
-      if(!result.test_eq("incorrect signature invalid", verifier.verify_message(message, bad_sig), false))
+      if(!result.test_eq("incorrect signature invalid",
+                         verifier.verify_message(message, bad_sig), false))
          {
          result.test_note("Accepted invalid signature " + Botan::hex_encode(bad_sig));
          }
@@ -103,7 +104,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
          {
          signer.reset(new Botan::PK_Signer(*privkey, padding, Botan::IEEE_1363, sign_provider));
          }
-      catch(Botan::Lookup_Error)
+      catch(...)
          {
          //result.test_note("Skipping signing with " + sign_provider);
          continue;
@@ -130,13 +131,14 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
             {
             verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
             }
-         catch(Botan::Lookup_Error)
+         catch(...)
             {
             //result.test_note("Skipping verifying with " + verify_provider);
             continue;
             }
 
-         if(!result.test_eq("generated signature valid", verifier->verify_message(message, generated_signature), true))
+         if(!result.test_eq("generated signature valid",
+                            verifier->verify_message(message, generated_signature), true))
             {
             result.test_failure("generated signature", generated_signature);
             }
