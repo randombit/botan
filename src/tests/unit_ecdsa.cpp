@@ -3,7 +3,7 @@
 *
 * (C) 2007 Falko Strenzke
 *     2007 Manuel Hartl
-*     2008 Jack Lloyd
+*     2008,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -17,10 +17,6 @@
   #include <botan/ec_group.h>
   #include <botan/oids.h>
   #include <botan/pkcs8.h>
-#endif
-
-#if defined(BOTAN_HAS_RSA)
-  #include <botan/rsa.h>
 #endif
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -129,10 +125,11 @@ Test::Result test_decode_ver_link_SHA1()
 
 Test::Result test_sign_then_ver()
    {
+   Test::Result result("ECDSA Unit");
+
    Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
    Botan::ECDSA_PrivateKey ecdsa(Test::rng(), dom_pars);
 
-   Test::Result result("ECDSA Unit");
    Botan::PK_Signer signer(ecdsa, "EMSA1(SHA-1)");
 
    auto msg = Botan::hex_decode("12345678901234567890abcdef12");
@@ -189,7 +186,7 @@ Test::Result test_ec_sign()
 
       result.test_eq("invalid ECDSA signature invalid", verifier.check_signature(sig), false);
       }
-   catch (std::exception& e)
+   catch(std::exception& e)
       {
       result.test_failure("test_ec_sign", e.what());
       }
@@ -197,53 +194,44 @@ Test::Result test_ec_sign()
    return result;
    }
 
-Test::Result test_create_pkcs8()
+Test::Result test_ecdsa_create_save_load()
    {
    Test::Result result("ECDSA Unit");
 
+   std::string ecc_private_key_pem;
+   const std::vector<byte> msg = Botan::hex_decode("12345678901234567890abcdef12");
+   std::vector<byte> msg_signature;
+
    try
       {
-#if defined(BOTAN_HAS_RSA)
-      Botan::RSA_PrivateKey rsa_key(Test::rng(), 1024);
-
-      std::ofstream rsa_priv_key(Test::full_path_for_output_file("rsa_private.pkcs8.pem"));
-      rsa_priv_key << Botan::PKCS8::PEM_encode(rsa_key);
-#endif
-
       Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
       Botan::ECDSA_PrivateKey key(Test::rng(), dom_pars);
 
-      // later used by other tests :(
-      std::ofstream priv_key(Test::full_path_for_output_file("wo_dompar_private.pkcs8.pem"));
-      priv_key << Botan::PKCS8::PEM_encode(key);
+      Botan::PK_Signer signer(key, "EMSA1(SHA-1)");
+      msg_signature = signer.sign_message(msg, Test::rng());
+
+      ecc_private_key_pem = Botan::PKCS8::PEM_encode(key);
       }
-   catch (std::exception& e)
+   catch(std::exception& e)
       {
       result.test_failure("create_pkcs8", e.what());
       }
 
+   Botan::DataSource_Memory pem_src(ecc_private_key_pem);
+   std::unique_ptr<Botan::Private_Key> loaded_key(Botan::PKCS8::load_key(pem_src, Test::rng()));
+   Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
+   result.confirm("the loaded key could be converted into an ECDSA_PrivateKey", loaded_ec_key);
+
+   Botan::PK_Verifier verifier(*loaded_ec_key, "EMSA1(SHA-1)");
+
+   result.confirm("generated signature valid", verifier.verify_message(msg, msg_signature));
+
    return result;
    }
 
-Test::Result test_create_and_verify()
+Test::Result test_unusual_curve()
    {
    Test::Result result("ECDSA Unit");
-
-   Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
-   Botan::ECDSA_PrivateKey key(Test::rng(), dom_pars);
-   std::ofstream priv_key(Test::full_path_for_output_file("dompar_private.pkcs8.pem"));
-   priv_key << Botan::PKCS8::PEM_encode(key);
-
-   std::unique_ptr<Botan::Private_Key> loaded_key(Botan::PKCS8::load_key(Test::full_path_for_output_file("wo_dompar_private.pkcs8.pem"), Test::rng()));
-   Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
-   result.confirm("the loaded key could not be converted into an ECDSA_PrivateKey", loaded_ec_key);
-
-#if defined(BOTAN_HAS_RSA)
-   std::unique_ptr<Botan::Private_Key> loaded_key_1(Botan::PKCS8::load_key(Test::full_path_for_output_file("rsa_private.pkcs8.pem"), Test::rng()));
-   Botan::ECDSA_PrivateKey* loaded_rsa_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key_1.get());
-   result.test_eq("loaded key type corrected", loaded_key_1->algo_name(), "RSA");
-   result.confirm("RSA key cannot be casted to ECDSA", !loaded_rsa_key);
-#endif
 
    //calc a curve which is not in the registry
    const std::string G_secp_comp = "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
@@ -258,16 +246,58 @@ Test::Result test_create_and_verify()
    if(!result.confirm("point is on curve", p_G.on_the_curve()))
       return result;
 
-   Botan::ECDSA_PrivateKey key_odd_oid(Test::rng(), dom_params);
-   std::string key_odd_oid_str = Botan::PKCS8::PEM_encode(key_odd_oid);
+   Botan::ECDSA_PrivateKey key_odd_curve(Test::rng(), dom_params);
+   std::string key_odd_curve_str = Botan::PKCS8::PEM_encode(key_odd_curve);
 
-   Botan::DataSource_Memory key_data_src(key_odd_oid_str);
-   std::unique_ptr<Botan::Private_Key> loaded_key2(Botan::PKCS8::load_key(key_data_src, Test::rng()));
+   Botan::DataSource_Memory key_data_src(key_odd_curve_str);
+   std::unique_ptr<Botan::Private_Key> loaded_key(Botan::PKCS8::load_key(key_data_src, Test::rng()));
 
    result.confirm("reloaded key", loaded_key.get());
 
    return result;
    }
+
+Test::Result test_read_pkcs8()
+   {
+   Test::Result result("ECDSA Unit");
+
+   const std::vector<byte> msg = Botan::hex_decode("12345678901234567890abcdef12");
+
+   try
+      {
+      std::unique_ptr<Botan::Private_Key> loaded_key_nodp(Botan::PKCS8::load_key(Test::data_file("ecc/nodompar_private.pkcs8.pem"), Test::rng()));
+      // anew in each test with unregistered domain-parameters
+      Botan::ECDSA_PrivateKey* ecdsa_nodp = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key_nodp.get());
+      result.confirm("key loaded", ecdsa_nodp);
+
+      Botan::PK_Signer signer(*ecdsa_nodp, "EMSA1(SHA-1)");
+      Botan::PK_Verifier verifier(*ecdsa_nodp, "EMSA1(SHA-1)");
+
+      std::vector<byte> signature_nodp = signer.sign_message(msg, Test::rng());
+
+      result.confirm("signature valid", verifier.verify_message(msg, signature_nodp));
+
+      try
+         {
+         std::unique_ptr<Botan::Private_Key> loaded_key_withdp(
+            Botan::PKCS8::load_key(Test::data_file("ecc/withdompar_private.pkcs8.pem"), Test::rng()));
+
+         result.test_failure("loaded key with unknown OID");
+         }
+      catch(std::exception& e)
+         {
+         result.test_note("rejected key with unknown OID");
+         }
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure("read_pkcs8", e.what());
+      }
+
+   return result;
+   }
+
+
 
 Test::Result test_curve_registry()
    {
@@ -324,65 +354,6 @@ Test::Result test_curve_registry()
    return result;
    }
 
-Test::Result test_read_pkcs8()
-   {
-   Test::Result result("ECDSA Unit");
-
-   const std::vector<byte> msg = Botan::hex_decode("12345678901234567890abcdef12");
-
-   try
-      {
-      std::unique_ptr<Botan::Private_Key> loaded_key(Botan::PKCS8::load_key(Test::full_path_for_output_file("wo_dompar_private.pkcs8.pem"), Test::rng()));
-      Botan::ECDSA_PrivateKey* ecdsa = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
-      result.confirm("key loaded", ecdsa);
-
-      Botan::PK_Signer signer(*ecdsa, "EMSA1(SHA-1)");
-
-      std::vector<byte> sig = signer.sign_message(msg, Test::rng());
-
-      Botan::PK_Verifier verifier(*ecdsa, "EMSA1(SHA-1)");
-
-      result.confirm("generated signature valid", verifier.verify_message(msg, sig));
-      }
-   catch (std::exception& e)
-      {
-      result.test_failure("read_pkcs8", e.what());
-      }
-
-   try
-      {
-      std::unique_ptr<Botan::Private_Key> loaded_key_nodp(Botan::PKCS8::load_key(Test::data_file("ecc/nodompar_private.pkcs8.pem"), Test::rng()));
-      // anew in each test with unregistered domain-parameters
-      Botan::ECDSA_PrivateKey* ecdsa_nodp = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key_nodp.get());
-      result.confirm("key loaded", ecdsa_nodp);
-
-      Botan::PK_Signer signer(*ecdsa_nodp, "EMSA1(SHA-1)");
-      Botan::PK_Verifier verifier(*ecdsa_nodp, "EMSA1(SHA-1)");
-
-      std::vector<byte> signature_nodp = signer.sign_message(msg, Test::rng());
-
-      result.confirm("signature valid", verifier.verify_message(msg, signature_nodp));
-
-      try
-         {
-         std::unique_ptr<Botan::Private_Key> loaded_key_withdp(
-            Botan::PKCS8::load_key(Test::data_file("ecc/withdompar_private.pkcs8.pem"), Test::rng()));
-
-         result.test_failure("loaded key with unknown OID");
-         }
-      catch (std::exception& e)
-         {
-         result.test_note("rejected key with unknown OID");
-         }
-      }
-   catch (std::exception& e)
-      {
-      result.test_failure("read_pkcs8", e.what());
-      }
-
-   return result;
-   }
-
 Test::Result test_ecc_key_with_rfc5915_extensions()
    {
    Test::Result result("ECDSA Unit");
@@ -419,10 +390,10 @@ class ECDSA_Unit_Tests : public Test
 #endif
          results.push_back(test_sign_then_ver());
          results.push_back(test_ec_sign());
-         results.push_back(test_create_pkcs8());
-         results.push_back(test_create_and_verify());
-         results.push_back(test_curve_registry());
          results.push_back(test_read_pkcs8());
+         results.push_back(test_ecdsa_create_save_load());
+         results.push_back(test_unusual_curve());
+         results.push_back(test_curve_registry());
          results.push_back(test_ecc_key_with_rfc5915_extensions());
          return results;
          }

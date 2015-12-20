@@ -20,7 +20,7 @@ class Curve25519_Sclarmult_Tests : public Text_Based_Test
    {
    public:
       Curve25519_Sclarmult_Tests() : Text_Based_Test(
-         Test::data_file("pubkey/c25519_scalar.vec"),
+         "pubkey/c25519_scalar.vec",
          {"Secret","Basepoint","Out"})
          {}
 

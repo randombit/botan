@@ -147,7 +147,7 @@ BOTAN_REGISTER_TEST("bigint_unit", BigInt_Unit_Tests);
 class BigInt_KAT_Tests : public Text_Based_Test
    {
    public:
-      BigInt_KAT_Tests() : Text_Based_Test(Test::data_file("bigint.vec"),
+      BigInt_KAT_Tests() : Text_Based_Test("bigint.vec",
                                            std::vector<std::string>{"Output"},
                                            {"In1","In2","Input","Shift","Modulus","Value","Base","Exponent","IsPrime"})
          {}

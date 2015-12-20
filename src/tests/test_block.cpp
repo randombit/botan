@@ -12,7 +12,7 @@ namespace Botan_Tests {
 class Block_Cipher_Tests : public Text_Based_Test
    {
    public:
-      Block_Cipher_Tests() : Text_Based_Test(Test::data_dir("block"), {"Key", "In", "Out"}) {}
+      Block_Cipher_Tests() : Text_Based_Test("block", {"Key", "In", "Out"}) {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {

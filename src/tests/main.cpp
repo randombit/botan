@@ -28,78 +28,25 @@
 
 namespace {
 
-using Botan_Tests::Test;
-
-std::unique_ptr<Botan::RandomNumberGenerator>
-setup_tests(std::ostream& out, size_t threads,
-            size_t soak_level,
-            bool log_success,
-            std::string drbg_seed)
-   {
-   out << "Testing " << Botan::version_string() << "\n";
-   out << "Starting tests";
-
-   if(threads > 1)
-      out << " threads:" << threads;
-
-   out << " soak level:" << soak_level;
-
-   std::unique_ptr<Botan::RandomNumberGenerator> rng;
-
-#if defined(BOTAN_HAS_HMAC_DRBG)
-   if(drbg_seed == "")
-      {
-      const uint64_t ts = Test::timestamp();
-      std::vector<uint8_t> ts8(8);
-      Botan::store_be(ts, ts8.data());
-      drbg_seed = Botan::hex_encode(ts8);
-      }
-
-   out << " rng:HMAC_DRBG with seed '" << drbg_seed << "'";
-   rng.reset(new Botan::Serialized_RNG(new Botan::HMAC_DRBG("HMAC(SHA-384)")));
-   const std::vector<uint8_t> seed = Botan::hex_decode(drbg_seed);
-   rng->add_entropy(seed.data(), seed.size());
-
-#else
-
-   if(drbg_seed != "")
-      throw Botan_Tests::Test_Error("HMAC_DRBG disabled in build, cannot specify DRBG seed");
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   out << " rng:system";
-   rng.reset(new Botan::System_RNG);
-#else
-   // AutoSeeded_RNG always available
-   out << " rng:autoseeded";
-   rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
-#endif
-
-#endif
-
-   out << std::endl;
-
-   Botan_Tests::Test::setup_tests(soak_level, log_success, rng.get());
-
-   return rng;
-   }
-
 class Test_Runner : public Botan_CLI::Command
    {
    public:
-      Test_Runner() : Command("test --threads=0 --soak=5 --drbg-seed= --log-success *suites") {}
+      Test_Runner() : Command("test --threads=0 --soak=5 --drbg-seed= --data-dir= --log-success *suites") {}
 
       std::string help_text() const override
          {
          std::ostringstream err;
 
-         err << "Usage: botan-test [--drbg-seed=] [--threads=N] [--log-success] "
-             << "suite suite ...\n\n"
-             << "Available suites\n"
+         const std::string& spec = cmd_spec();
+
+         err << "Usage: botan-test"
+             << spec.substr(spec.find_first_of(' '), std::string::npos)
+             << "\n\nAvailable test suites\n"
              << "----------------\n";
 
          size_t line_len = 0;
 
-         for(auto&& test : Test::registered_tests())
+         for(auto&& test : Botan_Tests::Test::registered_tests())
             {
             err << test << " ";
             line_len += test.size() + 1;
@@ -122,9 +69,10 @@ class Test_Runner : public Botan_CLI::Command
       void go() override
          {
          const size_t threads = get_arg_sz("threads");
-         const size_t soak = get_arg_sz("soak");
+         const size_t soak_level = get_arg_sz("soak");
          const std::string drbg_seed = get_arg("drbg-seed");
          bool log_success = flag_set("log-success");
+         const std::string data_dir = get_arg_or("data-dir", "src/tests/data");
 
          std::vector<std::string> req = get_arg_list("suites");
 
@@ -148,31 +96,72 @@ class Test_Runner : public Botan_CLI::Command
             req.insert(req.end(), all_others.begin(), all_others.end());
             }
 
-         std::unique_ptr<Botan::RandomNumberGenerator> rng =
-            setup_tests(std::cout, threads, soak, log_success, drbg_seed);
+         output() << "Testing " << Botan::version_string() << "\n";
+         output() << "Starting tests";
 
-         size_t failed = run_tests(req, std::cout, threads);
+         if(threads > 1)
+            output() << " threads:" << threads;
+
+         output() << " soak level:" << soak_level;
+
+         std::unique_ptr<Botan::RandomNumberGenerator> rng;
+
+#if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_64)
+         std::vector<uint8_t> seed = Botan::hex_decode(drbg_seed);
+         if(seed.empty())
+            {
+            const uint64_t ts = Botan_Tests::Test::timestamp();
+            seed.resize(8);
+            Botan::store_be(ts, seed.data());
+            }
+
+         output() << " rng:HMAC_DRBG with seed '" << Botan::hex_encode(seed) << "'";
+         rng.reset(new Botan::Serialized_RNG(new Botan::HMAC_DRBG("HMAC(SHA-384)")));
+         rng->add_entropy(seed.data(), seed.size());
+
+#else
+
+         if(drbg_seed != "")
+            throw Botan_Tests::Test_Error("HMAC_DRBG disabled in build, cannot specify DRBG seed");
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+         output() << " rng:system";
+         rng.reset(new Botan::System_RNG);
+#else
+         // AutoSeeded_RNG always available
+         output() << " rng:autoseeded";
+         rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
+#endif
+
+#endif
+
+         output() << "\n";
+
+         Botan_Tests::Test::setup_tests(soak_level, log_success, data_dir, rng.get());
+
+         const size_t failed = run_tests(req, output(), threads);
 
          // Throw so main returns an error
          if(failed)
             throw Botan_Tests::Test_Error("Test suite failure");
          }
+
    private:
 
-      std::string report_out(const std::vector<Test::Result>& results,
+      std::string report_out(const std::vector<Botan_Tests::Test::Result>& results,
                              size_t& tests_failed,
                              size_t& tests_ran)
          {
          std::ostringstream out;
 
-         std::map<std::string, Test::Result> combined;
+         std::map<std::string, Botan_Tests::Test::Result> combined;
          for(auto&& result : results)
             {
             const std::string who = result.who();
             auto i = combined.find(who);
             if(i == combined.end())
                {
-               combined[who] = Test::Result(who);
+               combined[who] = Botan_Tests::Test::Result(who);
                i = combined.find(who);
                }
 
@@ -200,7 +189,7 @@ class Test_Runner : public Botan_CLI::Command
             {
             for(auto&& test_name : tests_to_run)
                {
-               std::vector<Test::Result> results = Test::run_test(test_name, false);
+               const auto results = Botan_Tests::Test::run_test(test_name, false);
                out << report_out(results, tests_failed, tests_ran) << std::flush;
                }
             }
@@ -216,13 +205,14 @@ class Test_Runner : public Botan_CLI::Command
             (50-100% speedup) and provides a proof of concept for parallel testing.
             */
 
-            typedef std::future<std::vector<Test::Result>> FutureResults;
+            typedef std::future<std::vector<Botan_Tests::Test::Result>> FutureResults;
             std::deque<FutureResults> fut_results;
 
             for(auto&& test_name : tests_to_run)
                {
-               fut_results.push_back(std::async(std::launch::async,
-                                                [test_name]() { return Test::run_test(test_name, false); }));
+               auto run_it = [test_name] {
+                  return Botan_Tests::Test::run_test(test_name, false); };
+               fut_results.push_back(std::async(std::launch::async, run_it));
 
                while(fut_results.size() > threads)
                   {

@@ -22,7 +22,7 @@ class NR_KAT_Tests : public PK_Signature_Generation_Test
    public:
       NR_KAT_Tests() : PK_Signature_Generation_Test(
          "Nyberg-Rueppel",
-         Test::data_file("pubkey/nr.vec"),
+         "pubkey/nr.vec",
          {"P", "Q", "G", "X", "Hash", "Nonce", "Msg", "Signature"})
          {}
 

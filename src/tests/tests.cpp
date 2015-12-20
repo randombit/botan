@@ -15,9 +15,6 @@
 
 namespace Botan_Tests {
 
-#define TEST_DATA_DIR     "src/tests/data"
-#define TEST_OUTDATA_DIR  "src/tests/outdata"
-
 Test::Registration::Registration(const std::string& name, Test* test)
    {
    if(Test::global_registry().count(name) == 0)
@@ -420,32 +417,19 @@ std::vector<Test::Result> Test::run_test(const std::string& test_name, bool fail
    return results;
    }
 
-//static
-std::string Test::data_dir(const std::string& what)
-   {
-   return std::string(TEST_DATA_DIR) + "/" + what;
-   }
-
-//static
-std::string Test::data_file(const std::string& what)
-   {
-   return std::string(TEST_DATA_DIR) + "/" + what;
-   }
-
-//static
-std::string Test::full_path_for_output_file(const std::string& base)
-   {
-   return std::string(TEST_OUTDATA_DIR) + "/" + base;
-   }
-
 // static member variables of Test
 Botan::RandomNumberGenerator* Test::m_test_rng = nullptr;
+std::string Test::m_data_dir;
 size_t Test::m_soak_level = 0;
 bool Test::m_log_success = false;
 
 //static
-void Test::setup_tests(size_t soak, bool log_success, Botan::RandomNumberGenerator* rng)
+void Test::setup_tests(size_t soak,
+                       bool log_success,
+                       const std::string& data_dir,
+                       Botan::RandomNumberGenerator* rng)
    {
+   m_data_dir = data_dir;
    m_soak_level = soak;
    m_log_success = log_success;
    m_test_rng = rng;
@@ -455,6 +439,18 @@ void Test::setup_tests(size_t soak, bool log_success, Botan::RandomNumberGenerat
 size_t Test::soak_level()
    {
    return m_soak_level;
+   }
+
+//static
+std::string Test::data_file(const std::string& what)
+   {
+   return Test::data_dir() + "/" + what;
+   }
+
+//static
+const std::string& Test::data_dir()
+   {
+   return m_data_dir;
    }
 
 //static
@@ -604,16 +600,17 @@ std::string Text_Based_Test::get_next_line()
             {
             if(m_first)
                {
-               if(m_data_src.find(".vec") != std::string::npos)
+               const std::string full_path = Test::data_dir() + "/" + m_data_src;
+               if(full_path.find(".vec") != std::string::npos)
                   {
-                  m_srcs.push_back(m_data_src);
+                  m_srcs.push_back(full_path);
                   }
                else
                   {
-                  const auto fs = Botan::get_files_recursive(m_data_src);
+                  const auto fs = Botan::get_files_recursive(full_path);
                   m_srcs.assign(fs.begin(), fs.end());
                   if(m_srcs.empty())
-                     throw Test_Error("Error reading test data dir " + m_data_src);
+                     throw Test_Error("Error reading test data dir " + full_path);
                   }
 
                m_first = false;

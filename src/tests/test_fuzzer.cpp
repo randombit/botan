@@ -41,7 +41,7 @@ class Fuzzer_Input_Tests : public Test
 
          try
             {
-            files = Botan::get_files_recursive(Test::data_dir("fuzz/x509"));
+            files = Botan::get_files_recursive(Test::data_dir() + "/fuzz/x509");
             }
          catch(Botan::No_Filesystem_Access)
             {

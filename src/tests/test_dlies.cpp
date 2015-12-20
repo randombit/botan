@@ -23,7 +23,7 @@ class DLIES_KAT_Tests : public Text_Based_Test
    {
    public:
       DLIES_KAT_Tests() : Text_Based_Test(
-         Test::data_file("pubkey/dlies.vec"),
+         "pubkey/dlies.vec",
          {"P", "G", "X1", "X2", "Msg", "Ciphertext"})
          {}
 

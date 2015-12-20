@@ -157,6 +157,7 @@ class Command
                   }
                }
 
+            bool seen_stdin_flag = false;
             size_t arg_i = 0;
             for(auto&& arg : m_spec_args)
                {
@@ -170,6 +171,13 @@ class Command
                   }
 
                m_user_args.insert(std::make_pair(arg, args[arg_i]));
+
+               if(args[arg_i] == "-")
+                  {
+                  if(seen_stdin_flag)
+                     throw CLI_Usage_Error("Cannot specifiy '-' (stdin) more than once");
+                  seen_stdin_flag = true;
+                  }
 
                ++arg_i;
                }
@@ -234,6 +242,8 @@ class Command
          {
          return "Usage: " + m_spec;
          }
+
+      const std::string& cmd_spec() const { return m_spec; }
 
       std::string cmd_name() const
          {
@@ -403,9 +413,21 @@ class Command
                      std::function<void (uint8_t[], size_t)> consumer_fn,
                      size_t buf_size = 0) const
          {
-         // Any need to support non-binary files here?
-         std::ifstream in(input_file, std::ios::binary);
+         if(input_file == "-")
+            {
+            do_read_file(std::cin, consumer_fn, buf_size);
+            }
+         else
+            {
+            std::ifstream in(input_file, std::ios::binary);
+            do_read_file(in, consumer_fn, buf_size);
+            }
+         }
 
+      void do_read_file(std::istream& in,
+                        std::function<void (uint8_t[], size_t)> consumer_fn,
+                        size_t buf_size = 0) const
+         {
          // Avoid an infinite loop on --buf-size=0
          std::vector<uint8_t> buf(buf_size == 0 ? 4096 : buf_size);
 

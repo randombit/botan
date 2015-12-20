@@ -22,7 +22,7 @@ class ECC_Pointmult_Tests : public Text_Based_Test
    {
    public:
       ECC_Pointmult_Tests() : Text_Based_Test(
-         Test::data_file("pubkey/ecc.vec"),
+         "pubkey/ecc.vec",
          {"Group", "m", "X", "Y"})
          {}
 

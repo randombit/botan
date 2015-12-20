@@ -20,7 +20,7 @@ class AEAD_Tests : public Text_Based_Test
    {
    public:
       AEAD_Tests() :
-         Text_Based_Test(Test::data_dir("aead"), {"Key", "Nonce", "In", "Out"}, {"AD"})
+         Text_Based_Test("aead", {"Key", "Nonce", "In", "Out"}, {"AD"})
          {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override

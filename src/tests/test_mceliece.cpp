@@ -51,7 +51,7 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
    public:
       McEliece_Keygen_Encrypt_Test() :
          Text_Based_Test("McEliece",
-                         Test::data_file("pubkey/mce.vec"),
+                         "pubkey/mce.vec",
                          {"McElieceSeed", "KeyN","KeyT","PublicKeyFingerprint",
                           "PrivateKeyFingerprint", "EncryptPRNGSeed",
                             "SharedKey", "Ciphertext" })

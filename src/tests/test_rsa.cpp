@@ -22,7 +22,7 @@ class RSA_ES_KAT_Tests : public PK_Encryption_Decryption_Test
    public:
       RSA_ES_KAT_Tests() : PK_Encryption_Decryption_Test(
          "RSA",
-         Test::data_file("pubkey/rsaes.vec"),
+         "pubkey/rsaes.vec",
          {"E", "P", "Q", "Msg", "Ciphertext"},
          {"Padding", "Nonce"})
          {}
@@ -43,7 +43,7 @@ class RSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
    public:
       RSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
          "RSA",
-         Test::data_file("pubkey/rsa_sig.vec"),
+         "pubkey/rsa_sig.vec",
          {"E", "P", "Q", "Msg", "Signature"},
          {"Padding", "Nonce"})
          {}
@@ -66,7 +66,7 @@ class RSA_Signature_Verify_Tests : public PK_Signature_Verification_Test
    public:
       RSA_Signature_Verify_Tests() : PK_Signature_Verification_Test(
          "RSA",
-         Test::data_file("pubkey/rsa_verify.vec"),
+         "pubkey/rsa_verify.vec",
          {"E", "N", "Msg", "Signature"},
          {"Padding"})
          {}

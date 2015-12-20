@@ -23,7 +23,7 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
    public:
       Diffie_Hellman_KAT_Tests() : PK_Key_Agreement_Test(
          "Diffie-Hellman",
-         Test::data_file("pubkey/dh.vec"),
+         "pubkey/dh.vec",
          {"P", "G", "X", "Y", "Msg", "OutLen", "K"},
          {"KDF"})
          {}

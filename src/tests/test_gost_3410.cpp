@@ -23,7 +23,7 @@ class GOST_3410_2001_Verification_Tests : public PK_Signature_Verification_Test
    public:
       GOST_3410_2001_Verification_Tests() : PK_Signature_Verification_Test(
          "GOST 34.10-2001",
-         Test::data_file("pubkey/gost_3410.vec"),
+         "pubkey/gost_3410.vec",
          {"Group", "Pubkey", "Hash", "Msg", "Signature"})
          {}
 

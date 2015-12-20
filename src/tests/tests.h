@@ -273,9 +273,7 @@ class Test
 
       static Test* get_test(const std::string& test_name);
 
-      static std::string data_dir(const std::string& what);
       static std::string data_file(const std::string& what);
-      static std::string full_path_for_output_file(const std::string& base);
 
       template<typename Alloc>
       static std::vector<uint8_t, Alloc>
@@ -302,16 +300,22 @@ class Test
          return r;
          }
 
-      static void setup_tests(size_t soak, bool log_succcss, Botan::RandomNumberGenerator* rng);
+      static void setup_tests(size_t soak,
+                              bool log_succcss,
+                              const std::string& data_dir,
+                              Botan::RandomNumberGenerator* rng);
 
       static size_t soak_level();
       static bool log_success();
+
+      static const std::string& data_dir();
 
       static Botan::RandomNumberGenerator& rng();
       static std::string random_password();
       static uint64_t timestamp(); // nanoseconds arbitrary epoch
 
    private:
+      static std::string m_data_dir;
       static Botan::RandomNumberGenerator* m_test_rng;
       static size_t m_soak_level;
       static bool m_log_success;

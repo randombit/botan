@@ -23,7 +23,7 @@ class ECDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
    public:
       ECDSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
          "ECDSA",
-         Test::data_file("pubkey/ecdsa.vec"),
+         "pubkey/ecdsa.vec",
          {"Group", "X", "Hash", "Msg", "Signature"})
          {}
 

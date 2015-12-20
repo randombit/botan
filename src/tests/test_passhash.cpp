@@ -22,7 +22,7 @@ namespace {
 class Bcrypt_Tests : public Text_Based_Test
    {
    public:
-      Bcrypt_Tests() : Text_Based_Test(Test::data_file("bcrypt.vec"), {"Password","Passhash"}) {}
+      Bcrypt_Tests() : Text_Based_Test("bcrypt.vec", {"Password","Passhash"}) {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
@@ -56,7 +56,7 @@ BOTAN_REGISTER_TEST("bcrypt", Bcrypt_Tests);
 class Passhash9_Tests : public Text_Based_Test
    {
    public:
-      Passhash9_Tests() : Text_Based_Test(Test::data_file("passhash9.vec"), {"Password","Passhash"}) {}
+      Passhash9_Tests() : Text_Based_Test("passhash9.vec", {"Password","Passhash"}) {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {

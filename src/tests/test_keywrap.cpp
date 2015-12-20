@@ -20,7 +20,7 @@ namespace {
 class RFC3394_Keywrap_Tests : public Text_Based_Test
    {
    public:
-      RFC3394_Keywrap_Tests() : Text_Based_Test(Test::data_file("rfc3394.vec"),
+      RFC3394_Keywrap_Tests() : Text_Based_Test("rfc3394.vec",
                                                 {"Key", "KEK", "Output"})
          {}
 
