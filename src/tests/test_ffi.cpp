@@ -193,11 +193,17 @@ class FFI_Unit_Tests : public Test
 
          size_t out_len = 64;
          outstr.resize(out_len);
-         TEST_FFI_OK(botan_bcrypt_generate, (reinterpret_cast<uint8_t*>(&outstr[0]), &out_len, passphrase.c_str(), rng, 3, 0));
-         result.test_eq("bcrypt output size", out_len, 61);
 
-         TEST_FFI_OK(botan_bcrypt_is_valid, (passphrase.c_str(), outstr.data()));
-         TEST_FFI_FAIL("bad password", botan_bcrypt_is_valid, ("nope", outstr.data()));
+         int rc = botan_bcrypt_generate(reinterpret_cast<uint8_t*>(&outstr[0]),
+                                        &out_len, passphrase.c_str(), rng, 3, 0);
+
+         if(rc == 0)
+            {
+            result.test_eq("bcrypt output size", out_len, 61);
+
+            TEST_FFI_OK(botan_bcrypt_is_valid, (passphrase.c_str(), outstr.data()));
+            TEST_FFI_FAIL("bad password", botan_bcrypt_is_valid, ("nope", outstr.data()));
+            }
 
          std::vector<Test::Result> results;
          results.push_back(ffi_test_rsa(rng));
