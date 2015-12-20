@@ -173,6 +173,19 @@ softare-based entropy polling is still used.
 */
 #define BOTAN_ENTROPY_ESTIMATE_HARDWARE_RNG 0.0
 
+/*
+How often should the RdRand/RdSeed RNGs be polled
+
+Each poll generates 32 bit entropy
+*/
+#define BOTAN_ENTROPY_INTEL_RNG_POLLS 32
+
+/*
+* RdSeed is not guaranteed to generate a random number within a specific number of retries
+* Define the number of retries here
+*/
+#define BOTAN_ENTROPY_RDSEED_RETRIES 20
+
 // The output of a PRNG we are trusting to be strong
 #define BOTAN_ENTROPY_ESTIMATE_STRONG_RNG 7.0
 
