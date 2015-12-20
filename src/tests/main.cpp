@@ -30,36 +30,6 @@ namespace {
 
 using Botan_Tests::Test;
 
-std::string report_out(const std::vector<Test::Result>& results,
-                       size_t& tests_failed,
-                       size_t& tests_ran)
-   {
-   std::ostringstream out;
-
-   std::map<std::string, Test::Result> combined;
-   for(auto&& result : results)
-      {
-      const std::string who = result.who();
-      auto i = combined.find(who);
-      if(i == combined.end())
-         {
-         combined[who] = Test::Result(who);
-         i = combined.find(who);
-         }
-
-      i->second.merge(result);
-      }
-
-   for(auto&& result : combined)
-      {
-      out << result.second.result_string();
-      tests_failed += result.second.tests_failed();
-      tests_ran += result.second.tests_run();
-      }
-
-   return out.str();
-   }
-
 std::unique_ptr<Botan::RandomNumberGenerator>
 setup_tests(std::ostream& out, size_t threads,
             size_t soak_level,
@@ -188,6 +158,38 @@ class Test_Runner : public Botan_CLI::Command
             throw Botan_Tests::Test_Error("Test suite failure");
          }
    private:
+
+      std::string report_out(const std::vector<Test::Result>& results,
+                             size_t& tests_failed,
+                             size_t& tests_ran)
+         {
+         std::ostringstream out;
+
+         std::map<std::string, Test::Result> combined;
+         for(auto&& result : results)
+            {
+            const std::string who = result.who();
+            auto i = combined.find(who);
+            if(i == combined.end())
+               {
+               combined[who] = Test::Result(who);
+               i = combined.find(who);
+               }
+
+            i->second.merge(result);
+            }
+
+         for(auto&& result : combined)
+            {
+            out << result.second.result_string(verbose());
+            tests_failed += result.second.tests_failed();
+            tests_ran += result.second.tests_run();
+            }
+
+         return out.str();
+         }
+
+
       size_t run_tests(const std::vector<std::string>& tests_to_run,
                        std::ostream& out,
                        size_t threads)

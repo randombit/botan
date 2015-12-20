@@ -69,7 +69,7 @@ class Test
             bool any_results() const { return tests_run() > 0; }
 
             const std::string& who() const { return m_who; }
-            std::string result_string() const;
+            std::string result_string(bool verbose) const;
 
             static Result Failure(const std::string& who,
                                   const std::string& what)

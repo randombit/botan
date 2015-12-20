@@ -26,7 +26,8 @@ class KDF_KAT_Tests : public Text_Based_Test
       Test::Result run_one_test(const std::string& kdf_name, const VarMap& vars)
          {
          Test::Result result(kdf_name);
-         std::unique_ptr<Botan::KDF> kdf(Botan::get_kdf(kdf_name));
+
+         std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kdf_name));
 
          if(!kdf)
             {

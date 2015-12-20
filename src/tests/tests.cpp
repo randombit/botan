@@ -305,9 +305,13 @@ std::string format_time(uint64_t ns)
 
 }
 
-std::string Test::Result::result_string() const
+std::string Test::Result::result_string(bool verbose) const
    {
+   if(tests_run() == 0 && !verbose)
+      return "";
+
    std::ostringstream report;
+
    report << who() << " ran ";
 
    if(tests_run() == 0)
