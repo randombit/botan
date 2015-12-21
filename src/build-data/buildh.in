@@ -180,6 +180,9 @@ Each poll generates 32 bit entropy
 */
 #define BOTAN_ENTROPY_INTEL_RNG_POLLS 32
 
+// According to Intel RdRand is guaranteed to generate a random number within 10 retries on a working CPU
+#define BOTAN_ENTROPY_RDRAND_RETRIES 10
+
 /*
 * RdSeed is not guaranteed to generate a random number within a specific number of retries
 * Define the number of retries here
