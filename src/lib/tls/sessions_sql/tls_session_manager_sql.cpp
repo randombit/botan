@@ -88,7 +88,6 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
                                                  std::chrono::milliseconds(100),
                                                  iterations);
 
-      printf("pbkdf iter %d\n", iterations);
       size_t check_val = make_u16bit(x[0], x[1]);
       m_session_key.assign(x.begin() + 2, x.end());
 
