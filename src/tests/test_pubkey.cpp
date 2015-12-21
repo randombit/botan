@@ -116,7 +116,8 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
          rng.reset(new Fixed_Output_RNG(get_req_bin(vars, "Nonce")));
          }
 
-      const std::vector<uint8_t> generated_signature = signer->sign_message(message, rng ? *rng : Test::rng());
+      const std::vector<uint8_t> generated_signature =
+         signer->sign_message(message, rng ? *rng : Test::rng());
 
       if(sign_provider == "base")
          {
@@ -161,11 +162,21 @@ PK_Signature_Verification_Test::run_one_test(const std::string&, const VarMap& v
 
    Test::Result result(algo_name() + "/" + padding + " signature verification");
 
-   Botan::PK_Verifier verifier(*pubkey, padding);
+   for(auto&& verify_provider : possible_pk_providers())
+      {
+      std::unique_ptr<Botan::PK_Verifier> verifier;
 
-   result.test_eq("correct signature valid", verifier.verify_message(message, signature), true);
-
-   check_invalid_signatures(result, verifier, message, signature);
+      try
+         {
+         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
+         result.test_eq("correct signature valid", verifier->verify_message(message, signature), true);
+         check_invalid_signatures(result, *verifier, message, signature);
+         }
+      catch(Botan::Lookup_Error&)
+         {
+         result.test_note("Skipping verifying with " + verify_provider);
+         }
+      }
 
    return result;
    }
@@ -184,6 +195,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
 
    // instead slice the private key to work around elgamal test inputs
    //std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
+   Botan::Public_Key* pubkey = privkey.get();
 
    for(auto&& enc_provider : possible_pk_providers())
       {
@@ -191,7 +203,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
 
       try
          {
-         encryptor.reset(new Botan::PK_Encryptor_EME(*privkey, padding, enc_provider));
+         encryptor.reset(new Botan::PK_Encryptor_EME(*pubkey, padding, enc_provider));
          }
       catch(Botan::Lookup_Error&)
          {

@@ -667,7 +667,7 @@ std::vector<Test::Result> Text_Based_Test::run()
    {
    std::vector<Test::Result> results;
 
-   std::string who;
+   std::string header, header_or_name = m_data_src;
    VarMap vars;
    size_t test_cnt = 0;
 
@@ -679,7 +679,8 @@ std::vector<Test::Result> Text_Based_Test::run()
 
       if(line[0] == '[' && line[line.size()-1] == ']')
          {
-         who = line.substr(1, line.size() - 2);
+         header = line.substr(1, line.size() - 2);
+         header_or_name = header;
          test_cnt = 0;
          continue;
          }
@@ -690,7 +691,8 @@ std::vector<Test::Result> Text_Based_Test::run()
 
       if(equal_i == std::string::npos)
          {
-         results.push_back(Test::Result::Failure(who, "invalid input '" + line + "'"));
+         results.push_back(Test::Result::Failure(header_or_name,
+                                                 "invalid input '" + line + "'"));
          continue;
          }
 
@@ -698,7 +700,8 @@ std::vector<Test::Result> Text_Based_Test::run()
       std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
 
       if(m_required_keys.count(key) == 0 && m_optional_keys.count(key) == 0)
-         results.push_back(Test::Result::Failure(who, test_id + " failed unknown key " + key));
+         results.push_back(Test::Result::Failure(header_or_name,
+                                                 test_id + " failed unknown key " + key));
 
       vars[key] = val;
 
@@ -709,7 +712,7 @@ std::vector<Test::Result> Text_Based_Test::run()
             ++test_cnt;
 
             uint64_t start = Test::timestamp();
-            Test::Result result = run_one_test(who, vars);
+            Test::Result result = run_one_test(header, vars);
             result.set_ns_consumed(Test::timestamp() - start);
 
             if(result.tests_failed())
@@ -718,7 +721,8 @@ std::vector<Test::Result> Text_Based_Test::run()
             }
          catch(std::exception& e)
             {
-            results.push_back(Test::Result::Failure(who, "test " + std::to_string(test_cnt) +
+            results.push_back(Test::Result::Failure(header_or_name,
+                                                    "test " + std::to_string(test_cnt) +
                                                     " failed with exception '" + e.what() + "'"));
             }
 

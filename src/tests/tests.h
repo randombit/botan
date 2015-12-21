@@ -61,7 +61,7 @@ class Test
       class Result
          {
          public:
-            Result(const std::string& who = "") : m_who(who) {}
+            Result(const std::string& who) : m_who(who) {}
 
             size_t tests_passed() const { return m_tests_passed; }
             size_t tests_failed() const { return m_fail_log.size(); }

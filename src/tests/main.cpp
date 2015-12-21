@@ -161,7 +161,7 @@ class Test_Runner : public Botan_CLI::Command
             auto i = combined.find(who);
             if(i == combined.end())
                {
-               combined[who] = Botan_Tests::Test::Result(who);
+               combined.insert(std::make_pair(who, Botan_Tests::Test::Result(who)));
                i = combined.find(who);
                }
 
