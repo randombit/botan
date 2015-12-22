@@ -1,49 +1,49 @@
 Source Code Layout
 =================================================
 
-Under `src` there are directories
+Under ``src`` there are directories
 
-* `lib` is the library itself, more on that below
-* `cli` is the command line application `botan`
-* `tests` contain what you would expect. Input files go under `tests/data`.
-* `build-data` contains files read by the configure script. For
-  example `build-data/cc/gcc.txt` describes various gcc options.
-* `scripts` contains misc scripts: install, distribution, various
-  codegen things. Scripts controlling CI go under `scripts/ci`.
-* `python/botan.py` is the Python ctypes wrapper
+* ``lib`` is the library itself, more on that below
+* ``cli`` is the command line application ``botan``
+* ``tests`` contain what you would expect. Input files go under ``tests/data``.
+* ``build-data`` contains files read by the configure script. For
+  example ``build-data/cc/gcc.txt`` describes various gcc options.
+* ``scripts`` contains misc scripts: install, distribution, various
+  codegen things. Scripts controlling CI go under ``scripts/ci``.
+* ``python/botan.py`` is the Python ctypes wrapper
 
 Library Layout
 ========================================
 
-* `base` defines some high level types
-* `utils` contains various utility functions and types
-* `codec` has hex, base64
-* `block` contains the block cipher implementations
-* `modes` contains block cipher modes (CBC, GCM, etc)
-* `stream` contains the stream ciphers
-* `hash` contains the hash function implementations
-* `passhash` contains password hashing algorithms for authentication
-* `kdf` contains the key derivation functions
-* `mac` contains the message authentication codes
-* `pbkdf` contains password hashing algorithms for key derivation
-* `math` is the math library for public key operations. It is divided into
-  four parts: `mp` which are the low level algorithms; `bigint` which is
-  a C++ wrapper around `mp`; `numbertheory` which contains algorithms like
-  primality testing and exponentiation; and `ec_gfp` which defines elliptic
+* ``base`` defines some high level types
+* ``utils`` contains various utility functions and types
+* ``codec`` has hex, base64
+* ``block`` contains the block cipher implementations
+* ``modes`` contains block cipher modes (CBC, GCM, etc)
+* ``stream`` contains the stream ciphers
+* ``hash`` contains the hash function implementations
+* ``passhash`` contains password hashing algorithms for authentication
+* ``kdf`` contains the key derivation functions
+* ``mac`` contains the message authentication codes
+* ``pbkdf`` contains password hashing algorithms for key derivation
+* ``math`` is the math library for public key operations. It is divided into
+  four parts: ``mp`` which are the low level algorithms; ``bigint`` which is
+  a C++ wrapper around ``mp``; ``numbertheory`` which contains algorithms like
+  primality testing and exponentiation; and ``ec_gfp`` which defines elliptic
   curves over prime fields.
-* `pubkey` contains the public key implementations
-* `pk_pad` contains padding schemes for public key algorithms
-* `rng` contains the random number generators
-* `entropy` has various entropy sources
-* `asn1` is the DER encoder/decoder
-* `cert` has `x509` (X.509 PKI OCSP is also here) and `cvc` (Card Verifiable Ceritifcates,
+* ``pubkey`` contains the public key implementations
+* ``pk_pad`` contains padding schemes for public key algorithms
+* ``rng`` contains the random number generators
+* ``entropy`` has various entropy sources
+* ``asn1`` is the DER encoder/decoder
+* ``cert`` has ``x509`` (X.509 PKI OCSP is also here) and ``cvc`` (Card Verifiable Ceritifcates,
   for ePassports)
-* `tls` contains the TLS implementation
-* `filters` is a filter/pipe API for data transforms
-* `compression` has the compression wrappers (zlib, bzip2, lzma)
-* `ffi` is the C99 API
-* `prov` contains bindings to external libraries like OpenSSL
-* `misc` contains odds and ends: format preserving encryption, SRP, threshold
+* ``tls`` contains the TLS implementation
+* ``filters`` is a filter/pipe API for data transforms
+* ``compression`` has the compression wrappers (zlib, bzip2, lzma)
+* ``ffi`` is the C99 API
+* ``prov`` contains bindings to external libraries like OpenSSL
+* ``misc`` contains odds and ends: format preserving encryption, SRP, threshold
   secret sharing, all or nothing transform, and others
 
 Copyright Notice
@@ -65,7 +65,7 @@ change are consecutive, avoid year ranges: specify each year separated
 by a comma.
 
 Also if you are a new contributor or making an addition in a new year,
-include an update to `doc/license.txt` in your PR.
+include an update to ``doc/license.txt`` in your PR.
 
 Style Conventions
 ========================================
@@ -83,14 +83,14 @@ some code calling your idealized API, then just implement that API.
 This can often help avoid cut-and-paste by creating the correct
 abstractions needed to solve the problem at hand.
 
-The C++11 `auto` keyword is very convenient but only use it when the
+The C++11 ``auto`` keyword is very convenient but only use it when the
 type truly is obvious (considering also the potential for unexpected
 integer conversions and the like, such as an apparent uint8_t being
 promoted to an int).
 
-If a variable is defined and not modified, declare it `const`
+If a variable is defined and not modified, declare it ``const``
 
-Use `override` annotations whenever overriding a virtual function.
+Use ``override`` annotations whenever overriding a virtual function.
 
 A formatting setup for emacs is included in `scripts/indent.el` but
 the basic formatting style should be obvious. No tabs, and remove
@@ -103,12 +103,12 @@ Prefer using braces on both sides of if/else blocks, even if only
 using a single statement. Again the current code doesn't always do
 this.
 
-Avoid `using namespace` declarations, even inside of single functions.
-One allowed exception is `using namespace std::placeholders` in
-functions which use `std::bind`.
+Avoid ``using namespace`` declarations, even inside of single functions.
+One allowed exception is ``using namespace std::placeholders`` in
+functions which use ``std::bind``.
 
-Use `::` to explicitly refer to the global namespace (eg, when calling
-an OS or library function like `::select` or `::sqlite3_open`).
+Use ``::`` to explicitly refer to the global namespace (eg, when calling
+an OS or library function like ``::select`` or ``::sqlite3_open``).
 
 Sending patches
 ========================================
@@ -119,16 +119,16 @@ change email the mailing list or open a discussion ticket on github
 before starting out to make sure you are on the right path.
 
 Depending on what your change is, your PR should probably also include
-an update to `doc/news.rst` with a note explaining the change. If your
+an update to ``doc/news.rst`` with a note explaining the change. If your
 change is a simple bug fix, a one sentence description is perhaps
 sufficient. If there is an existing ticket on GitHub with discussion
 or other information, reference it in your change note as 'GH #000'.
 
-Update `doc/credits.txt` with your information so people know what
+Update ``doc/credits.txt`` with your information so people know what
 you did! (This is optional)
 
 If you are interested in contributing but don't know where to start
-check out `doc/todo.rst` for some ideas - these are changes we would
+check out ``doc/todo.rst`` for some ideas - these are changes we would
 almost certainly accept once they've passed code review.
 
 Also, try building and testing it on whatever hardware you have handy,
@@ -225,11 +225,11 @@ Build Tools and Hints
 ========================================
 
 If you don't already use it for all your C/C++ development, install
-`ccache` now and configure a large cache on a fast disk. It allows for
+``ccache`` now and configure a large cache on a fast disk. It allows for
 very quick rebuilds by caching the compiler output.
 
-Use `--with-sanitizers` to enable ASan. UBSan has to be added separately
-with --cc-abi-flags at the moment as GCC 4.8 does not have UBSan.
+Use ``--with-sanitizers`` to enable ASan. UBSan has to be added separately
+with ``--cc-abi-flags`` at the moment as GCC 4.8 does not have UBSan.
 
 Other Ways You Can Help
 ========================================
