@@ -1,4 +1,3 @@
-
 Source Code Layout
 =================================================
 
@@ -97,7 +96,7 @@ A formatting setup for emacs is included in `scripts/indent.el` but
 the basic formatting style should be obvious. No tabs, and remove
 trailing whitespace.
 
-Use m_ prefix on all member variables. The current code is not
+Use ``m_`` prefix on all member variables. The current code is not
 consistent but all new code should use it.
 
 Prefer using braces on both sides of if/else blocks, even if only
