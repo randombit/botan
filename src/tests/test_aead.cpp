@@ -71,7 +71,7 @@ class AEAD_Tests : public Text_Based_Test
                dec->finish(buf);
                result.test_failure("accepted modified message", mutated_input);
                }
-            catch(Botan::Integrity_Failure& e)
+            catch(Botan::Integrity_Failure&)
                {
                result.test_note("correctly rejected modified message");
                }
@@ -93,7 +93,7 @@ class AEAD_Tests : public Text_Based_Test
                dec->finish(buf);
                result.test_failure("accepted message with modified nonce", bad_nonce);
                }
-            catch(Botan::Integrity_Failure& e)
+            catch(Botan::Integrity_Failure&)
                {
                result.test_note("correctly rejected modified nonce");
                }
@@ -115,7 +115,7 @@ class AEAD_Tests : public Text_Based_Test
             dec->finish(buf);
             result.test_failure("accepted message with modified ad", bad_ad);
             }
-         catch(Botan::Integrity_Failure& e)
+         catch(Botan::Integrity_Failure&)
             {
             result.test_note("correctly rejected modified ad");
             }

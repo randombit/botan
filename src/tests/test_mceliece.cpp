@@ -222,7 +222,7 @@ class McEliece_Tests : public Test
                   result.test_failure("AEAD decrypted manipulated ciphertext");
                   result.test_note("Manipulated text was " + Botan::hex_encode(bad_ct));
                   }
-               catch(Botan::Integrity_Failure& e)
+               catch(Botan::Integrity_Failure&)
                   {
                   result.test_note("AEAD rejected manipulated ciphertext");
                   }

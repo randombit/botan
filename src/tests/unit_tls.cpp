@@ -530,7 +530,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                         needed = client.received_data(input.data(), input.size());
                         }
                      }
-                  catch(std::exception& e)
+                  catch(std::exception&)
                      {
                      result.test_note("corruption caused server exception");
                      }
@@ -570,7 +570,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                         needed = client.received_data(input.data(), input.size());
                         }
                      }
-                  catch(std::exception& e)
+                  catch(std::exception&)
                      {
                      result.test_note("corruption caused client exception");
                      }

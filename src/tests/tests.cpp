@@ -512,7 +512,7 @@ std::vector<uint8_t> Text_Based_Test::get_req_bin(const VarMap& vars,
          {
          return Botan::hex_decode(i->second);
          }
-      catch(std::exception& e)
+      catch(std::exception&)
          {
          throw Test_Error("Test invalid hex input '" + i->second + "'" +
                                   + " for key " + key);
@@ -556,7 +556,7 @@ std::vector<uint8_t> Text_Based_Test::get_opt_bin(const VarMap& vars,
       {
       return Botan::hex_decode(i->second);
       }
-   catch(std::exception& e)
+   catch(std::exception&)
       {
       throw Test_Error("Test invalid hex input '" + i->second + "'" +
                                + " for key " + key);
@@ -583,7 +583,7 @@ Botan::BigInt Text_Based_Test::get_req_bn(const VarMap& vars,
       {
       return Botan::BigInt(i->second);
       }
-   catch(std::exception& e)
+   catch(std::exception&)
       {
       throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key);
       }
