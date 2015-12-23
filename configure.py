@@ -1942,25 +1942,27 @@ def main(argv = None):
 
     # Now begin the actual IO to setup the build
 
+    # Workaround for Windows systems where antivirus is enabled GH #353
     def robust_rmtree(path, max_retries=5):
-        for i in range(max_retries):
+        for _ in range(max_retries):
             try:
                 shutil.rmtree(path)
                 return
-            except OSError, e:
+            except OSError:
                 time.sleep(0.1)
 
         # Final attempt, pass any Exceptions up to caller.
         shutil.rmtree(path)
 
-    def robust_makedirs(dir, max_retries=5):
-        for i in range(max_retries):
+    # Workaround for Windows systems where antivirus is enabled GH #353
+    def robust_makedirs(directory, max_retries=5):
+        for _ in range(max_retries):
             try:
-                os.makedirs(dir)
+                os.makedirs(directory)
                 return
-            except OSError, e:
+            except OSError as e:
                 if e.errno == errno.EEXIST:
-                    return
+                    raise
                 else:
                     time.sleep(0.1)
 
