@@ -44,12 +44,11 @@ class BOTAN_DLL RC4 : public StreamCipher
       void generate();
 
       const size_t SKIP;
-
-      byte X, Y;
+      byte X = 0;
+      byte Y = 0;
       secure_vector<byte> state;
-
       secure_vector<byte> buffer;
-      size_t position;
+      size_t position = 0;
    };
 
 }
