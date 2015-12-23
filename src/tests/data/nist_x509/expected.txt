@@ -1,0 +1,76 @@
+test01:Verified
+test02:Signature error
+test03:Signature error
+test04:Verified
+test05:Certificate is not yet valid
+test06:Certificate is not yet valid
+test07:Verified
+test08:Certificate is not yet valid
+test09:Certificate has expired
+test10:Certificate has expired
+test11:Certificate has expired
+test12:Verified
+test13:Certificate issuer not found
+test14:Certificate issuer not found
+test15:Verified
+test16:Verified
+test17:Verified
+test18:Verified
+test19:No revocation data
+test20:Certificate is revoked
+test21:Certificate is revoked
+test22:CA certificate not allowed to issue certs
+test23:CA certificate not allowed to issue certs
+test24:Verified
+test25:CA certificate not allowed to issue certs
+test26:Verified
+test27:Verified
+test28:CA certificate not allowed to issue certs
+test29:CA certificate not allowed to issue certs
+test30:Verified
+test31:CA certificate not allowed to issue CRLs
+test32:CA certificate not allowed to issue CRLs
+test33:Verified
+test34:Verified
+test35:Verified
+test36:Verified
+test37:Verified
+test38:Verified
+test39:Verified
+test40:Verified
+test41:Verified
+test42:Verified
+test43:Verified
+test44:Verified
+#test45:Explicit policy required
+#test46:
+#test47:Explicit policy required
+test48:Verified
+test49:Verified
+test50:Verified
+test51:Verified
+test52:Verified
+test53:Verified
+test54:Certificate chain too long
+test55:Certificate chain too long
+test56:Verified
+test57:Verified
+test58:Certificate chain too long
+test59:Certificate chain too long
+test60:Certificate chain too long
+test61:Certificate chain too long
+test62:Verified
+test63:Verified
+test64:CRL bad signature
+test65:No revocation data
+test66:No revocation data
+test67:Verified
+test68:Certificate is revoked
+test69:Certificate is revoked
+test70:Certificate is revoked
+test71:Certificate is revoked
+test72:CRL has expired
+test73:CRL has expired
+test74:Verified
+#test75:
+#test76:
