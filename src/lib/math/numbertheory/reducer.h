@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL Modular_Reducer
    {
    public:
-      const BigInt& get_modulus() const { return modulus; }
+      const BigInt& get_modulus() const { return m_modulus; }
 
       BigInt reduce(const BigInt& x) const;
 
@@ -47,13 +47,13 @@ class BOTAN_DLL Modular_Reducer
       BigInt cube(const BigInt& x) const
          { return multiply(x, this->square(x)); }
 
-      bool initialized() const { return (mod_words != 0); }
+      bool initialized() const { return (m_mod_words != 0); }
 
-      Modular_Reducer() { mod_words = 0; }
+      Modular_Reducer() { m_mod_words = 0; }
       Modular_Reducer(const BigInt& mod);
    private:
-      BigInt modulus, modulus_2, mu;
-      size_t mod_words;
+      BigInt m_modulus, m_modulus_2, m_mu;
+      size_t m_mod_words;
    };
 
 }

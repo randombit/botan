@@ -23,7 +23,10 @@ class BOTAN_DLL Attribute : public ASN1_Object
       void encode_into(class DER_Encoder& to) const override;
       void decode_from(class BER_Decoder& from) override;
 
+      // public member variable:
       OID oid;
+
+      // public member variable:
       std::vector<byte> parameters;
 
       Attribute() {}

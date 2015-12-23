@@ -41,8 +41,8 @@ class BOTAN_DLL X509_DN : public ASN1_Object
       X509_DN(const std::multimap<OID, std::string>&);
       X509_DN(const std::multimap<std::string, std::string>&);
    private:
-      std::multimap<OID, ASN1_String> dn_info;
-      std::vector<byte> dn_bits;
+      std::multimap<OID, ASN1_String> m_dn_info;
+      std::vector<byte> m_dn_bits;
    };
 
 bool BOTAN_DLL operator==(const X509_DN&, const X509_DN&);

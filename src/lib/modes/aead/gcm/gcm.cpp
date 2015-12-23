@@ -162,7 +162,7 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
    m_tag_size(tag_size),
    m_cipher_name(cipher->name())
    {
-   if(cipher->block_size() != BS)
+   if(cipher->block_size() != m_BS)
       throw Invalid_Argument("GCM requires a 128 bit cipher so cannot be used with " +
                                   cipher->name());
 
@@ -187,7 +187,7 @@ std::string GCM_Mode::name() const
 
 size_t GCM_Mode::update_granularity() const
    {
-   return BS;
+   return m_BS;
    }
 
 Key_Length_Specification GCM_Mode::key_spec() const
@@ -199,10 +199,10 @@ void GCM_Mode::key_schedule(const byte key[], size_t keylen)
    {
    m_ctr->set_key(key, keylen);
 
-   const std::vector<byte> zeros(BS);
+   const std::vector<byte> zeros(m_BS);
    m_ctr->set_iv(zeros.data(), zeros.size());
 
-   secure_vector<byte> H(BS);
+   secure_vector<byte> H(m_BS);
    m_ctr->encipher(H);
    m_ghash->set_key(H);
    }
@@ -217,7 +217,7 @@ secure_vector<byte> GCM_Mode::start_raw(const byte nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   secure_vector<byte> y0(BS);
+   secure_vector<byte> y0(m_BS);
 
    if(nonce_len == 12)
       {
@@ -231,7 +231,7 @@ secure_vector<byte> GCM_Mode::start_raw(const byte nonce[], size_t nonce_len)
 
    m_ctr->set_iv(y0.data(), y0.size());
 
-   secure_vector<byte> m_enc_y0(BS);
+   secure_vector<byte> m_enc_y0(m_BS);
    m_ctr->encipher(m_enc_y0);
 
    m_ghash->start(m_enc_y0.data(), m_enc_y0.size());

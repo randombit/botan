@@ -29,7 +29,7 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
                        bool big_bit_endian,
                        size_t counter_size = 8);
 
-      size_t hash_block_size() const override { return buffer.size(); }
+      size_t hash_block_size() const override { return m_buffer.size(); }
    protected:
       void add_data(const byte input[], size_t length) override;
       void final_result(byte output[]) override;
@@ -55,9 +55,9 @@ class BOTAN_DLL MDx_HashFunction : public HashFunction
       */
       virtual void write_count(byte out[]);
    private:
-      secure_vector<byte> buffer;
-      u64bit count;
-      size_t position;
+      secure_vector<byte> m_buffer;
+      u64bit m_count;
+      size_t m_position;
 
       const bool BIG_BYTE_ENDIAN, BIG_BIT_ENDIAN;
       const size_t COUNT_SIZE;

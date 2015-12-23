@@ -19,7 +19,7 @@ namespace Botan {
 * Load a X.509 CRL
 */
 X509_CRL::X509_CRL(DataSource& in, bool touc) :
-   X509_Object(in, "X509 CRL/CRL"), throw_on_unknown_critical(touc)
+   X509_Object(in, "X509 CRL/CRL"), m_throw_on_unknown_critical(touc)
    {
    do_decode();
    }
@@ -28,13 +28,13 @@ X509_CRL::X509_CRL(DataSource& in, bool touc) :
 * Load a X.509 CRL
 */
 X509_CRL::X509_CRL(const std::string& in, bool touc) :
-   X509_Object(in, "CRL/X509 CRL"), throw_on_unknown_critical(touc)
+   X509_Object(in, "CRL/X509 CRL"), m_throw_on_unknown_critical(touc)
    {
    do_decode();
    }
 
 X509_CRL::X509_CRL(const std::vector<byte>& in, bool touc) :
-   X509_Object(in, "CRL/X509 CRL"), throw_on_unknown_critical(touc)
+   X509_Object(in, "CRL/X509 CRL"), m_throw_on_unknown_critical(touc)
    {
    do_decode();
    }
@@ -62,11 +62,11 @@ bool X509_CRL::is_revoked(const X509_Certificate& cert) const
 
    bool is_revoked = false;
 
-   for(size_t i = 0; i != revoked.size(); ++i)
+   for(size_t i = 0; i != m_revoked.size(); ++i)
       {
-      if(cert_serial == revoked[i].serial_number())
+      if(cert_serial == m_revoked[i].serial_number())
          {
-         if(revoked[i].reason_code() == REMOVE_FROM_CRL)
+         if(m_revoked[i].reason_code() == REMOVE_FROM_CRL)
             is_revoked = false;
          else
             is_revoked = true;
@@ -81,7 +81,7 @@ bool X509_CRL::is_revoked(const X509_Certificate& cert) const
 */
 void X509_CRL::force_decode()
    {
-   BER_Decoder tbs_crl(tbs_bits);
+   BER_Decoder tbs_crl(m_tbs_bits);
 
    size_t version;
    tbs_crl.decode_optional(version, INTEGER, UNIVERSAL);
@@ -93,17 +93,17 @@ void X509_CRL::force_decode()
    AlgorithmIdentifier sig_algo_inner;
    tbs_crl.decode(sig_algo_inner);
 
-   if(sig_algo != sig_algo_inner)
+   if(m_sig_algo != sig_algo_inner)
       throw X509_CRL_Error("Algorithm identifier mismatch");
 
    X509_DN dn_issuer;
    tbs_crl.decode(dn_issuer);
-   info.add(dn_issuer.contents());
+   m_info.add(dn_issuer.contents());
 
    X509_Time start, end;
    tbs_crl.decode(start).decode(end);
-   info.add("X509.CRL.start", start.to_string());
-   info.add("X509.CRL.end", end.to_string());
+   m_info.add("X509.CRL.start", start.to_string());
+   m_info.add("X509.CRL.end", end.to_string());
 
    BER_Object next = tbs_crl.get_next_object();
 
@@ -113,9 +113,9 @@ void X509_CRL::force_decode()
 
       while(cert_list.more_items())
          {
-         CRL_Entry entry(throw_on_unknown_critical);
+         CRL_Entry entry(m_throw_on_unknown_critical);
          cert_list.decode(entry);
-         revoked.push_back(entry);
+         m_revoked.push_back(entry);
          }
       next = tbs_crl.get_next_object();
       }
@@ -125,11 +125,11 @@ void X509_CRL::force_decode()
       {
       BER_Decoder crl_options(next.value);
 
-      Extensions extensions(throw_on_unknown_critical);
+      Extensions extensions(m_throw_on_unknown_critical);
 
       crl_options.decode(extensions).verify_end();
 
-      extensions.contents_to(info, info);
+      extensions.contents_to(m_info, m_info);
 
       next = tbs_crl.get_next_object();
       }
@@ -145,7 +145,7 @@ void X509_CRL::force_decode()
 */
 std::vector<CRL_Entry> X509_CRL::get_revoked() const
    {
-   return revoked;
+   return m_revoked;
    }
 
 /*
@@ -153,7 +153,7 @@ std::vector<CRL_Entry> X509_CRL::get_revoked() const
 */
 X509_DN X509_CRL::issuer_dn() const
    {
-   return create_dn(info);
+   return create_dn(m_info);
    }
 
 /*
@@ -161,7 +161,7 @@ X509_DN X509_CRL::issuer_dn() const
 */
 std::vector<byte> X509_CRL::authority_key_id() const
    {
-   return info.get1_memvec("X509v3.AuthorityKeyIdentifier");
+   return m_info.get1_memvec("X509v3.AuthorityKeyIdentifier");
    }
 
 /*
@@ -169,7 +169,7 @@ std::vector<byte> X509_CRL::authority_key_id() const
 */
 u32bit X509_CRL::crl_number() const
    {
-   return info.get1_u32bit("X509v3.CRLNumber");
+   return m_info.get1_u32bit("X509v3.CRLNumber");
    }
 
 /*
@@ -177,7 +177,7 @@ u32bit X509_CRL::crl_number() const
 */
 X509_Time X509_CRL::this_update() const
    {
-   return X509_Time(info.get1("X509.CRL.start"), ASN1_Tag::UTC_OR_GENERALIZED_TIME);
+   return X509_Time(m_info.get1("X509.CRL.start"), ASN1_Tag::UTC_OR_GENERALIZED_TIME);
    }
 
 /*
@@ -185,7 +185,7 @@ X509_Time X509_CRL::this_update() const
 */
 X509_Time X509_CRL::next_update() const
    {
-   return X509_Time(info.get1("X509.CRL.end"), ASN1_Tag::UTC_OR_GENERALIZED_TIME);
+   return X509_Time(m_info.get1("X509.CRL.end"), ASN1_Tag::UTC_OR_GENERALIZED_TIME);
    }
 
 }

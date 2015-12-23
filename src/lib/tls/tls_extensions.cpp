@@ -91,7 +91,7 @@ std::vector<byte> Extensions::serialize() const
    {
    std::vector<byte> buf(2); // 2 bytes for length field
 
-   for(auto& extn : extensions)
+   for(auto& extn : m_extensions)
       {
       if(extn.second->empty())
          continue;
@@ -124,7 +124,7 @@ std::vector<byte> Extensions::serialize() const
 std::set<Handshake_Extension_Type> Extensions::extension_types() const
    {
    std::set<Handshake_Extension_Type> offers;
-   for(auto i = extensions.begin(); i != extensions.end(); ++i)
+   for(auto i = m_extensions.begin(); i != m_extensions.end(); ++i)
       offers.insert(i->first);
    return offers;
    }
@@ -150,8 +150,8 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader,
 
       if(name_type == 0) // DNS
          {
-         sni_host_name = reader.get_string(2, 1, 65535);
-         name_bytes -= (2 + sni_host_name.size());
+         m_sni_host_name = reader.get_string(2, 1, 65535);
+         name_bytes -= (2 + m_sni_host_name.size());
          }
       else // some other unknown name type
          {
@@ -165,7 +165,7 @@ std::vector<byte> Server_Name_Indicator::serialize() const
    {
    std::vector<byte> buf;
 
-   size_t name_len = sni_host_name.size();
+   size_t name_len = m_sni_host_name.size();
 
    buf.push_back(get_byte<u16bit>(0, name_len+3));
    buf.push_back(get_byte<u16bit>(1, name_len+3));
@@ -175,8 +175,8 @@ std::vector<byte> Server_Name_Indicator::serialize() const
    buf.push_back(get_byte<u16bit>(1, name_len));
 
    buf += std::make_pair(
-      reinterpret_cast<const byte*>(sni_host_name.data()),
-      sni_host_name.size());
+      reinterpret_cast<const byte*>(m_sni_host_name.data()),
+      m_sni_host_name.size());
 
    return buf;
    }
@@ -184,9 +184,9 @@ std::vector<byte> Server_Name_Indicator::serialize() const
 SRP_Identifier::SRP_Identifier(TLS_Data_Reader& reader,
                                u16bit extension_size)
    {
-   srp_identifier = reader.get_string(1, 1, 255);
+   m_srp_identifier = reader.get_string(1, 1, 255);
 
-   if(srp_identifier.size() + 1 != extension_size)
+   if(m_srp_identifier.size() + 1 != extension_size)
       throw Decoding_Error("Bad encoding for SRP identifier extension");
    }
 
@@ -195,9 +195,9 @@ std::vector<byte> SRP_Identifier::serialize() const
    std::vector<byte> buf;
 
    const byte* srp_bytes =
-      reinterpret_cast<const byte*>(srp_identifier.data());
+      reinterpret_cast<const byte*>(m_srp_identifier.data());
 
-   append_tls_length_value(buf, srp_bytes, srp_identifier.size(), 1);
+   append_tls_length_value(buf, srp_bytes, m_srp_identifier.size(), 1);
 
    return buf;
    }
@@ -205,16 +205,16 @@ std::vector<byte> SRP_Identifier::serialize() const
 Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader,
                                                  u16bit extension_size)
    {
-   reneg_data = reader.get_range<byte>(1, 0, 255);
+   m_reneg_data = reader.get_range<byte>(1, 0, 255);
 
-   if(reneg_data.size() + 1 != extension_size)
+   if(m_reneg_data.size() + 1 != extension_size)
       throw Decoding_Error("Bad encoding for secure renegotiation extn");
    }
 
 std::vector<byte> Renegotiation_Extension::serialize() const
    {
    std::vector<byte> buf;
-   append_tls_length_value(buf, reneg_data, 1);
+   append_tls_length_value(buf, m_reneg_data, 1);
    return buf;
    }
 

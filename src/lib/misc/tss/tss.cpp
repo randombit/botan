@@ -105,7 +105,7 @@ HashFunction* get_rtss_hash_by_id(byte id)
 
 RTSS_Share::RTSS_Share(const std::string& hex_input)
    {
-   contents = hex_decode_locked(hex_input);
+   m_contents = hex_decode_locked(hex_input);
    }
 
 byte RTSS_Share::share_id() const
@@ -113,12 +113,12 @@ byte RTSS_Share::share_id() const
    if(!initialized())
       throw Invalid_State("RTSS_Share::share_id not initialized");
 
-   return contents[20];
+   return m_contents[20];
    }
 
 std::string RTSS_Share::to_string() const
    {
-   return hex_encode(contents.data(), contents.size());
+   return hex_encode(m_contents.data(), m_contents.size());
    }
 
 std::vector<RTSS_Share>
@@ -137,16 +137,16 @@ RTSS_Share::split(byte M, byte N,
    // Create RTSS header in each share
    for(byte i = 0; i != N; ++i)
       {
-      shares[i].contents += std::make_pair(identifier, 16);
-      shares[i].contents += rtss_hash_id(hash.name());
-      shares[i].contents += M;
-      shares[i].contents += get_byte(0, S_len);
-      shares[i].contents += get_byte(1, S_len);
+      shares[i].m_contents += std::make_pair(identifier, 16);
+      shares[i].m_contents += rtss_hash_id(hash.name());
+      shares[i].m_contents += M;
+      shares[i].m_contents += get_byte(0, S_len);
+      shares[i].m_contents += get_byte(1, S_len);
       }
 
    // Choose sequential values for X starting from 1
    for(byte i = 0; i != N; ++i)
-      shares[i].contents.push_back(i+1);
+      shares[i].m_contents.push_back(i+1);
 
    // secret = S || H(S)
    secure_vector<byte> secret(S, S + S_len);
@@ -170,7 +170,7 @@ RTSS_Share::split(byte M, byte N,
             X_i  = gfp_mul(X_i, X);
             }
 
-         shares[j].contents.push_back(sum);
+         shares[j].m_contents.push_back(sum);
          }
       }
 
@@ -191,18 +191,18 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
       if(shares[i].size() < RTSS_HEADER_SIZE)
          throw Decoding_Error("Missing or malformed RTSS header");
 
-      if(!same_mem(&shares[0].contents[0],
-                   &shares[i].contents[0], RTSS_HEADER_SIZE))
+      if(!same_mem(&shares[0].m_contents[0],
+                   &shares[i].m_contents[0], RTSS_HEADER_SIZE))
          throw Decoding_Error("Different RTSS headers detected");
       }
 
-   if(shares.size() < shares[0].contents[17])
+   if(shares.size() < shares[0].m_contents[17])
       throw Decoding_Error("Insufficient shares to do TSS reconstruction");
 
-   u16bit secret_len = make_u16bit(shares[0].contents[18],
-                                   shares[0].contents[19]);
+   u16bit secret_len = make_u16bit(shares[0].m_contents[18],
+                                   shares[0].m_contents[19]);
 
-   byte hash_id = shares[0].contents[16];
+   byte hash_id = shares[0].m_contents[16];
 
    std::unique_ptr<HashFunction> hash(get_rtss_hash_by_id(hash_id));
 
@@ -215,7 +215,7 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
    for(size_t i = RTSS_HEADER_SIZE + 1; i != shares[0].size(); ++i)
       {
       for(size_t j = 0; j != V.size(); ++j)
-         V[j] = shares[j].contents[i];
+         V[j] = shares[j].m_contents[i];
 
       byte r = 0;
       for(size_t k = 0; k != shares.size(); ++k)

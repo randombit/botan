@@ -55,15 +55,15 @@ size_t DataSource::discard_next(size_t n)
 */
 size_t DataSource_Memory::read(byte out[], size_t length)
    {
-   size_t got = std::min<size_t>(source.size() - offset, length);
-   copy_mem(out, source.data() + offset, got);
-   offset += got;
+   size_t got = std::min<size_t>(m_source.size() - m_offset, length);
+   copy_mem(out, m_source.data() + m_offset, got);
+   m_offset += got;
    return got;
    }
 
 bool DataSource_Memory::check_available(size_t n)
    {
-   return (n <= (source.size() - offset));
+   return (n <= (m_source.size() - m_offset));
    }
 
 /*
@@ -72,11 +72,11 @@ bool DataSource_Memory::check_available(size_t n)
 size_t DataSource_Memory::peek(byte out[], size_t length,
                                size_t peek_offset) const
    {
-   const size_t bytes_left = source.size() - offset;
+   const size_t bytes_left = m_source.size() - m_offset;
    if(peek_offset >= bytes_left) return 0;
 
    size_t got = std::min(bytes_left - peek_offset, length);
-   copy_mem(out, &source[offset + peek_offset], got);
+   copy_mem(out, &m_source[m_offset + peek_offset], got);
    return got;
    }
 
@@ -85,18 +85,18 @@ size_t DataSource_Memory::peek(byte out[], size_t length,
 */
 bool DataSource_Memory::end_of_data() const
    {
-   return (offset == source.size());
+   return (m_offset == m_source.size());
    }
 
 /*
 * DataSource_Memory Constructor
 */
 DataSource_Memory::DataSource_Memory(const std::string& in) :
-   source(reinterpret_cast<const byte*>(in.data()),
+   m_source(reinterpret_cast<const byte*>(in.data()),
           reinterpret_cast<const byte*>(in.data()) + in.length()),
-   offset(0)
+   m_offset(0)
    {
-   offset = 0;
+   m_offset = 0;
    }
 
 /*
@@ -104,21 +104,21 @@ DataSource_Memory::DataSource_Memory(const std::string& in) :
 */
 size_t DataSource_Stream::read(byte out[], size_t length)
    {
-   source.read(reinterpret_cast<char*>(out), length);
-   if(source.bad())
+   m_source.read(reinterpret_cast<char*>(out), length);
+   if(m_source.bad())
       throw Stream_IO_Error("DataSource_Stream::read: Source failure");
 
-   size_t got = source.gcount();
-   total_read += got;
+   size_t got = m_source.gcount();
+   m_total_read += got;
    return got;
    }
 
 bool DataSource_Stream::check_available(size_t n)
    {
-   const std::streampos orig_pos = source.tellg();
-   source.seekg(0, std::ios::end);
-   const size_t avail = source.tellg() - orig_pos;
-   source.seekg(orig_pos);
+   const std::streampos orig_pos = m_source.tellg();
+   m_source.seekg(0, std::ios::end);
+   const size_t avail = m_source.tellg() - orig_pos;
+   m_source.seekg(orig_pos);
    return (avail >= n);
    }
 
@@ -135,23 +135,23 @@ size_t DataSource_Stream::peek(byte out[], size_t length, size_t offset) const
    if(offset)
       {
       secure_vector<byte> buf(offset);
-      source.read(reinterpret_cast<char*>(buf.data()), buf.size());
-      if(source.bad())
+      m_source.read(reinterpret_cast<char*>(buf.data()), buf.size());
+      if(m_source.bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
-      got = source.gcount();
+      got = m_source.gcount();
       }
 
    if(got == offset)
       {
-      source.read(reinterpret_cast<char*>(out), length);
-      if(source.bad())
+      m_source.read(reinterpret_cast<char*>(out), length);
+      if(m_source.bad())
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
-      got = source.gcount();
+      got = m_source.gcount();
       }
 
-   if(source.eof())
-      source.clear();
-   source.seekg(total_read, std::ios::beg);
+   if(m_source.eof())
+      m_source.clear();
+   m_source.seekg(m_total_read, std::ios::beg);
 
    return got;
    }
@@ -161,7 +161,7 @@ size_t DataSource_Stream::peek(byte out[], size_t length, size_t offset) const
 */
 bool DataSource_Stream::end_of_data() const
    {
-   return (!source.good());
+   return (!m_source.good());
    }
 
 /*
@@ -169,7 +169,7 @@ bool DataSource_Stream::end_of_data() const
 */
 std::string DataSource_Stream::id() const
    {
-   return identifier;
+   return m_identifier;
    }
 
 /*
@@ -177,15 +177,15 @@ std::string DataSource_Stream::id() const
 */
 DataSource_Stream::DataSource_Stream(const std::string& path,
                                      bool use_binary) :
-   identifier(path),
-   source_p(new std::ifstream(path,
+   m_identifier(path),
+   m_source_p(new std::ifstream(path,
                               use_binary ? std::ios::binary : std::ios::in)),
-   source(*source_p),
-   total_read(0)
+   m_source(*m_source_p),
+   m_total_read(0)
    {
-   if(!source.good())
+   if(!m_source.good())
       {
-      delete source_p;
+      delete m_source_p;
       throw Stream_IO_Error("DataSource: Failure opening file " + path);
       }
    }
@@ -195,10 +195,10 @@ DataSource_Stream::DataSource_Stream(const std::string& path,
 */
 DataSource_Stream::DataSource_Stream(std::istream& in,
                                      const std::string& name) :
-   identifier(name),
-   source_p(nullptr),
-   source(in),
-   total_read(0)
+   m_identifier(name),
+   m_source_p(nullptr),
+   m_source(in),
+   m_total_read(0)
    {
    }
 
@@ -207,7 +207,7 @@ DataSource_Stream::DataSource_Stream(std::istream& in,
 */
 DataSource_Stream::~DataSource_Stream()
    {
-   delete source_p;
+   delete m_source_p;
    }
 
 }

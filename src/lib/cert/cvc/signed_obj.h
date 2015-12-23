@@ -82,10 +82,10 @@ class BOTAN_DLL EAC_Signed_Object
       void do_decode();
       EAC_Signed_Object() {}
 
-      AlgorithmIdentifier sig_algo;
-      std::vector<byte> tbs_bits;
-      std::string PEM_label_pref;
-      std::vector<std::string> PEM_labels_allowed;
+      AlgorithmIdentifier m_sig_algo;
+      std::vector<byte> m_tbs_bits;
+      std::string m_PEM_label_pref;
+      std::vector<std::string> m_PEM_labels_allowed;
    private:
       virtual void force_decode() = 0;
    };

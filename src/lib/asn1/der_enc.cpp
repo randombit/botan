@@ -70,21 +70,21 @@ secure_vector<byte> encode_length(size_t length)
 */
 secure_vector<byte> DER_Encoder::DER_Sequence::get_contents()
    {
-   const ASN1_Tag real_class_tag = ASN1_Tag(class_tag | CONSTRUCTED);
+   const ASN1_Tag real_class_tag = ASN1_Tag(m_class_tag | CONSTRUCTED);
 
-   if(type_tag == SET)
+   if(m_type_tag == SET)
       {
-      std::sort(set_contents.begin(), set_contents.end());
-      for(size_t i = 0; i != set_contents.size(); ++i)
-         contents += set_contents[i];
-      set_contents.clear();
+      std::sort(m_set_contents.begin(), m_set_contents.end());
+      for(size_t i = 0; i != m_set_contents.size(); ++i)
+         m_contents += m_set_contents[i];
+      m_set_contents.clear();
       }
 
    secure_vector<byte> result;
-   result += encode_tag(type_tag, real_class_tag);
-   result += encode_length(contents.size());
-   result += contents;
-   contents.clear();
+   result += encode_tag(m_type_tag, real_class_tag);
+   result += encode_length(m_contents.size());
+   result += m_contents;
+   m_contents.clear();
 
    return result;
    }
@@ -94,10 +94,10 @@ secure_vector<byte> DER_Encoder::DER_Sequence::get_contents()
 */
 void DER_Encoder::DER_Sequence::add_bytes(const byte data[], size_t length)
    {
-   if(type_tag == SET)
-      set_contents.push_back(secure_vector<byte>(data, data + length));
+   if(m_type_tag == SET)
+      m_set_contents.push_back(secure_vector<byte>(data, data + length));
    else
-      contents += std::make_pair(data, length);
+      m_contents += std::make_pair(data, length);
    }
 
 /*
@@ -105,14 +105,14 @@ void DER_Encoder::DER_Sequence::add_bytes(const byte data[], size_t length)
 */
 ASN1_Tag DER_Encoder::DER_Sequence::tag_of() const
    {
-   return ASN1_Tag(type_tag | class_tag);
+   return ASN1_Tag(m_type_tag | m_class_tag);
    }
 
 /*
 * DER_Sequence Constructor
 */
 DER_Encoder::DER_Sequence::DER_Sequence(ASN1_Tag t1, ASN1_Tag t2) :
-   type_tag(t1), class_tag(t2)
+   m_type_tag(t1), m_class_tag(t2)
    {
    }
 
@@ -121,11 +121,11 @@ DER_Encoder::DER_Sequence::DER_Sequence(ASN1_Tag t1, ASN1_Tag t2) :
 */
 secure_vector<byte> DER_Encoder::get_contents()
    {
-   if(subsequences.size() != 0)
+   if(m_subsequences.size() != 0)
       throw Invalid_State("DER_Encoder: Sequence hasn't been marked done");
 
    secure_vector<byte> output;
-   std::swap(output, contents);
+   std::swap(output, m_contents);
    return output;
    }
 
@@ -135,7 +135,7 @@ secure_vector<byte> DER_Encoder::get_contents()
 DER_Encoder& DER_Encoder::start_cons(ASN1_Tag type_tag,
                                      ASN1_Tag class_tag)
    {
-   subsequences.push_back(DER_Sequence(type_tag, class_tag));
+   m_subsequences.push_back(DER_Sequence(type_tag, class_tag));
    return (*this);
    }
 
@@ -144,11 +144,11 @@ DER_Encoder& DER_Encoder::start_cons(ASN1_Tag type_tag,
 */
 DER_Encoder& DER_Encoder::end_cons()
    {
-   if(subsequences.empty())
+   if(m_subsequences.empty())
       throw Invalid_State("DER_Encoder::end_cons: No such sequence");
 
-   secure_vector<byte> seq = subsequences[subsequences.size()-1].get_contents();
-   subsequences.pop_back();
+   secure_vector<byte> seq = m_subsequences[m_subsequences.size()-1].get_contents();
+   m_subsequences.pop_back();
    raw_bytes(seq);
    return (*this);
    }
@@ -192,10 +192,10 @@ DER_Encoder& DER_Encoder::raw_bytes(const std::vector<byte>& val)
 */
 DER_Encoder& DER_Encoder::raw_bytes(const byte bytes[], size_t length)
    {
-   if(subsequences.size())
-      subsequences[subsequences.size()-1].add_bytes(bytes, length);
+   if(m_subsequences.size())
+      m_subsequences[m_subsequences.size()-1].add_bytes(bytes, length);
    else
-      contents += std::make_pair(bytes, length);
+      m_contents += std::make_pair(bytes, length);
 
    return (*this);
    }

@@ -168,10 +168,10 @@ class BOTAN_DLL BER_Decoder
       BER_Decoder(const BER_Decoder&);
       ~BER_Decoder();
    private:
-      BER_Decoder* parent;
-      DataSource* source;
-      BER_Object pushed;
-      mutable bool owns;
+      BER_Decoder* m_parent;
+      DataSource* m_source;
+      BER_Object m_pushed;
+      mutable bool m_owns;
    };
 
 /*

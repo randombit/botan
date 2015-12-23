@@ -25,7 +25,7 @@
 namespace Botan {
 
 EGD_EntropySource::EGD_Socket::EGD_Socket(const std::string& path) :
-   socket_path(path), m_fd(-1)
+   m_socket_path(path), m_fd(-1)
    {
    }
 
@@ -69,7 +69,7 @@ size_t EGD_EntropySource::EGD_Socket::read(byte outbuf[], size_t length)
 
    if(m_fd < 0)
       {
-      m_fd = open_socket(socket_path);
+      m_fd = open_socket(m_socket_path);
       if(m_fd < 0)
          return 0;
       }
@@ -121,14 +121,14 @@ void EGD_EntropySource::EGD_Socket::close()
 EGD_EntropySource::EGD_EntropySource(const std::vector<std::string>& paths)
    {
    for(size_t i = 0; i != paths.size(); ++i)
-      sockets.push_back(EGD_Socket(paths[i]));
+      m_sockets.push_back(EGD_Socket(paths[i]));
    }
 
 EGD_EntropySource::~EGD_EntropySource()
    {
-   for(size_t i = 0; i != sockets.size(); ++i)
-      sockets[i].close();
-   sockets.clear();
+   for(size_t i = 0; i != m_sockets.size(); ++i)
+      m_sockets[i].close();
+   m_sockets.clear();
    }
 
 /**
@@ -140,9 +140,9 @@ void EGD_EntropySource::poll(Entropy_Accumulator& accum)
 
    secure_vector<byte>& buf = accum.get_io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
 
-   for(size_t i = 0; i != sockets.size(); ++i)
+   for(size_t i = 0; i != m_sockets.size(); ++i)
       {
-      size_t got = sockets[i].read(buf.data(), buf.size());
+      size_t got = m_sockets[i].read(buf.data(), buf.size());
 
       if(got)
          {

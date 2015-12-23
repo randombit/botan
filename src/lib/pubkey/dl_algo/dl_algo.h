@@ -29,30 +29,30 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       * Get the DL domain parameters of this key.
       * @return DL domain parameters of this key
       */
-      const DL_Group& get_domain() const { return group; }
+      const DL_Group& get_domain() const { return m_group; }
 
       /**
       * Get the public value y with y = g^x mod p where x is the secret key.
       */
-      const BigInt& get_y() const { return y; }
+      const BigInt& get_y() const { return m_y; }
 
       /**
       * Get the prime p of the underlying DL group.
       * @return prime p
       */
-      const BigInt& group_p() const { return group.get_p(); }
+      const BigInt& group_p() const { return m_group.get_p(); }
 
       /**
       * Get the prime q of the underlying DL group.
       * @return prime q
       */
-      const BigInt& group_q() const { return group.get_q(); }
+      const BigInt& group_q() const { return m_group.get_q(); }
 
       /**
       * Get the generator g of the underlying DL group.
       * @return generator g
       */
-      const BigInt& group_g() const { return group.get_g(); }
+      const BigInt& group_g() const { return m_group.get_g(); }
 
       /**
       * Get the underlying groups encoding format.
@@ -72,12 +72,12 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       /**
       * The DL public key
       */
-      BigInt y;
+      BigInt m_y;
 
       /**
       * The DL group
       */
-      DL_Group group;
+      DL_Group m_group;
    };
 
 /**
@@ -93,7 +93,7 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       * Get the secret key x.
       * @return secret key
       */
-      const BigInt& get_x() const { return x; }
+      const BigInt& get_x() const { return m_x; }
 
       secure_vector<byte> pkcs8_private_key() const override;
 
@@ -107,7 +107,7 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       /**
       * The DL private key
       */
-      BigInt x;
+      BigInt m_x;
    };
 
 }

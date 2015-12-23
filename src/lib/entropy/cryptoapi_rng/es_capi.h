@@ -29,7 +29,7 @@ class Win32_CAPI_EntropySource : public Entropy_Source
      */
       Win32_CAPI_EntropySource(const std::string& provs = "");
    private:
-      std::vector<u64bit> prov_types;
+      std::vector<u64bit> m_prov_types;
    };
 
 }

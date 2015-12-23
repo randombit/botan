@@ -27,7 +27,7 @@ class BOTAN_DLL DES : public Block_Cipher_Fixed_Params<8, 8>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      secure_vector<u32bit> round_key;
+      secure_vector<u32bit> m_round_key;
    };
 
 /**
@@ -45,7 +45,7 @@ class BOTAN_DLL TripleDES : public Block_Cipher_Fixed_Params<8, 16, 24, 8>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      secure_vector<u32bit> round_key;
+      secure_vector<u32bit> m_round_key;
    };
 
 /*

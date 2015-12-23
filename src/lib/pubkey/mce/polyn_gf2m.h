@@ -147,8 +147,13 @@ struct polyn_gf2m
 
       static polyn_gf2m gcd_aux(polyn_gf2m& p1, polyn_gf2m& p2);
    public:
+      // public member variable:
       int m_deg;
+
+      // public member variable:
       secure_vector<gf2m> coeff;
+
+      // public member variable:
       std::shared_ptr<GF2m_Field> msp_field;
    };
 

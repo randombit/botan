@@ -18,12 +18,12 @@ MDx_HashFunction::MDx_HashFunction(size_t block_len,
                                    bool byte_end,
                                    bool bit_end,
                                    size_t cnt_size) :
-   buffer(block_len),
+   m_buffer(block_len),
    BIG_BYTE_ENDIAN(byte_end),
    BIG_BIT_ENDIAN(bit_end),
    COUNT_SIZE(cnt_size)
    {
-   count = position = 0;
+   m_count = m_position = 0;
    }
 
 /*
@@ -31,8 +31,8 @@ MDx_HashFunction::MDx_HashFunction(size_t block_len,
 */
 void MDx_HashFunction::clear()
    {
-   zeroise(buffer);
-   count = position = 0;
+   zeroise(m_buffer);
+   m_count = m_position = 0;
    }
 
 /*
@@ -40,29 +40,29 @@ void MDx_HashFunction::clear()
 */
 void MDx_HashFunction::add_data(const byte input[], size_t length)
    {
-   count += length;
+   m_count += length;
 
-   if(position)
+   if(m_position)
       {
-      buffer_insert(buffer, position, input, length);
+      buffer_insert(m_buffer, m_position, input, length);
 
-      if(position + length >= buffer.size())
+      if(m_position + length >= m_buffer.size())
          {
-         compress_n(buffer.data(), 1);
-         input += (buffer.size() - position);
-         length -= (buffer.size() - position);
-         position = 0;
+         compress_n(m_buffer.data(), 1);
+         input += (m_buffer.size() - m_position);
+         length -= (m_buffer.size() - m_position);
+         m_position = 0;
          }
       }
 
-   const size_t full_blocks = length / buffer.size();
-   const size_t remaining   = length % buffer.size();
+   const size_t full_blocks = length / m_buffer.size();
+   const size_t remaining   = length % m_buffer.size();
 
    if(full_blocks)
       compress_n(input, full_blocks);
 
-   buffer_insert(buffer, position, input + full_blocks * buffer.size(), remaining);
-   position += remaining;
+   buffer_insert(m_buffer, m_position, input + full_blocks * m_buffer.size(), remaining);
+   m_position += remaining;
    }
 
 /*
@@ -70,19 +70,19 @@ void MDx_HashFunction::add_data(const byte input[], size_t length)
 */
 void MDx_HashFunction::final_result(byte output[])
    {
-   buffer[position] = (BIG_BIT_ENDIAN ? 0x80 : 0x01);
-   for(size_t i = position+1; i != buffer.size(); ++i)
-      buffer[i] = 0;
+   m_buffer[m_position] = (BIG_BIT_ENDIAN ? 0x80 : 0x01);
+   for(size_t i = m_position+1; i != m_buffer.size(); ++i)
+      m_buffer[i] = 0;
 
-   if(position >= buffer.size() - COUNT_SIZE)
+   if(m_position >= m_buffer.size() - COUNT_SIZE)
       {
-      compress_n(buffer.data(), 1);
-      zeroise(buffer);
+      compress_n(m_buffer.data(), 1);
+      zeroise(m_buffer);
       }
 
-   write_count(&buffer[buffer.size() - COUNT_SIZE]);
+   write_count(&m_buffer[m_buffer.size() - COUNT_SIZE]);
 
-   compress_n(buffer.data(), 1);
+   compress_n(m_buffer.data(), 1);
    copy_out(output);
    clear();
    }
@@ -97,7 +97,7 @@ void MDx_HashFunction::write_count(byte out[])
    if(COUNT_SIZE >= output_length() || COUNT_SIZE >= hash_block_size())
       throw Invalid_Argument("MDx_HashFunction: COUNT_SIZE is too big");
 
-   const u64bit bit_count = count * 8;
+   const u64bit bit_count = m_count * 8;
 
    if(BIG_BYTE_ENDIAN)
       store_be(bit_count, out + COUNT_SIZE - 8);

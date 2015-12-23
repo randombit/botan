@@ -123,13 +123,13 @@ class BOTAN_DLL DER_Encoder
             void add_bytes(const byte[], size_t);
             DER_Sequence(ASN1_Tag, ASN1_Tag);
          private:
-            ASN1_Tag type_tag, class_tag;
-            secure_vector<byte> contents;
-            std::vector< secure_vector<byte> > set_contents;
+            ASN1_Tag m_type_tag, m_class_tag;
+            secure_vector<byte> m_contents;
+            std::vector< secure_vector<byte> > m_set_contents;
          };
 
-      secure_vector<byte> contents;
-      std::vector<DER_Sequence> subsequences;
+      secure_vector<byte> m_contents;
+      std::vector<DER_Sequence> m_subsequences;
    };
 
 }

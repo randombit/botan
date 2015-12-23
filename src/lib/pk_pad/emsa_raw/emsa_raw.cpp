@@ -14,7 +14,7 @@ namespace Botan {
 */
 void EMSA_Raw::update(const byte input[], size_t length)
    {
-   message += std::make_pair(input, length);
+   m_message += std::make_pair(input, length);
    }
 
 /*
@@ -23,7 +23,7 @@ void EMSA_Raw::update(const byte input[], size_t length)
 secure_vector<byte> EMSA_Raw::raw_data()
    {
    secure_vector<byte> output;
-   std::swap(message, output);
+   std::swap(m_message, output);
    return output;
    }
 

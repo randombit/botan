@@ -27,13 +27,13 @@ class BOTAN_DLL OID : public ASN1_Object
       * Find out whether this OID is empty
       * @return true is no OID value is set
       */
-      bool empty() const { return id.size() == 0; }
+      bool empty() const { return m_id.size() == 0; }
 
       /**
       * Get this OID as list (vector) of its components.
       * @return vector representing this OID
       */
-      const std::vector<u32bit>& get_id() const { return id; }
+      const std::vector<u32bit>& get_id() const { return m_id; }
 
       /**
       * Get this OID as a string
@@ -65,7 +65,7 @@ class BOTAN_DLL OID : public ASN1_Object
       */
       OID(const std::string& str = "");
    private:
-      std::vector<u32bit> id;
+      std::vector<u32bit> m_id;
    };
 
 /**
