@@ -58,13 +58,13 @@ void X509_DN::add_attribute(const OID& oid, const std::string& str)
    if(str.empty())
       return;
 
-   auto range = dn_info.equal_range(oid);
+   auto range = m_dn_info.equal_range(oid);
    for(auto i = range.first; i != range.second; ++i)
       if(i->second.value() == str)
          return;
 
-   multimap_insert(dn_info, oid, ASN1_String(str));
-   dn_bits.clear();
+   multimap_insert(m_dn_info, oid, ASN1_String(str));
+   m_dn_bits.clear();
    }
 
 /*
@@ -73,7 +73,7 @@ void X509_DN::add_attribute(const OID& oid, const std::string& str)
 std::multimap<OID, std::string> X509_DN::get_attributes() const
    {
    std::multimap<OID, std::string> retval;
-   for(auto i = dn_info.begin(); i != dn_info.end(); ++i)
+   for(auto i = m_dn_info.begin(); i != m_dn_info.end(); ++i)
       multimap_insert(retval, i->first, i->second.value());
    return retval;
    }
@@ -84,7 +84,7 @@ std::multimap<OID, std::string> X509_DN::get_attributes() const
 std::multimap<std::string, std::string> X509_DN::contents() const
    {
    std::multimap<std::string, std::string> retval;
-   for(auto i = dn_info.begin(); i != dn_info.end(); ++i)
+   for(auto i = m_dn_info.begin(); i != m_dn_info.end(); ++i)
       multimap_insert(retval, OIDS::lookup(i->first), i->second.value());
    return retval;
    }
@@ -96,7 +96,7 @@ std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
    {
    const OID oid = OIDS::lookup(deref_info_field(attr));
 
-   auto range = dn_info.equal_range(oid);
+   auto range = m_dn_info.equal_range(oid);
 
    std::vector<std::string> values;
    for(auto i = range.first; i != range.second; ++i)
@@ -109,7 +109,7 @@ std::vector<std::string> X509_DN::get_attribute(const std::string& attr) const
 */
 std::vector<byte> X509_DN::get_bits() const
    {
-   return dn_bits;
+   return m_dn_bits;
    }
 
 /*
@@ -227,8 +227,8 @@ void X509_DN::encode_into(DER_Encoder& der) const
 
    der.start_cons(SEQUENCE);
 
-   if(!dn_bits.empty())
-      der.raw_bytes(dn_bits);
+   if(!m_dn_bits.empty())
+      der.raw_bytes(m_dn_bits);
    else
       {
       do_ava(der, dn_info, PRINTABLE_STRING, "X520.Country");
@@ -275,7 +275,7 @@ void X509_DN::decode_from(BER_Decoder& source)
          }
       }
 
-   dn_bits = bits;
+   m_dn_bits = bits;
    }
 
 namespace {

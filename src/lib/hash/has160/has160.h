@@ -25,13 +25,13 @@ class BOTAN_DLL HAS_160 : public MDx_HashFunction
 
       void clear() override;
 
-      HAS_160() : MDx_HashFunction(64, false, true), X(20), digest(5)
+      HAS_160() : MDx_HashFunction(64, false, true), m_X(20), m_digest(5)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks) override;
       void copy_out(byte[]) override;
 
-      secure_vector<u32bit> X, digest;
+      secure_vector<u32bit> m_X, m_digest;
    };
 
 }

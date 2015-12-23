@@ -61,12 +61,12 @@ void Adler32::add_data(const byte input[], size_t length)
 
    while(length >= PROCESS_AMOUNT)
       {
-      adler32_update(input, PROCESS_AMOUNT, S1, S2);
+      adler32_update(input, PROCESS_AMOUNT, m_S1, m_S2);
       input += PROCESS_AMOUNT;
       length -= PROCESS_AMOUNT;
       }
 
-   adler32_update(input, length, S1, S2);
+   adler32_update(input, length, m_S1, m_S2);
    }
 
 /*
@@ -74,7 +74,7 @@ void Adler32::add_data(const byte input[], size_t length)
 */
 void Adler32::final_result(byte output[])
    {
-   store_be(output, S2, S1);
+   store_be(output, m_S2, m_S1);
    clear();
    }
 

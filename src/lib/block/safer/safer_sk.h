@@ -33,8 +33,8 @@ class BOTAN_DLL SAFER_SK : public Block_Cipher_Fixed_Params<8, 16>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      size_t rounds;
-      secure_vector<byte> EK;
+      size_t m_rounds;
+      secure_vector<byte> m_EK;
    };
 
 }

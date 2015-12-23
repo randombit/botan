@@ -61,14 +61,14 @@ class BOTAN_DLL RTSS_Share
       /**
       * @return size of this share in bytes
       */
-      size_t size() const { return contents.size(); }
+      size_t size() const { return m_contents.size(); }
 
       /**
       * @return if this TSS share was initialized or not
       */
-      bool initialized() const { return (contents.size() > 0); }
+      bool initialized() const { return (m_contents.size() > 0); }
    private:
-      secure_vector<byte> contents;
+      secure_vector<byte> m_contents;
    };
 
 }

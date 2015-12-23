@@ -19,9 +19,9 @@ namespace Botan {
 /*
 * Create an ASN1_EAC_String
 */
-ASN1_EAC_String::ASN1_EAC_String(const std::string& str, ASN1_Tag t) : tag(t)
+ASN1_EAC_String::ASN1_EAC_String(const std::string& str, ASN1_Tag t) : m_tag(t)
    {
-   iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
+   m_iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
 
    if(!sanity_check())
       throw Invalid_Argument("ASN1_EAC_String contains illegal characters");
@@ -32,7 +32,7 @@ ASN1_EAC_String::ASN1_EAC_String(const std::string& str, ASN1_Tag t) : tag(t)
 */
 std::string ASN1_EAC_String::iso_8859() const
    {
-   return iso_8859_str;
+   return m_iso_8859_str;
    }
 
 /*
@@ -40,7 +40,7 @@ std::string ASN1_EAC_String::iso_8859() const
 */
 std::string ASN1_EAC_String::value() const
    {
-   return Charset::transcode(iso_8859_str, LATIN1_CHARSET, LOCAL_CHARSET);
+   return Charset::transcode(m_iso_8859_str, LATIN1_CHARSET, LOCAL_CHARSET);
    }
 
 /*
@@ -48,7 +48,7 @@ std::string ASN1_EAC_String::value() const
 */
 ASN1_Tag ASN1_EAC_String::tagging() const
    {
-   return tag;
+   return m_tag;
    }
 
 /*
@@ -67,14 +67,14 @@ void ASN1_EAC_String::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
 
-   if(obj.type_tag != this->tag)
+   if(obj.type_tag != m_tag)
       {
       std::stringstream ss;
 
       ss << "ASN1_EAC_String tag mismatch, tag was "
          << std::hex << obj.type_tag
          << " expected "
-         << std::hex << this->tag;
+         << std::hex << m_tag;
 
       throw Decoding_Error(ss.str());
       }
@@ -99,8 +99,8 @@ void ASN1_EAC_String::decode_from(BER_Decoder& source)
 // p. 43
 bool ASN1_EAC_String::sanity_check() const
    {
-   const byte* rep = reinterpret_cast<const byte*>(iso_8859_str.data());
-   const size_t rep_len = iso_8859_str.size();
+   const byte* rep = reinterpret_cast<const byte*>(m_iso_8859_str.data());
+   const size_t rep_len = m_iso_8859_str.size();
 
    for(size_t i = 0; i != rep_len; ++i)
       {

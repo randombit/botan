@@ -70,22 +70,22 @@ class BOTAN_DLL Buffered_Filter
       /**
       * @return block size of inputs
       */
-      size_t buffered_block_size() const { return main_block_mod; }
+      size_t buffered_block_size() const { return m_main_block_mod; }
 
       /**
       * @return current position in the buffer
       */
-      size_t current_position() const { return buffer_pos; }
+      size_t current_position() const { return m_buffer_pos; }
 
       /**
       * Reset the buffer position
       */
-      void buffer_reset() { buffer_pos = 0; }
+      void buffer_reset() { m_buffer_pos = 0; }
    private:
-      size_t main_block_mod, final_minimum;
+      size_t m_main_block_mod, m_final_minimum;
 
-      secure_vector<byte> buffer;
-      size_t buffer_pos;
+      secure_vector<byte> m_buffer;
+      size_t m_buffer_pos;
    };
 
 }

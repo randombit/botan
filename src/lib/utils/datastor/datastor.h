@@ -49,7 +49,7 @@ class BOTAN_DLL Data_Store
       void add(const std::string&, const secure_vector<byte>&);
       void add(const std::string&, const std::vector<byte>&);
    private:
-      std::multimap<std::string, std::string> contents;
+      std::multimap<std::string, std::string> m_contents;
    };
 
 }

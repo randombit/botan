@@ -20,7 +20,7 @@ bool EAC1_1_Req::operator==(EAC1_1_Req const& rhs) const
 void EAC1_1_Req::force_decode()
    {
    std::vector<byte> enc_pk;
-   BER_Decoder tbs_cert(tbs_bits);
+   BER_Decoder tbs_cert(m_tbs_bits);
    size_t cpi;
    tbs_cert.decode(cpi, ASN1_Tag(41), APPLICATION)
       .start_cons(ASN1_Tag(73))
@@ -32,13 +32,13 @@ void EAC1_1_Req::force_decode()
    if(cpi != 0)
       throw Decoding_Error("EAC1_1 requests cpi was not 0");
 
-   m_pk = decode_eac1_1_key(enc_pk, sig_algo);
+   m_pk = decode_eac1_1_key(enc_pk, m_sig_algo);
    }
 
 EAC1_1_Req::EAC1_1_Req(DataSource& in)
    {
    init(in);
-   self_signed = true;
+   m_self_signed = true;
    do_decode();
    }
 
@@ -46,7 +46,7 @@ EAC1_1_Req::EAC1_1_Req(const std::string& in)
    {
    DataSource_Stream stream(in, true);
    init(stream);
-   self_signed = true;
+   m_self_signed = true;
    do_decode();
    }
 

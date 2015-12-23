@@ -17,10 +17,10 @@ namespace Botan {
 */
 void DataSink_Stream::write(const byte out[], size_t length)
    {
-   sink.write(reinterpret_cast<const char*>(out), length);
-   if(!sink.good())
+   m_sink.write(reinterpret_cast<const char*>(out), length);
+   if(!m_sink.good())
       throw Stream_IO_Error("DataSink_Stream: Failure writing to " +
-                            identifier);
+                            m_identifier);
    }
 
 /*
@@ -28,9 +28,9 @@ void DataSink_Stream::write(const byte out[], size_t length)
 */
 DataSink_Stream::DataSink_Stream(std::ostream& out,
                                  const std::string& name) :
-   identifier(name),
-   sink_p(nullptr),
-   sink(out)
+   m_identifier(name),
+   m_sink_p(nullptr),
+   m_sink(out)
    {
    }
 
@@ -39,14 +39,14 @@ DataSink_Stream::DataSink_Stream(std::ostream& out,
 */
 DataSink_Stream::DataSink_Stream(const std::string& path,
                                  bool use_binary) :
-   identifier(path),
-   sink_p(new std::ofstream(path,
+   m_identifier(path),
+   m_sink_p(new std::ofstream(path,
                             use_binary ? std::ios::binary : std::ios::out)),
-   sink(*sink_p)
+   m_sink(*m_sink_p)
    {
-   if(!sink.good())
+   if(!m_sink.good())
       {
-      delete sink_p;
+      delete m_sink_p;
       throw Stream_IO_Error("DataSink_Stream: Failure opening " + path);
       }
    }
@@ -56,7 +56,7 @@ DataSink_Stream::DataSink_Stream(const std::string& path,
 */
 DataSink_Stream::~DataSink_Stream()
    {
-   delete sink_p;
+   delete m_sink_p;
    }
 
 }

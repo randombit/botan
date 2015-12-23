@@ -16,9 +16,9 @@ void DESX::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    for(size_t i = 0; i != blocks; ++i)
       {
-      xor_buf(out, in, K1.data(), BLOCK_SIZE);
-      des.encrypt(out);
-      xor_buf(out, K2.data(), BLOCK_SIZE);
+      xor_buf(out, in, m_K1.data(), BLOCK_SIZE);
+      m_des.encrypt(out);
+      xor_buf(out, m_K2.data(), BLOCK_SIZE);
 
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
@@ -32,9 +32,9 @@ void DESX::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    for(size_t i = 0; i != blocks; ++i)
       {
-      xor_buf(out, in, K2.data(), BLOCK_SIZE);
-      des.decrypt(out);
-      xor_buf(out, K1.data(), BLOCK_SIZE);
+      xor_buf(out, in, m_K2.data(), BLOCK_SIZE);
+      m_des.decrypt(out);
+      xor_buf(out, m_K1.data(), BLOCK_SIZE);
 
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
@@ -46,16 +46,16 @@ void DESX::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void DESX::key_schedule(const byte key[], size_t)
    {
-   K1.assign(key, key + 8);
-   des.set_key(key + 8, 8);
-   K2.assign(key + 16, key + 24);
+   m_K1.assign(key, key + 8);
+   m_des.set_key(key + 8, 8);
+   m_K2.assign(key + 16, key + 24);
    }
 
 void DESX::clear()
    {
-   des.clear();
-   zap(K1);
-   zap(K2);
+   m_des.clear();
+   zap(m_K1);
+   zap(m_K2);
    }
 
 }

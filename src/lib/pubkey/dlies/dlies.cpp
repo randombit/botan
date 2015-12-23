@@ -16,12 +16,12 @@ DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key& key,
                                  KDF* kdf_obj,
                                  MessageAuthenticationCode* mac_obj,
                                  size_t mac_kl) :
-   ka(key, "Raw"),
-   kdf(kdf_obj),
-   mac(mac_obj),
-   mac_keylen(mac_kl)
+   m_ka(key, "Raw"),
+   m_kdf(kdf_obj),
+   m_mac(mac_obj),
+   m_mac_keylen(mac_kl)
    {
-   my_key = key.public_value();
+   m_my_key = key.public_value();
    }
 
 /*
@@ -32,31 +32,31 @@ std::vector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
    {
    if(length > maximum_input_size())
       throw Invalid_Argument("DLIES: Plaintext too large");
-   if(other_key.empty())
+   if(m_other_key.empty())
       throw Invalid_State("DLIES: The other key was never set");
 
-   secure_vector<byte> out(my_key.size() + length + mac->output_length());
-   buffer_insert(out, 0, my_key);
-   buffer_insert(out, my_key.size(), in, length);
+   secure_vector<byte> out(m_my_key.size() + length + m_mac->output_length());
+   buffer_insert(out, 0, m_my_key);
+   buffer_insert(out, m_my_key.size(), in, length);
 
-   secure_vector<byte> vz(my_key.begin(), my_key.end());
-   vz += ka.derive_key(0, other_key).bits_of();
+   secure_vector<byte> vz(m_my_key.begin(), m_my_key.end());
+   vz += m_ka.derive_key(0, m_other_key).bits_of();
 
-   const size_t K_LENGTH = length + mac_keylen;
-   secure_vector<byte> K = kdf->derive_key(K_LENGTH, vz);
+   const size_t K_LENGTH = length + m_mac_keylen;
+   secure_vector<byte> K = m_kdf->derive_key(K_LENGTH, vz);
 
    if(K.size() != K_LENGTH)
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
-   byte* C = &out[my_key.size()];
+   byte* C = &out[m_my_key.size()];
 
-   mac->set_key(K.data(), mac_keylen);
-   xor_buf(C, &K[mac_keylen], length);
+   m_mac->set_key(K.data(), m_mac_keylen);
+   xor_buf(C, &K[m_mac_keylen], length);
 
-   mac->update(C, length);
+   m_mac->update(C, length);
    for(size_t j = 0; j != 8; ++j)
-      mac->update(0);
+      m_mac->update(0);
 
-   mac->final(C + length);
+   m_mac->final(C + length);
 
    return unlock(out);
    }
@@ -66,7 +66,7 @@ std::vector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
 */
 void DLIES_Encryptor::set_other_key(const std::vector<byte>& ok)
    {
-   other_key = ok;
+   m_other_key = ok;
    }
 
 /*
@@ -84,12 +84,12 @@ DLIES_Decryptor::DLIES_Decryptor(const PK_Key_Agreement_Key& key,
                                  KDF* kdf_obj,
                                  MessageAuthenticationCode* mac_obj,
                                  size_t mac_kl) :
-   ka(key, "Raw"),
-   kdf(kdf_obj),
-   mac(mac_obj),
-   mac_keylen(mac_kl)
+   m_ka(key, "Raw"),
+   m_kdf(kdf_obj),
+   m_mac(mac_obj),
+   m_mac_keylen(mac_kl)
    {
-   my_key = key.public_value();
+   m_my_key = key.public_value();
    }
 
 /*
@@ -97,35 +97,35 @@ DLIES_Decryptor::DLIES_Decryptor(const PK_Key_Agreement_Key& key,
 */
 secure_vector<byte> DLIES_Decryptor::dec(const byte msg[], size_t length) const
    {
-   if(length < my_key.size() + mac->output_length())
+   if(length < m_my_key.size() + m_mac->output_length())
       throw Decoding_Error("DLIES decryption: ciphertext is too short");
 
-   const size_t CIPHER_LEN = length - my_key.size() - mac->output_length();
+   const size_t CIPHER_LEN = length - m_my_key.size() - m_mac->output_length();
 
-   std::vector<byte> v(msg, msg + my_key.size());
+   std::vector<byte> v(msg, msg + m_my_key.size());
 
-   secure_vector<byte> C(msg + my_key.size(), msg + my_key.size() + CIPHER_LEN);
+   secure_vector<byte> C(msg + m_my_key.size(), msg + m_my_key.size() + CIPHER_LEN);
 
-   secure_vector<byte> T(msg + my_key.size() + CIPHER_LEN,
-                         msg + my_key.size() + CIPHER_LEN + mac->output_length());
+   secure_vector<byte> T(msg + m_my_key.size() + CIPHER_LEN,
+                         msg + m_my_key.size() + CIPHER_LEN + m_mac->output_length());
 
-   secure_vector<byte> vz(msg, msg + my_key.size());
-   vz += ka.derive_key(0, v).bits_of();
+   secure_vector<byte> vz(msg, msg + m_my_key.size());
+   vz += m_ka.derive_key(0, v).bits_of();
 
-   const size_t K_LENGTH = C.size() + mac_keylen;
-   secure_vector<byte> K = kdf->derive_key(K_LENGTH, vz);
+   const size_t K_LENGTH = C.size() + m_mac_keylen;
+   secure_vector<byte> K = m_kdf->derive_key(K_LENGTH, vz);
    if(K.size() != K_LENGTH)
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
 
-   mac->set_key(K.data(), mac_keylen);
-   mac->update(C);
+   m_mac->set_key(K.data(), m_mac_keylen);
+   m_mac->update(C);
    for(size_t j = 0; j != 8; ++j)
-      mac->update(0);
-   secure_vector<byte> T2 = mac->final();
+      m_mac->update(0);
+   secure_vector<byte> T2 = m_mac->final();
    if(T != T2)
       throw Decoding_Error("DLIES: message authentication failed");
 
-   xor_buf(C, K.data() + mac_keylen, C.size());
+   xor_buf(C, K.data() + m_mac_keylen, C.size());
 
    return C;
    }

@@ -39,11 +39,11 @@ class EAC1_1_obj : public EAC_Signed_Object
          {
          try
             {
-            Derived::decode_info(in, tbs_bits, m_sig);
+            Derived::decode_info(in, m_tbs_bits, m_sig);
             }
          catch(Decoding_Error)
             {
-            throw Decoding_Error(PEM_label_pref + " decoding failed");
+            throw Decoding_Error(m_PEM_label_pref + " decoding failed");
             }
          }
 

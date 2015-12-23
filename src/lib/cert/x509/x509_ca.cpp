@@ -26,12 +26,12 @@ namespace Botan {
 */
 X509_CA::X509_CA(const X509_Certificate& c,
                  const Private_Key& key,
-                 const std::string& hash_fn) : cert(c)
+                 const std::string& hash_fn) : m_cert(c)
    {
-   if(!cert.is_CA_cert())
+   if(!m_cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
 
-   signer = choose_sig_format(key, hash_fn, ca_sig_algo);
+   m_signer = choose_sig_format(key, hash_fn, m_ca_sig_algo);
    }
 
 /*
@@ -39,7 +39,7 @@ X509_CA::X509_CA(const X509_Certificate& c,
 */
 X509_CA::~X509_CA()
    {
-   delete signer;
+   delete m_signer;
    }
 
 /*
@@ -67,7 +67,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
 
    extensions.add(new Cert_Extension::Key_Usage(constraints), true);
 
-   extensions.add(new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
+   extensions.add(new Cert_Extension::Authority_Key_ID(m_cert.subject_key_id()));
    extensions.add(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
 
    extensions.add(
@@ -76,10 +76,10 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    extensions.add(
       new Cert_Extension::Extended_Key_Usage(req.ex_constraints()));
 
-   return make_cert(signer, rng, ca_sig_algo,
+   return make_cert(m_signer, rng, m_ca_sig_algo,
                     req.raw_public_key(),
                     not_before, not_after,
-                    cert.subject_dn(), req.subject_dn(),
+                    m_cert.subject_dn(), req.subject_dn(),
                     extensions);
    }
 
@@ -177,16 +177,16 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
 
    Extensions extensions;
    extensions.add(
-      new Cert_Extension::Authority_Key_ID(cert.subject_key_id()));
+      new Cert_Extension::Authority_Key_ID(m_cert.subject_key_id()));
    extensions.add(new Cert_Extension::CRL_Number(crl_number));
 
    // clang-format off
    const std::vector<byte> crl = X509_Object::make_signed(
-      signer, rng, ca_sig_algo,
+      m_signer, rng, m_ca_sig_algo,
       DER_Encoder().start_cons(SEQUENCE)
          .encode(X509_CRL_VERSION-1)
-         .encode(ca_sig_algo)
-         .encode(cert.issuer_dn())
+         .encode(m_ca_sig_algo)
+         .encode(m_cert.issuer_dn())
          .encode(X509_Time(current_time))
          .encode(X509_Time(expire_time))
          .encode_if(revoked.size() > 0,
@@ -212,7 +212,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
 */
 X509_Certificate X509_CA::ca_certificate() const
    {
-   return cert;
+   return m_cert;
    }
 
 /*

@@ -61,19 +61,19 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    class Seed
       {
       public:
-         Seed(const std::vector<byte>& s) : seed(s) {}
+         Seed(const std::vector<byte>& s) : m_seed(s) {}
 
-         operator std::vector<byte>& () { return seed; }
+         operator std::vector<byte>& () { return m_seed; }
 
          Seed& operator++()
             {
-            for(size_t j = seed.size(); j > 0; --j)
-               if(++seed[j-1])
+            for(size_t j = m_seed.size(); j > 0; --j)
+               if(++m_seed[j-1])
                   break;
             return (*this);
             }
       private:
-         std::vector<byte> seed;
+         std::vector<byte> m_seed;
       };
 
    Seed seed(seed_c);

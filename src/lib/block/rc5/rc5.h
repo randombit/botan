@@ -23,7 +23,7 @@ class BOTAN_DLL RC5 : public Block_Cipher_Fixed_Params<8, 1, 32>
 
       void clear() override;
       std::string name() const override;
-      BlockCipher* clone() const override { return new RC5(rounds); }
+      BlockCipher* clone() const override { return new RC5(m_rounds); }
 
       /**
       * @param rounds the number of RC5 rounds to run. Must be between
@@ -33,8 +33,8 @@ class BOTAN_DLL RC5 : public Block_Cipher_Fixed_Params<8, 1, 32>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      size_t rounds;
-      secure_vector<u32bit> S;
+      size_t m_rounds;
+      secure_vector<u32bit> m_S;
    };
 
 }

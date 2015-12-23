@@ -28,17 +28,17 @@ class BOTAN_DLL IDEA : public Block_Cipher_Fixed_Params<8, 16>
       /**
       * @return const reference to encryption subkeys
       */
-      const secure_vector<u16bit>& get_EK() const { return EK; }
+      const secure_vector<u16bit>& get_EK() const { return m_EK; }
 
       /**
       * @return const reference to decryption subkeys
       */
-      const secure_vector<u16bit>& get_DK() const { return DK; }
+      const secure_vector<u16bit>& get_DK() const { return m_DK; }
 
    private:
       void key_schedule(const byte[], size_t) override;
 
-      secure_vector<u16bit> EK, DK;
+      secure_vector<u16bit> m_EK, m_DK;
    };
 
 }

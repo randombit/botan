@@ -26,23 +26,23 @@ class ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
 
       ECDH_KA_Operation(const ECDH_PrivateKey& key, const std::string& kdf) :
          PK_Ops::Key_Agreement_with_KDF(kdf),
-         curve(key.domain().get_curve()),
-         cofactor(key.domain().get_cofactor())
+         m_curve(key.domain().get_curve()),
+         m_cofactor(key.domain().get_cofactor())
          {
-         l_times_priv = inverse_mod(cofactor, key.domain().get_order()) * key.private_value();
+         m_l_times_priv = inverse_mod(m_cofactor, key.domain().get_order()) * key.private_value();
          }
 
       secure_vector<byte> raw_agree(const byte w[], size_t w_len) override
          {
-         PointGFp point = OS2ECP(w, w_len, curve);
-         PointGFp S = (cofactor * point) * l_times_priv;
+         PointGFp point = OS2ECP(w, w_len, m_curve);
+         PointGFp S = (m_cofactor * point) * m_l_times_priv;
          BOTAN_ASSERT(S.on_the_curve(), "ECDH agreed value was on the curve");
-         return BigInt::encode_1363(S.get_affine_x(), curve.get_p().bytes());
+         return BigInt::encode_1363(S.get_affine_x(), m_curve.get_p().bytes());
          }
    private:
-      const CurveGFp& curve;
-      const BigInt& cofactor;
-      BigInt l_times_priv;
+      const CurveGFp& m_curve;
+      const BigInt& m_cofactor;
+      BigInt m_l_times_priv;
    };
 
 }

@@ -41,7 +41,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * domain parameters of this point are not set
       * @result the public point of this key
       */
-      const PointGFp& public_point() const { return public_key; }
+      const PointGFp& public_point() const { return m_public_key; }
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
@@ -56,7 +56,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * domain parameters of this point are not set
       * @result the domain parameters of this key
       */
-      const EC_Group& domain() const { return domain_params; }
+      const EC_Group& domain() const { return m_domain_params; }
 
       /**
       * Set the domain parameter encoding to be used when encoding this key.
@@ -76,16 +76,16 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * @result the encoding to use
       */
       EC_Group_Encoding domain_format() const
-         { return domain_encoding; }
+         { return m_domain_encoding; }
 
       size_t estimated_strength() const override;
 
    protected:
-      EC_PublicKey() : domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {}
+      EC_PublicKey() : m_domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {}
 
-      EC_Group domain_params;
-      PointGFp public_key;
-      EC_Group_Encoding domain_encoding;
+      EC_Group m_domain_params;
+      PointGFp m_public_key;
+      EC_Group_Encoding m_domain_encoding;
    };
 
 /**
@@ -112,7 +112,7 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
    protected:
       EC_PrivateKey() {}
 
-      BigInt private_key;
+      BigInt m_private_key;
    };
 
 }

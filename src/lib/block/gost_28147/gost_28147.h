@@ -31,7 +31,7 @@ class BOTAN_DLL GOST_28147_89_Params
       /**
       * @return name of this parameter set
       */
-      std::string param_name() const { return name; }
+      std::string param_name() const { return m_name; }
 
       /**
       * Default GOST parameters are the ones given in GOST R 34.11 for
@@ -42,8 +42,8 @@ class BOTAN_DLL GOST_28147_89_Params
       */
       GOST_28147_89_Params(const std::string& name = "R3411_94_TestParam");
    private:
-      const byte* sboxes;
-      std::string name;
+      const byte* m_sboxes;
+      std::string m_name;
    };
 
 /**
@@ -58,7 +58,7 @@ class BOTAN_DLL GOST_28147_89 : public Block_Cipher_Fixed_Params<8, 32>
       void clear() override;
 
       std::string name() const override;
-      BlockCipher* clone() const override { return new GOST_28147_89(SBOX); }
+      BlockCipher* clone() const override { return new GOST_28147_89(m_SBOX); }
 
       /**
       * @param params the sbox parameters to use
@@ -66,7 +66,7 @@ class BOTAN_DLL GOST_28147_89 : public Block_Cipher_Fixed_Params<8, 32>
       GOST_28147_89(const GOST_28147_89_Params& params);
    private:
       GOST_28147_89(const std::vector<u32bit>& other_SBOX) :
-         SBOX(other_SBOX), EK(8) {}
+         m_SBOX(other_SBOX), m_EK(8) {}
 
       void key_schedule(const byte[], size_t) override;
 
@@ -74,9 +74,9 @@ class BOTAN_DLL GOST_28147_89 : public Block_Cipher_Fixed_Params<8, 32>
       * The sbox is not secret, this is just a larger expansion of it
       * which we generate at runtime for faster execution
       */
-      std::vector<u32bit> SBOX;
+      std::vector<u32bit> m_SBOX;
 
-      secure_vector<u32bit> EK;
+      secure_vector<u32bit> m_EK;
    };
 
 }

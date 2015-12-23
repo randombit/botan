@@ -63,7 +63,7 @@ void XTEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    while(blocks >= 4)
       {
-      xtea_encrypt_4(in, out, &(this->EK[0]));
+      xtea_encrypt_4(in, out, &(this->m_EK[0]));
       in += 4 * BLOCK_SIZE;
       out += 4 * BLOCK_SIZE;
       blocks -= 4;
@@ -76,8 +76,8 @@ void XTEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       for(size_t j = 0; j != 32; ++j)
          {
-         L += (((R << 4) ^ (R >> 5)) + R) ^ EK[2*j];
-         R += (((L << 4) ^ (L >> 5)) + L) ^ EK[2*j+1];
+         L += (((R << 4) ^ (R >> 5)) + R) ^ m_EK[2*j];
+         R += (((L << 4) ^ (L >> 5)) + L) ^ m_EK[2*j+1];
          }
 
       store_be(out, L, R);
@@ -94,7 +94,7 @@ void XTEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    while(blocks >= 4)
       {
-      xtea_decrypt_4(in, out, &(this->EK[0]));
+      xtea_decrypt_4(in, out, &(this->m_EK[0]));
       in += 4 * BLOCK_SIZE;
       out += 4 * BLOCK_SIZE;
       blocks -= 4;
@@ -107,8 +107,8 @@ void XTEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       for(size_t j = 0; j != 32; ++j)
          {
-         R -= (((L << 4) ^ (L >> 5)) + L) ^ EK[63 - 2*j];
-         L -= (((R << 4) ^ (R >> 5)) + R) ^ EK[62 - 2*j];
+         R -= (((L << 4) ^ (L >> 5)) + L) ^ m_EK[63 - 2*j];
+         L -= (((R << 4) ^ (R >> 5)) + R) ^ m_EK[62 - 2*j];
          }
 
       store_be(out, L, R);
@@ -123,7 +123,7 @@ void XTEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void XTEA::key_schedule(const byte key[], size_t)
    {
-   EK.resize(64);
+   m_EK.resize(64);
 
    secure_vector<u32bit> UK(4);
    for(size_t i = 0; i != 4; ++i)
@@ -132,15 +132,15 @@ void XTEA::key_schedule(const byte key[], size_t)
    u32bit D = 0;
    for(size_t i = 0; i != 64; i += 2)
       {
-      EK[i  ] = D + UK[D % 4];
+      m_EK[i  ] = D + UK[D % 4];
       D += 0x9E3779B9;
-      EK[i+1] = D + UK[(D >> 11) % 4];
+      m_EK[i+1] = D + UK[(D >> 11) % 4];
       }
    }
 
 void XTEA::clear()
    {
-   zap(EK);
+   zap(m_EK);
    }
 
 }

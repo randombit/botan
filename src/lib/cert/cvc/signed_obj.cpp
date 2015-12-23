@@ -41,7 +41,7 @@ std::string EAC_Signed_Object::PEM_encode() const
 */
 AlgorithmIdentifier EAC_Signed_Object::signature_algorithm() const
    {
-   return sig_algo;
+   return m_sig_algo;
    }
 
 bool EAC_Signed_Object::check_signature(Public_Key& pub_key,
@@ -50,7 +50,7 @@ bool EAC_Signed_Object::check_signature(Public_Key& pub_key,
    try
       {
       std::vector<std::string> sig_info =
-         split_on(OIDS::lookup(sig_algo.oid), '/');
+         split_on(OIDS::lookup(m_sig_algo.oid), '/');
 
       if(sig_info.size() != 2 || sig_info[0] != pub_key.algo_name())
          {
@@ -83,12 +83,12 @@ void EAC_Signed_Object::do_decode()
    catch(Decoding_Error& e)
       {
       const std::string what = e.what();
-      throw Decoding_Error(PEM_label_pref + " decoding failed (" + what + ")");
+      throw Decoding_Error(m_PEM_label_pref + " decoding failed (" + what + ")");
       }
    catch(Invalid_Argument& e)
       {
       const std::string what = e.what();
-      throw Decoding_Error(PEM_label_pref + " decoding failed (" + what + ")");
+      throw Decoding_Error(m_PEM_label_pref + " decoding failed (" + what + ")");
       }
    }
 

@@ -58,8 +58,8 @@ class Dynamically_Loaded_Library
       Dynamically_Loaded_Library(const Dynamically_Loaded_Library&);
       Dynamically_Loaded_Library& operator=(const Dynamically_Loaded_Library&);
 
-      std::string lib_name;
-      void* lib;
+      std::string m_lib_name;
+      void* m_lib;
    };
 
 }

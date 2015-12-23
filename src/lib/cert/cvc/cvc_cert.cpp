@@ -36,7 +36,7 @@ void EAC1_1_CVC::force_decode()
    std::vector<byte> enc_pk;
    std::vector<byte> enc_chat_val;
    size_t cpi;
-   BER_Decoder tbs_cert(tbs_bits);
+   BER_Decoder tbs_cert(m_tbs_bits);
    tbs_cert.decode(cpi, ASN1_Tag(41), APPLICATION)
       .decode(m_car)
       .start_cons(ASN1_Tag(73))
@@ -57,11 +57,11 @@ void EAC1_1_CVC::force_decode()
    if(cpi != 0)
       throw Decoding_Error("EAC1_1 certificate's cpi was not 0");
 
-   m_pk = decode_eac1_1_key(enc_pk, sig_algo);
+   m_pk = decode_eac1_1_key(enc_pk, m_sig_algo);
 
    m_chat_val = enc_chat_val[0];
 
-   self_signed = (m_car.iso_8859() == m_chr.iso_8859());
+   m_self_signed = (m_car.iso_8859() == m_chr.iso_8859());
    }
 
 /*
@@ -70,7 +70,7 @@ void EAC1_1_CVC::force_decode()
 EAC1_1_CVC::EAC1_1_CVC(DataSource& in)
    {
    init(in);
-   self_signed = false;
+   m_self_signed = false;
    do_decode();
    }
 
@@ -78,7 +78,7 @@ EAC1_1_CVC::EAC1_1_CVC(const std::string& in)
    {
    DataSource_Stream stream(in, true);
    init(stream);
-   self_signed = false;
+   m_self_signed = false;
    do_decode();
    }
 

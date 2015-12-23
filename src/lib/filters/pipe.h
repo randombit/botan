@@ -232,7 +232,7 @@ class BOTAN_DLL Pipe : public DataSource
       /**
       * @return currently set default message
       */
-      size_t default_msg() const { return default_read; }
+      size_t default_msg() const { return m_default_read; }
 
       /**
       * Set the default message
@@ -311,10 +311,10 @@ class BOTAN_DLL Pipe : public DataSource
 
       message_id get_message_no(const std::string&, message_id) const;
 
-      Filter* pipe;
-      class Output_Buffers* outputs;
-      message_id default_read;
-      bool inside_msg;
+      Filter* m_pipe;
+      class Output_Buffers* m_outputs;
+      message_id m_default_read;
+      bool m_inside_msg;
    };
 
 /**

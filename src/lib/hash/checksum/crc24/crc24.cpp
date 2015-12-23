@@ -60,7 +60,7 @@ void CRC24::add_data(const byte input[], size_t length)
       0x00FA48FA, 0x007C0401, 0x0042FA2F, 0x00C4B6D4, 0x00C82F22, 0x004E63D9,
       0x00D11CCE, 0x00575035, 0x005BC9C3, 0x00DD8538 };
 
-   u32bit tmp = crc;
+   u32bit tmp = m_crc;
    while(length >= 16)
       {
       tmp = TABLE[((tmp >> 16) ^ input[ 0]) & 0xFF] ^ (tmp << 8);
@@ -86,7 +86,7 @@ void CRC24::add_data(const byte input[], size_t length)
    for(size_t i = 0; i != length; ++i)
       tmp = TABLE[((tmp >> 16) ^ input[i]) & 0xFF] ^ (tmp << 8);
 
-   crc = tmp;
+   m_crc = tmp;
    }
 
 /*
@@ -95,7 +95,7 @@ void CRC24::add_data(const byte input[], size_t length)
 void CRC24::final_result(byte output[])
    {
    for(size_t i = 0; i != 3; ++i)
-      output[i] = get_byte(i+1, crc);
+      output[i] = get_byte(i+1, m_crc);
    clear();
    }
 

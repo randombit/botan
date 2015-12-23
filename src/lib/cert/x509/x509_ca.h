@@ -107,9 +107,9 @@ class BOTAN_DLL X509_CA
                         u32bit crl_number, u32bit next_update,
                         RandomNumberGenerator& rng) const;
 
-      AlgorithmIdentifier ca_sig_algo;
-      X509_Certificate cert;
-      PK_Signer* signer;
+      AlgorithmIdentifier m_ca_sig_algo;
+      X509_Certificate m_cert;
+      PK_Signer* m_signer;
    };
 
 /**
