@@ -439,31 +439,9 @@ class Command
          }
 
       template<typename Alloc>
-      void write_output_file(const std::string& who,
-                             const std::vector<uint8_t, Alloc>& vec) const
+      void write_output(const std::vector<uint8_t, Alloc>& vec)
          {
-         write_output_file(who, vec.begin(), vec.size());
-         }
-
-      void write_output_file(const std::string& output_file,
-                             const uint8_t buf[], size_t buf_len) const
-         {
-         std::ofstream out(output_file, std::ios::binary);
-         if(!out.good())
-            throw CLI_IO_Error("writing", output_file);
-
-         out.write(reinterpret_cast<const char*>(buf), buf_len);
-         out.close();
-         }
-
-      void write_output_file(const std::string& output_file, const std::string& outstr) const
-         {
-         std::ofstream out(output_file);
-         if(!out.good())
-            throw CLI_IO_Error("writing", output_file);
-
-         out.write(outstr.data(), outstr.size());
-         out.close();
+         output().write(reinterpret_cast<const char*>(vec.data()), vec.size());
          }
 
    private:

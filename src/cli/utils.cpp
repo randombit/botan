@@ -124,7 +124,11 @@ class Hash : public Command
 
          const size_t buf_size = get_arg_sz("buf-size");
 
-         for(auto fsname : get_arg_list("files"))
+         auto files = get_arg_list("files");
+         if(files.empty())
+            files.push_back("-"); // read stdin if no arguments on command line
+
+         for(auto fsname : files)
             {
             auto update_hash = [&](const uint8_t b[], size_t l) { hash_fn->update(b, l); };
             read_file(fsname, update_hash, buf_size);

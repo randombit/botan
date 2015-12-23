@@ -24,6 +24,10 @@
   #include <botan/rsa.h>
 #endif
 
+#if defined(BOTAN_HAS_DSA)
+  #include <botan/dsa.h>
+#endif
+
 #if defined(BOTAN_HAS_ECDSA)
   #include <botan/ecdsa.h>
 #endif
@@ -41,7 +45,7 @@ namespace Botan_CLI {
 class PK_Keygen : public Command
    {
    public:
-      PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300") {}
+      PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --der-out") {}
 
       std::unique_ptr<Botan::Private_Key> do_keygen(const std::string& algo,
                                                     const std::string& params,
@@ -56,6 +60,15 @@ class PK_Keygen : public Command
                param = "2048";
             return std::unique_ptr<Botan::Private_Key>(
                new Botan::RSA_PrivateKey(rng, Botan::to_u32bit(param)));
+         };
+#endif
+
+#if defined(BOTAN_HAS_DSA)
+         generators["DSA"] = [&rng](std::string param) -> std::unique_ptr<Botan::Private_Key> {
+            if(param.empty())
+               param = "dsa/botan/2048";
+            return std::unique_ptr<Botan::Private_Key>(
+               new Botan::DSA_PrivateKey(rng, param));
          };
 #endif
 
@@ -105,18 +118,32 @@ class PK_Keygen : public Command
          std::unique_ptr<Botan::Private_Key> key(do_keygen(get_arg("algo"), get_arg("params"), rng));
 
          const std::string pass = get_arg("passphrase");
+         const bool der_out = flag_set("der-out");
 
-         if(pass.empty())
+         const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
+         const std::string pbe = get_arg("pbe");
+
+         if(der_out)
             {
-            output() << Botan::PKCS8::PEM_encode(*key);
+            if(pass.empty())
+               {
+               write_output(Botan::PKCS8::BER_encode(*key));
+               }
+            else
+               {
+               write_output(Botan::PKCS8::BER_encode(*key, rng, pass, pbe_millis, pbe));
+               }
             }
          else
             {
-            output() << Botan::PKCS8::PEM_encode(*key,
-                                                 rng,
-                                                 pass,
-                                                 std::chrono::milliseconds(get_arg_sz("pbe-millis")),
-                                                 get_arg("pbe"));
+            if(pass.empty())
+               {
+               output() << Botan::PKCS8::PEM_encode(*key);
+               }
+            else
+               {
+               output() << Botan::PKCS8::PEM_encode(*key, rng, pass, pbe_millis, pbe);
+               }
             }
          }
    };
@@ -235,39 +262,59 @@ BOTAN_REGISTER_COMMAND(Gen_DL_Group);
 class PKCS8_Tool : public Command
    {
    public:
-      PKCS8_Tool() : Command("pkcs8 --pass-in= --pub-out --pass-out= --pbe= --pbe-millis=300 key") {}
+      PKCS8_Tool() : Command("pkcs8 --pass-in= --pub-out --der-out --pass-out= --pbe= --pbe-millis=300 key") {}
 
       void go() override
          {
          Botan::AutoSeeded_RNG rng;
 
-         std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(get_arg("key"),
-                                                                        rng,
-                                                                        get_arg("pass-in")));
+         std::unique_ptr<Botan::Private_Key> key(
+            Botan::PKCS8::load_key(get_arg("key"),
+                                   rng,
+                                   get_arg("pass-in")));
+
+         const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
+         const std::string pbe = get_arg("pbe");
+         const bool der_out = flag_set("der-out");
 
          if(flag_set("pub-out"))
             {
-            output() << Botan::X509::PEM_encode(*key);
+            if(der_out)
+               {
+               write_output(Botan::X509::BER_encode(*key));
+               }
+            else
+               {
+               output() << Botan::X509::PEM_encode(*key);
+               }
             }
          else
             {
             const std::string pass = get_arg("pass-out");
 
-            if(pass.empty())
+            if(der_out)
                {
-               output() << Botan::PKCS8::PEM_encode(*key);
+               if(pass.empty())
+                  {
+                  write_output(Botan::PKCS8::BER_encode(*key));
+                  }
+               else
+                  {
+                  write_output(Botan::PKCS8::BER_encode(*key, rng, pass, pbe_millis, pbe));
+                  }
                }
             else
                {
-               output() << Botan::PKCS8::PEM_encode(*key,
-                                                    rng,
-                                                    pass,
-                                                    std::chrono::milliseconds(get_arg_sz("pbe-millis")),
-                                                    get_arg("pbe"));
+               if(pass.empty())
+                  {
+                  output() << Botan::PKCS8::PEM_encode(*key);
+                  }
+               else
+                  {
+                  output() << Botan::PKCS8::PEM_encode(*key, rng, pass, pbe_millis, pbe);
+                  }
+               }
             }
-
-            }
-
          }
    };
 
