@@ -71,7 +71,7 @@ class Test_Runner : public Botan_CLI::Command
          const size_t threads = get_arg_sz("threads");
          const size_t soak_level = get_arg_sz("soak");
          const std::string drbg_seed = get_arg("drbg-seed");
-         bool log_success = flag_set("log-success");
+         const bool log_success = flag_set("log-success");
          const std::string data_dir = get_arg_or("data-dir", "src/tests/data");
 
          std::vector<std::string> req = get_arg_list("suites");
@@ -211,7 +211,9 @@ class Test_Runner : public Botan_CLI::Command
             for(auto&& test_name : tests_to_run)
                {
                auto run_it = [test_name] {
-                  return Botan_Tests::Test::run_test(test_name, false); };
+                  return Botan_Tests::Test::run_test(test_name, false);
+               };
+
                fut_results.push_back(std::async(std::launch::async, run_it));
 
                while(fut_results.size() > threads)

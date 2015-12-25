@@ -132,16 +132,6 @@ class Timer
       uint64_t m_event_count = 0, m_event_mult = 0;
    };
 
-inline bool operator<(const Timer& x, const Timer& y)
-   {
-   return (x.get_name() < y.get_name());
-   }
-
-inline bool operator==(const Timer& x, const Timer& y)
-   {
-   return (x.get_name() == y.get_name());
-   }
-
 std::ostream& operator<<(std::ostream& out, Timer& timer)
    {
    const double events_per_second = timer.events() / timer.seconds();

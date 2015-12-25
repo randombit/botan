@@ -32,7 +32,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 
       size_t reseed_with_sources(Botan::Entropy_Sources&,
                                  size_t,
-                                 std::chrono::milliseconds) { return 0; }
+                                 std::chrono::milliseconds) override { return 0; }
 
       void randomize(uint8_t out[], size_t len) override
          {

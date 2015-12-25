@@ -388,7 +388,6 @@ class Text_Based_Test : public Test
       std::set<std::string> m_required_keys;
       std::set<std::string> m_optional_keys;
       std::string m_output_key;
-      bool m_clear_between_cb = false;
 
       bool m_first = true;
       std::unique_ptr<std::ifstream> m_cur;

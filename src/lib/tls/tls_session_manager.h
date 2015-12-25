@@ -127,7 +127,7 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
 
       void remove_entry(const std::vector<byte>& session_id) override;
 
-      size_t remove_all();
+      size_t remove_all() override;
 
       void save(const Session& session_data) override;
 
