@@ -331,8 +331,6 @@ PK_Key_Generation_Test::test_key(const std::string& algo, const Botan::Private_K
       result.test_failure("roundtrip PEM private key", e.what());
       }
 
-   /*
-   // Currently broken GH #379
    try
       {
       Botan::DataSource_Memory data_src(Botan::PKCS8::BER_encode(key));
@@ -346,7 +344,6 @@ PK_Key_Generation_Test::test_key(const std::string& algo, const Botan::Private_K
       {
       result.test_failure("roundtrip BER private key", e.what());
       }
-   */
 
    const std::string passphrase = Test::random_password();
 
