@@ -308,24 +308,27 @@ inline void load_le(T out[],
                     const byte in[],
                     size_t count)
    {
+   if(count > 0)
+      {
 #if defined(BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS)
-   std::memcpy(out, in, sizeof(T)*count);
+      std::memcpy(out, in, sizeof(T)*count);
 
 #if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   const size_t blocks = count - (count % 4);
-   const size_t left = count - blocks;
+      const size_t blocks = count - (count % 4);
+      const size_t left = count - blocks;
 
-   for(size_t i = 0; i != blocks; i += 4)
-      bswap_4(out + i);
+      for(size_t i = 0; i != blocks; i += 4)
+         bswap_4(out + i);
 
-   for(size_t i = 0; i != left; ++i)
-      out[blocks+i] = reverse_bytes(out[blocks+i]);
+      for(size_t i = 0; i != left; ++i)
+         out[blocks+i] = reverse_bytes(out[blocks+i]);
 #endif
 
 #else
-   for(size_t i = 0; i != count; ++i)
-      out[i] = load_le<T>(in, i);
+      for(size_t i = 0; i != count; ++i)
+         out[i] = load_le<T>(in, i);
 #endif
+      }
    }
 
 /**
@@ -397,24 +400,27 @@ inline void load_be(T out[],
                     const byte in[],
                     size_t count)
    {
+   if(count > 0)
+      {
 #if defined(BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS)
-   std::memcpy(out, in, sizeof(T)*count);
+      std::memcpy(out, in, sizeof(T)*count);
 
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   const size_t blocks = count - (count % 4);
-   const size_t left = count - blocks;
+      const size_t blocks = count - (count % 4);
+      const size_t left = count - blocks;
 
-   for(size_t i = 0; i != blocks; i += 4)
-      bswap_4(out + i);
+      for(size_t i = 0; i != blocks; i += 4)
+         bswap_4(out + i);
 
-   for(size_t i = 0; i != left; ++i)
-      out[blocks+i] = reverse_bytes(out[blocks+i]);
+      for(size_t i = 0; i != left; ++i)
+         out[blocks+i] = reverse_bytes(out[blocks+i]);
 #endif
 
 #else
-   for(size_t i = 0; i != count; ++i)
-      out[i] = load_be<T>(in, i);
+      for(size_t i = 0; i != count; ++i)
+         out[i] = load_be<T>(in, i);
 #endif
+      }
    }
 
 /**

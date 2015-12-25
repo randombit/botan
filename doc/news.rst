@@ -4,6 +4,11 @@ Release Notes
 Version 1.11.26, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Deprecation warning: Nyberg-Rueppel signatures, MARS, RC2, RC5, RC6,
+  SAFER, HAS-160, RIPEMD-128, and MD2 are being considered for removal
+  in a future release. If there is a compelling use case for keeping
+  any of them in the library, please open a discussion ticket on GitHub.
+
 * Root all exceptions thrown by the library in the `Botan::Exception` class.
   Previously the library would in many cases throw `std::runtime_error`
   or `std::invalid_argument` exceptions which would make it hard to determine
@@ -20,6 +25,12 @@ Version 1.11.26, Not Yet Released
 * Add preliminary support for accessing TPM v1.2 devices. Currently
   random number generation, RSA key generation, and signing are
   supported. Tested using Trousers and an ST TPM
+
+* Avoid calling memcpy, memset, or memmove with a length of zero to
+  avoid undefined behavior, as calling these functions with an invalid
+  or null pointer, even with a length of zero, is invalid. Often there
+  are corner cases where this can occur, such as pointing to the very
+  end of a buffer.
 
 Version 1.11.25, 2015-12-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
