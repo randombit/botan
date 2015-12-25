@@ -28,7 +28,7 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
          {"KDF"})
          {}
 
-      std::string default_kdf(const VarMap&) { return "Raw"; }
+      std::string default_kdf(const VarMap&) const override { return "Raw"; }
 
       std::unique_ptr<Botan::Private_Key> load_our_key(const VarMap& vars) override
          {
