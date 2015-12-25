@@ -81,15 +81,6 @@ void bigint_shr2(word y[], const word x[], size_t x_size,
                  size_t word_shift, size_t bit_shift);
 
 /*
-* Simple O(N^2) Multiplication and Squaring
-*/
-void bigint_simple_mul(word z[],
-                       const word x[], size_t x_size,
-                       const word y[], size_t y_size);
-
-void bigint_simple_sqr(word z[], const word x[], size_t x_size);
-
-/*
 * Linear Multiply
 */
 void bigint_linmul2(word x[], size_t x_size, word y);

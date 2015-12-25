@@ -1,5 +1,5 @@
 /*
-* Lowest Level MPI Algorithms
+* MPI Add, Subtract, Word Multiply
 * (C) 1999-2010 Jack Lloyd
 *     2006 Luca Piccarreta
 *

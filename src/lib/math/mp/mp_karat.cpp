@@ -1,5 +1,5 @@
 /*
-* Karatsuba Multiplication/Squaring
+* Multiplication and Squaring
 * (C) 1999-2010 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -16,6 +16,37 @@ namespace {
 const size_t KARATSUBA_MULTIPLY_THRESHOLD = 32;
 const size_t KARATSUBA_SQUARE_THRESHOLD = 32;
 
+namespace {
+
+/*
+* Simple O(N^2) Multiplication
+*/
+void basecase_mul(word z[],
+                  const word x[], size_t x_size,
+                  const word y[], size_t y_size)
+   {
+   const size_t x_size_8 = x_size - (x_size % 8);
+
+   clear_mem(z, x_size + y_size);
+
+   for(size_t i = 0; i != y_size; ++i)
+      {
+      const word y_i = y[i];
+
+      word carry = 0;
+
+      for(size_t j = 0; j != x_size_8; j += 8)
+         carry = word8_madd3(z + i + j, x + j, y_i, carry);
+
+      for(size_t j = x_size_8; j != x_size; ++j)
+         z[i+j] = word_madd3(x[j], y_i, z[i+j], &carry);
+
+      z[x_size+i] = carry;
+      }
+   }
+
+}
+
 /*
 * Karatsuba Multiplication Operation
 */
@@ -31,7 +62,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
       else if(N == 16)
          return bigint_comba_mul16(z, x, y);
       else
-         return bigint_simple_mul(z, x, N, y, N);
+         return basecase_mul(z, x, N, y, N);
       }
 
    const size_t N2 = N / 2;
@@ -101,7 +132,7 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
       else if(N == 16)
          return bigint_comba_sqr16(z, x);
       else
-         return bigint_simple_sqr(z, x, N);
+         return basecase_mul(z, x, N, x, N);
       }
 
    const size_t N2 = N / 2;
@@ -262,7 +293,7 @@ void bigint_mul(word z[], size_t z_size, word workspace[],
            y_sw < KARATSUBA_MULTIPLY_THRESHOLD ||
            !workspace)
       {
-      bigint_simple_mul(z, x, x_sw, y, y_sw);
+      basecase_mul(z, x, x_sw, y, y_sw);
       }
    else
       {
@@ -271,7 +302,7 @@ void bigint_mul(word z[], size_t z_size, word workspace[],
       if(N)
          karatsuba_mul(z, x, y, N, workspace);
       else
-         bigint_simple_mul(z, x, x_sw, y, y_sw);
+         basecase_mul(z, x, x_sw, y, y_sw);
       }
    }
 
@@ -307,7 +338,7 @@ void bigint_sqr(word z[], size_t z_size, word workspace[],
       }
    else if(x_size < KARATSUBA_SQUARE_THRESHOLD || !workspace)
       {
-      bigint_simple_sqr(z, x, x_sw);
+      basecase_mul(z, x, x_sw, x, x_sw);
       }
    else
       {
@@ -316,7 +347,7 @@ void bigint_sqr(word z[], size_t z_size, word workspace[],
       if(N)
          karatsuba_sqr(z, x, N, workspace);
       else
-         bigint_simple_sqr(z, x, x_sw);
+         basecase_mul(z, x, x_sw, x, x_sw);
       }
    }
 
