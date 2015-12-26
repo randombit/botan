@@ -147,6 +147,9 @@ std::string type_name(Botan::ASN1_Tag type)
 
       case Botan::BOOLEAN:
          return "BOOLEAN";
+
+      default:
+         return "TAG(" + std::to_string(static_cast<size_t>(type)) + ")";
       }
 
    return "(UNKNOWN)";
