@@ -88,7 +88,10 @@ type truly is obvious (considering also the potential for unexpected
 integer conversions and the like, such as an apparent uint8_t being
 promoted to an int).
 
-If a variable is defined and not modified, declare it ``const``
+If a variable is defined and not modified, declare it ``const``.
+Some exception for very short-lived variables, but generally speaking
+being able to read the declaration and know it will not be modified
+is useful.
 
 Use ``override`` annotations whenever overriding a virtual function.
 
@@ -217,9 +220,24 @@ developers or auditors.
 Python
 ========================================
 
-The house language for scripts is Python. The aim is to support 2.7 and latest
-3.x with the minimum possible number of explicit version checks (ideally zero).
-Support for CPython 2.6, PyPy, etc is a bonus but not required.
+Scripts should be in Python whenever possible.
+
+For configure.py (and install.py) the target is stock (no modules outside the
+standard library) CPython 2.7 plus latest CPython 3.x. Support for CPython 2.6,
+PyPy, etc is great when viable (in the sense of not causing problems for 2.7 or
+3.x, and not requiring huge blocks of version dependent code). As running this
+program succesfully is required for a working build making it as portable as
+possible is considered key.
+
+The python wrapper botan.py targets CPython 2.7, 3.x, and latest PyPy. Note that
+a single file is used to avoid dealing with any of Python's various crazy module
+distribution issues.
+
+For random scripts not typically run by an end-user (codegen, visualization, and
+so on) there isn't any need to worry about 2.6 and even just running under
+Python2 xor Python3 is acceptable if needed. Here it's fine to depend on any
+useful modules such as graphviz or matplotlib, regardless if it is available
+from a stock CPython install.
 
 Build Tools and Hints
 ========================================
