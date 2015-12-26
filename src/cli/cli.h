@@ -547,7 +547,8 @@ class Command
 
 #define BOTAN_REGISTER_COMMAND(name, CLI_Class)                         \
    namespace { Botan_CLI::Command::Registration                         \
-   reg_cmd_ ## CLI_Class(name, []() -> Botan_CLI::Command* { return new CLI_Class; }); }
+   reg_cmd_ ## CLI_Class(name, []() -> Botan_CLI::Command* { return new CLI_Class; }); } \
+   BOTAN_FORCE_SEMICOLON
 
 }
 
