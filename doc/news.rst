@@ -32,6 +32,8 @@ Version 1.11.26, Not Yet Released
   are corner cases where this can occur, such as pointing to the very
   end of a buffer.
 
+* Export MGF1 function mgf1_mask GH #380
+
 Version 1.11.25, 2015-12-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
