@@ -2,9 +2,8 @@ from collections import OrderedDict
 import re
 
 class VecDocument:
-    data = OrderedDict()
-    
     def __init__(self, filepath):
+        self.data = OrderedDict()
         last_testcase_number = 1
         current_testcase_number = 1
         current_group_name = ""
