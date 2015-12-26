@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "apps.h"
+#include "cli.h"
 
 #if defined(BOTAN_HAS_AES)
 
@@ -15,6 +15,8 @@
 #include <iterator>
 
 using namespace Botan;
+
+namespace Botan_CLI {
 
 namespace {
 
@@ -77,44 +79,47 @@ void to_stdout(const secure_vector<byte> &data)
    std::copy(data.begin(), data.end(), std::ostreambuf_iterator<char>(std::cout));
    }
 
-int encryption(const std::vector<std::string> &args)
-   {
-   OptionParser opts("debug|decrypt|mode=|key=|iv=|ad=");
-   opts.parse(args);
-
-   std::string mode = opts.value_if_set("mode");
-   if (!VALID_MODES.count(mode))
-      {
-      std::cout << "Invalid mode: '" << mode << "'\n"
-                << "valid modes are:";
-      for (auto valid_mode : VALID_MODES) std::cout << " " << valid_mode.first;
-      std::cout << std::endl;
-      return 1;
-      }
-
-   std::string key_hex = opts.value("key");
-   std::string iv_hex = opts.value("iv");
-   std::string ad_hex = opts.value_or_else("ad", "");
-
-   auto input = get_stdin();
-   if (opts.is_set("debug"))
-      {
-      std::cerr << "Got " << input.size() << " bytes of input data." << std::endl;
-      }
-
-   auto key = SymmetricKey(key_hex);
-   auto iv = InitializationVector(iv_hex);
-   auto ad = OctetString(ad_hex);
-
-   auto direction = opts.is_set("decrypt") ? Cipher_Dir::DECRYPTION : Cipher_Dir::ENCRYPTION;
-   auto out = do_crypt(VALID_MODES[mode], input, key, iv, ad, direction);
-   to_stdout(out);
-
-   return 0;
-   }
-
 }
 
-REGISTER_APP(encryption);
+class Encryption : public Command
+   {
+   public:
+      Encryption() : Command("encryption --decrypt --mode= --key= --iv= --ad=") {}
+
+      void go() override
+         {
+         std::string mode = get_arg_or("mode", "");
+         if (!VALID_MODES.count(mode))
+            {
+            std::cout << "Invalid mode: '" << mode << "'\n"
+                      << "valid modes are:";
+            for (auto valid_mode : VALID_MODES) std::cout << " " << valid_mode.first;
+            std::cout << std::endl;
+            return;
+            }
+
+         std::string key_hex = get_arg("key");
+         std::string iv_hex  = get_arg("iv");
+         std::string ad_hex  = get_arg_or("ad", "");
+
+         auto input = get_stdin();
+         if (verbose())
+            {
+            std::cerr << "Got " << input.size() << " bytes of input data." << std::endl;
+            }
+
+         auto key = SymmetricKey(key_hex);
+         auto iv = InitializationVector(iv_hex);
+         auto ad = OctetString(ad_hex);
+
+         auto direction = flag_set("decrypt") ? Cipher_Dir::DECRYPTION : Cipher_Dir::ENCRYPTION;
+         auto out = do_crypt(VALID_MODES[mode], input, key, iv, ad, direction);
+         to_stdout(out);
+         }
+   };
+
+BOTAN_REGISTER_COMMAND(Encryption);
+
+}
 
 #endif
