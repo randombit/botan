@@ -43,6 +43,13 @@ void do_compress(Botan::Transform& comp,
 
 }
 
+/**
+* Compress input data using one of the following formats
+* - zlib (RFC 1950): a stream compression format not to be confused with .zip files
+* - gzip (RFC 1952): similar to zlib but uses CRC checksums instead of Adler32
+* - bzip2 (there is no RFC for bzip2): see http://bzip.org/ or Wikipedia
+* - lzma
+*/
 class Compress : public Command
    {
    public:

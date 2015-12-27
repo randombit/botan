@@ -14,7 +14,7 @@
 namespace Botan {
 
 /**
-* Zlib Compression
+* Zlib Compression as definded in RFC 1950
 */
 class BOTAN_DLL Zlib_Compression : public Stream_Compression
    {
@@ -36,7 +36,7 @@ class BOTAN_DLL Zlib_Compression : public Stream_Compression
    };
 
 /**
-* Zlib Decompression
+* Zlib Decompression as definded in RFC 1950
 */
 class BOTAN_DLL Zlib_Decompression : public Stream_Decompression
    {
@@ -48,7 +48,7 @@ class BOTAN_DLL Zlib_Decompression : public Stream_Decompression
    };
 
 /**
-* Deflate Compression
+* Deflate Compression as defined in RFC 1951
 */
 class BOTAN_DLL Deflate_Compression : public Stream_Compression
    {
@@ -69,7 +69,7 @@ class BOTAN_DLL Deflate_Compression : public Stream_Compression
    };
 
 /**
-* Deflate Decompression
+* Deflate Decompression as defined in RFC 1951
 */
 class BOTAN_DLL Deflate_Decompression : public Stream_Decompression
    {
@@ -81,7 +81,7 @@ class BOTAN_DLL Deflate_Decompression : public Stream_Decompression
    };
 
 /**
-* Gzip Compression
+* Gzip Compression as defined in RFC 1952
 */
 class BOTAN_DLL Gzip_Compression : public Stream_Compression
    {
@@ -104,7 +104,7 @@ class BOTAN_DLL Gzip_Compression : public Stream_Compression
    };
 
 /**
-* Gzip Decompression
+* Gzip Decompression as defined in RFC 1952
 */
 class BOTAN_DLL Gzip_Decompression : public Stream_Decompression
    {
