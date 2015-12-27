@@ -8,7 +8,6 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
-#include <botan/auto_rng.h>
 #include <botan/certstor.h>
 #include <botan/pkcs8.h>
 #include <botan/x509_ca.h>
@@ -30,13 +29,11 @@ class Sign_Cert : public Command
 
       void go() override
          {
-         Botan::AutoSeeded_RNG rng;
-
          Botan::X509_Certificate ca_cert(get_arg("ca_cert"));
 
          std::unique_ptr<Botan::PKCS8_PrivateKey> key(
             Botan::PKCS8::load_key(get_arg("ca_key"),
-                                   rng,
+                                   rng(),
                                    get_arg("ca_key_pass")));
 
          if(!key)
@@ -54,7 +51,7 @@ class Sign_Cert : public Command
 
          Botan::X509_Time end_time(now + days(get_arg_sz("duration")));
 
-         Botan::X509_Certificate new_cert = ca.sign_request(req, rng,
+         Botan::X509_Certificate new_cert = ca.sign_request(req, rng(),
                                                             start_time, end_time);
 
          output() << new_cert.PEM_encode();
@@ -153,11 +150,9 @@ class Gen_Self_Signed : public Command
 
       void go() override
          {
-         Botan::AutoSeeded_RNG rng;
-
          std::unique_ptr<Botan::Private_Key> key(
             Botan::PKCS8::load_key(get_arg("key"),
-                                   rng,
+                                   rng(),
                                    get_arg("key-pass")));
 
          if(!key)
@@ -175,7 +170,7 @@ class Gen_Self_Signed : public Command
             opts.CA_key();
 
          Botan::X509_Certificate cert =
-            Botan::X509::create_self_signed_cert(opts, *key, get_arg("hash"), rng);
+            Botan::X509::create_self_signed_cert(opts, *key, get_arg("hash"), rng());
 
          output() << cert.PEM_encode();
          }
@@ -191,11 +186,9 @@ class Generate_PKCS10 : public Command
 
       void go() override
          {
-         Botan::AutoSeeded_RNG rng;
-
          std::unique_ptr<Botan::Private_Key> key(
             Botan::PKCS8::load_key(get_arg("key"),
-                                   rng,
+                                   rng(),
                                    get_arg("key-pass")));
 
          if(!key)
@@ -211,7 +204,7 @@ class Generate_PKCS10 : public Command
          Botan::PKCS10_Request req =
             Botan::X509::create_cert_req(opts, *key,
                                          get_arg("hash"),
-                                         rng);
+                                         rng());
 
          output() << req.PEM_encode();
          }

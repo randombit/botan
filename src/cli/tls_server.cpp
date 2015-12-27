@@ -11,7 +11,6 @@
 
 #include <botan/tls_server.h>
 #include <botan/hex.h>
-#include <botan/auto_rng.h>
 #include "credentials.h"
 
 #include <list>
@@ -48,13 +47,11 @@ class TLS_Server : public Command
 
          const bool is_tcp = (transport == "tcp");
 
-         Botan::AutoSeeded_RNG rng;
-
          Botan::TLS::Policy policy; // TODO read policy from file
 
-         Botan::TLS::Session_Manager_In_Memory session_manager(rng); // TODO sqlite3
+         Botan::TLS::Session_Manager_In_Memory session_manager(rng()); // TODO sqlite3
 
-         Basic_Credentials_Manager creds(rng, server_crt, server_key);
+         Basic_Credentials_Manager creds(rng(), server_crt, server_key);
 
          auto protocol_chooser = [](const std::vector<std::string>& protocols) -> std::string {
             for(size_t i = 0; i != protocols.size(); ++i)
@@ -116,7 +113,7 @@ class TLS_Server : public Command
                                       session_manager,
                                       creds,
                                       policy,
-                                      rng,
+                                      rng(),
                                       protocol_chooser,
                                       !is_tcp);
 

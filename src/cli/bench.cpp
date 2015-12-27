@@ -17,7 +17,6 @@
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <botan/cipher_mode.h>
-#include <botan/auto_rng.h>
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
   #include <botan/pkcs8.h>
@@ -338,9 +337,6 @@ class Benchmark : public Command
          }
 
    private:
-
-      Botan::AutoSeeded_RNG m_rng;
-      Botan::RandomNumberGenerator& rng() { return m_rng; }
 
       template<typename T>
       using bench_fn = std::function<void (T&,

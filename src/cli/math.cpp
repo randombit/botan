@@ -10,7 +10,6 @@
 
 #include <botan/reducer.h>
 #include <botan/numthry.h>
-#include <botan/auto_rng.h>
 #include <iterator>
 
 namespace Botan_CLI {
@@ -22,14 +21,12 @@ class Gen_Prime : public Command
 
       void go() override
          {
-         Botan::AutoSeeded_RNG rng;
-
          const size_t bits = get_arg_sz("bits");
          const size_t cnt = get_arg_sz("count");
 
          for(size_t i = 0; i != cnt; ++i)
             {
-            const Botan::BigInt p = Botan::random_prime(rng, bits);
+            const Botan::BigInt p = Botan::random_prime(rng(), bits);
             output() << p << "\n";
             }
          }
@@ -46,8 +43,7 @@ class Is_Prime : public Command
          {
          Botan::BigInt n(get_arg("n"));
          const size_t prob = get_arg_sz("prob");
-         Botan::AutoSeeded_RNG rng;
-         const bool prime = Botan::is_prime(n, rng, prob);
+         const bool prime = Botan::is_prime(n, rng(), prob);
 
          output() << n << " is " << (prime ? "probably prime" : "composite") << "\n";
          }
@@ -68,9 +64,7 @@ class Factor : public Command
          {
          Botan::BigInt n(get_arg("n"));
 
-         Botan::AutoSeeded_RNG rng;
-
-         std::vector<Botan::BigInt> factors = factorize(n, rng);
+         std::vector<Botan::BigInt> factors = factorize(n, rng());
          std::sort(factors.begin(), factors.end());
 
          output() << n << ": ";

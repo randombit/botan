@@ -10,6 +10,11 @@
 #include <botan/build.h>
 #include <botan/parsing.h>
 #include <botan/rng.h>
+#include <botan/auto_rng.h>
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#endif
 
 #include <fstream>
 #include <iostream>
@@ -445,6 +450,16 @@ class Command
          output().write(reinterpret_cast<const char*>(vec.data()), vec.size());
          }
 
+      Botan::RandomNumberGenerator& rng()
+         {
+         if(m_rng == nullptr)
+            {
+            m_rng.reset(new Botan::AutoSeeded_RNG);
+            }
+
+         return *m_rng;
+         }
+
    private:
       // set in constructor
       std::string m_spec;
@@ -463,6 +478,7 @@ class Command
       std::unique_ptr<std::ofstream> m_output_stream;
       std::unique_ptr<std::ofstream> m_error_output_stream;
 
+      std::unique_ptr<Botan::RandomNumberGenerator> m_rng;
 
    public:
       // the registry interface:

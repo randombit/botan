@@ -9,7 +9,6 @@
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_SOCKETS)
 
 #include <botan/tls_client.h>
-#include <botan/auto_rng.h>
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
@@ -44,7 +43,6 @@ class TLS_Client : public Command
 
       void go() override
          {
-         Botan::AutoSeeded_RNG rng;
          Botan::TLS::Policy policy; // TODO read from a file
 
          // TODO client cert auth
@@ -57,12 +55,12 @@ class TLS_Client : public Command
 
          if(!sessions_db.empty())
             {
-            session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng, sessions_db));
+            session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng(), sessions_db));
             }
 #endif
          if(!session_mgr)
             {
-            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng));
+            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
             }
 
          Basic_Credentials_Manager creds;
@@ -96,7 +94,7 @@ class TLS_Client : public Command
                                    *session_mgr,
                                    creds,
                                    policy,
-                                   rng,
+                                   rng(),
                                    Botan::TLS::Server_Information(host, port),
                                    version,
                                    protocols_to_offer);

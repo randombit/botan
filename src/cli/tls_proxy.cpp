@@ -401,8 +401,7 @@ class TLS_Proxy : public Command
 
          const size_t num_threads = get_arg_sz("threads") || std::thread::hardware_concurrency() || 2;
 
-         Botan::AutoSeeded_RNG rng;
-         Basic_Credentials_Manager creds(rng, server_crt, server_key);
+         Basic_Credentials_Manager creds(rng(), server_crt, server_key);
 
          Botan::TLS::Policy policy; // TODO: Read policy from text file
 
@@ -419,12 +418,12 @@ class TLS_Proxy : public Command
 
          if(!sessions_db.empty())
             {
-            session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng, sessions_db));
+            session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng(), sessions_db));
             }
 #endif
          if(!session_mgr)
             {
-            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng));
+            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
             }
 
          tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, policy, *session_mgr);

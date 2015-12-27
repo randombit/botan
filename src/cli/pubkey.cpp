@@ -9,7 +9,6 @@
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
 
-#include <botan/auto_rng.h>
 #include <botan/base64.h>
 
 #include <botan/pk_keys.h>
@@ -114,8 +113,7 @@ class PK_Keygen : public Command
 
       void go() override
          {
-         Botan::AutoSeeded_RNG rng;
-         std::unique_ptr<Botan::Private_Key> key(do_keygen(get_arg("algo"), get_arg("params"), rng));
+         std::unique_ptr<Botan::Private_Key> key(do_keygen(get_arg("algo"), get_arg("params"), rng()));
 
          const std::string pass = get_arg("passphrase");
          const bool der_out = flag_set("der-out");
@@ -173,10 +171,8 @@ class PK_Sign : public Command
 
       void go() override
          {
-         Botan::AutoSeeded_RNG rng;
-
          std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(get_arg("key"),
-                                                                        rng,
+                                                                        rng(),
                                                                         get_arg("passphrase")));
 
          if(!key)
@@ -234,20 +230,18 @@ class Gen_DL_Group : public Command
 
       void go() override
          {
-         Botan::AutoSeeded_RNG rng;
-
          const size_t pbits = get_arg_sz("pbits");
 
          const std::string type = get_arg("type");
 
          if(type == "strong")
             {
-            Botan::DL_Group grp(rng, Botan::DL_Group::Strong, pbits);
+            Botan::DL_Group grp(rng(), Botan::DL_Group::Strong, pbits);
             output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
             }
          else if(type == "subgroup")
             {
-            Botan::DL_Group grp(rng, Botan::DL_Group::Prime_Subgroup, pbits, get_arg_sz("qbits"));
+            Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, get_arg_sz("qbits"));
             output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
             }
          else
@@ -266,11 +260,9 @@ class PKCS8_Tool : public Command
 
       void go() override
          {
-         Botan::AutoSeeded_RNG rng;
-
          std::unique_ptr<Botan::Private_Key> key(
             Botan::PKCS8::load_key(get_arg("key"),
-                                   rng,
+                                   rng(),
                                    get_arg("pass-in")));
 
          const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
@@ -300,7 +292,7 @@ class PKCS8_Tool : public Command
                   }
                else
                   {
-                  write_output(Botan::PKCS8::BER_encode(*key, rng, pass, pbe_millis, pbe));
+                  write_output(Botan::PKCS8::BER_encode(*key, rng(), pass, pbe_millis, pbe));
                   }
                }
             else
@@ -311,7 +303,7 @@ class PKCS8_Tool : public Command
                   }
                else
                   {
-                  output() << Botan::PKCS8::PEM_encode(*key, rng, pass, pbe_millis, pbe);
+                  output() << Botan::PKCS8::PEM_encode(*key, rng(), pass, pbe_millis, pbe);
                   }
                }
             }

@@ -235,8 +235,7 @@ class Generate_Bcrypt : public Command
          const std::string password = get_arg("password");
          const size_t wf = get_arg_sz("work_factor");
 
-         Botan::AutoSeeded_RNG rng;
-         output() << Botan::generate_bcrypt(password, rng, wf) << "\n";
+         output() << Botan::generate_bcrypt(password, rng(), wf) << "\n";
          }
    };
 
