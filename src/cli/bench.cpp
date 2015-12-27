@@ -51,7 +51,6 @@
 
 #if defined(BOTAN_HAS_MCELIECE)
   #include <botan/mceliece.h>
-  #include <botan/mce_kem.h>
 #endif
 
 namespace Botan_CLI {
