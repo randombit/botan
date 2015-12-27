@@ -26,6 +26,14 @@ Version 1.11.26, Not Yet Released
   random number generation, RSA key generation, and signing are
   supported. Tested using Trousers and an ST TPM
 
+* Add generalized interface for KEM (key encapsulation) techniques. Convert
+  McEliece KEM to use it. The previous interfaces McEliece_KEM_Encryptor and
+  McEliece_KEM_Decryptor have been removed. The new KEM interface now uses a KDF
+  to hash the resulting keys; to get the same output as previously provided by
+  McEliece_KEM_Encryptor, use "KDF1(SHA-512)" and request exactly 64 bytes.
+
+* Add support for RSA-KEM from ISO 18033-2
+
 * Avoid calling memcpy, memset, or memmove with a length of zero to
   avoid undefined behavior, as calling these functions with an invalid
   or null pointer, even with a length of zero, is invalid. Often there

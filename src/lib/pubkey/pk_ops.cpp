@@ -129,4 +129,47 @@ bool PK_Ops::Verification_with_EMSA::is_valid_signature(const byte sig[], size_t
       }
    }
 
+void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<byte>& out_encapsulated_key,
+                                                  secure_vector<byte>& out_shared_key,
+                                                  size_t desired_shared_key_len,
+                                                  Botan::RandomNumberGenerator& rng,
+                                                  const uint8_t salt[],
+                                                  size_t salt_len)
+   {
+   secure_vector<byte> raw_shared;
+   this->raw_kem_encrypt(out_encapsulated_key, raw_shared, rng);
+
+   out_shared_key = m_kdf->derive_key(desired_shared_key_len,
+                                      raw_shared.data(), raw_shared.size(),
+                                      salt, salt_len);
+   }
+
+PK_Ops::KEM_Encryption_with_KDF::KEM_Encryption_with_KDF(const std::string& kdf)
+   {
+   m_kdf.reset(get_kdf(kdf));
+   }
+
+PK_Ops::KEM_Encryption_with_KDF::~KEM_Encryption_with_KDF() {}
+
+secure_vector<byte>
+PK_Ops::KEM_Decryption_with_KDF::kem_decrypt(const byte encap_key[],
+                                             size_t len,
+                                             size_t desired_shared_key_len,
+                                             const uint8_t salt[],
+                                             size_t salt_len)
+   {
+   secure_vector<byte> raw_shared = this->raw_kem_decrypt(encap_key, len);
+
+   return m_kdf->derive_key(desired_shared_key_len,
+                            raw_shared.data(), raw_shared.size(),
+                            salt, salt_len);
+   }
+
+PK_Ops::KEM_Decryption_with_KDF::KEM_Decryption_with_KDF(const std::string& kdf)
+   {
+   m_kdf.reset(get_kdf(kdf));
+   }
+
+PK_Ops::KEM_Decryption_with_KDF::~KEM_Decryption_with_KDF() {}
+
 }

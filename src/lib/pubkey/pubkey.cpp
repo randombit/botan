@@ -59,6 +59,46 @@ secure_vector<byte> PK_Decryptor_EME::dec(const byte msg[], size_t length) const
    return m_op->decrypt(msg, length);
    }
 
+PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
+                                   const std::string& param,
+                                   const std::string& provider)
+   {
+   m_op.reset(get_pk_op<PK_Ops::KEM_Encryption>("KEM", key, param, provider));
+   }
+
+void PK_KEM_Encryptor::encrypt(secure_vector<byte>& out_encapsulated_key,
+                               secure_vector<byte>& out_shared_key,
+                               size_t desired_shared_key_len,
+                               Botan::RandomNumberGenerator& rng,
+                               const uint8_t salt[],
+                               size_t salt_len)
+   {
+   m_op->kem_encrypt(out_encapsulated_key,
+                     out_shared_key,
+                     desired_shared_key_len,
+                     rng,
+                     salt,
+                     salt_len);
+   }
+
+PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
+                                   const std::string& param,
+                                   const std::string& provider)
+   {
+   m_op.reset(get_pk_op<PK_Ops::KEM_Decryption>("KEM", key, param, provider));
+   }
+
+secure_vector<byte> PK_KEM_Decryptor::decrypt(const byte encap_key[],
+                                              size_t encap_key_len,
+                                              size_t desired_shared_key_len,
+                                              const uint8_t salt[],
+                                              size_t salt_len)
+   {
+   return m_op->kem_decrypt(encap_key, encap_key_len,
+                            desired_shared_key_len,
+                            salt, salt_len);
+   }
+
 PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key, const std::string& kdf)
    {
    m_op.reset(get_pk_op<PK_Ops::Key_Agreement>("Key agreement", key, kdf));

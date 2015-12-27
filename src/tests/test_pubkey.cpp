@@ -249,6 +249,46 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
    return result;
    }
 
+Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
+   {
+   const std::vector<uint8_t> K = get_req_bin(vars, "K");
+   const std::vector<uint8_t> C0 = get_req_bin(vars, "C0");
+   const std::vector<uint8_t> salt = get_opt_bin(vars, "Salt");
+   const std::string kdf = get_req_str(vars, "KDF");
+
+   Test::Result result(algo_name() + "/" + kdf + " KEM");
+
+   std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
+
+   const size_t desired_key_len = K.size();
+
+   Botan::PK_KEM_Encryptor enc(*privkey, kdf);
+
+   Fixed_Output_RNG fixed_output_rng(get_req_bin(vars, "R"));
+
+   Botan::secure_vector<byte> produced_encap_key, shared_key;
+   enc.encrypt(produced_encap_key,
+               shared_key,
+               desired_key_len,
+               fixed_output_rng,
+               salt);
+
+   result.test_eq("C0 matches", produced_encap_key, C0);
+   result.test_eq("K matches", shared_key, K);
+
+   Botan::PK_KEM_Decryptor dec(*privkey, kdf);
+
+   const Botan::secure_vector<uint8_t> decr_shared_key =
+      dec.decrypt(C0.data(), C0.size(),
+                  desired_key_len,
+                  salt.data(),
+                  salt.size());
+
+   result.test_eq("decrypted K matches", decr_shared_key, K);
+
+   return result;
+   }
+
 Test::Result PK_Key_Agreement_Test::run_one_test(const std::string&, const VarMap& vars)
    {
    const std::vector<uint8_t> shared = get_req_bin(vars, "K");

@@ -38,6 +38,25 @@ class RSA_ES_KAT_Tests : public PK_Encryption_Decryption_Test
          }
    };
 
+class RSA_KEM_Tests : public PK_KEM_Test
+   {
+   public:
+      RSA_KEM_Tests() : PK_KEM_Test("RSA", "pubkey/rsa_kem.vec",
+                                    {"E", "P", "Q", "R", "C0", "KDF", "OutLen", "K"})
+         {}
+
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
+         {
+         const BigInt p = get_req_bn(vars, "P");
+         const BigInt q = get_req_bn(vars, "Q");
+         const BigInt e = get_req_bn(vars, "E");
+
+         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(Test::rng(), p, q, e));
+         return key;
+         }
+
+   };
+
 class RSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
    {
    public:
@@ -100,6 +119,7 @@ class RSA_Keygen_Tests : public PK_Key_Generation_Test
 BOTAN_REGISTER_TEST("rsa_encrypt", RSA_ES_KAT_Tests);
 BOTAN_REGISTER_TEST("rsa_sign", RSA_Signature_KAT_Tests);
 BOTAN_REGISTER_TEST("rsa_verify", RSA_Signature_Verify_Tests);
+BOTAN_REGISTER_TEST("rsa_kem", RSA_KEM_Tests);
 BOTAN_REGISTER_TEST("rsa_keygen", RSA_Keygen_Tests);
 
 #endif

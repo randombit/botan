@@ -438,6 +438,87 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
       std::unique_ptr<PK_Ops::Decryption> m_op;
    };
 
+class BOTAN_DLL PK_KEM_Encryptor
+   {
+   public:
+      PK_KEM_Encryptor(const Public_Key& key,
+                       const std::string& kem_param = "",
+                       const std::string& provider = "");
+
+      void encrypt(secure_vector<byte>& out_encapsulated_key,
+                   secure_vector<byte>& out_shared_key,
+                   size_t desired_shared_key_len,
+                   Botan::RandomNumberGenerator& rng,
+                   const uint8_t salt[],
+                   size_t salt_len);
+
+      template<typename Alloc>
+         void encrypt(secure_vector<byte>& out_encapsulated_key,
+                      secure_vector<byte>& out_shared_key,
+                      size_t desired_shared_key_len,
+                      Botan::RandomNumberGenerator& rng,
+                      const std::vector<uint8_t, Alloc>& salt)
+         {
+         this->encrypt(out_encapsulated_key,
+                       out_shared_key,
+                       desired_shared_key_len,
+                       rng,
+                       salt.data(), salt.size());
+         }
+
+      void encrypt(secure_vector<byte>& out_encapsulated_key,
+                   secure_vector<byte>& out_shared_key,
+                   size_t desired_shared_key_len,
+                   Botan::RandomNumberGenerator& rng)
+         {
+         this->encrypt(out_encapsulated_key,
+                       out_shared_key,
+                       desired_shared_key_len,
+                       rng,
+                       nullptr,
+                       0);
+         }
+
+   private:
+      std::unique_ptr<PK_Ops::KEM_Encryption> m_op;
+   };
+
+class BOTAN_DLL PK_KEM_Decryptor
+   {
+   public:
+      PK_KEM_Decryptor(const Private_Key& key,
+                       const std::string& kem_param = "",
+                       const std::string& provider = "");
+
+      secure_vector<byte> decrypt(const byte encap_key[],
+                                  size_t encap_key_len,
+                                  size_t desired_shared_key_len,
+                                  const uint8_t salt[],
+                                  size_t salt_len);
+
+      secure_vector<byte> decrypt(const byte encap_key[],
+                                  size_t encap_key_len,
+                                  size_t desired_shared_key_len)
+         {
+         return this->decrypt(encap_key, encap_key_len,
+                              desired_shared_key_len,
+                              nullptr, 0);
+         }
+
+      template<typename Alloc1, typename Alloc2>
+         secure_vector<byte> decrypt(const std::vector<byte, Alloc1>& encap_key,
+                                     size_t desired_shared_key_len,
+                                     const std::vector<byte, Alloc2>& salt)
+         {
+         return this->decrypt(encap_key.data(), encap_key.size(),
+                              desired_shared_key_len,
+                              salt.data(), salt.size());
+         }
+
+   private:
+      std::unique_ptr<PK_Ops::KEM_Decryption> m_op;
+   };
+
 }
 
 #endif

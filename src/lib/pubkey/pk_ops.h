@@ -47,11 +47,13 @@ typedef PK_Spec<Private_Key> PK_Spec_Private_Key;
 class BOTAN_DLL Encryption
    {
    public:
+      typedef PK_Spec_Public_Key Spec;
+
       virtual size_t max_input_bits() const = 0;
 
-      virtual secure_vector<byte> encrypt(const byte msg[], size_t msg_len, RandomNumberGenerator& rng) = 0;
-
-      typedef PK_Spec_Public_Key Spec;
+      virtual secure_vector<byte> encrypt(const byte msg[],
+                                          size_t msg_len,
+                                          RandomNumberGenerator& rng) = 0;
 
       virtual ~Encryption() {}
    };
@@ -162,6 +164,38 @@ class BOTAN_DLL Key_Agreement
                                         const byte salt[], size_t salt_len) = 0;
 
       virtual ~Key_Agreement() {}
+   };
+
+/**
+* KEM (key encapsulation)
+*/
+class BOTAN_DLL KEM_Encryption
+   {
+   public:
+      typedef PK_Spec_Public_Key Spec;
+
+      virtual void kem_encrypt(secure_vector<byte>& out_encapsulated_key,
+                               secure_vector<byte>& out_shared_key,
+                               size_t desired_shared_key_len,
+                               Botan::RandomNumberGenerator& rng,
+                               const uint8_t salt[],
+                               size_t salt_len) = 0;
+
+      virtual ~KEM_Encryption() {}
+   };
+
+class BOTAN_DLL KEM_Decryption
+   {
+   public:
+      typedef PK_Spec_Private_Key Spec;
+
+      virtual secure_vector<byte> kem_decrypt(const byte encap_key[],
+                                              size_t len,
+                                              size_t desired_shared_key_len,
+                                              const uint8_t salt[],
+                                              size_t salt_len) = 0;
+
+      virtual ~KEM_Decryption() {}
    };
 
 }

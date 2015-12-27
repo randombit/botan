@@ -139,6 +139,46 @@ class Key_Agreement_with_KDF : public Key_Agreement
       std::unique_ptr<KDF> m_kdf;
    };
 
+class KEM_Encryption_with_KDF : public KEM_Encryption
+   {
+   public:
+      void kem_encrypt(secure_vector<byte>& out_encapsulated_key,
+                       secure_vector<byte>& out_shared_key,
+                       size_t desired_shared_key_len,
+                       Botan::RandomNumberGenerator& rng,
+                       const uint8_t salt[],
+                       size_t salt_len) override;
+
+   protected:
+      virtual void raw_kem_encrypt(secure_vector<byte>& out_encapsulated_key,
+                                   secure_vector<byte>& raw_shared_key,
+                                   Botan::RandomNumberGenerator& rng) = 0;
+
+      KEM_Encryption_with_KDF(const std::string& kdf);
+      ~KEM_Encryption_with_KDF();
+   private:
+      std::unique_ptr<KDF> m_kdf;
+   };
+
+class KEM_Decryption_with_KDF : public KEM_Decryption
+   {
+   public:
+      secure_vector<byte> kem_decrypt(const byte encap_key[],
+                                      size_t len,
+                                      size_t desired_shared_key_len,
+                                      const uint8_t salt[],
+                                      size_t salt_len);
+
+   protected:
+      virtual secure_vector<byte>
+      raw_kem_decrypt(const byte encap_key[], size_t len) = 0;
+
+      KEM_Decryption_with_KDF(const std::string& kdf);
+      ~KEM_Decryption_with_KDF();
+   private:
+      std::unique_ptr<KDF> m_kdf;
+   };
+
 }
 
 }

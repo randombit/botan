@@ -1,6 +1,6 @@
 /*
 * RSA
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,6 +12,8 @@
 #include <botan/blinding.h>
 #include <botan/reducer.h>
 #include <future>
+
+#include <iostream>
 
 namespace Botan {
 
@@ -156,8 +158,31 @@ class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
          const BigInt m(msg, msg_len);
          const BigInt x = blinded_private_op(m);
          const BigInt c = m_powermod_e_n(x);
-         BOTAN_ASSERT(m == c, "RSA sign consistency check");
+         BOTAN_ASSERT(m == c, "RSA decrypt consistency check");
          return BigInt::encode_locked(x);
+         }
+   };
+
+class RSA_KEM_Decryption_Operation : public PK_Ops::KEM_Decryption_with_KDF,
+                                     private RSA_Private_Operation
+   {
+   public:
+      typedef RSA_PrivateKey Key_Type;
+
+      RSA_KEM_Decryption_Operation(const RSA_PrivateKey& key,
+                                   const std::string& kdf) :
+         PK_Ops::KEM_Decryption_with_KDF(kdf),
+         RSA_Private_Operation(key)
+         {}
+
+      secure_vector<byte>
+      raw_kem_decrypt(const byte encap_key[], size_t len) override
+         {
+         const BigInt m(encap_key, len);
+         const BigInt x = blinded_private_op(m);
+         const BigInt c = m_powermod_e_n(x);
+         BOTAN_ASSERT(m == c, "RSA KEM consistency check");
+         return BigInt::encode_1363(x, n.bytes());
          }
    };
 
@@ -180,6 +205,8 @@ class RSA_Public_Operation
             throw Invalid_Argument("RSA public op - input is too large");
          return powermod_e_n(m);
          }
+
+      const BigInt& get_n() const { return n; }
 
       const BigInt& n;
       Fixed_Exponent_Power_Mod powermod_e_n;
@@ -230,10 +257,41 @@ class RSA_Verify_Operation : public PK_Ops::Verification_with_EMSA,
          }
    };
 
+class RSA_KEM_Encryption_Operation : public PK_Ops::KEM_Encryption_with_KDF,
+                                     private RSA_Public_Operation
+   {
+   public:
+      typedef RSA_PublicKey Key_Type;
+
+      RSA_KEM_Encryption_Operation(const RSA_PublicKey& key,
+                                   const std::string& kdf) :
+         PK_Ops::KEM_Encryption_with_KDF(kdf),
+         RSA_Public_Operation(key) {}
+
+   private:
+      void raw_kem_encrypt(secure_vector<byte>& out_encapsulated_key,
+                           secure_vector<byte>& raw_shared_key,
+                           Botan::RandomNumberGenerator& rng) override
+         {
+         const BigInt r = BigInt::random_integer(rng, 1, get_n());
+         std::cout << "R = " << r << "\n";
+         const BigInt c = public_op(r);
+         std::cout << "C0 = " << c << "\n";
+
+         out_encapsulated_key = BigInt::encode_locked(c);
+         raw_shared_key = BigInt::encode_locked(r);
+         }
+   };
+
+
 BOTAN_REGISTER_PK_ENCRYPTION_OP("RSA", RSA_Encryption_Operation);
 BOTAN_REGISTER_PK_DECRYPTION_OP("RSA", RSA_Decryption_Operation);
+
 BOTAN_REGISTER_PK_SIGNATURE_OP("RSA", RSA_Signature_Operation);
 BOTAN_REGISTER_PK_VERIFY_OP("RSA", RSA_Verify_Operation);
+
+BOTAN_REGISTER_PK_KEM_ENCRYPTION_OP("RSA", RSA_KEM_Encryption_Operation);
+BOTAN_REGISTER_PK_KEM_DECRYPTION_OP("RSA", RSA_KEM_Decryption_Operation);
 
 }
 
