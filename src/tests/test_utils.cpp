@@ -305,7 +305,7 @@ class Base64_Tests : public Text_Based_Test
                   {
                   result.test_failure("decoded whitespace base64", Botan::base64_decode(b64_ws, false));
                   }
-               catch(std::exception& e) {}
+               catch(std::exception&) {}
 
                try
                   {

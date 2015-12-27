@@ -58,7 +58,7 @@ class Fuzzer_Input_Tests : public Test
                // TODO: check for memory consumption?
                Botan::X509_Certificate cert(vec_file);
                }
-            catch(std::exception& e)
+            catch(std::exception&)
                {
                }
 

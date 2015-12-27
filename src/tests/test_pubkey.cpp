@@ -74,7 +74,7 @@ void check_invalid_ciphertexts(Test::Result& result,
             result.test_eq("used corrupted ciphertext", bad_ctext, ciphertext);
             }
          }
-      catch(std::exception& e)
+      catch(std::exception&)
          {
          ++ciphertext_rejected;
          }

@@ -372,7 +372,7 @@ class Command
             {
             return static_cast<size_t>(std::stoul(s));
             }
-         catch(std::exception& e)
+         catch(std::exception&)
             {
             throw CLI_Usage_Error("Invalid integer value '" + s + "' for option " + opt_name);
             }

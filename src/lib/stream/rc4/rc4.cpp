@@ -111,6 +111,6 @@ void RC4::clear()
 /*
 * RC4 Constructor
 */
-RC4::RC4(size_t s) : SKIP(s), X(0), Y(0) {}
+RC4::RC4(size_t s) : SKIP(s) {}
 
 }

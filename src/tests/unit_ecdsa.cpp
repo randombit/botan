@@ -284,7 +284,7 @@ Test::Result test_read_pkcs8()
 
          result.test_failure("loaded key with unknown OID");
          }
-      catch(std::exception& e)
+      catch(std::exception&)
          {
          result.test_note("rejected key with unknown OID");
          }

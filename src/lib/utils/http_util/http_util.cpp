@@ -98,7 +98,6 @@ Response http_sync(http_exch_fn http_transact,
    const auto protocol_host_sep = url.find("://");
    if(protocol_host_sep == std::string::npos)
       throw Exception("Invalid URL " + url);
-   const std::string protocol = url.substr(0, protocol_host_sep);
 
    const auto host_loc_sep = url.find('/', protocol_host_sep + 3);
 
