@@ -1,0 +1,69 @@
+
+Implementation Techniques
+----------------------------------------
+
+* "Randomizing the Montgomery Powering Ladder"
+  Le, Tan, Tunstall https://eprint.iacr.org/2015/657
+
+* "Accelerating AES with vector permute instructions"
+  Hamburg https://shiftleft.org/papers/vector_aes/
+
+* "Elliptic curves and their implementation" Langley
+   http://www.imperialviolet.org/2010/12/04/ecc.html
+
+Random Number Generation
+----------------------------------------
+
+* "On Extract-then-Expand Key Derivation Functions and an HMAC-based KDF"
+  Krawczyk http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.131.8254
+  RNG design underlying HMAC_RNG
+
+Standards
+----------------------------------------
+
+* ISO/IEC 18033-2 http://www.shoup.net/iso/std4.pdf
+  RSA-KEM, PSEC-KEM
+
+* NIST SP 800-108
+  http://csrc.nist.gov/publications/nistpubs/800-108/sp800-108.pdf
+  KDF schemes
+
+* NIST SP 800-90A
+  http://csrc.nist.gov/publications/nistpubs/800-90A/SP800-90A.pdf
+  HMAC_DRBG, Hash_DRBG, CTR_DRBG, maybe one other thing?
+
+
+Side Channel Attacks
+----------------------------------------
+
+AES
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* "Software mitigations to hedge AES against cache-based software side
+  channel vulnerabilities" https://eprint.iacr.org/2006/052.pdf
+
+* "Cache Games - Bringing Access-Based Cache Attacks on AES to Practice"
+  http://www.ieee-security.org/TC/SP2011/PAPERS/2011/paper031.pdf
+
+* "Cache-Collision Timing Attacks Against AES" Bonneau, Mironov
+  http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.88.4753
+
+Public Key
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* "Fast Elliptic Curve Multiplications Resistant against Side Channel Attacks"
+  http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.98.1028&rep=rep1&type=pdf
+
+* "Resistance against Differential Power Analysis for Elliptic Curve Cryptosystems"
+   Coron http://www.jscoron.fr/publications/dpaecc.pdf
+
+* "Further Results and Considerations on Side Channel Attacks on RSA"
+  Klima, Rosa https://eprint.iacr.org/2002/071
+  Side channel attacks on RSA-KEM and MGF1-SHA1
+
+* "Side-Channel Attacks on the McEliece and Niederreiter Public-Key Cryptosystems"
+  Avanzi, Hoerder, Page, and Tunstall https://eprint.iacr.org/2010/479
+
+* "Minimum Requirements for Evaluating Side-Channel Attack Resistance
+  of Elliptic Curve Implementations" BSI
+  https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Zertifizierung/Interpretationen/AIS_46_ECCGuide_e_pdf.pdf
