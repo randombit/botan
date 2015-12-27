@@ -13,8 +13,6 @@
 #include <botan/reducer.h>
 #include <future>
 
-#include <iostream>
-
 namespace Botan {
 
 /*
@@ -274,9 +272,7 @@ class RSA_KEM_Encryption_Operation : public PK_Ops::KEM_Encryption_with_KDF,
                            Botan::RandomNumberGenerator& rng) override
          {
          const BigInt r = BigInt::random_integer(rng, 1, get_n());
-         std::cout << "R = " << r << "\n";
          const BigInt c = public_op(r);
-         std::cout << "C0 = " << c << "\n";
 
          out_encapsulated_key = BigInt::encode_locked(c);
          raw_shared_key = BigInt::encode_locked(r);
