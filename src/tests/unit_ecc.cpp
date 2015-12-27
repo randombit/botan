@@ -1,5 +1,7 @@
 /*
-* (C) 2009,2015 Jack Lloyd
+* (C) 2007 Falko Strenzke
+*     2007 Manuel Hartl
+*     2009,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -286,6 +288,9 @@ Test::Result test_point_transformation ()
 
    // get a copy
    Botan::PointGFp q = p;
+
+   p.randomize_repr(Test::rng());
+   q.randomize_repr(Test::rng());
 
    result.test_eq("affine x after copy", p.get_affine_x(), q.get_affine_x());
    result.test_eq("affine y after copy", p.get_affine_y(), q.get_affine_y());
