@@ -106,6 +106,7 @@ class Command
          // for checking all spec strings at load time
          //parse_spec();
          }
+      virtual ~Command() = default;
 
       int run(const std::vector<std::string>& params)
          {
