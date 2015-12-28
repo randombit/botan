@@ -30,7 +30,7 @@ class VecDocument:
                     match = re.match(PATTERN_KEYVALUE, line)
                     key = match.group(1)
                     value = match.group(2).strip()
-                    current_testcase[key] = value                 
+                    current_testcase[key] = value
 
                 if current_testcase_number != last_testcase_number:
                     if not current_group_name in self.data:

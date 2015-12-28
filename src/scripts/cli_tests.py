@@ -47,7 +47,7 @@ def create_test(data):
         if direction == "decrypt":
             invalue = ciphertext
         else:
-            invalue = plaintext  
+            invalue = plaintext
 
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         out_raw = p.communicate(input=binascii.unhexlify(invalue))[0]
@@ -57,7 +57,7 @@ def create_test(data):
         if direction == "decrypt":
             expected = plaintext
         else:
-            expected = ciphertext            
+            expected = ciphertext
         actual = out
         self.assertEqual(expected, actual)
     return do_test_expected
