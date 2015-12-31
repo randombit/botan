@@ -364,7 +364,7 @@ def process_command_line(args):
                           help='minimize build')
 
     # Should be derived from info.txt but this runs too early
-    third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib']
+    third_party  = ['boost', 'bzip2', 'dyn_load', 'lzma', 'openssl', 'sqlite3', 'zlib']
 
     for mod in third_party:
         mods_group.add_option('--with-%s' % (mod),

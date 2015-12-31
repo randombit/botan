@@ -356,7 +356,11 @@ add_custom_command(TARGET Botan-help
 
 set(extra_link_libraries)
 if(NOT WIN32)
-    list(APPEND extra_link_libraries rt dl pthread)
+    if (UNIX AND NOT APPLE)
+        list(APPEND extra_link_libraries rt dl pthread)
+    elseif(APPLE)
+        list(APPEND extra_link_libraries dl pthread)
+    endif()
 endif()
 
 set(CMAKE_DEBUG_POSTFIX "d")
