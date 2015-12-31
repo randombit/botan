@@ -38,6 +38,15 @@ Version 1.11.26, Not Yet Released
   infinite loop or the discarding of an incorrect number of bytes.
   Reported on mailing list by Falko Strenzke.
 
+* Previously if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK was defined,
+  the code doing low level loads/stores would use pointer casts to
+  access larger words out of a (potentially misaligned) byte array,
+  rather than using byte-at-a-time accesses. However even on platforms
+  such as x86 where this works, it triggers UBSan errors under Clang.
+  Instead use memcpy, which the C standard says is usable for such
+  purposes even with misaligned values. With recent GCC and Clang, the
+  same code seems to be emitted for either approach.
+
 * Avoid calling memcpy, memset, or memmove with a length of zero to
   avoid undefined behavior, as calling these functions with an invalid
   or null pointer, even with a length of zero, is invalid. Often there

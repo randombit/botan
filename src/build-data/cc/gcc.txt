@@ -13,12 +13,16 @@ warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align 
 
 compile_flags "-c"
 debug_info_flags "-g"
-optimization_flags "-O2"
+optimization_flags "-O3"
 
 shared_flags "-fPIC"
 coverage_flags "--coverage"
-#sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address -fsanitize=undefined"
+
+# GCC 4.8
 sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address"
+
+# GCC 4.9 and later
+#sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address,undefined -fno-sanitize-recover=undefined"
 
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
