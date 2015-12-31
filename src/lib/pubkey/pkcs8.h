@@ -80,50 +80,62 @@ PEM_encode(const Private_Key& key,
            const std::string& pbe_algo = "");
 
 /**
-* Load a key from a data source.
+* Load an encrypted key from a data source.
 * @param source the data source providing the encoded key
 * @param rng the rng to use
 * @param get_passphrase a function that returns passphrases
-* @return loaded private key object
-*/
-BOTAN_DLL Private_Key* load_key(
-  DataSource& source,
-  RandomNumberGenerator& rng,
-  std::function<std::string ()> get_passphrase);
-
-/** Load a key from a data source.
-* @param source the data source providing the encoded key
-* @param rng the rng to use
-* @param pass the passphrase to decrypt the key. Provide an empty
-* string if the key is not encrypted
 * @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(DataSource& source,
                                 RandomNumberGenerator& rng,
-                                const std::string& pass = "");
+                                std::function<std::string ()> get_passphrase);
+
+/** Load an encrypted key from a data source.
+* @param source the data source providing the encoded key
+* @param rng the rng to use
+* @param pass the passphrase to decrypt the key
+* @return loaded private key object
+*/
+BOTAN_DLL Private_Key* load_key(DataSource& source,
+                                RandomNumberGenerator& rng,
+                                const std::string& pass);
+
+/** Load an unencrypted key from a data source.
+* @param source the data source providing the encoded key
+* @param rng the rng to use
+* @return loaded private key object
+*/
+BOTAN_DLL Private_Key* load_key(DataSource& source,
+                                RandomNumberGenerator& rng);
 
 /**
-* Load a key from a file.
+* Load an encrypted key from a file.
 * @param filename the path to the file containing the encoded key
 * @param rng the rng to use
 * @param get_passphrase a function that returns passphrases
 * @return loaded private key object
 */
-BOTAN_DLL Private_Key* load_key(
-  const std::string& filename,
-  RandomNumberGenerator& rng,
-  std::function<std::string ()> get_passphrase);
+BOTAN_DLL Private_Key* load_key(const std::string& filename,
+                                RandomNumberGenerator& rng,
+                                std::function<std::string ()> get_passphrase);
 
-/** Load a key from a file.
+/** Load an encrypted key from a file.
 * @param filename the path to the file containing the encoded key
 * @param rng the rng to use
-* @param pass the passphrase to decrypt the key. Provide an empty
-* string if the key is not encrypted
+* @param pass the passphrase to decrypt the key
 * @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(const std::string& filename,
                                 RandomNumberGenerator& rng,
-                                const std::string& pass = "");
+                                const std::string& pass);
+
+/** Load an unencrypted key from a file.
+* @param filename the path to the file containing the encoded key
+* @param rng the rng to use
+* @return loaded private key object
+*/
+BOTAN_DLL Private_Key* load_key(const std::string& filename,
+                                RandomNumberGenerator& rng);
 
 /**
 * Copy an existing encoded key object.
