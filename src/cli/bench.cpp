@@ -747,6 +747,6 @@ class Benchmark : public Command
 
    };
 
-BOTAN_REGISTER_COMMAND(Benchmark);
+BOTAN_REGISTER_COMMAND("bench", Benchmark);
 
 }

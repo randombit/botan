@@ -379,7 +379,7 @@ class ASN1_Printer : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(ASN1_Printer);
+BOTAN_REGISTER_COMMAND("asn1print", ASN1_Printer);
 
 }
 

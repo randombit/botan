@@ -236,7 +236,7 @@ class TLS_Server : public Command
 
    };
 
-BOTAN_REGISTER_COMMAND(TLS_Server);
+BOTAN_REGISTER_COMMAND("tls_server", TLS_Server);
 
 }
 

@@ -283,7 +283,7 @@ class TLS_Client : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(TLS_Client);
+BOTAN_REGISTER_COMMAND("tls_client", TLS_Client);
 
 }
 

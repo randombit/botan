@@ -441,7 +441,7 @@ class TLS_Proxy : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(TLS_Proxy);
+BOTAN_REGISTER_COMMAND("tls_proxy", TLS_Proxy);
 
 }
 

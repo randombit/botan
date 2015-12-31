@@ -201,7 +201,7 @@ class Command
             if(flag_set("help"))
                {
                output() << help_text() << "\n";
-               return 1;
+               return 2;
                }
 
             if(m_user_args.count("output"))
@@ -314,6 +314,7 @@ class Command
          m_spec_flags.insert("help");
          m_spec_opts.insert(std::make_pair("output", ""));
          m_spec_opts.insert(std::make_pair("error-output", ""));
+         m_spec_opts.insert(std::make_pair("rng-type", "auto"));
          }
 
       /*
@@ -426,6 +427,8 @@ class Command
          else
             {
             std::ifstream in(input_file, std::ios::binary);
+            if(!in)
+               throw CLI_IO_Error("reading file", input_file);
             do_read_file(in, consumer_fn, buf_size);
             }
          }
@@ -454,10 +457,30 @@ class Command
          {
          if(m_rng == nullptr)
             {
-            m_rng.reset(new Botan::AutoSeeded_RNG);
+            const std::string rng_type = get_arg("rng-type");
+
+            if(rng_type == "system")
+               {
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+               m_rng.reset(new Botan::System_RNG);
+#endif
+               }
+
+            // TODO --rng-type=drbg
+            // TODO --drbg-seed=hexstr
+
+            if(rng_type == "auto")
+               {
+               m_rng.reset(new Botan::AutoSeeded_RNG);
+               }
+
+            if(!m_rng)
+               {
+               throw CLI_Error_Unsupported("rng", rng_type);
+               }
             }
 
-         return *m_rng;
+         return *m_rng.get();
          }
 
    private:
@@ -483,30 +506,33 @@ class Command
    public:
       // the registry interface:
 
-      static std::map<std::string, std::unique_ptr<Command>>& global_registry()
+      typedef std::function<Command* ()> cmd_maker_fn;
+
+      static std::map<std::string, cmd_maker_fn>& global_registry()
          {
-         static std::map<std::string, std::unique_ptr<Command>> g_cmds;
+         static std::map<std::string, cmd_maker_fn> g_cmds;
          return g_cmds;
          }
 
-      static Command* get_cmd(const std::string& name)
+      static std::unique_ptr<Command> get_cmd(const std::string& name)
          {
          auto& reg = Command::global_registry();
+
+         std::unique_ptr<Command> r;
          auto i = reg.find(name);
-         if(i == reg.end())
+         if(i != reg.end())
             {
-            return nullptr;
+            r.reset(i->second());
             }
 
-         return i->second.get();
+         return r;
          }
 
       class Registration
          {
          public:
-            Registration(Command* cmd)
+            Registration(const std::string& name, cmd_maker_fn maker_fn)
                {
-               const std::string name = cmd->cmd_name();
                auto& reg = Command::global_registry();
 
                if(reg.count(name) > 0)
@@ -514,14 +540,14 @@ class Command
                   throw CLI_Error("Duplicated registration of command " + name);
                   }
 
-               Command::global_registry().insert(
-                  std::make_pair(name, std::unique_ptr<Command>(cmd)));
+               Command::global_registry().insert(std::make_pair(name, maker_fn));
                }
          };
    };
 
-#define BOTAN_REGISTER_COMMAND(CLI_Class) \
-   namespace { Botan_CLI::Command::Registration reg_cmd_ ## CLI_Class(new CLI_Class); }
+#define BOTAN_REGISTER_COMMAND(name, CLI_Class)                         \
+   namespace { Botan_CLI::Command::Registration                         \
+   reg_cmd_ ## CLI_Class(name, []() -> Botan_CLI::Command* { return new CLI_Class; }); }
 
 }
 

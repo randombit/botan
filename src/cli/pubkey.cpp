@@ -46,9 +46,9 @@ class PK_Keygen : public Command
    public:
       PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --der-out") {}
 
-      std::unique_ptr<Botan::Private_Key> do_keygen(const std::string& algo,
-                                                    const std::string& params,
-                                                    Botan::RandomNumberGenerator& rng)
+      static std::unique_ptr<Botan::Private_Key> do_keygen(const std::string& algo,
+                                                           const std::string& params,
+                                                           Botan::RandomNumberGenerator& rng)
          {
          typedef std::function<std::unique_ptr<Botan::Private_Key> (std::string)> gen_fn;
          std::map<std::string, gen_fn> generators;
@@ -129,7 +129,7 @@ class PK_Keygen : public Command
                }
             else
                {
-               write_output(Botan::PKCS8::BER_encode(*key, rng, pass, pbe_millis, pbe));
+               write_output(Botan::PKCS8::BER_encode(*key, rng(), pass, pbe_millis, pbe));
                }
             }
          else
@@ -140,13 +140,13 @@ class PK_Keygen : public Command
                }
             else
                {
-               output() << Botan::PKCS8::PEM_encode(*key, rng, pass, pbe_millis, pbe);
+               output() << Botan::PKCS8::PEM_encode(*key, rng(), pass, pbe_millis, pbe);
                }
             }
          }
    };
 
-BOTAN_REGISTER_COMMAND(PK_Keygen);
+BOTAN_REGISTER_COMMAND("keygen", PK_Keygen);
 
 namespace {
 
@@ -186,11 +186,11 @@ class PK_Sign : public Command
          this->read_file(get_arg("file"),
                          [&signer](const uint8_t b[], size_t l) { signer.update(b, l); });
 
-         output() << Botan::base64_encode(signer.signature(rng)) << "\n";
+         output() << Botan::base64_encode(signer.signature(rng())) << "\n";
          }
    };
 
-BOTAN_REGISTER_COMMAND(PK_Sign);
+BOTAN_REGISTER_COMMAND("sign", PK_Sign);
 
 class PK_Verify : public Command
    {
@@ -219,7 +219,7 @@ class PK_Verify : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(PK_Verify);
+BOTAN_REGISTER_COMMAND("verify", PK_Verify);
 
 #if defined(BOTAN_HAS_DL_GROUP)
 
@@ -249,7 +249,7 @@ class Gen_DL_Group : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Gen_DL_Group);
+BOTAN_REGISTER_COMMAND("gen_dl_group", Gen_DL_Group);
 
 #endif
 
@@ -310,7 +310,7 @@ class PKCS8_Tool : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(PKCS8_Tool);
+BOTAN_REGISTER_COMMAND("pkcs8", PKCS8_Tool);
 
 }
 

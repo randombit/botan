@@ -58,7 +58,7 @@ class Sign_Cert : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Sign_Cert);
+BOTAN_REGISTER_COMMAND("sign_cert", Sign_Cert);
 
 class Cert_Info : public Command
    {
@@ -72,7 +72,7 @@ class Cert_Info : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Cert_Info);
+BOTAN_REGISTER_COMMAND("cert_info", Cert_Info);
 
 #if defined(BOTAN_HAS_OCSP)
 class OCSP_Check : public Command
@@ -103,7 +103,7 @@ class OCSP_Check : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(OCSP_Check);
+BOTAN_REGISTER_COMMAND("ocsp_check", OCSP_Check);
 
 #endif // OCSP
 
@@ -140,7 +140,7 @@ class Cert_Verify : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Cert_Verify);
+BOTAN_REGISTER_COMMAND("cert_verify", Cert_Verify);
 
 class Gen_Self_Signed : public Command
    {
@@ -176,7 +176,7 @@ class Gen_Self_Signed : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Gen_Self_Signed);
+BOTAN_REGISTER_COMMAND("gen_self_signed", Gen_Self_Signed);
 
 class Generate_PKCS10 : public Command
    {
@@ -210,7 +210,7 @@ class Generate_PKCS10 : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Generate_PKCS10);
+BOTAN_REGISTER_COMMAND("gen_pkcs10", Generate_PKCS10);
 
 }
 

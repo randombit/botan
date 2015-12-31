@@ -128,7 +128,7 @@ class CC_Encrypt : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(CC_Encrypt);
+BOTAN_REGISTER_COMMAND("cc_encrypt", CC_Encrypt);
 
 class CC_Decrypt : public Command
    {
@@ -154,7 +154,7 @@ class CC_Decrypt : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(CC_Decrypt);
+BOTAN_REGISTER_COMMAND("cc_decrypt", CC_Decrypt);
 
 }
 

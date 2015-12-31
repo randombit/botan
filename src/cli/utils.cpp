@@ -72,7 +72,7 @@ class Config_Info : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Config_Info);
+BOTAN_REGISTER_COMMAND("config", Config_Info);
 
 class Version_Info : public Command
    {
@@ -94,7 +94,7 @@ class Version_Info : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Version_Info);
+BOTAN_REGISTER_COMMAND("version", Version_Info);
 
 class Print_Cpuid : public Command
    {
@@ -107,7 +107,7 @@ class Print_Cpuid : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Print_Cpuid);
+BOTAN_REGISTER_COMMAND("cpuid", Print_Cpuid);
 
 class Hash : public Command
    {
@@ -130,14 +130,21 @@ class Hash : public Command
 
          for(auto fsname : files)
             {
-            auto update_hash = [&](const uint8_t b[], size_t l) { hash_fn->update(b, l); };
-            read_file(fsname, update_hash, buf_size);
-            output() << Botan::hex_encode(hash_fn->final()) << " " << fsname << "\n";
+            try
+               {
+               auto update_hash = [&](const uint8_t b[], size_t l) { hash_fn->update(b, l); };
+               read_file(fsname, update_hash, buf_size);
+               output() << Botan::hex_encode(hash_fn->final()) << " " << fsname << "\n";
+               }
+            catch(CLI_IO_Error& e)
+               {
+               error_output() << e.what() << "\n";
+               }
             }
          }
    };
 
-BOTAN_REGISTER_COMMAND(Hash);
+BOTAN_REGISTER_COMMAND("hash", Hash);
 
 class RNG : public Command
    {
@@ -164,7 +171,7 @@ class RNG : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(RNG);
+BOTAN_REGISTER_COMMAND("rng", RNG);
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
 
@@ -179,7 +186,7 @@ class HTTP_Get : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(HTTP_Get);
+BOTAN_REGISTER_COMMAND("http_get", HTTP_Get);
 
 #endif // http_util
 
@@ -198,7 +205,7 @@ class Base64_Encode : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Base64_Encode);
+BOTAN_REGISTER_COMMAND("base64_enc", Base64_Encode);
 
 class Base64_Decode : public Command
    {
@@ -219,7 +226,7 @@ class Base64_Decode : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Base64_Decode);
+BOTAN_REGISTER_COMMAND("base64_dec", Base64_Decode);
 
 #endif // base64
 
@@ -239,7 +246,7 @@ class Generate_Bcrypt : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Generate_Bcrypt);
+BOTAN_REGISTER_COMMAND("gen_bcrypt", Generate_Bcrypt);
 
 class Check_Bcrypt : public Command
    {
@@ -262,7 +269,7 @@ class Check_Bcrypt : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Check_Bcrypt);
+BOTAN_REGISTER_COMMAND("check_bcrypt", Check_Bcrypt);
 
 #endif // bcrypt
 

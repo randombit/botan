@@ -101,7 +101,7 @@ class Compress : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Compress);
+BOTAN_REGISTER_COMMAND("compress", Compress);
 
 class Decompress : public Command
    {
@@ -149,6 +149,6 @@ class Decompress : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Decompress);
+BOTAN_REGISTER_COMMAND("decompress", Decompress);
 
 }

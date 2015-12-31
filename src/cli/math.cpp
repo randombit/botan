@@ -32,7 +32,7 @@ class Gen_Prime : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Gen_Prime);
+BOTAN_REGISTER_COMMAND("gen_prime", Gen_Prime);
 
 class Is_Prime : public Command
    {
@@ -49,7 +49,7 @@ class Is_Prime : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Is_Prime);
+BOTAN_REGISTER_COMMAND("is_prime", Is_Prime);
 
 /*
 * Factor integers using a combination of trial division by small
@@ -175,7 +175,7 @@ class Factor : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Factor);
+BOTAN_REGISTER_COMMAND("factor", Factor);
 
 }
 

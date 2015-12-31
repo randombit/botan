@@ -249,7 +249,7 @@ class Test_Runner : public Botan_CLI::Command
 
    };
 
-BOTAN_REGISTER_COMMAND(Test_Runner);
+BOTAN_REGISTER_COMMAND("test", Test_Runner);
 
 }
 
@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
                                              BOTAN_VERSION_MINOR,
                                              BOTAN_VERSION_PATCH);
 
-   Botan_CLI::Command* cmd = Botan_CLI::Command::get_cmd("test");
+   std::unique_ptr<Botan_CLI::Command> cmd(Botan_CLI::Command::get_cmd("test"));
 
    if(!cmd)
       {
