@@ -41,6 +41,7 @@ size_t DataSource::discard_next(size_t n)
       {
       const size_t got = this->read(buf, std::min(n, sizeof(buf)));
       discarded += got;
+      n -= got;
 
       if(got == 0)
          break;

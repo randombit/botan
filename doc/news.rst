@@ -34,6 +34,10 @@ Version 1.11.26, Not Yet Released
 
 * Add support for RSA-KEM from ISO 18033-2
 
+* Fix a bug in DataSource::discard_next() which could cause either an
+  infinite loop or the discarding of an incorrect number of bytes.
+  Reported on mailing list by Falko Strenzke.
+
 * Avoid calling memcpy, memset, or memmove with a length of zero to
   avoid undefined behavior, as calling these functions with an invalid
   or null pointer, even with a length of zero, is invalid. Often there
