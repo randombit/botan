@@ -160,7 +160,6 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
       {
       const std::string test_name = i->first;
       const std::string expected_result = i->second;
-      printf("%s %s\n", test_name.c_str(), expected_result.c_str());
 
       const std::string test_dir = nist_test_dir + "/" + test_name;
 
