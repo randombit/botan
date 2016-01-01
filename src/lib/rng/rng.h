@@ -61,18 +61,6 @@ class BOTAN_DLL RandomNumberGenerator
          }
 
       /**
-      * Return a value in range [0,2^bits)
-      */
-      u64bit gen_mask(size_t bits)
-         {
-         if(bits == 0 || bits > 64)
-            throw Invalid_Argument("RandomNumberGenerator::gen_mask invalid argument");
-
-         const u64bit mask = ((1 << bits) - 1);
-         return this->get_random<u64bit>() & mask;
-         }
-
-      /**
       * Return a random byte
       * @return random byte
       */
