@@ -216,7 +216,7 @@ u32bit gen_mask(u32bit input)
 
             if(value == 0 || value == 0x3FF)
                {
-               mask |= 1 << j;
+               mask |= static_cast<u32bit>(1) << j;
                break;
                }
             }
