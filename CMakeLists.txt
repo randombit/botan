@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 
 # Configure for use with CMake
 #
-#   ./configure.py --with-bzip2 --with-zlib --with-lzma --enable-modules="dyn_load"
+#   ./configure.py --with-bzip2 --with-zlib --with-lzma
 #
 
 macro(use_cxx11)

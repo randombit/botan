@@ -293,7 +293,7 @@ set(BOTAN_SRC
 		utils/cpuid.cpp
 		utils/data_src.cpp
 		utils/datastor/datastor.cpp
-		utils/dyn_load/dyn_load.cpp
+#		utils/dyn_load/dyn_load.cpp
 		utils/filesystem.cpp
 		utils/http_util/http_util.cpp
 		utils/locking_allocator/locking_allocator.cpp
