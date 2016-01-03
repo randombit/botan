@@ -283,24 +283,6 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
 
    std::vector<BigInt> ws(9);
 
-   if(scalar_bits <= 2)
-      {
-      const byte abs_val = scalar.byte_at(0);
-
-      if(abs_val == 0)
-         return PointGFp::zero_of(curve);
-
-      PointGFp result = point;
-
-      if(abs_val == 2)
-         result.mult2(ws);
-
-      if(scalar.is_negative())
-         result.negate();
-
-      return result;
-      }
-
    PointGFp R[2] = { PointGFp(curve), point };
 
    for(size_t i = scalar_bits; i > 0; i--)

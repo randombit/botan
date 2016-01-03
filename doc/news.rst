@@ -4,10 +4,11 @@ Release Notes
 Version 1.11.26, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Deprecation warning: Nyberg-Rueppel signatures, MARS, RC2, RC5, RC6,
-  SAFER, HAS-160, RIPEMD-128, and MD2 are being considered for removal
-  in a future release. If there is a compelling use case for keeping
-  any of them in the library, please open a discussion ticket on GitHub.
+* Deprecation warnings: Nyberg-Rueppel signatures, MARS, RC2, RC5,
+  RC6, SAFER, HAS-160, RIPEMD-128, MD2 and support for the TLS minimum
+  fragment length extensions are all being considered for removal in a
+  future release. If there is a compelling use case for keeping any of
+  them in the library, please open a discussion ticket on GitHub.
 
 * Root all exceptions thrown by the library in the `Botan::Exception` class.
   Previously the library would in many cases throw `std::runtime_error`
@@ -15,8 +16,12 @@ Version 1.11.26, Not Yet Released
   the source of the error in some cases.
 
 * The command line interface has been mostly rewritten. The syntax of
-  many of the programs has changed, and a number have been extended with
-  new features and options.
+  many of the sub-programs has changed, and a number have been
+  extended with new features and options.
+
+* Correct an error in PointGFp multiplication when multiplying a point
+  by the scalar value 3. PointGFp::operator* would instead erronously
+  compute it as if the scalar was 1 instead.
 
 * Enable RdRand entropy source on Windows/MSVC. GH #364
 
@@ -52,6 +57,14 @@ Version 1.11.26, Not Yet Released
   or null pointer, even with a length of zero, is invalid. Often there
   are corner cases where this can occur, such as pointing to the very
   end of a buffer.
+
+* The function `RandomNumberGenerator::gen_mask` (added in 1.11.20)
+  had undefined behavior when called with a bits value of 32 or
+  higher, and was tested to behave in unpleasant ways (such as
+  returning zero) when compiled by common compilers. This function was
+  not being used anywhere in the library and rather than support
+  something without a use case to justify it it seemed simpler to
+  remove it. Undefined behavior found by Daniel Neus.
 
 * Export MGF1 function mgf1_mask GH #380
 
