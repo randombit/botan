@@ -289,15 +289,15 @@ Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
    return result;
    }
 
-Test::Result PK_Key_Agreement_Test::run_one_test(const std::string&, const VarMap& vars)
+Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, const VarMap& vars)
    {
    const std::vector<uint8_t> shared = get_req_bin(vars, "K");
    const std::string kdf = get_opt_str(vars, "KDF", default_kdf(vars));
 
    Test::Result result(algo_name() + "/" + kdf + " key agreement");
 
-   std::unique_ptr<Botan::Private_Key> privkey = load_our_key(vars);
-   const std::vector<uint8_t> pubkey = load_their_key(vars);
+   std::unique_ptr<Botan::Private_Key> privkey = load_our_key(header, vars);
+   const std::vector<uint8_t> pubkey = load_their_key(header, vars);
 
    const size_t key_len = get_opt_sz(vars, "OutLen", 0);
 
