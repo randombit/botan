@@ -1,6 +1,6 @@
 /*
 * TLS Extensions
-* (C) 2011-2012 Jack Lloyd
+* (C) 2011,2012,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -36,6 +36,8 @@ enum Handshake_Extension_Type {
    TLSEXT_USE_SRTP               = 14,
    TLSEXT_HEARTBEAT_SUPPORT      = 15,
    TLSEXT_ALPN                   = 16,
+
+   TLSEXT_EXTENDED_MASTER_SECRET = 23,
 
    TLSEXT_SESSION_TICKET         = 35,
 
@@ -372,6 +374,26 @@ class SRTP_Protection_Profiles : public Extension
       SRTP_Protection_Profiles(TLS_Data_Reader& reader, u16bit extension_size);
    private:
       std::vector<u16bit> m_pp;
+   };
+
+/**
+* Extended Master Secret Extension (RFC 7627)
+*/
+class Extended_Master_Secret : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_EXTENDED_MASTER_SECRET; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<byte> serialize() const override;
+
+      bool empty() const override { return false; }
+
+      Extended_Master_Secret() {}
+
+      Extended_Master_Secret(TLS_Data_Reader& reader, u16bit extension_size);
    };
 
 /**

@@ -10,6 +10,13 @@ Version 1.11.26, Not Yet Released
   future release. If there is a compelling use case for keeping any of
   them in the library, please open a discussion ticket on GitHub.
 
+* Support for the TLS extended master secret extension (RFC 7627) has
+  been added.
+
+* The format of serialized TLS sessions has changed to add a flag
+  indicating support for the extended master secret flag, which is
+  needed for proper handling of the extension.
+
 * Root all exceptions thrown by the library in the `Botan::Exception` class.
   Previously the library would in many cases throw `std::runtime_error`
   or `std::invalid_argument` exceptions which would make it hard to determine

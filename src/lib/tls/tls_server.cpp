@@ -1,6 +1,6 @@
 /*
 * TLS Server
-* (C) 2004-2011,2012 Jack Lloyd
+* (C) 2004-2011,2012,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -96,6 +96,24 @@ bool check_for_resume(Session& session_info,
       {
       if(client_hello->sni_hostname() != session_info.server_info().hostname())
          return false;
+      }
+
+   // Checking extended_master_secret on resume (RFC 7627 section 5.3)
+   if(client_hello->supports_extended_master_secret() != session_info.supports_extended_master_secret())
+      {
+      if(!session_info.supports_extended_master_secret())
+         {
+         return false; // force new handshake with extended master secret
+         }
+      else
+         {
+         /*
+         Client previously negotiated session with extended master secret,
+         but has now attempted to resume without the extension: abort
+         */
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Client resumed extended ms session without sending extension");
+         }
       }
 
    return true;
@@ -648,6 +666,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             state.server_hello()->compression_method(),
             SERVER,
             state.server_hello()->fragment_size(),
+            state.server_hello()->supports_extended_master_secret(),
             get_peer_cert_chain(state),
             std::vector<byte>(),
             Server_Information(state.client_hello()->sni_hostname()),

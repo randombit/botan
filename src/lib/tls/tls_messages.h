@@ -138,6 +138,11 @@ class Client_Hello : public Handshake_Message
          return m_extensions.has<Application_Layer_Protocol_Notification>();
          }
 
+      bool supports_extended_master_secret() const
+         {
+         return m_extensions.has<Extended_Master_Secret>();
+         }
+
       std::vector<std::string> next_protocols() const
          {
          if(auto alpn = m_extensions.get<Application_Layer_Protocol_Notification>())
@@ -237,6 +242,11 @@ class Server_Hello : public Handshake_Message
          if(Maximum_Fragment_Length* frag = m_extensions.get<Maximum_Fragment_Length>())
             return frag->fragment_size();
          return 0;
+         }
+
+      bool supports_extended_master_secret() const
+         {
+         return m_extensions.has<Extended_Master_Secret>();
          }
 
       bool supports_session_ticket() const

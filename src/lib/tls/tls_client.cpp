@@ -1,6 +1,6 @@
 /*
 * TLS Client
-* (C) 2004-2011,2012,2015 Jack Lloyd
+* (C) 2004-2011,2012,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -510,6 +510,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          state.server_hello()->compression_method(),
          CLIENT,
          state.server_hello()->fragment_size(),
+         state.server_hello()->supports_extended_master_secret(),
          get_peer_cert_chain(state),
          session_ticket,
          m_info,

@@ -1,6 +1,6 @@
 /*
 * TLS Hello Request and Client Hello Messages
-* (C) 2004-2011,2015 Jack Lloyd
+* (C) 2004-2011,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -80,6 +80,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_suites(policy.ciphersuite_list(m_version, (srp_identifier != ""))),
    m_comp_methods(policy.compression())
    {
+   m_extensions.add(new Extended_Master_Secret);
    m_extensions.add(new Renegotiation_Extension(reneg_info));
    m_extensions.add(new SRP_Identifier(srp_identifier));
    m_extensions.add(new Server_Name_Indicator(hostname));
@@ -129,6 +130,13 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    if(!value_exists(m_comp_methods, session.compression_method()))
       m_comp_methods.push_back(session.compression_method());
+
+   /*
+   We always add the EMS extension, even if not used in the original session.
+   If the server understands it and follows the RFC it should reject our resume
+   attempt and upgrade us to a new session with the EMS protection.
+   */
+   m_extensions.add(new Extended_Master_Secret);
 
    m_extensions.add(new Renegotiation_Extension(reneg_info));
    m_extensions.add(new SRP_Identifier(session.srp_identifier()));

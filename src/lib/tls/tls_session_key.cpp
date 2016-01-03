@@ -1,6 +1,6 @@
 /*
 * TLS Session Key
-* (C) 2004-2006,2011 Jack Lloyd
+* (C) 2004-2006,2011,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -24,9 +24,15 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    const size_t mac_keylen = state->ciphersuite().mac_keylen();
    const size_t cipher_nonce_bytes = state->ciphersuite().nonce_bytes_from_handshake();
 
+   const bool extended_master_secret = state->server_hello()->supports_extended_master_secret();
+
    const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_nonce_bytes);
 
    const byte MASTER_SECRET_MAGIC[] = {
+      0x6D, 0x61, 0x73, 0x74, 0x65, 0x72, 0x20, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74 };
+
+   const byte EXT_MASTER_SECRET_MAGIC[] = {
+      0x65, 0x78, 0x74, 0x65, 0x6E, 0x64, 0x65, 0x64, 0x20,
       0x6D, 0x61, 0x73, 0x74, 0x65, 0x72, 0x20, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74 };
 
    const byte KEY_GEN_MAGIC[] = {
@@ -36,14 +42,24 @@ Session_Keys::Session_Keys(const Handshake_State* state,
 
    if(resuming)
       {
+      // This is actually the master secret saved as part of the session
       master_sec = pre_master_secret;
       }
    else
       {
       secure_vector<byte> salt;
-      salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
-      salt += state->client_hello()->random();
-      salt += state->server_hello()->random();
+      if(extended_master_secret)
+         {
+         salt += std::make_pair(EXT_MASTER_SECRET_MAGIC, sizeof(EXT_MASTER_SECRET_MAGIC));
+         salt += state->hash().final(state->version(),
+                                     state->ciphersuite().prf_algo());
+         }
+      else
+         {
+         salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
+         salt += state->client_hello()->random();
+         salt += state->server_hello()->random();
+         }
 
       master_sec = prf->derive_key(48, pre_master_secret, salt);
       }
