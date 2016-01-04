@@ -40,7 +40,7 @@ New Protocols
   Accelerators / backends
 ----------------------------------------
 
-* Extend OpenSSL provider (cipher modes, ECDH, HMAC)
+* Extend OpenSSL provider (cipher modes, HMAC)
 * /dev/crypto
 * Windows CryptoAPI
 * Apple CommonCrypto

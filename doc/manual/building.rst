@@ -76,12 +76,12 @@ see :ref:`amalgamation`.
 
 For instance::
 
- $ ./configure.py --minimized-build --enable-modules=rsa,ecdsa,eme1,emsa1,emsa4
+ $ ./configure.py --minimized-build --enable-modules=rsa,eme_oaep,emsa_pssr
 
-will set up a build that only includes RSA, ECDSA, and some padding
-modes, along with their dependencies. A small subset of core features,
-including AES, SHA-2, HMAC, and the multiple precision integer
-library, are always loaded.
+will set up a build that only includes RSA, OAEP, PSS along with any
+required dependencies. A small subset of core features, including AES,
+SHA-2, HMAC, and the multiple precision integer library, are always
+loaded.
 
 The script tries to guess what kind of makefile to generate, and it
 almost always guesses correctly (basically, Visual C++ uses NMAKE with

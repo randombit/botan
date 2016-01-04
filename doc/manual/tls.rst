@@ -534,6 +534,13 @@ policy settings from a file.
 
      .. note::
 
+        The current ChaCha20Poly1305 ciphersuites are non-standard but
+        as of 2015 were implemented and deployed by Google and
+        elsewhere. Support will be changed to using IETF standard
+        ChaCha20Poly1305 ciphersuites when those are defined.
+
+     .. note::
+
         Support for the broken RC4 cipher was removed in 1.11.17
 
  .. cpp:function:: std::vector<std::string> allowed_macs() const

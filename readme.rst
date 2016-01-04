@@ -161,16 +161,21 @@ TLS/Public Key Infrastructure
   (TLS-PSK) and passwords (TLS-SRP) and most important extensions,
   such as session tickets, SNI, and ALPN.
 * X.509v3 certificates and CRLs
-* PKIX certificate path validation with multiple test suites for same
+* PKIX certificate path validation
 * OCSP requests
 * PKCS #10 certificate requests
 
 Public Key Cryptography
 ----------------------------------------
 
-* Encryption with RSA and ElGamal
-* Signatures with RSA, DSA, ECDSA, GOST 34.10-2001, Nyberg-Rueppel, Rabin-Williams
-* Key agreement with Diffie-Hellman, ECDH, Curve25519, and McEliece
+* RSA signatures and encryption
+* DH and ECDH key agreement
+* DSA and ECDSA signatures
+* Quantum computer resistant McEliece KEM scheme
+* GOST-34.10-2001
+* ElGamal encryption
+* Rabin-Williams signatures
+* Nyberg-Rueppel signatures
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
 Ciphers and cipher modes
@@ -194,11 +199,11 @@ Hash functions and MACs
 * SHA-3 winner Keccak-1600
 * SHA-3 candidate Skein-512
 * Authentication codes HMAC, CMAC, Poly1305, SipHash
-* RIPEMD-160, RIPEMD-128, Tiger, Whirlpool
+* RIPEMD-160, Tiger, Whirlpool, GOST 34.11
 * Hash function combiners (Parallel and Comb4P)
-* National standard hashes HAS-160 and GOST 34.11
 * Non-cryptographic checksums Adler32, CRC24, CRC32
-* Obsolete algorithms MD5, MD4, MD2, CBC-MAC, X9.19 DES-MAC
+* Obsolete algorithms MD5, MD4, CBC-MAC, X9.19 DES-MAC
+* Deprecated hashes MD2, HAS-160, RIPEMD-128
 
 Other Useful Things
 ----------------------------------------
