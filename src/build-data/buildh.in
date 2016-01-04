@@ -101,7 +101,7 @@
 * Define BOTAN_HAS_VALGRIND to enable checking constant time annotations
 * TODO: expose as configure.py flag --with-valgrind
 */
-#define BOTAN_HAS_VALGRIND
+//#define BOTAN_HAS_VALGRIND
 
 /*
 * RNGs will automatically poll the system for additional seed material
