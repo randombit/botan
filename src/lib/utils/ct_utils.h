@@ -1,12 +1,12 @@
 /*
 * Functions for constant time operations on data and testing of
-* constant time annotations using ctgrind.
+* constant time annotations using valgrind.
 *
 * For more information about constant time programming see
 * Wagner, Molnar, et al "The Program Counter Security Model"
 *
 * (C) 2010 Falko Strenzke
-* (C) 2015 Jack Lloyd
+* (C) 2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -17,23 +17,36 @@
 #include <botan/secmem.h>
 #include <vector>
 
-#if defined(BOTAN_USE_CTGRIND)
-
-// These are external symbols from libctgrind.so
-extern "C" void ct_poison(const void* address, size_t length);
-extern "C" void ct_unpoison(const void* address, size_t length);
-
+#if defined(BOTAN_HAS_VALGRIND)
+  #include <valgrind/memcheck.h>
 #endif
 
 namespace Botan {
 
 namespace CT {
 
+/**
+* Use valgrind to mark the contents of memory as being undefined.
+* Valgrind will accept operations which manipulate undefined values,
+* but will warn if an undefined value is used to decided a conditional
+* jump or a load/store address. So if we poison all of our inputs we
+* can confirm that the operations in question are truly const time
+* when compiled by whatever compiler is in use.
+*
+* Even better, the VALGRIND_MAKE_MEM_* macros work even when the
+* program is not run under valgrind (though with a few cycles of
+* overhead, which is unfortunate in final binaries as these
+* annotations tend to be used in fairly important loops).
+*
+* This approach was first used in ctgrind (https://github.com/agl/ctgrind)
+* but calling the valgrind mecheck API directly works just as well and
+* doesn't require a custom patched valgrind.
+*/
 template<typename T>
-inline void poison(T* p, size_t n)
+inline void poison(const T* p, size_t n)
    {
-#if defined(BOTAN_USE_CTGRIND)
-   ct_poison(p, sizeof(T)*n);
+#if defined(BOTAN_HAS_VALGRIND)
+   VALGRIND_MAKE_MEM_UNDEFINED(p, n * sizeof(T));
 #else
    BOTAN_UNUSED(p);
    BOTAN_UNUSED(n);
@@ -41,10 +54,10 @@ inline void poison(T* p, size_t n)
    }
 
 template<typename T>
-inline void unpoison(T* p, size_t n)
+inline void unpoison(const T* p, size_t n)
    {
-#if defined(BOTAN_USE_CTGRIND)
-   ct_unpoison(p, sizeof(T)*n);
+#if defined(BOTAN_HAS_VALGRIND)
+   VALGRIND_MAKE_MEM_DEFINED(p, n * sizeof(T));
 #else
    BOTAN_UNUSED(p);
    BOTAN_UNUSED(n);

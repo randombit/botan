@@ -1,6 +1,6 @@
 /*
 * AES using SSSE3
-* (C) 2010 Jack Lloyd
+* (C) 2010,2016 Jack Lloyd
 *
 * This is more or less a direct translation of public domain x86-64
 * assembly written by Mike Hamburg, described in "Accelerating AES
@@ -12,6 +12,7 @@
 
 #include <botan/aes_ssse3.h>
 #include <botan/cpuid.h>
+#include <botan/internal/ct_utils.h>
 #include <tmmintrin.h>
 
 namespace Botan {
@@ -345,11 +346,16 @@ void AES_128_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
    const __m128i* keys = reinterpret_cast<const __m128i*>(EK.data());
 
+   CT::poison(in, blocks * block_size());
+
    for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
       _mm_storeu_si128(out_mm + i, aes_ssse3_encrypt(B, keys, 10));
       }
+
+   CT::unpoison(in,  blocks * block_size());
+   CT::unpoison(out, blocks * block_size());
    }
 
 /*
@@ -362,11 +368,16 @@ void AES_128_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
    const __m128i* keys = reinterpret_cast<const __m128i*>(DK.data());
 
+   CT::poison(in, blocks * block_size());
+
    for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
       _mm_storeu_si128(out_mm + i, aes_ssse3_decrypt(B, keys, 10));
       }
+
+   CT::unpoison(in,  blocks * block_size());
+   CT::unpoison(out, blocks * block_size());
    }
 
 /*
@@ -423,11 +434,16 @@ void AES_192_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
    const __m128i* keys = reinterpret_cast<const __m128i*>(EK.data());
 
+   CT::poison(in, blocks * block_size());
+
    for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
       _mm_storeu_si128(out_mm + i, aes_ssse3_encrypt(B, keys, 12));
       }
+
+   CT::unpoison(in,  blocks * block_size());
+   CT::unpoison(out, blocks * block_size());
    }
 
 /*
@@ -440,11 +456,16 @@ void AES_192_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
    const __m128i* keys = reinterpret_cast<const __m128i*>(DK.data());
 
+   CT::poison(in, blocks * block_size());
+
    for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
       _mm_storeu_si128(out_mm + i, aes_ssse3_decrypt(B, keys, 12));
       }
+
+   CT::unpoison(in,  blocks * block_size());
+   CT::unpoison(out, blocks * block_size());
    }
 
 /*
@@ -530,11 +551,16 @@ void AES_256_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
    const __m128i* keys = reinterpret_cast<const __m128i*>(EK.data());
 
+   CT::poison(in, blocks * block_size());
+
    for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
       _mm_storeu_si128(out_mm + i, aes_ssse3_encrypt(B, keys, 14));
       }
+
+   CT::unpoison(in,  blocks * block_size());
+   CT::unpoison(out, blocks * block_size());
    }
 
 /*
@@ -547,11 +573,16 @@ void AES_256_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
    const __m128i* keys = reinterpret_cast<const __m128i*>(DK.data());
 
+   CT::poison(in, blocks * block_size());
+
    for(size_t i = 0; i != blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
       _mm_storeu_si128(out_mm + i, aes_ssse3_decrypt(B, keys, 14));
       }
+
+   CT::unpoison(in,  blocks * block_size());
+   CT::unpoison(out, blocks * block_size());
    }
 
 /*

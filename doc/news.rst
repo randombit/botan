@@ -17,10 +17,10 @@ Version 1.11.26, Not Yet Released
   indicating support for the extended master secret flag, which is
   needed for proper handling of the extension.
 
-* Root all exceptions thrown by the library in the `Botan::Exception` class.
-  Previously the library would in many cases throw `std::runtime_error`
-  or `std::invalid_argument` exceptions which would make it hard to determine
-  the source of the error in some cases.
+* Root all exceptions thrown by the library in the ``Botan::Exception`` class.
+  Previously the library would in many cases throw ``std::runtime_error``
+  or ``std::invalid_argument`` exceptions which would make it hard to
+  determine the source of the error in some cases.
 
 * The command line interface has been mostly rewritten. The syntax of
   many of the sub-programs has changed, and a number have been
@@ -65,13 +65,20 @@ Version 1.11.26, Not Yet Released
   are corner cases where this can occur, such as pointing to the very
   end of a buffer.
 
-* The function `RandomNumberGenerator::gen_mask` (added in 1.11.20)
+* The function ``RandomNumberGenerator::gen_mask`` (added in 1.11.20)
   had undefined behavior when called with a bits value of 32 or
   higher, and was tested to behave in unpleasant ways (such as
   returning zero) when compiled by common compilers. This function was
   not being used anywhere in the library and rather than support
   something without a use case to justify it it seemed simpler to
   remove it. Undefined behavior found by Daniel Neus.
+
+* Support for using ``ctgrind`` for checking const time blocks has
+  been replaced by calling the valgrind memcheck APIs directly. This
+  allows const-time behavior to be tested without requiring a modified
+  valgrind binary. Adding the appropriate calls requires defining
+  BOTAN_HAS_VALGRIND in build.h. A binary compiled with this flag set
+  can still run normally (though with some slight runtime overhead).
 
 * Export MGF1 function mgf1_mask GH #380
 
