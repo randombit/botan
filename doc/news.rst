@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 1.11.26, Not Yet Released
+Version 1.11.26, 2016-01-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Deprecation warnings: Nyberg-Rueppel signatures, MARS, RC2, RC5,
