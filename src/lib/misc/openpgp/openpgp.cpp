@@ -177,7 +177,7 @@ secure_vector<byte> PGP_decode(DataSource& source,
       }
    base64.end_msg();
 
-   if(crc != "" && crc != base64.read_all_as_string(1))
+   if(!crc.empty() && crc != base64.read_all_as_string(1))
       throw Decoding_Error("PGP: Corrupt CRC");
 
    return base64.read_all();

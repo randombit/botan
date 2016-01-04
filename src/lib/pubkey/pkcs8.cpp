@@ -153,7 +153,7 @@ namespace {
 std::pair<std::string, std::string>
 choose_pbe_params(const std::string& pbe_algo, const std::string& key_algo)
    {
-   if(pbe_algo == "")
+   if(pbe_algo.empty())
       {
       // Defaults:
       if(key_algo == "Curve25519" || key_algo == "McEliece")
@@ -202,7 +202,7 @@ std::string PEM_encode(const Private_Key& key,
                        std::chrono::milliseconds msec,
                        const std::string& pbe_algo)
    {
-   if(pass == "")
+   if(pass.empty())
       return PEM_encode(key);
 
    return PEM_Code::encode(PKCS8::BER_encode(key, rng, pass, msec, pbe_algo),
@@ -223,7 +223,7 @@ Private_Key* load_key(DataSource& source,
    secure_vector<byte> pkcs8_key = PKCS8_decode(source, get_pass, alg_id, is_encrypted);
 
    const std::string alg_name = OIDS::lookup(alg_id.oid);
-   if(alg_name == "" || alg_name == alg_id.oid.as_string())
+   if(alg_name.empty() || alg_name == alg_id.oid.as_string())
       throw PKCS8_Exception("Unknown algorithm OID: " +
                             alg_id.oid.as_string());
 

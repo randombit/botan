@@ -115,7 +115,7 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const X509_Certificate&
 
 Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
    {
-   if(dir == "")
+   if(dir.empty())
       return;
 
    std::vector<std::string> maybe_certs = get_files_recursive(dir);

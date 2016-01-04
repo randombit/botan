@@ -22,7 +22,7 @@ T* get_pk_op(const std::string& what, const Key& key, const std::string& pad,
       return p;
 
    const std::string err = what + " with " + key.algo_name() + "/" + pad + " not supported";
-   if(provider != "")
+   if(!provider.empty())
       throw Lookup_Error(err + " with provider " + provider);
    else
       throw Lookup_Error(err);

@@ -295,7 +295,7 @@ class BOTAN_DLL Authority_Information_Access : public Certificate_Extension
       std::string oid_name() const override
          { return "PKIX.AuthorityInformationAccess"; }
 
-      bool should_encode() const override { return (m_ocsp_responder != ""); }
+      bool should_encode() const override { return (!m_ocsp_responder.empty()); }
 
       std::vector<byte> encode_inner() const override;
       void decode_inner(const std::vector<byte>&) override;

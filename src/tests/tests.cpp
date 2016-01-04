@@ -634,7 +634,7 @@ std::string Text_Based_Test::get_next_line()
          std::string line;
          std::getline(*m_cur, line);
 
-         if(line == "")
+         if(line.empty())
             continue;
 
          if(line[0] == '#')
@@ -674,7 +674,7 @@ std::vector<Test::Result> Text_Based_Test::run()
    while(true)
       {
       const std::string line = get_next_line();
-      if(line == "") // EOF
+      if(line.empty()) // EOF
          break;
 
       if(line[0] == '[' && line[line.size()-1] == ']')

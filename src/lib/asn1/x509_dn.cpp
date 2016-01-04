@@ -55,7 +55,7 @@ void X509_DN::add_attribute(const std::string& type,
 */
 void X509_DN::add_attribute(const OID& oid, const std::string& str)
    {
-   if(str == "")
+   if(str.empty())
       return;
 
    auto range = dn_info.equal_range(oid);

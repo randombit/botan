@@ -91,7 +91,7 @@ class BOTAN_DLL Ciphersuite
 
       const std::string& prf_algo() const
          {
-         return (m_prf_algo != "") ? m_prf_algo : m_mac_algo;
+         return (!m_prf_algo.empty()) ? m_prf_algo : m_mac_algo;
          }
 
       /**

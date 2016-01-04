@@ -89,7 +89,7 @@ class Server_Name_Indicator : public Extension
 
       std::vector<byte> serialize() const override;
 
-      bool empty() const override { return sni_host_name == ""; }
+      bool empty() const override { return sni_host_name.empty(); }
    private:
       std::string sni_host_name;
    };
@@ -115,7 +115,7 @@ class SRP_Identifier : public Extension
 
       std::vector<byte> serialize() const override;
 
-      bool empty() const override { return srp_identifier == ""; }
+      bool empty() const override { return srp_identifier.empty(); }
    private:
       std::string srp_identifier;
    };

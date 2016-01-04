@@ -379,7 +379,7 @@ std::string X509_Certificate::fingerprint(const std::string& hash_name) const
 
 bool X509_Certificate::matches_dns_name(const std::string& name) const
    {
-   if(name == "")
+   if(name.empty())
       return false;
 
    std::vector<std::string> issued_names = subject_info("DNS");
@@ -508,9 +508,9 @@ std::string X509_Certificate::to_string() const
          out << "   " << ex_constraints[i] << "\n";
       }
 
-   if(ocsp_responder() != "")
+   if(!ocsp_responder().empty())
       out << "OCSP responder " << ocsp_responder() << "\n";
-   if(crl_distribution_point() != "")
+   if(!crl_distribution_point().empty())
       out << "CRL " << crl_distribution_point() << "\n";
 
    out << "Signature algorithm: " <<

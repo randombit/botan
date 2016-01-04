@@ -353,7 +353,7 @@ class Benchmark : public Command
          {
          for(auto&& prov : T::providers(algo))
             {
-            if(provider == "" || provider == prov)
+            if(provider.empty() || provider == prov)
                {
                auto p = T::create(algo, prov);
 

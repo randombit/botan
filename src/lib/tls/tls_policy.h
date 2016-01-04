@@ -326,7 +326,7 @@ class BOTAN_DLL Text_Policy : public Policy
          {
          const std::string v = get_str(key);
 
-         if(v == "")
+         if(v.empty())
             return def;
 
          return split_on(v, ' ');
@@ -336,7 +336,7 @@ class BOTAN_DLL Text_Policy : public Policy
          {
          const std::string v = get_str(key);
 
-         if(v == "")
+         if(v.empty())
             return def;
 
          return to_u32bit(v);
@@ -346,7 +346,7 @@ class BOTAN_DLL Text_Policy : public Policy
          {
          const std::string v = get_str(key);
 
-         if(v == "")
+         if(v.empty())
             return def;
 
          if(v == "true" || v == "True")

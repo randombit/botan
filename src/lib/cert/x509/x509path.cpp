@@ -249,7 +249,7 @@ Path_Validation_Result x509_path_validate(
 
    std::vector<std::set<Certificate_Status_Code>> res = check_chain(cert_path, restrictions, certstores);
 
-   if(hostname != "" && !cert_path[0].matches_dns_name(hostname))
+   if(!hostname.empty() && !cert_path[0].matches_dns_name(hostname))
       res[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
 
    if(!cert_path[0].allowed_usage(usage))

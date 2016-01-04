@@ -18,7 +18,7 @@ namespace Botan {
 */
 OID::OID(const std::string& oid_str)
    {
-   if(oid_str != "")
+   if(!oid_str.empty())
       {
       try
          {

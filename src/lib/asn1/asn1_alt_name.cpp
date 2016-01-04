@@ -55,7 +55,7 @@ AlternativeName::AlternativeName(const std::string& email_addr,
 void AlternativeName::add_attribute(const std::string& type,
                                     const std::string& str)
    {
-   if(type == "" || str == "")
+   if(type.empty() || str.empty())
       return;
 
    auto range = alt_info.equal_range(type);
@@ -72,7 +72,7 @@ void AlternativeName::add_attribute(const std::string& type,
 void AlternativeName::add_othername(const OID& oid, const std::string& value,
                                     ASN1_Tag type)
    {
-   if(value == "")
+   if(value.empty())
       return;
    multimap_insert(othernames, oid, ASN1_String(value, type));
    }
