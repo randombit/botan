@@ -99,9 +99,11 @@ secure_vector<byte> PK_KEM_Decryptor::decrypt(const byte encap_key[],
                             salt, salt_len);
    }
 
-PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key, const std::string& kdf)
+PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
+                                   const std::string& kdf,
+                                   const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::Key_Agreement>("Key agreement", key, kdf));
+   m_op.reset(get_pk_op<PK_Ops::Key_Agreement>("Key agreement", key, kdf, provider));
    }
 
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,

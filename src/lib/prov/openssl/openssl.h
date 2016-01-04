@@ -29,6 +29,7 @@ class OpenSSL_Error : public Exception
 
 #define BOTAN_OPENSSL_RSA_PRIO     90
 #define BOTAN_OPENSSL_ECDSA_PRIO   90
+#define BOTAN_OPENSSL_ECDH_PRIO    90
 
 }
 

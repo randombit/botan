@@ -325,8 +325,11 @@ class BOTAN_DLL PK_Key_Agreement
       * Construct a PK Key Agreement.
       * @param key the key to use
       * @param kdf name of the KDF to use (or 'Raw' for no KDF)
+      * @param provider the algo provider to use (or empty for default)
       */
-      PK_Key_Agreement(const Private_Key& key, const std::string& kdf);
+      PK_Key_Agreement(const Private_Key& key,
+                       const std::string& kdf,
+                       const std::string& provider = "");
 
       /*
       * Perform Key Agreement Operation

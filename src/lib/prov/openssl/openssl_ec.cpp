@@ -1,28 +1,48 @@
 /*
-* ECDSA via OpenSSL
-* (C) 2015 Jack Lloyd
+* ECDSA and ECDH via OpenSSL
+* (C) 2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <iostream>
 #include <botan/internal/openssl.h>
+
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+  #include <botan/der_enc.h>
+  #include <botan/pkcs8.h>
+  #include <botan/oids.h>
+  #include <botan/internal/pk_utils.h>
+#endif
+
+#if defined(BOTAN_HAS_ECDSA)
+  #include <botan/ecdsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ECDH)
+  #include <botan/ecdh.h>
+#endif
+
 #include <openssl/x509.h>
-
-#if defined(BOTAN_HAS_ECDSA) && !defined(OPENSSL_NO_ECDSA)
-
-#include <botan/der_enc.h>
-#include <botan/ecdsa.h>
-#include <botan/pkcs8.h>
-#include <botan/oids.h>
-#include <botan/internal/pk_utils.h>
-
-#include <openssl/ecdsa.h>
-#include <openssl/ec.h>
 #include <openssl/objects.h>
+
+#if !defined(OPENSSL_NO_EC)
+  #include <openssl/ec.h>
+#endif
+
+#if !defined(OPENSSL_NO_ECDSA)
+  #include <openssl/ecdsa.h>
+#endif
+
+#if !defined(OPENSSL_NO_ECDH)
+  #include <openssl/ecdh.h>
+#endif
 
 namespace Botan {
 
 namespace {
+
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
 
 secure_vector<byte> PKCS8_for_openssl(const EC_PrivateKey& ec)
    {
@@ -49,13 +69,11 @@ int OpenSSL_EC_nid_for(const OID& oid)
       return -1;
 
    static const std::map<std::string, int> nid_map = {
-      //{ "secp160r1", NID_secp160r1 },
-      //{ "secp160r2", NID_secp160r2 },
       { "secp192r1", NID_X9_62_prime192v1  },
       { "secp224r1", NID_secp224r1 },
       { "secp256r1", NID_X9_62_prime256v1 },
       { "secp384r1", NID_secp384r1 },
-      { "secp521r1", NID_secp521r1 }
+      { "secp521r1", NID_secp521r1 },
       // TODO: OpenSSL 1.0.2 added brainpool curves
    };
 
@@ -66,6 +84,10 @@ int OpenSSL_EC_nid_for(const OID& oid)
 
    return -1;
    }
+
+#endif
+
+#if defined(BOTAN_HAS_ECDSA) && !defined(OPENSSL_NO_ECDSA)
 
 class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
    {
@@ -200,8 +222,83 @@ BOTAN_REGISTER_TYPE(PK_Ops::Signature, OpenSSL_ECDSA_Signing_Operation, "ECDSA",
                     OpenSSL_ECDSA_Signing_Operation::make,
                     "openssl", BOTAN_OPENSSL_ECDSA_PRIO);
 
-}
+#endif
 
-}
+#if defined(BOTAN_HAS_ECDH) && !defined(OPENSSL_NO_ECDH)
+
+class OpenSSL_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
+   {
+   public:
+      typedef ECDH_PrivateKey Key_Type;
+
+      static OpenSSL_ECDH_KA_Operation* make(const Spec& spec)
+         {
+         if(const ECDH_PrivateKey* ecdh = dynamic_cast<const ECDH_PrivateKey*>(&spec.key()))
+            {
+            const int nid = OpenSSL_EC_nid_for(ecdh->domain().get_oid());
+            if(nid > 0)
+               return new OpenSSL_ECDH_KA_Operation(*ecdh, spec.padding());
+            }
+
+         return nullptr;
+         }
+
+      OpenSSL_ECDH_KA_Operation(const ECDH_PrivateKey& ecdh, const std::string& kdf) :
+         PK_Ops::Key_Agreement_with_KDF(kdf), m_ossl_ec(::EC_KEY_new(), ::EC_KEY_free)
+         {
+         const secure_vector<byte> der = PKCS8_for_openssl(ecdh);
+         const byte* der_ptr = der.data();
+         m_ossl_ec.reset(d2i_ECPrivateKey(nullptr, &der_ptr, der.size()));
+         if(!m_ossl_ec)
+            throw OpenSSL_Error("d2i_ECPrivateKey");
+         }
+
+      secure_vector<byte> raw_agree(const byte w[], size_t w_len) override
+         {
+         const EC_GROUP* group = ::EC_KEY_get0_group(m_ossl_ec.get());
+         const size_t out_len = (::EC_GROUP_get_degree(group) + 7) / 8;
+         secure_vector<byte> out(out_len);
+         EC_POINT* pub_key = ::EC_POINT_new(group);
+
+         if(!pub_key)
+            throw OpenSSL_Error("EC_POINT_new");
+
+         const int os2ecp_rc =
+            ::EC_POINT_oct2point(group, pub_key, w, w_len, nullptr);
+
+         if(os2ecp_rc != 1)
+            throw OpenSSL_Error("EC_POINT_oct2point");
+
+         const int ecdh_rc = ::ECDH_compute_key(out.data(),
+                                                out.size(),
+                                                pub_key,
+                                                m_ossl_ec.get(),
+                                                /*KDF*/nullptr);
+
+         if(ecdh_rc <= 0)
+            throw OpenSSL_Error("ECDH_compute_key");
+
+         const size_t ecdh_sz = static_cast<size_t>(ecdh_rc);
+
+         if(ecdh_sz > out.size())
+            throw Internal_Error("OpenSSL ECDH returned more than requested");
+
+         out.resize(ecdh_sz);
+         return out;
+         }
+
+   private:
+      std::unique_ptr<EC_KEY, std::function<void (EC_KEY*)>> m_ossl_ec;
+      size_t m_order_bits = 0;
+   };
+
+BOTAN_REGISTER_TYPE(PK_Ops::Key_Agreement, OpenSSL_ECDH_KA_Operation, "ECDH",
+                    OpenSSL_ECDH_KA_Operation::make,
+                    "openssl", BOTAN_OPENSSL_ECDH_PRIO);
 
 #endif
+
+}
+
+}
+

@@ -46,6 +46,8 @@ Version 1.11.26, Not Yet Released
 
 * Add support for RSA-KEM from ISO 18033-2
 
+* Add support for ECDH in the OpenSSL provider
+
 * Fix a bug in DataSource::discard_next() which could cause either an
   infinite loop or the discarding of an incorrect number of bytes.
   Reported on mailing list by Falko Strenzke.

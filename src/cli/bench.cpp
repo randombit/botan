@@ -554,8 +554,8 @@ class Benchmark : public Command
                        const std::string& kdf,
                        std::chrono::milliseconds msec)
          {
-         Botan::PK_Key_Agreement ka1(key1, kdf /*, provider */);
-         Botan::PK_Key_Agreement ka2(key2, kdf /*, provider */);
+         Botan::PK_Key_Agreement ka1(key1, kdf, provider);
+         Botan::PK_Key_Agreement ka2(key2, kdf, provider);
 
          const std::vector<uint8_t> ka1_pub = key1.public_value();
          const std::vector<uint8_t> ka2_pub = key2.public_value();
