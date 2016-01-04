@@ -64,7 +64,7 @@ class Compress : public Command
             throw CLI_Error_Unsupported("Compressing", comp_type);
             }
 
-         return input_fsname + suffix_info->second;
+         return input_fsname + "." + suffix_info->second;
          }
 
       void go() override
@@ -97,7 +97,7 @@ class Compress : public Command
             throw CLI_IO_Error("writing", out_file);
             }
 
-         do_compress(*compress, in, out, get_arg_sz("buf_size"));
+         do_compress(*compress, in, out, get_arg_sz("buf-size"));
          }
    };
 
@@ -106,7 +106,7 @@ BOTAN_REGISTER_COMMAND("compress", Compress);
 class Decompress : public Command
    {
    public:
-      Decompress() : Command("decompress file") {}
+      Decompress() : Command("decompress --buf-size=8192 file") {}
 
       void parse_extension(const std::string& in_file,
                            std::string& out_file,
@@ -144,8 +144,7 @@ class Decompress : public Command
          if(!out.good())
             throw CLI_IO_Error("writing", out_file);
 
-         do_compress(*decompress, in, out, get_arg_sz("buf_size"));
-
+         do_compress(*decompress, in, out, get_arg_sz("buf-size"));
          }
    };
 
