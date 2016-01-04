@@ -84,6 +84,13 @@ Version 1.11.26, Not Yet Released
 
 * Export MGF1 function mgf1_mask GH #380
 
+* Work around a problem with some antivirus programs which causes the
+  ``shutil.rmtree`` and ``os.makedirs`` Python calls to occasionally
+  fail. The could prevent ``configure.py`` from running sucessfully
+  on such systems. GH #353
+
+* Let ``configure.py`` run under CPython 2.6. GH #362
+
 Version 1.11.25, 2015-12-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

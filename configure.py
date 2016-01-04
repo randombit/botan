@@ -8,7 +8,14 @@ Configuration program for botan
 
 Botan is released under the Simplified BSD License (see license.txt)
 
-Tested with CPython 2.7 and 3.4. CPython 2.6 and earlier are not supported.
+This script is regularly tested with CPython 2.7 and 3.5, and
+occasionally tested with CPython 2.6 and PyPy 4.
+
+Support for CPython 2.6 will be dropped eventually, but is kept up for as
+long as reasonably convenient.
+
+CPython 2.5 and earlier are not supported.
+
 On Jython target detection does not work (use --os and --cpu).
 """
 
@@ -1801,7 +1808,7 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
-    class BotanConfigureLogHandler(logging.StreamHandler):
+    class BotanConfigureLogHandler(logging.StreamHandler, object):
         def emit(self, record):
             # Do the default stuff first
             super(BotanConfigureLogHandler, self).emit(record)
@@ -1809,7 +1816,7 @@ def main(argv = None):
             if record.levelno >= logging.ERROR:
                 sys.exit(1)
 
-    lh = BotanConfigureLogHandler(stream = sys.stdout)
+    lh = BotanConfigureLogHandler(sys.stdout)
     lh.setFormatter(logging.Formatter('%(levelname) 7s: %(message)s'))
     logging.getLogger().addHandler(lh)
 
