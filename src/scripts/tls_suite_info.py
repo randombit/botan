@@ -311,15 +311,33 @@ namespace Botan {
 
 namespace TLS {
 
+std::vector<u16bit> Ciphersuite::all_known_ciphersuite_ids()
+   {
+   return std::vector<u16bit>{
+"""
+
+    csuite_ids = {}
+
+    for (k,v) in suites.items():
+        csuite_ids[v[0]] = (k, v[1])
+
+    for i in sorted(csuite_ids.keys()):
+        suite_info += "      0x%s,\n" % (i)
+
+    suite_info += """   };
+}
+
 Ciphersuite Ciphersuite::by_id(u16bit suite)
    {
    switch(suite)
       {
 """
 
-    for k in sorted(suites.keys()):
-        suite_info += "      case 0x%s: // %s\n" % (suites[k][0], k)
-        suite_info += "         return %s;\n\n" % (suites[k][1])
+    for i in sorted(csuite_ids.keys()):
+        suite_name = csuite_ids[i][0]
+        suite_expr = csuite_ids[i][1]
+        suite_info += "      case 0x%s: // %s\n" % (i, suite_name)
+        suite_info += "         return %s;\n\n" % (suite_expr)
 
     suite_info += """      }
 

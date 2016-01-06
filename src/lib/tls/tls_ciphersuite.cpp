@@ -27,9 +27,11 @@ std::vector<Ciphersuite> gather_known_ciphersuites()
    {
    std::vector<Ciphersuite> ciphersuites;
 
-   for(size_t i = 0; i <= 0xFFFF; ++i)
+   std::vector<u16bit> all_ids = Ciphersuite::all_known_ciphersuite_ids();
+
+   for(auto id : all_ids)
       {
-      Ciphersuite suite = Ciphersuite::by_id(i);
+      Ciphersuite suite = Ciphersuite::by_id(id);
 
       if(suite.valid())
          ciphersuites.push_back(suite);

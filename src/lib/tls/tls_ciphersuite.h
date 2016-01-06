@@ -29,6 +29,8 @@ class BOTAN_DLL Ciphersuite
       */
       static Ciphersuite by_id(u16bit suite);
 
+      static std::vector<u16bit> all_known_ciphersuite_ids();
+
       /**
       * Returns true iff this suite is a known SCSV
       */
