@@ -186,7 +186,7 @@ class Algo_Registry
                {
                std::vector<maker_fn> r;
 
-               if(req_provider != "")
+               if(!req_provider.empty())
                   {
                   // find one explicit provider requested by user or fail
                   auto i = m_maker_fns.find(req_provider);

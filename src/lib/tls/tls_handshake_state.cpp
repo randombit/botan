@@ -462,7 +462,7 @@ Handshake_State::understand_sig_format(const Public_Key& key,
 
    if(this->version().supports_negotiable_signature_algorithms())
       {
-      if(hash_algo == "")
+      if(hash_algo.empty())
          throw Decoding_Error("Counterparty did not send hash/sig IDS");
 
       if(sig_algo != algo_name)
@@ -470,7 +470,7 @@ Handshake_State::understand_sig_format(const Public_Key& key,
       }
    else
       {
-      if(hash_algo != "" || sig_algo != "")
+      if(!hash_algo.empty() || !sig_algo.empty())
          throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
       }
 

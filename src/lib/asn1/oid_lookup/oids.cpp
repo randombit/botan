@@ -109,12 +109,12 @@ void OID_Map::read_cfg(std::istream& cfg, const std::string& source)
       std::getline(cfg, s);
       ++line;
 
-      if(s == "" || s[0] == '#')
+      if(s.empty() || s[0] == '#')
          continue;
 
       s = clean_ws(s.substr(0, s.find('#')));
 
-      if(s == "")
+      if(s.empty())
          continue;
 
       auto eq = s.find("=");

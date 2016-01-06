@@ -549,7 +549,7 @@ void Authority_Information_Access::decode_inner(const std::vector<byte>& in)
 
 void Authority_Information_Access::contents_to(Data_Store& subject, Data_Store&) const
    {
-   if(m_ocsp_responder != "")
+   if(!m_ocsp_responder.empty())
       subject.add("OCSP.responder", m_ocsp_responder);
    }
 

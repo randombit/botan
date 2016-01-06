@@ -59,7 +59,7 @@ std::vector<byte> Certificate_Verify::serialize() const
    {
    std::vector<byte> buf;
 
-   if(m_hash_algo != "" && m_sig_algo != "")
+   if(!m_hash_algo.empty() && !m_sig_algo.empty())
       {
       buf.push_back(Signature_Algorithms::hash_algo_code(m_hash_algo));
       buf.push_back(Signature_Algorithms::sig_algo_code(m_sig_algo));

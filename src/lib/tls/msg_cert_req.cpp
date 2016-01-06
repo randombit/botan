@@ -89,7 +89,7 @@ Certificate_Req::Certificate_Req(const std::vector<byte>& buf,
       {
       const std::string cert_type_name = cert_type_code_to_name(cert_type_codes[i]);
 
-      if(cert_type_name == "") // something we don't know
+      if(cert_type_name.empty()) // something we don't know
          continue;
 
       m_cert_key_types.push_back(cert_type_name);

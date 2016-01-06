@@ -66,7 +66,7 @@ void X509_Cert_Options::CA_key(size_t limit)
 */
 void X509_Cert_Options::sanity_check() const
    {
-   if(common_name == "" || country == "")
+   if(common_name.empty() || country.empty())
       throw Encoding_Error("X.509 certificate: name and country MUST be set");
    if(country.size() != 2)
       throw Encoding_Error("Invalid ISO country code: " + country);
@@ -89,7 +89,7 @@ X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
    start = X509_Time(now);
    end = X509_Time(now + std::chrono::seconds(expiration_time));
 
-   if(initial_opts == "")
+   if(initial_opts.empty())
       return;
 
    std::vector<std::string> parsed = split_on(initial_opts, '/');

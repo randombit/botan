@@ -126,7 +126,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       .raw_bytes(pub_key)
       .start_explicit(0);
 
-   if(opts.challenge != "")
+   if(!opts.challenge.empty())
       {
       ASN1_String challenge(opts.challenge, DIRECTORY_STRING);
 

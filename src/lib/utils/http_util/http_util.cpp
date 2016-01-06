@@ -127,7 +127,7 @@ Response http_sync(http_exch_fn http_transact,
    else if(verb == "POST")
       outbuf << "Content-Length: " << body.size() << "\r\n";
 
-   if(content_type != "")
+   if(!content_type.empty())
       outbuf << "Content-Type: " << content_type << "\r\n";
    outbuf << "Connection: close\r\n\r\n";
    outbuf.write(reinterpret_cast<const char*>(body.data()), body.size());
@@ -184,7 +184,7 @@ Response http_sync(http_exch_fn http_transact,
 
    const std::string header_size = search_map(headers, std::string("Content-Length"));
 
-   if(header_size != "")
+   if(!header_size.empty())
       {
       if(resp_body.size() != to_u32bit(header_size))
          throw Exception("Content-Length disagreement, header says " +

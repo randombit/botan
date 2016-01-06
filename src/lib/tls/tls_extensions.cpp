@@ -427,7 +427,7 @@ Supported_Elliptic_Curves::Supported_Elliptic_Curves(TLS_Data_Reader& reader,
       const u16bit id = reader.get_u16bit();
       const std::string name = curve_id_to_name(id);
 
-      if(name != "")
+      if(!name.empty())
          m_curves.push_back(name);
       }
    }
@@ -555,7 +555,7 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
       len -= 2;
 
       // If not something we know, ignore it completely
-      if(hash_code == "" || sig_code == "")
+      if(hash_code.empty() || sig_code.empty())
          continue;
 
       m_supported_algos.push_back(std::make_pair(hash_code, sig_code));
