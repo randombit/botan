@@ -233,10 +233,12 @@ std::vector<byte> Server_Key_Exchange::serialize() const
 * Verify a Server Key Exchange message
 */
 bool Server_Key_Exchange::verify(const Public_Key& server_key,
-                                 const Handshake_State& state) const
+                                 const Handshake_State& state,
+                                 const Policy& policy) const
    {
    std::pair<std::string, Signature_Format> format =
-      state.understand_sig_format(server_key, m_hash_algo, m_sig_algo);
+      state.parse_sig_format(server_key, m_hash_algo, m_sig_algo,
+                             false, policy);
 
    PK_Verifier verifier(server_key, format.first, format.second);
 

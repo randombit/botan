@@ -77,12 +77,14 @@ std::vector<byte> Certificate_Verify::serialize() const
 * Verify a Certificate Verify message
 */
 bool Certificate_Verify::verify(const X509_Certificate& cert,
-                                const Handshake_State& state) const
+                                const Handshake_State& state,
+                                const Policy& policy) const
    {
    std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
    std::pair<std::string, Signature_Format> format =
-      state.understand_sig_format(*key.get(), m_hash_algo, m_sig_algo);
+      state.parse_sig_format(*key.get(), m_hash_algo, m_sig_algo,
+                             true, policy);
 
    PK_Verifier verifier(*key, format.first, format.second);
 

@@ -394,7 +394,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          {
          const Public_Key& server_key = state.get_server_public_Key();
 
-         if(!state.server_kex()->verify(server_key, state))
+         if(!state.server_kex()->verify(server_key, state, policy()))
             {
             throw TLS_Exception(Alert::DECRYPT_ERROR,
                                 "Bad signature on server key exchange");

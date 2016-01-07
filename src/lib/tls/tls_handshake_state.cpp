@@ -1,6 +1,6 @@
 /*
 * TLS Handshaking
-* (C) 2004-2006,2011,2012,2015 Jack Lloyd
+* (C) 2004-2006,2011,2012,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -449,58 +449,111 @@ Handshake_State::choose_sig_format(const Private_Key& key,
    throw Invalid_Argument(sig_algo + " is invalid/unknown for TLS signatures");
    }
 
-std::pair<std::string, Signature_Format>
-Handshake_State::understand_sig_format(const Public_Key& key,
-                                       std::string hash_algo,
-                                       std::string sig_algo) const
+namespace {
+
+bool supported_algos_include(
+   const std::vector<std::pair<std::string, std::string>>& algos,
+   const std::string& key_type,
+   const std::string& hash_type)
    {
-   const std::string algo_name = key.algo_name();
+   for(auto&& algo : algos)
+      {
+      if(algo.first == hash_type && algo.second == key_type)
+         {
+         return true;
+         }
+      }
 
-   /*
-   FIXME: This should check what was sent against the client hello
-   preferences, or the certificate request, to ensure it was allowed
-   by those restrictions.
+   return false;
+   }
 
-   Or not?
-   */
+}
+
+std::pair<std::string, Signature_Format>
+Handshake_State::parse_sig_format(const Public_Key& key,
+                                  const std::string& input_hash_algo,
+                                  const std::string& input_sig_algo,
+                                  bool for_client_auth,
+                                  const Policy& policy) const
+   {
+   const std::string key_type = key.algo_name();
+
+   if(!policy.allowed_signature_method(key_type))
+      {
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                          "Rejecting " + key_type + " signature");
+      }
+
+   std::string hash_algo;
 
    if(this->version().supports_negotiable_signature_algorithms())
       {
-      if(hash_algo.empty())
+      if(input_sig_algo != key_type)
+         throw Decoding_Error("Counterparty sent inconsistent key and sig types");
+
+      if(input_hash_algo == "")
          throw Decoding_Error("Counterparty did not send hash/sig IDS");
 
-      if(sig_algo != algo_name)
-         throw Decoding_Error("Counterparty sent inconsistent key and sig types");
+      hash_algo = input_hash_algo;
+
+      if(for_client_auth && !cert_req())
+         {
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "No certificate verify set");
+         }
+
+      /*
+      Confirm the signature type we just received against the
+      supported_algos list that we sent; it better be there.
+      */
+
+      const auto supported_algos =
+         for_client_auth ? cert_req()->supported_algos() :
+                           client_hello()->supported_algos();
+
+      if(!supported_algos_include(supported_algos, key_type, hash_algo))
+         {
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "TLS signature extension did not allow for " +
+                             key_type + "/" + hash_algo + " signature");
+         }
       }
    else
       {
-      if(!hash_algo.empty() || !sig_algo.empty())
+      if(input_hash_algo != "" || input_sig_algo != "")
          throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
-      }
 
-   if(algo_name == "RSA")
-      {
-      if(!this->version().supports_negotiable_signature_algorithms())
+      if(key_type == "RSA")
          {
          hash_algo = "Parallel(MD5,SHA-160)";
          }
-
-      const std::string padding = "EMSA3(" + hash_algo + ")";
-      return std::make_pair(padding, IEEE_1363);
-      }
-   else if(algo_name == "DSA" || algo_name == "ECDSA")
-      {
-      if(!this->version().supports_negotiable_signature_algorithms())
+      else if(key_type == "DSA" || key_type == "ECDSA")
          {
          hash_algo = "SHA-1";
          }
+      else
+         {
+         throw Invalid_Argument(key_type + " is invalid/unknown for TLS signatures");
+         }
 
+      /*
+      There is no check on the acceptability of a v1.0/v1.1 hash type,
+      since it's implicit with use of the protocol
+      */
+      }
+
+   if(key_type == "RSA")
+      {
+      const std::string padding = "EMSA3(" + hash_algo + ")";
+      return std::make_pair(padding, IEEE_1363);
+      }
+   else if(key_type == "DSA" || key_type == "ECDSA")
+      {
       const std::string padding = "EMSA1(" + hash_algo + ")";
-
       return std::make_pair(padding, DER_SEQUENCE);
       }
 
-   throw Invalid_Argument(algo_name + " is invalid/unknown for TLS signatures");
+   throw Invalid_Argument(key_type + " is invalid/unknown for TLS signatures");
    }
 
 }

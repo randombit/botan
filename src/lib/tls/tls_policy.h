@@ -57,6 +57,8 @@ class BOTAN_DLL Policy
       */
       virtual std::vector<std::string> allowed_signature_methods() const;
 
+      bool allowed_signature_method(const std::string& sig_method) const;
+
       /**
       * Return list of ECC curves we are willing to use in order of preference
       */

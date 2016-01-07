@@ -84,6 +84,11 @@ std::vector<std::string> Policy::allowed_signature_methods() const
       };
    }
 
+bool Policy::allowed_signature_method(const std::string& sig_method) const
+   {
+   return value_exists(allowed_signature_methods(), sig_method);
+   }
+
 std::vector<std::string> Policy::allowed_ecc_curves() const
    {
    return {

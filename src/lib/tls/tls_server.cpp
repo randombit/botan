@@ -618,7 +618,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
          state.client_certs()->cert_chain();
 
       const bool sig_valid =
-         state.client_verify()->verify(client_certs[0], state);
+         state.client_verify()->verify(client_certs[0], state, policy());
 
       state.hash().update(state.handshake_io().format(contents, type));
 
