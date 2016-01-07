@@ -177,6 +177,7 @@ const char* default_oid_list()
       "2.5.29.21 = X509v3.ReasonCode" "\n"
       "2.5.29.23 = X509v3.HoldInstructionCode" "\n"
       "2.5.29.24 = X509v3.InvalidityDate" "\n"
+      "2.5.29.30 = X509v3.NameConstraints" "\n"
       "2.5.29.31 = X509v3.CRLDistributionPoints" "\n"
       "2.5.29.32 = X509v3.CertificatePolicies" "\n"
       "2.5.29.35 = X509v3.AuthorityKeyIdentifier" "\n"

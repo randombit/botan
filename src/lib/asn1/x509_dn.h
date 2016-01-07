@@ -50,6 +50,7 @@ bool BOTAN_DLL operator!=(const X509_DN&, const X509_DN&);
 bool BOTAN_DLL operator<(const X509_DN&, const X509_DN&);
 
 BOTAN_DLL std::ostream& operator<<(std::ostream& out, const X509_DN& dn);
+BOTAN_DLL std::istream& operator>>(std::istream& in, X509_DN& dn);
 
 }
 

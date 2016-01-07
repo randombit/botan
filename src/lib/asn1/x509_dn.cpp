@@ -12,6 +12,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/oids.h>
 #include <ostream>
+#include <cctype>
 
 namespace Botan {
 
@@ -117,15 +118,15 @@ std::vector<byte> X509_DN::get_bits() const
 */
 std::string X509_DN::deref_info_field(const std::string& info)
    {
-   if(info == "Name" || info == "CommonName") return "X520.CommonName";
-   if(info == "SerialNumber")                 return "X520.SerialNumber";
-   if(info == "Country")                      return "X520.Country";
-   if(info == "Organization")                 return "X520.Organization";
-   if(info == "Organizational Unit" || info == "OrgUnit")
+   if(info == "Name" || info == "CommonName" || info == "CN") return "X520.CommonName";
+   if(info == "SerialNumber" || info == "SN")                 return "X520.SerialNumber";
+   if(info == "Country" || info == "C")                       return "X520.Country";
+   if(info == "Organization" || info == "O")                  return "X520.Organization";
+   if(info == "Organizational Unit" || info == "OrgUnit" || info == "OU")
       return "X520.OrganizationalUnit";
-   if(info == "Locality")                     return "X520.Locality";
-   if(info == "State" || info == "Province")  return "X520.State";
-   if(info == "Email")                        return "RFC822";
+   if(info == "Locality" || info == "L")                      return "X520.Locality";
+   if(info == "State" || info == "Province" || info == "ST")  return "X520.State";
+   if(info == "Email")                                        return "RFC822";
    return info;
    }
 
@@ -303,9 +304,93 @@ std::ostream& operator<<(std::ostream& out, const X509_DN& dn)
    for(std::multimap<std::string, std::string>::const_iterator i = contents.begin();
        i != contents.end(); ++i)
       {
-      out << to_short_form(i->first) << "=" << i->second << ' ';
+      out << to_short_form(i->first) << "=\"";
+      for(char c: i->second)
+         {
+         if(c == '\\' || c == '\"')
+            {
+            out << "\\";
+            }
+         out << c;
+         }
+      out << "\"";
+
+      if(std::next(i) != contents.end())
+         {
+         out << ",";
+         }
       }
    return out;
    }
 
+std::istream& operator>>(std::istream& in, X509_DN& dn)
+   {
+   in >> std::noskipws;
+   do
+      {
+      std::string key;
+      std::string val;
+      char c;
+
+      while(in.good())
+         {
+         in >> c;
+
+         if(std::isspace(c) && key.empty())
+            continue;
+         else if(!std::isspace(c))
+            {
+            key.push_back(c);
+            break;
+            }
+         else
+            break;
+         }
+
+      while(in.good())
+         {
+         in >> c;
+
+         if(!std::isspace(c) && c != '=')
+            key.push_back(c);
+         else if(c == '=')
+            break;
+         else
+            throw Invalid_Argument("Ill-formed X.509 DN");
+         }
+
+      bool in_quotes = false;
+      while(in.good())
+         {
+         in >> c;
+
+         if(std::isspace(c))
+            {
+            if(!in_quotes && !val.empty())
+               break;
+            else if(in_quotes)
+               val.push_back(' ');
+            }
+         else if(c == '"')
+            in_quotes = !in_quotes;
+         else if(c == '\\')
+            {
+            if(in.good())
+               in >> c;
+            val.push_back(c);
+            }
+         else if(c == ',' && !in_quotes)
+            break;
+         else
+            val.push_back(c);
+         }
+
+      if(!key.empty() && !val.empty())
+         dn.add_attribute(X509_DN::deref_info_field(key),val);
+      else
+         break;
+      }
+   while(in.good());
+   return in;
+   }
 }
