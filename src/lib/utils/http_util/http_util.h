@@ -64,7 +64,7 @@ std::string BOTAN_DLL http_transact_asio(const std::string& hostname,
 #endif
 
 std::string BOTAN_DLL http_transact_fail(const std::string& hostname,
-                                         const std::string& message) BOTAN_NORETURN;
+                                         const std::string& message);
 
 
 BOTAN_DLL Response http_sync(http_exch_fn fn,

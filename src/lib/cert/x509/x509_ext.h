@@ -361,7 +361,7 @@ class BOTAN_DLL CRL_Distribution_Points : public Certificate_Extension
       class BOTAN_DLL Distribution_Point : public ASN1_Object
          {
          public:
-            void encode_into(class DER_Encoder&) const override BOTAN_NORETURN;
+            void encode_into(class DER_Encoder&) const override;
             void decode_from(class BER_Decoder&) override;
 
             const AlternativeName& point() const { return m_point; }
@@ -387,7 +387,7 @@ class BOTAN_DLL CRL_Distribution_Points : public Certificate_Extension
       bool should_encode() const override
          { return !m_distribution_points.empty(); }
 
-      std::vector<byte> encode_inner() const override BOTAN_NORETURN;
+      std::vector<byte> encode_inner() const override;
       void decode_inner(const std::vector<byte>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
