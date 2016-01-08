@@ -23,7 +23,7 @@ class RFC6979_KAT_Tests : public Text_Based_Test
       RFC6979_KAT_Tests() : Text_Based_Test("rfc6979.vec",
                                             {"Q", "X", "H", "K"}) {}
 
-      Test::Result run_one_test(const std::string& hash, const VarMap& vars)
+      Test::Result run_one_test(const std::string& hash, const VarMap& vars) override
          {
          const BigInt Q = get_req_bn(vars, "Q");
          const BigInt X = get_req_bn(vars, "X");

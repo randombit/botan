@@ -42,7 +42,7 @@ class Curve25519_Sclarmult_Tests : public Text_Based_Test
 class Curve25519_Roundtrip_Test : public Test
    {
    public:
-      std::vector<Test::Result> run()
+      std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
 

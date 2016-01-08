@@ -195,7 +195,7 @@ class NIST_Curve_Reduction_Tests : public Test
    {
    public:
       typedef std::function<void (Botan::BigInt&, Botan::secure_vector<Botan::word>&)> reducer_fn;
-      std::vector<Test::Result> run()
+      std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
 

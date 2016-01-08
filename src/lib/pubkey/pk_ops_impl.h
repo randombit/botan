@@ -167,7 +167,7 @@ class KEM_Decryption_with_KDF : public KEM_Decryption
                                       size_t len,
                                       size_t desired_shared_key_len,
                                       const uint8_t salt[],
-                                      size_t salt_len);
+                                      size_t salt_len) override;
 
    protected:
       virtual secure_vector<byte>
