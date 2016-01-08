@@ -181,7 +181,7 @@ class BOTAN_DLL Credentials_Manager
       */
       virtual SymmetricKey psk(const std::string& type,
                                const std::string& context,
-                               const std::string& identity);
+                               const std::string& identity) BOTAN_NORETURN;
    };
 
 }

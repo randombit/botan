@@ -19,7 +19,7 @@ void BOTAN_DLL assertion_failure(const char* expr_str,
                                  const char* assertion_made,
                                  const char* func,
                                  const char* file,
-                                 int line);
+                                 int line) BOTAN_NORETURN;
 
 /**
 * Make an assertion

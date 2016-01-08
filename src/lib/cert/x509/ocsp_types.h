@@ -50,7 +50,7 @@ class BOTAN_DLL SingleResponse : public ASN1_Object
 
       X509_Time next_update() const { return m_nextupdate; }
 
-      void encode_into(class DER_Encoder& to) const override;
+      void encode_into(class DER_Encoder& to) const override BOTAN_NORETURN;
 
       void decode_from(class BER_Decoder& from) override;
    private:
