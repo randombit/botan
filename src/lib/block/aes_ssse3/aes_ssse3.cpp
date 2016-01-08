@@ -59,8 +59,6 @@ __m128i aes_schedule_transform(__m128i input,
    __m128i i_1 = _mm_and_si128(low_nibs, input);
    __m128i i_2 = _mm_srli_epi32(_mm_andnot_si128(low_nibs, input), 4);
 
-   input = _mm_and_si128(low_nibs, input);
-
    return _mm_xor_si128(
       _mm_shuffle_epi8(table_1, i_1),
       _mm_shuffle_epi8(table_2, i_2));
