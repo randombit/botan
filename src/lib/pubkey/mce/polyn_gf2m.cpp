@@ -644,13 +644,11 @@ polyn_gf2m::polyn_gf2m(int t, Botan::RandomNumberGenerator& rng, std::shared_ptr
     coeff(t+1),
     msp_field(sp_field)
    {
-   int i;
    (*this).set_coef( t, 1);
-   i = 0;
    int degree = 0;
    do
       {
-      for (i = 0; i < t; ++i)
+      for (int i = 0; i < t; ++i)
          {
          (*this).set_coef( i, random_code_element(sp_field->get_cardinality(), rng));
          }
