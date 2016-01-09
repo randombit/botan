@@ -26,7 +26,7 @@ class BOTAN_DLL TEA : public Block_Cipher_Fixed_Params<8, 16>
       BlockCipher* clone() const override { return new TEA; }
    private:
       void key_schedule(const byte[], size_t) override;
-      secure_vector<u32bit> K;
+      secure_vector<u32bit> m_K;
    };
 
 }

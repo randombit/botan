@@ -18,84 +18,84 @@ class OpenSSL_BlockCipher : public BlockCipher
    {
    public:
       void clear();
-      std::string name() const { return cipher_name; }
+      std::string name() const { return m_cipher_name; }
       BlockCipher* clone() const;
 
-      size_t block_size() const { return block_sz; }
+      size_t block_size() const { return m_block_sz; }
 
       OpenSSL_BlockCipher(const EVP_CIPHER*, const std::string&);
 
       OpenSSL_BlockCipher(const EVP_CIPHER*, const std::string&,
                       size_t, size_t, size_t);
 
-      Key_Length_Specification key_spec() const { return cipher_key_spec; }
+      Key_Length_Specification key_spec() const { return m_cipher_key_spec; }
 
       ~OpenSSL_BlockCipher();
    private:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const
          {
          int out_len = 0;
-         EVP_EncryptUpdate(&encrypt, out, &out_len, in, blocks * block_sz);
+         EVP_EncryptUpdate(&m_encrypt, out, &out_len, in, blocks * m_block_sz);
          }
 
       void decrypt_n(const byte in[], byte out[], size_t blocks) const
          {
          int out_len = 0;
-         EVP_DecryptUpdate(&decrypt, out, &out_len, in, blocks * block_sz);
+         EVP_DecryptUpdate(&m_decrypt, out, &out_len, in, blocks * m_block_sz);
          }
 
       void key_schedule(const byte[], size_t);
 
-      size_t block_sz;
-      Key_Length_Specification cipher_key_spec;
-      std::string cipher_name;
-      mutable EVP_CIPHER_CTX encrypt, decrypt;
+      size_t m_block_sz;
+      Key_Length_Specification m_cipher_key_spec;
+      std::string m_cipher_name;
+      mutable EVP_CIPHER_CTX m_encrypt, m_decrypt;
    };
 
 OpenSSL_BlockCipher::OpenSSL_BlockCipher(const EVP_CIPHER* algo,
                                          const std::string& algo_name) :
-   block_sz(EVP_CIPHER_block_size(algo)),
-   cipher_key_spec(EVP_CIPHER_key_length(algo)),
-   cipher_name(algo_name)
+   m_block_sz(EVP_CIPHER_block_size(algo)),
+   m_cipher_key_spec(EVP_CIPHER_key_length(algo)),
+   m_cipher_name(algo_name)
    {
    if(EVP_CIPHER_mode(algo) != EVP_CIPH_ECB_MODE)
       throw Invalid_Argument("OpenSSL_BlockCipher: Non-ECB EVP was passed in");
 
-   EVP_CIPHER_CTX_init(&encrypt);
-   EVP_CIPHER_CTX_init(&decrypt);
+   EVP_CIPHER_CTX_init(&m_encrypt);
+   EVP_CIPHER_CTX_init(&m_decrypt);
 
-   EVP_EncryptInit_ex(&encrypt, algo, nullptr, nullptr, nullptr);
-   EVP_DecryptInit_ex(&decrypt, algo, nullptr, nullptr, nullptr);
+   EVP_EncryptInit_ex(&m_encrypt, algo, nullptr, nullptr, nullptr);
+   EVP_DecryptInit_ex(&m_decrypt, algo, nullptr, nullptr, nullptr);
 
-   EVP_CIPHER_CTX_set_padding(&encrypt, 0);
-   EVP_CIPHER_CTX_set_padding(&decrypt, 0);
+   EVP_CIPHER_CTX_set_padding(&m_encrypt, 0);
+   EVP_CIPHER_CTX_set_padding(&m_decrypt, 0);
    }
 
 OpenSSL_BlockCipher::OpenSSL_BlockCipher(const EVP_CIPHER* algo,
                                  const std::string& algo_name,
                                  size_t key_min, size_t key_max,
                                  size_t key_mod) :
-   block_sz(EVP_CIPHER_block_size(algo)),
-   cipher_key_spec(key_min, key_max, key_mod),
-   cipher_name(algo_name)
+   m_block_sz(EVP_CIPHER_block_size(algo)),
+   m_cipher_key_spec(key_min, key_max, key_mod),
+   m_cipher_name(algo_name)
    {
    if(EVP_CIPHER_mode(algo) != EVP_CIPH_ECB_MODE)
       throw Invalid_Argument("OpenSSL_BlockCipher: Non-ECB EVP was passed in");
 
-   EVP_CIPHER_CTX_init(&encrypt);
-   EVP_CIPHER_CTX_init(&decrypt);
+   EVP_CIPHER_CTX_init(&m_encrypt);
+   EVP_CIPHER_CTX_init(&m_decrypt);
 
-   EVP_EncryptInit_ex(&encrypt, algo, nullptr, nullptr, nullptr);
-   EVP_DecryptInit_ex(&decrypt, algo, nullptr, nullptr, nullptr);
+   EVP_EncryptInit_ex(&m_encrypt, algo, nullptr, nullptr, nullptr);
+   EVP_DecryptInit_ex(&m_decrypt, algo, nullptr, nullptr, nullptr);
 
-   EVP_CIPHER_CTX_set_padding(&encrypt, 0);
-   EVP_CIPHER_CTX_set_padding(&decrypt, 0);
+   EVP_CIPHER_CTX_set_padding(&m_encrypt, 0);
+   EVP_CIPHER_CTX_set_padding(&m_decrypt, 0);
    }
 
 OpenSSL_BlockCipher::~OpenSSL_BlockCipher()
    {
-   EVP_CIPHER_CTX_cleanup(&encrypt);
-   EVP_CIPHER_CTX_cleanup(&decrypt);
+   EVP_CIPHER_CTX_cleanup(&m_encrypt);
+   EVP_CIPHER_CTX_cleanup(&m_decrypt);
    }
 
 /*
@@ -105,18 +105,18 @@ void OpenSSL_BlockCipher::key_schedule(const byte key[], size_t length)
    {
    secure_vector<byte> full_key(key, key + length);
 
-   if(cipher_name == "TripleDES" && length == 16)
+   if(m_cipher_name == "TripleDES" && length == 16)
       {
       full_key += std::make_pair(key, 8);
       }
    else
-      if(EVP_CIPHER_CTX_set_key_length(&encrypt, length) == 0 ||
-         EVP_CIPHER_CTX_set_key_length(&decrypt, length) == 0)
+      if(EVP_CIPHER_CTX_set_key_length(&m_encrypt, length) == 0 ||
+         EVP_CIPHER_CTX_set_key_length(&m_decrypt, length) == 0)
          throw Invalid_Argument("OpenSSL_BlockCipher: Bad key length for " +
-                                cipher_name);
+                                m_cipher_name);
 
-   EVP_EncryptInit_ex(&encrypt, nullptr, nullptr, full_key.data(), nullptr);
-   EVP_DecryptInit_ex(&decrypt, nullptr, nullptr, full_key.data(), nullptr);
+   EVP_EncryptInit_ex(&m_encrypt, nullptr, nullptr, full_key.data(), nullptr);
+   EVP_DecryptInit_ex(&m_decrypt, nullptr, nullptr, full_key.data(), nullptr);
    }
 
 /*
@@ -124,11 +124,11 @@ void OpenSSL_BlockCipher::key_schedule(const byte key[], size_t length)
 */
 BlockCipher* OpenSSL_BlockCipher::clone() const
    {
-   return new OpenSSL_BlockCipher(EVP_CIPHER_CTX_cipher(&encrypt),
-                              cipher_name,
-                              cipher_key_spec.minimum_keylength(),
-                              cipher_key_spec.maximum_keylength(),
-                              cipher_key_spec.keylength_multiple());
+   return new OpenSSL_BlockCipher(EVP_CIPHER_CTX_cipher(&m_encrypt),
+                              m_cipher_name,
+                              m_cipher_key_spec.minimum_keylength(),
+                              m_cipher_key_spec.maximum_keylength(),
+                              m_cipher_key_spec.keylength_multiple());
    }
 
 /*
@@ -136,16 +136,16 @@ BlockCipher* OpenSSL_BlockCipher::clone() const
 */
 void OpenSSL_BlockCipher::clear()
    {
-   const EVP_CIPHER* algo = EVP_CIPHER_CTX_cipher(&encrypt);
+   const EVP_CIPHER* algo = EVP_CIPHER_CTX_cipher(&m_encrypt);
 
-   EVP_CIPHER_CTX_cleanup(&encrypt);
-   EVP_CIPHER_CTX_cleanup(&decrypt);
-   EVP_CIPHER_CTX_init(&encrypt);
-   EVP_CIPHER_CTX_init(&decrypt);
-   EVP_EncryptInit_ex(&encrypt, algo, nullptr, nullptr, nullptr);
-   EVP_DecryptInit_ex(&decrypt, algo, nullptr, nullptr, nullptr);
-   EVP_CIPHER_CTX_set_padding(&encrypt, 0);
-   EVP_CIPHER_CTX_set_padding(&decrypt, 0);
+   EVP_CIPHER_CTX_cleanup(&m_encrypt);
+   EVP_CIPHER_CTX_cleanup(&m_decrypt);
+   EVP_CIPHER_CTX_init(&m_encrypt);
+   EVP_CIPHER_CTX_init(&m_decrypt);
+   EVP_EncryptInit_ex(&m_encrypt, algo, nullptr, nullptr, nullptr);
+   EVP_DecryptInit_ex(&m_decrypt, algo, nullptr, nullptr, nullptr);
+   EVP_CIPHER_CTX_set_padding(&m_encrypt, 0);
+   EVP_CIPHER_CTX_set_padding(&m_decrypt, 0);
    }
 
 std::function<BlockCipher* (const BlockCipher::Spec&)>

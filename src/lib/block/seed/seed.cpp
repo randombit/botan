@@ -219,15 +219,15 @@ void SEED::encrypt_n(const byte in[], byte out[], size_t blocks) const
          {
          u32bit T0, T1;
 
-         T0 = B2 ^ K[2*j];
-         T1 = SEED_G(B2 ^ B3 ^ K[2*j+1]);
+         T0 = B2 ^ m_K[2*j];
+         T1 = SEED_G(B2 ^ B3 ^ m_K[2*j+1]);
          T0 = SEED_G(T1 + T0);
          T1 = SEED_G(T1 + T0);
          B1 ^= T1;
          B0 ^= T0 + T1;
 
-         T0 = B0 ^ K[2*j+2];
-         T1 = SEED_G(B0 ^ B1 ^ K[2*j+3]);
+         T0 = B0 ^ m_K[2*j+2];
+         T1 = SEED_G(B0 ^ B1 ^ m_K[2*j+3]);
          T0 = SEED_G(T1 + T0);
          T1 = SEED_G(T1 + T0);
          B3 ^= T1;
@@ -257,15 +257,15 @@ void SEED::decrypt_n(const byte in[], byte out[], size_t blocks) const
          {
          u32bit T0, T1;
 
-         T0 = B2 ^ K[30-2*j];
-         T1 = SEED_G(B2 ^ B3 ^ K[31-2*j]);
+         T0 = B2 ^ m_K[30-2*j];
+         T1 = SEED_G(B2 ^ B3 ^ m_K[31-2*j]);
          T0 = SEED_G(T1 + T0);
          T1 = SEED_G(T1 + T0);
          B1 ^= T1;
          B0 ^= T0 + T1;
 
-         T0 = B0 ^ K[28-2*j];
-         T1 = SEED_G(B0 ^ B1 ^ K[29-2*j]);
+         T0 = B0 ^ m_K[28-2*j];
+         T1 = SEED_G(B0 ^ B1 ^ m_K[29-2*j]);
          T0 = SEED_G(T1 + T0);
          T1 = SEED_G(T1 + T0);
          B3 ^= T1;
@@ -296,19 +296,19 @@ void SEED::key_schedule(const byte key[], size_t)
    for(size_t i = 0; i != 4; ++i)
       WK[i] = load_be<u32bit>(key, i);
 
-   K.resize(32);
+   m_K.resize(32);
 
    for(size_t i = 0; i != 16; i += 2)
       {
-      K[2*i  ] = SEED_G(WK[0] + WK[2] - RC[i]);
-      K[2*i+1] = SEED_G(WK[1] - WK[3] + RC[i]) ^ K[2*i];
+      m_K[2*i  ] = SEED_G(WK[0] + WK[2] - RC[i]);
+      m_K[2*i+1] = SEED_G(WK[1] - WK[3] + RC[i]) ^ m_K[2*i];
 
       byte T = get_byte(3, WK[0]);
       WK[0] = (WK[0] >> 8) | (get_byte(3, WK[1]) << 24);
       WK[1] = (WK[1] >> 8) | (T << 24);
 
-      K[2*i+2] = SEED_G(WK[0] + WK[2] - RC[i+1]);
-      K[2*i+3] = SEED_G(WK[1] - WK[3] + RC[i+1]) ^ K[2*i+2];
+      m_K[2*i+2] = SEED_G(WK[0] + WK[2] - RC[i+1]);
+      m_K[2*i+3] = SEED_G(WK[1] - WK[3] + RC[i+1]) ^ m_K[2*i+2];
 
       T = get_byte(0, WK[3]);
       WK[3] = (WK[3] << 8) | get_byte(0, WK[2]);
@@ -318,7 +318,7 @@ void SEED::key_schedule(const byte key[], size_t)
 
 void SEED::clear()
    {
-   zap(K);
+   zap(m_K);
    }
 
 }

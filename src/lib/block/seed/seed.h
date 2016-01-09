@@ -27,7 +27,7 @@ class BOTAN_DLL SEED : public Block_Cipher_Fixed_Params<16, 16>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      secure_vector<u32bit> K;
+      secure_vector<u32bit> m_K;
    };
 
 }

@@ -18,15 +18,15 @@ namespace Botan_Tests {
 class Fixed_Output_RNG : public Botan::RandomNumberGenerator
    {
    public:
-      bool is_seeded() const override { return !buf.empty(); }
+      bool is_seeded() const override { return !m_buf.empty(); }
 
       uint8_t random()
          {
          if(!is_seeded())
             throw Test_Error("Fixed output RNG ran out of bytes, test bug?");
 
-         uint8_t out = buf.front();
-         buf.pop_front();
+         uint8_t out = m_buf.front();
+         m_buf.pop_front();
          return out;
          }
 
@@ -42,7 +42,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 
       void add_entropy(const uint8_t b[], size_t s) override
          {
-         buf.insert(buf.end(), b, b + s);
+         m_buf.insert(m_buf.end(), b, b + s);
          }
 
       std::string name() const override { return "Fixed_Output_RNG"; }
@@ -51,20 +51,20 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 
       Fixed_Output_RNG(const std::vector<uint8_t>& in)
          {
-         buf.insert(buf.end(), in.begin(), in.end());
+         m_buf.insert(m_buf.end(), in.begin(), in.end());
          }
 
       Fixed_Output_RNG(const std::string& in_str)
          {
          std::vector<uint8_t> in = Botan::hex_decode(in_str);
-         buf.insert(buf.end(), in.begin(), in.end());
+         m_buf.insert(m_buf.end(), in.begin(), in.end());
          }
 
       Fixed_Output_RNG() {}
    protected:
-      size_t remaining() const { return buf.size(); }
+      size_t remaining() const { return m_buf.size(); }
    private:
-      std::deque<uint8_t> buf;
+      std::deque<uint8_t> m_buf;
    };
 
 }

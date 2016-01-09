@@ -414,71 +414,71 @@ void aes_key_schedule(const byte key[], size_t length,
 
 void AES_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_encrypt_n(in, out, blocks, EK, ME);
+   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_decrypt_n(in, out, blocks, DK, MD);
+   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_128::key_schedule(const byte key[], size_t length)
    {
-   aes_key_schedule(key, length, EK, DK, ME, MD);
+   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 
 void AES_128::clear()
    {
-   zap(EK);
-   zap(DK);
-   zap(ME);
-   zap(MD);
+   zap(m_EK);
+   zap(m_DK);
+   zap(m_ME);
+   zap(m_MD);
    }
 
 void AES_192::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_encrypt_n(in, out, blocks, EK, ME);
+   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_192::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_decrypt_n(in, out, blocks, DK, MD);
+   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_192::key_schedule(const byte key[], size_t length)
    {
-   aes_key_schedule(key, length, EK, DK, ME, MD);
+   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 
 void AES_192::clear()
    {
-   zap(EK);
-   zap(DK);
-   zap(ME);
-   zap(MD);
+   zap(m_EK);
+   zap(m_DK);
+   zap(m_ME);
+   zap(m_MD);
    }
 
 void AES_256::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_encrypt_n(in, out, blocks, EK, ME);
+   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_decrypt_n(in, out, blocks, DK, MD);
+   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_256::key_schedule(const byte key[], size_t length)
    {
-   aes_key_schedule(key, length, EK, DK, ME, MD);
+   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 
 void AES_256::clear()
    {
-   zap(EK);
-   zap(DK);
-   zap(ME);
-   zap(MD);
+   zap(m_EK);
+   zap(m_DK);
+   zap(m_ME);
+   zap(m_MD);
    }
 
 }

@@ -24,7 +24,7 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
 
       void clear() override;
 
-      SHA_160() : MDx_HashFunction(64, true, true), digest(5), W(80)
+      SHA_160() : MDx_HashFunction(64, true, true), m_digest(5), m_W(80)
          {
          clear();
          }
@@ -36,7 +36,7 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
       * @param W_size how big to make W
       */
       SHA_160(size_t W_size) :
-         MDx_HashFunction(64, true, true), digest(5), W(W_size)
+         MDx_HashFunction(64, true, true), m_digest(5), m_W(W_size)
          {
          clear();
          }
@@ -47,12 +47,12 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
       /**
       * The digest value, exposed for use by subclasses (asm, SSE2)
       */
-      secure_vector<u32bit> digest;
+      secure_vector<u32bit> m_digest;
 
       /**
       * The message buffer, exposed for use by subclasses (asm, SSE2)
       */
-      secure_vector<u32bit> W;
+      secure_vector<u32bit> m_W;
    };
 
 }

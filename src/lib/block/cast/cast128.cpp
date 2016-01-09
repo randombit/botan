@@ -55,22 +55,22 @@ void CAST_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
       u32bit L = load_be<u32bit>(in, 0);
       u32bit R = load_be<u32bit>(in, 1);
 
-      R1(L, R, MK[ 0], RK[ 0]);
-      R2(R, L, MK[ 1], RK[ 1]);
-      R3(L, R, MK[ 2], RK[ 2]);
-      R1(R, L, MK[ 3], RK[ 3]);
-      R2(L, R, MK[ 4], RK[ 4]);
-      R3(R, L, MK[ 5], RK[ 5]);
-      R1(L, R, MK[ 6], RK[ 6]);
-      R2(R, L, MK[ 7], RK[ 7]);
-      R3(L, R, MK[ 8], RK[ 8]);
-      R1(R, L, MK[ 9], RK[ 9]);
-      R2(L, R, MK[10], RK[10]);
-      R3(R, L, MK[11], RK[11]);
-      R1(L, R, MK[12], RK[12]);
-      R2(R, L, MK[13], RK[13]);
-      R3(L, R, MK[14], RK[14]);
-      R1(R, L, MK[15], RK[15]);
+      R1(L, R, m_MK[ 0], m_RK[ 0]);
+      R2(R, L, m_MK[ 1], m_RK[ 1]);
+      R3(L, R, m_MK[ 2], m_RK[ 2]);
+      R1(R, L, m_MK[ 3], m_RK[ 3]);
+      R2(L, R, m_MK[ 4], m_RK[ 4]);
+      R3(R, L, m_MK[ 5], m_RK[ 5]);
+      R1(L, R, m_MK[ 6], m_RK[ 6]);
+      R2(R, L, m_MK[ 7], m_RK[ 7]);
+      R3(L, R, m_MK[ 8], m_RK[ 8]);
+      R1(R, L, m_MK[ 9], m_RK[ 9]);
+      R2(L, R, m_MK[10], m_RK[10]);
+      R3(R, L, m_MK[11], m_RK[11]);
+      R1(L, R, m_MK[12], m_RK[12]);
+      R2(R, L, m_MK[13], m_RK[13]);
+      R3(L, R, m_MK[14], m_RK[14]);
+      R1(R, L, m_MK[15], m_RK[15]);
 
       store_be(out, R, L);
 
@@ -89,22 +89,22 @@ void CAST_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
       u32bit L = load_be<u32bit>(in, 0);
       u32bit R = load_be<u32bit>(in, 1);
 
-      R1(L, R, MK[15], RK[15]);
-      R3(R, L, MK[14], RK[14]);
-      R2(L, R, MK[13], RK[13]);
-      R1(R, L, MK[12], RK[12]);
-      R3(L, R, MK[11], RK[11]);
-      R2(R, L, MK[10], RK[10]);
-      R1(L, R, MK[ 9], RK[ 9]);
-      R3(R, L, MK[ 8], RK[ 8]);
-      R2(L, R, MK[ 7], RK[ 7]);
-      R1(R, L, MK[ 6], RK[ 6]);
-      R3(L, R, MK[ 5], RK[ 5]);
-      R2(R, L, MK[ 4], RK[ 4]);
-      R1(L, R, MK[ 3], RK[ 3]);
-      R3(R, L, MK[ 2], RK[ 2]);
-      R2(L, R, MK[ 1], RK[ 1]);
-      R1(R, L, MK[ 0], RK[ 0]);
+      R1(L, R, m_MK[15], m_RK[15]);
+      R3(R, L, m_MK[14], m_RK[14]);
+      R2(L, R, m_MK[13], m_RK[13]);
+      R1(R, L, m_MK[12], m_RK[12]);
+      R3(L, R, m_MK[11], m_RK[11]);
+      R2(R, L, m_MK[10], m_RK[10]);
+      R1(L, R, m_MK[ 9], m_RK[ 9]);
+      R3(R, L, m_MK[ 8], m_RK[ 8]);
+      R2(L, R, m_MK[ 7], m_RK[ 7]);
+      R1(R, L, m_MK[ 6], m_RK[ 6]);
+      R3(L, R, m_MK[ 5], m_RK[ 5]);
+      R2(R, L, m_MK[ 4], m_RK[ 4]);
+      R1(L, R, m_MK[ 3], m_RK[ 3]);
+      R3(R, L, m_MK[ 2], m_RK[ 2]);
+      R2(L, R, m_MK[ 1], m_RK[ 1]);
+      R1(R, L, m_MK[ 0], m_RK[ 0]);
 
       store_be(out, R, L);
 
@@ -118,26 +118,26 @@ void CAST_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void CAST_128::key_schedule(const byte key[], size_t length)
    {
-   MK.resize(48);
-   RK.resize(48);
+   m_MK.resize(48);
+   m_RK.resize(48);
 
    secure_vector<u32bit> X(4);
    for(size_t i = 0; i != length; ++i)
       X[i/4] = (X[i/4] << 8) + key[i];
 
-   cast_ks(MK, X);
+   cast_ks(m_MK, X);
 
    secure_vector<u32bit> RK32(48);
    cast_ks(RK32, X);
 
    for(size_t i = 0; i != 16; ++i)
-      RK[i] = RK32[i] % 32;
+      m_RK[i] = RK32[i] % 32;
    }
 
 void CAST_128::clear()
    {
-   zap(MK);
-   zap(RK);
+   zap(m_MK);
+   zap(m_RK);
    }
 
 /*
@@ -329,10 +329,10 @@ void CAST_128::cast_ks(secure_vector<u32bit>& K,
    class ByteReader
       {
       public:
-         byte operator()(size_t i) { return (X[i/4] >> (8*(3 - (i%4)))); }
-         ByteReader(const u32bit* x) : X(x) {}
+         byte operator()(size_t i) { return (m_X[i/4] >> (8*(3 - (i%4)))); }
+         ByteReader(const u32bit* x) : m_X(x) {}
       private:
-         const u32bit* X;
+         const u32bit* m_X;
       };
 
    secure_vector<u32bit> Z(4);

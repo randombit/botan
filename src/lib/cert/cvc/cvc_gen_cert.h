@@ -85,7 +85,7 @@ class EAC1_1_gen_CVC : public EAC1_1_obj<Derived> // CRTP continuation from EAC1
    protected:
       ECDSA_PublicKey* m_pk;
       ASN1_Chr m_chr;
-      bool self_signed;
+      bool m_self_signed;
 
       static void decode_info(DataSource& source,
                               std::vector<byte> & res_tbs_bits,
@@ -100,7 +100,7 @@ template<typename Derived> ASN1_Chr EAC1_1_gen_CVC<Derived>::get_chr() const
 
 template<typename Derived> bool EAC1_1_gen_CVC<Derived>::is_self_signed() const
    {
-   return self_signed;
+   return m_self_signed;
    }
 
 template<typename Derived>
@@ -135,7 +135,7 @@ template<typename Derived> std::vector<byte> EAC1_1_gen_CVC<Derived>::build_cert
 
 template<typename Derived> std::vector<byte> EAC1_1_gen_CVC<Derived>::tbs_data() const
    {
-   return build_cert_body(EAC1_1_obj<Derived>::tbs_bits);
+   return build_cert_body(EAC1_1_obj<Derived>::m_tbs_bits);
    }
 
 template<typename Derived> void EAC1_1_gen_CVC<Derived>::encode(Pipe& out, X509_Encoding encoding) const
@@ -144,7 +144,7 @@ template<typename Derived> void EAC1_1_gen_CVC<Derived>::encode(Pipe& out, X509_
    std::vector<byte> der = DER_Encoder()
       .start_cons(ASN1_Tag(33), APPLICATION)
       .start_cons(ASN1_Tag(78), APPLICATION)
-      .raw_bytes(EAC1_1_obj<Derived>::tbs_bits)
+      .raw_bytes(EAC1_1_obj<Derived>::m_tbs_bits)
       .end_cons()
       .encode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
       .end_cons()

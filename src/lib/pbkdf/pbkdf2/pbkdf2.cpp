@@ -122,7 +122,7 @@ PKCS5_PBKDF2::pbkdf(byte key[], size_t key_len,
                     size_t iterations,
                     std::chrono::milliseconds msec) const
    {
-   return pbkdf2(*mac.get(), key, key_len, passphrase, salt, salt_len, iterations, msec);
+   return pbkdf2(*m_mac.get(), key, key_len, passphrase, salt, salt_len, iterations, msec);
    }
 
 

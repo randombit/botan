@@ -94,15 +94,15 @@ void SAFER_SK::encrypt_n(const byte in[], byte out[], size_t blocks) const
       byte A = in[0], B = in[1], C = in[2], D = in[3],
            E = in[4], F = in[5], G = in[6], H = in[7], X, Y;
 
-      for(size_t j = 0; j != 16*rounds; j += 16)
+      for(size_t j = 0; j != 16*m_rounds; j += 16)
          {
-         A = EXP[A ^ EK[j  ]]; B = LOG[B + EK[j+1]];
-         C = LOG[C + EK[j+2]]; D = EXP[D ^ EK[j+3]];
-         E = EXP[E ^ EK[j+4]]; F = LOG[F + EK[j+5]];
-         G = LOG[G + EK[j+6]]; H = EXP[H ^ EK[j+7]];
+         A = EXP[A ^ m_EK[j  ]]; B = LOG[B + m_EK[j+1]];
+         C = LOG[C + m_EK[j+2]]; D = EXP[D ^ m_EK[j+3]];
+         E = EXP[E ^ m_EK[j+4]]; F = LOG[F + m_EK[j+5]];
+         G = LOG[G + m_EK[j+6]]; H = EXP[H ^ m_EK[j+7]];
 
-         A += EK[j+ 8]; B ^= EK[j+ 9]; C ^= EK[j+10]; D += EK[j+11];
-         E += EK[j+12]; F ^= EK[j+13]; G ^= EK[j+14]; H += EK[j+15];
+         A += m_EK[j+ 8]; B ^= m_EK[j+ 9]; C ^= m_EK[j+10]; D += m_EK[j+11];
+         E += m_EK[j+12]; F ^= m_EK[j+13]; G ^= m_EK[j+14]; H += m_EK[j+15];
 
          B += A; D += C; F += E; H += G; A += B; C += D; E += F; G += H;
          C += A; G += E; D += B; H += F; A += C; E += G; B += D; F += H;
@@ -110,10 +110,10 @@ void SAFER_SK::encrypt_n(const byte in[], byte out[], size_t blocks) const
          A += B; F = C + G; E = C + F; C = X; G = Y;
          }
 
-      out[0] = A ^ EK[16*rounds+0]; out[1] = B + EK[16*rounds+1];
-      out[2] = C + EK[16*rounds+2]; out[3] = D ^ EK[16*rounds+3];
-      out[4] = E ^ EK[16*rounds+4]; out[5] = F + EK[16*rounds+5];
-      out[6] = G + EK[16*rounds+6]; out[7] = H ^ EK[16*rounds+7];
+      out[0] = A ^ m_EK[16*m_rounds+0]; out[1] = B + m_EK[16*m_rounds+1];
+      out[2] = C + m_EK[16*m_rounds+2]; out[3] = D ^ m_EK[16*m_rounds+3];
+      out[4] = E ^ m_EK[16*m_rounds+4]; out[5] = F + m_EK[16*m_rounds+5];
+      out[6] = G + m_EK[16*m_rounds+6]; out[7] = H ^ m_EK[16*m_rounds+7];
 
       in += BLOCK_SIZE;
       out += BLOCK_SIZE;
@@ -130,24 +130,24 @@ void SAFER_SK::decrypt_n(const byte in[], byte out[], size_t blocks) const
       byte A = in[0], B = in[1], C = in[2], D = in[3],
            E = in[4], F = in[5], G = in[6], H = in[7];
 
-      A ^= EK[16*rounds+0]; B -= EK[16*rounds+1]; C -= EK[16*rounds+2];
-      D ^= EK[16*rounds+3]; E ^= EK[16*rounds+4]; F -= EK[16*rounds+5];
-      G -= EK[16*rounds+6]; H ^= EK[16*rounds+7];
+      A ^= m_EK[16*m_rounds+0]; B -= m_EK[16*m_rounds+1]; C -= m_EK[16*m_rounds+2];
+      D ^= m_EK[16*m_rounds+3]; E ^= m_EK[16*m_rounds+4]; F -= m_EK[16*m_rounds+5];
+      G -= m_EK[16*m_rounds+6]; H ^= m_EK[16*m_rounds+7];
 
-      for(s32bit j = 16*(rounds-1); j >= 0; j -= 16)
+      for(s32bit j = 16*(m_rounds-1); j >= 0; j -= 16)
          {
          byte T = E; E = B; B = C; C = T; T = F; F = D; D = G; G = T;
          A -= E; B -= F; C -= G; D -= H; E -= A; F -= B; G -= C; H -= D;
          A -= C; E -= G; B -= D; F -= H; C -= A; G -= E; D -= B; H -= F;
          A -= B; C -= D; E -= F; G -= H; B -= A; D -= C; F -= E; H -= G;
 
-         A = LOG[A - EK[j+8 ] + 256]; B = EXP[B ^ EK[j+9 ]];
-         C = EXP[C ^ EK[j+10]];       D = LOG[D - EK[j+11] + 256];
-         E = LOG[E - EK[j+12] + 256]; F = EXP[F ^ EK[j+13]];
-         G = EXP[G ^ EK[j+14]];       H = LOG[H - EK[j+15] + 256];
+         A = LOG[A - m_EK[j+8 ] + 256]; B = EXP[B ^ m_EK[j+9 ]];
+         C = EXP[C ^ m_EK[j+10]];       D = LOG[D - m_EK[j+11] + 256];
+         E = LOG[E - m_EK[j+12] + 256]; F = EXP[F ^ m_EK[j+13]];
+         G = EXP[G ^ m_EK[j+14]];       H = LOG[H - m_EK[j+15] + 256];
 
-         A ^= EK[j+0]; B -= EK[j+1]; C -= EK[j+2]; D ^= EK[j+3];
-         E ^= EK[j+4]; F -= EK[j+5]; G -= EK[j+6]; H ^= EK[j+7];
+         A ^= m_EK[j+0]; B -= m_EK[j+1]; C -= m_EK[j+2]; D ^= m_EK[j+3];
+         E ^= m_EK[j+4]; F -= m_EK[j+5]; G -= m_EK[j+6]; H ^= m_EK[j+7];
          }
 
       out[0] = A; out[1] = B; out[2] = C; out[3] = D;
@@ -203,28 +203,28 @@ void SAFER_SK::key_schedule(const byte key[], size_t)
       0x07, 0x08, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x11, 0x09, 0x0A, 0x0B,
       0x0C, 0x0D, 0x0E, 0x0F };
 
-   EK.resize(16 * rounds + 8);
+   m_EK.resize(16 * m_rounds + 8);
 
    secure_vector<byte> KB(18);
 
    for(size_t i = 0; i != 8; ++i)
       {
       KB[ 8] ^= KB[i] = rotate_left(key[i], 5);
-      KB[17] ^= KB[i+9] = EK[i] = key[i+8];
+      KB[17] ^= KB[i+9] = m_EK[i] = key[i+8];
       }
 
-   for(size_t i = 0; i != rounds; ++i)
+   for(size_t i = 0; i != m_rounds; ++i)
       {
       for(size_t j = 0; j != 18; ++j)
          KB[j] = rotate_left(KB[j], 6);
       for(size_t j = 0; j != 16; ++j)
-         EK[16*i+j+8] = KB[KEY_INDEX[16*i+j]] + BIAS[16*i+j];
+         m_EK[16*i+j+8] = KB[KEY_INDEX[16*i+j]] + BIAS[16*i+j];
       }
    }
 
 void SAFER_SK::clear()
    {
-   zap(EK);
+   zap(m_EK);
    }
 
 /*
@@ -232,7 +232,7 @@ void SAFER_SK::clear()
 */
 std::string SAFER_SK::name() const
    {
-   return "SAFER-SK(" + std::to_string(rounds) + ")";
+   return "SAFER-SK(" + std::to_string(m_rounds) + ")";
    }
 
 /*
@@ -240,15 +240,15 @@ std::string SAFER_SK::name() const
 */
 BlockCipher* SAFER_SK::clone() const
    {
-   return new SAFER_SK(rounds);
+   return new SAFER_SK(m_rounds);
    }
 
 /*
 * SAFER-SK Constructor
 */
-SAFER_SK::SAFER_SK(size_t r) : rounds(r)
+SAFER_SK::SAFER_SK(size_t r) : m_rounds(r)
    {
-   if(rounds > 13 || rounds == 0)
+   if(m_rounds > 13 || m_rounds == 0)
       throw Invalid_Argument(name() + ": Invalid number of rounds");
    }
 

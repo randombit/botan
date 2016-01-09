@@ -22,14 +22,14 @@ class BOTAN_DLL CRC32 : public HashFunction
       size_t output_length() const override { return 4; }
       HashFunction* clone() const override { return new CRC32; }
 
-      void clear() override { crc = 0xFFFFFFFF; }
+      void clear() override { m_crc = 0xFFFFFFFF; }
 
       CRC32() { clear(); }
       ~CRC32() { clear(); }
    private:
       void add_data(const byte[], size_t) override;
       void final_result(byte[]) override;
-      u32bit crc;
+      u32bit m_crc;
    };
 
 }

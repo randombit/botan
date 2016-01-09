@@ -30,7 +30,7 @@ PSSR* PSSR::make(const Spec& request)
 */
 void PSSR::update(const byte input[], size_t length)
    {
-   hash->update(input, length);
+   m_hash->update(input, length);
    }
 
 /*
@@ -38,7 +38,7 @@ void PSSR::update(const byte input[], size_t length)
 */
 secure_vector<byte> PSSR::raw_data()
    {
-   return hash->final();
+   return m_hash->final();
    }
 
 /*
@@ -48,28 +48,28 @@ secure_vector<byte> PSSR::encoding_of(const secure_vector<byte>& msg,
                                       size_t output_bits,
                                       RandomNumberGenerator& rng)
    {
-   const size_t HASH_SIZE = hash->output_length();
+   const size_t HASH_SIZE = m_hash->output_length();
 
    if(msg.size() != HASH_SIZE)
       throw Encoding_Error("PSSR::encoding_of: Bad input length");
-   if(output_bits < 8*HASH_SIZE + 8*SALT_SIZE + 9)
+   if(output_bits < 8*HASH_SIZE + 8*m_SALT_SIZE + 9)
       throw Encoding_Error("PSSR::encoding_of: Output length is too small");
 
    const size_t output_length = (output_bits + 7) / 8;
 
-   secure_vector<byte> salt = rng.random_vec(SALT_SIZE);
+   secure_vector<byte> salt = rng.random_vec(m_SALT_SIZE);
 
    for(size_t j = 0; j != 8; ++j)
-      hash->update(0);
-   hash->update(msg);
-   hash->update(salt);
-   secure_vector<byte> H = hash->final();
+      m_hash->update(0);
+   m_hash->update(msg);
+   m_hash->update(salt);
+   secure_vector<byte> H = m_hash->final();
 
    secure_vector<byte> EM(output_length);
 
-   EM[output_length - HASH_SIZE - SALT_SIZE - 2] = 0x01;
-   buffer_insert(EM, output_length - 1 - HASH_SIZE - SALT_SIZE, salt);
-   mgf1_mask(*hash, H.data(), HASH_SIZE, EM.data(), output_length - HASH_SIZE - 1);
+   EM[output_length - HASH_SIZE - m_SALT_SIZE - 2] = 0x01;
+   buffer_insert(EM, output_length - 1 - HASH_SIZE - m_SALT_SIZE, salt);
+   mgf1_mask(*m_hash, H.data(), HASH_SIZE, EM.data(), output_length - HASH_SIZE - 1);
    EM[0] &= 0xFF >> (8 * ((output_bits + 7) / 8) - output_bits);
    buffer_insert(EM, output_length - 1 - HASH_SIZE, H);
    EM[output_length-1] = 0xBC;
@@ -83,7 +83,7 @@ secure_vector<byte> PSSR::encoding_of(const secure_vector<byte>& msg,
 bool PSSR::verify(const secure_vector<byte>& const_coded,
                    const secure_vector<byte>& raw, size_t key_bits)
    {
-   const size_t HASH_SIZE = hash->output_length();
+   const size_t HASH_SIZE = m_hash->output_length();
    const size_t KEY_BYTES = (key_bits + 7) / 8;
 
    if(key_bits < 8*HASH_SIZE + 9)
@@ -116,7 +116,7 @@ bool PSSR::verify(const secure_vector<byte>& const_coded,
    const byte* H = &coded[DB_size];
    const size_t H_size = HASH_SIZE;
 
-   mgf1_mask(*hash, H, H_size, DB, DB_size);
+   mgf1_mask(*m_hash, H, H_size, DB, DB_size);
    DB[0] &= 0xFF >> TOP_BITS;
 
    size_t salt_offset = 0;
@@ -131,21 +131,21 @@ bool PSSR::verify(const secure_vector<byte>& const_coded,
       return false;
 
    for(size_t j = 0; j != 8; ++j)
-      hash->update(0);
-   hash->update(raw);
-   hash->update(&DB[salt_offset], DB_size - salt_offset);
-   secure_vector<byte> H2 = hash->final();
+      m_hash->update(0);
+   m_hash->update(raw);
+   m_hash->update(&DB[salt_offset], DB_size - salt_offset);
+   secure_vector<byte> H2 = m_hash->final();
 
    return same_mem(H, H2.data(), HASH_SIZE);
    }
 
 PSSR::PSSR(HashFunction* h) :
-   SALT_SIZE(h->output_length()), hash(h)
+   m_SALT_SIZE(h->output_length()), m_hash(h)
    {
    }
 
 PSSR::PSSR(HashFunction* h, size_t salt_size) :
-   SALT_SIZE(salt_size), hash(h)
+   m_SALT_SIZE(salt_size), m_hash(h)
    {
    }
 

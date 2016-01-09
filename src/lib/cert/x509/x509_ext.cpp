@@ -54,14 +54,14 @@ Extensions::Extensions(const Extensions& extensions) : ASN1_Object()
 */
 Extensions& Extensions::operator=(const Extensions& other)
    {
-   for(size_t i = 0; i != extensions.size(); ++i)
-      delete extensions[i].first;
-   extensions.clear();
+   for(size_t i = 0; i != m_extensions.size(); ++i)
+      delete m_extensions[i].first;
+   m_extensions.clear();
 
-   for(size_t i = 0; i != other.extensions.size(); ++i)
-      extensions.push_back(
-         std::make_pair(other.extensions[i].first->copy(),
-                        other.extensions[i].second));
+   for(size_t i = 0; i != other.m_extensions.size(); ++i)
+      m_extensions.push_back(
+         std::make_pair(other.m_extensions[i].first->copy(),
+                        other.m_extensions[i].second));
 
    m_throw_on_unknown_critical = other.m_throw_on_unknown_critical;
 
@@ -78,7 +78,7 @@ OID Certificate_Extension::oid_of() const
 
 void Extensions::add(Certificate_Extension* extn, bool critical)
    {
-   extensions.push_back(std::make_pair(extn, critical));
+   m_extensions.push_back(std::make_pair(extn, critical));
    }
 
 /*
@@ -86,10 +86,10 @@ void Extensions::add(Certificate_Extension* extn, bool critical)
 */
 void Extensions::encode_into(DER_Encoder& to_object) const
    {
-   for(size_t i = 0; i != extensions.size(); ++i)
+   for(size_t i = 0; i != m_extensions.size(); ++i)
       {
-      const Certificate_Extension* ext = extensions[i].first;
-      const bool is_critical = extensions[i].second;
+      const Certificate_Extension* ext = m_extensions[i].first;
+      const bool is_critical = m_extensions[i].second;
 
       const bool should_encode = ext->should_encode();
 
@@ -109,9 +109,9 @@ void Extensions::encode_into(DER_Encoder& to_object) const
 */
 void Extensions::decode_from(BER_Decoder& from_source)
    {
-   for(size_t i = 0; i != extensions.size(); ++i)
-      delete extensions[i].first;
-   extensions.clear();
+   for(size_t i = 0; i != m_extensions.size(); ++i)
+      delete m_extensions[i].first;
+   m_extensions.clear();
 
    BER_Decoder sequence = from_source.start_cons(SEQUENCE);
 
@@ -146,7 +146,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
                                  oid.as_string() + ": " + e.what());
             }
 
-         extensions.push_back(std::make_pair(ext, critical));
+         m_extensions.push_back(std::make_pair(ext, critical));
          }
       }
 
@@ -159,8 +159,8 @@ void Extensions::decode_from(BER_Decoder& from_source)
 void Extensions::contents_to(Data_Store& subject_info,
                              Data_Store& issuer_info) const
    {
-   for(size_t i = 0; i != extensions.size(); ++i)
-      extensions[i].first->contents_to(subject_info, issuer_info);
+   for(size_t i = 0; i != m_extensions.size(); ++i)
+      m_extensions[i].first->contents_to(subject_info, issuer_info);
    }
 
 /*
@@ -168,8 +168,8 @@ void Extensions::contents_to(Data_Store& subject_info,
 */
 Extensions::~Extensions()
    {
-   for(size_t i = 0; i != extensions.size(); ++i)
-      delete extensions[i].first;
+   for(size_t i = 0; i != m_extensions.size(); ++i)
+      delete m_extensions[i].first;
    }
 
 namespace Cert_Extension {
@@ -351,7 +351,7 @@ void Authority_Key_ID::contents_to(Data_Store&, Data_Store& issuer) const
 */
 std::vector<byte> Alternative_Name::encode_inner() const
    {
-   return DER_Encoder().encode(alt_name).get_contents_unlocked();
+   return DER_Encoder().encode(m_alt_name).get_contents_unlocked();
    }
 
 /*
@@ -359,7 +359,7 @@ std::vector<byte> Alternative_Name::encode_inner() const
 */
 void Alternative_Name::decode_inner(const std::vector<byte>& in)
    {
-   BER_Decoder(in).decode(alt_name);
+   BER_Decoder(in).decode(m_alt_name);
    }
 
 /*
@@ -371,13 +371,13 @@ void Alternative_Name::contents_to(Data_Store& subject_info,
    std::multimap<std::string, std::string> contents =
       get_alt_name().contents();
 
-   if(oid_name_str == "X509v3.SubjectAlternativeName")
+   if(m_oid_name_str == "X509v3.SubjectAlternativeName")
       subject_info.add(contents);
-   else if(oid_name_str == "X509v3.IssuerAlternativeName")
+   else if(m_oid_name_str == "X509v3.IssuerAlternativeName")
       issuer_info.add(contents);
    else
       throw Internal_Error("In Alternative_Name, unknown type " +
-                           oid_name_str);
+                           m_oid_name_str);
    }
 
 /*
@@ -386,8 +386,8 @@ void Alternative_Name::contents_to(Data_Store& subject_info,
 Alternative_Name::Alternative_Name(const AlternativeName& alt_name,
                                    const std::string& oid_name_str)
    {
-   this->alt_name = alt_name;
-   this->oid_name_str = oid_name_str;
+   this->m_alt_name = alt_name;
+   this->m_oid_name_str = oid_name_str;
    }
 
 /*
@@ -444,6 +444,7 @@ namespace {
 class Policy_Information : public ASN1_Object
    {
    public:
+      // public member variable:
       OID oid;
 
       Policy_Information() {}

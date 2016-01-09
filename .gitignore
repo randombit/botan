@@ -49,6 +49,3 @@ coverage/
 # Profiler outputs
 cachegrind.*
 callgrind.*
-
-# Test output
-src/tests/outdata

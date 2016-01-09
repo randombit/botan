@@ -22,14 +22,14 @@ class BOTAN_DLL Adler32 : public HashFunction
       size_t output_length() const override { return 4; }
       HashFunction* clone() const override { return new Adler32; }
 
-      void clear() override { S1 = 1; S2 = 0; }
+      void clear() override { m_S1 = 1; m_S2 = 0; }
 
       Adler32() { clear(); }
       ~Adler32() { clear(); }
    private:
       void add_data(const byte[], size_t) override;
       void final_result(byte[]) override;
-      u16bit S1, S2;
+      u16bit m_S1, m_S2;
    };
 
 }

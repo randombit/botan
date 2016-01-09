@@ -80,18 +80,18 @@ class Server_Name_Indicator : public Extension
       Handshake_Extension_Type type() const override { return static_type(); }
 
       Server_Name_Indicator(const std::string& host_name) :
-         sni_host_name(host_name) {}
+         m_sni_host_name(host_name) {}
 
       Server_Name_Indicator(TLS_Data_Reader& reader,
                             u16bit extension_size);
 
-      std::string host_name() const { return sni_host_name; }
+      std::string host_name() const { return m_sni_host_name; }
 
       std::vector<byte> serialize() const override;
 
-      bool empty() const override { return sni_host_name.empty(); }
+      bool empty() const override { return m_sni_host_name.empty(); }
    private:
-      std::string sni_host_name;
+      std::string m_sni_host_name;
    };
 
 /**
@@ -106,18 +106,18 @@ class SRP_Identifier : public Extension
       Handshake_Extension_Type type() const override { return static_type(); }
 
       SRP_Identifier(const std::string& identifier) :
-         srp_identifier(identifier) {}
+         m_srp_identifier(identifier) {}
 
       SRP_Identifier(TLS_Data_Reader& reader,
                      u16bit extension_size);
 
-      std::string identifier() const { return srp_identifier; }
+      std::string identifier() const { return m_srp_identifier; }
 
       std::vector<byte> serialize() const override;
 
-      bool empty() const override { return srp_identifier.empty(); }
+      bool empty() const override { return m_srp_identifier.empty(); }
    private:
-      std::string srp_identifier;
+      std::string m_srp_identifier;
    };
 
 /**
@@ -134,19 +134,19 @@ class Renegotiation_Extension : public Extension
       Renegotiation_Extension() {}
 
       Renegotiation_Extension(const std::vector<byte>& bits) :
-         reneg_data(bits) {}
+         m_reneg_data(bits) {}
 
       Renegotiation_Extension(TLS_Data_Reader& reader,
                              u16bit extension_size);
 
       const std::vector<byte>& renegotiation_info() const
-         { return reneg_data; }
+         { return m_reneg_data; }
 
       std::vector<byte> serialize() const override;
 
       bool empty() const override { return false; } // always send this
    private:
-      std::vector<byte> reneg_data;
+      std::vector<byte> m_reneg_data;
    };
 
 /**
@@ -409,9 +409,9 @@ class Extensions
          {
          Handshake_Extension_Type type = T::static_type();
 
-         auto i = extensions.find(type);
+         auto i = m_extensions.find(type);
 
-         if(i != extensions.end())
+         if(i != m_extensions.end())
             return dynamic_cast<T*>(i->second.get());
          return nullptr;
          }
@@ -424,7 +424,7 @@ class Extensions
 
       void add(Extension* extn)
          {
-         extensions[extn->type()].reset(extn);
+         m_extensions[extn->type()].reset(extn);
          }
 
       std::vector<byte> serialize() const;
@@ -439,7 +439,7 @@ class Extensions
       Extensions(const Extensions&) {}
       Extensions& operator=(const Extensions&) { return (*this); }
 
-      std::map<Handshake_Extension_Type, std::unique_ptr<Extension>> extensions;
+      std::map<Handshake_Extension_Type, std::unique_ptr<Extension>> m_extensions;
    };
 
 }

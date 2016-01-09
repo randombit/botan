@@ -23,7 +23,7 @@ class KDF_KAT_Tests : public Text_Based_Test
                                         {"IKM","XTS"})
          {}
 
-      Test::Result run_one_test(const std::string& kdf_name, const VarMap& vars)
+      Test::Result run_one_test(const std::string& kdf_name, const VarMap& vars) override
          {
          Test::Result result(kdf_name);
 

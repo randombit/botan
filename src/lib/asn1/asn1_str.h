@@ -29,8 +29,8 @@ class BOTAN_DLL ASN1_String : public ASN1_Object
       ASN1_String(const std::string& = "");
       ASN1_String(const std::string&, ASN1_Tag);
    private:
-      std::string iso_8859_str;
-      ASN1_Tag tag;
+      std::string m_iso_8859_str;
+      ASN1_Tag m_tag;
    };
 
 }

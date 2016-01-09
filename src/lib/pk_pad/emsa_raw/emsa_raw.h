@@ -27,7 +27,7 @@ class BOTAN_DLL EMSA_Raw : public EMSA
       bool verify(const secure_vector<byte>&, const secure_vector<byte>&,
                   size_t) override;
 
-      secure_vector<byte> message;
+      secure_vector<byte> m_message;
    };
 
 }

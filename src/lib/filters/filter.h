@@ -115,7 +115,7 @@ class BOTAN_DLL Filter
       friend class Fanout_Filter;
 
       size_t total_ports() const;
-      size_t current_port() const { return port_num; }
+      size_t current_port() const { return m_port_num; }
 
       /**
       * Set the active port
@@ -123,7 +123,7 @@ class BOTAN_DLL Filter
       */
       void set_port(size_t new_port);
 
-      size_t owns() const { return filter_owns; }
+      size_t owns() const { return m_filter_owns; }
 
       /**
       * Attach another filter to this one
@@ -138,12 +138,12 @@ class BOTAN_DLL Filter
       void set_next(Filter* filters[], size_t count);
       Filter* get_next() const;
 
-      secure_vector<byte> write_queue;
-      std::vector<Filter*> next;
-      size_t port_num, filter_owns;
+      secure_vector<byte> m_write_queue;
+      std::vector<Filter*> m_next;
+      size_t m_port_num, m_filter_owns;
 
       // true if filter belongs to a pipe --> prohibit filter sharing!
-      bool owned;
+      bool m_owned;
    };
 
 /**
@@ -155,7 +155,7 @@ class BOTAN_DLL Fanout_Filter : public Filter
       /**
       * Increment the number of filters past us that we own
       */
-      void incr_owns() { ++filter_owns; }
+      void incr_owns() { ++m_filter_owns; }
 
       void set_port(size_t n) { Filter::set_port(n); }
 
@@ -165,9 +165,9 @@ class BOTAN_DLL Fanout_Filter : public Filter
 
    private:
       friend class Threaded_Fork;
-      using Filter::write_queue;
+      using Filter::m_write_queue;
       using Filter::total_ports;
-      using Filter::next;
+      using Filter::m_next;
    };
 
 /**

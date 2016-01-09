@@ -161,11 +161,11 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], size_t blocks)
    const __m128i K40_59 = _mm_set1_epi32(0x8F1BBCDC);
    const __m128i K60_79 = _mm_set1_epi32(0xCA62C1D6);
 
-   u32bit A = digest[0],
-          B = digest[1],
-          C = digest[2],
-          D = digest[3],
-          E = digest[4];
+   u32bit A = m_digest[0],
+          B = m_digest[1],
+          C = m_digest[2],
+          D = m_digest[3],
+          E = m_digest[4];
 
    const __m128i* input = reinterpret_cast<const __m128i*>(input_bytes);
 
@@ -316,11 +316,11 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], size_t blocks)
       F4(C, D, E, A, B, GET_P_32(P3, 2));
       F4(B, C, D, E, A, GET_P_32(P3, 3));
 
-      A = (digest[0] += A);
-      B = (digest[1] += B);
-      C = (digest[2] += C);
-      D = (digest[3] += D);
-      E = (digest[4] += E);
+      A = (m_digest[0] += A);
+      B = (m_digest[1] += B);
+      C = (m_digest[2] += C);
+      D = (m_digest[3] += D);
+      E = (m_digest[4] += E);
 
       input += (hash_block_size() / 16);
       }

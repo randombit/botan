@@ -30,31 +30,31 @@ void raise_runtime_loader_exception(const std::string& lib_name,
 
 Dynamically_Loaded_Library::Dynamically_Loaded_Library(
    const std::string& library) :
-   lib_name(library), lib(nullptr)
+   m_lib_name(library), m_lib(nullptr)
    {
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
-   lib = ::dlopen(lib_name.c_str(), RTLD_LAZY);
+   m_lib = ::dlopen(m_lib_name.c_str(), RTLD_LAZY);
 
-   if(!lib)
-      raise_runtime_loader_exception(lib_name, dlerror());
+   if(!m_lib)
+      raise_runtime_loader_exception(m_lib_name, dlerror());
 
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
-   lib = ::LoadLibraryA(lib_name.c_str());
+   m_lib = ::LoadLibraryA(m_lib_name.c_str());
 
-   if(!lib)
-      raise_runtime_loader_exception(lib_name, "LoadLibrary failed");
+   if(!m_lib)
+      raise_runtime_loader_exception(m_lib_name, "LoadLibrary failed");
 #endif
 
-   if(!lib)
-      raise_runtime_loader_exception(lib_name, "Dynamic load not supported");
+   if(!m_lib)
+      raise_runtime_loader_exception(m_lib_name, "Dynamic load not supported");
    }
 
 Dynamically_Loaded_Library::~Dynamically_Loaded_Library()
    {
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
-   ::dlclose(lib);
+   ::dlclose(m_lib);
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
-   ::FreeLibrary((HMODULE)lib);
+   ::FreeLibrary((HMODULE)m_lib);
 #endif
    }
 
@@ -63,15 +63,15 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
    void* addr = nullptr;
 
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
-   addr = ::dlsym(lib, symbol.c_str());
+   addr = ::dlsym(m_lib, symbol.c_str());
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
-   addr = reinterpret_cast<void*>(::GetProcAddress((HMODULE)lib,
+   addr = reinterpret_cast<void*>(::GetProcAddress((HMODULE)m_lib,
                                                    symbol.c_str()));
 #endif
 
    if(!addr)
       throw Exception("Failed to resolve symbol " + symbol +
-                               " in " + lib_name);
+                               " in " + m_lib_name);
 
    return addr;
    }

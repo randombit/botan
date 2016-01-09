@@ -24,15 +24,15 @@ void Whirlpool::compress_n(const byte in[], size_t blocks)
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      load_be(M.data(), in, M.size());
+      load_be(m_M.data(), in, m_M.size());
 
       u64bit K0, K1, K2, K3, K4, K5, K6, K7;
-      K0 = digest[0]; K1 = digest[1]; K2 = digest[2]; K3 = digest[3];
-      K4 = digest[4]; K5 = digest[5]; K6 = digest[6]; K7 = digest[7];
+      K0 = m_digest[0]; K1 = m_digest[1]; K2 = m_digest[2]; K3 = m_digest[3];
+      K4 = m_digest[4]; K5 = m_digest[5]; K6 = m_digest[6]; K7 = m_digest[7];
 
       u64bit B0, B1, B2, B3, B4, B5, B6, B7;
-      B0 = K0 ^ M[0]; B1 = K1 ^ M[1]; B2 = K2 ^ M[2]; B3 = K3 ^ M[3];
-      B4 = K4 ^ M[4]; B5 = K5 ^ M[5]; B6 = K6 ^ M[6]; B7 = K7 ^ M[7];
+      B0 = K0 ^ m_M[0]; B1 = K1 ^ m_M[1]; B2 = K2 ^ m_M[2]; B3 = K3 ^ m_M[3];
+      B4 = K4 ^ m_M[4]; B5 = K5 ^ m_M[5]; B6 = K6 ^ m_M[6]; B7 = K7 ^ m_M[7];
 
       for(size_t j = 0; j != 10; ++j)
          {
@@ -110,14 +110,14 @@ void Whirlpool::compress_n(const byte in[], size_t blocks)
          B4 = T4; B5 = T5; B6 = T6; B7 = T7;
          }
 
-      digest[0] ^= B0 ^ M[0];
-      digest[1] ^= B1 ^ M[1];
-      digest[2] ^= B2 ^ M[2];
-      digest[3] ^= B3 ^ M[3];
-      digest[4] ^= B4 ^ M[4];
-      digest[5] ^= B5 ^ M[5];
-      digest[6] ^= B6 ^ M[6];
-      digest[7] ^= B7 ^ M[7];
+      m_digest[0] ^= B0 ^ m_M[0];
+      m_digest[1] ^= B1 ^ m_M[1];
+      m_digest[2] ^= B2 ^ m_M[2];
+      m_digest[3] ^= B3 ^ m_M[3];
+      m_digest[4] ^= B4 ^ m_M[4];
+      m_digest[5] ^= B5 ^ m_M[5];
+      m_digest[6] ^= B6 ^ m_M[6];
+      m_digest[7] ^= B7 ^ m_M[7];
 
       in += hash_block_size();
       }
@@ -128,7 +128,7 @@ void Whirlpool::compress_n(const byte in[], size_t blocks)
 */
 void Whirlpool::copy_out(byte output[])
    {
-   copy_out_vec_be(output, output_length(), digest);
+   copy_out_vec_be(output, output_length(), m_digest);
    }
 
 /*
@@ -137,8 +137,8 @@ void Whirlpool::copy_out(byte output[])
 void Whirlpool::clear()
    {
    MDx_HashFunction::clear();
-   zeroise(M);
-   zeroise(digest);
+   zeroise(m_M);
+   zeroise(m_digest);
    }
 
 }

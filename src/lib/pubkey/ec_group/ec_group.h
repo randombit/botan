@@ -43,11 +43,11 @@ class BOTAN_DLL EC_Group
                const PointGFp& base_point,
                const BigInt& order,
                const BigInt& cofactor) :
-         curve(curve),
-         base_point(base_point),
-         order(order),
-         cofactor(cofactor),
-         oid("")
+         m_curve(curve),
+         m_base_point(base_point),
+         m_order(order),
+         m_cofactor(cofactor),
+         m_oid("")
          {}
 
       /**
@@ -86,33 +86,33 @@ class BOTAN_DLL EC_Group
       * Return domain parameter curve
       * @result domain parameter curve
       */
-      const CurveGFp& get_curve() const { return curve; }
+      const CurveGFp& get_curve() const { return m_curve; }
 
       /**
       * Return group base point
       * @result base point
       */
-      const PointGFp& get_base_point() const { return base_point; }
+      const PointGFp& get_base_point() const { return m_base_point; }
 
       /**
       * Return the order of the base point
       * @result order of the base point
       */
-      const BigInt& get_order() const { return order; }
+      const BigInt& get_order() const { return m_order; }
 
       /**
       * Return the cofactor
       * @result the cofactor
       */
-      const BigInt& get_cofactor() const { return cofactor; }
+      const BigInt& get_cofactor() const { return m_cofactor; }
 
-      bool initialized() const { return !base_point.is_zero(); }
+      bool initialized() const { return !m_base_point.is_zero(); }
 
       /**
       * Return the OID of these domain parameters
       * @result the OID
       */
-      std::string get_oid() const { return oid; }
+      std::string get_oid() const { return m_oid; }
 
       bool operator==(const EC_Group& other) const
          {
@@ -128,10 +128,10 @@ class BOTAN_DLL EC_Group
       static const char* PEM_for_named_group(const std::string& name);
 
    private:
-      CurveGFp curve;
-      PointGFp base_point;
-      BigInt order, cofactor;
-      std::string oid;
+      CurveGFp m_curve;
+      PointGFp m_base_point;
+      BigInt m_order, m_cofactor;
+      std::string m_oid;
    };
 
 inline bool operator!=(const EC_Group& lhs,

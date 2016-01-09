@@ -45,7 +45,7 @@ SRP6_Authenticator_File::SRP6_Authenticator_File(const std::string& filename)
       else
          continue; // unknown group, ignored
 
-      entries[username] = SRP6_Data(v, salt, group_id);
+      m_entries[username] = SRP6_Data(v, salt, group_id);
       }
    }
 
@@ -54,9 +54,9 @@ bool SRP6_Authenticator_File::lookup_user(const std::string& username,
                                           std::vector<byte>& salt,
                                           std::string& group_id) const
    {
-   std::map<std::string, SRP6_Data>::const_iterator i = entries.find(username);
+   std::map<std::string, SRP6_Data>::const_iterator i = m_entries.find(username);
 
-   if(i == entries.end())
+   if(i == m_entries.end())
       return false;
 
    v = i->second.v;

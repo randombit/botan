@@ -75,7 +75,7 @@ class BOTAN_DLL Extensions : public ASN1_Object
    private:
       static Certificate_Extension* get_extension(const OID&);
 
-      std::vector<std::pair<Certificate_Extension*, bool> > extensions;
+      std::vector<std::pair<Certificate_Extension*, bool> > m_extensions;
       bool m_throw_on_unknown_critical;
    };
 
@@ -188,22 +188,22 @@ class BOTAN_DLL Authority_Key_ID : public Certificate_Extension
 class BOTAN_DLL Alternative_Name : public Certificate_Extension
    {
    public:
-      AlternativeName get_alt_name() const { return alt_name; }
+      AlternativeName get_alt_name() const { return m_alt_name; }
 
    protected:
       Alternative_Name(const AlternativeName&, const std::string& oid_name);
 
       Alternative_Name(const std::string&, const std::string&);
    private:
-      std::string oid_name() const override { return oid_name_str; }
+      std::string oid_name() const override { return m_oid_name_str; }
 
-      bool should_encode() const override { return alt_name.has_items(); }
+      bool should_encode() const override { return m_alt_name.has_items(); }
       std::vector<byte> encode_inner() const override;
       void decode_inner(const std::vector<byte>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
-      std::string oid_name_str;
-      AlternativeName alt_name;
+      std::string m_oid_name_str;
+      AlternativeName m_alt_name;
    };
 
 /**

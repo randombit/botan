@@ -152,7 +152,7 @@ class BigInt_KAT_Tests : public Text_Based_Test
                                            {"In1","In2","Input","Shift","Modulus","Value","Base","Exponent","IsPrime"})
          {}
 
-      Test::Result run_one_test(const std::string& algo, const VarMap& vars)
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          Test::Result result("BigInt " + algo);
 

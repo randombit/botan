@@ -55,7 +55,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
    // The parameters also includes hash and cipher OIDs
    BER_Decoder(alg_id.parameters).start_cons(SEQUENCE).decode(ecc_param_id);
 
-   domain_params = EC_Group(ecc_param_id);
+   m_domain_params = EC_Group(ecc_param_id);
 
    secure_vector<byte> bits;
    BER_Decoder(key_bits).decode(bits, OCTET_STRING);
@@ -72,9 +72,9 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
    BigInt x(bits.data(), part_size);
    BigInt y(&bits[part_size], part_size);
 
-   public_key = PointGFp(domain().get_curve(), x, y);
+   m_public_key = PointGFp(domain().get_curve(), x, y);
 
-   BOTAN_ASSERT(public_key.on_the_curve(),
+   BOTAN_ASSERT(m_public_key.on_the_curve(),
                 "Loaded GOST 34.10 public key is on the curve");
    }
 
@@ -160,28 +160,28 @@ class GOST_3410_Verification_Operation : public PK_Ops::Verification_with_EMSA
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost,
                                        const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
-         base_point(gost.domain().get_base_point()),
-         public_point(gost.public_point()),
-         order(gost.domain().get_order()) {}
+         m_base_point(gost.domain().get_base_point()),
+         m_public_point(gost.public_point()),
+         m_order(gost.domain().get_order()) {}
 
       size_t message_parts() const override { return 2; }
-      size_t message_part_size() const override { return order.bytes(); }
-      size_t max_input_bits() const override { return order.bits(); }
+      size_t message_part_size() const override { return m_order.bytes(); }
+      size_t max_input_bits() const override { return m_order.bits(); }
 
       bool with_recovery() const override { return false; }
 
       bool verify(const byte msg[], size_t msg_len,
                   const byte sig[], size_t sig_len) override;
    private:
-      const PointGFp& base_point;
-      const PointGFp& public_point;
-      const BigInt& order;
+      const PointGFp& m_base_point;
+      const PointGFp& m_public_point;
+      const BigInt& m_order;
    };
 
 bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
                                               const byte sig[], size_t sig_len)
    {
-   if(sig_len != order.bytes()*2)
+   if(sig_len != m_order.bytes()*2)
       return false;
 
    BigInt e = decode_le(msg, msg_len);
@@ -189,20 +189,20 @@ bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
    BigInt s(sig, sig_len / 2);
    BigInt r(sig + sig_len / 2, sig_len / 2);
 
-   if(r <= 0 || r >= order || s <= 0 || s >= order)
+   if(r <= 0 || r >= m_order || s <= 0 || s >= m_order)
       return false;
 
-   e %= order;
+   e %= m_order;
    if(e == 0)
       e = 1;
 
-   BigInt v = inverse_mod(e, order);
+   BigInt v = inverse_mod(e, m_order);
 
-   BigInt z1 = (s*v) % order;
-   BigInt z2 = (-r*v) % order;
+   BigInt z1 = (s*v) % m_order;
+   BigInt z2 = (-r*v) % m_order;
 
-   PointGFp R = multi_exponentiate(base_point, z1,
-                                   public_point, z2);
+   PointGFp R = multi_exponentiate(m_base_point, z1,
+                                   m_public_point, z2);
 
    if(R.is_zero())
      return false;

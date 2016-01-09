@@ -54,19 +54,19 @@ u32bit dec_two_digit(byte b1, byte b2)
 * Create an EAC_Time
 */
 EAC_Time::EAC_Time(const std::chrono::system_clock::time_point& time,
-                   ASN1_Tag t) : tag(t)
+                   ASN1_Tag t) : m_tag(t)
    {
    calendar_point cal = calendar_value(time);
 
-   year   = cal.year;
-   month  = cal.month;
-   day    = cal.day;
+   m_year   = cal.year;
+   m_month  = cal.month;
+   m_day    = cal.day;
    }
 
 /*
 * Create an EAC_Time
 */
-EAC_Time::EAC_Time(const std::string& t_spec, ASN1_Tag t) : tag(t)
+EAC_Time::EAC_Time(const std::string& t_spec, ASN1_Tag t) : m_tag(t)
    {
    set_to(t_spec);
    }
@@ -75,7 +75,7 @@ EAC_Time::EAC_Time(const std::string& t_spec, ASN1_Tag t) : tag(t)
 * Create an EAC_Time
 */
 EAC_Time::EAC_Time(u32bit y, u32bit m, u32bit d, ASN1_Tag t) :
-   year(y), month(m), day(d), tag(t)
+   m_year(y), m_month(m), m_day(d), m_tag(t)
    {
    }
 
@@ -86,7 +86,7 @@ void EAC_Time::set_to(const std::string& time_str)
    {
    if(time_str == "")
       {
-      year = month = day = 0;
+      m_year = m_month = m_day = 0;
       return;
       }
 
@@ -110,9 +110,9 @@ void EAC_Time::set_to(const std::string& time_str)
    if(params.size() != 3)
       throw Invalid_Argument("Invalid time specification " + time_str);
 
-   year   = to_u32bit(params[0]);
-   month  = to_u32bit(params[1]);
-   day    = to_u32bit(params[2]);
+   m_year   = to_u32bit(params[0]);
+   m_month  = to_u32bit(params[1]);
+   m_day    = to_u32bit(params[2]);
 
    if(!passes_sanity_check())
       throw Invalid_Argument("Invalid time specification " + time_str);
@@ -124,7 +124,7 @@ void EAC_Time::set_to(const std::string& time_str)
 */
 void EAC_Time::encode_into(DER_Encoder& der) const
    {
-   der.add_object(tag, APPLICATION,
+   der.add_object(m_tag, APPLICATION,
                   encoded_eac_time());
    }
 
@@ -136,7 +136,7 @@ std::string EAC_Time::as_string() const
    if(time_is_set() == false)
       throw Invalid_State("EAC_Time::as_string: No time set");
 
-   return std::to_string(year * 10000 + month * 100 + day);
+   return std::to_string(m_year * 10000 + m_month * 100 + m_day);
    }
 
 /*
@@ -144,7 +144,7 @@ std::string EAC_Time::as_string() const
 */
 bool EAC_Time::time_is_set() const
    {
-   return (year != 0);
+   return (m_year != 0);
    }
 
 /*
@@ -158,9 +158,9 @@ std::string EAC_Time::readable_string() const
    // desired format: "%04d/%02d/%02d"
    std::stringstream output;
    output << std::setfill('0')
-          << std::setw(4) << year << "/"
-          << std::setw(2) << month << "/"
-          << std::setw(2) << day;
+          << std::setw(4) << m_year << "/"
+          << std::setw(2) << m_month << "/"
+          << std::setw(2) << m_day;
    return output.str();
    }
 
@@ -169,11 +169,11 @@ std::string EAC_Time::readable_string() const
 */
 bool EAC_Time::passes_sanity_check() const
    {
-   if(year < 2000 || year > 2099)
+   if(m_year < 2000 || m_year > 2099)
       return false;
-   if(month == 0 || month > 12)
+   if(m_month == 0 || m_month > 12)
       return false;
-   if(day == 0 || day > 31)
+   if(m_day == 0 || m_day > 31)
       return false;
 
    return true;
@@ -184,17 +184,17 @@ bool EAC_Time::passes_sanity_check() const
 */
 void EAC_Time::add_years(u32bit years)
    {
-   year += years;
+   m_year += years;
    }
 
 void EAC_Time::add_months(u32bit months)
    {
-   year += months/12;
-   month += months % 12;
-   if(month > 12)
+   m_year += months/12;
+   m_month += months % 12;
+   if(m_month > 12)
       {
-      year += 1;
-      month -= 12;
+      m_year += 1;
+      m_month -= 12;
       }
    }
 
@@ -208,12 +208,12 @@ s32bit EAC_Time::cmp(const EAC_Time& other) const
 
    const s32bit EARLIER = -1, LATER = 1, SAME_TIME = 0;
 
-   if(year < other.year)     return EARLIER;
-   if(year > other.year)     return LATER;
-   if(month < other.month)   return EARLIER;
-   if(month > other.month)   return LATER;
-   if(day < other.day)       return EARLIER;
-   if(day > other.day)       return LATER;
+   if(m_year < other.m_year)     return EARLIER;
+   if(m_year > other.m_year)     return LATER;
+   if(m_month < other.m_month)   return EARLIER;
+   if(m_month > other.m_month)   return LATER;
+   if(m_day < other.m_day)       return EARLIER;
+   if(m_day > other.m_day)       return LATER;
 
    return SAME_TIME;
    }
@@ -258,7 +258,7 @@ void EAC_Time::decode_from(BER_Decoder& source)
    {
    BER_Object obj = source.get_next_object();
 
-   if(obj.type_tag != this->tag)
+   if(obj.type_tag != m_tag)
       throw BER_Decoding_Error("Tag mismatch when decoding");
 
    if(obj.value.size() != 6)
@@ -271,9 +271,9 @@ void EAC_Time::decode_from(BER_Decoder& source)
       u32bit tmp_year = dec_two_digit(obj.value[0], obj.value[1]);
       u32bit tmp_mon = dec_two_digit(obj.value[2], obj.value[3]);
       u32bit tmp_day = dec_two_digit(obj.value[4], obj.value[5]);
-      year = tmp_year + 2000;
-      month = tmp_mon;
-      day = tmp_day;
+      m_year = tmp_year + 2000;
+      m_month = tmp_mon;
+      m_day = tmp_day;
       }
    catch (Invalid_Argument)
       {
@@ -288,9 +288,9 @@ void EAC_Time::decode_from(BER_Decoder& source)
 std::vector<byte> EAC_Time::encoded_eac_time() const
    {
    std::vector<byte> result;
-   result += enc_two_digit(year);
-   result += enc_two_digit(month);
-   result += enc_two_digit(day);
+   result += enc_two_digit(m_year);
+   result += enc_two_digit(m_month);
+   result += enc_two_digit(m_day);
    return result;
    }
 
