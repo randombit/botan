@@ -80,13 +80,13 @@ class BOTAN_DLL Entropy_Accumulator
 class BOTAN_DLL Entropy_Source
    {
    public:
-      /*
+     /*
       * Return a new entropy source of a particular type, or null
       * Each entropy source may require substantial resources (eg, a file handle
       * or socket instance), so try to share them among multiple RNGs, or just
       * use the preconfigured global list accessed by global_entropy_sources()
       */
-      static std::unique_ptr<Entropy_Source> create(const std::string& type);
+      static std::unique_ptr<Entropy_Source> create(const std::string& name);
 
       /**
       * @return name identifying this entropy source
