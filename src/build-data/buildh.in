@@ -245,6 +245,22 @@ softare-based entropy polling is still used.
 
 #endif
 
+#if !defined(BOTAN_NORETURN)
+
+  #if defined (__clang__) || defined (__GNUG__)
+    #define BOTAN_NORETURN __attribute__ ((__noreturn__))
+
+  #elif defined (_MSC_VER)
+    #define BOTAN_NORETURN __declspec(noreturn)
+
+  #else
+    #define BOTAN_NORETURN
+	
+  #endif
+
+#endif
+
+
 #if defined(_MSC_VER)
   #define BOTAN_CURRENT_FUNCTION __FUNCTION__
 #else
