@@ -6,42 +6,49 @@ if(NOT WIN32)
 	#    list(APPEND extra_link_libraries dl pthread)
 endif()
 
+if(APPLE)
+	find_library(SECURITY_LIBRARY Security)
+
+	list(APPEND extra_link_libraries ${SECURITY_LIBRARY})
+endif()
+
+
 # botan-cli
 add_executable(botan-cli
-		asn1.cpp
-		base64.cpp
-		bcrypt.cpp
-		ca.cpp
-		cert_verify.cpp
-		compress.cpp
-		dl_group.cpp
-		dsa_sign.cpp
-		dsa_ver.cpp
-		factor.cpp
-		fpe.cpp
-		fuzzer.cpp
-		getopt.cpp
-		hash.cpp
-		is_prime.cpp
-		keygen.cpp
-		main.cpp
-		mce.cpp
-		ocsp.cpp
-		pkcs10.cpp
-		pkcs8.cpp
-		prime.cpp
-		rng.cpp
-		self_sig.cpp
-		speed.cpp
-		tls_client.cpp
-		tls_proxy.cpp
-		tls_server.cpp
-		x509print.cpp
-		implementation/speed_public_key.cpp
-		implementation/speed_prime.cpp
-		implementation/speed_transform.cpp
-		implementation/timer.cpp
-		)
+	asn1.cpp
+	base64.cpp
+	bcrypt.cpp
+	ca.cpp
+	cert_verify.cpp
+	compress.cpp
+	dl_group.cpp
+	dsa_sign.cpp
+	dsa_ver.cpp
+	factor.cpp
+	fpe.cpp
+	fuzzer.cpp
+	getopt.cpp
+	hash.cpp
+	is_prime.cpp
+	keygen.cpp
+	main.cpp
+	mce.cpp
+	ocsp.cpp
+	pkcs10.cpp
+	pkcs8.cpp
+	prime.cpp
+	rng.cpp
+	self_sig.cpp
+	speed.cpp
+	tls_client.cpp
+	tls_proxy.cpp
+	tls_server.cpp
+	x509print.cpp
+	implementation/speed_public_key.cpp
+	implementation/speed_prime.cpp
+	implementation/speed_transform.cpp
+	implementation/timer.cpp
+	)
 
 #find_package( LZMA REQUIRED )
 #if ( LZMA_FOUND )
