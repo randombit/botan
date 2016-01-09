@@ -23,7 +23,7 @@ EC_Group::EC_Group(const OID& domain_oid)
       throw Lookup_Error("No ECC domain data for " + domain_oid.as_string());
 
    *this = EC_Group(pem);
-   oid = domain_oid.as_string();
+   m_oid = domain_oid.as_string();
    }
 
 EC_Group::EC_Group(const std::string& str)
@@ -75,13 +75,13 @@ EC_Group::EC_Group(const std::vector<byte>& ber_data)
              .decode_octet_string_bigint(b)
            .end_cons()
            .decode(sv_base_point, OCTET_STRING)
-           .decode(order)
-           .decode(cofactor)
+           .decode(m_order)
+           .decode(m_cofactor)
          .end_cons()
          .verify_end();
 
-      curve = CurveGFp(p, a, b);
-      base_point = OS2ECP(sv_base_point, curve);
+      m_curve = CurveGFp(p, a, b);
+      m_base_point = OS2ECP(sv_base_point, m_curve);
       }
    else
       throw Decoding_Error("Unexpected tag while decoding ECC domain params");
@@ -95,24 +95,24 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
       const size_t ecpVers1 = 1;
       OID curve_type("1.2.840.10045.1.1");
 
-      const size_t p_bytes = curve.get_p().bytes();
+      const size_t p_bytes = m_curve.get_p().bytes();
 
       return DER_Encoder()
          .start_cons(SEQUENCE)
             .encode(ecpVers1)
             .start_cons(SEQUENCE)
                .encode(curve_type)
-               .encode(curve.get_p())
+               .encode(m_curve.get_p())
             .end_cons()
             .start_cons(SEQUENCE)
-               .encode(BigInt::encode_1363(curve.get_a(), p_bytes),
+               .encode(BigInt::encode_1363(m_curve.get_a(), p_bytes),
                        OCTET_STRING)
-               .encode(BigInt::encode_1363(curve.get_b(), p_bytes),
+               .encode(BigInt::encode_1363(m_curve.get_b(), p_bytes),
                        OCTET_STRING)
             .end_cons()
-            .encode(EC2OSP(base_point, PointGFp::UNCOMPRESSED), OCTET_STRING)
-            .encode(order)
-            .encode(cofactor)
+            .encode(EC2OSP(m_base_point, PointGFp::UNCOMPRESSED), OCTET_STRING)
+            .encode(m_order)
+            .encode(m_cofactor)
          .end_cons()
          .get_contents_unlocked();
       }

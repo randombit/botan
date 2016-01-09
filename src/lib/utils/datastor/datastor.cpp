@@ -18,7 +18,7 @@ namespace Botan {
 */
 bool Data_Store::operator==(const Data_Store& other) const
    {
-   return (contents == other.contents);
+   return (m_contents == other.m_contents);
    }
 
 /*
@@ -26,7 +26,7 @@ bool Data_Store::operator==(const Data_Store& other) const
 */
 bool Data_Store::has_value(const std::string& key) const
    {
-   return (contents.lower_bound(key) != contents.end());
+   return (m_contents.lower_bound(key) != m_contents.end());
    }
 
 /*
@@ -37,7 +37,7 @@ std::multimap<std::string, std::string> Data_Store::search_for(
    {
    std::multimap<std::string, std::string> out;
 
-   for(auto i = contents.begin(); i != contents.end(); ++i)
+   for(auto i = m_contents.begin(); i != m_contents.end(); ++i)
       if(predicate(i->first, i->second))
          out.insert(std::make_pair(i->first, i->second));
 
@@ -50,7 +50,7 @@ std::multimap<std::string, std::string> Data_Store::search_for(
 std::vector<std::string> Data_Store::get(const std::string& looking_for) const
    {
    std::vector<std::string> out;
-   auto range = contents.equal_range(looking_for);
+   auto range = m_contents.equal_range(looking_for);
    for(auto i = range.first; i != range.second; ++i)
       out.push_back(i->second);
    return out;
@@ -125,7 +125,7 @@ u32bit Data_Store::get1_u32bit(const std::string& key,
 */
 void Data_Store::add(const std::string& key, const std::string& val)
    {
-   multimap_insert(contents, key, val);
+   multimap_insert(m_contents, key, val);
    }
 
 /*
@@ -157,7 +157,7 @@ void Data_Store::add(const std::multimap<std::string, std::string>& in)
    std::multimap<std::string, std::string>::const_iterator i = in.begin();
    while(i != in.end())
       {
-      contents.insert(*i);
+      m_contents.insert(*i);
       ++i;
       }
    }

@@ -48,7 +48,7 @@ PKCS10_Request::PKCS10_Request(const std::vector<byte>& in) :
 */
 void PKCS10_Request::force_decode()
    {
-   BER_Decoder cert_req_info(tbs_bits);
+   BER_Decoder cert_req_info(m_tbs_bits);
 
    size_t version;
    cert_req_info.decode(version);
@@ -59,14 +59,14 @@ void PKCS10_Request::force_decode()
    X509_DN dn_subject;
    cert_req_info.decode(dn_subject);
 
-   info.add(dn_subject.contents());
+   m_info.add(dn_subject.contents());
 
    BER_Object public_key = cert_req_info.get_next_object();
    if(public_key.type_tag != SEQUENCE || public_key.class_tag != CONSTRUCTED)
       throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for public key",
                         public_key.type_tag, public_key.class_tag);
 
-   info.add("X509.Certificate.public_key",
+   m_info.add("X509.Certificate.public_key",
             PEM_Code::encode(
                ASN1::put_in_sequence(unlock(public_key.value)),
                "PUBLIC KEY"
@@ -108,13 +108,13 @@ void PKCS10_Request::handle_attribute(const Attribute& attr)
       {
       ASN1_String email;
       value.decode(email);
-      info.add("RFC822", email.value());
+      m_info.add("RFC822", email.value());
       }
    else if(attr.oid == OIDS::lookup("PKCS9.ChallengePassword"))
       {
       ASN1_String challenge_password;
       value.decode(challenge_password);
-      info.add("PKCS9.ChallengePassword", challenge_password.value());
+      m_info.add("PKCS9.ChallengePassword", challenge_password.value());
       }
    else if(attr.oid == OIDS::lookup("PKCS9.ExtensionRequest"))
       {
@@ -122,7 +122,7 @@ void PKCS10_Request::handle_attribute(const Attribute& attr)
       value.decode(extensions).verify_end();
 
       Data_Store issuer_info;
-      extensions.contents_to(info, issuer_info);
+      extensions.contents_to(m_info, issuer_info);
       }
    }
 
@@ -131,7 +131,7 @@ void PKCS10_Request::handle_attribute(const Attribute& attr)
 */
 std::string PKCS10_Request::challenge_password() const
    {
-   return info.get1("PKCS9.ChallengePassword");
+   return m_info.get1("PKCS9.ChallengePassword");
    }
 
 /*
@@ -139,7 +139,7 @@ std::string PKCS10_Request::challenge_password() const
 */
 X509_DN PKCS10_Request::subject_dn() const
    {
-   return create_dn(info);
+   return create_dn(m_info);
    }
 
 /*
@@ -147,7 +147,7 @@ X509_DN PKCS10_Request::subject_dn() const
 */
 std::vector<byte> PKCS10_Request::raw_public_key() const
    {
-   DataSource_Memory source(info.get1("X509.Certificate.public_key"));
+   DataSource_Memory source(m_info.get1("X509.Certificate.public_key"));
    return unlock(PEM_Code::decode_check_label(source, "PUBLIC KEY"));
    }
 
@@ -156,7 +156,7 @@ std::vector<byte> PKCS10_Request::raw_public_key() const
 */
 Public_Key* PKCS10_Request::subject_public_key() const
    {
-   DataSource_Memory source(info.get1("X509.Certificate.public_key"));
+   DataSource_Memory source(m_info.get1("X509.Certificate.public_key"));
    return X509::load_key(source);
    }
 
@@ -165,7 +165,7 @@ Public_Key* PKCS10_Request::subject_public_key() const
 */
 AlternativeName PKCS10_Request::subject_alt_name() const
    {
-   return create_alt_name(info);
+   return create_alt_name(m_info);
    }
 
 /*
@@ -173,7 +173,7 @@ AlternativeName PKCS10_Request::subject_alt_name() const
 */
 Key_Constraints PKCS10_Request::constraints() const
    {
-   return Key_Constraints(info.get1_u32bit("X509v3.KeyUsage", NO_CONSTRAINTS));
+   return Key_Constraints(m_info.get1_u32bit("X509v3.KeyUsage", NO_CONSTRAINTS));
    }
 
 /*
@@ -181,7 +181,7 @@ Key_Constraints PKCS10_Request::constraints() const
 */
 std::vector<OID> PKCS10_Request::ex_constraints() const
    {
-   std::vector<std::string> oids = info.get("X509v3.ExtendedKeyUsage");
+   std::vector<std::string> oids = m_info.get("X509v3.ExtendedKeyUsage");
 
    std::vector<OID> result;
    for(size_t i = 0; i != oids.size(); ++i)
@@ -194,7 +194,7 @@ std::vector<OID> PKCS10_Request::ex_constraints() const
 */
 bool PKCS10_Request::is_CA() const
    {
-   return (info.get1_u32bit("X509v3.BasicConstraints.is_ca") > 0);
+   return (m_info.get1_u32bit("X509v3.BasicConstraints.is_ca") > 0);
    }
 
 /*
@@ -202,7 +202,7 @@ bool PKCS10_Request::is_CA() const
 */
 u32bit PKCS10_Request::path_limit() const
    {
-   return info.get1_u32bit("X509v3.BasicConstraints.path_constraint", 0);
+   return m_info.get1_u32bit("X509v3.BasicConstraints.path_constraint", 0);
    }
 
 }

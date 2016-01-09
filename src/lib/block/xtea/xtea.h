@@ -28,11 +28,11 @@ class BOTAN_DLL XTEA : public Block_Cipher_Fixed_Params<8, 16>
       /**
       * @return const reference to the key schedule
       */
-      const secure_vector<u32bit>& get_EK() const { return EK; }
+      const secure_vector<u32bit>& get_EK() const { return m_EK; }
 
    private:
       void key_schedule(const byte[], size_t) override;
-      secure_vector<u32bit> EK;
+      secure_vector<u32bit> m_EK;
    };
 
 }

@@ -40,7 +40,7 @@ class BOTAN_DLL Parallel : public HashFunction
       void add_data(const byte[], size_t) override;
       void final_result(byte[]) override;
 
-      std::vector<std::unique_ptr<HashFunction>> hashes;
+      std::vector<std::unique_ptr<HashFunction>> m_hashes;
    };
 
 }

@@ -119,7 +119,7 @@ void KASUMI::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       for(size_t j = 0; j != 8; j += 2)
          {
-         const u16bit* K = &EK[8*j];
+         const u16bit* K = &m_EK[8*j];
 
          u16bit R = B1 ^ (rotate_left(B0, 1) & K[0]);
          u16bit L = B0 ^ (rotate_left(R, 1) | K[1]);
@@ -163,7 +163,7 @@ void KASUMI::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       for(size_t j = 0; j != 8; j += 2)
          {
-         const u16bit* K = &EK[8*(6-j)];
+         const u16bit* K = &m_EK[8*(6-j)];
 
          u16bit L = B2, R = B3;
 
@@ -210,24 +210,24 @@ void KASUMI::key_schedule(const byte key[], size_t)
       K[i+8] = K[i] ^ RC[i];
       }
 
-   EK.resize(64);
+   m_EK.resize(64);
 
    for(size_t i = 0; i != 8; ++i)
       {
-      EK[8*i  ] = rotate_left(K[(i+0) % 8    ], 2);
-      EK[8*i+1] = rotate_left(K[(i+2) % 8 + 8], 1);
-      EK[8*i+2] = rotate_left(K[(i+1) % 8    ], 5);
-      EK[8*i+3] = K[(i+4) % 8 + 8];
-      EK[8*i+4] = rotate_left(K[(i+5) % 8    ], 8);
-      EK[8*i+5] = K[(i+3) % 8 + 8];
-      EK[8*i+6] = rotate_left(K[(i+6) % 8    ], 13);
-      EK[8*i+7] = K[(i+7) % 8 + 8];
+      m_EK[8*i  ] = rotate_left(K[(i+0) % 8    ], 2);
+      m_EK[8*i+1] = rotate_left(K[(i+2) % 8 + 8], 1);
+      m_EK[8*i+2] = rotate_left(K[(i+1) % 8    ], 5);
+      m_EK[8*i+3] = K[(i+4) % 8 + 8];
+      m_EK[8*i+4] = rotate_left(K[(i+5) % 8    ], 8);
+      m_EK[8*i+5] = K[(i+3) % 8 + 8];
+      m_EK[8*i+6] = rotate_left(K[(i+6) % 8    ], 13);
+      m_EK[8*i+7] = K[(i+7) % 8 + 8];
       }
    }
 
 void KASUMI::clear()
    {
-   zap(EK);
+   zap(m_EK);
    }
 
 }

@@ -84,7 +84,10 @@ class BOTAN_DLL BER_Object
    public:
       void assert_is_a(ASN1_Tag, ASN1_Tag);
 
+      // public member variable:
       ASN1_Tag type_tag, class_tag;
+
+      // public member variable:
       secure_vector<byte> value;
    };
 

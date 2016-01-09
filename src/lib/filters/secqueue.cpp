@@ -17,42 +17,42 @@ namespace Botan {
 class SecureQueueNode
    {
    public:
-      SecureQueueNode() : buffer(DEFAULT_BUFFERSIZE)
-         { next = nullptr; start = end = 0; }
+      SecureQueueNode() : m_buffer(DEFAULT_BUFFERSIZE)
+         { m_next = nullptr; m_start = m_end = 0; }
 
-      ~SecureQueueNode() { next = nullptr; start = end = 0; }
+      ~SecureQueueNode() { m_next = nullptr; m_start = m_end = 0; }
 
       size_t write(const byte input[], size_t length)
          {
-         size_t copied = std::min<size_t>(length, buffer.size() - end);
-         copy_mem(buffer.data() + end, input, copied);
-         end += copied;
+         size_t copied = std::min<size_t>(length, m_buffer.size() - m_end);
+         copy_mem(m_buffer.data() + m_end, input, copied);
+         m_end += copied;
          return copied;
          }
 
       size_t read(byte output[], size_t length)
          {
-         size_t copied = std::min(length, end - start);
-         copy_mem(output, buffer.data() + start, copied);
-         start += copied;
+         size_t copied = std::min(length, m_end - m_start);
+         copy_mem(output, m_buffer.data() + m_start, copied);
+         m_start += copied;
          return copied;
          }
 
       size_t peek(byte output[], size_t length, size_t offset = 0)
          {
-         const size_t left = end - start;
+         const size_t left = m_end - m_start;
          if(offset >= left) return 0;
          size_t copied = std::min(length, left - offset);
-         copy_mem(output, buffer.data() + start + offset, copied);
+         copy_mem(output, m_buffer.data() + m_start + offset, copied);
          return copied;
          }
 
-      size_t size() const { return (end - start); }
+      size_t size() const { return (m_end - m_start); }
    private:
       friend class SecureQueue;
-      SecureQueueNode* next;
-      secure_vector<byte> buffer;
-      size_t start, end;
+      SecureQueueNode* m_next;
+      secure_vector<byte> m_buffer;
+      size_t m_start, m_end;
    };
 
 /*
@@ -78,8 +78,8 @@ SecureQueue::SecureQueue(const SecureQueue& input) :
    SecureQueueNode* temp = input.m_head;
    while(temp)
       {
-      write(&temp->buffer[temp->start], temp->end - temp->start);
-      temp = temp->next;
+      write(&temp->m_buffer[temp->m_start], temp->m_end - temp->m_start);
+      temp = temp->m_next;
       }
    }
 
@@ -91,7 +91,7 @@ void SecureQueue::destroy()
    SecureQueueNode* temp = m_head;
    while(temp)
       {
-      SecureQueueNode* holder = temp->next;
+      SecureQueueNode* holder = temp->m_next;
       delete temp;
       temp = holder;
       }
@@ -108,8 +108,8 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input)
    SecureQueueNode* temp = input.m_head;
    while(temp)
       {
-      write(&temp->buffer[temp->start], temp->end - temp->start);
-      temp = temp->next;
+      write(&temp->m_buffer[temp->m_start], temp->m_end - temp->m_start);
+      temp = temp->m_next;
       }
    return (*this);
    }
@@ -128,8 +128,8 @@ void SecureQueue::write(const byte input[], size_t length)
       length -= n;
       if(length)
          {
-         m_tail->next = new SecureQueueNode;
-         m_tail = m_tail->next;
+         m_tail->m_next = new SecureQueueNode;
+         m_tail = m_tail->m_next;
          }
       }
    }
@@ -148,7 +148,7 @@ size_t SecureQueue::read(byte output[], size_t length)
       length -= n;
       if(m_head->size() == 0)
          {
-         SecureQueueNode* holder = m_head->next;
+         SecureQueueNode* holder = m_head->m_next;
          delete m_head;
          m_head = holder;
          }
@@ -169,7 +169,7 @@ size_t SecureQueue::peek(byte output[], size_t length, size_t offset) const
       if(offset >= current->size())
          {
          offset -= current->size();
-         current = current->next;
+         current = current->m_next;
          }
       else
          break;
@@ -183,7 +183,7 @@ size_t SecureQueue::peek(byte output[], size_t length, size_t offset) const
       output += n;
       got += n;
       length -= n;
-      current = current->next;
+      current = current->m_next;
       }
    return got;
    }
@@ -207,7 +207,7 @@ size_t SecureQueue::size() const
    while(current)
       {
       count += current->size();
-      current = current->next;
+      current = current->m_next;
       }
    return count;
    }

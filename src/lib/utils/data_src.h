@@ -116,26 +116,26 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       * @param length the length of the byte array
       */
       DataSource_Memory(const byte in[], size_t length) :
-         source(in, in + length), offset(0) {}
+         m_source(in, in + length), m_offset(0) {}
 
       /**
       * Construct a memory source that reads from a secure_vector
       * @param in the MemoryRegion to read from
       */
       DataSource_Memory(const secure_vector<byte>& in) :
-         source(in), offset(0) {}
+         m_source(in), m_offset(0) {}
 
       /**
       * Construct a memory source that reads from a std::vector
       * @param in the MemoryRegion to read from
       */
       DataSource_Memory(const std::vector<byte>& in) :
-         source(in.begin(), in.end()), offset(0) {}
+         m_source(in.begin(), in.end()), m_offset(0) {}
 
-      size_t get_bytes_read() const override { return offset; }
+      size_t get_bytes_read() const override { return m_offset; }
    private:
-      secure_vector<byte> source;
-      size_t offset;
+      secure_vector<byte> m_source;
+      size_t m_offset;
    };
 
 /**
@@ -166,13 +166,13 @@ class BOTAN_DLL DataSource_Stream : public DataSource
 
       ~DataSource_Stream();
 
-      size_t get_bytes_read() const override { return total_read; }
+      size_t get_bytes_read() const override { return m_total_read; }
    private:
-      const std::string identifier;
+      const std::string m_identifier;
 
-      std::istream* source_p;
-      std::istream& source;
-      size_t total_read;
+      std::istream* m_source_p;
+      std::istream& m_source;
+      size_t m_total_read;
    };
 
 }

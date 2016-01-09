@@ -101,9 +101,9 @@ class BOTAN_DLL X509_CRL : public X509_Object
    private:
       void force_decode() override;
 
-      bool throw_on_unknown_critical;
-      std::vector<CRL_Entry> revoked;
-      Data_Store info;
+      bool m_throw_on_unknown_critical;
+      std::vector<CRL_Entry> m_revoked;
+      Data_Store m_info;
    };
 
 }

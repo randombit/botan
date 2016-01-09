@@ -12,12 +12,12 @@ namespace Botan {
 
 byte GOST_28147_89_Params::sbox_entry(size_t row, size_t col) const
    {
-   byte x = sboxes[4 * col + (row / 2)];
+   byte x = m_sboxes[4 * col + (row / 2)];
 
    return (row % 2 == 0) ? (x >> 4) : (x & 0x0F);
    }
 
-GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : name(n)
+GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : m_name(n)
    {
    // Encoded in the packed fromat from RFC 4357
 
@@ -39,18 +39,18 @@ GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : name(n)
       0x03, 0x25, 0xEB, 0xFE, 0x9C, 0x6D, 0xF8, 0x6D, 0x2E, 0xAB, 0xDE,
       0x20, 0xBA, 0x89, 0x3C, 0x92, 0xF8, 0xD3, 0x53, 0xBC };
 
-   if(name == "R3411_94_TestParam")
-      sboxes = GOST_R_3411_TEST_PARAMS;
-   else if(name == "R3411_CryptoPro")
-      sboxes = GOST_R_3411_CRYPTOPRO_PARAMS;
+   if(m_name == "R3411_94_TestParam")
+      m_sboxes = GOST_R_3411_TEST_PARAMS;
+   else if(m_name == "R3411_CryptoPro")
+      m_sboxes = GOST_R_3411_CRYPTOPRO_PARAMS;
    else
-      throw Invalid_Argument("GOST_28147_89_Params: Unknown " + name);
+      throw Invalid_Argument("GOST_28147_89_Params: Unknown " + m_name);
    }
 
 /*
 * GOST Constructor
 */
-GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) : SBOX(1024)
+GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) : m_SBOX(1024)
    {
    // Convert the parallel 4x4 sboxes into larger word-based sboxes
    for(size_t i = 0; i != 4; ++i)
@@ -58,7 +58,7 @@ GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) : SBOX(1024)
          {
          const u32bit T = (param.sbox_entry(2*i  , j % 16)) |
                           (param.sbox_entry(2*i+1, j / 16) << 4);
-         SBOX[256*i+j] = rotate_left(T, (11+8*i) % 32);
+         m_SBOX[256*i+j] = rotate_left(T, (11+8*i) % 32);
          }
    }
 
@@ -71,9 +71,9 @@ std::string GOST_28147_89::name() const
    constructor, but can't break binary compat.
    */
    std::string sbox_name = "";
-   if(SBOX[0] == 0x00072000)
+   if(m_SBOX[0] == 0x00072000)
       sbox_name = "R3411_94_TestParam";
-   else if(SBOX[0] == 0x0002D000)
+   else if(m_SBOX[0] == 0x0002D000)
       sbox_name = "R3411_CryptoPro";
    else
       throw Internal_Error("GOST-28147 unrecognized sbox value");
@@ -86,17 +86,17 @@ std::string GOST_28147_89::name() const
 */
 #define GOST_2ROUND(N1, N2, R1, R2)   \
    do {                               \
-   u32bit T0 = N1 + EK[R1];           \
-   N2 ^= SBOX[get_byte(3, T0)] |      \
-         SBOX[get_byte(2, T0)+256] |  \
-         SBOX[get_byte(1, T0)+512] |  \
-         SBOX[get_byte(0, T0)+768];   \
+   u32bit T0 = N1 + m_EK[R1];           \
+   N2 ^= m_SBOX[get_byte(3, T0)] |      \
+         m_SBOX[get_byte(2, T0)+256] |  \
+         m_SBOX[get_byte(1, T0)+512] |  \
+         m_SBOX[get_byte(0, T0)+768];   \
                                       \
-   u32bit T1 = N2 + EK[R2];           \
-   N1 ^= SBOX[get_byte(3, T1)] |      \
-         SBOX[get_byte(2, T1)+256] |  \
-         SBOX[get_byte(1, T1)+512] |  \
-         SBOX[get_byte(0, T1)+768];   \
+   u32bit T1 = N2 + m_EK[R2];           \
+   N1 ^= m_SBOX[get_byte(3, T1)] |      \
+         m_SBOX[get_byte(2, T1)+256] |  \
+         m_SBOX[get_byte(1, T1)+512] |  \
+         m_SBOX[get_byte(0, T1)+768];   \
    } while(0)
 
 /*
@@ -163,14 +163,14 @@ void GOST_28147_89::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void GOST_28147_89::key_schedule(const byte key[], size_t)
    {
-   EK.resize(8);
+   m_EK.resize(8);
    for(size_t i = 0; i != 8; ++i)
-      EK[i] = load_le<u32bit>(key, i);
+      m_EK[i] = load_le<u32bit>(key, i);
    }
 
 void GOST_28147_89::clear()
    {
-   zap(EK);
+   zap(m_EK);
    }
 
 }

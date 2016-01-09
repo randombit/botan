@@ -31,8 +31,8 @@ class BOTAN_DLL CAST_128 : public Block_Cipher_Fixed_Params<8, 11, 16>
       static void cast_ks(secure_vector<u32bit>& ks,
                           secure_vector<u32bit>& user_key);
 
-      secure_vector<u32bit> MK;
-      secure_vector<byte> RK;
+      secure_vector<u32bit> m_MK;
+      secure_vector<byte> m_RK;
    };
 
 }

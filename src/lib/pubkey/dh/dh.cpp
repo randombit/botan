@@ -18,8 +18,8 @@ namespace Botan {
 */
 DH_PublicKey::DH_PublicKey(const DL_Group& grp, const BigInt& y1)
    {
-   group = grp;
-   y = y1;
+   m_group = grp;
+   m_y = y1;
    }
 
 /*
@@ -27,7 +27,7 @@ DH_PublicKey::DH_PublicKey(const DL_Group& grp, const BigInt& y1)
 */
 std::vector<byte> DH_PublicKey::public_value() const
    {
-   return unlock(BigInt::encode_1363(y, group_p().bytes()));
+   return unlock(BigInt::encode_1363(m_y, group_p().bytes()));
    }
 
 /*
@@ -37,19 +37,19 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
                              const DL_Group& grp,
                              const BigInt& x_arg)
    {
-   group = grp;
-   x = x_arg;
+   m_group = grp;
+   m_x = x_arg;
 
-   if(x == 0)
+   if(m_x == 0)
       {
       const BigInt& p = group_p();
-      x.randomize(rng, dl_exponent_size(p.bits()));
+      m_x.randomize(rng, dl_exponent_size(p.bits()));
       }
 
-   if(y == 0)
-      y = power_mod(group_g(), x, group_p());
+   if(m_y == 0)
+      m_y = power_mod(group_g(), m_x, group_p());
 
-   if(x == 0)
+   if(m_x == 0)
       gen_check(rng);
    else
       load_check(rng);
@@ -63,8 +63,8 @@ DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
                              RandomNumberGenerator& rng) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
    {
-   if(y == 0)
-      y = power_mod(group_g(), x, group_p());
+   if(m_y == 0)
+      m_y = power_mod(group_g(), m_x, group_p());
 
    load_check(rng);
    }

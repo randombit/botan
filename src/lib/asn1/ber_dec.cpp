@@ -154,7 +154,7 @@ void BER_Object::assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag)
 */
 bool BER_Decoder::more_items() const
    {
-   if(source->end_of_data() && (pushed.type_tag == NO_OBJECT))
+   if(m_source->end_of_data() && (m_pushed.type_tag == NO_OBJECT))
       return false;
    return true;
    }
@@ -164,7 +164,7 @@ bool BER_Decoder::more_items() const
 */
 BER_Decoder& BER_Decoder::verify_end()
    {
-   if(!source->end_of_data() || (pushed.type_tag != NO_OBJECT))
+   if(!m_source->end_of_data() || (m_pushed.type_tag != NO_OBJECT))
       throw Invalid_State("BER_Decoder::verify_end called, but data remains");
    return (*this);
    }
@@ -176,7 +176,7 @@ BER_Decoder& BER_Decoder::raw_bytes(secure_vector<byte>& out)
    {
    out.clear();
    byte buf;
-   while(source->read_byte(buf))
+   while(m_source->read_byte(buf))
       out.push_back(buf);
    return (*this);
    }
@@ -185,7 +185,7 @@ BER_Decoder& BER_Decoder::raw_bytes(std::vector<byte>& out)
    {
    out.clear();
    byte buf;
-   while(source->read_byte(buf))
+   while(m_source->read_byte(buf))
       out.push_back(buf);
    return (*this);
    }
@@ -196,7 +196,7 @@ BER_Decoder& BER_Decoder::raw_bytes(std::vector<byte>& out)
 BER_Decoder& BER_Decoder::discard_remaining()
    {
    byte buf;
-   while(source->read_byte(buf))
+   while(m_source->read_byte(buf))
       ;
    return (*this);
    }
@@ -208,23 +208,23 @@ BER_Object BER_Decoder::get_next_object()
    {
    BER_Object next;
 
-   if(pushed.type_tag != NO_OBJECT)
+   if(m_pushed.type_tag != NO_OBJECT)
       {
-      next = pushed;
-      pushed.class_tag = pushed.type_tag = NO_OBJECT;
+      next = m_pushed;
+      m_pushed.class_tag = m_pushed.type_tag = NO_OBJECT;
       return next;
       }
 
-   decode_tag(source, next.type_tag, next.class_tag);
+   decode_tag(m_source, next.type_tag, next.class_tag);
    if(next.type_tag == NO_OBJECT)
       return next;
 
-   const size_t length = decode_length(source);
-   if(!source->check_available(length))
+   const size_t length = decode_length(m_source);
+   if(!m_source->check_available(length))
       throw BER_Decoding_Error("Value truncated");
 
    next.value.resize(length);
-   if(source->read(next.value.data(), length) != length)
+   if(m_source->read(next.value.data(), length) != length)
       throw BER_Decoding_Error("Value truncated");
 
    if(next.type_tag == EOC && next.class_tag == UNIVERSAL)
@@ -244,9 +244,9 @@ BER_Decoder& BER_Decoder::get_next(BER_Object& ber)
 */
 void BER_Decoder::push_back(const BER_Object& obj)
    {
-   if(pushed.type_tag != NO_OBJECT)
+   if(m_pushed.type_tag != NO_OBJECT)
       throw Invalid_State("BER_Decoder: Only one push back is allowed");
-   pushed = obj;
+   m_pushed = obj;
    }
 
 /*
@@ -259,7 +259,7 @@ BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag,
    obj.assert_is_a(type_tag, ASN1_Tag(class_tag | CONSTRUCTED));
 
    BER_Decoder result(obj.value.data(), obj.value.size());
-   result.parent = this;
+   result.m_parent = this;
    return result;
    }
 
@@ -268,11 +268,11 @@ BER_Decoder BER_Decoder::start_cons(ASN1_Tag type_tag,
 */
 BER_Decoder& BER_Decoder::end_cons()
    {
-   if(!parent)
+   if(!m_parent)
       throw Invalid_State("BER_Decoder::end_cons called with NULL parent");
-   if(!source->end_of_data())
+   if(!m_source->end_of_data())
       throw Decoding_Error("BER_Decoder::end_cons called with data left");
-   return (*parent);
+   return (*m_parent);
    }
 
 /*
@@ -280,10 +280,10 @@ BER_Decoder& BER_Decoder::end_cons()
 */
 BER_Decoder::BER_Decoder(DataSource& src)
    {
-   source = &src;
-   owns = false;
-   pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = nullptr;
+   m_source = &src;
+   m_owns = false;
+   m_pushed.type_tag = m_pushed.class_tag = NO_OBJECT;
+   m_parent = nullptr;
    }
 
 /*
@@ -291,10 +291,10 @@ BER_Decoder::BER_Decoder(DataSource& src)
  */
 BER_Decoder::BER_Decoder(const byte data[], size_t length)
    {
-   source = new DataSource_Memory(data, length);
-   owns = true;
-   pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = nullptr;
+   m_source = new DataSource_Memory(data, length);
+   m_owns = true;
+   m_pushed.type_tag = m_pushed.class_tag = NO_OBJECT;
+   m_parent = nullptr;
    }
 
 /*
@@ -302,10 +302,10 @@ BER_Decoder::BER_Decoder(const byte data[], size_t length)
 */
 BER_Decoder::BER_Decoder(const secure_vector<byte>& data)
    {
-   source = new DataSource_Memory(data);
-   owns = true;
-   pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = nullptr;
+   m_source = new DataSource_Memory(data);
+   m_owns = true;
+   m_pushed.type_tag = m_pushed.class_tag = NO_OBJECT;
+   m_parent = nullptr;
    }
 
 /*
@@ -313,10 +313,10 @@ BER_Decoder::BER_Decoder(const secure_vector<byte>& data)
 */
 BER_Decoder::BER_Decoder(const std::vector<byte>& data)
    {
-   source = new DataSource_Memory(data.data(), data.size());
-   owns = true;
-   pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = nullptr;
+   m_source = new DataSource_Memory(data.data(), data.size());
+   m_owns = true;
+   m_pushed.type_tag = m_pushed.class_tag = NO_OBJECT;
+   m_parent = nullptr;
    }
 
 /*
@@ -324,15 +324,15 @@ BER_Decoder::BER_Decoder(const std::vector<byte>& data)
 */
 BER_Decoder::BER_Decoder(const BER_Decoder& other)
    {
-   source = other.source;
-   owns = false;
-   if(other.owns)
+   m_source = other.m_source;
+   m_owns = false;
+   if(other.m_owns)
       {
-      other.owns = false;
-      owns = true;
+      other.m_owns = false;
+      m_owns = true;
       }
-   pushed.type_tag = pushed.class_tag = NO_OBJECT;
-   parent = other.parent;
+   m_pushed.type_tag = m_pushed.class_tag = NO_OBJECT;
+   m_parent = other.m_parent;
    }
 
 /*
@@ -340,9 +340,9 @@ BER_Decoder::BER_Decoder(const BER_Decoder& other)
 */
 BER_Decoder::~BER_Decoder()
    {
-   if(owns)
-      delete source;
-   source = nullptr;
+   if(m_owns)
+      delete m_source;
+   m_source = nullptr;
    }
 
 /*

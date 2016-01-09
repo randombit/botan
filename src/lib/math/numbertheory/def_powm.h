@@ -29,11 +29,11 @@ class Fixed_Window_Exponentiator : public Modular_Exponentiator
 
       Fixed_Window_Exponentiator(const BigInt&, Power_Mod::Usage_Hints);
    private:
-      Modular_Reducer reducer;
-      BigInt exp;
-      size_t window_bits;
-      std::vector<BigInt> g;
-      Power_Mod::Usage_Hints hints;
+      Modular_Reducer m_reducer;
+      BigInt m_exp;
+      size_t m_window_bits;
+      std::vector<BigInt> m_g;
+      Power_Mod::Usage_Hints m_hints;
    };
 
 /**

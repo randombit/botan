@@ -27,8 +27,8 @@ class BOTAN_DLL CAST_256 : public Block_Cipher_Fixed_Params<16, 4, 32, 4>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      secure_vector<u32bit> MK;
-      secure_vector<byte> RK;
+      secure_vector<u32bit> m_MK;
+      secure_vector<byte> m_RK;
    };
 
 }

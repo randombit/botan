@@ -41,12 +41,12 @@ class BOTAN_DLL SCAN_Name
       /**
       * @return original input string
       */
-      const std::string& as_string() const { return orig_algo_spec; }
+      const std::string& as_string() const { return m_orig_algo_spec; }
 
       /**
       * @return algorithm name
       */
-      const std::string& algo_name() const { return alg_name; }
+      const std::string& algo_name() const { return m_alg_name; }
 
       /**
       * @return algorithm name plus any arguments
@@ -61,7 +61,7 @@ class BOTAN_DLL SCAN_Name
       /**
       * @return number of arguments
       */
-      size_t arg_count() const { return args.size(); }
+      size_t arg_count() const { return m_args.size(); }
 
       /**
       * @param lower is the lower bound
@@ -95,13 +95,13 @@ class BOTAN_DLL SCAN_Name
       * @return cipher mode (if any)
       */
       std::string cipher_mode() const
-         { return (mode_info.size() >= 1) ? mode_info[0] : ""; }
+         { return (m_mode_info.size() >= 1) ? m_mode_info[0] : ""; }
 
       /**
       * @return cipher mode padding (if any)
       */
       std::string cipher_mode_pad() const
-         { return (mode_info.size() >= 2) ? mode_info[1] : ""; }
+         { return (m_mode_info.size() >= 2) ? m_mode_info[1] : ""; }
 
       static void add_alias(const std::string& alias, const std::string& basename);
 
@@ -110,10 +110,10 @@ class BOTAN_DLL SCAN_Name
       static std::mutex g_alias_map_mutex;
       static std::map<std::string, std::string> g_alias_map;
 
-      std::string orig_algo_spec;
-      std::string alg_name;
-      std::vector<std::string> args;
-      std::vector<std::string> mode_info;
+      std::string m_orig_algo_spec;
+      std::string m_alg_name;
+      std::vector<std::string> m_args;
+      std::vector<std::string> m_mode_info;
    };
 
 }

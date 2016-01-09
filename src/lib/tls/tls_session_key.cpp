@@ -43,7 +43,7 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    if(resuming)
       {
       // This is actually the master secret saved as part of the session
-      master_sec = pre_master_secret;
+      m_master_sec = pre_master_secret;
       }
    else
       {
@@ -61,7 +61,7 @@ Session_Keys::Session_Keys(const Handshake_State* state,
          salt += state->server_hello()->random();
          }
 
-      master_sec = prf->derive_key(48, pre_master_secret, salt);
+      m_master_sec = prf->derive_key(48, pre_master_secret, salt);
       }
 
    secure_vector<byte> salt;
@@ -69,26 +69,26 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    salt += state->server_hello()->random();
    salt += state->client_hello()->random();
 
-   SymmetricKey keyblock = prf->derive_key(prf_gen, master_sec, salt);
+   SymmetricKey keyblock = prf->derive_key(prf_gen, m_master_sec, salt);
 
    const byte* key_data = keyblock.begin();
 
-   c_mac = SymmetricKey(key_data, mac_keylen);
+   m_c_mac = SymmetricKey(key_data, mac_keylen);
    key_data += mac_keylen;
 
-   s_mac = SymmetricKey(key_data, mac_keylen);
+   m_s_mac = SymmetricKey(key_data, mac_keylen);
    key_data += mac_keylen;
 
-   c_cipher = SymmetricKey(key_data, cipher_keylen);
+   m_c_cipher = SymmetricKey(key_data, cipher_keylen);
    key_data += cipher_keylen;
 
-   s_cipher = SymmetricKey(key_data, cipher_keylen);
+   m_s_cipher = SymmetricKey(key_data, cipher_keylen);
    key_data += cipher_keylen;
 
-   c_iv = InitializationVector(key_data, cipher_nonce_bytes);
+   m_c_iv = InitializationVector(key_data, cipher_nonce_bytes);
    key_data += cipher_nonce_bytes;
 
-   s_iv = InitializationVector(key_data, cipher_nonce_bytes);
+   m_s_iv = InitializationVector(key_data, cipher_nonce_bytes);
    }
 
 }

@@ -93,13 +93,13 @@ EMSA_PKCS1v15::EMSA_PKCS1v15(HashFunction* hash) : m_hash(hash)
 
 void EMSA_PKCS1v15_Raw::update(const byte input[], size_t length)
    {
-   message += std::make_pair(input, length);
+   m_message += std::make_pair(input, length);
    }
 
 secure_vector<byte> EMSA_PKCS1v15_Raw::raw_data()
    {
    secure_vector<byte> ret;
-   std::swap(ret, message);
+   std::swap(ret, m_message);
    return ret;
    }
 

@@ -16,7 +16,7 @@ namespace Botan {
 */
 void Fixed_Window_Exponentiator::set_exponent(const BigInt& e)
    {
-   exp = e;
+   m_exp = e;
    }
 
 /*
@@ -24,14 +24,14 @@ void Fixed_Window_Exponentiator::set_exponent(const BigInt& e)
 */
 void Fixed_Window_Exponentiator::set_base(const BigInt& base)
    {
-   window_bits = Power_Mod::window_bits(exp.bits(), base.bits(), hints);
+   m_window_bits = Power_Mod::window_bits(m_exp.bits(), base.bits(), m_hints);
 
-   g.resize((1 << window_bits));
-   g[0] = 1;
-   g[1] = base;
+   m_g.resize((1 << m_window_bits));
+   m_g[0] = 1;
+   m_g[1] = base;
 
-   for(size_t i = 2; i != g.size(); ++i)
-      g[i] = reducer.multiply(g[i-1], g[0]);
+   for(size_t i = 2; i != m_g.size(); ++i)
+      m_g[i] = m_reducer.multiply(m_g[i-1], m_g[0]);
    }
 
 /*
@@ -39,18 +39,18 @@ void Fixed_Window_Exponentiator::set_base(const BigInt& base)
 */
 BigInt Fixed_Window_Exponentiator::execute() const
    {
-   const size_t exp_nibbles = (exp.bits() + window_bits - 1) / window_bits;
+   const size_t exp_nibbles = (m_exp.bits() + m_window_bits - 1) / m_window_bits;
 
    BigInt x = 1;
 
    for(size_t i = exp_nibbles; i > 0; --i)
       {
-      for(size_t j = 0; j != window_bits; ++j)
-         x = reducer.square(x);
+      for(size_t j = 0; j != m_window_bits; ++j)
+         x = m_reducer.square(x);
 
-      const u32bit nibble = exp.get_substring(window_bits*(i-1), window_bits);
+      const u32bit nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits);
 
-      x = reducer.multiply(x, g[nibble]);
+      x = m_reducer.multiply(x, m_g[nibble]);
       }
    return x;
    }
@@ -61,9 +61,9 @@ BigInt Fixed_Window_Exponentiator::execute() const
 Fixed_Window_Exponentiator::Fixed_Window_Exponentiator(const BigInt& n,
                                                        Power_Mod::Usage_Hints hints)
    {
-   reducer = Modular_Reducer(n);
-   this->hints = hints;
-   window_bits = 0;
+   m_reducer = Modular_Reducer(n);
+   m_hints = hints;
+   m_window_bits = 0;
    }
 
 }

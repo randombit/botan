@@ -45,8 +45,8 @@ class BOTAN_DLL PSSR : public EMSA
                   const secure_vector<byte>& raw,
                   size_t key_bits) override;
 
-      size_t SALT_SIZE;
-      std::unique_ptr<HashFunction> hash;
+      size_t m_SALT_SIZE;
+      std::unique_ptr<HashFunction> m_hash;
    };
 
 }

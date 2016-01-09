@@ -61,7 +61,7 @@ class BOTAN_DLL EMSA_PKCS1v15_Raw : public EMSA
                   size_t) override;
 
    private:
-      secure_vector<byte> message;
+      secure_vector<byte> m_message;
    };
 
 }

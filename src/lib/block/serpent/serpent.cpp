@@ -43,10 +43,10 @@ inline void i_transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
 * XOR a key block with a data block
 */
 #define key_xor(round, B0, B1, B2, B3) \
-   B0 ^= round_key[4*round  ]; \
-   B1 ^= round_key[4*round+1]; \
-   B2 ^= round_key[4*round+2]; \
-   B3 ^= round_key[4*round+3];
+   B0 ^= m_round_key[4*round  ]; \
+   B1 ^= m_round_key[4*round+1]; \
+   B2 ^= m_round_key[4*round+2]; \
+   B3 ^= m_round_key[4*round+3];
 
 /*
 * Serpent Encryption
@@ -193,12 +193,12 @@ void Serpent::key_schedule(const byte key[], size_t length)
    SBoxE6(W[128],W[129],W[130],W[131]); SBoxE5(W[132],W[133],W[134],W[135]);
    SBoxE4(W[136],W[137],W[138],W[139]);
 
-   round_key.assign(W.begin() + 8, W.end());
+   m_round_key.assign(W.begin() + 8, W.end());
    }
 
 void Serpent::clear()
    {
-   zap(round_key);
+   zap(m_round_key);
    }
 
 }

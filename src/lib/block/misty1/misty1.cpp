@@ -113,7 +113,7 @@ void MISTY1::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       for(size_t j = 0; j != 12; j += 3)
          {
-         const u16bit* RK = &EK[8 * j];
+         const u16bit* RK = &m_EK[8 * j];
 
          B1 ^= B0 & RK[0];
          B0 ^= B1 | RK[1];
@@ -137,10 +137,10 @@ void MISTY1::encrypt_n(const byte in[], byte out[], size_t blocks) const
          B1 ^= T0;
          }
 
-      B1 ^= B0 & EK[96];
-      B0 ^= B1 | EK[97];
-      B3 ^= B2 & EK[98];
-      B2 ^= B3 | EK[99];
+      B1 ^= B0 & m_EK[96];
+      B0 ^= B1 | m_EK[97];
+      B3 ^= B2 & m_EK[98];
+      B2 ^= B3 | m_EK[99];
 
       store_be(out, B2, B3, B0, B1);
 
@@ -163,7 +163,7 @@ void MISTY1::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       for(size_t j = 0; j != 12; j += 3)
          {
-         const u16bit* RK = &DK[8 * j];
+         const u16bit* RK = &m_DK[8 * j];
 
          B2 ^= B3 | RK[0];
          B3 ^= B2 & RK[1];
@@ -187,10 +187,10 @@ void MISTY1::decrypt_n(const byte in[], byte out[], size_t blocks) const
          B3 ^= T0;
          }
 
-      B2 ^= B3 | DK[96];
-      B3 ^= B2 & DK[97];
-      B0 ^= B1 | DK[98];
-      B1 ^= B0 & DK[99];
+      B2 ^= B3 | m_DK[96];
+      B3 ^= B2 & m_DK[97];
+      B0 ^= B1 | m_DK[98];
+      B1 ^= B0 & m_DK[99];
 
       store_be(out, B0, B1, B2, B3);
 
@@ -241,20 +241,20 @@ void MISTY1::key_schedule(const byte key[], size_t length)
       0x1C, 0x05, 0x00, 0x15, 0x1D, 0x02, 0x11, 0x19, 0x07, 0x13, 0x1B, 0x04,
       0x04, 0x0A, 0x0E, 0x00 };
 
-   EK.resize(100);
-   DK.resize(100);
+   m_EK.resize(100);
+   m_DK.resize(100);
 
    for(size_t i = 0; i != 100; ++i)
       {
-      EK[i] = KS[EK_ORDER[i]];
-      DK[i] = KS[DK_ORDER[i]];
+      m_EK[i] = KS[EK_ORDER[i]];
+      m_DK[i] = KS[DK_ORDER[i]];
       }
    }
 
 void MISTY1::clear()
    {
-   zap(EK);
-   zap(DK);
+   zap(m_EK);
+   zap(m_DK);
    }
 
 }

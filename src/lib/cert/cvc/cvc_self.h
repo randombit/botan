@@ -24,11 +24,22 @@ class BOTAN_DLL EAC1_1_CVC_Options
    {
    public:
 
+      // public member variable:
       ASN1_Car car;
+
+      // public member variable:
       ASN1_Chr chr;
+
+      // public member variable:
       byte holder_auth_templ;
+
+      // public member variable:
       ASN1_Ced ced;
+
+      // public member variable:
       ASN1_Cex cex;
+
+      // public member variable:
       std::string hash_alg;
    };
 

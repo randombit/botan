@@ -93,14 +93,14 @@ class BOTAN_DLL X509_Object : public ASN1_Object
 
       void do_decode();
       X509_Object() {}
-      AlgorithmIdentifier sig_algo;
-      std::vector<byte> tbs_bits, sig;
+      AlgorithmIdentifier m_sig_algo;
+      std::vector<byte> m_tbs_bits, m_sig;
    private:
       virtual void force_decode() = 0;
       void init(DataSource&, const std::string&);
 
-      std::vector<std::string> PEM_labels_allowed;
-      std::string PEM_label_pref;
+      std::vector<std::string> m_PEM_labels_allowed;
+      std::string m_PEM_label_pref;
    };
 
 }

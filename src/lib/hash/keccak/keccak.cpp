@@ -99,10 +99,10 @@ void keccak_f_1600(u64bit A[25])
 }
 
 Keccak_1600::Keccak_1600(size_t output_bits) :
-   output_bits(output_bits),
-   bitrate(1600 - 2*output_bits),
-   S(25),
-   S_pos(0)
+   m_output_bits(output_bits),
+   m_bitrate(1600 - 2*output_bits),
+   m_S(25),
+   m_S_pos(0)
    {
    // We only support the parameters for the SHA-3 proposal
 
@@ -114,18 +114,18 @@ Keccak_1600::Keccak_1600(size_t output_bits) :
 
 std::string Keccak_1600::name() const
    {
-   return "Keccak-1600(" + std::to_string(output_bits) + ")";
+   return "Keccak-1600(" + std::to_string(m_output_bits) + ")";
    }
 
 HashFunction* Keccak_1600::clone() const
    {
-   return new Keccak_1600(output_bits);
+   return new Keccak_1600(m_output_bits);
    }
 
 void Keccak_1600::clear()
    {
-   zeroise(S);
-   S_pos = 0;
+   zeroise(m_S);
+   m_S_pos = 0;
    }
 
 void Keccak_1600::add_data(const byte input[], size_t length)
@@ -135,47 +135,47 @@ void Keccak_1600::add_data(const byte input[], size_t length)
 
    while(length)
       {
-      size_t to_take = std::min(length, bitrate / 8 - S_pos);
+      size_t to_take = std::min(length, m_bitrate / 8 - m_S_pos);
 
       length -= to_take;
 
-      while(to_take && S_pos % 8)
+      while(to_take && m_S_pos % 8)
          {
-         S[S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (S_pos % 8));
+         m_S[m_S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (m_S_pos % 8));
 
-         ++S_pos;
+         ++m_S_pos;
          ++input;
          --to_take;
          }
 
       while(to_take && to_take % 8 == 0)
          {
-         S[S_pos / 8] ^= load_le<u64bit>(input, 0);
-         S_pos += 8;
+         m_S[m_S_pos / 8] ^= load_le<u64bit>(input, 0);
+         m_S_pos += 8;
          input += 8;
          to_take -= 8;
          }
 
       while(to_take)
          {
-         S[S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (S_pos % 8));
+         m_S[m_S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (m_S_pos % 8));
 
-         ++S_pos;
+         ++m_S_pos;
          ++input;
          --to_take;
          }
 
-      if(S_pos == bitrate / 8)
+      if(m_S_pos == m_bitrate / 8)
          {
-         keccak_f_1600(S.data());
-         S_pos = 0;
+         keccak_f_1600(m_S.data());
+         m_S_pos = 0;
          }
       }
    }
 
 void Keccak_1600::final_result(byte output[])
    {
-   std::vector<byte> padding(bitrate / 8 - S_pos);
+   std::vector<byte> padding(m_bitrate / 8 - m_S_pos);
 
    padding[0] = 0x01;
    padding[padding.size()-1] |= 0x80;
@@ -186,8 +186,8 @@ void Keccak_1600::final_result(byte output[])
    * We never have to run the permutation again because we only support
    * limited output lengths
    */
-   for(size_t i = 0; i != output_bits/8; ++i)
-      output[i] = get_byte(7 - (i % 8), S[i/8]);
+   for(size_t i = 0; i != m_output_bits/8; ++i)
+      output[i] = get_byte(7 - (i % 8), m_S[i/8]);
 
    clear();
    }
