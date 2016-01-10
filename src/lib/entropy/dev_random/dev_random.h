@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Entropy source reading from kernel devices like /dev/random
 */
-class Device_EntropySource : public Entropy_Source
+class Device_EntropySource final : public Entropy_Source
    {
    public:
       std::string name() const override { return "dev_random"; }

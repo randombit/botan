@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * RC4 stream cipher
 */
-class BOTAN_DLL RC4 : public StreamCipher
+class BOTAN_DLL RC4 final : public StreamCipher
    {
    public:
       void cipher(const byte in[], byte out[], size_t length) override;

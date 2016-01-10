@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * EGD Entropy Source
 */
-class EGD_EntropySource : public Entropy_Source
+class EGD_EntropySource final : public Entropy_Source
    {
    public:
       std::string name() const override { return "egd"; }

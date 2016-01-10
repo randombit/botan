@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Twofish, an AES finalist
 */
-class BOTAN_DLL Twofish : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
+class BOTAN_DLL Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;

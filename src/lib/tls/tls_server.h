@@ -19,7 +19,7 @@ namespace TLS {
 /**
 * TLS Server
 */
-class BOTAN_DLL Server : public Channel
+class BOTAN_DLL Server final : public Channel
    {
    public:
       typedef std::function<std::string (std::vector<std::string>)> next_protocol_fn;

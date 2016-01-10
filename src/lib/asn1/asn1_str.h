@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Simple String
 */
-class BOTAN_DLL ASN1_String : public ASN1_Object
+class BOTAN_DLL ASN1_String final : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;

@@ -18,7 +18,7 @@ namespace Botan {
 * only hash values which are less or equal than the maximum key
 * length. The implementation comes from InSiTo
 */
-class BOTAN_DLL EMSA1_BSI : public EMSA1
+class BOTAN_DLL EMSA1_BSI final : public EMSA1
    {
    public:
       /**

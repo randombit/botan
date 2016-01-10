@@ -58,7 +58,7 @@ class BOTAN_DLL ChaCha20Poly1305_Mode : public AEAD_Mode
 /**
 * ChaCha20Poly1305 Encryption
 */
-class BOTAN_DLL ChaCha20Poly1305_Encryption : public ChaCha20Poly1305_Mode
+class BOTAN_DLL ChaCha20Poly1305_Encryption final : public ChaCha20Poly1305_Mode
    {
    public:
       size_t output_length(size_t input_length) const override
@@ -74,7 +74,7 @@ class BOTAN_DLL ChaCha20Poly1305_Encryption : public ChaCha20Poly1305_Mode
 /**
 * ChaCha20Poly1305 Decryption
 */
-class BOTAN_DLL ChaCha20Poly1305_Decryption : public ChaCha20Poly1305_Mode
+class BOTAN_DLL ChaCha20Poly1305_Decryption final : public ChaCha20Poly1305_Mode
    {
    public:
       size_t output_length(size_t input_length) const override

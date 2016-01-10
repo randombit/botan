@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Zlib Compression
 */
-class BOTAN_DLL Zlib_Compression : public Stream_Compression
+class BOTAN_DLL Zlib_Compression final : public Stream_Compression
    {
    public:
       /**
@@ -38,7 +38,7 @@ class BOTAN_DLL Zlib_Compression : public Stream_Compression
 /**
 * Zlib Decompression
 */
-class BOTAN_DLL Zlib_Decompression : public Stream_Decompression
+class BOTAN_DLL Zlib_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Zlib_Decompression"; }
@@ -50,7 +50,7 @@ class BOTAN_DLL Zlib_Decompression : public Stream_Decompression
 /**
 * Deflate Compression
 */
-class BOTAN_DLL Deflate_Compression : public Stream_Compression
+class BOTAN_DLL Deflate_Compression final : public Stream_Compression
    {
    public:
       /**
@@ -71,7 +71,7 @@ class BOTAN_DLL Deflate_Compression : public Stream_Compression
 /**
 * Deflate Decompression
 */
-class BOTAN_DLL Deflate_Decompression : public Stream_Decompression
+class BOTAN_DLL Deflate_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Deflate_Decompression"; }
@@ -83,7 +83,7 @@ class BOTAN_DLL Deflate_Decompression : public Stream_Decompression
 /**
 * Gzip Compression
 */
-class BOTAN_DLL Gzip_Compression : public Stream_Compression
+class BOTAN_DLL Gzip_Compression final : public Stream_Compression
    {
    public:
       /**
@@ -106,7 +106,7 @@ class BOTAN_DLL Gzip_Compression : public Stream_Compression
 /**
 * Gzip Decompression
 */
-class BOTAN_DLL Gzip_Decompression : public Stream_Decompression
+class BOTAN_DLL Gzip_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Gzip_Decompression"; }

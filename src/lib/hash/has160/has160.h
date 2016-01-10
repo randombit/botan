@@ -16,7 +16,7 @@ namespace Botan {
 * HAS-160, a Korean hash function standardized in
 * TTAS.KO-12.0011/R1. Used in conjunction with KCDSA
 */
-class BOTAN_DLL HAS_160 : public MDx_HashFunction
+class BOTAN_DLL HAS_160 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "HAS-160"; }

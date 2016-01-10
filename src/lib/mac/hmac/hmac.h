@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * HMAC
 */
-class BOTAN_DLL HMAC : public MessageAuthenticationCode
+class BOTAN_DLL HMAC final : public MessageAuthenticationCode
    {
    public:
       void clear() override;

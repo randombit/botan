@@ -22,7 +22,7 @@ namespace Botan {
 
 * http://www.cl.cam.ac.uk/~rja14/Papers/bear-lion.pdf
 */
-class BOTAN_DLL Lion : public BlockCipher
+class BOTAN_DLL Lion final : public BlockCipher
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;

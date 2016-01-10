@@ -17,7 +17,7 @@ namespace Botan {
 * DJB's Poly1305
 * Important note: each key can only be used once
 */
-class BOTAN_DLL Poly1305 : public MessageAuthenticationCode
+class BOTAN_DLL Poly1305 final : public MessageAuthenticationCode
    {
    public:
       std::string name() const override { return "Poly1305"; }

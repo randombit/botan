@@ -41,7 +41,7 @@
 
 namespace Botan_CLI {
 
-class PK_Keygen : public Command
+class PK_Keygen final : public Command
    {
    public:
       PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --der-out") {}
@@ -164,7 +164,7 @@ std::string algo_default_emsa(const std::string& key)
 
 }
 
-class PK_Sign : public Command
+class PK_Sign final : public Command
    {
    public:
       PK_Sign() : Command("sign --passphrase= --hash=SHA-256 --emsa= key file") {}
@@ -192,7 +192,7 @@ class PK_Sign : public Command
 
 BOTAN_REGISTER_COMMAND("sign", PK_Sign);
 
-class PK_Verify : public Command
+class PK_Verify final : public Command
    {
    public:
       PK_Verify() : Command("verify --hash=SHA-256 --emsa= pubkey file signature") {}
@@ -223,7 +223,7 @@ BOTAN_REGISTER_COMMAND("verify", PK_Verify);
 
 #if defined(BOTAN_HAS_DL_GROUP)
 
-class Gen_DL_Group : public Command
+class Gen_DL_Group final : public Command
    {
    public:
       Gen_DL_Group() : Command("gen_dl_group --pbits=1024 --qbits=0 --type=subgroup") {}
@@ -253,7 +253,7 @@ BOTAN_REGISTER_COMMAND("gen_dl_group", Gen_DL_Group);
 
 #endif
 
-class PKCS8_Tool : public Command
+class PKCS8_Tool final : public Command
    {
    public:
       PKCS8_Tool() : Command("pkcs8 --pass-in= --pub-out --der-out --pass-out= --pbe= --pbe-millis=300 key") {}

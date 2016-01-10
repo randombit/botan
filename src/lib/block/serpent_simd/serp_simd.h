@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Serpent implementation using SIMD
 */
-class BOTAN_DLL Serpent_SIMD : public Serpent
+class BOTAN_DLL Serpent_SIMD final : public Serpent
    {
    public:
       size_t parallelism() const override { return 4; }

@@ -384,7 +384,7 @@ class tls_proxy_server
 
 }
 
-class TLS_Proxy : public Command
+class TLS_Proxy final : public Command
    {
    public:
       TLS_Proxy() : Command("tls_proxy listen_port target_host target_port server_cert server_key "

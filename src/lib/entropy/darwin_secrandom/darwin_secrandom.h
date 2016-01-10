@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Entropy source using SecRandomCopyBytes from Darwin's Security.framework
 */
-class Darwin_SecRandom : public Entropy_Source
+class Darwin_SecRandom final : public Entropy_Source
    {
    public:
       std::string name() const override { return "darwin_secrandom"; }

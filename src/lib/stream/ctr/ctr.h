@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * CTR-BE (Counter mode, big-endian)
 */
-class BOTAN_DLL CTR_BE : public StreamCipher
+class BOTAN_DLL CTR_BE final : public StreamCipher
    {
    public:
       void cipher(const byte in[], byte out[], size_t length) override;

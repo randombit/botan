@@ -240,7 +240,7 @@ std::vector<std::string> default_benchmark_list()
 
 }
 
-class Benchmark : public Command
+class Benchmark final : public Command
    {
    public:
       Benchmark() : Command("bench --msec=1000 --provider= --buf-size=8 *algos") {}

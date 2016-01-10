@@ -30,7 +30,7 @@
 
 namespace Botan_CLI {
 
-class TLS_Server : public Command
+class TLS_Server final : public Command
    {
    public:
       TLS_Server() : Command("tls_server cert key --port=443 --type=tcp") {}

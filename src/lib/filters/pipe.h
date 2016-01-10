@@ -24,7 +24,7 @@ namespace Botan {
 * collected for retrieval.  If you're familiar with the Unix shell
 * environment, this design will sound quite familiar.
 */
-class BOTAN_DLL Pipe : public DataSource
+class BOTAN_DLL Pipe final : public DataSource
    {
    public:
       /**

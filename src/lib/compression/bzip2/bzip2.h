@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Bzip2 Compression
 */
-class BOTAN_DLL Bzip2_Compression : public Stream_Compression
+class BOTAN_DLL Bzip2_Compression final : public Stream_Compression
    {
    public:
       /**
@@ -39,7 +39,7 @@ class BOTAN_DLL Bzip2_Compression : public Stream_Compression
 /**
 * Bzip2 Deccompression
 */
-class BOTAN_DLL Bzip2_Decompression : public Stream_Decompression
+class BOTAN_DLL Bzip2_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Bzip2_Decompression"; }

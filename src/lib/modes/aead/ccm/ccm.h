@@ -74,7 +74,7 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
 /**
 * CCM Encryption
 */
-class BOTAN_DLL CCM_Encryption : public CCM_Mode
+class BOTAN_DLL CCM_Encryption final : public CCM_Mode
    {
    public:
       /**
@@ -98,7 +98,7 @@ class BOTAN_DLL CCM_Encryption : public CCM_Mode
 /**
 * CCM Decryption
 */
-class BOTAN_DLL CCM_Decryption : public CCM_Mode
+class BOTAN_DLL CCM_Decryption final : public CCM_Mode
    {
    public:
       /**

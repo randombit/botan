@@ -56,7 +56,7 @@ class BOTAN_DLL BlockCipherModePaddingMethod
 /**
 * PKCS#7 Padding
 */
-class BOTAN_DLL PKCS7_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL PKCS7_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<byte>& buffer,
@@ -73,7 +73,7 @@ class BOTAN_DLL PKCS7_Padding : public BlockCipherModePaddingMethod
 /**
 * ANSI X9.23 Padding
 */
-class BOTAN_DLL ANSI_X923_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL ANSI_X923_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<byte>& buffer,
@@ -90,7 +90,7 @@ class BOTAN_DLL ANSI_X923_Padding : public BlockCipherModePaddingMethod
 /**
 * One And Zeros Padding
 */
-class BOTAN_DLL OneAndZeros_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL OneAndZeros_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<byte>& buffer,
@@ -107,7 +107,7 @@ class BOTAN_DLL OneAndZeros_Padding : public BlockCipherModePaddingMethod
 /**
 * Null Padding
 */
-class BOTAN_DLL Null_Padding : public BlockCipherModePaddingMethod
+class BOTAN_DLL Null_Padding final : public BlockCipherModePaddingMethod
    {
    public:
       void add_padding(secure_vector<byte>&, size_t, size_t) const override {}

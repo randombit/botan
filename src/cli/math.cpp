@@ -14,7 +14,7 @@
 
 namespace Botan_CLI {
 
-class Gen_Prime : public Command
+class Gen_Prime final : public Command
    {
    public:
       Gen_Prime() : Command("gen_prime --count=1 bits") {}
@@ -34,7 +34,7 @@ class Gen_Prime : public Command
 
 BOTAN_REGISTER_COMMAND("gen_prime", Gen_Prime);
 
-class Is_Prime : public Command
+class Is_Prime final : public Command
    {
    public:
       Is_Prime() : Command("is_prime --prob=56 n") {}
@@ -55,7 +55,7 @@ BOTAN_REGISTER_COMMAND("is_prime", Is_Prime);
 * Factor integers using a combination of trial division by small
 * primes, and Pollard's Rho algorithm
 */
-class Factor : public Command
+class Factor final : public Command
    {
    public:
       Factor() : Command("factor n") {}

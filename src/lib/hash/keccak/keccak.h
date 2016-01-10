@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Keccak[1600], a SHA-3 candidate
 */
-class BOTAN_DLL Keccak_1600 : public HashFunction
+class BOTAN_DLL Keccak_1600 final : public HashFunction
    {
    public:
 

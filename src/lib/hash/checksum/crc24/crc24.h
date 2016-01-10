@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * 24-bit cyclic redundancy check
 */
-class BOTAN_DLL CRC24 : public HashFunction
+class BOTAN_DLL CRC24 final : public HashFunction
    {
    public:
       std::string name() const override { return "CRC24"; }

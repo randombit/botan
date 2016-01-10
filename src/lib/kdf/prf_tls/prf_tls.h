@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * PRF used in TLS 1.0/1.1
 */
-class BOTAN_DLL TLS_PRF : public KDF
+class BOTAN_DLL TLS_PRF final : public KDF
    {
    public:
       std::string name() const override { return "TLS-PRF"; }
@@ -36,7 +36,7 @@ class BOTAN_DLL TLS_PRF : public KDF
 /**
 * PRF used in TLS 1.2
 */
-class BOTAN_DLL TLS_12_PRF : public KDF
+class BOTAN_DLL TLS_12_PRF final : public KDF
    {
    public:
       std::string name() const override { return "TLS-12-PRF(" + m_mac->name() + ")"; }

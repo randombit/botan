@@ -36,7 +36,7 @@ enum CRL_Code {
 /**
 * This class represents CRL entries
 */
-class BOTAN_DLL CRL_Entry : public ASN1_Object
+class BOTAN_DLL CRL_Entry final : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;

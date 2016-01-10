@@ -77,7 +77,7 @@ class BOTAN_DLL CBC_Encryption : public CBC_Mode
 /**
 * CBC Encryption with ciphertext stealing (CBC-CS3 variant)
 */
-class BOTAN_DLL CTS_Encryption : public CBC_Encryption
+class BOTAN_DLL CTS_Encryption final : public CBC_Encryption
    {
    public:
       CTS_Encryption(BlockCipher* cipher) : CBC_Encryption(cipher, nullptr) {}
@@ -114,7 +114,7 @@ class BOTAN_DLL CBC_Decryption : public CBC_Mode
 /**
 * CBC Decryption with ciphertext stealing (CBC-CS3 variant)
 */
-class BOTAN_DLL CTS_Decryption : public CBC_Decryption
+class BOTAN_DLL CTS_Decryption final : public CBC_Decryption
    {
    public:
       CTS_Decryption(BlockCipher* cipher) : CBC_Decryption(cipher, nullptr) {}

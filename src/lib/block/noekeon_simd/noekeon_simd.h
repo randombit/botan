@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Noekeon implementation using SIMD operations
 */
-class BOTAN_DLL Noekeon_SIMD : public Noekeon
+class BOTAN_DLL Noekeon_SIMD final : public Noekeon
    {
    public:
       size_t parallelism() const override { return 4; }

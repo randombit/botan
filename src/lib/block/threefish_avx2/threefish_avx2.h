@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Threefish-512
 */
-class BOTAN_DLL Threefish_512_AVX2 : public Threefish_512
+class BOTAN_DLL Threefish_512_AVX2 final : public Threefish_512
    {
    private:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;

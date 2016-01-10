@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * The Adler32 checksum, used in zlib
 */
-class BOTAN_DLL Adler32 : public HashFunction
+class BOTAN_DLL Adler32 final : public HashFunction
    {
    public:
       std::string name() const override { return "Adler32"; }

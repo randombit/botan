@@ -16,7 +16,7 @@ namespace Botan {
 
 namespace OCSP {
 
-class BOTAN_DLL CertID : public ASN1_Object
+class BOTAN_DLL CertID final : public ASN1_Object
    {
    public:
       CertID() {}
@@ -39,7 +39,7 @@ class BOTAN_DLL CertID : public ASN1_Object
       BigInt m_subject_serial;
    };
 
-class BOTAN_DLL SingleResponse : public ASN1_Object
+class BOTAN_DLL SingleResponse final : public ASN1_Object
    {
    public:
       const CertID& certid() const { return m_certid; }

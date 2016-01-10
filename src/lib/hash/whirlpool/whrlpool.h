@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Whirlpool
 */
-class BOTAN_DLL Whirlpool : public MDx_HashFunction
+class BOTAN_DLL Whirlpool final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "Whirlpool"; }

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * MD5
 */
-class BOTAN_DLL MD5 : public MDx_HashFunction
+class BOTAN_DLL MD5 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "MD5"; }
@@ -30,13 +30,14 @@ class BOTAN_DLL MD5 : public MDx_HashFunction
       void compress_n(const byte[], size_t blocks) override;
       void copy_out(byte[]) override;
 
+   private:
       /**
-      * The message buffer, exposed for use by subclasses (x86 asm)
+      * The message buffer
       */
       secure_vector<u32bit> m_M;
 
       /**
-      * The digest value, exposed for use by subclasses (x86 asm)
+      * The digest value
       */
       secure_vector<u32bit> m_digest;
    };

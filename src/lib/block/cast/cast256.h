@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * CAST-256
 */
-class BOTAN_DLL CAST_256 : public Block_Cipher_Fixed_Params<16, 4, 32, 4>
+class BOTAN_DLL CAST_256 final : public Block_Cipher_Fixed_Params<16, 4, 32, 4>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;

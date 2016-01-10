@@ -43,7 +43,7 @@ void do_compress(Botan::Transform& comp,
 
 }
 
-class Compress : public Command
+class Compress final : public Command
    {
    public:
       Compress() : Command("compress --type=gzip --level=6 --buf-size=8192 file") {}
@@ -103,7 +103,7 @@ class Compress : public Command
 
 BOTAN_REGISTER_COMMAND("compress", Compress);
 
-class Decompress : public Command
+class Decompress final : public Command
    {
    public:
       Decompress() : Command("decompress --buf-size=8192 file") {}

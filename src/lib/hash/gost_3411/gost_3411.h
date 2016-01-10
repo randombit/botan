@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * GOST 34.11
 */
-class BOTAN_DLL GOST_34_11 : public HashFunction
+class BOTAN_DLL GOST_34_11 final : public HashFunction
    {
    public:
       std::string name() const override { return "GOST-R-34.11-94" ; }

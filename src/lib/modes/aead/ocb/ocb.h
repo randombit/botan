@@ -73,7 +73,7 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
       secure_vector<byte> m_stretch;
    };
 
-class BOTAN_DLL OCB_Encryption : public OCB_Mode
+class BOTAN_DLL OCB_Encryption final : public OCB_Mode
    {
    public:
       /**
@@ -95,7 +95,7 @@ class BOTAN_DLL OCB_Encryption : public OCB_Mode
       void encrypt(byte input[], size_t blocks);
    };
 
-class BOTAN_DLL OCB_Decryption : public OCB_Mode
+class BOTAN_DLL OCB_Decryption final : public OCB_Mode
    {
    public:
       /**

@@ -49,7 +49,7 @@ class BOTAN_DLL GOST_28147_89_Params
 /**
 * GOST 28147-89
 */
-class BOTAN_DLL GOST_28147_89 : public Block_Cipher_Fixed_Params<8, 32>
+class BOTAN_DLL GOST_28147_89 final : public Block_Cipher_Fixed_Params<8, 32>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;

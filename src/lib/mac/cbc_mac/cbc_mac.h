@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * CBC-MAC
 */
-class BOTAN_DLL CBC_MAC : public MessageAuthenticationCode
+class BOTAN_DLL CBC_MAC final : public MessageAuthenticationCode
    {
    public:
       std::string name() const override;
