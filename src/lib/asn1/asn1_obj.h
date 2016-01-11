@@ -114,7 +114,7 @@ bool maybe_BER(DataSource& src);
 */
 struct BOTAN_DLL BER_Decoding_Error : public Decoding_Error
    {
-   BER_Decoding_Error(const std::string&);
+   explicit BER_Decoding_Error(const std::string&);
    };
 
 /**

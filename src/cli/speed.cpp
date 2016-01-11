@@ -136,7 +136,7 @@ class Timer
       struct Timer_Scope
          {
          public:
-            Timer_Scope(Timer& timer) : m_timer(timer) { m_timer.start(); }
+            explicit Timer_Scope(Timer& timer) : m_timer(timer) { m_timer.start(); }
             ~Timer_Scope() { m_timer.stop(); }
          private:
             Timer& m_timer;

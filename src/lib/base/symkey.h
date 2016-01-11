@@ -61,7 +61,7 @@ class BOTAN_DLL OctetString
       * Create a new OctetString
       * @param str is a hex encoded string
       */
-      OctetString(const std::string& str = "");
+      explicit OctetString(const std::string& str = "");
 
       /**
       * Create a new random OctetString

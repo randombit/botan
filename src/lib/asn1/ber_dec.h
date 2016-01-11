@@ -161,9 +161,9 @@ class BOTAN_DLL BER_Decoder
 
       BER_Decoder(const byte[], size_t);
 
-      BER_Decoder(const secure_vector<byte>&);
+      explicit BER_Decoder(const secure_vector<byte>&);
 
-      BER_Decoder(const std::vector<byte>& vec);
+      explicit BER_Decoder(const std::vector<byte>& vec);
 
       BER_Decoder(const BER_Decoder&);
       ~BER_Decoder();

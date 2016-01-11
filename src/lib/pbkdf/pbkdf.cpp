@@ -34,7 +34,7 @@ PBKDF::~PBKDF() {}
 std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
                                      const std::string& provider)
    {
-   return std::unique_ptr<PBKDF>(make_a<PBKDF>(algo_spec, provider));
+   return std::unique_ptr<PBKDF>(make_a<PBKDF>(Botan::PBKDF::Spec(algo_spec), provider));
    }
 
 std::vector<std::string> PBKDF::providers(const std::string& algo_spec)

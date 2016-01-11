@@ -70,7 +70,7 @@ class BOTAN_DLL Extensions : public ASN1_Object
       Extensions& operator=(const Extensions&);
 
       Extensions(const Extensions&);
-      Extensions(bool st = true) : m_throw_on_unknown_critical(st) {}
+      explicit Extensions(bool st = true) : m_throw_on_unknown_critical(st) {}
       ~Extensions();
    private:
       static Certificate_Extension* get_extension(const OID&);
@@ -117,7 +117,7 @@ class BOTAN_DLL Key_Usage final : public Certificate_Extension
    public:
       Key_Usage* copy() const override { return new Key_Usage(m_constraints); }
 
-      Key_Usage(Key_Constraints c = NO_CONSTRAINTS) : m_constraints(c) {}
+      explicit Key_Usage(Key_Constraints c = NO_CONSTRAINTS) : m_constraints(c) {}
 
       Key_Constraints get_constraints() const { return m_constraints; }
    private:
@@ -142,7 +142,7 @@ class BOTAN_DLL Subject_Key_ID final : public Certificate_Extension
          { return new Subject_Key_ID(m_key_id); }
 
       Subject_Key_ID() {}
-      Subject_Key_ID(const std::vector<byte>&);
+      explicit Subject_Key_ID(const std::vector<byte>&);
 
       std::vector<byte> get_key_id() const { return m_key_id; }
    private:
@@ -167,7 +167,7 @@ class BOTAN_DLL Authority_Key_ID final : public Certificate_Extension
          { return new Authority_Key_ID(m_key_id); }
 
       Authority_Key_ID() {}
-      Authority_Key_ID(const std::vector<byte>& k) : m_key_id(k) {}
+      explicit Authority_Key_ID(const std::vector<byte>& k) : m_key_id(k) {}
 
       std::vector<byte> get_key_id() const { return m_key_id; }
    private:
@@ -215,7 +215,7 @@ class BOTAN_DLL Subject_Alternative_Name : public Alternative_Name
       Subject_Alternative_Name* copy() const override
          { return new Subject_Alternative_Name(get_alt_name()); }
 
-      Subject_Alternative_Name(const AlternativeName& = AlternativeName());
+      explicit Subject_Alternative_Name(const AlternativeName& = AlternativeName());
    };
 
 /**
@@ -227,7 +227,7 @@ class BOTAN_DLL Issuer_Alternative_Name : public Alternative_Name
       Issuer_Alternative_Name* copy() const override
          { return new Issuer_Alternative_Name(get_alt_name()); }
 
-      Issuer_Alternative_Name(const AlternativeName& = AlternativeName());
+      explicit Issuer_Alternative_Name(const AlternativeName& = AlternativeName());
    };
 
 /**
@@ -240,7 +240,7 @@ class BOTAN_DLL Extended_Key_Usage final : public Certificate_Extension
          { return new Extended_Key_Usage(m_oids); }
 
       Extended_Key_Usage() {}
-      Extended_Key_Usage(const std::vector<OID>& o) : m_oids(o) {}
+      explicit Extended_Key_Usage(const std::vector<OID>& o) : m_oids(o) {}
 
       std::vector<OID> get_oids() const { return m_oids; }
    private:
@@ -265,7 +265,7 @@ class BOTAN_DLL Certificate_Policies final : public Certificate_Extension
          { return new Certificate_Policies(m_oids); }
 
       Certificate_Policies() {}
-      Certificate_Policies(const std::vector<OID>& o) : m_oids(o) {}
+      explicit Certificate_Policies(const std::vector<OID>& o) : m_oids(o) {}
 
       std::vector<OID> get_oids() const { return m_oids; }
    private:
@@ -288,7 +288,7 @@ class BOTAN_DLL Authority_Information_Access final : public Certificate_Extensio
 
       Authority_Information_Access() {}
 
-      Authority_Information_Access(const std::string& ocsp) :
+      explicit Authority_Information_Access(const std::string& ocsp) :
          m_ocsp_responder(ocsp) {}
 
    private:
@@ -314,7 +314,7 @@ class BOTAN_DLL CRL_Number final : public Certificate_Extension
       CRL_Number* copy() const override;
 
       CRL_Number() : m_has_value(false), m_crl_number(0) {}
-      CRL_Number(size_t n) : m_has_value(true), m_crl_number(n) {}
+      explicit CRL_Number(size_t n) : m_has_value(true), m_crl_number(n) {}
 
       size_t get_crl_number() const;
    private:
@@ -338,7 +338,7 @@ class BOTAN_DLL CRL_ReasonCode final : public Certificate_Extension
       CRL_ReasonCode* copy() const override
          { return new CRL_ReasonCode(m_reason); }
 
-      CRL_ReasonCode(CRL_Code r = UNSPECIFIED) : m_reason(r) {}
+      explicit CRL_ReasonCode(CRL_Code r = UNSPECIFIED) : m_reason(r) {}
 
       CRL_Code get_reason() const { return m_reason; }
    private:
@@ -374,7 +374,7 @@ class BOTAN_DLL CRL_Distribution_Points final : public Certificate_Extension
 
       CRL_Distribution_Points() {}
 
-      CRL_Distribution_Points(const std::vector<Distribution_Point>& points) :
+      explicit CRL_Distribution_Points(const std::vector<Distribution_Point>& points) :
          m_distribution_points(points) {}
 
       std::vector<Distribution_Point> distribution_points() const
