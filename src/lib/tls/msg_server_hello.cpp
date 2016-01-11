@@ -28,7 +28,7 @@ Server_Hello::Server_Hello(Handshake_IO& io,
                            u16bit ciphersuite,
                            byte compression,
                            bool offer_session_ticket,
-                           const std::string next_protocol) :
+                           const std::string& next_protocol) :
    m_version(new_session_version),
    m_session_id(new_session_id),
    m_random(make_hello_random(rng, policy)),

@@ -104,8 +104,8 @@ inline u64bit carry_shift(const donna128& a, size_t shift)
    return (a >> shift).lo();
    }
 
-inline u64bit combine_lower(const donna128 a, size_t s1,
-                            const donna128 b, size_t s2)
+inline u64bit combine_lower(const donna128& a, size_t s1,
+                            const donna128& b, size_t s2)
    {
    donna128 z = (a >> s1) | (b << s2);
    return z.lo();

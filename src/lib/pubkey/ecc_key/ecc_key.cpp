@@ -33,13 +33,8 @@ EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
    }
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
-                           const secure_vector<byte>& key_bits)
-   {
-   m_domain_params = EC_Group(alg_id.parameters);
-   m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
-
-   m_public_key = OS2ECP(key_bits, domain().get_curve());
-   }
+                           const secure_vector<byte>& key_bits) : m_domain_params{EC_Group(alg_id.parameters)}, m_public_key{OS2ECP(key_bits, domain().get_curve())}, m_domain_encoding{EC_DOMPAR_ENC_EXPLICIT}
+   {}
 
 bool EC_PublicKey::check_key(RandomNumberGenerator&,
                              bool) const

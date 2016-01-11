@@ -56,7 +56,7 @@ void Compression_Alloc_Info::do_free(void* ptr)
 
 namespace {
 
-Compressor_Transform* do_make_compressor(const std::string& type, const std::string suffix)
+Compressor_Transform* do_make_compressor(const std::string& type, const std::string& suffix)
    {
    const std::map<std::string, std::string> trans{
       {"zlib", "Zlib"},

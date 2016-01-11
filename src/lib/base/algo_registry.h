@@ -213,7 +213,7 @@ class Algo_Registry
    };
 
 template<typename T> T*
-make_a(const typename T::Spec& spec, const std::string provider = "")
+make_a(const typename T::Spec& spec, const std::string& provider = "")
    {
    return Algo_Registry<T>::global_registry().make(spec, provider);
    }

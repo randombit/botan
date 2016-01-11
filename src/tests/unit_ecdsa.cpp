@@ -61,7 +61,7 @@ Test::Result test_hash_larger_than_n()
 
    try
       {
-      std::vector<byte> signature_224 = pk_signer_224.sign_message(message, Test::rng());
+      pk_signer_224.sign_message(message, Test::rng());
       result.test_failure("bad key/hash combination not rejected");
       }
    catch(Botan::Encoding_Error)
@@ -152,8 +152,6 @@ Test::Result test_ec_sign()
       {
       Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
       Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
-      std::string pem_encoded_key = Botan::PKCS8::PEM_encode(priv_key);
-
       Botan::PK_Signer signer(priv_key, "EMSA1(SHA-224)");
       Botan::PK_Verifier verifier(priv_key, "EMSA1(SHA-224)");
 

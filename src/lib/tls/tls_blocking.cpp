@@ -20,7 +20,7 @@ Blocking_Client::Blocking_Client(read_fn reader,
                                  const Policy& policy,
                                  RandomNumberGenerator& rng,
                                  const Server_Information& server_info,
-                                 const Protocol_Version offer_version,
+                                 const Protocol_Version& offer_version,
                                  const std::vector<std::string>& next) :
    m_read(reader),
    m_channel(writer,
@@ -42,7 +42,7 @@ bool Blocking_Client::handshake_cb(const Session& session)
    return this->handshake_complete(session);
    }
 
-void Blocking_Client::alert_cb(const Alert alert, const byte[], size_t)
+void Blocking_Client::alert_cb(const Alert& alert, const byte[], size_t)
    {
    this->alert_notification(alert);
    }

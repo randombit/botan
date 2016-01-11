@@ -144,13 +144,10 @@ class NR_Verification_Operation : public PK_Ops::Verification_with_EMSA
       typedef NR_PublicKey Key_Type;
       NR_Verification_Operation(const NR_PublicKey& nr, const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
-         m_q(nr.group_q()), m_y(nr.get_y())
-         {
-         m_powermod_g_p = Fixed_Base_Power_Mod(nr.group_g(), nr.group_p());
-         m_powermod_y_p = Fixed_Base_Power_Mod(m_y, nr.group_p());
-         m_mod_p = Modular_Reducer(nr.group_p());
-         m_mod_q = Modular_Reducer(nr.group_q());
-         }
+         m_q(nr.group_q()), m_y(nr.get_y()), m_powermod_g_p{Fixed_Base_Power_Mod(nr.group_g(), nr.group_p())},
+         m_powermod_y_p{Fixed_Base_Power_Mod(m_y, nr.group_p())}, m_mod_p{Modular_Reducer(nr.group_p())},
+         m_mod_q{Modular_Reducer(nr.group_q())}
+         {}
 
       size_t message_parts() const override { return 2; }
       size_t message_part_size() const override { return m_q.bytes(); }
