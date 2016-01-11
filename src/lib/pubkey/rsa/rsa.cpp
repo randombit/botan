@@ -191,23 +191,23 @@ class RSA_Public_Operation
    {
    public:
       RSA_Public_Operation(const RSA_PublicKey& rsa) :
-         n(rsa.get_n()), powermod_e_n(rsa.get_e(), rsa.get_n())
+         m_n(rsa.get_n()), m_powermod_e_n(rsa.get_e(), rsa.get_n())
          {}
 
-      size_t get_max_input_bits() const { return (n.bits() - 1); }
+      size_t get_max_input_bits() const { return (m_n.bits() - 1); }
 
    protected:
       BigInt public_op(const BigInt& m) const
          {
-         if(m >= n)
+         if(m >= m_n)
             throw Invalid_Argument("RSA public op - input is too large");
-         return powermod_e_n(m);
+         return m_powermod_e_n(m);
          }
 
-      const BigInt& get_n() const { return n; }
+      const BigInt& get_n() const { return m_n; }
 
-      const BigInt& n;
-      Fixed_Exponent_Power_Mod powermod_e_n;
+      const BigInt& m_n;
+      Fixed_Exponent_Power_Mod m_powermod_e_n;
    };
 
 class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
@@ -228,7 +228,7 @@ class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
                                       RandomNumberGenerator&) override
          {
          BigInt m(msg, msg_len);
-         return BigInt::encode_1363(public_op(m), n.bytes());
+         return BigInt::encode_1363(public_op(m), m_n.bytes());
          }
    };
 
