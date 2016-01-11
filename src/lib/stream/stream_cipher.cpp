@@ -33,7 +33,7 @@ namespace Botan {
 std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
                                                    const std::string& provider)
    {
-   return std::unique_ptr<StreamCipher>(make_a<StreamCipher>(algo_spec, provider));
+   return std::unique_ptr<StreamCipher>(make_a<StreamCipher>(Botan::StreamCipher::Spec(algo_spec), provider));
    }
 
 std::vector<std::string> StreamCipher::providers(const std::string& algo_spec)

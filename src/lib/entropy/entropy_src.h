@@ -30,7 +30,7 @@ class BOTAN_DLL Entropy_Accumulator final
       * still be called again a few more times, and should be careful to return
       * true then as well.
       */
-      Entropy_Accumulator(std::function<bool (const byte[], size_t, double)> accum) :
+      explicit Entropy_Accumulator(std::function<bool (const byte[], size_t, double)> accum) :
          m_accum_fn(accum) {}
 
       /**
@@ -113,7 +113,7 @@ class BOTAN_DLL Entropy_Sources final
       bool poll_just(Entropy_Accumulator& accum, const std::string& src);
 
       Entropy_Sources() {}
-      Entropy_Sources(const std::vector<std::string>& sources);
+      explicit Entropy_Sources(const std::vector<std::string>& sources);
 
       ~Entropy_Sources();
    private:

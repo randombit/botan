@@ -71,7 +71,7 @@ class RSA_Private_Operation
    protected:
       size_t get_max_input_bits() const { return (m_n.bits() - 1); }
 
-      RSA_Private_Operation(const RSA_PrivateKey& rsa) :
+      explicit RSA_Private_Operation(const RSA_PrivateKey& rsa) :
          m_n(rsa.get_n()),
          m_q(rsa.get_q()),
          m_c(rsa.get_c()),
@@ -190,7 +190,7 @@ class RSA_KEM_Decryption_Operation : public PK_Ops::KEM_Decryption_with_KDF,
 class RSA_Public_Operation
    {
    public:
-      RSA_Public_Operation(const RSA_PublicKey& rsa) :
+      explicit RSA_Public_Operation(const RSA_PublicKey& rsa) :
          m_n(rsa.get_n()), m_powermod_e_n(rsa.get_e(), rsa.get_n())
          {}
 

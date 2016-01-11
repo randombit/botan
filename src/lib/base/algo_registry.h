@@ -11,6 +11,7 @@
 #include <botan/build.h>
 #include <botan/types.h>
 #include <botan/exceptn.h>
+#include <botan/scan_name.h>
 #include <functional>
 #include <mutex>
 #include <vector>
@@ -257,7 +258,7 @@ make_new_T_1str_req(const typename Algo_Registry<T>::Spec& spec)
 template<typename T, typename X> T*
 make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
    {
-   std::unique_ptr<X> x(Algo_Registry<X>::global_registry().make(spec.arg(0)));
+   std::unique_ptr<X> x(Algo_Registry<X>::global_registry().make(Botan::SCAN_Name(spec.arg(0))));
    if(!x)
       throw Exception(spec.arg(0));
    return new T(x.release());

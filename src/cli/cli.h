@@ -30,7 +30,7 @@ namespace Botan_CLI {
 class CLI_Error : public std::runtime_error
    {
    public:
-      CLI_Error(const std::string& s) : std::runtime_error(s) {}
+      explicit CLI_Error(const std::string& s) : std::runtime_error(s) {}
    };
 
 class CLI_IO_Error : public CLI_Error
@@ -43,7 +43,7 @@ class CLI_IO_Error : public CLI_Error
 class CLI_Usage_Error : public CLI_Error
    {
    public:
-      CLI_Usage_Error(const std::string& what) : CLI_Error(what) {}
+      explicit CLI_Usage_Error(const std::string& what) : CLI_Error(what) {}
    };
 
 /* Thrown eg when a requested feature was compiled out of the library
@@ -60,7 +60,7 @@ class CLI_Error_Unsupported : public CLI_Error
 struct CLI_Error_Invalid_Spec : public CLI_Error
    {
    public:
-      CLI_Error_Invalid_Spec(const std::string& spec) :
+      explicit CLI_Error_Invalid_Spec(const std::string& spec) :
          CLI_Error("Invalid command spec '" + spec + "'") {}
    };
 
@@ -106,7 +106,7 @@ class Command
       * Use of --help is captured in run() and returns help_text().
       * Use of --verbose can be checked with verbose() or flag_set("verbose")
       */
-      Command(const std::string& cmd_spec) : m_spec(cmd_spec)
+      explicit Command(const std::string& cmd_spec) : m_spec(cmd_spec)
          {
          // for checking all spec strings at load time
          //parse_spec();

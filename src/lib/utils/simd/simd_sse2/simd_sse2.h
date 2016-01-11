@@ -18,7 +18,7 @@ namespace Botan {
 class SIMD_SSE2
    {
    public:
-      SIMD_SSE2(const u32bit B[4])
+      explicit SIMD_SSE2(const u32bit B[4])
          {
          m_reg = _mm_loadu_si128(reinterpret_cast<const __m128i*>(B));
          }
@@ -28,14 +28,14 @@ class SIMD_SSE2
          m_reg = _mm_set_epi32(B0, B1, B2, B3);
          }
 
-      SIMD_SSE2(u32bit B)
+      explicit SIMD_SSE2(u32bit B)
          {
          m_reg = _mm_set1_epi32(B);
          }
 
       static SIMD_SSE2 load_le(const void* in)
          {
-         return _mm_loadu_si128(reinterpret_cast<const __m128i*>(in));
+         return SIMD_SSE2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
          }
 
       static SIMD_SSE2 load_be(const void* in)
@@ -71,7 +71,7 @@ class SIMD_SSE2
 
       SIMD_SSE2 operator+(const SIMD_SSE2& other) const
          {
-         return _mm_add_epi32(m_reg, other.m_reg);
+         return SIMD_SSE2(_mm_add_epi32(m_reg, other.m_reg));
          }
 
       void operator-=(const SIMD_SSE2& other)
@@ -81,7 +81,7 @@ class SIMD_SSE2
 
       SIMD_SSE2 operator-(const SIMD_SSE2& other) const
          {
-         return _mm_sub_epi32(m_reg, other.m_reg);
+         return SIMD_SSE2(_mm_sub_epi32(m_reg, other.m_reg));
          }
 
       void operator^=(const SIMD_SSE2& other)
@@ -91,7 +91,7 @@ class SIMD_SSE2
 
       SIMD_SSE2 operator^(const SIMD_SSE2& other) const
          {
-         return _mm_xor_si128(m_reg, other.m_reg);
+         return SIMD_SSE2(_mm_xor_si128(m_reg, other.m_reg));
          }
 
       void operator|=(const SIMD_SSE2& other)
@@ -101,7 +101,7 @@ class SIMD_SSE2
 
       SIMD_SSE2 operator&(const SIMD_SSE2& other)
          {
-         return _mm_and_si128(m_reg, other.m_reg);
+         return SIMD_SSE2(_mm_and_si128(m_reg, other.m_reg));
          }
 
       void operator&=(const SIMD_SSE2& other)
@@ -111,23 +111,23 @@ class SIMD_SSE2
 
       SIMD_SSE2 operator<<(size_t shift) const
          {
-         return _mm_slli_epi32(m_reg, static_cast<int>(shift));
+         return SIMD_SSE2(_mm_slli_epi32(m_reg, static_cast<int>(shift)));
          }
 
       SIMD_SSE2 operator>>(size_t shift) const
          {
-         return _mm_srli_epi32(m_reg, static_cast<int>(shift));
+         return SIMD_SSE2(_mm_srli_epi32(m_reg, static_cast<int>(shift)));
          }
 
       SIMD_SSE2 operator~() const
          {
-         return _mm_xor_si128(m_reg, _mm_set1_epi32(0xFFFFFFFF));
+         return SIMD_SSE2(_mm_xor_si128(m_reg, _mm_set1_epi32(0xFFFFFFFF)));
          }
 
       // (~reg) & other
       SIMD_SSE2 andc(const SIMD_SSE2& other)
          {
-         return _mm_andnot_si128(m_reg, other.m_reg);
+         return SIMD_SSE2(_mm_andnot_si128(m_reg, other.m_reg));
          }
 
       SIMD_SSE2 bswap() const
@@ -137,8 +137,8 @@ class SIMD_SSE2
          T = _mm_shufflehi_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
          T = _mm_shufflelo_epi16(T, _MM_SHUFFLE(2, 3, 0, 1));
 
-         return _mm_or_si128(_mm_srli_epi16(T, 8),
-                             _mm_slli_epi16(T, 8));
+         return SIMD_SSE2(_mm_or_si128(_mm_srli_epi16(T, 8),
+                             _mm_slli_epi16(T, 8)));
          }
 
       static void transpose(SIMD_SSE2& B0, SIMD_SSE2& B1,
@@ -155,7 +155,7 @@ class SIMD_SSE2
          }
 
    private:
-      SIMD_SSE2(__m128i in) { m_reg = in; }
+      explicit SIMD_SSE2(__m128i in) { m_reg = in; }
 
       __m128i m_reg;
    };

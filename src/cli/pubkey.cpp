@@ -67,7 +67,7 @@ class PK_Keygen final : public Command
             if(param.empty())
                param = "dsa/botan/2048";
             return std::unique_ptr<Botan::Private_Key>(
-               new Botan::DSA_PrivateKey(rng, param));
+               new Botan::DSA_PrivateKey(rng, Botan::DL_Group(param)));
          };
 #endif
 

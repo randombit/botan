@@ -36,7 +36,7 @@ class BOTAN_DLL RC4 final : public StreamCipher
       /**
       * @param skip skip this many initial bytes in the keystream
       */
-      RC4(size_t skip = 0);
+      explicit RC4(size_t skip = 0);
 
       ~RC4() { clear(); }
    private:

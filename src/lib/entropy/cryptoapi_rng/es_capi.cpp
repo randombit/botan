@@ -19,7 +19,7 @@ namespace {
 class CSP_Handle
    {
    public:
-      CSP_Handle(u64bit capi_provider)
+      explicit CSP_Handle(u64bit capi_provider)
          {
          m_valid = false;
          DWORD prov_type = (DWORD)capi_provider;

@@ -26,7 +26,7 @@ class BOTAN_DLL ASN1_String final : public ASN1_Object
 
       ASN1_Tag tagging() const;
 
-      ASN1_String(const std::string& = "");
+      explicit ASN1_String(const std::string& = "");
       ASN1_String(const std::string&, ASN1_Tag);
    private:
       std::string m_iso_8859_str;

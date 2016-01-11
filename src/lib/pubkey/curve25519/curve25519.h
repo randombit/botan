@@ -32,7 +32,7 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
       Curve25519_PublicKey(const AlgorithmIdentifier& alg_id,
                            const secure_vector<byte>& key_bits);
 
-      Curve25519_PublicKey(const secure_vector<byte>& pub) : m_public(pub) {}
+      explicit Curve25519_PublicKey(const secure_vector<byte>& pub) : m_public(pub) {}
    protected:
       Curve25519_PublicKey() {}
       secure_vector<byte> m_public;
@@ -47,9 +47,9 @@ class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
                             const secure_vector<byte>& key_bits,
                             RandomNumberGenerator& rng);
 
-      Curve25519_PrivateKey(RandomNumberGenerator& rng);
+      explicit Curve25519_PrivateKey(RandomNumberGenerator& rng);
 
-      Curve25519_PrivateKey(const secure_vector<byte>& secret_key);
+      explicit Curve25519_PrivateKey(const secure_vector<byte>& secret_key);
 
       std::vector<byte> public_value() const override { return Curve25519_PublicKey::public_value(); }
 

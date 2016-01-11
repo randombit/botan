@@ -37,7 +37,7 @@ class Bzip2_Stream : public Zlib_Style_Stream<bz_stream, char>
 class Bzip2_Compression_Stream : public Bzip2_Stream
    {
    public:
-      Bzip2_Compression_Stream(size_t block_size)
+      explicit Bzip2_Compression_Stream(size_t block_size)
          {
          int rc = BZ2_bzCompressInit(streamp(), block_size, 0, 0);
 

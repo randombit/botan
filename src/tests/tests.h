@@ -41,7 +41,7 @@ using Botan::BigInt;
 class Test_Error : public Botan::Exception
    {
    public:
-      Test_Error(const std::string& what) : Exception("Test error", what) {}
+      explicit Test_Error(const std::string& what) : Exception("Test error", what) {}
    };
 
 /*
@@ -61,7 +61,7 @@ class Test
       class Result
          {
          public:
-            Result(const std::string& who) : m_who(who) {}
+            explicit Result(const std::string& who) : m_who(who) {}
 
             size_t tests_passed() const { return m_tests_passed; }
             size_t tests_failed() const { return m_fail_log.size(); }
