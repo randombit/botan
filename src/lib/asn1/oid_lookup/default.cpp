@@ -201,6 +201,8 @@ const char* default_oid_list()
       "1.3.6.1.5.5.7.48.1 = PKIX.OCSP" "\n"
       "1.3.6.1.5.5.7.48.1.1 = PKIX.OCSP.BasicResponse" "\n"
 
+      "1.3.6.1.4.1.311.20.2.2 = Microsoft SmartcardLogon" "\n"
+
       // ECC param sets
       "1.3.132.0.8 = secp160r1" "\n"
       "1.3.132.0.9 = secp160k1" "\n"
