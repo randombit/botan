@@ -289,4 +289,8 @@ softare-based entropy polling is still used.
 */
 %{local_config}
 
+// Append to macros living outside of functions, so that invocations must end with a semicolon.
+// The struct is only declared to force the semicolon, it is never defined.
+#define BOTAN_FORCE_SEMICOLON struct BOTAN_DUMMY_STRUCT
+
 #endif

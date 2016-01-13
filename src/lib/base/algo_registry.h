@@ -8,6 +8,7 @@
 #ifndef BOTAN_ALGO_REGISTRY_H__
 #define BOTAN_ALGO_REGISTRY_H__
 
+#include <botan/build.h>
 #include <botan/types.h>
 #include <botan/exceptn.h>
 #include <functional>
@@ -261,10 +262,6 @@ make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
       throw Exception(spec.arg(0));
    return new T(x.release());
    }
-
-// Append to macros living outside of functions, so that invocations must end with a semicolon.
-// The struct is only declared to force the semicolon, it is never defined.
-#define BOTAN_FORCE_SEMICOLON struct BOTAN_DUMMY_STRUCT
 
 #define BOTAN_REGISTER_TYPE(T, type, name, maker, provider, pref)        \
    namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, maker, provider, pref); } \
