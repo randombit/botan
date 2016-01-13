@@ -1,3 +1,4 @@
+
 Source Code Layout
 =================================================
 
@@ -36,8 +37,8 @@ Library Layout
 * ``rng`` contains the random number generators
 * ``entropy`` has various entropy sources
 * ``asn1`` is the DER encoder/decoder
-* ``cert`` has ``x509`` (X.509 PKI OCSP is also here) and ``cvc`` (Card Verifiable Ceritifcates,
-  for ePassports)
+* ``cert/x509`` is X.509 certificates, PKCS #10 requests, OCSP
+* ``cert/cvc`` is Card Verifiable Certificates (ePassport credentials)
 * ``tls`` contains the TLS implementation
 * ``filters`` is a filter/pipe API for data transforms
 * ``compression`` has the compression wrappers (zlib, bzip2, lzma)
@@ -49,94 +50,92 @@ Library Layout
 Copyright Notice
 ========================================
 
-At the top of any new file add a comment with a copyright and
-a reference to the license, for example::
+At the top of any new file add a comment with a copyright and a reference to the
+license, for example::
 
   /*
   * (C) 2015,2016 Copyright Holder
   * Botan is released under the Simplified BSD License (see license.txt)
   */
 
-If you are making a substantial or non-trivial change to an existing
-file, add or update your own copyright statement at the top of the
-file. If you are making a change in a new year not covered by your
-existing statement, add the year. Even if the years you are making the
-change are consecutive, avoid year ranges: specify each year separated
-by a comma.
+If you are making a substantial or non-trivial change to an existing file, add
+or update your own copyright statement at the top of the file. If you are making
+a change in a new year not covered by your existing statement, add the
+year. Even if the years you are making the change are consecutive, avoid year
+ranges: specify each year separated by a comma.
 
-Also if you are a new contributor or making an addition in a new year,
-include an update to ``doc/license.txt`` in your PR.
+Also if you are a new contributor or making an addition in a new year, include
+an update to ``doc/license.txt`` in your PR.
 
 Style Conventions
 ========================================
 
-When writing your code remember the need for it to be easily
-understood by reviewers and auditors, both at the time of the patch
-submission and in the future.
+When writing your code remember the need for it to be easily understood by
+reviewers and auditors, both at the time of the patch submission and in the
+future.
 
-Avoid complicated template metaprogramming where possible. It has its
-places but should be used judiciously.
+Avoid complicated template metaprogramming where possible. It has its places but
+should be used judiciously.
 
-When designing a new API (for use either by library users or just
-internally) try writing out the calling code first. That is, write out
-some code calling your idealized API, then just implement that API.
-This can often help avoid cut-and-paste by creating the correct
-abstractions needed to solve the problem at hand.
+When designing a new API (for use either by library users or just internally)
+try writing out the calling code first. That is, write out some code calling
+your idealized API, then just implement that API.  This can often help avoid
+cut-and-paste by creating the correct abstractions needed to solve the problem
+at hand.
 
-The C++11 ``auto`` keyword is very convenient but only use it when the
-type truly is obvious (considering also the potential for unexpected
-integer conversions and the like, such as an apparent uint8_t being
-promoted to an int).
+The C++11 ``auto`` keyword is very convenient but only use it when the type
+truly is obvious (considering also the potential for unexpected integer
+conversions and the like, such as an apparent uint8_t being promoted to an int).
 
-If a variable is defined and not modified, declare it ``const``.
-Some exception for very short-lived variables, but generally speaking
-being able to read the declaration and know it will not be modified
-is useful.
+If a variable is defined and not modified, declare it ``const``.  Some exception
+for very short-lived variables, but generally speaking being able to read the
+declaration and know it will not be modified is useful.
 
-Use ``override`` annotations whenever overriding a virtual function.
+Use ``override`` annotations whenever overriding a virtual function.  If
+introducing a new type that is not intended for derivation, mark it ``final``.
 
-A formatting setup for emacs is included in `scripts/indent.el` but
-the basic formatting style should be obvious. No tabs, and remove
-trailing whitespace.
+Use ``m_`` prefix on all member variables.
 
-Use ``m_`` prefix on all member variables. The current code is not
-consistent but all new code should use it.
+A formatting setup for emacs is included in `scripts/indent.el` but the basic
+formatting style should be obvious. No tabs, and remove trailing whitespace.
 
-Prefer using braces on both sides of if/else blocks, even if only
-using a single statement. Again the current code doesn't always do
-this.
+Prefer using braces on both sides of if/else blocks, even if only using a single
+statement. The current code doesn't always do this.
 
-Avoid ``using namespace`` declarations, even inside of single functions.
-One allowed exception is ``using namespace std::placeholders`` in
-functions which use ``std::bind``.
+Avoid ``using namespace`` declarations, even inside of single functions.  One
+allowed exception is ``using namespace std::placeholders`` in functions which
+use ``std::bind``.
 
-Use ``::`` to explicitly refer to the global namespace (eg, when calling
-an OS or library function like ``::select`` or ``::sqlite3_open``).
+Use ``::`` to explicitly refer to the global namespace (eg, when calling an OS
+or library function like ``::select`` or ``::sqlite3_open``).
 
 Sending patches
 ========================================
 
 All contributions should be submitted as pull requests via GitHub
-(https://github.com/randombit/botan). If you are planning a large
-change email the mailing list or open a discussion ticket on github
-before starting out to make sure you are on the right path.
+(https://github.com/randombit/botan). If you are planning a large change email
+the mailing list or open a discussion ticket on github before starting out to
+make sure you are on the right path.
 
-Depending on what your change is, your PR should probably also include
-an update to ``doc/news.rst`` with a note explaining the change. If your
-change is a simple bug fix, a one sentence description is perhaps
-sufficient. If there is an existing ticket on GitHub with discussion
-or other information, reference it in your change note as 'GH #000'.
+If possible please sign your git commits using a PGP key.
+See https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work for
+instructions on how to set this up.
 
-Update ``doc/credits.txt`` with your information so people know what
-you did! (This is optional)
+Depending on what your change is, your PR should probably also include an update
+to ``doc/news.rst`` with a note explaining the change. If your change is a
+simple bug fix, a one sentence description is perhaps sufficient. If there is an
+existing ticket on GitHub with discussion or other information, reference it in
+your change note as 'GH #000'.
 
-If you are interested in contributing but don't know where to start
-check out ``doc/todo.rst`` for some ideas - these are changes we would
-almost certainly accept once they've passed code review.
+Update ``doc/credits.txt`` with your information so people know what you did!
+
+If you are interested in contributing but don't know where to start check out
+``doc/todo.rst`` for some ideas - these are changes we would almost certainly
+accept once they've passed code review.
 
 Also, try building and testing it on whatever hardware you have handy,
-especially non-x86 platforms, or especially C++11 compilers other
-than the regularly tested GCC, Clang, and Visual Studio compilers.
+especially non-x86 platforms, or especially C++11 compilers other than the
+regularly tested GCC, Clang, and Visual Studio compilers.
 
 External Dependencies
 ========================================
@@ -196,18 +195,18 @@ may give some estimate of the bar - you can do pretty much anything in 1000
 lines of well written C++11 (the implementations of *all* of the message
 authentication codes is much less than 1K SLOC).
 
-Current (all optional) external dependencies of the library are OpenSSL (for
-accessing their fast RSA and ECDSA impls, not the handshake code!), zlib, bzip2,
-lzma, sqlite3, plus various operating system utilities like basic filesystem
-operations. These are hugely useful libraries that provide serious value, and
-are worth the trouble of maintaining an integration with. And importantly their
-API contract doesn't change often: code calling zlib doesn't bitrot much.
+Current the (optional) external dependencies of the library are OpenSSL (for
+access to fast and side channel hardened RSA, ECDSA, AES), zlib, bzip2, lzma,
+sqlite3, Trousers (TPM integration), plus various operating system utilities
+like basic filesystem operations. These provide major pieces of functionality
+which seem worth the trouble of maintaining an integration with.
 
-Examples of external dependencies that would be appropriate include integration
-with system crypto (PKCS #11, TPM, CommonCrypto, CryptoAPI algorithms),
-potentially a parallelism framework such as Cilk (as part of a larger design for
-parallel message processing, say), or hypothentically use of a safe ASN.1 parser
-(that is, one written in Rust or OCaml providing a C API).
+Examples of other external dependencies that would be appropriate include
+integration with system crypto (PKCS #11, TPM, CommonCrypto, CryptoAPI
+algorithms), potentially a parallelism framework such as Cilk (as part of a
+larger design for parallel message processing, say), or hypothentically use of a
+safe ASN.1 parser (that is, one written in a safe language like Rust or OCaml
+providing a C API).
 
 Test Tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -216,6 +215,8 @@ Integration to better leverage specialized test or verification tools such as
 valgrind, ASan/UBSan, AFL, LLVM libFuzzer, KLEE, Coq, etc is fine. Typically
 these are not enabled or used during normal builds but are specially set up by
 developers or auditors.
+
+The fuzzer tests currently live at https://github.com/randombit/botan-fuzzers
 
 Python
 ========================================
@@ -248,19 +249,3 @@ very quick rebuilds by caching the compiler output.
 
 Use ``--with-sanitizers`` to enable ASan. UBSan has to be added separately
 with ``--cc-abi-flags`` at the moment as GCC 4.8 does not have UBSan.
-
-Other Ways You Can Help
-========================================
-
-Convince your employer that the software your company uses and relies on is
-worth the time and cost of serious audit. The code may be free, but you are
-still using it - so make sure it is any good. Fund code and design reviews
-whenever you can of the free software your company relies on, including Botan,
-then share the results with the developers to improve the ecosystem for everyone.
-
-Funding Development
-========================================
-
-If there is a change you'd like implemented in the library but you'd rather not,
-or can't, write it yourself, you can contact Jack Lloyd who in addition to being
-the primary author also works as a freelance contractor and security consultant.

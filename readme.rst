@@ -11,7 +11,7 @@ command line tool for various cryptographic operations, the source for which
 also helps demonstrate usage of the library.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
-and contributions are welcome. Read `doc/hacking.rst` for more
+and contributions are welcome. Read `doc/contributing.rst` for more
 about how to contribute.
 
 .. highlight:: none
