@@ -35,7 +35,7 @@
 
 namespace Botan_CLI {
 
-class TLS_Client : public Command
+class TLS_Client final : public Command
    {
    public:
       TLS_Client() : Command("tls_client host --port=443 --type=tcp "

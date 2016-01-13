@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * X.509 Time
 */
-class BOTAN_DLL X509_Time : public ASN1_Object
+class BOTAN_DLL X509_Time final : public ASN1_Object
    {
    public:
       /// DER encode a X509_Time

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * This class represents a Base64 encoder.
 */
-class BOTAN_DLL Base64_Encoder : public Filter
+class BOTAN_DLL Base64_Encoder final : public Filter
    {
    public:
       std::string name() const override { return "Base64_Encoder"; }
@@ -54,7 +54,7 @@ class BOTAN_DLL Base64_Encoder : public Filter
 /**
 * This object represents a Base64 decoder.
 */
-class BOTAN_DLL Base64_Decoder : public Filter
+class BOTAN_DLL Base64_Decoder final : public Filter
    {
    public:
       std::string name() const override { return "Base64_Decoder"; }

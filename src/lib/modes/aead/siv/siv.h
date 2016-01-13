@@ -67,7 +67,7 @@ class BOTAN_DLL SIV_Mode : public AEAD_Mode
 /**
 * SIV Encryption
 */
-class BOTAN_DLL SIV_Encryption : public SIV_Mode
+class BOTAN_DLL SIV_Encryption final : public SIV_Mode
    {
    public:
       /**
@@ -86,7 +86,7 @@ class BOTAN_DLL SIV_Encryption : public SIV_Mode
 /**
 * SIV Decryption
 */
-class BOTAN_DLL SIV_Decryption : public SIV_Mode
+class BOTAN_DLL SIV_Decryption final : public SIV_Mode
    {
    public:
       /**

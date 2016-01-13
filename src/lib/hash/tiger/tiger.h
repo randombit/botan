@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Tiger
 */
-class BOTAN_DLL Tiger : public MDx_HashFunction
+class BOTAN_DLL Tiger final : public MDx_HashFunction
    {
    public:
       std::string name() const override;

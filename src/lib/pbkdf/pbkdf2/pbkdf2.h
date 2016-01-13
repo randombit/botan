@@ -25,7 +25,7 @@ BOTAN_DLL size_t pbkdf2(MessageAuthenticationCode& prf,
 /**
 * PKCS #5 PBKDF2
 */
-class BOTAN_DLL PKCS5_PBKDF2 : public PBKDF
+class BOTAN_DLL PKCS5_PBKDF2 final : public PBKDF
    {
    public:
       std::string name() const override

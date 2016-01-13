@@ -18,7 +18,7 @@ namespace Botan {
 * Useful for Rabin-Williams, also sometimes used with RSA in
 * odd protocols.
 */
-class BOTAN_DLL EMSA_X931 : public EMSA
+class BOTAN_DLL EMSA_X931 final : public EMSA
    {
    public:
       /**

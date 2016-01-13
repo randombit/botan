@@ -18,7 +18,7 @@ namespace Botan {
 * Can only generate a key up to the size of the hash output.
 * Unless needed for backwards compatibility, use PKCS5_PBKDF2
 */
-class BOTAN_DLL PKCS5_PBKDF1 : public PBKDF
+class BOTAN_DLL PKCS5_PBKDF1 final : public PBKDF
    {
    public:
       /**

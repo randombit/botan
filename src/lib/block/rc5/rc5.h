@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * RC5
 */
-class BOTAN_DLL RC5 : public Block_Cipher_Fixed_Params<8, 1, 32>
+class BOTAN_DLL RC5 final : public Block_Cipher_Fixed_Params<8, 1, 32>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;

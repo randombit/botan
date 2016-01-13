@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * SEED, a Korean block cipher
 */
-class BOTAN_DLL SEED : public Block_Cipher_Fixed_Params<16, 16>
+class BOTAN_DLL SEED final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;

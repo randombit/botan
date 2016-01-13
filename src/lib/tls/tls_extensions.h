@@ -71,7 +71,7 @@ class Extension
 /**
 * Server Name Indicator extension (RFC 3546)
 */
-class Server_Name_Indicator : public Extension
+class Server_Name_Indicator final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -97,7 +97,7 @@ class Server_Name_Indicator : public Extension
 /**
 * SRP identifier extension (RFC 5054)
 */
-class SRP_Identifier : public Extension
+class SRP_Identifier final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -123,7 +123,7 @@ class SRP_Identifier : public Extension
 /**
 * Renegotiation Indication Extension (RFC 5746)
 */
-class Renegotiation_Extension : public Extension
+class Renegotiation_Extension final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -152,7 +152,7 @@ class Renegotiation_Extension : public Extension
 /**
 * Maximum Fragment Length Negotiation Extension (RFC 4366 sec 3.2)
 */
-class Maximum_Fragment_Length : public Extension
+class Maximum_Fragment_Length final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -184,7 +184,7 @@ class Maximum_Fragment_Length : public Extension
 /**
 * ALPN (RFC 7301)
 */
-class Application_Layer_Protocol_Notification : public Extension
+class Application_Layer_Protocol_Notification final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type() { return TLSEXT_ALPN; }
@@ -220,7 +220,7 @@ class Application_Layer_Protocol_Notification : public Extension
 /**
 * Session Ticket Extension (RFC 5077)
 */
-class Session_Ticket : public Extension
+class Session_Ticket final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -259,7 +259,7 @@ class Session_Ticket : public Extension
 /**
 * Supported Elliptic Curves Extension (RFC 4492)
 */
-class Supported_Elliptic_Curves : public Extension
+class Supported_Elliptic_Curves final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -288,7 +288,7 @@ class Supported_Elliptic_Curves : public Extension
 /**
 * Signature Algorithms Extension for TLS 1.2 (RFC 5246)
 */
-class Signature_Algorithms : public Extension
+class Signature_Algorithms final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -327,7 +327,7 @@ class Signature_Algorithms : public Extension
 /**
 * Heartbeat Extension (RFC 6520)
 */
-class Heartbeat_Support_Indicator : public Extension
+class Heartbeat_Support_Indicator final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -353,7 +353,7 @@ class Heartbeat_Support_Indicator : public Extension
 /**
 * Used to indicate SRTP algorithms for DTLS (RFC 5764)
 */
-class SRTP_Protection_Profiles : public Extension
+class SRTP_Protection_Profiles final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()
@@ -379,7 +379,7 @@ class SRTP_Protection_Profiles : public Extension
 /**
 * Extended Master Secret Extension (RFC 7627)
 */
-class Extended_Master_Secret : public Extension
+class Extended_Master_Secret final : public Extension
    {
    public:
       static Handshake_Extension_Type static_type()

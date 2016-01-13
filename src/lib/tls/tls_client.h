@@ -19,7 +19,7 @@ namespace TLS {
 /**
 * SSL/TLS Client
 */
-class BOTAN_DLL Client : public Channel
+class BOTAN_DLL Client final : public Channel
    {
    public:
       /**

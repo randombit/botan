@@ -35,7 +35,7 @@ std::vector<byte> make_hello_random(RandomNumberGenerator& rng,
 /**
 * DTLS Hello Verify Request
 */
-class Hello_Verify_Request : public Handshake_Message
+class Hello_Verify_Request final : public Handshake_Message
    {
    public:
       std::vector<byte> serialize() const override;
@@ -55,7 +55,7 @@ class Hello_Verify_Request : public Handshake_Message
 /**
 * Client Hello Message
 */
-class Client_Hello : public Handshake_Message
+class Client_Hello final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return CLIENT_HELLO; }
@@ -210,7 +210,7 @@ class Client_Hello : public Handshake_Message
 /**
 * Server Hello Message
 */
-class Server_Hello : public Handshake_Message
+class Server_Hello final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return SERVER_HELLO; }
@@ -327,7 +327,7 @@ class Server_Hello : public Handshake_Message
 /**
 * Client Key Exchange Message
 */
-class Client_Key_Exchange : public Handshake_Message
+class Client_Key_Exchange final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return CLIENT_KEX; }
@@ -361,7 +361,7 @@ class Client_Key_Exchange : public Handshake_Message
 /**
 * Certificate Message
 */
-class Certificate : public Handshake_Message
+class Certificate final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return CERTIFICATE; }
@@ -384,7 +384,7 @@ class Certificate : public Handshake_Message
 /**
 * Certificate Request Message
 */
-class Certificate_Req : public Handshake_Message
+class Certificate_Req final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return CERTIFICATE_REQUEST; }
@@ -417,7 +417,7 @@ class Certificate_Req : public Handshake_Message
 /**
 * Certificate Verify Message
 */
-class Certificate_Verify : public Handshake_Message
+class Certificate_Verify final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return CERTIFICATE_VERIFY; }
@@ -449,7 +449,7 @@ class Certificate_Verify : public Handshake_Message
 /**
 * Finished Message
 */
-class Finished : public Handshake_Message
+class Finished final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return FINISHED; }
@@ -474,7 +474,7 @@ class Finished : public Handshake_Message
 /**
 * Hello Request Message
 */
-class Hello_Request : public Handshake_Message
+class Hello_Request final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return HELLO_REQUEST; }
@@ -488,7 +488,7 @@ class Hello_Request : public Handshake_Message
 /**
 * Server Key Exchange Message
 */
-class Server_Key_Exchange : public Handshake_Message
+class Server_Key_Exchange final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return SERVER_KEX; }
@@ -533,7 +533,7 @@ class Server_Key_Exchange : public Handshake_Message
 /**
 * Server Hello Done Message
 */
-class Server_Hello_Done : public Handshake_Message
+class Server_Hello_Done final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return SERVER_HELLO_DONE; }
@@ -547,7 +547,7 @@ class Server_Hello_Done : public Handshake_Message
 /**
 * New Session Ticket Message
 */
-class New_Session_Ticket : public Handshake_Message
+class New_Session_Ticket final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return NEW_SESSION_TICKET; }
@@ -574,7 +574,7 @@ class New_Session_Ticket : public Handshake_Message
 /**
 * Change Cipher Spec
 */
-class Change_Cipher_Spec : public Handshake_Message
+class Change_Cipher_Spec final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return HANDSHAKE_CCS; }

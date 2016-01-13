@@ -19,7 +19,7 @@ namespace Botan {
 /**
 * Alternative Name
 */
-class BOTAN_DLL AlternativeName : public ASN1_Object
+class BOTAN_DLL AlternativeName final : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;

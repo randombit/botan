@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * OAEP (called EME1 in IEEE 1363 and in earlier versions of the library)
 */
-class BOTAN_DLL OAEP : public EME
+class BOTAN_DLL OAEP final : public EME
    {
    public:
       size_t maximum_input_size(size_t) const override;

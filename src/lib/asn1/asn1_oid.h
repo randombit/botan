@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * This class represents ASN.1 object identifiers.
 */
-class BOTAN_DLL OID : public ASN1_Object
+class BOTAN_DLL OID final : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;

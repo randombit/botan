@@ -30,7 +30,7 @@
 
 namespace Botan_CLI {
 
-class Config_Info : public Command
+class Config_Info final : public Command
    {
    public:
       Config_Info() : Command("config info_type") {}
@@ -74,7 +74,7 @@ class Config_Info : public Command
 
 BOTAN_REGISTER_COMMAND("config", Config_Info);
 
-class Version_Info : public Command
+class Version_Info final : public Command
    {
    public:
       Version_Info() : Command("version --full") {}
@@ -96,7 +96,7 @@ class Version_Info : public Command
 
 BOTAN_REGISTER_COMMAND("version", Version_Info);
 
-class Print_Cpuid : public Command
+class Print_Cpuid final : public Command
    {
    public:
       Print_Cpuid() : Command("cpuid") {}
@@ -109,7 +109,7 @@ class Print_Cpuid : public Command
 
 BOTAN_REGISTER_COMMAND("cpuid", Print_Cpuid);
 
-class Hash : public Command
+class Hash final : public Command
    {
    public:
       Hash() : Command("hash --algo=SHA-256 --buf-size=4096 *files") {}
@@ -146,7 +146,7 @@ class Hash : public Command
 
 BOTAN_REGISTER_COMMAND("hash", Hash);
 
-class RNG : public Command
+class RNG final : public Command
    {
    public:
       RNG() : Command("rng bytes --system") {}
@@ -175,7 +175,7 @@ BOTAN_REGISTER_COMMAND("rng", RNG);
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
 
-class HTTP_Get : public Command
+class HTTP_Get final : public Command
    {
    public:
       HTTP_Get() : Command("http_get url") {}
@@ -192,7 +192,7 @@ BOTAN_REGISTER_COMMAND("http_get", HTTP_Get);
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
 
-class Base64_Encode : public Command
+class Base64_Encode final : public Command
    {
    public:
       Base64_Encode() : Command("base64_enc file") {}
@@ -207,7 +207,7 @@ class Base64_Encode : public Command
 
 BOTAN_REGISTER_COMMAND("base64_enc", Base64_Encode);
 
-class Base64_Decode : public Command
+class Base64_Decode final : public Command
    {
    public:
       Base64_Decode() : Command("base64_dec file") {}
@@ -232,7 +232,7 @@ BOTAN_REGISTER_COMMAND("base64_dec", Base64_Decode);
 
 #if defined(BOTAN_HAS_BCRYPT)
 
-class Generate_Bcrypt : public Command
+class Generate_Bcrypt final : public Command
    {
    public:
       Generate_Bcrypt() : Command("gen_bcrypt --work-factor=12 password") {}
@@ -248,7 +248,7 @@ class Generate_Bcrypt : public Command
 
 BOTAN_REGISTER_COMMAND("gen_bcrypt", Generate_Bcrypt);
 
-class Check_Bcrypt : public Command
+class Check_Bcrypt final : public Command
    {
    public:
       Check_Bcrypt() : Command("check_bcrypt password hash") {}

@@ -52,7 +52,7 @@ class BOTAN_DLL XTS_Mode : public Cipher_Mode
 /**
 * IEEE P1619 XTS Encryption
 */
-class BOTAN_DLL XTS_Encryption : public XTS_Mode
+class BOTAN_DLL XTS_Encryption final : public XTS_Mode
    {
    public:
       XTS_Encryption(BlockCipher* cipher) : XTS_Mode(cipher) {}
@@ -67,7 +67,7 @@ class BOTAN_DLL XTS_Encryption : public XTS_Mode
 /**
 * IEEE P1619 XTS Decryption
 */
-class BOTAN_DLL XTS_Decryption : public XTS_Mode
+class BOTAN_DLL XTS_Decryption final : public XTS_Mode
    {
    public:
       XTS_Decryption(BlockCipher* cipher) : XTS_Mode(cipher) {}

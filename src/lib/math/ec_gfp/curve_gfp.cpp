@@ -14,7 +14,7 @@ namespace Botan {
 
 namespace {
 
-class CurveGFp_Montgomery : public CurveGFp_Repr
+class CurveGFp_Montgomery final : public CurveGFp_Repr
    {
    public:
       CurveGFp_Montgomery(const BigInt& p, const BigInt& a, const BigInt& b) :
@@ -203,7 +203,7 @@ void CurveGFp_NIST::curve_sqr(BigInt& z, const BigInt& x,
 /**
 * The NIST P-192 curve
 */
-class CurveGFp_P192 : public CurveGFp_NIST
+class CurveGFp_P192 final : public CurveGFp_NIST
    {
    public:
       CurveGFp_P192(const BigInt& a, const BigInt& b) : CurveGFp_NIST(192, a, b) {}
@@ -215,7 +215,7 @@ class CurveGFp_P192 : public CurveGFp_NIST
 /**
 * The NIST P-224 curve
 */
-class CurveGFp_P224 : public CurveGFp_NIST
+class CurveGFp_P224 final : public CurveGFp_NIST
    {
    public:
       CurveGFp_P224(const BigInt& a, const BigInt& b) : CurveGFp_NIST(224, a, b) {}
@@ -227,7 +227,7 @@ class CurveGFp_P224 : public CurveGFp_NIST
 /**
 * The NIST P-256 curve
 */
-class CurveGFp_P256 : public CurveGFp_NIST
+class CurveGFp_P256 final : public CurveGFp_NIST
    {
    public:
       CurveGFp_P256(const BigInt& a, const BigInt& b) : CurveGFp_NIST(256, a, b) {}
@@ -239,7 +239,7 @@ class CurveGFp_P256 : public CurveGFp_NIST
 /**
 * The NIST P-384 curve
 */
-class CurveGFp_P384 : public CurveGFp_NIST
+class CurveGFp_P384 final : public CurveGFp_NIST
    {
    public:
       CurveGFp_P384(const BigInt& a, const BigInt& b) : CurveGFp_NIST(384, a, b) {}
@@ -253,7 +253,7 @@ class CurveGFp_P384 : public CurveGFp_NIST
 /**
 * The NIST P-521 curve
 */
-class CurveGFp_P521 : public CurveGFp_NIST
+class CurveGFp_P521 final : public CurveGFp_NIST
    {
    public:
       CurveGFp_P521(const BigInt& a, const BigInt& b) : CurveGFp_NIST(521, a, b) {}

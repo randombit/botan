@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * AES-128 using AES-NI
 */
-class BOTAN_DLL AES_128_NI : public Block_Cipher_Fixed_Params<16, 16>
+class BOTAN_DLL AES_128_NI final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       size_t parallelism() const override { return 4; }
@@ -35,7 +35,7 @@ class BOTAN_DLL AES_128_NI : public Block_Cipher_Fixed_Params<16, 16>
 /**
 * AES-192 using AES-NI
 */
-class BOTAN_DLL AES_192_NI : public Block_Cipher_Fixed_Params<16, 24>
+class BOTAN_DLL AES_192_NI final : public Block_Cipher_Fixed_Params<16, 24>
    {
    public:
       size_t parallelism() const override { return 4; }
@@ -55,7 +55,7 @@ class BOTAN_DLL AES_192_NI : public Block_Cipher_Fixed_Params<16, 24>
 /**
 * AES-256 using AES-NI
 */
-class BOTAN_DLL AES_256_NI : public Block_Cipher_Fixed_Params<16, 32>
+class BOTAN_DLL AES_256_NI final : public Block_Cipher_Fixed_Params<16, 32>
    {
    public:
       size_t parallelism() const override { return 4; }

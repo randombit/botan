@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * IDEA in SSE2
 */
-class BOTAN_DLL IDEA_SSE2 : public IDEA
+class BOTAN_DLL IDEA_SSE2 final : public IDEA
    {
    public:
       size_t parallelism() const override { return 8; }

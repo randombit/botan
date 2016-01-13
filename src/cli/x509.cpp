@@ -21,7 +21,7 @@
 
 namespace Botan_CLI {
 
-class Sign_Cert : public Command
+class Sign_Cert final : public Command
    {
    public:
       Sign_Cert() : Command("sign_cert --ca-key-pass= --hash=SHA-256 "
@@ -60,7 +60,7 @@ class Sign_Cert : public Command
 
 BOTAN_REGISTER_COMMAND("sign_cert", Sign_Cert);
 
-class Cert_Info : public Command
+class Cert_Info final : public Command
    {
    public:
       Cert_Info() : Command("cert_info file") {}
@@ -75,7 +75,7 @@ class Cert_Info : public Command
 BOTAN_REGISTER_COMMAND("cert_info", Cert_Info);
 
 #if defined(BOTAN_HAS_OCSP)
-class OCSP_Check : public Command
+class OCSP_Check final : public Command
    {
    public:
       OCSP_Check() : Command("ocsp_check subject issuer") {}
@@ -107,7 +107,7 @@ BOTAN_REGISTER_COMMAND("ocsp_check", OCSP_Check);
 
 #endif // OCSP
 
-class Cert_Verify : public Command
+class Cert_Verify final : public Command
    {
    public:
       Cert_Verify() : Command("cert_verify subject *ca_certs") {}
@@ -142,7 +142,7 @@ class Cert_Verify : public Command
 
 BOTAN_REGISTER_COMMAND("cert_verify", Cert_Verify);
 
-class Gen_Self_Signed : public Command
+class Gen_Self_Signed final : public Command
    {
    public:
       Gen_Self_Signed() : Command("gen_self_signed key CN --country= --dns= "
@@ -178,7 +178,7 @@ class Gen_Self_Signed : public Command
 
 BOTAN_REGISTER_COMMAND("gen_self_signed", Gen_Self_Signed);
 
-class Generate_PKCS10 : public Command
+class Generate_PKCS10 final : public Command
    {
    public:
       Generate_PKCS10() : Command("gen_pkcs10 key CN --country= --organization= "

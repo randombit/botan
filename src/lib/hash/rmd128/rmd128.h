@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * RIPEMD-128
 */
-class BOTAN_DLL RIPEMD_128 : public MDx_HashFunction
+class BOTAN_DLL RIPEMD_128 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "RIPEMD-128"; }

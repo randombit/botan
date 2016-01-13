@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL EME_Raw : public EME
+class BOTAN_DLL EME_Raw final : public EME
    {
    public:
       size_t maximum_input_size(size_t i) const override;

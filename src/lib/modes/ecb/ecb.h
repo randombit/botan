@@ -49,7 +49,7 @@ class BOTAN_DLL ECB_Mode : public Cipher_Mode
 /**
 * ECB Encryption
 */
-class BOTAN_DLL ECB_Encryption : public ECB_Mode
+class BOTAN_DLL ECB_Encryption final : public ECB_Mode
    {
    public:
       ECB_Encryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
@@ -67,7 +67,7 @@ class BOTAN_DLL ECB_Encryption : public ECB_Mode
 /**
 * ECB Decryption
 */
-class BOTAN_DLL ECB_Decryption : public ECB_Mode
+class BOTAN_DLL ECB_Decryption final : public ECB_Mode
    {
    public:
       ECB_Decryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :

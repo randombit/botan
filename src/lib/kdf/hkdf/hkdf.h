@@ -18,7 +18,7 @@ namespace Botan {
 * HKDF, see @rfc 5869 for details
 * This is only the expansion portion of HKDF
 */
-class BOTAN_DLL HKDF : public KDF
+class BOTAN_DLL HKDF final : public KDF
    {
    public:
       HKDF(MessageAuthenticationCode* prf) : m_prf(prf) {}

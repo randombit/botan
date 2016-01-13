@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Parallel Hashes
 */
-class BOTAN_DLL Parallel : public HashFunction
+class BOTAN_DLL Parallel final : public HashFunction
    {
    public:
       void clear() override;

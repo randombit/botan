@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * XTEA implemented using SIMD operations
 */
-class BOTAN_DLL XTEA_SIMD : public XTEA
+class BOTAN_DLL XTEA_SIMD final : public XTEA
    {
    public:
       size_t parallelism() const override { return 8; }

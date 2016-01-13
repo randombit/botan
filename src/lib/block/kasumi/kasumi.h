@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * KASUMI, the block cipher used in 3G telephony
 */
-class BOTAN_DLL KASUMI : public Block_Cipher_Fixed_Params<8, 16>
+class BOTAN_DLL KASUMI final : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;

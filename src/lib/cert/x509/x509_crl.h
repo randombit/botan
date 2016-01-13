@@ -19,7 +19,7 @@ class X509_Certificate;
 /**
 * This class represents X.509 Certificate Revocation Lists (CRLs).
 */
-class BOTAN_DLL X509_CRL : public X509_Object
+class BOTAN_DLL X509_CRL final : public X509_Object
    {
    public:
       /**

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * MD2
 */
-class BOTAN_DLL MD2 : public HashFunction
+class BOTAN_DLL MD2 final : public HashFunction
    {
    public:
       std::string name() const override { return "MD2"; }
