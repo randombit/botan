@@ -179,9 +179,9 @@ namespace Cert_Extension {
 */
 size_t Basic_Constraints::get_path_limit() const
    {
-   if(!is_ca)
+   if(!m_is_ca)
       throw Invalid_State("Basic_Constraints::get_path_limit: Not a CA");
-   return path_limit;
+   return m_path_limit;
    }
 
 /*
@@ -191,10 +191,10 @@ std::vector<byte> Basic_Constraints::encode_inner() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
-      .encode_if(is_ca,
+      .encode_if(m_is_ca,
                  DER_Encoder()
-                    .encode(is_ca)
-                    .encode_optional(path_limit, NO_CERT_PATH_LIMIT)
+                    .encode(m_is_ca)
+                    .encode_optional(m_path_limit, NO_CERT_PATH_LIMIT)
          )
       .end_cons()
    .get_contents_unlocked();
@@ -207,13 +207,13 @@ void Basic_Constraints::decode_inner(const std::vector<byte>& in)
    {
    BER_Decoder(in)
       .start_cons(SEQUENCE)
-         .decode_optional(is_ca, BOOLEAN, UNIVERSAL, false)
-         .decode_optional(path_limit, INTEGER, UNIVERSAL, NO_CERT_PATH_LIMIT)
+         .decode_optional(m_is_ca, BOOLEAN, UNIVERSAL, false)
+         .decode_optional(m_path_limit, INTEGER, UNIVERSAL, NO_CERT_PATH_LIMIT)
          .verify_end()
       .end_cons();
 
-   if(is_ca == false)
-      path_limit = 0;
+   if(m_is_ca == false)
+      m_path_limit = 0;
    }
 
 /*
@@ -221,8 +221,8 @@ void Basic_Constraints::decode_inner(const std::vector<byte>& in)
 */
 void Basic_Constraints::contents_to(Data_Store& subject, Data_Store&) const
    {
-   subject.add("X509v3.BasicConstraints.is_ca", (is_ca ? 1 : 0));
-   subject.add("X509v3.BasicConstraints.path_constraint", path_limit);
+   subject.add("X509v3.BasicConstraints.is_ca", (m_is_ca ? 1 : 0));
+   subject.add("X509v3.BasicConstraints.path_constraint", m_path_limit);
    }
 
 /*
@@ -230,18 +230,18 @@ void Basic_Constraints::contents_to(Data_Store& subject, Data_Store&) const
 */
 std::vector<byte> Key_Usage::encode_inner() const
    {
-   if(constraints == NO_CONSTRAINTS)
+   if(m_constraints == NO_CONSTRAINTS)
       throw Encoding_Error("Cannot encode zero usage constraints");
 
-   const size_t unused_bits = low_bit(constraints) - 1;
+   const size_t unused_bits = low_bit(m_constraints) - 1;
 
    std::vector<byte> der;
    der.push_back(BIT_STRING);
    der.push_back(2 + ((unused_bits < 8) ? 1 : 0));
    der.push_back(unused_bits % 8);
-   der.push_back((constraints >> 8) & 0xFF);
-   if(constraints & 0xFF)
-      der.push_back(constraints & 0xFF);
+   der.push_back((m_constraints >> 8) & 0xFF);
+   if(m_constraints & 0xFF)
+      der.push_back(m_constraints & 0xFF);
 
    return der;
    }
@@ -271,7 +271,7 @@ void Key_Usage::decode_inner(const std::vector<byte>& in)
    for(size_t i = 1; i != obj.value.size(); ++i)
       usage = (obj.value[i] << 8) | usage;
 
-   constraints = Key_Constraints(usage);
+   m_constraints = Key_Constraints(usage);
    }
 
 /*
@@ -279,7 +279,7 @@ void Key_Usage::decode_inner(const std::vector<byte>& in)
 */
 void Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
    {
-   subject.add("X509v3.KeyUsage", constraints);
+   subject.add("X509v3.KeyUsage", m_constraints);
    }
 
 /*
@@ -287,7 +287,7 @@ void Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
 */
 std::vector<byte> Subject_Key_ID::encode_inner() const
    {
-   return DER_Encoder().encode(key_id, OCTET_STRING).get_contents_unlocked();
+   return DER_Encoder().encode(m_key_id, OCTET_STRING).get_contents_unlocked();
    }
 
 /*
@@ -295,7 +295,7 @@ std::vector<byte> Subject_Key_ID::encode_inner() const
 */
 void Subject_Key_ID::decode_inner(const std::vector<byte>& in)
    {
-   BER_Decoder(in).decode(key_id, OCTET_STRING).verify_end();
+   BER_Decoder(in).decode(m_key_id, OCTET_STRING).verify_end();
    }
 
 /*
@@ -303,7 +303,7 @@ void Subject_Key_ID::decode_inner(const std::vector<byte>& in)
 */
 void Subject_Key_ID::contents_to(Data_Store& subject, Data_Store&) const
    {
-   subject.add("X509v3.SubjectKeyIdentifier", key_id);
+   subject.add("X509v3.SubjectKeyIdentifier", m_key_id);
    }
 
 /*
@@ -312,7 +312,7 @@ void Subject_Key_ID::contents_to(Data_Store& subject, Data_Store&) const
 Subject_Key_ID::Subject_Key_ID(const std::vector<byte>& pub_key)
    {
    SHA_160 hash;
-   key_id = unlock(hash.process(pub_key));
+   m_key_id = unlock(hash.process(pub_key));
    }
 
 /*
@@ -322,7 +322,7 @@ std::vector<byte> Authority_Key_ID::encode_inner() const
    {
    return DER_Encoder()
          .start_cons(SEQUENCE)
-            .encode(key_id, OCTET_STRING, ASN1_Tag(0), CONTEXT_SPECIFIC)
+            .encode(m_key_id, OCTET_STRING, ASN1_Tag(0), CONTEXT_SPECIFIC)
          .end_cons()
       .get_contents_unlocked();
    }
@@ -334,7 +334,7 @@ void Authority_Key_ID::decode_inner(const std::vector<byte>& in)
    {
    BER_Decoder(in)
       .start_cons(SEQUENCE)
-      .decode_optional_string(key_id, OCTET_STRING, 0);
+      .decode_optional_string(m_key_id, OCTET_STRING, 0);
    }
 
 /*
@@ -342,8 +342,8 @@ void Authority_Key_ID::decode_inner(const std::vector<byte>& in)
 */
 void Authority_Key_ID::contents_to(Data_Store&, Data_Store& issuer) const
    {
-   if(key_id.size())
-      issuer.add("X509v3.AuthorityKeyIdentifier", key_id);
+   if(m_key_id.size())
+      issuer.add("X509v3.AuthorityKeyIdentifier", m_key_id);
    }
 
 /*
@@ -414,7 +414,7 @@ std::vector<byte> Extended_Key_Usage::encode_inner() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
-         .encode_list(oids)
+         .encode_list(m_oids)
       .end_cons()
    .get_contents_unlocked();
    }
@@ -424,7 +424,7 @@ std::vector<byte> Extended_Key_Usage::encode_inner() const
 */
 void Extended_Key_Usage::decode_inner(const std::vector<byte>& in)
    {
-   BER_Decoder(in).decode_list(oids);
+   BER_Decoder(in).decode_list(m_oids);
    }
 
 /*
@@ -432,8 +432,8 @@ void Extended_Key_Usage::decode_inner(const std::vector<byte>& in)
 */
 void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
    {
-   for(size_t i = 0; i != oids.size(); ++i)
-      subject.add("X509v3.ExtendedKeyUsage", oids[i].as_string());
+   for(size_t i = 0; i != m_oids.size(); ++i)
+      subject.add("X509v3.ExtendedKeyUsage", m_oids[i].as_string());
    }
 
 namespace {
@@ -475,8 +475,8 @@ std::vector<byte> Certificate_Policies::encode_inner() const
    {
    std::vector<Policy_Information> policies;
 
-   for(size_t i = 0; i != oids.size(); ++i)
-      policies.push_back(oids[i]);
+   for(size_t i = 0; i != m_oids.size(); ++i)
+      policies.push_back(m_oids[i]);
 
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -494,9 +494,9 @@ void Certificate_Policies::decode_inner(const std::vector<byte>& in)
 
    BER_Decoder(in).decode_list(policies);
 
-   oids.clear();
+   m_oids.clear();
    for(size_t i = 0; i != policies.size(); ++i)
-      oids.push_back(policies[i].oid);
+      m_oids.push_back(policies[i].oid);
    }
 
 /*
@@ -504,8 +504,8 @@ void Certificate_Policies::decode_inner(const std::vector<byte>& in)
 */
 void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
    {
-   for(size_t i = 0; i != oids.size(); ++i)
-      info.add("X509v3.CertificatePolicies", oids[i].as_string());
+   for(size_t i = 0; i != m_oids.size(); ++i)
+      info.add("X509v3.CertificatePolicies", m_oids[i].as_string());
    }
 
 std::vector<byte> Authority_Information_Access::encode_inner() const
@@ -559,9 +559,9 @@ void Authority_Information_Access::contents_to(Data_Store& subject, Data_Store&)
 */
 size_t CRL_Number::get_crl_number() const
    {
-   if(!has_value)
+   if(!m_has_value)
       throw Invalid_State("CRL_Number::get_crl_number: Not set");
-   return crl_number;
+   return m_crl_number;
    }
 
 /*
@@ -569,9 +569,9 @@ size_t CRL_Number::get_crl_number() const
 */
 CRL_Number* CRL_Number::copy() const
    {
-   if(!has_value)
+   if(!m_has_value)
       throw Invalid_State("CRL_Number::copy: Not set");
-   return new CRL_Number(crl_number);
+   return new CRL_Number(m_crl_number);
    }
 
 /*
@@ -579,7 +579,7 @@ CRL_Number* CRL_Number::copy() const
 */
 std::vector<byte> CRL_Number::encode_inner() const
    {
-   return DER_Encoder().encode(crl_number).get_contents_unlocked();
+   return DER_Encoder().encode(m_crl_number).get_contents_unlocked();
    }
 
 /*
@@ -587,7 +587,7 @@ std::vector<byte> CRL_Number::encode_inner() const
 */
 void CRL_Number::decode_inner(const std::vector<byte>& in)
    {
-   BER_Decoder(in).decode(crl_number);
+   BER_Decoder(in).decode(m_crl_number);
    }
 
 /*
@@ -595,7 +595,7 @@ void CRL_Number::decode_inner(const std::vector<byte>& in)
 */
 void CRL_Number::contents_to(Data_Store& info, Data_Store&) const
    {
-   info.add("X509v3.CRLNumber", crl_number);
+   info.add("X509v3.CRLNumber", m_crl_number);
    }
 
 /*
@@ -604,7 +604,7 @@ void CRL_Number::contents_to(Data_Store& info, Data_Store&) const
 std::vector<byte> CRL_ReasonCode::encode_inner() const
    {
    return DER_Encoder()
-      .encode(static_cast<size_t>(reason), ENUMERATED, UNIVERSAL)
+      .encode(static_cast<size_t>(m_reason), ENUMERATED, UNIVERSAL)
    .get_contents_unlocked();
    }
 
@@ -615,7 +615,7 @@ void CRL_ReasonCode::decode_inner(const std::vector<byte>& in)
    {
    size_t reason_code = 0;
    BER_Decoder(in).decode(reason_code, ENUMERATED, UNIVERSAL);
-   reason = static_cast<CRL_Code>(reason_code);
+   m_reason = static_cast<CRL_Code>(reason_code);
    }
 
 /*
@@ -623,7 +623,7 @@ void CRL_ReasonCode::decode_inner(const std::vector<byte>& in)
 */
 void CRL_ReasonCode::contents_to(Data_Store& info, Data_Store&) const
    {
-   info.add("X509v3.CRLReasonCode", reason);
+   info.add("X509v3.CRLReasonCode", m_reason);
    }
 
 std::vector<byte> CRL_Distribution_Points::encode_inner() const
