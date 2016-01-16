@@ -13,11 +13,15 @@
 
 namespace Botan {
 
+/**
+* A userspace RNG seeded from the default entropy sources
+*/
 class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
    {
    public:
-      void randomize(byte out[], size_t len) override
-         { m_rng->randomize(out, len); }
+      AutoSeeded_RNG(size_t max_bytes_before_reseed = BOTAN_RNG_RESEED_POLL_BITS);
+
+      void randomize(byte out[], size_t len) override;
 
       bool is_seeded() const override { return m_rng->is_seeded(); }
 
@@ -35,9 +39,9 @@ class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
       void add_entropy(const byte in[], size_t len) override
          { m_rng->add_entropy(in, len); }
 
-      AutoSeeded_RNG() : m_rng(RandomNumberGenerator::make_rng()) {}
    private:
-      std::unique_ptr<RandomNumberGenerator> m_rng;
+      std::unique_ptr<Stateful_RNG> m_rng;
+      uint32_t m_counter = 0;
    };
 
 }

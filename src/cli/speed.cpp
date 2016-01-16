@@ -352,7 +352,10 @@ class Speed final : public Command
 #endif
 
                Botan::AutoSeeded_RNG auto_rng;
-               bench_rng(auto_rng, "AutoSeeded_RNG", msec, buf_size);
+               bench_rng(auto_rng, "AutoSeeded_RNG (default reseed)", msec, buf_size);
+
+               Botan::AutoSeeded_RNG auto_rng_no_reseed(0);
+               bench_rng(auto_rng_no_reseed, "AutoSeeded_RNG (no reseed)", msec, buf_size);
                }
             else if(algo == "entropy")
                {
@@ -511,9 +514,9 @@ class Speed final : public Command
                      size_t buf_size)
          {
          Botan::secure_vector<uint8_t> buffer(buf_size);
-         Timer timer(rng_name, "", "bytes", buffer.size());
+         Timer timer(rng_name, "", std::to_string(buffer.size()) + " byte blocks");
          timer.run_until_elapsed(runtime, [&] { rng.randomize(buffer.data(), buffer.size()); });
-         output() << Timer::result_string_bps(timer);
+         output() << Timer::result_string_ops(timer);
          }
 
       void bench_entropy_sources(const std::chrono::milliseconds runtime)

@@ -1,6 +1,6 @@
 /*
 * HMAC_DRBG (SP800-90A)
-* (C) 2014,2015 Jack Lloyd
+* (C) 2014,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,40 +14,31 @@
 namespace Botan {
 
 /**
-* HMAC_DRBG (SP800-90A)
+* HMAC_DRBG from NIST SP800-90A
 */
-class BOTAN_DLL HMAC_DRBG : public RandomNumberGenerator
+class BOTAN_DLL HMAC_DRBG final : public Stateful_RNG
    {
    public:
-      void randomize(byte buf[], size_t buf_len) override;
-      bool is_seeded() const override;
-      void clear() override;
+      HMAC_DRBG(const std::string& hmac_hash);
+
+      HMAC_DRBG(const std::string& hmac_hash,
+                size_t max_bytes_before_reseed);
+
       std::string name() const override;
 
-      size_t reseed_with_sources(Entropy_Sources& srcs,
-                                 size_t poll_bits,
-                                 std::chrono::milliseconds poll_timeout) override;
+      void clear() override;
+
+      void randomize(byte output[], size_t output_len);
+
+      void randomize_with_input(byte output[], size_t output_len,
+                                const byte input[], size_t input_len);
 
       void add_entropy(const byte input[], size_t input_len) override;
-
-      /**
-      * @param mac the underlying mac function (eg HMAC(SHA-512))
-      * @param underlying_rng RNG used generating inputs (eg HMAC_RNG)
-      */
-      HMAC_DRBG(MessageAuthenticationCode* mac,
-                RandomNumberGenerator* underlying_rng = nullptr);
-
-      HMAC_DRBG(const std::string& mac,
-                RandomNumberGenerator* underlying_rng = nullptr);
-
    private:
       void update(const byte input[], size_t input_len);
 
       std::unique_ptr<MessageAuthenticationCode> m_mac;
-      std::unique_ptr<RandomNumberGenerator> m_prng;
-
       secure_vector<byte> m_V;
-      size_t m_reseed_counter;
    };
 
 }

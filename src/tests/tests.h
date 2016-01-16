@@ -293,7 +293,7 @@ class Test
 
          if(r.size() > 0)
             {
-            const size_t offset = rng.get_random<uint16_t>() % r.size();
+            const size_t offset = rng.next_byte() % r.size();
             r[offset] ^= rng.next_nonzero_byte();
             }
 

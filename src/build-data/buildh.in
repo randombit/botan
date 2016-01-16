@@ -104,11 +104,12 @@
 //#define BOTAN_HAS_VALGRIND
 
 /*
-* RNGs will automatically poll the system for additional seed material
-* after producing this many bytes of output.
+* Userspace RNGs will automatically poll the system for additional
+* seed material after producing a limited number of bytes.
 */
 #define BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED 4096
-#define BOTAN_RNG_RESEED_POLL_BITS 128
+#define BOTAN_RNG_RESEED_POLL_BITS 256
+#define BOTAN_RNG_AUTO_RESEED_POLL_BITS 128
 #define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
 #define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
 

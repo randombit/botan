@@ -7,7 +7,6 @@ pbkdf
 pubkey
 x509
 #tls
-auto_rng
 system_rng
 </requires>
 

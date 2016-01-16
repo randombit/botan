@@ -12,6 +12,10 @@
 //TODO: defined(BOTAN_TARGET_OS_TYPE_IS_POSIX)
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+  #define BOTAN_TARGET_OS_HAS_POSIX_2008
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
   #include <sys/types.h>
   #include <sys/mman.h>
   #include <sys/resource.h>
@@ -22,9 +26,20 @@ namespace Botan {
 
 namespace OS {
 
+uint32_t get_process_id()
+   {
+#if defined(BOTAN_TARGET_OS_HAS_POSIX_2008)
+   return ::getpid();
+#elif defined(BOTAN_TARGET_OS_HAS_WIN32_API)
+   return ::GetProcessId();
+#else
+   return 0;
+#endif
+   }
+
 size_t get_memory_locking_limit()
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX_2008)
    /*
    * Linux defaults to only 64 KiB of mlockable memory per process
    * (too small) but BSDs offer a small fraction of total RAM (more
@@ -71,7 +86,7 @@ size_t get_memory_locking_limit()
 
 void* allocate_locked_pages(size_t length)
    {
-#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX_2008)
 
 #if !defined(MAP_NOCORE)
    #define MAP_NOCORE 0
@@ -116,7 +131,7 @@ void free_locked_pages(void* ptr, size_t length)
    if(ptr == nullptr || length == 0)
       return;
 
-#if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
+#if defined(BOTAN_TARGET_OS_HAS_POSIX_2008)
    zero_mem(ptr, length);
    ::munlock(ptr, length);
    ::munmap(ptr, length);
