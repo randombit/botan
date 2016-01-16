@@ -140,8 +140,9 @@ class Test_Runner : public Botan_CLI::Command
             }
 
          output() << " rng:HMAC_DRBG with seed '" << Botan::hex_encode(seed) << "'";
-         rng.reset(new Botan::Serialized_RNG(new Botan::HMAC_DRBG("HMAC(SHA-384)")));
-         rng->add_entropy(seed.data(), seed.size());
+         std::unique_ptr<Botan::HMAC_DRBG> drbg(new Botan::HMAC_DRBG("SHA-384", 0));
+         drbg->initialize_with(seed.data(), seed.size());
+         rng.reset(new Botan::Serialized_RNG(drbg.release()));
 
 #else
 
