@@ -1,6 +1,21 @@
 Release Notes
 ========================================
 
+Version 1.11.27, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Use m_ prefix on all member variables. GH #398 and #407
+
+* Use final qualifier on many classes. GH #408
+
+* Use noreturn attribute on assertion failure function to assist
+  static analysis. GH #403
+
+* Use TickCount64 and MemoryStatusEx in the Windows entropy source.
+  Note these calls are only available in Vista/Server 2008. No
+  accomodations are made for XP or Server 2003, both of which are
+  no longer patched by the vendor. GH #365
+
 Version 1.11.26, 2016-01-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
