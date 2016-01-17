@@ -1,6 +1,6 @@
 /*
 * Policies for TLS
-* (C) 2004-2010,2012,2015 Jack Lloyd
+* (C) 2004-2010,2012,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -270,9 +270,7 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
    const std::vector<std::string> kex = allowed_key_exchange_methods();
    const std::vector<std::string> sigs = allowed_signature_methods();
 
-   Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);
-
-   std::set<Ciphersuite, Ciphersuite_Preference_Ordering> ciphersuites(order);
+   std::vector<Ciphersuite> ciphersuites;
 
    for(auto&& suite : Ciphersuite::all_known_ciphersuites())
       {
@@ -301,12 +299,15 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
             continue;
          }
 
-      // OK, allow it:
-      ciphersuites.insert(suite);
+      // OK, consider it
+      ciphersuites.push_back(suite);
       }
 
    if(ciphersuites.empty())
       throw Exception("Policy does not allow any available cipher suite");
+
+   Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);
+   std::sort(ciphersuites.begin(), ciphersuites.end(), order);
 
    std::vector<u16bit> ciphersuite_codes;
    for(auto i : ciphersuites)
