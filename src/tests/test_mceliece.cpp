@@ -80,17 +80,24 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
          rng.clear();
          rng.add_entropy(encrypt_seed.data(), encrypt_seed.size());
 
-         Botan::PK_KEM_Encryptor kem_enc(mce_priv, "KDF1(SHA-512)");
-         Botan::PK_KEM_Decryptor kem_dec(mce_priv, "KDF1(SHA-512)");
+         try
+            {
+            Botan::PK_KEM_Encryptor kem_enc(mce_priv, "KDF1(SHA-512)");
+            Botan::PK_KEM_Decryptor kem_dec(mce_priv, "KDF1(SHA-512)");
 
-         Botan::secure_vector<byte> encap_key, prod_shared_key;
-         kem_enc.encrypt(encap_key, prod_shared_key, 64, rng);
+            Botan::secure_vector<byte> encap_key, prod_shared_key;
+            kem_enc.encrypt(encap_key, prod_shared_key, 64, rng);
 
-         Botan::secure_vector<byte> dec_shared_key = kem_dec.decrypt(encap_key.data(), encap_key.size(), 64);
+            Botan::secure_vector<byte> dec_shared_key = kem_dec.decrypt(encap_key.data(), encap_key.size(), 64);
 
-         result.test_eq("ciphertext", encap_key, ciphertext);
-         result.test_eq("encrypt shared", prod_shared_key, shared_key);
-         result.test_eq("decrypt shared", dec_shared_key, shared_key);
+            result.test_eq("ciphertext", encap_key, ciphertext);
+            result.test_eq("encrypt shared", prod_shared_key, shared_key);
+            result.test_eq("decrypt shared", dec_shared_key, shared_key);
+            }
+         catch(Botan::Lookup_Error&)
+            {
+            }
+
          return result;
          }
 
