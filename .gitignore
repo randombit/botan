@@ -36,6 +36,10 @@ botan-test
 .DS_Store
 *.swp
 
+# ctags/etags files
+/TAGS
+/tags
+
 # Amalgamation code
 botan_all.h
 botan_all_internal.h
