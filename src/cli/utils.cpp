@@ -237,7 +237,7 @@ class Generate_Bcrypt final : public Command
    public:
       Generate_Bcrypt() : Command("gen_bcrypt --work-factor=12 password") {}
 
-      void go()
+      void go() override
          {
          const std::string password = get_arg("password");
          const size_t wf = get_arg_sz("work_factor");
@@ -253,7 +253,7 @@ class Check_Bcrypt final : public Command
    public:
       Check_Bcrypt() : Command("check_bcrypt password hash") {}
 
-      void go()
+      void go() override
          {
          const std::string password = get_arg("password");
          const std::string hash = get_arg("hash");

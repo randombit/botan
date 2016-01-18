@@ -17,34 +17,34 @@ namespace {
 class OpenSSL_BlockCipher : public BlockCipher
    {
    public:
-      void clear();
-      std::string name() const { return m_cipher_name; }
-      BlockCipher* clone() const;
-
-      size_t block_size() const { return m_block_sz; }
-
       OpenSSL_BlockCipher(const EVP_CIPHER*, const std::string&);
 
       OpenSSL_BlockCipher(const EVP_CIPHER*, const std::string&,
                       size_t, size_t, size_t);
 
-      Key_Length_Specification key_spec() const { return m_cipher_key_spec; }
-
       ~OpenSSL_BlockCipher();
-   private:
-      void encrypt_n(const byte in[], byte out[], size_t blocks) const
+
+      void clear() override;
+      std::string name() const override { return m_cipher_name; }
+      BlockCipher* clone() const override;
+
+      size_t block_size() const override { return m_block_sz; }
+
+      Key_Length_Specification key_spec() const override { return m_cipher_key_spec; }
+
+      void encrypt_n(const byte in[], byte out[], size_t blocks) const override
          {
          int out_len = 0;
          EVP_EncryptUpdate(&m_encrypt, out, &out_len, in, blocks * m_block_sz);
          }
 
-      void decrypt_n(const byte in[], byte out[], size_t blocks) const
+      void decrypt_n(const byte in[], byte out[], size_t blocks) const override
          {
          int out_len = 0;
          EVP_DecryptUpdate(&m_decrypt, out, &out_len, in, blocks * m_block_sz);
          }
 
-      void key_schedule(const byte[], size_t);
+      void key_schedule(const byte key[], size_t key_len) override;
 
       size_t m_block_sz;
       Key_Length_Specification m_cipher_key_spec;
@@ -169,12 +169,12 @@ make_evp_block_maker_keylen(const EVP_CIPHER* cipher, const char* algo,
 
 #define BOTAN_REGISTER_OPENSSL_EVP_BLOCK(NAME, EVP)                            \
    BOTAN_REGISTER_TYPE(BlockCipher, EVP_BlockCipher ## EVP, NAME,              \
-                       make_evp_block_maker(EVP(), NAME), "openssl", BOTAN_OPENSSL_BLOCK_PRIO);
+                       make_evp_block_maker(EVP(), NAME), "openssl", BOTAN_OPENSSL_BLOCK_PRIO)
 
 #define BOTAN_REGISTER_OPENSSL_EVP_BLOCK_KEYLEN(NAME, EVP, KMIN, KMAX, KMOD)       \
    BOTAN_REGISTER_TYPE(BlockCipher, OpenSSL_BlockCipher ## EVP, NAME,              \
                        make_evp_block_maker_keylen(EVP(), NAME, KMIN, KMAX, KMOD), \
-                       "openssl", BOTAN_OPENSSL_BLOCK_PRIO);
+                       "openssl", BOTAN_OPENSSL_BLOCK_PRIO)
 
 #if !defined(OPENSSL_NO_AES)
    BOTAN_REGISTER_OPENSSL_EVP_BLOCK("AES-128", EVP_aes_128_ecb);

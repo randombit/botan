@@ -21,9 +21,9 @@ namespace {
 class OpenSSL_RC4 : public StreamCipher
    {
    public:
-      void clear() { clear_mem(&m_rc4, 1); }
+      void clear() override { clear_mem(&m_rc4, 1); }
 
-      std::string name() const
+      std::string name() const override
          {
          switch(m_skip)
             {
@@ -36,9 +36,9 @@ class OpenSSL_RC4 : public StreamCipher
             }
          }
 
-      StreamCipher* clone() const { return new OpenSSL_RC4; }
+      StreamCipher* clone() const override { return new OpenSSL_RC4; }
 
-      Key_Length_Specification key_spec() const
+      Key_Length_Specification key_spec() const override
          {
          return Key_Length_Specification(1, 32);
          }
@@ -46,12 +46,12 @@ class OpenSSL_RC4 : public StreamCipher
       OpenSSL_RC4(size_t skip = 0) : m_skip(skip) { clear(); }
       ~OpenSSL_RC4() { clear(); }
    private:
-      void cipher(const byte in[], byte out[], size_t length)
+      void cipher(const byte in[], byte out[], size_t length) override
          {
          ::RC4(&m_rc4, length, in, out);
          }
 
-      void key_schedule(const byte key[], size_t length)
+      void key_schedule(const byte key[], size_t length) override
          {
          ::RC4_set_key(&m_rc4, length, key);
          byte d = 0;

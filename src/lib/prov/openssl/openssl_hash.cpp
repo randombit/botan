@@ -17,26 +17,26 @@ namespace {
 class OpenSSL_HashFunction : public HashFunction
    {
    public:
-      void clear()
+      void clear() override
          {
          const EVP_MD* algo = EVP_MD_CTX_md(&m_md);
          EVP_DigestInit_ex(&m_md, algo, nullptr);
          }
 
-      std::string name() const { return m_name; }
+      std::string name() const override { return m_name; }
 
-      HashFunction* clone() const
+      HashFunction* clone() const override
          {
          const EVP_MD* algo = EVP_MD_CTX_md(&m_md);
          return new OpenSSL_HashFunction(algo, name());
          }
 
-      size_t output_length() const
+      size_t output_length() const override
          {
          return EVP_MD_size(EVP_MD_CTX_md(&m_md));
          }
 
-      size_t hash_block_size() const
+      size_t hash_block_size() const override
          {
          return EVP_MD_block_size(EVP_MD_CTX_md(&m_md));
          }
@@ -53,12 +53,12 @@ class OpenSSL_HashFunction : public HashFunction
          }
 
    private:
-      void add_data(const byte input[], size_t length)
+      void add_data(const byte input[], size_t length) override
          {
          EVP_DigestUpdate(&m_md, input, length);
          }
 
-      void final_result(byte output[])
+      void final_result(byte output[]) override
          {
          EVP_DigestFinal_ex(&m_md, output, nullptr);
          const EVP_MD* algo = EVP_MD_CTX_md(&m_md);
@@ -80,7 +80,7 @@ make_evp_hash_maker(const EVP_MD* md, const char* algo)
 
 #define BOTAN_REGISTER_OPENSSL_EVP_HASH(NAME, EVP)                      \
    BOTAN_REGISTER_TYPE(HashFunction, OpenSSL_HashFunction ## EVP, NAME, \
-                       make_evp_hash_maker(EVP(), NAME), "openssl", BOTAN_OPENSSL_HASH_PRIO);
+                       make_evp_hash_maker(EVP(), NAME), "openssl", BOTAN_OPENSSL_HASH_PRIO)
 
 #if !defined(OPENSSL_NO_SHA)
    BOTAN_REGISTER_OPENSSL_EVP_HASH("SHA-160", EVP_sha1);

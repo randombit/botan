@@ -109,7 +109,7 @@ class CC_Encrypt final : public Command
    public:
       CC_Encrypt() : Command("cc_encrypt CC passphrase --tweak=") {}
 
-      void go()
+      void go() override
          {
          const uint64_t cc_number = std::stoull(get_arg("CC"));
          const std::vector<uint8_t> tweak = Botan::hex_decode(get_arg("tweak"));
