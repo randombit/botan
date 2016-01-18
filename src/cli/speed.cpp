@@ -18,6 +18,7 @@
 #include <botan/mac.h>
 #include <botan/cipher_mode.h>
 #include <botan/auto_rng.h>
+#include <botan/entropy_src.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
@@ -353,6 +354,10 @@ class Speed final : public Command
                Botan::AutoSeeded_RNG auto_rng;
                bench_rng(auto_rng, "AutoSeeded_RNG", msec, buf_size);
                }
+            else if(algo == "entropy")
+               {
+               bench_entropy_sources(msec);
+               }
             else
                {
                if(verbose() || !using_defaults)
@@ -506,17 +511,37 @@ class Speed final : public Command
                      size_t buf_size)
          {
          Botan::secure_vector<uint8_t> buffer(buf_size);
-
          Timer timer(rng_name, "", "bytes", buffer.size());
-
-         while(timer.under(runtime))
-            {
-            timer.run([&] { rng.randomize(buffer.data(), buffer.size()); });
-
-            //timer.run([&] { for(size_t i = 0; i != buffer.size(); i++) buffer[i] = rng.next_byte(); });
-            }
-
+         timer.run_until_elapsed(runtime, [&] { rng.randomize(buffer.data(), buffer.size()); });
          output() << Timer::result_string_bps(timer);
+         }
+
+      void bench_entropy_sources(const std::chrono::milliseconds runtime)
+         {
+         Botan::Entropy_Sources& srcs = Botan::Entropy_Sources::global_sources();
+
+         typedef std::chrono::system_clock clock;
+
+         auto deadline = clock::now() + runtime;
+
+         for(auto src : srcs.enabled_sources())
+            {
+            size_t bytes = 0, entropy_bits = 0, samples = 0;
+            Botan::Entropy_Accumulator accum(
+               [&](const uint8_t [], size_t buf_len, size_t buf_entropy) -> bool {
+                  bytes += buf_len;
+                  entropy_bits += buf_entropy;
+                  samples += 1;
+                  return (samples > 100 || entropy_bits > 512 || clock::now() > deadline);
+               });
+
+            Timer timer(src, "", "bytes");
+            timer.run([&] { srcs.poll_just(accum, src); });
+
+            output() << "Entropy source " << src << " produced " << bytes << " bytes with "
+                     << entropy_bits << " estimated bits of entropy in "
+                     << samples << " samples in " << timer.milliseconds() << " ms\n";
+            }
          }
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
