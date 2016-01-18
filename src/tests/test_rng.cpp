@@ -7,6 +7,10 @@
 #include "tests.h"
 #include <botan/entropy_src.h>
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#endif
+
 #if defined(BOTAN_HAS_HMAC_DRBG)
   #include <botan/hmac_drbg.h>
 #endif
@@ -42,6 +46,41 @@ class Fixed_Output_Entropy_Source : public Botan::Entropy_Source
       size_t m_poll = 0;
       std::vector<std::vector<uint8_t>> m_output;
    };
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+
+class System_RNG_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run()
+         {
+         Test::Result result("System_RNG");
+
+         try
+            {
+            Botan::System_RNG rng;
+
+            std::vector<uint8_t> buf(4096);
+            rng.randomize(buf.data(), buf.size());
+
+            rng.add_entropy(buf.data(), buf.size());
+
+            size_t bits = rng.reseed(256);
+            result.test_gte("Reseed bits", bits, 1);
+            }
+         catch(Botan::Exception& e)
+            {
+            result.test_failure(e.what());
+            }
+
+         return { result };
+         }
+   };
+
+BOTAN_REGISTER_TEST("system_rng", System_RNG_Tests);
+
+#endif
+
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
 
