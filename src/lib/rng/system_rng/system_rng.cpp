@@ -122,7 +122,19 @@ void System_RNG_Impl::add_entropy(const byte input[], size_t len)
          if(errno == EINTR)
             continue;
 
-         // maybe just ignore failure here and return?
+         /*
+         * This is seen on OS X CI, despite the fact that the man page
+         * for Darwin urandom explicitly states that writing to it is
+         * supported, and write(2) does not document EPERM at all.
+         * But in any case EPERM seems indicative of a policy decision
+         * by the OS or sysadmin that additional entropy is not wanted
+         * in the system pool, so we accept that and return here,
+         * since there is no corrective action possible.
+         */
+         if(errno == EPERM)
+            return;
+
+         // maybe just ignore any failure here and return?
          throw Exception("System_RNG write failed error " + std::to_string(errno));
          }
 
