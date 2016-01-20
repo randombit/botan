@@ -16,7 +16,7 @@ namespace Botan {
 class Semaphore
    {
    public:
-      Semaphore(int value = 0) : m_value(value), m_wakeups(0) {}
+      explicit Semaphore(int value = 0) : m_value(value), m_wakeups(0) {}
 
       void acquire();
 

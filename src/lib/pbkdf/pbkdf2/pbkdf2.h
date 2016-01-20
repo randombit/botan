@@ -48,7 +48,7 @@ class BOTAN_DLL PKCS5_PBKDF2 final : public PBKDF
       * Create a PKCS #5 instance using the specified message auth code
       * @param mac_fn the MAC object to use as PRF
       */
-      PKCS5_PBKDF2(MessageAuthenticationCode* mac_fn) : m_mac(mac_fn) {}
+      explicit PKCS5_PBKDF2(MessageAuthenticationCode* mac_fn) : m_mac(mac_fn) {}
 
       static PKCS5_PBKDF2* make(const Spec& spec);
    private:

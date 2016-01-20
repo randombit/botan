@@ -43,7 +43,7 @@ class BOTAN_DLL OFB final : public StreamCipher
       /**
       * @param cipher the underlying block cipher to use
       */
-      OFB(BlockCipher* cipher);
+      explicit OFB(BlockCipher* cipher);
    private:
       void key_schedule(const byte key[], size_t key_len) override;
 

@@ -24,7 +24,7 @@ class BOTAN_DLL SRP6_Authenticator_File
       * @param filename will be opened and processed as a SRP
       * authenticator file
       */
-      SRP6_Authenticator_File(const std::string& filename);
+      explicit SRP6_Authenticator_File(const std::string& filename);
 
       bool lookup_user(const std::string& username,
                        BigInt& v,

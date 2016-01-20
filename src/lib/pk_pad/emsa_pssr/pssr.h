@@ -23,7 +23,7 @@ class BOTAN_DLL PSSR final : public EMSA
       /**
       * @param hash the hash object to use
       */
-      PSSR(HashFunction* hash);
+      explicit PSSR(HashFunction* hash);
 
       /**
       * @param hash the hash object to use

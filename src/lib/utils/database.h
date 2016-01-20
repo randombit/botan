@@ -23,7 +23,7 @@ class BOTAN_DLL SQL_Database
       class BOTAN_DLL SQL_DB_Error : public Exception
          {
          public:
-            SQL_DB_Error(const std::string& what) : Exception("SQL database", what) {}
+            explicit SQL_DB_Error(const std::string& what) : Exception("SQL database", what) {}
          };
 
       class BOTAN_DLL Statement

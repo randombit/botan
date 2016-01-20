@@ -24,7 +24,7 @@ class BOTAN_DLL EMSA1_BSI final : public EMSA1
       /**
       * @param hash the hash object to use
       */
-      EMSA1_BSI(HashFunction* hash) : EMSA1(hash) {}
+      explicit EMSA1_BSI(HashFunction* hash) : EMSA1(hash) {}
    private:
       secure_vector<byte> encoding_of(const secure_vector<byte>&, size_t,
                                      RandomNumberGenerator& rng) override;

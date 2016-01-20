@@ -46,7 +46,7 @@ class BOTAN_DLL RTSS_Share
       /**
       * @param hex_input the share encoded in hexadecimal
       */
-      RTSS_Share(const std::string& hex_input);
+      explicit RTSS_Share(const std::string& hex_input);
 
       /**
       * @return hex representation
