@@ -117,7 +117,7 @@ class BOTAN_DLL Path_Validation_Result
 
       static const char* status_string(Certificate_Status_Code code);
 
-      explicit Path_Validation_Result(std::vector<std::set<Certificate_Status_Code>> status,
+      Path_Validation_Result(std::vector<std::set<Certificate_Status_Code>> status,
                              std::vector<X509_Certificate>&& cert_chain);
 
       explicit Path_Validation_Result(Certificate_Status_Code status) : m_overall(status) {}
