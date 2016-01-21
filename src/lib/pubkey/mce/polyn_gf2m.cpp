@@ -262,9 +262,8 @@ gf2m polyn_gf2m::eval(gf2m a)
 // p will contain it's remainder modulo g
 void polyn_gf2m::remainder(polyn_gf2m &p, const polyn_gf2m & g)
    {
-   int i, j, d;
    std::shared_ptr<GF2m_Field> msp_field = g.msp_field;
-   d = p.get_degree() - g.get_degree();
+   int d = p.get_degree() - g.get_degree();
    if (d >= 0) {
    gf2m la = msp_field->gf_inv_rn(g.get_lead_coef());
 
@@ -275,7 +274,7 @@ void polyn_gf2m::remainder(polyn_gf2m &p, const polyn_gf2m & g)
    for (i = p_degree; d >= 0; --i, --d) {
    if (p[i] != 0) {
    gf2m lb = msp_field->gf_mul_rrn(la, p[i]);
-   for (j = 0; j < g.get_degree(); ++j)
+   for (int j = 0; j < g.get_degree(); ++j)
       {
       p[j+d] ^= msp_field->gf_mul_zrz(lb, g[j]);
       }
