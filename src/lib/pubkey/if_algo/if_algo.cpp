@@ -98,9 +98,10 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
                                            const BigInt& exp,
                                            const BigInt& d_exp,
                                            const BigInt& mod) : 
-      IF_Scheme_PublicKey((mod.is_nonzero() ? mod : prime1 * prime2 ), exp),
       m_d{ d_exp }, m_p{ prime1 }, m_q{ prime2 }, m_d1{}, m_d2{}, m_c{ inverse_mod( m_q, m_p ) }
    {
+   m_n = mod.is_nonzero() ? mod : m_p * m_q;
+   m_e = exp;
 
    if(m_d == 0)
       {
