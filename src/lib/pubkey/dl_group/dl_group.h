@@ -108,7 +108,7 @@ class BOTAN_DLL DL_Group
       * the default values from the file policy.cpp will be used. For instance,
       * use "modp/ietf/768" as name.
       */
-      DL_Group(const std::string& name);
+      explicit DL_Group(const std::string& name);
 
       /**
       * Create a new group randomly.
