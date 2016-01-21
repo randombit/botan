@@ -309,11 +309,8 @@ void Subject_Key_ID::contents_to(Data_Store& subject, Data_Store&) const
 /*
 * Subject_Key_ID Constructor
 */
-Subject_Key_ID::Subject_Key_ID(const std::vector<byte>& pub_key)
-   {
-   SHA_160 hash;
-   m_key_id = unlock(hash.process(pub_key));
-   }
+Subject_Key_ID::Subject_Key_ID( const std::vector<byte>& pub_key ) : m_key_id{unlock(SHA_160().process(pub_key))}
+   {}
 
 /*
 * Encode the extension
@@ -384,11 +381,8 @@ void Alternative_Name::contents_to(Data_Store& subject_info,
 * Alternative_Name Constructor
 */
 Alternative_Name::Alternative_Name(const AlternativeName& alt_name,
-                                   const std::string& oid_name_str)
-   {
-   this->m_alt_name = alt_name;
-   this->m_oid_name_str = oid_name_str;
-   }
+                                   const std::string& oid_name_str) : m_alt_name{alt_name}, m_oid_name_str{oid_name_str}
+   {}
 
 /*
 * Subject_Alternative_Name Constructor

@@ -300,16 +300,11 @@ class BOTAN_DLL Text_Policy : public Policy
 
       void set(const std::string& k, const std::string& v) { m_kv[k] = v; }
 
-      explicit Text_Policy(const std::string& s)
-         {
-         std::istringstream iss(s);
-         m_kv = read_cfg(iss);
-         }
+      explicit Text_Policy(const std::string& s) : m_kv{read_cfg(std::istringstream(s))}
+         {}
 
-      explicit Text_Policy(std::istream& in)
-         {
-         m_kv = read_cfg(in);
-         }
+      explicit Text_Policy(std::istream& in) : m_kv{read_cfg(in)}
+         {}
 
    private:
 

@@ -60,10 +60,7 @@ BigInt Fixed_Window_Exponentiator::execute() const
 */
 Fixed_Window_Exponentiator::Fixed_Window_Exponentiator(const BigInt& n,
                                                        Power_Mod::Usage_Hints hints)
-   {
-   m_reducer = Modular_Reducer(n);
-   m_hints = hints;
-   m_window_bits = 0;
-   }
+      : m_reducer{Modular_Reducer(n)}, m_exp{}, m_window_bits{}, m_g{}, m_hints{hints}
+   {}
 
 }
