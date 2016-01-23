@@ -3,113 +3,130 @@
 Random Number Generators
 ========================================
 
-The random number generators provided in Botan are meant for creating
-keys, IVs, padding, nonces, and anything else that requires 'random'
-data. It is important to remember that the output of these classes
-will vary, even if they are supplied with the same seed (ie, two
-``Randpool`` objects with similar initial states will not produce the
-same output, because the value of high resolution timers is added to
-the state at various points).
+``RandomNumberGenerator`` is an interface class defined in ``rng.h``,
+with primary functions
 
-To create a random number generator, instantiate a ``AutoSeeded_RNG``
-object. This object will handle choosing the right algorithms from the
-set of enabled ones and doing seeding using OS specific
-routines. The main service a RandomNumberGenerator provides is, of
-course, random numbers:
+``void randomize(byte output[], size_t length)``
 
-.. cpp:function:: byte RandomNumberGenerator::next_byte()
+The primary interface, writes random data to output[0:length].
 
-  Generates a single random byte and returns it
+``secure_vector<byte> random_vec(size_t bytes)``
 
-.. cpp:function:: void RandomNumberGenerator::randomize(byte* data, size_t length)
+A convenience function, returns a vector of the requested length.
 
-  Places *length* bytes into the array pointed to by *data*
+``byte next_byte()``
 
-To ensure good quality output, a PRNG needs to be seeded with truly
-random data. Normally this is done for you. However it may happen that
-your application has access to data that is potentially unpredictable
-to an attacker. If so, use
+Returns a single random byte
 
-.. cpp:function:: void RandomNumberGenerator::add_entropy(const byte* data, \
-                                                          size_t length)
+``byte next_nonzero_byte()``
 
-which incorporates the data into the current randomness state. Don't
-worry about filtering the data or doing any kind of cryptographic
-preprocessing (such as hashing); the RNG objects in botan are designed
-such that you can feed them any arbitrary non-random or even
-maliciously chosen data - as long as at some point some of the seed
-data was good the output will be secure.
+Returns a single random byte between 1 and 255
+
+The library takes a ``RandomNumberGenerator`` reference anywhere
+random numbers are required.
+
+System RNG
+--------------------------------------
+
+Some systems offer a system RNG (currently /dev/urandom and
+CryptGenRandom are supported).
+
+If ``BOTAN_HAS_SYSTEM_RNG`` is defined, then the header
+``system_rng.h`` contains
+
+``RandomNumberGenerator& system_rng();``
+
+which returns the global handle to the system RNG.
+
+The header also defines
+
+``class System_RNG : public RandomNumberGenerator``
+
+which is just an instantiatable reference to ``system_rng``
+
+Userspace RNG
+-----------------
+
+A userspace RNG works by collecting entropy inputs from different
+sources and using them to seed a determinstic generator.
+
+The default userspace RNG in the library is available as `AutoSeeded_RNG`;
+it is currently implement using HMAC_DRBG from NIST SP 800-90A.
+
+Current entropy sources in the library include /dev/urandom,
+CryptGenRandom, RDRAND, RDSEED, and various methods of gathering
+system statistics used on Windows, Linux, and generic Unix systems.
+
+HMAC_DRBG
+----------------------------
+
+Occasionally a completely deterministic source of random numbers is
+required. For example, this can be used to expand a small symmetric
+key (such as the hash of a user's password) into a potentially larger
+value (such as an ECDSA or McEliece key). For these purposes HMAC_DRBG
+can also be used directly.
+
+HMAC_DRBG accepts an optional parameter which specifies the reseed
+rate. If this parameter is zero, automatic reseeds based on the number
+of outputs is disabled. SP 800-90A recommends this be finite and no
+more than 2**48, the default is ``BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED``
+which is a compile-time parameter set in build.h
+
+Adding Entropy/Reseeding
+-----------------------------
+
+There is an interface for adding entropy to the RNG state. This is
+implemented even for the system RNG, as both /dev/urandom and
+CryptGenRandom support adding entropy to the current state.
+
+``add_entropy(const byte input[], size_t length)``
+
+Adds some block of system
+
+``size_t reseed(size_t bits_to_collect = BOTAN_RNG_RESEED_POLL_BITS)``
 
 
-Implementation Notes
-----------------------------------------
+``size_t reseed_with_timeout(size_t bits_to_collect,
+                             std::chrono::milliseconds poll_timeout);``
 
-Randpool
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``size_t reseed_with_sources(Entropy_Sources& srcs,
+                             size_t poll_bits,
+                             std::chrono::milliseconds poll_timeout);``
 
-``Randpool`` is the primary PRNG within Botan. In recent versions all
-uses of it have been wrapped by an implementation of the X9.31 PRNG
-(see below). If for some reason you should have cause to create a PRNG
-instead of using the "global" one owned by the library, it would be
-wise to consider the same on the grounds of general caution; while
-``Randpool`` is designed with known attacks and PRNG weaknesses in
-mind, it is not an standard/official PRNG. The remainder of this
-section is a (fairly technical, though high-level) description of the
-algorithms used in this PRNG. Unless you have a specific interest in
-this subject, the rest of this section might prove somewhat
-uninteresting.
 
-``Randpool`` has an internal state called pool, which is 512 bytes
-long. This is where entropy is mixed into and extracted from. There is also a
-small output buffer (called buffer), which holds the data which has already
-been generated but has just not been output yet.
+Build Configuration of RNG Reseeding
+--------------------------------------
 
-It is based around a MAC and a block cipher (which are currently
-HMAC(SHA-256) and AES-256). Where a specific size is mentioned, it
-should be taken as a multiple of the cipher's block size. For example,
-if a 256-bit block cipher were used instead of AES, all the sizes
-internally would double. Every time some new output is needed, we
-compute the MAC of a counter and a high resolution timer. The
-resulting MAC is XORed into the output buffer (wrapping as needed),
-and the output buffer is then encrypted with AES, producing 16 bytes
-of output.
+There are a number of build options for RNGs set in ``build.h``
 
-After 8 blocks (or 128 bytes) have been produced, we mix the pool. To
-do this, we first rekey both the MAC and the cipher; the new MAC key
-is the MAC of the current pool under the old MAC key, while the new
-cipher key is the MAC of the current pool under the just-chosen MAC
-key. We then encrypt the entire pool in CBC mode, using the current
-(unused) output buffer as the IV. We then generate a new output
-buffer, using the mechanism described in the previous paragraph.
+- ``BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED`` after a given amount of
+  output a userspace RNG will reseed itself from the entropy sources.
 
-To add randomness to the PRNG, we compute the MAC of the input and XOR
-the output into the start of the pool. Then we remix the pool and
-produce a new output buffer. The initial MAC operation should make it
-very hard for chosen inputs to harm the security of ``Randpool``, and
-as HMAC should be able to hold roughly 256 bits of state, it is
-unlikely that we are wasting much input entropy (or, if we are, it
-doesn't matter, because we have a very abundant supply).
+- ``BOTAN_RNG_AUTO_RESEED_POLL_BITS`` if the output limit is reached,
+   the RNG will attempt to reseed with this many bits of entropy.
 
-ANSI X9.31
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+- ``BOTAN_RNG_AUTO_RESEED_TIMEOUT`` specifies the maximum amount of
+  time a reseed poll should run. If after this amount of time the
+  reseed is not complete the poll will return just the entropy
+  collected so far.
 
-``ANSI_X931_PRNG`` is the standard issue X9.31 Appendix A.2.4 PRNG,
-though using AES-256 instead of 3DES as the block cipher. This PRNG
-implementation has been checked against official X9.31 test vectors.
+- ``BOTAN_RNG_RESEED_POLL_BITS`` specifies the default entropy target for
+  a RNG which is unseeded or for when a fork is detected.
 
-Internally, the PRNG holds a pointer to another PRNG (typically
-Randpool). This internal PRNG generates the key and seed used by the
-X9.31 algorithm, as well as the date/time vectors. Each time an X9.31
-PRNG object receives entropy, it passes it along to the PRNG it is
-holding, and then pulls out some random bits to generate a new key and
-seed. This PRNG considers itself seeded as soon as the internal PRNG
-is seeded.
+- ``BOTAN_RNG_RESEED_DEFAULT_TIMEOUT`` specifies the timeout used for
+  ``RandomNumberGenerator::reseed``
+
+- ``BOTAN_ENTROPY_DEFAULT_SOURCES`` lists the sources that will be used
+  by default for reseeding.
 
 
 Entropy Sources
 ---------------------------------
 
-An ``EntropySource`` is an abstract representation of some method of
+An ``Entropy_Source`` class represents some mechanism for gathering
+inputs which 
+
+is an abstract representation of some method of
 gather "real" entropy. This tends to be very system dependent. The
 *only* way you should use an ``EntropySource`` is to pass it to a PRNG
 that will extract entropy from it -- never use the output directly for
@@ -126,4 +143,3 @@ produced by an EntropySource is only used by an application after it
 has been hashed by the ``RandomNumberGenerator`` that asked for the
 entropy, thus any hashing you do will be wasteful of both CPU cycles
 and entropy.
-

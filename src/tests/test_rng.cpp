@@ -52,7 +52,7 @@ class Fixed_Output_Entropy_Source : public Botan::Entropy_Source
 class System_RNG_Tests : public Test
    {
    public:
-      std::vector<Test::Result> run()
+      std::vector<Test::Result> run() override
          {
          Test::Result result("System_RNG");
 

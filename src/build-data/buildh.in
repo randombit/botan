@@ -112,6 +112,7 @@
 #define BOTAN_RNG_AUTO_RESEED_POLL_BITS 128
 #define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
 #define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
+#define BOTAN_AUTO_RNG_DRBG_HASH_FUNCTION "SHA-384"
 
 /*
 * Specifies (in order) the list of entropy sources that will be used
