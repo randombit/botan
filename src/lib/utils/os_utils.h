@@ -14,6 +14,20 @@ namespace Botan {
 
 namespace OS {
 
+/**
+* Return the process ID, or 0 if not available
+*/
+uint32_t get_process_id();
+
+/**
+* Return the CPU cycle counter, if available on the current system.
+* On Windows, uses QueryPerformanceCounter
+* On other platforms, accesses the CPU counter directly
+*
+* Returns 0 if CPU timestamp is not available on this system
+*/
+//uint64_t get_cpu_timestamp();
+
 /*
 * Returns the maximum amount of memory (in bytes) we could/should
 * hyptothetically allocate. Reads "BOTAN_MLOCK_POOL_SIZE" from
