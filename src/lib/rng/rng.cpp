@@ -112,7 +112,7 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
 
 AutoSeeded_RNG::AutoSeeded_RNG(size_t max_bytes_before_reseed)
    {
-   m_rng.reset(new HMAC_DRBG("SHA-384", max_bytes_before_reseed));
+   m_rng.reset(new HMAC_DRBG(BOTAN_AUTO_RNG_DRBG_HASH_FUNCTION, max_bytes_before_reseed));
    size_t bits = m_rng->reseed(384);
    if(!m_rng->is_seeded())
       {

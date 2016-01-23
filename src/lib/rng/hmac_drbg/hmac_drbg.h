@@ -28,10 +28,10 @@ class BOTAN_DLL HMAC_DRBG final : public Stateful_RNG
 
       void clear() override;
 
-      void randomize(byte output[], size_t output_len);
+      void randomize(byte output[], size_t output_len) override;
 
       void randomize_with_input(byte output[], size_t output_len,
-                                const byte input[], size_t input_len);
+                                const byte input[], size_t input_len) override;
 
       void add_entropy(const byte input[], size_t input_len) override;
    private:
