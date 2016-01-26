@@ -45,9 +45,7 @@ Blake2b::Blake2b(size_t output_bits) :
       m_output_bits(output_bits),
       m_buffer(BLAKE2B_BLOCKBYTES),
       m_buflen(0),
-      m_H(BLAKE2B_IVU64COUNT),
-      m_T{0},
-      m_F{0} {
+      m_H(BLAKE2B_IVU64COUNT) {
   if(output_bits == 0 || output_bits % 8 != 0
     || output_bits / 8 > BLAKE2B_OUTBYTES) {
       throw Invalid_Argument("Bad output bits size for Blake2b");
@@ -59,6 +57,8 @@ Blake2b::Blake2b(size_t output_bits) :
 inline void Blake2b::state_init() {
   std::copy(std::begin(blake2b_IV), std::end(blake2b_IV), m_H.begin());
   m_H[0] ^= 0x01010000 ^ static_cast<byte>(output_length());
+  m_T[0] = m_T[1] = 0;
+  m_F[0] = m_F[1] = 0;
 }
 
 void Blake2b::compress(bool lastblock) {
@@ -198,8 +198,6 @@ void Blake2b::clear() {
   zeroise(m_H);
   zeroise(m_buffer);
   m_buflen = 0;
-  m_T[0] = m_T[1] = 0;
-  m_F[0] = m_F[1] = 0;
   state_init();
 }
 
