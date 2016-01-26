@@ -1,5 +1,12 @@
-#ifndef BLAKE2B_H__
-#define BLAKE2B_H__
+/*
+* Blake2b
+* (C) 2016 cynecx
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#ifndef BOTAN_BLAKE2B_H__
+#define BOTAN_BLAKE2B_H__
 
 #include <botan/hash.h>
 #include <string>

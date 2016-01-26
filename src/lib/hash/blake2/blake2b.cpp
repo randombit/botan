@@ -1,3 +1,10 @@
+/*
+* Blake2b
+* (C) 2016 cynecx
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
 #include <botan/blake2b.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
@@ -45,7 +52,7 @@ Blake2b::Blake2b(size_t output_bits) :
     || output_bits / 8 > BLAKE2B_OUTBYTES) {
       throw Invalid_Argument("Bad output bits size for Blake2b");
   }
-  
+
   state_init();
 }
 
