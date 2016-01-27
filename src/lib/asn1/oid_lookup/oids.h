@@ -9,6 +9,8 @@
 #define BOTAN_OIDS_H__
 
 #include <botan/asn1_oid.h>
+#include <botan/build.h>
+#include <string>
 
 namespace Botan {
 

@@ -7,10 +7,9 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/der_enc.h>
-#include <botan/ber_dec.h>
 #include <botan/data_src.h>
-#include <botan/parsing.h>
 #include <botan/internal/stl_util.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 

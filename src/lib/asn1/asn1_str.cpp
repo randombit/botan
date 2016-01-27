@@ -9,7 +9,10 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/charset.h>
-#include <botan/parsing.h>
+#include <botan/asn1_obj.h>
+#include <botan/exceptn.h>
+#include <botan/types.h>
+#include <cstddef>
 
 namespace Botan {
 

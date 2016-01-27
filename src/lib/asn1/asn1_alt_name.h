@@ -12,7 +12,9 @@
 #include <botan/asn1_obj.h>
 #include <botan/asn1_str.h>
 #include <botan/asn1_oid.h>
+#include <botan/build.h>
 #include <map>
+#include <string>
 
 namespace Botan {
 

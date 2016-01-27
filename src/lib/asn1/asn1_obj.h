@@ -10,6 +10,10 @@
 
 #include <botan/secmem.h>
 #include <botan/exceptn.h>
+#include <botan/build.h>
+#include <botan/types.h>
+#include <string>
+#include <vector>
 
 namespace Botan {
 

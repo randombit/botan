@@ -9,6 +9,8 @@
 #define BOTAN_ASN1_OID_H__
 
 #include <botan/asn1_obj.h>
+#include <botan/build.h>
+#include <botan/types.h>
 #include <string>
 #include <vector>
 

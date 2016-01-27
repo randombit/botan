@@ -5,8 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/oids.h>
-
 namespace Botan {
 
 namespace OIDS {

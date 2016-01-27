@@ -9,9 +9,15 @@
 #define BOTAN_ASN1_TIME_H__
 
 #include <botan/asn1_obj.h>
+#include <botan/build.h>
+#include <botan/types.h>
 #include <chrono>
+#include <string>
 
 namespace Botan {
+
+class BER_Decoder;
+class DER_Encoder;
 
 /**
 * X.509 Time
