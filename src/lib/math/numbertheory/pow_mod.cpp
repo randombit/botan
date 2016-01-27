@@ -36,10 +36,12 @@ Power_Mod& Power_Mod::operator=(const Power_Mod& other)
    {
    if(this != &other)
       {
-	   delete m_core;
+      delete m_core;
       m_core = nullptr;
       if(other.m_core)
+         {
          m_core = other.m_core->copy();
+         }
       }
    return (*this);
    }

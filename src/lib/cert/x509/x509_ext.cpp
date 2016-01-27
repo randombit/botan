@@ -309,7 +309,7 @@ void Subject_Key_ID::contents_to(Data_Store& subject, Data_Store&) const
 /*
 * Subject_Key_ID Constructor
 */
-Subject_Key_ID::Subject_Key_ID( const std::vector<byte>& pub_key ) : m_key_id{unlock(SHA_160().process(pub_key))}
+Subject_Key_ID::Subject_Key_ID(const std::vector<byte>& pub_key) : m_key_id{unlock(SHA_160().process(pub_key))}
    {}
 
 /*
@@ -470,7 +470,7 @@ std::vector<byte> Certificate_Policies::encode_inner() const
    std::vector<Policy_Information> policies;
 
    for(size_t i = 0; i != m_oids.size(); ++i)
-      policies.push_back(Policy_Information( m_oids[i] ));
+      policies.push_back(Policy_Information(m_oids[i]));
 
    return DER_Encoder()
       .start_cons(SEQUENCE)

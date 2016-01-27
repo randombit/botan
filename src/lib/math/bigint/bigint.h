@@ -63,7 +63,7 @@ class BOTAN_DLL BigInt
      *
      * @param str the string to parse for an integer value
      */
-     explicit BigInt(const std::string& str);
+     BigInt(const std::string& str);
 
      /**
      * Create a BigInt from an integer in a byte array

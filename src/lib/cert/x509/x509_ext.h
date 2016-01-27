@@ -314,7 +314,7 @@ class BOTAN_DLL CRL_Number final : public Certificate_Extension
       CRL_Number* copy() const override;
 
       CRL_Number() : m_has_value(false), m_crl_number(0) {}
-      explicit CRL_Number(size_t n) : m_has_value(true), m_crl_number(n) {}
+      CRL_Number(size_t n) : m_has_value(true), m_crl_number(n) {}
 
       size_t get_crl_number() const;
    private:
