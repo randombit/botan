@@ -9,6 +9,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/loadstor.h>
+#include <botan/rotate.h>
 #include <algorithm>
 
 namespace Botan {
@@ -85,18 +86,16 @@ void Blake2b::compress(bool lastblock) {
   v[14] ^= m_F[0];
   v[15] ^= m_F[1];
 
-#define rotr64(w, c) (((w) >> c) ^ ((w) << (64 - c)))
-
 #define G(r, i, a, b, c, d) \
   do { \
     a = a + b + m[blake2b_sigma[r][2 * i + 0]]; \
-    d = rotr64(d ^ a, 32); \
+    d = rotate_right<u64bit>(d ^ a, 32); \
     c = c + d; \
-    b = rotr64(b ^ c, 24); \
+    b = rotate_right<u64bit>(b ^ c, 24); \
     a = a + b + m[blake2b_sigma[r][2 * i + 1]]; \
-    d = rotr64(d ^ a, 16); \
+    d = rotate_right<u64bit>(d ^ a, 16); \
     c = c + d; \
-    b = rotr64(b ^ c, 63); \
+    b = rotate_right<u64bit>(b ^ c, 63); \
   } while(0)
 
 #define ROUND(r)  \
@@ -130,7 +129,6 @@ void Blake2b::compress(bool lastblock) {
 
 #undef G
 #undef ROUND
-#undef rotr64
 }
 
 inline void Blake2b::increment_counter(const u64bit inc) {
