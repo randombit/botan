@@ -16,21 +16,21 @@ namespace Botan {
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
-                                         const std::vector<byte>& param) : oid{alg_id}, parameters{param}
+                                         const std::vector<byte>& param) : oid(alg_id), parameters(param)
    {}
 
 /*
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
-                                         const std::vector<byte>& param) : oid{OIDS::lookup(alg_id)}, parameters{param}
+                                         const std::vector<byte>& param) : oid(OIDS::lookup(alg_id)), parameters(param)
    {}
 
 /*
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
-                                         Encoding_Option option) : oid{alg_id}, parameters{}
+                                         Encoding_Option option) : oid(alg_id), parameters()
    {
    const byte DER_NULL[] = { 0x05, 0x00 };
 
@@ -42,7 +42,7 @@ AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
-                                         Encoding_Option option) : oid{OIDS::lookup(alg_id)}, parameters{}
+                                         Encoding_Option option) : oid(OIDS::lookup(alg_id)), parameters()
    {
    const byte DER_NULL[] = { 0x05, 0x00 };
 

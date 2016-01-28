@@ -180,7 +180,7 @@ std::vector<byte> Server_Name_Indicator::serialize() const
 #if defined(BOTAN_HAS_SRP6)
 
 SRP_Identifier::SRP_Identifier(TLS_Data_Reader& reader,
-                               u16bit extension_size) : m_srp_identifier{reader.get_string(1, 1, 255)}
+                               u16bit extension_size) : m_srp_identifier(reader.get_string(1, 1, 255))
    {
    if(m_srp_identifier.size() + 1 != extension_size)
       throw Decoding_Error("Bad encoding for SRP identifier extension");
@@ -201,7 +201,7 @@ std::vector<byte> SRP_Identifier::serialize() const
 #endif
 
 Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader,
-                                                 u16bit extension_size) : m_reneg_data{reader.get_range<byte>(1, 0, 255)}
+                                                 u16bit extension_size) : m_reneg_data(reader.get_range<byte>(1, 0, 255))
    {
    if(m_reneg_data.size() + 1 != extension_size)
       throw Decoding_Error("Bad encoding for secure renegotiation extn");
@@ -512,11 +512,11 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
    }
 
 Session_Ticket::Session_Ticket(TLS_Data_Reader& reader,
-                               u16bit extension_size) : m_ticket{reader.get_elem<byte, std::vector<byte>>(extension_size)}
+                               u16bit extension_size) : m_ticket(reader.get_elem<byte, std::vector<byte>>(extension_size))
    {}
 
 SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader,
-                                                   u16bit extension_size) : m_pp{reader.get_range<u16bit>(2, 0, 65535)}
+                                                   u16bit extension_size) : m_pp(reader.get_range<u16bit>(2, 0, 65535))
    {
    const std::vector<byte> mki = reader.get_range<byte>(1, 0, 255);
 
