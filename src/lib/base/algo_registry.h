@@ -11,6 +11,7 @@
 #include <botan/build.h>
 #include <botan/types.h>
 #include <botan/exceptn.h>
+#include <botan/scan_name.h>
 #include <functional>
 #include <mutex>
 #include <vector>
