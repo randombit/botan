@@ -363,15 +363,17 @@ class Speed final : public Command
 #endif
             else if(algo == "RNG")
                {
+               Botan::AutoSeeded_RNG auto_rng;
+               bench_rng(auto_rng, "AutoSeeded_RNG (periodic reseed)", msec, buf_size);
+
 #if defined(BOTAN_HAS_SYSTEM_RNG)
                bench_rng(Botan::system_rng(), "System_RNG", msec, buf_size);
 #endif
 
-               Botan::AutoSeeded_RNG auto_rng;
-               bench_rng(auto_rng, "AutoSeeded_RNG (periodic reseed)", msec, buf_size);
-
+#if defined(BOTAN_HAS_X931_RNG)
                Botan::ANSI_X931_RNG x931_rng(Botan::BlockCipher::create("AES-256").release(), new Botan::AutoSeeded_RNG);
                bench_rng(x931_rng, x931_rng.name(), msec, buf_size);
+#endif
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
                for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
