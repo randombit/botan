@@ -11,6 +11,7 @@
 #include <botan/build.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
+#include <botan/asn1_obj.h>
 #include <vector>
 #include <cstddef>
 #include <string>
