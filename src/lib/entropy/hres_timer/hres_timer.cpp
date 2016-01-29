@@ -1,19 +1,12 @@
 /*
 * High Resolution Timestamp Entropy Source
-* (C) 1999-2009,2011,2014 Jack Lloyd
+* (C) 1999-2009,2011,2014,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/hres_timer.h>
-#include <botan/cpuid.h>
-#include <chrono>
-
-#if defined(BOTAN_TARGET_OS_HAS_QUERY_PERF_COUNTER)
-  #include <windows.h>
-  #undef min
-  #undef max
-#endif
+#include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
   #include <time.h>
@@ -26,6 +19,10 @@ namespace Botan {
 */
 void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
    {
+   accum.add(OS::get_processor_timestamp(), BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS);
+
+   accum.add(OS::get_system_timestamp_ns(), BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS);
+
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
 
 #define CLOCK_GETTIME_POLL(src)                                     \
@@ -57,65 +54,6 @@ void High_Resolution_Timestamp::poll(Entropy_Accumulator& accum)
 
 #undef CLOCK_GETTIME_POLL
 
-#else
-
-#define STD_CHRONO_POLL(clock)                                  \
-   do {                                                         \
-      auto timestamp = clock::now().time_since_epoch().count(); \
-      accum.add(timestamp, BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS);         \
-   } while(0)
-
-  STD_CHRONO_POLL(std::chrono::high_resolution_clock);
-  STD_CHRONO_POLL(std::chrono::system_clock);
-
-#undef STD_CHRONO_POLL
-
-#endif
-
-#if defined(BOTAN_USE_GCC_INLINE_ASM)
-
-   u64bit rtc = 0;
-
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-   if(CPUID::has_rdtsc()) // not availble on all x86 CPUs
-      {
-      u32bit rtc_low = 0, rtc_high = 0;
-      asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
-      rtc = (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
-      }
-
-#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-   u32bit rtc_low = 0, rtc_high = 0;
-   asm volatile("mftbu %0; mftb %1" : "=r" (rtc_high), "=r" (rtc_low));
-   rtc = (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
-
-#elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
-   asm volatile("rpcc %0" : "=r" (rtc));
-
-#elif defined(BOTAN_TARGET_ARCH_IS_SPARC64) && !defined(BOTAN_TARGET_OS_IS_OPENBSD)
-   asm volatile("rd %%tick, %0" : "=r" (rtc));
-
-#elif defined(BOTAN_TARGET_ARCH_IS_IA64)
-   asm volatile("mov %0=ar.itc" : "=r" (rtc));
-
-#elif defined(BOTAN_TARGET_ARCH_IS_S390X)
-   asm volatile("stck 0(%0)" : : "a" (&rtc) : "memory", "cc");
-
-#elif defined(BOTAN_TARGET_ARCH_IS_HPPA)
-   asm volatile("mfctl 16,%0" : "=r" (rtc)); // 64-bit only?
-
-#endif
-
-   accum.add(rtc, BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS);
-
-#endif
-
-#if defined(BOTAN_TARGET_OS_HAS_QUERY_PERF_COUNTER)
-   {
-   LARGE_INTEGER tv;
-   ::QueryPerformanceCounter(&tv);
-   accum.add(tv.QuadPart, BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS);
-   }
 #endif
    }
 

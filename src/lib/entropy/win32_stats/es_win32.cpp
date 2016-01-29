@@ -43,10 +43,6 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
    GetCaretPos(&point);
    accum.add(point, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
 
-   LARGE_INTEGER perf_counter;
-   QueryPerformanceCounter(&perf_counter);
-   accum.add(perf_counter, BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS);
-
    /*
    Now use the Tooltip library to iterate throug various objects on
    the system, including processes, threads, and heap objects.

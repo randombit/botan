@@ -60,6 +60,7 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
 
       secure_vector<byte> m_K;
       u32bit m_counter = 0;
+      u32bit m_pid = 0;
    };
 
 }
