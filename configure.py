@@ -457,9 +457,6 @@ def process_command_line(args):
 
     options.disable_intrinsics = parse_multiple_enable(options.disable_intrinsics)
 
-    if options.maintainer_mode:
-        options.with_sanitizers = True
-
     return options
 
 """
