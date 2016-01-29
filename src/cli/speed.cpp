@@ -457,7 +457,7 @@ class Speed final : public Command
                                const std::chrono::milliseconds runtime,
                                size_t buf_size)
          {
-         Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size * 1024);
+         Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
          Timer encrypt_timer(cipher.name(), provider, "encrypt", buffer.size());
 
@@ -476,7 +476,7 @@ class Speed final : public Command
                       const std::chrono::milliseconds runtime,
                       size_t buf_size)
          {
-         Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size * 1024);
+         Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
          Timer timer(hash.name(), provider, "hash", buffer.size());
          timer.run_until_elapsed(runtime, [&] { hash.update(buffer); });
@@ -488,17 +488,13 @@ class Speed final : public Command
                      const std::chrono::milliseconds runtime,
                      size_t buf_size)
          {
-         Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size * 1024);
+         Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
+
+         const Botan::SymmetricKey key(rng(), mac.maximum_keylength());
+         mac.set_key(key);
 
          Timer timer(mac.name(), provider, "mac", buffer.size());
-
-         while(timer.under(runtime))
-            {
-            const Botan::SymmetricKey key(rng(), mac.maximum_keylength());
-            mac.set_key(key);
-            timer.run([&] { mac.update(buffer); });
-            }
-
+         timer.run_until_elapsed(runtime, [&] { mac.update(buffer); });
          output() << Timer::result_string_bps(timer);
          }
 
@@ -545,7 +541,7 @@ class Speed final : public Command
          Botan::secure_vector<uint8_t> buffer(buf_size);
 
          rng.add_entropy(buffer.data(), buffer.size());
-         size_t bits = rng.reseed(256);
+         rng.reseed(256);
 
          Timer timer(rng_name, "", "generate", buffer.size());
          timer.run_until_elapsed(runtime, [&] { rng.randomize(buffer.data(), buffer.size()); });
