@@ -238,10 +238,9 @@ gf2m gf2m_decomp_rootfind_state::calc_Fxj_j_neq_0( const polyn_gf2m & sigma, gf2
    gf2m sum = 0;
    u32bit i;
    std::shared_ptr<GF2m_Field> sp_field = sigma.get_sp_field();
-   gf2m xl_j_tt_5i, xl_j_tt_5,  xl_gray_tt_3;
    const gf2m jl_gray = sp_field->gf_l_from_n(j_gray);
-   xl_j_tt_5 = sp_field->gf_square_rr(jl_gray);
-   xl_gray_tt_3 = sp_field->gf_mul_rrr(xl_j_tt_5, jl_gray);
+   gf2m xl_j_tt_5 = sp_field->gf_square_rr(jl_gray);
+   gf2m xl_gray_tt_3 = sp_field->gf_mul_rrr(xl_j_tt_5, jl_gray);
    xl_j_tt_5 = sp_field->gf_mul_rrr(xl_j_tt_5, xl_gray_tt_3);
 
 
@@ -253,13 +252,16 @@ gf2m gf2m_decomp_rootfind_state::calc_Fxj_j_neq_0( const polyn_gf2m & sigma, gf2
    /* treat i = 0 special: */
    sum ^= this->m_Aij[0];
    /* treat i = 1 special also */
+
    if(this->m_outer_summands > 1)
       {
       gf2m x;
-      xl_j_tt_5i = xl_j_tt_5;
       x = sp_field->gf_mul_zrz(xl_j_tt_5, this->m_Aij[1]); /* x_j^{5i} A_i^j */
       sum ^= x;
       }
+
+   gf2m xl_j_tt_5i = xl_j_tt_5;
+
    for(i = 2; i < this->m_outer_summands; i++)
       {
       gf2m x;
