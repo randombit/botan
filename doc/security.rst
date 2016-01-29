@@ -16,6 +16,19 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 Advisories
 ----------------------------------------
 
+2016
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* 2016-02-01 (CVE-2016-2194): Infinite loop in modulur square root algorithm
+
+  The ressol function implements the Tonelli-Shanks algorithm for
+  finding square roots could be sent into a nearly infinite loop due
+  to a misplaced conditional check. This could occur if a composite
+  modulus is provided, as this algorithm is only defined for primes.
+  This function is exposed to attacker controlled input via the OS2ECP
+  function during ECC point decompression. Found by AFL
+
+  Introduced in 1.7.15, fixed in 1.11.27
+
 2015
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

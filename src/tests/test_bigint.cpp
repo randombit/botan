@@ -278,6 +278,24 @@ class BigInt_KAT_Tests : public Text_Based_Test
 
             result.test_eq("value", Botan::is_prime(value, Test::rng()), v_is_prime);
             }
+         else if(algo == "RESSOL")
+            {
+            const Botan::BigInt a = get_req_bn(vars, "Input");
+            const Botan::BigInt p = get_req_bn(vars, "Modulus");
+            const Botan::BigInt exp = get_req_bn(vars, "Output");
+
+            const Botan::BigInt a_sqrt = Botan::ressol(a, p);
+
+            result.test_eq("result", a_sqrt, exp);
+
+            if(a_sqrt > 1)
+               {
+               const Botan::BigInt a_sqrt2 = (a_sqrt*a_sqrt) % p;
+               result.test_eq("square correct", a_sqrt2, a);
+               }
+
+            return result;
+            }
          else
             {
             result.test_failure("Unknown BigInt algorithm " + algo);
