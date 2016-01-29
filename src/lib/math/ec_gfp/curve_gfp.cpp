@@ -80,6 +80,12 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
       return;
       }
 
+   const size_t x_sw = x.sig_words();
+   const size_t y_sw = y.sig_words();
+
+   BOTAN_ASSERT(x_sw <= m_p_words, "Input in range");
+   BOTAN_ASSERT(y_sw <= m_p_words, "Input in range");
+
    const size_t output_size = 2*m_p_words + 1;
    ws.resize(2*(m_p_words+2));
 
@@ -87,8 +93,8 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
    z.clear();
 
    bigint_monty_mul(z.mutable_data(), output_size,
-                    x.data(), x.size(), x.sig_words(),
-                    y.data(), y.size(), y.sig_words(),
+                    x.data(), x.size(), x_sw,
+                    y.data(), y.size(), y_sw,
                     m_p.data(), m_p_words, m_p_dash,
                     ws.data());
    }
@@ -102,6 +108,9 @@ void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
       return;
       }
 
+   const size_t x_sw = x.sig_words();
+   BOTAN_ASSERT(x_sw <= m_p_words, "Input in range");
+
    const size_t output_size = 2*m_p_words + 1;
 
    ws.resize(2*(m_p_words+2));
@@ -110,7 +119,7 @@ void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
    z.clear();
 
    bigint_monty_sqr(z.mutable_data(), output_size,
-                    x.data(), x.size(), x.sig_words(),
+                    x.data(), x.size(), x_sw,
                     m_p.data(), m_p_words, m_p_dash,
                     ws.data());
    }

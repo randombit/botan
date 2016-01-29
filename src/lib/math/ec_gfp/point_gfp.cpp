@@ -32,6 +32,11 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    m_coord_y(y),
    m_coord_z(1)
    {
+   if(x <= 0 || x >= curve.get_p())
+      throw Invalid_Argument("Invalid PointGFp affine x");
+   if(y <= 0 || y >= curve.get_p())
+      throw Invalid_Argument("Invalid PointGFp affine y");
+
    m_curve.to_rep(m_coord_x, m_monty_ws);
    m_curve.to_rep(m_coord_y, m_monty_ws);
    m_curve.to_rep(m_coord_z, m_monty_ws);

@@ -72,7 +72,8 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
 
    x.mask_bits(521);
 
-   bigint_add3(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
+   word carry = bigint_add3_nc(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
+   BOTAN_ASSERT_EQUAL(carry, 0, "Final final carry in P-521 reduction");
 
    normalize(prime_p521(), x, ws, 1);
    }

@@ -14,6 +14,10 @@
   #include <botan/internal/filesystem.h>
 #endif
 
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+  #include <botan/pkcs8.h>
+#endif
+
 namespace Botan_Tests {
 
 namespace {
@@ -27,10 +31,47 @@ class Fuzzer_Input_Tests : public Test
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
          results.push_back(test_x509_fuzz());
 #endif
+
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+         results.push_back(test_pkcs8());
+#endif
          return results;
          }
 
    private:
+
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+      Test::Result test_pkcs8()
+         {
+         std::vector<std::string> files;
+
+         Test::Result result("PKCS #8 fuzzing");
+
+         try
+            {
+            files = Botan::get_files_recursive(Test::data_dir() + "/fuzz/pkcs8");
+            }
+         catch(Botan::No_Filesystem_Access)
+            {
+            result.note_missing("Filesystem readdir wrapper not implemented");
+            return result;
+            }
+
+         for(auto vec_file: files)
+            {
+            try
+               {
+               std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(vec_file, Test::rng()));
+               Botan::X509_Certificate cert(vec_file);
+               }
+            catch(std::exception&) {}
+
+            result.test_success();
+            }
+
+         return result;
+         }
+#endif
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
       Test::Result test_x509_fuzz()

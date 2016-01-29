@@ -256,6 +256,9 @@ void bigint_mul(word z[], size_t z_size, word workspace[],
                 const word x[], size_t x_size, size_t x_sw,
                 const word y[], size_t y_size, size_t y_sw)
    {
+   // checking that z_size >= x_sw + y_sw without overflow
+   BOTAN_ASSERT(z_size > x_sw && z_size > y_sw && z_size-x_sw >= y_sw, "Output size is sufficient");
+
    if(x_sw == 1)
       {
       bigint_linmul3(z, y, y_sw, x[0]);
@@ -312,6 +315,8 @@ void bigint_mul(word z[], size_t z_size, word workspace[],
 void bigint_sqr(word z[], size_t z_size, word workspace[],
                 const word x[], size_t x_size, size_t x_sw)
    {
+   BOTAN_ASSERT(z_size/2 >= x_sw, "Output size is sufficient");
+
    if(x_sw == 1)
       {
       bigint_linmul3(z, x, x_sw, x[0]);
