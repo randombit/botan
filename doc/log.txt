@@ -7,6 +7,17 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.11, 2016-02-01
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Resolve heap overflow in ECC point decoding. CVE-2016-2915
+
+* Resolve infinite loop in modular square root algorithm.
+  CVE-2016-2194
+
+* Correct BigInt::to_u32bit to not fail on integers of exactly 32 bits.
+  GH #239
+
 Version 1.10.10, 2015-08-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

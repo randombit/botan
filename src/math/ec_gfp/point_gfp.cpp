@@ -11,6 +11,7 @@
 #include <botan/numthry.h>
 #include <botan/reducer.h>
 #include <botan/internal/mp_core.h>
+#include <botan/internal/assert.h>
 
 namespace Botan {
 
@@ -25,6 +26,10 @@ PointGFp::PointGFp(const CurveGFp& curve) :
 PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    curve(curve), ws(2 * (curve.get_p_words() + 2))
    {
+   if(x <= 0 || x >= curve.get_p())
+      throw Invalid_Argument("Invalid PointGFp x");
+   if(x <= 0 || x >= curve.get_p())
+      throw Invalid_Argument("Invalid PointGFp y");
    coord_x = monty_mult(x, curve.get_r2());
    coord_y = monty_mult(y, curve.get_r2());
    coord_z = monty_mult(1, curve.get_r2());
@@ -68,15 +73,18 @@ void PointGFp::monty_sqr(BigInt& z, const BigInt& x) const
       }
 
    const BigInt& p = curve.get_p();
-   const size_t p_size = curve.get_p_words();
    const word p_dash = curve.get_p_dash();
+   const size_t p_size = curve.get_p_words();
+
+   const size_t x_sw = x.sig_words();
+   BOTAN_ASSERT(x_sw <= p_size, "x value in range");
 
    SecureVector<word>& z_reg = z.get_reg();
    z_reg.resize(2*p_size+1);
    zeroise(z_reg);
 
    bigint_monty_sqr(&z_reg[0], z_reg.size(),
-                    x.data(), x.size(), x.sig_words(),
+                    x.data(), x.size(), x_sw,
                     p.data(), p_size, p_dash,
                     &ws[0]);
    }

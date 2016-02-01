@@ -63,10 +63,10 @@ BigInt ressol(const BigInt& a, const BigInt& p)
          {
          q = mod_p.square(q);
          ++i;
-         }
 
-      if(s <= i)
-         return -BigInt(1);
+         if(i >= s)
+            return -BigInt(1);
+         }
 
       c = power_mod(c, BigInt(BigInt::Power2, s-i-1), p);
       r = mod_p.multiply(r, c);
