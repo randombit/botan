@@ -1,8 +1,20 @@
 Release Notes
 ========================================
 
-Version 1.11.27, Not Yet Released
+Version 1.11.27, 2016-02-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* SECURITY: Avoid heap overflow in ECC point decoding. This could
+  likely result in remote code execution. CVE-2016-2195
+
+* SECURITY: Avoid one word heap overflow in P-521 reduction function.
+  This could potentially lead to remote code execution or other
+  attack. CVE-2016-2196.
+
+* SECURITY: Avoid infinite or near-infinite loop during modular square
+  root algorithm with invalid inputs. CVE-2016-2194
+
+* Add Blake2b hash function. GH #413
 
 * Use m_ prefix on all member variables. GH #398 and #407
 

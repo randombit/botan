@@ -19,11 +19,13 @@ Advisories
 2016
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* 2016-06-01 (CVE-2016-2196): Overwrite in P-521 reduction
+* 2016-02-01 (CVE-2016-2196): Overwrite in P-521 reduction
 
   The P-521 reduction function would overwrite zero to one word
   following the allocated block. This could potentially result
   in remote code execution or a crash. Found with AFL
+
+  Introduced in 1.11.10, fixed in 1.11.27
 
 * 2016-02-01 (CVE-2016-2195): Heap overflow on invalid ECC point
 
@@ -49,7 +51,7 @@ Advisories
 
   Found by Alex Gaynor fuzzing with AFL
 
-  Versions affected: all before 1.11.27 and 1.10.11
+  Introduced in 1.9.18, fixed in 1.11.27 and 1.10.11
 
 * 2016-02-01 (CVE-2016-2194): Infinite loop in modulur square root algorithm
 
@@ -60,7 +62,7 @@ Advisories
   This function is exposed to attacker controlled input via the OS2ECP
   function during ECC point decompression. Found by AFL
 
-  Versions affected: all before 1.11.27 and 1.10.11
+  Introduced in 1.7.15, fixed in 1.11.27 and 1.10.11
 
 2015
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -105,9 +105,9 @@ later, Clang 3.4 and later, and MSVC 2013 are regularly tested.
 A new development release is made on the first Monday of every month.
 
 The latest development release is
-`1.11.26 <http://botan.randombit.net/releases/Botan-1.11.26.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.26.tgz.asc>`_
-released on 2016-01-04
+`1.11.27 <http://botan.randombit.net/releases/Botan-1.11.27.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.27.tgz.asc>`_
+released on 2016-02-01
 
 Old Stable Series (1.10)
 ----------------------------------------
@@ -117,9 +117,9 @@ and is the most commonly packaged version. It is still supported for
 security patches, but all development efforts are focused on 1.11.
 
 The latest 1.10 release is
-`1.10.10 <http://botan.randombit.net/releases/Botan-1.10.10.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.10.10.tgz.asc>`_
-released on 2015-08-03
+`1.10.11 <http://botan.randombit.net/releases/Botan-1.10.11.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.10.11.tgz.asc>`_
+released on 2016-02-01
 
 Books and other resources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
