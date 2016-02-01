@@ -83,9 +83,6 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
    const size_t x_sw = x.sig_words();
    const size_t y_sw = y.sig_words();
 
-   BOTAN_ASSERT(x_sw <= m_p_words, "Input in range");
-   BOTAN_ASSERT(y_sw <= m_p_words, "Input in range");
-
    const size_t output_size = 2*m_p_words + 1;
    ws.resize(2*(m_p_words+2));
 

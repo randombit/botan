@@ -1,6 +1,12 @@
 Release Notes
 ========================================
 
+Version 1.11.28, 2016-02-01
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* One of the checks added while addressing CVE-2016-2195 was incorrect
+  and could cause needless assertion failures.
+
 Version 1.11.27, 2016-02-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
