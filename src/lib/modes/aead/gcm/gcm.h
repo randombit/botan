@@ -14,7 +14,52 @@
 
 namespace Botan {
 
-class GHASH;
+/**
+* GCM's GHASH
+* Maybe a Transform?
+*/
+class BOTAN_DLL GHASH : public SymmetricAlgorithm
+   {
+   public:
+      void set_associated_data(const byte ad[], size_t ad_len);
+
+      secure_vector<byte> nonce_hash(const byte nonce[], size_t len);
+
+      void start(const secure_vector<byte>& nonce);
+
+      /*
+      * Assumes input len is multiple of 16
+      */
+      void update(const byte in[], size_t len);
+
+      secure_vector<byte> final();
+
+      Key_Length_Specification key_spec() const override
+         { return Key_Length_Specification(16); }
+
+      size_t input_size() const { return m_text_len; }
+
+      void clear() override;
+
+      std::string name() const override { return "GHASH"; }
+   private:
+      void key_schedule(const byte key[], size_t key_len) override;
+
+      void gcm_multiply(secure_vector<byte>& x) const;
+
+      void ghash_update(secure_vector<byte>& x,
+                        const byte input[], size_t input_len);
+
+      void add_final_block(secure_vector<byte>& x,
+                           size_t ad_len, size_t pt_len);
+
+      secure_vector<byte> m_H;
+      secure_vector<byte> m_H_ad;
+      secure_vector<byte> m_nonce;
+      secure_vector<byte> m_ghash;
+      size_t m_ad_len = 0, m_text_len = 0;
+   };
+
 
 /**
 * GCM Mode
@@ -28,12 +73,16 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
 
       size_t update_granularity() const override;
 
+      void update(secure_vector<byte>& blocks, size_t offset = 0) override = 0;
+
       Key_Length_Specification key_spec() const override;
 
       // GCM supports arbitrary nonce lengths
       bool valid_nonce_length(size_t) const override { return true; }
 
       size_t tag_size() const override { return m_tag_size; }
+
+      size_t input_size() const { return m_ghash->input_size(); }
 
       void clear() override;
 
@@ -51,7 +100,9 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
    private:
       void start_msg(const byte nonce[], size_t nonce_len) override;
 
+   private:
       void key_schedule(const byte key[], size_t length) override;
+      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
    };
 
 /**
@@ -102,51 +153,5 @@ class BOTAN_DLL GCM_Decryption final : public GCM_Mode
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    };
-
-/**
-* GCM's GHASH
-* Maybe a Transform?
-*/
-class BOTAN_DLL GHASH : public SymmetricAlgorithm
-   {
-   public:
-      void set_associated_data(const byte ad[], size_t ad_len);
-
-      secure_vector<byte> nonce_hash(const byte nonce[], size_t len);
-
-      void start(const byte nonce[], size_t len);
-
-      /*
-      * Assumes input len is multiple of 16
-      */
-      void update(const byte in[], size_t len);
-
-      secure_vector<byte> final();
-
-      Key_Length_Specification key_spec() const override
-         { return Key_Length_Specification(16); }
-
-      void clear() override;
-
-      std::string name() const override { return "GHASH"; }
-   private:
-      void key_schedule(const byte key[], size_t key_len) override;
-
-      void gcm_multiply(secure_vector<byte>& x) const;
-
-      void ghash_update(secure_vector<byte>& x,
-                        const byte input[], size_t input_len);
-
-      void add_final_block(secure_vector<byte>& x,
-                           size_t ad_len, size_t pt_len);
-
-      secure_vector<byte> m_H;
-      secure_vector<byte> m_H_ad;
-      secure_vector<byte> m_nonce;
-      secure_vector<byte> m_ghash;
-      size_t m_ad_len = 0, m_text_len = 0;
-   };
-
 }
-
 #endif

@@ -17,6 +17,10 @@
   #include <botan/cmac.h>
 #endif
 
+#if defined(BOTAN_HAS_GMAC)
+  #include <botan/gmac.h>
+#endif
+
 #if defined(BOTAN_HAS_HMAC)
   #include <botan/hmac.h>
 #endif

@@ -59,7 +59,27 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       virtual bool verify_mac(const byte in[], size_t length);
 
       /**
-      * @return a new object representing the same algorithm as *this
+      * Verify a MAC.
+      * @param in the MAC to verify as a byte array
+      * @return true if the MAC is valid, false otherwise
+      */
+      virtual bool verify_mac(const std::vector<byte>& in)
+         {
+         return verify_mac(in.data(), in.size());
+         }
+
+      /**
+      * Verify a MAC.
+      * @param in the MAC to verify as a byte array
+      * @return true if the MAC is valid, false otherwise
+      */
+      virtual bool verify_mac(const secure_vector<byte>& in)
+         {
+         return verify_mac(in.data(), in.size());
+         }
+
+      /**
+      * Get a new object representing the same algorithm as *this
       */
       virtual MessageAuthenticationCode* clone() const = 0;
 

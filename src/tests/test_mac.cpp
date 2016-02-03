@@ -1,5 +1,6 @@
 /*
 * (C) 2014,2015 Jack Lloyd
+* (C) 2016 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,6 +9,10 @@
 
 #if defined(BOTAN_HAS_MAC)
   #include <botan/mac.h>
+#endif
+
+#if defined(BOTAN_HAS_GMAC)
+  #include <botan/gmac.h>
 #endif
 
 namespace Botan_Tests {
@@ -20,13 +25,14 @@ class Message_Auth_Tests : public Text_Based_Test
    {
    public:
       Message_Auth_Tests() :
-         Text_Based_Test("mac", {"Key", "In", "Out"}) {}
+         Text_Based_Test("mac", {"Key", "In", "Out"}, {"IV"}) {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
          const std::vector<uint8_t> input    = get_req_bin(vars, "In");
          const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> iv       = get_opt_bin(vars, "IV");
 
          Test::Result result(algo);
 
@@ -54,14 +60,14 @@ class Message_Auth_Tests : public Text_Based_Test
             result.test_eq(provider, mac->name(), algo);
 
             mac->set_key(key);
-            mac->update(input);
 
-            result.test_eq(provider, "correct mac", mac->final(), expected);
-
-            // Test to make sure clear() resets what we need it to
-            mac->set_key( key );
-            mac->update( "some discarded input");
-            mac->clear();
+#if defined(BOTAN_HAS_GMAC)
+            // GMAC needs to set an IV
+            if(Botan::GMAC* gmac = dynamic_cast<Botan::GMAC*>(mac.get()))
+               {
+               gmac->start(iv);
+               }
+#endif
 
             // do the same to test verify_mac()
             mac->set_key(key);
