@@ -784,6 +784,49 @@ void test_curve_cp_ctor()
    CurveGFp curve(dom_pars.get_curve());
    }
 
+size_t test_cve_2016_2195()
+   {
+   EC_Group dom_pars("secp256r1");
+   CurveGFp curve(dom_pars.get_curve());
+
+   size_t fail = 0;
+
+   const BigInt p = curve.get_p();
+
+   try {
+     PointGFp point(curve, p, p - 1);
+     std::cout << "Accepted PointGFp x == p\n";
+     ++fail;
+   }
+   catch(...) {}
+
+   try {
+     PointGFp point(curve, p + 1, p - 1);
+     std::cout << "Accepted PointGFp x > p\n";
+     ++fail;
+   }
+   catch(...) {}
+
+   try {
+     PointGFp point(curve, p - 1, p);
+     std::cout << "Accepted PointGFp y == p\n";
+     ++fail;
+   }
+   catch(...) {}
+
+   try {
+     PointGFp point(curve, p - 1, p + 1);
+     std::cout << "Accepted PointGFp y > p\n";
+     ++fail;
+   }
+   catch(...) {}
+
+   // this is allowed (though not on the curve)
+   PointGFp point(curve, p - 1, p - 1);
+
+   return fail;
+   }
+
 }
 
 void do_ec_tests(RandomNumberGenerator& rng)
@@ -814,6 +857,7 @@ void do_ec_tests(RandomNumberGenerator& rng)
    test_point_swap(rng);
    test_mult_sec_mass(rng);
    test_curve_cp_ctor();
+   test_cve_2016_2195();
 
    std::cout << std::endl;
    }

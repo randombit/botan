@@ -28,7 +28,7 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    {
    if(x <= 0 || x >= curve.get_p())
       throw Invalid_Argument("Invalid PointGFp x");
-   if(x <= 0 || x >= curve.get_p())
+   if(y <= 0 || y >= curve.get_p())
       throw Invalid_Argument("Invalid PointGFp y");
    coord_x = monty_mult(x, curve.get_r2());
    coord_y = monty_mult(y, curve.get_r2());
