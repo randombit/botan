@@ -1,6 +1,31 @@
 Release Notes
 ========================================
 
+Version 1.10.12, 2016-02-03
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* In 1.10.11, the check in PointGFp intended to check the affine y
+  argument actually checked the affine x again. Reported by Remi Gacogne
+
+  The CVE-2016-2195 overflow is not exploitable in 1.10.11 due to an
+  additional check in the multiplication function itself which was
+  also added in that release, so there are no security implications
+  from the missed check. However to avoid confusion the change was
+  pushed in a new release immediately.
+
+  The 1.10.11 release notes incorrectly identified CVE-2016-2195 as CVE-2016-2915
+
+Version 1.10.11, 2016-02-01
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Resolve heap overflow in ECC point decoding. CVE-2016-2195
+
+* Resolve infinite loop in modular square root algorithm.
+  CVE-2016-2194
+
+* Correct BigInt::to_u32bit to not fail on integers of exactly 32 bits.
+  GH #239
+
 Version 1.11.28, 2016-02-01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
