@@ -6,15 +6,19 @@ Request a new feature by opening a pull request to update this file.
 Commands
 ----------------------------------------
 
-* `encrypt` / `decrypt` tools
+* `encrypt` / `decrypt` tools providing password and/or public key
+  based file encryption
 
 TLS
 ----------------------------------------
 
+* Make DTLS and SRP6 support optional in build
+* Curve25519 key exchange
+* Support for server key stored in TPM
+* TLS OCSP stapling (RFC 6066)
 * Encrypt-then-MAC extension (RFC 7366)
 * Authentication using TOFU (sqlite3 storage)
 * Certificate pinning (using TACK?)
-* TLS OCSP stapling (RFC 6066)
 * TLS supplemental authorization data (RFC 4680, RFC 5878)
 * OpenPGP authentication (RFC 5081)
 * DTLS-SCTP (RFC 6083)
@@ -29,23 +33,24 @@ PKIX
 * OCSP responder logic
 * X.509 attribute certificates (RFC 5755)
 
-New Protocols
+New Protocols / Formats
 ----------------------------------------
 
-* Off-The-Record message protocol
+* NaCl compatible cryptobox functions
+* Off-The-Record v3 encrypted chat protocol
 * Some useful subset of OpenPGP
 * SSHv2 client and/or server
-* Cash schemes (such as Lucre, credlib, bitcoin?)
 
-  Accelerators / backends
+Accelerators / backends
 ----------------------------------------
 
 * Extend OpenSSL provider (cipher modes, HMAC)
 * /dev/crypto
 * Windows CryptoAPI
 * Apple CommonCrypto
-* ARMv8 crypto extensions
-* Intel Skylake SHA-1/SHA-2
+* ARMv8 crypto extensions (AES, SHA-2)
+* POWER8 crypto extensions (AES, SHA-2)
+* Better TPM support: NVRAM, PCR measurements, sealing
 
 FFI (Python, OCaml)
 ----------------------------------------
@@ -58,13 +63,13 @@ Symmetric Algorithms, Hashes, ...
 
 * Bitsliced AES or Camellia
 * Compressed tables for AES
+* AES using vector permutes for NEON, AltiVec
 * Camellia with AES-NI
 * Serpent using AVX2
 * Serpent using SSSE3 pshufb for sboxes
 * ChaCha20 using SSE2 or AVX2
 * scrypt
 * bcrypt PBKDF
-* BLAKE2b
 * Skein-MAC
 * ARIA (Korean block cipher, RFCs 5794 and 6209)
 * Extend Cascade_Cipher to support arbitrary number of ciphers
@@ -81,11 +86,10 @@ Public Key Crypto, Math
 * Some PK operations, especially RSA, have extensive computations per
   operation setup but many of the computed values depend only on the
   key and could be shared across operation objects.
-* Have BigInt '%' and '/' operators compute and cache the Barrett
-  reduction value on the BigInt.
 
 Library Infrastructure
 ----------------------------------------
+
 * Add logging callbacks
 * Add latency tracing framework
 * Compute cycles/byte estimates for benchmark output
