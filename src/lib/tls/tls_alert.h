@@ -60,8 +60,7 @@ class BOTAN_DLL Alert
          NO_APPLICATION_PROTOCOL         = 120, // RFC 7301
 
          // pseudo alert values
-         NULL_ALERT                      = 256,
-         HEARTBEAT_PAYLOAD               = 257
+         NULL_ALERT                      = 256
       };
 
       /**

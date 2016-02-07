@@ -8,7 +8,6 @@
 #include <botan/tls_channel.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
-#include <botan/internal/tls_heartbeats.h>
 #include <botan/internal/tls_record.h>
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/rounding.h>
@@ -269,20 +268,6 @@ void Channel::activate_session()
       }
    }
 
-bool Channel::peer_supports_heartbeats() const
-   {
-   if(auto active = active_state())
-      return active->server_hello()->supports_heartbeats();
-   return false;
-   }
-
-bool Channel::heartbeat_sending_allowed() const
-   {
-   if(auto active = active_state())
-      return active->server_hello()->peer_can_send_heartbeats();
-   return false;
-   }
-
 size_t Channel::received_data(const std::vector<byte>& buf)
    {
    return this->received_data(buf.data(), buf.size());
@@ -394,31 +379,6 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                   }
                }
             }
-         else if(record_type == HEARTBEAT && peer_supports_heartbeats())
-            {
-            if(!active_state())
-               throw Unexpected_Message("Heartbeat sent before handshake done");
-
-            Heartbeat_Message heartbeat(unlock(record));
-
-            const std::vector<byte>& payload = heartbeat.payload();
-
-            if(heartbeat.is_request())
-               {
-               if(!pending_state())
-                  {
-                  const std::vector<byte> padding = unlock(rng().random_vec(16));
-                  Heartbeat_Message response(Heartbeat_Message::RESPONSE,
-                                             payload.data(), payload.size(), padding);
-
-                  send_record(HEARTBEAT, response.contents());
-                  }
-               }
-            else
-               {
-               m_alert_cb(Alert(Alert::HEARTBEAT_PAYLOAD), payload.data(), payload.size());
-               }
-            }
          else if(record_type == APPLICATION_DATA)
             {
             if(!active_state())
@@ -483,18 +443,6 @@ size_t Channel::received_data(const byte input[], size_t input_size)
       {
       send_fatal_alert(Alert::INTERNAL_ERROR);
       throw;
-      }
-   }
-
-void Channel::heartbeat(const byte payload[], size_t payload_size, size_t pad_size)
-   {
-   if(heartbeat_sending_allowed())
-      {
-      const std::vector<byte> padding = unlock(rng().random_vec(pad_size + 16));
-      Heartbeat_Message heartbeat(Heartbeat_Message::REQUEST,
-                                  payload, payload_size, padding);
-
-      send_record(HEARTBEAT, heartbeat.contents());
       }
    }
 

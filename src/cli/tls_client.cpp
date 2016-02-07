@@ -175,8 +175,6 @@ class TLS_Client final : public Command
                      client.close();
                      }
                   }
-               else if(buf[0] == 'H')
-                  client.heartbeat(&buf[1], got-1);
                else
                   client.send(buf, got);
                }
