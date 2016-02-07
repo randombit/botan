@@ -167,7 +167,6 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite&) const
    return true;
    }
 
-bool Policy::negotiate_heartbeat_support() const { return false; }
 bool Policy::allow_server_initiated_renegotiation() const { return false; }
 bool Policy::allow_insecure_renegotiation() const { return false; }
 bool Policy::include_time_in_hello_random() const { return true; }
@@ -348,7 +347,6 @@ void Policy::print(std::ostream& o) const
    print_vec(o, "key_exchange_methods", allowed_key_exchange_methods());
    print_vec(o, "ecc_curves", allowed_ecc_curves());
 
-   print_bool(o, "negotiate_heartbeat_support", negotiate_heartbeat_support());
    print_bool(o, "allow_insecure_renegotiation", allow_insecure_renegotiation());
    print_bool(o, "include_time_in_hello_random", include_time_in_hello_random());
    print_bool(o, "allow_server_initiated_renegotiation", allow_server_initiated_renegotiation());

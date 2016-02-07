@@ -87,9 +87,6 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(new Session_Ticket());
    m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
 
-   if(policy.negotiate_heartbeat_support())
-      m_extensions.add(new Heartbeat_Support_Indicator(true));
-
    if(m_version.supports_negotiable_signature_algorithms())
       m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
                                                 policy.allowed_signature_methods()));
@@ -143,9 +140,6 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(new Server_Name_Indicator(session.server_info().hostname()));
    m_extensions.add(new Session_Ticket(session.session_ticket()));
    m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
-
-   if(policy.negotiate_heartbeat_support())
-      m_extensions.add(new Heartbeat_Support_Indicator(true));
 
    if(session.fragment_size() != 0)
       m_extensions.add(new Maximum_Fragment_Length(session.fragment_size()));

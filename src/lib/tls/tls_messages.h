@@ -150,18 +150,6 @@ class Client_Hello final : public Handshake_Message
          return std::vector<std::string>();
          }
 
-      bool supports_heartbeats() const
-         {
-         return m_extensions.has<Heartbeat_Support_Indicator>();
-         }
-
-      bool peer_can_send_heartbeats() const
-         {
-         if(Heartbeat_Support_Indicator* hb = m_extensions.get<Heartbeat_Support_Indicator>())
-            return hb->peer_allowed_to_send();
-         return false;
-         }
-
       std::vector<u16bit> srtp_profiles() const
          {
          if(SRTP_Protection_Profiles* srtp = m_extensions.get<SRTP_Protection_Profiles>())
@@ -252,18 +240,6 @@ class Server_Hello final : public Handshake_Message
       bool supports_session_ticket() const
          {
          return m_extensions.has<Session_Ticket>();
-         }
-
-      bool supports_heartbeats() const
-         {
-         return m_extensions.has<Heartbeat_Support_Indicator>();
-         }
-
-      bool peer_can_send_heartbeats() const
-         {
-         if(auto hb = m_extensions.get<Heartbeat_Support_Indicator>())
-            return hb->peer_allowed_to_send();
-         return false;
          }
 
       u16bit srtp_profile() const

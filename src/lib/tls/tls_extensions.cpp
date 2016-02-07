@@ -48,9 +48,6 @@ Extension* make_extension(TLS_Data_Reader& reader,
       case TLSEXT_EXTENDED_MASTER_SECRET:
          return new Extended_Master_Secret(reader, size);
 
-      case TLSEXT_HEARTBEAT_SUPPORT:
-         return new Heartbeat_Support_Indicator(reader, size);
-
       case TLSEXT_SESSION_TICKET:
          return new Session_Ticket(reader, size);
 
