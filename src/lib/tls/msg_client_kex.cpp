@@ -10,14 +10,19 @@
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/credentials_manager.h>
-#include <botan/pubkey.h>
-#include <botan/dh.h>
-#include <botan/ecdh.h>
-#include <botan/rsa.h>
-#include <botan/srp6.h>
 #include <botan/rng.h>
 #include <botan/loadstor.h>
 #include <botan/internal/ct_utils.h>
+
+#include <botan/pubkey.h>
+
+#include <botan/dh.h>
+#include <botan/ecdh.h>
+#include <botan/rsa.h>
+
+#if defined(BOTAN_HAS_SRP6)
+#include <botan/srp6.h>
+#endif
 
 namespace Botan {
 
@@ -166,6 +171,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          append_tls_length_value(m_key_material, priv_key.public_value(), 1);
          }
+#if defined(BOTAN_HAS_SRP6)
       else if(kex_algo == "SRP_SHA")
          {
          const BigInt N = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
@@ -193,6 +199,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          append_tls_length_value(m_key_material, BigInt::encode(srp_vals.first), 2);
          m_pre_master = srp_vals.second.bits_of();
          }
+#endif
       else
          {
          throw Internal_Error("Client_Key_Exchange: Unknown kex " +
@@ -323,12 +330,14 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
          append_tls_length_value(m_pre_master, zeros, 2);
          append_tls_length_value(m_pre_master, psk.bits_of(), 2);
          }
+#if defined(BOTAN_HAS_SRP6)
       else if(kex_algo == "SRP_SHA")
          {
          SRP6_Server_Session& srp = state.server_kex()->server_srp_params();
 
          m_pre_master = srp.step2(BigInt::decode(reader.get_range<byte>(2, 0, 65535))).bits_of();
          }
+#endif
       else if(kex_algo == "DH" || kex_algo == "DHE_PSK" ||
               kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
          {

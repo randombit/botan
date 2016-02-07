@@ -22,7 +22,10 @@
 namespace Botan {
 
 class Credentials_Manager;
+
+#if defined(BOTAN_HAS_SRP6)
 class SRP6_Server_Session;
+#endif
 
 namespace TLS {
 
@@ -95,12 +98,14 @@ class Client_Hello final : public Handshake_Message
          return "";
          }
 
+#if defined(BOTAN_HAS_SRP6)
       std::string srp_identifier() const
          {
          if(SRP_Identifier* srp = m_extensions.get<SRP_Identifier>())
             return srp->identifier();
          return "";
          }
+#endif
 
       bool secure_renegotiation() const
          {
@@ -463,8 +468,14 @@ class Server_Key_Exchange final : public Handshake_Message
       // Only valid for certain kex types
       const Private_Key& server_kex_key() const;
 
+#if defined(BOTAN_HAS_SRP6)
       // Only valid for SRP negotiation
-      SRP6_Server_Session& server_srp_params() const;
+      SRP6_Server_Session& server_srp_params() const
+         {
+         BOTAN_ASSERT_NONNULL(m_srp_params);
+         return *m_srp_params;
+         }
+#endif
 
       Server_Key_Exchange(Handshake_IO& io,
                           Handshake_State& state,
@@ -482,8 +493,10 @@ class Server_Key_Exchange final : public Handshake_Message
    private:
       std::vector<byte> serialize() const override;
 
-      std::unique_ptr<Private_Key> m_kex_key;
+#if defined(BOTAN_HAS_SRP6)
       std::unique_ptr<SRP6_Server_Session> m_srp_params;
+#endif
+      std::unique_ptr<Private_Key> m_kex_key;
 
       std::vector<byte> m_params;
 

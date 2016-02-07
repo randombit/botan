@@ -325,11 +325,15 @@ Handshake_State::get_next_handshake_msg()
 
 std::string Handshake_State::srp_identifier() const
    {
+#if defined(BOTAN_HAS_SRP6)
+   // Authenticated via the successful key exchange
    if(ciphersuite().valid() && ciphersuite().kex_algo() == "SRP_SHA")
       return client_hello()->srp_identifier();
+#endif
 
    return "";
    }
+
 
 std::vector<byte> Handshake_State::session_ticket() const
    {

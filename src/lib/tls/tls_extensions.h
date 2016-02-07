@@ -94,6 +94,7 @@ class Server_Name_Indicator final : public Extension
       std::string m_sni_host_name;
    };
 
+#if defined(BOTAN_HAS_SRP6)
 /**
 * SRP identifier extension (RFC 5054)
 */
@@ -119,6 +120,7 @@ class SRP_Identifier final : public Extension
    private:
       std::string m_srp_identifier;
    };
+#endif
 
 /**
 * Renegotiation Indication Extension (RFC 5746)

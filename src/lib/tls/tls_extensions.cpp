@@ -24,8 +24,10 @@ Extension* make_extension(TLS_Data_Reader& reader,
       case TLSEXT_SERVER_NAME_INDICATION:
          return new Server_Name_Indicator(reader, size);
 
+#if defined(BOTAN_HAS_SRP6)
       case TLSEXT_SRP_IDENTIFIER:
          return new SRP_Identifier(reader, size);
+#endif
 
       case TLSEXT_USABLE_ELLIPTIC_CURVES:
          return new Supported_Elliptic_Curves(reader, size);
@@ -175,6 +177,8 @@ std::vector<byte> Server_Name_Indicator::serialize() const
    return buf;
    }
 
+#if defined(BOTAN_HAS_SRP6)
+
 SRP_Identifier::SRP_Identifier(TLS_Data_Reader& reader,
                                u16bit extension_size)
    {
@@ -195,6 +199,8 @@ std::vector<byte> SRP_Identifier::serialize() const
 
    return buf;
    }
+
+#endif
 
 Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader,
                                                  u16bit extension_size)

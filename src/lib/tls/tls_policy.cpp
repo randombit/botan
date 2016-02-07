@@ -64,7 +64,7 @@ std::vector<std::string> Policy::allowed_macs() const
 std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
    return {
-      "SRP_SHA",
+      //"SRP_SHA",
       //"ECDHE_PSK",
       //"DHE_PSK",
       //"PSK",
@@ -80,7 +80,7 @@ std::vector<std::string> Policy::allowed_signature_methods() const
       "ECDSA",
       "RSA",
       "DSA",
-      //""
+      //"" (anon)
       };
    }
 

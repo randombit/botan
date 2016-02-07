@@ -84,12 +84,14 @@ bool check_for_resume(Session& session_info,
                     session_info.compression_method()))
       return false;
 
+#if defined(BOTAN_HAS_SRP6)
    // client sent a different SRP identity
    if(client_hello->srp_identifier() != "")
       {
       if(client_hello->srp_identifier() != session_info.srp_identifier())
          return false;
       }
+#endif
 
    // client sent a different SNI hostname
    if(client_hello->sni_hostname() != "")
@@ -160,6 +162,7 @@ u16bit choose_ciphersuite(
       if(suite.sig_algo() != "" && cert_chains.count(suite.sig_algo()) == 0)
          continue;
 
+#if defined(BOTAN_HAS_SRP6)
       /*
       The client may offer SRP cipher suites in the hello message but
       omit the SRP extension.  If the server would like to select an
@@ -171,6 +174,7 @@ u16bit choose_ciphersuite(
       if(suite.kex_algo() == "SRP_SHA" && client_hello->srp_identifier() == "")
          throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
                              "Client wanted SRP but did not send username");
+#endif
 
       return suite_id;
       }
