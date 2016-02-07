@@ -38,8 +38,7 @@ class BOTAN_DLL Session
          m_compression_method(0),
          m_connection_side(static_cast<Connection_Side>(0)),
          m_srtp_profile(0),
-         m_extended_master_secret(false),
-         m_fragment_size(0)
+         m_extended_master_secret(false)
             {}
 
       /**
@@ -51,7 +50,6 @@ class BOTAN_DLL Session
               u16bit ciphersuite,
               byte compression_method,
               Connection_Side side,
-              size_t fragment_size,
               bool supports_extended_master_secret,
               const std::vector<X509_Certificate>& peer_certs,
               const std::vector<byte>& session_ticket,
@@ -153,11 +151,6 @@ class BOTAN_DLL Session
       const std::vector<byte>& session_id() const { return m_identifier; }
 
       /**
-      * Get the negotiated maximum fragment size (or 0 if default)
-      */
-      size_t fragment_size() const { return m_fragment_size; }
-
-      /**
       * Get the negotiated DTLS-SRTP algorithm (RFC 5764)
       */
       u16bit dtls_srtp_profile() const { return m_srtp_profile; }
@@ -201,8 +194,6 @@ class BOTAN_DLL Session
       Connection_Side m_connection_side;
       u16bit m_srtp_profile;
       bool m_extended_master_secret;
-
-      size_t m_fragment_size;
 
       std::vector<X509_Certificate> m_peer_certs;
       Server_Information m_server_info; // optional

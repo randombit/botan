@@ -24,9 +24,6 @@ Extension* make_extension(TLS_Data_Reader& reader,
       case TLSEXT_SERVER_NAME_INDICATION:
          return new Server_Name_Indicator(reader, size);
 
-      case TLSEXT_MAX_FRAGMENT_LENGTH:
-         return new Maximum_Fragment_Length(reader, size);
-
       case TLSEXT_SRP_IDENTIFIER:
          return new SRP_Identifier(reader, size);
 
@@ -213,53 +210,6 @@ std::vector<byte> Renegotiation_Extension::serialize() const
    std::vector<byte> buf;
    append_tls_length_value(buf, m_reneg_data, 1);
    return buf;
-   }
-
-std::vector<byte> Maximum_Fragment_Length::serialize() const
-   {
-   switch(m_max_fragment)
-      {
-      case 512:
-         return std::vector<byte>(1, 1);
-      case 1024:
-         return std::vector<byte>(1, 2);
-      case 2048:
-         return std::vector<byte>(1, 3);
-      case 4096:
-         return std::vector<byte>(1, 4);
-      default:
-         throw Invalid_Argument("Bad setting " +
-                                     std::to_string(m_max_fragment) +
-                                     " for maximum fragment size");
-      }
-   }
-
-Maximum_Fragment_Length::Maximum_Fragment_Length(TLS_Data_Reader& reader,
-                                                 u16bit extension_size)
-   {
-   if(extension_size != 1)
-      throw Decoding_Error("Bad size for maximum fragment extension");
-
-   const byte val = reader.get_byte();
-
-   switch(val)
-      {
-      case 1:
-         m_max_fragment = 512;
-         break;
-      case 2:
-         m_max_fragment = 1024;
-         break;
-      case 3:
-         m_max_fragment = 2048;
-         break;
-      case 4:
-         m_max_fragment = 4096;
-         break;
-      default:
-         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
-                             "Bad value " + std::to_string(val) + " for max fragment len");
-      }
    }
 
 Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,

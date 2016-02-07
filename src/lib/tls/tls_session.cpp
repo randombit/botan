@@ -23,7 +23,6 @@ Session::Session(const std::vector<byte>& session_identifier,
                  u16bit ciphersuite,
                  byte compression_method,
                  Connection_Side side,
-                 size_t fragment_size,
                  bool extended_master_secret,
                  const std::vector<X509_Certificate>& certs,
                  const std::vector<byte>& ticket,
@@ -40,7 +39,6 @@ Session::Session(const std::vector<byte>& session_identifier,
    m_connection_side(side),
    m_srtp_profile(srtp_profile),
    m_extended_master_secret(extended_master_secret),
-   m_fragment_size(fragment_size),
    m_peer_certs(certs),
    m_server_info(server_info),
    m_srp_identifier(srp_identifier)
@@ -69,6 +67,7 @@ Session::Session(const byte ber[], size_t ber_len)
 
    size_t start_time = 0;
    size_t srtp_profile = 0;
+   size_t fragment_size = 0;
 
    BER_Decoder(ber, ber_len)
       .start_cons(SEQUENCE)
@@ -82,7 +81,7 @@ Session::Session(const byte ber[], size_t ber_len)
         .decode_integer_type(m_ciphersuite)
         .decode_integer_type(m_compression_method)
         .decode_integer_type(side_code)
-        .decode_integer_type(m_fragment_size)
+        .decode_integer_type(fragment_size)
         .decode(m_extended_master_secret)
         .decode(m_master_secret, OCTET_STRING)
         .decode(peer_cert_bits, OCTET_STRING)
@@ -93,6 +92,16 @@ Session::Session(const byte ber[], size_t ber_len)
         .decode(srtp_profile)
       .end_cons()
       .verify_end();
+
+   /*
+   Fragment size is not supported anymore, but the field is still
+   set in the session object.
+   */
+   if(fragment_size != 0)
+      {
+      throw Decoding_Error("Serialized TLS session used maximum fragment length which is "
+                           " no longer supported");
+      }
 
    m_version = Protocol_Version(major_version, minor_version);
    m_start_time = std::chrono::system_clock::from_time_t(start_time);
@@ -131,7 +140,7 @@ secure_vector<byte> Session::DER_encode() const
          .encode(static_cast<size_t>(m_ciphersuite))
          .encode(static_cast<size_t>(m_compression_method))
          .encode(static_cast<size_t>(m_connection_side))
-         .encode(static_cast<size_t>(m_fragment_size))
+         .encode(static_cast<size_t>(/*old fragment size*/0))
          .encode(m_extended_master_secret)
          .encode(m_master_secret, OCTET_STRING)
          .encode(peer_cert_bits, OCTET_STRING)

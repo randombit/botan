@@ -44,9 +44,6 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    if(client_hello.supports_session_ticket() && offer_session_ticket)
       m_extensions.add(new Session_Ticket());
 
-   if(size_t max_fragment_size = client_hello.fragment_size())
-      m_extensions.add(new Maximum_Fragment_Length(max_fragment_size));
-
    if(!next_protocol.empty() && client_hello.supports_alpn())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
 
@@ -98,9 +95,6 @@ Server_Hello::Server_Hello(Handshake_IO& io,
 
    if(client_hello.supports_session_ticket() && offer_session_ticket)
       m_extensions.add(new Session_Ticket());
-
-   if(size_t max_fragment_size = resumed_session.fragment_size())
-      m_extensions.add(new Maximum_Fragment_Length(max_fragment_size));
 
    if(!next_protocol.empty() && client_hello.supports_alpn())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));

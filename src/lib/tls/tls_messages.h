@@ -114,13 +114,6 @@ class Client_Hello final : public Handshake_Message
          return std::vector<byte>();
          }
 
-      size_t fragment_size() const
-         {
-         if(Maximum_Fragment_Length* frag = m_extensions.get<Maximum_Fragment_Length>())
-            return frag->fragment_size();
-         return 0;
-         }
-
       bool supports_session_ticket() const
          {
          return m_extensions.has<Session_Ticket>();
@@ -223,13 +216,6 @@ class Server_Hello final : public Handshake_Message
          if(Renegotiation_Extension* reneg = m_extensions.get<Renegotiation_Extension>())
             return reneg->renegotiation_info();
          return std::vector<byte>();
-         }
-
-      size_t fragment_size() const
-         {
-         if(Maximum_Fragment_Length* frag = m_extensions.get<Maximum_Fragment_Length>())
-            return frag->fragment_size();
-         return 0;
          }
 
       bool supports_extended_master_secret() const

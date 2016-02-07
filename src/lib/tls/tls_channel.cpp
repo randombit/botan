@@ -160,22 +160,6 @@ void Channel::renegotiate(bool force_full_renegotiation)
       throw Exception("Cannot renegotiate on inactive connection");
    }
 
-size_t Channel::maximum_fragment_size() const
-   {
-   // should we be caching this value?
-
-   if(auto pending = pending_state())
-      if(auto server_hello = pending->server_hello())
-         if(size_t frag = server_hello->fragment_size())
-            return frag;
-
-   if(auto active = active_state())
-      if(size_t frag = active->server_hello()->fragment_size())
-         return frag;
-
-   return MAX_PLAINTEXT_SIZE;
-   }
-
 void Channel::change_cipher_spec_reader(Connection_Side side)
    {
    auto pending = pending_state();
@@ -275,8 +259,6 @@ size_t Channel::received_data(const std::vector<byte>& buf)
 
 size_t Channel::received_data(const byte input[], size_t input_size)
    {
-   const size_t max_fragment_size = maximum_fragment_size();
-
    try
       {
       while(!is_closed() && input_size)
@@ -316,9 +298,9 @@ size_t Channel::received_data(const byte input[], size_t input_size)
          if(input_size == 0 && needed != 0)
             return needed; // need more data to complete record
 
-         if(record.size() > max_fragment_size)
+         if(record.size() > MAX_PLAINTEXT_SIZE)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                                "TLS input record is larger than allowed maximum");
+                                "TLS plaintext record is larger than allowed maximum");
 
          if(record_type == HANDSHAKE || record_type == CHANGE_CIPHER_SPEC)
             {
@@ -492,11 +474,9 @@ void Channel::send_record_array(u16bit epoch, byte type, const byte input[], siz
       length -= 1;
       }
 
-   const size_t max_fragment_size = maximum_fragment_size();
-
    while(length)
       {
-      const size_t sending = std::min(length, max_fragment_size);
+      const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);
       write_record(cipher_state.get(), epoch, type, input, sending);
 
       input += sending;

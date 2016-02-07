@@ -204,8 +204,6 @@ class BOTAN_DLL Channel
 
       handshake_msg_cb get_handshake_msg_cb() const { return m_handshake_msg_cb; }
    private:
-      size_t maximum_fragment_size() const;
-
       void send_record(byte record_type, const std::vector<byte>& record);
 
       void send_record_under_epoch(u16bit epoch, byte record_type,
