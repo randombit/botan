@@ -7,6 +7,12 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.13, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Avoid a compilation problem in OpenSSL engine when ECDSA was
+  disabled. Gentoo bug 542010
+
 Version 1.10.12, 2016-02-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -12,17 +12,23 @@
   #include <botan/rsa.h>
 #endif
 
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+  #include <botan/dh.h>
+#endif
+
 #if defined(BOTAN_HAS_DSA)
   #include <botan/dsa.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
   #include <botan/ecdsa.h>
+
+  #include <openssl/evp.h>
+
+#if !defined(OPENSSL_NO_ECDSA)
   #include <openssl/ecdsa.h>
 #endif
 
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-  #include <botan/dh.h>
 #endif
 
 namespace Botan {
