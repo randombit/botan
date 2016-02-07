@@ -33,6 +33,10 @@ class GF2m_Tests : public Test
          {
          Test::Result result("GF2m");
 
+         /*
+         * This is testing one specific case where an overflow
+         * occurred. It should be extended to test more of the interface.
+         */
          for(size_t degree = 2; degree <= 16; ++degree)
             {
             Botan::GF2m_Field field(degree);
@@ -52,9 +56,8 @@ class GF2m_Tests : public Test
                */
                   {
                   const gf2m jl_gray = field.gf_l_from_n(a);
-                  gf2m xl_j_tt_5 = field.gf_square_rr(jl_gray);
+                  const gf2m xl_j_tt_5 = field.gf_square_rr(jl_gray);
                   const gf2m xl_gray_tt_3 = field.gf_mul_rrr(xl_j_tt_5, jl_gray);
-                  xl_j_tt_5 = field.gf_mul_rrr(xl_j_tt_5, xl_gray_tt_3);
                   gf2m s = field.gf_mul_nrr(xl_gray_tt_3, field.gf_ord());
 
                   result.test_gte("Value less than order", field.gf_ord(), s);
