@@ -183,31 +183,31 @@ your documentation and/or local expert for details).
 For iOS using XCode
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To cross compile for iOS, configure with::
+For iOS, you typically build for 3 architectures: armv7 (32 bit, older iOS devices), armv8-a (64 bit, recent iOS devices) and x86_64 for the iPhone simulator. You can build for these 3 architectures and then create a universal binary containing code for all of these architectures, so you can link to Botan for the simulator as well as for an iOS device.
 
-   $ ./configure.py --cpu=armv7 --cc=clang --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++ --sysroot=$(IOS_SYSROOT)"
+To cross compile for armv7, configure and make with::
 
-Along with any additional configuration arguments. Using ``--minimized-build``
-might be helpful as can substantially reduce code size.
+   $ ./configure.py --cpu=armv7 --cc=clang --cc-abi-flags="-arch armv7 -stdlib=libc++" --prefix="iphone-32"
+   xcrun --sdk iphoneos make install
 
-Edit the makefile and change AR (around line 30) to::
+To cross compile for armv8-a, configure and make with::
 
-   AR = libtool -static -o
+   $ ./configure.py --cpu=armv8-a --cc=clang --cc-abi-flags="-arch arm64 -stdlib=libc++" --prefix="iphone-64"
+   xcrun --sdk iphoneos make install
 
-You may also want to edit LIB_OPT to use -Os to optimize for size.
+To compile for the iPhone Simulator, configure and make with::
 
-Now build as normal with ``make``. Confirm the binaries are compiled
-for both architectures with::
+   $ ./configure.py --cpu=x86_64 --cc=clang --cc-abi-flags="-arch x86_64 -stdlib=libc++" --prefix="iphone-simulator"
+   xcrun --sdk iphonesimulator make install
 
-   $ xcrun -sdk iphoneos lipo -info botan
-   Architectures in the fat file: botan are: armv7 armv7s
+Now create the universal binary and confirm the library is compiled
+for all three architectures::
 
-Now sign the test application with::
+   $ xcrun --sdk iphoneos lipo -create -output libbotan-1.11.a iphone-32/lib/libbotan-1.11.a iphone-64/lib/libbotan-1.11.a iphone-simulator/lib/libbotan-1.11.a
+   $ xcrun --sdk iphoneos lipo -info libbotan-1.11.a
+   Architectures in the fat file: libbotan-1.11.a are: armv7 x86_64 armv64
 
-   $ codesign -fs "Your Name" botan-test
-
-which should allow you to run the library self tests on a jailbroken
-device.
+The resulting static library can be linked to your app in Xcode.
 
 For Android
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
