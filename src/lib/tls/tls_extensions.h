@@ -325,32 +325,6 @@ class Signature_Algorithms final : public Extension
    };
 
 /**
-* Heartbeat Extension (RFC 6520)
-*/
-class Heartbeat_Support_Indicator final : public Extension
-   {
-   public:
-      static Handshake_Extension_Type static_type()
-         { return TLSEXT_HEARTBEAT_SUPPORT; }
-
-      Handshake_Extension_Type type() const override { return static_type(); }
-
-      bool peer_allowed_to_send() const { return m_peer_allowed_to_send; }
-
-      std::vector<byte> serialize() const override;
-
-      bool empty() const override { return false; }
-
-      Heartbeat_Support_Indicator(bool peer_allowed_to_send) :
-         m_peer_allowed_to_send(peer_allowed_to_send) {}
-
-      Heartbeat_Support_Indicator(TLS_Data_Reader& reader, u16bit extension_size);
-
-   private:
-      bool m_peer_allowed_to_send;
-   };
-
-/**
 * Used to indicate SRTP algorithms for DTLS (RFC 5764)
 */
 class SRTP_Protection_Profiles final : public Extension

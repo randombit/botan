@@ -77,11 +77,6 @@ class BOTAN_DLL Policy
       virtual std::string choose_curve(const std::vector<std::string>& curve_names) const;
 
       /**
-      * Attempt to negotiate the use of the heartbeat extension
-      */
-      virtual bool negotiate_heartbeat_support() const;
-
-      /**
       * Allow renegotiation even if the counterparty doesn't
       * support the secure renegotiation extension.
       *
@@ -268,9 +263,6 @@ class BOTAN_DLL Text_Policy : public Policy
 
       std::vector<std::string> allowed_ecc_curves() const override
          { return get_list("ecc_curves", Policy::allowed_ecc_curves()); }
-
-      bool negotiate_heartbeat_support() const override
-         { return get_bool("negotiate_heartbeat_support", Policy::negotiate_heartbeat_support()); }
 
       bool allow_insecure_renegotiation() const override
          { return get_bool("allow_insecure_renegotiation", Policy::allow_insecure_renegotiation()); }
