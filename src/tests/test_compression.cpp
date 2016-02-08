@@ -58,6 +58,7 @@ class Compression_Tests : public Test
       std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
+         const size_t text_len = strlen(text_str);
 
          for(std::string algo : { "zlib", "deflate", "gzip", "bz2", "lzma" })
             {
@@ -74,8 +75,6 @@ class Compression_Tests : public Test
                   result.note_missing(algo);
                   continue;
                   }
-
-               const size_t text_len = strlen(text_str);
 
                const Botan::secure_vector<uint8_t> empty;
                const Botan::secure_vector<uint8_t> all_zeros(text_len, 0);
