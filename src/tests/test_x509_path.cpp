@@ -145,7 +145,7 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
       // Do nothing, just test filesystem access
       Botan::get_files_recursive(nist_test_dir);
       }
-   catch(Botan::No_Filesystem_Access)
+   catch(Botan::No_Filesystem_Access&)
       {
       Test::Result result("NIST path validation");
       result.test_note("Skipping due to missing filesystem access");

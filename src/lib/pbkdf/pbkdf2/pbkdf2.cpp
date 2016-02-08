@@ -40,7 +40,7 @@ pbkdf2(MessageAuthenticationCode& prf,
       {
       prf.set_key(reinterpret_cast<const byte*>(passphrase.data()), passphrase.size());
       }
-   catch(Invalid_Key_Length)
+   catch(Invalid_Key_Length&)
       {
       throw Exception("PBKDF2 with " + prf.name() +
                                " cannot accept passphrases of length " +

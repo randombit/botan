@@ -231,7 +231,7 @@ bool PK_Verifier::check_signature(const byte sig[], size_t length)
          throw Decoding_Error("PK_Verifier: Unknown signature format " +
                               std::to_string(m_sig_format));
       }
-   catch(Invalid_Argument) { return false; }
+   catch(Invalid_Argument&) { return false; }
    }
 
 }
