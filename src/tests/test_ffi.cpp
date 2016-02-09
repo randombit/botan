@@ -107,8 +107,9 @@ class FFI_Unit_Tests : public Test
                   result.test_eq("SHA-256 output", outbuf, "B5D4045C3F466FA91FE2CC6ABE79232A1A57CDF104F7A26E716E0A1E2789DF78");
                   }
 
-               TEST_FFI_OK(botan_hash_destroy, (hash));
                }
+
+            TEST_FFI_OK(botan_hash_destroy, (hash));
             }
 
          // MAC test
@@ -142,9 +143,9 @@ class FFI_Unit_Tests : public Test
                TEST_FFI_OK(botan_mac_final, (mac, outbuf.data()));
 
                result.test_eq("HMAC output", outbuf, "1A82EEA984BC4A7285617CC0D05F1FE1D6C96675924A81BC965EE8FF7B0697A7");
-
-               TEST_FFI_OK(botan_mac_destroy, (mac));
                }
+
+            TEST_FFI_OK(botan_mac_destroy, (mac));
             }
 
          const std::vector<uint8_t> pbkdf_salt = Botan::hex_decode("ED1F39A0A7F3889AAF7E60743B3BC1CC2C738E60");
@@ -208,6 +209,7 @@ class FFI_Unit_Tests : public Test
          std::vector<Test::Result> results;
          results.push_back(ffi_test_rsa(rng));
          results.push_back(ffi_test_ecdsa(rng));
+         results.push_back(ffi_test_ecdh(rng));
 
          TEST_FFI_OK(botan_rng_destroy, (rng));
 
@@ -249,8 +251,6 @@ class FFI_Unit_Tests : public Test
                   {
                   ciphertext.resize(ctext_len);
 
-                  TEST_FFI_OK(botan_pk_op_encrypt_destroy, (encrypt));
-
                   botan_pk_op_decrypt_t decrypt;
                   if(TEST_FFI_OK(botan_pk_op_decrypt_create, (&decrypt, priv, "OAEP(SHA-256)", 0)))
                      {
@@ -261,10 +261,12 @@ class FFI_Unit_Tests : public Test
                      decrypted.resize(decrypted_len);
 
                      result.test_eq("RSA plaintext", decrypted, plaintext);
-
-                     TEST_FFI_OK(botan_pk_op_decrypt_destroy, (decrypt));
                      }
+
+                  TEST_FFI_OK(botan_pk_op_decrypt_destroy, (decrypt));
                   }
+
+               TEST_FFI_OK(botan_pk_op_encrypt_destroy, (encrypt));
                }
 
             TEST_FFI_OK(botan_pubkey_destroy, (pub));
@@ -392,6 +394,13 @@ class FFI_Unit_Tests : public Test
                                                  salt.data(), salt.size()));
 
          result.test_eq("shared ECDH key", key1, key2);
+
+         TEST_FFI_OK(botan_pk_op_key_agreement_destroy, (ka1));
+         TEST_FFI_OK(botan_pk_op_key_agreement_destroy, (ka2));
+         TEST_FFI_OK(botan_privkey_destroy, (priv1));
+         TEST_FFI_OK(botan_privkey_destroy, (priv2));
+         TEST_FFI_OK(botan_pubkey_destroy, (pub1));
+         TEST_FFI_OK(botan_pubkey_destroy, (pub2));
 
          return result;
          }
