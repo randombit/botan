@@ -59,7 +59,7 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
       bool operator!=(const McEliece_PublicKey& other) const { return !(*this == other); }
 
    protected:
-      McEliece_PublicKey() {}
+      McEliece_PublicKey() : m_t(0), m_code_length(0) {}
 
       std::vector<byte> m_public_matrix;
       u32bit m_t;
