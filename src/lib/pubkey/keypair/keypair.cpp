@@ -59,7 +59,7 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
       {
       signature = signer.sign_message(message, rng);
       }
-   catch(Encoding_Error)
+   catch(Encoding_Error&)
       {
       return false;
       }
