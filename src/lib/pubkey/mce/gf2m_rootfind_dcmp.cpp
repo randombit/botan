@@ -95,7 +95,7 @@ secure_vector<gf2m> find_roots_gf2m_decomp(const polyn_gf2m & polyn, u32bit code
    }
 
 gf2m_decomp_rootfind_state::gf2m_decomp_rootfind_state(const polyn_gf2m & polyn, u32bit the_code_length) :
-   code_length(the_code_length)
+   code_length(the_code_length), m_j(0), m_j_gray(0)
    {
    gf2m coeff_3;
    gf2m coeff_head;
@@ -105,7 +105,7 @@ gf2m_decomp_rootfind_state::gf2m_decomp_rootfind_state(const polyn_gf2m & polyn,
       {
       throw Internal_Error("Unexpected degree in gf2m_decomp_rootfind_state");
       }
-   this->m_j = 0;
+
    coeff_3 = polyn.get_coef( 3);
    coeff_head = polyn.get_coef( deg_sigma); /* dummy value for SCA CM */
    if(coeff_3 != 0)
@@ -275,7 +275,9 @@ gf2m gf2m_decomp_rootfind_state::calc_Fxj_j_neq_0( const polyn_gf2m & sigma, gf2
 
 secure_vector<gf2m> gf2m_decomp_rootfind_state::find_roots(const polyn_gf2m & sigma)
    {
-   secure_vector<gf2m> result(sigma.get_degree());
+   const int sigma_degree = sigma.get_degree();
+   BOTAN_ASSERT(sigma_degree > 0, "Valid sigma");
+   secure_vector<gf2m> result(sigma_degree);
    u32bit root_pos = 0;
 
    this->calc_Ai_zero(sigma);

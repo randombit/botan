@@ -268,7 +268,11 @@ void polyn_gf2m::remainder(polyn_gf2m &p, const polyn_gf2m & g)
    if (d >= 0) {
    gf2m la = msp_field->gf_inv_rn(g.get_lead_coef());
 
-   for (i = p.get_degree(); d >= 0; --i, --d) {
+   const int p_degree = p.get_degree();
+
+   BOTAN_ASSERT(p_degree > 0, "Valid polynomial");
+
+   for (i = p_degree; d >= 0; --i, --d) {
    if (p[i] != 0) {
    gf2m lb = msp_field->gf_mul_rrn(la, p[i]);
    for (j = 0; j < g.get_degree(); ++j)
@@ -454,6 +458,8 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
    // initialisation of the local variables
    // r0 <- g, r1 <- p, u0 <- 0, u1 <- 1
    dr = g.get_degree();
+
+   BOTAN_ASSERT(dr > 3, "Valid polynomial");
 
    polyn_gf2m r0(dr, g.msp_field);
    polyn_gf2m r1(dr - 1, g.msp_field);
@@ -656,18 +662,15 @@ polyn_gf2m::polyn_gf2m(int t, Botan::RandomNumberGenerator& rng, std::shared_ptr
 
 void polyn_gf2m::poly_shiftmod( const polyn_gf2m & g)
    {
-   int i, t;
-   gf2m a;
-
-   if(g.get_degree() <= 0)
+   if(g.get_degree() <= 1)
       {
-      throw Invalid_Argument("shiftmod cannot be called on polynomials of degree 0 or less");
+      throw Invalid_Argument("shiftmod cannot be called on polynomials of degree 1 or less");
       }
    std::shared_ptr<GF2m_Field> msp_field = g.msp_field;
 
-   t = g.get_degree();
-   a = msp_field->gf_div(this->coeff[t-1], g.coeff[t]);
-   for (i = t - 1; i > 0; --i)
+   int t = g.get_degree();
+   gf2m a = msp_field->gf_div(this->coeff[t-1], g.coeff[t]);
+   for (int i = t - 1; i > 0; --i)
       {
       this->coeff[i] = this->coeff[i - 1] ^ this->msp_field->gf_mul(a, g.coeff[i]);
       }

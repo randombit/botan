@@ -96,8 +96,9 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m & syndrom_polyn,
       sigma.set_coef(2*i, sp_field->gf_square(u.get_coef(i)));
       }
 
-   const size_t v_deg = v.get_degree();
-   for(size_t i = 0; i <= v_deg; ++i)
+   const int v_deg = v.get_degree();
+   BOTAN_ASSERT(v_deg > 0, "Valid degree");
+   for(int i = 0; i <= v_deg; ++i)
       {
       sigma.set_coef(2*i+1, sp_field->gf_square(v.get_coef(i)));
       }
