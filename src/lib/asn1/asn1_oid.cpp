@@ -141,6 +141,8 @@ void OID::encode_into(DER_Encoder& der) const
          size_t blocks = high_bit(m_id[i]) + 6;
          blocks = (blocks - (blocks % 7)) / 7;
 
+         BOTAN_ASSERT(blocks > 0, "Math works");
+
          for(size_t j = 0; j != blocks - 1; ++j)
             encoding.push_back(0x80 | ((m_id[i] >> 7*(blocks-j-1)) & 0x7F));
          encoding.push_back(m_id[i] & 0x7F);

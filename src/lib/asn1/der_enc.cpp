@@ -34,6 +34,8 @@ secure_vector<byte> encode_tag(ASN1_Tag type_tag, ASN1_Tag class_tag)
       size_t blocks = high_bit(type_tag) + 6;
       blocks = (blocks - (blocks % 7)) / 7;
 
+      BOTAN_ASSERT(blocks > 0, "Math works");
+
       encoded_tag.push_back(class_tag | 0x1F);
       for(size_t i = 0; i != blocks - 1; ++i)
          encoded_tag.push_back(0x80 | ((type_tag >> 7*(blocks-i-1)) & 0x7F));
