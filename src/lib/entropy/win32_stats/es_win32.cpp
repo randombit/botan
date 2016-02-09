@@ -32,8 +32,8 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
    GetSystemInfo(&sys_info);
    accum.add(sys_info, BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
 
-   MEMORYSTATUS mem_info;
-   GlobalMemoryStatus(&mem_info);
+   MEMORYSTATUSEX mem_info;
+   GlobalMemoryStatusEx(&mem_info);
    accum.add(mem_info, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
 
    POINT point;
