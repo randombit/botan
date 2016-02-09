@@ -81,17 +81,24 @@ class Curve25519_Roundtrip_Test : public Test
             Botan::Curve25519_PublicKey* a_pub_key = dynamic_cast<Botan::Curve25519_PublicKey*>(a_pub.get());
             Botan::Curve25519_PublicKey* b_pub_key = dynamic_cast<Botan::Curve25519_PublicKey*>(b_pub.get());
 
-            Botan::PK_Key_Agreement a_ka(*a_priv, "KDF2(SHA-256)");
-            Botan::PK_Key_Agreement b_ka(*b_priv, "KDF2(SHA-256)");
-
-            const std::string context = "shared context value";
-            Botan::SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value(), context);
-            Botan::SymmetricKey b_key = b_ka.derive_key(32, a_pub_key->public_value(), context);
-
-            if(!result.test_eq("key agreement", a_key.bits_of(), b_key.bits_of()))
+            if(a_pub_key && b_pub_key)
                {
-               result.test_note(a_priv_pem);
-               result.test_note(b_priv_pem);
+               Botan::PK_Key_Agreement a_ka(*a_priv, "KDF2(SHA-256)");
+               Botan::PK_Key_Agreement b_ka(*b_priv, "KDF2(SHA-256)");
+
+               const std::string context = "shared context value";
+               Botan::SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value(), context);
+               Botan::SymmetricKey b_key = b_ka.derive_key(32, a_pub_key->public_value(), context);
+
+               if(!result.test_eq("key agreement", a_key.bits_of(), b_key.bits_of()))
+                  {
+                  result.test_note(a_priv_pem);
+                  result.test_note(b_priv_pem);
+                  }
+               }
+            else
+               {
+               result.test_failure("Cast back to Curve25519 failed");
                }
 
             results.push_back(result);
