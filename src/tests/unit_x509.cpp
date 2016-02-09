@@ -82,27 +82,17 @@ Botan::X509_Cert_Options req_opts2()
 
 std::unique_ptr<Botan::Private_Key> make_a_private_key()
    {
-#if defined(BOTAN_HAS_DSA)
-   if(Test::rng().next_byte() < 32)
-      {
-      Botan::DL_Group grp("dsa/botan/2048");
-      return std::unique_ptr<Botan::Private_Key>(new Botan::DSA_PrivateKey(Test::rng(), grp));
-      }
-#endif
-
-#if defined(BOTAN_HAS_RSA)
-   if(Test::rng().next_byte() < 32)
-      {
-      return std::unique_ptr<Botan::Private_Key>(new Botan::RSA_PrivateKey(Test::rng(), 1536));
-      }
-#endif
-
 #if defined(BOTAN_HAS_ECDSA)
    Botan::EC_Group grp("secp256r1");
    return std::unique_ptr<Botan::Private_Key>(new Botan::ECDSA_PrivateKey(Test::rng(), grp));
+#elif defined(BOTAN_HAS_RSA)
+   return std::unique_ptr<Botan::Private_Key>(new Botan::RSA_PrivateKey(Test::rng(), 1024));
+#elif defined(BOTAN_HAS_DSA)
+   Botan::DL_Group grp("dsa/botan/2048");
+   return std::unique_ptr<Botan::Private_Key>(new Botan::DSA_PrivateKey(Test::rng(), grp));
+#else
+   return std::unique_ptr<Botan::Private_Key>(nullptr);
 #endif
-
-   throw Test_Error("Skipping X.509 cert test due to missing algos");
    }
 
 class X509_Cert_Unit_Tests : public Test
@@ -226,6 +216,14 @@ std::vector<Test::Result> X509_Cert_Unit_Tests::run()
 
    /* Create the CA's key and self-signed cert */
    std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key());
+
+   if(!ca_key)
+      {
+      // Failure because X.509 enabled but no RSA or ECDSA seems off
+      result.test_failure("Skipping due to no enabled signature algorithms");
+      results.push_back(result);
+      return results;
+      }
 
    Botan::X509_Certificate ca_cert =
       Botan::X509::create_self_signed_cert(ca_opts(),
