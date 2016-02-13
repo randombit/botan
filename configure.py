@@ -354,6 +354,9 @@ def process_command_line(args):
                            default='.'.join(map(str, sys.version_info[0:2])),
                            help='where to install botan.py (def %default)')
 
+    build_group.add_option('--with-valgrind', help='use valgrind API',
+                           dest='with_valgrind', action='store_true', default=False)
+
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
     mods_group.add_option('--enable-modules', dest='enabled_modules',
@@ -775,6 +778,9 @@ class ArchInfo(object):
             macros.append('TARGET_CPU_HAS_NATIVE_64BIT')
 
         macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
+
+        if options.with_valgrind:
+            macros.append('HAS_VALGRIND')
 
         return macros
 
