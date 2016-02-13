@@ -1,13 +1,11 @@
-Botan 1.8.14, 2012-07-18
+Botan 1.8.15, 2016-02-16
+
+NOTE WELL: Botan 1.8 is end of lifed and no longer supported for
+security issues. Please move to 1.10 or 1.11 as soon as possible.
+
 
 Botan is a C++ class library for performing a wide variety of
 cryptographic operations.
-
-I consider this release the best version available, and recommend all
-users upgrade from 1.6 or earlier versions of 1.8 as soon as
-possible. Some APIs have changed incompatibly since the 1.6 release
-series, but most applications should work as-is or with only simple
-modifications.
 
 Botan is released under the FreeBSD license (see doc/license.txt for
 the specifics). More information about the authors and contributors

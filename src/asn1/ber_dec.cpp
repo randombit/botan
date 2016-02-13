@@ -205,6 +205,8 @@ BER_Object BER_Decoder::get_next_object()
       return next;
 
    u32bit length = decode_length(source);
+   if(length >= (1024*1024))
+      throw Decoding_Error("Rejecting ASN.1 block as too large");
    next.value.create(length);
    if(source->read(next.value, length) != length)
       throw BER_Decoding_Error("Value truncated");
@@ -441,6 +443,8 @@ BER_Decoder& BER_Decoder::decode(MemoryRegion<byte>& buffer,
       buffer = obj.value;
    else
       {
+      if(obj.value.size() < 1)
+         throw BER_Decoding_Error("Bad size for BIT STRING");
       if(obj.value[0] >= 8)
          throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
       buffer.set(obj.value + 1, obj.value.size() - 1);

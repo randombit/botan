@@ -285,9 +285,9 @@ bool passes_mr_tests(RandomNumberGenerator& rng,
 
    u32bit tests = miller_rabin_test_iterations(n.bits(), verify);
 
-   BigInt nonce;
    for(u32bit i = 0; i != tests; ++i)
       {
+      BigInt nonce;
       if(!verify && PRIMES[i] < (n-1))
          nonce = PRIMES[i];
       else

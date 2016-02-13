@@ -63,13 +63,12 @@ BigInt ressol(const BigInt& a, const BigInt& p)
          {
          q = mod_p.square(q);
          ++i;
+
+         if(i >= s)
+            return -BigInt(1);
          }
-      u32bit t = s;
 
-      if(t <= i)
-         return -BigInt(1);
-
-      c = power_mod(c, BigInt(BigInt::Power2, t-i-1), p);
+      c = power_mod(c, BigInt(BigInt::Power2, s-i-1), p);
       r = mod_p.multiply(r, c);
       c = mod_p.square(c);
       n = mod_p.multiply(n, c);
