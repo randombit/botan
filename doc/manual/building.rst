@@ -51,17 +51,18 @@ system, and use that. It will print a display at the end showing which
 algorithms have and have not been enabled. For instance on one system
 we might see lines like::
 
-   INFO: Skipping, by request only - bzip2 cvc gnump lzma openssl sqlite3 zlib
-   INFO: Skipping, dependency failure - sessions_sqlite
-   INFO: Skipping, incompatible CPU - asm_x86_32 md4_x86_32 md5_x86_32 mp_x86_32 serpent_x86_32 sha1_x86_32
-   INFO: Skipping, incompatible OS - beos_stats cryptoapi_rng win32_stats
+   INFO: Skipping, dependency failure - sessions_sqlite3
+   INFO: Skipping, incompatible CPU - mp_x86_32 simd_altivec
+   INFO: Skipping, incompatible OS - beos_stats cryptoapi_rng darwin_secrandom win32_stats
    INFO: Skipping, incompatible compiler - mp_x86_32_msvc
+   INFO: Skipping, loaded only if needed by dependency - dyn_load mp_generic simd_scalar
+   INFO: Skipping, requires external dependency - boost bzip2 lzma sqlite3 tpm
 
-The ones that are skipped because they are 'by request only' have to
-be explicitly asked for, because they rely on third party libraries
-which your system might not have or that you might not want the
-resulting binary to depend on. For instance to enable zlib support,
-add ``--with-zlib`` to your invocation of ``configure.py``.
+The ones that are skipped because they are require an external
+depedency have to be explicitly asked for, because they rely on third
+party libraries which your system might not have or that you might not
+want the resulting binary to depend on. For instance to enable zlib
+support, add ``--with-zlib`` to your invocation of ``configure.py``.
 
 You can control which algorithms and modules are built using the
 options ``--enable-modules=MODS`` and ``--disable-modules=MODS``, for
@@ -144,9 +145,9 @@ Building Universal Binaries
 &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 To build a universal binary for OS X, you need to set some additional
-build flags. Do this with the --cc-abi-flags option::
+build flags. Do this with the `configure.py` flag `--cc-abi-flags`::
 
-  $ ./configure.py [other arguments] --cc-abi-flags="-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
+  --cc-abi-flags="-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
 
 On Windows
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -183,27 +184,38 @@ your documentation and/or local expert for details).
 For iOS using XCode
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For iOS, you typically build for 3 architectures: armv7 (32 bit, older iOS devices), armv8-a (64 bit, recent iOS devices) and x86_64 for the iPhone simulator. You can build for these 3 architectures and then create a universal binary containing code for all of these architectures, so you can link to Botan for the simulator as well as for an iOS device.
+For iOS, you typically build for 3 architectures: armv7 (32 bit, o
+lder iOS devices), armv8-a (64 bit, recent iOS devices) and x86_64 for
+the iPhone simulator. You can build for these 3 architectures and then
+create a universal binary containing code for all of these
+architectures, so you can link to Botan for the simulator as well as
+for an iOS device.
 
 To cross compile for armv7, configure and make with::
 
-   $ ./configure.py --cpu=armv7 --cc=clang --cc-abi-flags="-arch armv7 -stdlib=libc++" --prefix="iphone-32"
+   $ ./configure.py --prefix="iphone-32" --cpu=armv7 --cc=clang \
+                    --cc-abi-flags="-arch armv7 -stdlib=libc++"
    xcrun --sdk iphoneos make install
 
 To cross compile for armv8-a, configure and make with::
 
-   $ ./configure.py --cpu=armv8-a --cc=clang --cc-abi-flags="-arch arm64 -stdlib=libc++" --prefix="iphone-64"
+   $ ./configure.py --prefix="iphone-64" --cpu=armv8-a --cc=clang \
+                    --cc-abi-flags="-arch arm64 -stdlib=libc++"
    xcrun --sdk iphoneos make install
 
 To compile for the iPhone Simulator, configure and make with::
 
-   $ ./configure.py --cpu=x86_64 --cc=clang --cc-abi-flags="-arch x86_64 -stdlib=libc++" --prefix="iphone-simulator"
+   $ ./configure.py --prefix="iphone-simulator" --cpu=x86_64 --cc=clang \
+                    --cc-abi-flags="-arch x86_64 -stdlib=libc++"
    xcrun --sdk iphonesimulator make install
 
 Now create the universal binary and confirm the library is compiled
 for all three architectures::
 
-   $ xcrun --sdk iphoneos lipo -create -output libbotan-1.11.a iphone-32/lib/libbotan-1.11.a iphone-64/lib/libbotan-1.11.a iphone-simulator/lib/libbotan-1.11.a
+   $ xcrun --sdk iphoneos lipo -create -output libbotan-1.11.a \
+                  iphone-32/lib/libbotan-1.11.a \
+                  iphone-64/lib/libbotan-1.11.a \
+                  iphone-simulator/lib/libbotan-1.11.a
    $ xcrun --sdk iphoneos lipo -info libbotan-1.11.a
    Architectures in the fat file: libbotan-1.11.a are: armv7 x86_64 armv64
 
@@ -396,12 +408,8 @@ Language Wrappers
 Building the Python wrappers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Python wrappers for Botan use Boost.Python, so you must have Boost
-installed. To build the wrappers, pass the flag
-``--with-boost-python`` to ``configure.py`` and build the ``python``
-target with ``make``.
-
-To install the module, use the ``install_python`` target.
+The Python wrappers for Botan use ctypes and the C89 API so no special
+build step is required, just import botan.py
 
 See :doc:`Python Bindings <python>` for more information about the
-binding.
+Python bindings.

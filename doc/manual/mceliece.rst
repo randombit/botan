@@ -53,7 +53,7 @@ In ``mcies.h`` there are functions for this combination:
 For a given security level (SL) a McEliece key would use
 parameters n and t, and have the cooresponding key sizes listed:
 
-+-----+------+-----+--------------------------------+
++-----+------+-----+---------------+----------------+
 | SL  |   n  |   t | public key KB | private key KB |
 +=====+======+=====+===============+================+
 |  80 | 1632 |  33 |            59 |            140 |
