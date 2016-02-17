@@ -157,6 +157,13 @@ class BuildConfigurationInformation(object):
         if options.with_bakefile:
             gen_bakefile( self.sources, self.cli_sources, self.cli_headers, self.test_sources, options )
 
+        if options.write_sources_to_file:
+            all_sources = self.sources + self.cli_sources + self.test_sources
+            f = open('sources-list.txt','w')
+            for src in all_sources:
+                f.write('%s\n' % src)
+            f.close()
+
         self.python_dir = os.path.join(options.src_dir, 'python')
 
         def build_doc_commands():
@@ -375,6 +382,9 @@ def process_command_line(args):
 
     build_group.add_option('--with-bakefile', action='store_true',
                            default=False, help='Generate bakefile which can be used to create Visual Studio or Xcode project files')
+
+    build_group.add_option('--write-sources-to-file', action='store_true',
+                           default=False, help='Generate a file which includes all sources that will be compiled. Useful for cppcheck checking.')
 
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
