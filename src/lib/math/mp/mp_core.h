@@ -18,6 +18,28 @@ namespace Botan {
 */
 const size_t MP_WORD_BITS = BOTAN_MP_WORD_BITS;
 
+/*
+* If cond == 0, does nothing.
+* If cond > 0, swaps x[0:size] with y[0:size]
+* Runs in constant time
+*/
+BOTAN_DLL
+void bigint_cnd_swap(word cnd, word x[], word y[], size_t size);
+
+/*
+* If cond > 0 adds x[0:size] to y[0:size] and returns carry
+* Runs in constant time
+*/
+BOTAN_DLL
+word bigint_cnd_add(word cnd, word x[], const word y[], size_t size);
+
+/*
+* If cond > 0 subs x[0:size] to y[0:size] and returns borrow
+* Runs in constant time
+*/
+BOTAN_DLL
+word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size);
+
 /**
 * Two operand addition
 * @param x the first operand (and output)

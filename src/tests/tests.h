@@ -174,6 +174,13 @@ class Test
             bool test_eq(const std::string& what, bool produced, bool expected);
 
             bool test_eq(const std::string& what, size_t produced, size_t expected);
+
+            template<typename I1, typename I2>
+            bool test_int_eq(I1 x, I2 y, const char* what)
+               {
+               return test_eq(what, static_cast<size_t>(x), static_cast<size_t>(y));
+               }
+
             bool test_lt(const std::string& what, size_t produced, size_t expected);
             bool test_gte(const std::string& what, size_t produced, size_t expected);
 

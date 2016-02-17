@@ -68,7 +68,7 @@ template<typename T>
 inline void unpoison(T& p)
    {
 #if defined(BOTAN_HAS_VALGRIND)
-   VALGRIND_MAKE_MEM_DEFINED(p, sizeof(T));
+   VALGRIND_MAKE_MEM_DEFINED(&p, sizeof(T));
 #else
    BOTAN_UNUSED(p);
 #endif
