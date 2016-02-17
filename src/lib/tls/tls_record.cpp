@@ -456,7 +456,11 @@ size_t read_tls_record(secure_vector<byte>& readbuf,
 
    if(record_len > MAX_CIPHERTEXT_SIZE)
       throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                          "Got message that exceeds maximum size");
+                          "Received a record that exceeds maximum size");
+
+   if(record_len == 0)
+      throw TLS_Exception(Alert::DECODE_ERROR,
+                          "Received a completely empty record");
 
    if(size_t needed = fill_buffer_to(readbuf,
                                      input, input_sz, consumed,
@@ -543,9 +547,12 @@ size_t read_dtls_record(secure_vector<byte>& readbuf,
    const size_t record_len = make_u16bit(readbuf[DTLS_HEADER_SIZE-2],
                                          readbuf[DTLS_HEADER_SIZE-1]);
 
-   if(record_len > MAX_CIPHERTEXT_SIZE)
-      throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                          "Got message that exceeds maximum size");
+   // Invalid packet:
+   if(record_len == 0 || record_len > MAX_CIPHERTEXT_SIZE)
+      {
+      readbuf.clear();
+      return 0;
+      }
 
    if(fill_buffer_to(readbuf, input, input_sz, consumed, DTLS_HEADER_SIZE + record_len))
       {
