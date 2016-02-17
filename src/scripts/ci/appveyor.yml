@@ -6,10 +6,14 @@ platform:
 
 environment:
   matrix:
-    - COMPILER: msvc-14.0
     - COMPILER: msvc-12.0
-    - MODE: --enable-shared
-    - MODE: --disable-shared
+      MODE: --enable-shared
+    - COMPILER: msvc-12.0
+      MODE: --disable-shared
+    - COMPILER: msvc-14.0
+      MODE: --enable-shared
+    - COMPILER: msvc-14.0
+      MODE: --disable-shared
 
 install:
   - if %compiler% == msvc-12.0 (
