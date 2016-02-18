@@ -647,16 +647,16 @@ polyn_gf2m::polyn_gf2m(int t, Botan::RandomNumberGenerator& rng, std::shared_ptr
    int i;
    (*this).set_coef( t, 1);
    i = 0;
-   int m_deg;
+   int degree = 0;
    do
       {
       for (i = 0; i < t; ++i)
          {
          (*this).set_coef( i, random_code_element(sp_field->get_cardinality(), rng));
          }
-      polyn_gf2m::degppf(*this, &m_deg);
+      polyn_gf2m::degppf(*this, &degree);
       }
-   while (m_deg < t);
+   while (degree < t);
    }
 
 
@@ -666,15 +666,15 @@ void polyn_gf2m::poly_shiftmod( const polyn_gf2m & g)
       {
       throw Invalid_Argument("shiftmod cannot be called on polynomials of degree 1 or less");
       }
-   std::shared_ptr<GF2m_Field> msp_field = g.msp_field;
+   std::shared_ptr<GF2m_Field> field = g.msp_field;
 
    int t = g.get_degree();
-   gf2m a = msp_field->gf_div(this->coeff[t-1], g.coeff[t]);
+   gf2m a = field->gf_div(this->coeff[t-1], g.coeff[t]);
    for (int i = t - 1; i > 0; --i)
       {
       this->coeff[i] = this->coeff[i - 1] ^ this->msp_field->gf_mul(a, g.coeff[i]);
       }
-   this->coeff[0] = msp_field->gf_mul(a, g.coeff[0]);
+   this->coeff[0] = field->gf_mul(a, g.coeff[0]);
    }
 
 std::vector<polyn_gf2m> polyn_gf2m::sqrt_mod_init(const polyn_gf2m & g)

@@ -421,8 +421,8 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
          for(size_t i = 0; i != m_h; ++i)
             R.mult2(m_ws);
 
-         const u32bit nibble = scalar.get_substring((windows-1)*m_h, m_h);
-         R.add(m_U[nibble], m_ws);
+         const u32bit inner_nibble = scalar.get_substring((windows-1)*m_h, m_h);
+         R.add(m_U[inner_nibble], m_ws);
          windows--;
          }
       }

@@ -51,13 +51,13 @@ void Skein_512::clear()
    initial_block();
    }
 
-void Skein_512::reset_tweak(type_code type, bool final)
+void Skein_512::reset_tweak(type_code type, bool is_final)
    {
    m_T[0] = 0;
 
    m_T[1] = (static_cast<u64bit>(type) << 56) |
           (static_cast<u64bit>(1) << 62) |
-          (static_cast<u64bit>(final) << 63);
+          (static_cast<u64bit>(is_final) << 63);
    }
 
 void Skein_512::initial_block()

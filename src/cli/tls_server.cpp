@@ -138,11 +138,11 @@ class TLS_Server final : public Command
 
                while(server.is_active() && !pending_output.empty())
                   {
-                  std::string s = pending_output.front();
+                  std::string output = pending_output.front();
                   pending_output.pop_front();
-                  server.send(s);
+                  server.send(output);
 
-                  if(s == "quit\n")
+                  if(output == "quit\n")
                      server.close();
                   }
                }

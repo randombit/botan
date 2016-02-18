@@ -55,7 +55,7 @@ class BOTAN_DLL Skein_512 final : public HashFunction
       void ubi_512(const byte msg[], size_t msg_len);
 
       void initial_block();
-      void reset_tweak(type_code type, bool final);
+      void reset_tweak(type_code type, bool is_final);
 
       std::string m_personalization;
       size_t m_output_bits;

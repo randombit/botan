@@ -32,8 +32,11 @@ void normalize(const BigInt& p, BigInt& x, secure_vector<word>& ws, size_t bound
       const word* xd = x.data();
       word borrow = 0;
 
-      for(size_t i = 0; i != p_words; ++i)
-         ws[i] = word_sub(xd[i], prime[i], &borrow);
+      for(size_t j = 0; j != p_words; ++j)
+         {
+         ws[j] = word_sub(xd[j], prime[j], &borrow);
+         }
+
       ws[p_words] = word_sub(xd[p_words], 0, &borrow);
 
       if(borrow)

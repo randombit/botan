@@ -35,10 +35,10 @@ class BOTAN_DLL SRP6_Authenticator_File
          {
          SRP6_Data() {}
 
-         SRP6_Data(const BigInt& v,
-                   const std::vector<byte>& salt,
-                   const std::string& group_id) :
-            v(v), salt(salt), group_id(group_id) {}
+         SRP6_Data(const BigInt& v_,
+                   const std::vector<byte>& salt_,
+                   const std::string& group_id_) :
+            v(v_), salt(salt_), group_id(group_id_) {}
 
          // public member variable:
          BigInt v;
