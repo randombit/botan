@@ -69,10 +69,17 @@ BigInt BOTAN_DLL square(const BigInt& x);
 * Modular inversion
 * @param x a positive integer
 * @param modulus a positive integer
-* @return y st (x*y) % modulus == 1
+* @return y st (x*y) % modulus == 1 or 0 if no such value
 */
 BigInt BOTAN_DLL inverse_mod(const BigInt& x,
                              const BigInt& modulus);
+
+/**
+* As above but requires modulus be odd
+*/
+BigInt BOTAN_DLL inverse_mod_odd_modulus(const BigInt& x,
+                                         const BigInt& modulus);
+
 
 /**
 * Compute the Jacobi symbol. If n is prime, this is equivalent

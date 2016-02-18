@@ -190,13 +190,21 @@ std::string Timer::result_string_ops(const Timer& timer)
 
    const double events_per_second = timer.events() / timer.seconds();
 
-   oss << timer.get_name() << " "
-       << static_cast<uint64_t>(events_per_second)
-       << ' ' << timer.doing() << "/sec; "
-       << std::setprecision(2) << std::fixed
-       << timer.ms_per_event() << " ms/op"
-       << " (" << timer.events() << " " << (timer.events() == 1 ? "op" : "ops")
-       << " in " << timer.milliseconds() << " ms)\n";
+   oss << timer.get_name() << " ";
+
+   if(timer.events() == 0)
+      {
+      oss << "no events\n";
+      }
+   else
+      {
+      oss << static_cast<uint64_t>(events_per_second)
+          << ' ' << timer.doing() << "/sec; "
+          << std::setprecision(2) << std::fixed
+          << timer.ms_per_event() << " ms/op"
+          << " (" << timer.events() << " " << (timer.events() == 1 ? "op" : "ops")
+          << " in " << timer.milliseconds() << " ms)\n";
+      }
 
    return oss.str();
    }
@@ -359,6 +367,10 @@ class Speed final : public Command
             else if(algo == "random_prime")
                {
                bench_random_prime(msec);
+               }
+            else if(algo == "inverse_mod")
+               {
+               bench_inverse_mod(msec);
                }
 #endif
             else if(algo == "RNG")
@@ -601,6 +613,25 @@ class Speed final : public Command
          }
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
+
+      void bench_inverse_mod(const std::chrono::milliseconds runtime)
+         {
+         const Botan::BigInt p = random_prime(rng(), 1024);
+
+         Timer invmod_timer("inverse_mod");
+
+         while(invmod_timer.under(runtime))
+            {
+            const Botan::BigInt x(rng(), 1023);
+
+            const Botan::BigInt x_inv1 = invmod_timer.run([&]{
+               return Botan::inverse_mod(x, p);
+               });
+            }
+
+         output() << Timer::result_string_ops(invmod_timer);
+         }
+
       void bench_random_prime(const std::chrono::milliseconds runtime)
          {
          const size_t coprime = 65537; // simulates RSA key gen

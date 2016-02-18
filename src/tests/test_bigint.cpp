@@ -392,7 +392,7 @@ class BigInt_IsPrime_Test : public Text_Based_Test
          const BigInt value = get_req_bn(vars, "Value");
          const bool v_is_prime = get_req_sz(vars, "IsPrime") > 0;
 
-         result.test_eq("value", Botan::is_prime(value, Test::rng()), v_is_prime);
+         result.test_eq("is_prime", Botan::is_prime(value, Test::rng()), v_is_prime);
 
          return result;
          }
@@ -415,7 +415,7 @@ class BigInt_Ressol_Test : public Text_Based_Test
 
          const Botan::BigInt a_sqrt = Botan::ressol(a, p);
 
-         result.test_eq("result", a_sqrt, exp);
+         result.test_eq("ressol", a_sqrt, exp);
 
          if(a_sqrt > 1)
             {
@@ -428,6 +428,35 @@ class BigInt_Ressol_Test : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("bn_ressol", BigInt_Ressol_Test);
+
+class BigInt_InvMod_Test : public Text_Based_Test
+   {
+   public:
+      BigInt_InvMod_Test() : Text_Based_Test("bn/invmod.vec", {"Input","Modulus","Output"}) {}
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         Test::Result result("BigInt InvMod");
+
+         const Botan::BigInt a = get_req_bn(vars, "Input");
+         const Botan::BigInt mod = get_req_bn(vars, "Modulus");
+         const Botan::BigInt expected = get_req_bn(vars, "Output");
+
+         const Botan::BigInt a_inv = Botan::inverse_mod(a, mod);
+
+         result.test_eq("inverse_mod", a_inv, expected);
+
+         if(a_inv > 1)
+            {
+            const Botan::BigInt z = (a * a_inv) % mod;
+            result.test_eq("inverse ok", z, 1);
+            }
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("bn_invmod", BigInt_InvMod_Test);
 
 #endif
 

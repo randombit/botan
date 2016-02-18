@@ -1,0 +1,21 @@
+
+Input = 10
+Modulus = 37
+Output = 26
+
+Input = 5
+Modulus = 0x7fffffffffffffffffffffffffffffff
+Output = 0x33333333333333333333333333333333
+
+Input = 333
+Modulus = 0x7fffffffffffffffffffffffffffffff
+Output = 0x17d4f2ee517d4f2ee517d4f2ee517d4f
+
+Input = 0x435b21e35ccd62dbdbafa1368cf742f0
+Modulus = 0x7fffffffffffffffffffffffffffffff
+Output = 0x604ddb74e5a55e559a7320e45b06eaf6
+
+Input = 2
+Modulus = 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+Output  = 0x10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+

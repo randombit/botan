@@ -74,8 +74,6 @@ BigInt lcm(const BigInt& a, const BigInt& b)
    return ((a * b) / gcd(a, b));
    }
 
-namespace {
-
 /*
 * If the modulus is odd, then we can avoid computing A and C. This is
 * a critical path algorithm in some instances and an odd modulus is
@@ -84,6 +82,11 @@ namespace {
 */
 BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    {
+   if(n.is_negative() || mod.is_negative())
+      throw Invalid_Argument("inverse_mod_odd_modulus: arguments must be non-negative");
+   if(mod < 3 || mod.is_even())
+      throw Invalid_Argument("Bad modulus to inverse_mod_odd_modulus");
+
    BigInt u = mod, v = n;
    BigInt B = 0, D = 1;
 
@@ -119,8 +122,6 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
 
    return D;
    }
-
-}
 
 /*
 * Find the Modular Inverse
