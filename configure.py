@@ -293,6 +293,9 @@ def process_command_line(args):
     build_group.add_option('--with-sanitizers', action='store_true', default=False, dest='with_sanitizers',
                            help='enable runtime checks')
 
+    build_group.add_option('--with-static-analysis', action='store_true', default=False, 
+                           help='enable static analysis checks')
+
     build_group.add_option('--with-coverage', action='store_true', default=False, dest='with_coverage',
                            help='enable coverage checking')
 
@@ -843,6 +846,7 @@ class CompilerInfo(object):
                         'optimization_flags': '',
                         'coverage_flags': '',
                         'sanitizer_flags': '',
+                        'static_analysis_flags': '',
                         'shared_flags': '',
                         'lang_flags': '',
                         'warning_flags': '',
@@ -953,6 +957,11 @@ class CompilerInfo(object):
 
             if not options.no_optimizations:
                 yield self.optimization_flags
+
+            if options.with_static_analysis:
+                if self.static_analysis_flags == '':
+                    raise Exception('No static analysis handling for %s' % (self.basename))
+                yield self.static_analysis_flags
 
             def submodel_fixup(flags, tup):
                 return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))
