@@ -5,6 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#ifndef BOTAN_TPM_H__
+#define BOTAN_TPM_H__
+
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 #include <botan/bigint.h>
@@ -180,3 +183,5 @@ class BOTAN_DLL TPM_PrivateKey : public Private_Key
 // TODO: PCR measurement, writing, key locking
 
 }
+
+#endif
