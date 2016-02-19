@@ -1565,7 +1565,7 @@ def choose_link_method(options):
     def useable_methods():
         # Symbolic link support on Windows was introduced in Windows 6.0 (Vista) and Python 3.2
         # Furthermore the SeCreateSymbolicLinkPrivilege is required in order to successfully create symlinks
-        # So only use try to use symlinks on Windows if explicitly requested
+        # So only try to use symlinks on Windows if explicitly requested
         if req == 'symlink' and options.os == 'windows':
             yield 'symlink'
         # otherwise keep old conservative behavior
