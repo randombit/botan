@@ -26,6 +26,7 @@ class MP_Unit_Tests : public Test
          results.push_back(test_cnd_swap());
          results.push_back(test_cnd_add());
          results.push_back(test_cnd_sub());
+         results.push_back(test_cnd_abs());
 
          return results;
          }
@@ -71,6 +72,37 @@ class MP_Unit_Tests : public Test
 
          result.test_int_eq(a, MP_WORD_MAX, "Sub");
          result.test_int_eq(c, 1, "Borrow");
+
+         return result;
+         }
+
+      Result test_cnd_abs()
+         {
+         Result result("bigint_cnd_abs");
+
+         using namespace Botan;
+
+         word x1 = MP_WORD_MAX;
+         bigint_cnd_abs(1, &x1, 1);
+         result.test_int_eq(x1, 1, "Abs");
+
+         x1 = 0;
+         bigint_cnd_abs(1, &x1, 1);
+         result.test_int_eq(x1, 0, "Abs");
+
+         x1 = 1;
+         bigint_cnd_abs(1, &x1, 1);
+         result.test_int_eq(x1, MP_WORD_MAX, "Abs");
+
+         x1 = 1;
+         bigint_cnd_abs(0, &x1, 1);
+         result.test_int_eq(x1, 1, "No change");
+
+         word x2[2] = { MP_WORD_MAX, MP_WORD_MAX };
+
+         bigint_cnd_abs(1, x2, 2);
+         result.test_int_eq(x2[0], 1, "Abs");
+         result.test_int_eq(x2[1], 0, "Abs");
 
          return result;
          }

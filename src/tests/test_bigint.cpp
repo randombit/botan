@@ -448,8 +448,18 @@ class BigInt_InvMod_Test : public Text_Based_Test
 
          if(a_inv > 1)
             {
-            const Botan::BigInt z = (a * a_inv) % mod;
-            result.test_eq("inverse ok", z, 1);
+            result.test_eq("inverse ok", (a * a_inv) % mod, 1);
+            }
+
+         if(mod.is_odd())
+            {
+            result.test_eq("normalized_montgomery_inverse",
+                           normalized_montgomery_inverse(a, mod),
+                           expected);
+
+            result.test_eq("ct_inverse_odd_modulus",
+                           ct_inverse_mod_odd_modulus(a, mod),
+                           expected);
             }
 
          return result;

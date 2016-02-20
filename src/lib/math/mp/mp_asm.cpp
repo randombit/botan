@@ -24,9 +24,6 @@ void bigint_cnd_swap(word cnd, word x[], word y[], size_t size)
    {
    const word mask = CT::expand_mask(cnd);
 
-   CT::poison(x, size);
-   CT::poison(y, size);
-
    for(size_t i = 0; i != size; ++i)
       {
       word a = x[i];
@@ -34,9 +31,6 @@ void bigint_cnd_swap(word cnd, word x[], word y[], size_t size)
       x[i] = CT::select(mask, b, a);
       y[i] = CT::select(mask, a, b);
       }
-
-   CT::unpoison(x, size);
-   CT::unpoison(y, size);
    }
 
 /*
@@ -46,9 +40,6 @@ void bigint_cnd_swap(word cnd, word x[], word y[], size_t size)
 word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
    {
    const word mask = CT::expand_mask(cnd);
-
-   CT::poison(x, size);
-   CT::poison(y, size);
 
    word carry = 0;
    for(size_t i = 0; i != size; ++i)
@@ -61,10 +52,6 @@ word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
       x[i] = CT::select(mask, z, x[i]);
       }
 
-   CT::unpoison(x, size);
-   CT::unpoison(y, size);
-   CT::unpoison(carry);
-
    return carry & mask;
    }
 
@@ -76,9 +63,6 @@ word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
    {
    const word mask = CT::expand_mask(cnd);
 
-   CT::poison(x, size);
-   CT::poison(y, size);
-
    word carry = 0;
    for(size_t i = 0; i != size; ++i)
       {
@@ -86,11 +70,19 @@ word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
       x[i] = CT::select(mask, z, x[i]);
       }
 
-   CT::unpoison(x, size);
-   CT::unpoison(y, size);
-   CT::unpoison(carry);
-
    return carry & mask;
+   }
+
+void bigint_cnd_abs(word cnd, word x[], size_t size)
+   {
+   const word mask = CT::expand_mask(cnd);
+
+   word carry = mask & 1;
+   for(size_t i = 0; i != size; ++i)
+      {
+      const word z = word_add(~x[i], 0, &carry);
+      x[i] = CT::select(mask, z, x[i]);
+      }
    }
 
 /*

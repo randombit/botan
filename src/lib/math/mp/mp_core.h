@@ -40,6 +40,14 @@ word bigint_cnd_add(word cnd, word x[], const word y[], size_t size);
 BOTAN_DLL
 word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size);
 
+/*
+* 2s complement absolute value
+* If cond > 0 sets x to ~x + 1
+* Runs in constant time
+*/
+BOTAN_DLL
+void bigint_cnd_abs(word cnd, word x[], size_t size);
+
 /**
 * Two operand addition
 * @param x the first operand (and output)
