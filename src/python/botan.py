@@ -605,7 +605,7 @@ class x509_cert(object):
         if filename is None and buf is None:
             raise ArgumentError("No filename or buf given")
         if filename is not None and buf is not None:
-	    raise ArgumentError("Both filename and buf given")
+            raise ArgumentError("Both filename and buf given")
         elif filename is not None:
             botan.botan_x509_cert_load_file.argtypes = [POINTER(c_void_p), c_char_p]
             self.x509_cert = c_void_p(0)
