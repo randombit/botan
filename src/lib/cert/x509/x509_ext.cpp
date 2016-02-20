@@ -448,7 +448,7 @@ class Policy_Information : public ASN1_Object
       OID oid;
 
       Policy_Information() {}
-      Policy_Information(const OID& oid) : oid(oid) {}
+      Policy_Information(const OID& oid_) : oid(oid_) {}
 
       void encode_into(DER_Encoder& codec) const override
          {

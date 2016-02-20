@@ -350,9 +350,9 @@ cmult(limb *resultx, limb *resultz, const u8 *n, const limb *q) {
   copy_mem(nqpqx, q, 5);
 
   for (i = 0; i < 32; ++i) {
-    u8 byte = n[31 - i];
+    u8 byteval = n[31 - i];
     for (j = 0; j < 8; ++j) {
-      const limb bit = byte >> 7;
+      const limb bit = byteval >> 7;
 
       swap_conditional(nqx, nqpqx, bit);
       swap_conditional(nqz, nqpqz, bit);
@@ -377,7 +377,7 @@ cmult(limb *resultx, limb *resultz, const u8 *n, const limb *q) {
       nqpqz = nqpqz2;
       nqpqz2 = t;
 
-      byte <<= 1;
+      byteval <<= 1;
     }
   }
 

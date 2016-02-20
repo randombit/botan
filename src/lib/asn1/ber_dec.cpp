@@ -139,14 +139,14 @@ size_t find_eoc(DataSource* ber)
 /*
 * Check a type invariant on BER data
 */
-void BER_Object::assert_is_a(ASN1_Tag type_tag, ASN1_Tag class_tag)
+void BER_Object::assert_is_a(ASN1_Tag type_tag_, ASN1_Tag class_tag_)
    {
-   if(this->type_tag != type_tag || this->class_tag != class_tag)
+   if(type_tag != type_tag_ || class_tag != class_tag_)
       throw BER_Decoding_Error("Tag mismatch when decoding got " +
-                               std::to_string(this->type_tag) + "/" +
-                               std::to_string(this->class_tag) + " expected " +
                                std::to_string(type_tag) + "/" +
-                               std::to_string(class_tag));
+                               std::to_string(class_tag) + " expected " +
+                               std::to_string(type_tag_) + "/" +
+                               std::to_string(class_tag_));
    }
 
 /*

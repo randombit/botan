@@ -694,10 +694,10 @@ class Speed final : public Command
 
          while(ka_timer.under(msec))
             {
-            Botan::SymmetricKey key1 = ka_timer.run([&] { return ka1.derive_key(32, ka2_pub); });
-            Botan::SymmetricKey key2 = ka_timer.run([&] { return ka2.derive_key(32, ka1_pub); });
+            Botan::SymmetricKey symkey1 = ka_timer.run([&] { return ka1.derive_key(32, ka2_pub); });
+            Botan::SymmetricKey symkey2 = ka_timer.run([&] { return ka2.derive_key(32, ka1_pub); });
 
-            if(key1 != key2)
+            if(symkey1 != symkey1)
                {
                error_output() << "Key agreement mismatch in PK bench\n";
                }

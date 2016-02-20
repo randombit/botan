@@ -71,8 +71,10 @@ std::vector<byte> Certificate::serialize() const
       {
       std::vector<byte> raw_cert = m_certs[i].BER_encode();
       const size_t cert_size = raw_cert.size();
-      for(size_t i = 0; i != 3; ++i)
-         buf.push_back(get_byte<u32bit>(i+1, cert_size));
+      for(size_t j = 0; j != 3; ++j)
+         {
+         buf.push_back(get_byte<u32bit>(j+1, cert_size));
+         }
       buf += raw_cert;
       }
 

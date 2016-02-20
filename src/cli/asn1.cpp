@@ -274,31 +274,31 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
          }
       else if(type_tag == Botan::OCTET_STRING)
          {
-         std::vector<uint8_t> bits;
-         data.decode(bits, type_tag);
+         std::vector<uint8_t> decoded_bits;
+         data.decode(decoded_bits, type_tag);
 
          try
             {
-            Botan::BER_Decoder inner(bits);
+            Botan::BER_Decoder inner(decoded_bits);
             decode(inner, level + 1);
             }
          catch(...)
             {
             emit(type_name(type_tag), level, length,
-                 url_encode(bits));
+                 url_encode(decoded_bits));
             }
          }
       else if(type_tag == Botan::BIT_STRING)
          {
-         std::vector<uint8_t> bits;
-         data.decode(bits, type_tag);
+         std::vector<uint8_t> decoded_bits;
+         data.decode(decoded_bits, type_tag);
 
          std::vector<bool> bit_set;
 
-         for(size_t i = 0; i != bits.size(); ++i)
+         for(size_t i = 0; i != decoded_bits.size(); ++i)
             for(size_t j = 0; j != 8; ++j)
                {
-               const bool bit = static_cast<bool>((bits[bits.size()-i-1] >> (7-j)) & 1);
+               const bool bit = static_cast<bool>((decoded_bits[decoded_bits.size()-i-1] >> (7-j)) & 1);
                bit_set.push_back(bit);
                }
 
