@@ -8,7 +8,7 @@ if [ "$BUILD_MODE" = "coverage" ]; then
     /tmp/usr/bin/lcov --gcov-tool "$GCOV" --remove coverage.info 'tests/*' '/usr/*' --output-file coverage.info
     /tmp/usr/bin/lcov --gcov-tool "$GCOV" --list coverage.info
 
-    coverage run --branch src/python/botan.py
+    LD_LIBRARY_PATH=. coverage run --branch src/python/botan.py
 
     codecov
 fi
