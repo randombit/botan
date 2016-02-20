@@ -4,6 +4,37 @@ Release Notes
 Version 1.11.29, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Reject empty TLS records at the record processing layer since such a
+  record is not valid regardless of the record type. Later checks
+  already correctly rejected empty records, but during processing such
+  a record a pointer to the end of the vector was created, causing a
+  assertion when using checked iterators. Found by Juraj Somorovsky.
+
+* Support for the TLS heartbeat extension has been removed.
+
+* Support for the TLS minimum fragment length extension has been removed.
+
+* SRP6 support is now optional in TLS
+
+* Add --with-valgrind configure option to enable building against the
+  valgrind client API. This currently enables checking of const time
+  operations using memcheck.
+
+* Fix remaining Wshadow warnings. Enable Wshadow in build. GH #427
+
+* Use noexcept in VS 2015 GH #429
+
+* On Windows allow the user to explicitly request symlinks be used
+  as part of the build. Likely only useful for someone working on
+  the library itself. GH #430
+
+* Remove use of TickCount64 introduced in 1.11.27 which caused problem
+  with downstream distributors/users building XP compatiable binaries
+  which is still an option even in VS 2015
+
+* MCEIES requires KDF1 at runtime but did not require it be enabled
+  in the build. GH #369
+
 * Small optimizations to Keccak hash
 
 Version 1.10.12, 2016-02-03
