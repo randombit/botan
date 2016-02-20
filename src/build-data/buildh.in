@@ -265,7 +265,7 @@ softare-based entropy polling is still used.
   #define BOTAN_DEPRECATED(msg)
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
   // noexcept is not supported in VS 2013
   #include <yvals.h>
   #define BOTAN_NOEXCEPT _NOEXCEPT
