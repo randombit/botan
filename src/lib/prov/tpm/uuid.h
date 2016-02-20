@@ -5,6 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#ifndef BOTAN_UUID_H__
+#define BOTAN_UUID_H__
+
 #include <botan/secmem.h>
 #include <botan/hex.h>
 #include <sstream>
@@ -99,3 +102,5 @@ class UUID
    };
 
 }
+
+#endif
