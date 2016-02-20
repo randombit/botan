@@ -16,9 +16,9 @@ namespace Botan {
 * Create an OctetString from RNG output
 */
 OctetString::OctetString(RandomNumberGenerator& rng,
-                         size_t length)
+                         size_t len)
    {
-   m_data = rng.random_vec(length);
+   m_data = rng.random_vec(len);
    }
 
 /*

@@ -21,12 +21,11 @@ namespace Botan {
 class BOTAN_DLL Exception : public std::exception
    {
    public:
-      Exception(const std::string& what) : m_what(what) {}
-      Exception(const char* prefix, const std::string& what) : m_what(std::string(prefix) + " " + what) {}
-      //const char* what() const override BOTAN_NOEXCEPT { return m_what.c_str(); }
-      const char* what() const BOTAN_NOEXCEPT override { return m_what.c_str(); }
+      Exception(const std::string& msg) : m_msg(msg) {}
+      Exception(const char* prefix, const std::string& msg) : m_msg(std::string(prefix) + " " + msg) {}
+      const char* what() const BOTAN_NOEXCEPT override { return m_msg.c_str(); }
    private:
-      std::string m_what;
+      std::string m_msg;
    };
 
 /**
@@ -35,8 +34,8 @@ class BOTAN_DLL Exception : public std::exception
 class BOTAN_DLL Invalid_Argument : public Exception
    {
    public:
-      Invalid_Argument(const std::string& what) :
-         Exception("Invalid argument",  what) {}
+      Invalid_Argument(const std::string& msg) :
+         Exception("Invalid argument", msg) {}
    };
 
 /**
