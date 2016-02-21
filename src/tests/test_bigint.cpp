@@ -453,12 +453,15 @@ class BigInt_InvMod_Test : public Text_Based_Test
 
          if(mod.is_odd())
             {
-            result.test_eq("normalized_montgomery_inverse",
-                           normalized_montgomery_inverse(a, mod),
-                           expected);
-
             result.test_eq("ct_inverse_odd_modulus",
                            ct_inverse_mod_odd_modulus(a, mod),
+                           expected);
+            }
+
+         if(mod.is_odd() && a_inv != 0)
+            {
+            result.test_eq("normalized_montgomery_inverse",
+                           normalized_montgomery_inverse(a, mod),
                            expected);
             }
 
