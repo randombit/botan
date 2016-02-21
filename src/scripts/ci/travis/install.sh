@@ -8,6 +8,8 @@ if [ "$BUILD_MODE" = "coverage" ]; then
     export PREFIX="/tmp"
     make -C lcov-1.11/ install
 
+    pip install --user coverage
+
     pip install --user codecov
 fi
 

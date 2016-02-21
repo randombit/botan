@@ -1310,8 +1310,27 @@ int botan_x509_cert_path_verify(botan_x509_cert_t cert, const char* dir)
 
 int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key)
    {
+   try
+      {
+      if(key == nullptr)
+         return -1;
+
+      *key = nullptr;
+
+#if defined(BOTAN_HAS_RSA)
+      std::unique_ptr<Botan::Public_Key> publicKey(safe_get(cert).subject_public_key());
+      *key = new botan_pubkey_struct(publicKey.release());
+      return 0;
+#else
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-   //return BOTAN_FFI_DO(Botan::X509_Certificate, cert, { return write_vec_output(out, out_len, cert.subject_public_key_bits()); });
+#endif
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
 int botan_x509_cert_get_issuer_dn(botan_x509_cert_t cert,

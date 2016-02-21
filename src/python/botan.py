@@ -20,6 +20,8 @@ module should be used only with the library version it accompanied.
 import sys
 from ctypes import *
 from binascii import hexlify, unhexlify, b2a_base64
+from datetime import datetime
+import time
 
 """
 Module initialization
@@ -595,25 +597,54 @@ class pk_op_key_agreement(object):
                                       lambda b,bl: botan.botan_pk_op_key_agreement(self.op, b, bl,
                                                                                    other, len(other),
                                                                                    salt, len(salt)))
-
+"""
+X.509 certificates
+"""
 class x509_cert(object):
-    def __init__(self, filename):
-        botan.botan_x509_cert_load_file.argtypes = [POINTER(c_void_p), c_char_p]
-        self.x509_cert = c_void_p(0)
-        botan.botan_x509_cert_load_file(byref(self.x509_cert), _ctype_str(filename))
+    def __init__(self, filename=None, buf=None):
+        if filename is None and buf is None:
+            raise ArgumentError("No filename or buf given")
+        if filename is not None and buf is not None:
+            raise ArgumentError("Both filename and buf given")
+        elif filename is not None:
+            botan.botan_x509_cert_load_file.argtypes = [POINTER(c_void_p), c_char_p]
+            self.x509_cert = c_void_p(0)
+            botan.botan_x509_cert_load_file(byref(self.x509_cert), _ctype_str(filename))
+        elif buf is not None:
+            botan.botan_x509_cert_load.argtypes = [POINTER(c_void_p), POINTER(c_char), c_size_t]
+            self.x509_cert = c_void_p(0)
+            botan.botan_x509_cert_load(byref(self.x509_cert), _ctype_bits(buf), len(buf))
 
     def __del__(self):
         botan.botan_x509_cert_destroy.argtypes = [c_void_p]
         botan.botan_x509_cert_destroy(self.x509_cert)
 
-    # TODO: have these convert to a python datetime
     def time_starts(self):
         botan.botan_x509_cert_get_time_starts.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_string(16, lambda b,bl: botan.botan_x509_cert_get_time_starts(self.x509_cert, b, bl))
+        starts = _call_fn_returning_string(16, lambda b,bl: botan.botan_x509_cert_get_time_starts(self.x509_cert, b, bl))
+        if len(starts) == 13:
+            # UTC time
+            struct_time = time.strptime(starts, "%y%m%d%H%M%SZ")
+        elif len(starts) == 15:
+            # Generalized time
+            struct_time = time.strptime(starts, "%Y%m%d%H%M%SZ")
+        else:
+            raise Exception("Wrong date/time format")
+
+        return datetime.fromtimestamp(time.mktime(struct_time))
 
     def time_expires(self):
         botan.botan_x509_cert_get_time_expires.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_string(16, lambda b,bl: botan.botan_x509_cert_get_time_expires(self.x509_cert, b, bl))
+        expires = _call_fn_returning_string(16, lambda b,bl: botan.botan_x509_cert_get_time_expires(self.x509_cert, b, bl))
+        if len(expires) == 13:
+            # UTC time
+            struct_time = time.strptime(expires, "%y%m%d%H%M%SZ")
+        elif len(expires) == 15:
+            # Generalized time
+            struct_time = time.strptime(expires, "%Y%m%d%H%M%SZ")
+        else:
+            raise Exception("Wrong date/time format")
+        return datetime.fromtimestamp(time.mktime(struct_time))
 
     def to_string(self):
         botan.botan_x509_cert_to_string.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
@@ -641,6 +672,17 @@ class x509_cert(object):
     def subject_public_key_bits(self):
         botan.botan_x509_cert_get_public_key_bits.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
         return _call_fn_returning_vec(0, lambda b,bl: botan.botan_x509_cert_get_public_key_bits(self.x509_cert, b, bl))
+
+    def subject_public_key(self):
+        botan.botan_x509_cert_get_public_key.argtypes = [c_void_p, c_void_p]
+        pub = c_void_p(0)
+        botan.botan_x509_cert_get_public_key(self.x509_cert, byref(pub))
+
+        return public_key(pub)
+
+    def subject_dn(self, key, index):
+        botan.botan_x509_cert_get_subject_dn.argtypes = [c_void_p, c_char_p, c_size_t, POINTER(c_char), POINTER(c_size_t)]
+        return _call_fn_returning_string(0, lambda b,bl: botan.botan_x509_cert_get_subject_dn(self.x509_cert, _ctype_str(key), index, b, bl))
 
 
 """
@@ -836,18 +878,29 @@ def test():
                   (dh_grp, hex_encode(a_key), hex_encode(b_key)))
 
     def test_certs():
-        cert = x509_cert("src/tests/data/ecc/CSCA.CSCA.csca-germany.1.crt")
+        cert = x509_cert(filename="src/tests/data/ecc/CSCA.CSCA.csca-germany.1.crt")
         print("CSCA (Germany) Certificate\nDetails:")
-        print("SHA-1 fingerprint: %s" % cert.fingerprint("SHA-1"))
-        print("Expected:          32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9")
+        print("SHA-1 fingerprint:   %s" % cert.fingerprint("SHA-1"))
+        print("Expected:            32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9")
 
-        print("Not before:        %s" % cert.time_starts())
-        print("Not after:         %s" % cert.time_expires())
+        print("Not before:          %s" % cert.time_starts())
+        print("Not after:           %s" % cert.time_expires())
 
-        print("Serial number:     %s" % hex_encode(cert.serial_number()))
-        print("Authority Key ID:  %s" % hex_encode(cert.authority_key_id()))
-        print("Subject   Key ID:  %s" % hex_encode(cert.subject_key_id()))
+        print("Serial number:       %s" % hex_encode(cert.serial_number()))
+        print("Authority Key ID:    %s" % hex_encode(cert.authority_key_id()))
+        print("Subject   Key ID:    %s" % hex_encode(cert.subject_key_id()))
         print("Public key bits:\n%s\n" % b2a_base64(cert.subject_public_key_bits()))
+
+        pubkey = cert.subject_public_key()
+        print("Public key algo:     %s" % pubkey.algo_name())
+        print("Public key strength: %s" % pubkey.estimated_strength() + " bits" )
+
+        dn_fields = ("Name", "Email", "Organization", "Organizational Unit", "Country")
+        for field in dn_fields:
+            try:
+                print("%s: %s" % (field, cert.subject_dn(field, 0)))
+            except Exception:
+                print("Field: %s not found in certificate" % field)
 
         print(cert.to_string())
 
