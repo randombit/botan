@@ -1174,7 +1174,12 @@ def gen_bakefile(lib_sources, cli_sources, cli_headers, test_sources, options):
     f.write('}\n')
 
     # global options
-    f.write('includedirs += build/include/;\n')
+    f.write('includedirs += build/include/;\n')    
+
+    if options.with_external_includedir:
+        external_inc_dir = options.with_external_includedir.replace('\\','/')
+        f.write('includedirs += "%s";\n' %external_inc_dir )
+
     if options.cpu in "x86_64":
         f.write('archs = x86_64;\n')
     else:
