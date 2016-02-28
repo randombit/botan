@@ -270,41 +270,33 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
       if(!dynamic_cast<const RSA_PrivateKey*>(server_rsa_kex_key))
          throw Internal_Error("Expected RSA key but got " + server_rsa_kex_key->algo_name());
 
+      TLS_Data_Reader reader("ClientKeyExchange", contents);
+      const std::vector<byte> encrypted_pre_master = reader.get_range<byte>(2, 0, 65535);
+
       PK_Decryptor_EME decryptor(*server_rsa_kex_key, "PKCS1v15");
 
-      Protocol_Version client_version = state.client_hello()->version();
+      const byte client_major = state.client_hello()->version().major_version();
+      const byte client_minor = state.client_hello()->version().minor_version();
 
       /*
-      * This is used as the pre-master if RSA decryption fails.
-      * Otherwise we can be used as an oracle. See Bleichenbacher
-      * "Chosen Ciphertext Attacks against Protocols Based on RSA
-      * Encryption Standard PKCS #1", Crypto 98
-      *
-      * Create it here instead if in the catch clause as otherwise we
-      * expose a timing channel WRT the generation of the fake value.
-      * Some timing channel likely remains due to exception handling
-      * and the like.
+      * PK_Decryptor::decrypt_or_random will return a random value if
+      * either the length does not match the expected value or if the
+      * version number embedded in the PMS does not match the one sent
+      * in the client hello.
       */
-      secure_vector<byte> fake_pre_master = rng.random_vec(48);
-      fake_pre_master[0] = client_version.major_version();
-      fake_pre_master[1] = client_version.minor_version();
+      const size_t expected_plaintext_size = 48;
+      const size_t expected_content_size = 2;
+      const byte expected_content_bytes[expected_content_size] = { client_major, client_minor };
+      const byte expected_content_pos[expected_content_size] = { 0, 1 };
 
-      try
-         {
-         TLS_Data_Reader reader("ClientKeyExchange", contents);
-         m_pre_master = decryptor.decrypt(reader.get_range<byte>(2, 0, 65535));
-
-         if(m_pre_master.size() != 48 ||
-            client_version.major_version() != m_pre_master[0] ||
-            client_version.minor_version() != m_pre_master[1])
-            {
-            throw Decoding_Error("Client_Key_Exchange: Secret corrupted");
-            }
-         }
-      catch(...)
-         {
-         m_pre_master = fake_pre_master;
-         }
+      m_pre_master =
+         decryptor.decrypt_or_random(encrypted_pre_master.data(),
+                                     encrypted_pre_master.size(),
+                                     expected_plaintext_size,
+                                     rng,
+                                     expected_content_bytes,
+                                     expected_content_pos,
+                                     expected_content_size);
       }
    else
       {

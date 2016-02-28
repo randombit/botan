@@ -60,7 +60,8 @@ secure_vector<byte> OAEP::pad(const byte in[], size_t in_length,
 /*
 * OAEP Unpad Operation
 */
-secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
+secure_vector<byte> OAEP::unpad(byte& valid_mask,
+                                const byte in[], size_t in_length,
                                 size_t key_length) const
    {
    /*
@@ -116,16 +117,18 @@ secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
 
    // If we never saw any non-zero byte, then it's not valid input
    bad_input |= waiting_for_delim;
-   bad_input |= CT::expand_mask<byte>(!same_mem(&input[hlen], m_Phash.data(), hlen));
+   bad_input |= CT::is_equal<byte>(same_mem(&input[hlen], m_Phash.data(), hlen), false);
 
    CT::unpoison(input.data(), input.size());
    CT::unpoison(&bad_input, 1);
    CT::unpoison(&delim_idx, 1);
 
-   if(bad_input)
-      throw Decoding_Error("Invalid OAEP encoding");
+   valid_mask = ~bad_input;
 
-   return secure_vector<byte>(input.begin() + delim_idx + 1, input.end());
+   secure_vector<byte> output(input.begin() + delim_idx + 1, input.end());
+   CT::cond_zero_mem(bad_input, output.data(), output.size());
+
+   return output;
    }
 
 /*

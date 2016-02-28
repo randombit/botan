@@ -54,9 +54,13 @@ size_t PK_Ops::Decryption_with_EME::max_input_bits() const
    return m_eme->maximum_input_size(max_raw_input_bits());
    }
 
-secure_vector<byte> PK_Ops::Decryption_with_EME::decrypt(const byte msg[], size_t length)
+secure_vector<byte>
+PK_Ops::Decryption_with_EME::decrypt(byte& valid_mask,
+                                     const byte ciphertext[],
+                                     size_t ciphertext_len)
    {
-   return m_eme->decode(raw_decrypt(msg, length), max_raw_input_bits());
+   const secure_vector<byte> raw = raw_decrypt(ciphertext, ciphertext_len);
+   return m_eme->unpad(valid_mask, raw.data(), raw.size(), max_raw_input_bits());
    }
 
 PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(const std::string& kdf)

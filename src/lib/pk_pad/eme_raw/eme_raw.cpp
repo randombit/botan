@@ -18,9 +18,11 @@ secure_vector<byte> EME_Raw::pad(const byte in[], size_t in_length,
    return secure_vector<byte>(in, in + in_length);
    }
 
-secure_vector<byte> EME_Raw::unpad(const byte in[], size_t in_length,
+secure_vector<byte> EME_Raw::unpad(byte& valid_mask,
+                                   const byte in[], size_t in_length,
                                    size_t) const
    {
+   valid_mask = 0xFF;
    return secure_vector<byte>(in, in + in_length);
    }
 

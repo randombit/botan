@@ -68,7 +68,9 @@ class BOTAN_DLL Decryption
 
       virtual size_t max_input_bits() const = 0;
 
-      virtual secure_vector<byte> decrypt(const byte msg[],  size_t msg_len) = 0;
+      virtual secure_vector<byte> decrypt(byte& valid_mask,
+                                          const byte ciphertext[],
+                                          size_t ciphertext_len) = 0;
 
       virtual ~Decryption() {}
    };

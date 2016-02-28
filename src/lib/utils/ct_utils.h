@@ -100,6 +100,12 @@ inline T select(T mask, T from0, T from1)
    return (from0 & mask) | (from1 & ~mask);
    }
 
+template<typename PredT, typename ValT>
+inline ValT val_or_zero(PredT pred_val, ValT val)
+   {
+   return select(CT::expand_mask<ValT>(pred_val), val, static_cast<ValT>(0));
+   }
+
 template<typename T>
 inline T is_zero(T x)
    {
@@ -127,12 +133,28 @@ inline void conditional_copy_mem(T value,
                                  T* to,
                                  const T* from0,
                                  const T* from1,
-                                 size_t bytes)
+                                 size_t elems)
    {
    const T mask = CT::expand_mask(value);
 
-   for(size_t i = 0; i != bytes; ++i)
+   for(size_t i = 0; i != elems; ++i)
+      {
       to[i] = CT::select(mask, from0[i], from1[i]);
+      }
+   }
+
+template<typename T>
+inline void cond_zero_mem(T cond,
+                          T* array,
+                          size_t elems)
+   {
+   const T mask = CT::expand_mask(cond);
+   const T zero(0);
+
+   for(size_t i = 0; i != elems; ++i)
+      {
+      array[i] = CT::select(mask, zero, array[i]);
+      }
    }
 
 template<typename T>

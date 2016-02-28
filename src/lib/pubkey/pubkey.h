@@ -81,35 +81,71 @@ class BOTAN_DLL PK_Decryptor
    {
    public:
       /**
-      * Decrypt a ciphertext.
+      * Decrypt a ciphertext, throwing an exception if the input
+      * seems to be invalid (eg due to an accidental or malicious
+      * error in the ciphertext).
+      *
       * @param in the ciphertext as a byte array
       * @param length the length of the above byte array
       * @return decrypted message
       */
-      secure_vector<byte> decrypt(const byte in[], size_t length) const
-         {
-         return dec(in, length);
-         }
+      secure_vector<byte> decrypt(const byte in[], size_t length) const;
 
       /**
-      * Decrypt a ciphertext.
+      * Same as above, but taking a vector
       * @param in the ciphertext
       * @return decrypted message
       */
       template<typename Alloc>
       secure_vector<byte> decrypt(const std::vector<byte, Alloc>& in) const
          {
-         return dec(in.data(), in.size());
+         return decrypt(in.data(), in.size());
          }
 
+      /**
+      * Decrypt a ciphertext. If the ciphertext is invalid (eg due to
+      * invalid padding) or is not the expected length, instead
+      * returns a random string of the expected length. Use to avoid
+      * oracle attacks, especially against PKCS #1 v1.5 decryption.
+      */
+      secure_vector<byte>
+      decrypt_or_random(const byte in[],
+                        size_t length,
+                        size_t expected_pt_len,
+                        RandomNumberGenerator& rng) const;
+
+      /**
+      * Decrypt a ciphertext. If the ciphertext is invalid (eg due to
+      * invalid padding) or is not the expected length, instead
+      * returns a random string of the expected length. Use to avoid
+      * oracle attacks, especially against PKCS #1 v1.5 decryption.
+      *
+      * Additionally checks (also in const time) that:
+      *    contents[required_content_offsets[i]] == required_content_bytes[i]
+      * for 0 <= i < required_contents
+      *
+      * Used for example in TLS, which encodes the client version in
+      * the content bytes: if there is any timing variation the version
+      * check can be used as an oracle to recover the key.
+      */
+      secure_vector<byte>
+      decrypt_or_random(const byte in[],
+                        size_t length,
+                        size_t expected_pt_len,
+                        RandomNumberGenerator& rng,
+                        const byte required_content_bytes[],
+                        const byte required_content_offsets[],
+                        size_t required_contents) const;
+
       PK_Decryptor() {}
-      virtual ~PK_Decryptor() {}
+      virtual ~PK_Decryptor() = default;
 
       PK_Decryptor(const PK_Decryptor&) = delete;
       PK_Decryptor& operator=(const PK_Decryptor&) = delete;
 
    private:
-      virtual secure_vector<byte> dec(const byte[], size_t) const = 0;
+      virtual secure_vector<byte> do_decrypt(byte& valid_mask,
+                                             const byte in[], size_t in_len) const = 0;
    };
 
 /**
@@ -436,7 +472,9 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
                        const std::string& eme,
                        const std::string& provider = "");
    private:
-      secure_vector<byte> dec(const byte[], size_t) const override;
+      secure_vector<byte> do_decrypt(byte& valid_mask,
+                                     const byte in[],
+                                     size_t in_len) const override;
 
       std::unique_ptr<PK_Ops::Decryption> m_op;
    };

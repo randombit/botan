@@ -37,7 +37,8 @@ secure_vector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
 /*
 * PKCS1 Unpad Operation
 */
-secure_vector<byte> EME_PKCS1v15::unpad(const byte in[], size_t inlen,
+secure_vector<byte> EME_PKCS1v15::unpad(byte& valid_mask,
+                                        const byte in[], size_t inlen,
                                         size_t key_len) const
    {
    if(inlen != key_len / 8 || inlen < 10)
@@ -64,13 +65,13 @@ secure_vector<byte> EME_PKCS1v15::unpad(const byte in[], size_t inlen,
    bad_input_m |= ~seen_zero_m;
 
    CT::unpoison(in, inlen);
-   CT::unpoison(&bad_input_m, 1);
-   CT::unpoison(&delim_idx, 1);
+   CT::unpoison(bad_input_m);
+   CT::unpoison(delim_idx);
 
-   if(bad_input_m)
-      throw Decoding_Error("Invalid PKCS #1 v1.5 encryption padding");
-
-   return secure_vector<byte>(&in[delim_idx + 1], &in[inlen]);
+   secure_vector<byte> output(&in[delim_idx + 1], &in[inlen]);
+   CT::cond_zero_mem(bad_input_m, output.data(), output.size());
+   valid_mask = ~bad_input_m;
+   return output;
    }
 
 /*

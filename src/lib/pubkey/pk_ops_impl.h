@@ -37,7 +37,8 @@ class Decryption_with_EME : public Decryption
    public:
       size_t max_input_bits() const override;
 
-      secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override;
+      secure_vector<byte> decrypt(byte& valid_mask,
+                                  const byte msg[], size_t msg_len) override;
 
       ~Decryption_with_EME();
    protected:

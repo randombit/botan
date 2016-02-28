@@ -52,7 +52,8 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
                       size_t mac_key_len = 20);
 
    private:
-      secure_vector<byte> dec(const byte[], size_t) const override;
+      secure_vector<byte> do_decrypt(byte& valid_mask,
+                                     const byte in[], size_t in_len) const override;
 
       std::vector<byte> m_my_key;
 
