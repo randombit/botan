@@ -372,6 +372,10 @@ def process_command_line(args):
                           help=optparse.SUPPRESS_HELP)
     mods_group.add_option('--minimized-build', action='store_true', dest='no_autoload',
                           help='minimize build')
+    mods_group.add_option('--enable-modules-file', dest='enabled_modules_file',
+                          metavar='FILE', help='enable specific modules which are listed in FILE')
+    mods_group.add_option('--no-autoload-dependencies', action='store_true', default=False,
+                          help='no autoload of module dependencies')
 
     # Should be derived from info.txt but this runs too early
     third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib', 'tpm']
@@ -451,6 +455,9 @@ def process_command_line(args):
         if modules is None:
             return []
         return sorted(set(flatten([s.split(',') for s in modules])))
+
+    if options.enabled_modules and options.enabled_modules_file:
+        raise Exception('--enable-modules and --enable-modules-file are not compatible with each other.')
 
     options.enabled_modules = parse_multiple_enable(options.enabled_modules)
     options.disabled_modules = parse_multiple_enable(options.disabled_modules)
@@ -1417,15 +1424,14 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
     for (modname, module) in modules.items():
         if modname in options.disabled_modules:
             cannot_use_because(modname, 'disabled by user')
-        elif modname in options.enabled_modules:
-            to_load.append(modname) # trust the user
-
         elif not module.compatible_os(options.os):
             cannot_use_because(modname, 'incompatible OS')
         elif not module.compatible_compiler(ccinfo, archinfo.basename):
             cannot_use_because(modname, 'incompatible compiler')
         elif not module.compatible_cpu(archinfo, options):
             cannot_use_because(modname, 'incompatible CPU')
+        elif modname in options.enabled_modules:
+            to_load.append(modname)
 
         else:
             if module.load_on == 'never':
@@ -1441,22 +1447,24 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
                 else:
                     cannot_use_because(modname, 'requires external dependency')
             elif module.load_on == 'dep':
-                maybe_dep.append(modname)
+                if options.no_autoload_dependencies is False:
+                    maybe_dep.append(modname)
 
             elif module.load_on == 'always':
                 to_load.append(modname)
 
             elif module.load_on == 'auto':
-                if options.no_autoload:
+                if options.no_autoload and options.no_autoload_dependencies is False:
                     maybe_dep.append(modname)
-                else:
+                if options.no_autoload_dependencies is False and options.no_autoload is False:
                     to_load.append(modname)
             else:
                 logging.warning('Unknown load_on %s in %s' % (
                     module.load_on, modname))
 
     dependency_failure = True
-
+    missing_dependencies = {}
+    one_of_dependencies = {}
     while dependency_failure:
         dependency_failure = False
         for modname in to_load:
@@ -1467,30 +1475,76 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
                     if dep_met is True:
                         break
 
-                    if mod in to_load:
+                    if modname == mod: # base needs base, do not show this as error
+                        dep_met = True
+                    elif mod in to_load:
                         dep_met = True
                     elif mod in maybe_dep:
                         maybe_dep.remove(mod)
                         to_load.append(mod)
                         dep_met = True
 
-                if dep_met == False:
+                if dep_met is False:
                     dependency_failure = True
                     if modname in to_load:
                         to_load.remove(modname)
                     if modname in maybe_dep:
                         maybe_dep.remove(modname)
                     cannot_use_because(modname, 'dependency failure')
+                    if len(deplist) > 1:
+                        one_of_dependencies.setdefault(modname, []).append(' '.join(deplist))
+                    else:
+                        missing_dependencies.setdefault(modname, []).append(deplist[0])
+
+        # break here if --no-autoload-dependecies was specified
+        if options.no_autoload_dependencies:
+            break
 
     for not_a_dep in maybe_dep:
         cannot_use_because(not_a_dep, 'loaded only if needed by dependency')
+
+    # show the user which dependencies are missing
+    if options.no_autoload_dependencies:
+        dep_error = False
+        missing_dep_modules = []
+        for mod in missing_dependencies:
+            logging.warn('Missing dependencies for module %s - %s', mod, ' '.join(missing_dependencies[mod]))
+            missing_dep_modules += missing_dependencies[mod]
+            dep_error = True
+
+        for mod in one_of_dependencies:
+            logging.warn('One of the following dependencies is missing for module %s - %s', mod, ' '.join(one_of_dependencies[mod]))
+            missing_dep_modules += one_of_dependencies[mod]
+            dep_error = True
+
+        if dep_error:
+            # if missing dependency is in enabled_modules, tell the user why the loading failed
+            missing_dep_modules = sorted(set(flatten([s.split(' ') for s in missing_dep_modules])))
+            for missing_dep in missing_dep_modules:
+                if missing_dep in options.enabled_modules:
+                    for reason in sorted(not_using_because.keys()):
+                        if missing_dep in not_using_because[reason]:
+                            if reason == 'dependency failure':
+                                logging.warn('Missing dependencies for module %s - %s', missing_dep, ' '.join(missing_dependencies[missing_dep]))
+                            else:
+                                logging.warn('Module "%s" could not be loaded: %s', missing_dep, reason)
+            # fail hard
+            logging.error('There are unresolved dependencies')
 
     for reason in sorted(not_using_because.keys()):
         disabled_mods = sorted(set([mod for mod in not_using_because[reason]]))
 
         if disabled_mods != []:
-            logging.info('Skipping, %s - %s' % (
-                reason, ' '.join(disabled_mods)))
+            for mod in disabled_mods:
+                if mod in options.enabled_modules:
+                    # fail hard
+                    logging.error('Failed to load explicitly enabled module %s - %s' % (mod, reason))
+
+            if options.no_autoload_dependencies is False:
+                logging.info('Skipping, %s - %s' % (reason, ' '.join(disabled_mods)))
+
+    if to_load == []:
+        logging.error('No modules to load')
 
     for mod in sorted(to_load):
         if mod.startswith('mp_'):
@@ -1947,6 +2001,45 @@ def main(argv = None):
     if options.build_shared_lib and not osinfo.building_shared_supported:
         raise Exception('Botan does not support building as shared library on the target os. '
                 'Build static using --disable-shared.')
+
+    if options.no_autoload_dependencies is True:
+        logging.info('Autoloading of dependencies disabled')
+    else:
+        logging.info('Autoloading of dependencies enabled.')
+
+    if options.enabled_modules_file:
+        logging.info('Using module policy file from %s', options.enabled_modules_file)
+
+        options.enabled_modules = slurp_file(options.enabled_modules_file)
+
+        # Enable OS and architecture specific modules
+        if 'windows' in options.os:
+            options.enabled_modules = options.enabled_modules.replace('#Windows ', '')
+            if 'x86_32' in options.arch:
+                options.enabled_modules = options.enabled_modules.replace('#MSVC-x86 ', '')
+            else:
+                options.enabled_modules = options.enabled_modules.replace('#MSVC-x64 ', '')
+        elif 'linux' in options.os:
+            options.enabled_modules = options.enabled_modules.replace('#Linux ', '')
+            if 'x86_32' in options.arch:
+                options.enabled_modules = options.enabled_modules.replace('#Clang-gcc-x86 ', '')
+            else:
+                options.enabled_modules = options.enabled_modules.replace('#Clang-gcc-x64 ', '')
+        else:
+            raise Exception('--enable-modules-file currently not implemented for other OSes than Windows and Linux.')
+
+        options.enabled_modules = options.enabled_modules.split('\n')
+
+        # remove comments
+        options.enabled_modules = [line for line in options.enabled_modules if not line.startswith('#')]
+        # remove empty lines
+        options.enabled_modules = [line for line in options.enabled_modules if line != '']
+
+        options.enabled_modules = sorted(set((options.enabled_modules)))
+
+        if options.no_autoload_dependencies is False:
+            logging.warn('Autoloading of dependencies is enabled. Therefore probably more modules get loaded than those listed in your module policy file. '
+                         'To prevent this specifiy "--no-autoload-dependencies"')
 
     loaded_mods = choose_modules_to_use(modules, arch, cc, options)
 
