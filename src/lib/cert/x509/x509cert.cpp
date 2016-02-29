@@ -124,6 +124,7 @@ void X509_Certificate::force_decode()
 
       BER_Decoder(v3_exts_data.value).decode(extensions).verify_end();
 
+      m_v3_extensions = extensions.extensions_raw();
       extensions.contents_to(m_subject, m_issuer);
       }
    else if(v3_exts_data.type_tag != NO_OBJECT)
@@ -301,6 +302,11 @@ std::vector<std::string> X509_Certificate::ex_constraints() const
 std::vector<std::string> X509_Certificate::policies() const
    {
    return lookup_oids(m_subject.get("X509v3.CertificatePolicies"));
+   }
+
+std::map<OID, std::pair<std::vector<byte>, bool>> X509_Certificate::v3_extensions() const
+   {
+   return m_v3_extensions;
    }
 
 std::string X509_Certificate::ocsp_responder() const
