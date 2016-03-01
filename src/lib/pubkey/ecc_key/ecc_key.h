@@ -96,12 +96,30 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
                                 public virtual Private_Key
    {
    public:
-     EC_PrivateKey(RandomNumberGenerator& rng,
-                   const EC_Group& domain,
-                   const BigInt& private_key);
+      /*
+      * If x=0, creates a new private key in the domain
+      * using the given rng. If with_modular_inverse is set,
+      * the public key will be calculated by multiplying
+      * the base point with the modular inverse of
+      * x (as in ECGDSA and ECKCDSA), otherwise by
+      * multiplying directly with x (as in ECDSA).
+      */
+      EC_PrivateKey(RandomNumberGenerator& rng,
+                    const EC_Group& domain,
+                    const BigInt& x,
+                    bool with_modular_inverse=false);
 
+      /*
+      * Creates a new private key object from the given
+      * key_bits. If with_modular_inverse is set,
+      * the public key will be calculated by multiplying
+      * the base point with the modular inverse of
+      * x (as in ECGDSA and ECKCDSA), otherwise by
+      * multiplying directly with x (as in ECDSA).
+      */
       EC_PrivateKey(const AlgorithmIdentifier& alg_id,
-                    const secure_vector<byte>& key_bits);
+                    const secure_vector<byte>& key_bits,
+                    bool with_modular_inverse=false);
 
       secure_vector<byte> pkcs8_private_key() const override;
 

@@ -30,6 +30,7 @@ dh
 rsa
 dsa
 ecdsa
+ecgdsa
 ecdh
 
 # rng
