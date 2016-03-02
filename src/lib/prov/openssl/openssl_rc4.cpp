@@ -43,7 +43,7 @@ class OpenSSL_RC4 : public StreamCipher
          return Key_Length_Specification(1, 32);
          }
 
-      OpenSSL_RC4(size_t skip = 0) : m_skip(skip) { clear(); }
+      explicit OpenSSL_RC4(size_t skip = 0) : m_skip(skip) { clear(); }
       ~OpenSSL_RC4() { clear(); }
    private:
       void cipher(const byte in[], byte out[], size_t length) override

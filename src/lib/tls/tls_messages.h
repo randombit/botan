@@ -46,7 +46,7 @@ class Hello_Verify_Request final : public Handshake_Message
 
       std::vector<byte> cookie() const { return m_cookie; }
 
-      Hello_Verify_Request(const std::vector<byte>& buf);
+      explicit Hello_Verify_Request(const std::vector<byte>& buf);
 
       Hello_Verify_Request(const std::vector<byte>& client_hello_bits,
                            const std::string& client_identity,
@@ -178,7 +178,7 @@ class Client_Hello final : public Handshake_Message
                    const Session& resumed_session,
                    const std::vector<std::string>& next_protocols);
 
-      Client_Hello(const std::vector<byte>& buf);
+      explicit Client_Hello(const std::vector<byte>& buf);
 
    private:
       std::vector<byte> serialize() const override;
@@ -267,7 +267,7 @@ class Server_Hello final : public Handshake_Message
                    u16bit ciphersuite,
                    byte compression,
                    bool offer_session_ticket,
-                   const std::string next_protocol);
+                   const std::string& next_protocol);
 
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,
@@ -279,7 +279,7 @@ class Server_Hello final : public Handshake_Message
                    bool offer_session_ticket,
                    const std::string& next_protocol);
 
-      Server_Hello(const std::vector<byte>& buf);
+      explicit Server_Hello(const std::vector<byte>& buf);
    private:
       std::vector<byte> serialize() const override;
 
@@ -341,7 +341,7 @@ class Certificate final : public Handshake_Message
                   Handshake_Hash& hash,
                   const std::vector<X509_Certificate>& certs);
 
-      Certificate(const std::vector<byte>& buf);
+      explicit Certificate(const std::vector<byte>& buf);
    private:
       std::vector<byte> serialize() const override;
 
@@ -431,7 +431,7 @@ class Finished final : public Handshake_Message
                Handshake_State& state,
                Connection_Side side);
 
-      Finished(const std::vector<byte>& buf);
+      explicit Finished(const std::vector<byte>& buf);
    private:
       std::vector<byte> serialize() const override;
 
@@ -446,8 +446,8 @@ class Hello_Request final : public Handshake_Message
    public:
       Handshake_Type type() const override { return HELLO_REQUEST; }
 
-      Hello_Request(Handshake_IO& io);
-      Hello_Request(const std::vector<byte>& buf);
+      explicit Hello_Request(Handshake_IO& io);
+      explicit Hello_Request(const std::vector<byte>& buf);
    private:
       std::vector<byte> serialize() const override;
    };
@@ -514,7 +514,7 @@ class Server_Hello_Done final : public Handshake_Message
       Handshake_Type type() const override { return SERVER_HELLO_DONE; }
 
       Server_Hello_Done(Handshake_IO& io, Handshake_Hash& hash);
-      Server_Hello_Done(const std::vector<byte>& buf);
+      explicit Server_Hello_Done(const std::vector<byte>& buf);
    private:
       std::vector<byte> serialize() const override;
    };
@@ -538,7 +538,7 @@ class New_Session_Ticket final : public Handshake_Message
       New_Session_Ticket(Handshake_IO& io,
                          Handshake_Hash& hash);
 
-      New_Session_Ticket(const std::vector<byte>& buf);
+      explicit New_Session_Ticket(const std::vector<byte>& buf);
    private:
       std::vector<byte> serialize() const override;
 

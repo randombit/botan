@@ -56,7 +56,7 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, byte>
 class LZMA_Compression_Stream : public LZMA_Stream
    {
    public:
-      LZMA_Compression_Stream(size_t level)
+      explicit LZMA_Compression_Stream(size_t level)
          {
          lzma_ret rc = ::lzma_easy_encoder(streamp(), level, LZMA_CHECK_CRC64);
 

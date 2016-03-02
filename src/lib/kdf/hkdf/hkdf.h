@@ -21,7 +21,7 @@ namespace Botan {
 class BOTAN_DLL HKDF final : public KDF
    {
    public:
-      HKDF(MessageAuthenticationCode* prf) : m_prf(prf) {}
+      explicit HKDF(MessageAuthenticationCode* prf) : m_prf(prf) {}
 
       static HKDF* make(const Spec& spec);
 

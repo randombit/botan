@@ -48,9 +48,9 @@ class BOTAN_DLL Certificate_Store_In_Memory : public Certificate_Store
       * Attempt to parse all files in dir (including subdirectories)
       * as certificates. Ignores errors.
       */
-      Certificate_Store_In_Memory(const std::string& dir);
+      explicit Certificate_Store_In_Memory(const std::string& dir);
 
-      Certificate_Store_In_Memory(const X509_Certificate& cert);
+      explicit Certificate_Store_In_Memory(const X509_Certificate& cert);
 
       Certificate_Store_In_Memory() {}
 
@@ -74,7 +74,7 @@ class BOTAN_DLL Certificate_Store_In_Memory : public Certificate_Store
 class BOTAN_DLL Certificate_Store_Overlay : public Certificate_Store
    {
    public:
-      Certificate_Store_Overlay(const std::vector<X509_Certificate>& certs) :
+      explicit Certificate_Store_Overlay(const std::vector<X509_Certificate>& certs) :
          m_certs(certs) {}
 
       std::vector<X509_DN> all_subjects() const override;

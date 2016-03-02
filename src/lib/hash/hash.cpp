@@ -98,7 +98,7 @@ namespace Botan {
 std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
                                                    const std::string& provider)
    {
-   return std::unique_ptr<HashFunction>(make_a<HashFunction>(algo_spec, provider));
+   return std::unique_ptr<HashFunction>(make_a<HashFunction>(Botan::HashFunction::Spec(algo_spec), provider));
    }
 
 std::vector<std::string> HashFunction::providers(const std::string& algo_spec)

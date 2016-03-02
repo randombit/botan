@@ -140,13 +140,10 @@ class DSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
       DSA_Verification_Operation(const DSA_PublicKey& dsa,
                                  const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
-         m_q(dsa.group_q()), m_y(dsa.get_y())
-         {
-         m_powermod_g_p = Fixed_Base_Power_Mod(dsa.group_g(), dsa.group_p());
-         m_powermod_y_p = Fixed_Base_Power_Mod(m_y, dsa.group_p());
-         m_mod_p = Modular_Reducer(dsa.group_p());
-         m_mod_q = Modular_Reducer(dsa.group_q());
-         }
+         m_q(dsa.group_q()), m_y(dsa.get_y()), m_powermod_g_p{Fixed_Base_Power_Mod(dsa.group_g(), dsa.group_p())},
+         m_powermod_y_p{Fixed_Base_Power_Mod(m_y, dsa.group_p())}, m_mod_p{Modular_Reducer(dsa.group_p())},
+         m_mod_q{Modular_Reducer(dsa.group_q())}
+         {}
 
       size_t message_parts() const override { return 2; }
       size_t message_part_size() const override { return m_q.bytes(); }

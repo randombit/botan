@@ -34,10 +34,15 @@ Power_Mod::Power_Mod(const Power_Mod& other)
 */
 Power_Mod& Power_Mod::operator=(const Power_Mod& other)
    {
-   delete m_core;
-   m_core = nullptr;
-   if(other.m_core)
-      m_core = other.m_core->copy();
+   if(this != &other)
+      {
+      delete m_core;
+      m_core = nullptr;
+      if(other.m_core)
+         {
+         m_core = other.m_core->copy();
+         }
+      }
    return (*this);
    }
 

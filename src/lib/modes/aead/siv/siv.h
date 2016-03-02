@@ -43,7 +43,7 @@ class BOTAN_DLL SIV_Mode : public AEAD_Mode
       size_t tag_size() const override { return 16; }
 
    protected:
-      SIV_Mode(BlockCipher* cipher);
+      explicit SIV_Mode(BlockCipher* cipher);
 
       StreamCipher& ctr() { return *m_ctr; }
 
@@ -73,7 +73,7 @@ class BOTAN_DLL SIV_Encryption final : public SIV_Mode
       /**
       * @param cipher a block cipher
       */
-      SIV_Encryption(BlockCipher* cipher) : SIV_Mode(cipher) {}
+      explicit SIV_Encryption(BlockCipher* cipher) : SIV_Mode(cipher) {}
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
@@ -92,7 +92,7 @@ class BOTAN_DLL SIV_Decryption final : public SIV_Mode
       /**
       * @param cipher a 128-bit block cipher
       */
-      SIV_Decryption(BlockCipher* cipher) : SIV_Mode(cipher) {}
+      explicit SIV_Decryption(BlockCipher* cipher) : SIV_Mode(cipher) {}
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 

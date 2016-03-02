@@ -29,7 +29,7 @@ class BOTAN_DLL SAFER_SK final : public Block_Cipher_Fixed_Params<8, 16>
       * @param rounds the number of rounds to use - must be between 1
       * and 13
       */
-      SAFER_SK(size_t rounds);
+      explicit SAFER_SK(size_t rounds);
    private:
       void key_schedule(const byte[], size_t) override;
 

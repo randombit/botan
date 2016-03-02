@@ -40,7 +40,7 @@ class BOTAN_DLL CMAC final : public MessageAuthenticationCode
       /**
       * @param cipher the underlying block cipher to use
       */
-      CMAC(BlockCipher* cipher);
+      explicit CMAC(BlockCipher* cipher);
 
       static CMAC* make(const Spec& spec);
 

@@ -297,7 +297,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * Construct a Pipe from a list of filters
       * @param filters the set of filters to use
       */
-      Pipe(std::initializer_list<Filter*> filters);
+      explicit Pipe(std::initializer_list<Filter*> filters);
 
       Pipe(const Pipe&) = delete;
       Pipe& operator=(const Pipe&) = delete;

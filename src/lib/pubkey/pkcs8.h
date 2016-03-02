@@ -19,7 +19,7 @@ namespace Botan {
 */
 struct BOTAN_DLL PKCS8_Exception : public Decoding_Error
    {
-   PKCS8_Exception(const std::string& error) :
+   explicit PKCS8_Exception(const std::string& error) :
       Decoding_Error("PKCS #8: " + error) {}
    };
 

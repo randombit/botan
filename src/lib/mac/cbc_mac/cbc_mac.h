@@ -32,7 +32,7 @@ class BOTAN_DLL CBC_MAC final : public MessageAuthenticationCode
       /**
       * @param cipher the underlying block cipher to use
       */
-      CBC_MAC(BlockCipher* cipher);
+      explicit CBC_MAC(BlockCipher* cipher);
 
       static CBC_MAC* make(const Spec& spec);
    private:

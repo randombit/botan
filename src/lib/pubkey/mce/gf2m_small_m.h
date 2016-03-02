@@ -25,7 +25,7 @@ typedef u16bit gf2m;
 class BOTAN_DLL GF2m_Field
    {
    public:
-      GF2m_Field(size_t extdeg);
+      explicit GF2m_Field(size_t extdeg);
 
       gf2m gf_mul(gf2m x, gf2m y) const
          {

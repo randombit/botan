@@ -15,7 +15,7 @@ namespace Botan {
 class L_computer
    {
    public:
-      L_computer(const BlockCipher& cipher)
+      explicit L_computer(const BlockCipher& cipher)
          {
          m_L_star.resize(cipher.block_size());
          cipher.encrypt(m_L_star);

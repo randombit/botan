@@ -28,7 +28,7 @@ class BOTAN_DLL Parallel final : public HashFunction
       /**
       * @param hashes a set of hashes to compute in parallel
       */
-      Parallel(const std::vector<HashFunction*>& hashes);
+      explicit Parallel(const std::vector<HashFunction*>& hashes);
 
       Parallel(const Parallel&) = delete;
       Parallel& operator=(const Parallel&) = delete;

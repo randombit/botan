@@ -76,7 +76,7 @@ class BOTAN_DLL Base64_Decoder final : public Filter
       * @param checking the type of checking that shall be performed by
       * the decoder
       */
-      Base64_Decoder(Decoder_Checking checking = NONE);
+      explicit Base64_Decoder(Decoder_Checking checking = NONE);
    private:
       const Decoder_Checking m_checking;
       std::vector<byte> m_in, m_out;

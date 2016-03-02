@@ -65,7 +65,7 @@ class BOTAN_DLL Session
       /**
       * Load a session from PEM representation (created by PEM_encode)
       */
-      Session(const std::string& pem);
+      explicit Session(const std::string& pem);
 
       /**
       * Encode this session data for storage

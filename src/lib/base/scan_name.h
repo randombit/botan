@@ -26,12 +26,12 @@ class BOTAN_DLL SCAN_Name
       /**
       * @param algo_spec A SCAN-format name
       */
-      SCAN_Name(const char* algo_spec);
+      explicit SCAN_Name(const char* algo_spec);
 
       /**
       * @param algo_spec A SCAN-format name
       */
-      SCAN_Name(std::string algo_spec);
+      explicit SCAN_Name(std::string algo_spec);
 
       /**
       * @param algo_spec A SCAN-format name

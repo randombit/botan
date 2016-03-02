@@ -33,7 +33,7 @@ class BOTAN_DLL Hex_Encoder final : public Filter
       * Create a hex encoder.
       * @param the_case the case to use in the encoded strings.
       */
-      Hex_Encoder(Case the_case);
+      explicit Hex_Encoder(Case the_case);
 
       /**
       * Create a hex encoder.
@@ -69,7 +69,7 @@ class BOTAN_DLL Hex_Decoder final : public Filter
       * character checking.
       * @param checking the checking to use during decoding.
       */
-      Hex_Decoder(Decoder_Checking checking = NONE);
+      explicit Hex_Decoder(Decoder_Checking checking = NONE);
    private:
       const Decoder_Checking m_checking;
       std::vector<byte> m_in, m_out;

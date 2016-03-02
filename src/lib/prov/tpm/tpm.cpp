@@ -388,7 +388,6 @@ class TPM_Signing_Operation : public PK_Ops::Signature
          {
          if(auto* key = dynamic_cast<const TPM_PrivateKey*>(&spec.key()))
             {
-            const std::string padding = spec.padding();
             const std::string hash = "SHA-256"; // TODO
             return new TPM_Signing_Operation(*key, hash);
             }

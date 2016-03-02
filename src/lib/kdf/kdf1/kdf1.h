@@ -27,7 +27,7 @@ class BOTAN_DLL KDF1 final : public KDF
                  const byte secret[], size_t secret_len,
                  const byte salt[], size_t salt_len) const override;
 
-      KDF1(HashFunction* h) : m_hash(h) {}
+      explicit KDF1(HashFunction* h) : m_hash(h) {}
    private:
       std::unique_ptr<HashFunction> m_hash;
    };
