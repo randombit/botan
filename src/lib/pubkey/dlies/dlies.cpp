@@ -21,6 +21,8 @@ DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key& key,
    m_mac(mac_obj),
    m_mac_keylen(mac_kl)
    {
+   BOTAN_ASSERT_NONNULL(kdf_obj);
+   BOTAN_ASSERT_NONNULL(mac_obj);
    m_my_key = key.public_value();
    }
 

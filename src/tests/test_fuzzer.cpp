@@ -6,12 +6,12 @@
 
 #include "tests.h"
 #include <chrono>
+#include <botan/internal/filesystem.h>
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
   #include <botan/x509cert.h>
   #include <botan/x509_crl.h>
   #include <botan/base64.h>
-  #include <botan/internal/filesystem.h>
 #endif
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
@@ -61,8 +61,8 @@ class Fuzzer_Input_Tests : public Test
             {
             try
                {
-               std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(vec_file, Test::rng()));
-               Botan::X509_Certificate cert(vec_file);
+               std::unique_ptr<Botan::Private_Key> key(
+                  Botan::PKCS8::load_key(vec_file, Test::rng()));
                }
             catch(std::exception&) {}
 
