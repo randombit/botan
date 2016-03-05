@@ -136,7 +136,7 @@ class Timer
       struct Timer_Scope
          {
          public:
-            Timer_Scope(Timer& timer) : m_timer(timer) { m_timer.start(); }
+            explicit Timer_Scope(Timer& timer) : m_timer(timer) { m_timer.start(); }
             ~Timer_Scope() { m_timer.stop(); }
          private:
             Timer& m_timer;
@@ -871,7 +871,7 @@ class Speed final : public Command
             Timer keygen_timer(nm, provider, "keygen");
 
             std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
-               return new Botan::ECDSA_PrivateKey(rng(), grp);
+               return new Botan::ECDSA_PrivateKey(rng(), Botan::EC_Group(grp));
                }));
 
             output() << Timer::result_string_ops(keygen_timer);
@@ -892,10 +892,10 @@ class Speed final : public Command
             Timer keygen_timer(nm, provider, "keygen");
 
             std::unique_ptr<Botan::PK_Key_Agreement_Key> key1(keygen_timer.run([&] {
-               return new Botan::DH_PrivateKey(rng(), grp);
+               return new Botan::DH_PrivateKey(rng(), Botan::DL_Group(grp));
                }));
             std::unique_ptr<Botan::PK_Key_Agreement_Key> key2(keygen_timer.run([&] {
-               return new Botan::DH_PrivateKey(rng(), grp);
+               return new Botan::DH_PrivateKey(rng(), Botan::DL_Group(grp));
                }));
 
             output() << Timer::result_string_ops(keygen_timer);
@@ -915,10 +915,10 @@ class Speed final : public Command
             Timer keygen_timer(nm, provider, "keygen");
 
             std::unique_ptr<Botan::PK_Key_Agreement_Key> key1(keygen_timer.run([&] {
-               return new Botan::ECDH_PrivateKey(rng(), grp);
+               return new Botan::ECDH_PrivateKey(rng(), Botan::EC_Group(grp));
                }));
             std::unique_ptr<Botan::PK_Key_Agreement_Key> key2(keygen_timer.run([&] {
-               return new Botan::ECDH_PrivateKey(rng(), grp);
+               return new Botan::ECDH_PrivateKey(rng(), Botan::EC_Group(grp));
                }));
 
             output() << Timer::result_string_ops(keygen_timer);

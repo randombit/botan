@@ -49,12 +49,12 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 
       void clear() throw() override {}
 
-      Fixed_Output_RNG(const std::vector<uint8_t>& in)
+      explicit Fixed_Output_RNG(const std::vector<uint8_t>& in)
          {
          m_buf.insert(m_buf.end(), in.begin(), in.end());
          }
 
-      Fixed_Output_RNG(const std::string& in_str)
+      explicit Fixed_Output_RNG(const std::string& in_str)
          {
          std::vector<uint8_t> in = Botan::hex_decode(in_str);
          m_buf.insert(m_buf.end(), in.begin(), in.end());

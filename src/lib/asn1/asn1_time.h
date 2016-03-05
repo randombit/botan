@@ -41,7 +41,7 @@ class BOTAN_DLL X509_Time final : public ASN1_Object
       X509_Time() {}
 
       /// Create a X509_Time from a time point
-      X509_Time(const std::chrono::system_clock::time_point& time);
+      explicit X509_Time(const std::chrono::system_clock::time_point& time);
 
       /// Create an X509_Time from string
       X509_Time(const std::string& t_spec, ASN1_Tag tag);

@@ -65,7 +65,7 @@ namespace {
 class FFI_Error : public Botan::Exception
    {
    public:
-      FFI_Error(const std::string& what) : Exception("FFI error", what) {}
+      explicit FFI_Error(const std::string& what) : Exception("FFI error", what) {}
    };
 
 template<typename T, uint32_t MAGIC>

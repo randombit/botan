@@ -79,7 +79,7 @@ class Server_Name_Indicator final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      Server_Name_Indicator(const std::string& host_name) :
+      explicit Server_Name_Indicator(const std::string& host_name) :
          m_sni_host_name(host_name) {}
 
       Server_Name_Indicator(TLS_Data_Reader& reader,
@@ -106,7 +106,7 @@ class SRP_Identifier final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      SRP_Identifier(const std::string& identifier) :
+      explicit SRP_Identifier(const std::string& identifier) :
          m_srp_identifier(identifier) {}
 
       SRP_Identifier(TLS_Data_Reader& reader,
@@ -135,7 +135,7 @@ class Renegotiation_Extension final : public Extension
 
       Renegotiation_Extension() {}
 
-      Renegotiation_Extension(const std::vector<byte>& bits) :
+      explicit Renegotiation_Extension(const std::vector<byte>& bits) :
          m_reneg_data(bits) {}
 
       Renegotiation_Extension(TLS_Data_Reader& reader,
@@ -168,13 +168,13 @@ class Application_Layer_Protocol_Notification final : public Extension
       /**
       * Single protocol, used by server
       */
-      Application_Layer_Protocol_Notification(const std::string& protocol) :
+      explicit Application_Layer_Protocol_Notification(const std::string& protocol) :
          m_protocols(1, protocol) {}
 
       /**
       * List of protocols, used by client
       */
-      Application_Layer_Protocol_Notification(const std::vector<std::string>& protocols) :
+      explicit Application_Layer_Protocol_Notification(const std::vector<std::string>& protocols) :
          m_protocols(protocols) {}
 
       Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,
@@ -211,7 +211,7 @@ class Session_Ticket final : public Extension
       /**
       * Extension with ticket, used by client
       */
-      Session_Ticket(const std::vector<byte>& session_ticket) :
+      explicit Session_Ticket(const std::vector<byte>& session_ticket) :
          m_ticket(session_ticket) {}
 
       /**
@@ -244,7 +244,7 @@ class Supported_Elliptic_Curves final : public Extension
 
       std::vector<byte> serialize() const override;
 
-      Supported_Elliptic_Curves(const std::vector<std::string>& curves) :
+      explicit Supported_Elliptic_Curves(const std::vector<std::string>& curves) :
          m_curves(curves) {}
 
       Supported_Elliptic_Curves(TLS_Data_Reader& reader,
@@ -285,7 +285,7 @@ class Signature_Algorithms final : public Extension
       Signature_Algorithms(const std::vector<std::string>& hashes,
                            const std::vector<std::string>& sig_algos);
 
-      Signature_Algorithms(const std::vector<std::pair<std::string, std::string> >& algos) :
+      explicit Signature_Algorithms(const std::vector<std::pair<std::string, std::string> >& algos) :
          m_supported_algos(algos) {}
 
       Signature_Algorithms(TLS_Data_Reader& reader,
@@ -311,9 +311,9 @@ class SRTP_Protection_Profiles final : public Extension
 
       bool empty() const override { return m_pp.empty(); }
 
-      SRTP_Protection_Profiles(const std::vector<u16bit>& pp) : m_pp(pp) {}
+      explicit SRTP_Protection_Profiles(const std::vector<u16bit>& pp) : m_pp(pp) {}
 
-      SRTP_Protection_Profiles(u16bit pp) : m_pp(1, pp) {}
+      explicit SRTP_Protection_Profiles(u16bit pp) : m_pp(1, pp) {}
 
       SRTP_Protection_Profiles(TLS_Data_Reader& reader, u16bit extension_size);
    private:
@@ -377,7 +377,7 @@ class Extensions
 
       Extensions() {}
 
-      Extensions(TLS_Data_Reader& reader) { deserialize(reader); }
+      explicit Extensions(TLS_Data_Reader& reader) { deserialize(reader); }
 
    private:
       Extensions(const Extensions&) {}

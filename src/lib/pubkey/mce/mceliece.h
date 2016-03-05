@@ -21,7 +21,7 @@ namespace Botan {
 class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
    {
    public:
-      McEliece_PublicKey(const std::vector<byte>& key_bits);
+      explicit McEliece_PublicKey(const std::vector<byte>& key_bits);
 
       McEliece_PublicKey(std::vector<byte> const& pub_matrix, u32bit the_t, u32bit the_code_length) :
          m_public_matrix(pub_matrix),
@@ -90,7 +90,7 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
       */
       McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code_length, size_t t);
 
-      McEliece_PrivateKey(const secure_vector<byte>& key_bits);
+      explicit McEliece_PrivateKey(const secure_vector<byte>& key_bits);
 
       McEliece_PrivateKey(polyn_gf2m const& goppa_polyn,
                           std::vector<u32bit> const& parity_check_matrix_coeffs,

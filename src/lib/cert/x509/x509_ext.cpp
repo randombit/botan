@@ -448,7 +448,7 @@ class Policy_Information : public ASN1_Object
       OID oid;
 
       Policy_Information() {}
-      Policy_Information(const OID& oid_) : oid(oid_) {}
+      explicit Policy_Information(const OID& oid) : oid(oid) {}
 
       void encode_into(DER_Encoder& codec) const override
          {
@@ -476,7 +476,7 @@ std::vector<byte> Certificate_Policies::encode_inner() const
    std::vector<Policy_Information> policies;
 
    for(size_t i = 0; i != m_oids.size(); ++i)
-      policies.push_back(m_oids[i]);
+      policies.push_back(Policy_Information( m_oids[i] ));
 
    return DER_Encoder()
       .start_cons(SEQUENCE)

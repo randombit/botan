@@ -48,7 +48,7 @@ KDF::~KDF() {}
 std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
                                                  const std::string& provider)
    {
-   return std::unique_ptr<KDF>(make_a<KDF>(algo_spec, provider));
+   return std::unique_ptr<KDF>(make_a<KDF>(Botan::KDF::Spec(algo_spec), provider));
    }
 
 std::vector<std::string> KDF::providers(const std::string& algo_spec)

@@ -44,7 +44,7 @@ EME* get_eme(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);
 
-   if(EME* eme = make_a<EME>(algo_spec))
+   if(EME* eme = make_a<EME>(Botan::EME::Spec(algo_spec)))
       return eme;
 
    if(request.algo_name() == "Raw")
