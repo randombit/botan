@@ -85,7 +85,7 @@ void ASN1_EAC_String::decode_from(BER_Decoder& source)
    try
       {
       *this = ASN1_EAC_String(
-         Charset::transcode(ASN1::to_string(obj), LOCAL_CHARSET, chaset_is),
+         Charset::transcode(ASN1::to_string(obj), LOCAL_CHARSET, charset_is),
          obj.type_tag);
       }
    catch(Invalid_Argument& inv_arg)
