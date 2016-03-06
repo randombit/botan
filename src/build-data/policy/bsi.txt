@@ -48,16 +48,15 @@ clmul
 
 # entropy sources
 beos_stats
+cryptoapi_rng
 darwin_secrandom
+dev_random
 egd
+hres_timer
 proc_walk
-unix_procs
 rdrand
 rdseed
-hres_timer
-dev_random
 system_rng
-cryptoapi_rng
 win32_stats
 
 # utils
@@ -152,5 +151,6 @@ x919_mac
 
 # rng
 x931_rng
+unix_procs
 
 </prohibited>

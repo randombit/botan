@@ -98,10 +98,8 @@ unix_procs
 clmul
 locking_allocator
 
-sha1_sse2
 aes_ni
 aes_ssse3
-noekeon_simd
 serpent_simd
 threefish_avx2
 
@@ -110,11 +108,15 @@ simd_sse2
 simd_altivec
 
 # entropy sources
+beos_stats
+cryptoapi_rng
+darwin_secrandom
+dev_random
+egd
+hres_timer
+proc_walk
 rdrand
 rdseed
-hres_timer
-dev_random
 system_rng
-cryptoapi_rng
 win32_stats
 </if_available>
