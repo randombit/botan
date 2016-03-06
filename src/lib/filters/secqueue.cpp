@@ -104,6 +104,7 @@ void SecureQueue::destroy()
 SecureQueue& SecureQueue::operator=(const SecureQueue& input)
    {
    destroy();
+   m_bytes_read = input.get_bytes_read();
    m_head = m_tail = new SecureQueueNode;
    SecureQueueNode* temp = input.m_head;
    while(temp)

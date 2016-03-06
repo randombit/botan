@@ -62,7 +62,7 @@ class BOTAN_DLL Client final : public Channel
              const Policy& policy,
              RandomNumberGenerator& rng,
              const Server_Information& server_info = Server_Information(),
-             const Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
+             const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
              const std::vector<std::string>& next_protocols = {},
              size_t reserved_io_buffer_size = 16*1024
          );
@@ -77,7 +77,7 @@ class BOTAN_DLL Client final : public Channel
              const Policy& policy,
              RandomNumberGenerator& rng,
              const Server_Information& server_info = Server_Information(),
-             const Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
+             const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
              const std::vector<std::string>& next_protocols = {}
          );
 

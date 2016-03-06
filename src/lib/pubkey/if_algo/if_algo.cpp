@@ -97,13 +97,11 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
                                            const BigInt& prime2,
                                            const BigInt& exp,
                                            const BigInt& d_exp,
-                                           const BigInt& mod)
+                                           const BigInt& mod) : 
+      m_d{ d_exp }, m_p{ prime1 }, m_q{ prime2 }, m_d1{}, m_d2{}, m_c{ inverse_mod( m_q, m_p ) }
    {
-   m_p = prime1;
-   m_q = prime2;
-   m_e = exp;
-   m_d = d_exp;
    m_n = mod.is_nonzero() ? mod : m_p * m_q;
+   m_e = exp;
 
    if(m_d == 0)
       {
@@ -116,7 +114,6 @@ IF_Scheme_PrivateKey::IF_Scheme_PrivateKey(RandomNumberGenerator& rng,
 
    m_d1 = m_d % (m_p - 1);
    m_d2 = m_d % (m_q - 1);
-   m_c = inverse_mod(m_q, m_p);
 
    load_check(rng);
    }

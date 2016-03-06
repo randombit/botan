@@ -19,11 +19,8 @@ namespace Botan {
 Blinder::Blinder(const BigInt& modulus,
                  std::function<BigInt (const BigInt&)> fwd,
                  std::function<BigInt (const BigInt&)> inv) :
-   m_fwd_fn(fwd), m_inv_fn(inv)
+      m_reducer{Modular_Reducer(modulus)}, m_rng{}, m_fwd_fn(fwd), m_inv_fn(inv), m_modulus_bits{modulus.bits()}, m_e{}, m_d{}, m_counter{}
    {
-   m_reducer = Modular_Reducer(modulus);
-   m_modulus_bits = modulus.bits();
-
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    m_rng.reset(new System_RNG);
 #else

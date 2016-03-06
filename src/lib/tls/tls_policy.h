@@ -306,10 +306,8 @@ class BOTAN_DLL Text_Policy : public Policy
          m_kv = read_cfg(iss);
          }
 
-      explicit Text_Policy(std::istream& in)
-         {
-         m_kv = read_cfg(in);
-         }
+      explicit Text_Policy(std::istream& in) : m_kv(read_cfg(in))
+         {}
 
    private:
 

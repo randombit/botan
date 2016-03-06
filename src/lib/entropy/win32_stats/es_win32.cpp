@@ -72,7 +72,6 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
 
    if(!accum.polling_finished())
       {
-      size_t heap_lists_found = 0;
       HEAPLIST32 heap_list;
       heap_list.dwSize = sizeof(HEAPLIST32);
 
@@ -81,6 +80,7 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
 
       if(Heap32ListFirst(snapshot, &heap_list))
          {
+         size_t heap_lists_found = 0;
          do
             {
             accum.add(heap_list, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
@@ -88,12 +88,12 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
             if(++heap_lists_found > HEAP_LISTS_MAX)
                break;
 
-            size_t heap_objs_found = 0;
             HEAPENTRY32 heap_entry;
             heap_entry.dwSize = sizeof(HEAPENTRY32);
             if(Heap32First(&heap_entry, heap_list.th32ProcessID,
                            heap_list.th32HeapID))
                {
+               size_t heap_objs_found = 0;
                do
                   {
                   if(heap_objs_found++ > HEAP_OBJS_PER_LIST)

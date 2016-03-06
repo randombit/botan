@@ -267,7 +267,7 @@ class Server_Hello final : public Handshake_Message
                    u16bit ciphersuite,
                    byte compression,
                    bool offer_session_ticket,
-                   const std::string next_protocol);
+                   const std::string& next_protocol);
 
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,

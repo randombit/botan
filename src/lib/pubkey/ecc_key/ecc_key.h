@@ -81,7 +81,8 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       size_t estimated_strength() const override;
 
    protected:
-      EC_PublicKey() : m_domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {}
+      EC_PublicKey() : m_domain_params{}, m_public_key{}, m_domain_encoding(EC_DOMPAR_ENC_EXPLICIT)
+      {}
 
       EC_Group m_domain_params;
       PointGFp m_public_key;

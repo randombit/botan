@@ -39,7 +39,7 @@ class BOTAN_DLL Blocking_Client
                       const Policy& policy,
                       RandomNumberGenerator& rng,
                       const Server_Information& server_info = Server_Information(),
-                      const Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
+                      const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
                       const std::vector<std::string>& next_protos = {});
 
       /**
@@ -89,7 +89,7 @@ class BOTAN_DLL Blocking_Client
 
       void data_cb(const byte data[], size_t data_len);
 
-      void alert_cb(const Alert alert, const byte data[], size_t data_len);
+      void alert_cb(const Alert& alert, const byte data[], size_t data_len);
 
       read_fn m_read;
       TLS::Client m_channel;
