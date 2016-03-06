@@ -21,7 +21,7 @@ class BOTAN_DLL Transform_Filter : public Keyed_Filter,
                                    private Buffered_Filter
    {
    public:
-      Transform_Filter(Transform* t);
+      explicit Transform_Filter(Transform* t);
 
       void set_iv(const InitializationVector& iv) override;
 
@@ -49,7 +49,7 @@ class BOTAN_DLL Transform_Filter : public Keyed_Filter,
       class Nonce_State
          {
          public:
-            Nonce_State(bool allow_null_nonce) : m_fresh_nonce(allow_null_nonce) {}
+            explicit Nonce_State(bool allow_null_nonce) : m_fresh_nonce(allow_null_nonce) {}
 
             void update(const InitializationVector& iv);
             std::vector<byte> get();

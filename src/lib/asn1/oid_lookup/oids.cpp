@@ -125,8 +125,8 @@ void OID_Map::read_cfg(std::istream& cfg, const std::string& source)
       const std::string oid = clean_ws(s.substr(0, eq));
       const std::string name = clean_ws(s.substr(eq + 1, std::string::npos));
 
-      m_str2oid.insert(std::make_pair(name, oid));
-      m_oid2str.insert(std::make_pair(oid, name));
+      m_str2oid.insert(std::make_pair(name, OID(oid)));
+      m_oid2str.insert(std::make_pair(OID(oid), name));
       }
    }
 

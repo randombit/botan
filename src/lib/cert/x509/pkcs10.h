@@ -84,20 +84,20 @@ class BOTAN_DLL PKCS10_Request final : public X509_Object
       * Create a PKCS#10 Request from a data source.
       * @param source the data source providing the DER encoded request
       */
-      PKCS10_Request(DataSource& source);
+      explicit PKCS10_Request(DataSource& source);
 
       /**
       * Create a PKCS#10 Request from a file.
       * @param filename the name of the file containing the DER or PEM
       * encoded request file
       */
-      PKCS10_Request(const std::string& filename);
+      explicit PKCS10_Request(const std::string& filename);
 
       /**
       * Create a PKCS#10 Request from binary data.
       * @param vec a std::vector containing the DER value
       */
-      PKCS10_Request(const std::vector<byte>& vec);
+      explicit PKCS10_Request(const std::vector<byte>& vec);
    private:
       void force_decode() override;
       void handle_attribute(const Attribute&);

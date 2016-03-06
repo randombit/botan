@@ -42,7 +42,6 @@ pub   rsa3072/57123B60 2015-03-23
       Key fingerprint = 4E60 C735 51AF 2188 DF0A  5A62 78E9 8043 5712 3B60
       uid            Jack Lloyd <lloyd@randombit.net>
 
-
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: GnuPG v2
 
@@ -89,4 +88,39 @@ gt5I0+sIgGYtII6bUCOxcXexBrMRioAaEHqqJsKy55vGemurxBr+PTCyrufxk7tr
 px1yeG7h8Xdh1ZxpaUJQrPNZvxZdeh4Jo4rGYPkiCwaIDGc8q+wGB7WsyGUKgkmE
 kSZSXDGg/rs23aYdtiH9
 =o8bh
+-----END PGP PUBLIC KEY BLOCK-----
+
+This key is used for signing git commits:
+
+pub   rsa2048/AB50F90D 2016-03-03 [SC] [expires: 2020-03-02]
+      Key fingerprint = 1175 1014 9DF4 18AB D19C  B06D 9FFD 596F AB50 F90D
+      uid   Jack Lloyd (Git Signing Key) <lloyd@randombit.net>
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v2
+
+mQENBFbYWi4BCACjgz3gYgWMybPLiovNLnLonG0ex2y9kJgsR+Pm08L2fwCVCaHx
+wjlK5Oq04x3bvujZk7P0TThqS1WonYtEiVxz3Hcvt7rlU5fSCj/1uYmZV+mbPBdY
+f/yXMx3UD1UkZrdzbM21L78dfOoLZ2ybyuk4QOEad/AkouDCUA2pY3DJdNyX8Aee
+dBdQ+sQqF6DyDz4SDY+KAq3nFmmT04bdkiL9sZb2HUokxIdeA6HIR+CxxFaZzrYW
+Ky4iNPS1Zxv5D1KmpZzUOfN9RTgkbdRltgWxjpB+DFNUkpu3hYm/Y9lTPqGBt2C8
+JfIS5OaHxUVz0A+DtIGy+lk8/O5ek4suQBZ3ABEBAAG0MkphY2sgTGxveWQgKEdp
+dCBTaWduaW5nIEtleSkgPGxsb3lkQHJhbmRvbWJpdC5uZXQ+iQE9BBMBCAAnBQJW
+2FwDAhsDBQkHhM4ABQsJCAcCBhUICQoLAgQWAgMBAh4BAheAAAoJEJ/9WW+rUPkN
+K3cIAI+6M5JixbjdyoVSDor0RW4u5h6UESe2mRZ5YFzh8F5uGms8PE5HrIZAfNVy
+9lJrDoLSPpeb5KLAdGpaJ1NuJJ2glYzZFYr05gVHgCKJgfo6jkW22XnwO+vyXK+6
+TB6AExgO0RdN5aZcHL8KCfCWncVsWvF8d2cvbdb3sTfqtZoZ0l1DyYA62pz5BZd+
+iySjnWGsL9YM53pC6hhq62onSqfv0X0fqzZ3+zIqTgVMOJxIFCXBiUBkHEuizUUL
+fPrPxfAiaEQcaOcpEos+/OsG3e3nFmXEAlDa9ZsS2VEaZ/nFJPIaKeDXt80ptScn
+xp2tlecw8hR/OfJJ6MFMw4W/J8WJAZwEEAEIAAYFAlbYXDcACgkQeOmAQ1cSO2C8
+Kwv/ebJNrhMoknG5dSPVJpJxL0ta/m4KYBjX94VsB6Ofz96UmnNlCe9Exbi02ecL
+ygQfB9UUv7nsrORGOSoIEIV/RSYgN2eYUM21DHddlgVG3DTRrG//iV6rzAdgkZdR
+kxBhnzeFJRv4TMmnRQXM2x+gjognDWLpjgdvkRFcv5l6fTH24IldcdymnvmqBmsL
+vqoKFj13CtsDjngp5gGgp/ieIW6sPmgQX1pJCWHFDe/0qcjvuy0fKMq0Oyd0/8dX
+CnNawPb/9xlQY+lCpHILfvFsVty5djqHqDNKEBuYxyPjHICPGRukSK+zCS0EE8nz
+/oxor4OIr5svawfIO5Zw69USo01jC+K1OSRJQthFft5GqTwkfHniYJSVh7K1rPI/
+H35tf+XZLBwlafWs7vQb8XZfAPzhqw9blc5RS478rqzNQ0F1PHITjbaSCkMCgaNa
+2aeaoIw9uQjp6uB2T4xGAeqsd6JPrr5g1VZFPqthXdiDu6JmN4aVksG/SCx2Cwv2
+qiuS
+=Q88Z
 -----END PGP PUBLIC KEY BLOCK-----

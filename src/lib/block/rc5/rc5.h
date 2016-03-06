@@ -29,7 +29,7 @@ class BOTAN_DLL RC5 final : public Block_Cipher_Fixed_Params<8, 1, 32>
       * @param rounds the number of RC5 rounds to run. Must be between
       * 8 and 32 and a multiple of 4.
       */
-      RC5(size_t rounds);
+      explicit RC5(size_t rounds);
    private:
       void key_schedule(const byte[], size_t) override;
 

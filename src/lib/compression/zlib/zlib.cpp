@@ -115,7 +115,7 @@ class Deflate_Compression_Stream : public Zlib_Compression_Stream
 class Deflate_Decompression_Stream : public Zlib_Decompression_Stream
    {
    public:
-      Deflate_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, -1) {}
+      explicit Deflate_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, -1) {}
    };
 
 class Gzip_Compression_Stream : public Zlib_Compression_Stream
@@ -140,7 +140,7 @@ class Gzip_Compression_Stream : public Zlib_Compression_Stream
 class Gzip_Decompression_Stream : public Zlib_Decompression_Stream
    {
    public:
-      Gzip_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, 16) {}
+      explicit Gzip_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, 16) {}
    };
 
 }

@@ -15,21 +15,15 @@ namespace Botan {
 /*
 * Create an Attribute
 */
-Attribute::Attribute(const OID& attr_oid, const std::vector<byte>& attr_value)
-   {
-   oid = attr_oid;
-   parameters = attr_value;
-   }
+Attribute::Attribute(const OID& attr_oid, const std::vector<byte>& attr_value) : oid(attr_oid), parameters(attr_value)
+   {}
 
 /*
 * Create an Attribute
 */
 Attribute::Attribute(const std::string& attr_oid,
-                     const std::vector<byte>& attr_value)
-   {
-   oid = OIDS::lookup(attr_oid);
-   parameters = attr_value;
-   }
+                     const std::vector<byte>& attr_value) : oid(OIDS::lookup(attr_oid)), parameters(attr_value)
+   {}
 
 /*
 * DER encode a Attribute

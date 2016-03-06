@@ -27,7 +27,7 @@ struct polyn_gf2m
       /**
       * create a zero polynomial:
       */
-      polyn_gf2m( std::shared_ptr<GF2m_Field> sp_field );
+      explicit polyn_gf2m( std::shared_ptr<GF2m_Field> sp_field );
 
       polyn_gf2m()
          :m_deg(-1)

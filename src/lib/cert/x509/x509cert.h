@@ -220,16 +220,16 @@ class BOTAN_DLL X509_Certificate final : public X509_Object
       * PEM encoded certificate.
       * @param source the data source
       */
-      X509_Certificate(DataSource& source);
+      explicit X509_Certificate(DataSource& source);
 
       /**
       * Create a certificate from a file containing the DER or PEM
       * encoded certificate.
       * @param filename the name of the certificate file
       */
-      X509_Certificate(const std::string& filename);
+      explicit X509_Certificate(const std::string& filename);
 
-      X509_Certificate(const std::vector<byte>& in);
+      explicit X509_Certificate(const std::vector<byte>& in);
 
    private:
       void force_decode() override;

@@ -92,7 +92,7 @@ class BOTAN_DLL Alert
       * Deserialize an Alert message
       * @param buf the serialized alert
       */
-      Alert(const secure_vector<byte>& buf);
+      explicit Alert(const secure_vector<byte>& buf);
 
       /**
       * Create a new Alert

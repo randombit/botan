@@ -269,9 +269,6 @@ def process_command_line(args):
 
     build_group.add_option('--with-debug-info', action='store_true', default=False, dest='with_debug_info',
                            help='enable debug info')
-    # For compat and convenience:
-    build_group.add_option('--debug-mode', action='store_true', default=False, dest='with_debug_info',
-                           help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--with-sanitizers', action='store_true', default=False, dest='with_sanitizers',
                            help='enable runtime checks')
@@ -289,6 +286,9 @@ def process_command_line(args):
     build_group.add_option('--no-optimizations', dest='no_optimizations',
                            action='store_true', default=False,
                            help='disable all optimizations (for debugging)')
+
+    build_group.add_option('--debug-mode', action='store_true', default=False, dest='debug_mode',
+                           help='enable debug info and disable optimizations')
 
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
@@ -446,6 +446,10 @@ def process_command_line(args):
        options.with_endian not in ['little', 'big']:
         raise Exception('Bad value to --with-endian "%s"' % (
             options.with_endian))
+
+    if options.debug_mode:
+        options.no_optimizations = True
+        options.with_debug_info = True
 
     def parse_multiple_enable(modules):
         if modules is None:

@@ -108,7 +108,7 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       * Construct a memory source that reads from a string
       * @param in the string to read from
       */
-      DataSource_Memory(const std::string& in);
+      explicit DataSource_Memory(const std::string& in);
 
       /**
       * Construct a memory source that reads from a byte array
@@ -122,14 +122,14 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       * Construct a memory source that reads from a secure_vector
       * @param in the MemoryRegion to read from
       */
-      DataSource_Memory(const secure_vector<byte>& in) :
+      explicit DataSource_Memory(const secure_vector<byte>& in) :
          m_source(in), m_offset(0) {}
 
       /**
       * Construct a memory source that reads from a std::vector
       * @param in the MemoryRegion to read from
       */
-      DataSource_Memory(const std::vector<byte>& in) :
+      explicit DataSource_Memory(const std::vector<byte>& in) :
          m_source(in.begin(), in.end()), m_offset(0) {}
 
       size_t get_bytes_read() const override { return m_offset; }

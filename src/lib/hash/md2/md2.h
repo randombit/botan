@@ -25,7 +25,7 @@ class BOTAN_DLL MD2 final : public HashFunction
 
       void clear() override;
 
-      MD2() : m_X(48), m_checksum(16), m_buffer(16)
+      MD2() : m_X(48), m_checksum(16), m_buffer(16), m_position(0)
          { clear(); }
    private:
       void add_data(const byte[], size_t) override;

@@ -70,10 +70,8 @@ SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec))
    {
    }
 
-SCAN_Name::SCAN_Name(std::string algo_spec)
+SCAN_Name::SCAN_Name(std::string algo_spec) : m_orig_algo_spec(algo_spec), m_alg_name(), m_args(), m_mode_info()
    {
-   m_orig_algo_spec = algo_spec;
-
    std::vector<std::pair<size_t, std::string> > name;
    size_t level = 0;
    std::pair<size_t, std::string> accum = std::make_pair(level, "");

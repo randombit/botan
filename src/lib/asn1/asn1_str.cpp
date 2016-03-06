@@ -62,9 +62,8 @@ ASN1_Tag choose_encoding(const std::string& str,
 /*
 * Create an ASN1_String
 */
-ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : m_tag(t)
+ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : m_iso_8859_str(Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET)), m_tag(t)
    {
-   m_iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
 
    if(m_tag == DIRECTORY_STRING)
       m_tag = choose_encoding(m_iso_8859_str, "latin1");
@@ -83,11 +82,8 @@ ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : m_tag(t)
 /*
 * Create an ASN1_String
 */
-ASN1_String::ASN1_String(const std::string& str)
-   {
-   m_iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
-   m_tag = choose_encoding(m_iso_8859_str, "latin1");
-   }
+ASN1_String::ASN1_String(const std::string& str) : m_iso_8859_str(Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET)), m_tag(choose_encoding(m_iso_8859_str, "latin1"))
+   {}
 
 /*
 * Return this string in ISO 8859-1 encoding
@@ -141,7 +137,7 @@ void ASN1_String::decode_from(BER_Decoder& source)
       charset_is = LATIN1_CHARSET;
 
    *this = ASN1_String(
-      Charset::transcode(ASN1::to_string(obj), charset_is, LOCAL_CHARSET),
+      Charset::transcode(ASN1::to_string(obj), LOCAL_CHARSET, charset_is),
       obj.type_tag);
    }
 

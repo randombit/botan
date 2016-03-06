@@ -29,7 +29,7 @@ class BOTAN_DLL Blake2b final : public HashFunction
       /**
       * @param output_bits the output size of Blake2b in bits
       */
-      Blake2b(size_t output_bits = 512);
+      explicit Blake2b(size_t output_bits = 512);
 
       size_t hash_block_size() const override { return BLAKE2B_BLOCKBYTES; }
       size_t output_length() const override { return m_output_bits / 8; }

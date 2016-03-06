@@ -26,7 +26,7 @@ class BOTAN_DLL EMSA_PKCS1v15 final : public EMSA
       /**
       * @param hash the hash object to use
       */
-      EMSA_PKCS1v15(HashFunction* hash);
+      explicit EMSA_PKCS1v15(HashFunction* hash);
 
       void update(const byte[], size_t) override;
 

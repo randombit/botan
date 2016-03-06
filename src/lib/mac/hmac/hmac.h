@@ -34,7 +34,7 @@ class BOTAN_DLL HMAC final : public MessageAuthenticationCode
       /**
       * @param hash the hash to use for HMACing
       */
-      HMAC(HashFunction* hash);
+      explicit HMAC(HashFunction* hash);
 
       static HMAC* make(const Spec& spec);
 

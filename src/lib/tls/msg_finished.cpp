@@ -48,9 +48,8 @@ std::vector<byte> finished_compute_verify(const Handshake_State& state,
 */
 Finished::Finished(Handshake_IO& io,
                    Handshake_State& state,
-                   Connection_Side side)
+                   Connection_Side side) : m_verification_data(finished_compute_verify( state, side ))
    {
-   m_verification_data = finished_compute_verify(state, side);
    state.hash().update(io.send(*this));
    }
 
@@ -65,10 +64,8 @@ std::vector<byte> Finished::serialize() const
 /*
 * Deserialize a Finished message
 */
-Finished::Finished(const std::vector<byte>& buf)
-   {
-   m_verification_data = buf;
-   }
+Finished::Finished(const std::vector<byte>& buf) : m_verification_data(buf)
+   {}
 
 /*
 * Verify a Finished message

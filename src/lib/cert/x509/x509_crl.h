@@ -27,7 +27,7 @@ class BOTAN_DLL X509_CRL final : public X509_Object
       */
       struct BOTAN_DLL X509_CRL_Error : public Exception
          {
-         X509_CRL_Error(const std::string& error) :
+         explicit X509_CRL_Error(const std::string& error) :
             Exception("X509_CRL: " + error) {}
          };
 

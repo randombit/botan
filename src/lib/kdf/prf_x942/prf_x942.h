@@ -26,7 +26,7 @@ class BOTAN_DLL X942_PRF final : public KDF
                  const byte secret[], size_t secret_len,
                  const byte salt[], size_t salt_len) const override;
 
-      X942_PRF(const std::string& oid);
+      explicit X942_PRF(const std::string& oid);
    private:
       std::string m_key_wrap_oid;
    };

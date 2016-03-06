@@ -70,6 +70,13 @@ class Entropy_Source_Tests : public Test
                   {
                   for(const std::string comp_algo : { "zlib", "bzip2", "lzma" })
                      {
+#if defined(BOTAN_TARGET_OS_IS_DARWIN)
+                     if(comp_algo == "bzip2")
+                        {
+                        // Skip due to unresolved OS X specific issue GH #394
+                        continue;
+                        }
+#endif
                      std::unique_ptr<Botan::Compressor_Transform> comp(Botan::make_compressor(comp_algo, 9));
 
                      if(comp)

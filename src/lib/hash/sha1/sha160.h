@@ -35,7 +35,7 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
       * constraints
       * @param W_size how big to make W
       */
-      SHA_160(size_t W_size) :
+      explicit SHA_160(size_t W_size) :
          MDx_HashFunction(64, true, true), m_digest(5), m_W(W_size)
          {
          clear();

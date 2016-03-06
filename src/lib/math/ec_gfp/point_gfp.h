@@ -21,7 +21,7 @@ namespace Botan {
 */
 struct BOTAN_DLL Illegal_Transformation : public Exception
    {
-   Illegal_Transformation(const std::string& err =
+   explicit Illegal_Transformation(const std::string& err =
                           "Requested transformation is not possible") :
       Exception(err) {}
    };
@@ -31,7 +31,7 @@ struct BOTAN_DLL Illegal_Transformation : public Exception
 */
 struct BOTAN_DLL Illegal_Point : public Exception
    {
-   Illegal_Point(const std::string& err = "Malformed ECP point detected") :
+   explicit Illegal_Point(const std::string& err = "Malformed ECP point detected") :
       Exception(err) {}
    };
 
@@ -56,7 +56,7 @@ class BOTAN_DLL PointGFp
       * Construct the zero point
       * @param curve The base curve
       */
-      PointGFp(const CurveGFp& curve);
+      explicit PointGFp(const CurveGFp& curve);
 
       static PointGFp zero_of(const CurveGFp& curve)
          {

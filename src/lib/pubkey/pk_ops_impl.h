@@ -23,7 +23,7 @@ class Encryption_with_EME : public Encryption
 
       ~Encryption_with_EME();
    protected:
-      Encryption_with_EME(const std::string& eme);
+      explicit Encryption_with_EME(const std::string& eme);
    private:
       virtual size_t max_raw_input_bits() const = 0;
 
@@ -41,7 +41,7 @@ class Decryption_with_EME : public Decryption
 
       ~Decryption_with_EME();
    protected:
-      Decryption_with_EME(const std::string& eme);
+      explicit Decryption_with_EME(const std::string& eme);
    private:
       virtual size_t max_raw_input_bits() const = 0;
       virtual secure_vector<byte> raw_decrypt(const byte msg[], size_t len) = 0;
@@ -59,7 +59,7 @@ class Verification_with_EMSA : public Verification
 
    protected:
 
-      Verification_with_EMSA(const std::string& emsa);
+      explicit Verification_with_EMSA(const std::string& emsa);
       ~Verification_with_EMSA();
 
       /**
@@ -105,7 +105,7 @@ class Signature_with_EMSA : public Signature
 
       secure_vector<byte> sign(RandomNumberGenerator& rng) override;
    protected:
-      Signature_with_EMSA(const std::string& emsa);
+      explicit Signature_with_EMSA(const std::string& emsa);
       ~Signature_with_EMSA();
    private:
 
@@ -132,7 +132,7 @@ class Key_Agreement_with_KDF : public Key_Agreement
                                 const byte salt[], size_t salt_len) override;
 
    protected:
-      Key_Agreement_with_KDF(const std::string& kdf);
+      explicit Key_Agreement_with_KDF(const std::string& kdf);
       ~Key_Agreement_with_KDF();
    private:
       virtual secure_vector<byte> raw_agree(const byte w[], size_t w_len) = 0;
@@ -154,7 +154,7 @@ class KEM_Encryption_with_KDF : public KEM_Encryption
                                    secure_vector<byte>& raw_shared_key,
                                    Botan::RandomNumberGenerator& rng) = 0;
 
-      KEM_Encryption_with_KDF(const std::string& kdf);
+      explicit KEM_Encryption_with_KDF(const std::string& kdf);
       ~KEM_Encryption_with_KDF();
    private:
       std::unique_ptr<KDF> m_kdf;
@@ -173,7 +173,7 @@ class KEM_Decryption_with_KDF : public KEM_Decryption
       virtual secure_vector<byte>
       raw_kem_decrypt(const byte encap_key[], size_t len) = 0;
 
-      KEM_Decryption_with_KDF(const std::string& kdf);
+      explicit KEM_Decryption_with_KDF(const std::string& kdf);
       ~KEM_Decryption_with_KDF();
    private:
       std::unique_ptr<KDF> m_kdf;

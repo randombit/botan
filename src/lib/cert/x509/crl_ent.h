@@ -63,7 +63,7 @@ class BOTAN_DLL CRL_Entry final : public ASN1_Object
       /**
       * Construct an empty CRL entry.
       */
-      CRL_Entry(bool throw_on_unknown_critical_extension = false);
+      explicit CRL_Entry(bool throw_on_unknown_critical_extension = false);
 
       /**
       * Construct an CRL entry.
