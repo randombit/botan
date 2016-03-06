@@ -137,7 +137,7 @@ void ASN1_String::decode_from(BER_Decoder& source)
       charset_is = LATIN1_CHARSET;
 
    *this = ASN1_String(
-      Charset::transcode(ASN1::to_string(obj), charset_is, LOCAL_CHARSET),
+      Charset::transcode(ASN1::to_string(obj), LOCAL_CHARSET, charset_is),
       obj.type_tag);
    }
 
