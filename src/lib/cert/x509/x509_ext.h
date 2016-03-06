@@ -67,16 +67,20 @@ class BOTAN_DLL Extensions : public ASN1_Object
 
       void add(Certificate_Extension* extn, bool critical = false);
 
+      std::map<OID, std::pair<std::vector<byte>, bool>> extensions_raw() const;
+
       Extensions& operator=(const Extensions&);
 
       Extensions(const Extensions&);
+
       explicit Extensions(bool st = true) : m_throw_on_unknown_critical(st) {}
-      ~Extensions();
+
    private:
       static Certificate_Extension* get_extension(const OID&);
 
-      std::vector<std::pair<Certificate_Extension*, bool> > m_extensions;
+      std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> m_extensions;
       bool m_throw_on_unknown_critical;
+      std::map<OID, std::pair<std::vector<byte>, bool>> m_extensions_raw;
    };
 
 namespace Cert_Extension {

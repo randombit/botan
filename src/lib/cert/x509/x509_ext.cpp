@@ -53,14 +53,12 @@ Extensions::Extensions(const Extensions& extensions) : ASN1_Object()
 * Extensions Assignment Operator
 */
 Extensions& Extensions::operator=(const Extensions& other)
-   {
-   for(size_t i = 0; i != m_extensions.size(); ++i)
-      delete m_extensions[i].first;
+   {   
    m_extensions.clear();
 
    for(size_t i = 0; i != other.m_extensions.size(); ++i)
       m_extensions.push_back(
-         std::make_pair(other.m_extensions[i].first->copy(),
+         std::make_pair(std::unique_ptr<Certificate_Extension>(other.m_extensions[i].first->copy()),
                         other.m_extensions[i].second));
 
    m_throw_on_unknown_critical = other.m_throw_on_unknown_critical;
@@ -78,7 +76,14 @@ OID Certificate_Extension::oid_of() const
 
 void Extensions::add(Certificate_Extension* extn, bool critical)
    {
-   m_extensions.push_back(std::make_pair(extn, critical));
+   m_extensions.push_back(std::make_pair(std::unique_ptr<Certificate_Extension>(extn), critical));
+   m_extensions_raw.emplace(extn->oid_of(), std::make_pair(extn->encode_inner(), critical));
+   }
+
+
+std::map<OID, std::pair<std::vector<byte>, bool>> Extensions::extensions_raw() const
+   {
+   return m_extensions_raw;
    }
 
 /*
@@ -88,7 +93,7 @@ void Extensions::encode_into(DER_Encoder& to_object) const
    {
    for(size_t i = 0; i != m_extensions.size(); ++i)
       {
-      const Certificate_Extension* ext = m_extensions[i].first;
+      const Certificate_Extension* ext = m_extensions[i].first.get();
       const bool is_critical = m_extensions[i].second;
 
       const bool should_encode = ext->should_encode();
@@ -109,9 +114,8 @@ void Extensions::encode_into(DER_Encoder& to_object) const
 */
 void Extensions::decode_from(BER_Decoder& from_source)
    {
-   for(size_t i = 0; i != m_extensions.size(); ++i)
-      delete m_extensions[i].first;
    m_extensions.clear();
+   m_extensions_raw.clear();
 
    BER_Decoder sequence = from_source.start_cons(SEQUENCE);
 
@@ -128,7 +132,9 @@ void Extensions::decode_from(BER_Decoder& from_source)
             .verify_end()
          .end_cons();
 
-      Certificate_Extension* ext = get_extension(oid);
+      m_extensions_raw.emplace(oid, std::make_pair(value, critical));
+
+      std::unique_ptr<Certificate_Extension> ext(get_extension(oid));
 
       if(!ext && critical && m_throw_on_unknown_critical)
          throw Decoding_Error("Encountered unknown X.509 extension marked "
@@ -146,7 +152,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
                                  oid.as_string() + ": " + e.what());
             }
 
-         m_extensions.push_back(std::make_pair(ext, critical));
+         m_extensions.push_back(std::make_pair(std::move(ext), critical));
          }
       }
 
@@ -163,14 +169,6 @@ void Extensions::contents_to(Data_Store& subject_info,
       m_extensions[i].first->contents_to(subject_info, issuer_info);
    }
 
-/*
-* Delete an Extensions list
-*/
-Extensions::~Extensions()
-   {
-   for(size_t i = 0; i != m_extensions.size(); ++i)
-      delete m_extensions[i].first;
-   }
 
 namespace Cert_Extension {
 
