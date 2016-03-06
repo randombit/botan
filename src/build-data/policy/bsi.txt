@@ -22,6 +22,7 @@ hmac
 # pk_pad
 eme_oaep
 emsa_pssr
+emsa1
 
 # pubkey
 dlies
@@ -125,7 +126,6 @@ eme_raw
 #emsa_pkcs1 // needed for tls
 emsa_raw
 emsa_x931
-emsa1
 emsa1_bsi
 
 # hash
