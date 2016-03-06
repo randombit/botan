@@ -42,20 +42,29 @@ class DLIES_KAT_Tests : public Text_Based_Test
          Botan::DH_PrivateKey from(Test::rng(), domain, x1);
          Botan::DH_PrivateKey to(Test::rng(), domain, x2);
 
-         const std::string kdf = "KDF2(SHA-1)";
-         const std::string mac = "HMAC(SHA-1)";
+         const std::string kdf_algo = "KDF2(SHA-1)";
+         const std::string mac_algo = "HMAC(SHA-1)";
          const size_t mac_key_len = 16;
 
          Test::Result result("DLIES");
 
+         std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kdf_algo));
+         std::unique_ptr<Botan::MAC> mac(Botan::MAC::create(mac_algo));
+
+         if(!kdf || !mac)
+            {
+            result.test_note("Skipping due to missing KDF or MAC algo");
+            return result;
+            }
+
          Botan::DLIES_Encryptor encryptor(from,
-                                          Botan::KDF::create(kdf).release(),
-                                          Botan::MessageAuthenticationCode::create(mac).release(),
+                                          kdf->clone(),
+                                          mac->clone(),
                                           mac_key_len);
 
          Botan::DLIES_Decryptor decryptor(to,
-                                          Botan::KDF::create(kdf).release(),
-                                          Botan::MessageAuthenticationCode::create(mac).release(),
+                                          kdf.release(),
+                                          mac.release(),
                                           mac_key_len);
 
          encryptor.set_other_key(to.public_value());

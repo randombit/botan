@@ -53,6 +53,8 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       virtual MessageAuthenticationCode* clone() const = 0;
    };
 
+typedef MessageAuthenticationCode MAC;
+
 }
 
 #endif
