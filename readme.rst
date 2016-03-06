@@ -42,7 +42,7 @@ for contact information and procedures.
 
 The `GitHub wiki <https://github.com/randombit/botan/wiki>`_
 and `Doxygen docs <https://botan.randombit.net/doxygen>`_
-may also prove useful resources.
+may also prove as useful resources.
 
 In addition to C++, botan has a C89 API specifically designed to be easy
 to call from other languages. A Python binding using ctypes is included,
