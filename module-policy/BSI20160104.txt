@@ -1,0 +1,147 @@
+hash
+comb4p
+mdx_hash
+par_hash
+md5
+sha1
+sha1_sse2
+sha2_32
+sha2_64
+adler32
+crc24
+crc32
+modes
+cbc
+aead
+gcm
+ocb
+clmul
+xts
+mode_pad
+block
+aes
+aes_ni
+aes_ssse3
+cascade
+# cvc 	# exclude from build as long as tests are failing
+x509
+base64
+hex
+entropy
+hres_timer
+rdrand
+rdseed
+aont
+openpgp
+pem
+pbes2
+asn1
+oid_lookup
+pbkdf
+pbkdf2
+ffi
+filters
+codec_filt
+srp6
+kdf
+kdf1
+kdf2
+hkdf
+prf_tls
+mac
+cmac
+hmac
+bigint
+numbertheory
+mp
+ec_gfp
+pk_pad
+emsa_pkcs1
+eme_pkcs1
+eme_oaep
+eme_raw
+emsa_pssr
+emsa_raw
+emsa1
+emsa1_bsi
+hash_id
+mgf1
+pubkey
+dh
+dl_algo
+dl_group
+dlies
+dsa
+ec_group
+ecc_key
+ecdh
+ecdsa
+if_algo
+keypair
+mce
+mceies
+rfc6979
+rsa
+rng
+auto_rng
+hmac_rng
+hmac_drbg
+system_rng
+stream
+ctr
+tls
+utils
+datastor
+dyn_load
+http_util
+locking_allocator
+simd
+simd_scalar
+simd_sse2
+base
+compression
+
+#################################### OS specific ####################################
+
+# Windows:
+#Windows cryptoapi_rng
+#Windows win32_stats
+
+# Linux:
+#Linux dev_random
+#Linux egd
+#Linux proc_walk
+#Linux unix_procs
+#Linux fd_unix
+
+# OS X:
+#OSX darwin_secrandom
+#OSX dev_random
+#OSX egd
+#OSX proc_walk
+#OSX unix_procs
+#OSX fd_unix
+
+#################################### Compiler specific ####################################
+
+# MSVC-x86:
+#MSVC-x86 mp_x86_32_msvc
+
+# MSVC-x64:
+#MSVC-x64 mp_generic
+
+# On Clang/gcc x86 enable
+#Clang-gcc-x86 mp_x86_32
+
+# On Clang/gcc x64 enable
+#Clang-gcc-x64 mp_x86_64
+
+######################################## 3rdparty ##########################################
+# sqlite3
+# sessions_sqlite3
+# boost
+# bzip2
+# zlib
+# lzma
+# openssl
+# tpm
