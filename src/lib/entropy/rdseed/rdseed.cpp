@@ -7,6 +7,7 @@
 
 #include <botan/internal/rdseed.h>
 #include <botan/cpuid.h>
+#include <botan/build.h>
 
 #if !defined(BOTAN_USE_GCC_INLINE_ASM)
   #include <immintrin.h>
@@ -14,32 +15,31 @@
 
 namespace Botan {
 
-/*
-* Get the timestamp
-*/
-void Intel_Rdseed::poll(Entropy_Accumulator& accum)
-   {
+void Intel_Rdseed::poll(Entropy_Accumulator& accum) {
    if(!CPUID::has_rdseed())
       return;
 
-   const size_t RDSEED_POLLS = 32;
-
-   for(size_t i = 0; i != RDSEED_POLLS; ++i)
+   for(size_t i = 0; i != BOTAN_ENTROPY_INTEL_RNG_POLLS; ++i)
       {
-      unsigned int r = 0;
+      for(size_t i = 0; i != BOTAN_ENTROPY_RDSEED_RETRIES; ++i)
+         {
+         uint32_t r = 0;
 
 #if defined(BOTAN_USE_GCC_INLINE_ASM)
-      int cf = 0;
+         int cf = 0;
 
-      // Encoding of rdseed %eax
-      asm(".byte 0x0F, 0xC7, 0xF8; adcl $0,%1" :
-          "=a" (r), "=r" (cf) : "0" (r), "1" (cf) : "cc");
+         // Encoding of rdseed %eax
+         asm(".byte 0x0F, 0xC7, 0xF8; adcl $0,%1" :
+             "=a" (r), "=r" (cf) : "0" (r), "1" (cf) : "cc");
 #else
-      int cf = _rdseed32_step(&r);
+         int cf = _rdseed32_step(&r);
 #endif
-
-      if(cf == 1)
-         accum.add(r, BOTAN_ENTROPY_ESTIMATE_HARDWARE_RNG);
+         if(1 == cf)
+            {
+            accum.add(r, BOTAN_ENTROPY_ESTIMATE_HARDWARE_RNG);
+            break;
+            }
+         }
       }
    }
 
