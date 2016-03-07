@@ -37,6 +37,8 @@ Version 1.11.29, Not Yet Released
 
 * Small optimizations to Keccak hash
 
+* Support for locking allocator on Windows using VirtualLock/VirtualUnlock
+
 Version 1.10.12, 2016-02-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
