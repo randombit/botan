@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import binascii
-import collections
+from collections import OrderedDict
 import unittest
 import argparse
 import re
@@ -11,6 +11,23 @@ import sys
 
 cli_binary = ""
 testdata = {}
+
+SUPPORTED_ALGORITHMS = [
+    'AES-128/CFB',
+    'AES-192/CFB',
+    'AES-256/CFB',
+    'AES-128/GCM',
+    'AES-192/GCM',
+    'AES-256/GCM',
+    'AES-128/OCB',
+    'AES-128/XTS',
+    'AES-256/XTS'
+]
+
+def append_ordered(base, additional_elements):
+    for key in additional_elements:
+        value = additional_elements[key]
+        base[key] = value
 
 class TestSequence(unittest.TestCase):
     pass
@@ -25,12 +42,28 @@ def create_test(data):
         algorithm = data['Algorithm']
         direction = data['Direction']
 
-        if algorithm == "AES-128/GCM":
+        # CFB
+        if algorithm == "AES-128/CFB":
+            mode = "aes-128-cfb"
+        elif algorithm == "AES-192/CFB":
+            mode = "aes-192-cfb"
+        elif algorithm == "AES-256/CFB":
+            mode = "aes-256-cfb"
+        # GCM
+        elif algorithm == "AES-128/GCM":
             mode = "aes-128-gcm"
         elif algorithm == "AES-192/GCM":
             mode = "aes-192-gcm"
         elif algorithm == "AES-256/GCM":
             mode = "aes-256-gcm"
+        # OCB
+        elif algorithm == "AES-128/OCB":
+            mode = "aes-128-ocb"
+        # XTS
+        elif algorithm == "AES-128/XTS":
+            mode = "aes-128-xts"
+        elif algorithm == "AES-256/XTS":
+            mode = "aes-256-xts"
         else: raise Exception("Unknown algorithm: '" + algorithm + "'")
 
         cmd = [
@@ -49,6 +82,8 @@ def create_test(data):
         else:
             invalue = plaintext
 
+        #print(cmd)
+
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         out_raw = p.communicate(input=binascii.unhexlify(invalue))[0]
         out = binascii.hexlify(out_raw).decode("UTF-8").lower()
@@ -63,14 +98,15 @@ def create_test(data):
     return do_test_expected
 
 def get_testdata(document):
-    out = collections.OrderedDict()
+    out = OrderedDict()
     for algorithm in document:
-        if algorithm in ['AES-128/GCM', 'AES-192/GCM', 'AES-256/GCM']:
+        if algorithm in SUPPORTED_ALGORITHMS:
             testcase_number = 0
             for testcase in document[algorithm]:
                 testcase_number += 1
                 for direction in ['encrypt', 'decrypt']:
-                    testname = "%s no %d (%s)" % (algorithm.lower(), testcase_number, direction)
+                    testname = "{} no {:0>3} ({})".format(
+                            algorithm.lower(), testcase_number, direction)
                     testname = re.sub("[^a-z0-9\-]", "_", testname)
                     testname = re.sub("_+", "_", testname)
                     testname = testname.strip("_")
@@ -91,7 +127,10 @@ if __name__ == '__main__':
 
     cli_binary = args.cli_binary
 
-    vecfile = vecparser.VecDocument("src/tests/data/aead/gcm.vec")
+    vecfile_cfb = vecparser.VecDocument("src/tests/data/modes/cfb.vec")
+    vecfile_gcm = vecparser.VecDocument("src/tests/data/aead/gcm.vec")
+    vecfile_ocb = vecparser.VecDocument("src/tests/data/aead/ocb.vec")
+    vecfile_xts = vecparser.VecDocument("src/tests/data/modes/xts.vec")
     #data = vecfile.get_data()
     #for algo in data:
     #    print(algo)
@@ -100,7 +139,12 @@ if __name__ == '__main__':
     #        i += 1
     #        print(str(i) + ":", testcase)
 
-    testdata = get_testdata(vecfile.get_data())
+    testdata = OrderedDict();
+    append_ordered(testdata, get_testdata(vecfile_cfb.get_data()))
+    append_ordered(testdata, get_testdata(vecfile_gcm.get_data()))
+    append_ordered(testdata, get_testdata(vecfile_ocb.get_data()))
+    append_ordered(testdata, get_testdata(vecfile_xts.get_data()))
+
     #for testname in testdata:
     #    print(testname)
     #    for key in testdata[testname]:

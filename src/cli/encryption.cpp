@@ -13,6 +13,7 @@
 
 #include <iostream>
 #include <iterator>
+#include <sstream>
 
 using namespace Botan;
 
@@ -23,10 +24,22 @@ namespace {
 auto VALID_MODES = std::map<std::string, std::string>{
          // Don't add algorithms here without extending tests
          // in `src/scripts/cli_tests.py`
+         { "aes-128-cfb", "AES-128/CFB" },
+         { "aes-192-cfb", "AES-192/CFB" },
+         { "aes-256-cfb", "AES-256/CFB" },
          { "aes-128-gcm", "AES-128/GCM" },
          { "aes-192-gcm", "AES-192/GCM" },
          { "aes-256-gcm", "AES-256/GCM" },
+         { "aes-128-ocb", "AES-128/OCB" },
+         { "aes-128-xts", "AES-128/XTS" },
+         { "aes-256-xts", "AES-256/XTS" },
 };
+
+bool is_aead(const std::string &cipher)
+    {
+    return cipher.find("/GCM") != std::string::npos
+            || cipher.find("/OCB") != std::string::npos;
+    }
 
 secure_vector<byte> do_crypt(const std::string &cipher,
                              const secure_vector<byte> &input,
@@ -46,7 +59,7 @@ secure_vector<byte> do_crypt(const std::string &cipher,
    processor->set_key(key);
 
    // Set associated data
-   if (cipher.find("/GCM") != std::string::npos)
+   if (is_aead(cipher))
       {
       auto aead_processor = std::dynamic_pointer_cast<AEAD_Mode>(processor);
       if(!aead_processor) throw std::runtime_error("Cipher algorithm not could not be converted to AEAD");
@@ -91,11 +104,12 @@ class Encryption : public Command
          std::string mode = get_arg_or("mode", "");
          if (!VALID_MODES.count(mode))
             {
-            std::cout << "Invalid mode: '" << mode << "'\n"
-                      << "valid modes are:";
-            for (auto valid_mode : VALID_MODES) std::cout << " " << valid_mode.first;
-            std::cout << std::endl;
-            return;
+            std::ostringstream error;
+            error << "Invalid mode: '" << mode << "'\n"
+                  << "valid modes are:";
+            for (auto valid_mode : VALID_MODES) error << " " << valid_mode.first;
+
+            throw CLI_Usage_Error(error.str());
             }
 
          std::string key_hex = get_arg("key");
