@@ -94,7 +94,7 @@ uint64_t get_system_timestamp_ns()
       }
 #endif
 
-   auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+   auto now = std::chrono::system_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
    }
 
