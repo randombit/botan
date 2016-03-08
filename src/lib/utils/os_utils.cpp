@@ -171,7 +171,6 @@ size_t get_memory_locking_limit()
          return BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB * 1024ULL;
          }
       }
-   return 0;
 #endif
 
    return 0;
