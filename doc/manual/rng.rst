@@ -127,3 +127,22 @@ has been hashed by the ``RandomNumberGenerator`` that asked for the
 entropy, thus any hashing you do will be wasteful of both CPU cycles
 and entropy.
 
+Fork Safety
+---------------------------------
+
+On Unix platforms, the ``fork()`` and ``clone()`` system calls can
+be used to spawn a new child process. Fork safety ensures that the
+child process doesn't see the same output of random bytes as the
+parent process. Botan tries to ensure fork safety by feeding the
+process ID into the internal state of the random generator and by
+automatically reseeding the random generator if the process ID
+changed between two requests of random bytes. However, this does
+not protect against PID wrap around. The process ID is usually
+implemented as a 16 bit integer. In this scenario, a process will
+spawn a new child process, which exits the parent process and
+spawns a new child process himself. If the PID wrapped around, the
+second child process may get assigned the process ID of it's 
+grandparent and the fork safety can not be ensured.
+
+Therefore, it is strongly recommended to explicitly reseed the
+random generator after forking a new process.
