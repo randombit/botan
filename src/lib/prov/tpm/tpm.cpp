@@ -56,13 +56,14 @@ TSS_FLAG bit_flag(size_t bits)
       }
    }
 
+#if 0
 bool is_srk_uuid(const UUID& uuid)
    {
    static const byte srk[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
    const std::vector<uint8_t>& b = uuid.binary_value();
    return (b.size() == 16 && same_mem(b.data(), srk, 16));
    }
-
+#endif
 
 #define TSPI_CHECK_SUCCESS(expr) do {   \
    TSS_RESULT res = expr;           \
@@ -90,10 +91,11 @@ void set_policy_secret(TSS_HPOLICY policy, const char* secret)
    {
    if(secret)
       {
+      BYTE* as_b = const_cast<BYTE*>(reinterpret_cast<const BYTE*>(secret));
       TSPI_CHECK_SUCCESS(::Tspi_Policy_SetSecret(policy,
-                                             TSS_SECRET_MODE_PLAIN,
-                                             std::strlen(secret),
-                                             (BYTE*)secret));
+                                                 TSS_SECRET_MODE_PLAIN,
+                                                 std::strlen(secret),
+                                                 as_b));
       }
    else
       {

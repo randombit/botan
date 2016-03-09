@@ -20,7 +20,7 @@ void Intel_Rdrand::poll(Entropy_Accumulator& accum) {
    if(!CPUID::has_rdrand())
       return;
 
-   for(size_t i = 0; i != BOTAN_ENTROPY_INTEL_RNG_POLLS; ++i)
+   for(size_t p = 0; p != BOTAN_ENTROPY_INTEL_RNG_POLLS; ++p)
       {
       for(size_t i = 0; i != BOTAN_ENTROPY_RDRAND_RETRIES; ++i)
          {

@@ -32,11 +32,11 @@ class Filter_Tests : public Test
             secqueue_result.test_eq("size of SecureQueue is correct", queue_a.size(), test_data.size());
             secqueue_result.test_eq("0 bytes read so far from SecureQueue", queue_a.get_bytes_read(), 0);
 
-            uint8_t byte;
-            size_t bytes_read = queue_a.read_byte(byte);
+            uint8_t b;
+            size_t bytes_read = queue_a.read_byte(b);
             secqueue_result.test_eq("1 byte read", bytes_read, 1);
 
-            Botan::secure_vector<uint8_t> produced(byte);
+            Botan::secure_vector<uint8_t> produced(b);
             Botan::secure_vector<uint8_t> expected(test_data.at(0));
             secqueue_result.test_eq("byte read is correct", produced, expected);
 

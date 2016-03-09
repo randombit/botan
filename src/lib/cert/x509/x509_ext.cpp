@@ -379,7 +379,9 @@ void Alternative_Name::contents_to(Data_Store& subject_info,
 * Alternative_Name Constructor
 */
 Alternative_Name::Alternative_Name(const AlternativeName& alt_name,
-                                   const std::string& oid_name_str) : m_alt_name(alt_name), m_oid_name_str(oid_name_str)
+                                   const std::string& oid_name_str) :
+   m_oid_name_str(oid_name_str),
+   m_alt_name(alt_name)
    {}
 
 /*
@@ -436,26 +438,28 @@ namespace {
 class Policy_Information : public ASN1_Object
    {
    public:
-      // public member variable:
-      OID oid;
-
       Policy_Information() {}
-      explicit Policy_Information(const OID& oid) : oid(oid) {}
+      explicit Policy_Information(const OID& oid) : m_oid(oid) {}
+
+      const OID& oid() const { return m_oid; }
 
       void encode_into(DER_Encoder& codec) const override
          {
          codec.start_cons(SEQUENCE)
-            .encode(oid)
+            .encode(m_oid)
             .end_cons();
          }
 
       void decode_from(BER_Decoder& codec) override
          {
          codec.start_cons(SEQUENCE)
-            .decode(oid)
+            .decode(m_oid)
             .discard_remaining()
             .end_cons();
          }
+
+   private:
+      OID m_oid;
    };
 
 }
@@ -488,7 +492,7 @@ void Certificate_Policies::decode_inner(const std::vector<byte>& in)
 
    m_oids.clear();
    for(size_t i = 0; i != policies.size(); ++i)
-      m_oids.push_back(policies[i].oid);
+      m_oids.push_back(policies[i].oid());
    }
 
 /*

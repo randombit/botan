@@ -138,32 +138,36 @@ class BOTAN_DLL TPM_PrivateKey : public Private_Key
       */
       std::string register_key(TPM_Storage_Type storage_type);
 
-      /*
-      * Returns the list of all keys (in URL format) registered with the system
+      /**
+      * Returns a copy of the public key
       */
-      static std::vector<std::string> registered_keys(TPM_Context& ctx);
-
-      size_t estimated_strength() const;
-
-      size_t max_input_bits() const;
-
-      AlgorithmIdentifier algorithm_identifier() const;
-
-      std::vector<byte> x509_subject_public_key() const;
-
-      secure_vector<byte> pkcs8_private_key() const; // not implemented
-
       std::unique_ptr<Public_Key> public_key() const;
-
-      bool check_key(RandomNumberGenerator& rng, bool) const override;
-
-      std::string algo_name() const { return "RSA"; } // ???
 
       std::vector<uint8_t> export_blob() const;
 
       TPM_Context& ctx() const { return m_ctx; }
 
       TSS_HKEY handle() const { return m_key; }
+
+      /*
+      * Returns the list of all keys (in URL format) registered with the system
+      */
+      static std::vector<std::string> registered_keys(TPM_Context& ctx);
+
+      size_t estimated_strength() const override;
+
+      size_t max_input_bits() const override;
+
+      AlgorithmIdentifier algorithm_identifier() const override;
+
+      std::vector<byte> x509_subject_public_key() const override;
+
+      secure_vector<byte> pkcs8_private_key() const override;
+
+      bool check_key(RandomNumberGenerator& rng, bool) const override;
+
+      std::string algo_name() const override { return "RSA"; } // ???
+
    private:
       BigInt get_n() const;
       BigInt get_e() const;

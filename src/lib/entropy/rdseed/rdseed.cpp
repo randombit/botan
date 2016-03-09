@@ -19,7 +19,7 @@ void Intel_Rdseed::poll(Entropy_Accumulator& accum) {
    if(!CPUID::has_rdseed())
       return;
 
-   for(size_t i = 0; i != BOTAN_ENTROPY_INTEL_RNG_POLLS; ++i)
+   for(size_t p = 0; p != BOTAN_ENTROPY_INTEL_RNG_POLLS; ++p)
       {
       for(size_t i = 0; i != BOTAN_ENTROPY_RDSEED_RETRIES; ++i)
          {
