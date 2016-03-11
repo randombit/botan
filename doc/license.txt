@@ -26,7 +26,7 @@ Copyright (C) 1999-2013,2014,2015,2016 Jack Lloyd
               2015 Simon Warta (Kullo GmbH)
               2015 Matej Kenda (TopIT d.o.o.)
               2015 René Korthaus
-              2015 Daniel Neus
+              2015,2016 Daniel Neus
               2015 Uri Blumenthal
 All rights reserved.
 

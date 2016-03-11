@@ -1,6 +1,7 @@
 /*
 * OS and machine specific utility functions
 * (C) 2015,2016 Jack Lloyd
+* (C) 2016 Daniel Neus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -50,7 +51,7 @@ uint64_t get_processor_timestamp()
 #if defined(BOTAN_USE_GCC_INLINE_ASM)
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-   if(CPUID::has_rdtsc()) // not availble on all x86 CPUs
+   if(CPUID::has_rdtsc()) // not available on all x86 CPUs
       {
       uint32_t rtc_low = 0, rtc_high = 0;
       asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
@@ -140,6 +141,36 @@ size_t get_memory_locking_limit()
 
       return std::min<size_t>(limits.rlim_cur, mlock_requested * 1024);
       }
+#elif defined BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK
+   SIZE_T working_min = 0, working_max = 0;
+   DWORD working_flags = 0;
+   if(!::GetProcessWorkingSetSizeEx(::GetCurrentProcess(), &working_min, &working_max, &working_flags))
+      {
+      return 0;
+      }
+
+   SYSTEM_INFO sSysInfo;
+   ::GetSystemInfo(&sSysInfo);
+
+   // According to Microsoft MSDN:
+   // The maximum number of pages that a process can lock is equal to the number of pages in its minimum working set minus a small overhead
+   // In the book "Windows Internals Part 2": the maximum lockable pages are minimum working set size - 8 pages 
+   // But the information in the book seems to be inaccurate/outdated
+   // I've tested this on Windows 8.1 x64, Windows 10 x64 and Windows 7 x86
+   // On all three OS the value is 11 instead of 8
+   size_t overhead = sSysInfo.dwPageSize * 11ULL;
+   if(working_min > overhead)
+      {
+      size_t lockable_bytes = working_min - overhead;
+      if(lockable_bytes < (BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB * 1024ULL))
+         {
+         return lockable_bytes;
+         }
+      else
+         {
+         return BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB * 1024ULL;
+         }
+      }
 #endif
 
    return 0;
@@ -182,6 +213,20 @@ void* allocate_locked_pages(size_t length)
    ::memset(ptr, 0, length);
 
    return ptr;
+#elif defined BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK
+   LPVOID ptr = ::VirtualAlloc(nullptr, length, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+   if(!ptr)
+      {
+      return nullptr;
+      }
+
+   if(::VirtualLock(ptr, length) == 0)
+      {
+      ::VirtualFree(ptr, 0, MEM_RELEASE);
+      return nullptr; // failed to lock
+      }
+
+   return ptr;
 #else
    return nullptr; /* not implemented */
 #endif
@@ -196,6 +241,10 @@ void free_locked_pages(void* ptr, size_t length)
    zero_mem(ptr, length);
    ::munlock(ptr, length);
    ::munmap(ptr, length);
+#elif defined BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK
+   zero_mem(ptr, length);
+   ::VirtualUnlock(ptr, length);
+   ::VirtualFree(ptr, 0, MEM_RELEASE);
 #else
    // Invalid argument because no way this pointer was allocated by us
    throw Invalid_Argument("Invalid ptr to free_locked_pages");
