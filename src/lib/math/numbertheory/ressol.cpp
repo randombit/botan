@@ -66,7 +66,7 @@ BigInt ressol(const BigInt& a, const BigInt& p)
          q = mod_p.square(q);
          ++i;
 
-         if(i > s)
+         if(i >= s)
             {
             return -BigInt(1);
             }
