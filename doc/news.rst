@@ -4,6 +4,10 @@ Release Notes
 Version 1.11.29, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Deprecation warning: Rabin-Williams is deprecated and will likely be
+  removed in a future release unless some good reason to keep it
+  (current application use or real protocols using it) is found.
+
 * Reject empty TLS records at the record processing layer since such a
   record is not valid regardless of the record type. Later checks
   already correctly rejected empty records, but during processing such
