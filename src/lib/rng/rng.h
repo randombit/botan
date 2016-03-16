@@ -132,6 +132,8 @@ class BOTAN_DLL RandomNumberGenerator
       virtual ~RandomNumberGenerator() {}
    };
 
+typedef RandomNumberGenerator RNG;
+
 /**
 * Null/stub RNG - fails if you try to use it for anything
 */

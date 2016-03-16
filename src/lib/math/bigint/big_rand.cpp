@@ -45,19 +45,17 @@ void BigInt::randomize(RandomNumberGenerator& rng,
 BigInt BigInt::random_integer(RandomNumberGenerator& rng,
                               const BigInt& min, const BigInt& max)
    {
-   BigInt delta_upper_bound = max - min - 1;
+   BigInt r;
 
-   if(delta_upper_bound < 0)
-      throw Invalid_Argument("random_integer: invalid min/max values");
+   const size_t bits = max.bits();
 
-   // Choose x in [0, delta_upper_bound]
-   BigInt x;
-   do {
-      auto bitsize = delta_upper_bound.bits();
-      x.randomize(rng, bitsize, false);
-   } while(x > delta_upper_bound);
+   do
+      {
+      r.randomize(rng, bits, false);
+      }
+   while(r < min || r >= max);
 
-   return min + x;
+   return r;
    }
 
 }
