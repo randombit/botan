@@ -28,7 +28,6 @@ PKIX
 ----------------------------------------
 
 * Support multiple DNS names in certificates
-* X.509 name constraints
 * X.509 policy constraints
 * OCSP responder logic
 * X.509 attribute certificates (RFC 5755)

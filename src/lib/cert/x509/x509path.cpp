@@ -150,7 +150,7 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
             cert_status.at(i).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
 
          // Check that all subordinate certs pass the name constraint
-         for(int j = i; j >= 0; j--)
+         for(size_t j = 0; j <= i; ++j)
             {
             if(i == j && at_self_signed_root)
                continue;

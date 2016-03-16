@@ -33,7 +33,7 @@ GeneralName::GeneralName(const std::string& v) : GeneralName()
 
 void GeneralName::encode_into(class DER_Encoder&) const
    {
-   throw std::runtime_error("General Name encoding not implemented");
+   throw Exception("General Name encoding not implemented");
    }
 
 void GeneralName::decode_from(class BER_Decoder& ber)
@@ -84,6 +84,15 @@ void GeneralName::decode_from(class BER_Decoder& ber)
          m_type = "IP";
          m_name = ipv4_to_string(load_be<u32bit>(ip.data(),0)) + "/" + ipv4_to_string(load_be<u32bit>(net.data(),0));
          }
+      else if(obj.value.size() == 32)
+         {
+         throw Decoding_Error("Unsupported IPv6 name constraint");
+         }
+      else
+         {
+         throw Decoding_Error("Invalid IP name constraint size " +
+                              std::to_string(obj.value.size()));
+         }
       }
    else
       {
@@ -93,88 +102,83 @@ void GeneralName::decode_from(class BER_Decoder& ber)
 
 GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) const
    {
-   if(type() == "DNS" || type() == "DN" || type() == "IP")
+   std::vector<std::string> nam;
+   std::function<bool(const GeneralName*,const std::string&)> match_fn;
+
+   if(type() == "DNS")
       {
-      std::vector<std::string> nam;
-      std::function<bool(const GeneralName*,const std::string&)> match_fn;
-
-      if(type() == "DNS")
-         {
-         match_fn = std::mem_fn(&GeneralName::matches_dns);
-         nam = cert.subject_info("DNS");
-
-         if(nam.empty())
-            {
-            nam = cert.subject_info("CN");
-            }
-         }
-      else if(type() == "DN")
-         {
-         std::stringstream ss;
-
-         match_fn = std::mem_fn(&GeneralName::matches_dn);
-         ss << cert.subject_dn();
-
-         nam.push_back(ss.str());
-         }
-      else if(type() == "IP")
-         {
-         match_fn = std::mem_fn(&GeneralName::matches_ip);
-         nam = cert.subject_info("IP");
-         }
-
-      else
-         {
-         throw Unsupported_Argument("Unsupported Name Constraint");
-         }
+      match_fn = std::mem_fn(&GeneralName::matches_dns);
+      nam = cert.subject_info("DNS");
 
       if(nam.empty())
          {
-         return MatchResult::NotFound;
+         nam = cert.subject_info("CN");
          }
+      }
+   else if(type() == "DN")
+      {
+      match_fn = std::mem_fn(&GeneralName::matches_dn);
 
-      bool some = false;
-      bool all = true;
-
-      for(const std::string& n: nam)
-         {
-         bool m = match_fn(this,n);
-
-         some |= m;
-         all &= m;
-         }
-
-      if(all)
-         {
-         return MatchResult::All;
-         }
-      else if(some)
-         {
-         return MatchResult::Some;
-         }
-      else
-         {
-         return MatchResult::None;
-         }
+      std::stringstream ss;
+      ss << cert.subject_dn();
+      nam.push_back(ss.str());
+      }
+   else if(type() == "IP")
+      {
+      match_fn = std::mem_fn(&GeneralName::matches_ip);
+      nam = cert.subject_info("IP");
       }
    else
       {
       return MatchResult::UnknownType;
       }
+
+   if(nam.empty())
+      {
+      return MatchResult::NotFound;
+      }
+
+   bool some = false;
+   bool all = true;
+
+   for(const std::string& n: nam)
+      {
+      bool m = match_fn(this,n);
+
+      some |= m;
+      all &= m;
+      }
+
+   if(all)
+      {
+      return MatchResult::All;
+      }
+   else if(some)
+      {
+      return MatchResult::Some;
+      }
+   else
+      {
+      return MatchResult::None;
+      }
    }
 
 bool GeneralName::matches_dns(const std::string& nam) const
    {
-      if(nam.size() == name().size())
-         return nam == name();
-      else if(name().size() > nam.size())
-         return false;
-      else // nam.size() > name().size()
-         {
-         std::string constr = name().front() == '.' ? name() : "." + name();
-         // constr is suffix of nam
-         return constr == nam.substr(nam.size() - constr.size(),constr.size());
-         }
+   if(nam.size() == name().size())
+      {
+      return nam == name();
+      }
+   else if(name().size() > nam.size())
+      {
+      return false;
+      }
+   else // name.size() < nam.size()
+      {
+      std::string constr = name().front() == '.' ? name() : "." + name();
+      // constr is suffix of nam
+      return constr == nam.substr(nam.size() - constr.size(),constr.size());
+      }
    }
 
 bool GeneralName::matches_dn(const std::string& nam) const
@@ -227,8 +231,8 @@ std::ostream& operator<<(std::ostream& os, const GeneralName& gn)
 GeneralSubtree::GeneralSubtree(const std::string& v) : GeneralSubtree()
    {
    size_t p0, p1;
-   size_t min = stoull(v,&p0,10);
-   size_t max = stoull(v.substr(p0 + 1),&p1,10);
+   size_t min = std::stoull(v, &p0, 10);
+   size_t max = std::stoull(v.substr(p0 + 1), &p1, 10);
    GeneralName gn(v.substr(p0 + p1 + 2));
 
    if(p0 > 0 && p1 > 0)
