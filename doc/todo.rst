@@ -3,18 +3,21 @@ Projects
 
 Request a new feature by opening a pull request to update this file.
 
-Commands
+CLI
 ----------------------------------------
 
+* Rewrite `tls_client` and `tls_server` to use asio. See `tls_proxy`
+  for an example
 * `encrypt` / `decrypt` tools providing password and/or public key
   based file encryption
 
 TLS
 ----------------------------------------
 
-* Make DTLS and SRP6 support optional in build
+* Make DTLS support optional at build time
+* Make TLS v1.0 and v1.1 optional at build time
 * Curve25519 key exchange
-* Support for server key stored in TPM
+* IETF standard ChaCha20Poly1305
 * TLS OCSP stapling (RFC 6066)
 * Encrypt-then-MAC extension (RFC 7366)
 * Authentication using TOFU (sqlite3 storage)
@@ -23,6 +26,7 @@ TLS
 * OpenPGP authentication (RFC 5081)
 * DTLS-SCTP (RFC 6083)
 * Perspectives (http://perspectives-project.org/)
+* Support for server key stored in TPM
 
 PKIX
 ----------------------------------------
@@ -57,6 +61,7 @@ FFI (Python, OCaml)
 
 * Expose certificates
 * Expose TLS
+* Write a CLI in Python
 
 Symmetric Algorithms, Hashes, ...
 ----------------------------------------

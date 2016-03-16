@@ -290,6 +290,9 @@ class BOTAN_DLL Text_Policy : public Policy
       u32bit session_ticket_lifetime() const override
          { return get_len("session_ticket_lifetime", Policy::session_ticket_lifetime()); }
 
+      bool send_fallback_scsv(Protocol_Version version) const override
+         { return get_bool("send_fallback_scsv", false) ? Policy::send_fallback_scsv(version) : false; }
+
       std::vector<u16bit> srtp_profiles() const override
          {
          std::vector<u16bit> r;

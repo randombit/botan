@@ -38,29 +38,51 @@ namespace Botan_CLI {
 class TLS_Client final : public Command
    {
    public:
-      TLS_Client() : Command("tls_client host --port=443 --type=tcp "
-                             "--session-db= --session-db-pass= --next-protocols=") {}
+      TLS_Client() : Command("tls_client host --port=443 --print-certs --policy= "
+                             "--tls1.0 --tls1.1 --tls1.2 "
+                             "--session-db= --session-db-pass= --next-protocols= --type=tcp") {}
 
       void go() override
          {
-         Botan::TLS::Policy policy; // TODO read from a file
-
          // TODO client cert auth
 
          std::unique_ptr<Botan::TLS::Session_Manager> session_mgr;
 
-#if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-         const std::string sessions_passphrase = get_arg("session-db-pass");
          const std::string sessions_db = get_arg("session-db");
 
          if(!sessions_db.empty())
             {
+#if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
+            const std::string sessions_passphrase = get_arg("session-db-pass");
             session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng(), sessions_db));
-            }
+#else
+            error_output() << "Ignoring session DB file, sqlite not enabled\n";
 #endif
+            }
+
          if(!session_mgr)
             {
             session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
+            }
+
+         std::string policy_file = get_arg("policy");
+
+         std::unique_ptr<Botan::TLS::Policy> policy;
+
+         if(policy_file.size() > 0)
+            {
+            std::ifstream policy_stream(policy_file);
+            if(!policy_stream.good())
+               {
+               error_output() << "Failed reading policy file\n";
+               return;
+               }
+            policy.reset(new Botan::TLS::Text_Policy(policy_stream));
+            }
+
+         if(!policy)
+            {
+            policy.reset(new Botan::TLS::Policy);
             }
 
          Basic_Credentials_Manager creds;
@@ -85,7 +107,16 @@ class TLS_Client final : public Command
             std::bind(stream_socket_write, sockfd, _1, _2) :
             std::bind(dgram_socket_write, sockfd, _1, _2);
 
-         auto version = policy.latest_supported_version(!use_tcp);
+         auto version = policy->latest_supported_version(!use_tcp);
+
+         if(flag_set("tls1.0"))
+            {
+            version = Botan::TLS::Protocol_Version::TLS_V10;
+            }
+         else if(flag_set("tls1.1"))
+            {
+            version = Botan::TLS::Protocol_Version::TLS_V11;
+            }
 
          Botan::TLS::Client client(socket_write,
                                    std::bind(&TLS_Client::process_data, this, _1, _2),
@@ -93,7 +124,7 @@ class TLS_Client final : public Command
                                    std::bind(&TLS_Client::handshake_complete, this, _1),
                                    *session_mgr,
                                    creds,
-                                   policy,
+                                   *policy,
                                    rng(),
                                    Botan::TLS::Server_Information(host, port),
                                    version,
@@ -235,6 +266,18 @@ class TLS_Client final : public Command
 
          if(!session.session_ticket().empty())
             output() << "Session ticket " << Botan::hex_encode(session.session_ticket()) << "\n";
+
+         if(flag_set("print-certs"))
+            {
+            const std::vector<Botan::X509_Certificate>& certs = session.peer_certs();
+
+            for(size_t i = 0; i != certs.size(); ++i)
+               {
+               output() << "Certificate " << i+1 << "/" << certs.size() << "\n";
+               output() << certs[i].to_string();
+               output() << certs[i].PEM_encode();
+               }
+            }
 
          return true;
          }
