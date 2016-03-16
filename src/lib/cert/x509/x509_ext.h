@@ -260,6 +260,29 @@ class BOTAN_DLL Extended_Key_Usage final : public Certificate_Extension
    };
 
 /**
+* Name Constraints
+*/
+class BOTAN_DLL Name_Constraints : public Certificate_Extension
+   {
+   public:
+      Name_Constraints* copy() const override
+         { return new Name_Constraints(m_name_constraints); }
+
+      Name_Constraints() {}
+      Name_Constraints(const NameConstraints &nc) : m_name_constraints(nc) {}
+   private:
+      std::string oid_name() const override
+         { return "X509v3.NameConstraints"; }
+
+      bool should_encode() const override { return true; }
+      std::vector<byte> encode_inner() const override;
+      void decode_inner(const std::vector<byte>&) override;
+      void contents_to(Data_Store&, Data_Store&) const override;
+
+      NameConstraints m_name_constraints;
+   };
+
+/**
 * Certificate Policies Extension
 */
 class BOTAN_DLL Certificate_Policies final : public Certificate_Extension

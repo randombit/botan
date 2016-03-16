@@ -13,6 +13,7 @@
 #include <botan/charset.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
+#include <sstream>
 
 namespace Botan {
 
@@ -32,6 +33,7 @@ Certificate_Extension* Extensions::get_extension(const OID& oid)
    X509_EXTENSION("X509v3.ExtendedKeyUsage", Extended_Key_Usage);
    X509_EXTENSION("X509v3.IssuerAlternativeName", Issuer_Alternative_Name);
    X509_EXTENSION("X509v3.SubjectAlternativeName", Subject_Alternative_Name);
+   X509_EXTENSION("X509v3.NameConstraints", Name_Constraints);
    X509_EXTENSION("X509v3.CertificatePolicies", Certificate_Policies);
    X509_EXTENSION("X509v3.CRLDistributionPoints", CRL_Distribution_Points);
    X509_EXTENSION("PKIX.AuthorityInformationAccess", Authority_Information_Access);
@@ -166,7 +168,10 @@ void Extensions::contents_to(Data_Store& subject_info,
                              Data_Store& issuer_info) const
    {
    for(size_t i = 0; i != m_extensions.size(); ++i)
+      {
       m_extensions[i].first->contents_to(subject_info, issuer_info);
+      subject_info.add(m_extensions[i].first->oid_name() + ".is_critical", (m_extensions[i].second ? 1 : 0));
+      }
    }
 
 
@@ -428,6 +433,71 @@ void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
    {
    for(size_t i = 0; i != m_oids.size(); ++i)
       subject.add("X509v3.ExtendedKeyUsage", m_oids[i].as_string());
+   }
+
+/*
+* Encode the extension
+*/
+std::vector<byte> Name_Constraints::encode_inner() const
+   {
+   throw std::runtime_error("Name_Constraints encoding not implemented");
+   }
+
+
+/*
+* Decode the extension
+*/
+void Name_Constraints::decode_inner(const std::vector<byte>& in)
+   {
+   std::vector<GeneralSubtree> permit, exclude;
+   BER_Decoder ber(in);
+   BER_Decoder ext = ber.start_cons(SEQUENCE);
+   BER_Object per = ext.get_next_object();
+
+   ext.push_back(per);
+   if(per.type_tag == 0 && per.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+      {
+      ext.decode_list(permit,ASN1_Tag(0),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+      if(permit.empty())
+         throw Encoding_Error("Empty Name Contraint list");
+      }
+
+   BER_Object exc = ext.get_next_object();
+   ext.push_back(exc);
+   if(per.type_tag == 1 && per.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+      {
+      ext.decode_list(exclude,ASN1_Tag(1),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+      if(exclude.empty())
+         throw Encoding_Error("Empty Name Contraint list");
+      }
+
+   ext.end_cons();
+
+   if(permit.empty() && exclude.empty())
+      throw Encoding_Error("Empty Name Contraint extension");
+
+   m_name_constraints = NameConstraints(std::move(permit),std::move(exclude));
+   }
+
+/*
+* Return a textual representation
+*/
+void Name_Constraints::contents_to(Data_Store& subject, Data_Store&) const
+   {
+   std::stringstream ss;
+
+   for(const GeneralSubtree& gs: m_name_constraints.permitted())
+      {
+      ss << gs;
+      subject.add("X509v3.NameConstraints.permitted", ss.str());
+      ss.str(std::string());
+      }
+   for(const GeneralSubtree& gs: m_name_constraints.excluded())
+      {
+      ss << gs;
+      subject.add("X509v3.NameConstraints.excluded", ss.str());
+      ss.str(std::string());
+      }
    }
 
 namespace {

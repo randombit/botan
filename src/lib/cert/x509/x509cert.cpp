@@ -280,6 +280,14 @@ u32bit X509_Certificate::path_limit() const
    }
 
 /*
+* Return if a certificate extension is marked critical
+*/
+bool X509_Certificate::is_critical(const std::string& ex_name) const
+   {
+   return !!m_subject.get1_u32bit(ex_name + ".is_critical",0);
+   }
+
+/*
 * Return the key usage constraints
 */
 Key_Constraints X509_Certificate::constraints() const
@@ -294,6 +302,26 @@ Key_Constraints X509_Certificate::constraints() const
 std::vector<std::string> X509_Certificate::ex_constraints() const
    {
    return lookup_oids(m_subject.get("X509v3.ExtendedKeyUsage"));
+   }
+
+/*
+* Return the name constraints
+*/
+NameConstraints X509_Certificate::name_constraints() const
+   {
+   std::vector<GeneralSubtree> permit, exclude;
+
+   for(const std::string& v: m_subject.get("X509v3.NameConstraints.permitted"))
+      {
+      permit.push_back(GeneralSubtree(v));
+      }
+
+   for(const std::string& v: m_subject.get("X509v3.NameConstraints.excluded"))
+      {
+      exclude.push_back(GeneralSubtree(v));
+      }
+
+   return NameConstraints(std::move(permit),std::move(exclude));
    }
 
 /*
@@ -512,6 +540,33 @@ std::string X509_Certificate::to_string() const
       out << "Extended Constraints:\n";
       for(size_t i = 0; i != ex_constraints.size(); i++)
          out << "   " << ex_constraints[i] << "\n";
+      }
+
+   NameConstraints name_constraints = this->name_constraints();
+   if(!name_constraints.permitted().empty() ||
+         !name_constraints.excluded().empty())
+      {
+      out << "Name Constraints:\n";
+
+      if(!name_constraints.permitted().empty())
+         {
+         out << "   Permit";
+         for(auto st: name_constraints.permitted())
+            {
+            out << " " << st.base();
+            }
+         out << "\n";
+         }
+
+      if(!name_constraints.excluded().empty())
+         {
+         out << "   Exclude";
+         for(auto st: name_constraints.excluded())
+            {
+            out << " " << st.base();
+            }
+         out << "\n";
+         }
       }
 
    if(!ocsp_responder().empty())
