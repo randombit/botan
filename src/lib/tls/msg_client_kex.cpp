@@ -148,6 +148,12 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          if(name == "")
             throw Decoding_Error("Server sent unknown named curve " + std::to_string(curve_id));
 
+         if(!policy.allowed_ecc_curve(name))
+            {
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                "Server sent ECC curve prohibited by policy");
+            }
+
          EC_Group group(name);
 
          std::vector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);

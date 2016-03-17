@@ -64,6 +64,8 @@ class BOTAN_DLL Policy
       */
       virtual std::vector<std::string> allowed_ecc_curves() const;
 
+      bool allowed_ecc_curve(const std::string& curve) const;
+
       /**
       * Returns a list of compression algorithms we are willing to use,
       * in order of preference. Allowed values any value of

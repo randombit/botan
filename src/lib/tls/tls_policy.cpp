@@ -109,6 +109,11 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
       };
    }
 
+bool Policy::allowed_ecc_curve(const std::string& curve) const
+   {
+   return value_exists(allowed_ecc_curves(), curve);
+   }
+
 /*
 * Choose an ECC curve to use
 */
