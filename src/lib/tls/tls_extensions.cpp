@@ -274,22 +274,6 @@ std::string Supported_Elliptic_Curves::curve_id_to_name(u16bit id)
    {
    switch(id)
       {
-      case 15:
-         return "secp160k1";
-      case 16:
-         return "secp160r1";
-      case 17:
-         return "secp160r2";
-      case 18:
-         return "secp192k1";
-      case 19:
-         return "secp192r1";
-      case 20:
-         return "secp224k1";
-      case 21:
-         return "secp224r1";
-      case 22:
-         return "secp256k1";
       case 23:
          return "secp256r1";
       case 24:
@@ -309,22 +293,6 @@ std::string Supported_Elliptic_Curves::curve_id_to_name(u16bit id)
 
 u16bit Supported_Elliptic_Curves::name_to_curve_id(const std::string& name)
    {
-   if(name == "secp160k1")
-      return 15;
-   if(name == "secp160r1")
-      return 16;
-   if(name == "secp160r2")
-      return 17;
-   if(name == "secp192k1")
-      return 18;
-   if(name == "secp192r1")
-      return 19;
-   if(name == "secp224k1")
-      return 20;
-   if(name == "secp224r1")
-      return 21;
-   if(name == "secp256k1")
-      return 22;
    if(name == "secp256r1")
       return 23;
    if(name == "secp384r1")
@@ -385,14 +353,13 @@ std::string Signature_Algorithms::hash_algo_name(byte code)
    {
    switch(code)
       {
-      case 1:
-         return "MD5";
       // code 1 is MD5 - ignore it
 
       case 2:
          return "SHA-1";
-      case 3:
-         return "SHA-224";
+
+      // code 3 is SHA-224
+
       case 4:
          return "SHA-256";
       case 5:
@@ -406,14 +373,8 @@ std::string Signature_Algorithms::hash_algo_name(byte code)
 
 byte Signature_Algorithms::hash_algo_code(const std::string& name)
    {
-   if(name == "MD5")
-      return 1;
-
    if(name == "SHA-1")
       return 2;
-
-   if(name == "SHA-224")
-      return 3;
 
    if(name == "SHA-256")
       return 4;
