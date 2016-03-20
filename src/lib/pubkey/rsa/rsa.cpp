@@ -157,7 +157,7 @@ class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
          const BigInt x = blinded_private_op(m);
          const BigInt c = m_powermod_e_n(x);
          BOTAN_ASSERT(m == c, "RSA decrypt consistency check");
-         return BigInt::encode_locked(x);
+         return BigInt::encode_1363(x, m_n.bytes());
          }
    };
 

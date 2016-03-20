@@ -726,8 +726,8 @@ class Speed final : public Command
          Botan::PK_Encryptor_EME enc(key, padding, provider);
          Botan::PK_Decryptor_EME dec(key, padding, provider);
 
-         Timer enc_timer(nm, provider, "encrypt");
-         Timer dec_timer(nm, provider, "decrypt");
+         Timer enc_timer(nm, provider, padding + " encrypt");
+         Timer dec_timer(nm, provider, padding + " decrypt");
 
          while(enc_timer.under(msec) || dec_timer.under(msec))
             {
@@ -793,8 +793,8 @@ class Speed final : public Command
          Botan::PK_Signer   sig(key, padding, Botan::IEEE_1363, provider);
          Botan::PK_Verifier ver(key, padding, Botan::IEEE_1363, provider);
 
-         Timer sig_timer(nm, provider, "sign");
-         Timer ver_timer(nm, provider, "verify");
+         Timer sig_timer(nm, provider, padding + " sign");
+         Timer ver_timer(nm, provider, padding + " verify");
 
          while(ver_timer.under(msec) || sig_timer.under(msec))
             {
@@ -855,7 +855,10 @@ class Speed final : public Command
 
             // Using PKCS #1 padding so OpenSSL provider can play along
             bench_pk_enc(*key, nm, provider, "EME-PKCS1-v1_5", msec);
+            bench_pk_enc(*key, nm, provider, "OAEP(SHA-1)", msec);
+
             bench_pk_sig(*key, nm, provider, "EMSA-PKCS1-v1_5(SHA-1)", msec);
+            bench_pk_sig(*key, nm, provider, "PSSR(SHA-256)", msec);
             }
          }
 #endif

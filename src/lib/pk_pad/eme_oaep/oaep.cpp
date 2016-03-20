@@ -61,8 +61,7 @@ secure_vector<byte> OAEP::pad(const byte in[], size_t in_length,
 * OAEP Unpad Operation
 */
 secure_vector<byte> OAEP::unpad(byte& valid_mask,
-                                const byte in[], size_t in_length,
-                                size_t key_length) const
+                                const byte in[], size_t in_length) const
    {
    /*
    Must be careful about error messages here; if an attacker can
@@ -75,15 +74,13 @@ secure_vector<byte> OAEP::unpad(byte& valid_mask,
    Strenzke.
    */
 
-   key_length /= 8;
+   if(in[0] == 0)
+      {
+      in += 1;
+      in_length -= 1;
+      }
 
-   // Invalid input: truncate to zero length input, causing later
-   // checks to fail
-   if(in_length > key_length)
-      in_length = 0;
-
-   secure_vector<byte> input(key_length);
-   buffer_insert(input, key_length - in_length, in, in_length);
+   secure_vector<byte> input(in, in + in_length);
 
    CT::poison(input.data(), input.size());
 

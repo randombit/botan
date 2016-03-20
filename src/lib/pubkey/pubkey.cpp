@@ -53,7 +53,6 @@ PK_Decryptor::decrypt_or_random(const byte in[],
                                 size_t required_contents_length) const
    {
    const secure_vector<byte> fake_pms = rng.random_vec(expected_pt_len);
-   //secure_vector<byte> decoded(expected_pt_len);
 
    CT::poison(in, length);
 
@@ -62,7 +61,6 @@ PK_Decryptor::decrypt_or_random(const byte in[],
 
    valid_mask &= CT::is_equal(decoded.size(), expected_pt_len);
 
-   // fixme
    decoded.resize(expected_pt_len);
 
    for(size_t i = 0; i != required_contents_length; ++i)

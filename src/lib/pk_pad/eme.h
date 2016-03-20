@@ -65,8 +65,8 @@ class BOTAN_DLL EME
       */
       virtual secure_vector<byte> unpad(byte& valid_mask,
                                         const byte in[],
-                                        size_t in_len,
-                                        size_t key_length) const = 0;
+                                        size_t in_len) const = 0;
+
       /**
       * Encode an input
       * @param in the plaintext

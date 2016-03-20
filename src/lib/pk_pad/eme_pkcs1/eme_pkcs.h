@@ -25,8 +25,7 @@ class BOTAN_DLL EME_PKCS1v15 final : public EME
 
       secure_vector<byte> unpad(byte& valid_mask,
                                 const byte in[],
-                                size_t in_len,
-                                size_t key_length) const override;
+                                size_t in_len) const override;
    };
 
 }

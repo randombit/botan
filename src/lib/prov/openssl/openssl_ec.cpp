@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <iostream>
 #include <botan/internal/openssl.h>
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)

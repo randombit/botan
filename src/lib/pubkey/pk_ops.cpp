@@ -31,12 +31,7 @@ secure_vector<byte> PK_Ops::Encryption_with_EME::encrypt(const byte msg[], size_
                                                          RandomNumberGenerator& rng)
    {
    const size_t max_raw = max_raw_input_bits();
-
    const std::vector<byte> encoded = unlock(m_eme->encode(msg, msg_len, max_raw, rng));
-
-   if(8*(encoded.size() - 1) + high_bit(encoded[0]) > max_raw)
-      throw Exception("Input is too large to encrypt with this key");
-
    return raw_encrypt(encoded.data(), encoded.size(), rng);
    }
 
@@ -60,7 +55,7 @@ PK_Ops::Decryption_with_EME::decrypt(byte& valid_mask,
                                      size_t ciphertext_len)
    {
    const secure_vector<byte> raw = raw_decrypt(ciphertext, ciphertext_len);
-   return m_eme->unpad(valid_mask, raw.data(), raw.size(), max_raw_input_bits());
+   return m_eme->unpad(valid_mask, raw.data(), raw.size());
    }
 
 PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(const std::string& kdf)

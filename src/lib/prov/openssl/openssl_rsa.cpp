@@ -140,13 +140,21 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
 
       size_t max_input_bits() const override { return ::BN_num_bits(m_openssl_rsa->n) - 1; }
 
-      secure_vector<byte> decrypt(const byte msg[], size_t msg_len) override
+      secure_vector<byte> decrypt(byte& valid_mask,
+                                  const byte msg[], size_t msg_len) override
          {
          secure_vector<byte> buf(::RSA_size(m_openssl_rsa.get()));
          int rc = ::RSA_private_decrypt(msg_len, msg, buf.data(), m_openssl_rsa.get(), m_padding);
          if(rc < 0 || static_cast<size_t>(rc) > buf.size())
-            throw OpenSSL_Error("RSA_private_decrypt");
-         buf.resize(rc);
+            {
+            valid_mask = 0;
+            buf.resize(0);
+            }
+         else
+            {
+            valid_mask = 0xFF;
+            buf.resize(rc);
+            }
 
          if(m_padding == RSA_NO_PADDING)
             {
