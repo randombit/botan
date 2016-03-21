@@ -84,16 +84,9 @@ All releases are signed with a
         Key fingerprint = 621D AF64 11E1 851C 4CF9  A2E1 6211 EBF1 EFBA DFBC
   uid                  Botan Distribution Key
 
-Botan may already be included in your favorite distribution, such as
-`Fedora <https://admin.fedoraproject.org/pkgdb/packages/botan>`_,
-`EPEL <http://dl.fedoraproject.org/pub/epel/7/SRPMS/repoview/botan.html>`_ (for RHEL/CentOS),
-`Debian <http://packages.debian.org/search?keywords=libbotan>`_,
-`Ubuntu <http://packages.ubuntu.com/search?keywords=botan>`_,
-`Gentoo <https://packages.gentoo.org/packages/dev-libs/botan>`_,
-`Arch <http://www.archlinux.org/packages/community/x86_64/botan/>`_,
-`Slackbuild <http://slackbuilds.org/result/?search=Botan>`_,
-`FreeBSD ports <http://www.freshports.org/security/botan110>`_, or
-`MacPorts <http://www.macports.org/ports.php?by=name&substr=botan>`_.
+Some distributions such as Arch, Fedora and Debian include packages
+for Botan. However these are often out of date; using the latest
+source release is recommended.
 
 Current Development Work (1.11)
 ----------------------------------------
@@ -102,12 +95,10 @@ The 1.11 branch is highly recommended, especially for new projects.
 Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and
 later, Clang 3.4 and later, and MSVC 2013 are regularly tested.
 
-A new development release is made on the first Monday of every month.
-
 The latest development release is
-`1.11.28 <http://botan.randombit.net/releases/Botan-1.11.28.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.28.tgz.asc>`_
-released on 2016-02-01
+`1.11.29 <http://botan.randombit.net/releases/Botan-1.11.29.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.29.tgz.asc>`_
+released on 2016-03-20
 
 Old Stable Series (1.10)
 ----------------------------------------
@@ -174,8 +165,8 @@ Public Key Cryptography
 * Quantum computer resistant McEliece KEM scheme
 * GOST-34.10-2001
 * ElGamal encryption
-* Rabin-Williams signatures
-* Nyberg-Rueppel signatures
+* Rabin-Williams signatures (deprecated)
+* Nyberg-Rueppel signatures (deprecated)
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
 Ciphers and cipher modes
@@ -187,10 +178,10 @@ Ciphers and cipher modes
 * AES candidates Serpent, Twofish, MARS, CAST-256, RC6
 * Stream ciphers Salsa20/XSalsa20, ChaCha20, and RC4
 * DES, 3DES and DESX
+* Threefish-512, Noekeon, Blowfish, CAST-128, IDEA
 * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147
-* Other block ciphers including Threefish-512, Blowfish, CAST-128, IDEA,
-  Noekeon, TEA, XTEA, RC2, RC5, SAFER-SK
 * Large block cipher construction Lion
+* Deprecated ciphers TEA, XTEA, RC2, RC5, SAFER-SK
 
 Hash functions and MACs
 ----------------------------------------
@@ -219,13 +210,9 @@ Other Useful Things
 Recommended Algorithms
 ----------------------------------------
 
-If your application is protecting network traffic, seriously consider
-using TLS v1.2 as a pre built, standard and well studied protocol.
+* For encryption of network traffic use TLS v1.2
 
-Otherwise, if you simply *must* do something custom, the developers
-currently recommend using:
-
-* Message encryption: AES or Serpent in GCM mode, or ChaCha20Poly1305
+* Packet encryption: AES-128/GCM, AES-128/OCB, ChaCha20Poly1305
 
 * General hash functions: SHA-256 or SHA-384
 

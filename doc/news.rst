@@ -1,24 +1,93 @@
 Release Notes
 ========================================
 
-Version 1.11.29, Not Yet Released
+Version 1.11.29, 2016-03-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Deprecation warning: Rabin-Williams is deprecated and will likely be
-  removed in a future release unless some good reason to keep it
-  (current application use or real protocols using it) is found.
+* CVE-2016-2849 DSA and ECDSA used a modular inverse function which
+  had input dependent loops. It is possible a side channel attack on
+  this function could be used to recover sufficient information about
+  the nonce k to mount a lattice attack and recover the private key.
+  Found by Sean Devlin.
+
+* CVE-2016-2850 The TLS client did not check that the signature
+  algorithm or ECC curve a v1.2 server used was actually acceptable by
+  the policy. This would allow a server who ignored the preferences
+  indicated in the client to use a weak algorithm, and may allow MITM
+  attacks by an attacker who can break MD5 signatures or 160 bit ECC
+  in real time. The server similarly failed to check on the hash a
+  client used during client certificate authentication.
 
 * Reject empty TLS records at the record processing layer since such a
   record is not valid regardless of the record type. Later checks
   already correctly rejected empty records, but during processing such
-  a record a pointer to the end of the vector was created, causing a
-  assertion when using checked iterators. Found by Juraj Somorovsky.
+  a record, a pointer to the end of the vector was created, causing a
+  assertion failure under checked iterators. Found by Juraj Somorovsky.
 
-* Support for the TLS heartbeat extension has been removed.
+* Add PK_Decryptor::decrypt_or_random which allows an application to
+  atomically (in constant time) check that a decrypted ciphertext has
+  the expected length and/or apply content checks on the result. This
+  is used by the TLS server for decrypting PKCS #1 v1.5 RSA ciphertexts.
+  Previously the server used a implementation which was potentially
+  vulnerable to side channels.
 
-* Support for the TLS minimum fragment length extension has been removed.
+* Add support for processing X.509 name constraint extension during
+  path validation. GH #454
+
+* Add X509_Certificate::v3_extensions which allows retreiving the
+  raw binary of all certificate extensions, including those which
+  are not unknown to the library. This allows processing of custom
+  extensions. GH #437
+
+* Add support for module policies which are a preconfigured set of
+  acceptable or prohibited modules. A policy based on BSI TR-02102-1
+  is included. GH #439 #446
+
+* Support for the deprecated TLS heartbeat extension has been removed.
+
+* Support for the deprecated TLS minimum fragment length extension has
+  been removed.
 
 * SRP6 support is now optional in TLS
+
+* Support for negotiating MD5 and SHA-224 signatures in TLS v1.2 has
+  been removed. MD5 signatures are demonstratably insecure in TLS,
+  SHA-224 is rarely used.
+
+* Support for negotiating ECC curves secp160r1, secp160r2, secp160k1,
+  secp192k1, secp192r1 (P-192), secp224k1, secp224r1 (P-224), and
+  secp256k1 have been removed from the TLS implementation. All were
+  already disabled in the default policy.
+
+* HMAC_RNG now has an explicit check for fork using pid comparisons.
+  It also includes the pid and system and CPU clocks into the PRF
+  computation to help reduce the risk of pid wraparound. Even so,
+  applications using fork and userspace RNGs should explicitly reseed
+  all such RNGs whenever possible.
+
+* Deprecation warning: support for DSA certificates in TLS is
+  deprecated and will be removed in a future release.
+
+* Deprecation warning: in addition to the algorithms deprecated in
+  1.11.26, the following algorithms are now deprecated and will be
+  removed in a future release: Rabin-Williams signatures, TEA, XTEA.
+
+* Deprecation warning: the library has a number of compiled in MODP
+  and ECC DL parameters. All MODP parameter sets under 2048 bits and
+  all ECC parameters under 256 bits are deprecated and will be removed
+  in a future release. This includes the MODP groups "modp/ietf/1024",
+  "modp/srp/1024", "modp/ietf/1536", "modp/srp/1536" and the ECC
+  groups "secp160k1", "secp160r1", "secp160r2", "secp192k1",
+  "secp192r1", "secp224k1", "secp224r1", "brainpool160r1",
+  "brainpool192r1", "brainpool224r1", "x962_p192v2", "x962_p192v3",
+  "x962_p239v1", "x962_p239v2" and "x962_p239v3". Additionally all
+  compiled in DSA parameter sets ("dsa/jce/1024", "dsa/botan/2048",
+  and "dsa/botan/3072") are also deprecated.
+
+* RDSEED/RDRAND polling now retries if the operation fails. GH #373
+
+* Fix various minor bugs found by static analysis with PVS-Studio (GH#421),
+  Clang analyzer (GH #441), cppcheck (GH #444, #445), and Coverity.
 
 * Add --with-valgrind configure option to enable building against the
   valgrind client API. This currently enables checking of const time
@@ -41,7 +110,7 @@ Version 1.11.29, Not Yet Released
 
 * Small optimizations to Keccak hash
 
-* Support for locking allocator on Windows using VirtualLock/VirtualUnlock
+* Support for locking allocator on Windows using VirtualLock. GH #450
 
 Version 1.10.12, 2016-02-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

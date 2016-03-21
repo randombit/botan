@@ -19,6 +19,29 @@ Advisories
 2016
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2016-03-17 (CVE-2016-2849): ECDSA side channel
+
+  ECDSA (and DSA) signature algorithms perform a modular inverse on the
+  signature nonce `k`.  The modular inverse algorithm used had input dependent
+  loops, and it is possible a side channel attack could recover sufficient
+  information about the nonce to eventually recover the ECDSA secret key. Found
+  by Sean Devlin.
+
+  Introduced in 1.7.15, fixed in 1.11.29
+
+* 2016-03-17 (CVE-2016-2850): Failure to enforce TLS policy
+
+  TLS v1.2 allows negotiating which signature algorithms and hash functions each
+  side is willing to accept. However received signatures were not actually
+  checked against the specified policy.  This had the effect of allowing a
+  server to use an MD5 or SHA-1 signature, even though the default policy
+  prohibits it. The same issue affected client cert authentication.
+
+  The TLS client also failed to verify that the ECC curve the server chose to
+  use was one which was acceptable by the client policy.
+
+  Introduced in 1.11.0, fixed in 1.11.29
+
 * 2016-02-01 (CVE-2016-2196): Overwrite in P-521 reduction
 
   The P-521 reduction function would overwrite zero to one word
@@ -53,7 +76,7 @@ Advisories
 
   Introduced in 1.9.18, fixed in 1.11.27 and 1.10.11
 
-* 2016-02-01 (CVE-2016-2194): Infinite loop in modulur square root algorithm
+* 2016-02-01 (CVE-2016-2194): Infinite loop in modular square root algorithm
 
   The ressol function implements the Tonelli-Shanks algorithm for
   finding square roots could be sent into a nearly infinite loop due
@@ -141,7 +164,7 @@ Advisories
 
   The BER decoder would crash due to reading from offset 0 of an empty vector if
   it encountered a BIT STRING which did not contain any data at all. This can be
-  used to easily crash applicatons reading untrusted ASN.1 data, but does not
+  used to easily crash applications reading untrusted ASN.1 data, but does not
   seem exploitable for code execution. Found with afl.
 
   Fixed in 1.11.19 and 1.10.10, affected all previous versions of 1.10 and 1.11
