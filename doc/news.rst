@@ -36,7 +36,7 @@ Version 1.11.29, 2016-03-20
 
 * Add X509_Certificate::v3_extensions which allows retreiving the
   raw binary of all certificate extensions, including those which
-  are not unknown to the library. This allows processing of custom
+  are not known to the library. This allows processing of custom
   extensions. GH #437
 
 * Add support for module policies which are a preconfigured set of
