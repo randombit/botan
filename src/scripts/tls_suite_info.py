@@ -117,8 +117,9 @@ def to_ciphersuite_info(code, name):
         iv_len = 12
         if code in ['CC13', 'CC14', 'CC15']:
             iv_len = 0 # Google variant
-        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, %d, "AEAD", %d, "%s")' % (
-            code, sig_algo, kex_algo, "ChaCha20Poly1305", cipher_keylen, iv_len, 0, 0, mac_algo)
+        record_iv_len = 0
+
+        return (name, code, sig_algo, kex_algo, "ChaCha20Poly1305", cipher_keylen, iv_len, record_iv_len, "AEAD", 0, mac_algo)
 
     mode = cipher[-1]
     if mode not in ['CBC', 'GCM', 'CCM(8)', 'CCM', 'OCB']:
@@ -133,19 +134,16 @@ def to_ciphersuite_info(code, name):
             cipher_algo += '/' + mode
 
     if mode == 'CBC':
-        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, 0, "%s", %d)' % (
-            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, ivlen, mac_algo, mac_keylen[mac_algo])
+        return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, ivlen, 0, mac_algo, mac_keylen[mac_algo], "")
 
     elif mode == 'OCB':
-        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, %d, "AEAD", %d, "%s")' % (
-            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, 12, 0, 0, mac_algo)
+        return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, 12, 0, "AEAD", 0, mac_algo)
 
     else:
         iv_bytes_from_hs = 4
         iv_bytes_from_rec = 8
 
-        return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, %d, "AEAD", %d, "%s")' % (
-            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, iv_bytes_from_hs, iv_bytes_from_rec, 0, mac_algo)
+        return (name, code, sig_algo, kex_algo, cipher_algo, cipher_keylen, iv_bytes_from_hs, iv_bytes_from_rec, "AEAD", 0, mac_algo)
 
 def open_input(args):
     iana_url = 'https://www.iana.org/assignments/tls-parameters/tls-parameters.txt'
@@ -219,7 +217,7 @@ def main(args = None):
                     should_use = False
 
             if should_use:
-                suites[code] = (name, to_ciphersuite_info(code, name))
+                suites[code] = to_ciphersuite_info(code, name)
 
     sha1 = hashlib.sha1()
     sha1.update(contents)
@@ -231,7 +229,7 @@ def main(args = None):
         out.close()
 
     def define_custom_ciphersuite(name, code):
-        suites[code] = (name, to_ciphersuite_info(code, name))
+        suites[code] = to_ciphersuite_info(code, name)
 
     # Google servers - draft-agl-tls-chacha20poly1305-04
     define_custom_ciphersuite('ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC13')
@@ -312,10 +310,26 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
       {
 """
 
-    for i in sorted(suites.keys()):
-        suite_name = suites[i][0]
-        suite_expr = suites[i][1]
-        suite_info += "      case 0x%s: // %s\n" % (i, suite_name)
+    """
+      Ciphersuite(u16bit ciphersuite_code,
+                  const char* sig_algo,
+                  const char* kex_algo,
+                  const char* cipher_algo,
+                  size_t cipher_keylen,
+                  size_t nonce_bytes_from_handshake,
+                  size_t nonce_bytes_from_record,
+                  const char* mac_algo,
+                  size_t mac_keylen,
+                  const char* prf_algo = "");
+    """
+
+    for code in sorted(suites.keys()):
+        info = suites[code]
+        assert len(info) == 11
+        suite_expr = 'Ciphersuite(0x%s, "%s", "%s", "%s", "%s", %d, %d, %d, "%s", %d, "%s")' % (
+            code, info[0], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9], info[10])
+
+        suite_info += "      case 0x%s:\n" % (code)
         suite_info += "         return %s;\n\n" % (suite_expr)
 
     suite_info += """      }
