@@ -11,14 +11,14 @@
 
 #include <botan/tls_channel.h>
 #include <botan/credentials_manager.h>
-#include <botan/internal/tls_server_handshake_state.h>
 #include <vector>
-
 
 
 namespace Botan {
 
 namespace TLS {
+
+class Server_Handshake_State;
 
 /**
 * TLS Server

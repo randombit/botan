@@ -44,4 +44,5 @@ class Server_Handshake_State : public Handshake_State
 }
 
 }
-#endif //BOTAN_TLS_SERVER_HANDSHAKE_STATE_H__
+
+#endif

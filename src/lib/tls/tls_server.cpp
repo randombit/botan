@@ -8,9 +8,10 @@
 
 #include <botan/tls_server.h>
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_server_handshake_state.h>
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
-#include "tls_magic.h"
+#include <botan/tls_magic.h>
 
 namespace Botan {
 
