@@ -10,6 +10,8 @@ CLI
   for an example
 * `encrypt` / `decrypt` tools providing password and/or public key
   based file encryption
+* More microbenchmarks in `speed`: modular exponentiation, ECC point
+  multiplication, other BigInt operations
 
 TLS
 ----------------------------------------
@@ -48,9 +50,9 @@ Accelerators / backends
 
 * Extend OpenSSL provider (cipher modes, HMAC)
 * /dev/crypto
-* Windows CryptoAPI
+* Windows CryptoAPI (ciphers, hashes, RSA)
 * Apple CommonCrypto
-* ARMv8 crypto extensions (AES, SHA-2)
+* ARMv8-A crypto extensions (AES, SHA-2)
 * POWER8 crypto extensions (AES, SHA-2)
 * Better TPM support: NVRAM, PCR measurements, sealing
 
@@ -71,7 +73,9 @@ Symmetric Algorithms, Hashes, ...
 * Serpent using AVX2
 * Serpent using SSSE3 pshufb for sboxes
 * ChaCha20 using SSE2 or AVX2
+* Modify ChaCha to support 12 or 20 rounds
 * scrypt
+* Argon2 (draft-irtf-cfrg-argon2)
 * bcrypt PBKDF
 * Skein-MAC
 * ARIA (Korean block cipher, RFCs 5794 and 6209)
@@ -80,6 +84,8 @@ Symmetric Algorithms, Hashes, ...
 Public Key Crypto, Math
 ----------------------------------------
 
+* XMSS (draft-irtf-cfrg-xmss-hash-based-signatures)
+* SPHINCS-256
 * EdDSA (GH #283)
 * Ed448-Goldilocks
 * FHMQV
