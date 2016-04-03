@@ -282,6 +282,20 @@ bool Test::Result::test_rc_fail(const std::string& func, const std::string& why,
    return test_success();
    }
 
+bool Test::Result::test_rc(const std::string& func, int expected, int rc)
+   {
+   if(expected != rc)
+      {
+      std::ostringstream err;
+      err << m_who;
+      err << " call to " << func << " unexpectedly returned " << rc;
+      err << " but expecting " << expected;
+      return test_failure(err.str());
+      }
+
+   return test_success();
+   }
+
 namespace {
 
 std::string format_time(uint64_t ns)
