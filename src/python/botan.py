@@ -310,16 +310,16 @@ def bcrypt(passwd, rng, work_factor = 10):
     out_len = c_size_t(64)
     out = create_string_buffer(out_len.value)
     flags = c_uint32(0)
-    rc = botan.botan_bcrypt_generate(out, byref(out_len), passwd, rng.rng, c_size_t(work_factor), flags)
+    rc = botan.botan_bcrypt_generate(out, byref(out_len), _ctype_str(passwd), rng.rng, c_size_t(work_factor), flags)
     if rc != 0:
         raise Exception('botan bcrypt failed, error %s' % (rc))
-    b = out.raw[0:out_len.value]
+    b = out.raw[0:out_len.value-1]
     if b[-1] == '\x00':
         b = b[:-1]
     return b
 
 def check_bcrypt(passwd, bcrypt):
-    rc = botan.botan_bcrypt_is_valid(passwd, bcrypt)
+    rc = botan.botan_bcrypt_is_valid(_ctype_str(passwd), bcrypt)
     return (rc == 0)
 
 """
@@ -715,6 +715,15 @@ def test():
         print('x %s' % hex_encode(psk))
         print('y %s\n' % (hex_encode(pbkdf('PBKDF2(SHA-256)', 'xyz', 32, iterations, salt)[2])))
 
+    def test_bcrypt():
+
+        print("Testing Bcrypt...")
+        r = rng()
+        phash = bcrypt('testing', r)
+        print("bcrypt returned %s (%d bytes)" % (hex_encode(phash), len(phash)))
+        print("validating the hash produced: %r" % (check_bcrypt('testing', phash)))
+        print("\n")
+
     def test_hmac():
 
         hmac = message_authentication_code('HMAC(SHA-256)')
@@ -878,7 +887,7 @@ def test():
                   (dh_grp, hex_encode(a_key), hex_encode(b_key)))
 
     def test_certs():
-        cert = x509_cert(filename="src/tests/data/ecc/CSCA.CSCA.csca-germany.1.crt")
+        cert = x509_cert(filename="/Users/uri/src/botan/src/tests/data/ecc/CSCA.CSCA.csca-germany.1.crt")
         print("CSCA (Germany) Certificate\nDetails:")
         print("SHA-1 fingerprint:   %s" % cert.fingerprint("SHA-1"))
         print("Expected:            32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9")
@@ -907,6 +916,7 @@ def test():
     test_version()
     test_kdf()
     test_pbkdf()
+    test_bcrypt()
     test_hmac()
     test_rng()
     test_hash()
