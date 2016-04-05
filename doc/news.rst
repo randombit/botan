@@ -1,6 +1,23 @@
 Release Notes
 ========================================
 
+Version 1.11.30, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add IETF versions of the ChaCha20Poly1305 TLS ciphersuites from
+  draft-ietf-tls-chacha20-poly1305-04. The previously implemented
+  (non-standard) ChaCha20Poly1305 ciphersuites from
+  draft-agl-tls-chacha20poly1305 remain but are deprecated.
+
+* The OCB TLS ciphersuites have been updated to use the new nonce
+  scheme from draft-zauner-tls-aes-ocb-04. This is incompatible with
+  previous versions of the draft, and the ciphersuite numbers used for
+  the (still experimental) OCB ciphersuites have changed.
+
+* A bug in the IETF version of ChaCha20Poly1305 (with 96 bit nonces)
+  caused incorrect computation when the plaintext or AAD was exactly
+  a multiple of 16 bytes.
+
 Version 1.11.29, 2016-03-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -186,6 +186,7 @@ class Test
 
             bool test_rc_ok(const std::string& func, int rc);
             bool test_rc_fail(const std::string& func, const std::string& why, int rc);
+            bool test_rc(const std::string& func, int expected, int rc);
 
 #if defined(BOTAN_HAS_BIGINT)
             bool test_eq(const std::string& what, const BigInt& produced, const BigInt& expected);

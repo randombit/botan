@@ -42,13 +42,13 @@ class Connection_Cipher_State
 
       AEAD_Mode* aead() { return m_aead.get(); }
 
-      const secure_vector<byte>& aead_nonce(u64bit seq);
+      std::vector<byte> aead_nonce(u64bit seq);
 
-      const secure_vector<byte>& aead_nonce(const byte record[], size_t record_len, u64bit seq);
+      std::vector<byte> aead_nonce(const byte record[], size_t record_len, u64bit seq);
 
-      const secure_vector<byte>& format_ad(u64bit seq, byte type,
-                                           Protocol_Version version,
-                                           u16bit ptext_length);
+      std::vector<byte> format_ad(u64bit seq, byte type,
+                                  Protocol_Version version,
+                                  u16bit ptext_length);
 
       BlockCipher* block_cipher() { return m_block_cipher.get(); }
 
@@ -82,7 +82,7 @@ class Connection_Cipher_State
       std::unique_ptr<MessageAuthenticationCode> m_mac;
 
       std::unique_ptr<AEAD_Mode> m_aead;
-      secure_vector<byte> m_nonce, m_ad;
+      std::vector<byte> m_nonce;
 
       size_t m_block_size = 0;
       size_t m_nonce_bytes_from_handshake;

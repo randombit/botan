@@ -1,5 +1,5 @@
 /*
-* (C) 2014,2015 Jack Lloyd
+* (C) 2014,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -54,10 +54,17 @@ class AEAD_Tests : public Text_Based_Test
 
          buf.assign(expected.begin(), expected.end());
 
-         dec->set_key(key);
-         dec->set_associated_data_vec(ad);
-         dec->start(nonce);
-         dec->finish(buf);
+         try
+            {
+            dec->set_key(key);
+            dec->set_associated_data_vec(ad);
+            dec->start(nonce);
+            dec->finish(buf);
+            }
+         catch(Botan::Exception& e)
+            {
+            result.test_failure("Failure processing AEAD ciphertext");
+            }
 
          if(enc->authenticated())
             {

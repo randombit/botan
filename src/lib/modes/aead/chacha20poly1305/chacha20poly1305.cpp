@@ -1,12 +1,12 @@
 /*
 * ChaCha20Poly1305 AEAD
-* (C) 2014 Jack Lloyd
+* (C) 2014,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mode_utils.h>
 #include <botan/chacha20poly1305.h>
+#include <botan/internal/mode_utils.h>
 
 namespace Botan {
 
@@ -60,18 +60,21 @@ secure_vector<byte> ChaCha20Poly1305_Mode::start_raw(const byte nonce[], size_t 
 
    m_chacha->set_iv(nonce, nonce_len);
 
-   secure_vector<byte> zeros(64);
-   m_chacha->encrypt(zeros);
+   secure_vector<byte> init(64); // zeros
+   m_chacha->encrypt(init);
 
-   m_poly1305->set_key(zeros.data(), 32);
+   m_poly1305->set_key(init.data(), 32);
    // Remainder of output is discard
 
    m_poly1305->update(m_ad);
 
    if(cfrg_version())
       {
-      std::vector<byte> padding(16 - m_ad.size() % 16);
-      m_poly1305->update(padding);
+      if(m_ad.size() % 16)
+         {
+         const byte zeros[16] = { 0 };
+         m_poly1305->update(zeros, 16 - m_ad.size() % 16);
+         }
       }
    else
       {
@@ -97,8 +100,11 @@ void ChaCha20Poly1305_Encryption::finish(secure_vector<byte>& buffer, size_t off
    update(buffer, offset);
    if(cfrg_version())
       {
-      std::vector<byte> padding(16 - m_ctext_len % 16);
-      m_poly1305->update(padding);
+      if(m_ctext_len % 16)
+         {
+         const byte zeros[16] = { 0 };
+         m_poly1305->update(zeros, 16 - m_ctext_len % 16);
+         }
       update_len(m_ad.size());
       }
    update_len(m_ctext_len);
@@ -138,8 +144,11 @@ void ChaCha20Poly1305_Decryption::finish(secure_vector<byte>& buffer, size_t off
 
    if(cfrg_version())
       {
-      for(size_t i = 0; i != 16 - m_ctext_len % 16; ++i)
-         m_poly1305->update(0);
+      if(m_ctext_len % 16)
+         {
+         const byte zeros[16] = { 0 };
+         m_poly1305->update(zeros, 16 - m_ctext_len % 16);
+         }
       update_len(m_ad.size());
       }
 
