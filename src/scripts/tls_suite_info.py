@@ -138,7 +138,7 @@ def to_ciphersuite_info(code, name):
 
     elif mode == 'OCB':
         return 'Ciphersuite(0x%s, "%s", "%s", "%s", %d, %d, %d, "AEAD", %d, "%s")' % (
-            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, 4, 0, 0, mac_algo)
+            code, sig_algo, kex_algo, cipher_algo, cipher_keylen, 12, 0, 0, mac_algo)
 
     else:
         iv_bytes_from_hs = 4
@@ -240,19 +240,19 @@ def main(args = None):
 
     # Expermental things
     if options.with_ocb:
-        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FFF0')
-        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_OCB_SHA256', 'FFF1')
-        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_OCB_SHA256', 'FFF2')
-        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_OCB_SHA256', 'FFF3')
-        define_custom_ciphersuite('DHE_RSA_WITH_AES_128_OCB_SHA256', 'FFF4')
-        define_custom_ciphersuite('DHE_RSA_WITH_AES_256_OCB_SHA256', 'FFF5')
+        define_custom_ciphersuite('DHE_RSA_WITH_AES_128_OCB_SHA256', 'FFC0')
+        define_custom_ciphersuite('DHE_RSA_WITH_AES_256_OCB_SHA256', 'FFC1')
+        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FFC2')
+        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_OCB_SHA256', 'FFC3')
+        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_OCB_SHA256', 'FFC4')
+        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_OCB_SHA256', 'FFC5')
 
-        define_custom_ciphersuite('PSK_WITH_AES_128_OCB_SHA256', 'FFF6')
-        define_custom_ciphersuite('PSK_WITH_AES_256_OCB_SHA256', 'FFF7')
-        define_custom_ciphersuite('ECDHE_PSK_WITH_AES_128_OCB_SHA256', 'FFF8')
-        define_custom_ciphersuite('ECDHE_PSK_WITH_AES_256_OCB_SHA256', 'FFF9')
-        define_custom_ciphersuite('DHE_PSK_WITH_AES_128_OCB_SHA256', 'FFFA')
-        define_custom_ciphersuite('DHE_PSK_WITH_AES_256_OCB_SHA256', 'FFFB')
+        define_custom_ciphersuite('PSK_WITH_AES_128_OCB_SHA256', 'FFC6')
+        define_custom_ciphersuite('PSK_WITH_AES_256_OCB_SHA256', 'FFC7')
+        define_custom_ciphersuite('DHE_PSK_WITH_AES_128_OCB_SHA256', 'FFC8')
+        define_custom_ciphersuite('DHE_PSK_WITH_AES_256_OCB_SHA256', 'FFC9')
+        define_custom_ciphersuite('ECDHE_PSK_WITH_AES_128_OCB_SHA256', 'FFCA')
+        define_custom_ciphersuite('ECDHE_PSK_WITH_AES_256_OCB_SHA256', 'FFCB')
 
     if options.with_eax:
         define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_EAX_SHA256', 'FF90')
