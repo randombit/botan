@@ -310,7 +310,7 @@ def bcrypt(passwd, rng, work_factor = 10):
     out_len = c_size_t(64)
     out = create_string_buffer(out_len.value)
     flags = c_uint32(0)
-    rc = botan.botan_bcrypt_generate(out, byref(out_len), passwd, rng.rng, c_size_t(work_factor), flags)
+    rc = botan.botan_bcrypt_generate(out, byref(out_len), _ctype_str(passwd), rng.rng, c_size_t(work_factor), flags)
     if rc != 0:
         raise Exception('botan bcrypt failed, error %s' % (rc))
     b = out.raw[0:out_len.value]
@@ -319,7 +319,7 @@ def bcrypt(passwd, rng, work_factor = 10):
     return b
 
 def check_bcrypt(passwd, bcrypt):
-    rc = botan.botan_bcrypt_is_valid(passwd, bcrypt)
+    rc = botan.botan_bcrypt_is_valid(_ctype_str(passwd), bcrypt)
     return (rc == 0)
 
 """
