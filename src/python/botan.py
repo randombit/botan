@@ -887,7 +887,7 @@ def test():
                   (dh_grp, hex_encode(a_key), hex_encode(b_key)))
 
     def test_certs():
-        cert = x509_cert(filename="/Users/uri/src/botan/src/tests/data/ecc/CSCA.CSCA.csca-germany.1.crt")
+        cert = x509_cert(filename="src/tests/data/ecc/CSCA.CSCA.csca-germany.1.crt")
         print("CSCA (Germany) Certificate\nDetails:")
         print("SHA-1 fingerprint:   %s" % cert.fingerprint("SHA-1"))
         print("Expected:            32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9")
