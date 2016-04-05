@@ -73,7 +73,6 @@ Symmetric Algorithms, Hashes, ...
 * Serpent using AVX2
 * Serpent using SSSE3 pshufb for sboxes
 * ChaCha20 using SSE2 or AVX2
-* Modify ChaCha to support 12 or 20 rounds
 * scrypt
 * Argon2 (draft-irtf-cfrg-argon2)
 * bcrypt PBKDF

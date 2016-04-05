@@ -18,6 +18,14 @@ namespace Botan {
 class BOTAN_DLL ChaCha final : public StreamCipher
    {
    public:
+      StreamCipher* clone() const override { return new ChaCha(m_rounds); }
+
+      /**
+      * Currently only 12 or 20 rounds are supported, all others
+      * will throw an exception
+      */
+      ChaCha(size_t rounds);
+
       void cipher(const byte in[], byte out[], size_t length) override;
 
       void set_iv(const byte iv[], size_t iv_len) override;
@@ -31,14 +39,13 @@ class BOTAN_DLL ChaCha final : public StreamCipher
          }
 
       void clear() override;
-      std::string name() const override { return "ChaCha"; }
 
-      StreamCipher* clone() const override { return new ChaCha; }
-   protected:
-      virtual void chacha(byte output[64], const u32bit input[16]);
+      std::string name() const override;
+
    private:
       void key_schedule(const byte key[], size_t key_len) override;
 
+      size_t m_rounds;
       secure_vector<u32bit> m_state;
       secure_vector<byte> m_buffer;
       size_t m_position = 0;
