@@ -113,10 +113,12 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
 
       // Check issuer constraints
 
+      // TODO: put into Certificate_Extensions::Basic_Constraints::validate()
       // Don't require CA bit set on self-signed end entity cert
       if(!issuer.is_CA_cert() && !self_signed_ee_cert)
          status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER);
 
+      // TODO: put into Certificate_Extensions::Basic_Constraints::validate()
       if(issuer.path_limit() < i)
          status.insert(Certificate_Status_Code::CERT_CHAIN_TOO_LONG);
 
@@ -142,6 +144,7 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
             status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
          }
 
+      // TODO: put into Certificate_Extensions::Name_Constraints::validate()
       const NameConstraints& name_constr = issuer.name_constraints();
 
       if(!name_constr.permitted().empty() || !name_constr.excluded().empty())
@@ -197,6 +200,18 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
                }
             }
          }
+
+         // Check cert extensions
+         Extensions extensions = subject.v3_extensions();
+         for (auto& extension : extensions.extensions())
+            {
+            if(!Extensions::is_known_extension(extension.first->oid_of()) && extension.second)
+               {
+               status.insert(Certificate_Status_Code::UNKNOWN_CRITICAL_EXTENSION);
+               continue;
+               }
+            extension.first->validate(cert_path[i], status, cert_path);
+            }
       }
 
    for(size_t i = 0; i != cert_path.size() - 1; ++i)
@@ -472,6 +487,8 @@ const char* Path_Validation_Result::status_string(Certificate_Status_Code code)
          return "Certificate does not match provided name";
       case Certificate_Status_Code::NAME_CONSTRAINT_ERROR:
          return "Certificate does not pass name constraint";
+      case Certificate_Status_Code::UNKNOWN_CRITICAL_EXTENSION:
+         return "Unknown critical extension encountered";
 
       case Certificate_Status_Code::CERT_IS_REVOKED:
          return "Certificate is revoked";

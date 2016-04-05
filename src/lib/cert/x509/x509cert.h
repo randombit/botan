@@ -11,11 +11,13 @@
 #include <botan/x509_obj.h>
 #include <botan/x509_dn.h>
 #include <botan/x509_key.h>
+#include <botan/x509_ext.h>
 #include <botan/asn1_alt_name.h>
 #include <botan/datastor.h>
 #include <botan/key_constraint.h>
 #include <botan/name_constraint.h>
 #include <map>
+#include <memory>
 
 namespace Botan {
 
@@ -191,10 +193,10 @@ class BOTAN_DLL X509_Certificate final : public X509_Object
       std::vector<std::string> policies() const;
 
       /**
-      * Get all extensions of this certificate indexed by oid.
-      * @return extension values and critical flag
+      * Get all extensions of this certificate.
+      * @return certificate extensions
       */
-      std::map<OID, std::pair<std::vector<byte>, bool>> v3_extensions() const;
+      Extensions v3_extensions() const;
 
       /**
       * Return the listed address of an OCSP responder, or empty if not set
@@ -250,6 +252,10 @@ class BOTAN_DLL X509_Certificate final : public X509_Object
 
       explicit X509_Certificate(const std::vector<byte>& in);
 
+      X509_Certificate(const X509_Certificate& other);
+
+      X509_Certificate& operator=(const X509_Certificate& other);
+
    private:
       void force_decode() override;
       friend class X509_CA;
@@ -259,7 +265,7 @@ class BOTAN_DLL X509_Certificate final : public X509_Object
 
       Data_Store m_subject, m_issuer;
       bool m_self_signed;
-      std::map<OID, std::pair<std::vector<byte>, bool>> m_v3_extensions;
+      Extensions m_v3_extensions;
    };
 
 /**

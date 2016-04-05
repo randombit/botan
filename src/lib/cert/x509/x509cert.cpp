@@ -42,9 +42,10 @@ std::vector<std::string> lookup_oids(const std::vector<std::string>& in)
 * X509_Certificate Constructor
 */
 X509_Certificate::X509_Certificate(DataSource& in) :
-   X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
+   X509_Object(in, "CERTIFICATE/X509 CERTIFICATE"),
+   m_self_signed(false),
+   m_v3_extensions(false)
    {
-   m_self_signed = false;
    do_decode();
    }
 
@@ -52,9 +53,10 @@ X509_Certificate::X509_Certificate(DataSource& in) :
 * X509_Certificate Constructor
 */
 X509_Certificate::X509_Certificate(const std::string& in) :
-   X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
+   X509_Object(in, "CERTIFICATE/X509 CERTIFICATE"),
+   m_self_signed(false),
+   m_v3_extensions(false)
    {
-   m_self_signed = false;
    do_decode();
    }
 
@@ -62,11 +64,38 @@ X509_Certificate::X509_Certificate(const std::string& in) :
 * X509_Certificate Constructor
 */
 X509_Certificate::X509_Certificate(const std::vector<byte>& in) :
-   X509_Object(in, "CERTIFICATE/X509 CERTIFICATE")
+   X509_Object(in, "CERTIFICATE/X509 CERTIFICATE"),
+   m_self_signed(false),
+   m_v3_extensions(false)
    {
-   m_self_signed = false;
    do_decode();
    }
+
+X509_Certificate::X509_Certificate(const X509_Certificate& other) :
+   X509_Object(other)
+   {
+   m_subject = other.m_subject;
+   m_issuer = other.m_issuer;
+   m_self_signed = other.m_self_signed;
+   m_v3_extensions = other.m_v3_extensions;
+   }
+
+X509_Certificate& X509_Certificate::operator=(const X509_Certificate& other)
+   {
+   if(&other == this)
+      {
+      return *this;
+      }
+   else
+      {
+      m_subject = other.m_subject;
+      m_issuer = other.m_issuer;
+      m_self_signed = other.m_self_signed;
+      m_v3_extensions = other.m_v3_extensions;
+      }
+   return *this;
+   }
+
 
 /*
 * Decode the TBSCertificate data
@@ -120,12 +149,8 @@ void X509_Certificate::force_decode()
    if(v3_exts_data.type_tag == 3 &&
       v3_exts_data.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       {
-      Extensions extensions;
-
-      BER_Decoder(v3_exts_data.value).decode(extensions).verify_end();
-
-      m_v3_extensions = extensions.extensions_raw();
-      extensions.contents_to(m_subject, m_issuer);
+      BER_Decoder(v3_exts_data.value).decode(m_v3_extensions).verify_end();
+      m_v3_extensions.contents_to(m_subject, m_issuer);
       }
    else if(v3_exts_data.type_tag != NO_OBJECT)
       throw BER_Bad_Tag("Unknown tag in X.509 cert",
@@ -332,7 +357,7 @@ std::vector<std::string> X509_Certificate::policies() const
    return lookup_oids(m_subject.get("X509v3.CertificatePolicies"));
    }
 
-std::map<OID, std::pair<std::vector<byte>, bool>> X509_Certificate::v3_extensions() const
+Extensions X509_Certificate::v3_extensions() const
    {
    return m_v3_extensions;
    }

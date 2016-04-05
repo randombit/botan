@@ -8,10 +8,11 @@
 #ifndef BOTAN_CRL_ENTRY_H__
 #define BOTAN_CRL_ENTRY_H__
 
-#include <botan/x509cert.h>
 #include <botan/asn1_time.h>
 
 namespace Botan {
+
+class X509_Certificate;
 
 /**
 * X.509v2 CRL Reason Code.

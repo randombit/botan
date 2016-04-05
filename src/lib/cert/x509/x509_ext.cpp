@@ -55,7 +55,7 @@ Extensions::Extensions(const Extensions& extensions) : ASN1_Object()
 * Extensions Assignment Operator
 */
 Extensions& Extensions::operator=(const Extensions& other)
-   {   
+   {
    m_extensions.clear();
 
    for(size_t i = 0; i != other.m_extensions.size(); ++i)
@@ -63,6 +63,7 @@ Extensions& Extensions::operator=(const Extensions& other)
          std::make_pair(std::unique_ptr<Certificate_Extension>(other.m_extensions[i].first->copy()),
                         other.m_extensions[i].second));
 
+   m_extensions_raw = other.m_extensions_raw;
    m_throw_on_unknown_critical = other.m_throw_on_unknown_critical;
 
    return (*this);
@@ -82,6 +83,15 @@ void Extensions::add(Certificate_Extension* extn, bool critical)
    m_extensions_raw.emplace(extn->oid_of(), std::make_pair(extn->encode_inner(), critical));
    }
 
+std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> Extensions::extensions() const
+   {
+   std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> exts;
+   for(auto& ext : m_extensions)
+      {
+      exts.push_back(std::make_pair(std::unique_ptr<Certificate_Extension>(ext.first->copy()), ext.second));
+      }
+   return exts;
+   }
 
 std::map<OID, std::pair<std::vector<byte>, bool>> Extensions::extensions_raw() const
    {
@@ -172,6 +182,11 @@ void Extensions::contents_to(Data_Store& subject_info,
       m_extensions[i].first->contents_to(subject_info, issuer_info);
       subject_info.add(m_extensions[i].first->oid_name() + ".is_critical", (m_extensions[i].second ? 1 : 0));
       }
+   }
+
+bool Extensions::is_known_extension(const OID& oid)
+   {
+   return get_extension(oid) != nullptr;
    }
 
 

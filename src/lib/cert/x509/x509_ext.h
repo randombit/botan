@@ -10,10 +10,16 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/asn1_oid.h>
+#include <botan/asn1_alt_name.h>
+#include <botan/cert_status.h>
 #include <botan/datastor.h>
+#include <botan/name_constraint.h>
+#include <botan/key_constraint.h>
 #include <botan/crl_ent.h>
 
 namespace Botan {
+
+class X509_Certificate;
 
 /**
 * X.509 Certificate Extension
@@ -46,6 +52,19 @@ class BOTAN_DLL Certificate_Extension
       */
       virtual std::string oid_name() const = 0;
 
+      /*
+      * Callback visited during path validation
+      *
+      * If an error occurs during validation of this extension,
+      * an appropriate status code shall be added to status.
+      *
+      * @param current_cert Certificate that contains this extension
+      * @param status Certificate validation status codes for current_cert
+      * @param cert_path Certificate path which is currently validated
+      */
+      virtual void validate(const X509_Certificate& current_cert, std::set<Certificate_Status_Code>& status,
+            const std::vector<X509_Certificate>& cert_path) = 0;
+
       virtual ~Certificate_Extension() {}
    protected:
       friend class Extensions;
@@ -67,7 +86,11 @@ class BOTAN_DLL Extensions : public ASN1_Object
 
       void add(Certificate_Extension* extn, bool critical = false);
 
+      std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> extensions() const;
+
       std::map<OID, std::pair<std::vector<byte>, bool>> extensions_raw() const;
+
+      static bool is_known_extension(const OID& oid);
 
       Extensions& operator=(const Extensions&);
 
@@ -101,6 +124,9 @@ class BOTAN_DLL Basic_Constraints final : public Certificate_Extension
 
       bool get_is_ca() const { return m_is_ca; }
       size_t get_path_limit() const;
+
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override
          { return "X509v3.BasicConstraints"; }
@@ -124,6 +150,9 @@ class BOTAN_DLL Key_Usage final : public Certificate_Extension
       explicit Key_Usage(Key_Constraints c = NO_CONSTRAINTS) : m_constraints(c) {}
 
       Key_Constraints get_constraints() const { return m_constraints; }
+
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override { return "X509v3.KeyUsage"; }
 
@@ -149,6 +178,9 @@ class BOTAN_DLL Subject_Key_ID final : public Certificate_Extension
       explicit Subject_Key_ID(const std::vector<byte>&);
 
       std::vector<byte> get_key_id() const { return m_key_id; }
+
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override
          { return "X509v3.SubjectKeyIdentifier"; }
@@ -174,6 +206,9 @@ class BOTAN_DLL Authority_Key_ID final : public Certificate_Extension
       explicit Authority_Key_ID(const std::vector<byte>& k) : m_key_id(k) {}
 
       std::vector<byte> get_key_id() const { return m_key_id; }
+
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override
          { return "X509v3.AuthorityKeyIdentifier"; }
@@ -198,6 +233,9 @@ class BOTAN_DLL Alternative_Name : public Certificate_Extension
       Alternative_Name(const AlternativeName&, const std::string& oid_name);
 
       Alternative_Name(const std::string&, const std::string&);
+
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override { return m_oid_name_str; }
 
@@ -247,6 +285,9 @@ class BOTAN_DLL Extended_Key_Usage final : public Certificate_Extension
       explicit Extended_Key_Usage(const std::vector<OID>& o) : m_oids(o) {}
 
       std::vector<OID> get_oids() const { return m_oids; }
+
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override
          { return "X509v3.ExtendedKeyUsage"; }
@@ -270,6 +311,9 @@ class BOTAN_DLL Name_Constraints : public Certificate_Extension
 
       Name_Constraints() {}
       Name_Constraints(const NameConstraints &nc) : m_name_constraints(nc) {}
+
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override
          { return "X509v3.NameConstraints"; }
@@ -295,6 +339,9 @@ class BOTAN_DLL Certificate_Policies final : public Certificate_Extension
       explicit Certificate_Policies(const std::vector<OID>& o) : m_oids(o) {}
 
       std::vector<OID> get_oids() const { return m_oids; }
+
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override
          { return "X509v3.CertificatePolicies"; }
@@ -318,6 +365,8 @@ class BOTAN_DLL Authority_Information_Access final : public Certificate_Extensio
       explicit Authority_Information_Access(const std::string& ocsp) :
          m_ocsp_responder(ocsp) {}
 
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override
          { return "PKIX.AuthorityInformationAccess"; }
@@ -344,6 +393,9 @@ class BOTAN_DLL CRL_Number final : public Certificate_Extension
       CRL_Number(size_t n) : m_has_value(true), m_crl_number(n) {}
 
       size_t get_crl_number() const;
+
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override { return "X509v3.CRLNumber"; }
 
@@ -368,6 +420,9 @@ class BOTAN_DLL CRL_ReasonCode final : public Certificate_Extension
       explicit CRL_ReasonCode(CRL_Code r = UNSPECIFIED) : m_reason(r) {}
 
       CRL_Code get_reason() const { return m_reason; }
+
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override { return "X509v3.ReasonCode"; }
 
@@ -407,6 +462,8 @@ class BOTAN_DLL CRL_Distribution_Points final : public Certificate_Extension
       std::vector<Distribution_Point> distribution_points() const
          { return m_distribution_points; }
 
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& /* status */,
+                  const std::vector<X509_Certificate>& /* cert_path */) {}
    private:
       std::string oid_name() const override
          { return "X509v3.CRLDistributionPoints"; }
