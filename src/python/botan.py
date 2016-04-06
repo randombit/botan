@@ -716,7 +716,6 @@ def test():
         print('y %s\n' % (hex_encode(pbkdf('PBKDF2(SHA-256)', 'xyz', 32, iterations, salt)[2])))
 
     def test_bcrypt():
-
         print("Testing Bcrypt...")
         r = rng()
         phash = bcrypt('testing', r)
