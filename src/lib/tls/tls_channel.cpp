@@ -630,8 +630,8 @@ SymmetricKey Channel::key_material_export(const std::string& label,
          size_t context_size = context.length();
          if(context_size > 0xFFFF)
             throw Exception("key_material_export context is too long");
-         salt.push_back(get_byte<u16bit>(0, context_size));
-         salt.push_back(get_byte<u16bit>(1, context_size));
+         salt.push_back(get_byte(0, static_cast<u16bit>(context_size)));
+         salt.push_back(get_byte(1, static_cast<u16bit>(context_size)));
          salt += to_byte_vector(context);
          }
 

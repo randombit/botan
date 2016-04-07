@@ -99,8 +99,8 @@ std::vector<byte> Extensions::serialize() const
       buf.push_back(get_byte(0, extn_code));
       buf.push_back(get_byte(1, extn_code));
 
-      buf.push_back(get_byte<u16bit>(0, extn_val.size()));
-      buf.push_back(get_byte<u16bit>(1, extn_val.size()));
+      buf.push_back(get_byte(0, static_cast<u16bit>(extn_val.size())));
+      buf.push_back(get_byte(1, static_cast<u16bit>(extn_val.size())));
 
       buf += extn_val;
       }
@@ -163,12 +163,12 @@ std::vector<byte> Server_Name_Indicator::serialize() const
 
    size_t name_len = m_sni_host_name.size();
 
-   buf.push_back(get_byte<u16bit>(0, name_len+3));
-   buf.push_back(get_byte<u16bit>(1, name_len+3));
+   buf.push_back(get_byte(0, static_cast<u16bit>(name_len+3)));
+   buf.push_back(get_byte(1, static_cast<u16bit>(name_len+3)));
    buf.push_back(0); // DNS
 
-   buf.push_back(get_byte<u16bit>(0, name_len));
-   buf.push_back(get_byte<u16bit>(1, name_len));
+   buf.push_back(get_byte(0, static_cast<u16bit>(name_len)));
+   buf.push_back(get_byte(1, static_cast<u16bit>(name_len)));
 
    buf += std::make_pair(
       reinterpret_cast<const byte*>(m_sni_host_name.data()),
@@ -264,8 +264,8 @@ std::vector<byte> Application_Layer_Protocol_Notification::serialize() const
                                  1);
       }
 
-   buf[0] = get_byte<u16bit>(0, buf.size()-2);
-   buf[1] = get_byte<u16bit>(1, buf.size()-2);
+   buf[0] = get_byte(0, static_cast<u16bit>(buf.size()-2));
+   buf[1] = get_byte(1, static_cast<u16bit>(buf.size()-2));
 
    return buf;
    }
@@ -320,8 +320,8 @@ std::vector<byte> Supported_Elliptic_Curves::serialize() const
       buf.push_back(get_byte(1, id));
       }
 
-   buf[0] = get_byte<u16bit>(0, buf.size()-2);
-   buf[1] = get_byte<u16bit>(1, buf.size()-2);
+   buf[0] = get_byte(0, static_cast<u16bit>(buf.size()-2));
+   buf[1] = get_byte(1, static_cast<u16bit>(buf.size()-2));
 
    return buf;
    }
@@ -435,8 +435,8 @@ std::vector<byte> Signature_Algorithms::serialize() const
          {}
       }
 
-   buf[0] = get_byte<u16bit>(0, buf.size()-2);
-   buf[1] = get_byte<u16bit>(1, buf.size()-2);
+   buf[0] = get_byte(0, static_cast<u16bit>(buf.size()-2));
+   buf[1] = get_byte(1, static_cast<u16bit>(buf.size()-2));
 
    return buf;
    }
