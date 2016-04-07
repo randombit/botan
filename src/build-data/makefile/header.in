@@ -19,6 +19,7 @@ CLI_FLAGS      = $(CXXFLAGS) $(WARN_FLAGS)
 TEST_FLAGS     = $(CXXFLAGS) $(WARN_FLAGS)
 
 SCRIPTS_DIR    = %{scripts_dir}
+INSTALLED_LIB_DIR = %{destdir}/%{libdir}
 
 CLI_POST_LINK_CMD  = %{cli_post_link_cmd}
 TEST_POST_LINK_CMD = %{test_post_link_cmd}
