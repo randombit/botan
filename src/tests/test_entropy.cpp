@@ -40,10 +40,10 @@ class Entropy_Source_Tests : public Test
                {
                std::vector<uint8_t> entropy;
                size_t samples = 0;
-               size_t entropy_estimate = 0;
+               double entropy_estimate = 0.0;
 
                Botan::Entropy_Accumulator accum(
-                  [&](const uint8_t buf[], size_t buf_len, size_t buf_entropy) -> bool {
+                  [&](const uint8_t buf[], size_t buf_len, double buf_entropy) -> bool {
                      entropy.insert(entropy.end(), buf, buf + buf_len);
                      entropy_estimate += buf_entropy;
                      ++samples;
@@ -93,7 +93,7 @@ class Entropy_Source_Tests : public Test
                            comp1_size = compressed.size();
 
                            result.test_gte(comp_algo + " compressed entropy better than advertised",
-                                           compressed.size() * 8, entropy_estimate);
+                                           compressed.size() * 8, static_cast<size_t>(entropy_estimate));
                            }
                         catch(std::exception& e)
                            {
