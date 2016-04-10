@@ -205,11 +205,6 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
          Extensions extensions = subject.v3_extensions();
          for (auto& extension : extensions.extensions())
             {
-            if(!Extensions::is_known_extension(extension.first->oid_of()) && extension.second)
-               {
-               status.insert(Certificate_Status_Code::UNKNOWN_CRITICAL_EXTENSION);
-               continue;
-               }
             extension.first->validate(cert_path[i], status, cert_path);
             }
       }

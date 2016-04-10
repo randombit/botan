@@ -90,8 +90,6 @@ class BOTAN_DLL Extensions : public ASN1_Object
 
       std::map<OID, std::pair<std::vector<byte>, bool>> extensions_raw() const;
 
-      static bool is_known_extension(const OID& oid);
-
       Extensions& operator=(const Extensions&);
 
       Extensions(const Extensions&);
@@ -99,7 +97,7 @@ class BOTAN_DLL Extensions : public ASN1_Object
       explicit Extensions(bool st = true) : m_throw_on_unknown_critical(st) {}
 
    private:
-      static Certificate_Extension* get_extension(const OID&);
+      static Certificate_Extension* get_extension(const OID&, bool);
 
       std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> m_extensions;
       bool m_throw_on_unknown_critical;
@@ -476,6 +474,31 @@ class BOTAN_DLL CRL_Distribution_Points final : public Certificate_Extension
       void contents_to(Data_Store&, Data_Store&) const override;
 
       std::vector<Distribution_Point> m_distribution_points;
+   };
+
+/**
+* An unknown X.509 extension marked as critical
+* Will always add a failure to the path validation result.
+*/
+class BOTAN_DLL Unknown_Critical_Extension final : public Certificate_Extension
+   {
+   public:
+      Unknown_Critical_Extension* copy() const override
+         { return new Unknown_Critical_Extension(); }
+
+      void validate(const X509_Certificate& /* current_cert */, std::set<Certificate_Status_Code>& status,
+                  const std::vector<X509_Certificate>& /* cert_path */)
+         {
+         status.insert(Certificate_Status_Code::UNKNOWN_CRITICAL_EXTENSION);
+         }
+   private:
+      std::string oid_name() const override
+         { return "Unknown OID name"; }
+
+      bool should_encode() const { return false; }
+      std::vector<byte> encode_inner() const override;
+      void decode_inner(const std::vector<byte>&) override;
+      void contents_to(Data_Store&, Data_Store&) const override;
    };
 
 }

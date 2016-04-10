@@ -20,7 +20,7 @@ namespace Botan {
 /*
 * List of X.509 Certificate Extensions
 */
-Certificate_Extension* Extensions::get_extension(const OID& oid)
+Certificate_Extension* Extensions::get_extension(const OID& oid, bool critical)
    {
 #define X509_EXTENSION(NAME, TYPE) \
    if(OIDS::name_of(oid, NAME))    \
@@ -40,7 +40,7 @@ Certificate_Extension* Extensions::get_extension(const OID& oid)
    X509_EXTENSION("X509v3.CRLNumber", CRL_Number);
    X509_EXTENSION("X509v3.ReasonCode", CRL_ReasonCode);
 
-   return nullptr;
+   return critical ? new Cert_Extension::Unknown_Critical_Extension() : nullptr;
    }
 
 /*
@@ -146,7 +146,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
 
       m_extensions_raw.emplace(oid, std::make_pair(value, critical));
 
-      std::unique_ptr<Certificate_Extension> ext(get_extension(oid));
+      std::unique_ptr<Certificate_Extension> ext(get_extension(oid, critical));
 
       if(!ext && critical && m_throw_on_unknown_critical)
          throw Decoding_Error("Encountered unknown X.509 extension marked "
@@ -182,11 +182,6 @@ void Extensions::contents_to(Data_Store& subject_info,
       m_extensions[i].first->contents_to(subject_info, issuer_info);
       subject_info.add(m_extensions[i].first->oid_name() + ".is_critical", (m_extensions[i].second ? 1 : 0));
       }
-   }
-
-bool Extensions::is_known_extension(const OID& oid)
-   {
-   return get_extension(oid) != nullptr;
    }
 
 
@@ -743,6 +738,20 @@ void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder&
                                   ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED),
                                   SEQUENCE, CONSTRUCTED)
       .end_cons().end_cons();
+   }
+
+std::vector<byte> Unknown_Critical_Extension::encode_inner() const
+   {
+   throw Exception("Unknown_Critical_Extension encoding not implemented");
+   }
+
+void Unknown_Critical_Extension::decode_inner(const std::vector<byte>& buf)
+   {
+   }
+
+void Unknown_Critical_Extension::contents_to(Data_Store& info, Data_Store&) const
+   {
+   // TODO: textual representation?
    }
 
 }
