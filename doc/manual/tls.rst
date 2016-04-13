@@ -366,8 +366,6 @@ information about that session:
 
 There are also functions for serialization and deserializing sessions:
 
-.. cpp:class:: TLS::Session
-
    .. cpp:function:: std::vector<byte> encrypt(const SymmetricKey& key, \
                                                RandomNumberGenerator& rng)
 
