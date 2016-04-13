@@ -1,6 +1,7 @@
 /*
 * DSA
 * (C) 1999-2010,2014 Jack Lloyd
+* (C) 2016 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,7 +11,9 @@
 #include <botan/keypair.h>
 #include <botan/pow_mod.h>
 #include <botan/reducer.h>
-#include <botan/rfc6979.h>
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+  #include <botan/rfc6979.h>
+#endif
 #include <future>
 
 namespace Botan {
@@ -84,7 +87,7 @@ class DSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
          m_x(dsa.get_x()),
          m_powermod_g_p(dsa.group_g(), dsa.group_p()),
          m_mod_q(dsa.group_q()),
-         m_hash(hash_for_deterministic_signature(emsa))
+         m_emsa(emsa)
          {
          }
 
@@ -99,19 +102,23 @@ class DSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
       const BigInt& m_x;
       Fixed_Base_Power_Mod m_powermod_g_p;
       Modular_Reducer m_mod_q;
-      std::string m_hash;
+      std::string m_emsa;
    };
 
 secure_vector<byte>
 DSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
-                                  RandomNumberGenerator&)
+                                  RandomNumberGenerator& rng)
    {
    BigInt i(msg, msg_len);
 
    while(i >= m_q)
       i -= m_q;
 
-   const BigInt k = generate_rfc6979_nonce(m_x, m_q, i, m_hash);
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+   const BigInt k = generate_rfc6979_nonce(m_x, m_q, i, hash_for_deterministic_signature(m_emsa));
+#else
+   const BigInt k = BigInt::random_integer(rng, 1, m_q);
+#endif
 
    auto future_r = std::async(std::launch::async,
                               [&]() { return m_mod_q.reduce(m_powermod_g_p(k)); });

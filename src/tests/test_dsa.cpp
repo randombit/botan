@@ -22,8 +22,13 @@ class DSA_KAT_Tests : public PK_Signature_Generation_Test
    public:
       DSA_KAT_Tests() : PK_Signature_Generation_Test(
          "DSA",
-         "pubkey/dsa.vec",
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+         "pubkey/dsa_rfc6979.vec",
          {"P", "Q", "G", "X", "Hash", "Msg", "Signature"})
+#else
+         "pubkey/dsa_prob.vec",
+         {"P", "Q", "G", "X", "Hash", "Msg", "Nonce", "Signature"})
+#endif
          {}
 
       bool clear_between_callbacks() const override { return false; }
