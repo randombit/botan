@@ -33,6 +33,9 @@ const char* default_oid_list()
       // ecgPublicKey (see https://www.teletrust.de/projekte/oid/)
       "1.3.36.3.3.2.5.2.1 = ECGDSA" "\n"
 
+      // EC-KCDSA mechanism (Elliptic Curve KCDSA)
+      "1.0.14888.3.0.5 = ECKCDSA" "\n"
+
       "1.2.643.2.2.19 = GOST-34.10" "\n"
 
       // Block ciphers

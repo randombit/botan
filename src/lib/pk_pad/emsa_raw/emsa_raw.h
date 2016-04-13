@@ -18,6 +18,9 @@ namespace Botan {
 */
 class BOTAN_DLL EMSA_Raw final : public EMSA
    {
+   public:
+      EMSA* clone() override { return new EMSA_Raw(); }
+
    private:
       void update(const byte[], size_t) override;
       secure_vector<byte> raw_data() override;

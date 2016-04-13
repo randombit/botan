@@ -59,15 +59,26 @@ class BOTAN_DLL EMSA
                           size_t key_bits) = 0;
 
       virtual ~EMSA();
+
+      virtual EMSA* clone() = 0;
    };
 
 /**
 * Factory method for EMSA (message-encoding methods for signatures
 * with appendix) objects
-* @param algo_spec the name of the EME to create
+* @param algo_spec the name of the EMSA to create
 * @return pointer to newly allocated object of that type
 */
 BOTAN_DLL EMSA* get_emsa(const std::string& algo_spec);
+
+/**
+* Returns the hash function used in the given EMSA scheme
+* If the hash function is not specified or not understood,
+* returns "SHA-512"
+* @param algo_spec the name of the EMSA
+* @return hash function used in the given EMSA scheme
+*/
+BOTAN_DLL std::string hash_for_emsa(const std::string& algo_spec);
 
 }
 

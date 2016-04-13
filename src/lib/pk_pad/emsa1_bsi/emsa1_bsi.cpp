@@ -10,6 +10,12 @@
 
 namespace Botan {
 
+EMSA* EMSA1_BSI::clone()
+   {
+   return new EMSA1_BSI(m_hash->clone());
+   }
+
+
 /*
 * EMSA1 BSI Encode Operation
 */

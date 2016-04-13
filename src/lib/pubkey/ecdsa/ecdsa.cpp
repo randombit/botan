@@ -13,6 +13,7 @@
 #include <botan/keypair.h>
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
   #include <botan/rfc6979.h>
+  #include <botan/emsa.h>
 #endif
 
 namespace Botan {
@@ -72,7 +73,7 @@ ECDSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
    const BigInt m(msg, msg_len);
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-   const BigInt k = generate_rfc6979_nonce(m_x, m_order, m, hash_for_deterministic_signature(m_emsa));
+   const BigInt k = generate_rfc6979_nonce(m_x, m_order, m, hash_for_emsa(m_emsa));
 #else
    const BigInt k = BigInt::random_integer(rng, 1, m_order);
 #endif

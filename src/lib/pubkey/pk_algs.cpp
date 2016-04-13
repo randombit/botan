@@ -28,6 +28,10 @@
   #include <botan/ecgdsa.h>
 #endif
 
+#if defined(BOTAN_HAS_ECKCDSA)
+  #include <botan/eckcdsa.h>
+#endif
+
 #if defined(BOTAN_HAS_GOST_34_10_2001)
   #include <botan/gost_3410.h>
 #endif
@@ -105,6 +109,11 @@ Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
       return new ECGDSA_PublicKey(alg_id, key_bits);
 #endif
 
+#if defined(BOTAN_HAS_ECKCDSA)
+   if(alg_name == "ECKCDSA")
+      return new ECKCDSA_PublicKey(alg_id, key_bits);
+#endif
+
 #if defined(BOTAN_HAS_GOST_34_10_2001)
    if(alg_name == "GOST-34.10")
       return new GOST_3410_PublicKey(alg_id, key_bits);
@@ -174,6 +183,11 @@ Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ECGDSA)
    if(alg_name == "ECGDSA")
       return new ECGDSA_PrivateKey(alg_id, key_bits);
+#endif
+
+#if defined(BOTAN_HAS_ECKCDSA)
+   if(alg_name == "ECKCDSA")
+      return new ECKCDSA_PrivateKey(alg_id, key_bits);
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)

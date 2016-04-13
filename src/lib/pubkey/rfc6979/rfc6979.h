@@ -46,8 +46,6 @@ BigInt BOTAN_DLL generate_rfc6979_nonce(const BigInt& x,
                                         const BigInt& h,
                                         const std::string& hash);
 
-std::string hash_for_deterministic_signature(const std::string& emsa);
-
 }
 
 #endif
