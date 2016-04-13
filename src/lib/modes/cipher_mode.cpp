@@ -29,10 +29,13 @@
 
 namespace Botan {
 
+#define BOTAN_REGISTER_CIPHER_MODE(name, maker) BOTAN_REGISTER_T(Cipher_Mode, name, maker)
+#define BOTAN_REGISTER_CIPHER_MODE_NOARGS(name) BOTAN_REGISTER_T_NOARGS(Cipher_Mode, name)
+
 #if defined(BOTAN_HAS_MODE_ECB)
 
 template<typename T>
-Transform* make_ecb_mode(const Transform::Spec& spec)
+Cipher_Mode* make_ecb_mode(const Cipher_Mode::Spec& spec)
    {
    std::unique_ptr<BlockCipher> bc(BlockCipher::create(spec.arg(0)));
    std::unique_ptr<BlockCipherModePaddingMethod> pad(get_bc_pad(spec.arg(1, "NoPadding")));
@@ -41,14 +44,14 @@ Transform* make_ecb_mode(const Transform::Spec& spec)
    return nullptr;
    }
 
-BOTAN_REGISTER_TRANSFORM(ECB_Encryption, make_ecb_mode<ECB_Encryption>);
-BOTAN_REGISTER_TRANSFORM(ECB_Decryption, make_ecb_mode<ECB_Decryption>);
+BOTAN_REGISTER_CIPHER_MODE(ECB_Encryption, make_ecb_mode<ECB_Encryption>);
+BOTAN_REGISTER_CIPHER_MODE(ECB_Decryption, make_ecb_mode<ECB_Decryption>);
 #endif
 
 #if defined(BOTAN_HAS_MODE_CBC)
 
 template<typename CBC_T, typename CTS_T>
-Transform* make_cbc_mode(const Transform::Spec& spec)
+Cipher_Mode* make_cbc_mode(const Cipher_Mode::Spec& spec)
    {
    std::unique_ptr<BlockCipher> bc(BlockCipher::create(spec.arg(0)));
 
@@ -65,8 +68,8 @@ Transform* make_cbc_mode(const Transform::Spec& spec)
    return nullptr;
    }
 
-BOTAN_REGISTER_TRANSFORM(CBC_Encryption, (make_cbc_mode<CBC_Encryption,CTS_Encryption>));
-BOTAN_REGISTER_TRANSFORM(CBC_Decryption, (make_cbc_mode<CBC_Decryption,CTS_Decryption>));
+BOTAN_REGISTER_CIPHER_MODE(CBC_Encryption, (make_cbc_mode<CBC_Encryption,CTS_Encryption>));
+BOTAN_REGISTER_CIPHER_MODE(CBC_Decryption, (make_cbc_mode<CBC_Decryption,CTS_Decryption>));
 #endif
 
 #if defined(BOTAN_HAS_MODE_CFB)
@@ -83,14 +86,17 @@ Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction)
 
    const char* dir_string = (direction == ENCRYPTION) ? "_Encryption" : "_Decryption";
 
-   std::unique_ptr<Transform> t;
+   Cipher_Mode::Spec spec(algo_spec, dir_string);
 
-   t.reset(get_transform(algo_spec, provider, dir_string));
+   std::unique_ptr<Cipher_Mode> cipher_mode(
+      Algo_Registry<Cipher_Mode>::global_registry().make(
+         Cipher_Mode::Spec(algo_spec, dir_string),
+         provider)
+      );
 
-   if(Cipher_Mode* cipher = dynamic_cast<Cipher_Mode*>(t.get()))
+   if(cipher_mode)
       {
-      t.release();
-      return cipher;
+      return cipher_mode.release();
       }
 
    const std::vector<std::string> algo_parts = split_on(algo_spec, '/');
@@ -115,24 +121,32 @@ Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction)
    const std::string mode_name = mode_info[0] + alg_args.str();
    const std::string mode_name_directional = mode_info[0] + dir_string + alg_args.str();
 
-   t.reset(get_transform(mode_name_directional, provider));
+   cipher_mode.reset(
+      Algo_Registry<Cipher_Mode>::global_registry().make(
+         Cipher_Mode::Spec(mode_name_directional),
+         provider)
+      );
 
-   if(Cipher_Mode* cipher = dynamic_cast<Cipher_Mode*>(t.get()))
+   if(cipher_mode)
       {
-      t.release();
-      return cipher;
+      return cipher_mode.release();
       }
 
-   t.reset(get_transform(mode_name, provider));
+   cipher_mode.reset(
+      Algo_Registry<Cipher_Mode>::global_registry().make(
+         Cipher_Mode::Spec(mode_name),
+         provider)
+      );
 
-   if(Cipher_Mode* cipher = dynamic_cast<Cipher_Mode*>(t.get()))
+   if(cipher_mode)
       {
-      t.release();
-      return cipher;
+      return cipher_mode.release();
       }
 
    if(auto sc = StreamCipher::create(mode_name, provider))
+      {
       return new Stream_Cipher_Mode(sc.release());
+      }
 
    return nullptr;
    }

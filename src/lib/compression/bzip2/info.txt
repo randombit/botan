@@ -1,4 +1,4 @@
-define BZIP2_TRANSFORM 20141118
+define BZIP2 20160412
 
 load_on vendor
 

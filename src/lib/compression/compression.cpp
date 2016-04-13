@@ -54,9 +54,7 @@ void Compression_Alloc_Info::do_free(void* ptr)
       }
    }
 
-namespace {
-
-Compressor_Transform* do_make_compressor(const std::string& type, const std::string& suffix)
+Compression_Algorithm* make_compressor(const std::string& type)
    {
    const std::map<std::string, std::string> trans{
       {"zlib", "Zlib"},
@@ -73,31 +71,29 @@ Compressor_Transform* do_make_compressor(const std::string& type, const std::str
    if(i == trans.end())
       return nullptr;
 
-   const std::string t_name = i->second + suffix;
+   const SCAN_Name t_name(i->second + "_Compression");
+   return Algo_Registry<Compression_Algorithm>::global_registry().make(t_name);
+   }
 
-   std::unique_ptr<Transform> t(get_transform(t_name));
+Decompression_Algorithm* make_decompressor(const std::string& type)
+   {
+   const std::map<std::string, std::string> trans{
+      {"zlib", "Zlib"},
+      {"deflate", "Deflate"},
+      {"gzip", "Gzip"},
+      {"gz", "Gzip"},
+      {"bzip2", "Bzip2"},
+      {"bz2", "Bzip2"},
+      {"lzma", "LZMA"},
+      {"xz", "LZMA"}};
 
-   if(!t)
+   auto i = trans.find(type);
+
+   if(i == trans.end())
       return nullptr;
 
-   Compressor_Transform* r = dynamic_cast<Compressor_Transform*>(t.get());
-   if(!r)
-      throw Exception("Bad cast of compression object " + t_name);
-
-   t.release();
-   return r;
-   }
-
-}
-
-Compressor_Transform* make_compressor(const std::string& type, size_t level)
-   {
-   return do_make_compressor(type, "_Compression(" + std::to_string(level) + ")");
-   }
-
-Compressor_Transform* make_decompressor(const std::string& type)
-   {
-   return do_make_compressor(type, "_Decompression");
+   const SCAN_Name t_name(i->second + "_Decompression");
+   return Algo_Registry<Decompression_Algorithm>::global_registry().make(t_name);
    }
 
 void Stream_Compression::clear()
@@ -105,13 +101,9 @@ void Stream_Compression::clear()
    m_stream.reset();
    }
 
-secure_vector<byte> Stream_Compression::start_raw(const byte[], size_t nonce_len)
+void Stream_Compression::start(size_t level)
    {
-   if(!valid_nonce_length(nonce_len))
-      throw Invalid_IV_Length(name(), nonce_len);
-
-   m_stream.reset(make_stream());
-   return secure_vector<byte>();
+   m_stream.reset(make_stream(level));
    }
 
 void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit flags)
@@ -154,16 +146,10 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
    buf.swap(m_buffer);
    }
 
-void Stream_Compression::update(secure_vector<byte>& buf, size_t offset)
+void Stream_Compression::update(secure_vector<byte>& buf, size_t offset, bool flush)
    {
    BOTAN_ASSERT(m_stream, "Initialized");
-   process(buf, offset, m_stream->run_flag());
-   }
-
-void Stream_Compression::flush(secure_vector<byte>& buf, size_t offset)
-   {
-   BOTAN_ASSERT(m_stream, "Initialized");
-   process(buf, offset, m_stream->flush_flag());
+   process(buf, offset, flush ? m_stream->flush_flag() : m_stream->run_flag());
    }
 
 void Stream_Compression::finish(secure_vector<byte>& buf, size_t offset)
@@ -178,14 +164,9 @@ void Stream_Decompression::clear()
    m_stream.reset();
    }
 
-secure_vector<byte> Stream_Decompression::start_raw(const byte[], size_t nonce_len)
+void Stream_Decompression::start()
    {
-   if(!valid_nonce_length(nonce_len))
-      throw Invalid_IV_Length(name(), nonce_len);
-
    m_stream.reset(make_stream());
-
-   return secure_vector<byte>();
    }
 
 void Stream_Decompression::process(secure_vector<byte>& buf, size_t offset, u32bit flags)

@@ -19,20 +19,9 @@ namespace Botan {
 class BOTAN_DLL Zlib_Compression final : public Stream_Compression
    {
    public:
-      /**
-      * @param level how much effort to use on compressing (0 to 9);
-      *        higher levels are slower but tend to give better
-      *        compression
-      */
-
-      Zlib_Compression(size_t level = 6) : m_level(level) {}
-
       std::string name() const override { return "Zlib_Compression"; }
-
    private:
-      Compression_Stream* make_stream() const override;
-
-      const size_t m_level;
+      Compression_Stream* make_stream(size_t level) const override;
    };
 
 /**
@@ -42,7 +31,6 @@ class BOTAN_DLL Zlib_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Zlib_Decompression"; }
-
    private:
       Compression_Stream* make_stream() const override;
    };
@@ -53,19 +41,9 @@ class BOTAN_DLL Zlib_Decompression final : public Stream_Decompression
 class BOTAN_DLL Deflate_Compression final : public Stream_Compression
    {
    public:
-      /**
-      * @param level how much effort to use on compressing (0 to 9);
-      *        higher levels are slower but tend to give better
-      *        compression
-      */
-      Deflate_Compression(size_t level = 6) : m_level(level) {}
-
       std::string name() const override { return "Deflate_Compression"; }
-
    private:
-      Compression_Stream* make_stream() const override;
-
-      const size_t m_level;
+      Compression_Stream* make_stream(size_t level) const override;
    };
 
 /**
@@ -75,7 +53,6 @@ class BOTAN_DLL Deflate_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Deflate_Decompression"; }
-
    private:
       Compression_Stream* make_stream() const override;
    };
@@ -86,20 +63,11 @@ class BOTAN_DLL Deflate_Decompression final : public Stream_Decompression
 class BOTAN_DLL Gzip_Compression final : public Stream_Compression
    {
    public:
-      /**
-      * @param level how much effort to use on compressing (0 to 9);
-      *        higher levels are slower but tend to give better
-      *        compression
-      */
-      Gzip_Compression(size_t level = 6, byte os_code = 255) :
-         m_level(level), m_os_code(os_code) {}
+      Gzip_Compression(byte os_code = 255) : m_os_code(os_code) {}
 
       std::string name() const override { return "Gzip_Compression"; }
-
    private:
-      Compression_Stream* make_stream() const override;
-
-      const size_t m_level;
+      Compression_Stream* make_stream(size_t level) const override;
       const byte m_os_code;
    };
 
@@ -110,7 +78,6 @@ class BOTAN_DLL Gzip_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "Gzip_Decompression"; }
-
    private:
       Compression_Stream* make_stream() const override;
    };

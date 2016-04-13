@@ -8,7 +8,7 @@
 #ifndef BOTAN_AEAD_FILTER_H__
 #define BOTAN_AEAD_FILTER_H__
 
-#include <botan/transform_filter.h>
+#include <botan/cipher_filter.h>
 #include <botan/aead.h>
 
 namespace Botan {
@@ -16,10 +16,10 @@ namespace Botan {
 /**
 * Filter interface for AEAD Modes
 */
-class BOTAN_DLL AEAD_Filter : public Transform_Filter
+class AEAD_Filter : public Cipher_Mode_Filter
    {
    public:
-      AEAD_Filter(AEAD_Mode* aead) : Transform_Filter(aead) {}
+      AEAD_Filter(AEAD_Mode* aead) : Cipher_Mode_Filter(aead) {}
 
       /**
       * Set associated data that is not included in the ciphertext but

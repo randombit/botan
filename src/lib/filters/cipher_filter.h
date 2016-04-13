@@ -1,6 +1,6 @@
 /*
-* Filter interface for Transforms
-* (C) 2013 Jack Lloyd
+* Filter interface for ciphers
+* (C) 2013,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,20 +8,20 @@
 #ifndef BOTAN_TRANSFORM_FILTER_H__
 #define BOTAN_TRANSFORM_FILTER_H__
 
-#include <botan/transform.h>
+#include <botan/cipher_mode.h>
 #include <botan/key_filt.h>
 #include <botan/buf_filt.h>
 
 namespace Botan {
 
 /**
-* Filter interface for Transforms
+* Filter interface for cipher modes
 */
-class BOTAN_DLL Transform_Filter : public Keyed_Filter,
-                                   private Buffered_Filter
+class BOTAN_DLL Cipher_Mode_Filter : public Keyed_Filter,
+                                     private Buffered_Filter
    {
    public:
-      explicit Transform_Filter(Transform* t);
+      explicit Cipher_Mode_Filter(Cipher_Mode* t);
 
       void set_iv(const InitializationVector& iv) override;
 
@@ -34,9 +34,9 @@ class BOTAN_DLL Transform_Filter : public Keyed_Filter,
       std::string name() const override;
 
    protected:
-      const Transform& get_transform() const { return *m_transform; }
+      const Cipher_Mode& get_mode() const { return *m_mode; }
 
-      Transform& get_transform() { return *m_transform; }
+      Cipher_Mode& get_mode() { return *m_mode; }
 
    private:
       void write(const byte input[], size_t input_length) override;
@@ -59,10 +59,12 @@ class BOTAN_DLL Transform_Filter : public Keyed_Filter,
          };
 
       Nonce_State m_nonce;
-      std::unique_ptr<Transform> m_transform;
+      std::unique_ptr<Cipher_Mode> m_mode;
       secure_vector<byte> m_buffer;
    };
 
+// deprecated aliases, will be removed before 2.0
+typedef Cipher_Mode_Filter Transform_Filter;
 typedef Transform_Filter Transformation_Filter;
 
 }
