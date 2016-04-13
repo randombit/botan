@@ -2,6 +2,9 @@ SONAME_PATCH    = %{soname_patch}
 SONAME_ABI      = %{soname_abi}
 SONAME_BASE     = %{soname_base}
 
+DARWIN_COMPATIBILITY_VER = %{version_packed}.%{so_abi_rev}.0
+DARWIN_CURRENT_VER       = %{version_packed}.%{so_abi_rev}.%{version_patch}
+
 SHARED_LIB      = %{out_dir}/$(SONAME_PATCH)
 
 $(SHARED_LIB): $(LIBOBJS)
