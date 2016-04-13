@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * SHA-224
 */
-class BOTAN_DLL SHA_224 : public MDx_HashFunction
+class BOTAN_DLL SHA_224 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-224"; }
@@ -25,19 +25,19 @@ class BOTAN_DLL SHA_224 : public MDx_HashFunction
 
       void clear() override;
 
-      SHA_224() : MDx_HashFunction(64, true, true), digest(8)
+      SHA_224() : MDx_HashFunction(64, true, true), m_digest(8)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks) override;
       void copy_out(byte[]) override;
 
-      secure_vector<u32bit> digest;
+      secure_vector<u32bit> m_digest;
    };
 
 /**
 * SHA-256
 */
-class BOTAN_DLL SHA_256 : public MDx_HashFunction
+class BOTAN_DLL SHA_256 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-256"; }
@@ -46,13 +46,13 @@ class BOTAN_DLL SHA_256 : public MDx_HashFunction
 
       void clear() override;
 
-      SHA_256() : MDx_HashFunction(64, true, true), digest(8)
+      SHA_256() : MDx_HashFunction(64, true, true), m_digest(8)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks) override;
       void copy_out(byte[]) override;
 
-      secure_vector<u32bit> digest;
+      secure_vector<u32bit> m_digest;
    };
 
 }

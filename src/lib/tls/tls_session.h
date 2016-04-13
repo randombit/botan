@@ -38,7 +38,7 @@ class BOTAN_DLL Session
          m_compression_method(0),
          m_connection_side(static_cast<Connection_Side>(0)),
          m_srtp_profile(0),
-         m_fragment_size(0)
+         m_extended_master_secret(false)
             {}
 
       /**
@@ -50,7 +50,7 @@ class BOTAN_DLL Session
               u16bit ciphersuite,
               byte compression_method,
               Connection_Side side,
-              size_t fragment_size,
+              bool supports_extended_master_secret,
               const std::vector<X509_Certificate>& peer_certs,
               const std::vector<byte>& session_ticket,
               const Server_Information& server_info,
@@ -65,7 +65,7 @@ class BOTAN_DLL Session
       /**
       * Load a session from PEM representation (created by PEM_encode)
       */
-      Session(const std::string& pem);
+      explicit Session(const std::string& pem);
 
       /**
       * Encode this session data for storage
@@ -151,14 +151,11 @@ class BOTAN_DLL Session
       const std::vector<byte>& session_id() const { return m_identifier; }
 
       /**
-      * Get the negotiated maximum fragment size (or 0 if default)
-      */
-      size_t fragment_size() const { return m_fragment_size; }
-
-      /**
       * Get the negotiated DTLS-SRTP algorithm (RFC 5764)
       */
       u16bit dtls_srtp_profile() const { return m_srtp_profile; }
+
+      bool supports_extended_master_secret() const { return m_extended_master_secret; }
 
       /**
       * Return the certificate chain of the peer (possibly empty)
@@ -183,7 +180,7 @@ class BOTAN_DLL Session
       const Server_Information& server_info() const { return m_server_info; }
 
    private:
-      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20150104 };
+      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20160103 };
 
       std::chrono::system_clock::time_point m_start_time;
 
@@ -196,8 +193,7 @@ class BOTAN_DLL Session
       byte m_compression_method;
       Connection_Side m_connection_side;
       u16bit m_srtp_profile;
-
-      size_t m_fragment_size;
+      bool m_extended_master_secret;
 
       std::vector<X509_Certificate> m_peer_certs;
       Server_Information m_server_info; // optional

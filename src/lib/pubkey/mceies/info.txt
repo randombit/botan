@@ -4,4 +4,5 @@ define MCEIES 20150706
 aes
 mce
 ocb
+kdf1
 </requires>

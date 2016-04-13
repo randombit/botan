@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 #include <botan/secmem.h>
 
 namespace Botan {
@@ -24,6 +25,20 @@ inline std::vector<byte> to_byte_vector(const std::string& s)
 inline std::string to_string(const secure_vector<byte> &bytes)
    {
    return std::string(bytes.cbegin(), bytes.cend());
+   }
+
+/**
+* Return the keys of a map as a std::set
+*/
+template<typename K, typename V>
+std::set<K> map_keys_as_set(const std::map<K, V>& kv)
+   {
+   std::set<K> s;
+   for(auto&& i : kv)
+      {
+      s.insert(i.first);
+      }
+   return s;
    }
 
 /*

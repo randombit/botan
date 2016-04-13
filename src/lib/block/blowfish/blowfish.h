@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Blowfish
 */
-class BOTAN_DLL Blowfish : public Block_Cipher_Fixed_Params<8, 1, 56>
+class BOTAN_DLL Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -45,7 +45,7 @@ class BOTAN_DLL Blowfish : public Block_Cipher_Fixed_Params<8, 1, 56>
       static const u32bit P_INIT[18];
       static const u32bit S_INIT[1024];
 
-      secure_vector<u32bit> S, P;
+      secure_vector<u32bit> m_S, m_P;
    };
 
 }

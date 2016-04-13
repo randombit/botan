@@ -16,7 +16,7 @@ namespace Botan {
 * EMSA-Raw - sign inputs directly
 * Don't use this unless you know what you are doing.
 */
-class BOTAN_DLL EMSA_Raw : public EMSA
+class BOTAN_DLL EMSA_Raw final : public EMSA
    {
    private:
       void update(const byte[], size_t) override;
@@ -27,7 +27,7 @@ class BOTAN_DLL EMSA_Raw : public EMSA
       bool verify(const secure_vector<byte>&, const secure_vector<byte>&,
                   size_t) override;
 
-      secure_vector<byte> message;
+      secure_vector<byte> m_message;
    };
 
 }

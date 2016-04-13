@@ -130,8 +130,8 @@ void Lion::clear()
 /*
 * Lion Constructor
 */
-Lion::Lion(HashFunction* hash, StreamCipher* cipher, size_t block_size) :
-   m_block_size(std::max<size_t>(2*hash->output_length() + 1, block_size)),
+Lion::Lion(HashFunction* hash, StreamCipher* cipher, size_t bs) :
+   m_block_size(std::max<size_t>(2*hash->output_length() + 1, bs)),
    m_hash(hash),
    m_cipher(cipher)
    {

@@ -18,13 +18,13 @@ namespace Botan {
 * Useful for Rabin-Williams, also sometimes used with RSA in
 * odd protocols.
 */
-class BOTAN_DLL EMSA_X931 : public EMSA
+class BOTAN_DLL EMSA_X931 final : public EMSA
    {
    public:
       /**
       * @param hash the hash object to use
       */
-      EMSA_X931(HashFunction* hash);
+      explicit EMSA_X931(HashFunction* hash);
    private:
       void update(const byte[], size_t) override;
       secure_vector<byte> raw_data() override;

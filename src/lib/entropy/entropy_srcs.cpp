@@ -15,6 +15,10 @@
   #include <botan/internal/rdrand.h>
 #endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_RDSEED)
+  #include <botan/internal/rdseed.h>
+#endif
+
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
   #include <botan/internal/dev_random.h>
 #endif
@@ -62,6 +66,13 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       {
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
       return std::unique_ptr<Entropy_Source>(new Intel_Rdrand);
+#endif
+      }
+      
+   if(name == "rdseed")
+      {
+#if defined(BOTAN_HAS_ENTROPY_SRC_RDSEED)
+      return std::unique_ptr<Entropy_Source>(new Intel_Rdseed);
 #endif
       }
 

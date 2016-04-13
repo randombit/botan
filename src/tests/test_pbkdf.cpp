@@ -18,14 +18,14 @@ namespace {
 class PBKDF_KAT_Tests : public Text_Based_Test
    {
    public:
-      PBKDF_KAT_Tests() : Text_Based_Test(Test::data_dir("pbkdf"),
+      PBKDF_KAT_Tests() : Text_Based_Test("pbkdf",
                                           {"OutputLen", "Iterations", "Salt", "Passphrase", "Output"})
          {}
 
-      Test::Result run_one_test(const std::string& pbkdf_name, const VarMap& vars)
+      Test::Result run_one_test(const std::string& pbkdf_name, const VarMap& vars) override
          {
          Test::Result result(pbkdf_name);
-         std::unique_ptr<Botan::PBKDF> pbkdf(Botan::get_pbkdf(pbkdf_name));
+         std::unique_ptr<Botan::PBKDF> pbkdf(Botan::PBKDF::create(pbkdf_name));
 
          if(!pbkdf)
             {

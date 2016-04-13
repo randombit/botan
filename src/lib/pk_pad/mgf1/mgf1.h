@@ -15,9 +15,9 @@ namespace Botan {
 /**
 * MGF1 from PKCS #1 v2.0
 */
-void mgf1_mask(HashFunction& hash,
-               const byte in[], size_t in_len,
-               byte out[], size_t out_len);
+void BOTAN_DLL mgf1_mask(HashFunction& hash,
+                         const byte in[], size_t in_len,
+                         byte out[], size_t out_len);
 
 }
 

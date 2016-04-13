@@ -22,7 +22,7 @@ class ElGamal_KAT_Tests : public PK_Encryption_Decryption_Test
    public:
       ElGamal_KAT_Tests() : PK_Encryption_Decryption_Test(
          "ElGamal",
-         Test::data_file("pubkey/elgamal.vec"),
+         "pubkey/elgamal.vec",
          {"P", "G", "X", "Msg", "Nonce", "Ciphertext"},
          {"Padding"})
          {}

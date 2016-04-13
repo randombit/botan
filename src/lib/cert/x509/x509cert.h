@@ -14,6 +14,7 @@
 #include <botan/asn1_alt_name.h>
 #include <botan/datastor.h>
 #include <botan/key_constraint.h>
+#include <botan/name_constraint.h>
 #include <map>
 
 namespace Botan {
@@ -30,7 +31,7 @@ enum class Usage_Type
 /**
 * This class represents X.509 Certificate
 */
-class BOTAN_DLL X509_Certificate : public X509_Object
+class BOTAN_DLL X509_Certificate final : public X509_Object
    {
    public:
       /**
@@ -64,9 +65,9 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * "X509.Certificate.start", "X509.Certificate.end",
       * "X509.Certificate.v2.key_id", "X509.Certificate.public_key",
       * "X509v3.BasicConstraints.path_constraint",
-      * "X509v3.BasicConstraints.is_ca", "X509v3.ExtendedKeyUsage",
-      * "X509v3.CertificatePolicies", "X509v3.SubjectKeyIdentifier" or
-      * "X509.Certificate.serial".
+      * "X509v3.BasicConstraints.is_ca", "X509v3.NameConstraints",
+      * "X509v3.ExtendedKeyUsage", "X509v3.CertificatePolicies",
+      * "X509v3.SubjectKeyIdentifier" or "X509.Certificate.serial".
       * @return value(s) of the specified parameter
       */
       std::vector<std::string> subject_info(const std::string& name) const;
@@ -129,7 +130,7 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * Check whether this certificate is self signed.
       * @return true if this certificate is self signed
       */
-      bool is_self_signed() const { return self_signed; }
+      bool is_self_signed() const { return m_self_signed; }
 
       /**
       * Check whether this certificate is a CA certificate.
@@ -156,6 +157,12 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       u32bit path_limit() const;
 
       /**
+      * Check whenever a given X509 Extension is marked critical in this
+      * certificate.
+      */
+      bool is_critical(const std::string& ex_name) const;
+
+      /**
       * Get the key constraints as defined in the KeyUsage extension of this
       * certificate.
       * @return key constraints
@@ -164,11 +171,17 @@ class BOTAN_DLL X509_Certificate : public X509_Object
 
       /**
       * Get the key constraints as defined in the ExtendedKeyUsage
-      * extension of this
-      * certificate.
+      * extension of this certificate.
       * @return key constraints
       */
       std::vector<std::string> ex_constraints() const;
+
+      /**
+      * Get the name constraints as defined in the NameConstraints
+      * extension of this certificate.
+      * @return name constraints
+      */
+      NameConstraints name_constraints() const;
 
       /**
       * Get the policies as defined in the CertificatePolicies extension
@@ -176,6 +189,12 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * @return certificate policies
       */
       std::vector<std::string> policies() const;
+
+      /**
+      * Get all extensions of this certificate indexed by oid.
+      * @return extension values and critical flag
+      */
+      std::map<OID, std::pair<std::vector<byte>, bool>> v3_extensions() const;
 
       /**
       * Return the listed address of an OCSP responder, or empty if not set
@@ -220,16 +239,16 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * PEM encoded certificate.
       * @param source the data source
       */
-      X509_Certificate(DataSource& source);
+      explicit X509_Certificate(DataSource& source);
 
       /**
       * Create a certificate from a file containing the DER or PEM
       * encoded certificate.
       * @param filename the name of the certificate file
       */
-      X509_Certificate(const std::string& filename);
+      explicit X509_Certificate(const std::string& filename);
 
-      X509_Certificate(const std::vector<byte>& in);
+      explicit X509_Certificate(const std::vector<byte>& in);
 
    private:
       void force_decode() override;
@@ -238,8 +257,9 @@ class BOTAN_DLL X509_Certificate : public X509_Object
 
       X509_Certificate() {}
 
-      Data_Store subject, issuer;
-      bool self_signed;
+      Data_Store m_subject, m_issuer;
+      bool m_self_signed;
+      std::map<OID, std::pair<std::vector<byte>, bool>> m_v3_extensions;
    };
 
 /**

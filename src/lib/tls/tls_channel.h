@@ -161,28 +161,6 @@ class BOTAN_DLL Channel
       */
       bool timeout_check();
 
-      /**
-      * @return true iff the peer supports heartbeat messages
-      */
-      bool peer_supports_heartbeats() const;
-
-      /**
-      * @return true iff we are allowed to send heartbeat messages
-      */
-      bool heartbeat_sending_allowed() const;
-
-      /**
-      * Attempt to send a heartbeat message (if negotiated with counterparty)
-      * @param payload will be echoed back
-      * @param payload_size size of payload in bytes
-      * @param pad_bytes include 16 + pad_bytes extra bytes in the message (not echoed)
-      */
-      void heartbeat(const byte payload[], size_t payload_size, size_t pad_bytes = 0);
-
-      /**
-      * Attempt to send a heartbeat message (if negotiated with counterparty)
-      */
-      void heartbeat() { heartbeat(nullptr, 0); }
    protected:
 
       virtual void process_handshake_msg(const Handshake_State* active_state,
@@ -226,8 +204,6 @@ class BOTAN_DLL Channel
 
       handshake_msg_cb get_handshake_msg_cb() const { return m_handshake_msg_cb; }
    private:
-      size_t maximum_fragment_size() const;
-
       void send_record(byte record_type, const std::vector<byte>& record);
 
       void send_record_under_epoch(u16bit epoch, byte record_type,

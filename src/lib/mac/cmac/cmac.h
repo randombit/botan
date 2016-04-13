@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * CMAC, also known as OMAC1
 */
-class BOTAN_DLL CMAC : public MessageAuthenticationCode
+class BOTAN_DLL CMAC final : public MessageAuthenticationCode
    {
    public:
       std::string name() const override;
@@ -40,7 +40,7 @@ class BOTAN_DLL CMAC : public MessageAuthenticationCode
       /**
       * @param cipher the underlying block cipher to use
       */
-      CMAC(BlockCipher* cipher);
+      explicit CMAC(BlockCipher* cipher);
 
       static CMAC* make(const Spec& spec);
 

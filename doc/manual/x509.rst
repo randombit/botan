@@ -346,10 +346,6 @@ new certificate:
 .. cpp:function:: X509_Certificate \
    X509_CA::sign_request(const PKCS10_Request& req) const
 
-Here's an example:
-
-.. literalinclude ../../src/cli/ca.cpp
-
 Generating CRLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -413,10 +409,6 @@ protocols. The library provides a utility function for this:
    that will be used in creating the certificate (this structure, and
    its use, is discussed below).
 
-An example:
-
-.. literalinclude:: ../../src/cli/self_sig.cpp
-
 Creating PKCS #10 Requests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -431,10 +423,6 @@ This function acts quite similarly to
 #10 certificate request. After creating it, one would typically
 transmit it to a CA, who signs it and returns a freshly minted X.509
 certificate.
-
-An example:
-
-.. literalinclude:: ../../src/cli/pkcs10.cpp
 
 Certificate Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -19,4 +19,5 @@ x86_64
 gcc
 clang
 icc
+msvc
 </cc>

@@ -18,15 +18,16 @@ namespace {
 class KDF_KAT_Tests : public Text_Based_Test
    {
    public:
-      KDF_KAT_Tests() : Text_Based_Test(Test::data_dir("kdf"),
+      KDF_KAT_Tests() : Text_Based_Test("kdf",
                                         {"OutputLen", "Salt", "Secret", "Output"},
                                         {"IKM","XTS"})
          {}
 
-      Test::Result run_one_test(const std::string& kdf_name, const VarMap& vars)
+      Test::Result run_one_test(const std::string& kdf_name, const VarMap& vars) override
          {
          Test::Result result(kdf_name);
-         std::unique_ptr<Botan::KDF> kdf(Botan::get_kdf(kdf_name));
+
+         std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kdf_name));
 
          if(!kdf)
             {

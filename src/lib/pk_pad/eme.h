@@ -22,6 +22,8 @@ class BOTAN_DLL EME
    public:
       typedef SCAN_Name Spec;
 
+      virtual ~EME() = default;
+
       /**
       * Return the maximum input size in bytes we can support
       * @param keybits the size of the key in bits
@@ -38,9 +40,9 @@ class BOTAN_DLL EME
       * @return encoded plaintext
       */
       secure_vector<byte> encode(const byte in[],
-                                size_t in_length,
-                                size_t key_length,
-                                RandomNumberGenerator& rng) const;
+                                 size_t in_length,
+                                 size_t key_length,
+                                 RandomNumberGenerator& rng) const;
 
       /**
       * Encode an input
@@ -50,31 +52,21 @@ class BOTAN_DLL EME
       * @return encoded plaintext
       */
       secure_vector<byte> encode(const secure_vector<byte>& in,
-                                size_t key_length,
-                                RandomNumberGenerator& rng) const;
+                                 size_t key_length,
+                                 RandomNumberGenerator& rng) const;
 
       /**
       * Decode an input
+      * @param valid_mask written to specifies if output is valid
       * @param in the encoded plaintext
-      * @param in_length length of encoded plaintext in bytes
-      * @param key_length length of the key in bits
-      * @return plaintext
+      * @param in_len length of encoded plaintext in bytes
+      * @return bytes of out[] written to along with
+      *         validity mask (0xFF if valid, else 0x00)
       */
-      secure_vector<byte> decode(const byte in[],
-                                size_t in_length,
-                                size_t key_length) const;
+      virtual secure_vector<byte> unpad(byte& valid_mask,
+                                        const byte in[],
+                                        size_t in_len) const = 0;
 
-      /**
-      * Decode an input
-      * @param in the encoded plaintext
-      * @param key_length length of the key in bits
-      * @return plaintext
-      */
-      secure_vector<byte> decode(const secure_vector<byte>& in,
-                                size_t key_length) const;
-
-      virtual ~EME() {}
-   private:
       /**
       * Encode an input
       * @param in the plaintext
@@ -84,20 +76,9 @@ class BOTAN_DLL EME
       * @return encoded plaintext
       */
       virtual secure_vector<byte> pad(const byte in[],
-                                     size_t in_length,
-                                     size_t key_length,
-                                     RandomNumberGenerator& rng) const = 0;
-
-      /**
-      * Decode an input
-      * @param in the encoded plaintext
-      * @param in_length length of encoded plaintext in bytes
-      * @param key_length length of the key in bits
-      * @return plaintext
-      */
-      virtual secure_vector<byte> unpad(const byte in[],
-                                       size_t in_length,
-                                       size_t key_length) const = 0;
+                                      size_t in_length,
+                                      size_t key_length,
+                                      RandomNumberGenerator& rng) const = 0;
    };
 
 /**

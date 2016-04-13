@@ -68,7 +68,7 @@ void factor(BigInt n, BigInt& a, BigInt& b)
 size_t rounds(const BigInt& a, const BigInt& b)
    {
    if(a < b)
-      throw std::logic_error("FPE rounds: a < b");
+      throw Internal_Error("FPE rounds: a < b");
    return 3;
    }
 
@@ -85,42 +85,42 @@ class FPE_Encryptor
       BigInt operator()(size_t i, const BigInt& R);
 
    private:
-      std::unique_ptr<MessageAuthenticationCode> mac;
-      std::vector<byte> mac_n_t;
+      std::unique_ptr<MessageAuthenticationCode> m_mac;
+      std::vector<byte> m_mac_n_t;
    };
 
 FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
                              const BigInt& n,
                              const std::vector<byte>& tweak)
    {
-   mac.reset(new HMAC(new SHA_256));
-   mac->set_key(key);
+   m_mac.reset(new HMAC(new SHA_256));
+   m_mac->set_key(key);
 
    std::vector<byte> n_bin = BigInt::encode(n);
 
    if(n_bin.size() > MAX_N_BYTES)
       throw Exception("N is too large for FPE encryption");
 
-   mac->update_be(static_cast<u32bit>(n_bin.size()));
-   mac->update(n_bin.data(), n_bin.size());
+   m_mac->update_be(static_cast<u32bit>(n_bin.size()));
+   m_mac->update(n_bin.data(), n_bin.size());
 
-   mac->update_be(static_cast<u32bit>(tweak.size()));
-   mac->update(tweak.data(), tweak.size());
+   m_mac->update_be(static_cast<u32bit>(tweak.size()));
+   m_mac->update(tweak.data(), tweak.size());
 
-   mac_n_t = unlock(mac->final());
+   m_mac_n_t = unlock(m_mac->final());
    }
 
 BigInt FPE_Encryptor::operator()(size_t round_no, const BigInt& R)
    {
    secure_vector<byte> r_bin = BigInt::encode_locked(R);
 
-   mac->update(mac_n_t);
-   mac->update_be(static_cast<u32bit>(round_no));
+   m_mac->update(m_mac_n_t);
+   m_mac->update_be(static_cast<u32bit>(round_no));
 
-   mac->update_be(static_cast<u32bit>(r_bin.size()));
-   mac->update(r_bin.data(), r_bin.size());
+   m_mac->update_be(static_cast<u32bit>(r_bin.size()));
+   m_mac->update(r_bin.data(), r_bin.size());
 
-   secure_vector<byte> X = mac->final();
+   secure_vector<byte> X = m_mac->final();
    return BigInt(X.data(), X.size());
    }
 

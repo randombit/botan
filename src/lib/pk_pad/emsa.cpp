@@ -39,7 +39,7 @@ EMSA* get_emsa(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);
 
-   if(EMSA* emsa = make_a<EMSA>(algo_spec))
+   if(EMSA* emsa = make_a<EMSA>(Botan::EMSA::Spec(algo_spec)))
       return emsa;
 
    throw Algorithm_Not_Found(algo_spec);

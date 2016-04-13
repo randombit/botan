@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * SEED, a Korean block cipher
 */
-class BOTAN_DLL SEED : public Block_Cipher_Fixed_Params<16, 16>
+class BOTAN_DLL SEED final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -27,15 +27,7 @@ class BOTAN_DLL SEED : public Block_Cipher_Fixed_Params<16, 16>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      class G_FUNC
-         {
-         public:
-            u32bit operator()(u32bit) const;
-         private:
-            static const u32bit S0[256], S1[256], S2[256], S3[256];
-         };
-
-      secure_vector<u32bit> K;
+      secure_vector<u32bit> m_K;
    };
 
 }

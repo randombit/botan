@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * RC2
 */
-class BOTAN_DLL RC2 : public Block_Cipher_Fixed_Params<8, 1, 32>
+class BOTAN_DLL RC2 final : public Block_Cipher_Fixed_Params<8, 1, 32>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -34,7 +34,7 @@ class BOTAN_DLL RC2 : public Block_Cipher_Fixed_Params<8, 1, 32>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      secure_vector<u16bit> K;
+      secure_vector<u16bit> m_K;
    };
 
 }

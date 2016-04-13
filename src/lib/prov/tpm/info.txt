@@ -1,0 +1,13 @@
+define TPM 20151126
+
+load_on vendor
+
+<libs>
+all -> tspi
+</libs>
+
+<requires>
+hash_id
+rsa
+rng
+</requires>

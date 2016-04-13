@@ -1,6 +1,6 @@
 /*
 * PKCS #1 v1.5 Type 2 (encryption) padding
-* (C) 1999-2007,2015 Jack Lloyd
+* (C) 1999-2007,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -27,8 +27,16 @@ secure_vector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
    secure_vector<byte> out(olen);
 
    out[0] = 0x02;
+   rng.randomize(out.data() + 1, (olen - inlen - 2));
+
    for(size_t j = 1; j != olen - inlen - 1; ++j)
-      out[j] = rng.next_nonzero_byte();
+      {
+      if(out[j] == 0)
+         {
+         out[j] = rng.next_nonzero_byte();
+         }
+      }
+
    buffer_insert(out, olen - inlen, in, inlen);
 
    return out;
@@ -37,21 +45,19 @@ secure_vector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
 /*
 * PKCS1 Unpad Operation
 */
-secure_vector<byte> EME_PKCS1v15::unpad(const byte in[], size_t inlen,
-                                        size_t key_len) const
+secure_vector<byte> EME_PKCS1v15::unpad(byte& valid_mask,
+                                        const byte in[], size_t inlen) const
    {
-   if(inlen != key_len / 8 || inlen < 10)
-      throw Decoding_Error("PKCS1::unpad");
-
    CT::poison(in, inlen);
 
    byte bad_input_m = 0;
    byte seen_zero_m = 0;
    size_t delim_idx = 0;
 
-   bad_input_m |= ~CT::is_equal<byte>(in[0], 2);
+   bad_input_m |= ~CT::is_equal<byte>(in[0], 0);
+   bad_input_m |= ~CT::is_equal<byte>(in[1], 2);
 
-   for(size_t i = 1; i != inlen; ++i)
+   for(size_t i = 2; i < inlen; ++i)
       {
       const byte is_zero_m = CT::is_zero<byte>(in[i]);
 
@@ -62,15 +68,16 @@ secure_vector<byte> EME_PKCS1v15::unpad(const byte in[], size_t inlen,
       }
 
    bad_input_m |= ~seen_zero_m;
+   bad_input_m |= CT::is_less<size_t>(delim_idx, 8);
 
    CT::unpoison(in, inlen);
-   CT::unpoison(&bad_input_m, 1);
-   CT::unpoison(&delim_idx, 1);
+   CT::unpoison(bad_input_m);
+   CT::unpoison(delim_idx);
 
-   if(bad_input_m)
-      throw Decoding_Error("Invalid PKCS #1 v1.5 encryption padding");
-
-   return secure_vector<byte>(&in[delim_idx + 1], &in[inlen]);
+   secure_vector<byte> output(&in[delim_idx + 2], &in[inlen]);
+   CT::cond_zero_mem(bad_input_m, output.data(), output.size());
+   valid_mask = ~bad_input_m;
+   return output;
    }
 
 /*

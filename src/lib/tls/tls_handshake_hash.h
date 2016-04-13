@@ -16,8 +16,6 @@ namespace Botan {
 
 namespace TLS {
 
-using namespace Botan;
-
 /**
 * TLS Handshake Hash
 */
@@ -25,19 +23,19 @@ class Handshake_Hash
    {
    public:
       void update(const byte in[], size_t length)
-         { data += std::make_pair(in, length); }
+         { m_data += std::make_pair(in, length); }
 
       void update(const std::vector<byte>& in)
-         { data += in; }
+         { m_data += in; }
 
       secure_vector<byte> final(Protocol_Version version,
                                 const std::string& mac_algo) const;
 
-      const std::vector<byte>& get_contents() const { return data; }
+      const std::vector<byte>& get_contents() const { return m_data; }
 
-      void reset() { data.clear(); }
+      void reset() { m_data.clear(); }
    private:
-      std::vector<byte> data;
+      std::vector<byte> m_data;
    };
 
 }

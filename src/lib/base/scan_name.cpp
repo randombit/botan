@@ -63,17 +63,15 @@ deref_aliases(const std::pair<size_t, std::string>& in)
 
 SCAN_Name::SCAN_Name(std::string algo_spec, const std::string& extra) : SCAN_Name(algo_spec)
    {
-   alg_name += extra;
+   m_alg_name += extra;
    }
 
 SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec))
    {
    }
 
-SCAN_Name::SCAN_Name(std::string algo_spec)
+SCAN_Name::SCAN_Name(std::string algo_spec) : m_orig_algo_spec(algo_spec), m_alg_name(), m_args(), m_mode_info()
    {
-   orig_algo_spec = algo_spec;
-
    std::vector<std::pair<size_t, std::string> > name;
    size_t level = 0;
    std::pair<size_t, std::string> accum = std::make_pair(level, "");
@@ -119,7 +117,7 @@ SCAN_Name::SCAN_Name(std::string algo_spec)
    if(name.size() == 0)
       throw Decoding_Error(decoding_error + "Empty name");
 
-   alg_name = name[0].second;
+   m_alg_name = name[0].second;
 
    bool in_modes = false;
 
@@ -127,11 +125,11 @@ SCAN_Name::SCAN_Name(std::string algo_spec)
       {
       if(name[i].first == 0)
          {
-         mode_info.push_back(make_arg(name, i));
+         m_mode_info.push_back(make_arg(name, i));
          in_modes = true;
          }
       else if(name[i].first == 1 && !in_modes)
-         args.push_back(make_arg(name, i));
+         m_args.push_back(make_arg(name, i));
       }
    }
 
@@ -155,23 +153,23 @@ std::string SCAN_Name::all_arguments() const
 std::string SCAN_Name::arg(size_t i) const
    {
    if(i >= arg_count())
-      throw std::range_error("SCAN_Name::arg " + std::to_string(i) +
+      throw Invalid_Argument("SCAN_Name::arg " + std::to_string(i) +
                              " out of range for '" + as_string() + "'");
-   return args[i];
+   return m_args[i];
    }
 
 std::string SCAN_Name::arg(size_t i, const std::string& def_value) const
    {
    if(i >= arg_count())
       return def_value;
-   return args[i];
+   return m_args[i];
    }
 
 size_t SCAN_Name::arg_as_integer(size_t i, size_t def_value) const
    {
    if(i >= arg_count())
       return def_value;
-   return to_u32bit(args[i]);
+   return to_u32bit(m_args[i]);
    }
 
 std::mutex SCAN_Name::g_alias_map_mutex;

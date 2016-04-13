@@ -15,15 +15,15 @@ namespace Botan {
 /**
 * Tiger
 */
-class BOTAN_DLL Tiger : public MDx_HashFunction
+class BOTAN_DLL Tiger final : public MDx_HashFunction
    {
    public:
       std::string name() const override;
-      size_t output_length() const override { return hash_len; }
+      size_t output_length() const override { return m_hash_len; }
 
       HashFunction* clone() const override
          {
-         return new Tiger(output_length(), passes);
+         return new Tiger(output_length(), m_passes);
          }
 
       void clear() override;
@@ -46,8 +46,8 @@ class BOTAN_DLL Tiger : public MDx_HashFunction
       static const u64bit SBOX3[256];
       static const u64bit SBOX4[256];
 
-      secure_vector<u64bit> X, digest;
-      const size_t hash_len, passes;
+      secure_vector<u64bit> m_X, m_digest;
+      const size_t m_hash_len, m_passes;
    };
 
 }

@@ -18,6 +18,36 @@ namespace Botan {
 */
 const size_t MP_WORD_BITS = BOTAN_MP_WORD_BITS;
 
+/*
+* If cond == 0, does nothing.
+* If cond > 0, swaps x[0:size] with y[0:size]
+* Runs in constant time
+*/
+BOTAN_DLL
+void bigint_cnd_swap(word cnd, word x[], word y[], size_t size);
+
+/*
+* If cond > 0 adds x[0:size] to y[0:size] and returns carry
+* Runs in constant time
+*/
+BOTAN_DLL
+word bigint_cnd_add(word cnd, word x[], const word y[], size_t size);
+
+/*
+* If cond > 0 subs x[0:size] to y[0:size] and returns borrow
+* Runs in constant time
+*/
+BOTAN_DLL
+word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size);
+
+/*
+* 2s complement absolute value
+* If cond > 0 sets x to ~x + 1
+* Runs in constant time
+*/
+BOTAN_DLL
+void bigint_cnd_abs(word cnd, word x[], size_t size);
+
 /**
 * Two operand addition
 * @param x the first operand (and output)
@@ -79,15 +109,6 @@ void bigint_shl2(word y[], const word x[], size_t x_size,
 
 void bigint_shr2(word y[], const word x[], size_t x_size,
                  size_t word_shift, size_t bit_shift);
-
-/*
-* Simple O(N^2) Multiplication and Squaring
-*/
-void bigint_simple_mul(word z[],
-                       const word x[], size_t x_size,
-                       const word y[], size_t y_size);
-
-void bigint_simple_sqr(word z[], const word x[], size_t x_size);
 
 /*
 * Linear Multiply

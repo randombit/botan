@@ -15,7 +15,7 @@ namespace Botan {
 class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
    {
    public:
-      Stream_Cipher_Mode(StreamCipher* cipher) : m_cipher(cipher) {}
+      explicit Stream_Cipher_Mode(StreamCipher* cipher) : m_cipher(cipher) {}
 
       void update(secure_vector<byte>& buf, size_t offset) override
          {

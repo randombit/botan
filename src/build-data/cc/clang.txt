@@ -10,12 +10,13 @@ add_framework_option "-framework "
 
 lang_flags "-std=c++11 -D_REENTRANT -fstack-protector"
 
-warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wunreachable-code"
+warning_flags "-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wunreachable-code"
 maintainer_warning_flags "-Qunused-arguments -Werror -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=unreachable-code"
 
 compile_flags "-c"
 debug_info_flags "-g"
 optimization_flags "-O3"
+sanitizer_flags "-fsanitize=address,undefined -fsanitize-coverage=edge,indirect-calls,8bit-counters -fno-sanitize-recover=undefined"
 
 shared_flags "-fPIC"
 coverage_flags "--coverage"
@@ -50,6 +51,7 @@ avx2   -> "-mavx2"
 bmi2   -> "-mbmi2"
 aesni  -> "-maes -mpclmul -mssse3"
 rdrand -> "-mrdrnd"
+rdseed -> "-mrdseed"
 sha    -> "-msha"
 altivec -> "-maltivec"
 </isa_flags>

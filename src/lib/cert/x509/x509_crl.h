@@ -19,7 +19,7 @@ class X509_Certificate;
 /**
 * This class represents X.509 Certificate Revocation Lists (CRLs).
 */
-class BOTAN_DLL X509_CRL : public X509_Object
+class BOTAN_DLL X509_CRL final : public X509_Object
    {
    public:
       /**
@@ -27,7 +27,7 @@ class BOTAN_DLL X509_CRL : public X509_Object
       */
       struct BOTAN_DLL X509_CRL_Error : public Exception
          {
-         X509_CRL_Error(const std::string& error) :
+         explicit X509_CRL_Error(const std::string& error) :
             Exception("X509_CRL: " + error) {}
          };
 
@@ -101,9 +101,9 @@ class BOTAN_DLL X509_CRL : public X509_Object
    private:
       void force_decode() override;
 
-      bool throw_on_unknown_critical;
-      std::vector<CRL_Entry> revoked;
-      Data_Store info;
+      bool m_throw_on_unknown_critical;
+      std::vector<CRL_Entry> m_revoked;
+      Data_Store m_info;
    };
 
 }

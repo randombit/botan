@@ -177,6 +177,7 @@ const char* default_oid_list()
       "2.5.29.21 = X509v3.ReasonCode" "\n"
       "2.5.29.23 = X509v3.HoldInstructionCode" "\n"
       "2.5.29.24 = X509v3.InvalidityDate" "\n"
+      "2.5.29.30 = X509v3.NameConstraints" "\n"
       "2.5.29.31 = X509v3.CRLDistributionPoints" "\n"
       "2.5.29.32 = X509v3.CertificatePolicies" "\n"
       "2.5.29.35 = X509v3.AuthorityKeyIdentifier" "\n"
@@ -200,6 +201,8 @@ const char* default_oid_list()
 
       "1.3.6.1.5.5.7.48.1 = PKIX.OCSP" "\n"
       "1.3.6.1.5.5.7.48.1.1 = PKIX.OCSP.BasicResponse" "\n"
+
+      "1.3.6.1.4.1.311.20.2.2 = Microsoft SmartcardLogon" "\n"
 
       // ECC param sets
       "1.3.132.0.8 = secp160r1" "\n"

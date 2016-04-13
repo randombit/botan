@@ -31,7 +31,6 @@ enum Record_Type {
    ALERT              = 21,
    HANDSHAKE          = 22,
    APPLICATION_DATA   = 23,
-   HEARTBEAT          = 24,
 
    NO_RECORD          = 256
 };

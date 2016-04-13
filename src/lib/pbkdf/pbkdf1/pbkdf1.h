@@ -18,14 +18,14 @@ namespace Botan {
 * Can only generate a key up to the size of the hash output.
 * Unless needed for backwards compatibility, use PKCS5_PBKDF2
 */
-class BOTAN_DLL PKCS5_PBKDF1 : public PBKDF
+class BOTAN_DLL PKCS5_PBKDF1 final : public PBKDF
    {
    public:
       /**
       * Create a PKCS #5 instance using the specified hash function.
       * @param hash pointer to a hash function object to use
       */
-      PKCS5_PBKDF1(HashFunction* hash) : m_hash(hash) {}
+      explicit PKCS5_PBKDF1(HashFunction* hash) : m_hash(hash) {}
 
       std::string name() const override
          {

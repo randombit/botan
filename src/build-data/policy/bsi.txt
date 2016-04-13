@@ -1,0 +1,156 @@
+<required>
+# block
+aes
+
+# modes
+gcm
+cbc
+mode_pad
+
+# stream
+ctr
+
+# hash
+sha2_32
+sha2_64
+keccak
+
+# mac
+cmac
+hmac
+
+# pk_pad
+eme_oaep
+emsa_pssr
+emsa1
+
+# pubkey
+dlies
+dh
+rsa
+dsa
+ecdsa
+ecdh
+
+# rng
+auto_rng
+hmac_rng
+hmac_drbg
+</required>
+
+<if_available>
+# block
+aes_ni
+aes_ssse3
+
+# modes
+clmul
+
+# entropy sources
+beos_stats
+cryptoapi_rng
+darwin_secrandom
+dev_random
+egd
+hres_timer
+proc_walk
+rdrand
+rdseed
+system_rng
+win32_stats
+
+# utils
+locking_allocator
+simd_altivec
+simd_scalar
+simd_sse2
+</if_available>
+
+<prohibited>
+# block
+blowfish
+camellia
+cascade
+cast
+gost_28147
+idea
+idea_sse2
+kasumi
+lion
+mars
+misty1
+noekeon
+noekeon_simd
+rc2
+rc5
+rc6
+safer
+seed
+serpent
+serpent_simd
+tea
+threefish
+threefish_avx2
+twofish
+xtea
+xtea_simd
+
+# modes
+ccm
+chacha20poly1305
+eax
+ocb
+siv
+cfb
+ecb
+
+# stream
+chacha
+ofb
+rc4
+salsa20
+
+# pubkey
+curve25519
+elgamal
+gost_3410
+mce
+mceies
+nr
+rw
+
+# pk_pad
+#eme_pkcs1 // needed for tls
+eme_raw
+#emsa_pkcs1 // needed for tls
+emsa_raw
+emsa_x931
+emsa1_bsi
+
+# hash
+blake2
+comb4p
+gost_3411
+has160
+md2
+md4
+#md5 // needed for tls
+rmd128
+rmd160
+#sha1 // needed for tls
+#sha1_sse2 // needed for tls
+skein
+tiger
+whirlpool
+
+# mac
+cbc_mac
+poly1305
+siphash
+x919_mac
+
+# rng
+x931_rng
+unix_procs
+
+</prohibited>

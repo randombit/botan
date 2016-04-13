@@ -31,3 +31,7 @@ rounding.h
 semaphore.h
 stl_util.h
 </header:internal>
+
+<libs>
+linux -> rt
+</libs>

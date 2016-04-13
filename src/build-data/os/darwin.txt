@@ -17,6 +17,7 @@ gmtime_r
 memset_s
 readdir
 timegm
+sockets
 </target_features>
 
 <aliases>

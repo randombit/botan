@@ -149,14 +149,14 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
          set_to(t_spec, GENERALIZED_TIME);
          return;
          }
-      catch(Invalid_Argument) {} // Not a generalized time. Continue
+      catch(Invalid_Argument&) {} // Not a generalized time. Continue
 
       try
          {
          set_to(t_spec, UTC_TIME);
          return;
          }
-      catch(Invalid_Argument) {} // Not a UTC time. Continue
+      catch(Invalid_Argument&) {} // Not a UTC time. Continue
 
       throw Invalid_Argument("Time string could not be parsed as GeneralizedTime or UTCTime.");
       }

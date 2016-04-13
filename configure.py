@@ -8,7 +8,14 @@ Configuration program for botan
 
 Botan is released under the Simplified BSD License (see license.txt)
 
-Tested with CPython 2.7 and 3.4. CPython 2.6 and earlier are not supported.
+This script is regularly tested with CPython 2.7 and 3.5, and
+occasionally tested with CPython 2.6 and PyPy 4.
+
+Support for CPython 2.6 will be dropped eventually, but is kept up for as
+long as reasonably convenient.
+
+CPython 2.5 and earlier are not supported.
+
 On Jython target detection does not work (use --os and --cpu).
 """
 
@@ -262,9 +269,6 @@ def process_command_line(args):
 
     build_group.add_option('--with-debug-info', action='store_true', default=False, dest='with_debug_info',
                            help='enable debug info')
-    # For compat and convenience:
-    build_group.add_option('--debug-mode', action='store_true', default=False, dest='with_debug_info',
-                           help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--with-sanitizers', action='store_true', default=False, dest='with_sanitizers',
                            help='enable runtime checks')
@@ -282,6 +286,9 @@ def process_command_line(args):
     build_group.add_option('--no-optimizations', dest='no_optimizations',
                            action='store_true', default=False,
                            help='disable all optimizations (for debugging)')
+
+    build_group.add_option('--debug-mode', action='store_true', default=False, dest='debug_mode',
+                           help='enable debug info and disable optimizations')
 
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
@@ -347,7 +354,14 @@ def process_command_line(args):
                            default='.'.join(map(str, sys.version_info[0:2])),
                            help='where to install botan.py (def %default)')
 
+    build_group.add_option('--with-valgrind', help='use valgrind API',
+                           dest='with_valgrind', action='store_true', default=False)
+
     mods_group = optparse.OptionGroup(parser, 'Module selection')
+
+    mods_group.add_option('--module-policy', dest='module_policy',
+                          help="module policy file (see src/build-data/policy)",
+                          metavar='POL', default=None)
 
     mods_group.add_option('--enable-modules', dest='enabled_modules',
                           metavar='MODS', action='append',
@@ -364,7 +378,7 @@ def process_command_line(args):
                           help='minimize build')
 
     # Should be derived from info.txt but this runs too early
-    third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib']
+    third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib', 'tpm']
 
     for mod in third_party:
         mods_group.add_option('--with-%s' % (mod),
@@ -437,6 +451,10 @@ def process_command_line(args):
         raise Exception('Bad value to --with-endian "%s"' % (
             options.with_endian))
 
+    if options.debug_mode:
+        options.no_optimizations = True
+        options.with_debug_info = True
+
     def parse_multiple_enable(modules):
         if modules is None:
             return []
@@ -449,9 +467,6 @@ def process_command_line(args):
     options.without_os_features = parse_multiple_enable(options.without_os_features)
 
     options.disable_intrinsics = parse_multiple_enable(options.disable_intrinsics)
-
-    if options.maintainer_mode:
-        options.with_sanitizers = True
 
     return options
 
@@ -704,6 +719,11 @@ class ModuleInfo(object):
             return 0
         return 1
 
+class ModulePolicyInfo(object):
+    def __init__(self, infofile):
+        lex_me_harder(infofile, self,
+                      ['required', 'if_available', 'prohibited'], {})
+
 class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
@@ -771,6 +791,9 @@ class ArchInfo(object):
             macros.append('TARGET_CPU_HAS_NATIVE_64BIT')
 
         macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
+
+        if options.with_valgrind:
+            macros.append('HAS_VALGRIND')
 
         return macros
 
@@ -984,13 +1007,21 @@ class OsInfo(object):
 
     def defines(self, options):
         r = []
-        for feat in self.target_features:
-            if feat not in options.without_os_features:
-                r += ['TARGET_OS_HAS_' + feat.upper()]
-        for feat in options.with_os_features:
-            if feat not in self.target_features:
-                r += ['TARGET_OS_HAS_' + feat.upper()]
-        return ['TARGET_OS_IS_%s' % (self.basename.upper())] + sorted(r)
+        r += ['TARGET_OS_IS_%s' % (self.basename.upper())]
+
+        if self.os_type != None:
+            r += ['TARGET_OS_TYPE_IS_%s' % (self.os_type.upper())]
+
+        def feat_macros():
+            for feat in self.target_features:
+                if feat not in options.without_os_features:
+                    yield 'TARGET_OS_HAS_' + feat.upper()
+            for feat in options.with_os_features:
+                if feat not in self.target_features:
+                    yield 'TARGET_OS_HAS_' + feat.upper()
+
+        r += sorted(feat_macros())
+        return r
 
 def fixup_proc_name(proc):
     proc = proc.lower().replace(' ', '')
@@ -1376,7 +1407,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 """
 Determine which modules to load based on options, target, etc
 """
-def choose_modules_to_use(modules, archinfo, ccinfo, options):
+def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
 
     for mod in modules.values():
         mod.dependencies_exist(modules)
@@ -1388,6 +1419,18 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
     def cannot_use_because(mod, reason):
         not_using_because.setdefault(reason, []).append(mod)
 
+    def check_usable(module, modname, options):
+        if not module.compatible_os(options.os):
+            cannot_use_because(modname, 'incompatible OS')
+            return False
+        elif not module.compatible_compiler(ccinfo, archinfo.basename):
+            cannot_use_because(modname, 'incompatible compiler')
+            return False
+        elif not module.compatible_cpu(archinfo, options):
+            cannot_use_because(modname, 'incompatible CPU')
+            return False
+        return True
+
     for modname in options.enabled_modules:
         if modname not in modules:
             logging.error("Module not found: %s" % (modname))
@@ -1397,19 +1440,35 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
             logging.warning("Disabled module not found: %s" % (modname))
 
     for (modname, module) in modules.items():
+        usable = check_usable(module, modname, options)
+
+        if module_policy is not None:
+
+            if modname in module_policy.required:
+                if not usable:
+                    logging.error('Module policy requires module %s not usable on this platform' % (modname))
+                elif modname in options.disabled_modules:
+                    logging.error('Module %s was disabled but is required by policy' % (modname))
+                to_load.append(modname)
+                continue
+            elif modname in module_policy.if_available:
+                if modname in options.disabled_modules:
+                    cannot_use_because(modname, 'disabled by user')
+                elif usable:
+                    logging.debug('Enabling optional module %s' % (modname))
+                    to_load.append(modname)
+                continue
+            elif modname in module_policy.prohibited:
+                if modname in options.enabled_modules:
+                    logging.error('Module %s was requested but is prohibited by policy' % (modname))
+                cannot_use_because(modname, 'prohibited by module policy')
+                continue
+
         if modname in options.disabled_modules:
             cannot_use_because(modname, 'disabled by user')
         elif modname in options.enabled_modules:
             to_load.append(modname) # trust the user
-
-        elif not module.compatible_os(options.os):
-            cannot_use_because(modname, 'incompatible OS')
-        elif not module.compatible_compiler(ccinfo, archinfo.basename):
-            cannot_use_because(modname, 'incompatible compiler')
-        elif not module.compatible_cpu(archinfo, options):
-            cannot_use_because(modname, 'incompatible CPU')
-
-        else:
+        elif usable:
             if module.load_on == 'never':
                 cannot_use_because(modname, 'disabled as buggy')
             elif module.load_on == 'request':
@@ -1429,7 +1488,7 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
                 to_load.append(modname)
 
             elif module.load_on == 'auto':
-                if options.no_autoload:
+                if options.no_autoload or module_policy is not None:
                     maybe_dep.append(modname)
                 else:
                     to_load.append(modname)
@@ -1465,7 +1524,7 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
                     cannot_use_because(modname, 'dependency failure')
 
     for not_a_dep in maybe_dep:
-        cannot_use_because(not_a_dep, 'loaded only if needed by dependency')
+        cannot_use_because(not_a_dep, 'only used if needed or requested')
 
     for reason in sorted(not_using_because.keys()):
         disabled_mods = sorted(set([mod for mod in not_using_because[reason]]))
@@ -1492,64 +1551,24 @@ def choose_modules_to_use(modules, archinfo, ccinfo, options):
     return to_load
 
 """
-Load the info files about modules, targets, etc
-"""
-def load_info_files(options):
-
-    def find_files_named(desired_name, in_path):
-        for (dirpath, dirnames, filenames) in os.walk(in_path):
-            if desired_name in filenames:
-                yield os.path.join(dirpath, desired_name)
-
-    modules = dict([(mod.basename, mod) for mod in
-                    [ModuleInfo(info) for info in
-                     find_files_named('info.txt', options.lib_dir)]])
-
-    def list_files_in_build_data(subdir):
-        for (dirpath, dirnames, filenames) in \
-                os.walk(os.path.join(options.build_data, subdir)):
-            for filename in filenames:
-                if filename.endswith('.txt'):
-                    yield os.path.join(dirpath, filename)
-
-    def form_name(filepath):
-        return os.path.basename(filepath).replace('.txt', '')
-
-    archinfo = dict([(form_name(info), ArchInfo(info))
-                     for info in list_files_in_build_data('arch')])
-
-    osinfo   = dict([(form_name(info), OsInfo(info))
-                      for info in list_files_in_build_data('os')])
-
-    ccinfo = dict([(form_name(info), CompilerInfo(info))
-                    for info in list_files_in_build_data('cc')])
-
-    def info_file_load_report(type, num):
-        if num > 0:
-            logging.debug('Loaded %d %s info files' % (num, type))
-        else:
-            logging.warning('Failed to load any %s info files' % (type))
-
-    info_file_load_report('CPU', len(archinfo));
-    info_file_load_report('OS', len(osinfo))
-    info_file_load_report('compiler', len(ccinfo))
-
-    return (modules, archinfo, ccinfo, osinfo)
-
-
-"""
 Choose the link method based on system availablity and user request
 """
 def choose_link_method(options):
 
+    req = options.link_method
+
     def useable_methods():
+        # Symbolic link support on Windows was introduced in Windows 6.0 (Vista) and Python 3.2
+        # Furthermore the SeCreateSymbolicLinkPrivilege is required in order to successfully create symlinks
+        # So only try to use symlinks on Windows if explicitly requested
+        if req == 'symlink' and options.os == 'windows':
+            yield 'symlink'
+        # otherwise keep old conservative behavior
         if 'symlink' in os.__dict__ and options.os != 'windows':
             yield 'symlink'
         if 'link' in os.__dict__:
             yield 'hardlink'
         yield 'copy'
-
-    req = options.link_method
 
     for method in useable_methods():
         if req is None or req == method:
@@ -1793,7 +1812,7 @@ def main(argv = None):
     if argv is None:
         argv = sys.argv
 
-    class BotanConfigureLogHandler(logging.StreamHandler):
+    class BotanConfigureLogHandler(logging.StreamHandler, object):
         def emit(self, record):
             # Do the default stuff first
             super(BotanConfigureLogHandler, self).emit(record)
@@ -1801,7 +1820,7 @@ def main(argv = None):
             if record.levelno >= logging.ERROR:
                 sys.exit(1)
 
-    lh = BotanConfigureLogHandler(stream = sys.stdout)
+    lh = BotanConfigureLogHandler(sys.stdout)
     lh.setFormatter(logging.Formatter('%(levelname) 7s: %(message)s'))
     logging.getLogger().addHandler(lh)
 
@@ -1832,7 +1851,35 @@ def main(argv = None):
     options.build_data = os.path.join(options.src_dir, 'build-data')
     options.makefile_dir = os.path.join(options.build_data, 'makefile')
 
-    (modules, info_arch, info_cc, info_os) = load_info_files(options)
+    def find_files_named(desired_name, in_path):
+        for (dirpath, dirnames, filenames) in os.walk(in_path):
+            if desired_name in filenames:
+                yield os.path.join(dirpath, desired_name)
+
+    modules = dict([(mod.basename, mod) for mod in
+                    [ModuleInfo(info) for info in
+                     find_files_named('info.txt', options.lib_dir)]])
+
+    def load_build_data(descr, subdir, class_t):
+        info = {}
+
+        subdir = os.path.join(options.build_data, subdir)
+
+        for fsname in os.listdir(subdir):
+            if fsname.endswith('.txt'):
+                info[fsname.replace('.txt', '')] = class_t(os.path.join(subdir, fsname))
+        if len(info) == 0:
+            logging.warning('Failed to load any %s files' % (descr))
+        else:
+            logging.debug('Loaded %d %s files' % (len(info), descr))
+
+        return info
+
+    info_arch = load_build_data('CPU info', 'arch', ArchInfo)
+    info_os   = load_build_data('OS info', 'os', OsInfo)
+    info_cc   = load_build_data('compiler info', 'cc', CompilerInfo)
+
+    module_policies = load_build_data('module policy', 'policy', ModulePolicyInfo)
 
     if options.list_modules:
         for k in sorted(modules.keys()):
@@ -1908,6 +1955,12 @@ def main(argv = None):
     cc = info_cc[options.compiler]
     arch = info_arch[options.arch]
     osinfo = info_os[options.os]
+    module_policy = None
+
+    if options.module_policy != None:
+        if options.module_policy not in module_policies:
+            logging.error("Unknown module set %s", options.module_policy)
+        module_policy = module_policies[options.module_policy]
 
     if options.with_visibility is None:
         options.with_visibility = True
@@ -1924,7 +1977,7 @@ def main(argv = None):
         raise Exception('Botan does not support building as shared library on the target os. '
                 'Build static using --disable-shared.')
 
-    loaded_mods = choose_modules_to_use(modules, arch, cc, options)
+    loaded_mods = choose_modules_to_use(modules, module_policy, arch, cc, options)
 
     for m in loaded_mods:
         if modules[m].load_on == 'vendor':
@@ -1942,16 +1995,43 @@ def main(argv = None):
 
     # Now begin the actual IO to setup the build
 
+    # Workaround for Windows systems where antivirus is enabled GH #353
+    def robust_rmtree(path, max_retries=5):
+        for _ in range(max_retries):
+            try:
+                shutil.rmtree(path)
+                return
+            except OSError:
+                time.sleep(0.1)
+
+        # Final attempt, pass any Exceptions up to caller.
+        shutil.rmtree(path)
+
+    # Workaround for Windows systems where antivirus is enabled GH #353
+    def robust_makedirs(directory, max_retries=5):
+        for _ in range(max_retries):
+            try:
+                os.makedirs(directory)
+                return
+            except OSError as e:
+                if e.errno == errno.EEXIST:
+                    raise
+                else:
+                    time.sleep(0.1)
+
+        # Final attempt, pass any Exceptions up to caller.
+        os.makedirs(dir)
+
     try:
         if options.clean_build_tree:
-            shutil.rmtree(build_config.build_dir)
+            robust_rmtree(build_config.build_dir)
     except OSError as e:
         if e.errno != errno.ENOENT:
             logging.error('Problem while removing build dir: %s' % (e))
 
     for dir in build_config.build_dirs:
         try:
-            os.makedirs(dir)
+            robust_makedirs(dir)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 logging.error('Error while creating "%s": %s' % (dir, e))

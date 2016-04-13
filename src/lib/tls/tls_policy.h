@@ -57,10 +57,14 @@ class BOTAN_DLL Policy
       */
       virtual std::vector<std::string> allowed_signature_methods() const;
 
+      bool allowed_signature_method(const std::string& sig_method) const;
+
       /**
       * Return list of ECC curves we are willing to use in order of preference
       */
       virtual std::vector<std::string> allowed_ecc_curves() const;
+
+      bool allowed_ecc_curve(const std::string& curve) const;
 
       /**
       * Returns a list of compression algorithms we are willing to use,
@@ -75,11 +79,6 @@ class BOTAN_DLL Policy
       * Choose an elliptic curve to use
       */
       virtual std::string choose_curve(const std::vector<std::string>& curve_names) const;
-
-      /**
-      * Attempt to negotiate the use of the heartbeat extension
-      */
-      virtual bool negotiate_heartbeat_support() const;
 
       /**
       * Allow renegotiation even if the counterparty doesn't
@@ -269,9 +268,6 @@ class BOTAN_DLL Text_Policy : public Policy
       std::vector<std::string> allowed_ecc_curves() const override
          { return get_list("ecc_curves", Policy::allowed_ecc_curves()); }
 
-      bool negotiate_heartbeat_support() const override
-         { return get_bool("negotiate_heartbeat_support", Policy::negotiate_heartbeat_support()); }
-
       bool allow_insecure_renegotiation() const override
          { return get_bool("allow_insecure_renegotiation", Policy::allow_insecure_renegotiation()); }
 
@@ -296,6 +292,9 @@ class BOTAN_DLL Text_Policy : public Policy
       u32bit session_ticket_lifetime() const override
          { return get_len("session_ticket_lifetime", Policy::session_ticket_lifetime()); }
 
+      bool send_fallback_scsv(Protocol_Version version) const override
+         { return get_bool("send_fallback_scsv", false) ? Policy::send_fallback_scsv(version) : false; }
+
       std::vector<u16bit> srtp_profiles() const override
          {
          std::vector<u16bit> r;
@@ -308,16 +307,14 @@ class BOTAN_DLL Text_Policy : public Policy
 
       void set(const std::string& k, const std::string& v) { m_kv[k] = v; }
 
-      Text_Policy(const std::string& s)
+      explicit Text_Policy(const std::string& s)
          {
          std::istringstream iss(s);
          m_kv = read_cfg(iss);
          }
 
-      Text_Policy(std::istream& in)
-         {
-         m_kv = read_cfg(in);
-         }
+      explicit Text_Policy(std::istream& in) : m_kv(read_cfg(in))
+         {}
 
    private:
 
@@ -326,7 +323,7 @@ class BOTAN_DLL Text_Policy : public Policy
          {
          const std::string v = get_str(key);
 
-         if(v == "")
+         if(v.empty())
             return def;
 
          return split_on(v, ' ');
@@ -336,7 +333,7 @@ class BOTAN_DLL Text_Policy : public Policy
          {
          const std::string v = get_str(key);
 
-         if(v == "")
+         if(v.empty())
             return def;
 
          return to_u32bit(v);
@@ -346,7 +343,7 @@ class BOTAN_DLL Text_Policy : public Policy
          {
          const std::string v = get_str(key);
 
-         if(v == "")
+         if(v.empty())
             return def;
 
          if(v == "true" || v == "True")

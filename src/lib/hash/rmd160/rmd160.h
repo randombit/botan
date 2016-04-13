@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * RIPEMD-160
 */
-class BOTAN_DLL RIPEMD_160 : public MDx_HashFunction
+class BOTAN_DLL RIPEMD_160 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "RIPEMD-160"; }
@@ -24,13 +24,13 @@ class BOTAN_DLL RIPEMD_160 : public MDx_HashFunction
 
       void clear() override;
 
-      RIPEMD_160() : MDx_HashFunction(64, false, true), M(16), digest(5)
+      RIPEMD_160() : MDx_HashFunction(64, false, true), m_M(16), m_digest(5)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks) override;
       void copy_out(byte[]) override;
 
-      secure_vector<u32bit> M, digest;
+      secure_vector<u32bit> m_M, m_digest;
    };
 
 }

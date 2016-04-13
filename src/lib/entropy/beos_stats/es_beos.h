@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * BeOS Entropy Source
 */
-class BeOS_EntropySource : public Entropy_Source
+class BeOS_EntropySource final : public Entropy_Source
    {
    private:
       std::string name() const override { return "system_stats"; }

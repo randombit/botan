@@ -66,7 +66,7 @@ class Zlib_Compression_Stream : public Zlib_Stream
          int rc = deflate(streamp(), flags);
 
          if(rc == Z_MEM_ERROR)
-            throw std::bad_alloc();
+            throw Exception("zlib memory allocation failure");
          else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
             throw Exception("zlib deflate error " + std::to_string(rc));
 
@@ -82,7 +82,7 @@ class Zlib_Decompression_Stream : public Zlib_Stream
          int rc = inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
 
          if(rc == Z_MEM_ERROR)
-            throw std::bad_alloc();
+            throw Exception("zlib memory allocation failure");
          else if(rc != Z_OK)
             throw Exception("zlib inflate initialization failed");
          }
@@ -97,7 +97,7 @@ class Zlib_Decompression_Stream : public Zlib_Stream
          int rc = inflate(streamp(), flags);
 
          if(rc == Z_MEM_ERROR)
-            throw std::bad_alloc();
+            throw Exception("zlib memory allocation failure");
          else if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR)
             throw Exception("zlib inflate error " + std::to_string(rc));
 
@@ -115,7 +115,7 @@ class Deflate_Compression_Stream : public Zlib_Compression_Stream
 class Deflate_Decompression_Stream : public Zlib_Decompression_Stream
    {
    public:
-      Deflate_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, -1) {}
+      explicit Deflate_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, -1) {}
    };
 
 class Gzip_Compression_Stream : public Zlib_Compression_Stream
@@ -140,7 +140,7 @@ class Gzip_Compression_Stream : public Zlib_Compression_Stream
 class Gzip_Decompression_Stream : public Zlib_Decompression_Stream
    {
    public:
-      Gzip_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, 16) {}
+      explicit Gzip_Decompression_Stream(int wbits) : Zlib_Decompression_Stream(wbits, 16) {}
    };
 
 }

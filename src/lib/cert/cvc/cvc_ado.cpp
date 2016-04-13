@@ -27,7 +27,7 @@ EAC1_1_ADO::EAC1_1_ADO(const std::string& in)
 void EAC1_1_ADO::force_decode()
    {
    std::vector<byte> inner_cert;
-   BER_Decoder(tbs_bits)
+   BER_Decoder(m_tbs_bits)
       .start_cons(ASN1_Tag(33))
       .raw_bytes(inner_cert)
       .end_cons()
@@ -42,7 +42,7 @@ void EAC1_1_ADO::force_decode()
 
    DataSource_Memory req_source(req_bits);
    m_req = EAC1_1_Req(req_source);
-   sig_algo = m_req.sig_algo;
+   m_sig_algo = m_req.m_sig_algo;
    }
 
 std::vector<byte> EAC1_1_ADO::make_signed(PK_Signer& signer,
@@ -101,7 +101,7 @@ void EAC1_1_ADO::encode(Pipe& out, X509_Encoding encoding) const
 
    out.write(DER_Encoder()
              .start_cons(ASN1_Tag(7), APPLICATION)
-                 .raw_bytes(tbs_bits)
+                 .raw_bytes(m_tbs_bits)
                  .encode(concat_sig, OCTET_STRING, ASN1_Tag(55), APPLICATION)
              .end_cons()
              .get_contents());
@@ -109,7 +109,7 @@ void EAC1_1_ADO::encode(Pipe& out, X509_Encoding encoding) const
 
 std::vector<byte> EAC1_1_ADO::tbs_data() const
    {
-   return tbs_bits;
+   return m_tbs_bits;
    }
 
 bool EAC1_1_ADO::operator==(EAC1_1_ADO const& rhs) const

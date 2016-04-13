@@ -15,41 +15,41 @@ namespace Botan {
 
 size_t DL_Scheme_PublicKey::estimated_strength() const
    {
-   return dl_work_factor(group.get_p().bits());
+   return dl_work_factor(m_group.get_p().bits());
    }
 
 AlgorithmIdentifier DL_Scheme_PublicKey::algorithm_identifier() const
    {
    return AlgorithmIdentifier(get_oid(),
-                              group.DER_encode(group_format()));
+                              m_group.DER_encode(group_format()));
    }
 
 std::vector<byte> DL_Scheme_PublicKey::x509_subject_public_key() const
    {
-   return DER_Encoder().encode(y).get_contents_unlocked();
+   return DER_Encoder().encode(m_y).get_contents_unlocked();
    }
 
 DL_Scheme_PublicKey::DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
                                          const secure_vector<byte>& key_bits,
                                          DL_Group::Format format)
    {
-   group.BER_decode(alg_id.parameters, format);
+   m_group.BER_decode(alg_id.parameters, format);
 
-   BER_Decoder(key_bits).decode(y);
+   BER_Decoder(key_bits).decode(m_y);
    }
 
 secure_vector<byte> DL_Scheme_PrivateKey::pkcs8_private_key() const
    {
-   return DER_Encoder().encode(x).get_contents();
+   return DER_Encoder().encode(m_x).get_contents();
    }
 
 DL_Scheme_PrivateKey::DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
                                            const secure_vector<byte>& key_bits,
                                            DL_Group::Format format)
    {
-   group.BER_decode(alg_id.parameters, format);
+   m_group.BER_decode(alg_id.parameters, format);
 
-   BER_Decoder(key_bits).decode(x);
+   BER_Decoder(key_bits).decode(m_x);
    }
 
 /*
@@ -58,9 +58,9 @@ DL_Scheme_PrivateKey::DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
 bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,
                                     bool strong) const
    {
-   if(y < 2 || y >= group_p())
+   if(m_y < 2 || m_y >= group_p())
       return false;
-   if(!group.verify_group(rng, strong))
+   if(!m_group.verify_group(rng, strong))
       return false;
    return true;
    }
@@ -74,15 +74,15 @@ bool DL_Scheme_PrivateKey::check_key(RandomNumberGenerator& rng,
    const BigInt& p = group_p();
    const BigInt& g = group_g();
 
-   if(y < 2 || y >= p || x < 2 || x >= p)
+   if(m_y < 2 || m_y >= p || m_x < 2 || m_x >= p)
       return false;
-   if(!group.verify_group(rng, strong))
+   if(!m_group.verify_group(rng, strong))
       return false;
 
    if(!strong)
       return true;
 
-   if(y != power_mod(g, x, p))
+   if(m_y != power_mod(g, m_x, p))
       return false;
 
    return true;

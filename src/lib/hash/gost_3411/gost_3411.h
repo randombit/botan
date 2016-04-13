@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * GOST 34.11
 */
-class BOTAN_DLL GOST_34_11 : public HashFunction
+class BOTAN_DLL GOST_34_11 final : public HashFunction
    {
    public:
       std::string name() const override { return "GOST-R-34.11-94" ; }
@@ -33,10 +33,10 @@ class BOTAN_DLL GOST_34_11 : public HashFunction
       void add_data(const byte[], size_t) override;
       void final_result(byte[]) override;
 
-      GOST_28147_89 cipher;
-      secure_vector<byte> buffer, sum, hash;
-      size_t position;
-      u64bit count;
+      GOST_28147_89 m_cipher;
+      secure_vector<byte> m_buffer, m_sum, m_hash;
+      size_t m_position;
+      u64bit m_count;
    };
 
 }

@@ -39,7 +39,7 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
    protected:
       GCM_Mode(BlockCipher* cipher, size_t tag_size);
 
-      const size_t BS = 16;
+      const size_t m_BS = 16;
 
       const size_t m_tag_size;
       const std::string m_cipher_name;
@@ -55,7 +55,7 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
 /**
 * GCM Encryption
 */
-class BOTAN_DLL GCM_Encryption : public GCM_Mode
+class BOTAN_DLL GCM_Encryption final : public GCM_Mode
    {
    public:
       /**
@@ -78,7 +78,7 @@ class BOTAN_DLL GCM_Encryption : public GCM_Mode
 /**
 * GCM Decryption
 */
-class BOTAN_DLL GCM_Decryption : public GCM_Mode
+class BOTAN_DLL GCM_Decryption final : public GCM_Mode
    {
    public:
       /**

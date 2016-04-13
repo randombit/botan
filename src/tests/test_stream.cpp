@@ -17,7 +17,8 @@ namespace Botan_Tests {
 class Stream_Cipher_Tests : public Text_Based_Test
    {
    public:
-      Stream_Cipher_Tests(): Text_Based_Test(Test::data_dir("stream"), {"Key", "In", "Out"}, {"Nonce"}) {}
+      Stream_Cipher_Tests(): Text_Based_Test("stream",
+                                             {"Key", "In", "Out"}, {"Nonce"}) {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {

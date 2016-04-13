@@ -19,7 +19,7 @@ OID Public_Key::get_oid() const
    try {
       return OIDS::lookup(algo_name());
       }
-   catch(Lookup_Error)
+   catch(Lookup_Error&)
       {
       throw Lookup_Error("PK algo " + algo_name() + " has no defined OIDs");
       }

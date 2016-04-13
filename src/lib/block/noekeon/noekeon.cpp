@@ -95,7 +95,7 @@ void Noekeon::encrypt_n(const byte in[], byte out[], size_t blocks) const
       for(size_t j = 0; j != 16; ++j)
          {
          A0 ^= RC[j];
-         theta(A0, A1, A2, A3, EK.data());
+         theta(A0, A1, A2, A3, m_EK.data());
 
          A1 = rotate_left(A1, 1);
          A2 = rotate_left(A2, 5);
@@ -109,7 +109,7 @@ void Noekeon::encrypt_n(const byte in[], byte out[], size_t blocks) const
          }
 
       A0 ^= RC[16];
-      theta(A0, A1, A2, A3, EK.data());
+      theta(A0, A1, A2, A3, m_EK.data());
 
       store_be(out, A0, A1, A2, A3);
 
@@ -132,7 +132,7 @@ void Noekeon::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       for(size_t j = 16; j != 0; --j)
          {
-         theta(A0, A1, A2, A3, DK.data());
+         theta(A0, A1, A2, A3, m_DK.data());
          A0 ^= RC[j];
 
          A1 = rotate_left(A1, 1);
@@ -146,7 +146,7 @@ void Noekeon::decrypt_n(const byte in[], byte out[], size_t blocks) const
          A3 = rotate_right(A3, 2);
          }
 
-      theta(A0, A1, A2, A3, DK.data());
+      theta(A0, A1, A2, A3, m_DK.data());
       A0 ^= RC[0];
 
       store_be(out, A0, A1, A2, A3);
@@ -184,19 +184,19 @@ void Noekeon::key_schedule(const byte key[], size_t)
 
    A0 ^= RC[16];
 
-   DK.resize(4);
-   DK[0] = A0;
-   DK[1] = A1;
-   DK[2] = A2;
-   DK[3] = A3;
+   m_DK.resize(4);
+   m_DK[0] = A0;
+   m_DK[1] = A1;
+   m_DK[2] = A2;
+   m_DK[3] = A3;
 
    theta(A0, A1, A2, A3);
 
-   EK.resize(4);
-   EK[0] = A0;
-   EK[1] = A1;
-   EK[2] = A2;
-   EK[3] = A3;
+   m_EK.resize(4);
+   m_EK[0] = A0;
+   m_EK[1] = A1;
+   m_EK[2] = A2;
+   m_EK[3] = A3;
    }
 
 /*
@@ -204,8 +204,8 @@ void Noekeon::key_schedule(const byte key[], size_t)
 */
 void Noekeon::clear()
    {
-   zap(EK);
-   zap(DK);
+   zap(m_EK);
+   zap(m_DK);
    }
 
 }

@@ -15,21 +15,21 @@ namespace Botan {
 /**
 * 24-bit cyclic redundancy check
 */
-class BOTAN_DLL CRC24 : public HashFunction
+class BOTAN_DLL CRC24 final : public HashFunction
    {
    public:
       std::string name() const override { return "CRC24"; }
       size_t output_length() const override { return 3; }
       HashFunction* clone() const override { return new CRC24; }
 
-      void clear() override { crc = 0xB704CE; }
+      void clear() override { m_crc = 0xB704CE; }
 
       CRC24() { clear(); }
       ~CRC24() { clear(); }
    private:
       void add_data(const byte[], size_t) override;
       void final_result(byte[]) override;
-      u32bit crc;
+      u32bit m_crc;
    };
 
 }

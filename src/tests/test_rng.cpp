@@ -24,7 +24,7 @@ Botan::RandomNumberGenerator* get_rng(const std::string& algo_str, const std::ve
    class AllOnce_RNG : public Fixed_Output_RNG
       {
       public:
-         AllOnce_RNG(const std::vector<byte>& in) : Fixed_Output_RNG(in) {}
+         explicit AllOnce_RNG(const std::vector<byte>& in) : Fixed_Output_RNG(in) {}
 
          Botan::secure_vector<byte> random_vec(size_t) override
             {
@@ -58,7 +58,7 @@ Botan::RandomNumberGenerator* get_rng(const std::string& algo_str, const std::ve
 class X931_RNG_Tests : public Text_Based_Test
    {
    public:
-      X931_RNG_Tests() : Text_Based_Test(Test::data_file("x931.vec"), {"IKM", "L", "Out"}) {}
+      X931_RNG_Tests() : Text_Based_Test("x931.vec", {"IKM", "L", "Out"}) {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
@@ -88,7 +88,7 @@ BOTAN_REGISTER_TEST("x931_rng", X931_RNG_Tests);
 class HMAC_DRBG_Tests : public Text_Based_Test
    {
    public:
-      HMAC_DRBG_Tests() : Text_Based_Test(Test::data_file("hmac_drbg.vec"),
+      HMAC_DRBG_Tests() : Text_Based_Test("hmac_drbg.vec",
                                           {"EntropyInput", "EntropyInputReseed", "Out"}) {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override

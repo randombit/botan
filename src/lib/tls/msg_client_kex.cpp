@@ -10,14 +10,19 @@
 #include <botan/internal/tls_extensions.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/credentials_manager.h>
-#include <botan/pubkey.h>
-#include <botan/dh.h>
-#include <botan/ecdh.h>
-#include <botan/rsa.h>
-#include <botan/srp6.h>
 #include <botan/rng.h>
 #include <botan/loadstor.h>
 #include <botan/internal/ct_utils.h>
+
+#include <botan/pubkey.h>
+
+#include <botan/dh.h>
+#include <botan/ecdh.h>
+#include <botan/rsa.h>
+
+#if defined(BOTAN_HAS_SRP6)
+#include <botan/srp6.h>
+#endif
 
 namespace Botan {
 
@@ -143,6 +148,12 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          if(name == "")
             throw Decoding_Error("Server sent unknown named curve " + std::to_string(curve_id));
 
+         if(!policy.allowed_ecc_curve(name))
+            {
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                "Server sent ECC curve prohibited by policy");
+            }
+
          EC_Group group(name);
 
          std::vector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
@@ -166,6 +177,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          append_tls_length_value(m_key_material, priv_key.public_value(), 1);
          }
+#if defined(BOTAN_HAS_SRP6)
       else if(kex_algo == "SRP_SHA")
          {
          const BigInt N = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
@@ -193,6 +205,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          append_tls_length_value(m_key_material, BigInt::encode(srp_vals.first), 2);
          m_pre_master = srp_vals.second.bits_of();
          }
+#endif
       else
          {
          throw Internal_Error("Client_Key_Exchange: Unknown kex " +
@@ -257,41 +270,33 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
       if(!dynamic_cast<const RSA_PrivateKey*>(server_rsa_kex_key))
          throw Internal_Error("Expected RSA key but got " + server_rsa_kex_key->algo_name());
 
+      TLS_Data_Reader reader("ClientKeyExchange", contents);
+      const std::vector<byte> encrypted_pre_master = reader.get_range<byte>(2, 0, 65535);
+
       PK_Decryptor_EME decryptor(*server_rsa_kex_key, "PKCS1v15");
 
-      Protocol_Version client_version = state.client_hello()->version();
+      const byte client_major = state.client_hello()->version().major_version();
+      const byte client_minor = state.client_hello()->version().minor_version();
 
       /*
-      * This is used as the pre-master if RSA decryption fails.
-      * Otherwise we can be used as an oracle. See Bleichenbacher
-      * "Chosen Ciphertext Attacks against Protocols Based on RSA
-      * Encryption Standard PKCS #1", Crypto 98
-      *
-      * Create it here instead if in the catch clause as otherwise we
-      * expose a timing channel WRT the generation of the fake value.
-      * Some timing channel likely remains due to exception handling
-      * and the like.
+      * PK_Decryptor::decrypt_or_random will return a random value if
+      * either the length does not match the expected value or if the
+      * version number embedded in the PMS does not match the one sent
+      * in the client hello.
       */
-      secure_vector<byte> fake_pre_master = rng.random_vec(48);
-      fake_pre_master[0] = client_version.major_version();
-      fake_pre_master[1] = client_version.minor_version();
+      const size_t expected_plaintext_size = 48;
+      const size_t expected_content_size = 2;
+      const byte expected_content_bytes[expected_content_size] = { client_major, client_minor };
+      const byte expected_content_pos[expected_content_size] = { 0, 1 };
 
-      try
-         {
-         TLS_Data_Reader reader("ClientKeyExchange", contents);
-         m_pre_master = decryptor.decrypt(reader.get_range<byte>(2, 0, 65535));
-
-         if(m_pre_master.size() != 48 ||
-            client_version.major_version() != m_pre_master[0] ||
-            client_version.minor_version() != m_pre_master[1])
-            {
-            throw Decoding_Error("Client_Key_Exchange: Secret corrupted");
-            }
-         }
-      catch(...)
-         {
-         m_pre_master = fake_pre_master;
-         }
+      m_pre_master =
+         decryptor.decrypt_or_random(encrypted_pre_master.data(),
+                                     encrypted_pre_master.size(),
+                                     expected_plaintext_size,
+                                     rng,
+                                     expected_content_bytes,
+                                     expected_content_pos,
+                                     expected_content_size);
       }
    else
       {
@@ -323,12 +328,14 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
          append_tls_length_value(m_pre_master, zeros, 2);
          append_tls_length_value(m_pre_master, psk.bits_of(), 2);
          }
+#if defined(BOTAN_HAS_SRP6)
       else if(kex_algo == "SRP_SHA")
          {
          SRP6_Server_Session& srp = state.server_kex()->server_srp_params();
 
          m_pre_master = srp.step2(BigInt::decode(reader.get_range<byte>(2, 0, 65535))).bits_of();
          }
+#endif
       else if(kex_algo == "DH" || kex_algo == "DHE_PSK" ||
               kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
          {
@@ -365,7 +372,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
             else
                m_pre_master = shared_secret;
             }
-         catch(std::exception &e)
+         catch(std::exception &)
             {
             /*
             * Something failed in the DH computation. To avoid possible

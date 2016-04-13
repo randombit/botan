@@ -65,10 +65,10 @@ void Output_Buffers::add(SecureQueue* queue)
    {
    BOTAN_ASSERT(queue, "queue was provided");
 
-   BOTAN_ASSERT(buffers.size() < buffers.max_size(),
+   BOTAN_ASSERT(m_buffers.size() < m_buffers.max_size(),
                 "Room was available in container");
 
-   buffers.push_back(queue);
+   m_buffers.push_back(queue);
    }
 
 /*
@@ -76,17 +76,17 @@ void Output_Buffers::add(SecureQueue* queue)
 */
 void Output_Buffers::retire()
    {
-   for(size_t i = 0; i != buffers.size(); ++i)
-      if(buffers[i] && buffers[i]->size() == 0)
+   for(size_t i = 0; i != m_buffers.size(); ++i)
+      if(m_buffers[i] && m_buffers[i]->size() == 0)
          {
-         delete buffers[i];
-         buffers[i] = nullptr;
+         delete m_buffers[i];
+         m_buffers[i] = nullptr;
          }
 
-   while(buffers.size() && !buffers[0])
+   while(m_buffers.size() && !m_buffers[0])
       {
-      buffers.pop_front();
-      offset = offset + Pipe::message_id(1);
+      m_buffers.pop_front();
+      m_offset = m_offset + Pipe::message_id(1);
       }
    }
 
@@ -95,12 +95,12 @@ void Output_Buffers::retire()
 */
 SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
    {
-   if(msg < offset)
+   if(msg < m_offset)
       return nullptr;
 
    BOTAN_ASSERT(msg < message_count(), "Message number is in range");
 
-   return buffers[msg-offset];
+   return m_buffers[msg-m_offset];
    }
 
 /*
@@ -108,7 +108,7 @@ SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
 */
 Pipe::message_id Output_Buffers::message_count() const
    {
-   return (offset + buffers.size());
+   return (m_offset + m_buffers.size());
    }
 
 /*
@@ -116,7 +116,7 @@ Pipe::message_id Output_Buffers::message_count() const
 */
 Output_Buffers::Output_Buffers()
    {
-   offset = 0;
+   m_offset = 0;
    }
 
 /*
@@ -124,8 +124,8 @@ Output_Buffers::Output_Buffers()
 */
 Output_Buffers::~Output_Buffers()
    {
-   for(size_t j = 0; j != buffers.size(); ++j)
-      delete buffers[j];
+   for(size_t j = 0; j != m_buffers.size(); ++j)
+      delete m_buffers[j];
    }
 
 }

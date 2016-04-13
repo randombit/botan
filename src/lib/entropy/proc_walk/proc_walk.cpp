@@ -28,7 +28,7 @@ namespace {
 class Directory_Walker : public File_Descriptor_Source
    {
    public:
-      Directory_Walker(const std::string& root) :
+      explicit Directory_Walker(const std::string& root) :
          m_cur_dir(std::make_pair<DIR*, std::string>(nullptr, ""))
          {
          if(DIR* root_dir = ::opendir(root.c_str()))

@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * DES/3DES-based MAC from ANSI X9.19
 */
-class BOTAN_DLL ANSI_X919_MAC : public MessageAuthenticationCode
+class BOTAN_DLL ANSI_X919_MAC final : public MessageAuthenticationCode
    {
    public:
       void clear() override;

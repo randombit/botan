@@ -228,7 +228,7 @@ Response online_check(const X509_Certificate& issuer,
    {
    const std::string responder_url = subject.ocsp_responder();
 
-   if(responder_url == "")
+   if(responder_url.empty())
       throw Exception("No OCSP responder specified");
 
    OCSP::Request req(issuer, subject);

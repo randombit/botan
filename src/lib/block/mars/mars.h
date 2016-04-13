@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * MARS, IBM's candidate for AES
 */
-class BOTAN_DLL MARS : public Block_Cipher_Fixed_Params<16, 16, 32, 4>
+class BOTAN_DLL MARS final : public Block_Cipher_Fixed_Params<16, 16, 32, 4>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -27,7 +27,7 @@ class BOTAN_DLL MARS : public Block_Cipher_Fixed_Params<16, 16, 32, 4>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      secure_vector<u32bit> EK;
+      secure_vector<u32bit> m_EK;
    };
 
 }

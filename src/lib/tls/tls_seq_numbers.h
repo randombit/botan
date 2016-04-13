@@ -32,7 +32,7 @@ class Connection_Sequence_Numbers
       virtual void read_accept(u64bit seq) = 0;
    };
 
-class Stream_Sequence_Numbers : public Connection_Sequence_Numbers
+class Stream_Sequence_Numbers final : public Connection_Sequence_Numbers
    {
    public:
       void new_read_cipher_state() override { m_read_seq_no = 0; m_read_epoch += 1; }
@@ -53,7 +53,7 @@ class Stream_Sequence_Numbers : public Connection_Sequence_Numbers
       u16bit m_write_epoch = 0;
    };
 
-class Datagram_Sequence_Numbers : public Connection_Sequence_Numbers
+class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers
    {
    public:
       Datagram_Sequence_Numbers() { m_write_seqs[0] = 0; }

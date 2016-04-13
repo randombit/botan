@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * Skein-512, a SHA-3 candidate
 */
-class BOTAN_DLL Skein_512 : public HashFunction
+class BOTAN_DLL Skein_512 final : public HashFunction
    {
    public:
       /**
@@ -30,7 +30,7 @@ class BOTAN_DLL Skein_512 : public HashFunction
                 const std::string& personalization = "");
 
       size_t hash_block_size() const override { return 64; }
-      size_t output_length() const override { return output_bits / 8; }
+      size_t output_length() const override { return m_output_bits / 8; }
 
       static Skein_512* make(const Spec& spec);
 
@@ -55,15 +55,15 @@ class BOTAN_DLL Skein_512 : public HashFunction
       void ubi_512(const byte msg[], size_t msg_len);
 
       void initial_block();
-      void reset_tweak(type_code type, bool final);
+      void reset_tweak(type_code type, bool is_final);
 
-      std::string personalization;
-      size_t output_bits;
+      std::string m_personalization;
+      size_t m_output_bits;
 
       std::unique_ptr<Threefish_512> m_threefish;
-      secure_vector<u64bit> T;
-      secure_vector<byte> buffer;
-      size_t buf_pos;
+      secure_vector<u64bit> m_T;
+      secure_vector<byte> m_buffer;
+      size_t m_buf_pos;
    };
 
 }

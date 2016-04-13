@@ -22,16 +22,12 @@ class ECC_Pointmult_Tests : public Text_Based_Test
    {
    public:
       ECC_Pointmult_Tests() : Text_Based_Test(
-         Test::data_file("pubkey/ecc.vec"),
-         {"Group", "m", "X", "Y"})
+         "pubkey/ecc.vec",
+         {"m", "X", "Y"})
          {}
 
-      bool clear_between_callbacks() const override { return false; }
-
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& group_id, const VarMap& vars) override
          {
-         const std::string group_id = get_req_str(vars, "Group");
-
          const Botan::BigInt m = get_req_bn(vars, "m");
          const Botan::BigInt X = get_req_bn(vars, "X");
          const Botan::BigInt Y = get_req_bn(vars, "Y");
@@ -40,7 +36,7 @@ class ECC_Pointmult_Tests : public Text_Based_Test
 
          const Botan::PointGFp p = group.get_base_point() * m;
 
-         Test::Result result("ECC Scalarmult");
+         Test::Result result("ECC Scalarmult " + group_id);
          result.test_eq("affine X", p.get_affine_x(), X);
          result.test_eq("affine Y", p.get_affine_y(), Y);
 

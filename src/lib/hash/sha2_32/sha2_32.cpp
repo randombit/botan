@@ -161,7 +161,7 @@ void compress(secure_vector<u32bit>& digest,
 */
 void SHA_224::compress_n(const byte input[], size_t blocks)
    {
-   SHA2_32::compress(digest, input, blocks);
+   SHA2_32::compress(m_digest, input, blocks);
    }
 
 /*
@@ -169,7 +169,7 @@ void SHA_224::compress_n(const byte input[], size_t blocks)
 */
 void SHA_224::copy_out(byte output[])
    {
-   copy_out_vec_be(output, output_length(), digest);
+   copy_out_vec_be(output, output_length(), m_digest);
    }
 
 /*
@@ -178,14 +178,14 @@ void SHA_224::copy_out(byte output[])
 void SHA_224::clear()
    {
    MDx_HashFunction::clear();
-   digest[0] = 0xC1059ED8;
-   digest[1] = 0x367CD507;
-   digest[2] = 0x3070DD17;
-   digest[3] = 0xF70E5939;
-   digest[4] = 0xFFC00B31;
-   digest[5] = 0x68581511;
-   digest[6] = 0x64F98FA7;
-   digest[7] = 0xBEFA4FA4;
+   m_digest[0] = 0xC1059ED8;
+   m_digest[1] = 0x367CD507;
+   m_digest[2] = 0x3070DD17;
+   m_digest[3] = 0xF70E5939;
+   m_digest[4] = 0xFFC00B31;
+   m_digest[5] = 0x68581511;
+   m_digest[6] = 0x64F98FA7;
+   m_digest[7] = 0xBEFA4FA4;
    }
 
 /*
@@ -193,7 +193,7 @@ void SHA_224::clear()
 */
 void SHA_256::compress_n(const byte input[], size_t blocks)
    {
-   SHA2_32::compress(digest, input, blocks);
+   SHA2_32::compress(m_digest, input, blocks);
    }
 
 /*
@@ -201,7 +201,7 @@ void SHA_256::compress_n(const byte input[], size_t blocks)
 */
 void SHA_256::copy_out(byte output[])
    {
-   copy_out_vec_be(output, output_length(), digest);
+   copy_out_vec_be(output, output_length(), m_digest);
    }
 
 /*
@@ -210,14 +210,14 @@ void SHA_256::copy_out(byte output[])
 void SHA_256::clear()
    {
    MDx_HashFunction::clear();
-   digest[0] = 0x6A09E667;
-   digest[1] = 0xBB67AE85;
-   digest[2] = 0x3C6EF372;
-   digest[3] = 0xA54FF53A;
-   digest[4] = 0x510E527F;
-   digest[5] = 0x9B05688C;
-   digest[6] = 0x1F83D9AB;
-   digest[7] = 0x5BE0CD19;
+   m_digest[0] = 0x6A09E667;
+   m_digest[1] = 0xBB67AE85;
+   m_digest[2] = 0x3C6EF372;
+   m_digest[3] = 0xA54FF53A;
+   m_digest[4] = 0x510E527F;
+   m_digest[5] = 0x9B05688C;
+   m_digest[6] = 0x1F83D9AB;
+   m_digest[7] = 0x5BE0CD19;
    }
 
 }

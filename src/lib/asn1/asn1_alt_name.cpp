@@ -55,15 +55,15 @@ AlternativeName::AlternativeName(const std::string& email_addr,
 void AlternativeName::add_attribute(const std::string& type,
                                     const std::string& str)
    {
-   if(type == "" || str == "")
+   if(type.empty() || str.empty())
       return;
 
-   auto range = alt_info.equal_range(type);
+   auto range = m_alt_info.equal_range(type);
    for(auto j = range.first; j != range.second; ++j)
       if(j->second == str)
          return;
 
-   multimap_insert(alt_info, type, str);
+   multimap_insert(m_alt_info, type, str);
    }
 
 /*
@@ -72,9 +72,9 @@ void AlternativeName::add_attribute(const std::string& type,
 void AlternativeName::add_othername(const OID& oid, const std::string& value,
                                     ASN1_Tag type)
    {
-   if(value == "")
+   if(value.empty())
       return;
-   multimap_insert(othernames, oid, ASN1_String(value, type));
+   multimap_insert(m_othernames, oid, ASN1_String(value, type));
    }
 
 /*
@@ -82,7 +82,7 @@ void AlternativeName::add_othername(const OID& oid, const std::string& value,
 */
 std::multimap<std::string, std::string> AlternativeName::get_attributes() const
    {
-   return alt_info;
+   return m_alt_info;
    }
 
 /*
@@ -90,7 +90,7 @@ std::multimap<std::string, std::string> AlternativeName::get_attributes() const
 */
 std::multimap<OID, ASN1_String> AlternativeName::get_othernames() const
    {
-   return othernames;
+   return m_othernames;
    }
 
 /*
@@ -100,10 +100,10 @@ std::multimap<std::string, std::string> AlternativeName::contents() const
    {
    std::multimap<std::string, std::string> names;
 
-   for(auto i = alt_info.begin(); i != alt_info.end(); ++i)
+   for(auto i = m_alt_info.begin(); i != m_alt_info.end(); ++i)
       multimap_insert(names, i->first, i->second);
 
-   for(auto i = othernames.begin(); i != othernames.end(); ++i)
+   for(auto i = m_othernames.begin(); i != m_othernames.end(); ++i)
       multimap_insert(names, OIDS::lookup(i->first), i->second.value());
 
    return names;
@@ -114,7 +114,7 @@ std::multimap<std::string, std::string> AlternativeName::contents() const
 */
 bool AlternativeName::has_items() const
    {
-   return (alt_info.size() > 0 || othernames.size() > 0);
+   return (m_alt_info.size() > 0 || m_othernames.size() > 0);
    }
 
 namespace {
@@ -154,12 +154,12 @@ void AlternativeName::encode_into(DER_Encoder& der) const
    {
    der.start_cons(SEQUENCE);
 
-   encode_entries(der, alt_info, "RFC822", ASN1_Tag(1));
-   encode_entries(der, alt_info, "DNS", ASN1_Tag(2));
-   encode_entries(der, alt_info, "URI", ASN1_Tag(6));
-   encode_entries(der, alt_info, "IP", ASN1_Tag(7));
+   encode_entries(der, m_alt_info, "RFC822", ASN1_Tag(1));
+   encode_entries(der, m_alt_info, "DNS", ASN1_Tag(2));
+   encode_entries(der, m_alt_info, "URI", ASN1_Tag(6));
+   encode_entries(der, m_alt_info, "IP", ASN1_Tag(7));
 
-   for(auto i = othernames.begin(); i != othernames.end(); ++i)
+   for(auto i = m_othernames.begin(); i != m_othernames.end(); ++i)
       {
       der.start_explicit(0)
          .encode(i->first)

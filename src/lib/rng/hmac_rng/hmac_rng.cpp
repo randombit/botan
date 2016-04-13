@@ -1,12 +1,13 @@
 /*
 * HMAC_RNG
-* (C) 2008,2009,2013,2015 Jack Lloyd
+* (C) 2008,2009,2013,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/hmac_rng.h>
 #include <botan/entropy_src.h>
+#include <botan/internal/os_utils.h>
 #include <algorithm>
 #include <chrono>
 
@@ -69,10 +70,10 @@ void HMAC_RNG::clear()
 
 void HMAC_RNG::new_K_value(byte label)
    {
-   typedef std::chrono::high_resolution_clock clock;
-
    m_prf->update(m_K);
-   m_prf->update_be(clock::now().time_since_epoch().count());
+   m_prf->update_be(m_pid);
+   m_prf->update_be(OS::get_processor_timestamp());
+   m_prf->update_be(OS::get_system_timestamp_ns());
    m_prf->update_be(m_counter++);
    m_prf->update(label);
    m_prf->final(m_K.data());
@@ -83,7 +84,7 @@ void HMAC_RNG::new_K_value(byte label)
 */
 void HMAC_RNG::randomize(byte out[], size_t length)
    {
-   if(!is_seeded())
+   if(!is_seeded() || m_pid != OS::get_process_id())
       {
       reseed(256);
       if(!is_seeded())
@@ -168,6 +169,7 @@ size_t HMAC_RNG::reseed_with_sources(Entropy_Sources& srcs,
                        m_extractor->output_length() * 8);
 
    m_output_since_reseed = 0;
+   m_pid = OS::get_process_id();
 
    return static_cast<size_t>(bits_collected);
    }

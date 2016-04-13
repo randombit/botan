@@ -83,17 +83,6 @@ ECDH, or GOST 34.10-2001 private key with
 .. cpp:function:: GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, \
    const EC_Group& domain, const BigInt& x = 0)
 
-
-Generating RSA keys
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This example will generate an RSA key of a specified bitlength, and put it
-into a pair of key files. One is the public key in X.509 format (PEM encoded),
-the private key is in PKCS #8 format (also PEM encoded), either encrypted or
-unencrypted depending on if a password was given.
-
-.. literalinclude:: ../../src/cli/keygen.cpp
-
 .. _serializing_private_keys:
 
 Serializing Private Keys Using PKCS #8
@@ -477,14 +466,6 @@ Signatures are verified using
       These are equivalent to calling :cpp:func:`PK_Verifier::update`
       on *msg* and then calling :cpp:func:`PK_Verifier::check_signature`
       on *sig*.
-
-Here is an example of DSA signature generation
-
-.. literalinclude:: ../../src/cli/dsa_sign.cpp
-
-Here is an example that verifies DSA signatures
-
-.. literalinclude:: ../../src/cli/dsa_ver.cpp
 
 Key Agreement
 ---------------------------------

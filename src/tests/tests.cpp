@@ -11,11 +11,9 @@
 #include <botan/hex.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan_Tests {
-
-#define TEST_DATA_DIR     "src/tests/data"
-#define TEST_OUTDATA_DIR  "src/tests/outdata"
 
 Test::Registration::Registration(const std::string& name, Test* test)
    {
@@ -237,7 +235,8 @@ bool Test::Result::test_ne(const std::string& what, const BigInt& produced, cons
 #endif
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
-bool Test::Result::test_eq(const std::string& what, const Botan::PointGFp& a, const Botan::PointGFp& b)
+bool Test::Result::test_eq(const std::string& what,
+                           const Botan::PointGFp& a, const Botan::PointGFp& b)
    {
    //return test_is_eq(what, a, b);
    if(a == b)
@@ -283,6 +282,20 @@ bool Test::Result::test_rc_fail(const std::string& func, const std::string& why,
    return test_success();
    }
 
+bool Test::Result::test_rc(const std::string& func, int expected, int rc)
+   {
+   if(expected != rc)
+      {
+      std::ostringstream err;
+      err << m_who;
+      err << " call to " << func << " unexpectedly returned " << rc;
+      err << " but expecting " << expected;
+      return test_failure(err.str());
+      }
+
+   return test_success();
+   }
+
 namespace {
 
 std::string format_time(uint64_t ns)
@@ -303,9 +316,13 @@ std::string format_time(uint64_t ns)
 
 }
 
-std::string Test::Result::result_string() const
+std::string Test::Result::result_string(bool verbose) const
    {
+   if(tests_run() == 0 && !verbose)
+      return "";
+
    std::ostringstream report;
+
    report << who() << " ran ";
 
    if(tests_run() == 0)
@@ -358,21 +375,6 @@ std::map<std::string, std::unique_ptr<Test>>& Test::global_registry()
    return g_test_registry;
    }
 
-namespace {
-
-template<typename K, typename V>
-std::set<K> map_keys_as_set(const std::map<K, V>& kv)
-   {
-   std::set<K> s;
-   for(auto&& i : kv)
-      {
-      s.insert(i.first);
-      }
-   return s;
-   }
-
-}
-
 //static
 uint64_t Test::timestamp()
    {
@@ -383,7 +385,7 @@ uint64_t Test::timestamp()
 //static
 std::set<std::string> Test::registered_tests()
    {
-   return map_keys_as_set(Test::global_registry());
+   return Botan::map_keys_as_set(Test::global_registry());
    }
 
 //static
@@ -429,32 +431,19 @@ std::vector<Test::Result> Test::run_test(const std::string& test_name, bool fail
    return results;
    }
 
-//static
-std::string Test::data_dir(const std::string& what)
-   {
-   return std::string(TEST_DATA_DIR) + "/" + what;
-   }
-
-//static
-std::string Test::data_file(const std::string& what)
-   {
-   return std::string(TEST_DATA_DIR) + "/" + what;
-   }
-
-//static
-std::string Test::full_path_for_output_file(const std::string& base)
-   {
-   return std::string(TEST_OUTDATA_DIR) + "/" + base;
-   }
-
 // static member variables of Test
 Botan::RandomNumberGenerator* Test::m_test_rng = nullptr;
+std::string Test::m_data_dir;
 size_t Test::m_soak_level = 0;
 bool Test::m_log_success = false;
 
 //static
-void Test::setup_tests(size_t soak, bool log_success, Botan::RandomNumberGenerator* rng)
+void Test::setup_tests(size_t soak,
+                       bool log_success,
+                       const std::string& data_dir,
+                       Botan::RandomNumberGenerator* rng)
    {
+   m_data_dir = data_dir;
    m_soak_level = soak;
    m_log_success = log_success;
    m_test_rng = rng;
@@ -464,6 +453,18 @@ void Test::setup_tests(size_t soak, bool log_success, Botan::RandomNumberGenerat
 size_t Test::soak_level()
    {
    return m_soak_level;
+   }
+
+//static
+std::string Test::data_file(const std::string& what)
+   {
+   return Test::data_dir() + "/" + what;
+   }
+
+//static
+const std::string& Test::data_dir()
+   {
+   return m_data_dir;
    }
 
 //static
@@ -525,7 +526,7 @@ std::vector<uint8_t> Text_Based_Test::get_req_bin(const VarMap& vars,
          {
          return Botan::hex_decode(i->second);
          }
-      catch(std::exception& e)
+      catch(std::exception&)
          {
          throw Test_Error("Test invalid hex input '" + i->second + "'" +
                                   + " for key " + key);
@@ -569,7 +570,7 @@ std::vector<uint8_t> Text_Based_Test::get_opt_bin(const VarMap& vars,
       {
       return Botan::hex_decode(i->second);
       }
-   catch(std::exception& e)
+   catch(std::exception&)
       {
       throw Test_Error("Test invalid hex input '" + i->second + "'" +
                                + " for key " + key);
@@ -596,7 +597,7 @@ Botan::BigInt Text_Based_Test::get_req_bn(const VarMap& vars,
       {
       return Botan::BigInt(i->second);
       }
-   catch(std::exception& e)
+   catch(std::exception&)
       {
       throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key);
       }
@@ -613,16 +614,17 @@ std::string Text_Based_Test::get_next_line()
             {
             if(m_first)
                {
-               if(m_data_src.find(".vec") != std::string::npos)
+               const std::string full_path = Test::data_dir() + "/" + m_data_src;
+               if(full_path.find(".vec") != std::string::npos)
                   {
-                  m_srcs.push_back(m_data_src);
+                  m_srcs.push_back(full_path);
                   }
                else
                   {
-                  const auto fs = Botan::get_files_recursive(m_data_src);
+                  const auto fs = Botan::get_files_recursive(full_path);
                   m_srcs.assign(fs.begin(), fs.end());
                   if(m_srcs.empty())
-                     throw Test_Error("Error reading test data dir " + m_data_src);
+                     throw Test_Error("Error reading test data dir " + full_path);
                   }
 
                m_first = false;
@@ -646,7 +648,7 @@ std::string Text_Based_Test::get_next_line()
          std::string line;
          std::getline(*m_cur, line);
 
-         if(line == "")
+         if(line.empty())
             continue;
 
          if(line[0] == '#')
@@ -679,19 +681,20 @@ std::vector<Test::Result> Text_Based_Test::run()
    {
    std::vector<Test::Result> results;
 
-   std::string who;
+   std::string header, header_or_name = m_data_src;
    VarMap vars;
    size_t test_cnt = 0;
 
    while(true)
       {
       const std::string line = get_next_line();
-      if(line == "") // EOF
+      if(line.empty()) // EOF
          break;
 
       if(line[0] == '[' && line[line.size()-1] == ']')
          {
-         who = line.substr(1, line.size() - 2);
+         header = line.substr(1, line.size() - 2);
+         header_or_name = header;
          test_cnt = 0;
          continue;
          }
@@ -702,7 +705,8 @@ std::vector<Test::Result> Text_Based_Test::run()
 
       if(equal_i == std::string::npos)
          {
-         results.push_back(Test::Result::Failure(who, "invalid input '" + line + "'"));
+         results.push_back(Test::Result::Failure(header_or_name,
+                                                 "invalid input '" + line + "'"));
          continue;
          }
 
@@ -710,7 +714,8 @@ std::vector<Test::Result> Text_Based_Test::run()
       std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
 
       if(m_required_keys.count(key) == 0 && m_optional_keys.count(key) == 0)
-         results.push_back(Test::Result::Failure(who, test_id + " failed unknown key " + key));
+         results.push_back(Test::Result::Failure(header_or_name,
+                                                 test_id + " failed unknown key " + key));
 
       vars[key] = val;
 
@@ -721,7 +726,7 @@ std::vector<Test::Result> Text_Based_Test::run()
             ++test_cnt;
 
             uint64_t start = Test::timestamp();
-            Test::Result result = run_one_test(who, vars);
+            Test::Result result = run_one_test(header, vars);
             result.set_ns_consumed(Test::timestamp() - start);
 
             if(result.tests_failed())
@@ -730,7 +735,9 @@ std::vector<Test::Result> Text_Based_Test::run()
             }
          catch(std::exception& e)
             {
-            results.push_back(Test::Result::Failure(who, "test " + std::to_string(test_cnt) + " failed with exception '" + e.what() + "'"));
+            results.push_back(Test::Result::Failure(header_or_name,
+                                                    "test " + std::to_string(test_cnt) +
+                                                    " failed with exception '" + e.what() + "'"));
             }
 
          if(clear_between_callbacks())

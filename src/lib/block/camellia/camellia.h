@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Camellia-128
 */
-class BOTAN_DLL Camellia_128 : public Block_Cipher_Fixed_Params<16, 16>
+class BOTAN_DLL Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -27,13 +27,13 @@ class BOTAN_DLL Camellia_128 : public Block_Cipher_Fixed_Params<16, 16>
    private:
       void key_schedule(const byte key[], size_t length) override;
 
-      secure_vector<u64bit> SK;
+      secure_vector<u64bit> m_SK;
    };
 
 /**
 * Camellia-192
 */
-class BOTAN_DLL Camellia_192 : public Block_Cipher_Fixed_Params<16, 24>
+class BOTAN_DLL Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -45,13 +45,13 @@ class BOTAN_DLL Camellia_192 : public Block_Cipher_Fixed_Params<16, 24>
    private:
       void key_schedule(const byte key[], size_t length) override;
 
-      secure_vector<u64bit> SK;
+      secure_vector<u64bit> m_SK;
    };
 
 /**
 * Camellia-256
 */
-class BOTAN_DLL Camellia_256 : public Block_Cipher_Fixed_Params<16, 32>
+class BOTAN_DLL Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -63,7 +63,7 @@ class BOTAN_DLL Camellia_256 : public Block_Cipher_Fixed_Params<16, 32>
    private:
       void key_schedule(const byte key[], size_t length) override;
 
-      secure_vector<u64bit> SK;
+      secure_vector<u64bit> m_SK;
    };
 
 }

@@ -23,7 +23,7 @@ class RW_KAT_Tests : public PK_Signature_Generation_Test
    public:
       RW_KAT_Tests() : PK_Signature_Generation_Test(
          "Rabin-Williams",
-         Test::data_file("pubkey/rw_sig.vec"),
+         "pubkey/rw_sig.vec",
          {"E", "P", "Q", "Msg", "Signature"},
          {"Padding"})
          {}
@@ -47,7 +47,7 @@ class RW_Verify_Tests : public PK_Signature_Verification_Test
    public:
       RW_Verify_Tests() : PK_Signature_Verification_Test(
          "Rabin-Williams",
-         Test::data_file("pubkey/rw_verify.vec"),
+         "pubkey/rw_verify.vec",
          {"E", "N", "Msg", "Signature"})
          {}
 

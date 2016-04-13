@@ -12,11 +12,14 @@
 #include <botan/credentials_manager.h>
 #include <botan/loadstor.h>
 #include <botan/pubkey.h>
+#include <botan/oids.h>
+
 #include <botan/dh.h>
 #include <botan/ecdh.h>
-#include <botan/rsa.h>
+
+#if defined(BOTAN_HAS_SRP6)
 #include <botan/srp6.h>
-#include <botan/oids.h>
+#endif
 
 namespace Botan {
 
@@ -45,7 +48,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
    if(kex_algo == "DH" || kex_algo == "DHE_PSK")
       {
-      std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, policy.dh_group()));
+      std::unique_ptr<DH_PrivateKey> dh(new DH_PrivateKey(rng, DL_Group(policy.dh_group())));
 
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_p()), 2);
       append_tls_length_value(m_params, BigInt::encode(dh->get_domain().get_g()), 2);
@@ -86,6 +89,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       m_kex_key.reset(ecdh.release());
       }
+#if defined(BOTAN_HAS_SRP6)
    else if(kex_algo == "SRP_SHA")
       {
       const std::string srp_identifier = state.client_hello()->srp_identifier();
@@ -115,6 +119,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_params, salt, 1);
       append_tls_length_value(m_params, BigInt::encode(B), 2);
       }
+#endif
    else if(kex_algo != "PSK")
       throw Internal_Error("Server_Key_Exchange: Unknown kex type " + kex_algo);
 
@@ -142,8 +147,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
                                          const std::string& kex_algo,
                                          const std::string& sig_algo,
-                                         Protocol_Version version) :
-   m_kex_key(nullptr), m_srp_params(nullptr)
+                                         Protocol_Version version)
    {
    TLS_Data_Reader reader("ServerKeyExchange", buf);
 
@@ -229,10 +233,12 @@ std::vector<byte> Server_Key_Exchange::serialize() const
 * Verify a Server Key Exchange message
 */
 bool Server_Key_Exchange::verify(const Public_Key& server_key,
-                                 const Handshake_State& state) const
+                                 const Handshake_State& state,
+                                 const Policy& policy) const
    {
    std::pair<std::string, Signature_Format> format =
-      state.understand_sig_format(server_key, m_hash_algo, m_sig_algo);
+      state.parse_sig_format(server_key, m_hash_algo, m_sig_algo,
+                             false, policy);
 
    PK_Verifier verifier(server_key, format.first, format.second);
 
@@ -249,12 +255,6 @@ const Private_Key& Server_Key_Exchange::server_kex_key() const
    return *m_kex_key;
    }
 
-// Only valid for SRP negotiation
-SRP6_Server_Session& Server_Key_Exchange::server_srp_params() const
-   {
-   BOTAN_ASSERT_NONNULL(m_srp_params);
-   return *m_srp_params;
-   }
 }
 
 }

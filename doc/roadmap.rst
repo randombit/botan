@@ -32,8 +32,7 @@ compat. The C++11 transition makes it especially hard for the 1.10/1.11
 split. So if 1.10 does what you want now it probably will next week, but it
 won't ever do much beyond that. If you want any feature or optimization or side
 channel resistance added in the last 4 years you have to use 1.11. 1.10 will
-continue to be maintained at the current level for at least a year after 2.0 is
-released.
+continue to be maintained at the current level for 1 year after 2.0 is released.
 
 1.8 and all older versions are no longer maintained.
 

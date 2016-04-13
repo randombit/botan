@@ -345,6 +345,12 @@ void aes_key_schedule(const byte key[], size_t length,
                       secure_vector<byte>& ME,
                       secure_vector<byte>& MD)
    {
+
+   // if length is < 4, X = 0, the first for loop is not entered and in
+   // the second for loop "RC[(i-X)/X]" = division by zero
+   // But obviously valid aes length values are only 16, 24 and 32
+   BOTAN_ASSERT( length >= 4, "aes key length has valid size" );
+
    static const u32bit RC[10] = {
       0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
       0x20000000, 0x40000000, 0x80000000, 0x1B000000, 0x36000000 };
@@ -414,71 +420,71 @@ void aes_key_schedule(const byte key[], size_t length,
 
 void AES_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_encrypt_n(in, out, blocks, EK, ME);
+   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_decrypt_n(in, out, blocks, DK, MD);
+   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_128::key_schedule(const byte key[], size_t length)
    {
-   aes_key_schedule(key, length, EK, DK, ME, MD);
+   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 
 void AES_128::clear()
    {
-   zap(EK);
-   zap(DK);
-   zap(ME);
-   zap(MD);
+   zap(m_EK);
+   zap(m_DK);
+   zap(m_ME);
+   zap(m_MD);
    }
 
 void AES_192::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_encrypt_n(in, out, blocks, EK, ME);
+   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_192::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_decrypt_n(in, out, blocks, DK, MD);
+   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_192::key_schedule(const byte key[], size_t length)
    {
-   aes_key_schedule(key, length, EK, DK, ME, MD);
+   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 
 void AES_192::clear()
    {
-   zap(EK);
-   zap(DK);
-   zap(ME);
-   zap(MD);
+   zap(m_EK);
+   zap(m_DK);
+   zap(m_ME);
+   zap(m_MD);
    }
 
 void AES_256::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_encrypt_n(in, out, blocks, EK, ME);
+   aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   aes_decrypt_n(in, out, blocks, DK, MD);
+   aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_256::key_schedule(const byte key[], size_t length)
    {
-   aes_key_schedule(key, length, EK, DK, ME, MD);
+   aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 
 void AES_256::clear()
    {
-   zap(EK);
-   zap(DK);
-   zap(ME);
-   zap(MD);
+   zap(m_EK);
+   zap(m_DK);
+   zap(m_ME);
+   zap(m_MD);
    }
 
 }

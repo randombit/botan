@@ -21,8 +21,8 @@ namespace {
 class Utility_Function_Tests : public Text_Based_Test
    {
    public:
-      Utility_Function_Tests() : Text_Based_Test(Test::data_file("util.vec"),
-                                                      {"In1","In2","Out"})
+      Utility_Function_Tests() : Text_Based_Test("util.vec",
+                                                 {"In1","In2","Out"})
          {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
@@ -177,7 +177,7 @@ BOTAN_REGISTER_TEST("util", Utility_Function_Tests);
 class Date_Format_Tests : public Text_Based_Test
    {
    public:
-      Date_Format_Tests() : Text_Based_Test(Test::data_file("dates.vec"),
+      Date_Format_Tests() : Text_Based_Test("dates.vec",
                                             std::vector<std::string>{"Date"})
          {}
 
@@ -248,7 +248,7 @@ BOTAN_REGISTER_TEST("util_dates", Date_Format_Tests);
 class Base64_Tests : public Text_Based_Test
    {
    public:
-      Base64_Tests() : Text_Based_Test(Test::data_file("base64.vec"),
+      Base64_Tests() : Text_Based_Test("base64.vec",
                                        std::vector<std::string>({"Base64"}),
                                        {"Binary"})
          {}
@@ -305,7 +305,7 @@ class Base64_Tests : public Text_Based_Test
                   {
                   result.test_failure("decoded whitespace base64", Botan::base64_decode(b64_ws, false));
                   }
-               catch(std::exception& e) {}
+               catch(std::exception&) {}
 
                try
                   {

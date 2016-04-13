@@ -62,39 +62,35 @@ ASN1_Tag choose_encoding(const std::string& str,
 /*
 * Create an ASN1_String
 */
-ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : tag(t)
+ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : m_iso_8859_str(Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET)), m_tag(t)
    {
-   iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
 
-   if(tag == DIRECTORY_STRING)
-      tag = choose_encoding(iso_8859_str, "latin1");
+   if(m_tag == DIRECTORY_STRING)
+      m_tag = choose_encoding(m_iso_8859_str, "latin1");
 
-   if(tag != NUMERIC_STRING &&
-      tag != PRINTABLE_STRING &&
-      tag != VISIBLE_STRING &&
-      tag != T61_STRING &&
-      tag != IA5_STRING &&
-      tag != UTF8_STRING &&
-      tag != BMP_STRING)
+   if(m_tag != NUMERIC_STRING &&
+      m_tag != PRINTABLE_STRING &&
+      m_tag != VISIBLE_STRING &&
+      m_tag != T61_STRING &&
+      m_tag != IA5_STRING &&
+      m_tag != UTF8_STRING &&
+      m_tag != BMP_STRING)
       throw Invalid_Argument("ASN1_String: Unknown string type " +
-                             std::to_string(tag));
+                             std::to_string(m_tag));
    }
 
 /*
 * Create an ASN1_String
 */
-ASN1_String::ASN1_String(const std::string& str)
-   {
-   iso_8859_str = Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET);
-   tag = choose_encoding(iso_8859_str, "latin1");
-   }
+ASN1_String::ASN1_String(const std::string& str) : m_iso_8859_str(Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET)), m_tag(choose_encoding(m_iso_8859_str, "latin1"))
+   {}
 
 /*
 * Return this string in ISO 8859-1 encoding
 */
 std::string ASN1_String::iso_8859() const
    {
-   return iso_8859_str;
+   return m_iso_8859_str;
    }
 
 /*
@@ -102,7 +98,7 @@ std::string ASN1_String::iso_8859() const
 */
 std::string ASN1_String::value() const
    {
-   return Charset::transcode(iso_8859_str, LATIN1_CHARSET, LOCAL_CHARSET);
+   return Charset::transcode(m_iso_8859_str, LATIN1_CHARSET, LOCAL_CHARSET);
    }
 
 /*
@@ -110,7 +106,7 @@ std::string ASN1_String::value() const
 */
 ASN1_Tag ASN1_String::tagging() const
    {
-   return tag;
+   return m_tag;
    }
 
 /*
@@ -141,7 +137,7 @@ void ASN1_String::decode_from(BER_Decoder& source)
       charset_is = LATIN1_CHARSET;
 
    *this = ASN1_String(
-      Charset::transcode(ASN1::to_string(obj), charset_is, LOCAL_CHARSET),
+      Charset::transcode(ASN1::to_string(obj), LOCAL_CHARSET, charset_is),
       obj.type_tag);
    }
 

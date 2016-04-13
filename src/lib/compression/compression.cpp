@@ -14,10 +14,28 @@ namespace Botan {
 
 void* Compression_Alloc_Info::do_malloc(size_t n, size_t size)
    {
-   const size_t total_sz = n * size;
+   const size_t total_size = n * size;
 
-   void* ptr = std::malloc(total_sz);
-   m_current_allocs[ptr] = total_sz;
+   BOTAN_ASSERT_EQUAL(total_size / size, n, "Overflow check");
+
+   // TODO maximum length check here?
+
+   void* ptr = std::malloc(total_size);
+
+   /*
+   * Return null rather than throwing here as we are being called by a
+   * C library and it may not be possible for an exception to unwind
+   * the call stack from here. The compression library is expecting a
+   * function written in C and a null return on error, which it will
+   * send upwards to the compression wrappers.
+   */
+
+   if(ptr)
+      {
+      std::memset(ptr, 0, total_size);
+      m_current_allocs[ptr] = total_size;
+      }
+
    return ptr;
    }
 
@@ -38,7 +56,7 @@ void Compression_Alloc_Info::do_free(void* ptr)
 
 namespace {
 
-Compressor_Transform* do_make_compressor(const std::string& type, const std::string suffix)
+Compressor_Transform* do_make_compressor(const std::string& type, const std::string& suffix)
    {
    const std::map<std::string, std::string> trans{
       {"zlib", "Zlib"},

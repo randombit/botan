@@ -25,7 +25,6 @@ tls_extensions.h
 tls_handshake_hash.h
 tls_handshake_io.h
 tls_handshake_state.h
-tls_heartbeats.h
 tls_messages.h
 tls_reader.h
 tls_record.h
@@ -51,6 +50,5 @@ rng
 rsa
 sha1
 sha2_32
-srp6
 x509
 </requires>

@@ -22,7 +22,7 @@
 
 #define BOTAN_DISTRIBUTION_INFO "%{distribution_info}"
 
-#define BOTAN_INSTALL_PREFIX "%{prefix}"
+#define BOTAN_INSTALL_PREFIX R"(%{prefix})"
 #define BOTAN_INSTALL_HEADER_DIR "%{includedir}/botan-%{version_major}.%{version_minor}"
 #define BOTAN_INSTALL_LIB_DIR "%{libdir}"
 #define BOTAN_LIB_LINK "%{link_to}"
@@ -98,12 +98,6 @@
 #define BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_GENERATE 1
 
 /*
-* Define BOTAN_USE_CTGRIND to enable checking constant time
-* annotations using ctgrind https://github.com/agl/ctgrind
-*/
-//#define BOTAN_USE_CTGRIND
-
-/*
 * RNGs will automatically poll the system for additional seed material
 * after producing this many bytes of output.
 */
@@ -120,7 +114,7 @@
 * seriously broken system RNG.
 */
 #define BOTAN_ENTROPY_DEFAULT_SOURCES \
-   { "timestamp", "rdrand", "proc_info", \
+   { "timestamp", "rdseed", "rdrand", "proc_info", \
    "darwin_secrandom", "dev_random", "win32_cryptoapi", "egd", \
    "proc_walk", "system_stats", "unix_procs" }
 
@@ -165,8 +159,37 @@
 // Human readable text which has entropy
 #define BOTAN_ENTROPY_ESTIMATE_SYSTEM_TEXT (1.0 / 64)
 
+/*
+The output of a hardware RNG such as RDRAND / RDSEED
+
+By default such RNGs are used but not trusted, so that the standard
+softare-based entropy polling is still used.
+*/
+#define BOTAN_ENTROPY_ESTIMATE_HARDWARE_RNG 0.0
+
+/*
+How often should the RdRand/RdSeed RNGs be polled
+
+Each poll generates 32 bit entropy
+*/
+#define BOTAN_ENTROPY_INTEL_RNG_POLLS 32
+
+// According to Intel RdRand is guaranteed to generate a random number within 10 retries on a working CPU
+#define BOTAN_ENTROPY_RDRAND_RETRIES 10
+
+/*
+* RdSeed is not guaranteed to generate a random number within a specific number of retries
+* Define the number of retries here
+*/
+#define BOTAN_ENTROPY_RDSEED_RETRIES 20
+
 // The output of a PRNG we are trusting to be strong
 #define BOTAN_ENTROPY_ESTIMATE_STRONG_RNG 7.0
+
+
+/*
+* Compiler and target specific flags
+*/
 
 /* Should we use GCC-style inline assembler? */
 #if !defined(BOTAN_USE_GCC_INLINE_ASM) && defined(__GNUG__)
@@ -232,6 +255,22 @@
 
 #endif
 
+#if !defined(BOTAN_NORETURN)
+
+  #if defined (__clang__) || defined (__GNUG__)
+    #define BOTAN_NORETURN __attribute__ ((__noreturn__))
+
+  #elif defined (_MSC_VER)
+    #define BOTAN_NORETURN __declspec(noreturn)
+
+  #else
+    #define BOTAN_NORETURN
+	
+  #endif
+
+#endif
+
+
 #if defined(_MSC_VER)
   #define BOTAN_CURRENT_FUNCTION __FUNCTION__
 #else
@@ -242,7 +281,7 @@
   #define BOTAN_DEPRECATED(msg)
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
   // noexcept is not supported in VS 2013
   #include <yvals.h>
   #define BOTAN_NOEXCEPT _NOEXCEPT
@@ -259,5 +298,9 @@
 * Local configuration options (if any) follow
 */
 %{local_config}
+
+// Append to macros living outside of functions, so that invocations must end with a semicolon.
+// The struct is only declared to force the semicolon, it is never defined.
+#define BOTAN_FORCE_SEMICOLON struct BOTAN_DUMMY_STRUCT
 
 #endif

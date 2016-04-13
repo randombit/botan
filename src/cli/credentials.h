@@ -23,7 +23,7 @@ inline bool value_exists(const std::vector<std::string>& vec,
    return false;
    }
 
-class Basic_Credentials_Manager : public Credentials_Manager
+class Basic_Credentials_Manager : public Botan::Credentials_Manager
    {
    public:
       Basic_Credentials_Manager()
@@ -31,20 +31,20 @@ class Basic_Credentials_Manager : public Credentials_Manager
          load_certstores();
          }
 
-      Basic_Credentials_Manager(RandomNumberGenerator& rng,
+      Basic_Credentials_Manager(Botan::RandomNumberGenerator& rng,
                                 const std::string& server_crt,
                                 const std::string& server_key)
          {
          Certificate_Info cert;
 
-         cert.key.reset(PKCS8::load_key(server_key, rng));
+         cert.key.reset(Botan::PKCS8::load_key(server_key, rng));
 
-         DataSource_Stream in(server_crt);
+         Botan::DataSource_Stream in(server_crt);
          while(!in.end_of_data())
             {
             try
                {
-               cert.certs.push_back(X509_Certificate(in));
+               cert.certs.push_back(Botan::X509_Certificate(in));
                }
             catch(std::exception& e)
                {
@@ -66,7 +66,7 @@ class Basic_Credentials_Manager : public Credentials_Manager
 
             for(auto&& path : paths)
                {
-               std::shared_ptr<Certificate_Store> cs(new Certificate_Store_In_Memory(path));
+               std::shared_ptr<Botan::Certificate_Store> cs(new Botan::Certificate_Store_In_Memory(path));
                m_certstores.push_back(cs);
                }
             }
@@ -95,7 +95,7 @@ class Basic_Credentials_Manager : public Credentials_Manager
       void verify_certificate_chain(
          const std::string& type,
          const std::string& purported_hostname,
-         const std::vector<X509_Certificate>& cert_chain) override
+         const std::vector<Botan::X509_Certificate>& cert_chain) override
          {
          try
             {
@@ -110,7 +110,7 @@ class Basic_Credentials_Manager : public Credentials_Manager
             }
          }
 
-      std::vector<X509_Certificate> cert_chain(
+      std::vector<Botan::X509_Certificate> cert_chain(
          const std::vector<std::string>& algos,
          const std::string& type,
          const std::string& hostname) override
@@ -128,12 +128,12 @@ class Basic_Credentials_Manager : public Credentials_Manager
             return i.certs;
             }
 
-         return std::vector<X509_Certificate>();
+         return std::vector<Botan::X509_Certificate>();
          }
 
-      Private_Key* private_key_for(const X509_Certificate& cert,
-                                   const std::string& /*type*/,
-                                   const std::string& /*context*/) override
+      Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
+                                          const std::string& /*type*/,
+                                          const std::string& /*context*/) override
          {
          for(auto&& i : m_creds)
             {
@@ -147,12 +147,12 @@ class Basic_Credentials_Manager : public Credentials_Manager
    private:
       struct Certificate_Info
          {
-         std::vector<X509_Certificate> certs;
-         std::shared_ptr<Private_Key> key;
+            std::vector<Botan::X509_Certificate> certs;
+            std::shared_ptr<Botan::Private_Key> key;
          };
 
       std::vector<Certificate_Info> m_creds;
-      std::vector<std::shared_ptr<Certificate_Store>> m_certstores;
+      std::vector<std::shared_ptr<Botan::Certificate_Store>> m_certstores;
    };
 
 #endif

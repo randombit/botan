@@ -10,6 +10,10 @@ InvalidKeyUsage.pem:Invalid usage
 InvalidName.pem:Certificate does not match provided name
 InvalidNameAltName.pem:Certificate does not match provided name
 InvalidNameAltNameWithSubj.pem:Certificate does not match provided name
+InvalidNameConstraintExclude.pem:Certificate does not pass name constraint
+InvalidNameConstraintPermit.pem:Certificate does not pass name constraint
+InvalidNameConstraintPermitRight.pem:Certificate does not pass name constraint
+InvalidNameConstraintPermitThenExclude.pem:Certificate does not pass name constraint
 InvalidNotAfter.pem:Certificate has expired
 InvalidNotAfterChained.pem:Certificate has expired
 InvalidSelfSign.pem:Cannot establish trust
@@ -28,16 +32,10 @@ MissingIntCAExtensions.pem:CA certificate not allowed to issue certs
 ValidAltName.pem:Verified
 ValidCert.pem:Verified
 ValidChained.pem:Verified
+ValidNameConstraint.pem:Verified
 ValidIntCALen.pem:Verified
 ValidWildcard.pem:Verified
 
 # Need to fix date settings in x509test and regen
 #InvalidNotBefore.pem:Certificate is not yet valid
 #InvalidNotBeforeChained.pem:Certificate is not yet valid
-
-# Missing name constraints
-InvalidNameConstraintExclude.pem:Certificate issuer not found
-InvalidNameConstraintPermit.pem:Certificate issuer not found
-InvalidNameConstraintPermitRight.pem:Certificate issuer not found
-InvalidNameConstraintPermitThenExclude.pem:Certificate issuer not found
-ValidNameConstraint.pem:Certificate issuer not found

@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Output Feedback Mode
 */
-class BOTAN_DLL OFB : public StreamCipher
+class BOTAN_DLL OFB final : public StreamCipher
    {
    public:
       void cipher(const byte in[], byte out[], size_t length) override;
@@ -43,7 +43,7 @@ class BOTAN_DLL OFB : public StreamCipher
       /**
       * @param cipher the underlying block cipher to use
       */
-      OFB(BlockCipher* cipher);
+      explicit OFB(BlockCipher* cipher);
    private:
       void key_schedule(const byte key[], size_t key_len) override;
 

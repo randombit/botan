@@ -1,12 +1,14 @@
 /*
 * Entropy Source Using Intel's rdrand instruction
 * (C) 2012,2015 Jack Lloyd
+* (C) 2015 Daniel Neus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/rdrand.h>
 #include <botan/cpuid.h>
+#include <botan/build.h>
 
 #if !defined(BOTAN_USE_GCC_INLINE_ASM)
   #include <immintrin.h>
@@ -14,42 +16,31 @@
 
 namespace Botan {
 
-/*
-* Get the timestamp
-*/
-void Intel_Rdrand::poll(Entropy_Accumulator& accum)
-   {
+void Intel_Rdrand::poll(Entropy_Accumulator& accum) {
    if(!CPUID::has_rdrand())
       return;
 
-   /*
-   Don't consider rdrand as contributing any entropy to the poll. It doesn't
-   make sense to trust uninspectible hardware.
-
-   Even if backdoored, rdrand cannot harm us because the HMAC_RNG poll process
-   is designed to handle arbitrarily large amounts of attacker known/chosen
-   input (or even a reseed where every bit we reseeded with was attacker chosen),
-   as long as at least one seed occurred with enough unknown-to-attacker entropy.
-   */
-   const double ENTROPY_ESTIMATE = 0.0;
-   const size_t RDRAND_POLLS = 32;
-
-   for(size_t i = 0; i != RDRAND_POLLS; ++i)
+   for(size_t p = 0; p != BOTAN_ENTROPY_INTEL_RNG_POLLS; ++p)
       {
-      unsigned int r = 0;
+      for(size_t i = 0; i != BOTAN_ENTROPY_RDRAND_RETRIES; ++i)
+         {
+         uint32_t r = 0;
 
 #if defined(BOTAN_USE_GCC_INLINE_ASM)
-      int cf = 0;
+         int cf = 0;
 
-      // Encoding of rdrand %eax
-      asm(".byte 0x0F, 0xC7, 0xF0; adcl $0,%1" :
-          "=a" (r), "=r" (cf) : "0" (r), "1" (cf) : "cc");
+         // Encoding of rdrand %eax
+         asm(".byte 0x0F, 0xC7, 0xF0; adcl $0,%1" :
+             "=a" (r), "=r" (cf) : "0" (r), "1" (cf) : "cc");
 #else
-      int cf = _rdrand32_step(&r);
+         int cf = _rdrand32_step(&r);
 #endif
-
-      if(cf == 1)
-         accum.add(r, ENTROPY_ESTIMATE);
+         if(1 == cf)
+            {
+            accum.add(r, BOTAN_ENTROPY_ESTIMATE_HARDWARE_RNG);
+            break;
+            }
+         }
       }
    }
 

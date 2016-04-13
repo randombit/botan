@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * TEA
 */
-class BOTAN_DLL TEA : public Block_Cipher_Fixed_Params<8, 16>
+class BOTAN_DLL TEA final : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -26,7 +26,7 @@ class BOTAN_DLL TEA : public Block_Cipher_Fixed_Params<8, 16>
       BlockCipher* clone() const override { return new TEA; }
    private:
       void key_schedule(const byte[], size_t) override;
-      secure_vector<u32bit> K;
+      secure_vector<u32bit> m_K;
    };
 
 }

@@ -366,8 +366,6 @@ information about that session:
 
 There are also functions for serialization and deserializing sessions:
 
-.. cpp:class:: TLS::Session
-
    .. cpp:function:: std::vector<byte> encrypt(const SymmetricKey& key, \
                                                RandomNumberGenerator& rng)
 
@@ -534,6 +532,13 @@ policy settings from a file.
 
      .. note::
 
+        The current ChaCha20Poly1305 ciphersuites are non-standard but
+        as of 2015 were implemented and deployed by Google and
+        elsewhere. Support will be changed to using IETF standard
+        ChaCha20Poly1305 ciphersuites when those are defined.
+
+     .. note::
+
         Support for the broken RC4 cipher was removed in 1.11.17
 
  .. cpp:function:: std::vector<std::string> allowed_macs() const
@@ -543,7 +548,7 @@ policy settings from a file.
 
      Default: "AEAD", "SHA-384", "SHA-256", "SHA-1"
 
-     Also allowed (although **not recommended**): "MD5"
+     A plain hash function indicates HMAC
 
  .. cpp:function:: std::vector<std::string> allowed_key_exchange_methods() const
 
@@ -556,13 +561,12 @@ policy settings from a file.
 
  .. cpp:function:: std::vector<std::string> allowed_signature_hashes() const
 
-     Returns the list of algorithms we are willing to use for
+     Returns the list of hash algorithms we are willing to use for
      public key signatures, in order of preference.
 
      Default: "SHA-512", "SHA-384", "SHA-256"
 
-     Also allowed: "SHA-224"
-     Also allowed (although **not recommended**): "MD5", "SHA-1"
+     Also allowed (although **not recommended**): "SHA-1"
 
      .. note::
 
@@ -583,9 +587,7 @@ policy settings from a file.
      Default: "brainpool512r1", "secp521r1", "brainpool384r1",
      "secp384r1", "brainpool256r1", "secp256r1"
 
-     Also allowed (disabled by default): "secp256k1", "secp224r1",
-     "secp224k1", "secp192r1", "secp192k1", "secp160r2", "secp160r1",
-     "secp160k1"
+     No other values are currently defined.
 
  .. cpp:function:: std::vector<byte> compression() const
 

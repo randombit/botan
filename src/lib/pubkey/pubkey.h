@@ -81,35 +81,71 @@ class BOTAN_DLL PK_Decryptor
    {
    public:
       /**
-      * Decrypt a ciphertext.
+      * Decrypt a ciphertext, throwing an exception if the input
+      * seems to be invalid (eg due to an accidental or malicious
+      * error in the ciphertext).
+      *
       * @param in the ciphertext as a byte array
       * @param length the length of the above byte array
       * @return decrypted message
       */
-      secure_vector<byte> decrypt(const byte in[], size_t length) const
-         {
-         return dec(in, length);
-         }
+      secure_vector<byte> decrypt(const byte in[], size_t length) const;
 
       /**
-      * Decrypt a ciphertext.
+      * Same as above, but taking a vector
       * @param in the ciphertext
       * @return decrypted message
       */
       template<typename Alloc>
       secure_vector<byte> decrypt(const std::vector<byte, Alloc>& in) const
          {
-         return dec(in.data(), in.size());
+         return decrypt(in.data(), in.size());
          }
 
+      /**
+      * Decrypt a ciphertext. If the ciphertext is invalid (eg due to
+      * invalid padding) or is not the expected length, instead
+      * returns a random string of the expected length. Use to avoid
+      * oracle attacks, especially against PKCS #1 v1.5 decryption.
+      */
+      secure_vector<byte>
+      decrypt_or_random(const byte in[],
+                        size_t length,
+                        size_t expected_pt_len,
+                        RandomNumberGenerator& rng) const;
+
+      /**
+      * Decrypt a ciphertext. If the ciphertext is invalid (eg due to
+      * invalid padding) or is not the expected length, instead
+      * returns a random string of the expected length. Use to avoid
+      * oracle attacks, especially against PKCS #1 v1.5 decryption.
+      *
+      * Additionally checks (also in const time) that:
+      *    contents[required_content_offsets[i]] == required_content_bytes[i]
+      * for 0 <= i < required_contents
+      *
+      * Used for example in TLS, which encodes the client version in
+      * the content bytes: if there is any timing variation the version
+      * check can be used as an oracle to recover the key.
+      */
+      secure_vector<byte>
+      decrypt_or_random(const byte in[],
+                        size_t length,
+                        size_t expected_pt_len,
+                        RandomNumberGenerator& rng,
+                        const byte required_content_bytes[],
+                        const byte required_content_offsets[],
+                        size_t required_contents) const;
+
       PK_Decryptor() {}
-      virtual ~PK_Decryptor() {}
+      virtual ~PK_Decryptor() = default;
 
       PK_Decryptor(const PK_Decryptor&) = delete;
       PK_Decryptor& operator=(const PK_Decryptor&) = delete;
 
    private:
-      virtual secure_vector<byte> dec(const byte[], size_t) const = 0;
+      virtual secure_vector<byte> do_decrypt(byte& valid_mask,
+                                             const byte in[], size_t in_len) const = 0;
    };
 
 /**
@@ -325,8 +361,11 @@ class BOTAN_DLL PK_Key_Agreement
       * Construct a PK Key Agreement.
       * @param key the key to use
       * @param kdf name of the KDF to use (or 'Raw' for no KDF)
+      * @param provider the algo provider to use (or empty for default)
       */
-      PK_Key_Agreement(const Private_Key& key, const std::string& kdf);
+      PK_Key_Agreement(const Private_Key& key,
+                       const std::string& kdf,
+                       const std::string& provider = "");
 
       /*
       * Perform Key Agreement Operation
@@ -433,9 +472,92 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
                        const std::string& eme,
                        const std::string& provider = "");
    private:
-      secure_vector<byte> dec(const byte[], size_t) const override;
+      secure_vector<byte> do_decrypt(byte& valid_mask,
+                                     const byte in[],
+                                     size_t in_len) const override;
 
       std::unique_ptr<PK_Ops::Decryption> m_op;
+   };
+
+class BOTAN_DLL PK_KEM_Encryptor
+   {
+   public:
+      PK_KEM_Encryptor(const Public_Key& key,
+                       const std::string& kem_param = "",
+                       const std::string& provider = "");
+
+      void encrypt(secure_vector<byte>& out_encapsulated_key,
+                   secure_vector<byte>& out_shared_key,
+                   size_t desired_shared_key_len,
+                   Botan::RandomNumberGenerator& rng,
+                   const uint8_t salt[],
+                   size_t salt_len);
+
+      template<typename Alloc>
+         void encrypt(secure_vector<byte>& out_encapsulated_key,
+                      secure_vector<byte>& out_shared_key,
+                      size_t desired_shared_key_len,
+                      Botan::RandomNumberGenerator& rng,
+                      const std::vector<uint8_t, Alloc>& salt)
+         {
+         this->encrypt(out_encapsulated_key,
+                       out_shared_key,
+                       desired_shared_key_len,
+                       rng,
+                       salt.data(), salt.size());
+         }
+
+      void encrypt(secure_vector<byte>& out_encapsulated_key,
+                   secure_vector<byte>& out_shared_key,
+                   size_t desired_shared_key_len,
+                   Botan::RandomNumberGenerator& rng)
+         {
+         this->encrypt(out_encapsulated_key,
+                       out_shared_key,
+                       desired_shared_key_len,
+                       rng,
+                       nullptr,
+                       0);
+         }
+
+   private:
+      std::unique_ptr<PK_Ops::KEM_Encryption> m_op;
+   };
+
+class BOTAN_DLL PK_KEM_Decryptor
+   {
+   public:
+      PK_KEM_Decryptor(const Private_Key& key,
+                       const std::string& kem_param = "",
+                       const std::string& provider = "");
+
+      secure_vector<byte> decrypt(const byte encap_key[],
+                                  size_t encap_key_len,
+                                  size_t desired_shared_key_len,
+                                  const uint8_t salt[],
+                                  size_t salt_len);
+
+      secure_vector<byte> decrypt(const byte encap_key[],
+                                  size_t encap_key_len,
+                                  size_t desired_shared_key_len)
+         {
+         return this->decrypt(encap_key, encap_key_len,
+                              desired_shared_key_len,
+                              nullptr, 0);
+         }
+
+      template<typename Alloc1, typename Alloc2>
+         secure_vector<byte> decrypt(const std::vector<byte, Alloc1>& encap_key,
+                                     size_t desired_shared_key_len,
+                                     const std::vector<byte, Alloc2>& salt)
+         {
+         return this->decrypt(encap_key.data(), encap_key.size(),
+                              desired_shared_key_len,
+                              salt.data(), salt.size());
+         }
+
+   private:
+      std::unique_ptr<PK_Ops::KEM_Decryption> m_op;
    };
 
 }

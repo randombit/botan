@@ -46,7 +46,7 @@ class BOTAN_DLL RTSS_Share
       /**
       * @param hex_input the share encoded in hexadecimal
       */
-      RTSS_Share(const std::string& hex_input);
+      explicit RTSS_Share(const std::string& hex_input);
 
       /**
       * @return hex representation
@@ -61,14 +61,14 @@ class BOTAN_DLL RTSS_Share
       /**
       * @return size of this share in bytes
       */
-      size_t size() const { return contents.size(); }
+      size_t size() const { return m_contents.size(); }
 
       /**
       * @return if this TSS share was initialized or not
       */
-      bool initialized() const { return (contents.size() > 0); }
+      bool initialized() const { return (m_contents.size() > 0); }
    private:
-      secure_vector<byte> contents;
+      secure_vector<byte> m_contents;
    };
 
 }

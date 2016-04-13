@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * DESX
 */
-class BOTAN_DLL DESX : public Block_Cipher_Fixed_Params<8, 24>
+class BOTAN_DLL DESX final : public Block_Cipher_Fixed_Params<8, 24>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -26,8 +26,8 @@ class BOTAN_DLL DESX : public Block_Cipher_Fixed_Params<8, 24>
       BlockCipher* clone() const override { return new DESX; }
    private:
       void key_schedule(const byte[], size_t) override;
-      secure_vector<byte> K1, K2;
-      DES des;
+      secure_vector<byte> m_K1, m_K2;
+      DES m_des;
    };
 
 }

@@ -23,14 +23,14 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
    public:
       Diffie_Hellman_KAT_Tests() : PK_Key_Agreement_Test(
          "Diffie-Hellman",
-         Test::data_file("pubkey/dh.vec"),
+         "pubkey/dh.vec",
          {"P", "G", "X", "Y", "Msg", "OutLen", "K"},
          {"KDF"})
          {}
 
-      std::string default_kdf(const VarMap&) { return "Raw"; }
+      std::string default_kdf(const VarMap&) const override { return "Raw"; }
 
-      std::unique_ptr<Botan::Private_Key> load_our_key(const VarMap& vars) override
+      std::unique_ptr<Botan::Private_Key> load_our_key(const std::string&, const VarMap& vars) override
          {
          const Botan::BigInt p = get_req_bn(vars, "P");
          const Botan::BigInt g = get_req_bn(vars, "G");
@@ -42,7 +42,7 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
          return key;
          }
 
-      std::vector<uint8_t> load_their_key(const VarMap& vars) override
+      std::vector<uint8_t> load_their_key(const std::string&, const VarMap& vars) override
          {
          const Botan::BigInt p = get_req_bn(vars, "P");
          const Botan::BigInt g = get_req_bn(vars, "G");

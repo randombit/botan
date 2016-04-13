@@ -20,7 +20,7 @@ class Message_Auth_Tests : public Text_Based_Test
    {
    public:
       Message_Auth_Tests() :
-         Text_Based_Test(Test::data_dir("mac"), {"Key", "In", "Out"}) {}
+         Text_Based_Test("mac", {"Key", "In", "Out"}) {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {

@@ -62,12 +62,12 @@ class Handshake_IO
 /**
 * Handshake IO for stream-based handshakes
 */
-class Stream_Handshake_IO : public Handshake_IO
+class Stream_Handshake_IO final : public Handshake_IO
    {
    public:
       typedef std::function<void (byte, const std::vector<byte>&)> writer_fn;
 
-      Stream_Handshake_IO(writer_fn writer) : m_send_hs(writer) {}
+      explicit Stream_Handshake_IO(writer_fn writer) : m_send_hs(writer) {}
 
       Protocol_Version initial_record_version() const override;
 
@@ -93,7 +93,7 @@ class Stream_Handshake_IO : public Handshake_IO
 /**
 * Handshake IO for datagram-based handshakes
 */
-class Datagram_Handshake_IO : public Handshake_IO
+class Datagram_Handshake_IO final : public Handshake_IO
    {
    public:
       typedef std::function<void (u16bit, byte, const std::vector<byte>&)> writer_fn;

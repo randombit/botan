@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Win32 CAPI Entropy Source
 */
-class Win32_CAPI_EntropySource : public Entropy_Source
+class Win32_CAPI_EntropySource final : public Entropy_Source
    {
    public:
       std::string name() const override { return "win32_cryptoapi"; }
@@ -27,9 +27,9 @@ class Win32_CAPI_EntropySource : public Entropy_Source
      * Win32_Capi_Entropysource Constructor
      * @param provs list of providers, separated by ':'
      */
-      Win32_CAPI_EntropySource(const std::string& provs = "");
+      explicit Win32_CAPI_EntropySource(const std::string& provs = "");
    private:
-      std::vector<u64bit> prov_types;
+      std::vector<u64bit> m_prov_types;
    };
 
 }

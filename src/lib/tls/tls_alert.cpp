@@ -108,9 +108,6 @@ std::string Alert::type_string() const
 
       case NULL_ALERT:
          return "none";
-
-      case HEARTBEAT_PAYLOAD:
-         return "heartbeat_payload";
       }
 
    /*

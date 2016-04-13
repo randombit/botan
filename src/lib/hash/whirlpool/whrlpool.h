@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Whirlpool
 */
-class BOTAN_DLL Whirlpool : public MDx_HashFunction
+class BOTAN_DLL Whirlpool final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "Whirlpool"; }
@@ -24,7 +24,7 @@ class BOTAN_DLL Whirlpool : public MDx_HashFunction
 
       void clear() override;
 
-      Whirlpool() : MDx_HashFunction(64, true, true, 32), M(8), digest(8)
+      Whirlpool() : MDx_HashFunction(64, true, true, 32), m_M(8), m_digest(8)
          { clear(); }
    private:
       void compress_n(const byte[], size_t blocks) override;
@@ -39,7 +39,7 @@ class BOTAN_DLL Whirlpool : public MDx_HashFunction
       static const u64bit C6[256];
       static const u64bit C7[256];
 
-      secure_vector<u64bit> M, digest;
+      secure_vector<u64bit> m_M, m_digest;
    };
 
 }

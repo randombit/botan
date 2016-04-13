@@ -8,7 +8,6 @@
 #include <botan/tls_channel.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
-#include <botan/internal/tls_heartbeats.h>
 #include <botan/internal/tls_record.h>
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/rounding.h>
@@ -161,22 +160,6 @@ void Channel::renegotiate(bool force_full_renegotiation)
       throw Exception("Cannot renegotiate on inactive connection");
    }
 
-size_t Channel::maximum_fragment_size() const
-   {
-   // should we be caching this value?
-
-   if(auto pending = pending_state())
-      if(auto server_hello = pending->server_hello())
-         if(size_t frag = server_hello->fragment_size())
-            return frag;
-
-   if(auto active = active_state())
-      if(size_t frag = active->server_hello()->fragment_size())
-         return frag;
-
-   return MAX_PLAINTEXT_SIZE;
-   }
-
 void Channel::change_cipher_spec_reader(Connection_Side side)
    {
    auto pending = pending_state();
@@ -269,20 +252,6 @@ void Channel::activate_session()
       }
    }
 
-bool Channel::peer_supports_heartbeats() const
-   {
-   if(auto active = active_state())
-      return active->server_hello()->supports_heartbeats();
-   return false;
-   }
-
-bool Channel::heartbeat_sending_allowed() const
-   {
-   if(auto active = active_state())
-      return active->server_hello()->peer_can_send_heartbeats();
-   return false;
-   }
-
 size_t Channel::received_data(const std::vector<byte>& buf)
    {
    return this->received_data(buf.data(), buf.size());
@@ -290,8 +259,6 @@ size_t Channel::received_data(const std::vector<byte>& buf)
 
 size_t Channel::received_data(const byte input[], size_t input_size)
    {
-   const size_t max_fragment_size = maximum_fragment_size();
-
    try
       {
       while(!is_closed() && input_size)
@@ -331,9 +298,9 @@ size_t Channel::received_data(const byte input[], size_t input_size)
          if(input_size == 0 && needed != 0)
             return needed; // need more data to complete record
 
-         if(record.size() > max_fragment_size)
+         if(record.size() > MAX_PLAINTEXT_SIZE)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
-                                "TLS input record is larger than allowed maximum");
+                                "TLS plaintext record is larger than allowed maximum");
 
          if(record_type == HANDSHAKE || record_type == CHANGE_CIPHER_SPEC)
             {
@@ -392,31 +359,6 @@ size_t Channel::received_data(const byte input[], size_t input_size)
                   process_handshake_msg(active_state(), *pending,
                                         msg.first, msg.second);
                   }
-               }
-            }
-         else if(record_type == HEARTBEAT && peer_supports_heartbeats())
-            {
-            if(!active_state())
-               throw Unexpected_Message("Heartbeat sent before handshake done");
-
-            Heartbeat_Message heartbeat(unlock(record));
-
-            const std::vector<byte>& payload = heartbeat.payload();
-
-            if(heartbeat.is_request())
-               {
-               if(!pending_state())
-                  {
-                  const std::vector<byte> padding = unlock(rng().random_vec(16));
-                  Heartbeat_Message response(Heartbeat_Message::RESPONSE,
-                                             payload.data(), payload.size(), padding);
-
-                  send_record(HEARTBEAT, response.contents());
-                  }
-               }
-            else
-               {
-               m_alert_cb(Alert(Alert::HEARTBEAT_PAYLOAD), payload.data(), payload.size());
                }
             }
          else if(record_type == APPLICATION_DATA)
@@ -486,18 +428,6 @@ size_t Channel::received_data(const byte input[], size_t input_size)
       }
    }
 
-void Channel::heartbeat(const byte payload[], size_t payload_size, size_t pad_size)
-   {
-   if(heartbeat_sending_allowed())
-      {
-      const std::vector<byte> padding = unlock(rng().random_vec(pad_size + 16));
-      Heartbeat_Message heartbeat(Heartbeat_Message::REQUEST,
-                                  payload, payload_size, padding);
-
-      send_record(HEARTBEAT, heartbeat.contents());
-      }
-   }
-
 void Channel::write_record(Connection_Cipher_State* cipher_state, u16bit epoch,
                            byte record_type, const byte input[], size_t length)
    {
@@ -544,11 +474,9 @@ void Channel::send_record_array(u16bit epoch, byte type, const byte input[], siz
       length -= 1;
       }
 
-   const size_t max_fragment_size = maximum_fragment_size();
-
    while(length)
       {
-      const size_t sending = std::min(length, max_fragment_size);
+      const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);
       write_record(cipher_state.get(), epoch, type, input, sending);
 
       input += sending;

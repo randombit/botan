@@ -23,7 +23,7 @@ class BOTAN_DLL EMSA1 : public EMSA
       /**
       * @param hash the hash function to use
       */
-      EMSA1(HashFunction* hash) : m_hash(hash) {}
+      explicit EMSA1(HashFunction* hash) : m_hash(hash) {}
 
    protected:
       size_t hash_output_length() const { return m_hash->output_length(); }

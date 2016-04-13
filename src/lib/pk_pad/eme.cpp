@@ -44,7 +44,7 @@ EME* get_eme(const std::string& algo_spec)
    {
    SCAN_Name request(algo_spec);
 
-   if(EME* eme = make_a<EME>(algo_spec))
+   if(EME* eme = make_a<EME>(Botan::EME::Spec(algo_spec)))
       return eme;
 
    if(request.algo_name() == "Raw")
@@ -57,8 +57,8 @@ EME* get_eme(const std::string& algo_spec)
 * Encode a message
 */
 secure_vector<byte> EME::encode(const byte msg[], size_t msg_len,
-                               size_t key_bits,
-                               RandomNumberGenerator& rng) const
+                                size_t key_bits,
+                                RandomNumberGenerator& rng) const
    {
    return pad(msg, msg_len, key_bits, rng);
    }
@@ -67,28 +67,11 @@ secure_vector<byte> EME::encode(const byte msg[], size_t msg_len,
 * Encode a message
 */
 secure_vector<byte> EME::encode(const secure_vector<byte>& msg,
-                               size_t key_bits,
-                               RandomNumberGenerator& rng) const
+                                size_t key_bits,
+                                RandomNumberGenerator& rng) const
    {
    return pad(msg.data(), msg.size(), key_bits, rng);
    }
 
-/*
-* Decode a message
-*/
-secure_vector<byte> EME::decode(const byte msg[], size_t msg_len,
-                               size_t key_bits) const
-   {
-   return unpad(msg, msg_len, key_bits);
-   }
-
-/*
-* Decode a message
-*/
-secure_vector<byte> EME::decode(const secure_vector<byte>& msg,
-                               size_t key_bits) const
-   {
-   return unpad(msg.data(), msg.size(), key_bits);
-   }
 
 }

@@ -1,5 +1,0 @@
-define OPENSSL_HASH_FUNCTION 20151019
-
-<requires>
-openssl
-</requires>

@@ -21,12 +21,11 @@ namespace Botan {
 class BOTAN_DLL Exception : public std::exception
    {
    public:
-      Exception(const std::string& what) : m_what(what) {}
-      Exception(const char* prefix, const std::string& what) : m_what(std::string(prefix) + " " + what) {}
-      //const char* what() const override BOTAN_NOEXCEPT { return m_what.c_str(); }
-      const char* what() const BOTAN_NOEXCEPT override { return m_what.c_str(); }
+      explicit Exception(const std::string& msg) : m_msg(msg) {}
+      Exception(const char* prefix, const std::string& msg) : m_msg(std::string(prefix) + " " + msg) {}
+      const char* what() const BOTAN_NOEXCEPT override { return m_msg.c_str(); }
    private:
-      std::string m_what;
+      std::string m_msg;
    };
 
 /**
@@ -35,8 +34,8 @@ class BOTAN_DLL Exception : public std::exception
 class BOTAN_DLL Invalid_Argument : public Exception
    {
    public:
-      Invalid_Argument(const std::string& what) :
-         Exception("Invalid argument",  what) {}
+      explicit Invalid_Argument(const std::string& msg) :
+         Exception("Invalid argument", msg) {}
    };
 
 /**
@@ -47,7 +46,7 @@ class BOTAN_DLL Invalid_Argument : public Exception
 */
 struct BOTAN_DLL Unsupported_Argument : public Invalid_Argument
    {
-   Unsupported_Argument(const std::string& msg) : Invalid_Argument(msg) {}
+   explicit Unsupported_Argument(const std::string& msg) : Invalid_Argument(msg) {}
    };
 
 /**
@@ -55,7 +54,7 @@ struct BOTAN_DLL Unsupported_Argument : public Invalid_Argument
 */
 struct BOTAN_DLL Invalid_State : public Exception
    {
-   Invalid_State(const std::string& err) :
+   explicit Invalid_State(const std::string& err) :
       Exception(err)
       {}
    };
@@ -65,7 +64,7 @@ struct BOTAN_DLL Invalid_State : public Exception
 */
 struct BOTAN_DLL Lookup_Error : public Exception
    {
-   Lookup_Error(const std::string& err) :
+   explicit Lookup_Error(const std::string& err) :
       Exception(err)
       {}
    };
@@ -75,7 +74,7 @@ struct BOTAN_DLL Lookup_Error : public Exception
 */
 struct BOTAN_DLL Internal_Error : public Exception
    {
-   Internal_Error(const std::string& err) :
+   explicit Internal_Error(const std::string& err) :
       Exception("Internal error: " + err)
       {}
    };
@@ -107,7 +106,7 @@ struct BOTAN_DLL Invalid_IV_Length : public Invalid_Argument
 */
 struct BOTAN_DLL PRNG_Unseeded : public Invalid_State
    {
-   PRNG_Unseeded(const std::string& algo) :
+   explicit PRNG_Unseeded(const std::string& algo) :
       Invalid_State("PRNG not seeded: " + algo)
       {}
    };
@@ -117,7 +116,7 @@ struct BOTAN_DLL PRNG_Unseeded : public Invalid_State
 */
 struct BOTAN_DLL Policy_Violation : public Invalid_State
    {
-   Policy_Violation(const std::string& err) :
+   explicit Policy_Violation(const std::string& err) :
       Invalid_State("Policy violation: " + err)
       {}
    };
@@ -127,7 +126,7 @@ struct BOTAN_DLL Policy_Violation : public Invalid_State
 */
 struct BOTAN_DLL Algorithm_Not_Found : public Lookup_Error
    {
-   Algorithm_Not_Found(const std::string& name) :
+   explicit Algorithm_Not_Found(const std::string& name) :
       Lookup_Error("Could not find any algorithm named \"" + name + "\"")
       {}
    };
@@ -137,7 +136,7 @@ struct BOTAN_DLL Algorithm_Not_Found : public Lookup_Error
 */
 struct BOTAN_DLL No_Provider_Found : public Exception
    {
-   No_Provider_Found(const std::string& name) :
+   explicit No_Provider_Found(const std::string& name) :
       Exception("Could not find any provider for algorithm named \"" + name + "\"")
       {}
    };
@@ -147,7 +146,7 @@ struct BOTAN_DLL No_Provider_Found : public Exception
 */
 struct BOTAN_DLL Invalid_Algorithm_Name : public Invalid_Argument
    {
-   Invalid_Algorithm_Name(const std::string& name):
+   explicit Invalid_Algorithm_Name(const std::string& name):
       Invalid_Argument("Invalid algorithm name: " + name)
       {}
    };
@@ -157,7 +156,7 @@ struct BOTAN_DLL Invalid_Algorithm_Name : public Invalid_Argument
 */
 struct BOTAN_DLL Encoding_Error : public Invalid_Argument
    {
-   Encoding_Error(const std::string& name) :
+   explicit Encoding_Error(const std::string& name) :
       Invalid_Argument("Encoding error: " + name) {}
    };
 
@@ -166,7 +165,7 @@ struct BOTAN_DLL Encoding_Error : public Invalid_Argument
 */
 struct BOTAN_DLL Decoding_Error : public Invalid_Argument
    {
-   Decoding_Error(const std::string& name) :
+   explicit Decoding_Error(const std::string& name) :
       Invalid_Argument("Decoding error: " + name) {}
    };
 
@@ -175,7 +174,7 @@ struct BOTAN_DLL Decoding_Error : public Invalid_Argument
 */
 struct BOTAN_DLL Integrity_Failure : public Exception
    {
-   Integrity_Failure(const std::string& msg) :
+   explicit Integrity_Failure(const std::string& msg) :
       Exception("Integrity failure: " + msg) {}
    };
 
@@ -184,7 +183,7 @@ struct BOTAN_DLL Integrity_Failure : public Exception
 */
 struct BOTAN_DLL Invalid_OID : public Decoding_Error
    {
-   Invalid_OID(const std::string& oid) :
+   explicit Invalid_OID(const std::string& oid) :
       Decoding_Error("Invalid ASN.1 OID: " + oid) {}
    };
 
@@ -193,7 +192,7 @@ struct BOTAN_DLL Invalid_OID : public Decoding_Error
 */
 struct BOTAN_DLL Stream_IO_Error : public Exception
    {
-   Stream_IO_Error(const std::string& err) :
+   explicit Stream_IO_Error(const std::string& err) :
       Exception("I/O error: " + err)
       {}
    };
@@ -211,7 +210,7 @@ struct BOTAN_DLL No_Filesystem_Access : public Exception
 */
 struct BOTAN_DLL Self_Test_Failure : public Internal_Error
    {
-   Self_Test_Failure(const std::string& err) :
+   explicit Self_Test_Failure(const std::string& err) :
       Internal_Error("Self test failed: " + err)
       {}
    };

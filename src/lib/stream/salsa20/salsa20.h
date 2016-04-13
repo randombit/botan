@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * DJB's Salsa20 (and XSalsa20)
 */
-class BOTAN_DLL Salsa20 : public StreamCipher
+class BOTAN_DLL Salsa20 final : public StreamCipher
    {
    public:
       void cipher(const byte in[], byte out[], size_t length) override;

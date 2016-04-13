@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * DES
 */
-class BOTAN_DLL DES : public Block_Cipher_Fixed_Params<8, 8>
+class BOTAN_DLL DES final : public Block_Cipher_Fixed_Params<8, 8>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -27,13 +27,13 @@ class BOTAN_DLL DES : public Block_Cipher_Fixed_Params<8, 8>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      secure_vector<u32bit> round_key;
+      secure_vector<u32bit> m_round_key;
    };
 
 /**
 * Triple DES
 */
-class BOTAN_DLL TripleDES : public Block_Cipher_Fixed_Params<8, 16, 24, 8>
+class BOTAN_DLL TripleDES final : public Block_Cipher_Fixed_Params<8, 16, 24, 8>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -45,7 +45,7 @@ class BOTAN_DLL TripleDES : public Block_Cipher_Fixed_Params<8, 16, 24, 8>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      secure_vector<u32bit> round_key;
+      secure_vector<u32bit> m_round_key;
    };
 
 /*

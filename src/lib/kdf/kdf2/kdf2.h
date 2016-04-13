@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * KDF2, from IEEE 1363
 */
-class BOTAN_DLL KDF2 : public KDF
+class BOTAN_DLL KDF2 final : public KDF
    {
    public:
       std::string name() const override { return "KDF2(" + m_hash->name() + ")"; }
@@ -27,7 +27,7 @@ class BOTAN_DLL KDF2 : public KDF
                  const byte secret[], size_t secret_len,
                  const byte salt[], size_t salt_len) const override;
 
-      KDF2(HashFunction* h) : m_hash(h) {}
+      explicit KDF2(HashFunction* h) : m_hash(h) {}
    private:
       std::unique_ptr<HashFunction> m_hash;
    };

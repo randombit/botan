@@ -89,12 +89,16 @@
   #include <botan/comb4p.h>
 #endif
 
+#if defined(BOTAN_HAS_BLAKE2B)
+  #include <botan/blake2b.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
                                                    const std::string& provider)
    {
-   return std::unique_ptr<HashFunction>(make_a<HashFunction>(algo_spec, provider));
+   return std::unique_ptr<HashFunction>(make_a<HashFunction>(Botan::HashFunction::Spec(algo_spec), provider));
    }
 
 std::vector<std::string> HashFunction::providers(const std::string& algo_spec)
@@ -201,6 +205,10 @@ BOTAN_REGISTER_NAMED_T(HashFunction, "Skein-512", Skein_512, Skein_512::make);
 
 #if defined(BOTAN_HAS_WHIRLPOOL)
 BOTAN_REGISTER_HASH_NOARGS(Whirlpool);
+#endif
+
+#if defined(BOTAN_HAS_BLAKE2B)
+BOTAN_REGISTER_NAMED_T(HashFunction, "Blake2b", Blake2b, Blake2b::make);
 #endif
 
 }

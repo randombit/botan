@@ -84,7 +84,10 @@ class BOTAN_DLL BER_Object
    public:
       void assert_is_a(ASN1_Tag, ASN1_Tag);
 
+      // public member variable:
       ASN1_Tag type_tag, class_tag;
+
+      // public member variable:
       secure_vector<byte> value;
    };
 
@@ -111,7 +114,7 @@ bool maybe_BER(DataSource& src);
 */
 struct BOTAN_DLL BER_Decoding_Error : public Decoding_Error
    {
-   BER_Decoding_Error(const std::string&);
+   explicit BER_Decoding_Error(const std::string&);
    };
 
 /**

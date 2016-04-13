@@ -157,21 +157,21 @@ class BOTAN_DLL BER_Decoder
 
       BER_Decoder& operator=(const BER_Decoder&) = delete;
 
-      BER_Decoder(DataSource&);
+      explicit BER_Decoder(DataSource&);
 
       BER_Decoder(const byte[], size_t);
 
-      BER_Decoder(const secure_vector<byte>&);
+      explicit BER_Decoder(const secure_vector<byte>&);
 
-      BER_Decoder(const std::vector<byte>& vec);
+      explicit BER_Decoder(const std::vector<byte>& vec);
 
       BER_Decoder(const BER_Decoder&);
       ~BER_Decoder();
    private:
-      BER_Decoder* parent;
-      DataSource* source;
-      BER_Object pushed;
-      mutable bool owns;
+      BER_Decoder* m_parent;
+      DataSource* m_source;
+      BER_Object m_pushed;
+      mutable bool m_owns;
    };
 
 /*

@@ -58,7 +58,7 @@ class BOTAN_DLL CFB_Mode : public Cipher_Mode
 /**
 * CFB Encryption
 */
-class BOTAN_DLL CFB_Encryption : public CFB_Mode
+class BOTAN_DLL CFB_Encryption final : public CFB_Mode
    {
    public:
       CFB_Encryption(BlockCipher* cipher, size_t feedback_bits) :
@@ -72,7 +72,7 @@ class BOTAN_DLL CFB_Encryption : public CFB_Mode
 /**
 * CFB Decryption
 */
-class BOTAN_DLL CFB_Decryption : public CFB_Mode
+class BOTAN_DLL CFB_Decryption final : public CFB_Mode
    {
    public:
       CFB_Decryption(BlockCipher* cipher, size_t feedback_bits) :

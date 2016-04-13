@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Algorithm Identifier
 */
-class BOTAN_DLL AlgorithmIdentifier : public ASN1_Object
+class BOTAN_DLL AlgorithmIdentifier final : public ASN1_Object
    {
    public:
       enum Encoding_Option { USE_NULL_PARAM };
@@ -32,7 +32,10 @@ class BOTAN_DLL AlgorithmIdentifier : public ASN1_Object
       AlgorithmIdentifier(const OID&, const std::vector<byte>&);
       AlgorithmIdentifier(const std::string&, const std::vector<byte>&);
 
+      // public member variable:
       OID oid;
+
+      // public member variable:
       std::vector<byte> parameters;
    };
 

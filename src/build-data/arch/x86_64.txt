@@ -45,6 +45,7 @@ avx2
 aesni
 clmul
 rdrand
+rdseed
 sha
 bmi2
 </isa_extensions>

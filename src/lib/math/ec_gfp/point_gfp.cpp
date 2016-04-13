@@ -32,6 +32,11 @@ PointGFp::PointGFp(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
    m_coord_y(y),
    m_coord_z(1)
    {
+   if(x <= 0 || x >= curve.get_p())
+      throw Invalid_Argument("Invalid PointGFp affine x");
+   if(y <= 0 || y >= curve.get_p())
+      throw Invalid_Argument("Invalid PointGFp affine y");
+
    m_curve.to_rep(m_coord_x, m_monty_ws);
    m_curve.to_rep(m_coord_y, m_monty_ws);
    m_curve.to_rep(m_coord_z, m_monty_ws);
@@ -283,24 +288,6 @@ PointGFp operator*(const BigInt& scalar, const PointGFp& point)
 
    std::vector<BigInt> ws(9);
 
-   if(scalar_bits <= 2)
-      {
-      const byte abs_val = scalar.byte_at(0);
-
-      if(abs_val == 0)
-         return PointGFp::zero_of(curve);
-
-      PointGFp result = point;
-
-      if(abs_val == 2)
-         result.mult2(ws);
-
-      if(scalar.is_negative())
-         result.negate();
-
-      return result;
-      }
-
    PointGFp R[2] = { PointGFp(curve), point };
 
    for(size_t i = scalar_bits; i > 0; i--)
@@ -434,8 +421,8 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
          for(size_t i = 0; i != m_h; ++i)
             R.mult2(m_ws);
 
-         const u32bit nibble = scalar.get_substring((windows-1)*m_h, m_h);
-         R.add(m_U[nibble], m_ws);
+         const u32bit inner_nibble = scalar.get_substring((windows-1)*m_h, m_h);
+         R.add(m_U[inner_nibble], m_ws);
          windows--;
          }
       }

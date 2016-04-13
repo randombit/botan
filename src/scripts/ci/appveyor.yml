@@ -1,4 +1,4 @@
-os: Windows Server 2012 R2
+os: Visual Studio 2015
 
 platform:
   - x86
@@ -6,11 +6,22 @@ platform:
 
 environment:
   matrix:
-    - MODE: --enable-shared
-    - MODE: --disable-shared
+    - COMPILER: msvc-12.0
+      MODE: --enable-shared
+    - COMPILER: msvc-12.0
+      MODE: --disable-shared
+    - COMPILER: msvc-14.0
+      MODE: --enable-shared
+    - COMPILER: msvc-14.0
+      MODE: --disable-shared
 
 install:
-  - call "%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %PLATFORM%
+  - if %compiler% == msvc-12.0 (
+       call "%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %PLATFORM%
+    )
+  - if %compiler% == msvc-14.0 (
+       call "%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
+    )
   - cl # check compiler version
 
 # always build via amalgamation due to build time constraints on appveyor

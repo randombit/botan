@@ -1,5 +1,7 @@
 /*
-* (C) 2009,2015 Jack Lloyd
+* (C) 2007 Falko Strenzke
+*     2007 Manuel Hartl
+*     2009,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -193,7 +195,7 @@ class NIST_Curve_Reduction_Tests : public Test
    {
    public:
       typedef std::function<void (Botan::BigInt&, Botan::secure_vector<Botan::word>&)> reducer_fn;
-      std::vector<Test::Result> run()
+      std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
 
@@ -286,6 +288,9 @@ Test::Result test_point_transformation ()
 
    // get a copy
    Botan::PointGFp q = p;
+
+   p.randomize_repr(Test::rng());
+   q.randomize_repr(Test::rng());
 
    result.test_eq("affine x after copy", p.get_affine_x(), q.get_affine_x());
    result.test_eq("affine y after copy", p.get_affine_y(), q.get_affine_y());
@@ -523,7 +528,6 @@ Test::Result test_enc_dec_compressed_256()
    std::string a_secp = "ffffffff00000001000000000000000000000000ffffffffffffffffffffffFC";
    std::string b_secp = "5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B";
    std::string G_secp_comp = "036B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296";
-   std::string G_order_secp_comp = "ffffffff00000000ffffffffffffffffBCE6FAADA7179E84F3B9CAC2FC632551";
 
    std::vector<byte> sv_p_secp = Botan::hex_decode ( p_secp );
    std::vector<byte> sv_a_secp = Botan::hex_decode ( a_secp );
@@ -554,7 +558,6 @@ Test::Result test_enc_dec_uncompressed_112()
    std::string a_secp = "6127C24C05F38A0AAAF65C0EF02C";
    std::string b_secp = "51DEF1815DB5ED74FCC34C85D709";
    std::string G_secp_uncomp = "044BA30AB5E892B4E1649DD0928643ADCD46F5882E3747DEF36E956E97";
-   std::string G_order_secp_uncomp = "36DF0AAFD8B8D7597CA10520D04B";
 
    std::vector<byte> sv_p_secp = Botan::hex_decode ( p_secp );
    std::vector<byte> sv_a_secp = Botan::hex_decode ( a_secp );
@@ -583,7 +586,6 @@ Test::Result test_enc_dec_uncompressed_521()
    std::string a_secp = "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffFC";
    std::string b_secp = "0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00";
    std::string G_secp_uncomp = "0400C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2ffA8DE3348B3C1856A429BF97E7E31C2E5BD66011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650";
-   std::string G_order_secp_uncomp = "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409";
 
    std::vector<byte> sv_p_secp = Botan::hex_decode ( p_secp );
    std::vector<byte> sv_a_secp = Botan::hex_decode ( a_secp );
@@ -613,7 +615,6 @@ Test::Result test_enc_dec_uncompressed_521_prime_too_large()
    std::string a_secp = "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffFC";
    std::string b_secp = "0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00";
    std::string G_secp_uncomp = "0400C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2ffA8DE3348B3C1856A429BF97E7E31C2E5BD66011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650";
-   std::string G_order_secp_uncomp = "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409";
 
    std::vector<byte> sv_p_secp = Botan::hex_decode ( p_secp );
    std::vector<byte> sv_a_secp = Botan::hex_decode ( a_secp );
@@ -632,7 +633,7 @@ Test::Result test_enc_dec_uncompressed_521_prime_too_large()
       p_G = std::unique_ptr<Botan::PointGFp>(new Botan::PointGFp(Botan::OS2ECP ( sv_G_secp_uncomp, secp521r1)));
       result.test_failure("point decoding with too large value accepted");
       }
-   catch(std::exception& e)
+   catch(std::exception&)
       {
       result.test_note("rejected invalid point");
       }
@@ -683,9 +684,6 @@ Test::Result test_more_zeropoint()
 
    Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
    const Botan::CurveGFp& curve = secp160r1.get_curve();
-
-   std::string G = "024a96b5688ef573284664698968c38bb913cbfc82";
-   std::vector<byte> sv_G_secp_comp = Botan::hex_decode ( G );
 
    Botan::PointGFp p1(curve,
                Botan::BigInt("16984103820118642236896513183038186009872590470"),

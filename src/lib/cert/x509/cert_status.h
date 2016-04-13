@@ -38,6 +38,7 @@ enum class Certificate_Status_Code {
    INVALID_USAGE,
    CERT_CHAIN_TOO_LONG,
    CA_CERT_NOT_FOR_CERT_ISSUER,
+   NAME_CONSTRAINT_ERROR,
 
    // Revocation errors
    CA_CERT_NOT_FOR_CRL_ISSUER,

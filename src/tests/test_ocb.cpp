@@ -20,10 +20,10 @@ namespace {
 class OCB_Long_KAT_Tests : public Text_Based_Test
    {
    public:
-      OCB_Long_KAT_Tests() : Text_Based_Test(Test::data_file("ocb_long.vec"),
+      OCB_Long_KAT_Tests() : Text_Based_Test("ocb_long.vec",
                                              {"Keylen", "Taglen", "Output"}) {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars)
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
          const size_t keylen = get_req_sz(vars, "Keylen");
          const size_t taglen = get_req_sz(vars, "Taglen");

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * AES-128
 */
-class BOTAN_DLL AES_128 : public Block_Cipher_Fixed_Params<16, 16>
+class BOTAN_DLL AES_128 final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -28,14 +28,14 @@ class BOTAN_DLL AES_128 : public Block_Cipher_Fixed_Params<16, 16>
    private:
       void key_schedule(const byte key[], size_t length) override;
 
-      secure_vector<u32bit> EK, DK;
-      secure_vector<byte> ME, MD;
+      secure_vector<u32bit> m_EK, m_DK;
+      secure_vector<byte> m_ME, m_MD;
    };
 
 /**
 * AES-192
 */
-class BOTAN_DLL AES_192 : public Block_Cipher_Fixed_Params<16, 24>
+class BOTAN_DLL AES_192 final : public Block_Cipher_Fixed_Params<16, 24>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -48,14 +48,14 @@ class BOTAN_DLL AES_192 : public Block_Cipher_Fixed_Params<16, 24>
    private:
       void key_schedule(const byte key[], size_t length) override;
 
-      secure_vector<u32bit> EK, DK;
-      secure_vector<byte> ME, MD;
+      secure_vector<u32bit> m_EK, m_DK;
+      secure_vector<byte> m_ME, m_MD;
    };
 
 /**
 * AES-256
 */
-class BOTAN_DLL AES_256 : public Block_Cipher_Fixed_Params<16, 32>
+class BOTAN_DLL AES_256 final : public Block_Cipher_Fixed_Params<16, 32>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -68,8 +68,8 @@ class BOTAN_DLL AES_256 : public Block_Cipher_Fixed_Params<16, 32>
    private:
       void key_schedule(const byte key[], size_t length) override;
 
-      secure_vector<u32bit> EK, DK;
-      secure_vector<byte> ME, MD;
+      secure_vector<u32bit> m_EK, m_DK;
+      secure_vector<byte> m_ME, m_MD;
    };
 
 }

@@ -1,6 +1,6 @@
 /*
 * TLS Extensions
-* (C) 2011,2012,2015 Jack Lloyd
+* (C) 2011,2012,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -24,11 +24,10 @@ Extension* make_extension(TLS_Data_Reader& reader,
       case TLSEXT_SERVER_NAME_INDICATION:
          return new Server_Name_Indicator(reader, size);
 
-      case TLSEXT_MAX_FRAGMENT_LENGTH:
-         return new Maximum_Fragment_Length(reader, size);
-
+#if defined(BOTAN_HAS_SRP6)
       case TLSEXT_SRP_IDENTIFIER:
          return new SRP_Identifier(reader, size);
+#endif
 
       case TLSEXT_USABLE_ELLIPTIC_CURVES:
          return new Supported_Elliptic_Curves(reader, size);
@@ -39,14 +38,14 @@ Extension* make_extension(TLS_Data_Reader& reader,
       case TLSEXT_SIGNATURE_ALGORITHMS:
          return new Signature_Algorithms(reader, size);
 
-        case TLSEXT_USE_SRTP:
+      case TLSEXT_USE_SRTP:
           return new SRTP_Protection_Profiles(reader, size);
 
       case TLSEXT_ALPN:
          return new Application_Layer_Protocol_Notification(reader, size);
 
-      case TLSEXT_HEARTBEAT_SUPPORT:
-         return new Heartbeat_Support_Indicator(reader, size);
+      case TLSEXT_EXTENDED_MASTER_SECRET:
+         return new Extended_Master_Secret(reader, size);
 
       case TLSEXT_SESSION_TICKET:
          return new Session_Ticket(reader, size);
@@ -88,7 +87,7 @@ std::vector<byte> Extensions::serialize() const
    {
    std::vector<byte> buf(2); // 2 bytes for length field
 
-   for(auto& extn : extensions)
+   for(auto& extn : m_extensions)
       {
       if(extn.second->empty())
          continue;
@@ -121,7 +120,7 @@ std::vector<byte> Extensions::serialize() const
 std::set<Handshake_Extension_Type> Extensions::extension_types() const
    {
    std::set<Handshake_Extension_Type> offers;
-   for(auto i = extensions.begin(); i != extensions.end(); ++i)
+   for(auto i = m_extensions.begin(); i != m_extensions.end(); ++i)
       offers.insert(i->first);
    return offers;
    }
@@ -147,8 +146,8 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader,
 
       if(name_type == 0) // DNS
          {
-         sni_host_name = reader.get_string(2, 1, 65535);
-         name_bytes -= (2 + sni_host_name.size());
+         m_sni_host_name = reader.get_string(2, 1, 65535);
+         name_bytes -= (2 + m_sni_host_name.size());
          }
       else // some other unknown name type
          {
@@ -162,7 +161,7 @@ std::vector<byte> Server_Name_Indicator::serialize() const
    {
    std::vector<byte> buf;
 
-   size_t name_len = sni_host_name.size();
+   size_t name_len = m_sni_host_name.size();
 
    buf.push_back(get_byte<u16bit>(0, name_len+3));
    buf.push_back(get_byte<u16bit>(1, name_len+3));
@@ -172,18 +171,18 @@ std::vector<byte> Server_Name_Indicator::serialize() const
    buf.push_back(get_byte<u16bit>(1, name_len));
 
    buf += std::make_pair(
-      reinterpret_cast<const byte*>(sni_host_name.data()),
-      sni_host_name.size());
+      reinterpret_cast<const byte*>(m_sni_host_name.data()),
+      m_sni_host_name.size());
 
    return buf;
    }
 
-SRP_Identifier::SRP_Identifier(TLS_Data_Reader& reader,
-                               u16bit extension_size)
-   {
-   srp_identifier = reader.get_string(1, 1, 255);
+#if defined(BOTAN_HAS_SRP6)
 
-   if(srp_identifier.size() + 1 != extension_size)
+SRP_Identifier::SRP_Identifier(TLS_Data_Reader& reader,
+                               u16bit extension_size) : m_srp_identifier(reader.get_string(1, 1, 255))
+   {
+   if(m_srp_identifier.size() + 1 != extension_size)
       throw Decoding_Error("Bad encoding for SRP identifier extension");
    }
 
@@ -192,74 +191,27 @@ std::vector<byte> SRP_Identifier::serialize() const
    std::vector<byte> buf;
 
    const byte* srp_bytes =
-      reinterpret_cast<const byte*>(srp_identifier.data());
+      reinterpret_cast<const byte*>(m_srp_identifier.data());
 
-   append_tls_length_value(buf, srp_bytes, srp_identifier.size(), 1);
+   append_tls_length_value(buf, srp_bytes, m_srp_identifier.size(), 1);
 
    return buf;
    }
 
-Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader,
-                                                 u16bit extension_size)
-   {
-   reneg_data = reader.get_range<byte>(1, 0, 255);
+#endif
 
-   if(reneg_data.size() + 1 != extension_size)
+Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader,
+                                                 u16bit extension_size) : m_reneg_data(reader.get_range<byte>(1, 0, 255))
+   {
+   if(m_reneg_data.size() + 1 != extension_size)
       throw Decoding_Error("Bad encoding for secure renegotiation extn");
    }
 
 std::vector<byte> Renegotiation_Extension::serialize() const
    {
    std::vector<byte> buf;
-   append_tls_length_value(buf, reneg_data, 1);
+   append_tls_length_value(buf, m_reneg_data, 1);
    return buf;
-   }
-
-std::vector<byte> Maximum_Fragment_Length::serialize() const
-   {
-   switch(m_max_fragment)
-      {
-      case 512:
-         return std::vector<byte>(1, 1);
-      case 1024:
-         return std::vector<byte>(1, 2);
-      case 2048:
-         return std::vector<byte>(1, 3);
-      case 4096:
-         return std::vector<byte>(1, 4);
-      default:
-         throw Invalid_Argument("Bad setting " +
-                                     std::to_string(m_max_fragment) +
-                                     " for maximum fragment size");
-      }
-   }
-
-Maximum_Fragment_Length::Maximum_Fragment_Length(TLS_Data_Reader& reader,
-                                                 u16bit extension_size)
-   {
-   if(extension_size != 1)
-      throw Decoding_Error("Bad size for maximum fragment extension");
-
-   const byte val = reader.get_byte();
-
-   switch(val)
-      {
-      case 1:
-         m_max_fragment = 512;
-         break;
-      case 2:
-         m_max_fragment = 1024;
-         break;
-      case 3:
-         m_max_fragment = 2048;
-         break;
-      case 4:
-         m_max_fragment = 4096;
-         break;
-      default:
-         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
-                             "Bad value " + std::to_string(val) + " for max fragment len");
-      }
    }
 
 Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,
@@ -322,22 +274,6 @@ std::string Supported_Elliptic_Curves::curve_id_to_name(u16bit id)
    {
    switch(id)
       {
-      case 15:
-         return "secp160k1";
-      case 16:
-         return "secp160r1";
-      case 17:
-         return "secp160r2";
-      case 18:
-         return "secp192k1";
-      case 19:
-         return "secp192r1";
-      case 20:
-         return "secp224k1";
-      case 21:
-         return "secp224r1";
-      case 22:
-         return "secp256k1";
       case 23:
          return "secp256r1";
       case 24:
@@ -357,22 +293,6 @@ std::string Supported_Elliptic_Curves::curve_id_to_name(u16bit id)
 
 u16bit Supported_Elliptic_Curves::name_to_curve_id(const std::string& name)
    {
-   if(name == "secp160k1")
-      return 15;
-   if(name == "secp160r1")
-      return 16;
-   if(name == "secp160r2")
-      return 17;
-   if(name == "secp192k1")
-      return 18;
-   if(name == "secp192r1")
-      return 19;
-   if(name == "secp224k1")
-      return 20;
-   if(name == "secp224r1")
-      return 21;
-   if(name == "secp256k1")
-      return 22;
    if(name == "secp256r1")
       return 23;
    if(name == "secp384r1")
@@ -424,7 +344,7 @@ Supported_Elliptic_Curves::Supported_Elliptic_Curves(TLS_Data_Reader& reader,
       const u16bit id = reader.get_u16bit();
       const std::string name = curve_id_to_name(id);
 
-      if(name != "")
+      if(!name.empty())
          m_curves.push_back(name);
       }
    }
@@ -433,14 +353,13 @@ std::string Signature_Algorithms::hash_algo_name(byte code)
    {
    switch(code)
       {
-      case 1:
-         return "MD5";
       // code 1 is MD5 - ignore it
 
       case 2:
          return "SHA-1";
-      case 3:
-         return "SHA-224";
+
+      // code 3 is SHA-224
+
       case 4:
          return "SHA-256";
       case 5:
@@ -454,14 +373,8 @@ std::string Signature_Algorithms::hash_algo_name(byte code)
 
 byte Signature_Algorithms::hash_algo_code(const std::string& name)
    {
-   if(name == "MD5")
-      return 1;
-
    if(name == "SHA-1")
       return 2;
-
-   if(name == "SHA-224")
-      return 3;
 
    if(name == "SHA-256")
       return 4;
@@ -552,7 +465,7 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
       len -= 2;
 
       // If not something we know, ignore it completely
-      if(hash_code == "" || sig_code == "")
+      if(hash_code.empty() || sig_code.empty())
          continue;
 
       m_supported_algos.push_back(std::make_pair(hash_code, sig_code));
@@ -560,16 +473,12 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
    }
 
 Session_Ticket::Session_Ticket(TLS_Data_Reader& reader,
-                               u16bit extension_size)
-   {
-   m_ticket = reader.get_elem<byte, std::vector<byte> >(extension_size);
-   }
+                               u16bit extension_size) : m_ticket(reader.get_elem<byte, std::vector<byte>>(extension_size))
+   {}
 
 SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader,
-                                                   u16bit extension_size)
+                                                   u16bit extension_size) : m_pp(reader.get_range<u16bit>(2, 0, 65535))
    {
-   m_pp = reader.get_range<u16bit>(2, 0, 65535);
-
    const std::vector<byte> mki = reader.get_range<byte>(1, 0, 255);
 
    if(m_pp.size() * 2 + mki.size() + 3 != extension_size)
@@ -596,6 +505,18 @@ std::vector<byte> SRTP_Protection_Profiles::serialize() const
    buf.push_back(0); // srtp_mki, always empty here
 
    return buf;
+   }
+
+Extended_Master_Secret::Extended_Master_Secret(TLS_Data_Reader&,
+                                               u16bit extension_size)
+   {
+   if(extension_size != 0)
+      throw Decoding_Error("Invalid extended_master_secret extension");
+   }
+
+std::vector<byte> Extended_Master_Secret::serialize() const
+   {
+   return std::vector<byte>();
    }
 
 }

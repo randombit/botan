@@ -33,7 +33,7 @@ class BOTAN_DLL XTS_Mode : public Cipher_Mode
 
       void clear() override;
    protected:
-      XTS_Mode(BlockCipher* cipher);
+      explicit XTS_Mode(BlockCipher* cipher);
 
       const byte* tweak() const { return m_tweak.data(); }
 
@@ -52,10 +52,10 @@ class BOTAN_DLL XTS_Mode : public Cipher_Mode
 /**
 * IEEE P1619 XTS Encryption
 */
-class BOTAN_DLL XTS_Encryption : public XTS_Mode
+class BOTAN_DLL XTS_Encryption final : public XTS_Mode
    {
    public:
-      XTS_Encryption(BlockCipher* cipher) : XTS_Mode(cipher) {}
+      explicit XTS_Encryption(BlockCipher* cipher) : XTS_Mode(cipher) {}
 
       void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 
@@ -67,10 +67,10 @@ class BOTAN_DLL XTS_Encryption : public XTS_Mode
 /**
 * IEEE P1619 XTS Decryption
 */
-class BOTAN_DLL XTS_Decryption : public XTS_Mode
+class BOTAN_DLL XTS_Decryption final : public XTS_Mode
    {
    public:
-      XTS_Decryption(BlockCipher* cipher) : XTS_Mode(cipher) {}
+      explicit XTS_Decryption(BlockCipher* cipher) : XTS_Mode(cipher) {}
 
       void update(secure_vector<byte>& blocks, size_t offset = 0) override;
 

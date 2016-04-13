@@ -21,42 +21,42 @@ void Twofish::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    for(size_t i = 0; i != blocks; ++i)
       {
-      u32bit A = load_le<u32bit>(in, 0) ^ RK[0];
-      u32bit B = load_le<u32bit>(in, 1) ^ RK[1];
-      u32bit C = load_le<u32bit>(in, 2) ^ RK[2];
-      u32bit D = load_le<u32bit>(in, 3) ^ RK[3];
+      u32bit A = load_le<u32bit>(in, 0) ^ m_RK[0];
+      u32bit B = load_le<u32bit>(in, 1) ^ m_RK[1];
+      u32bit C = load_le<u32bit>(in, 2) ^ m_RK[2];
+      u32bit D = load_le<u32bit>(in, 3) ^ m_RK[3];
 
       for(size_t j = 0; j != 16; j += 2)
          {
          u32bit X, Y;
 
-         X = SB[    get_byte(3, A)] ^ SB[256+get_byte(2, A)] ^
-             SB[512+get_byte(1, A)] ^ SB[768+get_byte(0, A)];
-         Y = SB[    get_byte(0, B)] ^ SB[256+get_byte(3, B)] ^
-             SB[512+get_byte(2, B)] ^ SB[768+get_byte(1, B)];
+         X = m_SB[    get_byte(3, A)] ^ m_SB[256+get_byte(2, A)] ^
+             m_SB[512+get_byte(1, A)] ^ m_SB[768+get_byte(0, A)];
+         Y = m_SB[    get_byte(0, B)] ^ m_SB[256+get_byte(3, B)] ^
+             m_SB[512+get_byte(2, B)] ^ m_SB[768+get_byte(1, B)];
          X += Y;
-         Y += X + RK[2*j + 9];
-         X += RK[2*j + 8];
+         Y += X + m_RK[2*j + 9];
+         X += m_RK[2*j + 8];
 
          C = rotate_right(C ^ X, 1);
          D = rotate_left(D, 1) ^ Y;
 
-         X = SB[    get_byte(3, C)] ^ SB[256+get_byte(2, C)] ^
-             SB[512+get_byte(1, C)] ^ SB[768+get_byte(0, C)];
-         Y = SB[    get_byte(0, D)] ^ SB[256+get_byte(3, D)] ^
-             SB[512+get_byte(2, D)] ^ SB[768+get_byte(1, D)];
+         X = m_SB[    get_byte(3, C)] ^ m_SB[256+get_byte(2, C)] ^
+             m_SB[512+get_byte(1, C)] ^ m_SB[768+get_byte(0, C)];
+         Y = m_SB[    get_byte(0, D)] ^ m_SB[256+get_byte(3, D)] ^
+             m_SB[512+get_byte(2, D)] ^ m_SB[768+get_byte(1, D)];
          X += Y;
-         Y += X + RK[2*j + 11];
-         X += RK[2*j + 10];
+         Y += X + m_RK[2*j + 11];
+         X += m_RK[2*j + 10];
 
          A = rotate_right(A ^ X, 1);
          B = rotate_left(B, 1) ^ Y;
          }
 
-      C ^= RK[4];
-      D ^= RK[5];
-      A ^= RK[6];
-      B ^= RK[7];
+      C ^= m_RK[4];
+      D ^= m_RK[5];
+      A ^= m_RK[6];
+      B ^= m_RK[7];
 
       store_le(out, C, D, A, B);
 
@@ -72,42 +72,42 @@ void Twofish::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    for(size_t i = 0; i != blocks; ++i)
       {
-      u32bit A = load_le<u32bit>(in, 0) ^ RK[4];
-      u32bit B = load_le<u32bit>(in, 1) ^ RK[5];
-      u32bit C = load_le<u32bit>(in, 2) ^ RK[6];
-      u32bit D = load_le<u32bit>(in, 3) ^ RK[7];
+      u32bit A = load_le<u32bit>(in, 0) ^ m_RK[4];
+      u32bit B = load_le<u32bit>(in, 1) ^ m_RK[5];
+      u32bit C = load_le<u32bit>(in, 2) ^ m_RK[6];
+      u32bit D = load_le<u32bit>(in, 3) ^ m_RK[7];
 
       for(size_t j = 0; j != 16; j += 2)
          {
          u32bit X, Y;
 
-         X = SB[    get_byte(3, A)] ^ SB[256+get_byte(2, A)] ^
-             SB[512+get_byte(1, A)] ^ SB[768+get_byte(0, A)];
-         Y = SB[    get_byte(0, B)] ^ SB[256+get_byte(3, B)] ^
-             SB[512+get_byte(2, B)] ^ SB[768+get_byte(1, B)];
+         X = m_SB[    get_byte(3, A)] ^ m_SB[256+get_byte(2, A)] ^
+             m_SB[512+get_byte(1, A)] ^ m_SB[768+get_byte(0, A)];
+         Y = m_SB[    get_byte(0, B)] ^ m_SB[256+get_byte(3, B)] ^
+             m_SB[512+get_byte(2, B)] ^ m_SB[768+get_byte(1, B)];
          X += Y;
-         Y += X + RK[39 - 2*j];
-         X += RK[38 - 2*j];
+         Y += X + m_RK[39 - 2*j];
+         X += m_RK[38 - 2*j];
 
          C = rotate_left(C, 1) ^ X;
          D = rotate_right(D ^ Y, 1);
 
-         X = SB[    get_byte(3, C)] ^ SB[256+get_byte(2, C)] ^
-             SB[512+get_byte(1, C)] ^ SB[768+get_byte(0, C)];
-         Y = SB[    get_byte(0, D)] ^ SB[256+get_byte(3, D)] ^
-             SB[512+get_byte(2, D)] ^ SB[768+get_byte(1, D)];
+         X = m_SB[    get_byte(3, C)] ^ m_SB[256+get_byte(2, C)] ^
+             m_SB[512+get_byte(1, C)] ^ m_SB[768+get_byte(0, C)];
+         Y = m_SB[    get_byte(0, D)] ^ m_SB[256+get_byte(3, D)] ^
+             m_SB[512+get_byte(2, D)] ^ m_SB[768+get_byte(1, D)];
          X += Y;
-         Y += X + RK[37 - 2*j];
-         X += RK[36 - 2*j];
+         Y += X + m_RK[37 - 2*j];
+         X += m_RK[36 - 2*j];
 
          A = rotate_left(A, 1) ^ X;
          B = rotate_right(B ^ Y, 1);
          }
 
-      C ^= RK[0];
-      D ^= RK[1];
-      A ^= RK[2];
-      B ^= RK[3];
+      C ^= m_RK[0];
+      D ^= m_RK[1];
+      A ^= m_RK[2];
+      B ^= m_RK[3];
 
       store_le(out, C, D, A, B);
 
@@ -121,8 +121,8 @@ void Twofish::decrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void Twofish::key_schedule(const byte key[], size_t length)
    {
-   SB.resize(1024);
-   RK.resize(40);
+   m_SB.resize(1024);
+   m_RK.resize(40);
 
    secure_vector<byte> S(16);
 
@@ -133,10 +133,10 @@ void Twofish::key_schedule(const byte key[], size_t length)
       {
       for(size_t i = 0; i != 256; ++i)
          {
-         SB[    i] = MDS0[Q0[Q0[i]^S[ 0]]^S[ 4]];
-         SB[256+i] = MDS1[Q0[Q1[i]^S[ 1]]^S[ 5]];
-         SB[512+i] = MDS2[Q1[Q0[i]^S[ 2]]^S[ 6]];
-         SB[768+i] = MDS3[Q1[Q1[i]^S[ 3]]^S[ 7]];
+         m_SB[    i] = MDS0[Q0[Q0[i]^S[ 0]]^S[ 4]];
+         m_SB[256+i] = MDS1[Q0[Q1[i]^S[ 1]]^S[ 5]];
+         m_SB[512+i] = MDS2[Q1[Q0[i]^S[ 2]]^S[ 6]];
+         m_SB[768+i] = MDS3[Q1[Q1[i]^S[ 3]]^S[ 7]];
          }
 
       for(size_t i = 0; i != 40; i += 2)
@@ -152,18 +152,18 @@ void Twofish::key_schedule(const byte key[], size_t length)
          Y = rotate_left(Y, 8);
          X += Y; Y += X;
 
-         RK[i] = X;
-         RK[i+1] = rotate_left(Y, 9);
+         m_RK[i] = X;
+         m_RK[i+1] = rotate_left(Y, 9);
          }
       }
    else if(length == 24)
       {
       for(size_t i = 0; i != 256; ++i)
          {
-         SB[    i] = MDS0[Q0[Q0[Q1[i]^S[ 0]]^S[ 4]]^S[ 8]];
-         SB[256+i] = MDS1[Q0[Q1[Q1[i]^S[ 1]]^S[ 5]]^S[ 9]];
-         SB[512+i] = MDS2[Q1[Q0[Q0[i]^S[ 2]]^S[ 6]]^S[10]];
-         SB[768+i] = MDS3[Q1[Q1[Q0[i]^S[ 3]]^S[ 7]]^S[11]];
+         m_SB[    i] = MDS0[Q0[Q0[Q1[i]^S[ 0]]^S[ 4]]^S[ 8]];
+         m_SB[256+i] = MDS1[Q0[Q1[Q1[i]^S[ 1]]^S[ 5]]^S[ 9]];
+         m_SB[512+i] = MDS2[Q1[Q0[Q0[i]^S[ 2]]^S[ 6]]^S[10]];
+         m_SB[768+i] = MDS3[Q1[Q1[Q0[i]^S[ 3]]^S[ 7]]^S[11]];
          }
 
       for(size_t i = 0; i != 40; i += 2)
@@ -179,18 +179,18 @@ void Twofish::key_schedule(const byte key[], size_t length)
          Y = rotate_left(Y, 8);
          X += Y; Y += X;
 
-         RK[i] = X;
-         RK[i+1] = rotate_left(Y, 9);
+         m_RK[i] = X;
+         m_RK[i+1] = rotate_left(Y, 9);
          }
       }
    else if(length == 32)
       {
       for(size_t i = 0; i != 256; ++i)
          {
-         SB[    i] = MDS0[Q0[Q0[Q1[Q1[i]^S[ 0]]^S[ 4]]^S[ 8]]^S[12]];
-         SB[256+i] = MDS1[Q0[Q1[Q1[Q0[i]^S[ 1]]^S[ 5]]^S[ 9]]^S[13]];
-         SB[512+i] = MDS2[Q1[Q0[Q0[Q0[i]^S[ 2]]^S[ 6]]^S[10]]^S[14]];
-         SB[768+i] = MDS3[Q1[Q1[Q0[Q1[i]^S[ 3]]^S[ 7]]^S[11]]^S[15]];
+         m_SB[    i] = MDS0[Q0[Q0[Q1[Q1[i]^S[ 0]]^S[ 4]]^S[ 8]]^S[12]];
+         m_SB[256+i] = MDS1[Q0[Q1[Q1[Q0[i]^S[ 1]]^S[ 5]]^S[ 9]]^S[13]];
+         m_SB[512+i] = MDS2[Q1[Q0[Q0[Q0[i]^S[ 2]]^S[ 6]]^S[10]]^S[14]];
+         m_SB[768+i] = MDS3[Q1[Q1[Q0[Q1[i]^S[ 3]]^S[ 7]]^S[11]]^S[15]];
          }
 
       for(size_t i = 0; i != 40; i += 2)
@@ -206,8 +206,8 @@ void Twofish::key_schedule(const byte key[], size_t length)
          Y = rotate_left(Y, 8);
          X += Y; Y += X;
 
-         RK[i] = X;
-         RK[i+1] = rotate_left(Y, 9);
+         m_RK[i] = X;
+         m_RK[i+1] = rotate_left(Y, 9);
          }
       }
    }
@@ -238,8 +238,8 @@ void Twofish::rs_mul(byte S[4], byte key, size_t offset)
 */
 void Twofish::clear()
    {
-   zap(SB);
-   zap(RK);
+   zap(m_SB);
+   zap(m_RK);
    }
 
 }

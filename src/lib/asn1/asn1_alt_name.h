@@ -19,7 +19,7 @@ namespace Botan {
 /**
 * Alternative Name
 */
-class BOTAN_DLL AlternativeName : public ASN1_Object
+class BOTAN_DLL AlternativeName final : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;
@@ -38,8 +38,8 @@ class BOTAN_DLL AlternativeName : public ASN1_Object
       AlternativeName(const std::string& = "", const std::string& = "",
                       const std::string& = "", const std::string& = "");
    private:
-      std::multimap<std::string, std::string> alt_info;
-      std::multimap<OID, ASN1_String> othernames;
+      std::multimap<std::string, std::string> m_alt_info;
+      std::multimap<OID, ASN1_String> m_othernames;
    };
 
 }

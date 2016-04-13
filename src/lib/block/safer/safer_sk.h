@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * SAFER-SK
 */
-class BOTAN_DLL SAFER_SK : public Block_Cipher_Fixed_Params<8, 16>
+class BOTAN_DLL SAFER_SK final : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -29,12 +29,12 @@ class BOTAN_DLL SAFER_SK : public Block_Cipher_Fixed_Params<8, 16>
       * @param rounds the number of rounds to use - must be between 1
       * and 13
       */
-      SAFER_SK(size_t rounds);
+      explicit SAFER_SK(size_t rounds);
    private:
       void key_schedule(const byte[], size_t) override;
 
-      size_t rounds;
-      secure_vector<byte> EK;
+      size_t m_rounds;
+      secure_vector<byte> m_EK;
    };
 
 }

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * SHA-160 using SSE2 for the message expansion
 */
-class BOTAN_DLL SHA_160_SSE2 : public SHA_160
+class BOTAN_DLL SHA_160_SSE2 final : public SHA_160
    {
    public:
       HashFunction* clone() const override { return new SHA_160_SSE2; }

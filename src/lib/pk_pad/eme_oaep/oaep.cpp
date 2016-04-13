@@ -60,8 +60,8 @@ secure_vector<byte> OAEP::pad(const byte in[], size_t in_length,
 /*
 * OAEP Unpad Operation
 */
-secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
-                                size_t key_length) const
+secure_vector<byte> OAEP::unpad(byte& valid_mask,
+                                const byte in[], size_t in_length) const
    {
    /*
    Must be careful about error messages here; if an attacker can
@@ -74,15 +74,13 @@ secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
    Strenzke.
    */
 
-   key_length /= 8;
+   if(in[0] == 0)
+      {
+      in += 1;
+      in_length -= 1;
+      }
 
-   // Invalid input: truncate to zero length input, causing later
-   // checks to fail
-   if(in_length > key_length)
-      in_length = 0;
-
-   secure_vector<byte> input(key_length);
-   buffer_insert(input, key_length - in_length, in, in_length);
+   secure_vector<byte> input(in, in + in_length);
 
    CT::poison(input.data(), input.size());
 
@@ -116,16 +114,18 @@ secure_vector<byte> OAEP::unpad(const byte in[], size_t in_length,
 
    // If we never saw any non-zero byte, then it's not valid input
    bad_input |= waiting_for_delim;
-   bad_input |= CT::expand_mask<byte>(!same_mem(&input[hlen], m_Phash.data(), hlen));
+   bad_input |= CT::is_equal<byte>(same_mem(&input[hlen], m_Phash.data(), hlen), false);
 
    CT::unpoison(input.data(), input.size());
    CT::unpoison(&bad_input, 1);
    CT::unpoison(&delim_idx, 1);
 
-   if(bad_input)
-      throw Decoding_Error("Invalid OAEP encoding");
+   valid_mask = ~bad_input;
 
-   return secure_vector<byte>(input.begin() + delim_idx + 1, input.end());
+   secure_vector<byte> output(input.begin() + delim_idx + 1, input.end());
+   CT::cond_zero_mem(bad_input, output.data(), output.size());
+
+   return output;
    }
 
 /*

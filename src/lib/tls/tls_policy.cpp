@@ -1,6 +1,6 @@
 /*
 * Policies for TLS
-* (C) 2004-2010,2012,2015 Jack Lloyd
+* (C) 2004-2010,2012,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -44,9 +44,7 @@ std::vector<std::string> Policy::allowed_signature_hashes() const
       "SHA-512",
       "SHA-384",
       "SHA-256",
-      //"SHA-224",
       //"SHA-1",
-      //"MD5",
       };
    }
 
@@ -57,14 +55,13 @@ std::vector<std::string> Policy::allowed_macs() const
       "SHA-384",
       "SHA-256",
       "SHA-1",
-      //"MD5",
       };
    }
 
 std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
    return {
-      "SRP_SHA",
+      //"SRP_SHA",
       //"ECDHE_PSK",
       //"DHE_PSK",
       //"PSK",
@@ -80,8 +77,13 @@ std::vector<std::string> Policy::allowed_signature_methods() const
       "ECDSA",
       "RSA",
       "DSA",
-      //""
+      //"" (anon)
       };
+   }
+
+bool Policy::allowed_signature_method(const std::string& sig_method) const
+   {
+   return value_exists(allowed_signature_methods(), sig_method);
    }
 
 std::vector<std::string> Policy::allowed_ecc_curves() const
@@ -93,15 +95,12 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
       "secp384r1",
       "brainpool256r1",
       "secp256r1",
-      //"secp256k1",
-      //"secp224r1",
-      //"secp224k1",
-      //"secp192r1",
-      //"secp192k1",
-      //"secp160r2",
-      //"secp160r1",
-      //"secp160k1",
       };
+   }
+
+bool Policy::allowed_ecc_curve(const std::string& curve) const
+   {
+   return value_exists(allowed_ecc_curves(), curve);
    }
 
 /*
@@ -167,7 +166,6 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite&) const
    return true;
    }
 
-bool Policy::negotiate_heartbeat_support() const { return false; }
 bool Policy::allow_server_initiated_renegotiation() const { return false; }
 bool Policy::allow_insecure_renegotiation() const { return false; }
 bool Policy::include_time_in_hello_random() const { return true; }
@@ -270,9 +268,7 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
    const std::vector<std::string> kex = allowed_key_exchange_methods();
    const std::vector<std::string> sigs = allowed_signature_methods();
 
-   Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);
-
-   std::set<Ciphersuite, Ciphersuite_Preference_Ordering> ciphersuites(order);
+   std::vector<Ciphersuite> ciphersuites;
 
    for(auto&& suite : Ciphersuite::all_known_ciphersuites())
       {
@@ -301,12 +297,15 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
             continue;
          }
 
-      // OK, allow it:
-      ciphersuites.insert(suite);
+      // OK, consider it
+      ciphersuites.push_back(suite);
       }
 
    if(ciphersuites.empty())
-      throw std::logic_error("Policy does not allow any available cipher suite");
+      throw Exception("Policy does not allow any available cipher suite");
+
+   Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);
+   std::sort(ciphersuites.begin(), ciphersuites.end(), order);
 
    std::vector<u16bit> ciphersuite_codes;
    for(auto i : ciphersuites)
@@ -347,7 +346,6 @@ void Policy::print(std::ostream& o) const
    print_vec(o, "key_exchange_methods", allowed_key_exchange_methods());
    print_vec(o, "ecc_curves", allowed_ecc_curves());
 
-   print_bool(o, "negotiate_heartbeat_support", negotiate_heartbeat_support());
    print_bool(o, "allow_insecure_renegotiation", allow_insecure_renegotiation());
    print_bool(o, "include_time_in_hello_random", include_time_in_hello_random());
    print_bool(o, "allow_server_initiated_renegotiation", allow_server_initiated_renegotiation());

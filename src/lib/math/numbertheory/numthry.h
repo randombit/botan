@@ -69,10 +69,32 @@ BigInt BOTAN_DLL square(const BigInt& x);
 * Modular inversion
 * @param x a positive integer
 * @param modulus a positive integer
-* @return y st (x*y) % modulus == 1
+* @return y st (x*y) % modulus == 1 or 0 if no such value
+* Not const time
 */
 BigInt BOTAN_DLL inverse_mod(const BigInt& x,
                              const BigInt& modulus);
+
+/**
+* Const time modular inversion
+* Requires the modulus be odd
+*/
+BigInt BOTAN_DLL ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod);
+
+/**
+* Return a^-1 * 2^k mod b
+* Returns k, between n and 2n
+* Not const time
+*/
+size_t BOTAN_DLL almost_montgomery_inverse(BigInt& result,
+                                           const BigInt& a,
+                                           const BigInt& b);
+
+/**
+* Call almost_montgomery_inverse and correct the result to a^-1 mod b
+*/
+BigInt BOTAN_DLL normalized_montgomery_inverse(const BigInt& a, const BigInt& b);
+
 
 /**
 * Compute the Jacobi symbol. If n is prime, this is equivalent

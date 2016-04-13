@@ -11,7 +11,6 @@
 #if defined(BOTAN_HAS_MCELIECE)
 
 #include <botan/mceliece.h>
-#include <botan/mce_kem.h>
 #include <botan/pubkey.h>
 #include <botan/oids.h>
 #include <botan/hmac_drbg.h>
@@ -51,7 +50,7 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
    public:
       McEliece_Keygen_Encrypt_Test() :
          Text_Based_Test("McEliece",
-                         Test::data_file("pubkey/mce.vec"),
+                         "pubkey/mce.vec",
                          {"McElieceSeed", "KeyN","KeyT","PublicKeyFingerprint",
                           "PrivateKeyFingerprint", "EncryptPRNGSeed",
                             "SharedKey", "Ciphertext" })
@@ -81,13 +80,24 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
          rng.clear();
          rng.add_entropy(encrypt_seed.data(), encrypt_seed.size());
 
-         Botan::McEliece_KEM_Encryptor kem_enc(mce_priv);
-         Botan::McEliece_KEM_Decryptor kem_dec(mce_priv);
+         try
+            {
+            Botan::PK_KEM_Encryptor kem_enc(mce_priv, "KDF1(SHA-512)");
+            Botan::PK_KEM_Decryptor kem_dec(mce_priv, "KDF1(SHA-512)");
 
-         const auto kem = kem_enc.encrypt(rng);
-         result.test_eq("ciphertext", kem.first, ciphertext);
-         result.test_eq("encrypt shared", kem.second, shared_key);
-         result.test_eq("decrypt shared", kem_dec.decrypt_vec(kem.first), shared_key);
+            Botan::secure_vector<byte> encap_key, prod_shared_key;
+            kem_enc.encrypt(encap_key, prod_shared_key, 64, rng);
+
+            Botan::secure_vector<byte> dec_shared_key = kem_dec.decrypt(encap_key.data(), encap_key.size(), 64);
+
+            result.test_eq("ciphertext", encap_key, ciphertext);
+            result.test_eq("encrypt shared", prod_shared_key, shared_key);
+            result.test_eq("decrypt shared", dec_shared_key, shared_key);
+            }
+         catch(Botan::Lookup_Error&)
+            {
+            }
+
          return result;
          }
 
@@ -176,18 +186,19 @@ class McEliece_Tests : public Test
          {
          Test::Result result("McEliece KEM");
 
-         Botan::McEliece_KEM_Encryptor pub_op(pk);
-         Botan::McEliece_KEM_Decryptor priv_op(sk);
+         Botan::PK_KEM_Encryptor enc_op(pk, "KDF2(SHA-256)");
+         Botan::PK_KEM_Decryptor dec_op(sk, "KDF2(SHA-256)");
 
          for(size_t i = 0; i <= Test::soak_level(); i++)
             {
-            const std::pair<Botan::secure_vector<byte>,Botan::secure_vector<byte> > ciphertext__sym_key = pub_op.encrypt(Test::rng());
-            const Botan::secure_vector<byte>& ciphertext = ciphertext__sym_key.first;
-            const Botan::secure_vector<byte>& sym_key_encr = ciphertext__sym_key.second;
+            Botan::secure_vector<byte> salt = Test::rng().random_vec(i);
 
-            const Botan::secure_vector<byte> sym_key_decr = priv_op.decrypt(ciphertext.data(), ciphertext.size());
+            Botan::secure_vector<byte> encap_key, shared_key;
+            enc_op.encrypt(encap_key, shared_key, 64, Test::rng(), salt);
 
-            result.test_eq("same key", sym_key_decr, sym_key_encr);
+            Botan::secure_vector<byte> shared_key2 = dec_op.decrypt(encap_key, 64, salt);
+
+            result.test_eq("same key", shared_key, shared_key2);
             }
          return result;
          }
@@ -222,7 +233,7 @@ class McEliece_Tests : public Test
                   result.test_failure("AEAD decrypted manipulated ciphertext");
                   result.test_note("Manipulated text was " + Botan::hex_encode(bad_ct));
                   }
-               catch(Botan::Integrity_Failure& e)
+               catch(Botan::Integrity_Failure&)
                   {
                   result.test_note("AEAD rejected manipulated ciphertext");
                   }

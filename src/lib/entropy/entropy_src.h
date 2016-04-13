@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Class used to accumulate the poll results of EntropySources
 */
-class BOTAN_DLL Entropy_Accumulator
+class BOTAN_DLL Entropy_Accumulator final
    {
    public:
       /**
@@ -30,10 +30,8 @@ class BOTAN_DLL Entropy_Accumulator
       * still be called again a few more times, and should be careful to return
       * true then as well.
       */
-      Entropy_Accumulator(std::function<bool (const byte[], size_t, double)> accum) :
+      explicit Entropy_Accumulator(std::function<bool (const byte[], size_t, double)> accum) :
          m_accum_fn(accum) {}
-
-      virtual ~Entropy_Accumulator() {}
 
       /**
       * @return if our polling goal has been achieved
@@ -102,7 +100,7 @@ class BOTAN_DLL Entropy_Source
       virtual ~Entropy_Source() {}
    };
 
-class BOTAN_DLL Entropy_Sources
+class BOTAN_DLL Entropy_Sources final
    {
    public:
       static Entropy_Sources& global_sources();
@@ -115,7 +113,7 @@ class BOTAN_DLL Entropy_Sources
       bool poll_just(Entropy_Accumulator& accum, const std::string& src);
 
       Entropy_Sources() {}
-      Entropy_Sources(const std::vector<std::string>& sources);
+      explicit Entropy_Sources(const std::vector<std::string>& sources);
 
       ~Entropy_Sources();
    private:

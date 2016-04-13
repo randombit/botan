@@ -29,6 +29,8 @@ class BOTAN_DLL Ciphersuite
       */
       static Ciphersuite by_id(u16bit suite);
 
+      static std::vector<u16bit> all_known_ciphersuite_ids();
+
       /**
       * Returns true iff this suite is a known SCSV
       */
@@ -91,7 +93,7 @@ class BOTAN_DLL Ciphersuite
 
       const std::string& prf_algo() const
          {
-         return (m_prf_algo != "") ? m_prf_algo : m_mac_algo;
+         return (!m_prf_algo.empty()) ? m_prf_algo : m_mac_algo;
          }
 
       /**

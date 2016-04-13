@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * MISTY1 with 8 rounds
 */
-class BOTAN_DLL MISTY1 : public Block_Cipher_Fixed_Params<8, 16>
+class BOTAN_DLL MISTY1 final : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -27,7 +27,7 @@ class BOTAN_DLL MISTY1 : public Block_Cipher_Fixed_Params<8, 16>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      secure_vector<u16bit> EK, DK;
+      secure_vector<u16bit> m_EK, m_DK;
    };
 
 }

@@ -16,8 +16,6 @@
 #include <vector>
 #include <set>
 
-#include <iostream>
-
 namespace Botan {
 
 namespace {
@@ -143,6 +141,62 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
          if(!trusted_hashes.count(subject.hash_used_for_signature()))
             status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
          }
+
+      const NameConstraints& name_constr = issuer.name_constraints();
+
+      if(!name_constr.permitted().empty() || !name_constr.excluded().empty())
+         {
+         if(!issuer.is_CA_cert() || !issuer.is_critical("X509v3.NameConstraints"))
+            cert_status.at(i).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
+
+         // Check that all subordinate certs pass the name constraint
+         for(size_t j = 0; j <= i; ++j)
+            {
+            if(i == j && at_self_signed_root)
+               continue;
+
+            bool permitted = name_constr.permitted().empty();
+            bool failed = false;
+
+            for(auto c: name_constr.permitted())
+               {
+               switch(c.base().matches(cert_path.at(j)))
+                  {
+                  case GeneralName::MatchResult::NotFound:
+                  case GeneralName::MatchResult::All:
+                     permitted = true;
+                     break;
+                  case GeneralName::MatchResult::UnknownType:
+                     failed = issuer.is_critical("X509v3.NameConstraints");
+                     permitted = true;
+                     break;
+                  default:
+                     break;
+                  }
+               }
+
+            for(auto c: name_constr.excluded())
+               {
+               switch(c.base().matches(cert_path.at(j)))
+                  {
+                  case GeneralName::MatchResult::All:
+                  case GeneralName::MatchResult::Some:
+                     failed = true;
+                     break;
+                  case GeneralName::MatchResult::UnknownType:
+                     failed = issuer.is_critical("X509v3.NameConstraints");
+                     break;
+                  default:
+                     break;
+                  }
+               }
+
+            if(failed || !permitted)
+               {
+               cert_status.at(j).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
+               }
+            }
+         }
       }
 
    for(size_t i = 0; i != cert_path.size() - 1; ++i)
@@ -170,7 +224,7 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
             else if(ocsp_status == Certificate_Status_Code::OCSP_RESPONSE_GOOD)
                continue;
             }
-         catch(std::exception& e)
+         catch(std::exception&)
             {
             //std::cout << "OCSP error: " << e.what() << "\n";
             }
@@ -249,7 +303,7 @@ Path_Validation_Result x509_path_validate(
 
    std::vector<std::set<Certificate_Status_Code>> res = check_chain(cert_path, restrictions, certstores);
 
-   if(hostname != "" && !cert_path[0].matches_dns_name(hostname))
+   if(!hostname.empty() && !cert_path[0].matches_dns_name(hostname))
       res[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
 
    if(!cert_path[0].allowed_usage(usage))
@@ -416,6 +470,8 @@ const char* Path_Validation_Result::status_string(Certificate_Status_Code code)
          return "OCSP bad status";
       case Certificate_Status_Code::CERT_NAME_NOMATCH:
          return "Certificate does not match provided name";
+      case Certificate_Status_Code::NAME_CONSTRAINT_ERROR:
+         return "Certificate does not pass name constraint";
 
       case Certificate_Status_Code::CERT_IS_REVOKED:
          return "Certificate is revoked";

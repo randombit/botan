@@ -1,6 +1,6 @@
 /*
 * TLS Client
-* (C) 2004-2011,2012,2015 Jack Lloyd
+* (C) 2004-2011,2012,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -51,7 +51,7 @@ Client::Client(output_fn output_fn,
                const Policy& policy,
                RandomNumberGenerator& rng,
                const Server_Information& info,
-               const Protocol_Version offer_version,
+               const Protocol_Version& offer_version,
                const std::vector<std::string>& next_protos,
                size_t io_buf_sz) :
    Channel(output_fn, proc_cb, alert_cb, handshake_cb, Channel::handshake_msg_cb(),
@@ -75,7 +75,7 @@ Client::Client(output_fn output_fn,
                const Policy& policy,
                RandomNumberGenerator& rng,
                const Server_Information& info,
-               const Protocol_Version offer_version,
+               const Protocol_Version& offer_version,
                const std::vector<std::string>& next_protos) :
    Channel(output_fn, proc_cb, alert_cb, handshake_cb, hs_msg_cb,
            session_manager, rng, policy, offer_version.is_datagram_protocol()),
@@ -394,7 +394,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          {
          const Public_Key& server_key = state.get_server_public_Key();
 
-         if(!state.server_kex()->verify(server_key, state))
+         if(!state.server_kex()->verify(server_key, state, policy()))
             {
             throw TLS_Exception(Alert::DECRYPT_ERROR,
                                 "Bad signature on server key exchange");
@@ -509,7 +509,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          state.server_hello()->ciphersuite(),
          state.server_hello()->compression_method(),
          CLIENT,
-         state.server_hello()->fragment_size(),
+         state.server_hello()->supports_extended_master_secret(),
          get_peer_cert_chain(state),
          session_ticket,
          m_info,

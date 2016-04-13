@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * RC6, Ron Rivest's AES candidate
 */
-class BOTAN_DLL RC6 : public Block_Cipher_Fixed_Params<16, 1, 32>
+class BOTAN_DLL RC6 final : public Block_Cipher_Fixed_Params<16, 1, 32>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -27,7 +27,7 @@ class BOTAN_DLL RC6 : public Block_Cipher_Fixed_Params<16, 1, 32>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      secure_vector<u32bit> S;
+      secure_vector<u32bit> m_S;
    };
 
 }

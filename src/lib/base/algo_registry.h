@@ -8,8 +8,10 @@
 #ifndef BOTAN_ALGO_REGISTRY_H__
 #define BOTAN_ALGO_REGISTRY_H__
 
+#include <botan/build.h>
 #include <botan/types.h>
 #include <botan/exceptn.h>
+#include <botan/scan_name.h>
 #include <functional>
 #include <mutex>
 #include <vector>
@@ -22,7 +24,7 @@
    #define BOTAN_WORKAROUND_GH_321
    #define NOMINMAX 1
    #define WIN32_LEAN_AND_MEAN 1
-   #include <Windows.h>
+   #include <windows.h>
 
 #endif
 
@@ -33,28 +35,28 @@ namespace Botan {
 class WinCS_Mutex
    {
    public:
-       WinCS_Mutex()
-          {
-          InitializeCriticalSection(&m_cs);
-          }
-          
-       ~WinCS_Mutex()
-          {
-          DeleteCriticalSection(&m_cs);
-          }
+      WinCS_Mutex()
+         {
+         ::InitializeCriticalSection(&m_cs);
+         }
 
-       void lock()
-          {
-          EnterCriticalSection(&m_cs);
-          }
+      ~WinCS_Mutex()
+         {
+         ::DeleteCriticalSection(&m_cs);
+         }
 
-       void unlock()
-          {
-          LeaveCriticalSection(&m_cs);
-          }
+      void lock()
+         {
+         ::EnterCriticalSection(&m_cs);
+         }
 
-    private:
-        CRITICAL_SECTION   m_cs;
+      void unlock()
+         {
+         ::LeaveCriticalSection(&m_cs);
+         }
+
+   private:
+      CRITICAL_SECTION m_cs;
    };
 
 #endif
@@ -111,7 +113,7 @@ class Algo_Registry
             }
          catch(std::exception& e)
             {
-            throw Exception("Creating '" + spec.as_string() + "' failed: " + e.what());
+            throw Lookup_Error("Creating '" + spec.as_string() + "' failed: " + e.what());
             }
 
          return nullptr;
@@ -186,7 +188,7 @@ class Algo_Registry
                {
                std::vector<maker_fn> r;
 
-               if(req_provider != "")
+               if(!req_provider.empty())
                   {
                   // find one explicit provider requested by user or fail
                   auto i = m_maker_fns.find(req_provider);
@@ -211,7 +213,7 @@ class Algo_Registry
    };
 
 template<typename T> T*
-make_a(const typename T::Spec& spec, const std::string provider = "")
+make_a(const typename T::Spec& spec, const std::string& provider = "")
    {
    return Algo_Registry<T>::global_registry().make(spec, provider);
    }
@@ -256,15 +258,11 @@ make_new_T_1str_req(const typename Algo_Registry<T>::Spec& spec)
 template<typename T, typename X> T*
 make_new_T_1X(const typename Algo_Registry<T>::Spec& spec)
    {
-   std::unique_ptr<X> x(Algo_Registry<X>::global_registry().make(spec.arg(0)));
+   std::unique_ptr<X> x(Algo_Registry<X>::global_registry().make(Botan::SCAN_Name(spec.arg(0))));
    if(!x)
       throw Exception(spec.arg(0));
    return new T(x.release());
    }
-
-// Append to macros living outside of functions, so that invocations must end with a semicolon.
-// The struct is only declared to force the semicolon, it is never defined.
-#define BOTAN_FORCE_SEMICOLON struct BOTAN_DUMMY_STRUCT
 
 #define BOTAN_REGISTER_TYPE(T, type, name, maker, provider, pref)        \
    namespace { Algo_Registry<T>::Add g_ ## type ## _reg(name, maker, provider, pref); } \

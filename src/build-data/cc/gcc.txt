@@ -8,17 +8,21 @@ add_lib_dir_option -L
 add_lib_option -l
 
 lang_flags "-std=c++11 -D_REENTRANT"
-maintainer_warning_flags "-Wold-style-cast -Werror -Wno-error=old-style-cast -Wno-error=zero-as-null-pointer-constant -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=strict-overflow"
-warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant"
+maintainer_warning_flags "-Wold-style-cast -Werror -Wno-error=old-style-cast -Wno-error=zero-as-null-pointer-constant -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=strict-overflow -Wsuggest-override"
+warning_flags "-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor"
 
 compile_flags "-c"
 debug_info_flags "-g"
-optimization_flags "-O2"
+optimization_flags "-O3"
 
 shared_flags "-fPIC"
 coverage_flags "--coverage"
-#sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address -fsanitize=undefined"
+
+# GCC 4.8
 sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address"
+
+# GCC 4.9 and later
+#sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address,undefined -fno-sanitize-recover=undefined"
 
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
@@ -56,6 +60,7 @@ avx2    -> "-mavx2"
 bmi2    -> "-mbmi2"
 aesni   -> "-maes -mpclmul -mssse3"
 rdrand  -> "-mrdrnd"
+rdseed	-> "-mrdseed"
 sha     -> "-msha"
 altivec -> "-maltivec"
 </isa_flags>

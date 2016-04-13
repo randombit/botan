@@ -22,7 +22,7 @@ namespace Botan {
 class BOTAN_DLL LibraryInitializer
    {
    public:
-      LibraryInitializer(const std::string& s = "") { initialize(s); }
+      explicit LibraryInitializer(const std::string& s = "") { initialize(s); }
       ~LibraryInitializer() { deinitialize(); }
 
       static void initialize(const std::string& = "");

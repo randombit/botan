@@ -62,7 +62,7 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode
 /**
 * EAX Encryption
 */
-class BOTAN_DLL EAX_Encryption : public EAX_Mode
+class BOTAN_DLL EAX_Encryption final : public EAX_Mode
    {
    public:
       /**
@@ -85,7 +85,7 @@ class BOTAN_DLL EAX_Encryption : public EAX_Mode
 /**
 * EAX Decryption
 */
-class BOTAN_DLL EAX_Decryption : public EAX_Mode
+class BOTAN_DLL EAX_Decryption final : public EAX_Mode
    {
    public:
       /**

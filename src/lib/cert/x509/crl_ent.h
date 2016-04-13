@@ -36,7 +36,7 @@ enum CRL_Code {
 /**
 * This class represents CRL entries
 */
-class BOTAN_DLL CRL_Entry : public ASN1_Object
+class BOTAN_DLL CRL_Entry final : public ASN1_Object
    {
    public:
       void encode_into(class DER_Encoder&) const override;
@@ -46,24 +46,24 @@ class BOTAN_DLL CRL_Entry : public ASN1_Object
       * Get the serial number of the certificate associated with this entry.
       * @return certificate's serial number
       */
-      std::vector<byte> serial_number() const { return serial; }
+      std::vector<byte> serial_number() const { return m_serial; }
 
       /**
       * Get the revocation date of the certificate associated with this entry
       * @return certificate's revocation date
       */
-      X509_Time expire_time() const { return time; }
+      X509_Time expire_time() const { return m_time; }
 
       /**
       * Get the entries reason code
       * @return reason code
       */
-      CRL_Code reason_code() const { return reason; }
+      CRL_Code reason_code() const { return m_reason; }
 
       /**
       * Construct an empty CRL entry.
       */
-      CRL_Entry(bool throw_on_unknown_critical_extension = false);
+      explicit CRL_Entry(bool throw_on_unknown_critical_extension = false);
 
       /**
       * Construct an CRL entry.
@@ -74,10 +74,10 @@ class BOTAN_DLL CRL_Entry : public ASN1_Object
                 CRL_Code reason = UNSPECIFIED);
 
    private:
-      bool throw_on_unknown_critical;
-      std::vector<byte> serial;
-      X509_Time time;
-      CRL_Code reason;
+      bool m_throw_on_unknown_critical;
+      std::vector<byte> m_serial;
+      X509_Time m_time;
+      CRL_Code m_reason;
    };
 
 /**

@@ -32,12 +32,12 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
 
       size_t maximum_input_size() const override;
 
-      std::vector<byte> other_key, my_key;
+      std::vector<byte> m_other_key, m_my_key;
 
-      PK_Key_Agreement ka;
-      std::unique_ptr<KDF> kdf;
-      std::unique_ptr<MessageAuthenticationCode> mac;
-      size_t mac_keylen;
+      PK_Key_Agreement m_ka;
+      std::unique_ptr<KDF> m_kdf;
+      std::unique_ptr<MessageAuthenticationCode> m_mac;
+      size_t m_mac_keylen;
    };
 
 /**
@@ -52,14 +52,15 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
                       size_t mac_key_len = 20);
 
    private:
-      secure_vector<byte> dec(const byte[], size_t) const override;
+      secure_vector<byte> do_decrypt(byte& valid_mask,
+                                     const byte in[], size_t in_len) const override;
 
-      std::vector<byte> my_key;
+      std::vector<byte> m_my_key;
 
-      PK_Key_Agreement ka;
-      std::unique_ptr<KDF> kdf;
-      std::unique_ptr<MessageAuthenticationCode> mac;
-      size_t mac_keylen;
+      PK_Key_Agreement m_ka;
+      std::unique_ptr<KDF> m_kdf;
+      std::unique_ptr<MessageAuthenticationCode> m_mac;
+      size_t m_mac_keylen;
    };
 
 }

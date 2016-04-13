@@ -22,7 +22,7 @@ class DSA_KAT_Tests : public PK_Signature_Generation_Test
    public:
       DSA_KAT_Tests() : PK_Signature_Generation_Test(
          "DSA",
-         Test::data_file("pubkey/dsa.vec"),
+         "pubkey/dsa.vec",
          {"P", "Q", "G", "X", "Hash", "Msg", "Signature"})
          {}
 

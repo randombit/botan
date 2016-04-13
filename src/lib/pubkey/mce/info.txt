@@ -1,7 +1,6 @@
 define MCELIECE 20150922
 
 <header:public>
-mce_kem.h
 mceliece.h
 polyn_gf2m.h
 gf2m_small_m.h

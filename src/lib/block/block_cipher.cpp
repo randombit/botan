@@ -150,7 +150,7 @@ BlockCipher::~BlockCipher() {}
 std::unique_ptr<BlockCipher> BlockCipher::create(const std::string& algo_spec,
                                                  const std::string& provider)
    {
-   return std::unique_ptr<BlockCipher>(make_a<BlockCipher>(algo_spec, provider));
+   return std::unique_ptr<BlockCipher>(make_a<BlockCipher>(Botan::BlockCipher::Spec(algo_spec), provider));
    }
 
 std::vector<std::string> BlockCipher::providers(const std::string& algo_spec)

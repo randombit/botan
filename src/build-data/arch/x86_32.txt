@@ -70,5 +70,6 @@ avx2
 bmi2
 aesni
 rdrand
+rdseed
 sha
 </isa_extensions>

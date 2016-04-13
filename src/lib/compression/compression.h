@@ -58,16 +58,16 @@ class Compression_Stream
 class BOTAN_DLL Stream_Compression : public Compressor_Transform
    {
    public:
-      void update(secure_vector<byte>& buf, size_t offset = 0) override;
+      void update(secure_vector<byte>& buf, size_t offset = 0) final override;
 
-      void flush(secure_vector<byte>& buf, size_t offset = 0) override;
+      void flush(secure_vector<byte>& buf, size_t offset = 0) final override;
 
-      void finish(secure_vector<byte>& buf, size_t offset = 0) override;
+      void finish(secure_vector<byte>& buf, size_t offset = 0) final override;
 
-      void clear() override;
+      void clear() final override;
 
    private:
-      secure_vector<byte> start_raw(const byte[], size_t) override;
+      secure_vector<byte> start_raw(const byte[], size_t) final override;
 
       void process(secure_vector<byte>& buf, size_t offset, u32bit flags);
 
@@ -80,14 +80,14 @@ class BOTAN_DLL Stream_Compression : public Compressor_Transform
 class BOTAN_DLL Stream_Decompression : public Compressor_Transform
    {
    public:
-      void update(secure_vector<byte>& buf, size_t offset = 0) override;
+      void update(secure_vector<byte>& buf, size_t offset = 0) final override;
 
-      void finish(secure_vector<byte>& buf, size_t offset = 0) override;
+      void finish(secure_vector<byte>& buf, size_t offset = 0) final override;
 
-      void clear() override;
+      void clear() final override;
 
    private:
-      secure_vector<byte> start_raw(const byte[], size_t) override;
+      secure_vector<byte> start_raw(const byte[], size_t) final override;
 
       void process(secure_vector<byte>& buf, size_t offset, u32bit flags);
 

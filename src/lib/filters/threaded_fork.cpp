@@ -77,7 +77,7 @@ std::string Threaded_Fork::name() const
 void Threaded_Fork::set_next(Filter* f[], size_t n)
    {
    Fork::set_next(f, n);
-   n = next.size();
+   n = m_next.size();
 
    if(n < m_threads.size())
       m_threads.resize(n);
@@ -89,26 +89,26 @@ void Threaded_Fork::set_next(Filter* f[], size_t n)
          m_threads.push_back(
             std::shared_ptr<std::thread>(
                new std::thread(
-                  std::bind(&Threaded_Fork::thread_entry, this, next[i]))));
+                  std::bind(&Threaded_Fork::thread_entry, this, m_next[i]))));
          }
       }
    }
 
 void Threaded_Fork::send(const byte input[], size_t length)
    {
-   if(write_queue.size())
-      thread_delegate_work(write_queue.data(), write_queue.size());
+   if(m_write_queue.size())
+      thread_delegate_work(m_write_queue.data(), m_write_queue.size());
    thread_delegate_work(input, length);
 
    bool nothing_attached = true;
    for(size_t j = 0; j != total_ports(); ++j)
-      if(next[j])
+      if(m_next[j])
          nothing_attached = false;
 
    if(nothing_attached)
-      write_queue += std::make_pair(input, length);
+      m_write_queue += std::make_pair(input, length);
    else
-      write_queue.clear();
+      m_write_queue.clear();
    }
 
 void Threaded_Fork::thread_delegate_work(const byte input[], size_t length)
