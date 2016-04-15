@@ -4,6 +4,11 @@ Release Notes
 Version 1.11.30, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* In 1.11.23 a bug was introduced such that CBC-encrypted TLS packets
+  containing no plaintext bytes at all were incorrectly rejected with
+  a MAC failure. Records like this are used by OpenSSL in TLS 1.0
+  connections in order to randomize the IV.
+
 * Add IETF versions of the ChaCha20Poly1305 TLS ciphersuites from
   draft-ietf-tls-chacha20-poly1305-04. The previously implemented
   (non-standard) ChaCha20Poly1305 ciphersuites from
