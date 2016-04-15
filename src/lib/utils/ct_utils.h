@@ -129,6 +129,12 @@ inline T is_less(T x, T y)
    }
 
 template<typename T>
+inline T is_lte(T x, T y)
+   {
+   return expand_mask<T>(x <= y);
+   }
+
+template<typename T>
 inline void conditional_copy_mem(T value,
                                  T* to,
                                  const T* from0,

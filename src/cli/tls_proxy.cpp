@@ -24,6 +24,7 @@
 #include <botan/x509cert.h>
 #include <botan/pkcs8.h>
 #include <botan/auto_rng.h>
+#include <botan/hex.h>
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
   #include <botan/tls_session_manager_sqlite.h>
@@ -44,12 +45,12 @@ inline void log_exception(const char* where, const std::exception& e)
 
 inline void log_error(const char* where, const boost::system::error_code& error)
    {
-   //std::cout << where << ' ' << error.message() << std::endl;
+   std::cout << where << ' ' << error.message() << std::endl;
    }
 
 inline void log_binary_message(const char* where, const uint8_t buf[], size_t buf_len)
    {
-   //std::cout << where << ' ' << hex_encode(buf, buf_len) << std::endl;
+   //std::cout << where << ' ' << Botan::hex_encode(buf, buf_len) << std::endl;
    }
 
 void log_text_message(const char* where,  const uint8_t buf[], size_t buf_len)
@@ -92,9 +93,12 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
 
       void stop()
          {
-         m_tls.close();
-         m_client_socket.close();
+         /*
+         Don't need to talk to the server anymore
+         Client socket is closed during write callback
+         */
          m_server_socket.close();
+         m_tls.close();
          }
 
    private:
@@ -134,7 +138,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
                log_binary_message("From client", &m_c2p[0], bytes_transferred);
             m_tls.received_data(&m_c2p[0], bytes_transferred);
             }
-         catch(std::exception& e)
+         catch(Botan::Exception& e)
             {
             log_exception("TLS connection failed", e);
             stop();
@@ -158,6 +162,11 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
             }
 
          m_p2c.clear();
+
+         if(m_p2c_pending.empty() && m_tls.is_closed())
+            {
+            m_client_socket.close();
+            }
          tls_proxy_write_to_client(nullptr, 0); // initiate another write if needed
          }
 
@@ -190,7 +199,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
             {
             std::swap(m_p2c_pending, m_p2c);
 
-            //log_binary_message("To Client", &m_p2c[0], m_p2c.size());
+            log_binary_message("To Client", &m_p2c[0], m_p2c.size());
 
             boost::asio::async_write(
                m_client_socket,
@@ -243,7 +252,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
                m_tls.send(&m_s2p[0], bytes_transferred);
                }
             }
-         catch(std::exception& e)
+         catch(Botan::Exception& e)
             {
             log_exception("TLS connection failed", e);
             stop();
@@ -390,7 +399,7 @@ class TLS_Proxy final : public Command
       TLS_Proxy() : Command("tls_proxy listen_port target_host target_port server_cert server_key "
                             "--threads=0 --session-db= --session-db-pass=") {}
 
-      void go()
+      void go() override
          {
          const size_t listen_port = get_arg_sz("listen_port");
          const std::string target = get_arg("target_host");
