@@ -1,6 +1,10 @@
 Projects
 ========================================
 
+Feel free to take one of these on if it interests you. Before starting
+out on something, send an email to the dev list or open a discussion
+ticket on GitHub to make sure you're on the right track.
+
 Request a new feature by opening a pull request to update this file.
 
 CLI
@@ -41,9 +45,17 @@ New Protocols / Formats
 ----------------------------------------
 
 * NaCl compatible cryptobox functions
-* Off-The-Record v3 encrypted chat protocol
+* Off-The-Record v3 https://otr.cypherpunks.ca/
 * Some useful subset of OpenPGP
-* SSHv2 client and/or server
+  - Subset #1: symmetrically encrypted files
+
+    Not aiming to process arbitrary OpenPGP, but rather produce
+    something that happens to be readable by `gpg` and is relatively
+    simple to process for decryption. Require a 128-bit block cipher
+    and MDC packet.
+
+  - Subset #2: Process OpenPGP public keys
+  - Subset #3: Verification of OpenPGP signatures
 
 Accelerators / backends
 ----------------------------------------
@@ -61,7 +73,7 @@ FFI (Python, OCaml)
 
 * Expose certificates
 * Expose TLS
-* Write a CLI in Python
+* Write a CLI or HTTPS client in Python
 
 Symmetric Algorithms, Hashes, ...
 ----------------------------------------
