@@ -113,12 +113,9 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
 
       // Check issuer constraints
 
-      // TODO: put into Certificate_Extensions::Basic_Constraints::validate()
-      // Don't require CA bit set on self-signed end entity cert
       if(!issuer.is_CA_cert() && !self_signed_ee_cert)
          status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER);
 
-      // TODO: put into Certificate_Extensions::Basic_Constraints::validate()
       if(issuer.path_limit() < i)
          status.insert(Certificate_Status_Code::CERT_CHAIN_TOO_LONG);
 
@@ -144,69 +141,12 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
             status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
          }
 
-      // TODO: put into Certificate_Extensions::Name_Constraints::validate()
-      const NameConstraints& name_constr = issuer.name_constraints();
-
-      if(!name_constr.permitted().empty() || !name_constr.excluded().empty())
+      // Check cert extensions
+      Extensions extensions = subject.v3_extensions();
+      for(auto& extension : extensions.extensions())
          {
-         if(!issuer.is_CA_cert() || !issuer.is_critical("X509v3.NameConstraints"))
-            cert_status.at(i).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
-
-         // Check that all subordinate certs pass the name constraint
-         for(size_t j = 0; j <= i; ++j)
-            {
-            if(i == j && at_self_signed_root)
-               continue;
-
-            bool permitted = name_constr.permitted().empty();
-            bool failed = false;
-
-            for(auto c: name_constr.permitted())
-               {
-               switch(c.base().matches(cert_path.at(j)))
-                  {
-                  case GeneralName::MatchResult::NotFound:
-                  case GeneralName::MatchResult::All:
-                     permitted = true;
-                     break;
-                  case GeneralName::MatchResult::UnknownType:
-                     failed = issuer.is_critical("X509v3.NameConstraints");
-                     permitted = true;
-                     break;
-                  default:
-                     break;
-                  }
-               }
-
-            for(auto c: name_constr.excluded())
-               {
-               switch(c.base().matches(cert_path.at(j)))
-                  {
-                  case GeneralName::MatchResult::All:
-                  case GeneralName::MatchResult::Some:
-                     failed = true;
-                     break;
-                  case GeneralName::MatchResult::UnknownType:
-                     failed = issuer.is_critical("X509v3.NameConstraints");
-                     break;
-                  default:
-                     break;
-                  }
-               }
-
-            if(failed || !permitted)
-               {
-               cert_status.at(j).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
-               }
-            }
+         extension.first->validate(subject, issuer, cert_path, cert_status, i);
          }
-
-         // Check cert extensions
-         Extensions extensions = subject.v3_extensions();
-         for (auto& extension : extensions.extensions())
-            {
-            extension.first->validate(cert_path[i], status, cert_path);
-            }
       }
 
    for(size_t i = 0; i != cert_path.size() - 1; ++i)

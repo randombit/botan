@@ -6,6 +6,7 @@
 */
 
 #include <botan/x509_ext.h>
+#include <botan/x509cert.h>
 #include <botan/sha160.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
@@ -40,7 +41,7 @@ Certificate_Extension* Extensions::get_extension(const OID& oid, bool critical)
    X509_EXTENSION("X509v3.CRLNumber", CRL_Number);
    X509_EXTENSION("X509v3.ReasonCode", CRL_ReasonCode);
 
-   return critical ? new Cert_Extension::Unknown_Critical_Extension() : nullptr;
+   return critical ? new Cert_Extension::Unknown_Critical_Extension(oid) : nullptr;
    }
 
 /*
@@ -75,6 +76,16 @@ Extensions& Extensions::operator=(const Extensions& other)
 OID Certificate_Extension::oid_of() const
    {
    return OIDS::lookup(oid_name());
+   }
+
+/*
+* Validate the extension (the default implementation is a NOP)
+*/
+void Certificate_Extension::validate(const X509_Certificate&, const X509_Certificate&,
+      const std::vector<X509_Certificate>&,
+      std::vector<std::set<Certificate_Status_Code>>&,
+      size_t)
+   {
    }
 
 void Extensions::add(Certificate_Extension* extn, bool critical)
@@ -507,6 +518,68 @@ void Name_Constraints::contents_to(Data_Store& subject, Data_Store&) const
       ss << gs;
       subject.add("X509v3.NameConstraints.excluded", ss.str());
       ss.str(std::string());
+      }
+   }
+
+void Name_Constraints::validate(const X509_Certificate& subject, const X509_Certificate& issuer,
+      const std::vector<X509_Certificate>& cert_path,
+      std::vector<std::set<Certificate_Status_Code>>& cert_status,
+      size_t pos)
+   {
+   if(!m_name_constraints.permitted().empty() || !m_name_constraints.excluded().empty())
+      {
+      if(!subject.is_CA_cert() || !subject.is_critical("X509v3.NameConstraints"))
+         cert_status.at(pos).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
+
+      const bool at_self_signed_root = (pos == cert_path.size() - 1);
+
+      // Check that all subordinate certs pass the name constraint
+      for(size_t j = 0; j <= pos; ++j)
+         {
+         if(pos == j && at_self_signed_root)
+            continue;
+
+         bool permitted = m_name_constraints.permitted().empty();
+         bool failed = false;
+
+         for(auto c: m_name_constraints.permitted())
+            {
+            switch(c.base().matches(cert_path.at(j)))
+               {
+            case GeneralName::MatchResult::NotFound:
+            case GeneralName::MatchResult::All:
+               permitted = true;
+               break;
+            case GeneralName::MatchResult::UnknownType:
+               failed = issuer.is_critical("X509v3.NameConstraints");
+               permitted = true;
+               break;
+            default:
+               break;
+               }
+            }
+
+         for(auto c: m_name_constraints.excluded())
+            {
+            switch(c.base().matches(cert_path.at(j)))
+               {
+            case GeneralName::MatchResult::All:
+            case GeneralName::MatchResult::Some:
+               failed = true;
+               break;
+            case GeneralName::MatchResult::UnknownType:
+               failed = issuer.is_critical("X509v3.NameConstraints");
+               break;
+            default:
+               break;
+               }
+            }
+
+         if(failed || !permitted)
+            {
+            cert_status.at(j).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
+            }
+         }
       }
    }
 
