@@ -1,7 +1,5 @@
 define ECGDSA 20160301
 
-load_on request
-
 <requires>
 asn1
 bigint
