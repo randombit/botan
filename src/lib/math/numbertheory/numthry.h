@@ -37,6 +37,17 @@ BigInt BOTAN_DLL sub_mul(const BigInt& a,
                          const BigInt& c);
 
 /**
+* Fused multiply-subtract
+* @param a an integer
+* @param b an integer
+* @param c an integer
+* @return (a*b)-c
+*/
+BigInt BOTAN_DLL mul_sub(const BigInt& a,
+                         const BigInt& b,
+                         const BigInt& c);
+
+/**
 * Return the absolute value
 * @param n an integer
 * @return absolute value of n

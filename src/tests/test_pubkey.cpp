@@ -113,7 +113,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
       if(vars.count("Nonce"))
          {
-         rng.reset(new Fixed_Output_RNG(get_req_bin(vars, "Nonce")));
+         rng.reset(test_rng(get_req_bin(vars, "Nonce")));
          }
 
       const std::vector<uint8_t> generated_signature =

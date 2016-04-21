@@ -8,8 +8,7 @@
 #ifndef BOTAN_PBE_PKCS_v20_H__
 #define BOTAN_PBE_PKCS_v20_H__
 
-#include <botan/secmem.h>
-#include <botan/transform.h>
+#include <botan/rng.h>
 #include <botan/alg_id.h>
 #include <chrono>
 

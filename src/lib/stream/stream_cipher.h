@@ -8,7 +8,6 @@
 #ifndef BOTAN_STREAM_CIPHER_H__
 #define BOTAN_STREAM_CIPHER_H__
 
-#include <botan/transform.h>
 #include <botan/sym_algo.h>
 #include <botan/scan_name.h>
 

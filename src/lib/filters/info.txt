@@ -1,4 +1,4 @@
-define FILTERS 20131128
+define FILTERS 20160415
 
 <source>
 algo_filt.cpp
@@ -14,7 +14,7 @@ pipe_io.cpp
 pipe_rw.cpp
 secqueue.cpp
 threaded_fork.cpp
-transform_filter.cpp
+cipher_filter.cpp
 </source>
 
 <header:public>
@@ -27,7 +27,7 @@ filters.h
 key_filt.h
 pipe.h
 secqueue.h
-transform_filter.h
+cipher_filter.h
 </header:public>
 
 <header:internal>

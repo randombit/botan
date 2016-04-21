@@ -613,13 +613,13 @@ class Speed final : public Command
             timer.run([&] { srcs.poll_just(accum, src); });
 
 #if defined(BOTAN_HAS_COMPRESSION)
-            std::unique_ptr<Botan::Compressor_Transform> comp(Botan::make_compressor("zlib", 9));
+            std::unique_ptr<Botan::Compression_Algorithm> comp(Botan::make_compressor("zlib"));
             Botan::secure_vector<uint8_t> compressed;
 
             if(comp)
                {
                compressed.assign(entropy.begin(), entropy.end());
-               comp->start();
+               comp->start(9);
                comp->finish(compressed);
                }
 #endif
