@@ -5,7 +5,7 @@
 */
 
 #include <botan/key_filt.h>
-#include <botan/transform_filter.h>
+#include <botan/cipher_filter.h>
 
 namespace Botan {
 
@@ -14,7 +14,7 @@ Keyed_Filter* get_cipher(const std::string& algo_spec,
    {
    std::unique_ptr<Cipher_Mode> c(get_cipher_mode(algo_spec, direction));
    if(c)
-      return new Transform_Filter(c.release());
+      return new Cipher_Mode_Filter(c.release());
    throw Algorithm_Not_Found(algo_spec);
    }
 

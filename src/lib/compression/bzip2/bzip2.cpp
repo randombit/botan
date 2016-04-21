@@ -39,6 +39,14 @@ class Bzip2_Compression_Stream : public Bzip2_Stream
    public:
       explicit Bzip2_Compression_Stream(size_t block_size)
          {
+         /*
+         * Defaults to 900k blocks as the computation cost of
+         * compression is not overly affected by the size, though
+         * more memory is required.
+         */
+         if(block_size == 0 || block_size >= 9)
+            block_size = 9;
+
          int rc = BZ2_bzCompressInit(streamp(), block_size, 0, 0);
 
          if(rc == BZ_MEM_ERROR)
@@ -98,9 +106,9 @@ class Bzip2_Decompression_Stream : public Bzip2_Stream
 
 }
 
-Compression_Stream* Bzip2_Compression::make_stream() const
+Compression_Stream* Bzip2_Compression::make_stream(size_t comp_level) const
    {
-   return new Bzip2_Compression_Stream(m_block_size);
+   return new Bzip2_Compression_Stream(comp_level);
    }
 
 Compression_Stream* Bzip2_Decompression::make_stream() const

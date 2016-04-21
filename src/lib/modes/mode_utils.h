@@ -18,7 +18,7 @@
 namespace Botan {
 
 template<typename T>
-T* make_block_cipher_mode(const Transform::Spec& spec)
+T* make_block_cipher_mode(const Cipher_Mode::Spec& spec)
    {
    if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
       return new T(bc.release());
@@ -26,7 +26,7 @@ T* make_block_cipher_mode(const Transform::Spec& spec)
    }
 
 template<typename T, size_t LEN1>
-T* make_block_cipher_mode_len(const Transform::Spec& spec)
+T* make_block_cipher_mode_len(const Cipher_Mode::Spec& spec)
    {
    if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
       {
@@ -38,7 +38,7 @@ T* make_block_cipher_mode_len(const Transform::Spec& spec)
    }
 
 template<typename T, size_t LEN1, size_t LEN2>
-T* make_block_cipher_mode_len2(const Transform::Spec& spec)
+T* make_block_cipher_mode_len2(const Cipher_Mode::Spec& spec)
    {
    if(std::unique_ptr<BlockCipher> bc = BlockCipher::create(spec.arg(0)))
       {
@@ -51,16 +51,16 @@ T* make_block_cipher_mode_len2(const Transform::Spec& spec)
    }
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE(E, D)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, make_block_cipher_mode<E>); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, make_block_cipher_mode<D>)
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #E, E, make_block_cipher_mode<E>); \
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #D, D, make_block_cipher_mode<D>)
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN(E, D, LEN)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len<E, LEN>)); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len<D, LEN>))
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #E, E, (make_block_cipher_mode_len<E, LEN>)); \
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #D, D, (make_block_cipher_mode_len<D, LEN>))
 
 #define BOTAN_REGISTER_BLOCK_CIPHER_MODE_LEN2(E, D, LEN1, LEN2)                          \
-   BOTAN_REGISTER_NAMED_T(Transform, #E, E, (make_block_cipher_mode_len2<E, LEN1, LEN2>)); \
-   BOTAN_REGISTER_NAMED_T(Transform, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>))
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #E, E, (make_block_cipher_mode_len2<E, LEN1, LEN2>)); \
+   BOTAN_REGISTER_NAMED_T(Cipher_Mode, #D, D, (make_block_cipher_mode_len2<D, LEN1, LEN2>))
 
 }
 

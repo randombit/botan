@@ -77,7 +77,7 @@ class Entropy_Source_Tests : public Test
                         continue;
                         }
 #endif
-                     std::unique_ptr<Botan::Compressor_Transform> comp(Botan::make_compressor(comp_algo, 9));
+                     std::unique_ptr<Botan::Compression_Algorithm> comp(Botan::make_compressor(comp_algo));
 
                      if(comp)
                         {
@@ -87,7 +87,7 @@ class Entropy_Source_Tests : public Test
                            {
                            Botan::secure_vector<byte> compressed;
                            compressed.assign(entropy.begin(), entropy.end());
-                           comp->start();
+                           comp->start(9);
                            comp->finish(compressed);
 
                            comp1_size = compressed.size();

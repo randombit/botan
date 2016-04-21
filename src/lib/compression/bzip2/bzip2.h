@@ -19,21 +19,9 @@ namespace Botan {
 class BOTAN_DLL Bzip2_Compression final : public Stream_Compression
    {
    public:
-      /**
-      * @param block_size in 1024 KiB increments, in range from 1 to 9.
-      *
-      * Lowering this does not noticably modify the compression or
-      * decompression speed, though less memory is required for both
-      * compression and decompression.
-      */
-      Bzip2_Compression(size_t block_size = 9) : m_block_size(block_size) {}
-
       std::string name() const override { return "Bzip2_Compression"; }
-
    private:
-      Compression_Stream* make_stream() const override;
-
-      const size_t m_block_size;
+      Compression_Stream* make_stream(size_t comp_level) const override;
    };
 
 /**

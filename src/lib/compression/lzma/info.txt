@@ -1,4 +1,4 @@
-define LZMA_TRANSFORM 20141118
+define LZMA 20160412
 
 load_on vendor
 
