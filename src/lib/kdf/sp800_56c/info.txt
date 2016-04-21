@@ -1,0 +1,6 @@
+define SP800_56C 20160211
+
+<requires>
+sp800_108
+hmac
+</requires>
