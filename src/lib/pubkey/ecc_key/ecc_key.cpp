@@ -33,7 +33,10 @@ EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
    }
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
-                           const secure_vector<byte>& key_bits) : m_domain_params{EC_Group(alg_id.parameters)}, m_public_key{OS2ECP(key_bits, domain().get_curve())}, m_domain_encoding{EC_DOMPAR_ENC_EXPLICIT}
+                           const secure_vector<byte>& key_bits) :
+   m_domain_params{EC_Group(alg_id.parameters)},
+   m_public_key{OS2ECP(key_bits, domain().get_curve())},
+   m_domain_encoding{EC_DOMPAR_ENC_EXPLICIT}
    {}
 
 bool EC_PublicKey::check_key(RandomNumberGenerator&,
@@ -80,17 +83,23 @@ const BigInt& EC_PrivateKey::private_value() const
 */
 EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
                              const EC_Group& ec_group,
-                             const BigInt& x)
+                             const BigInt& x,
+                             bool with_modular_inverse)
    {
    m_domain_params = ec_group;
    m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
    if(x == 0)
+      {
       m_private_key = BigInt::random_integer(rng, 1, domain().get_order());
+      }
    else
+      {
       m_private_key = x;
+      }
 
-   m_public_key = domain().get_base_point() * m_private_key;
+   m_public_key = domain().get_base_point() *
+                  ((with_modular_inverse) ? inverse_mod(m_private_key, m_domain_params.get_order()) : m_private_key);
 
    BOTAN_ASSERT(m_public_key.on_the_curve(),
                 "Generated public key point was on the curve");
@@ -108,7 +117,8 @@ secure_vector<byte> EC_PrivateKey::pkcs8_private_key() const
    }
 
 EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
-                             const secure_vector<byte>& key_bits)
+                             const secure_vector<byte>& key_bits,
+                             bool with_modular_inverse)
    {
    m_domain_params = EC_Group(alg_id.parameters);
    m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
@@ -129,7 +139,8 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
 
    if(public_key_bits.empty())
       {
-      m_public_key = domain().get_base_point() * m_private_key;
+      m_public_key = domain().get_base_point() *
+                     ((with_modular_inverse) ? inverse_mod(m_private_key, m_domain_params.get_order()) : m_private_key);
 
       BOTAN_ASSERT(m_public_key.on_the_curve(),
                    "Public point derived from loaded key was on the curve");

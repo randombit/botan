@@ -71,4 +71,18 @@ BigInt sub_mul(const BigInt& a, const BigInt& b, const BigInt& c)
    return r;
    }
 
+/*
+* Multiply-Subtract Operation
+*/
+BigInt mul_sub(const BigInt& a, const BigInt& b, const BigInt& c)
+   {
+   if(c.is_negative() || c.is_zero())
+      throw Invalid_Argument("mul_sub: Third argument must be > 0");
+
+   BigInt r = a;
+   r *= b;
+   r -= c;
+   return r;
+   }
+
 }

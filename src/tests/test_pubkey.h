@@ -9,6 +9,8 @@
 
 #include "tests.h"
 
+#include "test_rng.h"
+
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
 
 #include <botan/pubkey.h>
@@ -30,6 +32,12 @@ class PK_Signature_Generation_Test : public Text_Based_Test
          }
 
       virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) = 0;
+
+      virtual Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const
+         {
+            return new Fixed_Output_RNG(nonce);
+         }
+
    private:
       Test::Result run_one_test(const std::string&, const VarMap& vars) override;
    };

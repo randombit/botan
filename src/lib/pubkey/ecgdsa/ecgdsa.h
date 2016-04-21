@@ -1,23 +1,21 @@
 /*
-* ECDSA
-* (C) 2007 Falko Strenzke, FlexSecure GmbH
-*          Manuel Hartl, FlexSecure GmbH
-* (C) 2008-2010 Jack Lloyd
+* ECGDSA (BSI-TR-03111, version 2.0)
+* (C) 2016 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_ECDSA_KEY_H__
-#define BOTAN_ECDSA_KEY_H__
+#ifndef BOTAN_ECGDSA_KEY_H__
+#define BOTAN_ECGDSA_KEY_H__
 
 #include <botan/ecc_key.h>
 
 namespace Botan {
 
 /**
-* This class represents ECDSA Public Keys.
+* This class represents ECGDSA public keys.
 */
-class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
+class BOTAN_DLL ECGDSA_PublicKey : public virtual EC_PublicKey
    {
    public:
 
@@ -26,19 +24,19 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
       * @param dom_par the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
-      ECDSA_PublicKey(const EC_Group& dom_par,
+      ECGDSA_PublicKey(const EC_Group& dom_par,
                       const PointGFp& public_point) :
          EC_PublicKey(dom_par, public_point) {}
 
-      ECDSA_PublicKey(const AlgorithmIdentifier& alg_id,
+      ECGDSA_PublicKey(const AlgorithmIdentifier& alg_id,
                       const secure_vector<byte>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
 
       /**
       * Get this keys algorithm name.
-      * @result this keys algorithm name ("ECDSA")
+      * @result this keys algorithm name ("ECGDSA")
       */
-      std::string algo_name() const override { return "ECDSA"; }
+      std::string algo_name() const override { return "ECGDSA"; }
 
       /**
       * Get the maximum number of bits allowed to be fed to this key.
@@ -54,14 +52,14 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
          { return domain().get_order().bytes(); }
 
    protected:
-      ECDSA_PublicKey() {}
+      ECGDSA_PublicKey() {}
    };
 
 /**
-* This class represents ECDSA Private Keys
+* This class represents ECGDSA private keys.
 */
-class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
-                                   public EC_PrivateKey
+class BOTAN_DLL ECGDSA_PrivateKey : public ECGDSA_PublicKey,
+                                    public EC_PrivateKey
    {
    public:
 
@@ -70,9 +68,9 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits PKCS #8 structure
       */
-      ECDSA_PrivateKey(const AlgorithmIdentifier& alg_id,
+      ECGDSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                        const secure_vector<byte>& key_bits) :
-         EC_PrivateKey(alg_id, key_bits) {}
+         EC_PrivateKey(alg_id, key_bits, true) {}
 
       /**
       * Generate a new private key
@@ -80,10 +78,10 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       * @param domain parameters to used for this key
       * @param x the private key (if zero, generate a new random key)
       */
-      ECDSA_PrivateKey(RandomNumberGenerator& rng,
+      ECGDSA_PrivateKey(RandomNumberGenerator& rng,
                        const EC_Group& domain,
                        const BigInt& x = 0) :
-         EC_PrivateKey(rng, domain, x) {}
+         EC_PrivateKey(rng, domain, x, true) {}
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
    };
