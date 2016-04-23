@@ -23,6 +23,18 @@ Version 1.11.30, Not Yet Released
   caused incorrect computation when the plaintext or AAD was exactly
   a multiple of 16 bytes.
 
+Version 1.10.13, 2016-04-23
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Use constant time modular inverse algorithm to avoid possible
+  side channel attack against ECDSA (CVE-2016-2849)
+
+* Use constant time PKCS #1 unpadding to avoid possible side channel
+  attack against RSA decryption (CVE-2015-7827)
+
+* Avoid a compilation problem in OpenSSL engine when ECDSA was
+  disabled. Gentoo bug 542010
+
 Version 1.11.29, 2016-03-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

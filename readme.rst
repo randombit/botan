@@ -108,9 +108,9 @@ and is the most commonly packaged version. It is still supported for
 security patches, but all development efforts are focused on 1.11.
 
 The latest 1.10 release is
-`1.10.12 <http://botan.randombit.net/releases/Botan-1.10.12.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.10.12.tgz.asc>`_
-released on 2016-02-03
+`1.10.13 <http://botan.randombit.net/releases/Botan-1.10.13.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.10.13.tgz.asc>`_
+released on 2016-04-23
 
 Books and other resources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
