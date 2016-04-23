@@ -6,6 +6,7 @@
 */
 
 #include <botan/crl_ent.h>
+#include <botan/x509cert.h>
 #include <botan/x509_ext.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>

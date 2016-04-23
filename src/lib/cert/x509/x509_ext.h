@@ -10,10 +10,16 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/asn1_oid.h>
+#include <botan/asn1_alt_name.h>
+#include <botan/cert_status.h>
 #include <botan/datastor.h>
+#include <botan/name_constraint.h>
+#include <botan/key_constraint.h>
 #include <botan/crl_ent.h>
 
 namespace Botan {
+
+class X509_Certificate;
 
 /**
 * X.509 Certificate Extension
@@ -24,7 +30,7 @@ class BOTAN_DLL Certificate_Extension
       /**
       * @return OID representing this extension
       */
-      OID oid_of() const;
+      virtual OID oid_of() const;
 
       /**
       * Make a copy of this extension
@@ -45,6 +51,26 @@ class BOTAN_DLL Certificate_Extension
       * @return specific OID name
       */
       virtual std::string oid_name() const = 0;
+
+      /*
+      * Callback visited during path validation.
+      *
+      * An extension can implement this callback to inspect
+      * the path during path validation.
+      *
+      * If an error occurs during validation of this extension,
+      * an appropriate status code shall be added to cert_status.
+      *
+      * @param subject Subject certificate that contains this extension
+      * @param issuer Issuer certificate
+      * @param status Certificate validation status codes for subject certificate
+      * @param cert_path Certificate path which is currently validated
+      * @param pos Position of subject certificate in cert_path
+      */
+      virtual void validate(const X509_Certificate& subject, const X509_Certificate& issuer,
+            const std::vector<X509_Certificate>& cert_path,
+            std::vector<std::set<Certificate_Status_Code>>& cert_status,
+            size_t pos);
 
       virtual ~Certificate_Extension() {}
    protected:
@@ -67,6 +93,8 @@ class BOTAN_DLL Extensions : public ASN1_Object
 
       void add(Certificate_Extension* extn, bool critical = false);
 
+      std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> extensions() const;
+
       std::map<OID, std::pair<std::vector<byte>, bool>> extensions_raw() const;
 
       Extensions& operator=(const Extensions&);
@@ -76,7 +104,7 @@ class BOTAN_DLL Extensions : public ASN1_Object
       explicit Extensions(bool st = true) : m_throw_on_unknown_critical(st) {}
 
    private:
-      static Certificate_Extension* get_extension(const OID&);
+      static Certificate_Extension* get_extension(const OID&, bool);
 
       std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> m_extensions;
       bool m_throw_on_unknown_critical;
@@ -101,6 +129,7 @@ class BOTAN_DLL Basic_Constraints final : public Certificate_Extension
 
       bool get_is_ca() const { return m_is_ca; }
       size_t get_path_limit() const;
+
    private:
       std::string oid_name() const override
          { return "X509v3.BasicConstraints"; }
@@ -124,6 +153,7 @@ class BOTAN_DLL Key_Usage final : public Certificate_Extension
       explicit Key_Usage(Key_Constraints c = NO_CONSTRAINTS) : m_constraints(c) {}
 
       Key_Constraints get_constraints() const { return m_constraints; }
+
    private:
       std::string oid_name() const override { return "X509v3.KeyUsage"; }
 
@@ -174,6 +204,7 @@ class BOTAN_DLL Authority_Key_ID final : public Certificate_Extension
       explicit Authority_Key_ID(const std::vector<byte>& k) : m_key_id(k) {}
 
       std::vector<byte> get_key_id() const { return m_key_id; }
+
    private:
       std::string oid_name() const override
          { return "X509v3.AuthorityKeyIdentifier"; }
@@ -198,6 +229,7 @@ class BOTAN_DLL Alternative_Name : public Certificate_Extension
       Alternative_Name(const AlternativeName&, const std::string& oid_name);
 
       Alternative_Name(const std::string&, const std::string&);
+
    private:
       std::string oid_name() const override { return m_oid_name_str; }
 
@@ -247,6 +279,7 @@ class BOTAN_DLL Extended_Key_Usage final : public Certificate_Extension
       explicit Extended_Key_Usage(const std::vector<OID>& o) : m_oids(o) {}
 
       std::vector<OID> get_oids() const { return m_oids; }
+
    private:
       std::string oid_name() const override
          { return "X509v3.ExtendedKeyUsage"; }
@@ -270,6 +303,12 @@ class BOTAN_DLL Name_Constraints : public Certificate_Extension
 
       Name_Constraints() {}
       Name_Constraints(const NameConstraints &nc) : m_name_constraints(nc) {}
+
+      void validate(const X509_Certificate& subject, const X509_Certificate& issuer,
+            const std::vector<X509_Certificate>& cert_path,
+            std::vector<std::set<Certificate_Status_Code>>& cert_status,
+            size_t pos) override;
+
    private:
       std::string oid_name() const override
          { return "X509v3.NameConstraints"; }
@@ -295,6 +334,7 @@ class BOTAN_DLL Certificate_Policies final : public Certificate_Extension
       explicit Certificate_Policies(const std::vector<OID>& o) : m_oids(o) {}
 
       std::vector<OID> get_oids() const { return m_oids; }
+
    private:
       std::string oid_name() const override
          { return "X509v3.CertificatePolicies"; }
@@ -344,6 +384,7 @@ class BOTAN_DLL CRL_Number final : public Certificate_Extension
       CRL_Number(size_t n) : m_has_value(true), m_crl_number(n) {}
 
       size_t get_crl_number() const;
+
    private:
       std::string oid_name() const override { return "X509v3.CRLNumber"; }
 
@@ -368,6 +409,7 @@ class BOTAN_DLL CRL_ReasonCode final : public Certificate_Extension
       explicit CRL_ReasonCode(CRL_Code r = UNSPECIFIED) : m_reason(r) {}
 
       CRL_Code get_reason() const { return m_reason; }
+
    private:
       std::string oid_name() const override { return "X509v3.ReasonCode"; }
 
@@ -419,6 +461,41 @@ class BOTAN_DLL CRL_Distribution_Points final : public Certificate_Extension
       void contents_to(Data_Store&, Data_Store&) const override;
 
       std::vector<Distribution_Point> m_distribution_points;
+   };
+
+/**
+* An unknown X.509 extension marked as critical
+* Will always add a failure to the path validation result.
+*/
+class BOTAN_DLL Unknown_Critical_Extension final : public Certificate_Extension
+   {
+   public:
+      explicit Unknown_Critical_Extension(OID oid) : m_oid(oid) {}
+
+      Unknown_Critical_Extension* copy() const override
+         { return new Unknown_Critical_Extension(m_oid); }
+
+      OID oid_of() const override
+         { return m_oid; };
+
+      void validate(const X509_Certificate&, const X509_Certificate&,
+      		const std::vector<X509_Certificate>&,
+      		std::vector<std::set<Certificate_Status_Code>>& cert_status,
+      		size_t pos) override
+         {
+         cert_status.at(pos).insert(Certificate_Status_Code::UNKNOWN_CRITICAL_EXTENSION);
+         }
+
+   private:
+      std::string oid_name() const override
+         { return "Unknown OID name"; }
+
+      bool should_encode() const { return false; }
+      std::vector<byte> encode_inner() const override;
+      void decode_inner(const std::vector<byte>&) override;
+      void contents_to(Data_Store&, Data_Store&) const override;
+
+      OID m_oid;
    };
 
 }
