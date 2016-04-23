@@ -20,6 +20,32 @@ const size_t MP_WORD_BITS = BOTAN_MP_WORD_BITS;
 extern "C" {
 
 /*
+* If cond == 0, does nothing.
+* If cond > 0, swaps x[0:size] with y[0:size]
+* Runs in constant time
+*/
+void bigint_cnd_swap(word cnd, word x[], word y[], size_t size);
+
+/*
+* If cond > 0 adds x[0:size] to y[0:size] and returns carry
+* Runs in constant time
+*/
+word bigint_cnd_add(word cnd, word x[], const word y[], size_t size);
+
+/*
+* If cond > 0 subs x[0:size] to y[0:size] and returns borrow
+* Runs in constant time
+*/
+word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size);
+
+/*
+* 2s complement absolute value
+* If cond > 0 sets x to ~x + 1
+* Runs in constant time
+*/
+void bigint_cnd_abs(word cnd, word x[], size_t size);
+
+/*
 * Addition/Subtraction Operations
 */
 void bigint_add2(word x[], size_t x_size,

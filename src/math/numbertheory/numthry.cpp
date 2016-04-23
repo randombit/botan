@@ -7,6 +7,7 @@
 
 #include <botan/numthry.h>
 #include <botan/reducer.h>
+#include <botan/internal/mp_core.h>
 #include <botan/internal/bit_ops.h>
 #include <algorithm>
 
@@ -196,6 +197,117 @@ BigInt lcm(const BigInt& a, const BigInt& b)
    return ((a * b) / gcd(a, b));
    }
 
+namespace {
+
+BigInt ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
+   {
+   if(n.is_negative() || mod.is_negative())
+      throw Invalid_Argument("ct_inverse_mod_odd_modulus: arguments must be non-negative");
+   if(mod < 3 || mod.is_even())
+      throw Invalid_Argument("Bad modulus to ct_inverse_mod_odd_modulus");
+
+   /*
+   This uses a modular inversion algorithm designed by Niels Möller
+   and implemented in Nettle. The same algorithm was later also
+   adapted to GMP in mpn_sec_invert.
+
+   It can be easily implemented in a way that does not depend on
+   secret branches or memory lookups, providing resistance against
+   some forms of side channel attack.
+
+   There is also a description of the algorithm in Appendix 5 of "Fast
+   Software Polynomial Multiplication on ARM Processors using the NEON Engine"
+   by Danilo Câmara, Conrado P. L. Gouvêa, Julio López, and Ricardo
+   Dahab in LNCS 8182
+      http://conradoplg.cryptoland.net/files/2010/12/mocrysen13.pdf
+
+   Thanks to Niels for creating the algorithm, explaining some things
+   about it, and the reference to the paper.
+   */
+
+   // todo allow this to be pre-calculated and passed in as arg
+   BigInt mp1o2 = (mod + 1) >> 1;
+
+   const size_t mod_words = mod.sig_words();
+
+   BigInt a = n;
+   BigInt b = mod;
+   BigInt u = 1, v = 0;
+
+   a.grow_to(mod_words);
+   u.grow_to(mod_words);
+   v.grow_to(mod_words);
+   mp1o2.grow_to(mod_words);
+
+   SecureVector<word>& a_w = a.get_reg();
+   SecureVector<word>& b_w = b.get_reg();
+   SecureVector<word>& u_w = u.get_reg();
+   SecureVector<word>& v_w = v.get_reg();
+
+   // Only n.bits() + mod.bits() iterations are required, but avoid leaking the size of n
+   size_t bits = 2 * mod.bits();
+
+   while(bits--)
+      {
+#if 1
+      const word odd = a.is_odd();
+      a -= odd * b;
+      const word underflow = a.is_negative();
+      b += a * underflow;
+      a.set_sign(BigInt::Positive);
+
+      a >>= 1;
+
+      if(underflow)
+         {
+         std::swap(u, v);
+         }
+
+      u -= odd * v;
+      u += u.is_negative() * mod;
+
+      const word odd_u = u.is_odd();
+
+      u >>= 1;
+      u += mp1o2 * odd_u;
+#else
+      const word odd_a = a_w[0] & 1;
+
+      //if(odd_a) a -= b
+      word underflow = bigint_cnd_sub(odd_a, a_w.begin(), b_w.begin(), mod_words);
+
+      //if(underflow) { b -= a; a = abs(a); swap(u, v); }
+      bigint_cnd_add(underflow, b_w.begin(), a_w.begin(), mod_words);
+      bigint_cnd_abs(underflow, a_w.begin(), mod_words);
+      bigint_cnd_swap(underflow, u_w.begin(), v_w.begin(), mod_words);
+
+      // a >>= 1
+      bigint_shr1(a_w.begin(), mod_words, 0, 1);
+
+      //if(odd_a) u -= v;
+      word borrow = bigint_cnd_sub(odd_a, u_w.begin(), v_w.begin(), mod_words);
+
+      // if(borrow) u += p
+      bigint_cnd_add(borrow, u_w.begin(), mod.data(), mod_words);
+
+      const word odd_u = u_w[0] & 1;
+
+      // u >>= 1
+      bigint_shr1(u_w.begin(), mod_words, 0, 1);
+
+      //if(odd_u) u += mp1o2;
+      bigint_cnd_add(odd_u, u_w.begin(), mp1o2.data(), mod_words);
+#endif
+      }
+
+   if(b != 1)
+      return 0;
+
+   return v;
+   }
+
+}
+
 /*
 * Find the Modular Inverse
 */
@@ -208,6 +320,9 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
 
    if(n.is_zero() || (n.is_even() && mod.is_even()))
       return 0;
+
+   if(mod.is_odd())
+      return ct_inverse_mod_odd_modulus(n % mod, mod);
 
    BigInt x = mod, y = n, u = mod, v = n;
    BigInt A = 1, B = 0, C = 0, D = 1;

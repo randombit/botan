@@ -6,6 +6,7 @@
 */
 
 #include <botan/eme_pkcs.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -40,20 +41,31 @@ SecureVector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
 SecureVector<byte> EME_PKCS1v15::unpad(const byte in[], size_t inlen,
                                        size_t key_len) const
    {
-   if(inlen != key_len / 8 || inlen < 10 || in[0] != 0x02)
-      throw Decoding_Error("PKCS1::unpad");
 
-   size_t seperator = 0;
-   for(size_t j = 0; j != inlen; ++j)
-      if(in[j] == 0)
-         {
-         seperator = j;
-         break;
-         }
-   if(seperator < 9)
-      throw Decoding_Error("PKCS1::unpad");
+   byte bad_input_m = 0;
+   byte seen_zero_m = 0;
+   size_t delim_idx = 0;
 
-   return SecureVector<byte>(in + seperator + 1, inlen - seperator - 1);
+   bad_input_m |= ~CT::is_equal<byte>(in[0], 2);
+
+   for(size_t i = 1; i < inlen; ++i)
+      {
+      const byte is_zero_m = CT::is_zero<byte>(in[i]);
+
+      delim_idx += CT::select<byte>(~seen_zero_m, 1, 0);
+
+      bad_input_m |= is_zero_m & CT::expand_mask<byte>(i < 9);
+      seen_zero_m |= is_zero_m;
+      }
+
+   bad_input_m |= ~seen_zero_m;
+   bad_input_m |= CT::is_less<size_t>(delim_idx, 8);
+
+   SecureVector<byte> output(&in[delim_idx + 1], inlen - (delim_idx + 1));
+
+   if(bad_input_m)
+      throw Decoding_Error("EME_PKCS1v15::unpad invalid ciphertext");
+   return output;
    }
 
 /*
