@@ -62,19 +62,6 @@ void X509_Cert_Options::CA_key(size_t limit)
    }
 
 /*
-* Do basic sanity checks
-*/
-void X509_Cert_Options::sanity_check() const
-   {
-   if(common_name.empty() || country.empty())
-      throw Encoding_Error("X.509 certificate: name and country MUST be set");
-   if(country.size() != 2)
-      throw Encoding_Error("Invalid ISO country code: " + country);
-   if(start >= end)
-      throw Encoding_Error("X509_Cert_Options: invalid time constraints");
-   }
-
-/*
 * Initialize the certificate options
 */
 X509_Cert_Options::X509_Cert_Options(const std::string& initial_opts,
