@@ -9,7 +9,9 @@
 #define BOTAN_X509_CRL_H__
 
 #include <botan/x509_obj.h>
+#include <botan/x509_dn.h>
 #include <botan/crl_ent.h>
+#include <botan/datastor.h>
 #include <vector>
 
 namespace Botan {
