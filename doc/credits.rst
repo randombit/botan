@@ -104,3 +104,9 @@ snail-mail address (S), and Bitcoin address (B).
   W: https://www.kullo.net
   D: Build system
   S: Germany
+
+  N: Philipp Weber
+  E: p.weber@sirrix.com
+  W: https://sirrix.com/
+  D: KDF1-18033
+  S: Saarland, Germany
