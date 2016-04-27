@@ -108,5 +108,5 @@ snail-mail address (S), and Bitcoin address (B).
   N: Philipp Weber
   E: p.weber@sirrix.com
   W: https://sirrix.com/
-  D: KDF1-18033
+  D: KDF1-18033, ECIES
   S: Saarland, Germany
