@@ -139,20 +139,16 @@ Connection_Cipher_State::format_ad(u64bit msg_sequence,
                                    Protocol_Version version,
                                    u16bit msg_length)
    {
-   std::vector<byte> m_ad;
-   m_ad.reserve(13);
+   std::vector<byte> ad(13);
 
-   for(size_t i = 0; i != 8; ++i)
-      m_ad.push_back(get_byte(i, msg_sequence));
-   m_ad.push_back(msg_type);
+   store_be(msg_sequence, &ad[0]);
+   ad[8] = msg_type;
+   ad[9] = version.major_version();
+   ad[10] = version.minor_version();
+   ad[11] = get_byte(0, msg_length);
+   ad[12] = get_byte(1, msg_length);
 
-   m_ad.push_back(version.major_version());
-   m_ad.push_back(version.minor_version());
-
-   m_ad.push_back(get_byte(0, msg_length));
-   m_ad.push_back(get_byte(1, msg_length));
-
-   return m_ad;
+   return ad;
    }
 
 void write_record(secure_vector<byte>& output,
@@ -425,7 +421,7 @@ void decrypt_record(secure_vector<byte>& output,
       u16bit pad_size = tls_padding_check(record_contents, record_len);
 
       // This mask is zero if there is not enough room in the packet
-      const u16bit size_ok_mask = CT::is_less<u16bit>(mac_size + pad_size + iv_size, record_len);
+      const u16bit size_ok_mask = CT::is_lte<u16bit>(mac_size + pad_size + iv_size, record_len);
       pad_size &= size_ok_mask;
 
       CT::unpoison(record_contents, record_len);
@@ -454,9 +450,13 @@ void decrypt_record(secure_vector<byte>& output,
       CT::unpoison(ok_mask);
 
       if(ok_mask)
+         {
          output.assign(plaintext_block, plaintext_block + plaintext_length);
+         }
       else
+         {
          throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
+         }
       }
    }
 

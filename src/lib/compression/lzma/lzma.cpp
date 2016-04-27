@@ -58,6 +58,11 @@ class LZMA_Compression_Stream : public LZMA_Stream
    public:
       explicit LZMA_Compression_Stream(size_t level)
          {
+         if(level == 0)
+            level = 6; // default
+         else if(level > 9)
+            level = 9; // clamp to maximum allowed value
+
          lzma_ret rc = ::lzma_easy_encoder(streamp(), level, LZMA_CHECK_CRC64);
 
          if(rc == LZMA_MEM_ERROR)
@@ -84,9 +89,9 @@ class LZMA_Decompression_Stream : public LZMA_Stream
 
 }
 
-Compression_Stream* LZMA_Compression::make_stream() const
+Compression_Stream* LZMA_Compression::make_stream(size_t level) const
    {
-   return new LZMA_Compression_Stream(m_level);
+   return new LZMA_Compression_Stream(level);
    }
 
 Compression_Stream* LZMA_Decompression::make_stream() const

@@ -597,13 +597,14 @@ class Speed final : public Command
 
          for(auto src : srcs.enabled_sources())
             {
-            size_t entropy_bits = 0, samples = 0;
+            double entropy_bits = 0.0;
+            size_t samples = 0;
             std::vector<size_t> entropy;
 
             Botan::Entropy_Accumulator accum(
-               [&](const uint8_t buf[], size_t buf_len, size_t buf_entropy) -> bool {
-               entropy.insert(entropy.end(), buf, buf + buf_len);
-               entropy_bits += buf_entropy;
+               [&](const uint8_t buf[], size_t buf_len, double buf_entropy) -> bool {
+                  entropy.insert(entropy.end(), buf, buf + buf_len);
+                  entropy_bits += buf_entropy;
                   samples += 1;
                   return (samples > 1024 || entropy_bits > 1024 || clock::now() > deadline);
                });
@@ -612,19 +613,20 @@ class Speed final : public Command
             timer.run([&] { srcs.poll_just(accum, src); });
 
 #if defined(BOTAN_HAS_COMPRESSION)
-            std::unique_ptr<Botan::Compressor_Transform> comp(Botan::make_compressor("zlib", 9));
+            std::unique_ptr<Botan::Compression_Algorithm> comp(Botan::make_compressor("zlib"));
             Botan::secure_vector<uint8_t> compressed;
 
             if(comp)
                {
                compressed.assign(entropy.begin(), entropy.end());
-               comp->start();
+               comp->start(9);
                comp->finish(compressed);
                }
 #endif
 
-            output() << "Entropy source " << src << " output " << entropy.size()
-                     << " bytes in " << timer.milliseconds() << " ms";
+            output() << "Entropy source " << src << " output " << entropy.size() << " bytes"
+                     << " estimated entropy " << entropy_bits
+                     << " in " << timer.milliseconds() << " ms";
 
 #if defined(BOTAN_HAS_COMPRESSION)
             if(compressed.size() > 0)

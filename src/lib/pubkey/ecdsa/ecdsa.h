@@ -78,7 +78,7 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       * Generate a new private key
       * @param rng a random number generator
       * @param domain parameters to used for this key
-      * @param x the private key (if zero, generate a ney random key)
+      * @param x the private key (if zero, generate a new random key)
       */
       ECDSA_PrivateKey(RandomNumberGenerator& rng,
                        const EC_Group& domain,

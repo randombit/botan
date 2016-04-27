@@ -6,42 +6,13 @@
 
 #include "cli.h"
 
-#include <botan/transform.h>
-
 #if defined(BOTAN_HAS_COMPRESSION)
   #include <botan/compression.h>
 #endif
 
 namespace Botan_CLI {
 
-namespace {
-
-void do_compress(Botan::Transform& comp,
-                 std::ifstream& in,
-                 std::ostream& out,
-                 size_t buf_size)
-   {
-   Botan::secure_vector<uint8_t> buf;
-
-   comp.start();
-
-   while(in.good())
-      {
-      buf.resize(buf_size);
-      in.read(reinterpret_cast<char*>(&buf[0]), buf.size());
-      buf.resize(in.gcount());
-
-      comp.update(buf);
-
-      out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
-      }
-
-   buf.clear();
-   comp.finish(buf);
-   out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
-   }
-
-}
+#if defined(BOTAN_HAS_COMPRESSION)
 
 class Compress final : public Command
    {
@@ -70,12 +41,12 @@ class Compress final : public Command
       void go() override
          {
          const std::string comp_type = get_arg("type");
+         const size_t buf_size = get_arg_sz("buf-size");
+         const size_t comp_level = get_arg_sz("level");
 
-         std::unique_ptr<Botan::Transform> compress;
+         std::unique_ptr<Botan::Compression_Algorithm> compress;
 
-#if defined(BOTAN_HAS_COMPRESSION)
-         compress.reset(Botan::make_compressor(comp_type, get_arg_sz("level")));
-#endif
+         compress.reset(Botan::make_compressor(comp_type));
 
          if(!compress)
             {
@@ -97,7 +68,25 @@ class Compress final : public Command
             throw CLI_IO_Error("writing", out_file);
             }
 
-         do_compress(*compress, in, out, get_arg_sz("buf-size"));
+         Botan::secure_vector<uint8_t> buf;
+
+         compress->start(comp_level);
+
+         while(in.good())
+            {
+            buf.resize(buf_size);
+            in.read(reinterpret_cast<char*>(&buf[0]), buf.size());
+            buf.resize(in.gcount());
+
+            compress->update(buf);
+
+            out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
+            }
+
+         buf.clear();
+         compress->finish(buf);
+         out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
+         out.close();
          }
    };
 
@@ -122,6 +111,7 @@ class Decompress final : public Command
 
       void go() override
          {
+         const size_t buf_size = get_arg_sz("buf-size");
          const std::string in_file = get_arg("file");
          std::string out_file, suffix;
          parse_extension(in_file, out_file, suffix);
@@ -131,11 +121,9 @@ class Decompress final : public Command
          if(!in.good())
             throw CLI_IO_Error("reading", in_file);
 
-         std::unique_ptr<Botan::Transform> decompress;
+         std::unique_ptr<Botan::Decompression_Algorithm> decompress;
 
-#if defined(BOTAN_HAS_COMPRESSION)
          decompress.reset(Botan::make_decompressor(suffix));
-#endif
 
          if(!decompress)
             throw CLI_Error_Unsupported("Decompression", suffix);
@@ -144,10 +132,30 @@ class Decompress final : public Command
          if(!out.good())
             throw CLI_IO_Error("writing", out_file);
 
-         do_compress(*decompress, in, out, get_arg_sz("buf-size"));
+         Botan::secure_vector<uint8_t> buf;
+
+         decompress->start();
+
+         while(in.good())
+            {
+            buf.resize(buf_size);
+            in.read(reinterpret_cast<char*>(&buf[0]), buf.size());
+            buf.resize(in.gcount());
+
+            decompress->update(buf);
+
+            out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
+            }
+
+         buf.clear();
+         decompress->finish(buf);
+         out.write(reinterpret_cast<const char*>(&buf[0]), buf.size());
+         out.close();
          }
    };
 
 BOTAN_REGISTER_COMMAND("decompress", Decompress);
+
+#endif
 
 }

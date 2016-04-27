@@ -364,10 +364,6 @@ information about that session:
       Returns ``true`` if the connection was negotiated with the
       correct extensions to prevent the renegotiation attack.
 
-There are also functions for serialization and deserializing sessions:
-
-.. cpp:class:: TLS::Session
-
    .. cpp:function:: std::vector<byte> encrypt(const SymmetricKey& key, \
                                                RandomNumberGenerator& rng)
 
@@ -382,18 +378,17 @@ There are also functions for serialization and deserializing sessions:
                                             size_t length, \
                                             const SymmetricKey& key)
 
-      Decrypts a session that was encrypted previously with
-      ``encrypt`` and *key*, or throws an exception if decryption
-      fails.
+      Decrypts a session that was encrypted previously with ``encrypt`` and
+      ``key``, or throws an exception if decryption fails.
 
    .. cpp:function:: secure_vector<byte> DER_encode() const
 
        Returns a serialized version of the session.
 
-       .. warning:: The return value contains the master secret for
-                    the session, and an attacker who recovers it could
-                    recover plaintext of previous sessions or
-                    impersonate one side to the other.
+       .. warning:: The return value of ``DER_encode`` contains the
+                    master secret for the session, and an attacker who
+                    recovers it could recover plaintext of previous
+                    sessions or impersonate one side to the other.
 
 .. _tls_session_managers:
 

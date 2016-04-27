@@ -8,14 +8,11 @@ secmem.h
 scan_name.h
 sym_algo.h
 symkey.h
-transform.h
 </header:public>
 
 <header:internal>
 algo_registry.h
 </header:internal>
-
-define TRANSFORM 20131209
 
 <requires>
 block

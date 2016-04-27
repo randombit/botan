@@ -50,20 +50,25 @@ class Zlib_Compression_Stream : public Zlib_Stream
          {
          wbits = compute_window_bits(wbits, wbits_offset);
 
-         int rc = deflateInit2(streamp(), level, Z_DEFLATED, wbits,
-                               8, Z_DEFAULT_STRATEGY);
+         if(level >= 9)
+            level = 9;
+         else if(level == 0)
+            level = 6;
+
+         int rc = ::deflateInit2(streamp(), level, Z_DEFLATED, wbits, 8, Z_DEFAULT_STRATEGY);
+
          if(rc != Z_OK)
             throw Exception("zlib deflate initialization failed");
          }
 
       ~Zlib_Compression_Stream()
          {
-         deflateEnd(streamp());
+         ::deflateEnd(streamp());
          }
 
       bool run(u32bit flags) override
          {
-         int rc = deflate(streamp(), flags);
+         int rc = ::deflate(streamp(), flags);
 
          if(rc == Z_MEM_ERROR)
             throw Exception("zlib memory allocation failure");
@@ -79,7 +84,7 @@ class Zlib_Decompression_Stream : public Zlib_Stream
    public:
       Zlib_Decompression_Stream(int wbits, int wbits_offset = 0)
          {
-         int rc = inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
+         int rc = ::inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
 
          if(rc == Z_MEM_ERROR)
             throw Exception("zlib memory allocation failure");
@@ -89,12 +94,12 @@ class Zlib_Decompression_Stream : public Zlib_Stream
 
       ~Zlib_Decompression_Stream()
          {
-         inflateEnd(streamp());
+         ::inflateEnd(streamp());
          }
 
       bool run(u32bit flags) override
          {
-         int rc = inflate(streamp(), flags);
+         int rc = ::inflate(streamp(), flags);
 
          if(rc == Z_MEM_ERROR)
             throw Exception("zlib memory allocation failure");
@@ -145,9 +150,9 @@ class Gzip_Decompression_Stream : public Zlib_Decompression_Stream
 
 }
 
-Compression_Stream* Zlib_Compression::make_stream() const
+Compression_Stream* Zlib_Compression::make_stream(size_t level) const
    {
-   return new Zlib_Compression_Stream(m_level, 15);
+   return new Zlib_Compression_Stream(level, 15);
    }
 
 Compression_Stream* Zlib_Decompression::make_stream() const
@@ -155,9 +160,9 @@ Compression_Stream* Zlib_Decompression::make_stream() const
    return new Zlib_Decompression_Stream(15);
    }
 
-Compression_Stream* Deflate_Compression::make_stream() const
+Compression_Stream* Deflate_Compression::make_stream(size_t level) const
    {
-   return new Deflate_Compression_Stream(m_level, 15);
+   return new Deflate_Compression_Stream(level, 15);
    }
 
 Compression_Stream* Deflate_Decompression::make_stream() const
@@ -165,9 +170,9 @@ Compression_Stream* Deflate_Decompression::make_stream() const
    return new Deflate_Decompression_Stream(15);
    }
 
-Compression_Stream* Gzip_Compression::make_stream() const
+Compression_Stream* Gzip_Compression::make_stream(size_t level) const
    {
-   return new Gzip_Compression_Stream(m_level, 15, m_os_code);
+   return new Gzip_Compression_Stream(level, 15, m_os_code);
    }
 
 Compression_Stream* Gzip_Decompression::make_stream() const

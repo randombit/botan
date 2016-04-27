@@ -30,6 +30,9 @@ const char* default_oid_list()
       "1.2.840.10045.2.1 = ECDSA" "\n"
       "1.3.132.1.12 = ECDH" "\n"
 
+      // ecgPublicKey (see https://www.teletrust.de/projekte/oid/)
+      "1.3.36.3.3.2.5.2.1 = ECGDSA" "\n"
+
       "1.2.643.2.2.19 = GOST-34.10" "\n"
 
       // Block ciphers
@@ -111,6 +114,13 @@ const char* default_oid_list()
       "1.2.840.10045.4.3.2 = ECDSA/EMSA1(SHA-256)" "\n"
       "1.2.840.10045.4.3.3 = ECDSA/EMSA1(SHA-384)" "\n"
       "1.2.840.10045.4.3.4 = ECDSA/EMSA1(SHA-512)" "\n"
+
+      "1.3.36.3.3.2.5.4.1 = ECGDSA/EMSA1(RIPEMD-160)" "\n"
+      "1.3.36.3.3.2.5.4.2 = ECGDSA/EMSA1(SHA-160)" "\n"
+      "1.3.36.3.3.2.5.4.3 = ECGDSA/EMSA1(SHA-224)" "\n"
+      "1.3.36.3.3.2.5.4.4 = ECGDSA/EMSA1(SHA-256)" "\n"
+      "1.3.36.3.3.2.5.4.5 = ECGDSA/EMSA1(SHA-384)" "\n"
+      "1.3.36.3.3.2.5.4.6 = ECGDSA/EMSA1(SHA-512)" "\n"
 
       "1.2.643.2.2.3 = GOST-34.10/EMSA1(GOST-R-34.11-94)" "\n"
 

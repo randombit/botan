@@ -443,7 +443,7 @@ class Command
          while(in.good())
             {
             in.read(reinterpret_cast<char*>(buf.data()), buf.size());
-            consumer_fn(buf.data(), in.gcount());
+            consumer_fn(buf.data(), static_cast<size_t>(in.gcount()));
             }
          }
 

@@ -66,11 +66,10 @@ class Compression_Tests : public Test
                {
                Test::Result result(algo + " compression");
 
-               std::unique_ptr<Botan::Compressor_Transform> c1(Botan::make_compressor(algo, 1));
-               std::unique_ptr<Botan::Compressor_Transform> c9(Botan::make_compressor(algo, 9));
-               std::unique_ptr<Botan::Compressor_Transform> d(Botan::make_decompressor(algo));
+               std::unique_ptr<Botan::Compression_Algorithm> c(Botan::make_compressor(algo));
+               std::unique_ptr<Botan::Decompression_Algorithm> d(Botan::make_decompressor(algo));
 
-               if(!c1 || !c9 || !d)
+               if(!c || !d)
                   {
                   result.note_missing(algo);
                   continue;
@@ -83,14 +82,14 @@ class Compression_Tests : public Test
                const uint8_t* textb = reinterpret_cast<const uint8_t*>(text_str);
                const Botan::secure_vector<uint8_t> text(textb, textb + text_len);
 
-               const size_t c1_e = run_compression(result, *c1, *d, empty);
-               const size_t c9_e = run_compression(result, *c9, *d, empty);
-               const size_t c1_z = run_compression(result, *c1, *d, all_zeros);
-               const size_t c9_z = run_compression(result, *c9, *d, all_zeros);
-               const size_t c1_r = run_compression(result, *c1, *d, random_binary);
-               const size_t c9_r = run_compression(result, *c9, *d, random_binary);
-               const size_t c1_t = run_compression(result, *c1, *d, text);
-               const size_t c9_t = run_compression(result, *c9, *d, text);
+               const size_t c1_e = run_compression(result, 1, *c, *d, empty);
+               const size_t c9_e = run_compression(result, 9, *c, *d, empty);
+               const size_t c1_z = run_compression(result, 1, *c, *d, all_zeros);
+               const size_t c9_z = run_compression(result, 9, *c, *d, all_zeros);
+               const size_t c1_r = run_compression(result, 1, *c, *d, random_binary);
+               const size_t c9_r = run_compression(result, 9, *c, *d, random_binary);
+               const size_t c1_t = run_compression(result, 1, *c, *d, text);
+               const size_t c9_t = run_compression(result, 9, *c, *d, text);
 
                result.test_gte("Empty input L1 compresses to non-empty output", c1_e, 1);
                result.test_gte("Empty input L9 compresses to non-empty output", c9_e, 1);
@@ -118,13 +117,14 @@ class Compression_Tests : public Test
 
       // Returns # of bytes of compressed message
       size_t run_compression(Test::Result& result,
-                             Botan::Compressor_Transform& c,
-                             Botan::Transform& d,
+                             size_t level,
+                             Botan::Compression_Algorithm& c,
+                             Botan::Decompression_Algorithm& d,
                              const Botan::secure_vector<uint8_t>& msg)
          {
          Botan::secure_vector<uint8_t> compressed = msg;
 
-         c.start();
+         c.start(level);
          c.finish(compressed);
 
          const size_t c_size = compressed.size();

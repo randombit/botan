@@ -4,6 +4,11 @@ Release Notes
 Version 1.11.30, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* In 1.11.23 a bug was introduced such that CBC-encrypted TLS packets
+  containing no plaintext bytes at all were incorrectly rejected with
+  a MAC failure. Records like this are used by OpenSSL in TLS 1.0
+  connections in order to randomize the IV.
+
 * Add IETF versions of the ChaCha20Poly1305 TLS ciphersuites from
   draft-ietf-tls-chacha20-poly1305-04. The previously implemented
   (non-standard) ChaCha20Poly1305 ciphersuites from
@@ -17,6 +22,18 @@ Version 1.11.30, Not Yet Released
 * A bug in the IETF version of ChaCha20Poly1305 (with 96 bit nonces)
   caused incorrect computation when the plaintext or AAD was exactly
   a multiple of 16 bytes.
+
+Version 1.10.13, 2016-04-23
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Use constant time modular inverse algorithm to avoid possible
+  side channel attack against ECDSA (CVE-2016-2849)
+
+* Use constant time PKCS #1 unpadding to avoid possible side channel
+  attack against RSA decryption (CVE-2015-7827)
+
+* Avoid a compilation problem in OpenSSL engine when ECDSA was
+  disabled. Gentoo bug 542010
 
 Version 1.11.29, 2016-03-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

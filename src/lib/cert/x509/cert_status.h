@@ -47,6 +47,8 @@ enum class Certificate_Status_Code {
 
    CERT_NAME_NOMATCH,
 
+   UNKNOWN_CRITICAL_EXTENSION,
+
    // Hard failures
    CERT_IS_REVOKED = 5000,
    CRL_BAD_SIGNATURE,

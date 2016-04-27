@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL AutoSeeded_RNG : public RandomNumberGenerator
+class AutoSeeded_RNG : public RandomNumberGenerator
    {
    public:
       void randomize(byte out[], size_t len) override
