@@ -37,7 +37,7 @@ void PKCS7_Padding::add_padding(secure_vector<byte>& buffer,
                                 size_t last_byte_pos,
                                 size_t block_size) const
    {
-   const byte pad_value = block_size - last_byte_pos;
+   const byte pad_value = static_cast<byte>(block_size - last_byte_pos);
 
    for(size_t i = 0; i != pad_value; ++i)
       buffer.push_back(pad_value);
@@ -67,7 +67,7 @@ void ANSI_X923_Padding::add_padding(secure_vector<byte>& buffer,
                                     size_t last_byte_pos,
                                     size_t block_size) const
    {
-   const byte pad_value = block_size - last_byte_pos;
+   const byte pad_value = static_cast<byte>(block_size - last_byte_pos);
 
    for(size_t i = last_byte_pos; i < block_size; ++i)
       buffer.push_back(0);

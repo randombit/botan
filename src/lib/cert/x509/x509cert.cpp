@@ -159,7 +159,7 @@ void X509_Certificate::force_decode()
    if(tbs_cert.more_items())
       throw Decoding_Error("TBSCertificate has more items that expected");
 
-   m_subject.add("X509.Certificate.version", version);
+   m_subject.add("X509.Certificate.version", static_cast<u32bit>(version));
    m_subject.add("X509.Certificate.serial", BigInt::encode(serial_bn));
    m_subject.add("X509.Certificate.start", start.to_string());
    m_subject.add("X509.Certificate.end", end.to_string());
@@ -182,7 +182,7 @@ void X509_Certificate::force_decode()
       const size_t limit = (x509_version() < 3) ?
         Cert_Extension::NO_CERT_PATH_LIMIT : 0;
 
-      m_subject.add("X509v3.BasicConstraints.path_constraint", limit);
+      m_subject.add("X509v3.BasicConstraints.path_constraint", static_cast<u32bit>(limit));
       }
    }
 

@@ -290,7 +290,7 @@ class BOTAN_DLL Text_Policy : public Policy
          { return get_bool("hide_unknown_users", Policy::hide_unknown_users()); }
 
       u32bit session_ticket_lifetime() const override
-         { return get_len("session_ticket_lifetime", Policy::session_ticket_lifetime()); }
+         { return static_cast<u32bit>(get_len("session_ticket_lifetime", Policy::session_ticket_lifetime())); }
 
       bool send_fallback_scsv(Protocol_Version version) const override
          { return get_bool("send_fallback_scsv", false) ? Policy::send_fallback_scsv(version) : false; }

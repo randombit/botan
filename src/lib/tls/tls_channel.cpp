@@ -122,7 +122,7 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
       io.reset(new Datagram_Handshake_IO(
                   std::bind(&Channel::send_record_under_epoch, this, _1, _2, _3),
                   sequence_numbers(),
-                  m_policy.dtls_default_mtu(),
+                  static_cast<u16bit>(m_policy.dtls_default_mtu()),
                   m_policy.dtls_initial_timeout(),
                   m_policy.dtls_maximum_timeout()));
       }
@@ -644,4 +644,3 @@ SymmetricKey Channel::key_material_export(const std::string& label,
 }
 
 }
-

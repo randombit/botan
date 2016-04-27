@@ -105,7 +105,7 @@ std::vector<byte> Extensions::serialize() const
       buf += extn_val;
       }
 
-   const u16bit extn_size = buf.size() - 2;
+   const u16bit extn_size = static_cast<u16bit>(buf.size() - 2);
 
    buf[0] = get_byte(0, extn_size);
    buf[1] = get_byte(1, extn_size);
@@ -147,7 +147,7 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader,
       if(name_type == 0) // DNS
          {
          m_sni_host_name = reader.get_string(2, 1, 65535);
-         name_bytes -= (2 + m_sni_host_name.size());
+         name_bytes -= static_cast<u16bit>(2 + m_sni_host_name.size());
          }
       else // some other unknown name type
          {
@@ -492,7 +492,7 @@ std::vector<byte> SRTP_Protection_Profiles::serialize() const
    {
    std::vector<byte> buf;
 
-   const u16bit pp_len = m_pp.size() * 2;
+   const u16bit pp_len = static_cast<u16bit>(m_pp.size() * 2);
    buf.push_back(get_byte(0, pp_len));
    buf.push_back(get_byte(1, pp_len));
 
