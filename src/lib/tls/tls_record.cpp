@@ -172,8 +172,8 @@ void write_record(secure_vector<byte>& output,
 
    if(!cs) // initial unencrypted handshake records
       {
-      output.push_back(get_byte<u16bit>(0, msg_length));
-      output.push_back(get_byte<u16bit>(1, msg_length));
+      output.push_back(get_byte(0, static_cast<u16bit>(msg_length)));
+      output.push_back(get_byte(1, static_cast<u16bit>(msg_length)));
 
       output.insert(output.end(), msg, msg + msg_length);
 
@@ -190,8 +190,8 @@ void write_record(secure_vector<byte>& output,
       const size_t rec_size = ctext_size + cs->nonce_bytes_from_record();
 
       BOTAN_ASSERT(rec_size <= 0xFFFF, "Ciphertext length fits in field");
-      output.push_back(get_byte<u16bit>(0, rec_size));
-      output.push_back(get_byte<u16bit>(1, rec_size));
+      output.push_back(get_byte(0, static_cast<u16bit>(rec_size)));
+      output.push_back(get_byte(1, static_cast<u16bit>(rec_size)));
 
       aead->set_ad(cs->format_ad(seq, msg_type, version, msg_length));
 
@@ -228,8 +228,8 @@ void write_record(secure_vector<byte>& output,
    if(buf_size > MAX_CIPHERTEXT_SIZE)
       throw Internal_Error("Output record is larger than allowed by protocol");
 
-   output.push_back(get_byte<u16bit>(0, buf_size));
-   output.push_back(get_byte<u16bit>(1, buf_size));
+   output.push_back(get_byte(0, static_cast<u16bit>(buf_size)));
+   output.push_back(get_byte(1, static_cast<u16bit>(buf_size)));
 
    const size_t header_size = output.size();
 
