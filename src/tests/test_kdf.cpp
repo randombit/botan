@@ -39,8 +39,9 @@ class KDF_KAT_Tests : public Text_Based_Test
          const std::vector<uint8_t> salt = get_opt_bin(vars, "Salt");
          const std::vector<uint8_t> secret = get_req_bin(vars, "Secret");
          const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
+         const std::vector<uint8_t> label = get_opt_bin(vars, "Label");
 
-         result.test_eq("derived key", kdf->derive_key(outlen, secret, salt), expected);
+         result.test_eq("derived key", kdf->derive_key(outlen, secret, salt, label), expected);
 
          return result;
          }

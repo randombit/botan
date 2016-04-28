@@ -11,7 +11,8 @@ namespace Botan {
 
 size_t KDF1::kdf(byte key[], size_t key_len,
                  const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len) const
+                 const byte salt[], size_t salt_len,
+                 const byte[], size_t) const
    {
    m_hash->update(secret, secret_len);
    m_hash->update(salt, salt_len);

@@ -27,17 +27,18 @@ SP800_56C* SP800_56C::make(const Spec& spec)
 
 size_t SP800_56C::kdf(byte key[], size_t key_len,
                       const byte secret[], size_t secret_len,
-                      const byte salt[], size_t salt_len) const
+                      const byte salt[], size_t salt_len,
+                      const byte label[], size_t label_len) const
    {
       // Randomness Extraction
-      secure_vector< byte > k_dk, context;
+      secure_vector< byte > k_dk;
 
       m_prf->set_key(salt, salt_len);
       m_prf->update(secret, secret_len);
       m_prf->final(k_dk);
 
       // Key Expansion
-      m_exp->kdf(key, key_len, k_dk.data(), k_dk.size(), context.data(), context.size());
+      m_exp->kdf(key, key_len, k_dk.data(), k_dk.size(), nullptr, 0, label, label_len);
 
    return key_len;
    }

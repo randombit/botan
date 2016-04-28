@@ -30,7 +30,8 @@ std::vector<byte> encode_x942_int(u32bit n)
 
 size_t X942_PRF::kdf(byte key[], size_t key_len,
                      const byte secret[], size_t secret_len,
-                     const byte salt[], size_t salt_len) const
+                     const byte salt[], size_t salt_len,
+                     const byte[], size_t) const
    {
    std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-160"));
    const OID kek_algo(m_key_wrap_oid);

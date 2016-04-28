@@ -205,7 +205,9 @@ class FFI_Unit_Tests : public Test
                                     kdf_secret.data(),
                                     kdf_secret.size(),
                                     kdf_salt.data(),
-                                    kdf_salt.size())))
+                                    kdf_salt.size(),
+                                    nullptr,
+                                    0)))
             {
             result.test_eq("KDF output", outbuf, "3A5DC9AA1C872B4744515AC2702D6396FC2A");
             }

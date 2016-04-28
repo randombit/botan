@@ -22,7 +22,8 @@ HKDF* HKDF::make(const Spec& spec)
 
 size_t HKDF::kdf(byte out[], size_t out_len,
                  const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len) const
+                 const byte salt[], size_t salt_len,
+                 const byte[], size_t) const
    {
    m_prf->set_key(secret, secret_len);
 

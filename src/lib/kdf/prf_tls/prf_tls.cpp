@@ -73,7 +73,8 @@ void P_hash(byte out[], size_t out_len,
 
 size_t TLS_PRF::kdf(byte key[], size_t key_len,
                     const byte secret[], size_t secret_len,
-                    const byte salt[], size_t salt_len) const
+                    const byte salt[], size_t salt_len,
+                    const byte[], size_t) const
    {
    const size_t S1_len = (secret_len + 1) / 2,
                 S2_len = (secret_len + 1) / 2;
@@ -87,7 +88,8 @@ size_t TLS_PRF::kdf(byte key[], size_t key_len,
 
 size_t TLS_12_PRF::kdf(byte key[], size_t key_len,
                        const byte secret[], size_t secret_len,
-                       const byte salt[], size_t salt_len) const
+                       const byte salt[], size_t salt_len,
+                       const byte[], size_t) const
    {
    P_hash(key, key_len, *m_mac, secret, secret_len, salt, salt_len);
    return key_len;

@@ -38,7 +38,7 @@ std::vector<byte> finished_compute_verify(const Handshake_State& state,
 
    input += state.hash().final(state.version(), state.ciphersuite().prf_algo());
 
-   return unlock(prf->derive_key(12, state.session_keys().master_secret(), input));
+   return unlock(prf->derive_key(12, state.session_keys().master_secret(), input, secure_vector<byte>()));
    }
 
 }

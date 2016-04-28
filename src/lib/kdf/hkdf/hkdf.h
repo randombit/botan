@@ -31,7 +31,8 @@ class BOTAN_DLL HKDF final : public KDF
 
       size_t kdf(byte out[], size_t out_len,
                  const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len) const override;
+                 const byte salt[], size_t salt_len,
+                 const byte label[], size_t label_len) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;

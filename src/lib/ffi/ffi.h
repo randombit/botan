@@ -269,7 +269,8 @@ BOTAN_DLL int botan_pbkdf_timed(const char* pbkdf_algo,
 BOTAN_DLL int botan_kdf(const char* kdf_algo,
                         uint8_t out[], size_t out_len,
                         const uint8_t secret[], size_t secret_len,
-                        const uint8_t salt[], size_t salt_len);
+                        const uint8_t salt[], size_t salt_len,
+                        const uint8_t label[], size_t label_len);
 
 /*
 * Bcrypt

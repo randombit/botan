@@ -635,7 +635,7 @@ SymmetricKey Channel::key_material_export(const std::string& label,
          salt += to_byte_vector(context);
          }
 
-      return prf->derive_key(length, master_secret, salt);
+      return prf->derive_key(length, master_secret, salt, secure_vector<byte>());
       }
    else
       throw Exception("Channel::key_material_export connection not active");
