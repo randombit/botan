@@ -19,6 +19,10 @@ Version 1.11.30, Not Yet Released
   previous versions of the draft, and the ciphersuite numbers used for
   the (still experimental) OCB ciphersuites have changed.
 
+* Add ECGDSA signature algorithm (GH #479)
+
+* Add NIST SP800-108 and 56C KDFs
+
 * A bug in the IETF version of ChaCha20Poly1305 (with 96 bit nonces)
   caused incorrect computation when the plaintext or AAD was exactly
   a multiple of 16 bytes.

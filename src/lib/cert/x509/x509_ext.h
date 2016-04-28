@@ -490,7 +490,7 @@ class BOTAN_DLL Unknown_Critical_Extension final : public Certificate_Extension
       std::string oid_name() const override
          { return "Unknown OID name"; }
 
-      bool should_encode() const { return false; }
+      bool should_encode() const override { return false; }
       std::vector<byte> encode_inner() const override;
       void decode_inner(const std::vector<byte>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;

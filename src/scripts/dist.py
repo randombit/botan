@@ -3,7 +3,7 @@
 """
 Release script for botan (http://botan.randombit.net/)
 
-(C) 2011, 2012, 2013, 2015 Jack Lloyd
+(C) 2011, 2012, 2013, 2015, 2016 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -218,29 +218,50 @@ def main(args = None):
 
     version_file = os.path.join(output_basename, 'botan_version.py')
 
-    if os.access(version_file, os.R_OK):
-        # rewrite botan_version.py
-
-        contents = open(version_file).readlines()
-
-        def content_rewriter():
-            for line in contents:
-                if line == 'release_vc_rev = None\n':
-                    yield 'release_vc_rev = \'git:%s\'\n' % (rev_id)
-                elif line == 'release_datestamp = 0\n':
-                    yield 'release_datestamp = %d\n' % (rel_date)
-                elif line == "release_type = \'unreleased\'\n":
-                    if args[0] == 'snapshot':
-                        yield "release_type = 'snapshot'\n"
-                    else:
-                        yield "release_type = 'released'\n"
-                else:
-                    yield line
-
-        open(version_file, 'w').write(''.join(list(content_rewriter())))
-    else:
+    if os.access(version_file, os.R_OK) == False:
         logging.error('Cannot read %s' % (version_file))
         return 2
+
+    # rewrite botan_version.py
+
+    contents = open(version_file).readlines()
+
+    version_re = re.compile('release_(major|minor|patch) = ([0-9]+)')
+    version_parts = target_version.split('.')
+    assert len(version_parts) == 3
+
+    def content_rewriter():
+        for line in contents:
+
+            if target_version != 'HEAD':
+                match = version_re.match(line)
+                if match:
+                    name_to_idx = {
+                        'major': 0,
+                        'minor': 1,
+                        'patch': 2
+                    }
+                    in_tag = int(version_parts[name_to_idx[match.group(1)]])
+                    in_file = int(match.group(2))
+
+                    if in_tag != in_file:
+                        logging.error('Version number part "%s" in botan_version.py does not match tag %s' %
+                                      (match.group(1), target_version))
+                        raise Exception('Bad botan_version.py')
+
+            if line == 'release_vc_rev = None\n':
+                yield 'release_vc_rev = \'git:%s\'\n' % (rev_id)
+            elif line == 'release_datestamp = 0\n':
+                yield 'release_datestamp = %d\n' % (rel_date)
+            elif line == "release_type = \'unreleased\'\n":
+                if args[0] == 'snapshot':
+                    yield "release_type = 'snapshot'\n"
+                else:
+                    yield "release_type = 'released'\n"
+            else:
+                yield line
+
+    open(version_file, 'w').write(''.join(list(content_rewriter())))
 
     try:
         os.makedirs(options.output_dir)
@@ -323,5 +344,5 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(e)
         import traceback
-        logging.info(traceback.format_exc())
+        logging.debug(traceback.format_exc())
         sys.exit(1)

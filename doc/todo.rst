@@ -14,8 +14,11 @@ CLI
   for an example
 * `encrypt` / `decrypt` tools providing password and/or public key
   based file encryption
+* `bcrypt` cmdlet
+* Make help output more helpful
 * More microbenchmarks in `speed`: modular exponentiation, ECC point
   multiplication, other BigInt operations
+* Compute cycles/byte estimates for benchmark output
 
 TLS
 ----------------------------------------
@@ -81,6 +84,7 @@ Symmetric Algorithms, Hashes, ...
 * Bitsliced AES or Camellia
 * Compressed tables for AES
 * AES using vector permutes for NEON, AltiVec
+* Use ARMv8 crypto: AES, SHA
 * Camellia with AES-NI
 * Serpent using AVX2
 * Serpent using SSSE3 pshufb for sboxes
@@ -112,7 +116,6 @@ Library Infrastructure
 
 * Add logging callbacks
 * Add latency tracing framework
-* Compute cycles/byte estimates for benchmark output
 
 Build
 ----------------------------------------
