@@ -27,7 +27,7 @@ Advisories
   information about the nonce to eventually recover the ECDSA secret key. Found
   by Sean Devlin.
 
-  Introduced in 1.7.15, fixed in 1.11.29
+  Introduced in 1.7.15, fixed in 1.10.13 and 1.11.29
 
 * 2016-03-17 (CVE-2016-2850): Failure to enforce TLS policy
 
@@ -158,7 +158,7 @@ Advisories
   time blocks with ctgrind (https://github.com/agl/ctgrind) were added to PKCS
   #1 decoding among other areas. Found in a review by Sirrix AG and 3curity GmbH.
 
-  Fixed in 1.11.22. Affected all previous versions.
+  Fixed in 1.11.22 and 1.10.13. Affected all previous versions.
 
 * 2015-08-03 (CVE-2015-5726): Crash in BER decoder
 
