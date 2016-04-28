@@ -5,10 +5,13 @@ Botan (Japanese for peony) is a cryptography library written in C++11
 and released under the permissive `Simplified BSD
 <http://botan.randombit.net/license.txt>`_ license.
 
-It provides TLS, X.509 certificates, OCSP, ECDSA, AES, GCM, ChaCha20Poly1305,
-McEliece, bcrypt, and quite a few other things. It also provides a `botan`
-command line tool for various cryptographic operations, the source for which
-also helps demonstrate usage of the library.
+It contains TLS client and server implementation, X.509 certificates,
+ECDSA, AES, GCM, ChaCha20Poly1305, McEliece, bcrypt and other useful
+tools.
+
+As part of the build there is also a `botan` program built for command
+line usage (similar to `openssl`). The sources for these are intended to
+act as good examples of library usage.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
 and contributions are welcome. Read `doc/contributing.rst` for more
@@ -40,18 +43,16 @@ think you've found a security bug, read the
 `security page <http://botan.randombit.net/security.html>`_
 for contact information and procedures.
 
-The `GitHub wiki <https://github.com/randombit/botan/wiki>`_
-and `Doxygen docs <https://botan.randombit.net/doxygen>`_
-may also prove as useful resources.
-
 In addition to C++, botan has a C89 API specifically designed to be easy
 to call from other languages. A Python binding using ctypes is included,
 there are also partial bindings for
 `Node.js <https://github.com/justinfreitag/node-botan>`_ and
 `OCaml <https://github.com/randombit/botan-ocaml>`_ among others.
 
-There is also a third party open source implementation of
-`SSHv2 <https://github.com/cdesjardins/cppssh>`_ using the library.
+There is no support for the SSH protocol in Botan but there is a
+seperately developed C++11 SSH library by `cdesjardins
+<https://github.com/cdesjardins/cppssh>`_ which uses Botan for crypto
+operations.
 
 .. image:: https://travis-ci.org/randombit/botan.svg?branch=master
     :target: https://travis-ci.org/randombit/botan
@@ -188,9 +189,9 @@ Hash functions and MACs
 
 * SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512
 * SHA-3 winner Keccak-1600
-* SHA-3 candidate Skein-512
-* Authentication codes HMAC, CMAC, Poly1305, SipHash
+* Skein-512, BLAKE2b
 * RIPEMD-160, Tiger, Whirlpool, GOST 34.11
+* Authentication codes HMAC, CMAC, Poly1305, SipHash
 * Hash function combiners (Parallel and Comb4P)
 * Non-cryptographic checksums Adler32, CRC24, CRC32
 * Obsolete algorithms MD5, MD4, CBC-MAC, X9.19 DES-MAC
