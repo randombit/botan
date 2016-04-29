@@ -1,6 +1,7 @@
 /*
 * Multiplication and Squaring
 * (C) 1999-2010 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -252,60 +253,55 @@ size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw)
 /*
 * Multiplication Algorithm Dispatcher
 */
-void bigint_mul(word z[], size_t z_size, word workspace[],
-                const word x[], size_t x_size, size_t x_sw,
-                const word y[], size_t y_size, size_t y_sw)
+void bigint_mul(BigInt& z, const BigInt& x, const BigInt& y, word workspace[])
    {
-   // checking that z_size >= x_sw + y_sw without overflow
-   BOTAN_ASSERT(z_size > x_sw && z_size > y_sw && z_size-x_sw >= y_sw, "Output size is sufficient");
-
-   if(x_sw == 1)
+   if(x.sig_words() == 1)
       {
-      bigint_linmul3(z, y, y_sw, x[0]);
+      bigint_linmul3(z.mutable_data(), y.data(), y.sig_words(), x.data()[0]);
       }
-   else if(y_sw == 1)
+   else if(y.sig_words() == 1)
       {
-      bigint_linmul3(z, x, x_sw, y[0]);
+      bigint_linmul3(z.mutable_data(), x.data(), x.sig_words(), y.data()[0]);
       }
-   else if(x_sw <= 4 && x_size >= 4 &&
-           y_sw <= 4 && y_size >= 4 && z_size >= 8)
+   else if(x.sig_words() <= 4 && x.size() >= 4 &&
+           y.sig_words() <= 4 && y.size() >= 4 && z.size() >= 8)
       {
-      bigint_comba_mul4(z, x, y);
+      bigint_comba_mul4(z.mutable_data(), x.data(), y.data());
       }
-   else if(x_sw <= 6 && x_size >= 6 &&
-           y_sw <= 6 && y_size >= 6 && z_size >= 12)
+   else if(x.sig_words() <= 6 && x.size() >= 6 &&
+           y.sig_words() <= 6 && y.size() >= 6 && z.size() >= 12)
       {
-      bigint_comba_mul6(z, x, y);
+      bigint_comba_mul6(z.mutable_data(), x.data(), y.data());
       }
-   else if(x_sw <= 8 && x_size >= 8 &&
-           y_sw <= 8 && y_size >= 8 && z_size >= 16)
+   else if(x.sig_words() <= 8 && x.size() >= 8 &&
+           y.sig_words() <= 8 && y.size() >= 8 && z.size() >= 16)
       {
-      bigint_comba_mul8(z, x, y);
+      bigint_comba_mul8(z.mutable_data(), x.data(), y.data());
       }
-   else if(x_sw <= 9 && x_size >= 9 &&
-           y_sw <= 9 && y_size >= 9 && z_size >= 18)
+   else if(x.sig_words() <= 9 && x.size() >= 9 &&
+           y.sig_words() <= 9 && y.size() >= 9 && z.size() >= 18)
       {
-      bigint_comba_mul9(z, x, y);
+      bigint_comba_mul9(z.mutable_data(), x.data(), y.data());
       }
-   else if(x_sw <= 16 && x_size >= 16 &&
-           y_sw <= 16 && y_size >= 16 && z_size >= 32)
+   else if(x.sig_words() <= 16 && x.size() >= 16 &&
+           y.sig_words() <= 16 && y.size() >= 16 && z.size() >= 32)
       {
-      bigint_comba_mul16(z, x, y);
+      bigint_comba_mul16(z.mutable_data(), x.data(), y.data());
       }
-   else if(x_sw < KARATSUBA_MULTIPLY_THRESHOLD ||
-           y_sw < KARATSUBA_MULTIPLY_THRESHOLD ||
+   else if(x.sig_words() < KARATSUBA_MULTIPLY_THRESHOLD ||
+           y.sig_words() < KARATSUBA_MULTIPLY_THRESHOLD ||
            !workspace)
       {
-      basecase_mul(z, x, x_sw, y, y_sw);
+      basecase_mul(z.mutable_data(), x.data(), x.sig_words(), y.data(), y.sig_words());
       }
    else
       {
-      const size_t N = karatsuba_size(z_size, x_size, x_sw, y_size, y_sw);
+      const size_t N = karatsuba_size(z.size(), x.size(), x.sig_words(), y.size(), y.sig_words());
 
       if(N)
-         karatsuba_mul(z, x, y, N, workspace);
+         karatsuba_mul(z.mutable_data(), x.data(), y.data(), N, workspace);
       else
-         basecase_mul(z, x, x_sw, y, y_sw);
+         basecase_mul(z.mutable_data(), x.data(), x.sig_words(), y.data(), y.sig_words());
       }
    }
 

@@ -2,10 +2,12 @@
 * Montgomery Reduction
 * (C) 1999-2011 Jack Lloyd
 *     2006 Luca Piccarreta
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/bigint.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/mp_madd.h>
 #include <botan/internal/mp_asmi.h>
@@ -92,30 +94,25 @@ void bigint_monty_redc(word z[],
    BOTAN_ASSERT(borrow == 0 || borrow == 1, "Expected borrow");
    }
 
-void bigint_monty_mul(word z[], size_t z_size,
-                      const word x[], size_t x_size, size_t x_sw,
-                      const word y[], size_t y_size, size_t y_sw,
+void bigint_monty_mul(BigInt& z, const BigInt& x, const BigInt& y,
                       const word p[], size_t p_size, word p_dash,
                       word ws[])
    {
-   bigint_mul(&z[0], z_size, &ws[0],
-              &x[0], x_size, x_sw,
-              &y[0], y_size, y_sw);
+   bigint_mul(z, x, y, &ws[0]);
 
-   bigint_monty_redc(&z[0],
+   bigint_monty_redc(z.mutable_data(),
                      &p[0], p_size, p_dash,
                      &ws[0]);
+
    }
 
-void bigint_monty_sqr(word z[], size_t z_size,
-                      const word x[], size_t x_size, size_t x_sw,
-                      const word p[], size_t p_size, word p_dash,
-                      word ws[])
+void bigint_monty_sqr(BigInt& z, const BigInt& x, const word p[],
+                      size_t p_size, word p_dash, word ws[])
    {
-   bigint_sqr(&z[0], z_size, &ws[0],
-              &x[0], x_size, x_sw);
+   bigint_sqr(z.mutable_data(), z.size(), &ws[0],
+              x.data(), x.size(), x.sig_words());
 
-   bigint_monty_redc(&z[0],
+   bigint_monty_redc(z.mutable_data(),
                      &p[0], p_size, p_dash,
                      &ws[0]);
    }

@@ -1,6 +1,7 @@
 /*
 * PKCS #10/Self Signed Cert Creation
 * (C) 1999-2008 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

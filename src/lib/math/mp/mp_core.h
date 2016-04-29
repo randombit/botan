@@ -2,6 +2,7 @@
 * MPI Algorithms
 * (C) 1999-2010 Jack Lloyd
 *     2006 Luca Piccarreta
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +10,7 @@
 #ifndef BOTAN_MP_CORE_OPS_H__
 #define BOTAN_MP_CORE_OPS_H__
 
+#include <botan/bigint.h>
 #include <botan/mp_types.h>
 
 namespace Botan {
@@ -134,17 +136,14 @@ void bigint_monty_redc(word z[],
 /*
 * Montgomery Multiplication
 */
-void bigint_monty_mul(word z[], size_t z_size,
-                      const word x[], size_t x_size, size_t x_sw,
-                      const word y[], size_t y_size, size_t y_sw,
+void bigint_monty_mul(BigInt& z, const BigInt& x, const BigInt& y,
                       const word p[], size_t p_size, word p_dash,
                       word workspace[]);
 
 /*
 * Montgomery Squaring
 */
-void bigint_monty_sqr(word z[], size_t z_size,
-                      const word x[], size_t x_size, size_t x_sw,
+void bigint_monty_sqr(BigInt& z, const BigInt& x,
                       const word p[], size_t p_size, word p_dash,
                       word workspace[]);
 
@@ -182,9 +181,7 @@ void bigint_comba_sqr16(word out[32], const word in[16]);
 /*
 * High Level Multiplication/Squaring Interfaces
 */
-void bigint_mul(word z[], size_t z_size, word workspace[],
-                const word x[], size_t x_size, size_t x_sw,
-                const word y[], size_t y_size, size_t y_sw);
+void bigint_mul(BigInt& z, const BigInt& x, const BigInt& y, word workspace[]);
 
 void bigint_sqr(word z[], size_t z_size, word workspace[],
                 const word x[], size_t x_size, size_t x_sw);
