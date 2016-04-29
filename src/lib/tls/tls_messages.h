@@ -1,6 +1,7 @@
 /*
 * TLS Messages
 * (C) 2004-2011,2015 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -61,6 +62,26 @@ class Hello_Verify_Request final : public Handshake_Message
 class Client_Hello final : public Handshake_Message
    {
    public:
+      class Settings
+      {
+          public:
+              Settings(const Protocol_Version version,
+                       const std::string& hostname = "",
+                       const std::string& srp_identifier = "")
+                  : m_new_session_version(version),
+                    m_hostname(hostname),
+                    m_srp_identifier(srp_identifier) {};
+
+              const Protocol_Version protocol_version() const { return m_new_session_version; };
+              const std::string& hostname() const { return m_hostname; };
+              const std::string& srp_identifier() const { return m_srp_identifier; }
+
+          private:
+              const Protocol_Version m_new_session_version;
+              const std::string m_hostname;
+              const std::string m_srp_identifier;
+      };
+
       Handshake_Type type() const override { return CLIENT_HELLO; }
 
       Protocol_Version version() const { return m_version; }
@@ -160,18 +181,14 @@ class Client_Hello final : public Handshake_Message
       std::set<Handshake_Extension_Type> extension_types() const
          { return m_extensions.extension_types(); }
 
-      Client_Hello(Handshake_IO& io,
-                   Handshake_Hash& hash,
-                   Protocol_Version version,
+      Client_Hello(Handshake_Info& hs_info,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
                    const std::vector<byte>& reneg_info,
-                   const std::vector<std::string>& next_protocols,
-                   const std::string& hostname = "",
-                   const std::string& srp_identifier = "");
+                   const Client_Hello::Settings& client_settings,
+                   const std::vector<std::string>& next_protocols);
 
-      Client_Hello(Handshake_IO& io,
-                   Handshake_Hash& hash,
+      Client_Hello(Handshake_Info& hs_info,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
                    const std::vector<byte>& reneg_info,
@@ -199,6 +216,35 @@ class Client_Hello final : public Handshake_Message
 class Server_Hello final : public Handshake_Message
    {
    public:
+      class Settings
+      {
+          public:
+              Settings(const std::vector<byte> new_session_id,
+                       Protocol_Version new_session_version,
+                       u16bit ciphersuite,
+                       byte compression,
+                       bool offer_session_ticket)
+                  : m_new_session_id(new_session_id),
+                    m_new_session_version(new_session_version),
+                    m_ciphersuite(ciphersuite),
+                    m_compression(compression),
+                    m_offer_session_ticket(offer_session_ticket) {};
+
+              const std::vector<byte>& session_id() const { return m_new_session_id; };
+              Protocol_Version protocol_version() const { return m_new_session_version; };
+              u16bit ciphersuite() const { return m_ciphersuite; };
+              byte compression() const { return m_compression; }
+              bool offer_session_ticket() const { return m_offer_session_ticket; }
+
+          private:
+              const std::vector<byte> m_new_session_id;
+              Protocol_Version m_new_session_version;
+              u16bit m_ciphersuite;
+              byte m_compression;
+              bool m_offer_session_ticket;
+      };
+
+
       Handshake_Type type() const override { return SERVER_HELLO; }
 
       Protocol_Version version() const { return m_version; }
@@ -256,21 +302,15 @@ class Server_Hello final : public Handshake_Message
       std::set<Handshake_Extension_Type> extension_types() const
          { return m_extensions.extension_types(); }
 
-      Server_Hello(Handshake_IO& io,
-                   Handshake_Hash& hash,
+      Server_Hello(Handshake_Info& hs_info,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
                    const std::vector<byte>& secure_reneg_info,
                    const Client_Hello& client_hello,
-                   const std::vector<byte>& new_session_id,
-                   Protocol_Version new_session_version,
-                   u16bit ciphersuite,
-                   byte compression,
-                   bool offer_session_ticket,
-                   const std::string& next_protocol);
+                   const Server_Hello::Settings& settings,
+                   const std::string next_protocol);
 
-      Server_Hello(Handshake_IO& io,
-                   Handshake_Hash& hash,
+      Server_Hello(Handshake_Info& hs_info,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
                    const std::vector<byte>& secure_reneg_info,
@@ -301,7 +341,6 @@ class Client_Key_Exchange final : public Handshake_Message
 
       const secure_vector<byte>& pre_master_secret() const
          { return m_pre_master; }
-
       Client_Key_Exchange(Handshake_IO& io,
                           Handshake_State& state,
                           const Policy& policy,
@@ -337,8 +376,7 @@ class Certificate final : public Handshake_Message
       size_t count() const { return m_certs.size(); }
       bool empty() const { return m_certs.empty(); }
 
-      Certificate(Handshake_IO& io,
-                  Handshake_Hash& hash,
+      Certificate(Handshake_Info& hs_info,
                   const std::vector<X509_Certificate>& certs);
 
       explicit Certificate(const std::vector<byte>& buf);
@@ -364,8 +402,7 @@ class Certificate_Req final : public Handshake_Message
       std::vector<std::pair<std::string, std::string> > supported_algos() const
          { return m_supported_algos; }
 
-      Certificate_Req(Handshake_IO& io,
-                      Handshake_Hash& hash,
+      Certificate_Req(Handshake_Info& hs_info,
                       const Policy& policy,
                       const std::vector<X509_DN>& allowed_cas,
                       Protocol_Version version);

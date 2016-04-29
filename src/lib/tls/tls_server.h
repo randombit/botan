@@ -1,6 +1,7 @@
 /*
 * TLS Server
 * (C) 2004-2011 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,7 +11,10 @@
 
 #include <botan/tls_channel.h>
 #include <botan/credentials_manager.h>
+#include <botan/internal/tls_server_handshake_state.h>
 #include <vector>
+
+
 
 namespace Botan {
 
@@ -27,32 +31,15 @@ class BOTAN_DLL Server final : public Channel
       /**
       * Server initialization
       */
-      Server(output_fn output,
-             data_cb data_cb,
-             alert_cb alert_cb,
-             handshake_cb handshake_cb,
+      Server(const Callbacks& callbacks,
              Session_Manager& session_manager,
              Credentials_Manager& creds,
              const Policy& policy,
              RandomNumberGenerator& rng,
              next_protocol_fn next_proto = next_protocol_fn(),
              bool is_datagram = false,
-             size_t reserved_io_buffer_size = 16*1024
+             size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
          );
-
-      Server(output_fn output,
-             data_cb data_cb,
-             alert_cb alert_cb,
-             handshake_cb handshake_cb,
-             handshake_msg_cb hs_msg_cb,
-             Session_Manager& session_manager,
-             Credentials_Manager& creds,
-             const Policy& policy,
-             RandomNumberGenerator& rng,
-             next_protocol_fn next_proto = next_protocol_fn(),
-             bool is_datagram = false
-         );
-
       /**
       * Return the protocol notification set by the client (using the
       * NPN extension) for this connection, if any. This value is not
@@ -72,6 +59,33 @@ class BOTAN_DLL Server final : public Channel
                                  Handshake_State& pending_state,
                                  Handshake_Type type,
                                  const std::vector<byte>& contents) override;
+
+      void process_client_hello_msg(const Handshake_State* active_state,
+                                    Server_Handshake_State& pending_state,
+                                    const std::vector<byte>& contents);
+
+      void process_certificate_msg(Server_Handshake_State& pending_state,
+                                   const std::vector<byte>& contents);
+
+      void process_client_key_exchange_msg(Server_Handshake_State& pending_state,
+                                           const std::vector<byte>& contents);
+
+      void process_change_cipher_spec_msg(Server_Handshake_State& pending_state);
+
+      void process_certificate_verify_msg(Server_Handshake_State& pending_state,
+                                          Handshake_Type type,
+                                          const std::vector<byte>& contents);
+
+      void process_finished_msg(Server_Handshake_State& pending_state,
+                                Handshake_Type type,
+                                const std::vector<byte>& contents);
+
+      void session_resume(Server_Handshake_State& pending_state,
+                          bool have_session_ticket_key,
+                          Session& session_info);
+
+      void session_create(Server_Handshake_State& pending_state,
+                          bool have_session_ticket_key);
 
       Handshake_State* new_handshake_state(Handshake_IO* io) override;
 

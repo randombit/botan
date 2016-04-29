@@ -1,6 +1,7 @@
 /*
 * TLS Channel
 * (C) 2011,2012,2014,2015 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -32,22 +33,58 @@ class Handshake_Message;
 class BOTAN_DLL Channel
    {
    public:
-      typedef std::function<void (const byte[], size_t)> output_fn;
-      typedef std::function<void (const byte[], size_t)> data_cb;
-      typedef std::function<void (Alert, const byte[], size_t)> alert_cb;
-      typedef std::function<bool (const Session&)> handshake_cb;
-      typedef std::function<void (const Handshake_Message&)> handshake_msg_cb;
+      static size_t IO_BUF_DEFAULT_SIZE;
 
-      Channel(output_fn out,
-              data_cb app_data_cb,
-              alert_cb alert_cb,
-              handshake_cb hs_cb,
-              handshake_msg_cb hs_msg_cb,
+      class Callbacks
+         {
+            public:
+               typedef std::function<void (const byte[], size_t)> output_fn;
+               typedef std::function<void (const byte[], size_t)> data_cb;
+               typedef std::function<void (Alert, const byte[], size_t)> alert_cb;
+               typedef std::function<bool (const Session&)> handshake_cb;
+               typedef std::function<void (const Handshake_Message&)> handshake_msg_cb;
+               /**
+                * Encapsulates a set of callback functions required by a TLS Channel.
+                * @param output_fn is called with data for the outbound socket
+                *
+                * @param app_data_cb is called when new application data is received
+                *
+                * @param alert_cb is called when a TLS alert is received
+                *
+                * @param handshake_cb is called when a handshake is completed
+                */
+                Callbacks(output_fn out, data_cb app_data_cb, alert_cb alert_cb,
+                          handshake_cb hs_cb)
+                   : m_output_function(out), m_app_data_cb(app_data_cb),
+                     m_alert_cb(alert_cb), m_hs_cb(hs_cb), m_hs_msg_cb() {}
+
+                Callbacks(output_fn out, data_cb app_data_cb, alert_cb alert_cb,
+                          handshake_cb hs_cb, handshake_msg_cb hs_msg_cb)
+                   : m_output_function(out), m_app_data_cb(app_data_cb),
+                     m_alert_cb(alert_cb), m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb) {}
+
+                const output_fn& out_fn() const { return m_output_function; }
+                const data_cb& app_data() const { return m_app_data_cb; }
+                const alert_cb& alert() const { return m_alert_cb; }
+                const handshake_cb& handshake() const { return m_hs_cb; }
+                const handshake_msg_cb& handshake_msg() const { return m_hs_msg_cb; }
+
+             private:
+                  const output_fn m_output_function;
+                  const data_cb m_app_data_cb;
+                  const alert_cb m_alert_cb;
+                  const handshake_cb m_hs_cb;
+                  const handshake_msg_cb m_hs_msg_cb;
+         };
+
+
+
+      Channel(const Callbacks& callbacks,
               Session_Manager& session_manager,
               RandomNumberGenerator& rng,
               const Policy& policy,
               bool is_datagram,
-              size_t io_buf_sz = 16*1024);
+              size_t io_buf_sz = IO_BUF_DEFAULT_SIZE);
 
       Channel(const Channel&) = delete;
 
@@ -200,9 +237,9 @@ class BOTAN_DLL Channel
 
       const Policy& policy() const { return m_policy; }
 
-      bool save_session(const Session& session) const { return m_handshake_cb(session); }
+      bool save_session(const Session& session) const { return m_callbacks.handshake()(session); }
 
-      handshake_msg_cb get_handshake_msg_cb() const { return m_handshake_msg_cb; }
+      Callbacks get_callbacks() const { return m_callbacks; }
    private:
       void send_record(byte record_type, const std::vector<byte>& record);
 
@@ -227,14 +264,20 @@ class BOTAN_DLL Channel
 
       const Handshake_State* pending_state() const { return m_pending_state.get(); }
 
+      /* methods to handle incoming traffic through Channel::receive_data. */
+      void process_handshake_ccs(secure_vector<byte>& record,
+                                 u64bit& record_sequence,
+                                 Record_Type& record_type,
+                                 Protocol_Version& record_version);
+
+      void process_application_data(secure_vector<byte>& record);
+
+      void process_alert(secure_vector<byte>& record);
+
       bool m_is_datagram;
 
       /* callbacks */
-      data_cb m_data_cb;
-      alert_cb m_alert_cb;
-      output_fn m_output_fn;
-      handshake_cb m_handshake_cb;
-      handshake_msg_cb m_handshake_msg_cb;
+      Callbacks m_callbacks;
 
       /* external state */
       Session_Manager& m_session_manager;

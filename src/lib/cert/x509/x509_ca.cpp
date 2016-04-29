@@ -78,8 +78,10 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
 
    return make_cert(m_signer, rng, m_ca_sig_algo,
                     req.raw_public_key(),
-                    not_before, not_after,
-                    m_cert.subject_dn(), req.subject_dn(),
+                    Certificate_Properties(not_before,
+                                           not_after,
+                                           m_cert.subject_dn(),
+                                           req.subject_dn()),
                     extensions);
    }
 
@@ -90,10 +92,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
                                     RandomNumberGenerator& rng,
                                     const AlgorithmIdentifier& sig_algo,
                                     const std::vector<byte>& pub_key,
-                                    const X509_Time& not_before,
-                                    const X509_Time& not_after,
-                                    const X509_DN& issuer_dn,
-                                    const X509_DN& subject_dn,
+                                    const Certificate_Properties properties,
                                     const Extensions& extensions)
    {
    const size_t X509_CERT_VERSION = 3;
@@ -112,14 +111,14 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
          .encode(serial_no)
 
          .encode(sig_algo)
-         .encode(issuer_dn)
+         .encode(properties.get_issuer_dn())
 
          .start_cons(SEQUENCE)
-            .encode(not_before)
-            .encode(not_after)
+            .encode(properties.get_not_before())
+            .encode(properties.get_not_after())
          .end_cons()
 
-         .encode(subject_dn)
+         .encode(properties.get_subject_dn())
          .raw_bytes(pub_key)
 
          .start_explicit(3)

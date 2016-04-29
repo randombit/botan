@@ -22,6 +22,25 @@ namespace Botan {
 class BOTAN_DLL X509_CA
    {
    public:
+      class Certificate_Properties
+         {
+         public:
+            Certificate_Properties(X509_Time not_before, X509_Time not_after,
+                                   X509_DN issuer_dn, X509_DN subject_dn)
+               : m_not_before(not_before), m_not_after(not_after),
+                 m_issuer_dn(issuer_dn), m_subject_dn(subject_dn) {}
+
+            const X509_Time& get_not_before() const { return m_not_before; }
+            const X509_Time& get_not_after() const { return m_not_after; }
+            const X509_DN& get_issuer_dn() const { return m_issuer_dn; }
+            const X509_DN& get_subject_dn() const { return m_subject_dn; }
+
+         private:
+            X509_Time m_not_before;
+            X509_Time m_not_after;
+            X509_DN m_issuer_dn;
+            X509_DN m_subject_dn;
+         };
 
       /**
       * Sign a PKCS#10 Request.
@@ -82,10 +101,7 @@ class BOTAN_DLL X509_CA
                                         RandomNumberGenerator& rng,
                                         const AlgorithmIdentifier& sig_algo,
                                         const std::vector<byte>& pub_key,
-                                        const X509_Time& not_before,
-                                        const X509_Time& not_after,
-                                        const X509_DN& issuer_dn,
-                                        const X509_DN& subject_dn,
+                                        const Certificate_Properties properties,
                                         const Extensions& extensions);
 
       /**

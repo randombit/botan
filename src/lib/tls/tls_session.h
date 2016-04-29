@@ -1,6 +1,7 @@
 /*
 * TLS Session
 * (C) 2011-2012,2015 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -27,35 +28,106 @@ namespace TLS {
 class BOTAN_DLL Session
    {
    public:
+      class Properties
+         {
+         public:
+            Properties() : m_srtp_profile(0), m_protocol_version(),
+               m_ciphersuite(), m_compression_method(0) {}
+
+            Properties(const Server_Information& server_info,
+                       const std::string& srp_identifier,
+                       u16bit srtp_profile,
+                       Protocol_Version protocol_version,
+                       u16bit ciphersuite,
+                       byte compression_method)
+               : m_server_info(server_info),
+                 m_srp_identifier(srp_identifier),
+                 m_srtp_profile(srtp_profile),
+                 m_protocol_version(protocol_version),
+                 m_ciphersuite(ciphersuite),
+                 m_compression_method(compression_method) {}
+
+               const Server_Information& get_server_info() const
+                  {
+                  return m_server_info;
+                  }
+
+               void set_server_info(Server_Information server_info)
+                  {
+                  m_server_info = server_info;
+                  }
+
+               const std::string& get_srp_identifier() const
+                 {
+                    return m_srp_identifier;
+                 }
+
+               void set_srp_identifier(const std::string& srp_identifier)
+                 {
+                    m_srp_identifier = srp_identifier;
+                 }
+
+               u16bit get_srtp_profile() const { return m_srtp_profile; }
+               void set_srtp_profile(u16bit srtp_profile)
+                  {
+                  m_srtp_profile = srtp_profile;
+                  }
+
+               Protocol_Version get_protocol_version() const
+                  {
+                  return m_protocol_version;
+                  }
+
+               void set_protocol_version(Protocol_Version protocol_version)
+                  {
+                  m_protocol_version = protocol_version;
+                  }
+
+               u16bit get_ciphersuite() const { return m_ciphersuite; }
+
+               void set_ciphersuite(u16bit ciphersuite)
+                  {
+                  m_ciphersuite = ciphersuite;
+                  }
+
+               byte get_compression_method() const
+                  {
+                  return m_compression_method;
+                  }
+
+               void set_compression_method(byte compression_method)
+                  {
+                  m_compression_method = compression_method;
+                  }
+
+         private:
+            Server_Information m_server_info;
+            std::string m_srp_identifier;
+            u16bit m_srtp_profile;
+            Protocol_Version m_protocol_version;
+            u16bit m_ciphersuite;
+            byte m_compression_method;
+         };
 
       /**
       * Uninitialized session
       */
       Session() :
          m_start_time(std::chrono::system_clock::time_point::min()),
-         m_version(),
-         m_ciphersuite(0),
-         m_compression_method(0),
          m_connection_side(static_cast<Connection_Side>(0)),
-         m_srtp_profile(0),
-         m_extended_master_secret(false)
-            {}
+         m_extended_master_secret(false),
+         m_properties() {}
 
       /**
       * New session (sets session start time)
       */
       Session(const std::vector<byte>& session_id,
               const secure_vector<byte>& master_secret,
-              Protocol_Version version,
-              u16bit ciphersuite,
-              byte compression_method,
               Connection_Side side,
               bool supports_extended_master_secret,
               const std::vector<X509_Certificate>& peer_certs,
               const std::vector<byte>& session_ticket,
-              const Server_Information& server_info,
-              const std::string& srp_identifier,
-              u16bit srtp_profile);
+              Properties properties);
 
       /**
       * Load a session from DER representation (created by DER_encode)
@@ -112,22 +184,22 @@ class BOTAN_DLL Session
       /**
       * Get the version of the saved session
       */
-      Protocol_Version version() const { return m_version; }
+      Protocol_Version version() const { return m_properties.get_protocol_version(); }
 
       /**
       * Get the ciphersuite code of the saved session
       */
-      u16bit ciphersuite_code() const { return m_ciphersuite; }
+      u16bit ciphersuite_code() const { return m_properties.get_ciphersuite(); }
 
       /**
       * Get the ciphersuite info of the saved session
       */
-      Ciphersuite ciphersuite() const { return Ciphersuite::by_id(m_ciphersuite); }
+      Ciphersuite ciphersuite() const { return Ciphersuite::by_id(ciphersuite_code()); }
 
       /**
       * Get the compression method used in the saved session
       */
-      byte compression_method() const { return m_compression_method; }
+      byte compression_method() const { return m_properties.get_compression_method(); }
 
       /**
       * Get which side of the connection the resumed session we are/were
@@ -138,7 +210,7 @@ class BOTAN_DLL Session
       /**
       * Get the SRP identity (if sent by the client in the initial handshake)
       */
-      const std::string& srp_identifier() const { return m_srp_identifier; }
+      const std::string& srp_identifier() const { return m_properties.get_srp_identifier(); }
 
       /**
       * Get the saved master secret
@@ -153,7 +225,7 @@ class BOTAN_DLL Session
       /**
       * Get the negotiated DTLS-SRTP algorithm (RFC 5764)
       */
-      u16bit dtls_srtp_profile() const { return m_srtp_profile; }
+      u16bit dtls_srtp_profile() const { return m_properties.get_srtp_profile(); }
 
       bool supports_extended_master_secret() const { return m_extended_master_secret; }
 
@@ -177,7 +249,7 @@ class BOTAN_DLL Session
       */
       const std::vector<byte>& session_ticket() const { return m_session_ticket; }
 
-      const Server_Information& server_info() const { return m_server_info; }
+      const Server_Information& server_info() const { return m_properties.get_server_info(); }
 
    private:
       enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20160103 };
@@ -188,16 +260,10 @@ class BOTAN_DLL Session
       std::vector<byte> m_session_ticket; // only used by client side
       secure_vector<byte> m_master_secret;
 
-      Protocol_Version m_version;
-      u16bit m_ciphersuite;
-      byte m_compression_method;
       Connection_Side m_connection_side;
-      u16bit m_srtp_profile;
       bool m_extended_master_secret;
-
       std::vector<X509_Certificate> m_peer_certs;
-      Server_Information m_server_info; // optional
-      std::string m_srp_identifier; // optional
+      Properties m_properties;
    };
 
 }

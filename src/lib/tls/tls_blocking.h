@@ -1,6 +1,7 @@
 /*
 * TLS Blocking API
 * (C) 2013 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -38,9 +39,7 @@ class BOTAN_DLL Blocking_Client
                       Credentials_Manager& creds,
                       const Policy& policy,
                       RandomNumberGenerator& rng,
-                      const Server_Information& server_info = Server_Information(),
-                      const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
-                      const std::vector<std::string>& next_protos = {});
+                      TLS::Client::Properties& properties);
 
       /**
       * Completes full handshake then returns

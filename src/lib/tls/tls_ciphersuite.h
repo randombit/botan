@@ -1,6 +1,7 @@
 /*
 * TLS Cipher Suites
 * (C) 2004-2011,2012 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -116,31 +117,17 @@ class BOTAN_DLL Ciphersuite
 
    private:
 
-
-      Ciphersuite(u16bit ciphersuite_code,
-                  const char* iana_id,
-                  const char* sig_algo,
-                  const char* kex_algo,
-                  const char* cipher_algo,
-                  size_t cipher_keylen,
-                  size_t nonce_bytes_from_handshake,
-                  size_t nonce_bytes_from_record,
-                  const char* mac_algo,
-                  size_t mac_keylen,
-                  const char* prf_algo) :
-         m_ciphersuite_code(ciphersuite_code),
-         m_iana_id(iana_id),
-         m_sig_algo(sig_algo),
-         m_kex_algo(kex_algo),
-         m_prf_algo(prf_algo),
-         m_cipher_algo(cipher_algo),
-         m_mac_algo(mac_algo),
-         m_cipher_keylen(cipher_keylen),
-         m_nonce_bytes_from_handshake(nonce_bytes_from_handshake),
-         m_nonce_bytes_from_record(nonce_bytes_from_record),
-         m_mac_keylen(mac_keylen)
-         {
-         }
+       Ciphersuite(u16bit ciphersuite_code,
+                   const char* iana_id,
+                   const char* sig_algo,
+                   const char* kex_algo,
+                   const char* cipher_algo,
+                   size_t cipher_keylen,
+                   size_t nonce_bytes_from_handshake,
+                   size_t nonce_bytes_from_record,
+                   const char* mac_algo,
+                   size_t mac_keylen,
+                   const char* prf_algo = "");
 
       u16bit m_ciphersuite_code = 0;
 

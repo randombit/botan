@@ -1,5 +1,6 @@
 /*
 * (C) 2014,2015 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -118,17 +119,19 @@ class TLS_Client final : public Command
             version = Botan::TLS::Protocol_Version::TLS_V11;
             }
 
-         Botan::TLS::Client client(socket_write,
-                                   std::bind(&TLS_Client::process_data, this, _1, _2),
-                                   std::bind(&TLS_Client::alert_received, this, _1, _2, _3),
-                                   std::bind(&TLS_Client::handshake_complete, this, _1),
+         Botan::TLS::Client client(Botan::TLS::Client::Callbacks(
+                                      socket_write,
+                                      std::bind(&TLS_Client::process_data, this, _1, _2),
+                                      std::bind(&TLS_Client::alert_received, this, _1, _2, _3),
+                                      std::bind(&TLS_Client::handshake_complete, this, _1)),
                                    *session_mgr,
                                    creds,
                                    *policy,
                                    rng(),
-                                   Botan::TLS::Server_Information(host, port),
-                                   version,
-                                   protocols_to_offer);
+                                   Botan::TLS::Client::Properties(
+                                      Botan::TLS::Server_Information(host, port),
+                                      version,
+                                      protocols_to_offer));
 
          bool first_active = true;
 

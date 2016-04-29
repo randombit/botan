@@ -1,6 +1,7 @@
 /*
 * Certificate Request Message
 * (C) 2004-2006,2012 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -51,8 +52,7 @@ byte cert_type_name_to_code(const std::string& name)
 /**
 * Create a new Certificate Request message
 */
-Certificate_Req::Certificate_Req(Handshake_IO& io,
-                                 Handshake_Hash& hash,
+Certificate_Req::Certificate_Req(Handshake_Info& hs_info,
                                  const Policy& policy,
                                  const std::vector<X509_DN>& ca_certs,
                                  Protocol_Version version) :
@@ -69,7 +69,7 @@ Certificate_Req::Certificate_Req(Handshake_IO& io,
             m_supported_algos.push_back(std::make_pair(hashes[i], sigs[j]));
       }
 
-   hash.update(io.send(*this));
+   hs_info.get_hash().update(hs_info.get_io().send(*this));
    }
 
 /**

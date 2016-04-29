@@ -1,6 +1,7 @@
 /*
 * TLS Blocking API
 * (C) 2013 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -19,21 +20,19 @@ Blocking_Client::Blocking_Client(read_fn reader,
                                  Credentials_Manager& creds,
                                  const Policy& policy,
                                  RandomNumberGenerator& rng,
-                                 const Server_Information& server_info,
-                                 const Protocol_Version& offer_version,
-                                 const std::vector<std::string>& next) :
+                                 TLS::Client::Properties& properties) :
    m_read(reader),
-   m_channel(writer,
-             std::bind(&Blocking_Client::data_cb, this, _1, _2),
-             std::bind(&Blocking_Client::alert_cb, this, _1, _2, _3),
-             std::bind(&Blocking_Client::handshake_cb, this, _1),
+   m_channel(TLS::Client::Callbacks(
+               writer,
+               std::bind(&Blocking_Client::data_cb, this, _1, _2),
+               std::bind(&Blocking_Client::alert_cb, this, _1, _2, _3),
+               std::bind(&Blocking_Client::handshake_cb, this, _1)
+             ),
              session_manager,
              creds,
              policy,
              rng,
-             server_info,
-             offer_version,
-             next)
+             properties)
    {
    }
 

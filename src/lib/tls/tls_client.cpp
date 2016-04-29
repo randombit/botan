@@ -1,6 +1,7 @@
 /*
 * TLS Client
 * (C) 2004-2011,2012,2015,2016 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -42,55 +43,28 @@ class Client_Handshake_State : public Handshake_State
 /*
 * TLS Client Constructor
 */
-Client::Client(output_fn output_fn,
-               data_cb proc_cb,
-               alert_cb alert_cb,
-               handshake_cb handshake_cb,
+Client::Client(const Callbacks& callbacks,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
                RandomNumberGenerator& rng,
-               const Server_Information& info,
-               const Protocol_Version& offer_version,
-               const std::vector<std::string>& next_protos,
+               Properties properties,
                size_t io_buf_sz) :
-   Channel(output_fn, proc_cb, alert_cb, handshake_cb, Channel::handshake_msg_cb(),
-           session_manager, rng, policy, offer_version.is_datagram_protocol(), io_buf_sz),
+   Channel(callbacks, session_manager, rng, policy, properties.get_protocol_version().is_datagram_protocol(),
+           io_buf_sz),
    m_creds(creds),
-   m_info(info)
+   m_info(properties.get_server_info())
    {
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
 
-   Handshake_State& state = create_handshake_state(offer_version);
-   send_client_hello(state, false, offer_version, srp_identifier, next_protos);
-   }
-
-Client::Client(output_fn output_fn,
-               data_cb proc_cb,
-               alert_cb alert_cb,
-               handshake_cb handshake_cb,
-               handshake_msg_cb hs_msg_cb,
-               Session_Manager& session_manager,
-               Credentials_Manager& creds,
-               const Policy& policy,
-               RandomNumberGenerator& rng,
-               const Server_Information& info,
-               const Protocol_Version& offer_version,
-               const std::vector<std::string>& next_protos) :
-   Channel(output_fn, proc_cb, alert_cb, handshake_cb, hs_msg_cb,
-           session_manager, rng, policy, offer_version.is_datagram_protocol()),
-   m_creds(creds),
-   m_info(info)
-   {
-   const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
-
-   Handshake_State& state = create_handshake_state(offer_version);
-   send_client_hello(state, false, offer_version, srp_identifier, next_protos);
+   Handshake_State& state = create_handshake_state(properties.get_protocol_version());
+   send_client_hello(state, false, properties.get_protocol_version(),
+                     srp_identifier, properties.get_next_protocol_versions());
    }
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)
    {
-   return new Client_Handshake_State(io, get_handshake_msg_cb());
+   return new Client_Handshake_State(io, get_callbacks().handshake_msg());
    }
 
 std::vector<X509_Certificate>
@@ -129,9 +103,9 @@ void Client::send_client_hello(Handshake_State& state_base,
          {
          if(srp_identifier == "" || session_info.srp_identifier() == srp_identifier)
             {
+            Client_Hello::Handshake_Info hs_info(state.handshake_io(), state.hash());
             state.client_hello(new Client_Hello(
-               state.handshake_io(),
-               state.hash(),
+               hs_info,
                policy(),
                rng(),
                secure_renegotiation_data_for_client_hello(),
@@ -145,16 +119,16 @@ void Client::send_client_hello(Handshake_State& state_base,
 
    if(!state.client_hello()) // not resuming
       {
+      Client_Hello::Handshake_Info hs_info(state.handshake_io(), state.hash());
+
+      Client_Hello::Settings client_settings(version, m_info.hostname(), srp_identifier);
       state.client_hello(new Client_Hello(
-         state.handshake_io(),
-         state.hash(),
-         version,
+         hs_info,
          policy(),
          rng(),
          secure_renegotiation_data_for_client_hello(),
-         next_protocols,
-         m_info.hostname(),
-         srp_identifier));
+         client_settings,
+         next_protocols));
       }
 
    secure_renegotiation_check(state.client_hello());
@@ -419,11 +393,10 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                "tls-client",
                                m_info.hostname());
 
-         state.client_certs(
-            new Certificate(state.handshake_io(),
-                            state.hash(),
-                            client_certs)
-            );
+         Certificate::Handshake_Info hs_info(state.handshake_io(),
+                                             state.hash());
+
+         state.client_certs(new Certificate(hs_info, client_certs));
          }
 
       state.client_kex(
@@ -502,20 +475,22 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       if(session_id.empty() && !session_ticket.empty())
          session_id = make_hello_random(rng(), policy());
 
+      Session::Properties session_properties(
+         m_info,
+         "",
+         state.server_hello()->srtp_profile(),
+         state.server_hello()->version(),
+         state.server_hello()->ciphersuite(),
+         state.server_hello()->compression_method());
+
       Session session_info(
          session_id,
          state.session_keys().master_secret(),
-         state.server_hello()->version(),
-         state.server_hello()->ciphersuite(),
-         state.server_hello()->compression_method(),
          CLIENT,
          state.server_hello()->supports_extended_master_secret(),
          get_peer_cert_chain(state),
          session_ticket,
-         m_info,
-         "",
-         state.server_hello()->srtp_profile()
-         );
+         session_properties);
 
       const bool should_save = save_session(session_info);
 

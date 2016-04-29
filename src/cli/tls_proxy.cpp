@@ -1,6 +1,7 @@
 /*
 * TLS Server Proxy
 * (C) 2014,2015 Jack Lloyd
+* (C) 2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

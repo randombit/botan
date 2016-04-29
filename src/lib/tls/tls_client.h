@@ -1,6 +1,7 @@
 /*
 * TLS Client
 * (C) 2004-2011 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -25,13 +26,8 @@ class BOTAN_DLL Client final : public Channel
       /**
       * Set up a new TLS client session
       *
-      * @param output_fn is called with data for the outbound socket
-      *
-      * @param app_data_cb is called when new application data is received
-      *
-      * @param alert_cb is called when a TLS alert is received
-      *
-      * @param handshake_cb is called when a handshake is completed
+      * @param callbacks contains a set of callback function references
+      *        required by the TLS client.
       *
       * @param session_manager manages session state
       *
@@ -41,44 +37,65 @@ class BOTAN_DLL Client final : public Channel
       *
       * @param rng a random number generator
       *
-      * @param server_info is identifying information about the TLS server
-      *
-      * @param offer_version specifies which version we will offer
-      *        to the TLS server.
-      *
-      * @param next_protocols specifies protocols to advertise with ALPN
+      * @param properties holds server information and protocol related
+      *        properties.
       *
       * @param reserved_io_buffer_size This many bytes of memory will
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
       */
 
-      Client(output_fn out,
-             data_cb app_data_cb,
-             alert_cb alert_cb,
-             handshake_cb hs_cb,
-             Session_Manager& session_manager,
-             Credentials_Manager& creds,
-             const Policy& policy,
-             RandomNumberGenerator& rng,
-             const Server_Information& server_info = Server_Information(),
-             const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
-             const std::vector<std::string>& next_protocols = {},
-             size_t reserved_io_buffer_size = 16*1024
-         );
+     class Properties
+        {
+            /**
+             * Stores TLS Client properties.
+             *
+             * @param server_info is identifying information about the TLS server
+             *
+             * @param protocol_version specifies which version we will offer
+             *        to the TLS server.
+             *
+             * @param next_protocols specifies protocols to advertise with ALPN
+             */
 
-      Client(output_fn out,
-             data_cb app_data_cb,
-             alert_cb alert_cb,
-             handshake_cb hs_cb,
-             handshake_msg_cb hs_msg_cb,
-             Session_Manager& session_manager,
-             Credentials_Manager& creds,
-             const Policy& policy,
-             RandomNumberGenerator& rng,
-             const Server_Information& server_info = Server_Information(),
-             const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
-             const std::vector<std::string>& next_protocols = {}
+            public:
+                Properties(const Server_Information& server_info
+                              = Server_Information(),
+                           const Protocol_Version protocol_version
+                              = Protocol_Version::latest_tls_version(),
+                           const std::vector<std::string>& next_versions
+                              = {})
+                    : m_server_info(server_info),
+                      m_protocol_version(protocol_version),
+                      m_next_protocol_versions(next_versions) {}
+
+                const Server_Information& get_server_info()
+                   {
+                   return m_server_info;
+                   }
+
+                const Protocol_Version& get_protocol_version()
+                   {
+                   return m_protocol_version;
+                   }
+
+                const std::vector<std::string>& get_next_protocol_versions()
+                   {
+                   return m_next_protocol_versions;
+                   }
+
+            private:
+                const Server_Information& m_server_info;
+                const Protocol_Version m_protocol_version;
+                const std::vector<std::string>& m_next_protocol_versions;
+        };
+     Client(const Callbacks& callbacks,
+            Session_Manager& session_manager,
+            Credentials_Manager& creds,
+            const Policy& policy,
+            RandomNumberGenerator& rng,
+            Properties properties,
+            size_t reserved_io_buffer_size = 16*1024
          );
 
       const std::string& application_protocol() const { return m_application_protocol; }
