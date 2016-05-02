@@ -41,7 +41,6 @@ Test::Result test_hash_larger_than_n()
 
    Botan::EC_Group dom_pars(Botan::OIDS::lookup("1.3.132.0.8")); // secp160r1
    // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
-   // -> shouldn't work with SHA224 which outputs 28 bytes
 
    Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
 
@@ -49,35 +48,18 @@ Test::Result test_hash_larger_than_n()
    for(size_t i = 0; i != message.size(); ++i)
       message[i] = i;
 
-   Botan::PK_Signer pk_signer_160(priv_key, "EMSA1_BSI(SHA-1)");
-   Botan::PK_Verifier pk_verifier_160(priv_key, "EMSA1_BSI(SHA-1)");
-
-   Botan::PK_Signer pk_signer_224(priv_key, "EMSA1_BSI(SHA-224)");
+   Botan::PK_Signer pk_signer_160(priv_key, "EMSA1(SHA-1)");
+   Botan::PK_Verifier pk_verifier_160(priv_key, "EMSA1(SHA-1)");
 
    // Verify we can sign and verify with SHA-160
    std::vector<byte> signature_160 = pk_signer_160.sign_message(message, Test::rng());
-
    result.test_eq("message verifies", pk_verifier_160.verify_message(message, signature_160), true);
 
-   try
-      {
-      pk_signer_224.sign_message(message, Test::rng());
-      result.test_failure("bad key/hash combination not rejected");
-      }
-   catch(Botan::Encoding_Error)
-      {
-      result.test_note("bad key/hash combination rejected");
-      }
-
-   // now check that verification alone fails
-
-   // sign it with the normal EMSA1
+   // Verify we can sign and verify with SHA-224
    Botan::PK_Signer pk_signer(priv_key, "EMSA1(SHA-224)");
    std::vector<byte> signature = pk_signer.sign_message(message, Test::rng());
-
-   Botan::PK_Verifier pk_verifier(priv_key, "EMSA1_BSI(SHA-224)");
-
-   result.test_eq("corrupt message does not verify", pk_verifier.verify_message(message, signature), false);
+   Botan::PK_Verifier pk_verifier(priv_key, "EMSA1(SHA-224)");
+   result.test_eq("message verifies", pk_verifier.verify_message(message, signature), true);
 
    return result;
    }

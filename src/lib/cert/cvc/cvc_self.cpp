@@ -99,7 +99,7 @@ EAC1_1_CVC create_self_signed_cert(Private_Key const& key,
    ASN1_Chr chr(opt.car.value());
 
    AlgorithmIdentifier sig_algo;
-   std::string padding_and_hash("EMSA1_BSI(" + opt.hash_alg + ")");
+   std::string padding_and_hash("EMSA1(" + opt.hash_alg + ")");
    sig_algo.oid = OIDS::lookup(priv_key->algo_name() + "/" + padding_and_hash);
    sig_algo = AlgorithmIdentifier(sig_algo.oid, AlgorithmIdentifier::USE_NULL_PARAM);
 
@@ -126,7 +126,7 @@ EAC1_1_Req create_cvc_req(Private_Key const& key,
       throw Invalid_Argument("CVC_EAC::create_self_signed_cert(): unsupported key type");
       }
    AlgorithmIdentifier sig_algo;
-   std::string padding_and_hash("EMSA1_BSI(" + hash_alg + ")");
+   std::string padding_and_hash("EMSA1(" + hash_alg + ")");
    sig_algo.oid = OIDS::lookup(priv_key->algo_name() + "/" + padding_and_hash);
    sig_algo = AlgorithmIdentifier(sig_algo.oid, AlgorithmIdentifier::USE_NULL_PARAM);
 

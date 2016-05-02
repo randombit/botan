@@ -234,10 +234,8 @@ PK_Signer* choose_sig_format(const Private_Key& key,
    std::string padding;
    if(algo_name == "RSA")
       padding = "EMSA3";
-   else if(algo_name == "DSA")
+   else if(algo_name == "DSA" || algo_name == "ECDSA" )
       padding = "EMSA1";
-   else if(algo_name == "ECDSA")
-      padding = "EMSA1_BSI";
    else
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
 
