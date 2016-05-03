@@ -341,7 +341,7 @@ class Certificate final : public Handshake_Message
                   Handshake_Hash& hash,
                   const std::vector<X509_Certificate>& certs);
 
-      explicit Certificate(const std::vector<byte>& buf);
+      explicit Certificate(const std::vector<byte>& buf, const Policy &policy);
    private:
       std::vector<byte> serialize() const override;
 

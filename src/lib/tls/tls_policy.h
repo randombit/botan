@@ -101,6 +101,31 @@ class BOTAN_DLL Policy
       * Allow servers to initiate a new handshake
       */
       virtual bool allow_server_initiated_renegotiation() const;
+      
+      /**
+      * Allow TLS v1.0
+      */
+      virtual bool allow_tls10() const;
+      
+      /**
+      * Allow TLS v1.1
+      */
+      virtual bool allow_tls11() const;
+      
+      /**
+      * Allow TLS v1.2
+      */
+      virtual bool allow_tls12() const;
+      
+      /**
+      * Allow DTLS v1.0
+      */
+      virtual bool allow_dtls10() const;
+      
+      /**
+      * Allow DTLS v1.2
+      */
+      virtual bool allow_dtls12() const;
 
       virtual std::string dh_group() const;
 
@@ -108,7 +133,17 @@ class BOTAN_DLL Policy
       * Return the minimum DH group size we're willing to use
       */
       virtual size_t minimum_dh_group_size() const;
-
+      
+      /**
+      * Return the minimum ECDH group size we're willing to use
+      */
+      virtual size_t minimum_ecdh_group_size() const;
+      
+      /**
+      * Return the minimum RSA bit size we're willing to use
+      */
+      virtual size_t minimum_rsa_bits() const;
+      
       /**
       * If this function returns false, unknown SRP/PSK identifiers
       * will be rejected with an unknown_psk_identifier alert as soon
@@ -207,9 +242,12 @@ class BOTAN_DLL NSA_Suite_B_128 : public Policy
 
       std::vector<std::string> allowed_ecc_curves() const override
          { return std::vector<std::string>({"secp256r1"}); }
-
-      bool acceptable_protocol_version(Protocol_Version version) const override
-         { return version == Protocol_Version::TLS_V12; }
+            
+      bool allow_tls10()  const override { return false; }
+      bool allow_tls11()  const override { return false; }
+      bool allow_tls12()  const override { return true;  }
+      bool allow_dtls10() const override { return false; }
+      bool allow_dtls12() const override { return false; }
    };
 
 /**
@@ -220,9 +258,12 @@ class BOTAN_DLL Datagram_Policy : public Policy
    public:
       std::vector<std::string> allowed_macs() const override
          { return std::vector<std::string>({"AEAD"}); }
-
-      bool acceptable_protocol_version(Protocol_Version version) const override
-         { return version == Protocol_Version::DTLS_V12; }
+            
+      bool allow_tls10()  const override { return false; }
+      bool allow_tls11()  const override { return false; }
+      bool allow_tls12()  const override { return false; }
+      bool allow_dtls10() const override { return false; }
+      bool allow_dtls12() const override { return true;  }
    };
 
 /*
@@ -243,7 +284,11 @@ class BOTAN_DLL Strict_Policy : public Policy
 
       std::vector<std::string> allowed_key_exchange_methods() const override;
 
-      bool acceptable_protocol_version(Protocol_Version version) const override;
+      bool allow_tls10()  const override;
+      bool allow_tls11()  const override;
+      bool allow_tls12()  const override;
+      bool allow_dtls10() const override;
+      bool allow_dtls12() const override;
    };
 
 class BOTAN_DLL Text_Policy : public Policy
@@ -267,6 +312,21 @@ class BOTAN_DLL Text_Policy : public Policy
 
       std::vector<std::string> allowed_ecc_curves() const override
          { return get_list("ecc_curves", Policy::allowed_ecc_curves()); }
+      
+      bool allow_tls10() const override
+         { return get_bool("allow_tls10", Policy::allow_tls10()); }
+      
+      bool allow_tls11() const override
+         { return get_bool("allow_tls11", Policy::allow_tls11()); }
+      
+      bool allow_tls12() const override
+         { return get_bool("allow_tls12", Policy::allow_tls12()); }
+      
+      bool allow_dtls10() const override
+         { return get_bool("allow_dtls10", Policy::allow_dtls10()); }
+      
+      bool allow_dtls12() const override
+         { return get_bool("allow_dtls12", Policy::allow_dtls12()); }
 
       bool allow_insecure_renegotiation() const override
          { return get_bool("allow_insecure_renegotiation", Policy::allow_insecure_renegotiation()); }
@@ -286,6 +346,9 @@ class BOTAN_DLL Text_Policy : public Policy
       size_t minimum_dh_group_size() const override
          { return get_len("minimum_dh_group_size", Policy::minimum_dh_group_size()); }
 
+      size_t minimum_rsa_bits() const override
+         { return get_len("minimum_rsa_bits", Policy::minimum_rsa_bits()); }
+      
       bool hide_unknown_users() const override
          { return get_bool("hide_unknown_users", Policy::hide_unknown_users()); }
 

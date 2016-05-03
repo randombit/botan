@@ -31,7 +31,7 @@ Certificate::Certificate(Handshake_IO& io,
 /**
 * Deserialize a Certificate message
 */
-Certificate::Certificate(const std::vector<byte>& buf)
+Certificate::Certificate(const std::vector<byte>& buf, const Policy &policy)
    {
    if(buf.size() < 3)
       throw Decoding_Error("Certificate: Message malformed");
@@ -54,7 +54,45 @@ Certificate::Certificate(const std::vector<byte>& buf)
          throw Decoding_Error("Certificate: Message malformed");
 
       DataSource_Memory cert_buf(&certs[3], cert_size);
-      m_certs.push_back(X509_Certificate(cert_buf));
+      X509_Certificate cert(cert_buf);
+      
+	  std::unique_ptr<Public_Key> cert_pub_key(cert.subject_public_key());
+          
+      const std::string algo_name = cert_pub_key->algo_name();
+      const size_t keylength = cert_pub_key->max_input_bits();
+      if(algo_name == "RSA")
+         {
+         const size_t expected_keylength = policy.minimum_rsa_bits();
+         if(keylength < expected_keylength)
+            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+                                "The peer sent RSA certificate of " +
+                                std::to_string(keylength) +
+                                " bits, policy requires at least " +
+                                std::to_string(expected_keylength));
+      }
+      else if(algo_name == "DH")
+         {
+         const size_t expected_keylength = policy.minimum_dh_group_size();
+         if(keylength < expected_keylength)
+            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+                                "The peer sent DH certificate of " +
+                                std::to_string(keylength) +
+                                " bits, policy requires at least " +
+                                std::to_string(expected_keylength));          
+      }
+      else if(algo_name == "ECDH")
+         {
+         const size_t expected_keylength = policy.minimum_ecdh_group_size();
+         if(keylength < expected_keylength)
+            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+                                "The peer sent ECDH certificate of " +
+                                std::to_string(keylength) +
+                                " bits, policy requires at least " +
+                                std::to_string(expected_keylength));
+          
+      }
+      
+      m_certs.push_back(cert);
 
       certs += cert_size + 3;
       }

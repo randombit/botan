@@ -352,7 +352,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          state.set_expected_next(SERVER_HELLO_DONE);
          }
 
-      state.server_certs(new Certificate(contents));
+      state.server_certs(new Certificate(contents, policy()));
 
       const std::vector<X509_Certificate>& server_certs =
          state.server_certs()->cert_chain();

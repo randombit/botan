@@ -591,7 +591,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
       }
    else if(type == CERTIFICATE)
       {
-      state.client_certs(new Certificate(contents));
+      state.client_certs(new Certificate(contents, policy()));
 
       state.set_expected_next(CLIENT_KEX);
       }
