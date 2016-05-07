@@ -24,7 +24,6 @@ install:
     )
   - cl # check compiler version
 
-# always build via amalgamation due to build time constraints on appveyor
 build_script:
   - python configure.py --cc=msvc --cpu=%PLATFORM% %MODE%
   - nmake
