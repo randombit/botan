@@ -118,6 +118,19 @@ bool check_for_resume(Session& session_info,
          }
       }
 
+   // Checking encrypt_then_mac on resume (RFC 7366 section 3.1)
+   if( !client_hello->supports_encrypt_then_mac() && session_info.supports_encrypt_then_mac())
+      {
+      
+      /*
+      Client previously negotiated session with Encrypt-then-MAC,
+      but has now attempted to resume without the extension: abort
+      */
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Client resumed Encrypt-then-MAC session without sending extension");
+         
+      }
+
    return true;
    }
 
@@ -670,6 +683,7 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
             state.server_hello()->compression_method(),
             SERVER,
             state.server_hello()->supports_extended_master_secret(),
+            state.server_hello()->supports_encrypt_then_mac(),
             get_peer_cert_chain(state),
             std::vector<byte>(),
             Server_Information(state.client_hello()->sni_hostname()),

@@ -69,17 +69,7 @@ Certificate::Certificate(const std::vector<byte>& buf, const Policy &policy)
                                 std::to_string(keylength) +
                                 " bits, policy requires at least " +
                                 std::to_string(expected_keylength));
-      }
-      else if(algo_name == "DH")
-         {
-         const size_t expected_keylength = policy.minimum_dh_group_size();
-         if(keylength < expected_keylength)
-            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
-                                "The peer sent DH certificate of " +
-                                std::to_string(keylength) +
-                                " bits, policy requires at least " +
-                                std::to_string(expected_keylength));          
-      }
+         }
       else if(algo_name == "ECDH")
          {
          const size_t expected_keylength = policy.minimum_ecdh_group_size();
@@ -90,7 +80,7 @@ Certificate::Certificate(const std::vector<byte>& buf, const Policy &policy)
                                 " bits, policy requires at least " +
                                 std::to_string(expected_keylength));
           
-      }
+         }
       
       m_certs.push_back(cert);
 

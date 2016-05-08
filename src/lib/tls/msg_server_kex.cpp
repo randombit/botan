@@ -147,6 +147,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
                                          const std::string& kex_algo,
                                          const std::string& sig_algo,
+                                         const Policy& policy,
                                          Protocol_Version version)
    {
    TLS_Data_Reader reader("ServerKeyExchange", buf);
@@ -165,11 +166,18 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
    if(kex_algo == "DH" || kex_algo == "DHE_PSK")
       {
       // 3 bigints, DH p, g, Y
-
-      for(size_t i = 0; i != 3; ++i)
-         {
-         reader.get_range<byte>(2, 1, 65535);
-         }
+      std::vector<byte> p = reader.get_range<byte>(2, 1, 65535);
+      reader.get_range<byte>(2, 1, 65535);
+      reader.get_range<byte>(2, 1, 65535);
+      
+      // protection against the LOGJAM attack
+      int key_size = p.size() * 8;
+      if(key_size < policy.minimum_dh_group_size())
+         throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+                                "Server sent DH group of " +
+                                std::to_string(key_size) +
+                                " bits, policy requires at least " +
+                                std::to_string(policy.minimum_dh_group_size()));
       }
    else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
       {

@@ -47,6 +47,9 @@ Extension* make_extension(TLS_Data_Reader& reader,
       case TLSEXT_EXTENDED_MASTER_SECRET:
          return new Extended_Master_Secret(reader, size);
 
+      case TLSEXT_ENCRYPT_THEN_MAC:
+         return new Encrypt_then_MAC(reader, size);
+
       case TLSEXT_SESSION_TICKET:
          return new Session_Ticket(reader, size);
 
@@ -515,6 +518,18 @@ Extended_Master_Secret::Extended_Master_Secret(TLS_Data_Reader&,
    }
 
 std::vector<byte> Extended_Master_Secret::serialize() const
+   {
+   return std::vector<byte>();
+   }
+
+Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader&,
+                                               u16bit extension_size)
+   {
+   if(extension_size != 0)
+      throw Decoding_Error("Invalid encrypt_then_mac extension");
+   }
+
+std::vector<byte> Encrypt_then_MAC::serialize() const
    {
    return std::vector<byte>();
    }

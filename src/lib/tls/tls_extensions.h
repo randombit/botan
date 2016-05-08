@@ -37,6 +37,7 @@ enum Handshake_Extension_Type {
    TLSEXT_HEARTBEAT_SUPPORT      = 15,
    TLSEXT_ALPN                   = 16,
 
+   TLSEXT_ENCRYPT_THEN_MAC       = 22,
    TLSEXT_EXTENDED_MASTER_SECRET = 23,
 
    TLSEXT_SESSION_TICKET         = 35,
@@ -338,6 +339,26 @@ class Extended_Master_Secret final : public Extension
       Extended_Master_Secret() {}
 
       Extended_Master_Secret(TLS_Data_Reader& reader, u16bit extension_size);
+   };
+
+/**
+* Encrypt-then-MAC Extension (RFC 7366)
+*/
+class Encrypt_then_MAC final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_ENCRYPT_THEN_MAC; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<byte> serialize() const override;
+
+      bool empty() const override { return false; }
+
+      Encrypt_then_MAC() {}
+
+      Encrypt_then_MAC(TLS_Data_Reader& reader, u16bit extension_size);
    };
 
 /**

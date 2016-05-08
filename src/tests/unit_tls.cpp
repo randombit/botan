@@ -167,7 +167,8 @@ void print_alert(Botan::TLS::Alert, const byte[], size_t)
 
 Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                                 Botan::Credentials_Manager& creds,
-                                Botan::TLS::Policy& policy)
+                                Botan::TLS::Policy& client_policy,
+                                Botan::TLS::Policy& server_policy )
    {
    Botan::RandomNumberGenerator& rng = Test::rng();
 
@@ -224,7 +225,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                                    handshake_complete,
                                    server_sessions,
                                    creds,
-                                   policy,
+                                   server_policy,
                                    rng,
                                    next_protocol_chooser,
                                    false);
@@ -235,7 +236,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                                    handshake_complete,
                                    client_sessions,
                                    creds,
-                                   policy,
+                                   client_policy,
                                    rng,
                                    Botan::TLS::Server_Information("server.example.com"),
                                    offer_version,
@@ -397,9 +398,17 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
    return result;
    }
 
+Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
+                                Botan::Credentials_Manager& creds,
+                                Botan::TLS::Policy& policy )
+   {
+   return test_tls_handshake(offer_version, creds, policy, policy);
+   }
+
 Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                                  Botan::Credentials_Manager& creds,
-                                 Botan::TLS::Policy& policy)
+                                 Botan::TLS::Policy& client_policy,
+                                 Botan::TLS::Policy& server_policy )
    {
    BOTAN_ASSERT(offer_version.is_datagram_protocol(), "Test is for datagram version");
 
@@ -450,7 +459,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                                    handshake_complete,
                                    server_sessions,
                                    creds,
-                                   policy,
+                                   server_policy,
                                    rng,
                                    next_protocol_chooser,
                                    true);
@@ -461,7 +470,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                                    handshake_complete,
                                    client_sessions,
                                    creds,
-                                   policy,
+                                   client_policy,
                                    rng,
                                    Botan::TLS::Server_Information("server.example.com"),
                                    offer_version,
@@ -527,7 +536,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                         {
                         input.resize(needed);
                         Test::rng().randomize(input.data(), input.size());
-                        client.received_data(input.data(), input.size());
+                        needed = client.received_data(input.data(), input.size());
                         }
                      }
                   catch(std::exception&)
@@ -567,7 +576,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                         {
                         input.resize(needed);
                         Test::rng().randomize(input.data(), input.size());
-                        client.received_data(input.data(), input.size());
+                        needed = client.received_data(input.data(), input.size());
                         }
                      }
                   catch(std::exception&)
@@ -639,6 +648,13 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
 
    result.end_timer();
    return result;
+   }
+
+Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
+                                Botan::Credentials_Manager& creds,
+                                Botan::TLS::Policy& policy)
+   {
+   return test_dtls_handshake(offer_version, creds, policy, policy);
    }
 
 class Test_Policy : public Botan::TLS::Text_Policy
@@ -719,6 +735,25 @@ class TLS_Unit_Tests : public Test
          results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V12, *basic_creds, policy));
          results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V12, *basic_creds, policy));
 
+         policy.set("negotiate_encrypt_then_mac", "false");
+         policy.set("key_exchange_methods", "ECDH");
+         policy.set("ciphers", "AES-128");
+         Test_Policy server_policy;
+         server_policy.set("key_exchange_methods", "ECDH");
+         server_policy.set("ciphers", "AES-128");
+         server_policy.set("negotiate_encrypt_then_mac", "true");
+         results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V10, *basic_creds, policy, server_policy));
+         results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V11, *basic_creds, policy, server_policy));
+         results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V12, *basic_creds, policy, server_policy));
+         results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V10, *basic_creds, policy, server_policy));
+         results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V12, *basic_creds, policy, server_policy));
+         
+         policy.set("negotiate_encrypt_then_mac", "true");
+         policy.set("ciphers", "AES-128/GCM");
+         server_policy.set("ciphers", "AES-128/GCM");
+         results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V12, *basic_creds, policy, server_policy));
+         results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V12, *basic_creds, policy, server_policy));
+         
          return results;
          }
 

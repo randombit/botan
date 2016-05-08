@@ -141,6 +141,11 @@ class Client_Hello final : public Handshake_Message
          return m_extensions.has<Extended_Master_Secret>();
          }
 
+      bool supports_encrypt_then_mac() const
+         {
+         return m_extensions.has<Encrypt_then_MAC>();
+         }
+
       std::vector<std::string> next_protocols() const
          {
          if(auto alpn = m_extensions.get<Application_Layer_Protocol_Notification>())
@@ -226,6 +231,11 @@ class Server_Hello final : public Handshake_Message
       bool supports_extended_master_secret() const
          {
          return m_extensions.has<Extended_Master_Secret>();
+         }
+
+      bool supports_encrypt_then_mac() const
+         {
+         return m_extensions.has<Encrypt_then_MAC>();
          }
 
       bool supports_session_ticket() const
@@ -489,6 +499,7 @@ class Server_Key_Exchange final : public Handshake_Message
       Server_Key_Exchange(const std::vector<byte>& buf,
                           const std::string& kex_alg,
                           const std::string& sig_alg,
+                          const Policy& policy,
                           Protocol_Version version);
 
       ~Server_Key_Exchange();

@@ -100,6 +100,12 @@ bool Ciphersuite::ecc_ciphersuite() const
    return (sig_algo() == "ECDSA" || kex_algo() == "ECDH" || kex_algo() == "ECDHE_PSK");
    }
 
+bool Ciphersuite::cbc_ciphersuite() const
+   {
+   return (cipher_algo() == "3DES" || cipher_algo() == "AES-128" || cipher_algo() == "AES-256"
+        || cipher_algo() == "Camellia-128" || cipher_algo() == "Camellia-256");
+   }
+
 namespace {
 
 bool have_hash(const std::string& prf)

@@ -92,13 +92,6 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          if(reader.remaining_bytes())
             throw Decoding_Error("Bad params size for DH key exchange");
 
-         if(p.bits() < policy.minimum_dh_group_size())
-            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
-                                "Server sent DH group of " +
-                                std::to_string(p.bits()) +
-                                " bits, policy requires at least " +
-                                std::to_string(policy.minimum_dh_group_size()));
-
          /*
          * A basic check for key validity. As we do not know q here we
          * cannot check that Y is in the right subgroup. However since

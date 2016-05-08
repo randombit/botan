@@ -203,6 +203,12 @@ class BOTAN_DLL Policy
       virtual bool server_uses_own_ciphersuite_preferences() const;
 
       /**
+      * Indicates whether the encrypt-then-MAC extension should be negotiated
+      * (RFC 7366)
+      */
+      virtual bool negotiate_encrypt_then_mac() const;
+
+      /**
       * Return allowed ciphersuites, in order of preference
       */
       virtual std::vector<u16bit> ciphersuite_list(Protocol_Version version,
@@ -339,6 +345,9 @@ class BOTAN_DLL Text_Policy : public Policy
 
       bool server_uses_own_ciphersuite_preferences() const override
          { return get_bool("server_uses_own_ciphersuite_preferences", Policy::server_uses_own_ciphersuite_preferences()); }
+
+      bool negotiate_encrypt_then_mac() const override
+         { return get_bool("negotiate_encrypt_then_mac", Policy::negotiate_encrypt_then_mac()); }
 
       std::string dh_group() const override
          { return get_str("dh_group", Policy::dh_group()); }

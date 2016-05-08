@@ -387,6 +387,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          new Server_Key_Exchange(contents,
                                  state.ciphersuite().kex_algo(),
                                  state.ciphersuite().sig_algo(),
+                                 policy(),
                                  state.version())
          );
 
@@ -510,6 +511,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          state.server_hello()->compression_method(),
          CLIENT,
          state.server_hello()->supports_extended_master_secret(),
+         state.server_hello()->supports_encrypt_then_mac(),
          get_peer_cert_chain(state),
          session_ticket,
          m_info,
