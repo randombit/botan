@@ -226,12 +226,6 @@ Each poll generates 32 bit entropy
 
 %{target_compiler_defines}
 
-#if defined(_MSC_VER)
-  // 4250: inherits via dominance (diamond inheritence issue)
-  // 4251: needs DLL interface (STL DLL exports)
-  #pragma warning(disable: 4250 4251)
-#endif
-
 /*
 * Compile-time deprecatation warnings
 */
