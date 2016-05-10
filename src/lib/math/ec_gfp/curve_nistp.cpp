@@ -94,7 +94,7 @@ inline u32bit get_u32bit(const BigInt& x, size_t i)
 #if (BOTAN_MP_WORD_BITS == 32)
    return x.word_at(i);
 #elif (BOTAN_MP_WORD_BITS == 64)
-   return (x.word_at(i/2) >> ((i % 2)*32));
+   return static_cast<u32bit>(x.word_at(i/2) >> ((i % 2)*32));
 #else
   #error "Not implemented"
 #endif

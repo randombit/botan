@@ -287,7 +287,7 @@ void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
 
    m_hand_received_mask |= mask;
 
-   const bool ok = (m_hand_expecting_mask & mask); // overlap?
+   const bool ok = (m_hand_expecting_mask & mask) != 0; // overlap?
 
    if(!ok)
       throw Unexpected_Message("Unexpected state transition in handshake, got type " +
@@ -311,14 +311,14 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    {
    const u32bit mask = bitmask_for_handshake_type(handshake_msg);
 
-   return (m_hand_received_mask & mask);
+   return (m_hand_received_mask & mask) != 0;
    }
 
 std::pair<Handshake_Type, std::vector<byte>>
 Handshake_State::get_next_handshake_msg()
    {
    const bool expecting_ccs =
-      (bitmask_for_handshake_type(HANDSHAKE_CCS) & m_hand_expecting_mask);
+      (bitmask_for_handshake_type(HANDSHAKE_CCS) & m_hand_expecting_mask) != 0;
 
    return m_handshake_io->get_next_record(expecting_ccs);
    }

@@ -86,7 +86,7 @@ class BOTAN_DLL BER_Decoder
                                           ASN1_Tag type_tag,
                                           ASN1_Tag class_tag = CONTEXT_SPECIFIC)
          {
-         out = decode_constrained_integer(type_tag, class_tag, sizeof(out));
+         out = static_cast<T>(decode_constrained_integer(type_tag, class_tag, sizeof(out)));
          return (*this);
          }
 

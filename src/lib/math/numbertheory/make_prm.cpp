@@ -66,7 +66,7 @@ BigInt random_prime(RandomNumberGenerator& rng,
       secure_vector<u16bit> sieve(sieve_size);
 
       for(size_t j = 0; j != sieve.size(); ++j)
-         sieve[j] = p % PRIMES[j];
+         sieve[j] = static_cast<u16bit>(p % PRIMES[j]);
 
       size_t counter = 0;
       while(true)
