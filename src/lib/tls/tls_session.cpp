@@ -106,11 +106,11 @@ Session::Session(const byte ber[], size_t ber_len)
    m_version = Protocol_Version(major_version, minor_version);
    m_start_time = std::chrono::system_clock::from_time_t(start_time);
    m_connection_side = static_cast<Connection_Side>(side_code);
-   m_srtp_profile = srtp_profile;
+   m_srtp_profile = static_cast<u16bit>(srtp_profile);
 
    m_server_info = Server_Information(server_hostname.value(),
                                       server_service.value(),
-                                      server_port);
+                                      static_cast<u16bit>(server_port));
 
    m_srp_identifier = srp_identifier_str.value();
 
@@ -218,4 +218,3 @@ Session Session::decrypt(const byte in[], size_t in_len, const SymmetricKey& key
 }
 
 }
-

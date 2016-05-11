@@ -5,6 +5,8 @@ libbotan*.so.*
 *.dylib
 *.exp
 *.lib
+*.pdb
+*.ilk
 *.dll
 *.exe
 *.manifest

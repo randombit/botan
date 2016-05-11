@@ -51,7 +51,7 @@ size_t dl_exponent_size(size_t bits)
 
    const double strength = 1.92 * std::pow(log_p, 1.0/3.0) * std::pow(std::log(log_p), 2.0/3.0);
 
-   return 2 * std::max<size_t>(MIN_WORKFACTOR, log2_e * strength);
+   return 2 * std::max<size_t>(MIN_WORKFACTOR, static_cast<size_t>(log2_e * strength));
    }
 
 }

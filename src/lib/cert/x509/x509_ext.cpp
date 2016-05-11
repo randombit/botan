@@ -246,7 +246,7 @@ void Basic_Constraints::decode_inner(const std::vector<byte>& in)
 void Basic_Constraints::contents_to(Data_Store& subject, Data_Store&) const
    {
    subject.add("X509v3.BasicConstraints.is_ca", (m_is_ca ? 1 : 0));
-   subject.add("X509v3.BasicConstraints.path_constraint", m_path_limit);
+   subject.add("X509v3.BasicConstraints.path_constraint", static_cast<u32bit>(m_path_limit));
    }
 
 /*
@@ -744,7 +744,7 @@ void CRL_Number::decode_inner(const std::vector<byte>& in)
 */
 void CRL_Number::contents_to(Data_Store& info, Data_Store&) const
    {
-   info.add("X509v3.CRLNumber", m_crl_number);
+   info.add("X509v3.CRLNumber", static_cast<u32bit>(m_crl_number));
    }
 
 /*

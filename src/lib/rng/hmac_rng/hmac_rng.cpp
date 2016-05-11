@@ -165,7 +165,7 @@ size_t HMAC_RNG::reseed_with_sources(Entropy_Sources& srcs,
    m_counter = 0;
 
    m_collected_entropy_estimate =
-      std::min<size_t>(m_collected_entropy_estimate + bits_collected,
+      std::min<size_t>(m_collected_entropy_estimate + static_cast<size_t>(bits_collected),
                        m_extractor->output_length() * 8);
 
    m_output_since_reseed = 0;
