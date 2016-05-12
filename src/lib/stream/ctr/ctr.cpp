@@ -98,7 +98,7 @@ void CTR_BE::increment_counter()
 
    for(size_t i = 0; i != n_wide; ++i)
       {
-      uint16_t carry = n_wide;
+      uint16_t carry = static_cast<uint16_t>(n_wide);
       for(size_t j = 0; carry && j != bs; ++j)
          {
          const size_t off = i*bs + (bs-1-j);

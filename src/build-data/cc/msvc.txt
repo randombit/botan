@@ -19,7 +19,7 @@ optimization_flags "/O2"
 debug_info_flags "/Zi /FS"
 
 lang_flags "/EHs /GR"
-warning_flags "/W3 /wd4275 /wd4267"
+warning_flags "/W4 /wd4250 /wd4251 /wd4275"
 
 visibility_build_flags "/DBOTAN_DLL=__declspec(dllexport)"
 visibility_attribute "__declspec(dllimport)"

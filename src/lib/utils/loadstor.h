@@ -47,7 +47,7 @@ namespace Botan {
 template<typename T> inline byte get_byte(size_t byte_num, T input)
    {
    return static_cast<byte>(
-      input >> ((sizeof(T)-1-(byte_num&(sizeof(T)-1))) << 3)
+      input >> (((~byte_num)&(sizeof(T)-1)) << 3)
       );
    }
 

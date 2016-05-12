@@ -174,8 +174,8 @@ void write_record(secure_vector<byte>& output,
 
    if(!cs) // initial unencrypted handshake records
       {
-      output.push_back(get_byte<u16bit>(0, msg_length));
-      output.push_back(get_byte<u16bit>(1, msg_length));
+      output.push_back(get_byte(0, static_cast<u16bit>(msg_length)));
+      output.push_back(get_byte(1, static_cast<u16bit>(msg_length)));
 
       output.insert(output.end(), msg, msg + msg_length);
 
@@ -192,10 +192,10 @@ void write_record(secure_vector<byte>& output,
       const size_t rec_size = ctext_size + cs->nonce_bytes_from_record();
 
       BOTAN_ASSERT(rec_size <= 0xFFFF, "Ciphertext length fits in field");
-      output.push_back(get_byte<u16bit>(0, rec_size));
-      output.push_back(get_byte<u16bit>(1, rec_size));
+      output.push_back(get_byte(0, static_cast<u16bit>(rec_size)));
+      output.push_back(get_byte(1, static_cast<u16bit>(rec_size)));
 
-      aead->set_ad(cs->format_ad(seq, msg_type, version, msg_length));
+      aead->set_ad(cs->format_ad(seq, msg_type, version, static_cast<u16bit>(msg_length)));
 
       if(cs->nonce_bytes_from_record() > 0)
          {
@@ -221,7 +221,7 @@ void write_record(secure_vector<byte>& output,
 
    if(!cs->uses_encrypt_then_mac()) 
       {
-      cs->mac()->update(cs->format_ad(seq, msg_type, version, msg_length));
+      cs->mac()->update(cs->format_ad(seq, msg_type, version, static_cast<u16bit>(msg_length)));
       cs->mac()->update(msg, msg_length);
 
       const size_t buf_size = round_up(
@@ -231,8 +231,8 @@ void write_record(secure_vector<byte>& output,
       if(buf_size > MAX_CIPHERTEXT_SIZE)
          throw Internal_Error("Output record is larger than allowed by protocol");
 
-      output.push_back(get_byte<u16bit>(0, buf_size));
-      output.push_back(get_byte<u16bit>(1, buf_size));
+      output.push_back(get_byte(0, static_cast<u16bit>(buf_size)));
+      output.push_back(get_byte(1, static_cast<u16bit>(buf_size)));
 
       const size_t header_size = output.size();
 
@@ -253,7 +253,7 @@ void write_record(secure_vector<byte>& output,
             buf_size - (iv_size + msg_length + mac_size + 1);
 
          for(size_t i = 0; i != pad_val + 1; ++i)
-            output.push_back(pad_val);
+            output.push_back(static_cast<byte>(pad_val));
          }
 
       if(buf_size > MAX_CIPHERTEXT_SIZE)
@@ -407,7 +407,7 @@ u16bit tls_padding_check(const byte record[], size_t record_len)
    for(size_t i = 0; i != record_len; ++i)
       {
       const size_t left = record_len - i - 2;
-      const byte delim_mask = CT::is_less<u16bit>(left, pad_byte) & 0xFF;
+      const byte delim_mask = CT::is_less<u16bit>(static_cast<u16bit>(left), pad_byte) & 0xFF;
       pad_invalid |= (delim_mask & (record[i] ^ pad_byte));
       }
 
@@ -465,7 +465,7 @@ void decrypt_record(secure_vector<byte>& output,
       const size_t ptext_size = aead->output_length(msg_length);
 
       aead->set_associated_data_vec(
-         cs.format_ad(record_sequence, record_type, record_version, ptext_size)
+         cs.format_ad(record_sequence, record_type, record_version, static_cast<u16bit>(ptext_size))
          );
 
       output += aead->start(nonce);
@@ -501,7 +501,7 @@ void decrypt_record(secure_vector<byte>& output,
          // This mask is zero if there is not enough room in the packet to get
          // a valid MAC. We have to accept empty packets, since otherwise we 
          // are not compatible with the BEAST countermeasure (thus record_len+1).
-         const u16bit size_ok_mask = CT::is_less<u16bit>(mac_size + pad_size + iv_size, record_len + 1);
+         const u16bit size_ok_mask = CT::is_lte<u16bit>(static_cast<u16bit>(mac_size + pad_size + iv_size), static_cast<u16bit>(record_len + 1));
          pad_size &= size_ok_mask;
 
          CT::unpoison(record_contents, record_len);
@@ -513,7 +513,7 @@ void decrypt_record(secure_vector<byte>& output,
          CT::unpoison(pad_size);
 
          const byte* plaintext_block = &record_contents[iv_size];
-         const u16bit plaintext_length = record_len - mac_size - iv_size - pad_size;
+         const u16bit plaintext_length = static_cast<u16bit>(record_len - mac_size - iv_size - pad_size);
 
          cs.mac()->update(cs.format_ad(record_sequence, record_type, record_version, plaintext_length));
          cs.mac()->update(plaintext_block, plaintext_length);

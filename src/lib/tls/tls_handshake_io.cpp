@@ -28,9 +28,9 @@ inline size_t load_be24(const byte q[3])
 
 void store_be24(byte out[3], size_t val)
    {
-   out[0] = get_byte<u32bit>(1, val);
-   out[1] = get_byte<u32bit>(2, val);
-   out[2] = get_byte<u32bit>(3, val);
+   out[0] = get_byte(1, static_cast<u32bit>(val));
+   out[1] = get_byte(2, static_cast<u32bit>(val));
+   out[2] = get_byte(3, static_cast<u32bit>(val));
    }
 
 u64bit steady_clock_ms()
@@ -376,7 +376,7 @@ Datagram_Handshake_IO::format_w_seq(const std::vector<byte>& msg,
                                     Handshake_Type type,
                                     u16bit msg_sequence) const
    {
-   return format_fragment(msg.data(), msg.size(), 0, msg.size(), type, msg_sequence);
+   return format_fragment(msg.data(), msg.size(), 0, static_cast<u16bit>(msg.size()), type, msg_sequence);
    }
 
 std::vector<byte>
@@ -441,8 +441,8 @@ std::vector<byte> Datagram_Handshake_IO::send_message(u16bit msg_seq,
                    HANDSHAKE,
                    format_fragment(&msg_bits[frag_offset],
                                    frag_len,
-                                   frag_offset,
-                                   msg_bits.size(),
+                                   static_cast<u16bit>(frag_offset),
+                                   static_cast<u16bit>(msg_bits.size()),
                                    msg_type,
                                    msg_seq));
 
