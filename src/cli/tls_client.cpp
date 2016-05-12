@@ -122,7 +122,7 @@ class TLS_Client final : public Command
          Botan::TLS::Client client(Botan::TLS::Client::Callbacks(
                                       socket_write,
                                       std::bind(&TLS_Client::process_data, this, _1, _2),
-                                      std::bind(&TLS_Client::alert_received, this, _1, _2, _3),
+                                      std::bind(&TLS_Client::alert_received, this, _1),
                                       std::bind(&TLS_Client::handshake_complete, this, _1)),
                                    *session_mgr,
                                    creds,
@@ -315,7 +315,7 @@ class TLS_Client final : public Command
             }
          }
 
-      void alert_received(Botan::TLS::Alert alert, const uint8_t [], size_t )
+      void alert_received(Botan::TLS::Alert alert)
          {
          output() << "Alert: " << alert.type_string() << "\n";
          }

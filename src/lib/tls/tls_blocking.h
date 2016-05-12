@@ -88,7 +88,7 @@ class BOTAN_DLL Blocking_Client
 
       void data_cb(const byte data[], size_t data_len);
 
-      void alert_cb(const Alert& alert, const byte data[], size_t data_len);
+      void alert_cb(const Alert& alert);
 
       read_fn m_read;
       TLS::Client m_channel;

@@ -128,7 +128,6 @@ class BOTAN_DLL Ciphersuite
                    const char* mac_algo,
                    size_t mac_keylen,
                    const char* prf_algo = "");
-
       u16bit m_ciphersuite_code = 0;
 
       /*

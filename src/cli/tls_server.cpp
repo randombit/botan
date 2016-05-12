@@ -110,7 +110,7 @@ class TLS_Server final : public Command
             Botan::TLS::Server server(Botan::TLS::Server::Callbacks(
                                          socket_write,
                                          proc_fn,
-                                         std::bind(&TLS_Server::alert_received, this, _1, _2, _3),
+                                         std::bind(&TLS_Server::alert_received, this, _1),
                                          std::bind(&TLS_Server::handshake_complete, this, _1)),
                                       session_manager,
                                       creds,
@@ -238,7 +238,7 @@ class TLS_Server final : public Command
             }
          }
 
-      void alert_received(Botan::TLS::Alert alert, const uint8_t[], size_t)
+      void alert_received(Botan::TLS::Alert alert)
          {
          std::cout << "Alert: " << alert.type_string() << std::endl;
          }

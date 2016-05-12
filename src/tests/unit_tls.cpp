@@ -162,7 +162,7 @@ std::function<void (const byte[], size_t)> queue_inserter(std::vector<byte>& q)
    return [&](const byte buf[], size_t sz) { q.insert(q.end(), buf, buf + sz); };
    }
 
-void print_alert(Botan::TLS::Alert, const byte[], size_t)
+void print_alert(Botan::TLS::Alert)
    {
    }
 

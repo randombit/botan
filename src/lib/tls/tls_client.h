@@ -67,7 +67,7 @@ class BOTAN_DLL Client final : public Channel
                               = {})
                     : m_server_info(server_info),
                       m_protocol_version(protocol_version),
-                      m_next_protocol_versions(next_versions) {}
+                      m_next_protocols(next_versions) {}
 
                 const Server_Information& get_server_info()
                    {
@@ -79,15 +79,15 @@ class BOTAN_DLL Client final : public Channel
                    return m_protocol_version;
                    }
 
-                const std::vector<std::string>& get_next_protocol_versions()
-                   {
-                   return m_next_protocol_versions;
+                const std::vector<std::string>& get_next_protocols()
+                   { 
+                   return m_next_protocols;
                    }
 
             private:
                 const Server_Information& m_server_info;
                 const Protocol_Version m_protocol_version;
-                const std::vector<std::string>& m_next_protocol_versions;
+                const std::vector<std::string>& m_next_protocols;
         };
      Client(const Callbacks& callbacks,
             Session_Manager& session_manager,

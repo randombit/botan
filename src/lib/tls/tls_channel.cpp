@@ -419,7 +419,7 @@ void Channel::process_alert(secure_vector<byte>& record)
     if(alert_msg.type() == Alert::NO_RENEGOTIATION)
        m_pending_state.reset();
 
-    m_callbacks.alert()(alert_msg, nullptr, 0);
+    m_callbacks.alert()(alert_msg);
 
     if(alert_msg.is_fatal())
        {

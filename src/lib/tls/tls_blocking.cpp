@@ -25,7 +25,7 @@ Blocking_Client::Blocking_Client(read_fn reader,
    m_channel(TLS::Client::Callbacks(
                writer,
                std::bind(&Blocking_Client::data_cb, this, _1, _2),
-               std::bind(&Blocking_Client::alert_cb, this, _1, _2, _3),
+               std::bind(&Blocking_Client::alert_cb, this, _1),
                std::bind(&Blocking_Client::handshake_cb, this, _1)
              ),
              session_manager,
@@ -41,7 +41,7 @@ bool Blocking_Client::handshake_cb(const Session& session)
    return this->handshake_complete(session);
    }
 
-void Blocking_Client::alert_cb(const Alert& alert, const byte[], size_t)
+void Blocking_Client::alert_cb(const Alert& alert)
    {
    this->alert_notification(alert);
    }

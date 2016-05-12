@@ -58,8 +58,8 @@ Client::Client(const Callbacks& callbacks,
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
 
    Handshake_State& state = create_handshake_state(properties.get_protocol_version());
-   send_client_hello(state, false, properties.get_protocol_version(),
-                     srp_identifier, properties.get_next_protocol_versions());
+   send_client_hello(state, false, properties.get_protocol_version(), 
+                     srp_identifier, properties.get_next_protocols());
    }
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)

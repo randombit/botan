@@ -114,7 +114,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
          m_server_socket(io),
          m_tls(Botan::TLS::Server::Callbacks(boost::bind(&tls_proxy_session::tls_proxy_write_to_client, this, _1, _2),
                boost::bind(&tls_proxy_session::tls_client_write_to_proxy, this, _1, _2),
-               boost::bind(&tls_proxy_session::tls_alert_cb, this, _1, _2, _3),
+               boost::bind(&tls_proxy_session::tls_alert_cb, this, _1),
                boost::bind(&tls_proxy_session::tls_handshake_complete, this, _1)),
                session_manager,
                credentials,

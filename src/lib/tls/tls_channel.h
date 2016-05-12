@@ -40,7 +40,7 @@ class BOTAN_DLL Channel
             public:
                typedef std::function<void (const byte[], size_t)> output_fn;
                typedef std::function<void (const byte[], size_t)> data_cb;
-               typedef std::function<void (Alert, const byte[], size_t)> alert_cb;
+               typedef std::function<void (Alert)> alert_cb;
                typedef std::function<bool (const Session&)> handshake_cb;
                typedef std::function<void (const Handshake_Message&)> handshake_msg_cb;
                /**
