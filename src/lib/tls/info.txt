@@ -6,6 +6,7 @@ load_on auto
 credentials_manager.h
 tls_alert.h
 tls_blocking.h
+tls_callbacks.h
 tls_channel.h
 tls_ciphersuite.h
 tls_client.h

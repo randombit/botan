@@ -409,7 +409,7 @@ void Channel::process_application_data(secure_vector<byte>& record)
    * following record. Avoid spurious callbacks.
    */
    if(record.size() > 0)
-      m_callbacks.app_data()(record.data(), record.size());
+      m_callbacks.app_data(record.data(), record.size());
    }
 
 void Channel::process_alert(secure_vector<byte>& record)
@@ -419,7 +419,7 @@ void Channel::process_alert(secure_vector<byte>& record)
     if(alert_msg.type() == Alert::NO_RENEGOTIATION)
        m_pending_state.reset();
 
-    m_callbacks.alert()(alert_msg);
+    m_callbacks.alert(alert_msg);
 
     if(alert_msg.is_fatal())
        {
@@ -454,7 +454,7 @@ void Channel::write_record(Connection_Cipher_State* cipher_state, u16bit epoch,
                      cipher_state,
                      m_rng);
 
-   m_callbacks.out_fn()(m_writebuf.data(), m_writebuf.size());
+   m_callbacks.out_fn(m_writebuf.data(), m_writebuf.size());
    }
 
 void Channel::send_record_array(u16bit epoch, byte type, const byte input[], size_t length)

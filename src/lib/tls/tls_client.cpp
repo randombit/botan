@@ -64,7 +64,10 @@ Client::Client(const Callbacks& callbacks,
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)
    {
-   return new Client_Handshake_State(io, get_callbacks().handshake_msg());
+      return new Client_Handshake_State(io,
+                                        std::bind(&TLS::Callbacks::handshake_msg,
+                                                  get_callbacks(),
+                                                  std::placeholders::_1));
    }
 
 std::vector<X509_Certificate>

@@ -95,7 +95,7 @@ class BOTAN_DLL Client final : public Channel
             const Policy& policy,
             RandomNumberGenerator& rng,
             Properties properties,
-            size_t reserved_io_buffer_size = 16*1024
+            size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE
          );
 
       const std::string& application_protocol() const { return m_application_protocol; }

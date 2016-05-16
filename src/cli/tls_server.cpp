@@ -107,7 +107,7 @@ class TLS_Server final : public Command
                      }
                };
 
-            Botan::TLS::Server server(Botan::TLS::Server::Callbacks(
+            Botan::TLS::Server server(Botan::TLS::Callbacks(
                                          socket_write,
                                          proc_fn,
                                          std::bind(&TLS_Server::alert_received, this, _1),

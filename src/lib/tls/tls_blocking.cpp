@@ -22,7 +22,7 @@ Blocking_Client::Blocking_Client(read_fn reader,
                                  RandomNumberGenerator& rng,
                                  TLS::Client::Properties& properties) :
    m_read(reader),
-   m_channel(TLS::Client::Callbacks(
+   m_channel(TLS::Callbacks(
                writer,
                std::bind(&Blocking_Client::data_cb, this, _1, _2),
                std::bind(&Blocking_Client::alert_cb, this, _1),

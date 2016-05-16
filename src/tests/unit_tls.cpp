@@ -220,7 +220,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
          std::vector<byte> c2s_traffic, s2c_traffic, client_recv, server_recv, client_sent, server_sent;
 
 
-         Botan::TLS::Server server(Botan::TLS::Server::Callbacks(
+         Botan::TLS::Server server(Botan::TLS::Callbacks(
                                       queue_inserter(s2c_traffic),
                                       queue_inserter(server_recv),
                                       print_alert,
@@ -232,10 +232,10 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                                    next_protocol_chooser,
                                    false);
 
-         Botan::TLS::Client::Callbacks client_callbacks(queue_inserter(c2s_traffic),
-                                                        queue_inserter(client_recv),
-                                                        print_alert,
-                                                        handshake_complete);
+         Botan::TLS::Callbacks client_callbacks(queue_inserter(c2s_traffic),
+                                                queue_inserter(client_recv),
+                                                print_alert,
+                                                handshake_complete);
          Botan::TLS::Client client(client_callbacks,
                                    client_sessions,
                                    creds,
@@ -449,10 +449,10 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
          {
          std::vector<byte> c2s_traffic, s2c_traffic, client_recv, server_recv, client_sent, server_sent;
 
-         Botan::TLS::Server::Callbacks server_callbacks(queue_inserter(s2c_traffic),
-                                                        queue_inserter(server_recv),
-                                                        print_alert,
-                                                        handshake_complete);
+         Botan::TLS::Callbacks server_callbacks(queue_inserter(s2c_traffic),
+                                                queue_inserter(server_recv),
+                                                print_alert,
+                                                handshake_complete);
          Botan::TLS::Server server(server_callbacks,
                                    server_sessions,
                                    creds,
@@ -461,10 +461,10 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                                    next_protocol_chooser,
                                    true);
 
-         Botan::TLS::Client::Callbacks client_callbacks(queue_inserter(c2s_traffic),
-                                                        queue_inserter(client_recv),
-                                                        print_alert,
-                                                        handshake_complete);
+         Botan::TLS::Callbacks client_callbacks(queue_inserter(c2s_traffic),
+                                                queue_inserter(client_recv),
+                                                print_alert,
+                                                handshake_complete);
          Botan::TLS::Client client(client_callbacks,
                                    client_sessions,
                                    creds,

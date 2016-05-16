@@ -231,7 +231,10 @@ Server::Server(const Callbacks& callbacks,
 Handshake_State* Server::new_handshake_state(Handshake_IO* io)
    {
    std::unique_ptr<Handshake_State> state(
-      new Server_Handshake_State(io, get_callbacks().handshake_msg()));
+      new Server_Handshake_State(io,
+                                 std::bind(&TLS::Callbacks::handshake_msg,
+                                           get_callbacks(),
+                                           std::placeholders::_1)));
 
    state->set_expected_next(CLIENT_HELLO);
    return state.release();

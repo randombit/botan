@@ -119,7 +119,7 @@ class TLS_Client final : public Command
             version = Botan::TLS::Protocol_Version::TLS_V11;
             }
 
-         Botan::TLS::Client client(Botan::TLS::Client::Callbacks(
+         Botan::TLS::Client client(Botan::TLS::Callbacks(
                                       socket_write,
                                       std::bind(&TLS_Client::process_data, this, _1, _2),
                                       std::bind(&TLS_Client::alert_received, this, _1),
