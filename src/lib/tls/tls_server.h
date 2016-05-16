@@ -40,6 +40,43 @@ class BOTAN_DLL Server final : public Channel
              bool is_datagram = false,
              size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
          );
+
+      /**
+       * DEPRECATED. This constructor is only provided for backward
+       * compatibility and should not be used in new implementations.
+       */
+      BOTAN_DEPRECATED("Use TLS::Server(TLS::Callbacks ...)")
+      Server(output_fn output,
+             data_cb data_cb,
+             alert_cb alert_cb,
+             handshake_cb handshake_cb,
+             Session_Manager& session_manager,
+             Credentials_Manager& creds,
+             const Policy& policy,
+             RandomNumberGenerator& rng,
+             next_protocol_fn next_proto = next_protocol_fn(),
+             bool is_datagram = false,
+             size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
+         );
+
+      /**
+       * DEPRECATED. This constructor is only provided for backward
+       * compatibility and should not be used in new implementations.
+       */
+      BOTAN_DEPRECATED("Use TLS::Server(TLS::Callbacks ...)")
+      Server(output_fn output,
+             data_cb data_cb,
+             alert_cb alert_cb,
+             handshake_cb handshake_cb,
+             handshake_msg_cb hs_msg_cb,
+             Session_Manager& session_manager,
+             Credentials_Manager& creds,
+             const Policy& policy,
+             RandomNumberGenerator& rng,
+             next_protocol_fn next_proto = next_protocol_fn(),
+             bool is_datagram = false
+         );
+
       /**
       * Return the protocol notification set by the client (using the
       * NPN extension) for this connection, if any. This value is not

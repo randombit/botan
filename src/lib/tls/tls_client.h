@@ -89,6 +89,46 @@ class BOTAN_DLL Client final : public Channel
                 const Protocol_Version m_protocol_version;
                 const std::vector<std::string>& m_next_protocols;
         };
+
+      /**
+       * DEPRECATED. This constructor is only provided for backward
+       * compatibility and should not be used in new implementations.
+       */
+      BOTAN_DEPRECATED("Use TLS::Client(TLS::Callbacks ...)")
+      Client(output_fn out,
+             data_cb app_data_cb,
+             alert_cb alert_cb,
+             handshake_cb hs_cb,
+             Session_Manager& session_manager,
+             Credentials_Manager& creds,
+             const Policy& policy,
+             RandomNumberGenerator& rng,
+             const Server_Information& server_info = Server_Information(),
+             const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
+             const std::vector<std::string>& next_protocols = {},
+             size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE
+         );
+
+      /**
+       * DEPRECATED. This constructor is only provided for backward
+       * compatibility and should not be used in new implementations.
+       */
+      BOTAN_DEPRECATED("Use TLS::Client(TLS::Callbacks ...)")
+      Client(output_fn out,
+             data_cb app_data_cb,
+             alert_cb alert_cb,
+             handshake_cb hs_cb,
+             handshake_msg_cb hs_msg_cb,
+             Session_Manager& session_manager,
+             Credentials_Manager& creds,
+             const Policy& policy,
+             RandomNumberGenerator& rng,
+             const Server_Information& server_info = Server_Information(),
+             const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
+             const std::vector<std::string>& next_protocols = {}
+         );
+
+
      Client(const Callbacks& callbacks,
             Session_Manager& session_manager,
             Credentials_Manager& creds,
@@ -100,6 +140,9 @@ class BOTAN_DLL Client final : public Channel
 
       const std::string& application_protocol() const { return m_application_protocol; }
    private:
+      void init(const Protocol_Version& protocol_version,
+                const std::vector<std::string>& next_protocols);
+
       std::vector<X509_Certificate>
          get_peer_cert_chain(const Handshake_State& state) const override;
 

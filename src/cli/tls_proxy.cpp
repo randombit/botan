@@ -112,7 +112,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
          m_server_endpoints(endpoints),
          m_client_socket(io),
          m_server_socket(io),
-         m_tls(Botan::TLS::Server::Callbacks(boost::bind(&tls_proxy_session::tls_proxy_write_to_client, this, _1, _2),
+         m_tls(Botan::TLS::Callbacks(boost::bind(&tls_proxy_session::tls_proxy_write_to_client, this, _1, _2),
                boost::bind(&tls_proxy_session::tls_client_write_to_proxy, this, _1, _2),
                boost::bind(&tls_proxy_session::tls_alert_cb, this, _1),
                boost::bind(&tls_proxy_session::tls_handshake_complete, this, _1)),
@@ -293,7 +293,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
          return true;
          }
 
-      void tls_alert_cb(Botan::TLS::Alert alert, const uint8_t[], size_t)
+      void tls_alert_cb(Botan::TLS::Alert alert)
          {
          if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
             {

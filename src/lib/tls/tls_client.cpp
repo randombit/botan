@@ -55,19 +55,65 @@ Client::Client(const Callbacks& callbacks,
    m_creds(creds),
    m_info(properties.get_server_info())
    {
+   init(properties.get_protocol_version(), properties.get_next_protocols());
+   }
+
+Client::Client(output_fn output_fn,
+               data_cb proc_cb,
+               alert_cb alert_cb,
+               handshake_cb handshake_cb,
+               Session_Manager& session_manager,
+               Credentials_Manager& creds,
+               const Policy& policy,
+               RandomNumberGenerator& rng,
+               const Server_Information& info,
+               const Protocol_Version& offer_version,
+               const std::vector<std::string>& next_protos,
+               size_t io_buf_sz) :
+   Channel(output_fn, proc_cb, alert_cb, handshake_cb, Channel::handshake_msg_cb(),
+           session_manager, rng, policy, offer_version.is_datagram_protocol(), io_buf_sz),
+   m_creds(creds),
+   m_info(info)
+   {
+   init(offer_version, next_protos);
+   }
+
+Client::Client(output_fn output_fn,
+               data_cb proc_cb,
+               alert_cb alert_cb,
+               handshake_cb handshake_cb,
+               handshake_msg_cb hs_msg_cb,
+               Session_Manager& session_manager,
+               Credentials_Manager& creds,
+               const Policy& policy,
+               RandomNumberGenerator& rng,
+               const Server_Information& info,
+               const Protocol_Version& offer_version,
+               const std::vector<std::string>& next_protos) :
+   Channel(output_fn, proc_cb, alert_cb, handshake_cb, hs_msg_cb,
+           session_manager, rng, policy, offer_version.is_datagram_protocol()),
+   m_creds(creds),
+   m_info(info)
+   {
+   init(offer_version, next_protos);
+   }
+
+void Client::init(const Protocol_Version& protocol_version,
+                  const std::vector<std::string>& next_protocols)
+   {
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
 
-   Handshake_State& state = create_handshake_state(properties.get_protocol_version());
-   send_client_hello(state, false, properties.get_protocol_version(), 
-                     srp_identifier, properties.get_next_protocols());
+   Handshake_State& state = create_handshake_state(protocol_version);
+   send_client_hello(state, false, protocol_version,
+                     srp_identifier, next_protocols);
    }
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)
    {
-      return new Client_Handshake_State(io,
-                                        std::bind(&TLS::Callbacks::handshake_msg,
-                                                  get_callbacks(),
-                                                  std::placeholders::_1));
+   return new Client_Handshake_State(io,
+                                     std::bind(&TLS::Callbacks::handshake_msg,
+                                               get_callbacks(),
+                                               std::placeholders::_1));
    }
 
 std::vector<X509_Certificate>

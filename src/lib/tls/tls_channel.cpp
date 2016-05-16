@@ -33,12 +33,36 @@ Channel::Channel(const Callbacks& callbacks,
    m_policy(policy),
    m_rng(rng)
    {
+   init(reserved_io_buffer_size);
+   }
+
+Channel::Channel(output_fn out,
+                 data_cb app_data_cb,
+                 alert_cb alert_cb,
+                 handshake_cb hs_cb,
+                 handshake_msg_cb hs_msg_cb,
+                 Session_Manager& session_manager,
+                 RandomNumberGenerator& rng,
+                 const Policy& policy,
+                 bool is_datagram,
+                 size_t io_buf_sz) :
+    m_is_datagram(is_datagram),
+    m_callbacks(Callbacks(out, app_data_cb, alert_cb, hs_cb, hs_msg_cb)),
+    m_session_manager(session_manager),
+    m_policy(policy),
+    m_rng(rng)
+    {
+    init(io_buf_sz);
+    }
+
+void Channel::init(size_t io_buf_sz)
+   {
    /* epoch 0 is plaintext, thus null cipher state */
    m_write_cipher_states[0] = nullptr;
    m_read_cipher_states[0] = nullptr;
 
-   m_writebuf.reserve(reserved_io_buffer_size);
-   m_readbuf.reserve(reserved_io_buffer_size);
+   m_writebuf.reserve(io_buf_sz);
+   m_readbuf.reserve(io_buf_sz);
    }
 
 void Channel::reset_state()

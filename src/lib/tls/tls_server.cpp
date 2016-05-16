@@ -228,6 +228,44 @@ Server::Server(const Callbacks& callbacks,
    {
    }
 
+Server::Server(output_fn output,
+               data_cb data_cb,
+               alert_cb alert_cb,
+               handshake_cb handshake_cb,
+               Session_Manager& session_manager,
+               Credentials_Manager& creds,
+               const Policy& policy,
+               RandomNumberGenerator& rng,
+               next_protocol_fn next_proto,
+               bool is_datagram,
+               size_t io_buf_sz) :
+   Channel(output, data_cb, alert_cb, handshake_cb,
+           Channel::handshake_msg_cb(), session_manager,
+           rng, policy, is_datagram, io_buf_sz),
+   m_creds(creds),
+   m_choose_next_protocol(next_proto)
+   {
+   }
+
+
+Server::Server(output_fn output,
+               data_cb data_cb,
+               alert_cb alert_cb,
+               handshake_cb handshake_cb,
+               handshake_msg_cb hs_msg_cb,
+               Session_Manager& session_manager,
+               Credentials_Manager& creds,
+               const Policy& policy,
+               RandomNumberGenerator& rng,
+               next_protocol_fn next_proto,
+               bool is_datagram) :
+   Channel(output, data_cb, alert_cb, handshake_cb, hs_msg_cb,
+           session_manager, rng, policy, is_datagram),
+   m_creds(creds),
+   m_choose_next_protocol(next_proto)
+   {
+   }
+
 Handshake_State* Server::new_handshake_state(Handshake_IO* io)
    {
    std::unique_ptr<Handshake_State> state(

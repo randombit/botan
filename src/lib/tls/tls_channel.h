@@ -34,9 +34,30 @@ class Handshake_Message;
 class BOTAN_DLL Channel
    {
    public:
+      typedef std::function<void (const byte[], size_t)> output_fn;
+      typedef std::function<void (const byte[], size_t)> data_cb;
+      typedef std::function<void (Alert)> alert_cb;
+      typedef std::function<bool (const Session&)> handshake_cb;
+      typedef std::function<void (const Handshake_Message&)> handshake_msg_cb;
       static size_t IO_BUF_DEFAULT_SIZE;
 
       Channel(const Callbacks& callbacks,
+              Session_Manager& session_manager,
+              RandomNumberGenerator& rng,
+              const Policy& policy,
+              bool is_datagram,
+              size_t io_buf_sz = IO_BUF_DEFAULT_SIZE);
+
+      /**
+       * DEPRECATED. This constructor is only provided for backward
+       * compatibility and should not be used in new implementations.
+       */
+      BOTAN_DEPRECATED("Use TLS::Channel(TLS::Callbacks ...)")
+      Channel(output_fn out,
+              data_cb app_data_cb,
+              alert_cb alert_cb,
+              handshake_cb hs_cb,
+              handshake_msg_cb hs_msg_cb,
               Session_Manager& session_manager,
               RandomNumberGenerator& rng,
               const Policy& policy,
@@ -198,6 +219,8 @@ class BOTAN_DLL Channel
 
       Callbacks get_callbacks() const { return m_callbacks; }
    private:
+      void init(size_t io_buf_sze);
+
       void send_record(byte record_type, const std::vector<byte>& record);
 
       void send_record_under_epoch(u16bit epoch, byte record_type,

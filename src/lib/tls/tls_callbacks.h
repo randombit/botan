@@ -49,37 +49,52 @@ class BOTAN_DLL Callbacks
        *
        * @param handshake_cb is called when a handshake is completed
        */
-
+       BOTAN_DEPRECATED("Use TLS::Callbacks() (virtual interface).")
        Callbacks(output_fn out, data_cb app_data_cb, alert_cb alert_cb,
                  handshake_cb hs_cb, handshake_msg_cb hs_msg_cb = nullptr)
           : m_output_function(out), m_app_data_cb(app_data_cb),
             m_alert_cb(alert_cb), m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb) {}
 
+       Callbacks()
+          : m_output_function(nullptr), m_app_data_cb(nullptr),
+            m_alert_cb(nullptr), m_hs_cb(nullptr), m_hs_msg_cb(nullptr) {}
+
+
        virtual ~Callbacks() {}
 
        virtual void out_fn(const byte data[], size_t size) const
           {
-          if (m_output_function != nullptr) { m_output_function(data, size); }
+          BOTAN_ASSERT(m_output_function != nullptr,
+                       "Invalid TLS output function callback.");
+          m_output_function(data, size);
           }
 
        virtual void app_data(const byte data[], size_t size) const
           {
-          if (m_app_data_cb != nullptr) { m_app_data_cb(data, size); }
+          BOTAN_ASSERT(m_app_data_cb != nullptr,
+                       "Invalid TLS app data callback.");
+          m_app_data_cb(data, size);
           }
 
        virtual void alert(Alert alert) const
           {
-          if (m_alert_cb != nullptr) { m_alert_cb(alert); }
+          BOTAN_ASSERT(m_alert_cb != nullptr,
+                       "Invalid TLS alert callback.");
+          m_alert_cb(alert);
           }
 
        virtual bool handshake(const Session& session) const
           {
-          if (m_hs_cb != nullptr) { return m_hs_cb(session); }
+          BOTAN_ASSERT(m_hs_cb != nullptr,
+                       "Invalid TLS handshake callback.");
+          return m_hs_cb(session);
           }
 
-       virtual void handshake_msg(const Handshake_Message& hmsg)
+       virtual void handshake_msg(const Handshake_Message& hmsg) const
           {
-          if (m_hs_msg_cb != nullptr) { m_hs_msg_cb(hmsg); }
+          // The handshake message callback is optional so we can
+          // not assume it has been set.
+          if(m_hs_msg_cb != nullptr) { m_hs_msg_cb(hmsg); }
           }
 
     private:
