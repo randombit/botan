@@ -9,6 +9,17 @@ Version 1.11.30, Not Yet Released
   a MAC failure. Records like this are used by OpenSSL in TLS 1.0
   connections in order to randomize the IV.
 
+* A bug in GCM caused incorrect results if the 32-bit counter field
+  overflowed. With a 96-bit nonce, this could only occur if 2**32
+  128-bit blocks were encrypted. This actually exceeds the maximum
+  allowable length of a GCM plaintext.
+
+  However if a GCM nonce of any other size is used, the bug triggers
+  randomly, with increasing probability on longer messages. For
+  instance when encrypting 256 MiB of data under a random 128 bit
+  nonce, an incorrect result would be produced about 1/256 of the
+  time. With 1 MiB texts, the probability of error reduced to 1/65536.
+
 * The Transform and Keyed_Transform interfaces has been removed. The
   two concrete implementations of these interfaces were Cipher_Mode
   and the Compressor_tkk. The Cipher_Mode interface remains unchanged
@@ -37,7 +48,7 @@ Version 1.11.30, Not Yet Released
 
 * X509_CRL previously had an option to cause it to ignore unknown
   critical extensions. This has been removed.
- 
+
 * Added support for ChaCha stream cipher with 12 rounds.
 
 * Add ECGDSA signature algorithm (GH #479)
