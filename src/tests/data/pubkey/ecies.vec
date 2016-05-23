@@ -105,7 +105,7 @@ Label = Test
 Plaintext = 000102030405060708090A0B0C0D0E0F
 Ciphertext = 048c40bda0986dadeb651178b4a8e64b7735fb02f43e621151849ea761230f2bddf1ffa3262673bcb3f468dd8b92c31a32e23935cfd27dfcc123928a18bbc82bdcada733be6d42119d3fb968ac4b77fff9a47d336fa025bfad3ee54286
 
-# bouncycastle does not support aead ciphers with IESEngine -> empty ciphertext; the test suite asserts that the plaintext can be encrypted and decrypted properly
+# bouncycastle does not support aead ciphers with IESEngine -> the following ciphertext has been created with botan (asserts deterministic ciphertext)
 
 Curve = brainpool512r1
 PrivateKey = 7978796978847894400103470063598909318992754342406974939475470191530421638356103244921001321651015274653183103561457607601257178840534133802655904526250737
@@ -123,4 +123,4 @@ CheckMode = 0
 SingleHashMode = 0
 Label = Test
 Plaintext = 00
-Ciphertext = 
+Ciphertext = 02407515774fad019b762e2ba4c04fa6ff35ba7acc356a167cdf83747e5438b5494a6727366f4d031f2c676eed78a99bf74da9e4edd808fc2360927d52213997d35cd8371d89195b5294da4f99ab1126c703093361c9f6067314b39b70762b13fff1d0fb5ad043a67074ad89176af7ea7d562a0f8c5b9f721192c5c5d338ceea8d59c492aebc3de551dd9ed6fc346c02c586

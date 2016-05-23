@@ -71,10 +71,7 @@ void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& p
    try
       {
       const std::vector<byte> encrypted = ecies_enc.encrypt(plaintext, Test::rng());
-      if(!ciphertext.empty())
-         {
-         result.test_eq("encrypted data", encrypted, ciphertext);
-         }
+      result.test_eq("encrypted data", encrypted, ciphertext);
       const Botan::secure_vector<byte> decrypted = ecies_dec.decrypt(encrypted);
       result.test_eq("decrypted data equals plaintext", decrypted, plaintext);
       }
