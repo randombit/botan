@@ -88,7 +88,7 @@ void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& p
                            const Botan::ECDH_PrivateKey& other_private_key,
                            const Botan::ECIES_System_Params& ecies_params, size_t iv_length = 0)
    {
-   static std::vector<byte> Plaintext { 1, 2, 3 };
+   const std::vector<byte> Plaintext { 1, 2, 3 };
    check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, std::vector<byte>(iv_length, 0), "",
                          Plaintext, std::vector<byte>());
    }
