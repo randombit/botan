@@ -368,18 +368,32 @@ secure_vector<byte> ECIES_Decryptor::do_decrypt(byte& valid_mask, const byte in[
    const secure_vector<byte> calculated_mac = mac->final();
    valid_mask = CT::expand_mask<byte>(same_mem(mac_data.data(), calculated_mac.data(), mac_data.size()));
 
-   // decrypt data
-   std::unique_ptr<Keyed_Filter> cipher = m_params.create_cipher(DECRYPTION);
-   BOTAN_ASSERT(cipher != nullptr, "Cipher is found");
-
-   cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
-   if(m_iv.size() != 0)
+   if(valid_mask)
       {
-      cipher->set_iv(m_iv);
-      }
-   Pipe pipe(cipher.release());
-   pipe.process_msg(encrypted_data);
-   return pipe.read_all(0);
+      // decrypt data
+      std::unique_ptr<Keyed_Filter> cipher = m_params.create_cipher(DECRYPTION);
+      BOTAN_ASSERT(cipher != nullptr, "Cipher is found");
+
+      cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
+      if(m_iv.size() != 0)
+         {
+         cipher->set_iv(m_iv);
+         }
+	  
+      try
+         {
+		 // the decryption can fail:
+		 // e.g. Integrity_Failure is thrown if GCM is used and the message does not have a valid tag
+         Pipe pipe(cipher.release());
+         pipe.process_msg(encrypted_data);
+         return pipe.read_all(0);
+         }
+      catch(...)
+         {
+		 valid_mask = 0;
+         }
+	  }
+   return secure_vector<byte>();
    }
 
 }
