@@ -74,6 +74,14 @@ void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& p
       result.test_eq("encrypted data", encrypted, ciphertext);
       const Botan::secure_vector<byte> decrypted = ecies_dec.decrypt(encrypted);
       result.test_eq("decrypted data equals plaintext", decrypted, plaintext);
+	  
+      std::vector<byte> invalid_encrypted = encrypted;
+      byte& last_byte = invalid_encrypted[invalid_encrypted.size() - 1];
+      last_byte = ~last_byte;
+      result.test_throws("throw on invalid ciphertext", [&ecies_dec, &invalid_encrypted]
+         {
+         ecies_dec.decrypt(invalid_encrypted);
+         });
       }
    catch(Botan::Lookup_Error& e)
       {
