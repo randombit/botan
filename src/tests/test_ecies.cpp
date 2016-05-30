@@ -71,7 +71,10 @@ void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& p
    try
       {
       const std::vector<byte> encrypted = ecies_enc.encrypt(plaintext, Test::rng());
-      result.test_eq("encrypted data", encrypted, ciphertext);
+      if(!ciphertext.empty())
+         {
+         result.test_eq("encrypted data", encrypted, ciphertext);
+         }
       const Botan::secure_vector<byte> decrypted = ecies_dec.decrypt(encrypted);
       result.test_eq("decrypted data equals plaintext", decrypted, plaintext);
 	  
@@ -93,9 +96,9 @@ void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& p
                            const Botan::ECDH_PrivateKey& other_private_key,
                            const Botan::ECIES_System_Params& ecies_params, size_t iv_length = 0)
    {
-   const std::vector<byte> Plaintext { 1, 2, 3 };
+   const std::vector<byte> plaintext { 1, 2, 3 };
    check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, std::vector<byte>(iv_length, 0), "",
-                         Plaintext, std::vector<byte>());
+                         plaintext, std::vector<byte>());
    }
 
 class ECIES_ISO_Tests : public Text_Based_Test
