@@ -6,6 +6,7 @@
 */
 
 #include "cli.h"
+
 #include <sstream>
 #include <iomanip>
 #include <chrono>
@@ -34,6 +35,10 @@
 
 #if defined(BOTAN_HAS_X931_RNG)
   #include <botan/x931_rng.h>
+#endif
+
+#if defined(BOTAN_HAS_FPE_FE1)
+  #include <botan/fpe_fe1.h>
 #endif
 
 #if defined(BOTAN_HAS_COMPRESSION)
@@ -398,6 +403,13 @@ class Speed final : public Command
                bench_inverse_mod(msec);
                }
 #endif
+
+#if defined(BOTAN_HAS_FPE_FE1)
+            else if(algo == "fpe_fe1")
+               {
+               bench_fpe_fe1(msec);
+               }
+#endif
             else if(algo == "RNG")
                {
                Botan::AutoSeeded_RNG auto_rng;
@@ -638,6 +650,41 @@ class Speed final : public Command
             output() << " total samples " << samples << "\n";
             }
          }
+
+#if defined(BOTAN_HAS_FPE_FE1)
+
+      void bench_fpe_fe1(const std::chrono::milliseconds runtime)
+         {
+         const Botan::BigInt n = 1000000000000000;
+
+         Timer enc_timer("FPE_FE1 encrypt");
+         Timer dec_timer("FPE_FE1 decrypt");
+
+         const Botan::SymmetricKey key(rng(), 32);
+         const std::vector<uint8_t> tweak(8); // 8 zeros
+
+         Botan::BigInt x = 1;
+
+         while(enc_timer.under(runtime))
+            {
+            enc_timer.start();
+            x = Botan::FPE::fe1_encrypt(n, x, key, tweak);
+            enc_timer.stop();
+            }
+
+         for(size_t i = 0; i != enc_timer.events(); ++i)
+            {
+            dec_timer.start();
+            x = Botan::FPE::fe1_decrypt(n, x, key, tweak);
+            dec_timer.stop();
+            }
+
+         BOTAN_ASSERT(x == 1, "FPE works");
+
+         output() << Timer::result_string_ops(enc_timer);
+         output() << Timer::result_string_ops(dec_timer);
+         }
+#endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
 

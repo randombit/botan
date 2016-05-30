@@ -9,6 +9,28 @@ Version 1.11.30, Not Yet Released
   a MAC failure. Records like this are used by OpenSSL in TLS 1.0
   connections in order to randomize the IV.
 
+* A bug in GCM caused incorrect results if the 32-bit counter field
+  overflowed. With a 96-bit nonce, this could only occur if 2**32
+  128-bit blocks were encrypted. This actually exceeds the maximum
+  allowable length of a GCM plaintext.
+
+  However if a GCM nonce of any other size is used, the bug triggers
+  randomly, with increasing probability on longer messages. For
+  instance when encrypting 256 MiB of data under a random 128 bit
+  nonce, an incorrect result would be produced about 1/256 of the
+  time. With 1 MiB texts, the probability of error reduced to 1/65536.
+
+* The Transform and Keyed_Transform interfaces has been removed. The
+  two concrete implementations of these interfaces were Cipher_Mode
+  and the Compressor_tkk. The Cipher_Mode interface remains unchanged
+  as the Transform and Keyed_Transform signatures have moved to it;
+  no changes to Cipher_Mode usage should be necessary. Any uses of
+  Transform& or Keyed_Transform& to refer to a cipher should be replaced
+  by Cipher_Mode&. The compression algorithm interface has changed; the start
+  function now takes the per-message compression ratio to use. Previously the
+  compression level to use had to be set once, at creation time, and
+  the required `secure_vector` argument to start was required to be empty.
+
 * Add IETF versions of the ChaCha20Poly1305 TLS ciphersuites from
   draft-ietf-tls-chacha20-poly1305-04. The previously implemented
   (non-standard) ChaCha20Poly1305 ciphersuites from
@@ -19,9 +41,31 @@ Version 1.11.30, Not Yet Released
   previous versions of the draft, and the ciphersuite numbers used for
   the (still experimental) OCB ciphersuites have changed.
 
+* Previously an unknown critical extension caused X.509 certificate
+  parsing to fail; such a cert could not be created at all. Now
+  parsing succeeds and the certificate validation fails with
+  an error indicating an unknown critical extension. GH #469
+
+* X509_CRL previously had an option to cause it to ignore unknown
+  critical extensions. This has been removed.
+
+* Added support for ChaCha stream cipher with 12 rounds.
+
+* Add ECGDSA signature algorithm (GH #479)
+
+* Add NIST SP800-108 and 56C KDFs (GH #481)
+
 * A bug in the IETF version of ChaCha20Poly1305 (with 96 bit nonces)
   caused incorrect computation when the plaintext or AAD was exactly
   a multiple of 16 bytes.
+
+* Fix return type of TLS_Reader::get_u32bit, which was truncated to
+  16 bits. This only affected decoding of session ticket lifetimes.
+  GH #478
+
+* Fix OS X dylib naming problem (GH #468 #467)
+
+* Fix bcrypt function under Python 3 (GH #461)
 
 Version 1.10.13, 2016-04-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

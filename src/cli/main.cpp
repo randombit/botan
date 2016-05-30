@@ -21,11 +21,13 @@ std::string main_help()
    std::ostringstream oss;
 
    oss << "Usage: botan <cmd> <cmd-options>\n";
-   oss << "Available commands: ";
-   std::copy(avail_commands.begin(),
-             avail_commands.end(),
-             std::ostream_iterator<std::string>(oss, " "));
-   oss << "\n";
+   oss << "Available commands:\n";
+
+   for(auto& cmd_name : avail_commands)
+      {
+      auto cmd = Botan_CLI::Command::get_cmd(cmd_name);
+      oss << cmd->cmd_spec() << "\n";
+      }
 
    return oss.str();
    }
