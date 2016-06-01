@@ -699,7 +699,7 @@ def test():
     def test_kdf():
         print("KDF2(SHA-1)   %s" %
               hex_encode(kdf('KDF2(SHA-1)', hex_decode('701F3480DFE95F57941F804B1B2413EF'), 7,
-                             hex_decode('55A4E9DD5F4CA2EF82'), '')))
+                             hex_decode('55A4E9DD5F4CA2EF82'), hex_decode(''))))
 
     def test_pbkdf():
         print("PBKDF2(SHA-1) %s" %
