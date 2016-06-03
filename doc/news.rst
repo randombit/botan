@@ -10,15 +10,35 @@ Version 1.11.30, Not Yet Released
   connections in order to randomize the IV.
 
 * A bug in GCM caused incorrect results if the 32-bit counter field
-  overflowed. With a 96-bit nonce, this could only occur if 2**32
-  128-bit blocks were encrypted. This actually exceeds the maximum
-  allowable length of a GCM plaintext.
+  overflowed. This bug has no implications on the security but affects
+  interoperability.
 
-  However if a GCM nonce of any other size is used, the bug triggers
-  randomly, with increasing probability on longer messages. For
-  instance when encrypting 256 MiB of data under a random 128 bit
-  nonce, an incorrect result would be produced about 1/256 of the
-  time. With 1 MiB texts, the probability of error reduced to 1/65536.
+  With a 96-bit nonce, this could only occur if at least 2**32 128-bit
+  blocks (64 GiB) were encrypted. This actually exceeds the maximum
+  allowable length of a GCM plaintext; when messages longer than
+  2**32 - 2 blocks are encrypted, GCM loses its security properties.
+
+  In addition to 96-bit nonces, GCM also supports nonces of arbitrary
+  length using a different method which hashes the provided nonce
+  under the authentication key. When using such a nonce, the last 4
+  bytes of the resulting CTR input might be near the overflow
+  boundary, with the probability of incorrect overflow increasing with
+  longer messages. when encrypting 256 MiB of data under a random 128
+  bit nonce, an incorrect result would be produced about 1/256 of the
+  time. With 1 MiB texts, the probability of error is reduced to 1/65536.
+
+  Since TLS uses GCM with 96 bit nonces and limits the length of any
+  record to far less than 64 GiB, TLS GCM ciphersuites are not
+  affected by this bug.
+
+  Reported by Juraj Somorovsky, described also in "Nonce-Disrespecting
+  Adversaries: Practical Forgery Attacks on GCM in TLS"
+  (https://eprint.iacr.org/2016/475.pdf)
+
+* Previously when generating a new self-signed certificate or PKCS #10
+  request, the subject DN was required to contain both common name
+  (CN) and country (C) fields. These restrictions have been removed.
+  GH #496
 
 * The Transform and Keyed_Transform interfaces has been removed. The
   two concrete implementations of these interfaces were Cipher_Mode
@@ -66,6 +86,17 @@ Version 1.11.30, Not Yet Released
 * Fix OS X dylib naming problem (GH #468 #467)
 
 * Fix bcrypt function under Python 3 (GH #461)
+
+* The ``unix_procs`` entropy source is deprecated and will be removed
+  in a future release. This entropy source attempts to get entropy by
+  running Unix programs like ``arp``, ``netstat``, and ``dmesg`` which
+  produce information which may be difficult for a remote attacker to
+  guess. This exists primarily as a last-ditch for Unix systems
+  without ``/dev/random``. But at this point such systems effectively
+  no longer exist, and the use of ``fork`` and ``exec`` by the library
+  complicates effective application sandboxing.
+
+* Changes to avoid implicit cast warnings in Visual C++ (GH #484)
 
 Version 1.10.13, 2016-04-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

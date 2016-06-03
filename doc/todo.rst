@@ -101,6 +101,7 @@ Public Key Crypto, Math
 
 * XMSS (draft-irtf-cfrg-xmss-hash-based-signatures)
 * SPHINCS-256
+* NEWHOPE RLWE scheme + BoringSSL compatible TLS cipher suites
 * EdDSA (GH #283)
 * Ed448-Goldilocks
 * FHMQV
