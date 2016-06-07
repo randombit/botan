@@ -131,26 +131,21 @@ class McEliece_Tests : public Test
 
       std::vector<Test::Result> run() override
          {
-         size_t params__n__t_min_max[] = {
-            256, 5, 15,
-            512, 5, 33,
-            1024, 15, 35,
-            2048, 33, 50,
-            2960, 50, 56,
-            6624, 110, 115
-         };
+         struct keygen_params { size_t code_length, t_min, t_max; };
+
+         const keygen_params param_sets[] = { { 256, 5, 15 },
+                                              { 512, 5, 33 },
+                                              { 1024, 15, 35 },
+                                              { 2048, 33, 50 },
+                                              { 6624, 110, 115 } };
 
          std::vector<Test::Result> results;
 
-         for(size_t i = 0; i < sizeof(params__n__t_min_max)/sizeof(params__n__t_min_max[0]); i+=3)
+         for(size_t i = 0; i < sizeof(param_sets)/sizeof(param_sets[0]); ++i)
             {
-            const size_t code_length = params__n__t_min_max[i];
-            const size_t min_t = params__n__t_min_max[i+1];
-            const size_t max_t = params__n__t_min_max[i+2];
-
-            for(size_t t = min_t; t <= max_t; ++t)
+            for(size_t t = param_sets[i].t_min; t <= param_sets[i].t_max; ++t)
                {
-               Botan::McEliece_PrivateKey sk1(Test::rng(), code_length, t);
+               Botan::McEliece_PrivateKey sk1(Test::rng(), param_sets[i].code_length, t);
                const Botan::McEliece_PublicKey& pk1 = sk1;
 
                const std::vector<byte> pk_enc = pk1.x509_subject_public_key();
