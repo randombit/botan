@@ -58,7 +58,7 @@ clean:
 	-$(RM) %{libobj_dir}/*
 	-$(RM) %{testobj_dir}/*
 	-$(RM) %{cliobj_dir}/*
-	-$(RM) $(SONAME) $(SYMLINK)
+	-$(RM) $(SONAME_ABI) $(SONAME_BASE)
 	-$(RM) $(LIBRARIES) $(CLI) $(TEST)
 
 distclean: clean
