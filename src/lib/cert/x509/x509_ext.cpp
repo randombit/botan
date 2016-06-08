@@ -461,7 +461,7 @@ void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
 */
 std::vector<byte> Name_Constraints::encode_inner() const
    {
-   throw std::runtime_error("Name_Constraints encoding not implemented");
+   throw Not_Implemented("Name_Constraints encoding");
    }
 
 
@@ -777,7 +777,7 @@ void CRL_ReasonCode::contents_to(Data_Store& info, Data_Store&) const
 
 std::vector<byte> CRL_Distribution_Points::encode_inner() const
    {
-   throw Exception("CRL_Distribution_Points encoding not implemented");
+   throw Not_Implemented("CRL_Distribution_Points encoding");
    }
 
 void CRL_Distribution_Points::decode_inner(const std::vector<byte>& buf)
@@ -800,7 +800,7 @@ void CRL_Distribution_Points::contents_to(Data_Store& info, Data_Store&) const
 
 void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder&) const
    {
-   throw Exception("CRL_Distribution_Points encoding not implemented");
+   throw Not_Implemented("CRL_Distribution_Points encoding");
    }
 
 void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder& ber)
@@ -815,7 +815,7 @@ void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder&
 
 std::vector<byte> Unknown_Critical_Extension::encode_inner() const
    {
-   throw Exception("Unknown_Critical_Extension encoding not implemented");
+   throw Not_Implemented("Unknown_Critical_Extension encoding");
    }
 
 void Unknown_Critical_Extension::decode_inner(const std::vector<byte>& buf)

@@ -1,14 +1,8 @@
 dependencies:
   pre:
-    - sudo add-apt-repository -y 'deb http://llvm.org/apt/precise/ llvm-toolchain-precise-3.6 main'
-    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    - wget -q -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
     - sudo apt-get update -qq
-  override:
-    - sudo apt-get install g++-4.9 clang-3.6
+    - sudo apt-get install clang
   post:
-    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 99
-    - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.6 99
     - g++ --version
     - clang++ --version
 
