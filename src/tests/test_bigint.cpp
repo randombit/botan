@@ -5,6 +5,7 @@
 */
 
 #include "tests.h"
+#include "cmath"
 
 #if defined(BOTAN_HAS_BIGINT)
   #include <botan/bigint.h>
