@@ -6,6 +6,8 @@
 
 #include "tests.h"
 
+#include "test_rng.h"
+
 #if defined(BOTAN_HAS_ECDSA)
   #include "test_pubkey.h"
   #include <botan/ecdsa.h>
@@ -23,8 +25,13 @@ class ECDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
    public:
       ECDSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
          "ECDSA",
-         "pubkey/ecdsa.vec",
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+         "pubkey/ecdsa_rfc6979.vec",
          {"Group", "X", "Hash", "Msg", "Signature"})
+#else
+         "pubkey/ecdsa_prob.vec",
+         {"Group", "X", "Hash", "Msg", "Nonce", "Signature"})
+#endif
          {}
 
       bool clear_between_callbacks() const override { return false; }
@@ -43,6 +50,15 @@ class ECDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
          {
          return "EMSA1(" + get_req_str(vars, "Hash") + ")";
          }
+
+#if !defined(BOTAN_HAS_RFC6979)
+      Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
+         {
+         // probabilistic ecdsa signature generation extracts more random than just the nonce,
+         // but the nonce is extracted first
+         return new Fixed_Output_Position_RNG(nonce, 1);
+         }
+#endif
    };
 
 class ECDSA_Keygen_Tests : public PK_Key_Generation_Test

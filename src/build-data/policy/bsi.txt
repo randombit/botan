@@ -118,6 +118,7 @@ gost_3410
 mce
 mceies
 nr
+rfc6979
 rw
 
 # pk_pad

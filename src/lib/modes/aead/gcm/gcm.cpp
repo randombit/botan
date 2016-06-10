@@ -168,7 +168,7 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
 
    m_ghash.reset(new GHASH);
 
-   m_ctr.reset(new CTR_BE(cipher)); // CTR_BE takes ownership of cipher
+   m_ctr.reset(new CTR_BE(cipher, 4)); // CTR_BE takes ownership of cipher
 
    if(m_tag_size != 8 && m_tag_size != 16)
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(m_tag_size));
