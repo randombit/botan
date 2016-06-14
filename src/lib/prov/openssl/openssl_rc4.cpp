@@ -45,6 +45,11 @@ class OpenSSL_RC4 : public StreamCipher
 
       explicit OpenSSL_RC4(size_t skip = 0) : m_skip(skip) { clear(); }
       ~OpenSSL_RC4() { clear(); }
+
+      void seek(u64bit) override
+         {
+         throw Exception("RC4 does not support seeking");
+         }
    private:
       void cipher(const byte in[], byte out[], size_t length) override
          {

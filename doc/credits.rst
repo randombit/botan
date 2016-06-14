@@ -104,3 +104,10 @@ snail-mail address (S), and Bitcoin address (B).
   W: https://www.kullo.net
   D: Build system
   S: Germany
+
+  N: Simon Cogliani
+  E: simon.cogliani@tanker.io
+  W: https://www.tanker.io/
+  P: EA73 D0AF 5A81 A61A 8931  C2CA C9AB F2E4 3820 4F25
+  D: Getting keystream of ChaCha
+  S: Paris, France

@@ -73,4 +73,9 @@ void OFB::set_iv(const byte iv[], size_t iv_len)
    m_buf_pos = 0;
    }
 
+
+void OFB::seek(u64bit)
+   {
+   throw Exception("OFB does not support seeking");
+   }
 }

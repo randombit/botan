@@ -113,4 +113,8 @@ void RC4::clear()
 */
 RC4::RC4(size_t s) : m_SKIP(s) {}
 
+void RC4::seek(u64bit)
+   {
+   throw Exception("RC4 does not support seeking");
+   }
 }
