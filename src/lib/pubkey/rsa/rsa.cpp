@@ -58,7 +58,7 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if((m_e * m_d) % lcm(m_p - 1, m_q - 1) != 1)
       return false;
 
-   return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-1)");
+   return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-256)");
    }
 
 namespace {

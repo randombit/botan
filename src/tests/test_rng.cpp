@@ -40,15 +40,31 @@ Botan::RandomNumberGenerator* get_rng(const std::string& algo_str, const std::ve
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
    if(rng_name == "HMAC_DRBG")
-      return new Botan::HMAC_DRBG(
-         Botan::MessageAuthenticationCode::create("HMAC(" + algo_name[1] + ")").release(),
-         new AllOnce_RNG(ikm));
+      {
+      auto mac = Botan::MessageAuthenticationCode::create("HMAC(" + algo_name[1] + ")");
+
+      if(!mac)
+         {
+         return nullptr;
+         }
+
+      return new Botan::HMAC_DRBG(mac.release(), new AllOnce_RNG(ikm));
+      }
+
 #endif
 
 #if defined(BOTAN_HAS_X931_RNG)
    if(rng_name == "X9.31-RNG")
-      return new Botan::ANSI_X931_RNG(Botan::BlockCipher::create(algo_name[1]).release(),
-                                      new Fixed_Output_RNG(ikm));
+      {
+      auto bc = Botan::BlockCipher::create(algo_name[1]);
+
+      if(!bc)
+         {
+         return nullptr;
+         }
+
+      return new Botan::ANSI_X931_RNG(bc.release(), new Fixed_Output_RNG(ikm));
+      }
 #endif
 
    return nullptr;
@@ -72,6 +88,11 @@ class X931_RNG_Tests : public Text_Based_Test
          result.test_eq("length", L, expected.size());
 
          std::unique_ptr<Botan::RandomNumberGenerator> rng(get_rng(algo, ikm));
+         if(!rng)
+            {
+            result.note_missing("RNG " + algo);
+            return result;
+            }
 
          result.test_eq("rng", rng->random_vec(L), expected);
 

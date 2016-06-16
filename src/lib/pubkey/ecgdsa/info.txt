@@ -8,4 +8,6 @@ ecc_key
 keypair
 numbertheory
 rng
+emsa1
+sha2_32
 </requires>
