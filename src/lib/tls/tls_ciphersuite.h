@@ -31,17 +31,15 @@ class BOTAN_DLL Ciphersuite
 
       static std::vector<u16bit> all_known_ciphersuite_ids();
 
+      /*
+      * Returns the compiled in list of cipher suites.
+      */
+      static const std::vector<Ciphersuite>& all_cipher_suites();
+
       /**
       * Returns true iff this suite is a known SCSV
       */
       static bool is_scsv(u16bit suite);
-
-      /**
-      * Lookup a ciphersuite by name
-      * @param name the name (eg TLS_RSA_WITH_RC4_128_SHA)
-      * @return ciphersuite object
-      */
-      static Ciphersuite by_name(const std::string& name);
 
       /**
       * Generate a static list of all known ciphersuites and return it.
@@ -54,7 +52,7 @@ class BOTAN_DLL Ciphersuite
       * Formats the ciphersuite back to an RFC-style ciphersuite string
       * @return RFC ciphersuite string identifier
       */
-      std::string to_string() const;
+      std::string to_string() const { return m_iana_id; }
 
       /**
       * @return ciphersuite number
@@ -74,26 +72,28 @@ class BOTAN_DLL Ciphersuite
       /**
       * @return key exchange algorithm used by this ciphersuite
       */
-      const std::string& kex_algo() const { return m_kex_algo; }
+      std::string kex_algo() const { return m_kex_algo; }
 
       /**
       * @return signature algorithm used by this ciphersuite
       */
-      const std::string& sig_algo() const { return m_sig_algo; }
+      std::string sig_algo() const { return m_sig_algo; }
 
       /**
       * @return symmetric cipher algorithm used by this ciphersuite
       */
-      const std::string& cipher_algo() const { return m_cipher_algo; }
+      std::string cipher_algo() const { return m_cipher_algo; }
 
       /**
       * @return message authentication algorithm used by this ciphersuite
       */
-      const std::string& mac_algo() const { return m_mac_algo; }
+      std::string mac_algo() const { return m_mac_algo; }
 
-      const std::string& prf_algo() const
+      std::string prf_algo() const
          {
-         return (!m_prf_algo.empty()) ? m_prf_algo : m_mac_algo;
+         if(m_prf_algo && *m_prf_algo)
+            return m_prf_algo;
+         return m_mac_algo;
          }
 
       /**
@@ -116,7 +116,9 @@ class BOTAN_DLL Ciphersuite
 
    private:
 
+
       Ciphersuite(u16bit ciphersuite_code,
+                  const char* iana_id,
                   const char* sig_algo,
                   const char* kex_algo,
                   const char* cipher_algo,
@@ -125,20 +127,39 @@ class BOTAN_DLL Ciphersuite
                   size_t nonce_bytes_from_record,
                   const char* mac_algo,
                   size_t mac_keylen,
-                  const char* prf_algo = "");
+                  const char* prf_algo) :
+         m_ciphersuite_code(ciphersuite_code),
+         m_iana_id(iana_id),
+         m_sig_algo(sig_algo),
+         m_kex_algo(kex_algo),
+         m_prf_algo(prf_algo),
+         m_cipher_algo(cipher_algo),
+         m_mac_algo(mac_algo),
+         m_cipher_keylen(cipher_keylen),
+         m_nonce_bytes_from_handshake(nonce_bytes_from_handshake),
+         m_nonce_bytes_from_record(nonce_bytes_from_record),
+         m_mac_keylen(mac_keylen)
+         {
+         }
 
       u16bit m_ciphersuite_code = 0;
 
-      std::string m_sig_algo;
-      std::string m_kex_algo;
-      std::string m_prf_algo;
+      /*
+      All of these const char* strings are references to compile time
+      constants in tls_suite_info.cpp
+      */
+      const char* m_iana_id;
 
-      std::string m_cipher_algo;
+      const char* m_sig_algo;
+      const char* m_kex_algo;
+      const char* m_prf_algo;
+
+      const char* m_cipher_algo;
+      const char* m_mac_algo;
+
       size_t m_cipher_keylen = 0;
       size_t m_nonce_bytes_from_handshake = 0;
       size_t m_nonce_bytes_from_record = 0;
-
-      std::string m_mac_algo;
       size_t m_mac_keylen = 0;
    };
 
