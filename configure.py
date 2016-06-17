@@ -958,8 +958,8 @@ class CompilerInfo(object):
             if s in self.so_link_commands:
                 return self.so_link_commands[s]
 
-        raise Exception("No shared library link command found for target '%s' in compiler settings '%s'. Searched for: %s" %
-                    (osname, self.infofile, ", ".join(search_for)))
+        raise Exception("No shared library link command found for target '%s' in compiler settings '%s'" %
+                    (osname, self.infofile))
 
     """
     Return the command needed to link an app/test object
@@ -969,8 +969,7 @@ class CompilerInfo(object):
             if s in self.binary_link_commands:
                 return self.binary_link_commands[s]
 
-        raise Exception("No binary link command found for target '%s' in compiler settings '%s'. Searched for: %s" %
-                    (osname, self.infofile, ", ".join(search_for)))
+        return '$(LINKER)'
 
     """
     Return defines for build.h
