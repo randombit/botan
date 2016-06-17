@@ -4,4 +4,6 @@ define RSA 20131128
 if_algo
 keypair
 numbertheory
+emsa_pssr
+sha2_32
 </requires>
