@@ -25,7 +25,8 @@ class BOTAN_DLL KDF1 final : public KDF
 
       size_t kdf(byte key[], size_t key_len,
                  const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len) const override;
+                 const byte salt[], size_t salt_len,
+                 const byte label[], size_t label_len) const override;
 
       explicit KDF1(HashFunction* h) : m_hash(h) {}
    private:

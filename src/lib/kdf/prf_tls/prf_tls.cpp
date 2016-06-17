@@ -73,23 +73,36 @@ void P_hash(byte out[], size_t out_len,
 
 size_t TLS_PRF::kdf(byte key[], size_t key_len,
                     const byte secret[], size_t secret_len,
-                    const byte salt[], size_t salt_len) const
+                    const byte salt[], size_t salt_len,
+                    const byte label[], size_t label_len) const
    {
    const size_t S1_len = (secret_len + 1) / 2,
                 S2_len = (secret_len + 1) / 2;
    const byte* S1 = secret;
    const byte* S2 = secret + (secret_len - S2_len);
+   secure_vector<byte> msg;
 
-   P_hash(key, key_len, *m_hmac_md5,  S1, S1_len, salt, salt_len);
-   P_hash(key, key_len, *m_hmac_sha1, S2, S2_len, salt, salt_len);
+   msg.reserve(label_len + salt_len);
+   msg += std::make_pair(label, label_len);
+   msg += std::make_pair(salt, salt_len);
+
+   P_hash(key, key_len, *m_hmac_md5,  S1, S1_len, msg.data(), msg.size());
+   P_hash(key, key_len, *m_hmac_sha1, S2, S2_len, msg.data(), msg.size());
    return key_len;
    }
 
 size_t TLS_12_PRF::kdf(byte key[], size_t key_len,
                        const byte secret[], size_t secret_len,
-                       const byte salt[], size_t salt_len) const
+                       const byte salt[], size_t salt_len,
+                       const byte label[], size_t label_len) const
    {
-   P_hash(key, key_len, *m_mac, secret, secret_len, salt, salt_len);
+   secure_vector<byte> msg;
+
+   msg.reserve(label_len + salt_len);
+   msg += std::make_pair(label, label_len);
+   msg += std::make_pair(salt, salt_len);
+
+   P_hash(key, key_len, *m_mac, secret, secret_len, msg.data(), msg.size());
    return key_len;
    }
 

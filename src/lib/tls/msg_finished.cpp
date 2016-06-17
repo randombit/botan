@@ -31,14 +31,15 @@ std::vector<byte> finished_compute_verify(const Handshake_State& state,
    std::unique_ptr<KDF> prf(state.protocol_specific_prf());
 
    std::vector<byte> input;
+   std::vector<byte> label;
    if(side == CLIENT)
-      input += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
+      label += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
    else
-      input += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
+      label += std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
 
    input += state.hash().final(state.version(), state.ciphersuite().prf_algo());
 
-   return unlock(prf->derive_key(12, state.session_keys().master_secret(), input));
+   return unlock(prf->derive_key(12, state.session_keys().master_secret(), input, label));
    }
 
 }
