@@ -621,7 +621,6 @@ SymmetricKey Channel::key_material_export(const std::string& label,
          active->session_keys().master_secret();
 
       std::vector<byte> salt;
-      salt += to_byte_vector(label);
       salt += active->client_hello()->random();
       salt += active->server_hello()->random();
 
@@ -635,7 +634,7 @@ SymmetricKey Channel::key_material_export(const std::string& label,
          salt += to_byte_vector(context);
          }
 
-      return prf->derive_key(length, master_secret, salt);
+      return prf->derive_key(length, master_secret, salt, to_byte_vector(label));
       }
    else
       throw Exception("Channel::key_material_export connection not active");

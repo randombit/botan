@@ -11,10 +11,6 @@
   #include <botan/emsa1.h>
 #endif
 
-#if defined(BOTAN_HAS_EMSA1_BSI)
-  #include <botan/emsa1_bsi.h>
-#endif
-
 #if defined(BOTAN_HAS_EMSA_X931)
   #include <botan/emsa_x931.h>
 #endif
@@ -56,10 +52,6 @@ EMSA* get_emsa(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_EMSA1)
 BOTAN_REGISTER_EMSA_1HASH(EMSA1, "EMSA1");
-#endif
-
-#if defined(BOTAN_HAS_EMSA1_BSI)
-BOTAN_REGISTER_EMSA_1HASH(EMSA1_BSI, "EMSA1_BSI");
 #endif
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)

@@ -23,9 +23,27 @@ class BOTAN_DLL SP800_108_Counter : public KDF
 
       KDF* clone() const override { return new SP800_108_Counter(m_prf->clone()); }
 
+      /**
+      * Derive a key using the SP800-108 KDF in Counter mode.
+      *
+      * The implementation hard codes the length of [L]_2
+      * and [i]_2 (the value r) to 32 bits.
+      *
+      * @param key resulting keying material
+      * @param key_len the desired output length in bytes
+      * @param secret K_I
+      * @param secret_len size of K_I in bytes
+      * @param salt Context
+      * @param salt_len size of Context in bytes
+      * @param label Label
+      * @param label_len size of Label in bytes
+      *
+      * @throws Invalid_Argument key_len > 2^32
+      */
       size_t kdf(byte key[], size_t key_len,
                  const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len) const override;
+                 const byte salt[], size_t salt_len,
+                 const byte label[], size_t label_len) const override;
 
       SP800_108_Counter(MessageAuthenticationCode* mac) : m_prf(mac) {}
 
@@ -44,9 +62,27 @@ class BOTAN_DLL SP800_108_Feedback : public KDF
 
       KDF* clone() const override { return new SP800_108_Feedback(m_prf->clone()); }
 
+      /**
+      * Derive a key using the SP800-108 KDF in Feedback mode.
+      *
+      * The implementation uses the optional counter i and hard
+      * codes the length of [L]_2 and [i]_2 (the value r) to 32 bits.
+      *
+      * @param key resulting keying material
+      * @param key_len the desired output length in bytes
+      * @param secret K_I
+      * @param secret_len size of K_I in bytes
+      * @param salt IV || Context
+      * @param salt_len size of Context plus IV in bytes
+      * @param label Label
+      * @param label_len size of Label in bytes
+      *
+      * @throws Invalid_Argument key_len > 2^32
+      */
       size_t kdf(byte key[], size_t key_len,
                  const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len) const override;
+                 const byte salt[], size_t salt_len,
+                 const byte label[], size_t label_len) const override;
 
       SP800_108_Feedback(MessageAuthenticationCode* mac) : m_prf(mac) {}
 
@@ -65,9 +101,27 @@ class BOTAN_DLL SP800_108_Pipeline : public KDF
 
       KDF* clone() const override { return new SP800_108_Pipeline(m_prf->clone()); }
 
+      /**
+      * Derive a key using the SP800-108 KDF in Double Pipeline mode.
+      *
+      * The implementation uses the optional counter i and hard
+      * codes the length of [L]_2 and [i]_2 (the value r) to 32 bits.
+      *
+      * @param key resulting keying material
+      * @param key_len the desired output length in bytes
+      * @param secret K_I
+      * @param secret_len size of K_I in bytes
+      * @param salt Context
+      * @param salt_len size of Context in bytes
+      * @param label Label
+      * @param label_len size of Label in bytes
+      *
+      * @throws Invalid_Argument key_len > 2^32
+      */
       size_t kdf(byte key[], size_t key_len,
                  const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len) const override;
+                 const byte salt[], size_t salt_len,
+                 const byte label[], size_t label_len) const override;
 
       SP800_108_Pipeline(MessageAuthenticationCode* mac) : m_prf(mac) {}
 

@@ -57,8 +57,10 @@ hres_timer
 proc_walk
 rdrand
 rdseed
-system_rng
 win32_stats
+
+# rng
+system_rng
 
 # utils
 locking_allocator
@@ -153,6 +155,8 @@ x919_mac
 
 # rng
 x931_rng
+
+# entropy sources
 unix_procs
 
 </prohibited>

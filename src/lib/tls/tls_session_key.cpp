@@ -48,28 +48,30 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    else
       {
       secure_vector<byte> salt;
+      secure_vector<byte> label;
       if(extended_master_secret)
          {
-         salt += std::make_pair(EXT_MASTER_SECRET_MAGIC, sizeof(EXT_MASTER_SECRET_MAGIC));
+         label += std::make_pair(EXT_MASTER_SECRET_MAGIC, sizeof(EXT_MASTER_SECRET_MAGIC));
          salt += state->hash().final(state->version(),
                                      state->ciphersuite().prf_algo());
          }
       else
          {
-         salt += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
+         label += std::make_pair(MASTER_SECRET_MAGIC, sizeof(MASTER_SECRET_MAGIC));
          salt += state->client_hello()->random();
          salt += state->server_hello()->random();
          }
 
-      m_master_sec = prf->derive_key(48, pre_master_secret, salt);
+      m_master_sec = prf->derive_key(48, pre_master_secret, salt, label);
       }
 
    secure_vector<byte> salt;
-   salt += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
+   secure_vector<byte> label;
+   label += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
    salt += state->server_hello()->random();
    salt += state->client_hello()->random();
 
-   SymmetricKey keyblock = prf->derive_key(prf_gen, m_master_sec, salt);
+   SymmetricKey keyblock = prf->derive_key(prf_gen, m_master_sec, salt, label);
 
    const byte* key_data = keyblock.begin();
 

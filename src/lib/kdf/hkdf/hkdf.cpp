@@ -22,7 +22,8 @@ HKDF* HKDF::make(const Spec& spec)
 
 size_t HKDF::kdf(byte out[], size_t out_len,
                  const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len) const
+                 const byte salt[], size_t salt_len,
+                 const byte label[], size_t label_len) const
    {
    m_prf->set_key(secret, secret_len);
 
@@ -33,6 +34,7 @@ size_t HKDF::kdf(byte out[], size_t out_len,
    while(offset != out_len && counter != 0)
       {
       m_prf->update(h);
+      m_prf->update(label, label_len);
       m_prf->update(salt, salt_len);
       m_prf->update(counter++);
       m_prf->final(h);

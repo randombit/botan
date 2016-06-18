@@ -653,12 +653,13 @@ int botan_pbkdf_timed(const char* pbkdf_algo,
 int botan_kdf(const char* kdf_algo,
               uint8_t out[], size_t out_len,
               const uint8_t secret[], size_t secret_len,
-              const uint8_t salt[], size_t salt_len)
+              const uint8_t salt[], size_t salt_len,
+              const uint8_t label[], size_t label_len)
    {
    try
       {
       std::unique_ptr<Botan::KDF> kdf(Botan::get_kdf(kdf_algo));
-      kdf->kdf(out, out_len, secret, secret_len, salt, salt_len);
+      kdf->kdf(out, out_len, secret, secret_len, salt, salt_len, label, label_len);
       return 0;
       }
    catch(std::exception& e)

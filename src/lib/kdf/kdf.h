@@ -40,7 +40,8 @@ class BOTAN_DLL KDF
 
       virtual size_t kdf(byte key[], size_t key_len,
                          const byte secret[], size_t secret_len,
-                         const byte salt[], size_t salt_len) const = 0;
+                         const byte salt[], size_t salt_len,
+                         const byte label[], size_t label_len) const = 0;
 
 
       /**
@@ -50,15 +51,19 @@ class BOTAN_DLL KDF
       * @param secret_len size of secret in bytes
       * @param salt a diversifier
       * @param salt_len size of salt in bytes
+      * @param label purpose for the derived keying material
+      * @param label_len size of label in bytes
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const byte secret[],
                                     size_t secret_len,
                                     const byte salt[],
-                                    size_t salt_len) const
+                                    size_t salt_len,
+                                    const byte label[] = nullptr,
+                                    size_t label_len = 0) const
          {
          secure_vector<byte> key(key_len);
-         key.resize(kdf(key.data(), key.size(), secret, secret_len, salt, salt_len));
+         key.resize(kdf(key.data(), key.size(), secret, secret_len, salt, salt_len, label, label_len));
          return key;
          }
 
@@ -67,14 +72,19 @@ class BOTAN_DLL KDF
       * @param key_len the desired output length in bytes
       * @param secret the secret input
       * @param salt a diversifier
+      * @param label purpose for the derived keying material
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const secure_vector<byte>& secret,
-                                    const std::string& salt = "") const
+                                    const std::string& salt = "",
+                                    const std::string& label = "") const
          {
          return derive_key(key_len, secret.data(), secret.size(),
                            reinterpret_cast<const byte*>(salt.data()),
-                           salt.length());
+                           salt.length(),
+                           reinterpret_cast<const byte*>(label.data()),
+                           label.length());
+
          }
 
       /**
@@ -82,15 +92,18 @@ class BOTAN_DLL KDF
       * @param key_len the desired output length in bytes
       * @param secret the secret input
       * @param salt a diversifier
+      * @param label purpose for the derived keying material
       */
-      template<typename Alloc, typename Alloc2>
+      template<typename Alloc, typename Alloc2, typename Alloc3>
       secure_vector<byte> derive_key(size_t key_len,
                                      const std::vector<byte, Alloc>& secret,
-                                     const std::vector<byte, Alloc2>& salt) const
+                                     const std::vector<byte, Alloc2>& salt,
+                                     const std::vector<byte, Alloc3>& label) const
          {
          return derive_key(key_len,
                            secret.data(), secret.size(),
-                           salt.data(), salt.size());
+                           salt.data(), salt.size(),
+                           label.data(), label.size());
          }
 
       /**
@@ -99,15 +112,19 @@ class BOTAN_DLL KDF
       * @param secret the secret input
       * @param salt a diversifier
       * @param salt_len size of salt in bytes
+      * @param label purpose for the derived keying material
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const secure_vector<byte>& secret,
                                     const byte salt[],
-                                    size_t salt_len) const
+                                    size_t salt_len,
+                                    const std::string& label = "") const
          {
          return derive_key(key_len,
                            secret.data(), secret.size(),
-                           salt, salt_len);
+                           salt, salt_len,
+                           reinterpret_cast<const byte*>(label.data()),
+                           label.size());
          }
 
       /**
@@ -116,15 +133,19 @@ class BOTAN_DLL KDF
       * @param secret the secret input
       * @param secret_len size of secret in bytes
       * @param salt a diversifier
+      * @param label purpose for the derived keying material
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const byte secret[],
                                     size_t secret_len,
-                                    const std::string& salt = "") const
+                                    const std::string& salt = "",
+                                    const std::string& label = "") const
          {
          return derive_key(key_len, secret, secret_len,
                            reinterpret_cast<const byte*>(salt.data()),
-                           salt.length());
+                           salt.length(),
+                           reinterpret_cast<const byte*>(label.data()),
+                           label.length());
          }
 
       virtual KDF* clone() const = 0;
