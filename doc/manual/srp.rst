@@ -10,7 +10,7 @@ This verifier is based on a password, but the password cannot be
 easily derived from the verifier. Later, the client and server can
 perform an SRP exchange, in which
 
- .. warning::
+.. warning::
 
      While knowledge of the verifier does not easily allow an attacker
      to get the raw password, they could still use the verifier to
