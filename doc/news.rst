@@ -42,14 +42,15 @@ Version 1.11.30, Not Yet Released
 
 * The Transform and Keyed_Transform interfaces has been removed. The
   two concrete implementations of these interfaces were Cipher_Mode
-  and the Compressor_tkk. The Cipher_Mode interface remains unchanged
+  and Compressor_Transform. The Cipher_Mode interface remains unchanged
   as the Transform and Keyed_Transform signatures have moved to it;
   no changes to Cipher_Mode usage should be necessary. Any uses of
   Transform& or Keyed_Transform& to refer to a cipher should be replaced
   by Cipher_Mode&. The compression algorithm interface has changed; the start
   function now takes the per-message compression ratio to use. Previously the
   compression level to use had to be set once, at creation time, and
-  the required `secure_vector` argument to start was required to be empty.
+  the required ``secure_vector`` argument to ``start`` was required to be empty.
+  The new API is documented in `compression.rst` in the manual.
 
 * Add IETF versions of the ChaCha20Poly1305 TLS ciphersuites from
   draft-ietf-tls-chacha20-poly1305-04. The previously implemented
@@ -69,11 +70,19 @@ Version 1.11.30, Not Yet Released
 * X509_CRL previously had an option to cause it to ignore unknown
   critical extensions. This has been removed.
 
-* Added support for ChaCha stream cipher with 12 rounds.
+* Added StreamCipher::seek allowing seeking to arbitrary position
+  in the key stream. Currently only implemented for ChaCha. (GH #497)
+
+* Added support for ChaCha stream cipher with 8 or 12 rounds.
 
 * Add ECGDSA signature algorithm (GH #479)
 
+* Add support for label argument to KDFs (GH #495)
+
 * Add NIST SP800-108 and 56C KDFs (GH #481)
+
+* Support for Card Verifiable Certificates and the obsolete EMSA1_BSI
+  signature padding scheme have been removed. (GH #487)
 
 * A bug in the IETF version of ChaCha20Poly1305 (with 96 bit nonces)
   caused incorrect computation when the plaintext or AAD was exactly
