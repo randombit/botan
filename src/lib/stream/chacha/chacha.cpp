@@ -12,8 +12,8 @@ namespace Botan {
 
 ChaCha::ChaCha(size_t rounds) : m_rounds(rounds)
    {
-   if(m_rounds != 12 && m_rounds != 20)
-      throw Invalid_Argument("ChaCha only supports 12 or 20 rounds");
+   if(m_rounds != 8 && m_rounds != 12 && m_rounds != 20)
+      throw Invalid_Argument("ChaCha only supports 8, 12 or 20 rounds");
    }
 
 namespace {
@@ -67,7 +67,6 @@ void chacha(byte output[64], const u32bit input[16], size_t rounds)
    store_le(x14 + input[14], output + 4 * 14);
    store_le(x15 + input[15], output + 4 * 15);
    }
-
 }
 
 /*
@@ -173,4 +172,27 @@ std::string ChaCha::name() const
    return "ChaCha(" + std::to_string(m_rounds) + ")";
    }
 
+void ChaCha::seek(u64bit offset)
+   {
+   if (m_state.size() == 0 && m_buffer.size() == 0)
+      {
+         throw Invalid_State("You have to setup the stream cipher (key and iv)");
+      }
+
+   m_position = offset % m_buffer.size();
+
+   u64bit counter = offset / m_buffer.size();
+
+   byte out[8];
+
+   store_le(counter, out);
+
+   m_state[12] = load_le<u32bit>(out, 0);
+   m_state[13] += load_le<u32bit>(out, 1);
+
+   chacha(m_buffer.data(), m_state.data(), m_rounds);
+
+   ++m_state[12];
+   m_state[13] += (m_state[12] == 0);
+   }
 }

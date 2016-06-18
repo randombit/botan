@@ -39,6 +39,8 @@ class BOTAN_DLL RC4 final : public StreamCipher
       explicit RC4(size_t skip = 0);
 
       ~RC4() { clear(); }
+
+      void seek(u64bit offset) override;
    private:
       void key_schedule(const byte[], size_t) override;
       void generate();

@@ -125,4 +125,8 @@ void CTR_BE::increment_counter()
    m_pad_pos = 0;
    }
 
+void CTR_BE::seek(u64bit)
+   {
+   throw Not_Implemented("CTR_BE::seek");
+   }
 }

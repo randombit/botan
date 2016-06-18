@@ -21,7 +21,7 @@ class BOTAN_DLL ChaCha final : public StreamCipher
       StreamCipher* clone() const override { return new ChaCha(m_rounds); }
 
       /**
-      * Currently only 12 or 20 rounds are supported, all others
+      * Currently only 8, 12 or 20 rounds are supported, all others
       * will throw an exception
       */
       ChaCha(size_t rounds);
@@ -41,6 +41,8 @@ class BOTAN_DLL ChaCha final : public StreamCipher
       void clear() override;
 
       std::string name() const override;
+
+      void seek(u64bit offset) override;
 
    private:
       void key_schedule(const byte key[], size_t key_len) override;

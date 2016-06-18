@@ -80,6 +80,12 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       */
       virtual StreamCipher* clone() const = 0;
 
+      /**
+      * Set the offset and the state used later to generate the keystream
+      * @param offset the offset where we begin to generate the keystream
+      */
+      virtual void seek(u64bit offset) = 0;
+
       StreamCipher();
       virtual ~StreamCipher();
    };

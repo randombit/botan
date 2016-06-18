@@ -44,6 +44,8 @@ class BOTAN_DLL OFB final : public StreamCipher
       * @param cipher the underlying block cipher to use
       */
       explicit OFB(BlockCipher* cipher);
+
+      void seek(u64bit offset) override;
    private:
       void key_schedule(const byte key[], size_t key_len) override;
 

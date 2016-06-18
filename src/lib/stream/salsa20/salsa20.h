@@ -33,6 +33,8 @@ class BOTAN_DLL Salsa20 final : public StreamCipher
       void clear() override;
       std::string name() const override;
       StreamCipher* clone() const override { return new Salsa20; }
+
+      void seek(u64bit offset) override;
    private:
       void key_schedule(const byte key[], size_t key_len) override;
 
