@@ -128,10 +128,9 @@ class TLS_Client final : public Command
                                    creds,
                                    *policy,
                                    rng(),
-                                   Botan::TLS::Client::Properties(
-                                      Botan::TLS::Server_Information(host, port),
-                                      version,
-                                      protocols_to_offer));
+                                   Botan::TLS::Server_Information(host, port),
+                                   version,
+                                   protocols_to_offer);
 
          bool first_active = true;
 

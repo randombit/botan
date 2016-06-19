@@ -244,10 +244,9 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                                    creds,
                                    policy,
                                    rng,
-                                   Botan::TLS::Client::Properties(
-                                      Botan::TLS::Server_Information("server.example.com"),
-                                      offer_version,
-                                      protocols_offered)));
+                                   Botan::TLS::Server_Information("server.example.com"),
+                                   offer_version,
+                                   protocols_offered));
 
          size_t rounds = 0;
 
@@ -511,10 +510,9 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                                    creds,
                                    policy,
                                    rng,
-                                   Botan::TLS::Client::Properties(
-                                      Botan::TLS::Server_Information("server.example.com"),
-                                      offer_version,
-                                      protocols_offered)));
+                                   Botan::TLS::Server_Information("server.example.com"),
+                                   offer_version,
+                                   protocols_offered));
 
          size_t rounds = 0;
 

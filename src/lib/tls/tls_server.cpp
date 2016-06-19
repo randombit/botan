@@ -494,23 +494,20 @@ void Server::process_finished_msg(Server_Handshake_State& pending_state,
 
         pending_state.hash().update ( pending_state.handshake_io().format ( contents, type ) );
 
-      Session::Properties session_properties(
-         Server_Information(pending_state.client_hello()->sni_hostname()),
-         "",
-         pending_state.server_hello()->srtp_profile(),
-         pending_state.server_hello()->version(),
-         pending_state.server_hello()->ciphersuite(),
-         pending_state.server_hello()->compression_method());
-
-
         Session session_info(
             pending_state.server_hello()->session_id(),
             pending_state.session_keys().master_secret(),
+            pending_state.server_hello()->version(),
+            pending_state.server_hello()->ciphersuite(),
+            pending_state.server_hello()->compression_method(),
             SERVER,
             pending_state.server_hello()->supports_extended_master_secret(),
             get_peer_cert_chain ( pending_state ),
             std::vector<byte>(),
-            session_properties);
+            Server_Information(pending_state.client_hello()->sni_hostname()),
+            pending_state.srp_identifier(),
+            pending_state.server_hello()->srtp_profile()
+            );
 
         if ( save_session ( session_info ) )
             {

@@ -1,7 +1,6 @@
 /*
 * TLS Session State
 * (C) 2011-2012,2015 Jack Lloyd
-*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -20,19 +19,29 @@ namespace TLS {
 
 Session::Session(const std::vector<byte>& session_identifier,
                  const secure_vector<byte>& master_secret,
+                 Protocol_Version version,
+                 u16bit ciphersuite,
+                 byte compression_method,
                  Connection_Side side,
                  bool extended_master_secret,
                  const std::vector<X509_Certificate>& certs,
                  const std::vector<byte>& ticket,
-                 Properties properties) :
+                 const Server_Information& server_info,
+                 const std::string& srp_identifier,
+                 u16bit srtp_profile) :
    m_start_time(std::chrono::system_clock::now()),
    m_identifier(session_identifier),
    m_session_ticket(ticket),
    m_master_secret(master_secret),
+   m_version(version),
+   m_ciphersuite(ciphersuite),
+   m_compression_method(compression_method),
    m_connection_side(side),
+   m_srtp_profile(srtp_profile),
    m_extended_master_secret(extended_master_secret),
    m_peer_certs(certs),
-   m_properties(properties)
+   m_server_info(server_info),
+   m_srp_identifier(srp_identifier)
    {
    }
 
@@ -60,9 +69,6 @@ Session::Session(const byte ber[], size_t ber_len)
    size_t srtp_profile = 0;
    size_t fragment_size = 0;
 
-   u16bit cs = m_properties.get_ciphersuite();
-   byte compr = compression_method();
-
    BER_Decoder(ber, ber_len)
       .start_cons(SEQUENCE)
         .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
@@ -72,9 +78,10 @@ Session::Session(const byte ber[], size_t ber_len)
         .decode_integer_type(minor_version)
         .decode(m_identifier, OCTET_STRING)
         .decode(m_session_ticket, OCTET_STRING)
-        .decode_integer_type(cs)
-        .decode_integer_type(compr)
+        .decode_integer_type(m_ciphersuite)
+        .decode_integer_type(m_compression_method)
         .decode_integer_type(side_code)
+        .decode_integer_type(fragment_size)
         .decode(m_extended_master_secret)
         .decode(m_master_secret, OCTET_STRING)
         .decode(peer_cert_bits, OCTET_STRING)
@@ -96,17 +103,16 @@ Session::Session(const byte ber[], size_t ber_len)
                            " no longer supported");
       }
 
-   m_properties.set_ciphersuite(cs);
-   m_properties.set_compression_method(compr);
-   m_properties.set_protocol_version(Protocol_Version(major_version, minor_version));
+   m_version = Protocol_Version(major_version, minor_version);
    m_start_time = std::chrono::system_clock::from_time_t(start_time);
    m_connection_side = static_cast<Connection_Side>(side_code);
-   m_properties.set_srtp_profile(static_cast<u16bit>(srtp_profile));
-   m_properties.set_server_info(
-      Server_Information(server_hostname.value(),
-                         server_service.value(),
-                         static_cast<u16bit>(server_port)));
-   m_properties.set_srp_identifier(srp_identifier_str.value());
+   m_srtp_profile = static_cast<u16bit>(srtp_profile);
+
+   m_server_info = Server_Information(server_hostname.value(),
+                                      server_service.value(),
+                                      static_cast<u16bit>(server_port));
+
+   m_srp_identifier = srp_identifier_str.value();
 
    if(!peer_cert_bits.empty())
       {
@@ -127,22 +133,22 @@ secure_vector<byte> Session::DER_encode() const
       .start_cons(SEQUENCE)
          .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
          .encode(static_cast<size_t>(std::chrono::system_clock::to_time_t(m_start_time)))
-         .encode(static_cast<size_t>(version().major_version()))
-         .encode(static_cast<size_t>(version().minor_version()))
+         .encode(static_cast<size_t>(m_version.major_version()))
+         .encode(static_cast<size_t>(m_version.minor_version()))
          .encode(m_identifier, OCTET_STRING)
          .encode(m_session_ticket, OCTET_STRING)
-         .encode(static_cast<size_t>(ciphersuite_code()))
-         .encode(static_cast<size_t>(compression_method()))
+         .encode(static_cast<size_t>(m_ciphersuite))
+         .encode(static_cast<size_t>(m_compression_method))
          .encode(static_cast<size_t>(m_connection_side))
          .encode(static_cast<size_t>(/*old fragment size*/0))
          .encode(m_extended_master_secret)
          .encode(m_master_secret, OCTET_STRING)
          .encode(peer_cert_bits, OCTET_STRING)
-         .encode(ASN1_String(m_properties.get_server_info().hostname(), UTF8_STRING))
-         .encode(ASN1_String(m_properties.get_server_info().service(), UTF8_STRING))
-         .encode(static_cast<size_t>(m_properties.get_server_info().port()))
-         .encode(ASN1_String(srp_identifier(), UTF8_STRING))
-         .encode(static_cast<size_t>(dtls_srtp_profile()))
+         .encode(ASN1_String(m_server_info.hostname(), UTF8_STRING))
+         .encode(ASN1_String(m_server_info.service(), UTF8_STRING))
+         .encode(static_cast<size_t>(m_server_info.port()))
+         .encode(ASN1_String(m_srp_identifier, UTF8_STRING))
+         .encode(static_cast<size_t>(m_srtp_profile))
       .end_cons()
    .get_contents();
    }

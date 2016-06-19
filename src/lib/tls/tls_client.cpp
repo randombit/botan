@@ -48,14 +48,16 @@ Client::Client(const Callbacks& callbacks,
                Credentials_Manager& creds,
                const Policy& policy,
                RandomNumberGenerator& rng,
-               Properties properties,
+               const Server_Information& info,
+               const Protocol_Version& offer_version,
+               const std::vector<std::string>& next_protos,
                size_t io_buf_sz) :
-   Channel(callbacks, session_manager, rng, policy, properties.get_protocol_version().is_datagram_protocol(),
+   Channel(callbacks, session_manager, rng, policy, offer_version.is_datagram_protocol(),
            io_buf_sz),
    m_creds(creds),
-   m_info(properties.get_server_info())
+   m_info(info)
    {
-   init(properties.get_protocol_version(), properties.get_next_protocols());
+   init(offer_version, next_protos);
    }
 
 Client::Client(output_fn output_fn,
@@ -524,22 +526,20 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       if(session_id.empty() && !session_ticket.empty())
          session_id = make_hello_random(rng(), policy());
 
-      Session::Properties session_properties(
-         m_info,
-         "",
-         state.server_hello()->srtp_profile(),
-         state.server_hello()->version(),
-         state.server_hello()->ciphersuite(),
-         state.server_hello()->compression_method());
-
       Session session_info(
          session_id,
          state.session_keys().master_secret(),
+         state.server_hello()->version(),
+         state.server_hello()->ciphersuite(),
+         state.server_hello()->compression_method(),
          CLIENT,
          state.server_hello()->supports_extended_master_secret(),
          get_peer_cert_chain(state),
          session_ticket,
-         session_properties);
+         m_info,
+         "",
+         state.server_hello()->srtp_profile()
+         );
 
       const bool should_save = save_session(session_info);
 

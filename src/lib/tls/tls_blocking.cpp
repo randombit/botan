@@ -20,7 +20,9 @@ Blocking_Client::Blocking_Client(read_fn reader,
                                  Credentials_Manager& creds,
                                  const Policy& policy,
                                  RandomNumberGenerator& rng,
-                                 TLS::Client::Properties& properties) :
+                                 const Server_Information& server_info,
+                                 const Protocol_Version& offer_version,
+                                 const std::vector<std::string>& next) :
    m_read(reader),
    m_channel(TLS::Callbacks(
                writer,
@@ -32,7 +34,9 @@ Blocking_Client::Blocking_Client(read_fn reader,
              creds,
              policy,
              rng,
-             properties)
+             server_info,
+             offer_version,
+             next)
    {
    }
 

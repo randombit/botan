@@ -39,7 +39,9 @@ class BOTAN_DLL Blocking_Client
                       Credentials_Manager& creds,
                       const Policy& policy,
                       RandomNumberGenerator& rng,
-                      TLS::Client::Properties& properties);
+                      const Server_Information& server_info = Server_Information(),
+                      const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
+                      const std::vector<std::string>& next_protos = {});
 
       /**
       * Completes full handshake then returns
