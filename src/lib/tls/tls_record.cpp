@@ -567,7 +567,7 @@ size_t read_dtls_record(secure_vector<byte>& readbuf,
    BOTAN_ASSERT(rec.get_protocol_version()->is_datagram_protocol(), "Expected DTLS");
 
    const size_t record_size = make_u16bit(readbuf[DTLS_HEADER_SIZE-2],
-                                         readbuf[DTLS_HEADER_SIZE-1]);
+                                          readbuf[DTLS_HEADER_SIZE-1]);
 
    if(record_size > MAX_CIPHERTEXT_SIZE)
       throw TLS_Exception(Alert::RECORD_OVERFLOW,

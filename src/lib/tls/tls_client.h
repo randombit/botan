@@ -80,7 +80,7 @@ class BOTAN_DLL Client final : public Channel
                    }
 
                 const std::vector<std::string>& get_next_protocols()
-                   { 
+                   {
                    return m_next_protocols;
                    }
 

@@ -1,7 +1,6 @@
 /*
 * PKCS #10/Self Signed Cert Creation
 * (C) 1999-2008 Jack Lloyd
-*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -76,14 +75,9 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    extensions.add(
       new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
 
-   return X509_CA::make_cert(signer.get(),
-                             rng,
-                             sig_algo,
-                             pub_key,
-                             X509_CA::Certificate_Properties(opts.start,
-                                                             opts.end,
-                                                             subject_dn,
-                                                             subject_dn),
+   return X509_CA::make_cert(signer.get(), rng, sig_algo, pub_key,
+                             opts.start, opts.end,
+                             subject_dn, subject_dn,
                              extensions);
    }
 
