@@ -181,14 +181,16 @@ class Client_Hello final : public Handshake_Message
       std::set<Handshake_Extension_Type> extension_types() const
          { return m_extensions.extension_types(); }
 
-      Client_Hello(Handshake_Info& hs_info,
+      Client_Hello(Handshake_IO& io,
+                   Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
                    const std::vector<byte>& reneg_info,
                    const Client_Hello::Settings& client_settings,
                    const std::vector<std::string>& next_protocols);
 
-      Client_Hello(Handshake_Info& hs_info,
+      Client_Hello(Handshake_IO& io,
+                   Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
                    const std::vector<byte>& reneg_info,
@@ -302,7 +304,8 @@ class Server_Hello final : public Handshake_Message
       std::set<Handshake_Extension_Type> extension_types() const
          { return m_extensions.extension_types(); }
 
-      Server_Hello(Handshake_Info& hs_info,
+      Server_Hello(Handshake_IO& io,
+                   Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
                    const std::vector<byte>& secure_reneg_info,
@@ -310,7 +313,8 @@ class Server_Hello final : public Handshake_Message
                    const Server_Hello::Settings& settings,
                    const std::string next_protocol);
 
-      Server_Hello(Handshake_Info& hs_info,
+      Server_Hello(Handshake_IO& io,
+                   Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
                    const std::vector<byte>& secure_reneg_info,
@@ -341,6 +345,7 @@ class Client_Key_Exchange final : public Handshake_Message
 
       const secure_vector<byte>& pre_master_secret() const
          { return m_pre_master; }
+
       Client_Key_Exchange(Handshake_IO& io,
                           Handshake_State& state,
                           const Policy& policy,
@@ -376,7 +381,8 @@ class Certificate final : public Handshake_Message
       size_t count() const { return m_certs.size(); }
       bool empty() const { return m_certs.empty(); }
 
-      Certificate(Handshake_Info& hs_info,
+      Certificate(Handshake_IO& io,
+                  Handshake_Hash& hash,
                   const std::vector<X509_Certificate>& certs);
 
       explicit Certificate(const std::vector<byte>& buf);
@@ -402,7 +408,8 @@ class Certificate_Req final : public Handshake_Message
       std::vector<std::pair<std::string, std::string> > supported_algos() const
          { return m_supported_algos; }
 
-      Certificate_Req(Handshake_Info& hs_info,
+      Certificate_Req(Handshake_IO& io,
+                      Handshake_Hash& hash,
                       const Policy& policy,
                       const std::vector<X509_DN>& allowed_cas,
                       Protocol_Version version);

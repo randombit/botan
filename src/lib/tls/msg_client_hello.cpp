@@ -67,7 +67,8 @@ std::vector<byte> Hello_Request::serialize() const
 /*
 * Create a new Client Hello message
 */
-Client_Hello::Client_Hello(Handshake_Info& hs_info,
+Client_Hello::Client_Hello(Handshake_IO& io,
+                           Handshake_Hash& hash,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
                            const std::vector<byte>& reneg_info,
@@ -110,13 +111,14 @@ Client_Hello::Client_Hello(Handshake_Info& hs_info,
    if(policy.send_fallback_scsv(client_settings.protocol_version()))
       m_suites.push_back(TLS_FALLBACK_SCSV);
 
-   hs_info.get_hash().update(hs_info.get_io().send(*this));
+   hash.update(io.send(*this));
    }
 
 /*
 * Create a new Client Hello message (session resumption case)
 */
-Client_Hello::Client_Hello(Handshake_Info& hs_info,
+Client_Hello::Client_Hello(Handshake_IO& io,
+                           Handshake_Hash& hash,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
                            const std::vector<byte>& reneg_info,
@@ -162,7 +164,7 @@ Client_Hello::Client_Hello(Handshake_Info& hs_info,
       }
 #endif
 
-   hs_info.get_hash().update(hs_info.get_io().send(*this));
+   hash.update(io.send(*this));
    }
 
 void Client_Hello::update_hello_cookie(const Hello_Verify_Request& hello_verify)

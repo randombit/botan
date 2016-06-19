@@ -26,20 +26,6 @@ class Handshake_Hash;
 class BOTAN_DLL Handshake_Message
    {
    public:
-      class Handshake_Info
-         {
-             public:
-                 Handshake_Info(Handshake_IO& io, Handshake_Hash& hash)
-                     : m_io(io), m_hash(hash) {}
-
-                 Handshake_IO& get_io() { return m_io; }
-                 Handshake_Hash& get_hash() {return m_hash; }
-
-             private:
-                 Handshake_IO& m_io;
-                 Handshake_Hash& m_hash;
-         };
-
       std::string type_string() const;
 
       virtual Handshake_Type type() const = 0;

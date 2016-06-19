@@ -154,9 +154,9 @@ void Client::send_client_hello(Handshake_State& state_base,
          {
          if(srp_identifier == "" || session_info.srp_identifier() == srp_identifier)
             {
-            Client_Hello::Handshake_Info hs_info(state.handshake_io(), state.hash());
             state.client_hello(new Client_Hello(
-               hs_info,
+               state.handshake_io(),
+               state.hash(),
                policy(),
                rng(),
                secure_renegotiation_data_for_client_hello(),
@@ -170,11 +170,10 @@ void Client::send_client_hello(Handshake_State& state_base,
 
    if(!state.client_hello()) // not resuming
       {
-      Client_Hello::Handshake_Info hs_info(state.handshake_io(), state.hash());
-
       Client_Hello::Settings client_settings(version, m_info.hostname(), srp_identifier);
       state.client_hello(new Client_Hello(
-         hs_info,
+         state.handshake_io(),
+         state.hash(),
          policy(),
          rng(),
          secure_renegotiation_data_for_client_hello(),
@@ -444,10 +443,9 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                "tls-client",
                                m_info.hostname());
 
-         Certificate::Handshake_Info hs_info(state.handshake_io(),
-                                             state.hash());
-
-         state.client_certs(new Certificate(hs_info, client_certs));
+         state.client_certs(new Certificate(state.handshake_io(),
+                                            state.hash(),
+                                            client_certs));
          }
 
       state.client_kex(

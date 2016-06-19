@@ -1,7 +1,6 @@
 /*
 * Certificate Message
 * (C) 2004-2006,2012 Jack Lloyd
-*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -21,11 +20,12 @@ namespace TLS {
 /**
 * Create a new Certificate message
 */
-Certificate::Certificate(Handshake_Info& hs_info,
+Certificate::Certificate(Handshake_IO& io,
+                         Handshake_Hash& hash,
                          const std::vector<X509_Certificate>& cert_list) :
    m_certs(cert_list)
    {
-   hs_info.get_hash().update(hs_info.get_io().send(*this));
+   hash.update(io.send(*this));
    }
 
 /**

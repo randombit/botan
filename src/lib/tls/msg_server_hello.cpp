@@ -18,7 +18,8 @@ namespace Botan {
 namespace TLS {
 
 // New session case
-Server_Hello::Server_Hello(Handshake_Info& hs_info,
+Server_Hello::Server_Hello(Handshake_IO& io,
+                           Handshake_Hash& hash,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
                            const std::vector<byte>& reneg_info,
@@ -64,11 +65,12 @@ Server_Hello::Server_Hello(Handshake_Info& hs_info,
          }
       }
 
-   hs_info.get_hash().update(hs_info.get_io().send(*this));
+   hash.update(io.send(*this));
    }
 
 // Resuming
-Server_Hello::Server_Hello(Handshake_Info& hs_info,
+Server_Hello::Server_Hello(Handshake_IO& io,
+                           Handshake_Hash& hash,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
                            const std::vector<byte>& reneg_info,
@@ -94,7 +96,7 @@ Server_Hello::Server_Hello(Handshake_Info& hs_info,
    if(!next_protocol.empty() && client_hello.supports_alpn())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
 
-   hs_info.get_hash().update(hs_info.get_io().send(*this));
+   hash.update(io.send(*this));
    }
 
 /*

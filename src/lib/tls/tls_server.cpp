@@ -616,10 +616,9 @@ void Server::session_resume(Server_Handshake_State& pending_state,
             pending_state.client_hello()->session_ticket().empty() &&
             have_session_ticket_key);
 
-      Server_Hello::Handshake_Info hs_info(pending_state.handshake_io(),
-                             pending_state.hash());
       pending_state.server_hello(new Server_Hello(
-            hs_info,
+            pending_state.handshake_io(),
+            pending_state.hash(),
             policy(),
             rng(),
             secure_renegotiation_data_for_server_hello(),
@@ -713,10 +712,9 @@ void Server::session_create(Server_Handshake_State& pending_state,
                                               pending_state.client_hello()->compression_methods()),
                            have_session_ticket_key);
 
-   Server_Hello::Handshake_Info hs_info(pending_state.handshake_io(),
-                                        pending_state.hash());
    pending_state.server_hello(new Server_Hello(
-         hs_info,
+         pending_state.handshake_io(),
+         pending_state.hash(),
          policy(),
          rng(),
          secure_renegotiation_data_for_server_hello(),
@@ -735,10 +733,9 @@ void Server::session_create(Server_Handshake_State& pending_state,
       BOTAN_ASSERT(!cert_chains[sig_algo].empty(),
                      "Attempting to send empty certificate chain");
 
-      Certificate::Handshake_Info hs_info(pending_state.handshake_io(),
-                                          pending_state.hash());
-
-      pending_state.server_certs(new Certificate(hs_info, cert_chains[sig_algo]));
+      pending_state.server_certs(new Certificate(pending_state.handshake_io(),
+                                                 pending_state.hash(),
+                                                 cert_chains[sig_algo]));
       }
 
    Private_Key* private_key = nullptr;
@@ -778,10 +775,11 @@ void Server::session_create(Server_Handshake_State& pending_state,
 
    if(!client_auth_CAs.empty() && pending_state.ciphersuite().sig_algo() != "")
       {
-      Certificate_Req::Handshake_Info hs_info(pending_state.handshake_io(),
-                                              pending_state.hash());
       pending_state.cert_req(
-         new Certificate_Req(hs_info, policy(), client_auth_CAs,
+         new Certificate_Req(pending_state.handshake_io(),
+                             pending_state.hash(),
+                             policy(),
+                             client_auth_CAs,
                              pending_state.version()));
 
       pending_state.set_expected_next(CERTIFICATE);
