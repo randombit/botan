@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 1.11.30, Not Yet Released
+Version 1.11.30, 2016-06-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * In 1.11.23 a bug was introduced such that CBC-encrypted TLS packets
