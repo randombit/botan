@@ -76,9 +76,12 @@ secure_vector<byte> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
    return z;
   }
 
-PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa)
+PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa) :
+   Signature(),
+   m_emsa(get_emsa(emsa)),
+   m_hash(hash_for_emsa(emsa)),
+   m_prefix_used(false)
    {
-   m_emsa.reset(get_emsa(emsa));
    if(!m_emsa)
       throw Algorithm_Not_Found(emsa);
    }
@@ -87,19 +90,29 @@ PK_Ops::Signature_with_EMSA::~Signature_with_EMSA() {}
 
 void PK_Ops::Signature_with_EMSA::update(const byte msg[], size_t msg_len)
    {
+   if(has_prefix() && !m_prefix_used)
+      {
+      m_prefix_used = true;
+      secure_vector<byte> prefix = message_prefix();
+      m_emsa->update(prefix.data(), prefix.size());
+      }
    m_emsa->update(msg, msg_len);
    }
 
 secure_vector<byte> PK_Ops::Signature_with_EMSA::sign(RandomNumberGenerator& rng)
    {
+   m_prefix_used = false;
    const secure_vector<byte> msg = m_emsa->raw_data();
    const auto padded = m_emsa->encoding_of(msg, this->max_input_bits(), rng);
    return raw_sign(padded.data(), padded.size(), rng);
    }
 
-PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa)
+PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa) :
+   Verification(),
+   m_emsa(get_emsa(emsa)),
+   m_hash(hash_for_emsa(emsa)),
+   m_prefix_used(false)
    {
-   m_emsa.reset(get_emsa(emsa));
    if(!m_emsa)
       throw Algorithm_Not_Found(emsa);
    }
@@ -108,11 +121,18 @@ PK_Ops::Verification_with_EMSA::~Verification_with_EMSA() {}
 
 void PK_Ops::Verification_with_EMSA::update(const byte msg[], size_t msg_len)
    {
+   if(has_prefix() && !m_prefix_used)
+      {
+      m_prefix_used = true;
+      secure_vector<byte> prefix = message_prefix();
+      m_emsa->update(prefix.data(), prefix.size());
+      }
    m_emsa->update(msg, msg_len);
    }
 
 bool PK_Ops::Verification_with_EMSA::is_valid_signature(const byte sig[], size_t sig_len)
    {
+   m_prefix_used = false;
    const secure_vector<byte> msg = m_emsa->raw_data();
 
    if(with_recovery())

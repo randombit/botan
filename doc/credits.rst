@@ -67,6 +67,13 @@ snail-mail address (S), and Bitcoin address (B).
   D: Locking in Algo_Registry for Windows OS
   S: Slovenia
 
+  N: René Korthaus
+  E: r.korthaus@sirrix.com
+  W: https://www.sirrix.com
+  P: C196 FF9D 3DDC A5E7 F98C E745 9AD0 F9FA 587E 74D6
+  D: CI, ECGDSA, ECKCDSA
+  S: Bochum, Germany
+
   N: Adam Langley
   E: agl@imperialviolet.org
   D: Curve25519

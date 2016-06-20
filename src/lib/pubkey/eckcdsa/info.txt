@@ -1,0 +1,13 @@
+define ECKCDSA 20160413
+
+<requires>
+asn1
+bigint
+ec_group
+ecc_key
+hash
+keypair
+numbertheory
+pk_pad
+rng
+</requires>

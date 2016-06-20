@@ -40,6 +40,11 @@ secure_vector<byte> emsa1_encoding(const secure_vector<byte>& msg,
 
 }
 
+EMSA* EMSA1::clone()
+   {
+   return new EMSA1(m_hash->clone());
+   }
+
 void EMSA1::update(const byte input[], size_t length)
    {
    m_hash->update(input, length);
