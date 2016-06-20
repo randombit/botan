@@ -15,6 +15,13 @@ snail-mail address (S), and Bitcoin address (B).
   D: documentation editing
   S: Oregon, USA
 
+  N: Simon Cogliani
+  E: simon.cogliani@tanker.io
+  W: https://www.tanker.io/
+  P: EA73 D0AF 5A81 A61A 8931  C2CA C9AB F2E4 3820 4F25
+  D: Getting keystream of ChaCha
+  S: Paris, France
+
   N: Martin Doering
   E: doering@cdc.informatik.tu-darmstadt.de
   D: GF(p) arithmetic
@@ -105,9 +112,8 @@ snail-mail address (S), and Bitcoin address (B).
   D: Build system
   S: Germany
 
-  N: Simon Cogliani
-  E: simon.cogliani@tanker.io
-  W: https://www.tanker.io/
-  P: EA73 D0AF 5A81 A61A 8931  C2CA C9AB F2E4 3820 4F25
-  D: Getting keystream of ChaCha
-  S: Paris, France
+  N: Philipp Weber
+  E: p.weber@sirrix.com
+  W: https://sirrix.com/
+  D: KDF1-18033, ECIES
+  S: Saarland, Germany

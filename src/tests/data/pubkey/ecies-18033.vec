@@ -1,0 +1,66 @@
+# ISO/IEC 18033-2 2006
+# ECIES-KEM test vectors for ECModp-Group
+
+# ----------------------------------------------------------------------------------------------------
+
+# C.2.2
+# Kdf=Kdf1(Hash=Sha1())
+# Keylen=128
+# CofactorMode=0
+# OldCofactorMode=0
+# CheckMode=0
+# SingleHashMode=0
+
+format = uncompressed
+
+p  = 0xfffffffffffffffffffffffffffffffeffffffffffffffff
+a  = 0xfffffffffffffffffffffffffffffffefffffffffffffffc
+b  = 0x64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1
+mu = 0xffffffffffffffffffffffff99def836146bc9b1b4d22831
+nu = 0x01
+gx = 0x188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012
+gy = 0x07192b95ffc8da78631011ed6b24cdd573f977a11e794811
+
+# Public Key
+hx = 0x1cbc74a41b4e84a1509f935e2328a0bb06104d8dbb8d2130
+hy = 0x7b2ab1f10d76fde1ea046a4ad5fb903734190151bb30cec2
+
+# Private Key
+x  = 0xb67048c28d2d26a73f713d5ebb994ac92588464e7fe7d3f3
+
+# Encoding format = uncompressed_fmt
+r  = 0x083d4ac64f1960a9836a84f91ca211a185814fa43a2c8f21
+C0 = 04ccc9ea07b8b71d25646b22b0e251362a3fa9e993042315df047b2e07dd2ffb89359945f3d22ca8757874be2536e0f924
+K  = 9a709adeb6c7590ccfc7d594670dd2d74fcdda3f8622f2dbcf0f0c02966d5d9002db578c989bf4a5cc896d2a11d74e0c51efc1f8ee784897ab9b865a7232b5661b7cac87cf4150bdf23b015d7b525b797cf6d533e9f6ad49a4c6de5e7089724c9cadf0adf13ee51b41be6713653fc1cb2c95a1d1b771cc7429189861d7a829f3
+
+# ----------------------------------------------------------------------------------------------------
+
+# C.2.3
+# Kdf=Kdf1(Hash=Sha1())
+# Keylen=128
+# CofactorMode=0
+# OldCofactorMode=0
+# CheckMode=0
+# SingleHashMode=0
+
+format = compressed
+
+p = 0xfffffffffffffffffffffffffffffffeffffffffffffffff
+a = 0xfffffffffffffffffffffffffffffffefffffffffffffffc
+b = 0x64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1
+mu = 0xffffffffffffffffffffffff99def836146bc9b1b4d22831
+nu = 0x01
+gx = 0x188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012
+gy = 0x07192b95ffc8da78631011ed6b24cdd573f977a11e794811
+
+# Public Key
+hx = 0x1cbc74a41b4e84a1509f935e2328a0bb06104d8dbb8d2130
+hy = 0x7b2ab1f10d76fde1ea046a4ad5fb903734190151bb30cec2
+
+# Private Key
+x  = 0xb67048c28d2d26a73f713d5ebb994ac92588464e7fe7d3f3
+
+# Encoding format = compressed_fmt
+r  = 0x083d4ac64f1960a9836a84f91ca211a185814fa43a2c8f21
+C0 = 02ccc9ea07b8b71d25646b22b0e251362a3fa9e993042315df
+K  = 8fbe0903fac2fa05df02278fe162708fb432f3cbf9bb14138d22be1d279f74bfb94f0843a153b708fcc8d9446c76f00e4ccabef85228195f732f4aedc5e48efcf2968c3a46f2df6f2afcbdf5ef79c958f233c6d208f3a7496e08f505d1c792b314b45ff647237b0aa186d0cdbab47a00fb4065d62cfc18f8a8d12c78ecbee3fd
