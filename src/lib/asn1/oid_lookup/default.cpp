@@ -118,6 +118,10 @@ const char* default_oid_list()
       "1.3.36.3.3.2.5.4.5 = ECGDSA/EMSA1(SHA-384)" "\n"
       "1.3.36.3.3.2.5.4.6 = ECGDSA/EMSA1(SHA-512)" "\n"
 
+      "1.2.410.200004.1.100.4.3 = ECKCDSA/EMSA1(SHA-1)" "\n"
+      "1.2.410.200004.1.100.4.4 = ECKCDSA/EMSA1(SHA-224)" "\n"
+      "1.2.410.200004.1.100.4.5 = ECKCDSA/EMSA1(SHA-256)" "\n"
+
       "1.2.643.2.2.3 = GOST-34.10/EMSA1(GOST-R-34.11-94)" "\n"
 
       "1.3.6.1.4.1.25258.2.1.1.1 = RW/EMSA2(RIPEMD-160)" "\n"
