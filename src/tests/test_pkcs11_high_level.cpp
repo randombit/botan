@@ -29,12 +29,12 @@
 #include <botan/der_enc.h>
 #include <botan/pubkey.h>
 
-#if defined(BOTAN_HAS_RSA)
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_PKCS11) 
    #include <botan/rsa.h>
    #include <botan/p11_rsa.h>
 #endif
 
-#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO) && defined(BOTAN_HAS_PKCS11)
    #include <botan/ecc_key.h>
    #include <botan/ecdsa.h>
    #include <botan/ecdh.h>
@@ -43,7 +43,7 @@
    #include <botan/p11_ecdsa.h>
 #endif
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_PKCS11)
    #include <botan/p11_x509.h>
 #endif
 
