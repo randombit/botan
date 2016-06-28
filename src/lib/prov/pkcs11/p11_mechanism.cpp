@@ -7,7 +7,6 @@
 */
 
 #include <botan/internal/p11_mechanism.h>
-#include <botan/rfc6979.h>
 #include <botan/scan_name.h>
 #include <botan/emsa.h>
 
