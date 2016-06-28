@@ -31,7 +31,7 @@ class BOTAN_DLL PKCS11_ECDSA_PublicKey final : public PKCS11_EC_PublicKey, publi
       * @param handle the handle of the ECDSA public key
       */
       PKCS11_ECDSA_PublicKey(Session& session, ObjectHandle handle)
-         : PKCS11_EC_PublicKey(session, handle)
+         : EC_PublicKey(), PKCS11_EC_PublicKey(session, handle)
          {}
 
       /**
@@ -40,7 +40,7 @@ class BOTAN_DLL PKCS11_ECDSA_PublicKey final : public PKCS11_EC_PublicKey, publi
       * @param props the attributes of the public key
       */
       PKCS11_ECDSA_PublicKey(Session& session, const EC_PublicKeyImportProperties& props)
-         : PKCS11_EC_PublicKey(session, props)
+         : EC_PublicKey(), PKCS11_EC_PublicKey(session, props)
          {}
 
       inline std::string algo_name() const override

@@ -9,6 +9,7 @@
 #include <botan/internal/p11_mechanism.h>
 #include <botan/rfc6979.h>
 #include <botan/scan_name.h>
+#include <botan/emsa.h>
 
 #include <tuple>
 
@@ -208,7 +209,7 @@ MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(const std::string& has
 
    if(hash_name != "Raw")
       {
-      hash_name = hash_for_deterministic_signature(hash);
+      hash_name = hash_for_emsa(hash);
       }
 
    auto mechanism_type = EcdsaHash.find(hash_name);

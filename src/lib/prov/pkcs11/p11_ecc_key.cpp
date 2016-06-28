@@ -40,7 +40,7 @@ EC_PublicKeyImportProperties::EC_PublicKeyImportProperties(const std::vector<byt
    }
 
 PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, ObjectHandle handle)
-   : EC_PublicKey(), Object(session, handle)
+   : Object(session, handle)
    {
    secure_vector<byte> ec_parameters = get_attribute_value(AttributeType::EcParams);
    m_domain_params = EC_Group(unlock(ec_parameters));
