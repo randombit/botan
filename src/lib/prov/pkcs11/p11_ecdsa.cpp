@@ -14,12 +14,7 @@
 #include <botan/internal/algo_registry.h>
 #include <botan/internal/pk_utils.h>
 #include <botan/keypair.h>
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   #include <botan/system_rng.h>
-#else
-   #include <botan/auto_rng.h>
-#endif
+#include <botan/rng.h>
 
 namespace Botan {
 namespace PKCS11 {
@@ -47,14 +42,9 @@ bool PKCS11_ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong)
 
 ECDSA_PrivateKey PKCS11_ECDSA_PrivateKey::export_key() const
    {
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   System_RNG rng;
-#else
-   AutoSeeded_RNG rng;
-#endif
    auto priv_key = get_attribute_value(AttributeType::Value);
 
+   Null_RNG rng;
    return ECDSA_PrivateKey(rng, domain(), BigInt::decode(priv_key));
    }
 
