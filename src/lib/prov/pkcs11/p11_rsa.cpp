@@ -163,12 +163,7 @@ class PKCS11_RSA_Decryption_Operation : public PK_Ops::Decryption
          // Unblind for RSA/RAW decryption
          if(!m_mechanism.padding_size())
             {
-            secure_vector<byte> unblinded_data = BigInt::encode_locked(m_blinder.unblind(BigInt::decode(decrypted_data)));
-
-            // pad possible leading zeros that were stripped off during conversion to BigInt
-            secure_vector<byte> padded_result(m_key.get_n().bits() / 8 - unblinded_data.size());
-            padded_result.insert(padded_result.end(), unblinded_data.begin(), unblinded_data.end());
-            decrypted_data = padded_result;
+            decrypted_data = BigInt::encode_1363(m_blinder.unblind(BigInt::decode(decrypted_data)), m_key.get_n().bits() / 8 );
             }
 
          valid_mask = 0xFF;
