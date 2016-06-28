@@ -26,8 +26,13 @@
    #include <botan/p11_randomgenerator.h>
 #endif
 
-#include <botan/der_enc.h>
-#include <botan/pubkey.h>
+#if defined(BOTAN_HAS_ASN1)
+   #include <botan/der_enc.h>
+#endif
+
+#if defined (BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+   #include <botan/pubkey.h>
+#endif
 
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_PKCS11) 
    #include <botan/rsa.h>
