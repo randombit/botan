@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/dev_random.h>
+#include <botan/exceptn.h>
 
 #include <sys/types.h>
 #include <sys/select.h>
@@ -31,15 +32,39 @@ Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnam
 
    const int flags = O_RDONLY | O_NONBLOCK | O_NOCTTY;
 
+   m_max_fd = 0;
+
    for(auto fsname : fsnames)
       {
-      fd_type fd = ::open(fsname.c_str(), flags);
+      int fd = ::open(fsname.c_str(), flags);
 
-      if(fd >= 0 && fd < FD_SETSIZE)
-         m_devices.push_back(fd);
-      else if(fd >= 0)
-         ::close(fd);
+      if(fd > 0)
+         {
+         if(fd > FD_SETSIZE)
+            {
+            ::close(fd);
+            throw Exception("Open of OS RNG succeeded but fd is too large for fd_set");
+            }
+
+         m_dev_fds.push_back(fd);
+         m_max_fd = std::max(m_max_fd, fd);
+         }
+      else
+         {
+         /*
+         ENOENT or EACCES is normal as some of the named devices may not exist
+         on this system. But any other errno value probably indicates
+         either a bug in the application or file descriptor exhaustion.
+         */
+         if(errno != ENOENT && errno != EACCES)
+            {
+            throw Exception("Opening OS RNG device failed with errno " +
+                            std::to_string(errno));
+            }
+         }
       }
+
+   m_io_buf.resize(BOTAN_SYSTEM_RNG_POLL_REQUEST);
    }
 
 /**
@@ -47,8 +72,11 @@ Device_EntropySource destructor: close all open devices
 */
 Device_EntropySource::~Device_EntropySource()
    {
-   for(size_t i = 0; i != m_devices.size(); ++i)
-      ::close(m_devices[i]);
+   for(int fd : m_dev_fds)
+      {
+      // ignoring return value here, can't throw in destructor anyway
+      ::close(fd);
+      }
    }
 
 /**
@@ -56,35 +84,36 @@ Device_EntropySource::~Device_EntropySource()
 */
 void Device_EntropySource::poll(Entropy_Accumulator& accum)
    {
-   if(m_devices.empty())
+   if(m_dev_fds.empty())
       return;
 
-   fd_type max_fd = m_devices[0];
    fd_set read_set;
    FD_ZERO(&read_set);
-   for(size_t i = 0; i != m_devices.size(); ++i)
+
+   for(int dev_fd : m_dev_fds)
       {
-      FD_SET(m_devices[i], &read_set);
-      max_fd = std::max(m_devices[i], max_fd);
+      FD_SET(dev_fd, &read_set);
       }
 
    struct ::timeval timeout;
-
    timeout.tv_sec = (BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS / 1000);
    timeout.tv_usec = (BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS % 1000) * 1000;
 
-   if(::select(max_fd + 1, &read_set, nullptr, nullptr, &timeout) < 0)
-      return;
-
-   secure_vector<byte>& buf = accum.get_io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
-
-   for(size_t i = 0; i != m_devices.size(); ++i)
+   if(::select(m_max_fd + 1, &read_set, nullptr, nullptr, &timeout) > 0)
       {
-      if(FD_ISSET(m_devices[i], &read_set))
+      for(int dev_fd : m_dev_fds)
          {
-         const ssize_t got = ::read(m_devices[i], buf.data(), buf.size());
-         if(got > 0)
-            accum.add(buf.data(), got, BOTAN_ENTROPY_ESTIMATE_STRONG_RNG);
+         if(FD_ISSET(dev_fd, &read_set))
+            {
+            const ssize_t got = ::read(dev_fd, m_io_buf.data(), m_io_buf.size());
+
+            if(got > 0)
+               {
+               accum.add(m_io_buf.data(),
+                         static_cast<size_t>(got),
+                         BOTAN_ENTROPY_ESTIMATE_STRONG_RNG);
+               }
+            }
          }
       }
    }

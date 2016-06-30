@@ -427,12 +427,10 @@ class Speed final : public Command
 #if defined(BOTAN_HAS_HMAC_DRBG)
                for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
                   {
-
-                  auto hmac = Botan::MessageAuthenticationCode::create("HMAC(" + hash + ")");
-                  Botan::HMAC_DRBG hmac_drbg(hmac->clone());
+                  Botan::HMAC_DRBG hmac_drbg(hash);
                   bench_rng(hmac_drbg, hmac_drbg.name(), msec, buf_size);
 
-                  Botan::HMAC_RNG hmac_rng(hmac->clone(), hmac->clone());
+                  Botan::HMAC_RNG hmac_rng(hash);
                   bench_rng(hmac_rng, hmac_rng.name(), msec, buf_size);
                   }
 #endif

@@ -21,6 +21,8 @@ class Darwin_SecRandom final : public Entropy_Source
       std::string name() const override { return "darwin_secrandom"; }
 
       void poll(Entropy_Accumulator& accum) override;
+   private:
+      secure_vector<uint8_t> m_io_buf;
    };
 
 }

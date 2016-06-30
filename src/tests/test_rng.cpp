@@ -21,37 +21,10 @@ namespace {
 
 Botan::RandomNumberGenerator* get_rng(const std::string& algo_str, const std::vector<byte>& ikm)
    {
-   class AllOnce_RNG : public Fixed_Output_RNG
-      {
-      public:
-         explicit AllOnce_RNG(const std::vector<byte>& in) : Fixed_Output_RNG(in) {}
-
-         Botan::secure_vector<byte> random_vec(size_t) override
-            {
-            Botan::secure_vector<byte> vec(this->remaining());
-            this->randomize(vec.data(), vec.size());
-            return vec;
-            }
-      };
-
    const std::vector<std::string> algo_name = Botan::parse_algorithm_name(algo_str);
 
    const std::string rng_name = algo_name[0];
 
-#if defined(BOTAN_HAS_HMAC_DRBG)
-   if(rng_name == "HMAC_DRBG")
-      {
-      auto mac = Botan::MessageAuthenticationCode::create("HMAC(" + algo_name[1] + ")");
-
-      if(!mac)
-         {
-         return nullptr;
-         }
-
-      return new Botan::HMAC_DRBG(mac.release(), new AllOnce_RNG(ikm));
-      }
-
-#endif
 
 #if defined(BOTAN_HAS_X931_RNG)
    if(rng_name == "X9.31-RNG")
@@ -110,7 +83,8 @@ class HMAC_DRBG_Tests : public Text_Based_Test
    {
    public:
       HMAC_DRBG_Tests() : Text_Based_Test("hmac_drbg.vec",
-                                          {"EntropyInput", "EntropyInputReseed", "Out"}) {}
+                                          {"EntropyInput", "EntropyInputReseed", "Out"},
+                                          {"AdditionalInput1", "AdditionalInput2"}) {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
@@ -118,23 +92,30 @@ class HMAC_DRBG_Tests : public Text_Based_Test
          const std::vector<byte> reseed_input = get_req_bin(vars, "EntropyInputReseed");
          const std::vector<byte> expected     = get_req_bin(vars, "Out");
 
-         Test::Result result(algo);
+         const std::vector<byte> ad1 = get_opt_bin(vars, "AdditionalInput1");
+         const std::vector<byte> ad2 = get_opt_bin(vars, "AdditionalInput2");
 
-         std::unique_ptr<Botan::RandomNumberGenerator> rng(get_rng(algo, seed_input));
-         if(!rng)
+         Test::Result result("HMAC_DRBG(" + algo + ")");
+
+         auto mac = Botan::MessageAuthenticationCode::create("HMAC(" + algo + ")");
+         if(!mac)
             {
-            result.note_missing("RNG " + algo);
+            result.note_missing("HMAC(" + algo + ")");
             return result;
             }
 
-         rng->reseed(0); // force initialization
+         std::unique_ptr<Botan::HMAC_DRBG> rng(new Botan::HMAC_DRBG(mac.release(), 0));
+         rng->initialize_with(seed_input.data(), seed_input.size());
 
          // now reseed
          rng->add_entropy(reseed_input.data(), reseed_input.size());
 
-         rng->random_vec(expected.size()); // discard 1st block
+         std::vector<byte> out(expected.size());
+         // first block is discarded
+         rng->randomize_with_input(out.data(), out.size(), ad1.data(), ad1.size());
+         rng->randomize_with_input(out.data(), out.size(), ad2.data(), ad2.size());
 
-         result.test_eq("rng", rng->random_vec(expected.size()), expected);
+         result.test_eq("rng", out, expected);
          return result;
          }
 

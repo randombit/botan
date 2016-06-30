@@ -25,10 +25,12 @@ class Device_EntropySource final : public Entropy_Source
       void poll(Entropy_Accumulator& accum) override;
 
       Device_EntropySource(const std::vector<std::string>& fsnames);
+
       ~Device_EntropySource();
    private:
-      typedef int fd_type;
-      std::vector<fd_type> m_devices;
+      secure_vector<uint8_t> m_io_buf;
+      std::vector<int> m_dev_fds;
+      int m_max_fd;
    };
 
 }

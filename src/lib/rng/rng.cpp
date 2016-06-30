@@ -6,12 +6,18 @@
 */
 
 #include <botan/rng.h>
-#include <botan/hmac_drbg.h>
 #include <botan/auto_rng.h>
 #include <botan/entropy_src.h>
 #include <botan/loadstor.h>
 #include <botan/internal/os_utils.h>
-#include <chrono>
+
+#if defined(BOTAN_HAS_HMAC_DRBG)
+  #include <botan/hmac_drbg.h>
+#endif
+
+#if defined(BOTAN_HAS_HMAC_RNG)
+  #include <botan/hmac_rng.h>
+#endif
 
 namespace Botan {
 
@@ -50,9 +56,15 @@ size_t RandomNumberGenerator::reseed_with_sources(Entropy_Sources& srcs,
    return bits_collected;
    }
 
-Stateful_RNG::Stateful_RNG(size_t bytes_before_reseed) :
-   m_max_bytes_before_reseed_required(bytes_before_reseed)
+Stateful_RNG::Stateful_RNG(size_t bytes_before_reseed) : m_bytes_before_reseed(bytes_before_reseed)
    {
+   }
+
+void Stateful_RNG::clear()
+   {
+   m_successful_initialization = false;
+   m_bytes_since_reseed = 0;
+   m_last_pid = 0;
    }
 
 size_t Stateful_RNG::reseed_with_sources(Entropy_Sources& srcs,
@@ -81,10 +93,9 @@ void Stateful_RNG::reseed_check(size_t bytes_requested)
       {
       this->reseed(BOTAN_RNG_RESEED_POLL_BITS);
       }
-   else if(m_max_bytes_before_reseed_required > 0 &&
-           m_bytes_since_reseed >= m_max_bytes_before_reseed_required)
+   else if(m_bytes_before_reseed > 0 && m_bytes_since_reseed >= m_bytes_before_reseed)
       {
-      this->reseed_with_timeout(BOTAN_RNG_AUTO_RESEED_POLL_BITS,
+      this->reseed_with_timeout(BOTAN_RNG_RESEED_POLL_BITS,
                                 BOTAN_RNG_AUTO_RESEED_TIMEOUT);
       }
 
@@ -112,8 +123,10 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
 
 AutoSeeded_RNG::AutoSeeded_RNG(size_t max_bytes_before_reseed)
    {
-   m_rng.reset(new HMAC_DRBG(BOTAN_AUTO_RNG_DRBG_HASH_FUNCTION, max_bytes_before_reseed));
-   size_t bits = m_rng->reseed(384);
+   m_rng.reset(new BOTAN_AUTO_RNG_DRBG(BOTAN_AUTO_RNG_HASH, max_bytes_before_reseed));
+
+   size_t bits = m_rng->reseed(BOTAN_AUTO_RNG_ENTROPY_TARGET);
+
    if(!m_rng->is_seeded())
       {
       throw Exception("AutoSeeded_RNG failed to gather enough entropy only got " +
@@ -124,24 +137,22 @@ AutoSeeded_RNG::AutoSeeded_RNG(size_t max_bytes_before_reseed)
 void AutoSeeded_RNG::randomize(byte output[], size_t output_len)
    {
    /*
-   This data is not secret so skipping a vector/secure_vector allows
-   avoiding an allocation.
+   Form additional input which is provided to the PRNG implementation
+   to paramaterize the KDF output.
    */
-   typedef std::chrono::high_resolution_clock clock;
+   byte additional_input[24] = { 0 };
+   store_le(OS::get_system_timestamp_ns(), additional_input);
+   store_le(OS::get_processor_timestamp(), additional_input + 8);
+   store_le(OS::get_process_id(), additional_input + 16);
+   store_le(m_counter++, additional_input + 20);
 
-   byte nonce_buf[16] = { 0 };
-   const uint32_t cur_ctr = m_counter++;
-   const uint32_t cur_pid = OS::get_process_id();
-   const uint64_t cur_time = clock::now().time_since_epoch().count();
+   randomize_with_input(output, output_len, additional_input, sizeof(additional_input));
+   }
 
-   store_le(cur_ctr,  nonce_buf);
-   store_le(cur_pid,  nonce_buf + 4);
-   store_le(cur_time, nonce_buf + 8);
-
-   m_rng->randomize_with_input(output, output_len,
-                               nonce_buf, sizeof(nonce_buf));
-
-   ++m_counter;
+void AutoSeeded_RNG::randomize_with_input(byte output[], size_t output_len,
+                                          const byte ad[], size_t ad_len)
+   {
+   m_rng->randomize_with_input(output, output_len, ad, ad_len);
    }
 
 }

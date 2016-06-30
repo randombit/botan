@@ -10,9 +10,14 @@
 
 namespace Botan {
 
-HMAC_DRBG::HMAC_DRBG(const std::string& hmac_hash) :
-   HMAC_DRBG(hmac_hash, BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED)
-   {}
+HMAC_DRBG::HMAC_DRBG(MessageAuthenticationCode* hmac,
+                     size_t max_bytes_before_reseed) :
+   Stateful_RNG(max_bytes_before_reseed),
+   m_mac(hmac)
+   {
+   m_V.resize(m_mac->output_length());
+   clear();
+   }
 
 HMAC_DRBG::HMAC_DRBG(const std::string& hmac_hash,
                      size_t max_bytes_before_reseed) :
@@ -27,12 +32,13 @@ HMAC_DRBG::HMAC_DRBG(const std::string& hmac_hash,
       }
 
    m_V.resize(m_mac->output_length());
-
    clear();
    }
 
 void HMAC_DRBG::clear()
    {
+   Stateful_RNG::clear();
+
    for(size_t i = 0; i != m_V.size(); ++i)
       m_V[i] = 0x01;
    m_mac->set_key(std::vector<byte>(m_mac->output_length(), 0x00));

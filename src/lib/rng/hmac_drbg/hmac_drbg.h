@@ -19,10 +19,14 @@ namespace Botan {
 class BOTAN_DLL HMAC_DRBG final : public Stateful_RNG
    {
    public:
-      HMAC_DRBG(const std::string& hmac_hash);
-
+      /**
+      * Initialize an HMAC_DRBG instance with the given hash function
+      */
       HMAC_DRBG(const std::string& hmac_hash,
-                size_t max_bytes_before_reseed);
+                size_t max_bytes_before_reseed = BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED);
+
+      HMAC_DRBG(MessageAuthenticationCode* hmac,
+                size_t max_bytes_before_reseed = BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED);
 
       std::string name() const override;
 

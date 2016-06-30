@@ -154,7 +154,7 @@ class BOTAN_DLL RandomNumberGenerator
 * bytes have been output.
 *
 * Not implemented by RNGs which access an external RNG, such as the
-* system PRNG or an hardware RNG.
+* system PRNG or a hardware RNG.
 */
 class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
    {
@@ -182,14 +182,35 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
    protected:
       void reseed_check(size_t bytes_requested);
 
+      void clear() override;
+
+      /**
+      * Mark state as requiring a reseed on next use
+      */
+      void force_reseed() { m_bytes_since_reseed = m_bytes_before_reseed; }
+
+      uint32_t last_pid() const { return m_last_pid; }
+
+      mutable std::mutex m_mutex;
+
    private:
-      const size_t m_max_bytes_before_reseed_required;
+      const size_t m_bytes_before_reseed;
       size_t m_bytes_since_reseed = 0;
       uint32_t m_last_pid = 0;
       bool m_successful_initialization = false;
    };
 
+/**
+* Convenience typedef
+*/
 typedef RandomNumberGenerator RNG;
+
+/**
+* Hardware RNG has no members but exists to tag hardware RNG types
+*/
+class BOTAN_DLL Hardware_RNG : public RandomNumberGenerator
+   {
+   };
 
 /**
 * Null/stub RNG - fails if you try to use it for anything
@@ -212,7 +233,6 @@ class BOTAN_DLL Null_RNG final : public RandomNumberGenerator
       std::string name() const override { return "Null_RNG"; }
    };
 
-
 /**
 * Wraps access to a RNG in a mutex
 */
@@ -223,20 +243,6 @@ class BOTAN_DLL Serialized_RNG final : public RandomNumberGenerator
          {
          std::lock_guard<std::mutex> lock(m_mutex);
          m_rng->randomize(out, len);
-         }
-
-      void randomize_with_input(byte output[], size_t output_length,
-                                const byte input[], size_t input_length) override
-         {
-         std::lock_guard<std::mutex> lock(m_mutex);
-         m_rng->randomize_with_input(output, output_length,
-                                     input, input_length);
-         }
-
-      void add_entropy(const byte in[], size_t len) override
-         {
-         std::lock_guard<std::mutex> lock(m_mutex);
-         m_rng->add_entropy(in, len);
          }
 
       bool is_seeded() const override
@@ -263,6 +269,12 @@ class BOTAN_DLL Serialized_RNG final : public RandomNumberGenerator
          {
          std::lock_guard<std::mutex> lock(m_mutex);
          return m_rng->reseed_with_sources(src, bits, msec);
+         }
+
+      void add_entropy(const byte in[], size_t len) override
+         {
+         std::lock_guard<std::mutex> lock(m_mutex);
+         m_rng->add_entropy(in, len);
          }
 
       Serialized_RNG() : m_rng(RandomNumberGenerator::make_rng()) {}

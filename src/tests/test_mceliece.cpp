@@ -77,7 +77,7 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
          result.test_eq("private key fingerprint", hash_bytes(mce_priv.pkcs8_private_key()), fprint_priv);
 
          rng.clear();
-         rng.add_entropy(encrypt_seed.data(), encrypt_seed.size());
+         rng.initialize_with(encrypt_seed.data(), encrypt_seed.size());
 
          try
             {

@@ -1,3 +1,4 @@
+
 /*
 * TPM 1.2 interface
 * (C) 2015 Jack Lloyd
@@ -71,7 +72,7 @@ class BOTAN_DLL TPM_Context
       TSS_HTPM m_tpm;
    };
 
-class BOTAN_DLL TPM_RNG : public RandomNumberGenerator
+class BOTAN_DLL TPM_RNG : public Hardware_RNG
    {
    public:
       TPM_RNG(TPM_Context& ctx) : m_ctx(ctx) {}
@@ -90,7 +91,7 @@ class BOTAN_DLL TPM_RNG : public RandomNumberGenerator
 
       bool is_seeded() const override { return true; }
 
-      void clear() const override {}
+      void clear() override {}
 
    private:
       TPM_Context& m_ctx;
