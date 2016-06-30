@@ -280,7 +280,7 @@ class BOTAN_DLL ECIES_Decryptor : public PK_Decryptor
          }
 
    private:
-      secure_vector<byte> do_decrypt(byte& valid_mask, const byte in[], size_t in_len) const;
+      secure_vector<byte> do_decrypt(byte& valid_mask, const byte in[], size_t in_len) const override;
 
       const ECIES_KA_Operation m_ka;
       const ECIES_System_Params m_params;

@@ -77,7 +77,7 @@ void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& p
          }
       const Botan::secure_vector<byte> decrypted = ecies_dec.decrypt(encrypted);
       result.test_eq("decrypted data equals plaintext", decrypted, plaintext);
-	  
+
       std::vector<byte> invalid_encrypted = encrypted;
       byte& last_byte = invalid_encrypted[invalid_encrypted.size() - 1];
       last_byte = ~last_byte;
@@ -119,16 +119,16 @@ class ECIES_ISO_Tests : public Text_Based_Test
          const Botan::BigInt p = get_req_bn(vars, "p");
          const Botan::BigInt a = get_req_bn(vars, "a");
          const Botan::BigInt b = get_req_bn(vars, "b");
-         const Botan::BigInt mu = get_req_bn(vars, "mu");	// order
-         const Botan::BigInt nu = get_req_bn(vars, "nu");	// cofactor
-         const Botan::BigInt gx = get_req_bn(vars, "gx");	// base point x
-         const Botan::BigInt gy = get_req_bn(vars, "gy");	// base point y
-         const Botan::BigInt hx = get_req_bn(vars, "hx");	// x of public point of bob
-         const Botan::BigInt hy = get_req_bn(vars, "hy");	// y of public point of bob
-         const Botan::BigInt x = get_req_bn(vars, "x");	// private key of bob
-         const Botan::BigInt r = get_req_bn(vars, "r");	// (ephemeral) private key of alice
-         const std::vector<byte> c0 = get_req_bin(vars, "C0");	// expected encoded (ephemeral) public key
-         const std::vector<byte> k = get_req_bin(vars, "K");	// expected derived secret
+         const Botan::BigInt mu = get_req_bn(vars, "mu");   // order
+         const Botan::BigInt nu = get_req_bn(vars, "nu");   // cofactor
+         const Botan::BigInt gx = get_req_bn(vars, "gx");   // base point x
+         const Botan::BigInt gy = get_req_bn(vars, "gy");   // base point y
+         const Botan::BigInt hx = get_req_bn(vars, "hx");   // x of public point of bob
+         const Botan::BigInt hy = get_req_bn(vars, "hy");   // y of public point of bob
+         const Botan::BigInt x = get_req_bn(vars, "x");   // private key of bob
+         const Botan::BigInt r = get_req_bn(vars, "r");   // (ephemeral) private key of alice
+         const std::vector<byte> c0 = get_req_bin(vars, "C0");   // expected encoded (ephemeral) public key
+         const std::vector<byte> k = get_req_bin(vars, "K");   // expected derived secret
 
          const Botan::CurveGFp curve(p, a, b);
          const Botan::EC_Group domain(curve, Botan::PointGFp(curve, gx, gy), mu, nu);
@@ -142,13 +142,12 @@ class ECIES_ISO_Tests : public Text_Based_Test
          const Botan::ECDH_PrivateKey eph_private_key(Test::rng(), domain, r);
          const Botan::PointGFp eph_public_key_point = eph_private_key.public_point();
          const std::vector<byte> eph_public_key_bin = Botan::unlock(
-															Botan::EC2OSP(eph_public_key_point, compression_type));
+            Botan::EC2OSP(eph_public_key_point, compression_type));
          result.test_eq("encoded (ephemeral) public key", eph_public_key_bin, c0);
 
          // test secret derivation: ISO 18033 test vectors use KDF1 from ISO 18033
          // no cofactor-/oldcofactor-/singlehash-/check-mode and 128 byte secret length
-         Botan::ECIES_KA_Params ka_params(eph_private_key.domain(), "KDF1-18033(SHA-1)", 128, compression_type, 
-															Flags::NONE);
+         Botan::ECIES_KA_Params ka_params(eph_private_key.domain(), "KDF1-18033(SHA-1)", 128, compression_type, Flags::NONE);
          const Botan::ECIES_KA_Operation ka(eph_private_key, ka_params, true);
          const Botan::SymmetricKey secret_key = ka.derive_secret(eph_public_key_bin, other_public_key_point);
          result.test_eq("derived secret key", secret_key.bits_of(), k);
@@ -168,8 +167,8 @@ class ECIES_ISO_Tests : public Text_Based_Test
                         const bool single_hash_mode = i_single_hash_mode != 0;
                         const bool old_cofactor_mode = i_old_cofactor_mode != 0;
                         const bool check_mode = i_check_mode != 0;
-                        const Botan::PointGFp::Compression_Type compression_type = 
-							static_cast<Botan::PointGFp::Compression_Type>(i_compression_type);
+                        const Botan::PointGFp::Compression_Type gen_compression_type =
+                           static_cast<Botan::PointGFp::Compression_Type>(i_compression_type);
 
                         Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
 
@@ -177,14 +176,14 @@ class ECIES_ISO_Tests : public Text_Based_Test
                            {
                            result.test_throws("throw on invalid ECIES_Flags", [&]
                               {
-                              Botan::ECIES_System_Params(eph_private_key.domain(), "KDF2(SHA-1)", "AES-256/CBC", 
-															32, "HMAC(SHA-1)", 20, compression_type, flags);
+                              Botan::ECIES_System_Params(eph_private_key.domain(), "KDF2(SHA-1)", "AES-256/CBC",
+                                                         32, "HMAC(SHA-1)", 20, gen_compression_type, flags);
                               });
                            continue;
                            }
 
                         Botan::ECIES_System_Params ecies_params(eph_private_key.domain(), "KDF2(SHA-1)", "AES-256/CBC",
-															32, "HMAC(SHA-1)", 20, compression_type, flags);
+                                                                32, "HMAC(SHA-1)", 20, gen_compression_type, flags);
                         check_encrypt_decrypt(result, eph_private_key, other_private_key, ecies_params, 16);
                         }
                      }
@@ -205,7 +204,7 @@ class ECIES_Tests : public Text_Based_Test
       ECIES_Tests() : Text_Based_Test(
             "pubkey/ecies.vec",
          { "Curve", "PrivateKey", "OtherPrivateKey", "Kdf", "Dem", "DemKeyLen", "Iv", "Mac", "MacKeyLen", "Format",
-				"CofactorMode", "OldCofactorMode", "CheckMode", "SingleHashMode", "Label", "Plaintext", "Ciphertext" })
+            "CofactorMode", "OldCofactorMode", "CheckMode", "SingleHashMode", "Label", "Plaintext", "Ciphertext" })
          {
          }
 
