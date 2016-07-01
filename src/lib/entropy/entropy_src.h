@@ -1,6 +1,6 @@
 /*
 * EntropySource
-* (C) 2008,2009,2014,2015 Jack Lloyd
+* (C) 2008,2009,2014,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,9 +10,12 @@
 
 #include <botan/secmem.h>
 #include <string>
+#include <chrono>
 #include <functional>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * Class used to accumulate the poll results of EntropySources
@@ -109,7 +112,10 @@ class BOTAN_DLL Entropy_Sources final
 
       std::vector<std::string> enabled_sources() const;
 
-      void poll(Entropy_Accumulator& accum);
+      size_t poll(RandomNumberGenerator& rng,
+                  size_t bits,
+                  std::chrono::milliseconds timeout);
+
       bool poll_just(Entropy_Accumulator& accum, const std::string& src);
 
       Entropy_Sources() {}

@@ -6,6 +6,7 @@
 */
 
 #include <botan/entropy_src.h>
+#include <botan/rng.h>
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
   #include <botan/internal/hres_timer.h>
@@ -154,14 +155,30 @@ std::vector<std::string> Entropy_Sources::enabled_sources() const
    return sources;
    }
 
-void Entropy_Sources::poll(Entropy_Accumulator& accum)
+size_t Entropy_Sources::poll(RandomNumberGenerator& rng,
+                             size_t poll_bits,
+                             std::chrono::milliseconds timeout)
    {
+   typedef std::chrono::system_clock clock;
+
+   auto deadline = clock::now() + timeout;
+
+   double bits_collected = 0;
+
+   Entropy_Accumulator accum([&](const byte in[], size_t in_len, double entropy_estimate) {
+      rng.add_entropy(in, in_len);
+      bits_collected += entropy_estimate;
+      return (bits_collected >= poll_bits || clock::now() > deadline);
+      });
+
    for(size_t i = 0; i != m_srcs.size(); ++i)
       {
       m_srcs[i]->poll(accum);
       if(accum.polling_goal_achieved())
          break;
       }
+
+   return static_cast<size_t>(bits_collected);
    }
 
 bool Entropy_Sources::poll_just(Entropy_Accumulator& accum, const std::string& the_src)

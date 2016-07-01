@@ -39,21 +39,7 @@ size_t RandomNumberGenerator::reseed_with_sources(Entropy_Sources& srcs,
                                                   size_t poll_bits,
                                                   std::chrono::milliseconds poll_timeout)
    {
-   typedef std::chrono::system_clock clock;
-
-   auto deadline = clock::now() + poll_timeout;
-
-   double bits_collected = 0;
-
-   Entropy_Accumulator accum([&](const byte in[], size_t in_len, double entropy_estimate) {
-      add_entropy(in, in_len);
-      bits_collected += entropy_estimate;
-      return (bits_collected >= poll_bits || clock::now() > deadline);
-      });
-
-   srcs.poll(accum);
-
-   return bits_collected;
+   return srcs.poll(*this, poll_bits, poll_timeout);
    }
 
 Stateful_RNG::Stateful_RNG(size_t bytes_before_reseed) : m_bytes_before_reseed(bytes_before_reseed)
