@@ -19,55 +19,32 @@ namespace Botan_Tests {
 
 namespace {
 
-Botan::RandomNumberGenerator* get_rng(const std::string& algo_str, const std::vector<byte>& ikm)
-   {
-   const std::vector<std::string> algo_name = Botan::parse_algorithm_name(algo_str);
-
-   const std::string rng_name = algo_name[0];
-
-
-#if defined(BOTAN_HAS_X931_RNG)
-   if(rng_name == "X9.31-RNG")
-      {
-      auto bc = Botan::BlockCipher::create(algo_name[1]);
-
-      if(!bc)
-         {
-         return nullptr;
-         }
-
-      return new Botan::ANSI_X931_RNG(bc.release(), new Fixed_Output_RNG(ikm));
-      }
-#endif
-
-   return nullptr;
-   }
-
 #if defined(BOTAN_HAS_X931_RNG)
 class X931_RNG_Tests : public Text_Based_Test
    {
    public:
-      X931_RNG_Tests() : Text_Based_Test("x931.vec", {"IKM", "L", "Out"}) {}
+      X931_RNG_Tests() : Text_Based_Test("x931.vec", {"IKM", "Out"}) {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          const std::vector<uint8_t> ikm      = get_req_bin(vars, "IKM");
          const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
 
-         const size_t L = get_req_sz(vars, "L");
+         Test::Result result("X9.31-RNG(" + algo + ")");
 
-         Test::Result result(algo);
+         std::unique_ptr<Botan::BlockCipher> bc = Botan::BlockCipher::create(algo);
 
-         result.test_eq("length", L, expected.size());
-
-         std::unique_ptr<Botan::RandomNumberGenerator> rng(get_rng(algo, ikm));
-         if(!rng)
+         if(!bc)
             {
-            result.note_missing("RNG " + algo);
+            result.note_missing("X9.31 cipher " + algo);
             return result;
             }
 
-         result.test_eq("rng", rng->random_vec(L), expected);
+         Botan::ANSI_X931_RNG rng(bc.release(), new Fixed_Output_RNG(ikm));
+
+         std::vector<uint8_t> output(expected.size());
+         rng.randomize(output.data(), output.size());
+         result.test_eq("rng", output, expected);
 
          return result;
          }
