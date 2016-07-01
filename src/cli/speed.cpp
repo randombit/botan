@@ -427,10 +427,15 @@ class Speed final : public Command
 #if defined(BOTAN_HAS_HMAC_DRBG)
                for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
                   {
-                  Botan::HMAC_DRBG hmac_drbg(hash);
+                  Botan::HMAC_DRBG hmac_drbg(hash, 0);
                   bench_rng(hmac_drbg, hmac_drbg.name(), msec, buf_size);
+                  }
+#endif
 
-                  Botan::HMAC_RNG hmac_rng(hash);
+#if defined(BOTAN_HAS_HMAC_RNG)
+               for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
+                  {
+                  Botan::HMAC_RNG hmac_rng(hash, 0);
                   bench_rng(hmac_rng, hmac_rng.name(), msec, buf_size);
                   }
 #endif
