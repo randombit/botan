@@ -149,24 +149,29 @@ BOTAN_REGISTER_COMMAND("hash", Hash);
 class RNG final : public Command
    {
    public:
-      RNG() : Command("rng bytes --system") {}
+      RNG() : Command("rng --system *bytes") {}
 
       void go() override
          {
-         const size_t bytes = get_arg_sz("bytes");
+         std::unique_ptr<Botan::RNG> rng;
 
          if(flag_set("system"))
             {
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-            output() << Botan::hex_encode(Botan::system_rng().random_vec(bytes)) << "\n";
+            rng.reset(new Botan::System_RNG);
 #else
             error_output() << "system_rng disabled in build\n";
+            return;
 #endif
             }
          else
             {
-            Botan::AutoSeeded_RNG rng;
-            output() << Botan::hex_encode(rng.random_vec(bytes)) << "\n";
+            rng.reset(new Botan::AutoSeeded_RNG);
+            }
+
+         for(const std::string& req : get_arg_list("bytes"))
+            {
+            output() << Botan::hex_encode(rng->random_vec(Botan::to_u32bit(req))) << "\n";
             }
          }
    };
