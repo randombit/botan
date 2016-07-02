@@ -40,6 +40,8 @@ darwin        -> "$(LINKER) -headerpad_max_install_names"
 darwin-debug  -> "$(LINKER) -headerpad_max_install_names"
 linux         -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
 linux-debug   -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
+freebsd       -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
+freebsd-debug -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
 default       -> "$(LINKER)"
 default-debug -> "$(LINKER)"
 </binary_link_commands>
