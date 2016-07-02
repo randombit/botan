@@ -1922,6 +1922,12 @@ def main(argv = None):
         elif options.os == 'darwin':
             if have_program('clang++'):
                 options.compiler = 'clang'
+        elif options.os == 'openbsd':
+            if have_program('eg++'):
+                info_cc['gcc'].binary_name = 'eg++'
+            else:
+                logging.warning('Default GCC is too old; install a newer one using \'pkg_add gcc\'')
+            options.compiler = 'gcc'
         else:
             options.compiler = 'gcc'
         logging.info('Guessing to use compiler %s (use --cc to set)' % (
