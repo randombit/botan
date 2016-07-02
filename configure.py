@@ -1927,6 +1927,8 @@ def main(argv = None):
                 info_cc['gcc'].binary_name = 'eg++'
             else:
                 logging.warning('Default GCC is too old; install a newer one using \'pkg_add gcc\'')
+            # The assembler shipping with OpenBSD 5.9 does not support avx2
+            del info_cc['gcc'].isa_flags['avx2']
             options.compiler = 'gcc'
         else:
             options.compiler = 'gcc'
