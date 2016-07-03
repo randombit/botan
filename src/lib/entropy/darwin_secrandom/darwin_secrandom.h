@@ -20,9 +20,7 @@ class Darwin_SecRandom final : public Entropy_Source
    public:
       std::string name() const override { return "darwin_secrandom"; }
 
-      void poll(Entropy_Accumulator& accum) override;
-   private:
-      secure_vector<uint8_t> m_io_buf;
+      size_t poll(RandomNumberGenerator& rng) override;
    };
 
 }

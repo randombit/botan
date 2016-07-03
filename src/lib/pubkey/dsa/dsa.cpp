@@ -116,6 +116,7 @@ DSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
       i -= m_q;
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
+   BOTAN_UNUSED(rng);
    const BigInt k = generate_rfc6979_nonce(m_x, m_q, i, hash_for_emsa(m_emsa));
 #else
    const BigInt k = BigInt::random_integer(rng, 1, m_q);

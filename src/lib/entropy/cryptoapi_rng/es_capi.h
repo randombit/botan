@@ -21,15 +21,21 @@ class Win32_CAPI_EntropySource final : public Entropy_Source
    public:
       std::string name() const override { return "win32_cryptoapi"; }
 
-      void poll(Entropy_Accumulator& accum) override;
+      size_t poll(RandomNumberGenerator& rng) override;
 
-     /**
-     * Win32_Capi_Entropysource Constructor
-     * @param provs list of providers, separated by ':'
-     */
+      /**
+      * Win32_Capi_Entropysource Constructor
+      * @param provs list of providers, separated by ':'
+      */
       explicit Win32_CAPI_EntropySource(const std::string& provs = "");
+
+      class CSP_Handle
+         {
+         public:
+            virtual size_t gen_random(byte out[], size_t n) const = 0;
+         };
    private:
-      std::vector<u64bit> m_prov_types;
+      std::vector<std::unique_ptr<CSP_Handle>> m_csp_provs;
    };
 
 }

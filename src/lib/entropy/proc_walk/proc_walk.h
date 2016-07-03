@@ -28,7 +28,7 @@ class ProcWalking_EntropySource final : public Entropy_Source
    public:
       std::string name() const override { return "proc_walk"; }
 
-      void poll(Entropy_Accumulator& accum) override;
+      size_t poll(RandomNumberGenerator& rng) override;
 
       ProcWalking_EntropySource(const std::string& root_dir) :
          m_path(root_dir), m_dir(nullptr) {}

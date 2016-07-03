@@ -134,22 +134,24 @@ EGD_EntropySource::~EGD_EntropySource()
 /**
 * Gather Entropy from EGD
 */
-void EGD_EntropySource::poll(Entropy_Accumulator& accum)
+size_t EGD_EntropySource::poll(RandomNumberGenerator& rng)
    {
    std::lock_guard<std::mutex> lock(m_mutex);
 
-   secure_vector<byte>& buf = accum.get_io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
+   secure_vector<byte> buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
 
    for(size_t i = 0; i != m_sockets.size(); ++i)
       {
-      size_t got = m_sockets[i].read(buf.data(), buf.size());
+      size_t got = m_sockets[i].read(m_io_buf.data(), m_io_buf.size());
 
       if(got)
          {
-         accum.add(buf.data(), got, BOTAN_ENTROPY_ESTIMATE_STRONG_RNG);
-         break;
+         rng.add_entropy(m_io_buf.data(), got);
+         return got * 8;
          }
       }
+
+   return 0;
    }
 
 }

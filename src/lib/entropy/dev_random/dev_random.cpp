@@ -63,8 +63,6 @@ Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnam
             }
          }
       }
-
-   m_io_buf.resize(BOTAN_SYSTEM_RNG_POLL_REQUEST);
    }
 
 /**
@@ -82,40 +80,45 @@ Device_EntropySource::~Device_EntropySource()
 /**
 * Gather entropy from a RNG device
 */
-void Device_EntropySource::poll(Entropy_Accumulator& accum)
+size_t Device_EntropySource::poll(RandomNumberGenerator& rng)
    {
-   if(m_dev_fds.empty())
-      return;
+   size_t bits = 0;
 
-   fd_set read_set;
-   FD_ZERO(&read_set);
-
-   for(int dev_fd : m_dev_fds)
+   if(m_dev_fds.size() > 0)
       {
-      FD_SET(dev_fd, &read_set);
-      }
+      fd_set read_set;
+      FD_ZERO(&read_set);
 
-   struct ::timeval timeout;
-   timeout.tv_sec = (BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS / 1000);
-   timeout.tv_usec = (BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS % 1000) * 1000;
-
-   if(::select(m_max_fd + 1, &read_set, nullptr, nullptr, &timeout) > 0)
-      {
       for(int dev_fd : m_dev_fds)
          {
-         if(FD_ISSET(dev_fd, &read_set))
-            {
-            const ssize_t got = ::read(dev_fd, m_io_buf.data(), m_io_buf.size());
+         FD_SET(dev_fd, &read_set);
+         }
 
-            if(got > 0)
+      secure_vector<uint8_t> io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
+
+      struct ::timeval timeout;
+      timeout.tv_sec = (BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS / 1000);
+      timeout.tv_usec = (BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS % 1000) * 1000;
+
+      if(::select(m_max_fd + 1, &read_set, nullptr, nullptr, &timeout) > 0)
+         {
+         for(int dev_fd : m_dev_fds)
+            {
+            if(FD_ISSET(dev_fd, &read_set))
                {
-               accum.add(m_io_buf.data(),
-                         static_cast<size_t>(got),
-                         BOTAN_ENTROPY_ESTIMATE_STRONG_RNG);
+               const ssize_t got = ::read(dev_fd, io_buf.data(), io_buf.size());
+
+               if(got > 0)
+                  {
+                  rng.add_entropy(io_buf.data(), static_cast<size_t>(got));
+                  bits += got * 8;
+                  }
                }
             }
          }
       }
+
+   return bits;
    }
 
 }

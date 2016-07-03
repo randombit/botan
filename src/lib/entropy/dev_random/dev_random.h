@@ -22,13 +22,12 @@ class Device_EntropySource final : public Entropy_Source
    public:
       std::string name() const override { return "dev_random"; }
 
-      void poll(Entropy_Accumulator& accum) override;
+      size_t poll(RandomNumberGenerator& rng) override;
 
       Device_EntropySource(const std::vector<std::string>& fsnames);
 
       ~Device_EntropySource();
    private:
-      secure_vector<uint8_t> m_io_buf;
       std::vector<int> m_dev_fds;
       int m_max_fd;
    };

@@ -19,7 +19,7 @@ class Win32_EntropySource final : public Entropy_Source
    {
    public:
       std::string name() const override { return "system_stats"; }
-      void poll(Entropy_Accumulator& accum) override;
+      size_t poll(RandomNumberGenerator& rng) override;
    };
 
 }

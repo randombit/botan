@@ -42,14 +42,22 @@ class BOTAN_DLL RandomNumberGenerator
       virtual void randomize(byte output[], size_t length) = 0;
 
       /**
-      * Incorporate some entropy into the RNG state. For example
-      * adding nonces or timestamps from a peer's protocol message
-      * can help hedge against VM state rollback attacks.
+      * Incorporate some additional data into the RNG state. For
+      * example adding nonces or timestamps from a peer's protocol
+      * message can help hedge against VM state rollback attacks.
       *
       * @param inputs a byte array containg the entropy to be added
       * @param length the length of the byte array in
       */
       virtual void add_entropy(const byte input[], size_t length) = 0;
+
+      /**
+      * Incorporate some additional data into the RNG state.
+      */
+      template<typename T> void add_entropy_T(const T& t)
+         {
+         add_entropy(reinterpret_cast<const uint8_t*>(&t), sizeof(T));
+         }
 
       /**
       * Incorporate entropy into the RNG state then produce output

@@ -3,5 +3,4 @@ define AUTO_SEEDING_RNG 20131128
 <requires>
 entropy
 hmac_drbg
-sha2_64
 </requires>

@@ -69,7 +69,7 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       return std::unique_ptr<Entropy_Source>(new Intel_Rdrand);
 #endif
       }
-      
+
    if(name == "rdseed")
       {
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDSEED)
@@ -163,36 +163,30 @@ size_t Entropy_Sources::poll(RandomNumberGenerator& rng,
 
    auto deadline = clock::now() + timeout;
 
-   double bits_collected = 0;
+   size_t bits_collected = 0;
 
-   Entropy_Accumulator accum([&](const byte in[], size_t in_len, double entropy_estimate) {
-      rng.add_entropy(in, in_len);
-      bits_collected += entropy_estimate;
-      return (bits_collected >= poll_bits || clock::now() > deadline);
-      });
-
-   for(size_t i = 0; i != m_srcs.size(); ++i)
+   for(Entropy_Source* src : m_srcs)
       {
-      m_srcs[i]->poll(accum);
-      if(accum.polling_goal_achieved())
+      bits_collected += src->poll(rng);
+
+      if (bits_collected >= poll_bits || clock::now() > deadline)
          break;
       }
 
-   return static_cast<size_t>(bits_collected);
+   return bits_collected;
    }
 
-bool Entropy_Sources::poll_just(Entropy_Accumulator& accum, const std::string& the_src)
+size_t Entropy_Sources::poll_just(RandomNumberGenerator& rng, const std::string& the_src)
    {
    for(size_t i = 0; i != m_srcs.size(); ++i)
       {
       if(m_srcs[i]->name() == the_src)
          {
-         m_srcs[i]->poll(accum);
-         return true;
+         return m_srcs[i]->poll(rng);
          }
       }
 
-   return false;
+   return 0;
    }
 
 Entropy_Sources::Entropy_Sources(const std::vector<std::string>& sources)

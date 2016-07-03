@@ -6,6 +6,7 @@
 */
 
 #include "cli.h"
+#include "../tests/test_rng.h" // FIXME
 
 #include <sstream>
 #include <iomanip>
@@ -602,30 +603,17 @@ class Speed final : public Command
          output() << Timer::result_string_bps(timer);
          }
 
-      void bench_entropy_sources(const std::chrono::milliseconds runtime)
+      void bench_entropy_sources(const std::chrono::milliseconds)
          {
          Botan::Entropy_Sources& srcs = Botan::Entropy_Sources::global_sources();
 
-         typedef std::chrono::system_clock clock;
-
-         auto deadline = clock::now() + runtime;
-
          for(auto src : srcs.enabled_sources())
             {
-            double entropy_bits = 0.0;
-            size_t samples = 0;
-            std::vector<size_t> entropy;
-
-            Botan::Entropy_Accumulator accum(
-               [&](const uint8_t buf[], size_t buf_len, double buf_entropy) -> bool {
-                  entropy.insert(entropy.end(), buf, buf + buf_len);
-                  entropy_bits += buf_entropy;
-                  samples += 1;
-                  return (samples > 1024 || entropy_bits > 1024 || clock::now() > deadline);
-               });
+            size_t entropy_bits = 0;
+            Botan_Tests::SeedCapturing_RNG rng;
 
             Timer timer(src, "", "bytes");
-            timer.run([&] { srcs.poll_just(accum, src); });
+            timer.run([&] { entropy_bits = srcs.poll_just(rng, src); });
 
 #if defined(BOTAN_HAS_COMPRESSION)
             std::unique_ptr<Botan::Compression_Algorithm> comp(Botan::make_compressor("zlib"));
@@ -633,13 +621,13 @@ class Speed final : public Command
 
             if(comp)
                {
-               compressed.assign(entropy.begin(), entropy.end());
+               compressed.assign(rng.seed_material().begin(), rng.seed_material().end());
                comp->start(9);
                comp->finish(compressed);
                }
 #endif
 
-            output() << "Entropy source " << src << " output " << entropy.size() << " bytes"
+            output() << "Entropy source " << src << " output " << rng.seed_material().size() << " bytes"
                      << " estimated entropy " << entropy_bits
                      << " in " << timer.milliseconds() << " ms";
 
@@ -650,7 +638,7 @@ class Speed final : public Command
                }
 #endif
 
-            output() << " total samples " << samples << "\n";
+            output() << " total samples " << rng.samples() << "\n";
             }
          }
 
