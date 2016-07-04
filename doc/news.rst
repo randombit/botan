@@ -4,6 +4,17 @@ Release Notes
 Version 1.11.31, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add PKCS #11 support (GH #507)
+
+* Add ECIES encryption system (GH #483)
+
+* Add ECKCDSA signature algorithm (#504)
+
+* Add KDF1 from ISO 18033 (GH #483)
+
+* Fixes for FreeBSD (GH #517) and OpenBSD (GH #523)
+
+
 Version 1.11.30, 2016-06-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
