@@ -21,14 +21,19 @@ secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
    {
    auto choose_hash = [=]() {
       if(!version.supports_ciphersuite_specific_prf())
-         return "Parallel(MD5,SHA-160)";;
+         return "Parallel(MD5,SHA-160)";
 
       if(mac_algo == "MD5" || mac_algo == "SHA-1")
          return "SHA-256";
       return mac_algo.c_str();
    };
 
-   std::unique_ptr<HashFunction> hash(HashFunction::create(choose_hash()));
+   const std::string hash_algo = choose_hash();
+   std::unique_ptr<HashFunction> hash(HashFunction::create(hash_algo));
+   if(!hash)
+   {
+      throw Algorithm_Not_Found(hash_algo);
+   }
    hash->update(m_data);
    return hash->final();
    }

@@ -45,6 +45,7 @@ gcm
 hmac
 kdf2
 md5
+par_hash
 prf_tls
 rng
 rsa
