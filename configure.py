@@ -1179,31 +1179,17 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     Form snippets of makefile for building each source file
     """
     def build_commands(sources, obj_dir, flags):
-        if options.with_external_includedir:
-            for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-                yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s%s %s %s %s$@\n' % (
-                    obj_file, src,
-                    isa_specific_flags(cc, src),
-                    flags,
-                    cc.add_include_dir_option,
-                    build_config.include_dir,
-                    cc.add_include_dir_option,
-                    options.with_external_includedir,
-                    cc.compile_flags,
-                    src,
-                    cc.output_to_option)
-        else:
-            for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-                yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s %s %s$@\n' % (
-                    obj_file, src,
-                    isa_specific_flags(cc, src),
-                    flags,
-                    cc.add_include_dir_option,
-                    build_config.include_dir,
-                    cc.compile_flags,
-                    src,
-                    cc.output_to_option)
-
+        includes = cc.add_include_dir_option + build_config.include_dir
+        includes+= ' ' + cc.add_include_dir_option + options.with_external_includedir if options.with_external_includedir else ''
+        for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
+            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
+                obj_file, src,
+                isa_specific_flags(cc, src),
+                flags,
+                includes,
+                cc.compile_flags,
+                src,
+                cc.output_to_option)
 
     for t in ['lib', 'cli', 'test']:
         obj_key = '%s_objs' % (t)

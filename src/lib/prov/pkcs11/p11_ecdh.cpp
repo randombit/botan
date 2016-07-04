@@ -15,12 +15,7 @@
 #include <botan/der_enc.h>
 #include <botan/internal/algo_registry.h>
 #include <botan/internal/pk_utils.h>
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   #include <botan/system_rng.h>
-#else
-   #include <botan/auto_rng.h>
-#endif
+#include <botan/rng.h>
 
 namespace Botan {
 
@@ -33,14 +28,9 @@ ECDH_PublicKey PKCS11_ECDH_PublicKey::export_key() const
 
 ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const
    {
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   System_RNG rng;
-#else
-   AutoSeeded_RNG rng;
-#endif
    auto priv_key = get_attribute_value(AttributeType::Value);
 
+   Null_RNG rng;
    return ECDH_PrivateKey(rng, domain(), BigInt::decode(priv_key));
    }
 

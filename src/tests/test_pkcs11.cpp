@@ -7,6 +7,9 @@
 #include "test_pkcs11.h"
 
 namespace Botan_Tests {
+	
+#if defined(BOTAN_HAS_PKCS11)
+
 using namespace Botan;
 using namespace PKCS11;
 
@@ -38,5 +41,7 @@ std::vector<Test::Result> PKCS11_Test::run_pkcs11_tests(const std::string& name,
 
    return results;
    }
+
+#endif
 
 }
