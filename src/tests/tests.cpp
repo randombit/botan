@@ -254,34 +254,6 @@ bool Test::Result::test_eq(const std::string& what, bool produced, bool expected
    return test_is_eq(what, produced, expected);
    }
 
-bool Test::Result::test_rc_ok(const std::string& what, int rc)
-   {
-   if(rc != 0)
-      {
-      std::ostringstream err;
-      err << m_who;
-      err << " " << what;
-      err << " unexpectedly failed with error code " << rc;
-      return test_failure(err.str());
-      }
-
-   return test_success();
-   }
-
-bool Test::Result::test_rc_fail(const std::string& func, const std::string& why, int rc)
-   {
-   if(rc == 0)
-      {
-      std::ostringstream err;
-      err << m_who;
-      err << " call to " << func << " unexpectedly succeeded";
-      err << " expecting failure because " << why;
-      return test_failure(err.str());
-      }
-
-   return test_success();
-   }
-
 bool Test::Result::test_rc(const std::string& func, int expected, int rc)
    {
    if(expected != rc)
@@ -436,17 +408,20 @@ Botan::RandomNumberGenerator* Test::m_test_rng = nullptr;
 std::string Test::m_data_dir;
 size_t Test::m_soak_level = 0;
 bool Test::m_log_success = false;
+std::string Test::m_pkcs11_lib;
 
 //static
 void Test::setup_tests(size_t soak,
                        bool log_success,
                        const std::string& data_dir,
+                       const std::string& pkcs11_lib,
                        Botan::RandomNumberGenerator* rng)
    {
    m_data_dir = data_dir;
    m_soak_level = soak;
    m_log_success = log_success;
    m_test_rng = rng;
+   m_pkcs11_lib = pkcs11_lib;
    }
 
 //static
@@ -471,6 +446,12 @@ const std::string& Test::data_dir()
 bool Test::log_success()
    {
    return m_log_success;
+   }
+
+//static
+std::string Test::pkcs11_lib()
+   {
+   return m_pkcs11_lib;
    }
 
 //static

@@ -31,7 +31,7 @@ namespace {
 class Test_Runner : public Botan_CLI::Command
    {
    public:
-      Test_Runner() : Command("test --threads=0 --soak=5 --drbg-seed= --data-dir= --log-success *suites") {}
+      Test_Runner() : Command("test --threads=0 --soak=5 --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
 
       std::string help_text() const override
          {
@@ -73,6 +73,7 @@ class Test_Runner : public Botan_CLI::Command
          const std::string drbg_seed = get_arg("drbg-seed");
          const bool log_success = flag_set("log-success");
          const std::string data_dir = get_arg_or("data-dir", "src/tests/data");
+         const std::string pkcs11_lib = get_arg("pkcs11-lib");
 
          std::vector<std::string> req = get_arg_list("suites");
 
@@ -88,12 +89,30 @@ class Test_Runner : public Botan_CLI::Command
 
             std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
 
+            // do not run pkcs11 tests by default
+            for(std::set<std::string>::iterator iter = all_others.begin(); iter != all_others.end();)
+               {
+               if((*iter).find("pkcs11") != std::string::npos)
+                  {
+                  iter = all_others.erase(iter);
+                  }
+               else
+                  {
+                  ++iter;
+                  }
+               }
+
             for(auto f : req)
                {
                all_others.erase(f);
                }
 
             req.insert(req.end(), all_others.begin(), all_others.end());
+            }
+         else if(req.size() == 1 && req.at(0) == "pkcs11")
+            {
+            req = {"pkcs11-manage", "pkcs11-module", "pkcs11-slot", "pkcs11-session", "pkcs11-object", "pkcs11-rsa",
+                    "pkcs11-ecdsa", "pkcs11-ecdh", "pkcs11-rng", "pkcs11-x509"};
             }
 
          output() << "Testing " << Botan::version_string() << "\n";
@@ -103,6 +122,11 @@ class Test_Runner : public Botan_CLI::Command
             output() << " threads:" << threads;
 
          output() << " soak level:" << soak_level;
+
+         if(! pkcs11_lib.empty())
+            {
+            output() << " pkcs11 library:" << pkcs11_lib;
+            }
 
          std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
@@ -137,7 +161,7 @@ class Test_Runner : public Botan_CLI::Command
 
          output() << "\n";
 
-         Botan_Tests::Test::setup_tests(soak_level, log_success, data_dir, rng.get());
+         Botan_Tests::Test::setup_tests(soak_level, log_success, data_dir, pkcs11_lib, rng.get());
 
          const size_t failed = run_tests(req, output(), threads);
 

@@ -1,4 +1,4 @@
-define DYNAMIC_LOADER 20131128
+define DYNAMIC_LOADER 20160310
 
 load_on dep
 
@@ -11,18 +11,12 @@ openbsd
 qnx
 solaris
 windows
+darwin
 </os>
 
 <libs>
 android -> dl
 linux -> dl
 solaris -> dl
+darwin -> dl
 </libs>
-
-<source>
-dyn_load.cpp
-</source>
-
-<header:internal>
-dyn_load.h
-</header:internal>

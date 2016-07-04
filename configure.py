@@ -308,6 +308,9 @@ def process_command_line(args):
     build_group.add_option('--with-build-dir', metavar='DIR', default='',
                            help='setup the build in DIR')
 
+    build_group.add_option('--with-external-includedir', metavar='DIR', default='',
+                           help='use DIR for external includes')
+
     link_methods = ['symlink', 'hardlink', 'copy']
     build_group.add_option('--link-method', default=None, metavar='METHOD',
                            choices=link_methods,
@@ -1176,16 +1179,30 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     Form snippets of makefile for building each source file
     """
     def build_commands(sources, obj_dir, flags):
-        for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s %s %s$@\n' % (
-                obj_file, src,
-                isa_specific_flags(cc, src),
-                flags,
-                cc.add_include_dir_option,
-                build_config.include_dir,
-                cc.compile_flags,
-                src,
-                cc.output_to_option)
+        if options.with_external_includedir:
+            for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
+                yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s%s %s %s %s$@\n' % (
+                    obj_file, src,
+                    isa_specific_flags(cc, src),
+                    flags,
+                    cc.add_include_dir_option,
+                    build_config.include_dir,
+                    cc.add_include_dir_option,
+                    options.with_external_includedir,
+                    cc.compile_flags,
+                    src,
+                    cc.output_to_option)
+        else:
+            for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
+                yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s %s %s$@\n' % (
+                    obj_file, src,
+                    isa_specific_flags(cc, src),
+                    flags,
+                    cc.add_include_dir_option,
+                    build_config.include_dir,
+                    cc.compile_flags,
+                    src,
+                    cc.output_to_option)
 
 
     for t in ['lib', 'cli', 'test']:
@@ -1332,7 +1349,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
         # 'botan' or 'botan-1.11'. Used in Makefile and install script
-        # This can be made constistent over all platforms in the future
+        # This can be made consistent over all platforms in the future
         'libname': 'botan' if options.os == 'windows' else 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
 
         'lib_link_cmd':  cc.so_link_command_for(osinfo.basename, options),
