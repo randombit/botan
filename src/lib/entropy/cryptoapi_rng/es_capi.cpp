@@ -82,7 +82,7 @@ Win32_CAPI_EntropySource::Win32_CAPI_EntropySource(const std::string& provs)
       if(prov_name == "RSA_FULL")
          prov_type = PROV_RSA_FULL;
       else if(prov_name == "INTEL_SEC")
-         prov_type == PROV_INTEL_SEC;
+         prov_type = PROV_INTEL_SEC;
       else if(prov_name == "RNG")
          prov_type = PROV_RNG;
       else
