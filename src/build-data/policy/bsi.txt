@@ -19,6 +19,11 @@ keccak
 cmac
 hmac
 
+# kdf
+kdf1_iso18033
+sp800_108
+sp800_56c
+
 # pk_pad
 eme_oaep
 emsa_pssr
@@ -31,6 +36,8 @@ rsa
 dsa
 ecdsa
 ecgdsa
+ecies
+eckcdsa
 ecdh
 
 # rng
@@ -112,6 +119,11 @@ chacha
 ofb
 rc4
 salsa20
+
+# kdf
+kdf1
+kdf2
+prf_x942
 
 # pubkey
 curve25519

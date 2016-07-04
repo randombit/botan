@@ -43,8 +43,8 @@ eme_pkcs1
 emsa_pkcs1
 gcm
 hmac
-kdf2
 md5
+par_hash
 prf_tls
 rng
 rsa
