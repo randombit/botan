@@ -1919,7 +1919,7 @@ def main(argv = None):
                 options.compiler = 'gcc'
             else:
                 options.compiler = 'msvc'
-        elif options.os == 'darwin':
+        elif options.os == 'darwin' or options.os == 'freebsd':
             if have_program('clang++'):
                 options.compiler = 'clang'
         else:
