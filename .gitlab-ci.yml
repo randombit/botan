@@ -1,6 +1,8 @@
 variables:
   GCOV: "/usr/bin/gcov-5"
-  EXTRA_MODULES: "tls"
+  EXTRA_MODULES: "tls,pkcs11"
+  SOFTHSM2_CONF_LINUX: "/home/gitlab-runner/softhsm2.conf"
+  SOFTHSM2_LIB_LINUX:  "/home/gitlab-runner/SoftHSMv2-inst/lib/softhsm/libsofthsm2.so"
 
 windows-cppcheck:
   script:
@@ -34,6 +36,7 @@ build-windows-shared-vs2015-with-analysis:
     - python configure.py --cc=msvc --cpu=x64 --module-policy=bsi --enable-modules=%EXTRA_MODULES% --with-static-analysis
     - jom
     - botan-test.exe
+    - botan-test.exe --pkcs11-lib=C:\SoftHSMv2-x86-VS2015\softhsm2.dll pkcs11
   tags:
     - windows7
     - x64
@@ -48,6 +51,7 @@ build-windows-static-vs2015:
     - python configure.py --module-policy=bsi --enable-modules=%EXTRA_MODULES% --cc=msvc --cpu=x64 --disable-shared
     - jom
     - botan-test.exe
+    - botan-test.exe --pkcs11-lib=C:\SoftHSMv2-x86-VS2015\softhsm2.dll pkcs11
   tags:
     - windows7
     - x64
@@ -62,6 +66,7 @@ build-windows-shared-vs2013:
     - python configure.py --module-policy=bsi --enable-modules=%EXTRA_MODULES% --cc=msvc --cpu=x86
     - jom
     - botan-test.exe
+    - botan-test.exe --pkcs11-lib=C:\SoftHSMv2-x86-VS2015\softhsm2.dll pkcs11
   tags:
     - windows7
     - x64
@@ -76,6 +81,7 @@ build-windows-static-vs2013:
     - python configure.py --module-policy=bsi --enable-modules=%EXTRA_MODULES% --cc=msvc --cpu=x86 --disable-shared
     - jom
     - botan-test.exe
+    - botan-test.exe --pkcs11-lib=C:\SoftHSMv2-x86-VS2015\softhsm2.dll pkcs11
   tags:
     - windows7
     - x64
@@ -90,6 +96,7 @@ build-linux-all-shared-gcc:
     - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation
     - make -j 4
     - ./botan-test
+    - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11
   tags:
     - ubuntu
     - x64
@@ -104,6 +111,7 @@ build-linux-all-static-gcc:
     - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --disable-shared --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation
     - make -j 4
     - ./botan-test
+    - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11
   tags:
     - ubuntu
     - x64
@@ -118,7 +126,7 @@ build-linux-all-shared-clang:
     - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation
     - make -j 4
     - ./botan-test
-
+    - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11
   tags:
     - ubuntu
     - x64
@@ -133,6 +141,7 @@ build-linux-all-static-clang:
     - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --disable-shared --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation
     - make -j 4
     - ./botan-test
+    - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11
   tags:
     - ubuntu
     - x64
@@ -147,6 +156,7 @@ coverage:
     - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --with-coverage --cc="$CC" --cc-bin="$CXX" --prefix=/tmp/botan-installation
     - make -j 4
     - ./botan-test
+    - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11
     - lcov --gcov-tool "$GCOV" --directory . --capture --output-file coverage.info
     - lcov --gcov-tool "$GCOV" --remove coverage.info 'tests/*' '/usr/*' --output-file coverage.info
     - lcov --gcov-tool "$GCOV" --list coverage.info
@@ -183,6 +193,7 @@ asan-ubsan:
     - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --cc-abi-flags="-D_GLIBCXX_DEBUG -fsanitize=address,undefined -fno-sanitize-recover=undefined" --with-debug-info --no-optimizations --cc="$CC" --cc-bin="$CXX" --prefix=/tmp/botan-installation
     - make -j 4
     - ./botan-test
+    - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11
   tags:
     - ubuntu
     - x64
