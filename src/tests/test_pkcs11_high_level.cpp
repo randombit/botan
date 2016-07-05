@@ -1042,10 +1042,13 @@ Test::Result test_ecdsa_sign_verify()
 
       result.test_eq("ECDSA PKCS11 sign and verify: " + emsa, ecdsa_ok, true);
 
+// test against software implementation if available
+#if defined (BOTAN_HAS_EMSA_RAW)
       Botan::PK_Verifier soft_verifier(keypair.first, emsa, Botan::IEEE_1363);
       bool soft_ecdsa_ok = soft_verifier.verify_message(plaintext, signature);
 
       result.test_eq("ECDSA PKCS11 verify (in software): " + emsa, soft_ecdsa_ok, true);
+#endif
       };
 
    sign_and_verify("Raw");   // SoftHSMv2 until now only supports "Raw"
