@@ -82,7 +82,12 @@ class secure_allocator
          ::new(static_cast<void*>(p)) U(std::forward<Args>(args)...);
          }
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4100)
       template<typename U> void destroy(U* p) { p->~U(); }
+#pragma warning(pop)
+#endif
    };
 
 template<typename T, typename U> inline bool
