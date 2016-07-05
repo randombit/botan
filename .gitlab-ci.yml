@@ -1,6 +1,6 @@
 variables:
   GCOV: "/usr/bin/gcov-5"
-  EXTRA_MODULES: "tls,pkcs11"
+  EXTRA_MODULES: "tls,pkcs11,xts"
   SOFTHSM2_CONF_LINUX: "/home/gitlab-runner/softhsm2.conf"
   SOFTHSM2_LIB_LINUX:  "/home/gitlab-runner/SoftHSMv2-inst/lib/softhsm/libsofthsm2.so"
 
