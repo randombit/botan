@@ -1205,7 +1205,8 @@ def gen_bakefile(lib_sources, cli_sources, cli_headers, test_sources, options):
         f.write('archs = x86;\n')
 
     # vs2013 options
-    f.write('vs2013.option.ClCompile.DisableSpecificWarnings = "4275;4267";\n')
+    f.write('vs2013.option.ClCompile.DisableSpecificWarnings = "4250;4251;4275";\n')
+    f.write('vs2013.option.ClCompile.WarningLevel = Level4;\n')
     f.write('vs2013.option.ClCompile.ExceptionHandling = SyncCThrow;\n')
     f.write('vs2013.option.ClCompile.RuntimeTypeInfo = true;\n')
     f.write('if ( $(config) == Release ) {\n')
