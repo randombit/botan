@@ -19,8 +19,8 @@ linux-shared-clang-analyzer:
     - export CC=clang
     - export CXX=clang++
     - $CXX --version
-    - ./configure.py --cc="$CC" --cc-bin="$CXX" --prefix=/tmp/botan-installation --module-policy=bsi --enable-modules=$EXTRA_MODULES --with-debug-info --with-static-analysis
-    - make -j 2
+    - ./configure.py --cc="$CC" --cc-bin="$CXX" --prefix=/tmp/botan-installation --module-policy=bsi --enable-modules=$EXTRA_MODULES --with-debug-info --with-static-analysis --with-external-includedir=/home/gitlab-runner/pkcs11
+    - make -j 4
   tags:
     - ubuntu
     - x64
@@ -31,9 +31,9 @@ linux-shared-clang-analyzer:
 build-windows-shared-vs2015-with-analysis:
   script:
     - set OLDDIR=%CD%
-    - call "%ProgramFiles(x86)%\Microsoft Visual C++ Build Tools\vcbuildtools.bat" x64
+    - call "%ProgramFiles(x86)%\Microsoft Visual C++ Build Tools\vcbuildtools.bat" x86
     - chdir /d %OLDDIR%
-    - python configure.py --cc=msvc --cpu=x64 --module-policy=bsi --enable-modules=%EXTRA_MODULES% --with-static-analysis
+    - python configure.py --cc=msvc --cpu=x86 --module-policy=bsi --enable-modules=%EXTRA_MODULES% --with-static-analysis --with-external-includedir=C:\BotanIncludes
     - jom
     - botan-test.exe
     - botan-test.exe --pkcs11-lib=C:\SoftHSMv2-x86-VS2015\softhsm2.dll pkcs11
@@ -46,9 +46,9 @@ build-windows-shared-vs2015-with-analysis:
 build-windows-static-vs2015:
   script:
     - set OLDDIR=%CD%
-    - call "%ProgramFiles(x86)%\Microsoft Visual C++ Build Tools\vcbuildtools.bat" x64
+    - call "%ProgramFiles(x86)%\Microsoft Visual C++ Build Tools\vcbuildtools.bat" x86
     - chdir /d %OLDDIR%
-    - python configure.py --module-policy=bsi --enable-modules=%EXTRA_MODULES% --cc=msvc --cpu=x64 --disable-shared
+    - python configure.py --module-policy=bsi --enable-modules=%EXTRA_MODULES% --cc=msvc --cpu=x86 --disable-shared --with-external-includedir=C:\BotanIncludes
     - jom
     - botan-test.exe
     - botan-test.exe --pkcs11-lib=C:\SoftHSMv2-x86-VS2015\softhsm2.dll pkcs11
@@ -63,7 +63,7 @@ build-windows-shared-vs2013:
     - set OLDDIR=%CD%
     - call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
     - chdir /d %OLDDIR%
-    - python configure.py --module-policy=bsi --enable-modules=%EXTRA_MODULES% --cc=msvc --cpu=x86
+    - python configure.py --module-policy=bsi --enable-modules=%EXTRA_MODULES% --cc=msvc --cpu=x86 --with-external-includedir=C:\BotanIncludes
     - jom
     - botan-test.exe
     - botan-test.exe --pkcs11-lib=C:\SoftHSMv2-x86-VS2015\softhsm2.dll pkcs11
@@ -78,7 +78,7 @@ build-windows-static-vs2013:
     - set OLDDIR=%CD%
     - call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" x86
     - chdir /d %OLDDIR%
-    - python configure.py --module-policy=bsi --enable-modules=%EXTRA_MODULES% --cc=msvc --cpu=x86 --disable-shared
+    - python configure.py --module-policy=bsi --enable-modules=%EXTRA_MODULES% --cc=msvc --cpu=x86 --disable-shared --with-external-includedir=C:\BotanIncludes
     - jom
     - botan-test.exe
     - botan-test.exe --pkcs11-lib=C:\SoftHSMv2-x86-VS2015\softhsm2.dll pkcs11
@@ -93,7 +93,7 @@ build-linux-all-shared-gcc:
     - export CC=gcc
     - export CXX=g++
     - $CXX --version
-    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation --with-external-includedir=/home/gitlab-runner/pkcs11
     - make -j 4
     - ./botan-test
     - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11
@@ -108,7 +108,7 @@ build-linux-all-static-gcc:
     - export CC=gcc
     - export CXX=g++
     - $CXX --version
-    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --disable-shared --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --disable-shared --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation --with-external-includedir=/home/gitlab-runner/pkcs11
     - make -j 4
     - ./botan-test
     - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11
@@ -123,7 +123,7 @@ build-linux-all-shared-clang:
     - export CC=clang
     - export CXX=clang++
     - $CXX --version
-    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation --with-external-includedir=/home/gitlab-runner/pkcs11
     - make -j 4
     - ./botan-test
     - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11
@@ -138,7 +138,7 @@ build-linux-all-static-clang:
     - export CC=clang
     - export CXX=clang++
     - $CXX --version
-    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --disable-shared --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --disable-shared --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation --with-external-includedir=/home/gitlab-runner/pkcs11
     - make -j 4
     - ./botan-test
     - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11
@@ -153,7 +153,7 @@ coverage:
     - export CC=gcc
     - export CXX=g++
     - $CXX --version
-    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --with-coverage --cc="$CC" --cc-bin="$CXX" --prefix=/tmp/botan-installation
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --with-coverage --cc="$CC" --cc-bin="$CXX" --prefix=/tmp/botan-installation --with-external-includedir=/home/gitlab-runner/pkcs11
     - make -j 4
     - ./botan-test
     - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11
@@ -175,7 +175,7 @@ build-linux-all-shared-gcc-32bit-cross:
     - export CC=gcc
     - export CXX=g++
     - $CXX --version
-    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --cpu="x86" --cc-abi-flags="-m32" --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --cpu="x86" --cc-abi-flags="-m32" --cc="$CC" --cc-bin="$CXX" --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib --prefix=/tmp/botan-installation --with-external-includedir=/home/gitlab-runner/pkcs11
     - make -j 4
     - ./botan-test
   tags:
@@ -190,7 +190,7 @@ asan-ubsan:
     - export CXX=g++
     - $CXX --version
     - export ASAN_OPTIONS=check_initialization_order=true
-    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --cc-abi-flags="-D_GLIBCXX_DEBUG -fsanitize=address,undefined -fno-sanitize-recover=undefined" --with-debug-info --no-optimizations --cc="$CC" --cc-bin="$CXX" --prefix=/tmp/botan-installation
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --cc-abi-flags="-D_GLIBCXX_DEBUG -fsanitize=address,undefined -fno-sanitize-recover=undefined" --with-debug-info --no-optimizations --cc="$CC" --cc-bin="$CXX" --prefix=/tmp/botan-installation --with-external-includedir=/home/gitlab-runner/pkcs11
     - make -j 4
     - ./botan-test
     - ./botan-test --pkcs11-lib="$SOFTHSM2_LIB_LINUX" pkcs11

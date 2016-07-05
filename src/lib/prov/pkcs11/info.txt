@@ -6,7 +6,6 @@ load_on vendor
 dyn_load
 rng
 pk_pad
-rfc6979
 </requires>
 
 <header:internal>
