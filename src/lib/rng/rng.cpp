@@ -42,7 +42,7 @@ size_t RandomNumberGenerator::reseed_with_sources(Entropy_Sources& srcs,
    return srcs.poll(*this, poll_bits, poll_timeout);
    }
 
-Stateful_RNG::Stateful_RNG(size_t bytes_before_reseed) : m_bytes_before_reseed(bytes_before_reseed)
+Stateful_RNG::Stateful_RNG(size_t max_output_before_reseed) : m_max_output_before_reseed(max_output_before_reseed)
    {
    }
 
@@ -79,7 +79,7 @@ void Stateful_RNG::reseed_check(size_t bytes_requested)
       {
       this->reseed(BOTAN_RNG_RESEED_POLL_BITS);
       }
-   else if(m_bytes_before_reseed > 0 && m_bytes_since_reseed >= m_bytes_before_reseed)
+   else if(m_max_output_before_reseed > 0 && m_bytes_since_reseed >= m_max_output_before_reseed)
       {
       this->reseed_with_timeout(BOTAN_RNG_RESEED_POLL_BITS,
                                 BOTAN_RNG_AUTO_RESEED_TIMEOUT);
@@ -107,9 +107,9 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
    return new AutoSeeded_RNG;
    }
 
-AutoSeeded_RNG::AutoSeeded_RNG(size_t max_bytes_before_reseed)
+AutoSeeded_RNG::AutoSeeded_RNG(size_t max_output_before_reseed)
    {
-   m_rng.reset(new BOTAN_AUTO_RNG_DRBG(BOTAN_AUTO_RNG_HASH, max_bytes_before_reseed));
+   m_rng.reset(new BOTAN_AUTO_RNG_DRBG(BOTAN_AUTO_RNG_HASH, max_output_before_reseed));
 
    size_t bits = m_rng->reseed(BOTAN_AUTO_RNG_ENTROPY_TARGET);
 

@@ -36,7 +36,7 @@ class BOTAN_DLL AutoSeeded_RNG final : public RandomNumberGenerator
       void add_entropy(const byte in[], size_t len) override
          { m_rng->add_entropy(in, len); }
 
-      AutoSeeded_RNG(size_t bytes_before_reseed = BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED);
+      AutoSeeded_RNG(size_t max_output_before_reseed = BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED);
    private:
       std::unique_ptr<RandomNumberGenerator> m_rng;
       uint32_t m_counter = 0;

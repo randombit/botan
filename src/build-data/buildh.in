@@ -102,7 +102,7 @@
 * after producing this many bytes of output. Set to zero to disable
 * automatic reseeding.
 */
-#define BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED 16384
+#define BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED 16384
 #define BOTAN_RNG_RESEED_POLL_BITS 256
 #define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
 #define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)

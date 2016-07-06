@@ -195,14 +195,14 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
       /**
       * Mark state as requiring a reseed on next use
       */
-      void force_reseed() { m_bytes_since_reseed = m_bytes_before_reseed; }
+      void force_reseed() { m_bytes_since_reseed = m_max_output_before_reseed; }
 
       uint32_t last_pid() const { return m_last_pid; }
 
       mutable std::mutex m_mutex;
 
    private:
-      const size_t m_bytes_before_reseed;
+      const size_t m_max_output_before_reseed;
       size_t m_bytes_since_reseed = 0;
       uint32_t m_last_pid = 0;
       bool m_successful_initialization = false;

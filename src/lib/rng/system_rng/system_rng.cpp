@@ -38,9 +38,9 @@ class System_RNG_Impl final : public RandomNumberGenerator
 
       void clear() override {}
 
-      void randomize(Botan::byte out[], size_t len) override;
+      void randomize(uint8_t out[], size_t len) override;
 
-      void add_entropy(const byte in[], size_t length) override;
+      void add_entropy(const uint8_t in[], size_t length) override;
 
       std::string name() const override;
 
@@ -90,7 +90,7 @@ System_RNG_Impl::~System_RNG_Impl()
 #endif
    }
 
-void System_RNG_Impl::add_entropy(const byte input[], size_t len)
+void System_RNG_Impl::add_entropy(const uint8_t input[], size_t len)
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
    /*
@@ -102,14 +102,14 @@ void System_RNG_Impl::add_entropy(const byte input[], size_t len)
 
    for(size_t i = 0; i != len; ++i)
       {
-      byte b = input[i];
+      uint8_t b = input[i];
       ::CryptGenRandom(m_prov, 1, &b);
       }
    */
 
    if(len > 0)
       {
-      secure_vector<byte> buf(input, input + len);
+      secure_vector<uint8_t> buf(input, input + len);
       ::CryptGenRandom(m_prov, static_cast<DWORD>(buf.size()), buf.data());
       }
 #else
@@ -144,7 +144,7 @@ void System_RNG_Impl::add_entropy(const byte input[], size_t len)
 #endif
    }
 
-void System_RNG_Impl::randomize(byte buf[], size_t len)
+void System_RNG_Impl::randomize(uint8_t buf[], size_t len)
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
    ::CryptGenRandom(m_prov, static_cast<DWORD>(len), buf);

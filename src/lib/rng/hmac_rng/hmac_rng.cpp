@@ -12,8 +12,8 @@
 
 namespace Botan {
 
-HMAC_RNG::HMAC_RNG(const std::string& hash, size_t max_before_reseed) :
-   Stateful_RNG(max_before_reseed)
+HMAC_RNG::HMAC_RNG(const std::string& hash, size_t max_output_before_reseed) :
+   Stateful_RNG(max_output_before_reseed)
    {
    m_extractor = MAC::create("HMAC(" + hash + ")");
    if(!m_extractor)
@@ -36,8 +36,9 @@ HMAC_RNG::HMAC_RNG(const std::string& hash, size_t max_before_reseed) :
 * HMAC_RNG Constructor
 */
 HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor,
-                   MessageAuthenticationCode* prf) :
-   Stateful_RNG(BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED),
+                   MessageAuthenticationCode* prf,
+                   size_t max_output_before_reseed) :
+   Stateful_RNG(max_output_before_reseed),
    m_extractor(extractor), m_prf(prf)
    {
    if(!m_prf->valid_keylength(m_extractor->output_length()) ||

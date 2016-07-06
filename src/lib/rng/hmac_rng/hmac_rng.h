@@ -42,13 +42,14 @@ class BOTAN_DLL HMAC_RNG : public Stateful_RNG
       * @param prf a MAC used as a PRF using HKDF construction
       */
       HMAC_RNG(MessageAuthenticationCode* extractor,
-               MessageAuthenticationCode* prf);
+               MessageAuthenticationCode* prf,
+               size_t max_output_before_reseed = BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED);
 
       /**
       * Use the specified hash for both the extractor and PRF functions
       */
       HMAC_RNG(const std::string& hash,
-               size_t max_before_reseed = BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED);
+               size_t max_output_before_reseed = BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED);
    private:
       std::unique_ptr<MessageAuthenticationCode> m_extractor;
       std::unique_ptr<MessageAuthenticationCode> m_prf;
