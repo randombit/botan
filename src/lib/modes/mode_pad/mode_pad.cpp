@@ -69,8 +69,10 @@ void ANSI_X923_Padding::add_padding(secure_vector<byte>& buffer,
    {
    const byte pad_value = static_cast<byte>(block_size - last_byte_pos);
 
-   for(size_t i = last_byte_pos; i < block_size; ++i)
+   for(size_t i = last_byte_pos; i < block_size-1; ++i)
+      {
       buffer.push_back(0);
+      }
    buffer.push_back(pad_value);
    }
 
