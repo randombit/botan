@@ -124,3 +124,9 @@ snail-mail address (S), and Bitcoin address (B).
   W: https://sirrix.com/
   D: KDF1-18033, ECIES
   S: Saarland, Germany
+  
+  N: Daniel Neus
+  E: d.neus@sirrix.com
+  W: https://sirrix.com/
+  D: CI, PKCS#11, RdSeed, BSI module policy
+  S: Bochum, Germany
