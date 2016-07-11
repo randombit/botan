@@ -59,7 +59,6 @@ beos_stats
 cryptoapi_rng
 darwin_secrandom
 dev_random
-egd
 hres_timer
 proc_walk
 rdrand
@@ -169,6 +168,7 @@ x919_mac
 x931_rng
 
 # entropy sources
+egd
 unix_procs
 
 </prohibited>
