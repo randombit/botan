@@ -32,6 +32,7 @@ class BOTAN_DLL BlockCipherModePaddingMethod
       /**
       * @param block the last block
       * @param size the of the block
+      * @return number of padding bytes
       */
       virtual size_t unpad(const byte block[],
                            size_t size) const = 0;
@@ -119,7 +120,7 @@ class BOTAN_DLL Null_Padding final : public BlockCipherModePaddingMethod
       std::string name() const override { return "NoPadding"; }
    };
 
-BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec);
+BOTAN_DLL BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec);
 
 }
 
