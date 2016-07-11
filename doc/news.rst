@@ -14,6 +14,10 @@ Version 1.11.31, Not Yet Released
 
 * Fixes for FreeBSD (GH #517) and OpenBSD (GH #523)
 
+* Support for getting entropy from EGD is deprecated, and will be removed in
+  a future release. The developers believe that it is unlikely that any modern
+  system requires EGD and so the code is now dead weight. If you rely on EGD
+  support, you should contact the developers by email or GitHub ASAP.
 
 Version 1.11.30, 2016-06-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
