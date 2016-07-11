@@ -22,17 +22,17 @@ poly1305
 siphash
 
 pbkdf2
+bcrypt
+compression
 
 # required for private key encryption
 pbes2
-
-# required for TLS
-prf_tls
 
 curve25519
 ecdh
 ecdsa
 rsa
+rfc6979
 
 eme_oaep
 emsa_pssr
@@ -43,6 +43,36 @@ hmac_rng
 
 ffi
 </required>
+
+<if_available>
+tls
+prf_tls
+
+clmul
+locking_allocator
+
+aes_ni
+aes_ssse3
+serpent_simd
+threefish_avx2
+
+simd_scalar
+simd_sse2
+simd_altivec
+
+system_rng
+
+# entropy sources
+beos_stats
+cryptoapi_rng
+darwin_secrandom
+dev_random
+hres_timer
+proc_walk
+rdrand
+rdseed
+win32_stats
+</if_available>
 
 <prohibited>
 cast
@@ -91,32 +121,9 @@ x931_rng
 
 passhash9
 cryptobox
+
+# questionable entropy sources
+egd
 unix_procs
 </prohibited>
 
-<if_available>
-clmul
-locking_allocator
-
-aes_ni
-aes_ssse3
-serpent_simd
-threefish_avx2
-
-simd_scalar
-simd_sse2
-simd_altivec
-
-# entropy sources
-beos_stats
-cryptoapi_rng
-darwin_secrandom
-dev_random
-egd
-hres_timer
-proc_walk
-rdrand
-rdseed
-system_rng
-win32_stats
-</if_available>
