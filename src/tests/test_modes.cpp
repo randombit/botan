@@ -39,6 +39,8 @@ class Cipher_Mode_Tests : public Text_Based_Test
             return result;
             }
 
+         result.test_eq("name", enc->name(), algo);
+
          result.test_eq("mode not authenticated", enc->authenticated(), false);
 
          enc->set_key(key);
@@ -56,6 +58,9 @@ class Cipher_Mode_Tests : public Text_Based_Test
          dec->start(nonce);
          dec->finish(buf);
          result.test_eq("decrypt", buf, input);
+
+         enc->clear();
+         dec->clear();
 
          return result;
          }
