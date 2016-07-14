@@ -461,6 +461,9 @@ def process_command_line(args):
         options.no_optimizations = True
         options.with_debug_info = True
 
+    if options.with_coverage:
+        options.no_optimizations = True
+
     def parse_multiple_enable(modules):
         if modules is None:
             return []
