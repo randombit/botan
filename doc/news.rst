@@ -12,6 +12,10 @@ Version 1.11.31, Not Yet Released
 
 * Add KDF1 from ISO 18033 (GH #483)
 
+* Fix undefined behavior in Curve25519 on platforms without a native 128-bit
+  integer type. This was known to produce incorrect results on 32-bit ARM
+  under Clang. GH #532
+
 * Fixes for FreeBSD (GH #517) and OpenBSD (GH #523)
 
 * Support for getting entropy from EGD is deprecated, and will be removed in

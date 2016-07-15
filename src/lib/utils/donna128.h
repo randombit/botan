@@ -23,18 +23,24 @@ class donna128
       friend donna128 operator>>(const donna128& x, size_t shift)
          {
          donna128 z = x;
-         const u64bit carry = z.h << (64 - shift);
-         z.h = (z.h >> shift);
-         z.l = (z.l >> shift) | carry;
+         if(shift > 0)
+            {
+            const u64bit carry = z.h << (64 - shift);
+            z.h = (z.h >> shift);
+            z.l = (z.l >> shift) | carry;
+            }
          return z;
          }
 
       friend donna128 operator<<(const donna128& x, size_t shift)
          {
          donna128 z = x;
-         const u64bit carry = z.l >> (64 - shift);
-         z.l = (z.l << shift);
-         z.h = (z.h << shift) | carry;
+         if(shift > 0)
+            {
+            const u64bit carry = z.l >> (64 - shift);
+            z.l = (z.l << shift);
+            z.h = (z.h << shift) | carry;
+            }
          return z;
          }
 
