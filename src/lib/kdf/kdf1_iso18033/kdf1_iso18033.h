@@ -1,5 +1,5 @@
 /*
-* KDF1 from ISO 18033
+* KDF1 from ISO 18033-2
 * (C) 2016 Philipp Weber
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -14,7 +14,7 @@
 namespace Botan {
 
 /**
-* KDF1, from IEEE 1363
+* KDF1, from ISO 18033-2
 */
 class BOTAN_DLL KDF1_18033 : public KDF
    {
