@@ -232,3 +232,15 @@ osx:
     - xcode7.3
   except:
     - tags
+
+android:
+  script:
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --os=android --cpu=armv7 --cc=clang --with-external-includedir=/home/gitlab-runner/pkcs11
+    - ./build_android_mk.sh /home/gitlab-runner/pkcs11
+    - export APP_PROJECT_PATH=`pwd`
+    - /home/gitlab-runner/android-ndk-r12b/ndk-build NDK_APPLICATION_MK=botan.mk -j4
+  tags:
+    - ubuntu
+    - x64
+  except:
+    - tags
