@@ -22,6 +22,17 @@ Version 1.11.31, Not Yet Released
   a future release. The developers believe that it is unlikely that any modern
   system requires EGD and so the code is now dead weight. If you rely on EGD
   support, you should contact the developers by email or GitHub ASAP.
+  
+* Changes in DLIES: Previously the input to the KDF was the concatenation
+  of the (ephemeral) public key and the secret value derived by the key
+  agreement operation. Now the input is only the secret value obtained
+  by the key agreement operation. That's how it is specified in the original
+  paper "DHIES: An encryption scheme based on Diffie-Hellman Problem" or in BSI
+  technical guideline TR-02102-1 for example. In addition to the already present
+  XOR-encrypion/decryption mode it's now possible to use DLIES with a block cipher.
+  Furthermore the order of the output was changed from {public key, tag, ciphertext}
+  to {public key, ciphertext, tag}. Both modes are compatible with bouncycastle.
+
 
 * Fix a bug in ANSI X9.23 padding mode, which returned one byte more
   than the given block size (GH #529).

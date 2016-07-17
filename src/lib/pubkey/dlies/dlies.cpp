@@ -1,6 +1,7 @@
 /*
 * DLIES
 * (C) 1999-2007 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,128 +11,204 @@
 
 namespace Botan {
 
-/*
-* DLIES_Encryptor Constructor
-*/
-DLIES_Encryptor::DLIES_Encryptor(const PK_Key_Agreement_Key& key,
-                                 KDF* kdf_obj,
-                                 MessageAuthenticationCode* mac_obj,
-                                 size_t mac_kl) :
-   m_ka(key, "Raw"),
-   m_kdf(kdf_obj),
-   m_mac(mac_obj),
-   m_mac_keylen(mac_kl)
+DLIES_Encryptor::DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
+                                 KDF* kdf,
+                                 MessageAuthenticationCode* mac,
+                                 size_t mac_key_length) :
+   DLIES_Encryptor(own_priv_key, kdf, nullptr, 0, mac, mac_key_length)
    {
-   BOTAN_ASSERT_NONNULL(kdf_obj);
-   BOTAN_ASSERT_NONNULL(mac_obj);
-   m_my_key = key.public_value();
    }
 
-/*
-* DLIES Encryption
-*/
+DLIES_Encryptor::DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
+                                 KDF* kdf,
+                                 Cipher_Mode* cipher,
+                                 size_t cipher_key_len,
+                                 MessageAuthenticationCode* mac,
+                                 size_t mac_key_length) :
+   m_other_pub_key(),
+   m_own_pub_key(own_priv_key.public_value()),
+   m_ka(own_priv_key, "Raw"),
+   m_kdf(kdf),
+   m_cipher(cipher),
+   m_cipher_key_len(cipher_key_len),
+   m_mac(mac),
+   m_mac_keylen(mac_key_length),
+   m_iv()
+   {
+   BOTAN_ASSERT_NONNULL(kdf);
+   BOTAN_ASSERT_NONNULL(mac);
+   }
+
 std::vector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
                                        RandomNumberGenerator&) const
    {
-   if(length > maximum_input_size())
-      throw Invalid_Argument("DLIES: Plaintext too large");
-   if(m_other_key.empty())
+   if(m_other_pub_key.empty())
+      {
       throw Invalid_State("DLIES: The other key was never set");
+      }
 
-   secure_vector<byte> out(m_my_key.size() + length + m_mac->output_length());
-   buffer_insert(out, 0, m_my_key);
-   buffer_insert(out, m_my_key.size(), in, length);
+   // calculate secret value
+   const SymmetricKey secret_value = m_ka.derive_key(0, m_other_pub_key);
 
-   secure_vector<byte> vz(m_my_key.begin(), m_my_key.end());
-   vz += m_ka.derive_key(0, m_other_key).bits_of();
+   // derive secret key from secret value
+   const size_t required_key_length = m_cipher ? m_cipher_key_len + m_mac_keylen : length + m_mac_keylen;
+   const secure_vector<byte> secret_keys = m_kdf->derive_key(required_key_length, secret_value.bits_of());
 
-   const size_t K_LENGTH = length + m_mac_keylen;
-   secure_vector<byte> K = m_kdf->derive_key(K_LENGTH, vz);
-
-   if(K.size() != K_LENGTH)
+   if(secret_keys.size() != required_key_length)
+      {
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
-   byte* C = &out[m_my_key.size()];
+      }
 
-   m_mac->set_key(K.data(), m_mac_keylen);
-   xor_buf(C, &K[m_mac_keylen], length);
+   secure_vector<byte> ciphertext(in, in + length);
+   const size_t cipher_key_len = m_cipher ? m_cipher_key_len : length;
 
-   m_mac->update(C, length);
-   for(size_t j = 0; j != 8; ++j)
-      m_mac->update(0);
+   if(m_cipher)
+      {
+      SymmetricKey enc_key(secret_keys.data(), cipher_key_len);
+      m_cipher->set_key(enc_key);
 
-   m_mac->final(C + length);
+      if(m_iv.size())
+         {
+         m_cipher->start(m_iv.bits_of());
+         }
+
+      m_cipher->finish(ciphertext);
+      }
+   else
+      {
+      xor_buf(ciphertext, secret_keys, cipher_key_len);
+      }
+
+   // calculate MAC
+   m_mac->set_key(secret_keys.data() + cipher_key_len, m_mac_keylen);
+   secure_vector<byte> tag = m_mac->process(ciphertext);
+
+   // out = (ephemeral) public key + ciphertext + tag
+   secure_vector<byte> out(m_own_pub_key.size() + ciphertext.size() + tag.size());
+   buffer_insert(out, 0, m_own_pub_key);
+   buffer_insert(out, 0 + m_own_pub_key.size(), ciphertext);
+   buffer_insert(out, 0 + m_own_pub_key.size() + ciphertext.size(), tag);
 
    return unlock(out);
    }
 
-/*
-* Set the other parties public key
-*/
-void DLIES_Encryptor::set_other_key(const std::vector<byte>& ok)
-   {
-   m_other_key = ok;
-   }
-
-/*
+/**
 * Return the max size, in bytes, of a message
+* Not_Implemented if DLIES is used in XOR encryption mode
 */
 size_t DLIES_Encryptor::maximum_input_size() const
    {
-   return 32;
+   if(m_cipher)
+      {
+      // no limit in block cipher mode
+      return std::numeric_limits<size_t>::max();
+      }
+   else
+      {
+      // No way to determine if the KDF will output enough bits for XORing with the plaintext?!
+      throw Not_Implemented("Not implemented for XOR encryption mode");
+      }
    }
 
-/*
-* DLIES_Decryptor Constructor
-*/
-DLIES_Decryptor::DLIES_Decryptor(const PK_Key_Agreement_Key& key,
-                                 KDF* kdf_obj,
-                                 MessageAuthenticationCode* mac_obj,
-                                 size_t mac_kl) :
-   m_ka(key, "Raw"),
-   m_kdf(kdf_obj),
-   m_mac(mac_obj),
-   m_mac_keylen(mac_kl)
+DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
+                                 KDF* kdf,
+                                 Cipher_Mode* cipher,
+                                 size_t cipher_key_len,
+                                 MessageAuthenticationCode* mac,
+                                 size_t mac_key_length) :
+   m_pub_key_size(own_priv_key.public_value().size()),
+   m_ka(own_priv_key, "Raw"),
+   m_kdf(kdf),
+   m_cipher(cipher),
+   m_cipher_key_len(cipher_key_len),
+   m_mac(mac),
+   m_mac_keylen(mac_key_length),
+   m_iv()
    {
-   m_my_key = key.public_value();
+   BOTAN_ASSERT_NONNULL(kdf);
+   BOTAN_ASSERT_NONNULL(mac);
    }
 
-/*
-* DLIES Decryption
-*/
+DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
+                                 KDF* kdf,
+                                 MessageAuthenticationCode* mac,
+                                 size_t mac_key_length) :
+   DLIES_Decryptor(own_priv_key, kdf, nullptr, 0, mac, mac_key_length)
+   {}
+
 secure_vector<byte> DLIES_Decryptor::do_decrypt(byte& valid_mask,
-                                                const byte msg[], size_t length) const
+      const byte msg[], size_t length) const
    {
-   if(length < m_my_key.size() + m_mac->output_length())
+   if(length < m_pub_key_size + m_mac->output_length())
+      {
       throw Decoding_Error("DLIES decryption: ciphertext is too short");
+      }
 
-   const size_t CIPHER_LEN = length - m_my_key.size() - m_mac->output_length();
+   // calculate secret value
+   std::vector<byte> other_pub_key(msg, msg + m_pub_key_size);
+   const SymmetricKey secret_value = m_ka.derive_key(0, other_pub_key);
 
-   std::vector<byte> v(msg, msg + m_my_key.size());
+   const size_t ciphertext_len = length - m_pub_key_size - m_mac->output_length();
+   size_t cipher_key_len = m_cipher ? m_cipher_key_len : ciphertext_len;
 
-   secure_vector<byte> C(msg + m_my_key.size(), msg + m_my_key.size() + CIPHER_LEN);
+   // derive secret key from secret value
+   const size_t required_key_length = cipher_key_len + m_mac_keylen;
+   secure_vector<byte> secret_keys = m_kdf->derive_key(required_key_length, secret_value.bits_of());
 
-   secure_vector<byte> T(msg + m_my_key.size() + CIPHER_LEN,
-                         msg + m_my_key.size() + CIPHER_LEN + m_mac->output_length());
-
-   secure_vector<byte> vz(msg, msg + m_my_key.size());
-   vz += m_ka.derive_key(0, v).bits_of();
-
-   const size_t K_LENGTH = C.size() + m_mac_keylen;
-   secure_vector<byte> K = m_kdf->derive_key(K_LENGTH, vz);
-   if(K.size() != K_LENGTH)
+   if(secret_keys.size() != required_key_length)
+      {
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
+      }
 
-   m_mac->set_key(K.data(), m_mac_keylen);
-   m_mac->update(C);
-   for(size_t j = 0; j != 8; ++j)
-      m_mac->update(0);
-   secure_vector<byte> T2 = m_mac->final();
+   secure_vector<byte> ciphertext(msg + m_pub_key_size, msg + m_pub_key_size + ciphertext_len);
 
-   valid_mask = CT::expand_mask<byte>(same_mem(T.data(), T2.data(), T.size()));
+   // calculate MAC
+   m_mac->set_key(secret_keys.data() + cipher_key_len, m_mac_keylen);
+   secure_vector<byte> calculated_tag = m_mac->process(ciphertext);
 
-   xor_buf(C, K.data() + m_mac_keylen, C.size());
+   // calculated tag == received tag ?
+   secure_vector<byte> tag(msg + m_pub_key_size + ciphertext_len,
+                           msg + m_pub_key_size + ciphertext_len + m_mac->output_length());
 
-   return C;
+   valid_mask = CT::expand_mask<byte>(same_mem(tag.data(), calculated_tag.data(), tag.size()));
+
+   // decrypt
+   if(m_cipher)
+      {
+      if(valid_mask)
+         {
+         SymmetricKey dec_key(secret_keys.data(), cipher_key_len);
+         m_cipher->set_key(dec_key);
+
+         try
+            {
+            // the decryption can fail:
+            // e.g. Integrity_Failure is thrown if GCM is used and the message does not have a valid tag
+
+            if(m_iv.size())
+               {
+               m_cipher->start(m_iv.bits_of());
+               }
+
+            m_cipher->finish(ciphertext);
+            }
+         catch(...)
+            {
+            valid_mask = 0;
+            }
+
+         }
+      else
+         {
+         return secure_vector<byte>();
+         }
+      }
+   else
+      {
+      xor_buf(ciphertext, secret_keys.data(), cipher_key_len);
+      }
+
+   return ciphertext;
    }
 
 }
