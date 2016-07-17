@@ -23,6 +23,9 @@ Version 1.11.31, Not Yet Released
   system requires EGD and so the code is now dead weight. If you rely on EGD
   support, you should contact the developers by email or GitHub ASAP.
 
+* Fix a bug in ANSI X9.23 padding mode, which returned one byte more
+  than the given block size (GH #529).
+
 Version 1.11.30, 2016-06-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
