@@ -1,1 +1,0 @@
-define SAFER 20131128

@@ -80,15 +80,9 @@ idea
 idea_sse2
 kasumi
 lion
-mars
 misty1
-rc2
 rc4
-rc5
-rc6
-safer
 seed
-tea
 xtea
 xtea_simd
 
