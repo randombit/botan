@@ -1,13 +1,13 @@
 /*
 * ECIES
 * (C) 2016 Philipp Weber
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/ecies.h>
 #include <botan/cipher_mode.h>
-#include <botan/pipe.h>
 
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/pk_utils.h>
@@ -217,14 +217,14 @@ std::unique_ptr<MessageAuthenticationCode> ECIES_System_Params::create_mac() con
    return mac;
    }
 
-std::unique_ptr<Keyed_Filter> ECIES_System_Params::create_cipher(Botan::Cipher_Dir direction) const
+std::unique_ptr<Cipher_Mode> ECIES_System_Params::create_cipher(Botan::Cipher_Dir direction) const
    {
-   Keyed_Filter* cipher = get_cipher(m_dem_spec, direction);
+   Cipher_Mode* cipher = get_cipher_mode(m_dem_spec, direction);
    if(cipher == nullptr)
       {
       throw Algorithm_Not_Found(m_dem_spec);
       }
-   return std::unique_ptr<Keyed_Filter>(cipher);
+   return std::unique_ptr<Cipher_Mode>(cipher);
    }
 
 
@@ -270,17 +270,16 @@ std::vector<byte> ECIES_Encryptor::enc(const byte data[], size_t length, RandomN
    const SymmetricKey secret_key = m_ka.derive_secret(m_eph_public_key_bin, m_other_point);
 
    // encryption
-   std::unique_ptr<Keyed_Filter> cipher = m_params.create_cipher(ENCRYPTION);
+   std::unique_ptr<Cipher_Mode> cipher = m_params.create_cipher(ENCRYPTION);
    BOTAN_ASSERT(cipher != nullptr, "Cipher is found");
 
    cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
    if(m_iv.size() != 0)
       {
-      cipher->set_iv(m_iv);
+      cipher->start(m_iv.bits_of());
       }
-   Pipe pipe(cipher.release());
-   pipe.process_msg(data, length);
-   const secure_vector<byte> encrypted_data = pipe.read_all(0);
+   secure_vector<byte> encrypted_data(data, data + length);
+   cipher->finish(encrypted_data);
 
    // concat elements
    std::unique_ptr<MessageAuthenticationCode> mac = m_params.create_mac();
@@ -371,28 +370,28 @@ secure_vector<byte> ECIES_Decryptor::do_decrypt(byte& valid_mask, const byte in[
    if(valid_mask)
       {
       // decrypt data
-      std::unique_ptr<Keyed_Filter> cipher = m_params.create_cipher(DECRYPTION);
+      std::unique_ptr<Cipher_Mode> cipher = m_params.create_cipher(DECRYPTION);
       BOTAN_ASSERT(cipher != nullptr, "Cipher is found");
 
       cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
       if(m_iv.size() != 0)
          {
-         cipher->set_iv(m_iv);
+         cipher->start(m_iv.bits_of());
          }
-	  
+      
       try
          {
-		 // the decryption can fail:
-		 // e.g. Integrity_Failure is thrown if GCM is used and the message does not have a valid tag
-         Pipe pipe(cipher.release());
-         pipe.process_msg(encrypted_data);
-         return pipe.read_all(0);
+         // the decryption can fail:
+         // e.g. Integrity_Failure is thrown if GCM is used and the message does not have a valid tag
+         secure_vector<byte> decrypted_data(encrypted_data.begin(), encrypted_data.end());
+         cipher->finish(decrypted_data);
+         return decrypted_data;
          }
       catch(...)
          {
-		 valid_mask = 0;
+         valid_mask = 0;
          }
-	  }
+      }
    return secure_vector<byte>();
    }
 
