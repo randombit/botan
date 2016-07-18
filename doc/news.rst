@@ -12,6 +12,10 @@ Version 1.11.31, Not Yet Released
 
 * Add KDF1 from ISO 18033 (GH #483)
 
+* RNG changes: NIST SP900-80's HMAC_DRBG is now the default generator
+  for userspace RNG (AutoSeeded_RNG). HMAC_DRBG now attempts to detect
+  use of fork (via pid checks)
+
 * Fix undefined behavior in Curve25519 on platforms without a native 128-bit
   integer type. This was known to produce incorrect results on 32-bit ARM
   under Clang. GH #532
@@ -22,7 +26,7 @@ Version 1.11.31, Not Yet Released
   a future release. The developers believe that it is unlikely that any modern
   system requires EGD and so the code is now dead weight. If you rely on EGD
   support, you should contact the developers by email or GitHub ASAP.
-  
+
 * Changes in DLIES: Previously the input to the KDF was the concatenation
   of the (ephemeral) public key and the secret value derived by the key
   agreement operation. Now the input is only the secret value obtained
@@ -32,7 +36,6 @@ Version 1.11.31, Not Yet Released
   XOR-encrypion/decryption mode it's now possible to use DLIES with a block cipher.
   Furthermore the order of the output was changed from {public key, tag, ciphertext}
   to {public key, ciphertext, tag}. Both modes are compatible with bouncycastle.
-
 
 * Fix a bug in ANSI X9.23 padding mode, which returned one byte more
   than the given block size (GH #529).
