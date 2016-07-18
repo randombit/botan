@@ -233,10 +233,22 @@ osx:
   except:
     - tags
 
-android:
+android-32bit:
   script:
     - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --os=android --cpu=armv7 --cc=clang --with-external-includedir=/home/gitlab-runner/pkcs11
-    - ./build_android_mk.sh /home/gitlab-runner/pkcs11
+    - ./build_android_mk.sh armeabi-v7a /home/gitlab-runner/pkcs11
+    - export APP_PROJECT_PATH=`pwd`
+    - /home/gitlab-runner/android-ndk-r12b/ndk-build NDK_APPLICATION_MK=botan.mk -j4
+  tags:
+    - ubuntu
+    - x64
+  except:
+    - tags
+
+android-64bit:
+  script:
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --os=android --cpu=arm64 --cc=clang --with-external-includedir=/home/gitlab-runner/pkcs11
+    - ./build_android_mk.sh arm64-v8a /home/gitlab-runner/pkcs11
     - export APP_PROJECT_PATH=`pwd`
     - /home/gitlab-runner/android-ndk-r12b/ndk-build NDK_APPLICATION_MK=botan.mk -j4
   tags:

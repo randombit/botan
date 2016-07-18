@@ -1,6 +1,7 @@
 #!/bin/bash
 
-EXTERNAL_INCLUDEDIR=$1
+ABI=$1
+EXTERNAL_INCLUDEDIR=$2
 
 function android_mk {
 	echo 'LOCAL_PATH := $(call my-dir)' > $1
@@ -39,7 +40,7 @@ function android_mk {
 function application_mk {
 	echo 'NDK_TOOLCHAIN_VERSION := clang' > $1
 	echo 'APP_CPPFLAGS := -D_REENTRANT -Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wunreachable-code -Wno-gnu-include-next' >> $1
-	echo 'APP_ABI := armeabi-v7a' >> $1
+	echo 'APP_ABI :=' $2 >> $1
 	echo 'APP_PLATFORM = android-23' >> $1
 	echo 'APP_STL := c++_static' >> $1
 }
@@ -52,7 +53,7 @@ android_mk Android.mk $EXTERNAL_INCLUDEDIR
 
 echo "Generating botan.mk for the NDK build"
 # Construct Application.mk for NDK build
-application_mk botan.mk $EXTERNAL_INCLUDEDIR
+application_mk botan.mk $EXTERNAL_INCLUDEDIR $ABI
 
 # Create link to jni
 ln -sfn . jni
