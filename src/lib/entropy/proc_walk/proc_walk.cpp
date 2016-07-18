@@ -140,6 +140,9 @@ size_t ProcWalking_EntropySource::poll(RandomNumberGenerator& rng)
       if(got > 0)
          {
          rng.add_entropy(m_buf.data(), static_cast<size_t>(got));
+
+         // Conservative estimate of 4 bits per file
+         bitS += 4;
          }
 
       if(bits > 128)
