@@ -6,7 +6,6 @@
 
 #include "tests.h"
 
-
 #if defined(BOTAN_HAS_ECIES)
    #include "test_pubkey.h"
    #include <botan/ecies.h>

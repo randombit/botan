@@ -1,6 +1,7 @@
-define DLIES 20131128
+define DLIES 20160713
 
 <requires>
 kdf
 mac
+block
 </requires>

@@ -1,5 +1,5 @@
 /*
-* KDF1 from ISO 18033
+* KDF1 from ISO 18033-2
 * (C) 2016 Philipp Weber
 *
 * Botan is released under the Simplified BSD License (see license.txt)

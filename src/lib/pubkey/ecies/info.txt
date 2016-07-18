@@ -5,5 +5,4 @@ kdf
 mac
 ecdh
 modes
-filters
 </requires>

@@ -11,7 +11,7 @@
 #include <botan/ecdh.h>
 #include <botan/ec_group.h>
 #include <botan/kdf.h>
-#include <botan/key_filt.h>
+#include <botan/cipher_mode.h>
 #include <botan/mac.h>
 #include <botan/point_gfp.h>
 #include <botan/pubkey.h>
@@ -150,7 +150,7 @@ class BOTAN_DLL ECIES_System_Params : public ECIES_KA_Params
       std::unique_ptr<MessageAuthenticationCode> create_mac() const;
 
       /// creates an instance of the data encryption method
-      std::unique_ptr<Keyed_Filter> create_cipher(Botan::Cipher_Dir direction) const;
+      std::unique_ptr<Cipher_Mode> create_cipher(Botan::Cipher_Dir direction) const;
 
       /// returns the length of the key used by the data encryption method
       inline size_t dem_keylen() const

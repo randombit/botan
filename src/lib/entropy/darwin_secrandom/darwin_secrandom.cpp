@@ -7,6 +7,7 @@
 
 #include <botan/internal/darwin_secrandom.h>
 #include <Security/Security.h>
+#include <Security/SecRandom.h>
 
 namespace Botan {
 
