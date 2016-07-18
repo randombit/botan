@@ -67,17 +67,52 @@ Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& trusted_p
    {
    }
 
-void UnixProcessInfo_EntropySource::poll(Entropy_Accumulator& accum)
+size_t UnixProcessInfo_EntropySource::poll(RandomNumberGenerator& rng)
    {
-   accum.add(::getpid(), BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
-   accum.add(::getppid(), BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
-   accum.add(::getuid(),  BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
-   accum.add(::getgid(),  BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
-   accum.add(::getpgrp(), BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
+   rng.add_entropy_T(::getpid());
+   rng.add_entropy_T(::getppid());
+   rng.add_entropy_T(::getuid());
+   rng.add_entropy_T(::getgid());
+   rng.add_entropy_T(::getpgrp());
 
    struct ::rusage usage;
    ::getrusage(RUSAGE_SELF, &usage);
-   accum.add(usage, BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
+   rng.add_entropy_T(usage);
+
+#if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
+
+#define CLOCK_GETTIME_POLL(src)                                     \
+   do {                                                             \
+     struct timespec ts;                                            \
+     ::clock_gettime(src, &ts);                                     \
+     rng.add_entropy_T(ts);                                         \
+   } while(0)
+
+#if defined(CLOCK_REALTIME)
+   CLOCK_GETTIME_POLL(CLOCK_REALTIME);
+#endif
+
+#if defined(CLOCK_MONOTONIC)
+   CLOCK_GETTIME_POLL(CLOCK_MONOTONIC);
+#endif
+
+#if defined(CLOCK_MONOTONIC_RAW)
+   CLOCK_GETTIME_POLL(CLOCK_MONOTONIC_RAW);
+#endif
+
+#if defined(CLOCK_PROCESS_CPUTIME_ID)
+   CLOCK_GETTIME_POLL(CLOCK_PROCESS_CPUTIME_ID);
+#endif
+
+#if defined(CLOCK_THREAD_CPUTIME_ID)
+   CLOCK_GETTIME_POLL(CLOCK_THREAD_CPUTIME_ID);
+#endif
+
+#undef CLOCK_GETTIME_POLL
+
+#endif
+
+   return 0;
    }
 
 void Unix_EntropySource::Unix_Process::spawn(const std::vector<std::string>& args)
@@ -168,11 +203,11 @@ const std::vector<std::string>& Unix_EntropySource::next_source()
    return src;
    }
 
-void Unix_EntropySource::poll(Entropy_Accumulator& accum)
+size_t Unix_EntropySource::poll(RandomNumberGenerator& rng)
    {
    // refuse to run setuid or setgid, or as root
    if((getuid() != geteuid()) || (getgid() != getegid()) || (geteuid() == 0))
-      return;
+      return 0;
 
    std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -192,13 +227,15 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
       }
 
    if(m_sources.empty())
-      return; // still empty, really nothing to try
+      return 0; // still empty, really nothing to try
 
    const size_t MS_WAIT_TIME = 32;
 
    m_buf.resize(4096);
 
-   while(!accum.polling_finished())
+   size_t bytes = 0;
+
+   while(bytes < 128 * 1024) // arbitrary limit...
       {
       while(m_procs.size() < m_concurrent)
          m_procs.emplace_back(Unix_Process(next_source()));
@@ -228,7 +265,7 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
       timeout.tv_usec = (MS_WAIT_TIME % 1000) * 1000;
 
       if(::select(max_fd + 1, &read_set, nullptr, nullptr, &timeout) < 0)
-         return; // or continue?
+         break; // or continue?
 
       for(auto& proc : m_procs)
          {
@@ -237,13 +274,19 @@ void Unix_EntropySource::poll(Entropy_Accumulator& accum)
          if(FD_ISSET(fd, &read_set))
             {
             const ssize_t got = ::read(fd, m_buf.data(), m_buf.size());
+
             if(got > 0)
-               accum.add(m_buf.data(), got, BOTAN_ENTROPY_ESTIMATE_SYSTEM_TEXT);
+               {
+               rng.add_entropy(m_buf.data(), got);
+               bytes += got;
+               }
             else
                proc.spawn(next_source());
             }
          }
       }
+
+   return bytes / 1024;
    }
 
 }

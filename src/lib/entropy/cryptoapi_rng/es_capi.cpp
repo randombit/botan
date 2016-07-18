@@ -1,6 +1,6 @@
 /*
 * Win32 CryptoAPI EntropySource
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2009,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -16,38 +16,34 @@ namespace Botan {
 
 namespace {
 
-class CSP_Handle
+class CSP_Handle_Impl : public Win32_CAPI_EntropySource::CSP_Handle
    {
    public:
-      explicit CSP_Handle(u64bit capi_provider)
+      explicit CSP_Handle_Impl(u64bit capi_provider)
          {
-         m_valid = false;
-         DWORD prov_type = (DWORD)capi_provider;
-
-         if(CryptAcquireContext(&m_handle, 0, 0,
-                                prov_type, CRYPT_VERIFYCONTEXT))
-            m_valid = true;
+         m_valid = ::CryptAcquireContext(&m_handle,
+                                         0,
+                                         0,
+                                         static_cast<DWORD>(capi_provider),
+                                         CRYPT_VERIFYCONTEXT);
          }
 
-      ~CSP_Handle()
+      ~CSP_Handle_Impl()
          {
-         if(is_valid())
-            CryptReleaseContext(m_handle, 0);
+         if(m_valid)
+            ::CryptReleaseContext(m_handle, 0);
          }
 
       size_t gen_random(byte out[], size_t n) const
          {
-         if(is_valid() && CryptGenRandom(m_handle, static_cast<DWORD>(n), out))
+         if(m_valid && ::CryptGenRandom(m_handle, static_cast<DWORD>(n), out))
             return n;
          return 0;
          }
 
-      bool is_valid() const { return m_valid; }
-
-      HCRYPTPROV get_handle() const { return m_handle; }
    private:
-      HCRYPTPROV m_handle;
       bool m_valid;
+      HCRYPTPROV m_handle;
    };
 
 }
@@ -55,20 +51,23 @@ class CSP_Handle
 /*
 * Gather Entropy from Win32 CAPI
 */
-void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
+size_t Win32_CAPI_EntropySource::poll(RandomNumberGenerator& rng)
    {
-   secure_vector<byte>& buf = accum.get_io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
+   secure_vector<uint8_t> buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
+   size_t bits = 0;
 
-   for(size_t i = 0; i != m_prov_types.size(); ++i)
+   for(size_t i = 0; i != m_csp_provs.size(); ++i)
       {
-      CSP_Handle csp(m_prov_types[i]);
+      size_t got = m_csp_provs[i]->gen_random(buf.data(), buf.size());
 
-      if(size_t got = csp.gen_random(buf.data(), buf.size()))
+      if(got > 0)
          {
-         accum.add(buf.data(), got, BOTAN_ENTROPY_ESTIMATE_STRONG_RNG);
-         break;
+         rng.add_entropy(buf.data(), got);
+         bits += got * 8;
          }
       }
+
+   return bits;
    }
 
 /*
@@ -76,18 +75,21 @@ void Win32_CAPI_EntropySource::poll(Entropy_Accumulator& accum)
 */
 Win32_CAPI_EntropySource::Win32_CAPI_EntropySource(const std::string& provs)
    {
-   std::vector<std::string> capi_provs = split_on(provs, ':');
-
-   for(size_t i = 0; i != capi_provs.size(); ++i)
+   for(std::string prov_name : split_on(provs, ':'))
       {
-      if(capi_provs[i] == "RSA_FULL")  m_prov_types.push_back(PROV_RSA_FULL);
-      if(capi_provs[i] == "INTEL_SEC") m_prov_types.push_back(PROV_INTEL_SEC);
-      if(capi_provs[i] == "FORTEZZA")  m_prov_types.push_back(PROV_FORTEZZA);
-      if(capi_provs[i] == "RNG")       m_prov_types.push_back(PROV_RNG);
-      }
+      DWORD prov_type;
 
-   if(m_prov_types.size() == 0)
-      m_prov_types.push_back(PROV_RSA_FULL);
+      if(prov_name == "RSA_FULL")
+         prov_type = PROV_RSA_FULL;
+      else if(prov_name == "INTEL_SEC")
+         prov_type = PROV_INTEL_SEC;
+      else if(prov_name == "RNG")
+         prov_type = PROV_RNG;
+      else
+         continue;
+
+      m_csp_provs.push_back(std::unique_ptr<CSP_Handle>(new CSP_Handle_Impl(prov_type)));
+      }
    }
 
 }

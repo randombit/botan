@@ -67,9 +67,8 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
          const size_t keygen_n = get_req_sz(vars, "KeyN");
          const size_t keygen_t = get_req_sz(vars, "KeyT");
 
-         Botan::HMAC_DRBG rng("HMAC(SHA-384)");
-
-         rng.add_entropy(keygen_seed.data(), keygen_seed.size());
+         Botan::HMAC_DRBG rng("SHA-384", 0);
+         rng.initialize_with(keygen_seed.data(), keygen_seed.size());
          Botan::McEliece_PrivateKey mce_priv(rng, keygen_n, keygen_t);
 
          Test::Result result("McEliece keygen");
@@ -78,7 +77,7 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
          result.test_eq("private key fingerprint", hash_bytes(mce_priv.pkcs8_private_key()), fprint_priv);
 
          rng.clear();
-         rng.add_entropy(encrypt_seed.data(), encrypt_seed.size());
+         rng.initialize_with(encrypt_seed.data(), encrypt_seed.size());
 
          try
             {

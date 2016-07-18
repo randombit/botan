@@ -1,6 +1,6 @@
 /*
 * HMAC_DRBG
-* (C) 2014,2015 Jack Lloyd
+* (C) 2014,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,53 +10,81 @@
 
 namespace Botan {
 
-HMAC_DRBG::HMAC_DRBG(MessageAuthenticationCode* mac,
-                     RandomNumberGenerator* prng) :
-   m_mac(mac),
-   m_prng(prng),
-   m_V(m_mac->output_length(), 0x01),
-   m_reseed_counter(0)
+HMAC_DRBG::HMAC_DRBG(MessageAuthenticationCode* hmac,
+                     size_t max_output_before_reseed) :
+   Stateful_RNG(max_output_before_reseed),
+   m_mac(hmac)
    {
-   m_mac->set_key(std::vector<byte>(m_mac->output_length(), 0x00));
+   m_V.resize(m_mac->output_length());
+   clear();
    }
 
-HMAC_DRBG::HMAC_DRBG(const std::string& mac_name,
-                     RandomNumberGenerator* prng) :
-   m_prng(prng),
-   m_reseed_counter(0)
+HMAC_DRBG::HMAC_DRBG(const std::string& hmac_hash,
+                     size_t max_output_before_reseed) :
+   Stateful_RNG(max_output_before_reseed)
    {
-   m_mac = MessageAuthenticationCode::create(mac_name);
+   const std::string hmac = "HMAC(" + hmac_hash + ")";
+
+   m_mac = MessageAuthenticationCode::create(hmac);
    if(!m_mac)
-      throw Algorithm_Not_Found(mac_name);
-   m_V = secure_vector<byte>(m_mac->output_length(), 0x01),
-   m_mac->set_key(std::vector<byte>(m_mac->output_length(), 0x00));
-   }
-
-void HMAC_DRBG::randomize(byte out[], size_t length)
-   {
-   if(!is_seeded() || m_reseed_counter > BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED)
-      reseed(m_mac->output_length() * 8);
-
-   if(!is_seeded())
-      throw PRNG_Unseeded(name());
-
-   while(length)
       {
-      const size_t to_copy = std::min(length, m_V.size());
-      m_V = m_mac->process(m_V);
-      copy_mem(out, m_V.data(), to_copy);
-
-      length -= to_copy;
-      out += to_copy;
+      throw Algorithm_Not_Found(hmac);
       }
 
-   m_reseed_counter += length;
+   m_V.resize(m_mac->output_length());
+   clear();
+   }
 
-   update(nullptr, 0); // additional_data is always empty
+void HMAC_DRBG::clear()
+   {
+   Stateful_RNG::clear();
+
+   for(size_t i = 0; i != m_V.size(); ++i)
+      m_V[i] = 0x01;
+   m_mac->set_key(std::vector<byte>(m_mac->output_length(), 0x00));
+   }
+
+std::string HMAC_DRBG::name() const
+   {
+   return "HMAC_DRBG(" + m_mac->name() + ")";
+   }
+
+void HMAC_DRBG::randomize(byte output[], size_t output_len)
+   {
+   randomize_with_input(output, output_len, nullptr, 0);
+   }
+
+/*
+* HMAC_DRBG generation
+* See NIST SP800-90A section 10.1.2.5
+*/
+void HMAC_DRBG::randomize_with_input(byte output[], size_t output_len,
+                                     const byte input[], size_t input_len)
+   {
+   reseed_check(output_len);
+
+   if(input_len > 0)
+      {
+      update(input, input_len);
+      }
+
+   while(output_len)
+      {
+      const size_t to_copy = std::min(output_len, m_V.size());
+      m_mac->update(m_V.data(), m_V.size());
+      m_mac->final(m_V.data());
+      copy_mem(output, m_V.data(), to_copy);
+
+      output += to_copy;
+      output_len -= to_copy;
+      }
+
+   update(input, input_len);
    }
 
 /*
 * Reset V and the mac key with new values
+* See NIST SP800-90A section 10.1.2.2
 */
 void HMAC_DRBG::update(const byte input[], size_t input_len)
    {
@@ -65,66 +93,24 @@ void HMAC_DRBG::update(const byte input[], size_t input_len)
    m_mac->update(input, input_len);
    m_mac->set_key(m_mac->final());
 
-   m_V = m_mac->process(m_V);
+   m_mac->update(m_V.data(), m_V.size());
+   m_mac->final(m_V.data());
 
-   if(input_len)
+   if(input_len > 0)
       {
       m_mac->update(m_V);
       m_mac->update(0x01);
       m_mac->update(input, input_len);
       m_mac->set_key(m_mac->final());
 
-      m_V = m_mac->process(m_V);
+      m_mac->update(m_V.data(), m_V.size());
+      m_mac->final(m_V.data());
       }
    }
 
-size_t HMAC_DRBG::reseed_with_sources(Entropy_Sources& srcs,
-                                      size_t poll_bits,
-                                      std::chrono::milliseconds poll_timeout)
+void HMAC_DRBG::add_entropy(const byte input[], size_t input_len)
    {
-   if(m_prng)
-      {
-      size_t bits = m_prng->reseed_with_sources(srcs, poll_bits, poll_timeout);
-
-      if(m_prng->is_seeded())
-         {
-         secure_vector<byte> input = m_prng->random_vec(m_mac->output_length());
-         update(input.data(), input.size());
-         m_reseed_counter = 1;
-         }
-
-      return bits;
-      }
-
-   return 0;
-   }
-
-void HMAC_DRBG::add_entropy(const byte input[], size_t length)
-   {
-   update(input, length);
-   m_reseed_counter = 1;
-   }
-
-bool HMAC_DRBG::is_seeded() const
-   {
-   return m_reseed_counter > 0;
-   }
-
-void HMAC_DRBG::clear()
-   {
-   m_reseed_counter = 0;
-   for(size_t i = 0; i != m_V.size(); ++i)
-      m_V[i] = 0x01;
-
-   m_mac->set_key(std::vector<byte>(m_mac->output_length(), 0x00));
-
-   if(m_prng)
-      m_prng->clear();
-   }
-
-std::string HMAC_DRBG::name() const
-   {
-   return "HMAC_DRBG(" + m_mac->name() + ")";
+   update(input, input_len);
    }
 
 }
