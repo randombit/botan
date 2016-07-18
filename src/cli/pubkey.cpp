@@ -156,8 +156,6 @@ std::string algo_default_emsa(const std::string& key)
       return "EMSA4"; // PSS
    else if(key == "ECDSA" || key == "DSA")
       return "EMSA1";
-   else if(key == "RW")
-      return "EMSA2";
    else
       return "EMSA1";
    }

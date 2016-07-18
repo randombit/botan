@@ -36,14 +36,6 @@
   #include <botan/gost_3410.h>
 #endif
 
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-  #include <botan/nr.h>
-#endif
-
-#if defined(BOTAN_HAS_RW)
-  #include <botan/rw.h>
-#endif
-
 #if defined(BOTAN_HAS_ELGAMAL)
   #include <botan/elgamal.h>
 #endif
@@ -74,11 +66,6 @@ Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
       return new RSA_PublicKey(alg_id, key_bits);
 #endif
 
-#if defined(BOTAN_HAS_RW)
-   if(alg_name == "RW")
-      return new RW_PublicKey(alg_id, key_bits);
-#endif
-
 #if defined(BOTAN_HAS_DSA)
    if(alg_name == "DSA")
       return new DSA_PublicKey(alg_id, key_bits);
@@ -87,11 +74,6 @@ Public_Key* make_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(alg_name == "DH")
       return new DH_PublicKey(alg_id, key_bits);
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-   if(alg_name == "NR")
-      return new NR_PublicKey(alg_id, key_bits);
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
@@ -150,11 +132,6 @@ Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
       return new RSA_PrivateKey(alg_id, key_bits, rng);
 #endif
 
-#if defined(BOTAN_HAS_RW)
-   if(alg_name == "RW")
-      return new RW_PrivateKey(alg_id, key_bits, rng);
-#endif
-
 #if defined(BOTAN_HAS_DSA)
    if(alg_name == "DSA")
       return new DSA_PrivateKey(alg_id, key_bits, rng);
@@ -163,11 +140,6 @@ Private_Key* make_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(alg_name == "DH")
       return new DH_PrivateKey(alg_id, key_bits, rng);
-#endif
-
-#if defined(BOTAN_HAS_NYBERG_RUEPPEL)
-   if(alg_name == "NR")
-      return new NR_PrivateKey(alg_id, key_bits, rng);
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
