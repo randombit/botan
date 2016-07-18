@@ -1,7 +1,7 @@
 #!/bin/bash
 
-ABI=$1
-EXTERNAL_INCLUDEDIR=$2
+EXTERNAL_INCLUDEDIR=$1
+ABI=$2
 
 function android_mk {
 	echo 'LOCAL_PATH := $(call my-dir)' > $1
@@ -53,7 +53,7 @@ android_mk Android.mk $EXTERNAL_INCLUDEDIR
 
 echo "Generating botan.mk for the NDK build"
 # Construct Application.mk for NDK build
-application_mk botan.mk $EXTERNAL_INCLUDEDIR $ABI
+application_mk botan.mk $ABI
 
 # Create link to jni
 ln -sfn . jni
