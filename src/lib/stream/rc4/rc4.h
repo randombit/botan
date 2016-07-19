@@ -21,6 +21,8 @@ class BOTAN_DLL RC4 final : public StreamCipher
    public:
       void cipher(const byte in[], byte out[], size_t length) override;
 
+      void set_iv(const byte iv[], size_t iv_len) override;
+
       void clear() override;
       std::string name() const override;
 

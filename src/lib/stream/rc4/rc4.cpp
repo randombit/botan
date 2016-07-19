@@ -6,6 +6,7 @@
 */
 
 #include <botan/rc4.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -33,6 +34,11 @@ void RC4::cipher(const byte in[], byte out[], size_t length)
       }
    xor_buf(out, in, &m_buffer[m_position], length);
    m_position += length;
+   }
+
+void RC4::set_iv(const byte*, size_t)
+   {
+   throw Exception("RC4 does not support an IV");
    }
 
 /*
