@@ -224,9 +224,10 @@ ios-64bit:
 
 osx:
   script:
-    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --prefix=/tmp/botan-installation --with-external-includedir=/Users/gitlab-runner/Downloads
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --prefix=/tmp/botan-installation --with-external-includedir=/Users/gitlab-runner/pkcs11
     - make -j 2
     - ./botan-test
+    - ./botan-test --pkcs11-lib=/usr/local/lib/softhsm/libsofthsm2.so pkcs11
   tags:
     - osx10.11
     - xcode7.3
