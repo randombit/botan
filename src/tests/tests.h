@@ -11,6 +11,7 @@
 #include <botan/build.h>
 #include <botan/rng.h>
 #include <botan/hex.h>
+#include <botan/symkey.h>
 
 #if defined(BOTAN_HAS_BIGINT)
   #include <botan/bigint.h>
@@ -37,6 +38,8 @@ using Botan::byte;
 #if defined(BOTAN_HAS_BIGINT)
 using Botan::BigInt;
 #endif
+
+using Botan::OctetString;
 
 class Test_Error : public Botan::Exception
    {
@@ -174,6 +177,8 @@ class Test
             bool test_eq(const std::string& what, bool produced, bool expected);
 
             bool test_eq(const std::string& what, size_t produced, size_t expected);
+
+            bool test_eq(const std::string& what, OctetString produced, OctetString expected);
 
             template<typename I1, typename I2>
             bool test_int_eq(I1 x, I2 y, const char* what)
