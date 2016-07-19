@@ -202,7 +202,7 @@ windows-cppcheck:
 
 ios-32bit:
   script:
-    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --disable-shared --via-amalgamation --cpu=armv7 --cc=clang --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++" --prefix=/tmp/botan-installation --with-external-includedir=/Users/gitlab-runner/Downloads
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --disable-shared --via-amalgamation --cpu=armv7 --cc=clang --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++" --prefix=/tmp/botan-installation --with-external-includedir=/Users/gitlab-runner/pkcs11
     - xcrun --sdk iphoneos make -j 2
   tags:
     - osx10.11
@@ -213,7 +213,7 @@ ios-32bit:
 
 ios-64bit:
   script:
-    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --disable-shared --via-amalgamation --cpu=armv8-a --cc=clang --cc-abi-flags="-arch arm64 -stdlib=libc++" --prefix=/tmp/botan-installation --with-external-includedir=/Users/gitlab-runner/Downloads
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --disable-shared --via-amalgamation --cpu=armv8-a --cc=clang --cc-abi-flags="-arch arm64 -stdlib=libc++" --prefix=/tmp/botan-installation --with-external-includedir=/Users/gitlab-runner/pkcs11
     - xcrun --sdk iphoneos make -j 2
   tags:
     - osx10.11
@@ -224,9 +224,10 @@ ios-64bit:
 
 osx:
   script:
-    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --prefix=/tmp/botan-installation --with-external-includedir=/Users/gitlab-runner/Downloads
+    - ./configure.py --module-policy=bsi --enable-modules=$EXTRA_MODULES --prefix=/tmp/botan-installation --with-external-includedir=/Users/gitlab-runner/pkcs11
     - make -j 2
     - ./botan-test
+    - ./botan-test --pkcs11-lib=/usr/local/lib/softhsm/libsofthsm2.so pkcs11
   tags:
     - osx10.11
     - xcode7.3
