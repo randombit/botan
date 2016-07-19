@@ -126,8 +126,6 @@ class BOTAN_DLL ECIES_System_Params : public ECIES_KA_Params
       * @param dem_key_len length of the key used for the data encryption method
       * @param mac_spec name of the message authentication code
       * @param mac_key_len length of the key used for the message authentication code
-      * @param compression_type format of encoded keys (affects the secret derivation if single_hash_mode is used)
-      * @param flags options, see documentation of ECIES_Flags
       */
       ECIES_System_Params(const EC_Group& domain, const std::string& kdf_spec, const std::string& dem_algo_spec,
                           size_t dem_key_len, const std::string& mac_spec, size_t mac_key_len);
@@ -139,6 +137,8 @@ class BOTAN_DLL ECIES_System_Params : public ECIES_KA_Params
       * @param dem_key_len length of the key used for the data encryption method
       * @param mac_spec name of the message authentication code
       * @param mac_key_len length of the key used for the message authentication code
+      * @param compression_type format of encoded keys (affects the secret derivation if single_hash_mode is used)
+      * @param flags options, see documentation of ECIES_Flags
       */
       ECIES_System_Params(const EC_Group& domain, const std::string& kdf_spec, const std::string& dem_algo_spec,
                           size_t dem_key_len, const std::string& mac_spec, size_t mac_key_len,
