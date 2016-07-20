@@ -1345,7 +1345,7 @@ Test::Result test_pkcs11_hmac_drbg()
    PKCS11_RNG *rng = new PKCS11_RNG(test_session.session());
    MessageAuthenticationCode *hmac = MessageAuthenticationCode::create("HMAC(SHA-512)").release();
    HMAC_DRBG drbg(hmac) ;
-   result.test_success("HMAC_DRBG(\"SHA-512\") instantiated with PKCS11_RNG");
+   result.test_success("HMAC_DRBG(HMAC(SHA512)) instantiated with PKCS11_RNG");
 
    result.test_eq("HMAC_DRBG is not seeded yet.", drbg.is_seeded(), false);
 
