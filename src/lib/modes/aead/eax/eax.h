@@ -1,6 +1,7 @@
 /*
 * EAX Mode
 * (C) 1999-2007,2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -35,6 +36,9 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode
       size_t tag_size() const override { return m_tag_size; }
 
       void clear() override;
+
+      void reset() override;
+
    protected:
       /**
       * @param cipher the cipher to use
@@ -97,7 +101,7 @@ class BOTAN_DLL EAX_Decryption final : public EAX_Mode
 
       size_t output_length(size_t input_length) const override
          {
-         BOTAN_ASSERT(input_length > tag_size(), "Sufficient input");
+         BOTAN_ASSERT(input_length >= tag_size(), "Sufficient input");
          return input_length - tag_size();
          }
 

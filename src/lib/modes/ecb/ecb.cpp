@@ -1,6 +1,7 @@
 /*
 * ECB Mode
 * (C) 1999-2009,2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -23,6 +24,12 @@ ECB_Mode::ECB_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
 void ECB_Mode::clear()
    {
    m_cipher->clear();
+   }
+
+void ECB_Mode::reset()
+   {
+   // no msg state here
+   return;
    }
 
 std::string ECB_Mode::name() const

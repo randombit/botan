@@ -1,6 +1,7 @@
 /*
 * ECB Mode
 * (C) 1999-2009,2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -31,6 +32,9 @@ class BOTAN_DLL ECB_Mode : public Cipher_Mode
       bool valid_nonce_length(size_t n) const override;
 
       void clear() override;
+
+      void reset() override;
+
    protected:
       ECB_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding);
 

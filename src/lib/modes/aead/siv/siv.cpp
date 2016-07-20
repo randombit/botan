@@ -1,6 +1,7 @@
 /*
 * SIV Mode Encryption
 * (C) 2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -23,7 +24,13 @@ SIV_Mode::SIV_Mode(BlockCipher* cipher) :
 
 void SIV_Mode::clear()
    {
-   m_ctr.reset();
+   m_ctr->clear();
+   m_cmac->clear();
+   reset();
+   }
+
+void SIV_Mode::reset()
+   {
    m_nonce.clear();
    m_msg_buf.clear();
    m_ad_macs.clear();

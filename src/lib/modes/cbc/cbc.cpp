@@ -1,6 +1,7 @@
 /*
 * CBC Mode
 * (C) 1999-2007,2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -25,7 +26,12 @@ CBC_Mode::CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
 void CBC_Mode::clear()
    {
    m_cipher->clear();
-   m_state.clear();
+   reset();
+   }
+
+void CBC_Mode::reset()
+   {
+   zeroise(m_state);
    }
 
 std::string CBC_Mode::name() const
@@ -237,6 +243,12 @@ void CBC_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    const size_t pad_bytes = BS - padding().unpad(&buffer[buffer.size()-BS], BS);
    buffer.resize(buffer.size() - pad_bytes); // remove padding
+   }
+
+void CBC_Decryption::reset()
+   {
+   zeroise(state());
+   zeroise(m_tempbuf);
    }
 
 bool CTS_Decryption::valid_nonce_length(size_t n) const

@@ -1,6 +1,7 @@
 /*
 * OCB Mode
 * (C) 2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -129,12 +130,19 @@ OCB_Mode::~OCB_Mode() { /* for unique_ptr destructor */ }
 
 void OCB_Mode::clear()
    {
-   m_cipher.reset();
-   m_L.reset();
+   m_cipher->clear();
+   m_L.reset(); // add clear here?
+   reset();
+   }
 
+void OCB_Mode::reset()
+   {
+   m_block_index = 0;
    zeroise(m_ad_hash);
    zeroise(m_offset);
    zeroise(m_checksum);
+   m_last_nonce.clear();
+   m_stretch.clear();
    }
 
 bool OCB_Mode::valid_nonce_length(size_t length) const
