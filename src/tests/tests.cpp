@@ -190,6 +190,23 @@ bool Test::Result::test_eq(const std::string& what, size_t produced, size_t expe
    return test_is_eq(what, produced, expected);
    }
 
+bool Test::Result::test_eq(const std::string& what, OctetString produced, OctetString expected)
+   {
+   std::ostringstream out;
+   out << m_who << " " << what;
+
+   if(produced == expected)
+      {
+      out << " produced expected result " << produced.as_string();
+      return test_success(out.str());
+      }
+   else
+      {
+      out << " produced unexpected result " << produced.as_string() << " expected " << expected.as_string();
+      return test_failure(out.str());
+      }
+   }
+
 bool Test::Result::test_lt(const std::string& what, size_t produced, size_t expected)
    {
    if(produced >= expected)
