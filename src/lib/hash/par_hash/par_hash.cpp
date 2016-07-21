@@ -68,7 +68,7 @@ HashFunction* Parallel::clone() const
    std::vector<HashFunction*> hash_copies;
 
    for(auto&& hash : m_hashes)
-      hash_copies.push_back(hash->clone());
+      hash_copies.push_back(hash.get());
 
    return new Parallel(hash_copies);
    }
