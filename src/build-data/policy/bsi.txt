@@ -65,6 +65,7 @@ rdseed
 win32_stats
 
 # rng
+rdrand_rng
 system_rng
 
 # utils
