@@ -51,10 +51,20 @@ class Message_Auth_Tests : public Text_Based_Test
             result.test_eq(provider, mac->name(), algo);
 
             mac->set_key(key);
-
             mac->update(input);
 
             result.test_eq(provider, "correct mac", mac->final(), expected);
+
+            // Test to make sure clear() resets what we need it to
+            mac->set_key( key );
+            mac->update( "some discarded input");
+            mac->clear();
+
+            // do the same to test verify_mac()
+            mac->set_key(key);
+            mac->update(input);
+
+            result.test_eq(provider + " correct mac", mac->verify_mac(expected.data(), expected.size()), true);
 
             if(input.size() > 2)
                {
@@ -64,6 +74,14 @@ class Message_Auth_Tests : public Text_Based_Test
                mac->update(input[input.size()-1]);
 
                result.test_eq(provider, "split mac", mac->final(), expected);
+
+               // do the same to test verify_mac()
+               mac->set_key(key);
+               mac->update(input[ 0 ]);
+               mac->update(&input[ 1 ], input.size() - 2);
+               mac->update(input[ input.size() - 1 ]);
+
+               result.test_eq(provider + " split mac", mac->verify_mac(expected.data(), expected.size()), true);
                }
             }
 
