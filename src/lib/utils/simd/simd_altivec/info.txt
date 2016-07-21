@@ -1,9 +1,0 @@
-define SIMD_ALTIVEC 20131128
-
-need_isa altivec
-
-load_on dep
-
-<header:internal>
-simd_altivec.h
-</header:internal>

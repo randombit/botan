@@ -581,8 +581,7 @@ class ModuleInfo(object):
                       {
                         'load_on': 'auto',
                         'define': [],
-                        'need_isa': '',
-                        'mp_bits': 0 })
+                        'need_isa': ''})
 
         def extract_files_matching(basedir, suffixes):
             for (dirpath, dirnames, filenames) in os.walk(basedir):
@@ -642,9 +641,7 @@ class ModuleInfo(object):
 
         for src in self.source + self.header_internal + self.header_public:
             if os.access(src, os.R_OK) == False:
-                logging.warning("Missing file %s in %s" % (src, infofile))
-
-        self.mp_bits = int(self.mp_bits)
+                logging.error("Missing file %s in %s" % (src, infofile))
 
         if self.comment != []:
             self.comment = ' '.join(self.comment)
@@ -1126,11 +1123,11 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     def isa_specific_flags(cc, src):
 
         def simd_dependencies():
-            simd_re = re.compile('simd_(.*)')
-            for mod in modules:
-                if simd_re.match(mod.basename):
-                    for isa in mod.need_isa:
-                        yield isa
+            if 'sse2' in arch.isa_extensions:
+                return ['sse2']
+            elif 'altivec' in arch.isa_extensions:
+                return ['altivec']
+            return []
 
         for mod in modules:
             if src in mod.sources():
@@ -1235,19 +1232,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         return sorted(libs)
 
     def choose_mp_bits():
-        mp_bits = [mod.mp_bits for mod in modules if mod.mp_bits != 0]
-
-        if mp_bits == []:
-            logging.debug('Using arch default MP bits %d' % (arch.wordsize))
-            return arch.wordsize
-
-        # Check that settings are consistent across modules
-        for mp_bit in mp_bits[1:]:
-            if mp_bit != mp_bits[0]:
-                raise Exception('Incompatible mp_bits settings found')
-
-        logging.debug('Using MP bits %d' % (mp_bits[0]))
-        return mp_bits[0]
+        mp_bits = arch.wordsize # allow command line override?
+        logging.debug('Using MP bits %d' % (mp_bits))
+        return mp_bits
 
     def prefix_with_build_dir(path):
         if options.with_build_dir != None:
@@ -1546,8 +1533,6 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                 reason, ' '.join(disabled_mods)))
 
     for mod in sorted(to_load):
-        if mod.startswith('mp_'):
-            logging.info('Using MP module ' + mod)
         if mod.startswith('simd_') and mod != 'simd_engine':
             logging.info('Using SIMD module ' + mod)
 
@@ -1659,8 +1644,11 @@ def generate_amalgamation(build_config, options):
 
             self.file_contents = {}
             for f in sorted(input_list):
-                contents = strip_header_goop(f, open(f).readlines())
-                self.file_contents[os.path.basename(f)] = contents
+                try:
+                    contents = strip_header_goop(f, open(f).readlines())
+                    self.file_contents[os.path.basename(f)] = contents
+                except Exception as e:
+                    logging.error('Error processing file %s for amalgamation: %s' % (f, e))
 
             self.contents = ''
             for name in sorted(self.file_contents):
