@@ -1342,7 +1342,8 @@ Test::Result test_pkcs11_hmac_drbg()
    Test::Result result("PKCS11 HMAC_DRBG using PKCS11_RNG");
    TestSession test_session(true);
 
-   HMAC_DRBG drbg(MessageAuthenticationCode::create("HMAC(SHA-512)").release(), new PKCS11_RNG(test_session.session()));
+   // FIXME
+   HMAC_DRBG drbg(MessageAuthenticationCode::create("HMAC(SHA-512)").release());
    result.test_success("HMAC_DRBG(HMAC(SHA512)) instantiated with PKCS11_RNG");
 
    result.test_eq("HMAC_DRBG is not seeded yet.", drbg.is_seeded(), false);
