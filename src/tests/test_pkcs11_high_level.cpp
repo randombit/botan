@@ -1344,12 +1344,15 @@ Test::Result test_pkcs11_hmac_drbg()
 
    // FIXME
    HMAC_DRBG drbg(MessageAuthenticationCode::create("HMAC(SHA-512)").release());
-   result.test_success("HMAC_DRBG(HMAC(SHA512)) instantiated with PKCS11_RNG");
+   //result.test_success("HMAC_DRBG(HMAC(SHA512)) instantiated with PKCS11_RNG");
 
    result.test_eq("HMAC_DRBG is not seeded yet.", drbg.is_seeded(), false);
 
    std::string personalization_string = "Botan PKCS#11 Tests";
    std::vector<byte> personalization_data(personalization_string.begin(), personalization_string.end());
+
+   // FIX ME
+   drbg.initialize_with( personalization_data.data(), personalization_data.size() );
    drbg.add_entropy(personalization_data.data(), personalization_data.size());
 
    result.test_eq("HMAC_DRBG is seeded now", drbg.is_seeded(), true);
