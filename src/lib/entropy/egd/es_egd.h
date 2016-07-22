@@ -23,7 +23,7 @@ class EGD_EntropySource final : public Entropy_Source
    public:
       std::string name() const override { return "egd"; }
 
-      void poll(Entropy_Accumulator& accum) override;
+      size_t poll(RandomNumberGenerator& rng) override;
 
       EGD_EntropySource(const std::vector<std::string>&);
       ~EGD_EntropySource();
@@ -44,6 +44,7 @@ class EGD_EntropySource final : public Entropy_Source
 
       std::mutex m_mutex;
       std::vector<EGD_Socket> m_sockets;
+      secure_vector<uint8_t> m_io_buf;
    };
 
 }

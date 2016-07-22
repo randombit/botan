@@ -41,7 +41,6 @@ eckcdsa
 ecdh
 
 # rng
-auto_rng
 hmac_rng
 hmac_drbg
 </required>
@@ -66,6 +65,7 @@ rdseed
 win32_stats
 
 # rng
+rdrand_rng
 system_rng
 
 # utils

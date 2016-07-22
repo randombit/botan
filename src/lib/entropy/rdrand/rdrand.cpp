@@ -7,41 +7,24 @@
 */
 
 #include <botan/internal/rdrand.h>
+#include <botan/rdrand_rng.h>
 #include <botan/cpuid.h>
 #include <botan/build.h>
 
-#if !defined(BOTAN_USE_GCC_INLINE_ASM)
-  #include <immintrin.h>
-#endif
-
 namespace Botan {
 
-void Intel_Rdrand::poll(Entropy_Accumulator& accum) {
-   if(!CPUID::has_rdrand())
-      return;
-
-   for(size_t p = 0; p != BOTAN_ENTROPY_INTEL_RNG_POLLS; ++p)
+size_t Intel_Rdrand::poll(RandomNumberGenerator& rng) {
+   if(CPUID::has_rdrand() && BOTAN_ENTROPY_INTEL_RNG_POLLS > 0)
       {
-      for(size_t i = 0; i != BOTAN_ENTROPY_RDRAND_RETRIES; ++i)
-         {
-         uint32_t r = 0;
+      RDRAND_RNG rdrand_rng;
+      secure_vector<uint8_t> buf(4 * BOTAN_ENTROPY_INTEL_RNG_POLLS);
 
-#if defined(BOTAN_USE_GCC_INLINE_ASM)
-         int cf = 0;
-
-         // Encoding of rdrand %eax
-         asm(".byte 0x0F, 0xC7, 0xF0; adcl $0,%1" :
-             "=a" (r), "=r" (cf) : "0" (r), "1" (cf) : "cc");
-#else
-         int cf = _rdrand32_step(&r);
-#endif
-         if(1 == cf)
-            {
-            accum.add(r, BOTAN_ENTROPY_ESTIMATE_HARDWARE_RNG);
-            break;
-            }
-         }
+      rdrand_rng.randomize(buf.data(), buf.size());
+      rng.add_entropy(buf.data(), buf.size());
       }
+
+   // RDRAND is used but not trusted
+   return 0;
    }
 
 }

@@ -3,108 +3,77 @@
 Random Number Generators
 ========================================
 
-The random number generators provided in Botan are meant for creating
-keys, IVs, padding, nonces, and anything else that requires 'random'
-data. It is important to remember that the output of these classes
-will vary, even if they are supplied with the same seed (ie, two
-``Randpool`` objects with similar initial states will not produce the
-same output, because the value of high resolution timers is added to
-the state at various points).
+The base class ``RandomNumberGenerator`` is in the header ``botan/rng.h``.
 
-To create a random number generator, instantiate a ``AutoSeeded_RNG``
-object. This object will handle choosing the right algorithms from the
-set of enabled ones and doing seeding using OS specific
-routines. The main service a RandomNumberGenerator provides is, of
-course, random numbers:
+The major interfaces are
+
+.. cpp:function:: void RandomNumberGenerator::randomize(byte* output_array, size_t length)
+
+  Places *length* random bytes into the provided buffer.
+
+.. cpp:function:: void RandomNumberGenerator::add_entropy(const byte* data, size_t length)
+
+  Incorporates provided data into the state of the PRNG, if at all
+  possible.  This works for most RNG types, including the system and
+  TPM RNGs. But if the RNG doesn't support this operation, the data is
+  dropped, no error is indicated.
+
+.. cpp:function:: void RandomNumberGenerator::randomize_with_input(byte* data, size_t length, \
+    const byte* ad, size_t ad_len)
+
+  Like randomize, but first incorporates the additional input field
+  into the state of the RNG. The additional input could be anything which
+  parameterizes this request.
 
 .. cpp:function:: byte RandomNumberGenerator::next_byte()
 
-  Generates a single random byte and returns it
+  Generates a single random byte and returns it. Note that calling this
+  function several times is much slower than calling ``randomize`` once
+  to produce multiple bytes at a time.
 
-.. cpp:function:: void RandomNumberGenerator::randomize(byte* data, size_t length)
-
-  Places *length* bytes into the array pointed to by *data*
-
-To ensure good quality output, a PRNG needs to be seeded with truly
-random data. Normally this is done for you. However it may happen that
-your application has access to data that is potentially unpredictable
-to an attacker. If so, use
-
-.. cpp:function:: void RandomNumberGenerator::add_entropy(const byte* data, \
-                                                          size_t length)
-
-which incorporates the data into the current randomness state. Don't
-worry about filtering the data or doing any kind of cryptographic
-preprocessing (such as hashing); the RNG objects in botan are designed
-such that you can feed them any arbitrary non-random or even
-maliciously chosen data - as long as at some point some of the seed
-data was good the output will be secure.
-
-
-Implementation Notes
+RNG Types
 ----------------------------------------
 
-Randpool
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The following RNG types are included
 
-``Randpool`` is the primary PRNG within Botan. In recent versions all
-uses of it have been wrapped by an implementation of the X9.31 PRNG
-(see below). If for some reason you should have cause to create a PRNG
-instead of using the "global" one owned by the library, it would be
-wise to consider the same on the grounds of general caution; while
-``Randpool`` is designed with known attacks and PRNG weaknesses in
-mind, it is not an standard/official PRNG. The remainder of this
-section is a (fairly technical, though high-level) description of the
-algorithms used in this PRNG. Unless you have a specific interest in
-this subject, the rest of this section might prove somewhat
-uninteresting.
+HMAC_DRBG
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``Randpool`` has an internal state called pool, which is 512 bytes
-long. This is where entropy is mixed into and extracted from. There is also a
-small output buffer (called buffer), which holds the data which has already
-been generated but has just not been output yet.
+HMAC DRBG is a random number generator designed by NIST and specified
+in SP 800-90A. It can be instantiated with any hash function but is
+typically used with SHA-256, SHA-384, or SHA-512.
 
-It is based around a MAC and a block cipher (which are currently
-HMAC(SHA-256) and AES-256). Where a specific size is mentioned, it
-should be taken as a multiple of the cipher's block size. For example,
-if a 256-bit block cipher were used instead of AES, all the sizes
-internally would double. Every time some new output is needed, we
-compute the MAC of a counter and a high resolution timer. The
-resulting MAC is XORed into the output buffer (wrapping as needed),
-and the output buffer is then encrypted with AES, producing 16 bytes
-of output.
+HMAC DRBG seems to be the most conservative generator of the NIST
+approved options.
 
-After 8 blocks (or 128 bytes) have been produced, we mix the pool. To
-do this, we first rekey both the MAC and the cipher; the new MAC key
-is the MAC of the current pool under the old MAC key, while the new
-cipher key is the MAC of the current pool under the just-chosen MAC
-key. We then encrypt the entire pool in CBC mode, using the current
-(unused) output buffer as the IV. We then generate a new output
-buffer, using the mechanism described in the previous paragraph.
+System_RNG
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To add randomness to the PRNG, we compute the MAC of the input and XOR
-the output into the start of the pool. Then we remix the pool and
-produce a new output buffer. The initial MAC operation should make it
-very hard for chosen inputs to harm the security of ``Randpool``, and
-as HMAC should be able to hold roughly 256 bits of state, it is
-unlikely that we are wasting much input entropy (or, if we are, it
-doesn't matter, because we have a very abundant supply).
+In ``system_rng.h``, objects of ``System_RNG`` reference a single
+(process global) reference to the system PRNG (/dev/urandom or
+CryptGenRandom).
+
+AutoSeeded_RNG
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This instantiates a new instance of a userspace PRNG, seeds it with
+a default entropy pool.
 
 ANSI X9.31
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This generator is deprecated and will be removed in a future release.
 
 ``ANSI_X931_PRNG`` is the standard issue X9.31 Appendix A.2.4 PRNG,
 though using AES-256 instead of 3DES as the block cipher. This PRNG
 implementation has been checked against official X9.31 test vectors.
 
-Internally, the PRNG holds a pointer to another PRNG (typically
-Randpool). This internal PRNG generates the key and seed used by the
-X9.31 algorithm, as well as the date/time vectors. Each time an X9.31
-PRNG object receives entropy, it passes it along to the PRNG it is
-holding, and then pulls out some random bits to generate a new key and
-seed. This PRNG considers itself seeded as soon as the internal PRNG
-is seeded.
-
+Internally, the PRNG holds a pointer to another RNG object. This
+internal PRNG generates the key and seed used by the X9.31 algorithm,
+as well as the date/time vectors. Each time an X9.31 PRNG object
+receives entropy, it passes it along to the PRNG it is holding, and
+then pulls out some random bits to generate a new key and seed. This
+PRNG considers itself seeded as soon as the internal PRNG is seeded.
 
 Entropy Sources
 ---------------------------------

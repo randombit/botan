@@ -20,7 +20,7 @@ class Intel_Rdrand final : public Entropy_Source
    {
    public:
       std::string name() const override { return "rdrand"; }
-      void poll(Entropy_Accumulator& accum) override;
+      size_t poll(RandomNumberGenerator& rng) override;
    };
 
 }

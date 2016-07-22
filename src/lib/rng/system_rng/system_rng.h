@@ -22,29 +22,18 @@ BOTAN_DLL RandomNumberGenerator& system_rng();
 /*
 * Instantiatable reference to the system RNG.
 */
-class BOTAN_DLL System_RNG : public RandomNumberGenerator
+class BOTAN_DLL System_RNG final : public RandomNumberGenerator
    {
    public:
-      System_RNG() : m_rng(system_rng()) {}
+      std::string name() const override { return system_rng().name(); }
 
-      void randomize(Botan::byte out[], size_t len) override { m_rng.randomize(out, len); }
+      void randomize(uint8_t out[], size_t len) override { system_rng().randomize(out, len); }
 
-      bool is_seeded() const override { return m_rng.is_seeded(); }
+      void add_entropy(const uint8_t in[], size_t length) override { system_rng().add_entropy(in, length); }
 
-      void clear() override { m_rng.clear(); }
+      bool is_seeded() const override { return true; }
 
-      std::string name() const override { return m_rng.name(); }
-
-      size_t reseed_with_sources(Entropy_Sources& srcs,
-                                         size_t poll_bits,
-                                         std::chrono::milliseconds poll_timeout) override
-         {
-         return m_rng.reseed_with_sources(srcs, poll_bits, poll_timeout);
-         }
-
-      void add_entropy(const byte in[], size_t len) override { m_rng.add_entropy(in, len); }
-   private:
-      Botan::RandomNumberGenerator& m_rng;
+      void clear() override {}
    };
 
 }

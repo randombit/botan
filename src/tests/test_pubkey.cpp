@@ -276,6 +276,7 @@ Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
       }
    catch(Botan::Lookup_Error&)
       {
+      result.test_note("Skipping due to missing KDF: " + kdf);
       return result;
       }
 

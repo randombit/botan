@@ -24,11 +24,10 @@ namespace Botan {
 * Krawczyk's paper), for instance one could use HMAC(SHA-512) as the
 * extractor and CMAC(AES-256) as the PRF.
 */
-class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
+class BOTAN_DLL HMAC_RNG : public Stateful_RNG
    {
    public:
       void randomize(byte buf[], size_t len) override;
-      bool is_seeded() const override;
       void clear() override;
       std::string name() const override;
 
@@ -43,24 +42,28 @@ class BOTAN_DLL HMAC_RNG : public RandomNumberGenerator
       * @param prf a MAC used as a PRF using HKDF construction
       */
       HMAC_RNG(MessageAuthenticationCode* extractor,
-               MessageAuthenticationCode* prf);
+               MessageAuthenticationCode* prf,
+               size_t max_output_before_reseed = BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED);
+
+      /**
+      * Use the specified hash for both the extractor and PRF functions
+      */
+      HMAC_RNG(const std::string& hash,
+               size_t max_output_before_reseed = BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED);
    private:
       std::unique_ptr<MessageAuthenticationCode> m_extractor;
       std::unique_ptr<MessageAuthenticationCode> m_prf;
 
       enum HMAC_PRF_Label {
          Running,
+         BlockFinished,
          Reseed,
          ExtractorSeed,
       };
       void new_K_value(byte label);
 
-      size_t m_collected_entropy_estimate = 0;
-      size_t m_output_since_reseed = 0;
-
       secure_vector<byte> m_K;
       u32bit m_counter = 0;
-      u32bit m_pid = 0;
    };
 
 }

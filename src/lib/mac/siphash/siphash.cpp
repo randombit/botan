@@ -85,9 +85,7 @@ void SipHash::final_result(byte mac[])
 
    store_le(X, mac);
 
-   m_mbuf = 0;
-   m_mbuf_pos = 0;
-   m_words = 0;
+   clear();
    }
 
 void SipHash::key_schedule(const byte key[], size_t)
@@ -105,6 +103,9 @@ void SipHash::key_schedule(const byte key[], size_t)
 void SipHash::clear()
    {
    m_V.clear();
+   m_mbuf = 0;
+   m_mbuf_pos = 0;
+   m_words = 0;
    }
 
 std::string SipHash::name() const

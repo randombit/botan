@@ -38,8 +38,8 @@ eme_oaep
 emsa_pssr
 emsa1
 
-auto_rng
 hmac_rng
+hmac_drbg
 
 ffi
 </required>
@@ -60,6 +60,7 @@ simd_scalar
 simd_sse2
 simd_altivec
 
+rdrand_rng
 system_rng
 
 # entropy sources

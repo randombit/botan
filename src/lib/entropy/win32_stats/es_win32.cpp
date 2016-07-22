@@ -1,6 +1,6 @@
 /*
 * Win32 EntropySource
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2009,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,44 +14,44 @@ namespace Botan {
 /**
 * Win32 poll using stats functions including Tooltip32
 */
-void Win32_EntropySource::poll(Entropy_Accumulator& accum)
+size_t Win32_EntropySource::poll(RandomNumberGenerator& rng)
    {
    /*
-   First query a bunch of basic statistical stuff, though
-   don't count it for much in terms of contributed entropy.
+   First query a bunch of basic statistical stuff
    */
-   accum.add(GetTickCount(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
-   accum.add(GetMessagePos(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
-   accum.add(GetMessageTime(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
-   accum.add(GetInputState(), BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
+   rng.add_entropy_T(::GetTickCount());
+   rng.add_entropy_T(::GetMessagePos());
+   rng.add_entropy_T(::GetMessageTime());
+   rng.add_entropy_T(::GetInputState());
 
-   accum.add(GetCurrentProcessId(), BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
-   accum.add(GetCurrentThreadId(), BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
+   rng.add_entropy_T(::GetCurrentProcessId());
+   rng.add_entropy_T(::GetCurrentThreadId());
 
    SYSTEM_INFO sys_info;
-   GetSystemInfo(&sys_info);
-   accum.add(sys_info, BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA);
+   ::GetSystemInfo(&sys_info);
+   rng.add_entropy_T(sys_info);
 
    MEMORYSTATUSEX mem_info;
-   GlobalMemoryStatusEx(&mem_info);
-   accum.add(mem_info, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
+   ::GlobalMemoryStatusEx(&mem_info);
+   rng.add_entropy_T(mem_info);
 
    POINT point;
-   GetCursorPos(&point);
-   accum.add(point, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
+   ::GetCursorPos(&point);
+   rng.add_entropy_T(point);
 
-   GetCaretPos(&point);
-   accum.add(point, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
+   ::GetCaretPos(&point);
+   rng.add_entropy_T(point);
 
    /*
-   Now use the Tooltip library to iterate throug various objects on
+   Now use the Tooltip library to iterate through various objects on
    the system, including processes, threads, and heap objects.
    */
 
-   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, 0);
+   HANDLE snapshot = ::CreateToolhelp32Snapshot(TH32CS_SNAPALL, 0);
+   size_t bits = 0;
 
 #define TOOLHELP32_ITER(DATA_TYPE, FUNC_FIRST, FUNC_NEXT)        \
-   if(!accum.polling_finished())                                 \
+   if(bits < 256)                                                \
       {                                                          \
       DATA_TYPE info;                                            \
       info.dwSize = sizeof(DATA_TYPE);                           \
@@ -59,57 +59,52 @@ void Win32_EntropySource::poll(Entropy_Accumulator& accum)
          {                                                       \
          do                                                      \
             {                                                    \
-            accum.add(info, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA); \
+            rng.add_entropy_T(info);                             \
+            bits += 4;                                           \
             } while(FUNC_NEXT(snapshot, &info));                 \
          }                                                       \
       }
 
-   TOOLHELP32_ITER(MODULEENTRY32, Module32First, Module32Next);
-   TOOLHELP32_ITER(PROCESSENTRY32, Process32First, Process32Next);
-   TOOLHELP32_ITER(THREADENTRY32, Thread32First, Thread32Next);
+   TOOLHELP32_ITER(MODULEENTRY32, ::Module32First, ::Module32Next);
+   TOOLHELP32_ITER(PROCESSENTRY32, ::Process32First, ::Process32Next);
+   TOOLHELP32_ITER(THREADENTRY32, ::Thread32First, ::Thread32Next);
 
 #undef TOOLHELP32_ITER
 
-   if(!accum.polling_finished())
+   if(bits <= 256)
       {
       HEAPLIST32 heap_list;
       heap_list.dwSize = sizeof(HEAPLIST32);
 
-      const size_t HEAP_LISTS_MAX = 32;
-      const size_t HEAP_OBJS_PER_LIST = 128;
-
-      if(Heap32ListFirst(snapshot, &heap_list))
+      if(::Heap32ListFirst(snapshot, &heap_list))
          {
-         size_t heap_lists_found = 0;
          do
             {
-            accum.add(heap_list, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
-
-            if(++heap_lists_found > HEAP_LISTS_MAX)
-               break;
+            rng.add_entropy_T(heap_list);
 
             HEAPENTRY32 heap_entry;
             heap_entry.dwSize = sizeof(HEAPENTRY32);
-            if(Heap32First(&heap_entry, heap_list.th32ProcessID,
-                           heap_list.th32HeapID))
+            if(::Heap32First(&heap_entry,
+                             heap_list.th32ProcessID,
+                             heap_list.th32HeapID))
                {
-               size_t heap_objs_found = 0;
                do
                   {
-                  if(heap_objs_found++ > HEAP_OBJS_PER_LIST)
-                     break;
-                  accum.add(heap_entry, BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA);
-                  } while(Heap32Next(&heap_entry));
+                  rng.add_entropy_T(heap_entry);
+                  bits += 4;
+                  } while(::Heap32Next(&heap_entry));
                }
 
-            if(accum.polling_finished())
+            if(bits >= 256)
                break;
 
-            } while(Heap32ListNext(snapshot, &heap_list));
+            } while(::Heap32ListNext(snapshot, &heap_list));
          }
       }
 
-   CloseHandle(snapshot);
+   ::CloseHandle(snapshot);
+
+   return bits;
    }
 
 }

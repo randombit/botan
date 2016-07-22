@@ -110,7 +110,7 @@ int Directory_Walker::next_fd()
 
 }
 
-void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
+size_t ProcWalking_EntropySource::poll(RandomNumberGenerator& rng)
    {
    const size_t MAX_FILES_READ_PER_POLL = 2048;
 
@@ -120,6 +120,8 @@ void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
       m_dir.reset(new Directory_Walker(m_path));
 
    m_buf.resize(4096);
+
+   size_t bits = 0;
 
    for(size_t i = 0; i != MAX_FILES_READ_PER_POLL; ++i)
       {
@@ -136,11 +138,18 @@ void ProcWalking_EntropySource::poll(Entropy_Accumulator& accum)
       ::close(fd);
 
       if(got > 0)
-         accum.add(m_buf.data(), got, BOTAN_ENTROPY_ESTIMATE_SYSTEM_TEXT);
+         {
+         rng.add_entropy(m_buf.data(), static_cast<size_t>(got));
 
-      if(accum.polling_finished())
+         // Conservative estimate of 4 bits per file
+         bits += 4;
+         }
+
+      if(bits > 128)
          break;
       }
+
+   return bits;
    }
 
 }

@@ -1,5 +1,6 @@
+define AUTO_SEEDING_RNG 20131128
+
 <requires>
 entropy
-auto_rng
-hmac_rng
+hmac_drbg
 </requires>

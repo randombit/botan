@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-class RandomNumberGenerator;
+class HMAC_DRBG;
 
 class BOTAN_DLL RFC6979_Nonce_Generator
    {
@@ -26,12 +26,14 @@ class BOTAN_DLL RFC6979_Nonce_Generator
                               const BigInt& order,
                               const BigInt& x);
 
+      ~RFC6979_Nonce_Generator();
+
       const BigInt& nonce_for(const BigInt& m);
    private:
       const BigInt& m_order;
       BigInt m_k;
       size_t m_qlen, m_rlen;
-      std::unique_ptr<RandomNumberGenerator> m_hmac_drbg;
+      std::unique_ptr<HMAC_DRBG> m_hmac_drbg;
       secure_vector<byte> m_rng_in, m_rng_out;
    };
 
