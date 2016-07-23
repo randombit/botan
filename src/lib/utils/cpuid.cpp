@@ -159,14 +159,12 @@ bool altivec_check_pvr_emul()
 
 bool CPUID::has_simd_32()
    {
-#if defined(BOTAN_HAS_SIMD_SSE2)
+#if defined(BOTAN_TARGET_SUPPORTS_SSE2)
    return CPUID::has_sse2();
-#elif defined(BOTAN_HAS_SIMD_ALTIVEC)
+#elif defined(BOTAN_TARGET_SUPPORTS_ALTIVEC)
    return CPUID::has_altivec();
-#elif defined(BOTAN_HAS_SIMD_SCALAR)
-   return true;
 #else
-   return false;
+   return true;
 #endif
    }
 
