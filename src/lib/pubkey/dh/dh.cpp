@@ -37,6 +37,7 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
                              const DL_Group& grp,
                              const BigInt& x_arg)
    {
+   const bool generate = (x_arg == 0) ? true : false;
    m_group = grp;
    m_x = x_arg;
 
@@ -47,12 +48,18 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
       }
 
    if(m_y == 0)
+      {
       m_y = power_mod(group_g(), m_x, group_p());
+      }
 
-   if(m_x == 0)
+   if(generate)
+      {
       gen_check(rng);
+      }
    else
+      {
       load_check(rng);
+      }
    }
 
 /*
