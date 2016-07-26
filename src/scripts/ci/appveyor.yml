@@ -23,9 +23,12 @@ install:
        call "%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
     )
   - cl # check compiler version
+  
+  - appveyor DownloadFile http://download.qt.io/official_releases/jom/jom.zip -FileName jom.zip
+  - 7z e jom.zip
 
 build_script:
-  - python configure.py --cc=msvc --cpu=%PLATFORM% %MODE%
-  - nmake
+  - python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11
+  - jom
   - botan-test
   - nmake install
