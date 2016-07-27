@@ -303,6 +303,15 @@ class BigInt_Mod_Test : public Text_Based_Test
          e %= b;
          result.test_eq("a %= b", e, c);
 
+         // if b fits into a Botan::word test %= operator for words
+         if(b.bytes() <= sizeof(Botan::word))
+            {
+            Botan::word b_word = b.word_at( 0 );
+            e = a;
+            e %= b_word;
+            result.test_eq("a %= b (as word)", e, c);
+            }
+
          return result;
          }
    };
