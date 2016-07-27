@@ -45,6 +45,12 @@ class Block_Cipher_Tests : public Text_Based_Test
             result.test_gte(provider, cipher->block_size(), 8);
             result.test_gte(provider, cipher->parallel_bytes(), cipher->block_size() * cipher->parallelism());
 
+            // Test to make sure clear() resets what we need it to
+            cipher->set_key(Test::rng().random_vec(cipher->key_spec().minimum_keylength()));
+            Botan::secure_vector<byte> garbage = Test::rng().random_vec(cipher->block_size());
+            cipher->encrypt(garbage);
+            cipher->clear();
+
             cipher->set_key(key);
             std::vector<uint8_t> buf = input;
 
