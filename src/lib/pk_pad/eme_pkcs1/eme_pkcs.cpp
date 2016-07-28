@@ -14,22 +14,22 @@ namespace Botan {
 * PKCS1 Pad Operation
 */
 secure_vector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
-                                     size_t olen,
+                                     size_t key_length,
                                      RandomNumberGenerator& rng) const
    {
-   olen /= 8;
+   key_length /= 8;
 
-   if(olen < 10)
-      throw Encoding_Error("PKCS1: Output space too small");
-   if(inlen > olen - 10)
-      throw Encoding_Error("PKCS1: Input is too large");
+   if(inlen > maximum_input_size(key_length * 8))
+      {
+      throw Invalid_Argument("PKCS1: Input is too large");
+      }
 
-   secure_vector<byte> out(olen);
+   secure_vector<byte> out(key_length);
 
    out[0] = 0x02;
-   rng.randomize(out.data() + 1, (olen - inlen - 2));
+   rng.randomize(out.data() + 1, (key_length - inlen - 2));
 
-   for(size_t j = 1; j != olen - inlen - 1; ++j)
+   for(size_t j = 1; j != key_length - inlen - 1; ++j)
       {
       if(out[j] == 0)
          {
@@ -37,7 +37,7 @@ secure_vector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
          }
       }
 
-   buffer_insert(out, olen - inlen, in, inlen);
+   buffer_insert(out, key_length - inlen, in, inlen);
 
    return out;
    }

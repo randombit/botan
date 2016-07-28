@@ -1,7 +1,0 @@
-define SIMD_SCALAR 20131128
-
-load_on dep
-
-<header:internal>
-simd_scalar.h
-</header:internal>
