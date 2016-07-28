@@ -29,6 +29,6 @@ install:
 
 build_script:
   - python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11
-  - jom
+  - jom -j2
   - botan-test
   - nmake install
