@@ -265,7 +265,7 @@ bool X509_Certificate::allowed_usage(const std::string& usage) const
    const std::vector<std::string> ex = ex_constraints();
 
    if(ex.empty())
-      return true;
+      return false;
 
    if(std::find(ex.begin(), ex.end(), usage) != ex.end())
       return true;
