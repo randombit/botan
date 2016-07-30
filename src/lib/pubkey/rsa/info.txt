@@ -1,7 +1,6 @@
-define RSA 20131128
+define RSA 20160730
 
 <requires>
-if_algo
 keypair
 numbertheory
 emsa_pssr
