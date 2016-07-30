@@ -12,7 +12,7 @@
 #include <botan/loadstor.h>
 #include <botan/bswap.h>
 
-#if defined(BOTAN_TARGET_SUPPORTS_SSE2) && 0
+#if defined(BOTAN_TARGET_SUPPORTS_SSE2)
   #include <emmintrin.h>
   #define BOTAN_SIMD_USE_SSE2
 
