@@ -169,8 +169,6 @@ Public Key Cryptography
 * Quantum computer resistant McEliece KEM scheme
 * GOST-34.10-2001
 * ElGamal encryption
-* Rabin-Williams signatures (deprecated)
-* Nyberg-Rueppel signatures (deprecated)
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
 Ciphers and cipher modes
@@ -179,13 +177,12 @@ Ciphers and cipher modes
 * Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, and ChaCha20Poly1305
 * Unauthenticated cipher modes CTR, CBC, XTS, CFB, OFB, and ECB
 * AES (including constant time SSSE3 and AES-NI versions)
-* AES candidates Serpent, Twofish, MARS, CAST-256, RC6
+* AES candidates Serpent, Twofish, CAST-256
 * Stream ciphers Salsa20/XSalsa20, ChaCha20, and RC4
 * DES, 3DES and DESX
-* Threefish-512, Noekeon, Blowfish, CAST-128, IDEA
+* Threefish-512, Noekeon, Blowfish, CAST-128, IDEA, XTEA
 * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147
 * Large block cipher construction Lion
-* Deprecated ciphers TEA, XTEA, RC2, RC5, SAFER-SK
 
 Hash functions and MACs
 ----------------------------------------
@@ -198,7 +195,6 @@ Hash functions and MACs
 * Hash function combiners (Parallel and Comb4P)
 * Non-cryptographic checksums Adler32, CRC24, CRC32
 * Obsolete algorithms MD5, MD4, CBC-MAC, X9.19 DES-MAC
-* Deprecated hashes MD2, HAS-160, RIPEMD-128
 
 Other Useful Things
 ----------------------------------------
