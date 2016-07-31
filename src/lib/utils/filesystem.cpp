@@ -90,7 +90,7 @@ std::vector<std::string> impl_readdir(const std::string& dir_path)
 
             struct stat stat_buf;
 
-            if(::lstat(full_path.c_str(), &stat_buf) == -1)
+            if(::stat(full_path.c_str(), &stat_buf) == -1)
                continue;
 
             if(S_ISDIR(stat_buf.st_mode))
