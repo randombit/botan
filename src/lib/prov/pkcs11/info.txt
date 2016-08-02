@@ -10,6 +10,9 @@ pk_pad
 
 <header:internal>
 p11_mechanism.h
+pkcs11.h
+pkcs11f.h
+pkcs11t.h
 </header:internal>
 
 <header:public>

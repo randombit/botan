@@ -50,7 +50,7 @@
    #pragma pack(push, cryptoki, 1)
 #endif
 
-#include "pkcs11.h"
+#include <botan/internal/pkcs11.h>
 
 #if defined(_MSC_VER)
    #pragma pack(pop, cryptoki)
