@@ -64,7 +64,7 @@ class ECDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
 class ECDSA_Keygen_Tests : public PK_Key_Generation_Test
    {
    public:
-      std::vector<std::string> keygen_params() const override { return { "secp256r1", "secp384r1", "secp521r1" }; }
+      std::vector<std::string> keygen_params() const override { return { "secp256r1", "secp384r1", "secp521r1", "frp256v1" }; }
 
       std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
                                                    const std::string& param) const override

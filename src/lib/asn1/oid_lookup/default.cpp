@@ -247,6 +247,8 @@ const char* default_oid_list()
       "1.2.643.2.2.36.0 = gost_256A" "\n"
 
       "0.4.0.127.0.7.3.1.2.1 = CertificateHolderAuthorizationTemplate" "\n"
+
+      "1.2.250.1.223.101.256.1 = frp256v1" "\n"
       ;
    }
 
