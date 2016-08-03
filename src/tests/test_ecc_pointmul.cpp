@@ -32,13 +32,21 @@ class ECC_Pointmult_Tests : public Text_Based_Test
          const Botan::BigInt X = get_req_bn(vars, "X");
          const Botan::BigInt Y = get_req_bn(vars, "Y");
 
-         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
-
-         const Botan::PointGFp p = group.get_base_point() * m;
-
          Test::Result result("ECC Scalarmult " + group_id);
-         result.test_eq("affine X", p.get_affine_x(), X);
-         result.test_eq("affine Y", p.get_affine_y(), Y);
+         try
+            { 
+            Botan::EC_Group group(Botan::OIDS::lookup(group_id));
+
+            const Botan::PointGFp p = group.get_base_point() * m;
+
+            result.test_eq("affine X", p.get_affine_x(), X);
+            result.test_eq("affine Y", p.get_affine_y(), Y);
+
+            }
+         catch(Botan::Lookup_Error const&)
+            {
+               result.note_missing("ECC " + group_id);
+            }
 
          return result;
          }

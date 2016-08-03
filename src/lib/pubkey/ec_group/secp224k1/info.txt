@@ -1,0 +1,5 @@
+define SECP224K1 20160803
+
+<requires>
+ec_group
+</requires>

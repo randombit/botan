@@ -1,0 +1,5 @@
+define GOST_256A 20160803
+
+<requires>
+ec_group
+</requires>
