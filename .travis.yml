@@ -25,6 +25,9 @@ compiler:
   - gcc
 
 env:
+  global:
+    - secure: IOnsRvoIXYp2Wc+S9TtKNC3qlnDr3bBO9O68TWfmaelOvzdACPYqeBNbUgSEhqHNexujf2lYHT31y8zqvrZacNSWsWYwp6RoBHd9Z5fMG0U6Z50rGwBPMVZTsWJlHGjsXk1EvovCKXOuQq1GvdPIdTUHJsY/Ctg4KEDClEyw9X0=
+  
   matrix:
     - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="shared"
     - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="static"
@@ -97,6 +100,7 @@ install:
 
 script:
   - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci/travis/build.sh ; fi
+  - sonar-scanner -v
 
 after_success:
   - ./src/scripts/ci/travis/after_success.sh
@@ -105,6 +109,8 @@ notifications:
   email: botan-commits@lists.randombit.net
 
 addons:
+  sonarqube: true
+
   apt:
     sources:
     - ubuntu-toolchain-r-test
