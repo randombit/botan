@@ -1,6 +1,7 @@
 /*
 * Enumerations
 * (C) 1999-2007 Jack Lloyd
+* (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,7 +9,7 @@
 #ifndef BOTAN_ENUMS_H__
 #define BOTAN_ENUMS_H__
 
-#include <botan/ber_dec.h>
+#include <botan/build.h>
 
 namespace Botan {
 
@@ -43,15 +44,6 @@ class Public_Key;
 
 BOTAN_DLL Key_Constraints find_constraints(const Public_Key& pub_key,
                                            Key_Constraints limits);
-
-/**
-* BER Decoding Function for key constraints
-*/
-namespace BER {
-
-void BOTAN_DLL decode(BER_Decoder&, Key_Constraints&);
-
-}
 
 }
 

@@ -1,5 +1,6 @@
 /*
 * (C) 2009 Jack Lloyd
+* (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -26,6 +27,14 @@
 
 #if defined(BOTAN_HAS_ECDSA)
   #include <botan/ecdsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ECGDSA)
+  #include <botan/ecgdsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ECKCDSA)
+  #include <botan/eckcdsa.h>
 #endif
 
 #endif
@@ -56,13 +65,25 @@ Botan::X509_Cert_Options ca_opts()
    return opts;
    }
 
-Botan::X509_Cert_Options req_opts1()
+Botan::X509_Cert_Options req_opts1(const std::string& algo)
    {
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
 
    opts.uri = "http://botan.randombit.net";
    opts.dns = "botan.randombit.net";
    opts.email = "testing@randombit.net";
+
+   opts.not_before("1601012000Z");
+   opts.not_after("3001012000Z");
+
+   if(algo == "RSA")
+      {
+      opts.constraints = Botan::Key_Constraints(Botan::DECIPHER_ONLY);
+      }
+   else if(algo == "DSA" || algo == "ECDSA" || algo == "ECGDSA" || algo == "ECKCDSA")
+      {
+      opts.constraints = Botan::Key_Constraints(Botan::DIGITAL_SIGNATURE);
+      }
 
    return opts;
    }
@@ -80,19 +101,43 @@ Botan::X509_Cert_Options req_opts2()
    return opts;
    }
 
-std::unique_ptr<Botan::Private_Key> make_a_private_key()
+std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo)
    {
-#if defined(BOTAN_HAS_ECDSA)
-   Botan::EC_Group grp("secp256r1");
-   return std::unique_ptr<Botan::Private_Key>(new Botan::ECDSA_PrivateKey(Test::rng(), grp));
-#elif defined(BOTAN_HAS_RSA)
-   return std::unique_ptr<Botan::Private_Key>(new Botan::RSA_PrivateKey(Test::rng(), 1024));
-#elif defined(BOTAN_HAS_DSA)
-   Botan::DL_Group grp("dsa/botan/2048");
-   return std::unique_ptr<Botan::Private_Key>(new Botan::DSA_PrivateKey(Test::rng(), grp));
-#else
-   return std::unique_ptr<Botan::Private_Key>(nullptr);
+#if defined(BOTAN_HAS_RSA)
+   if(algo == "RSA")
+      {
+      return std::unique_ptr<Botan::Private_Key>(new Botan::RSA_PrivateKey(Test::rng(), 1024));
+      }
 #endif
+#if defined(BOTAN_HAS_DSA)
+   if(algo == "DSA")
+      {
+      Botan::DL_Group grp("dsa/botan/2048");
+      return std::unique_ptr<Botan::Private_Key>(new Botan::DSA_PrivateKey(Test::rng(), grp));
+      }
+#endif
+#if defined(BOTAN_HAS_ECDSA)
+   if(algo == "ECDSA")
+      {
+      Botan::EC_Group grp("secp256r1");
+      return std::unique_ptr<Botan::Private_Key>(new Botan::ECDSA_PrivateKey(Test::rng(), grp));
+      }
+#endif
+#if defined(BOTAN_HAS_ECGDSA)
+   if(algo == "ECGDSA")
+      {
+      Botan::EC_Group grp("brainpool256r1");
+      return std::unique_ptr<Botan::Private_Key>(new Botan::ECGDSA_PrivateKey(Test::rng(), grp));
+      }
+#endif
+#if defined(BOTAN_HAS_ECKCDSA)
+   if(algo == "ECKCDSA")
+      {
+      Botan::EC_Group grp("brainpool256r1");
+      return std::unique_ptr<Botan::Private_Key>(new Botan::ECKCDSA_PrivateKey(Test::rng(), grp));
+      }
+#endif
+   return std::unique_ptr<Botan::Private_Key>(nullptr);
    }
 
 class X509_Cert_Unit_Tests : public Test
@@ -207,22 +252,20 @@ class X509_Cert_Unit_Tests : public Test
          }
    };
 
-std::vector<Test::Result> X509_Cert_Unit_Tests::run()
+Test::Result test_x509_cert(const std::string& algo)
    {
-   std::vector<Test::Result> results;
    Test::Result result("X509 Unit");
 
    const std::string hash_fn = "SHA-256";
 
    /* Create the CA's key and self-signed cert */
-   std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key());
+   std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key(algo));
 
    if(!ca_key)
       {
-      // Failure because X.509 enabled but no RSA or ECDSA seems off
-      result.test_failure("Skipping due to no enabled signature algorithms");
-      results.push_back(result);
-      return results;
+      // Failure because X.509 enabled but requested algorithm is not present
+      result.test_note("Skipping due to missing signature algorithm: " + algo);
+      return result;
       }
 
    Botan::X509_Certificate ca_cert =
@@ -231,17 +274,20 @@ std::vector<Test::Result> X509_Cert_Unit_Tests::run()
                                            hash_fn,
                                            Test::rng());
 
+   result.test_eq("ca key usage", (ca_cert.constraints() & Botan::Key_Constraints(Botan::KEY_CERT_SIGN | Botan::CRL_SIGN)) ==
+         Botan::Key_Constraints(Botan::KEY_CERT_SIGN | Botan::CRL_SIGN), true);
+
    /* Create user #1's key and cert request */
-   std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key());
+   std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(algo));
 
    Botan::PKCS10_Request user1_req =
-      Botan::X509::create_cert_req(req_opts1(),
+      Botan::X509::create_cert_req(req_opts1(algo),
                                    *user1_key,
                                    hash_fn,
                                    Test::rng());
 
    /* Create user #2's key and cert request */
-   std::unique_ptr<Botan::Private_Key> user2_key(make_a_private_key());
+   std::unique_ptr<Botan::Private_Key> user2_key(make_a_private_key(algo));
 
    Botan::PKCS10_Request user2_req =
       Botan::X509::create_cert_req(req_opts2(),
@@ -258,9 +304,35 @@ std::vector<Test::Result> X509_Cert_Unit_Tests::run()
                       from_date(2008, 01, 01),
                       from_date(2033, 01, 01));
 
-   Botan::X509_Certificate user2_cert = ca.sign_request(user2_req, Test::rng(),
-                                                 from_date(2008, 01, 01),
-                                                 from_date(2033, 01, 01));
+   Botan::X509_Certificate user2_cert =
+      ca.sign_request(user2_req, Test::rng(),
+                      from_date(2008, 01, 01),
+                      from_date(2033, 01, 01));
+
+   result.test_eq("user1 key usage", (user1_cert.constraints() & req_opts1(algo).constraints) == req_opts1(algo).constraints, true);
+
+   /* Copy, assign and compare */
+   Botan::X509_Certificate user1_cert_copy(user1_cert);
+   result.test_eq("certificate copy", user1_cert == user1_cert_copy, true);
+
+   user1_cert_copy = user1_cert;
+   result.test_eq("certificate assignment", user1_cert == user1_cert_copy, true);
+
+   Botan::X509_Certificate user1_cert_differ =
+      ca.sign_request(user1_req, Test::rng(),
+                      from_date(2008, 01, 01),
+                      from_date(2032, 01, 01));
+
+   result.test_eq("certificate differs", user1_cert == user1_cert_differ, false);
+
+   /* Get cert data */
+   result.test_eq("x509 version", user1_cert.x509_version(), size_t(3));
+
+   result.test_eq("issuer info CN", user1_cert.issuer_info("CN").at(0), ca_opts().common_name);
+   result.test_eq("issuer info Country", user1_cert.issuer_info("C").at(0), ca_opts().country);
+   result.test_eq("issuer info Orga", user1_cert.issuer_info("O").at(0), ca_opts().organization);
+   result.test_eq("issuer info OrgaUnit", user1_cert.issuer_info("OU").at(0), ca_opts().org_unit);
+
    Botan::X509_CRL crl1 = ca.new_crl(Test::rng());
 
    /* Verify the certs */
@@ -316,7 +388,20 @@ std::vector<Test::Result> X509_Cert_Unit_Tests::run()
    result_u2 = Botan::x509_path_validate(user2_cert, restrictions, store);
    result.test_eq("user 2 still revoked", result_u2.result_string(), revoked_str);
 
-   results.push_back(result);
+   return result;
+   }
+
+std::vector<Test::Result> X509_Cert_Unit_Tests::run()
+   {
+   std::vector<Test::Result> results;
+   const std::vector<std::string> algos { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA" };
+   Test::Result cert_result("X509 Unit");
+   for(const auto& algo : algos)
+      {
+      cert_result.merge(test_x509_cert(algo));
+      }
+
+   results.push_back(cert_result);
    results.push_back(test_x509_dates());
    return results;
    }

@@ -233,11 +233,17 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    std::string padding;
    if(algo_name == "RSA")
+      {
       padding = "EMSA3";
-   else if(algo_name == "DSA" || algo_name == "ECDSA" )
+      }
+   else if(algo_name == "DSA" || algo_name == "ECDSA" || algo_name == "ECGDSA" || algo_name == "ECKCDSA")
+      {
       padding = "EMSA1";
+      }
    else
+      {
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
+      }
 
    const Signature_Format format = (key.message_parts() > 1) ? DER_SEQUENCE : IEEE_1363;
 

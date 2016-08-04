@@ -1,6 +1,7 @@
 /*
 * X.509 Certificates
 * (C) 1999-2010,2015 Jack Lloyd
+* (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -565,7 +566,7 @@ std::string X509_Certificate::to_string() const
       if(constraints & DIGITAL_SIGNATURE)
          out << "   Digital Signature\n";
       if(constraints & NON_REPUDIATION)
-         out << "   Non-Repuidation\n";
+         out << "   Non-Repudiation\n";
       if(constraints & KEY_ENCIPHERMENT)
          out << "   Key Encipherment\n";
       if(constraints & DATA_ENCIPHERMENT)
@@ -576,6 +577,10 @@ std::string X509_Certificate::to_string() const
          out << "   Cert Sign\n";
       if(constraints & CRL_SIGN)
          out << "   CRL Sign\n";
+      if(constraints & ENCIPHER_ONLY)
+         out << "   Encipher Only\n";
+      if(constraints & DECIPHER_ONLY)
+         out << "   Decipher Only\n";
       }
 
    std::vector<std::string> policies = this->policies();
