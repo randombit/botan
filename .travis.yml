@@ -24,10 +24,13 @@ compiler:
   - clang
   - gcc
 
+git:
+  depth: 5
+
 env:
   global:
     - secure: IOnsRvoIXYp2Wc+S9TtKNC3qlnDr3bBO9O68TWfmaelOvzdACPYqeBNbUgSEhqHNexujf2lYHT31y8zqvrZacNSWsWYwp6RoBHd9Z5fMG0U6Z50rGwBPMVZTsWJlHGjsXk1EvovCKXOuQq1GvdPIdTUHJsY/Ctg4KEDClEyw9X0=
-  
+
   matrix:
     - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="shared"
     - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="static"
@@ -92,17 +95,21 @@ matrix:
 # END BUILD MATRIX
 
 cache:
+  ccache: true
   directories:
-    - $HOME/.ccache
+    - $HOME/.sonar/cache
 
 install:
   - ./src/scripts/ci/travis/install.sh
 
 script:
   - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci/travis/build.sh ; fi
-  - sonar-scanner -v
 
 after_success:
+  # just a test
+  - echo "Starting analysis by SonarQube..."
+  - sonar-scanner -v
+  - sonar-scanner -Dsonar.login=$SONAR_TOKEN
   - ./src/scripts/ci/travis/after_success.sh
 
 notifications:
