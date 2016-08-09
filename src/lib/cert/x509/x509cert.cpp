@@ -258,7 +258,7 @@ bool X509_Certificate::allowed_usage(Key_Constraints usage) const
    {
    if(constraints() == NO_CONSTRAINTS)
       return true;
-   return ((constraints() & usage) != 0);
+   return ((constraints() & usage) == usage);
    }
 
 bool X509_Certificate::allowed_extended_usage(const std::string& usage) const

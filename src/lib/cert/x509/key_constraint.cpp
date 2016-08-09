@@ -29,7 +29,7 @@ Key_Constraints find_constraints(const Public_Key& pub_key,
 
    if(name == "RSA" || name == "RW" || name == "NR" ||
       name == "DSA" || name == "ECDSA" || name == "ECGDSA" || name == "ECKCDSA")
-      constraints |= DIGITAL_SIGNATURE | NON_REPUDIATION;
+      constraints |= DIGITAL_SIGNATURE | NON_REPUDIATION | KEY_CERT_SIGN | CRL_SIGN;
 
    if(limits)
       constraints &= limits;

@@ -140,134 +140,127 @@ std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo)
    return std::unique_ptr<Botan::Private_Key>(nullptr);
    }
 
-class X509_Cert_Unit_Tests : public Test
+
+Test::Result test_x509_dates()
    {
-   public:
-      std::vector<Test::Result> run() override;
+   Test::Result result("X509_Time");
 
-   private:
-      Test::Result test_x509_dates()
-         {
-         Test::Result result("X509_Time");
+   Botan::X509_Time time;
+   result.confirm("unset time not set", !time.time_is_set());
+   time = Botan::X509_Time("0802011822Z", Botan::ASN1_Tag::UTC_TIME);
+   result.confirm("time set after construction", time.time_is_set());
+   result.test_eq("time readable_string", time.readable_string(), "2008/02/01 18:22:00 UTC");
 
-         Botan::X509_Time time;
-         result.confirm("unset time not set", !time.time_is_set());
-         time = Botan::X509_Time("0802011822Z", Botan::ASN1_Tag::UTC_TIME);
-         result.confirm("time set after construction", time.time_is_set());
-         result.test_eq("time readable_string", time.readable_string(), "2008/02/01 18:22:00 UTC");
+   const std::vector<std::string> valid = {
+      "0802010000Z",
+      "0802011724Z",
+      "0406142334Z",
+      "9906142334Z",
+      "0006142334Z",
 
-         const std::vector<std::string> valid = {
-            "0802010000Z",
-            "0802011724Z",
-            "0406142334Z",
-            "9906142334Z",
-            "0006142334Z",
-
-            "080201000000Z",
-            "080201172412Z",
-            "040614233433Z",
-            "990614233444Z",
-            "000614233455Z",
-         };
-
-         // Dates that are valid per X.500 but rejected as unsupported
-         const std::vector<std::string> valid_but_unsup = {
-            "0802010000-0000",
-            "0802011724+0000",
-            "0406142334-0500",
-            "9906142334+0500",
-            "0006142334-0530",
-            "0006142334+0530",
-
-            "080201000000-0000",
-            "080201172412+0000",
-            "040614233433-0500",
-            "990614233444+0500",
-            "000614233455-0530",
-            "000614233455+0530",
-         };
-
-         const std::vector<std::string> invalid = {
-            "",
-            " ",
-            "2008`02-01",
-            "9999-02-01",
-            "2000-02-01 17",
-            "999921",
-
-            // valid length 13 -> range check
-            "080201000061Z", // seconds too big (61)
-            "080201000060Z", // seconds too big (60, leap seconds not covered by the standard)
-            "0802010000-1Z", // seconds too small (-1)
-            "080201006000Z", // minutes too big (60)
-            "080201240000Z", // hours too big (24:00)
-
-            // valid length 13 -> invalid numbers
-            "08020123112 Z",
-            "08020123112!Z",
-            "08020123112,Z",
-            "08020123112\nZ",
-            "080201232 33Z",
-            "080201232!33Z",
-            "080201232,33Z",
-            "080201232\n33Z",
-            "0802012 3344Z",
-            "0802012!3344Z",
-            "0802012,3344Z",
-            "08022\n334455Z",
-            "08022 334455Z",
-            "08022!334455Z",
-            "08022,334455Z",
-            "08022\n334455Z",
-            "082 33445511Z",
-            "082!33445511Z",
-            "082,33445511Z",
-            "082\n33445511Z",
-            "2 2211221122Z",
-            "2!2211221122Z",
-            "2,2211221122Z",
-            "2\n2211221122Z",
-
-            // wrong time zone
-            "0802010000",
-            "0802010000z"
-         };
-
-         for(auto&& v : valid)
-            {
-            Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME);
-            }
-
-         for(auto&& v : valid_but_unsup)
-            {
-            result.test_throws("valid but unsupported", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME); });
-            }
-
-         for(auto&& v : invalid)
-            {
-            result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME); });
-            }
-
-         return result;
-         }
+      "080201000000Z",
+      "080201172412Z",
+      "040614233433Z",
+      "990614233444Z",
+      "000614233455Z",
    };
 
-Test::Result test_x509_cert(const std::string& algo)
+   // Dates that are valid per X.500 but rejected as unsupported
+   const std::vector<std::string> valid_but_unsup = {
+      "0802010000-0000",
+      "0802011724+0000",
+      "0406142334-0500",
+      "9906142334+0500",
+      "0006142334-0530",
+      "0006142334+0530",
+
+      "080201000000-0000",
+      "080201172412+0000",
+      "040614233433-0500",
+      "990614233444+0500",
+      "000614233455-0530",
+      "000614233455+0530",
+   };
+
+   const std::vector<std::string> invalid = {
+      "",
+      " ",
+      "2008`02-01",
+      "9999-02-01",
+      "2000-02-01 17",
+      "999921",
+
+      // valid length 13 -> range check
+      "080201000061Z", // seconds too big (61)
+      "080201000060Z", // seconds too big (60, leap seconds not covered by the standard)
+      "0802010000-1Z", // seconds too small (-1)
+      "080201006000Z", // minutes too big (60)
+      "080201240000Z", // hours too big (24:00)
+
+      // valid length 13 -> invalid numbers
+      "08020123112 Z",
+      "08020123112!Z",
+      "08020123112,Z",
+      "08020123112\nZ",
+      "080201232 33Z",
+      "080201232!33Z",
+      "080201232,33Z",
+      "080201232\n33Z",
+      "0802012 3344Z",
+      "0802012!3344Z",
+      "0802012,3344Z",
+      "08022\n334455Z",
+      "08022 334455Z",
+      "08022!334455Z",
+      "08022,334455Z",
+      "08022\n334455Z",
+      "082 33445511Z",
+      "082!33445511Z",
+      "082,33445511Z",
+      "082\n33445511Z",
+      "2 2211221122Z",
+      "2!2211221122Z",
+      "2,2211221122Z",
+      "2\n2211221122Z",
+
+      // wrong time zone
+      "0802010000",
+      "0802010000z"
+   };
+
+   for(auto&& v : valid)
+      {
+      Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME);
+      }
+
+   for(auto&& v : valid_but_unsup)
+      {
+      result.test_throws("valid but unsupported", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME); });
+      }
+
+   for(auto&& v : invalid)
+      {
+      result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME); });
+      }
+
+   return result;
+   }
+
+Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash_fn = "SHA-256")
    {
    Test::Result result("X509 Unit");
 
-   const std::string hash_fn = "SHA-256";
-
    /* Create the CA's key and self-signed cert */
-   std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key(algo));
+   std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key(sig_algo));
 
    if(!ca_key)
       {
-      // Failure because X.509 enabled but requested algorithm is not present
-      result.test_note("Skipping due to missing signature algorithm: " + algo);
+      // Failure because X.509 enabled but requested signature algorithm is not present
+      result.test_note("Skipping due to missing signature algorithm: " + sig_algo);
       return result;
       }
 
+   /* Create the self-signed cert */
    Botan::X509_Certificate ca_cert =
       Botan::X509::create_self_signed_cert(ca_opts(),
                                            *ca_key,
@@ -278,16 +271,16 @@ Test::Result test_x509_cert(const std::string& algo)
          Botan::Key_Constraints(Botan::KEY_CERT_SIGN | Botan::CRL_SIGN), true);
 
    /* Create user #1's key and cert request */
-   std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(algo));
+   std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(sig_algo));
 
    Botan::PKCS10_Request user1_req =
-      Botan::X509::create_cert_req(req_opts1(algo),
+      Botan::X509::create_cert_req(req_opts1(sig_algo),
                                    *user1_key,
                                    hash_fn,
                                    Test::rng());
 
    /* Create user #2's key and cert request */
-   std::unique_ptr<Botan::Private_Key> user2_key(make_a_private_key(algo));
+   std::unique_ptr<Botan::Private_Key> user2_key(make_a_private_key(sig_algo));
 
    Botan::PKCS10_Request user2_req =
       Botan::X509::create_cert_req(req_opts2(),
@@ -309,7 +302,7 @@ Test::Result test_x509_cert(const std::string& algo)
                       from_date(2008, 01, 01),
                       from_date(2033, 01, 01));
 
-   result.test_eq("user1 key usage", (user1_cert.constraints() & req_opts1(algo).constraints) == req_opts1(algo).constraints, true);
+   result.test_eq("user1 key usage", (user1_cert.constraints() & req_opts1(sig_algo).constraints) == req_opts1(sig_algo).constraints, true);
 
    /* Copy, assign and compare */
    Botan::X509_Certificate user1_cert_copy(user1_cert);
@@ -338,7 +331,7 @@ Test::Result test_x509_cert(const std::string& algo)
    /* Verify the certs */
    Botan::Certificate_Store_In_Memory store;
 
-   store.add_certificate(ca_cert);
+   store.add_certificate(ca.ca_certificate());
 
    Botan::Path_Validation_Restrictions restrictions(false);
 
@@ -391,20 +384,121 @@ Test::Result test_x509_cert(const std::string& algo)
    return result;
    }
 
-std::vector<Test::Result> X509_Cert_Unit_Tests::run()
+Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn = "SHA-256")
    {
-   std::vector<Test::Result> results;
-   const std::vector<std::string> algos { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA" };
-   Test::Result cert_result("X509 Unit");
-   for(const auto& algo : algos)
+   using Botan::Key_Constraints;
+
+   Test::Result result("X509 Usage");
+
+   /* Create the CA's key and self-signed cert */
+   std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key(sig_algo));
+
+   if(!ca_key)
       {
-      cert_result.merge(test_x509_cert(algo));
+      // Failure because X.509 enabled but requested signature algorithm is not present
+      result.test_note("Skipping due to missing signature algorithm: " + sig_algo);
+      return result;
       }
 
-   results.push_back(cert_result);
-   results.push_back(test_x509_dates());
-   return results;
+   /* Create the self-signed cert */
+   Botan::X509_Certificate ca_cert =
+        Botan::X509::create_self_signed_cert(ca_opts(),
+                                           *ca_key,
+                                           hash_fn,
+                                           Test::rng());
+
+   /* Create the CA object */
+   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn);
+
+   std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(sig_algo));
+
+   Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
+   opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
+
+   Botan::PKCS10_Request user1_req =
+        Botan::X509::create_cert_req(opts,
+                                      *user1_key,
+                                      hash_fn,
+                                      Test::rng());
+
+   Botan::X509_Certificate user1_cert =
+      ca.sign_request(user1_req, Test::rng(),
+                      from_date(2008, 01, 01),
+                      from_date(2033, 01, 01));
+
+   // cert only allows digitalSignature, but we check for both digitalSignature and cRLSign
+   result.test_eq("key usage cRLSign not allowed", user1_cert.allowed_usage(Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE |
+        Key_Constraints::CRL_SIGN)), false);
+
+   // cert only allows digitalSignature, so checking for only that should be ok
+   result.confirm("key usage digitalSignature allowed", user1_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
+
+   opts.constraints = Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN);
+
+   Botan::PKCS10_Request mult_usage_req =
+        Botan::X509::create_cert_req(opts,
+                                        *user1_key,
+                                        hash_fn,
+                                        Test::rng());
+
+   Botan::X509_Certificate mult_usage_cert =
+         ca.sign_request(mult_usage_req, Test::rng(),
+                         from_date(2008, 01, 01),
+                         from_date(2033, 01, 01));
+
+   // cert allows multiple usages, so each one of them as well as both together should be allowed
+   result.confirm("key usage multiple digitalSignature allowed", mult_usage_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
+   result.confirm("key usage multiple cRLSign allowed", mult_usage_cert.allowed_usage(Key_Constraints::CRL_SIGN));
+   result.confirm("key usage multiple digitalSignature and cRLSign allowed", mult_usage_cert.allowed_usage(
+         Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN)));
+
+   opts.constraints = Key_Constraints::NO_CONSTRAINTS;
+
+   Botan::PKCS10_Request no_usage_req =
+        Botan::X509::create_cert_req(opts,
+                                        *user1_key,
+                                        hash_fn,
+                                        Test::rng());
+
+   Botan::X509_Certificate no_usage_cert =
+         ca.sign_request(no_usage_req, Test::rng(),
+                         from_date(2008, 01, 01),
+                         from_date(2033, 01, 01));
+
+   // cert allows every usage
+   result.confirm("key usage digitalSignature allowed", no_usage_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
+   result.confirm("key usage cRLSign allowed", no_usage_cert.allowed_usage(Key_Constraints::CRL_SIGN));
+
+   return result;
    }
+
+
+class X509_Cert_Unit_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+         const std::vector<std::string> sig_algos { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA" };
+         Test::Result cert_result("X509 Unit");
+         for(const auto& algo : sig_algos)
+            {
+            cert_result.merge(test_x509_cert(algo));
+            }
+
+         results.push_back(cert_result);
+         results.push_back(test_x509_dates());
+
+         Test::Result usage_result("X509 Usage");
+         for(const auto& algo : sig_algos)
+            {
+            usage_result.merge(test_usage(algo));
+            }
+         results.push_back(usage_result);
+
+         return results;
+         }
+   };
 
 BOTAN_REGISTER_TEST("unit_x509", X509_Cert_Unit_Tests);
 
