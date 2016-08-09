@@ -481,20 +481,17 @@ class X509_Cert_Unit_Tests : public Test
          std::vector<Test::Result> results;
          const std::vector<std::string> sig_algos { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA" };
          Test::Result cert_result("X509 Unit");
+         Test::Result usage_result("X509 Usage");
+
          for(const auto& algo : sig_algos)
             {
             cert_result.merge(test_x509_cert(algo));
+            usage_result.merge(test_usage(algo));
             }
 
          results.push_back(cert_result);
-         results.push_back(test_x509_dates());
-
-         Test::Result usage_result("X509 Usage");
-         for(const auto& algo : sig_algos)
-            {
-            usage_result.merge(test_usage(algo));
-            }
          results.push_back(usage_result);
+         results.push_back(test_x509_dates());
 
          return results;
          }
