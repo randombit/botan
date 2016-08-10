@@ -100,6 +100,9 @@ class BOTAN_DLL X509_CRL final : public X509_Object
       X509_CRL(const std::vector<byte>& vec,
                bool throw_on_unknown_critical = false);
 
+      X509_CRL(const X509_DN& issuer, const X509_Time& thisUpdate,
+               const X509_Time& nextUpdate, const std::vector<CRL_Entry>& revoked);
+
    private:
       void force_decode() override;
 

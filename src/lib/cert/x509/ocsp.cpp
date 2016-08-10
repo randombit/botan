@@ -92,9 +92,9 @@ void check_signature(const std::vector<byte>& tbs_response,
    if(!trusted_roots.certificate_known(result.trust_root())) // not needed anymore?
       throw Exception("Certificate chain roots in unknown/untrusted CA");
 
-   const std::vector<X509_Certificate>& cert_path = result.cert_path();
+   const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path = result.cert_path();
 
-   check_signature(tbs_response, sig_algo, signature, cert_path[0]);
+   check_signature(tbs_response, sig_algo, signature, *cert_path[0]);
    }
 
 }

@@ -99,6 +99,13 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::vector<byt
       throw SQL_DB_Error("sqlite3_bind_text failed, code " + std::to_string(rc));
    }
 
+void Sqlite3_Database::Sqlite3_Statement::bind(int column, const byte* p, size_t len)
+   {
+   int rc = ::sqlite3_bind_blob(m_stmt, column, p, len, SQLITE_TRANSIENT);
+   if(rc != SQLITE_OK)
+      throw SQL_DB_Error("sqlite3_bind_text failed, code " + std::to_string(rc));
+   }
+
 std::pair<const byte*, size_t> Sqlite3_Database::Sqlite3_Statement::get_blob(int column)
    {
    BOTAN_ASSERT(::sqlite3_column_type(m_stmt, 0) == SQLITE_BLOB,

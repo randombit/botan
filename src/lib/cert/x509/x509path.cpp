@@ -20,7 +20,7 @@ namespace Botan {
 
 namespace {
 
-const X509_Certificate*
+std::shared_ptr<const X509_Certificate>
 find_issuing_cert(const X509_Certificate& cert,
                   Certificate_Store& end_certs,
                   const std::vector<Certificate_Store*>& certstores)
@@ -28,25 +28,25 @@ find_issuing_cert(const X509_Certificate& cert,
    const X509_DN issuer_dn = cert.issuer_dn();
    const std::vector<byte> auth_key_id = cert.authority_key_id();
 
-   const X509_Certificate* c = end_certs.find_cert(issuer_dn, auth_key_id);
+   std::shared_ptr<const X509_Certificate> c = end_certs.find_cert(issuer_dn, auth_key_id);
    if(c && *c != cert)
       return c;
 
    for(size_t i = 0; i != certstores.size(); ++i)
       {
-      if(const X509_Certificate* c = certstores[i]->find_cert(issuer_dn, auth_key_id))
+      if(std::shared_ptr<const X509_Certificate> c = certstores[i]->find_cert(issuer_dn, auth_key_id))
          return c;
       }
 
    return nullptr;
    }
 
-const X509_CRL* find_crls_for(const X509_Certificate& cert,
+std::shared_ptr<const X509_CRL> find_crls_for(const X509_Certificate& cert,
                               const std::vector<Certificate_Store*>& certstores)
    {
    for(size_t i = 0; i != certstores.size(); ++i)
       {
-      if(const X509_CRL* crl = certstores[i]->find_crl_for(cert))
+      if(std::shared_ptr<const X509_CRL> crl = certstores[i]->find_crl_for(cert))
          return crl;
       }
 
@@ -72,7 +72,7 @@ const X509_CRL* find_crls_for(const X509_Certificate& cert,
    }
 
 std::vector<std::set<Certificate_Status_Code>>
-check_chain(const std::vector<X509_Certificate>& cert_path,
+check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
             const Path_Validation_Restrictions& restrictions,
             const std::vector<Certificate_Store*>& certstores)
    {
@@ -92,9 +92,9 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
 
       const bool at_self_signed_root = (i == cert_path.size() - 1);
 
-      const X509_Certificate& subject = cert_path[i];
+      std::shared_ptr<const X509_Certificate> subject = cert_path[i];
 
-      const X509_Certificate& issuer = cert_path[at_self_signed_root ? (i) : (i + 1)];
+      std::shared_ptr<const X509_Certificate> issuer = cert_path[at_self_signed_root ? (i) : (i + 1)];
 
       if(i == 0 || restrictions.ocsp_all_intermediates())
          {
@@ -102,25 +102,25 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
          if(certstores.size() > 1)
             ocsp_responses.push_back(
                std::async(std::launch::async,
-                          OCSP::online_check, issuer, subject, certstores[0]));
+                          OCSP::online_check, *issuer, *subject, certstores[0]));
          }
 
       // Check all certs for valid time range
-      if(current_time < X509_Time(subject.start_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
+      if(current_time < X509_Time(subject->start_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
          status.insert(Certificate_Status_Code::CERT_NOT_YET_VALID);
 
-      if(current_time > X509_Time(subject.end_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
+      if(current_time > X509_Time(subject->end_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
          status.insert(Certificate_Status_Code::CERT_HAS_EXPIRED);
 
       // Check issuer constraints
 
-      if(!issuer.is_CA_cert() && !self_signed_ee_cert)
+      if(!issuer->is_CA_cert() && !self_signed_ee_cert)
          status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER);
 
-      if(issuer.path_limit() < i)
+      if(issuer->path_limit() < i)
          status.insert(Certificate_Status_Code::CERT_CHAIN_TOO_LONG);
 
-      std::unique_ptr<Public_Key> issuer_key(issuer.subject_public_key());
+      std::unique_ptr<Public_Key> issuer_key(issuer->subject_public_key());
 
       if(!issuer_key)
          {
@@ -128,7 +128,7 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
          }
       else
          {
-         if(subject.check_signature(*issuer_key) == false)
+         if(subject->check_signature(*issuer_key) == false)
             status.insert(Certificate_Status_Code::SIGNATURE_ERROR);
 
          if(issuer_key->estimated_strength() < restrictions.minimum_key_strength())
@@ -138,15 +138,15 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
       // Allow untrusted hashes on self-signed roots
       if(!trusted_hashes.empty() && !at_self_signed_root)
          {
-         if(!trusted_hashes.count(subject.hash_used_for_signature()))
+         if(!trusted_hashes.count(subject->hash_used_for_signature()))
             status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
          }
 
       // Check cert extensions
-      Extensions extensions = subject.v3_extensions();
+      Extensions extensions = subject->v3_extensions();
       for(auto& extension : extensions.extensions())
          {
-         extension.first->validate(subject, issuer, cert_path, cert_status, i);
+         extension.first->validate(*subject, *issuer, cert_path, cert_status, i);
          }
       }
 
@@ -154,8 +154,8 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
       {
       std::set<Certificate_Status_Code>& status = cert_status.at(i);
 
-      const X509_Certificate& subject = cert_path.at(i);
-      const X509_Certificate& ca = cert_path.at(i+1);
+      std::shared_ptr<const X509_Certificate> subject = cert_path.at(i);
+      std::shared_ptr<const X509_Certificate> ca = cert_path.at(i+1);
 
       if(i < ocsp_responses.size())
          {
@@ -163,7 +163,7 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
             {
             OCSP::Response ocsp = ocsp_responses[i].get();
 
-            auto ocsp_status = ocsp.status_for(ca, subject);
+            auto ocsp_status = ocsp.status_for(*ca, *subject);
 
             status.insert(ocsp_status);
 
@@ -181,7 +181,7 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
             }
          }
 
-      const X509_CRL* crl_p = find_crls_for(subject, certstores);
+      std::shared_ptr<const X509_CRL> crl_p = find_crls_for(*subject, certstores);
 
       if(!crl_p)
          {
@@ -192,7 +192,7 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
 
       const X509_CRL& crl = *crl_p;
 
-      if(!ca.allowed_usage(CRL_SIGN))
+      if(!ca->allowed_usage(CRL_SIGN))
          status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER);
 
       if(current_time < X509_Time(crl.this_update()))
@@ -201,10 +201,10 @@ check_chain(const std::vector<X509_Certificate>& cert_path,
       if(current_time > X509_Time(crl.next_update()))
          status.insert(Certificate_Status_Code::CRL_HAS_EXPIRED);
 
-      if(crl.check_signature(ca.subject_public_key()) == false)
+      if(crl.check_signature(ca->subject_public_key()) == false)
          status.insert(Certificate_Status_Code::CRL_BAD_SIGNATURE);
 
-      if(crl.is_revoked(subject))
+      if(crl.is_revoked(*subject))
          status.insert(Certificate_Status_Code::CERT_IS_REVOKED);
       }
 
@@ -226,8 +226,12 @@ Path_Validation_Result x509_path_validate(
    if(end_certs.empty())
       throw Invalid_Argument("x509_path_validate called with no subjects");
 
-   std::vector<X509_Certificate> cert_path;
-   cert_path.push_back(end_certs[0]);
+   std::vector<std::shared_ptr<const X509_Certificate>> cert_path;
+   std::vector<std::shared_ptr<const X509_Certificate>> end_certs_sharedptr;
+   cert_path.push_back(std::make_shared<X509_Certificate>(end_certs[0]));
+
+   for(auto c: end_certs)
+      end_certs_sharedptr.push_back(std::make_shared<const X509_Certificate>(c));
 
    /*
    * This is an inelegant but functional way of preventing path loops
@@ -236,12 +240,12 @@ Path_Validation_Result x509_path_validate(
    */
    std::set<std::string> certs_seen;
 
-   Certificate_Store_Overlay extra(end_certs);
+   Certificate_Store_Overlay extra(end_certs_sharedptr);
 
    // iterate until we reach a root or cannot find the issuer
-   while(!cert_path.back().is_self_signed())
+   while(!cert_path.back()->is_self_signed())
       {
-      const X509_Certificate* cert = find_issuing_cert(cert_path.back(), extra, certstores);
+      std::shared_ptr<const X509_Certificate> cert = find_issuing_cert(*cert_path.back(), extra, certstores);
       if(!cert)
          return Path_Validation_Result(Certificate_Status_Code::CERT_ISSUER_NOT_FOUND);
 
@@ -249,15 +253,15 @@ Path_Validation_Result x509_path_validate(
       if(certs_seen.count(fprint) > 0)
          return Path_Validation_Result(Certificate_Status_Code::CERT_CHAIN_LOOP);
       certs_seen.insert(fprint);
-      cert_path.push_back(*cert);
+      cert_path.push_back(cert);
       }
 
    std::vector<std::set<Certificate_Status_Code>> res = check_chain(cert_path, restrictions, certstores);
 
-   if(!hostname.empty() && !cert_path[0].matches_dns_name(hostname))
+   if(!hostname.empty() && !cert_path[0]->matches_dns_name(hostname))
       res[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
 
-   if(!cert_path[0].allowed_usage(usage))
+   if(!cert_path[0]->allowed_usage(usage))
       res[0].insert(Certificate_Status_Code::INVALID_USAGE);
 
    return Path_Validation_Result(res, std::move(cert_path));
@@ -321,7 +325,7 @@ Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
    }
 
 Path_Validation_Result::Path_Validation_Result(std::vector<std::set<Certificate_Status_Code>> status,
-                                               std::vector<X509_Certificate>&& cert_chain) :
+                                               std::vector<std::shared_ptr<const X509_Certificate>>&& cert_chain) :
    m_overall(Certificate_Status_Code::VERIFIED),
    m_all_status(status),
    m_cert_path(cert_chain)
@@ -346,14 +350,14 @@ const X509_Certificate& Path_Validation_Result::trust_root() const
    if(result() != Certificate_Status_Code::VERIFIED)
       throw Exception("Path_Validation_Result::trust_root meaningless with invalid status");
 
-   return m_cert_path[m_cert_path.size()-1];
+   return *m_cert_path[m_cert_path.size()-1];
    }
 
 std::set<std::string> Path_Validation_Result::trusted_hashes() const
    {
    std::set<std::string> hashes;
    for(size_t i = 0; i != m_cert_path.size(); ++i)
-      hashes.insert(m_cert_path[i].hash_used_for_signature());
+      hashes.insert(m_cert_path[i]->hash_used_for_signature());
    return hashes;
    }
 

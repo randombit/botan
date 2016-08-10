@@ -5,62 +5,73 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <cassert>
 #include <botan/certstor.h>
+#include <botan/ber_dec.h>
+#include <botan/der_enc.h>
 #include <botan/internal/filesystem.h>
+#include <botan/pkcs8.h>
+#include <botan/data_src.h>
+#include <botan/auto_rng.h>
+#include <botan/hash.h>
+#include <botan/hex.h>
+
+#include <iostream>
 
 namespace Botan {
 
-const X509_CRL* Certificate_Store::find_crl_for(const X509_Certificate&) const
+std::shared_ptr<const X509_CRL> Certificate_Store::find_crl_for(const X509_Certificate&) const
    {
-   return nullptr;
+   return std::shared_ptr<const X509_CRL>();
    }
 
 void Certificate_Store_In_Memory::add_certificate(const X509_Certificate& cert)
    {
    for(size_t i = 0; i != m_certs.size(); ++i)
       {
-      if(m_certs[i] == cert)
+      if(*m_certs[i] == cert)
          return;
       }
 
-   m_certs.push_back(cert);
+   m_certs.push_back(std::make_shared<X509_Certificate>(cert));
    }
 
 std::vector<X509_DN> Certificate_Store_In_Memory::all_subjects() const
    {
    std::vector<X509_DN> subjects;
    for(size_t i = 0; i != m_certs.size(); ++i)
-      subjects.push_back(m_certs[i].subject_dn());
+      subjects.push_back(m_certs[i]->subject_dn());
    return subjects;
    }
 
 namespace {
 
-const X509_Certificate*
+template<typename T>
+std::shared_ptr<const X509_Certificate>
 cert_search(const X509_DN& subject_dn, const std::vector<byte>& key_id,
-            const std::vector<X509_Certificate>& certs)
+            const std::vector<std::shared_ptr<T>>& certs)
    {
    for(size_t i = 0; i != certs.size(); ++i)
       {
       // Only compare key ids if set in both call and in the cert
       if(key_id.size())
          {
-         std::vector<byte> skid = certs[i].subject_key_id();
+         std::vector<byte> skid = certs[i]->subject_key_id();
 
          if(skid.size() && skid != key_id) // no match
             continue;
          }
 
-      if(certs[i].subject_dn() == subject_dn)
-         return &certs[i];
+      if(certs[i]->subject_dn() == subject_dn)
+         return certs[i];
       }
 
-   return nullptr;
+   return std::shared_ptr<const X509_Certificate>();
    }
 
 }
 
-const X509_Certificate*
+std::shared_ptr<const X509_Certificate>
 Certificate_Store_In_Memory::find_cert(const X509_DN& subject_dn,
                                        const std::vector<byte>& key_id) const
    {
@@ -74,19 +85,19 @@ void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl)
    for(size_t i = 0; i != m_crls.size(); ++i)
       {
       // Found an update of a previously existing one; replace it
-      if(m_crls[i].issuer_dn() == crl_issuer)
+      if(m_crls[i]->issuer_dn() == crl_issuer)
          {
-         if(m_crls[i].this_update() <= crl.this_update())
-            m_crls[i] = crl;
+         if(m_crls[i]->this_update() <= crl.this_update())
+            m_crls[i] = std::make_shared<X509_CRL>(crl);
          return;
          }
       }
 
    // Totally new CRL, add to the list
-   m_crls.push_back(crl);
+   m_crls.push_back(std::make_shared<X509_CRL>(crl));
    }
 
-const X509_CRL* Certificate_Store_In_Memory::find_crl_for(const X509_Certificate& subject) const
+std::shared_ptr<const X509_CRL> Certificate_Store_In_Memory::find_crl_for(const X509_Certificate& subject) const
    {
    const std::vector<byte>& key_id = subject.authority_key_id();
 
@@ -95,17 +106,17 @@ const X509_CRL* Certificate_Store_In_Memory::find_crl_for(const X509_Certificate
       // Only compare key ids if set in both call and in the CRL
       if(key_id.size())
          {
-         std::vector<byte> akid = m_crls[i].authority_key_id();
+         std::vector<byte> akid = m_crls[i]->authority_key_id();
 
          if(akid.size() && akid != key_id) // no match
             continue;
          }
 
-      if(m_crls[i].issuer_dn() == subject.issuer_dn())
-         return &m_crls[i];
+      if(m_crls[i]->issuer_dn() == subject.issuer_dn())
+         return m_crls[i];
       }
 
-   return nullptr;
+   return std::shared_ptr<const X509_CRL>();
    }
 
 Certificate_Store_In_Memory::Certificate_Store_In_Memory(const X509_Certificate& cert)
@@ -123,7 +134,7 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
       {
       try
          {
-         m_certs.push_back(X509_Certificate(cert_file));
+         m_certs.push_back(std::make_shared<X509_Certificate>(cert_file));
          }
       catch(std::exception&)
          {
@@ -131,7 +142,7 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
       }
    }
 
-const X509_Certificate*
+std::shared_ptr<const X509_Certificate>
 Certificate_Store_Overlay::find_cert(const X509_DN& subject_dn,
                                      const std::vector<byte>& key_id) const
    {
@@ -142,7 +153,7 @@ std::vector<X509_DN> Certificate_Store_Overlay::all_subjects() const
    {
    std::vector<X509_DN> subjects;
    for(size_t i = 0; i != m_certs.size(); ++i)
-      subjects.push_back(m_certs[i].subject_dn());
+      subjects.push_back(m_certs[i]->subject_dn());
    return subjects;
    }
 

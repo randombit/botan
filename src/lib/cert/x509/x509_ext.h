@@ -68,7 +68,7 @@ class BOTAN_DLL Certificate_Extension
       * @param pos Position of subject certificate in cert_path
       */
       virtual void validate(const X509_Certificate& subject, const X509_Certificate& issuer,
-            const std::vector<X509_Certificate>& cert_path,
+            const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
             std::vector<std::set<Certificate_Status_Code>>& cert_status,
             size_t pos);
 
@@ -305,7 +305,7 @@ class BOTAN_DLL Name_Constraints : public Certificate_Extension
       Name_Constraints(const NameConstraints &nc) : m_name_constraints(nc) {}
 
       void validate(const X509_Certificate& subject, const X509_Certificate& issuer,
-            const std::vector<X509_Certificate>& cert_path,
+            const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
             std::vector<std::set<Certificate_Status_Code>>& cert_status,
             size_t pos) override;
 
@@ -479,7 +479,7 @@ class BOTAN_DLL Unknown_Critical_Extension final : public Certificate_Extension
          { return m_oid; };
 
       void validate(const X509_Certificate&, const X509_Certificate&,
-      		const std::vector<X509_Certificate>&,
+      		const std::vector<std::shared_ptr<const X509_Certificate>>&,
       		std::vector<std::set<Certificate_Status_Code>>& cert_status,
       		size_t pos) override
          {

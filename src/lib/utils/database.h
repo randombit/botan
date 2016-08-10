@@ -38,6 +38,8 @@ class BOTAN_DLL SQL_Database
 
             virtual void bind(int column, const std::vector<byte>& blob) = 0;
 
+            virtual void bind(int column, const byte* data, size_t len) = 0;
+
             /* Get output */
             virtual std::pair<const byte*, size_t> get_blob(int column) = 0;
 

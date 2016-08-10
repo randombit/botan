@@ -1,0 +1,6 @@
+define CERTSTOR_SQLITE3 20160818
+
+<requires>
+certstor_sql
+sqlite3
+</requires>
