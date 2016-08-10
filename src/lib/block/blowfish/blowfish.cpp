@@ -202,10 +202,10 @@ void Blowfish::encrypt_n(const byte in[], byte out[], size_t blocks) const
    const u32bit* S3 = &m_S[512];
    const u32bit* S4 = &m_S[768];
 
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u32bit L = load_be<u32bit>(in, 0);
-      u32bit R = load_be<u32bit>(in, 1);
+      u32bit L, R;
+      load_be(in + BLOCK_SIZE*i, L, R);
 
       for(size_t j = 0; j != 16; j += 2)
          {
@@ -220,10 +220,7 @@ void Blowfish::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
       L ^= m_P[16]; R ^= m_P[17];
 
-      store_be(out, R, L);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      store_be(out + BLOCK_SIZE*i, R, L);
       }
    }
 
@@ -237,10 +234,10 @@ void Blowfish::decrypt_n(const byte in[], byte out[], size_t blocks) const
    const u32bit* S3 = &m_S[512];
    const u32bit* S4 = &m_S[768];
 
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u32bit L = load_be<u32bit>(in, 0);
-      u32bit R = load_be<u32bit>(in, 1);
+      u32bit L, R;
+      load_be(in + BLOCK_SIZE*i, L, R);
 
       for(size_t j = 17; j != 1; j -= 2)
          {
@@ -255,10 +252,7 @@ void Blowfish::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       L ^= m_P[1]; R ^= m_P[0];
 
-      store_be(out, R, L);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      store_be(out + BLOCK_SIZE*i, R, L);
       }
    }
 

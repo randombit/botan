@@ -323,6 +323,11 @@ def process_command_line(args):
     build_group.add_option('--with-external-includedir', metavar='DIR', default='',
                            help='use DIR for external includes')
 
+    build_group.add_option('--with-openmp', default=False, action='store_true',
+                           help='enable use of OpenMP')
+    build_group.add_option('--with-cilkplus', default=False, action='store_true',
+                           help='enable use of Cilk Plus')
+
     link_methods = ['symlink', 'hardlink', 'copy']
     build_group.add_option('--link-method', default=None, metavar='METHOD',
                            choices=link_methods,
@@ -850,6 +855,11 @@ class ArchInfo(object):
         if options.with_valgrind:
             macros.append('HAS_VALGRIND')
 
+        if options.with_openmp:
+            macros.append('TARGET_HAS_OPENMP')
+        if options.with_cilkplus:
+            macros.append('TARGET_HAS_CILKPLUS')
+
         return macros
 
 class CompilerInfo(object):
@@ -952,6 +962,16 @@ class CompilerInfo(object):
             if self.sanitizer_flags == '':
                 raise Exception('No sanitizer handling for %s' % (self.basename))
             abi_link.append(self.sanitizer_flags)
+
+        if options.with_openmp:
+            if 'openmp' not in self.mach_abi_linking:
+                raise Exception('No support for OpenMP for %s' % (self.basename))
+            abi_link.append(self.mach_abi_linking['openmp'])
+
+        if options.with_cilkplus:
+            if 'cilkplus' not in self.mach_abi_linking:
+                raise Exception('No support for Cilk Plus for %s' % (self.basename))
+            abi_link.append(self.mach_abi_linking['cilkplus'])
 
         abi_flags = ' '.join(sorted(abi_link))
 

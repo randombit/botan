@@ -50,10 +50,10 @@ inline void R3(u32bit& L, u32bit R, u32bit MK, byte RK)
 */
 void CAST_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u32bit L = load_be<u32bit>(in, 0);
-      u32bit R = load_be<u32bit>(in, 1);
+      u32bit L, R;
+      load_be(in + BLOCK_SIZE*i, L, R);
 
       R1(L, R, m_MK[ 0], m_RK[ 0]);
       R2(R, L, m_MK[ 1], m_RK[ 1]);
@@ -72,10 +72,7 @@ void CAST_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
       R3(L, R, m_MK[14], m_RK[14]);
       R1(R, L, m_MK[15], m_RK[15]);
 
-      store_be(out, R, L);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      store_be(out + BLOCK_SIZE*i, R, L);
       }
    }
 
@@ -84,10 +81,10 @@ void CAST_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void CAST_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u32bit L = load_be<u32bit>(in, 0);
-      u32bit R = load_be<u32bit>(in, 1);
+      u32bit L, R;
+      load_be(in + BLOCK_SIZE*i, L, R);
 
       R1(L, R, m_MK[15], m_RK[15]);
       R3(R, L, m_MK[14], m_RK[14]);
@@ -106,10 +103,7 @@ void CAST_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
       R2(L, R, m_MK[ 1], m_RK[ 1]);
       R1(R, L, m_MK[ 0], m_RK[ 0]);
 
-      store_be(out, R, L);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      store_be(out + BLOCK_SIZE*i, R, L);
       }
    }
 

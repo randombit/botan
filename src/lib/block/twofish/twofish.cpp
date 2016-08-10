@@ -19,12 +19,15 @@ namespace Botan {
 */
 void Twofish::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u32bit A = load_le<u32bit>(in, 0) ^ m_RK[0];
-      u32bit B = load_le<u32bit>(in, 1) ^ m_RK[1];
-      u32bit C = load_le<u32bit>(in, 2) ^ m_RK[2];
-      u32bit D = load_le<u32bit>(in, 3) ^ m_RK[3];
+      u32bit A, B, C, D;
+      load_le(in + BLOCK_SIZE*i, A, B, C, D);
+
+      A ^= m_RK[0];
+      B ^= m_RK[1];
+      C ^= m_RK[2];
+      D ^= m_RK[3];
 
       for(size_t j = 0; j != 16; j += 2)
          {
@@ -58,10 +61,7 @@ void Twofish::encrypt_n(const byte in[], byte out[], size_t blocks) const
       A ^= m_RK[6];
       B ^= m_RK[7];
 
-      store_le(out, C, D, A, B);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      store_le(out + BLOCK_SIZE*i, C, D, A, B);
       }
    }
 
@@ -70,12 +70,15 @@ void Twofish::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void Twofish::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u32bit A = load_le<u32bit>(in, 0) ^ m_RK[4];
-      u32bit B = load_le<u32bit>(in, 1) ^ m_RK[5];
-      u32bit C = load_le<u32bit>(in, 2) ^ m_RK[6];
-      u32bit D = load_le<u32bit>(in, 3) ^ m_RK[7];
+      u32bit A, B, C, D;
+      load_le(in + BLOCK_SIZE*i, A, B, C, D);
+
+      A ^= m_RK[4];
+      B ^= m_RK[5];
+      C ^= m_RK[6];
+      D ^= m_RK[7];
 
       for(size_t j = 0; j != 16; j += 2)
          {
@@ -109,10 +112,7 @@ void Twofish::decrypt_n(const byte in[], byte out[], size_t blocks) const
       A ^= m_RK[2];
       B ^= m_RK[3];
 
-      store_le(out, C, D, A, B);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      store_le(out + BLOCK_SIZE*i, C, D, A, B);
       }
    }
 
@@ -139,7 +139,7 @@ void Twofish::key_schedule(const byte key[], size_t length)
          m_SB[768+i] = MDS3[Q1[Q1[i]^S[ 3]]^S[ 7]];
          }
 
-      for(size_t i = 0; i != 40; i += 2)
+      BOTAN_PARALLEL_FOR(size_t i = 0; i < 40; i += 2)
          {
          u32bit X = MDS0[Q0[Q0[i  ]^key[ 8]]^key[ 0]] ^
                     MDS1[Q0[Q1[i  ]^key[ 9]]^key[ 1]] ^
@@ -166,7 +166,7 @@ void Twofish::key_schedule(const byte key[], size_t length)
          m_SB[768+i] = MDS3[Q1[Q1[Q0[i]^S[ 3]]^S[ 7]]^S[11]];
          }
 
-      for(size_t i = 0; i != 40; i += 2)
+      BOTAN_PARALLEL_FOR(size_t i = 0; i < 40; i += 2)
          {
          u32bit X = MDS0[Q0[Q0[Q1[i  ]^key[16]]^key[ 8]]^key[ 0]] ^
                     MDS1[Q0[Q1[Q1[i  ]^key[17]]^key[ 9]]^key[ 1]] ^
@@ -193,7 +193,7 @@ void Twofish::key_schedule(const byte key[], size_t length)
          m_SB[768+i] = MDS3[Q1[Q1[Q0[Q1[i]^S[ 3]]^S[ 7]]^S[11]]^S[15]];
          }
 
-      for(size_t i = 0; i != 40; i += 2)
+      BOTAN_PARALLEL_FOR(size_t i = 0; i < 40; i += 2)
          {
          u32bit X = MDS0[Q0[Q0[Q1[Q1[i  ]^key[24]]^key[16]]^key[ 8]]^key[ 0]] ^
                     MDS1[Q0[Q1[Q1[Q0[i  ]^key[25]]^key[17]]^key[ 9]]^key[ 1]] ^

@@ -645,10 +645,10 @@ inline u64bit FLINV(u64bit v, u64bit K)
 void encrypt(const byte in[], byte out[], size_t blocks,
              const secure_vector<u64bit>& SK, const size_t rounds)
    {
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u64bit D1 = load_be<u64bit>(in, 0);
-      u64bit D2 = load_be<u64bit>(in, 1);
+      u64bit D1, D2;
+      load_be(in + 16*i, D1, D2);
 
       const u64bit* K = SK.data();
 
@@ -676,10 +676,7 @@ void encrypt(const byte in[], byte out[], size_t blocks,
       D2 ^= *K++;
       D1 ^= *K++;
 
-      store_be(out, D2, D1);
-
-      in += 16;
-      out += 16;
+      store_be(out + 16*i, D2, D1);
       }
    }
 
@@ -689,10 +686,10 @@ void encrypt(const byte in[], byte out[], size_t blocks,
 void decrypt(const byte in[], byte out[], size_t blocks,
              const secure_vector<u64bit>& SK, const size_t rounds)
    {
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u64bit D1 = load_be<u64bit>(in, 0);
-      u64bit D2 = load_be<u64bit>(in, 1);
+      u64bit D1, D2;
+      load_be(in + 16*i, D1, D2);
 
       const u64bit* K = &SK[SK.size()-1];
 
@@ -720,10 +717,7 @@ void decrypt(const byte in[], byte out[], size_t blocks,
       D1 ^= *K--;
       D2 ^= *K;
 
-      store_be(out, D2, D1);
-
-      in += 16;
-      out += 16;
+      store_be(out + 16*i, D2, D1);
       }
    }
 

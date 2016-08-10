@@ -355,7 +355,7 @@ void AES_128::ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const
 
    CT::poison(in, blocks * block_size());
 
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
       _mm_storeu_si128(out_mm + i, aes_ssse3_encrypt(B, keys, 10));
@@ -378,7 +378,7 @@ void AES_128::ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const
 
    CT::poison(in, blocks * block_size());
 
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       __m128i B = _mm_loadu_si128(in_mm + i);
       _mm_storeu_si128(out_mm + i, aes_ssse3_decrypt(B, keys, 10));

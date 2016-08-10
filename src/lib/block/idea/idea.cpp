@@ -67,12 +67,10 @@ void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
    CT::poison(out, blocks * 8);
    CT::poison(K, 52);
 
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u16bit X1 = load_be<u16bit>(in + BLOCK_SIZE*i, 0);
-      u16bit X2 = load_be<u16bit>(in + BLOCK_SIZE*i, 1);
-      u16bit X3 = load_be<u16bit>(in + BLOCK_SIZE*i, 2);
-      u16bit X4 = load_be<u16bit>(in + BLOCK_SIZE*i, 3);
+      u16bit X1, X2, X3, X4;
+      load_be(in + BLOCK_SIZE*i, X1, X2, X3, X4);
 
       for(size_t j = 0; j != 8; ++j)
          {

@@ -168,12 +168,15 @@ void aes_encrypt_n(const byte in[], byte out[],
       }
    Z &= TE[82]; // this is zero, which hopefully the compiler cannot deduce
 
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u32bit T0 = load_be<u32bit>(in, 0) ^ EK[0];
-      u32bit T1 = load_be<u32bit>(in, 1) ^ EK[1];
-      u32bit T2 = load_be<u32bit>(in, 2) ^ EK[2];
-      u32bit T3 = load_be<u32bit>(in, 3) ^ EK[3];
+      u32bit T0, T1, T2, T3;
+      load_be(in + 16*i, T0, T1, T2, T3);
+
+      T0 ^= EK[0];
+      T1 ^= EK[1];
+      T2 ^= EK[2];
+      T3 ^= EK[3];
 
       T0 ^= Z;
 
@@ -226,25 +229,22 @@ void aes_encrypt_n(const byte in[], byte out[],
                         TE[get_byte(2, T1) + 512] ^ TE[get_byte(3, T2) + 768];
          }
 
-      out[ 0] = SE[get_byte(0, B0)] ^ ME[0];
-      out[ 1] = SE[get_byte(1, B1)] ^ ME[1];
-      out[ 2] = SE[get_byte(2, B2)] ^ ME[2];
-      out[ 3] = SE[get_byte(3, B3)] ^ ME[3];
-      out[ 4] = SE[get_byte(0, B1)] ^ ME[4];
-      out[ 5] = SE[get_byte(1, B2)] ^ ME[5];
-      out[ 6] = SE[get_byte(2, B3)] ^ ME[6];
-      out[ 7] = SE[get_byte(3, B0)] ^ ME[7];
-      out[ 8] = SE[get_byte(0, B2)] ^ ME[8];
-      out[ 9] = SE[get_byte(1, B3)] ^ ME[9];
-      out[10] = SE[get_byte(2, B0)] ^ ME[10];
-      out[11] = SE[get_byte(3, B1)] ^ ME[11];
-      out[12] = SE[get_byte(0, B3)] ^ ME[12];
-      out[13] = SE[get_byte(1, B0)] ^ ME[13];
-      out[14] = SE[get_byte(2, B1)] ^ ME[14];
-      out[15] = SE[get_byte(3, B2)] ^ ME[15];
-
-      in += 16;
-      out += 16;
+      out[16*i+ 0] = SE[get_byte(0, B0)] ^ ME[0];
+      out[16*i+ 1] = SE[get_byte(1, B1)] ^ ME[1];
+      out[16*i+ 2] = SE[get_byte(2, B2)] ^ ME[2];
+      out[16*i+ 3] = SE[get_byte(3, B3)] ^ ME[3];
+      out[16*i+ 4] = SE[get_byte(0, B1)] ^ ME[4];
+      out[16*i+ 5] = SE[get_byte(1, B2)] ^ ME[5];
+      out[16*i+ 6] = SE[get_byte(2, B3)] ^ ME[6];
+      out[16*i+ 7] = SE[get_byte(3, B0)] ^ ME[7];
+      out[16*i+ 8] = SE[get_byte(0, B2)] ^ ME[8];
+      out[16*i+ 9] = SE[get_byte(1, B3)] ^ ME[9];
+      out[16*i+10] = SE[get_byte(2, B0)] ^ ME[10];
+      out[16*i+11] = SE[get_byte(3, B1)] ^ ME[11];
+      out[16*i+12] = SE[get_byte(0, B3)] ^ ME[12];
+      out[16*i+13] = SE[get_byte(1, B0)] ^ ME[13];
+      out[16*i+14] = SE[get_byte(2, B1)] ^ ME[14];
+      out[16*i+15] = SE[get_byte(3, B2)] ^ ME[15];
       }
    }
 

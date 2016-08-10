@@ -1,6 +1,6 @@
 /*
 * XTEA
-* (C) 1999-2009 Jack Lloyd
+* (C) 1999-2009,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,80 +10,49 @@
 
 namespace Botan {
 
-namespace {
-
-void xtea_encrypt_4(const byte in[32], byte out[32], const u32bit EK[64])
-   {
-   u32bit L0, R0, L1, R1, L2, R2, L3, R3;
-   load_be(in, L0, R0, L1, R1, L2, R2, L3, R3);
-
-   for(size_t i = 0; i != 32; ++i)
-      {
-      L0 += (((R0 << 4) ^ (R0 >> 5)) + R0) ^ EK[2*i];
-      L1 += (((R1 << 4) ^ (R1 >> 5)) + R1) ^ EK[2*i];
-      L2 += (((R2 << 4) ^ (R2 >> 5)) + R2) ^ EK[2*i];
-      L3 += (((R3 << 4) ^ (R3 >> 5)) + R3) ^ EK[2*i];
-
-      R0 += (((L0 << 4) ^ (L0 >> 5)) + L0) ^ EK[2*i+1];
-      R1 += (((L1 << 4) ^ (L1 >> 5)) + L1) ^ EK[2*i+1];
-      R2 += (((L2 << 4) ^ (L2 >> 5)) + L2) ^ EK[2*i+1];
-      R3 += (((L3 << 4) ^ (L3 >> 5)) + L3) ^ EK[2*i+1];
-      }
-
-   store_be(out, L0, R0, L1, R1, L2, R2, L3, R3);
-   }
-
-void xtea_decrypt_4(const byte in[32], byte out[32], const u32bit EK[64])
-   {
-   u32bit L0, R0, L1, R1, L2, R2, L3, R3;
-   load_be(in, L0, R0, L1, R1, L2, R2, L3, R3);
-
-   for(size_t i = 0; i != 32; ++i)
-      {
-      R0 -= (((L0 << 4) ^ (L0 >> 5)) + L0) ^ EK[63 - 2*i];
-      R1 -= (((L1 << 4) ^ (L1 >> 5)) + L1) ^ EK[63 - 2*i];
-      R2 -= (((L2 << 4) ^ (L2 >> 5)) + L2) ^ EK[63 - 2*i];
-      R3 -= (((L3 << 4) ^ (L3 >> 5)) + L3) ^ EK[63 - 2*i];
-
-      L0 -= (((R0 << 4) ^ (R0 >> 5)) + R0) ^ EK[62 - 2*i];
-      L1 -= (((R1 << 4) ^ (R1 >> 5)) + R1) ^ EK[62 - 2*i];
-      L2 -= (((R2 << 4) ^ (R2 >> 5)) + R2) ^ EK[62 - 2*i];
-      L3 -= (((R3 << 4) ^ (R3 >> 5)) + R3) ^ EK[62 - 2*i];
-      }
-
-   store_be(out, L0, R0, L1, R1, L2, R2, L3, R3);
-   }
-
-}
-
 /*
 * XTEA Encryption
 */
 void XTEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   while(blocks >= 4)
-      {
-      xtea_encrypt_4(in, out, &(this->m_EK[0]));
-      in += 4 * BLOCK_SIZE;
-      out += 4 * BLOCK_SIZE;
-      blocks -= 4;
-      }
+   const u32bit* EK = &m_EK[0];
 
-   for(size_t i = 0; i != blocks; ++i)
-      {
-      u32bit L = load_be<u32bit>(in, 0);
-      u32bit R = load_be<u32bit>(in, 1);
+   const size_t blocks4 = blocks / 4;
+   const size_t blocks_left = blocks % 4;
 
-      for(size_t j = 0; j != 32; ++j)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks4; i++)
+      {
+      u32bit L0, R0, L1, R1, L2, R2, L3, R3;
+      load_be(in + 4*BLOCK_SIZE*i, L0, R0, L1, R1, L2, R2, L3, R3);
+
+      for(size_t r = 0; r != 32; ++r)
          {
-         L += (((R << 4) ^ (R >> 5)) + R) ^ m_EK[2*j];
-         R += (((L << 4) ^ (L >> 5)) + L) ^ m_EK[2*j+1];
+         L0 += (((R0 << 4) ^ (R0 >> 5)) + R0) ^ EK[2*r];
+         L1 += (((R1 << 4) ^ (R1 >> 5)) + R1) ^ EK[2*r];
+         L2 += (((R2 << 4) ^ (R2 >> 5)) + R2) ^ EK[2*r];
+         L3 += (((R3 << 4) ^ (R3 >> 5)) + R3) ^ EK[2*r];
+
+         R0 += (((L0 << 4) ^ (L0 >> 5)) + L0) ^ EK[2*r+1];
+         R1 += (((L1 << 4) ^ (L1 >> 5)) + L1) ^ EK[2*r+1];
+         R2 += (((L2 << 4) ^ (L2 >> 5)) + L2) ^ EK[2*r+1];
+         R3 += (((L3 << 4) ^ (L3 >> 5)) + L3) ^ EK[2*r+1];
          }
 
-      store_be(out, L, R);
+      store_be(out + 4*BLOCK_SIZE*i, L0, R0, L1, R1, L2, R2, L3, R3);
+      }
+      
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks_left; ++i)
+      {
+      u32bit L, R;
+      load_be(in + BLOCK_SIZE*(4*blocks4+i), L, R);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      for(size_t r = 0; r != 32; ++r)
+         {
+         L += (((R << 4) ^ (R >> 5)) + R) ^ EK[2*r];
+         R += (((L << 4) ^ (L >> 5)) + L) ^ EK[2*r+1];
+         }
+
+      store_be(out + BLOCK_SIZE*(4*blocks4+i), L, R);
       }
    }
 
@@ -92,29 +61,44 @@ void XTEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void XTEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   while(blocks >= 4)
-      {
-      xtea_decrypt_4(in, out, &(this->m_EK[0]));
-      in += 4 * BLOCK_SIZE;
-      out += 4 * BLOCK_SIZE;
-      blocks -= 4;
-      }
+   const u32bit* EK = &m_EK[0];
 
-   for(size_t i = 0; i != blocks; ++i)
-      {
-      u32bit L = load_be<u32bit>(in, 0);
-      u32bit R = load_be<u32bit>(in, 1);
+   const size_t blocks4 = blocks / 4;
+   const size_t blocks_left = blocks % 4;
 
-      for(size_t j = 0; j != 32; ++j)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks4; i++)
+      {
+      u32bit L0, R0, L1, R1, L2, R2, L3, R3;
+      load_be(in + 4*BLOCK_SIZE*i, L0, R0, L1, R1, L2, R2, L3, R3);
+
+      for(size_t r = 0; r != 32; ++r)
          {
-         R -= (((L << 4) ^ (L >> 5)) + L) ^ m_EK[63 - 2*j];
-         L -= (((R << 4) ^ (R >> 5)) + R) ^ m_EK[62 - 2*j];
+         R0 -= (((L0 << 4) ^ (L0 >> 5)) + L0) ^ EK[63 - 2*r];
+         R1 -= (((L1 << 4) ^ (L1 >> 5)) + L1) ^ EK[63 - 2*r];
+         R2 -= (((L2 << 4) ^ (L2 >> 5)) + L2) ^ EK[63 - 2*r];
+         R3 -= (((L3 << 4) ^ (L3 >> 5)) + L3) ^ EK[63 - 2*r];
+
+         L0 -= (((R0 << 4) ^ (R0 >> 5)) + R0) ^ EK[62 - 2*r];
+         L1 -= (((R1 << 4) ^ (R1 >> 5)) + R1) ^ EK[62 - 2*r];
+         L2 -= (((R2 << 4) ^ (R2 >> 5)) + R2) ^ EK[62 - 2*r];
+         L3 -= (((R3 << 4) ^ (R3 >> 5)) + R3) ^ EK[62 - 2*r];
          }
 
-      store_be(out, L, R);
+      store_be(out + 4*BLOCK_SIZE*i, L0, R0, L1, R1, L2, R2, L3, R3);
+      }
+      
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks_left; ++i)
+      {
+      u32bit L, R;
+      load_be(in + BLOCK_SIZE*(4*blocks4+i), L, R);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      for(size_t r = 0; r != 32; ++r)
+         {
+         R -= (((L << 4) ^ (L >> 5)) + L) ^ m_EK[63 - 2*r];
+         L -= (((R << 4) ^ (R >> 5)) + R) ^ m_EK[62 - 2*r];
+         }
+
+      store_be(out + BLOCK_SIZE*(4*blocks4+i), L, R);
       }
    }
 

@@ -122,16 +122,10 @@ void Threefish_512::encrypt_n(const byte in[], byte out[], size_t blocks) const
       }
 #endif
 
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u64bit X0 = load_le<u64bit>(in, 0);
-      u64bit X1 = load_le<u64bit>(in, 1);
-      u64bit X2 = load_le<u64bit>(in, 2);
-      u64bit X3 = load_le<u64bit>(in, 3);
-      u64bit X4 = load_le<u64bit>(in, 4);
-      u64bit X5 = load_le<u64bit>(in, 5);
-      u64bit X6 = load_le<u64bit>(in, 6);
-      u64bit X7 = load_le<u64bit>(in, 7);
+      u64bit X0, X1, X2, X3, X4, X5, X6, X7;
+      load_le(in + BLOCK_SIZE*i, X0, X1, X2, X3, X4, X5, X6, X7);
 
       THREEFISH_INJECT_KEY(0);
 
@@ -145,10 +139,7 @@ void Threefish_512::encrypt_n(const byte in[], byte out[], size_t blocks) const
       THREEFISH_ENC_8_ROUNDS(15,16);
       THREEFISH_ENC_8_ROUNDS(17,18);
 
-      store_le(out, X0, X1, X2, X3, X4, X5, X6, X7);
-
-      in += 64;
-      out += 64;
+      store_le(out + BLOCK_SIZE*i, X0, X1, X2, X3, X4, X5, X6, X7);
       }
    }
 
@@ -211,16 +202,10 @@ void Threefish_512::decrypt_n(const byte in[], byte out[], size_t blocks) const
       THREEFISH_INJECT_KEY(R2);                               \
    } while(0)
 
-   for(size_t i = 0; i != blocks; ++i)
+   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u64bit X0 = load_le<u64bit>(in, 0);
-      u64bit X1 = load_le<u64bit>(in, 1);
-      u64bit X2 = load_le<u64bit>(in, 2);
-      u64bit X3 = load_le<u64bit>(in, 3);
-      u64bit X4 = load_le<u64bit>(in, 4);
-      u64bit X5 = load_le<u64bit>(in, 5);
-      u64bit X6 = load_le<u64bit>(in, 6);
-      u64bit X7 = load_le<u64bit>(in, 7);
+      u64bit X0, X1, X2, X3, X4, X5, X6, X7;
+      load_le(in + BLOCK_SIZE*i, X0, X1, X2, X3, X4, X5, X6, X7);
 
       THREEFISH_INJECT_KEY(18);
 
@@ -234,10 +219,7 @@ void Threefish_512::decrypt_n(const byte in[], byte out[], size_t blocks) const
       THREEFISH_DEC_8_ROUNDS(3,2);
       THREEFISH_DEC_8_ROUNDS(1,0);
 
-      store_le(out, X0, X1, X2, X3, X4, X5, X6, X7);
-
-      in += 64;
-      out += 64;
+      store_le(out + BLOCK_SIZE*i, X0, X1, X2, X3, X4, X5, X6, X7);
       }
 
 #undef THREEFISH_DEC_8_ROUNDS
