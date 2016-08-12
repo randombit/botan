@@ -260,7 +260,7 @@ bool X509_Certificate::allowed_usage(Key_Constraints usage) const
    return ((constraints() & usage) != 0);
    }
 
-bool X509_Certificate::allowed_usage(const std::string& usage) const
+bool X509_Certificate::allowed_extended_usage(const std::string& usage) const
    {
    const std::vector<std::string> ex = ex_constraints();
 
@@ -281,16 +281,43 @@ bool X509_Certificate::allowed_usage(Usage_Type usage) const
          return true;
 
       case Usage_Type::TLS_SERVER_AUTH:
-         return allowed_usage(Key_Constraints(DATA_ENCIPHERMENT | KEY_ENCIPHERMENT | DIGITAL_SIGNATURE)) && allowed_usage("PKIX.ServerAuth");
+         return allowed_usage(Key_Constraints(DATA_ENCIPHERMENT | KEY_ENCIPHERMENT | DIGITAL_SIGNATURE)) && allowed_extended_usage("PKIX.ServerAuth");
 
       case Usage_Type::TLS_CLIENT_AUTH:
-         return allowed_usage(Key_Constraints(DIGITAL_SIGNATURE | NON_REPUDIATION)) && allowed_usage("PKIX.ClientAuth");
+         return allowed_usage(Key_Constraints(DIGITAL_SIGNATURE | NON_REPUDIATION)) && allowed_extended_usage("PKIX.ClientAuth");
 
       case Usage_Type::OCSP_RESPONDER:
-         return allowed_usage(Key_Constraints(DIGITAL_SIGNATURE | NON_REPUDIATION)) && allowed_usage("PKIX.OCSPSigning");
+         return allowed_usage(Key_Constraints(DIGITAL_SIGNATURE | NON_REPUDIATION)) && allowed_extended_usage("PKIX.OCSPSigning");
 
       case Usage_Type::CERTIFICATE_AUTHORITY:
          return is_CA_cert();
+      }
+
+   return false;
+   }
+
+bool X509_Certificate::has_constraints(Key_Constraints constraints) const
+   {
+   if(this->constraints() == NO_CONSTRAINTS)
+      {
+      return false;
+      }
+
+   return ((this->constraints() & constraints) != 0);
+   }
+
+bool X509_Certificate::has_ex_constraint(const std::string& ex_constraint) const
+   {
+   const std::vector<std::string> ex = ex_constraints();
+
+   if(ex.empty())
+      {
+      return false;
+      }
+
+   if(std::find(ex.begin(), ex.end(), ex_constraint) != ex.end())
+      {
+      return true;
       }
 
    return false;

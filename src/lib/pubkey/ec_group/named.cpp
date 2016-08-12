@@ -255,6 +255,16 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "/////////////////////2xhEHCZWtEARYQbCbdhuJMCAQE="
          "-----END EC PARAMETERS-----";
 
+   if(name == "frp256v1")
+      return
+         "-----BEGIN EC PARAMETERS-----"
+         "MIHgAgEBMCwGByqGSM49AQECIQDx/ReMCzrVjxASbejOQkNbOWGtvKvIym3o/PNT"
+         "2G6cAzBEBCDx/ReMCzrVjxASbejOQkNbOWGtvKvIym3o/PNT2G6cAAQg7jU/ylQo"
+         "qTANSrp1SkTAD9/sDJrksaGAMHXtlnt7tz8EQQS2s9TDVsE56zEYPUdJ1COVjCfS"
+         "3K+YtwFkyXot2Y9c/2FC4PfIsgSRH5Jx8PPs74wnAcMH6OTJ4YMRWhVUBiz7AiEA"
+         "8f0XjAs61Y8QEm3ozkJDW1PcZ+FA0r+UH/3UWcbWVeECAQE="
+         "-----END EC PARAMETERS-----";
+
    return nullptr;
    }
 

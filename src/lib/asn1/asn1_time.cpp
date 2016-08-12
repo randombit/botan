@@ -250,6 +250,11 @@ bool X509_Time::passes_sanity_check() const
    return true;
    }
 
+std::chrono::system_clock::time_point X509_Time::to_std_timepoint() const
+   {
+   return calendar_point(m_year, m_month, m_day, m_hour, m_minute, m_second).to_std_timepoint();
+   }
+
 /*
 * Compare two X509_Times for in various ways
 */

@@ -51,7 +51,7 @@ class ECDH_Keygen_Tests : public PK_Key_Generation_Test
       std::vector<std::string> keygen_params() const override
          {
          return { "secp256r1", "secp384r1", "secp521r1",
-                  "brainpool256r1", "brainpool384r1", "brainpool512r1" };
+                  "brainpool256r1", "brainpool384r1", "brainpool512r1", "frp256v1" };
          }
 
       std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,

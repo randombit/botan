@@ -81,7 +81,7 @@ void check_signature(const std::vector<byte>& tbs_response,
 
    // Otherwise attempt to chain the signing cert to a trust root
 
-   if(!certs[0].allowed_usage("PKIX.OCSPSigning"))
+   if(!certs[0].allowed_extended_usage("PKIX.OCSPSigning"))
       throw Exception("OCSP response cert does not allow OCSP signing");
 
    auto result = x509_path_validate(certs, Path_Validation_Restrictions(), trusted_roots);

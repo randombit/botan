@@ -62,6 +62,7 @@ altivec -> "-maltivec"
 </isa_flags>
 
 <mach_opt>
+x86_32      -> "-march=SUBMODEL"
 x86_64      -> "-march=SUBMODEL"
 nehalem     -> "-march=corei7"
 sandybridge -> "-march=corei7-avx"
@@ -71,8 +72,10 @@ ivybridge   -> "-march=core-avx-i"
 <mach_abi_linking>
 all     -> "-pthread"
 
+x86_32  -> "-m32"
 x86_64  -> "-m64"
 ppc64   -> "-m64"
 
+darwin  -> "-stdlib=libc++"
 netbsd  -> "-D_NETBSD_SOURCE"
 </mach_abi_linking>
