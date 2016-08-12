@@ -8,8 +8,8 @@
  * https://www.oasis-open.org/policies-guidelines/ipr
  */
 
-#ifndef _PKCS11_H_
-#define _PKCS11_H_ 1
+#ifndef BOTAN_PKCS11_H__
+#define BOTAN_PKCS11_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -261,4 +261,3 @@ struct CK_FUNCTION_LIST {
 #endif
 
 #endif /* _PKCS11_H_ */
-

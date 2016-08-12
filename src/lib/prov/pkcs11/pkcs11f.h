@@ -8,6 +8,9 @@
  * https://www.oasis-open.org/policies-guidelines/ipr
  */
 
+#ifndef BOTAN_PKCS11F_H__
+#define BOTAN_PKCS11F_H__
+ 
 /* This header file contains pretty much everything about all the
  * Cryptoki function prototypes.  Because this information is
  * used for more than just declaring function prototypes, the
@@ -936,3 +939,4 @@ CK_PKCS11_FUNCTION_INFO(C_WaitForSlotEvent)
 );
 #endif
 
+#endif

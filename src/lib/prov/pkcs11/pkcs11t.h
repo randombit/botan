@@ -13,8 +13,8 @@
  * must be set before including this file.
  */
 
-#ifndef _PKCS11T_H_
-#define _PKCS11T_H_ 1
+#ifndef BOTAN_PKCS11T_H__
+#define BOTAN_PKCS11T_H__
 
 #define CRYPTOKI_VERSION_MAJOR          2
 #define CRYPTOKI_VERSION_MINOR          40
