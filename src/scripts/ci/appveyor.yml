@@ -10,10 +10,14 @@ environment:
       MODE: --enable-shared
     - COMPILER: msvc-12.0
       MODE: --disable-shared
+    - COMPILER: msvc-12.0
+      MODE: --via-amalgamation
     - COMPILER: msvc-14.0
       MODE: --enable-shared
     - COMPILER: msvc-14.0
       MODE: --disable-shared
+    - COMPILER: msvc-14.0
+      MODE: --via-amalgamation
 
 install:
   - if %compiler% == msvc-12.0 (

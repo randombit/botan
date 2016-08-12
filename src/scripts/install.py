@@ -147,6 +147,12 @@ def main(args = None):
         copy_file(os.path.join(build_include_dir, include),
                   os.path.join(target_include_dir, include))
 
+    build_external_include_dir = os.path.join(options.build_dir, 'include', 'external')
+
+    for include in sorted(os.listdir(build_external_include_dir)):
+        copy_file(os.path.join(build_external_include_dir, include),
+                  os.path.join(target_include_dir, include))
+
     static_lib = process_template('%{lib_prefix}%{libname}.%{static_suffix}')
     copy_file(os.path.join(out_dir, static_lib),
               os.path.join(lib_dir, os.path.basename(static_lib)))
