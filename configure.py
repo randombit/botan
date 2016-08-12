@@ -658,21 +658,14 @@ class ModuleInfo(object):
         else:
             self.warning = None
 
-        intersection = set.intersection(set(self.header_public), set(self.header_internal), set(self.header_external))
-        if len(intersection) > 0:
-            logging.warning('Headers %s marked public, internal and external' % (' '.join(intersection)))
-        else:
-            intersection = set.intersection(set(self.header_public), set(self.header_internal))
-            if len(intersection) > 0:
-                logging.warning('Headers %s marked both public and internal' % (' '.join(intersection)))
+        def intersect_check(typeA, listA, typeB, listB):
+           intersection = set.intersection(set(listA), set(listB))
+           if len(intersection) > 0:
+              logging.error('Headers %s marked both %s and %s' % (' '.join(intersection), typeA, typeB))
 
-            intersection = set.intersection(set(self.header_public), set(self.header_external))
-            if len(intersection) > 0:
-                logging.warning('Headers %s marked both public and external' % (' '.join(intersection)))
-
-            intersection = set.intersection(set(self.header_external), set(self.header_internal))
-            if len(intersection) > 0:
-                logging.warning('Headers %s marked both external and internal' % (' '.join(intersection)))    
+        intersect_check('public', self.header_public, 'internal', self.header_internal)
+        intersect_check('public', self.header_public, 'external', self.header_external)
+        intersect_check('external', self.header_external, 'internal', self.header_internal)
 
     def sources(self):
         return self.source
