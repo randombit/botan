@@ -60,7 +60,7 @@ void log_text_message(const char* where,  const uint8_t buf[], size_t buf_len)
    //std::cout << where << ' ' << std::string(c, c + buf_len)  << std::endl;
    }
 
-class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_session>
+class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_session>, public Botan::TLS::Callbacks
    {
    public:
       enum { readbuf_size = 4 * 1024 };
@@ -112,10 +112,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
          m_server_endpoints(endpoints),
          m_client_socket(io),
          m_server_socket(io),
-         m_tls(Botan::TLS::Callbacks(boost::bind(&tls_proxy_session::tls_proxy_write_to_client, this, _1, _2),
-               boost::bind(&tls_proxy_session::tls_client_write_to_proxy, this, _1, _2),
-               boost::bind(&tls_proxy_session::tls_alert_cb, this, _1),
-               boost::bind(&tls_proxy_session::tls_handshake_complete, this, _1)),
+         m_tls(*this,
                session_manager,
                credentials,
                policy,
@@ -168,7 +165,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
             {
             m_client_socket.close();
             }
-         tls_proxy_write_to_client(nullptr, 0); // initiate another write if needed
+         tls_emit_data(nullptr, 0); // initiate another write if needed
          }
 
       void handle_server_write_completion(const boost::system::error_code& error)
@@ -184,13 +181,13 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
          proxy_write_to_server(nullptr, 0); // initiate another write if needed
          }
 
-      void tls_client_write_to_proxy(const uint8_t buf[], size_t buf_len)
+      void tls_record_received(uint64_t /*rec_no*/, const uint8_t buf[], size_t buf_len) override
          {
          // Immediately bounce message to server
          proxy_write_to_server(buf, buf_len);
          }
 
-      void tls_proxy_write_to_client(const uint8_t buf[], size_t buf_len)
+      void tls_emit_data(const uint8_t buf[], size_t buf_len) override
          {
          if(buf_len > 0)
             m_p2c_pending.insert(m_p2c_pending.end(), buf, buf + buf_len);
@@ -269,7 +266,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
                                       boost::asio::placeholders::bytes_transferred)));
          }
 
-      bool tls_handshake_complete(const Botan::TLS::Session& session)
+      bool tls_session_established(const Botan::TLS::Session& session) override
          {
          //std::cout << "Handshake from client complete" << std::endl;
 
@@ -293,7 +290,7 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
          return true;
          }
 
-      void tls_alert_cb(Botan::TLS::Alert alert)
+      void tls_alert(Botan::TLS::Alert alert) override
          {
          if(alert.type() == Botan::TLS::Alert::CLOSE_NOTIFY)
             {

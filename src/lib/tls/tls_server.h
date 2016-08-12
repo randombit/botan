@@ -30,8 +30,29 @@ class BOTAN_DLL Server final : public Channel
 
       /**
       * Server initialization
+      *
+      * @param callbacks contains a set of callback function references
+      *        required by the TLS client.
+      *
+      * @param session_manager manages session state
+      *
+      * @param creds manages application/user credentials
+      *
+      * @param policy specifies other connection policy information
+      *
+      * @param rng a random number generator
+      *
+      * @param next_proto is called with client's ALPN protocol list
+      *        and returns chosen protocol.
+      *
+      * @param is_datagram set to true if this server should expect DTLS
+      *        connections. Otherwise TLS connections are expected.
+      *
+      * @param reserved_io_buffer_size This many bytes of memory will
+      *        be preallocated for the read and write buffers. Smaller
+      *        values just mean reallocations and copies are more likely.
       */
-      Server(const Callbacks& callbacks,
+      Server(Callbacks& callbacks,
              Session_Manager& session_manager,
              Credentials_Manager& creds,
              const Policy& policy,

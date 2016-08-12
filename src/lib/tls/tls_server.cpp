@@ -8,7 +8,6 @@
 
 #include <botan/tls_server.h>
 #include <botan/internal/tls_handshake_state.h>
-#include <botan/internal/tls_server_handshake_state.h>
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
 #include <botan/tls_magic.h>
@@ -17,9 +16,34 @@ namespace Botan {
 
 namespace TLS {
 
+class Server_Handshake_State : public Handshake_State
+   {
+   public:
+      Server_Handshake_State(Handshake_IO* io, Callbacks& cb)
+         : Handshake_State(io, cb) {}
+
+      Private_Key* server_rsa_kex_key() { return m_server_rsa_kex_key; }
+      void set_server_rsa_kex_key(Private_Key* key)
+         { m_server_rsa_kex_key = key; }
+
+      bool allow_session_resumption() const
+         { return m_allow_session_resumption; }
+      void set_allow_session_resumption(bool allow_session_resumption)
+         { m_allow_session_resumption = allow_session_resumption; }
+
+
+   private:
+      // Used by the server only, in case of RSA key exchange. Not owned
+      Private_Key* m_server_rsa_kex_key = nullptr;
+
+      /*
+      * Used by the server to know if resumption should be allowed on
+      * a server-initiated renegotiation
+      */
+      bool m_allow_session_resumption = true;
+   };
+
 namespace {
-
-
 
 bool check_for_resume(Session& session_info,
                       Session_Manager& session_manager,
@@ -213,7 +237,7 @@ get_server_certs(const std::string& hostname,
 /*
 * TLS Server Constructor
 */
-Server::Server(const Callbacks& callbacks,
+Server::Server(Callbacks& callbacks,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
@@ -268,11 +292,7 @@ Server::Server(output_fn output,
 
 Handshake_State* Server::new_handshake_state(Handshake_IO* io)
    {
-   std::unique_ptr<Handshake_State> state(
-      new Server_Handshake_State(io,
-                                 std::bind(&TLS::Callbacks::handshake_msg,
-                                           get_callbacks(),
-                                           std::placeholders::_1)));
+   std::unique_ptr<Handshake_State> state(new Server_Handshake_State(io, callbacks()));
 
    state->set_expected_next(CLIENT_HELLO);
    return state.release();

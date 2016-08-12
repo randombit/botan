@@ -102,10 +102,6 @@ class Record
            m_type(type), m_size(data.size()) {};
 
       secure_vector<byte>& get_data() { return m_data; }
-      void set_data(secure_vector<byte> data)
-         {
-         m_data.swap(data);
-         }
 
       Protocol_Version* get_protocol_version() { return m_protocol_version; }
 

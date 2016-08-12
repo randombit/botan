@@ -1,7 +1,6 @@
 /*
 * TLS echo server using BSD sockets
 * (C) 2014 Jack Lloyd
-*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -107,11 +106,10 @@ class TLS_Server final : public Command
                      }
                };
 
-            Botan::TLS::Server server(Botan::TLS::Callbacks(
-                                         socket_write,
-                                         proc_fn,
-                                         std::bind(&TLS_Server::alert_received, this, _1),
-                                         std::bind(&TLS_Server::handshake_complete, this, _1)),
+            Botan::TLS::Server server(socket_write,
+                                      proc_fn,
+                                      std::bind(&TLS_Server::alert_received, this, _1, _2, _3),
+                                      std::bind(&TLS_Server::handshake_complete, this, _1),
                                       session_manager,
                                       creds,
                                       policy,
@@ -238,7 +236,7 @@ class TLS_Server final : public Command
             }
          }
 
-      void alert_received(Botan::TLS::Alert alert)
+      void alert_received(Botan::TLS::Alert alert, const uint8_t[], size_t)
          {
          std::cout << "Alert: " << alert.type_string() << std::endl;
          }

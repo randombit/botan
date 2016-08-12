@@ -36,12 +36,12 @@ class BOTAN_DLL Channel
    public:
       typedef std::function<void (const byte[], size_t)> output_fn;
       typedef std::function<void (const byte[], size_t)> data_cb;
-      typedef std::function<void (Alert)> alert_cb;
+      typedef std::function<void (Alert, const byte[], size_t)> alert_cb;
       typedef std::function<bool (const Session&)> handshake_cb;
       typedef std::function<void (const Handshake_Message&)> handshake_msg_cb;
       static size_t IO_BUF_DEFAULT_SIZE;
 
-      Channel(const Callbacks& callbacks,
+      Channel(Callbacks& callbacks,
               Session_Manager& session_manager,
               RandomNumberGenerator& rng,
               const Policy& policy,
@@ -215,9 +215,9 @@ class BOTAN_DLL Channel
 
       const Policy& policy() const { return m_policy; }
 
-      bool save_session(const Session& session) const { return m_callbacks.handshake(session); }
+      bool save_session(const Session& session) const { return callbacks().tls_session_established(session); }
 
-      Callbacks get_callbacks() const { return m_callbacks; }
+      Callbacks& callbacks() const { return m_callbacks; }
    private:
       void init(size_t io_buf_sze);
 
@@ -245,19 +245,20 @@ class BOTAN_DLL Channel
       const Handshake_State* pending_state() const { return m_pending_state.get(); }
 
       /* methods to handle incoming traffic through Channel::receive_data. */
-      void process_handshake_ccs(secure_vector<byte>& record,
-                                 u64bit& record_sequence,
-                                 Record_Type& record_type,
-                                 Protocol_Version& record_version);
+      void process_handshake_ccs(const secure_vector<byte>& record,
+                                 u64bit record_sequence,
+                                 Record_Type record_type,
+                                 Protocol_Version record_version);
 
-      void process_application_data(secure_vector<byte>& record);
+      void process_application_data(u64bit req_no, const secure_vector<byte>& record);
 
-      void process_alert(secure_vector<byte>& record);
+      void process_alert(const secure_vector<byte>& record);
 
       bool m_is_datagram;
 
       /* callbacks */
-      Callbacks m_callbacks;
+      std::unique_ptr<Compat_Callbacks> m_compat_callbacks;
+      Callbacks& m_callbacks;
 
       /* external state */
       Session_Manager& m_session_manager;

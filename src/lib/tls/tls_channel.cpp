@@ -1,6 +1,6 @@
 /*
 * TLS Channels
-* (C) 2011,2012,2014,2015 Jack Lloyd
+* (C) 2011,2012,2014,2015,2016 Jack Lloyd
 *     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -21,7 +21,7 @@ namespace TLS {
 
 size_t TLS::Channel::IO_BUF_DEFAULT_SIZE = 10*1024;
 
-Channel::Channel(const Callbacks& callbacks,
+Channel::Channel(Callbacks& callbacks,
                  Session_Manager& session_manager,
                  RandomNumberGenerator& rng,
                  const Policy& policy,
@@ -47,7 +47,8 @@ Channel::Channel(output_fn out,
                  bool is_datagram,
                  size_t io_buf_sz) :
     m_is_datagram(is_datagram),
-    m_callbacks(Callbacks(out, app_data_cb, alert_cb, hs_cb, hs_msg_cb)),
+    m_compat_callbacks(new Compat_Callbacks(out, app_data_cb, alert_cb, hs_cb, hs_msg_cb)),
+    m_callbacks(*m_compat_callbacks.get()),
     m_session_manager(session_manager),
     m_policy(policy),
     m_rng(rng)
@@ -319,15 +320,15 @@ size_t Channel::received_data(const byte input[], size_t input_size)
 
          if(record_type == HANDSHAKE || record_type == CHANGE_CIPHER_SPEC)
             {
-               process_handshake_ccs(record_data, record_sequence, record_type, record_version);
+            process_handshake_ccs(record_data, record_sequence, record_type, record_version);
             }
          else if(record_type == APPLICATION_DATA)
             {
-               process_application_data(record_data);
+            process_application_data(record_sequence, record_data);
             }
          else if(record_type == ALERT)
             {
-                process_alert(record_data);
+            process_alert(record_data);
             }
          else if(record_type != NO_RECORD)
             throw Unexpected_Message("Unexpected record type " +
@@ -359,10 +360,10 @@ size_t Channel::received_data(const byte input[], size_t input_size)
       }
    }
 
-void Channel::process_handshake_ccs(secure_vector<byte>& record,
-                                    u64bit& record_sequence,
-                                    Record_Type& record_type,
-                                    Protocol_Version& record_version)
+void Channel::process_handshake_ccs(const secure_vector<byte>& record,
+                                    u64bit record_sequence,
+                                    Record_Type record_type,
+                                    Protocol_Version record_version)
    {
    if(!m_pending_state)
       {
@@ -422,7 +423,7 @@ void Channel::process_handshake_ccs(secure_vector<byte>& record,
       }
    }
 
-void Channel::process_application_data(secure_vector<byte>& record)
+void Channel::process_application_data(u64bit seq_no, const secure_vector<byte>& record)
    {
    if(!active_state())
       throw Unexpected_Message("Application data before handshake done");
@@ -433,17 +434,17 @@ void Channel::process_application_data(secure_vector<byte>& record)
    * following record. Avoid spurious callbacks.
    */
    if(record.size() > 0)
-      m_callbacks.app_data(record.data(), record.size());
+      callbacks().tls_record_received(seq_no, record.data(), record.size());
    }
 
-void Channel::process_alert(secure_vector<byte>& record)
+void Channel::process_alert(const secure_vector<byte>& record)
     {
     Alert alert_msg(record);
 
     if(alert_msg.type() == Alert::NO_RENEGOTIATION)
        m_pending_state.reset();
 
-    m_callbacks.alert(alert_msg);
+    callbacks().tls_alert(alert_msg);
 
     if(alert_msg.is_fatal())
        {
@@ -478,7 +479,7 @@ void Channel::write_record(Connection_Cipher_State* cipher_state, u16bit epoch,
                      cipher_state,
                      m_rng);
 
-   m_callbacks.out_fn(m_writebuf.data(), m_writebuf.size());
+   callbacks().tls_emit_data(m_writebuf.data(), m_writebuf.size());
    }
 
 void Channel::send_record_array(u16bit epoch, byte type, const byte input[], size_t length)

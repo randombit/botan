@@ -33,6 +33,7 @@ class BOTAN_DLL Blocking_Client
       typedef std::function<size_t (byte[], size_t)> read_fn;
       typedef std::function<void (const byte[], size_t)> write_fn;
 
+      BOTAN_DEPRECATED("Use the regular TLS::Client interface")
       Blocking_Client(read_fn reader,
                       write_fn writer,
                       Session_Manager& session_manager,
@@ -93,6 +94,7 @@ class BOTAN_DLL Blocking_Client
       void alert_cb(const Alert& alert);
 
       read_fn m_read;
+      std::unique_ptr<Compat_Callbacks> m_callbacks;
       TLS::Client m_channel;
       secure_vector<byte> m_plaintext;
    };

@@ -24,12 +24,13 @@ Blocking_Client::Blocking_Client(read_fn reader,
                                  const Protocol_Version& offer_version,
                                  const std::vector<std::string>& next) :
    m_read(reader),
-   m_channel(TLS::Callbacks(
+   m_callbacks(new TLS::Compat_Callbacks(
                writer,
                std::bind(&Blocking_Client::data_cb, this, _1, _2),
-               std::bind(&Blocking_Client::alert_cb, this, _1),
+               std::function<void (Alert)>(std::bind(&Blocking_Client::alert_cb, this, _1)),
                std::bind(&Blocking_Client::handshake_cb, this, _1)
-             ),
+             )),
+   m_channel(*m_callbacks.get(),
              session_manager,
              creds,
              policy,
@@ -38,6 +39,7 @@ Blocking_Client::Blocking_Client(read_fn reader,
              offer_version,
              next)
    {
+   printf("hi\n");
    }
 
 bool Blocking_Client::handshake_cb(const Session& session)

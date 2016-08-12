@@ -30,7 +30,6 @@ tls_messages.h
 tls_reader.h
 tls_record.h
 tls_seq_numbers.h
-tls_server_handshake_state.h
 tls_session_key.h
 </header:internal>
 

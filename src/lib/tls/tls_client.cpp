@@ -24,7 +24,7 @@ class Client_Handshake_State : public Handshake_State
    public:
       // using Handshake_State::Handshake_State;
 
-      Client_Handshake_State(Handshake_IO* io, handshake_msg_cb cb) : Handshake_State(io, cb) {}
+      Client_Handshake_State(Handshake_IO* io, Callbacks& cb) : Handshake_State(io, cb) {}
 
       const Public_Key& get_server_public_Key() const
          {
@@ -43,7 +43,7 @@ class Client_Handshake_State : public Handshake_State
 /*
 * TLS Client Constructor
 */
-Client::Client(const Callbacks& callbacks,
+Client::Client(Callbacks& callbacks,
                Session_Manager& session_manager,
                Credentials_Manager& creds,
                const Policy& policy,
@@ -112,10 +112,7 @@ void Client::init(const Protocol_Version& protocol_version,
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)
    {
-   return new Client_Handshake_State(io,
-                                     std::bind(&TLS::Callbacks::handshake_msg,
-                                               get_callbacks(),
-                                               std::placeholders::_1));
+   return new Client_Handshake_State(io, callbacks());
    }
 
 std::vector<X509_Certificate>
