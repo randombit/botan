@@ -184,7 +184,7 @@ class BOTAN_DLL Session
       const Server_Information& server_info() const { return m_server_info; }
 
    private:
-      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20160103 };
+      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20160812};
 
       std::chrono::system_clock::time_point m_start_time;
 

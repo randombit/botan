@@ -1,6 +1,7 @@
 /*
 * TLS Extensions
 * (C) 2011,2012,2015,2016 Jack Lloyd
+*     2016 Juraj Somorovsky
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

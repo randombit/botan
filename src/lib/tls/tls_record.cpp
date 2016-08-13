@@ -1,6 +1,7 @@
 /*
 * TLS Record Handling
 * (C) 2012,2013,2014,2015 Jack Lloyd
+* (C) 2016 Juraj Somorovsky
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

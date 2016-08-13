@@ -82,6 +82,8 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
    {
    std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
+   policy.check_peer_key_acceptable(*key);
+
    std::pair<std::string, Signature_Format> format =
       state.parse_sig_format(*key.get(), m_hash_algo, m_sig_algo,
                              true, policy);

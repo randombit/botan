@@ -25,6 +25,7 @@ TLS
 
 * Make DTLS support optional at build time
 * Make TLS v1.0 and v1.1 optional at build time
+* Make finite field DH optional at build time
 * Curve25519 key exchange
 * TLS OCSP stapling (RFC 6066)
 * Encrypt-then-MAC extension (RFC 7366)

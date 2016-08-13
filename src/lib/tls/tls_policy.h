@@ -131,18 +131,47 @@ class BOTAN_DLL Policy
 
       /**
       * Return the minimum DH group size we're willing to use
+      * Default is currently 1024 (insecure), should be 2048
       */
       virtual size_t minimum_dh_group_size() const;
       
       /**
+      * For ECDSA authenticated ciphersuites, the smallest key size the
+      * client will accept.
+      * This policy is currently only enforced on the server by the client.
+      */
+      virtual size_t minimum_ecdsa_group_size() const;
+      
+      /**
       * Return the minimum ECDH group size we're willing to use
+      * for key exchange
+      *
+      * Default 256, allowing P-256 and larger
+      * P-256 is the smallest curve we will negotiate
       */
       virtual size_t minimum_ecdh_group_size() const;
       
       /**
-      * Return the minimum RSA bit size we're willing to use
+      * Return the minimum bit size we're willing to accept for RSA
+      * key exchange or server signatures.
+      *
+      * It does not place any requirements on the size of any RSA signature(s)
+      * which were used to check the server certificate. This is only
+      * concerned with the server's public key.
+      *
+      * Default is 2048 which is smallest RSA key size still secure
+      * for medium term security.
       */
       virtual size_t minimum_rsa_bits() const;
+
+      /**
+      * Throw an exception if you don't like the peer's key.
+      * Default impl checks the key size against minimum_rsa_bits, minimum_ecdsa_group_size,
+      * or minimum_ecdh_group_size depending on the key's type.
+      * Override if you'd like to perform some other kind of test on
+      * (or logging of) the peer's keys.
+      */
+      virtual void check_peer_key_acceptable(const Public_Key& public_key) const;
       
       /**
       * If this function returns false, unknown SRP/PSK identifiers
@@ -351,6 +380,12 @@ class BOTAN_DLL Text_Policy : public Policy
 
       std::string dh_group() const override
          { return get_str("dh_group", Policy::dh_group()); }
+
+      size_t minimum_ecdh_group_size() const override
+         { return get_len("minimum_ecdh_group_size", Policy::minimum_ecdh_group_size()); }
+
+      size_t minimum_ecdsa_group_size() const override
+         { return get_len("minimum_ecdsa_group_size", Policy::minimum_ecdsa_group_size()); }
 
       size_t minimum_dh_group_size() const override
          { return get_len("minimum_dh_group_size", Policy::minimum_dh_group_size()); }

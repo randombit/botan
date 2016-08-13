@@ -666,6 +666,8 @@ class Test_Policy : public Botan::TLS::Text_Policy
 
       size_t dtls_initial_timeout() const override { return 1; }
       size_t dtls_maximum_timeout() const override { return 8; }
+
+      size_t minimum_rsa_bits() const { return 1024; }
    };
 
 

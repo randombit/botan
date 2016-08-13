@@ -102,8 +102,9 @@ bool Ciphersuite::ecc_ciphersuite() const
 
 bool Ciphersuite::cbc_ciphersuite() const
    {
-   return (cipher_algo() == "3DES" || cipher_algo() == "AES-128" || cipher_algo() == "AES-256"
-        || cipher_algo() == "Camellia-128" || cipher_algo() == "Camellia-256");
+   return (cipher_algo() == "3DES" || cipher_algo() == "SEED" ||
+           cipher_algo() == "AES-128" || cipher_algo() == "AES-256" ||
+           cipher_algo() == "Camellia-128" || cipher_algo() == "Camellia-256");
    }
 
 namespace {

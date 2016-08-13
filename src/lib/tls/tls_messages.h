@@ -499,7 +499,6 @@ class Server_Key_Exchange final : public Handshake_Message
       Server_Key_Exchange(const std::vector<byte>& buf,
                           const std::string& kex_alg,
                           const std::string& sig_alg,
-                          const Policy& policy,
                           Protocol_Version version);
 
       ~Server_Key_Exchange();

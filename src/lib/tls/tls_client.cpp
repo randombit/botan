@@ -387,7 +387,6 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          new Server_Key_Exchange(contents,
                                  state.ciphersuite().kex_algo(),
                                  state.ciphersuite().sig_algo(),
-                                 policy(),
                                  state.version())
          );
 

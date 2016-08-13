@@ -110,6 +110,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          DH_PublicKey counterparty_key(group, Y);
 
+         policy.check_peer_key_acceptable(counterparty_key);
+
          DH_PrivateKey priv_key(rng, group);
 
          PK_Key_Agreement ka(priv_key, "Raw");
@@ -153,6 +155,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          ECDH_PublicKey counterparty_key(group, OS2ECP(ecdh_key, group.get_curve()));
 
+         policy.check_peer_key_acceptable(counterparty_key);
+         
          ECDH_PrivateKey priv_key(rng, group);
 
          PK_Key_Agreement ka(priv_key, "Raw");
