@@ -1404,14 +1404,14 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     if options.os != 'windows':
         vars['botan_pkgconfig'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
                                                                      build_config.pkg_config_file()))
-
-    vars["header_in"] = process_template('src/build-data/makefile/header.in', vars)
+    proj_dir = os.path.dirname(os.path.realpath(__file__)) + '/'
+    vars["header_in"] = process_template(proj_dir + 'src/build-data/makefile/header.in', vars)
 
     if vars["makefile_style"] == "gmake":
-        vars["gmake_commands_in"] = process_template('src/build-data/makefile/gmake_commands.in', vars)
-        vars["gmake_dso_in"]      = process_template('src/build-data/makefile/gmake_dso.in', vars) \
+        vars["gmake_commands_in"] = process_template(proj_dir + 'src/build-data/makefile/gmake_commands.in', vars)
+        vars["gmake_dso_in"]      = process_template(proj_dir + 'src/build-data/makefile/gmake_dso.in', vars) \
                                     if options.build_shared_lib else ''
-        vars["gmake_coverage_in"] = process_template('src/build-data/makefile/gmake_coverage.in', vars) \
+        vars["gmake_coverage_in"] = process_template(proj_dir + 'src/build-data/makefile/gmake_coverage.in', vars) \
                                     if options.with_coverage else ''
 
     return vars
