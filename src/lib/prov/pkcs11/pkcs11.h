@@ -184,7 +184,7 @@ extern "C" {
 /* All the various Cryptoki types and #define'd values are in the
  * file pkcs11t.h.
  */
-#include <botan/internal/pkcs11t.h>
+#include "pkcs11t.h"
 
 #define __PASTE(x,y)      x##y
 
@@ -201,7 +201,7 @@ extern "C" {
 /* pkcs11f.h has all the information about the Cryptoki
  * function prototypes.
  */
-#include <botan/internal/pkcs11f.h>
+#include "pkcs11f.h"
 
 #undef CK_NEED_ARG_LIST
 #undef CK_PKCS11_FUNCTION_INFO
@@ -221,7 +221,7 @@ extern "C" {
 /* pkcs11f.h has all the information about the Cryptoki
  * function prototypes.
  */
-#include <botan/internal/pkcs11f.h>
+#include "pkcs11f.h"
 
 #undef CK_NEED_ARG_LIST
 #undef CK_PKCS11_FUNCTION_INFO
@@ -247,7 +247,7 @@ struct CK_FUNCTION_LIST {
 /* pkcs11f.h has all the information about the Cryptoki
  * function prototypes.
  */
-#include <botan/internal/pkcs11f.h>
+#include "pkcs11f.h"
 
 };
 

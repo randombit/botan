@@ -123,10 +123,12 @@ class BuildConfigurationInformation(object):
         self.include_dir = os.path.join(self.build_dir, 'include')
         self.botan_include_dir = os.path.join(self.include_dir, 'botan')
         self.internal_include_dir = os.path.join(self.botan_include_dir, 'internal')
+        self.external_include_dir = os.path.join(self.include_dir, 'external')
 
         self.modules = modules
         self.sources = sorted(flatten([mod.sources() for mod in modules]))
         self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
+        self.external_headers = sorted(flatten([m.external_headers() for m in modules]))
 
         if options.via_amalgamation:
             self.build_sources = ['botan_all.cpp']
@@ -197,6 +199,7 @@ class BuildConfigurationInformation(object):
             yield self.testobj_dir
             yield self.botan_include_dir
             yield self.internal_include_dir
+            yield self.external_include_dir
             yield os.path.join(self.doc_output_dir, 'manual')
 
             if options.with_doxygen:
@@ -601,9 +604,10 @@ class ModuleInfo(object):
     def __init__(self, infofile):
 
         lex_me_harder(infofile, self,
-                      ['source', 'header:internal', 'header:public',
-                       'requires', 'os', 'arch', 'cc', 'libs',
-                       'frameworks', 'comment', 'warning'],
+                      ['source', 'header:internal', 'header:public', 
+                        'header:external', 'requires', 'os', 'arch', 
+                        'cc', 'libs', 'frameworks', 'comment', 
+                        'warning'],
                       {
                         'load_on': 'auto',
                         'define': [],
@@ -664,8 +668,9 @@ class ModuleInfo(object):
         self.source = [add_dir_name(s) for s in self.source]
         self.header_internal = [add_dir_name(s) for s in self.header_internal]
         self.header_public = [add_dir_name(s) for s in self.header_public]
+        self.header_external = [add_dir_name(s) for s in self.header_external]
 
-        for src in self.source + self.header_internal + self.header_public:
+        for src in self.source + self.header_internal + self.header_public + self.header_external:
             if os.access(src, os.R_OK) == False:
                 logging.error("Missing file %s in %s" % (src, infofile))
 
@@ -679,10 +684,14 @@ class ModuleInfo(object):
         else:
             self.warning = None
 
-        intersection = set(self.header_public) & set(self.header_internal)
+        def intersect_check(typeA, listA, typeB, listB):
+           intersection = set.intersection(set(listA), set(listB))
+           if len(intersection) > 0:
+              logging.error('Headers %s marked both %s and %s' % (' '.join(intersection), typeA, typeB))
 
-        if len(intersection) > 0:
-            logging.warning('Headers %s marked both public and internal' % (' '.join(intersection)))
+        intersect_check('public', self.header_public, 'internal', self.header_internal)
+        intersect_check('public', self.header_public, 'external', self.header_external)
+        intersect_check('external', self.header_external, 'internal', self.header_internal)
 
     def sources(self):
         return self.source
@@ -692,6 +701,9 @@ class ModuleInfo(object):
 
     def internal_headers(self):
         return self.header_internal
+
+    def external_headers(self):
+        return self.header_external
 
     def defines(self):
         return ['HAS_' + d[0] + ' ' + d[1] for d in chunks(self.define, 2)]
@@ -1285,6 +1297,7 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     """
     def build_commands(sources, obj_dir, flags):
         includes = cc.add_include_dir_option + build_config.include_dir
+        includes+= ' ' + cc.add_include_dir_option + build_config.external_include_dir if build_config.external_headers else ''
         includes+= ' ' + cc.add_include_dir_option + options.with_external_includedir if options.with_external_includedir else ''
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
             yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
@@ -2187,6 +2200,9 @@ def main(argv = None):
 
     link_headers(build_config.internal_headers, 'internal',
                  build_config.internal_include_dir)
+
+    link_headers(build_config.external_headers, 'external',
+                 build_config.external_include_dir)
 
     with open(os.path.join(build_config.build_dir, 'build_config.py'), 'w') as f:
         f.write(str(template_vars))
