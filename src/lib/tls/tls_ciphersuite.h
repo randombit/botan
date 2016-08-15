@@ -29,13 +29,6 @@ class BOTAN_DLL Ciphersuite
       */
       static Ciphersuite by_id(u16bit suite);
 
-      static std::vector<u16bit> all_known_ciphersuite_ids();
-
-      /*
-      * Returns the compiled in list of cipher suites.
-      */
-      static const std::vector<Ciphersuite>& all_cipher_suites();
-
       /**
       * Returns true iff this suite is a known SCSV
       */
@@ -110,13 +103,17 @@ class BOTAN_DLL Ciphersuite
       /**
       * @return true if this is a valid/known ciphersuite
       */
-      bool valid() const;
+      bool valid() const { return m_usable; }
+
+      bool operator<(const Ciphersuite& o) const { return ciphersuite_code() < o.ciphersuite_code(); }
+      bool operator<(const u16bit c) const { return ciphersuite_code() < c; }
 
       Ciphersuite() {}
 
    private:
 
-
+      bool is_usable() const;
+      
       Ciphersuite(u16bit ciphersuite_code,
                   const char* iana_id,
                   const char* sig_algo,
@@ -140,6 +137,7 @@ class BOTAN_DLL Ciphersuite
          m_nonce_bytes_from_record(nonce_bytes_from_record),
          m_mac_keylen(mac_keylen)
          {
+         m_usable = is_usable();
          }
 
       u16bit m_ciphersuite_code = 0;
@@ -161,6 +159,8 @@ class BOTAN_DLL Ciphersuite
       size_t m_nonce_bytes_from_handshake = 0;
       size_t m_nonce_bytes_from_record = 0;
       size_t m_mac_keylen = 0;
+
+      bool m_usable = false;
    };
 
 }

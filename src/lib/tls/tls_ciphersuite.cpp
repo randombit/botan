@@ -11,42 +11,11 @@
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
-#include <sstream>
+#include <algorithm>
 
 namespace Botan {
 
 namespace TLS {
-
-namespace {
-
-/*
-* This way all work happens at the constuctor call, and we can
-* rely on that happening only once in C++11.
-*/
-std::vector<Ciphersuite> gather_known_ciphersuites()
-   {
-   std::vector<Ciphersuite> ciphersuites;
-
-   std::vector<u16bit> all_ids = Ciphersuite::all_known_ciphersuite_ids();
-
-   for(auto id : all_ids)
-      {
-      Ciphersuite suite = Ciphersuite::by_id(id);
-
-      if(suite.valid())
-         ciphersuites.push_back(suite);
-      }
-
-   return ciphersuites;
-   }
-
-}
-
-const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
-   {
-   static std::vector<Ciphersuite> all_ciphersuites(gather_known_ciphersuites());
-   return all_ciphersuites;
-   }
 
 bool Ciphersuite::is_scsv(u16bit suite)
    {
@@ -66,6 +35,19 @@ bool Ciphersuite::ecc_ciphersuite() const
    return (sig_algo() == "ECDSA" || kex_algo() == "ECDH" || kex_algo() == "ECDHE_PSK");
    }
 
+Ciphersuite Ciphersuite::by_id(u16bit suite)
+   {
+   const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
+   auto s = std::lower_bound(all_suites.begin(), all_suites.end(), suite);
+
+   if(s->ciphersuite_code() == suite)
+      {
+      return *s;
+      }
+
+   return Ciphersuite(); // some unknown ciphersuite
+   }
+
 namespace {
 
 bool have_hash(const std::string& prf)
@@ -81,7 +63,7 @@ bool have_cipher(const std::string& cipher)
 
 }
 
-bool Ciphersuite::valid() const
+bool Ciphersuite::is_usable() const
    {
    if(!m_cipher_keylen) // uninitialized object
       return false;
