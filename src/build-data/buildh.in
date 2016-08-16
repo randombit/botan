@@ -2,8 +2,8 @@
 #define BOTAN_BUILD_CONFIG_H__
 
 /*
-* This file was automatically generated %{timestamp} UTC by
-* %{user}@%{hostname} running '%{command_line}'
+* This file was automatically generated running
+* '%{command_line}'
 *
 * Target
 *  - Compiler: %{cxx} %{cxx_abi_flags} %{cc_compile_flags}
