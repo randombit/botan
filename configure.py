@@ -202,13 +202,17 @@ class BuildConfigurationInformation(object):
         return 'botan-%d.%d.pc' % (self.version_major, self.version_minor)
 
     def username(self):
+        if 'SOURCE_DATE_EPOCH' in os.environ:
+            return 'generic-username'
         return getpass.getuser()
 
     def hostname(self):
+        if 'SOURCE_DATE_EPOCH' in os.environ:
+            return 'generic-hostname'
         return platform.node()
 
     def timestamp(self):
-        return time.ctime()
+        return time.asctime(time.gmtime(int(os.environ.get('SOURCE_DATE_EPOCH', time.time()))))
 
 """
 Handle command line options
