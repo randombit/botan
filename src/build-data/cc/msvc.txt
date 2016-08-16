@@ -48,7 +48,7 @@ default-debug -> "$(LINKER) /DLL /DEBUG"
 
 <binary_link_commands>
 default       -> "$(LINKER)"
-default-debug -> "$(LINKER) /DEBUG"
+default-debug -> "$(LINKER)"
 </binary_link_commands>
 
 <mach_abi_linking>

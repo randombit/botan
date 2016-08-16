@@ -1337,10 +1337,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'shared_flags': cc.gen_shared_flags(options),
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
-        # 'botan' or 'botan-1.11'. Used in Makefile and install script
-        # This can be made consistent over all platforms in the future
-        'libname': 'botan' if options.os == 'windows' else 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
-
         'lib_link_cmd':  cc.so_link_command_for(osinfo.basename, options),
         'cli_link_cmd':  cc.binary_link_command_for(osinfo.basename, options),
         'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options),
@@ -1404,6 +1400,15 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     if options.os != 'windows':
         vars['botan_pkgconfig'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
                                                                      build_config.pkg_config_file()))
+
+        # 'botan' or 'botan-1.11'. Used in Makefile and install script
+        # This can be made consistent over all platforms in the future    
+        vars['libname'] = 'botan-%d.%d' % (build_config.version_major, build_config.version_minor)
+    else:
+        if options.with_debug_info:
+            vars['libname'] = 'botand'
+        else:
+            vars['libname'] = 'botan'
 
     vars["header_in"] = process_template('src/build-data/makefile/header.in', vars)
 
