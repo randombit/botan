@@ -1,3 +1,7 @@
+dist: trusty
+
+sudo: required
+
 language: cpp
 
 # BEGIN BUILD MATRIX
@@ -29,13 +33,15 @@ git:
 
 env:
   global:
-    - secure: IOnsRvoIXYp2Wc+S9TtKNC3qlnDr3bBO9O68TWfmaelOvzdACPYqeBNbUgSEhqHNexujf2lYHT31y8zqvrZacNSWsWYwp6RoBHd9Z5fMG0U6Z50rGwBPMVZTsWJlHGjsXk1EvovCKXOuQq1GvdPIdTUHJsY/Ctg4KEDClEyw9X0=
+    - secure: "IOnsRvoIXYp2Wc+S9TtKNC3qlnDr3bBO9O68TWfmaelOvzdACPYqeBNbUgSEhqHNexujf2lYHT31y8zqvrZacNSWsWYwp6RoBHd9Z5fMG0U6Z50rGwBPMVZTsWJlHGjsXk1EvovCKXOuQq1GvdPIdTUHJsY/Ctg4KEDClEyw9X0="
+    - secure: "Th0mBSkUCDqu+EA6F7zA6DCSDZBNunfndANyq06BwaFlj71daWWjthwYFsfg3T5N2ZmI+PsULQQpOirCnJt1lbNHhMVJwZPkW0JnjoxbSNpSI2+nHv7+GO9X9WjK0LRFawiQu8WxmLMQDA+0oR0BERSFKc3gmbuav9fDfla0dXg="
 
   matrix:
     - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="shared"
     - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="static"
     - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="coverage"
     - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="sanitizer"
+    - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="sonarqube"
     - TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="shared"
     - TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="static"
     - TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="coverage"
@@ -68,11 +74,13 @@ matrix:
     - os: linux
       env: TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="static"
 
-    # No coverage and sanitizer on clang
+    # No coverage, sanitizer and sonarqube on clang
     - compiler: clang
       env: TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="coverage"
     - compiler: clang
       env: TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="sanitizer"
+    - compiler: clang
+      env: TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="sonarqube"
     - compiler: clang
       env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="coverage"
     - compiler: clang
@@ -102,14 +110,14 @@ cache:
 install:
   - ./src/scripts/ci/travis/install.sh
 
+before_script:
+  - jdk_switcher use oraclejdk8
+  - java -version
+
 script:
   - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci/travis/build.sh ; fi
 
 after_success:
-  # just a test
-  - echo "Starting analysis by SonarQube..."
-  - sonar-scanner -v
-  - sonar-scanner -Dsonar.login=$SONAR_TOKEN
   - ./src/scripts/ci/travis/after_success.sh
 
 notifications:
@@ -122,8 +130,7 @@ addons:
     sources:
     - ubuntu-toolchain-r-test
     packages:
-    - ccache
-    - g++-4.8
+    - oracle-java8-installer
     - libssl-dev
     - libsqlite3-dev
     - zlib1g-dev

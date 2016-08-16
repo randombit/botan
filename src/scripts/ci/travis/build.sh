@@ -4,7 +4,7 @@ which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if avai
 
 if [ "$BUILD_MODE" = "static" ]; then
     CFG_FLAGS=(--disable-shared --via-amalgamation)
-elif [ "$BUILD_MODE" = "shared" ]; then
+elif [ "$BUILD_MODE" = "shared" ] || [ "$BUILD_MODE" = "sonarqube" ]; then
     CFG_FLAGS=()
 elif [ "$BUILD_MODE" = "coverage" ]; then
     CFG_FLAGS=(--with-coverage)
@@ -24,14 +24,6 @@ fi
 # https://github.com/travis-ci/travis-ci/issues/3668
 if [ "$CXX" = "g++" ]; then
     export CXX="/usr/bin/g++-4.8"
-fi
-
-# enable ccache
-if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    ccache --max-size=30M
-    ccache --show-stats
-
-    export CXX="ccache $CXX"
 fi
 
 # configure
@@ -55,11 +47,13 @@ fi
 # build
 if [ "${TARGETOS:0:3}" = "ios" ]; then
     xcrun --sdk iphoneos make -j 2
+elif [ "$BUILD_MODE" = "sonarqube" ]; then
+    ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-outputs make -j 2
 else
     make -j 2
 fi
 
-if [ "$MODULES" != "min" ] && [ "${TARGETOS:0:3}" != "ios" ]; then
+if [ "$MODULES" != "min" ] && [ "${TARGETOS:0:3}" != "ios" ] && [ "$BUILD_MODE" != "sonarqube" ]; then
     ./botan-test
 fi
 
