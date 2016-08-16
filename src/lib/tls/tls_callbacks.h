@@ -61,8 +61,24 @@ class BOTAN_DLL Callbacks
 
        /**
        * Optional callback: inspect handshake message
+       * Throw an exception to abort the handshake.
        */       
        virtual void tls_inspect_handshake_msg(const Handshake_Message&) {}
+
+       /**
+       * Optional callback for server: choose ALPN protocol
+       * ALPN (RFC 7301) works by the client sending a list of application
+       * protocols it is willing to negotiate. The server then selects which
+       * protocol to use, which is not necessarily even on the list that
+       * the client sent.
+       *
+       * If the empty string is returned from this function the server will
+       * just ignore the client ALPN extension.
+       */
+       virtual std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos)
+          {
+          return "";
+          }
 
        /**
        * Optional callback: debug logging. (not currently used)
@@ -83,6 +99,7 @@ class BOTAN_DLL Compat_Callbacks final : public Callbacks
       typedef std::function<void (Alert, const byte[], size_t)> alert_cb;
       typedef std::function<bool (const Session&)> handshake_cb;
       typedef std::function<void (const Handshake_Message&)> handshake_msg_cb;
+      typedef std::function<std::string (std::vector<std::string>)> next_protocol_fn;
 
       /**
        * @param output_fn is called with data for the outbound socket
@@ -95,18 +112,21 @@ class BOTAN_DLL Compat_Callbacks final : public Callbacks
        */
        BOTAN_DEPRECATED("Use TLS::Callbacks (virtual interface).")
        Compat_Callbacks(output_fn out, data_cb app_data_cb, alert_cb alert_cb,
-                        handshake_cb hs_cb, handshake_msg_cb hs_msg_cb = nullptr)
+                        handshake_cb hs_cb, handshake_msg_cb hs_msg_cb = nullptr,
+                        next_protocol_fn next_proto = nullptr)
           : m_output_function(out), m_app_data_cb(app_data_cb),
             m_alert_cb(std::bind(alert_cb, std::placeholders::_1, nullptr, 0)),
-            m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb) {}
+            m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb), m_next_proto(next_proto) {}
 
        BOTAN_DEPRECATED("Use TLS::Callbacks (virtual interface).")
        Compat_Callbacks(output_fn out, data_cb app_data_cb,
                         std::function<void (Alert)> alert_cb,
-                        handshake_cb hs_cb, handshake_msg_cb hs_msg_cb = nullptr)
+                        handshake_cb hs_cb,
+                        handshake_msg_cb hs_msg_cb = nullptr,
+                        next_protocol_fn next_proto = nullptr)
           : m_output_function(out), m_app_data_cb(app_data_cb),
             m_alert_cb(alert_cb),
-            m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb) {}
+            m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb), m_next_proto(next_proto) {}
 
        void tls_emit_data(const byte data[], size_t size) override
           {
@@ -136,6 +156,12 @@ class BOTAN_DLL Compat_Callbacks final : public Callbacks
           return m_hs_cb(session);
           }
 
+       std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos) override
+          {
+          if(m_next_proto != nullptr) { return m_next_proto(client_protos); }
+          return "";
+          }
+ 
        void tls_inspect_handshake_msg(const Handshake_Message& hmsg) override
           {
           // The handshake message callback is optional so we can
@@ -149,6 +175,7 @@ class BOTAN_DLL Compat_Callbacks final : public Callbacks
          const std::function<void (Alert)> m_alert_cb;
          const handshake_cb m_hs_cb;
          const handshake_msg_cb m_hs_msg_cb;
+         const next_protocol_fn m_next_proto;
    };
 
 }

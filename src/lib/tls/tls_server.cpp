@@ -242,13 +242,11 @@ Server::Server(Callbacks& callbacks,
                Credentials_Manager& creds,
                const Policy& policy,
                RandomNumberGenerator& rng,
-               next_protocol_fn next_proto,
                bool is_datagram,
                size_t io_buf_sz) :
    Channel(callbacks, session_manager, rng, policy,
            is_datagram, io_buf_sz),
-   m_creds(creds),
-   m_choose_next_protocol(next_proto)
+   m_creds(creds)
    {
    }
 
@@ -419,8 +417,16 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
    catch(...) {}
 
    m_next_protocol = "";
-   if(m_choose_next_protocol && pending_state.client_hello()->supports_alpn())
-      m_next_protocol = m_choose_next_protocol(pending_state.client_hello()->next_protocols());
+   if(pending_state.client_hello()->supports_alpn())
+      {
+      m_next_protocol = callbacks().tls_server_choose_app_protocol(pending_state.client_hello()->next_protocols());
+
+      // if the callback return was empty, fall back to the (deprecated) std::function
+      if(m_next_protocol.empty() && m_choose_next_protocol)
+         {
+         m_next_protocol = m_choose_next_protocol(pending_state.client_hello()->next_protocols());
+         }
+      }
 
    if(resuming)
       {

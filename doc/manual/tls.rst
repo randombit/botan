@@ -38,17 +38,21 @@ information about the connection.
 
  .. cpp:function:: void tls_emit_data(const byte data[], size_t data_len)
 
-    The TLS stack requests that all bytes of *data* be queued up to send to the
+    Mandatory. The TLS stack requests that all bytes of *data* be queued up to send to the
     counterparty. After this function returns, the buffer containing *data* will
     be overwritten, so a copy of the input must be made if the callback
     cannot send the data immediately.
 
-    The write can be deferred but for TLS all writes must occur *in order*.
-    For DTLS this is not strictly required, but is still recommended.
+    As an example you could ``send`` to perform a blocking write on a socket,
+    or append the data to a queue managed by your application, and initiate
+    an asyncronous write.
+
+    For TLS all writes must occur *in the order requested*.
+    For DTLS this ordering is not strictly required, but is still recommended.
 
  .. cpp:function:: void tls_record_received(uint64_t rec_no, const byte data[], size_t data_len)
 
-    Called once for each application_data record which is received, with the
+    Mandatory. Called once for each application_data record which is received, with the
     matching (TLS level) record sequence number.
 
     Currently empty records are ignored and do not instigate a callback,
@@ -57,15 +61,21 @@ information about the connection.
      As with ``tls_emit_data``, the array will be overwritten sometime after
      the callback returns, so a copy should be made if needed.
 
+     For TLS the record number will always increase.
+
+     For DTLS, it is possible to receive records with the `rec_no` field
+     field out of order or repeated. It is even possible (from a malicious or
+     faulty peer) to receive multiple copies of a single record with differing plaintexts.
+
  .. cpp:function:: void tls_alert(Alert alert) 
 
-     Called when an alert is received from the peer. Note that alerts
+     Mandatory. Called when an alert is received from the peer. Note that alerts
      received before the handshake is complete are not authenticated and
      could have been inserted by a MITM attacker.
      
  .. cpp:function:: bool tls_session_established(const TLS::Session& session)
 
-     Called whenever a negotiation completes. This can happen more
+     Mandatory. Called whenever a negotiation completes. This can happen more
      than once on any connection, if renegotiation occurs. The *session* parameter
      provides information about the session which was just established.
 
@@ -75,6 +85,13 @@ information about the connection.
      If this function wishes to cancel the handshake, it can throw an
      exception which will send a close message to the counterparty and
      reset the connection state.
+
+ .. cpp:function:: std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos)
+
+     Optional. Called by the server when a client includes a list of protocols in the ALPN extension.
+     The server then choose which protocol to use, or "" to disable sending any ALPN response.
+     The default implementation returns the empty string all of the time, effectively disabling
+     ALPN responses.
 
  .. cpp:function:: void tls_inspect_handshake_msg(const Handshake_Message&)
 
@@ -90,7 +107,7 @@ Versions from 1.11.0 to 1.11.30 did not have ``TLS::Callbacks` and instead
 used independent std::functions to pass the various callback functions.
 This interface is currently still included but is deprecated and will be removed
 in a future release. For the documentation for this interface, please check
-the docs in 1.11.30. This version of the manual only documents the new interface
+the docs for 1.11.30. This version of the manual only documents the new interface
 added in 1.11.31.
 
 TLS Channels
@@ -278,7 +295,6 @@ TLS Servers
          Credentials_Manager& creds, \
          const Policy& policy, \
          RandomNumberGenerator& rng, \
-         next_protocol_fn next_proto = next_protocol_fn(), \
          bool is_datagram = false, \
          size_t reserved_io_buffer_size = 16*1024 \
          )
@@ -287,12 +303,12 @@ The first 5 arguments as well as the final argument
 *reserved_io_buffer_size*, are treated similiarly to the :ref:`client
 <tls_client>`.
 
-The (optional) argument, *next_proto*, is a function called if the
-client sent the ALPN extension to negotiate an application
-protocol. In that case, the function should choose a protocol to use
-and return it. Alternately it can throw an exception to abort the
-exchange; the ALPN specification says that if this occurs the alert
-should be of type `NO_APPLICATION_PROTOCOL`.
+If a client sends the ALPN extension, the ``callbacks`` function
+``tls_server_choose_app_protocol`` will be called and the result
+sent back to the client. If the empty string is returned, the server
+will not send an ALPN response. The function can also throw an exception
+to abort the handshake entirely, the ALPN specification says that if this
+occurs the alert should be of type `NO_APPLICATION_PROTOCOL`.
 
 The optional argument *is_datagram* specifies if this is a TLS or DTLS
 server; unlike clients, which know what type of protocol (TLS vs DTLS)

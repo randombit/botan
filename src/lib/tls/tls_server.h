@@ -42,9 +42,6 @@ class BOTAN_DLL Server final : public Channel
       *
       * @param rng a random number generator
       *
-      * @param next_proto is called with client's ALPN protocol list
-      *        and returns chosen protocol.
-      *
       * @param is_datagram set to true if this server should expect DTLS
       *        connections. Otherwise TLS connections are expected.
       *
@@ -57,7 +54,6 @@ class BOTAN_DLL Server final : public Channel
              Credentials_Manager& creds,
              const Policy& policy,
              RandomNumberGenerator& rng,
-             next_protocol_fn next_proto = next_protocol_fn(),
              bool is_datagram = false,
              size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
          );
@@ -148,9 +144,10 @@ class BOTAN_DLL Server final : public Channel
       Handshake_State* new_handshake_state(Handshake_IO* io) override;
 
       Credentials_Manager& m_creds;
-
-      next_protocol_fn m_choose_next_protocol;
       std::string m_next_protocol;
+
+      // Set by deprecated constructor, Server calls both this fn and Callbacks version
+      next_protocol_fn m_choose_next_protocol;
    };
 
 }

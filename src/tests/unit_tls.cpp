@@ -227,7 +227,9 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                  queue_inserter(s2c_traffic),
                  queue_inserter(server_recv),
                  std::function<void (Botan::TLS::Alert, const byte[], size_t)>(alert_cb_with_data),
-                 handshake_complete));
+                 handshake_complete,
+                 nullptr,
+                 next_protocol_chooser));
 
          // TLS::Server object constructed by new constructor using virtual callback interface.
          std::unique_ptr<Botan::TLS::Server> server(
@@ -236,7 +238,6 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                                    creds,
                                    policy,
                                    rng,
-                                   next_protocol_chooser,
                                    false));
 
          std::unique_ptr<Botan::TLS::Callbacks> client_cb(new Botan::TLS::Compat_Callbacks(
@@ -504,7 +505,9 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                  queue_inserter(s2c_traffic),
                  queue_inserter(server_recv),
                  std::function<void (Botan::TLS::Alert)>(print_alert),
-                 handshake_complete));
+                 handshake_complete,
+                 nullptr,
+                 next_protocol_chooser));
 
          std::unique_ptr<Botan::TLS::Callbacks> client_cb(new Botan::TLS::Compat_Callbacks(
                  queue_inserter(c2s_traffic),
@@ -519,7 +522,6 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                               creds,
                               policy,
                               rng,
-                              next_protocol_chooser,
                               true));
 
          // TLS::Client object constructed by new constructor using virtual callback interface.
