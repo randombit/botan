@@ -12,6 +12,12 @@ pk_pad
 p11_mechanism.h
 </header:internal>
 
+<header:external>
+pkcs11.h
+pkcs11f.h
+pkcs11t.h
+</header:external>
+
 <header:public>
 p11.h
 p11_ecc_key.h

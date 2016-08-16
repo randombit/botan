@@ -100,6 +100,47 @@ class HMAC_DRBG_Tests : public Text_Based_Test
 
 BOTAN_REGISTER_TEST("hmac_drbg", HMAC_DRBG_Tests);
 
+class HMAC_DRBG_Reseed_Tests : public Test
+   {
+   public:
+      HMAC_DRBG_Reseed_Tests() : Test() {}
+
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("HMAC_DRBG Reseed");
+
+         auto mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
+         if(!mac)
+            {
+            result.note_missing("HMAC(SHA-256)");
+            return {result};
+            }
+
+         Botan::HMAC_DRBG rng(mac.release(), 17);
+         Botan::secure_vector<Botan::byte> seed_input(
+               {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF});
+         Botan::secure_vector<Botan::byte> output_after_initialization(
+               {0x26,0x06,0x95,0xF4,0xB8,0x96,0x0D,0x0B,0x27,0x4E,0xA2,0x9E,0x8D,0x2B,0x5A,0x35});
+         Botan::secure_vector<Botan::byte> output_without_reseed(
+               {0xC4,0x90,0x04,0x5B,0x35,0x4F,0x50,0x09,0x68,0x45,0xF0,0x4B,0x11,0x03,0x58,0xF0});
+         result.test_eq("is_seeded",rng.is_seeded(),false);
+
+         rng.initialize_with(seed_input.data(), seed_input.size());
+
+         Botan::secure_vector<Botan::byte> out(16);
+
+         rng.randomize(out.data(), out.size());
+         result.test_eq("out before reseed", out, output_after_initialization);
+
+         // reseed must happend here
+         rng.randomize(out.data(), out.size());
+         result.test_ne("out after reseed", out, output_without_reseed);
+         return {result};
+         }
+   };
+
+BOTAN_REGISTER_TEST("hmac_drbg_reseed", HMAC_DRBG_Reseed_Tests);
+
 #endif
 
 }
