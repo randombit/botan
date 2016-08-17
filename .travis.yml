@@ -110,10 +110,6 @@ cache:
 install:
   - ./src/scripts/ci/travis/install.sh
 
-before_script:
-  # for sonarqube:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then jdk_switcher use oraclejdk8 ; fi
-
 script:
   - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci/travis/build.sh ; fi
 
@@ -125,17 +121,6 @@ notifications:
 
 addons:
   sonarqube: true
-
-  apt:
-    packages:
-    - oracle-java8-installer
-    - libssl-dev
-    - libsqlite3-dev
-    - zlib1g-dev
-    - libbz2-dev
-    - liblzma-dev
-    - python
-    - python3
 
   coverity_scan:
     project:
