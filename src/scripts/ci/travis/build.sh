@@ -25,8 +25,8 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     ccache --max-size=30M
     ccache --show-stats
 
-    export CXX="ccache $CXX"		
- fi
+    export CXX="ccache $CXX"
+fi
 
 # configure
 if [ "$TARGETOS" = "ios32" ]; then
