@@ -20,6 +20,14 @@ if [ "$BOOST" = "y" ]; then
     CFG_FLAGS+=(--with-boost)
 fi
 
+# enable ccache		
+if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    ccache --max-size=30M
+    ccache --show-stats
+
+    export CXX="ccache $CXX"		
+ fi
+
 # configure
 if [ "$TARGETOS" = "ios32" ]; then
     ./configure.py "${CFG_FLAGS[@]}" --cpu=armv7 --cc=clang \
