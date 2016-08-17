@@ -159,7 +159,8 @@ def main(args = None):
 
     if bool(cfg['build_shared_lib']):
         if str(cfg['os']) == "windows":
-            soname_base = process_template('%{soname_base}') # botan.dll
+            libname = process_template('%{libname}')
+            soname_base = libname + '.dll'
             copy_executable(os.path.join(out_dir, soname_base),
                             os.path.join(lib_dir, soname_base))
         else:
