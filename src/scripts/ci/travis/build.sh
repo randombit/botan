@@ -20,12 +20,6 @@ if [ "$BOOST" = "y" ]; then
     CFG_FLAGS+=(--with-boost)
 fi
 
-# Workaround for missing update-alternatives
-# https://github.com/travis-ci/travis-ci/issues/3668
-if [ "$CXX" = "g++" ]; then
-    export CXX="/usr/bin/g++-4.8"
-fi
-
 # configure
 if [ "$TARGETOS" = "ios32" ]; then
     ./configure.py "${CFG_FLAGS[@]}" --cpu=armv7 --cc=clang \
@@ -59,9 +53,9 @@ fi
 
 if [ "$MODULES" != "min" ] && [ "$BUILD_MODE" = "shared" ] && [ "$TARGETOS" = "native" ]
 then
-    python2 --version
+    python --version
     python3 --version
-    LD_LIBRARY_PATH=. python2 src/python/botan.py
+    LD_LIBRARY_PATH=. python src/python/botan.py
     LD_LIBRARY_PATH=. python3 src/python/botan.py
 fi
 

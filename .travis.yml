@@ -127,8 +127,6 @@ addons:
   sonarqube: true
 
   apt:
-    sources:
-    - ubuntu-toolchain-r-test
     packages:
     - oracle-java8-installer
     - libssl-dev
@@ -136,7 +134,7 @@ addons:
     - zlib1g-dev
     - libbz2-dev
     - liblzma-dev
-    - python2
+    - python
     - python3
 
   coverity_scan:
