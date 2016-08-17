@@ -33,7 +33,7 @@ git:
 
 env:
   global:
-    - secure: "IOnsRvoIXYp2Wc+S9TtKNC3qlnDr3bBO9O68TWfmaelOvzdACPYqeBNbUgSEhqHNexujf2lYHT31y8zqvrZacNSWsWYwp6RoBHd9Z5fMG0U6Z50rGwBPMVZTsWJlHGjsXk1EvovCKXOuQq1GvdPIdTUHJsY/Ctg4KEDClEyw9X0="
+    - secure: "X/tyU+QICHNstzYVrFTXoUyNNE56qxGtQX6zUneqUk/SH08j2ILI5zguuV3hh/PAdKxq7mxRjoQ7peAPKsWRsg1WGEwunyjFq2rhjzUatnMLoCbbHT9MnaMENqRNeGddoc9Z60c9dSNWkuFhdjiRV7QXuvbGjqEcw5NRViXJYZk="
     - secure: "Th0mBSkUCDqu+EA6F7zA6DCSDZBNunfndANyq06BwaFlj71daWWjthwYFsfg3T5N2ZmI+PsULQQpOirCnJt1lbNHhMVJwZPkW0JnjoxbSNpSI2+nHv7+GO9X9WjK0LRFawiQu8WxmLMQDA+0oR0BERSFKc3gmbuav9fDfla0dXg="
 
   matrix:
