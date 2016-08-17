@@ -134,7 +134,7 @@ def main(args = None):
                                       'botan')
 
     out_dir = process_template('%{out_dir}')
-    app_exe = process_template('botan%{program_suffix}')
+    app_exe = process_template('botan%{program_suffix}') if str(cfg['os']) != "windows" else 'botan-cli.exe'
 
     for d in [options.destdir, lib_dir, bin_dir, target_doc_dir, target_include_dir]:
         makedirs(d)
