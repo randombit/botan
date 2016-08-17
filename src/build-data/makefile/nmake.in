@@ -14,7 +14,7 @@ RM_R          = $(RM) /S
 RMDIR         = @rmdir
 
 # Executable targets
-CLI           = %{out_dir}\botan%{program_suffix}
+CLI           = %{out_dir}\botan-cli%{program_suffix}
 TEST          = %{out_dir}\botan-test%{program_suffix}
 
 # Library targets
