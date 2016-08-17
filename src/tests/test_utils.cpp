@@ -378,7 +378,7 @@ class Charset_Tests : public Text_Based_Test
 
          result.test_throws("conversion fails for non-Latin1 characters", []()
             {
-            // "abcdefüabcdef"
+            // "abcdef≈∏abcdef"
             std::vector<byte> input = { 0x00, 0x61, 0x00, 0x62, 0x00, 0x63, 0x00, 0x64, 0x00, 0x65, 0x00, 0x66, 0x01,
                                         0x78, 0x00, 0x61, 0x00, 0x62, 0x00, 0x63, 0x00, 0x64, 0x00, 0x65, 0x00, 0x66
                                       };
@@ -406,7 +406,7 @@ class Charset_Tests : public Text_Based_Test
 
          result.test_throws("conversion fails for non-Latin1 characters", []()
             {
-            // "abcdefüabcdef"
+            // "abcdef≈∏abcdef"
             std::vector<byte> input = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0xC5,
                                         0xB8, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66
                                       };
