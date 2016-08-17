@@ -110,10 +110,6 @@ cache:
 install:
   - ./src/scripts/ci/travis/install.sh
 
-before_script:
-  - jdk_switcher use oraclejdk8
-  - java -version
-
 script:
   - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci/travis/build.sh ; fi
 

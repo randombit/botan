@@ -35,3 +35,9 @@ elif [ "$TRAVIS_PULL_REQUEST" != "false" ] && [ -n "${GITHUB_TOKEN-}" ]  && [ "$
     -Dsonar.github.pullRequest=$TRAVIS_PULL_REQUEST
 fi
 # When neither on master branch nor on a non-external pull request => nothing to do
+
+if [ "$BUILD_MODE" = "sonarqube" ]; then
+    # just a test
+    echo "Starting analysis by SonarQube..."
+    sonar-scanner -Dsonar.login=$SONAR_TOKEN
+fi

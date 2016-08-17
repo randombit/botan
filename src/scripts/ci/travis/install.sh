@@ -14,6 +14,9 @@ if [ "$BUILD_MODE" = "coverage" ]; then
 fi
 
 if [ "$BUILD_MODE" = "sonarqube" ]; then
+    jdk_switcher use oraclejdk8
+    java -version
+
     curl -LsS https://sonarqube.com/static/cpp/build-wrapper-linux-x86.zip > build-wrapper-linux-x86.zip
     unzip build-wrapper-linux-x86.zip
 fi
