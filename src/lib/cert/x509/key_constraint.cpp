@@ -33,7 +33,7 @@ void decode(BER_Decoder& source, Key_Constraints& key_usage)
 
    u16bit usage = 0;
    for(size_t j = 1; j != obj.value.size(); ++j)
-      usage = (obj.value[j] << 8) | usage;
+      usage = (obj.value[j] << 8*(sizeof(usage)-j)) | usage;
 
    key_usage = Key_Constraints(usage);
    }
