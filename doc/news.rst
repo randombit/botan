@@ -27,6 +27,13 @@ Version 1.11.31, Not Yet Released
   system requires EGD and so the code is now dead weight. If you rely on EGD
   support, you should contact the developers by email or GitHub ASAP.
 
+* The TLS ciphersuites using 3DES and SEED are deprecated and will be removed in
+  a future release.
+
+* Support for BeOS/Haiku has not been tested in 5 years and is in an unknown state.
+  Unless reports are received of successful builds and use on this platform, support
+  for BeOS/Haiku will be removed in a future release.
+
 * Changes in DLIES: Previously the input to the KDF was the concatenation
   of the (ephemeral) public key and the secret value derived by the key
   agreement operation. Now the input is only the secret value obtained

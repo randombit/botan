@@ -1,0 +1,28 @@
+Currently deprecated:
+
+- Rabin-Williams signatures
+
+- Nyberg-Rueppel signatures
+
+- MARS, RC2, RC5, RC6, SAFER, TEA
+
+- MD2, HAS-160, RIPEMD-128
+
+- TLS 3DES and SEED ciphersuites in TLS
+
+- DSA auth in TLS (not ECDSA)
+
+- Old (Google specific) ChaCha20 TLS ciphersuites
+
+- All built in ECC groups < 256 bits
+
+- All built in MODP groups < 2048 bits
+
+- All pre-created DSA groups
+
+- All support for BeOS/Haiku including BeOS entropy source
+
+- EGD entropy source
+
+- Unix process exec entropy source
+
