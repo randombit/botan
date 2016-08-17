@@ -4,7 +4,7 @@
 Configuration program for botan
 
 (C) 2009,2010,2011,2012,2013,2014,2015 Jack Lloyd
-(C) 2015 Simon Warta (Kullo GmbH)
+(C) 2015,2016 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
 
@@ -29,7 +29,6 @@ import shutil
 import string
 import subprocess
 import logging
-import getpass
 import time
 import errno
 import optparse
@@ -201,14 +200,6 @@ class BuildConfigurationInformation(object):
     def pkg_config_file(self):
         return 'botan-%d.%d.pc' % (self.version_major, self.version_minor)
 
-    def username(self):
-        return getpass.getuser()
-
-    def hostname(self):
-        return platform.node()
-
-    def timestamp(self):
-        return time.ctime()
 
 """
 Handle command line options
@@ -1282,9 +1273,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'src_dir': build_config.src_dir,
         'doc_dir': build_config.doc_dir,
 
-        'timestamp': build_config.timestamp(),
-        'user':      build_config.username(),
-        'hostname':  build_config.hostname(),
         'command_line': ' '.join(sys.argv),
         'local_config': slurp_file(options.local_config),
         'makefile_style': options.makefile_style or cc.makefile_style,
