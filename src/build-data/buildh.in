@@ -272,4 +272,20 @@ Each read generates 32 bits of output
 // The struct is only declared to force the semicolon, it is never defined.
 #define BOTAN_FORCE_SEMICOLON struct BOTAN_DUMMY_STRUCT
 
+#if defined(BOTAN_TARGET_ARCH_IS_X86_64) && (\
+    (defined(_MSC_VER) && !defined(_WIN64)) || \
+    (defined(__clang__) && !defined(__x86_64__)) || \
+    (defined(__GNUG__) && !defined(__x86_64__)) \
+)
+    #error "Trying to compile Botan configured as x86_64 with non-x86_64 compiler."
+#endif
+
+#if defined(BOTAN_TARGET_ARCH_IS_X86_32) && (\
+    (defined(_MSC_VER) && defined(_WIN64)) || \
+    (defined(__clang__) && !defined(__i386__)) || \
+    (defined(__GNUG__) && !defined(__i386__)) \
+)
+    #error "Trying to compile Botan configured as x86_32 with non-x86_32 compiler."
+#endif
+
 #endif
