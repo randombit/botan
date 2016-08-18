@@ -72,6 +72,9 @@ operations.
 .. image:: https://codecov.io/github/randombit/botan/coverage.svg?branch=master
     :target: https://codecov.io/github/randombit/botan
 
+.. image:: https://sonarqube.com/api/badges/gate?key=botan
+    :target: https://sonarqube.com/dashboard/index/botan
+
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
