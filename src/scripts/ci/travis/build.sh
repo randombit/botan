@@ -78,12 +78,6 @@ elif [ "$TRAVIS_PULL_REQUEST" != "false" ] && [ -n "${GITHUB_TOKEN-}" ]  && [ "$
 fi
 # When neither on master branch nor on a non-external pull request => nothing to do
 
-# just a test
-if [ "$BUILD_MODE" = "sonarqube" ]; then
-    echo "Starting analysis by SonarQube..."
-    sonar-scanner -Dsonar.login=$SONAR_TOKEN
-fi
-
 if [ "$MODULES" != "min" ] && [ "${TARGETOS:0:3}" != "ios" ] && [ "$BUILD_MODE" != "sonarqube" ]; then
     ./botan-test
 fi
