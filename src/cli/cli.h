@@ -10,7 +10,10 @@
 #include <botan/build.h>
 #include <botan/parsing.h>
 #include <botan/rng.h>
-#include <botan/auto_rng.h>
+
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+  #include <botan/auto_rng.h>
+#endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
@@ -471,7 +474,9 @@ class Command
 
             if(rng_type == "auto")
                {
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
                m_rng.reset(new Botan::AutoSeeded_RNG);
+#endif
                }
 
             if(!m_rng)

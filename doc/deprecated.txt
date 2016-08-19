@@ -1,5 +1,10 @@
 Currently deprecated:
 
+- PRNGs X9.31 (no longer approved) and HMAC_RNG (non-standard)
+  Use HMAC_DRBG
+
+- ECB mode for block ciphers
+
 - Rabin-Williams signatures
 
 - Nyberg-Rueppel signatures

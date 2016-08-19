@@ -10,28 +10,42 @@
 
 namespace Botan {
 
-HMAC_DRBG::HMAC_DRBG(MessageAuthenticationCode* hmac,
+HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
+                     RandomNumberGenerator& underlying_rng,
                      size_t max_output_before_reseed) :
-   Stateful_RNG(max_output_before_reseed),
-   m_mac(hmac)
+   Stateful_RNG(underlying_rng, max_output_before_reseed),
+   m_mac(std::move(prf))
    {
-   m_V.resize(m_mac->output_length());
+   BOTAN_ASSERT_NONNULL(m_mac);
    clear();
    }
 
-HMAC_DRBG::HMAC_DRBG(const std::string& hmac_hash,
+HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
+                     RandomNumberGenerator& underlying_rng,
+                     Entropy_Sources& entropy_sources,
                      size_t max_output_before_reseed) :
-   Stateful_RNG(max_output_before_reseed)
+   Stateful_RNG(underlying_rng, entropy_sources, max_output_before_reseed),
+   m_mac(std::move(prf))
    {
-   const std::string hmac = "HMAC(" + hmac_hash + ")";
+   BOTAN_ASSERT_NONNULL(m_mac);
+   clear();
+   }
 
-   m_mac = MessageAuthenticationCode::create(hmac);
-   if(!m_mac)
-      {
-      throw Algorithm_Not_Found(hmac);
-      }
+HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
+                     Entropy_Sources& entropy_sources,
+                     size_t max_output_before_reseed) :
+   Stateful_RNG(entropy_sources, max_output_before_reseed),
+   m_mac(std::move(prf))
+   {
+   BOTAN_ASSERT_NONNULL(m_mac);
+   clear();
+   }
 
-   m_V.resize(m_mac->output_length());
+HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf) :
+   Stateful_RNG(),
+   m_mac(std::move(prf))
+   {
+   BOTAN_ASSERT_NONNULL(m_mac);
    clear();
    }
 
@@ -39,6 +53,7 @@ void HMAC_DRBG::clear()
    {
    Stateful_RNG::clear();
 
+   m_V.resize(m_mac->output_length());
    for(size_t i = 0; i != m_V.size(); ++i)
       m_V[i] = 0x01;
    m_mac->set_key(std::vector<byte>(m_mac->output_length(), 0x00));
@@ -111,6 +126,12 @@ void HMAC_DRBG::update(const byte input[], size_t input_len)
 void HMAC_DRBG::add_entropy(const byte input[], size_t input_len)
    {
    update(input, input_len);
+   }
+
+size_t HMAC_DRBG::security_level() const
+   {
+   // sqrt of hash size
+   return m_mac->output_length() * 8 / 2;
    }
 
 }

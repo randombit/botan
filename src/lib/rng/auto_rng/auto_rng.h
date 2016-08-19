@@ -26,11 +26,11 @@ class BOTAN_DLL AutoSeeded_RNG final : public RandomNumberGenerator
 
       std::string name() const override { return m_rng->name(); }
 
-      size_t reseed_with_sources(Entropy_Sources& srcs,
-                               size_t poll_bits,
-                               std::chrono::milliseconds poll_timeout) override
+      size_t reseed(Entropy_Sources& srcs,
+                    size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS,
+                    std::chrono::milliseconds poll_timeout = BOTAN_RNG_RESEED_DEFAULT_TIMEOUT) override
          {
-         return m_rng->reseed_with_sources(srcs, poll_bits, poll_timeout);
+         return m_rng->reseed(srcs, poll_bits, poll_timeout);
          }
 
       void add_entropy(const byte in[], size_t len) override
