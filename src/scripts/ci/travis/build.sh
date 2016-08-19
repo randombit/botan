@@ -32,18 +32,18 @@ fi
 if [ "$TARGETOS" = "ios32" ]; then
     ./configure.py "${CFG_FLAGS[@]}" --cpu=armv7 --cc=clang \
         --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++" \
-        --prefix=/tmp/botan-installation
+        --with-pkcs11 --prefix=/tmp/botan-installation
 
 elif [ "$TARGETOS" = "ios64" ]; then
     ./configure.py "${CFG_FLAGS[@]}" --cpu=armv8-a --cc=clang \
         --cc-abi-flags="-arch arm64 -stdlib=libc++" \
-        --prefix=/tmp/botan-installation
+        --with-pkcs11 --prefix=/tmp/botan-installation
 
 else
     $CXX --version
     ./configure.py "${CFG_FLAGS[@]}" --cc="$CC" --cc-bin="$CXX" \
         --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib \
-        --prefix=/tmp/botan-installation
+        --with-pkcs11 --prefix=/tmp/botan-installation
 fi
 
 # build
