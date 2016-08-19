@@ -2,4 +2,5 @@ define HMAC_DRBG 20140319
 
 <requires>
 hmac
+stateful_rng
 </requires>

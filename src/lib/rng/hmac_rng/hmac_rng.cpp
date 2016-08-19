@@ -12,43 +12,71 @@
 
 namespace Botan {
 
-HMAC_RNG::HMAC_RNG(const std::string& hash, size_t max_output_before_reseed) :
-   Stateful_RNG(max_output_before_reseed)
+HMAC_RNG::HMAC_RNG(std::unique_ptr<MessageAuthenticationCode> prf,
+                   RandomNumberGenerator& underlying_rng,
+                   Entropy_Sources& entropy_sources,
+                   size_t reseed_interval) :
+   Stateful_RNG(underlying_rng, reseed_interval),
+   m_prf(std::move(prf))
    {
-   m_extractor = MAC::create("HMAC(" + hash + ")");
-   if(!m_extractor)
-      throw Invalid_Argument("HMAC_RNG hash not found");
+   BOTAN_ASSERT_NONNULL(m_prf);
 
-   m_prf.reset(m_extractor->clone());
-
-   if(!m_prf->valid_keylength(m_extractor->output_length()) ||
-      !m_extractor->valid_keylength(m_prf->output_length()))
+   if(!m_prf->valid_keylength(m_prf->output_length()))
       {
-      throw Invalid_Argument("HMAC_RNG: Bad algo combination " +
-                             m_extractor->name() + " and " +
-                             m_prf->name());
+      throw Invalid_Argument("HMAC_RNG cannot use " + m_prf->name());
       }
 
+   m_extractor.reset(m_prf->clone());
    this->clear();
    }
 
-/*
-* HMAC_RNG Constructor
-*/
-HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor,
-                   MessageAuthenticationCode* prf,
-                   size_t max_output_before_reseed) :
-   Stateful_RNG(max_output_before_reseed),
-   m_extractor(extractor), m_prf(prf)
+HMAC_RNG::HMAC_RNG(std::unique_ptr<MessageAuthenticationCode> prf,
+                   RandomNumberGenerator& underlying_rng,
+                   size_t reseed_interval) :
+   Stateful_RNG(underlying_rng, reseed_interval),
+   m_prf(std::move(prf))
    {
-   if(!m_prf->valid_keylength(m_extractor->output_length()) ||
-      !m_extractor->valid_keylength(m_prf->output_length()))
+   BOTAN_ASSERT_NONNULL(m_prf);
+
+   if(!m_prf->valid_keylength(m_prf->output_length()))
       {
-      throw Invalid_Argument("HMAC_RNG: Bad algo combination " +
-                             m_extractor->name() + " and " +
-                             m_prf->name());
+      throw Invalid_Argument("HMAC_RNG cannot use " + m_prf->name());
       }
 
+   m_extractor.reset(m_prf->clone());
+   this->clear();
+   }
+
+HMAC_RNG::HMAC_RNG(std::unique_ptr<MessageAuthenticationCode> prf,
+                   Entropy_Sources& entropy_sources,
+                   size_t reseed_interval) :
+   Stateful_RNG(entropy_sources, reseed_interval),
+   m_prf(std::move(prf)),
+   m_extractor(m_prf->clone())
+   {
+   BOTAN_ASSERT_NONNULL(m_prf);
+
+   if(!m_prf->valid_keylength(m_prf->output_length()))
+      {
+      throw Invalid_Argument("HMAC_RNG cannot use " + m_prf->name());
+      }
+
+   m_extractor.reset(m_prf->clone());
+   this->clear();
+   }
+
+HMAC_RNG::HMAC_RNG(std::unique_ptr<MessageAuthenticationCode> prf) :
+   Stateful_RNG(),
+   m_prf(std::move(prf))
+   {
+   BOTAN_ASSERT_NONNULL(m_prf);
+
+   if(!m_prf->valid_keylength(m_prf->output_length()))
+      {
+      throw Invalid_Argument("HMAC_RNG cannot use " + m_prf->name());
+      }
+
+   m_extractor.reset(m_prf->clone());
    this->clear();
    }
 
@@ -105,7 +133,7 @@ void HMAC_RNG::new_K_value(byte label)
 */
 void HMAC_RNG::randomize(byte out[], size_t length)
    {
-   reseed_check(length);
+   reseed_check();
 
    while(length)
       {
@@ -121,9 +149,9 @@ void HMAC_RNG::randomize(byte out[], size_t length)
    new_K_value(BlockFinished);
    }
 
-size_t HMAC_RNG::reseed_with_sources(Entropy_Sources& srcs,
-                                     size_t poll_bits,
-                                     std::chrono::milliseconds timeout)
+size_t HMAC_RNG::reseed(Entropy_Sources& srcs,
+                        size_t poll_bits,
+                        std::chrono::milliseconds timeout)
    {
    new_K_value(Reseed);
    m_extractor->update(m_K); // m_K is the PRF output
@@ -131,7 +159,7 @@ size_t HMAC_RNG::reseed_with_sources(Entropy_Sources& srcs,
    /*
    * This ends up calling add_entropy which provides input to the extractor
    */
-   size_t bits_collected = Stateful_RNG::reseed_with_sources(srcs, poll_bits, timeout);
+   size_t bits_collected = Stateful_RNG::reseed(srcs, poll_bits, timeout);
 
    /*
    Now derive the new PRK using everything that has been fed into

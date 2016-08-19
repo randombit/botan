@@ -1,1 +1,5 @@
 define X931_RNG 20131128
+
+<requires>
+stateful_rng
+</requires>

@@ -98,11 +98,10 @@
 #define BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_GENERATE 1
 
 /*
-* RNGs will automatically poll the system for additional seed material
-* after producing this many bytes of output. Set to zero to disable
-* automatic reseeding.
+* Userspace RNGs like HMAC_DRBG will reseed after a specified number
+* of outputs are generated. Set to zero to disable automatic reseeding.
 */
-#define BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED 16384
+#define BOTAN_RNG_DEFAULT_RESEED_INTERVAL 1024
 #define BOTAN_RNG_RESEED_POLL_BITS 256
 #define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
 #define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
@@ -111,8 +110,7 @@
 * Controls how AutoSeeded_RNG is instantiated
 */
 #define BOTAN_AUTO_RNG_DRBG HMAC_DRBG
-#define BOTAN_AUTO_RNG_HASH "SHA-256"
-#define BOTAN_AUTO_RNG_ENTROPY_TARGET 256
+#define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-384)"
 
 /*
 * Specifies (in order) the list of entropy sources that will be used

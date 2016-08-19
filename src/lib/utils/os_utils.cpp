@@ -19,7 +19,7 @@
   #include <unistd.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
   #include <windows.h>
 #endif
 
@@ -29,12 +29,12 @@ namespace OS {
 
 uint32_t get_process_id()
    {
-#if defined(BOTAN_TARGET_OS_IS_UNIX)
+#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
    return ::getpid();
 #elif defined(BOTAN_TARGET_OS_IS_WINDOWS)
    return ::GetCurrentProcessId();
 #else
-   return 0;
+   throw Exception("get_process_id not supported");
 #endif
    }
 

@@ -14,7 +14,7 @@ void ANSI_X931_RNG::randomize(byte out[], size_t length)
    {
    if(!is_seeded())
       {
-      reseed(BOTAN_RNG_RESEED_POLL_BITS);
+      rekey();
 
       if(!is_seeded())
          throw PRNG_Unseeded(name());
@@ -72,11 +72,11 @@ void ANSI_X931_RNG::rekey()
       }
    }
 
-size_t ANSI_X931_RNG::reseed_with_sources(Entropy_Sources& srcs,
-                                          size_t poll_bits,
-                                          std::chrono::milliseconds poll_timeout)
+size_t ANSI_X931_RNG::reseed(Entropy_Sources& srcs,
+                             size_t poll_bits,
+                             std::chrono::milliseconds poll_timeout)
    {
-   size_t bits = m_prng->reseed_with_sources(srcs, poll_bits, poll_timeout);
+   size_t bits = m_prng->reseed(srcs, poll_bits, poll_timeout);
    rekey();
    return bits;
    }

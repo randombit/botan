@@ -7,13 +7,16 @@
 #include "cli.h"
 
 #include <botan/version.h>
-#include <botan/auto_rng.h>
 #include <botan/hash.h>
 #include <botan/cpuid.h>
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
   #include <botan/base64.h>
+#endif
+
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+  #include <botan/auto_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
@@ -179,7 +182,12 @@ class RNG final : public Command
             }
          else
             {
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
             rng.reset(new Botan::AutoSeeded_RNG);
+#else
+            error_output() << "auto_rng disabled in build\n";
+            return;
+#endif
             }
 
          for(const std::string& req : get_arg_list("bytes"))
