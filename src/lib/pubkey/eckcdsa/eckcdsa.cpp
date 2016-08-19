@@ -100,10 +100,9 @@ ECKCDSA_Signature_Operation::raw_sign(const byte msg[], size_t,
    const BigInt s = m_mod_order.multiply(m_x, k - w);
    BOTAN_ASSERT(s != 0, "invalid s");
 
-   secure_vector<byte> signature(r.bytes() + s.bytes());
-   r.binary_encode(signature.data());
-   s.binary_encode(&signature[r.bytes()]);
-   return signature;
+   secure_vector<byte> output = BigInt::encode_1363(r, c.size());
+   output += BigInt::encode_1363(s, m_mod_order.get_modulus().bytes());
+   return output;
    }
 
 /**

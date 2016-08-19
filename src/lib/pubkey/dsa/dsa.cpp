@@ -133,10 +133,7 @@ DSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
    BOTAN_ASSERT(s != 0, "invalid s");
    BOTAN_ASSERT(r != 0, "invalid r");
 
-   secure_vector<byte> output(2*m_q.bytes());
-   r.binary_encode(&output[output.size() / 2 - r.bytes()]);
-   s.binary_encode(&output[output.size() - s.bytes()]);
-   return output;
+   return BigInt::encode_fixed_length_int_pair(r, s, m_q.bytes());
    }
 
 /**

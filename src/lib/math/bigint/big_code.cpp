@@ -98,6 +98,17 @@ void BigInt::encode_1363(byte output[], size_t bytes, const BigInt& n)
    }
 
 /*
+* Encode two BigInt, with leading 0s if needed, and concatenate
+*/
+secure_vector<byte> BigInt::encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes)
+   {
+   secure_vector<byte> output(2 * bytes);
+   BigInt::encode_1363(output.data(), bytes, n1);
+   BigInt::encode_1363(output.data() + bytes, bytes, n2);
+   return output;
+   }
+
+/*
 * Decode a BigInt
 */
 BigInt BigInt::decode(const byte buf[], size_t length, Base base)

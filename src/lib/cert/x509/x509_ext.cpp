@@ -1,6 +1,7 @@
 /*
 * X.509 Certificate Extensions
 * (C) 1999-2010,2012 Jack Lloyd
+* (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -293,7 +294,9 @@ void Key_Usage::decode_inner(const std::vector<byte>& in)
 
    u16bit usage = 0;
    for(size_t i = 1; i != obj.value.size(); ++i)
-      usage = (obj.value[i] << 8) | usage;
+      {
+      usage = (obj.value[i] << 8*(sizeof(usage)-i)) | usage;
+      }
 
    m_constraints = Key_Constraints(usage);
    }
@@ -818,13 +821,12 @@ std::vector<byte> Unknown_Critical_Extension::encode_inner() const
    throw Not_Implemented("Unknown_Critical_Extension encoding");
    }
 
-void Unknown_Critical_Extension::decode_inner(const std::vector<byte>& buf)
+void Unknown_Critical_Extension::decode_inner(const std::vector<byte>&)
    {
    }
 
-void Unknown_Critical_Extension::contents_to(Data_Store& info, Data_Store&) const
+void Unknown_Critical_Extension::contents_to(Data_Store&, Data_Store&) const
    {
-   // TODO: textual representation?
    }
 
 }

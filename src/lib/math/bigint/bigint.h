@@ -566,6 +566,15 @@ class BOTAN_DLL BigInt
 
      static void encode_1363(byte out[], size_t bytes, const BigInt& n);
 
+     /**
+     * Encode two BigInt to a byte array according to IEEE 1363
+     * @param n1 the first BigInt to encode
+     * @param n2 the second BigInt to encode
+     * @param bytes the length of the encoding of each single BigInt
+     * @result a secure_vector<byte> containing the concatenation of the two encoded BigInt
+     */
+     static secure_vector<byte> encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes);
+
    private:
       secure_vector<word> m_reg;
       Sign m_signedness = Positive;
