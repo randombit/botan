@@ -225,6 +225,8 @@ class Test
 
             bool test_rc(const std::string& func, int expected, int rc);
 
+            bool test_ne(const std::string& what, size_t produced, size_t expected);
+
 #if defined(BOTAN_HAS_BIGINT)
             bool test_eq(const std::string& what, const BigInt& produced, const BigInt& expected);
             bool test_ne(const std::string& what, const BigInt& produced, const BigInt& expected);
