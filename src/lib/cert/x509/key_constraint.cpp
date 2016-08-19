@@ -12,29 +12,35 @@
 namespace Botan {
 
 /*
-* Find the allowable key constraints
+* Make sure the given key constraints are permitted for the given key type
 */
-Key_Constraints find_constraints(const Public_Key& pub_key,
-                                 Key_Constraints limits)
+void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
+                                                      Key_Constraints constraints)
    {
    const std::string name = pub_key.algo_name();
 
-   size_t constraints = 0;
+   size_t permitted = 0;
 
    if(name == "DH" || name == "ECDH")
-      constraints |= KEY_AGREEMENT;
+      {
+      permitted |= KEY_AGREEMENT | ENCIPHER_ONLY | DECIPHER_ONLY;
+      }
 
    if(name == "RSA" || name == "ElGamal")
-      constraints |= KEY_ENCIPHERMENT | DATA_ENCIPHERMENT | ENCIPHER_ONLY | DECIPHER_ONLY;
+      {
+      permitted |= KEY_ENCIPHERMENT | DATA_ENCIPHERMENT;
+      }
 
    if(name == "RSA" || name == "RW" || name == "NR" ||
       name == "DSA" || name == "ECDSA" || name == "ECGDSA" || name == "ECKCDSA")
-      constraints |= DIGITAL_SIGNATURE | NON_REPUDIATION | KEY_CERT_SIGN | CRL_SIGN;
+      {
+      permitted |= DIGITAL_SIGNATURE | NON_REPUDIATION | KEY_CERT_SIGN | CRL_SIGN;
+      }
 
-   if(limits)
-      constraints &= limits;
-
-   return Key_Constraints(constraints);
+   if ( ( constraints & permitted ) != constraints )
+      {
+      throw Exception("Constraint not permitted for key type " + name);
+      }
    }
 
 }

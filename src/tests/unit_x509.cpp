@@ -78,7 +78,7 @@ Botan::X509_Cert_Options req_opts1(const std::string& algo)
 
    if(algo == "RSA")
       {
-      opts.constraints = Botan::Key_Constraints(Botan::DECIPHER_ONLY);
+      opts.constraints = Botan::Key_Constraints(Botan::KEY_ENCIPHERMENT);
       }
    else if(algo == "DSA" || algo == "ECDSA" || algo == "ECGDSA" || algo == "ECKCDSA")
       {
@@ -472,6 +472,153 @@ Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn 
    return result;
    }
 
+using Botan::Key_Constraints;
+
+/**
+* @brief Some typical key usage scenarios (taken from RFC 5280, sec. 4.2.1.3)
+*/
+struct typical_usage_constraints
+   {
+   // ALL constraints are not typical at all, but we use them for a negative test
+   Key_Constraints all = Key_Constraints(
+                           Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::NON_REPUDIATION | Key_Constraints::KEY_ENCIPHERMENT |
+                           Key_Constraints::DATA_ENCIPHERMENT | Key_Constraints::KEY_AGREEMENT | Key_Constraints::KEY_CERT_SIGN |
+                           Key_Constraints::CRL_SIGN | Key_Constraints::ENCIPHER_ONLY | Key_Constraints::DECIPHER_ONLY);
+
+   Key_Constraints ca = Key_Constraints(Key_Constraints::KEY_CERT_SIGN);
+   Key_Constraints sign_data = Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE);
+   Key_Constraints non_repudiation = Key_Constraints(Key_Constraints::NON_REPUDIATION | Key_Constraints::DIGITAL_SIGNATURE);
+   Key_Constraints key_encipherment = Key_Constraints(Key_Constraints::KEY_ENCIPHERMENT);
+   Key_Constraints data_encipherment = Key_Constraints(Key_Constraints::DATA_ENCIPHERMENT);
+   Key_Constraints key_agreement = Key_Constraints(Key_Constraints::KEY_AGREEMENT);
+   Key_Constraints key_agreement_encipher_only = Key_Constraints(Key_Constraints::KEY_AGREEMENT | Key_Constraints::ENCIPHER_ONLY);
+   Key_Constraints key_agreement_decipher_only = Key_Constraints(Key_Constraints::KEY_AGREEMENT | Key_Constraints::DECIPHER_ONLY);
+   Key_Constraints crl_sign = Key_Constraints(Key_Constraints::CRL_SIGN);
+   Key_Constraints sign_everything = Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::KEY_CERT_SIGN | Key_Constraints::CRL_SIGN);
+   };
+
+
+Test::Result test_valid_constraints(const std::string& pk_algo)
+   {
+   Test::Result result("X509 Valid Constraints");
+
+   std::unique_ptr<Botan::Private_Key> key(make_a_private_key(pk_algo));
+
+   if(!key)
+      {
+      // Failure because X.509 enabled but requested algorithm is not present
+      result.test_note("Skipping due to missing signature algorithm: " + pk_algo);
+      return result;
+      }
+
+   // should not throw on empty constraints
+   verify_cert_constraints_valid_for_key_type(*key, Key_Constraints(Key_Constraints::NO_CONSTRAINTS));
+
+   // now check some typical usage scenarios for the given key type
+   typical_usage_constraints typical_usage;
+
+   if(pk_algo == "DH" || pk_algo == "ECDH")
+      {
+      // DH and ECDH only for key agreement
+      result.test_throws("all constraints not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.all); });
+      result.test_throws("cert sign not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.ca); });
+      result.test_throws("signature not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.sign_data); });
+      result.test_throws("non repudiation not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.non_repudiation); });
+      result.test_throws("key encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_encipherment); });
+      result.test_throws("data encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.data_encipherment); });
+
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement);
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_encipher_only);
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_decipher_only);
+
+      result.test_throws("crl sign not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.crl_sign); });
+      result.test_throws("sign, cert sign, crl sign not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.sign_everything); });
+      }
+   else if(pk_algo == "RSA")
+      {
+      // RSA can do everything except key agreement
+      result.test_throws("all constraints not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.all); });
+
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.ca);
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_data);
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.non_repudiation);
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_encipherment);
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.data_encipherment);
+
+      result.test_throws("key agreement not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_agreement); });
+      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_agreement_encipher_only); });
+      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_agreement_decipher_only); });
+
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.crl_sign);
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_everything);
+      }
+   else if(pk_algo == "ElGamal")
+      {
+      // only ElGamal encryption is currently implemented
+      result.test_throws("all constraints not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.all); });
+      result.test_throws("cert sign not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.ca); });
+
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.non_repudiation);
+
+      result.test_throws("key encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_encipherment); });
+      result.test_throws("data encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.data_encipherment); });
+
+      result.test_throws("key agreement not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_agreement); });
+      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_agreement_encipher_only); });
+      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_agreement_decipher_only); });
+      result.test_throws("crl sign not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.crl_sign); });
+      result.test_throws("sign, cert sign, crl sign not permitted not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.sign_everything); });
+      }
+   else if(pk_algo == "RW" || pk_algo == "NR" || pk_algo == "DSA" ||
+         pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA")
+      {
+      // these are signature algorithms only
+      result.test_throws("all constraints not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.all); });
+
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.ca);
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_data);
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.non_repudiation);
+
+      result.test_throws("key encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_encipherment); });
+      result.test_throws("data encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.data_encipherment); });
+      result.test_throws("key agreement not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_agreement); });
+      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_agreement_encipher_only); });
+      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
+            typical_usage.key_agreement_decipher_only); });
+
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.crl_sign);
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_everything);
+      }
+
+   return result;
+   }
+
 
 class X509_Cert_Unit_Tests : public Test
    {
@@ -491,6 +638,17 @@ class X509_Cert_Unit_Tests : public Test
 
          results.push_back(cert_result);
          results.push_back(usage_result);
+
+         const std::vector<std::string> pk_algos { "DH", "ECDH", "RSA", "ElGamal", "RW", "NR",
+                                                   "DSA", "ECDSA", "ECGDSA", "ECKCDSA" };
+         Test::Result valid_constraints_result("X509 Valid Constraints");
+
+         for(const auto& algo : pk_algos)
+            {
+            valid_constraints_result.merge(test_valid_constraints(algo));
+            }
+
+         results.push_back(valid_constraints_result);
          results.push_back(test_x509_dates());
 
          return results;
