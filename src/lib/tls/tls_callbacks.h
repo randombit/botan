@@ -32,6 +32,10 @@ class BOTAN_DLL Callbacks
        * (eg, over a socket or some other form of IPC). The array will be overwritten
        * when the function returns so a copy must be made if the data cannot be
        * sent immediately.
+       *
+       * @param data the vector of data to send
+       *
+       * @param size the number of bytes to send
        */
        virtual void tls_emit_data(const uint8_t data[], size_t size) = 0;
 
@@ -39,31 +43,44 @@ class BOTAN_DLL Callbacks
        * Mandatory callback: process application data
        * Called when application data record is received from the peer.
        * Again the array is overwritten immediately after the function returns.
-       * seq_no is the underlying TLS/DTLS record sequence number.
+       *
+       * @param seq_no the underlying TLS/DTLS record sequence number
+       *
+       * @param data the vector containing the received record
+       *
+       * @param size the length of the received record, in bytes
        */
        virtual void tls_record_received(u64bit seq_no, const uint8_t data[], size_t size) = 0;
-     
+
        /**
        * Mandary callback: alert received
        * Called when an alert is received from the peer
        * If fatal, the connection is closing. If not fatal, the connection may
        * still be closing (depending on the error and the peer).
-       */ 
+       *
+       * @param alert the source of the alert
+       */
        virtual void tls_alert(Alert alert) = 0;
 
        /**
        * Mandatory callback: session established
        * Called when a session is established. Throw an exception to abort
-       * the connection. Return false to prevent the session from being cached.
-       * Return true to cache the session in the configured session manager.
-       */ 
+       * the connection.
+       *
+       * @param session the session descriptor
+       *
+       * @return return false to prevent the session from being cached,
+       * return true to cache the session in the configured session manager
+       */
        virtual bool tls_session_established(const Session& session) = 0;
 
        /**
        * Optional callback: inspect handshake message
        * Throw an exception to abort the handshake.
-       */       
-       virtual void tls_inspect_handshake_msg(const Handshake_Message&) {}
+       *
+       * @param message the handshake message
+       */
+       virtual void tls_inspect_handshake_msg(const Handshake_Message& message) {}
 
        /**
        * Optional callback for server: choose ALPN protocol
@@ -72,8 +89,11 @@ class BOTAN_DLL Callbacks
        * protocol to use, which is not necessarily even on the list that
        * the client sent.
        *
-       * If the empty string is returned from this function the server will
-       * just ignore the client ALPN extension.
+       * @param client_protos the vector of protocols the client is willing to negotiate
+       *
+       * @return the protocol selected by the server, which need not be on the
+       * list that the client sent; if this is the empty string, the server ignores the
+       * client ALPN extension
        */
        virtual std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos)
           {
@@ -82,7 +102,7 @@ class BOTAN_DLL Callbacks
 
        /**
        * Optional callback: debug logging. (not currently used)
-       */       
+       */
        virtual bool tls_log_debug(const char*) { return false; }
    };
 
@@ -161,7 +181,7 @@ class BOTAN_DLL Compat_Callbacks final : public Callbacks
           if(m_next_proto != nullptr) { return m_next_proto(client_protos); }
           return "";
           }
- 
+
        void tls_inspect_handshake_msg(const Handshake_Message& hmsg) override
           {
           // The handshake message callback is optional so we can
