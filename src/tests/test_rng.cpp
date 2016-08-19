@@ -81,7 +81,7 @@ class HMAC_DRBG_Tests : public Text_Based_Test
             return result;
             }
 
-         std::unique_ptr<Botan::HMAC_DRBG> rng(new Botan::HMAC_DRBG(mac.release(), 0));
+         std::unique_ptr<Botan::HMAC_DRBG> rng(new Botan::HMAC_DRBG(std::move(mac)));
          rng->initialize_with(seed_input.data(), seed_input.size());
 
          // now reseed
@@ -116,7 +116,7 @@ class HMAC_DRBG_Reseed_Tests : public Test
             return {result};
             }
 
-         Botan::HMAC_DRBG rng(mac.release(), 17);
+         Botan::HMAC_DRBG rng(std::move(mac), Botan::Entropy_Sources::global_sources(), 17);
          Botan::secure_vector<Botan::byte> seed_input(
                {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF});
          Botan::secure_vector<Botan::byte> output_after_initialization(

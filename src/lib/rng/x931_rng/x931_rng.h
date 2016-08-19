@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * ANSI X9.31 RNG
 */
-class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
+class BOTAN_DLL ANSI_X931_RNG final : public RandomNumberGenerator
    {
    public:
       void randomize(byte[], size_t) override;
@@ -24,9 +24,9 @@ class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
       void clear() override;
       std::string name() const override;
 
-      size_t reseed_with_sources(Entropy_Sources& srcs,
-                                 size_t poll_bits,
-                                 std::chrono::milliseconds poll_timeout) override;
+      size_t reseed(Entropy_Sources& srcs,
+                    size_t poll_bits,
+                    std::chrono::milliseconds poll_timeout) override;
 
       void add_entropy(const byte[], size_t) override;
 
@@ -35,6 +35,7 @@ class BOTAN_DLL ANSI_X931_RNG : public RandomNumberGenerator
       * @param rng the underlying PRNG for generating inputs
       * (eg, an HMAC_RNG)
       */
+      BOTAN_DEPRECATED("X9.31 RNG is deprecated and will be removed soon")
       ANSI_X931_RNG(BlockCipher* cipher,
                     RandomNumberGenerator* rng);
 

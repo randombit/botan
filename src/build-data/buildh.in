@@ -111,7 +111,7 @@
 * Controls how AutoSeeded_RNG is instantiated
 */
 #define BOTAN_AUTO_RNG_DRBG HMAC_DRBG
-#define BOTAN_AUTO_RNG_HASH "SHA-256"
+#define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-384)"
 #define BOTAN_AUTO_RNG_ENTROPY_TARGET 256
 
 /*

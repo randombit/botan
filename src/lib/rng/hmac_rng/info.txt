@@ -2,4 +2,5 @@ define HMAC_RNG 20131128
 
 <requires>
 mac
+stateful_rng
 </requires>
