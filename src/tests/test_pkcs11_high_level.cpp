@@ -415,6 +415,7 @@ Test::Result test_attribute_container()
    return result;
    }
 
+#if defined(BOTAN_HAS_ASN1)
 Test::Result test_create_destroy_data_object()
    {
    Test::Result result("Object create/delete data object");
@@ -565,6 +566,7 @@ Test::Result test_object_copy()
    copied_obj.destroy();
    return result;
    }
+#endif
 
 class Object_Tests : public PKCS11_Test
    {
@@ -573,11 +575,13 @@ class Object_Tests : public PKCS11_Test
          {
          std::vector<std::function<Test::Result()>> fns =
             {
-            test_attribute_container,
-            test_create_destroy_data_object,
-            test_get_set_attribute_values,
-            test_object_finder,
-            test_object_copy
+            test_attribute_container
+#if defined(BOTAN_HAS_ASN1)
+            ,test_create_destroy_data_object
+            ,test_get_set_attribute_values
+            ,test_object_finder
+            ,test_object_copy
+#endif
             };
 
          return run_pkcs11_tests("Object", fns);

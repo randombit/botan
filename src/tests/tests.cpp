@@ -234,6 +234,18 @@ bool Test::Result::test_gte(const std::string& what, size_t produced, size_t exp
    return test_success();
    }
 
+bool Test::Result::test_ne(const std::string& what, size_t produced, size_t expected)
+   {
+   if(produced != expected)
+      {
+      return test_success();
+      }
+
+   std::ostringstream err;
+   err << who() << " " << what << " produced " << produced << " prohibited value";
+   return test_failure(err.str());
+   }
+
 #if defined(BOTAN_HAS_BIGINT)
 bool Test::Result::test_eq(const std::string& what, const BigInt& produced, const BigInt& expected)
    {
