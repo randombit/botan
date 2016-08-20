@@ -6,9 +6,11 @@ Currently deprecated:
 
 - MARS, RC2, RC5, RC6, SAFER, TEA
 
+- ECB Cipher_Mode
+
 - MD2, HAS-160, RIPEMD-128
 
-- TLS 3DES and SEED ciphersuites in TLS
+- 3DES and SEED ciphersuites in TLS
 
 - DSA auth in TLS (not ECDSA)
 
@@ -25,4 +27,3 @@ Currently deprecated:
 - EGD entropy source
 
 - Unix process exec entropy source
-

@@ -38,7 +38,6 @@ Library Layout
 * ``entropy`` has various entropy sources
 * ``asn1`` is the DER encoder/decoder
 * ``cert/x509`` is X.509 certificates, PKCS #10 requests, OCSP
-* ``cert/cvc`` is Card Verifiable Certificates (ePassport credentials)
 * ``tls`` contains the TLS implementation
 * ``filters`` is a filter/pipe API for data transforms
 * ``compression`` has the compression wrappers (zlib, bzip2, lzma)

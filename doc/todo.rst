@@ -7,6 +7,14 @@ ticket on GitHub to make sure you're on the right track.
 
 Request a new feature by opening a pull request to update this file.
 
+Documentation
+----------------------------------------
+
+* TPM (no docs)
+* PKCS #11 (no docs)
+* X.509 certs, path validation
+* Specific docs covering one major topic (RSA, ECDSA, AES/GCM, ...)
+
 CLI
 ----------------------------------------
 

@@ -4,48 +4,68 @@ Release Notes
 Version 1.11.31, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add PKCS #11 support (GH #507)
+* Fix undefined behavior in Curve25519 on platforms without a native 128-bit
+  integer type. This was known to produce incorrect results on 32-bit ARM
+  under Clang. GH #532 (CVE-2016-6878)
 
-* Add ECIES encryption system (GH #483)
+* If X509_Certificate::allowed_usage was called with more than one Key_Usage
+  set in the enum value, the function would return true if *any* of the allowed
+  usages were set, instead of if *all* of the allowed usages are set.
+  GH #591 (CVE-2016-6879)
+
+* Incompatible changes in DLIES: Previously the input to the KDF was
+  the concatenation of the (ephemeral) public key and the secret value
+  derived by the key agreement operation. Now the input is only the
+  secret value obtained by the key agreement operation. That's how it
+  is specified in the original paper "DHIES: An encryption scheme
+  based on Diffie-Hellman Problem" or in BSI technical guideline
+  TR-02102-1 for example. In addition to the already present
+  XOR-encrypion/decryption mode it's now possible to use DLIES with a
+  block cipher.  Furthermore the order of the output was changed from
+  {public key, tag, ciphertext} to {public key, ciphertext, tag}. Both
+  modes are compatible with bouncycastle.
+
+* Add initial PKCS #11 support (GH #507). Currently includes a low level
+  wrapper to all of PKCS #11 (p11.h) and high level code for RSA and ECDSA
+  signatures and hardware RNG access.
 
 * Add ECKCDSA signature algorithm (#504)
 
 * Add KDF1 from ISO 18033 (GH #483)
 
+* Add FRP256v1 curve (GH #551)
+
 * RNG changes: NIST SP900-80's HMAC_DRBG is now the default generator
   for userspace RNG (AutoSeeded_RNG). HMAC_DRBG now attempts to detect
   use of fork (via pid checks)
 
-* Fix undefined behavior in Curve25519 on platforms without a native 128-bit
-  integer type. This was known to produce incorrect results on 32-bit ARM
-  under Clang. GH #532
-
-* Fixes for FreeBSD (GH #517) and OpenBSD (GH #523)
-
-* Support for getting entropy from EGD is deprecated, and will be removed in
-  a future release. The developers believe that it is unlikely that any modern
-  system requires EGD and so the code is now dead weight. If you rely on EGD
-  support, you should contact the developers by email or GitHub ASAP.
-
-* The TLS ciphersuites using 3DES and SEED are deprecated and will be removed in
-  a future release.
-
-* Support for BeOS/Haiku has not been tested in 5 years and is in an unknown state.
-  Unless reports are received of successful builds and use on this platform, support
-  for BeOS/Haiku will be removed in a future release.
-
-* Changes in DLIES: Previously the input to the KDF was the concatenation
-  of the (ephemeral) public key and the secret value derived by the key
-  agreement operation. Now the input is only the secret value obtained
-  by the key agreement operation. That's how it is specified in the original
-  paper "DHIES: An encryption scheme based on Diffie-Hellman Problem" or in BSI
-  technical guideline TR-02102-1 for example. In addition to the already present
-  XOR-encrypion/decryption mode it's now possible to use DLIES with a block cipher.
-  Furthermore the order of the output was changed from {public key, tag, ciphertext}
-  to {public key, ciphertext, tag}. Both modes are compatible with bouncycastle.
+* The X9.31 and HMAC_RNG RNGs are deprecated and will be removed in a
+  future release.  If you need a userspace PRNG switch to HMAC_DRBG
+  (or AutoSeeded_RNG which is HMAC_DRBG with useful defaults).
 
 * Fix a bug in ANSI X9.23 padding mode, which returned one byte more
   than the given block size (GH #529).
+
+* Fixes for FreeBSD (GH #517) and OpenBSD (GH #523)
+
+* New deprecations. See the full list in doc/deprecated.txt
+
+  Support for getting entropy from EGD is deprecated, and will be
+  removed in a future release. The developers believe that it is
+  unlikely that any modern system requires EGD and so the code is now
+  dead weight. If you rely on EGD support, you should contact the
+  developers by email or GitHub ASAP.
+
+  The TLS ciphersuites using 3DES and SEED are deprecated and will be
+  removed in a future release.
+
+  ECB mode Cipher_Mode is deprecated and will be removed in a future
+  release.
+
+  Support for BeOS/Haiku has not been tested in 5+ years and is in an
+  unknown state.  Unless reports are received of successful builds and
+  use on this platform, support for BeOS/Haiku will be removed in a
+  future release.
 
 Version 1.11.30, 2016-06-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
