@@ -5,12 +5,28 @@
 */
 
 #include <botan/rng.h>
+#include <botan/loadstor.h>
+#include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
   #include <botan/auto_rng.h>
 #endif
 
 namespace Botan {
+
+void RandomNumberGenerator::randomize_with_ts_input(byte output[], size_t output_len)
+   {
+   /*
+   Form additional input which is provided to the PRNG implementation
+   to paramaterize the KDF output.
+   */
+   byte additional_input[20] = { 0 };
+   store_le(OS::get_system_timestamp_ns(), additional_input);
+   store_le(OS::get_processor_timestamp(), additional_input + 8);
+   store_le(OS::get_process_id(), additional_input + 16);
+
+   randomize_with_input(output, output_len, additional_input, sizeof(additional_input));
+   }
 
 void RandomNumberGenerator::randomize_with_input(byte output[], size_t output_len,
                                                  const byte input[], size_t input_len)

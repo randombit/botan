@@ -22,7 +22,7 @@ class BOTAN_DLL AutoSeeded_RNG final : public RandomNumberGenerator
 
       bool is_seeded() const override { return m_rng->is_seeded(); }
 
-      void clear() override { m_rng->clear(); m_counter = 0; }
+      void clear() override { m_rng->clear(); }
 
       std::string name() const override { return m_rng->name(); }
 
@@ -39,7 +39,6 @@ class BOTAN_DLL AutoSeeded_RNG final : public RandomNumberGenerator
       AutoSeeded_RNG(size_t max_output_before_reseed = BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED);
    private:
       std::unique_ptr<RandomNumberGenerator> m_rng;
-      uint32_t m_counter = 0;
    };
 
 }

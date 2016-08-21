@@ -6,8 +6,6 @@
 
 #include <botan/auto_rng.h>
 #include <botan/entropy_src.h>
-#include <botan/loadstor.h>
-#include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
   #include <botan/hmac_drbg.h>
@@ -33,27 +31,18 @@ AutoSeeded_RNG::AutoSeeded_RNG(size_t max_output_before_reseed)
 #endif
                                        max_output_before_reseed));
 
+   // Initially RNG is unseeded, this will force a reseed:
+   m_rng->randomize(nullptr, 0);
+
    if(!m_rng->is_seeded())
       {
-      m_rng->next_byte();
-      BOTAN_ASSERT(m_rng->is_seeded(), "ok");
-      //throw Exception("AutoSeeded_RNG failed to generate seed material");
+      throw Exception("AutoSeeded_RNG failed initial seeding");
       }
    }
 
 void AutoSeeded_RNG::randomize(byte output[], size_t output_len)
    {
-   /*
-   Form additional input which is provided to the PRNG implementation
-   to paramaterize the KDF output.
-   */
-   byte additional_input[24] = { 0 };
-   store_le(OS::get_system_timestamp_ns(), additional_input);
-   store_le(OS::get_processor_timestamp(), additional_input + 8);
-   store_le(OS::get_process_id(), additional_input + 16);
-   store_le(m_counter++, additional_input + 20);
-
-   randomize_with_input(output, output_len, additional_input, sizeof(additional_input));
+   randomize_with_ts_input(output, output_len);
    }
 
 void AutoSeeded_RNG::randomize_with_input(byte output[], size_t output_len,

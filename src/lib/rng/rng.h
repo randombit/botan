@@ -76,6 +76,11 @@ class BOTAN_DLL RandomNumberGenerator
                                         const byte input[], size_t input_len);
 
       /**
+      * This calls `randomize_with_input` using a buffer with various timestamps.
+      */
+      void randomize_with_ts_input(byte output[], size_t output_len);
+
+      /**
       * Return the name of this object
       */
       virtual std::string name() const = 0;
