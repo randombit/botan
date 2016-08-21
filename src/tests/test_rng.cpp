@@ -274,16 +274,19 @@ class HMAC_DRBG_Unit_Tests : public Test
                mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
                }
 
-            Botan::HMAC_DRBG rng(std::move(mac), Test::rng());
+            Botan::HMAC_DRBG rng(std::move(mac));
+            result.test_eq("not seeded", rng.is_seeded(), false);
             std::vector<Botan::byte> nonce(nonce_size);
             rng.initialize_with(nonce.data(), nonce.size());
 
             if(nonce_size < 16)
                {
+               result.test_eq("not seeded", rng.is_seeded(), false);
                result.test_throws("invalid nonce size", [&rng, &nonce] () { rng.random_vec(16); });
                }
             else
                {
+               result.test_eq("is seeded", rng.is_seeded(), true);
                rng.random_vec(16);
                }
             }
