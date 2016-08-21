@@ -1,6 +1,6 @@
 /*
 * Auto Seeded RNG
-* (C) 2008 Jack Lloyd
+* (C) 2008,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,6 +12,11 @@
 
 namespace Botan {
 
+class Stateful_RNG;
+
+/**
+* A userspace PRNG
+*/
 class BOTAN_DLL AutoSeeded_RNG final : public RandomNumberGenerator
    {
    public:
@@ -20,25 +25,39 @@ class BOTAN_DLL AutoSeeded_RNG final : public RandomNumberGenerator
       void randomize_with_input(byte output[], size_t output_len,
                                 const byte input[], size_t input_len) override;
 
-      bool is_seeded() const override { return m_rng->is_seeded(); }
+      bool is_seeded() const override;
 
-      void clear() override { m_rng->clear(); }
-
-      std::string name() const override { return m_rng->name(); }
+      void force_reseed();
 
       size_t reseed(Entropy_Sources& srcs,
                     size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS,
-                    std::chrono::milliseconds poll_timeout = BOTAN_RNG_RESEED_DEFAULT_TIMEOUT) override
-         {
-         return m_rng->reseed(srcs, poll_bits, poll_timeout);
-         }
+                    std::chrono::milliseconds poll_timeout = BOTAN_RNG_RESEED_DEFAULT_TIMEOUT) override;
 
-      void add_entropy(const byte in[], size_t len) override
-         { m_rng->add_entropy(in, len); }
+      void add_entropy(const byte in[], size_t len) override;
 
+      std::string name() const override;
+
+      void clear() override;
+
+      /**
+      * If no RNG or entropy sources are provided to AutoSeeded_RNG, it uses the system RNG
+      * (if available) or else a default group of entropy sources (all other systems) to
+      * gather seed material.
+      */
       AutoSeeded_RNG(size_t max_output_before_reseed = BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED);
+
+      AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
+                     size_t max_output_before_reseed = BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED);
+
+      AutoSeeded_RNG(Entropy_Sources& entropy_sources,
+                     size_t max_output_before_reseed = BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED);
+
+      AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
+                     Entropy_Sources& entropy_sources,
+                     size_t max_output_before_reseed = BOTAN_RNG_DEFAULT_MAX_OUTPUT_BEFORE_RESEED);
+
    private:
-      std::unique_ptr<RandomNumberGenerator> m_rng;
+      std::unique_ptr<Stateful_RNG> m_rng;
    };
 
 }

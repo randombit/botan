@@ -230,7 +230,8 @@ class BOTAN_DLL Serialized_RNG final : public RandomNumberGenerator
          m_rng->add_entropy(in, len);
          }
 
-      Serialized_RNG();
+      BOTAN_DEPRECATED("Create an AutoSeeded_RNG for other constructor") Serialized_RNG();
+
       explicit Serialized_RNG(RandomNumberGenerator* rng) : m_rng(rng) {}
    private:
       mutable std::mutex m_mutex;

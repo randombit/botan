@@ -86,6 +86,11 @@ void Stateful_RNG::initialize_with(const byte input[], size_t len)
       }
    }
 
+void Stateful_RNG::force_reseed()
+   {
+   m_successful_initialization = false;
+   }
+
 bool Stateful_RNG::is_seeded() const
    {
    return m_successful_initialization;

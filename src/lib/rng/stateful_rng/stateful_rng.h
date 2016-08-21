@@ -57,6 +57,11 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
 
       bool is_seeded() const override final;
 
+      /**
+      * Mark state as requiring a reseed on next use
+      */
+      void force_reseed();
+
       void reseed_from_rng(RandomNumberGenerator& rng,
                            size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS) override final;
 
@@ -69,20 +74,18 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
                     size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS,
                     std::chrono::milliseconds poll_timeout = BOTAN_RNG_RESEED_DEFAULT_TIMEOUT) override;
 
+      /**
+      * Return intended security level of this DRBG
+      */
       virtual size_t security_level() const = 0;
+
+      void clear() override;
 
    protected:
       /**
       * Called with lock held
       */
       void reseed_check(size_t bytes_requested);
-
-      void clear() override;
-
-      /**
-      * Mark state as requiring a reseed on next use
-      */
-      void force_reseed() { m_bytes_since_reseed = m_max_output_before_reseed; }
 
       uint32_t last_pid() const { return m_last_pid; }
 
