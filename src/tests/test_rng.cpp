@@ -161,9 +161,9 @@ class HMAC_DRBG_Unit_Tests : public Test
          };
 
    public:
-      Test::Result test_reseed()
+      Test::Result test_reseed_kat()
          {
-         Test::Result result("HMAC_DRBG Reseed");
+         Test::Result result("HMAC_DRBG Reseed KAT");
 
          auto mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
          if(!mac)
@@ -191,6 +191,46 @@ class HMAC_DRBG_Unit_Tests : public Test
          // reseed must happend here
          rng.randomize(out.data(), out.size());
          result.test_ne("out after reseed", out, output_without_reseed);
+
+         return result;
+         }
+
+      Test::Result test_reseed()
+         {
+         Test::Result result("HMAC_DRBG Reseed");
+
+         auto mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
+         if(!mac)
+            {
+            result.note_missing("HMAC(SHA-256)");
+            return result;
+            }
+
+         // test max_output_before_reseed is enforced
+         Request_Counting_RNG counting_rng;
+         Botan::HMAC_DRBG rng(std::move(mac), counting_rng, 16);
+
+         rng.random_vec(8);
+         result.test_eq("initial seeding", counting_rng.randomize_count(), 1);
+         rng.random_vec(8);
+         result.test_eq("still initial seed", counting_rng.randomize_count(), 1);
+         rng.random_vec(1);
+         // counter should have been reset now, expecting m_bytes_since_reseed = 1
+         result.test_eq("first reseed", counting_rng.randomize_count(), 2);
+         rng.random_vec(15);
+         // requested exactly max_output_before_reseed bytes now after first reseed
+         result.test_eq("still first reseed", counting_rng.randomize_count(), 2);
+         rng.random_vec(8);
+         // counter should have been reset now, expecting m_bytes_since_reseed = 8
+         result.test_eq("second reseed", counting_rng.randomize_count(), 3);
+         rng.random_vec(8);
+         // requested exactly max_output_before_reseed bytes now after second reseed
+         result.test_eq("still second reseed", counting_rng.randomize_count(), 3);
+
+         // request 2*more bytes than max_output_before_reseed, expecting 2 reseeds
+         rng.random_vec(32);
+         result.test_eq("request exceeds output limit", counting_rng.randomize_count(), 5);
+
          return result;
          }
 
@@ -344,7 +384,12 @@ class HMAC_DRBG_Unit_Tests : public Test
          size_t count = counting_rng.randomize_count();
          Botan::secure_vector<byte> parent_bytes, child_bytes;
          int fd[2];
-         pipe(fd);
+         int rc = pipe(fd);
+         if(rc != 0)
+            {
+            result.test_failure("failed to create pipe");
+            }
+
          pid_t pid = fork();
          if ( pid == -1 )
             {
@@ -384,6 +429,7 @@ class HMAC_DRBG_Unit_Tests : public Test
       std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
+         results.push_back(test_reseed_kat());
          results.push_back(test_reseed());
          results.push_back(test_broken_entropy_input());
          results.push_back(test_check_nonce());
