@@ -18,14 +18,19 @@ if [ "$BUILD_MODE" = "sonarqube" ]; then
     unzip build-wrapper-linux-x86.zip
 fi
 
-if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "$TARGETOS" != "ios" ]; then
+if [ "$TRAVIS_OS_NAME" = "osx" ]; then
     # Workaround for https://github.com/Homebrew/homebrew/issues/42553
     brew update || brew update
 
-    brew install xz
-    brew install python # python2
-    brew install python3
+    brew install ccache
 
-    # Boost 1.58 is installed on Travis OS X images
-    # brew install boost
+    if [ "$TARGETOS" = "native" ]; then
+        brew install xz
+        brew install python # python2
+        brew install python3
+
+        # Boost 1.58 is installed on Travis OS X images
+        # brew install boost
+    fi
+
 fi
