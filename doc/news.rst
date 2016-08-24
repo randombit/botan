@@ -296,6 +296,19 @@ Version 1.11.29, 2016-03-20
 
 * Support for locking allocator on Windows using VirtualLock. GH #450
 
+Version 1.18.15, 2016-02-13
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* NOTE WELL: Botan 1.8 is not supported for security issues anymore.
+  Moving to 1.10 or 1.11 is certainly recommended.
+* Fix CVE-2014-9742: Insufficient randomness in Miller-Rabin primality check
+* Fix CVE-2016-2194: Infinite loop in modulur square root algorithm
+* Fix CVE-2015-5726: Crash in BER decoder
+* Fix CVE-2015-5727: Excess memory allocation in BER decoder
+  Note: Unlike the fix in 1.10 which checks that the source actually
+  contains enough data to satisfy the read before allocating the
+  memory, 1.8.15 simply rejects all ASN.1 blocks larger than 1 MiB.
+  This simpler check avoids the problem without breaking ABI.
+
 Version 1.10.12, 2016-02-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
