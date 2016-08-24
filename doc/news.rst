@@ -36,19 +36,55 @@ Version 1.11.31, Not Yet Released
 * Add FRP256v1 curve (GH #551)
 
 * RNG changes: NIST SP900-80's HMAC_DRBG is now the default generator
-  for userspace RNG (AutoSeeded_RNG). HMAC_DRBG now attempts to detect
-  use of fork (via pid checks)
+  for userspace RNG (in AutoSeeded_RNG). HMAC_DRBG now attempts to detect
+  use of fork via pid checks and perform automatic reseeding.
+  GH #520
 
-* The X9.31 and HMAC_RNG RNGs are deprecated and will be removed in a
-  future release.  If you need a userspace PRNG switch to HMAC_DRBG
-  (or AutoSeeded_RNG which is HMAC_DRBG with useful defaults).
+* Add RDRAND_RNG which directly exposes the CPU RNG (GH #543)
+
+* Add PKCS #1 v1.5 id for SHA-512/256 (GH #554)
+
+* Add X509_Time::to_std_timepoint (GH #560)
 
 * Fix a bug in ANSI X9.23 padding mode, which returned one byte more
   than the given block size (GH #529).
 
-* Fixes for FreeBSD (GH #517) and OpenBSD (GH #523)
+* Fix bug in SipHash::clear, which did not reset all state (GH #547)
+
+* Fixes for FreeBSD (GH #517) and OpenBSD (GH #523). The compiler defaults
+  to Clang on FreeBSD now.
+
+* SonarQube static analysis integration (GH #592)
+
+* Switched Travis CI to Ubuntu 14.04 LTS (GH #592)
+
+* Clean up in TLS ciphersuite handling (GH #583)
+
+* Threefish-512 AVX2 optimization work (GH #581)
+
+* Remove build configuration host and timestamp from build.h
+  This makes this header reproducible and allows using ccache's direct mode
+  (GH #586 see also #587)
+
+* Prevent building for x86-64 with x86-32 compiler and the reverse (GH #585)
+
+* Avoid build problem on 32-bit userspace ARMv8 (GH #563)
+
+* Refactor of internal MP headers (GH #549)
+
+* Avoid MSVC C4100 warning (GH #525)
+
+* More tests for RSA-KEM (GH #538), DH (GH #556), EME (GH #553),
+  cipher mode padding (GH #529), CTS mode (GH #531),
+  KDF1/ISO18033 (GH #537), OctetString (GH #545), OIDs (GH #546),
+  parallel hash (GH #548), charset handling (GH #555),
+  BigInt (GH #558)
 
 * New deprecations. See the full list in doc/deprecated.txt
+
+  The X9.31 and HMAC_RNG RNGs are deprecated.
+  If you need a userspace PRNG, use HMAC_DRBG (or AutoSeeded_RNG
+  which is HMAC_DRBG with defaults).
 
   Support for getting entropy from EGD is deprecated, and will be
   removed in a future release. The developers believe that it is
