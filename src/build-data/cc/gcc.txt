@@ -8,8 +8,11 @@ add_lib_dir_option -L
 add_lib_option -l
 
 lang_flags "-std=c++11 -D_REENTRANT"
-maintainer_warning_flags "-Wold-style-cast -Werror -Wno-error=old-style-cast -Wno-error=zero-as-null-pointer-constant -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=strict-overflow -Wsuggest-override"
-warning_flags "-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor"
+
+# This should only contain flags which are included in GCC 4.8
+warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor"
+
+maintainer_warning_flags "-Wold-style-cast -Wsuggest-override -Wshadow -Werror -Wno-error=old-style-cast -Wno-error=zero-as-null-pointer-constant -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=strict-overflow"
 
 compile_flags "-c"
 debug_info_flags "-g"

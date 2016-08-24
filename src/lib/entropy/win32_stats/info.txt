@@ -15,5 +15,5 @@ mingw
 </os>
 
 <libs>
-windows -> user32.lib
+windows -> user32
 </libs>

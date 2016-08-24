@@ -12,6 +12,7 @@
 #include <sstream>
 #include <iomanip>
 #include <mutex>
+#include <stdlib.h>
 
 #if defined(BOTAN_HAS_BOOST_DATETIME)
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -39,7 +40,7 @@ std::tm do_gmtime(std::time_t time_val)
    return tm;
    }
 
-#if !defined(BOTAN_TARGET_OS_HAS_TIMEGM) && !defined(BOTAN_TARGET_OS_HAS_MKGMTIME)
+#if !defined(BOTAN_TARGET_OS_HAS_TIMEGM) && !(defined(BOTAN_TARGET_OS_HAS_MKGMTIME) && defined(BOTAN_BUILD_COMPILER_IS_MSVC))
 
 #if defined(BOTAN_HAS_BOOST_DATETIME)
 
@@ -67,7 +68,7 @@ std::time_t boost_timegm(std::tm *tm)
    return out;
    }
 
-#else
+#elif defined(BOTAN_OS_TYPE_IS_UNIX)
 
 #pragma message "Caution! A fallback version of timegm() is used which is not thread-safe"
 
@@ -138,13 +139,15 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const
    // Define a function alias `botan_timegm`
    #if defined(BOTAN_TARGET_OS_HAS_TIMEGM)
    std::time_t (&botan_timegm)(std::tm *tm) = timegm;
-   #elif defined(BOTAN_TARGET_OS_HAS_MKGMTIME)
+   #elif defined(BOTAN_TARGET_OS_HAS_MKGMTIME) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    // http://stackoverflow.com/questions/16647819/timegm-cross-platform
    std::time_t (&botan_timegm)(std::tm *tm) = _mkgmtime;
    #elif defined(BOTAN_HAS_BOOST_DATETIME)
    std::time_t (&botan_timegm)(std::tm *tm) = boost_timegm;
-   #else
+   #elif defined(BOTAN_OS_TYPE_IS_UNIX)
    std::time_t (&botan_timegm)(std::tm *tm) = fallback_timegm;
+   #else
+   std::time_t (&botan_timegm)(std::tm *tm) = mktime; // localtime instead...
    #endif
 
    // Convert std::tm to std::time_t

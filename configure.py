@@ -1841,7 +1841,7 @@ def main(argv = None):
 
     logging.getLogger().setLevel(log_level())
 
-    logging.debug('%s invoked with options "%s"' % (
+    logging.info('%s invoked with options "%s"' % (
         argv[0], ' '.join(argv[1:])))
 
     logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (

@@ -642,6 +642,7 @@ class FFI_Unit_Tests : public Test
          Test::Result result("FFI");
 
          botan_privkey_t priv;
+#if defined(BOTAN_HAS_MCELIECE)
          if (TEST_FFI_OK(botan_privkey_create_mceliece, (&priv, rng, 2048, 50)))
             {
             botan_pubkey_t pub;
@@ -683,6 +684,10 @@ class FFI_Unit_Tests : public Test
             TEST_FFI_OK(botan_pubkey_destroy, (pub));
             TEST_FFI_OK(botan_privkey_destroy, (priv));
             }
+#else
+         // Not included, test that calling the FFI function work (and returns an error)
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NOT_IMPLEMENTED, botan_privkey_create_mceliece, (&priv, rng, 2048, 50));
+#endif
 
          return result;
          }
