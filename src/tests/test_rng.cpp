@@ -441,6 +441,44 @@ class HMAC_DRBG_Unit_Tests : public Test
          return result;
          }
 
+      Test::Result test_randomize_with_ts_input()
+         {
+         Test::Result result("HMAC_DRBG Randomize With Timestamp Input");
+
+         auto mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
+         if(!mac)
+            {
+            result.note_missing("HMAC(SHA-256)");
+            return result;
+            }
+
+         const size_t reseed_interval = 1024;
+         const size_t request_bytes = 64;
+         const std::vector<uint8_t> seed(128);
+
+         // check that randomize_with_ts_input() creates different output based on a timestamp
+         // and possibly additional data, such as process id
+         Fixed_Output_RNG fixed_output_rng1(seed);
+         Botan::HMAC_DRBG rng1(std::move(mac), fixed_output_rng1, reseed_interval);
+         Botan::secure_vector<byte> output1(request_bytes);
+         rng1.randomize(output1.data(), output1.size());
+
+         mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
+         Fixed_Output_RNG fixed_output_rng2(seed);
+         Botan::HMAC_DRBG rng2(std::move(mac), fixed_output_rng2, reseed_interval);
+         Botan::secure_vector<byte> output2(request_bytes);
+         rng2.randomize(output2.data(), output2.size());
+
+         result.test_eq("equal output due to same seed", output1, output2);
+
+         rng1.randomize_with_ts_input(output1.data(), output1.size());
+         rng2.randomize_with_ts_input(output2.data(), output2.size());
+
+         result.test_ne("output differs due to different timestamp", output1, output2);
+
+         return result;
+         }
+
       std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
@@ -450,6 +488,7 @@ class HMAC_DRBG_Unit_Tests : public Test
          results.push_back(test_check_nonce());
          results.push_back(test_prediction_resistance());
          results.push_back(test_fork_safety());
+         results.push_back(test_randomize_with_ts_input());
          return results;
          }
    };
