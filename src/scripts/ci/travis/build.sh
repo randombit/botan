@@ -20,30 +20,27 @@ if [ "$BOOST" = "y" ]; then
     CFG_FLAGS+=(--with-boost)
 fi
 
-# enable ccache
-if [ "$TRAVIS_OS_NAME" = "linux" ] && [ "$BUILD_MODE" != "sonarqube" ]; then
-    ccache --max-size=30M
-    ccache --show-stats
+CFG_FLAGS+=(--with-pkcs11 --prefix=/tmp/botan-installation)
 
+# enable ccache
+if [ "$BUILD_MODE" != "sonarqube" ]; then
+    ccache --max-size=100M
+    ccache --show-stats
     export CXX="ccache $CXX"
 fi
 
 # configure
 if [ "$TARGETOS" = "ios32" ]; then
-    ./configure.py "${CFG_FLAGS[@]}" --cpu=armv7 --cc=clang \
-        --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++" \
-        --with-pkcs11 --prefix=/tmp/botan-installation
+    ./configure.py "${CFG_FLAGS[@]}" --cpu=armv7 --cc=clang --cc-bin="$CXX" \
+        --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++"
 
 elif [ "$TARGETOS" = "ios64" ]; then
-    ./configure.py "${CFG_FLAGS[@]}" --cpu=armv8-a --cc=clang \
-        --cc-abi-flags="-arch arm64 -stdlib=libc++" \
-        --with-pkcs11 --prefix=/tmp/botan-installation
+    ./configure.py "${CFG_FLAGS[@]}" --cpu=armv8-a --cc=clang --cc-bin="$CXX" \
+        --cc-abi-flags="-arch arm64 -stdlib=libc++"
 
 else
-    $CXX --version
     ./configure.py "${CFG_FLAGS[@]}" --cc="$CC" --cc-bin="$CXX" \
-        --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib \
-        --with-pkcs11 --prefix=/tmp/botan-installation
+        --with-bzip2 --with-lzma --with-openssl --with-sqlite --with-zlib
 fi
 
 # build
@@ -53,6 +50,11 @@ elif [ "$BUILD_MODE" = "sonarqube" ]; then
     ./build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir bw-outputs make -j 2
 else
     make -j 2
+fi
+
+# Show post-build ccache stats
+if [ "$BUILD_MODE" != "sonarqube" ]; then
+    ccache --show-stats
 fi
 
 # Run SonarQube analysis
