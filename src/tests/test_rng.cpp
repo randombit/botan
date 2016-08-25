@@ -353,7 +353,7 @@ class HMAC_DRBG_Unit_Tests : public Test
             return result;
             }
 
-         // set max_output_before_reseed = 1, forcing a reseed on every request
+         // set reseed_interval = 1, forcing a reseed for every RNG request
          Request_Counting_RNG counting_rng;
          Botan::HMAC_DRBG rng(std::move(mac), counting_rng, 1);
 
