@@ -127,7 +127,7 @@ bool Test::Result::test_ne(const std::string& what,
                            const uint8_t expected[], size_t expected_len)
    {
    if(produced_len == expected_len && Botan::same_mem(produced, expected, expected_len))
-      return test_failure(who() + ":" + what + " produced matching");
+      return test_failure(who() + ": " + what + " produced matching");
    return test_success();
    }
 

@@ -38,7 +38,7 @@ eme_oaep
 emsa_pssr
 emsa1
 
-hmac_rng
+auto_rng
 hmac_drbg
 
 ffi

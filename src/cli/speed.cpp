@@ -19,8 +19,11 @@
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <botan/cipher_mode.h>
-#include <botan/auto_rng.h>
 #include <botan/entropy_src.h>
+
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+  #include <botan/auto_rng.h>
+#endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
@@ -413,8 +416,10 @@ class Speed final : public Command
 #endif
             else if(algo == "RNG")
                {
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
                Botan::AutoSeeded_RNG auto_rng;
                bench_rng(auto_rng, "AutoSeeded_RNG (periodic reseed)", msec, buf_size);
+#endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
                bench_rng(Botan::system_rng(), "System_RNG", msec, buf_size);
@@ -428,7 +433,7 @@ class Speed final : public Command
 #if defined(BOTAN_HAS_HMAC_DRBG)
                for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
                   {
-                  Botan::HMAC_DRBG hmac_drbg(hash, 0);
+                  Botan::HMAC_DRBG hmac_drbg(hash);
                   bench_rng(hmac_drbg, hmac_drbg.name(), msec, buf_size);
                   }
 #endif
@@ -436,7 +441,7 @@ class Speed final : public Command
 #if defined(BOTAN_HAS_HMAC_RNG)
                for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
                   {
-                  Botan::HMAC_RNG hmac_rng(hash, 0);
+                  Botan::HMAC_RNG hmac_rng(Botan::MessageAuthenticationCode::create("HMAC(" + hash + ")"));
                   bench_rng(hmac_rng, hmac_rng.name(), msec, buf_size);
                   }
 #endif
@@ -595,8 +600,9 @@ class Speed final : public Command
          {
          Botan::secure_vector<uint8_t> buffer(buf_size);
 
-         rng.add_entropy(buffer.data(), buffer.size());
-         rng.reseed(256);
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+         rng.reseed_from_rng(Botan::system_rng(), 256);
+#endif
 
          Timer timer(rng_name, "", "generate", buffer.size());
          timer.run_until_elapsed(runtime, [&] { rng.randomize(buffer.data(), buffer.size()); });
