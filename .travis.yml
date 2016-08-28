@@ -25,10 +25,6 @@ env:
   matrix:
     - BUILD_MODE="shared"
     - BUILD_MODE="static"
-    - BUILD_MODE="coverage"
-    - BUILD_MODE="sanitizer"
-    - BUILD_MODE="sonarqube"
-    - BUILD_MODE="valgrind"
     - BUILD_MODE="mini-shared"
     - BUILD_MODE="mini-static"
     - BUILD_MODE="cross-arm32"
@@ -36,6 +32,10 @@ env:
     - BUILD_MODE="cross-ppc32"
     - BUILD_MODE="cross-ppc64"
     - BUILD_MODE="cross-win32"
+    - BUILD_MODE="coverage"
+    - BUILD_MODE="sanitizer"
+    - BUILD_MODE="valgrind"
+    - BUILD_MODE="sonarqube"
 
 matrix:
   # Ignore some problem builds for now
@@ -52,15 +52,15 @@ matrix:
     - os: osx
       compiler: gcc
 
-    # Use LLVM Clang + GCC for ASan/UBsan checks
-    - os: osx
-      env: BUILD_MODE="sanitizer"
-
-    # Run coverage, valgrind, sonarqube, minimized and non-ARM cross builds on Linux/gcc only
+    # Run coverage, valgrind, sonarqube, sanitizer, minimized and
+    # non-ARM cross builds on Linux/gcc only. The sanitizer builds
+    # under Clang run the tests very slowly and cause CI timeouts.
     - compiler: clang
       env: BUILD_MODE="coverage"
     - compiler: clang
       env: BUILD_MODE="sonarqube"
+    - compiler: clang
+      env: BUILD_MODE="sanitizer"
     - compiler: clang
       env: BUILD_MODE="valgrind"
     - compiler: clang
