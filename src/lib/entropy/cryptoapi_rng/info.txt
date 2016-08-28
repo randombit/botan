@@ -17,6 +17,6 @@ mingw
 </os>
 
 <libs>
-windows -> advapi32.lib
+windows -> advapi32
 mingw -> advapi32
 </libs>

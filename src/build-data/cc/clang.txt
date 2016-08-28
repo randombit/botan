@@ -16,7 +16,8 @@ maintainer_warning_flags "-Qunused-arguments -Werror -Wno-error=unused-parameter
 compile_flags "-c"
 debug_info_flags "-g"
 optimization_flags "-O3"
-sanitizer_flags "-fsanitize=address,undefined -fsanitize-coverage=edge,indirect-calls,8bit-counters -fno-sanitize-recover=undefined"
+#sanitizer_flags "-fsanitize=address,undefined -fsanitize-coverage=edge,indirect-calls,8bit-counters -fno-sanitize-recover=undefined"
+sanitizer_flags "-fsanitize=address,undefined"
 
 shared_flags "-fPIC"
 coverage_flags "--coverage"

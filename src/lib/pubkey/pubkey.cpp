@@ -54,7 +54,7 @@ PK_Decryptor::decrypt_or_random(const byte in[],
    {
    const secure_vector<byte> fake_pms = rng.random_vec(expected_pt_len);
 
-   CT::poison(in, length);
+   //CT::poison(in, length);
 
    byte valid_mask = 0;
    secure_vector<byte> decoded = do_decrypt(valid_mask, in, length);
@@ -90,8 +90,8 @@ PK_Decryptor::decrypt_or_random(const byte in[],
                             /*from1*/fake_pms.data(),
                             expected_pt_len);
 
-   CT::unpoison(in, length);
-   CT::unpoison(decoded.data(), decoded.size());
+   //CT::unpoison(in, length);
+   //CT::unpoison(decoded.data(), decoded.size());
 
    return decoded;
    }
