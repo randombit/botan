@@ -95,7 +95,7 @@ if [ "${BUILD_MODE:0:6}" = "cross-" ]; then
         elif [ "$BUILD_MODE" = "cross-win32" ]; then
             CC_BIN=i686-w64-mingw32-g++
             # No test prefix needed, PE executes as usual with Wine installed
-            CFG_FLAGS+=(--cpu=x86_32 --os=windows --cc-abi-flags="-static")
+            CFG_FLAGS+=(--cpu=x86_32 --os=mingw --cc-abi-flags="-static")
             TEST_EXE=./botan-test.exe
         fi
     fi
