@@ -19,7 +19,7 @@
   #include <unistd.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS) || defined(BOTAN_TARGET_OS_IS_MINGW)
   #include <windows.h>
 #endif
 
@@ -31,7 +31,7 @@ uint32_t get_process_id()
    {
 #if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
    return ::getpid();
-#elif defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#elif defined(BOTAN_TARGET_OS_IS_WINDOWS) || defined(BOTAN_TARGET_OS_IS_MINGW)
    return ::GetCurrentProcessId();
 #else
    throw Exception("get_process_id not supported");
