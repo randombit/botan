@@ -42,7 +42,6 @@ ecdh
 
 # rng
 auto_rng
-hmac_rng
 hmac_drbg
 </required>
 
