@@ -33,6 +33,12 @@ class BOTAN_DLL Keccak_1600 final : public HashFunction
       HashFunction* clone() const override;
       std::string name() const override;
       void clear() override;
+
+      /**
+      * The bare Keccak-1600 permutation
+      */
+      static void permute(u64bit A[25]);
+
    private:
       void add_data(const byte input[], size_t length) override;
       void final_result(byte out[]) override;

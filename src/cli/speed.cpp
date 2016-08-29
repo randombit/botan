@@ -83,6 +83,10 @@
   #include <botan/mceliece.h>
 #endif
 
+#if defined(BOTAN_HAS_NEWHOPE)
+  #include <botan/newhope.h>
+#endif
+
 namespace Botan_CLI {
 
 namespace {
@@ -306,6 +310,7 @@ std::vector<std::string> default_benchmark_list()
       "ECDSA",
       "Curve25519",
       "McEliece",
+      "NEWHOPE"
       };
    }
 
@@ -394,6 +399,12 @@ class Speed final : public Command
             else if(algo == "McEliece")
                {
                bench_mceliece(provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_NEWHOPE)
+            else if(algo == "NEWHOPE")
+               {
+               bench_newhope(provider, msec);
                }
 #endif
 
@@ -1075,6 +1086,44 @@ class Speed final : public Command
             output() << Timer::result_string_ops(keygen_timer);
             bench_pk_kem(*key, nm, provider, "KDF2(SHA-256)", msec);
             }
+         }
+#endif
+
+#if defined(BOTAN_HAS_NEWHOPE)
+      void bench_newhope(const std::string& provider,
+                         std::chrono::milliseconds msec)
+         {
+         const std::string nm = "NEWHOPE";
+
+         Timer keygen_timer(nm, "", "keygen");
+         Timer shareda_timer(nm, "", "shareda");
+         Timer sharedb_timer(nm, "", "sharedb");
+
+         while(sharedb_timer.under(msec))
+            {
+            std::vector<uint8_t> send_a(NEWHOPE_SENDABYTES), send_b(NEWHOPE_SENDBBYTES);
+            std::vector<uint8_t> shared_a(32), shared_b(32);
+
+            Botan::newhope_poly sk_a;
+
+            keygen_timer.start();
+            Botan::newhope_keygen(send_a.data(), &sk_a, rng());
+            keygen_timer.stop();
+
+            sharedb_timer.start();
+            Botan::newhope_sharedb(shared_b.data(), send_b.data(), send_a.data(), rng());
+            sharedb_timer.stop();
+
+            shareda_timer.start();
+            Botan::newhope_shareda(shared_a.data(), &sk_a, send_b.data());
+            shareda_timer.stop();
+
+            BOTAN_ASSERT(shared_a == shared_b, "Same derived key");
+            }
+
+         output() << Timer::result_string_ops(keygen_timer);
+         output() << Timer::result_string_ops(shareda_timer);
+         output() << Timer::result_string_ops(sharedb_timer);
          }
 #endif
 

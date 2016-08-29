@@ -11,9 +11,8 @@
 
 namespace Botan {
 
-namespace {
-
-void keccak_f_1600(u64bit A[25])
+//static
+void Keccak_1600::permute(u64bit A[25])
    {
    static const u64bit RC[24] = {
       0x0000000000000001, 0x0000000000008082, 0x800000000000808A,
@@ -96,8 +95,6 @@ void keccak_f_1600(u64bit A[25])
       }
    }
 
-}
-
 Keccak_1600::Keccak_1600(size_t output_bits) :
    m_output_bits(output_bits),
    m_bitrate(1600 - 2*output_bits),
@@ -167,7 +164,7 @@ void Keccak_1600::add_data(const byte input[], size_t length)
 
       if(m_S_pos == m_bitrate / 8)
          {
-         keccak_f_1600(m_S.data());
+         Keccak_1600::permute(m_S.data());
          m_S_pos = 0;
          }
       }
