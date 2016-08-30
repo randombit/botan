@@ -23,13 +23,15 @@ Version 1.11.31, Not Yet Released
   XOR-encrypion/decryption mode it's now possible to use DLIES with a
   block cipher.  Furthermore the order of the output was changed from
   {public key, tag, ciphertext} to {public key, ciphertext, tag}. Both
-  modes are compatible with bouncycastle.
+  modes are compatible with BouncyCastle.
 
 * Add initial PKCS #11 support (GH #507). Currently includes a low level
   wrapper to all of PKCS #11 (p11.h) and high level code for RSA and ECDSA
   signatures and hardware RNG access.
 
-* Add ECKCDSA signature algorithm (#504)
+* Add ECIES encryption scheme, compatible with BouncyCastle (GH #483)
+
+* Add ECKCDSA signature algorithm (GH #504)
 
 * Add KDF1 from ISO 18033 (GH #483)
 
