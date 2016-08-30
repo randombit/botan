@@ -160,23 +160,17 @@ inline void poly_tobytes(uint8_t *r, const poly *p)
 inline void poly_getnoise(Botan::RandomNumberGenerator& rng, poly *r)
 {
   uint8_t buf[4*PARAM_N];
-  uint32_t *tp, t,d, a, b;
-  int i,j;
-
-  // Not an endian problem because this is just used for RNG output
-  // Is an endian problem for tests
-  tp = (uint32_t *) buf;
 
   rng.randomize(buf, 4*PARAM_N);
 
-  for(i=0;i<PARAM_N;i++)
+  for(int i=0;i<PARAM_N;i++)
   {
-    t = tp[i];
-    d = 0;
-    for(j=0;j<8;j++)
+    uint32_t t = load_le<u32bit>(buf, i);
+    uint32_t d = 0;
+    for(int j=0;j<8;j++)
       d += (t >> j) & 0x01010101;
-    a = ((d >> 8) & 0xff) + (d & 0xff);
-    b = (d >> 24) + ((d >> 16) & 0xff);
+    uint32_t a = ((d >> 8) & 0xff) + (d & 0xff);
+    uint32_t b = (d >> 24) + ((d >> 16) & 0xff);
     r->coeffs[i] = a + PARAM_Q - b;
   }
 }
