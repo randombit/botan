@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 1.11.31, Not Yet Released
+Version 1.11.31, 2016-08-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix undefined behavior in Curve25519 on platforms without a native 128-bit
