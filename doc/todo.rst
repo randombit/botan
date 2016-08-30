@@ -22,7 +22,6 @@ CLI
   for an example
 * `encrypt` / `decrypt` tools providing password and/or public key
   based file encryption
-* `bcrypt` cmdlet
 * Make help output more helpful
 * More microbenchmarks in `speed`: modular exponentiation, ECC point
   multiplication, other BigInt operations
@@ -34,6 +33,7 @@ TLS
 * Make DTLS support optional at build time
 * Make TLS v1.0 and v1.1 optional at build time
 * Curve25519 key exchange
+* NEWHOPE (CECPQ1) key exchange (GH #613)
 * TLS OCSP stapling (RFC 6066)
 * Encrypt-then-MAC extension (RFC 7366)
 * Authentication using TOFU (sqlite3 storage)
@@ -47,6 +47,7 @@ TLS
 PKIX
 ----------------------------------------
 
+* Test suite for validation of 'real world' cert chains (GH #611)
 * Support multiple DNS names in certificates
 * X.509 policy constraints
 * OCSP responder logic
@@ -109,7 +110,6 @@ Public Key Crypto, Math
 
 * XMSS (draft-irtf-cfrg-xmss-hash-based-signatures)
 * SPHINCS-256
-* NEWHOPE RLWE scheme + BoringSSL compatible TLS cipher suites
 * EdDSA (GH #283)
 * Ed448-Goldilocks
 * FHMQV
