@@ -19,6 +19,7 @@ typedef newhope_poly poly;
 
 // Don't change this :)
 #define PARAM_Q 12289
+#define PARAM_N 1024
 
 #define NEWHOPE_POLY_BYTES 1792
 #define NEWHOPE_SEED_BYTES 32
@@ -604,3 +605,6 @@ void newhope_shareda(unsigned char *sharedkey, const poly *sk, const unsigned ch
 }
 
 }
+
+#undef PARAM_N
+#undef PARAM_Q

@@ -9,8 +9,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef NEWHOPE_H
-#define NEWHOPE_H
+#ifndef BOTAN_NEWHOPE_H__
+#define BOTAN_NEWHOPE_H__
 
 #include <botan/rng.h>
 
@@ -21,13 +21,11 @@ namespace Botan {
 * Currently pubkey.h does not support a 2-phase KEM scheme of
 * the sort NEWHOPE exports.
 */
-#define PARAM_N 1024
-
 #define NEWHOPE_SENDABYTES 1824
 #define NEWHOPE_SENDBBYTES 2048
 
 typedef struct {
-  uint16_t coeffs[PARAM_N];
+  uint16_t coeffs[1024];
 } newhope_poly __attribute__ ((aligned (32)));
 
 
