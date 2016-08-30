@@ -266,7 +266,7 @@ class Generate_Bcrypt final : public Command
       void go() override
          {
          const std::string password = get_arg("password");
-         const size_t wf = get_arg_sz("work_factor");
+         const size_t wf = get_arg_sz("work-factor");
 
          output() << Botan::generate_bcrypt(password, rng(), wf) << "\n";
          }
