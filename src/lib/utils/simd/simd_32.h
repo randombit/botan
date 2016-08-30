@@ -100,7 +100,9 @@ class SIMD_4x32
 
          __vector unsigned char perm = vec_lvsl(0, in_32);
 
-         perm = vec_xor(perm, vec_splat_u8(3));
+#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+         perm = vec_xor(perm, vec_splat_u8(3)); // bswap vector
+#endif
 
          R0 = vec_perm(R0, R1, perm);
 
@@ -124,6 +126,10 @@ class SIMD_4x32
 
          __vector unsigned char perm = vec_lvsl(0, in_32);
 
+#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+         perm = vec_xor(perm, vec_splat_u8(3)); // bswap vector
+#endif
+
          R0 = vec_perm(R0, R1, perm);
 
          return SIMD_4x32(R0);
@@ -142,7 +148,9 @@ class SIMD_4x32
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
          __vector unsigned char perm = vec_lvsl(0, static_cast<u32bit*>(nullptr));
 
+#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
          perm = vec_xor(perm, vec_splat_u8(3)); // bswap vector
+#endif
 
          union {
             __vector unsigned int V;
