@@ -5,11 +5,16 @@
 */
 
 #include "tests.h"
-#include <botan/newhope.h>
-#include <botan/chacha.h>
-#include <botan/rng.h>
+
+#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
+  #include <botan/newhope.h>
+  #include <botan/chacha.h>
+  #include <botan/rng.h>
+#endif
 
 namespace Botan_Tests {
+
+#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
 
 class NEWHOPE_RNG : public Botan::RandomNumberGenerator
    {
@@ -123,5 +128,7 @@ class NEWHOPE_Tests : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("newhope", NEWHOPE_Tests);
+
+#endif
 
 }
