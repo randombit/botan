@@ -103,7 +103,7 @@ inline void ntt(uint16_t * a, const uint16_t* omega)
   }
 }
 
-inline void poly_frombytes(poly *r, const unsigned char *a)
+inline void poly_frombytes(poly *r, const uint8_t *a)
 {
   int i;
   for(i=0;i<PARAM_N/4;i++)
@@ -115,13 +115,13 @@ inline void poly_frombytes(poly *r, const unsigned char *a)
   }
 }
 
-inline void poly_tobytes(unsigned char *r, const poly *p)
+inline void poly_tobytes(uint8_t *r, const poly *p)
 {
   int i;
-  uint16_t t0,t1,t2,t3,m;
-  int16_t c;
   for(i=0;i<PARAM_N/4;i++)
   {
+    uint16_t t0,t1,t2,t3,m;
+    int16_t c;
     t0 = barrett_reduce(p->coeffs[4*i+0]); //Make sure that coefficients have only 14 bits
     t1 = barrett_reduce(p->coeffs[4*i+1]);
     t2 = barrett_reduce(p->coeffs[4*i+2]);
@@ -159,7 +159,7 @@ inline void poly_tobytes(unsigned char *r, const poly *p)
 
 inline void poly_getnoise(Botan::RandomNumberGenerator& rng, poly *r)
 {
-  unsigned char buf[4*PARAM_N];
+  uint8_t buf[4*PARAM_N];
   uint32_t *tp, t,d, a, b;
   int i,j;
 
@@ -274,7 +274,7 @@ static const uint16_t psis_inv_montgomery[PARAM_N] = {256,10570,1510,7238,1034,7
 }
 
 
-inline void encode_a(unsigned char *r, const poly *pk, const unsigned char *seed)
+inline void encode_a(uint8_t *r, const poly *pk, const uint8_t *seed)
 {
   int i;
   poly_tobytes(r, pk);
@@ -282,7 +282,7 @@ inline void encode_a(unsigned char *r, const poly *pk, const unsigned char *seed
     r[NEWHOPE_POLY_BYTES+i] = seed[i];
 }
 
-inline void decode_a(poly *pk, unsigned char *seed, const unsigned char *r)
+inline void decode_a(poly *pk, uint8_t *seed, const uint8_t *r)
 {
   int i;
   poly_frombytes(pk, r);
@@ -290,7 +290,7 @@ inline void decode_a(poly *pk, unsigned char *seed, const unsigned char *r)
     seed[i] = r[NEWHOPE_POLY_BYTES+i];
 }
 
-inline void encode_b(unsigned char *r, const poly *b, const poly *c)
+inline void encode_b(uint8_t *r, const poly *b, const poly *c)
 {
   int i;
   poly_tobytes(r,b);
@@ -298,7 +298,7 @@ inline void encode_b(unsigned char *r, const poly *b, const poly *c)
     r[NEWHOPE_POLY_BYTES+i] = c->coeffs[4*i] | (c->coeffs[4*i+1] << 2) | (c->coeffs[4*i+2] << 4) | (c->coeffs[4*i+3] << 6);
 }
 
-inline void decode_b(poly *b, poly *c, const unsigned char *r)
+inline void decode_b(poly *b, poly *c, const uint8_t *r)
 {
   int i;
   poly_frombytes(b, r);
@@ -379,14 +379,14 @@ inline int16_t LDDecode(int32_t xi0, int32_t xi1, int32_t xi2, int32_t xi3)
 inline void helprec(poly *c, const poly *v, RandomNumberGenerator& rng)
 {
   int32_t v0[4], v1[4];
-  unsigned char rand[32];
+  uint8_t rand[32];
   int i;
 
   rng.randomize(rand, 32);
 
   for(i=0; i<256; i++)
   {
-    unsigned char rbit = (rand[i>>3] >> (i&7)) & 1;
+    uint8_t rbit = (rand[i>>3] >> (i&7)) & 1;
     int32_t k;
 
     k  = f(v0+0, v1+0, 8*v->coeffs[  0+i] + 4*rbit);
@@ -409,7 +409,7 @@ inline void helprec(poly *c, const poly *v, RandomNumberGenerator& rng)
   }
 }
 
-inline void rec(unsigned char *key, const poly *v, const poly *c)
+inline void rec(uint8_t *key, const poly *v, const poly *c)
 {
   int i;
   int32_t tmp[4];
@@ -437,11 +437,11 @@ inline void rec(unsigned char *key, const poly *v, const poly *c)
 
 void keccak_absorb(uint64_t *s,
                    unsigned int r,
-                   const unsigned char *m, unsigned long long int mlen,
-                   unsigned char p)
+                   const uint8_t *m, size_t mlen,
+                   uint8_t p)
 {
-  unsigned long long i;
-  unsigned char t[200];
+  size_t i;
+  uint8_t t[200];
 
   for (i = 0; i < 25; ++i)
     s[i] = 0;
@@ -466,10 +466,9 @@ void keccak_absorb(uint64_t *s,
      s[i] ^= load_le<u64bit>(t, i);
 }
 
-inline void keccak_squeezeblocks(unsigned char *h, unsigned long long int nblocks,
+inline void keccak_squeezeblocks(uint8_t *h, size_t nblocks,
                                  uint64_t *s, unsigned int r)
 {
-  unsigned int i;
   while(nblocks > 0)
      {
      Keccak_1600::permute(s);
@@ -481,27 +480,27 @@ inline void keccak_squeezeblocks(unsigned char *h, unsigned long long int nblock
      }
 }
 
-inline void shake128_absorb(uint64_t *s, const unsigned char *input, unsigned int inputByteLen)
+inline void shake128_absorb(uint64_t *s, const uint8_t *input, size_t inputByteLen)
 {
   keccak_absorb(s, SHAKE128_RATE, input, inputByteLen, 0x1F);
 }
 
-inline void shake128_squeezeblocks(unsigned char *output, unsigned long long nblocks, uint64_t *s)
+inline void shake128_squeezeblocks(uint8_t *output, size_t nblocks, uint64_t *s)
 {
   keccak_squeezeblocks(output, nblocks, s, SHAKE128_RATE);
 }
 
-void gen_a(poly *a, const unsigned char *seed)
+void gen_a(poly *a, const uint8_t *seed)
 {
   unsigned int pos=0, ctr=0;
   uint16_t val;
   uint64_t state[25];
   unsigned int nblocks=16;
-  uint8_t buf[SHAKE128_RATE*nblocks];
+  uint8_t buf[SHAKE128_RATE*16];
 
   shake128_absorb(state, seed, NEWHOPE_SEED_BYTES);
 
-  shake128_squeezeblocks((unsigned char *) buf, nblocks, state);
+  shake128_squeezeblocks((uint8_t *) buf, nblocks, state);
 
   while(ctr < PARAM_N)
   {
@@ -512,7 +511,7 @@ void gen_a(poly *a, const unsigned char *seed)
     if(pos > SHAKE128_RATE*nblocks-2)
     {
       nblocks=1;
-      shake128_squeezeblocks((unsigned char *) buf,nblocks,state);
+      shake128_squeezeblocks((uint8_t *) buf,nblocks,state);
       pos = 0;
     }
   }
@@ -522,12 +521,12 @@ void gen_a(poly *a, const unsigned char *seed)
 
 // API FUNCTIONS
 
-void newhope_hash(unsigned char *output, const unsigned char *input, unsigned int inputByteLen)
+void newhope_hash(uint8_t *output, const uint8_t *input, size_t inputByteLen)
 {
 const size_t SHA3_256_RATE = 136;
 
   uint64_t s[25];
-  unsigned char t[SHA3_256_RATE];
+  uint8_t t[SHA3_256_RATE];
   int i;
 
   keccak_absorb(s, SHA3_256_RATE, input, inputByteLen, 0x06);
@@ -536,10 +535,10 @@ const size_t SHA3_256_RATE = 136;
     output[i] = t[i];
 }
 
-void newhope_keygen(unsigned char *send, poly *sk, RandomNumberGenerator& rng)
+void newhope_keygen(uint8_t *send, poly *sk, RandomNumberGenerator& rng)
 {
   poly a, e, r, pk;
-  unsigned char seed[NEWHOPE_SEED_BYTES];
+  uint8_t seed[NEWHOPE_SEED_BYTES];
 
   rng.randomize(seed, NEWHOPE_SEED_BYTES);
 
@@ -557,11 +556,11 @@ void newhope_keygen(unsigned char *send, poly *sk, RandomNumberGenerator& rng)
   encode_a(send, &pk, seed);
 }
 
-void newhope_sharedb(unsigned char *sharedkey, unsigned char *send, const unsigned char *received,
+void newhope_sharedb(uint8_t *sharedkey, uint8_t *send, const uint8_t *received,
                      RandomNumberGenerator& rng)
 {
   poly sp, ep, v, a, pka, c, epp, bp;
-  unsigned char seed[NEWHOPE_SEED_BYTES];
+  uint8_t seed[NEWHOPE_SEED_BYTES];
 
   decode_a(&pka, seed, received);
   gen_a(&a, seed);
@@ -590,7 +589,7 @@ void newhope_sharedb(unsigned char *sharedkey, unsigned char *send, const unsign
 }
 
 
-void newhope_shareda(unsigned char *sharedkey, const poly *sk, const unsigned char *received)
+void newhope_shareda(uint8_t *sharedkey, const poly *sk, const uint8_t *received)
 {
   poly v,bp, c;
 

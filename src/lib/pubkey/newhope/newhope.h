@@ -26,18 +26,17 @@ namespace Botan {
 
 typedef struct {
   uint16_t coeffs[1024];
-} newhope_poly __attribute__ ((aligned (32)));
+} newhope_poly;
 
-
-void BOTAN_DLL newhope_keygen(unsigned char *send, newhope_poly *sk, RandomNumberGenerator& rng);
-void BOTAN_DLL newhope_sharedb(unsigned char *sharedkey, unsigned char *send, const unsigned char *received, RandomNumberGenerator& rng);
-void BOTAN_DLL newhope_shareda(unsigned char *sharedkey, const newhope_poly *ska, const unsigned char *received);
+void BOTAN_DLL newhope_keygen(uint8_t *send, newhope_poly *sk, RandomNumberGenerator& rng);
+void BOTAN_DLL newhope_sharedb(uint8_t *sharedkey, uint8_t *send, const uint8_t *received, RandomNumberGenerator& rng);
+void BOTAN_DLL newhope_shareda(uint8_t *sharedkey, const newhope_poly *ska, const uint8_t *received);
 
 
 /*
 * This is just exposed for testing
 */
-void BOTAN_DLL newhope_hash(unsigned char *output, const unsigned char *input, unsigned int inputByteLen);
+void BOTAN_DLL newhope_hash(uint8_t *output, const uint8_t *input, size_t inputByteLen);
 
 
 }
