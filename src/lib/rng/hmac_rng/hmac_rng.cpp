@@ -16,7 +16,7 @@ HMAC_RNG::HMAC_RNG(std::unique_ptr<MessageAuthenticationCode> prf,
                    RandomNumberGenerator& underlying_rng,
                    Entropy_Sources& entropy_sources,
                    size_t reseed_interval) :
-   Stateful_RNG(underlying_rng, reseed_interval),
+   Stateful_RNG(underlying_rng, entropy_sources, reseed_interval),
    m_prf(std::move(prf))
    {
    BOTAN_ASSERT_NONNULL(m_prf);
