@@ -22,44 +22,62 @@ instance, by reading from a network socket) it passes that information
 to TLS using :cpp:func:`TLS::Channel::received_data`. If the data
 passed in results in some change in the state, such as a handshake
 completing, or some data or an alert being received from the other
-side, then a user provided callback will be invoked. If the reader is
-familiar with OpenSSL's BIO layer, it might be analagous to saying the
-only way of interacting with Botan's TLS is via a `BIO_mem` I/O
+side, then the appropriate user provided callback will be invoked.
+
+If the reader is familiar with OpenSSL's BIO layer, it might be analagous
+to saying the only way of interacting with Botan's TLS is via a `BIO_mem` I/O
 abstraction. This makes the library completely agnostic to how you
 write your network layer, be it blocking sockets, libevent, asio, a
-message queue, etc.
+message queue, lwIP on RTOS, some carrier pidgeons, etc.
 
-The callbacks for TLS have the signatures
+Starting in 1.11.31, the application callbacks are encapsulated as the class
+``TLS::Callbacks`` with the following members. The first four (``tls_emit_data``,
+``tls_record_received``, ``tls_alert``, and ``tls_session_established``) are
+mandatory for using TLS, all others are optional and provide additional
+information about the connection.
 
- .. cpp:function:: void output_fn(const byte data[], size_t data_len)
+ .. cpp:function:: void tls_emit_data(const byte data[], size_t data_len)
 
-    TLS requests that all bytes of *data* be queued up to send to the
-    counterparty. After this function returns, *data* will be
-    overwritten, so a copy of the input must be made if the callback
+    Mandatory. The TLS stack requests that all bytes of *data* be queued up to send to the
+    counterparty. After this function returns, the buffer containing *data* will
+    be overwritten, so a copy of the input must be made if the callback
     cannot send the data immediately.
 
- .. cpp:function:: void data_cb(const byte data[], size_t data_len)
+    As an example you could ``send`` to perform a blocking write on a socket,
+    or append the data to a queue managed by your application, and initiate
+    an asyncronous write.
 
-     Called whenever application data is received from the other side
-     of the connection, in which case *data* and *data_len* specify
-     the data received. This array will be overwritten sometime after
-     the callback returns, so again a copy should be made if need be.
+    For TLS all writes must occur *in the order requested*.
+    For DTLS this ordering is not strictly required, but is still recommended.
 
- .. cpp:function:: void alert_cb(Alert alert, const byte data[], size_t data_len)
+ .. cpp:function:: void tls_record_received(uint64_t rec_no, const byte data[], size_t data_len)
 
-     Called when an alert is received. Normally, data is null and
-     data_len is 0, as most alerts have no associated data. However,
-     if TLS heartbeats (see :rfc:`6520`) were negotiated, and we
-     initiated a heartbeat, then if/when the other party responds,
-     ``alert_cb`` will be called with whatever data was included in
-     the heartbeat response (if any) along with a psuedo-alert value
-     of ``HEARTBEAT_PAYLOAD``.
+    Mandatory. Called once for each application_data record which is received, with the
+    matching (TLS level) record sequence number.
 
- .. cpp:function:: bool handshake_cb(const TLS::Session& session)
+    Currently empty records are ignored and do not instigate a callback,
+    but this may change in a future release.
 
-     Called whenever a negotiation completes. This can happen more
-     than once on any connection. The *session* parameter provides
-     information about the session which was established.
+     As with ``tls_emit_data``, the array will be overwritten sometime after
+     the callback returns, so a copy should be made if needed.
+
+     For TLS the record number will always increase.
+
+     For DTLS, it is possible to receive records with the `rec_no` field
+     field out of order or repeated. It is even possible (from a malicious or
+     faulty peer) to receive multiple copies of a single record with differing plaintexts.
+
+ .. cpp:function:: void tls_alert(Alert alert) 
+
+     Mandatory. Called when an alert is received from the peer. Note that alerts
+     received before the handshake is complete are not authenticated and
+     could have been inserted by a MITM attacker.
+     
+ .. cpp:function:: bool tls_session_established(const TLS::Session& session)
+
+     Mandatory. Called whenever a negotiation completes. This can happen more
+     than once on any connection, if renegotiation occurs. The *session* parameter
+     provides information about the session which was just established.
 
      If this function returns false, the session will not be cached
      for later resumption.
@@ -68,8 +86,29 @@ The callbacks for TLS have the signatures
      exception which will send a close message to the counterparty and
      reset the connection state.
 
-You can of course use tools like ``std::bind`` to bind additional
-parameters to your callback functions.
+ .. cpp:function:: std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos)
+
+     Optional. Called by the server when a client includes a list of protocols in the ALPN extension.
+     The server then choose which protocol to use, or "" to disable sending any ALPN response.
+     The default implementation returns the empty string all of the time, effectively disabling
+     ALPN responses.
+
+ .. cpp:function:: void tls_inspect_handshake_msg(const Handshake_Message&)
+
+     This callback is optional, and can be used to inspect all handshake messages
+     while the session establishment occurs.
+
+ .. cpp:function:: void tls_log_debug(const char*)
+
+     This callback is for exerimental purposes and currently unused. It may be
+     removed or modified in a future release.
+
+Versions from 1.11.0 to 1.11.30 did not have ``TLS::Callbacks` and instead
+used independent std::functions to pass the various callback functions.
+This interface is currently still included but is deprecated and will be removed
+in a future release. For the documentation for this interface, please check
+the docs for 1.11.30. This version of the manual only documents the new interface
+added in 1.11.31.
 
 TLS Channels
 ----------------------------------------
@@ -79,16 +118,6 @@ TLS channel (either client or server object) has these methods
 available:
 
 .. cpp:class:: TLS::Channel
-
-   .. cpp:type:: std::function<void (const byte[], size_t)> output_fn
-
-   .. cpp:type:: std::function<void (const byte[], size_t)> data_cb
-
-   .. cpp:type:: std::function<void (Alert, const byte[], size_t)> alert_cb
-
-   .. cpp:type:: std::function<bool (const Session&)> handshake_cb
-
-     Typedefs used in the code for the functions described above
 
    .. cpp:function:: size_t received_data(const byte buf[], size_t buf_size)
    .. cpp:function:: size_t received_data(const std::vector<byte>& buf)
@@ -194,10 +223,7 @@ TLS Clients
 .. cpp:class:: TLS::Client
 
    .. cpp:function:: Client( \
-         output_fn out, \
-         data_cb app_data_cb, \
-         alert_cb alert_cb, \
-         handshake_cb hs_cb, \
+         Callbacks& callbacks,
          Session_Manager& session_manager, \
          Credentials_Manager& creds, \
          const Policy& policy, \
@@ -211,29 +237,8 @@ TLS Clients
    Initialize a new TLS client. The constructor will immediately
    initiate a new session.
 
-   The *output_fn* callback will be called with output that
-   should be sent to the counterparty. For instance this will be
-   called immediately from the constructor after the client hello
-   message is constructed. An implementation of *output_fn* is
-   allowed to defer the write (for instance if writing when the
-   callback occurs would block), but should eventually write the data
-   to the counterparty *in order*.
-
-   The *data_cb* will be called with data sent by the counterparty
-   after it has been processed. The byte array and size_t represent
-   the plaintext value and size.
-
-   The *alert_cb* will be called when a protocol alert is received,
-   commonly with a close alert during connection teardown.
-
-   The *handshake_cb* function is called when a handshake
-   (either initial or renegotiation) is completed. The return value of
-   the callback specifies if the session should be cached for later
-   resumption. If the function for some reason desires to prevent the
-   connection from completing, it should throw an exception
-   (preferably a TLS::Exception, which can provide more specific alert
-   information to the counterparty). The :cpp:class:`TLS::Session`
-   provides information about the session that was just established.
+   The *callbacks* parameter specifies the various application callbacks
+   which pertain to this particular client connection.
 
    The *session_manager* is an interface for storing TLS sessions,
    which allows for session resumption upon reconnecting to a server.
@@ -285,34 +290,30 @@ TLS Servers
 .. cpp:class:: TLS::Server
 
    .. cpp:function:: Server( \
-         output_fn output, \
-         data_cb data_cb, \
-         alert_cb alert_cb, \
-         handshake_cb handshake_cb, \
+         Callbacks& callbacks,
          Session_Manager& session_manager, \
          Credentials_Manager& creds, \
          const Policy& policy, \
          RandomNumberGenerator& rng, \
-         next_protocol_fn next_proto = next_protocol_fn(), \
          bool is_datagram = false, \
          size_t reserved_io_buffer_size = 16*1024 \
          )
 
-The first 8 arguments as well as the final argument
+The first 5 arguments as well as the final argument
 *reserved_io_buffer_size*, are treated similiarly to the :ref:`client
 <tls_client>`.
 
-The (optional) argument, *proto_chooser*, is a function called if the
-client sent the ALPN extension to negotiate an application
-protocol. In that case, the function should choose a protocol to use
-and return it. Alternately it can throw an exception to abort the
-exchange; the ALPN specification says that if this occurs the alert
-should be of type `NO_APPLICATION_PROTOCOL`.
+If a client sends the ALPN extension, the ``callbacks`` function
+``tls_server_choose_app_protocol`` will be called and the result
+sent back to the client. If the empty string is returned, the server
+will not send an ALPN response. The function can also throw an exception
+to abort the handshake entirely, the ALPN specification says that if this
+occurs the alert should be of type `NO_APPLICATION_PROTOCOL`.
 
 The optional argument *is_datagram* specifies if this is a TLS or DTLS
 server; unlike clients, which know what type of protocol (TLS vs DTLS)
 they are negotiating from the start via the *offer_version*, servers
-would not until they actually received a hello without this parameter.
+would not until they actually received a client hello.
 
 Code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
 
@@ -516,7 +517,7 @@ policy settings from a file.
      Values without an explicit mode use old-style CBC with HMAC encryption.
 
      Default value: "AES-256/GCM", "AES-128/GCM", "ChaCha20Poly1305",
-     "AES-256/CCM", "AES-128/CCM", "AES-256/CCM-8", "AES-128/CCM-8",
+     "AES-256/CCM", "AES-128/CCM", "AES-256/CCM(8)", "AES-128/CCM(8)",
      "AES-256", "AES-128"
 
      Also allowed: "Camellia-256/GCM", "Camellia-128/GCM",
@@ -529,14 +530,17 @@ policy settings from a file.
 
      .. note::
 
-        The current ChaCha20Poly1305 ciphersuites are non-standard but
-        as of 2015 were implemented and deployed by Google and
-        elsewhere. Support will be changed to using IETF standard
-        ChaCha20Poly1305 ciphersuites when those are defined.
+        Before 1.11.30 only the non-standard ChaCha20Poly1305 ciphersuite
+        was implemented. The RFC 7905 ciphersuites are supported in 1.11.30
+        onwards.
 
      .. note::
 
         Support for the broken RC4 cipher was removed in 1.11.17
+
+     .. note::
+
+        SEED and 3DES are deprecated and will be removed in a future release.
 
  .. cpp:function:: std::vector<std::string> allowed_macs() const
 
@@ -576,6 +580,10 @@ policy settings from a file.
      Default: "ECDSA", "RSA", "DSA"
 
      Also allowed (disabled by default): "" (meaning anonymous)
+
+     .. note::
+
+        DSA authentication is deprecated and will be removed in a future release.
 
  .. cpp:function:: std::vector<std::string> allowed_ecc_curves() const
 

@@ -1,6 +1,7 @@
 /*
 * TLS Record Handling
 * (C) 2004-2012 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -90,6 +91,80 @@ class Connection_Cipher_State
       size_t m_iv_size = 0;
    };
 
+class Record
+   {
+   public:
+      Record(secure_vector<byte>& data,
+             u64bit* sequence,
+             Protocol_Version* protocol_version,
+             Record_Type* type)
+         : m_data(data), m_sequence(sequence), m_protocol_version(protocol_version),
+           m_type(type), m_size(data.size()) {};
+
+      secure_vector<byte>& get_data() { return m_data; }
+
+      Protocol_Version* get_protocol_version() { return m_protocol_version; }
+
+      u64bit* get_sequence() { return m_sequence; }
+
+      Record_Type* get_type() { return m_type; }
+
+      size_t& get_size() { return m_size; }
+
+   private:
+      secure_vector<byte>& m_data;
+      u64bit* m_sequence;
+      Protocol_Version* m_protocol_version;
+      Record_Type* m_type;
+      size_t m_size;
+   };
+
+class Record_Message
+   {
+   public:
+      Record_Message(const byte* data, size_t size)
+         : m_type(0), m_sequence(0), m_data(data), m_size(size) {};
+      Record_Message(byte type, u64bit sequence, const byte* data, size_t size)
+         : m_type(type), m_sequence(sequence), m_data(data),
+           m_size(size) {};
+
+      byte& get_type() { return m_type; };
+      u64bit& get_sequence() { return m_sequence; };
+      const byte* get_data() { return m_data; };
+      size_t& get_size() { return m_size; };
+
+   private:
+      byte m_type;
+      u64bit m_sequence;
+      const byte* m_data;
+      size_t m_size;
+};
+
+class Record_Raw_Input
+   {
+   public:
+      Record_Raw_Input(const byte* data, size_t size, size_t& consumed,
+                       bool is_datagram)
+         : m_data(data), m_size(size), m_consumed(consumed),
+           m_is_datagram(is_datagram) {};
+
+      const byte*& get_data() { return m_data; };
+
+      size_t& get_size() { return m_size; };
+
+      size_t& get_consumed() { return m_consumed; };
+      void set_consumed(size_t consumed) { m_consumed = consumed; }
+
+      bool is_datagram() { return m_is_datagram; };
+
+   private:
+      const byte* m_data;
+      size_t m_size;
+      size_t& m_consumed;
+      bool m_is_datagram;
+   };
+
+
 /**
 * Create a TLS record
 * @param write_buffer the output record is placed here
@@ -103,7 +178,7 @@ class Connection_Cipher_State
 * @return number of bytes written to write_buffer
 */
 void write_record(secure_vector<byte>& write_buffer,
-                  byte msg_type, const byte msg[], size_t msg_length,
+                  Record_Message rec_msg,
                   Protocol_Version version,
                   u64bit msg_sequence,
                   Connection_Cipher_State* cipherstate,
@@ -117,14 +192,8 @@ typedef std::function<std::shared_ptr<Connection_Cipher_State> (u16bit)> get_cip
 * @return zero if full message, else number of bytes still needed
 */
 size_t read_record(secure_vector<byte>& read_buffer,
-                   const byte input[],
-                   size_t input_length,
-                   bool is_datagram,
-                   size_t& input_consumed,
-                   secure_vector<byte>& record,
-                   u64bit* record_sequence,
-                   Protocol_Version* record_version,
-                   Record_Type* record_type,
+                   Record_Raw_Input& raw_input,
+                   Record& rec,
                    Connection_Sequence_Numbers* sequence_numbers,
                    get_cipherstate_fn get_cipherstate);
 

@@ -1,6 +1,7 @@
 /*
 * Montgomery Exponentiation
 * (C) 1999-2010,2012 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,6 +9,7 @@
 #include <botan/internal/def_powm.h>
 #include <botan/numthry.h>
 #include <botan/internal/mp_core.h>
+#include <iostream>
 
 namespace Botan {
 
@@ -34,36 +36,26 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
 
    m_g[0] = 1;
 
-   bigint_monty_mul(z.mutable_data(), z.size(),
-                    m_g[0].data(), m_g[0].size(), m_g[0].sig_words(),
-                    m_R2_mod.data(), m_R2_mod.size(), m_R2_mod.sig_words(),
+   bigint_monty_mul(z, m_g[0], m_R2_mod,
                     m_modulus.data(), m_mod_words, m_mod_prime,
                     workspace.data());
-
    m_g[0] = z;
 
    m_g[1] = (base >= m_modulus) ? (base % m_modulus) : base;
 
-   bigint_monty_mul(z.mutable_data(), z.size(),
-                    m_g[1].data(), m_g[1].size(), m_g[1].sig_words(),
-                    m_R2_mod.data(), m_R2_mod.size(), m_R2_mod.sig_words(),
+   bigint_monty_mul(z, m_g[1], m_R2_mod,
                     m_modulus.data(), m_mod_words, m_mod_prime,
                     workspace.data());
 
    m_g[1] = z;
 
    const BigInt& x = m_g[1];
-   const size_t x_sig = x.sig_words();
 
    for(size_t i = 2; i != m_g.size(); ++i)
       {
       const BigInt& y = m_g[i-1];
-      const size_t y_sig = y.sig_words();
 
-      bigint_monty_mul(z.mutable_data(), z.size(),
-                       x.data(), x.size(), x_sig,
-                       y.data(), y.size(), y_sig,
-                       m_modulus.data(), m_mod_words, m_mod_prime,
+      bigint_monty_mul(z, x, y, m_modulus.data(), m_mod_words, m_mod_prime,
                        workspace.data());
 
       m_g[i] = z;
@@ -82,15 +74,13 @@ BigInt Montgomery_Exponentiator::execute() const
    const size_t z_size = 2*(m_mod_words + 1);
 
    BigInt z(BigInt::Positive, z_size);
-   secure_vector<word> workspace(z_size);
+   secure_vector<word> workspace(z.size());
 
    for(size_t i = exp_nibbles; i > 0; --i)
       {
       for(size_t k = 0; k != m_window_bits; ++k)
          {
-         bigint_monty_sqr(z.mutable_data(), z_size,
-                          x.data(), x.size(), x.sig_words(),
-                          m_modulus.data(), m_mod_words, m_mod_prime,
+         bigint_monty_sqr(z, x, m_modulus.data(), m_mod_words, m_mod_prime,
                           workspace.data());
 
          x = z;
@@ -100,9 +90,7 @@ BigInt Montgomery_Exponentiator::execute() const
 
       const BigInt& y = m_g[nibble];
 
-      bigint_monty_mul(z.mutable_data(), z_size,
-                       x.data(), x.size(), x.sig_words(),
-                       y.data(), y.size(), y.sig_words(),
+      bigint_monty_mul(z, x, y,
                        m_modulus.data(), m_mod_words, m_mod_prime,
                        workspace.data());
 

@@ -1,6 +1,7 @@
 /*
 * TLS Channel
 * (C) 2011,2012,2014,2015 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,6 +13,7 @@
 #include <botan/tls_session.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_session_manager.h>
+#include <botan/tls_callbacks.h>
 #include <botan/x509cert.h>
 #include <vector>
 #include <string>
@@ -37,7 +39,20 @@ class BOTAN_DLL Channel
       typedef std::function<void (Alert, const byte[], size_t)> alert_cb;
       typedef std::function<bool (const Session&)> handshake_cb;
       typedef std::function<void (const Handshake_Message&)> handshake_msg_cb;
+      static size_t IO_BUF_DEFAULT_SIZE;
 
+      Channel(Callbacks& callbacks,
+              Session_Manager& session_manager,
+              RandomNumberGenerator& rng,
+              const Policy& policy,
+              bool is_datagram,
+              size_t io_buf_sz = IO_BUF_DEFAULT_SIZE);
+
+      /**
+       * DEPRECATED. This constructor is only provided for backward
+       * compatibility and should not be used in new implementations.
+       */
+      BOTAN_DEPRECATED("Use TLS::Channel(TLS::Callbacks ...)")
       Channel(output_fn out,
               data_cb app_data_cb,
               alert_cb alert_cb,
@@ -47,7 +62,7 @@ class BOTAN_DLL Channel
               RandomNumberGenerator& rng,
               const Policy& policy,
               bool is_datagram,
-              size_t io_buf_sz = 16*1024);
+              size_t io_buf_sz = IO_BUF_DEFAULT_SIZE);
 
       Channel(const Channel&) = delete;
 
@@ -200,10 +215,12 @@ class BOTAN_DLL Channel
 
       const Policy& policy() const { return m_policy; }
 
-      bool save_session(const Session& session) const { return m_handshake_cb(session); }
+      bool save_session(const Session& session) const { return callbacks().tls_session_established(session); }
 
-      handshake_msg_cb get_handshake_msg_cb() const { return m_handshake_msg_cb; }
+      Callbacks& callbacks() const { return m_callbacks; }
    private:
+      void init(size_t io_buf_sze);
+
       void send_record(byte record_type, const std::vector<byte>& record);
 
       void send_record_under_epoch(u16bit epoch, byte record_type,
@@ -227,14 +244,21 @@ class BOTAN_DLL Channel
 
       const Handshake_State* pending_state() const { return m_pending_state.get(); }
 
+      /* methods to handle incoming traffic through Channel::receive_data. */
+      void process_handshake_ccs(const secure_vector<byte>& record,
+                                 u64bit record_sequence,
+                                 Record_Type record_type,
+                                 Protocol_Version record_version);
+
+      void process_application_data(u64bit req_no, const secure_vector<byte>& record);
+
+      void process_alert(const secure_vector<byte>& record);
+
       bool m_is_datagram;
 
       /* callbacks */
-      data_cb m_data_cb;
-      alert_cb m_alert_cb;
-      output_fn m_output_fn;
-      handshake_cb m_handshake_cb;
-      handshake_msg_cb m_handshake_msg_cb;
+      std::unique_ptr<Compat_Callbacks> m_compat_callbacks;
+      Callbacks& m_callbacks;
 
       /* external state */
       Session_Manager& m_session_manager;
