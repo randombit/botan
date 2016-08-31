@@ -12,6 +12,7 @@
 #include <botan/internal/algo_registry.h>
 #include <botan/internal/openssl.h>
 #include <botan/parsing.h>
+#include <botan/exceptn.h>
 #include <openssl/rc4.h>
 
 namespace Botan {
@@ -45,6 +46,16 @@ class OpenSSL_RC4 : public StreamCipher
 
       explicit OpenSSL_RC4(size_t skip = 0) : m_skip(skip) { clear(); }
       ~OpenSSL_RC4() { clear(); }
+
+      void set_iv(const byte*, size_t) override
+         {
+         throw Exception("RC4 does not support an IV");
+         }
+
+      void seek(u64bit) override
+         {
+         throw Exception("RC4 does not support seeking");
+         }
    private:
       void cipher(const byte in[], byte out[], size_t length) override
          {

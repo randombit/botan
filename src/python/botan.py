@@ -342,11 +342,11 @@ def pbkdf_timed(algo, password, out_len, ms_to_run = 300, salt = rng().get(12)):
 """
 KDF
 """
-def kdf(algo, secret, out_len, salt):
-    botan.botan_kdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
+def kdf(algo, secret, out_len, salt, label):
+    botan.botan_kdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
     out_buf = create_string_buffer(out_len)
     out_sz = c_size_t(out_len)
-    botan.botan_kdf(_ctype_str(algo), out_buf, out_sz, secret, len(secret), salt, len(salt))
+    botan.botan_kdf(_ctype_str(algo), out_buf, out_sz, secret, len(secret), salt, len(salt), label, len(label))
     return out_buf.raw[0:out_sz.value]
 
 """
@@ -699,7 +699,7 @@ def test():
     def test_kdf():
         print("KDF2(SHA-1)   %s" %
               hex_encode(kdf('KDF2(SHA-1)', hex_decode('701F3480DFE95F57941F804B1B2413EF'), 7,
-                             hex_decode('55A4E9DD5F4CA2EF82'))))
+                             hex_decode('55A4E9DD5F4CA2EF82'), hex_decode(''))))
 
     def test_pbkdf():
         print("PBKDF2(SHA-1) %s" %

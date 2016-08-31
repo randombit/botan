@@ -2,8 +2,8 @@
 #define BOTAN_BUILD_CONFIG_H__
 
 /*
-* This file was automatically generated %{timestamp} UTC by
-* %{user}@%{hostname} running '%{command_line}'
+* This file was automatically generated running
+* '%{command_line}'
 *
 * Target
 *  - Compiler: %{cxx} %{cxx_abi_flags} %{cc_compile_flags}
@@ -98,13 +98,19 @@
 #define BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_GENERATE 1
 
 /*
-* RNGs will automatically poll the system for additional seed material
-* after producing this many bytes of output.
+* Userspace RNGs like HMAC_DRBG will reseed after a specified number
+* of outputs are generated. Set to zero to disable automatic reseeding.
 */
-#define BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED 4096
-#define BOTAN_RNG_RESEED_POLL_BITS 128
+#define BOTAN_RNG_DEFAULT_RESEED_INTERVAL 1024
+#define BOTAN_RNG_RESEED_POLL_BITS 256
 #define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
 #define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
+
+/**
+* Controls how AutoSeeded_RNG is instantiated
+*/
+#define BOTAN_AUTO_RNG_DRBG HMAC_DRBG
+#define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-384)"
 
 /*
 * Specifies (in order) the list of entropy sources that will be used
@@ -140,41 +146,12 @@
 #define BOTAN_ENTROPY_SAFE_PATHS { "/bin", "/sbin", "/usr/bin", "/usr/sbin" }
 
 /*
-* Defines the static entropy estimates which each type of source uses.
-* These values are expressed as the bits of entropy per byte of
-* output (in double format) and should be conservative. These are used
-* unless an entropy source has some more specific opinion on the entropy
-* of the underlying source.
-*/
-
-// We include some high resolution timestamps because it can't hurt
-#define BOTAN_ENTROPY_ESTIMATE_TIMESTAMPS 0
-
-// Data which is system or process specific, but otherwise static
-#define BOTAN_ENTROPY_ESTIMATE_STATIC_SYSTEM_DATA 0
-
-// Binary system data of some kind
-#define BOTAN_ENTROPY_ESTIMATE_SYSTEM_DATA 0.5
-
-// Human readable text which has entropy
-#define BOTAN_ENTROPY_ESTIMATE_SYSTEM_TEXT (1.0 / 64)
-
-/*
-The output of a hardware RNG such as RDRAND / RDSEED
-
-By default such RNGs are used but not trusted, so that the standard
-softare-based entropy polling is still used.
-*/
-#define BOTAN_ENTROPY_ESTIMATE_HARDWARE_RNG 0.0
-
-/*
-How often should the RdRand/RdSeed RNGs be polled
-
-Each poll generates 32 bit entropy
+How many times to read from the RDRAND/RDSEED RNGs.
+Each read generates 32 bits of output
 */
 #define BOTAN_ENTROPY_INTEL_RNG_POLLS 32
 
-// According to Intel RdRand is guaranteed to generate a random number within 10 retries on a working CPU
+// According to Intel, RDRAND is guaranteed to generate a random number within 10 retries on a working CPU
 #define BOTAN_ENTROPY_RDRAND_RETRIES 10
 
 /*
@@ -182,10 +159,6 @@ Each poll generates 32 bit entropy
 * Define the number of retries here
 */
 #define BOTAN_ENTROPY_RDSEED_RETRIES 20
-
-// The output of a PRNG we are trusting to be strong
-#define BOTAN_ENTROPY_ESTIMATE_STRONG_RNG 7.0
-
 
 /*
 * Compiler and target specific flags
@@ -296,5 +269,21 @@ Each poll generates 32 bit entropy
 // Append to macros living outside of functions, so that invocations must end with a semicolon.
 // The struct is only declared to force the semicolon, it is never defined.
 #define BOTAN_FORCE_SEMICOLON struct BOTAN_DUMMY_STRUCT
+
+#if defined(BOTAN_TARGET_ARCH_IS_X86_64) && (\
+    (defined(_MSC_VER) && !defined(_WIN64)) || \
+    (defined(__clang__) && !defined(__x86_64__)) || \
+    (defined(__GNUG__) && !defined(__x86_64__)) \
+)
+    #error "Trying to compile Botan configured as x86_64 with non-x86_64 compiler."
+#endif
+
+#if defined(BOTAN_TARGET_ARCH_IS_X86_32) && (\
+    (defined(_MSC_VER) && defined(_WIN64)) || \
+    (defined(__clang__) && !defined(__i386__)) || \
+    (defined(__GNUG__) && !defined(__i386__)) \
+)
+    #error "Trying to compile Botan configured as x86_32 with non-x86_32 compiler."
+#endif
 
 #endif

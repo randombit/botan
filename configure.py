@@ -4,7 +4,7 @@
 Configuration program for botan
 
 (C) 2009,2010,2011,2012,2013,2014,2015 Jack Lloyd
-(C) 2015 Simon Warta (Kullo GmbH)
+(C) 2015,2016 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
 
@@ -29,7 +29,6 @@ import shutil
 import string
 import subprocess
 import logging
-import getpass
 import time
 import errno
 import optparse
@@ -123,10 +122,12 @@ class BuildConfigurationInformation(object):
         self.include_dir = os.path.join(self.build_dir, 'include')
         self.botan_include_dir = os.path.join(self.include_dir, 'botan')
         self.internal_include_dir = os.path.join(self.botan_include_dir, 'internal')
+        self.external_include_dir = os.path.join(self.include_dir, 'external')
 
         self.modules = modules
         self.sources = sorted(flatten([mod.sources() for mod in modules]))
         self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
+        self.external_headers = sorted(flatten([m.external_headers() for m in modules]))
 
         if options.via_amalgamation:
             self.build_sources = ['botan_all.cpp']
@@ -180,6 +181,7 @@ class BuildConfigurationInformation(object):
             yield self.testobj_dir
             yield self.botan_include_dir
             yield self.internal_include_dir
+            yield self.external_include_dir
             yield os.path.join(self.doc_output_dir, 'manual')
 
             if options.with_doxygen:
@@ -198,14 +200,6 @@ class BuildConfigurationInformation(object):
     def pkg_config_file(self):
         return 'botan-%d.%d.pc' % (self.version_major, self.version_minor)
 
-    def username(self):
-        return getpass.getuser()
-
-    def hostname(self):
-        return platform.node()
-
-    def timestamp(self):
-        return time.ctime()
 
 """
 Handle command line options
@@ -308,6 +302,9 @@ def process_command_line(args):
     build_group.add_option('--with-build-dir', metavar='DIR', default='',
                            help='setup the build in DIR')
 
+    build_group.add_option('--with-external-includedir', metavar='DIR', default='',
+                           help='use DIR for external includes')
+
     link_methods = ['symlink', 'hardlink', 'copy']
     build_group.add_option('--link-method', default=None, metavar='METHOD',
                            choices=link_methods,
@@ -381,7 +378,7 @@ def process_command_line(args):
                           help='minimize build')
 
     # Should be derived from info.txt but this runs too early
-    third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib', 'tpm']
+    third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib', 'tpm', 'pkcs11']
 
     for mod in third_party:
         mods_group.add_option('--with-%s' % (mod),
@@ -457,6 +454,9 @@ def process_command_line(args):
     if options.debug_mode:
         options.no_optimizations = True
         options.with_debug_info = True
+
+    if options.with_coverage:
+        options.no_optimizations = True
 
     def parse_multiple_enable(modules):
         if modules is None:
@@ -569,14 +569,14 @@ class ModuleInfo(object):
     def __init__(self, infofile):
 
         lex_me_harder(infofile, self,
-                      ['source', 'header:internal', 'header:public',
-                       'requires', 'os', 'arch', 'cc', 'libs',
-                       'frameworks', 'comment', 'warning'],
+                      ['source', 'header:internal', 'header:public', 
+                        'header:external', 'requires', 'os', 'arch', 
+                        'cc', 'libs', 'frameworks', 'comment', 
+                        'warning'],
                       {
                         'load_on': 'auto',
                         'define': [],
-                        'need_isa': '',
-                        'mp_bits': 0 })
+                        'need_isa': ''})
 
         def extract_files_matching(basedir, suffixes):
             for (dirpath, dirnames, filenames) in os.walk(basedir):
@@ -633,12 +633,11 @@ class ModuleInfo(object):
         self.source = [add_dir_name(s) for s in self.source]
         self.header_internal = [add_dir_name(s) for s in self.header_internal]
         self.header_public = [add_dir_name(s) for s in self.header_public]
+        self.header_external = [add_dir_name(s) for s in self.header_external]
 
-        for src in self.source + self.header_internal + self.header_public:
+        for src in self.source + self.header_internal + self.header_public + self.header_external:
             if os.access(src, os.R_OK) == False:
-                logging.warning("Missing file %s in %s" % (src, infofile))
-
-        self.mp_bits = int(self.mp_bits)
+                logging.error("Missing file %s in %s" % (src, infofile))
 
         if self.comment != []:
             self.comment = ' '.join(self.comment)
@@ -650,10 +649,14 @@ class ModuleInfo(object):
         else:
             self.warning = None
 
-        intersection = set(self.header_public) & set(self.header_internal)
+        def intersect_check(typeA, listA, typeB, listB):
+           intersection = set.intersection(set(listA), set(listB))
+           if len(intersection) > 0:
+              logging.error('Headers %s marked both %s and %s' % (' '.join(intersection), typeA, typeB))
 
-        if len(intersection) > 0:
-            logging.warning('Headers %s marked both public and internal' % (' '.join(intersection)))
+        intersect_check('public', self.header_public, 'internal', self.header_internal)
+        intersect_check('public', self.header_public, 'external', self.header_external)
+        intersect_check('external', self.header_external, 'internal', self.header_internal)
 
     def sources(self):
         return self.source
@@ -663,6 +666,9 @@ class ModuleInfo(object):
 
     def internal_headers(self):
         return self.header_internal
+
+    def external_headers(self):
+        return self.header_external
 
     def defines(self):
         return ['HAS_' + d[0] + ' ' + d[1] for d in chunks(self.define, 2)]
@@ -958,8 +964,8 @@ class CompilerInfo(object):
             if s in self.so_link_commands:
                 return self.so_link_commands[s]
 
-        raise Exception("No shared library link command found for target '%s' in compiler settings '%s'. Searched for: %s" %
-                    (osname, self.infofile, ", ".join(search_for)))
+        raise Exception("No shared library link command found for target '%s' in compiler settings '%s'" %
+                    (osname, self.infofile))
 
     """
     Return the command needed to link an app/test object
@@ -969,8 +975,7 @@ class CompilerInfo(object):
             if s in self.binary_link_commands:
                 return self.binary_link_commands[s]
 
-        raise Exception("No binary link command found for target '%s' in compiler settings '%s'. Searched for: %s" %
-                    (osname, self.infofile, ", ".join(search_for)))
+        return '$(LINKER)'
 
     """
     Return defines for build.h
@@ -1121,11 +1126,11 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     def isa_specific_flags(cc, src):
 
         def simd_dependencies():
-            simd_re = re.compile('simd_(.*)')
-            for mod in modules:
-                if simd_re.match(mod.basename):
-                    for isa in mod.need_isa:
-                        yield isa
+            if 'sse2' in arch.isa_extensions:
+                return ['sse2']
+            elif 'altivec' in arch.isa_extensions:
+                return ['altivec']
+            return []
 
         for mod in modules:
             if src in mod.sources():
@@ -1177,17 +1182,18 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     Form snippets of makefile for building each source file
     """
     def build_commands(sources, obj_dir, flags):
+        includes = cc.add_include_dir_option + build_config.include_dir
+        includes+= ' ' + cc.add_include_dir_option + build_config.external_include_dir if build_config.external_headers else ''
+        includes+= ' ' + cc.add_include_dir_option + options.with_external_includedir if options.with_external_includedir else ''
         for (obj_file,src) in zip(objectfile_list(sources, obj_dir), sources):
-            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s%s %s %s %s$@\n' % (
+            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
                 obj_file, src,
                 isa_specific_flags(cc, src),
                 flags,
-                cc.add_include_dir_option,
-                build_config.include_dir,
+                includes,
                 cc.compile_flags,
                 src,
                 cc.output_to_option)
-
 
     for t in ['lib', 'cli', 'test']:
         obj_key = '%s_objs' % (t)
@@ -1230,19 +1236,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         return sorted(libs)
 
     def choose_mp_bits():
-        mp_bits = [mod.mp_bits for mod in modules if mod.mp_bits != 0]
-
-        if mp_bits == []:
-            logging.debug('Using arch default MP bits %d' % (arch.wordsize))
-            return arch.wordsize
-
-        # Check that settings are consistent across modules
-        for mp_bit in mp_bits[1:]:
-            if mp_bit != mp_bits[0]:
-                raise Exception('Incompatible mp_bits settings found')
-
-        logging.debug('Using MP bits %d' % (mp_bits[0]))
-        return mp_bits[0]
+        mp_bits = arch.wordsize # allow command line override?
+        logging.debug('Using MP bits %d' % (mp_bits))
+        return mp_bits
 
     def prefix_with_build_dir(path):
         if options.with_build_dir != None:
@@ -1277,9 +1273,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'src_dir': build_config.src_dir,
         'doc_dir': build_config.doc_dir,
 
-        'timestamp': build_config.timestamp(),
-        'user':      build_config.username(),
-        'hostname':  build_config.hostname(),
         'command_line': ' '.join(sys.argv),
         'local_config': slurp_file(options.local_config),
         'makefile_style': options.makefile_style or cc.makefile_style,
@@ -1331,10 +1324,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'shared_flags': cc.gen_shared_flags(options),
         'visibility_attribute': cc.gen_visibility_attribute(options),
-
-        # 'botan' or 'botan-1.11'. Used in Makefile and install script
-        # This can be made constistent over all platforms in the future
-        'libname': 'botan' if options.os == 'windows' else 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
 
         'lib_link_cmd':  cc.so_link_command_for(osinfo.basename, options),
         'cli_link_cmd':  cc.binary_link_command_for(osinfo.basename, options),
@@ -1399,6 +1388,15 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     if options.os != 'windows':
         vars['botan_pkgconfig'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
                                                                      build_config.pkg_config_file()))
+
+        # 'botan' or 'botan-1.11'. Used in Makefile and install script
+        # This can be made consistent over all platforms in the future    
+        vars['libname'] = 'botan-%d.%d' % (build_config.version_major, build_config.version_minor)
+    else:
+        if options.with_debug_info:
+            vars['libname'] = 'botand'
+        else:
+            vars['libname'] = 'botan'
 
     vars["header_in"] = process_template('src/build-data/makefile/header.in', vars)
 
@@ -1541,8 +1539,6 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                 reason, ' '.join(disabled_mods)))
 
     for mod in sorted(to_load):
-        if mod.startswith('mp_'):
-            logging.info('Using MP module ' + mod)
         if mod.startswith('simd_') and mod != 'simd_engine':
             logging.info('Using SIMD module ' + mod)
 
@@ -1654,8 +1650,11 @@ def generate_amalgamation(build_config, options):
 
             self.file_contents = {}
             for f in sorted(input_list):
-                contents = strip_header_goop(f, open(f).readlines())
-                self.file_contents[os.path.basename(f)] = contents
+                try:
+                    contents = strip_header_goop(f, open(f).readlines())
+                    self.file_contents[os.path.basename(f)] = contents
+                except Exception as e:
+                    logging.error('Error processing file %s for amalgamation: %s' % (f, e))
 
             self.contents = ''
             for name in sorted(self.file_contents):
@@ -1842,7 +1841,7 @@ def main(argv = None):
 
     logging.getLogger().setLevel(log_level())
 
-    logging.debug('%s invoked with options "%s"' % (
+    logging.info('%s invoked with options "%s"' % (
         argv[0], ' '.join(argv[1:])))
 
     logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
@@ -1920,9 +1919,17 @@ def main(argv = None):
                 options.compiler = 'gcc'
             else:
                 options.compiler = 'msvc'
-        elif options.os == 'darwin':
+        elif options.os == 'darwin' or options.os == 'freebsd':
             if have_program('clang++'):
                 options.compiler = 'clang'
+        elif options.os == 'openbsd':
+            if have_program('eg++'):
+                info_cc['gcc'].binary_name = 'eg++'
+            else:
+                logging.warning('Default GCC is too old; install a newer one using \'pkg_add gcc\'')
+            # The assembler shipping with OpenBSD 5.9 does not support avx2
+            del info_cc['gcc'].isa_flags['avx2']
+            options.compiler = 'gcc'
         else:
             options.compiler = 'gcc'
         logging.info('Guessing to use compiler %s (use --cc to set)' % (
@@ -2081,6 +2088,9 @@ def main(argv = None):
 
     link_headers(build_config.internal_headers, 'internal',
                  build_config.internal_include_dir)
+
+    link_headers(build_config.external_headers, 'external',
+                 build_config.external_include_dir)
 
     with open(os.path.join(build_config.build_dir, 'build_config.py'), 'w') as f:
         f.write(str(template_vars))

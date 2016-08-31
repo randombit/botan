@@ -1,6 +1,7 @@
 /*
 * BigInt Binary Operators
 * (C) 1999-2007 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -93,9 +94,7 @@ BigInt operator*(const BigInt& x, const BigInt& y)
    else if(x_sw && y_sw)
       {
       secure_vector<word> workspace(z.size());
-      bigint_mul(z.mutable_data(), z.size(), workspace.data(),
-                 x.data(), x.size(), x_sw,
-                 y.data(), y.size(), y_sw);
+      bigint_mul(z, x, y, workspace.data());
       }
 
    if(x_sw && y_sw && x.sign() != y.sign())

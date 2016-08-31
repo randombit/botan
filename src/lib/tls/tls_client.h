@@ -1,6 +1,7 @@
 /*
 * TLS Client
 * (C) 2004-2011 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -22,7 +23,47 @@ namespace TLS {
 class BOTAN_DLL Client final : public Channel
    {
    public:
+
       /**
+      * Set up a new TLS client session
+      *
+      * @param callbacks contains a set of callback function references
+      *        required by the TLS client.
+      *
+      * @param session_manager manages session state
+      *
+      * @param creds manages application/user credentials
+      *
+      * @param policy specifies other connection policy information
+      *
+      * @param rng a random number generator
+      *
+      * @param server_info is identifying information about the TLS server
+      *
+      * @param offer_version specifies which version we will offer
+      *        to the TLS server.
+      *
+      * @param next_protocols specifies protocols to advertise with ALPN
+      *
+      * @param reserved_io_buffer_size This many bytes of memory will
+      *        be preallocated for the read and write buffers. Smaller
+      *        values just mean reallocations and copies are more likely.
+      */
+     Client(Callbacks& callbacks,
+            Session_Manager& session_manager,
+            Credentials_Manager& creds,
+            const Policy& policy,
+            RandomNumberGenerator& rng,
+            const Server_Information& server_info = Server_Information(),
+            const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
+            const std::vector<std::string>& next_protocols = {},
+            size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE
+         );
+
+      /**
+      * DEPRECATED. This constructor is only provided for backward
+      * compatibility and should not be used in new code.
+      * 
       * Set up a new TLS client session
       *
       * @param output_fn is called with data for the outbound socket
@@ -52,7 +93,7 @@ class BOTAN_DLL Client final : public Channel
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
       */
-
+      BOTAN_DEPRECATED("Use TLS::Client(TLS::Callbacks ...)")
       Client(output_fn out,
              data_cb app_data_cb,
              alert_cb alert_cb,
@@ -64,9 +105,14 @@ class BOTAN_DLL Client final : public Channel
              const Server_Information& server_info = Server_Information(),
              const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
              const std::vector<std::string>& next_protocols = {},
-             size_t reserved_io_buffer_size = 16*1024
+             size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE
          );
 
+      /**
+       * DEPRECATED. This constructor is only provided for backward
+       * compatibility and should not be used in new implementations.
+       */
+      BOTAN_DEPRECATED("Use TLS::Client(TLS::Callbacks ...)")
       Client(output_fn out,
              data_cb app_data_cb,
              alert_cb alert_cb,
@@ -83,6 +129,9 @@ class BOTAN_DLL Client final : public Channel
 
       const std::string& application_protocol() const { return m_application_protocol; }
    private:
+      void init(const Protocol_Version& protocol_version,
+                const std::vector<std::string>& next_protocols);
+
       std::vector<X509_Certificate>
          get_peer_cert_chain(const Handshake_State& state) const override;
 

@@ -1,6 +1,7 @@
 /*
 * TLS Handshake Message
 * (C) 2012 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -15,6 +16,9 @@
 namespace Botan {
 
 namespace TLS {
+
+class Handshake_IO;
+class Handshake_Hash;
 
 /**
 * TLS Handshake Message Base Class

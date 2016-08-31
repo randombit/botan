@@ -44,12 +44,17 @@ class BOTAN_DLL CTR_BE final : public StreamCipher
       * @param cipher the underlying block cipher to use
       */
       explicit CTR_BE(BlockCipher* cipher);
+
+      CTR_BE(BlockCipher* cipher, size_t ctr_size);
+
+      void seek(u64bit offset) override;
    private:
       void key_schedule(const byte key[], size_t key_len) override;
       void increment_counter();
 
       std::unique_ptr<BlockCipher> m_cipher;
       secure_vector<byte> m_counter, m_pad;
+      size_t m_ctr_size;
       size_t m_pad_pos;
    };
 

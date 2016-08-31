@@ -1,3 +1,4 @@
+
 /*
 * TPM 1.2 interface
 * (C) 2015 Jack Lloyd
@@ -71,34 +72,27 @@ class BOTAN_DLL TPM_Context
       TSS_HTPM m_tpm;
    };
 
-class BOTAN_DLL TPM_RNG : public RandomNumberGenerator
+class BOTAN_DLL TPM_RNG : public Hardware_RNG
    {
    public:
       TPM_RNG(TPM_Context& ctx) : m_ctx(ctx) {}
-
-      void randomize(byte out[], size_t out_len) override
-         {
-         m_ctx.gen_random(out, out_len);
-         }
-
-      void clear() override {}
-
-      std::string name() const override { return "TPM_RNG"; }
-
-      size_t reseed_with_sources(Entropy_Sources&,
-                                 size_t,
-                                 std::chrono::milliseconds) override
-         {
-         // TODO: poll and stir
-         return 0;
-         }
 
       void add_entropy(const byte in[], size_t in_len) override
          {
          m_ctx.stir_random(in, in_len);
          }
 
+      void randomize(byte out[], size_t out_len) override
+         {
+         m_ctx.gen_random(out, out_len);
+         }
+
+      std::string name() const override { return "TPM_RNG"; }
+
       bool is_seeded() const override { return true; }
+
+      void clear() override {}
+
    private:
       TPM_Context& m_ctx;
 };

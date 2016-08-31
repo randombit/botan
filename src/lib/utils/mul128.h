@@ -12,13 +12,15 @@
 
 namespace Botan {
 
-// Prefer TI mode over __int128 as GCC rejects the latter in pendantic mode
-#if (BOTAN_GCC_VERSION > 440) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
+#if defined(__SIZEOF_INT128__) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
    #define BOTAN_TARGET_HAS_NATIVE_UINT128
-   typedef unsigned int uint128_t __attribute__((mode(TI)));
-#elif defined(__SIZEOF_INT128__)
-   #define BOTAN_TARGET_HAS_NATIVE_UINT128
-   typedef unsigned __int128 uint128_t;
+
+   // Prefer TI mode over __int128 as GCC rejects the latter in pendantic mode
+   #if defined(__GNUG__)
+     typedef unsigned int uint128_t __attribute__((mode(TI)));
+   #else
+     typedef unsigned __int128 uint128_t;
+   #endif
 #endif
 
 }

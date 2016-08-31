@@ -52,7 +52,40 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
          Botan::DH_PublicKey key(grp, y);
          return key.public_value();
          }
+
+      std::vector<Test::Result> run_final_tests() override
+         {
+         using namespace Botan;
+
+         Test::Result result("DH negative tests");
+
+         const BigInt g("2");
+         const BigInt p("58458002095536094658683755258523362961421200751439456159756164191494576279467");
+         const DL_Group grp(p, g);
+
+         const Botan::BigInt x("46205663093589612668746163860870963912226379131190812163519349848291472898748");
+         std::unique_ptr<Private_Key> privkey(new DH_PrivateKey(Test::rng(), grp, x));
+
+         std::unique_ptr<PK_Key_Agreement> kas(new PK_Key_Agreement(*privkey, "Raw"));
+
+         result.test_throws("agreement input too big", [&kas]()
+            {
+            const BigInt too_big("584580020955360946586837552585233629614212007514394561597561641914945762794672");
+            kas->derive_key(16, BigInt::encode(too_big));
+            });
+
+         result.test_throws("agreement input too small", [&kas]()
+            {
+            const BigInt too_small("1");
+            kas->derive_key(16, BigInt::encode(too_small));
+            });
+
+         return{result};
+         }
+
    };
+
+BOTAN_REGISTER_TEST("dh_kat", Diffie_Hellman_KAT_Tests);
 
 class Diffie_Hellman_Keygen_Tests : public PK_Key_Generation_Test
    {
@@ -69,7 +102,6 @@ class Diffie_Hellman_Keygen_Tests : public PK_Key_Generation_Test
    };
 
 
-BOTAN_REGISTER_TEST("dh_kat", Diffie_Hellman_KAT_Tests);
 BOTAN_REGISTER_TEST("dh_keygen", Diffie_Hellman_Keygen_Tests);
 
 #endif

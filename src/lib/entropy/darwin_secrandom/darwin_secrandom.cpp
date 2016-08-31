@@ -7,19 +7,21 @@
 
 #include <botan/internal/darwin_secrandom.h>
 #include <Security/Security.h>
+#include <Security/SecRandom.h>
 
 namespace Botan {
 
 /**
 * Gather entropy from SecRandomCopyBytes
 */
-void Darwin_SecRandom::poll(Entropy_Accumulator& accum)
+size_t Darwin_SecRandom::poll(RandomNumberGenerator& rng)
    {
-   secure_vector<byte>& buf = accum.get_io_buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
+   secure_vector<uint8_t> buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
 
    if(0 == SecRandomCopyBytes(kSecRandomDefault, buf.size(), buf.data()))
       {
-      accum.add(buf.data(), buf.size(), BOTAN_ENTROPY_ESTIMATE_STRONG_RNG);
+      rng.add_entropy(buf.data(), buf.size());
+      return buf.size() * 8;
       }
    }
 

@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/dyn_load.h>
+#include <botan/dyn_load.h>
 #include <botan/build.h>
 #include <botan/exceptn.h>
 

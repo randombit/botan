@@ -19,7 +19,7 @@
   #include <unistd.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_TYPE_IS_WINDOWS)
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS) || defined(BOTAN_TARGET_OS_IS_MINGW)
   #include <windows.h>
 #endif
 
@@ -29,12 +29,12 @@ namespace OS {
 
 uint32_t get_process_id()
    {
-#if defined(BOTAN_TARGET_OS_IS_UNIX)
+#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
    return ::getpid();
-#elif defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#elif defined(BOTAN_TARGET_OS_IS_WINDOWS) || defined(BOTAN_TARGET_OS_IS_MINGW)
    return ::GetCurrentProcessId();
 #else
-   return 0;
+   throw Exception("get_process_id not supported");
 #endif
    }
 
@@ -141,7 +141,7 @@ size_t get_memory_locking_limit()
 
       return std::min<size_t>(limits.rlim_cur, mlock_requested * 1024);
       }
-#elif defined BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK
+#elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    SIZE_T working_min = 0, working_max = 0;
    DWORD working_flags = 0;
    if(!::GetProcessWorkingSetSizeEx(::GetCurrentProcess(), &working_min, &working_max, &working_flags))

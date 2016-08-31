@@ -1,6 +1,7 @@
 /*
 * DSA
 * (C) 1999-2010,2014 Jack Lloyd
+* (C) 2016 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,7 +11,10 @@
 #include <botan/keypair.h>
 #include <botan/pow_mod.h>
 #include <botan/reducer.h>
-#include <botan/rfc6979.h>
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+  #include <botan/rfc6979.h>
+  #include <botan/emsa.h>
+#endif
 #include <future>
 
 namespace Botan {
@@ -66,7 +70,7 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    if(!strong)
       return true;
 
-   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-1)");
+   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-256)");
    }
 
 namespace {
@@ -84,7 +88,7 @@ class DSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
          m_x(dsa.get_x()),
          m_powermod_g_p(dsa.group_g(), dsa.group_p()),
          m_mod_q(dsa.group_q()),
-         m_hash(hash_for_deterministic_signature(emsa))
+         m_emsa(emsa)
          {
          }
 
@@ -99,19 +103,24 @@ class DSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
       const BigInt& m_x;
       Fixed_Base_Power_Mod m_powermod_g_p;
       Modular_Reducer m_mod_q;
-      std::string m_hash;
+      std::string m_emsa;
    };
 
 secure_vector<byte>
 DSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
-                                  RandomNumberGenerator&)
+                                  RandomNumberGenerator& rng)
    {
    BigInt i(msg, msg_len);
 
    while(i >= m_q)
       i -= m_q;
 
-   const BigInt k = generate_rfc6979_nonce(m_x, m_q, i, m_hash);
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+   BOTAN_UNUSED(rng);
+   const BigInt k = generate_rfc6979_nonce(m_x, m_q, i, hash_for_emsa(m_emsa));
+#else
+   const BigInt k = BigInt::random_integer(rng, 1, m_q);
+#endif
 
    auto future_r = std::async(std::launch::async,
                               [&]() { return m_mod_q.reduce(m_powermod_g_p(k)); });
@@ -124,10 +133,7 @@ DSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
    BOTAN_ASSERT(s != 0, "invalid s");
    BOTAN_ASSERT(r != 0, "invalid r");
 
-   secure_vector<byte> output(2*m_q.bytes());
-   r.binary_encode(&output[output.size() / 2 - r.bytes()]);
-   s.binary_encode(&output[output.size() - s.bytes()]);
-   return output;
+   return BigInt::encode_fixed_length_int_pair(r, s, m_q.bytes());
    }
 
 /**

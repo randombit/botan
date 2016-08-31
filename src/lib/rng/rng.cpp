@@ -1,42 +1,62 @@
 /*
-* Random Number Generator
-* (C) 1999-2008 Jack Lloyd
+* (C) 2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/rng.h>
-#include <botan/hmac_rng.h>
-#include <botan/entropy_src.h>
+#include <botan/loadstor.h>
+#include <botan/internal/os_utils.h>
+
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+  #include <botan/auto_rng.h>
+#endif
 
 namespace Botan {
 
-size_t RandomNumberGenerator::reseed(size_t bits_to_collect)
+void RandomNumberGenerator::randomize_with_ts_input(byte output[], size_t output_len)
    {
-   return this->reseed_with_timeout(bits_to_collect,
-                                    BOTAN_RNG_RESEED_DEFAULT_TIMEOUT);
+   /*
+   Form additional input which is provided to the PRNG implementation
+   to paramaterize the KDF output.
+   */
+   byte additional_input[16] = { 0 };
+   store_le(OS::get_system_timestamp_ns(), additional_input);
+   store_le(OS::get_processor_timestamp(), additional_input + 8);
+
+   randomize_with_input(output, output_len, additional_input, sizeof(additional_input));
    }
 
-size_t RandomNumberGenerator::reseed_with_timeout(size_t bits_to_collect,
-                                                  std::chrono::milliseconds timeout)
+void RandomNumberGenerator::randomize_with_input(byte output[], size_t output_len,
+                                                 const byte input[], size_t input_len)
    {
-   return this->reseed_with_sources(Entropy_Sources::global_sources(),
-                                    bits_to_collect,
-                                    timeout);
+   this->add_entropy(input, input_len);
+   this->randomize(output, output_len);
+   }
+
+size_t RandomNumberGenerator::reseed(Entropy_Sources& srcs,
+                                     size_t poll_bits,
+                                     std::chrono::milliseconds poll_timeout)
+   {
+   return srcs.poll(*this, poll_bits, poll_timeout);
+   }
+
+void RandomNumberGenerator::reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits)
+   {
+   secure_vector<byte> buf(poll_bits / 8);
+   rng.randomize(buf.data(), buf.size());
+   this->add_entropy(buf.data(), buf.size());
    }
 
 RandomNumberGenerator* RandomNumberGenerator::make_rng()
    {
-   std::unique_ptr<MessageAuthenticationCode> h1(MessageAuthenticationCode::create("HMAC(SHA-512)"));
-   std::unique_ptr<MessageAuthenticationCode> h2(MessageAuthenticationCode::create("HMAC(SHA-512)"));
-
-   if(!h1 || !h2)
-      throw Algorithm_Not_Found("HMAC_RNG HMACs");
-   std::unique_ptr<RandomNumberGenerator> rng(new HMAC_RNG(h1.release(), h2.release()));
-
-   rng->reseed(256);
-
-   return rng.release();
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+   return new AutoSeeded_RNG;
+#else
+   throw Exception("make_rng failed, no AutoSeeded_RNG in this build");
+#endif
    }
+
+Serialized_RNG::Serialized_RNG() : m_rng(RandomNumberGenerator::make_rng()) {}
 
 }

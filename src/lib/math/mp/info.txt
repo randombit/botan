@@ -1,12 +1,10 @@
 define BIGINT_MP 20151225
 
 <source>
-mp_asm.cpp
+mp_core.cpp
 mp_comba.cpp
 mp_karat.cpp
 mp_monty.cpp
-mp_misc.cpp
-mp_shift.cpp
 </source>
 
 <header:public>
@@ -15,8 +13,6 @@ mp_types.h
 
 <header:internal>
 mp_core.h
+mp_madd.h
+mp_asmi.h
 </header:internal>
-
-<requires>
-mp_x86_64|mp_x86_32|mp_x86_32_msvc|mp_generic
-</requires>

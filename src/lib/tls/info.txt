@@ -6,6 +6,7 @@ load_on auto
 credentials_manager.h
 tls_alert.h
 tls_blocking.h
+tls_callbacks.h
 tls_channel.h
 tls_ciphersuite.h
 tls_client.h
@@ -43,12 +44,12 @@ eme_pkcs1
 emsa_pkcs1
 gcm
 hmac
-kdf2
 md5
+par_hash
 prf_tls
 rng
 rsa
-sha1
+sha1_sse2|sha1
 sha2_32
 x509
 </requires>

@@ -15,6 +15,13 @@ snail-mail address (S), and Bitcoin address (B).
   D: documentation editing
   S: Oregon, USA
 
+  N: Simon Cogliani
+  E: simon.cogliani@tanker.io
+  W: https://www.tanker.io/
+  P: EA73 D0AF 5A81 A61A 8931  C2CA C9AB F2E4 3820 4F25
+  D: Getting keystream of ChaCha
+  S: Paris, France
+
   N: Martin Doering
   E: doering@cdc.informatik.tu-darmstadt.de
   D: GF(p) arithmetic
@@ -60,6 +67,13 @@ snail-mail address (S), and Bitcoin address (B).
   D: Locking in Algo_Registry for Windows OS
   S: Slovenia
 
+  N: René Korthaus
+  E: r.korthaus@sirrix.com
+  W: https://www.sirrix.com
+  P: C196 FF9D 3DDC A5E7 F98C E745 9AD0 F9FA 587E 74D6
+  D: CI, ECGDSA, ECKCDSA
+  S: Bochum, Germany
+
   N: Adam Langley
   E: agl@imperialviolet.org
   D: Curve25519
@@ -104,3 +118,15 @@ snail-mail address (S), and Bitcoin address (B).
   W: https://www.kullo.net
   D: Build system
   S: Germany
+
+  N: Philipp Weber
+  E: p.weber@sirrix.com
+  W: https://sirrix.com/
+  D: KDF1-18033, ECIES
+  S: Saarland, Germany
+  
+  N: Daniel Neus
+  E: d.neus@sirrix.com
+  W: https://sirrix.com/
+  D: CI, PKCS#11, RdSeed, BSI module policy
+  S: Bochum, Germany

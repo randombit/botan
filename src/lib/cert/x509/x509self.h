@@ -115,11 +115,6 @@ class BOTAN_DLL X509_Cert_Options
       std::vector<OID> ex_constraints;
 
       /**
-      * Check the options set in this object for validity.
-      */
-      void sanity_check() const;
-
-      /**
       * Mark the certificate as a CA certificate and set the path limit.
       * @param limit the path limit to be set in the BasicConstraints extension.
       */

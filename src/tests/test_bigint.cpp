@@ -10,6 +10,7 @@
   #include <botan/bigint.h>
   #include <botan/numthry.h>
   #include <botan/reducer.h>
+  #include <cmath>
 #endif
 
 namespace Botan_Tests {
@@ -29,6 +30,7 @@ class BigInt_Unit_Tests : public Test
 
          results.push_back(test_bigint_sizes());
          results.push_back(test_random_integer());
+         results.push_back(test_encode());
 
          return results;
          }
@@ -139,6 +141,32 @@ class BigInt_Unit_Tests : public Test
             }
 
          result.end_timer();
+
+         return result;
+         }
+
+      Test::Result test_encode()
+         {
+         Test::Result result("BigInt encoding functions");
+
+         const BigInt n1(0xffff);
+         const BigInt n2(1023);
+
+         Botan::secure_vector<byte> encoded_n1 = BigInt::encode_1363(n1, 256);
+         Botan::secure_vector<byte> encoded_n2 = BigInt::encode_1363(n2, 256);
+         Botan::secure_vector<byte> expected = encoded_n1;
+         expected += encoded_n2;
+
+         Botan::secure_vector<byte> encoded_n1_n2 = BigInt::encode_fixed_length_int_pair(n1, n2, 256);
+         result.test_eq("encode_fixed_length_int_pair", encoded_n1_n2, expected);
+
+         for (size_t i = 0; i < 256 - n1.bytes(); ++i)
+            {
+               if ( encoded_n1[i] != 0 )
+                  {
+                  result.test_failure("encode_1363", "no zero byte");
+                  }
+            }
 
          return result;
          }
@@ -301,6 +329,15 @@ class BigInt_Mod_Test : public Text_Based_Test
          BigInt e = a;
          e %= b;
          result.test_eq("a %= b", e, c);
+
+         // if b fits into a Botan::word test %= operator for words
+         if(b.bytes() <= sizeof(Botan::word))
+            {
+            Botan::word b_word = b.word_at( 0 );
+            e = a;
+            e %= b_word;
+            result.test_eq("a %= b (as word)", e, c);
+            }
 
          return result;
          }

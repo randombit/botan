@@ -1,7 +1,128 @@
 Release Notes
 ========================================
 
-Version 1.11.30, Not Yet Released
+Version 1.11.31, 2016-08-30
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix undefined behavior in Curve25519 on platforms without a native 128-bit
+  integer type. This was known to produce incorrect results on 32-bit ARM
+  under Clang. GH #532 (CVE-2016-6878)
+
+* If X509_Certificate::allowed_usage was called with more than one Key_Usage
+  set in the enum value, the function would return true if *any* of the allowed
+  usages were set, instead of if *all* of the allowed usages are set.
+  GH #591 (CVE-2016-6879)
+
+* Incompatible changes in DLIES: Previously the input to the KDF was
+  the concatenation of the (ephemeral) public key and the secret value
+  derived by the key agreement operation. Now the input is only the
+  secret value obtained by the key agreement operation. That's how it
+  is specified in the original paper "DHIES: An encryption scheme
+  based on Diffie-Hellman Problem" or in BSI technical guideline
+  TR-02102-1 for example. In addition to the already present
+  XOR-encrypion/decryption mode it's now possible to use DLIES with a
+  block cipher.  Furthermore the order of the output was changed from
+  {public key, tag, ciphertext} to {public key, ciphertext, tag}. Both
+  modes are compatible with BouncyCastle.
+
+* Add initial PKCS #11 support (GH #507). Currently includes a low level
+  wrapper to all of PKCS #11 (p11.h) and high level code for RSA and ECDSA
+  signatures and hardware RNG access.
+
+* Add ECIES encryption scheme, compatible with BouncyCastle (GH #483)
+
+* Add ECKCDSA signature algorithm (GH #504)
+
+* Add KDF1 from ISO 18033 (GH #483)
+
+* Add FRP256v1 curve (GH #551)
+
+* Changes for userspace PRNGs HMAC_DRBG and HMAC_RNG (GH #520 and #593)
+
+  These RNGs now derive from Stateful_RNG which handles issues like periodic
+  reseeding and (on Unix) detecting use of fork. Previously these measures were
+  included only in HMAC_RNG.
+
+  Stateful_RNG allows reseeding from another RNG and/or a specified set of
+  entropy sources. For example it is possible to configure a HMAC_DRBG to reseed
+  using a PKCS #11 token RNG, the CPU's RDSEED instruction, and the system RNG
+  but disabling all other entropy polls.
+
+* AutoSeeded_RNG now uses NIST SP800-90a HMAC_DRBG(SHA-384). (GH #520)
+
+* On Windows and Unix systems, the system PRNG is used as the sole reseeding
+  source for a default AutoSeeded_RNG, completely skipping the standard entropy
+  polling code. New constructors allow specifying the reseed RNG and/or entropy
+  sources. (GH #520)
+
+* Add RDRAND_RNG which directly exposes the CPU RNG (GH #543)
+
+* Add PKCS #1 v1.5 id for SHA-512/256 (GH #554)
+
+* Add X509_Time::to_std_timepoint (GH #560)
+
+* Fix a bug in ANSI X9.23 padding mode, which returned one byte more
+  than the given block size (GH #529).
+
+* Fix bug in SipHash::clear, which did not reset all state (GH #547)
+
+* Fixes for FreeBSD (GH #517) and OpenBSD (GH #523). The compiler defaults
+  to Clang on FreeBSD now.
+
+* SonarQube static analysis integration (GH #592)
+
+* Switched Travis CI to Ubuntu 14.04 LTS (GH #592)
+
+* Added ARM32, ARM64, PPC32, PPC64, and MinGW x86 cross compile targets to Travis CI (GH #608)
+
+* Clean up in TLS ciphersuite handling (GH #583)
+
+* Threefish-512 AVX2 optimization work (GH #581)
+
+* Remove build configuration host and timestamp from build.h
+  This makes this header reproducible and allows using ccache's direct mode
+  (GH #586 see also #587)
+
+* Prevent building for x86-64 with x86-32 compiler and the reverse (GH #585)
+
+* Avoid build problem on 32-bit userspace ARMv8 (GH #563)
+
+* Refactor of internal MP headers (GH #549)
+
+* Avoid MSVC C4100 warning (GH #525)
+
+* Change botan.exe to botan-cli.exe on Windows to workaround VC issue (GH #584)
+
+* More tests for RSA-KEM (GH #538), DH (GH #556), EME (GH #553),
+  cipher mode padding (GH #529), CTS mode (GH #531),
+  KDF1/ISO18033 (GH #537), OctetString (GH #545), OIDs (GH #546),
+  parallel hash (GH #548), charset handling (GH #555),
+  BigInt (GH #558), HMAC_DRBG (GH #598 #600)
+
+* New deprecations. See the full list in doc/deprecated.txt
+
+  The X9.31 and HMAC_RNG RNGs are deprecated.
+  If you need a userspace PRNG, use HMAC_DRBG (or AutoSeeded_RNG
+  which is HMAC_DRBG with defaults).
+
+  Support for getting entropy from EGD is deprecated, and will be
+  removed in a future release. The developers believe that it is
+  unlikely that any modern system requires EGD and so the code is now
+  dead weight. If you rely on EGD support, you should contact the
+  developers by email or GitHub ASAP.
+
+  The TLS ciphersuites using 3DES and SEED are deprecated and will be
+  removed in a future release.
+
+  ECB mode Cipher_Mode is deprecated and will be removed in a future
+  release.
+
+  Support for BeOS/Haiku has not been tested in 5+ years and is in an
+  unknown state.  Unless reports are received of successful builds and
+  use on this platform, support for BeOS/Haiku will be removed in a
+  future release.
+
+Version 1.11.30, 2016-06-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * In 1.11.23 a bug was introduced such that CBC-encrypted TLS packets
@@ -9,16 +130,48 @@ Version 1.11.30, Not Yet Released
   a MAC failure. Records like this are used by OpenSSL in TLS 1.0
   connections in order to randomize the IV.
 
+* A bug in GCM caused incorrect results if the 32-bit counter field
+  overflowed. This bug has no implications on the security but affects
+  interoperability.
+
+  With a 96-bit nonce, this could only occur if at least 2**32 128-bit
+  blocks (64 GiB) were encrypted. This actually exceeds the maximum
+  allowable length of a GCM plaintext; when messages longer than
+  2**32 - 2 blocks are encrypted, GCM loses its security properties.
+
+  In addition to 96-bit nonces, GCM also supports nonces of arbitrary
+  length using a different method which hashes the provided nonce
+  under the authentication key. When using such a nonce, the last 4
+  bytes of the resulting CTR input might be near the overflow
+  boundary, with the probability of incorrect overflow increasing with
+  longer messages. when encrypting 256 MiB of data under a random 128
+  bit nonce, an incorrect result would be produced about 1/256 of the
+  time. With 1 MiB texts, the probability of error is reduced to 1/65536.
+
+  Since TLS uses GCM with 96 bit nonces and limits the length of any
+  record to far less than 64 GiB, TLS GCM ciphersuites are not
+  affected by this bug.
+
+  Reported by Juraj Somorovsky, described also in "Nonce-Disrespecting
+  Adversaries: Practical Forgery Attacks on GCM in TLS"
+  (https://eprint.iacr.org/2016/475.pdf)
+
+* Previously when generating a new self-signed certificate or PKCS #10
+  request, the subject DN was required to contain both common name
+  (CN) and country (C) fields. These restrictions have been removed.
+  GH #496
+
 * The Transform and Keyed_Transform interfaces has been removed. The
   two concrete implementations of these interfaces were Cipher_Mode
-  and the Compressor_tkk. The Cipher_Mode interface remains unchanged
+  and Compressor_Transform. The Cipher_Mode interface remains unchanged
   as the Transform and Keyed_Transform signatures have moved to it;
   no changes to Cipher_Mode usage should be necessary. Any uses of
   Transform& or Keyed_Transform& to refer to a cipher should be replaced
   by Cipher_Mode&. The compression algorithm interface has changed; the start
   function now takes the per-message compression ratio to use. Previously the
   compression level to use had to be set once, at creation time, and
-  the required `secure_vector` argument to start was required to be empty.
+  the required ``secure_vector`` argument to ``start`` was required to be empty.
+  The new API is documented in `compression.rst` in the manual.
 
 * Add IETF versions of the ChaCha20Poly1305 TLS ciphersuites from
   draft-ietf-tls-chacha20-poly1305-04. The previously implemented
@@ -37,12 +190,20 @@ Version 1.11.30, Not Yet Released
 
 * X509_CRL previously had an option to cause it to ignore unknown
   critical extensions. This has been removed.
- 
-* Added support for ChaCha stream cipher with 12 rounds.
+
+* Added StreamCipher::seek allowing seeking to arbitrary position
+  in the key stream. Currently only implemented for ChaCha. (GH #497)
+
+* Added support for ChaCha stream cipher with 8 or 12 rounds.
 
 * Add ECGDSA signature algorithm (GH #479)
 
+* Add support for label argument to KDFs (GH #495)
+
 * Add NIST SP800-108 and 56C KDFs (GH #481)
+
+* Support for Card Verifiable Certificates and the obsolete EMSA1_BSI
+  signature padding scheme have been removed. (GH #487)
 
 * A bug in the IETF version of ChaCha20Poly1305 (with 96 bit nonces)
   caused incorrect computation when the plaintext or AAD was exactly
@@ -55,6 +216,17 @@ Version 1.11.30, Not Yet Released
 * Fix OS X dylib naming problem (GH #468 #467)
 
 * Fix bcrypt function under Python 3 (GH #461)
+
+* The ``unix_procs`` entropy source is deprecated and will be removed
+  in a future release. This entropy source attempts to get entropy by
+  running Unix programs like ``arp``, ``netstat``, and ``dmesg`` which
+  produce information which may be difficult for a remote attacker to
+  guess. This exists primarily as a last-ditch for Unix systems
+  without ``/dev/random``. But at this point such systems effectively
+  no longer exist, and the use of ``fork`` and ``exec`` by the library
+  complicates effective application sandboxing.
+
+* Changes to avoid implicit cast warnings in Visual C++ (GH #484)
 
 Version 1.10.13, 2016-04-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -178,6 +350,19 @@ Version 1.11.29, 2016-03-20
 * Small optimizations to Keccak hash
 
 * Support for locking allocator on Windows using VirtualLock. GH #450
+
+Version 1.18.15, 2016-02-13
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* NOTE WELL: Botan 1.8 is not supported for security issues anymore.
+  Moving to 1.10 or 1.11 is certainly recommended.
+* Fix CVE-2014-9742: Insufficient randomness in Miller-Rabin primality check
+* Fix CVE-2016-2194: Infinite loop in modulur square root algorithm
+* Fix CVE-2015-5726: Crash in BER decoder
+* Fix CVE-2015-5727: Excess memory allocation in BER decoder
+  Note: Unlike the fix in 1.10 which checks that the source actually
+  contains enough data to satisfy the read before allocating the
+  memory, 1.8.15 simply rejects all ASN.1 blocks larger than 1 MiB.
+  This simpler check avoids the problem without breaking ABI.
 
 Version 1.10.12, 2016-02-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -9,31 +9,80 @@
 #include <botan/entropy_src.h>
 #include <botan/internal/os_utils.h>
 #include <algorithm>
-#include <chrono>
 
 namespace Botan {
 
-/*
-* HMAC_RNG Constructor
-*/
-HMAC_RNG::HMAC_RNG(MessageAuthenticationCode* extractor,
-                   MessageAuthenticationCode* prf) :
-   m_extractor(extractor), m_prf(prf)
+HMAC_RNG::HMAC_RNG(std::unique_ptr<MessageAuthenticationCode> prf,
+                   RandomNumberGenerator& underlying_rng,
+                   Entropy_Sources& entropy_sources,
+                   size_t reseed_interval) :
+   Stateful_RNG(underlying_rng, entropy_sources, reseed_interval),
+   m_prf(std::move(prf))
    {
-   if(!m_prf->valid_keylength(m_extractor->output_length()) ||
-      !m_extractor->valid_keylength(m_prf->output_length()))
+   BOTAN_ASSERT_NONNULL(m_prf);
+
+   if(!m_prf->valid_keylength(m_prf->output_length()))
       {
-      throw Invalid_Argument("HMAC_RNG: Bad algo combination " +
-                             m_extractor->name() + " and " +
-                             m_prf->name());
+      throw Invalid_Argument("HMAC_RNG cannot use " + m_prf->name());
       }
 
+   m_extractor.reset(m_prf->clone());
+   this->clear();
+   }
+
+HMAC_RNG::HMAC_RNG(std::unique_ptr<MessageAuthenticationCode> prf,
+                   RandomNumberGenerator& underlying_rng,
+                   size_t reseed_interval) :
+   Stateful_RNG(underlying_rng, reseed_interval),
+   m_prf(std::move(prf))
+   {
+   BOTAN_ASSERT_NONNULL(m_prf);
+
+   if(!m_prf->valid_keylength(m_prf->output_length()))
+      {
+      throw Invalid_Argument("HMAC_RNG cannot use " + m_prf->name());
+      }
+
+   m_extractor.reset(m_prf->clone());
+   this->clear();
+   }
+
+HMAC_RNG::HMAC_RNG(std::unique_ptr<MessageAuthenticationCode> prf,
+                   Entropy_Sources& entropy_sources,
+                   size_t reseed_interval) :
+   Stateful_RNG(entropy_sources, reseed_interval),
+   m_prf(std::move(prf)),
+   m_extractor(m_prf->clone())
+   {
+   BOTAN_ASSERT_NONNULL(m_prf);
+
+   if(!m_prf->valid_keylength(m_prf->output_length()))
+      {
+      throw Invalid_Argument("HMAC_RNG cannot use " + m_prf->name());
+      }
+
+   m_extractor.reset(m_prf->clone());
+   this->clear();
+   }
+
+HMAC_RNG::HMAC_RNG(std::unique_ptr<MessageAuthenticationCode> prf) :
+   Stateful_RNG(),
+   m_prf(std::move(prf))
+   {
+   BOTAN_ASSERT_NONNULL(m_prf);
+
+   if(!m_prf->valid_keylength(m_prf->output_length()))
+      {
+      throw Invalid_Argument("HMAC_RNG cannot use " + m_prf->name());
+      }
+
+   m_extractor.reset(m_prf->clone());
    this->clear();
    }
 
 void HMAC_RNG::clear()
    {
-   m_collected_entropy_estimate = 0;
+   Stateful_RNG::clear();
    m_counter = 0;
 
    // First PRF inputs are all zero, as specified in section 2
@@ -71,7 +120,7 @@ void HMAC_RNG::clear()
 void HMAC_RNG::new_K_value(byte label)
    {
    m_prf->update(m_K);
-   m_prf->update_be(m_pid);
+   m_prf->update_be(last_pid());
    m_prf->update_be(OS::get_processor_timestamp());
    m_prf->update_be(OS::get_system_timestamp_ns());
    m_prf->update_be(m_counter++);
@@ -84,76 +133,38 @@ void HMAC_RNG::new_K_value(byte label)
 */
 void HMAC_RNG::randomize(byte out[], size_t length)
    {
-   if(!is_seeded() || m_pid != OS::get_process_id())
-      {
-      reseed(256);
-      if(!is_seeded())
-         throw PRNG_Unseeded(name());
-      }
+   reseed_check();
 
-   const size_t max_per_prf_iter = m_prf->output_length() / 2;
-
-   m_output_since_reseed += length;
-
-   if(m_output_since_reseed >= BOTAN_RNG_MAX_OUTPUT_BEFORE_RESEED)
-      {
-      reseed_with_sources(Entropy_Sources::global_sources(),
-                          BOTAN_RNG_RESEED_POLL_BITS,
-                          BOTAN_RNG_AUTO_RESEED_TIMEOUT);
-      }
-
-   /*
-    HMAC KDF as described in E-t-E, using a CTXinfo of "rng"
-   */
    while(length)
       {
       new_K_value(Running);
 
-      const size_t copied = std::min<size_t>(length, max_per_prf_iter);
+      const size_t copied = std::min<size_t>(length, m_prf->output_length());
 
       copy_mem(out, m_K.data(), copied);
       out += copied;
       length -= copied;
       }
+
+   new_K_value(BlockFinished);
    }
 
-size_t HMAC_RNG::reseed_with_sources(Entropy_Sources& srcs,
-                                     size_t poll_bits,
-                                     std::chrono::milliseconds timeout)
+size_t HMAC_RNG::reseed(Entropy_Sources& srcs,
+                        size_t poll_bits,
+                        std::chrono::milliseconds timeout)
    {
-   /*
-   Using the terminology of E-t-E, XTR is the MAC function (normally
-   HMAC) seeded with XTS (below) and we form SKM, the key material, by
-   polling as many sources as we think needed to reach our polling
-   goal. We then also include feedback of the current PRK so that
-   a bad poll doesn't wipe us out.
-   */
-
-   typedef std::chrono::system_clock clock;
-   auto deadline = clock::now() + timeout;
-
-   double bits_collected = 0;
-
-   Entropy_Accumulator accum([&](const byte in[], size_t in_len, double entropy_estimate) {
-      m_extractor->update(in, in_len);
-      bits_collected += entropy_estimate;
-      return (bits_collected >= poll_bits || clock::now() > deadline);
-      });
-
-   srcs.poll(accum);
-
-   /*
-   * It is necessary to feed forward poll data. Otherwise, a good poll
-   * (collecting a large amount of conditional entropy) followed by a
-   * bad one (collecting little) would be unsafe. Do this by
-   * generating new PRF outputs using the previous key and feeding
-   * them into the extractor function.
-   */
    new_K_value(Reseed);
-   m_extractor->update(m_K); // K is the CTXinfo=reseed PRF output
+   m_extractor->update(m_K); // m_K is the PRF output
 
-   /* Now derive the new PRK using everything that has been fed into
-      the extractor, and set the PRF key to that */
+   /*
+   * This ends up calling add_entropy which provides input to the extractor
+   */
+   size_t bits_collected = Stateful_RNG::reseed(srcs, poll_bits, timeout);
+
+   /*
+   Now derive the new PRK using everything that has been fed into
+   the extractor, and set the PRF key to that
+   */
    m_prf->set_key(m_extractor->final());
 
    // Now generate a new PRF output to use as the XTS extractor salt
@@ -164,32 +175,17 @@ size_t HMAC_RNG::reseed_with_sources(Entropy_Sources& srcs,
    zeroise(m_K);
    m_counter = 0;
 
-   m_collected_entropy_estimate =
-      std::min<size_t>(m_collected_entropy_estimate + static_cast<size_t>(bits_collected),
-                       m_extractor->output_length() * 8);
-
-   m_output_since_reseed = 0;
-   m_pid = OS::get_process_id();
-
-   return static_cast<size_t>(bits_collected);
-   }
-
-bool HMAC_RNG::is_seeded() const
-   {
-   return (m_collected_entropy_estimate >= 256);
+   return bits_collected;
    }
 
 /*
-* Add user-supplied entropy to the extractor input then reseed
-* to incorporate it into the state
+* Add user-supplied entropy to the extractor input then set remaining
+* output length to for a reseed on next use.
 */
 void HMAC_RNG::add_entropy(const byte input[], size_t length)
    {
    m_extractor->update(input, length);
-
-   reseed_with_sources(Entropy_Sources::global_sources(),
-                       BOTAN_RNG_RESEED_POLL_BITS,
-                       BOTAN_RNG_RESEED_DEFAULT_TIMEOUT);
+   force_reseed();
    }
 
 /*

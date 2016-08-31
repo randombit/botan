@@ -21,6 +21,8 @@ class BOTAN_DLL RC4 final : public StreamCipher
    public:
       void cipher(const byte in[], byte out[], size_t length) override;
 
+      void set_iv(const byte iv[], size_t iv_len) override;
+
       void clear() override;
       std::string name() const override;
 
@@ -39,6 +41,8 @@ class BOTAN_DLL RC4 final : public StreamCipher
       explicit RC4(size_t skip = 0);
 
       ~RC4() { clear(); }
+
+      void seek(u64bit offset) override;
    private:
       void key_schedule(const byte[], size_t) override;
       void generate();

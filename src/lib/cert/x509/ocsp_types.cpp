@@ -92,7 +92,7 @@ void CertID::decode_from(class BER_Decoder& from)
 
 void SingleResponse::encode_into(class DER_Encoder&) const
    {
-   throw Exception("Not implemented (SingleResponse::encode_into)");
+   throw Not_Implemented("SingleResponse::encode_into");
    }
 
 void SingleResponse::decode_from(class BER_Decoder& from)

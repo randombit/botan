@@ -25,7 +25,7 @@ class Unix_EntropySource final : public Entropy_Source
    public:
       std::string name() const override { return "unix_procs"; }
 
-      void poll(Entropy_Accumulator& accum) override;
+      size_t poll(RandomNumberGenerator& rng) override;
 
       /**
       * @param trusted_paths is a list of directories that are assumed
@@ -83,7 +83,7 @@ class UnixProcessInfo_EntropySource final : public Entropy_Source
    public:
       std::string name() const override { return "proc_info"; }
 
-      void poll(Entropy_Accumulator& accum) override;
+      size_t poll(RandomNumberGenerator& rng) override;
    };
 
 }

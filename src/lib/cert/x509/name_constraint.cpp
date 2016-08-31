@@ -33,7 +33,7 @@ GeneralName::GeneralName(const std::string& v) : GeneralName()
 
 void GeneralName::encode_into(class DER_Encoder&) const
    {
-   throw Exception("General Name encoding not implemented");
+   throw Not_Implemented("GeneralName encoding");
    }
 
 void GeneralName::decode_from(class BER_Decoder& ber)
@@ -249,7 +249,7 @@ GeneralSubtree::GeneralSubtree(const std::string& v) : GeneralSubtree()
 
 void GeneralSubtree::encode_into(class DER_Encoder&) const
    {
-   throw std::runtime_error("General Subtree encoding not implemented");
+   throw Not_Implemented("General Subtree encoding");
    }
 
 void GeneralSubtree::decode_from(class BER_Decoder& ber)

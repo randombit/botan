@@ -23,8 +23,21 @@ CTR_BE::CTR_BE(BlockCipher* ciph) :
    m_cipher(ciph),
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
+   m_ctr_size(m_cipher->block_size()),
    m_pad_pos(0)
    {
+   }
+
+CTR_BE::CTR_BE(BlockCipher* cipher, size_t ctr_size) :
+   m_cipher(cipher),
+   m_counter(m_cipher->parallel_bytes()),
+   m_pad(m_counter.size()),
+   m_ctr_size(ctr_size),
+   m_pad_pos(0)
+   {
+   //BOTAN_CHECK_ARG(m_ctr_size > 0 && m_ctr_size <= cipher->block_size(), "Invalid CTR size");
+   if(m_ctr_size == 0 || m_ctr_size > m_cipher->block_size())
+      throw Invalid_Argument("Invalid CTR-BE counter size");
    }
 
 void CTR_BE::clear()
@@ -79,7 +92,7 @@ void CTR_BE::set_iv(const byte iv[], size_t iv_len)
       {
       buffer_insert(m_counter, i*bs, &m_counter[(i-1)*bs], bs);
 
-      for(size_t j = 0; j != bs; ++j)
+      for(size_t j = 0; j != m_ctr_size; ++j)
          if(++m_counter[i*bs + (bs - 1 - j)])
             break;
       }
@@ -99,7 +112,7 @@ void CTR_BE::increment_counter()
    for(size_t i = 0; i != n_wide; ++i)
       {
       uint16_t carry = static_cast<uint16_t>(n_wide);
-      for(size_t j = 0; carry && j != bs; ++j)
+      for(size_t j = 0; carry && j != m_ctr_size; ++j)
          {
          const size_t off = i*bs + (bs-1-j);
          const uint16_t cnt = static_cast<uint16_t>(m_counter[off]) + carry;
@@ -112,4 +125,8 @@ void CTR_BE::increment_counter()
    m_pad_pos = 0;
    }
 
+void CTR_BE::seek(u64bit)
+   {
+   throw Not_Implemented("CTR_BE::seek");
+   }
 }

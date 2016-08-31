@@ -62,7 +62,7 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
          try
             {
             // TODO: make path configurable
-            const std::vector<std::string> paths = { "/usr/share/ca-certificates" };
+            const std::vector<std::string> paths = { "/etc/ssl/certs", "/usr/share/ca-certificates" };
 
             for(auto&& path : paths)
                {

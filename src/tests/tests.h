@@ -11,6 +11,7 @@
 #include <botan/build.h>
 #include <botan/rng.h>
 #include <botan/hex.h>
+#include <botan/symkey.h>
 
 #if defined(BOTAN_HAS_BIGINT)
   #include <botan/bigint.h>
@@ -37,6 +38,8 @@ using Botan::byte;
 #if defined(BOTAN_HAS_BIGINT)
 using Botan::BigInt;
 #endif
+
+using Botan::OctetString;
 
 class Test_Error : public Botan::Exception
    {
@@ -175,6 +178,8 @@ class Test
 
             bool test_eq(const std::string& what, size_t produced, size_t expected);
 
+            bool test_eq(const std::string& what, OctetString produced, OctetString expected);
+
             template<typename I1, typename I2>
             bool test_int_eq(I1 x, I2 y, const char* what)
                {
@@ -184,9 +189,43 @@ class Test
             bool test_lt(const std::string& what, size_t produced, size_t expected);
             bool test_gte(const std::string& what, size_t produced, size_t expected);
 
-            bool test_rc_ok(const std::string& func, int rc);
-            bool test_rc_fail(const std::string& func, const std::string& why, int rc);
+            template<typename T>
+            bool test_rc_ok(const std::string& func, T rc)
+               {
+               static_assert(std::is_integral<T>::value, "Integer required.");
+
+               if(rc != 0)
+                  {
+                  std::ostringstream err;
+                  err << m_who;
+                  err << " " << func;
+                  err << " unexpectedly failed with error code " << rc;
+                  return test_failure(err.str());
+                  }
+
+               return test_success();
+               }
+
+            template<typename T>
+            bool test_rc_fail(const std::string& func, const std::string& why, T rc)
+               {
+               static_assert(std::is_integral<T>::value, "Integer required.");
+
+               if(rc == 0)
+                  {
+                  std::ostringstream err;
+                  err << m_who;
+                  err << " call to " << func << " unexpectedly succeeded";
+                  err << " expecting failure because " << why;
+                  return test_failure(err.str());
+                  }
+
+               return test_success();
+               }
+
             bool test_rc(const std::string& func, int expected, int rc);
+
+            bool test_ne(const std::string& what, size_t produced, size_t expected);
 
 #if defined(BOTAN_HAS_BIGINT)
             bool test_eq(const std::string& what, const BigInt& produced, const BigInt& expected);
@@ -301,7 +340,7 @@ class Test
 
          if(r.size() > 0)
             {
-            const size_t offset = rng.get_random<uint16_t>() % r.size();
+            const size_t offset = rng.next_byte() % r.size();
             r[offset] ^= rng.next_nonzero_byte();
             }
 
@@ -311,10 +350,12 @@ class Test
       static void setup_tests(size_t soak,
                               bool log_succcss,
                               const std::string& data_dir,
+                              const std::string& pkcs11_lib,
                               Botan::RandomNumberGenerator* rng);
 
       static size_t soak_level();
       static bool log_success();
+      static std::string pkcs11_lib();
 
       static const std::string& data_dir();
 
@@ -327,6 +368,7 @@ class Test
       static Botan::RandomNumberGenerator* m_test_rng;
       static size_t m_soak_level;
       static bool m_log_success;
+      static std::string m_pkcs11_lib;
    };
 
 /*

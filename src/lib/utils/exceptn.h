@@ -215,6 +215,16 @@ struct BOTAN_DLL Self_Test_Failure : public Internal_Error
       {}
    };
 
+/**
+* Not Implemented Exception
+*/
+struct BOTAN_DLL Not_Implemented : public Exception
+   {
+   explicit Not_Implemented(const std::string& err) :
+      Exception("Not implemented", err)
+      {}
+   };
+
 }
 
 #endif

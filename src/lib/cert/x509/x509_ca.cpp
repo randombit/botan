@@ -52,11 +52,14 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    {
    Key_Constraints constraints;
    if(req.is_CA())
+      {
       constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
+      }
    else
       {
       std::unique_ptr<Public_Key> key(req.subject_public_key());
-      constraints = find_constraints(*key, req.constraints());
+      verify_cert_constraints_valid_for_key_type(*key, req.constraints());
+      constraints = req.constraints();
       }
 
    Extensions extensions;
@@ -65,7 +68,10 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       new Cert_Extension::Basic_Constraints(req.is_CA(), req.path_limit()),
       true);
 
-   extensions.add(new Cert_Extension::Key_Usage(constraints), true);
+   if(constraints != NO_CONSTRAINTS)
+      {
+      extensions.add(new Cert_Extension::Key_Usage(constraints), true);
+      }
 
    extensions.add(new Cert_Extension::Authority_Key_ID(m_cert.subject_key_id()));
    extensions.add(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
@@ -233,13 +239,17 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    std::string padding;
    if(algo_name == "RSA")
+      {
       padding = "EMSA3";
-   else if(algo_name == "DSA")
+      }
+   else if(algo_name == "DSA" || algo_name == "ECDSA" || algo_name == "ECGDSA" || algo_name == "ECKCDSA")
+      {
       padding = "EMSA1";
-   else if(algo_name == "ECDSA")
-      padding = "EMSA1_BSI";
+      }
    else
+      {
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
+      }
 
    const Signature_Format format = (key.message_parts() > 1) ? DER_SEQUENCE : IEEE_1363;
 

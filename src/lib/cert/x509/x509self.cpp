@@ -49,17 +49,20 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    X509_DN subject_dn;
    AlternativeName subject_alt;
 
-   opts.sanity_check();
-
    std::vector<byte> pub_key = X509::BER_encode(key);
    std::unique_ptr<PK_Signer> signer(choose_sig_format(key, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
    Key_Constraints constraints;
    if(opts.is_CA)
+      {
       constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
+      }
    else
-      constraints = find_constraints(key, opts.constraints);
+      {
+      verify_cert_constraints_valid_for_key_type(key, opts.constraints);
+      constraints = opts.constraints;
+      }
 
    Extensions extensions;
 
@@ -67,7 +70,10 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
       new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit),
       true);
 
-   extensions.add(new Cert_Extension::Key_Usage(constraints), true);
+   if(constraints != NO_CONSTRAINTS)
+      {
+      extensions.add(new Cert_Extension::Key_Usage(constraints), true);
+      }
 
    extensions.add(new Cert_Extension::Subject_Key_ID(pub_key));
 
@@ -95,24 +101,33 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    X509_DN subject_dn;
    AlternativeName subject_alt;
 
-   opts.sanity_check();
-
    std::vector<byte> pub_key = X509::BER_encode(key);
    std::unique_ptr<PK_Signer> signer(choose_sig_format(key, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
    const size_t PKCS10_VERSION = 0;
 
+   Key_Constraints constraints;
+   if(opts.is_CA)
+      {
+      constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
+      }
+   else
+      {
+      verify_cert_constraints_valid_for_key_type(key, opts.constraints);
+      constraints = opts.constraints;
+      }
+
    Extensions extensions;
 
    extensions.add(
       new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit));
-   extensions.add(
-      new Cert_Extension::Key_Usage(
-         opts.is_CA ? Key_Constraints(KEY_CERT_SIGN | CRL_SIGN) :
-                      find_constraints(key, opts.constraints)
-         )
-      );
+
+   if(constraints != NO_CONSTRAINTS)
+      {
+      extensions.add(
+         new Cert_Extension::Key_Usage(constraints));
+      }
    extensions.add(
       new Cert_Extension::Extended_Key_Usage(opts.ex_constraints));
    extensions.add(

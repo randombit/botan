@@ -1,0 +1,34 @@
+Currently deprecated:
+
+- PRNGs X9.31 (no longer approved) and HMAC_RNG (non-standard)
+  Use HMAC_DRBG
+
+- ECB mode for block ciphers
+
+- Rabin-Williams signatures
+
+- Nyberg-Rueppel signatures
+
+- MARS, RC2, RC5, RC6, SAFER, TEA
+
+- ECB Cipher_Mode
+
+- MD2, HAS-160, RIPEMD-128
+
+- 3DES and SEED ciphersuites in TLS
+
+- DSA auth in TLS (not ECDSA)
+
+- Old (Google specific) ChaCha20 TLS ciphersuites
+
+- All built in ECC groups < 256 bits
+
+- All built in MODP groups < 2048 bits
+
+- All pre-created DSA groups
+
+- All support for BeOS/Haiku including BeOS entropy source
+
+- EGD entropy source
+
+- Unix process exec entropy source

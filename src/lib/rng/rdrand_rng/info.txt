@@ -1,0 +1,16 @@
+define RDRAND_RNG 20160619
+
+need_isa rdrand
+
+<arch>
+x86_32
+x86_64
+</arch>
+
+<cc>
+gcc
+clang
+icc
+msvc
+</cc>
+

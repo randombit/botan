@@ -35,8 +35,10 @@ secure_vector<byte> OAEP::pad(const byte in[], size_t in_length,
    {
    key_length /= 8;
 
-   if(key_length < in_length + 2*m_Phash.size() + 1)
+   if(in_length > maximum_input_size(key_length * 8))
+      {
       throw Invalid_Argument("OAEP: Input is too large");
+      }
 
    secure_vector<byte> out(key_length);
 

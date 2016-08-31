@@ -1,1 +1,5 @@
 define ENTROPY_SOURCE 20151120
+
+<requires>
+rng
+</requires>

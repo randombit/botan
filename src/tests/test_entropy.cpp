@@ -5,6 +5,7 @@
 */
 
 #include "tests.h"
+#include "test_rng.h"
 #include <botan/entropy_src.h>
 
 #if defined(BOTAN_HAS_COMPRESSION)
@@ -20,10 +21,6 @@ class Entropy_Source_Tests : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         static const size_t MAX_ENTROPY = 512;
-         static const size_t MAX_SAMPLES = 256;
-         static const size_t MAX_ENTROPY_BYTES = 256*1024;
-
          Botan::Entropy_Sources& srcs = Botan::Entropy_Sources::global_sources();
 
          std::vector<std::string> src_names = srcs.enabled_sources();
@@ -39,31 +36,21 @@ class Entropy_Source_Tests : public Test
             try
                {
                std::vector<uint8_t> entropy;
-               size_t samples = 0;
                double entropy_estimate = 0.0;
 
-               Botan::Entropy_Accumulator accum(
-                  [&](const uint8_t buf[], size_t buf_len, double buf_entropy) -> bool {
-                     entropy.insert(entropy.end(), buf, buf + buf_len);
-                     entropy_estimate += buf_entropy;
-                     ++samples;
+               SeedCapturing_RNG rng;
 
-                     result.test_note("sample " + std::to_string(samples) + " " +
-                                      Botan::hex_encode(buf, buf_len) + " " + std::to_string(buf_entropy));
+               size_t bits = srcs.poll_just(rng, src_name);
 
-                     result.test_gte("impossible entropy", buf_len * 8, buf_entropy);
+               result.test_gte("Entropy estimate", rng.seed_material().size() * 8, bits);
 
-                     return (entropy_estimate > MAX_ENTROPY ||
-                             samples > MAX_SAMPLES ||
-                             entropy.size() > MAX_ENTROPY_BYTES);
-                  });
+               if(rng.samples() > 0)
+                  {
+                  result.test_gte("Seed material bytes", rng.seed_material().size(), 1);
+                  result.test_gte("Samples", rng.samples(), 1);
+                  }
 
-               result.confirm("polled source", srcs.poll_just(accum, src_name));
-
-               result.test_note("saw " + std::to_string(samples) +
-                                " samples with total estimated entropy " +
-                                std::to_string(entropy_estimate));
-               result.test_note("poll result", entropy);
+               result.test_note("poll result", rng.seed_material());
 
 #if defined(BOTAN_HAS_COMPRESSION)
                if(!entropy.empty())
@@ -100,23 +87,17 @@ class Entropy_Source_Tests : public Test
                            result.test_failure(comp_algo + " exception while compressing", e.what());
                            }
 
-                        std::vector<uint8_t> entropy2;
-                        size_t entropy_estimate2 = 0;
-                        Botan::Entropy_Accumulator accum2(
-                           [&](const uint8_t buf[], size_t buf_len, size_t buf_entropy) -> bool {
-                           entropy2.insert(entropy2.end(), buf, buf + buf_len);
-                           entropy_estimate2 += buf_entropy;
-                           return entropy2.size() >= entropy.size();
-                           });
+                        SeedCapturing_RNG rng2;
 
-                        result.confirm("polled source", srcs.poll_just(accum2, src_name));
-                        result.test_note("poll 2 result", entropy2);
+                        size_t bits2 = srcs.poll_just(rng2, src_name);
+
+                        result.test_note("poll 2 result", rng2.seed_material());
 
                         try
                            {
                            Botan::secure_vector<byte> compressed;
-                           compressed.insert(compressed.end(), entropy.begin(), entropy.end());
-                           compressed.insert(compressed.end(), entropy2.begin(), entropy2.end());
+                           compressed.insert(compressed.end(), rng.seed_material().begin(), rng.seed_material().end());
+                           compressed.insert(compressed.end(), rng2.seed_material().begin(), rng2.seed_material().end());
 
                            comp->start();
                            comp->finish(compressed);
@@ -129,7 +110,7 @@ class Entropy_Source_Tests : public Test
                            size_t comp_diff = comp2_size - comp1_size;
 
                            result.test_gte(comp_algo + " diff compressed entropy better than advertised",
-                                           comp_diff*8, entropy_estimate2);
+                                           comp_diff*8, bits2);
                            }
                         catch(std::exception& e)
                            {

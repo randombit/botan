@@ -1,5 +1,6 @@
 /*
 * (C) 2015 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +10,7 @@
 #include <botan/loadstor.h>
 #include <botan/calendar.h>
 #include <botan/internal/rounding.h>
+#include <botan/charset.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
   #include <botan/base64.h>
@@ -325,6 +327,129 @@ class Base64_Tests : public Text_Based_Test
 BOTAN_REGISTER_TEST("base64", Base64_Tests);
 
 #endif
+
+class Charset_Tests : public Text_Based_Test
+   {
+   public:
+      Charset_Tests() : Text_Based_Test("charset.vec",
+         { "In","Out" })
+         {}
+
+      Test::Result run_one_test(const std::string& type, const VarMap& vars) override
+         {
+         using namespace Botan;
+
+         Test::Result result("Charset");
+
+         const std::vector<byte> in = get_req_bin(vars, "In");
+         const std::vector<byte> expected = get_req_bin(vars, "Out");
+
+         std::string converted;
+         if(type == "UTF16-LATIN1")
+            {
+            converted = Charset::transcode(std::string(in.begin(), in.end()),
+                                           Character_Set::LATIN1_CHARSET, Character_Set::UCS2_CHARSET);
+            }
+         else if(type == "UTF8-LATIN1")
+            {
+            converted = Charset::transcode(std::string(in.begin(), in.end()),
+                                           Character_Set::LATIN1_CHARSET, Character_Set::UTF8_CHARSET);
+            }
+         else if(type == "LATIN1-UTF8")
+            {
+            converted = Charset::transcode(std::string(in.begin(), in.end()),
+                                           Character_Set::UTF8_CHARSET, Character_Set::LATIN1_CHARSET);
+            }
+         else
+            {
+            throw Test_Error("Unexpected header '" + type + "' in charset tests");
+            }
+
+         result.test_eq("string converted successfully", std::vector<byte>(converted.begin(), converted.end()), expected);
+
+         return result;
+         }
+
+      Test::Result utf16_to_latin1_negative_tests()
+         {
+         using namespace Botan;
+
+         Test::Result result("Charset negative tests");
+
+         result.test_throws("conversion fails for non-Latin1 characters", []()
+            {
+            // "abcdefŸabcdef"
+            std::vector<byte> input = { 0x00, 0x61, 0x00, 0x62, 0x00, 0x63, 0x00, 0x64, 0x00, 0x65, 0x00, 0x66, 0x01,
+                                        0x78, 0x00, 0x61, 0x00, 0x62, 0x00, 0x63, 0x00, 0x64, 0x00, 0x65, 0x00, 0x66
+                                      };
+
+            Charset::transcode(std::string(input.begin(), input.end()),
+                               Character_Set::LATIN1_CHARSET, Character_Set::UCS2_CHARSET);
+            });
+
+         result.test_throws("conversion fails for UTF16 string with odd number of bytes", []()
+            {
+            std::vector<byte> input = { 0x00, 0x61, 0x00 };
+
+            Charset::transcode(std::string(input.begin(), input.end()),
+                               Character_Set::LATIN1_CHARSET, Character_Set::UCS2_CHARSET);
+            });
+
+         return result;
+         }
+
+      Test::Result utf8_to_latin1_negative_tests()
+         {
+         using namespace Botan;
+
+         Test::Result result("Charset negative tests");
+
+         result.test_throws("conversion fails for non-Latin1 characters", []()
+            {
+            // "abcdefŸabcdef"
+            std::vector<byte> input = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0xC5,
+                                        0xB8, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66
+                                      };
+
+            Charset::transcode(std::string(input.begin(), input.end()),
+                               Character_Set::LATIN1_CHARSET, Character_Set::UTF8_CHARSET);
+            });
+
+         result.test_throws("invalid utf-8 string", []()
+            {
+            // sequence truncated
+            std::vector<byte> input = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0xC5 };
+
+            Charset::transcode(std::string(input.begin(), input.end()),
+                               Character_Set::LATIN1_CHARSET, Character_Set::UTF8_CHARSET);
+            });
+
+         result.test_throws("invalid utf-8 string", []()
+            {
+            std::vector<byte> input = { 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0xC8, 0xB8, 0x61 };
+
+            Charset::transcode(std::string(input.begin(), input.end()),
+                               Character_Set::LATIN1_CHARSET, Character_Set::UTF8_CHARSET);
+            });
+
+         return result;
+         }
+
+      std::vector<Test::Result> run_final_tests() override
+         {
+         using namespace Botan;
+
+         Test::Result result("Charset negative tests");
+
+         result.merge(utf16_to_latin1_negative_tests());
+         result.merge(utf8_to_latin1_negative_tests());
+
+         return{ result };
+         }
+
+   };
+
+BOTAN_REGISTER_TEST("charset", Charset_Tests);
 
 }
 

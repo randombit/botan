@@ -18,7 +18,7 @@ class Stream_Cipher_Tests : public Text_Based_Test
    {
    public:
       Stream_Cipher_Tests(): Text_Based_Test("stream",
-                                             {"Key", "In", "Out"}, {"Nonce"}) {}
+                                             {"Key", "In", "Out"}, {"Nonce", "Seek"}) {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
@@ -26,6 +26,7 @@ class Stream_Cipher_Tests : public Text_Based_Test
          const std::vector<uint8_t> input    = get_req_bin(vars, "In");
          const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
          const std::vector<uint8_t> nonce    = get_opt_bin(vars, "Nonce");
+         const size_t seek                   = get_opt_sz(vars, "Seek", 0);
 
          Test::Result result(algo);
 
@@ -52,6 +53,9 @@ class Stream_Cipher_Tests : public Text_Based_Test
 
             if(nonce.size())
                cipher->set_iv(nonce.data(), nonce.size());
+
+            if (seek != 0)
+               cipher->seek(seek);
 
             std::vector<uint8_t> buf = input;
             cipher->encrypt(buf);

@@ -1,6 +1,7 @@
 /*
 * Elliptic curves over GF(p) Montgomery Representation
 * (C) 2014,2015 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -80,20 +81,14 @@ void CurveGFp_Montgomery::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
       return;
       }
 
-   const size_t x_sw = x.sig_words();
-   const size_t y_sw = y.sig_words();
-
    const size_t output_size = 2*m_p_words + 1;
    ws.resize(2*(m_p_words+2));
 
    z.grow_to(output_size);
    z.clear();
 
-   bigint_monty_mul(z.mutable_data(), output_size,
-                    x.data(), x.size(), x_sw,
-                    y.data(), y.size(), y_sw,
-                    m_p.data(), m_p_words, m_p_dash,
-                    ws.data());
+   bigint_monty_mul(z, x, y, m_p.data(), m_p_words, m_p_dash, ws.data());
+
    }
 
 void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
@@ -115,9 +110,7 @@ void CurveGFp_Montgomery::curve_sqr(BigInt& z, const BigInt& x,
    z.grow_to(output_size);
    z.clear();
 
-   bigint_monty_sqr(z.mutable_data(), output_size,
-                    x.data(), x.size(), x_sw,
-                    m_p.data(), m_p_words, m_p_dash,
+   bigint_monty_sqr(z, x, m_p.data(), m_p_words, m_p_dash,
                     ws.data());
    }
 
@@ -174,9 +167,7 @@ void CurveGFp_NIST::curve_mul(BigInt& z, const BigInt& x, const BigInt& y,
    z.grow_to(output_size);
    z.clear();
 
-   bigint_mul(z.mutable_data(), output_size, ws.data(),
-              x.data(), x.size(), x.sig_words(),
-              y.data(), y.size(), y.sig_words());
+   bigint_mul(z, x, y, ws.data());
 
    this->redc(z, ws);
    }

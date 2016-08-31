@@ -1,6 +1,7 @@
 /*
 * X.509 Certificates
 * (C) 1999-2010,2015 Jack Lloyd
+* (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -257,10 +258,10 @@ bool X509_Certificate::allowed_usage(Key_Constraints usage) const
    {
    if(constraints() == NO_CONSTRAINTS)
       return true;
-   return ((constraints() & usage) != 0);
+   return ((constraints() & usage) == usage);
    }
 
-bool X509_Certificate::allowed_usage(const std::string& usage) const
+bool X509_Certificate::allowed_extended_usage(const std::string& usage) const
    {
    const std::vector<std::string> ex = ex_constraints();
 
@@ -275,22 +276,51 @@ bool X509_Certificate::allowed_usage(const std::string& usage) const
 
 bool X509_Certificate::allowed_usage(Usage_Type usage) const
    {
+   // These follow suggestions in RFC 5280 4.2.1.12
+
    switch(usage)
       {
       case Usage_Type::UNSPECIFIED:
          return true;
 
       case Usage_Type::TLS_SERVER_AUTH:
-         return allowed_usage(Key_Constraints(DATA_ENCIPHERMENT | KEY_ENCIPHERMENT | DIGITAL_SIGNATURE)) && allowed_usage("PKIX.ServerAuth");
+         return (allowed_usage(KEY_AGREEMENT) || allowed_usage(KEY_ENCIPHERMENT) || allowed_usage(DIGITAL_SIGNATURE)) && allowed_extended_usage("PKIX.ServerAuth");
 
       case Usage_Type::TLS_CLIENT_AUTH:
-         return allowed_usage(Key_Constraints(DIGITAL_SIGNATURE | NON_REPUDIATION)) && allowed_usage("PKIX.ClientAuth");
+         return (allowed_usage(DIGITAL_SIGNATURE) || allowed_usage(KEY_AGREEMENT)) && allowed_extended_usage("PKIX.ClientAuth");
 
       case Usage_Type::OCSP_RESPONDER:
-         return allowed_usage(Key_Constraints(DIGITAL_SIGNATURE | NON_REPUDIATION)) && allowed_usage("PKIX.OCSPSigning");
+         return (allowed_usage(DIGITAL_SIGNATURE) || allowed_usage(NON_REPUDIATION)) && allowed_extended_usage("PKIX.OCSPSigning");
 
       case Usage_Type::CERTIFICATE_AUTHORITY:
          return is_CA_cert();
+      }
+
+   return false;
+   }
+
+bool X509_Certificate::has_constraints(Key_Constraints constraints) const
+   {
+   if(this->constraints() == NO_CONSTRAINTS)
+      {
+      return false;
+      }
+
+   return ((this->constraints() & constraints) != 0);
+   }
+
+bool X509_Certificate::has_ex_constraint(const std::string& ex_constraint) const
+   {
+   const std::vector<std::string> ex = ex_constraints();
+
+   if(ex.empty())
+      {
+      return false;
+      }
+
+   if(std::find(ex.begin(), ex.end(), ex_constraint) != ex.end())
+      {
+      return true;
       }
 
    return false;
@@ -538,7 +568,7 @@ std::string X509_Certificate::to_string() const
       if(constraints & DIGITAL_SIGNATURE)
          out << "   Digital Signature\n";
       if(constraints & NON_REPUDIATION)
-         out << "   Non-Repuidation\n";
+         out << "   Non-Repudiation\n";
       if(constraints & KEY_ENCIPHERMENT)
          out << "   Key Encipherment\n";
       if(constraints & DATA_ENCIPHERMENT)
@@ -549,6 +579,10 @@ std::string X509_Certificate::to_string() const
          out << "   Cert Sign\n";
       if(constraints & CRL_SIGN)
          out << "   CRL Sign\n";
+      if(constraints & ENCIPHER_ONLY)
+         out << "   Encipher Only\n";
+      if(constraints & DECIPHER_ONLY)
+         out << "   Decipher Only\n";
       }
 
    std::vector<std::string> policies = this->policies();

@@ -44,12 +44,6 @@ std::vector<std::string> StreamCipher::providers(const std::string& algo_spec)
 StreamCipher::StreamCipher() {}
 StreamCipher::~StreamCipher() {}
 
-void StreamCipher::set_iv(const byte[], size_t iv_len)
-   {
-   if(!valid_iv_length(iv_len))
-      throw Invalid_IV_Length(name(), iv_len);
-   }
-
 #if defined(BOTAN_HAS_CHACHA)
 BOTAN_REGISTER_T_1LEN(StreamCipher, ChaCha, 20);
 #endif

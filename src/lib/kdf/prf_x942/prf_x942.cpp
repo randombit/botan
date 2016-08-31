@@ -30,14 +30,20 @@ std::vector<byte> encode_x942_int(u32bit n)
 
 size_t X942_PRF::kdf(byte key[], size_t key_len,
                      const byte secret[], size_t secret_len,
-                     const byte salt[], size_t salt_len) const
+                     const byte salt[], size_t salt_len,
+                     const byte label[], size_t label_len) const
    {
    std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-160"));
    const OID kek_algo(m_key_wrap_oid);
 
    secure_vector<byte> h;
+   secure_vector<byte> in;
    size_t offset = 0;
    u32bit counter = 1;
+
+   in.reserve(salt_len + label_len);
+   in += std::make_pair(label,label_len);
+   in += std::make_pair(salt,salt_len);
 
    while(offset != key_len && counter)
       {
@@ -54,7 +60,7 @@ size_t X942_PRF::kdf(byte key[], size_t key_len,
             .encode_if(salt_len != 0,
                DER_Encoder()
                   .start_explicit(0)
-                     .encode(salt, salt_len, OCTET_STRING)
+                     .encode(in, OCTET_STRING)
                   .end_explicit()
                )
 

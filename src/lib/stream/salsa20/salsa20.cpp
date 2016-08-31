@@ -227,4 +227,8 @@ void Salsa20::clear()
    m_position = 0;
    }
 
+void Salsa20::seek(u64bit)
+   {
+   throw Not_Implemented("Salsa20::seek");
+   }
 }

@@ -3,6 +3,7 @@
 * (C) 2007 Manuel Hartl, FlexSecure GmbH
 *     2007 Falko Strenzke, FlexSecure GmbH
 *     2008-2010,2015 Jack Lloyd
+*     2016 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,7 +11,10 @@
 #include <botan/internal/pk_utils.h>
 #include <botan/ecdsa.h>
 #include <botan/keypair.h>
-#include <botan/rfc6979.h>
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+  #include <botan/rfc6979.h>
+  #include <botan/emsa.h>
+#endif
 
 namespace Botan {
 
@@ -23,7 +27,7 @@ bool ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
    if(!strong)
       return true;
 
-   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-1)");
+   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-256)");
    }
 
 namespace {
@@ -43,7 +47,7 @@ class ECDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
          m_base_point(ecdsa.domain().get_base_point(), m_order),
          m_x(ecdsa.private_value()),
          m_mod_order(m_order),
-         m_hash(hash_for_deterministic_signature(emsa))
+         m_emsa(emsa)
          {
          }
 
@@ -59,7 +63,7 @@ class ECDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
       Blinded_Point_Multiply m_base_point;
       const BigInt& m_x;
       Modular_Reducer m_mod_order;
-      std::string m_hash;
+      std::string m_emsa;
    };
 
 secure_vector<byte>
@@ -68,7 +72,11 @@ ECDSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
    {
    const BigInt m(msg, msg_len);
 
-   const BigInt k = generate_rfc6979_nonce(m_x, m_order, m, m_hash);
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+   const BigInt k = generate_rfc6979_nonce(m_x, m_order, m, hash_for_emsa(m_emsa));
+#else
+   const BigInt k = BigInt::random_integer(rng, 1, m_order);
+#endif
 
    const PointGFp k_times_P = m_base_point.blinded_multiply(k, rng);
    const BigInt r = m_mod_order.reduce(k_times_P.get_affine_x());
@@ -78,10 +86,7 @@ ECDSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
    BOTAN_ASSERT(s != 0, "invalid s");
    BOTAN_ASSERT(r != 0, "invalid r");
 
-   secure_vector<byte> output(2*m_order.bytes());
-   r.binary_encode(&output[output.size() / 2 - r.bytes()]);
-   s.binary_encode(&output[output.size() - s.bytes()]);
-   return output;
+   return BigInt::encode_fixed_length_int_pair(r, s, m_order.bytes());
    }
 
 /**

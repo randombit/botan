@@ -24,6 +24,7 @@ class KDF;
 
 namespace TLS {
 
+class Callbacks;
 class Policy;
 
 class Hello_Verify_Request;
@@ -45,9 +46,7 @@ class Finished;
 class Handshake_State
    {
    public:
-      typedef std::function<void (const Handshake_Message&)> handshake_msg_cb;
-
-      Handshake_State(Handshake_IO* io, handshake_msg_cb cb);
+      Handshake_State(Handshake_IO* io, Callbacks& callbacks);
 
       virtual ~Handshake_State();
 
@@ -164,15 +163,10 @@ class Handshake_State
 
       const Handshake_Hash& hash() const { return m_handshake_hash; }
 
-      void note_message(const Handshake_Message& msg)
-         {
-         if(m_msg_callback)
-            m_msg_callback(msg);
-         }
-
+      void note_message(const Handshake_Message& msg);
    private:
 
-      handshake_msg_cb m_msg_callback;
+      Callbacks& m_callbacks;
 
       std::unique_ptr<Handshake_IO> m_handshake_io;
 

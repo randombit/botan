@@ -1,6 +1,8 @@
 define ENTROPY_SRC_RDRAND 20131128
 
-need_isa rdrand
+<requires>
+rdrand_rng
+</requires>
 
 <source>
 rdrand.cpp
@@ -9,15 +11,3 @@ rdrand.cpp
 <header:internal>
 rdrand.h
 </header:internal>
-
-<arch>
-x86_32
-x86_64
-</arch>
-
-<cc>
-gcc
-clang
-icc
-msvc
-</cc>

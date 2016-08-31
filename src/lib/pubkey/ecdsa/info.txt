@@ -7,5 +7,6 @@ ecc_key
 keypair
 numbertheory
 rng
-rfc6979
+emsa1
+sha2_32
 </requires>

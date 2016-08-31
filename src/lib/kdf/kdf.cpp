@@ -21,6 +21,10 @@
 #include <botan/kdf2.h>
 #endif
 
+#if defined(BOTAN_HAS_KDF1_18033)
+#include <botan/kdf1_iso18033.h>
+#endif
+
 #if defined(BOTAN_HAS_TLS_V10_PRF)
 #include <botan/prf_tls.h>
 #endif
@@ -87,6 +91,10 @@ BOTAN_REGISTER_KDF_1HASH(KDF1, "KDF1");
 
 #if defined(BOTAN_HAS_KDF2)
 BOTAN_REGISTER_KDF_1HASH(KDF2, "KDF2");
+#endif
+
+#if defined(BOTAN_HAS_KDF1_18033)
+BOTAN_REGISTER_KDF_1HASH( KDF1_18033, "KDF1-18033" );
 #endif
 
 #if defined(BOTAN_HAS_TLS_V10_PRF)

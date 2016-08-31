@@ -11,81 +11,16 @@
 #include <botan/stream_cipher.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
-#include <sstream>
+#include <algorithm>
 
 namespace Botan {
 
 namespace TLS {
 
-namespace {
-
-/*
-* This way all work happens at the constuctor call, and we can
-* rely on that happening only once in C++11.
-*/
-std::vector<Ciphersuite> gather_known_ciphersuites()
-   {
-   std::vector<Ciphersuite> ciphersuites;
-
-   std::vector<u16bit> all_ids = Ciphersuite::all_known_ciphersuite_ids();
-
-   for(auto id : all_ids)
-      {
-      Ciphersuite suite = Ciphersuite::by_id(id);
-
-      if(suite.valid())
-         ciphersuites.push_back(suite);
-      }
-
-   return ciphersuites;
-   }
-
-}
-
-const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
-   {
-   static std::vector<Ciphersuite> all_ciphersuites(gather_known_ciphersuites());
-   return all_ciphersuites;
-   }
-
-Ciphersuite Ciphersuite::by_name(const std::string& name)
-   {
-   for(auto suite : all_known_ciphersuites())
-      {
-      if(suite.to_string() == name)
-         return suite;
-      }
-
-   return Ciphersuite(); // some unknown ciphersuite
-   }
-
 bool Ciphersuite::is_scsv(u16bit suite)
    {
    // TODO: derive from IANA file in script
    return (suite == 0x00FF || suite == 0x5600);
-   }
-
-Ciphersuite::Ciphersuite(u16bit ciphersuite_code,
-                         const char* sig_algo,
-                         const char* kex_algo,
-                         const char* cipher_algo,
-                         size_t cipher_keylen,
-                         size_t nonce_bytes_from_handshake,
-                         size_t nonce_bytes_from_record,
-                         const char* mac_algo,
-                         size_t mac_keylen,
-                         const char* prf_algo) :
-   m_ciphersuite_code(ciphersuite_code),
-   m_sig_algo(sig_algo),
-   m_kex_algo(kex_algo),
-   m_prf_algo(prf_algo),
-   m_cipher_algo(cipher_algo),
-   m_cipher_keylen(cipher_keylen),
-   m_nonce_bytes_from_handshake(nonce_bytes_from_handshake),
-   m_nonce_bytes_from_record(nonce_bytes_from_record),
-   m_mac_algo(mac_algo),
-   m_mac_keylen(mac_keylen)
-   {
    }
 
 bool Ciphersuite::psk_ciphersuite() const
@@ -107,6 +42,19 @@ bool Ciphersuite::cbc_ciphersuite() const
            cipher_algo() == "Camellia-128" || cipher_algo() == "Camellia-256");
    }
 
+Ciphersuite Ciphersuite::by_id(u16bit suite)
+   {
+   const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
+   auto s = std::lower_bound(all_suites.begin(), all_suites.end(), suite);
+
+   if(s->ciphersuite_code() == suite)
+      {
+      return *s;
+      }
+
+   return Ciphersuite(); // some unknown ciphersuite
+   }
+
 namespace {
 
 bool have_hash(const std::string& prf)
@@ -122,7 +70,7 @@ bool have_cipher(const std::string& cipher)
 
 }
 
-bool Ciphersuite::valid() const
+bool Ciphersuite::is_usable() const
    {
    if(!m_cipher_keylen) // uninitialized object
       return false;
@@ -211,73 +159,6 @@ bool Ciphersuite::valid() const
       }
 
    return true;
-   }
-
-std::string Ciphersuite::to_string() const
-   {
-   if(m_cipher_keylen == 0)
-      throw Exception("Ciphersuite::to_string - no value set");
-
-   std::ostringstream out;
-
-   out << "TLS_";
-
-   if(kex_algo() != "RSA")
-      {
-      if(kex_algo() == "DH")
-         out << "DHE";
-      else if(kex_algo() == "ECDH")
-         out << "ECDHE";
-      else
-         out << kex_algo();
-
-      out << '_';
-      }
-
-   if(sig_algo() == "DSA")
-      out << "DSS_";
-   else if(sig_algo() != "")
-      out << sig_algo() << '_';
-
-   out << "WITH_";
-
-   if(cipher_algo() == "RC4")
-      {
-      out << "RC4_128_";
-      }
-   else if(cipher_algo() == "ChaCha20Poly1305")
-      {
-      out << "CHACHA20_POLY1305_";
-      }
-   else
-      {
-      if(cipher_algo() == "3DES")
-         out << "3DES_EDE";
-      else if(cipher_algo().find("Camellia") == 0)
-         out << "CAMELLIA_" << std::to_string(8*cipher_keylen());
-      else
-         {
-         if(cipher_algo().find("OCB(12)") != std::string::npos)
-            out << replace_chars(cipher_algo().substr(0, cipher_algo().size() - 4),
-                                 {'-', '/'}, '_');
-         else
-            out << replace_chars(cipher_algo(), {'-', '/'}, '_');
-         }
-
-      if(cipher_algo().find("/") != std::string::npos)
-         out << "_"; // some explicit mode already included
-      else
-         out << "_CBC_";
-      }
-
-   if(mac_algo() == "SHA-1")
-      out << "SHA";
-   else if(mac_algo() == "AEAD")
-      out << erase_chars(prf_algo(), {'-'});
-   else
-      out << erase_chars(mac_algo(), {'-'});
-
-   return out.str();
    }
 
 }

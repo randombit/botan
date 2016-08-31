@@ -2,6 +2,7 @@
 * TLS Extensions
 * (C) 2011,2012,2016 Jack Lloyd
 *     2016 Juraj Somorovsky
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -35,7 +36,6 @@ enum Handshake_Extension_Type {
    TLSEXT_SRP_IDENTIFIER         = 12,
    TLSEXT_SIGNATURE_ALGORITHMS   = 13,
    TLSEXT_USE_SRTP               = 14,
-   TLSEXT_HEARTBEAT_SUPPORT      = 15,
    TLSEXT_ALPN                   = 16,
 
    TLSEXT_ENCRYPT_THEN_MAC       = 22,

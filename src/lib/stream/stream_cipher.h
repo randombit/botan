@@ -67,7 +67,7 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
       */
-      virtual void set_iv(const byte[], size_t iv_len);
+      virtual void set_iv(const byte[], size_t iv_len) = 0;
 
       /**
       * @param iv_len the length of the IV in bytes
@@ -79,6 +79,12 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * Get a new object representing the same algorithm as *this
       */
       virtual StreamCipher* clone() const = 0;
+
+      /**
+      * Set the offset and the state used later to generate the keystream
+      * @param offset the offset where we begin to generate the keystream
+      */
+      virtual void seek(u64bit offset) = 0;
 
       StreamCipher();
       virtual ~StreamCipher();

@@ -9,13 +9,14 @@
 #define BOTAN_DYNAMIC_LOADER_H__
 
 #include <string>
+#include <botan/build.h>
 
 namespace Botan {
 
 /**
 * Represents a DLL or shared object
 */
-class Dynamically_Loaded_Library
+class BOTAN_DLL Dynamically_Loaded_Library
    {
    public:
       /**

@@ -1,6 +1,7 @@
 /*
 * TLS Blocking API
 * (C) 2013 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -23,10 +24,13 @@ Blocking_Client::Blocking_Client(read_fn reader,
                                  const Protocol_Version& offer_version,
                                  const std::vector<std::string>& next) :
    m_read(reader),
-   m_channel(writer,
-             std::bind(&Blocking_Client::data_cb, this, _1, _2),
-             std::bind(&Blocking_Client::alert_cb, this, _1, _2, _3),
-             std::bind(&Blocking_Client::handshake_cb, this, _1),
+   m_callbacks(new TLS::Compat_Callbacks(
+               writer,
+               std::bind(&Blocking_Client::data_cb, this, _1, _2),
+               std::function<void (Alert)>(std::bind(&Blocking_Client::alert_cb, this, _1)),
+               std::bind(&Blocking_Client::handshake_cb, this, _1)
+             )),
+   m_channel(*m_callbacks.get(),
              session_manager,
              creds,
              policy,
@@ -42,7 +46,7 @@ bool Blocking_Client::handshake_cb(const Session& session)
    return this->handshake_complete(session);
    }
 
-void Blocking_Client::alert_cb(const Alert& alert, const byte[], size_t)
+void Blocking_Client::alert_cb(const Alert& alert)
    {
    this->alert_notification(alert);
    }

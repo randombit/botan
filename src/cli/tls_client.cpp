@@ -1,5 +1,6 @@
 /*
 * (C) 2014,2015 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -35,7 +36,7 @@
 
 namespace Botan_CLI {
 
-class TLS_Client final : public Command
+class TLS_Client final : public Command, public Botan::TLS::Callbacks
    {
    public:
       TLS_Client() : Command("tls_client host --port=443 --print-certs --policy= "
@@ -98,14 +99,9 @@ class TLS_Client final : public Command
 
          const std::vector<std::string> protocols_to_offer = Botan::split_on("next-protocols", ',');
 
-         int sockfd = connect_to_host(host, port, use_tcp);
+         m_sockfd = connect_to_host(host, port, use_tcp);
 
          using namespace std::placeholders;
-
-         auto socket_write =
-            use_tcp ?
-            std::bind(stream_socket_write, sockfd, _1, _2) :
-            std::bind(dgram_socket_write, sockfd, _1, _2);
 
          auto version = policy->latest_supported_version(!use_tcp);
 
@@ -118,10 +114,7 @@ class TLS_Client final : public Command
             version = Botan::TLS::Protocol_Version::TLS_V11;
             }
 
-         Botan::TLS::Client client(socket_write,
-                                   std::bind(&TLS_Client::process_data, this, _1, _2),
-                                   std::bind(&TLS_Client::alert_received, this, _1, _2, _3),
-                                   std::bind(&TLS_Client::handshake_complete, this, _1),
+         Botan::TLS::Client client(*this,
                                    *session_mgr,
                                    creds,
                                    *policy,
@@ -136,7 +129,7 @@ class TLS_Client final : public Command
             {
             fd_set readfds;
             FD_ZERO(&readfds);
-            FD_SET(sockfd, &readfds);
+            FD_SET(m_sockfd, &readfds);
 
             if(client.is_active())
                {
@@ -152,13 +145,13 @@ class TLS_Client final : public Command
 
             struct timeval timeout = { 1, 0 };
 
-            ::select(sockfd + 1, &readfds, nullptr, nullptr, &timeout);
+            ::select(m_sockfd + 1, &readfds, nullptr, nullptr, &timeout);
 
-            if(FD_ISSET(sockfd, &readfds))
+            if(FD_ISSET(m_sockfd, &readfds))
                {
                uint8_t buf[4*1024] = { 0 };
 
-               ssize_t got = ::read(sockfd, buf, sizeof(buf));
+               ssize_t got = ::read(m_sockfd, buf, sizeof(buf));
 
                if(got == 0)
                   {
@@ -216,7 +209,7 @@ class TLS_Client final : public Command
                }
             }
 
-         ::close(sockfd);
+         ::close(m_sockfd);
          }
 
    private:
@@ -256,7 +249,7 @@ class TLS_Client final : public Command
          return fd;
          }
 
-      bool handshake_complete(const Botan::TLS::Session& session)
+      bool tls_session_established(const Botan::TLS::Session& session) override
          {
          output() << "Handshake complete, " << session.version().to_string()
                    << " using " << session.ciphersuite().to_string() << "\n";
@@ -290,13 +283,13 @@ class TLS_Client final : public Command
             throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
          }
 
-      static void stream_socket_write(int sockfd, const uint8_t buf[], size_t length)
+      void tls_emit_data(const uint8_t buf[], size_t length) override
          {
          size_t offset = 0;
 
          while(length)
             {
-            ssize_t sent = ::send(sockfd, (const char*)buf + offset,
+            ssize_t sent = ::send(m_sockfd, (const char*)buf + offset,
                                   length, MSG_NOSIGNAL);
 
             if(sent == -1)
@@ -312,16 +305,19 @@ class TLS_Client final : public Command
             }
          }
 
-      void alert_received(Botan::TLS::Alert alert, const uint8_t [], size_t )
+      void tls_alert(Botan::TLS::Alert alert) override
          {
          output() << "Alert: " << alert.type_string() << "\n";
          }
 
-      void process_data(const uint8_t buf[], size_t buf_size)
+      void tls_record_received(uint64_t /*seq_no*/, const uint8_t buf[], size_t buf_size) override
          {
          for(size_t i = 0; i != buf_size; ++i)
             output() << buf[i];
          }
+
+      private:
+         int m_sockfd;
    };
 
 BOTAN_REGISTER_COMMAND("tls_client", TLS_Client);

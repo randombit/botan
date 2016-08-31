@@ -1,0 +1,141 @@
+/*
+* PKCS#11 ECDH
+* (C) 2016 Daniel Neus, Sirrix AG
+* (C) 2016 Philipp Weber, Sirrix AG
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#include <botan/p11_ecdh.h>
+
+#if defined(BOTAN_HAS_ECDH)
+
+#include <botan/internal/p11_mechanism.h>
+#include <botan/ber_dec.h>
+#include <botan/der_enc.h>
+#include <botan/internal/algo_registry.h>
+#include <botan/internal/pk_utils.h>
+#include <botan/rng.h>
+
+namespace Botan {
+
+namespace PKCS11 {
+
+ECDH_PublicKey PKCS11_ECDH_PublicKey::export_key() const
+   {
+   return ECDH_PublicKey(domain(), public_point());
+   }
+
+ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const
+   {
+   auto priv_key = get_attribute_value(AttributeType::Value);
+
+   Null_RNG rng;
+   return ECDH_PrivateKey(rng, domain(), BigInt::decode(priv_key));
+   }
+
+secure_vector<byte> PKCS11_ECDH_PrivateKey::pkcs8_private_key() const
+   {
+   return export_key().pkcs8_private_key();
+   }
+
+namespace {
+class PKCS11_ECDH_KA_Operation : public PK_Ops::Key_Agreement
+   {
+   public:
+      typedef PKCS11_EC_PrivateKey Key_Type;
+
+      static PKCS11_ECDH_KA_Operation* make_ecdh(const Spec& spec, bool use_cofactor)
+         {
+         try
+            {
+            if(auto* key = dynamic_cast< const PKCS11_EC_PrivateKey* >(&spec.key()))
+               {
+               return new PKCS11_ECDH_KA_Operation(*key, spec.padding(), use_cofactor);
+               }
+            }
+         catch(...)
+            {
+            }
+
+         return nullptr;
+         }
+
+      PKCS11_ECDH_KA_Operation(const PKCS11_EC_PrivateKey& key, const std::string& kdf, bool use_cofactor)
+         : PK_Ops::Key_Agreement(), m_key(key), m_mechanism(MechanismWrapper::create_ecdh_mechanism(kdf, use_cofactor))
+         {}
+
+
+      /// The encoding in V2.20 was not specified and resulted in different implementations choosing different encodings.
+      /// Applications relying only on a V2.20 encoding (e.g. the DER variant) other than the one specified now (raw) may not work with all V2.30 compliant tokens.
+      secure_vector<byte> agree(size_t key_len, const byte other_key[], size_t other_key_len, const byte salt[],
+                                size_t salt_len) override
+         {
+         std::vector<byte> der_encoded_other_key;
+         if(m_key.point_encoding() == PublicPointEncoding::Der)
+            {
+            der_encoded_other_key = DER_Encoder().encode(other_key, other_key_len, OCTET_STRING).get_contents_unlocked();
+            m_mechanism.set_ecdh_other_key(der_encoded_other_key.data(), der_encoded_other_key.size());
+            }
+         else
+            {
+            m_mechanism.set_ecdh_other_key(other_key, other_key_len);
+            }
+
+         if(salt != nullptr && salt_len > 0)
+            {
+            m_mechanism.set_ecdh_salt(salt, salt_len);
+            }
+
+         ObjectHandle secret_handle = 0;
+         AttributeContainer attributes;
+         attributes.add_bool(AttributeType::Sensitive, false);
+         attributes.add_bool(AttributeType::Extractable, true);
+         attributes.add_numeric(AttributeType::Class, static_cast< CK_OBJECT_CLASS >(ObjectClass::SecretKey));
+         attributes.add_numeric(AttributeType::KeyType, static_cast< CK_KEY_TYPE >(KeyType::GenericSecret));
+         attributes.add_numeric(AttributeType::ValueLen, key_len);
+         m_key.module()->C_DeriveKey(m_key.session().handle(), m_mechanism.data(), m_key.handle(), attributes.data(),
+                                     attributes.count(), &secret_handle);
+
+         Object secret_object(m_key.session(), secret_handle);
+         secure_vector<byte> secret = secret_object.get_attribute_value(AttributeType::Value);
+         if(secret.size() < key_len)
+            {
+            throw PKCS11_Error("ECDH key derivation secret length is too short");
+            }
+         secret.resize(key_len);
+         return secret;
+         }
+
+   private:
+      const PKCS11_EC_PrivateKey& m_key;
+      MechanismWrapper m_mechanism;
+   };
+
+Algo_Registry<PK_Ops::Key_Agreement>::Add g_PKCS11_ECDH_KA_Operation_reg("ECDH",
+      std::bind(&PKCS11_ECDH_KA_Operation::make_ecdh, std::placeholders::_1, false), "pkcs11", BOTAN_PKCS11_ECDH_PRIO);
+
+Algo_Registry<PK_Ops::Key_Agreement>::Add g_PKCS11_ECDHC_KA_Operation_reg("ECDHC",
+      std::bind(&PKCS11_ECDH_KA_Operation::make_ecdh, std::placeholders::_1, true), "pkcs11", BOTAN_PKCS11_ECDH_PRIO);
+
+}
+
+PKCS11_ECDH_KeyPair generate_ecdh_keypair(Session& session, const EC_PublicKeyGenerationProperties& pub_props,
+      const EC_PrivateKeyGenerationProperties& priv_props)
+   {
+   ObjectHandle pub_key_handle = 0;
+   ObjectHandle priv_key_handle = 0;
+
+   Mechanism mechanism = { static_cast< CK_MECHANISM_TYPE >(MechanismType::EcKeyPairGen), nullptr, 0 };
+
+   session.module()->C_GenerateKeyPair(session.handle(), &mechanism,
+                                       pub_props.data(), pub_props.count(), priv_props.data(), priv_props.count(),
+                                       &pub_key_handle, &priv_key_handle);
+
+   return std::make_pair(PKCS11_ECDH_PublicKey(session, pub_key_handle), PKCS11_ECDH_PrivateKey(session, priv_key_handle));
+   }
+
+}
+}
+
+#endif

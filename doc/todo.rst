@@ -7,6 +7,14 @@ ticket on GitHub to make sure you're on the right track.
 
 Request a new feature by opening a pull request to update this file.
 
+Documentation
+----------------------------------------
+
+* TPM (no docs)
+* PKCS #11 (no docs)
+* X.509 certs, path validation
+* Specific docs covering one major topic (RSA, ECDSA, AES/GCM, ...)
+
 CLI
 ----------------------------------------
 
@@ -14,7 +22,6 @@ CLI
   for an example
 * `encrypt` / `decrypt` tools providing password and/or public key
   based file encryption
-* `bcrypt` cmdlet
 * Make help output more helpful
 * More microbenchmarks in `speed`: modular exponentiation, ECC point
   multiplication, other BigInt operations
@@ -27,6 +34,7 @@ TLS
 * Make TLS v1.0 and v1.1 optional at build time
 * Make finite field DH optional at build time
 * Curve25519 key exchange
+* NEWHOPE (CECPQ1) key exchange (GH #613)
 * TLS OCSP stapling (RFC 6066)
 * Encrypt-then-MAC extension (RFC 7366)
 * Authentication using TOFU (sqlite3 storage)
@@ -40,6 +48,7 @@ TLS
 PKIX
 ----------------------------------------
 
+* Test suite for validation of 'real world' cert chains (GH #611)
 * Support multiple DNS names in certificates
 * X.509 policy constraints
 * OCSP responder logic

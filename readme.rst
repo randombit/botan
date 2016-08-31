@@ -72,6 +72,9 @@ operations.
 .. image:: https://codecov.io/github/randombit/botan/coverage.svg?branch=master
     :target: https://codecov.io/github/randombit/botan
 
+.. image:: https://sonarqube.com/api/badges/gate?key=botan
+    :target: https://sonarqube.com/dashboard/index/botan
+
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -97,9 +100,9 @@ Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and
 later, Clang 3.4 and later, and MSVC 2013 are regularly tested.
 
 The latest development release is
-`1.11.29 <http://botan.randombit.net/releases/Botan-1.11.29.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.29.tgz.asc>`_
-released on 2016-03-20
+`1.11.31 <http://botan.randombit.net/releases/Botan-1.11.31.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.31.tgz.asc>`_
+released on 2016-08-30
 
 Old Stable Series (1.10)
 ----------------------------------------

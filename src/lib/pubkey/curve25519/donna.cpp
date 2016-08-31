@@ -39,6 +39,26 @@ typedef byte u8;
 typedef u64bit limb;
 typedef limb felem[5];
 
+typedef struct
+   {
+       limb* x;
+       limb* z;
+   } fmonty_pair_t;
+
+typedef struct
+   {
+     fmonty_pair_t q;
+     fmonty_pair_t q_dash;
+     const limb* q_minus_q_dash;
+   } fmonty_in_t;
+
+typedef struct
+   {
+     fmonty_pair_t two_q;
+     fmonty_pair_t q_plus_q_dash;
+   } fmonty_out_t;
+
+
 #if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
 typedef donna128 uint128_t;
 #endif
@@ -273,44 +293,41 @@ fcontract(u8 *output, const felem input) {
 /* Input: Q, Q', Q-Q'
  * Output: 2Q, Q+Q'
  *
- *   x2 z3: long form
- *   x3 z3: long form
- *   x z: short form, destroyed
- *   xprime zprime: short form, destroyed
- *   qmqp: short form, preserved
+ *   result.two_q (2*Q): long form
+ *   result.q_plus_q_dash (Q + Q): long form
+ *   in.q: short form, destroyed
+ *   in.q_dash: short form, destroyed
+ *   in.q_minus_q_dash: short form, preserved
  */
 static void
-fmonty(limb *x2, limb *z2, /* output 2Q */
-       limb *x3, limb *z3, /* output Q + Q' */
-       limb *x, limb *z,   /* input Q */
-       limb *xprime, limb *zprime, /* input Q' */
-       const limb *qmqp /* input Q - Q' */) {
+fmonty(fmonty_out_t& result, fmonty_in_t& in)
+{
   limb origx[5], origxprime[5], zzz[5], xx[5], zz[5], xxprime[5],
-        zzprime[5], zzzprime[5];
+       zzprime[5], zzzprime[5];
 
-  copy_mem(origx, x, 5);
-  fsum(x, z);
-  fdifference_backwards(z, origx);  // does x - z
+  copy_mem(origx, in.q.x, 5);
+  fsum(in.q.x, in.q.z);
+  fdifference_backwards(in.q.z, origx);  // does x - z
 
-  copy_mem(origxprime, xprime, 5);
-  fsum(xprime, zprime);
-  fdifference_backwards(zprime, origxprime);
-  fmul(xxprime, xprime, z);
-  fmul(zzprime, x, zprime);
+  copy_mem(origxprime, in.q_dash.x, 5);
+  fsum(in.q_dash.x, in.q_dash.z);
+  fdifference_backwards(in.q_dash.z, origxprime);
+  fmul(xxprime, in.q_dash.x, in.q.z);
+  fmul(zzprime, in.q.x, in.q_dash.z);
   copy_mem(origxprime, xxprime, 5);
   fsum(xxprime, zzprime);
   fdifference_backwards(zzprime, origxprime);
-  fsquare_times(x3, xxprime, 1);
+  fsquare_times(result.q_plus_q_dash.x, xxprime, 1);
   fsquare_times(zzzprime, zzprime, 1);
-  fmul(z3, zzzprime, qmqp);
+  fmul(result.q_plus_q_dash.z, zzzprime, in.q_minus_q_dash);
 
-  fsquare_times(xx, x, 1);
-  fsquare_times(zz, z, 1);
-  fmul(x2, xx, zz);
+  fsquare_times(xx, in.q.x, 1);
+  fsquare_times(zz, in.q.z, 1);
+  fmul(result.two_q.x, xx, zz);
   fdifference_backwards(zz, xx);  // does zz = xx - zz
   fscalar_product(zzz, zz, 121665);
   fsum(zzz, xx);
-  fmul(z2, zz, zzz);
+  fmul(result.two_q.z, zz, zzz);
 }
 
 // -----------------------------------------------------------------------------
@@ -356,11 +373,10 @@ cmult(limb *resultx, limb *resultz, const u8 *n, const limb *q) {
 
       swap_conditional(nqx, nqpqx, bit);
       swap_conditional(nqz, nqpqz, bit);
-      fmonty(nqx2, nqz2,
-             nqpqx2, nqpqz2,
-             nqx, nqz,
-             nqpqx, nqpqz,
-             q);
+
+      fmonty_out_t result { nqx2, nqz2, nqpqx2, nqpqz2 };
+      fmonty_in_t in { nqx, nqz, nqpqx, nqpqz, q };
+      fmonty(result, in);
       swap_conditional(nqx2, nqpqx2, bit);
       swap_conditional(nqz2, nqpqz2, bit);
 

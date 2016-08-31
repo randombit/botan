@@ -32,11 +32,11 @@ templates_path = ['templates']
 if is_website_build and use_disqus:
     templates_path += ['disqus']
 
-files_dir = 'http://botan.randombit.net/releases'
+files_dir = 'https://botan.randombit.net/releases'
 
 extlinks = {
     'wikipedia': ('https://en.wikipedia.org/wiki/%s', ''),
-    'botan-devel': ('http://lists.randombit.net/pipermail/botan-devel/%s.html', None),
+    'botan-devel': ('https://lists.randombit.net/pipermail/botan-devel/%s.html', None),
 
     'cve': ('https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-%s', 'CVE-'),
 
@@ -177,7 +177,7 @@ html_show_copyright = False
 # contain a <link> tag referring to it.  The value of this option must be the
 # base URL from which the finished HTML is served.
 if is_website_build:
-    html_use_opensearch = 'http://botan.randombit.net/'
+    html_use_opensearch = 'https://botan.randombit.net/'
 else:
     html_use_opensearch = ''
 

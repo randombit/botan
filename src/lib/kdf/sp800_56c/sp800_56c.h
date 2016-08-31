@@ -23,9 +23,27 @@ class BOTAN_DLL SP800_56C : public KDF
 
       KDF* clone() const override { return new SP800_56C(m_prf->clone(), m_exp->clone()); }
 
+      /**
+      * Derive a key using the SP800-56C KDF.
+      *
+      * The implementation hard codes the context value for the
+      * expansion step to the empty string.
+      *
+      * @param key derived keying material K_M
+      * @param key_len the desired output length in bytes
+      * @param secret shared secret Z
+      * @param secret_len size of Z in bytes
+      * @param salt salt s of the extraction step
+      * @param salt_len size of s in bytes
+      * @param label label for the expansion step
+      * @param label_len size of label in bytes
+      *
+      * @throws Invalid_Argument key_len > 2^32
+      */
       size_t kdf(byte key[], size_t key_len,
                  const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len) const override;
+                 const byte salt[], size_t salt_len,
+                 const byte label[], size_t label_len) const override;
 
       SP800_56C(MessageAuthenticationCode* mac, KDF* exp) : m_prf(mac), m_exp(exp) {}
 

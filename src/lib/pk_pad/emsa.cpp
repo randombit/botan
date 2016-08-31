@@ -11,10 +11,6 @@
   #include <botan/emsa1.h>
 #endif
 
-#if defined(BOTAN_HAS_EMSA1_BSI)
-  #include <botan/emsa1_bsi.h>
-#endif
-
 #if defined(BOTAN_HAS_EMSA_X931)
   #include <botan/emsa_x931.h>
 #endif
@@ -45,6 +41,19 @@ EMSA* get_emsa(const std::string& algo_spec)
    throw Algorithm_Not_Found(algo_spec);
    }
 
+std::string hash_for_emsa(const std::string& algo_spec)
+   {
+   SCAN_Name emsa_name(algo_spec);
+
+   if(emsa_name.arg_count() > 0)
+      {
+      const std::string pos_hash = emsa_name.arg(0);
+      return pos_hash;
+      }
+
+   return "SHA-512"; // safe default if nothing we understand
+   }
+
 #define BOTAN_REGISTER_EMSA_NAMED_NOARGS(type, name) \
    BOTAN_REGISTER_NAMED_T(EMSA, name, type, make_new_T<type>)
 
@@ -56,10 +65,6 @@ EMSA* get_emsa(const std::string& algo_spec)
 
 #if defined(BOTAN_HAS_EMSA1)
 BOTAN_REGISTER_EMSA_1HASH(EMSA1, "EMSA1");
-#endif
-
-#if defined(BOTAN_HAS_EMSA1_BSI)
-BOTAN_REGISTER_EMSA_1HASH(EMSA1_BSI, "EMSA1_BSI");
 #endif
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)

@@ -28,38 +28,38 @@ namespace Botan {
 
 namespace {
 
-class System_RNG_Impl : public RandomNumberGenerator
+class System_RNG_Impl final : public RandomNumberGenerator
    {
    public:
       System_RNG_Impl();
       ~System_RNG_Impl();
 
-      void randomize(byte buf[], size_t len) override;
-
       bool is_seeded() const override { return true; }
+
       void clear() override {}
-      std::string name() const override { return "system"; }
 
-      size_t reseed_with_sources(Entropy_Sources&,
-                                 size_t /*poll_bits*/,
-                                 std::chrono::milliseconds /*timeout*/) override
-         {
-         // We ignore it and assert the PRNG is seeded.
-         // TODO: could poll and write it to /dev/urandom to help seed it
-         return 0;
-         }
+      void randomize(uint8_t out[], size_t len) override;
 
-      void add_entropy(const byte[], size_t) override
-         {
-         }
+      void add_entropy(const uint8_t in[], size_t length) override;
+
+      std::string name() const override;
+
    private:
-
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
       HCRYPTPROV m_prov;
 #else
       int m_fd;
 #endif
    };
+
+std::string System_RNG_Impl::name() const
+   {
+#if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
+   return "cryptoapi";
+#else
+   return BOTAN_SYSTEM_RNG_DEVICE;
+#endif
+   }
 
 System_RNG_Impl::System_RNG_Impl()
    {
@@ -74,7 +74,7 @@ System_RNG_Impl::System_RNG_Impl()
   #define O_NOCTTY 0
 #endif
 
-   m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDONLY | O_NOCTTY);
+   m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDWR | O_NOCTTY);
    if(m_fd < 0)
       throw Exception("System_RNG failed to open RNG device");
 #endif
@@ -90,7 +90,61 @@ System_RNG_Impl::~System_RNG_Impl()
 #endif
    }
 
-void System_RNG_Impl::randomize(byte buf[], size_t len)
+void System_RNG_Impl::add_entropy(const uint8_t input[], size_t len)
+   {
+#if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
+   /*
+   There is no explicit ConsumeRandom, but all values provided in
+   the call are incorporated into the state.
+
+   TODO: figure out a way to avoid this copy. Byte at a time updating
+   seems worse than the allocation.
+
+   for(size_t i = 0; i != len; ++i)
+      {
+      uint8_t b = input[i];
+      ::CryptGenRandom(m_prov, 1, &b);
+      }
+   */
+
+   if(len > 0)
+      {
+      secure_vector<uint8_t> buf(input, input + len);
+      ::CryptGenRandom(m_prov, static_cast<DWORD>(buf.size()), buf.data());
+      }
+#else
+   while(len)
+      {
+      ssize_t got = ::write(m_fd, input, len);
+
+      if(got < 0)
+         {
+         if(errno == EINTR)
+            continue;
+
+         /*
+         * This is seen on OS X CI, despite the fact that the man page
+         * for Darwin urandom explicitly states that writing to it is
+         * supported, and write(2) does not document EPERM at all.
+         * But in any case EPERM seems indicative of a policy decision
+         * by the OS or sysadmin that additional entropy is not wanted
+         * in the system pool, so we accept that and return here,
+         * since there is no corrective action possible.
+         */
+         if(errno == EPERM)
+            return;
+
+         // maybe just ignore any failure here and return?
+         throw Exception("System_RNG write failed error " + std::to_string(errno));
+         }
+
+      input += got;
+      len -= got;
+      }
+#endif
+   }
+
+void System_RNG_Impl::randomize(uint8_t buf[], size_t len)
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
    ::CryptGenRandom(m_prov, static_cast<DWORD>(len), buf);

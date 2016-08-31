@@ -1,6 +1,7 @@
 /*
 * X.509 Certificate Extensions
 * (C) 1999-2010,2012 Jack Lloyd
+* (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -293,7 +294,9 @@ void Key_Usage::decode_inner(const std::vector<byte>& in)
 
    u16bit usage = 0;
    for(size_t i = 1; i != obj.value.size(); ++i)
-      usage = (obj.value[i] << 8) | usage;
+      {
+      usage = (obj.value[i] << 8*(sizeof(usage)-i)) | usage;
+      }
 
    m_constraints = Key_Constraints(usage);
    }
@@ -461,7 +464,7 @@ void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
 */
 std::vector<byte> Name_Constraints::encode_inner() const
    {
-   throw std::runtime_error("Name_Constraints encoding not implemented");
+   throw Not_Implemented("Name_Constraints encoding");
    }
 
 
@@ -777,7 +780,7 @@ void CRL_ReasonCode::contents_to(Data_Store& info, Data_Store&) const
 
 std::vector<byte> CRL_Distribution_Points::encode_inner() const
    {
-   throw Exception("CRL_Distribution_Points encoding not implemented");
+   throw Not_Implemented("CRL_Distribution_Points encoding");
    }
 
 void CRL_Distribution_Points::decode_inner(const std::vector<byte>& buf)
@@ -800,7 +803,7 @@ void CRL_Distribution_Points::contents_to(Data_Store& info, Data_Store&) const
 
 void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder&) const
    {
-   throw Exception("CRL_Distribution_Points encoding not implemented");
+   throw Not_Implemented("CRL_Distribution_Points encoding");
    }
 
 void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder& ber)
@@ -815,16 +818,15 @@ void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder&
 
 std::vector<byte> Unknown_Critical_Extension::encode_inner() const
    {
-   throw Exception("Unknown_Critical_Extension encoding not implemented");
+   throw Not_Implemented("Unknown_Critical_Extension encoding");
    }
 
-void Unknown_Critical_Extension::decode_inner(const std::vector<byte>& buf)
+void Unknown_Critical_Extension::decode_inner(const std::vector<byte>&)
    {
    }
 
-void Unknown_Critical_Extension::contents_to(Data_Store& info, Data_Store&) const
+void Unknown_Critical_Extension::contents_to(Data_Store&, Data_Store&) const
    {
-   // TODO: textual representation?
    }
 
 }
