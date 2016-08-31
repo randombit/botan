@@ -25,6 +25,7 @@ class BOTAN_DLL LibraryInitializer
       explicit LibraryInitializer(const std::string& s = "") { initialize(s); }
       ~LibraryInitializer() { deinitialize(); }
 
+      BOTAN_DEPRECATED("LibraryInitializer is no longer needed")
       static void initialize(const std::string& = "");
       static void deinitialize();
    };
