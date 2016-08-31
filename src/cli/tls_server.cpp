@@ -33,7 +33,7 @@ namespace Botan_CLI {
 class TLS_Server final : public Command
    {
    public:
-      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp") {}
+      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy=") {}
 
       void go() override
          {
@@ -47,7 +47,24 @@ class TLS_Server final : public Command
 
          const bool is_tcp = (transport == "tcp");
 
-         Botan::TLS::Policy policy; // TODO read policy from file
+         std::unique_ptr<Botan::TLS::Policy> policy;
+         const std::string policy_file = get_arg("policy");
+         std::filebuf fb;
+         if(policy_file.size() > 0)
+            {
+            std::ifstream policy_stream(policy_file);
+            if(!policy_stream.good())
+               {
+               error_output() << "Failed reading policy file\n";
+               return;
+               }
+            policy.reset(new Botan::TLS::Text_Policy(policy_stream));
+            }
+
+         if(!policy)
+            {
+            policy.reset(new Botan::TLS::Policy);
+            }
 
          Botan::TLS::Session_Manager_In_Memory session_manager(rng()); // TODO sqlite3
 
@@ -112,7 +129,7 @@ class TLS_Server final : public Command
                                       std::bind(&TLS_Server::handshake_complete, this, _1),
                                       session_manager,
                                       creds,
-                                      policy,
+                                      *policy,
                                       rng(),
                                       protocol_chooser,
                                       !is_tcp);

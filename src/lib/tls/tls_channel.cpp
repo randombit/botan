@@ -215,7 +215,8 @@ void Channel::change_cipher_spec_reader(Connection_Side side)
                                   (side == CLIENT) ? SERVER : CLIENT,
                                   false,
                                   pending->ciphersuite(),
-                                  pending->session_keys()));
+                                  pending->session_keys(),
+                                  pending->server_hello()->supports_encrypt_then_mac()));
 
    m_read_cipher_states[epoch] = read_state;
    }
@@ -242,7 +243,8 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
                                   side,
                                   true,
                                   pending->ciphersuite(),
-                                  pending->session_keys()));
+                                  pending->session_keys(),
+                                  pending->server_hello()->supports_encrypt_then_mac()));
 
    m_write_cipher_states[epoch] = write_state;
    }

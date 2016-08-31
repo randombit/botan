@@ -63,6 +63,11 @@ class BOTAN_DLL Ciphersuite
       bool ecc_ciphersuite() const;
 
       /**
+       * @return true if this suite uses a CBC cipher
+       */
+      bool cbc_ciphersuite() const;
+
+      /**
       * @return key exchange algorithm used by this ciphersuite
       */
       std::string kex_algo() const { return m_kex_algo; }

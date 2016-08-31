@@ -130,6 +130,19 @@ bool check_for_resume(Session& session_info,
          }
       }
 
+   // Checking encrypt_then_mac on resume (RFC 7366 section 3.1)
+   if( !client_hello->supports_encrypt_then_mac() && session_info.supports_encrypt_then_mac())
+      {
+      
+      /*
+      Client previously negotiated session with Encrypt-then-MAC,
+      but has now attempted to resume without the extension: abort
+      */
+      throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Client resumed Encrypt-then-MAC session without sending extension");
+         
+      }
+
    return true;
    }
 
@@ -441,7 +454,7 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
 void Server::process_certificate_msg(Server_Handshake_State& pending_state,
                                      const std::vector<byte>& contents)
 {
-   pending_state.client_certs(new Certificate(contents));
+   pending_state.client_certs(new Certificate(contents, policy()));
    pending_state.set_expected_next(CLIENT_KEX);
 }
 
@@ -528,6 +541,7 @@ void Server::process_finished_msg(Server_Handshake_State& pending_state,
             pending_state.server_hello()->compression_method(),
             SERVER,
             pending_state.server_hello()->supports_extended_master_secret(),
+            pending_state.server_hello()->supports_encrypt_then_mac(),
             get_peer_cert_chain ( pending_state ),
             std::vector<byte>(),
             Server_Information(pending_state.client_hello()->sni_hostname()),
@@ -783,7 +797,6 @@ void Server::session_create(Server_Handshake_State& pending_state,
       }
    else
       {
-
       pending_state.server_kex(new Server_Key_Exchange(pending_state.handshake_io(),
                                                        pending_state, policy(),
                                                        m_creds, rng(), private_key));

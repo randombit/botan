@@ -35,6 +35,13 @@ bool Ciphersuite::ecc_ciphersuite() const
    return (sig_algo() == "ECDSA" || kex_algo() == "ECDH" || kex_algo() == "ECDHE_PSK");
    }
 
+bool Ciphersuite::cbc_ciphersuite() const
+   {
+   return (cipher_algo() == "3DES" || cipher_algo() == "SEED" ||
+           cipher_algo() == "AES-128" || cipher_algo() == "AES-256" ||
+           cipher_algo() == "Camellia-128" || cipher_algo() == "Camellia-256");
+   }
+
 Ciphersuite Ciphersuite::by_id(u16bit suite)
    {
    const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();

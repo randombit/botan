@@ -162,6 +162,11 @@ class Client_Hello final : public Handshake_Message
          return m_extensions.has<Extended_Master_Secret>();
          }
 
+      bool supports_encrypt_then_mac() const
+         {
+         return m_extensions.has<Encrypt_then_MAC>();
+         }
+
       std::vector<std::string> next_protocols() const
          {
          if(auto alpn = m_extensions.get<Application_Layer_Protocol_Notification>())
@@ -276,6 +281,11 @@ class Server_Hello final : public Handshake_Message
          return m_extensions.has<Extended_Master_Secret>();
          }
 
+      bool supports_encrypt_then_mac() const
+         {
+         return m_extensions.has<Encrypt_then_MAC>();
+         }
+
       bool supports_session_ticket() const
          {
          return m_extensions.has<Session_Ticket>();
@@ -385,7 +395,7 @@ class Certificate final : public Handshake_Message
                   Handshake_Hash& hash,
                   const std::vector<X509_Certificate>& certs);
 
-      explicit Certificate(const std::vector<byte>& buf);
+      explicit Certificate(const std::vector<byte>& buf, const Policy &policy);
    private:
       std::vector<byte> serialize() const override;
 

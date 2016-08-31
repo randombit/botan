@@ -39,7 +39,8 @@ class Connection_Cipher_State
                               Connection_Side which_side,
                               bool is_our_side,
                               const Ciphersuite& suite,
-                              const Session_Keys& keys);
+                              const Session_Keys& keys,
+                              bool uses_encrypt_then_mac);
 
       AEAD_Mode* aead() { return m_aead.get(); }
 
@@ -67,6 +68,8 @@ class Connection_Cipher_State
 
       size_t nonce_bytes_from_handshake() const { return m_nonce_bytes_from_handshake; }
 
+      bool uses_encrypt_then_mac() const { return m_uses_encrypt_then_mac; }
+
       bool cbc_without_explicit_iv() const
          { return (m_block_size > 0) && (m_iv_size == 0); }
 
@@ -89,6 +92,8 @@ class Connection_Cipher_State
       size_t m_nonce_bytes_from_handshake;
       size_t m_nonce_bytes_from_record;
       size_t m_iv_size = 0;
+      
+      bool m_uses_encrypt_then_mac;
    };
 
 class Record

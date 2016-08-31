@@ -31,7 +31,7 @@ Certificate::Certificate(Handshake_IO& io,
 /**
 * Deserialize a Certificate message
 */
-Certificate::Certificate(const std::vector<byte>& buf)
+Certificate::Certificate(const std::vector<byte>& buf, const Policy& /*policy_currently_unused*/)
    {
    if(buf.size() < 3)
       throw Decoding_Error("Certificate: Message malformed");
