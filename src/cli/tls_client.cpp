@@ -310,7 +310,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          output() << "Alert: " << alert.type_string() << "\n";
          }
 
-      void tls_record_received(uint64_t seq_no, const uint8_t buf[], size_t buf_size)
+      void tls_record_received(uint64_t /*seq_no*/, const uint8_t buf[], size_t buf_size)
          {
          for(size_t i = 0; i != buf_size; ++i)
             output() << buf[i];
