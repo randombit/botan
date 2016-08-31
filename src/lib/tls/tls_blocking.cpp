@@ -39,7 +39,6 @@ Blocking_Client::Blocking_Client(read_fn reader,
              offer_version,
              next)
    {
-   printf("hi\n");
    }
 
 bool Blocking_Client::handshake_cb(const Session& session)
