@@ -7,6 +7,7 @@
 
 #include <botan/chacha.h>
 #include <botan/loadstor.h>
+#include <botan/cpuid.h>
 
 namespace Botan {
 
@@ -16,11 +17,17 @@ ChaCha::ChaCha(size_t rounds) : m_rounds(rounds)
       throw Invalid_Argument("ChaCha only supports 8, 12 or 20 rounds");
    }
 
-namespace {
-
-void chacha(byte output[64], const u32bit input[16], size_t rounds)
+//static
+void ChaCha::chacha(byte output[64], const u32bit input[16], size_t rounds)
    {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
+
+   #if defined(BOTAN_TARGET_SUPPORTS_SSE2)
+   if(CPUID::has_sse2())
+      {
+      return ChaCha::chacha_sse2(output, input, rounds);
+      }
+   #endif
 
    u32bit x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
           x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
@@ -67,7 +74,6 @@ void chacha(byte output[64], const u32bit input[16], size_t rounds)
    store_le(x14 + input[14], output + 4 * 14);
    store_le(x15 + input[15], output + 4 * 15);
    }
-}
 
 /*
 * Combine cipher stream with message
@@ -80,7 +86,7 @@ void ChaCha::cipher(const byte in[], byte out[], size_t length)
       length -= (m_buffer.size() - m_position);
       in += (m_buffer.size() - m_position);
       out += (m_buffer.size() - m_position);
-      chacha(m_buffer.data(), m_state.data(), m_rounds);
+      chacha_sse2(m_buffer.data(), m_state.data(), m_rounds);
 
       ++m_state[12];
       m_state[13] += (m_state[12] == 0);
@@ -176,7 +182,7 @@ void ChaCha::seek(u64bit offset)
    {
    if (m_state.size() == 0 && m_buffer.size() == 0)
       {
-         throw Invalid_State("You have to setup the stream cipher (key and iv)");
+      throw Invalid_State("You have to setup the stream cipher (key and iv)");
       }
 
    m_position = offset % m_buffer.size();

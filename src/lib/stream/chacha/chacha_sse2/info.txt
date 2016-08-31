@@ -1,0 +1,3 @@
+define CHACHA_SSE2 20160831
+
+need_isa sse2

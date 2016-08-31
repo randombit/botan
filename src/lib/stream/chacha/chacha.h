@@ -47,6 +47,12 @@ class BOTAN_DLL ChaCha final : public StreamCipher
    private:
       void key_schedule(const byte key[], size_t key_len) override;
 
+      void chacha(byte output[64], const u32bit input[16], size_t rounds);
+
+#if defined(BOTAN_TARGET_SUPPORTS_SSE2)
+      void chacha_sse2(byte output[64], const u32bit input[16], size_t rounds);
+#endif
+
       size_t m_rounds;
       secure_vector<u32bit> m_state;
       secure_vector<byte> m_buffer;
