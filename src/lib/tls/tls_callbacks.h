@@ -24,7 +24,7 @@ class Handshake_Message;
 class BOTAN_DLL Callbacks
    {
    public:
-       virtual ~Callbacks() {}
+       virtual ~Callbacks();
 
        /**
        * Mandatory callback: output function
@@ -77,10 +77,11 @@ class BOTAN_DLL Callbacks
        /**
        * Optional callback: inspect handshake message
        * Throw an exception to abort the handshake.
+       * Default simply ignores the message.
        *
        * @param message the handshake message
        */
-       virtual void tls_inspect_handshake_msg(const Handshake_Message& message) {}
+       virtual void tls_inspect_handshake_msg(const Handshake_Message& message);
 
        /**
        * Optional callback for server: choose ALPN protocol
@@ -93,12 +94,9 @@ class BOTAN_DLL Callbacks
        *
        * @return the protocol selected by the server, which need not be on the
        * list that the client sent; if this is the empty string, the server ignores the
-       * client ALPN extension
+       * client ALPN extension. Default return value is empty string.
        */
-       virtual std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos)
-          {
-          return "";
-          }
+       virtual std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos);
 
        /**
        * Optional callback: debug logging. (not currently used)
