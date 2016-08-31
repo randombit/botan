@@ -99,7 +99,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 #if defined(BOTAN_HAS_SRP6)
    m_extensions.add(new SRP_Identifier(client_settings.srp_identifier()));
 #else
-   if(!srp_identifier.empty())
+   if(!client_settings.srp_identifier().empty())
       {
       throw Invalid_State("Attempting to initiate SRP session but TLS-SRP support disabled");
       }
