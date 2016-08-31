@@ -305,12 +305,12 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             }
          }
 
-      void tls_alert(Botan::TLS::Alert alert)
+      void tls_alert(Botan::TLS::Alert alert) override
          {
          output() << "Alert: " << alert.type_string() << "\n";
          }
 
-      void tls_record_received(uint64_t /*seq_no*/, const uint8_t buf[], size_t buf_size)
+      void tls_record_received(uint64_t /*seq_no*/, const uint8_t buf[], size_t buf_size) override
          {
          for(size_t i = 0; i != buf_size; ++i)
             output() << buf[i];
