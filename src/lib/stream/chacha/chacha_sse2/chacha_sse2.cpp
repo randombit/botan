@@ -251,6 +251,9 @@ void ChaCha::chacha_sse2_x4(byte output[64], u32bit input[16], size_t rounds)
 
 #undef mm_rotl
 
+   input[12] += 4;
+   if(input[12] < 4)
+      input[13]++;
    }
 
 }
