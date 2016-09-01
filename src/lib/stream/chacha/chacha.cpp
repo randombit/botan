@@ -22,7 +22,7 @@ void ChaCha::chacha_x4(byte output[64*4], u32bit input[16], size_t rounds)
    {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
 
-#if defined(BOTAN_TARGET_SUPPORTS_SSE2)
+#if defined(BOTAN_HAS_CHACHA_SSE2)
    if(CPUID::has_sse2())
       {
       return ChaCha::chacha_sse2_x4(output, input, rounds);
