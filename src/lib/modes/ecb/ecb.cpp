@@ -55,12 +55,10 @@ void ECB_Mode::key_schedule(const byte key[], size_t length)
    m_cipher->set_key(key, length);
    }
 
-secure_vector<byte> ECB_Mode::start_raw(const byte[], size_t nonce_len)
+void ECB_Mode::start_msg(const byte[], size_t nonce_len)
    {
-   if(!valid_nonce_length(nonce_len))
+   if(nonce_len != 0)
       throw Invalid_IV_Length(name(), nonce_len);
-
-   return secure_vector<byte>();
    }
 
 size_t ECB_Encryption::minimum_final_size() const
@@ -76,18 +74,13 @@ size_t ECB_Encryption::output_length(size_t input_length) const
       return round_up(input_length, cipher().block_size());
    }
 
-void ECB_Encryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t ECB_Encryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    const size_t BS = cipher().block_size();
-
    BOTAN_ASSERT(sz % BS == 0, "ECB input is full blocks");
    const size_t blocks = sz / BS;
-
    cipher().encrypt_n(buf, buf, blocks);
+   return sz;
    }
 
 void ECB_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
@@ -117,18 +110,13 @@ size_t ECB_Decryption::minimum_final_size() const
    return cipher().block_size();
    }
 
-void ECB_Decryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t ECB_Decryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    const size_t BS = cipher().block_size();
-
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
    size_t blocks = sz / BS;
-
    cipher().decrypt_n(buf, buf, blocks);
+   return sz;
    }
 
 void ECB_Decryption::finish(secure_vector<byte>& buffer, size_t offset)

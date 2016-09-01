@@ -458,7 +458,7 @@ int botan_cipher_start(botan_cipher_t cipher_obj,
    try
       {
       Botan::Cipher_Mode& cipher = safe_get(cipher_obj);
-      BOTAN_ASSERT(cipher.start(nonce, nonce_len).empty(), "Ciphers have no prefix");
+      cipher.start(nonce, nonce_len);
       cipher_obj->m_buf.reserve(cipher.update_granularity());
       return 0;
       }

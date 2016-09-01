@@ -35,6 +35,19 @@ BOTAN_NORETURN void BOTAN_DLL assertion_failure(const char* expr_str,
    } while(0)
 
 /**
+* Make an assertion
+*/
+#define BOTAN_ASSERT_NOMSG(expr)                          \
+   do {                                                   \
+      if(!(expr))                                         \
+         Botan::assertion_failure(#expr,                  \
+                                  "",                     \
+                                  BOTAN_CURRENT_FUNCTION, \
+                                  __FILE__,               \
+                                  __LINE__);              \
+   } while(0)
+
+/**
 * Assert that value1 == value2
 */
 #define BOTAN_ASSERT_EQUAL(expr1, expr2, assertion_made)   \

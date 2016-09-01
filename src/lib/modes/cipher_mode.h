@@ -1,6 +1,6 @@
 /*
 * Cipher Modes
-* (C) 2013 Jack Lloyd
+* (C) 2013,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -28,25 +28,19 @@ class BOTAN_DLL Cipher_Mode
 
       virtual ~Cipher_Mode() {}
 
-      /**
-      * Begin processing a message.
-      * @param nonce the per message nonce
+      /*
+      * Prepare for processing a message under the specified nonce
       */
-      template<typename Alloc>
-      secure_vector<byte> start(const std::vector<byte, Alloc>& nonce)
-         {
-         return start(nonce.data(), nonce.size());
-         }
+      virtual void start_msg(const byte nonce[], size_t nonce_len) = 0;
 
       /**
       * Begin processing a message.
       * @param nonce the per message nonce
       */
       template<typename Alloc>
-      BOTAN_DEPRECATED("Use Transform::start")
-      secure_vector<byte> start_vec(const std::vector<byte, Alloc>& nonce)
+      void start(const std::vector<byte, Alloc>& nonce)
          {
-         return start(nonce.data(), nonce.size());
+         start_msg(nonce.data(), nonce.size());
          }
 
       /**
@@ -54,27 +48,45 @@ class BOTAN_DLL Cipher_Mode
       * @param nonce the per message nonce
       * @param nonce_len length of nonce
       */
-      secure_vector<byte> start(const byte nonce[], size_t nonce_len)
+      void start(const byte nonce[], size_t nonce_len)
          {
-         return start_raw(nonce, nonce_len);
+         start_msg(nonce, nonce_len);
          }
 
       /**
       * Begin processing a message.
       */
-      secure_vector<byte> start()
+      void start()
          {
-         return start_raw(nullptr, 0);
+         return start_msg(nullptr, 0);
          }
 
-      virtual secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) = 0;
+      /**
+      * Process message blocks
+      *
+      * Input must be a multiple of update_granularity
+      *
+      * Processes msg in place and returns bytes written. Normally
+      * this will be either msg_len (indicating the entire message was
+      * processes) or for certain AEAD modes zero (indicating that the
+      * mode requires the entire message be processed in one pass.
+      */
+      virtual size_t process(uint8_t msg[], size_t msg_len) = 0;
 
       /**
       * Process some data. Input must be in size update_granularity() byte blocks.
       * @param blocks in/out parameter which will possibly be resized
       * @param offset an offset into blocks to begin processing
       */
-      virtual void update(secure_vector<byte>& blocks, size_t offset = 0) = 0;
+      void update(secure_vector<byte>& buffer, size_t offset = 0)
+         {
+         BOTAN_ASSERT(buffer.size() >= offset, "Offset ok");
+         byte* buf = buffer.data() + offset;
+         const size_t buf_size = buffer.size() - offset;
+
+         const size_t written = process(buf, buf_size);
+         buffer.resize(offset + written);
+         }
 
       /**
       * Complete processing of a message.

@@ -70,7 +70,7 @@ void SIV_Mode::set_associated_data_n(size_t n, const byte ad[], size_t length)
    m_ad_macs[n] = m_cmac->process(ad, length);
    }
 
-secure_vector<byte> SIV_Mode::start_raw(const byte nonce[], size_t nonce_len)
+void SIV_Mode::start_msg(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -81,18 +81,13 @@ secure_vector<byte> SIV_Mode::start_raw(const byte nonce[], size_t nonce_len)
       m_nonce.clear();
 
    m_msg_buf.clear();
-
-   return secure_vector<byte>();
    }
 
-void SIV_Mode::update(secure_vector<byte>& buffer, size_t offset)
+size_t SIV_Mode::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
+   // all output is saved for processing in finish
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
-   buffer.resize(offset); // truncate msg
+   return 0;
    }
 
 secure_vector<byte> SIV_Mode::S2V(const byte* text, size_t text_len)

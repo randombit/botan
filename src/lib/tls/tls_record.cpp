@@ -190,7 +190,6 @@ void write_record(secure_vector<byte>& output,
 
       const std::vector<byte> nonce = cs->aead_nonce(seq);
 
-      // wrong if start returns something
       const size_t rec_size = ctext_size + cs->nonce_bytes_from_record();
 
       BOTAN_ASSERT(rec_size <= 0xFFFF, "Ciphertext length fits in field");
@@ -203,13 +202,11 @@ void write_record(secure_vector<byte>& output,
          {
          output += std::make_pair(&nonce[cs->nonce_bytes_from_handshake()], cs->nonce_bytes_from_record());
          }
-      BOTAN_ASSERT(aead->start(nonce).empty(), "AEAD doesn't return anything from start");
-
-      const size_t offset = output.size();
+      const size_t header_size = output.size();
       output += std::make_pair(msg.get_data(), msg.get_size());
-      aead->finish(output, offset);
 
-      BOTAN_ASSERT(output.size() == offset + ctext_size, "Expected size");
+      aead->start(nonce);
+      aead->finish(output, header_size);
 
       BOTAN_ASSERT(output.size() < MAX_CIPHERTEXT_SIZE,
                    "Produced ciphertext larger than protocol allows");
@@ -469,7 +466,7 @@ void decrypt_record(secure_vector<byte>& output,
          cs.format_ad(record_sequence, record_type, record_version, static_cast<u16bit>(ptext_size))
          );
 
-      output += aead->start(nonce);
+      aead->start(nonce);
 
       const size_t offset = output.size();
       output += std::make_pair(msg, msg_length);

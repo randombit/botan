@@ -105,7 +105,7 @@ void XTS_Mode::key_schedule(const byte key[], size_t length)
    m_tweak_cipher->set_key(&key[key_half], key_half);
    }
 
-secure_vector<byte> XTS_Mode::start_raw(const byte nonce[], size_t nonce_len)
+void XTS_Mode::start_msg(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -114,8 +114,6 @@ secure_vector<byte> XTS_Mode::start_raw(const byte nonce[], size_t nonce_len)
    m_tweak_cipher->encrypt(m_tweak.data());
 
    update_tweak(0);
-
-   return secure_vector<byte>();
    }
 
 void XTS_Mode::update_tweak(size_t which)
@@ -136,12 +134,8 @@ size_t XTS_Encryption::output_length(size_t input_length) const
    return input_length;
    }
 
-void XTS_Encryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t XTS_Encryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    const size_t BS = cipher().block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
@@ -163,6 +157,8 @@ void XTS_Encryption::update(secure_vector<byte>& buffer, size_t offset)
 
       update_tweak(to_proc);
       }
+
+   return sz;
    }
 
 void XTS_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
@@ -214,12 +210,8 @@ size_t XTS_Decryption::output_length(size_t input_length) const
    return input_length;
    }
 
-void XTS_Decryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t XTS_Decryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    const size_t BS = cipher().block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
@@ -241,6 +233,8 @@ void XTS_Decryption::update(secure_vector<byte>& buffer, size_t offset)
 
       update_tweak(to_proc);
       }
+
+   return sz;
    }
 
 void XTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)

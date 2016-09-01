@@ -85,7 +85,7 @@ void Cipher_Mode_Filter::end_msg()
 
 void Cipher_Mode_Filter::start_msg()
    {
-   send(m_mode->start(m_nonce.get()));
+   m_mode->start(m_nonce.get());
    }
 
 void Cipher_Mode_Filter::buffered_block(const byte input[], size_t input_length)

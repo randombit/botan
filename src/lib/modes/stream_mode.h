@@ -17,10 +17,10 @@ class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
    public:
       explicit Stream_Cipher_Mode(StreamCipher* cipher) : m_cipher(cipher) {}
 
-      void update(secure_vector<byte>& buf, size_t offset) override
+      size_t process(uint8_t buf[], size_t sz) override
          {
-         if(offset < buf.size())
-            m_cipher->cipher1(&buf[offset], buf.size() - offset);
+         m_cipher->cipher1(buf, sz);
+         return sz;
          }
 
       void finish(secure_vector<byte>& buf, size_t offset) override
@@ -28,7 +28,7 @@ class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
 
       size_t output_length(size_t input_length) const override { return input_length; }
 
-      size_t update_granularity() const override { return 64; /* arbitrary */ }
+      size_t update_granularity() const override { return 1; }
 
       size_t minimum_final_size() const override { return 0; }
 
@@ -44,10 +44,9 @@ class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
       void clear() override { return m_cipher->clear(); }
 
    private:
-      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override
+      void start_msg(const byte nonce[], size_t nonce_len) override
          {
          m_cipher->set_iv(nonce, nonce_len);
-         return secure_vector<byte>();
          }
 
       void key_schedule(const byte key[], size_t length) override

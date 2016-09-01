@@ -22,7 +22,7 @@ namespace Botan {
 class BOTAN_DLL CCM_Mode : public AEAD_Mode
    {
    public:
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t sz) override;
 
       void set_associated_data(const byte ad[], size_t ad_len) override;
 
@@ -41,8 +41,6 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
       size_t tag_size() const override { return m_tag_size; }
 
    protected:
-      const size_t BS = 16; // intrinsic to CCM definition
-
       CCM_Mode(BlockCipher* cipher, size_t tag_size, size_t L);
 
       size_t L() const { return m_L; }
@@ -60,7 +58,7 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
       secure_vector<byte> format_b0(size_t msg_size);
       secure_vector<byte> format_c0();
    private:
-      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const byte nonce[], size_t nonce_len) override;
 
       void key_schedule(const byte key[], size_t length) override;
 

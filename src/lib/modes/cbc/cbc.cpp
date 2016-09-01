@@ -61,7 +61,7 @@ void CBC_Mode::key_schedule(const byte key[], size_t length)
    m_cipher->set_key(key, length);
    }
 
-secure_vector<byte> CBC_Mode::start_raw(const byte nonce[], size_t nonce_len)
+void CBC_Mode::start_msg(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -73,8 +73,6 @@ secure_vector<byte> CBC_Mode::start_raw(const byte nonce[], size_t nonce_len)
    */
    if(nonce_len)
       m_state.assign(nonce, nonce + nonce_len);
-
-   return secure_vector<byte>();
    }
 
 size_t CBC_Encryption::minimum_final_size() const
@@ -90,12 +88,8 @@ size_t CBC_Encryption::output_length(size_t input_length) const
       return round_up(input_length, cipher().block_size());
    }
 
-void CBC_Encryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    const size_t BS = cipher().block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "CBC input is full blocks");
@@ -114,6 +108,8 @@ void CBC_Encryption::update(secure_vector<byte>& buffer, size_t offset)
 
       state().assign(&buf[BS*(blocks-1)], &buf[BS*blocks]);
       }
+
+   return sz;
    }
 
 void CBC_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
@@ -201,12 +197,8 @@ size_t CBC_Decryption::minimum_final_size() const
    return cipher().block_size();
    }
 
-void CBC_Decryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t CBC_Decryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    const size_t BS = cipher().block_size();
 
    BOTAN_ASSERT(sz % BS == 0, "Input is full blocks");
@@ -227,6 +219,8 @@ void CBC_Decryption::update(secure_vector<byte>& buffer, size_t offset)
       buf += to_proc;
       blocks -= to_proc / BS;
       }
+
+   return sz;
    }
 
 void CBC_Decryption::finish(secure_vector<byte>& buffer, size_t offset)

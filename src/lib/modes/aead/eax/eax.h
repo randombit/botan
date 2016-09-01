@@ -54,7 +54,7 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode
 
       secure_vector<byte> m_nonce_mac;
    private:
-      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const byte nonce[], size_t nonce_len) override;
 
       void key_schedule(const byte key[], size_t length) override;
    };
@@ -77,7 +77,7 @@ class BOTAN_DLL EAX_Encryption final : public EAX_Mode
 
       size_t minimum_final_size() const override { return 0; }
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    };
@@ -103,7 +103,7 @@ class BOTAN_DLL EAX_Decryption final : public EAX_Mode
 
       size_t minimum_final_size() const override { return tag_size(); }
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    };

@@ -11,6 +11,9 @@
 
 namespace Botan {
 
+// 128-bit cipher is intrinsic to CCM definition
+static const size_t CCM_BS = 16;
+
 /*
 * CCM_Mode Constructor
 */
@@ -19,7 +22,7 @@ CCM_Mode::CCM_Mode(BlockCipher* cipher, size_t tag_size, size_t L) :
    m_L(L),
    m_cipher(cipher)
    {
-   if(m_cipher->block_size() != BS)
+   if(m_cipher->block_size() != CCM_BS)
       throw Invalid_Argument(m_cipher->name() + " cannot be used with CCM mode");
 
    if(L < 2 || L > 8)
@@ -84,30 +87,24 @@ void CCM_Mode::set_associated_data(const byte ad[], size_t length)
       m_ad_buf.push_back(get_byte(0, static_cast<u16bit>(length)));
       m_ad_buf.push_back(get_byte(1, static_cast<u16bit>(length)));
       m_ad_buf += std::make_pair(ad, length);
-      while(m_ad_buf.size() % BS)
+      while(m_ad_buf.size() % CCM_BS)
          m_ad_buf.push_back(0); // pad with zeros to full block size
       }
    }
 
-secure_vector<byte> CCM_Mode::start_raw(const byte nonce[], size_t nonce_len)
+void CCM_Mode::start_msg(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
    m_nonce.assign(nonce, nonce + nonce_len);
    m_msg_buf.clear();
-
-   return secure_vector<byte>();
    }
 
-void CCM_Mode::update(secure_vector<byte>& buffer, size_t offset)
+size_t CCM_Mode::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
-   buffer.resize(offset); // truncate msg
+   return 0; // no output until finished
    }
 
 void CCM_Mode::encode_length(size_t len, byte out[])
@@ -131,7 +128,7 @@ void CCM_Mode::inc(secure_vector<byte>& C)
 
 secure_vector<byte> CCM_Mode::format_b0(size_t sz)
    {
-   secure_vector<byte> B0(BS);
+   secure_vector<byte> B0(CCM_BS);
 
    const byte b_flags = (m_ad_buf.size() ? 64 : 0) + (((tag_size()/2)-1) << 3) + (L()-1);
 
@@ -144,7 +141,7 @@ secure_vector<byte> CCM_Mode::format_b0(size_t sz)
 
 secure_vector<byte> CCM_Mode::format_c0()
    {
-   secure_vector<byte> C(BS);
+   secure_vector<byte> C(CCM_BS);
 
    const byte a_flags = L()-1;
 
@@ -164,31 +161,31 @@ void CCM_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    byte* buf = buffer.data() + offset;
 
    const secure_vector<byte>& ad = ad_buf();
-   BOTAN_ASSERT(ad.size() % BS == 0, "AD is block size multiple");
+   BOTAN_ASSERT(ad.size() % CCM_BS == 0, "AD is block size multiple");
 
    const BlockCipher& E = cipher();
 
-   secure_vector<byte> T(BS);
+   secure_vector<byte> T(CCM_BS);
    E.encrypt(format_b0(sz), T);
 
-   for(size_t i = 0; i != ad.size(); i += BS)
+   for(size_t i = 0; i != ad.size(); i += CCM_BS)
       {
-      xor_buf(T.data(), &ad[i], BS);
+      xor_buf(T.data(), &ad[i], CCM_BS);
       E.encrypt(T);
       }
 
    secure_vector<byte> C = format_c0();
-   secure_vector<byte> S0(BS);
+   secure_vector<byte> S0(CCM_BS);
    E.encrypt(C, S0);
    inc(C);
 
-   secure_vector<byte> X(BS);
+   secure_vector<byte> X(CCM_BS);
 
    const byte* buf_end = &buf[sz];
 
    while(buf != buf_end)
       {
-      const size_t to_proc = std::min<size_t>(BS, buf_end - buf);
+      const size_t to_proc = std::min<size_t>(CCM_BS, buf_end - buf);
 
       xor_buf(T.data(), buf, to_proc);
       E.encrypt(T);
@@ -217,32 +214,32 @@ void CCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
 
    const secure_vector<byte>& ad = ad_buf();
-   BOTAN_ASSERT(ad.size() % BS == 0, "AD is block size multiple");
+   BOTAN_ASSERT(ad.size() % CCM_BS == 0, "AD is block size multiple");
 
    const BlockCipher& E = cipher();
 
-   secure_vector<byte> T(BS);
+   secure_vector<byte> T(CCM_BS);
    E.encrypt(format_b0(sz - tag_size()), T);
 
-   for(size_t i = 0; i != ad.size(); i += BS)
+   for(size_t i = 0; i != ad.size(); i += CCM_BS)
       {
-      xor_buf(T.data(), &ad[i], BS);
+      xor_buf(T.data(), &ad[i], CCM_BS);
       E.encrypt(T);
       }
 
    secure_vector<byte> C = format_c0();
 
-   secure_vector<byte> S0(BS);
+   secure_vector<byte> S0(CCM_BS);
    E.encrypt(C, S0);
    inc(C);
 
-   secure_vector<byte> X(BS);
+   secure_vector<byte> X(CCM_BS);
 
    const byte* buf_end = &buf[sz - tag_size()];
 
    while(buf != buf_end)
       {
-      const size_t to_proc = std::min<size_t>(BS, buf_end - buf);
+      const size_t to_proc = std::min<size_t>(CCM_BS, buf_end - buf);
 
       E.encrypt(C, X);
       xor_buf(buf, X.data(), to_proc);
