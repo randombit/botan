@@ -1,6 +1,18 @@
 Release Notes
 ========================================
 
+Version 1.11.32, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add support for TLS Encrypt-then-MAC extension (GH #492 and #578)
+  which fixes the known issues in the TLS CBC-HMAC construction.
+
+* Add a new TLS Callbacks interface. Compatability with previous
+  versions is maintained. GH #457 and #567
+
+* The HMAC_RNG constructor added in 1.11.31 that took both an RNG and an
+  entropy source list ignored the entropy sources.
+
 Version 1.11.31, 2016-08-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
