@@ -521,10 +521,11 @@ class Speed final : public Command
 
          Timer encrypt_timer(cipher.name(), provider, "encrypt", buffer.size());
 
+         const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
+         cipher.set_key(key);
+
          while(encrypt_timer.under(runtime))
             {
-            const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
-            cipher.set_key(key);
             encrypt_timer.run([&] { cipher.encipher(buffer); });
             }
 
