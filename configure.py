@@ -478,6 +478,8 @@ Generic lexer function for info.txt and src/build-data files
 """
 def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
+    to_obj.infofile = infofile
+
     # Format as a nameable Python variable
     def py_var(group):
         return group.replace(':', '_')
@@ -733,6 +735,19 @@ class ModulePolicyInfo(object):
         lex_me_harder(infofile, self,
                       ['required', 'if_available', 'prohibited'], {})
 
+    def cross_check(self, modules):
+
+        def check(tp, lst):
+            for mod in lst:
+                if mod not in modules:
+                    logging.error("Module policy %s includes non-existent module %s in <%s>" % (
+                        self.infofile, mod, tp))
+
+        check('required', self.required)
+        check('if_available', self.if_available)
+        check('prohibited', self.prohibited)
+
+
 class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
@@ -838,7 +853,6 @@ class CompilerInfo(object):
         self.mach_abi_linking     = force_to_dict(self.mach_abi_linking)
         self.isa_flags            = force_to_dict(self.isa_flags)
 
-        self.infofile = infofile
         self.mach_opt_flags = {}
 
         while self.mach_opt != []:
@@ -1886,6 +1900,9 @@ def main(argv = None):
     info_cc   = load_build_data('compiler info', 'cc', CompilerInfo)
 
     module_policies = load_build_data('module policy', 'policy', ModulePolicyInfo)
+
+    for policy in module_policies.values():
+        policy.cross_check(modules)
 
     if options.list_modules:
         for k in sorted(modules.keys()):

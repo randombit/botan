@@ -58,7 +58,6 @@ beos_stats
 cryptoapi_rng
 darwin_secrandom
 dev_random
-hres_timer
 proc_walk
 rdrand
 rdseed
@@ -70,9 +69,7 @@ system_rng
 
 # utils
 locking_allocator
-simd_altivec
-simd_scalar
-simd_sse2
+simd
 </if_available>
 
 <prohibited>
@@ -140,7 +137,6 @@ eme_raw
 #emsa_pkcs1 // needed for tls
 emsa_raw
 emsa_x931
-emsa1_bsi
 
 # hash
 blake2
