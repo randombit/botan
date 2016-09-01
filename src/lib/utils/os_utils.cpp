@@ -40,49 +40,92 @@ uint32_t get_process_id()
 
 uint64_t get_processor_timestamp()
    {
-   uint64_t rtc = 0;
-
 #if defined(BOTAN_TARGET_OS_HAS_QUERY_PERF_COUNTER)
    LARGE_INTEGER tv;
    ::QueryPerformanceCounter(&tv);
-   rtc = tv.QuadPart;
-#endif
+   return tv.QuadPart;
 
-#if defined(BOTAN_USE_GCC_INLINE_ASM)
-
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
    if(CPUID::has_rdtsc()) // not available on all x86 CPUs
       {
       uint32_t rtc_low = 0, rtc_high = 0;
       asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
-      rtc = (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
+      return (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
       }
 
-#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    uint32_t rtc_low = 0, rtc_high = 0;
    asm volatile("mftbu %0; mftb %1" : "=r" (rtc_high), "=r" (rtc_low));
-   rtc = (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
+   return (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
 
-#elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
+#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_ALPHA)
+   uint64_t rtc = 0;
    asm volatile("rpcc %0" : "=r" (rtc));
-
-#elif defined(BOTAN_TARGET_ARCH_IS_SPARC64) && !defined(BOTAN_TARGET_OS_IS_OPENBSD)
-   // OpenBSD does not trap access to the %tick register
-   asm volatile("rd %%tick, %0" : "=r" (rtc));
-
-#elif defined(BOTAN_TARGET_ARCH_IS_IA64)
-   asm volatile("mov %0=ar.itc" : "=r" (rtc));
-
-#elif defined(BOTAN_TARGET_ARCH_IS_S390X)
-   asm volatile("stck 0(%0)" : : "a" (&rtc) : "memory", "cc");
-
-#elif defined(BOTAN_TARGET_ARCH_IS_HPPA)
-   asm volatile("mfctl 16,%0" : "=r" (rtc)); // 64-bit only?
-#endif
-
-#endif
-
    return rtc;
+
+   // OpenBSD does not trap access to the %tick register
+#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_SPARC64) && !defined(BOTAN_TARGET_OS_IS_OPENBSD)
+   uint64_t rtc = 0;
+   asm volatile("rd %%tick, %0" : "=r" (rtc));
+   return rtc;
+
+#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_IA64)
+   uint64_t rtc = 0;
+   asm volatile("mov %0=ar.itc" : "=r" (rtc));
+   return rtc;
+
+#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_S390X)
+   uint64_t rtc = 0;
+   asm volatile("stck 0(%0)" : : "a" (&rtc) : "memory", "cc");
+   return rtc;
+
+#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_HPPA)
+   uint64_t rtc = 0;
+   asm volatile("mfctl 16,%0" : "=r" (rtc)); // 64-bit only?
+   return rtc;
+#endif
+
+   /*
+   If we got here either we either don't have an asm instruction
+   above, or (for x86) RDTSC is not available at runtime. Try some
+   clock_gettimes and return the first one that works, or otherwise
+   fall back to std::chrono.
+   */
+
+#if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
+
+   // The ordering here is somewhat arbitrary...
+   const clockid_t clock_types[] = {
+#if defined(CLOCK_MONOTONIC_HR)
+      CLOCK_MONOTONIC_HR,
+#endif
+#if defined(CLOCK_MONOTONIC_RAW)
+      CLOCK_MONOTONIC_RAW,
+#endif
+#if defined(CLOCK_MONOTONIC)
+      CLOCK_MONOTONIC,
+#endif
+#if defined(CLOCK_PROCESS_CPUTIME_ID)
+      CLOCK_PROCESS_CPUTIME_ID,
+#endif
+#if defined(CLOCK_THREAD_CPUTIME_ID)
+      CLOCK_THREAD_CPUTIME_ID,
+#endif
+   };
+
+   for(clockid_t clock : clock_types)
+      {
+      struct timespec ts;
+      if(::clock_gettime(clock, &ts) == 0)
+         {
+         return (static_cast<uint64_t>(ts.tv_sec) * 1000000000) + static_cast<uint64_t>(ts.tv_nsec);
+         }
+      }
+#endif
+
+   // Plain C++11 fallback
+   auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+   return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
    }
 
 uint64_t get_system_timestamp_ns()
