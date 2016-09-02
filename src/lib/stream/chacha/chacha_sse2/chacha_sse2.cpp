@@ -37,19 +37,19 @@ void ChaCha::chacha_sse2_x4(byte output[64], u32bit input[16], size_t rounds)
    __m128i r1_1 = input1;
    __m128i r1_2 = input2;
    __m128i r1_3 = input3;
-   r1_3 = _mm_add_epi64(r0_3, _mm_set_epi64x(0, 1));
+   r1_3 = _mm_add_epi64(r0_3, _mm_set_epi32(0, 0, 0, 1));
 
    __m128i r2_0 = input0;
    __m128i r2_1 = input1;
    __m128i r2_2 = input2;
    __m128i r2_3 = input3;
-   r2_3 = _mm_add_epi64(r0_3, _mm_set_epi64x(0, 2));
+   r2_3 = _mm_add_epi64(r0_3, _mm_set_epi32(0, 0, 0, 2));
 
    __m128i r3_0 = input0;
    __m128i r3_1 = input1;
    __m128i r3_2 = input2;
    __m128i r3_3 = input3;
-   r3_3 = _mm_add_epi64(r0_3, _mm_set_epi64x(0, 3));
+   r3_3 = _mm_add_epi64(r0_3, _mm_set_epi32(0, 0, 0, 3));
 
    for(size_t r = 0; r != rounds / 2; ++r)
       {
@@ -215,26 +215,26 @@ void ChaCha::chacha_sse2_x4(byte output[64], u32bit input[16], size_t rounds)
    r1_1 = _mm_add_epi32(r1_1, input1);
    r1_2 = _mm_add_epi32(r1_2, input2);
    r1_3 = _mm_add_epi32(r1_3, input3);
-   r1_3 = _mm_add_epi64(r1_3, _mm_set_epi64x(0, 1));
+   r1_3 = _mm_add_epi64(r1_3, _mm_set_epi32(0, 0, 0, 1));
 
    r2_0 = _mm_add_epi32(r2_0, input0);
    r2_1 = _mm_add_epi32(r2_1, input1);
    r2_2 = _mm_add_epi32(r2_2, input2);
    r2_3 = _mm_add_epi32(r2_3, input3);
-   r2_3 = _mm_add_epi64(r2_3, _mm_set_epi64x(0, 2));
+   r2_3 = _mm_add_epi64(r2_3, _mm_set_epi32(0, 0, 0, 2));
 
    r3_0 = _mm_add_epi32(r3_0, input0);
    r3_1 = _mm_add_epi32(r3_1, input1);
    r3_2 = _mm_add_epi32(r3_2, input2);
    r3_3 = _mm_add_epi32(r3_3, input3);
-   r3_3 = _mm_add_epi64(r3_3, _mm_set_epi64x(0, 3));
+   r3_3 = _mm_add_epi64(r3_3, _mm_set_epi32(0, 0, 0, 3));
 
    _mm_storeu_si128(output_mm + 0, r0_0);
    _mm_storeu_si128(output_mm + 1, r0_1);
    _mm_storeu_si128(output_mm + 2, r0_2);
    _mm_storeu_si128(output_mm + 3, r0_3);
 
-   _mm_storeu_si128(output_mm + 4    , r1_0);
+   _mm_storeu_si128(output_mm + 4, r1_0);
    _mm_storeu_si128(output_mm + 5, r1_1);
    _mm_storeu_si128(output_mm + 6, r1_2);
    _mm_storeu_si128(output_mm + 7, r1_3);
@@ -244,7 +244,7 @@ void ChaCha::chacha_sse2_x4(byte output[64], u32bit input[16], size_t rounds)
    _mm_storeu_si128(output_mm + 10, r2_2);
    _mm_storeu_si128(output_mm + 11, r2_3);
 
-   _mm_storeu_si128(output_mm + 12    , r3_0);
+   _mm_storeu_si128(output_mm + 12, r3_0);
    _mm_storeu_si128(output_mm + 13, r3_1);
    _mm_storeu_si128(output_mm + 14, r3_2);
    _mm_storeu_si128(output_mm + 15, r3_3);
