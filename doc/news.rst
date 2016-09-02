@@ -10,6 +10,10 @@ Version 1.11.32, Not Yet Released
 * Add a new TLS Callbacks interface. Compatability with previous
   versions is maintained. GH #457 and #567
 
+* The deprecated algorithms Rabin-Williams, Nyberg-Rueppel, MARS, RC2,
+  RC5, RC6, SAFER-SK, TEA, MD2, HAS-160, and RIPEMD-128 have been
+  removed. GH #580
+
 * The HMAC_RNG constructor added in 1.11.31 that took both an RNG and an
   entropy source list ignored the entropy sources.
 

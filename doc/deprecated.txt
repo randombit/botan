@@ -3,17 +3,7 @@ Currently deprecated:
 - PRNGs X9.31 (no longer approved) and HMAC_RNG (non-standard)
   Use HMAC_DRBG
 
-- ECB mode for block ciphers
-
-- Rabin-Williams signatures
-
-- Nyberg-Rueppel signatures
-
-- MARS, RC2, RC5, RC6, SAFER, TEA
-
-- ECB Cipher_Mode
-
-- MD2, HAS-160, RIPEMD-128
+- ECB Cipher_Mode for block ciphers
 
 - 3DES and SEED ciphersuites in TLS
 
