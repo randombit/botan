@@ -96,10 +96,6 @@ make_evp_hash_maker(const EVP_MD* md, const char* algo)
    BOTAN_REGISTER_OPENSSL_EVP_HASH("SHA-512", EVP_sha512);
 #endif
 
-#if !defined(OPENSSL_NO_MD2)
-   BOTAN_REGISTER_OPENSSL_EVP_HASH("MD2", EVP_md2);
-#endif
-
 #if !defined(OPENSSL_NO_MD4)
    BOTAN_REGISTER_OPENSSL_EVP_HASH("MD4", EVP_md4);
 #endif

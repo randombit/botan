@@ -83,23 +83,16 @@ idea
 idea_sse2
 kasumi
 lion
-mars
 misty1
 noekeon
 noekeon_simd
-rc2
-rc5
-rc6
-safer
 seed
 serpent
 serpent_simd
-tea
 threefish
 threefish_avx2
 twofish
 xtea
-xtea_simd
 
 # modes
 ccm
@@ -127,9 +120,7 @@ elgamal
 gost_3410
 mce
 mceies
-nr
 rfc6979
-rw
 
 # pk_pad
 #eme_pkcs1 // needed for tls
@@ -142,11 +133,8 @@ emsa_x931
 blake2
 comb4p
 gost_3411
-has160
-md2
 md4
 #md5 // needed for tls
-rmd128
 rmd160
 #sha1 // needed for tls
 #sha1_sse2 // needed for tls
