@@ -93,7 +93,6 @@ threefish
 threefish_avx2
 twofish
 xtea
-xtea_simd
 
 # modes
 ccm
@@ -121,9 +120,7 @@ elgamal
 gost_3410
 mce
 mceies
-nr
 rfc6979
-rw
 
 # pk_pad
 #eme_pkcs1 // needed for tls
@@ -136,11 +133,8 @@ emsa_x931
 blake2
 comb4p
 gost_3411
-has160
-md2
 md4
 #md5 // needed for tls
-rmd128
 rmd160
 #sha1 // needed for tls
 #sha1_sse2 // needed for tls

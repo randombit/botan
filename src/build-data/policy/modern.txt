@@ -84,17 +84,13 @@ misty1
 rc4
 seed
 xtea
-xtea_simd
 
 cbc_mac
 x919_mac
 
 # MD5 and SHA1 are broken but not prohibited. They are widely in use
 # in non-crypto contexts and are required by TLS currently
-md2
 md4
-rmd128
-has160
 gost_3411
 
 cfb
@@ -102,8 +98,6 @@ ecb
 ofb
 
 elgamal
-rw
-nr
 gost_3410
 
 emsa_x931
@@ -118,4 +112,3 @@ cryptobox
 egd
 unix_procs
 </prohibited>
-
