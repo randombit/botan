@@ -289,11 +289,15 @@ def process_command_line(args):
 
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
-                           help='generate amalgamation files')
+                           help='generate amalgamation files and build without amalgamation (removed)')
 
     build_group.add_option('--via-amalgamation', dest='via_amalgamation',
                            default=False, action='store_true',
-                           help='build via amalgamation')
+                           help='build via amalgamation (deprecated, use --amalgamation)')
+
+    build_group.add_option('--amalgamation', dest='amalgamation',
+                           default=False, action='store_true',
+                           help='generate amalgamation files and build via amalgamation')
 
     build_group.add_option('--single-amalgamation-file',
                            default=False, action='store_true',
@@ -2001,8 +2005,12 @@ def main(argv = None):
             logging.info('Found sphinx-build (use --without-sphinx to disable)')
             options.with_sphinx = True
 
+    if options.gen_amalgamation:
+        raise Exception("--gen-amalgamation was removed. Migrate to --amalgamation.")
+
     if options.via_amalgamation:
-        options.gen_amalgamation = True
+        logging.warn("--via-amalgamation is deprecated. Use --amalgamation.")
+        options.amalgamation = True
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         raise Exception('Botan does not support building as shared library on the target os. '
@@ -2112,11 +2120,10 @@ def main(argv = None):
     with open(os.path.join(build_config.build_dir, 'build_config.py'), 'w') as f:
         f.write(str(template_vars))
 
-    if options.gen_amalgamation:
-        fs = generate_amalgamation(build_config, options)
-        if options.via_amalgamation:
-            build_config.build_sources = fs
-            gen_makefile_lists(template_vars, build_config, options, using_mods, cc, arch, osinfo)
+    if options.amalgamation:
+        amalgamation_cpp_files = generate_amalgamation(build_config, options)
+        build_config.build_sources = amalgamation_cpp_files
+        gen_makefile_lists(template_vars, build_config, options, using_mods, cc, arch, osinfo)
 
     write_template(template_vars['makefile_path'], makefile_template)
 

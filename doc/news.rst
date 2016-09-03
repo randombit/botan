@@ -17,6 +17,11 @@ Version 1.11.32, Not Yet Released
 * The HMAC_RNG constructor added in 1.11.31 that took both an RNG and an
   entropy source list ignored the entropy sources.
 
+* The configure option ``--via-algamation`` was renamed to ``--amalgamation``.
+  The configure option ``--gen-algamation`` was removed. It did generate
+  amalgamations but build Botan without amalgamation. Users should migrate to
+  ``--amalgamation``. GH #621
+
 Version 1.11.31, 2016-08-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
