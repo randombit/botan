@@ -1,14 +1,6 @@
-define SERPENT_SIMD 20131128
+define SERPENT_SIMD 20160903
 
 <requires>
 serpent
 simd
 </requires>
-
-<source>
-serp_simd.cpp
-</source>
-
-<header:public>
-serp_simd.h
-</header:public>

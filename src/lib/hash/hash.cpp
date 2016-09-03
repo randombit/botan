@@ -45,10 +45,6 @@
   #include <botan/sha160.h>
 #endif
 
-#if defined(BOTAN_HAS_SHA1_SSE2)
-  #include <botan/sha1_sse2.h>
-#endif
-
 #if defined(BOTAN_HAS_SHA2_32)
   #include <botan/sha2_32.h>
 #endif
@@ -153,11 +149,6 @@ BOTAN_REGISTER_HASH_NAMED_NOARGS(RIPEMD_160, "RIPEMD-160");
 
 #if defined(BOTAN_HAS_SHA1)
 BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_160, "SHA-160");
-#endif
-
-#if defined(BOTAN_HAS_SHA1_SSE2)
-BOTAN_REGISTER_HASH_NOARGS_IF(CPUID::has_sse2(), SHA_160_SSE2, "SHA-160",
-                              "sse2", BOTAN_SIMD_ALGORITHM_PRIO);
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32)

@@ -420,16 +420,58 @@ void aes_key_schedule(const byte key[], size_t length,
 
 void AES_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni())
+      {
+      return aesni_encrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+   if(CPUID::has_ssse3())
+      {
+      return ssse3_encrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_128::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni())
+      {
+      return aesni_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+   if(CPUID::has_ssse3())
+      {
+      return ssse3_decrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_128::key_schedule(const byte key[], size_t length)
    {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni())
+      {
+      return aesni_key_schedule(key, length);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+   if(CPUID::has_ssse3())
+      {
+      return ssse3_key_schedule(key, length);
+      }
+#endif
+
    aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 
@@ -443,16 +485,58 @@ void AES_128::clear()
 
 void AES_192::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni())
+      {
+      return aesni_encrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+   if(CPUID::has_ssse3())
+      {
+      return ssse3_encrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_192::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni())
+      {
+      return aesni_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+   if(CPUID::has_ssse3())
+      {
+      return ssse3_decrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_192::key_schedule(const byte key[], size_t length)
    {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni())
+      {
+      return aesni_key_schedule(key, length);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+   if(CPUID::has_ssse3())
+      {
+      return ssse3_key_schedule(key, length);
+      }
+#endif
+
    aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 
@@ -466,16 +550,58 @@ void AES_192::clear()
 
 void AES_256::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni())
+      {
+      return aesni_encrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+   if(CPUID::has_ssse3())
+      {
+      return ssse3_encrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
 void AES_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni())
+      {
+      return aesni_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+   if(CPUID::has_ssse3())
+      {
+      return ssse3_decrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_decrypt_n(in, out, blocks, m_DK, m_MD);
    }
 
 void AES_256::key_schedule(const byte key[], size_t length)
    {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni())
+      {
+      return aesni_key_schedule(key, length);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+   if(CPUID::has_ssse3())
+      {
+      return ssse3_key_schedule(key, length);
+      }
+#endif
+
    aes_key_schedule(key, length, m_EK, m_DK, m_ME, m_MD);
    }
 

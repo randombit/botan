@@ -1,12 +1,13 @@
 /*
 * Threefish-512
-* (C) 2013,2014 Jack Lloyd
+* (C) 2013,2014,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/threefish.h>
 #include <botan/loadstor.h>
+#include <botan/cpuid.h>
 
 namespace Botan {
 
@@ -102,6 +103,13 @@ void Threefish_512::encrypt_n(const byte in[], byte out[], size_t blocks) const
    BOTAN_ASSERT(m_K.size() == 9, "Key was set");
    BOTAN_ASSERT(m_T.size() == 3, "Tweak was set");
 
+#if defined(BOTAN_HAS_THREEFISH_AVX2)
+   if(CPUID::has_avx2())
+      {
+      return avx2_encrypt_n(in, out, blocks);
+      }
+#endif
+
    for(size_t i = 0; i != blocks; ++i)
       {
       u64bit X0 = load_le<u64bit>(in, 0);
@@ -140,6 +148,13 @@ void Threefish_512::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    BOTAN_ASSERT(m_K.size() == 9, "Key was set");
    BOTAN_ASSERT(m_T.size() == 3, "Tweak was set");
+
+#if defined(BOTAN_HAS_THREEFISH_AVX2)
+   if(CPUID::has_avx2())
+      {
+      return avx2_dencrypt_n(in, out, blocks);
+      }
+#endif
 
 #define THREEFISH_ROUND(X0,X1,X2,X3,X4,X5,X6,X7,ROT1,ROT2,ROT3,ROT4) \
    do {                                                              \

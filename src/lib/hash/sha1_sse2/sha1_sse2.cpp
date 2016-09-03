@@ -7,8 +7,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/sha1_sse2.h>
-#include <botan/cpuid.h>
+#include <botan/sha160.h>
 #include <emmintrin.h>
 
 namespace Botan {
@@ -152,7 +151,8 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 /*
 * SHA-160 Compression Function using SSE for message expansion
 */
-void SHA_160_SSE2::compress_n(const byte input_bytes[], size_t blocks)
+//static
+void SHA_160::sse2_compress_n(secure_vector<uint32_t>& digest, const byte input[], size_t blocks)
    {
    using namespace SHA1_SSE2_F;
 
@@ -161,13 +161,13 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], size_t blocks)
    const __m128i K40_59 = _mm_set1_epi32(0x8F1BBCDC);
    const __m128i K60_79 = _mm_set1_epi32(0xCA62C1D6);
 
-   u32bit A = m_digest[0],
-          B = m_digest[1],
-          C = m_digest[2],
-          D = m_digest[3],
-          E = m_digest[4];
+   u32bit A = digest[0],
+          B = digest[1],
+          C = digest[2],
+          D = digest[3],
+          E = digest[4];
 
-   const __m128i* input = reinterpret_cast<const __m128i*>(input_bytes);
+   const __m128i* input_mm = reinterpret_cast<const __m128i*>(input);
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -178,16 +178,16 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], size_t blocks)
 
       v4si P0, P1, P2, P3;
 
-      __m128i W0 = _mm_loadu_si128(&input[0]);
+      __m128i W0 = _mm_loadu_si128(&input_mm[0]);
       prep00_15(P0, W0);
 
-      __m128i W1 = _mm_loadu_si128(&input[1]);
+      __m128i W1 = _mm_loadu_si128(&input_mm[1]);
       prep00_15(P1, W1);
 
-      __m128i W2 = _mm_loadu_si128(&input[2]);
+      __m128i W2 = _mm_loadu_si128(&input_mm[2]);
       prep00_15(P2, W2);
 
-      __m128i W3 = _mm_loadu_si128(&input[3]);
+      __m128i W3 = _mm_loadu_si128(&input_mm[3]);
       prep00_15(P3, W3);
 
       /*
@@ -316,13 +316,13 @@ void SHA_160_SSE2::compress_n(const byte input_bytes[], size_t blocks)
       F4(C, D, E, A, B, GET_P_32(P3, 2));
       F4(B, C, D, E, A, GET_P_32(P3, 3));
 
-      A = (m_digest[0] += A);
-      B = (m_digest[1] += B);
-      C = (m_digest[2] += C);
-      D = (m_digest[3] += D);
-      E = (m_digest[4] += E);
+      A = (digest[0] += A);
+      B = (digest[1] += B);
+      C = (digest[2] += C);
+      D = (digest[3] += D);
+      E = (digest[4] += E);
 
-      input += (hash_block_size() / 16);
+      input_mm += (64 / 16);
       }
 
 #undef GET_P_32

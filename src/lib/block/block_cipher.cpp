@@ -13,14 +13,6 @@
   #include <botan/aes.h>
 #endif
 
-#if defined(BOTAN_HAS_AES_SSSE3)
-  #include <botan/aes_ssse3.h>
-#endif
-
-#if defined(BOTAN_HAS_AES_NI)
-  #include <botan/aes_ni.h>
-#endif
-
 #if defined(BOTAN_HAS_BLOWFISH)
   #include <botan/blowfish.h>
 #endif
@@ -51,10 +43,6 @@
   #include <botan/idea.h>
 #endif
 
-#if defined(BOTAN_HAS_IDEA_SSE2)
-  #include <botan/idea_sse2.h>
-#endif
-
 #if defined(BOTAN_HAS_KASUMI)
   #include <botan/kasumi.h>
 #endif
@@ -71,20 +59,12 @@
   #include <botan/noekeon.h>
 #endif
 
-#if defined(BOTAN_HAS_NOEKEON_SIMD)
-  #include <botan/noekeon_simd.h>
-#endif
-
 #if defined(BOTAN_HAS_SEED)
   #include <botan/seed.h>
 #endif
 
 #if defined(BOTAN_HAS_SERPENT)
   #include <botan/serpent.h>
-#endif
-
-#if defined(BOTAN_HAS_SERPENT_SIMD)
-  #include <botan/serp_simd.h>
 #endif
 
 #if defined(BOTAN_HAS_TWOFISH)
@@ -95,16 +75,8 @@
   #include <botan/threefish.h>
 #endif
 
-#if defined(BOTAN_HAS_THREEFISH_512_AVX2)
-  #include <botan/threefish_avx2.h>
-#endif
-
 #if defined(BOTAN_HAS_XTEA)
   #include <botan/xtea.h>
-#endif
-
-#if defined(BOTAN_HAS_XTEA_SIMD)
-  #include <botan/xtea_simd.h>
 #endif
 
 namespace Botan {
@@ -143,21 +115,6 @@ BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_192, "AES-192");
 BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_256, "AES-256");
 #endif
 
-#if defined(BOTAN_HAS_AES_NI)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_aes_ni(), AES_128_NI, "AES-128", "aes_ni", 200);
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_aes_ni(), AES_192_NI, "AES-192", "aes_ni", 200);
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_aes_ni(), AES_256_NI, "AES-256", "aes_ni", 200);
-#endif
-
-#if defined(BOTAN_HAS_AES_SSSE3)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_ssse3(), AES_128_SSSE3, "AES-128",
-                                      "ssse3", BOTAN_SIMD_ALGORITHM_PRIO);
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_ssse3(), AES_192_SSSE3, "AES-192",
-                                      "ssse3", BOTAN_SIMD_ALGORITHM_PRIO);
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_ssse3(), AES_256_SSSE3, "AES-256",
-                                      "ssse3", BOTAN_SIMD_ALGORITHM_PRIO);
-#endif
-
 #if defined(BOTAN_HAS_BLOWFISH)
 BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Blowfish);
 #endif
@@ -187,11 +144,6 @@ BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1STR(GOST_28147_89, "GOST-28147-89", "R3411_94
 BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(IDEA);
 #endif
 
-#if defined(BOTAN_HAS_IDEA_SSE2)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_sse2(), IDEA_SSE2, "IDEA",
-                                      "sse2", BOTAN_SIMD_ALGORITHM_PRIO);
-#endif
-
 #if defined(BOTAN_HAS_KASUMI)
 BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(KASUMI);
 #endif
@@ -204,22 +156,12 @@ BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(MISTY1);
 BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Noekeon);
 #endif
 
-#if defined(BOTAN_HAS_NOEKEON_SIMD)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_simd_32(), Noekeon_SIMD, "Noekeon",
-                                      "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
-#endif
-
 #if defined(BOTAN_HAS_SEED)
 BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(SEED);
 #endif
 
 #if defined(BOTAN_HAS_SERPENT)
 BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Serpent);
-#endif
-
-#if defined(BOTAN_HAS_SERPENT_SIMD)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_simd_32(), Serpent_SIMD, "Serpent",
-                                      "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
 #endif
 
 #if defined(BOTAN_HAS_TWOFISH)
@@ -230,18 +172,8 @@ BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Twofish);
 BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Threefish_512, "Threefish-512");
 #endif
 
-#if defined(BOTAN_HAS_THREEFISH_512_AVX2)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_avx2(), Threefish_512_AVX2, "Threefish-512",
-                                      "avx2", BOTAN_SIMD_ALGORITHM_PRIO);
-#endif
-
 #if defined(BOTAN_HAS_XTEA)
 BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(XTEA);
-#endif
-
-#if defined(BOTAN_HAS_XTEA_SIMD)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_simd_32(), XTEA_SIMD, "XTEA",
-                                      "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
 #endif
 
 #if defined(BOTAN_HAS_CASCADE)

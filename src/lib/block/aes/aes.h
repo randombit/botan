@@ -28,6 +28,18 @@ class BOTAN_DLL AES_128 final : public Block_Cipher_Fixed_Params<16, 16>
    private:
       void key_schedule(const byte key[], size_t length) override;
 
+#if defined(BOTAN_HAS_AES_SSSE3)
+      void ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void ssse3_key_schedule(const byte key[], size_t length);
+#endif
+
+#if defined(BOTAN_HAS_AES_NI)
+      void aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void aesni_key_schedule(const byte key[], size_t length);
+#endif
+
       secure_vector<u32bit> m_EK, m_DK;
       secure_vector<byte> m_ME, m_MD;
    };
@@ -46,6 +58,18 @@ class BOTAN_DLL AES_192 final : public Block_Cipher_Fixed_Params<16, 24>
       std::string name() const override { return "AES-192"; }
       BlockCipher* clone() const override { return new AES_192; }
    private:
+#if defined(BOTAN_HAS_AES_SSSE3)
+      void ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void ssse3_key_schedule(const byte key[], size_t length);
+#endif
+
+#if defined(BOTAN_HAS_AES_NI)
+      void aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void aesni_key_schedule(const byte key[], size_t length);
+#endif
+
       void key_schedule(const byte key[], size_t length) override;
 
       secure_vector<u32bit> m_EK, m_DK;
@@ -66,6 +90,18 @@ class BOTAN_DLL AES_256 final : public Block_Cipher_Fixed_Params<16, 32>
       std::string name() const override { return "AES-256"; }
       BlockCipher* clone() const override { return new AES_256; }
    private:
+#if defined(BOTAN_HAS_AES_SSSE3)
+      void ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void ssse3_key_schedule(const byte key[], size_t length);
+#endif
+
+#if defined(BOTAN_HAS_AES_NI)
+      void aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void aesni_key_schedule(const byte key[], size_t length);
+#endif
+
       void key_schedule(const byte key[], size_t length) override;
 
       secure_vector<u32bit> m_EK, m_DK;

@@ -5,9 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/aes_ni.h>
+#include <botan/aes.h>
 #include <botan/loadstor.h>
-#include <botan/cpuid.h>
 #include <wmmintrin.h>
 
 namespace Botan {
@@ -104,7 +103,7 @@ __m128i aes_256_key_expansion(__m128i key, __m128i key2)
 /*
 * AES-128 Encryption
 */
-void AES_128_NI::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_128::aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -180,7 +179,7 @@ void AES_128_NI::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-128 Decryption
 */
-void AES_128_NI::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_128::aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -256,7 +255,7 @@ void AES_128_NI::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-128 Key Schedule
 */
-void AES_128_NI::key_schedule(const byte key[], size_t)
+void AES_128::aesni_key_schedule(const byte key[], size_t)
    {
    m_EK.resize(44);
    m_DK.resize(44);
@@ -306,18 +305,9 @@ void AES_128_NI::key_schedule(const byte key[], size_t)
    }
 
 /*
-* Clear memory of sensitive data
-*/
-void AES_128_NI::clear()
-   {
-   zap(m_EK);
-   zap(m_DK);
-   }
-
-/*
 * AES-192 Encryption
 */
-void AES_192_NI::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_192::aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -399,7 +389,7 @@ void AES_192_NI::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-192 Decryption
 */
-void AES_192_NI::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_192::aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -481,7 +471,7 @@ void AES_192_NI::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-192 Key Schedule
 */
-void AES_192_NI::key_schedule(const byte key[], size_t)
+void AES_192::aesni_key_schedule(const byte key[], size_t)
    {
    m_EK.resize(52);
    m_DK.resize(52);
@@ -528,18 +518,9 @@ void AES_192_NI::key_schedule(const byte key[], size_t)
    }
 
 /*
-* Clear memory of sensitive data
-*/
-void AES_192_NI::clear()
-   {
-   zap(m_EK);
-   zap(m_DK);
-   }
-
-/*
 * AES-256 Encryption
 */
-void AES_256_NI::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_256::aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -627,7 +608,7 @@ void AES_256_NI::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-256 Decryption
 */
-void AES_256_NI::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_256::aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -715,7 +696,7 @@ void AES_256_NI::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-256 Key Schedule
 */
-void AES_256_NI::key_schedule(const byte key[], size_t)
+void AES_256::aesni_key_schedule(const byte key[], size_t)
    {
    m_EK.resize(60);
    m_DK.resize(60);
@@ -777,15 +758,6 @@ void AES_256_NI::key_schedule(const byte key[], size_t)
    _mm_storeu_si128(DK_mm + 12, _mm_aesimc_si128(K2));
    _mm_storeu_si128(DK_mm + 13, _mm_aesimc_si128(K1));
    _mm_storeu_si128(DK_mm + 14, K0);
-   }
-
-/*
-* Clear memory of sensitive data
-*/
-void AES_256_NI::clear()
-   {
-   zap(m_EK);
-   zap(m_DK);
    }
 
 #undef AES_ENC_4_ROUNDS
