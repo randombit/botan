@@ -13,7 +13,6 @@ ecc_curves=brainpool512r1 brainpool384r1 brainpool256r1 secp384r1 secp256r1
 minimum_dh_group_size=2000
 minimum_ecdh_group_size=250
 minimum_rsa_bits=2000
-ecc_curves=brainpool512r1 brainpool384r1 brainpool256r1
 
 allow_insecure_renegotiation=false
 allow_server_initiated_renegotiation=true
