@@ -7,8 +7,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/ecdh.h>
+#include <botan/internal/pk_ops_impl.h>
+
+#if defined(BOTAN_HAS_OPENSSL)
+  #include <botan/internal/openssl.h>
+#endif
 
 namespace Botan {
 
@@ -47,6 +51,22 @@ class ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
 
 }
 
-BOTAN_REGISTER_PK_KEY_AGREE_OP("ECDH", ECDH_KA_Operation);
+std::unique_ptr<PK_Ops::Key_Agreement>
+ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
+                                         const std::string& params,
+                                         const std::string& provider) const
+   {
+#if defined(BOTAN_HAS_OPENSSL)
+   if(provider == "openssl")
+      {
+      std::unique_ptr<PK_Ops::Key_Agreement> res = make_openssl_ecdh_ka_op(*this, params);
+      if(res)
+         return res;
+      }
+#endif
+
+   return std::unique_ptr<PK_Ops::Key_Agreement>(new ECDH_KA_Operation(*this, params));
+   }
+
 
 }

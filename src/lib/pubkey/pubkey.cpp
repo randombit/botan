@@ -8,28 +8,10 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/pk_ops.h>
 #include <botan/internal/ct_utils.h>
 
 namespace Botan {
-
-namespace {
-
-template<typename T, typename Key>
-T* get_pk_op(const std::string& what, const Key& key, const std::string& pad,
-             const std::string& provider = "")
-   {
-   if(T* p = Algo_Registry<T>::global_registry().make(typename T::Spec(key, pad), provider))
-      return p;
-
-   const std::string err = what + " with " + key.algo_name() + "/" + pad + " not supported";
-   if(!provider.empty())
-      throw Lookup_Error(err + " with provider " + provider);
-   else
-      throw Lookup_Error(err);
-   }
-
-}
 
 secure_vector<byte> PK_Decryptor::decrypt(const byte in[], size_t length) const
    {
@@ -53,8 +35,6 @@ PK_Decryptor::decrypt_or_random(const byte in[],
                                 size_t required_contents_length) const
    {
    const secure_vector<byte> fake_pms = rng.random_vec(expected_pt_len);
-
-   //CT::poison(in, length);
 
    byte valid_mask = 0;
    secure_vector<byte> decoded = do_decrypt(valid_mask, in, length);
@@ -90,9 +70,6 @@ PK_Decryptor::decrypt_or_random(const byte in[],
                             /*from1*/fake_pms.data(),
                             expected_pt_len);
 
-   //CT::unpoison(in, length);
-   //CT::unpoison(decoded.data(), decoded.size());
-
    return decoded;
    }
 
@@ -107,10 +84,12 @@ PK_Decryptor::decrypt_or_random(const byte in[],
    }
 
 PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
+                                   RandomNumberGenerator& rng,
                                    const std::string& padding,
                                    const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::Encryption>("Encryption", key, padding, provider));
+   m_op = key.create_encryption_op(rng, padding, provider);
+   BOTAN_ASSERT_NONNULL(m_op);
    }
 
 std::vector<byte>
@@ -124,10 +103,13 @@ size_t PK_Encryptor_EME::maximum_input_size() const
    return m_op->max_input_bits() / 8;
    }
 
-PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key, const std::string& padding,
+PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
+                                   RandomNumberGenerator& rng,
+                                   const std::string& padding,
                                    const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::Decryption>("Decryption", key, padding, provider));
+   m_op = key.create_decryption_op(rng, padding, provider);
+   BOTAN_ASSERT_NONNULL(m_op);
    }
 
 secure_vector<byte> PK_Decryptor_EME::do_decrypt(byte& valid_mask,
@@ -137,10 +119,12 @@ secure_vector<byte> PK_Decryptor_EME::do_decrypt(byte& valid_mask,
    }
 
 PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
+                                   RandomNumberGenerator& rng,
                                    const std::string& param,
                                    const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::KEM_Encryption>("KEM", key, param, provider));
+   m_op = key.create_kem_encryption_op(rng, param, provider);
+   BOTAN_ASSERT_NONNULL(m_op);
    }
 
 void PK_KEM_Encryptor::encrypt(secure_vector<byte>& out_encapsulated_key,
@@ -159,10 +143,12 @@ void PK_KEM_Encryptor::encrypt(secure_vector<byte>& out_encapsulated_key,
    }
 
 PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
+                                   RandomNumberGenerator& rng,
                                    const std::string& param,
                                    const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::KEM_Decryption>("KEM", key, param, provider));
+   m_op = key.create_kem_decryption_op(rng, param, provider);
+   BOTAN_ASSERT_NONNULL(m_op);
    }
 
 secure_vector<byte> PK_KEM_Decryptor::decrypt(const byte encap_key[],
@@ -177,10 +163,12 @@ secure_vector<byte> PK_KEM_Decryptor::decrypt(const byte encap_key[],
    }
 
 PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
+                                   RandomNumberGenerator& rng,
                                    const std::string& kdf,
                                    const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::Key_Agreement>("Key agreement", key, kdf, provider));
+   m_op = key.create_key_agreement_op(rng, kdf, provider);
+   BOTAN_ASSERT_NONNULL(m_op);
    }
 
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
@@ -234,11 +222,13 @@ std::vector<byte> der_decode_signature(const byte sig[], size_t len,
 }
 
 PK_Signer::PK_Signer(const Private_Key& key,
+                     RandomNumberGenerator& rng,
                      const std::string& emsa,
                      Signature_Format format,
                      const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::Signature>("Signing", key, emsa, provider));
+   m_op = key.create_signature_op(rng, emsa, provider);
+   BOTAN_ASSERT_NONNULL(m_op);
    m_sig_format = format;
    }
 
@@ -262,11 +252,13 @@ std::vector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
    }
 
 PK_Verifier::PK_Verifier(const Public_Key& key,
-                         const std::string& emsa_name,
+                         RandomNumberGenerator& rng,
+                         const std::string& emsa,
                          Signature_Format format,
                          const std::string& provider)
    {
-   m_op.reset(get_pk_op<PK_Ops::Verification>("Verification", key, emsa_name, provider));
+   m_op = key.create_verification_op(rng, emsa, provider);
+   BOTAN_ASSERT_NONNULL(m_op);
    m_sig_format = format;
    }
 

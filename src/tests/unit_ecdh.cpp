@@ -49,8 +49,8 @@ class ECDH_Unit_Tests : public Test
                Botan::ECDH_PrivateKey private_a(Test::rng(), dom_pars);
                Botan::ECDH_PrivateKey private_b(Test::rng(), dom_pars);
 
-               Botan::PK_Key_Agreement ka(private_a, "KDF2(SHA-512)");
-               Botan::PK_Key_Agreement kb(private_b, "KDF2(SHA-512)");
+               Botan::PK_Key_Agreement ka(private_a, Test::rng(), "KDF2(SHA-512)");
+               Botan::PK_Key_Agreement kb(private_b, Test::rng(), "KDF2(SHA-512)");
 
                Botan::SymmetricKey alice_key = ka.derive_key(32, private_b.public_value());
                Botan::SymmetricKey bob_key = kb.derive_key(32, private_a.public_value());

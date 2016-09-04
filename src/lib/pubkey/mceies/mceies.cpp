@@ -36,7 +36,7 @@ mceies_encrypt(const McEliece_PublicKey& pubkey,
                RandomNumberGenerator& rng,
                const std::string& algo)
    {
-   PK_KEM_Encryptor kem_op(pubkey, "KDF1(SHA-512)");
+   PK_KEM_Encryptor kem_op(pubkey, rng, "KDF1(SHA-512)");
 
    secure_vector<byte> mce_ciphertext, mce_key;
    kem_op.encrypt(mce_ciphertext, mce_key, 64, rng);
@@ -74,7 +74,8 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
    {
    try
       {
-      PK_KEM_Decryptor kem_op(privkey, "KDF1(SHA-512)");
+      Null_RNG null_rng;
+      PK_KEM_Decryptor kem_op(privkey, null_rng, "KDF1(SHA-512)");
 
       const size_t mce_code_bytes = (privkey.get_code_length() + 7) / 8;
 

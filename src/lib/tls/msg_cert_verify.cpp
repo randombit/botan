@@ -28,7 +28,7 @@ Certificate_Verify::Certificate_Verify(Handshake_IO& io,
    std::pair<std::string, Signature_Format> format =
       state.choose_sig_format(*priv_key, m_hash_algo, m_sig_algo, true, policy);
 
-   PK_Signer signer(*priv_key, format.first, format.second);
+   PK_Signer signer(*priv_key, rng, format.first, format.second);
 
    m_signature = signer.sign_message(state.hash().get_contents(), rng);
 
@@ -78,7 +78,8 @@ std::vector<byte> Certificate_Verify::serialize() const
 */
 bool Certificate_Verify::verify(const X509_Certificate& cert,
                                 const Handshake_State& state,
-                                const Policy& policy) const
+                                const Policy& policy,
+                                RandomNumberGenerator& rng) const
    {
    std::unique_ptr<Public_Key> key(cert.subject_public_key());
 
@@ -88,7 +89,7 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
       state.parse_sig_format(*key.get(), m_hash_algo, m_sig_algo,
                              true, policy);
 
-   PK_Verifier verifier(*key, format.first, format.second);
+   PK_Verifier verifier(*key, rng, format.first, format.second);
 
    return verifier.verify_message(state.hash().get_contents(), m_signature);
    }

@@ -162,6 +162,11 @@ class BOTAN_DLL TPM_PrivateKey : public Private_Key
 
       std::string algo_name() const override { return "RSA"; } // ???
 
+      std::unique_ptr<PK_Ops::Signature>
+         create_signature_op(RandomNumberGenerator& rng,
+                             const std::string& params,
+                             const std::string& provider) const override;
+
    private:
       BigInt get_n() const;
       BigInt get_e() const;

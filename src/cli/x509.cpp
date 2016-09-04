@@ -47,7 +47,7 @@ class Sign_Cert final : public Command
          if(!key)
             throw CLI_Error("Failed to load key from " + get_arg("ca_key"));
 
-         Botan::X509_CA ca(ca_cert, *key, get_arg("hash"));
+         Botan::X509_CA ca(ca_cert, *key, get_arg("hash"), rng());
 
          Botan::PKCS10_Request req(get_arg("pkcs10_req"));
 

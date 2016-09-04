@@ -94,6 +94,11 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
 
       std::vector<byte> public_value(PointGFp::Compression_Type type) const
          { return ECDH_PublicKey::public_value(type); }
+
+      std::unique_ptr<PK_Ops::Key_Agreement>
+         create_key_agreement_op(RandomNumberGenerator& rng,
+                                 const std::string& params,
+                                 const std::string& provider) const override;
    };
 
 }

@@ -59,6 +59,11 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
       size_t message_part_size() const override
          { return domain().get_order().bytes(); }
 
+      std::unique_ptr<PK_Ops::Verification>
+         create_verification_op(RandomNumberGenerator& rng,
+                                const std::string& params,
+                                const std::string& provider) const override;
+
    protected:
       GOST_3410_PublicKey() {}
    };
@@ -88,6 +93,11 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
 
       AlgorithmIdentifier pkcs8_algorithm_identifier() const override
          { return EC_PublicKey::algorithm_identifier(); }
+
+      std::unique_ptr<PK_Ops::Signature>
+         create_signature_op(RandomNumberGenerator& rng,
+                             const std::string& params,
+                             const std::string& provider) const;
    };
 
 }

@@ -786,8 +786,8 @@ class Speed final : public Command
          {
          std::vector<uint8_t> plaintext, ciphertext;
 
-         Botan::PK_Encryptor_EME enc(key, padding, provider);
-         Botan::PK_Decryptor_EME dec(key, padding, provider);
+         Botan::PK_Encryptor_EME enc(key, rng(), padding, provider);
+         Botan::PK_Decryptor_EME dec(key, rng(), padding, provider);
 
          Timer enc_timer(nm, provider, padding + " encrypt");
          Timer dec_timer(nm, provider, padding + " decrypt");
@@ -823,8 +823,8 @@ class Speed final : public Command
                        const std::string& kdf,
                        std::chrono::milliseconds msec)
          {
-         Botan::PK_Key_Agreement ka1(key1, kdf, provider);
-         Botan::PK_Key_Agreement ka2(key2, kdf, provider);
+         Botan::PK_Key_Agreement ka1(key1, rng(), kdf, provider);
+         Botan::PK_Key_Agreement ka2(key2, rng(), kdf, provider);
 
          const std::vector<uint8_t> ka1_pub = key1.public_value();
          const std::vector<uint8_t> ka2_pub = key2.public_value();
@@ -851,8 +851,8 @@ class Speed final : public Command
                         const std::string& kdf,
                         std::chrono::milliseconds msec)
          {
-         Botan::PK_KEM_Decryptor dec(key, kdf, provider);
-         Botan::PK_KEM_Encryptor enc(key, kdf, provider);
+         Botan::PK_KEM_Decryptor dec(key, rng(), kdf, provider);
+         Botan::PK_KEM_Encryptor enc(key, rng(), kdf, provider);
 
          Timer kem_enc_timer(nm, provider, "KEM encrypt");
          Timer kem_dec_timer(nm, provider, "KEM decrypt");
@@ -888,8 +888,8 @@ class Speed final : public Command
          {
          std::vector<uint8_t> message, signature, bad_signature;
 
-         Botan::PK_Signer   sig(key, padding, Botan::IEEE_1363, provider);
-         Botan::PK_Verifier ver(key, padding, Botan::IEEE_1363, provider);
+         Botan::PK_Signer   sig(key, rng(), padding, Botan::IEEE_1363, provider);
+         Botan::PK_Verifier ver(key, rng(), padding, Botan::IEEE_1363, provider);
 
          Timer sig_timer(nm, provider, padding + " sign");
          Timer ver_timer(nm, provider, padding + " verify");

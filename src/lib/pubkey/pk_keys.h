@@ -15,6 +15,20 @@
 
 namespace Botan {
 
+class RandomNumberGenerator;
+
+namespace PK_Ops {
+
+class Encryption;
+class Decryption;
+class Key_Agreement;
+class KEM_Encryption;
+class KEM_Decryption;
+class Verification;
+class Signature;
+
+}
+
 /**
 * Public Key Base Class.
 */
@@ -82,6 +96,42 @@ class BOTAN_DLL Public_Key
       */
       virtual std::vector<byte> x509_subject_public_key() const = 0;
 
+      /**
+      * Return an encryption operation for this key/params or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      */
+      virtual std::unique_ptr<PK_Ops::Encryption>
+         create_encryption_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const;
+
+      /**
+      * Return a KEM encryption operation for this key/params or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      */
+      virtual std::unique_ptr<PK_Ops::KEM_Encryption>
+         create_kem_encryption_op(RandomNumberGenerator& rng,
+                                  const std::string& params,
+                                  const std::string& provider) const;
+
+      /**
+      * Return a verification operation for this key/params or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      */
+      virtual std::unique_ptr<PK_Ops::Verification>
+         create_verification_op(RandomNumberGenerator& rng,
+                                const std::string& params,
+                                const std::string& provider) const;
+
       virtual ~Public_Key() {}
    protected:
       /**
@@ -113,6 +163,55 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
        * @return Hash of the PKCS #8 encoding for this key object
        */
       std::string fingerprint(const std::string& alg = "SHA") const;
+
+      /**
+      * Return an decryption operation for this key/params or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      */
+      virtual std::unique_ptr<PK_Ops::Decryption>
+         create_decryption_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const;
+
+      /**
+      * Return a KEM decryption operation for this key/params or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      */
+      virtual std::unique_ptr<PK_Ops::KEM_Decryption>
+         create_kem_decryption_op(RandomNumberGenerator& rng,
+                                  const std::string& params,
+                                  const std::string& provider) const;
+
+      /**
+      * Return a signature operation for this key/params or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      */
+      virtual std::unique_ptr<PK_Ops::Signature>
+         create_signature_op(RandomNumberGenerator& rng,
+                             const std::string& params,
+                             const std::string& provider) const;
+
+      /**
+      * Return a key agreement operation for this key/params or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      */
+      virtual std::unique_ptr<PK_Ops::Key_Agreement>
+         create_key_agreement_op(RandomNumberGenerator& rng,
+                                 const std::string& params,
+                                 const std::string& provider) const;
+
    protected:
       /**
       * Self-test after loading a key
@@ -142,7 +241,8 @@ class BOTAN_DLL PK_Key_Agreement_Key : public virtual Private_Key
    };
 
 /*
-* Typedefs
+* Old compat typedefs
+* TODO: remove these?
 */
 typedef PK_Key_Agreement_Key PK_KA_Key;
 typedef Public_Key X509_PublicKey;

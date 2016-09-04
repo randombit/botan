@@ -145,7 +145,7 @@ Botan::Credentials_Manager* create_creds(Botan::RandomNumberGenerator& rng,
                                                             "SHA-256",
                                                             rng);
 
-   Botan::X509_CA ca(ca_cert, *ca_key, "SHA-256");
+   Botan::X509_CA ca(ca_cert, *ca_key, "SHA-256", Test::rng());
 
    auto now = std::chrono::system_clock::now();
    Botan::X509_Time start_time(now);

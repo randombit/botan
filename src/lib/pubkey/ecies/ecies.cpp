@@ -10,7 +10,7 @@
 #include <botan/cipher_mode.h>
 
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/pk_utils.h>
+#include <botan/internal/pk_ops_impl.h>
 
 namespace Botan {
 
@@ -45,6 +45,11 @@ class ECIES_PrivateKey : public EC_PrivateKey, public PK_Key_Agreement_Key
          return m_key.max_input_bits();
          }
 
+      std::unique_ptr<PK_Ops::Key_Agreement>
+         create_key_agreement_op(RandomNumberGenerator& rng,
+                                 const std::string& params,
+                                 const std::string& provider) const override;
+
    private:
       ECDH_PrivateKey m_key;
    };
@@ -55,9 +60,7 @@ class ECIES_PrivateKey : public EC_PrivateKey, public PK_Key_Agreement_Key
 class ECIES_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
-      typedef ECIES_PrivateKey Key_Type;
-
-      ECIES_ECDH_KA_Operation(const ECIES_PrivateKey& private_key, const std::string&) :
+      ECIES_ECDH_KA_Operation(const ECIES_PrivateKey& private_key) :
          PK_Ops::Key_Agreement_with_KDF("Raw"),
          m_key(private_key)
          {
@@ -75,6 +78,14 @@ class ECIES_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
    private:
       ECIES_PrivateKey m_key;
    };
+
+std::unique_ptr<PK_Ops::Key_Agreement>
+ECIES_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
+                                          const std::string& /*params*/,
+                                          const std::string& /*provider*/) const
+   {
+   return std::unique_ptr<PK_Ops::Key_Agreement>(new ECIES_ECDH_KA_Operation(*this));
+   }
 
 /**
 * Creates a PK_Key_Agreement instance for the given key and ecies_params
@@ -109,8 +120,6 @@ PK_Key_Agreement create_key_agreement(const PK_Key_Agreement_Key& private_key, c
    return PK_Key_Agreement(private_key, "Raw");		// use default implementation
    }
 }
-
-BOTAN_REGISTER_PK_KEY_AGREE_OP("ECIES", ECIES_ECDH_KA_Operation);
 
 ECIES_KA_Operation::ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key, const ECIES_KA_Params& ecies_params,
                                        bool for_encryption) :

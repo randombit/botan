@@ -2,18 +2,24 @@
 * ECDSA implemenation
 * (C) 2007 Manuel Hartl, FlexSecure GmbH
 *     2007 Falko Strenzke, FlexSecure GmbH
-*     2008-2010,2015 Jack Lloyd
+*     2008-2010,2015,2016 Jack Lloyd
 *     2016 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/ecdsa.h>
+#include <botan/internal/pk_ops_impl.h>
 #include <botan/keypair.h>
+#include <botan/reducer.h>
+#include <botan/emsa.h>
+
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
   #include <botan/rfc6979.h>
-  #include <botan/emsa.h>
+#endif
+
+#if defined(BOTAN_HAS_OPENSSL)
+  #include <botan/internal/openssl.h>
 #endif
 
 namespace Botan {
@@ -150,9 +156,39 @@ bool ECDSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
    return (v == r);
    }
 
-BOTAN_REGISTER_PK_SIGNATURE_OP("ECDSA", ECDSA_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("ECDSA", ECDSA_Verification_Operation);
-
 }
+
+std::unique_ptr<PK_Ops::Verification>
+ECDSA_PublicKey::create_verification_op(RandomNumberGenerator& rng,
+                                        const std::string& params,
+                                        const std::string& provider) const
+   {
+#if defined(BOTAN_HAS_OPENSSL)
+   if(provider == "openssl")
+      {
+      std::unique_ptr<PK_Ops::Verification> res = make_openssl_ecdsa_ver_op(*this, params);
+      if(res)
+         return res;
+      }
+#endif
+   return std::unique_ptr<PK_Ops::Verification>(new ECDSA_Verification_Operation(*this, params));
+   }
+
+std::unique_ptr<PK_Ops::Signature>
+ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
+                                      const std::string& params,
+                                      const std::string& provider) const
+   {
+#if defined(BOTAN_HAS_OPENSSL)
+   if(provider == "openssl")
+      {
+      std::unique_ptr<PK_Ops::Signature> res = make_openssl_ecdsa_sig_op(*this, params);
+      if(res)
+         return res;
+      }
+#endif
+
+   return std::unique_ptr<PK_Ops::Signature>(new ECDSA_Signature_Operation(*this, params));
+   }
 
 }

@@ -29,6 +29,12 @@ class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
          {}
 
       ElGamal_PublicKey(const DL_Group& group, const BigInt& y);
+
+      std::unique_ptr<PK_Ops::Encryption>
+         create_encryption_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const override;
+
    protected:
       ElGamal_PublicKey() {}
    };
@@ -49,6 +55,11 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
       ElGamal_PrivateKey(RandomNumberGenerator& rng,
                          const DL_Group& group,
                          const BigInt& priv_key = 0);
+
+      std::unique_ptr<PK_Ops::Decryption>
+         create_decryption_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const override;
    };
 
 }

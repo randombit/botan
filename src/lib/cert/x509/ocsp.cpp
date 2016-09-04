@@ -61,7 +61,8 @@ void check_signature(const std::vector<byte>& tbs_response,
    Signature_Format format =
       (pub_key->message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
 
-   PK_Verifier verifier(*pub_key, padding, format);
+   Null_RNG null_rng;
+   PK_Verifier verifier(*pub_key, null_rng, padding, format);
 
    if(!verifier.verify_message(ASN1::put_in_sequence(tbs_response), signature))
       throw Exception("Signature on OCSP response does not verify");

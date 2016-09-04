@@ -1,20 +1,22 @@
 /*
 * DSA
-* (C) 1999-2010,2014 Jack Lloyd
+* (C) 1999-2010,2014,2016 Jack Lloyd
 * (C) 2016 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/dsa.h>
 #include <botan/keypair.h>
 #include <botan/pow_mod.h>
 #include <botan/reducer.h>
+#include <botan/internal/pk_ops_impl.h>
+
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-  #include <botan/rfc6979.h>
   #include <botan/emsa.h>
+  #include <botan/rfc6979.h>
 #endif
+
 #include <future>
 
 namespace Botan {
@@ -193,9 +195,22 @@ bool DSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
    return (m_mod_q.reduce(s) == r);
    }
 
-BOTAN_REGISTER_PK_SIGNATURE_OP("DSA", DSA_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("DSA", DSA_Verification_Operation);
-
 }
+
+std::unique_ptr<PK_Ops::Verification>
+DSA_PublicKey::create_verification_op(RandomNumberGenerator& rng,
+                                      const std::string& params,
+                                      const std::string& provider) const
+   {
+   return std::unique_ptr<PK_Ops::Verification>(new DSA_Verification_Operation(*this, params));
+   }
+
+std::unique_ptr<PK_Ops::Signature>
+DSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
+                                    const std::string& params,
+                                    const std::string& provider) const
+   {
+   return std::unique_ptr<PK_Ops::Signature>(new DSA_Signature_Operation(*this, params));
+   }
 
 }

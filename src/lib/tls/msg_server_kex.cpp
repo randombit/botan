@@ -133,7 +133,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       std::pair<std::string, Signature_Format> format =
          state.choose_sig_format(*signing_key, m_hash_algo, m_sig_algo, false, policy);
 
-      PK_Signer signer(*signing_key, format.first, format.second);
+      PK_Signer signer(*signing_key, rng, format.first, format.second);
 
       signer.update(state.client_hello()->random());
       signer.update(state.server_hello()->random());
@@ -237,7 +237,8 @@ std::vector<byte> Server_Key_Exchange::serialize() const
 */
 bool Server_Key_Exchange::verify(const Public_Key& server_key,
                                  const Handshake_State& state,
-                                 const Policy& policy) const
+                                 const Policy& policy,
+                                 RandomNumberGenerator& rng) const
    {
    policy.check_peer_key_acceptable(server_key);
 
@@ -245,7 +246,7 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
       state.parse_sig_format(server_key, m_hash_algo, m_sig_algo,
                              false, policy);
 
-   PK_Verifier verifier(server_key, format.first, format.second);
+   PK_Verifier verifier(server_key, rng, format.first, format.second);
 
    verifier.update(state.client_hello()->random());
    verifier.update(state.server_hello()->random());

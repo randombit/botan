@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/rsa.h>
+#include <botan/internal/pk_ops_impl.h>
 #include <botan/parsing.h>
 #include <botan/keypair.h>
 #include <botan/blinding.h>
@@ -15,6 +15,10 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <future>
+
+#if defined(BOTAN_HAS_OPENSSL)
+  #include <botan/internal/openssl.h>
+#endif
 
 namespace Botan {
 
@@ -189,7 +193,7 @@ class RSA_Private_Operation
    protected:
       size_t get_max_input_bits() const { return (m_n.bits() - 1); }
 
-      explicit RSA_Private_Operation(const RSA_PrivateKey& rsa) :
+      explicit RSA_Private_Operation(const RSA_PrivateKey& rsa, RandomNumberGenerator& rng) :
          m_n(rsa.get_n()),
          m_q(rsa.get_q()),
          m_c(rsa.get_c()),
@@ -198,6 +202,7 @@ class RSA_Private_Operation
          m_powermod_d2_q(rsa.get_d2(), rsa.get_q()),
          m_mod_p(rsa.get_p()),
          m_blinder(m_n,
+                   rng,
                    [this](const BigInt& k) { return m_powermod_e_n(k); },
                    [this](const BigInt& k) { return inverse_mod(k, m_n); })
          {
@@ -238,9 +243,9 @@ class RSA_Signature_Operation : public PK_Ops::Signature_with_EMSA,
 
       size_t max_input_bits() const override { return get_max_input_bits(); };
 
-      RSA_Signature_Operation(const RSA_PrivateKey& rsa, const std::string& emsa) :
+      RSA_Signature_Operation(const RSA_PrivateKey& rsa, const std::string& emsa, RandomNumberGenerator& rng) :
          PK_Ops::Signature_with_EMSA(emsa),
-         RSA_Private_Operation(rsa)
+         RSA_Private_Operation(rsa, rng)
          {
          }
 
@@ -263,9 +268,9 @@ class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
 
       size_t max_raw_input_bits() const override { return get_max_input_bits(); };
 
-      RSA_Decryption_Operation(const RSA_PrivateKey& rsa, const std::string& eme) :
+      RSA_Decryption_Operation(const RSA_PrivateKey& rsa, const std::string& eme, RandomNumberGenerator& rng) :
          PK_Ops::Decryption_with_EME(eme),
-         RSA_Private_Operation(rsa)
+         RSA_Private_Operation(rsa, rng)
          {
          }
 
@@ -286,9 +291,10 @@ class RSA_KEM_Decryption_Operation : public PK_Ops::KEM_Decryption_with_KDF,
       typedef RSA_PrivateKey Key_Type;
 
       RSA_KEM_Decryption_Operation(const RSA_PrivateKey& key,
-                                   const std::string& kdf) :
+                                   const std::string& kdf,
+                                   RandomNumberGenerator& rng) :
          PK_Ops::KEM_Decryption_with_KDF(kdf),
-         RSA_Private_Operation(key)
+         RSA_Private_Operation(key, rng)
          {}
 
       secure_vector<byte>
@@ -397,16 +403,90 @@ class RSA_KEM_Encryption_Operation : public PK_Ops::KEM_Encryption_with_KDF,
          }
    };
 
-
-BOTAN_REGISTER_PK_ENCRYPTION_OP("RSA", RSA_Encryption_Operation);
-BOTAN_REGISTER_PK_DECRYPTION_OP("RSA", RSA_Decryption_Operation);
-
-BOTAN_REGISTER_PK_SIGNATURE_OP("RSA", RSA_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("RSA", RSA_Verify_Operation);
-
-BOTAN_REGISTER_PK_KEM_ENCRYPTION_OP("RSA", RSA_KEM_Encryption_Operation);
-BOTAN_REGISTER_PK_KEM_DECRYPTION_OP("RSA", RSA_KEM_Decryption_Operation);
-
 }
+
+std::unique_ptr<PK_Ops::Encryption>
+RSA_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
+                                    const std::string& params,
+                                    const std::string& provider) const
+   {
+#if defined(BOTAN_HAS_OPENSSL)
+   if(provider == "openssl")
+      {
+      std::unique_ptr<PK_Ops::Encryption> res = make_openssl_rsa_enc_op(*this, params);
+      if(res)
+         return res;
+      }
+#endif
+
+   return std::unique_ptr<PK_Ops::Encryption>(new RSA_Encryption_Operation(*this, params));
+   }
+
+std::unique_ptr<PK_Ops::KEM_Encryption>
+RSA_PublicKey::create_kem_encryption_op(RandomNumberGenerator& rng,
+                                        const std::string& params,
+                                        const std::string& /*provider*/) const
+   {
+   return std::unique_ptr<PK_Ops::KEM_Encryption>(new RSA_KEM_Encryption_Operation(*this, params));
+   }
+
+std::unique_ptr<PK_Ops::Verification>
+RSA_PublicKey::create_verification_op(RandomNumberGenerator& rng,
+                                      const std::string& params,
+                                      const std::string& provider) const
+   {
+#if defined(BOTAN_HAS_OPENSSL)
+   if(provider == "openssl")
+      {
+      std::unique_ptr<PK_Ops::Verification> res = make_openssl_rsa_ver_op(*this, params);
+      if(res)
+         return res;
+      }
+#endif
+
+   return std::unique_ptr<PK_Ops::Verification>(new RSA_Verify_Operation(*this, params));
+   }
+
+std::unique_ptr<PK_Ops::Decryption>
+RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
+                                     const std::string& params,
+                                     const std::string& provider) const
+   {
+#if defined(BOTAN_HAS_OPENSSL)
+   if(provider == "openssl")
+      {
+      std::unique_ptr<PK_Ops::Decryption> res = make_openssl_rsa_dec_op(*this, params);
+      if(res)
+         return res;
+      }
+#endif
+
+   return std::unique_ptr<PK_Ops::Decryption>(new RSA_Decryption_Operation(*this, params, rng));
+   }
+
+std::unique_ptr<PK_Ops::KEM_Decryption>
+RSA_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
+                                         const std::string& params,
+                                         const std::string& /*provider*/) const
+   {
+   return std::unique_ptr<PK_Ops::KEM_Decryption>(new RSA_KEM_Decryption_Operation(*this, params, rng));
+   }
+
+std::unique_ptr<PK_Ops::Signature>
+RSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
+                                    const std::string& params,
+                                    const std::string& provider) const
+   {
+#if defined(BOTAN_HAS_OPENSSL)
+   if(provider == "openssl")
+      {
+      std::unique_ptr<PK_Ops::Signature> res = make_openssl_rsa_sig_op(*this, params);
+      if(res)
+         return res;
+      }
+#endif
+
+   return std::unique_ptr<PK_Ops::Signature>(new RSA_Signature_Operation(*this, params, rng));
+   }
 
 }

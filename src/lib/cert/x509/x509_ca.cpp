@@ -26,12 +26,13 @@ namespace Botan {
 */
 X509_CA::X509_CA(const X509_Certificate& c,
                  const Private_Key& key,
-                 const std::string& hash_fn) : m_cert(c)
+                 const std::string& hash_fn,
+                 RandomNumberGenerator& rng) : m_cert(c)
    {
    if(!m_cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
 
-   m_signer = choose_sig_format(key, hash_fn, m_ca_sig_algo);
+   m_signer = choose_sig_format(key, rng, hash_fn, m_ca_sig_algo);
    }
 
 /*
@@ -225,6 +226,7 @@ X509_Certificate X509_CA::ca_certificate() const
 * Choose a signing format for the key
 */
 PK_Signer* choose_sig_format(const Private_Key& key,
+                             RandomNumberGenerator& rng,
                              const std::string& hash_fn,
                              AlgorithmIdentifier& sig_algo)
    {
@@ -258,7 +260,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
    sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
    sig_algo.parameters = key.algorithm_identifier().parameters;
 
-   return new PK_Signer(key, padding, format);
+   return new PK_Signer(key, rng, padding, format);
    }
 
 }
