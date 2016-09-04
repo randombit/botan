@@ -89,6 +89,7 @@ X509_Certificate& X509_Certificate::operator=(const X509_Certificate& other)
       }
    else
       {
+      X509_Object::operator=(other);
       m_subject = other.m_subject;
       m_issuer = other.m_issuer;
       m_self_signed = other.m_self_signed;
