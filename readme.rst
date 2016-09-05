@@ -165,9 +165,8 @@ Public Key Cryptography
 
 * RSA signatures and encryption
 * DH and ECDH key agreement
-* DSA and ECDSA signatures
-* Quantum computer resistant McEliece KEM scheme
-* GOST-34.10-2001
+* Signature schemes DSA, ECDSA, ECGDSA, ECKCDSA, GOST 34.10-2001
+* Post-quantum KEM schemes McEliece (code based) and NewHope (Ring-LWE)
 * ElGamal encryption
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
@@ -199,6 +198,7 @@ Hash functions and MACs
 Other Useful Things
 ----------------------------------------
 
+* Interfaces for accessing PKCS #11 and TPM hardware
 * Key derivation functions for passwords, including PBKDF2
 * Password hashing functions, including bcrypt and a PBKDF based scheme
 * General key derivation functions KDF1 and KDF2 from IEEE 1363

@@ -4,15 +4,26 @@ Release Notes
 Version 1.11.32, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add support for TLS Encrypt-then-MAC extension (GH #492 and #578)
-  which fixes the known issues in the TLS CBC-HMAC construction.
+* Add support for the NewHope Ring-LWE key encapsulation algorithm. This scheme
+  provides an estimated ~200 bit security level against a quantum attacker while
+  also being very fast and requiring only modest message sizes of 1824 and 2048
+  bytes for initiator and responder, resp. This version is tested as having
+  bit-for-bit identical output as the reference implementation by the authors.
 
-* Add a new TLS Callbacks interface. Compatability with previous
-  versions is maintained. GH #457 and #567
+  Be warned that NewHope is still a very new scheme and may yet fall to analysis.
+  For best assurance, it should be used only in combination with an existing key
+  exchange mechanism such as ECDH.
 
-* The deprecated algorithms Rabin-Williams, Nyberg-Rueppel, MARS, RC2,
-  RC5, RC6, SAFER-SK, TEA, MD2, HAS-160, and RIPEMD-128 have been
-  removed. GH #580
+* Add support for TLS Encrypt-then-MAC extension (GH #492 and #578) which fixes
+  the known issues in the TLS CBC-HMAC construction.
+
+* Add a new TLS Callbacks interface. Compatability with previous versions is
+  maintained. The documentation has been updated accordingly. GH #457 and #567
+
+* The deprecated algorithms Rabin-Williams, Nyberg-Rueppel, MARS, RC2, RC5, RC6,
+  SAFER-SK, TEA, MD2, HAS-160, and RIPEMD-128 have been removed. GH #580
+
+* SSE2 optimizations for ChaCha, 60% faster on both Westmere and Skylake (GH #616)
 
 * The HMAC_RNG constructor added in 1.11.31 that took both an RNG and an
   entropy source list ignored the entropy sources.
