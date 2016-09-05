@@ -274,9 +274,9 @@ class BOTAN_DLL X509_Certificate : public X509_Object
 
       explicit X509_Certificate(const std::vector<byte>& in);
 
-      X509_Certificate(const X509_Certificate& other);
+      X509_Certificate(const X509_Certificate& other) = default;
 
-      X509_Certificate& operator=(const X509_Certificate& other);
+      X509_Certificate& operator=(const X509_Certificate& other) = default;
 
    private:
       void force_decode() override;
