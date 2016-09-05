@@ -308,8 +308,8 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
    Botan::X509_Certificate user1_cert_copy(user1_cert);
    result.test_eq("certificate copy", user1_cert == user1_cert_copy, true);
 
-   user1_cert_copy = user1_cert;
-   result.test_eq("certificate assignment", user1_cert == user1_cert_copy, true);
+   user1_cert_copy = user2_cert;
+   result.test_eq("certificate assignment", user2_cert == user1_cert_copy, true);
 
    Botan::X509_Certificate user1_cert_differ =
       ca.sign_request(user1_req, Test::rng(),

@@ -72,32 +72,6 @@ X509_Certificate::X509_Certificate(const std::vector<byte>& in) :
    do_decode();
    }
 
-X509_Certificate::X509_Certificate(const X509_Certificate& other) :
-   X509_Object(other)
-   {
-   m_subject = other.m_subject;
-   m_issuer = other.m_issuer;
-   m_self_signed = other.m_self_signed;
-   m_v3_extensions = other.m_v3_extensions;
-   }
-
-X509_Certificate& X509_Certificate::operator=(const X509_Certificate& other)
-   {
-   if(&other == this)
-      {
-      return *this;
-      }
-   else
-      {
-      m_subject = other.m_subject;
-      m_issuer = other.m_issuer;
-      m_self_signed = other.m_self_signed;
-      m_v3_extensions = other.m_v3_extensions;
-      }
-   return *this;
-   }
-
-
 /*
 * Decode the TBSCertificate data
 */
