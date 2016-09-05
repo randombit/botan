@@ -46,7 +46,7 @@ PKCS10_Request::PKCS10_Request(const std::vector<byte>& in) :
    }
 
 /*
-* Deocde the CertificateRequestInfo
+* Decode the CertificateRequestInfo
 */
 void PKCS10_Request::force_decode()
    {
@@ -120,11 +120,7 @@ void PKCS10_Request::handle_attribute(const Attribute& attr)
       }
    else if(attr.oid == OIDS::lookup("PKCS9.ExtensionRequest"))
       {
-      Extensions extensions;
-      value.decode(extensions).verify_end();
-
-      Data_Store issuer_info;
-      extensions.contents_to(m_info, issuer_info);
+      value.decode(m_extensions).verify_end();
       }
    }
 
@@ -175,7 +171,12 @@ AlternativeName PKCS10_Request::subject_alt_name() const
 */
 Key_Constraints PKCS10_Request::constraints() const
    {
-   return Key_Constraints(m_info.get1_u32bit("X509v3.KeyUsage", NO_CONSTRAINTS));
+   if(Certificate_Extension* ext = m_extensions.get(OIDS::lookup("X509v3.KeyUsage")))
+      {
+      return dynamic_cast<Cert_Extension::Key_Usage&>(*ext).get_constraints();
+      }
+
+   return NO_CONSTRAINTS;
    }
 
 /*
@@ -183,12 +184,12 @@ Key_Constraints PKCS10_Request::constraints() const
 */
 std::vector<OID> PKCS10_Request::ex_constraints() const
    {
-   std::vector<std::string> oids = m_info.get("X509v3.ExtendedKeyUsage");
+   if(Certificate_Extension* ext = m_extensions.get(OIDS::lookup("X509v3.ExtendedKeyUsage")))
+      {
+      return dynamic_cast<Cert_Extension::Extended_Key_Usage&>(*ext).get_oids();
+      }
 
-   std::vector<OID> result;
-   for(size_t i = 0; i != oids.size(); ++i)
-      result.push_back(OID(oids[i]));
-   return result;
+   return {};
    }
 
 /*
@@ -196,15 +197,37 @@ std::vector<OID> PKCS10_Request::ex_constraints() const
 */
 bool PKCS10_Request::is_CA() const
    {
-   return (m_info.get1_u32bit("X509v3.BasicConstraints.is_ca") > 0);
+   if(Certificate_Extension* ext = m_extensions.get(OIDS::lookup("X509v3.BasicConstraints")))
+      {
+      return dynamic_cast<Cert_Extension::Basic_Constraints&>(*ext).get_is_ca();
+      }
+
+   return false;
    }
 
 /*
 * Return the desired path limit (if any)
 */
-u32bit PKCS10_Request::path_limit() const
+size_t PKCS10_Request::path_limit() const
    {
-   return m_info.get1_u32bit("X509v3.BasicConstraints.path_constraint", 0);
+   if(Certificate_Extension* ext = m_extensions.get(OIDS::lookup("X509v3.BasicConstraints")))
+      {
+      Cert_Extension::Basic_Constraints& basic_constraints = dynamic_cast<Cert_Extension::Basic_Constraints&>(*ext);
+      if(basic_constraints.get_is_ca())
+         {
+         return basic_constraints.get_path_limit();
+         }
+      }
+
+   return 0;
+   }
+
+/*
+* Return the X509v3 extensions
+*/
+Extensions PKCS10_Request::extensions() const
+   {
+   return m_extensions;
    }
 
 }

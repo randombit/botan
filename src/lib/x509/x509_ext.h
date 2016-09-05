@@ -92,6 +92,29 @@ class BOTAN_DLL Extensions : public ASN1_Object
       void contents_to(Data_Store&, Data_Store&) const;
 
       void add(Certificate_Extension* extn, bool critical = false);
+      void replace(Certificate_Extension* extn, bool critical = false);
+
+      Certificate_Extension* get(const OID& oid) const;
+
+      template<typename T>
+      std::unique_ptr<T> get_extension(const OID& oid)
+      {
+      try
+         {
+         if(m_extensions_raw.count(oid) > 0)
+            {
+            std::unique_ptr<T> ext(new T);
+            ext->decode_inner(m_extensions_raw[oid].first);
+            return std::move(ext);
+            }
+         }
+      catch(std::exception& e)
+         {
+         throw Decoding_Error("Exception while decoding extension " +
+                              oid.as_string() + ": " + e.what());
+         }
+      return nullptr;
+      }
 
       std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> extensions() const;
 
