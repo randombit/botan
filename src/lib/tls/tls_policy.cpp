@@ -1,6 +1,7 @@
 /*
 * Policies for TLS
 * (C) 2004-2010,2012,2015,2016 Jack Lloyd
+*     2016 Christian Mainka
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -119,12 +120,73 @@ std::string Policy::choose_curve(const std::vector<std::string>& curve_names) co
 
 std::string Policy::dh_group() const
    {
+   // We offer 2048 bit DH because we can
    return "modp/ietf/2048";
    }
 
 size_t Policy::minimum_dh_group_size() const
    {
+   // Many servers still send 1024 bit
    return 1024;
+   }
+
+size_t Policy::minimum_ecdsa_group_size() const
+   {
+   // Here we are at the mercy of whatever the CA signed, but most certs should be 256 bit by now
+   return 256;
+   }
+
+size_t Policy::minimum_ecdh_group_size() const
+   {
+   // P-256 is smallest curve currently supplrted for TLS key exchange (after 1.11.29)
+   return 256;
+   }
+
+size_t Policy::minimum_rsa_bits() const
+   {
+   /* Default assumption is all end-entity certificates should
+      be at least 2048 bits these days.
+
+      If you are connecting to arbitrary servers on the Internet
+      (ie as a web browser or SMTP client) you'll probably have to reduce this
+      to 1024 bits, or perhaps even lower.
+   */
+   return 2048;
+   }
+
+void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
+   {
+   const std::string algo_name = public_key.algo_name();
+
+   // FIXME this is not really the right way to do this 
+   size_t keylength = public_key.max_input_bits();
+   size_t expected_keylength = 0;
+
+   if(algo_name == "RSA")
+      {
+      expected_keylength = minimum_rsa_bits();
+      keylength += 1; // fixup for use of max_input_bits above
+      }
+   else if(algo_name == "DH")
+      {
+      expected_keylength = minimum_dh_group_size();
+      }
+   else if(algo_name == "ECDH")
+      {
+      expected_keylength = minimum_ecdh_group_size();
+      }
+   else if(algo_name == "ECDSA")
+      {
+      expected_keylength = minimum_ecdsa_group_size();
+      }
+   // else some other algo, so leave expected_keylength as zero and the check is a no-op
+
+   if(keylength < expected_keylength)
+      throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
+                          "Peer sent " + 
+                           std::to_string(keylength) + " bit " + algo_name + " key"
+                           ", policy requires at least " +
+                           std::to_string(expected_keylength));
    }
 
 /*
@@ -147,10 +209,17 @@ bool Policy::send_fallback_scsv(Protocol_Version version) const
 
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
-   if(version.is_datagram_protocol())
-      return (version >= Protocol_Version::DTLS_V12);
-   else
-      return (version >= Protocol_Version::TLS_V10);
+   // Uses boolean optimization:
+   // First check the current version (left part), then if it is allowed 
+   // (right part)
+   // checks are ordered according to their probability
+   return (
+           ( ( version == Protocol_Version::TLS_V12)  && allow_tls12()  ) ||
+           ( ( version == Protocol_Version::TLS_V10)  && allow_tls10()  ) ||
+           ( ( version == Protocol_Version::TLS_V11)  && allow_tls11()  ) ||
+           ( ( version == Protocol_Version::DTLS_V12) && allow_dtls12() ) ||
+           ( ( version == Protocol_Version::DTLS_V10) && allow_dtls10() )
+        );
    }
 
 Protocol_Version Policy::latest_supported_version(bool datagram) const
@@ -168,9 +237,15 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite&) const
 
 bool Policy::allow_server_initiated_renegotiation() const { return false; }
 bool Policy::allow_insecure_renegotiation() const { return false; }
+bool Policy::allow_tls10()  const { return true; }
+bool Policy::allow_tls11()  const { return true; }
+bool Policy::allow_tls12()  const { return true; }
+bool Policy::allow_dtls10() const { return false; }
+bool Policy::allow_dtls12() const { return true; }
 bool Policy::include_time_in_hello_random() const { return true; }
 bool Policy::hide_unknown_users() const { return false; }
 bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
+bool Policy::negotiate_encrypt_then_mac() const { return true; }
 
 // 1 second initial timeout, 60 second max - see RFC 6347 sec 4.2.4.1
 size_t Policy::dtls_initial_timeout() const { return 1*1000; }
@@ -339,6 +414,11 @@ void print_bool(std::ostream& o,
 
 void Policy::print(std::ostream& o) const
    {
+   print_bool(o, "allow_tls10", allow_tls10());
+   print_bool(o, "allow_tls11", allow_tls11());
+   print_bool(o, "allow_tls12", allow_tls12());
+   print_bool(o, "allow_dtls10", allow_dtls10());
+   print_bool(o, "allow_dtls12", allow_dtls12());
    print_vec(o, "ciphers", allowed_ciphers());
    print_vec(o, "macs", allowed_macs());
    print_vec(o, "signature_hashes", allowed_signature_hashes());
@@ -351,9 +431,12 @@ void Policy::print(std::ostream& o) const
    print_bool(o, "allow_server_initiated_renegotiation", allow_server_initiated_renegotiation());
    print_bool(o, "hide_unknown_users", hide_unknown_users());
    print_bool(o, "server_uses_own_ciphersuite_preferences", server_uses_own_ciphersuite_preferences());
+   print_bool(o, "negotiate_encrypt_then_mac", negotiate_encrypt_then_mac());
    o << "session_ticket_lifetime = " << session_ticket_lifetime() << '\n';
    o << "dh_group = " << dh_group() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
+   o << "minimum_ecdh_group_size = " << minimum_ecdh_group_size() << '\n';
+   o << "minimum_rsa_bits = " << minimum_rsa_bits() << '\n';
    }
 
 std::vector<std::string> Strict_Policy::allowed_ciphers() const
@@ -376,13 +459,11 @@ std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
    return { "ECDH" };
    }
 
-bool Strict_Policy::acceptable_protocol_version(Protocol_Version version) const
-   {
-   if(version.is_datagram_protocol())
-      return (version >= Protocol_Version::DTLS_V12);
-   else
-      return (version >= Protocol_Version::TLS_V12);
-   }
+bool Strict_Policy::allow_tls10()  const { return false; }
+bool Strict_Policy::allow_tls11()  const { return false; }
+bool Strict_Policy::allow_tls12()  const { return true;  }
+bool Strict_Policy::allow_dtls10() const { return false; }
+bool Strict_Policy::allow_dtls12() const { return true;  }
 
 }
 

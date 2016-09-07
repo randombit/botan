@@ -15,8 +15,8 @@
 #include <future>
 
 #include <botan/version.h>
-#include <botan/auto_rng.h>
 #include <botan/loadstor.h>
+#include <botan/hash.h>
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
 #include <botan/hmac_drbg.h>
@@ -24,6 +24,10 @@
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
 #include <botan/system_rng.h>
+#endif
+
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+  #include <botan/auto_rng.h>
 #endif
 
 namespace {
@@ -140,7 +144,14 @@ class Test_Runner : public Botan_CLI::Command
             }
 
          output() << " rng:HMAC_DRBG with seed '" << Botan::hex_encode(seed) << "'";
-         std::unique_ptr<Botan::HMAC_DRBG> drbg(new Botan::HMAC_DRBG("SHA-384", 0));
+
+         // Expand out the seed to 512 bits to make the DRBG happy
+         std::unique_ptr<Botan::HashFunction> sha512(Botan::HashFunction::create("SHA-512"));
+         sha512->update(seed);
+         seed.resize(sha512->output_length());
+         sha512->final(seed.data());
+
+         std::unique_ptr<Botan::HMAC_DRBG> drbg(new Botan::HMAC_DRBG("SHA-384"));
          drbg->initialize_with(seed.data(), seed.size());
          rng.reset(new Botan::Serialized_RNG(drbg.release()));
 
@@ -152,15 +163,18 @@ class Test_Runner : public Botan_CLI::Command
 #if defined(BOTAN_HAS_SYSTEM_RNG)
          output() << " rng:system";
          rng.reset(new Botan::System_RNG);
-#else
-         // AutoSeeded_RNG always available
+#elif defined(BOTAN_HAS_AUTO_SEEDING_RNG)
          output() << " rng:autoseeded";
          rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
 #endif
 
 #endif
-
          output() << "\n";
+
+         if(rng.get() == nullptr)
+             {
+             throw Botan_Tests::Test_Error("No usable RNG enabled in build, aborting tests");
+             }
 
          Botan_Tests::Test::setup_tests(soak_level, log_success, data_dir, pkcs11_lib, rng.get());
 

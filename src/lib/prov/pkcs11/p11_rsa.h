@@ -10,13 +10,12 @@
 #define BOTAN_P11_RSA_H__
 
 #include <botan/build.h>
-#if defined(BOTAN_HAS_RSA)
-
 #include <botan/p11.h>
 #include <botan/p11_session.h>
 #include <botan/p11_object.h>
-#include <botan/rsa.h>
 
+#if defined(BOTAN_HAS_RSA)
+#include <botan/rsa.h>
 #include <utility>
 
 namespace Botan {

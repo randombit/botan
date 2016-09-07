@@ -22,7 +22,6 @@ namespace Botan {
 class BOTAN_DLL X509_CA
    {
    public:
-
       /**
       * Sign a PKCS#10 Request.
       * @param req the request to sign

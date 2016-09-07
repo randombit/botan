@@ -1,6 +1,7 @@
 /*
 * Enumerations
 * (C) 1999-2007 Jack Lloyd
+* (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,7 +9,7 @@
 #ifndef BOTAN_ENUMS_H__
 #define BOTAN_ENUMS_H__
 
-#include <botan/ber_dec.h>
+#include <botan/build.h>
 
 namespace Botan {
 
@@ -32,26 +33,13 @@ enum Key_Constraints {
 class Public_Key;
 
 /**
-* Create the key constraints for a specific public key.
-* @param pub_key the public key from which the basic set of
-* constraints to be placed in the return value is derived
-* @param limits additional limits that will be incorporated into the
-* return value
-* @return combination of key type specific constraints and
-* additional limits
+* Check that key constraints are permitted for a specific public key.
+* @param pub_key the public key on which the constraints shall be enforced on
+* @param constrains the constraints that shall be enforced on the key
+* @throw Exception if the given constraints are not permitted for this key
 */
-
-BOTAN_DLL Key_Constraints find_constraints(const Public_Key& pub_key,
-                                           Key_Constraints limits);
-
-/**
-* BER Decoding Function for key constraints
-*/
-namespace BER {
-
-void BOTAN_DLL decode(BER_Decoder&, Key_Constraints&);
-
-}
+BOTAN_DLL void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
+                                                                Key_Constraints constraints);
 
 }
 

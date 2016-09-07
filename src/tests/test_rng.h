@@ -15,13 +15,6 @@
 #include <botan/hex.h>
 #include <botan/exceptn.h>
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
-#else
-  #include <botan/auto_rng.h>
-#endif
-
-
 namespace Botan_Tests {
 
 /**
@@ -43,9 +36,9 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          return out;
          }
 
-      size_t reseed_with_sources(Botan::Entropy_Sources&,
-                                 size_t,
-                                 std::chrono::milliseconds) override { return 0; }
+      size_t reseed(Botan::Entropy_Sources&,
+                    size_t,
+                    std::chrono::milliseconds) override { return 0; }
 
       void randomize(uint8_t out[], size_t len) override
          {
@@ -87,7 +80,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 class Fixed_Output_Position_RNG : public Fixed_Output_RNG
    {
    public:
-      bool is_seeded() const override { return !m_buf.empty() || m_rng->is_seeded(); }
+      bool is_seeded() const override { return !m_buf.empty() || Test::rng().is_seeded(); }
 
       uint8_t random() override
          {
@@ -114,7 +107,7 @@ class Fixed_Output_Position_RNG : public Fixed_Output_RNG
             }
          else
             { // return random
-               m_rng->randomize(out,len);
+               Test::rng().randomize(out,len);
             }
          }
 
@@ -127,32 +120,19 @@ class Fixed_Output_Position_RNG : public Fixed_Output_RNG
 
       explicit Fixed_Output_Position_RNG(const std::vector<uint8_t>& in, uint32_t pos) :
             Fixed_Output_RNG(in),
-            m_pos(pos),
-            m_rng{}
+            m_pos(pos)
          {
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   m_rng.reset(new Botan::System_RNG);
-#else
-   m_rng.reset(new Botan::AutoSeeded_RNG);
-#endif
          }
 
       explicit Fixed_Output_Position_RNG(const std::string& in_str, uint32_t pos) :
             Fixed_Output_RNG(in_str),
-            m_pos(pos),
-            m_rng{}
+            m_pos(pos)
          {
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   m_rng.reset(new Botan::System_RNG);
-#else
-   m_rng.reset(new Botan::AutoSeeded_RNG);
-#endif
          }
 
    private:
       uint32_t m_pos = 0;
       uint32_t m_requests = 0;
-      std::unique_ptr<RandomNumberGenerator> m_rng;
    };
 
 class SeedCapturing_RNG : public Botan::RandomNumberGenerator

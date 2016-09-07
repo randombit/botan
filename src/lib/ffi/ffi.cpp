@@ -287,7 +287,7 @@ int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
 
 int botan_rng_reseed(botan_rng_t rng, size_t bits)
    {
-   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed(bits); });
+   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed_from_rng(Botan::system_rng(), bits); });
    }
 
 int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)

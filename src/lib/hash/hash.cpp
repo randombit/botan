@@ -25,16 +25,8 @@
   #include <botan/gost_3411.h>
 #endif
 
-#if defined(BOTAN_HAS_HAS_160)
-  #include <botan/has160.h>
-#endif
-
 #if defined(BOTAN_HAS_KECCAK)
   #include <botan/keccak.h>
-#endif
-
-#if defined(BOTAN_HAS_MD2)
-  #include <botan/md2.h>
 #endif
 
 #if defined(BOTAN_HAS_MD4)
@@ -43,10 +35,6 @@
 
 #if defined(BOTAN_HAS_MD5)
   #include <botan/md5.h>
-#endif
-
-#if defined(BOTAN_HAS_RIPEMD_128)
-  #include <botan/rmd128.h>
 #endif
 
 #if defined(BOTAN_HAS_RIPEMD_160)
@@ -147,16 +135,8 @@ BOTAN_REGISTER_NAMED_T(HashFunction, "Parallel", Parallel, Parallel::make);
 BOTAN_REGISTER_HASH_NAMED_NOARGS(GOST_34_11, "GOST-R-34.11-94");
 #endif
 
-#if defined(BOTAN_HAS_HAS_160)
-BOTAN_REGISTER_HASH_NAMED_NOARGS(HAS_160, "HAS-160");
-#endif
-
 #if defined(BOTAN_HAS_KECCAK)
 BOTAN_REGISTER_HASH_NAMED_1LEN(Keccak_1600, "Keccak-1600", 512);
-#endif
-
-#if defined(BOTAN_HAS_MD2)
-BOTAN_REGISTER_HASH_NOARGS(MD2);
 #endif
 
 #if defined(BOTAN_HAS_MD4)
@@ -165,10 +145,6 @@ BOTAN_REGISTER_HASH_NOARGS(MD4);
 
 #if defined(BOTAN_HAS_MD5)
 BOTAN_REGISTER_HASH_NOARGS(MD5);
-#endif
-
-#if defined(BOTAN_HAS_RIPEMD_128)
-BOTAN_REGISTER_HASH_NAMED_NOARGS(RIPEMD_128, "RIPEMD-128");
 #endif
 
 #if defined(BOTAN_HAS_RIPEMD_160)

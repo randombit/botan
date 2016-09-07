@@ -18,15 +18,18 @@ class Stream_Cipher_Tests : public Text_Based_Test
    {
    public:
       Stream_Cipher_Tests(): Text_Based_Test("stream",
-                                             {"Key", "In", "Out"}, {"Nonce", "Seek"}) {}
+                                             std::vector<std::string>{"Key", "Out"}, {"In", "Nonce", "Seek"}) {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
-         const std::vector<uint8_t> input    = get_req_bin(vars, "In");
          const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
          const std::vector<uint8_t> nonce    = get_opt_bin(vars, "Nonce");
          const size_t seek                   = get_opt_sz(vars, "Seek", 0);
+         std::vector<uint8_t> input          = get_opt_bin(vars, "In");
+
+         if(input.empty())
+            input.resize(expected.size());
 
          Test::Result result(algo);
 

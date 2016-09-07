@@ -22,7 +22,7 @@ namespace PKCS11 {
 class Module;
 
 /// A random generator that only fetches random from the PKCS#11 RNG
-class BOTAN_DLL PKCS11_RNG final : public RandomNumberGenerator
+class BOTAN_DLL PKCS11_RNG final : public Hardware_RNG
    {
    public:
       /// Initialize the RNG with the PKCS#11 session that provides access to the cryptoki functions
@@ -43,7 +43,7 @@ class BOTAN_DLL PKCS11_RNG final : public RandomNumberGenerator
          }
 
       /// No operation - always returns 0
-      size_t reseed_with_sources(Entropy_Sources&, size_t, std::chrono::milliseconds) override
+      size_t reseed(Entropy_Sources&, size_t, std::chrono::milliseconds) override
          {
          return 0;
          }

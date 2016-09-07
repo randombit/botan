@@ -127,7 +127,7 @@ bool Test::Result::test_ne(const std::string& what,
                            const uint8_t expected[], size_t expected_len)
    {
    if(produced_len == expected_len && Botan::same_mem(produced, expected, expected_len))
-      return test_failure(who() + ":" + what + " produced matching");
+      return test_failure(who() + ": " + what + " produced matching");
    return test_success();
    }
 
@@ -232,6 +232,18 @@ bool Test::Result::test_gte(const std::string& what, size_t produced, size_t exp
       }
 
    return test_success();
+   }
+
+bool Test::Result::test_ne(const std::string& what, size_t produced, size_t expected)
+   {
+   if(produced != expected)
+      {
+      return test_success();
+      }
+
+   std::ostringstream err;
+   err << who() << " " << what << " produced " << produced << " prohibited value";
+   return test_failure(err.str());
    }
 
 #if defined(BOTAN_HAS_BIGINT)

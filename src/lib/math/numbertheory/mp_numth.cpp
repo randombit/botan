@@ -1,6 +1,7 @@
 /*
 * Fused and Important MP Algorithms
 * (C) 1999-2007 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -40,20 +41,13 @@ BigInt mul_add(const BigInt& a, const BigInt& b, const BigInt& c)
    if(a.sign() != b.sign())
       sign = BigInt::Negative;
 
-   const size_t a_sw = a.sig_words();
-   const size_t b_sw = b.sig_words();
-   const size_t c_sw = c.sig_words();
-
-   BigInt r(sign, std::max(a.size() + b.size(), c_sw) + 1);
+   BigInt r(sign, std::max(a.size() + b.size(), c.sig_words()) + 1);
    secure_vector<word> workspace(r.size());
 
-   bigint_mul(r.mutable_data(), r.size(),
-              workspace.data(),
-              a.data(), a.size(), a_sw,
-              b.data(), b.size(), b_sw);
+   bigint_mul(r, a, b, workspace.data());
 
-   const size_t r_size = std::max(r.sig_words(), c_sw);
-   bigint_add2(r.mutable_data(), r_size, c.data(), c_sw);
+   const size_t r_size = std::max(r.sig_words(), c.sig_words());
+   bigint_add2(r.mutable_data(), r_size, c.data(), c.sig_words());
    return r;
    }
 

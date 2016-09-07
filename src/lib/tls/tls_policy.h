@@ -101,14 +101,78 @@ class BOTAN_DLL Policy
       * Allow servers to initiate a new handshake
       */
       virtual bool allow_server_initiated_renegotiation() const;
+      
+      /**
+      * Allow TLS v1.0
+      */
+      virtual bool allow_tls10() const;
+      
+      /**
+      * Allow TLS v1.1
+      */
+      virtual bool allow_tls11() const;
+      
+      /**
+      * Allow TLS v1.2
+      */
+      virtual bool allow_tls12() const;
+      
+      /**
+      * Allow DTLS v1.0
+      */
+      virtual bool allow_dtls10() const;
+      
+      /**
+      * Allow DTLS v1.2
+      */
+      virtual bool allow_dtls12() const;
 
       virtual std::string dh_group() const;
 
       /**
       * Return the minimum DH group size we're willing to use
+      * Default is currently 1024 (insecure), should be 2048
       */
       virtual size_t minimum_dh_group_size() const;
+      
+      /**
+      * For ECDSA authenticated ciphersuites, the smallest key size the
+      * client will accept.
+      * This policy is currently only enforced on the server by the client.
+      */
+      virtual size_t minimum_ecdsa_group_size() const;
+      
+      /**
+      * Return the minimum ECDH group size we're willing to use
+      * for key exchange
+      *
+      * Default 256, allowing P-256 and larger
+      * P-256 is the smallest curve we will negotiate
+      */
+      virtual size_t minimum_ecdh_group_size() const;
+      
+      /**
+      * Return the minimum bit size we're willing to accept for RSA
+      * key exchange or server signatures.
+      *
+      * It does not place any requirements on the size of any RSA signature(s)
+      * which were used to check the server certificate. This is only
+      * concerned with the server's public key.
+      *
+      * Default is 2048 which is smallest RSA key size still secure
+      * for medium term security.
+      */
+      virtual size_t minimum_rsa_bits() const;
 
+      /**
+      * Throw an exception if you don't like the peer's key.
+      * Default impl checks the key size against minimum_rsa_bits, minimum_ecdsa_group_size,
+      * or minimum_ecdh_group_size depending on the key's type.
+      * Override if you'd like to perform some other kind of test on
+      * (or logging of) the peer's keys.
+      */
+      virtual void check_peer_key_acceptable(const Public_Key& public_key) const;
+      
       /**
       * If this function returns false, unknown SRP/PSK identifiers
       * will be rejected with an unknown_psk_identifier alert as soon
@@ -168,6 +232,12 @@ class BOTAN_DLL Policy
       virtual bool server_uses_own_ciphersuite_preferences() const;
 
       /**
+      * Indicates whether the encrypt-then-MAC extension should be negotiated
+      * (RFC 7366)
+      */
+      virtual bool negotiate_encrypt_then_mac() const;
+
+      /**
       * Return allowed ciphersuites, in order of preference
       */
       virtual std::vector<u16bit> ciphersuite_list(Protocol_Version version,
@@ -207,9 +277,12 @@ class BOTAN_DLL NSA_Suite_B_128 : public Policy
 
       std::vector<std::string> allowed_ecc_curves() const override
          { return std::vector<std::string>({"secp256r1"}); }
-
-      bool acceptable_protocol_version(Protocol_Version version) const override
-         { return version == Protocol_Version::TLS_V12; }
+            
+      bool allow_tls10()  const override { return false; }
+      bool allow_tls11()  const override { return false; }
+      bool allow_tls12()  const override { return true;  }
+      bool allow_dtls10() const override { return false; }
+      bool allow_dtls12() const override { return false; }
    };
 
 /**
@@ -220,9 +293,12 @@ class BOTAN_DLL Datagram_Policy : public Policy
    public:
       std::vector<std::string> allowed_macs() const override
          { return std::vector<std::string>({"AEAD"}); }
-
-      bool acceptable_protocol_version(Protocol_Version version) const override
-         { return version == Protocol_Version::DTLS_V12; }
+            
+      bool allow_tls10()  const override { return false; }
+      bool allow_tls11()  const override { return false; }
+      bool allow_tls12()  const override { return false; }
+      bool allow_dtls10() const override { return false; }
+      bool allow_dtls12() const override { return true;  }
    };
 
 /*
@@ -243,7 +319,11 @@ class BOTAN_DLL Strict_Policy : public Policy
 
       std::vector<std::string> allowed_key_exchange_methods() const override;
 
-      bool acceptable_protocol_version(Protocol_Version version) const override;
+      bool allow_tls10()  const override;
+      bool allow_tls11()  const override;
+      bool allow_tls12()  const override;
+      bool allow_dtls10() const override;
+      bool allow_dtls12() const override;
    };
 
 class BOTAN_DLL Text_Policy : public Policy
@@ -267,6 +347,21 @@ class BOTAN_DLL Text_Policy : public Policy
 
       std::vector<std::string> allowed_ecc_curves() const override
          { return get_list("ecc_curves", Policy::allowed_ecc_curves()); }
+      
+      bool allow_tls10() const override
+         { return get_bool("allow_tls10", Policy::allow_tls10()); }
+      
+      bool allow_tls11() const override
+         { return get_bool("allow_tls11", Policy::allow_tls11()); }
+      
+      bool allow_tls12() const override
+         { return get_bool("allow_tls12", Policy::allow_tls12()); }
+      
+      bool allow_dtls10() const override
+         { return get_bool("allow_dtls10", Policy::allow_dtls10()); }
+      
+      bool allow_dtls12() const override
+         { return get_bool("allow_dtls12", Policy::allow_dtls12()); }
 
       bool allow_insecure_renegotiation() const override
          { return get_bool("allow_insecure_renegotiation", Policy::allow_insecure_renegotiation()); }
@@ -280,12 +375,24 @@ class BOTAN_DLL Text_Policy : public Policy
       bool server_uses_own_ciphersuite_preferences() const override
          { return get_bool("server_uses_own_ciphersuite_preferences", Policy::server_uses_own_ciphersuite_preferences()); }
 
+      bool negotiate_encrypt_then_mac() const override
+         { return get_bool("negotiate_encrypt_then_mac", Policy::negotiate_encrypt_then_mac()); }
+
       std::string dh_group() const override
          { return get_str("dh_group", Policy::dh_group()); }
+
+      size_t minimum_ecdh_group_size() const override
+         { return get_len("minimum_ecdh_group_size", Policy::minimum_ecdh_group_size()); }
+
+      size_t minimum_ecdsa_group_size() const override
+         { return get_len("minimum_ecdsa_group_size", Policy::minimum_ecdsa_group_size()); }
 
       size_t minimum_dh_group_size() const override
          { return get_len("minimum_dh_group_size", Policy::minimum_dh_group_size()); }
 
+      size_t minimum_rsa_bits() const override
+         { return get_len("minimum_rsa_bits", Policy::minimum_rsa_bits()); }
+      
       bool hide_unknown_users() const override
          { return get_bool("hide_unknown_users", Policy::hide_unknown_users()); }
 

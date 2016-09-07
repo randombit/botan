@@ -1,6 +1,7 @@
 /*
 * TLS Server Hello and Server Hello Done
 * (C) 2004-2011,2015,2016 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -23,25 +24,28 @@ Server_Hello::Server_Hello(Handshake_IO& io,
                            RandomNumberGenerator& rng,
                            const std::vector<byte>& reneg_info,
                            const Client_Hello& client_hello,
-                           const std::vector<byte>& new_session_id,
-                           Protocol_Version new_session_version,
-                           u16bit ciphersuite,
-                           byte compression,
-                           bool offer_session_ticket,
-                           const std::string& next_protocol) :
-   m_version(new_session_version),
-   m_session_id(new_session_id),
+                           const Server_Hello::Settings& server_settings,
+                           const std::string next_protocol) :
+   m_version(server_settings.protocol_version()),
+   m_session_id(server_settings.session_id()),
    m_random(make_hello_random(rng, policy)),
-   m_ciphersuite(ciphersuite),
-   m_comp_method(compression)
+   m_ciphersuite(server_settings.ciphersuite()),
+   m_comp_method(server_settings.compression())
    {
    if(client_hello.supports_extended_master_secret())
       m_extensions.add(new Extended_Master_Secret);
 
+   if(client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac())
+      {
+      Ciphersuite c = Ciphersuite::by_id(m_ciphersuite);
+      if(c.cbc_ciphersuite())
+         m_extensions.add(new Encrypt_then_MAC);
+      }
+      
    if(client_hello.secure_renegotiation())
       m_extensions.add(new Renegotiation_Extension(reneg_info));
 
-   if(client_hello.supports_session_ticket() && offer_session_ticket)
+   if(client_hello.supports_session_ticket() && server_settings.offer_session_ticket())
       m_extensions.add(new Session_Ticket());
 
    if(!next_protocol.empty() && client_hello.supports_alpn())
@@ -89,6 +93,13 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    {
    if(client_hello.supports_extended_master_secret())
       m_extensions.add(new Extended_Master_Secret);
+
+   if(client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac())
+      {
+      Ciphersuite c = resumed_session.ciphersuite();
+      if(c.cbc_ciphersuite())
+         m_extensions.add(new Encrypt_then_MAC);
+      }
 
    if(client_hello.secure_renegotiation())
       m_extensions.add(new Renegotiation_Extension(reneg_info));

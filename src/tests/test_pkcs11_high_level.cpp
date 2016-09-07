@@ -415,6 +415,7 @@ Test::Result test_attribute_container()
    return result;
    }
 
+#if defined(BOTAN_HAS_ASN1)
 Test::Result test_create_destroy_data_object()
    {
    Test::Result result("Object create/delete data object");
@@ -565,6 +566,7 @@ Test::Result test_object_copy()
    copied_obj.destroy();
    return result;
    }
+#endif
 
 class Object_Tests : public PKCS11_Test
    {
@@ -573,11 +575,13 @@ class Object_Tests : public PKCS11_Test
          {
          std::vector<std::function<Test::Result()>> fns =
             {
-            test_attribute_container,
-            test_create_destroy_data_object,
-            test_get_set_attribute_values,
-            test_object_finder,
-            test_object_copy
+            test_attribute_container
+#if defined(BOTAN_HAS_ASN1)
+            ,test_create_destroy_data_object
+            ,test_get_set_attribute_values
+            ,test_object_finder
+            ,test_object_copy
+#endif
             };
 
          return run_pkcs11_tests("Object", fns);
@@ -1342,18 +1346,12 @@ Test::Result test_pkcs11_hmac_drbg()
    Test::Result result("PKCS11 HMAC_DRBG using PKCS11_RNG");
    TestSession test_session(true);
 
-   // FIXME: this is only a temporary fix
-   // It should be possible to instantiate HMAC_DRBG with PKCS11_RNG and
-   // HMAC_DRBG should reseed itself from PKCS11_RNG
-   HMAC_DRBG drbg(MessageAuthenticationCode::create("HMAC(SHA-512)").release());
+   PKCS11_RNG p11_rng(test_session.session());
+   HMAC_DRBG drbg(MessageAuthenticationCode::create("HMAC(SHA-512)"), p11_rng);
    // result.test_success("HMAC_DRBG(HMAC(SHA512)) instantiated with PKCS11_RNG");
 
    result.test_eq("HMAC_DRBG is not seeded yet.", drbg.is_seeded(), false);
-
-   PKCS11_RNG p11_rng(test_session.session());
-   secure_vector<byte> rnd = p11_rng.random_vec(64);
-
-   drbg.initialize_with(rnd.data(), rnd.size());
+   secure_vector<byte> rnd = drbg.random_vec(64);
    result.test_eq("HMAC_DRBG is seeded now", drbg.is_seeded(), true);
 
    std::string personalization_string = "Botan PKCS#11 Tests";

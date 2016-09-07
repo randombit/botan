@@ -406,13 +406,38 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_pubkey_export, (pub, pubkey.data(), &pubkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
 
          // export private key
+         std::vector<uint8_t> privkey;
          size_t privkey_len = 0;
+
+         /*
+         * botan_privkey_export is bogus for several reasons. first it hardcodes a 300 msec
+         * pbkdf, instead of taking that as an argument. secondly, calling it twice not only
+         * returns different results (due to the encryption) but they may have different sizes,
+         * if the number of PBKDF iterations that is used in the two runs differs greatly, and
+         * ends up encoding as fewer bytes in the variable length ASN.1 encoding used in PKCS #8
+         * private key encryption.
+         *
+         * here request the size but then add 10 bytes. this is an attempt to avoid occasional
+         * cases on CI where the above case occurs, and the build fails because on the second
+         * call, more space was required than the first call had returned.
+         */
+         const size_t privkey_size_slop = 10;
+
+         // call with nullptr to query the length
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export, (priv, nullptr, &privkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_DER));
 
-         std::vector<uint8_t> privkey(privkey_len);
+         privkey.resize(privkey_len + privkey_size_slop);
+         privkey_len = privkey.size(); // set buffer size
+
          TEST_FFI_OK(botan_privkey_export, (priv, privkey.data(), &privkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_DER));
 
+         privkey.resize(privkey_len);
+
+         result.test_lt("Reasonable size", 64, privkey.size());
+
+         // Now again for PEM
          privkey_len = 0;
+
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export, (priv, nullptr, &privkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
 
          privkey.resize(privkey_len);
@@ -422,9 +447,10 @@ class FFI_Unit_Tests : public Test
          privkey_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export_encrypted, (priv, nullptr, &privkey_len, rng, "password", "", BOTAN_PRIVKEY_EXPORT_FLAG_DER));
 
-         privkey.resize(privkey_len);
-         TEST_FFI_OK(botan_privkey_export_encrypted, (priv, privkey.data(), &privkey_len, rng, "password", "", BOTAN_PRIVKEY_EXPORT_FLAG_DER));
+         privkey.resize(privkey_len + privkey_size_slop);
+         privkey_len = privkey.size();
 
+         TEST_FFI_OK(botan_privkey_export_encrypted, (priv, privkey.data(), &privkey_len, rng, "password", "", BOTAN_PRIVKEY_EXPORT_FLAG_DER));
          privkey_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export_encrypted, (priv, nullptr, &privkey_len, rng, "password", "", BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
 
@@ -642,6 +668,7 @@ class FFI_Unit_Tests : public Test
          Test::Result result("FFI");
 
          botan_privkey_t priv;
+#if defined(BOTAN_HAS_MCELIECE)
          if (TEST_FFI_OK(botan_privkey_create_mceliece, (&priv, rng, 2048, 50)))
             {
             botan_pubkey_t pub;
@@ -683,6 +710,10 @@ class FFI_Unit_Tests : public Test
             TEST_FFI_OK(botan_pubkey_destroy, (pub));
             TEST_FFI_OK(botan_privkey_destroy, (priv));
             }
+#else
+         // Not included, test that calling the FFI function work (and returns an error)
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NOT_IMPLEMENTED, botan_privkey_create_mceliece, (&priv, rng, 2048, 50));
+#endif
 
          return result;
          }

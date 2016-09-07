@@ -1,6 +1,7 @@
 /*
 * TLS Hello Request and Client Hello Messages
 * (C) 2004-2011,2015,2016 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -68,22 +69,20 @@ std::vector<byte> Hello_Request::serialize() const
 */
 Client_Hello::Client_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
-                           Protocol_Version version,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
                            const std::vector<byte>& reneg_info,
-                           const std::vector<std::string>& next_protocols,
-                           const std::string& hostname,
-                           const std::string& srp_identifier) :
-   m_version(version),
+                           const Client_Hello::Settings& client_settings,
+                           const std::vector<std::string>& next_protocols) :
+   m_version(client_settings.protocol_version()),
    m_random(make_hello_random(rng, policy)),
-   m_suites(policy.ciphersuite_list(m_version, (srp_identifier != ""))),
+   m_suites(policy.ciphersuite_list(m_version,
+                                    client_settings.srp_identifier() != "")),
    m_comp_methods(policy.compression())
    {
    m_extensions.add(new Extended_Master_Secret);
    m_extensions.add(new Renegotiation_Extension(reneg_info));
-
-   m_extensions.add(new Server_Name_Indicator(hostname));
+   m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
    m_extensions.add(new Session_Ticket());
    m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
 
@@ -96,20 +95,23 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    if(reneg_info.empty() && !next_protocols.empty())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
+   
+   if(policy.negotiate_encrypt_then_mac())
+      m_extensions.add(new Encrypt_then_MAC);
 
 #if defined(BOTAN_HAS_SRP6)
-   m_extensions.add(new SRP_Identifier(srp_identifier));
+   m_extensions.add(new SRP_Identifier(client_settings.srp_identifier()));
 #else
-   if(!srp_identifier.empty())
+   if(!client_settings.srp_identifier().empty())
       {
       throw Invalid_State("Attempting to initiate SRP session but TLS-SRP support disabled");
       }
 #endif
 
-   BOTAN_ASSERT(policy.acceptable_protocol_version(version),
+   BOTAN_ASSERT(policy.acceptable_protocol_version(client_settings.protocol_version()),
                 "Our policy accepts the version we are offering");
 
-   if(policy.send_fallback_scsv(version))
+   if(policy.send_fallback_scsv(client_settings.protocol_version()))
       m_suites.push_back(TLS_FALLBACK_SCSV);
 
    hash.update(io.send(*this));
@@ -155,6 +157,9 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    if(reneg_info.empty() && !next_protocols.empty())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
+   
+   if(policy.negotiate_encrypt_then_mac())
+      m_extensions.add(new Encrypt_then_MAC);
 
 #if defined(BOTAN_HAS_SRP6)
    m_extensions.add(new SRP_Identifier(session.srp_identifier()));

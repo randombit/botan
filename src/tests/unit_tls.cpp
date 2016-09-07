@@ -1,5 +1,6 @@
 /*
 * (C) 2014,2015 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -161,13 +162,18 @@ std::function<void (const byte[], size_t)> queue_inserter(std::vector<byte>& q)
    return [&](const byte buf[], size_t sz) { q.insert(q.end(), buf, buf + sz); };
    }
 
-void print_alert(Botan::TLS::Alert, const byte[], size_t)
+void print_alert(Botan::TLS::Alert)
+   {
+   }
+
+void alert_cb_with_data(Botan::TLS::Alert, const byte[], size_t)
    {
    }
 
 Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                                 Botan::Credentials_Manager& creds,
-                                Botan::TLS::Policy& policy)
+                                Botan::TLS::Policy& client_policy,
+                                Botan::TLS::Policy& server_policy )
    {
    Botan::RandomNumberGenerator& rng = Test::rng();
 
@@ -218,164 +224,216 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
          {
          std::vector<byte> c2s_traffic, s2c_traffic, client_recv, server_recv, client_sent, server_sent;
 
-         Botan::TLS::Server server(queue_inserter(s2c_traffic),
-                                   queue_inserter(server_recv),
-                                   print_alert,
-                                   handshake_complete,
+         std::unique_ptr<Botan::TLS::Callbacks> server_cb(new Botan::TLS::Compat_Callbacks(
+                 queue_inserter(s2c_traffic),
+                 queue_inserter(server_recv),
+                 std::function<void (Botan::TLS::Alert, const byte[], size_t)>(alert_cb_with_data),
+                 handshake_complete,
+                 nullptr,
+                 next_protocol_chooser));
+
+         // TLS::Server object constructed by new constructor using virtual callback interface.
+         std::unique_ptr<Botan::TLS::Server> server(
+            new Botan::TLS::Server(*server_cb,
                                    server_sessions,
                                    creds,
-                                   policy,
+                                   server_policy,
                                    rng,
-                                   next_protocol_chooser,
-                                   false);
+                                   false));
 
-         Botan::TLS::Client client(queue_inserter(c2s_traffic),
-                                   queue_inserter(client_recv),
-                                   print_alert,
-                                   handshake_complete,
+         std::unique_ptr<Botan::TLS::Callbacks> client_cb(new Botan::TLS::Compat_Callbacks(
+                 queue_inserter(c2s_traffic),
+                 queue_inserter(client_recv),
+                 std::function<void (Botan::TLS::Alert, const byte[], size_t)>(alert_cb_with_data),
+                 handshake_complete));
+
+         // TLS::Client object constructed by new constructor using virtual callback interface.
+         std::unique_ptr<Botan::TLS::Client> client(
+            new Botan::TLS::Client(*client_cb,
                                    client_sessions,
                                    creds,
-                                   policy,
+                                   client_policy,
                                    rng,
                                    Botan::TLS::Server_Information("server.example.com"),
                                    offer_version,
-                                   protocols_offered);
+                                   protocols_offered));
 
          size_t rounds = 0;
 
-         while(true)
+         // Test TLS using both new and legacy constructors.
+         for(size_t ctor_sel = 0; ctor_sel < 2; ctor_sel++)
             {
-            ++rounds;
-
-            if(rounds > 25)
+            if(ctor_sel == 1)
                {
-               if(r <= 2)
-                  result.test_failure("Still here after many rounds, deadlock?");
-               break;
+               c2s_traffic.clear();
+               s2c_traffic.clear();
+               server_recv.clear();
+               client_recv.clear();
+               client_sent.clear();
+               server_sent.clear();
+
+               // TLS::Server object constructed by legacy constructor.
+               server.reset( 
+                  new Botan::TLS::Server(queue_inserter(s2c_traffic),
+                                         queue_inserter(server_recv),
+                                         alert_cb_with_data, 
+                                         handshake_complete,
+                                         server_sessions,
+                                         creds,
+                                         server_policy,
+                                         rng,
+                                         next_protocol_chooser,
+                                         false));
+
+               // TLS::Client object constructed by legacy constructor.
+               client.reset( 
+                  new Botan::TLS::Client(queue_inserter(c2s_traffic),
+                                         queue_inserter(client_recv),
+                                         alert_cb_with_data,
+                                         handshake_complete,
+                                         client_sessions,
+                                         creds,
+                                         server_policy,
+                                         rng,
+                                         Botan::TLS::Server_Information("server.example.com"),
+                                         offer_version,
+                                         protocols_offered));
                }
 
-            if(handshake_done && (client.is_closed() || server.is_closed()))
-               break;
-
-            if(client.is_active() && client_sent.empty())
+            while(true)
                {
-               // Choose a len between 1 and 511
-               const size_t c_len = 1 + rng.next_byte() + rng.next_byte();
-               client_sent = unlock(rng.random_vec(c_len));
+               ++rounds;
 
-               // TODO send in several records
-               client.send(client_sent);
-               }
-
-            if(server.is_active() && server_sent.empty())
-               {
-               result.test_eq("server protocol", server.next_protocol(), "test/3");
-
-               const size_t s_len = 1 + rng.next_byte() + rng.next_byte();
-               server_sent = unlock(rng.random_vec(s_len));
-               server.send(server_sent);
-               }
-
-            const bool corrupt_client_data = (r == 3);
-            const bool corrupt_server_data = (r == 4);
-
-            if(c2s_traffic.size() > 0)
-               {
-               /*
-               * Use this as a temp value to hold the queues as otherwise they
-               * might end up appending more in response to messages during the
-               * handshake.
-               */
-               std::vector<byte> input;
-               std::swap(c2s_traffic, input);
-
-               if(corrupt_server_data)
+               if(rounds > 25)
                   {
-                  input = Test::mutate_vec(input, true);
-                  size_t needed = server.received_data(input.data(), input.size());
+                  if(r <= 2)
+                     result.test_failure("Still here after many rounds, deadlock?");
+                  break;
+                  }
 
-                  size_t total_consumed = needed;
+               if(handshake_done && (client->is_closed() || server->is_closed()))
+                  break;
 
-                  while(needed > 0 &&
-                        result.test_lt("Never requesting more than max protocol len", needed, 18*1024) &&
-                        result.test_lt("Total requested is readonable", total_consumed, 128*1024))
+               if(client->is_active() && client_sent.empty())
+                  {
+                  // Choose a len between 1 and 511
+                  const size_t c_len = 1 + rng.next_byte() + rng.next_byte();
+                  client_sent = unlock(rng.random_vec(c_len));
+
+                  // TODO send in several records
+                  client->send(client_sent);
+                  }
+
+               if(server->is_active() && server_sent.empty())
+                  {
+                  result.test_eq("server->protocol", server->next_protocol(), "test/3");
+
+                  const size_t s_len = 1 + rng.next_byte() + rng.next_byte();
+                  server_sent = unlock(rng.random_vec(s_len));
+                  server->send(server_sent);
+                  }
+
+               const bool corrupt_client_data = (r == 3);
+               const bool corrupt_server_data = (r == 4);
+
+               if(c2s_traffic.size() > 0)
+                  {
+                  /*
+                  * Use this as a temp value to hold the queues as otherwise they
+                  * might end up appending more in response to messages during the
+                  * handshake.
+                  */
+                  std::vector<byte> input;
+                  std::swap(c2s_traffic, input);
+
+                  if(corrupt_server_data)
                      {
-                     input.resize(needed);
-                     Test::rng().randomize(input.data(), input.size());
-                     needed = server.received_data(input.data(), input.size());
-                     total_consumed += needed;
+                     input = Test::mutate_vec(input, true);
+                     size_t needed = server->received_data(input.data(), input.size());
+
+                     size_t total_consumed = needed;
+
+                     while(needed > 0 &&
+                           result.test_lt("Never requesting more than max protocol len", needed, 18*1024) &&
+                           result.test_lt("Total requested is readonable", total_consumed, 128*1024))
+                        {
+                        input.resize(needed);
+                        Test::rng().randomize(input.data(), input.size());
+                        needed = server->received_data(input.data(), input.size());
+                        total_consumed += needed;
+                        }
+                     }
+                  else
+                     {
+                     size_t needed = server->received_data(input.data(), input.size());
+                     result.test_eq("full packet received", needed, 0);
+                     }
+
+                  continue;
+                  }
+
+               if(s2c_traffic.size() > 0)
+                  {
+                  std::vector<byte> input;
+                  std::swap(s2c_traffic, input);
+
+                  if(corrupt_client_data)
+                     {
+                     input = Test::mutate_vec(input, true);
+                     size_t needed = client->received_data(input.data(), input.size());
+
+                     size_t total_consumed = 0;
+
+                     while(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
+                        {
+                        input.resize(needed);
+                        Test::rng().randomize(input.data(), input.size());
+                        needed = client->received_data(input.data(), input.size());
+                        total_consumed += needed;
+                        }
+                     }
+                  else
+                     {
+                     size_t needed = client->received_data(input.data(), input.size());
+                     result.test_eq("full packet received", needed, 0);
+                     }
+
+                  continue;
+                  }
+
+               if(client_recv.size())
+                  {
+                  result.test_eq("client recv", client_recv, server_sent);
+                  }
+
+               if(server_recv.size())
+                  {
+                  result.test_eq("server->recv", server_recv, client_sent);
+                  }
+
+               if(r > 2)
+                  {
+                  if(client_recv.size() && server_recv.size())
+                     {
+                     result.test_failure("Negotiated in the face of data corruption " + std::to_string(r));
                      }
                   }
-               else
+
+               if(client->is_closed() && server->is_closed())
+                  break;
+
+               if(server_recv.size() && client_recv.size())
                   {
-                  size_t needed = server.received_data(input.data(), input.size());
-                  result.test_eq("full packet received", needed, 0);
+                  Botan::SymmetricKey client_key = client->key_material_export("label", "context", 32);
+                  Botan::SymmetricKey server_key = server->key_material_export("label", "context", 32);
+
+                  result.test_eq("TLS key material export", client_key.bits_of(), server_key.bits_of());
+
+                  if(r % 2 == 0)
+                     client->close();
+                  else
+                     server->close();
                   }
-
-               continue;
-               }
-
-            if(s2c_traffic.size() > 0)
-               {
-               std::vector<byte> input;
-               std::swap(s2c_traffic, input);
-
-               if(corrupt_client_data)
-                  {
-                  input = Test::mutate_vec(input, true);
-                  size_t needed = client.received_data(input.data(), input.size());
-
-                  size_t total_consumed = 0;
-
-                  while(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
-                     {
-                     input.resize(needed);
-                     Test::rng().randomize(input.data(), input.size());
-                     needed = client.received_data(input.data(), input.size());
-                     total_consumed += needed;
-                     }
-                  }
-               else
-                  {
-                  size_t needed = client.received_data(input.data(), input.size());
-                  result.test_eq("full packet received", needed, 0);
-                  }
-
-               continue;
-               }
-
-            if(client_recv.size())
-               {
-               result.test_eq("client recv", client_recv, server_sent);
-               }
-
-            if(server_recv.size())
-               {
-               result.test_eq("server recv", server_recv, client_sent);
-               }
-
-            if(r > 2)
-               {
-               if(client_recv.size() && server_recv.size())
-                  {
-                  result.test_failure("Negotiated in the face of data corruption " + std::to_string(r));
-                  }
-               }
-
-            if(client.is_closed() && server.is_closed())
-               break;
-
-            if(server_recv.size() && client_recv.size())
-               {
-               Botan::SymmetricKey client_key = client.key_material_export("label", "context", 32);
-               Botan::SymmetricKey server_key = server.key_material_export("label", "context", 32);
-
-               result.test_eq("TLS key material export", client_key.bits_of(), server_key.bits_of());
-
-               if(r % 2 == 0)
-                  client.close();
-               else
-                  server.close();
                }
             }
          }
@@ -397,9 +455,17 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
    return result;
    }
 
+Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
+                                Botan::Credentials_Manager& creds,
+                                Botan::TLS::Policy& policy )
+   {
+   return test_tls_handshake(offer_version, creds, policy, policy);
+   }
+
 Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                                  Botan::Credentials_Manager& creds,
-                                 Botan::TLS::Policy& policy)
+                                 Botan::TLS::Policy& client_policy,
+                                 Botan::TLS::Policy& server_policy )
    {
    BOTAN_ASSERT(offer_version.is_datagram_protocol(), "Test is for datagram version");
 
@@ -444,183 +510,232 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
          {
          std::vector<byte> c2s_traffic, s2c_traffic, client_recv, server_recv, client_sent, server_sent;
 
-         Botan::TLS::Server server(queue_inserter(s2c_traffic),
-                                   queue_inserter(server_recv),
-                                   print_alert,
-                                   handshake_complete,
+         std::unique_ptr<Botan::TLS::Callbacks> server_cb(new Botan::TLS::Compat_Callbacks(
+                 queue_inserter(s2c_traffic),
+                 queue_inserter(server_recv),
+                 std::function<void (Botan::TLS::Alert)>(print_alert),
+                 handshake_complete,
+                 nullptr,
+                 next_protocol_chooser));
+
+         std::unique_ptr<Botan::TLS::Callbacks> client_cb(new Botan::TLS::Compat_Callbacks(
+                 queue_inserter(c2s_traffic),
+                 queue_inserter(client_recv),
+                 std::function<void (Botan::TLS::Alert)>(print_alert),
+                 handshake_complete));
+
+         // TLS::Server object constructed by new constructor using virtual callback interface.
+         std::unique_ptr<Botan::TLS::Server> server(
+            new Botan::TLS::Server(*server_cb,
                                    server_sessions,
                                    creds,
-                                   policy,
+                                   server_policy,
                                    rng,
-                                   next_protocol_chooser,
-                                   true);
+                                   true));
 
-         Botan::TLS::Client client(queue_inserter(c2s_traffic),
-                                   queue_inserter(client_recv),
-                                   print_alert,
-                                   handshake_complete,
+         // TLS::Client object constructed by new constructor using virtual callback interface.
+         std::unique_ptr<Botan::TLS::Client> client(
+            new Botan::TLS::Client(*client_cb,
                                    client_sessions,
                                    creds,
-                                   policy,
+                                   client_policy,
                                    rng,
                                    Botan::TLS::Server_Information("server.example.com"),
                                    offer_version,
-                                   protocols_offered);
+                                   protocols_offered));
 
          size_t rounds = 0;
 
-         while(true)
+         // Test DTLS using both new and legacy constructors.
+         for(size_t ctor_sel = 0; ctor_sel < 2; ctor_sel++)
             {
-            // TODO: client and server should be in different threads
-            std::this_thread::sleep_for(std::chrono::milliseconds(rng.next_byte() % 2));
-            ++rounds;
-
-            if(rounds > 100)
+            if(ctor_sel == 1)
                {
-               result.test_failure("Still here after many rounds");
-               break;
+               c2s_traffic.clear();
+               s2c_traffic.clear();
+               server_recv.clear();
+               client_recv.clear();
+               client_sent.clear();
+               server_sent.clear();
+               // TLS::Server object constructed by legacy constructor.
+               server.reset(
+                  new Botan::TLS::Server(queue_inserter(s2c_traffic),
+                                         queue_inserter(server_recv),
+                                         alert_cb_with_data, 
+                                         handshake_complete,
+                                         server_sessions,
+                                         creds,
+                                         server_policy,
+                                         rng,
+                                         next_protocol_chooser,
+                                         true));
+
+               // TLS::Client object constructed by legacy constructor.
+               client.reset(
+                  new Botan::TLS::Client(queue_inserter(c2s_traffic),
+                                         queue_inserter(client_recv),
+                                         alert_cb_with_data, 
+                                         handshake_complete,
+                                         client_sessions,
+                                         creds,
+                                         client_policy,
+                                         rng,
+                                         Botan::TLS::Server_Information("server.example.com"),
+                                         offer_version,
+                                         protocols_offered));
                }
 
-            if(handshake_done && (client.is_closed() || server.is_closed()))
-               break;
-
-            if(client.is_active() && client_sent.empty())
+            while(true)
                {
-               // Choose a len between 1 and 511 and send random chunks:
-               const size_t c_len = 1 + rng.next_byte() + rng.next_byte();
-               client_sent = unlock(rng.random_vec(c_len));
+               // TODO: client and server should be in different threads
+               std::this_thread::sleep_for(std::chrono::milliseconds(rng.next_byte() % 2));
+               ++rounds;
 
-               // TODO send multiple parts
-               client.send(client_sent);
-               }
-
-            if(server.is_active() && server_sent.empty())
-               {
-               result.test_eq("server ALPN", server.next_protocol(), "test/3");
-
-               const size_t s_len = 1 + rng.next_byte() + rng.next_byte();
-               server_sent = unlock(rng.random_vec(s_len));
-               server.send(server_sent);
-               }
-
-            const bool corrupt_client_data = (r == 3 && rng.next_byte() % 3 <= 1 && rounds < 10);
-            const bool corrupt_server_data = (r == 4 && rng.next_byte() % 3 <= 1 && rounds < 10);
-
-            if(c2s_traffic.size() > 0)
-               {
-               /*
-               * Use this as a temp value to hold the queues as otherwise they
-               * might end up appending more in response to messages during the
-               * handshake.
-               */
-               std::vector<byte> input;
-               std::swap(c2s_traffic, input);
-
-               if(corrupt_server_data)
+               if(rounds > 100)
                   {
-                  try
-                     {
-                     input = Test::mutate_vec(input, true);
-                     size_t needed = server.received_data(input.data(), input.size());
+                  result.test_failure("Still here after many rounds");
+                  break;
+                  }
 
-                     if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
+               if(handshake_done && (client->is_closed() || server->is_closed()))
+                  break;
+
+               if(client->is_active() && client_sent.empty())
+                  {
+                  // Choose a len between 1 and 511, todo use random chunks
+                  const size_t c_len = 1 + rng.next_byte() + rng.next_byte();
+                  client_sent = unlock(rng.random_vec(c_len));
+                  client->send(client_sent);
+                  }
+
+               if(server->is_active() && server_sent.empty())
+                  {
+                  result.test_eq("server ALPN", server->next_protocol(), "test/3");
+
+                  const size_t s_len = 1 + rng.next_byte() + rng.next_byte();
+                  server_sent = unlock(rng.random_vec(s_len));
+                  server->send(server_sent);
+                  }
+
+               const bool corrupt_client_data = (r == 3 && rng.next_byte() % 3 <= 1 && rounds < 10);
+               const bool corrupt_server_data = (r == 4 && rng.next_byte() % 3 <= 1 && rounds < 10);
+
+               if(c2s_traffic.size() > 0)
+                  {
+                  /*
+                  * Use this as a temp value to hold the queues as otherwise they
+                  * might end up appending more in response to messages during the
+                  * handshake.
+                  */
+                  std::vector<byte> input;
+                  std::swap(c2s_traffic, input);
+
+                  if(corrupt_server_data)
+                     {
+                     try
                         {
-                        input.resize(needed);
-                        Test::rng().randomize(input.data(), input.size());
-                        client.received_data(input.data(), input.size());
+                        input = Test::mutate_vec(input, true);
+                        size_t needed = server->received_data(input.data(), input.size());
+
+                        if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
+                           {
+                           input.resize(needed);
+                           Test::rng().randomize(input.data(), input.size());
+                           client->received_data(input.data(), input.size());
+                           }
+                        }
+                     catch(std::exception&)
+                        {
+                        result.test_note("corruption caused server exception");
                         }
                      }
-                  catch(std::exception&)
+                  else
                      {
-                     result.test_note("corruption caused server exception");
-                     }
-                  }
-               else
-                  {
-                  try
-                     {
-                     size_t needed = server.received_data(input.data(), input.size());
-                     result.test_eq("full packet received", needed, 0);
-                     }
-                  catch(std::exception& e)
-                     {
-                     result.test_failure("server error", e.what());
-                     }
-                  }
-
-               continue;
-               }
-
-            if(s2c_traffic.size() > 0)
-               {
-               std::vector<byte> input;
-               std::swap(s2c_traffic, input);
-
-               if(corrupt_client_data)
-                  {
-                  try
-                     {
-                     input = Test::mutate_vec(input, true);
-                     size_t needed = client.received_data(input.data(), input.size());
-
-                     if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
+                     try
                         {
-                        input.resize(needed);
-                        Test::rng().randomize(input.data(), input.size());
-                        client.received_data(input.data(), input.size());
+                        size_t needed = server->received_data(input.data(), input.size());
+                        result.test_eq("full packet received", needed, 0);
+                        }
+                     catch(std::exception& e)
+                        {
+                        result.test_failure("server error", e.what());
                         }
                      }
-                  catch(std::exception&)
-                     {
-                     result.test_note("corruption caused client exception");
-                     }
+
+                  continue;
                   }
-               else
+
+               if(s2c_traffic.size() > 0)
                   {
-                  try
+                  std::vector<byte> input;
+                  std::swap(s2c_traffic, input);
+
+                  if(corrupt_client_data)
                      {
-                     size_t needed = client.received_data(input.data(), input.size());
-                     result.test_eq("full packet received", needed, 0);
+                     try
+                        {
+                        input = Test::mutate_vec(input, true);
+                        size_t needed = client->received_data(input.data(), input.size());
+
+                        if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
+                           {
+                           input.resize(needed);
+                           Test::rng().randomize(input.data(), input.size());
+                           client->received_data(input.data(), input.size());
+                           }
+                        }
+                     catch(std::exception&)
+                        {
+                        result.test_note("corruption caused client exception");
+                        }
                      }
-                  catch(std::exception& e)
+                  else
                      {
-                     result.test_failure("client error", e.what());
+                     try
+                        {
+                        size_t needed = client->received_data(input.data(), input.size());
+                        result.test_eq("full packet received", needed, 0);
+                        }
+                     catch(std::exception& e)
+                        {
+                        result.test_failure("client error", e.what());
+                        }
                      }
+
+                  continue;
                   }
 
-               continue;
-               }
+               // If we corrupted a DTLS application message, resend it:
+               if(client->is_active() && corrupt_client_data && server_recv.empty())
+                  client->send(client_sent);
+               if(server->is_active() && corrupt_server_data && client_recv.empty())
+                  server->send(server_sent);
 
-            // If we corrupted a DTLS application message, resend it:
-            if(client.is_active() && corrupt_client_data && server_recv.empty())
-               client.send(client_sent);
-            if(server.is_active() && corrupt_server_data && client_recv.empty())
-               server.send(server_sent);
+               if(client_recv.size())
+                  {
+                  result.test_eq("client recv", client_recv, server_sent);
+                  }
 
-            if(client_recv.size())
-               {
-               result.test_eq("client recv", client_recv, server_sent);
-               }
+               if(server_recv.size())
+                  {
+                  result.test_eq("server recv", server_recv, client_sent);
+                  }
 
-            if(server_recv.size())
-               {
-               result.test_eq("server recv", server_recv, client_sent);
-               }
+               if(client->is_closed() && server->is_closed())
+                  break;
 
-            if(client.is_closed() && server.is_closed())
-               break;
+               if(server_recv.size() && client_recv.size())
+                  {
+                  Botan::SymmetricKey client_key = client->key_material_export("label", "context", 32);
+                  Botan::SymmetricKey server_key = server->key_material_export("label", "context", 32);
 
-            if(server_recv.size() && client_recv.size())
-               {
-               Botan::SymmetricKey client_key = client.key_material_export("label", "context", 32);
-               Botan::SymmetricKey server_key = server.key_material_export("label", "context", 32);
+                  result.test_eq("key material export", client_key.bits_of(), server_key.bits_of());
 
-               result.test_eq("key material export", client_key.bits_of(), server_key.bits_of());
-
-               if(r % 2 == 0)
-                  client.close();
-               else
-                  server.close();
+                  if(r % 2 == 0)
+                     client->close();
+                  else
+                     server->close();
+                  }
                }
             }
          }
@@ -641,6 +756,13 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
    return result;
    }
 
+Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
+                                Botan::Credentials_Manager& creds,
+                                Botan::TLS::Policy& policy)
+   {
+   return test_dtls_handshake(offer_version, creds, policy, policy);
+   }
+
 class Test_Policy : public Botan::TLS::Text_Policy
    {
    public:
@@ -650,6 +772,8 @@ class Test_Policy : public Botan::TLS::Text_Policy
 
       size_t dtls_initial_timeout() const override { return 1; }
       size_t dtls_maximum_timeout() const override { return 8; }
+
+      size_t minimum_rsa_bits() const { return 1024; }
    };
 
 
@@ -719,6 +843,25 @@ class TLS_Unit_Tests : public Test
          results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V12, *basic_creds, policy));
          results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V12, *basic_creds, policy));
 
+         policy.set("negotiate_encrypt_then_mac", "false");
+         policy.set("key_exchange_methods", "ECDH");
+         policy.set("ciphers", "AES-128");
+         Test_Policy server_policy;
+         server_policy.set("key_exchange_methods", "ECDH");
+         server_policy.set("ciphers", "AES-128");
+         server_policy.set("negotiate_encrypt_then_mac", "true");
+         results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V10, *basic_creds, policy, server_policy));
+         results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V11, *basic_creds, policy, server_policy));
+         results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V12, *basic_creds, policy, server_policy));
+         results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V10, *basic_creds, policy, server_policy));
+         results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V12, *basic_creds, policy, server_policy));
+         
+         policy.set("negotiate_encrypt_then_mac", "true");
+         policy.set("ciphers", "AES-128/GCM");
+         server_policy.set("ciphers", "AES-128/GCM");
+         results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V12, *basic_creds, policy, server_policy));
+         results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V12, *basic_creds, policy, server_policy));
+         
          return results;
          }
 

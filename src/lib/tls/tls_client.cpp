@@ -1,6 +1,7 @@
 /*
 * TLS Client
 * (C) 2004-2011,2012,2015,2016 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -23,7 +24,7 @@ class Client_Handshake_State : public Handshake_State
    public:
       // using Handshake_State::Handshake_State;
 
-      Client_Handshake_State(Handshake_IO* io, handshake_msg_cb cb) : Handshake_State(io, cb) {}
+      Client_Handshake_State(Handshake_IO* io, Callbacks& cb) : Handshake_State(io, cb) {}
 
       const Public_Key& get_server_public_Key() const
          {
@@ -42,6 +43,23 @@ class Client_Handshake_State : public Handshake_State
 /*
 * TLS Client Constructor
 */
+Client::Client(Callbacks& callbacks,
+               Session_Manager& session_manager,
+               Credentials_Manager& creds,
+               const Policy& policy,
+               RandomNumberGenerator& rng,
+               const Server_Information& info,
+               const Protocol_Version& offer_version,
+               const std::vector<std::string>& next_protos,
+               size_t io_buf_sz) :
+   Channel(callbacks, session_manager, rng, policy, offer_version.is_datagram_protocol(),
+           io_buf_sz),
+   m_creds(creds),
+   m_info(info)
+   {
+   init(offer_version, next_protos);
+   }
+
 Client::Client(output_fn output_fn,
                data_cb proc_cb,
                alert_cb alert_cb,
@@ -59,10 +77,7 @@ Client::Client(output_fn output_fn,
    m_creds(creds),
    m_info(info)
    {
-   const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
-
-   Handshake_State& state = create_handshake_state(offer_version);
-   send_client_hello(state, false, offer_version, srp_identifier, next_protos);
+   init(offer_version, next_protos);
    }
 
 Client::Client(output_fn output_fn,
@@ -82,15 +97,22 @@ Client::Client(output_fn output_fn,
    m_creds(creds),
    m_info(info)
    {
+   init(offer_version, next_protos);
+   }
+
+void Client::init(const Protocol_Version& protocol_version,
+                  const std::vector<std::string>& next_protocols)
+   {
    const std::string srp_identifier = m_creds.srp_identifier("tls-client", m_info.hostname());
 
-   Handshake_State& state = create_handshake_state(offer_version);
-   send_client_hello(state, false, offer_version, srp_identifier, next_protos);
+   Handshake_State& state = create_handshake_state(protocol_version);
+   send_client_hello(state, false, protocol_version,
+                     srp_identifier, next_protocols);
    }
 
 Handshake_State* Client::new_handshake_state(Handshake_IO* io)
    {
-   return new Client_Handshake_State(io, get_handshake_msg_cb());
+   return new Client_Handshake_State(io, callbacks());
    }
 
 std::vector<X509_Certificate>
@@ -145,16 +167,15 @@ void Client::send_client_hello(Handshake_State& state_base,
 
    if(!state.client_hello()) // not resuming
       {
+      Client_Hello::Settings client_settings(version, m_info.hostname(), srp_identifier);
       state.client_hello(new Client_Hello(
          state.handshake_io(),
          state.hash(),
-         version,
          policy(),
          rng(),
          secure_renegotiation_data_for_client_hello(),
-         next_protocols,
-         m_info.hostname(),
-         srp_identifier));
+         client_settings,
+         next_protocols));
       }
 
    secure_renegotiation_check(state.client_hello());
@@ -352,7 +373,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          state.set_expected_next(SERVER_HELLO_DONE);
          }
 
-      state.server_certs(new Certificate(contents));
+      state.server_certs(new Certificate(contents, policy()));
 
       const std::vector<X509_Certificate>& server_certs =
          state.server_certs()->cert_chain();
@@ -419,11 +440,9 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
                                "tls-client",
                                m_info.hostname());
 
-         state.client_certs(
-            new Certificate(state.handshake_io(),
-                            state.hash(),
-                            client_certs)
-            );
+         state.client_certs(new Certificate(state.handshake_io(),
+                                            state.hash(),
+                                            client_certs));
          }
 
       state.client_kex(
@@ -510,6 +529,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          state.server_hello()->compression_method(),
          CLIENT,
          state.server_hello()->supports_extended_master_secret(),
+         state.server_hello()->supports_encrypt_then_mac(),
          get_peer_cert_chain(state),
          session_ticket,
          m_info,

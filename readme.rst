@@ -72,6 +72,9 @@ operations.
 .. image:: https://codecov.io/github/randombit/botan/coverage.svg?branch=master
     :target: https://codecov.io/github/randombit/botan
 
+.. image:: https://sonarqube.com/api/badges/gate?key=botan
+    :target: https://sonarqube.com/dashboard/index/botan
+
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -97,9 +100,9 @@ Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and
 later, Clang 3.4 and later, and MSVC 2013 are regularly tested.
 
 The latest development release is
-`1.11.30 <http://botan.randombit.net/releases/Botan-1.11.30.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.30.tgz.asc>`_
-released on 2016-06-19
+`1.11.31 <http://botan.randombit.net/releases/Botan-1.11.31.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.31.tgz.asc>`_
+released on 2016-08-30
 
 Old Stable Series (1.10)
 ----------------------------------------
@@ -162,12 +165,9 @@ Public Key Cryptography
 
 * RSA signatures and encryption
 * DH and ECDH key agreement
-* DSA and ECDSA signatures
-* Quantum computer resistant McEliece KEM scheme
-* GOST-34.10-2001
+* Signature schemes DSA, ECDSA, ECGDSA, ECKCDSA, GOST 34.10-2001
+* Post-quantum KEM schemes McEliece (code based) and NewHope (Ring-LWE)
 * ElGamal encryption
-* Rabin-Williams signatures (deprecated)
-* Nyberg-Rueppel signatures (deprecated)
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
 Ciphers and cipher modes
@@ -176,13 +176,12 @@ Ciphers and cipher modes
 * Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, and ChaCha20Poly1305
 * Unauthenticated cipher modes CTR, CBC, XTS, CFB, OFB, and ECB
 * AES (including constant time SSSE3 and AES-NI versions)
-* AES candidates Serpent, Twofish, MARS, CAST-256, RC6
+* AES candidates Serpent, Twofish, CAST-256
 * Stream ciphers Salsa20/XSalsa20, ChaCha20, and RC4
 * DES, 3DES and DESX
-* Threefish-512, Noekeon, Blowfish, CAST-128, IDEA
+* Threefish-512, Noekeon, Blowfish, CAST-128, IDEA, XTEA
 * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147
 * Large block cipher construction Lion
-* Deprecated ciphers TEA, XTEA, RC2, RC5, SAFER-SK
 
 Hash functions and MACs
 ----------------------------------------
@@ -195,11 +194,11 @@ Hash functions and MACs
 * Hash function combiners (Parallel and Comb4P)
 * Non-cryptographic checksums Adler32, CRC24, CRC32
 * Obsolete algorithms MD5, MD4, CBC-MAC, X9.19 DES-MAC
-* Deprecated hashes MD2, HAS-160, RIPEMD-128
 
 Other Useful Things
 ----------------------------------------
 
+* Interfaces for accessing PKCS #11 and TPM hardware
 * Key derivation functions for passwords, including PBKDF2
 * Password hashing functions, including bcrypt and a PBKDF based scheme
 * General key derivation functions KDF1 and KDF2 from IEEE 1363

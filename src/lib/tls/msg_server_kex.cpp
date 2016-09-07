@@ -236,6 +236,8 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
                                  const Handshake_State& state,
                                  const Policy& policy) const
    {
+   policy.check_peer_key_acceptable(server_key);
+
    std::pair<std::string, Signature_Format> format =
       state.parse_sig_format(server_key, m_hash_algo, m_sig_algo,
                              false, policy);

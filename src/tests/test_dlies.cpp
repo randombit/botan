@@ -25,13 +25,11 @@ class DLIES_KAT_Tests : public Text_Based_Test
    public:
       DLIES_KAT_Tests() : Text_Based_Test(
          "pubkey/dlies.vec",
-         {"Kdf", "Mac", "MacKeyLen", "Cipher", "CipherKeyLen", "IV", "P", "G", "X1", "X2", "Msg", "Ciphertext"})
+         {"Kdf", "Mac", "MacKeyLen", "IV", "Group", "X1", "X2", "Msg", "Ciphertext"})
          {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& cipher_algo, const VarMap& vars) override
          {
-         const Botan::BigInt p = get_req_bn(vars, "P");
-         const Botan::BigInt g = get_req_bn(vars, "G");
          const Botan::BigInt x1 = get_req_bn(vars, "X1");
          const Botan::BigInt x2 = get_req_bn(vars, "X2");
 
@@ -41,12 +39,11 @@ class DLIES_KAT_Tests : public Text_Based_Test
          const std::string kdf_algo = get_req_str(vars, "Kdf");
          const std::string mac_algo = get_req_str(vars, "Mac");
          const size_t mac_key_len = get_req_sz(vars, "MacKeyLen");
+         const std::string group_name = get_req_str(vars, "Group");
 
-         const std::string cipher_algo = get_opt_str(vars, "Cipher", "");
-         const size_t cipher_key_len = get_opt_sz(vars, "CipherKeyLen", 0);
          const std::vector<uint8_t> iv = get_opt_bin(vars, "IV");
 
-         Test::Result result("DLIES");
+         Test::Result result("DLIES " + cipher_algo);
 
          std::unique_ptr<Botan::KDF> kdf(Botan::KDF::create(kdf_algo));
          if(!kdf)
@@ -64,14 +61,17 @@ class DLIES_KAT_Tests : public Text_Based_Test
 
          std::unique_ptr<Botan::Cipher_Mode> enc;
          std::unique_ptr<Botan::Cipher_Mode> dec;
+         size_t cipher_key_len = 0;
 
-         if(! cipher_algo.empty())
+         if(cipher_algo != "XOR")
             {
             enc.reset(Botan::get_cipher_mode(cipher_algo, Botan::ENCRYPTION));
             dec.reset(Botan::get_cipher_mode(cipher_algo, Botan::DECRYPTION));
+
+            cipher_key_len = enc->key_spec().maximum_keylength();
             }
 
-         Botan::DL_Group domain(p, g);
+         Botan::DL_Group domain(group_name);
 
          Botan::DH_PrivateKey from(Test::rng(), domain, x1);
          Botan::DH_PrivateKey to(Test::rng(), domain, x2);

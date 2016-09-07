@@ -19,6 +19,24 @@ Advisories
 2016
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2016-08-30 (CVE-2016-6878) Undefined behavior in Curve25519
+
+  On systems without a native 128-bit integer type, the Curve25519 code invoked
+  undefined behavior. This was known to produce incorrect results on 32-bit ARM
+  when compiled by Clang.
+
+  Introduced in 1.11.12, fixed in 1.11.31
+
+* 2016-08-30 (CVE-2016-6879) Bad result from X509_Certificate::allowed_usage
+
+  If allowed_usage was called with more than one Key_Usage set in the enum
+  value, the function would return true if *any* of the allowed usages were set,
+  instead of if *all* of the allowed usages are set.  This could be used to
+  bypass an application key usage check. Credit to Daniel Neus of Rohde &
+  Schwarz Cybersecurity for finding this issue.
+
+  Introduced in 1.11.0, fixed in 1.11.31
+
 * 2016-03-17 (CVE-2016-2849): ECDSA side channel
 
   ECDSA (and DSA) signature algorithms perform a modular inverse on the

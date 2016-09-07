@@ -8,6 +8,7 @@
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_messages.h>
 #include <botan/internal/tls_record.h>
+#include <botan/tls_callbacks.h>
 
 namespace Botan {
 
@@ -174,14 +175,19 @@ std::string handshake_mask_to_string(u32bit mask)
 /*
 * Initialize the SSL/TLS Handshake State
 */
-Handshake_State::Handshake_State(Handshake_IO* io, handshake_msg_cb cb) :
-   m_msg_callback(cb),
+Handshake_State::Handshake_State(Handshake_IO* io, Callbacks& cb) :
+   m_callbacks(cb),
    m_handshake_io(io),
    m_version(m_handshake_io->initial_record_version())
    {
    }
 
 Handshake_State::~Handshake_State() {}
+
+void Handshake_State::note_message(const Handshake_Message& msg)
+   {
+   m_callbacks.tls_inspect_handshake_msg(msg);
+   }
 
 void Handshake_State::hello_verify_request(const Hello_Verify_Request& hello_verify)
    {

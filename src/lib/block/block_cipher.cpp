@@ -63,14 +63,6 @@
   #include <botan/lion.h>
 #endif
 
-#if defined(BOTAN_HAS_LUBY_RACKOFF)
-  #include <botan/lubyrack.h>
-#endif
-
-#if defined(BOTAN_HAS_MARS)
-  #include <botan/mars.h>
-#endif
-
 #if defined(BOTAN_HAS_MISTY1)
   #include <botan/misty1.h>
 #endif
@@ -83,22 +75,6 @@
   #include <botan/noekeon_simd.h>
 #endif
 
-#if defined(BOTAN_HAS_RC2)
-  #include <botan/rc2.h>
-#endif
-
-#if defined(BOTAN_HAS_RC5)
-  #include <botan/rc5.h>
-#endif
-
-#if defined(BOTAN_HAS_RC6)
-  #include <botan/rc6.h>
-#endif
-
-#if defined(BOTAN_HAS_SAFER)
-  #include <botan/safer_sk.h>
-#endif
-
 #if defined(BOTAN_HAS_SEED)
   #include <botan/seed.h>
 #endif
@@ -109,18 +85,6 @@
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)
   #include <botan/serp_simd.h>
-#endif
-
-#if defined(BOTAN_HAS_SKIPJACK)
-  #include <botan/skipjack.h>
-#endif
-
-#if defined(BOTAN_HAS_SQUARE)
-  #include <botan/square.h>
-#endif
-
-#if defined(BOTAN_HAS_TEA)
-  #include <botan/tea.h>
 #endif
 
 #if defined(BOTAN_HAS_TWOFISH)
@@ -232,10 +196,6 @@ BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_sse2(), IDEA_SSE2, "IDEA",
 BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(KASUMI);
 #endif
 
-#if defined(BOTAN_HAS_MARS)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(MARS);
-#endif
-
 #if defined(BOTAN_HAS_MISTY1)
 BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(MISTY1);
 #endif
@@ -249,22 +209,6 @@ BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_simd_32(), Noekeon_SIMD, "Noeke
                                       "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
 #endif
 
-#if defined(BOTAN_HAS_RC2)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(RC2);
-#endif
-
-#if defined(BOTAN_HAS_RC5)
-BOTAN_REGISTER_BLOCK_CIPHER_1LEN(RC5, 12);
-#endif
-
-#if defined(BOTAN_HAS_RC6)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(RC6);
-#endif
-
-#if defined(BOTAN_HAS_SAFER)
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1LEN(SAFER_SK, "SAFER-SK", 10);
-#endif
-
 #if defined(BOTAN_HAS_SEED)
 BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(SEED);
 #endif
@@ -276,10 +220,6 @@ BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Serpent);
 #if defined(BOTAN_HAS_SERPENT_SIMD)
 BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(CPUID::has_simd_32(), Serpent_SIMD, "Serpent",
                                       "simd32", BOTAN_SIMD_ALGORITHM_PRIO);
-#endif
-
-#if defined(BOTAN_HAS_TEA)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(TEA);
 #endif
 
 #if defined(BOTAN_HAS_TWOFISH)

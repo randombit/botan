@@ -1,0 +1,5 @@
+define NEWHOPE 20160829
+
+<requires>
+keccak
+</requires>

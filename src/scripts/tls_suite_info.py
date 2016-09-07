@@ -293,35 +293,12 @@ namespace Botan {
 
 namespace TLS {
 
-std::vector<u16bit> Ciphersuite::all_known_ciphersuite_ids()
+//static
+const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
    {
-   return std::vector<u16bit>{
+   // Note that this list of ciphersuites is ordered by id!
+   static const std::vector<Ciphersuite> g_ciphersuite_list = {
 """
-
-    for i in sorted(suites.keys()):
-        suite_info += "      0x%s,\n" % (i)
-
-    suite_info += """   };
-}
-
-Ciphersuite Ciphersuite::by_id(u16bit suite)
-   {
-   switch(suite)
-      {
-"""
-
-    """
-      Ciphersuite(u16bit ciphersuite_code,
-                  const char* sig_algo,
-                  const char* kex_algo,
-                  const char* cipher_algo,
-                  size_t cipher_keylen,
-                  size_t nonce_bytes_from_handshake,
-                  size_t nonce_bytes_from_record,
-                  const char* mac_algo,
-                  size_t mac_keylen,
-                  const char* prf_algo = "");
-    """
 
     for code in sorted(suites.keys()):
         info = suites[code]
@@ -329,12 +306,12 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
         suite_expr = 'Ciphersuite(0x%s, "%s", "%s", "%s", "%s", %d, %d, %d, "%s", %d, "%s")' % (
             code, info[0], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9], info[10])
 
-        suite_info += "      case 0x%s:\n" % (code)
-        suite_info += "         return %s;\n\n" % (suite_expr)
+        suite_info += "      " + suite_expr + ",\n"
+        
 
-    suite_info += """      }
+    suite_info += """      };
 
-   return Ciphersuite(); // some unknown ciphersuite
+   return g_ciphersuite_list;
    }
 
 }

@@ -1,23 +1,11 @@
 language: cpp
 
-# BEGIN BUILD MATRIX
-#
-# Build matrix must be smaller on branch coverity_scan because quota allows
-# only 5 Coverity Scan jobs at once. Thus we have different versions of this
-# file on branch master and coverity_scan.
-#
-# Please keep this file as much in sync as possible to allow easy merging
-# from master into coverity_scan and only have differences in the build
-# matrix block.
-#
-# Check the difference as follows:
-#   $ git checkout master
-#   $ git checkout coverity_scan
-#   $ git difftool master coverity_scan .travis.yml
 os:
   - linux
   - osx
 
+dist: trusty
+sudo: required
 osx_image: xcode7
 
 compiler:
@@ -25,72 +13,74 @@ compiler:
   - gcc
 
 env:
+  global:
+    - CCACHE_SIZE=50M
+    - CCACHE_COMPRESS=1
+    - BUILD_JOBS=2
+    # SONAR_TOKEN for accessing the SonarQube server
+    - secure: "VezRbHFg6kllV5WG06M3tG3aHJaC3xrMylJ6RCVbL+uz2JeralVCqV7eIk4fVb9cu83Li+weEa0AJj0wkxpIUJ+vUh5F65L6gSWSbgHP7muOSVsmnEc6KvX4n3av/ZGe4geSmsxqh2pd/2xI1h7KioGRhKeqaZIdjVgWgGJW2iQ="
+    # GITHUB_TOKEN for posting found issues as comments in the PR that's beeing analyzed by SonarQube
+    - secure: "Th0mBSkUCDqu+EA6F7zA6DCSDZBNunfndANyq06BwaFlj71daWWjthwYFsfg3T5N2ZmI+PsULQQpOirCnJt1lbNHhMVJwZPkW0JnjoxbSNpSI2+nHv7+GO9X9WjK0LRFawiQu8WxmLMQDA+0oR0BERSFKc3gmbuav9fDfla0dXg="
+
   matrix:
-    - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="shared"
-    - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="static"
-    - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="coverage"
-    - TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="sanitizer"
-    - TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="shared"
-    - TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="static"
-    - TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="coverage"
-    - TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="sanitizer"
-
-    - TARGETOS="native" MODULES="min" BOOST="n" BUILD_MODE="shared"
-    - TARGETOS="native" MODULES="min" BOOST="n" BUILD_MODE="static"
-    - TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="shared"
-    - TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="static"
-
-    - TARGETOS="ios32" MODULES="all" BOOST="n" BUILD_MODE="static"
-    - TARGETOS="ios64" MODULES="all" BOOST="n" BUILD_MODE="static"
+    - BUILD_MODE="shared"
+    - BUILD_MODE="static"
+    - BUILD_MODE="mini-shared"
+    - BUILD_MODE="mini-static"
+    - BUILD_MODE="cross-arm32"
+    - BUILD_MODE="cross-arm64"
+    - BUILD_MODE="cross-ppc32"
+    - BUILD_MODE="cross-ppc64"
+    - BUILD_MODE="cross-win32"
+    - BUILD_MODE="coverage"
+    - BUILD_MODE="sanitizer"
+    - BUILD_MODE="valgrind"
+    - BUILD_MODE="sonarqube"
 
 matrix:
+  # Ignore some problem builds for now
+  allow_failures:
+    - os: linux
+      env: BUILD_MODE="cross-ppc32"
+    - os: linux
+      env: BUILD_MODE="cross-ppc64"
+    - os: linux
+      env: BUILD_MODE="cross-win32"
+
   exclude:
+    # Skip GCC on OS X entirely
     - os: osx
       compiler: gcc
 
-    # No boost on Linux because installing Boost is easier on OS X
-    - os: linux
-      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="shared"
-    - os: linux
-      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="static"
-    - os: linux
-      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="coverage"
-    - os: linux
-      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="sanitizer"
-    - os: linux
-      env: TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="shared"
-    - os: linux
-      env: TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="static"
+    # Run coverage, valgrind, sonarqube, sanitizer, minimized and
+    # non-ARM cross builds on Linux/gcc only. The sanitizer builds
+    # under Clang run the tests very slowly and cause CI timeouts.
+    - compiler: clang
+      env: BUILD_MODE="coverage"
+    - compiler: clang
+      env: BUILD_MODE="sonarqube"
+    - compiler: clang
+      env: BUILD_MODE="sanitizer"
+    - compiler: clang
+      env: BUILD_MODE="valgrind"
+    - compiler: clang
+      env: BUILD_MODE="mini-shared"
+    - compiler: clang
+      env: BUILD_MODE="mini-static"
+    - compiler: clang
+      env: BUILD_MODE="cross-win32"
+    - compiler: clang
+      env: BUILD_MODE="cross-ppc32"
+    - compiler: clang
+      env: BUILD_MODE="cross-ppc64"
 
-    # No coverage and sanitizer on clang
-    - compiler: clang
-      env: TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="coverage"
-    - compiler: clang
-      env: TARGETOS="native" MODULES="all" BOOST="n" BUILD_MODE="sanitizer"
-    - compiler: clang
-      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="coverage"
-    - compiler: clang
-      env: TARGETOS="native" MODULES="all" BOOST="y" BUILD_MODE="sanitizer"
-
-    # No minimal builds on clang
-    - compiler: clang
-      env: TARGETOS="native" MODULES="min" BOOST="n" BUILD_MODE="shared"
-    - compiler: clang
-      env: TARGETOS="native" MODULES="min" BOOST="n" BUILD_MODE="static"
-    - compiler: clang
-      env: TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="shared"
-    - compiler: clang
-      env: TARGETOS="native" MODULES="min" BOOST="y" BUILD_MODE="static"
-
+    # No ARM Clang compiler on Linux
     - os: linux
-      env: TARGETOS="ios32" MODULES="all" BOOST="n" BUILD_MODE="static"
+      compiler: clang
+      env: BUILD_MODE="cross-arm32"
     - os: linux
-      env: TARGETOS="ios64" MODULES="all" BOOST="n" BUILD_MODE="static"
-# END BUILD MATRIX
-
-cache:
-  directories:
-    - $HOME/.ccache
+      compiler: clang
+      env: BUILD_MODE="cross-arm64"
 
 install:
   - ./src/scripts/ci/travis/install.sh
@@ -104,20 +94,16 @@ after_success:
 notifications:
   email: botan-commits@lists.randombit.net
 
+git:
+  depth: 5
+
+cache:
+  ccache: true
+  directories:
+    - $HOME/.sonar/cache
+
 addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - ccache
-    - g++-4.8
-    - libssl-dev
-    - libsqlite3-dev
-    - zlib1g-dev
-    - libbz2-dev
-    - liblzma-dev
-    - python2
-    - python3
+  sonarqube: true
 
   coverity_scan:
     project:
@@ -126,3 +112,4 @@ addons:
     build_command_prepend: "./configure.py --cc-bin=/usr/bin/g++-4.8"
     build_command: "make -j2"
     branch_pattern: coverity_scan
+

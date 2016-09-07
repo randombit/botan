@@ -41,7 +41,7 @@ eckcdsa
 ecdh
 
 # rng
-hmac_rng
+auto_rng
 hmac_drbg
 </required>
 
@@ -58,7 +58,6 @@ beos_stats
 cryptoapi_rng
 darwin_secrandom
 dev_random
-hres_timer
 proc_walk
 rdrand
 rdseed
@@ -70,9 +69,7 @@ system_rng
 
 # utils
 locking_allocator
-simd_altivec
-simd_scalar
-simd_sse2
+simd
 </if_available>
 
 <prohibited>
@@ -86,23 +83,16 @@ idea
 idea_sse2
 kasumi
 lion
-mars
 misty1
 noekeon
 noekeon_simd
-rc2
-rc5
-rc6
-safer
 seed
 serpent
 serpent_simd
-tea
 threefish
 threefish_avx2
 twofish
 xtea
-xtea_simd
 
 # modes
 ccm
@@ -130,9 +120,7 @@ elgamal
 gost_3410
 mce
 mceies
-nr
 rfc6979
-rw
 
 # pk_pad
 #eme_pkcs1 // needed for tls
@@ -140,17 +128,13 @@ eme_raw
 #emsa_pkcs1 // needed for tls
 emsa_raw
 emsa_x931
-emsa1_bsi
 
 # hash
 blake2
 comb4p
 gost_3411
-has160
-md2
 md4
 #md5 // needed for tls
-rmd128
 rmd160
 #sha1 // needed for tls
 #sha1_sse2 // needed for tls

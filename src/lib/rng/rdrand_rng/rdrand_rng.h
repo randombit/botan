@@ -45,8 +45,7 @@ class BOTAN_DLL RDRAND_RNG : public Hardware_RNG
       void add_entropy(const uint8_t[], size_t) override
          { /* no op */ }
 
-      size_t reseed_with_sources(Entropy_Sources&, size_t,
-                               std::chrono::milliseconds) override
+      size_t reseed(Entropy_Sources&, size_t, std::chrono::milliseconds) override
          { return 0; /* no op */ }
 
       std::string name() const override { return "RDRAND"; }

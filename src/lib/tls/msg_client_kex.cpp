@@ -92,13 +92,6 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          if(reader.remaining_bytes())
             throw Decoding_Error("Bad params size for DH key exchange");
 
-         if(p.bits() < policy.minimum_dh_group_size())
-            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
-                                "Server sent DH group of " +
-                                std::to_string(p.bits()) +
-                                " bits, policy requires at least " +
-                                std::to_string(policy.minimum_dh_group_size()));
-
          /*
          * A basic check for key validity. As we do not know q here we
          * cannot check that Y is in the right subgroup. However since
@@ -116,6 +109,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                                 "DH group validation failed");
 
          DH_PublicKey counterparty_key(group, Y);
+
+         policy.check_peer_key_acceptable(counterparty_key);
 
          DH_PrivateKey priv_key(rng, group);
 
@@ -160,6 +155,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          ECDH_PublicKey counterparty_key(group, OS2ECP(ecdh_key, group.get_curve()));
 
+         policy.check_peer_key_acceptable(counterparty_key);
+         
          ECDH_PrivateKey priv_key(rng, group);
 
          PK_Key_Agreement ka(priv_key, "Raw");

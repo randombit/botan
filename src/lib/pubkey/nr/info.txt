@@ -1,8 +1,0 @@
-define NYBERG_RUEPPEL 20131128
-
-<requires>
-dl_algo
-dl_group
-keypair
-numbertheory
-</requires>

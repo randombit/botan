@@ -308,7 +308,7 @@ ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key, const ECIES_Sy
    m_iv(),
    m_label()
    {
-   // ISO 18033: "If v > 1 and CheckMode = 0, then we must have gcd(µ, v) = 1." (v = index, µ = order)
+   // ISO 18033: "If v > 1 and CheckMode = 0, then we must have gcd(u, v) = 1." (v = index, u= order)
    if(!ecies_params.check_mode())
       {
       Botan::BigInt cofactor = m_params.domain().get_cofactor();
