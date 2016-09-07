@@ -87,6 +87,9 @@ Version 1.11.31, 2016-08-30
   polling code. New constructors allow specifying the reseed RNG and/or entropy
   sources. (GH #520)
 
+* The `hres_timer` entropy source module has been removed. Timestamp inputs to
+  the RNG are now handled as additional_data inputs to HMAC_DRBG.
+
 * Add RDRAND_RNG which directly exposes the CPU RNG (GH #543)
 
 * Add PKCS #1 v1.5 id for SHA-512/256 (GH #554)
