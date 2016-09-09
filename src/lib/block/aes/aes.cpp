@@ -122,7 +122,7 @@ const std::vector<u32bit>& AES_TE()
       return TE;
    };
 
-   static std::vector<u32bit> TE = compute_TE();
+   static const std::vector<u32bit> TE = compute_TE();
    return TE;
    }
 
@@ -142,7 +142,7 @@ const std::vector<u32bit>& AES_TD()
          }
       return TD;
    };
-   static std::vector<u32bit> TD = compute_TD();
+   static const std::vector<u32bit> TD = compute_TD();
    return TD;
    }
 
