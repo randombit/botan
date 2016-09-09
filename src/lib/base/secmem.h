@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <vector>
 #include <deque>
+#include <type_traits>
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
   #include <botan/locking_allocator.h>
@@ -23,6 +24,8 @@ template<typename T>
 class secure_allocator
    {
    public:
+      static_assert(std::is_integral<T>::value, "secure_allocator supports only integer types");
+
       typedef T          value_type;
 
       typedef T*         pointer;
