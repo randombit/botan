@@ -527,21 +527,21 @@ Text_Based_Test::Text_Based_Test(const std::string& algo,
 
 std::vector<uint8_t> Text_Based_Test::get_req_bin(const VarMap& vars,
                                                   const std::string& key) const
-      {
-      auto i = vars.find(key);
-      if(i == vars.end())
-         throw Test_Error("Test missing variable " + key);
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      throw Test_Error("Test missing variable " + key);
 
-      try
-         {
-         return Botan::hex_decode(i->second);
-         }
-      catch(std::exception&)
-         {
-         throw Test_Error("Test invalid hex input '" + i->second + "'" +
-                                  + " for key " + key);
-         }
+   try
+      {
+      return Botan::hex_decode(i->second);
       }
+   catch(std::exception&)
+      {
+      throw Test_Error("Test invalid hex input '" + i->second + "'" +
+                       + " for key " + key);
+      }
+   }
 
 std::string Text_Based_Test::get_opt_str(const VarMap& vars,
                                          const std::string& key, const std::string& def_value) const
@@ -646,9 +646,17 @@ std::string Text_Based_Test::get_next_line()
             }
 
          m_cur.reset(new std::ifstream(m_srcs[0]));
+         m_cur_src_name = m_srcs[0];
+
+         // Reinit cpuid on new file if needed
+         if(m_cpu_flags.empty() == false)
+            {
+            m_cpu_flags.clear();
+            Botan::CPUID::initialize();
+            }
 
          if(!m_cur->good())
-            throw Test_Error("Could not open input file '" + m_srcs[0]);
+            throw Test_Error("Could not open input file '" + m_cur_src_name);
 
          m_srcs.pop_front();
          }
@@ -662,7 +670,12 @@ std::string Text_Based_Test::get_next_line()
             continue;
 
          if(line[0] == '#')
-            continue;
+            {
+            if(line.compare(0, 6, "#test ") == 0)
+               return line;
+            else
+               continue;
+            }
 
          return line;
          }
@@ -685,6 +698,42 @@ std::string strip_ws(const std::string& in)
    return in.substr(first_c, last_c - first_c + 1);
    }
 
+std::vector<Botan::CPUID::CPUID_bits> map_cpuid_string(const std::string& tok)
+   {
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+   if(tok == "sse2" || tok == "simd")
+      return {Botan::CPUID::CPUID_SSE2_BIT};
+   if(tok == "ssse3")
+      return {Botan::CPUID::CPUID_SSSE3_BIT};
+   if(tok == "aesni")
+      return {Botan::CPUID::CPUID_AESNI_BIT};
+   if(tok == "clmul")
+      return {Botan::CPUID::CPUID_CLMUL_BIT};
+   if(tok == "avx2")
+      return {Botan::CPUID::CPUID_AVX2_BIT};
+#endif
+
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+   if(tok == "altivec" || tok == "simd")
+      return {Botan::CPUID::CPUID_ALITVEC_BIT};
+#endif
+
+   return {};
+   }
+
+std::vector<Botan::CPUID::CPUID_bits>
+parse_cpuid_bits(const std::vector<std::string>& tok)
+   {
+   std::vector<Botan::CPUID::CPUID_bits> bits;
+   for(size_t i = 1; i < tok.size(); ++i)
+      {
+      const std::vector<Botan::CPUID::CPUID_bits> more = map_cpuid_string(tok[i]);
+      bits.insert(bits.end(), more.begin(), more.end());
+      }
+
+   return bits;
+   }
+
 }
 
 std::vector<Test::Result> Text_Based_Test::run()
@@ -700,6 +749,26 @@ std::vector<Test::Result> Text_Based_Test::run()
       const std::string line = get_next_line();
       if(line.empty()) // EOF
          break;
+
+      if(line.compare(0, 6, "#test ") == 0)
+         {
+         std::vector<std::string> pragma_tokens = Botan::split_on(line.substr(6), ' ');
+
+         if(pragma_tokens.empty())
+            throw Test_Error("Empty pragma found in " + m_cur_src_name);
+
+         if(pragma_tokens[0] != "cpuid")
+            throw Test_Error("Unknown test pragma '" + line + "' in " + m_cur_src_name);
+
+         m_cpu_flags = parse_cpuid_bits(pragma_tokens);
+
+         if(m_cpu_flags.empty())
+            throw Test_Error("Empty cpuid pragma in " + m_cur_src_name);
+
+         continue;
+         }
+      else if(line[0] == '#')
+         throw Test_Error("Unknown test pragma '" + line + "' in " + m_cur_src_name);
 
       if(line[0] == '[' && line[line.size()-1] == ']')
          {
@@ -736,7 +805,21 @@ std::vector<Test::Result> Text_Based_Test::run()
             ++test_cnt;
 
             uint64_t start = Test::timestamp();
+
             Test::Result result = run_one_test(header, vars);
+            if(m_cpu_flags.size() > 0)
+               {
+               for(auto&& cpuid_bit : m_cpu_flags)
+                  {
+                  if(Botan::CPUID::has_cpuid_bit(cpuid_bit))
+                     {
+                     Botan::CPUID::clear_cpuid_bit(cpuid_bit);
+                     // now re-run the test
+                     result.merge(run_one_test(header, vars));
+                     }
+                  }
+               Botan::CPUID::initialize();
+               }
             result.set_ns_consumed(Test::timestamp() - start);
 
             if(result.tests_failed())
