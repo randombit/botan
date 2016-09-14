@@ -31,7 +31,7 @@ std::pair<int, size_t> get_openssl_enc_pad(const std::string& eme)
       return std::make_pair(RSA_NO_PADDING, 0);
    else if(eme == "EME-PKCS1-v1_5")
       return std::make_pair(RSA_PKCS1_PADDING, 11);
-   else if(eme == "OAEP(SHA-1)")
+   else if(eme == "OAEP(SHA-1)" || eme == "EME1(SHA-1)")
       return std::make_pair(RSA_PKCS1_OAEP_PADDING, 41);
    else
       throw Lookup_Error("OpenSSL RSA does not support EME " + eme);

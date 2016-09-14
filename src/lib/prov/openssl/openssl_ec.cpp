@@ -273,12 +273,12 @@ std::unique_ptr<PK_Ops::Key_Agreement>
 make_openssl_ecdh_ka_op(const ECDH_PrivateKey& key, const std::string& params)
    {
    const int nid = OpenSSL_EC_nid_for(key.domain().get_oid());
-   if(nid > 0)
+   if(nid == 0)
       {
-      return std::unique_ptr<PK_Ops::Key_Agreement>(new OpenSSL_ECDH_KA_Operation(key, params));
+      throw Lookup_Error("OpenSSL ECDH does not support this curve");
       }
 
-   return {};
+   return std::unique_ptr<PK_Ops::Key_Agreement>(new OpenSSL_ECDH_KA_Operation(key, params));
    }
 
 #endif
