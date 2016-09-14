@@ -31,9 +31,9 @@ elif [ "$BUILD_MODE" = "coverage" ]; then
     CFG_FLAGS+=(--with-coverage)
 elif [ "$BUILD_MODE" = "sanitizer" ]; then
     export ASAN_OPTIONS=detect_leaks=0
-    CFG_FLAGS+=(--with-sanitizers)
+    CFG_FLAGS+=(--with-sanitizers --disable-modules=locking_allocator)
 elif [ "$BUILD_MODE" = "valgrind" ]; then
-    CFG_FLAGS+=(--with-valgrind --with-debug-info)
+    CFG_FLAGS+=(--with-valgrind --with-debug-info --disable-modules=locking_allocator)
     TEST_PREFIX="valgrind --track-origins=yes --error-exitcode=9 -v"
 fi
 
