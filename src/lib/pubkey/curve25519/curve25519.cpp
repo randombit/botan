@@ -139,9 +139,11 @@ class Curve25519_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
 std::unique_ptr<PK_Ops::Key_Agreement>
 Curve25519_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
                                                const std::string& params,
-                                               const std::string& /*provider*/) const
+                                               const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::Key_Agreement>(new Curve25519_KA_Operation(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Key_Agreement>(new Curve25519_KA_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 }

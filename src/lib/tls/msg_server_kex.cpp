@@ -237,8 +237,7 @@ std::vector<byte> Server_Key_Exchange::serialize() const
 */
 bool Server_Key_Exchange::verify(const Public_Key& server_key,
                                  const Handshake_State& state,
-                                 const Policy& policy,
-                                 RandomNumberGenerator& rng) const
+                                 const Policy& policy) const
    {
    policy.check_peer_key_acceptable(server_key);
 
@@ -246,7 +245,7 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
       state.parse_sig_format(server_key, m_hash_algo, m_sig_algo,
                              false, policy);
 
-   PK_Verifier verifier(server_key, rng, format.first, format.second);
+   PK_Verifier verifier(server_key, format.first, format.second);
 
    verifier.update(state.client_hello()->random());
    verifier.update(state.server_hello()->random());

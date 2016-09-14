@@ -406,37 +406,51 @@ class RSA_KEM_Encryption_Operation : public PK_Ops::KEM_Encryption_with_KDF,
 }
 
 std::unique_ptr<PK_Ops::Encryption>
-RSA_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
+RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
                                     const std::string& params,
                                     const std::string& provider) const
    {
 #if defined(BOTAN_HAS_OPENSSL)
-   if(provider == "openssl")
+   if(provider == "openssl" || provider.empty())
       {
-      std::unique_ptr<PK_Ops::Encryption> res = make_openssl_rsa_enc_op(*this, params);
-      if(res)
-         return res;
+      try
+         {
+         return make_openssl_rsa_enc_op(*this, params);
+         }
+      catch(Exception& e)
+         {
+         /*
+         * If OpenSSL for some reason could not handle this (eg due to OAEP params),
+         * throw if openssl was specifically requested but otherwise just fall back
+         * to the normal version.
+         */
+         if(provider == "openssl")
+            throw Exception("OpenSSL RSA provider rejected key:", e.what());
+         }
       }
 #endif
 
-   return std::unique_ptr<PK_Ops::Encryption>(new RSA_Encryption_Operation(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Encryption>(new RSA_Encryption_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::KEM_Encryption>
-RSA_PublicKey::create_kem_encryption_op(RandomNumberGenerator& rng,
+RSA_PublicKey::create_kem_encryption_op(RandomNumberGenerator& /*rng*/,
                                         const std::string& params,
-                                        const std::string& /*provider*/) const
+                                        const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::KEM_Encryption>(new RSA_KEM_Encryption_Operation(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::KEM_Encryption>(new RSA_KEM_Encryption_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Verification>
-RSA_PublicKey::create_verification_op(RandomNumberGenerator& rng,
-                                      const std::string& params,
+RSA_PublicKey::create_verification_op(const std::string& params,
                                       const std::string& provider) const
    {
 #if defined(BOTAN_HAS_OPENSSL)
-   if(provider == "openssl")
+   if(provider == "openssl" || provider.empty())
       {
       std::unique_ptr<PK_Ops::Verification> res = make_openssl_rsa_ver_op(*this, params);
       if(res)
@@ -444,7 +458,10 @@ RSA_PublicKey::create_verification_op(RandomNumberGenerator& rng,
       }
 #endif
 
-   return std::unique_ptr<PK_Ops::Verification>(new RSA_Verify_Operation(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Verification>(new RSA_Verify_Operation(*this, params));
+
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Decryption>
@@ -453,23 +470,35 @@ RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
                                      const std::string& provider) const
    {
 #if defined(BOTAN_HAS_OPENSSL)
-   if(provider == "openssl")
+   if(provider == "openssl" || provider.empty())
       {
-      std::unique_ptr<PK_Ops::Decryption> res = make_openssl_rsa_dec_op(*this, params);
-      if(res)
-         return res;
+      try
+         {
+         return make_openssl_rsa_dec_op(*this, params);
+         }
+      catch(Exception& e)
+         {
+         if(provider == "openssl")
+            throw Exception("OpenSSL RSA provider rejected key:", e.what());
+         }
       }
 #endif
 
-   return std::unique_ptr<PK_Ops::Decryption>(new RSA_Decryption_Operation(*this, params, rng));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Decryption>(new RSA_Decryption_Operation(*this, params, rng));
+
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::KEM_Decryption>
 RSA_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
                                          const std::string& params,
-                                         const std::string& /*provider*/) const
+                                         const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::KEM_Decryption>(new RSA_KEM_Decryption_Operation(*this, params, rng));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::KEM_Decryption>(new RSA_KEM_Decryption_Operation(*this, params, rng));
+
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Signature>
@@ -478,7 +507,7 @@ RSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
                                     const std::string& provider) const
    {
 #if defined(BOTAN_HAS_OPENSSL)
-   if(provider == "openssl")
+   if(provider == "openssl" || provider.empty())
       {
       std::unique_ptr<PK_Ops::Signature> res = make_openssl_rsa_sig_op(*this, params);
       if(res)
@@ -486,7 +515,10 @@ RSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
       }
 #endif
 
-   return std::unique_ptr<PK_Ops::Signature>(new RSA_Signature_Operation(*this, params, rng));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Signature>(new RSA_Signature_Operation(*this, params, rng));
+
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 }

@@ -63,8 +63,7 @@ class BOTAN_DLL RSA_PublicKey : public virtual Public_Key
                                   const std::string& provider) const override;
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(RandomNumberGenerator& rng,
-                                const std::string& params,
+         create_verification_op(const std::string& params,
                                 const std::string& provider) const override;
 
    protected:

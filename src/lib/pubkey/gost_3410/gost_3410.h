@@ -60,8 +60,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
          { return domain().get_order().bytes(); }
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(RandomNumberGenerator& rng,
-                                const std::string& params,
+         create_verification_op(const std::string& params,
                                 const std::string& provider) const override;
 
    protected:
@@ -97,7 +96,7 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
       std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator& rng,
                              const std::string& params,
-                             const std::string& provider) const;
+                             const std::string& provider) const override;
    };
 
 }

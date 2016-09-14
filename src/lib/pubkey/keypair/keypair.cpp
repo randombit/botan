@@ -49,7 +49,7 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
                                  const std::string& padding)
    {
    PK_Signer signer(key, rng, padding);
-   PK_Verifier verifier(key, rng, padding);
+   PK_Verifier verifier(key, padding);
 
    std::vector<byte> message = unlock(rng.random_vec(16));
 

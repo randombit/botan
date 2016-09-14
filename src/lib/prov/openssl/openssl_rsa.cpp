@@ -228,28 +228,16 @@ class OpenSSL_RSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
 std::unique_ptr<PK_Ops::Encryption>
 make_openssl_rsa_enc_op(const RSA_PublicKey& key, const std::string& params)
    {
-   try
-      {
-      auto pad_info = get_openssl_enc_pad(params);
-      return std::unique_ptr<PK_Ops::Encryption>(
-         new OpenSSL_RSA_Encryption_Operation(key, pad_info.first, pad_info.second));
-      }
-   catch(...) {}
-
-   return {};
+   auto pad_info = get_openssl_enc_pad(params);
+   return std::unique_ptr<PK_Ops::Encryption>(
+      new OpenSSL_RSA_Encryption_Operation(key, pad_info.first, pad_info.second));
    }
 
 std::unique_ptr<PK_Ops::Decryption>
 make_openssl_rsa_dec_op(const RSA_PrivateKey& key, const std::string& params)
    {
-   try
-      {
-      auto pad_info = get_openssl_enc_pad(params);
-      return std::unique_ptr<PK_Ops::Decryption>(new OpenSSL_RSA_Decryption_Operation(key, pad_info.first));
-      }
-   catch(...) {}
-
-   return {};
+   auto pad_info = get_openssl_enc_pad(params);
+   return std::unique_ptr<PK_Ops::Decryption>(new OpenSSL_RSA_Decryption_Operation(key, pad_info.first));
    }
 
 std::unique_ptr<PK_Ops::Verification>

@@ -96,8 +96,7 @@ Public_Key::create_kem_encryption_op(RandomNumberGenerator& /*rng*/,
    }
 
 std::unique_ptr<PK_Ops::Verification>
-Public_Key::create_verification_op(RandomNumberGenerator& /*rng*/,
-                                   const std::string& /*params*/,
+Public_Key::create_verification_op(const std::string& /*params*/,
                                    const std::string& /*provider*/) const
    {
    throw Lookup_Error(algo_name() + " does not support verification");

@@ -102,7 +102,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
 
       try
          {
-         signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::IEEE_1363, sign_provider));
+         signer.reset(new Botan::PK_Signer(*privkey, padding, Botan::IEEE_1363, sign_provider));
          }
       catch(Botan::Lookup_Error&)
          {
@@ -130,7 +130,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
 
          try
             {
-            verifier.reset(new Botan::PK_Verifier(*pubkey, Test::rng(), padding, Botan::IEEE_1363, verify_provider));
+            verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
             }
          catch(Botan::Lookup_Error&)
             {
@@ -168,7 +168,7 @@ PK_Signature_Verification_Test::run_one_test(const std::string&, const VarMap& v
 
       try
          {
-         verifier.reset(new Botan::PK_Verifier(*pubkey, Test::rng(), padding, Botan::IEEE_1363, verify_provider));
+         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
          result.test_eq("correct signature valid", verifier->verify_message(message, signature), true);
          check_invalid_signatures(result, *verifier, message, signature);
          }

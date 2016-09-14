@@ -129,9 +129,11 @@ secure_vector<byte> DH_KA_Operation::raw_agree(const byte w[], size_t w_len)
 std::unique_ptr<PK_Ops::Key_Agreement>
 DH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
                                        const std::string& params,
-                                       const std::string& /*provider*/) const
+                                       const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::Key_Agreement>(new DH_KA_Operation(*this, params, rng));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Key_Agreement>(new DH_KA_Operation(*this, params, rng));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 }

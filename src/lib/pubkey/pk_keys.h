@@ -122,14 +122,9 @@ class BOTAN_DLL Public_Key
 
       /**
       * Return a verification operation for this key/params or throw
-      *
-      * @param rng a random number generator. The PK_Op may maintain a
-      * reference to the RNG and use it many times. The rng must outlive
-      * any operations which reference it.
       */
       virtual std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(RandomNumberGenerator& rng,
-                                const std::string& params,
+         create_verification_op(const std::string& params,
                                 const std::string& provider) const;
 
       virtual ~Public_Key() {}

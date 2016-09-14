@@ -39,6 +39,7 @@ class ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
       secure_vector<byte> raw_agree(const byte w[], size_t w_len) override
          {
          PointGFp point = OS2ECP(w, w_len, m_curve);
+         // TODO: add blinding
          PointGFp S = (m_cofactor * point) * m_l_times_priv;
          BOTAN_ASSERT(S.on_the_curve(), "ECDH agreed value was on the curve");
          return BigInt::encode_1363(S.get_affine_x(), m_curve.get_p().bytes());
@@ -57,15 +58,24 @@ ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
                                          const std::string& provider) const
    {
 #if defined(BOTAN_HAS_OPENSSL)
-   if(provider == "openssl")
+   if(provider == "openssl" || provider.empty())
       {
-      std::unique_ptr<PK_Ops::Key_Agreement> res = make_openssl_ecdh_ka_op(*this, params);
-      if(res)
-         return res;
+      try
+         {
+         return make_openssl_ecdh_ka_op(*this, params);
+         }
+      catch(Exception& e)
+         {
+         if(provider == "openssl")
+            throw Exception("OpenSSL ECDH refused key or params", e.what());
+         }
       }
 #endif
 
-   return std::unique_ptr<PK_Ops::Key_Agreement>(new ECDH_KA_Operation(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Key_Agreement>(new ECDH_KA_Operation(*this, params));
+
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 

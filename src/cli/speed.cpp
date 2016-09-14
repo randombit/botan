@@ -889,7 +889,7 @@ class Speed final : public Command
          std::vector<uint8_t> message, signature, bad_signature;
 
          Botan::PK_Signer   sig(key, rng(), padding, Botan::IEEE_1363, provider);
-         Botan::PK_Verifier ver(key, rng(), padding, Botan::IEEE_1363, provider);
+         Botan::PK_Verifier ver(key, padding, Botan::IEEE_1363, provider);
 
          Timer sig_timer(nm, provider, padding + " sign");
          Timer ver_timer(nm, provider, padding + " verify");

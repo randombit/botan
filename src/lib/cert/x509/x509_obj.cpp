@@ -197,8 +197,7 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const
       Signature_Format format =
          (pub_key.message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
 
-      Null_RNG null_rng;
-      PK_Verifier verifier(pub_key, null_rng, padding, format);
+      PK_Verifier verifier(pub_key, padding, format);
 
       return verifier.verify_message(tbs_data(), signature());
       }

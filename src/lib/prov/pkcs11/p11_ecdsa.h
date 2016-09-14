@@ -57,8 +57,7 @@ class BOTAN_DLL PKCS11_ECDSA_PublicKey final : public PKCS11_EC_PublicKey, publi
       ECDSA_PublicKey export_key() const;
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(RandomNumberGenerator& rng,
-                                const std::string& params,
+         create_verification_op(const std::string& params,
                                 const std::string& provider) const override;
    };
 

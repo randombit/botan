@@ -356,17 +356,21 @@ class MCE_KEM_Decryptor : public PK_Ops::KEM_Decryption_with_KDF
 std::unique_ptr<PK_Ops::KEM_Encryption>
 McEliece_PublicKey::create_kem_encryption_op(RandomNumberGenerator& /*rng*/,
                                              const std::string& params,
-                                             const std::string& /*provider*/) const
+                                             const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::KEM_Encryption>(new MCE_KEM_Encryptor(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::KEM_Encryption>(new MCE_KEM_Encryptor(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::KEM_Decryption>
 McEliece_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& /*rng*/,
                                               const std::string& params,
-                                              const std::string& /*provider*/) const
+                                              const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::KEM_Decryption>(new MCE_KEM_Decryptor(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::KEM_Decryption>(new MCE_KEM_Decryptor(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 }

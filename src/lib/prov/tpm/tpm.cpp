@@ -443,9 +443,9 @@ class TPM_Signing_Operation : public PK_Ops::Signature
 }
 
 std::unique_ptr<PK_Ops::Signature>
-TPM_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
+TPM_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                     const std::string& params,
-                                    const std::string& provider) const
+                                    const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Signature>(new TPM_Signing_Operation(*this, params));
    }

@@ -141,19 +141,22 @@ bool ECGDSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
 }
 
 std::unique_ptr<PK_Ops::Verification>
-ECGDSA_PublicKey::create_verification_op(RandomNumberGenerator& rng,
-                                         const std::string& params,
+ECGDSA_PublicKey::create_verification_op(const std::string& params,
                                          const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::Verification>(new ECGDSA_Verification_Operation(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Verification>(new ECGDSA_Verification_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Signature>
-ECGDSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
+ECGDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                        const std::string& params,
                                        const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::Signature>(new ECGDSA_Signature_Operation(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Signature>(new ECGDSA_Signature_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 }

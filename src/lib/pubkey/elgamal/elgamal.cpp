@@ -186,17 +186,21 @@ ElGamal_Decryption_Operation::raw_decrypt(const byte msg[], size_t msg_len)
 std::unique_ptr<PK_Ops::Encryption>
 ElGamal_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
                                         const std::string& params,
-                                        const std::string& /*provider*/) const
+                                        const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::Encryption>(new ElGamal_Encryption_Operation(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Encryption>(new ElGamal_Encryption_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Decryption>
 ElGamal_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
                                          const std::string& params,
-                                         const std::string& /*provider*/) const
+                                         const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::Decryption>(new ElGamal_Decryption_Operation(*this, params, rng));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Decryption>(new ElGamal_Decryption_Operation(*this, params, rng));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 }

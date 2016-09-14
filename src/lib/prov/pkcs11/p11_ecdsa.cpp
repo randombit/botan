@@ -201,17 +201,16 @@ class PKCS11_ECDSA_Verification_Operation : public PK_Ops::Verification
 }
 
 std::unique_ptr<PK_Ops::Verification>
-PKCS11_ECDSA_PublicKey::create_verification_op(RandomNumberGenerator& rng,
-                                        const std::string& params,
-                                        const std::string& provider) const
+PKCS11_ECDSA_PublicKey::create_verification_op(const std::string& params,
+                                               const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Verification>(new PKCS11_ECDSA_Verification_Operation(*this, params));
    }
 
 std::unique_ptr<PK_Ops::Signature>
-PKCS11_ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                      const std::string& params,
-                                      const std::string& provider) const
+PKCS11_ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                             const std::string& params,
+                                             const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Signature>(new PKCS11_ECDSA_Signature_Operation(*this, params));
    }

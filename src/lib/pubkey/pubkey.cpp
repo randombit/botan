@@ -252,12 +252,11 @@ std::vector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
    }
 
 PK_Verifier::PK_Verifier(const Public_Key& key,
-                         RandomNumberGenerator& rng,
                          const std::string& emsa,
                          Signature_Format format,
                          const std::string& provider)
    {
-   m_op = key.create_verification_op(rng, emsa, provider);
+   m_op = key.create_verification_op(emsa, provider);
    BOTAN_ASSERT_NONNULL(m_op);
    m_sig_format = format;
    }

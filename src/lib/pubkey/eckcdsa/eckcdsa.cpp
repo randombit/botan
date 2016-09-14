@@ -196,19 +196,22 @@ bool ECKCDSA_Verification_Operation::verify(const byte msg[], size_t,
 }
 
 std::unique_ptr<PK_Ops::Verification>
-ECKCDSA_PublicKey::create_verification_op(RandomNumberGenerator& rng,
-                                         const std::string& params,
+ECKCDSA_PublicKey::create_verification_op(const std::string& params,
                                          const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::Verification>(new ECKCDSA_Verification_Operation(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Verification>(new ECKCDSA_Verification_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Signature>
-ECKCDSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                       const std::string& params,
-                                       const std::string& provider) const
+ECKCDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                        const std::string& params,
+                                        const std::string& provider) const
    {
-   return std::unique_ptr<PK_Ops::Signature>(new ECKCDSA_Signature_Operation(*this, params));
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Signature>(new ECKCDSA_Signature_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
    }
 
 }

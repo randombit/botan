@@ -281,26 +281,9 @@ class BOTAN_DLL PK_Verifier
       * @param format the signature format to use
       */
       PK_Verifier(const Public_Key& pub_key,
-                  RandomNumberGenerator& rng,
                   const std::string& emsa,
                   Signature_Format format = IEEE_1363,
                   const std::string& provider = "");
-
-#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
-      /**
-      * Construct a PK Verifier.
-      * @param pub_key the public key to verify against
-      * @param emsa the EMSA to use (eg "EMSA3(SHA-1)")
-      * @param format the signature format to use
-      */
-      BOTAN_DEPRECATED("Use constructor taking a RNG object")
-      PK_Verifier(const Public_Key& pub_key,
-                  const std::string& emsa,
-                  Signature_Format format = IEEE_1363,
-                  const std::string& provider = "") :
-         PK_Verifier(pub_key, system_rng(), emsa, format, provider)
-         {}
-#endif
 
       /**
       * Verify a signature.

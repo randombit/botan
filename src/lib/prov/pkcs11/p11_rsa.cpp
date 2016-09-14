@@ -358,8 +358,7 @@ PKCS11_RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
    }
 
 std::unique_ptr<PK_Ops::Verification>
-PKCS11_RSA_PublicKey::create_verification_op(RandomNumberGenerator& /*rng*/,
-                                             const std::string& params,
+PKCS11_RSA_PublicKey::create_verification_op(const std::string& params,
                                              const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Verification>(new PKCS11_RSA_Verification_Operation(*this, params));

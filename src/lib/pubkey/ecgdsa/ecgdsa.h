@@ -52,8 +52,7 @@ class BOTAN_DLL ECGDSA_PublicKey : public virtual EC_PublicKey
          { return domain().get_order().bytes(); }
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(RandomNumberGenerator& rng,
-                                const std::string& params,
+         create_verification_op(const std::string& params,
                                 const std::string& provider) const override;
    protected:
       ECGDSA_PublicKey() {}
@@ -92,7 +91,7 @@ class BOTAN_DLL ECGDSA_PrivateKey : public ECGDSA_PublicKey,
       std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator& rng,
                              const std::string& params,
-                             const std::string& provider) const;
+                             const std::string& provider) const override;
    };
 
 }
