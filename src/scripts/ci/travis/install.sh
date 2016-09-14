@@ -28,8 +28,17 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo pip install sphinx
     fi
 
-    if [ "$BUILD_MODE" = "valgrind" ] || [ "${BUILD_MODE:0:5}" = "cross" ]; then
+    if [ "$BUILD_MODE" = "coverage" ]; then
+        sudo apt-get install trousers libtspi-dev
 
+        # SoftHSMv1 in 14.04 does not work
+        # Installs prebuilt SoftHSMv2 binaries into /tmp
+        wget https://www.randombit.net/softhsm2-trusty-bin.tar.bz2
+        tar -C / -xvjf softhsm2-trusty-bin.tar.bz2
+        /tmp/softhsm/bin/softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
+    fi
+
+    if [ "$BUILD_MODE" = "valgrind" ] || [ "${BUILD_MODE:0:5}" = "cross" ]; then
         if [ "$BUILD_MODE" = "valgrind" ]; then
             sudo apt-get install valgrind
         elif [ "$BUILD_MODE" = "cross-win32" ]; then

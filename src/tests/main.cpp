@@ -93,16 +93,19 @@ class Test_Runner : public Botan_CLI::Command
 
             std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
 
-            // do not run pkcs11 tests by default
-            for(std::set<std::string>::iterator iter = all_others.begin(); iter != all_others.end();)
+            if(pkcs11_lib.empty())
                {
-               if((*iter).find("pkcs11") != std::string::npos)
+               // do not run pkcs11 tests by default unless pkcs11-lib set
+               for(std::set<std::string>::iterator iter = all_others.begin(); iter != all_others.end();)
                   {
-                  iter = all_others.erase(iter);
-                  }
-               else
-                  {
-                  ++iter;
+                  if((*iter).find("pkcs11") != std::string::npos)
+                     {
+                     iter = all_others.erase(iter);
+                     }
+                  else
+                     {
+                     ++iter;
+                     }
                   }
                }
 
