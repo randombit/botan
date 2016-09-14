@@ -715,7 +715,7 @@ std::vector<Botan::CPUID::CPUID_bits> map_cpuid_string(const std::string& tok)
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    if(tok == "altivec" || tok == "simd")
-      return {Botan::CPUID::CPUID_ALITVEC_BIT};
+      return {Botan::CPUID::CPUID_ALTIVEC_BIT};
 #endif
 
    return {};
@@ -761,9 +761,6 @@ std::vector<Test::Result> Text_Based_Test::run()
             throw Test_Error("Unknown test pragma '" + line + "' in " + m_cur_src_name);
 
          m_cpu_flags = parse_cpuid_bits(pragma_tokens);
-
-         if(m_cpu_flags.empty())
-            throw Test_Error("Empty cpuid pragma in " + m_cur_src_name);
 
          continue;
          }
