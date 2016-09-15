@@ -41,16 +41,18 @@ class Stream_Cipher_Tests : public Text_Based_Test
             return result;
             }
 
-         for(auto&& provider: providers)
+         for(auto&& provider_ask : providers)
             {
-            std::unique_ptr<Botan::StreamCipher> cipher(Botan::StreamCipher::create(algo, provider));
+            std::unique_ptr<Botan::StreamCipher> cipher(Botan::StreamCipher::create(algo, provider_ask));
 
             if(!cipher)
                {
-               result.note_missing(algo + " from " + provider);
+               result.note_missing(algo + " from " + provider_ask);
                continue;
                }
 
+            const std::string provider(cipher->provider());
+            result.test_is_nonempty("provider", provider);
             result.test_eq(provider, cipher->name(), algo);
             cipher->set_key(key);
 

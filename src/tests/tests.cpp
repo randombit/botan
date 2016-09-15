@@ -175,6 +175,13 @@ bool Test::Result::test_eq(const char* producer, const std::string& what,
    return test_failure(err.str());
    }
 
+bool Test::Result::test_is_nonempty(const std::string& what_is_it, const std::string& to_examine)
+   {
+   if(to_examine.empty())
+      return test_failure(what_is_it + " was empty");
+   return test_success();
+   }
+
 bool Test::Result::test_eq(const std::string& what, const std::string& produced, const std::string& expected)
    {
    return test_is_eq(what, produced, expected);

@@ -416,7 +416,30 @@ void aes_key_schedule(const byte key[], size_t length,
    copy_mem(DK.data(), XDK.data(), DK.size());
    }
 
+const char* aes_provider()
+   {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni())
+      {
+      return "aesni";
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_SSSE3)
+   if(CPUID::has_ssse3())
+      {
+      return "ssse3";
+      }
+#endif
+
+   return "base";
+   }
+
 }
+
+const char* AES_128::provider() const { return aes_provider(); }
+const char* AES_192::provider() const { return aes_provider(); }
+const char* AES_256::provider() const { return aes_provider(); }
 
 void AES_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {

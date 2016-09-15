@@ -171,6 +171,8 @@ class Test
 
             bool test_eq(const std::string& what, const char* produced, const char* expected);
 
+            bool test_is_nonempty(const std::string& what_is_it, const std::string& to_examine);
+
             bool test_eq(const std::string& what,
                          const std::string& produced,
                          const std::string& expected);

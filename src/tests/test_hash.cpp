@@ -36,16 +36,18 @@ class Hash_Function_Tests : public Text_Based_Test
             return result;
             }
 
-         for(auto&& provider: providers)
+         for(auto&& provider_ask : providers)
             {
-            std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(algo, provider));
+            std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(algo, provider_ask));
 
             if(!hash)
                {
-               result.note_missing(algo + " from " + provider);
+               result.note_missing(algo + " from " + provider_ask);
                continue;
                }
 
+            const std::string provider(hash->provider());
+            result.test_is_nonempty("provider", provider);
             result.test_eq(provider, hash->name(), algo);
 
             hash->update(input);

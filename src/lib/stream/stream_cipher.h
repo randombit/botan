@@ -86,6 +86,13 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       */
       virtual void seek(u64bit offset) = 0;
 
+      /**
+      * @return provider information about this implementation. Default is "base",
+      * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
+      * The return value is guaranteed to point to a string literal constant.
+      */
+      virtual const char* provider() const { return "base"; }
+
       StreamCipher();
       virtual ~StreamCipher();
    };

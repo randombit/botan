@@ -231,4 +231,16 @@ void Serpent::clear()
    zap(m_round_key);
    }
 
+const char* Serpent::provider() const
+   {
+#if defined(BOTAN_HAS_SERPENT_SIMD)
+   if(CPUID::has_simd_32())
+      {
+      return "simd";
+      }
+#endif
+
+   return "base";
+   }
+
 }

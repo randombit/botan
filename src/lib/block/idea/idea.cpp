@@ -109,6 +109,18 @@ void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
 
 }
 
+const char* IDEA::provider() const
+   {
+#if defined(BOTAN_HAS_IDEA_SSE2)
+   if(CPUID::has_sse2())
+      {
+      return "sse2";
+      }
+#endif
+
+   return "base";
+   }
+
 /*
 * IDEA Encryption
 */

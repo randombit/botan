@@ -98,6 +98,18 @@ void Threefish_512::skein_feedfwd(const secure_vector<u64bit>& M,
             m_K[4] ^ m_K[5] ^ m_K[6] ^ m_K[7] ^ 0x1BD11BDAA9FC1A22;
    }
 
+const char* Threefish_512::provider() const
+   {
+#if defined(BOTAN_HAS_THREEFISH_512_AVX2)
+   if(CPUID::has_avx2())
+      {
+      return "avx2";
+      }
+#endif
+
+   return "base";
+   }
+
 void Threefish_512::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    BOTAN_ASSERT(m_K.size() == 9, "Key was set");

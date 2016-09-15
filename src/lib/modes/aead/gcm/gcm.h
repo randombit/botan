@@ -36,6 +36,8 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
       size_t tag_size() const override { return m_tag_size; }
 
       void clear() override;
+
+      const char* provider() const override;
    protected:
       GCM_Mode(BlockCipher* cipher, size_t tag_size);
 

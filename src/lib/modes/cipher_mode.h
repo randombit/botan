@@ -113,14 +113,6 @@ class BOTAN_DLL Cipher_Mode
       */
       virtual bool valid_nonce_length(size_t nonce_len) const = 0;
 
-      /**
-      * Return some short name describing the provider of this tranformation.
-      * Useful in cases where multiple implementations are available (eg,
-      * different implementations of AES). Default "core" is used for the
-      * 'standard' implementation included in the library.
-      */
-      virtual std::string provider() const { return "core"; }
-
       virtual std::string name() const = 0;
 
       virtual void clear() = 0;
@@ -173,6 +165,13 @@ class BOTAN_DLL Cipher_Mode
             throw Invalid_Key_Length(name(), length);
          key_schedule(key, length);
          }
+
+      /**
+      * @return provider information about this implementation. Default is "base",
+      * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
+      * The return value is guaranteed to point to a string literal constant.
+      */
+      virtual const char* provider() const { return "base"; }
 
    private:
       virtual void key_schedule(const byte key[], size_t length) = 0;

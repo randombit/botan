@@ -23,6 +23,7 @@ class BOTAN_DLL AES_128 final : public Block_Cipher_Fixed_Params<16, 16>
 
       void clear() override;
 
+      const char* provider() const override;
       std::string name() const override { return "AES-128"; }
       BlockCipher* clone() const override { return new AES_128; }
    private:
@@ -55,6 +56,7 @@ class BOTAN_DLL AES_192 final : public Block_Cipher_Fixed_Params<16, 24>
 
       void clear() override;
 
+      const char* provider() const override;
       std::string name() const override { return "AES-192"; }
       BlockCipher* clone() const override { return new AES_192; }
    private:
@@ -86,6 +88,8 @@ class BOTAN_DLL AES_256 final : public Block_Cipher_Fixed_Params<16, 32>
       void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
 
       void clear() override;
+
+      const char* provider() const override;
 
       std::string name() const override { return "AES-256"; }
       BlockCipher* clone() const override { return new AES_256; }

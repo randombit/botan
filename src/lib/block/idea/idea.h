@@ -22,6 +22,8 @@ class BOTAN_DLL IDEA final : public Block_Cipher_Fixed_Params<8, 16>
       void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
 
       void clear() override;
+
+      const char* provider() const override;
       std::string name() const override { return "IDEA"; }
       BlockCipher* clone() const override { return new IDEA; }
    private:

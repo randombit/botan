@@ -39,6 +39,7 @@ class Cipher_Mode_Tests : public Text_Based_Test
             return result;
             }
 
+         result.test_is_nonempty("provider", enc->provider());
          result.test_eq("name", enc->name(), algo);
 
          result.test_eq("mode not authenticated", enc->authenticated(), false);
