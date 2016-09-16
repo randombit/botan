@@ -228,8 +228,14 @@ class Test_Runner : public Botan_CLI::Command
             {
             for(auto&& test_name : tests_to_run)
                {
-               const auto results = Botan_Tests::Test::run_test(test_name, false);
-               out << report_out(results, tests_failed, tests_ran) << std::flush;
+               try {
+                  const auto results = Botan_Tests::Test::run_test(test_name, false);
+                  out << report_out(results, tests_failed, tests_ran) << std::flush;
+               }
+               catch(std::exception& e)
+                  {
+                  out << "Test " << test_name << " failed with exception " << e.what() << std::flush;
+                  }
                }
             }
          else
@@ -250,7 +256,15 @@ class Test_Runner : public Botan_CLI::Command
             for(auto&& test_name : tests_to_run)
                {
                auto run_it = [test_name] {
-                  return Botan_Tests::Test::run_test(test_name, false);
+                  try {
+                     return Botan_Tests::Test::run_test(test_name, false);
+                  }
+                  catch(std::exception& e)
+                     {
+                     Botan_Tests::Test::Result r(test_name);
+                     r.test_failure("Exception thrown", e.what());
+                     return std::vector<Botan_Tests::Test::Result>{r};
+                     }
                };
 
                fut_results.push_back(std::async(std::launch::async, run_it));
