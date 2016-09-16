@@ -185,7 +185,7 @@ std::string GCM_Mode::name() const
    return (m_cipher_name + "/GCM");
    }
 
-const char* GCM_Mode::provider() const
+std::string GCM_Mode::provider() const
    {
 #if defined(BOTAN_HAS_GCM_CLMUL)
    if(CPUID::has_clmul())

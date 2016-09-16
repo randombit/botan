@@ -25,7 +25,7 @@ class OpenSSL_BlockCipher : public BlockCipher
       ~OpenSSL_BlockCipher();
 
       void clear() override;
-      const char* provider() const override { return "openssl"; }
+      std::string provider() const override { return "openssl"; }
       std::string name() const override { return m_cipher_name; }
       BlockCipher* clone() const override;
 

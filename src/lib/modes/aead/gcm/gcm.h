@@ -37,7 +37,7 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
 
       void clear() override;
 
-      const char* provider() const override;
+      std::string provider() const override;
    protected:
       GCM_Mode(BlockCipher* cipher, size_t tag_size);
 

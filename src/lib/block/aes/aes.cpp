@@ -437,9 +437,9 @@ const char* aes_provider()
 
 }
 
-const char* AES_128::provider() const { return aes_provider(); }
-const char* AES_192::provider() const { return aes_provider(); }
-const char* AES_256::provider() const { return aes_provider(); }
+std::string AES_128::provider() const { return aes_provider(); }
+std::string AES_192::provider() const { return aes_provider(); }
+std::string AES_256::provider() const { return aes_provider(); }
 
 void AES_128::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {

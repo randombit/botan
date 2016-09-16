@@ -21,7 +21,7 @@ class BOTAN_DLL Noekeon final : public Block_Cipher_Fixed_Params<16, 16>
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
 
-      const char* provider() const override;
+      std::string provider() const override;
       void clear() override;
       std::string name() const override { return "Noekeon"; }
       BlockCipher* clone() const override { return new Noekeon; }

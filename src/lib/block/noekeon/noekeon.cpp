@@ -73,7 +73,7 @@ inline void gamma(u32bit& A0, u32bit& A1, u32bit& A2, u32bit& A3)
 
 }
 
-const char* Noekeon::provider() const
+std::string Noekeon::provider() const
    {
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
    if(CPUID::has_simd_32())

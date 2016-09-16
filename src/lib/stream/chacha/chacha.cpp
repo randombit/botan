@@ -17,7 +17,7 @@ ChaCha::ChaCha(size_t rounds) : m_rounds(rounds)
       throw Invalid_Argument("ChaCha only supports 8, 12 or 20 rounds");
    }
 
-const char* ChaCha::provider() const
+std::string ChaCha::provider() const
    {
 #if defined(BOTAN_HAS_CHACHA_SSE2)
    if(CPUID::has_sse2())

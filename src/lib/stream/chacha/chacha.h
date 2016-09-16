@@ -26,7 +26,7 @@ class BOTAN_DLL ChaCha final : public StreamCipher
       */
       ChaCha(size_t rounds = 20);
 
-      const char* provider() const override;
+      std::string provider() const override;
 
       void cipher(const byte in[], byte out[], size_t length) override;
 

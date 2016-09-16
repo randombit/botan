@@ -24,7 +24,7 @@ class BOTAN_DLL Threefish_512 final : public Block_Cipher_Fixed_Params<64, 64>
       void set_tweak(const byte tweak[], size_t len);
 
       void clear() override;
-      const char* provider() const override;
+      std::string provider() const override;
       std::string name() const override { return "Threefish-512"; }
       BlockCipher* clone() const override { return new Threefish_512; }
    protected:

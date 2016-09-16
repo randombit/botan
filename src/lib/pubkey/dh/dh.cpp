@@ -58,7 +58,7 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
       }
    else
       {
-      load_check(rng);
+      //load_check(rng);
       }
    }
 
@@ -73,7 +73,7 @@ DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
    if(m_y == 0)
       m_y = power_mod(group_g(), m_x, group_p());
 
-   load_check(rng);
+   //load_check(rng);
    }
 
 /*
