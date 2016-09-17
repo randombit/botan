@@ -366,7 +366,7 @@ class Encrypt_then_MAC final : public Extension
 /**
 * Represents a block of extensions in a hello message
 */
-class Extensions
+class BOTAN_DLL Extensions
    {
    public:
       std::set<Handshake_Extension_Type> extension_types() const;
