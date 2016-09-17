@@ -94,6 +94,29 @@ bool Test::Result::test_throws(const std::string& what, std::function<void ()> f
       }
    }
 
+bool Test::Result::test_throws(const std::string& what, const std::string& expected, std::function<void ()> fn)
+   {
+   try {
+      fn();
+      return test_failure(what + " failed to throw expected exception");
+   }
+   catch(std::exception& e)
+      {
+      if(expected == e.what()) 
+         {
+         return test_success(what + " threw exception " + e.what());
+         }
+      else 
+         {
+         return test_failure(what + " failed to throw an exception with the expected text:\n  Expected: " + expected + "\n  Got: " + e.what());
+         }
+      }
+   catch(...)
+      {
+      return test_failure(what + " failed to throw an exception with the expected text:\n  Expected: " + expected);
+      }
+   }
+
 bool Test::Result::test_success(const std::string& note)
    {
    if(Test::log_success())

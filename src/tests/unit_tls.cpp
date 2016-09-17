@@ -41,6 +41,7 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
          {
          std::unique_ptr<Botan::Certificate_Store> store(new Botan::Certificate_Store_In_Memory(m_ca_cert));
          m_stores.push_back(std::move(store));
+         m_provides_client_certs = false;
          }
 
       std::vector<Botan::Certificate_Store*>
@@ -60,7 +61,7 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
          {
          std::vector<Botan::X509_Certificate> chain;
 
-         if(type == "tls-server")
+         if(type == "tls-server" || (type == "tls-client" && m_provides_client_certs))
             {
             bool have_match = false;
             for(size_t i = 0; i != cert_key_types.size(); ++i)
@@ -114,9 +115,10 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
       Botan::X509_Certificate m_server_cert, m_ca_cert;
       std::unique_ptr<Botan::Private_Key> m_key;
       std::vector<std::unique_ptr<Botan::Certificate_Store>> m_stores;
+      bool m_provides_client_certs;
    };
 
-Botan::Credentials_Manager* create_creds()
+Botan::Credentials_Manager* create_creds(bool client_type)
    {
    std::unique_ptr<Botan::Private_Key> ca_key(new Botan::RSA_PrivateKey(Test::rng(), 1024));
 
@@ -154,7 +156,9 @@ Botan::Credentials_Manager* create_creds()
                                                          start_time,
                                                          end_time);
 
-   return new Credentials_Manager_Test(server_cert, ca_cert, server_key);
+   Credentials_Manager_Test* cmt (new Credentials_Manager_Test(server_cert, ca_cert, server_key));
+   cmt->m_provides_client_certs = client_type;
+   return cmt;
    }
 
 std::function<void (const byte[], size_t)> queue_inserter(std::vector<byte>& q)
@@ -782,7 +786,8 @@ class TLS_Unit_Tests : public Test
    public:
       std::vector<Test::Result> run() override
          {
-         std::unique_ptr<Botan::Credentials_Manager> basic_creds(create_creds());
+         std::unique_ptr<Botan::Credentials_Manager> basic_creds(create_creds(false));
+         std::unique_ptr<Botan::Credentials_Manager> basic_creds_with_client_cert(create_creds(true));
          std::vector<Test::Result> results;
 
          Test_Policy policy;
@@ -815,6 +820,7 @@ class TLS_Unit_Tests : public Test
          results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V12, *basic_creds, policy));
          results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V10, *basic_creds, policy));
          results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V12, *basic_creds, policy));
+         results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V12, *basic_creds_with_client_cert, policy));
 
 #if defined(BOTAN_HAS_AEAD_OCB)
          policy.set("ciphers", "AES-128/OCB(12)");
