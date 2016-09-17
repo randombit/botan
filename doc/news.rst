@@ -20,6 +20,22 @@ Version 1.11.32, Not Yet Released
 * Add a new TLS Callbacks interface. Compatability with previous versions is
   maintained. The documentation has been updated accordingly. GH #457 and #567
 
+* How the library presents optimized algorithm implementations has changed.  For
+  example with the algorithm AES-128, previously there were three BlockCipher
+  classes AES_128, AES_128_SSSE3, and AES_128_NI which used (resp) a table-based
+  implementation vulnerable to side channels, a constant time version using
+  SSSE3 SIMD extensions on modern x86, and x86 AES-NI instructions. Using the
+  correct version at runtime required using `BlockCipher::create`. Now, only the
+  class AES_128 is presented, and the best available version is always used
+  based on CPUID checks. The tests have been extended to selectively disable
+  CPUID bits to ensure all available versions are tested.
+
+  Removes API classes AES_128_NI, AES_192_NI, AES_256_NI, AES_128_SSSE3,
+  AES_192_SSSE3 AES_256_SSSE3, IDEA_SSE2, Noekeon_SIMD, Serpent_SIMD,
+  Threefish_512_AVX2, SHA_160_SSE2
+
+  GH #477 #623
+
 * The deprecated algorithms Rabin-Williams, Nyberg-Rueppel, MARS, RC2, RC5, RC6,
   SAFER-SK, TEA, MD2, HAS-160, and RIPEMD-128 have been removed. GH #580
 
