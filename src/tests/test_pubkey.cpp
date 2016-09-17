@@ -218,9 +218,12 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
          {
          encryptor.reset(new Botan::PK_Encryptor_EME(*pubkey, Test::rng(),padding, enc_provider));
          }
+      catch(Botan::Provider_Not_Found&)
+         {
+         continue;
+         }
       catch(Botan::Lookup_Error&)
          {
-         //result.test_note("Skipping encryption with provider " + enc_provider);
          continue;
          }
 
@@ -247,9 +250,12 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
             {
             decryptor.reset(new Botan::PK_Decryptor_EME(*privkey, Test::rng(), padding, dec_provider));
             }
+         catch(Botan::Provider_Not_Found&)
+            {
+            continue;
+            }
          catch(Botan::Lookup_Error&)
             {
-            //result.test_note("Skipping decryption with provider " + dec_provider);
             continue;
             }
 
@@ -287,6 +293,11 @@ Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
       {
       enc.reset(new Botan::PK_KEM_Encryptor(pubkey, Test::rng(), kdf));
       }
+   catch(Botan::Provider_Not_Found& e)
+      {
+      result.test_note("Skipping test", e.what());
+      return result;
+      }
    catch(Botan::Lookup_Error&)
       {
       result.test_note("Skipping due to missing KDF: " + kdf);
@@ -310,8 +321,14 @@ Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
       {
       dec.reset(new Botan::PK_KEM_Decryptor(*privkey, Test::rng(), kdf));
       }
-   catch(Botan::Lookup_Error&)
+   catch(Botan::Provider_Not_Found& e)
       {
+      result.test_note("Skipping test", e.what());
+      return result;
+      }
+   catch(Botan::Lookup_Error& e)
+      {
+      result.test_note("Skipping test", e.what());
       return result;
       }
 
@@ -348,6 +365,9 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
          {
          kas.reset(new Botan::PK_Key_Agreement(*privkey, Test::rng(), kdf, provider));
          result.test_eq(provider, "agreement", kas->derive_key(key_len, pubkey).bits_of(), shared);
+         }
+      catch(Botan::Provider_Not_Found&)
+         {
          }
       catch(Botan::Lookup_Error&)
          {

@@ -35,6 +35,8 @@ class Signature;
 class BOTAN_DLL Public_Key
    {
    public:
+      virtual ~Public_Key() {}
+
       /**
       * Get the name of the underlying public key scheme.
       * @return name of the public key scheme
@@ -96,7 +98,12 @@ class BOTAN_DLL Public_Key
       */
       virtual std::vector<byte> x509_subject_public_key() const = 0;
 
+      // Internal or non-public declarations follow
+
       /**
+      * This is an internal library function exposed on key types.
+      * In almost all cases applications should use wrappers in pubkey.h
+      *
       * Return an encryption operation for this key/params or throw
       *
       * @param rng a random number generator. The PK_Op may maintain a
@@ -109,6 +116,9 @@ class BOTAN_DLL Public_Key
                               const std::string& provider) const;
 
       /**
+      * This is an internal library function exposed on key types.
+      * In almost all cases applications should use wrappers in pubkey.h
+      *
       * Return a KEM encryption operation for this key/params or throw
       *
       * @param rng a random number generator. The PK_Op may maintain a
@@ -121,13 +131,15 @@ class BOTAN_DLL Public_Key
                                   const std::string& provider) const;
 
       /**
+      * This is an internal library function exposed on key types.
+      * In almost all cases applications should use wrappers in pubkey.h
+      *
       * Return a verification operation for this key/params or throw
       */
       virtual std::unique_ptr<PK_Ops::Verification>
          create_verification_op(const std::string& params,
                                 const std::string& provider) const;
 
-      virtual ~Public_Key() {}
    protected:
       /**
       * Self-test after loading a key
@@ -154,12 +166,17 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       virtual AlgorithmIdentifier pkcs8_algorithm_identifier() const
          { return algorithm_identifier(); }
 
+      // Internal or non-public declarations follow
+
       /**
        * @return Hash of the PKCS #8 encoding for this key object
        */
       std::string fingerprint(const std::string& alg = "SHA") const;
 
       /**
+      * This is an internal library function exposed on key types.
+      * In almost all cases applications should use wrappers in pubkey.h
+      *
       * Return an decryption operation for this key/params or throw
       *
       * @param rng a random number generator. The PK_Op may maintain a
@@ -172,6 +189,9 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
                               const std::string& provider) const;
 
       /**
+      * This is an internal library function exposed on key types.
+      * In almost all cases applications should use wrappers in pubkey.h
+      *
       * Return a KEM decryption operation for this key/params or throw
       *
       * @param rng a random number generator. The PK_Op may maintain a
@@ -184,6 +204,9 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
                                   const std::string& provider) const;
 
       /**
+      * This is an internal library function exposed on key types.
+      * In almost all cases applications should use wrappers in pubkey.h
+      *
       * Return a signature operation for this key/params or throw
       *
       * @param rng a random number generator. The PK_Op may maintain a
@@ -196,6 +219,9 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
                              const std::string& provider) const;
 
       /**
+      * This is an internal library function exposed on key types.
+      * In almost all cases applications should use wrappers in pubkey.h
+      *
       * Return a key agreement operation for this key/params or throw
       *
       * @param rng a random number generator. The PK_Op may maintain a
