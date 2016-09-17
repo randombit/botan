@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Threefish-512
 */
-class BOTAN_DLL Threefish_512 : public Block_Cipher_Fixed_Params<64, 64>
+class BOTAN_DLL Threefish_512 final : public Block_Cipher_Fixed_Params<64, 64>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
@@ -24,12 +24,19 @@ class BOTAN_DLL Threefish_512 : public Block_Cipher_Fixed_Params<64, 64>
       void set_tweak(const byte tweak[], size_t len);
 
       void clear() override;
+      std::string provider() const override;
       std::string name() const override { return "Threefish-512"; }
       BlockCipher* clone() const override { return new Threefish_512; }
    protected:
       const secure_vector<u64bit>& get_T() const { return m_T; }
       const secure_vector<u64bit>& get_K() const { return m_K; }
    private:
+
+#if defined(BOTAN_HAS_THREEFISH_512_AVX2)
+      void avx2_encrypt_n(const byte in[], byte out[], size_t blocks) const;
+      void avx2_decrypt_n(const byte in[], byte out[], size_t blocks) const;
+#endif
+
       void key_schedule(const byte key[], size_t key_len) override;
 
       // Interface for Skein

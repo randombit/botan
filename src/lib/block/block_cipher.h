@@ -10,6 +10,7 @@
 
 #include <botan/scan_name.h>
 #include <botan/sym_algo.h>
+#include <string>
 
 namespace Botan {
 
@@ -51,6 +52,12 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
          {
          return parallelism() * block_size() * BOTAN_BLOCK_CIPHER_PAR_MULT;
          }
+
+      /**
+      * @return provider information about this implementation. Default is "base",
+      * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
+      */
+      virtual std::string provider() const { return "base"; }
 
       /**
       * Encrypt a block.

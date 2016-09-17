@@ -9,6 +9,10 @@
 #include <botan/loadstor.h>
 #include <botan/internal/serpent_sbox.h>
 
+#if defined(BOTAN_HAS_SERPENT_SIMD)
+  #include <botan/cpuid.h>
+#endif
+
 namespace Botan {
 
 namespace {
@@ -53,6 +57,19 @@ inline void i_transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
 */
 void Serpent::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_SERPENT_SIMD)
+   if(CPUID::has_simd_32())
+      {
+      while(blocks >= 4)
+         {
+         simd_encrypt_4(in, out);
+         in += 4 * BLOCK_SIZE;
+         out += 4 * BLOCK_SIZE;
+         blocks -= 4;
+         }
+      }
+#endif
+
    for(size_t i = 0; i != blocks; ++i)
       {
       u32bit B0 = load_le<u32bit>(in, 0);
@@ -105,6 +122,19 @@ void Serpent::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void Serpent::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_SERPENT_SIMD)
+   if(CPUID::has_simd_32())
+      {
+      while(blocks >= 4)
+         {
+         simd_decrypt_4(in, out);
+         in += 4 * BLOCK_SIZE;
+         out += 4 * BLOCK_SIZE;
+         blocks -= 4;
+         }
+      }
+#endif
+
    for(size_t i = 0; i != blocks; ++i)
       {
       u32bit B0 = load_le<u32bit>(in, 0);
@@ -199,6 +229,18 @@ void Serpent::key_schedule(const byte key[], size_t length)
 void Serpent::clear()
    {
    zap(m_round_key);
+   }
+
+std::string Serpent::provider() const
+   {
+#if defined(BOTAN_HAS_SERPENT_SIMD)
+   if(CPUID::has_simd_32())
+      {
+      return "simd";
+      }
+#endif
+
+   return "base";
    }
 
 }

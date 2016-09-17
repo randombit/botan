@@ -10,8 +10,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/aes_ssse3.h>
-#include <botan/cpuid.h>
+#include <botan/aes.h>
 #include <botan/internal/ct_utils.h>
 #include <tmmintrin.h>
 
@@ -337,7 +336,7 @@ __m128i aes_ssse3_decrypt(__m128i B, const __m128i* keys, size_t rounds)
 /*
 * AES-128 Encryption
 */
-void AES_128_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_128::ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -359,7 +358,7 @@ void AES_128_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-128 Decryption
 */
-void AES_128_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_128::ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -381,7 +380,7 @@ void AES_128_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-128 Key Schedule
 */
-void AES_128_SSSE3::key_schedule(const byte keyb[], size_t)
+void AES_128::ssse3_key_schedule(const byte keyb[], size_t)
    {
    __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
                                 0x1F8391B9, 0xAF9DEEB6);
@@ -416,16 +415,10 @@ void AES_128_SSSE3::key_schedule(const byte keyb[], size_t)
    _mm_storeu_si128(DK_mm, aes_schedule_mangle_last_dec(key));
    }
 
-void AES_128_SSSE3::clear()
-   {
-   zap(m_EK);
-   zap(m_DK);
-   }
-
 /*
 * AES-192 Encryption
 */
-void AES_192_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_192::ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -447,7 +440,7 @@ void AES_192_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-192 Decryption
 */
-void AES_192_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_192::ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -469,7 +462,7 @@ void AES_192_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-192 Key Schedule
 */
-void AES_192_SSSE3::key_schedule(const byte keyb[], size_t)
+void AES_192::ssse3_key_schedule(const byte keyb[], size_t)
    {
    __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
                                 0x1F8391B9, 0xAF9DEEB6);
@@ -533,16 +526,10 @@ void AES_192_SSSE3::key_schedule(const byte keyb[], size_t)
       }
    }
 
-void AES_192_SSSE3::clear()
-   {
-   zap(m_EK);
-   zap(m_DK);
-   }
-
 /*
 * AES-256 Encryption
 */
-void AES_256_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_256::ssse3_encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -564,7 +551,7 @@ void AES_256_SSSE3::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-256 Decryption
 */
-void AES_256_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_256::ssse3_decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -586,7 +573,7 @@ void AES_256_SSSE3::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * AES-256 Key Schedule
 */
-void AES_256_SSSE3::key_schedule(const byte keyb[], size_t)
+void AES_256::ssse3_key_schedule(const byte keyb[], size_t)
    {
    __m128i rcon = _mm_set_epi32(0x702A9808, 0x4D7C7D81,
                                 0x1F8391B9, 0xAF9DEEB6);
@@ -627,12 +614,6 @@ void AES_256_SSSE3::key_schedule(const byte keyb[], size_t)
 
    _mm_storeu_si128(EK_mm + 14, aes_schedule_mangle_last(key2, 2));
    _mm_storeu_si128(DK_mm + 0, aes_schedule_mangle_last_dec(key2));
-   }
-
-void AES_256_SSSE3::clear()
-   {
-   zap(m_EK);
-   zap(m_DK);
    }
 
 }

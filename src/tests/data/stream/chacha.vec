@@ -1,3 +1,6 @@
+
+#test cpuid sse2
+
 [ChaCha(8)]
 
 # Tests got from the original implementation of Daniel J. Bernstein

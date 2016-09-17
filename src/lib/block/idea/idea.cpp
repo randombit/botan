@@ -7,6 +7,7 @@
 
 #include <botan/idea.h>
 #include <botan/loadstor.h>
+#include <botan/cpuid.h>
 #include <botan/internal/ct_utils.h>
 
 namespace Botan {
@@ -108,11 +109,36 @@ void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
 
 }
 
+std::string IDEA::provider() const
+   {
+#if defined(BOTAN_HAS_IDEA_SSE2)
+   if(CPUID::has_sse2())
+      {
+      return "sse2";
+      }
+#endif
+
+   return "base";
+   }
+
 /*
 * IDEA Encryption
 */
 void IDEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_IDEA_SSE2)
+   if(CPUID::has_sse2())
+      {
+      while(blocks >= 8)
+         {
+         sse2_idea_op_8(in, out, m_EK.data());
+         in += 8 * BLOCK_SIZE;
+         out += 8 * BLOCK_SIZE;
+         blocks -= 8;
+         }
+      }
+#endif
+
    idea_op(in, out, blocks, m_EK.data());
    }
 
@@ -121,6 +147,19 @@ void IDEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void IDEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_IDEA_SSE2)
+   if(CPUID::has_sse2())
+      {
+      while(blocks >= 8)
+         {
+         sse2_idea_op_8(in, out, m_DK.data());
+         in += 8 * BLOCK_SIZE;
+         out += 8 * BLOCK_SIZE;
+         blocks -= 8;
+         }
+      }
+#endif
+
    idea_op(in, out, blocks, m_DK.data());
    }
 

@@ -23,6 +23,7 @@ class OpenSSL_HashFunction : public HashFunction
          EVP_DigestInit_ex(&m_md, algo, nullptr);
          }
 
+      std::string provider() const override { return "openssl"; }
       std::string name() const override { return m_name; }
 
       HashFunction* clone() const override

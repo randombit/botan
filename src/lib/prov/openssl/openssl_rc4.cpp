@@ -24,6 +24,8 @@ class OpenSSL_RC4 : public StreamCipher
    public:
       void clear() override { clear_mem(&m_rc4, 1); }
 
+      std::string provider() const override { return "openssl"; }
+
       std::string name() const override
          {
          switch(m_skip)

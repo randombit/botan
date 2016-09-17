@@ -73,9 +73,8 @@
 
 namespace Botan {
 
-u64bit CPUID::g_x86_processor_flags[2] = { 0, 0 };
+u64bit CPUID::g_processor_flags[2] = { 0, 0 };
 size_t CPUID::g_cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
-bool CPUID::g_altivec_capable = false;
 bool CPUID::g_initialized = false;
 
 namespace {
@@ -173,13 +172,14 @@ void CPUID::print(std::ostream& o)
    o << "CPUID flags: ";
 
 #define CPUID_PRINT(flag) do { if(has_##flag()) o << #flag << " "; } while(0)
+
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
    CPUID_PRINT(sse2);
    CPUID_PRINT(ssse3);
    CPUID_PRINT(sse41);
    CPUID_PRINT(sse42);
    CPUID_PRINT(avx2);
    CPUID_PRINT(avx512f);
-   CPUID_PRINT(altivec);
 
    CPUID_PRINT(rdtsc);
    CPUID_PRINT(bmi2);
@@ -189,18 +189,25 @@ void CPUID::print(std::ostream& o)
    CPUID_PRINT(rdseed);
    CPUID_PRINT(intel_sha);
    CPUID_PRINT(adx);
+#endif
+
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+   CPUID_PRINT(altivec);
+#endif
+
 #undef CPUID_PRINT
    o << "\n";
    }
 
 void CPUID::initialize()
    {
-   if(g_initialized)
-      return;
+   clear_mem(g_processor_flags, 2);
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-      if(altivec_check_sysctl() || altivec_check_pvr_emul())
-         g_altivec_capable = true;
+   if(altivec_check_sysctl() || altivec_check_pvr_emul())
+      {
+      g_processor_flags[0] |= CPUID_ALTIVEC_BIT;
+      }
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
@@ -220,7 +227,7 @@ void CPUID::initialize()
 
    X86_CPUID(1, cpuid);
 
-   g_x86_processor_flags[0] = (static_cast<u64bit>(cpuid[2]) << 32) | cpuid[3];
+   g_processor_flags[0] = (static_cast<u64bit>(cpuid[2]) << 32) | cpuid[3];
 
    if(is_intel)
       g_cache_line_size = 8 * get_byte(2, cpuid[1]);
@@ -229,7 +236,7 @@ void CPUID::initialize()
       {
       clear_mem(cpuid, 4);
       X86_CPUID_SUBLEVEL(7, 0, cpuid);
-      g_x86_processor_flags[1] = (static_cast<u64bit>(cpuid[2]) << 32) | cpuid[1];
+      g_processor_flags[1] = (static_cast<u64bit>(cpuid[2]) << 32) | cpuid[1];
       }
 
    if(is_amd)
@@ -245,8 +252,8 @@ void CPUID::initialize()
    * If we don't have access to CPUID, we can still safely assume that
    * any x86-64 processor has SSE2 and RDTSC
    */
-   if(g_x86_processor_flags[0] == 0)
-      g_x86_processor_flags[0] = (1 << CPUID_SSE2_BIT) | (1 << CPUID_RDTSC_BIT);
+   if(g_processor_flags[0] == 0)
+      g_processor_flags[0] = (1 << CPUID_SSE2_BIT) | (1 << CPUID_RDTSC_BIT);
 #endif
 
    g_initialized = true;

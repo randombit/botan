@@ -15,32 +15,27 @@ namespace Botan {
 /**
 * Noekeon
 */
-class BOTAN_DLL Noekeon : public Block_Cipher_Fixed_Params<16, 16>
+class BOTAN_DLL Noekeon final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
       void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
       void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
 
+      std::string provider() const override;
       void clear() override;
       std::string name() const override { return "Noekeon"; }
       BlockCipher* clone() const override { return new Noekeon; }
-   protected:
+   private:
+#if defined(BOTAN_HAS_NOEKEON_SIMD)
+      void simd_encrypt_4(const byte in[], byte out[]) const;
+      void simd_decrypt_4(const byte in[], byte out[]) const;
+#endif
+
       /**
       * The Noekeon round constants
       */
       static const byte RC[17];
 
-      /**
-      * @return const reference to encryption subkeys
-      */
-      const secure_vector<u32bit>& get_EK() const { return m_EK; }
-
-      /**
-      * @return const reference to decryption subkeys
-      */
-      const secure_vector<u32bit>& get_DK() const { return m_DK; }
-
-   private:
       void key_schedule(const byte[], size_t) override;
       secure_vector<u32bit> m_EK, m_DK;
    };

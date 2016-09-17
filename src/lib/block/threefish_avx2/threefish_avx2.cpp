@@ -5,8 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/threefish_avx2.h>
-#include <botan/cpuid.h>
+#include <botan/threefish.h>
 #include <immintrin.h>
 
 namespace Botan {
@@ -38,7 +37,8 @@ inline void rotate_keys(__m256i& R0, __m256i& R1, __m256i R2)
    {
    /*
    Behold. The key schedule progresses like so. The values
-   loop back to the originals after the rounds are complete.
+   loop back to the originals after the rounds are complete
+   so we don't need to reload for starting the next block.
 
                  R0        R1        R2
      K1,K2,K3 (7,5,3,1),(8,6,4,2),(0,7,5,3)
@@ -71,7 +71,7 @@ inline void rotate_keys(__m256i& R0, __m256i& R1, __m256i R2)
 
 }
 
-void Threefish_512_AVX2::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void Threefish_512::avx2_encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u64bit* K = &get_K()[0];
    const u64bit* T_64 = &get_T()[0];
@@ -245,7 +245,7 @@ void Threefish_512_AVX2::encrypt_n(const byte in[], byte out[], size_t blocks) c
 #undef THREEFISH_INJECT_KEY_2
    }
 
-void Threefish_512_AVX2::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void Threefish_512::avx2_decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u64bit* K = &get_K()[0];
    const u64bit* T_64 = &get_T()[0];

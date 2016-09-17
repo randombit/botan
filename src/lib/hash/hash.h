@@ -40,6 +40,12 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
       */
       virtual HashFunction* clone() const = 0;
 
+      /**
+      * @return provider information about this implementation. Default is "base",
+      * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
+      */
+      virtual std::string provider() const { return "base"; }
+
       HashFunction();
 
       virtual ~HashFunction();
