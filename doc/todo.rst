@@ -70,10 +70,18 @@ New Protocols / Formats
   - Subset #2: Process OpenPGP public keys
   - Subset #3: Verification of OpenPGP signatures
 
+Compat Headers
+----------------
+
+* Write an OpenSSL-compatible TLS API stub so existing applications
+  can be converted more easily. Would require some networking code
+  since the OpenSSL API handles both crypto and IO. Use Asio, since it
+  is expected to be the base of future C++ standard network library.
+
 Accelerators / backends
 ----------------------------------------
 
-* Extend OpenSSL provider (cipher modes, HMAC)
+* Extend OpenSSL provider (cipher modes, HMAC, CMAC)
 * /dev/crypto
 * Windows CryptoAPI (ciphers, hashes, RSA)
 * Apple CommonCrypto
@@ -99,6 +107,7 @@ Symmetric Algorithms, Hashes, ...
 * Serpent using AVX2
 * Serpent using SSSE3 pshufb for sboxes
 * ChaCha20 using SSE2 or AVX2
+* NORX-64 3.0
 * scrypt
 * Argon2 (draft-irtf-cfrg-argon2)
 * bcrypt PBKDF
@@ -131,3 +140,9 @@ Build
 ----------------------------------------
 
 * Code signing for Windows installers
+
+Testing
+----------------------------------------
+
+* Test runner python script that captures backtraces and other
+  debug info during CI
