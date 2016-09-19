@@ -44,7 +44,7 @@ class Connection_Cipher_State
 
       AEAD_Mode* aead() { return m_aead.get(); }
 
-      std::vector<byte> aead_nonce(u64bit seq);
+      std::vector<byte> aead_nonce(u64bit seq, RandomNumberGenerator& rng);
 
       std::vector<byte> aead_nonce(const byte record[], size_t record_len, u64bit seq);
 
@@ -52,26 +52,9 @@ class Connection_Cipher_State
                                   Protocol_Version version,
                                   u16bit ptext_length);
 
-      BlockCipher* block_cipher() { return m_block_cipher.get(); }
-
-      MessageAuthenticationCode* mac() { return m_mac.get(); }
-
-      secure_vector<byte>& cbc_state() { return m_block_cipher_cbc_state; }
-
-      size_t block_size() const { return m_block_size; }
-
-      size_t mac_size() const { return m_mac->output_length(); }
-
-      size_t iv_size() const { return m_iv_size; }
-
-      size_t nonce_bytes_from_record() const { return m_nonce_bytes_from_record; }
-
       size_t nonce_bytes_from_handshake() const { return m_nonce_bytes_from_handshake; }
-
-      bool uses_encrypt_then_mac() const { return m_uses_encrypt_then_mac; }
-
-      bool cbc_without_explicit_iv() const
-         { return (m_block_size > 0) && (m_iv_size == 0); }
+      size_t nonce_bytes_from_record() const { return m_nonce_bytes_from_record; }
+      bool cbc_nonce() const { return m_cbc_nonce; }
 
       std::chrono::seconds age() const
          {
@@ -81,19 +64,12 @@ class Connection_Cipher_State
 
    private:
       std::chrono::system_clock::time_point m_start_time;
-      std::unique_ptr<BlockCipher> m_block_cipher;
-      secure_vector<byte> m_block_cipher_cbc_state;
-      std::unique_ptr<MessageAuthenticationCode> m_mac;
-
       std::unique_ptr<AEAD_Mode> m_aead;
-      std::vector<byte> m_nonce;
 
-      size_t m_block_size = 0;
+      std::vector<byte> m_nonce;
       size_t m_nonce_bytes_from_handshake;
       size_t m_nonce_bytes_from_record;
-      size_t m_iv_size = 0;
-      
-      bool m_uses_encrypt_then_mac;
+      bool m_cbc_nonce;
    };
 
 class Record

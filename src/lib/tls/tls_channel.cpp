@@ -276,7 +276,7 @@ void Channel::activate_session()
    if(!m_active_state->version().is_datagram_protocol())
       {
       // TLS is easy just remove all but the current state
-      auto current_epoch = sequence_numbers().current_write_epoch();
+      const u16bit current_epoch = sequence_numbers().current_write_epoch();
 
       const auto not_current_epoch =
          [current_epoch](u16bit epoch) { return (epoch != current_epoch); };
@@ -502,10 +502,11 @@ void Channel::send_record_array(u16bit epoch, byte type, const byte input[], siz
       return;
 
    /*
-   * If using CBC mode without an explicit IV (SSL v3 or TLS v1.0),
-   * send a single byte of plaintext to randomize the (implicit) IV of
-   * the following main block. If using a stream cipher, or TLS v1.1
-   * or higher, this isn't necessary.
+   * In versions without an explicit IV field (only TLS v1.0 now that
+   * SSLv3 has been removed) send a single byte record first to randomize
+   * the following (implicit) IV of the following record.
+   *
+   * This isn't needed in TLS v1.1 or higher.
    *
    * An empty record also works but apparently some implementations do
    * not like this (https://bugzilla.mozilla.org/show_bug.cgi?id=665814)
@@ -515,7 +516,7 @@ void Channel::send_record_array(u16bit epoch, byte type, const byte input[], siz
 
    auto cipher_state = write_cipher_state_epoch(epoch);
 
-   if(type == APPLICATION_DATA && cipher_state->cbc_without_explicit_iv())
+   if(type == APPLICATION_DATA && m_active_state->version().supports_explicit_cbc_ivs() == false)
       {
       write_record(cipher_state.get(), epoch, type, input, 1);
       input += 1;

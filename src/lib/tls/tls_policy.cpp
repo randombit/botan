@@ -352,12 +352,19 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
 
    for(auto&& suite : Ciphersuite::all_known_ciphersuites())
       {
-      if(!acceptable_ciphersuite(suite))
+      // Can we use it?
+      if(suite.valid() == false)
          continue;
 
+      // Is it acceptable to the policy?
+      if(!this->acceptable_ciphersuite(suite))
+         continue;
+
+      // Are we doing SRP?
       if(!have_srp && suite.kex_algo() == "SRP_SHA")
          continue;
 
+      // Are we doing AEAD in a non-AEAD version
       if(!version.supports_aead_modes() && suite.mac_algo() == "AEAD")
          continue;
 
