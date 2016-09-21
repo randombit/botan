@@ -154,11 +154,11 @@ u16bit choose_ciphersuite(
    Protocol_Version version,
    Credentials_Manager& creds,
    const std::map<std::string, std::vector<X509_Certificate> >& cert_chains,
-   const Client_Hello* client_hello)
+   const Client_Hello& client_hello)
    {
    const bool our_choice = policy.server_uses_own_ciphersuite_preferences();
-   const bool have_srp = creds.attempt_srp("tls-server", client_hello->sni_hostname());
-   const std::vector<u16bit> client_suites = client_hello->ciphersuites();
+   const bool have_srp = creds.attempt_srp("tls-server", client_hello.sni_hostname());
+   const std::vector<u16bit> client_suites = client_hello.ciphersuites();
    const std::vector<u16bit> server_suites = policy.ciphersuite_list(version, have_srp);
 
    if(server_suites.empty())
@@ -166,7 +166,11 @@ u16bit choose_ciphersuite(
                           "Policy forbids us from negotiating any ciphersuite");
 
    const bool have_shared_ecc_curve =
-      (policy.choose_curve(client_hello->supported_ecc_curves()) != "");
+      (policy.choose_curve(client_hello.supported_ecc_curves()) != "");
+
+   /*
+   Walk down one list in preference order
+   */
 
    std::vector<u16bit> pref_list = server_suites;
    std::vector<u16bit> other_list = client_suites;
@@ -174,18 +178,32 @@ u16bit choose_ciphersuite(
    if(!our_choice)
       std::swap(pref_list, other_list);
 
+   const std::set<std::string> client_sig_algos = client_hello.supported_sig_algos();
+
    for(auto suite_id : pref_list)
       {
       if(!value_exists(other_list, suite_id))
          continue;
 
-      Ciphersuite suite = Ciphersuite::by_id(suite_id);
+      const Ciphersuite suite = Ciphersuite::by_id(suite_id);
 
-      if(!have_shared_ecc_curve && suite.ecc_ciphersuite())
+      if(suite.valid() == false)
          continue;
 
-      if(suite.sig_algo() != "" && cert_chains.count(suite.sig_algo()) == 0)
+      if(suite.ecc_ciphersuite() && have_shared_ecc_curve == false)
          continue;
+
+      // For non-anon ciphersuites
+      if(suite.sig_algo() != "")
+         {
+         // Do we have any certificates for this sig?
+         if(cert_chains.count(suite.sig_algo()) == 0)
+            continue;
+
+         // Client reques
+         if(!client_sig_algos.empty() && client_sig_algos.count(suite.sig_algo()) == 0)
+            continue;
+         }
 
 #if defined(BOTAN_HAS_SRP6)
       /*
@@ -196,7 +214,7 @@ u16bit choose_ciphersuite(
       client hello message.
        - RFC 5054 section 2.5.1.2
       */
-      if(suite.kex_algo() == "SRP_SHA" && client_hello->srp_identifier() == "")
+      if(suite.kex_algo() == "SRP_SHA" && client_hello.srp_identifier() == "")
          throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
                              "Client wanted SRP but did not send username");
 #endif
@@ -747,7 +765,7 @@ void Server::session_create(Server_Handshake_State& pending_state,
                                               pending_state.version(),
                                               m_creds,
                                               cert_chains,
-                                              pending_state.client_hello()),
+                                              *pending_state.client_hello()),
                            choose_compression(policy(),
                                               pending_state.client_hello()->compression_methods()),
                            have_session_ticket_key);

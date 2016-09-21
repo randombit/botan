@@ -19,6 +19,7 @@
 #include <botan/x509cert.h>
 #include <vector>
 #include <string>
+#include <set>
 
 namespace Botan {
 
@@ -105,6 +106,14 @@ class Client_Hello final : public Handshake_Message
          return std::vector<std::pair<std::string, std::string>>();
          }
 
+      std::set<std::string> supported_sig_algos() const
+         {
+         std::set<std::string> sig;
+         for(auto&& hash_and_sig : supported_algos())
+            sig.insert(hash_and_sig.second);
+         return sig;
+         }
+
       std::vector<std::string> supported_ecc_curves() const
          {
          if(Supported_Elliptic_Curves* ecc = m_extensions.get<Supported_Elliptic_Curves>())
@@ -165,6 +174,11 @@ class Client_Hello final : public Handshake_Message
       bool supports_encrypt_then_mac() const
          {
          return m_extensions.has<Encrypt_then_MAC>();
+         }
+
+      bool sent_signature_algorithms() const
+         {
+         return m_extensions.has<Signature_Algorithms>();
          }
 
       std::vector<std::string> next_protocols() const

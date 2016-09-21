@@ -274,8 +274,9 @@ class Signature_Algorithms final : public Extension
       static std::string sig_algo_name(byte code);
       static byte sig_algo_code(const std::string& name);
 
-      std::vector<std::pair<std::string, std::string> >
-         supported_signature_algorthms() const
+      // [(hash,sig),(hash,sig),...]
+      const std::vector<std::pair<std::string, std::string>>&
+      supported_signature_algorthms() const
          {
          return m_supported_algos;
          }
@@ -287,13 +288,13 @@ class Signature_Algorithms final : public Extension
       Signature_Algorithms(const std::vector<std::string>& hashes,
                            const std::vector<std::string>& sig_algos);
 
-      explicit Signature_Algorithms(const std::vector<std::pair<std::string, std::string> >& algos) :
+      explicit Signature_Algorithms(const std::vector<std::pair<std::string, std::string>>& algos) :
          m_supported_algos(algos) {}
 
       Signature_Algorithms(TLS_Data_Reader& reader,
                            u16bit extension_size);
    private:
-      std::vector<std::pair<std::string, std::string> > m_supported_algos;
+      std::vector<std::pair<std::string, std::string>> m_supported_algos;
    };
 
 /**

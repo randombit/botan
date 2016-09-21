@@ -463,16 +463,27 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
 
    while(len)
       {
-      const std::string hash_code = hash_algo_name(reader.get_byte());
-      const std::string sig_code = sig_algo_name(reader.get_byte());
-
+      const byte hash_code = reader.get_byte();
+      const byte sig_code = reader.get_byte();
       len -= 2;
 
+      if(sig_code == 0)
+         {
+         /*
+         RFC 5247 7.4.1.4.1 explicitly prohibits anonymous (0) signature code in
+         the client hello. ("It MUST NOT appear in this extension.")
+         */
+         throw TLS_Exception(Alert::DECODE_ERROR, "Client sent ANON signature");
+         }
+
+      const std::string hash_name = hash_algo_name(hash_code);
+      const std::string sig_name = sig_algo_name(sig_code);
+
       // If not something we know, ignore it completely
-      if(hash_code.empty() || sig_code.empty())
+      if(hash_name.empty() || sig_name.empty())
          continue;
 
-      m_supported_algos.push_back(std::make_pair(hash_code, sig_code));
+      m_supported_algos.push_back(std::make_pair(hash_name, sig_name));
       }
    }
 
