@@ -1092,7 +1092,7 @@ class Speed final : public Command
 #endif
 
 #if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
-      void bench_newhope(const std::string& provider,
+      void bench_newhope(const std::string& /*provider*/,
                          std::chrono::milliseconds msec)
          {
          const std::string nm = "NEWHOPE";

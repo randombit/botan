@@ -57,7 +57,7 @@ void ChaCha::chacha_x4(byte output[64*4], u32bit input[16], size_t rounds)
       c += d; b ^= c; b = rotate_left(b, 7);    \
       } while(0)
 
-      for(size_t i = 0; i != rounds / 2; ++i)
+      for(size_t r = 0; r != rounds / 2; ++r)
          {
          CHACHA_QUARTER_ROUND(x00, x04, x08, x12);
          CHACHA_QUARTER_ROUND(x01, x05, x09, x13);

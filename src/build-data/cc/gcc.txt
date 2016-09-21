@@ -12,7 +12,7 @@ lang_flags "-std=c++11 -D_REENTRANT"
 # This should only contain flags which are included in GCC 4.8
 warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor"
 
-maintainer_warning_flags "-Wold-style-cast -Wsuggest-override -Wshadow -Werror -Wno-error=old-style-cast -Wno-error=zero-as-null-pointer-constant -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=strict-overflow -Wno-error=deprecated-declarations"
+maintainer_warning_flags "-Wold-style-cast -Wsuggest-override -Wshadow -Werror -Wno-error=old-style-cast -Wno-error=zero-as-null-pointer-constant -Wno-error=strict-overflow -Wno-error=deprecated-declarations"
 
 compile_flags "-c"
 debug_info_flags "-g"
