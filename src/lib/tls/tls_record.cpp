@@ -180,6 +180,14 @@ void cbc_encrypt_record(const BlockCipher& bc,
                     &buf[block_size*blocks]);
    }
 
+inline void append_u16_len(secure_vector<byte>& output, size_t len_field)
+   {
+   const uint16_t len16 = len_field;
+   BOTAN_ASSERT_EQUAL(len_field, len16, "No truncation");
+   output.push_back(get_byte(0, len16));
+   output.push_back(get_byte(1, len16));
+   }
+
 }
 
 void write_record(secure_vector<byte>& output,
@@ -203,13 +211,13 @@ void write_record(secure_vector<byte>& output,
 
    if(!cs) // initial unencrypted handshake records
       {
-      output.push_back(get_byte<u16bit>(0, static_cast<u16bit>(msg.get_size())));
-      output.push_back(get_byte<u16bit>(1, static_cast<u16bit>(msg.get_size())));
-
+      append_u16_len(output, msg.get_size());
       output.insert(output.end(), msg.get_data(), msg.get_data() + msg.get_size());
 
       return;
       }
+
+   std::vector<byte> aad = cs->format_ad(seq, msg.get_type(), version, static_cast<u16bit>(msg.get_size()));
 
    if(AEAD_Mode* aead = cs->aead())
       {
@@ -221,10 +229,9 @@ void write_record(secure_vector<byte>& output,
       const size_t rec_size = ctext_size + cs->nonce_bytes_from_record();
 
       BOTAN_ASSERT(rec_size <= 0xFFFF, "Ciphertext length fits in field");
-      output.push_back(get_byte(0, static_cast<u16bit>(rec_size)));
-      output.push_back(get_byte(1, static_cast<u16bit>(rec_size)));
+      append_u16_len(output, rec_size);
 
-      aead->set_ad(cs->format_ad(seq, msg.get_type(), version, static_cast<u16bit>(msg.get_size())));
+      aead->set_ad(aad);
 
       if(cs->nonce_bytes_from_record() > 0)
          {
@@ -253,16 +260,22 @@ void write_record(secure_vector<byte>& output,
    const size_t pad_val = enc_size - input_size;
    const size_t buf_size = enc_size + (cs->uses_encrypt_then_mac() ? mac_size : 0);
 
+   if(cs->uses_encrypt_then_mac())
+      {
+      aad[11] = get_byte<uint16_t>(0, enc_size);
+      aad[12] = get_byte<uint16_t>(1, enc_size);
+      }
+
    BOTAN_ASSERT(enc_size % block_size == 0,
                 "Buffer is an even multiple of block size");
 
-   if(buf_size > MAX_CIPHERTEXT_SIZE)
-      throw Internal_Error("Output record is larger than allowed by protocol");
-
-   output.push_back(get_byte(0, static_cast<u16bit>(buf_size)));
-   output.push_back(get_byte(1, static_cast<u16bit>(buf_size)));
+   append_u16_len(output, buf_size);
 
    const size_t header_size = output.size();
+
+   // EtM also uses ciphertext size instead of plaintext size for AEAD input
+   const byte* mac_input = (cs->uses_encrypt_then_mac() ? &output[header_size] : msg.get_data());
+   const size_t mac_input_len = (cs->uses_encrypt_then_mac() ? enc_size : msg.get_size());
 
    if(iv_size)
       {
@@ -272,31 +285,27 @@ void write_record(secure_vector<byte>& output,
 
    output.insert(output.end(), msg.get_data(), msg.get_data() + msg.get_size());
 
-   if(!cs->uses_encrypt_then_mac())
+   if(cs->uses_encrypt_then_mac())
       {
-      output.resize(output.size() + mac_size);
-
-      cs->mac()->update(cs->format_ad(seq, msg.get_type(), version, static_cast<u16bit>(msg.get_size())));
-      cs->mac()->update(msg.get_data(), msg.get_size());
-      cs->mac()->final(&output[output.size() - mac_size]);
-
       for(size_t i = 0; i != pad_val + 1; ++i)
          output.push_back(static_cast<byte>(pad_val));
-
-      cbc_encrypt_record(*cs->block_cipher(), cs->cbc_state(), &output[header_size], buf_size);
+      cbc_encrypt_record(*cs->block_cipher(), cs->cbc_state(), &output[header_size], enc_size);
       }
-   else
+
+   output.resize(output.size() + mac_size);
+   cs->mac()->update(aad);
+   cs->mac()->update(mac_input, mac_input_len);
+   cs->mac()->final(&output[output.size() - mac_size]);
+
+   if(cs->uses_encrypt_then_mac() == false)
       {
       for(size_t i = 0; i != pad_val + 1; ++i)
-         output.push_back(pad_val);
-
-      cbc_encrypt_record(*cs->block_cipher(), cs->cbc_state(), &output[header_size], enc_size);
-      cs->mac()->update(cs->format_ad(seq, msg.get_type(), version, enc_size));
-      cs->mac()->update(&output[header_size], enc_size);
-
-      output.resize(output.size() + mac_size);
-      cs->mac()->final(&output[output.size() - mac_size]);
+         output.push_back(static_cast<byte>(pad_val));
+      cbc_encrypt_record(*cs->block_cipher(), cs->cbc_state(), &output[header_size], buf_size);
       }
+
+   if(buf_size > MAX_CIPHERTEXT_SIZE)
+      throw Internal_Error("Output record is larger than allowed by protocol");
 
    BOTAN_ASSERT_EQUAL(buf_size + header_size, output.size(),
                       "Output buffer is sized properly");
