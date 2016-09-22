@@ -273,10 +273,6 @@ void write_record(secure_vector<byte>& output,
 
    const size_t header_size = output.size();
 
-   // EtM also uses ciphertext size instead of plaintext size for AEAD input
-   const byte* mac_input = (cs->uses_encrypt_then_mac() ? &output[header_size] : msg.get_data());
-   const size_t mac_input_len = (cs->uses_encrypt_then_mac() ? enc_size : msg.get_size());
-
    if(iv_size)
       {
       output.resize(output.size() + iv_size);
@@ -284,6 +280,10 @@ void write_record(secure_vector<byte>& output,
       }
 
    output.insert(output.end(), msg.get_data(), msg.get_data() + msg.get_size());
+
+   // EtM also uses ciphertext size instead of plaintext size for AEAD input
+   const byte* mac_input = (cs->uses_encrypt_then_mac() ? &output[header_size] : msg.get_data());
+   const size_t mac_input_len = (cs->uses_encrypt_then_mac() ? enc_size : msg.get_size());
 
    if(cs->uses_encrypt_then_mac())
       {
