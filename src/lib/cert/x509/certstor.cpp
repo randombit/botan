@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <cassert>
 #include <botan/certstor.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
@@ -15,8 +14,6 @@
 #include <botan/auto_rng.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
-
-#include <iostream>
 
 namespace Botan {
 

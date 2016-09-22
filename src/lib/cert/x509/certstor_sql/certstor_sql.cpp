@@ -175,15 +175,15 @@ Certificate_Store_In_SQL::find_certs_for_key(const Private_Key& key) const
 
    stmt->bind(1,fpr);
 
-   std::shared_ptr<const X509_Certificate> cert;
+   std::vector<std::shared_ptr<const X509_Certificate>> certs;
    while(stmt->step())
       {
       auto blob = stmt->get_blob(0);
-      cert = std::make_shared<X509_Certificate>(
-            std::vector<byte>(blob.first,blob.first + blob.second));
+      certs.push_back(std::make_shared<X509_Certificate>(
+            std::vector<byte>(blob.first,blob.first + blob.second)));
       }
 
-   return {cert};
+   return certs;
    }
 
 bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Private_Key& key) {
@@ -195,8 +195,6 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
    AutoSeeded_RNG rng;
    auto pkcs8 = PKCS8::BER_encode(key,rng,m_password);
    auto fpr = fingerprint_key(key);
-
-   //m_database->new_statement("BEGIN TRANSACTION")->spin();
 
    auto stmt1 = m_database->new_statement(
          "INSERT OR REPLACE INTO keys ( fingerprint, key ) VALUES ( ?1, ?2 )");
@@ -212,8 +210,6 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
    stmt2->bind(2,cert.fingerprint("SHA-256"));
    stmt2->spin();
 
-   //m_database->new_statement("END TRANSACTION")->spin();
-   
    return true;
    }
 

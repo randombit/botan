@@ -12,9 +12,12 @@
    #include <botan/internal/filesystem.h>
    #include <botan/pkcs8.h>
    #include <botan/auto_rng.h>
+   #include <sstream>
+   extern "C" {
+   #include <unistd.h> // unlink()
+   }
 #endif
 
-#include <iostream>
 
 namespace Botan_Tests {
 
@@ -53,6 +56,20 @@ Test::Result test_certstor_insert_find_remove_test(
       if(priv)
          {
          result.test_eq("Got wrong private key",key->pkcs8_private_key(),priv->pkcs8_private_key());
+
+         auto rev_certs = store.find_certs_for_key(*priv);
+
+         if(rev_certs.empty())
+            {
+            result.test_failure("No certificate");
+            }
+         else
+            {
+               bool found = std::any_of(rev_certs.begin(),rev_certs.end(),[&](std::shared_ptr<const Botan::X509_Certificate> c)
+                     { return c->fingerprint() == cert.fingerprint(); });
+
+               result.test_eq("Got wrong/no certificate",found,true);
+            }
          }
 
       if(certs[4] != cert_key && certs[5] != cert_key)
@@ -193,7 +210,11 @@ class Certstor_Tests : public Test
 
             try
                {
-               Botan::Certificate_Store_In_SQLite store(fn.first + ".db","123");
+               unlink((fn.first + ".db").c_str());
+
+               auto& rng = Test::rng();
+               std::string passwd(reinterpret_cast<const char*>(rng.random_vec(8).data()),8);
+               Botan::Certificate_Store_In_SQLite store(fn.first + ".db",passwd);
                std::vector<std::pair<Botan::X509_Certificate,std::shared_ptr<Botan::Private_Key>>> retrieve;
 
                for(auto&& cert_key_pair : test_data)

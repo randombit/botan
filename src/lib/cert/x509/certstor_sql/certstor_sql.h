@@ -33,10 +33,6 @@ class BOTAN_DLL Certificate_Store_In_SQL : public Certificate_Store
       virtual std::shared_ptr<const X509_Certificate>
          find_cert(const X509_DN& subject_dn, const std::vector<byte>& key_id) const override;
 
-      /// Generates a CRL for all certificates issued by "subject"s issuer.
-      virtual std::shared_ptr<const X509_CRL>
-         find_crl_for(const X509_Certificate& subject) const override;
-
       /// Returns all subject DNs known to the store instance,
       virtual std::vector<X509_DN> all_subjects() const override;
 
@@ -79,6 +75,10 @@ class BOTAN_DLL Certificate_Store_In_SQL : public Certificate_Store
        * A CRL is returned for each unique issuer DN.
        */
       std::vector<X509_CRL> generate_crls() const;
+
+      /// Generates a CRL for all certificates issued by the given issuer.
+      virtual std::shared_ptr<const X509_CRL>
+         find_crl_for(const X509_Certificate& issuer) const override;
 
    private:
       std::string fingerprint_key(const Private_Key&) const;
