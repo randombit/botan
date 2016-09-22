@@ -114,7 +114,7 @@ Test::Result test_certstor_crl_test(
    {
       auto crls = store.generate_crls();
 
-      result.test_eq("Can't revoke certificate, wrong crll size",crls.size(),1);
+      result.test_eq("Can't revoke certificate, wrong crl size",crls.size(),1);
       result.test_eq("Can't revoke certificate, cert 0 not revoked",crls[0].is_revoked(certs[0].first),true);
    }
 
