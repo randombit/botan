@@ -472,6 +472,66 @@ Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn 
    return result;
    }
 
+Test::Result test_self_issued(const std::string& sig_algo, const std::string& hash_fn = "SHA-256")
+   {
+   using Botan::Key_Constraints;
+
+   Test::Result result("X509 Self Issued");
+
+   // create the CA's key and self-signed cert
+   std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key(sig_algo));
+
+   if(!ca_key)
+      {
+      // Failure because X.509 enabled but requested signature algorithm is not present
+      result.test_note("Skipping due to missing signature algorithm: " + sig_algo);
+      return result;
+      }
+
+   // create the self-signed cert
+   Botan::X509_Certificate ca_cert =
+        Botan::X509::create_self_signed_cert(ca_opts(),
+                                           *ca_key,
+                                           hash_fn,
+                                           Test::rng());
+
+   /* Create the CA object */
+   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn);
+
+   std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
+
+   // create a self-issued certificate, that is, a certificate with subject dn == issuer dn,
+   // but signed by a CA, not signed by it's own private key
+   Botan::X509_Cert_Options opts = ca_opts();
+   opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
+
+   Botan::PKCS10_Request self_issued_req =
+        Botan::X509::create_cert_req(opts,
+                                      *user_key,
+                                      hash_fn,
+                                      Test::rng());
+
+   Botan::X509_Certificate self_issued_cert =
+      ca.sign_request(self_issued_req, Test::rng(),
+                      from_date(2008, 01, 01),
+                      from_date(2033, 01, 01));
+
+   // check that this chain can can be verified successfully
+   Botan::Certificate_Store_In_Memory trusted(ca.ca_certificate());
+
+   Botan::Path_Validation_Restrictions restrictions;
+
+   Botan::Path_Validation_Result validation_result =
+         Botan::x509_path_validate(self_issued_cert,
+                                   restrictions,
+                                   trusted);
+
+   result.confirm("chain with self-issued cert validates", validation_result.successful_validation());
+
+   return result;
+   }
+
+
 using Botan::Key_Constraints;
 
 /**
@@ -629,15 +689,18 @@ class X509_Cert_Unit_Tests : public Test
          const std::vector<std::string> sig_algos { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA" };
          Test::Result cert_result("X509 Unit");
          Test::Result usage_result("X509 Usage");
+         Test::Result self_issued_result("X509 Self Issued");
 
          for(const auto& algo : sig_algos)
             {
             cert_result.merge(test_x509_cert(algo));
             usage_result.merge(test_usage(algo));
+            self_issued_result.merge(test_self_issued(algo));
             }
 
          results.push_back(cert_result);
          results.push_back(usage_result);
+         results.push_back(self_issued_result);
 
          const std::vector<std::string> pk_algos { "DH", "ECDH", "RSA", "ElGamal", "RW", "NR",
                                                    "DSA", "ECDSA", "ECGDSA", "ECKCDSA" };
