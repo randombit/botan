@@ -7,25 +7,50 @@ ticket on GitHub to make sure you're on the right track.
 
 Request a new feature by opening a pull request to update this file.
 
-Documentation
+Ciphers, Hashes, PBKDF
 ----------------------------------------
 
-* TPM (no docs)
-* PKCS #11 (no docs)
-* X.509 certs, path validation
-* Specific docs covering one major topic (RSA, ECDSA, AES/GCM, ...)
+* Bitsliced AES or Camellia
+* Compressed tables for AES
+* AES using vector permutes for NEON or AltiVec
+* Camellia using AES-NI
+* Serpent using AVX2 or SSSE3/pshufb
+* ChaCha20 using AVX2, NEON
+* ARIA block cipher (RFCs 5794 and 6209)
+* ASCON 1.2 (CAESAR)
+* NORX-64 3.0 (CAESAR)
+* scrypt PBKDF
+* Argon2 PBKDF (draft-irtf-cfrg-argon2)
+* bcrypt PBKDF
+* Skein-MAC
+* Extend Cascade_Cipher to support arbitrary number of ciphers
 
-CLI
+Public Key Crypto, Math
 ----------------------------------------
 
-* Rewrite `tls_client` and `tls_server` to use asio. See `tls_proxy`
-  for an example
-* `encrypt` / `decrypt` tools providing password and/or public key
-  based file encryption
-* Make help output more helpful
-* More microbenchmarks in `speed`: modular exponentiation, ECC point
-  multiplication, other BigInt operations
-* Compute cycles/byte estimates for benchmark output
+* XMSS (draft-irtf-cfrg-xmss-hash-based-signatures)
+* SPHINCS-256
+* EdDSA (GH #283)
+* Ed448-Goldilocks
+* FHMQV
+* Support mixed hashes and non-empty param strings in OAEP
+* wNAF ECC point multiply
+* Fast new implementations/algorithms for ECC point operations,
+  Montgomery multiplication, multi-exponentiation, ...
+* Some PK operations, especially RSA, have extensive computations per
+  operation setup but many of the computed values depend only on the
+  key and could be shared across operation objects.
+
+External Providers, Hardware Support
+----------------------------------------
+
+* Extend OpenSSL provider (cipher modes, HMAC, CMAC)
+* /dev/crypto provider (ciphers, hashes)
+* Windows CryptoAPI provider (ciphers, hashes, RSA)
+* Apple CommonCrypto
+* ARMv8-A crypto extensions (AES, SHA-2)
+* POWER8 crypto extensions (AES, SHA-2)
+* Better TPM support: NVRAM, PCR measurements, sealing
 
 TLS
 ----------------------------------------
@@ -78,17 +103,6 @@ Compat Headers
   since the OpenSSL API handles both crypto and IO. Use Asio, since it
   is expected to be the base of future C++ standard network library.
 
-Accelerators / backends
-----------------------------------------
-
-* Extend OpenSSL provider (cipher modes, HMAC, CMAC)
-* /dev/crypto
-* Windows CryptoAPI (ciphers, hashes, RSA)
-* Apple CommonCrypto
-* ARMv8-A crypto extensions (AES, SHA-2)
-* POWER8 crypto extensions (AES, SHA-2)
-* Better TPM support: NVRAM, PCR measurements, sealing
-
 FFI (Python, OCaml)
 ----------------------------------------
 
@@ -96,53 +110,36 @@ FFI (Python, OCaml)
 * Expose TLS
 * Write a CLI or HTTPS client in Python
 
-Symmetric Algorithms, Hashes, ...
-----------------------------------------
-
-* Bitsliced AES or Camellia
-* Compressed tables for AES
-* AES using vector permutes for NEON, AltiVec
-* Use ARMv8 crypto: AES, SHA
-* Camellia with AES-NI
-* Serpent using AVX2
-* Serpent using SSSE3 pshufb for sboxes
-* ChaCha20 using SSE2 or AVX2
-* NORX-64 3.0
-* scrypt
-* Argon2 (draft-irtf-cfrg-argon2)
-* bcrypt PBKDF
-* Skein-MAC
-* ARIA (Korean block cipher, RFCs 5794 and 6209)
-* Extend Cascade_Cipher to support arbitrary number of ciphers
-
-Public Key Crypto, Math
-----------------------------------------
-
-* XMSS (draft-irtf-cfrg-xmss-hash-based-signatures)
-* SPHINCS-256
-* EdDSA (GH #283)
-* Ed448-Goldilocks
-* FHMQV
-* Support mixed hashes and non-empty param strings in OAEP
-* Fast new implementations/algorithms for ECC point operations,
-  Montgomery multiplication, multi-exponentiation, ...
-* Some PK operations, especially RSA, have extensive computations per
-  operation setup but many of the computed values depend only on the
-  key and could be shared across operation objects.
-
 Library Infrastructure
 ----------------------------------------
 
 * Add logging callbacks
 * Add latency tracing framework
 
-Build
+Build/Test
 ----------------------------------------
 
 * Code signing for Windows installers
-
-Testing
-----------------------------------------
-
 * Test runner python script that captures backtraces and other
   debug info during CI
+
+CLI
+----------------------------------------
+
+* Rewrite `tls_client` and `tls_server` to use asio. See `tls_proxy`
+  for an example
+* `encrypt` / `decrypt` tools providing password and/or public key
+  based file encryption
+* Make help output more helpful
+* More microbenchmarks in `speed`: modular exponentiation, ECC point
+  multiplication, other BigInt operations
+* Compute cycles/byte estimates for benchmark output
+
+Documentation
+----------------------------------------
+
+* TPM (no docs)
+* PKCS #11 (no docs)
+* X.509 certs, path validation
+* Specific docs covering one major topic (RSA, ECDSA, AES/GCM, ...)
+* Some howto style docs (setting up CA, ...)
