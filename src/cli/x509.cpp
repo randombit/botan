@@ -30,11 +30,19 @@ class Sign_Cert final : public Command
       void go() override
          {
          Botan::X509_Certificate ca_cert(get_arg("ca_cert"));
+         std::unique_ptr<Botan::PKCS8_PrivateKey> key;
 
-         std::unique_ptr<Botan::PKCS8_PrivateKey> key(
-            Botan::PKCS8::load_key(get_arg("ca_key"),
-                                   rng(),
-                                   get_arg("ca_key_pass")));
+         if(flag_set("ca_key_pass"))
+            {
+            key.reset(Botan::PKCS8::load_key(get_arg("ca_key"),
+                     rng(),
+                     get_arg("ca_key_pass")));
+            }
+         else
+            {
+            key.reset(Botan::PKCS8::load_key(get_arg("ca_key"),
+                     rng()));
+            }
 
          if(!key)
             throw CLI_Error("Failed to load key from " + get_arg("ca_key"));

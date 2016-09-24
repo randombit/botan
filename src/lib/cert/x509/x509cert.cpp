@@ -102,7 +102,6 @@ void X509_Certificate::force_decode()
    if(m_sig_algo != sig_algo_inner)
       throw Decoding_Error("Algorithm identifier mismatch");
 
-   m_self_signed = (dn_subject == dn_issuer);
 
    m_subject.add(dn_subject.contents());
    m_issuer.add(dn_issuer.contents());
@@ -144,6 +143,9 @@ void X509_Certificate::force_decode()
 
    m_subject.add("X509.Certificate.public_key",
                hex_encode(public_key.value));
+
+   std::unique_ptr<Public_Key> pub_key(subject_public_key());
+   m_self_signed = (dn_subject == dn_issuer) && check_signature(*pub_key);
 
    if(m_self_signed && version == 0)
       {
