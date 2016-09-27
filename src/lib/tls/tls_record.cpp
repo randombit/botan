@@ -155,6 +155,41 @@ Connection_Cipher_State::format_ad(u64bit msg_sequence,
    return ad;
    }
 
+namespace {
+
+void cbc_encrypt_record(const BlockCipher& bc,
+                        secure_vector<byte>& cbc_state,
+                        byte buf[],
+                        size_t buf_size)
+   {
+   const size_t block_size = bc.block_size();
+   const size_t blocks = buf_size / block_size;
+   BOTAN_ASSERT(buf_size % block_size == 0, "CBC input");
+   BOTAN_ASSERT(blocks > 0, "Expected at least 1 block");
+
+   xor_buf(buf, cbc_state.data(), block_size);
+   bc.encrypt(buf);
+
+   for(size_t i = 1; i < blocks; ++i)
+      {
+      xor_buf(&buf[block_size*i], &buf[block_size*(i-1)], block_size);
+      bc.encrypt(&buf[block_size*i]);
+      }
+
+   cbc_state.assign(&buf[block_size*(blocks-1)],
+                    &buf[block_size*blocks]);
+   }
+
+inline void append_u16_len(secure_vector<byte>& output, size_t len_field)
+   {
+   const uint16_t len16 = len_field;
+   BOTAN_ASSERT_EQUAL(len_field, len16, "No truncation");
+   output.push_back(get_byte(0, len16));
+   output.push_back(get_byte(1, len16));
+   }
+
+}
+
 void write_record(secure_vector<byte>& output,
                   Record_Message msg,
                   Protocol_Version version,
@@ -176,13 +211,13 @@ void write_record(secure_vector<byte>& output,
 
    if(!cs) // initial unencrypted handshake records
       {
-      output.push_back(get_byte<u16bit>(0, static_cast<u16bit>(msg.get_size())));
-      output.push_back(get_byte<u16bit>(1, static_cast<u16bit>(msg.get_size())));
-
+      append_u16_len(output, msg.get_size());
       output.insert(output.end(), msg.get_data(), msg.get_data() + msg.get_size());
 
       return;
       }
+
+   std::vector<byte> aad = cs->format_ad(seq, msg.get_type(), version, static_cast<u16bit>(msg.get_size()));
 
    if(AEAD_Mode* aead = cs->aead())
       {
@@ -193,10 +228,9 @@ void write_record(secure_vector<byte>& output,
       const size_t rec_size = ctext_size + cs->nonce_bytes_from_record();
 
       BOTAN_ASSERT(rec_size <= 0xFFFF, "Ciphertext length fits in field");
-      output.push_back(get_byte(0, static_cast<u16bit>(rec_size)));
-      output.push_back(get_byte(1, static_cast<u16bit>(rec_size)));
+      append_u16_len(output, rec_size);
 
-      aead->set_ad(cs->format_ad(seq, msg.get_type(), version, static_cast<u16bit>(msg.get_size())));
+      aead->set_ad(aad);
 
       if(cs->nonce_bytes_from_record() > 0)
          {
@@ -217,147 +251,61 @@ void write_record(secure_vector<byte>& output,
    const size_t iv_size = cs->iv_size();
    const size_t mac_size = cs->mac_size();
 
-   if(!cs->uses_encrypt_then_mac()) 
+   const size_t input_size =
+      iv_size + msg.get_size() + 1 + (cs->uses_encrypt_then_mac() ? 0 : mac_size);
+   const size_t enc_size = round_up(input_size, block_size);
+   const size_t pad_val = enc_size - input_size;
+   const size_t buf_size = enc_size + (cs->uses_encrypt_then_mac() ? mac_size : 0);
+
+   if(cs->uses_encrypt_then_mac())
       {
-      cs->mac()->update(cs->format_ad(seq, msg.get_type(), version, static_cast<u16bit>(msg.get_size())));
-      cs->mac()->update(msg.get_data(), msg.get_size());
-
-      const size_t buf_size = round_up(
-         iv_size + msg.get_size() + mac_size + (block_size ? 1 : 0),
-         block_size);
-
-      if(buf_size > MAX_CIPHERTEXT_SIZE)
-         throw Internal_Error("Output record is larger than allowed by protocol");
-
-      output.push_back(get_byte(0, static_cast<u16bit>(buf_size)));
-      output.push_back(get_byte(1, static_cast<u16bit>(buf_size)));
-
-      const size_t header_size = output.size();
-
-      if(iv_size)
-         {
-         output.resize(output.size() + iv_size);
-         rng.randomize(&output[output.size() - iv_size], iv_size);
-         }
-
-      output.insert(output.end(), msg.get_data(), msg.get_data() + msg.get_size());
-
-      output.resize(output.size() + mac_size);
-      cs->mac()->final(&output[output.size() - mac_size]);
-
-      if(block_size)
-         {
-         const size_t pad_val =
-            buf_size - (iv_size + msg.get_size() + mac_size + 1);
-
-         for(size_t i = 0; i != pad_val + 1; ++i)
-            output.push_back(static_cast<byte>(pad_val));
-         }
-
-      if(buf_size > MAX_CIPHERTEXT_SIZE)
-         throw Internal_Error("Produced ciphertext larger than protocol allows");
-
-      BOTAN_ASSERT_EQUAL(buf_size + header_size, output.size(),
-                      "Output buffer is sized properly");
-
-      if(BlockCipher* bc = cs->block_cipher())
-         {
-         secure_vector<byte>& cbc_state = cs->cbc_state();
-
-         BOTAN_ASSERT(buf_size % block_size == 0,
-                   "Buffer is an even multiple of block size");
-
-         byte* buf = &output[header_size];
-
-         const size_t blocks = buf_size / block_size;
-
-         xor_buf(buf, cbc_state.data(), block_size);
-         bc->encrypt(buf);
-
-         for(size_t i = 1; i < blocks; ++i)
-            {
-            xor_buf(&buf[block_size*i], &buf[block_size*(i-1)], block_size);
-            bc->encrypt(&buf[block_size*i]);
-            }
-
-         cbc_state.assign(&buf[block_size*(blocks-1)],
-                       &buf[block_size*blocks]);
-         }
-      else
-         {
-         throw Internal_Error("NULL cipher not supported");
-         }
+      aad[11] = get_byte<uint16_t>(0, enc_size);
+      aad[12] = get_byte<uint16_t>(1, enc_size);
       }
-   else
+
+   BOTAN_ASSERT(enc_size % block_size == 0,
+                "Buffer is an even multiple of block size");
+
+   append_u16_len(output, buf_size);
+
+   const size_t header_size = output.size();
+
+   if(iv_size)
       {
-      const size_t enc_size = round_up(
-         iv_size + msg.get_size() + (block_size ? 1 : 0),
-         block_size);
-
-      const size_t buf_size = enc_size + mac_size;
-
-      if(buf_size > MAX_CIPHERTEXT_SIZE)
-         throw Internal_Error("Output record is larger than allowed by protocol");
-
-      output.push_back(get_byte<u16bit>(0, buf_size));
-      output.push_back(get_byte<u16bit>(1, buf_size));
-      
-      const size_t header_size = output.size();
-
-      if(iv_size)
-         {
-         output.resize(output.size() + iv_size);
-         rng.randomize(&output[output.size() - iv_size], iv_size);
-         }
-      
-      output.insert(output.end(), msg.get_data(), msg.get_data() + msg.get_size());
-      
-      if(block_size)
-         {
-         const size_t pad_val =
-            enc_size - (iv_size + msg.get_size() + 1);
-
-         for(size_t i = 0; i != pad_val + 1; ++i)
-            output.push_back(pad_val);
-         }
-
-      if(BlockCipher* bc = cs->block_cipher())
-         {
-         secure_vector<byte>& cbc_state = cs->cbc_state();
-
-         BOTAN_ASSERT( enc_size % block_size == 0,
-                   "Buffer is an even multiple of block size");
-
-         byte* buf = &output[header_size];
-         
-         const size_t blocks = enc_size / block_size;
-
-         xor_buf(buf, cbc_state.data(), block_size);
-         bc->encrypt(buf);
-         
-         for(size_t i = 1; i < blocks; ++i)
-            {
-            xor_buf(&buf[block_size*i], &buf[block_size*(i-1)], block_size);
-            bc->encrypt(&buf[block_size*i]);
-            }
-
-         cbc_state.assign(&buf[block_size*(blocks-1)],
-                       &buf[block_size*blocks]);
-         
-         cs->mac()->update(cs->format_ad(seq, msg.get_type(), version, enc_size));
-         cs->mac()->update(buf, enc_size);
-         
-         output.resize(output.size() + mac_size);
-         cs->mac()->final(&output[output.size() - mac_size]);
-
-         BOTAN_ASSERT_EQUAL(buf_size + header_size, output.size(),
-                      "Output buffer is sized properly");
-         }
-      else
-         {
-         throw Internal_Error("NULL cipher not supported");
-         }
+      output.resize(output.size() + iv_size);
+      rng.randomize(&output[output.size() - iv_size], iv_size);
       }
+
+   output.insert(output.end(), msg.get_data(), msg.get_data() + msg.get_size());
+
+   // EtM also uses ciphertext size instead of plaintext size for AEAD input
+   const byte* mac_input = (cs->uses_encrypt_then_mac() ? &output[header_size] : msg.get_data());
+   const size_t mac_input_len = (cs->uses_encrypt_then_mac() ? enc_size : msg.get_size());
+
+   if(cs->uses_encrypt_then_mac())
+      {
+      for(size_t i = 0; i != pad_val + 1; ++i)
+         output.push_back(static_cast<byte>(pad_val));
+      cbc_encrypt_record(*cs->block_cipher(), cs->cbc_state(), &output[header_size], enc_size);
+      }
+
+   output.resize(output.size() + mac_size);
+   cs->mac()->update(aad);
+   cs->mac()->update(mac_input, mac_input_len);
+   cs->mac()->final(&output[output.size() - mac_size]);
+
+   if(cs->uses_encrypt_then_mac() == false)
+      {
+      for(size_t i = 0; i != pad_val + 1; ++i)
+         output.push_back(static_cast<byte>(pad_val));
+      cbc_encrypt_record(*cs->block_cipher(), cs->cbc_state(), &output[header_size], buf_size);
+      }
+
+   if(buf_size > MAX_CIPHERTEXT_SIZE)
+      throw Internal_Error("Output record is larger than allowed by protocol");
+
+   BOTAN_ASSERT_EQUAL(buf_size + header_size, output.size(),
+                      "Output buffer is sized properly");
    }
 
 namespace {
@@ -497,7 +445,7 @@ void decrypt_record(secure_vector<byte>& output,
          u16bit pad_size = tls_padding_check(record_contents, record_len);
 
          // This mask is zero if there is not enough room in the packet to get
-         // a valid MAC. We have to accept empty packets, since otherwise we 
+         // a valid MAC. We have to accept empty packets, since otherwise we
          // are not compatible with the BEAST countermeasure (thus record_len+1).
          const u16bit size_ok_mask = CT::is_lte<u16bit>(static_cast<u16bit>(mac_size + pad_size + iv_size), static_cast<u16bit>(record_len + 1));
          pad_size &= size_ok_mask;
@@ -542,7 +490,7 @@ void decrypt_record(secure_vector<byte>& output,
          // This early exit does not leak info because all the values are public
          if((record_len < mac_size + iv_size) || ( enc_size % cs.block_size() != 0))
             throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
-         
+
          cs.mac()->update(cs.format_ad(record_sequence, record_type, record_version, enc_size));
          cs.mac()->update(record_contents, enc_size);
 
@@ -550,14 +498,14 @@ void decrypt_record(secure_vector<byte>& output,
          cs.mac()->final(mac_buf.data());
 
          const size_t mac_offset = enc_size;
-   
+
          const bool mac_ok = same_mem(&record_contents[mac_offset], mac_buf.data(), mac_size);
-         
+
          if(!mac_ok)
             {
-            throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure"); 
+            throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
             }
-         
+
          cbc_decrypt_record(record_contents, enc_size, cs, *bc);
 
          // 0 if padding was invalid, otherwise 1 + padding_bytes
@@ -565,7 +513,7 @@ void decrypt_record(secure_vector<byte>& output,
 
          const byte* plaintext_block = &record_contents[iv_size];
          const u16bit plaintext_length = enc_size - iv_size - pad_size;
-         
+
          output.assign(plaintext_block, plaintext_block + plaintext_length);
          }
       }
