@@ -50,7 +50,7 @@ void ChaCha20Poly1305_Mode::update_len(size_t len)
    m_poly1305->update(len8, 8);
    }
 
-secure_vector<byte> ChaCha20Poly1305_Mode::start_raw(const byte nonce[], size_t nonce_len)
+void ChaCha20Poly1305_Mode::start_msg(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -80,19 +80,14 @@ secure_vector<byte> ChaCha20Poly1305_Mode::start_raw(const byte nonce[], size_t 
       {
       update_len(m_ad.size());
       }
-
-   return secure_vector<byte>();
    }
 
-void ChaCha20Poly1305_Encryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t ChaCha20Poly1305_Encryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    m_chacha->cipher1(buf, sz);
    m_poly1305->update(buf, sz); // poly1305 of ciphertext
    m_ctext_len += sz;
+   return sz;
    }
 
 void ChaCha20Poly1305_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
@@ -114,15 +109,12 @@ void ChaCha20Poly1305_Encryption::finish(secure_vector<byte>& buffer, size_t off
    m_ctext_len = 0;
    }
 
-void ChaCha20Poly1305_Decryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t ChaCha20Poly1305_Decryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    m_poly1305->update(buf, sz); // poly1305 of ciphertext
    m_chacha->cipher1(buf, sz);
    m_ctext_len += sz;
+   return sz;
    }
 
 void ChaCha20Poly1305_Decryption::finish(secure_vector<byte>& buffer, size_t offset)

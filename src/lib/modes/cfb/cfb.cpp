@@ -69,7 +69,7 @@ void CFB_Mode::key_schedule(const byte key[], size_t length)
    m_cipher->set_key(key, length);
    }
 
-secure_vector<byte> CFB_Mode::start_raw(const byte nonce[], size_t nonce_len)
+void CFB_Mode::start_msg(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -77,24 +77,19 @@ secure_vector<byte> CFB_Mode::start_raw(const byte nonce[], size_t nonce_len)
    m_shift_register.assign(nonce, nonce + nonce_len);
    m_keystream_buf.resize(m_shift_register.size());
    cipher().encrypt(m_shift_register, m_keystream_buf);
-
-   return secure_vector<byte>();
    }
 
-void CFB_Encryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    const size_t BS = cipher().block_size();
 
    secure_vector<byte>& state = shift_register();
    const size_t shift = feedback();
+   size_t left = sz;
 
-   while(sz)
+   while(left)
       {
-      const size_t took = std::min(shift, sz);
+      const size_t took = std::min(shift, left);
       xor_buf(buf, &keystream_buf()[0], took);
 
       // Assumes feedback-sized block except for last input
@@ -106,8 +101,9 @@ void CFB_Encryption::update(secure_vector<byte>& buffer, size_t offset)
       cipher().encrypt(state, keystream_buf());
 
       buf += took;
-      sz -= took;
+      left -= took;
       }
+   return sz;
    }
 
 void CFB_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
@@ -115,20 +111,17 @@ void CFB_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    update(buffer, offset);
    }
 
-void CFB_Decryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    const size_t BS = cipher().block_size();
 
    secure_vector<byte>& state = shift_register();
    const size_t shift = feedback();
+   size_t left = sz;
 
-   while(sz)
+   while(left)
       {
-      const size_t took = std::min(shift, sz);
+      const size_t took = std::min(shift, left);
 
       // first update shift register with ciphertext
       if (BS - shift > 0)
@@ -144,8 +137,9 @@ void CFB_Decryption::update(secure_vector<byte>& buffer, size_t offset)
       cipher().encrypt(state, keystream_buf());
 
       buf += took;
-      sz -= took;
+      left -= took;
       }
+   return sz;
    }
 
 void CFB_Decryption::finish(secure_vector<byte>& buffer, size_t offset)

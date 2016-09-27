@@ -29,14 +29,20 @@ class BOTAN_DLL Exception : public std::exception
    };
 
 /**
-* An invalid argument which caused
+* An invalid argument
 */
 class BOTAN_DLL Invalid_Argument : public Exception
    {
    public:
       explicit Invalid_Argument(const std::string& msg) :
          Exception("Invalid argument", msg) {}
-   };
+
+      explicit Invalid_Argument(const std::string& msg, const std::string& where) :
+         Exception("Invalid argument", msg + " in " + where) {}
+};
+
+#define BOTAN_ARG_CHECK(expr) \
+   do { if(!(expr)) throw Invalid_Argument(#expr, BOTAN_CURRENT_FUNCTION); } while(0)
 
 /**
 * Unsupported_Argument Exception

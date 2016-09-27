@@ -60,7 +60,7 @@ std::string EAX_Mode::name() const
 
 size_t EAX_Mode::update_granularity() const
    {
-   return 8 * m_cipher->parallel_bytes();
+   return 1;
    }
 
 Key_Length_Specification EAX_Mode::key_spec() const
@@ -91,7 +91,7 @@ void EAX_Mode::set_associated_data(const byte ad[], size_t length)
    m_ad_mac = eax_prf(1, block_size(), *m_cmac, ad, length);
    }
 
-secure_vector<byte> EAX_Mode::start_raw(const byte nonce[], size_t nonce_len)
+void EAX_Mode::start_msg(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -103,18 +103,13 @@ secure_vector<byte> EAX_Mode::start_raw(const byte nonce[], size_t nonce_len)
    for(size_t i = 0; i != block_size() - 1; ++i)
       m_cmac->update(0);
    m_cmac->update(2);
-
-   return secure_vector<byte>();
    }
 
-void EAX_Encryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t EAX_Encryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    m_ctr->cipher(buf, buf, sz);
    m_cmac->update(buf, sz);
+   return sz;
    }
 
 void EAX_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
@@ -128,14 +123,11 @@ void EAX_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    buffer += std::make_pair(data_mac.data(), tag_size());
    }
 
-void EAX_Decryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t EAX_Decryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
    m_cmac->update(buf, sz);
    m_ctr->cipher(buf, buf, sz);
+   return sz;
    }
 
 void EAX_Decryption::finish(secure_vector<byte>& buffer, size_t offset)

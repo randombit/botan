@@ -50,7 +50,7 @@ class BOTAN_DLL ChaCha20Poly1305_Mode : public AEAD_Mode
       bool cfrg_version() const { return m_nonce_len == 12; }
       void update_len(size_t len);
    private:
-      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const byte nonce[], size_t nonce_len) override;
 
       void key_schedule(const byte key[], size_t length) override;
    };
@@ -66,7 +66,7 @@ class BOTAN_DLL ChaCha20Poly1305_Encryption final : public ChaCha20Poly1305_Mode
 
       size_t minimum_final_size() const override { return 0; }
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    };
@@ -85,7 +85,7 @@ class BOTAN_DLL ChaCha20Poly1305_Decryption final : public ChaCha20Poly1305_Mode
 
       size_t minimum_final_size() const override { return tag_size(); }
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    };

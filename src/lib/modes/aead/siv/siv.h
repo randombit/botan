@@ -21,7 +21,7 @@ namespace Botan {
 class BOTAN_DLL SIV_Mode : public AEAD_Mode
    {
    public:
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void set_associated_data_n(size_t n, const byte ad[], size_t ad_len);
 
@@ -53,7 +53,7 @@ class BOTAN_DLL SIV_Mode : public AEAD_Mode
 
       secure_vector<byte> S2V(const byte text[], size_t text_len);
    private:
-      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const byte nonce[], size_t nonce_len) override;
 
       void key_schedule(const byte key[], size_t length) override;
 

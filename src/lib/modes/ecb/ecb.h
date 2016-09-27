@@ -39,7 +39,7 @@ class BOTAN_DLL ECB_Mode : public Cipher_Mode
       const BlockCipherModePaddingMethod& padding() const { return *m_padding; }
 
    private:
-      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const byte nonce[], size_t nonce_len) override;
       void key_schedule(const byte key[], size_t length) override;
 
       std::unique_ptr<BlockCipher> m_cipher;
@@ -55,7 +55,7 @@ class BOTAN_DLL ECB_Encryption final : public ECB_Mode
       ECB_Encryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
          ECB_Mode(cipher, padding) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
@@ -73,7 +73,7 @@ class BOTAN_DLL ECB_Decryption final : public ECB_Mode
       ECB_Decryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
          ECB_Mode(cipher, padding) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
