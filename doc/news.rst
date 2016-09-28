@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 1.11.32, Not Yet Released
+Version 1.11.32, 2016-09-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add support for the NewHope Ring-LWE key encapsulation algorithm. This scheme
@@ -11,43 +11,55 @@ Version 1.11.32, Not Yet Released
   bit-for-bit identical output as the reference implementation by the authors.
 
   Be warned that NewHope is still a very new scheme and may yet fall to analysis.
-  For best assurance, it should be used only in combination with an existing key
-  exchange mechanism such as ECDH.
+  For best assurance, NewHope should be used only in combination with another
+  key exchange mechanism, such as ECDH.
 
-* Add support for TLS Encrypt-then-MAC extension (GH #492 and #578) which fixes
+* New TLS callbacks API. Instead of numerous std::function callbacks, the
+  application passes an object implementing the TLS::Callbacks interface, which
+  has virtual functions matching the previous callbacks (plus some extras).
+  Full source compatability with previous versions is maintained for now, but
+  the old interface is deprecated and will be removed in a future release.  The
+  manual has been updated to reflect the changes. (GH #457 and #567)
+
+* Add support for TLS Encrypt-then-MAC extension (GH #492 and #578), which fixes
   the known issues in the TLS CBC-HMAC construction.
 
-* Add a new TLS Callbacks interface. Compatability with previous versions is
-  maintained. The documentation has been updated accordingly. GH #457 and #567
+* The format of the TLS session struct has changed (to support EtM), so old
+  TLS session caches will be invalidated.
 
 * How the library presents optimized algorithm implementations has changed.  For
   example with the algorithm AES-128, previously there were three BlockCipher
   classes AES_128, AES_128_SSSE3, and AES_128_NI which used (resp) a table-based
   implementation vulnerable to side channels, a constant time version using
   SSSE3 SIMD extensions on modern x86, and x86 AES-NI instructions. Using the
-  correct version at runtime required using `BlockCipher::create`. Now, only the
-  class AES_128 is presented, and the best available version is always used
+  correct version at runtime required using ``BlockCipher::create``. Now, only
+  the class AES_128 is presented, and the best available version is always used
   based on CPUID checks. The tests have been extended to selectively disable
-  CPUID bits to ensure all available versions are tested.
+  CPUID bits to ensure all available versions are tested. (GH #477 #623)
 
   Removes API classes AES_128_NI, AES_192_NI, AES_256_NI, AES_128_SSSE3,
   AES_192_SSSE3 AES_256_SSSE3, IDEA_SSE2, Noekeon_SIMD, Serpent_SIMD,
   Threefish_512_AVX2, SHA_160_SSE2
 
-  GH #477 #623
-
 * The deprecated algorithms Rabin-Williams, Nyberg-Rueppel, MARS, RC2, RC5, RC6,
-  SAFER-SK, TEA, MD2, HAS-160, and RIPEMD-128 have been removed. GH #580
+  SAFER-SK, TEA, MD2, HAS-160, and RIPEMD-128 have been removed. (GH #580)
+
+* A new Cipher_Mode interface ``process`` allows encryption/decryption of
+  buffers without requiring copying into ``secure_vector`` first. (GH #516)
+
+* Fix verification of self-issued certificates (GH #634)
 
 * SSE2 optimizations for ChaCha, 60% faster on both Westmere and Skylake (GH #616)
 
 * The HMAC_RNG constructor added in 1.11.31 that took both an RNG and an
   entropy source list ignored the entropy sources.
 
-* The configure option ``--via-algamation`` was renamed to ``--amalgamation``.
-  The configure option ``--gen-algamation`` was removed. It did generate
+* The configure option ``--via-amalgamation`` was renamed to ``--amalgamation``.
+  The configure option ``--gen-amalgamation`` was removed. It did generate
   amalgamations but build Botan without amalgamation. Users should migrate to
-  ``--amalgamation``. GH #621
+  ``--amalgamation``. (GH #621)
+
+* Add tests for TLS 1.2 PRF (GH #628)
 
 Version 1.11.31, 2016-08-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

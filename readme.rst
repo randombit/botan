@@ -97,12 +97,12 @@ Current Development Work (1.11)
 
 The 1.11 branch is highly recommended, especially for new projects.
 Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and
-later, Clang 3.4 and later, and MSVC 2013 are regularly tested.
+later, Clang 3.4 and later, and MSVC 2013/2015 are regularly tested.
 
 The latest development release is
-`1.11.31 <http://botan.randombit.net/releases/Botan-1.11.31.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.31.tgz.asc>`_
-released on 2016-08-30
+`1.11.32 <http://botan.randombit.net/releases/Botan-1.11.32.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.32.tgz.asc>`_
+released on 2016-09-28
 
 Old Stable Series (1.10)
 ----------------------------------------
@@ -212,7 +212,7 @@ Recommended Algorithms
 
 * For encryption of network traffic use TLS v1.2
 
-* Packet encryption: AES-128/GCM, AES-128/OCB, ChaCha20Poly1305
+* Packet encryption: AES-256/GCM, AES-256/OCB, Serpent/OCB, or ChaCha20Poly1305
 
 * General hash functions: SHA-256 or SHA-384
 
