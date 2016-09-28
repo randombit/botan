@@ -258,6 +258,38 @@ class Supported_Elliptic_Curves final : public Extension
    };
 
 /**
+* Supported Point Formats Extension (RFC 4492)
+*/
+class Supported_Point_Formats final : public Extension
+   {
+   public:
+      enum ECPointFormat : byte {
+         UNCOMPRESSED = 0,
+         ANSIX962_COMPRESSED_PRIME = 1,
+         ANSIX962_COMPRESSED_CHAR2 = 2, // don't support these curves
+      };
+
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_EC_POINT_FORMATS; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<byte> serialize() const override;
+
+      explicit Supported_Point_Formats() : m_prefers_compressed(true) {}
+
+      Supported_Point_Formats(TLS_Data_Reader& reader,
+                              u16bit extension_size);
+
+      bool empty() const override { return false; }
+
+      bool prefers_compressed() { return m_prefers_compressed; }
+
+   private:
+      bool m_prefers_compressed = false;
+   };
+
+/**
 * Signature Algorithms Extension for TLS 1.2 (RFC 5246)
 */
 class Signature_Algorithms final : public Extension

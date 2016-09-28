@@ -104,6 +104,11 @@ bool Policy::allowed_ecc_curve(const std::string& curve) const
    return value_exists(allowed_ecc_curves(), curve);
    }
 
+bool Policy::use_ecc_point_compression() const
+   {
+   return false;
+   }
+
 /*
 * Choose an ECC curve to use
 */

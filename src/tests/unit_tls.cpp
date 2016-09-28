@@ -868,6 +868,18 @@ class TLS_Unit_Tests : public Test
          results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V12, *basic_creds, policy, server_policy));
          results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V12, *basic_creds, policy, server_policy));
          
+         policy.set("use_ecc_point_compression", "true");
+         policy.set("key_exchange_methods", "ECDH");
+         policy.set("ciphers", "AES-128");
+         results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V12, *basic_creds, policy));
+         results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V12, *basic_creds, policy));
+
+         server_policy.set("use_ecc_point_compression", "true");
+         server_policy.set("key_exchange_methods", "ECDH");
+         server_policy.set("ciphers", "AES-128");
+         results.push_back(test_tls_handshake(Botan::TLS::Protocol_Version::TLS_V12, *basic_creds, policy, server_policy));
+         results.push_back(test_dtls_handshake(Botan::TLS::Protocol_Version::DTLS_V12, *basic_creds, policy, server_policy));
+
          return results;
          }
 

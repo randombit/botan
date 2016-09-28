@@ -35,11 +35,17 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    if(client_hello.supports_extended_master_secret())
       m_extensions.add(new Extended_Master_Secret);
 
+   Ciphersuite c = Ciphersuite::by_id(m_ciphersuite);
+
    if(client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac())
       {
-      Ciphersuite c = Ciphersuite::by_id(m_ciphersuite);
       if(c.cbc_ciphersuite())
          m_extensions.add(new Encrypt_then_MAC);
+      }
+
+   if(c.ecc_ciphersuite() && policy.use_ecc_point_compression())
+      {
+      m_extensions.add(new Supported_Point_Formats());
       }
       
    if(client_hello.secure_renegotiation())

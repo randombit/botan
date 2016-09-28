@@ -121,6 +121,15 @@ class BOTAN_DLL Client_Hello final : public Handshake_Message
          return std::vector<std::string>();
          }
 
+      bool prefers_compressed_ec_points() const
+         {
+         if(Supported_Point_Formats* ecc_formats = m_extensions.get<Supported_Point_Formats>())
+            {
+            return ecc_formats->prefers_compressed();
+            }
+         return false;
+         }
+
       std::string sni_hostname() const
          {
          if(Server_Name_Indicator* sni = m_extensions.get<Server_Name_Indicator>())
@@ -327,6 +336,15 @@ class BOTAN_DLL Server_Hello final : public Handshake_Message
 
       std::set<Handshake_Extension_Type> extension_types() const
          { return m_extensions.extension_types(); }
+
+      bool prefers_compressed_ec_points() const
+         {
+         if(auto ecc_formats = m_extensions.get<Supported_Point_Formats>())
+            {
+            return ecc_formats->prefers_compressed();
+            }
+         return false;
+         }
 
       Server_Hello(Handshake_IO& io,
                    Handshake_Hash& hash,

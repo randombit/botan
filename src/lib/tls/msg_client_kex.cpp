@@ -172,7 +172,15 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             append_tls_length_value(m_pre_master, psk.bits_of(), 2);
             }
 
-         append_tls_length_value(m_key_material, priv_key.public_value(), 1);
+         // follow server's preference for point compression
+         if(state.server_hello()->prefers_compressed_ec_points())
+            {
+            append_tls_length_value(m_key_material, priv_key.public_value(PointGFp::COMPRESSED), 1);
+            }
+         else
+            {
+            append_tls_length_value(m_key_material, priv_key.public_value(PointGFp::UNCOMPRESSED), 1);
+            }
          }
 #if defined(BOTAN_HAS_SRP6)
       else if(kex_algo == "SRP_SHA")

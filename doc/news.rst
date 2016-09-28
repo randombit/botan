@@ -4,6 +4,8 @@ Release Notes
 Version 1.11.33, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add support for the TLS Supported Point Formats Extension (RFC 4492).
+
 Version 1.11.32, 2016-09-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

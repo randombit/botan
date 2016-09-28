@@ -98,8 +98,12 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    if(reneg_info.empty() && !next_protocols.empty())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
 
+   if(m_version.supports_negotiable_signature_algorithms())
+      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
+                                                policy.allowed_signature_methods()));
+
    if(m_version.is_datagram_protocol())
-     m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
+      m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
 
 #if defined(BOTAN_HAS_SRP6)
    m_extensions.add(new SRP_Identifier(client_settings.srp_identifier()));
@@ -111,6 +115,11 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 #endif
 
    m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
+
+   if(!policy.allowed_ecc_curves().empty() && policy.use_ecc_point_compression())
+   {
+      m_extensions.add(new Supported_Point_Formats());
+   }
 
    if(m_version.supports_negotiable_signature_algorithms())
       m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
@@ -155,6 +164,11 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(new Server_Name_Indicator(session.server_info().hostname()));
    m_extensions.add(new Session_Ticket(session.session_ticket()));
    m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
+
+   if(!policy.allowed_ecc_curves().empty() && policy.use_ecc_point_compression())
+   {
+      m_extensions.add(new Supported_Point_Formats());
+   }
 
    if(m_version.supports_negotiable_signature_algorithms())
       m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
