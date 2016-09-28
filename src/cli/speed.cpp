@@ -515,8 +515,6 @@ class Speed final : public Command
          const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
          ks_timer.run([&] { cipher.set_key(key); });
 
-         std::chrono::milliseconds half = runtime / 2;
-
          encrypt_timer.run_until_elapsed(runtime, [&] { cipher.encrypt(buffer); });
          output() << Timer::result_string_bps(encrypt_timer);
 
