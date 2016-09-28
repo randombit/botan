@@ -10,7 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/pem.h>
 #include <botan/alg_id.h>
-#include <botan/internal/pk_algs.h>
+#include <botan/pk_algs.h>
 
 namespace Botan {
 
@@ -70,7 +70,7 @@ Public_Key* load_key(DataSource& source)
       if(key_bits.empty())
          throw Decoding_Error("X.509 public key decoding failed");
 
-      return make_public_key(alg_id, key_bits);
+      return load_public_key(alg_id, key_bits).release();
       }
    catch(Decoding_Error& e)
       {

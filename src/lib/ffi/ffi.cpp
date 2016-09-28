@@ -21,6 +21,7 @@
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/x509_key.h>
+#include <botan/pk_algs.h>
 #include <cstring>
 #include <memory>
 
@@ -725,6 +726,36 @@ int botan_bcrypt_is_valid(const char* pass, const char* hash)
    catch(...)
       {
       log_exception(BOTAN_CURRENT_FUNCTION, "unknown");
+      }
+
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
+   }
+
+int botan_privkey_create(botan_privkey_t* key_obj,
+                         const char* algo_name,
+                         const char* algo_params,
+                         botan_rng_t rng_obj)
+   {
+   try
+      {
+      if(key_obj == nullptr || rng_obj == nullptr)
+         return -1;
+      if(algo_name == nullptr)
+         algo_name = "RSA";
+      if(algo_params == nullptr)
+         algo_name = "";
+
+      *key_obj = nullptr;
+
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+      std::unique_ptr<Botan::Private_Key> key(
+         Botan::create_private_key(algo_name, rng, algo_params));
+      *key_obj = new botan_privkey_struct(key.release());
+      return 0;
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
       }
 
    return BOTAN_FFI_ERROR_EXCEPTION_THROWN;

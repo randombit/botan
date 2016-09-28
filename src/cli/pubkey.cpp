@@ -12,31 +12,12 @@
 #include <botan/base64.h>
 
 #include <botan/pk_keys.h>
+#include <botan/pk_algs.h>
 #include <botan/pkcs8.h>
 #include <botan/pubkey.h>
 
 #if defined(BOTAN_HAS_DL_GROUP)
   #include <botan/dl_group.h>
-#endif
-
-#if defined(BOTAN_HAS_RSA)
-  #include <botan/rsa.h>
-#endif
-
-#if defined(BOTAN_HAS_DSA)
-  #include <botan/dsa.h>
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ecdsa.h>
-#endif
-
-#if defined(BOTAN_HAS_CURVE_25519)
-  #include <botan/curve25519.h>
-#endif
-
-#if defined(BOTAN_HAS_MCELIECE)
-  #include <botan/mceliece.h>
 #endif
 
 namespace Botan_CLI {
@@ -46,74 +27,18 @@ class PK_Keygen final : public Command
    public:
       PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --der-out") {}
 
-      static std::unique_ptr<Botan::Private_Key> do_keygen(const std::string& algo,
-                                                           const std::string& params,
-                                                           Botan::RandomNumberGenerator& rng)
+      void go() override
          {
-         typedef std::function<std::unique_ptr<Botan::Private_Key> (std::string)> gen_fn;
-         std::map<std::string, gen_fn> generators;
+         const std::string algo = get_arg("algo");
+         const std::string params = get_arg("params");
 
-#if defined(BOTAN_HAS_RSA)
-         generators["RSA"] = [&rng](std::string param) -> std::unique_ptr<Botan::Private_Key> {
-            if(param.empty())
-               param = "2048";
-            return std::unique_ptr<Botan::Private_Key>(
-               new Botan::RSA_PrivateKey(rng, Botan::to_u32bit(param)));
-         };
-#endif
+         std::unique_ptr<Botan::Private_Key>
+            key(Botan::create_private_key(algo, rng(), params));
 
-#if defined(BOTAN_HAS_DSA)
-         generators["DSA"] = [&rng](std::string param) -> std::unique_ptr<Botan::Private_Key> {
-            if(param.empty())
-               param = "dsa/botan/2048";
-            return std::unique_ptr<Botan::Private_Key>(
-               new Botan::DSA_PrivateKey(rng, Botan::DL_Group(param)));
-         };
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-         generators["ECDSA"] = [&rng](std::string param) {
-            if(param.empty())
-               param = "secp256r1";
-            Botan::EC_Group grp(param);
-            return std::unique_ptr<Botan::Private_Key>(
-               new Botan::ECDSA_PrivateKey(rng, grp));
-         };
-#endif
-
-#if defined(BOTAN_HAS_CURVE_25519)
-         generators["Curve25519"] = [&rng](std::string /*ignored*/) {
-            return std::unique_ptr<Botan::Private_Key>(
-               new Botan::Curve25519_PrivateKey(rng));
-         };
-#endif
-
-#if defined(BOTAN_HAS_MCELIECE)
-         generators["McEliece"] = [&rng](std::string param) {
-            if(param.empty())
-               param = "2280,45";
-            std::vector<std::string> param_parts = Botan::split_on(param, ',');
-            if(param_parts.size() != 2)
-               throw CLI_Usage_Error("Bad McEliece parameters " + param);
-            return std::unique_ptr<Botan::Private_Key>(
-               new Botan::McEliece_PrivateKey(rng,
-                                              Botan::to_u32bit(param_parts[0]),
-                                              Botan::to_u32bit(param_parts[1])));
-         };
-#endif
-
-         auto gen = generators.find(algo);
-         if(gen == generators.end())
+         if(!key)
             {
             throw CLI_Error_Unsupported("keygen", algo);
             }
-
-         return gen->second(params);
-         }
-
-      void go() override
-         {
-         std::unique_ptr<Botan::Private_Key> key(do_keygen(get_arg("algo"), get_arg("params"), rng()));
 
          const std::string pass = get_arg("passphrase");
          const bool der_out = flag_set("der-out");

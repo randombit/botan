@@ -13,7 +13,7 @@
 #include <botan/pem.h>
 #include <botan/pbes2.h>
 #include <botan/scan_name.h>
-#include <botan/internal/pk_algs.h>
+#include <botan/pk_algs.h>
 
 namespace Botan {
 
@@ -227,7 +227,7 @@ Private_Key* load_key(DataSource& source,
       throw PKCS8_Exception("Unknown algorithm OID: " +
                             alg_id.oid.as_string());
 
-   return make_private_key(alg_id, pkcs8_key, rng);
+   return load_private_key(alg_id, pkcs8_key, rng).release();
    }
 
 }

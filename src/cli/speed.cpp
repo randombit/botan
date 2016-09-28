@@ -596,16 +596,18 @@ class Speed final : public Command
          ks_timer.run([&] { enc.set_key(key); });
          ks_timer.run([&] { dec.set_key(key); });
 
+         Botan::secure_vector<uint8_t> iv = rng().random_vec(enc.default_nonce_length());
+
          while(encrypt_timer.under(runtime) && decrypt_timer.under(runtime))
             {
-            const Botan::secure_vector<uint8_t> iv = rng().random_vec(enc.default_nonce_length());
-
             // Must run in this order, or AEADs will reject the ciphertext
             iv_timer.run([&] { enc.start(iv); });
             encrypt_timer.run([&] { enc.finish(buffer); });
 
             iv_timer.run([&] { dec.start(iv); });
             decrypt_timer.run([&] { dec.finish(buffer); });
+
+            iv[0] += 1;
             }
 
          output() << Timer::result_string_ops(ks_timer);

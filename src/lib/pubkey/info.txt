@@ -13,6 +13,7 @@ x509_key.cpp
 
 <header:public>
 blinding.h
+pk_algs.h
 pk_keys.h
 pk_ops_fwd.h
 pkcs8.h
@@ -22,7 +23,6 @@ x509_key.h
 </header:public>
 
 <header:internal>
-pk_algs.h
 pk_ops.h
 pk_ops_impl.h
 </header:internal>
