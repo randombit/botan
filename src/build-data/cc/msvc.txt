@@ -10,6 +10,8 @@ add_lib_option ""
 
 compile_flags "/nologo /c"
 
+static_analysis_flags "/analyze"
+
 optimization_flags "/O2"
 
 # for debug info in the object file:

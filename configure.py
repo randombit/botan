@@ -145,8 +145,25 @@ class BuildConfigurationInformation(object):
                     if filename.endswith('.cpp') and not filename.startswith('.'):
                         yield os.path.join(dirpath, filename)
 
+        def find_headers_in(basedir, srcdir):
+            for (dirpath, dirnames, filenames) in os.walk(os.path.join(basedir, srcdir)):
+                for filename in filenames:
+                    if filename.endswith('.h') and not filename.startswith('.'):
+                        yield os.path.join(dirpath, filename)
+
         self.cli_sources = list(find_sources_in(self.src_dir, 'cli'))
+        self.cli_headers = list(find_headers_in(self.src_dir, 'cli'))
         self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
+
+        if options.with_bakefile:
+            gen_bakefile( self.sources, self.cli_sources, self.cli_headers, self.test_sources, options )
+
+        if options.write_sources_to_file:
+            all_sources = self.sources + self.cli_sources + self.test_sources
+            f = open('sources-list.txt','w')
+            for src in all_sources:
+                f.write('%s\n' % src)
+            f.close()
 
         self.python_dir = os.path.join(options.src_dir, 'python')
 
@@ -270,6 +287,9 @@ def process_command_line(args):
     build_group.add_option('--with-sanitizers', action='store_true', default=False, dest='with_sanitizers',
                            help='enable runtime checks')
 
+    build_group.add_option('--with-static-analysis', action='store_true', default=False, 
+                           help='enable static analysis checks')
+
     build_group.add_option('--with-coverage', action='store_true', default=False, dest='with_coverage',
                            help='enable coverage checking')
 
@@ -360,6 +380,12 @@ def process_command_line(args):
 
     build_group.add_option('--with-valgrind', help='use valgrind API',
                            dest='with_valgrind', action='store_true', default=False)
+
+    build_group.add_option('--with-bakefile', action='store_true',
+                           default=False, help='Generate bakefile which can be used to create Visual Studio or Xcode project files')
+
+    build_group.add_option('--write-sources-to-file', action='store_true',
+                           default=False, help='Generate a file which includes all sources that will be compiled. Useful for cppcheck checking.')
 
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
@@ -842,6 +868,7 @@ class CompilerInfo(object):
                         'optimization_flags': '',
                         'coverage_flags': '',
                         'sanitizer_flags': '',
+                        'static_analysis_flags': '',
                         'shared_flags': '',
                         'lang_flags': '',
                         'warning_flags': '',
@@ -951,6 +978,11 @@ class CompilerInfo(object):
 
             if not options.no_optimizations:
                 yield self.optimization_flags
+
+            if options.with_static_analysis:
+                if self.static_analysis_flags == '':
+                    raise Exception('No static analysis handling for %s' % (self.basename))
+                yield self.static_analysis_flags
 
             def submodel_fixup(flags, tup):
                 return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))
@@ -1130,6 +1162,79 @@ def process_template(template_file, variables):
 def makefile_list(items):
     items = list(items) # force evaluation so we can slice it
     return (' '*16).join([item + ' \\\n' for item in items[:-1]] + [items[-1]])
+
+def gen_bakefile(lib_sources, cli_sources, cli_headers, test_sources, options):
+    def bakefile_sources(file, sources):
+        for src in sources:
+                (dir,filename) = os.path.split(os.path.normpath(src))
+                dir = dir.replace('\\','/')
+                try:
+                    param, dir = dir.split('/src/',1)
+                    file.write('\tsources { src/%s/%s } \n' % ( dir, filename))
+                except ValueError:
+                    pass
+                    file.write('\tsources { %s/%s } \n' % ( dir, filename))
+            
+    def bakefile_cli_headers(file, headers):
+        for header in headers:
+                (dir,filename) = os.path.split(os.path.normpath(header))
+                dir = dir.replace('\\','/')
+                try:
+                    param, dir = dir.split('/src/',1)
+                    file.write('\theaders { src/%s/%s } \n' % ( dir, filename))
+                except ValueError:
+                    pass
+                    file.write('\theaders { %s/%s } \n' % ( dir, filename))
+
+    def bakefile_test_sources(file, sources):
+        for src in sources:
+                (dir,filename) = os.path.split(os.path.normpath(src))
+                file.write('\tsources { src/tests/%s } \n' %filename)
+
+    f = open('botan.bkl','w')
+    f.write('toolsets = vs2013;\n')
+
+    # shared library project
+    f.write('shared-library botan {\n')
+    f.write('\tdefines = "BOTAN_DLL=__declspec(dllexport)";\n')
+    bakefile_sources( f, lib_sources )
+    f.write('}\n')
+
+    # cli project
+    f.write('program cli {\n')
+    f.write('\tdeps = botan;\n')
+    bakefile_sources( f, cli_sources )
+    bakefile_cli_headers( f, cli_headers )
+    f.write('}\n')
+
+    # tests project
+    f.write('program tests {\n')
+    f.write('\tdeps = botan;\n')
+    bakefile_test_sources( f, test_sources )
+    f.write('}\n')
+
+    # global options
+    f.write('includedirs += build/include/;\n')    
+
+    if options.with_external_includedir:
+        external_inc_dir = options.with_external_includedir.replace('\\','/')
+        f.write('includedirs += "%s";\n' %external_inc_dir )
+
+    if options.cpu in "x86_64":
+        f.write('archs = x86_64;\n')
+    else:
+        f.write('archs = x86;\n')
+
+    # vs2013 options
+    f.write('vs2013.option.ClCompile.DisableSpecificWarnings = "4250;4251;4275";\n')
+    f.write('vs2013.option.ClCompile.WarningLevel = Level4;\n')
+    f.write('vs2013.option.ClCompile.ExceptionHandling = SyncCThrow;\n')
+    f.write('vs2013.option.ClCompile.RuntimeTypeInfo = true;\n')
+    f.write('if ( $(config) == Release ) {\n')
+    f.write('vs2013.option.Configuration.WholeProgramOptimization = true;\n')
+    f.write('}\n')
+
+    f.close()
 
 def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     def get_isa_specific_flags(cc, isas):

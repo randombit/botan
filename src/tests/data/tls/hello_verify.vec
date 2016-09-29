@@ -1,0 +1,26 @@
+# Tests generated partially with openssl 1.0.2g
+# HelloVerify message contains the following fields:
+# - Protocol version (2 bytes)
+# - Cookie length (1 byte)
+# - Cookie
+
+[hello_verify]
+Buffer = feff14925523e7539a13d9782af6d771b97d0032c61800
+Exception = 
+
+# HelloVerify request has to contain at least 3 bytes
+Buffer = 0101
+Exception = Invalid argument Decoding error: Hello verify request too small
+
+# HelloVerify has to contain valid protocol version
+Buffer = 010100
+Exception = Invalid argument Decoding error: Unknown version from server in hello verify request
+
+# HelloVerify has to contain valid number of bytes 
+Buffer = FEFD0000
+Exception = Invalid argument Decoding error: Bad length in hello verify request
+
+# HelloVerify has to contain valid number of bytes 
+Buffer = FEFD0500
+Exception = Invalid argument Decoding error: Bad length in hello verify request
+
