@@ -24,7 +24,7 @@
   #include <botan/ofb.h>
 #endif
 
-#if defined(BOTAN_HAS_RC4)
+#if defined(BOTAN_HAS_RC4) && !defined(OPENSSL_NO_RC4)
   #include <botan/rc4.h>
 #endif
 
@@ -60,7 +60,7 @@ BOTAN_REGISTER_NAMED_T(StreamCipher, "CTR-BE", CTR_BE, CTR_BE::make);
 BOTAN_REGISTER_NAMED_T(StreamCipher, "OFB", OFB, OFB::make);
 #endif
 
-#if defined(BOTAN_HAS_RC4)
+#if defined(BOTAN_HAS_RC4) && !defined(OPENSSL_NO_RC4)
 BOTAN_REGISTER_NAMED_T(StreamCipher, "RC4", RC4, RC4::make);
 #endif
 
