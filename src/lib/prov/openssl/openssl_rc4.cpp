@@ -9,7 +9,7 @@
 
 #if defined(BOTAN_HAS_OPENSSL)
 #include <openssl/opensslconf.h>
-#ifndef OPENSSL_NO_RC4
+#if !defined(OPENSSL_NO_RC4)
 
 #include <botan/internal/algo_registry.h>
 #include <botan/internal/openssl.h>
