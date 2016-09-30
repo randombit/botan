@@ -221,9 +221,6 @@ std::vector<byte> Client_Hello::serialize() const
 */
 Client_Hello::Client_Hello(const std::vector<byte>& buf)
    {
-   if(buf.size() == 0)
-      throw Decoding_Error("Client_Hello: Packet corrupted");
-
    if(buf.size() < 41)
       throw Decoding_Error("Client_Hello: Packet corrupted");
 
