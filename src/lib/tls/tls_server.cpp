@@ -247,7 +247,7 @@ std::map<std::string, std::vector<X509_Certificate> >
 get_server_certs(const std::string& hostname,
                  Credentials_Manager& creds)
    {
-   const char* cert_types[] = { "RSA", "DSA", "ECDSA", nullptr };
+   const char* cert_types[] = { "RSA", "ECDSA", nullptr };
 
    std::map<std::string, std::vector<X509_Certificate> > cert_chains;
 

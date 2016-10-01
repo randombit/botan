@@ -139,13 +139,7 @@ bool Ciphersuite::is_usable() const
 #endif
       }
 
-   if(sig_algo() == "DSA")
-      {
-#if !defined(BOTAN_HAS_DSA)
-      return false;
-#endif
-      }
-   else if(sig_algo() == "ECDSA")
+   if(sig_algo() == "ECDSA")
       {
 #if !defined(BOTAN_HAS_ECDSA)
       return false;
