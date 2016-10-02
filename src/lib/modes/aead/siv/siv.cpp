@@ -18,6 +18,8 @@ SIV_Mode::SIV_Mode(BlockCipher* cipher) :
    m_ctr(new CTR_BE(cipher->clone())),
    m_cmac(new CMAC(cipher))
    {
+   if(cipher->block_size() != 16)
+      throw Invalid_Argument("SIV requires a 128 bit block cipher");
    }
 
 void SIV_Mode::clear()
