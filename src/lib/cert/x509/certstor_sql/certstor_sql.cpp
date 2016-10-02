@@ -22,21 +22,22 @@ Certificate_Store_In_SQL::Certificate_Store_In_SQL(std::shared_ptr<SQL_Database>
                                                    const std::string& table_prefix)
 : m_database(db), m_prefix(table_prefix), m_password(passwd)
    {
-   m_database->create_table("CREATE TABLE IF NOT EXISTS certificates ( \
+   m_database->create_table("CREATE TABLE IF NOT EXISTS " +
+                             m_prefix + "certificates (                \
                                  fingerprint       BLOB PRIMARY KEY,   \
                                  subject_dn        BLOB,               \
                                  key_id            BLOB,               \
                                  priv_fingerprint  BLOB,               \
                                  certificate       BLOB UNIQUE NOT NULL\
                              )");
-   m_database->create_table("CREATE TABLE IF NOT EXISTS keys (   \
-                                 fingerprint BLOB PRIMARY KEY,   \
-                                 key         BLOB UNIQUE NOT NULL\
+   m_database->create_table("CREATE TABLE IF NOT EXISTS " + m_prefix + "keys (\
+                                 fingerprint BLOB PRIMARY KEY,                \
+                                 key         BLOB UNIQUE NOT NULL             \
                              )");
-   m_database->create_table("CREATE TABLE IF NOT EXISTS revoked (\
-                                 fingerprint BLOB PRIMARY KEY,   \
-                                 reason      BLOB NOT NULL,      \
-                                 time        BLOB NOT NULL       \
+   m_database->create_table("CREATE TABLE IF NOT EXISTS " + m_prefix + "revoked (\
+                                 fingerprint BLOB PRIMARY KEY,                   \
+                                 reason      BLOB NOT NULL,                      \
+                                 time        BLOB NOT NULL                       \
                             )");
    }
 
@@ -51,12 +52,12 @@ Certificate_Store_In_SQL::find_cert(const X509_DN& subject_dn, const std::vector
 
    if(key_id.empty())
       {
-      stmt = m_database->new_statement("SELECT certificate FROM certificates WHERE subject_dn == ?1");
+      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE subject_dn == ?1");
       stmt->bind(1,enc.get_contents_unlocked());
       }
    else
       {
-      stmt = m_database->new_statement("SELECT certificate FROM certificates WHERE\
+      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE\
                                         subject_dn == ?1 AND (key_id == NULL OR key_id == ?2)");
       stmt->bind(1,enc.get_contents_unlocked());
       stmt->bind(2,key_id);
@@ -91,7 +92,7 @@ Certificate_Store_In_SQL::find_crl_for(const X509_Certificate& subject) const
 std::vector<X509_DN> Certificate_Store_In_SQL::all_subjects() const
    {
    std::vector<X509_DN> ret;
-   auto stmt = m_database->new_statement("SELECT subject_dn FROM certificates");
+   auto stmt = m_database->new_statement("SELECT subject_dn FROM " + m_prefix + "certificates");
 
    while(stmt->step())
       {
@@ -113,12 +114,13 @@ bool Certificate_Store_In_SQL::insert_cert(const X509_Certificate& cert)
       return false;
 
    DER_Encoder enc;
-   auto stmt = m_database->new_statement("INSERT OR REPLACE INTO certificates (\
-                                         fingerprint,                          \
-                                         subject_dn,                           \
-                                         key_id,                               \
-                                         priv_fingerprint,                     \
-                                         certificate                           \
+   auto stmt = m_database->new_statement("INSERT OR REPLACE INTO " +
+                                     m_prefix + "certificates (\
+                                         fingerprint,          \
+                                         subject_dn,           \
+                                         key_id,               \
+                                         priv_fingerprint,     \
+                                         certificate           \
                                      ) VALUES ( ?1, ?2, ?3, ?4, ?5 )");
 
    stmt->bind(1,cert.fingerprint("SHA-256"));
@@ -140,7 +142,7 @@ bool Certificate_Store_In_SQL::remove_cert(const X509_Certificate& cert)
    if(!find_cert(cert.subject_dn(),cert.subject_key_id()))
       return false;
 
-   auto stmt = m_database->new_statement("DELETE FROM certificates WHERE fingerprint == ?1");
+   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "certificates WHERE fingerprint == ?1");
 
    stmt->bind(1,cert.fingerprint("SHA-256"));
    stmt->spin();
@@ -151,7 +153,10 @@ bool Certificate_Store_In_SQL::remove_cert(const X509_Certificate& cert)
 // Private key handling
 std::shared_ptr<const Private_Key> Certificate_Store_In_SQL::find_key(const X509_Certificate& cert) const
    {
-   auto stmt = m_database->new_statement("SELECT key FROM keys JOIN certificates ON keys.fingerprint == certificates.priv_fingerprint WHERE certificates.fingerprint == ?1");
+   auto stmt = m_database->new_statement("SELECT key FROM " + m_prefix + "keys "
+       "JOIN " + m_prefix + "certificates ON " +
+       m_prefix + "keys.fingerprint == " + m_prefix + "certificates.priv_fingerprint "
+       "WHERE " + m_prefix + "certificates.fingerprint == ?1");
    stmt->bind(1,cert.fingerprint("SHA-256"));
 
    std::shared_ptr<const Private_Key> key;
@@ -170,8 +175,8 @@ std::vector<std::shared_ptr<const X509_Certificate>>
 Certificate_Store_In_SQL::find_certs_for_key(const Private_Key& key) const
    {
    AutoSeeded_RNG rng;
-   auto fpr = fingerprint_key(key);
-   auto stmt = m_database->new_statement("SELECT certificate FROM certificates WHERE priv_fingerprint == ?1");
+   auto fpr = key.fingerprint("SHA-256");
+   auto stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE priv_fingerprint == ?1");
 
    stmt->bind(1,fpr);
 
@@ -194,17 +199,17 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
 
    AutoSeeded_RNG rng;
    auto pkcs8 = PKCS8::BER_encode(key,rng,m_password);
-   auto fpr = fingerprint_key(key);
+   auto fpr = key.fingerprint("SHA-256");
 
    auto stmt1 = m_database->new_statement(
-         "INSERT OR REPLACE INTO keys ( fingerprint, key ) VALUES ( ?1, ?2 )");
+         "INSERT OR REPLACE INTO " + m_prefix + "keys ( fingerprint, key ) VALUES ( ?1, ?2 )");
 
    stmt1->bind(1,fpr);
    stmt1->bind(2,pkcs8.data(),pkcs8.size());
    stmt1->spin();
 
    auto stmt2 = m_database->new_statement(
-         "UPDATE certificates SET priv_fingerprint = ?1 WHERE fingerprint == ?2");
+         "UPDATE " + m_prefix + "certificates SET priv_fingerprint = ?1 WHERE fingerprint == ?2");
 
    stmt2->bind(1,fpr);
    stmt2->bind(2,cert.fingerprint("SHA-256"));
@@ -213,32 +218,11 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
    return true;
    }
 
-std::string Certificate_Store_In_SQL::fingerprint_key(const Botan::Private_Key& key) const
-   {
-   secure_vector<byte> buf = key.pkcs8_private_key();
-   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-256"));
-   hash->update(buf);
-   const auto hex_print = hex_encode(hash->final());
-
-   std::string formatted_print;
-
-   for(size_t i = 0; i != hex_print.size(); i += 2)
-      {
-      formatted_print.push_back(hex_print[i]);
-      formatted_print.push_back(hex_print[i+1]);
-
-      if(i != hex_print.size() - 2)
-         formatted_print.push_back(':');
-      }
-
-   return formatted_print;
-   }
-
 void Certificate_Store_In_SQL::remove_key(const Private_Key& key)
    {
    AutoSeeded_RNG rng;
-   auto fpr = fingerprint_key(key);
-   auto stmt = m_database->new_statement("DELETE FROM keys WHERE fingerprint == ?1");
+   auto fpr = key.fingerprint("SHA-256");
+   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "keys WHERE fingerprint == ?1");
 
    stmt->bind(1,fpr);
    stmt->spin();
@@ -250,7 +234,7 @@ void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Cod
    insert_cert(cert);
 
    auto stmt1 = m_database->new_statement(
-         "INSERT OR REPLACE INTO revoked ( fingerprint, reason, time ) VALUES ( ?1, ?2, ?3 )");
+         "INSERT OR REPLACE INTO " + m_prefix + "revoked ( fingerprint, reason, time ) VALUES ( ?1, ?2, ?3 )");
 
    stmt1->bind(1,cert.fingerprint("SHA-256"));
    stmt1->bind(2,code);
@@ -271,7 +255,7 @@ void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Cod
 
 void Certificate_Store_In_SQL::affirm_cert(const X509_Certificate& cert)
    {
-   auto stmt = m_database->new_statement("DELETE FROM revoked WHERE fingerprint == ?1");
+   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "revoked WHERE fingerprint == ?1");
 
    stmt->bind(1,cert.fingerprint("SHA-256"));
    stmt->spin();
@@ -280,7 +264,9 @@ void Certificate_Store_In_SQL::affirm_cert(const X509_Certificate& cert)
 std::vector<X509_CRL> Certificate_Store_In_SQL::generate_crls() const
    {
    auto stmt = m_database->new_statement(
-         "SELECT certificate,reason,time FROM revoked JOIN certificates ON certificates.fingerprint == revoked.fingerprint");
+         "SELECT certificate,reason,time FROM " + m_prefix + "revoked "
+         "JOIN " + m_prefix + "certificates ON " +
+         m_prefix + "certificates.fingerprint == " + m_prefix + "revoked.fingerprint");
 
    std::map<X509_DN,std::vector<CRL_Entry>> crls;
    while(stmt->step())

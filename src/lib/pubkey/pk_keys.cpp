@@ -8,6 +8,8 @@
 #include <botan/pk_keys.h>
 #include <botan/der_enc.h>
 #include <botan/oids.h>
+#include <botan/hash.h>
+#include <botan/hex.h>
 
 namespace Botan {
 
@@ -50,6 +52,30 @@ void Private_Key::gen_check(RandomNumberGenerator& rng) const
    {
    if(!check_key(rng, BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_GENERATE))
       throw Self_Test_Failure("Private key generation failed");
+   }
+
+/*
+* Hash of the PKCS #8 encoding for this key object
+*/
+std::string Private_Key::fingerprint(const std::string& alg) const
+   {
+   secure_vector<byte> buf = pkcs8_private_key();
+   std::unique_ptr<HashFunction> hash(HashFunction::create(alg));
+   hash->update(buf);
+   const auto hex_print = hex_encode(hash->final());
+
+   std::string formatted_print;
+
+   for(size_t i = 0; i != hex_print.size(); i += 2)
+      {
+      formatted_print.push_back(hex_print[i]);
+      formatted_print.push_back(hex_print[i+1]);
+
+      if(i != hex_print.size() - 2)
+         formatted_print.push_back(':');
+      }
+
+   return formatted_print;
    }
 
 }

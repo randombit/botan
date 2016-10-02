@@ -37,4 +37,6 @@ pem
 pk_pad
 numbertheory
 rng
+hash
+hex
 </requires>

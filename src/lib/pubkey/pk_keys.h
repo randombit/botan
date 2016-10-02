@@ -109,6 +109,10 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       virtual AlgorithmIdentifier pkcs8_algorithm_identifier() const
          { return algorithm_identifier(); }
 
+      /**
+       * @return Hash of the PKCS #8 encoding for this key object
+       */
+      std::string fingerprint(const std::string& alg = "SHA") const;
    protected:
       /**
       * Self-test after loading a key
