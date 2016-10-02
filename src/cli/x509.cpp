@@ -71,12 +71,34 @@ BOTAN_REGISTER_COMMAND("sign_cert", Sign_Cert);
 class Cert_Info final : public Command
    {
    public:
-      Cert_Info() : Command("cert_info file") {}
+      Cert_Info() : Command("cert_info --ber file") {}
 
       void go() override
          {
-         Botan::X509_Certificate cert(get_arg("file"));
-         output() << cert.to_string() << "\n";
+         Botan::DataSource_Stream in(get_arg("file"), flag_set("ber"));
+
+         while(!in.end_of_data())
+            {
+            try
+               {
+               Botan::X509_Certificate cert(in);
+
+               try
+                  {
+                  output() << cert.to_string() << std::endl;
+                  }
+               catch(Botan::Exception& e)
+                  {
+                  // to_string failed - report the exception and continue
+                  output() << "X509_Certificate::to_string failed: " << e.what() << "\n";
+                  }
+               }
+            catch(Botan::Exception& e)
+               {
+               if(!in.end_of_data())
+                  output() << "X509_Certificate parsing failed " << e.what() << "\n";
+               }
+            }
          }
    };
 
