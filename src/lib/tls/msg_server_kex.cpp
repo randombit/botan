@@ -86,14 +86,9 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       m_params.push_back(get_byte(1, named_curve_id));
 
       // follow client's preference for point compression
-      if(state.client_hello()->prefers_compressed_ec_points())
-         {
-         append_tls_length_value(m_params, ecdh->public_value(PointGFp::COMPRESSED), 1);
-         }
-      else
-         {
-         append_tls_length_value(m_params, ecdh->public_value(PointGFp::UNCOMPRESSED), 1);
-         }
+      append_tls_length_value(m_params,
+            ecdh->public_value(state.client_hello()->prefers_compressed_ec_points() ?
+            PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED), 1);
 
       m_kex_key.reset(ecdh.release());
       }
