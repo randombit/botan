@@ -4,6 +4,10 @@ platform:
   - x86
   - x86_amd64
 
+configuration:
+  - Release
+  - Debug
+
 environment:
   matrix:
     - COMPILER: msvc-12.0
@@ -32,7 +36,12 @@ install:
   - 7z e jom.zip
 
 build_script:
-  - python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11
+  - if %configuration% == Release (
+       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11
+    )
+  - if %configuration% == Debug (
+       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11 --debug-mode
+    )
   - jom -j2
   - botan-test
   - nmake install
