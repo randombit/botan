@@ -594,6 +594,19 @@ policy settings from a file.
 
      No other values are currently defined.
 
+ .. cpp:function:: bool use_ecc_point_compression() const
+
+     Prefer ECC point compression.
+
+     Signals that we prefer ECC points to be compressed when transmitted to us.
+     The other party may not support ECC point compression and therefore may still
+     send points uncompressed.
+    
+     Note that the certificate used during authentication must also follow the other
+     party's preference.
+
+     Default: false
+
  .. cpp:function:: std::vector<byte> compression() const
 
      Return the list of compression methods we are willing to use, in order of
