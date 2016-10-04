@@ -7,7 +7,7 @@
 
 #include <botan/stream_cipher.h>
 
-#if defined(BOTAN_HAS_OPENSSL)
+#if defined(BOTAN_HAS_OPENSSL) && defined(BOTAN_HAS_RC4)
 
 #include <botan/internal/algo_registry.h>
 #include <botan/internal/openssl.h>
