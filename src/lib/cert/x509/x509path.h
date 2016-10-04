@@ -92,7 +92,7 @@ class BOTAN_DLL Path_Validation_Result
       /**
       * @return the full path from subject to trust root
       */
-      const std::vector<X509_Certificate>& cert_path() const { return m_cert_path; }
+      const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path() const { return m_cert_path; }
 
       /**
       * @return true iff the validation was successful
@@ -118,7 +118,7 @@ class BOTAN_DLL Path_Validation_Result
       static const char* status_string(Certificate_Status_Code code);
 
       Path_Validation_Result(std::vector<std::set<Certificate_Status_Code>> status,
-                             std::vector<X509_Certificate>&& cert_chain);
+                             std::vector<std::shared_ptr<const X509_Certificate>>&& cert_chain);
 
       explicit Path_Validation_Result(Certificate_Status_Code status) : m_overall(status) {}
 
@@ -130,7 +130,7 @@ class BOTAN_DLL Path_Validation_Result
 
       Certificate_Status_Code m_overall;
       std::vector<std::set<Certificate_Status_Code>> m_all_status;
-      std::vector<X509_Certificate> m_cert_path;
+      std::vector<std::shared_ptr<const X509_Certificate>> m_cert_path;
    };
 
 

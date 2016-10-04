@@ -39,6 +39,15 @@ X509_CRL::X509_CRL(const std::vector<byte>& in, bool touc) :
    do_decode();
    }
 
+X509_CRL::X509_CRL(const X509_DN& issuer, const X509_Time& thisUpdate,
+                   const X509_Time& nextUpdate, const std::vector<CRL_Entry>& revoked) :
+   X509_Object(), m_throw_on_unknown_critical(false), m_revoked(revoked)
+   {
+   m_info.add(issuer.contents());
+   m_info.add("X509.CRL.start", thisUpdate.to_string());
+   m_info.add("X509.CRL.end", nextUpdate.to_string());
+   }
+
 /**
 * Check if this particular certificate is listed in the CRL
 */
