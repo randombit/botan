@@ -4,6 +4,10 @@ Release Notes
 Version 1.11.33, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix entropy source selection bug on Windows, which caused the
+  CryptoAPI entropy source to be not available under its normal name
+  "win32_cryptoapi" but instead "dev_random". GH #644
+
 Version 1.11.32, 2016-09-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
