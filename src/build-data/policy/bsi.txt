@@ -78,6 +78,7 @@ blowfish
 camellia
 cascade
 cast
+des
 gost_28147
 idea
 idea_sse2
@@ -110,6 +111,7 @@ rc4
 salsa20
 
 # kdf
+hkdf
 kdf1
 kdf2
 prf_x942
@@ -149,6 +151,7 @@ siphash
 x919_mac
 
 # rng
+hmac_rng
 x931_rng
 
 # entropy sources
