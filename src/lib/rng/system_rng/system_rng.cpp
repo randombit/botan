@@ -75,6 +75,12 @@ System_RNG_Impl::System_RNG_Impl()
 #endif
 
    m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDWR | O_NOCTTY);
+   
+   // Cannot open in read-write mode. Fall back to read-only
+   // Calls to add_entropy will fail, but randomize will work
+   if(m_fd < 0)
+      m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDONLY | O_NOCTTY);
+
    if(m_fd < 0)
       throw Exception("System_RNG failed to open RNG device");
 #endif
