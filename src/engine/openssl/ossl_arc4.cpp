@@ -7,10 +7,14 @@
 
 #include <botan/internal/openssl_engine.h>
 #include <botan/parsing.h>
+#include <openssl/opensslconf.h>
+#if !defined(OPENSSL_NO_RC4)
 #include <openssl/rc4.h>
+#endif
 
 namespace Botan {
 
+#if !defined(OPENSSL_NO_RC4)
 namespace {
 
 /**
@@ -69,6 +73,7 @@ void ARC4_OpenSSL::cipher(const byte in[], byte out[], size_t length)
    }
 
 }
+#endif
 
 /**
 * Look for an OpenSSL-supported stream cipher (ARC4)
@@ -77,10 +82,12 @@ StreamCipher*
 OpenSSL_Engine::find_stream_cipher(const SCAN_Name& request,
                                    Algorithm_Factory&) const
    {
+#if !defined(OPENSSL_NO_RC4)
    if(request.algo_name() == "ARC4")
       return new ARC4_OpenSSL(request.arg_as_integer(0, 0));
    if(request.algo_name() == "RC4_drop")
       return new ARC4_OpenSSL(768);
+#endif
 
    return 0;
    }
