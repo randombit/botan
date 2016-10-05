@@ -53,18 +53,19 @@ struct Response
       std::map<std::string, std::string> m_headers;
    };
 
+/**
+* HTTP_Error Exception
+*/
+struct BOTAN_DLL HTTP_Error : public Exception
+   {
+   explicit HTTP_Error(const std::string& msg) :
+      Exception("HTTP error " + msg)
+      {}
+   };
+
 BOTAN_DLL std::ostream& operator<<(std::ostream& o, const Response& resp);
 
 typedef std::function<std::string (const std::string&, const std::string&)> http_exch_fn;
-
-#if defined(BOTAN_HAS_BOOST_ASIO)
-std::string BOTAN_DLL http_transact_asio(const std::string& hostname,
-                                         const std::string& message);
-#endif
-
-std::string BOTAN_DLL http_transact_fail(const std::string& hostname,
-                                         const std::string& message);
-
 
 BOTAN_DLL Response http_sync(http_exch_fn fn,
                              const std::string& verb,
