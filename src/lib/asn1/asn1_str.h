@@ -9,6 +9,8 @@
 #define BOTAN_ASN1_STRING_H__
 
 #include <botan/asn1_obj.h>
+#include <botan/build.h>
+#include <string>
 
 namespace Botan {
 

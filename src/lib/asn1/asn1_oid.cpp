@@ -10,6 +10,9 @@
 #include <botan/ber_dec.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/parsing.h>
+#include <botan/asn1_obj.h>
+#include <botan/exceptn.h>
+#include <cstddef>
 
 namespace Botan {
 

@@ -12,8 +12,12 @@
 #include <botan/exceptn.h>
 #include <botan/parsing.h>
 #include <botan/calendar.h>
+#include <botan/asn1_obj.h>
+#include <botan/assert.h>
 #include <sstream>
 #include <iomanip>
+#include <cstdint>
+#include <vector>
 
 namespace Botan {
 

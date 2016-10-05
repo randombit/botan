@@ -8,10 +8,17 @@
 #ifndef BOTAN_BER_DECODER_H__
 #define BOTAN_BER_DECODER_H__
 
-#include <botan/asn1_oid.h>
-#include <botan/data_src.h>
+#include <botan/asn1_obj.h>
+#include <botan/build.h>
+#include <botan/exceptn.h>
+#include <botan/types.h>
+#include <cstddef>
+#include <string>
+#include <vector>
 
 namespace Botan {
+
+class DataSource;
 
 /**
 * BER Decoding Object

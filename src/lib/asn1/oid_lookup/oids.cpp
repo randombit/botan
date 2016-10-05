@@ -7,8 +7,12 @@
 
 #include <botan/oids.h>
 #include <botan/parsing.h>
+#include <botan/exceptn.h>
 #include <mutex>
 #include <sstream>
+#include <map>
+#include <utility>
+#include <cstddef>
 
 namespace Botan {
 

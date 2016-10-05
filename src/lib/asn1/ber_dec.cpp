@@ -9,6 +9,10 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/loadstor.h>
+#include <botan/data_src.h>
+#include <botan/mem_ops.h>
+#include <botan/secmem.h>
+#include <utility>
 
 namespace Botan {
 

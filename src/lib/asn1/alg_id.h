@@ -10,7 +10,10 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/asn1_oid.h>
+#include <botan/build.h>
+#include <botan/types.h>
 #include <string>
+#include <vector>
 
 namespace Botan {
 

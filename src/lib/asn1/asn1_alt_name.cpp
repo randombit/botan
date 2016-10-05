@@ -14,6 +14,11 @@
 #include <botan/charset.h>
 #include <botan/parsing.h>
 #include <botan/loadstor.h>
+#include <botan/asn1_str.h>
+#include <botan/exceptn.h>
+#include <botan/types.h>
+#include <utility>
+#include <vector>
 
 namespace Botan {
 

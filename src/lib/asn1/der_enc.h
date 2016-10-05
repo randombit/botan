@@ -8,8 +8,13 @@
 #ifndef BOTAN_DER_ENCODER_H__
 #define BOTAN_DER_ENCODER_H__
 
+#include <botan/build.h>
+#include <botan/secmem.h>
+#include <botan/types.h>
 #include <botan/asn1_obj.h>
 #include <vector>
+#include <cstddef>
+#include <string>
 
 namespace Botan {
 
