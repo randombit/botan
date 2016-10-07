@@ -101,7 +101,7 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    if(name == "win32_cryptoapi")
       {
 #if defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
-      return std::unique_ptr<Entropy_Source>(new Win32_CAPI_EntropySource);
+      return std::unique_ptr<Entropy_Source>(new Win32_CAPI_EntropySource("RSA_FULL"));
 #endif
       }
 
