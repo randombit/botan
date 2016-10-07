@@ -61,9 +61,9 @@ if [ "$TRAVIS_OS_NAME" = "osx" ] && [ "${BUILD_MODE:0:5}" != "cross" ]; then
 fi
 
 if [ "${BUILD_MODE:0:6}" = "cross-" ]; then
-    CFG_FLAGS+=(--disable-shared)
 
     if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+        CFG_FLAGS+=(--disable-shared)
         MAKE_PREFIX="xcrun --sdk iphoneos"
         if [ "$BUILD_MODE" = "cross-arm32" ]; then
             CFG_FLAGS+=(--cpu=armv7 --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++")
@@ -71,7 +71,6 @@ if [ "${BUILD_MODE:0:6}" = "cross-" ]; then
             CFG_FLAGS+=(--cpu=armv8-a --cc-abi-flags="-arch arm64 -stdlib=libc++")
         fi
     elif [ "$TRAVIS_OS_NAME" = "linux" ]; then
-        CFG_FLAGS+=(--cc-abi-flags="-static-libstdc++")
 
         if [ "$BUILD_MODE" = "cross-arm32" ]; then
             CC_BIN=arm-linux-gnueabihf-g++-4.8
@@ -90,13 +89,13 @@ if [ "${BUILD_MODE:0:6}" = "cross-" ]; then
             CFG_FLAGS+=(--module-policy=modern --enable-modules=tls)
         elif [ "$BUILD_MODE" = "cross-ppc64" ]; then
             CC_BIN=powerpc64le-linux-gnu-g++-4.8
-            TEST_PREFIX="qemu-ppc64 -L /usr/powerpc64le-linux-gnu/"
-            CFG_FLAGS+=(--cpu=ppc64)
+            TEST_PREFIX="qemu-ppc64le -L /usr/powerpc64le-linux-gnu/"
+            CFG_FLAGS+=(--cpu=ppc64 --with-endian=little)
             CFG_FLAGS+=(--module-policy=modern --enable-modules=tls)
         elif [ "$BUILD_MODE" = "cross-win32" ]; then
             CC_BIN=i686-w64-mingw32-g++
             # No test prefix needed, PE executes as usual with Wine installed
-            CFG_FLAGS+=(--cpu=x86_32 --os=mingw --cc-abi-flags="-static")
+            CFG_FLAGS+=(--cpu=x86_32 --os=mingw --cc-abi-flags="-static" --disable-shared)
             TEST_EXE=./botan-test.exe
         fi
     fi

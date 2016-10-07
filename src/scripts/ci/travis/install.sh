@@ -24,14 +24,6 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
         if [ "$BUILD_MODE" = "valgrind" ]; then
             sudo apt-get install valgrind
-        elif [ "$BUILD_MODE" = "cross-arm32" ]; then
-            sudo apt-get install g++-4.8-arm-linux-gnueabihf libc6-dev-armhf-cross qemu-user
-        elif [ "$BUILD_MODE" = "cross-arm64" ]; then
-            sudo apt-get install g++-4.8-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user
-        elif [ "$BUILD_MODE" = "cross-ppc32" ]; then
-            sudo apt-get install g++-4.8-powerpc-linux-gnu libc6-dev-powerpc-cross qemu-user
-        elif [ "$BUILD_MODE" = "cross-ppc64" ]; then
-            sudo apt-get install g++-4.8-powerpc64le-linux-gnu libc6-dev-ppc64el-cross qemu-user
         elif [ "$BUILD_MODE" = "cross-win32" ]; then
             sudo apt-get install g++-mingw-w64-i686 mingw-w64-i686-dev
 
@@ -39,6 +31,22 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
             sudo dpkg --add-architecture i386
             sudo apt-get -qq update # have to update again due to adding i386 above
             sudo apt-get install wine
+        else
+
+            # Need updated qemu
+            sudo add-apt-repository -y ppa:ubuntu-cloud-archive/kilo-staging
+            sudo apt-get -qq update
+            sudo apt-get install qemu
+
+            if [ "$BUILD_MODE" = "cross-arm32" ]; then
+                sudo apt-get install g++-4.8-arm-linux-gnueabihf libc6-dev-armhf-cross
+            elif [ "$BUILD_MODE" = "cross-arm64" ]; then
+                sudo apt-get install g++-4.8-aarch64-linux-gnu libc6-dev-arm64-cross
+            elif [ "$BUILD_MODE" = "cross-ppc32" ]; then
+                sudo apt-get install g++-4.8-powerpc-linux-gnu libc6-dev-powerpc-cross
+            elif [ "$BUILD_MODE" = "cross-ppc64" ]; then
+                sudo apt-get install g++-4.8-powerpc64le-linux-gnu libc6-dev-ppc64el-cross
+            fi
         fi
     fi
 fi
