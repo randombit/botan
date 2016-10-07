@@ -22,6 +22,7 @@ tls_version.h
 </header:public>
 
 <header:internal>
+tls_cbc.h
 tls_extensions.h
 tls_handshake_hash.h
 tls_handshake_io.h
