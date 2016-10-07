@@ -24,17 +24,21 @@ class BOTAN_DLL SCAN_Name
    {
    public:
       /**
+      * Create a SCAN_Name
       * @param algo_spec A SCAN-format name
       */
       explicit SCAN_Name(const char* algo_spec);
 
       /**
+      * Create a SCAN_Name
       * @param algo_spec A SCAN-format name
       */
       explicit SCAN_Name(std::string algo_spec);
 
       /**
+      * Create a SCAN_Name
       * @param algo_spec A SCAN-format name
+      * @param extra An extra string appended to the algorithm name
       */
       SCAN_Name(std::string algo_spec, const std::string& extra);
 
@@ -103,8 +107,14 @@ class BOTAN_DLL SCAN_Name
       std::string cipher_mode_pad() const
          { return (m_mode_info.size() >= 2) ? m_mode_info[1] : ""; }
 
+      /*
+      * FIXME add doc
+      */
       static void add_alias(const std::string& alias, const std::string& basename);
 
+      /*
+      * FIXME add doc
+      */
       static std::string deref_alias(const std::string& alias);
    private:
       static std::mutex g_alias_map_mutex;

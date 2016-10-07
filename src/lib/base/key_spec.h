@@ -79,6 +79,11 @@ class BOTAN_DLL Key_Length_Specification
          return m_keylen_mod;
          }
 
+      /*
+      * Multiplies all length requirements with the given factor
+      * @param n the multiplication factor
+      * @return a key length specification multiplied by the factor
+      */
       Key_Length_Specification multiple(size_t n) const
          {
          return Key_Length_Specification(n * m_min_keylen,
