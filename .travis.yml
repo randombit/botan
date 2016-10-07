@@ -43,8 +43,6 @@ matrix:
     - os: linux
       env: BUILD_MODE="cross-ppc32"
     - os: linux
-      env: BUILD_MODE="cross-ppc64"
-    - os: linux
       env: BUILD_MODE="cross-win32"
 
   exclude:
