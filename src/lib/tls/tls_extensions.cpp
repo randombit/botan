@@ -33,6 +33,9 @@ Extension* make_extension(TLS_Data_Reader& reader,
       case TLSEXT_USABLE_ELLIPTIC_CURVES:
          return new Supported_Elliptic_Curves(reader, size);
 
+      case TLSEXT_EC_POINT_FORMATS:
+         return new Supported_Point_Formats(reader, size);
+
       case TLSEXT_SAFE_RENEGOTIATION:
          return new Renegotiation_Extension(reader, size);
 
@@ -350,6 +353,43 @@ Supported_Elliptic_Curves::Supported_Elliptic_Curves(TLS_Data_Reader& reader,
 
       if(!name.empty())
          m_curves.push_back(name);
+      }
+   }
+
+std::vector<byte> Supported_Point_Formats::serialize() const
+   {
+   // if we send this extension, we prefer compressed points,
+   // otherwise we don't send it (which is equal to supporting only uncompressed)
+   // if this extension is sent, it MUST include uncompressed (RFC 4492, section 5.1)
+   return std::vector<byte>{2, ANSIX962_COMPRESSED_PRIME, UNCOMPRESSED};
+   }
+
+Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader,
+                                                 u16bit extension_size)
+   {
+   byte len = reader.get_byte();
+
+   if(len + 1 != extension_size)
+      throw Decoding_Error("Inconsistent length field in supported point formats list");
+
+   for(size_t i = 0; i != len; ++i)
+      {
+      byte format = reader.get_byte();
+
+      if(format == UNCOMPRESSED)
+         {
+         m_prefers_compressed = false;
+         reader.discard_next(len-i-1);
+         return;
+         }
+      else if(format == ANSIX962_COMPRESSED_PRIME)
+         {
+         m_prefers_compressed = true;
+         reader.discard_next(len-i-1);
+         return;
+         }
+
+      // ignore ANSIX962_COMPRESSED_CHAR2, we don't support these curves
       }
    }
 

@@ -4,6 +4,8 @@ Release Notes
 Version 1.11.33, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add support for the TLS Supported Point Formats Extension (RFC 4492).
+
 * Fix entropy source selection bug on Windows, which caused the
   CryptoAPI entropy source to be not available under its normal name
   "win32_cryptoapi" but instead "dev_random". GH #644

@@ -67,6 +67,11 @@ class BOTAN_DLL Policy
       bool allowed_ecc_curve(const std::string& curve) const;
 
       /**
+      * Request that ECC curve points are sent compressed
+      */
+      virtual bool use_ecc_point_compression() const;
+
+      /**
       * Returns a list of compression algorithms we are willing to use,
       * in order of preference. Allowed values any value of
       * Compression_Method.
@@ -348,6 +353,9 @@ class BOTAN_DLL Text_Policy : public Policy
       std::vector<std::string> allowed_ecc_curves() const override
          { return get_list("ecc_curves", Policy::allowed_ecc_curves()); }
       
+      bool use_ecc_point_compression() const override
+         { return get_bool("use_ecc_point_compression", Policy::use_ecc_point_compression()); }
+
       bool allow_tls10() const override
          { return get_bool("allow_tls10", Policy::allow_tls10()); }
       
