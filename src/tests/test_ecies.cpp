@@ -54,9 +54,9 @@ void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& p
                            const Botan::InitializationVector& iv, const std::string& label,
                            const std::vector<byte>& plaintext, const std::vector<byte>& ciphertext)
    {
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params);
+   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
    ecies_enc.set_other_key(other_private_key.public_point());
-   Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params);
+   Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, Test::rng());
    if(!iv.bits_of().empty())
       {
       ecies_enc.set_initialization_vector(iv);
@@ -150,7 +150,7 @@ class ECIES_ISO_Tests : public Text_Based_Test
          // test secret derivation: ISO 18033 test vectors use KDF1 from ISO 18033
          // no cofactor-/oldcofactor-/singlehash-/check-mode and 128 byte secret length
          Botan::ECIES_KA_Params ka_params(eph_private_key.domain(), "KDF1-18033(SHA-1)", 128, compression_type, Flags::NONE);
-         const Botan::ECIES_KA_Operation ka(eph_private_key, ka_params, true);
+         const Botan::ECIES_KA_Operation ka(eph_private_key, ka_params, true, Test::rng());
          const Botan::SymmetricKey secret_key = ka.derive_secret(eph_public_key_bin, other_public_key_point);
          result.test_eq("derived secret key", secret_key.bits_of(), k);
 
@@ -266,7 +266,7 @@ Test::Result test_other_key_not_set()
          "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
          flags);
 
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params);
+   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
 
    result.test_throws("encrypt not possible without setting other public key", [ &ecies_enc ]()
       {
@@ -291,7 +291,7 @@ Test::Result test_kdf_not_found()
          "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
          flags);
 
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params);
+   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
 
    result.test_throws("kdf not found", [ &ecies_enc ]()
       {
@@ -316,7 +316,7 @@ Test::Result test_mac_not_found()
          "XYZMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
          flags);
 
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params);
+   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
 
    result.test_throws("mac not found", [ &ecies_enc ]()
       {
@@ -341,7 +341,7 @@ Test::Result test_cipher_not_found()
          "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
          flags);
 
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params);
+   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
 
    result.test_throws("cipher not found", [ &ecies_enc ]()
       {
@@ -409,7 +409,7 @@ Test::Result test_ciphertext_too_short()
    const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
          "HMAC(SHA-512)", 16);
 
-   Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params);
+   Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, Test::rng());
 
    result.test_throws("ciphertext too short", [ &ecies_dec ]()
       {

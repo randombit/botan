@@ -7,7 +7,7 @@
 #ifndef BOTAN_PK_OPERATION_IMPL_H__
 #define BOTAN_PK_OPERATION_IMPL_H__
 
-#include <botan/pk_ops.h>
+#include <botan/internal/pk_ops.h>
 
 namespace Botan {
 

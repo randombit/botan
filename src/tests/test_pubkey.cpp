@@ -102,7 +102,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
 
       try
          {
-         signer.reset(new Botan::PK_Signer(*privkey, padding, Botan::IEEE_1363, sign_provider));
+         signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::IEEE_1363, sign_provider));
          }
       catch(Botan::Lookup_Error&)
          {

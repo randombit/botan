@@ -8,7 +8,7 @@
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
-#include <botan/pk_ops.h>
+#include <botan/internal/pk_ops.h>
 #include <botan/internal/ct_utils.h>
 
 namespace Botan {
@@ -92,6 +92,8 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
    BOTAN_ASSERT_NONNULL(m_op);
    }
 
+PK_Encryptor_EME::~PK_Encryptor_EME() { /* for unique_ptr */ }
+
 std::vector<byte>
 PK_Encryptor_EME::enc(const byte in[], size_t length, RandomNumberGenerator& rng) const
    {
@@ -112,6 +114,8 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
    BOTAN_ASSERT_NONNULL(m_op);
    }
 
+PK_Decryptor_EME::~PK_Decryptor_EME() { /* for unique_ptr */ }
+
 secure_vector<byte> PK_Decryptor_EME::do_decrypt(byte& valid_mask,
                                                  const byte in[], size_t in_len) const
    {
@@ -126,6 +130,8 @@ PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
    m_op = key.create_kem_encryption_op(rng, param, provider);
    BOTAN_ASSERT_NONNULL(m_op);
    }
+
+PK_KEM_Encryptor::~PK_KEM_Encryptor() { /* for unique_ptr */ }
 
 void PK_KEM_Encryptor::encrypt(secure_vector<byte>& out_encapsulated_key,
                                secure_vector<byte>& out_shared_key,
@@ -151,6 +157,8 @@ PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
    BOTAN_ASSERT_NONNULL(m_op);
    }
 
+PK_KEM_Decryptor::~PK_KEM_Decryptor() { /* for unique_ptr */ }
+
 secure_vector<byte> PK_KEM_Decryptor::decrypt(const byte encap_key[],
                                               size_t encap_key_len,
                                               size_t desired_shared_key_len,
@@ -170,6 +178,21 @@ PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
    m_op = key.create_key_agreement_op(rng, kdf, provider);
    BOTAN_ASSERT_NONNULL(m_op);
    }
+
+PK_Key_Agreement::~PK_Key_Agreement() { /* for unique_ptr */ }
+
+PK_Key_Agreement& PK_Key_Agreement::operator=(PK_Key_Agreement&& other)
+   {
+   if(this != &other)
+      {
+      m_op = std::move(other.m_op);
+      }
+   return (*this);
+   }
+
+PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&& other) :
+   m_op(std::move(other.m_op))
+   {}
 
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
                                           const byte in[], size_t in_len,
@@ -232,6 +255,8 @@ PK_Signer::PK_Signer(const Private_Key& key,
    m_sig_format = format;
    }
 
+PK_Signer::~PK_Signer() { /* for unique_ptr */ }
+
 void PK_Signer::update(const byte in[], size_t length)
    {
    m_op->update(in, length);
@@ -260,6 +285,8 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
    BOTAN_ASSERT_NONNULL(m_op);
    m_sig_format = format;
    }
+
+PK_Verifier::~PK_Verifier() { /* for unique_ptr */ }
 
 void PK_Verifier::set_input_format(Signature_Format format)
    {

@@ -96,8 +96,10 @@ ECIES_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
 * @param for_encryption disable cofactor mode if the secret will be used for encryption
 * (according to ISO 18033 cofactor mode is only used during decryption)
 */
-PK_Key_Agreement create_key_agreement(const PK_Key_Agreement_Key& private_key, const ECIES_KA_Params& ecies_params,
-                                      bool for_encryption)
+PK_Key_Agreement create_key_agreement(const PK_Key_Agreement_Key& private_key,
+                                      const ECIES_KA_Params& ecies_params,
+                                      bool for_encryption,
+                                      RandomNumberGenerator& rng)
    {
    const ECDH_PrivateKey* ecdh_key = dynamic_cast<const ECDH_PrivateKey*>(&private_key);
 
@@ -114,16 +116,18 @@ PK_Key_Agreement create_key_agreement(const PK_Key_Agreement_Key& private_key, c
    if(ecdh_key && (for_encryption || !ecies_params.cofactor_mode()))
       {
       // ECDH_KA_Operation uses cofactor mode: use own key agreement method if cofactor should not be used.
-      return PK_Key_Agreement(ECIES_PrivateKey(*ecdh_key), "Raw");
+      return PK_Key_Agreement(ECIES_PrivateKey(*ecdh_key), rng, "Raw");
       }
 
-   return PK_Key_Agreement(private_key, "Raw");		// use default implementation
+   return PK_Key_Agreement(private_key, rng, "Raw");		// use default implementation
    }
 }
 
-ECIES_KA_Operation::ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key, const ECIES_KA_Params& ecies_params,
-                                       bool for_encryption) :
-   m_ka(create_key_agreement(private_key, ecies_params, for_encryption)),
+ECIES_KA_Operation::ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key,
+                                       const ECIES_KA_Params& ecies_params,
+                                       bool for_encryption,
+                                       RandomNumberGenerator& rng) :
+   m_ka(create_key_agreement(private_key, ecies_params, for_encryption, rng)),
    m_params(ecies_params)
    {
    }
@@ -240,8 +244,10 @@ std::unique_ptr<Cipher_Mode> ECIES_System_Params::create_cipher(Botan::Cipher_Di
 /*
 * ECIES_Encryptor Constructor
 */
-ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key, const ECIES_System_Params& ecies_params) :
-   m_ka(private_key, ecies_params, true),
+ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
+                                 const ECIES_System_Params& ecies_params,
+                                 RandomNumberGenerator& rng) :
+   m_ka(private_key, ecies_params, true, rng),
    m_params(ecies_params),
    m_eph_public_key_bin(private_key.public_value()),	// returns the uncompressed public key, see conversion below
    m_iv(),
@@ -261,7 +267,7 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key, const 
 * ECIES_Encryptor Constructor
 */
 ECIES_Encryptor::ECIES_Encryptor(RandomNumberGenerator& rng, const ECIES_System_Params& ecies_params) :
-   ECIES_Encryptor(ECDH_PrivateKey(rng, ecies_params.domain()), ecies_params)
+   ECIES_Encryptor(ECDH_PrivateKey(rng, ecies_params.domain()), ecies_params, rng)
    {
    }
 
@@ -311,8 +317,10 @@ std::vector<byte> ECIES_Encryptor::enc(const byte data[], size_t length, RandomN
    }
 
 
-ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key, const ECIES_System_Params& ecies_params) :
-   m_ka(key, ecies_params, false),
+ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
+                                 const ECIES_System_Params& ecies_params,
+                                 RandomNumberGenerator& rng) :
+   m_ka(key, ecies_params, false, rng),
    m_params(ecies_params),
    m_iv(),
    m_label()

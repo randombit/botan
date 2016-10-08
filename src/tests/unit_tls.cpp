@@ -326,7 +326,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                if(client->is_active() && client_sent.empty())
                   {
                   // Choose random application data to send
-                  const size_t c_len = 1 + (static_cast<size_t>(rng.next_byte()) << 4) ^ rng.next_byte();
+                  const size_t c_len = 1 + ((static_cast<size_t>(rng.next_byte()) << 4) ^ rng.next_byte());
                   client_sent = unlock(rng.random_vec(c_len));
 
                   size_t sent_so_far = 0;
@@ -345,7 +345,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                   {
                   result.test_eq("server->protocol", server->next_protocol(), "test/3");
 
-                  const size_t s_len = 1 + (static_cast<size_t>(rng.next_byte()) << 4) ^ rng.next_byte();
+                  const size_t s_len = 1 + ((static_cast<size_t>(rng.next_byte()) << 4) ^ rng.next_byte());
                   server_sent = unlock(rng.random_vec(s_len));
 
                   size_t sent_so_far = 0;
