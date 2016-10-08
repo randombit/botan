@@ -11,7 +11,7 @@
   #include <botan/der_enc.h>
   #include <botan/pkcs8.h>
   #include <botan/oids.h>
-  #include <botan/internal/pk_utils.h>
+  #include <botan/internal/pk_ops_impl.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
@@ -91,20 +91,6 @@ int OpenSSL_EC_nid_for(const OID& oid)
 class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
    {
    public:
-      typedef ECDSA_PublicKey Key_Type;
-
-      static OpenSSL_ECDSA_Verification_Operation* make(const Spec& spec)
-         {
-         if(const ECDSA_PublicKey* ecdsa = dynamic_cast<const ECDSA_PublicKey*>(&spec.key()))
-            {
-            const int nid = OpenSSL_EC_nid_for(ecdsa->domain().get_oid());
-            if(nid > 0)
-               return new OpenSSL_ECDSA_Verification_Operation(*ecdsa, spec.padding(), nid);
-            }
-
-         return nullptr;
-         }
-
       OpenSSL_ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const std::string& emsa, int nid) :
          PK_Ops::Verification_with_EMSA(emsa), m_ossl_ec(::EC_KEY_new(), ::EC_KEY_free)
          {
@@ -158,20 +144,6 @@ class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EM
 class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
    {
    public:
-      typedef ECDSA_PrivateKey Key_Type;
-
-      static OpenSSL_ECDSA_Signing_Operation* make(const Spec& spec)
-         {
-         if(const ECDSA_PrivateKey* ecdsa = dynamic_cast<const ECDSA_PrivateKey*>(&spec.key()))
-            {
-            const int nid = OpenSSL_EC_nid_for(ecdsa->domain().get_oid());
-            if(nid > 0)
-               return new OpenSSL_ECDSA_Signing_Operation(*ecdsa, spec.padding());
-            }
-
-         return nullptr;
-         }
-
       OpenSSL_ECDSA_Signing_Operation(const ECDSA_PrivateKey& ecdsa, const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),
          m_ossl_ec(nullptr, ::EC_KEY_free)
@@ -213,34 +185,38 @@ class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
       size_t m_order_bits = 0;
    };
 
-BOTAN_REGISTER_TYPE(PK_Ops::Verification, OpenSSL_ECDSA_Verification_Operation, "ECDSA",
-                    OpenSSL_ECDSA_Verification_Operation::make,
-                    "openssl", BOTAN_OPENSSL_ECDSA_PRIO);
+}
 
-BOTAN_REGISTER_TYPE(PK_Ops::Signature, OpenSSL_ECDSA_Signing_Operation, "ECDSA",
-                    OpenSSL_ECDSA_Signing_Operation::make,
-                    "openssl", BOTAN_OPENSSL_ECDSA_PRIO);
+std::unique_ptr<PK_Ops::Verification>
+make_openssl_ecdsa_ver_op(const ECDSA_PublicKey& key, const std::string& params)
+   {
+   const int nid = OpenSSL_EC_nid_for(key.domain().get_oid());
+   if(nid > 0)
+      {
+      return std::unique_ptr<PK_Ops::Verification>(new OpenSSL_ECDSA_Verification_Operation(key, params, nid));
+      }
+   return {};
+   }
+
+std::unique_ptr<PK_Ops::Signature>
+make_openssl_ecdsa_sig_op(const ECDSA_PrivateKey& key, const std::string& params)
+   {
+   const int nid = OpenSSL_EC_nid_for(key.domain().get_oid());
+   if(nid > 0)
+      return std::unique_ptr<PK_Ops::Signature>(new OpenSSL_ECDSA_Signing_Operation(key, params));
+   return {};
+   }
 
 #endif
 
 #if defined(BOTAN_HAS_ECDH) && !defined(OPENSSL_NO_ECDH)
 
+namespace {
+
 class OpenSSL_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
       typedef ECDH_PrivateKey Key_Type;
-
-      static OpenSSL_ECDH_KA_Operation* make(const Spec& spec)
-         {
-         if(const ECDH_PrivateKey* ecdh = dynamic_cast<const ECDH_PrivateKey*>(&spec.key()))
-            {
-            const int nid = OpenSSL_EC_nid_for(ecdh->domain().get_oid());
-            if(nid > 0)
-               return new OpenSSL_ECDH_KA_Operation(*ecdh, spec.padding());
-            }
-
-         return nullptr;
-         }
 
       OpenSSL_ECDH_KA_Operation(const ECDH_PrivateKey& ecdh, const std::string& kdf) :
          PK_Ops::Key_Agreement_with_KDF(kdf), m_ossl_ec(::EC_KEY_new(), ::EC_KEY_free)
@@ -291,13 +267,21 @@ class OpenSSL_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
       size_t m_order_bits = 0;
    };
 
-BOTAN_REGISTER_TYPE(PK_Ops::Key_Agreement, OpenSSL_ECDH_KA_Operation, "ECDH",
-                    OpenSSL_ECDH_KA_Operation::make,
-                    "openssl", BOTAN_OPENSSL_ECDH_PRIO);
+}
+
+std::unique_ptr<PK_Ops::Key_Agreement>
+make_openssl_ecdh_ka_op(const ECDH_PrivateKey& key, const std::string& params)
+   {
+   const int nid = OpenSSL_EC_nid_for(key.domain().get_oid());
+   if(nid == 0)
+      {
+      throw Lookup_Error("OpenSSL ECDH does not support this curve");
+      }
+
+   return std::unique_ptr<PK_Ops::Key_Agreement>(new OpenSSL_ECDH_KA_Operation(key, params));
+   }
 
 #endif
-
-}
 
 }
 

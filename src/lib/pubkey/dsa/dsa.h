@@ -32,6 +32,10 @@ class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
          }
 
       DSA_PublicKey(const DL_Group& group, const BigInt& y);
+
+      std::unique_ptr<PK_Ops::Verification>
+         create_verification_op(const std::string& params,
+                                const std::string& provider) const override;
    protected:
       DSA_PublicKey() {}
    };
@@ -52,6 +56,11 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
                      const BigInt& private_key = 0);
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
+
+      std::unique_ptr<PK_Ops::Signature>
+         create_signature_op(RandomNumberGenerator& rng,
+                             const std::string& params,
+                             const std::string& provider) const override;
    };
 
 }

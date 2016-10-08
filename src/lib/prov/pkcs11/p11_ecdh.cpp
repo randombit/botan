@@ -14,7 +14,7 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/internal/algo_registry.h>
-#include <botan/internal/pk_utils.h>
+#include <botan/internal/pk_ops.h>
 #include <botan/rng.h>
 
 namespace Botan {
@@ -43,26 +43,8 @@ namespace {
 class PKCS11_ECDH_KA_Operation : public PK_Ops::Key_Agreement
    {
    public:
-      typedef PKCS11_EC_PrivateKey Key_Type;
-
-      static PKCS11_ECDH_KA_Operation* make_ecdh(const Spec& spec, bool use_cofactor)
-         {
-         try
-            {
-            if(auto* key = dynamic_cast< const PKCS11_EC_PrivateKey* >(&spec.key()))
-               {
-               return new PKCS11_ECDH_KA_Operation(*key, spec.padding(), use_cofactor);
-               }
-            }
-         catch(...)
-            {
-            }
-
-         return nullptr;
-         }
-
-      PKCS11_ECDH_KA_Operation(const PKCS11_EC_PrivateKey& key, const std::string& kdf, bool use_cofactor)
-         : PK_Ops::Key_Agreement(), m_key(key), m_mechanism(MechanismWrapper::create_ecdh_mechanism(kdf, use_cofactor))
+      PKCS11_ECDH_KA_Operation(const PKCS11_EC_PrivateKey& key, const std::string& params)
+         : PK_Ops::Key_Agreement(), m_key(key), m_mechanism(MechanismWrapper::create_ecdh_mechanism(params))
          {}
 
 
@@ -112,13 +94,15 @@ class PKCS11_ECDH_KA_Operation : public PK_Ops::Key_Agreement
       MechanismWrapper m_mechanism;
    };
 
-Algo_Registry<PK_Ops::Key_Agreement>::Add g_PKCS11_ECDH_KA_Operation_reg("ECDH",
-      std::bind(&PKCS11_ECDH_KA_Operation::make_ecdh, std::placeholders::_1, false), "pkcs11", BOTAN_PKCS11_ECDH_PRIO);
-
-Algo_Registry<PK_Ops::Key_Agreement>::Add g_PKCS11_ECDHC_KA_Operation_reg("ECDHC",
-      std::bind(&PKCS11_ECDH_KA_Operation::make_ecdh, std::placeholders::_1, true), "pkcs11", BOTAN_PKCS11_ECDH_PRIO);
-
 }
+
+std::unique_ptr<PK_Ops::Key_Agreement>
+PKCS11_ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator&,
+                                                const std::string& params,
+                                                const std::string& /*provider*/) const
+   {
+   return std::unique_ptr<PK_Ops::Key_Agreement>(new PKCS11_ECDH_KA_Operation(*this, params));
+   }
 
 PKCS11_ECDH_KeyPair generate_ecdh_keypair(Session& session, const EC_PublicKeyGenerationProperties& pub_props,
       const EC_PrivateKeyGenerationProperties& priv_props)

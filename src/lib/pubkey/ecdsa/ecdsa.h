@@ -53,6 +53,9 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
       size_t message_part_size() const override
          { return domain().get_order().bytes(); }
 
+      std::unique_ptr<PK_Ops::Verification>
+         create_verification_op(const std::string& params,
+                                const std::string& provider) const override;
    protected:
       ECDSA_PublicKey() {}
    };
@@ -86,6 +89,11 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
          EC_PrivateKey(rng, domain, x) {}
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
+
+      std::unique_ptr<PK_Ops::Signature>
+         create_signature_op(RandomNumberGenerator& rng,
+                             const std::string& params,
+                             const std::string& provider) const override;
    };
 
 }

@@ -11,7 +11,7 @@
 #include <botan/hash_id.h>
 #include <botan/der_enc.h>
 #include <botan/workfactor.h>
-#include <botan/internal/pk_utils.h>
+#include <botan/internal/pk_ops.h>
 #include <sstream>
 
 #include <tss/platform.h>
@@ -386,18 +386,6 @@ namespace {
 class TPM_Signing_Operation : public PK_Ops::Signature
    {
    public:
-      static TPM_Signing_Operation* make(const Spec& spec)
-         {
-         if(auto* key = dynamic_cast<const TPM_PrivateKey*>(&spec.key()))
-            {
-            const std::string padding = spec.padding();
-            const std::string hash = "SHA-256"; // TODO
-            return new TPM_Signing_Operation(*key, hash);
-            }
-
-         return nullptr;
-         }
-
       TPM_Signing_Operation(const TPM_PrivateKey& key,
                             const std::string& hash_name) :
          m_key(key),
@@ -454,7 +442,12 @@ class TPM_Signing_Operation : public PK_Ops::Signature
 
 }
 
-BOTAN_REGISTER_TYPE(PK_Ops::Signature, TPM_Signing_Operation, "RSA",
-                    TPM_Signing_Operation::make, "tpm", 100);
+std::unique_ptr<PK_Ops::Signature>
+TPM_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                    const std::string& params,
+                                    const std::string& /*provider*/) const
+   {
+   return std::unique_ptr<PK_Ops::Signature>(new TPM_Signing_Operation(*this, params));
+   }
 
 }

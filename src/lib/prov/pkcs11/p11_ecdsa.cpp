@@ -12,7 +12,7 @@
 
 #include <botan/internal/p11_mechanism.h>
 #include <botan/internal/algo_registry.h>
-#include <botan/internal/pk_utils.h>
+#include <botan/internal/pk_ops.h>
 #include <botan/keypair.h>
 #include <botan/rng.h>
 
@@ -198,13 +198,22 @@ class PKCS11_ECDSA_Verification_Operation : public PK_Ops::Verification
       bool m_initialized = false;
    };
 
-BOTAN_REGISTER_TYPE(PK_Ops::Signature, PKCS11_ECDSA_Signature_Operation, "ECDSA",
-                    (make_pk_op<PK_Ops::Signature, PKCS11_ECDSA_Signature_Operation>), "pkcs11", BOTAN_PKCS11_ECDSA_PRIO);
-
-BOTAN_REGISTER_TYPE(PK_Ops::Verification, PKCS11_ECDSA_Verification_Operation, "ECDSA",
-                    (make_pk_op<PK_Ops::Verification, PKCS11_ECDSA_Verification_Operation>), "pkcs11", BOTAN_PKCS11_ECDSA_PRIO);
-
 }
+
+std::unique_ptr<PK_Ops::Verification>
+PKCS11_ECDSA_PublicKey::create_verification_op(const std::string& params,
+                                               const std::string& /*provider*/) const
+   {
+   return std::unique_ptr<PK_Ops::Verification>(new PKCS11_ECDSA_Verification_Operation(*this, params));
+   }
+
+std::unique_ptr<PK_Ops::Signature>
+PKCS11_ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                             const std::string& params,
+                                             const std::string& /*provider*/) const
+   {
+   return std::unique_ptr<PK_Ops::Signature>(new PKCS11_ECDSA_Signature_Operation(*this, params));
+   }
 
 PKCS11_ECDSA_KeyPair generate_ecdsa_keypair(Session& session, const EC_PublicKeyGenerationProperties& pub_props,
       const EC_PrivateKeyGenerationProperties& priv_props)

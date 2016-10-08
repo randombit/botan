@@ -28,7 +28,7 @@ Certificate_Verify::Certificate_Verify(Handshake_IO& io,
    std::pair<std::string, Signature_Format> format =
       state.choose_sig_format(*priv_key, m_hash_algo, m_sig_algo, true, policy);
 
-   PK_Signer signer(*priv_key, format.first, format.second);
+   PK_Signer signer(*priv_key, rng, format.first, format.second);
 
    m_signature = signer.sign_message(state.hash().get_contents(), rng);
 

@@ -867,8 +867,16 @@ std::vector<Test::Result> Text_Based_Test::run()
          }
       }
 
-   std::vector<Test::Result> final_tests = run_final_tests();
-   results.insert(results.end(), final_tests.begin(), final_tests.end());
+   try
+      {
+      std::vector<Test::Result> final_tests = run_final_tests();
+      results.insert(results.end(), final_tests.begin(), final_tests.end());
+      }
+   catch(std::exception& e)
+      {
+      results.push_back(Test::Result::Failure(header_or_name,
+                                              "run_final_tests exception " + std::string(e.what())));
+      }
 
    return results;
    }

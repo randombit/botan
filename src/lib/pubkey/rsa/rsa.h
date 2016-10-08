@@ -52,6 +52,20 @@ class BOTAN_DLL RSA_PublicKey : public virtual Public_Key
 
       size_t estimated_strength() const override;
 
+      std::unique_ptr<PK_Ops::Encryption>
+         create_encryption_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const override;
+
+      std::unique_ptr<PK_Ops::KEM_Encryption>
+         create_kem_encryption_op(RandomNumberGenerator& rng,
+                                  const std::string& params,
+                                  const std::string& provider) const override;
+
+      std::unique_ptr<PK_Ops::Verification>
+         create_verification_op(const std::string& params,
+                                const std::string& provider) const override;
+
    protected:
       RSA_PublicKey() {}
 
@@ -119,6 +133,22 @@ class BOTAN_DLL RSA_PrivateKey : public Private_Key, public RSA_PublicKey
       const BigInt& get_d2() const { return m_d2; }
 
       secure_vector<byte> pkcs8_private_key() const override;
+
+      std::unique_ptr<PK_Ops::Decryption>
+         create_decryption_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const override;
+
+      std::unique_ptr<PK_Ops::KEM_Decryption>
+         create_kem_decryption_op(RandomNumberGenerator& rng,
+                                  const std::string& params,
+                                  const std::string& provider) const override;
+
+      std::unique_ptr<PK_Ops::Signature>
+         create_signature_op(RandomNumberGenerator& rng,
+                             const std::string& params,
+                             const std::string& provider) const override;
+
    private:
       BigInt m_d, m_p, m_q, m_d1, m_d2, m_c;
    };

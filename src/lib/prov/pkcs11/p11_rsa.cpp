@@ -11,9 +11,9 @@
 #if defined(BOTAN_HAS_RSA)
 
 #include <botan/internal/p11_mechanism.h>
-#include <botan/pk_ops.h>
+#include <botan/internal/pk_ops.h>
 #include <botan/internal/algo_registry.h>
-#include <botan/internal/pk_utils.h>
+#include <botan/internal/pk_ops.h>
 #include <botan/rng.h>
 #include <botan/blinding.h>
 
@@ -125,14 +125,18 @@ secure_vector<byte> PKCS11_RSA_PrivateKey::pkcs8_private_key() const
 namespace {
 // note:	multiple-part decryption operations (with C_DecryptUpdate/C_DecryptFinal)
 //			are not supported (PK_Ops::Decryption does not provide an `update` method)
-class PKCS11_RSA_Decryption_Operation : public PK_Ops::Decryption
+class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
    {
    public:
       typedef PKCS11_RSA_PrivateKey Key_Type;
 
-      PKCS11_RSA_Decryption_Operation(const PKCS11_RSA_PrivateKey& key, const std::string& padding)
-         : m_key(key), m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)), 
-           m_powermod(m_key.get_e(), m_key.get_n()), m_blinder(m_key.get_n(),
+      PKCS11_RSA_Decryption_Operation(const PKCS11_RSA_PrivateKey& key,
+                                      const std::string& padding,
+                                      RandomNumberGenerator& rng)
+         : m_key(key),
+           m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)),
+           m_powermod(m_key.get_e(), m_key.get_n()),
+           m_blinder(m_key.get_n(), rng,
                      [ this ](const BigInt& k) { return m_powermod(k); },
                      [ this ](const BigInt& k) { return inverse_mod(k, m_key.get_n()); })
          {
@@ -343,19 +347,38 @@ class PKCS11_RSA_Verification_Operation : public PK_Ops::Verification
       MechanismWrapper m_mechanism;
    };
 
-BOTAN_REGISTER_TYPE(PK_Ops::Decryption, PKCS11_RSA_Decryption_Operation, "RSA",
-                    (make_pk_op<PK_Ops::Decryption, PKCS11_RSA_Decryption_Operation>), "pkcs11", BOTAN_PKCS11_RSA_PRIO);
-
-BOTAN_REGISTER_TYPE(PK_Ops::Encryption, PKCS11_RSA_Encryption_Operation, "RSA",
-                    (make_pk_op<PK_Ops::Encryption, PKCS11_RSA_Encryption_Operation>), "pkcs11", BOTAN_PKCS11_RSA_PRIO);
-
-BOTAN_REGISTER_TYPE(PK_Ops::Signature, PKCS11_RSA_Signature_Operation, "RSA",
-                    (make_pk_op<PK_Ops::Signature, PKCS11_RSA_Signature_Operation>), "pkcs11", BOTAN_PKCS11_RSA_PRIO);
-
-BOTAN_REGISTER_TYPE(PK_Ops::Verification, PKCS11_RSA_Verification_Operation, "RSA",
-                    (make_pk_op<PK_Ops::Verification, PKCS11_RSA_Verification_Operation>), "pkcs11", BOTAN_PKCS11_RSA_PRIO);
-
 }
+
+std::unique_ptr<PK_Ops::Encryption>
+PKCS11_RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
+                                           const std::string& params,
+                                           const std::string& /*provider*/) const
+   {
+   return std::unique_ptr<PK_Ops::Encryption>(new PKCS11_RSA_Encryption_Operation(*this, params));
+   }
+
+std::unique_ptr<PK_Ops::Verification>
+PKCS11_RSA_PublicKey::create_verification_op(const std::string& params,
+                                             const std::string& /*provider*/) const
+   {
+   return std::unique_ptr<PK_Ops::Verification>(new PKCS11_RSA_Verification_Operation(*this, params));
+   }
+
+std::unique_ptr<PK_Ops::Decryption>
+PKCS11_RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
+                                            const std::string& params,
+                                            const std::string& /*provider*/) const
+   {
+   return std::unique_ptr<PK_Ops::Decryption>(new PKCS11_RSA_Decryption_Operation(*this, params, rng));
+   }
+
+std::unique_ptr<PK_Ops::Signature>
+PKCS11_RSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                           const std::string& params,
+                                           const std::string& /*provider*/) const
+   {
+   return std::unique_ptr<PK_Ops::Signature>(new PKCS11_RSA_Signature_Operation(*this, params));
+   }
 
 PKCS11_RSA_KeyPair generate_rsa_keypair(Session& session, const RSA_PublicKeyGenerationProperties& pub_props,
                                         const RSA_PrivateKeyGenerationProperties& priv_props)
@@ -374,4 +397,5 @@ PKCS11_RSA_KeyPair generate_rsa_keypair(Session& session, const RSA_PublicKeyGen
 
 }
 }
+
 #endif

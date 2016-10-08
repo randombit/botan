@@ -312,14 +312,29 @@ int main(int argc, char* argv[])
                                              BOTAN_VERSION_MINOR,
                                              BOTAN_VERSION_PATCH);
 
-   std::unique_ptr<Botan_CLI::Command> cmd(Botan_CLI::Command::get_cmd("test"));
-
-   if(!cmd)
+   try
       {
-      std::cout << "Unable to retrieve testing helper (program bug)\n"; // WTF
-      return 1;
-      }
+      std::unique_ptr<Botan_CLI::Command> cmd(Botan_CLI::Command::get_cmd("test"));
 
-   std::vector<std::string> args(argv + 1, argv + argc);
-   return cmd->run(args);
+      if(!cmd)
+         {
+         std::cout << "Unable to retrieve testing helper (program bug)\n"; // WTF
+         return 1;
+         }
+
+      std::vector<std::string> args(argv + 1, argv + argc);
+      return cmd->run(args);
+      }
+   catch(Botan::Exception& e)
+      {
+      std::cout << "Exiting with library exception " << e.what() << std::endl;
+      }
+   catch(std::exception& e)
+      {
+      std::cout << "Exiting with std exception " << e.what() << std::endl;
+      }
+   catch(...)
+      {
+      std::cout << "Exiting with unknown exception\n";
+      }
    }

@@ -509,7 +509,7 @@ void Server::process_certificate_verify_msg(Server_Handshake_State& pending_stat
         pending_state.client_certs()->cert_chain();
 
     const bool sig_valid =
-        pending_state.client_verify()->verify ( client_certs[0], pending_state, policy() );
+       pending_state.client_verify()->verify ( client_certs[0], pending_state, policy() );
 
     pending_state.hash().update ( pending_state.handshake_io().format ( contents, type ) );
 

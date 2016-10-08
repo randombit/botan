@@ -133,7 +133,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       std::pair<std::string, Signature_Format> format =
          state.choose_sig_format(*signing_key, m_hash_algo, m_sig_algo, false, policy);
 
-      PK_Signer signer(*signing_key, format.first, format.second);
+      PK_Signer signer(*signing_key, rng, format.first, format.second);
 
       signer.update(state.client_hello()->random());
       signer.update(state.server_hello()->random());

@@ -14,6 +14,10 @@
 #include <botan/pkcs10.h>
 #include <botan/pubkey.h>
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#endif
+
 namespace Botan {
 
 /**
@@ -95,7 +99,17 @@ class BOTAN_DLL X509_CA
       */
       X509_CA(const X509_Certificate& ca_certificate,
               const Private_Key& key,
-              const std::string& hash_fn);
+              const std::string& hash_fn,
+              RandomNumberGenerator& rng);
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+      BOTAN_DEPRECATED("Use version taking RNG object")
+      X509_CA(const X509_Certificate& ca_certificate,
+              const Private_Key& key,
+              const std::string& hash_fn) :
+         X509_CA(ca_certificate, key, hash_fn, system_rng())
+         {}
+#endif
 
       X509_CA(const X509_CA&) = delete;
       X509_CA& operator=(const X509_CA&) = delete;
@@ -120,6 +134,7 @@ class BOTAN_DLL X509_CA
 * @return A PK_Signer object for generating signatures
 */
 BOTAN_DLL PK_Signer* choose_sig_format(const Private_Key& key,
+                                       RandomNumberGenerator& rng,
                                        const std::string& hash_fn,
                                        AlgorithmIdentifier& alg_id);
 

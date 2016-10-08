@@ -81,8 +81,8 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
 
          try
             {
-            Botan::PK_KEM_Encryptor kem_enc(mce_priv, "KDF1(SHA-512)");
-            Botan::PK_KEM_Decryptor kem_dec(mce_priv, "KDF1(SHA-512)");
+            Botan::PK_KEM_Encryptor kem_enc(mce_priv, Test::rng(), "KDF1(SHA-512)");
+            Botan::PK_KEM_Decryptor kem_dec(mce_priv, Test::rng(), "KDF1(SHA-512)");
 
             Botan::secure_vector<byte> encap_key, prod_shared_key;
             kem_enc.encrypt(encap_key, prod_shared_key, 64, rng);
@@ -180,8 +180,8 @@ class McEliece_Tests : public Test
          {
          Test::Result result("McEliece KEM");
 
-         Botan::PK_KEM_Encryptor enc_op(pk, "KDF2(SHA-256)");
-         Botan::PK_KEM_Decryptor dec_op(sk, "KDF2(SHA-256)");
+         Botan::PK_KEM_Encryptor enc_op(pk, Test::rng(), "KDF2(SHA-256)");
+         Botan::PK_KEM_Decryptor dec_op(sk, Test::rng(), "KDF2(SHA-256)");
 
          for(size_t i = 0; i <= Test::soak_level(); i++)
             {

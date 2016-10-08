@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/curve25519.h>
+#include <botan/internal/pk_ops_impl.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 
@@ -134,9 +134,16 @@ class Curve25519_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
       const Curve25519_PrivateKey& m_key;
    };
 
-BOTAN_REGISTER_PK_KEY_AGREE_OP("Curve25519", Curve25519_KA_Operation);
-
 }
 
+std::unique_ptr<PK_Ops::Key_Agreement>
+Curve25519_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
+                                               const std::string& params,
+                                               const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Key_Agreement>(new Curve25519_KA_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
 
 }

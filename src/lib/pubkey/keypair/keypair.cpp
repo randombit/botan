@@ -19,8 +19,8 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
                                   const Private_Key& key,
                                   const std::string& padding)
    {
-   PK_Encryptor_EME encryptor(key, padding);
-   PK_Decryptor_EME decryptor(key, padding);
+   PK_Encryptor_EME encryptor(key, rng, padding);
+   PK_Decryptor_EME decryptor(key, rng, padding);
 
    /*
    Weird corner case, if the key is too small to encrypt anything at
@@ -48,7 +48,7 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
                                  const Private_Key& key,
                                  const std::string& padding)
    {
-   PK_Signer signer(key, padding);
+   PK_Signer signer(key, rng, padding);
    PK_Verifier verifier(key, padding);
 
    std::vector<byte> message = unlock(rng.random_vec(16));

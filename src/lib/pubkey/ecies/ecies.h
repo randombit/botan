@@ -184,8 +184,10 @@ class BOTAN_DLL ECIES_KA_Operation
       * @param for_encryption disable cofactor mode if the secret will be used for encryption
       * (according to ISO 18033 cofactor mode is only used during decryption)
       */
-      ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key, const ECIES_KA_Params& ecies_params,
-                         bool for_encryption);
+      ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key,
+                         const ECIES_KA_Params& ecies_params,
+                         bool for_encryption,
+                         RandomNumberGenerator& rng);
 
       /**
       * Performs a key agreement with the provided keys and derives the secret from the result
@@ -211,7 +213,9 @@ class BOTAN_DLL ECIES_Encryptor : public PK_Encryptor
       * @param private_key the (ephemeral) private key which is used for the key agreement
       * @param ecies_params settings for ecies
       */
-      ECIES_Encryptor(const PK_Key_Agreement_Key& private_key, const ECIES_System_Params& ecies_params);
+      ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
+                      const ECIES_System_Params& ecies_params,
+                      RandomNumberGenerator& rng);
 
       /**
       * Creates an ephemeral private key which is used for the key agreement
@@ -265,7 +269,9 @@ class BOTAN_DLL ECIES_Decryptor : public PK_Decryptor
       * @param private_key the private key which is used for the key agreement
       * @param ecies_params settings for ecies
       */
-      ECIES_Decryptor(const PK_Key_Agreement_Key& private_key, const ECIES_System_Params& ecies_params);
+      ECIES_Decryptor(const PK_Key_Agreement_Key& private_key,
+                      const ECIES_System_Params& ecies_params,
+                      RandomNumberGenerator& rng);
 
       /// Set the initialization vector for the data encryption method
       inline void set_initialization_vector(const InitializationVector& iv)

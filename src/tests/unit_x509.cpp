@@ -289,7 +289,7 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
                                    Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn);
+   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
 
    /* Sign the requests to create the certs */
    Botan::X509_Certificate user1_cert =
@@ -408,7 +408,7 @@ Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn 
                                            Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn);
+   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(sig_algo));
 
@@ -496,7 +496,7 @@ Test::Result test_self_issued(const std::string& sig_algo, const std::string& ha
                                            Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn);
+   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 

@@ -58,6 +58,11 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
       bool operator==(const McEliece_PublicKey& other) const;
       bool operator!=(const McEliece_PublicKey& other) const { return !(*this == other); }
 
+      std::unique_ptr<PK_Ops::KEM_Encryption>
+         create_kem_encryption_op(RandomNumberGenerator& rng,
+                                  const std::string& params,
+                                  const std::string& provider) const override;
+
    protected:
       McEliece_PublicKey() : m_t(0), m_code_length(0) {}
 
@@ -115,6 +120,10 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
 
       bool operator!=(const McEliece_PrivateKey& other) const { return !(*this == other); }
 
+      std::unique_ptr<PK_Ops::KEM_Decryption>
+         create_kem_decryption_op(RandomNumberGenerator& rng,
+                                  const std::string& params,
+                                  const std::string& provider) const override;
    private:
       polyn_gf2m m_g;
       std::vector<polyn_gf2m> m_sqrtmod;

@@ -10,7 +10,7 @@
 #if defined(BOTAN_HAS_RSA)
 
 #include <botan/rsa.h>
-#include <botan/internal/pk_utils.h>
+#include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/ct_utils.h>
 
 #include <functional>
@@ -31,7 +31,7 @@ std::pair<int, size_t> get_openssl_enc_pad(const std::string& eme)
       return std::make_pair(RSA_NO_PADDING, 0);
    else if(eme == "EME-PKCS1-v1_5")
       return std::make_pair(RSA_PKCS1_PADDING, 11);
-   else if(eme == "OAEP(SHA-1)")
+   else if(eme == "OAEP(SHA-1)" || eme == "EME1(SHA-1)")
       return std::make_pair(RSA_PKCS1_OAEP_PADDING, 41);
    else
       throw Lookup_Error("OpenSSL RSA does not support EME " + eme);
@@ -41,21 +41,6 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
    {
    public:
       typedef RSA_PublicKey Key_Type;
-
-      static OpenSSL_RSA_Encryption_Operation* make(const Spec& spec)
-         {
-         try
-            {
-            if(auto* key = dynamic_cast<const RSA_PublicKey*>(&spec.key()))
-               {
-               auto pad_info = get_openssl_enc_pad(spec.padding());
-               return new OpenSSL_RSA_Encryption_Operation(*key, pad_info.first, pad_info.second);
-               }
-            }
-         catch(...) {}
-
-         return nullptr;
-         }
 
       OpenSSL_RSA_Encryption_Operation(const RSA_PublicKey& rsa, int pad, size_t pad_overhead) :
          m_openssl_rsa(nullptr, ::RSA_free), m_padding(pad)
@@ -113,21 +98,6 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
    public:
       typedef RSA_PrivateKey Key_Type;
 
-      static OpenSSL_RSA_Decryption_Operation* make(const Spec& spec)
-         {
-         try
-            {
-            if(auto* key = dynamic_cast<const RSA_PrivateKey*>(&spec.key()))
-               {
-               auto pad_info = get_openssl_enc_pad(spec.padding());
-               return new OpenSSL_RSA_Decryption_Operation(*key, pad_info.first);
-               }
-            }
-         catch(...) {}
-
-         return nullptr;
-         }
-
       OpenSSL_RSA_Decryption_Operation(const RSA_PrivateKey& rsa, int pad) :
          m_openssl_rsa(nullptr, ::RSA_free), m_padding(pad)
          {
@@ -174,16 +144,6 @@ class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
    public:
       typedef RSA_PublicKey Key_Type;
 
-      static OpenSSL_RSA_Verification_Operation* make(const Spec& spec)
-         {
-         if(const RSA_PublicKey* rsa = dynamic_cast<const RSA_PublicKey*>(&spec.key()))
-            {
-            return new OpenSSL_RSA_Verification_Operation(*rsa, spec.padding());
-            }
-
-         return nullptr;
-         }
-
       OpenSSL_RSA_Verification_Operation(const RSA_PublicKey& rsa, const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
          m_openssl_rsa(nullptr, ::RSA_free)
@@ -225,16 +185,6 @@ class OpenSSL_RSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
    public:
       typedef RSA_PrivateKey Key_Type;
 
-      static OpenSSL_RSA_Signing_Operation* make(const Spec& spec)
-         {
-         if(const RSA_PrivateKey* rsa = dynamic_cast<const RSA_PrivateKey*>(&spec.key()))
-            {
-            return new OpenSSL_RSA_Signing_Operation(*rsa, spec.padding());
-            }
-
-         return nullptr;
-         }
-
       OpenSSL_RSA_Signing_Operation(const RSA_PrivateKey& rsa, const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),
          m_openssl_rsa(nullptr, ::RSA_free)
@@ -273,19 +223,34 @@ class OpenSSL_RSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
       std::unique_ptr<RSA, std::function<void (RSA*)>> m_openssl_rsa;
    };
 
-BOTAN_REGISTER_TYPE(PK_Ops::Verification, OpenSSL_RSA_Verification_Operation, "RSA",
-                    OpenSSL_RSA_Verification_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
-
-BOTAN_REGISTER_TYPE(PK_Ops::Signature, OpenSSL_RSA_Signing_Operation, "RSA",
-                    OpenSSL_RSA_Signing_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
-
-BOTAN_REGISTER_TYPE(PK_Ops::Encryption, OpenSSL_RSA_Encryption_Operation, "RSA",
-                    OpenSSL_RSA_Encryption_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
-
-BOTAN_REGISTER_TYPE(PK_Ops::Decryption, OpenSSL_RSA_Decryption_Operation, "RSA",
-                    OpenSSL_RSA_Decryption_Operation::make, "openssl", BOTAN_OPENSSL_RSA_PRIO);
-
 }
+
+std::unique_ptr<PK_Ops::Encryption>
+make_openssl_rsa_enc_op(const RSA_PublicKey& key, const std::string& params)
+   {
+   auto pad_info = get_openssl_enc_pad(params);
+   return std::unique_ptr<PK_Ops::Encryption>(
+      new OpenSSL_RSA_Encryption_Operation(key, pad_info.first, pad_info.second));
+   }
+
+std::unique_ptr<PK_Ops::Decryption>
+make_openssl_rsa_dec_op(const RSA_PrivateKey& key, const std::string& params)
+   {
+   auto pad_info = get_openssl_enc_pad(params);
+   return std::unique_ptr<PK_Ops::Decryption>(new OpenSSL_RSA_Decryption_Operation(key, pad_info.first));
+   }
+
+std::unique_ptr<PK_Ops::Verification>
+make_openssl_rsa_ver_op(const RSA_PublicKey& key, const std::string& params)
+   {
+   return std::unique_ptr<PK_Ops::Verification>(new OpenSSL_RSA_Verification_Operation(key, params));
+   }
+
+std::unique_ptr<PK_Ops::Signature>
+make_openssl_rsa_sig_op(const RSA_PrivateKey& key, const std::string& params)
+   {
+   return std::unique_ptr<PK_Ops::Signature>(new OpenSSL_RSA_Signing_Operation(key, params));
+   }
 
 }
 

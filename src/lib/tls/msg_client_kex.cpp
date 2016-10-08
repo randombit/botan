@@ -114,7 +114,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          DH_PrivateKey priv_key(rng, group);
 
-         PK_Key_Agreement ka(priv_key, "Raw");
+         PK_Key_Agreement ka(priv_key, rng, "Raw");
 
          secure_vector<byte> dh_secret = CT::strip_leading_zeros(
             ka.derive_key(0, counterparty_key.public_value()).bits_of());
@@ -159,7 +159,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          
          ECDH_PrivateKey priv_key(rng, group);
 
-         PK_Key_Agreement ka(priv_key, "Raw");
+         PK_Key_Agreement ka(priv_key, rng, "Raw");
 
          secure_vector<byte> ecdh_secret =
             ka.derive_key(0, counterparty_key.public_value()).bits_of();
@@ -232,7 +232,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          m_pre_master[0] = offered_version.major_version();
          m_pre_master[1] = offered_version.minor_version();
 
-         PK_Encryptor_EME encryptor(*rsa_pub, "PKCS1v15");
+         PK_Encryptor_EME encryptor(*rsa_pub, rng, "PKCS1v15");
 
          const std::vector<byte> encrypted_key = encryptor.encrypt(m_pre_master, rng);
 
@@ -273,7 +273,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
       TLS_Data_Reader reader("ClientKeyExchange", contents);
       const std::vector<byte> encrypted_pre_master = reader.get_range<byte>(2, 0, 65535);
 
-      PK_Decryptor_EME decryptor(*server_rsa_kex_key, "PKCS1v15");
+      PK_Decryptor_EME decryptor(*server_rsa_kex_key, rng, "PKCS1v15");
 
       const byte client_major = state.client_hello()->version().major_version();
       const byte client_minor = state.client_hello()->version().minor_version();
@@ -350,7 +350,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
 
          try
             {
-            PK_Key_Agreement ka(*ka_key, "Raw");
+            PK_Key_Agreement ka(*ka_key, rng, "Raw");
 
             std::vector<byte> client_pubkey;
 

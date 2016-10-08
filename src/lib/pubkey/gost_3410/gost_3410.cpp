@@ -7,8 +7,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/gost_3410.h>
+#include <botan/internal/pk_ops_impl.h>
+#include <botan/reducer.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 
@@ -212,7 +213,23 @@ bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
 
 }
 
-BOTAN_REGISTER_PK_SIGNATURE_OP("GOST-34.10", GOST_3410_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("GOST-34.10", GOST_3410_Verification_Operation);
+std::unique_ptr<PK_Ops::Verification>
+GOST_3410_PublicKey::create_verification_op(const std::string& params,
+                                            const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Verification>(new GOST_3410_Verification_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
+std::unique_ptr<PK_Ops::Signature>
+GOST_3410_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                          const std::string& params,
+                                          const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Signature>(new GOST_3410_Signature_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
 
 }

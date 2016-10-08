@@ -34,6 +34,7 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
       * output = (ephemeral) public key + ciphertext + tag
       */
       DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
+                      RandomNumberGenerator& rng,
                       KDF* kdf,
                       MessageAuthenticationCode* mac,
                       size_t mac_key_len = 20);
@@ -51,6 +52,7 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
       * output = (ephemeral) public key + ciphertext + tag
       */
       DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
+                      RandomNumberGenerator& rng,
                       KDF* kdf,
                       Cipher_Mode* cipher,
                       size_t cipher_key_len,
@@ -103,6 +105,7 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
       * input = (ephemeral) public key + ciphertext + tag
       */
       DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
+                      RandomNumberGenerator& rng,
                       KDF* kdf,
                       MessageAuthenticationCode* mac,
                       size_t mac_key_len = 20);
@@ -120,6 +123,7 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
       * input = (ephemeral) public key + ciphertext + tag
       */
       DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
+                      RandomNumberGenerator& rng,
                       KDF* kdf,
                       Cipher_Mode* cipher,
                       size_t cipher_key_len,

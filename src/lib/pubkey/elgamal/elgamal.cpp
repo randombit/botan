@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/elgamal.h>
+#include <botan/internal/pk_ops_impl.h>
 #include <botan/keypair.h>
 #include <botan/reducer.h>
 #include <botan/blinding.h>
@@ -134,7 +134,9 @@ class ElGamal_Decryption_Operation : public PK_Ops::Decryption_with_EME
       size_t max_raw_input_bits() const override
          { return m_mod_p.get_modulus().bits() - 1; }
 
-      ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key, const std::string& eme);
+      ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
+                                   const std::string& eme,
+                                   RandomNumberGenerator& rng);
 
       secure_vector<byte> raw_decrypt(const byte msg[], size_t msg_len) override;
    private:
@@ -144,13 +146,15 @@ class ElGamal_Decryption_Operation : public PK_Ops::Decryption_with_EME
    };
 
 ElGamal_Decryption_Operation::ElGamal_Decryption_Operation(const ElGamal_PrivateKey& key,
-                                                           const std::string& eme) :
+                                                           const std::string& eme,
+                                                           RandomNumberGenerator& rng) :
    PK_Ops::Decryption_with_EME(eme),
    m_powermod_x_p(Fixed_Exponent_Power_Mod(key.get_x(), key.group_p())),
    m_mod_p(Modular_Reducer(key.group_p())),
    m_blinder(key.group_p(),
-           [](const BigInt& k) { return k; },
-           [this](const BigInt& k) { return m_powermod_x_p(k); })
+             rng,
+             [](const BigInt& k) { return k; },
+             [this](const BigInt& k) { return m_powermod_x_p(k); })
    {
    }
 
@@ -177,9 +181,26 @@ ElGamal_Decryption_Operation::raw_decrypt(const byte msg[], size_t msg_len)
    return BigInt::encode_1363(m_blinder.unblind(r), p_bytes);
    }
 
-BOTAN_REGISTER_PK_ENCRYPTION_OP("ElGamal", ElGamal_Encryption_Operation);
-BOTAN_REGISTER_PK_DECRYPTION_OP("ElGamal", ElGamal_Decryption_Operation);
-
 }
+
+std::unique_ptr<PK_Ops::Encryption>
+ElGamal_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
+                                        const std::string& params,
+                                        const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Encryption>(new ElGamal_Encryption_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
+std::unique_ptr<PK_Ops::Decryption>
+ElGamal_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
+                                         const std::string& params,
+                                         const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Decryption>(new ElGamal_Decryption_Operation(*this, params, rng));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
 
 }

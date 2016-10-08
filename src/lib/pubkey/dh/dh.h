@@ -67,6 +67,11 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
       */
       DH_PrivateKey(RandomNumberGenerator& rng, const DL_Group& grp,
                     const BigInt& x = 0);
+
+      std::unique_ptr<PK_Ops::Key_Agreement>
+         create_key_agreement_op(RandomNumberGenerator& rng,
+                                 const std::string& params,
+                                 const std::string& provider) const override;
    };
 
 }

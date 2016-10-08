@@ -5,9 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/eckcdsa.h>
+#include <botan/internal/pk_ops_impl.h>
 #include <botan/keypair.h>
+#include <botan/reducer.h>
 #include <botan/emsa.h>
 #include <botan/hash.h>
 
@@ -192,9 +193,25 @@ bool ECKCDSA_Verification_Operation::verify(const byte msg[], size_t,
    return (v == r);
    }
 
-BOTAN_REGISTER_PK_SIGNATURE_OP("ECKCDSA", ECKCDSA_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("ECKCDSA", ECKCDSA_Verification_Operation);
-
 }
+
+std::unique_ptr<PK_Ops::Verification>
+ECKCDSA_PublicKey::create_verification_op(const std::string& params,
+                                         const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Verification>(new ECKCDSA_Verification_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
+std::unique_ptr<PK_Ops::Signature>
+ECKCDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                        const std::string& params,
+                                        const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Signature>(new ECKCDSA_Signature_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
 
 }

@@ -9,12 +9,17 @@
 #define BOTAN_PUBKEY_H__
 
 #include <botan/pk_keys.h>
-#include <botan/pk_ops.h>
+#include <botan/pk_ops_fwd.h>
 #include <botan/symkey.h>
 #include <botan/rng.h>
 #include <botan/eme.h>
 #include <botan/emsa.h>
 #include <botan/kdf.h>
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+  #define BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS
+#endif
 
 namespace Botan {
 
@@ -66,7 +71,6 @@ class BOTAN_DLL PK_Encryptor
       virtual ~PK_Encryptor() {}
 
       PK_Encryptor(const PK_Encryptor&) = delete;
-
       PK_Encryptor& operator=(const PK_Encryptor&) = delete;
 
    private:
@@ -153,7 +157,7 @@ class BOTAN_DLL PK_Decryptor
 * messages. Use multiple calls update() to process large messages and
 * generate the signature by finally calling signature().
 */
-class BOTAN_DLL PK_Signer
+class BOTAN_DLL PK_Signer final
    {
    public:
 
@@ -165,9 +169,32 @@ class BOTAN_DLL PK_Signer
       * @param format the signature format to use
       */
       PK_Signer(const Private_Key& key,
+                RandomNumberGenerator& rng,
                 const std::string& emsa,
                 Signature_Format format = IEEE_1363,
                 const std::string& provider = "");
+
+#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
+      /**
+      * Construct a PK Signer.
+      * @param key the key to use inside this signer
+      * @param emsa the EMSA to use
+      * An example would be "EMSA1(SHA-224)".
+      * @param format the signature format to use
+      */
+      BOTAN_DEPRECATED("Use constructor taking a RNG object")
+      PK_Signer(const Private_Key& key,
+                const std::string& emsa,
+                Signature_Format format = IEEE_1363,
+                const std::string& provider = "") :
+         PK_Signer(key, system_rng(), emsa, format, provider)
+         {}
+#endif
+
+      ~PK_Signer();
+
+      PK_Signer(const PK_Signer&) = delete;
+      PK_Signer& operator=(const PK_Signer&) = delete;
 
       /**
       * Sign a message all in one go
@@ -248,7 +275,7 @@ class BOTAN_DLL PK_Signer
 * messages. Use multiple calls update() to process large messages and
 * verify the signature by finally calling check_signature().
 */
-class BOTAN_DLL PK_Verifier
+class BOTAN_DLL PK_Verifier final
    {
    public:
       /**
@@ -261,6 +288,11 @@ class BOTAN_DLL PK_Verifier
                   const std::string& emsa,
                   Signature_Format format = IEEE_1363,
                   const std::string& provider = "");
+
+      ~PK_Verifier();
+
+      PK_Verifier& operator=(const PK_Verifier&) = delete;
+      PK_Verifier(const PK_Verifier&) = delete;
 
       /**
       * Verify a signature.
@@ -353,7 +385,7 @@ class BOTAN_DLL PK_Verifier
 /**
 * Key used for key agreement
 */
-class BOTAN_DLL PK_Key_Agreement
+class BOTAN_DLL PK_Key_Agreement final
    {
    public:
 
@@ -364,8 +396,33 @@ class BOTAN_DLL PK_Key_Agreement
       * @param provider the algo provider to use (or empty for default)
       */
       PK_Key_Agreement(const Private_Key& key,
+                       RandomNumberGenerator& rng,
                        const std::string& kdf,
                        const std::string& provider = "");
+
+#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
+      /**
+      * Construct a PK Key Agreement.
+      * @param key the key to use
+      * @param kdf name of the KDF to use (or 'Raw' for no KDF)
+      * @param provider the algo provider to use (or empty for default)
+      */
+      BOTAN_DEPRECATED("Use constructor taking a RNG object")
+      PK_Key_Agreement(const Private_Key& key,
+                       const std::string& kdf,
+                       const std::string& provider = "") :
+         PK_Key_Agreement(key, system_rng(), kdf, provider)
+         {}
+#endif
+
+      ~PK_Key_Agreement();
+
+      // For ECIES
+      PK_Key_Agreement& operator=(PK_Key_Agreement&&);
+      PK_Key_Agreement(PK_Key_Agreement&&);
+
+      PK_Key_Agreement& operator=(const PK_Key_Agreement&) = delete;
+      PK_Key_Agreement(const PK_Key_Agreement&) = delete;
 
       /*
       * Perform Key Agreement Operation
@@ -437,19 +494,38 @@ class BOTAN_DLL PK_Key_Agreement
 * Encryption using a standard message recovery algorithm like RSA or
 * ElGamal, paired with an encoding scheme like OAEP.
 */
-class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
+class BOTAN_DLL PK_Encryptor_EME final : public PK_Encryptor
    {
    public:
       size_t maximum_input_size() const override;
 
       /**
       * Construct an instance.
-      * @param key the key to use inside the decryptor
+      * @param key the key to use inside the encryptor
       * @param padding the message encoding scheme to use (eg "OAEP(SHA-256)")
       */
       PK_Encryptor_EME(const Public_Key& key,
+                       RandomNumberGenerator& rng,
                        const std::string& padding,
                        const std::string& provider = "");
+
+#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
+      /**
+      * Construct an instance.
+      * @param key the key to use inside the encryptor
+      * @param padding the message encoding scheme to use (eg "OAEP(SHA-256)")
+      */
+      BOTAN_DEPRECATED("Use constructor taking a RNG object")
+      PK_Encryptor_EME(const Public_Key& key,
+                       const std::string& padding,
+                       const std::string& provider = "") :
+         PK_Encryptor_EME(key, system_rng(), padding, provider) {}
+#endif
+
+      ~PK_Encryptor_EME();
+
+      PK_Encryptor_EME& operator=(const PK_Encryptor_EME&) = delete;
+      PK_Encryptor_EME(const PK_Encryptor_EME&) = delete;
    private:
       std::vector<byte> enc(const byte[], size_t,
                              RandomNumberGenerator& rng) const override;
@@ -460,17 +536,37 @@ class BOTAN_DLL PK_Encryptor_EME : public PK_Encryptor
 /**
 * Decryption with an MR algorithm and an EME.
 */
-class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
+class BOTAN_DLL PK_Decryptor_EME final : public PK_Decryptor
    {
    public:
      /**
       * Construct an instance.
-      * @param key the key to use inside the encryptor
+      * @param key the key to use inside the decryptor
       * @param eme the EME to use
+      * @param provider
       */
       PK_Decryptor_EME(const Private_Key& key,
+                       RandomNumberGenerator& rng,
                        const std::string& eme,
                        const std::string& provider = "");
+
+
+#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
+      /**
+      * Construct an instance.
+      * @param key the key to use inside the decryptor
+      * @param padding the message encoding scheme to use (eg "OAEP(SHA-256)")
+      */
+      BOTAN_DEPRECATED("Use constructor taking a RNG object")
+      PK_Decryptor_EME(const Private_Key& key,
+                       const std::string& eme,
+                       const std::string& provider = "") :
+         PK_Decryptor_EME(key, system_rng(), eme, provider) {}
+#endif
+
+      ~PK_Decryptor_EME();
+      PK_Decryptor_EME& operator=(const PK_Decryptor_EME&) = delete;
+      PK_Decryptor_EME(const PK_Decryptor_EME&) = delete;
    private:
       secure_vector<byte> do_decrypt(byte& valid_mask,
                                      const byte in[],
@@ -479,12 +575,26 @@ class BOTAN_DLL PK_Decryptor_EME : public PK_Decryptor
       std::unique_ptr<PK_Ops::Decryption> m_op;
    };
 
-class BOTAN_DLL PK_KEM_Encryptor
+class BOTAN_DLL PK_KEM_Encryptor final
    {
    public:
       PK_KEM_Encryptor(const Public_Key& key,
+                       RandomNumberGenerator& rng,
                        const std::string& kem_param = "",
                        const std::string& provider = "");
+
+#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
+      BOTAN_DEPRECATED("Use constructor taking a RNG object")
+      PK_KEM_Encryptor(const Public_Key& key,
+                       const std::string& kem_param = "",
+                       const std::string& provider = "") :
+         PK_KEM_Encryptor(key, system_rng(), kem_param, provider) {}
+#endif
+
+      ~PK_KEM_Encryptor();
+
+      PK_KEM_Encryptor& operator=(const PK_KEM_Encryptor&) = delete;
+      PK_KEM_Encryptor(const PK_KEM_Encryptor&) = delete;
 
       void encrypt(secure_vector<byte>& out_encapsulated_key,
                    secure_vector<byte>& out_shared_key,
@@ -524,12 +634,26 @@ class BOTAN_DLL PK_KEM_Encryptor
       std::unique_ptr<PK_Ops::KEM_Encryption> m_op;
    };
 
-class BOTAN_DLL PK_KEM_Decryptor
+class BOTAN_DLL PK_KEM_Decryptor final
    {
    public:
       PK_KEM_Decryptor(const Private_Key& key,
+                       RandomNumberGenerator& rng,
                        const std::string& kem_param = "",
                        const std::string& provider = "");
+
+#if defined(BOTAN_PUBKEY_INCLUDE_DEPRECATED_CONSTRUCTORS)
+      BOTAN_DEPRECATED("Use constructor taking a RNG object")
+      PK_KEM_Decryptor(const Private_Key& key,
+                       const std::string& kem_param = "",
+                       const std::string& provider = "") :
+         PK_KEM_Decryptor(key, system_rng(), kem_param, provider)
+         {}
+#endif
+
+      ~PK_KEM_Decryptor();
+      PK_KEM_Decryptor& operator=(const PK_KEM_Decryptor&) = delete;
+      PK_KEM_Decryptor(const PK_KEM_Decryptor&) = delete;
 
       secure_vector<byte> decrypt(const byte encap_key[],
                                   size_t encap_key_len,

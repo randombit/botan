@@ -179,7 +179,7 @@ class PK_Sign final : public Command
          const std::string sig_padding =
             get_arg_or("emsa", algo_default_emsa(key->algo_name())) + "(" + get_arg("hash") + ")";
 
-         Botan::PK_Signer signer(*key, sig_padding);
+         Botan::PK_Signer signer(*key, rng(), sig_padding);
 
          this->read_file(get_arg("file"),
                          [&signer](const uint8_t b[], size_t l) { signer.update(b, l); });
