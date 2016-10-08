@@ -12,12 +12,19 @@
 #include <cstddef>
 #include <limits>
 #include <memory>
+<<<<<<< HEAD
+=======
+#include <mutex>
+>>>>>>> 959425d... Added Extended Hash-Based Signatures (XMSS)
 #include <string>
 #include <botan/hash.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <botan/atomic.h>
+<<<<<<< HEAD
 #include <botan/mutex.h>
+=======
+>>>>>>> 959425d... Added Extended Hash-Based Signatures (XMSS)
 
 namespace Botan {
 

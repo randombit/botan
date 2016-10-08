@@ -101,7 +101,7 @@ void XMSS_Signature_Operation::initialize()
    m_randomness = m_hash.prf(m_priv_key.prf(), index_bytes);
    index_bytes.clear();
    XMSS_Tools::concat(index_bytes, m_leaf_idx,
-                            m_priv_key.xmss_parameters().element_size());
+                      m_priv_key.xmss_parameters().element_size());
    m_hash.h_msg_init(m_randomness,
                      m_priv_key.root(),
                      index_bytes);
