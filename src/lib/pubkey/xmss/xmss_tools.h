@@ -1,0 +1,111 @@
+/**
+ * XMSS Address
+ * (C) 2016 Matthias Gierlings
+ *
+ * Botan is released under the Simplified BSD License (see license.txt)
+ **/
+
+#ifndef BOTAN_XMSS_TOOLS_H__
+#define BOTAN_XMSS_TOOLS_H__
+
+#include <stdint.h>
+#include <iterator>
+#include <type_traits>
+#include <botan/types.h>
+#include <botan/secmem.h>
+
+namespace Botan {
+
+/**
+ * Helper tools for low level byte operations required
+ * for the XMSS implementation.
+ **/
+ class XMSS_Tools
+   {
+   public:
+      XMSS_Tools(const XMSS_Tools&) = delete;
+      void operator=(const XMSS_Tools&) = delete;
+
+      static const XMSS_Tools& get();
+
+      /**
+       * Retrieves information about endianess
+       *
+       * @return true if machine uses little-endian byte order, false
+       *         otherwise.
+       **/
+      inline bool is_little_endian() const { return m_is_little_endian; }
+
+      /**
+       * Concatenates the byte representation in big-endian order of any
+       * integral value to a secure_vector.
+       *
+       * @param target Vector to concatenate the byte representation of the
+       *               integral value to.
+       * @param src integral value to concatenate.
+       **/
+      template<typename T,
+               typename U = typename std::enable_if<std::is_integral<T>::value,
+                                                    void>::type>
+      void concat(secure_vector<byte>& target, const T& src) const;
+
+      /**
+       * Concatenates the last n bytes of the byte representation in big-endian
+       * order of any integral value to a to a secure_vector.
+       *
+       * @param target Vector to concatenate the byte representation of the
+       *               integral value to.
+       * @param src Integral value to concatenate.
+       * @param len number of bytes to concatenate. This value must be smaller
+       *            or equal to the size of type T.
+       **/
+      template <typename T,
+                typename U = typename std::enable_if<std::is_integral<T>::value,
+                void>::type>
+      void concat(secure_vector<byte>& target, const T& src, size_t len) const;
+
+   private:
+      XMSS_Tools();
+
+      bool m_is_little_endian;
+   };
+
+template <typename T, typename U>
+void XMSS_Tools::concat(secure_vector<byte>& target, const T& src) const
+   {
+   const byte* src_bytes = reinterpret_cast<const byte*>(&src);
+   if(is_little_endian())
+      std::reverse_copy(src_bytes,
+                        src_bytes + sizeof(src),
+                        std::back_inserter(target));
+   else
+      std::copy(src_bytes,
+                src_bytes + sizeof(src),
+                std::back_inserter(target));
+   }
+
+
+template <typename T, typename U>
+void XMSS_Tools::concat(secure_vector<byte>& target,
+                        const T& src,
+                        size_t len) const
+   {
+   size_t c = static_cast<size_t>(std::min(len, sizeof(src)));
+   if(len > sizeof(src))
+      {
+      target.resize(target.size() + len - sizeof(src), 0);
+      }
+
+   const byte* src_bytes = reinterpret_cast<const byte*>(&src);
+   if(is_little_endian())
+      std::reverse_copy(src_bytes,
+                        src_bytes + c,
+                        std::back_inserter(target));
+   else
+      std::copy(src_bytes + sizeof(src) - c,
+                src_bytes + sizeof(src),
+                std::back_inserter(target));
+   }
+}
+
+#endif

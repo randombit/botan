@@ -40,6 +40,7 @@ ecgdsa
 ecies
 eckcdsa
 ecdh
+xmss
 
 # rng
 auto_rng
