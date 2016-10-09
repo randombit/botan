@@ -64,10 +64,10 @@ ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
          {
          return make_openssl_ecdh_ka_op(*this, params);
          }
-      catch(Exception& e)
+      catch(Lookup_Error&)
          {
          if(provider == "openssl")
-            throw Exception("OpenSSL ECDH refused key or params", e.what());
+            throw;
          }
       }
 #endif

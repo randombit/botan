@@ -169,10 +169,10 @@ ECDSA_PublicKey::create_verification_op(const std::string& params,
          {
          return make_openssl_ecdsa_ver_op(*this, params);
          }
-      catch(Exception& e)
+      catch(Lookup_Error& e)
          {
          if(provider == "openssl")
-            throw Exception("OpenSSL provider refused ECDSA pubkey", e.what());
+            throw;
          }
       }
 #endif
@@ -195,10 +195,10 @@ ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
          {
          return make_openssl_ecdsa_sig_op(*this, params);
          }
-      catch(Exception& e)
+      catch(Lookup_Error& e)
          {
          if(provider == "openssl")
-            throw Exception("OpenSSL provider refused ECDSA privkey", e.what());
+            throw;
          }
       }
 #endif
