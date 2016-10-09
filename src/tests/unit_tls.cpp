@@ -880,6 +880,7 @@ class TLS_Unit_Tests : public Test
          std::unique_ptr<Botan::Credentials_Manager> creds(create_creds(rng));
          std::vector<Test::Result> results;
 
+#if defined(BOTAN_HAS_TLS_CBC)
          for(std::string etm_setting : { "true", "false" })
             {
             test_all_versions(results, *creds, "RSA", "AES-128", "SHA-256 SHA-1", etm_setting);
@@ -904,6 +905,8 @@ class TLS_Unit_Tests : public Test
             }
 
          test_modern_versions(results, *creds, "DH", "AES-128", "SHA-256");
+#endif
+
          test_modern_versions(results, *creds, "RSA", "AES-128/GCM");
          test_modern_versions(results, *creds, "ECDH", "AES-128/GCM");
          test_modern_versions(results, *creds, "ECDH", "AES-128/GCM", "AEAD",
@@ -927,9 +930,11 @@ class TLS_Unit_Tests : public Test
          test_modern_versions(results, *creds, "PSK", "AES-128/CCM(8)");
 #endif
 
+#if defined(BOTAN_HAS_TLS_CBC)
          // For whatever reason no (EC)DHE_PSK GCM ciphersuites are defined
          test_modern_versions(results, *creds, "ECDHE_PSK", "AES-128", "SHA-256");
          test_modern_versions(results, *creds, "DHE_PSK", "AES-128", "SHA-1");
+#endif
 
          return results;
          }
