@@ -51,7 +51,7 @@ elif [ "${BUILD_MODE:0:5}" != "cross" ]; then
 
     # Avoid OpenSSL when using dynamic checkers...
     if [ "$BUILD_MODE" != "sanitizer" ] && [ "$BUILD_MODE" != "valgrind" ]; then
-        CFG_LFAGS+=(--with-openssl)
+        CFG_FLAGS+=(--with-openssl)
     fi
 fi
 
