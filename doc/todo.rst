@@ -44,7 +44,7 @@ Public Key Crypto, Math
 External Providers, Hardware Support
 ----------------------------------------
 
-* Extend OpenSSL provider (cipher modes, HMAC, CMAC)
+* Extend OpenSSL provider (DH, HMAC, CMAC, GCM)
 * /dev/crypto provider (ciphers, hashes)
 * Windows CryptoAPI provider (ciphers, hashes, RSA)
 * Apple CommonCrypto
@@ -61,7 +61,6 @@ TLS
 * Curve25519 key exchange
 * NEWHOPE (CECPQ1) key exchange (GH #613)
 * TLS OCSP stapling (RFC 6066)
-* Encrypt-then-MAC extension (RFC 7366)
 * Authentication using TOFU (sqlite3 storage)
 * Certificate pinning (using TACK?)
 * TLS supplemental authorization data (RFC 4680, RFC 5878)
@@ -75,6 +74,9 @@ PKIX
 
 * Test suite for validation of 'real world' cert chains (GH #611)
 * Support multiple DNS names in certificates
+* Improve output of X509_Certificate::to_string
+  This is a free-form string for human consumption so the only constraints
+  are being informative and concise. (GH #656)
 * X.509 policy constraints
 * OCSP responder logic
 * X.509 attribute certificates (RFC 5755)
