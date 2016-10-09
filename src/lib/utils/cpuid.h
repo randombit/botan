@@ -170,7 +170,6 @@ class BOTAN_DLL CPUID
       */
       static void clear_cpuid_bit(CPUID_bits bit)
          {
-         BOTAN_ASSERT(bit < 128, "CPUID bit within bounds");
          const uint64_t mask = ~(static_cast<uint64_t>(1) << (bit % 64));
          g_processor_flags[bit/64] &= mask;
          }
@@ -180,7 +179,6 @@ class BOTAN_DLL CPUID
          if(!g_initialized)
             initialize();
          const size_t bit = static_cast<size_t>(elem);
-         BOTAN_ASSERT(bit < 128, "CPUID bit within bounds");
          return ((g_processor_flags[bit/64] >> (bit % 64)) & 1);
          }
 

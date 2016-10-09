@@ -374,8 +374,8 @@ cmult(limb *resultx, limb *resultz, const u8 *n, const limb *q) {
       swap_conditional(nqx, nqpqx, bit);
       swap_conditional(nqz, nqpqz, bit);
 
-      fmonty_out_t result { nqx2, nqz2, nqpqx2, nqpqz2 };
-      fmonty_in_t in { nqx, nqz, nqpqx, nqpqz, q };
+      fmonty_out_t result { {nqx2, nqz2}, {nqpqx2, nqpqz2} };
+      fmonty_in_t in { { nqx, nqz }, { nqpqx, nqpqz }, q };
       fmonty(result, in);
       swap_conditional(nqx2, nqpqx2, bit);
       swap_conditional(nqz2, nqpqz2, bit);
