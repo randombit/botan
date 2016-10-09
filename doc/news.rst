@@ -68,6 +68,9 @@ Version 1.11.32, 2016-09-28
   amalgamations but build Botan without amalgamation. Users should migrate to
   ``--amalgamation``. (GH #621)
 
+* DH keys did not automatically self-test after being generated, contrary to
+  the current behavior for other key types.
+
 * Add tests for TLS 1.2 PRF (GH #628)
 
 Version 1.11.31, 2016-08-30
