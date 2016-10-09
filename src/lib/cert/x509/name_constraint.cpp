@@ -16,14 +16,14 @@
 
 namespace Botan {
 
-GeneralName::GeneralName(const std::string& v) : GeneralName()
+GeneralName::GeneralName(const std::string& str) : GeneralName()
    {
-   size_t p = v.find(':');
+   size_t p = str.find(':');
 
    if(p != std::string::npos)
       {
-      m_type = v.substr(0,p);
-      m_name = v.substr(p + 1,std::string::npos);
+      m_type = str.substr(0, p);
+      m_name = str.substr(p + 1, std::string::npos);
       }
    else
       {
@@ -47,7 +47,7 @@ void GeneralName::decode_from(class BER_Decoder& ber)
 
    if(tag == 1 || tag == 2 || tag == 6)
       {
-      m_name = Charset::transcode(ASN1::to_string(obj),LATIN1_CHARSET,LOCAL_CHARSET);
+      m_name = Charset::transcode(ASN1::to_string(obj), LATIN1_CHARSET, LOCAL_CHARSET);
 
       if(tag == 1)
          {
@@ -79,10 +79,10 @@ void GeneralName::decode_from(class BER_Decoder& ber)
       {
       if(obj.value.size() == 8)
          {
-         const std::vector<byte> ip(obj.value.begin(),obj.value.begin() + 4);
-         const std::vector<byte> net(obj.value.begin() + 4,obj.value.end());
+         const std::vector<byte> ip(obj.value.begin(), obj.value.begin() + 4);
+         const std::vector<byte> net(obj.value.begin() + 4, obj.value.end());
          m_type = "IP";
-         m_name = ipv4_to_string(load_be<u32bit>(ip.data(),0)) + "/" + ipv4_to_string(load_be<u32bit>(net.data(),0));
+         m_name = ipv4_to_string(load_be<u32bit>(ip.data(), 0)) + "/" + ipv4_to_string(load_be<u32bit>(net.data(), 0));
          }
       else if(obj.value.size() == 32)
          {
@@ -103,7 +103,7 @@ void GeneralName::decode_from(class BER_Decoder& ber)
 GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) const
    {
    std::vector<std::string> nam;
-   std::function<bool(const GeneralName*,const std::string&)> match_fn;
+   std::function<bool(const GeneralName*, const std::string&)> match_fn;
 
    if(type() == "DNS")
       {
@@ -143,7 +143,7 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
 
    for(const std::string& n: nam)
       {
-      bool m = match_fn(this,n);
+      bool m = match_fn(this, n);
 
       some |= m;
       all &= m;
@@ -177,7 +177,7 @@ bool GeneralName::matches_dns(const std::string& nam) const
       {
       std::string constr = name().front() == '.' ? name() : "." + name();
       // constr is suffix of nam
-      return constr == nam.substr(nam.size() - constr.size(),constr.size());
+      return constr == nam.substr(nam.size() - constr.size(), constr.size());
       }
    }
 
@@ -211,7 +211,7 @@ bool GeneralName::matches_dn(const std::string& nam) const
 bool GeneralName::matches_ip(const std::string& nam) const
    {
    u32bit ip = string_to_ipv4(nam);
-   std::vector<std::string> p = split_on(name(),'/');
+   std::vector<std::string> p = split_on(name(), '/');
 
    if(p.size() != 2)
       throw Decoding_Error("failed to parse IPv4 address");
@@ -228,12 +228,12 @@ std::ostream& operator<<(std::ostream& os, const GeneralName& gn)
    return os;
    }
 
-GeneralSubtree::GeneralSubtree(const std::string& v) : GeneralSubtree()
+GeneralSubtree::GeneralSubtree(const std::string& str) : GeneralSubtree()
    {
    size_t p0, p1;
-   size_t min = std::stoull(v, &p0, 10);
-   size_t max = std::stoull(v.substr(p0 + 1), &p1, 10);
-   GeneralName gn(v.substr(p0 + p1 + 2));
+   size_t min = std::stoull(str, &p0, 10);
+   size_t max = std::stoull(str.substr(p0 + 1), &p1, 10);
+   GeneralName gn(str.substr(p0 + p1 + 2));
 
    if(p0 > 0 && p1 > 0)
       {
@@ -256,7 +256,7 @@ void GeneralSubtree::decode_from(class BER_Decoder& ber)
    {
    ber.start_cons(SEQUENCE)
       .decode(m_base)
-      .decode_optional(m_minimum,ASN1_Tag(0),CONTEXT_SPECIFIC,size_t(0))
+      .decode_optional(m_minimum,ASN1_Tag(0), CONTEXT_SPECIFIC,size_t(0))
    .end_cons();
 
    if(m_minimum != 0)

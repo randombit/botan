@@ -71,8 +71,16 @@ class BOTAN_DLL X509_Object : public ASN1_Object
       */
       bool check_signature(const Public_Key* key) const;
 
+      /**
+      * DER encode an X509_Object
+      * See @ref ASN1_Object::encode_into()
+      */
       void encode_into(class DER_Encoder& to) const override;
 
+      /**
+      * Decode a BER encoded X509_Object
+      * See @ref ASN1_Object::decode_from()
+      */
       void decode_from(class BER_Decoder& from) override;
 
       /**
