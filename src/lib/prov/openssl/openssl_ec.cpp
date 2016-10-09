@@ -191,20 +191,22 @@ std::unique_ptr<PK_Ops::Verification>
 make_openssl_ecdsa_ver_op(const ECDSA_PublicKey& key, const std::string& params)
    {
    const int nid = OpenSSL_EC_nid_for(key.domain().get_oid());
-   if(nid > 0)
+   if(nid < 0)
       {
-      return std::unique_ptr<PK_Ops::Verification>(new OpenSSL_ECDSA_Verification_Operation(key, params, nid));
+      throw Lookup_Error("OpenSSL ECDSA does not support this curve");
       }
-   return {};
+   return std::unique_ptr<PK_Ops::Verification>(new OpenSSL_ECDSA_Verification_Operation(key, params, nid));
    }
 
 std::unique_ptr<PK_Ops::Signature>
 make_openssl_ecdsa_sig_op(const ECDSA_PrivateKey& key, const std::string& params)
    {
    const int nid = OpenSSL_EC_nid_for(key.domain().get_oid());
-   if(nid > 0)
-      return std::unique_ptr<PK_Ops::Signature>(new OpenSSL_ECDSA_Signing_Operation(key, params));
-   return {};
+   if(nid < 0)
+      {
+      throw Lookup_Error("OpenSSL ECDSA does not support this curve");
+      }
+   return std::unique_ptr<PK_Ops::Signature>(new OpenSSL_ECDSA_Signing_Operation(key, params));
    }
 
 #endif
@@ -273,7 +275,7 @@ std::unique_ptr<PK_Ops::Key_Agreement>
 make_openssl_ecdh_ka_op(const ECDH_PrivateKey& key, const std::string& params)
    {
    const int nid = OpenSSL_EC_nid_for(key.domain().get_oid());
-   if(nid == 0)
+   if(nid < 0)
       {
       throw Lookup_Error("OpenSSL ECDH does not support this curve");
       }
