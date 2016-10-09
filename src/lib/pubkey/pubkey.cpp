@@ -89,7 +89,8 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
                                    const std::string& provider)
    {
    m_op = key.create_encryption_op(rng, padding, provider);
-   BOTAN_ASSERT_NONNULL(m_op);
+   if(!m_op)
+      throw Invalid_Argument("Key type " + key.algo_name() + " does not support encryption");
    }
 
 PK_Encryptor_EME::~PK_Encryptor_EME() { /* for unique_ptr */ }
@@ -111,7 +112,8 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
                                    const std::string& provider)
    {
    m_op = key.create_decryption_op(rng, padding, provider);
-   BOTAN_ASSERT_NONNULL(m_op);
+   if(!m_op)
+      throw Invalid_Argument("Key type " + key.algo_name() + " does not support decryption");
    }
 
 PK_Decryptor_EME::~PK_Decryptor_EME() { /* for unique_ptr */ }
@@ -128,7 +130,8 @@ PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
                                    const std::string& provider)
    {
    m_op = key.create_kem_encryption_op(rng, param, provider);
-   BOTAN_ASSERT_NONNULL(m_op);
+   if(!m_op)
+      throw Invalid_Argument("Key type " + key.algo_name() + " does not support KEM encryption");
    }
 
 PK_KEM_Encryptor::~PK_KEM_Encryptor() { /* for unique_ptr */ }
@@ -154,7 +157,8 @@ PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
                                    const std::string& provider)
    {
    m_op = key.create_kem_decryption_op(rng, param, provider);
-   BOTAN_ASSERT_NONNULL(m_op);
+   if(!m_op)
+      throw Invalid_Argument("Key type " + key.algo_name() + " does not support KEM decryption");
    }
 
 PK_KEM_Decryptor::~PK_KEM_Decryptor() { /* for unique_ptr */ }
@@ -176,7 +180,8 @@ PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
                                    const std::string& provider)
    {
    m_op = key.create_key_agreement_op(rng, kdf, provider);
-   BOTAN_ASSERT_NONNULL(m_op);
+   if(!m_op)
+      throw Invalid_Argument("Key type " + key.algo_name() + " does not support key agreement");
    }
 
 PK_Key_Agreement::~PK_Key_Agreement() { /* for unique_ptr */ }
@@ -251,7 +256,8 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      const std::string& provider)
    {
    m_op = key.create_signature_op(rng, emsa, provider);
-   BOTAN_ASSERT_NONNULL(m_op);
+   if(!m_op)
+      throw Invalid_Argument("Key type " + key.algo_name() + " does not support signature generation");
    m_sig_format = format;
    }
 
@@ -282,7 +288,8 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
                          const std::string& provider)
    {
    m_op = key.create_verification_op(emsa, provider);
-   BOTAN_ASSERT_NONNULL(m_op);
+   if(!m_op)
+      throw Invalid_Argument("Key type " + key.algo_name() + " does not support signature verification");
    m_sig_format = format;
    }
 
