@@ -25,6 +25,7 @@ X509_Object::X509_Object(DataSource& stream, const std::string& labels)
    init(stream, labels);
    }
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /*
 * Create a generic X.509 object
 */
@@ -33,6 +34,7 @@ X509_Object::X509_Object(const std::string& file, const std::string& labels)
    DataSource_Stream stream(file, true);
    init(stream, labels);
    }
+#endif
 
 /*
 * Create a generic X.509 object

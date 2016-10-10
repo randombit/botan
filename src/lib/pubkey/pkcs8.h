@@ -108,6 +108,7 @@ BOTAN_DLL Private_Key* load_key(DataSource& source,
 BOTAN_DLL Private_Key* load_key(DataSource& source,
                                 RandomNumberGenerator& rng);
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /**
 * Load an encrypted key from a file.
 * @param filename the path to the file containing the encoded key
@@ -136,6 +137,7 @@ BOTAN_DLL Private_Key* load_key(const std::string& filename,
 */
 BOTAN_DLL Private_Key* load_key(const std::string& filename,
                                 RandomNumberGenerator& rng);
+#endif
 
 /**
 * Copy an existing encoded key object.

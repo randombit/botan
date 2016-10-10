@@ -9,6 +9,7 @@
 #define BOTAN_SRP6A_FILES_H__
 
 #include <botan/bigint.h>
+#include <iosfwd>
 #include <string>
 #include <map>
 
@@ -20,11 +21,11 @@ namespace Botan {
 class BOTAN_DLL SRP6_Authenticator_File
    {
    public:
+
       /**
-      * @param filename will be opened and processed as a SRP
-      * authenticator file
+      * @param input will be read and processed as SRP authenticator file
       */
-      explicit SRP6_Authenticator_File(const std::string& filename);
+      explicit SRP6_Authenticator_File(std::istream& input);
 
       bool lookup_user(const std::string& username,
                        BigInt& v,

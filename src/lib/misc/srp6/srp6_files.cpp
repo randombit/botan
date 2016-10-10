@@ -8,14 +8,11 @@
 #include <botan/srp6_files.h>
 #include <botan/parsing.h>
 #include <botan/base64.h>
-#include <fstream>
 
 namespace Botan {
 
-SRP6_Authenticator_File::SRP6_Authenticator_File(const std::string& filename)
+SRP6_Authenticator_File::SRP6_Authenticator_File(std::istream& in)
    {
-   std::ifstream in(filename);
-
    if(!in)
       return; // no entries
 

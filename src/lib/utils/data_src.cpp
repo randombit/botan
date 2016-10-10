@@ -8,8 +8,11 @@
 
 #include <botan/data_src.h>
 #include <botan/exceptn.h>
-#include <fstream>
 #include <algorithm>
+
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+  #include <fstream>
+#endif
 
 namespace Botan {
 
@@ -97,6 +100,8 @@ DataSource_Memory::DataSource_Memory(const std::string& in) :
    m_offset(0)
    {
    }
+
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 /*
 * Read from a stream
@@ -208,5 +213,7 @@ DataSource_Stream::~DataSource_Stream()
    {
    delete m_source_p;
    }
+
+#endif
 
 }

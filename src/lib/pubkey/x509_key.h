@@ -46,12 +46,14 @@ BOTAN_DLL std::string PEM_encode(const Public_Key& key);
 */
 BOTAN_DLL Public_Key* load_key(DataSource& source);
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /**
 * Create a public key from a file
 * @param filename pathname to the file to load
 * @return new public key object
 */
 BOTAN_DLL Public_Key* load_key(const std::string& filename);
+#endif
 
 /**
 * Create a public key from a memory region.
