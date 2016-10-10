@@ -2,6 +2,7 @@
 
 PROJECT_NAME           = Botan
 PROJECT_NUMBER         = %{version}
+PROJECT_BRIEF          = Crypto&nbsp;and&nbsp;TLS&nbsp;for&nbsp;C&#43;&#43;11
 OUTPUT_DIRECTORY       = %{doc_output_dir}/doxygen
 DOXYFILE_ENCODING      = UTF-8
 CREATE_SUBDIRS         = NO
