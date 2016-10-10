@@ -44,6 +44,7 @@ Public Key Crypto, Math
 External Providers, Hardware Support
 ----------------------------------------
 
+* Access to system certificate stores (Windows, OS X)
 * Extend OpenSSL provider (DH, HMAC, CMAC, GCM)
 * /dev/crypto provider (ciphers, hashes)
 * Windows CryptoAPI provider (ciphers, hashes, RSA)
