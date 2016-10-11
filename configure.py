@@ -1216,6 +1216,7 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     for t in ['lib', 'cli', 'test']:
         obj_key = '%s_objs' % (t)
         src_list, src_dir = build_config.src_info(t)
+        src_list.sort()
         var[obj_key] = makefile_list(objectfile_list(src_list, src_dir))
         build_key = '%s_build_cmds' % (t)
         var[build_key] = '\n'.join(build_commands(src_list, src_dir, t.upper()))
