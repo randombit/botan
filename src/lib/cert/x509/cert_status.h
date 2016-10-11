@@ -10,6 +10,9 @@
 
 namespace Botan {
 
+/**
+* Certificate validation status code
+*/
 enum class Certificate_Status_Code {
    VERIFIED = 0x00000000,
    OCSP_RESPONSE_GOOD,

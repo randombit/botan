@@ -12,12 +12,21 @@
 
 namespace Botan {
 
+/**
+* Certificate and private key store backed by an sqlite (http://sqlite.org) database.
+*/
 class BOTAN_DLL Certificate_Store_In_SQLite : public Certificate_Store_In_SQL
    {
    public:
+      /**
+      * Create/open a certificate store.
+      * @param db underlying database storage
+      * @param passwd password to encrypt private keys in the database
+      * @param table_prefix optional prefix for db table names
+      */
       Certificate_Store_In_SQLite(const std::string& db_path,
-                                           const std::string& passwd,
-                                           const std::string& table_prefix = "");
+                                  const std::string& passwd,
+                                  const std::string& table_prefix = "");
    };
 }
 #endif
