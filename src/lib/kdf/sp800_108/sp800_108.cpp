@@ -12,17 +12,6 @@
 
 namespace Botan {
 
-SP800_108_Counter* SP800_108_Counter::make(const Spec& spec)
-   {
-   if(auto mac = MessageAuthenticationCode::create(spec.arg(0)))
-      return new SP800_108_Counter(mac.release());
-
-   if(auto mac = MessageAuthenticationCode::create("HMAC(" + spec.arg(0) + ")"))
-      return new SP800_108_Counter(mac.release());
-
-   return nullptr;
-   }
-
 size_t SP800_108_Counter::kdf(byte key[], size_t key_len,
                               const byte secret[], size_t secret_len,
                               const byte salt[], size_t salt_len,
@@ -63,17 +52,6 @@ size_t SP800_108_Counter::kdf(byte key[], size_t key_len,
          }
 
    return key_len;
-   }
-
-SP800_108_Feedback* SP800_108_Feedback::make(const Spec& spec)
-   {
-   if(auto mac = MessageAuthenticationCode::create(spec.arg(0)))
-      return new SP800_108_Feedback(mac.release());
-
-   if(auto mac = MessageAuthenticationCode::create("HMAC(" + spec.arg(0) + ")"))
-      return new SP800_108_Feedback(mac.release());
-
-   return nullptr;
    }
 
 size_t SP800_108_Feedback::kdf(byte key[], size_t key_len,
@@ -120,17 +98,6 @@ size_t SP800_108_Feedback::kdf(byte key[], size_t key_len,
          }
 
    return key_len;
-   }
-
-SP800_108_Pipeline* SP800_108_Pipeline::make(const Spec& spec)
-   {
-   if(auto mac = MessageAuthenticationCode::create(spec.arg(0)))
-      return new SP800_108_Pipeline(mac.release());
-
-   if(auto mac = MessageAuthenticationCode::create("HMAC(" + spec.arg(0) + ")"))
-      return new SP800_108_Pipeline(mac.release());
-
-   return nullptr;
    }
 
 size_t SP800_108_Pipeline::kdf(byte key[], size_t key_len,

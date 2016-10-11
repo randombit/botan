@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mode_utils.h>
 #include <botan/ecb.h>
+#include <botan/internal/rounding.h>
 
 namespace Botan {
 

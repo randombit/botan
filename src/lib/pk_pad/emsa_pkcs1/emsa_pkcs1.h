@@ -21,8 +21,6 @@ namespace Botan {
 class BOTAN_DLL EMSA_PKCS1v15 final : public EMSA
    {
    public:
-      static EMSA* make(const EMSA::Spec& spec);
-
       /**
       * @param hash the hash function to use
       */

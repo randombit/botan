@@ -6,8 +6,7 @@
 */
 
 #include <botan/hash.h>
-#include <botan/cpuid.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_ADLER32)
   #include <botan/adler32.h>
@@ -81,109 +80,213 @@
   #include <botan/blake2b.h>
 #endif
 
+#if defined(BOTAN_HAS_OPENSSL)
+  #include <botan/internal/openssl.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
                                                    const std::string& provider)
    {
-   return std::unique_ptr<HashFunction>(make_a<HashFunction>(Botan::HashFunction::Spec(algo_spec), provider));
+   const SCAN_Name req(algo_spec);
+
+#if defined(BOTAN_HAS_OPENSSL)
+   if(provider.empty() || provider == "openssl")
+      {
+      if(auto hash = make_openssl_hash(algo_spec))
+         return hash;
+
+      if(!provider.empty())
+         return nullptr;
+      }
+#endif
+
+   if(provider.empty() == false && provider != "base")
+      return nullptr; // unknown provider
+
+#if defined(BOTAN_HAS_SHA1)
+   if(req.algo_name() == "SHA-160")
+      {
+      return std::unique_ptr<HashFunction>(new SHA_160);
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_32)
+   if(req.algo_name() == "SHA-224")
+      {
+      return std::unique_ptr<HashFunction>(new SHA_224);
+      }
+
+   if(req.algo_name() == "SHA-256")
+      {
+      return std::unique_ptr<HashFunction>(new SHA_256);
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64)
+   if(req.algo_name() == "SHA-384")
+      {
+      return std::unique_ptr<HashFunction>(new SHA_384);
+      }
+
+   if(req.algo_name() == "SHA-512")
+      {
+      return std::unique_ptr<HashFunction>(new SHA_512);
+      }
+
+   if(req.algo_name() == "SHA-512-256")
+      {
+      return std::unique_ptr<HashFunction>(new SHA_512_256);
+      }
+#endif
+
+#if defined(BOTAN_HAS_RIPEMD_160)
+   if(req.algo_name() == "RIPEMD-160")
+      {
+      return std::unique_ptr<HashFunction>(new RIPEMD_160);
+      }
+#endif
+
+#if defined(BOTAN_HAS_TIGER)
+   if(req.algo_name() == "Tiger")
+      {
+      return std::unique_ptr<HashFunction>(
+         new Tiger(req.arg_as_integer(0, 24),
+                   req.arg_as_integer(1, 3)));
+      }
+#endif
+
+#if defined(BOTAN_HAS_SKEIN_512)
+   if(req.algo_name() == "Skein-512")
+      {
+      return std::unique_ptr<HashFunction>(
+         new Skein_512(req.arg_as_integer(0, 512), req.arg(1, "")));
+      }
+#endif
+
+#if defined(BOTAN_HAS_BLAKE2B)
+   if(req.algo_name() == "Blake2b")
+      {
+      return std::unique_ptr<HashFunction>(
+         new Blake2b(req.arg_as_integer(0, 512)));
+   }
+#endif
+
+#if defined(BOTAN_HAS_KECCAK)
+   if(req.algo_name() == "Keccak-1600")
+      {
+      return std::unique_ptr<HashFunction>(
+         new Keccak_1600(req.arg_as_integer(0, 512)));
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHA3)
+   if(req.algo_name() == "SHA-3")
+      {
+      return std::unique_ptr<HashFunction>(
+         new SHA_3(req.arg_as_integer(0, 512)));
+      }
+#endif
+
+#if defined(BOTAN_HAS_WHIRLPOOL)
+   if(req.algo_name() == "Whirlpool")
+      {
+      return std::unique_ptr<HashFunction>(new Whirlpool);
+      }
+#endif
+
+#if defined(BOTAN_HAS_PARALLEL_HASH)
+   if(req.algo_name() == "Parallel")
+      {
+      std::vector<std::unique_ptr<HashFunction>> hashes;
+
+      for(size_t i = 0; i != req.arg_count(); ++i)
+         {
+         auto h = HashFunction::create(req.arg(i));
+         if(!h)
+            {
+            return nullptr;
+            }
+         hashes.push_back(std::move(h));
+         }
+
+      return std::unique_ptr<HashFunction>(new Parallel(hashes));
+      }
+#endif
+
+#if defined(BOTAN_HAS_COMB4P)
+   if(req.algo_name() == "Comb4p" && req.arg_count() == 2)
+      {
+      std::unique_ptr<HashFunction> h1(HashFunction::create(req.arg(0)));
+      std::unique_ptr<HashFunction> h2(HashFunction::create(req.arg(1)));
+
+      if(h1 && h2)
+         return std::unique_ptr<HashFunction>(new Comb4P(h1.release(), h2.release()));
+      }
+#endif
+
+#if defined(BOTAN_HAS_MD5)
+   if(req.algo_name() == "MD5")
+      {
+      return std::unique_ptr<HashFunction>(new MD5);
+      }
+#endif
+
+#if defined(BOTAN_HAS_MD4)
+   if(req.algo_name() == "MD4")
+      {
+      return std::unique_ptr<HashFunction>(new MD4);
+      }
+#endif
+
+#if defined(BOTAN_HAS_GOST_34_11)
+   if(req.algo_name() == "GOST-R-34.11-94")
+      {
+      return std::unique_ptr<HashFunction>(new GOST_34_11);
+      }
+#endif
+
+#if defined(BOTAN_HAS_ADLER32)
+   if(req.algo_name() == "Adler32")
+      {
+      return std::unique_ptr<HashFunction>(new Adler32);
+      }
+#endif
+
+#if defined(BOTAN_HAS_CRC24)
+   if(req.algo_name() == "CRC24")
+      {
+      return std::unique_ptr<HashFunction>(new CRC24);
+      }
+#endif
+
+#if defined(BOTAN_HAS_CRC32)
+   if(req.algo_name() == "CRC32")
+      {
+      return std::unique_ptr<HashFunction>(new CRC32);
+      }
+#endif
+
+   return nullptr;
+   }
+
+//static
+std::unique_ptr<HashFunction>
+HashFunction::create_or_throw(const std::string& algo,
+                              const std::string& provider)
+   {
+   if(auto hash = HashFunction::create(algo, provider))
+      {
+      return hash;
+      }
+   throw Lookup_Error("Hash", algo, provider);
    }
 
 std::vector<std::string> HashFunction::providers(const std::string& algo_spec)
    {
-   return providers_of<HashFunction>(HashFunction::Spec(algo_spec));
+   return probe_providers_of<HashFunction>(algo_spec, {"base", "openssl"});
    }
 
-HashFunction::HashFunction() {}
-
-HashFunction::~HashFunction() {}
-
-#define BOTAN_REGISTER_HASH(name, maker) BOTAN_REGISTER_T(HashFunction, name, maker)
-#define BOTAN_REGISTER_HASH_NOARGS(name) BOTAN_REGISTER_T_NOARGS(HashFunction, name)
-
-#define BOTAN_REGISTER_HASH_1LEN(name, def) BOTAN_REGISTER_T_1LEN(HashFunction, name, def)
-
-#define BOTAN_REGISTER_HASH_NAMED_NOARGS(type, name) \
-   BOTAN_REGISTER_NAMED_T(HashFunction, name, type, make_new_T<type>)
-#define BOTAN_REGISTER_HASH_NAMED_1LEN(type, name, def) \
-   BOTAN_REGISTER_NAMED_T(HashFunction, name, type, (make_new_T_1len<type,def>))
-
-#define BOTAN_REGISTER_HASH_NOARGS_IF(cond, type, name, provider, pref)      \
-   BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, HashFunction, type, name, provider, pref)
-
-#if defined(BOTAN_HAS_ADLER32)
-BOTAN_REGISTER_HASH_NOARGS(Adler32);
-#endif
-
-#if defined(BOTAN_HAS_CRC24)
-BOTAN_REGISTER_HASH_NOARGS(CRC24);
-#endif
-
-#if defined(BOTAN_HAS_CRC32)
-BOTAN_REGISTER_HASH_NOARGS(CRC32);
-#endif
-
-#if defined(BOTAN_HAS_COMB4P)
-BOTAN_REGISTER_NAMED_T(HashFunction, "Comb4P", Comb4P, Comb4P::make);
-#endif
-
-#if defined(BOTAN_HAS_PARALLEL_HASH)
-BOTAN_REGISTER_NAMED_T(HashFunction, "Parallel", Parallel, Parallel::make);
-#endif
-
-#if defined(BOTAN_HAS_GOST_34_11)
-BOTAN_REGISTER_HASH_NAMED_NOARGS(GOST_34_11, "GOST-R-34.11-94");
-#endif
-
-#if defined(BOTAN_HAS_KECCAK)
-BOTAN_REGISTER_HASH_NAMED_1LEN(Keccak_1600, "Keccak-1600", 512);
-#endif
-
-#if defined(BOTAN_HAS_SHA3)
-BOTAN_REGISTER_HASH_NAMED_1LEN(SHA_3, "SHA-3", 512);
-#endif
-
-#if defined(BOTAN_HAS_MD4)
-BOTAN_REGISTER_HASH_NOARGS(MD4);
-#endif
-
-#if defined(BOTAN_HAS_MD5)
-BOTAN_REGISTER_HASH_NOARGS(MD5);
-#endif
-
-#if defined(BOTAN_HAS_RIPEMD_160)
-BOTAN_REGISTER_HASH_NAMED_NOARGS(RIPEMD_160, "RIPEMD-160");
-#endif
-
-#if defined(BOTAN_HAS_SHA1)
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_160, "SHA-160");
-#endif
-
-#if defined(BOTAN_HAS_SHA2_32)
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_224, "SHA-224");
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_256, "SHA-256");
-#endif
-
-#if defined(BOTAN_HAS_SHA2_64)
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_384, "SHA-384");
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_512, "SHA-512");
-BOTAN_REGISTER_HASH_NAMED_NOARGS(SHA_512_256, "SHA-512-256");
-#endif
-
-#if defined(BOTAN_HAS_TIGER)
-BOTAN_REGISTER_NAMED_T_2LEN(HashFunction, Tiger, "Tiger", "base", 24, 3);
-#endif
-
-#if defined(BOTAN_HAS_SKEIN_512)
-BOTAN_REGISTER_NAMED_T(HashFunction, "Skein-512", Skein_512, Skein_512::make);
-#endif
-
-#if defined(BOTAN_HAS_WHIRLPOOL)
-BOTAN_REGISTER_HASH_NOARGS(Whirlpool);
-#endif
-
-#if defined(BOTAN_HAS_BLAKE2B)
-BOTAN_REGISTER_NAMED_T(HashFunction, "Blake2b", Blake2b, Blake2b::make);
-#endif
-
 }
+

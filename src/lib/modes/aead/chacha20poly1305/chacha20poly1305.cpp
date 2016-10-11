@@ -6,7 +6,6 @@
 */
 
 #include <botan/chacha20poly1305.h>
-#include <botan/internal/mode_utils.h>
 
 namespace Botan {
 

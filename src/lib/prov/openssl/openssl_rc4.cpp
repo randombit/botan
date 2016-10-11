@@ -9,7 +9,6 @@
 
 #if defined(BOTAN_HAS_OPENSSL) && defined(BOTAN_HAS_RC4)
 
-#include <botan/internal/algo_registry.h>
 #include <botan/internal/openssl.h>
 #include <botan/parsing.h>
 #include <botan/exceptn.h>
@@ -78,8 +77,12 @@ class OpenSSL_RC4 : public StreamCipher
 
 }
 
-BOTAN_REGISTER_TYPE(StreamCipher, OpenSSL_RC4, "RC4", (make_new_T_1len<OpenSSL_RC4,0>),
-                    "openssl", BOTAN_OPENSSL_RC4_PRIO);
+std::unique_ptr<StreamCipher>
+make_openssl_rc4(size_t skip)
+   {
+   return std::unique_ptr<StreamCipher>(new OpenSSL_RC4(skip));
+   }
+
 
 }
 

@@ -10,23 +10,6 @@
 
 namespace Botan {
 
-Parallel* Parallel::make(const Spec& spec)
-   {
-   std::vector<std::unique_ptr<HashFunction>> m_hashes;
-
-   for(size_t i = 0; i != spec.arg_count(); ++i)
-      {
-      auto h = HashFunction::create(spec.arg(i));
-      if(!h)
-         return nullptr;
-      m_hashes.push_back(std::move(h));
-      }
-
-   Parallel* p = new Parallel;
-   std::swap(p->m_hashes, m_hashes);
-   return p;
-   }
-
 void Parallel::add_data(const byte input[], size_t length)
    {
    for(auto&& hash : m_hashes)
@@ -65,10 +48,10 @@ std::string Parallel::name() const
 
 HashFunction* Parallel::clone() const
    {
-   std::vector<HashFunction*> hash_copies;
+   std::vector<std::unique_ptr<HashFunction>> hash_copies;
 
    for(auto&& hash : m_hashes)
-      hash_copies.push_back(hash.get());
+      hash_copies.push_back(std::unique_ptr<HashFunction>(hash->clone()));
 
    return new Parallel(hash_copies);
    }
@@ -79,12 +62,11 @@ void Parallel::clear()
       hash->clear();
    }
 
-Parallel::Parallel(const std::vector<HashFunction*>& in)
+Parallel::Parallel(std::vector<std::unique_ptr<HashFunction>>& h)
    {
-   for(size_t i = 0; i != in.size(); ++i)
+   for(size_t i = 0; i != h.size(); ++i)
       {
-      std::unique_ptr<HashFunction> h(in[i]->clone());
-      m_hashes.push_back(std::move(h));
+      m_hashes.push_back(std::unique_ptr<HashFunction>(h[i].release()));
       }
    }
 

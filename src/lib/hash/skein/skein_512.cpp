@@ -12,11 +12,6 @@
 
 namespace Botan {
 
-Skein_512* Skein_512::make(const Spec& spec)
-   {
-   return new Skein_512(spec.arg_as_integer(0, 512), spec.arg(1, ""));
-   }
-
 Skein_512::Skein_512(size_t arg_output_bits,
                      const std::string& arg_personalization) :
    m_personalization(arg_personalization),

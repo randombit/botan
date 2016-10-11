@@ -12,7 +12,6 @@
 #include <botan/key_spec.h>
 #include <botan/exceptn.h>
 #include <botan/symkey.h>
-#include <botan/scan_name.h>
 #include <string>
 #include <vector>
 
@@ -24,8 +23,6 @@ namespace Botan {
 class BOTAN_DLL Cipher_Mode
    {
    public:
-      typedef SCAN_Name Spec;
-
       virtual ~Cipher_Mode() {}
 
       /*

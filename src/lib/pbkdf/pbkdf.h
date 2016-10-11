@@ -9,8 +9,6 @@
 #define BOTAN_PBKDF_H__
 
 #include <botan/symkey.h>
-#include <botan/scan_name.h>
-#include <botan/scan_name.h>
 #include <botan/exceptn.h>
 #include <chrono>
 
@@ -38,8 +36,6 @@ class BOTAN_DLL PBKDF
       * @return list of available providers for this algorithm, empty if not available
       */
       static std::vector<std::string> providers(const std::string& algo_spec);
-
-      typedef SCAN_Name Spec;
 
       /**
       * @return new instance of this same algorithm

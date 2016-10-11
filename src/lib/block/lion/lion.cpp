@@ -10,22 +10,6 @@
 
 namespace Botan {
 
-Lion* Lion::make(const BlockCipher::Spec& spec)
-   {
-   if(spec.arg_count_between(2, 3))
-      {
-      std::unique_ptr<HashFunction> hash(HashFunction::create(spec.arg(0)));
-      std::unique_ptr<StreamCipher> stream(StreamCipher::create(spec.arg(1)));
-
-      if(hash && stream)
-         {
-         const size_t block_size = spec.arg_as_integer(2, 1024);
-         return new Lion(hash.release(), stream.release(), block_size);
-         }
-      }
-   return nullptr;
-   }
-
 /*
 * Lion Encryption
 */

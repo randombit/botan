@@ -9,16 +9,6 @@
 
 namespace Botan {
 
-CBC_MAC* CBC_MAC::make(const Spec& spec)
-   {
-   if(spec.arg_count() == 1)
-      {
-      if(auto bc = BlockCipher::create(spec.arg(0)))
-         return new CBC_MAC(bc.release());
-      }
-   return nullptr;
-   }
-
 /*
 * Update an CBC-MAC Calculation
 */

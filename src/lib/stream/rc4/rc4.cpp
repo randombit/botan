@@ -10,15 +10,6 @@
 
 namespace Botan {
 
-RC4* RC4::make(const Spec& spec)
-   {
-   if(spec.algo_name() == "RC4")
-      return new RC4(spec.arg_as_integer(0, 0));
-   if(spec.algo_name() == "RC4_drop")
-      return new RC4(768);
-   return nullptr;
-   }
-
 /*
 * Combine cipher stream with message
 */

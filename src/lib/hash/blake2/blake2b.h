@@ -34,8 +34,6 @@ class BOTAN_DLL Blake2b final : public HashFunction
       size_t hash_block_size() const override { return BLAKE2B_BLOCKBYTES; }
       size_t output_length() const override { return m_output_bits / 8; }
 
-      static Blake2b* make(const Spec& spec);
-
       HashFunction* clone() const override;
       std::string name() const override;
       void clear() override;

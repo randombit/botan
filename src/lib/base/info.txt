@@ -10,10 +10,6 @@ sym_algo.h
 symkey.h
 </header:public>
 
-<header:internal>
-algo_registry.h
-</header:internal>
-
 <requires>
 block
 hash

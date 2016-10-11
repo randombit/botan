@@ -53,8 +53,6 @@ class BOTAN_DLL TLS_12_PRF final : public KDF
       * @param mac MAC algorithm to use
       */
       explicit TLS_12_PRF(MessageAuthenticationCode* mac) : m_mac(mac) {}
-
-      static TLS_12_PRF* make(const Spec& spec);
    private:
       std::unique_ptr<MessageAuthenticationCode> m_mac;
    };

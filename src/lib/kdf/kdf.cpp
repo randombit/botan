@@ -6,8 +6,8 @@
 */
 
 #include <botan/kdf.h>
+#include <botan/scan_name.h>
 #include <botan/exceptn.h>
-#include <botan/internal/algo_registry.h>
 
 #if defined(BOTAN_HAS_HKDF)
 #include <botan/hkdf.h>
@@ -45,27 +45,162 @@
 #include <botan/sp800_56c.h>
 #endif
 
-#define BOTAN_REGISTER_KDF_NOARGS(type, name)                    \
-   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T<type>))
-#define BOTAN_REGISTER_KDF_1HASH(type, name)                    \
-   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T_1X<type, HashFunction>))
-
-#define BOTAN_REGISTER_KDF_NAMED_1STR(type, name) \
-   BOTAN_REGISTER_NAMED_T(KDF, name, type, (make_new_T_1str_req<type>))
-
 namespace Botan {
 
-KDF::~KDF() {}
+namespace {
+
+template<typename KDF_Type>
+std::unique_ptr<KDF>
+kdf_create_mac_or_hash(const std::string& nm)
+   {
+   if(auto mac = MessageAuthenticationCode::create(nm))
+      return std::unique_ptr<KDF>(new KDF_Type(mac.release()));
+
+   if(auto mac = MessageAuthenticationCode::create("HMAC(" + nm + ")"))
+      return std::unique_ptr<KDF>(new KDF_Type(mac.release()));
+
+   return nullptr;
+   }
+
+}
 
 std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
-                                                 const std::string& provider)
+                                 const std::string& provider)
    {
-   return std::unique_ptr<KDF>(make_a<KDF>(Botan::KDF::Spec(algo_spec), provider));
+   const SCAN_Name req(algo_spec);
+
+#if defined(BOTAN_HAS_HKDF)
+   if(req.algo_name() == "HKDF" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         return kdf_create_mac_or_hash<HKDF>(req.arg(0));
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_KDF2)
+   if(req.algo_name() == "KDF2" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         if(auto hash = HashFunction::create(req.arg(0)))
+            return std::unique_ptr<KDF>(new KDF2(hash.release()));
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_KDF1_18033)
+   if(req.algo_name() == "KDF1-18033" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         if(auto hash = HashFunction::create(req.arg(0)))
+            return std::unique_ptr<KDF>(new KDF1_18033(hash.release()));
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_KDF1)
+   if(req.algo_name() == "KDF1" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         if(auto hash = HashFunction::create(req.arg(0)))
+            return std::unique_ptr<KDF>(new KDF1(hash.release()));
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_TLS_V10_PRF)
+   if(req.algo_name() == "TLS-PRF" && req.arg_count() == 0)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         return std::unique_ptr<KDF>(new TLS_PRF);
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_TLS_V12_PRF)
+   if(req.algo_name() == "TLS-12-PRF" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         return kdf_create_mac_or_hash<TLS_12_PRF>(req.arg(0));
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_X942_PRF)
+   if(req.algo_name() == "X9.42-PRF" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         return std::unique_ptr<KDF>(new X942_PRF(req.arg(0)));
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_SP800_108)
+   if(req.algo_name() == "SP800-108-Counter" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         return kdf_create_mac_or_hash<SP800_108_Counter>(req.arg(0));
+         }
+      }
+
+   if(req.algo_name() == "SP800-108-Feedback" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         return kdf_create_mac_or_hash<SP800_108_Feedback>(req.arg(0));
+         }
+      }
+
+   if(req.algo_name() == "SP800-108-Pipeline" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         return kdf_create_mac_or_hash<SP800_108_Pipeline>(req.arg(0));
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_SP800_56C)
+   if(req.algo_name() == "SP800-56C" && req.arg_count() == 1)
+      {
+      std::unique_ptr<KDF> exp(kdf_create_mac_or_hash<SP800_108_Feedback>(req.arg(0)));
+      if(exp)
+         {
+         if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
+            return std::unique_ptr<KDF>(new SP800_56C(mac.release(), exp.release()));
+
+         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
+            return std::unique_ptr<KDF>(new SP800_56C(mac.release(), exp.release()));
+         }
+      }
+#endif
+
+   return nullptr;
+   }
+
+//static
+std::unique_ptr<KDF>
+KDF::create_or_throw(const std::string& algo,
+                             const std::string& provider)
+   {
+   if(auto bc = KDF::create(algo, provider))
+      {
+      return bc;
+      }
+   throw Lookup_Error("Block cipher", algo, provider);
    }
 
 std::vector<std::string> KDF::providers(const std::string& algo_spec)
    {
-   return providers_of<KDF>(KDF::Spec(algo_spec));
+   return probe_providers_of<KDF>(algo_spec, { "base" });
    }
 
 KDF* get_kdf(const std::string& algo_spec)
@@ -75,47 +210,11 @@ KDF* get_kdf(const std::string& algo_spec)
    if(request.algo_name() == "Raw")
       return nullptr; // No KDF
 
+   //return KDF::create_or_throw(algo_spec).release();
    auto kdf = KDF::create(algo_spec);
    if(!kdf)
       throw Algorithm_Not_Found(algo_spec);
    return kdf.release();
    }
 
-#if defined(BOTAN_HAS_HKDF)
-BOTAN_REGISTER_NAMED_T(KDF, "HKDF", HKDF, HKDF::make);
-#endif
-
-#if defined(BOTAN_HAS_KDF1)
-BOTAN_REGISTER_KDF_1HASH(KDF1, "KDF1");
-#endif
-
-#if defined(BOTAN_HAS_KDF2)
-BOTAN_REGISTER_KDF_1HASH(KDF2, "KDF2");
-#endif
-
-#if defined(BOTAN_HAS_KDF1_18033)
-BOTAN_REGISTER_KDF_1HASH( KDF1_18033, "KDF1-18033" );
-#endif
-
-#if defined(BOTAN_HAS_TLS_V10_PRF)
-BOTAN_REGISTER_KDF_NOARGS(TLS_PRF, "TLS-PRF");
-#endif
-
-#if defined(BOTAN_HAS_TLS_V12_PRF)
-BOTAN_REGISTER_NAMED_T(KDF, "TLS-12-PRF", TLS_12_PRF, TLS_12_PRF::make);
-#endif
-
-#if defined(BOTAN_HAS_X942_PRF)
-BOTAN_REGISTER_KDF_NAMED_1STR(X942_PRF, "X9.42-PRF");
-#endif
-
-#if defined(BOTAN_HAS_SP800_108)
-BOTAN_REGISTER_NAMED_T(KDF, "SP800-108-Counter", SP800_108_Counter, SP800_108_Counter::make);
-BOTAN_REGISTER_NAMED_T(KDF, "SP800-108-Feedback", SP800_108_Feedback, SP800_108_Feedback::make);
-BOTAN_REGISTER_NAMED_T(KDF, "SP800-108-Pipeline", SP800_108_Pipeline, SP800_108_Pipeline::make);
-#endif
-
-#if defined(BOTAN_HAS_SP800_56C)
-BOTAN_REGISTER_NAMED_T(KDF, "SP800-56C", SP800_56C, SP800_56C::make);
-#endif
 }

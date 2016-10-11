@@ -9,16 +9,6 @@
 
 namespace Botan {
 
-CTR_BE* CTR_BE::make(const Spec& spec)
-   {
-   if(spec.algo_name() == "CTR-BE" && spec.arg_count() == 1)
-      {
-      if(auto c = BlockCipher::create(spec.arg(0)))
-         return new CTR_BE(c.release());
-      }
-   return nullptr;
-   }
-
 CTR_BE::CTR_BE(BlockCipher* ciph) :
    m_cipher(ciph),
    m_counter(m_cipher->parallel_bytes()),

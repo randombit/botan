@@ -33,8 +33,6 @@ class BOTAN_DLL Cascade_Cipher final : public BlockCipher
       std::string name() const override;
       BlockCipher* clone() const override;
 
-      static Cascade_Cipher* make(const Spec& spec);
-
       /**
       * Create a cascade of two block ciphers
       * @param cipher1 the first cipher

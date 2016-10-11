@@ -9,7 +9,6 @@
 #define BOTAN_COMPRESSION_UTILS_H__
 
 #include <botan/compression.h>
-#include <botan/internal/algo_registry.h>
 #include <memory>
 #include <unordered_map>
 
@@ -84,10 +83,6 @@ class Zlib_Style_Stream : public Compression_Stream
       stream_t m_stream;
       std::unique_ptr<Compression_Alloc_Info> m_allocs;
    };
-
-#define BOTAN_REGISTER_COMPRESSION(C, D) \
-   BOTAN_REGISTER_T_NOARGS(Compression_Algorithm, C); \
-   BOTAN_REGISTER_T_NOARGS(Decompression_Algorithm, D)
 
 }
 

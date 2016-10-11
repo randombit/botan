@@ -6,7 +6,7 @@
 */
 
 #include <botan/mac.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/scan_name.h>
 #include <botan/mem_ops.h>
 
 #if defined(BOTAN_HAS_CBC_MAC)
@@ -35,18 +35,97 @@
 
 namespace Botan {
 
-std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(const std::string& algo_spec,
-                                                                             const std::string& provider)
+std::unique_ptr<MessageAuthenticationCode>
+MessageAuthenticationCode::create(const std::string& algo_spec,
+                                  const std::string& provider)
    {
-   return std::unique_ptr<MessageAuthenticationCode>(make_a<MessageAuthenticationCode>(MessageAuthenticationCode::Spec(algo_spec), provider));
+   const SCAN_Name req(algo_spec);
+
+#if defined(BOTAN_HAS_HMAC)
+   if(req.algo_name() == "HMAC" && req.arg_count() == 1)
+      {
+      // TODO OpenSSL
+      if(provider.empty() || provider == "base")
+         {
+         if(auto h = HashFunction::create(req.arg(0)))
+            return std::unique_ptr<MessageAuthenticationCode>(new HMAC(h.release()));
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_POLY1305)
+   if(req.algo_name() == "Poly1305" && req.arg_count() == 0)
+      {
+      if(provider.empty() || provider == "base")
+         return std::unique_ptr<MessageAuthenticationCode>(new Poly1305);
+      }
+#endif
+
+#if defined(BOTAN_HAS_SIPHASH)
+   if(req.algo_name() == "SipHash")
+      {
+      if(provider.empty() || provider == "base")
+         {
+         return std::unique_ptr<MessageAuthenticationCode>(
+            new SipHash(req.arg_as_integer(0, 2),
+                        req.arg_as_integer(1, 4)));
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_CMAC)
+   if(req.algo_name() == "CMAC" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         if(auto bc = BlockCipher::create(req.arg(0)))
+            return std::unique_ptr<MessageAuthenticationCode>(new CMAC(bc.release()));
+         }
+      }
+#endif
+
+
+#if defined(BOTAN_HAS_CBC_MAC)
+   if(req.algo_name() == "CBC-MAC" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         if(auto bc = BlockCipher::create(req.arg(0)))
+            return std::unique_ptr<MessageAuthenticationCode>(new CBC_MAC(bc.release()));
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_ANSI_X919_MAC)
+   if(req.algo_name() == "X9.19-MAC")
+      {
+      if(provider.empty() || provider == "base")
+         {
+         return std::unique_ptr<MessageAuthenticationCode>(new ANSI_X919_MAC);
+         }
+      }
+#endif
+
+   return nullptr;
    }
 
-std::vector<std::string> MessageAuthenticationCode::providers(const std::string& algo_spec)
+std::vector<std::string>
+MessageAuthenticationCode::providers(const std::string& algo_spec)
    {
-   return providers_of<MessageAuthenticationCode>(MessageAuthenticationCode::Spec(algo_spec));
+   return probe_providers_of<MessageAuthenticationCode>(algo_spec, {"base", "openssl"});
    }
 
-MessageAuthenticationCode::~MessageAuthenticationCode() {}
+//static
+std::unique_ptr<MessageAuthenticationCode>
+MessageAuthenticationCode::create_or_throw(const std::string& algo,
+                                           const std::string& provider)
+   {
+   if(auto mac = MessageAuthenticationCode::create(algo, provider))
+      {
+      return mac;
+      }
+   throw Lookup_Error("MAC", algo, provider);
+   }
 
 /*
 * Default (deterministic) MAC verification operation
@@ -60,29 +139,5 @@ bool MessageAuthenticationCode::verify_mac(const byte mac[], size_t length)
 
    return same_mem(our_mac.data(), mac, length);
    }
-
-#if defined(BOTAN_HAS_CBC_MAC)
-BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CBC-MAC", CBC_MAC, CBC_MAC::make);
-#endif
-
-#if defined(BOTAN_HAS_CMAC)
-BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "CMAC", CMAC, CMAC::make);
-#endif
-
-#if defined(BOTAN_HAS_HMAC)
-BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "HMAC", HMAC, HMAC::make);
-#endif
-
-#if defined(BOTAN_HAS_POLY1305)
-BOTAN_REGISTER_T_NOARGS(MessageAuthenticationCode, Poly1305);
-#endif
-
-#if defined(BOTAN_HAS_SIPHASH)
-BOTAN_REGISTER_NAMED_T_2LEN(MessageAuthenticationCode, SipHash, "SipHash", "base", 2, 4);
-#endif
-
-#if defined(BOTAN_HAS_ANSI_X919_MAC)
-BOTAN_REGISTER_NAMED_T(MessageAuthenticationCode, "X9.19-MAC", ANSI_X919_MAC, make_new_T<ANSI_X919_MAC>);
-#endif
 
 }

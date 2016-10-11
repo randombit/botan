@@ -13,7 +13,6 @@
 #include <botan/internal/p11_mechanism.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
-#include <botan/internal/algo_registry.h>
 #include <botan/internal/pk_ops.h>
 #include <botan/rng.h>
 

@@ -8,7 +8,7 @@
 #ifndef BOTAN_SCAN_NAME_H__
 #define BOTAN_SCAN_NAME_H__
 
-#include <botan/types.h>
+#include <botan/exceptn.h>
 #include <string>
 #include <vector>
 #include <botan/mutex.h>
@@ -125,6 +125,23 @@ class BOTAN_DLL SCAN_Name
       std::vector<std::string> m_args;
       std::vector<std::string> m_mode_info;
    };
+
+// This is unrelated but it is convenient to stash it here
+template<typename T>
+std::vector<std::string> probe_providers_of(const std::string& algo_spec,
+                                            const std::vector<std::string>& possible)
+   {
+   std::vector<std::string> providers;
+   for(auto&& prov : possible)
+      {
+      std::unique_ptr<T> o(T::create(algo_spec, prov));
+      if(o)
+         {
+         providers.push_back(prov); // available
+         }
+      }
+   return providers;
+   }
 
 }
 

@@ -41,8 +41,6 @@ class BOTAN_DLL CMAC final : public MessageAuthenticationCode
       */
       explicit CMAC(BlockCipher* cipher);
 
-      static CMAC* make(const Spec& spec);
-
       CMAC(const CMAC&) = delete;
       CMAC& operator=(const CMAC&) = delete;
    private:

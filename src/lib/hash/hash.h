@@ -8,7 +8,6 @@
 #ifndef BOTAN_HASH_FUNCTION_BASE_CLASS_H__
 #define BOTAN_HASH_FUNCTION_BASE_CLASS_H__
 
-#include <botan/scan_name.h>
 #include <botan/buf_comp.h>
 #include <string>
 
@@ -20,17 +19,25 @@ namespace Botan {
 class BOTAN_DLL HashFunction : public Buffered_Computation
    {
    public:
-      typedef SCAN_Name Spec;
+      /**
+      * Create an instance based on a name, or return null if the
+      * algo/provider combination cannot be found. If provider is
+      * empty then best available is chosen.
+      */
+      static std::unique_ptr<HashFunction>
+         create(const std::string& algo_spec,
+                const std::string& provider = "");
 
       /**
       * Create an instance based on a name
       * If provider is empty then best available is chosen.
       * @param algo_spec algorithm name
       * @param provider provider implementation to use
-      * @return a null pointer if the algo/provider combination cannot be found
+      * Throws Lookup_Error if not not found.
       */
-      static std::unique_ptr<HashFunction> create(const std::string& algo_spec,
-                                                  const std::string& provider = "");
+      static std::unique_ptr<HashFunction>
+         create_or_throw(const std::string& algo_spec,
+                         const std::string& provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -49,9 +56,7 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
       */
       virtual std::string provider() const { return "base"; }
 
-      HashFunction();
-
-      virtual ~HashFunction();
+      virtual ~HashFunction() {}
 
       /**
       * Reset the state.
