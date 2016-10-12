@@ -209,7 +209,7 @@ size_t Unix_EntropySource::poll(RandomNumberGenerator& rng)
    if((getuid() != geteuid()) || (getgid() != getegid()) || (geteuid() == 0))
       return 0;
 
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
 
    if(m_sources.empty())
       {

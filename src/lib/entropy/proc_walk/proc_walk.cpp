@@ -114,7 +114,7 @@ size_t ProcWalking_EntropySource::poll(RandomNumberGenerator& rng)
    {
    const size_t MAX_FILES_READ_PER_POLL = 2048;
 
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
 
    if(!m_dir)
       m_dir.reset(new Directory_Walker(m_path));

@@ -14,11 +14,15 @@
 #include <botan/workfactor.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
-#include <future>
 
 #if defined(BOTAN_HAS_OPENSSL)
   #include <botan/internal/openssl.h>
 #endif
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+#include <future>
+#endif
+
 
 namespace Botan {
 
@@ -218,9 +222,14 @@ class RSA_Private_Operation
 
       BigInt private_op(const BigInt& m) const
          {
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
          auto future_j1 = std::async(std::launch::async, m_powermod_d1_p, m);
          BigInt j2 = m_powermod_d2_q(m);
          BigInt j1 = future_j1.get();
+#else
+         BigInt j1 = m_powermod_d1_p(m);
+         BigInt j2 = m_powermod_d2_q(m);
+#endif
 
          j1 = m_mod_p.reduce(sub_mul(j1, j2, m_c));
 

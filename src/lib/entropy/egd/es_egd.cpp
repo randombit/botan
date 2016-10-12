@@ -136,7 +136,7 @@ EGD_EntropySource::~EGD_EntropySource()
 */
 size_t EGD_EntropySource::poll(RandomNumberGenerator& rng)
    {
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
 
    secure_vector<byte> buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
 

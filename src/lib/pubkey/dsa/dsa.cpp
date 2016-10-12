@@ -17,7 +17,9 @@
   #include <botan/rfc6979.h>
 #endif
 
-#include <future>
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+  #include <future>
+#endif
 
 namespace Botan {
 
@@ -124,11 +126,17 @@ DSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
    const BigInt k = BigInt::random_integer(rng, 1, m_q);
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
    auto future_r = std::async(std::launch::async,
                               [&]() { return m_mod_q.reduce(m_powermod_g_p(k)); });
 
    BigInt s = inverse_mod(k, m_q);
    const BigInt r = future_r.get();
+#else
+   BigInt s = inverse_mod(k, m_q);
+   const BigInt r = m_mod_q.reduce(m_powermod_g_p(k));
+#endif
+
    s = m_mod_q.multiply(s, mul_add(m_x, r, i));
 
    // With overwhelming probability, a bug rather than actual zero r/s
@@ -184,11 +192,16 @@ bool DSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
 
    s = inverse_mod(s, m_q);
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
    auto future_s_i = std::async(std::launch::async,
       [&]() { return m_powermod_g_p(m_mod_q.multiply(s, i)); });
 
    BigInt s_r = m_powermod_y_p(m_mod_q.multiply(s, r));
    BigInt s_i = future_s_i.get();
+#else
+   BigInt s_r = m_powermod_y_p(m_mod_q.multiply(s, r));
+   BigInt s_i = m_powermod_g_p(m_mod_q.multiply(s, i));
+#endif
 
    s = m_mod_p.multiply(s_i, s_r);
 

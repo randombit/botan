@@ -7,7 +7,7 @@
 
 #include <botan/oids.h>
 #include <botan/parsing.h>
-#include <mutex>
+#include <botan/mutex.h>
 #include <sstream>
 
 namespace Botan {

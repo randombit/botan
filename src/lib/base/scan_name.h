@@ -11,7 +11,7 @@
 #include <botan/types.h>
 #include <string>
 #include <vector>
-#include <mutex>
+#include <botan/mutex.h>
 #include <map>
 
 namespace Botan {
@@ -107,7 +107,7 @@ class BOTAN_DLL SCAN_Name
 
       static std::string deref_alias(const std::string& alias);
    private:
-      static std::mutex g_alias_map_mutex;
+      static mutex_type g_alias_map_mutex;
       static std::map<std::string, std::string> g_alias_map;
 
       std::string m_orig_algo_spec;

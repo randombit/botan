@@ -9,7 +9,7 @@
 #define BOTAN_TLS_SESSION_MANAGER_H__
 
 #include <botan/tls_session.h>
-#include <mutex>
+#include <botan/mutex.h>
 #include <chrono>
 #include <map>
 
@@ -138,7 +138,7 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       bool load_from_session_str(const std::string& session_str,
                                  Session& session);
 
-      std::mutex m_mutex;
+      mutex_type m_mutex;
 
       size_t m_max_sessions;
 

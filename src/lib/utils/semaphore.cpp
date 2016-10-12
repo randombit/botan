@@ -7,6 +7,8 @@
 
 #include <botan/internal/semaphore.h>
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+
 // Based on code by Pierre Gaston (http://p9as.blogspot.com/2012/06/c11-semaphores.html)
 
 namespace Botan {
@@ -15,7 +17,7 @@ void Semaphore::release(size_t n)
    {
    for(size_t i = 0; i != n; ++i)
       {
-      std::lock_guard<std::mutex> lock(m_mutex);
+      lock_guard_type<mutex_type> lock(m_mutex);
 
       ++m_value;
 
@@ -29,7 +31,7 @@ void Semaphore::release(size_t n)
 
 void Semaphore::acquire()
    {
-   std::unique_lock<std::mutex> lock(m_mutex);
+   std::unique_lock<mutex_type> lock(m_mutex);
    --m_value;
    if(m_value < 0)
       {
@@ -39,3 +41,5 @@ void Semaphore::acquire()
    }
 
 }
+
+#endif
