@@ -19,7 +19,6 @@
 #include <botan/x509self.h>
 #include <botan/rsa.h>
 #include <botan/x509_ca.h>
-#include <botan/auto_rng.h>
 #include <botan/hex.h>
 #endif
 
