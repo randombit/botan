@@ -1211,6 +1211,7 @@ int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path
       if(!cert_obj || !cert_path)
          return -1;
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       std::unique_ptr<Botan::X509_Certificate> c(new Botan::X509_Certificate(cert_path));
 
       if(c)
@@ -1218,6 +1219,9 @@ int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path
          *cert_obj = new botan_x509_cert_struct(c.release());
          return 0;
          }
+#else
+      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
       }
    catch(std::exception& e)
       {

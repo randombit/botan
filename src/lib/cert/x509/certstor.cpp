@@ -114,6 +114,7 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const X509_Certificate&
    add_certificate(cert);
    }
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
    {
    if(dir.empty())
@@ -131,6 +132,7 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
          }
       }
    }
+#endif
 
 std::shared_ptr<const X509_Certificate>
 Certificate_Store_Overlay::find_cert(const X509_DN& subject_dn,

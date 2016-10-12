@@ -86,12 +86,14 @@ class BOTAN_DLL PKCS10_Request final : public X509_Object
       */
       explicit PKCS10_Request(DataSource& source);
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       /**
       * Create a PKCS#10 Request from a file.
       * @param filename the name of the file containing the DER or PEM
       * encoded request file
       */
       explicit PKCS10_Request(const std::string& filename);
+#endif
 
       /**
       * Create a PKCS#10 Request from binary data.
