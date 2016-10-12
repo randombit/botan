@@ -1019,7 +1019,6 @@ class OsInfo(object):
                         'bin_dir': 'bin',
                         'lib_dir': 'lib',
                         'doc_dir': 'share/doc',
-                        'with_filesystem': 'yes',
                         'building_shared_supported': 'yes',
                         'install_cmd_data': 'install -m 644',
                         'install_cmd_exec': 'install -m 755'
@@ -1028,7 +1027,6 @@ class OsInfo(object):
         self.ar_needs_ranlib = bool(self.ar_needs_ranlib)
 
         self.building_shared_supported = (True if self.building_shared_supported == 'yes' else False)
-        self.with_filesystem = (True if self.with_filesystem == 'yes' else False)
 
     def ranlib_command(self):
         return ('ranlib' if self.ar_needs_ranlib else 'true')
@@ -1047,9 +1045,6 @@ class OsInfo(object):
             for feat in options.with_os_features:
                 if feat not in self.target_features:
                     yield 'TARGET_OS_HAS_' + feat.upper()
-
-            if self.with_filesystem:
-                yield 'TARGET_OS_HAS_FILESYSTEM'
 
         r += sorted(feat_macros())
         return r

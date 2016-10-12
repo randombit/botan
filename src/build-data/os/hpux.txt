@@ -2,6 +2,8 @@ os_type unix
 
 <target_features>
 gettimeofday
+threads
+filesystem
 </target_features>
 
 <aliases>

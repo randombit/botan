@@ -25,4 +25,6 @@ loadlibrary
 mkgmtime
 win32_virtual_lock
 win32_get_systemtime
+threads
+filesystem
 </target_features>

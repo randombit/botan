@@ -5,4 +5,6 @@ clock_gettime
 gettimeofday
 posix_mlock
 sockets
+threads
+filesystem
 </target_features>

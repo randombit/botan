@@ -18,6 +18,8 @@ memset_s
 readdir
 timegm
 sockets
+threads
+filesystem
 </target_features>
 
 <aliases>
