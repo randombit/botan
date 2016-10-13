@@ -11,7 +11,6 @@
 #include <botan/internal/filesystem.h>
 #include <botan/pkcs8.h>
 #include <botan/data_src.h>
-#include <botan/auto_rng.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
 
@@ -19,8 +18,12 @@ namespace Botan {
 
 Certificate_Store_In_SQL::Certificate_Store_In_SQL(std::shared_ptr<SQL_Database> db,
                                                    const std::string& passwd,
-                                                   const std::string& table_prefix)
-: m_database(db), m_prefix(table_prefix), m_password(passwd)
+                                                   RandomNumberGenerator& rng,
+                                                   const std::string& table_prefix) :
+   m_rng(rng),
+   m_database(db),
+   m_prefix(table_prefix),
+   m_password(passwd)
    {
    m_database->create_table("CREATE TABLE IF NOT EXISTS " +
                              m_prefix + "certificates (                \
@@ -163,9 +166,8 @@ std::shared_ptr<const Private_Key> Certificate_Store_In_SQL::find_key(const X509
    while(stmt->step())
       {
       auto blob = stmt->get_blob(0);
-      AutoSeeded_RNG rng;
       DataSource_Memory src(blob.first,blob.second);
-      key.reset(PKCS8::load_key(src,rng,m_password));
+      key.reset(PKCS8::load_key(src, m_rng, m_password));
       }
 
    return key;
@@ -174,7 +176,6 @@ std::shared_ptr<const Private_Key> Certificate_Store_In_SQL::find_key(const X509
 std::vector<std::shared_ptr<const X509_Certificate>>
 Certificate_Store_In_SQL::find_certs_for_key(const Private_Key& key) const
    {
-   AutoSeeded_RNG rng;
    auto fpr = key.fingerprint("SHA-256");
    auto stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE priv_fingerprint == ?1");
 
@@ -197,8 +198,7 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
    if(find_key(cert))
       return false;
 
-   AutoSeeded_RNG rng;
-   auto pkcs8 = PKCS8::BER_encode(key,rng,m_password);
+   auto pkcs8 = PKCS8::BER_encode(key, m_rng, m_password);
    auto fpr = key.fingerprint("SHA-256");
 
    auto stmt1 = m_database->new_statement(
@@ -220,7 +220,6 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
 
 void Certificate_Store_In_SQL::remove_key(const Private_Key& key)
    {
-   AutoSeeded_RNG rng;
    auto fpr = key.fingerprint("SHA-256");
    auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "keys WHERE fingerprint == ?1");
 

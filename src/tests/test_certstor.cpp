@@ -214,7 +214,7 @@ class Certstor_Tests : public Test
 
                auto& rng = Test::rng();
                std::string passwd(reinterpret_cast<const char*>(rng.random_vec(8).data()),8);
-               Botan::Certificate_Store_In_SQLite store(fn.first + ".db",passwd);
+               Botan::Certificate_Store_In_SQLite store(fn.first + ".db", passwd, rng);
                std::vector<std::pair<Botan::X509_Certificate,std::shared_ptr<Botan::Private_Key>>> retrieve;
 
                for(auto&& cert_key_pair : test_data)

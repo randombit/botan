@@ -22,10 +22,12 @@ class BOTAN_DLL Certificate_Store_In_SQLite : public Certificate_Store_In_SQL
       * Create/open a certificate store.
       * @param db underlying database storage
       * @param passwd password to encrypt private keys in the database
+      * @param rng used for encrypting keys
       * @param table_prefix optional prefix for db table names
       */
       Certificate_Store_In_SQLite(const std::string& db_path,
                                   const std::string& passwd,
+                                  RandomNumberGenerator& rng,
                                   const std::string& table_prefix = "");
    };
 }

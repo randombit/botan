@@ -15,6 +15,8 @@
 
 namespace Botan {
 
+class RandomNumberGenerator;
+
 /**
  * Certificate and private key store backed by an SQL database.
  */
@@ -25,10 +27,12 @@ class BOTAN_DLL Certificate_Store_In_SQL : public Certificate_Store
       * Create/open a certificate store.
       * @param db underlying database storage
       * @param passwd password to encrypt private keys in the database
+      * @param rng used for encrypting keys
       * @param table_prefix optional prefix for db table names
       */
       explicit Certificate_Store_In_SQL(const std::shared_ptr<SQL_Database> db,
                                         const std::string& passwd,
+                                        RandomNumberGenerator& rng,
                                         const std::string& table_prefix = "");
 
       /**
@@ -89,8 +93,7 @@ class BOTAN_DLL Certificate_Store_In_SQL : public Certificate_Store
          find_crl_for(const X509_Certificate& issuer) const override;
 
    private:
-      std::string fingerprint_key(const Private_Key&) const;
-
+      RandomNumberGenerator& m_rng;
       std::shared_ptr<SQL_Database> m_database;
       std::string m_prefix;
       std::string m_password;
