@@ -13,10 +13,13 @@
 #include <botan/loadstor.h>
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/tls_session_key.h>
-#include <botan/internal/tls_cbc.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/rng.h>
+
+#if defined(BOTAN_HAS_TLS_CBC)
+  #include <botan/internal/tls_cbc.h>
+#endif
 
 namespace Botan {
 
@@ -70,6 +73,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       }
    else
       {
+#if defined(BOTAN_HAS_TLS_CBC)
       // legacy CBC+HMAC mode
       if(our_side)
          {
@@ -99,6 +103,9 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
          m_nonce_bytes_from_record = m_nonce_bytes_from_handshake;
       else if(our_side == false)
          m_aead->start(iv.bits_of());
+#else
+      throw Exception("Negotiated disabled TLS CBC+HMAC ciphersuite");
+#endif
       }
    }
 

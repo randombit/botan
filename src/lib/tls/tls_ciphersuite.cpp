@@ -78,6 +78,11 @@ bool Ciphersuite::is_usable() const
    if(!have_hash(prf_algo()))
       return false;
 
+#if !defined(BOTAN_HAS_TLS_CBC)
+   if(cbc_ciphersuite())
+      return false;
+#endif
+
    if(mac_algo() == "AEAD")
       {
       if(cipher_algo() == "ChaCha20Poly1305")
