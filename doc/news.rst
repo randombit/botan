@@ -13,12 +13,8 @@ Version 1.11.33, Not Yet Released
 
 * Add support for the TLS Supported Point Formats Extension from RFC 4492. Adds
   TLS::Policy::use_ecc_point_compression policy option. If supported on both
-  sides, ECC points can be sent in compressed format, which both saves a few
-  bytes on the wire and is an inexpensive way of avoiding invalid curve attacks.
-  For uncompressed points Botan already checks that the point is on the curve so
-  invalid curve attacks are not possible in either situation, but the point
-  decompression will typically be cheaper than verifying the point is on the
-  curve. (GH #645)
+  sides, ECC points can be sent in compressed format which saves a few bytes
+  during the handshake. (GH #645)
 
 * Fix entropy source selection bug on Windows, which caused the CryptoAPI
   entropy source to be not available under its normal name "win32_cryptoapi" but

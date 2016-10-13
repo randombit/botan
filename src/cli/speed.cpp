@@ -88,6 +88,10 @@
   #include <botan/chacha.h>
 #endif
 
+#if defined(BOTAN_HAS_ECC_GROUP)
+  #include <botan/ec_group.h>
+#endif
+
 namespace Botan_CLI {
 
 namespace {
@@ -426,6 +430,12 @@ class Speed final : public Command
                bench_fpe_fe1(msec);
                }
 #endif
+#if defined(BOTAN_HAS_ECC_GROUP)
+            else if(algo == "os2ecp")
+               {
+               bench_os2ecp(msec);
+               }
+#endif
             else if(algo == "RNG")
                {
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
@@ -658,6 +668,32 @@ class Speed final : public Command
             output() << " total samples " << rng.samples() << "\n";
             }
          }
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+      void bench_os2ecp(const std::chrono::milliseconds runtime)
+         {
+         Timer uncmp_timer("OS2ECP uncompressed");
+         Timer cmp_timer("OS2ECP compressed");
+
+         const Botan::EC_Group group("secp256r1");
+         const Botan::CurveGFp& curve = group.get_curve();
+
+         while(uncmp_timer.under(runtime) && cmp_timer.under(runtime))
+            {
+            const Botan::BigInt k(rng(), 256);
+            const Botan::PointGFp p = group.get_base_point() * k;
+            const Botan::secure_vector<uint8_t> os_cmp = Botan::EC2OSP(p, Botan::PointGFp::COMPRESSED);
+            const Botan::secure_vector<uint8_t> os_uncmp = Botan::EC2OSP(p, Botan::PointGFp::UNCOMPRESSED);
+
+            uncmp_timer.run([&] { OS2ECP(os_uncmp, curve); });
+            cmp_timer.run([&] { OS2ECP(os_cmp, curve); });
+            }
+
+         output() << Timer::result_string_ops(uncmp_timer);
+         output() << Timer::result_string_ops(cmp_timer);
+         }
+
+#endif
 
 #if defined(BOTAN_HAS_FPE_FE1)
 
