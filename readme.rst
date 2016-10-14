@@ -97,7 +97,7 @@ Current Development Work (1.11)
 
 The 1.11 branch is highly recommended, especially for new projects.
 Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and
-later, Clang 3.4 and later, and MSVC 2013/2015 are regularly tested.
+later, Clang 3.5 and later, and MSVC 2013/2015 are regularly tested.
 
 The latest development release is
 `1.11.32 <http://botan.randombit.net/releases/Botan-1.11.32.tgz>`_
@@ -224,4 +224,4 @@ Recommended Algorithms
   or ECDSA with P-256/SHA-256 or P-384/SHA-384
 
 * Key Agreement: ECDH P-256 or Curve25519, with KDF2(SHA-256)
-  Or McEliece if you are concerned about attacks by quantum computers.
+  If you are concerned about quantum computers, combine ECC with NewHope
