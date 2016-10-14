@@ -417,11 +417,11 @@ class FFI_Unit_Tests : public Test
          * ends up encoding as fewer bytes in the variable length ASN.1 encoding used in PKCS #8
          * private key encryption.
          *
-         * here request the size but then add 10 bytes. this is an attempt to avoid occasional
+         * here request the size but then add a few bytes. this is an attempt to avoid occasional
          * cases on CI where the above case occurs, and the build fails because on the second
          * call, more space was required than the first call had returned.
          */
-         const size_t privkey_size_slop = 10;
+         const size_t privkey_size_slop = 64;
 
          // call with nullptr to query the length
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export, (priv, nullptr, &privkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_DER));
@@ -451,6 +451,7 @@ class FFI_Unit_Tests : public Test
          privkey_len = privkey.size();
 
          TEST_FFI_OK(botan_privkey_export_encrypted, (priv, privkey.data(), &privkey_len, rng, "password", "", BOTAN_PRIVKEY_EXPORT_FLAG_DER));
+
          privkey_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export_encrypted, (priv, nullptr, &privkey_len, rng, "password", "", BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
 
