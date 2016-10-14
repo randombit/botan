@@ -36,6 +36,7 @@ uint32_t RDRAND_RNG::rdrand()
    }
 
 //static
+BOTAN_FUNC_ISA("rdrnd")
 uint32_t RDRAND_RNG::rdrand_status(bool& ok)
    {
    ok = false;

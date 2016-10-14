@@ -1783,6 +1783,16 @@ def generate_amalgamation(build_config, options):
 
         if tgt not in botan_amalg_files:
             botan_amalg_files[tgt] = open_amalg_file(tgt)
+
+            if tgt != '':
+                for isa in mod.need_isa:
+                    if isa == 'aesni':
+                        isa = "aes,ssse3,pclmul"
+                    elif isa == 'rdrand':
+                        isa = 'rdrnd'
+
+                    botan_amalg_files[tgt].write('#if defined(__GNUG__)\n#pragma GCC target ("%s")\n#endif\n' % (isa))
+
         if tgt not in headers_written:
             headers_written[tgt] = headers_written_in_h_files.copy()
 

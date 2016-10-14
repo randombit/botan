@@ -152,6 +152,7 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 * SHA-160 Compression Function using SSE for message expansion
 */
 //static
+BOTAN_FUNC_ISA("sse2")
 void SHA_160::sse2_compress_n(secure_vector<uint32_t>& digest, const byte input[], size_t blocks)
    {
    using namespace SHA1_SSE2_F;
