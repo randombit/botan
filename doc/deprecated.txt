@@ -7,6 +7,8 @@ Currently deprecated:
 
 - 3DES and SEED ciphersuites in TLS
 
+- PBKDF1 key derivation
+
 - DSA auth in TLS (not ECDSA)
 
 - Old (Google specific) ChaCha20 TLS ciphersuites
@@ -22,3 +24,4 @@ Currently deprecated:
 - EGD entropy source
 
 - Unix process exec entropy source
+

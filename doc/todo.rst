@@ -35,6 +35,7 @@ Public Key Crypto, Math
 * FHMQV
 * Support mixed hashes and non-empty param strings in OAEP
 * wNAF ECC point multiply
+* Recover ECDSA public key from signature/message pair (GH #664)
 * Fast new implementations/algorithms for ECC point operations,
   Montgomery multiplication, multi-exponentiation, ...
 * Some PK operations, especially RSA, have extensive computations per
