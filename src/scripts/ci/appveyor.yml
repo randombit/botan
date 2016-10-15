@@ -4,24 +4,16 @@ platform:
   - x86
   - x86_amd64
 
-configuration:
-  - Release
-  - Debug
-
 environment:
   matrix:
     - COMPILER: msvc-12.0
-      MODE: --enable-shared
-    - COMPILER: msvc-12.0
       MODE: --disable-shared
-    - COMPILER: msvc-12.0
-      MODE: --amalgamation
     - COMPILER: msvc-14.0
       MODE: --enable-shared
     - COMPILER: msvc-14.0
-      MODE: --disable-shared
+      MODE: --enable-shared --enable-debug
     - COMPILER: msvc-14.0
-      MODE: --amalgamation
+      MODE: --disable-shared --amalgamation
 
 install:
   - if %compiler% == msvc-12.0 (
@@ -36,12 +28,7 @@ install:
   - 7z e jom.zip
 
 build_script:
-  - if %configuration% == Release (
-       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11
-    )
-  - if %configuration% == Debug (
-       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11 --debug-mode
-    )
+  - python configure.py --cc=msvc --with-pkcs11 --cpu=%PLATFORM% %MODE%
   - jom -j2
   - botan-test
   - nmake install
