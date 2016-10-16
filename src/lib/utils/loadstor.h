@@ -44,7 +44,7 @@ namespace Botan {
 * @param input the value to extract from
 * @return byte byte_num of input
 */
-template<typename T> inline constexpr byte get_byte(size_t byte_num, T input)
+template<typename T> inline byte get_byte(size_t byte_num, T input)
    {
    return static_cast<byte>(
       input >> (((~byte_num)&(sizeof(T)-1)) << 3)
@@ -57,7 +57,7 @@ template<typename T> inline constexpr byte get_byte(size_t byte_num, T input)
 * @param i1 the second byte
 * @return i0 || i1
 */
-inline constexpr u16bit make_u16bit(byte i0, byte i1)
+inline u16bit make_u16bit(byte i0, byte i1)
    {
    return ((static_cast<u16bit>(i0) << 8) | i1);
    }
@@ -70,7 +70,7 @@ inline constexpr u16bit make_u16bit(byte i0, byte i1)
 * @param i3 the fourth byte
 * @return i0 || i1 || i2 || i3
 */
-inline constexpr u32bit make_u32bit(byte i0, byte i1, byte i2, byte i3)
+inline u32bit make_u32bit(byte i0, byte i1, byte i2, byte i3)
    {
    return ((static_cast<u32bit>(i0) << 24) |
            (static_cast<u32bit>(i1) << 16) |
@@ -90,8 +90,8 @@ inline constexpr u32bit make_u32bit(byte i0, byte i1, byte i2, byte i3)
 * @param i7 the eighth byte
 * @return i0 || i1 || i2 || i3 || i4 || i5 || i6 || i7
 */
-inline constexpr u64bit make_u64bit(byte i0, byte i1, byte i2, byte i3,
-                                    byte i4, byte i5, byte i6, byte i7)
+inline u64bit make_u64bit(byte i0, byte i1, byte i2, byte i3,
+                          byte i4, byte i5, byte i6, byte i7)
     {
    return ((static_cast<u64bit>(i0) << 56) |
            (static_cast<u64bit>(i1) << 48) |
