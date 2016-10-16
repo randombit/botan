@@ -15,6 +15,9 @@ namespace Botan {
 class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
    {
    public:
+      /**
+      * @param cipher underyling stream cipher
+      */
       explicit Stream_Cipher_Mode(StreamCipher* cipher) : m_cipher(cipher) {}
 
       size_t process(uint8_t buf[], size_t sz) override

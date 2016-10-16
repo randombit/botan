@@ -55,6 +55,9 @@ class BOTAN_DLL XTS_Mode : public Cipher_Mode
 class BOTAN_DLL XTS_Encryption final : public XTS_Mode
    {
    public:
+      /**
+      * @param cipher underlying block cipher
+      */
       explicit XTS_Encryption(BlockCipher* cipher) : XTS_Mode(cipher) {}
 
       size_t process(uint8_t buf[], size_t size) override;
@@ -70,6 +73,9 @@ class BOTAN_DLL XTS_Encryption final : public XTS_Mode
 class BOTAN_DLL XTS_Decryption final : public XTS_Mode
    {
    public:
+      /**
+      * @param cipher underlying block cipher
+      */
       explicit XTS_Decryption(BlockCipher* cipher) : XTS_Mode(cipher) {}
 
       size_t process(uint8_t buf[], size_t size) override;

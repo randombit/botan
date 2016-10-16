@@ -61,6 +61,12 @@ class BOTAN_DLL CFB_Mode : public Cipher_Mode
 class BOTAN_DLL CFB_Encryption final : public CFB_Mode
    {
    public:
+      /**
+      * If feedback_bits is zero, cipher->block_size() bytes will be used.
+      * @param cipher block cipher to use
+      * @param feedback_bits number of bits fed back into the shift register,
+      * must be a multiple of 8
+      */
       CFB_Encryption(BlockCipher* cipher, size_t feedback_bits) :
          CFB_Mode(cipher, feedback_bits) {}
 
@@ -75,6 +81,12 @@ class BOTAN_DLL CFB_Encryption final : public CFB_Mode
 class BOTAN_DLL CFB_Decryption final : public CFB_Mode
    {
    public:
+      /**
+      * If feedback_bits is zero, cipher->block_size() bytes will be used.
+      * @param cipher block cipher to use
+      * @param feedback_bits number of bits fed back into the shift register,
+      * must be a multiple of 8
+      */
       CFB_Decryption(BlockCipher* cipher, size_t feedback_bits) :
          CFB_Mode(cipher, feedback_bits) {}
 

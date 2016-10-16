@@ -23,6 +23,12 @@ class BOTAN_DLL SIV_Mode : public AEAD_Mode
    public:
       size_t process(uint8_t buf[], size_t size) override;
 
+      /**
+      * Sets the nth element of the vector of associated data
+      * @param n index into the AD vector
+      * @param ad associated data
+      * @param ad_len length of associated data in bytes
+      */
       void set_associated_data_n(size_t n, const byte ad[], size_t ad_len);
 
       void set_associated_data(const byte ad[], size_t ad_len) override
