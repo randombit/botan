@@ -26,7 +26,7 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
       * Create an instance based on a name
       * If provider is empty then best available is chosen.
       * @param algo_spec algorithm name
-      * @param provider provider implementation to choose
+      * @param provider provider implementation to use
       * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<HashFunction> create(const std::string& algo_spec,

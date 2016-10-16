@@ -28,7 +28,7 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       * Create an instance based on a name
       * If provider is empty then best available is chosen.
       * @param algo_spec algorithm name
-      * @param provider provider implementation to choose
+      * @param provider provider implementation to use
       * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<MessageAuthenticationCode> create(const std::string& algo_spec,
