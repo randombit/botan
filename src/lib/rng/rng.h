@@ -38,7 +38,7 @@ class BOTAN_DLL RandomNumberGenerator
       /**
       * Randomize a byte array.
       * @param output the byte array to hold the random output.
-      * @param length the length of the byte array output.
+      * @param length the length of the byte array output in bytes.
       */
       virtual void randomize(byte output[], size_t length) = 0;
 
@@ -70,7 +70,12 @@ class BOTAN_DLL RandomNumberGenerator
       * Use this to further bind the outputs to your current
       * process/protocol state. For instance if generating a new key
       * for use in a session, include a session ID or other such
-      * value.  See NIST SP 800-90 A, B, C series for more ideas.
+      * value. See NIST SP 800-90 A, B, C series for more ideas.
+      *
+      * @param output buffer to hold the random output
+      * @param output_len size of the output buffer in bytes
+      * @param input entropy buffer to incorporate
+      * @param input_len size of the input buffer in bytes
       */
       virtual void randomize_with_input(byte output[], size_t output_len,
                                         const byte input[], size_t input_len);
@@ -78,8 +83,8 @@ class BOTAN_DLL RandomNumberGenerator
       /**
       * This calls `randomize_with_input` using some timestamps as extra input.
       *
-      * For a stateful RNG using non-random but potentially unique data as the
-      * additional_input can help protect against problems with fork, VM state
+      * For a stateful RNG using non-random but potentially unique data the
+      * extra input can help protect against problems with fork, VM state
       * rollback, or other cases where somehow an RNG state is duplicated. If
       * both of the duplicated RNG states later incorporate a timestamp (and the
       * timestamps don't themselves repeat), their outputs will diverge.
@@ -87,7 +92,7 @@ class BOTAN_DLL RandomNumberGenerator
       virtual void randomize_with_ts_input(byte output[], size_t output_len);
 
       /**
-      * Return the name of this RNG type
+      * @return the name of this RNG type
       */
       virtual std::string name() const = 0;
 
@@ -143,6 +148,9 @@ class BOTAN_DLL RandomNumberGenerator
          return b;
          }
 
+      /**
+      * @return a random byte that is not the zero byte
+      */
       byte next_nonzero_byte()
          {
          byte b = this->next_byte();

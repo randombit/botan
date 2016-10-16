@@ -20,7 +20,7 @@ namespace Botan {
 BOTAN_DLL RandomNumberGenerator& system_rng();
 
 /*
-* Instantiatable reference to the system RNG.
+* Instantiable reference to the system RNG.
 */
 class BOTAN_DLL System_RNG final : public RandomNumberGenerator
    {
