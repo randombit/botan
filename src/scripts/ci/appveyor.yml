@@ -45,3 +45,8 @@ build_script:
   - jom -j2
   - botan-test
   - nmake install
+
+# whitelist branches to avoid testing feature branches twice (as branch and as pull request)
+branches:
+  only:
+    - master
