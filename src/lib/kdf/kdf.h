@@ -25,24 +25,40 @@ class BOTAN_DLL KDF
 
       /**
       * Create an instance based on a name
-      * Will return a null pointer if the algo/provider combination cannot
-      * be found. If provider is empty then best available is chosen.
+      * If provider is empty then best available is chosen.
+      * @param algo_spec algorithm name
+      * @param provider provider implementation to choose
+      * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<KDF> create(const std::string& algo_spec,
                                          const std::string& provider = "");
 
       /**
-      * Returns the list of available providers for this algorithm, empty if not available
+      * @return list of available providers for this algorithm, empty if not available
       */
       static std::vector<std::string> providers(const std::string& algo_spec);
 
+      /**
+      * @return KDF name
+      */
       virtual std::string name() const = 0;
 
+      /**
+      * Derive a key
+      * @param key buffer holding the derived key, must be of length key_len
+      * @param key_len the desired output length in bytes
+      * @param secret the secret input
+      * @param secret_len size of secret in bytes
+      * @param salt a diversifier
+      * @param salt_len size of salt in bytes
+      * @param label purpose for the derived keying material
+      * @param label_len size of label in bytes
+      * @return the derived key
+      */
       virtual size_t kdf(byte key[], size_t key_len,
                          const byte secret[], size_t secret_len,
                          const byte salt[], size_t salt_len,
                          const byte label[], size_t label_len) const = 0;
-
 
       /**
       * Derive a key
@@ -53,6 +69,7 @@ class BOTAN_DLL KDF
       * @param salt_len size of salt in bytes
       * @param label purpose for the derived keying material
       * @param label_len size of label in bytes
+      * @return the derived key
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const byte secret[],
@@ -73,6 +90,7 @@ class BOTAN_DLL KDF
       * @param secret the secret input
       * @param salt a diversifier
       * @param label purpose for the derived keying material
+      * @return the derived key
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const secure_vector<byte>& secret,
@@ -93,6 +111,7 @@ class BOTAN_DLL KDF
       * @param secret the secret input
       * @param salt a diversifier
       * @param label purpose for the derived keying material
+      * @return the derived key
       */
       template<typename Alloc, typename Alloc2, typename Alloc3>
       secure_vector<byte> derive_key(size_t key_len,
@@ -113,6 +132,7 @@ class BOTAN_DLL KDF
       * @param salt a diversifier
       * @param salt_len size of salt in bytes
       * @param label purpose for the derived keying material
+      * @return the derived key
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const secure_vector<byte>& secret,
@@ -134,6 +154,7 @@ class BOTAN_DLL KDF
       * @param secret_len size of secret in bytes
       * @param salt a diversifier
       * @param label purpose for the derived keying material
+      * @return the derived key
       */
       secure_vector<byte> derive_key(size_t key_len,
                                     const byte secret[],
@@ -148,10 +169,12 @@ class BOTAN_DLL KDF
                            label.length());
          }
 
+      /**
+      * @return new object representing the same algorithm as *this
+      */
       virtual KDF* clone() const = 0;
 
       typedef SCAN_Name Spec;
-
    };
 
 /**
@@ -159,7 +182,7 @@ class BOTAN_DLL KDF
 * @param algo_spec the name of the KDF to create
 * @return pointer to newly allocated object of that type
 */
-BOTAN_DLL KDF*  get_kdf(const std::string& algo_spec);
+BOTAN_DLL KDF* get_kdf(const std::string& algo_spec);
 
 }
 

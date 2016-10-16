@@ -45,6 +45,9 @@ class BOTAN_DLL SP800_108_Counter : public KDF
                  const byte salt[], size_t salt_len,
                  const byte label[], size_t label_len) const override;
 
+      /**
+      * @param mac underlying MAC algorithm
+      */
       SP800_108_Counter(MessageAuthenticationCode* mac) : m_prf(mac) {}
 
       static SP800_108_Counter* make(const Spec& spec);
