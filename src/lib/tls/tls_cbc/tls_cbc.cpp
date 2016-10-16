@@ -285,6 +285,81 @@ size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t) const
    return 0;
    }
 
+/*
+* This function performs additional compression calls in order 
+* to protect from the Lucky 13 attack. It adds new compression 
+* function calls over dummy data, by computing additianl HMACs.
+* 
+* Background:
+* - One SHA-1/SHA-256 compression is performed with 64 bytes of data.
+* - HMAC adds an additional padding so that we have:
+*   - 0 - 55 bytes: 1 compression
+*   - 56 - 55+64 bytes: 2 compressions
+*   - 56+64 - 55+2*64 bytes: 3 compressions
+* 
+* The implemented countermeasure:
+* 1) computes max_comp: number of maximum compressions performed on the 
+*    decrypted data
+* 2) computes current_comp: number of compressions performed on the decrypted
+*    data, without padding
+* 3) if current_comp != max_comp: It computes HMAC over dummy data so that 
+*    max_comp compressions are performed. Otherwise, (max_comp-1).
+* 
+* Note that the padding validation in Botan is always performed over
+* min(plen,256) bytes, see the function check_tls_padding. This differs
+* from the countermeasure described in the paper.
+* 
+* Note that the padding length padlen does also count the last byte
+* of the decrypted plaintext. This is different from the typical 
+* padding computation and different from the Lucky 13 paper.
+* 
+* Remark: The attacker can still break indistinguishability of ciphertexts, in 
+* specific scenarios. For example, a ciphertext that decrypts to 288 bytes 0xFF
+* results in one SHA-1 compression over the unpadded plaintext. A ciphertext 
+* that decrypts to 288 bytes 0x00 decrypts to 287 plaintext bytes and results in
+* at least 4 SHA-1 compression executions. This would break our approach.
+* However, this is only relevant in scenarios where the attacker can create
+* ciphertexts with >68 valid padding bytes, and place the guessed secret next to  
+* the padding bytes (e.g., BEAST). Even then, he would be able to decrypt
+* at most 16 plaintext bytes (due to the nature of CBC).
+* 
+* TODO: This fix does not present a valid countermeasure for SHA-384. This
+* hash function contains different compression function and thus different
+* computations have to be performed.
+* 
+* plen represents the length of the decrypted plaintext message P
+* padlen represents the padding length
+* 
+*/
+void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, size_t padlen)
+   {
+   // number of maximum maced bytes
+   const uint16_t L1 = 13 + plen - tag_size();
+   // number of current maced bytes (L1 - padlen)
+   // Here the Lucky 13 paper is different because the padlen length in the paper 
+   // does not count the last message byte.
+   const uint16_t L2 = 13 + plen - padlen - tag_size();
+   // From the paper: |compress|=ceil((L1-55)/64)-ceil((L2-55)/64)
+   // ceil((L1-55)/64) = floor((L1+8)/64)
+   const uint16_t max_comp = ((L1+8)/64);
+   const uint16_t current_comp = ((L2+8)/64);
+   
+   // If max_comp == current_comp, compute HMAC over dummy data as if there were
+   // (current_comp-1) compressions. Otherwise, compute HMAC over dummy data
+   // of full record length
+   const uint8_t equal_comp = CT::is_equal(max_comp, current_comp) & 0x01;
+   // the minimum number of bytes we compute the HMAC
+   const uint16_t min_mac = (L1 < 55) ? L1 : 55;
+   const uint16_t comp = (max_comp > 0) ? (max_comp-1) : 0;
+   const uint16_t to_mac = equal_comp * (min_mac + 64 * comp) + (equal_comp^1) * L1;
+   
+   std::unique_ptr<Botan::MessageAuthenticationCode> dmac(Botan::MessageAuthenticationCode::create(mac().name()));
+   byte data[L1];
+   dmac->update(data, to_mac);
+   std::vector<byte> mac_buf(tag_size());
+   dmac->final(mac_buf);
+   }
+
 void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
    update(buffer, offset);
@@ -393,6 +468,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<byte>& buffer, size_t of
          }
       else
          {
+         perform_additional_compressions(record_len, pad_size);
          throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
          }
       }
