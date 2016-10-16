@@ -60,6 +60,9 @@ class BOTAN_DLL EMSA
 
       virtual ~EMSA();
 
+      /**
+      * @return a new object representing the same encoding method as *this
+      */
       virtual EMSA* clone() = 0;
    };
 

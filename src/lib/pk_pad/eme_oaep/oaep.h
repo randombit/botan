@@ -24,7 +24,7 @@ class BOTAN_DLL OAEP final : public EME
       static OAEP* make(const Spec& spec);
 
       /**
-      * @param hash object to use for hashing (takes ownership)
+      * @param hash function to use for hashing (takes ownership)
       * @param P an optional label. Normally empty.
       */
       OAEP(HashFunction* hash, const std::string& P = "");
