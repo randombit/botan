@@ -16,6 +16,10 @@ namespace PEM_Code {
 
 /**
 * Encode some binary data in PEM format
+* @param data binary data to encode
+* @param data_len length of binary data in bytes
+* @param label PEM label put after BEGIN and END
+* @param line_width after this many characters, a new line is inserted
 */
 BOTAN_DLL std::string encode(const byte data[],
                              size_t data_len,
@@ -24,6 +28,9 @@ BOTAN_DLL std::string encode(const byte data[],
 
 /**
 * Encode some binary data in PEM format
+* @param data binary data to encode
+* @param label PEM label
+* @param line_width after this many characters, a new line is inserted
 */
 inline std::string encode(const std::vector<byte>& data,
                           const std::string& label,
@@ -34,6 +41,9 @@ inline std::string encode(const std::vector<byte>& data,
 
 /**
 * Encode some binary data in PEM format
+* @param data binary data to encode
+* @param label PEM label put after BEGIN and END
+* @param line_width after this many characters, a new line is inserted
 */
 inline std::string encode(const secure_vector<byte>& data,
                           const std::string& label,
