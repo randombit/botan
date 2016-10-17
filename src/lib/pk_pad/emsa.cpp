@@ -71,7 +71,7 @@ EMSA* get_emsa(const std::string& algo_spec)
       req.algo_name() == "PSS-MGF1" ||
       req.algo_name() == "EMSA4")
       {
-      if(req.arg_count_between(2, 3))
+      if(req.arg_count_between(1, 3))
          {
          if(req.arg(1, "MGF1") != "MGF1")
             return nullptr; // not supported
