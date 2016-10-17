@@ -54,11 +54,6 @@ std::string make_arg(
 
 }
 
-SCAN_Name::SCAN_Name(std::string algo_spec, const std::string& extra) : SCAN_Name(algo_spec)
-   {
-   m_alg_name += extra;
-   }
-
 SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec))
    {
    }
@@ -122,23 +117,6 @@ SCAN_Name::SCAN_Name(std::string algo_spec) : m_orig_algo_spec(algo_spec), m_alg
       else if(name[i].first == 1 && !in_modes)
          m_args.push_back(make_arg(name, i));
       }
-   }
-
-std::string SCAN_Name::all_arguments() const
-   {
-   std::string out;
-   if(arg_count())
-      {
-      out += "(";
-      for(size_t i = 0; i != arg_count(); ++i)
-         {
-         out += arg(i);
-         if(i != arg_count() - 1)
-            out += ",";
-         }
-      out += ")";
-      }
-   return out;
    }
 
 std::string SCAN_Name::arg(size_t i) const
