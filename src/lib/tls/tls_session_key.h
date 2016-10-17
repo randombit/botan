@@ -20,14 +20,14 @@ namespace TLS {
 class Session_Keys
    {
    public:
-      SymmetricKey client_cipher_key() const { return m_c_cipher; }
-      SymmetricKey server_cipher_key() const { return m_s_cipher; }
+      const SymmetricKey& client_cipher_key() const { return m_c_cipher; }
+      const SymmetricKey& server_cipher_key() const { return m_s_cipher; }
 
-      SymmetricKey client_mac_key() const { return m_c_mac; }
-      SymmetricKey server_mac_key() const { return m_s_mac; }
+      const SymmetricKey& client_mac_key() const { return m_c_mac; }
+      const SymmetricKey& server_mac_key() const { return m_s_mac; }
 
-      InitializationVector client_iv() const { return m_c_iv; }
-      InitializationVector server_iv() const { return m_s_iv; }
+      const InitializationVector& client_iv() const { return m_c_iv; }
+      const InitializationVector& server_iv() const { return m_s_iv; }
 
       const secure_vector<byte>& master_secret() const { return m_master_sec; }
 
