@@ -91,9 +91,12 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
 
 #if defined(BOTAN_HAS_RC4)
 
-   if(req.algo_name() == "RC4")
+   if(req.algo_name() == "RC4" ||
+      req.algo_name() == "ARC4" ||
+      req.algo_name() == "MARK-4")
       {
-      const size_t skip = req.arg_as_integer(0, 0);
+      const size_t skip = (req.algo_name() == "MARK-4") ? 256 : req.arg_as_integer(0, 0);
+
 #if defined(BOTAN_HAS_OPENSSL)
       if(provider.empty() || provider == "openssl")
          {

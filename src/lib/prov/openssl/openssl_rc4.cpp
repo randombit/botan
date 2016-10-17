@@ -48,9 +48,10 @@ class OpenSSL_RC4 : public StreamCipher
       explicit OpenSSL_RC4(size_t skip = 0) : m_skip(skip) { clear(); }
       ~OpenSSL_RC4() { clear(); }
 
-      void set_iv(const byte*, size_t) override
+      void set_iv(const byte*, size_t len) override
          {
-         throw Exception("RC4 does not support an IV");
+         if(len > 0)
+            throw Exception("RC4 does not support an IV");
          }
 
       void seek(u64bit) override

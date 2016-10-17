@@ -79,6 +79,12 @@ Cipher_Mode* get_cipher_mode(const std::string& algo, Cipher_Dir direction)
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
 
    SCAN_Name spec(algo);
+
+   if(spec.arg_count() == 0)
+      {
+      return nullptr;
+      }
+
    std::unique_ptr<BlockCipher> bc(BlockCipher::create(spec.arg(0)));
 
    if(!bc)

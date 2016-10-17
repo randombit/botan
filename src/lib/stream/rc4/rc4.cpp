@@ -27,9 +27,10 @@ void RC4::cipher(const byte in[], byte out[], size_t length)
    m_position += length;
    }
 
-void RC4::set_iv(const byte*, size_t)
+void RC4::set_iv(const byte*, size_t length)
    {
-   throw Exception("RC4 does not support an IV");
+   if(length > 0)
+      throw Exception("RC4 does not support an IV");
    }
 
 /*

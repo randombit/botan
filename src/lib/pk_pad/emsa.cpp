@@ -44,42 +44,58 @@ EMSA* get_emsa(const std::string& algo_spec)
 #endif
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)
-   if(req.algo_name() == "EMSA_PKCS1" && req.arg_count() == 1)
+   if(req.algo_name() == "EMSA_PKCS1" ||
+      req.algo_name() == "EMSA-PKCS1-v1_5" ||
+      req.algo_name() == "EMSA3")
       {
-      if(req.arg(0) == "Raw")
+      if(req.arg_count() == 1)
          {
-         return new EMSA_PKCS1v15_Raw;
-         }
-      else
-         {
-         if(auto hash = HashFunction::create(req.arg(0)))
+         if(req.arg(0) == "Raw")
             {
-            return new EMSA_PKCS1v15(hash.release());
+            return new EMSA_PKCS1v15_Raw;
+            }
+         else
+            {
+            if(auto hash = HashFunction::create(req.arg(0)))
+               {
+               return new EMSA_PKCS1v15(hash.release());
+               }
             }
          }
       }
 #endif
 
 #if defined(BOTAN_HAS_EMSA_PSSR)
-   if(req.algo_name() == "PSSR")
+   if(req.algo_name() == "PSSR" ||
+      req.algo_name() == "EMSA-PSS" ||
+      req.algo_name() == "PSS-MGF1" ||
+      req.algo_name() == "EMSA4")
       {
-      if(req.arg(1, "MGF1") != "MGF1")
-         return nullptr; // not supported
-
-      if(auto h = HashFunction::create(req.arg(0)))
+      if(req.arg_count_between(2, 3))
          {
-         const size_t salt_size = req.arg_as_integer(2, h->output_length());
-         return new PSSR(h.release(), salt_size);
+         if(req.arg(1, "MGF1") != "MGF1")
+            return nullptr; // not supported
+
+         if(auto h = HashFunction::create(req.arg(0)))
+            {
+            const size_t salt_size = req.arg_as_integer(2, h->output_length());
+            return new PSSR(h.release(), salt_size);
+            }
          }
       }
 #endif
 
 #if defined(BOTAN_HAS_EMSA_X931)
-   if(req.algo_name() == "EMSA_X931" && req.arg_count() == 1)
+   if(req.algo_name() == "EMSA_X931" ||
+      req.algo_name() == "EMSA2" ||
+      req.algo_name() == "X9.31")
       {
-      if(auto hash = HashFunction::create(req.arg(0)))
+      if(req.arg_count() == 1)
          {
-         return new EMSA_X931(hash.release());
+         if(auto hash = HashFunction::create(req.arg(0)))
+            {
+            return new EMSA_X931(hash.release());
+            }
          }
       }
 #endif

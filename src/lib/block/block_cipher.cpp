@@ -88,8 +88,6 @@ std::unique_ptr<BlockCipher>
 BlockCipher::create(const std::string& algo,
                     const std::string& provider)
    {
-   const SCAN_Name req(algo);
-
 #if defined(BOTAN_HAS_OPENSSL)
    if(provider.empty() || provider == "openssl")
       {
@@ -110,142 +108,144 @@ BlockCipher::create(const std::string& algo,
       return nullptr;
 
 #if defined(BOTAN_HAS_AES)
-   if(req.algo_name() == "AES-128" && req.arg_count() == 0)
+   if(algo == "AES-128")
       {
       return std::unique_ptr<BlockCipher>(new AES_128);
       }
 
-   if(req.algo_name() == "AES-192" && req.arg_count() == 0)
+   if(algo == "AES-192")
       {
       return std::unique_ptr<BlockCipher>(new AES_192);
       }
 
-   if(req.algo_name() == "AES-256" && req.arg_count() == 0)
+   if(algo == "AES-256")
       {
       return std::unique_ptr<BlockCipher>(new AES_256);
       }
 #endif
 
 #if defined(BOTAN_HAS_SERPENT)
-   if(req.algo_name() == "Serpent" && req.arg_count() == 0)
+   if(algo == "Serpent")
       {
       return std::unique_ptr<BlockCipher>(new Serpent);
       }
 #endif
 
 #if defined(BOTAN_HAS_TWOFISH)
-   if(req.algo_name() == "Twofish" && req.arg_count() == 0)
+   if(algo == "Twofish")
       {
       return std::unique_ptr<BlockCipher>(new Twofish);
       }
 #endif
 
 #if defined(BOTAN_HAS_THREEFISH_512)
-   if(req.algo_name() == "Threefish-512" && req.arg_count() == 0)
+   if(algo == "Threefish-512")
       {
       return std::unique_ptr<BlockCipher>(new Threefish_512);
       }
 #endif
 
 #if defined(BOTAN_HAS_BLOWFISH)
-   if(req.algo_name() == "Blowfish" && req.arg_count() == 0)
+   if(algo == "Blowfish")
       {
       return std::unique_ptr<BlockCipher>(new Blowfish);
       }
 #endif
 
 #if defined(BOTAN_HAS_CAMELLIA)
-   if(req.algo_name() == "Camellia-128" && req.arg_count() == 0)
+   if(algo == "Camellia-128")
       {
       return std::unique_ptr<BlockCipher>(new Camellia_128);
       }
 
-   if(req.algo_name() == "Camellia-192" && req.arg_count() == 0)
+   if(algo == "Camellia-192")
       {
       return std::unique_ptr<BlockCipher>(new Camellia_192);
       }
 
-   if(req.algo_name() == "Camellia-256" && req.arg_count() == 0)
+   if(algo == "Camellia-256")
       {
       return std::unique_ptr<BlockCipher>(new Camellia_256);
       }
 #endif
 
 #if defined(BOTAN_HAS_DES)
-   if(req.algo_name() == "DES" && req.arg_count() == 0)
+   if(algo == "DES")
       {
       return std::unique_ptr<BlockCipher>(new DES);
       }
 
-   if(req.algo_name() == "DESX" && req.arg_count() == 0)
+   if(algo == "DESX")
       {
       return std::unique_ptr<BlockCipher>(new DESX);
       }
 
-   if(req.algo_name() == "TripleDES" && req.arg_count() == 0)
+   if(algo == "TripleDES" || algo == "3DES" || algo == "DES-EDE")
       {
       return std::unique_ptr<BlockCipher>(new TripleDES);
       }
 #endif
 
 #if defined(BOTAN_HAS_NOEKEON)
-   if(req.algo_name() == "Noekeon" && req.arg_count() == 0)
+   if(algo == "Noekeon")
       {
       return std::unique_ptr<BlockCipher>(new Noekeon);
       }
 #endif
 
 #if defined(BOTAN_HAS_CAST)
-   if(req.algo_name() == "CAST-128" && req.arg_count() == 0)
+   if(algo == "CAST-128" || algo == "CAST5")
       {
       return std::unique_ptr<BlockCipher>(new CAST_128);
       }
 
-   if(req.algo_name() == "CAST-256" && req.arg_count() == 0)
+   if(algo == "CAST-256")
       {
       return std::unique_ptr<BlockCipher>(new CAST_256);
       }
 #endif
 
-#if defined(BOTAN_HAS_GOST_28147_89)
-   if(req.algo_name() == "GOST-28147-89")
-      {
-      return std::unique_ptr<BlockCipher>(new GOST_28147_89(req.arg(0, "R3411_94_TestParam")));
-      }
-#endif
-
 #if defined(BOTAN_HAS_IDEA)
-   if(req.algo_name() == "IDEA" && req.arg_count() == 0)
+   if(algo == "IDEA")
       {
       return std::unique_ptr<BlockCipher>(new IDEA);
       }
 #endif
 
 #if defined(BOTAN_HAS_KASUMI)
-   if(req.algo_name() == "KASUMI" && req.arg_count() == 0)
+   if(algo == "KASUMI")
       {
       return std::unique_ptr<BlockCipher>(new KASUMI);
       }
 #endif
 
 #if defined(BOTAN_HAS_MISTY1)
-   if(req.algo_name() == "MISTY1" && req.arg_count() == 0)
+   if(algo == "MISTY1")
       {
       return std::unique_ptr<BlockCipher>(new MISTY1);
       }
 #endif
 
 #if defined(BOTAN_HAS_SEED)
-   if(req.algo_name() == "SEED" && req.arg_count() == 0)
+   if(algo == "SEED")
       {
       return std::unique_ptr<BlockCipher>(new SEED);
       }
 #endif
 
 #if defined(BOTAN_HAS_XTEA)
-   if(req.algo_name() == "XTEA" && req.arg_count() == 0)
+   if(algo == "XTEA")
       {
       return std::unique_ptr<BlockCipher>(new XTEA);
+      }
+#endif
+
+   const SCAN_Name req(algo);
+
+#if defined(BOTAN_HAS_GOST_28147_89)
+   if(req.algo_name() == "GOST-28147-89")
+      {
+      return std::unique_ptr<BlockCipher>(new GOST_28147_89(req.arg(0, "R3411_94_TestParam")));
       }
 #endif
 

@@ -107,15 +107,6 @@ class BOTAN_DLL SCAN_Name
       std::string cipher_mode_pad() const
          { return (m_mode_info.size() >= 2) ? m_mode_info[1] : ""; }
 
-      /*
-      * FIXME add doc
-      */
-      static void add_alias(const std::string& alias, const std::string& basename);
-
-      /*
-      * FIXME add doc
-      */
-      static std::string deref_alias(const std::string& alias);
    private:
       static mutex_type g_alias_map_mutex;
       static std::map<std::string, std::string> g_alias_map;

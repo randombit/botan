@@ -76,6 +76,12 @@ AEAD_Mode* get_aead(const std::string& algo, Cipher_Dir dir)
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
 
    SCAN_Name req(algo);
+
+   if(req.arg_count() == 0)
+      {
+      return nullptr;
+      }
+
    std::unique_ptr<BlockCipher> bc(BlockCipher::create(req.arg(0)));
 
    if(!bc)

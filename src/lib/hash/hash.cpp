@@ -89,8 +89,6 @@ namespace Botan {
 std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
                                                    const std::string& provider)
    {
-   const SCAN_Name req(algo_spec);
-
 #if defined(BOTAN_HAS_OPENSSL)
    if(provider.empty() || provider == "openssl")
       {
@@ -102,51 +100,106 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
       }
 #endif
 
+   // TODO: CommonCrypto hashes
+
    if(provider.empty() == false && provider != "base")
       return nullptr; // unknown provider
 
 #if defined(BOTAN_HAS_SHA1)
-   if(req.algo_name() == "SHA-160")
+   if(algo_spec == "SHA-160" ||
+      algo_spec == "SHA-1" ||
+      algo_spec == "SHA1")
       {
       return std::unique_ptr<HashFunction>(new SHA_160);
       }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32)
-   if(req.algo_name() == "SHA-224")
+   if(algo_spec == "SHA-224")
       {
       return std::unique_ptr<HashFunction>(new SHA_224);
       }
 
-   if(req.algo_name() == "SHA-256")
+   if(algo_spec == "SHA-256")
       {
       return std::unique_ptr<HashFunction>(new SHA_256);
       }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64)
-   if(req.algo_name() == "SHA-384")
+   if(algo_spec == "SHA-384")
       {
       return std::unique_ptr<HashFunction>(new SHA_384);
       }
 
-   if(req.algo_name() == "SHA-512")
+   if(algo_spec == "SHA-512")
       {
       return std::unique_ptr<HashFunction>(new SHA_512);
       }
 
-   if(req.algo_name() == "SHA-512-256")
+   if(algo_spec == "SHA-512-256")
       {
       return std::unique_ptr<HashFunction>(new SHA_512_256);
       }
 #endif
 
 #if defined(BOTAN_HAS_RIPEMD_160)
-   if(req.algo_name() == "RIPEMD-160")
+   if(algo_spec == "RIPEMD-160")
       {
       return std::unique_ptr<HashFunction>(new RIPEMD_160);
       }
 #endif
+
+#if defined(BOTAN_HAS_WHIRLPOOL)
+   if(algo_spec == "Whirlpool")
+      {
+      return std::unique_ptr<HashFunction>(new Whirlpool);
+      }
+#endif
+
+#if defined(BOTAN_HAS_MD5)
+   if(algo_spec == "MD5")
+      {
+      return std::unique_ptr<HashFunction>(new MD5);
+      }
+#endif
+
+#if defined(BOTAN_HAS_MD4)
+   if(algo_spec == "MD4")
+      {
+      return std::unique_ptr<HashFunction>(new MD4);
+      }
+#endif
+
+#if defined(BOTAN_HAS_GOST_34_11)
+   if(algo_spec == "GOST-R-34.11-94" || algo_spec == "GOST-34.11")
+      {
+      return std::unique_ptr<HashFunction>(new GOST_34_11);
+      }
+#endif
+
+#if defined(BOTAN_HAS_ADLER32)
+   if(algo_spec == "Adler32")
+      {
+      return std::unique_ptr<HashFunction>(new Adler32);
+      }
+#endif
+
+#if defined(BOTAN_HAS_CRC24)
+   if(algo_spec == "CRC24")
+      {
+      return std::unique_ptr<HashFunction>(new CRC24);
+      }
+#endif
+
+#if defined(BOTAN_HAS_CRC32)
+   if(algo_spec == "CRC32")
+      {
+      return std::unique_ptr<HashFunction>(new CRC32);
+      }
+#endif
+
+   const SCAN_Name req(algo_spec);
 
 #if defined(BOTAN_HAS_TIGER)
    if(req.algo_name() == "Tiger")
@@ -226,47 +279,6 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
       }
 #endif
 
-#if defined(BOTAN_HAS_MD5)
-   if(req.algo_name() == "MD5")
-      {
-      return std::unique_ptr<HashFunction>(new MD5);
-      }
-#endif
-
-#if defined(BOTAN_HAS_MD4)
-   if(req.algo_name() == "MD4")
-      {
-      return std::unique_ptr<HashFunction>(new MD4);
-      }
-#endif
-
-#if defined(BOTAN_HAS_GOST_34_11)
-   if(req.algo_name() == "GOST-R-34.11-94")
-      {
-      return std::unique_ptr<HashFunction>(new GOST_34_11);
-      }
-#endif
-
-#if defined(BOTAN_HAS_ADLER32)
-   if(req.algo_name() == "Adler32")
-      {
-      return std::unique_ptr<HashFunction>(new Adler32);
-      }
-#endif
-
-#if defined(BOTAN_HAS_CRC24)
-   if(req.algo_name() == "CRC24")
-      {
-      return std::unique_ptr<HashFunction>(new CRC24);
-      }
-#endif
-
-#if defined(BOTAN_HAS_CRC32)
-   if(req.algo_name() == "CRC32")
-      {
-      return std::unique_ptr<HashFunction>(new CRC32);
-      }
-#endif
 
    return nullptr;
    }

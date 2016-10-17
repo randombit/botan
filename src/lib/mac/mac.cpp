@@ -67,15 +67,15 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          return std::unique_ptr<MessageAuthenticationCode>(
-            new SipHash(req.arg_as_integer(0, 2),
-                        req.arg_as_integer(1, 4)));
+            new SipHash(req.arg_as_integer(0, 2), req.arg_as_integer(1, 4)));
          }
       }
 #endif
 
 #if defined(BOTAN_HAS_CMAC)
-   if(req.algo_name() == "CMAC" && req.arg_count() == 1)
+   if((req.algo_name() == "CMAC" || req.algo_name() == "OMAC") && req.arg_count() == 1)
       {
+      // TODO: OpenSSL CMAC
       if(provider.empty() || provider == "base")
          {
          if(auto bc = BlockCipher::create(req.arg(0)))

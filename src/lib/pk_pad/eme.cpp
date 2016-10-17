@@ -24,10 +24,22 @@ namespace Botan {
 
 EME* get_eme(const std::string& algo_spec)
    {
-   SCAN_Name req(algo_spec);
+#if defined(BOTAN_HAS_EME_RAW)
+   if(algo_spec == "Raw")
+      return new EME_Raw;
+#endif
+
+#if defined(BOTAN_HAS_EME_PKCS1v15)
+   if(algo_spec == "PKCS1v15" || algo_spec == "EME-PKCS1-v1_5")
+      return new EME_PKCS1v15;
+#endif
 
 #if defined(BOTAN_HAS_EME_OAEP)
-   if(req.algo_name() == "OAEP" && req.arg_count_between(1, 2))
+   SCAN_Name req(algo_spec);
+
+   if(req.algo_name() == "OAEP" ||
+      req.algo_name() == "EME-OAEP" ||
+      req.algo_name() == "EME1")
       {
       if(req.arg_count() == 1 ||
          (req.arg_count() == 2 && req.arg(1) == "MGF1"))
@@ -36,16 +48,6 @@ EME* get_eme(const std::string& algo_spec)
             return new OAEP(hash.release());
          }
       }
-#endif
-
-#if defined(BOTAN_HAS_EME_PKCS1v15)
-   if(req.algo_name() == "PKCS1v15" && req.arg_count() == 0)
-      return new EME_PKCS1v15;
-#endif
-
-#if defined(BOTAN_HAS_EME_RAW)
-   if(req.algo_name() == "Raw" && req.arg_count() == 0)
-      return new EME_Raw;
 #endif
 
    throw Algorithm_Not_Found(algo_spec);
