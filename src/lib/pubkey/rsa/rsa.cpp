@@ -20,9 +20,8 @@
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-#include <future>
+  #include <future>
 #endif
-
 
 namespace Botan {
 
