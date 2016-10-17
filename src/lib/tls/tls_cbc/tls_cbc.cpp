@@ -130,12 +130,11 @@ void TLS_CBC_HMAC_AEAD_Encryption::set_associated_data(const byte ad[], size_t a
 
    if(use_encrypt_then_mac())
       {
-      std::vector<byte>& ad = assoc_data();
       // AAD hack for EtM
-      size_t pt_size = make_u16bit(ad[11], ad[12]);
+      size_t pt_size = make_u16bit(assoc_data()[11], assoc_data()[12]);
       size_t enc_size = round_up(iv_size() + pt_size + 1, block_size());
-      ad[11] = get_byte<uint16_t>(0, enc_size);
-      ad[12] = get_byte<uint16_t>(1, enc_size);
+      assoc_data()[11] = get_byte<uint16_t>(0, enc_size);
+      assoc_data()[12] = get_byte<uint16_t>(1, enc_size);
       }
    }
 
@@ -341,9 +340,6 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<byte>& buffer, size_t of
       }
    else
       {
-      uint8_t* record_contents = msg().data();
-      const size_t record_len = msg().size();
-
       CT::poison(record_contents, record_len);
 
       cbc_decrypt_record(record_contents, record_len);

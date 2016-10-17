@@ -220,7 +220,6 @@ class Certstor_Tests : public Test
                for(auto&& cert_key_pair : test_data)
                   {
                   Botan::X509_Certificate cert(test_dir + "/" + cert_key_pair.first);
-                  Botan::AutoSeeded_RNG rng;
                   std::shared_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(test_dir + "/" + cert_key_pair.second,rng));
 
                   if(!key)
