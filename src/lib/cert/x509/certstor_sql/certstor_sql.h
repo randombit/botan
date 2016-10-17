@@ -97,7 +97,7 @@ class BOTAN_DLL Certificate_Store_In_SQL : public Certificate_Store
       std::shared_ptr<SQL_Database> m_database;
       std::string m_prefix;
       std::string m_password;
-      std::mutex m_mutex;
+      mutex_type m_mutex;
    };
 
 }

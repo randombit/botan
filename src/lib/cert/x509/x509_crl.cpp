@@ -24,14 +24,16 @@ X509_CRL::X509_CRL(DataSource& in, bool touc) :
    do_decode();
    }
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /*
 * Load a X.509 CRL
 */
-X509_CRL::X509_CRL(const std::string& in, bool touc) :
-   X509_Object(in, "CRL/X509 CRL"), m_throw_on_unknown_critical(touc)
+X509_CRL::X509_CRL(const std::string& fsname, bool touc) :
+   X509_Object(fsname, "CRL/X509 CRL"), m_throw_on_unknown_critical(touc)
    {
    do_decode();
    }
+#endif
 
 X509_CRL::X509_CRL(const std::vector<byte>& in, bool touc) :
    X509_Object(in, "CRL/X509 CRL"), m_throw_on_unknown_critical(touc)

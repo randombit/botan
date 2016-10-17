@@ -13,7 +13,7 @@
 #include <botan/exceptn.h>
 #include <botan/scan_name.h>
 #include <functional>
-#include <mutex>
+#include <botan/mutex.h>
 #include <vector>
 #include <map>
 #include <string>
@@ -77,14 +77,14 @@ class Algo_Registry
 
       void add(const std::string& name, const std::string& provider, maker_fn fn, byte pref)
          {
-         std::lock_guard<mutex> lock(m_mutex);
+         lock_guard_type<af_mutex_type> lock(m_mutex);
          if(!m_algo_info[name].add_provider(provider, fn, pref))
             throw Exception("Duplicated registration of " + name + "/" + provider);
          }
 
       std::vector<std::string> providers_of(const Spec& spec)
          {
-         std::lock_guard<mutex> lock(m_mutex);
+         lock_guard_type<af_mutex_type> lock(m_mutex);
          auto i = m_algo_info.find(spec.algo_name());
          if(i != m_algo_info.end())
             return i->second.providers();
@@ -93,7 +93,7 @@ class Algo_Registry
 
       void set_provider_preference(const Spec& spec, const std::string& provider, byte pref)
          {
-         std::lock_guard<mutex> lock(m_mutex);
+         lock_guard_type<af_mutex_type> lock(m_mutex);
          auto i = m_algo_info.find(spec.algo_name());
          if(i != m_algo_info.end())
             i->second.set_pref(provider, pref);
@@ -137,16 +137,16 @@ class Algo_Registry
    private:
 
 #if defined(BOTAN_WORKAROUND_GH_321)
-      using mutex = WinCS_Mutex;
+      using af_mutex_type = WinCS_Mutex;
 #else
-      using mutex = std::mutex;
+      using af_mutex_type = mutex_type;
 #endif
 
       Algo_Registry()  { }
 
       std::vector<maker_fn> get_makers(const Spec& spec, const std::string& provider)
          {
-         std::lock_guard<mutex> lock(m_mutex);
+         lock_guard_type<af_mutex_type> lock(m_mutex);
          return m_algo_info[spec.algo_name()].get_makers(provider);
          }
 
@@ -208,7 +208,7 @@ class Algo_Registry
             std::unordered_map<std::string, maker_fn> m_maker_fns;
          };
 
-      mutex m_mutex;
+      af_mutex_type m_mutex;
       std::unordered_map<std::string, Algo_Info> m_algo_info;
    };
 

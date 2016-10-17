@@ -50,16 +50,18 @@ X509_Certificate::X509_Certificate(DataSource& in) :
    do_decode();
    }
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /*
 * X509_Certificate Constructor
 */
-X509_Certificate::X509_Certificate(const std::string& in) :
-   X509_Object(in, "CERTIFICATE/X509 CERTIFICATE"),
+X509_Certificate::X509_Certificate(const std::string& fsname) :
+   X509_Object(fsname, "CERTIFICATE/X509 CERTIFICATE"),
    m_self_signed(false),
    m_v3_extensions(false)
    {
    do_decode();
    }
+#endif
 
 /*
 * X509_Certificate Constructor

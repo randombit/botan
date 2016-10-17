@@ -11,7 +11,7 @@
 #include <botan/entropy_src.h>
 #include <string>
 #include <vector>
-#include <mutex>
+#include <botan/mutex.h>
 
 namespace Botan {
 
@@ -42,7 +42,7 @@ class EGD_EntropySource final : public Entropy_Source
             int m_fd; // cached fd
          };
 
-      std::mutex m_mutex;
+      mutex_type m_mutex;
       std::vector<EGD_Socket> m_sockets;
       secure_vector<uint8_t> m_io_buf;
    };

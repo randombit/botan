@@ -11,9 +11,9 @@
 #include <botan/entropy_src.h>
 #include <botan/secmem.h>
 #include <botan/exceptn.h>
+#include <botan/mutex.h>
 #include <chrono>
 #include <string>
-#include <mutex>
 
 namespace Botan {
 
@@ -193,6 +193,7 @@ class BOTAN_DLL Null_RNG final : public RandomNumberGenerator
       std::string name() const override { return "Null_RNG"; }
    };
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
 /**
 * Wraps access to a RNG in a mutex
 */
@@ -201,25 +202,25 @@ class BOTAN_DLL Serialized_RNG final : public RandomNumberGenerator
    public:
       void randomize(byte out[], size_t len) override
          {
-         std::lock_guard<std::mutex> lock(m_mutex);
+         lock_guard_type<mutex_type> lock(m_mutex);
          m_rng->randomize(out, len);
          }
 
       bool is_seeded() const override
          {
-         std::lock_guard<std::mutex> lock(m_mutex);
+         lock_guard_type<mutex_type> lock(m_mutex);
          return m_rng->is_seeded();
          }
 
       void clear() override
          {
-         std::lock_guard<std::mutex> lock(m_mutex);
+         lock_guard_type<mutex_type> lock(m_mutex);
          m_rng->clear();
          }
 
       std::string name() const override
          {
-         std::lock_guard<std::mutex> lock(m_mutex);
+         lock_guard_type<mutex_type> lock(m_mutex);
          return m_rng->name();
          }
 
@@ -227,23 +228,24 @@ class BOTAN_DLL Serialized_RNG final : public RandomNumberGenerator
                     size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS,
                     std::chrono::milliseconds poll_timeout = BOTAN_RNG_RESEED_DEFAULT_TIMEOUT) override
          {
-         std::lock_guard<std::mutex> lock(m_mutex);
+         lock_guard_type<mutex_type> lock(m_mutex);
          return m_rng->reseed(src, poll_bits, poll_timeout);
          }
 
       void add_entropy(const byte in[], size_t len) override
          {
-         std::lock_guard<std::mutex> lock(m_mutex);
+         lock_guard_type<mutex_type> lock(m_mutex);
          m_rng->add_entropy(in, len);
          }
 
-      BOTAN_DEPRECATED("Create an AutoSeeded_RNG for other constructor") Serialized_RNG();
+      BOTAN_DEPRECATED("Use Serialized_RNG(new AutoSeeded_RNG)") Serialized_RNG();
 
       explicit Serialized_RNG(RandomNumberGenerator* rng) : m_rng(rng) {}
    private:
-      mutable std::mutex m_mutex;
+      mutable mutex_type m_mutex;
       std::unique_ptr<RandomNumberGenerator> m_rng;
    };
+#endif
 
 }
 

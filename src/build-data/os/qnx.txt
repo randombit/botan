@@ -6,4 +6,6 @@ gettimeofday
 posix_mlock
 gmtime_r
 dlopen
+threads
+filesystem
 </target_features>

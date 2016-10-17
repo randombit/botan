@@ -172,7 +172,7 @@ size_t SCAN_Name::arg_as_integer(size_t i, size_t def_value) const
    return to_u32bit(m_args[i]);
    }
 
-std::mutex SCAN_Name::g_alias_map_mutex;
+mutex_type SCAN_Name::g_alias_map_mutex;
 std::map<std::string, std::string> SCAN_Name::g_alias_map = {
    { "3DES",            "TripleDES" },
    { "ARC4",            "RC4" },
@@ -197,7 +197,7 @@ std::map<std::string, std::string> SCAN_Name::g_alias_map = {
 
 void SCAN_Name::add_alias(const std::string& alias, const std::string& basename)
    {
-   std::lock_guard<std::mutex> lock(g_alias_map_mutex);
+   lock_guard_type<mutex_type> lock(g_alias_map_mutex);
 
    if(g_alias_map.find(alias) == g_alias_map.end())
       g_alias_map[alias] = basename;
@@ -205,7 +205,7 @@ void SCAN_Name::add_alias(const std::string& alias, const std::string& basename)
 
 std::string SCAN_Name::deref_alias(const std::string& alias)
    {
-   std::lock_guard<std::mutex> lock(g_alias_map_mutex);
+   lock_guard_type<mutex_type> lock(g_alias_map_mutex);
 
    std::string name = alias;
 

@@ -267,12 +267,14 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       */
       explicit X509_Certificate(DataSource& source);
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       /**
       * Create a certificate from a file containing the DER or PEM
       * encoded certificate.
       * @param filename the name of the certificate file
       */
       explicit X509_Certificate(const std::string& filename);
+#endif
 
       /**
       * Create a certificate from a buffer

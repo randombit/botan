@@ -57,6 +57,8 @@ RandomNumberGenerator* RandomNumberGenerator::make_rng()
 #endif
    }
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
 Serialized_RNG::Serialized_RNG() : m_rng(RandomNumberGenerator::make_rng()) {}
+#endif
 
 }

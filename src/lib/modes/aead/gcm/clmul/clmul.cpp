@@ -11,6 +11,7 @@
 
 namespace Botan {
 
+BOTAN_FUNC_ISA("pclmul,ssse3")
 void gcm_multiply_clmul(byte x[16], const byte H[16])
    {
    /*

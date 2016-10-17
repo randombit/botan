@@ -78,6 +78,7 @@ Public_Key* load_key(DataSource& source)
       }
    }
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /*
 * Extract a public key and return it
 */
@@ -86,6 +87,7 @@ Public_Key* load_key(const std::string& fsname)
    DataSource_Stream source(fsname, true);
    return X509::load_key(source);
    }
+#endif
 
 /*
 * Extract a public key and return it

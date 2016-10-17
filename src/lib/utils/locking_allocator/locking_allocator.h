@@ -10,7 +10,7 @@
 
 #include <botan/types.h>
 #include <vector>
-#include <mutex>
+#include <botan/mutex.h>
 
 namespace Botan {
 
@@ -32,7 +32,7 @@ class BOTAN_DLL mlock_allocator
 
       ~mlock_allocator();
 
-      std::mutex m_mutex;
+      mutex_type m_mutex;
       std::vector<std::pair<size_t, size_t>> m_freelist;
       byte* m_pool = nullptr;
       size_t m_poolsize = 0;

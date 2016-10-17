@@ -10,7 +10,7 @@
 
 #include <botan/entropy_src.h>
 #include <vector>
-#include <mutex>
+#include <botan/mutex.h>
 
 namespace Botan {
 
@@ -67,7 +67,7 @@ class Unix_EntropySource final : public Entropy_Source
 
       const std::vector<std::string>& next_source();
 
-      std::mutex m_mutex;
+      mutex_type m_mutex;
       const std::vector<std::string> m_trusted_paths;
       const size_t m_concurrent;
 

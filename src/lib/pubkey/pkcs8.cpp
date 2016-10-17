@@ -262,6 +262,8 @@ Private_Key* load_key(DataSource& source,
       throw PKCS8_Exception( "Internal error: Attempt to read password for unencrypted key" );}, false);
    }
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
 /*
 * Extract an encrypted private key and return it
 */
@@ -293,6 +295,7 @@ Private_Key* load_key(const std::string& fsname,
    return load_key(source, rng, []() -> std::string {
       throw PKCS8_Exception( "Internal error: Attempt to read password for unencrypted key" );}, false);
    }
+#endif
 
 /*
 * Make a copy of this private key

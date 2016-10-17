@@ -8,10 +8,14 @@
 
 #include <botan/data_snk.h>
 #include <botan/exceptn.h>
-#include <fstream>
+
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+  #include <fstream>
+#endif
 
 namespace Botan {
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /*
 * Write to a stream
 */
@@ -58,5 +62,6 @@ DataSink_Stream::~DataSink_Stream()
    {
    delete m_sink_p;
    }
+#endif
 
 }

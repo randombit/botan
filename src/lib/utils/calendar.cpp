@@ -11,7 +11,7 @@
 #include <ctime>
 #include <sstream>
 #include <iomanip>
-#include <mutex>
+#include <botan/mutex.h>
 #include <stdlib.h>
 
 #if defined(BOTAN_HAS_BOOST_DATETIME)
@@ -72,7 +72,7 @@ std::time_t boost_timegm(std::tm *tm)
 
 #pragma message "Caution! A fallback version of timegm() is used which is not thread-safe"
 
-std::mutex ENV_TZ;
+mutex_type ENV_TZ;
 
 std::time_t fallback_timegm(std::tm *tm)
    {

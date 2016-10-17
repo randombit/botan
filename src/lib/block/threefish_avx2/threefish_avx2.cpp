@@ -12,6 +12,7 @@ namespace Botan {
 
 namespace {
 
+BOTAN_FUNC_ISA("avx2")
 inline void interleave_epi64(__m256i& X0, __m256i& X1)
    {
    // interleave X0 and X1 qwords
@@ -24,6 +25,7 @@ inline void interleave_epi64(__m256i& X0, __m256i& X1)
    X1 = _mm256_permute4x64_epi64(T1, _MM_SHUFFLE(3,1,2,0));
    }
 
+BOTAN_FUNC_ISA("avx2")
 inline void deinterleave_epi64(__m256i& X0, __m256i& X1)
    {
    const __m256i T0 = _mm256_permute4x64_epi64(X0, _MM_SHUFFLE(3,1,2,0));
@@ -33,6 +35,7 @@ inline void deinterleave_epi64(__m256i& X0, __m256i& X1)
    X1 = _mm256_unpackhi_epi64(T0, T1);
    }
 
+BOTAN_FUNC_ISA("avx2")
 inline void rotate_keys(__m256i& R0, __m256i& R1, __m256i R2)
    {
    /*
@@ -71,6 +74,7 @@ inline void rotate_keys(__m256i& R0, __m256i& R1, __m256i R2)
 
 }
 
+BOTAN_FUNC_ISA("avx2")
 void Threefish_512::avx2_encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u64bit* K = &get_K()[0];
@@ -245,6 +249,7 @@ void Threefish_512::avx2_encrypt_n(const byte in[], byte out[], size_t blocks) c
 #undef THREEFISH_INJECT_KEY_2
    }
 
+BOTAN_FUNC_ISA("avx2")
 void Threefish_512::avx2_decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
    const u64bit* K = &get_K()[0];

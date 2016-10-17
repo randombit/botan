@@ -10,7 +10,6 @@
 
 #if defined(BOTAN_HAS_TLS)
   #include <botan/pubkey.h>
-  #include <botan/auto_rng.h>
   #include <botan/oids.h>
   #include <botan/tls_policy.h>
 #endif

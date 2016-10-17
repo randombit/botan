@@ -25,14 +25,16 @@ PKCS10_Request::PKCS10_Request(DataSource& in) :
    do_decode();
    }
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /*
 * PKCS10_Request Constructor
 */
-PKCS10_Request::PKCS10_Request(const std::string& in) :
-   X509_Object(in, "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
+PKCS10_Request::PKCS10_Request(const std::string& fsname) :
+   X509_Object(fsname, "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
    {
    do_decode();
    }
+#endif
 
 /*
 * PKCS10_Request Constructor

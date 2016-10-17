@@ -10,7 +10,10 @@
 #define BOTAN_BASEFILT_H__
 
 #include <botan/filter.h>
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
 #include <thread>
+#endif
 
 namespace Botan {
 
@@ -78,6 +81,8 @@ class BOTAN_DLL Fork : public Fanout_Filter
       Fork(Filter* filter_arr[], size_t length);
    };
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+
 /**
 * This class is a threaded version of the Fork filter. While this uses
 * threads, the class itself is NOT thread-safe. This is meant as a drop-
@@ -113,6 +118,7 @@ class BOTAN_DLL Threaded_Fork : public Fork
       std::vector<std::shared_ptr<std::thread>> m_threads;
       std::unique_ptr<struct Threaded_Fork_Data> m_thread_data;
    };
+#endif
 
 }
 
