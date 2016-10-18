@@ -41,7 +41,7 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
          {}
 
       /**
-      * @param underlying_rng is a reference to some RNG which will be used
+      * @param rng is a reference to some RNG which will be used
       * to perform the periodic reseeding
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed

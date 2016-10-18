@@ -27,6 +27,8 @@ class Connection_Cipher_State;
 class Connection_Sequence_Numbers;
 class Handshake_State;
 class Handshake_Message;
+class Client_Hello;
+class Server_Hello;
 
 /**
 * Generic interface for TLS endpoint
@@ -221,8 +223,8 @@ class BOTAN_DLL Channel
 
       /* secure renegotiation handling */
 
-      void secure_renegotiation_check(const class Client_Hello* client_hello);
-      void secure_renegotiation_check(const class Server_Hello* server_hello);
+      void secure_renegotiation_check(const Client_Hello* client_hello);
+      void secure_renegotiation_check(const Server_Hello* server_hello);
 
       std::vector<byte> secure_renegotiation_data_for_client_hello() const;
       std::vector<byte> secure_renegotiation_data_for_server_hello() const;

@@ -49,7 +49,7 @@ class BOTAN_DLL RandomNumberGenerator
       * A few RNG types do not accept any externally provided input,
       * in which case this function is a no-op.
       *
-      * @param inputs a byte array containg the entropy to be added
+      * @param input a byte array containg the entropy to be added
       * @param length the length of the byte array in
       */
       virtual void add_entropy(const byte input[], size_t length) = 0;

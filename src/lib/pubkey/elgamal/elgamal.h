@@ -62,7 +62,7 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
       * Load a private key.
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits PKCS #8 structure
-      * @paran rng the RNG to use
+      * @param rng the RNG to use
       */
       ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
                          const secure_vector<byte>& key_bits,
@@ -71,7 +71,7 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
       /**
       * Create a private key.
       * @param rng random number generator to use
-      * @param grp the group to be used in the key
+      * @param group the group to be used in the key
       * @param priv_key the key's secret value (or if zero, generate a new key)
       */
       ElGamal_PrivateKey(RandomNumberGenerator& rng,

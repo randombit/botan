@@ -273,7 +273,7 @@ class BOTAN_DLL Policy
    };
 
 /**
-* NSA Suite B 128-bit security level (see @rfc 6460)
+* NSA Suite B 128-bit security level (RFC 6460)
 */
 class BOTAN_DLL NSA_Suite_B_128 : public Policy
    {
@@ -304,7 +304,7 @@ class BOTAN_DLL NSA_Suite_B_128 : public Policy
    };
 
 /**
-* Policy for DTLS. We require DTLS v1.2 and an AEAD mode
+* Policy for DTLS. We require DTLS v1.2 and an AEAD mode.
 */
 class BOTAN_DLL Datagram_Policy : public Policy
    {

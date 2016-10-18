@@ -85,7 +85,7 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
       */
-      virtual void set_iv(const byte[], size_t iv_len) = 0;
+      virtual void set_iv(const byte iv[], size_t iv_len) = 0;
 
       /**
       * @param iv_len the length of the IV in bytes

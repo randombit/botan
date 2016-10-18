@@ -58,7 +58,7 @@ BOTAN_DLL u32bit version_patch();
 * Usable for checking that the DLL version loaded at runtime exactly
 * matches the compile-time version. Call using BOTAN_VERSION_* macro
 * values. Returns the empty string if an exact match, otherwise an
-* appropriate message. @added 1.11.26
+* appropriate message. Added with 1.11.26.
 */
 BOTAN_DLL std::string
 runtime_version_check(u32bit major,

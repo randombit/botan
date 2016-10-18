@@ -28,8 +28,8 @@ class BOTAN_DLL BlockCipherModePaddingMethod
       /**
       * Add padding bytes to buffer.
       * @param buffer data to pad
-      * @param size of the final block in bytes
-      * @param size of each block in bytes
+      * @param final_block_bytes size of the final block in bytes
+      * @param block_size size of each block in bytes
       */
       virtual void add_padding(secure_vector<byte>& buffer,
                                size_t final_block_bytes,

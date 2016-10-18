@@ -157,8 +157,8 @@ void mceliece_decrypt(
    }
 
 /**
-* @param p_err_pos_len must point to the available length of err_pos on input, the
-* function will set it to the actual number of errors returned in the err_pos
+* @p p_err_pos_len must point to the available length of @p error_pos on input, the
+* function will set it to the actual number of errors returned in the @p error_pos
 * array */
 secure_vector<byte> mceliece_decrypt(
    secure_vector<gf2m> & error_pos,

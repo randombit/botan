@@ -80,7 +80,6 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
       * Load a private key.
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits PKCS #8 structure
-      * @paran rng the RNG to use
       */
       GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id,
                            const secure_vector<byte>& key_bits) :

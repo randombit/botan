@@ -88,8 +88,7 @@ class BOTAN_DLL AttributeContainer
       /**
       * Add a binary attribute (e.g. CKA_ID / AttributeType::Id).
       * @param attribute attribute type
-      * @param value binary attribute value to add
-      * @param length size of the binary attribute value in bytes
+      * @param binary binary attribute value to add
       */
       template<typename TAlloc>
       void add_binary(AttributeType attribute, const std::vector<byte, TAlloc>& binary)

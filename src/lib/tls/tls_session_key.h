@@ -14,6 +14,8 @@ namespace Botan {
 
 namespace TLS {
 
+class Handshake_State;
+
 /**
 * TLS Session Keys
 */
@@ -59,11 +61,11 @@ class Session_Keys
 
       /**
       * @param state state the handshake state
-      * @param pre_master the pre-master secret
+      * @param pre_master_secret the pre-master secret
       * @param resuming whether this TLS session is resumed
       */
-      Session_Keys(const class Handshake_State* state,
-                   const secure_vector<byte>& pre_master,
+      Session_Keys(const Handshake_State* state,
+                   const secure_vector<byte>& pre_master_secret,
                    bool resuming);
 
    private:

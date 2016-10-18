@@ -164,9 +164,11 @@ class BOTAN_DLL PK_Signer final
       /**
       * Construct a PK Signer.
       * @param key the key to use inside this signer
+      * @param rng the random generator to use
       * @param emsa the EMSA to use
       * An example would be "EMSA1(SHA-224)".
       * @param format the signature format to use
+      * @param provider the provider to use
       */
       PK_Signer(const Private_Key& key,
                 RandomNumberGenerator& rng,
@@ -289,6 +291,7 @@ class BOTAN_DLL PK_Verifier final
       * @param pub_key the public key to verify against
       * @param emsa the EMSA to use (eg "EMSA3(SHA-1)")
       * @param format the signature format to use
+      * @param provider the provider to use
       */
       PK_Verifier(const Public_Key& pub_key,
                   const std::string& emsa,
@@ -398,6 +401,7 @@ class BOTAN_DLL PK_Key_Agreement final
       /**
       * Construct a PK Key Agreement.
       * @param key the key to use
+      * @param rng the random generator to use
       * @param kdf name of the KDF to use (or 'Raw' for no KDF)
       * @param provider the algo provider to use (or empty for default)
       */
@@ -510,6 +514,7 @@ class BOTAN_DLL PK_Encryptor_EME final : public PK_Encryptor
       * @param key the key to use inside the encryptor
       * @param rng the RNG to use
       * @param padding the message encoding scheme to use (eg "OAEP(SHA-256)")
+      * @param provider the provider to use
       */
       PK_Encryptor_EME(const Public_Key& key,
                        RandomNumberGenerator& rng,
@@ -549,6 +554,7 @@ class BOTAN_DLL PK_Decryptor_EME final : public PK_Decryptor
      /**
       * Construct an instance.
       * @param key the key to use inside the decryptor
+      * @param rng the random generator to use
       * @param eme the EME to use
       * @param provider the provider to use
       */

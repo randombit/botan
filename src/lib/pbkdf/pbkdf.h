@@ -99,7 +99,7 @@ class BOTAN_DLL PBKDF
       * @param salt_len length of salt in bytes
       * @param msec if iterations is zero, then instead the PBKDF is
       *        run until msec milliseconds has passed.
-      * @param set to the number iterations executed
+      * @param iterations set to the number iterations executed
       */
       void pbkdf_timed(byte out[], size_t out_len,
                          const std::string& passphrase,
@@ -131,7 +131,7 @@ class BOTAN_DLL PBKDF
       * @param salt_len length of salt in bytes
       * @param msec if iterations is zero, then instead the PBKDF is
       *        run until msec milliseconds has passed.
-      * @param set to the number iterations executed
+      * @param iterations set to the number iterations executed
       * @return the derived key
       */
       secure_vector<byte> pbkdf_timed(size_t out_len,
@@ -214,6 +214,7 @@ class BOTAN_DLL PBKDF
 /**
 * Password based key derivation function factory method
 * @param algo_spec the name of the desired PBKDF algorithm
+* @param provider the provider to use
 * @return pointer to newly allocated object of that type
 */
 inline PBKDF* get_pbkdf(const std::string& algo_spec,

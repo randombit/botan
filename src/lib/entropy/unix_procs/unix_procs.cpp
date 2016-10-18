@@ -60,10 +60,10 @@ size_t concurrent_processes(size_t user_request)
 /**
 * Unix_EntropySource Constructor
 */
-Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& trusted_path,
-                                       size_t proc_cnt) :
-   m_trusted_paths(trusted_path),
-   m_concurrent(concurrent_processes(proc_cnt))
+Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& trusted_paths,
+                                       size_t proc_count) :
+   m_trusted_paths(trusted_paths),
+   m_concurrent(concurrent_processes(proc_count))
    {
    }
 

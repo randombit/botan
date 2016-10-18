@@ -72,7 +72,7 @@ class BOTAN_DLL Client final : public Channel
       *
       * @param alert_cb is called when a TLS alert is received
       *
-      * @param handshake_cb is called when a handshake is completed
+      * @param hs_cb is called when a handshake is completed
       *
       * @param session_manager manages session state
       *
@@ -94,7 +94,7 @@ class BOTAN_DLL Client final : public Channel
       *        values just mean reallocations and copies are more likely.
       */
       BOTAN_DEPRECATED("Use TLS::Client(TLS::Callbacks ...)")
-      Client(output_fn out,
+      Client(output_fn output_fn,
              data_cb app_data_cb,
              alert_cb alert_cb,
              handshake_cb hs_cb,

@@ -28,6 +28,7 @@ class BOTAN_DLL HMAC_RNG final : public Stateful_RNG
    public:
       /**
       * Initialize an HMAC_RNG instance with the given MAC as PRF (normally HMAC)
+      * @param prf MAC to use as a PRF
       * @param underlying_rng is a reference to some RNG which will be used
       * to perform the periodic reseeding.
       * @param entropy_sources will be polled to perform reseeding periodically
@@ -41,6 +42,7 @@ class BOTAN_DLL HMAC_RNG final : public Stateful_RNG
 
       /**
       * Initialize an HMAC_RNG instance with the given MAC as PRF (normally HMAC)
+      * @param prf MAC to use as a PRF
       * @param underlying_rng is a reference to some RNG which will be used
       * to perform the periodic reseeding.
       * @param reseed_interval specifies a limit of how many times
@@ -52,6 +54,7 @@ class BOTAN_DLL HMAC_RNG final : public Stateful_RNG
 
       /*
       * Initialize an HMAC_RNG instance with the given MAC as PRF (normally HMAC)
+      * @param prf MAC to use as a PRF
       * @param entropy_sources will be polled to perform reseeding periodically
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed.
@@ -63,6 +66,7 @@ class BOTAN_DLL HMAC_RNG final : public Stateful_RNG
       /**
       * Initialize an HMAC_RNG instance with the given MAC as PRF (normally HMAC)
       * Automatic reseeding is disabled completely.
+      * @param prf MAC to use as a PRF
       */
       HMAC_RNG(std::unique_ptr<MessageAuthenticationCode> prf);
 

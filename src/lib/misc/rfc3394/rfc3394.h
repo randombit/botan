@@ -29,7 +29,6 @@ secure_vector<byte> BOTAN_DLL rfc3394_keywrap(const secure_vector<byte>& key,
 *
 * @param key the encrypted key to decrypt
 * @param kek the key encryption key
-* @param af an algorithm factory
 * @return key decrypted under kek
 */
 secure_vector<byte> BOTAN_DLL rfc3394_keyunwrap(const secure_vector<byte>& key,

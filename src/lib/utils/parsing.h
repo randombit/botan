@@ -39,6 +39,7 @@ BOTAN_DLL std::vector<std::string> split_on(
 /**
 * Split a string on a character predicate
 * @param str the input string
+* @param pred the predicate
 */
 BOTAN_DLL std::vector<std::string>
 split_on_pred(const std::string& str,

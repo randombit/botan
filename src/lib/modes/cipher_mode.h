@@ -78,7 +78,7 @@ class BOTAN_DLL Cipher_Mode
 
       /**
       * Process some data. Input must be in size update_granularity() byte blocks.
-      * @param blocks in/out parameter which will possibly be resized
+      * @param buffer in/out parameter which will possibly be resized
       * @param offset an offset into blocks to begin processing
       */
       void update(secure_vector<byte>& buffer, size_t offset = 0)
