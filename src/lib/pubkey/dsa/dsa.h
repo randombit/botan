@@ -25,12 +25,22 @@ class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
       size_t message_part_size() const override { return group_q().bytes(); }
       size_t max_input_bits() const override { return group_q().bits(); }
 
+      /**
+      * Load a public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits DER encoded public key bits
+      */
       DSA_PublicKey(const AlgorithmIdentifier& alg_id,
                     const secure_vector<byte>& key_bits) :
          DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
          {
          }
 
+      /**
+      * Create a public key.
+      * @param group the underlying DL group
+      * @param y the public value y = g^x mod p
+      */
       DSA_PublicKey(const DL_Group& group, const BigInt& y);
 
       std::unique_ptr<PK_Ops::Verification>
@@ -47,10 +57,22 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
                                  public virtual DL_Scheme_PrivateKey
    {
    public:
+      /**
+      * Load a private key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits PKCS#8 structure
+      * @param rng the RNG to use
+      */
       DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                      const secure_vector<byte>& key_bits,
                      RandomNumberGenerator& rng);
 
+      /**
+      * Create a private key.
+      * @param rng the RNG to use
+      * @param group the underlying DL group
+      * @param private_key the private key (if zero, a new random key is generated)
+      */
       DSA_PrivateKey(RandomNumberGenerator& rng,
                      const DL_Group& group,
                      const BigInt& private_key = 0);

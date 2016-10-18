@@ -220,6 +220,12 @@ class BOTAN_DLL PK_Signer final
                                      RandomNumberGenerator& rng)
          { return sign_message(in.data(), in.size(), rng); }
 
+      /**
+      * Sign a message.
+      * @param in the message to sign
+      * @param rng the rng to use
+      * @return signature
+      */
       std::vector<byte> sign_message(const secure_vector<byte>& in,
                                      RandomNumberGenerator& rng)
          { return sign_message(in.data(), in.size(), rng); }
@@ -502,6 +508,7 @@ class BOTAN_DLL PK_Encryptor_EME final : public PK_Encryptor
       /**
       * Construct an instance.
       * @param key the key to use inside the encryptor
+      * @param rng the RNG to use
       * @param padding the message encoding scheme to use (eg "OAEP(SHA-256)")
       */
       PK_Encryptor_EME(const Public_Key& key,
@@ -543,7 +550,7 @@ class BOTAN_DLL PK_Decryptor_EME final : public PK_Decryptor
       * Construct an instance.
       * @param key the key to use inside the decryptor
       * @param eme the EME to use
-      * @param provider
+      * @param provider the provider to use
       */
       PK_Decryptor_EME(const Private_Key& key,
                        RandomNumberGenerator& rng,
@@ -575,9 +582,19 @@ class BOTAN_DLL PK_Decryptor_EME final : public PK_Decryptor
       std::unique_ptr<PK_Ops::Decryption> m_op;
    };
 
+/**
+* Public Key Key Encapsulation Mechanism Encryption.
+*/
 class BOTAN_DLL PK_KEM_Encryptor final
    {
    public:
+      /**
+      * Construct an instance.
+      * @param key the key to use inside the encryptor
+      * @param rng the RNG to use
+      * @param kem_param additional KEM parameters
+      * @param provider the provider to use
+      */
       PK_KEM_Encryptor(const Public_Key& key,
                        RandomNumberGenerator& rng,
                        const std::string& kem_param = "",
@@ -596,6 +613,15 @@ class BOTAN_DLL PK_KEM_Encryptor final
       PK_KEM_Encryptor& operator=(const PK_KEM_Encryptor&) = delete;
       PK_KEM_Encryptor(const PK_KEM_Encryptor&) = delete;
 
+      /**
+      * Generate a shared key for data encryption.
+      * @param out_encapsulated_key the generated encapsulated key
+      * @param out_shared_key the generated shared key
+      * @param desired_shared_key_len desired size of the shared key in bytes
+      * @param rng the RNG to use
+      * @param salt a salt value used in the KDF
+      * @param salt_len size of the salt value in bytes
+      */
       void encrypt(secure_vector<byte>& out_encapsulated_key,
                    secure_vector<byte>& out_shared_key,
                    size_t desired_shared_key_len,
@@ -603,6 +629,14 @@ class BOTAN_DLL PK_KEM_Encryptor final
                    const uint8_t salt[],
                    size_t salt_len);
 
+      /**
+      * Generate a shared key for data encryption.
+      * @param out_encapsulated_key the generated encapsulated key
+      * @param out_shared_key the generated shared key
+      * @param desired_shared_key_len desired size of the shared key in bytes
+      * @param rng the RNG to use
+      * @param salt a salt value used in the KDF
+      */
       template<typename Alloc>
          void encrypt(secure_vector<byte>& out_encapsulated_key,
                       secure_vector<byte>& out_shared_key,
@@ -617,6 +651,14 @@ class BOTAN_DLL PK_KEM_Encryptor final
                        salt.data(), salt.size());
          }
 
+
+      /**
+      * Generate a shared key for data encryption.
+      * @param out_encapsulated_key the generated encapsulated key
+      * @param out_shared_key the generated shared key
+      * @param desired_shared_key_len desired size of the shared key in bytes
+      * @param rng the RNG to use
+      */
       void encrypt(secure_vector<byte>& out_encapsulated_key,
                    secure_vector<byte>& out_shared_key,
                    size_t desired_shared_key_len,
@@ -634,9 +676,19 @@ class BOTAN_DLL PK_KEM_Encryptor final
       std::unique_ptr<PK_Ops::KEM_Encryption> m_op;
    };
 
+/**
+* Public Key Key Encapsulation Mechanism Decryption.
+*/
 class BOTAN_DLL PK_KEM_Decryptor final
    {
    public:
+      /**
+      * Construct an instance.
+      * @param key the key to use inside the decryptor
+      * @param rng the RNG to use
+      * @param kem_param additional KEM parameters
+      * @param provider the provider to use
+      */
       PK_KEM_Decryptor(const Private_Key& key,
                        RandomNumberGenerator& rng,
                        const std::string& kem_param = "",
@@ -655,12 +707,28 @@ class BOTAN_DLL PK_KEM_Decryptor final
       PK_KEM_Decryptor& operator=(const PK_KEM_Decryptor&) = delete;
       PK_KEM_Decryptor(const PK_KEM_Decryptor&) = delete;
 
+      /**
+      * Decrypts the shared key for data encryption.
+      * @param encap_key the encapsulated key
+      * @param encap_key_len size of the encapsulated key in bytes
+      * @param desired_shared_key_len desired size of the shared key in bytes
+      * @param salt a salt value used in the KDF
+      * @param salt_len size of the salt value in bytes
+      * @return the shared data encryption key
+      */
       secure_vector<byte> decrypt(const byte encap_key[],
                                   size_t encap_key_len,
                                   size_t desired_shared_key_len,
                                   const uint8_t salt[],
                                   size_t salt_len);
 
+      /**
+      * Decrypts the shared key for data encryption.
+      * @param encap_key the encapsulated key
+      * @param encap_key_len size of the encapsulated key in bytes
+      * @param desired_shared_key_len desired size of the shared key in bytes
+      * @return the shared data encryption key
+      */
       secure_vector<byte> decrypt(const byte encap_key[],
                                   size_t encap_key_len,
                                   size_t desired_shared_key_len)
@@ -670,6 +738,13 @@ class BOTAN_DLL PK_KEM_Decryptor final
                               nullptr, 0);
          }
 
+      /**
+      * Decrypts the shared key for data encryption.
+      * @param encap_key the encapsulated key
+      * @param desired_shared_key_len desired size of the shared key in bytes
+      * @param salt a salt value used in the KDF
+      * @return the shared data encryption key
+      */
       template<typename Alloc1, typename Alloc2>
          secure_vector<byte> decrypt(const std::vector<byte, Alloc1>& encap_key,
                                      size_t desired_shared_key_len,

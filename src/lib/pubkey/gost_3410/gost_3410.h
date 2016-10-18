@@ -31,7 +31,9 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
          EC_PublicKey(dom_par, public_point) {}
 
       /**
-      * Construct from X.509 algorithm id and subject public key bits
+      * Load a public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits X.509 subject public key info structure
       */
       GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
                           const secure_vector<byte>& key_bits);
@@ -74,7 +76,12 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
                                        public EC_PrivateKey
    {
    public:
-
+      /**
+      * Load a private key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits PKCS #8 structure
+      * @paran rng the RNG to use
+      */
       GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id,
                            const secure_vector<byte>& key_bits) :
          EC_PrivateKey(alg_id, key_bits) {}

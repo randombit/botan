@@ -62,6 +62,12 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
 
       size_t estimated_strength() const override;
 
+      /**
+      * Create a public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits X.509 subject public key info structure
+      * @param group_format the underlying groups encoding format
+      */
       DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
                           const secure_vector<byte>& key_bits,
                           DL_Group::Format group_format);
@@ -97,6 +103,12 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
 
       secure_vector<byte> pkcs8_private_key() const override;
 
+      /**
+      * Create a private key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits DER encoded private key bits
+      * @param group_format the underlying groups encoding format
+      */
       DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
                            const secure_vector<byte>& key_bits,
                            DL_Group::Format group_format);

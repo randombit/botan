@@ -53,7 +53,7 @@ inline ECIES_Flags operator &(ECIES_Flags a, ECIES_Flags b)
    }
 
 /**
-* Parameters for ecies secret derivation
+* Parameters for ECIES secret derivation
 */
 class BOTAN_DLL ECIES_KA_Params
    {

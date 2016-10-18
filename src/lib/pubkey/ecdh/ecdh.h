@@ -20,7 +20,11 @@ namespace Botan {
 class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
    {
    public:
-
+      /**
+      * Create an ECDH public key.
+      * @param alg_id algorithm identifier
+      * @param key_bits DER encoded public key bits
+      */
       ECDH_PublicKey(const AlgorithmIdentifier& alg_id,
                      const secure_vector<byte>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
@@ -74,6 +78,11 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
    {
    public:
 
+      /**
+      * Create an ECDH public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits X.509 subject public key info structure
+      */
       ECDH_PrivateKey(const AlgorithmIdentifier& alg_id,
                       const secure_vector<byte>& key_bits) :
          EC_PrivateKey(alg_id, key_bits) {}
