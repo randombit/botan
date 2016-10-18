@@ -20,19 +20,48 @@ namespace TLS {
 class Session_Keys
    {
    public:
+      /**
+      * @return client encipherment key
+      */
       const SymmetricKey& client_cipher_key() const { return m_c_cipher; }
+
+      /**
+      * @return client encipherment key
+      */
       const SymmetricKey& server_cipher_key() const { return m_s_cipher; }
 
+      /**
+      * @return client MAC key
+      */
       const SymmetricKey& client_mac_key() const { return m_c_mac; }
+
+      /**
+      * @return server MAC key
+      */
       const SymmetricKey& server_mac_key() const { return m_s_mac; }
 
+      /**
+      * @return client IV
+      */
       const InitializationVector& client_iv() const { return m_c_iv; }
+
+      /**
+      * @return server IV
+      */
       const InitializationVector& server_iv() const { return m_s_iv; }
 
+      /**
+      * @return TLS master secret
+      */
       const secure_vector<byte>& master_secret() const { return m_master_sec; }
 
       Session_Keys() {}
 
+      /**
+      * @param state state the handshake state
+      * @param pre_master the pre-master secret
+      * @param resuming whether this TLS session is resumed
+      */
       Session_Keys(const class Handshake_State* state,
                    const secure_vector<byte>& pre_master,
                    bool resuming);

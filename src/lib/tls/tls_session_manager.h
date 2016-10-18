@@ -109,6 +109,8 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
    {
    public:
       /**
+      * @param rng a RNG used for generating session key and for
+      *        session encryption
       * @param max_sessions a hint on the maximum number of sessions
       *        to keep in memory at any one time. (If zero, don't cap)
       * @param session_lifetime sessions are expired after this many

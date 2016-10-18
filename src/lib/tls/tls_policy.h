@@ -248,12 +248,25 @@ class BOTAN_DLL Policy
       virtual std::vector<u16bit> ciphersuite_list(Protocol_Version version,
                                                    bool have_srp) const;
 
+      /**
+      * @return the default MTU for DTLS
+      */
       virtual size_t dtls_default_mtu() const;
 
+      /**
+      * @return the initial timeout for DTLS
+      */
       virtual size_t dtls_initial_timeout() const;
 
+      /**
+      * @return the maximum timeout for DTLS
+      */
       virtual size_t dtls_maximum_timeout() const;
 
+      /**
+      * Convert this policy to a printable format.
+      * @param o stream to be printed to
+      */
       virtual void print(std::ostream& o) const;
 
       virtual ~Policy() {}

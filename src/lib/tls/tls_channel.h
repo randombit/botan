@@ -41,6 +41,24 @@ class BOTAN_DLL Channel
       typedef std::function<void (const Handshake_Message&)> handshake_msg_cb;
       static size_t IO_BUF_DEFAULT_SIZE;
 
+      /**
+      * Set up a new TLS session
+      *
+      * @param callbacks contains a set of callback function references
+      *        required by the TLS endpoint.
+      *
+      * @param session_manager manages session state
+      *
+      * @param rng a random number generator
+      *
+      * @param policy specifies other connection policy information
+      *
+      * @param is_datagram whether this is a DTLS session
+      *
+      * @param io_buf_sz This many bytes of memory will
+      *        be preallocated for the read and write buffers. Smaller
+      *        values just mean reallocations and copies are more likely.
+      */
       Channel(Callbacks& callbacks,
               Session_Manager& session_manager,
               RandomNumberGenerator& rng,

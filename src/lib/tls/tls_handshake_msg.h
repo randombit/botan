@@ -26,10 +26,19 @@ class Handshake_Hash;
 class BOTAN_DLL Handshake_Message
    {
    public:
+      /**
+      * @return string representation of this message type
+      */
       std::string type_string() const;
 
+      /**
+      * @return the message type
+      */
       virtual Handshake_Type type() const = 0;
 
+      /**
+      * @return DER representation of this message
+      */
       virtual std::vector<byte> serialize() const = 0;
 
       virtual ~Handshake_Message() {}

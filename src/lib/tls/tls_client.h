@@ -127,6 +127,9 @@ class BOTAN_DLL Client final : public Channel
              const std::vector<std::string>& next_protocols = {}
          );
 
+      /**
+      * @return network protocol as advertised by the TLS server, if server sent the ALPN extension
+      */
       const std::string& application_protocol() const { return m_application_protocol; }
    private:
       void init(const Protocol_Version& protocol_version,

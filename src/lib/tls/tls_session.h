@@ -61,11 +61,14 @@ class BOTAN_DLL Session
 
       /**
       * Load a session from DER representation (created by DER_encode)
+      * @param ber DER representation buffer
+      * @param ber_len size of buffer in bytes
       */
       Session(const byte ber[], size_t ber_len);
 
       /**
       * Load a session from PEM representation (created by PEM_encode)
+      * @param pem PEM representation
       */
       explicit Session(const std::string& pem);
 
@@ -181,6 +184,9 @@ class BOTAN_DLL Session
       */
       const std::vector<byte>& session_ticket() const { return m_session_ticket; }
 
+      /**
+      * @return information about the TLS server
+      */
       const Server_Information& server_info() const { return m_server_info; }
 
    private:
