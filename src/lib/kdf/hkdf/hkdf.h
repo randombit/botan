@@ -23,7 +23,7 @@ class BOTAN_DLL HKDF final : public KDF
    {
    public:
       /**
-      * @param prf underlying MAC algorithm
+      * @param prf MAC algorithm to use
       */
       explicit HKDF(MessageAuthenticationCode* prf) : m_prf(prf) {}
 

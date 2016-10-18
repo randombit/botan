@@ -41,7 +41,7 @@ class BOTAN_DLL CTR_BE final : public StreamCipher
       static CTR_BE* make(const Spec& spec);
 
       /**
-      * @param cipher the underlying block cipher to use
+      * @param cipher the block cipher to use
       */
       explicit CTR_BE(BlockCipher* cipher);
 

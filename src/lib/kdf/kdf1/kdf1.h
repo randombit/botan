@@ -29,7 +29,7 @@ class BOTAN_DLL KDF1 final : public KDF
                  const byte label[], size_t label_len) const override;
 
       /**
-      * @param h underlying hash function
+      * @param h hash function to use
       */
       explicit KDF1(HashFunction* h) : m_hash(h) {}
    private:
