@@ -53,6 +53,10 @@
   #include <botan/sha2_64.h>
 #endif
 
+#if defined(BOTAN_HAS_SHA3)
+  #include <botan/sha3.h>
+#endif
+
 #if defined(BOTAN_HAS_SKEIN_512)
   #include <botan/skein_512.h>
 #endif
@@ -133,6 +137,10 @@ BOTAN_REGISTER_HASH_NAMED_NOARGS(GOST_34_11, "GOST-R-34.11-94");
 
 #if defined(BOTAN_HAS_KECCAK)
 BOTAN_REGISTER_HASH_NAMED_1LEN(Keccak_1600, "Keccak-1600", 512);
+#endif
+
+#if defined(BOTAN_HAS_SHA3)
+BOTAN_REGISTER_HASH_NAMED_1LEN(SHA_3, "SHA-3", 512);
 #endif
 
 #if defined(BOTAN_HAS_MD4)

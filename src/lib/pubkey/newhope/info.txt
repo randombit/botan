@@ -1,5 +1,5 @@
 define NEWHOPE 20160829
 
 <requires>
-keccak
+sha3
 </requires>

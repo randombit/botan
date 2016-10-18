@@ -1,1 +1,5 @@
 define KECCAK 20131128
+
+<requires>
+sha3
+</requires>

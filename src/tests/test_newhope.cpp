@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
   #include <botan/newhope.h>
+  #include <botan/sha3.h>
   #include <botan/chacha.h>
   #include <botan/rng.h>
 #endif
@@ -101,13 +102,15 @@ class NEWHOPE_Tests : public Text_Based_Test
          NEWHOPE_RNG drbg_a(get_req_bin(vars, "DRBG_SeedA"));
          NEWHOPE_RNG drbg_b(get_req_bin(vars, "DRBG_SeedB"));
 
+         Botan::SHA_3_256 sha3;
+
          std::vector<uint8_t> send_a(NEWHOPE_SENDABYTES);
          Botan::newhope_poly a_sk;
          Botan::newhope_keygen(send_a.data(), &a_sk, drbg_a);
 
-         std::vector<uint8_t> h_send_a(32);
-         Botan::newhope_hash(h_send_a.data(), send_a.data(), send_a.size());
-
+         std::vector<uint8_t> h_send_a(sha3.output_length());
+         sha3.update(send_a);
+         sha3.final(h_send_a.data());
          result.test_eq("Hash Output A", h_send_a, h_output_a);
 
          std::vector<uint8_t> sharedkey_b(32);
@@ -115,8 +118,9 @@ class NEWHOPE_Tests : public Text_Based_Test
          Botan::newhope_sharedb(sharedkey_b.data(), send_b.data(), send_a.data(), drbg_b);
          result.test_eq("Key B", sharedkey_b, shared_key);
 
-         std::vector<uint8_t> h_send_b(32);
-         Botan::newhope_hash(h_send_b.data(), send_b.data(), send_b.size());
+         std::vector<uint8_t> h_send_b(sha3.output_length());
+         sha3.update(send_b);
+         sha3.final(h_send_b.data());
          result.test_eq("Hash Output B", h_send_b, h_output_b);
 
          std::vector<uint8_t> sharedkey_a(32);

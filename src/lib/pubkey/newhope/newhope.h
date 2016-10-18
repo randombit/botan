@@ -32,13 +32,6 @@ void BOTAN_DLL newhope_keygen(uint8_t *send, newhope_poly *sk, RandomNumberGener
 void BOTAN_DLL newhope_sharedb(uint8_t *sharedkey, uint8_t *send, const uint8_t *received, RandomNumberGenerator& rng);
 void BOTAN_DLL newhope_shareda(uint8_t *sharedkey, const newhope_poly *ska, const uint8_t *received);
 
-
-/*
-* This is just exposed for testing
-*/
-void BOTAN_DLL newhope_hash(uint8_t *output, const uint8_t *input, size_t inputByteLen);
-
-
 }
 
 #endif

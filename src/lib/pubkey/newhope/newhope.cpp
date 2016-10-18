@@ -10,7 +10,7 @@
 */
 
 #include <botan/newhope.h>
-#include <botan/keccak.h>
+#include <botan/sha3.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
@@ -445,7 +445,7 @@ void keccak_absorb(uint64_t *s,
     for (i = 0; i < r / 8; ++i)
        s[i] ^= load_le<u64bit>(m, i);
 
-    Keccak_1600::permute(s);
+    SHA_3::permute(s);
     mlen -= r;
     m += r;
   }
@@ -465,7 +465,7 @@ inline void keccak_squeezeblocks(uint8_t *h, size_t nblocks,
 {
   while(nblocks > 0)
      {
-     Keccak_1600::permute(s);
+     SHA_3::permute(s);
 
      copy_out_le(h, r, s);
 
@@ -511,23 +511,17 @@ void gen_a(poly *a, const uint8_t *seed)
   }
 }
 
+void newhope_hash(uint8_t *output, const uint8_t *input, size_t inputByteLen)
+   {
+   SHA_3_256 sha3;
+
+   sha3.update(input, inputByteLen);
+   sha3.final(output);
+}
+
 }
 
 // API FUNCTIONS
-
-void newhope_hash(uint8_t *output, const uint8_t *input, size_t inputByteLen)
-{
-const size_t SHA3_256_RATE = 136;
-
-  uint64_t s[25];
-  uint8_t t[SHA3_256_RATE];
-  int i;
-
-  keccak_absorb(s, SHA3_256_RATE, input, inputByteLen, 0x06);
-  keccak_squeezeblocks(t, 1, s, SHA3_256_RATE);
-  for(i=0;i<32;i++)
-    output[i] = t[i];
-}
 
 void newhope_keygen(uint8_t *send, poly *sk, RandomNumberGenerator& rng)
 {
