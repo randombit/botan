@@ -197,17 +197,22 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
    //std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
    Botan::Public_Key* pubkey = privkey.get();
 
-   // test EME::maximum_input_size()
-   std::unique_ptr<Botan::EME> eme(Botan::get_eme(padding));
+   try {
+      // test EME::maximum_input_size()
+      std::unique_ptr<Botan::EME> eme(Botan::get_eme(padding));
 
-   if(eme)
+      if(eme)
+         {
+         size_t max_input_size = eme->maximum_input_size(1);
+         result.test_eq("maximum input size( 1 ) should always return 0", max_input_size, 0);
+         size_t keybits = pubkey->max_input_bits();
+         max_input_size = eme->maximum_input_size(keybits);
+         result.test_gte("maximum input size( keybits ) > 0", max_input_size, 1);
+         }
+   }
+   catch(Botan::Lookup_Error&)
       {
-      size_t max_input_size = eme->maximum_input_size(1);
-      result.test_eq("maximum input size( 1 ) should always return 0", max_input_size, 0);
-
-      size_t keybits = pubkey->max_input_bits();
-      max_input_size = eme->maximum_input_size(keybits);
-      result.test_gte("maximum input size( keybits ) > 0", max_input_size, 1);
+      result.note_missing("PK padding " + padding);
       }
 
    for(auto&& enc_provider : possible_pk_providers())
@@ -217,10 +222,6 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
       try
          {
          encryptor.reset(new Botan::PK_Encryptor_EME(*pubkey, Test::rng(),padding, enc_provider));
-         }
-      catch(Botan::Provider_Not_Found&)
-         {
-         continue;
          }
       catch(Botan::Lookup_Error&)
          {
@@ -249,10 +250,6 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
          try
             {
             decryptor.reset(new Botan::PK_Decryptor_EME(*privkey, Test::rng(), padding, dec_provider));
-            }
-         catch(Botan::Provider_Not_Found&)
-            {
-            continue;
             }
          catch(Botan::Lookup_Error&)
             {
@@ -293,11 +290,6 @@ Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
       {
       enc.reset(new Botan::PK_KEM_Encryptor(pubkey, Test::rng(), kdf));
       }
-   catch(Botan::Provider_Not_Found& e)
-      {
-      result.test_note("Skipping test", e.what());
-      return result;
-      }
    catch(Botan::Lookup_Error&)
       {
       result.test_note("Skipping due to missing KDF: " + kdf);
@@ -320,11 +312,6 @@ Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
    try
       {
       dec.reset(new Botan::PK_KEM_Decryptor(*privkey, Test::rng(), kdf));
-      }
-   catch(Botan::Provider_Not_Found& e)
-      {
-      result.test_note("Skipping test", e.what());
-      return result;
       }
    catch(Botan::Lookup_Error& e)
       {
@@ -365,9 +352,6 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
          {
          kas.reset(new Botan::PK_Key_Agreement(*privkey, Test::rng(), kdf, provider));
          result.test_eq(provider, "agreement", kas->derive_key(key_len, pubkey).bits_of(), shared);
-         }
-      catch(Botan::Provider_Not_Found&)
-         {
          }
       catch(Botan::Lookup_Error&)
          {
