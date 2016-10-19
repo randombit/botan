@@ -16,6 +16,10 @@
   #include <botan/salsa20.h>
 #endif
 
+#if defined(BOTAN_HAS_SHAKE_CIPHER)
+  #include <botan/shake_cipher.h>
+#endif
+
 #if defined(BOTAN_HAS_CTR_BE)
   #include <botan/ctr.h>
 #endif
@@ -50,6 +54,10 @@ BOTAN_REGISTER_T_1LEN(StreamCipher, ChaCha, 20);
 
 #if defined(BOTAN_HAS_SALSA20)
 BOTAN_REGISTER_T_NOARGS(StreamCipher, Salsa20);
+#endif
+
+#if defined(BOTAN_HAS_SHAKE_CIPHER)
+BOTAN_REGISTER_NAMED_T(StreamCipher, "SHAKE-128", SHAKE_128, make_new_T<SHAKE_128>);
 #endif
 
 #if defined(BOTAN_HAS_CTR_BE)
