@@ -17,6 +17,8 @@ if [ "$BUILD_MODE" = "static" ] || [ "$BUILD_MODE" = "mini-static" ]; then
 elif [ "$BUILD_MODE" = "shared" ] || [ "$BUILD_MODE" = "mini-shared" ]; then
     # No special flags required for shared lib build
     CFG_FLAGS+=()
+elif [ "$BUILD_MODE" = "bsi" ]; then
+    CFG_FLAGS+=(--module-policy=bsi)
 elif [ "$BUILD_MODE" = "sonarqube" ]; then
     # No special flags required
     CFG_FLAGS+=()
@@ -76,12 +78,12 @@ if [ "${BUILD_MODE:0:6}" = "cross-" ]; then
             CC_BIN=arm-linux-gnueabihf-g++-4.8
             TEST_PREFIX="qemu-arm -L /usr/arm-linux-gnueabihf/"
             CFG_FLAGS+=(--cpu=armv7)
-            CFG_FLAGS+=(--module-policy=bsi --enable-modules=tls)
+            CFG_FLAGS+=(--module-policy=modern --enable-modules=tls)
         elif [ "$BUILD_MODE" = "cross-arm64" ]; then
             CC_BIN=aarch64-linux-gnu-g++-4.8
             TEST_PREFIX="qemu-aarch64 -L /usr/aarch64-linux-gnu/"
             CFG_FLAGS+=(--cpu=armv8-a)
-            CFG_FLAGS+=(--module-policy=bsi --enable-modules=tls)
+            CFG_FLAGS+=(--module-policy=modern --enable-modules=tls)
         elif [ "$BUILD_MODE" = "cross-ppc32" ]; then
             CC_BIN=powerpc-linux-gnu-g++-4.8
             TEST_PREFIX="qemu-ppc -L /usr/powerpc-linux-gnu/"

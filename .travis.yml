@@ -25,6 +25,7 @@ env:
   matrix:
     - BUILD_MODE="shared"
     - BUILD_MODE="static"
+    - BUILD_MODE="bsi"
     - BUILD_MODE="mini-shared"
     - BUILD_MODE="mini-static"
     - BUILD_MODE="cross-arm32"
