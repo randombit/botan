@@ -724,7 +724,7 @@ class ModuleInfo(object):
         all_deps = [s.split('|') for s in self.dependencies()]
 
         for missing in [s for s in flatten(all_deps) if s not in modules]:
-            logging.warn("Module '%s', dep of '%s', does not exist" % (
+            logging.error("Module '%s', dep of '%s', does not exist" % (
                 missing, self.basename))
 
     def __cmp__(self, other):
