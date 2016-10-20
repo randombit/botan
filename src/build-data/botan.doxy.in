@@ -148,7 +148,14 @@ EXPAND_ONLY_PREDEF     = NO
 SEARCH_INCLUDES        = YES
 INCLUDE_PATH           =
 INCLUDE_FILE_PATTERNS  =
-PREDEFINED             =
+PREDEFINED             = BOTAN_HAS_AES_SSSE3 \
+                         BOTAN_HAS_AES_NI \
+                         BOTAN_HAS_IDEA_SSE2 \
+                         BOTAN_HAS_NOEKEON_SIMD \
+                         BOTAN_HAS_SERPENT_SIMD \
+                         BOTAN_HAS_THREEFISH_512_AVX2 \
+                         BOTAN_HAS_SHA1_SSE2 \
+                         BOTAN_HAS_CHACHA_SSE2
 EXPAND_AS_DEFINED      =
 SKIP_FUNCTION_MACROS   = YES
 
