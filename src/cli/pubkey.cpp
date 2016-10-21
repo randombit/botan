@@ -221,6 +221,30 @@ BOTAN_REGISTER_COMMAND("verify", PK_Verify);
 
 #if defined(BOTAN_HAS_DL_GROUP)
 
+class DL_Group_Info final : public Command
+   {
+   public:
+      DL_Group_Info() : Command("dl_group_info --pem name") {}
+
+      void go() override
+         {
+         Botan::DL_Group group(get_arg("name"));
+
+         if(flag_set("pem"))
+            {
+            output() << group.PEM_encode(Botan::DL_Group::X942_DH_PARAMETERS);
+            }
+         else
+            {
+            output() << "P = " << std::hex << group.get_p() << "\n"
+                     << "G = " << group.get_g() << "\n";
+            }
+
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("dl_group_info", DL_Group_Info);
+
 class Gen_DL_Group final : public Command
    {
    public:
