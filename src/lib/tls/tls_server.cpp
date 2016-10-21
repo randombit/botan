@@ -633,32 +633,25 @@ void Server::process_handshake_msg(const Handshake_State* active_state,
    switch(type)
       {
       case CLIENT_HELLO:
-         this->process_client_hello_msg(active_state, state, contents);
-      break;
+         return this->process_client_hello_msg(active_state, state, contents);
 
       case CERTIFICATE:
-         this->process_certificate_msg(state, contents);
-      break;
+         return this->process_certificate_msg(state, contents);
 
       case CLIENT_KEX:
-         this->process_client_key_exchange_msg(state, contents);
-      break;
+         return this->process_client_key_exchange_msg(state, contents);
 
       case CERTIFICATE_VERIFY:
-         this->process_certificate_verify_msg(state, type, contents);
-      break;
+         return this->process_certificate_verify_msg(state, type, contents);
 
       case HANDSHAKE_CCS:
-         this->process_change_cipher_spec_msg(state);
-      break;
+         return this->process_change_cipher_spec_msg(state);
 
       case FINISHED:
-         this->process_finished_msg(state, type, contents);
-      break;
+         return this->process_finished_msg(state, type, contents);
 
       default:
          throw Unexpected_Message("Unknown handshake message received");
-         break;
       }
    }
 
@@ -839,15 +832,17 @@ void Server::session_create(Server_Handshake_State& pending_state,
                              client_auth_CAs,
                              pending_state.version()));
 
+      /*
+      SSLv3 allowed clients to skip the Certificate message entirely
+      if they wanted. In TLS v1.0 and later clients must send a
+      (possibly empty) Certificate message
+      */
       pending_state.set_expected_next(CERTIFICATE);
       }
-
-   /*
-   * If the client doesn't have a cert they want to use they are
-   * allowed to send either an empty cert message or proceed
-   * directly to the client key exchange, so allow either case.
-   */
-   pending_state.set_expected_next(CLIENT_KEX);
+   else
+      {
+      pending_state.set_expected_next(CLIENT_KEX);
+      }
 
    pending_state.server_hello_done(new Server_Hello_Done(pending_state.handshake_io(), pending_state.hash()));
    }
