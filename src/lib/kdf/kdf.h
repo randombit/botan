@@ -182,11 +182,6 @@ class BOTAN_DLL KDF
       * @return new object representing the same algorithm as *this
       */
       virtual KDF* clone() const = 0;
-<<<<<<< HEAD
-
-      typedef SCAN_Name Spec;
-=======
->>>>>>> 8978841... Remove Algo_Registry
    };
 
 /**
