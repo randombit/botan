@@ -27,7 +27,7 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
 
       std::vector<byte> x509_subject_public_key() const override;
 
-      std::vector<byte> public_value() const { return unlock(m_public); }
+      std::vector<byte> public_value() const { return m_public; }
 
       /**
       * Create a Curve25519 Public Key.
@@ -39,13 +39,20 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
 
       /**
       * Create a Curve25519 Public Key.
-      * @param pub DER encoded public key bits
+      * @param pub 32-byte raw public key
       */
-      explicit Curve25519_PublicKey(const secure_vector<byte>& pub) : m_public(pub) {}
+      explicit Curve25519_PublicKey(const std::vector<byte>& pub) : m_public(pub) {}
+
+      /**
+      * Create a Curve25519 Public Key.
+      * @param pub 32-byte raw public key
+      */
+      explicit Curve25519_PublicKey(const secure_vector<byte>& pub) :
+         m_public(pub.begin(), pub.end()) {}
 
    protected:
       Curve25519_PublicKey() {}
-      secure_vector<byte> m_public;
+      std::vector<byte> m_public;
    };
 
 class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,

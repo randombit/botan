@@ -20,8 +20,12 @@
 #include <botan/ecdh.h>
 #include <botan/rsa.h>
 
+#if defined(BOTAN_HAS_CURVE_25519)
+  #include <botan/curve25519.h>
+#endif
+
 #if defined(BOTAN_HAS_SRP6)
-#include <botan/srp6.h>
+  #include <botan/srp6.h>
 #endif
 
 namespace Botan {
@@ -138,31 +142,53 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          const u16bit curve_id = reader.get_u16bit();
 
-         const std::string name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
+         const std::string curve_name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
 
-         if(name == "")
+         if(curve_name == "")
             throw Decoding_Error("Server sent unknown named curve " + std::to_string(curve_id));
 
-         if(!policy.allowed_ecc_curve(name))
+         if(!policy.allowed_ecc_curve(curve_name))
             {
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server sent ECC curve prohibited by policy");
             }
 
-         EC_Group group(name);
+         const std::vector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
 
-         std::vector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
+         std::vector<byte> our_ecdh_public;
+         secure_vector<byte> ecdh_secret;
 
-         ECDH_PublicKey counterparty_key(group, OS2ECP(ecdh_key, group.get_curve()));
+         if(curve_name == "x25519")
+            {
+#if defined(BOTAN_HAS_CURVE_25519)
+            if(ecdh_key.size() != 32)
+               throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Invalid X25519 key size");
 
-         policy.check_peer_key_acceptable(counterparty_key);
-         
-         ECDH_PrivateKey priv_key(rng, group);
+            Curve25519_PublicKey counterparty_key(ecdh_key);
+            policy.check_peer_key_acceptable(counterparty_key);
+            Curve25519_PrivateKey priv_key(rng);
+            PK_Key_Agreement ka(priv_key, rng, "Raw");
+            ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
+#else
+            throw Internal_Error("Negotiated X25519 somehow, but it is disabled");
+#endif
 
-         PK_Key_Agreement ka(priv_key, rng, "Raw");
+            // X25519 is always compressed but sent as "uncompressed" in TLS
+            our_ecdh_public = priv_key.public_value();
+            }
+         else
+            {
+            EC_Group group(curve_name);
+            ECDH_PublicKey counterparty_key(group, OS2ECP(ecdh_key, group.get_curve()));
+            policy.check_peer_key_acceptable(counterparty_key);
+            ECDH_PrivateKey priv_key(rng, group);
+            PK_Key_Agreement ka(priv_key, rng, "Raw");
+            ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
 
-         secure_vector<byte> ecdh_secret =
-            ka.derive_key(0, counterparty_key.public_value()).bits_of();
+            // follow server's preference for point compression
+            our_ecdh_public = priv_key.public_value(
+               state.server_hello()->prefers_compressed_ec_points() ? PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED);
+            }
 
          if(kex_algo == "ECDH")
             m_pre_master = ecdh_secret;
@@ -172,10 +198,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             append_tls_length_value(m_pre_master, psk.bits_of(), 2);
             }
 
-         // follow server's preference for point compression
-         append_tls_length_value(m_key_material,
-               priv_key.public_value(state.server_hello()->prefers_compressed_ec_points() ?
-               PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED ), 1);
+         append_tls_length_value(m_key_material, our_ecdh_public, 1);
          }
 #if defined(BOTAN_HAS_SRP6)
       else if(kex_algo == "SRP_SHA")

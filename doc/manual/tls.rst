@@ -590,7 +590,7 @@ policy settings from a file.
      Return a list of ECC curves we are willing to use, in order of preference.
 
      Default: "brainpool512r1", "secp521r1", "brainpool384r1",
-     "secp384r1", "brainpool256r1", "secp256r1"
+     "secp384r1", "brainpool256r1", "secp256r1", "x25519"
 
      No other values are currently defined.
 

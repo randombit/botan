@@ -17,8 +17,12 @@
 #include <botan/dh.h>
 #include <botan/ecdh.h>
 
+#if defined(BOTAN_HAS_CURVE_25519)
+  #include <botan/curve25519.h>
+#endif
+
 #if defined(BOTAN_HAS_SRP6)
-#include <botan/srp6.h>
+  #include <botan/srp6.h>
 #endif
 
 namespace Botan {
@@ -69,28 +73,40 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                              "Could not agree on an ECC curve with the client");
 
-      EC_Group ec_group(curve_name);
+      const uint16_t named_curve_id = Supported_Elliptic_Curves::name_to_curve_id(curve_name);
+      if(named_curve_id == 0)
+         throw Internal_Error("TLS does not support ECC with " + curve_name);
 
-      std::unique_ptr<ECDH_PrivateKey> ecdh(new ECDH_PrivateKey(rng, ec_group));
+      std::vector<byte> ecdh_public_val;
 
-      const std::string ecdh_domain_oid = ecdh->domain().get_oid();
-      const std::string domain = OIDS::lookup(OID(ecdh_domain_oid));
+      if(curve_name == "x25519")
+         {
+#if defined(BOTAN_HAS_CURVE_25519)
+         std::unique_ptr<Curve25519_PrivateKey> x25519(new Curve25519_PrivateKey(rng));
+         ecdh_public_val = x25519->public_value();
+         m_kex_key.reset(x25519.release());
+#else
+         throw Internal_Error("Negotiated X25519 somehow, but it is disabled");
+#endif
+         }
+      else
+         {
+         EC_Group ec_group(curve_name);
+         std::unique_ptr<ECDH_PrivateKey> ecdh(new ECDH_PrivateKey(rng, ec_group));
 
-      if(domain == "")
-         throw Internal_Error("Could not find name of ECDH domain " + ecdh_domain_oid);
+         // follow client's preference for point compression
+         ecdh_public_val = ecdh->public_value(
+            state.client_hello()->prefers_compressed_ec_points() ?
+            PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED);
 
-      const u16bit named_curve_id = Supported_Elliptic_Curves::name_to_curve_id(domain);
+         m_kex_key.reset(ecdh.release());
+         }
 
       m_params.push_back(3); // named curve
       m_params.push_back(get_byte(0, named_curve_id));
       m_params.push_back(get_byte(1, named_curve_id));
 
-      // follow client's preference for point compression
-      append_tls_length_value(m_params,
-            ecdh->public_value(state.client_hello()->prefers_compressed_ec_points() ?
-            PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED), 1);
-
-      m_kex_key.reset(ecdh.release());
+      append_tls_length_value(m_params, ecdh_public_val, 1);
       }
 #if defined(BOTAN_HAS_SRP6)
    else if(kex_algo == "SRP_SHA")
