@@ -24,14 +24,17 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
 
       /**
       * Create an instance based on a name
-      * Will return a null pointer if the algo/provider combination cannot
-      * be found. If provider is empty then best available is chosen.
+      * If provider is empty then best available is chosen.
+      * @param algo_spec algorithm name
+      * @param provider provider implementation to use
+      * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<HashFunction> create(const std::string& algo_spec,
                                                   const std::string& provider = "");
 
       /**
-      * Returns the list of available providers for this algorithm, empty if not available
+      * @return list of available providers for this algorithm, empty if not available
+      * @param algo_spec algorithm name
       */
       static std::vector<std::string> providers(const std::string& algo_spec);
 
@@ -50,8 +53,14 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
 
       virtual ~HashFunction();
 
+      /**
+      * Reset the state.
+      */
       virtual void clear() = 0;
 
+      /**
+      * @return the hash function name
+      */
       virtual std::string name() const = 0;
 
       /**

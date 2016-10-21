@@ -38,12 +38,30 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
       */
       virtual void set_associated_data(const byte ad[], size_t ad_len) = 0;
 
+      /**
+      * Set associated data that is not included in the ciphertext but
+      * that should be authenticated. Must be called after set_key and
+      * before start.
+      *
+      * See @ref set_associated_data().
+      *
+      * @param ad the associated data
+      */
       template<typename Alloc>
       void set_associated_data_vec(const std::vector<byte, Alloc>& ad)
          {
          set_associated_data(ad.data(), ad.size());
          }
 
+      /**
+      * Set associated data that is not included in the ciphertext but
+      * that should be authenticated. Must be called after set_key and
+      * before start.
+      *
+      * See @ref set_associated_data().
+      *
+      * @param ad the associated data
+      */
       template<typename Alloc>
       void set_ad(const std::vector<byte, Alloc>& ad)
          {
@@ -51,8 +69,8 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
          }
 
       /**
-      * Default AEAD nonce size (a commonly supported value among AEAD
-      * modes, and large enough that random collisions are unlikely).
+      * @return default AEAD nonce size (a commonly supported value among AEAD
+      * modes, and large enough that random collisions are unlikely)
       */
       size_t default_nonce_length() const override { return 12; }
 
@@ -61,6 +79,8 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
 
 /**
 * Get an AEAD mode by name (eg "AES-128/GCM" or "Serpent/EAX")
+* @param name AEAD name
+* @param direction ENCRYPTION or DECRYPTION
 */
 BOTAN_DLL AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction);
 

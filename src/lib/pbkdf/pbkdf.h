@@ -26,14 +26,16 @@ class BOTAN_DLL PBKDF
    public:
       /**
       * Create an instance based on a name
-      * Will return a null pointer if the algo/provider combination cannot
-      * be found. If provider is empty then best available is chosen.
+      * If provider is empty then best available is chosen.
+      * @param algo_spec algorithm name
+      * @param provider provider implementation to choose
+      * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<PBKDF> create(const std::string& algo_spec,
                                            const std::string& provider = "");
 
       /**
-      * Returns the list of available providers for this algorithm, empty if not available
+      * @return list of available providers for this algorithm, empty if not available
       */
       static std::vector<std::string> providers(const std::string& algo_spec);
 
@@ -44,6 +46,9 @@ class BOTAN_DLL PBKDF
       */
       virtual PBKDF* clone() const = 0;
 
+      /**
+      * @return name of this PBKDF
+      */
       virtual std::string name() const = 0;
 
       virtual ~PBKDF();
@@ -51,8 +56,9 @@ class BOTAN_DLL PBKDF
       /**
       * Derive a key from a passphrase for a number of iterations
       * specified by either iterations or if iterations == 0 then
-      * running until seconds time has elapsed.
+      * running until msec time has elapsed.
       *
+      * @param out buffer to store the derived key, must be of out_len bytes
       * @param out_len the desired length of the key to produce
       * @param passphrase the password to derive the key from
       * @param salt a randomly chosen salt
@@ -68,22 +74,66 @@ class BOTAN_DLL PBKDF
                            size_t iterations,
                            std::chrono::milliseconds msec) const = 0;
 
+      /**
+      * Derive a key from a passphrase for a number of iterations.
+      *
+      * @param out buffer to store the derived key, must be of out_len bytes
+      * @param out_len the desired length of the key to produce
+      * @param passphrase the password to derive the key from
+      * @param salt a randomly chosen salt
+      * @param salt_len length of salt in bytes
+      * @param iterations the number of iterations to use (use 10K or more)
+      */
       void pbkdf_iterations(byte out[], size_t out_len,
                             const std::string& passphrase,
                             const byte salt[], size_t salt_len,
                             size_t iterations) const;
 
+      /**
+      * Derive a key from a passphrase, running until msec time has elapsed.
+      *
+      * @param out buffer to store the derived key, must be of out_len bytes
+      * @param out_len the desired length of the key to produce
+      * @param passphrase the password to derive the key from
+      * @param salt a randomly chosen salt
+      * @param salt_len length of salt in bytes
+      * @param msec if iterations is zero, then instead the PBKDF is
+      *        run until msec milliseconds has passed.
+      * @param iterations set to the number iterations executed
+      */
       void pbkdf_timed(byte out[], size_t out_len,
                          const std::string& passphrase,
                          const byte salt[], size_t salt_len,
                          std::chrono::milliseconds msec,
                          size_t& iterations) const;
 
+      /**
+      * Derive a key from a passphrase for a number of iterations.
+      *
+      * @param out_len the desired length of the key to produce
+      * @param passphrase the password to derive the key from
+      * @param salt a randomly chosen salt
+      * @param salt_len length of salt in bytes
+      * @param iterations the number of iterations to use (use 10K or more)
+      * @return the derived key
+      */
       secure_vector<byte> pbkdf_iterations(size_t out_len,
                                            const std::string& passphrase,
                                            const byte salt[], size_t salt_len,
                                            size_t iterations) const;
 
+      /**
+      * Derive a key from a passphrase, running until msec time has elapsed.
+      *
+      * @param out_len the desired length of the key to produce
+      * @param passphrase the password to derive the key from
+      * @param salt a randomly chosen salt
+      * @param salt_len length of salt in bytes
+      * @param msec if iterations is zero, then instead the PBKDF is
+      *        run until msec milliseconds has passed.
+      * @param iterations set to the number iterations executed
+      * @return the derived key
+      */
       secure_vector<byte> pbkdf_timed(size_t out_len,
                                       const std::string& passphrase,
                                       const byte salt[], size_t salt_len,
@@ -164,6 +214,7 @@ class BOTAN_DLL PBKDF
 /**
 * Password based key derivation function factory method
 * @param algo_spec the name of the desired PBKDF algorithm
+* @param provider the provider to use
 * @return pointer to newly allocated object of that type
 */
 inline PBKDF* get_pbkdf(const std::string& algo_spec,

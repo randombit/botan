@@ -53,7 +53,7 @@ inline ECIES_Flags operator &(ECIES_Flags a, ECIES_Flags b)
    }
 
 /**
-* Parameters for ecies secret derivation
+* Parameters for ECIES secret derivation
 */
 class BOTAN_DLL ECIES_KA_Params
    {
@@ -183,6 +183,7 @@ class BOTAN_DLL ECIES_KA_Operation
       * @param ecies_params settings for ecies
       * @param for_encryption disable cofactor mode if the secret will be used for encryption
       * (according to ISO 18033 cofactor mode is only used during decryption)
+      * @param rng the RNG to use
       */
       ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key,
                          const ECIES_KA_Params& ecies_params,
@@ -212,6 +213,7 @@ class BOTAN_DLL ECIES_Encryptor : public PK_Encryptor
       /**
       * @param private_key the (ephemeral) private key which is used for the key agreement
       * @param ecies_params settings for ecies
+      * @param rng random generator to use
       */
       ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
                       const ECIES_System_Params& ecies_params,
@@ -268,6 +270,7 @@ class BOTAN_DLL ECIES_Decryptor : public PK_Decryptor
       /**
       * @param private_key the private key which is used for the key agreement
       * @param ecies_params settings for ecies
+      * @param rng the random generator to use
       */
       ECIES_Decryptor(const PK_Key_Agreement_Key& private_key,
                       const ECIES_System_Params& ecies_params,

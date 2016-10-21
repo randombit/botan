@@ -19,11 +19,16 @@ namespace Botan {
 class BOTAN_DLL RSA_PublicKey : public virtual Public_Key
    {
    public:
+      /**
+      * Load a public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits X.509 subject public key info structure
+      */
       RSA_PublicKey(const AlgorithmIdentifier& alg_id,
                     const secure_vector<byte>& key_bits);
 
       /**
-      * Create a RSA_PublicKey
+      * Create a public key.
       * @arg n the modulus
       * @arg e the exponent
       */
@@ -78,6 +83,12 @@ class BOTAN_DLL RSA_PublicKey : public virtual Public_Key
 class BOTAN_DLL RSA_PrivateKey : public Private_Key, public RSA_PublicKey
    {
    public:
+      /**
+      * Load a private key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits PKCS #8 structure
+      * @param rng a random number generator
+      */
       RSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                      const secure_vector<byte>& key_bits,
                      RandomNumberGenerator& rng);

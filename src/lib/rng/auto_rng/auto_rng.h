@@ -27,6 +27,9 @@ class BOTAN_DLL AutoSeeded_RNG final : public RandomNumberGenerator
 
       bool is_seeded() const override;
 
+      /**
+      * Mark state as requiring a reseed on next use
+      */
       void force_reseed();
 
       size_t reseed(Entropy_Sources& srcs,
@@ -40,18 +43,44 @@ class BOTAN_DLL AutoSeeded_RNG final : public RandomNumberGenerator
       void clear() override;
 
       /**
-      * If no RNG or entropy sources are provided to AutoSeeded_RNG, it uses the system RNG
-      * (if available) or else a default group of entropy sources (all other systems) to
-      * gather seed material.
+      * Uses the system RNG (if available) or else a default group of
+      * entropy sources (all other systems) to gather seed material.
+      *
+      * @param reseed_interval specifies a limit of how many times
+      * the RNG will be called before automatic reseeding is performed
       */
       AutoSeeded_RNG(size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
 
+      /**
+      * Uses the BOTAN_AUTO_RNG_DRBG RNG to gather seed material.
+      *
+      * @param underlying_rng is a reference to some RNG which will be used
+      * to perform the periodic reseeding
+      * @param reseed_interval specifies a limit of how many times
+      * the RNG will be called before automatic reseeding is performed
+      */
       AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
                      size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
 
+      /**
+      * Uses the BOTAN_AUTO_RNG_DRBG RNG to gather seed material.
+      *
+      * @param entropy_sources will be polled to perform reseeding periodically
+      * @param reseed_interval specifies a limit of how many times
+      * the RNG will be called before automatic reseeding is performed
+      */
       AutoSeeded_RNG(Entropy_Sources& entropy_sources,
                      size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
 
+      /**
+      * Uses the BOTAN_AUTO_RNG_DRBG RNG to gather seed material.
+      *
+      * @param underlying_rng is a reference to some RNG which will be used
+      * to perform the periodic reseeding
+      * @param entropy_sources will be polled to perform reseeding periodically
+      * @param reseed_interval specifies a limit of how many times
+      * the RNG will be called before automatic reseeding is performed
+      */
       AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
                      Entropy_Sources& entropy_sources,
                      size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);

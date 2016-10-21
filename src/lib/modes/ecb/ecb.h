@@ -52,6 +52,10 @@ class BOTAN_DLL ECB_Mode : public Cipher_Mode
 class BOTAN_DLL ECB_Encryption final : public ECB_Mode
    {
    public:
+      /**
+      * @param cipher block cipher to use
+      * @param padding padding method to use
+      */
       ECB_Encryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
          ECB_Mode(cipher, padding) {}
 
@@ -70,6 +74,10 @@ class BOTAN_DLL ECB_Encryption final : public ECB_Mode
 class BOTAN_DLL ECB_Decryption final : public ECB_Mode
    {
    public:
+      /**
+      * @param cipher block cipher to use
+      * @param padding padding method to use
+      */
       ECB_Decryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
          ECB_Mode(cipher, padding) {}
 

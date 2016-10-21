@@ -26,14 +26,16 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
 
       /**
       * Create an instance based on a name
-      * Will return a null pointer if the algo/provider combination cannot
-      * be found. If provider is empty then best available is chosen.
+      * If provider is empty then best available is chosen.
+      * @param algo_spec algorithm name
+      * @param provider provider implementation to use
+      * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<MessageAuthenticationCode> create(const std::string& algo_spec,
                                                                const std::string& provider = "");
 
       /**
-      * Returns the list of available providers for this algorithm, empty if not available
+      * @return list of available providers for this algorithm, empty if not available
       */
       static std::vector<std::string> providers(const std::string& algo_spec);
 
@@ -48,7 +50,7 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       virtual bool verify_mac(const byte in[], size_t length);
 
       /**
-      * Get a new object representing the same algorithm as *this
+      * @return a new object representing the same algorithm as *this
       */
       virtual MessageAuthenticationCode* clone() const = 0;
 

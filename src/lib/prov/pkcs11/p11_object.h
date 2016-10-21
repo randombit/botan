@@ -52,6 +52,7 @@ class BOTAN_DLL AttributeContainer
          return m_attributes;
          }
 
+      /// @return raw attribute data
       inline Attribute* data() const
          {
          return const_cast< Attribute* >(m_attributes.data());
@@ -63,26 +64,50 @@ class BOTAN_DLL AttributeContainer
          return m_attributes.size();
          }
 
-      /// Add a class attribute (CKA_CLASS / AttributeType::Class)
+      /**
+      * Add a class attribute (CKA_CLASS / AttributeType::Class).
+      * @param object_class class attribute to add
+      */
       void add_class(ObjectClass object_class);
 
-      /// Add a string attribute (e.g. CKA_LABEL / AttributeType::Label)
+      /**
+      * Add a string attribute (e.g. CKA_LABEL / AttributeType::Label).
+      * @param attribute attribute type
+      * @param value string value to add
+      */
       void add_string(AttributeType attribute, const std::string& value);
 
-      /// Add a binary attribute (e.g. CKA_ID / AttributeType::Id)
+      /**
+      * Add a binary attribute (e.g. CKA_ID / AttributeType::Id).
+      * @param attribute attribute type
+      * @param value binary attribute value to add
+      * @param length size of the binary attribute value in bytes
+      */
       void add_binary(AttributeType attribute, const byte* value, size_t length);
 
-      /// Add a binary attribute (e.g. CKA_ID / AttributeType::Id)
+      /**
+      * Add a binary attribute (e.g. CKA_ID / AttributeType::Id).
+      * @param attribute attribute type
+      * @param binary binary attribute value to add
+      */
       template<typename TAlloc>
       void add_binary(AttributeType attribute, const std::vector<byte, TAlloc>& binary)
          {
          add_binary(attribute, binary.data(), binary.size());
          }
 
-      /// Add a bool attribute (e.g. CKA_SENSITIVE / AttributeType::Sensitive)
+      /**
+      * Add a bool attribute (e.g. CKA_SENSITIVE / AttributeType::Sensitive).
+      * @param attribute attribute type
+      * @param value boolean value to add
+      */
       void add_bool(AttributeType attribute, bool value);
 
-      /// Add a numeric attribute (e.g. CKA_MODULUS_BITS / AttributeType::ModulusBits)
+      /**
+      * Add a numeric attribute (e.g. CKA_MODULUS_BITS / AttributeType::ModulusBits).
+      * @param attribute attribute type
+      * @param value numeric value to add
+      */
       template<typename T>
       void add_numeric(AttributeType attribute, T value)
          {
@@ -92,7 +117,7 @@ class BOTAN_DLL AttributeContainer
          }
 
    protected:
-      /// Add a attribute with the given value and size to the attribute collection `m_attributes`
+      /// Add an attribute with the given value and size to the attribute collection `m_attributes`
       void add_attribute(AttributeType attribute, const byte* value, uint32_t size);
 
    private:
@@ -610,6 +635,9 @@ class BOTAN_DLL DomainParameterProperties : public StorageObjectProperties
       const KeyType m_key_type;
    };
 
+/**
+* Represents a PKCS#11 object.
+*/
 class BOTAN_DLL Object
    {
    public:

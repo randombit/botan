@@ -86,14 +86,6 @@ u32bit brootf_decomp__calc_sum_limit(u32bit t)
    return result;
    }
 
-}
-
-secure_vector<gf2m> find_roots_gf2m_decomp(const polyn_gf2m & polyn, u32bit code_length)
-   {
-   gf2m_decomp_rootfind_state state(polyn, code_length);
-   return state.find_roots(polyn);
-   }
-
 gf2m_decomp_rootfind_state::gf2m_decomp_rootfind_state(const polyn_gf2m & polyn, u32bit the_code_length) :
    code_length(the_code_length), m_j(0), m_j_gray(0)
    {
@@ -312,6 +304,14 @@ secure_vector<gf2m> gf2m_decomp_rootfind_state::find_roots(const polyn_gf2m & si
    root_pos = patch_root_array(result.data(), result.size(), root_pos);
    result.resize(root_pos);
    return result;
+   }
+
+} // end anonymous namespace
+
+secure_vector<gf2m> find_roots_gf2m_decomp(const polyn_gf2m & polyn, u32bit code_length)
+   {
+   gf2m_decomp_rootfind_state state(polyn, code_length);
+   return state.find_roots(polyn);
    }
 
 } // end namespace Botan

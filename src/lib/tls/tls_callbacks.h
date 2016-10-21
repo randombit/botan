@@ -126,23 +126,27 @@ class BOTAN_DLL Compat_Callbacks final : public Callbacks
        *
        * @param alert_cb is called when a TLS alert is received
        *
-       * @param handshake_cb is called when a handshake is completed
+       * @param hs_cb is called when a handshake is completed
+       *
+       * @param hs_msg_cb is called for each handshake message received
+       *
+       * @param next_proto is called with ALPN protocol data sent by the client
        */
        BOTAN_DEPRECATED("Use TLS::Callbacks (virtual interface).")
-       Compat_Callbacks(output_fn out, data_cb app_data_cb, alert_cb alert_cb,
+       Compat_Callbacks(output_fn output_fn, data_cb app_data_cb, alert_cb alert_cb,
                         handshake_cb hs_cb, handshake_msg_cb hs_msg_cb = nullptr,
                         next_protocol_fn next_proto = nullptr)
-          : m_output_function(out), m_app_data_cb(app_data_cb),
+          : m_output_function(output_fn), m_app_data_cb(app_data_cb),
             m_alert_cb(std::bind(alert_cb, std::placeholders::_1, nullptr, 0)),
             m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb), m_next_proto(next_proto) {}
 
        BOTAN_DEPRECATED("Use TLS::Callbacks (virtual interface).")
-       Compat_Callbacks(output_fn out, data_cb app_data_cb,
+       Compat_Callbacks(output_fn output_fn, data_cb app_data_cb,
                         std::function<void (Alert)> alert_cb,
                         handshake_cb hs_cb,
                         handshake_msg_cb hs_msg_cb = nullptr,
                         next_protocol_fn next_proto = nullptr)
-          : m_output_function(out), m_app_data_cb(app_data_cb),
+          : m_output_function(output_fn), m_app_data_cb(app_data_cb),
             m_alert_cb(alert_cb),
             m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb), m_next_proto(next_proto) {}
 

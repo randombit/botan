@@ -47,12 +47,25 @@ class BOTAN_DLL Server_Information
                         u16bit port = 0) :
          m_hostname(hostname), m_service(service), m_port(port) {}
 
+      /**
+      * @return the host's DNS name, if known
+      */
       std::string hostname() const { return m_hostname; }
 
+      /**
+      * @return text string of the service type, e.g.,
+      * "https", "tor", or "git"
+      */
       std::string service() const { return m_service; }
 
+      /**
+      * @return the protocol port of the server, or zero if unknown
+      */
       u16bit port() const { return m_port; }
 
+      /**
+      * @return whether the hostname is known
+      */
       bool empty() const { return m_hostname.empty(); }
 
    private:

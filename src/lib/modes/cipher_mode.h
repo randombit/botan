@@ -69,13 +69,16 @@ class BOTAN_DLL Cipher_Mode
       * Processes msg in place and returns bytes written. Normally
       * this will be either msg_len (indicating the entire message was
       * processes) or for certain AEAD modes zero (indicating that the
-      * mode requires the entire message be processed in one pass.
+      * mode requires the entire message be processed in one pass).
+      *
+      * @param msg the message to be processed
+      * @param msg_len length of the message in bytes
       */
       virtual size_t process(uint8_t msg[], size_t msg_len) = 0;
 
       /**
       * Process some data. Input must be in size update_granularity() byte blocks.
-      * @param blocks in/out parameter which will possibly be resized
+      * @param buffer in/out parameter which will possibly be resized
       * @param offset an offset into blocks to begin processing
       */
       void update(secure_vector<byte>& buffer, size_t offset = 0)
@@ -116,12 +119,12 @@ class BOTAN_DLL Cipher_Mode
       virtual size_t minimum_final_size() const = 0;
 
       /**
-      * Return the default size for a nonce
+      * @return the default size for a nonce
       */
       virtual size_t default_nonce_length() const = 0;
 
       /**
-      * Return true iff nonce_len is a valid length for the nonce
+      * @return true iff nonce_len is a valid length for the nonce
       */
       virtual bool valid_nonce_length(size_t nonce_len) const = 0;
 
@@ -130,13 +133,13 @@ class BOTAN_DLL Cipher_Mode
       virtual void clear() = 0;
 
       /**
-      * Returns true iff this mode provides authentication as well as
+      * @return true iff this mode provides authentication as well as
       * confidentiality.
       */
       virtual bool authenticated() const { return false; }
 
       /**
-      * Return the size of the authentication tag used (in bytes)
+      * @return the size of the authentication tag used (in bytes)
       */
       virtual size_t tag_size() const { return 0; }
 
@@ -155,12 +158,20 @@ class BOTAN_DLL Cipher_Mode
          return key_spec().valid_keylength(length);
          }
 
+      /**
+      * Set the symmetric key of this transform
+      * @param key contains the key material
+      */
       template<typename Alloc>
       void set_key(const std::vector<byte, Alloc>& key)
          {
          set_key(key.data(), key.size());
          }
 
+      /**
+      * Set the symmetric key of this transform
+      * @param key contains the key material
+      */
       void set_key(const SymmetricKey& key)
          {
          set_key(key.begin(), key.length());
@@ -194,6 +205,11 @@ class BOTAN_DLL Cipher_Mode
 */
 enum Cipher_Dir { ENCRYPTION, DECRYPTION };
 
+/**
+* Get a cipher mode by name (eg "AES-128/CBC" or "Serpent/XTS")
+* @param algo_spec cipher name
+* @param direction ENCRYPTION or DECRYPTION
+*/
 BOTAN_DLL Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction);
 
 }

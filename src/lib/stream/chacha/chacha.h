@@ -21,7 +21,8 @@ class BOTAN_DLL ChaCha final : public StreamCipher
       StreamCipher* clone() const override { return new ChaCha(m_rounds); }
 
       /**
-      * Currently only 8, 12 or 20 rounds are supported, all others
+      * @param rounds number of rounds
+      * @note Currently only 8, 12 or 20 rounds are supported, all others
       * will throw an exception
       */
       ChaCha(size_t rounds = 20);

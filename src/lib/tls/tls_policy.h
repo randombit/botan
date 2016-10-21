@@ -248,19 +248,32 @@ class BOTAN_DLL Policy
       virtual std::vector<u16bit> ciphersuite_list(Protocol_Version version,
                                                    bool have_srp) const;
 
+      /**
+      * @return the default MTU for DTLS
+      */
       virtual size_t dtls_default_mtu() const;
 
+      /**
+      * @return the initial timeout for DTLS
+      */
       virtual size_t dtls_initial_timeout() const;
 
+      /**
+      * @return the maximum timeout for DTLS
+      */
       virtual size_t dtls_maximum_timeout() const;
 
+      /**
+      * Convert this policy to a printable format.
+      * @param o stream to be printed to
+      */
       virtual void print(std::ostream& o) const;
 
       virtual ~Policy() {}
    };
 
 /**
-* NSA Suite B 128-bit security level (see @rfc 6460)
+* NSA Suite B 128-bit security level (RFC 6460)
 */
 class BOTAN_DLL NSA_Suite_B_128 : public Policy
    {
@@ -291,7 +304,7 @@ class BOTAN_DLL NSA_Suite_B_128 : public Policy
    };
 
 /**
-* Policy for DTLS. We require DTLS v1.2 and an AEAD mode
+* Policy for DTLS. We require DTLS v1.2 and an AEAD mode.
 */
 class BOTAN_DLL Datagram_Policy : public Policy
    {

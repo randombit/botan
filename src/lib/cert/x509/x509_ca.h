@@ -96,6 +96,7 @@ class BOTAN_DLL X509_CA
       * @param ca_certificate the certificate of the CA
       * @param key the private key of the CA
       * @param hash_fn name of a hash function to use for signing
+      * @param rng the random generator to use
       */
       X509_CA(const X509_Certificate& ca_certificate,
               const Private_Key& key,
@@ -129,6 +130,7 @@ class BOTAN_DLL X509_CA
 * Choose the default signature format for a certain public key signature
 * scheme.
 * @param key will be the key to choose a padding scheme for
+* @param rng the random generator to use
 * @param hash_fn is the desired hash function
 * @param alg_id will be set to the chosen scheme
 * @return A PK_Signer object for generating signatures

@@ -149,14 +149,11 @@ class Record_Raw_Input
 /**
 * Create a TLS record
 * @param write_buffer the output record is placed here
-* @param msg_type is the type of the message (handshake, alert, ...)
-* @param msg is the plaintext message
-* @param msg_length is the length of msg
-* @param msg_sequence is the sequence number
+* @param rec_msg is the plaintext message
 * @param version is the protocol version
+* @param msg_sequence is the sequence number
 * @param cipherstate is the writing cipher state
 * @param rng is a random number generator
-* @return number of bytes written to write_buffer
 */
 void write_record(secure_vector<byte>& write_buffer,
                   Record_Message rec_msg,

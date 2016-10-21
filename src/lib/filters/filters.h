@@ -106,7 +106,7 @@ class BOTAN_DLL Hash_Filter : public Filter
 
       /**
       * Construct a hash filter.
-      * @param hash_fun the hash function to use
+      * @param hash the hash function to use
       * @param len the output length of this filter. Leave the default
       * value 0 if you want to use the full output of the hashfunction
       * hash. Otherwise, specify a smaller value here so that the

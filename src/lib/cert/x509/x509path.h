@@ -130,7 +130,7 @@ class BOTAN_DLL Path_Validation_Result
       std::string result_string() const;
 
       /**
-      * @param validation status code
+      * @param code validation status code
       * @return corresponding validation status message
       */
       static const char* status_string(Certificate_Status_Code code);
@@ -145,7 +145,7 @@ class BOTAN_DLL Path_Validation_Result
 
       /**
       * Create a Path_Validation_Result
-      * @status status validation status code
+      * @param status validation status code
       */
       explicit Path_Validation_Result(Certificate_Status_Code status) : m_overall(status) {}
 

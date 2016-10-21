@@ -20,7 +20,7 @@ class BOTAN_DLL Certificate_Store_In_SQLite : public Certificate_Store_In_SQL
    public:
       /**
       * Create/open a certificate store.
-      * @param db underlying database storage
+      * @param db_path path to the database file
       * @param passwd password to encrypt private keys in the database
       * @param rng used for encrypting keys
       * @param table_prefix optional prefix for db table names

@@ -204,7 +204,6 @@ BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator& rng,
 /**
 * Generate DSA parameters using the FIPS 186 kosherizer
 * @param rng a random number generator
-* @param af an algorithm factory
 * @param p_out where the prime p will be stored
 * @param q_out where the prime q will be stored
 * @param pbits how long p will be in bits
@@ -219,7 +218,6 @@ generate_dsa_primes(RandomNumberGenerator& rng,
 /**
 * Generate DSA parameters using the FIPS 186 kosherizer
 * @param rng a random number generator
-* @param af an algorithm factory
 * @param p_out where the prime p will be stored
 * @param q_out where the prime q will be stored
 * @param pbits how long p will be in bits

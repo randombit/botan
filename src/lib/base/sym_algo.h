@@ -86,7 +86,7 @@ class BOTAN_DLL SymmetricAlgorithm
          key_schedule(key, length);
          }
 
-      /*
+      /**
       * @return the algorithm name
       */
       virtual std::string name() const = 0;

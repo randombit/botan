@@ -15,12 +15,16 @@
 namespace Botan {
 
 /**
-* HKDF, see @rfc 5869 for details
-* This is only the expansion portion of HKDF
+* HKDF, see RFC 5869 for details.
+* This is only the expansion portion of HKDF.
+* An appropriate extraction function should be used before.
 */
 class BOTAN_DLL HKDF final : public KDF
    {
    public:
+      /**
+      * @param prf MAC algorithm to use
+      */
       explicit HKDF(MessageAuthenticationCode* prf) : m_prf(prf) {}
 
       static HKDF* make(const Spec& spec);

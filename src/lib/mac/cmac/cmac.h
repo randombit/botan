@@ -33,12 +33,11 @@ class BOTAN_DLL CMAC final : public MessageAuthenticationCode
       /**
       * CMAC's polynomial doubling operation
       * @param in the input
-      * @param polynomial the byte value of the polynomial
       */
       static secure_vector<byte> poly_double(const secure_vector<byte>& in);
 
       /**
-      * @param cipher the underlying block cipher to use
+      * @param cipher the block cipher to use
       */
       explicit CMAC(BlockCipher* cipher);
 

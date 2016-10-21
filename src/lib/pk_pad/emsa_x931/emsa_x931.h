@@ -22,7 +22,7 @@ class BOTAN_DLL EMSA_X931 final : public EMSA
    {
    public:
       /**
-      * @param hash the hash object to use
+      * @param hash the hash function to use
       */
       explicit EMSA_X931(HashFunction* hash);
 

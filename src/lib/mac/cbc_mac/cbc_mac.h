@@ -30,7 +30,7 @@ class BOTAN_DLL CBC_MAC final : public MessageAuthenticationCode
          }
 
       /**
-      * @param cipher the underlying block cipher to use
+      * @param cipher the block cipher to use
       */
       explicit CBC_MAC(BlockCipher* cipher);
 

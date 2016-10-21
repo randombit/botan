@@ -16,6 +16,7 @@ namespace Botan {
 
 /**
 * Encrypt with PBES2 from PKCS #5 v2.0
+* @param key_bits the input
 * @param passphrase the passphrase to use for encryption
 * @param msec how many milliseconds to run PBKDF2
 * @param cipher specifies the block cipher to use to encrypt

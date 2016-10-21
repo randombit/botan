@@ -109,6 +109,8 @@ class BOTAN_DLL Public_Key
       * @param rng a random number generator. The PK_Op may maintain a
       * reference to the RNG and use it many times. The rng must outlive
       * any operations which reference it.
+      * @param params additional parameters
+      * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::Encryption>
          create_encryption_op(RandomNumberGenerator& rng,
@@ -124,6 +126,8 @@ class BOTAN_DLL Public_Key
       * @param rng a random number generator. The PK_Op may maintain a
       * reference to the RNG and use it many times. The rng must outlive
       * any operations which reference it.
+      * @param params additional parameters
+      * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::KEM_Encryption>
          create_kem_encryption_op(RandomNumberGenerator& rng,
@@ -135,6 +139,8 @@ class BOTAN_DLL Public_Key
       * In almost all cases applications should use wrappers in pubkey.h
       *
       * Return a verification operation for this key/params or throw
+      * @param params additional parameters
+      * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::Verification>
          create_verification_op(const std::string& params,
@@ -182,6 +188,9 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       * @param rng a random number generator. The PK_Op may maintain a
       * reference to the RNG and use it many times. The rng must outlive
       * any operations which reference it.
+      * @param params additional parameters
+      * @param provider the provider to use
+      *
       */
       virtual std::unique_ptr<PK_Ops::Decryption>
          create_decryption_op(RandomNumberGenerator& rng,
@@ -197,6 +206,8 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       * @param rng a random number generator. The PK_Op may maintain a
       * reference to the RNG and use it many times. The rng must outlive
       * any operations which reference it.
+      * @param params additional parameters
+      * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::KEM_Decryption>
          create_kem_decryption_op(RandomNumberGenerator& rng,
@@ -212,6 +223,8 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       * @param rng a random number generator. The PK_Op may maintain a
       * reference to the RNG and use it many times. The rng must outlive
       * any operations which reference it.
+      * @param params additional parameters
+      * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator& rng,
@@ -227,6 +240,8 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       * @param rng a random number generator. The PK_Op may maintain a
       * reference to the RNG and use it many times. The rng must outlive
       * any operations which reference it.
+      * @param params additional parameters
+      * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,

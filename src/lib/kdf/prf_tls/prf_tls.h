@@ -49,6 +49,9 @@ class BOTAN_DLL TLS_12_PRF final : public KDF
                  const byte salt[], size_t salt_len,
                  const byte label[], size_t label_len) const override;
 
+      /**
+      * @param mac MAC algorithm to use
+      */
       explicit TLS_12_PRF(MessageAuthenticationCode* mac) : m_mac(mac) {}
 
       static TLS_12_PRF* make(const Spec& spec);

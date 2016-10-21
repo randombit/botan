@@ -479,6 +479,7 @@ class BOTAN_DLL Certificate_Verify final : public Handshake_Message
       * Check the signature on a certificate verify message
       * @param cert the purported certificate
       * @param state the handshake state
+      * @param policy the TLS policy
       */
       bool verify(const X509_Certificate& cert,
                   const Handshake_State& state,

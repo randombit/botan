@@ -33,7 +33,7 @@ class BOTAN_DLL Compression_Algorithm
 
       /**
       * Process some data. Input must be in size update_granularity() byte blocks.
-      * @param blocks in/out parameter which will possibly be resized or swapped
+      * @param buf in/out parameter which will possibly be resized or swapped
       * @param offset an offset into blocks to begin processing
       * @param flush if true the compressor will be told to flush state
       */
@@ -77,7 +77,7 @@ class BOTAN_DLL Decompression_Algorithm
 
       /**
       * Process some data. Input must be in size update_granularity() byte blocks.
-      * @param blocks in/out parameter which will possibly be resized or swapped
+      * @param buf in/out parameter which will possibly be resized or swapped
       * @param offset an offset into blocks to begin processing
       */
       virtual void update(secure_vector<byte>& buf, size_t offset = 0) = 0;

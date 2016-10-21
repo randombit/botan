@@ -25,6 +25,13 @@ namespace Botan {
 class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
    {
    public:
+      /**
+      * @param rng is a reference to some RNG which will be used
+      * to perform the periodic reseeding
+      * @param entropy_sources will be polled to perform reseeding periodically
+      * @param reseed_interval specifies a limit of how many times
+      * the RNG will be called before automatic reseeding is performed
+      */
       Stateful_RNG(RandomNumberGenerator& rng,
                    Entropy_Sources& entropy_sources,
                    size_t reseed_interval) :
@@ -33,11 +40,22 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
          m_reseed_interval(reseed_interval)
          {}
 
+      /**
+      * @param rng is a reference to some RNG which will be used
+      * to perform the periodic reseeding
+      * @param reseed_interval specifies a limit of how many times
+      * the RNG will be called before automatic reseeding is performed
+      */
       Stateful_RNG(RandomNumberGenerator& rng, size_t reseed_interval) :
          m_underlying_rng(&rng),
          m_reseed_interval(reseed_interval)
          {}
 
+      /**
+      * @param entropy_sources will be polled to perform reseeding periodically
+      * @param reseed_interval specifies a limit of how many times
+      * the RNG will be called before automatic reseeding is performed
+      */
       Stateful_RNG(Entropy_Sources& entropy_sources, size_t reseed_interval) :
          m_entropy_sources(&entropy_sources),
          m_reseed_interval(reseed_interval)
@@ -81,7 +99,7 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
                     std::chrono::milliseconds poll_timeout = BOTAN_RNG_RESEED_DEFAULT_TIMEOUT) override;
 
       /**
-      * Return intended security level of this DRBG
+      * @return intended security level of this DRBG
       */
       virtual size_t security_level() const = 0;
 

@@ -14,6 +14,11 @@ namespace Botan {
 
 /**
 * MGF1 from PKCS #1 v2.0
+* @param hash hash function to use
+* @param in input buffer
+* @param in_len size of the input buffer in bytes
+* @param out output buffer
+* @param out_len size of the output buffer in bytes
 */
 void BOTAN_DLL mgf1_mask(HashFunction& hash,
                          const byte in[], size_t in_len,
