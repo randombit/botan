@@ -9,6 +9,7 @@
 #define BOTAN_COMPRESSION_TRANSFORM_H__
 
 #include <botan/secmem.h>
+#include <string>
 
 namespace Botan {
 
