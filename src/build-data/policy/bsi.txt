@@ -126,7 +126,6 @@ rfc6979
 
 # pk_pad
 #eme_pkcs1 // needed for tls
-eme_raw
 #emsa_pkcs1 // needed for tls
 emsa_raw
 emsa_x931
