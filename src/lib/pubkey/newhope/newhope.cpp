@@ -10,7 +10,8 @@
 */
 
 #include <botan/newhope.h>
-#include <botan/keccak.h>
+#include <botan/hash.h>
+#include <botan/stream_cipher.h>
 #include <botan/loadstor.h>
 
 namespace Botan {
@@ -23,8 +24,6 @@ typedef newhope_poly poly;
 
 #define NEWHOPE_POLY_BYTES 1792
 #define NEWHOPE_SEED_BYTES 32
-
-#define SHAKE128_RATE 168
 
 namespace {
 
@@ -422,121 +421,57 @@ inline void rec(uint8_t *key, const poly *v, const poly *c)
   }
 }
 
-/* Based on the public domain implementation in
- * crypto_hash/keccakc512/simple/ from http://bench.cr.yp.to/supercop.html
- * by Ronny Van Keer
- * and the public domain "TweetFips202" implementation
- * from https://twitter.com/tweetfips202
- * by Gilles Van Assche, Daniel J. Bernstein, and Peter Schwabe */
+void gen_a(poly *a, const uint8_t *seed, Newhope_Mode mode)
+   {
+   std::vector<uint8_t> buf(168*16);
 
-void keccak_absorb(uint64_t *s,
-                   unsigned int r,
-                   const uint8_t *m, size_t mlen,
-                   uint8_t p)
-{
-  size_t i;
-  uint8_t t[200];
+   std::unique_ptr<StreamCipher> xof;
 
-  for (i = 0; i < 25; ++i)
-    s[i] = 0;
+   if(mode == Newhope_Mode::BoringSSL)
+      {
+      xof = StreamCipher::create("CTR(AES-128)");
+      xof->set_key(seed, 16);
+      xof->set_iv(seed + 16, 16);
+      }
+   else
+      {
+      xof = StreamCipher::create("SHAKE-128");
+      xof->set_key(seed, NEWHOPE_SEED_BYTES);
+      }
 
-  while (mlen >= r)
-  {
-    for (i = 0; i < r / 8; ++i)
-       s[i] ^= load_le<u64bit>(m, i);
+   zeroise(buf);
+   xof->encrypt(buf);
 
-    Keccak_1600::permute(s);
-    mlen -= r;
-    m += r;
-  }
+   unsigned int pos=0, ctr=0;
 
-  for (i = 0; i < r; ++i)
-    t[i] = 0;
-  for (i = 0; i < mlen; ++i)
-    t[i] = m[i];
-  t[i] = p;
-  t[r - 1] |= 128;
-  for (i = 0; i < r / 8; ++i)
-     s[i] ^= load_le<u64bit>(t, i);
-}
-
-inline void keccak_squeezeblocks(uint8_t *h, size_t nblocks,
-                                 uint64_t *s, unsigned int r)
-{
-  while(nblocks > 0)
-     {
-     Keccak_1600::permute(s);
-
-     copy_out_le(h, r, s);
-
-     h += r;
-     nblocks--;
-     }
-}
-
-inline void shake128_absorb(uint64_t *s, const uint8_t *input, size_t inputByteLen)
-{
-  keccak_absorb(s, SHAKE128_RATE, input, inputByteLen, 0x1F);
-}
-
-inline void shake128_squeezeblocks(uint8_t *output, size_t nblocks, uint64_t *s)
-{
-  keccak_squeezeblocks(output, nblocks, s, SHAKE128_RATE);
-}
-
-void gen_a(poly *a, const uint8_t *seed)
-{
-  unsigned int pos=0, ctr=0;
-  uint16_t val;
-  uint64_t state[25];
-  unsigned int nblocks=16;
-  uint8_t buf[SHAKE128_RATE*16];
-
-  shake128_absorb(state, seed, NEWHOPE_SEED_BYTES);
-
-  shake128_squeezeblocks((uint8_t *) buf, nblocks, state);
-
-  while(ctr < PARAM_N)
-  {
-    val = (buf[pos] | ((uint16_t) buf[pos+1] << 8)) & 0x3fff; // Specialized for q = 12889
-    if(val < PARAM_Q)
-      a->coeffs[ctr++] = val;
-    pos += 2;
-    if(pos > SHAKE128_RATE*nblocks-2)
-    {
-      nblocks=1;
-      shake128_squeezeblocks((uint8_t *) buf,nblocks,state);
-      pos = 0;
-    }
-  }
-}
+   while(ctr < PARAM_N)
+      {
+      uint16_t val = (buf[pos] | ((uint16_t) buf[pos+1] << 8)) & 0x3fff; // Specialized for q = 12889
+      if(val < PARAM_Q)
+         a->coeffs[ctr++] = val;
+      pos += 2;
+      if(pos >= buf.size())
+         {
+         zeroise(buf);
+         xof->encrypt(buf);
+         pos = 0;
+         }
+      }
+   }
 
 }
 
 // API FUNCTIONS
 
-void newhope_hash(uint8_t *output, const uint8_t *input, size_t inputByteLen)
-{
-const size_t SHA3_256_RATE = 136;
-
-  uint64_t s[25];
-  uint8_t t[SHA3_256_RATE];
-  int i;
-
-  keccak_absorb(s, SHA3_256_RATE, input, inputByteLen, 0x06);
-  keccak_squeezeblocks(t, 1, s, SHA3_256_RATE);
-  for(i=0;i<32;i++)
-    output[i] = t[i];
-}
-
-void newhope_keygen(uint8_t *send, poly *sk, RandomNumberGenerator& rng)
+void newhope_keygen(uint8_t *send, poly *sk, RandomNumberGenerator& rng,
+                    Newhope_Mode mode)
 {
   poly a, e, r, pk;
   uint8_t seed[NEWHOPE_SEED_BYTES];
 
   rng.randomize(seed, NEWHOPE_SEED_BYTES);
 
-  gen_a(&a, seed);
+  gen_a(&a, seed, mode);
 
   poly_getnoise(rng, sk);
   poly_ntt(sk);
@@ -551,13 +486,14 @@ void newhope_keygen(uint8_t *send, poly *sk, RandomNumberGenerator& rng)
 }
 
 void newhope_sharedb(uint8_t *sharedkey, uint8_t *send, const uint8_t *received,
-                     RandomNumberGenerator& rng)
+                     RandomNumberGenerator& rng,
+                     Newhope_Mode mode)
 {
   poly sp, ep, v, a, pka, c, epp, bp;
   uint8_t seed[NEWHOPE_SEED_BYTES];
 
   decode_a(&pka, seed, received);
-  gen_a(&a, seed);
+  gen_a(&a, seed, mode);
 
   poly_getnoise(rng, &sp);
   poly_ntt(&sp);
@@ -579,11 +515,19 @@ void newhope_sharedb(uint8_t *sharedkey, uint8_t *send, const uint8_t *received,
 
   rec(sharedkey, &v, &c);
 
-  newhope_hash(sharedkey, sharedkey, 32);
+  std::unique_ptr<HashFunction> hash(HashFunction::create(
+     (mode == Newhope_Mode::SHA3) ? "SHA-3(256)" : "SHA-256"));
+
+  if(!hash)
+     throw Exception("NewHope hash function not available");
+
+  hash->update(sharedkey, 32);
+  hash->final(sharedkey);
 }
 
 
-void newhope_shareda(uint8_t *sharedkey, const poly *sk, const uint8_t *received)
+void newhope_shareda(uint8_t *sharedkey, const poly *sk, const uint8_t *received,
+                     Newhope_Mode mode)
 {
   poly v,bp, c;
 
@@ -594,7 +538,14 @@ void newhope_shareda(uint8_t *sharedkey, const poly *sk, const uint8_t *received
 
   rec(sharedkey, &v, &c);
 
-  newhope_hash(sharedkey, sharedkey, 32);
+  std::unique_ptr<HashFunction> hash(HashFunction::create(
+     (mode == Newhope_Mode::SHA3) ? "SHA-3(256)" : "SHA-256"));
+
+  if(!hash)
+     throw Exception("NewHope hash function not available");
+
+  hash->update(sharedkey, 32);
+  hash->final(sharedkey);
 }
 
 }

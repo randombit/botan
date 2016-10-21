@@ -28,16 +28,33 @@ typedef struct {
   uint16_t coeffs[1024];
 } newhope_poly;
 
-void BOTAN_DLL newhope_keygen(uint8_t *send, newhope_poly *sk, RandomNumberGenerator& rng);
-void BOTAN_DLL newhope_sharedb(uint8_t *sharedkey, uint8_t *send, const uint8_t *received, RandomNumberGenerator& rng);
-void BOTAN_DLL newhope_shareda(uint8_t *sharedkey, const newhope_poly *ska, const uint8_t *received);
+/**
+* This chooses the XOF + hash for NewHope
 
-
-/*
-* This is just exposed for testing
+* The official NewHope specification and reference implementation use
+* SHA-3 and SHAKE-128. BoringSSL instead uses SHA-256 and AES-128 in
+* CTR mode.
 */
-void BOTAN_DLL newhope_hash(uint8_t *output, const uint8_t *input, size_t inputByteLen);
+enum class Newhope_Mode {
+   SHA3,
+   BoringSSL
+};
 
+void BOTAN_DLL newhope_keygen(uint8_t *send,
+                              newhope_poly *sk,
+                              RandomNumberGenerator& rng,
+                              Newhope_Mode = Newhope_Mode::SHA3);
+
+void BOTAN_DLL newhope_sharedb(uint8_t *sharedkey,
+                               uint8_t *send,
+                               const uint8_t *received,
+                               RandomNumberGenerator& rng,
+                               Newhope_Mode mode = Newhope_Mode::SHA3);
+
+void BOTAN_DLL newhope_shareda(uint8_t *sharedkey,
+                               const newhope_poly *ska,
+                               const uint8_t *received,
+                               Newhope_Mode mode = Newhope_Mode::SHA3);
 
 }
 

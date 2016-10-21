@@ -1,5 +1,10 @@
-define NEWHOPE 20160829
+define NEWHOPE 20161018
 
 <requires>
-keccak
+sha3
+shake_cipher
+
+sha2_32
+ctr
+aes
 </requires>
