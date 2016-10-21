@@ -12,6 +12,7 @@
 #include <botan/x509cert.h>
 #include <botan/certstor.h>
 #include <set>
+#include <chrono>
 
 namespace Botan {
 
@@ -175,7 +176,8 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
    const Path_Validation_Restrictions& restrictions,
    const std::vector<Certificate_Store*>& certstores,
    const std::string& hostname = "",
-   Usage_Type usage = Usage_Type::UNSPECIFIED);
+   Usage_Type usage = Usage_Type::UNSPECIFIED,
+   std::chrono::system_clock::time_point validation_time = std::chrono::system_clock::now());
 
 /**
 * PKIX Path Validation
@@ -191,7 +193,8 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
    const Path_Validation_Restrictions& restrictions,
    const std::vector<Certificate_Store*>& certstores,
    const std::string& hostname = "",
-   Usage_Type usage = Usage_Type::UNSPECIFIED);
+   Usage_Type usage = Usage_Type::UNSPECIFIED,
+   std::chrono::system_clock::time_point validation_time = std::chrono::system_clock::now());
 
 /**
 * PKIX Path Validation
@@ -207,7 +210,8 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
    const Path_Validation_Restrictions& restrictions,
    const Certificate_Store& store,
    const std::string& hostname = "",
-   Usage_Type usage = Usage_Type::UNSPECIFIED);
+   Usage_Type usage = Usage_Type::UNSPECIFIED,
+   std::chrono::system_clock::time_point validation_time = std::chrono::system_clock::now());
 
 /**
 * PKIX Path Validation
@@ -223,7 +227,8 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
    const Path_Validation_Restrictions& restrictions,
    const Certificate_Store& store,
    const std::string& hostname = "",
-   Usage_Type usage = Usage_Type::UNSPECIFIED);
+   Usage_Type usage = Usage_Type::UNSPECIFIED,
+   std::chrono::system_clock::time_point validation_time = std::chrono::system_clock::now());
 
 }
 

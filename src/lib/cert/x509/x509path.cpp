@@ -77,13 +77,14 @@ std::shared_ptr<const X509_CRL> find_crls_for(const X509_Certificate& cert,
 std::vector<std::set<Certificate_Status_Code>>
 check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
             const Path_Validation_Restrictions& restrictions,
-            const std::vector<Certificate_Store*>& certstores)
+            const std::vector<Certificate_Store*>& certstores,
+            std::chrono::system_clock::time_point ref_time)
    {
    const std::set<std::string>& trusted_hashes = restrictions.trusted_hashes();
 
    const bool self_signed_ee_cert = (cert_path.size() == 1);
 
-   X509_Time current_time(std::chrono::system_clock::now());
+   X509_Time validation_time(ref_time);
 
    std::vector<std::future<OCSP::Response>> ocsp_responses;
 
@@ -109,10 +110,10 @@ check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_pat
          }
 
       // Check all certs for valid time range
-      if(current_time < X509_Time(subject->start_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
+      if(validation_time < X509_Time(subject->start_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
          status.insert(Certificate_Status_Code::CERT_NOT_YET_VALID);
 
-      if(current_time > X509_Time(subject->end_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
+      if(validation_time > X509_Time(subject->end_time(), ASN1_Tag::UTC_OR_GENERALIZED_TIME))
          status.insert(Certificate_Status_Code::CERT_HAS_EXPIRED);
 
       // Check issuer constraints
@@ -198,10 +199,10 @@ check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_pat
       if(!ca->allowed_usage(CRL_SIGN))
          status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER);
 
-      if(current_time < X509_Time(crl.this_update()))
+      if(validation_time < X509_Time(crl.this_update()))
          status.insert(Certificate_Status_Code::CRL_NOT_YET_VALID);
 
-      if(current_time > X509_Time(crl.next_update()))
+      if(validation_time > X509_Time(crl.next_update()))
          status.insert(Certificate_Status_Code::CRL_HAS_EXPIRED);
 
       if(crl.check_signature(ca->subject_public_key()) == false)
@@ -224,7 +225,8 @@ Path_Validation_Result x509_path_validate(
    const Path_Validation_Restrictions& restrictions,
    const std::vector<Certificate_Store*>& certstores,
    const std::string& hostname,
-   Usage_Type usage)
+   Usage_Type usage,
+   std::chrono::system_clock::time_point validation_time)
    {
    if(end_certs.empty())
       throw Invalid_Argument("x509_path_validate called with no subjects");
@@ -259,7 +261,8 @@ Path_Validation_Result x509_path_validate(
       cert_path.push_back(cert);
       }
 
-   std::vector<std::set<Certificate_Status_Code>> res = check_chain(cert_path, restrictions, certstores);
+   std::vector<std::set<Certificate_Status_Code>> res =
+      check_chain(cert_path, restrictions, certstores, validation_time);
 
    if(!hostname.empty() && !cert_path[0]->matches_dns_name(hostname))
       res[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
@@ -275,11 +278,12 @@ Path_Validation_Result x509_path_validate(
    const Path_Validation_Restrictions& restrictions,
    const std::vector<Certificate_Store*>& certstores,
    const std::string& hostname,
-   Usage_Type usage)
+   Usage_Type usage,
+   std::chrono::system_clock::time_point when)
    {
    std::vector<X509_Certificate> certs;
    certs.push_back(end_cert);
-   return x509_path_validate(certs, restrictions, certstores, hostname, usage);
+   return x509_path_validate(certs, restrictions, certstores, hostname, usage, when);
    }
 
 Path_Validation_Result x509_path_validate(
@@ -287,12 +291,13 @@ Path_Validation_Result x509_path_validate(
    const Path_Validation_Restrictions& restrictions,
    const Certificate_Store& store,
    const std::string& hostname,
-   Usage_Type usage)
+   Usage_Type usage,
+   std::chrono::system_clock::time_point when)
    {
    std::vector<Certificate_Store*> certstores;
    certstores.push_back(const_cast<Certificate_Store*>(&store));
 
-   return x509_path_validate(end_certs, restrictions, certstores, hostname, usage);
+   return x509_path_validate(end_certs, restrictions, certstores, hostname, usage, when);
    }
 
 Path_Validation_Result x509_path_validate(
@@ -300,7 +305,8 @@ Path_Validation_Result x509_path_validate(
    const Path_Validation_Restrictions& restrictions,
    const Certificate_Store& store,
    const std::string& hostname,
-   Usage_Type usage)
+   Usage_Type usage,
+   std::chrono::system_clock::time_point when)
    {
    std::vector<X509_Certificate> certs;
    certs.push_back(end_cert);
@@ -308,7 +314,7 @@ Path_Validation_Result x509_path_validate(
    std::vector<Certificate_Store*> certstores;
    certstores.push_back(const_cast<Certificate_Store*>(&store));
 
-   return x509_path_validate(certs, restrictions, certstores, hostname, usage);
+   return x509_path_validate(certs, restrictions, certstores, hostname, usage, when);
    }
 
 Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
