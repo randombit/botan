@@ -31,7 +31,6 @@ pk_ops_impl.h
 asn1
 bigint
 kdf
-oid_lookup
 pbes2
 pem
 pk_pad
