@@ -282,7 +282,7 @@ class BOTAN_DLL CertificateProperties : public StorageObjectProperties
 
       /**
       * @param checksum the value of this attribute is derived from the certificate by taking the
-      * first three bytes of the SHA - 1 hash of the certificate object�s `CKA_VALUE` attribute
+      * first three bytes of the SHA - 1 hash of the certificate object's `CKA_VALUE` attribute
       */
       inline void set_check_value(const std::vector<byte>& checksum)
          {
