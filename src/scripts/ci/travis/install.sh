@@ -19,8 +19,16 @@ if [ "$BUILD_MODE" = "sonarqube" ]; then
 fi
 
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+    sudo apt-get -qq update
+
+    if [ "$BUILD_MODE" = "docs" ]; then
+        sudo apt-get install doxygen
+        # The version of Sphinx in 14.04 is too old (1.2.2)
+        # and does not support all C++ features used in the manual
+        sudo pip install sphinx
+    fi
+
     if [ "$BUILD_MODE" = "valgrind" ] || [ "${BUILD_MODE:0:5}" = "cross" ]; then
-        sudo apt-get -qq update
 
         if [ "$BUILD_MODE" = "valgrind" ]; then
             sudo apt-get install valgrind
