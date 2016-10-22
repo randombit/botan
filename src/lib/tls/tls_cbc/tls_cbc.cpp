@@ -298,20 +298,19 @@ size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t) const
 *   - 56+64 - 55+2*64 bytes: 3 compressions
 * 
 * The implemented countermeasure:
-* 1) computes max_comp: number of maximum compressions performed on the 
+* 1) computes max_compressions: number of maximum compressions performed on the 
 *    decrypted data
-* 2) computes current_comp: number of compressions performed on the decrypted
-*    data, without padding
-* 3) if current_comp != max_comp: It computes HMAC over dummy data so that 
-*    max_comp compressions are performed. Otherwise, (max_comp-1).
+* 2) computes current_compressions: number of compressions performed on the 
+*    decrypted data, without padding
+* 3) if current_compressions != max_compressions: It computes HMAC over dummy 
+*    data so that max_comp compressions are performed. Otherwise, (max_comp-1).
 * 
 * Note that the padding validation in Botan is always performed over
 * min(plen,256) bytes, see the function check_tls_padding. This differs
 * from the countermeasure described in the paper.
 * 
 * Note that the padding length padlen does also count the last byte
-* of the decrypted plaintext. This is different from the typical 
-* padding computation and different from the Lucky 13 paper.
+* of the decrypted plaintext. This is different from the Lucky 13 paper.
 * 
 * Remark: The attacker can still break indistinguishability of ciphertexts, in 
 * specific scenarios. For example, a ciphertext that decrypts to 288 bytes 0xFF
@@ -323,35 +322,44 @@ size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t) const
 * the padding bytes (e.g., BEAST). Even then, he would be able to decrypt
 * at most 16 plaintext bytes (due to the nature of CBC).
 * 
-* TODO: This fix does not present a valid countermeasure for SHA-384. This
-* hash function contains different compression function and thus different
-* computations have to be performed.
-* 
 * plen represents the length of the decrypted plaintext message P
 * padlen represents the padding length
 * 
 */
 void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, size_t padlen)
    {
+   uint16_t block_size;
+   uint16_t max_bytes_in_first_block;
+   if(mac().name() == "HMAC(SHA-384)")
+      {
+      block_size = 128;
+      max_bytes_in_first_block = 111;
+      }
+   else
+      {
+      block_size = 64;
+      max_bytes_in_first_block = 55;
+      }
    // number of maximum maced bytes
    const uint16_t L1 = 13 + plen - tag_size();
    // number of current maced bytes (L1 - padlen)
    // Here the Lucky 13 paper is different because the padlen length in the paper 
    // does not count the last message byte.
    const uint16_t L2 = 13 + plen - padlen - tag_size();
-   // From the paper: |compress|=ceil((L1-55)/64)-ceil((L2-55)/64)
-   // ceil((L1-55)/64) = floor((L1+8)/64)
-   const uint16_t max_comp = ((L1+8)/64);
-   const uint16_t current_comp = ((L2+8)/64);
+   // From the paper, for SHA-256/SHA-1 compute: ceil((L1-55)/64) and ceil((L2-55)/64)
+   // ceil((L1-55)/64) = floor((L1+64-1-55)/64)
+   // Here we compute number of compressions for SHA-* in general
+   const uint16_t max_compresssions = ( (L1 + block_size - 1 - max_bytes_in_first_block) / block_size);
+   const uint16_t current_compressions = ((L2 + block_size - 1 - max_bytes_in_first_block) / block_size);
    
    // If max_comp == current_comp, compute HMAC over dummy data as if there were
    // (current_comp-1) compressions. Otherwise, compute HMAC over dummy data
    // of full record length
-   const uint8_t equal_comp = CT::is_equal(max_comp, current_comp) & 0x01;
+   const uint8_t equal_comp = CT::is_equal(max_compresssions, current_compressions) & 0x01;
    // the minimum number of bytes we compute the HMAC
-   const uint16_t min_mac = (L1 < 55) ? L1 : 55;
-   const uint16_t comp = (max_comp > 0) ? (max_comp-1) : 0;
-   const uint16_t to_mac = equal_comp * (min_mac + 64 * comp) + (equal_comp^1) * L1;
+   const uint16_t min_mac = (L1 < max_bytes_in_first_block) ? L1 : max_bytes_in_first_block;
+   const uint16_t comp = (max_compresssions > 0) ? (max_compresssions-1) : 0;
+   const uint16_t to_mac = equal_comp * (min_mac + block_size * comp) + (equal_comp^1) * L1;
    
    std::unique_ptr<Botan::MessageAuthenticationCode> dmac(Botan::MessageAuthenticationCode::create(mac().name()));
    byte data[L1];
