@@ -118,7 +118,7 @@ class BOTAN_DLL Ciphersuite
    private:
 
       bool is_usable() const;
-      
+
       Ciphersuite(u16bit ciphersuite_code,
                   const char* iana_id,
                   const char* sig_algo,
@@ -151,14 +151,14 @@ class BOTAN_DLL Ciphersuite
       All of these const char* strings are references to compile time
       constants in tls_suite_info.cpp
       */
-      const char* m_iana_id;
+      const char* m_iana_id = nullptr;
 
-      const char* m_sig_algo;
-      const char* m_kex_algo;
-      const char* m_prf_algo;
+      const char* m_sig_algo = nullptr;
+      const char* m_kex_algo = nullptr;
+      const char* m_prf_algo = nullptr;
 
-      const char* m_cipher_algo;
-      const char* m_mac_algo;
+      const char* m_cipher_algo = nullptr;
+      const char* m_mac_algo = nullptr;
 
       size_t m_cipher_keylen = 0;
       size_t m_nonce_bytes_from_handshake = 0;

@@ -12,7 +12,7 @@ namespace Botan {
 
 //static
 BOTAN_FUNC_ISA("sse2")
-void ChaCha::chacha_sse2_x4(byte output[64], u32bit input[16], size_t rounds)
+void ChaCha::chacha_sse2_x4(byte output[64*4], u32bit input[16], size_t rounds)
    {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
 

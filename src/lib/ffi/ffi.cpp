@@ -743,7 +743,7 @@ int botan_privkey_create(botan_privkey_t* key_obj,
       if(algo_name == nullptr)
          algo_name = "RSA";
       if(algo_params == nullptr)
-         algo_name = "";
+         algo_params = "";
 
       *key_obj = nullptr;
 
