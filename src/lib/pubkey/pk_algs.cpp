@@ -226,7 +226,7 @@ create_private_key(const std::string& alg_name,
 #endif
 
    // ECC crypto
-#if defined(BOTAN_HAS_ECC_CRYPTO)
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
 
    if(alg_name == "ECDSA" ||
       alg_name == "ECDH" ||
