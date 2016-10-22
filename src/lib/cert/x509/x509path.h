@@ -169,6 +169,7 @@ class BOTAN_DLL Path_Validation_Result
 * @param certstores list of certificate stores that contain trusted certificates
 * @param hostname if not empty, compared against the DNS name in end_certs[0]
 * @param usage if not set to UNSPECIFIED, compared against the key usage in end_certs[0]
+* @param validation_time what reference time to use for validation
 * @return result of the path validation
 */
 Path_Validation_Result BOTAN_DLL x509_path_validate(
@@ -186,6 +187,7 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
 * @param certstores list of stores that contain trusted certificates
 * @param hostname if not empty, compared against the DNS name in end_cert
 * @param usage if not set to UNSPECIFIED, compared against the key usage in end_cert
+* @param validation_time what reference time to use for validation
 * @return result of the path validation
 */
 Path_Validation_Result BOTAN_DLL x509_path_validate(
@@ -203,6 +205,7 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
 * @param store store that contains trusted certificates
 * @param hostname if not empty, compared against the DNS name in end_cert
 * @param usage if not set to UNSPECIFIED, compared against the key usage in end_cert
+* @param validation_time what reference time to use for validation
 * @return result of the path validation
 */
 Path_Validation_Result BOTAN_DLL x509_path_validate(
@@ -220,6 +223,7 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
 * @param store store that contains trusted certificates
 * @param hostname if not empty, compared against the DNS name in end_certs[0]
 * @param usage if not set to UNSPECIFIED, compared against the key usage in end_certs[0]
+* @param validation_time what reference time to use for validation
 * @return result of the path validation
 */
 Path_Validation_Result BOTAN_DLL x509_path_validate(

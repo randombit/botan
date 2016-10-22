@@ -12,6 +12,8 @@ maintainer if you would like to build Botan on such a system.
 Botan's build is controlled by configure.py, which is a `Python
 <http://www.python.org>`_ script. Python 2.6 or later is required.
 
+.. highlight:: none
+
 For the impatient, this works for most systems::
 
   $ ./configure.py [--prefix=/some/directory]

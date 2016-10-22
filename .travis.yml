@@ -23,18 +23,19 @@ env:
     - secure: "Th0mBSkUCDqu+EA6F7zA6DCSDZBNunfndANyq06BwaFlj71daWWjthwYFsfg3T5N2ZmI+PsULQQpOirCnJt1lbNHhMVJwZPkW0JnjoxbSNpSI2+nHv7+GO9X9WjK0LRFawiQu8WxmLMQDA+0oR0BERSFKc3gmbuav9fDfla0dXg="
 
   matrix:
+    - BUILD_MODE="docs"
+    - BUILD_MODE="mini-shared"
+    - BUILD_MODE="mini-static"
     - BUILD_MODE="shared"
     - BUILD_MODE="static"
     - BUILD_MODE="bsi"
-    - BUILD_MODE="mini-shared"
-    - BUILD_MODE="mini-static"
+    - BUILD_MODE="sanitizer"
+    - BUILD_MODE="coverage"
     - BUILD_MODE="cross-arm32"
     - BUILD_MODE="cross-arm64"
+    - BUILD_MODE="cross-win32"
     - BUILD_MODE="cross-ppc32"
     - BUILD_MODE="cross-ppc64"
-    - BUILD_MODE="cross-win32"
-    - BUILD_MODE="coverage"
-    - BUILD_MODE="sanitizer"
     - BUILD_MODE="valgrind"
     - BUILD_MODE="sonarqube"
 
@@ -51,12 +52,15 @@ matrix:
     - os: osx
       compiler: gcc
 
-    # Run bsi, coverage, valgrind, sonarqube, sanitizer, minimized and
-    # non-ARM cross builds on Linux/gcc only. The sanitizer builds
-    # under Clang run the tests very slowly and cause CI timeouts.
+    # Run docs, bsi, coverage, valgrind, sonarqube, sanitizer,
+    # minimized and non-ARM cross builds on Linux/gcc only. The
+    # sanitizer builds under Clang run the tests very slowly and cause
+    # CI timeouts.
 
     - compiler: clang
       env: BUILD_MODE="bsi"
+    - compiler: clang
+      env: BUILD_MODE="docs"
     - compiler: clang
       env: BUILD_MODE="coverage"
     - compiler: clang

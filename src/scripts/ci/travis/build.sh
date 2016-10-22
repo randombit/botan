@@ -116,8 +116,14 @@ fi
 ccache --show-stats
 
 # build!
-echo $MAKE_PREFIX make -j $BUILD_JOBS
-time $MAKE_PREFIX make -j $BUILD_JOBS
+
+if [ "$BUILD_MODE" = "docs" ]; then
+    doxygen build/botan.doxy
+    sphinx-build -a -W -c src/build-data/sphinx doc/manual manual-out
+else
+    echo $MAKE_PREFIX make -j $BUILD_JOBS
+    time $MAKE_PREFIX make -j $BUILD_JOBS
+fi
 
 # post-build ccache stats
 ccache --show-stats
@@ -151,8 +157,8 @@ if [ "$BUILD_MODE" = "sonarqube" ]; then
        # When neither on master branch nor on a non-external pull request => nothing to do
     fi
 
-if [ "$BUILD_MODE" == "sonarqube" ] || \
-       ( [ "${BUILD_MODE:0:5}" == "cross" ] && [ "$TRAVIS_OS_NAME" == "osx" ] ); then
+if [ "$BUILD_MODE" = "sonarqube" ] || [ "$BUILD_MODE" = "docs" ] || \
+       ( [ "${BUILD_MODE:0:5}" = "cross" ] && [ "$TRAVIS_OS_NAME" = "osx" ] ); then
     echo "Running tests disabled on this build type"
 else
     echo Running $TEST_PREFIX $TEST_EXE
@@ -170,5 +176,7 @@ then
     done
 fi
 
-# Test make install
-make install
+if [ "$BUILD_MODE" != "docs" ]; then
+    # Test make install
+    make install
+fi
