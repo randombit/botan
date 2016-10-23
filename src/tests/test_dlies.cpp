@@ -191,7 +191,7 @@ class DLIES_Unit_Tests : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("dlies-unit", DLIES_Unit_Tests);
+BOTAN_REGISTER_TEST("dlies_unit", DLIES_Unit_Tests);
 
 #endif
 

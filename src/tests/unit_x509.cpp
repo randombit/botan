@@ -718,7 +718,7 @@ class X509_Cert_Unit_Tests : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("unit_x509", X509_Cert_Unit_Tests);
+BOTAN_REGISTER_TEST("x509_unit", X509_Cert_Unit_Tests);
 
 #endif
 
