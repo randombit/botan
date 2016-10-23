@@ -288,22 +288,30 @@ size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t) const
 /*
 * This function performs additional compression calls in order 
 * to protect from the Lucky 13 attack. It adds new compression 
-* function calls over dummy data, by computing additianl HMACs.
+* function calls over dummy data, by computing additional HMAC updates.
+*
+* The countermeasure was described (in a similar way) in the Lucky 13 paper.
 * 
 * Background:
 * - One SHA-1/SHA-256 compression is performed with 64 bytes of data.
-* - HMAC adds an additional padding so that we have:
+* - HMAC adds 8 byte length field and padding (at least 1 byte) so that we have:
 *   - 0 - 55 bytes: 1 compression
 *   - 56 - 55+64 bytes: 2 compressions
-*   - 56+64 - 55+2*64 bytes: 3 compressions
+*   - 56+64 - 55+2*64 bytes: 3 compressions ...
+* - For SHA-384, this works similarly, but we have 128 byte blocks and 16 byte 
+*   long length field. This results in:
+*   - 0 - 111 bytes: 1 compression
+*   - 112 - 111+128 bytes: 2 compressions ...
 * 
-* The implemented countermeasure:
-* 1) computes max_compressions: number of maximum compressions performed on the 
-*    decrypted data
-* 2) computes current_compressions: number of compressions performed on the 
-*    decrypted data, without padding
-* 3) if current_compressions != max_compressions: It computes HMAC over dummy 
-*    data so that max_comp compressions are performed. Otherwise, (max_comp-1).
+* The implemented countermeasure works as follows:
+* 1) It computes max_compressions: number of maximum compressions performed on
+*    the decrypted data
+* 2) It computes current_compressions: number of compressions performed on the 
+*    decrypted data, after padding has been removed
+* 3) If current_compressions != max_compressions: It invokes an HMAC update 
+*    over dummy data so that (max_compressions - current_compressions) 
+*    compressions are performed. Otherwise, it invokes an HMAC update so that
+*    no compressions are performed.
 * 
 * Note that the padding validation in Botan is always performed over
 * min(plen,256) bytes, see the function check_tls_padding. This differs
@@ -312,15 +320,8 @@ size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t) const
 * Note that the padding length padlen does also count the last byte
 * of the decrypted plaintext. This is different from the Lucky 13 paper.
 * 
-* Remark: The attacker can still break indistinguishability of ciphertexts, in 
-* specific scenarios. For example, a ciphertext that decrypts to 288 bytes 0xFF
-* results in one SHA-1 compression over the unpadded plaintext. A ciphertext 
-* that decrypts to 288 bytes 0x00 decrypts to 287 plaintext bytes and results in
-* at least 4 SHA-1 compression executions. This would break our approach.
-* However, this is only relevant in scenarios where the attacker can create
-* ciphertexts with >68 valid padding bytes, and place the guessed secret next to  
-* the padding bytes (e.g., BEAST). Even then, he would be able to decrypt
-* at most 16 plaintext bytes (due to the nature of CBC).
+* This countermeasure leaves a difference of about 100 clock cycles (in 
+* comparison to >1000 clock cycles observed without it).
 * 
 * plen represents the length of the decrypted plaintext message P
 * padlen represents the padding length
@@ -340,9 +341,9 @@ void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, 
       block_size = 64;
       max_bytes_in_first_block = 55;
       }
-   // number of maximum maced bytes
+   // number of maximum MACed bytes
    const uint16_t L1 = 13 + plen - tag_size();
-   // number of current maced bytes (L1 - padlen)
+   // number of current MACed bytes (L1 - padlen)
    // Here the Lucky 13 paper is different because the padlen length in the paper 
    // does not count the last message byte.
    const uint16_t L2 = 13 + plen - padlen - tag_size();
@@ -351,21 +352,16 @@ void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, 
    // Here we compute number of compressions for SHA-* in general
    const uint16_t max_compresssions = ( (L1 + block_size - 1 - max_bytes_in_first_block) / block_size);
    const uint16_t current_compressions = ((L2 + block_size - 1 - max_bytes_in_first_block) / block_size);
-   
-   // If max_comp == current_comp, compute HMAC over dummy data as if there were
-   // (current_comp-1) compressions. Otherwise, compute HMAC over dummy data
-   // of full record length
-   const uint8_t equal_comp = CT::is_equal(max_compresssions, current_compressions) & 0x01;
-   // the minimum number of bytes we compute the HMAC
-   const uint16_t min_mac = (L1 < max_bytes_in_first_block) ? L1 : max_bytes_in_first_block;
-   const uint16_t comp = (max_compresssions > 0) ? (max_compresssions-1) : 0;
-   const uint16_t to_mac = equal_comp * (min_mac + block_size * comp) + (equal_comp^1) * L1;
-   
-   std::unique_ptr<Botan::MessageAuthenticationCode> dmac(Botan::MessageAuthenticationCode::create(mac().name()));
-   byte data[L1];
-   dmac->update(data, to_mac);
-   std::vector<byte> mac_buf(tag_size());
-   dmac->final(mac_buf);
+   // number of additional compressions we have to perform
+   const uint16_t add_compressions = max_compresssions - current_compressions;
+   const uint8_t equal = CT::is_equal(max_compresssions, current_compressions) & 0x01;
+   // We compute the data length we need to achieve the number of compressions.
+   // If there are no compressions, we just add 55/111 dummy bytes so that no
+   // compression is performed.
+   const uint16_t data_len = block_size * add_compressions + equal * max_bytes_in_first_block;
+   secure_vector<byte> data(data_len);
+   mac().update(unlock(data));
+   // we do not need to clear the MAC since the connection is broken anyway
    }
 
 void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
