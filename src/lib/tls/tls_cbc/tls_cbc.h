@@ -159,6 +159,8 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AEAD_Mo
 
    private:
       void cbc_decrypt_record(byte record_contents[], size_t record_len);
+      
+      void perform_additional_compressions(size_t plen, size_t padlen);
    };
 
 }

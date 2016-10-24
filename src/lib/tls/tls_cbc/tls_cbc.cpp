@@ -284,6 +284,85 @@ size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t) const
    return 0;
    }
 
+/*
+* This function performs additional compression calls in order 
+* to protect from the Lucky 13 attack. It adds new compression 
+* function calls over dummy data, by computing additional HMAC updates.
+*
+* The countermeasure was described (in a similar way) in the Lucky 13 paper.
+* 
+* Background:
+* - One SHA-1/SHA-256 compression is performed with 64 bytes of data.
+* - HMAC adds 8 byte length field and padding (at least 1 byte) so that we have:
+*   - 0 - 55 bytes: 1 compression
+*   - 56 - 55+64 bytes: 2 compressions
+*   - 56+64 - 55+2*64 bytes: 3 compressions ...
+* - For SHA-384, this works similarly, but we have 128 byte blocks and 16 byte 
+*   long length field. This results in:
+*   - 0 - 111 bytes: 1 compression
+*   - 112 - 111+128 bytes: 2 compressions ...
+* 
+* The implemented countermeasure works as follows:
+* 1) It computes max_compressions: number of maximum compressions performed on
+*    the decrypted data
+* 2) It computes current_compressions: number of compressions performed on the 
+*    decrypted data, after padding has been removed
+* 3) If current_compressions != max_compressions: It invokes an HMAC update 
+*    over dummy data so that (max_compressions - current_compressions) 
+*    compressions are performed. Otherwise, it invokes an HMAC update so that
+*    no compressions are performed.
+* 
+* Note that the padding validation in Botan is always performed over
+* min(plen,256) bytes, see the function check_tls_padding. This differs
+* from the countermeasure described in the paper.
+* 
+* Note that the padding length padlen does also count the last byte
+* of the decrypted plaintext. This is different from the Lucky 13 paper.
+* 
+* This countermeasure leaves a difference of about 100 clock cycles (in 
+* comparison to >1000 clock cycles observed without it).
+* 
+* plen represents the length of the decrypted plaintext message P
+* padlen represents the padding length
+* 
+*/
+void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, size_t padlen)
+   {
+   uint16_t block_size;
+   uint16_t max_bytes_in_first_block;
+   if(mac().name() == "HMAC(SHA-384)")
+      {
+      block_size = 128;
+      max_bytes_in_first_block = 111;
+      }
+   else
+      {
+      block_size = 64;
+      max_bytes_in_first_block = 55;
+      }
+   // number of maximum MACed bytes
+   const uint16_t L1 = 13 + plen - tag_size();
+   // number of current MACed bytes (L1 - padlen)
+   // Here the Lucky 13 paper is different because the padlen length in the paper 
+   // does not count the last message byte.
+   const uint16_t L2 = 13 + plen - padlen - tag_size();
+   // From the paper, for SHA-256/SHA-1 compute: ceil((L1-55)/64) and ceil((L2-55)/64)
+   // ceil((L1-55)/64) = floor((L1+64-1-55)/64)
+   // Here we compute number of compressions for SHA-* in general
+   const uint16_t max_compresssions = ( (L1 + block_size - 1 - max_bytes_in_first_block) / block_size);
+   const uint16_t current_compressions = ((L2 + block_size - 1 - max_bytes_in_first_block) / block_size);
+   // number of additional compressions we have to perform
+   const uint16_t add_compressions = max_compresssions - current_compressions;
+   const uint8_t equal = CT::is_equal(max_compresssions, current_compressions) & 0x01;
+   // We compute the data length we need to achieve the number of compressions.
+   // If there are no compressions, we just add 55/111 dummy bytes so that no
+   // compression is performed.
+   const uint16_t data_len = block_size * add_compressions + equal * max_bytes_in_first_block;
+   secure_vector<byte> data(data_len);
+   mac().update(unlock(data));
+   // we do not need to clear the MAC since the connection is broken anyway
+   }
+
 void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
    update(buffer, offset);
@@ -389,6 +468,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<byte>& buffer, size_t of
          }
       else
          {
+         perform_additional_compressions(record_len, pad_size);
          throw TLS_Exception(Alert::BAD_RECORD_MAC, "Message authentication failure");
          }
       }
