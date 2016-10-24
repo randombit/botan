@@ -101,7 +101,7 @@ void check_encrypt_decrypt(Test::Result& result, const Botan::ECDH_PrivateKey& p
                          plaintext, std::vector<byte>());
    }
 
-#if defined(BOTAN_HAS_KDF1_18033)
+#if defined(BOTAN_HAS_KDF1_18033) && defined(BOTAN_HAS_SHA1)
 
 class ECIES_ISO_Tests : public Text_Based_Test
    {

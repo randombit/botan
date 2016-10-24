@@ -8,7 +8,6 @@
 #ifndef BOTAN_KDF_BASE_H__
 #define BOTAN_KDF_BASE_H__
 
-#include <botan/scan_name.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <string>
@@ -21,7 +20,7 @@ namespace Botan {
 class BOTAN_DLL KDF
    {
    public:
-      virtual ~KDF();
+      virtual ~KDF() {}
 
       /**
       * Create an instance based on a name
@@ -30,8 +29,18 @@ class BOTAN_DLL KDF
       * @param provider provider implementation to choose
       * @return a null pointer if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<KDF> create(const std::string& algo_spec,
-                                         const std::string& provider = "");
+      static std::unique_ptr<KDF>
+         create(const std::string& algo_spec,
+                const std::string& provider = "");
+
+      /**
+      * Create an instance based on a name, or throw if the
+      * algo/provider combination cannot be found. If provider is
+      * empty then best available is chosen.
+      */
+      static std::unique_ptr<KDF>
+         create_or_throw(const std::string& algo_spec,
+                         const std::string& provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -173,8 +182,6 @@ class BOTAN_DLL KDF
       * @return new object representing the same algorithm as *this
       */
       virtual KDF* clone() const = 0;
-
-      typedef SCAN_Name Spec;
    };
 
 /**

@@ -5,7 +5,7 @@
 */
 
 #include <botan/emsa.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_EMSA1)
   #include <botan/emsa1.h>
@@ -33,10 +33,79 @@ EMSA::~EMSA() {}
 
 EMSA* get_emsa(const std::string& algo_spec)
    {
-   SCAN_Name request(algo_spec);
+   SCAN_Name req(algo_spec);
 
-   if(EMSA* emsa = make_a<EMSA>(Botan::EMSA::Spec(algo_spec)))
-      return emsa;
+#if defined(BOTAN_HAS_EMSA1)
+   if(req.algo_name() == "EMSA1" && req.arg_count() == 1)
+      {
+      if(auto hash = HashFunction::create(req.arg(0)))
+         return new EMSA1(hash.release());
+      }
+#endif
+
+#if defined(BOTAN_HAS_EMSA_PKCS1)
+   if(req.algo_name() == "EMSA_PKCS1" ||
+      req.algo_name() == "EMSA-PKCS1-v1_5" ||
+      req.algo_name() == "EMSA3")
+      {
+      if(req.arg_count() == 1)
+         {
+         if(req.arg(0) == "Raw")
+            {
+            return new EMSA_PKCS1v15_Raw;
+            }
+         else
+            {
+            if(auto hash = HashFunction::create(req.arg(0)))
+               {
+               return new EMSA_PKCS1v15(hash.release());
+               }
+            }
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_EMSA_PSSR)
+   if(req.algo_name() == "PSSR" ||
+      req.algo_name() == "EMSA-PSS" ||
+      req.algo_name() == "PSS-MGF1" ||
+      req.algo_name() == "EMSA4")
+      {
+      if(req.arg_count_between(1, 3))
+         {
+         if(req.arg(1, "MGF1") != "MGF1")
+            return nullptr; // not supported
+
+         if(auto h = HashFunction::create(req.arg(0)))
+            {
+            const size_t salt_size = req.arg_as_integer(2, h->output_length());
+            return new PSSR(h.release(), salt_size);
+            }
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_EMSA_X931)
+   if(req.algo_name() == "EMSA_X931" ||
+      req.algo_name() == "EMSA2" ||
+      req.algo_name() == "X9.31")
+      {
+      if(req.arg_count() == 1)
+         {
+         if(auto hash = HashFunction::create(req.arg(0)))
+            {
+            return new EMSA_X931(hash.release());
+            }
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_EMSA_RAW)
+   if(req.algo_name() == "Raw" && req.arg_count() == 0)
+      {
+      return new EMSA_Raw;
+      }
+#endif
 
    throw Algorithm_Not_Found(algo_spec);
    }
@@ -53,35 +122,6 @@ std::string hash_for_emsa(const std::string& algo_spec)
 
    return "SHA-512"; // safe default if nothing we understand
    }
-
-#define BOTAN_REGISTER_EMSA_NAMED_NOARGS(type, name) \
-   BOTAN_REGISTER_NAMED_T(EMSA, name, type, make_new_T<type>)
-
-#define BOTAN_REGISTER_EMSA(name, maker) BOTAN_REGISTER_T(EMSA, name, maker)
-#define BOTAN_REGISTER_EMSA_NOARGS(name) BOTAN_REGISTER_T_NOARGS(EMSA, name)
-
-#define BOTAN_REGISTER_EMSA_1HASH(type, name)                    \
-   BOTAN_REGISTER_NAMED_T(EMSA, name, type, (make_new_T_1X<type, HashFunction>))
-
-#if defined(BOTAN_HAS_EMSA1)
-BOTAN_REGISTER_EMSA_1HASH(EMSA1, "EMSA1");
-#endif
-
-#if defined(BOTAN_HAS_EMSA_PKCS1)
-BOTAN_REGISTER_NAMED_T(EMSA, "EMSA_PKCS1", EMSA_PCS1v15, EMSA_PKCS1v15::make);
-#endif
-
-#if defined(BOTAN_HAS_EMSA_PSSR)
-BOTAN_REGISTER_NAMED_T(EMSA, "PSSR", PSSR, PSSR::make);
-#endif
-
-#if defined(BOTAN_HAS_EMSA_X931)
-BOTAN_REGISTER_EMSA_1HASH(EMSA_X931, "EMSA_X931");
-#endif
-
-#if defined(BOTAN_HAS_EMSA_RAW)
-BOTAN_REGISTER_EMSA_NAMED_NOARGS(EMSA_Raw, "Raw");
-#endif
 
 }
 

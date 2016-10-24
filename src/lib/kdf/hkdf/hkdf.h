@@ -27,8 +27,6 @@ class BOTAN_DLL HKDF final : public KDF
       */
       explicit HKDF(MessageAuthenticationCode* prf) : m_prf(prf) {}
 
-      static HKDF* make(const Spec& spec);
-
       KDF* clone() const override { return new HKDF(m_prf->clone()); }
 
       std::string name() const override { return "HKDF(" + m_prf->name() + ")"; }

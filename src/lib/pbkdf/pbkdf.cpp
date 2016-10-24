@@ -6,7 +6,7 @@
 */
 
 #include <botan/pbkdf.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_PBKDF1)
 #include <botan/pbkdf1.h>
@@ -18,28 +18,46 @@
 
 namespace Botan {
 
-#define BOTAN_REGISTER_PBKDF_1HASH(type, name)                          \
-   BOTAN_REGISTER_NAMED_T(PBKDF, name, type, (make_new_T_1X<type, HashFunction>))
-
-#if defined(BOTAN_HAS_PBKDF1)
-BOTAN_REGISTER_PBKDF_1HASH(PKCS5_PBKDF1, "PBKDF1");
-#endif
-
-#if defined(BOTAN_HAS_PBKDF2)
-BOTAN_REGISTER_NAMED_T(PBKDF, "PBKDF2", PKCS5_PBKDF2, PKCS5_PBKDF2::make);
-#endif
-
 PBKDF::~PBKDF() {}
 
 std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
                                      const std::string& provider)
    {
-   return std::unique_ptr<PBKDF>(make_a<PBKDF>(Botan::PBKDF::Spec(algo_spec), provider));
+   const SCAN_Name req(algo_spec);
+
+#if defined(BOTAN_HAS_PBKDF2)
+   if(req.algo_name() == "PBKDF2")
+      {
+      // TODO OpenSSL
+
+      if(provider.empty() || provider == "base")
+         {
+         if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
+            return std::unique_ptr<PBKDF>(new PKCS5_PBKDF2(mac.release()));
+
+         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
+            return std::unique_ptr<PBKDF>(new PKCS5_PBKDF2(mac.release()));
+         }
+
+      return nullptr;
+      }
+#endif
+
+#if defined(BOTAN_HAS_PBKDF1)
+   if(req.algo_name() == "PBKDF1" && req.arg_count() == 1)
+      {
+      if(auto hash = HashFunction::create(req.arg(0)))
+         return std::unique_ptr<PBKDF>(new PKCS5_PBKDF1(hash.release()));
+
+      }
+#endif
+
+   return nullptr;
    }
 
 std::vector<std::string> PBKDF::providers(const std::string& algo_spec)
    {
-   return providers_of<PBKDF>(PBKDF::Spec(algo_spec));
+   return probe_providers_of<PBKDF>(algo_spec, { "base", "openssl" });
    }
 
 void PBKDF::pbkdf_timed(byte out[], size_t out_len,

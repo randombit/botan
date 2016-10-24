@@ -32,8 +32,6 @@ class BOTAN_DLL PSSR final : public EMSA
       PSSR(HashFunction* hash, size_t salt_size);
 
       EMSA* clone() override { return new PSSR(m_hash->clone(), m_SALT_SIZE); }
-
-      static PSSR* make(const Spec& spec);
    private:
       void update(const byte input[], size_t length) override;
 

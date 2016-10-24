@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mode_utils.h>
 #include <botan/eax.h>
 #include <botan/cmac.h>
 #include <botan/ctr.h>

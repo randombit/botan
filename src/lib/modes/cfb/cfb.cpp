@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mode_utils.h>
 #include <botan/cfb.h>
 #include <botan/parsing.h>
 

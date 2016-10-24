@@ -33,19 +33,6 @@ void comb4p_round(secure_vector<byte>& out,
 
 }
 
-Comb4P* Comb4P::make(const Spec& spec)
-   {
-   if(spec.arg_count() == 2)
-      {
-      std::unique_ptr<HashFunction> h1(HashFunction::create(spec.arg(0)));
-      std::unique_ptr<HashFunction> h2(HashFunction::create(spec.arg(1)));
-
-      if(h1 && h2)
-         return new Comb4P(h1.release(), h2.release());
-      }
-   return nullptr;
-   }
-
 Comb4P::Comb4P(HashFunction* h1, HashFunction* h2) :
    m_hash1(h1), m_hash2(h2)
    {

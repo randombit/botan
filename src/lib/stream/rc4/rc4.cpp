@@ -10,15 +10,6 @@
 
 namespace Botan {
 
-RC4* RC4::make(const Spec& spec)
-   {
-   if(spec.algo_name() == "RC4")
-      return new RC4(spec.arg_as_integer(0, 0));
-   if(spec.algo_name() == "RC4_drop")
-      return new RC4(768);
-   return nullptr;
-   }
-
 /*
 * Combine cipher stream with message
 */
@@ -36,9 +27,10 @@ void RC4::cipher(const byte in[], byte out[], size_t length)
    m_position += length;
    }
 
-void RC4::set_iv(const byte*, size_t)
+void RC4::set_iv(const byte*, size_t length)
    {
-   throw Exception("RC4 does not support an IV");
+   if(length > 0)
+      throw Exception("RC4 does not support an IV");
    }
 
 /*

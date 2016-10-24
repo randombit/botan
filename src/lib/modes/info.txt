@@ -4,7 +4,3 @@ define MODES 20150626
 cipher_mode.h
 stream_mode.h
 </header:public>
-
-<header:internal>
-mode_utils.h
-</header:internal>

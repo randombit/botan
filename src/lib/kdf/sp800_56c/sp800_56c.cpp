@@ -11,20 +11,6 @@
 
 namespace Botan {
 
-SP800_56C* SP800_56C::make(const Spec& spec)
-   {
-   if(auto exp = SP800_108_Feedback::make(spec))
-      {
-      if(auto mac = MessageAuthenticationCode::create(spec.arg(0)))
-         return new SP800_56C(mac.release(), exp);
-
-      if(auto mac = MessageAuthenticationCode::create("HMAC(" + spec.arg(0) + ")"))
-         return new SP800_56C(mac.release(), exp);
-      }
-
-   return nullptr;
-   }
-
 size_t SP800_56C::kdf(byte key[], size_t key_len,
                       const byte secret[], size_t secret_len,
                       const byte salt[], size_t salt_len,

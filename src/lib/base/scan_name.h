@@ -8,7 +8,7 @@
 #ifndef BOTAN_SCAN_NAME_H__
 #define BOTAN_SCAN_NAME_H__
 
-#include <botan/types.h>
+#include <botan/exceptn.h>
 #include <string>
 #include <vector>
 #include <botan/mutex.h>
@@ -36,13 +36,6 @@ class BOTAN_DLL SCAN_Name
       explicit SCAN_Name(std::string algo_spec);
 
       /**
-      * Create a SCAN_Name
-      * @param algo_spec A SCAN-format name
-      * @param extra An extra string appended to the algorithm name
-      */
-      SCAN_Name(std::string algo_spec, const std::string& extra);
-
-      /**
       * @return original input string
       */
       const std::string& as_string() const { return m_orig_algo_spec; }
@@ -51,16 +44,6 @@ class BOTAN_DLL SCAN_Name
       * @return algorithm name
       */
       const std::string& algo_name() const { return m_alg_name; }
-
-      /**
-      * @return algorithm name plus any arguments
-      */
-      std::string algo_name_and_args() const { return algo_name() + all_arguments(); }
-
-      /**
-      * @return all arguments
-      */
-      std::string all_arguments() const;
 
       /**
       * @return number of arguments
@@ -107,15 +90,6 @@ class BOTAN_DLL SCAN_Name
       std::string cipher_mode_pad() const
          { return (m_mode_info.size() >= 2) ? m_mode_info[1] : ""; }
 
-      /*
-      * FIXME add doc
-      */
-      static void add_alias(const std::string& alias, const std::string& basename);
-
-      /*
-      * FIXME add doc
-      */
-      static std::string deref_alias(const std::string& alias);
    private:
       static mutex_type g_alias_map_mutex;
       static std::map<std::string, std::string> g_alias_map;
@@ -125,6 +99,23 @@ class BOTAN_DLL SCAN_Name
       std::vector<std::string> m_args;
       std::vector<std::string> m_mode_info;
    };
+
+// This is unrelated but it is convenient to stash it here
+template<typename T>
+std::vector<std::string> probe_providers_of(const std::string& algo_spec,
+                                            const std::vector<std::string>& possible)
+   {
+   std::vector<std::string> providers;
+   for(auto&& prov : possible)
+      {
+      std::unique_ptr<T> o(T::create(algo_spec, prov));
+      if(o)
+         {
+         providers.push_back(prov); // available
+         }
+      }
+   return providers;
+   }
 
 }
 

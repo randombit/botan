@@ -8,7 +8,6 @@
 #ifndef BOTAN_BLOCK_CIPHER_H__
 #define BOTAN_BLOCK_CIPHER_H__
 
-#include <botan/scan_name.h>
 #include <botan/sym_algo.h>
 #include <string>
 
@@ -20,7 +19,6 @@ namespace Botan {
 class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
    {
    public:
-      typedef SCAN_Name Spec;
 
       /**
       * Create an instance based on a name
@@ -29,8 +27,18 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param provider provider implementation to choose
       * @return a null pointer if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<BlockCipher> create(const std::string& algo_spec,
-                                                 const std::string& provider = "");
+      static std::unique_ptr<BlockCipher>
+         create(const std::string& algo_spec,
+                const std::string& provider = "");
+
+      /**
+      * Create an instance based on a name, or throw if the
+      * algo/provider combination cannot be found. If provider is
+      * empty then best available is chosen.
+      */
+      static std::unique_ptr<BlockCipher>
+         create_or_throw(const std::string& algo_spec,
+                         const std::string& provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -165,7 +173,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       */
       virtual BlockCipher* clone() const = 0;
 
-      virtual ~BlockCipher();
+      virtual ~BlockCipher() {}
    };
 
 /**

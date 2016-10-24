@@ -6,8 +6,7 @@
 */
 
 #include <botan/block_cipher.h>
-#include <botan/cpuid.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_AES)
   #include <botan/aes.h>
@@ -79,109 +78,220 @@
   #include <botan/xtea.h>
 #endif
 
+#if defined(BOTAN_HAS_OPENSSL)
+  #include <botan/internal/openssl.h>
+#endif
+
 namespace Botan {
 
-BlockCipher::~BlockCipher() {}
-
-std::unique_ptr<BlockCipher> BlockCipher::create(const std::string& algo_spec,
-                                                 const std::string& provider)
+std::unique_ptr<BlockCipher>
+BlockCipher::create(const std::string& algo,
+                    const std::string& provider)
    {
-   return std::unique_ptr<BlockCipher>(make_a<BlockCipher>(Botan::BlockCipher::Spec(algo_spec), provider));
-   }
+#if defined(BOTAN_HAS_OPENSSL)
+   if(provider.empty() || provider == "openssl")
+      {
+      if(auto bc = make_openssl_block_cipher(algo))
+         return bc;
 
-std::vector<std::string> BlockCipher::providers(const std::string& algo_spec)
-   {
-   return providers_of<BlockCipher>(BlockCipher::Spec(algo_spec));
-   }
+      if(!provider.empty())
+         return nullptr;
+      }
+#endif
 
-#define BOTAN_REGISTER_BLOCK_CIPHER(name, maker) BOTAN_REGISTER_T(BlockCipher, name, maker)
-#define BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(name) BOTAN_REGISTER_T_NOARGS(BlockCipher, name)
+   // TODO: CommonCrypto
+   // TODO: CryptoAPI
+   // TODO: /dev/crypto
 
-#define BOTAN_REGISTER_BLOCK_CIPHER_1LEN(name, def) BOTAN_REGISTER_T_1LEN(BlockCipher, name, def)
-
-#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(type, name) \
-   BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, make_new_T<type>)
-#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1LEN(type, name, def) \
-   BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, (make_new_T_1len<type,def>))
-#define BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1STR(type, name, def) \
-   BOTAN_REGISTER_NAMED_T(BlockCipher, name, type, std::bind(make_new_T_1str<type>, std::placeholders::_1, def))
-
-#define BOTAN_REGISTER_BLOCK_CIPHER_NOARGS_IF(cond, type, name, provider, pref) \
-   BOTAN_COND_REGISTER_NAMED_T_NOARGS(cond, BlockCipher, type, name, provider, pref)
+   // Only base providers from here on out
+   if(provider.empty() == false && provider != "base")
+      return nullptr;
 
 #if defined(BOTAN_HAS_AES)
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_128, "AES-128");
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_192, "AES-192");
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(AES_256, "AES-256");
-#endif
+   if(algo == "AES-128")
+      {
+      return std::unique_ptr<BlockCipher>(new AES_128);
+      }
 
-#if defined(BOTAN_HAS_BLOWFISH)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Blowfish);
-#endif
+   if(algo == "AES-192")
+      {
+      return std::unique_ptr<BlockCipher>(new AES_192);
+      }
 
-#if defined(BOTAN_HAS_CAMELLIA)
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Camellia_128, "Camellia-128");
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Camellia_192, "Camellia-192");
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Camellia_256, "Camellia-256");
-#endif
-
-#if defined(BOTAN_HAS_CAST)
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(CAST_128, "CAST-128");
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(CAST_256, "CAST-256");
-#endif
-
-#if defined(BOTAN_HAS_DES)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(DES);
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(TripleDES);
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(DESX);
-#endif
-
-#if defined(BOTAN_HAS_GOST_28147_89)
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_1STR(GOST_28147_89, "GOST-28147-89", "R3411_94_TestParam");
-#endif
-
-#if defined(BOTAN_HAS_IDEA)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(IDEA);
-#endif
-
-#if defined(BOTAN_HAS_KASUMI)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(KASUMI);
-#endif
-
-#if defined(BOTAN_HAS_MISTY1)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(MISTY1);
-#endif
-
-#if defined(BOTAN_HAS_NOEKEON)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Noekeon);
-#endif
-
-#if defined(BOTAN_HAS_SEED)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(SEED);
+   if(algo == "AES-256")
+      {
+      return std::unique_ptr<BlockCipher>(new AES_256);
+      }
 #endif
 
 #if defined(BOTAN_HAS_SERPENT)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Serpent);
+   if(algo == "Serpent")
+      {
+      return std::unique_ptr<BlockCipher>(new Serpent);
+      }
 #endif
 
 #if defined(BOTAN_HAS_TWOFISH)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(Twofish);
+   if(algo == "Twofish")
+      {
+      return std::unique_ptr<BlockCipher>(new Twofish);
+      }
 #endif
 
 #if defined(BOTAN_HAS_THREEFISH_512)
-BOTAN_REGISTER_BLOCK_CIPHER_NAMED_NOARGS(Threefish_512, "Threefish-512");
+   if(algo == "Threefish-512")
+      {
+      return std::unique_ptr<BlockCipher>(new Threefish_512);
+      }
+#endif
+
+#if defined(BOTAN_HAS_BLOWFISH)
+   if(algo == "Blowfish")
+      {
+      return std::unique_ptr<BlockCipher>(new Blowfish);
+      }
+#endif
+
+#if defined(BOTAN_HAS_CAMELLIA)
+   if(algo == "Camellia-128")
+      {
+      return std::unique_ptr<BlockCipher>(new Camellia_128);
+      }
+
+   if(algo == "Camellia-192")
+      {
+      return std::unique_ptr<BlockCipher>(new Camellia_192);
+      }
+
+   if(algo == "Camellia-256")
+      {
+      return std::unique_ptr<BlockCipher>(new Camellia_256);
+      }
+#endif
+
+#if defined(BOTAN_HAS_DES)
+   if(algo == "DES")
+      {
+      return std::unique_ptr<BlockCipher>(new DES);
+      }
+
+   if(algo == "DESX")
+      {
+      return std::unique_ptr<BlockCipher>(new DESX);
+      }
+
+   if(algo == "TripleDES" || algo == "3DES" || algo == "DES-EDE")
+      {
+      return std::unique_ptr<BlockCipher>(new TripleDES);
+      }
+#endif
+
+#if defined(BOTAN_HAS_NOEKEON)
+   if(algo == "Noekeon")
+      {
+      return std::unique_ptr<BlockCipher>(new Noekeon);
+      }
+#endif
+
+#if defined(BOTAN_HAS_CAST)
+   if(algo == "CAST-128" || algo == "CAST5")
+      {
+      return std::unique_ptr<BlockCipher>(new CAST_128);
+      }
+
+   if(algo == "CAST-256")
+      {
+      return std::unique_ptr<BlockCipher>(new CAST_256);
+      }
+#endif
+
+#if defined(BOTAN_HAS_IDEA)
+   if(algo == "IDEA")
+      {
+      return std::unique_ptr<BlockCipher>(new IDEA);
+      }
+#endif
+
+#if defined(BOTAN_HAS_KASUMI)
+   if(algo == "KASUMI")
+      {
+      return std::unique_ptr<BlockCipher>(new KASUMI);
+      }
+#endif
+
+#if defined(BOTAN_HAS_MISTY1)
+   if(algo == "MISTY1")
+      {
+      return std::unique_ptr<BlockCipher>(new MISTY1);
+      }
+#endif
+
+#if defined(BOTAN_HAS_SEED)
+   if(algo == "SEED")
+      {
+      return std::unique_ptr<BlockCipher>(new SEED);
+      }
 #endif
 
 #if defined(BOTAN_HAS_XTEA)
-BOTAN_REGISTER_BLOCK_CIPHER_NOARGS(XTEA);
+   if(algo == "XTEA")
+      {
+      return std::unique_ptr<BlockCipher>(new XTEA);
+      }
+#endif
+
+   const SCAN_Name req(algo);
+
+#if defined(BOTAN_HAS_GOST_28147_89)
+   if(req.algo_name() == "GOST-28147-89")
+      {
+      return std::unique_ptr<BlockCipher>(new GOST_28147_89(req.arg(0, "R3411_94_TestParam")));
+      }
 #endif
 
 #if defined(BOTAN_HAS_CASCADE)
-BOTAN_REGISTER_NAMED_T(BlockCipher, "Cascade", Cascade_Cipher, Cascade_Cipher::make);
+   if(req.algo_name() == "Cascade" && req.arg_count() == 2)
+      {
+      std::unique_ptr<BlockCipher> c1(BlockCipher::create(req.arg(0)));
+      std::unique_ptr<BlockCipher> c2(BlockCipher::create(req.arg(1)));
+
+      if(c1 && c2)
+         return std::unique_ptr<BlockCipher>(new Cascade_Cipher(c1.release(), c2.release()));
+      }
 #endif
 
 #if defined(BOTAN_HAS_LION)
-BOTAN_REGISTER_NAMED_T(BlockCipher, "Lion", Lion, Lion::make);
+   if(req.algo_name() == "Lion" && req.arg_count_between(2, 3))
+      {
+      std::unique_ptr<HashFunction> hash(HashFunction::create(req.arg(0)));
+      std::unique_ptr<StreamCipher> stream(StreamCipher::create(req.arg(1)));
+
+      if(hash && stream)
+         {
+         const size_t block_size = req.arg_as_integer(2, 1024);
+         return std::unique_ptr<BlockCipher>(new Lion(hash.release(), stream.release(), block_size));
+         }
+      }
 #endif
+
+   return nullptr;
+   }
+
+//static
+std::unique_ptr<BlockCipher>
+BlockCipher::create_or_throw(const std::string& algo,
+                             const std::string& provider)
+   {
+   if(auto bc = BlockCipher::create(algo, provider))
+      {
+      return bc;
+      }
+   throw Lookup_Error("Block cipher", algo, provider);
+   }
+
+std::vector<std::string> BlockCipher::providers(const std::string& algo)
+   {
+   return probe_providers_of<BlockCipher>(algo, { "base", "openssl" });
+   }
 
 }

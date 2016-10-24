@@ -39,11 +39,6 @@ const u64bit blake2b_sigma[12][16] = {
 };
 }
 
-Blake2b* Blake2b::make(const Spec& spec)
-   {
-   return new Blake2b(spec.arg_as_integer(0, 512));
-   }
-
 Blake2b::Blake2b(size_t output_bits) :
    m_output_bits(output_bits),
    m_buffer(BLAKE2B_BLOCKBYTES),

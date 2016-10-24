@@ -9,7 +9,7 @@
 #define BOTAN_STREAM_CIPHER_H__
 
 #include <botan/sym_algo.h>
-#include <botan/scan_name.h>
+#include <string>
 
 namespace Botan {
 
@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
    {
    public:
-      typedef SCAN_Name Spec;
+      virtual ~StreamCipher() {}
 
       /**
       * Create an instance based on a name
@@ -28,8 +28,20 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param provider provider implementation to use
       * @return a null pointer if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<StreamCipher> create(const std::string& algo_spec,
-                                                  const std::string& provider = "");
+      static std::unique_ptr<StreamCipher>
+         create(const std::string& algo_spec,
+                const std::string& provider = "");
+
+      /**
+      * Create an instance based on a name
+      * If provider is empty then best available is chosen.
+      * @param algo_spec algorithm name
+      * @param provider provider implementation to use
+      * Throws a Lookup_Error if the algo/provider combination cannot be found
+      */
+      static std::unique_ptr<StreamCipher>
+         create_or_throw(const std::string& algo_spec,
+                         const std::string& provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -109,9 +121,6 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
       virtual std::string provider() const { return "base"; }
-
-      StreamCipher();
-      virtual ~StreamCipher();
    };
 
 }

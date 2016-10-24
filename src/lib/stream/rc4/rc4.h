@@ -33,8 +33,6 @@ class BOTAN_DLL RC4 final : public StreamCipher
          return Key_Length_Specification(1, 256);
          }
 
-      static RC4* make(const Spec& spec);
-
       /**
       * @param skip skip this many initial bytes in the keystream
       */

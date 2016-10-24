@@ -6,7 +6,6 @@
 */
 
 #include <botan/block_cipher.h>
-#include <botan/internal/algo_registry.h>
 #include <botan/internal/openssl.h>
 #include <openssl/evp.h>
 
@@ -17,10 +16,12 @@ namespace {
 class OpenSSL_BlockCipher : public BlockCipher
    {
    public:
-      OpenSSL_BlockCipher(const EVP_CIPHER*, const std::string&);
+      OpenSSL_BlockCipher(const std::string& name,
+                          const EVP_CIPHER* cipher);
 
-      OpenSSL_BlockCipher(const EVP_CIPHER*, const std::string&,
-                      size_t, size_t, size_t);
+      OpenSSL_BlockCipher(const std::string& name,
+                          const EVP_CIPHER* cipher,
+                          size_t kl_min, size_t kl_max, size_t kl_mod);
 
       ~OpenSSL_BlockCipher();
 
@@ -53,8 +54,8 @@ class OpenSSL_BlockCipher : public BlockCipher
       mutable EVP_CIPHER_CTX m_encrypt, m_decrypt;
    };
 
-OpenSSL_BlockCipher::OpenSSL_BlockCipher(const EVP_CIPHER* algo,
-                                         const std::string& algo_name) :
+OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
+                                         const EVP_CIPHER* algo) :
    m_block_sz(EVP_CIPHER_block_size(algo)),
    m_cipher_key_spec(EVP_CIPHER_key_length(algo)),
    m_cipher_name(algo_name)
@@ -72,10 +73,11 @@ OpenSSL_BlockCipher::OpenSSL_BlockCipher(const EVP_CIPHER* algo,
    EVP_CIPHER_CTX_set_padding(&m_decrypt, 0);
    }
 
-OpenSSL_BlockCipher::OpenSSL_BlockCipher(const EVP_CIPHER* algo,
-                                 const std::string& algo_name,
-                                 size_t key_min, size_t key_max,
-                                 size_t key_mod) :
+OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
+                                         const EVP_CIPHER* algo,
+                                         size_t key_min,
+                                         size_t key_max,
+                                         size_t key_mod) :
    m_block_sz(EVP_CIPHER_block_size(algo)),
    m_cipher_key_spec(key_min, key_max, key_mod),
    m_cipher_name(algo_name)
@@ -125,11 +127,11 @@ void OpenSSL_BlockCipher::key_schedule(const byte key[], size_t length)
 */
 BlockCipher* OpenSSL_BlockCipher::clone() const
    {
-   return new OpenSSL_BlockCipher(EVP_CIPHER_CTX_cipher(&m_encrypt),
-                              m_cipher_name,
-                              m_cipher_key_spec.minimum_keylength(),
-                              m_cipher_key_spec.maximum_keylength(),
-                              m_cipher_key_spec.keylength_multiple());
+   return new OpenSSL_BlockCipher(m_cipher_name,
+                                  EVP_CIPHER_CTX_cipher(&m_encrypt),
+                                  m_cipher_key_spec.minimum_keylength(),
+                                  m_cipher_key_spec.maximum_keylength(),
+                                  m_cipher_key_spec.keylength_multiple());
    }
 
 /*
@@ -149,67 +151,63 @@ void OpenSSL_BlockCipher::clear()
    EVP_CIPHER_CTX_set_padding(&m_decrypt, 0);
    }
 
-std::function<BlockCipher* (const BlockCipher::Spec&)>
-make_evp_block_maker(const EVP_CIPHER* cipher, const char* algo)
+}
+
+std::unique_ptr<BlockCipher>
+make_openssl_block_cipher(const std::string& name)
    {
-   return [cipher,algo](const BlockCipher::Spec&)
-      {
-      return new OpenSSL_BlockCipher(cipher, algo);
-      };
+#define MAKE_OPENSSL_BLOCK(evp_fn) \
+   std::unique_ptr<BlockCipher>(new OpenSSL_BlockCipher(name, evp_fn()))
+#define MAKE_OPENSSL_BLOCK_KEYLEN(evp_fn, kl_min, kl_max, kl_mod)       \
+   std::unique_ptr<BlockCipher>(new OpenSSL_BlockCipher(name, evp_fn(), kl_min, kl_max, kl_mod))
+
+#if defined(BOTAN_HAS_AES) && !defined(OPENSSL_NO_AES)
+   if(name == "AES-128")
+      return MAKE_OPENSSL_BLOCK(EVP_aes_128_ecb);
+   if(name == "AES-192")
+      return MAKE_OPENSSL_BLOCK(EVP_aes_192_ecb);
+   if(name == "AES-256")
+      return MAKE_OPENSSL_BLOCK(EVP_aes_256_ecb);
+#endif
+
+#if defined(BOTAN_HAS_CAMELLIA) && !defined(OPENSSL_NO_CAMELLIA)
+   if(name == "Camellia-128")
+      return MAKE_OPENSSL_BLOCK(EVP_camellia_128_ecb);
+   if(name == "Camellia-192")
+      return MAKE_OPENSSL_BLOCK(EVP_camellia_192_ecb);
+   if(name == "Camellia-256")
+      return MAKE_OPENSSL_BLOCK(EVP_camellia_256_ecb);
+#endif
+
+#if defined(BOTAN_HAS_DES) && !defined(OPENSSL_NO_DES)
+   if(name == "DES")
+      return MAKE_OPENSSL_BLOCK(EVP_des_ecb);
+   if(name == "TripleDES")
+      return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_des_ede3_ecb, 16, 24, 8);
+#endif
+
+#if defined(BOTAN_HAS_BLOWFISH) && !defined(OPENSSL_NO_BF)
+   if(name == "Blowfish")
+      return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_bf_ecb, 1, 56, 1);
+#endif
+
+#if defined(BOTAN_HAS_CAST) && !defined(OPENSSL_NO_CAST)
+   if(name == "CAST-128")
+      return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_cast5_ecb, 1, 16, 1);
+#endif
+
+#if defined(BOTAN_HAS_IDEA) && !defined(OPENSSL_NO_IDEA)
+   if(name == "IDEA")
+      return MAKE_OPENSSL_BLOCK(EVP_idea_ecb);
+#endif
+
+#if defined(BOTAN_HAS_SEED) && !defined(OPENSSL_NO_SEED)
+   if(name == "SEED")
+      return MAKE_OPENSSL_BLOCK(EVP_seed_ecb);
+#endif
+
+   return nullptr;
    }
-
-std::function<BlockCipher* (const BlockCipher::Spec&)>
-make_evp_block_maker_keylen(const EVP_CIPHER* cipher, const char* algo,
-                            size_t kmin, size_t kmax, size_t kmod)
-   {
-   return [cipher,algo,kmin,kmax,kmod](const BlockCipher::Spec&)
-      {
-      return new OpenSSL_BlockCipher(cipher, algo, kmin, kmax, kmod);
-      };
-   }
-
-#define BOTAN_REGISTER_OPENSSL_EVP_BLOCK(NAME, EVP)                            \
-   BOTAN_REGISTER_TYPE(BlockCipher, EVP_BlockCipher ## EVP, NAME,              \
-                       make_evp_block_maker(EVP(), NAME), "openssl", BOTAN_OPENSSL_BLOCK_PRIO)
-
-#define BOTAN_REGISTER_OPENSSL_EVP_BLOCK_KEYLEN(NAME, EVP, KMIN, KMAX, KMOD)       \
-   BOTAN_REGISTER_TYPE(BlockCipher, OpenSSL_BlockCipher ## EVP, NAME,              \
-                       make_evp_block_maker_keylen(EVP(), NAME, KMIN, KMAX, KMOD), \
-                       "openssl", BOTAN_OPENSSL_BLOCK_PRIO)
-
-#if !defined(OPENSSL_NO_AES)
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK("AES-128", EVP_aes_128_ecb);
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK("AES-192", EVP_aes_192_ecb);
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK("AES-256", EVP_aes_256_ecb);
-#endif
-
-#if !defined(OPENSSL_NO_DES)
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK("DES", EVP_des_ecb);
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK_KEYLEN("TripleDES", EVP_des_ede3_ecb, 16, 24, 8);
-#endif
-
-#if !defined(OPENSSL_NO_BF)
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK_KEYLEN("Blowfish", EVP_bf_ecb, 1, 56, 1);
-#endif
-
-#if !defined(OPENSSL_NO_CAST)
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK_KEYLEN("CAST-128", EVP_cast5_ecb, 1, 16, 1);
-#endif
-
-#if !defined(OPENSSL_NO_CAMELLIA)
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK("Camellia-128", EVP_camellia_128_ecb);
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK("Camellia-192", EVP_camellia_192_ecb);
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK("Camellia-256", EVP_camellia_256_ecb);
-#endif
-
-#if !defined(OPENSSL_NO_IDEA)
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK("IDEA", EVP_idea_ecb);
-#endif
-
-#if !defined(OPENSSL_NO_SEED)
-   BOTAN_REGISTER_OPENSSL_EVP_BLOCK("SEED", EVP_seed_ecb);
-#endif
 
 }
 
-}

@@ -6,8 +6,8 @@
 */
 
 #include <botan/gcm.h>
-#include <botan/internal/mode_utils.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/loadstor.h>
 #include <botan/ctr.h>
 
 #if defined(BOTAN_HAS_GCM_CLMUL)

@@ -67,19 +67,20 @@ int OpenSSL_EC_nid_for(const OID& oid)
    if(oid.empty())
       return -1;
 
-   static const std::map<std::string, int> nid_map = {
-      { "secp192r1", NID_X9_62_prime192v1  },
-      { "secp224r1", NID_secp224r1 },
-      { "secp256r1", NID_X9_62_prime256v1 },
-      { "secp384r1", NID_secp384r1 },
-      { "secp521r1", NID_secp521r1 },
-      // TODO: OpenSSL 1.0.2 added brainpool curves
-   };
-
    const std::string name = OIDS::lookup(oid);
-   auto i = nid_map.find(name);
-   if(i != nid_map.end())
-      return i->second;
+
+   if(name == "secp192r1")
+      return NID_X9_62_prime192v1;
+   if(name == "secp224r1")
+      return NID_secp224r1;
+   if(name == "secp256r1")
+      return NID_X9_62_prime256v1;
+   if(name == "secp384r1")
+      return NID_secp384r1;
+   if(name == "secp521r1")
+      return NID_secp521r1;
+
+   // TODO: OpenSSL 1.0.2 added brainpool curves
 
    return -1;
    }

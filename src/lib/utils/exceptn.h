@@ -73,6 +73,13 @@ struct BOTAN_DLL Lookup_Error : public Exception
    explicit Lookup_Error(const std::string& err) :
       Exception(err)
       {}
+
+   Lookup_Error(const std::string& type,
+                const std::string& algo,
+                const std::string& provider) :
+      Exception("Unavailable " + type + " " + algo +
+                (provider.empty() ? std::string("") : (" for provider " + provider)))
+      {}
    };
 
 /**

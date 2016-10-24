@@ -7,8 +7,8 @@
 
 #include <botan/hash.h>
 #include <botan/internal/openssl.h>
-#include <botan/internal/algo_registry.h>
 #include <openssl/evp.h>
+#include <unordered_map>
 
 namespace Botan {
 
@@ -29,7 +29,7 @@ class OpenSSL_HashFunction : public HashFunction
       HashFunction* clone() const override
          {
          const EVP_MD* algo = EVP_MD_CTX_md(&m_md);
-         return new OpenSSL_HashFunction(algo, name());
+         return new OpenSSL_HashFunction(name(), algo);
          }
 
       size_t output_length() const override
@@ -42,7 +42,7 @@ class OpenSSL_HashFunction : public HashFunction
          return EVP_MD_block_size(EVP_MD_CTX_md(&m_md));
          }
 
-      OpenSSL_HashFunction(const EVP_MD* md, const std::string& name) : m_name(name)
+      OpenSSL_HashFunction(const std::string& name, const EVP_MD* md) : m_name(name)
          {
          EVP_MD_CTX_init(&m_md);
          EVP_DigestInit_ex(&m_md, md, nullptr);
@@ -70,45 +70,49 @@ class OpenSSL_HashFunction : public HashFunction
       EVP_MD_CTX m_md;
    };
 
-std::function<HashFunction* (const HashFunction::Spec&)>
-make_evp_hash_maker(const EVP_MD* md, const char* algo)
-   {
-   return [md,algo](const HashFunction::Spec&)
-      {
-      return new OpenSSL_HashFunction(md, algo);
-      };
-   }
-
-#define BOTAN_REGISTER_OPENSSL_EVP_HASH(NAME, EVP)                      \
-   BOTAN_REGISTER_TYPE(HashFunction, OpenSSL_HashFunction ## EVP, NAME, \
-                       make_evp_hash_maker(EVP(), NAME), "openssl", BOTAN_OPENSSL_HASH_PRIO)
-
-#if !defined(OPENSSL_NO_SHA)
-   BOTAN_REGISTER_OPENSSL_EVP_HASH("SHA-160", EVP_sha1);
-#endif
-
-#if !defined(OPENSSL_NO_SHA256)
-   BOTAN_REGISTER_OPENSSL_EVP_HASH("SHA-224", EVP_sha224);
-   BOTAN_REGISTER_OPENSSL_EVP_HASH("SHA-256", EVP_sha256);
-#endif
-
-#if !defined(OPENSSL_NO_SHA512)
-   BOTAN_REGISTER_OPENSSL_EVP_HASH("SHA-384", EVP_sha384);
-   BOTAN_REGISTER_OPENSSL_EVP_HASH("SHA-512", EVP_sha512);
-#endif
-
-#if !defined(OPENSSL_NO_MD4)
-   BOTAN_REGISTER_OPENSSL_EVP_HASH("MD4", EVP_md4);
-#endif
-
-#if !defined(OPENSSL_NO_MD5)
-   BOTAN_REGISTER_OPENSSL_EVP_HASH("MD5", EVP_md5);
-#endif
-
-#if !defined(OPENSSL_NO_RIPEMD)
-   BOTAN_REGISTER_OPENSSL_EVP_HASH("RIPEMD-160", EVP_ripemd160);
-#endif
-
 }
+
+std::unique_ptr<HashFunction>
+make_openssl_hash(const std::string& name)
+   {
+#define MAKE_OPENSSL_HASH(fn)                                       \
+   std::unique_ptr<HashFunction>(new OpenSSL_HashFunction(name, fn ()))
+
+#if defined(BOTAN_HAS_SHA2_32) && !defined(OPENSSL_NO_SHA256)
+   if(name == "SHA-224")
+      return MAKE_OPENSSL_HASH(EVP_sha224);
+   if(name == "SHA-256")
+      return MAKE_OPENSSL_HASH(EVP_sha256);
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64) && !defined(OPENSSL_NO_SHA512)
+   if(name == "SHA-384")
+      return MAKE_OPENSSL_HASH(EVP_sha384);
+   if(name == "SHA-512")
+      return MAKE_OPENSSL_HASH(EVP_sha512);
+#endif
+
+#if defined(BOTAN_HAS_SHA1) && !defined(OPENSSL_NO_SHA)
+   if(name == "SHA-160")
+      return MAKE_OPENSSL_HASH(EVP_sha1);
+#endif
+
+#if defined(BOTAN_HAS_RIPEMD_160) && !defined(OPENSSL_NO_RIPEMD)
+   if(name == "RIPEMD-160")
+      return MAKE_OPENSSL_HASH(EVP_ripemd160);
+#endif
+
+#if defined(BOTAN_HAS_MD5) && !defined(OPENSSL_NO_MD5)
+   if(name == "MD5")
+      return MAKE_OPENSSL_HASH(EVP_md5);
+   #endif
+
+#if defined(BOTAN_HAS_MD4) && !defined(OPENSSL_NO_MD4)
+   if(name == "MD4")
+      return MAKE_OPENSSL_HASH(EVP_md4);
+#endif
+
+   return nullptr;
+   }
 
 }

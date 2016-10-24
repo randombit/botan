@@ -9,17 +9,6 @@
 
 namespace Botan {
 
-HKDF* HKDF::make(const Spec& spec)
-   {
-   if(auto mac = MessageAuthenticationCode::create(spec.arg(0)))
-      return new HKDF(mac.release());
-
-   if(auto mac = MessageAuthenticationCode::create("HMAC(" + spec.arg(0) + ")"))
-      return new HKDF(mac.release());
-
-   return nullptr;
-   }
-
 size_t HKDF::kdf(byte out[], size_t out_len,
                  const byte secret[], size_t secret_len,
                  const byte salt[], size_t salt_len,

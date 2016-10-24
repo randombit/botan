@@ -74,7 +74,7 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
       */
       size_t default_nonce_length() const override { return 12; }
 
-      virtual ~AEAD_Mode();
+      virtual ~AEAD_Mode() {}
    };
 
 /**

@@ -10,7 +10,6 @@
 
 #include <botan/buf_comp.h>
 #include <botan/sym_algo.h>
-#include <botan/scan_name.h>
 #include <string>
 
 namespace Botan {
@@ -22,8 +21,6 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
                                             public SymmetricAlgorithm
    {
    public:
-      typedef SCAN_Name Spec;
-
       /**
       * Create an instance based on a name
       * If provider is empty then best available is chosen.
@@ -31,15 +28,27 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       * @param provider provider implementation to use
       * @return a null pointer if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<MessageAuthenticationCode> create(const std::string& algo_spec,
-                                                               const std::string& provider = "");
+      static std::unique_ptr<MessageAuthenticationCode>
+         create(const std::string& algo_spec,
+                const std::string& provider = "");
+
+      /*
+      * Create an instance based on a name
+      * If provider is empty then best available is chosen.
+      * @param algo_spec algorithm name
+      * @param provider provider implementation to use
+      * Throws a Lookup_Error if algo/provider combination cannot be found
+      */
+      static std::unique_ptr<MessageAuthenticationCode>
+         create_or_throw(const std::string& algo_spec,
+                         const std::string& provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
       */
       static std::vector<std::string> providers(const std::string& algo_spec);
 
-      virtual ~MessageAuthenticationCode();
+      virtual ~MessageAuthenticationCode() {}
 
       /**
       * Verify a MAC.
