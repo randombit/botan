@@ -102,7 +102,7 @@ ECKCDSA_Signature_Operation::raw_sign(const byte msg[], size_t,
    BOTAN_ASSERT(s != 0, "invalid s");
 
    secure_vector<byte> output = BigInt::encode_1363(r, c.size());
-   output += BigInt::encode_1363(s, m_mod_order.get_modulus().bytes());
+   output += BigInt::encode_1363(s, m_order.bytes());
    return output;
    }
 
@@ -155,20 +155,18 @@ class ECKCDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
 bool ECKCDSA_Verification_Operation::verify(const byte msg[], size_t,
                                            const byte sig[], size_t sig_len)
    {
-   // check that bit length of r is equal to output bit length of employed hash function h
    const std::unique_ptr<HashFunction> hash = HashFunction::create(hash_for_signature());
-
-   // no way to know size of r in sig, so check that we have at least hash->output_length()+1
-   // bytes in sig, enough for r and an arbitrary size s
-   if(sig_len <= hash->output_length())
+   //calculate size of r
+   size_t size_r = std::min(hash -> output_length(), m_order.bytes());
+   if(sig_len < size_r+m_order.bytes())
       {
       return false;
       }
 
-   secure_vector<byte> r(sig, sig + hash->output_length());
+   secure_vector<byte> r(sig, sig + size_r);
 
    // check that 0 < s < q
-   const BigInt s(sig + hash->output_length(), sig_len - hash->output_length());
+   const BigInt s(sig + size_r, m_order.bytes());
 
    if(s <= 0 || s >= m_order)
       {
@@ -179,8 +177,8 @@ bool ECKCDSA_Verification_Operation::verify(const byte msg[], size_t,
    xor_buf(r_xor_e, msg, r.size());
    BigInt w(r_xor_e.data(), r_xor_e.size());
    w = m_mod_order.reduce(w);
-
-   const PointGFp q = (m_base_point * w) + (m_public_point * s);
+   
+   const PointGFp q = multi_exponentiate(m_base_point, w, m_public_point, s);
    const BigInt q_x = q.get_affine_x();
    secure_vector<byte> c(q_x.bytes());
    q_x.binary_encode(c.data());
