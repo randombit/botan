@@ -1,0 +1,7 @@
+os_type unikernel
+
+building_shared_supported no
+
+<target_features>
+includeos_rng
+</target_features>

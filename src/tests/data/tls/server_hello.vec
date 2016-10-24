@@ -1,0 +1,48 @@
+# Tests generated partially with openssl 1.0.2g
+# ServerHello message contains many fields, the following fields are checked:
+# - Protocol Version
+# - Cipher suite
+# - Extensions
+
+[server_hello]
+# correct, with session ticket and renegotiation info
+Buffer = 0303ffea0bcfba564a4ce177c6a444b0ebdff5629b277293c618c1125f231e8628dd00c030000016ff01000100000b00040300010200230000000f000101
+Protocol = 0303
+Ciphersuite = C030
+AdditionalData = 000B0023FF01
+Exception = 
+
+# correct, with session ticket, extended master secret, and renegotiation info
+Buffer = 03019f9cafa88664d9095f85dd64a39e5dd5c09f5a4a5362938af3718ee4e818af6a00c03000001aff01000100000b00040300010200230000000f00010100170000
+Protocol = 0301
+Ciphersuite = C030
+AdditionalData = 000B00170023FF01
+Exception = 
+
+# incorrect, corrupted
+Buffer = 
+Protocol = 0303
+Ciphersuite = C030
+AdditionalData = 
+Exception = Invalid argument Decoding error: Server_Hello: Packet corrupted
+
+# incorrect, corrupted
+Buffer = 00
+Protocol = 0303
+Ciphersuite = C030
+AdditionalData = 
+Exception = Invalid argument Decoding error: Server_Hello: Packet corrupted
+
+# invalid extensions length
+Buffer = 03039f9cafa88664d9095f85dd64a39e5dd5c09f5a4a5362938af3718ee4e818af6a00c03000001cff01000100000b00040300010200230000000f00010100170000
+Protocol = 0303
+Ciphersuite = C030
+AdditionalData = 00170023FF01
+Exception = Invalid argument Decoding error: Bad extension size
+
+# invalid extension length
+Buffer = 03039f9cafa88664d9095f85dd64a39e5dd5c09f5a4a5362938af3718ee4e818af6a00c03000001aff01000100000b00040300010200230100000f00010100170000
+Protocol = 0303
+Ciphersuite = C030
+AdditionalData = 00170023FF01
+Exception = Invalid argument Decoding error: Invalid ServerHello: Expected 256 bytes remaining, only 9 left

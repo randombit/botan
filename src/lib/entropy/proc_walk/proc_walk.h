@@ -9,7 +9,7 @@
 #define BOTAN_ENTROPY_SRC_PROC_WALK_H__
 
 #include <botan/entropy_src.h>
-#include <mutex>
+#include <botan/mutex.h>
 
 namespace Botan {
 
@@ -35,7 +35,7 @@ class ProcWalking_EntropySource final : public Entropy_Source
 
    private:
       const std::string m_path;
-      std::mutex m_mutex;
+      mutex_type m_mutex;
       std::unique_ptr<File_Descriptor_Source> m_dir;
       secure_vector<byte> m_buf;
    };

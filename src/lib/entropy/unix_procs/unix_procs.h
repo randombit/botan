@@ -10,7 +10,7 @@
 
 #include <botan/entropy_src.h>
 #include <vector>
-#include <mutex>
+#include <botan/mutex.h>
 
 namespace Botan {
 
@@ -32,9 +32,11 @@ class Unix_EntropySource final : public Entropy_Source
       *        to contain only 'safe' binaries. If an attacker can write
       *        an executable to one of these directories then we will
       *        run arbitrary code.
+      * @param proc_count number of concurrent processes executing,
+      * when set to zero, number of processors is used
       */
       Unix_EntropySource(const std::vector<std::string>& trusted_paths,
-                         size_t concurrent_processes = 0);
+                         size_t proc_count = 0);
    private:
       static std::vector<std::vector<std::string>> get_default_sources();
 
@@ -67,7 +69,7 @@ class Unix_EntropySource final : public Entropy_Source
 
       const std::vector<std::string>& next_source();
 
-      std::mutex m_mutex;
+      mutex_type m_mutex;
       const std::vector<std::string> m_trusted_paths;
       const size_t m_concurrent;
 

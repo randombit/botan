@@ -195,7 +195,7 @@ const u32bit SEED_S3[256] = {
 /*
 * SEED G Function
 */
-u32bit SEED_G(u32bit X)
+inline u32bit SEED_G(u32bit X)
    {
    return (SEED_S0[get_byte(3, X)] ^ SEED_S1[get_byte(2, X)] ^
            SEED_S2[get_byte(1, X)] ^ SEED_S3[get_byte(0, X)]);

@@ -18,8 +18,6 @@
 #include <botan/key_filt.h>
 #include <botan/data_snk.h>
 
-#include <botan/scan_name.h>
-
 #if defined(BOTAN_HAS_CODEC_FILTERS)
   #include <botan/b64_filt.h>
   #include <botan/hex_filt.h>
@@ -106,7 +104,7 @@ class BOTAN_DLL Hash_Filter : public Filter
 
       /**
       * Construct a hash filter.
-      * @param hash_fun the hash function to use
+      * @param hash the hash function to use
       * @param len the output length of this filter. Leave the default
       * value 0 if you want to use the full output of the hashfunction
       * hash. Otherwise, specify a smaller value here so that the

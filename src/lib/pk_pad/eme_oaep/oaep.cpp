@@ -11,21 +11,6 @@
 
 namespace Botan {
 
-OAEP* OAEP::make(const Spec& request)
-   {
-   if(request.algo_name() == "OAEP" && request.arg_count_between(1, 2))
-      {
-      if(request.arg_count() == 1 ||
-         (request.arg_count() == 2 && request.arg(1) == "MGF1"))
-         {
-         if(auto hash = HashFunction::create(request.arg(0)))
-            return new OAEP(hash.release());
-         }
-      }
-
-   return nullptr;
-   }
-
 /*
 * OAEP Pad Operation
 */

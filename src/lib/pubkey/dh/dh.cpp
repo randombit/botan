@@ -1,12 +1,12 @@
 /*
 * Diffie-Hellman
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/dh.h>
+#include <botan/internal/pk_ops_impl.h>
 #include <botan/workfactor.h>
 #include <botan/pow_mod.h>
 #include <botan/blinding.h>
@@ -41,7 +41,7 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
    m_group = grp;
    m_x = x_arg;
 
-   if(m_x == 0)
+   if(generate)
       {
       const BigInt& p = group_p();
       m_x.randomize(rng, dl_exponent_size(p.bits()));
@@ -93,7 +93,16 @@ class DH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
       typedef DH_PrivateKey Key_Type;
-      DH_KA_Operation(const DH_PrivateKey& key, const std::string& kdf);
+
+      DH_KA_Operation(const DH_PrivateKey& key, const std::string& kdf, RandomNumberGenerator& rng) :
+         PK_Ops::Key_Agreement_with_KDF(kdf),
+         m_p(key.group_p()),
+         m_powermod_x_p(key.get_x(), m_p),
+         m_blinder(m_p,
+                   rng,
+                   [](const BigInt& k) { return k; },
+                   [this](const BigInt& k) { return m_powermod_x_p(inverse_mod(k, m_p)); })
+         {}
 
       secure_vector<byte> raw_agree(const byte w[], size_t w_len) override;
    private:
@@ -102,16 +111,6 @@ class DH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
       Fixed_Exponent_Power_Mod m_powermod_x_p;
       Blinder m_blinder;
    };
-
-DH_KA_Operation::DH_KA_Operation(const DH_PrivateKey& dh, const std::string& kdf) :
-   PK_Ops::Key_Agreement_with_KDF(kdf),
-   m_p(dh.group_p()),
-   m_powermod_x_p(dh.get_x(), m_p),
-   m_blinder(m_p,
-             [](const BigInt& k) { return k; },
-             [this](const BigInt& k) { return m_powermod_x_p(inverse_mod(k, m_p)); })
-   {
-   }
 
 secure_vector<byte> DH_KA_Operation::raw_agree(const byte w[], size_t w_len)
    {
@@ -127,6 +126,14 @@ secure_vector<byte> DH_KA_Operation::raw_agree(const byte w[], size_t w_len)
 
 }
 
-BOTAN_REGISTER_PK_KEY_AGREE_OP("DH", DH_KA_Operation);
+std::unique_ptr<PK_Ops::Key_Agreement>
+DH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
+                                       const std::string& params,
+                                       const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Key_Agreement>(new DH_KA_Operation(*this, params, rng));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
 
 }

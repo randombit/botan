@@ -21,19 +21,17 @@ class BOTAN_DLL PSSR final : public EMSA
    public:
 
       /**
-      * @param hash the hash object to use
+      * @param hash the hash function to use
       */
       explicit PSSR(HashFunction* hash);
 
       /**
-      * @param hash the hash object to use
+      * @param hash the hash function to use
       * @param salt_size the size of the salt to use in bytes
       */
       PSSR(HashFunction* hash, size_t salt_size);
 
       EMSA* clone() override { return new PSSR(m_hash->clone(), m_SALT_SIZE); }
-
-      static PSSR* make(const Spec& spec);
    private:
       void update(const byte input[], size_t length) override;
 

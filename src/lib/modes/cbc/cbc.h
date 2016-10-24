@@ -47,7 +47,7 @@ class BOTAN_DLL CBC_Mode : public Cipher_Mode
       byte* state_ptr() { return m_state.data(); }
 
    private:
-      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const byte nonce[], size_t nonce_len) override;
 
       void key_schedule(const byte key[], size_t length) override;
 
@@ -62,10 +62,14 @@ class BOTAN_DLL CBC_Mode : public Cipher_Mode
 class BOTAN_DLL CBC_Encryption : public CBC_Mode
    {
    public:
+      /**
+      * @param cipher block cipher to use
+      * @param padding padding method to use
+      */
       CBC_Encryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
          CBC_Mode(cipher, padding) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
@@ -80,6 +84,9 @@ class BOTAN_DLL CBC_Encryption : public CBC_Mode
 class BOTAN_DLL CTS_Encryption final : public CBC_Encryption
    {
    public:
+      /**
+      * @param cipher block cipher to use
+      */
       explicit CTS_Encryption(BlockCipher* cipher) : CBC_Encryption(cipher, nullptr) {}
 
       size_t output_length(size_t input_length) const override;
@@ -97,10 +104,14 @@ class BOTAN_DLL CTS_Encryption final : public CBC_Encryption
 class BOTAN_DLL CBC_Decryption : public CBC_Mode
    {
    public:
+      /**
+      * @param cipher block cipher to use
+      * @param padding padding method to use
+      */
       CBC_Decryption(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
          CBC_Mode(cipher, padding), m_tempbuf(update_granularity()) {}
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
 
@@ -117,6 +128,9 @@ class BOTAN_DLL CBC_Decryption : public CBC_Mode
 class BOTAN_DLL CTS_Decryption final : public CBC_Decryption
    {
    public:
+      /**
+      * @param cipher block cipher to use
+      */
       explicit CTS_Decryption(BlockCipher* cipher) : CBC_Decryption(cipher, nullptr) {}
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;

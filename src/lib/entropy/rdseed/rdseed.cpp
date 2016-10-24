@@ -15,6 +15,7 @@
 
 namespace Botan {
 
+BOTAN_FUNC_ISA("rdseed")
 size_t Intel_Rdseed::poll(RandomNumberGenerator& rng) {
    if(CPUID::has_rdseed())
       {

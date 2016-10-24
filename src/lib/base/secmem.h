@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <vector>
 #include <deque>
+#include <type_traits>
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
   #include <botan/locking_allocator.h>
@@ -23,6 +24,17 @@ template<typename T>
 class secure_allocator
    {
    public:
+      /*
+      * Assert exists to prevent someone from doing something that will
+      * probably crash anyway (like secure_vector<non_POD_t> where ~non_POD_t
+      * deletes a member pointer which was zeroed before it ran).
+      * MSVC in debug mode uses non-integral proxy types in container types
+      * like std::vector, thus we disable the check there.
+      */
+#if !defined(_ITERATOR_DEBUG_LEVEL) || _ITERATOR_DEBUG_LEVEL == 0
+      static_assert(std::is_integral<T>::value, "secure_allocator supports only integer types");
+#endif
+
       typedef T          value_type;
 
       typedef T*         pointer;

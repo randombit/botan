@@ -30,6 +30,7 @@ class BigInt_Unit_Tests : public Test
 
          results.push_back(test_bigint_sizes());
          results.push_back(test_random_integer());
+         results.push_back(test_encode());
 
          return results;
          }
@@ -140,6 +141,32 @@ class BigInt_Unit_Tests : public Test
             }
 
          result.end_timer();
+
+         return result;
+         }
+
+      Test::Result test_encode()
+         {
+         Test::Result result("BigInt encoding functions");
+
+         const BigInt n1(0xffff);
+         const BigInt n2(1023);
+
+         Botan::secure_vector<byte> encoded_n1 = BigInt::encode_1363(n1, 256);
+         Botan::secure_vector<byte> encoded_n2 = BigInt::encode_1363(n2, 256);
+         Botan::secure_vector<byte> expected = encoded_n1;
+         expected += encoded_n2;
+
+         Botan::secure_vector<byte> encoded_n1_n2 = BigInt::encode_fixed_length_int_pair(n1, n2, 256);
+         result.test_eq("encode_fixed_length_int_pair", encoded_n1_n2, expected);
+
+         for (size_t i = 0; i < 256 - n1.bytes(); ++i)
+            {
+               if ( encoded_n1[i] != 0 )
+                  {
+                  result.test_failure("encode_1363", "no zero byte");
+                  }
+            }
 
          return result;
          }

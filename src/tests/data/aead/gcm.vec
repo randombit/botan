@@ -1,3 +1,6 @@
+
+#test cpuid aesni ssse3 clmul
+
 [AES-128/GCM]
 # Nist | Test Case 1
 Key    = 00000000000000000000000000000000

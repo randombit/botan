@@ -27,6 +27,7 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
       * Stream mode: use KDF to provide a stream of bytes to xor with the message
       *
       * @param own_priv_key own (ephemeral) DH private key
+      * @param rng the RNG to use
       * @param kdf the KDF that should be used
       * @param mac the MAC function that should be used
       * @param mac_key_len key length of the MAC function. Default = 20 bytes
@@ -34,6 +35,7 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
       * output = (ephemeral) public key + ciphertext + tag
       */
       DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
+                      RandomNumberGenerator& rng,
                       KDF* kdf,
                       MessageAuthenticationCode* mac,
                       size_t mac_key_len = 20);
@@ -42,6 +44,7 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
       * Block cipher mode
       *
       * @param own_priv_key own (ephemeral) DH private key
+      * @param rng the RNG to use
       * @param kdf the KDF that should be used
       * @param cipher the block cipher that should be used
       * @param cipher_key_len the key length of the block cipher
@@ -51,6 +54,7 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
       * output = (ephemeral) public key + ciphertext + tag
       */
       DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
+                      RandomNumberGenerator& rng,
                       KDF* kdf,
                       Cipher_Mode* cipher,
                       size_t cipher_key_len,
@@ -96,6 +100,7 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
       * Stream mode: use KDF to provide a stream of bytes to xor with the message
       *
       * @param own_priv_key own (ephemeral) DH private key
+      * @param rng the RNG to use
       * @param kdf the KDF that should be used
       * @param mac the MAC function that should be used
       * @param mac_key_len key length of the MAC function. Default = 20 bytes
@@ -103,6 +108,7 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
       * input = (ephemeral) public key + ciphertext + tag
       */
       DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
+                      RandomNumberGenerator& rng,
                       KDF* kdf,
                       MessageAuthenticationCode* mac,
                       size_t mac_key_len = 20);
@@ -111,6 +117,7 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
       * Block cipher mode
       *
       * @param own_priv_key own (ephemeral) DH private key
+      * @param rng the RNG to use
       * @param kdf the KDF that should be used
       * @param cipher the block cipher that should be used
       * @param cipher_key_len the key length of the block cipher
@@ -120,6 +127,7 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
       * input = (ephemeral) public key + ciphertext + tag
       */
       DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
+                      RandomNumberGenerator& rng,
                       KDF* kdf,
                       Cipher_Mode* cipher,
                       size_t cipher_key_len,

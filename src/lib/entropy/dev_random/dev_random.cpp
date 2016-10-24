@@ -38,7 +38,18 @@ Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnam
       {
       int fd = ::open(fsname.c_str(), flags);
 
-      if(fd > 0)
+      if(fd < 0)
+         {
+         /*
+         ENOENT or EACCES is normal as some of the named devices may not exist
+         on this system. But any other errno value probably indicates
+         either a bug in the application or file descriptor exhaustion.
+         */
+         if(errno != ENOENT && errno != EACCES)
+            throw Exception("Opening OS RNG device failed with errno " +
+                            std::to_string(errno));
+         }
+      else
          {
          if(fd > FD_SETSIZE)
             {
@@ -48,19 +59,6 @@ Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnam
 
          m_dev_fds.push_back(fd);
          m_max_fd = std::max(m_max_fd, fd);
-         }
-      else
-         {
-         /*
-         ENOENT or EACCES is normal as some of the named devices may not exist
-         on this system. But any other errno value probably indicates
-         either a bug in the application or file descriptor exhaustion.
-         */
-         if(errno != ENOENT && errno != EACCES)
-            {
-            throw Exception("Opening OS RNG device failed with errno " +
-                            std::to_string(errno));
-            }
          }
       }
    }

@@ -6,6 +6,7 @@
 */
 
 #include <botan/sha160.h>
+#include <botan/cpuid.h>
 
 namespace Botan {
 
@@ -60,8 +61,18 @@ void SHA_160::compress_n(const byte input[], size_t blocks)
    {
    using namespace SHA1_F;
 
+#if defined(BOTAN_HAS_SHA1_SSE2)
+   if(CPUID::has_sse2())
+      {
+      return sse2_compress_n(m_digest, input, blocks);
+      }
+
+#endif
+
    u32bit A = m_digest[0], B = m_digest[1], C = m_digest[2],
           D = m_digest[3], E = m_digest[4];
+
+   m_W.resize(80);
 
    for(size_t i = 0; i != blocks; ++i)
       {

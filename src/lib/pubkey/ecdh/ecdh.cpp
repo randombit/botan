@@ -7,8 +7,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/ecdh.h>
+#include <botan/internal/pk_ops_impl.h>
+
+#if defined(BOTAN_HAS_OPENSSL)
+  #include <botan/internal/openssl.h>
+#endif
 
 namespace Botan {
 
@@ -35,6 +39,7 @@ class ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
       secure_vector<byte> raw_agree(const byte w[], size_t w_len) override
          {
          PointGFp point = OS2ECP(w, w_len, m_curve);
+         // TODO: add blinding
          PointGFp S = (m_cofactor * point) * m_l_times_priv;
          BOTAN_ASSERT(S.on_the_curve(), "ECDH agreed value was on the curve");
          return BigInt::encode_1363(S.get_affine_x(), m_curve.get_p().bytes());
@@ -47,6 +52,31 @@ class ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
 
 }
 
-BOTAN_REGISTER_PK_KEY_AGREE_OP("ECDH", ECDH_KA_Operation);
+std::unique_ptr<PK_Ops::Key_Agreement>
+ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
+                                         const std::string& params,
+                                         const std::string& provider) const
+   {
+#if defined(BOTAN_HAS_OPENSSL)
+   if(provider == "openssl" || provider.empty())
+      {
+      try
+         {
+         return make_openssl_ecdh_ka_op(*this, params);
+         }
+      catch(Lookup_Error&)
+         {
+         if(provider == "openssl")
+            throw;
+         }
+      }
+#endif
+
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Key_Agreement>(new ECDH_KA_Operation(*this, params));
+
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
 
 }

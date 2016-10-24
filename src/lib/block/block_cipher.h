@@ -8,8 +8,8 @@
 #ifndef BOTAN_BLOCK_CIPHER_H__
 #define BOTAN_BLOCK_CIPHER_H__
 
-#include <botan/scan_name.h>
 #include <botan/sym_algo.h>
+#include <string>
 
 namespace Botan {
 
@@ -19,18 +19,30 @@ namespace Botan {
 class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
    {
    public:
-      typedef SCAN_Name Spec;
 
       /**
       * Create an instance based on a name
-      * Will return a null pointer if the algo/provider combination cannot
-      * be found. If provider is empty then best available is chosen.
+      * If provider is empty then best available is chosen.
+      * @param algo_spec algorithm name
+      * @param provider provider implementation to choose
+      * @return a null pointer if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<BlockCipher> create(const std::string& algo_spec,
-                                                 const std::string& provider = "");
+      static std::unique_ptr<BlockCipher>
+         create(const std::string& algo_spec,
+                const std::string& provider = "");
 
       /**
-      * Returns the list of available providers for this algorithm, empty if not available
+      * Create an instance based on a name, or throw if the
+      * algo/provider combination cannot be found. If provider is
+      * empty then best available is chosen.
+      */
+      static std::unique_ptr<BlockCipher>
+         create_or_throw(const std::string& algo_spec,
+                         const std::string& provider = "");
+
+      /**
+      * @return list of available providers for this algorithm, empty if not available
+      * @param algo_spec algorithm name
       */
       static std::vector<std::string> providers(const std::string& algo_spec);
 
@@ -51,6 +63,12 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
          {
          return parallelism() * block_size() * BOTAN_BLOCK_CIPHER_PAR_MULT;
          }
+
+      /**
+      * @return provider information about this implementation. Default is "base",
+      * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
+      */
+      virtual std::string provider() const { return "base"; }
 
       /**
       * Encrypt a block.
@@ -155,7 +173,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       */
       virtual BlockCipher* clone() const = 0;
 
-      virtual ~BlockCipher();
+      virtual ~BlockCipher() {}
    };
 
 /**

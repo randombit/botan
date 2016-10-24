@@ -25,6 +25,10 @@ The major interfaces are
   into the state of the RNG. The additional input could be anything which
   parameterizes this request.
 
+.. cpp:function:: void RandomNumberGenerator::randomize_with_ts_input(byte* data, size_t length)
+
+  Creates a buffer with some timestamp values and calls ``randomize_with_input``
+
 .. cpp:function:: byte RandomNumberGenerator::next_byte()
 
   Generates a single random byte and returns it. Note that calling this
@@ -40,24 +44,39 @@ HMAC_DRBG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 HMAC DRBG is a random number generator designed by NIST and specified
-in SP 800-90A. It can be instantiated with any hash function but is
-typically used with SHA-256, SHA-384, or SHA-512.
+in SP 800-90A. It seems to be the most conservative generator of the
+NIST approved options.
 
-HMAC DRBG seems to be the most conservative generator of the NIST
-approved options.
+It can be instantiated with any HMAC but is typically used with
+SHA-256, SHA-384, or SHA-512, as these are the hash functions approved
+for this use by NIST.
 
 System_RNG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In ``system_rng.h``, objects of ``System_RNG`` reference a single
-(process global) reference to the system PRNG (/dev/urandom or
-CryptGenRandom).
+(process global) reference to the system PRNG (such as
+``/dev/urandom`` or ``CryptGenRandom``).
+
+You can also use the function ``system_rng()`` which returns a
+reference to the global handle to the system RNG.
 
 AutoSeeded_RNG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This instantiates a new instance of a userspace PRNG, seeds it with
-a default entropy pool.
+AutoSeeded_RNG is type naming a 'best available' userspace PRNG. The
+exact definition of this has changed over time and may change in the
+future, fortunately there is no compatability concerns when changing
+such an RNG.
+
+Note well: like most other classes in Botan, it is not safe to share
+an instance of ``AutoSeeded_RNG`` among multiple threads without
+serialization.
+
+The current version uses the HMAC_DRBG with SHA-384. The initial seed
+is generated either by the system PRNG (if available) or a default set
+of entropy sources. These are also used for periodic reseeding of the
+RNG state.
 
 ANSI X9.31
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

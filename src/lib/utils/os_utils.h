@@ -15,7 +15,7 @@ namespace Botan {
 namespace OS {
 
 /**
-* Returns the OS assigned process ID, if available. Otherwise returns 0.
+* Returns the OS assigned process ID, if available. Otherwise throws.
 */
 uint32_t get_process_id();
 

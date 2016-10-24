@@ -236,13 +236,15 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::string to_string() const;
 
       /**
-      * Return a fingerprint of the certificate
+      * @return a fingerprint of the certificate
+      * @param hash_name hash function used to calculate the fingerprint
       */
-      std::string fingerprint(const std::string& = "SHA-1") const;
+      std::string fingerprint(const std::string& hash_name = "SHA-1") const;
 
       /**
       * Check if a certain DNS name matches up with the information in
       * the cert
+      * @param name DNS name to match
       */
       bool matches_dns_name(const std::string& name) const;
 
@@ -265,18 +267,24 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       */
       explicit X509_Certificate(DataSource& source);
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       /**
       * Create a certificate from a file containing the DER or PEM
       * encoded certificate.
       * @param filename the name of the certificate file
       */
       explicit X509_Certificate(const std::string& filename);
+#endif
 
+      /**
+      * Create a certificate from a buffer
+      * @param in the buffer containing the DER-encoded certificate
+      */
       explicit X509_Certificate(const std::vector<byte>& in);
 
-      X509_Certificate(const X509_Certificate& other);
+      X509_Certificate(const X509_Certificate& other) = default;
 
-      X509_Certificate& operator=(const X509_Certificate& other);
+      X509_Certificate& operator=(const X509_Certificate& other) = default;
 
    private:
       void force_decode() override;
@@ -292,16 +300,30 @@ class BOTAN_DLL X509_Certificate : public X509_Object
 
 /**
 * Check two certificates for inequality
+* @param cert1 The first certificate
+* @param cert2 The second certificate
 * @return true if the arguments represent different certificates,
 * false if they are binary identical
 */
-BOTAN_DLL bool operator!=(const X509_Certificate&, const X509_Certificate&);
+BOTAN_DLL bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2);
 
 /*
 * Data Store Extraction Operations
 */
-BOTAN_DLL X509_DN create_dn(const Data_Store&);
-BOTAN_DLL AlternativeName create_alt_name(const Data_Store&);
+
+/*
+* Create and populate a X509_DN
+* @param info data store containing DN information
+* @return DN containing attributes from data store
+*/
+BOTAN_DLL X509_DN create_dn(const Data_Store& info);
+
+/*
+* Create and populate an AlternativeName
+* @param info data store containing AlternativeName information
+* @return AlternativeName containing attributes from data store
+*/
+BOTAN_DLL AlternativeName create_alt_name(const Data_Store& info);
 
 }
 

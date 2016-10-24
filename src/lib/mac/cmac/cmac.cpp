@@ -9,16 +9,6 @@
 
 namespace Botan {
 
-CMAC* CMAC::make(const Spec& spec)
-   {
-   if(spec.arg_count() == 1)
-      {
-      if(auto bc = BlockCipher::create(spec.arg(0)))
-         return new CMAC(bc.release());
-      }
-   return nullptr;
-   }
-
 /*
 * Perform CMAC's multiplication in GF(2^n)
 */

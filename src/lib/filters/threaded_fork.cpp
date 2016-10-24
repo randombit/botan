@@ -7,6 +7,9 @@
 */
 
 #include <botan/basefilt.h>
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+
 #include <botan/internal/semaphore.h>
 
 namespace Botan {
@@ -144,3 +147,5 @@ void Threaded_Fork::thread_entry(Filter* filter)
    }
 
 }
+
+#endif

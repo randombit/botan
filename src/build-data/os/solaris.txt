@@ -6,6 +6,8 @@ install_cmd_exec '/usr/ucb/install -m 755'
 <target_features>
 posix_mlock
 gettimeofday
+threads
+filesystem
 </target_features>
 
 <aliases>

@@ -32,8 +32,6 @@ class BOTAN_DLL Comb4P final : public HashFunction
          return m_hash1->output_length() + m_hash2->output_length();
          }
 
-      static Comb4P* make(const Spec& spec);
-      
       HashFunction* clone() const override
          {
          return new Comb4P(m_hash1->clone(), m_hash2->clone());

@@ -1,6 +1,7 @@
 /*
 * TLS Channels
-* (C) 2011,2012,2014,2015 Jack Lloyd
+* (C) 2011,2012,2014,2015,2016 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -18,32 +19,63 @@ namespace Botan {
 
 namespace TLS {
 
-Channel::Channel(output_fn output_fn,
-                 data_cb data_cb,
-                 alert_cb alert_cb,
-                 handshake_cb handshake_cb,
-                 handshake_msg_cb handshake_msg_cb,
+Callbacks::~Callbacks() {}
+
+void Callbacks::tls_inspect_handshake_msg(const Handshake_Message&)
+   {
+   // default is no op
+   }
+
+std::string Callbacks::tls_server_choose_app_protocol(const std::vector<std::string>&)
+   {
+   return "";
+   }
+
+size_t TLS::Channel::IO_BUF_DEFAULT_SIZE = 10*1024;
+
+Channel::Channel(Callbacks& callbacks,
                  Session_Manager& session_manager,
                  RandomNumberGenerator& rng,
                  const Policy& policy,
                  bool is_datagram,
                  size_t reserved_io_buffer_size) :
    m_is_datagram(is_datagram),
-   m_data_cb(data_cb),
-   m_alert_cb(alert_cb),
-   m_output_fn(output_fn),
-   m_handshake_cb(handshake_cb),
-   m_handshake_msg_cb(handshake_msg_cb),
+   m_callbacks(callbacks),
    m_session_manager(session_manager),
    m_policy(policy),
    m_rng(rng)
+   {
+   init(reserved_io_buffer_size);
+   }
+
+Channel::Channel(output_fn out,
+                 data_cb app_data_cb,
+                 alert_cb alert_cb,
+                 handshake_cb hs_cb,
+                 handshake_msg_cb hs_msg_cb,
+                 Session_Manager& session_manager,
+                 RandomNumberGenerator& rng,
+                 const Policy& policy,
+                 bool is_datagram,
+                 size_t io_buf_sz) :
+    m_is_datagram(is_datagram),
+    m_compat_callbacks(new Compat_Callbacks(out, app_data_cb, alert_cb, hs_cb, hs_msg_cb)),
+    m_callbacks(*m_compat_callbacks.get()),
+    m_session_manager(session_manager),
+    m_policy(policy),
+    m_rng(rng)
+    {
+    init(io_buf_sz);
+    }
+
+void Channel::init(size_t io_buf_sz)
    {
    /* epoch 0 is plaintext, thus null cipher state */
    m_write_cipher_states[0] = nullptr;
    m_read_cipher_states[0] = nullptr;
 
-   m_writebuf.reserve(reserved_io_buffer_size);
-   m_readbuf.reserve(reserved_io_buffer_size);
+   m_writebuf.reserve(io_buf_sz);
+   m_readbuf.reserve(io_buf_sz);
    }
 
 void Channel::reset_state()
@@ -183,7 +215,8 @@ void Channel::change_cipher_spec_reader(Connection_Side side)
                                   (side == CLIENT) ? SERVER : CLIENT,
                                   false,
                                   pending->ciphersuite(),
-                                  pending->session_keys()));
+                                  pending->session_keys(),
+                                  pending->server_hello()->supports_encrypt_then_mac()));
 
    m_read_cipher_states[epoch] = read_state;
    }
@@ -210,7 +243,8 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
                                   side,
                                   true,
                                   pending->ciphersuite(),
-                                  pending->session_keys()));
+                                  pending->session_keys(),
+                                  pending->server_hello()->supports_encrypt_then_mac()));
 
    m_write_cipher_states[epoch] = write_state;
    }
@@ -242,7 +276,7 @@ void Channel::activate_session()
    if(!m_active_state->version().is_datagram_protocol())
       {
       // TLS is easy just remove all but the current state
-      auto current_epoch = sequence_numbers().current_write_epoch();
+      const u16bit current_epoch = sequence_numbers().current_write_epoch();
 
       const auto not_current_epoch =
          [current_epoch](u16bit epoch) { return (epoch != current_epoch); };
@@ -263,23 +297,19 @@ size_t Channel::received_data(const byte input[], size_t input_size)
       {
       while(!is_closed() && input_size)
          {
-         secure_vector<byte> record;
+         secure_vector<byte> record_data;
          u64bit record_sequence = 0;
          Record_Type record_type = NO_RECORD;
          Protocol_Version record_version;
 
          size_t consumed = 0;
 
+         Record_Raw_Input raw_input(input, input_size, consumed, m_is_datagram);
+         Record record(record_data, &record_sequence, &record_version, &record_type);
          const size_t needed =
             read_record(m_readbuf,
-                        input,
-                        input_size,
-                        m_is_datagram,
-                        consumed,
+                        raw_input,
                         record,
-                        &record_sequence,
-                        &record_version,
-                        &record_type,
                         m_sequence_numbers.get(),
                         std::bind(&TLS::Channel::read_cipher_state_epoch, this,
                                   std::placeholders::_1));
@@ -298,105 +328,21 @@ size_t Channel::received_data(const byte input[], size_t input_size)
          if(input_size == 0 && needed != 0)
             return needed; // need more data to complete record
 
-         if(record.size() > MAX_PLAINTEXT_SIZE)
+         if(record_data.size() > MAX_PLAINTEXT_SIZE)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
                                 "TLS plaintext record is larger than allowed maximum");
 
          if(record_type == HANDSHAKE || record_type == CHANGE_CIPHER_SPEC)
             {
-            if(!m_pending_state)
-               {
-               // No pending handshake, possibly new:
-               if(record_version.is_datagram_protocol())
-                  {
-                  if(m_sequence_numbers)
-                     {
-                     /*
-                     * Might be a peer retransmit under epoch - 1 in which
-                     * case we must retransmit last flight
-                     */
-                     sequence_numbers().read_accept(record_sequence);
-
-                     const u16bit epoch = record_sequence >> 48;
-
-                     if(epoch == sequence_numbers().current_read_epoch())
-                        {
-                        create_handshake_state(record_version);
-                        }
-                     else if(epoch == sequence_numbers().current_read_epoch() - 1)
-                        {
-                        BOTAN_ASSERT(m_active_state, "Have active state here");
-                        m_active_state->handshake_io().add_record(unlock(record),
-                                                                  record_type,
-                                                                  record_sequence);
-                        }
-                     }
-                  else if(record_sequence == 0)
-                     {
-                     create_handshake_state(record_version);
-                     }
-                  }
-               else
-                  {
-                  create_handshake_state(record_version);
-                  }
-               }
-
-            // May have been created in above conditional
-            if(m_pending_state)
-               {
-               m_pending_state->handshake_io().add_record(unlock(record),
-                                                          record_type,
-                                                          record_sequence);
-
-               while(auto pending = m_pending_state.get())
-                  {
-                  auto msg = pending->get_next_handshake_msg();
-
-                  if(msg.first == HANDSHAKE_NONE) // no full handshake yet
-                     break;
-
-                  process_handshake_msg(active_state(), *pending,
-                                        msg.first, msg.second);
-                  }
-               }
+            process_handshake_ccs(record_data, record_sequence, record_type, record_version);
             }
          else if(record_type == APPLICATION_DATA)
             {
-            if(!active_state())
-               throw Unexpected_Message("Application data before handshake done");
-
-            /*
-            * OpenSSL among others sends empty records in versions
-            * before TLS v1.1 in order to randomize the IV of the
-            * following record. Avoid spurious callbacks.
-            */
-            if(record.size() > 0)
-               m_data_cb(record.data(), record.size());
+            process_application_data(record_sequence, record_data);
             }
          else if(record_type == ALERT)
             {
-            Alert alert_msg(record);
-
-            if(alert_msg.type() == Alert::NO_RENEGOTIATION)
-               m_pending_state.reset();
-
-            m_alert_cb(alert_msg, nullptr, 0);
-
-            if(alert_msg.is_fatal())
-               {
-               if(auto active = active_state())
-                  m_session_manager.remove_entry(active->server_hello()->session_id());
-               }
-
-            if(alert_msg.type() == Alert::CLOSE_NOTIFY)
-               send_warning_alert(Alert::CLOSE_NOTIFY); // reply in kind
-
-            if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
-               {
-               reset_state();
-               return 0;
-               }
+            process_alert(record_data);
             }
          else if(record_type != NO_RECORD)
             throw Unexpected_Message("Unexpected record type " +
@@ -428,6 +374,108 @@ size_t Channel::received_data(const byte input[], size_t input_size)
       }
    }
 
+void Channel::process_handshake_ccs(const secure_vector<byte>& record,
+                                    u64bit record_sequence,
+                                    Record_Type record_type,
+                                    Protocol_Version record_version)
+   {
+   if(!m_pending_state)
+      {
+      // No pending handshake, possibly new:
+      if(record_version.is_datagram_protocol())
+         {
+         if(m_sequence_numbers)
+            {
+            /*
+            * Might be a peer retransmit under epoch - 1 in which
+            * case we must retransmit last flight
+            */
+            sequence_numbers().read_accept(record_sequence);
+
+            const u16bit epoch = record_sequence >> 48;
+
+            if(epoch == sequence_numbers().current_read_epoch())
+               {
+               create_handshake_state(record_version);
+               }
+            else if(epoch == sequence_numbers().current_read_epoch() - 1)
+               {
+               BOTAN_ASSERT(m_active_state, "Have active state here");
+               m_active_state->handshake_io().add_record(unlock(record),
+                                                         record_type,
+                                                         record_sequence);
+               }
+            }
+         else if(record_sequence == 0)
+            {
+            create_handshake_state(record_version);
+            }
+         }
+      else
+         {
+         create_handshake_state(record_version);
+         }
+      }
+
+   // May have been created in above conditional
+   if(m_pending_state)
+      {
+      m_pending_state->handshake_io().add_record(unlock(record),
+                                                 record_type,
+                                                 record_sequence);
+
+      while(auto pending = m_pending_state.get())
+         {
+         auto msg = pending->get_next_handshake_msg();
+
+         if(msg.first == HANDSHAKE_NONE) // no full handshake yet
+            break;
+
+         process_handshake_msg(active_state(), *pending,
+                               msg.first, msg.second);
+         }
+      }
+   }
+
+void Channel::process_application_data(u64bit seq_no, const secure_vector<byte>& record)
+   {
+   if(!active_state())
+      throw Unexpected_Message("Application data before handshake done");
+
+   /*
+   * OpenSSL among others sends empty records in versions
+   * before TLS v1.1 in order to randomize the IV of the
+   * following record. Avoid spurious callbacks.
+   */
+   if(record.size() > 0)
+      callbacks().tls_record_received(seq_no, record.data(), record.size());
+   }
+
+void Channel::process_alert(const secure_vector<byte>& record)
+    {
+    Alert alert_msg(record);
+
+    if(alert_msg.type() == Alert::NO_RENEGOTIATION)
+       m_pending_state.reset();
+
+    callbacks().tls_alert(alert_msg);
+
+    if(alert_msg.is_fatal())
+       {
+       if(auto active = active_state())
+          m_session_manager.remove_entry(active->server_hello()->session_id());
+       }
+
+    if(alert_msg.type() == Alert::CLOSE_NOTIFY)
+       send_warning_alert(Alert::CLOSE_NOTIFY); // reply in kind
+
+    if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
+       {
+       reset_state();
+       }
+    }
+
+
 void Channel::write_record(Connection_Cipher_State* cipher_state, u16bit epoch,
                            byte record_type, const byte input[], size_t length)
    {
@@ -436,16 +484,16 @@ void Channel::write_record(Connection_Cipher_State* cipher_state, u16bit epoch,
    Protocol_Version record_version =
       (m_pending_state) ? (m_pending_state->version()) : (m_active_state->version());
 
+   Record_Message record_message(record_type, 0, input, length);
+
    TLS::write_record(m_writebuf,
-                     record_type,
-                     input,
-                     length,
+                     record_message,
                      record_version,
                      sequence_numbers().next_write_sequence(epoch),
                      cipher_state,
                      m_rng);
 
-   m_output_fn(m_writebuf.data(), m_writebuf.size());
+   callbacks().tls_emit_data(m_writebuf.data(), m_writebuf.size());
    }
 
 void Channel::send_record_array(u16bit epoch, byte type, const byte input[], size_t length)
@@ -454,10 +502,11 @@ void Channel::send_record_array(u16bit epoch, byte type, const byte input[], siz
       return;
 
    /*
-   * If using CBC mode without an explicit IV (SSL v3 or TLS v1.0),
-   * send a single byte of plaintext to randomize the (implicit) IV of
-   * the following main block. If using a stream cipher, or TLS v1.1
-   * or higher, this isn't necessary.
+   * In versions without an explicit IV field (only TLS v1.0 now that
+   * SSLv3 has been removed) send a single byte record first to randomize
+   * the following (implicit) IV of the following record.
+   *
+   * This isn't needed in TLS v1.1 or higher.
    *
    * An empty record also works but apparently some implementations do
    * not like this (https://bugzilla.mozilla.org/show_bug.cgi?id=665814)
@@ -467,7 +516,7 @@ void Channel::send_record_array(u16bit epoch, byte type, const byte input[], siz
 
    auto cipher_state = write_cipher_state_epoch(epoch);
 
-   if(type == APPLICATION_DATA && cipher_state->cbc_without_explicit_iv())
+   if(type == APPLICATION_DATA && m_active_state->version().supports_explicit_cbc_ivs() == false)
       {
       write_record(cipher_state.get(), epoch, type, input, 1);
       input += 1;

@@ -6,6 +6,11 @@ dependencies:
     - g++ --version
     - clang++ --version
 
+general:
+  branches:
+    only:
+      - master
+
 test:
   override:
     - runall() { for f in "$@"; do bash $f; done }; runall:

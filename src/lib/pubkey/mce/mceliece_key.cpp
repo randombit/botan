@@ -15,7 +15,6 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/code_based_util.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/pk_utils.h>
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 
@@ -352,10 +351,27 @@ class MCE_KEM_Decryptor : public PK_Ops::KEM_Decryption_with_KDF
       const McEliece_PrivateKey& m_key;
    };
 
-BOTAN_REGISTER_PK_KEM_ENCRYPTION_OP("McEliece", MCE_KEM_Encryptor);
-BOTAN_REGISTER_PK_KEM_DECRYPTION_OP("McEliece", MCE_KEM_Decryptor);
-
 }
+
+std::unique_ptr<PK_Ops::KEM_Encryption>
+McEliece_PublicKey::create_kem_encryption_op(RandomNumberGenerator& /*rng*/,
+                                             const std::string& params,
+                                             const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::KEM_Encryption>(new MCE_KEM_Encryptor(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
+std::unique_ptr<PK_Ops::KEM_Decryption>
+McEliece_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& /*rng*/,
+                                              const std::string& params,
+                                              const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::KEM_Decryption>(new MCE_KEM_Decryptor(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
 
 }
 

@@ -1,6 +1,0 @@
-define XTEA_SIMD 20131128
-
-<requires>
-xtea
-simd
-</requires>

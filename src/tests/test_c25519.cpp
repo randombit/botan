@@ -83,8 +83,8 @@ class Curve25519_Roundtrip_Test : public Test
 
             if(a_pub_key && b_pub_key)
                {
-               Botan::PK_Key_Agreement a_ka(*a_priv, "KDF2(SHA-256)");
-               Botan::PK_Key_Agreement b_ka(*b_priv, "KDF2(SHA-256)");
+               Botan::PK_Key_Agreement a_ka(*a_priv, Test::rng(), "KDF2(SHA-256)");
+               Botan::PK_Key_Agreement b_ka(*b_priv, Test::rng(), "KDF2(SHA-256)");
 
                const std::string context = "shared context value";
                Botan::SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value(), context);

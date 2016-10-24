@@ -9,7 +9,7 @@
 #define BOTAN_TLS_SESSION_MANAGER_H__
 
 #include <botan/tls_session.h>
-#include <mutex>
+#include <botan/mutex.h>
 #include <chrono>
 #include <map>
 
@@ -109,6 +109,8 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
    {
    public:
       /**
+      * @param rng a RNG used for generating session key and for
+      *        session encryption
       * @param max_sessions a hint on the maximum number of sessions
       *        to keep in memory at any one time. (If zero, don't cap)
       * @param session_lifetime sessions are expired after this many
@@ -138,7 +140,7 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       bool load_from_session_str(const std::string& session_str,
                                  Session& session);
 
-      std::mutex m_mutex;
+      mutex_type m_mutex;
 
       size_t m_max_sessions;
 

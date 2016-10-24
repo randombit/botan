@@ -21,6 +21,7 @@
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/x509_key.h>
+#include <botan/pk_algs.h>
 #include <cstring>
 #include <memory>
 
@@ -287,7 +288,7 @@ int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
 
 int botan_rng_reseed(botan_rng_t rng, size_t bits)
    {
-   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed(bits); });
+   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed_from_rng(Botan::system_rng(), bits); });
    }
 
 int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)
@@ -458,7 +459,7 @@ int botan_cipher_start(botan_cipher_t cipher_obj,
    try
       {
       Botan::Cipher_Mode& cipher = safe_get(cipher_obj);
-      BOTAN_ASSERT(cipher.start(nonce, nonce_len).empty(), "Ciphers have no prefix");
+      cipher.start(nonce, nonce_len);
       cipher_obj->m_buf.reserve(cipher.update_granularity());
       return 0;
       }
@@ -730,6 +731,36 @@ int botan_bcrypt_is_valid(const char* pass, const char* hash)
    return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
+int botan_privkey_create(botan_privkey_t* key_obj,
+                         const char* algo_name,
+                         const char* algo_params,
+                         botan_rng_t rng_obj)
+   {
+   try
+      {
+      if(key_obj == nullptr || rng_obj == nullptr)
+         return -1;
+      if(algo_name == nullptr)
+         algo_name = "RSA";
+      if(algo_params == nullptr)
+         algo_params = "";
+
+      *key_obj = nullptr;
+
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+      std::unique_ptr<Botan::Private_Key> key(
+         Botan::create_private_key(algo_name, rng, algo_params));
+      *key_obj = new botan_privkey_struct(key.release());
+      return 0;
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
+   }
+
 int botan_privkey_create_rsa(botan_privkey_t* key_obj, botan_rng_t rng_obj, size_t n_bits)
    {
    try
@@ -985,7 +1016,7 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op,
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
-      std::unique_ptr<Botan::PK_Encryptor> pk(new Botan::PK_Encryptor_EME(safe_get(key_obj), padding));
+      std::unique_ptr<Botan::PK_Encryptor> pk(new Botan::PK_Encryptor_EME(safe_get(key_obj), Botan::system_rng(), padding));
       *op = new botan_pk_op_encrypt_struct(pk.release());
       return 0;
       }
@@ -1030,7 +1061,7 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
-      std::unique_ptr<Botan::PK_Decryptor> pk(new Botan::PK_Decryptor_EME(safe_get(key_obj), padding));
+      std::unique_ptr<Botan::PK_Decryptor> pk(new Botan::PK_Decryptor_EME(safe_get(key_obj), Botan::system_rng(), padding));
       *op = new botan_pk_op_decrypt_struct(pk.release());
       return 0;
       }
@@ -1074,7 +1105,7 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
-      std::unique_ptr<Botan::PK_Signer> pk(new Botan::PK_Signer(safe_get(key_obj), hash));
+      std::unique_ptr<Botan::PK_Signer> pk(new Botan::PK_Signer(safe_get(key_obj),Botan::system_rng(),  hash));
       *op = new botan_pk_op_sign_struct(pk.release());
       return 0;
       }
@@ -1165,7 +1196,7 @@ int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op,
       if(flags != 0)
          return BOTAN_FFI_ERROR_BAD_FLAG;
 
-      std::unique_ptr<Botan::PK_Key_Agreement> pk(new Botan::PK_Key_Agreement(safe_get(key_obj), kdf));
+      std::unique_ptr<Botan::PK_Key_Agreement> pk(new Botan::PK_Key_Agreement(safe_get(key_obj), Botan::system_rng(), kdf));
       *op = new botan_pk_op_ka_struct(pk.release());
       return 0;
       }
@@ -1211,6 +1242,7 @@ int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path
       if(!cert_obj || !cert_path)
          return -1;
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       std::unique_ptr<Botan::X509_Certificate> c(new Botan::X509_Certificate(cert_path));
 
       if(c)
@@ -1218,6 +1250,9 @@ int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path
          *cert_obj = new botan_x509_cert_struct(c.release());
          return 0;
          }
+#else
+      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
       }
    catch(std::exception& e)
       {

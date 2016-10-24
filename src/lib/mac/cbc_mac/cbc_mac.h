@@ -30,11 +30,9 @@ class BOTAN_DLL CBC_MAC final : public MessageAuthenticationCode
          }
 
       /**
-      * @param cipher the underlying block cipher to use
+      * @param cipher the block cipher to use
       */
       explicit CBC_MAC(BlockCipher* cipher);
-
-      static CBC_MAC* make(const Spec& spec);
    private:
       void add_data(const byte[], size_t) override;
       void final_result(byte[]) override;

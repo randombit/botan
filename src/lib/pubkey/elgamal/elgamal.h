@@ -23,12 +23,28 @@ class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
 
       size_t max_input_bits() const override { return (group_p().bits() - 1); }
 
+      /**
+      * Load a public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits X.509 subject public key info structure
+      */
       ElGamal_PublicKey(const AlgorithmIdentifier& alg_id,
                         const secure_vector<byte>& key_bits) :
          DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
          {}
 
+      /**
+      * Create a public key.
+      * @param group the underlying DL group
+      * @param y the public value y = g^x mod p
+      */
       ElGamal_PublicKey(const DL_Group& group, const BigInt& y);
+
+      std::unique_ptr<PK_Ops::Encryption>
+         create_encryption_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const override;
+
    protected:
       ElGamal_PublicKey() {}
    };
@@ -42,13 +58,30 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
    public:
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 
+      /**
+      * Load a private key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits PKCS #8 structure
+      * @param rng the RNG to use
+      */
       ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
                          const secure_vector<byte>& key_bits,
                          RandomNumberGenerator& rng);
 
+      /**
+      * Create a private key.
+      * @param rng random number generator to use
+      * @param group the group to be used in the key
+      * @param priv_key the key's secret value (or if zero, generate a new key)
+      */
       ElGamal_PrivateKey(RandomNumberGenerator& rng,
                          const DL_Group& group,
                          const BigInt& priv_key = 0);
+
+      std::unique_ptr<PK_Ops::Decryption>
+         create_decryption_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const override;
    };
 
 }

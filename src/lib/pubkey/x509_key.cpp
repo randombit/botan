@@ -10,7 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/pem.h>
 #include <botan/alg_id.h>
-#include <botan/internal/pk_algs.h>
+#include <botan/pk_algs.h>
 
 namespace Botan {
 
@@ -70,7 +70,7 @@ Public_Key* load_key(DataSource& source)
       if(key_bits.empty())
          throw Decoding_Error("X.509 public key decoding failed");
 
-      return make_public_key(alg_id, key_bits);
+      return load_public_key(alg_id, key_bits).release();
       }
    catch(Decoding_Error& e)
       {
@@ -78,6 +78,7 @@ Public_Key* load_key(DataSource& source)
       }
    }
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /*
 * Extract a public key and return it
 */
@@ -86,6 +87,7 @@ Public_Key* load_key(const std::string& fsname)
    DataSource_Stream source(fsname, true);
    return X509::load_key(source);
    }
+#endif
 
 /*
 * Extract a public key and return it

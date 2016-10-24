@@ -4,7 +4,7 @@
 Configuration program for botan
 
 (C) 2009,2010,2011,2012,2013,2014,2015 Jack Lloyd
-(C) 2015 Simon Warta (Kullo GmbH)
+(C) 2015,2016 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
 
@@ -29,7 +29,6 @@ import shutil
 import string
 import subprocess
 import logging
-import getpass
 import time
 import errno
 import optparse
@@ -201,14 +200,6 @@ class BuildConfigurationInformation(object):
     def pkg_config_file(self):
         return 'botan-%d.%d.pc' % (self.version_major, self.version_minor)
 
-    def username(self):
-        return getpass.getuser()
-
-    def hostname(self):
-        return platform.node()
-
-    def timestamp(self):
-        return time.ctime()
 
 """
 Handle command line options
@@ -298,11 +289,15 @@ def process_command_line(args):
 
     build_group.add_option('--gen-amalgamation', dest='gen_amalgamation',
                            default=False, action='store_true',
-                           help='generate amalgamation files')
+                           help='generate amalgamation files and build without amalgamation (removed)')
 
     build_group.add_option('--via-amalgamation', dest='via_amalgamation',
                            default=False, action='store_true',
-                           help='build via amalgamation')
+                           help='build via amalgamation (deprecated, use --amalgamation)')
+
+    build_group.add_option('--amalgamation', dest='amalgamation',
+                           default=False, action='store_true',
+                           help='generate amalgamation files and build via amalgamation')
 
     build_group.add_option('--single-amalgamation-file',
                            default=False, action='store_true',
@@ -486,6 +481,8 @@ def process_command_line(args):
 Generic lexer function for info.txt and src/build-data files
 """
 def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
+
+    to_obj.infofile = infofile
 
     # Format as a nameable Python variable
     def py_var(group):
@@ -727,7 +724,7 @@ class ModuleInfo(object):
         all_deps = [s.split('|') for s in self.dependencies()]
 
         for missing in [s for s in flatten(all_deps) if s not in modules]:
-            logging.warn("Module '%s', dep of '%s', does not exist" % (
+            logging.error("Module '%s', dep of '%s', does not exist" % (
                 missing, self.basename))
 
     def __cmp__(self, other):
@@ -741,6 +738,19 @@ class ModulePolicyInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
                       ['required', 'if_available', 'prohibited'], {})
+
+    def cross_check(self, modules):
+
+        def check(tp, lst):
+            for mod in lst:
+                if mod not in modules:
+                    logging.error("Module policy %s includes non-existent module %s in <%s>" % (
+                        self.infofile, mod, tp))
+
+        check('required', self.required)
+        check('if_available', self.if_available)
+        check('prohibited', self.prohibited)
+
 
 class ArchInfo(object):
     def __init__(self, infofile):
@@ -847,7 +857,6 @@ class CompilerInfo(object):
         self.mach_abi_linking     = force_to_dict(self.mach_abi_linking)
         self.isa_flags            = force_to_dict(self.isa_flags)
 
-        self.infofile = infofile
         self.mach_opt_flags = {}
 
         while self.mach_opt != []:
@@ -1207,6 +1216,7 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     for t in ['lib', 'cli', 'test']:
         obj_key = '%s_objs' % (t)
         src_list, src_dir = build_config.src_info(t)
+        src_list.sort()
         var[obj_key] = makefile_list(objectfile_list(src_list, src_dir))
         build_key = '%s_build_cmds' % (t)
         var[build_key] = '\n'.join(build_commands(src_list, src_dir, t.upper()))
@@ -1282,9 +1292,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'src_dir': build_config.src_dir,
         'doc_dir': build_config.doc_dir,
 
-        'timestamp': build_config.timestamp(),
-        'user':      build_config.username(),
-        'hostname':  build_config.hostname(),
         'command_line': ' '.join(sys.argv),
         'local_config': slurp_file(options.local_config),
         'makefile_style': options.makefile_style or cc.makefile_style,
@@ -1336,10 +1343,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'shared_flags': cc.gen_shared_flags(options),
         'visibility_attribute': cc.gen_visibility_attribute(options),
-
-        # 'botan' or 'botan-1.11'. Used in Makefile and install script
-        # This can be made consistent over all platforms in the future
-        'libname': 'botan' if options.os == 'windows' else 'botan-%d.%d' % (build_config.version_major, build_config.version_minor),
 
         'lib_link_cmd':  cc.so_link_command_for(osinfo.basename, options),
         'cli_link_cmd':  cc.binary_link_command_for(osinfo.basename, options),
@@ -1404,6 +1407,15 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     if options.os != 'windows':
         vars['botan_pkgconfig'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
                                                                      build_config.pkg_config_file()))
+
+        # 'botan' or 'botan-1.11'. Used in Makefile and install script
+        # This can be made consistent over all platforms in the future    
+        vars['libname'] = 'botan-%d.%d' % (build_config.version_major, build_config.version_minor)
+    else:
+        if options.with_debug_info:
+            vars['libname'] = 'botand'
+        else:
+            vars['libname'] = 'botan'
 
     vars["header_in"] = process_template('src/build-data/makefile/header.in', vars)
 
@@ -1772,6 +1784,16 @@ def generate_amalgamation(build_config, options):
 
         if tgt not in botan_amalg_files:
             botan_amalg_files[tgt] = open_amalg_file(tgt)
+
+            if tgt != '':
+                for isa in mod.need_isa:
+                    if isa == 'aesni':
+                        isa = "aes,ssse3,pclmul"
+                    elif isa == 'rdrand':
+                        isa = 'rdrnd'
+
+                    botan_amalg_files[tgt].write('#if defined(__GNUG__)\n#pragma GCC target ("%s")\n#endif\n' % (isa))
+
         if tgt not in headers_written:
             headers_written[tgt] = headers_written_in_h_files.copy()
 
@@ -1848,7 +1870,7 @@ def main(argv = None):
 
     logging.getLogger().setLevel(log_level())
 
-    logging.debug('%s invoked with options "%s"' % (
+    logging.info('%s invoked with options "%s"' % (
         argv[0], ' '.join(argv[1:])))
 
     logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
@@ -1893,6 +1915,9 @@ def main(argv = None):
     info_cc   = load_build_data('compiler info', 'cc', CompilerInfo)
 
     module_policies = load_build_data('module policy', 'policy', ModulePolicyInfo)
+
+    for policy in module_policies.values():
+        policy.cross_check(modules)
 
     if options.list_modules:
         for k in sorted(modules.keys()):
@@ -1991,8 +2016,12 @@ def main(argv = None):
             logging.info('Found sphinx-build (use --without-sphinx to disable)')
             options.with_sphinx = True
 
+    if options.gen_amalgamation:
+        raise Exception("--gen-amalgamation was removed. Migrate to --amalgamation.")
+
     if options.via_amalgamation:
-        options.gen_amalgamation = True
+        logging.warn("--via-amalgamation is deprecated. Use --amalgamation.")
+        options.amalgamation = True
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         raise Exception('Botan does not support building as shared library on the target os. '
@@ -2102,11 +2131,10 @@ def main(argv = None):
     with open(os.path.join(build_config.build_dir, 'build_config.py'), 'w') as f:
         f.write(str(template_vars))
 
-    if options.gen_amalgamation:
-        fs = generate_amalgamation(build_config, options)
-        if options.via_amalgamation:
-            build_config.build_sources = fs
-            gen_makefile_lists(template_vars, build_config, options, using_mods, cc, arch, osinfo)
+    if options.amalgamation:
+        amalgamation_cpp_files = generate_amalgamation(build_config, options)
+        build_config.build_sources = amalgamation_cpp_files
+        gen_makefile_lists(template_vars, build_config, options, using_mods, cc, arch, osinfo)
 
     write_template(template_vars['makefile_path'], makefile_template)
 

@@ -1,6 +1,8 @@
 /*
 * TLS Extensions
 * (C) 2011,2012,2016 Jack Lloyd
+*     2016 Juraj Somorovsky
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -34,9 +36,9 @@ enum Handshake_Extension_Type {
    TLSEXT_SRP_IDENTIFIER         = 12,
    TLSEXT_SIGNATURE_ALGORITHMS   = 13,
    TLSEXT_USE_SRTP               = 14,
-   TLSEXT_HEARTBEAT_SUPPORT      = 15,
    TLSEXT_ALPN                   = 16,
 
+   TLSEXT_ENCRYPT_THEN_MAC       = 22,
    TLSEXT_EXTENDED_MASTER_SECRET = 23,
 
    TLSEXT_SESSION_TICKET         = 35,
@@ -256,6 +258,38 @@ class Supported_Elliptic_Curves final : public Extension
    };
 
 /**
+* Supported Point Formats Extension (RFC 4492)
+*/
+class Supported_Point_Formats final : public Extension
+   {
+   public:
+      enum ECPointFormat : byte {
+         UNCOMPRESSED = 0,
+         ANSIX962_COMPRESSED_PRIME = 1,
+         ANSIX962_COMPRESSED_CHAR2 = 2, // don't support these curves
+      };
+
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_EC_POINT_FORMATS; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<byte> serialize() const override;
+
+      explicit Supported_Point_Formats() : m_prefers_compressed(true) {}
+
+      Supported_Point_Formats(TLS_Data_Reader& reader,
+                              u16bit extension_size);
+
+      bool empty() const override { return false; }
+
+      bool prefers_compressed() { return m_prefers_compressed; }
+
+   private:
+      bool m_prefers_compressed = false;
+   };
+
+/**
 * Signature Algorithms Extension for TLS 1.2 (RFC 5246)
 */
 class Signature_Algorithms final : public Extension
@@ -272,8 +306,9 @@ class Signature_Algorithms final : public Extension
       static std::string sig_algo_name(byte code);
       static byte sig_algo_code(const std::string& name);
 
-      std::vector<std::pair<std::string, std::string> >
-         supported_signature_algorthms() const
+      // [(hash,sig),(hash,sig),...]
+      const std::vector<std::pair<std::string, std::string>>&
+      supported_signature_algorthms() const
          {
          return m_supported_algos;
          }
@@ -285,13 +320,13 @@ class Signature_Algorithms final : public Extension
       Signature_Algorithms(const std::vector<std::string>& hashes,
                            const std::vector<std::string>& sig_algos);
 
-      explicit Signature_Algorithms(const std::vector<std::pair<std::string, std::string> >& algos) :
+      explicit Signature_Algorithms(const std::vector<std::pair<std::string, std::string>>& algos) :
          m_supported_algos(algos) {}
 
       Signature_Algorithms(TLS_Data_Reader& reader,
                            u16bit extension_size);
    private:
-      std::vector<std::pair<std::string, std::string> > m_supported_algos;
+      std::vector<std::pair<std::string, std::string>> m_supported_algos;
    };
 
 /**
@@ -341,9 +376,29 @@ class Extended_Master_Secret final : public Extension
    };
 
 /**
+* Encrypt-then-MAC Extension (RFC 7366)
+*/
+class Encrypt_then_MAC final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_ENCRYPT_THEN_MAC; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<byte> serialize() const override;
+
+      bool empty() const override { return false; }
+
+      Encrypt_then_MAC() {}
+
+      Encrypt_then_MAC(TLS_Data_Reader& reader, u16bit extension_size);
+   };
+
+/**
 * Represents a block of extensions in a hello message
 */
-class Extensions
+class BOTAN_DLL Extensions
    {
    public:
       std::set<Handshake_Extension_Type> extension_types() const;

@@ -5,9 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/eckcdsa.h>
+#include <botan/internal/pk_ops_impl.h>
 #include <botan/keypair.h>
+#include <botan/reducer.h>
 #include <botan/emsa.h>
 #include <botan/hash.h>
 
@@ -100,10 +101,9 @@ ECKCDSA_Signature_Operation::raw_sign(const byte msg[], size_t,
    const BigInt s = m_mod_order.multiply(m_x, k - w);
    BOTAN_ASSERT(s != 0, "invalid s");
 
-   secure_vector<byte> signature(r.bytes() + s.bytes());
-   r.binary_encode(signature.data());
-   s.binary_encode(&signature[r.bytes()]);
-   return signature;
+   secure_vector<byte> output = BigInt::encode_1363(r, c.size());
+   output += BigInt::encode_1363(s, m_mod_order.get_modulus().bytes());
+   return output;
    }
 
 /**
@@ -193,9 +193,25 @@ bool ECKCDSA_Verification_Operation::verify(const byte msg[], size_t,
    return (v == r);
    }
 
-BOTAN_REGISTER_PK_SIGNATURE_OP("ECKCDSA", ECKCDSA_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("ECKCDSA", ECKCDSA_Verification_Operation);
-
 }
+
+std::unique_ptr<PK_Ops::Verification>
+ECKCDSA_PublicKey::create_verification_op(const std::string& params,
+                                         const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Verification>(new ECKCDSA_Verification_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
+std::unique_ptr<PK_Ops::Signature>
+ECKCDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                        const std::string& params,
+                                        const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Signature>(new ECKCDSA_Signature_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
 
 }

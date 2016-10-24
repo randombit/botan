@@ -38,7 +38,6 @@ Library Layout
 * ``entropy`` has various entropy sources
 * ``asn1`` is the DER encoder/decoder
 * ``cert/x509`` is X.509 certificates, PKCS #10 requests, OCSP
-* ``cert/cvc`` is Card Verifiable Certificates (ePassport credentials)
 * ``tls`` contains the TLS implementation
 * ``filters`` is a filter/pipe API for data transforms
 * ``compression`` has the compression wrappers (zlib, bzip2, lzma)
@@ -113,9 +112,11 @@ Sending patches
 ========================================
 
 All contributions should be submitted as pull requests via GitHub
-(https://github.com/randombit/botan). If you are planning a large change email
-the mailing list or open a discussion ticket on github before starting out to
-make sure you are on the right path.
+(https://github.com/randombit/botan). If you are planning a large
+change email the mailing list or open a discussion ticket on github
+before starting out to make sure you are on the right path. And once
+you have something written, free to open a [WIP] PR for early review
+and comment.
 
 If possible please sign your git commits using a PGP key.
 See https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work for
@@ -136,6 +137,21 @@ accept once they've passed code review.
 Also, try building and testing it on whatever hardware you have handy,
 especially non-x86 platforms, or especially C++11 compilers other than the
 regularly tested GCC, Clang, and Visual Studio compilers.
+
+Git Usage
+========================================
+
+Do *NOT* merge ``master`` into your topic branch, this creates
+needless commits and noise in history. Instead, as needed, rebase your
+branch against master (``git rebase -i master``) and force push the
+branch to update the PR. If the GitHub PR page does not report any
+merge conflicts and nobody asks you to rebase, you don't need to
+rebase.
+
+Try to keep your history clean and use rebase to squash your commits
+as needed. If your diff is less than roughly 100 lines, it should
+probably be a single commit. Only split commits as needed to help with
+review/understanding of the change.
 
 External Dependencies
 ========================================

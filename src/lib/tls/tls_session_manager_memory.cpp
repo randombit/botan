@@ -57,7 +57,7 @@ bool Session_Manager_In_Memory::load_from_session_str(
 bool Session_Manager_In_Memory::load_from_session_id(
    const std::vector<byte>& session_id, Session& session)
    {
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
 
    return load_from_session_str(hex_encode(session_id), session);
    }
@@ -65,7 +65,7 @@ bool Session_Manager_In_Memory::load_from_session_id(
 bool Session_Manager_In_Memory::load_from_server_info(
    const Server_Information& info, Session& session)
    {
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
 
    auto i = m_info_sessions.find(info);
 
@@ -87,7 +87,7 @@ bool Session_Manager_In_Memory::load_from_server_info(
 void Session_Manager_In_Memory::remove_entry(
    const std::vector<byte>& session_id)
    {
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
 
    auto i = m_sessions.find(hex_encode(session_id));
 
@@ -106,7 +106,7 @@ size_t Session_Manager_In_Memory::remove_all()
 
 void Session_Manager_In_Memory::save(const Session& session)
    {
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
 
    if(m_max_sessions != 0)
       {

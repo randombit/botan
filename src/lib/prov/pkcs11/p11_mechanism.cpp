@@ -219,8 +219,18 @@ MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(const std::string& has
    return MechanismWrapper(mechanism_type->second);
    }
 
-MechanismWrapper MechanismWrapper::create_ecdh_mechanism(const std::string& kdf_name, bool use_cofactor)
+MechanismWrapper MechanismWrapper::create_ecdh_mechanism(const std::string& params)
    {
+   std::vector<std::string> param_parts = split_on(params, ',');
+
+   if(param_parts.empty() || param_parts.size() > 2)
+      throw Invalid_Argument("PKCS #11 ECDH key derivation bad params " + params);
+
+   const bool use_cofactor =
+      (param_parts[0] == "Cofactor") ||
+      (param_parts.size() == 2 && param_parts[1] == "Cofactor");
+
+   std::string kdf_name = (param_parts[0] == "Cofactor" ? param_parts[1] : param_parts[0]);
    std::string hash = kdf_name;
 
    if(kdf_name != "Raw")

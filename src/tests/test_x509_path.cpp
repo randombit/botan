@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
   #include <botan/x509path.h>
+  #include <botan/calendar.h>
   #include <botan/internal/filesystem.h>
 #endif
 
@@ -23,7 +24,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 std::map<std::string, std::string> read_results(const std::string& results_file)
    {
@@ -70,6 +71,8 @@ class X509test_Path_Validation_Tests : public Test
          Botan::Certificate_Store_In_Memory trusted;
          trusted.add_certificate(root);
 
+         auto validation_time = Botan::calendar_point(2016,10,21,4,20,0).to_std_timepoint();
+
          for(auto i = expected.begin(); i != expected.end(); ++i)
             {
             Test::Result result("X509test path validation");
@@ -84,7 +87,8 @@ class X509test_Path_Validation_Tests : public Test
 
             Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
                certs, default_restrictions, trusted,
-               "www.tls.test", Botan::Usage_Type::TLS_SERVER_AUTH);
+               "www.tls.test", Botan::Usage_Type::TLS_SERVER_AUTH,
+               validation_time);
 
             if(path_result.successful_validation() && path_result.trust_root() != root)
                path_result = Botan::Path_Validation_Result(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);

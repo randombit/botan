@@ -29,9 +29,19 @@ namespace Botan {
 class BOTAN_DLL EC_PublicKey : public virtual Public_Key
    {
    public:
+      /**
+      * Create a public key.
+      * @param dom_par EC domain parameters
+      * @param pub_point public point on the curve
+      */
       EC_PublicKey(const EC_Group& dom_par,
                    const PointGFp& pub_point);
 
+      /**
+      * Load a public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits PKCS #8 structure
+      */
       EC_PublicKey(const AlgorithmIdentifier& alg_id,
                    const secure_vector<byte>& key_bits);
 

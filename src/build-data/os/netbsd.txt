@@ -8,4 +8,6 @@ gmtime_r
 dlopen
 readdir
 timegm
+threads
+filesystem
 </target_features>

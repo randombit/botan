@@ -27,15 +27,32 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
 
       std::vector<byte> x509_subject_public_key() const override;
 
-      std::vector<byte> public_value() const { return unlock(m_public); }
+      std::vector<byte> public_value() const { return m_public; }
 
+      /**
+      * Create a Curve25519 Public Key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits X.509 subject public key info structure
+      */
       Curve25519_PublicKey(const AlgorithmIdentifier& alg_id,
                            const secure_vector<byte>& key_bits);
 
-      explicit Curve25519_PublicKey(const secure_vector<byte>& pub) : m_public(pub) {}
+      /**
+      * Create a Curve25519 Public Key.
+      * @param pub 32-byte raw public key
+      */
+      explicit Curve25519_PublicKey(const std::vector<byte>& pub) : m_public(pub) {}
+
+      /**
+      * Create a Curve25519 Public Key.
+      * @param pub 32-byte raw public key
+      */
+      explicit Curve25519_PublicKey(const secure_vector<byte>& pub) :
+         m_public(pub.begin(), pub.end()) {}
+
    protected:
       Curve25519_PublicKey() {}
-      secure_vector<byte> m_public;
+      std::vector<byte> m_public;
    };
 
 class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
@@ -43,12 +60,26 @@ class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
                                         public virtual PK_Key_Agreement_Key
    {
    public:
+      /**
+      * Construct a private key from the specified parameters.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits PKCS #8 structure
+      * @param rng the RNG to use
+      */
       Curve25519_PrivateKey(const AlgorithmIdentifier& alg_id,
                             const secure_vector<byte>& key_bits,
                             RandomNumberGenerator& rng);
 
+      /**
+      * Generate a private key.
+      * @param rng the RNG to use
+      */
       explicit Curve25519_PrivateKey(RandomNumberGenerator& rng);
 
+      /**
+      * Construct a private key from the specified parameters.
+      * @param secret_key DER encoded private key bits
+      */
       explicit Curve25519_PrivateKey(const secure_vector<byte>& secret_key);
 
       std::vector<byte> public_value() const override { return Curve25519_PublicKey::public_value(); }
@@ -60,6 +91,12 @@ class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
       secure_vector<byte> pkcs8_private_key() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
+
+      std::unique_ptr<PK_Ops::Key_Agreement>
+         create_key_agreement_op(RandomNumberGenerator& rng,
+                                 const std::string& params,
+                                 const std::string& provider) const override;
+
    private:
       secure_vector<byte> m_private;
    };

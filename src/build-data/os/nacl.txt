@@ -1,4 +1,5 @@
 
 <target_features>
 gettimeofday
+threads
 </target_features>

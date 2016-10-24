@@ -29,14 +29,20 @@ class BOTAN_DLL Exception : public std::exception
    };
 
 /**
-* An invalid argument which caused
+* An invalid argument
 */
 class BOTAN_DLL Invalid_Argument : public Exception
    {
    public:
       explicit Invalid_Argument(const std::string& msg) :
          Exception("Invalid argument", msg) {}
-   };
+
+      explicit Invalid_Argument(const std::string& msg, const std::string& where) :
+         Exception("Invalid argument", msg + " in " + where) {}
+};
+
+#define BOTAN_ARG_CHECK(expr) \
+   do { if(!(expr)) throw Invalid_Argument(#expr, BOTAN_CURRENT_FUNCTION); } while(0)
 
 /**
 * Unsupported_Argument Exception
@@ -66,6 +72,13 @@ struct BOTAN_DLL Lookup_Error : public Exception
    {
    explicit Lookup_Error(const std::string& err) :
       Exception(err)
+      {}
+
+   Lookup_Error(const std::string& type,
+                const std::string& algo,
+                const std::string& provider) :
+      Exception("Unavailable " + type + " " + algo +
+                (provider.empty() ? std::string("") : (" for provider " + provider)))
       {}
    };
 
@@ -139,6 +152,16 @@ struct BOTAN_DLL No_Provider_Found : public Exception
    explicit No_Provider_Found(const std::string& name) :
       Exception("Could not find any provider for algorithm named \"" + name + "\"")
       {}
+   };
+
+/**
+* Provider_Not_Found is thrown when a specific provider was requested
+* but that provider is not available.
+*/
+struct BOTAN_DLL Provider_Not_Found : public Lookup_Error
+   {
+   Provider_Not_Found(const std::string& algo, const std::string& provider) :
+      Lookup_Error("Could not find provider '" + provider + "' for " + algo) {}
    };
 
 /**

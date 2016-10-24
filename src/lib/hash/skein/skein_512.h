@@ -32,8 +32,6 @@ class BOTAN_DLL Skein_512 final : public HashFunction
       size_t hash_block_size() const override { return 64; }
       size_t output_length() const override { return m_output_bits / 8; }
 
-      static Skein_512* make(const Spec& spec);
-
       HashFunction* clone() const override;
       std::string name() const override;
       void clear() override;

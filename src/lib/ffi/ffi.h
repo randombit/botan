@@ -295,9 +295,12 @@ BOTAN_DLL int botan_bcrypt_is_valid(const char* pass, const char* hash);
 */
 typedef struct botan_privkey_struct* botan_privkey_t;
 
+BOTAN_DLL int botan_privkey_create(botan_privkey_t* key,
+                                   const char* algo_name,
+                                   const char* algo_params,
+                                   botan_rng_t rng);
+
 BOTAN_DLL int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng, size_t n_bits);
-//BOTAN_DLL int botan_privkey_create_dsa(botan_privkey_t* key, botan_rng_t rng, size_t p_bits, size_t q_bits);
-//BOTAN_DLL int botan_privkey_create_dh(botan_privkey_t* key, botan_rng_t rng, size_t p_bits);
 BOTAN_DLL int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng, const char* params);
 BOTAN_DLL int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, const char* params);
 BOTAN_DLL int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t);

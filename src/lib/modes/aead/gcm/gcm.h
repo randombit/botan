@@ -36,6 +36,8 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
       size_t tag_size() const override { return m_tag_size; }
 
       void clear() override;
+
+      std::string provider() const override;
    protected:
       GCM_Mode(BlockCipher* cipher, size_t tag_size);
 
@@ -47,7 +49,7 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
       std::unique_ptr<StreamCipher> m_ctr;
       std::unique_ptr<GHASH> m_ghash;
    private:
-      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const byte nonce[], size_t nonce_len) override;
 
       void key_schedule(const byte key[], size_t length) override;
    };
@@ -70,7 +72,7 @@ class BOTAN_DLL GCM_Encryption final : public GCM_Mode
 
       size_t minimum_final_size() const override { return 0; }
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    };
@@ -96,7 +98,7 @@ class BOTAN_DLL GCM_Decryption final : public GCM_Mode
 
       size_t minimum_final_size() const override { return tag_size(); }
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    };

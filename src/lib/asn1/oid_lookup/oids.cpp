@@ -7,7 +7,7 @@
 
 #include <botan/oids.h>
 #include <botan/parsing.h>
-#include <mutex>
+#include <botan/mutex.h>
 #include <sstream>
 
 namespace Botan {
@@ -27,7 +27,7 @@ class OID_Map
 
       void add_str2oid(const OID& oid, const std::string& str)
          {
-         std::lock_guard<std::mutex> lock(m_mutex);
+         lock_guard_type<mutex_type> lock(m_mutex);
          auto i = m_str2oid.find(str);
          if(i == m_str2oid.end())
             m_str2oid.insert(std::make_pair(str, oid));
@@ -35,7 +35,7 @@ class OID_Map
 
       void add_oid2str(const OID& oid, const std::string& str)
          {
-         std::lock_guard<std::mutex> lock(m_mutex);
+         lock_guard_type<mutex_type> lock(m_mutex);
          auto i = m_oid2str.find(oid);
          if(i == m_oid2str.end())
             m_oid2str.insert(std::make_pair(oid, str));
@@ -43,7 +43,7 @@ class OID_Map
 
       std::string lookup(const OID& oid)
          {
-         std::lock_guard<std::mutex> lock(m_mutex);
+         lock_guard_type<mutex_type> lock(m_mutex);
 
          auto i = m_oid2str.find(oid);
          if(i != m_oid2str.end())
@@ -54,7 +54,7 @@ class OID_Map
 
       OID lookup(const std::string& str)
          {
-         std::lock_guard<std::mutex> lock(m_mutex);
+         lock_guard_type<mutex_type> lock(m_mutex);
 
          auto i = m_str2oid.find(str);
          if(i != m_str2oid.end())
@@ -72,7 +72,7 @@ class OID_Map
 
       bool have_oid(const std::string& str)
          {
-         std::lock_guard<std::mutex> lock(m_mutex);
+         lock_guard_type<mutex_type> lock(m_mutex);
          return m_str2oid.find(str) != m_str2oid.end();
          }
 
@@ -92,14 +92,14 @@ class OID_Map
          read_cfg(cfg, "builtin");
          }
 
-      std::mutex m_mutex;
+      mutex_type m_mutex;
       std::map<std::string, OID> m_str2oid;
       std::map<OID, std::string> m_oid2str;
    };
 
 void OID_Map::read_cfg(std::istream& cfg, const std::string& source)
    {
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
 
    size_t line = 0;
 

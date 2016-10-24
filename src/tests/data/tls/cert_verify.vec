@@ -1,0 +1,40 @@
+# Tests generated partially with openssl 1.0.2g
+# CertificateVerify message contains the following fields:
+# - SignatureAndHash Algorithm (2 bytes) [only in TLS 1.2]
+# - Certificate length (2 bytes)
+# - Certificate
+
+[cert_verify]
+Buffer = 06010080266481066a8431582157a9a591150d418b63d46154c4cd85bffcfdba8c7f6396f0ceb0402c2142c526a19659d58cd4111bf45f57a56e97d16eeecd350f6e9dc93662e4361053666e5a53c74fe11bd6cf86a9cf7a2488704c5121915820973280ed6afa3e8b79dfb799bddffb52caa2d1a0a895a0e7505d841a882bdd92ec9141
+Protocol = 0303
+Exception = 
+
+Buffer = 008080c920a228dc3f32927fd8026a97fb8474603191a89c49aeeddd1b1caf7f28d6af7b9b7c0bc6b954e909f3d054eb3964d626402b7c932c019111bc854007c90c134d6adce505e5cd60292331f7645fba909017565fc60ee76a5eb6b6a89ab2a3d69be6c0e283ae5a84b1fc367c1a865c35dd8a1c93ac3d538d91a2d5128d8d52
+Protocol = 0302
+Exception = 
+
+Buffer = 0080bb6b1df8c744f961ee3f5334448fac4af0f372763149972b88bec525a3196f87cf0204a50fd516b6808530252d1c6b79414b8b9194b3c5e2958adab5524bc124e16d9f3b05f5bf63c0b184709ce6586a0a4b267280b47576893406c381a401b10bcc5f111b14cd8ce889b5d48fbe47f465cf70bf23b71109f81d4574bbf6f93f
+Protocol = 0301
+Exception  =
+
+Buffer = 0601000100
+Protocol = 0303
+Exception = 
+
+#Incomplete algorithm
+Buffer = 06
+Protocol = 0303
+Exception = Invalid argument Decoding error: Invalid CertificateVerify: Expected 1 bytes remaining, only 0 left
+
+#Incomplete certificate
+Buffer = 0601000500
+Protocol = 0303
+Exception = Invalid argument Decoding error: Invalid CertificateVerify: Expected 5 bytes remaining, only 1 left
+
+Buffer = 000200
+Protocol = 0302
+Exception = Invalid argument Decoding error: Invalid CertificateVerify: Expected 2 bytes remaining, only 1 left
+
+Buffer = 000200
+Protocol = 0301
+Exception = Invalid argument Decoding error: Invalid CertificateVerify: Expected 2 bytes remaining, only 1 left

@@ -49,20 +49,17 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
       */
       OCB_Mode(BlockCipher* cipher, size_t tag_size);
 
-      size_t BS() const { return m_BS; }
-
       // fixme make these private
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<L_computer> m_L;
 
-      size_t m_BS;
       size_t m_block_index = 0;
 
       secure_vector<byte> m_checksum;
       secure_vector<byte> m_offset;
       secure_vector<byte> m_ad_hash;
    private:
-      secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const byte nonce[], size_t nonce_len) override;
 
       void key_schedule(const byte key[], size_t length) override;
 
@@ -88,7 +85,7 @@ class BOTAN_DLL OCB_Encryption final : public OCB_Mode
 
       size_t minimum_final_size() const override { return 0; }
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    private:
@@ -113,7 +110,7 @@ class BOTAN_DLL OCB_Decryption final : public OCB_Mode
 
       size_t minimum_final_size() const override { return tag_size(); }
 
-      void update(secure_vector<byte>& blocks, size_t offset = 0) override;
+      size_t process(uint8_t buf[], size_t size) override;
 
       void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
    private:

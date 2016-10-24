@@ -52,7 +52,7 @@ class Cipher_Mode_Padding_Tests : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("bc-padding", Cipher_Mode_Padding_Tests);
+BOTAN_REGISTER_TEST("bc_pad", Cipher_Mode_Padding_Tests);
 
 #endif
 

@@ -163,7 +163,7 @@ void Salsa20::key_schedule(const byte key[], size_t length)
    }
 
 /*
-* Return the name of this type
+* Set the Salsa IV
 */
 void Salsa20::set_iv(const byte iv[], size_t length)
    {

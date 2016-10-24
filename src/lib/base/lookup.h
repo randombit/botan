@@ -34,6 +34,7 @@ namespace Botan {
 * Block cipher factory method.
 *
 * @param algo_spec the name of the desired block cipher
+* @param provider the provider to use
 * @return pointer to the block cipher object
 */
 BOTAN_DEPRECATED("Use BlockCipher::create")
@@ -63,6 +64,7 @@ inline std::vector<std::string> get_block_cipher_providers(const std::string& al
 * Stream cipher factory method.
 *
 * @param algo_spec the name of the desired stream cipher
+* @param provider the provider to use
 * @return pointer to the stream cipher object
 */
 BOTAN_DEPRECATED("Use StreamCipher::create")
@@ -92,6 +94,7 @@ inline std::vector<std::string> get_stream_cipher_providers(const std::string& a
 * Hash function factory method.
 *
 * @param algo_spec the name of the desired hash function
+* @param provider the provider to use
 * @return pointer to the hash function object
 */
 BOTAN_DEPRECATED("Use HashFunction::create")
@@ -128,6 +131,7 @@ inline std::vector<std::string> get_hash_function_providers(const std::string& a
 * MAC factory method.
 *
 * @param algo_spec the name of the desired MAC
+* @param provider the provider to use
 * @return pointer to the MAC object
 */
 BOTAN_DEPRECATED("MessageAuthenticationCode::create")

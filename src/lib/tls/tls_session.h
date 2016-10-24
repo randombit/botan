@@ -38,7 +38,8 @@ class BOTAN_DLL Session
          m_compression_method(0),
          m_connection_side(static_cast<Connection_Side>(0)),
          m_srtp_profile(0),
-         m_extended_master_secret(false)
+         m_extended_master_secret(false),
+         m_encrypt_then_mac(false)
             {}
 
       /**
@@ -51,6 +52,7 @@ class BOTAN_DLL Session
               byte compression_method,
               Connection_Side side,
               bool supports_extended_master_secret,
+              bool supports_encrypt_then_mac,
               const std::vector<X509_Certificate>& peer_certs,
               const std::vector<byte>& session_ticket,
               const Server_Information& server_info,
@@ -59,11 +61,14 @@ class BOTAN_DLL Session
 
       /**
       * Load a session from DER representation (created by DER_encode)
+      * @param ber DER representation buffer
+      * @param ber_len size of buffer in bytes
       */
       Session(const byte ber[], size_t ber_len);
 
       /**
       * Load a session from PEM representation (created by PEM_encode)
+      * @param pem PEM representation
       */
       explicit Session(const std::string& pem);
 
@@ -157,6 +162,8 @@ class BOTAN_DLL Session
 
       bool supports_extended_master_secret() const { return m_extended_master_secret; }
 
+      bool supports_encrypt_then_mac() const { return m_encrypt_then_mac; }
+
       /**
       * Return the certificate chain of the peer (possibly empty)
       */
@@ -177,10 +184,13 @@ class BOTAN_DLL Session
       */
       const std::vector<byte>& session_ticket() const { return m_session_ticket; }
 
+      /**
+      * @return information about the TLS server
+      */
       const Server_Information& server_info() const { return m_server_info; }
 
    private:
-      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20160103 };
+      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20160812};
 
       std::chrono::system_clock::time_point m_start_time;
 
@@ -194,6 +204,7 @@ class BOTAN_DLL Session
       Connection_Side m_connection_side;
       u16bit m_srtp_profile;
       bool m_extended_master_secret;
+      bool m_encrypt_then_mac;
 
       std::vector<X509_Certificate> m_peer_certs;
       Server_Information m_server_info; // optional

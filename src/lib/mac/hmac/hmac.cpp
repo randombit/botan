@@ -10,16 +10,6 @@
 
 namespace Botan {
 
-HMAC* HMAC::make(const Spec& spec)
-   {
-   if(spec.arg_count() == 1)
-      {
-      if(auto h = HashFunction::create(spec.arg(0)))
-         return new HMAC(h.release());
-      }
-   return nullptr;
-   }
-
 /*
 * Update a HMAC Calculation
 */

@@ -21,6 +21,8 @@ query_perf_counter
 virtual_lock
 rtlsecurezeromemory
 stl_filesystem_msvc
+threads
+filesystem
 </target_features>
 
 <aliases>

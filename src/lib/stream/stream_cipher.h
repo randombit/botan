@@ -9,7 +9,7 @@
 #define BOTAN_STREAM_CIPHER_H__
 
 #include <botan/sym_algo.h>
-#include <botan/scan_name.h>
+#include <string>
 
 namespace Botan {
 
@@ -19,18 +19,32 @@ namespace Botan {
 class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
    {
    public:
-      typedef SCAN_Name Spec;
+      virtual ~StreamCipher() {}
 
       /**
       * Create an instance based on a name
-      * Will return a null pointer if the algo/provider combination cannot
-      * be found. If provider is empty then best available is chosen.
+      * If provider is empty then best available is chosen.
+      * @param algo_spec algorithm name
+      * @param provider provider implementation to use
+      * @return a null pointer if the algo/provider combination cannot be found
       */
-      static std::unique_ptr<StreamCipher> create(const std::string& algo_spec,
-                                                  const std::string& provider = "");
+      static std::unique_ptr<StreamCipher>
+         create(const std::string& algo_spec,
+                const std::string& provider = "");
 
       /**
-      * Returns the list of available providers for this algorithm, empty if not available
+      * Create an instance based on a name
+      * If provider is empty then best available is chosen.
+      * @param algo_spec algorithm name
+      * @param provider provider implementation to use
+      * Throws a Lookup_Error if the algo/provider combination cannot be found
+      */
+      static std::unique_ptr<StreamCipher>
+         create_or_throw(const std::string& algo_spec,
+                         const std::string& provider = "");
+
+      /**
+      * @return list of available providers for this algorithm, empty if not available
       */
       static std::vector<std::string> providers(const std::string& algo_spec);
 
@@ -44,20 +58,36 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
 
       /**
       * Encrypt or decrypt a message
+      * The message is encrypted/decrypted in place.
       * @param buf the plaintext / ciphertext
       * @param len the length of buf in bytes
       */
       void cipher1(byte buf[], size_t len)
          { cipher(buf, buf, len); }
 
+      /**
+      * Encrypt a message
+      * The message is encrypted/decrypted in place.
+      * @param inout the plaintext / ciphertext
+      */
       template<typename Alloc>
          void encipher(std::vector<byte, Alloc>& inout)
          { cipher(inout.data(), inout.data(), inout.size()); }
 
+      /**
+      * Encrypt a message
+      * The message is encrypted in place.
+      * @param inout the plaintext / ciphertext
+      */
       template<typename Alloc>
          void encrypt(std::vector<byte, Alloc>& inout)
          { cipher(inout.data(), inout.data(), inout.size()); }
 
+      /**
+      * Decrypt a message in place
+      * The message is decrypted in place.
+      * @param inout the plaintext / ciphertext
+      */
       template<typename Alloc>
          void decrypt(std::vector<byte, Alloc>& inout)
          { cipher(inout.data(), inout.data(), inout.size()); }
@@ -67,7 +97,7 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
       */
-      virtual void set_iv(const byte[], size_t iv_len) = 0;
+      virtual void set_iv(const byte iv[], size_t iv_len) = 0;
 
       /**
       * @param iv_len the length of the IV in bytes
@@ -76,7 +106,7 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       virtual bool valid_iv_length(size_t iv_len) const { return (iv_len == 0); }
 
       /**
-      * Get a new object representing the same algorithm as *this
+      * @return a new object representing the same algorithm as *this
       */
       virtual StreamCipher* clone() const = 0;
 
@@ -86,8 +116,11 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       */
       virtual void seek(u64bit offset) = 0;
 
-      StreamCipher();
-      virtual ~StreamCipher();
+      /**
+      * @return provider information about this implementation. Default is "base",
+      * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
+      */
+      virtual std::string provider() const { return "base"; }
    };
 
 }

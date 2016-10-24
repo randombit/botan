@@ -30,16 +30,24 @@ class Sign_Cert final : public Command
       void go() override
          {
          Botan::X509_Certificate ca_cert(get_arg("ca_cert"));
+         std::unique_ptr<Botan::PKCS8_PrivateKey> key;
 
-         std::unique_ptr<Botan::PKCS8_PrivateKey> key(
-            Botan::PKCS8::load_key(get_arg("ca_key"),
-                                   rng(),
-                                   get_arg("ca_key_pass")));
+         if(flag_set("ca_key_pass"))
+            {
+            key.reset(Botan::PKCS8::load_key(get_arg("ca_key"),
+                     rng(),
+                     get_arg("ca_key_pass")));
+            }
+         else
+            {
+            key.reset(Botan::PKCS8::load_key(get_arg("ca_key"),
+                     rng()));
+            }
 
          if(!key)
             throw CLI_Error("Failed to load key from " + get_arg("ca_key"));
 
-         Botan::X509_CA ca(ca_cert, *key, get_arg("hash"));
+         Botan::X509_CA ca(ca_cert, *key, get_arg("hash"), rng());
 
          Botan::PKCS10_Request req(get_arg("pkcs10_req"));
 
@@ -63,12 +71,34 @@ BOTAN_REGISTER_COMMAND("sign_cert", Sign_Cert);
 class Cert_Info final : public Command
    {
    public:
-      Cert_Info() : Command("cert_info file") {}
+      Cert_Info() : Command("cert_info --ber file") {}
 
       void go() override
          {
-         Botan::X509_Certificate cert(get_arg("file"));
-         output() << cert.to_string() << "\n";
+         Botan::DataSource_Stream in(get_arg("file"), flag_set("ber"));
+
+         while(!in.end_of_data())
+            {
+            try
+               {
+               Botan::X509_Certificate cert(in);
+
+               try
+                  {
+                  output() << cert.to_string() << std::endl;
+                  }
+               catch(Botan::Exception& e)
+                  {
+                  // to_string failed - report the exception and continue
+                  output() << "X509_Certificate::to_string failed: " << e.what() << "\n";
+                  }
+               }
+            catch(Botan::Exception& e)
+               {
+               if(!in.end_of_data())
+                  output() << "X509_Certificate parsing failed " << e.what() << "\n";
+               }
+            }
          }
    };
 

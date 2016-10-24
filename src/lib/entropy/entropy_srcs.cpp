@@ -95,12 +95,13 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       {
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
       return std::unique_ptr<Entropy_Source>(new Device_EntropySource(BOTAN_SYSTEM_RNG_POLL_DEVICES));
+#endif
       }
 
    if(name == "win32_cryptoapi")
       {
-#elif defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
-      return std::unique_ptr<Entropy_Source>(new Win32_CAPI_EntropySource);
+#if defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
+      return std::unique_ptr<Entropy_Source>(new Win32_CAPI_EntropySource("RSA_FULL"));
 #endif
       }
 

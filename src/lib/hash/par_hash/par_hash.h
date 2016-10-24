@@ -27,13 +27,12 @@ class BOTAN_DLL Parallel final : public HashFunction
 
       /**
       * @param hashes a set of hashes to compute in parallel
+      * Takes ownership of all pointers
       */
-      explicit Parallel(const std::vector<HashFunction*>& hashes);
+      explicit Parallel(std::vector<std::unique_ptr<HashFunction>>& hashes);
 
       Parallel(const Parallel&) = delete;
       Parallel& operator=(const Parallel&) = delete;
-
-      static Parallel* make(const Spec& spec);
    private:
       Parallel() {}
 

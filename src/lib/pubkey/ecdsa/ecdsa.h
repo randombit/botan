@@ -22,7 +22,7 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
    public:
 
       /**
-      * Construct a public key from a given public point.
+      * Create a public key from a given public point.
       * @param dom_par the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
@@ -30,6 +30,11 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
                       const PointGFp& public_point) :
          EC_PublicKey(dom_par, public_point) {}
 
+      /**
+      * Load a public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits X.509 subject public key info structure
+      */
       ECDSA_PublicKey(const AlgorithmIdentifier& alg_id,
                       const secure_vector<byte>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
@@ -53,6 +58,9 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
       size_t message_part_size() const override
          { return domain().get_order().bytes(); }
 
+      std::unique_ptr<PK_Ops::Verification>
+         create_verification_op(const std::string& params,
+                                const std::string& provider) const override;
    protected:
       ECDSA_PublicKey() {}
    };
@@ -75,7 +83,7 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
          EC_PrivateKey(alg_id, key_bits) {}
 
       /**
-      * Generate a new private key
+      * Create a private key.
       * @param rng a random number generator
       * @param domain parameters to used for this key
       * @param x the private key (if zero, generate a new random key)
@@ -86,6 +94,11 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
          EC_PrivateKey(rng, domain, x) {}
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
+
+      std::unique_ptr<PK_Ops::Signature>
+         create_signature_op(RandomNumberGenerator& rng,
+                             const std::string& params,
+                             const std::string& provider) const override;
    };
 
 }

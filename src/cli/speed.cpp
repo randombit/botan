@@ -19,8 +19,11 @@
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <botan/cipher_mode.h>
-#include <botan/auto_rng.h>
 #include <botan/entropy_src.h>
+
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+  #include <botan/auto_rng.h>
+#endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
@@ -78,6 +81,15 @@
 
 #if defined(BOTAN_HAS_MCELIECE)
   #include <botan/mceliece.h>
+#endif
+
+#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
+  #include <botan/newhope.h>
+  #include <botan/chacha.h>
+#endif
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+  #include <botan/ec_group.h>
 #endif
 
 namespace Botan_CLI {
@@ -303,6 +315,7 @@ std::vector<std::string> default_benchmark_list()
       "ECDSA",
       "Curve25519",
       "McEliece",
+      "NEWHOPE"
       };
    }
 
@@ -393,6 +406,12 @@ class Speed final : public Command
                bench_mceliece(provider, msec);
                }
 #endif
+#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
+            else if(algo == "NEWHOPE")
+               {
+               bench_newhope(provider, msec);
+               }
+#endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
             else if(algo == "random_prime")
@@ -411,10 +430,18 @@ class Speed final : public Command
                bench_fpe_fe1(msec);
                }
 #endif
+#if defined(BOTAN_HAS_ECC_GROUP)
+            else if(algo == "os2ecp")
+               {
+               bench_os2ecp(msec);
+               }
+#endif
             else if(algo == "RNG")
                {
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
                Botan::AutoSeeded_RNG auto_rng;
                bench_rng(auto_rng, "AutoSeeded_RNG (periodic reseed)", msec, buf_size);
+#endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
                bench_rng(Botan::system_rng(), "System_RNG", msec, buf_size);
@@ -428,7 +455,7 @@ class Speed final : public Command
 #if defined(BOTAN_HAS_HMAC_DRBG)
                for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
                   {
-                  Botan::HMAC_DRBG hmac_drbg(hash, 0);
+                  Botan::HMAC_DRBG hmac_drbg(hash);
                   bench_rng(hmac_drbg, hmac_drbg.name(), msec, buf_size);
                   }
 #endif
@@ -436,7 +463,7 @@ class Speed final : public Command
 #if defined(BOTAN_HAS_HMAC_RNG)
                for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
                   {
-                  Botan::HMAC_RNG hmac_rng(hash, 0);
+                  Botan::HMAC_RNG hmac_rng(Botan::MessageAuthenticationCode::create("HMAC(" + hash + ")"));
                   bench_rng(hmac_rng, hmac_rng.name(), msec, buf_size);
                   }
 #endif
@@ -498,8 +525,6 @@ class Speed final : public Command
          const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
          ks_timer.run([&] { cipher.set_key(key); });
 
-         std::chrono::milliseconds half = runtime / 2;
-
          encrypt_timer.run_until_elapsed(runtime, [&] { cipher.encrypt(buffer); });
          output() << Timer::result_string_bps(encrypt_timer);
 
@@ -516,10 +541,11 @@ class Speed final : public Command
 
          Timer encrypt_timer(cipher.name(), provider, "encrypt", buffer.size());
 
+         const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
+         cipher.set_key(key);
+
          while(encrypt_timer.under(runtime))
             {
-            const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
-            cipher.set_key(key);
             encrypt_timer.run([&] { cipher.encipher(buffer); });
             }
 
@@ -570,16 +596,18 @@ class Speed final : public Command
          ks_timer.run([&] { enc.set_key(key); });
          ks_timer.run([&] { dec.set_key(key); });
 
+         Botan::secure_vector<uint8_t> iv = rng().random_vec(enc.default_nonce_length());
+
          while(encrypt_timer.under(runtime) && decrypt_timer.under(runtime))
             {
-            const Botan::secure_vector<uint8_t> iv = rng().random_vec(enc.default_nonce_length());
-
             // Must run in this order, or AEADs will reject the ciphertext
             iv_timer.run([&] { enc.start(iv); });
             encrypt_timer.run([&] { enc.finish(buffer); });
 
             iv_timer.run([&] { dec.start(iv); });
             decrypt_timer.run([&] { dec.finish(buffer); });
+
+            iv[0] += 1;
             }
 
          output() << Timer::result_string_ops(ks_timer);
@@ -595,8 +623,9 @@ class Speed final : public Command
          {
          Botan::secure_vector<uint8_t> buffer(buf_size);
 
-         rng.add_entropy(buffer.data(), buffer.size());
-         rng.reseed(256);
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+         rng.reseed_from_rng(Botan::system_rng(), 256);
+#endif
 
          Timer timer(rng_name, "", "generate", buffer.size());
          timer.run_until_elapsed(runtime, [&] { rng.randomize(buffer.data(), buffer.size()); });
@@ -641,6 +670,32 @@ class Speed final : public Command
             output() << " total samples " << rng.samples() << "\n";
             }
          }
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+      void bench_os2ecp(const std::chrono::milliseconds runtime)
+         {
+         Timer uncmp_timer("OS2ECP uncompressed");
+         Timer cmp_timer("OS2ECP compressed");
+
+         const Botan::EC_Group group("secp256r1");
+         const Botan::CurveGFp& curve = group.get_curve();
+
+         while(uncmp_timer.under(runtime) && cmp_timer.under(runtime))
+            {
+            const Botan::BigInt k(rng(), 256);
+            const Botan::PointGFp p = group.get_base_point() * k;
+            const Botan::secure_vector<uint8_t> os_cmp = Botan::EC2OSP(p, Botan::PointGFp::COMPRESSED);
+            const Botan::secure_vector<uint8_t> os_uncmp = Botan::EC2OSP(p, Botan::PointGFp::UNCOMPRESSED);
+
+            uncmp_timer.run([&] { OS2ECP(os_uncmp, curve); });
+            cmp_timer.run([&] { OS2ECP(os_cmp, curve); });
+            }
+
+         output() << Timer::result_string_ops(uncmp_timer);
+         output() << Timer::result_string_ops(cmp_timer);
+         }
+
+#endif
 
 #if defined(BOTAN_HAS_FPE_FE1)
 
@@ -769,8 +824,8 @@ class Speed final : public Command
          {
          std::vector<uint8_t> plaintext, ciphertext;
 
-         Botan::PK_Encryptor_EME enc(key, padding, provider);
-         Botan::PK_Decryptor_EME dec(key, padding, provider);
+         Botan::PK_Encryptor_EME enc(key, rng(), padding, provider);
+         Botan::PK_Decryptor_EME dec(key, rng(), padding, provider);
 
          Timer enc_timer(nm, provider, padding + " encrypt");
          Timer dec_timer(nm, provider, padding + " decrypt");
@@ -806,8 +861,8 @@ class Speed final : public Command
                        const std::string& kdf,
                        std::chrono::milliseconds msec)
          {
-         Botan::PK_Key_Agreement ka1(key1, kdf, provider);
-         Botan::PK_Key_Agreement ka2(key2, kdf, provider);
+         Botan::PK_Key_Agreement ka1(key1, rng(), kdf, provider);
+         Botan::PK_Key_Agreement ka2(key2, rng(), kdf, provider);
 
          const std::vector<uint8_t> ka1_pub = key1.public_value();
          const std::vector<uint8_t> ka2_pub = key2.public_value();
@@ -834,8 +889,8 @@ class Speed final : public Command
                         const std::string& kdf,
                         std::chrono::milliseconds msec)
          {
-         Botan::PK_KEM_Decryptor dec(key, kdf, provider);
-         Botan::PK_KEM_Encryptor enc(key, kdf, provider);
+         Botan::PK_KEM_Decryptor dec(key, rng(), kdf, provider);
+         Botan::PK_KEM_Encryptor enc(key, rng(), kdf, provider);
 
          Timer kem_enc_timer(nm, provider, "KEM encrypt");
          Timer kem_dec_timer(nm, provider, "KEM decrypt");
@@ -871,7 +926,7 @@ class Speed final : public Command
          {
          std::vector<uint8_t> message, signature, bad_signature;
 
-         Botan::PK_Signer   sig(key, padding, Botan::IEEE_1363, provider);
+         Botan::PK_Signer   sig(key, rng(), padding, Botan::IEEE_1363, provider);
          Botan::PK_Verifier ver(key, padding, Botan::IEEE_1363, provider);
 
          Timer sig_timer(nm, provider, padding + " sign");
@@ -1069,6 +1124,71 @@ class Speed final : public Command
             output() << Timer::result_string_ops(keygen_timer);
             bench_pk_kem(*key, nm, provider, "KDF2(SHA-256)", msec);
             }
+         }
+#endif
+
+#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
+      void bench_newhope(const std::string& /*provider*/,
+                         std::chrono::milliseconds msec)
+         {
+         const std::string nm = "NEWHOPE";
+
+         Timer keygen_timer(nm, "", "keygen");
+         Timer shareda_timer(nm, "", "shareda");
+         Timer sharedb_timer(nm, "", "sharedb");
+
+         class ChaCha20_RNG : public Botan::RandomNumberGenerator
+            {
+            public:
+               std::string name() const override { return "ChaCha20_RNG"; }
+               void clear() override { /* ignored */ }
+
+               void randomize(uint8_t out[], size_t len) override
+                  {
+                  Botan::clear_mem(out, len);
+                  m_chacha.cipher1(out, len);
+                  }
+
+               bool is_seeded() const override { return true; }
+
+               void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
+
+               ChaCha20_RNG(const Botan::secure_vector<uint8_t>& seed)
+                  {
+                  m_chacha.set_key(seed);
+                  }
+
+            private:
+               Botan::ChaCha m_chacha;
+            };
+
+         ChaCha20_RNG nh_rng(rng().random_vec(32));
+
+         while(sharedb_timer.under(msec))
+            {
+            std::vector<uint8_t> send_a(NEWHOPE_SENDABYTES), send_b(NEWHOPE_SENDBBYTES);
+            std::vector<uint8_t> shared_a(32), shared_b(32);
+
+            Botan::newhope_poly sk_a;
+
+            keygen_timer.start();
+            Botan::newhope_keygen(send_a.data(), &sk_a, nh_rng);
+            keygen_timer.stop();
+
+            sharedb_timer.start();
+            Botan::newhope_sharedb(shared_b.data(), send_b.data(), send_a.data(), nh_rng);
+            sharedb_timer.stop();
+
+            shareda_timer.start();
+            Botan::newhope_shareda(shared_a.data(), &sk_a, send_b.data());
+            shareda_timer.stop();
+
+            BOTAN_ASSERT(shared_a == shared_b, "Same derived key");
+            }
+
+         output() << Timer::result_string_ops(keygen_timer);
+         output() << Timer::result_string_ops(shareda_timer);
+         output() << Timer::result_string_ops(sharedb_timer);
          }
 #endif
 

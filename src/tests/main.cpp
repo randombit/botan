@@ -15,8 +15,8 @@
 #include <future>
 
 #include <botan/version.h>
-#include <botan/auto_rng.h>
 #include <botan/loadstor.h>
+#include <botan/hash.h>
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
 #include <botan/hmac_drbg.h>
@@ -24,6 +24,10 @@
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
 #include <botan/system_rng.h>
+#endif
+
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+  #include <botan/auto_rng.h>
 #endif
 
 namespace {
@@ -140,7 +144,14 @@ class Test_Runner : public Botan_CLI::Command
             }
 
          output() << " rng:HMAC_DRBG with seed '" << Botan::hex_encode(seed) << "'";
-         std::unique_ptr<Botan::HMAC_DRBG> drbg(new Botan::HMAC_DRBG("SHA-384", 0));
+
+         // Expand out the seed to 512 bits to make the DRBG happy
+         std::unique_ptr<Botan::HashFunction> sha512(Botan::HashFunction::create("SHA-512"));
+         sha512->update(seed);
+         seed.resize(sha512->output_length());
+         sha512->final(seed.data());
+
+         std::unique_ptr<Botan::HMAC_DRBG> drbg(new Botan::HMAC_DRBG("SHA-384"));
          drbg->initialize_with(seed.data(), seed.size());
          rng.reset(new Botan::Serialized_RNG(drbg.release()));
 
@@ -152,15 +163,18 @@ class Test_Runner : public Botan_CLI::Command
 #if defined(BOTAN_HAS_SYSTEM_RNG)
          output() << " rng:system";
          rng.reset(new Botan::System_RNG);
-#else
-         // AutoSeeded_RNG always available
+#elif defined(BOTAN_HAS_AUTO_SEEDING_RNG)
          output() << " rng:autoseeded";
          rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
 #endif
 
 #endif
-
          output() << "\n";
+
+         if(rng.get() == nullptr)
+             {
+             throw Botan_Tests::Test_Error("No usable RNG enabled in build, aborting tests");
+             }
 
          Botan_Tests::Test::setup_tests(soak_level, log_success, data_dir, pkcs11_lib, rng.get());
 
@@ -214,8 +228,14 @@ class Test_Runner : public Botan_CLI::Command
             {
             for(auto&& test_name : tests_to_run)
                {
-               const auto results = Botan_Tests::Test::run_test(test_name, false);
-               out << report_out(results, tests_failed, tests_ran) << std::flush;
+               try {
+                  const auto results = Botan_Tests::Test::run_test(test_name, false);
+                  out << report_out(results, tests_failed, tests_ran) << std::flush;
+               }
+               catch(std::exception& e)
+                  {
+                  out << "Test " << test_name << " failed with exception " << e.what() << std::flush;
+                  }
                }
             }
          else
@@ -236,7 +256,15 @@ class Test_Runner : public Botan_CLI::Command
             for(auto&& test_name : tests_to_run)
                {
                auto run_it = [test_name] {
-                  return Botan_Tests::Test::run_test(test_name, false);
+                  try {
+                     return Botan_Tests::Test::run_test(test_name, false);
+                  }
+                  catch(std::exception& e)
+                     {
+                     Botan_Tests::Test::Result r(test_name);
+                     r.test_failure("Exception thrown", e.what());
+                     return std::vector<Botan_Tests::Test::Result>{r};
+                     }
                };
 
                fut_results.push_back(std::async(std::launch::async, run_it));
@@ -284,14 +312,29 @@ int main(int argc, char* argv[])
                                              BOTAN_VERSION_MINOR,
                                              BOTAN_VERSION_PATCH);
 
-   std::unique_ptr<Botan_CLI::Command> cmd(Botan_CLI::Command::get_cmd("test"));
-
-   if(!cmd)
+   try
       {
-      std::cout << "Unable to retrieve testing helper (program bug)\n"; // WTF
-      return 1;
-      }
+      std::unique_ptr<Botan_CLI::Command> cmd(Botan_CLI::Command::get_cmd("test"));
 
-   std::vector<std::string> args(argv + 1, argv + argc);
-   return cmd->run(args);
+      if(!cmd)
+         {
+         std::cout << "Unable to retrieve testing helper (program bug)\n"; // WTF
+         return 1;
+         }
+
+      std::vector<std::string> args(argv + 1, argv + argc);
+      return cmd->run(args);
+      }
+   catch(Botan::Exception& e)
+      {
+      std::cout << "Exiting with library exception " << e.what() << std::endl;
+      }
+   catch(std::exception& e)
+      {
+      std::cout << "Exiting with std exception " << e.what() << std::endl;
+      }
+   catch(...)
+      {
+      std::cout << "Exiting with unknown exception\n";
+      }
    }

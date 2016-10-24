@@ -17,10 +17,10 @@ RFC6979_Nonce_Generator::RFC6979_Nonce_Generator(const std::string& hash,
    m_order(order),
    m_qlen(m_order.bits()),
    m_rlen(m_qlen / 8 + (m_qlen % 8 ? 1 : 0)),
-   m_hmac_drbg(new HMAC_DRBG(hash, 0)),
    m_rng_in(m_rlen * 2),
    m_rng_out(m_rlen)
    {
+   m_hmac_drbg.reset(new HMAC_DRBG(MessageAuthenticationCode::create("HMAC(" + hash + ")")));
    BigInt::encode_1363(m_rng_in.data(), m_rlen, x);
    }
 

@@ -12,17 +12,9 @@ namespace Botan {
 
 namespace {
 
-const byte MD2_PKCS_ID[] = {
-0x30, 0x20, 0x30, 0x0C, 0x06, 0x08, 0x2A, 0x86, 0x48, 0x86,
-0xF7, 0x0D, 0x02, 0x02, 0x05, 0x00, 0x04, 0x10 };
-
 const byte MD5_PKCS_ID[] = {
 0x30, 0x20, 0x30, 0x0C, 0x06, 0x08, 0x2A, 0x86, 0x48, 0x86,
 0xF7, 0x0D, 0x02, 0x05, 0x05, 0x00, 0x04, 0x10 };
-
-const byte RIPEMD_128_PKCS_ID[] = {
-0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x24, 0x03, 0x02,
-0x02, 0x05, 0x00, 0x04, 0x14 };
 
 const byte RIPEMD_160_PKCS_ID[] = {
 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x24, 0x03, 0x02,
@@ -67,17 +59,9 @@ std::vector<byte> pkcs_hash_id(const std::string& name)
    if(name == "Parallel(MD5,SHA-160)")
       return std::vector<byte>();
 
-   if(name == "MD2")
-      return std::vector<byte>(MD2_PKCS_ID,
-                               MD2_PKCS_ID + sizeof(MD2_PKCS_ID));
-
    if(name == "MD5")
       return std::vector<byte>(MD5_PKCS_ID,
                                MD5_PKCS_ID + sizeof(MD5_PKCS_ID));
-
-   if(name == "RIPEMD-128")
-      return std::vector<byte>(RIPEMD_128_PKCS_ID,
-                               RIPEMD_128_PKCS_ID + sizeof(RIPEMD_128_PKCS_ID));
 
    if(name == "RIPEMD-160")
       return std::vector<byte>(RIPEMD_160_PKCS_ID,
@@ -127,7 +111,6 @@ byte ieee1363_hash_id(const std::string& name)
    if(name == "SHA-512")    return 0x35;
 
    if(name == "RIPEMD-160") return 0x31;
-   if(name == "RIPEMD-128") return 0x32;
 
    if(name == "Whirlpool")  return 0x37;
 

@@ -20,8 +20,12 @@
 #include <botan/ecdh.h>
 #include <botan/rsa.h>
 
+#if defined(BOTAN_HAS_CURVE_25519)
+  #include <botan/curve25519.h>
+#endif
+
 #if defined(BOTAN_HAS_SRP6)
-#include <botan/srp6.h>
+  #include <botan/srp6.h>
 #endif
 
 namespace Botan {
@@ -92,13 +96,6 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          if(reader.remaining_bytes())
             throw Decoding_Error("Bad params size for DH key exchange");
 
-         if(p.bits() < policy.minimum_dh_group_size())
-            throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
-                                "Server sent DH group of " +
-                                std::to_string(p.bits()) +
-                                " bits, policy requires at least " +
-                                std::to_string(policy.minimum_dh_group_size()));
-
          /*
          * A basic check for key validity. As we do not know q here we
          * cannot check that Y is in the right subgroup. However since
@@ -117,9 +114,11 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          DH_PublicKey counterparty_key(group, Y);
 
+         policy.check_peer_key_acceptable(counterparty_key);
+
          DH_PrivateKey priv_key(rng, group);
 
-         PK_Key_Agreement ka(priv_key, "Raw");
+         PK_Key_Agreement ka(priv_key, rng, "Raw");
 
          secure_vector<byte> dh_secret = CT::strip_leading_zeros(
             ka.derive_key(0, counterparty_key.public_value()).bits_of());
@@ -143,29 +142,53 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          const u16bit curve_id = reader.get_u16bit();
 
-         const std::string name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
+         const std::string curve_name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
 
-         if(name == "")
+         if(curve_name == "")
             throw Decoding_Error("Server sent unknown named curve " + std::to_string(curve_id));
 
-         if(!policy.allowed_ecc_curve(name))
+         if(!policy.allowed_ecc_curve(curve_name))
             {
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
                                 "Server sent ECC curve prohibited by policy");
             }
 
-         EC_Group group(name);
+         const std::vector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
 
-         std::vector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
+         std::vector<byte> our_ecdh_public;
+         secure_vector<byte> ecdh_secret;
 
-         ECDH_PublicKey counterparty_key(group, OS2ECP(ecdh_key, group.get_curve()));
+         if(curve_name == "x25519")
+            {
+#if defined(BOTAN_HAS_CURVE_25519)
+            if(ecdh_key.size() != 32)
+               throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Invalid X25519 key size");
 
-         ECDH_PrivateKey priv_key(rng, group);
+            Curve25519_PublicKey counterparty_key(ecdh_key);
+            policy.check_peer_key_acceptable(counterparty_key);
+            Curve25519_PrivateKey priv_key(rng);
+            PK_Key_Agreement ka(priv_key, rng, "Raw");
+            ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
 
-         PK_Key_Agreement ka(priv_key, "Raw");
+            // X25519 is always compressed but sent as "uncompressed" in TLS
+            our_ecdh_public = priv_key.public_value();
+#else
+            throw Internal_Error("Negotiated X25519 somehow, but it is disabled");
+#endif
+            }
+         else
+            {
+            EC_Group group(curve_name);
+            ECDH_PublicKey counterparty_key(group, OS2ECP(ecdh_key, group.get_curve()));
+            policy.check_peer_key_acceptable(counterparty_key);
+            ECDH_PrivateKey priv_key(rng, group);
+            PK_Key_Agreement ka(priv_key, rng, "Raw");
+            ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
 
-         secure_vector<byte> ecdh_secret =
-            ka.derive_key(0, counterparty_key.public_value()).bits_of();
+            // follow server's preference for point compression
+            our_ecdh_public = priv_key.public_value(
+               state.server_hello()->prefers_compressed_ec_points() ? PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED);
+            }
 
          if(kex_algo == "ECDH")
             m_pre_master = ecdh_secret;
@@ -175,7 +198,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             append_tls_length_value(m_pre_master, psk.bits_of(), 2);
             }
 
-         append_tls_length_value(m_key_material, priv_key.public_value(), 1);
+         append_tls_length_value(m_key_material, our_ecdh_public, 1);
          }
 #if defined(BOTAN_HAS_SRP6)
       else if(kex_algo == "SRP_SHA")
@@ -232,7 +255,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          m_pre_master[0] = offered_version.major_version();
          m_pre_master[1] = offered_version.minor_version();
 
-         PK_Encryptor_EME encryptor(*rsa_pub, "PKCS1v15");
+         PK_Encryptor_EME encryptor(*rsa_pub, rng, "PKCS1v15");
 
          const std::vector<byte> encrypted_key = encryptor.encrypt(m_pre_master, rng);
 
@@ -273,7 +296,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
       TLS_Data_Reader reader("ClientKeyExchange", contents);
       const std::vector<byte> encrypted_pre_master = reader.get_range<byte>(2, 0, 65535);
 
-      PK_Decryptor_EME decryptor(*server_rsa_kex_key, "PKCS1v15");
+      PK_Decryptor_EME decryptor(*server_rsa_kex_key, rng, "PKCS1v15");
 
       const byte client_major = state.client_hello()->version().major_version();
       const byte client_minor = state.client_hello()->version().minor_version();
@@ -350,7 +373,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
 
          try
             {
-            PK_Key_Agreement ka(*ka_key, "Raw");
+            PK_Key_Agreement ka(*ka_key, rng, "Raw");
 
             std::vector<byte> client_pubkey;
 

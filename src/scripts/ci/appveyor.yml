@@ -1,29 +1,69 @@
 os: Visual Studio 2015
 
-platform:
-  - x86
-  - x86_amd64
+# Let's call MSVS 2015 the default compiler, 64 bit the default architecture,
+# release the default configuration and --enable-shared the default mode.
+#
+# Build jobs
+#  1. four basic builds: 32/64bit on MSVS2013/2015
+#  2. add static lib and amalgamation
+#  3. add a debug build on MSVS2013/2015
+#
+# Note: Avoid the AppVeyor settings `platform` and `configuration` since excluding
+# from the build matrix is not supported (https://github.com/appveyor/ci/issues/386)
 
 environment:
   matrix:
-    - COMPILER: msvc-12.0
-      MODE: --enable-shared
-    - COMPILER: msvc-12.0
+    # 1
+    - MSVS: 2013
+      PLATFORM: x86
+      CONFIG:
+      MODE:
+    - MSVS: 2013
+      PLATFORM: x86_amd64
+      CONFIG:
+      MODE:
+    - MSVS: 2015
+      PLATFORM: x86
+      CONFIG:
+      MODE:
+    - MSVS: 2015
+      PLATFORM: x86_amd64
+      CONFIG:
+      MODE:
+    # 2
+    - MSVS:
+      PLATFORM:
+      CONFIG:
       MODE: --disable-shared
-    - COMPILER: msvc-12.0
-      MODE: --via-amalgamation
-    - COMPILER: msvc-14.0
-      MODE: --enable-shared
-    - COMPILER: msvc-14.0
-      MODE: --disable-shared
-    - COMPILER: msvc-14.0
-      MODE: --via-amalgamation
+    - MSVS:
+      PLATFORM:
+      CONFIG:
+      MODE: --amalgamation
+    # 3
+    - MSVS: 2013
+      PLATFORM:
+      CONFIG: Debug
+      MODE:
+    - MSVS: 2015
+      PLATFORM:
+      CONFIG: Debug
+      MODE:
 
 install:
-  - if %compiler% == msvc-12.0 (
+  # Set defaults
+  - if [%MSVS%] == [] set MSVS=2015
+  - if [%PLATFORM%] == [] set PLATFORM=x86_amd64
+  - if [%CONFIG%] == [] set CONFIG=Release
+  - if [%MODE%] == [] set MODE=--enable-shared
+
+  # Check setup
+  - echo Current build setup MSVS="%MSVS%" PLATFORM="%PLATFORM%" CONFIG="%CONFIG%" MODE="%MODE%"
+
+  # Choose compiler
+  - if %MSVS% == 2013 (
        call "%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %PLATFORM%
     )
-  - if %compiler% == msvc-14.0 (
+  - if %MSVS% == 2015 (
        call "%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %PLATFORM%
     )
   - cl # check compiler version
@@ -32,7 +72,17 @@ install:
   - 7z e jom.zip
 
 build_script:
-  - python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11
+  - if %CONFIG% == Release (
+       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11
+    )
+  - if %CONFIG% == Debug (
+       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11 --debug-mode
+    )
   - jom -j2
   - botan-test
   - nmake install
+
+# whitelist branches to avoid testing feature branches twice (as branch and as pull request)
+branches:
+  only:
+    - master

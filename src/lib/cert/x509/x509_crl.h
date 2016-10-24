@@ -82,6 +82,7 @@ class BOTAN_DLL X509_CRL final : public X509_Object
       */
       X509_CRL(DataSource& source, bool throw_on_unknown_critical = false);
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       /**
       * Construct a CRL from a file containing the DER or PEM encoded CRL.
       * @param filename the name of the CRL file
@@ -90,6 +91,7 @@ class BOTAN_DLL X509_CRL final : public X509_Object
       */
       X509_CRL(const std::string& filename,
                bool throw_on_unknown_critical = false);
+#endif
 
       /**
       * Construct a CRL from a binary vector
@@ -99,6 +101,16 @@ class BOTAN_DLL X509_CRL final : public X509_Object
       */
       X509_CRL(const std::vector<byte>& vec,
                bool throw_on_unknown_critical = false);
+
+      /**
+      * Construct a CRL
+      * @param issuer issuer of this CRL
+      * @param thisUpdate valid from
+      * @param nextUpdate valid until
+      * @param revoked entries to be included in the CRL
+      */
+      X509_CRL(const X509_DN& issuer, const X509_Time& thisUpdate,
+               const X509_Time& nextUpdate, const std::vector<CRL_Entry>& revoked);
 
    private:
       void force_decode() override;

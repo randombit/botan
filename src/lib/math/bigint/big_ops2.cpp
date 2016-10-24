@@ -1,6 +1,7 @@
 /*
 * BigInt Assignment Operators
 * (C) 1999-2007 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -118,10 +119,7 @@ BigInt& BigInt::operator*=(const BigInt& y)
 
       secure_vector<word> z(data(), data() + x_sw);
       secure_vector<word> workspace(size());
-
-      bigint_mul(mutable_data(), size(), workspace.data(),
-                 z.data(), z.size(), x_sw,
-                 y.data(), y.size(), y_sw);
+      bigint_mul(*this, BigInt(*this), y, workspace.data());
       }
 
    return (*this);

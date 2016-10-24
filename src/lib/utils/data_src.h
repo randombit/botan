@@ -138,6 +138,8 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       size_t m_offset;
    };
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
 /**
 * This class represents a Stream-Based DataSource.
 */
@@ -174,6 +176,8 @@ class BOTAN_DLL DataSource_Stream : public DataSource
       std::istream& m_source;
       size_t m_total_read;
    };
+
+#endif
 
 }
 

@@ -28,6 +28,11 @@ class BOTAN_DLL ECKCDSA_PublicKey : public virtual EC_PublicKey
                       const PointGFp& public_point) :
          EC_PublicKey(dom_par, public_point) {}
 
+      /**
+      * Load a public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits X.509 subject public key info structure
+      */
       ECKCDSA_PublicKey(const AlgorithmIdentifier& alg_id,
                       const secure_vector<byte>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
@@ -51,6 +56,9 @@ class BOTAN_DLL ECKCDSA_PublicKey : public virtual EC_PublicKey
       size_t message_part_size() const override
          { return domain().get_order().bytes(); }
 
+      std::unique_ptr<PK_Ops::Verification>
+         create_verification_op(const std::string& params,
+                                const std::string& provider) const override;
    protected:
       ECKCDSA_PublicKey() {}
    };
@@ -64,7 +72,7 @@ class BOTAN_DLL ECKCDSA_PrivateKey : public ECKCDSA_PublicKey,
    public:
 
       /**
-      * Load a private key
+      * Load a private key.
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits PKCS #8 structure
       */
@@ -73,7 +81,7 @@ class BOTAN_DLL ECKCDSA_PrivateKey : public ECKCDSA_PublicKey,
          EC_PrivateKey(alg_id, key_bits, true) {}
 
       /**
-      * Generate a new private key
+      * Create a private key.
       * @param rng a random number generator
       * @param domain parameters to used for this key
       * @param x the private key (if zero, generate a new random key)
@@ -84,6 +92,11 @@ class BOTAN_DLL ECKCDSA_PrivateKey : public ECKCDSA_PublicKey,
          EC_PrivateKey(rng, domain, x, true) {}
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
+
+      std::unique_ptr<PK_Ops::Signature>
+         create_signature_op(RandomNumberGenerator& rng,
+                             const std::string& params,
+                             const std::string& provider) const override;
    };
 
 }

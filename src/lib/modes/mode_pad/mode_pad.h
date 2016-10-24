@@ -25,13 +25,20 @@ namespace Botan {
 class BOTAN_DLL BlockCipherModePaddingMethod
    {
    public:
+      /**
+      * Add padding bytes to buffer.
+      * @param buffer data to pad
+      * @param final_block_bytes size of the final block in bytes
+      * @param block_size size of each block in bytes
+      */
       virtual void add_padding(secure_vector<byte>& buffer,
                                size_t final_block_bytes,
                                size_t block_size) const = 0;
 
       /**
+      * Remove padding bytes from block
       * @param block the last block
-      * @param size the of the block
+      * @param size the size of the block in bytes
       * @return number of padding bytes
       */
       virtual size_t unpad(const byte block[],
@@ -120,6 +127,10 @@ class BOTAN_DLL Null_Padding final : public BlockCipherModePaddingMethod
       std::string name() const override { return "NoPadding"; }
    };
 
+/**
+* Get a block cipher padding mode by name (eg "NoPadding" or "PKCS7")
+* @param algo_spec block cipher padding mode name
+*/
 BOTAN_DLL BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec);
 
 }

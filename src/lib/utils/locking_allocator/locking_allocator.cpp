@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <string>
-#include <mutex>
+#include <botan/mutex.h>
 
 namespace Botan {
 
@@ -58,7 +58,7 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
    if(n < BOTAN_MLOCK_ALLOCATOR_MIN_ALLOCATION || n > BOTAN_MLOCK_ALLOCATOR_MAX_ALLOCATION)
       return nullptr;
 
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
 
    auto best_fit = m_freelist.end();
 
@@ -146,7 +146,7 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
    if(!ptr_in_pool(m_pool, m_poolsize, p, n))
       return false;
 
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
 
    const size_t start = static_cast<byte*>(p) - m_pool;
 

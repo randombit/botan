@@ -10,11 +10,10 @@
 
 #include <botan/lzma.h>
 #include <botan/internal/compress_utils.h>
+#include <botan/exceptn.h>
 #include <lzma.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_COMPRESSION(LZMA_Compression, LZMA_Decompression);
 
 namespace {
 

@@ -11,4 +11,6 @@ posix_mlock
 gmtime_r
 dlopen
 readdir
+threads
+filesystem
 </target_features>

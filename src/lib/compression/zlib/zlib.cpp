@@ -9,14 +9,11 @@
 
 #include <botan/zlib.h>
 #include <botan/internal/compress_utils.h>
+#include <botan/exceptn.h>
 #include <ctime>
 #include <zlib.h>
 
 namespace Botan {
-
-BOTAN_REGISTER_COMPRESSION(Zlib_Compression, Zlib_Decompression);
-BOTAN_REGISTER_COMPRESSION(Gzip_Compression, Gzip_Decompression);
-BOTAN_REGISTER_COMPRESSION(Deflate_Compression, Deflate_Decompression);
 
 namespace {
 

@@ -134,17 +134,17 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
       {
       Test::Result result("ECC randomized " + group_name);
 
-      Botan::EC_Group group(group_name);
-
-      const Botan::PointGFp& base_point = group.get_base_point();
-      const Botan::BigInt& group_order = group.get_order();
-
-      const Botan::PointGFp inf = base_point * group_order;
-      result.test_eq("infinite order correct", inf.is_zero(), true);
-      result.test_eq("infinity on the curve", inf.on_the_curve(), true);
-
       try
          {
+         Botan::EC_Group group(group_name);
+
+         const Botan::PointGFp& base_point = group.get_base_point();
+         const Botan::BigInt& group_order = group.get_order();
+
+         const Botan::PointGFp inf = base_point * group_order;
+         result.test_eq("infinite order correct", inf.is_zero(), true);
+         result.test_eq("infinity on the curve", inf.on_the_curve(), true);
+
          for(size_t i = 0; i <= Test::soak_level(); ++i)
             {
             const size_t h = 1 + (Test::rng().next_byte() % 8);
@@ -178,6 +178,10 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
             result.test_eq("Q1", Q1, Q);
             result.test_eq("R1", R1, R);
             }
+         }
+      catch(Botan::Lookup_Error const&)
+         {
+         result.note_missing("ECC " + group_name);
          }
       catch(std::exception& e)
          {

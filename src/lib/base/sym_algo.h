@@ -23,6 +23,9 @@ class BOTAN_DLL SymmetricAlgorithm
    public:
       virtual ~SymmetricAlgorithm() {}
 
+      /**
+      * Reset the state.
+      */
       virtual void clear() = 0;
 
       /**
@@ -39,7 +42,7 @@ class BOTAN_DLL SymmetricAlgorithm
          }
 
       /**
-      * @return maxmium allowed key length
+      * @return maximum allowed key length
       */
       size_t minimum_keylength() const
          {
@@ -83,6 +86,9 @@ class BOTAN_DLL SymmetricAlgorithm
          key_schedule(key, length);
          }
 
+      /**
+      * @return the algorithm name
+      */
       virtual std::string name() const = 0;
 
    private:

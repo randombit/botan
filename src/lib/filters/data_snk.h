@@ -27,6 +27,8 @@ class BOTAN_DLL DataSink : public Filter
       DataSink(const DataSink&) = delete;
    };
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
 /**
 * This class represents a data sink which writes its output to a stream.
 */
@@ -61,6 +63,8 @@ class BOTAN_DLL DataSink_Stream : public DataSink
       std::ostream* m_sink_p;
       std::ostream& m_sink;
    };
+
+#endif
 
 }
 

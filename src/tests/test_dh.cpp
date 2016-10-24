@@ -66,7 +66,7 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
          const Botan::BigInt x("46205663093589612668746163860870963912226379131190812163519349848291472898748");
          std::unique_ptr<Private_Key> privkey(new DH_PrivateKey(Test::rng(), grp, x));
 
-         std::unique_ptr<PK_Key_Agreement> kas(new PK_Key_Agreement(*privkey, "Raw"));
+         std::unique_ptr<PK_Key_Agreement> kas(new PK_Key_Agreement(*privkey, rng(), "Raw"));
 
          result.test_throws("agreement input too big", [&kas]()
             {

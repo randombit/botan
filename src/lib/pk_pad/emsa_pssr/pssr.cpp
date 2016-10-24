@@ -11,20 +11,6 @@
 
 namespace Botan {
 
-PSSR* PSSR::make(const Spec& request)
-   {
-   if(request.arg(1, "MGF1") != "MGF1")
-      return nullptr;
-
-   if(auto h = HashFunction::create(request.arg(0)))
-      {
-      const size_t salt_size = request.arg_as_integer(2, h->output_length());
-      return new PSSR(h.release(), salt_size);
-      }
-
-   return nullptr;
-   }
-
 /*
 * PSSR Update Operation
 */

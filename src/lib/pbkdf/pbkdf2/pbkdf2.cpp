@@ -11,17 +11,6 @@
 
 namespace Botan {
 
-PKCS5_PBKDF2* PKCS5_PBKDF2::make(const Spec& spec)
-   {
-   if(auto mac = MessageAuthenticationCode::create(spec.arg(0)))
-      return new PKCS5_PBKDF2(mac.release());
-
-   if(auto mac = MessageAuthenticationCode::create("HMAC(" + spec.arg(0) + ")"))
-      return new PKCS5_PBKDF2(mac.release());
-
-   return nullptr;
-   }
-
 size_t
 pbkdf2(MessageAuthenticationCode& prf,
        byte out[],

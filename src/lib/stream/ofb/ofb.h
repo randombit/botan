@@ -38,10 +38,8 @@ class BOTAN_DLL OFB final : public StreamCipher
 
       void clear() override;
 
-      static OFB* make(const Spec& spec);
-
       /**
-      * @param cipher the underlying block cipher to use
+      * @param cipher the block cipher to use
       */
       explicit OFB(BlockCipher* cipher);
 

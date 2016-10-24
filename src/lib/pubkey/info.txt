@@ -13,17 +13,17 @@ x509_key.cpp
 
 <header:public>
 blinding.h
+pk_algs.h
 pk_keys.h
-pk_ops.h
+pk_ops_fwd.h
 pkcs8.h
 pubkey.h
-x509_key.h
 workfactor.h
+x509_key.h
 </header:public>
 
 <header:internal>
-pk_algs.h
-pk_utils.h
+pk_ops.h
 pk_ops_impl.h
 </header:internal>
 
@@ -37,4 +37,6 @@ pem
 pk_pad
 numbertheory
 rng
+hash
+hex
 </requires>

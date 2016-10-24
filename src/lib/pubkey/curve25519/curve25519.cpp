@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/curve25519.h>
+#include <botan/internal/pk_ops_impl.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 
@@ -29,10 +29,13 @@ secure_vector<byte> curve25519(const secure_vector<byte>& secret,
    return out;
    }
 
-secure_vector<byte> curve25519_basepoint(const secure_vector<byte>& secret)
+std::vector<byte> curve25519_basepoint(const secure_vector<byte>& secret)
    {
    const byte basepoint[32] = { 9 };
-   return curve25519(secret, basepoint);
+   std::vector<byte> out(32);
+   const int rc = curve25519_donna(out.data(), secret.data(), basepoint);
+   BOTAN_ASSERT_EQUAL(rc, 0, "Return value of curve25519_donna is ok");
+   return out;
    }
 
 }
@@ -134,9 +137,16 @@ class Curve25519_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
       const Curve25519_PrivateKey& m_key;
    };
 
-BOTAN_REGISTER_PK_KEY_AGREE_OP("Curve25519", Curve25519_KA_Operation);
-
 }
 
+std::unique_ptr<PK_Ops::Key_Agreement>
+Curve25519_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
+                                               const std::string& params,
+                                               const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Key_Agreement>(new Curve25519_KA_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
 
 }

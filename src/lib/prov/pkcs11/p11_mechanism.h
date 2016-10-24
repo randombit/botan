@@ -21,7 +21,7 @@ namespace PKCS11 {
 /**
 * Simple class to build and hold the data for a CK_MECHANISM struct
 * for RSA (encryption/decryption, signature/verification)
-* and EC (ecdsa signature/verification, ecdh key derivation)
+* and EC (ECDSA signature/verification, ECDH key derivation).
 */
 class MechanismWrapper final
    {
@@ -51,19 +51,29 @@ class MechanismWrapper final
 
       /**
       * Creates the CK_MECHANISM data for ECDH key derivation (CKM_ECDH1_DERIVE or CKM_ECDH1_COFACTOR_DERIVE)
-      * @param kdf_name the key derivation function to use. Supported KDFs are Raw and SHA-160 to SHA-512
-      * @param use_cofactor true if the cofactor key derivation mechanism should be used
+      * @param params specifies the key derivation function to use.
+      * Supported KDFs are Raw and SHA-160 to SHA-512.
+      * Params can also include the string "Cofactor" if the cofactor
+      * key derivation mechanism should be used, for example "SHA-512,Cofactor"
       */
-      static MechanismWrapper create_ecdh_mechanism(const std::string& kdf_name, bool use_cofactor);
+      static MechanismWrapper create_ecdh_mechanism(const std::string& params);
 
-      /// Sets the salt for the ECDH mechanism parameters
+      /**
+      * Sets the salt for the ECDH mechanism parameters.
+      * @param salt the salt
+      * @param salt_len size of the salt in bytes
+      */
       inline void set_ecdh_salt(const byte salt[], size_t salt_len)
          {
          m_parameters->ecdh_params.pSharedData = const_cast<byte*>(salt);
          m_parameters->ecdh_params.ulSharedDataLen = salt_len;
          }
 
-      /// Sets the public key of the other party for the ECDH mechanism parameters
+      /**
+      * Sets the public key of the other party for the ECDH mechanism parameters.
+      * @param other_key key of the other party
+      * @param other_key_len size of the key of the other party in bytes
+      */
       inline void set_ecdh_other_key(const byte other_key[], size_t other_key_len)
          {
          m_parameters->ecdh_params.pPublicData = const_cast<byte*>(other_key);

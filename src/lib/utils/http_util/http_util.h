@@ -10,7 +10,6 @@
 
 #include <botan/types.h>
 #include <botan/exceptn.h>
-#include <future>
 #include <vector>
 #include <map>
 #include <chrono>
@@ -87,9 +86,6 @@ BOTAN_DLL Response POST_sync(const std::string& url,
                              const std::string& content_type,
                              const std::vector<byte>& body,
                              size_t allowable_redirects = 1);
-
-std::future<Response> BOTAN_DLL GET_async(const std::string& url,
-                                                    size_t allowable_redirects = 1);
 
 BOTAN_DLL std::string url_encode(const std::string& url);
 

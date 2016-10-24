@@ -1,6 +1,6 @@
 /*
 * SHA-160
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * NIST's SHA-160
 */
-class BOTAN_DLL SHA_160 : public MDx_HashFunction
+class BOTAN_DLL SHA_160 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-160"; }
@@ -24,36 +24,35 @@ class BOTAN_DLL SHA_160 : public MDx_HashFunction
 
       void clear() override;
 
-      SHA_160() : MDx_HashFunction(64, true, true), m_digest(5), m_W(80)
-         {
-         clear();
-         }
-   protected:
-      /**
-      * Set a custom size for the W array. Normally 80, but some
-      * subclasses need slightly more for best performance/internal
-      * constraints
-      * @param W_size how big to make W
-      */
-      explicit SHA_160(size_t W_size) :
-         MDx_HashFunction(64, true, true), m_digest(5), m_W(W_size)
+      SHA_160() : MDx_HashFunction(64, true, true), m_digest(5)
          {
          clear();
          }
 
+   private:
       void compress_n(const byte[], size_t blocks) override;
+
+#if defined(BOTAN_HAS_SHA1_SSE2)
+      static void sse2_compress_n(secure_vector<u32bit>& digest,
+                                  const byte blocks[],
+                                  size_t block_count);
+#endif
+
+
       void copy_out(byte[]) override;
 
       /**
-      * The digest value, exposed for use by subclasses (asm, SSE2)
+      * The digest value
       */
       secure_vector<u32bit> m_digest;
 
       /**
-      * The message buffer, exposed for use by subclasses (asm, SSE2)
+      * The message buffer
       */
       secure_vector<u32bit> m_W;
    };
+
+typedef SHA_160 SHA_1;
 
 }
 

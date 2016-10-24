@@ -12,14 +12,16 @@
 namespace Botan {
 
 DLIES_Encryptor::DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
+                                 RandomNumberGenerator& rng,
                                  KDF* kdf,
                                  MessageAuthenticationCode* mac,
                                  size_t mac_key_length) :
-   DLIES_Encryptor(own_priv_key, kdf, nullptr, 0, mac, mac_key_length)
+   DLIES_Encryptor(own_priv_key, rng, kdf, nullptr, 0, mac, mac_key_length)
    {
    }
 
 DLIES_Encryptor::DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
+                                 RandomNumberGenerator& rng,
                                  KDF* kdf,
                                  Cipher_Mode* cipher,
                                  size_t cipher_key_len,
@@ -27,7 +29,7 @@ DLIES_Encryptor::DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
                                  size_t mac_key_length) :
    m_other_pub_key(),
    m_own_pub_key(own_priv_key.public_value()),
-   m_ka(own_priv_key, "Raw"),
+   m_ka(own_priv_key, rng, "Raw"),
    m_kdf(kdf),
    m_cipher(cipher),
    m_cipher_key_len(cipher_key_len),
@@ -111,13 +113,14 @@ size_t DLIES_Encryptor::maximum_input_size() const
    }
 
 DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
+                                 RandomNumberGenerator& rng,
                                  KDF* kdf,
                                  Cipher_Mode* cipher,
                                  size_t cipher_key_len,
                                  MessageAuthenticationCode* mac,
                                  size_t mac_key_length) :
    m_pub_key_size(own_priv_key.public_value().size()),
-   m_ka(own_priv_key, "Raw"),
+   m_ka(own_priv_key, rng, "Raw"),
    m_kdf(kdf),
    m_cipher(cipher),
    m_cipher_key_len(cipher_key_len),
@@ -130,10 +133,11 @@ DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
    }
 
 DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
+                                 RandomNumberGenerator& rng,
                                  KDF* kdf,
                                  MessageAuthenticationCode* mac,
                                  size_t mac_key_length) :
-   DLIES_Decryptor(own_priv_key, kdf, nullptr, 0, mac, mac_key_length)
+   DLIES_Decryptor(own_priv_key, rng, kdf, nullptr, 0, mac, mac_key_length)
    {}
 
 secure_vector<byte> DLIES_Decryptor::do_decrypt(byte& valid_mask,

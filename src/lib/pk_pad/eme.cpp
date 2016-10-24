@@ -6,7 +6,7 @@
 */
 
 #include <botan/eme.h>
-#include <botan/internal/algo_registry.h>
+#include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_EME_OAEP)
 #include <botan/oaep.h>
@@ -22,33 +22,33 @@
 
 namespace Botan {
 
-#define BOTAN_REGISTER_EME(name, maker) BOTAN_REGISTER_T(EME, name, maker)
-#define BOTAN_REGISTER_EME_NOARGS(name) BOTAN_REGISTER_T_NOARGS(EME, name)
-
-#define BOTAN_REGISTER_EME_NAMED_NOARGS(type, name) \
-   BOTAN_REGISTER_NAMED_T(EME, name, type, make_new_T<type>)
-
-#if defined(BOTAN_HAS_EME_OAEP)
-BOTAN_REGISTER_NAMED_T(EME, "OAEP", OAEP, OAEP::make);
+EME* get_eme(const std::string& algo_spec)
+   {
+#if defined(BOTAN_HAS_EME_RAW)
+   if(algo_spec == "Raw")
+      return new EME_Raw;
 #endif
 
 #if defined(BOTAN_HAS_EME_PKCS1v15)
-BOTAN_REGISTER_EME_NAMED_NOARGS(EME_PKCS1v15, "PKCS1v15");
+   if(algo_spec == "PKCS1v15" || algo_spec == "EME-PKCS1-v1_5")
+      return new EME_PKCS1v15;
 #endif
 
-#if defined(BOTAN_HAS_EME_RAW)
-BOTAN_REGISTER_EME_NAMED_NOARGS(EME_Raw, "Raw");
+#if defined(BOTAN_HAS_EME_OAEP)
+   SCAN_Name req(algo_spec);
+
+   if(req.algo_name() == "OAEP" ||
+      req.algo_name() == "EME-OAEP" ||
+      req.algo_name() == "EME1")
+      {
+      if(req.arg_count() == 1 ||
+         (req.arg_count() == 2 && req.arg(1) == "MGF1"))
+         {
+         if(auto hash = HashFunction::create(req.arg(0)))
+            return new OAEP(hash.release());
+         }
+      }
 #endif
-
-EME* get_eme(const std::string& algo_spec)
-   {
-   SCAN_Name request(algo_spec);
-
-   if(EME* eme = make_a<EME>(Botan::EME::Spec(algo_spec)))
-      return eme;
-
-   if(request.algo_name() == "Raw")
-      return nullptr; // No padding
 
    throw Algorithm_Not_Found(algo_spec);
    }

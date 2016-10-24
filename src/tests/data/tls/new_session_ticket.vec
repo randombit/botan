@@ -1,0 +1,20 @@
+# NewSessionTicket message contains the following fields:
+# - lifetime (4 bytes)
+# - length (2 bytes)
+# - session ticket
+
+[new_session_ticket]
+Buffer = 000000000000
+Exception = 
+
+Buffer = 00000000000100
+Exception = 
+
+Buffer = 0000000000051122334455
+Exception  =
+
+Buffer = 0001
+Exception = Invalid argument Decoding error: Session ticket message too short to be valid
+
+Buffer = 00010203000500
+Exception = Invalid argument Decoding error: Invalid SessionTicket: Expected 5 bytes remaining, only 1 left

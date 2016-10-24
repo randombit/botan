@@ -70,5 +70,4 @@ parameters n and t, and have the cooresponding key sizes listed:
 +-----+------+-----+---------------+----------------+
 
 You can check the speed of McEliece with the suggested parameters above
-using ``botan speed McEliece``, and can encrypt files using the ``botan mce``
-command.
+using ``botan speed McEliece``

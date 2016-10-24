@@ -26,12 +26,13 @@ namespace Botan {
 */
 X509_CA::X509_CA(const X509_Certificate& c,
                  const Private_Key& key,
-                 const std::string& hash_fn) : m_cert(c)
+                 const std::string& hash_fn,
+                 RandomNumberGenerator& rng) : m_cert(c)
    {
    if(!m_cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
 
-   m_signer = choose_sig_format(key, hash_fn, m_ca_sig_algo);
+   m_signer = choose_sig_format(key, rng, hash_fn, m_ca_sig_algo);
    }
 
 /*
@@ -52,11 +53,14 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
    {
    Key_Constraints constraints;
    if(req.is_CA())
+      {
       constraints = Key_Constraints(KEY_CERT_SIGN | CRL_SIGN);
+      }
    else
       {
       std::unique_ptr<Public_Key> key(req.subject_public_key());
-      constraints = find_constraints(*key, req.constraints());
+      verify_cert_constraints_valid_for_key_type(*key, req.constraints());
+      constraints = req.constraints();
       }
 
    Extensions extensions;
@@ -65,7 +69,10 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       new Cert_Extension::Basic_Constraints(req.is_CA(), req.path_limit()),
       true);
 
-   extensions.add(new Cert_Extension::Key_Usage(constraints), true);
+   if(constraints != NO_CONSTRAINTS)
+      {
+      extensions.add(new Cert_Extension::Key_Usage(constraints), true);
+      }
 
    extensions.add(new Cert_Extension::Authority_Key_ID(m_cert.subject_key_id()));
    extensions.add(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
@@ -219,6 +226,7 @@ X509_Certificate X509_CA::ca_certificate() const
 * Choose a signing format for the key
 */
 PK_Signer* choose_sig_format(const Private_Key& key,
+                             RandomNumberGenerator& rng,
                              const std::string& hash_fn,
                              AlgorithmIdentifier& sig_algo)
    {
@@ -233,11 +241,17 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    std::string padding;
    if(algo_name == "RSA")
+      {
       padding = "EMSA3";
-   else if(algo_name == "DSA" || algo_name == "ECDSA" )
+      }
+   else if(algo_name == "DSA" || algo_name == "ECDSA" || algo_name == "ECGDSA" || algo_name == "ECKCDSA")
+      {
       padding = "EMSA1";
+      }
    else
+      {
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
+      }
 
    const Signature_Format format = (key.message_parts() > 1) ? DER_SEQUENCE : IEEE_1363;
 
@@ -246,7 +260,7 @@ PK_Signer* choose_sig_format(const Private_Key& key,
    sig_algo.oid = OIDS::lookup(algo_name + "/" + padding);
    sig_algo.parameters = key.algorithm_identifier().parameters;
 
-   return new PK_Signer(key, padding, format);
+   return new PK_Signer(key, rng, padding, format);
    }
 
 }

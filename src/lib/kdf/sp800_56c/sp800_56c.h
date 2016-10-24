@@ -45,9 +45,11 @@ class BOTAN_DLL SP800_56C : public KDF
                  const byte salt[], size_t salt_len,
                  const byte label[], size_t label_len) const override;
 
+      /**
+      * @param mac MAC algorithm used for randomness extraction
+      * @param exp KDF used for key expansion
+      */
       SP800_56C(MessageAuthenticationCode* mac, KDF* exp) : m_prf(mac), m_exp(exp) {}
-
-      static SP800_56C* make(const Spec& spec);
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
       std::unique_ptr<KDF> m_exp;

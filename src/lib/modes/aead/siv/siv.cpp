@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/mode_utils.h>
 #include <botan/siv.h>
 #include <botan/cmac.h>
 #include <botan/ctr.h>
@@ -18,6 +17,8 @@ SIV_Mode::SIV_Mode(BlockCipher* cipher) :
    m_ctr(new CTR_BE(cipher->clone())),
    m_cmac(new CMAC(cipher))
    {
+   if(cipher->block_size() != 16)
+      throw Invalid_Argument("SIV requires a 128 bit block cipher");
    }
 
 void SIV_Mode::clear()
@@ -70,7 +71,7 @@ void SIV_Mode::set_associated_data_n(size_t n, const byte ad[], size_t length)
    m_ad_macs[n] = m_cmac->process(ad, length);
    }
 
-secure_vector<byte> SIV_Mode::start_raw(const byte nonce[], size_t nonce_len)
+void SIV_Mode::start_msg(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -81,18 +82,13 @@ secure_vector<byte> SIV_Mode::start_raw(const byte nonce[], size_t nonce_len)
       m_nonce.clear();
 
    m_msg_buf.clear();
-
-   return secure_vector<byte>();
    }
 
-void SIV_Mode::update(secure_vector<byte>& buffer, size_t offset)
+size_t SIV_Mode::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
+   // all output is saved for processing in finish
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
-   buffer.resize(offset); // truncate msg
+   return 0;
    }
 
 secure_vector<byte> SIV_Mode::S2V(const byte* text, size_t text_len)

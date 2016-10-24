@@ -6,8 +6,8 @@
 */
 
 #include <botan/gcm.h>
-#include <botan/internal/mode_utils.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/loadstor.h>
 #include <botan/ctr.h>
 
 #if defined(BOTAN_HAS_GCM_CLMUL)
@@ -16,6 +16,8 @@
 #endif
 
 namespace Botan {
+
+static const size_t GCM_BS = 16;
 
 void GHASH::gcm_multiply(secure_vector<byte>& x) const
    {
@@ -66,15 +68,13 @@ void GHASH::gcm_multiply(secure_vector<byte>& x) const
 void GHASH::ghash_update(secure_vector<byte>& ghash,
                          const byte input[], size_t length)
    {
-   const size_t BS = 16;
-
    /*
    This assumes if less than block size input then we're just on the
    final block and should pad with zeros
    */
    while(length)
       {
-      const size_t to_proc = std::min(length, BS);
+      const size_t to_proc = std::min(length, GCM_BS);
 
       xor_buf(ghash.data(), input, to_proc);
 
@@ -88,7 +88,7 @@ void GHASH::ghash_update(secure_vector<byte>& ghash,
 void GHASH::key_schedule(const byte key[], size_t length)
    {
    m_H.assign(key, key+length);
-   m_H_ad.resize(16);
+   m_H_ad.resize(GCM_BS);
    m_ad_len = 0;
    m_text_len = 0;
    }
@@ -109,7 +109,7 @@ void GHASH::set_associated_data(const byte input[], size_t length)
 
 void GHASH::update(const byte input[], size_t length)
    {
-   BOTAN_ASSERT(m_ghash.size() == 16, "Key was set");
+   BOTAN_ASSERT(m_ghash.size() == GCM_BS, "Key was set");
 
    m_text_len += length;
 
@@ -119,7 +119,7 @@ void GHASH::update(const byte input[], size_t length)
 void GHASH::add_final_block(secure_vector<byte>& hash,
                             size_t ad_len, size_t text_len)
    {
-   secure_vector<byte> final_block(16);
+   secure_vector<byte> final_block(GCM_BS);
    store_be<u64bit>(final_block.data(), 8*ad_len, 8*text_len);
    ghash_update(hash, final_block.data(), final_block.size());
    }
@@ -139,7 +139,7 @@ secure_vector<byte> GHASH::final()
 secure_vector<byte> GHASH::nonce_hash(const byte nonce[], size_t nonce_len)
    {
    BOTAN_ASSERT(m_ghash.size() == 0, "nonce_hash called during wrong time");
-   secure_vector<byte> y0(16);
+   secure_vector<byte> y0(GCM_BS);
 
    ghash_update(y0, nonce, nonce_len);
    add_final_block(y0, 0, nonce_len);
@@ -162,15 +162,14 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
    m_tag_size(tag_size),
    m_cipher_name(cipher->name())
    {
-   if(cipher->block_size() != m_BS)
-      throw Invalid_Argument("GCM requires a 128 bit cipher so cannot be used with " +
-                                  cipher->name());
+   if(cipher->block_size() != GCM_BS)
+      throw Invalid_Argument("Invalid block cipher for GCM");
 
    m_ghash.reset(new GHASH);
 
    m_ctr.reset(new CTR_BE(cipher, 4)); // CTR_BE takes ownership of cipher
 
-   if(m_tag_size != 8 && m_tag_size != 16)
+   if(m_tag_size != 8 && m_tag_size != GCM_BS)
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(m_tag_size));
    }
 
@@ -185,9 +184,19 @@ std::string GCM_Mode::name() const
    return (m_cipher_name + "/GCM");
    }
 
+std::string GCM_Mode::provider() const
+   {
+#if defined(BOTAN_HAS_GCM_CLMUL)
+   if(CPUID::has_clmul())
+      return "clmul";
+#endif
+
+   return "base";
+   }
+
 size_t GCM_Mode::update_granularity() const
    {
-   return m_BS;
+   return GCM_BS;
    }
 
 Key_Length_Specification GCM_Mode::key_spec() const
@@ -199,10 +208,10 @@ void GCM_Mode::key_schedule(const byte key[], size_t keylen)
    {
    m_ctr->set_key(key, keylen);
 
-   const std::vector<byte> zeros(m_BS);
+   const std::vector<byte> zeros(GCM_BS);
    m_ctr->set_iv(zeros.data(), zeros.size());
 
-   secure_vector<byte> H(m_BS);
+   secure_vector<byte> H(GCM_BS);
    m_ctr->encipher(H);
    m_ghash->set_key(H);
    }
@@ -212,12 +221,12 @@ void GCM_Mode::set_associated_data(const byte ad[], size_t ad_len)
    m_ghash->set_associated_data(ad, ad_len);
    }
 
-secure_vector<byte> GCM_Mode::start_raw(const byte nonce[], size_t nonce_len)
+void GCM_Mode::start_msg(const byte nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   secure_vector<byte> y0(m_BS);
+   secure_vector<byte> y0(GCM_BS);
 
    if(nonce_len == 12)
       {
@@ -231,48 +240,48 @@ secure_vector<byte> GCM_Mode::start_raw(const byte nonce[], size_t nonce_len)
 
    m_ctr->set_iv(y0.data(), y0.size());
 
-   secure_vector<byte> m_enc_y0(m_BS);
+   secure_vector<byte> m_enc_y0(GCM_BS);
    m_ctr->encipher(m_enc_y0);
 
    m_ghash->start(m_enc_y0.data(), m_enc_y0.size());
-
-   return secure_vector<byte>();
    }
 
-void GCM_Encryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t GCM_Encryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
+   BOTAN_ARG_CHECK(sz % update_granularity() == 0);
    m_ctr->cipher(buf, buf, sz);
    m_ghash->update(buf, sz);
+   return sz;
    }
 
 void GCM_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
-   update(buffer, offset);
+   BOTAN_ARG_CHECK(offset <= buffer.size());
+   const size_t sz = buffer.size() - offset;
+   byte* buf = buffer.data() + offset;
+
+   m_ctr->cipher(buf, buf, sz);
+   m_ghash->update(buf, sz);
    auto mac = m_ghash->final();
    buffer += std::make_pair(mac.data(), tag_size());
    }
 
-void GCM_Decryption::update(secure_vector<byte>& buffer, size_t offset)
+size_t GCM_Decryption::process(uint8_t buf[], size_t sz)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
-
+   BOTAN_ARG_CHECK(sz % update_granularity() == 0);
    m_ghash->update(buf, sz);
    m_ctr->cipher(buf, buf, sz);
+   return sz;
    }
 
 void GCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
    {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+   BOTAN_ARG_CHECK(offset <= buffer.size());
    const size_t sz = buffer.size() - offset;
    byte* buf = buffer.data() + offset;
 
-   BOTAN_ASSERT(sz >= tag_size(), "Have the tag as part of final input");
+   if(sz < tag_size())
+      throw Exception("Insufficient input for GCM decryption, tag missing");
 
    const size_t remaining = sz - tag_size();
 

@@ -20,7 +20,11 @@ namespace Botan {
 class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
    {
    public:
-
+      /**
+      * Create an ECDH public key.
+      * @param alg_id algorithm identifier
+      * @param key_bits DER encoded public key bits
+      */
       ECDH_PublicKey(const AlgorithmIdentifier& alg_id,
                      const secure_vector<byte>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
@@ -55,6 +59,12 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       std::vector<byte> public_value() const
          { return unlock(EC2OSP(public_point(), PointGFp::UNCOMPRESSED)); }
 
+      /**
+      * @return public point value
+      */
+      std::vector<byte> public_value(PointGFp::Compression_Type type) const
+         { return unlock(EC2OSP(public_point(), type)); }
+
    protected:
       ECDH_PublicKey();
    };
@@ -68,6 +78,11 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
    {
    public:
 
+      /**
+      * Create an ECDH public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits X.509 subject public key info structure
+      */
       ECDH_PrivateKey(const AlgorithmIdentifier& alg_id,
                       const secure_vector<byte>& key_bits) :
          EC_PrivateKey(alg_id, key_bits) {}
@@ -84,7 +99,15 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
          EC_PrivateKey(rng, domain, x) {}
 
       std::vector<byte> public_value() const override
-         { return ECDH_PublicKey::public_value(); }
+         { return ECDH_PublicKey::public_value(PointGFp::UNCOMPRESSED); }
+
+      std::vector<byte> public_value(PointGFp::Compression_Type type) const
+         { return ECDH_PublicKey::public_value(type); }
+
+      std::unique_ptr<PK_Ops::Key_Agreement>
+         create_key_agreement_op(RandomNumberGenerator& rng,
+                                 const std::string& params,
+                                 const std::string& provider) const override;
    };
 
 }

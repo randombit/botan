@@ -9,16 +9,6 @@
 
 namespace Botan {
 
-OFB* OFB::make(const Spec& spec)
-   {
-   if(spec.algo_name() == "OFB" && spec.arg_count() == 1)
-      {
-      if(auto c = BlockCipher::create(spec.arg(0)))
-         return new OFB(c.release());
-      }
-   return nullptr;
-   }
-
 OFB::OFB(BlockCipher* cipher) :
    m_cipher(cipher),
    m_buffer(m_cipher->block_size()),

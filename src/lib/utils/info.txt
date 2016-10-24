@@ -14,6 +14,7 @@ exceptn.h
 loadstor.h
 mem_ops.h
 mul128.h
+mutex.h
 parsing.h
 rotate.h
 types.h

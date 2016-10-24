@@ -1325,7 +1325,7 @@ class BOTAN_DLL LowLevel
       /**
       * C_GetSessionInfo obtains information about the session.
       * @param session the session's handle
-      * @param info receives session info
+      * @param info_ptr receives session info
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
@@ -1639,7 +1639,7 @@ class BOTAN_DLL LowLevel
       * C_SetAttributeValue modifies the value of one or more object attributes.
       * @param session the session's handle
       * @param object the object's handle
-      * @param attributes specifies attrs and values
+      * @param attribute_values specifies attrs and values
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
@@ -1692,9 +1692,9 @@ class BOTAN_DLL LowLevel
       /**
       * C_FindObjects continues a search for token and session objects that match a template, obtaining additional object handles.
       * @param session session's handle
-      * @param object gets obj. handles
+      * @param object_ptr gets obj. handles
       * @param max_object_count max handles to get
-      * @param object_count actual # returned
+      * @param object_count_ptr actual # returned
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
@@ -1753,9 +1753,9 @@ class BOTAN_DLL LowLevel
       * C_Encrypt encrypts single-part data.
       * @param session session's handle
       * @param data_ptr the plaintext data
-      * @param encrypted_data_len_ptr bytes of plaintext
+      * @param data_len size of plaintext data in bytes
       * @param encrypted_data gets ciphertext
-      * @param encrypted_data_len gets c-text size
+      * @param encrypted_data_len_ptr gets c-text size
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:

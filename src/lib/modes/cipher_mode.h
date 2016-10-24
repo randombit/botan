@@ -1,6 +1,6 @@
 /*
 * Cipher Modes
-* (C) 2013 Jack Lloyd
+* (C) 2013,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,7 +12,6 @@
 #include <botan/key_spec.h>
 #include <botan/exceptn.h>
 #include <botan/symkey.h>
-#include <botan/scan_name.h>
 #include <string>
 #include <vector>
 
@@ -24,29 +23,21 @@ namespace Botan {
 class BOTAN_DLL Cipher_Mode
    {
    public:
-      typedef SCAN_Name Spec;
-
       virtual ~Cipher_Mode() {}
 
-      /**
-      * Begin processing a message.
-      * @param nonce the per message nonce
+      /*
+      * Prepare for processing a message under the specified nonce
       */
-      template<typename Alloc>
-      secure_vector<byte> start(const std::vector<byte, Alloc>& nonce)
-         {
-         return start(nonce.data(), nonce.size());
-         }
+      virtual void start_msg(const byte nonce[], size_t nonce_len) = 0;
 
       /**
       * Begin processing a message.
       * @param nonce the per message nonce
       */
       template<typename Alloc>
-      BOTAN_DEPRECATED("Use Transform::start")
-      secure_vector<byte> start_vec(const std::vector<byte, Alloc>& nonce)
+      void start(const std::vector<byte, Alloc>& nonce)
          {
-         return start(nonce.data(), nonce.size());
+         start_msg(nonce.data(), nonce.size());
          }
 
       /**
@@ -54,27 +45,48 @@ class BOTAN_DLL Cipher_Mode
       * @param nonce the per message nonce
       * @param nonce_len length of nonce
       */
-      secure_vector<byte> start(const byte nonce[], size_t nonce_len)
+      void start(const byte nonce[], size_t nonce_len)
          {
-         return start_raw(nonce, nonce_len);
+         start_msg(nonce, nonce_len);
          }
 
       /**
       * Begin processing a message.
       */
-      secure_vector<byte> start()
+      void start()
          {
-         return start_raw(nullptr, 0);
+         return start_msg(nullptr, 0);
          }
 
-      virtual secure_vector<byte> start_raw(const byte nonce[], size_t nonce_len) = 0;
+      /**
+      * Process message blocks
+      *
+      * Input must be a multiple of update_granularity
+      *
+      * Processes msg in place and returns bytes written. Normally
+      * this will be either msg_len (indicating the entire message was
+      * processes) or for certain AEAD modes zero (indicating that the
+      * mode requires the entire message be processed in one pass).
+      *
+      * @param msg the message to be processed
+      * @param msg_len length of the message in bytes
+      */
+      virtual size_t process(uint8_t msg[], size_t msg_len) = 0;
 
       /**
       * Process some data. Input must be in size update_granularity() byte blocks.
-      * @param blocks in/out parameter which will possibly be resized
+      * @param buffer in/out parameter which will possibly be resized
       * @param offset an offset into blocks to begin processing
       */
-      virtual void update(secure_vector<byte>& blocks, size_t offset = 0) = 0;
+      void update(secure_vector<byte>& buffer, size_t offset = 0)
+         {
+         BOTAN_ASSERT(buffer.size() >= offset, "Offset ok");
+         byte* buf = buffer.data() + offset;
+         const size_t buf_size = buffer.size() - offset;
+
+         const size_t written = process(buf, buf_size);
+         buffer.resize(offset + written);
+         }
 
       /**
       * Complete processing of a message.
@@ -104,35 +116,27 @@ class BOTAN_DLL Cipher_Mode
       virtual size_t minimum_final_size() const = 0;
 
       /**
-      * Return the default size for a nonce
+      * @return the default size for a nonce
       */
       virtual size_t default_nonce_length() const = 0;
 
       /**
-      * Return true iff nonce_len is a valid length for the nonce
+      * @return true iff nonce_len is a valid length for the nonce
       */
       virtual bool valid_nonce_length(size_t nonce_len) const = 0;
-
-      /**
-      * Return some short name describing the provider of this tranformation.
-      * Useful in cases where multiple implementations are available (eg,
-      * different implementations of AES). Default "core" is used for the
-      * 'standard' implementation included in the library.
-      */
-      virtual std::string provider() const { return "core"; }
 
       virtual std::string name() const = 0;
 
       virtual void clear() = 0;
 
       /**
-      * Returns true iff this mode provides authentication as well as
+      * @return true iff this mode provides authentication as well as
       * confidentiality.
       */
       virtual bool authenticated() const { return false; }
 
       /**
-      * Return the size of the authentication tag used (in bytes)
+      * @return the size of the authentication tag used (in bytes)
       */
       virtual size_t tag_size() const { return 0; }
 
@@ -151,12 +155,20 @@ class BOTAN_DLL Cipher_Mode
          return key_spec().valid_keylength(length);
          }
 
+      /**
+      * Set the symmetric key of this transform
+      * @param key contains the key material
+      */
       template<typename Alloc>
       void set_key(const std::vector<byte, Alloc>& key)
          {
          set_key(key.data(), key.size());
          }
 
+      /**
+      * Set the symmetric key of this transform
+      * @param key contains the key material
+      */
       void set_key(const SymmetricKey& key)
          {
          set_key(key.begin(), key.length());
@@ -174,6 +186,12 @@ class BOTAN_DLL Cipher_Mode
          key_schedule(key, length);
          }
 
+      /**
+      * @return provider information about this implementation. Default is "base",
+      * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
+      */
+      virtual std::string provider() const { return "base"; }
+
    private:
       virtual void key_schedule(const byte key[], size_t length) = 0;
    };
@@ -184,6 +202,11 @@ class BOTAN_DLL Cipher_Mode
 */
 enum Cipher_Dir { ENCRYPTION, DECRYPTION };
 
+/**
+* Get a cipher mode by name (eg "AES-128/CBC" or "Serpent/XTS")
+* @param algo_spec cipher name
+* @param direction ENCRYPTION or DECRYPTION
+*/
 BOTAN_DLL Cipher_Mode* get_cipher_mode(const std::string& algo_spec, Cipher_Dir direction);
 
 }

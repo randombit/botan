@@ -1,6 +1,7 @@
 /*
 * X.509 Certificate Extensions
 * (C) 1999-2010,2012 Jack Lloyd
+* (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -82,7 +83,7 @@ OID Certificate_Extension::oid_of() const
 * Validate the extension (the default implementation is a NOP)
 */
 void Certificate_Extension::validate(const X509_Certificate&, const X509_Certificate&,
-      const std::vector<X509_Certificate>&,
+      const std::vector<std::shared_ptr<const X509_Certificate>>&,
       std::vector<std::set<Certificate_Status_Code>>&,
       size_t)
    {
@@ -293,7 +294,9 @@ void Key_Usage::decode_inner(const std::vector<byte>& in)
 
    u16bit usage = 0;
    for(size_t i = 1; i != obj.value.size(); ++i)
-      usage = (obj.value[i] << 8) | usage;
+      {
+      usage = (obj.value[i] << 8*(sizeof(usage)-i)) | usage;
+      }
 
    m_constraints = Key_Constraints(usage);
    }
@@ -522,7 +525,7 @@ void Name_Constraints::contents_to(Data_Store& subject, Data_Store&) const
    }
 
 void Name_Constraints::validate(const X509_Certificate& subject, const X509_Certificate& issuer,
-      const std::vector<X509_Certificate>& cert_path,
+      const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
       std::vector<std::set<Certificate_Status_Code>>& cert_status,
       size_t pos)
    {
@@ -544,7 +547,7 @@ void Name_Constraints::validate(const X509_Certificate& subject, const X509_Cert
 
          for(auto c: m_name_constraints.permitted())
             {
-            switch(c.base().matches(cert_path.at(j)))
+            switch(c.base().matches(*cert_path.at(j)))
                {
             case GeneralName::MatchResult::NotFound:
             case GeneralName::MatchResult::All:
@@ -561,7 +564,7 @@ void Name_Constraints::validate(const X509_Certificate& subject, const X509_Cert
 
          for(auto c: m_name_constraints.excluded())
             {
-            switch(c.base().matches(cert_path.at(j)))
+            switch(c.base().matches(*cert_path.at(j)))
                {
             case GeneralName::MatchResult::All:
             case GeneralName::MatchResult::Some:
@@ -818,13 +821,12 @@ std::vector<byte> Unknown_Critical_Extension::encode_inner() const
    throw Not_Implemented("Unknown_Critical_Extension encoding");
    }
 
-void Unknown_Critical_Extension::decode_inner(const std::vector<byte>& buf)
+void Unknown_Critical_Extension::decode_inner(const std::vector<byte>&)
    {
    }
 
-void Unknown_Critical_Extension::contents_to(Data_Store& info, Data_Store&) const
+void Unknown_Critical_Extension::contents_to(Data_Store&, Data_Store&) const
    {
-   // TODO: textual representation?
    }
 
 }

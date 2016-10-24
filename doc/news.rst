@@ -1,44 +1,270 @@
 Release Notes
 ========================================
 
-Version 1.11.31, Not Yet Released
+Version 1.11.33, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add PKCS #11 support (GH #507)
+* A countermeasure for the Lucky13 timing attack against CBC-based TLS
+  ciphersuites has been added. (GH #675)
 
-* Add ECIES encryption system (GH #483)
+* Added X25519-based key exchange for TLS (GH #673)
 
-* Add ECKCDSA signature algorithm (#504)
+* Add Certificate_Store_In_SQL which supports storing certs, keys, and
+  revocation information in a SQL database. Subclass Certificate_Store_In_SQLite
+  specializes with support for SQLite3 databases. (GH #631)
 
-* Add KDF1 from ISO 18033 (GH #483)
+* The Certificate_Store interface has been changed to deal with std::shared_ptrs
+  instead of raw pointers (GH #471 #631)
 
-* RNG changes: NIST SP900-80's HMAC_DRBG is now the default generator
-  for userspace RNG (AutoSeeded_RNG). HMAC_DRBG now attempts to detect
-  use of fork (via pid checks)
+* Add support for official SHA-3. Keccak-1600 was already supported
+  but used different padding from FIPS 202. (GH #669)
+
+* Add SHAKE-128 based stream cipher. (GH #669)
+
+* NewHope now supports the AES-128/CTR + SHA-256 parameters used by
+  BoringSSL in addition to the SHA-3/SHAKE-128 parameters used by the
+  reference implementation. (GH #669)
+
+* Add support for the TLS Supported Point Formats Extension from RFC 4492. Adds
+  TLS::Policy::use_ecc_point_compression policy option. If supported on both
+  sides, ECC points can be sent in compressed format which saves a few bytes
+  during the handshake. (GH #645)
+
+* Fix entropy source selection bug on Windows, which caused the CryptoAPI
+  entropy source to be not available under its normal name "win32_cryptoapi" but
+  instead "dev_random". GH #644
+
+* Accept read-only access to /dev/urandom. System_RNG previously required
+  read-write access, to allow applications to provide inputs to the system
+  PRNG. But local security policies might only allow read-only access, as is the
+  case with Ubuntu's AppArmor profile for applications in the Snappy binary
+  format. If opening read/write fails, System_RNG silently backs down to
+  read-only, in which case calls to `add_entropy` on that object will fail.
+  (GH #647 #648)
+
+* Fix use of Win32 CryptoAPI RNG as an entropy source, which was accidentally
+  disabled due to empty list of acceptable providers being specified. Typically
+  the library would fall back to gathering entropy from OS functions returning
+  statistical information, but if this functionality was disabled in the build a
+  PRNG_Unseeded exception would result. (GH #655)
+
+* Add support for building the library as part of the IncludeOS unikernel.
+  This included making filesystem and threading support optional. (GH #665)
+
+* Added ISA annotations so that with GCC (all supported versions) and
+  Clang (since 3.7) it is no longer required to compile amalgamation
+  files with ABI specific flags such as ``-maes``. (GH #665)
+
+* Internal cleanups to TLS CBC record handling. TLS CBC ciphersuites
+  can now be disabled by disabling `tls_cbc` module. (GH #642 #659)
+
+* Internal cleanups to the name->object mapping code eliminates most
+  global locks and all use of static initializers (GH #668 #465)
+
+* Avoid static_assert triggering under MSVC debug builds (GH #646)
+
+* The antique PBKDF1 password hashing scheme is deprecated and will be
+  removed in a future release. It was only used to support the equally
+  ancient PBES1 private key encryption scheme, which was removed in 1.11.8.
+
+* Added MSVC debug/checked iterator builds (GH #666 #667)
+
+* Added Linux ppc64le cross compile target to Travis CI (GH #654)
+
+* If RC4 is disabled, also disable it coming from the OpenSSL provider (GH #641)
+
+* Add TLS message parsing tests (GH #640)
+
+* Updated BSI policy to prohibit DES, HKDF, HMAC_RNG (GH #649)
+
+* Documentation improvements (GH #660 #662 #663 #670)
+
+Version 1.11.32, 2016-09-28
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add support for the NewHope Ring-LWE key encapsulation algorithm. This scheme
+  provides an estimated ~200 bit security level against a quantum attacker while
+  also being very fast and requiring only modest message sizes of 1824 and 2048
+  bytes for initiator and responder, resp. This version is tested as having
+  bit-for-bit identical output as the reference implementation by the authors.
+
+  Be warned that NewHope is still a very new scheme and may yet fall to analysis.
+  For best assurance, NewHope should be used only in combination with another
+  key exchange mechanism, such as ECDH.
+
+* New TLS callbacks API. Instead of numerous std::function callbacks, the
+  application passes an object implementing the TLS::Callbacks interface, which
+  has virtual functions matching the previous callbacks (plus some extras).
+  Full source compatability with previous versions is maintained for now, but
+  the old interface is deprecated and will be removed in a future release.  The
+  manual has been updated to reflect the changes. (GH #457 and #567)
+
+* Add support for TLS Encrypt-then-MAC extension (GH #492 and #578), which fixes
+  the known issues in the TLS CBC-HMAC construction.
+
+* The format of the TLS session struct has changed (to support EtM), so old
+  TLS session caches will be invalidated.
+
+* How the library presents optimized algorithm implementations has changed.  For
+  example with the algorithm AES-128, previously there were three BlockCipher
+  classes AES_128, AES_128_SSSE3, and AES_128_NI which used (resp) a table-based
+  implementation vulnerable to side channels, a constant time version using
+  SSSE3 SIMD extensions on modern x86, and x86 AES-NI instructions. Using the
+  correct version at runtime required using ``BlockCipher::create``. Now, only
+  the class AES_128 is presented, and the best available version is always used
+  based on CPUID checks. The tests have been extended to selectively disable
+  CPUID bits to ensure all available versions are tested. (GH #477 #623)
+
+  Removes API classes AES_128_NI, AES_192_NI, AES_256_NI, AES_128_SSSE3,
+  AES_192_SSSE3 AES_256_SSSE3, IDEA_SSE2, Noekeon_SIMD, Serpent_SIMD,
+  Threefish_512_AVX2, SHA_160_SSE2
+
+* The deprecated algorithms Rabin-Williams, Nyberg-Rueppel, MARS, RC2, RC5, RC6,
+  SAFER-SK, TEA, MD2, HAS-160, and RIPEMD-128 have been removed. (GH #580)
+
+* A new Cipher_Mode interface ``process`` allows encryption/decryption of
+  buffers without requiring copying into ``secure_vector`` first. (GH #516)
+
+* Fix verification of self-issued certificates (GH #634)
+
+* SSE2 optimizations for ChaCha, 60% faster on both Westmere and Skylake (GH #616)
+
+* The HMAC_RNG constructor added in 1.11.31 that took both an RNG and an
+  entropy source list ignored the entropy sources.
+
+* The configure option ``--via-amalgamation`` was renamed to ``--amalgamation``.
+  The configure option ``--gen-amalgamation`` was removed. It did generate
+  amalgamations but build Botan without amalgamation. Users should migrate to
+  ``--amalgamation``. (GH #621)
+
+* DH keys did not automatically self-test after being generated, contrary to
+  the current behavior for other key types.
+
+* Add tests for TLS 1.2 PRF (GH #628)
+
+Version 1.11.31, 2016-08-30
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix undefined behavior in Curve25519 on platforms without a native 128-bit
   integer type. This was known to produce incorrect results on 32-bit ARM
-  under Clang. GH #532
+  under Clang. GH #532 (CVE-2016-6878)
 
-* Fixes for FreeBSD (GH #517) and OpenBSD (GH #523)
+* If X509_Certificate::allowed_usage was called with more than one Key_Usage
+  set in the enum value, the function would return true if *any* of the allowed
+  usages were set, instead of if *all* of the allowed usages are set.
+  GH #591 (CVE-2016-6879)
 
-* Support for getting entropy from EGD is deprecated, and will be removed in
-  a future release. The developers believe that it is unlikely that any modern
-  system requires EGD and so the code is now dead weight. If you rely on EGD
-  support, you should contact the developers by email or GitHub ASAP.
+* Incompatible changes in DLIES: Previously the input to the KDF was
+  the concatenation of the (ephemeral) public key and the secret value
+  derived by the key agreement operation. Now the input is only the
+  secret value obtained by the key agreement operation. That's how it
+  is specified in the original paper "DHIES: An encryption scheme
+  based on Diffie-Hellman Problem" or in BSI technical guideline
+  TR-02102-1 for example. In addition to the already present
+  XOR-encrypion/decryption mode it's now possible to use DLIES with a
+  block cipher.  Furthermore the order of the output was changed from
+  {public key, tag, ciphertext} to {public key, ciphertext, tag}. Both
+  modes are compatible with BouncyCastle.
 
-* Changes in DLIES: Previously the input to the KDF was the concatenation
-  of the (ephemeral) public key and the secret value derived by the key
-  agreement operation. Now the input is only the secret value obtained
-  by the key agreement operation. That's how it is specified in the original
-  paper "DHIES: An encryption scheme based on Diffie-Hellman Problem" or in BSI
-  technical guideline TR-02102-1 for example. In addition to the already present
-  XOR-encrypion/decryption mode it's now possible to use DLIES with a block cipher.
-  Furthermore the order of the output was changed from {public key, tag, ciphertext}
-  to {public key, ciphertext, tag}. Both modes are compatible with bouncycastle.
+* Add initial PKCS #11 support (GH #507). Currently includes a low level
+  wrapper to all of PKCS #11 (p11.h) and high level code for RSA and ECDSA
+  signatures and hardware RNG access.
+
+* Add ECIES encryption scheme, compatible with BouncyCastle (GH #483)
+
+* Add ECKCDSA signature algorithm (GH #504)
+
+* Add KDF1 from ISO 18033 (GH #483)
+
+* Add FRP256v1 curve (GH #551)
+
+* Changes for userspace PRNGs HMAC_DRBG and HMAC_RNG (GH #520 and #593)
+
+  These RNGs now derive from Stateful_RNG which handles issues like periodic
+  reseeding and (on Unix) detecting use of fork. Previously these measures were
+  included only in HMAC_RNG.
+
+  Stateful_RNG allows reseeding from another RNG and/or a specified set of
+  entropy sources. For example it is possible to configure a HMAC_DRBG to reseed
+  using a PKCS #11 token RNG, the CPU's RDSEED instruction, and the system RNG
+  but disabling all other entropy polls.
+
+* AutoSeeded_RNG now uses NIST SP800-90a HMAC_DRBG(SHA-384). (GH #520)
+
+* On Windows and Unix systems, the system PRNG is used as the sole reseeding
+  source for a default AutoSeeded_RNG, completely skipping the standard entropy
+  polling code. New constructors allow specifying the reseed RNG and/or entropy
+  sources. (GH #520)
+
+* The `hres_timer` entropy source module has been removed. Timestamp inputs to
+  the RNG are now handled as additional_data inputs to HMAC_DRBG.
+
+* Add RDRAND_RNG which directly exposes the CPU RNG (GH #543)
+
+* Add PKCS #1 v1.5 id for SHA-512/256 (GH #554)
+
+* Add X509_Time::to_std_timepoint (GH #560)
 
 * Fix a bug in ANSI X9.23 padding mode, which returned one byte more
   than the given block size (GH #529).
+
+* Fix bug in SipHash::clear, which did not reset all state (GH #547)
+
+* Fixes for FreeBSD (GH #517) and OpenBSD (GH #523). The compiler defaults
+  to Clang on FreeBSD now.
+
+* SonarQube static analysis integration (GH #592)
+
+* Switched Travis CI to Ubuntu 14.04 LTS (GH #592)
+
+* Added ARM32, ARM64, PPC32, PPC64, and MinGW x86 cross compile targets to Travis CI (GH #608)
+
+* Clean up in TLS ciphersuite handling (GH #583)
+
+* Threefish-512 AVX2 optimization work (GH #581)
+
+* Remove build configuration host and timestamp from build.h
+  This makes this header reproducible and allows using ccache's direct mode
+  (GH #586 see also #587)
+
+* Prevent building for x86-64 with x86-32 compiler and the reverse (GH #585)
+
+* Avoid build problem on 32-bit userspace ARMv8 (GH #563)
+
+* Refactor of internal MP headers (GH #549)
+
+* Avoid MSVC C4100 warning (GH #525)
+
+* Change botan.exe to botan-cli.exe on Windows to workaround VC issue (GH #584)
+
+* More tests for RSA-KEM (GH #538), DH (GH #556), EME (GH #553),
+  cipher mode padding (GH #529), CTS mode (GH #531),
+  KDF1/ISO18033 (GH #537), OctetString (GH #545), OIDs (GH #546),
+  parallel hash (GH #548), charset handling (GH #555),
+  BigInt (GH #558), HMAC_DRBG (GH #598 #600)
+
+* New deprecations. See the full list in doc/deprecated.txt
+
+  The X9.31 and HMAC_RNG RNGs are deprecated.
+  If you need a userspace PRNG, use HMAC_DRBG (or AutoSeeded_RNG
+  which is HMAC_DRBG with defaults).
+
+  Support for getting entropy from EGD is deprecated, and will be
+  removed in a future release. The developers believe that it is
+  unlikely that any modern system requires EGD and so the code is now
+  dead weight. If you rely on EGD support, you should contact the
+  developers by email or GitHub ASAP.
+
+  The TLS ciphersuites using 3DES and SEED are deprecated and will be
+  removed in a future release.
+
+  ECB mode Cipher_Mode is deprecated and will be removed in a future
+  release.
+
+  Support for BeOS/Haiku has not been tested in 5+ years and is in an
+  unknown state.  Unless reports are received of successful builds and
+  use on this platform, support for BeOS/Haiku will be removed in a
+  future release.
 
 Version 1.11.30, 2016-06-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -268,6 +494,19 @@ Version 1.11.29, 2016-03-20
 * Small optimizations to Keccak hash
 
 * Support for locking allocator on Windows using VirtualLock. GH #450
+
+Version 1.18.15, 2016-02-13
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+* NOTE WELL: Botan 1.8 is not supported for security issues anymore.
+  Moving to 1.10 or 1.11 is certainly recommended.
+* Fix CVE-2014-9742: Insufficient randomness in Miller-Rabin primality check
+* Fix CVE-2016-2194: Infinite loop in modulur square root algorithm
+* Fix CVE-2015-5726: Crash in BER decoder
+* Fix CVE-2015-5727: Excess memory allocation in BER decoder
+  Note: Unlike the fix in 1.10 which checks that the source actually
+  contains enough data to satisfy the read before allocating the
+  memory, 1.8.15 simply rejects all ASN.1 blocks larger than 1 MiB.
+  This simpler check avoids the problem without breaking ABI.
 
 Version 1.10.12, 2016-02-03
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

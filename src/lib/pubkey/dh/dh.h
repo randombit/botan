@@ -25,6 +25,11 @@ class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
 
       DL_Group::Format group_format() const override { return DL_Group::ANSI_X9_42; }
 
+      /**
+      * Create a public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits X.509 subject public key info structure
+      */
       DH_PublicKey(const AlgorithmIdentifier& alg_id,
                    const secure_vector<byte>& key_bits) :
          DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_42) {}
@@ -50,9 +55,9 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
       std::vector<byte> public_value() const override;
 
       /**
-      * Load a DH private key
-      * @param alg_id the algorithm id
-      * @param key_bits the subject public key
+      * Load a private key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits PKCS #8 structure
       * @param rng a random number generator
       */
       DH_PrivateKey(const AlgorithmIdentifier& alg_id,
@@ -60,13 +65,18 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
                     RandomNumberGenerator& rng);
 
       /**
-      * Construct a private key with predetermined value.
+      * Create a private key.
       * @param rng random number generator to use
       * @param grp the group to be used in the key
       * @param x the key's secret value (or if zero, generate a new key)
       */
       DH_PrivateKey(RandomNumberGenerator& rng, const DL_Group& grp,
                     const BigInt& x = 0);
+
+      std::unique_ptr<PK_Ops::Key_Agreement>
+         create_key_agreement_op(RandomNumberGenerator& rng,
+                                 const std::string& params,
+                                 const std::string& provider) const override;
    };
 
 }

@@ -1,0 +1,2 @@
+define STATEFUL_RNG 20160819
+

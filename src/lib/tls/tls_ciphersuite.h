@@ -29,13 +29,6 @@ class BOTAN_DLL Ciphersuite
       */
       static Ciphersuite by_id(u16bit suite);
 
-      static std::vector<u16bit> all_known_ciphersuite_ids();
-
-      /*
-      * Returns the compiled in list of cipher suites.
-      */
-      static const std::vector<Ciphersuite>& all_cipher_suites();
-
       /**
       * Returns true iff this suite is a known SCSV
       */
@@ -68,6 +61,11 @@ class BOTAN_DLL Ciphersuite
       * @return true if this is an ECC ciphersuite
       */
       bool ecc_ciphersuite() const;
+
+      /**
+       * @return true if this suite uses a CBC cipher
+       */
+      bool cbc_ciphersuite() const;
 
       /**
       * @return key exchange algorithm used by this ciphersuite
@@ -110,12 +108,16 @@ class BOTAN_DLL Ciphersuite
       /**
       * @return true if this is a valid/known ciphersuite
       */
-      bool valid() const;
+      bool valid() const { return m_usable; }
+
+      bool operator<(const Ciphersuite& o) const { return ciphersuite_code() < o.ciphersuite_code(); }
+      bool operator<(const u16bit c) const { return ciphersuite_code() < c; }
 
       Ciphersuite() {}
 
    private:
 
+      bool is_usable() const;
 
       Ciphersuite(u16bit ciphersuite_code,
                   const char* iana_id,
@@ -140,6 +142,7 @@ class BOTAN_DLL Ciphersuite
          m_nonce_bytes_from_record(nonce_bytes_from_record),
          m_mac_keylen(mac_keylen)
          {
+         m_usable = is_usable();
          }
 
       u16bit m_ciphersuite_code = 0;
@@ -148,19 +151,21 @@ class BOTAN_DLL Ciphersuite
       All of these const char* strings are references to compile time
       constants in tls_suite_info.cpp
       */
-      const char* m_iana_id;
+      const char* m_iana_id = nullptr;
 
-      const char* m_sig_algo;
-      const char* m_kex_algo;
-      const char* m_prf_algo;
+      const char* m_sig_algo = nullptr;
+      const char* m_kex_algo = nullptr;
+      const char* m_prf_algo = nullptr;
 
-      const char* m_cipher_algo;
-      const char* m_mac_algo;
+      const char* m_cipher_algo = nullptr;
+      const char* m_mac_algo = nullptr;
 
       size_t m_cipher_keylen = 0;
       size_t m_nonce_bytes_from_handshake = 0;
       size_t m_nonce_bytes_from_record = 0;
       size_t m_mac_keylen = 0;
+
+      bool m_usable = false;
    };
 
 }

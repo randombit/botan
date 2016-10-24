@@ -41,8 +41,6 @@ support a 128-bit block cipher such as AES. EAX and SIV also support
        Start processing a message, using *nonce* as the unique per-message
        value.
 
-       Returns any initial data that should be emitted (for instance a header).
-
   .. cpp:function:: void update(secure_vector<byte>& buffer, size_t offset = 0)
 
        Continue processing a message. The *buffer* is an in/out parameter and
@@ -79,7 +77,7 @@ support a 128-bit block cipher such as AES. EAX and SIV also support
   .. cpp:function:: size_t update_granularity() const
 
        The AEAD interface requires :cpp:func:`update` be called with blocks of
-       this size.
+       this size. This will be 1, if the mode can process any length inputs.
 
   .. cpp:function:: size_t final_minimum_size() const
 

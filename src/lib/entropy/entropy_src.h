@@ -8,11 +8,16 @@
 #ifndef BOTAN_ENTROPY_H__
 #define BOTAN_ENTROPY_H__
 
+#include <botan/secmem.h>
 #include <botan/rng.h>
 #include <string>
 #include <chrono>
+#include <memory>
+#include <vector>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
 * Abstract interface to a source of entropy

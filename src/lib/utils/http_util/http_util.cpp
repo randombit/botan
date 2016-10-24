@@ -226,11 +226,6 @@ Response POST_sync(const std::string& url,
    return http_sync("POST", url, content_type, body, allowable_redirects);
    }
 
-std::future<Response> GET_async(const std::string& url, size_t allowable_redirects)
-   {
-   return std::async(std::launch::async, GET_sync, url, allowable_redirects);
-   }
-
 }
 
 }

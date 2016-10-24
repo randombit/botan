@@ -1,6 +1,7 @@
 /*
 * TLS Handshake Message
 * (C) 2012 Jack Lloyd
+*     2016 Matthias Gierlings
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -16,16 +17,28 @@ namespace Botan {
 
 namespace TLS {
 
+class Handshake_IO;
+class Handshake_Hash;
+
 /**
 * TLS Handshake Message Base Class
 */
 class BOTAN_DLL Handshake_Message
    {
    public:
+      /**
+      * @return string representation of this message type
+      */
       std::string type_string() const;
 
+      /**
+      * @return the message type
+      */
       virtual Handshake_Type type() const = 0;
 
+      /**
+      * @return DER representation of this message
+      */
       virtual std::vector<byte> serialize() const = 0;
 
       virtual ~Handshake_Message() {}

@@ -5,8 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/idea_sse2.h>
-#include <botan/cpuid.h>
+#include <botan/idea.h>
 #include <botan/internal/ct_utils.h>
 #include <emmintrin.h>
 
@@ -14,6 +13,7 @@ namespace Botan {
 
 namespace {
 
+BOTAN_FUNC_ISA("sse2")
 inline __m128i mul(__m128i X, u16bit K_16)
    {
    const __m128i zeros = _mm_set1_epi16(0);
@@ -62,6 +62,7 @@ inline __m128i mul(__m128i X, u16bit K_16)
 * that extra unpack could easily save 3-4 cycles per block, and would
 * also help a lot with register pressure on 32-bit x86
 */
+BOTAN_FUNC_ISA("sse2")
 void transpose_in(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
    {
    __m128i T0 = _mm_unpackhi_epi32(B0, B1);
@@ -98,6 +99,7 @@ void transpose_in(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
 /*
 * 4x8 matrix transpose (reverse)
 */
+BOTAN_FUNC_ISA("sse2")
 void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
    {
    __m128i T0 = _mm_unpacklo_epi64(B0, B1);
@@ -126,10 +128,13 @@ void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
    B3 = _mm_unpackhi_epi32(T2, T3);
    }
 
+}
+
 /*
-* IDEA encryption/decryption in SSE2
+* 8 wide IDEA encryption/decryption in SSE2
 */
-void idea_op_8(const byte in[64], byte out[64], const u16bit EK[52])
+BOTAN_FUNC_ISA("sse2")
+void IDEA::sse2_idea_op_8(const byte in[64], byte out[64], const u16bit EK[52]) const
    {
    CT::poison(in, 64);
    CT::poison(out, 64);
@@ -198,46 +203,6 @@ void idea_op_8(const byte in[64], byte out[64], const u16bit EK[52])
    CT::unpoison(in, 64);
    CT::unpoison(out, 64);
    CT::unpoison(EK, 52);
-   }
-
-}
-
-/*
-* IDEA Encryption
-*/
-void IDEA_SSE2::encrypt_n(const byte in[], byte out[], size_t blocks) const
-   {
-   const u16bit* KS = &this->get_EK()[0];
-
-   while(blocks >= 8)
-      {
-      idea_op_8(in, out, KS);
-      in += 8 * BLOCK_SIZE;
-      out += 8 * BLOCK_SIZE;
-      blocks -= 8;
-      }
-
-   if(blocks)
-     IDEA::encrypt_n(in, out, blocks);
-   }
-
-/*
-* IDEA Decryption
-*/
-void IDEA_SSE2::decrypt_n(const byte in[], byte out[], size_t blocks) const
-   {
-   const u16bit* KS = &this->get_DK()[0];
-
-   while(blocks >= 8)
-      {
-      idea_op_8(in, out, KS);
-      in += 8 * BLOCK_SIZE;
-      out += 8 * BLOCK_SIZE;
-      blocks -= 8;
-      }
-
-   if(blocks)
-     IDEA::decrypt_n(in, out, blocks);
    }
 
 }

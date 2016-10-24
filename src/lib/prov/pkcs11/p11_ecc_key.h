@@ -10,15 +10,14 @@
 #define BOTAN_P11_ECC_H__
 
 #include <botan/build.h>
-#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
-
 #include <botan/p11_object.h>
+
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
 #include <botan/pk_keys.h>
 #include <botan/ecc_key.h>
 #include <botan/ec_group.h>
 #include <botan/rng.h>
 #include <botan/alg_id.h>
-
 #include <vector>
 
 namespace Botan {
@@ -182,12 +181,11 @@ class BOTAN_DLL PKCS11_EC_PrivateKey : public virtual Private_Key,
 
       /**
       * Gets the public_point
-      * @note: the public key must be set using `set_public_point`
-      *        because it is not possible to infer the public key from a PKCS#11 EC private key
+      * @note the public key must be set using `set_public_point`
+      *       because it is not possible to infer the public key from a PKCS#11 EC private key
       * @return the public point of the private key
       * @throws Exception if the public point was not set using set_public_point()
       */
-
       const PointGFp& public_point() const
          {
          if(m_public_key.is_zero())

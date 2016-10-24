@@ -31,7 +31,9 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
          EC_PublicKey(dom_par, public_point) {}
 
       /**
-      * Construct from X.509 algorithm id and subject public key bits
+      * Load a public key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits X.509 subject public key info structure
       */
       GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
                           const secure_vector<byte>& key_bits);
@@ -59,6 +61,10 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
       size_t message_part_size() const override
          { return domain().get_order().bytes(); }
 
+      std::unique_ptr<PK_Ops::Verification>
+         create_verification_op(const std::string& params,
+                                const std::string& provider) const override;
+
    protected:
       GOST_3410_PublicKey() {}
    };
@@ -70,7 +76,11 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
                                        public EC_PrivateKey
    {
    public:
-
+      /**
+      * Load a private key.
+      * @param alg_id the X.509 algorithm identifier
+      * @param key_bits PKCS #8 structure
+      */
       GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id,
                            const secure_vector<byte>& key_bits) :
          EC_PrivateKey(alg_id, key_bits) {}
@@ -88,6 +98,11 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
 
       AlgorithmIdentifier pkcs8_algorithm_identifier() const override
          { return EC_PublicKey::algorithm_identifier(); }
+
+      std::unique_ptr<PK_Ops::Signature>
+         create_signature_op(RandomNumberGenerator& rng,
+                             const std::string& params,
+                             const std::string& provider) const override;
    };
 
 }

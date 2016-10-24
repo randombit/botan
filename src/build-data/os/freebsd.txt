@@ -13,4 +13,6 @@ dlopen
 readdir
 timegm
 sockets
+threads
+filesystem
 </target_features>

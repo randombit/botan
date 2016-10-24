@@ -1,21 +1,25 @@
 /*
 * DSA
-* (C) 1999-2010,2014 Jack Lloyd
+* (C) 1999-2010,2014,2016 Jack Lloyd
 * (C) 2016 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pk_utils.h>
 #include <botan/dsa.h>
 #include <botan/keypair.h>
 #include <botan/pow_mod.h>
 #include <botan/reducer.h>
+#include <botan/internal/pk_ops_impl.h>
+
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-  #include <botan/rfc6979.h>
   #include <botan/emsa.h>
+  #include <botan/rfc6979.h>
 #endif
-#include <future>
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+  #include <future>
+#endif
 
 namespace Botan {
 
@@ -122,21 +126,24 @@ DSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
    const BigInt k = BigInt::random_integer(rng, 1, m_q);
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
    auto future_r = std::async(std::launch::async,
                               [&]() { return m_mod_q.reduce(m_powermod_g_p(k)); });
 
    BigInt s = inverse_mod(k, m_q);
    const BigInt r = future_r.get();
+#else
+   BigInt s = inverse_mod(k, m_q);
+   const BigInt r = m_mod_q.reduce(m_powermod_g_p(k));
+#endif
+
    s = m_mod_q.multiply(s, mul_add(m_x, r, i));
 
    // With overwhelming probability, a bug rather than actual zero r/s
    BOTAN_ASSERT(s != 0, "invalid s");
    BOTAN_ASSERT(r != 0, "invalid r");
 
-   secure_vector<byte> output(2*m_q.bytes());
-   r.binary_encode(&output[output.size() / 2 - r.bytes()]);
-   s.binary_encode(&output[output.size() - s.bytes()]);
-   return output;
+   return BigInt::encode_fixed_length_int_pair(r, s, m_q.bytes());
    }
 
 /**
@@ -185,20 +192,41 @@ bool DSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
 
    s = inverse_mod(s, m_q);
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
    auto future_s_i = std::async(std::launch::async,
       [&]() { return m_powermod_g_p(m_mod_q.multiply(s, i)); });
 
    BigInt s_r = m_powermod_y_p(m_mod_q.multiply(s, r));
    BigInt s_i = future_s_i.get();
+#else
+   BigInt s_r = m_powermod_y_p(m_mod_q.multiply(s, r));
+   BigInt s_i = m_powermod_g_p(m_mod_q.multiply(s, i));
+#endif
 
    s = m_mod_p.multiply(s_i, s_r);
 
    return (m_mod_q.reduce(s) == r);
    }
 
-BOTAN_REGISTER_PK_SIGNATURE_OP("DSA", DSA_Signature_Operation);
-BOTAN_REGISTER_PK_VERIFY_OP("DSA", DSA_Verification_Operation);
-
 }
+
+std::unique_ptr<PK_Ops::Verification>
+DSA_PublicKey::create_verification_op(const std::string& params,
+                                      const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Verification>(new DSA_Verification_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
+
+std::unique_ptr<PK_Ops::Signature>
+DSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
+                                    const std::string& params,
+                                    const std::string& provider) const
+   {
+   if(provider == "base" || provider.empty())
+      return std::unique_ptr<PK_Ops::Signature>(new DSA_Signature_Operation(*this, params));
+   throw Provider_Not_Found(algo_name(), provider);
+   }
 
 }

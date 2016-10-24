@@ -1,6 +1,7 @@
 /*
 * TLS Extensions
 * (C) 2011,2012,2015,2016 Jack Lloyd
+*     2016 Juraj Somorovsky
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -32,6 +33,9 @@ Extension* make_extension(TLS_Data_Reader& reader,
       case TLSEXT_USABLE_ELLIPTIC_CURVES:
          return new Supported_Elliptic_Curves(reader, size);
 
+      case TLSEXT_EC_POINT_FORMATS:
+         return new Supported_Point_Formats(reader, size);
+
       case TLSEXT_SAFE_RENEGOTIATION:
          return new Renegotiation_Extension(reader, size);
 
@@ -46,6 +50,9 @@ Extension* make_extension(TLS_Data_Reader& reader,
 
       case TLSEXT_EXTENDED_MASTER_SECRET:
          return new Extended_Master_Secret(reader, size);
+
+      case TLSEXT_ENCRYPT_THEN_MAC:
+         return new Encrypt_then_MAC(reader, size);
 
       case TLSEXT_SESSION_TICKET:
          return new Session_Ticket(reader, size);
@@ -286,6 +293,12 @@ std::string Supported_Elliptic_Curves::curve_id_to_name(u16bit id)
          return "brainpool384r1";
       case 28:
          return "brainpool512r1";
+
+#if defined(BOTAN_HAS_CURVE_25519)
+      case 29:
+         return "x25519";
+#endif
+
       default:
          return ""; // something we don't know or support
       }
@@ -306,7 +319,13 @@ u16bit Supported_Elliptic_Curves::name_to_curve_id(const std::string& name)
    if(name == "brainpool512r1")
       return 28;
 
-   throw Invalid_Argument("name_to_curve_id unknown name " + name);
+#if defined(BOTAN_HAS_CURVE_25519)
+   if(name == "x25519")
+      return 29;
+#endif
+
+   // Unknown/unavailable EC curves are ignored
+   return 0;
    }
 
 std::vector<byte> Supported_Elliptic_Curves::serialize() const
@@ -316,8 +335,12 @@ std::vector<byte> Supported_Elliptic_Curves::serialize() const
    for(size_t i = 0; i != m_curves.size(); ++i)
       {
       const u16bit id = name_to_curve_id(m_curves[i]);
-      buf.push_back(get_byte(0, id));
-      buf.push_back(get_byte(1, id));
+
+      if(id > 0)
+         {
+         buf.push_back(get_byte(0, id));
+         buf.push_back(get_byte(1, id));
+         }
       }
 
    buf[0] = get_byte(0, static_cast<u16bit>(buf.size()-2));
@@ -346,6 +369,43 @@ Supported_Elliptic_Curves::Supported_Elliptic_Curves(TLS_Data_Reader& reader,
 
       if(!name.empty())
          m_curves.push_back(name);
+      }
+   }
+
+std::vector<byte> Supported_Point_Formats::serialize() const
+   {
+   // if we send this extension, we prefer compressed points,
+   // otherwise we don't send it (which is equal to supporting only uncompressed)
+   // if this extension is sent, it MUST include uncompressed (RFC 4492, section 5.1)
+   return std::vector<byte>{2, ANSIX962_COMPRESSED_PRIME, UNCOMPRESSED};
+   }
+
+Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader,
+                                                 u16bit extension_size)
+   {
+   byte len = reader.get_byte();
+
+   if(len + 1 != extension_size)
+      throw Decoding_Error("Inconsistent length field in supported point formats list");
+
+   for(size_t i = 0; i != len; ++i)
+      {
+      byte format = reader.get_byte();
+
+      if(format == UNCOMPRESSED)
+         {
+         m_prefers_compressed = false;
+         reader.discard_next(len-i-1);
+         return;
+         }
+      else if(format == ANSIX962_COMPRESSED_PRIME)
+         {
+         m_prefers_compressed = true;
+         reader.discard_next(len-i-1);
+         return;
+         }
+
+      // ignore ANSIX962_COMPRESSED_CHAR2, we don't support these curves
       }
    }
 
@@ -459,16 +519,27 @@ Signature_Algorithms::Signature_Algorithms(TLS_Data_Reader& reader,
 
    while(len)
       {
-      const std::string hash_code = hash_algo_name(reader.get_byte());
-      const std::string sig_code = sig_algo_name(reader.get_byte());
-
+      const byte hash_code = reader.get_byte();
+      const byte sig_code = reader.get_byte();
       len -= 2;
 
+      if(sig_code == 0)
+         {
+         /*
+         RFC 5247 7.4.1.4.1 explicitly prohibits anonymous (0) signature code in
+         the client hello. ("It MUST NOT appear in this extension.")
+         */
+         throw TLS_Exception(Alert::DECODE_ERROR, "Client sent ANON signature");
+         }
+
+      const std::string hash_name = hash_algo_name(hash_code);
+      const std::string sig_name = sig_algo_name(sig_code);
+
       // If not something we know, ignore it completely
-      if(hash_code.empty() || sig_code.empty())
+      if(hash_name.empty() || sig_name.empty())
          continue;
 
-      m_supported_algos.push_back(std::make_pair(hash_code, sig_code));
+      m_supported_algos.push_back(std::make_pair(hash_name, sig_name));
       }
    }
 
@@ -515,6 +586,18 @@ Extended_Master_Secret::Extended_Master_Secret(TLS_Data_Reader&,
    }
 
 std::vector<byte> Extended_Master_Secret::serialize() const
+   {
+   return std::vector<byte>();
+   }
+
+Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader&,
+                                               u16bit extension_size)
+   {
+   if(extension_size != 0)
+      throw Decoding_Error("Invalid encrypt_then_mac extension");
+   }
+
+std::vector<byte> Encrypt_then_MAC::serialize() const
    {
    return std::vector<byte>();
    }

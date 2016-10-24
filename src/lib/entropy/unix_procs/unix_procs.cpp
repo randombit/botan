@@ -60,10 +60,10 @@ size_t concurrent_processes(size_t user_request)
 /**
 * Unix_EntropySource Constructor
 */
-Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& trusted_path,
-                                       size_t proc_cnt) :
-   m_trusted_paths(trusted_path),
-   m_concurrent(concurrent_processes(proc_cnt))
+Unix_EntropySource::Unix_EntropySource(const std::vector<std::string>& trusted_paths,
+                                       size_t proc_count) :
+   m_trusted_paths(trusted_paths),
+   m_concurrent(concurrent_processes(proc_count))
    {
    }
 
@@ -209,7 +209,7 @@ size_t Unix_EntropySource::poll(RandomNumberGenerator& rng)
    if((getuid() != geteuid()) || (getgid() != getegid()) || (geteuid() == 0))
       return 0;
 
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
 
    if(m_sources.empty())
       {
