@@ -4,6 +4,11 @@ Release Notes
 Version 1.11.33, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* A countermeasure for the Lucky13 timing attack against CBC-based TLS
+  ciphersuites has been added. (GH #675)
+
+* Added X25519-based key exchange for TLS (GH #673)
+
 * Add Certificate_Store_In_SQL which supports storing certs, keys, and
   revocation information in a SQL database. Subclass Certificate_Store_In_SQLite
   specializes with support for SQLite3 databases. (GH #631)
@@ -12,13 +17,13 @@ Version 1.11.33, Not Yet Released
   instead of raw pointers (GH #471 #631)
 
 * Add support for official SHA-3. Keccak-1600 was already supported
-  but used different padding from FIPS 202.
+  but used different padding from FIPS 202. (GH #669)
 
-* Add SHAKE-128 based stream cipher.
+* Add SHAKE-128 based stream cipher. (GH #669)
 
 * NewHope now supports the AES-128/CTR + SHA-256 parameters used by
   BoringSSL in addition to the SHA-3/SHAKE-128 parameters used by the
-  reference implementation.
+  reference implementation. (GH #669)
 
 * Add support for the TLS Supported Point Formats Extension from RFC 4492. Adds
   TLS::Policy::use_ecc_point_compression policy option. If supported on both
@@ -51,7 +56,10 @@ Version 1.11.33, Not Yet Released
   files with ABI specific flags such as ``-maes``. (GH #665)
 
 * Internal cleanups to TLS CBC record handling. TLS CBC ciphersuites
-  can now be disabled by disabling `tls_cbc` module.
+  can now be disabled by disabling `tls_cbc` module. (GH #642 #659)
+
+* Internal cleanups to the name->object mapping code eliminates most
+  global locks and all use of static initializers (GH #668 #465)
 
 * Avoid static_assert triggering under MSVC debug builds (GH #646)
 
