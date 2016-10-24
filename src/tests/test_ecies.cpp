@@ -197,7 +197,7 @@ class ECIES_ISO_Tests : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("ecies-iso", ECIES_ISO_Tests);
+BOTAN_REGISTER_TEST("ecies_iso", ECIES_ISO_Tests);
 
 #endif
 
@@ -452,7 +452,7 @@ class ECIES_Unit_Tests : public Test
          }
    };
 
-BOTAN_REGISTER_TEST("ecies-unit", ECIES_Unit_Tests);
+BOTAN_REGISTER_TEST("ecies_unit", ECIES_Unit_Tests);
 
 #endif
 
