@@ -169,12 +169,12 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             Curve25519_PrivateKey priv_key(rng);
             PK_Key_Agreement ka(priv_key, rng, "Raw");
             ecdh_secret = ka.derive_key(0, counterparty_key.public_value()).bits_of();
-#else
-            throw Internal_Error("Negotiated X25519 somehow, but it is disabled");
-#endif
 
             // X25519 is always compressed but sent as "uncompressed" in TLS
             our_ecdh_public = priv_key.public_value();
+#else
+            throw Internal_Error("Negotiated X25519 somehow, but it is disabled");
+#endif
             }
          else
             {

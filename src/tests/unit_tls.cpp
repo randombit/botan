@@ -912,8 +912,11 @@ class TLS_Unit_Tests : public Test
                               { { "use_ecc_point_compression", "true" } });
          test_modern_versions(results, *creds, "ECDH", "AES-128/GCM", "AEAD",
                               { { "ecc_curves", "secp384r1" } });
+
+#if defined(BOTAN_HAS_CURVE_25519)
          test_modern_versions(results, *creds, "ECDH", "AES-128/GCM", "AEAD",
                               { { "ecc_curves", "x25519" } });
+#endif
 
          std::unique_ptr<Botan::Credentials_Manager> creds_with_client_cert(create_creds(rng, true));
          test_modern_versions(results, *creds_with_client_cert, "ECDH", "AES-256/GCM");
