@@ -10,6 +10,7 @@
 #include <botan/kdf.h>
 #include <botan/emsa.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/auto_rng.h>
 
 namespace Botan {
 
@@ -138,6 +139,22 @@ bool PK_Ops::Verification_with_EMSA::is_valid_signature(const byte sig[], size_t
    if(with_recovery())
       {
       secure_vector<byte> output_of_key = verify_mr(sig, sig_len);
+
+      // verify_mr() does not return leading zeros
+      if(m_hash != "Raw")
+         {
+         AutoSeeded_RNG rng;
+         m_emsa->update(sig, sig_len);
+         auto size = m_emsa->encoding_of(m_emsa->raw_data(), max_input_bits(), rng).size();
+         int32_t padding_bytes = size - output_of_key.size();
+         if(padding_bytes > 0)
+            {
+            secure_vector<byte> result(padding_bytes);
+            result.insert(result.end(), output_of_key.begin(), output_of_key.end());
+            output_of_key = result;
+            }
+         }
+
       return m_emsa->verify(output_of_key, msg, max_input_bits());
       }
    else
