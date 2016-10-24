@@ -11,7 +11,6 @@
    #include <botan/sqlite3.h>
    #include <botan/internal/filesystem.h>
    #include <botan/pkcs8.h>
-   #include <botan/auto_rng.h>
    #include <sstream>
    extern "C" {
    #include <unistd.h> // unlink()

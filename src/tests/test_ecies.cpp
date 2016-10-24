@@ -11,7 +11,6 @@
    #include "test_pubkey.h"
    #include <botan/ecies.h>
    #include <botan/ecdh.h>
-   #include <botan/auto_rng.h>
 #endif
 
 namespace Botan_Tests {
