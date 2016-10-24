@@ -7,6 +7,12 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.14, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* When RC4 is disabled in the build, also prevent it from being
+  included in the OpenSSL provider. (GH #638)
+
 Version 1.10.13, 2016-04-23
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
