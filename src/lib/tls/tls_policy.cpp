@@ -96,6 +96,7 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
       "secp384r1",
       "brainpool256r1",
       "secp256r1",
+      "x25519",
       };
    }
 

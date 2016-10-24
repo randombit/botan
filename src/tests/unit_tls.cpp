@@ -910,6 +910,10 @@ class TLS_Unit_Tests : public Test
          test_modern_versions(results, *creds, "ECDH", "AES-128/GCM");
          test_modern_versions(results, *creds, "ECDH", "AES-128/GCM", "AEAD",
                               { { "use_ecc_point_compression", "true" } });
+         test_modern_versions(results, *creds, "ECDH", "AES-128/GCM", "AEAD",
+                              { { "ecc_curves", "secp384r1" } });
+         test_modern_versions(results, *creds, "ECDH", "AES-128/GCM", "AEAD",
+                              { { "ecc_curves", "x25519" } });
 
          std::unique_ptr<Botan::Credentials_Manager> creds_with_client_cert(create_creds(rng, true));
          test_modern_versions(results, *creds_with_client_cert, "ECDH", "AES-256/GCM");

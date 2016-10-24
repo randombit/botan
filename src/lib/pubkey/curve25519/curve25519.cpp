@@ -29,10 +29,13 @@ secure_vector<byte> curve25519(const secure_vector<byte>& secret,
    return out;
    }
 
-secure_vector<byte> curve25519_basepoint(const secure_vector<byte>& secret)
+std::vector<byte> curve25519_basepoint(const secure_vector<byte>& secret)
    {
    const byte basepoint[32] = { 9 };
-   return curve25519(secret, basepoint);
+   std::vector<byte> out(32);
+   const int rc = curve25519_donna(out.data(), secret.data(), basepoint);
+   BOTAN_ASSERT_EQUAL(rc, 0, "Return value of curve25519_donna is ok");
+   return out;
    }
 
 }
