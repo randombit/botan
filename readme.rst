@@ -75,6 +75,9 @@ operations.
 .. image:: https://sonarqube.com/api/badges/gate?key=botan
     :target: https://sonarqube.com/dashboard/index/botan
 
+.. image:: https://badges.gitter.im/libbotan/Chat.svg
+    :target: https://gitter.im/libbotan/Chat
+
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

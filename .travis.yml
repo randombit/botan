@@ -100,6 +100,11 @@ after_success:
 notifications:
   email: botan-commits@lists.randombit.net
 
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/df1f750f4308f6b14c9a
+    on_start: never
+
 git:
   depth: 5
 
