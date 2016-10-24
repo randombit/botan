@@ -66,7 +66,7 @@ class DSA_Keygen_Tests : public PK_Key_Generation_Test
          }
    };
 
-BOTAN_REGISTER_TEST("dsa_kat", DSA_KAT_Tests);
+BOTAN_REGISTER_TEST("dsa_sign", DSA_KAT_Tests);
 BOTAN_REGISTER_TEST("dsa_keygen", DSA_Keygen_Tests);
 
 #endif
