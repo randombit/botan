@@ -17,10 +17,6 @@
 #include <string>
 #include <map>
 
-#define BOTAN_PKCS11_RSA_PRIO     90
-#define BOTAN_PKCS11_ECDSA_PRIO   90
-#define BOTAN_PKCS11_ECDH_PRIO    90
-
 #define CK_PTR *
 
 #if defined(_MSC_VER)
