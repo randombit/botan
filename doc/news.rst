@@ -13,20 +13,20 @@ Version 1.11.33, Not Yet Released
   revocation information in a SQL database. Subclass Certificate_Store_In_SQLite
   specializes with support for SQLite3 databases. (GH #631)
 
-* The Certificate_Store interface has been changed to deal with std::shared_ptrs
-  instead of raw pointers (GH #471 #631)
+* The Certificate_Store interface has been changed to deal with
+  ``std::shared_ptrs`` instead of raw pointers (GH #471 #631)
 
 * Add support for official SHA-3. Keccak-1600 was already supported
   but used different padding from FIPS 202. (GH #669)
 
 * Add SHAKE-128 based stream cipher. (GH #669)
 
-* NewHope now supports the AES-128/CTR + SHA-256 parameters used by
-  BoringSSL in addition to the SHA-3/SHAKE-128 parameters used by the
-  reference implementation. (GH #669)
+* NewHope key exchange now supports the SHA-256/AES-128-CTR scheme
+  used by BoringSSL in addition to the SHA-3/SHAKE-128 parameters used
+  by the reference implementation. (GH #669)
 
 * Add support for the TLS Supported Point Formats Extension from RFC 4492. Adds
-  TLS::Policy::use_ecc_point_compression policy option. If supported on both
+  ``TLS::Policy::use_ecc_point_compression`` policy option. If supported on both
   sides, ECC points can be sent in compressed format which saves a few bytes
   during the handshake. (GH #645)
 
@@ -34,19 +34,19 @@ Version 1.11.33, Not Yet Released
   entropy source to be not available under its normal name "win32_cryptoapi" but
   instead "dev_random". GH #644
 
-* Accept read-only access to /dev/urandom. System_RNG previously required
+* Accept read-only access to ``/dev/urandom``. System_RNG previously required
   read-write access, to allow applications to provide inputs to the system
   PRNG. But local security policies might only allow read-only access, as is the
   case with Ubuntu's AppArmor profile for applications in the Snappy binary
   format. If opening read/write fails, System_RNG silently backs down to
-  read-only, in which case calls to `add_entropy` on that object will fail.
+  read-only, in which case calls to ``add_entropy`` on that object will fail.
   (GH #647 #648)
 
 * Fix use of Win32 CryptoAPI RNG as an entropy source, which was accidentally
   disabled due to empty list of acceptable providers being specified. Typically
   the library would fall back to gathering entropy from OS functions returning
   statistical information, but if this functionality was disabled in the build a
-  PRNG_Unseeded exception would result. (GH #655)
+  ``PRNG_Unseeded`` exception would result. (GH #655)
 
 * Add support for building the library as part of the IncludeOS unikernel.
   This included making filesystem and threading support optional. (GH #665)
@@ -58,10 +58,10 @@ Version 1.11.33, Not Yet Released
 * Internal cleanups to TLS CBC record handling. TLS CBC ciphersuites
   can now be disabled by disabling `tls_cbc` module. (GH #642 #659)
 
-* Internal cleanups to the name->object mapping code eliminates most
-  global locks and all use of static initializers (GH #668 #465)
+* Internal cleanups to the object lookup code eliminates most global locks and
+  all use of static initializers (GH #668 #465)
 
-* Avoid static_assert triggering under MSVC debug builds (GH #646)
+* Avoid ``static_assert`` triggering under MSVC debug builds (GH #646)
 
 * The antique PBKDF1 password hashing scheme is deprecated and will be
   removed in a future release. It was only used to support the equally
