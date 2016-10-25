@@ -119,7 +119,7 @@ addons:
   coverity_scan:
     project:
       name: "randombit/botan"
-    notification_email: lloyd@randombit.net
+    notification_email: jack@randombit.net
     build_command_prepend: "./configure.py --no-optimizations --with-zlib --with-pkcs11"
     build_command: "make -j2"
     branch_pattern: coverity_scan
