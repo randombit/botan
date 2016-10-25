@@ -409,9 +409,8 @@ class HMAC_DRBG_Unit_Tests : public Test
          else if ( pid != 0 )
             {
             // parent process, wait for randomize_count from child's rng
-            ::close(fd[1]);
+            ::close(fd[1]); // close write end in parent
             ssize_t got = ::read(fd[0], &count, sizeof(count));
-            ::close(fd[0]);
 
             if(got > 0)
                {
@@ -429,28 +428,35 @@ class HMAC_DRBG_Unit_Tests : public Test
 
             if(got > 0)
                {
-               result.test_eq("expected bytes from child", got, sizeof(count));
+               result.test_eq("expected bytes from child", got, child_bytes.size());
                result.test_ne("parent and child output sequences differ", parent_bytes, child_bytes);
                }
             else
                {
-               result.test_failure("Failed to read count size from child process");
+               result.test_failure("Failed to read RNG bytes from child process");
                }
-            ::close(fd[0]);
+            ::close(fd[0]); // close read end in parent
 
+            // wait for the child to exit
             int status = 0;
             ::waitpid(pid, &status, 0);
             }
          else
             {
             // child process, send randomize_count and first output sequence back to parent
-            ::close(fd[0]);
+            ::close(fd[0]); // close read end in child
             rng.randomize(&child_bytes[0], child_bytes.size());
             count = counting_rng.randomize_count();
             ::write(fd[1], &count, sizeof(count));
-            rng.randomize(&child_bytes[0], child_bytes.size());
+            try {
+               rng.randomize(&child_bytes[0], child_bytes.size());
+            }
+            catch(std::exception& e)
+               {
+               fprintf(stderr, "%s", e.what());
+               }
             ::write(fd[1], &child_bytes[0], child_bytes.size());
-            ::close(fd[1]);
+            ::close(fd[1]); // close write end in child
             ::_exit(0);
             }
 #endif
