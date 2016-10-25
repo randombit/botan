@@ -212,9 +212,11 @@ Test::Result test_ecdsa_create_save_load()
    Botan::ECDSA_PrivateKey* loaded_ec_key = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key.get());
    result.confirm("the loaded key could be converted into an ECDSA_PrivateKey", loaded_ec_key);
 
-   Botan::PK_Verifier verifier(*loaded_ec_key, "EMSA1(SHA-256)");
-
-   result.confirm("generated signature valid", verifier.verify_message(msg, msg_signature));
+   if(loaded_ec_key)
+      {
+      Botan::PK_Verifier verifier(*loaded_ec_key, "EMSA1(SHA-256)");
+      result.confirm("generated signature valid", verifier.verify_message(msg, msg_signature));
+      }
 
    return result;
    }
@@ -258,7 +260,8 @@ Test::Result test_read_pkcs8()
       std::unique_ptr<Botan::Private_Key> loaded_key_nodp(Botan::PKCS8::load_key(Test::data_file("ecc/nodompar_private.pkcs8.pem"), Test::rng()));
       // anew in each test with unregistered domain-parameters
       Botan::ECDSA_PrivateKey* ecdsa_nodp = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key_nodp.get());
-      result.confirm("key loaded", ecdsa_nodp);
+      if(!ecdsa_nodp)
+         throw Test_Error("Unable to load valid PKCS8 ECDSA key");
 
       Botan::PK_Signer signer(*ecdsa_nodp, Test::rng(), "EMSA1(SHA-256)");
       Botan::PK_Verifier verifier(*ecdsa_nodp, "EMSA1(SHA-256)");

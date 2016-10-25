@@ -267,7 +267,6 @@ class OpenSSL_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
 
    private:
       std::unique_ptr<EC_KEY, std::function<void (EC_KEY*)>> m_ossl_ec;
-      size_t m_order_bits = 0;
    };
 
 }

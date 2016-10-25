@@ -394,13 +394,13 @@ class HMAC_DRBG_Unit_Tests : public Test
          size_t count = counting_rng.randomize_count();
          Botan::secure_vector<byte> parent_bytes(16), child_bytes(16);
          int fd[2];
-         int rc = pipe(fd);
+         int rc = ::pipe(fd);
          if(rc != 0)
             {
             result.test_failure("failed to create pipe");
             }
 
-         pid_t pid = fork();
+         pid_t pid = ::fork();
          if ( pid == -1 )
             {
             result.test_failure("failed to fork process");
@@ -409,18 +409,34 @@ class HMAC_DRBG_Unit_Tests : public Test
          else if ( pid != 0 )
             {
             // parent process, wait for randomize_count from child's rng
-            close(fd[1]);
-            read(fd[0], &count, sizeof(count));
-            close(fd[0]);
+            ::close(fd[1]);
+            ssize_t got = ::read(fd[0], &count, sizeof(count));
+            ::close(fd[0]);
 
-
-            result.test_eq("parent not reseeded",  counting_rng.randomize_count(), 1);
-            result.test_eq("child reseed occurred", count, 2);
+            if(got > 0)
+               {
+               result.test_eq("expected bytes from child", got, sizeof(count));
+               result.test_eq("parent not reseeded",  counting_rng.randomize_count(), 1);
+               result.test_eq("child reseed occurred", count, 2);
+               }
+            else
+               {
+               result.test_failure("Failed to read count size from child process");
+               }
 
             parent_bytes = rng.random_vec(16);
-            read(fd[0], &child_bytes[0], child_bytes.size());
-            result.test_ne("parent and child output sequences differ", parent_bytes, child_bytes);
-            close(fd[0]);
+            got = ::read(fd[0], &child_bytes[0], child_bytes.size());
+
+            if(got > 0)
+               {
+               result.test_eq("expected bytes from child", got, sizeof(count));
+               result.test_ne("parent and child output sequences differ", parent_bytes, child_bytes);
+               }
+            else
+               {
+               result.test_failure("Failed to read count size from child process");
+               }
+            ::close(fd[0]);
 
             int status = 0;
             ::waitpid(pid, &status, 0);
@@ -428,14 +444,14 @@ class HMAC_DRBG_Unit_Tests : public Test
          else
             {
             // child process, send randomize_count and first output sequence back to parent
-            close(fd[0]);
+            ::close(fd[0]);
             rng.randomize(&child_bytes[0], child_bytes.size());
             count = counting_rng.randomize_count();
-            write(fd[1], &count, sizeof(count));
+            ::write(fd[1], &count, sizeof(count));
             rng.randomize(&child_bytes[0], child_bytes.size());
-            write(fd[1], &child_bytes[0], child_bytes.size());
-            close(fd[1]);
-            _exit(0);
+            ::write(fd[1], &child_bytes[0], child_bytes.size());
+            ::close(fd[1]);
+            ::_exit(0);
             }
 #endif
          return result;
