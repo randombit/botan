@@ -102,7 +102,7 @@ notifications:
 
   webhooks:
     urls:
-      - https://webhooks.gitter.im/e/df1f750f4308f6b14c9a
+      - https://webhooks.gitter.im/e/9caf8eaa06913b69443f
     on_start: never
 
 git:
