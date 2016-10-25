@@ -35,13 +35,18 @@ For all the details on building the library, read the
 The library can also be built into a single-file amalgamation for easy
 inclusion into external build systems.
 
-If you need help or have questions, send a mail to the
-`mailing list <http://lists.randombit.net/mailman/listinfo/botan-devel/>`_
-or open a ticket on
-`GitHub Issues <https://github.com/randombit/botan/issues>`_. If you
-think you've found a security bug, read the
-`security page <http://botan.randombit.net/security.html>`_
-for contact information and procedures.
+If you need help or have questions, open a ticket on
+`GitHub Issues <https://github.com/randombit/botan/issues>`_ or
+send a mail to the
+`mailing list <http://lists.randombit.net/mailman/listinfo/botan-devel/>`_.
+
+You can also try the chat room for botan on `gitter.im
+<https://gitter.im/libbotan/Chat>`_ where some of the developers hang
+out.
+
+If you think you've found a security bug, read the `security page
+<http://botan.randombit.net/security.html>`_ for contact information
+and procedures.
 
 In addition to C++, botan has a C89 API specifically designed to be easy
 to call from other languages. A Python binding using ctypes is included,
@@ -50,33 +55,47 @@ there are also partial bindings for
 `OCaml <https://github.com/randombit/botan-ocaml>`_ among others.
 
 There is no support for the SSH protocol in Botan but there is a
-seperately developed C++11 SSH library by `cdesjardins
+separately developed C++11 SSH library by `cdesjardins
 <https://github.com/cdesjardins/cppssh>`_ which uses Botan for crypto
 operations.
 
+Continuous integration status
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. image:: https://travis-ci.org/randombit/botan.svg?branch=master
     :target: https://travis-ci.org/randombit/botan
+    :alt: Travis CI status
 
 .. image:: https://ci.appveyor.com/api/projects/status/n9f94dljd03j2lce/branch/master?svg=true
     :target: https://ci.appveyor.com/project/randombit/botan/branch/master
+    :alt: AppVeyor CI status
 
 .. image:: https://circleci.com/gh/randombit/botan.svg?style=shield
     :target: https://circleci.com/gh/randombit/botan
+    :alt: CircleCI status
 
 .. image:: https://botan-ci.kullo.net/badge
     :target: https://botan-ci.kullo.net/
+    :alt: Kullo CI status
+
+Static analyzer status
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. image:: https://codecov.io/github/randombit/botan/coverage.svg?branch=master
+    :target: https://codecov.io/github/randombit/botan
+    :alt: Code coverage report
 
 .. image:: https://scan.coverity.com/projects/624/badge.svg
     :target: https://scan.coverity.com/projects/624
-
-.. image:: https://codecov.io/github/randombit/botan/coverage.svg?branch=master
-    :target: https://codecov.io/github/randombit/botan
+    :alt: Coverity results
 
 .. image:: https://sonarqube.com/api/badges/gate?key=botan
     :target: https://sonarqube.com/dashboard/index/botan
+    :alt: Sonarqube analysis
 
-.. image:: https://badges.gitter.im/libbotan/Chat.svg
-    :target: https://gitter.im/libbotan/Chat
+Code coverage map
+---------------------
+
+.. image:: https://codecov.io/gh/randombit/botan/graphs/tree.svg
 
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
