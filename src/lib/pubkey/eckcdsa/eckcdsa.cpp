@@ -27,7 +27,7 @@ bool ECKCDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
       return true;
       }
 
-   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-1)");
+   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-256)");
    }
 
 namespace {

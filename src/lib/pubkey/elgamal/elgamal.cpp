@@ -65,7 +65,7 @@ bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng,
    if(!strong)
       return true;
 
-   return KeyPair::encryption_consistency_check(rng, *this, "EME1(SHA-1)");
+   return KeyPair::encryption_consistency_check(rng, *this, "EME1(SHA-256)");
    }
 
 namespace {
