@@ -19,6 +19,20 @@ Advisories
 2016
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2016-10-8871 (CVE-2016-8871) OAEP side channel
+
+  A side channel in OAEP decoding could be used to distinguish RSA ciphertexts
+  that did or did not have a leading 0 byte. For an attacker capable of
+  precisely measuring the time taken for OAEP decoding, this could be used as an
+  oracle allowing decryption of arbitrary RSA ciphertexts. Remote exploitation
+  seems difficult as OAEP decoding is always paired with RSA decryption, which
+  takes substantially more (and variable) time, and so will tend to mask the
+  timing channel. This attack does seems well within reach of a local attacker
+  capable of a cache or branch predictor based side channel attack. Finding,
+  analysis, and patch by Juraj Somorovsky.
+
+  Introduced in 1.11.29, fixed in 1.11.33
+
 * 2016-08-30 (CVE-2016-6878) Undefined behavior in Curve25519
 
   On systems without a native 128-bit integer type, the Curve25519 code invoked

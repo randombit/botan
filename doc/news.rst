@@ -1,8 +1,10 @@
 Release Notes
 ========================================
 
-Version 1.11.33, Not Yet Released
+Version 1.11.33, 2016-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Avoid side channel during OAEP decryption. (CVE-2016-8871)
 
 * A countermeasure for the Lucky13 timing attack against CBC-based TLS
   ciphersuites has been added. (GH #675)

@@ -122,9 +122,9 @@ Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and
 later, Clang 3.5 and later, and MSVC 2013/2015 are regularly tested.
 
 The latest development release is
-`1.11.32 <http://botan.randombit.net/releases/Botan-1.11.32.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.32.tgz.asc>`_
-released on 2016-09-28
+`1.11.33 <http://botan.randombit.net/releases/Botan-1.11.33.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.33.tgz.asc>`_
+released on 2016-10-26
 
 Old Stable Series (1.10)
 ----------------------------------------
@@ -199,7 +199,7 @@ Ciphers and cipher modes
 * Unauthenticated cipher modes CTR, CBC, XTS, CFB, OFB, and ECB
 * AES (including constant time SSSE3 and AES-NI versions)
 * AES candidates Serpent, Twofish, CAST-256
-* Stream ciphers Salsa20/XSalsa20, ChaCha20, and RC4
+* Stream ciphers Salsa20/XSalsa20, ChaCha20, SHAKE-128, and RC4
 * DES, 3DES and DESX
 * Threefish-512, Noekeon, Blowfish, CAST-128, IDEA, XTEA
 * National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147
@@ -209,7 +209,7 @@ Hash functions and MACs
 ----------------------------------------
 
 * SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512
-* SHA-3 winner Keccak-1600
+* SHA-3 (and Keccak-1600)
 * Skein-512, BLAKE2b
 * RIPEMD-160, Tiger, Whirlpool, GOST 34.11
 * Authentication codes HMAC, CMAC, Poly1305, SipHash
