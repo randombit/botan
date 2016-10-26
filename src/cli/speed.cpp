@@ -63,6 +63,14 @@
   #include <botan/ecdsa.h>
 #endif
 
+#if defined(BOTAN_HAS_ECKCDSA)
+  #include <botan/eckcdsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ECGDSA)
+  #include <botan/ecgdsa.h>
+#endif
+
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
   #include <botan/dh.h>
 #endif
@@ -309,6 +317,8 @@ std::vector<std::string> default_benchmark_list()
       "DH",
       "ECDH",
       "ECDSA",
+      "ECKCDSA",
+      "ECGDSA",
       "Curve25519",
       "McEliece",
       "NEWHOPE"
@@ -376,6 +386,18 @@ class Speed final : public Command
             else if(algo == "ECDSA")
                {
                bench_ecdsa(provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_ECKCDSA)
+            else if(algo == "ECKCDSA")
+               {
+               bench_eckcdsa(provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_ECGDSA)
+            else if(algo == "ECGDSA")
+               {
+               bench_ecgdsa(provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
@@ -994,6 +1016,46 @@ class Speed final : public Command
 
             std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
                return new Botan::ECDSA_PrivateKey(rng(), Botan::EC_Group(grp));
+               }));
+
+            output() << Timer::result_string_ops(keygen_timer);
+            bench_pk_sig(*key, nm, provider, "EMSA1(SHA-256)", msec);
+            }
+         }
+#endif
+      
+#if defined(BOTAN_HAS_ECKCDSA)
+      void bench_eckcdsa(const std::string& provider,
+                       std::chrono::milliseconds msec)
+         {
+         for(std::string grp : { "secp256r1", "secp384r1", "secp521r1" })
+            {
+            const std::string nm = "ECKCDSA-" + grp;
+
+            Timer keygen_timer(nm, provider, "keygen");
+
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
+               return new Botan::ECKCDSA_PrivateKey(rng(), Botan::EC_Group(grp));
+               }));
+
+            output() << Timer::result_string_ops(keygen_timer);
+            bench_pk_sig(*key, nm, provider, "EMSA1(SHA-256)", msec);
+            }
+         }
+#endif
+      
+#if defined(BOTAN_HAS_ECGDSA)
+      void bench_ecgdsa(const std::string& provider,
+                       std::chrono::milliseconds msec)
+         {
+         for(std::string grp : { "secp256r1", "secp384r1", "secp521r1" })
+            {
+            const std::string nm = "ECGDSA-" + grp;
+
+            Timer keygen_timer(nm, provider, "keygen");
+
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
+               return new Botan::ECGDSA_PrivateKey(rng(), Botan::EC_Group(grp));
                }));
 
             output() << Timer::result_string_ops(keygen_timer);
