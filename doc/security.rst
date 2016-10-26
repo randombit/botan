@@ -10,7 +10,7 @@ mail please use::
         Key fingerprint = 4E60 C735 51AF 2188 DF0A  5A62 78E9 8043 5712 3B60
         uid         Jack Lloyd <jack@randombit.net>
 
-This key can be found in the file `pgpkey.txt` or online at
+This key can be found in the file ``pgpkey.txt`` or online at
 https://keybase.io/jacklloyd and on most PGP keyservers.
 
 Advisories

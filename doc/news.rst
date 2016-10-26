@@ -62,7 +62,7 @@ Version 1.11.33, 2016-10-26
   files with ABI specific flags such as ``-maes``. (GH #665)
 
 * Internal cleanups to TLS CBC record handling. TLS CBC ciphersuites
-  can now be disabled by disabling `tls_cbc` module. (GH #642 #659)
+  can now be disabled by disabling ``tls_cbc`` module. (GH #642 #659)
 
 * Internal cleanups to the object lookup code eliminates most global locks and
   all use of static initializers (GH #668 #465)
