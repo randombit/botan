@@ -44,6 +44,7 @@ Compression_Algorithm* make_compressor(const std::string& name)
       return new LZMA_Compression;
 #endif
 
+   BOTAN_UNUSED(name);
    return nullptr;
    }
 
@@ -68,6 +69,7 @@ Decompression_Algorithm* make_decompressor(const std::string& name)
       return new LZMA_Decompression;
 #endif
 
+   BOTAN_UNUSED(name);
    return nullptr;
    }
 
