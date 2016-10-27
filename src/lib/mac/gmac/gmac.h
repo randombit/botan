@@ -8,9 +8,9 @@
 #ifndef BOTAN_GMAC_H__
 #define BOTAN_GMAC_H__
 
-#include <botan/types.h>
-#include <botan/mac.h>
 #include <botan/gcm.h>
+#include <botan/mac.h>
+#include <botan/types.h>
 #include <algorithm>
 
 namespace Botan {
@@ -18,13 +18,24 @@ namespace Botan {
 /**
 * GMAC
 */
-class BOTAN_DLL GMAC : public MessageAuthenticationCode
+class BOTAN_DLL GMAC : public MessageAuthenticationCode,
+                       public GHASH
+
    {
    public:
       void clear() override;
       std::string name() const override;
       size_t output_length() const override;
       MessageAuthenticationCode* clone() const override;
+
+      /**
+      * Must be called to set the initialization vector prior to GMAC
+      * calculation.
+      *
+      * @param nonce Initialization vector.
+      * @param nonce_len size of initialization vector.
+      */
+      void start(const byte nonce[], size_t nonce_len);
 
       /**
       * Must be called to set the initialization vector prior to GMAC
@@ -44,7 +55,7 @@ class BOTAN_DLL GMAC : public MessageAuthenticationCode
 
       Key_Length_Specification key_spec() const
          {
-         return m_gcm.key_spec();
+         return m_cipher->key_spec();
          }
 
       /**
@@ -54,23 +65,19 @@ class BOTAN_DLL GMAC : public MessageAuthenticationCode
       */
       explicit GMAC(BlockCipher* cipher);
 
-      static GMAC* make(const Spec& spec);
-
       GMAC(const GMAC&) = delete;
       GMAC& operator=(const GMAC&) = delete;
+
    private:
       void add_data(const byte[], size_t) override;
       void final_result(byte[]) override;
+      void start_msg(const byte nonce[], size_t nonce_len);
+      void key_schedule(const byte key[], size_t size) override;
 
-      void key_schedule(const byte key[], size_t size) override
-        {
-        m_gcm.set_key(key, size);
-        }
-
-      secure_vector<byte> m_iv;
-      secure_vector<byte> m_aad;
-      GCM_Encryption m_gcm;
+      static const size_t GCM_BS = 16;
+      secure_vector<byte> m_aad_buf;
       std::unique_ptr<BlockCipher> m_cipher;
+      bool m_initialized;
    };
 
 }

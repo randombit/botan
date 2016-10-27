@@ -93,9 +93,9 @@ void GHASH::key_schedule(const byte key[], size_t length)
    m_text_len = 0;
    }
 
-void GHASH::start(const secure_vector<byte>& nonce)
+void GHASH::start(const byte nonce[], size_t len)
    {
-   m_nonce = nonce;
+   m_nonce.assign(nonce, nonce + len);
    m_ghash = m_H_ad;
    }
 
