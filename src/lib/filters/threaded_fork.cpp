@@ -136,6 +136,11 @@ void Threaded_Fork::thread_entry(Filter* filter)
    {
    while(true)
       {
+      /*
+      * This is plain wrong: a single thread can get the semaphore
+      * more than one time, meaning it will process the input twice
+      * and some other thread/filter will not see this input.
+      */
       m_thread_data->m_input_ready_semaphore.acquire();
 
       if(!m_thread_data->m_input)
