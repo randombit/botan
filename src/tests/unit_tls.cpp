@@ -926,10 +926,13 @@ class TLS_Unit_Tests : public Test
          client_ses.reset(
             new Botan::TLS::Session_Manager_SQLite("pass", rng, ":memory:", 5,
                                                    std::chrono::seconds(2)));
+         server_ses.reset(
+            new Botan::TLS::Session_Manager_SQLite("pass", rng, ":memory:", 10,
+                                                   std::chrono::seconds(4)));
 #else
          client_ses.reset(new Botan::TLS::Session_Manager_In_Memory(rng));
-#endif
          server_ses.reset(new Botan::TLS::Session_Manager_In_Memory(rng));
+#endif
 
          std::unique_ptr<Botan::Credentials_Manager> creds(create_creds(rng));
          std::vector<Test::Result> results;
@@ -956,6 +959,8 @@ class TLS_Unit_Tests : public Test
 #if defined(BOTAN_HAS_SEED)
             test_all_versions(results, *client_ses, *server_ses, *creds, "RSA", "SEED", "SHA-1", etm_setting);
 #endif
+
+            server_ses->remove_all();
             }
 
          test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256");
@@ -967,6 +972,8 @@ class TLS_Unit_Tests : public Test
 
          test_modern_versions(results, *client_ses, *server_ses, *creds, "RSA", "AES-128/GCM");
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM");
+
+         client_ses->remove_all();
 
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
                               { { "signature_methods", "RSA" } });
@@ -983,6 +990,11 @@ class TLS_Unit_Tests : public Test
 
          std::unique_ptr<Botan::Credentials_Manager> creds_with_client_cert(create_creds(rng, true));
          test_modern_versions(results, *client_ses, *server_ses, *creds_with_client_cert, "ECDH", "AES-256/GCM");
+
+#if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
+         client_ses.reset(new Botan::TLS::Session_Manager_In_Memory(rng));
+         server_ses.reset(new Botan::TLS::Session_Manager_In_Memory(rng));
+#endif
 
 #if defined(BOTAN_HAS_AEAD_OCB)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/OCB(12)");
