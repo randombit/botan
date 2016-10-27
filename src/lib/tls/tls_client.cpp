@@ -149,18 +149,25 @@ void Client::send_client_hello(Handshake_State& state_base,
       Session session_info;
       if(session_manager().load_from_server_info(m_info, session_info))
          {
-         if(srp_identifier == "" || session_info.srp_identifier() == srp_identifier)
+         /*
+         Ensure that the session protocol type matches what we want to use
+         If not skip the resume and establish a new session
+         */
+         if(version == session_info.version())
             {
-            state.client_hello(new Client_Hello(
-               state.handshake_io(),
-               state.hash(),
-               policy(),
-               rng(),
-               secure_renegotiation_data_for_client_hello(),
-               session_info,
-               next_protocols));
+            if(srp_identifier == "" || session_info.srp_identifier() == srp_identifier)
+               {
+               state.client_hello(
+                  new Client_Hello(state.handshake_io(),
+                                   state.hash(),
+                                   policy(),
+                                   rng(),
+                                   secure_renegotiation_data_for_client_hello(),
+                                   session_info,
+                                   next_protocols));
 
-            state.resume_master_secret = session_info.master_secret();
+               state.resume_master_secret = session_info.master_secret();
+               }
             }
          }
       }
