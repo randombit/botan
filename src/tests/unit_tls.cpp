@@ -935,7 +935,7 @@ class TLS_Unit_Tests : public Test
          std::vector<Test::Result> results;
 
 #if defined(BOTAN_HAS_TLS_CBC)
-         for(std::string etm_setting : { "true", "false" })
+         for(std::string etm_setting : { "false", "true" })
             {
             test_all_versions(results, *client_ses, *server_ses, *creds, "RSA", "AES-128", "SHA-256 SHA-1", etm_setting);
             test_all_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128", "SHA-256 SHA-1", etm_setting);
