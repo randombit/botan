@@ -144,7 +144,10 @@ class HMAC_DRBG_Unit_Tests : public Test
 
             bool is_seeded() const override { return true; }
 
-            void clear() override {}
+            void clear() override
+               {
+               m_randomize_count = 0;
+               }
 
             void randomize(byte[], size_t) override
                {
@@ -235,6 +238,61 @@ class HMAC_DRBG_Unit_Tests : public Test
 
          rng.random_vec(9*64*1024 + 1);
          result.test_eq("request exceeds output limit", counting_rng.randomize_count(), 9);
+
+         return result;
+         }
+
+      Test::Result test_max_number_of_bytes_per_request()
+         {
+         Test::Result result("HMAC_DRBG max_number_of_bytes_per_request");
+
+         std::string mac_string = "HMAC(SHA-256)";
+         auto mac = Botan::MessageAuthenticationCode::create(mac_string);
+         if(!mac)
+            {
+            result.note_missing(mac_string);
+            return result;
+            }
+
+         Request_Counting_RNG counting_rng;
+
+         result.test_throws("HMAC_DRBG does not accept 0 for max_number_of_bytes_per_request", [&mac_string, &counting_rng ]()
+            {
+            Botan::HMAC_DRBG rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 2, 0);
+            });
+
+         result.test_throws("HMAC_DRBG does not accept values higher than 64KB for max_number_of_bytes_per_request", [ &mac_string,
+                            &counting_rng ]()
+            {
+            Botan::HMAC_DRBG rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 2, 64 * 1024 + 1);
+            });
+
+         // set reseed_interval to 1 so we can test that a long request is split
+         // into multiple, max_number_of_bytes_per_request long requests
+         // for each smaller request, reseed_check() calls counting_rng::randomize(),
+         // which we can compare with
+         Botan::HMAC_DRBG rng(std::move(mac), counting_rng, 1, 64);
+
+         rng.random_vec(63);
+         result.test_eq("one request", counting_rng.randomize_count(), 1);
+
+         rng.clear();
+         counting_rng.clear();
+
+         rng.random_vec(64);
+         result.test_eq("one request", counting_rng.randomize_count(), 1);
+
+         rng.clear();
+         counting_rng.clear();
+
+         rng.random_vec(65);
+         result.test_eq("two requests", counting_rng.randomize_count(), 2);
+
+         rng.clear();
+         counting_rng.clear();
+
+         rng.random_vec(1025);
+         result.test_eq("17 requests", counting_rng.randomize_count(), 17);
 
          return result;
          }
@@ -506,6 +564,7 @@ class HMAC_DRBG_Unit_Tests : public Test
          std::vector<Test::Result> results;
          results.push_back(test_reseed_kat());
          results.push_back(test_reseed());
+         results.push_back(test_max_number_of_bytes_per_request());
          results.push_back(test_broken_entropy_input());
          results.push_back(test_check_nonce());
          results.push_back(test_prediction_resistance());

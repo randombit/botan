@@ -12,38 +12,63 @@ namespace Botan {
 
 HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                      RandomNumberGenerator& underlying_rng,
-                     size_t reseed_interval) :
+                     size_t reseed_interval,
+                     size_t max_number_of_bytes_per_request) :
    Stateful_RNG(underlying_rng, reseed_interval),
-   m_mac(std::move(prf))
+   m_mac(std::move(prf)),
+   m_max_number_of_bytes_per_request(max_number_of_bytes_per_request)
    {
    BOTAN_ASSERT_NONNULL(m_mac);
+
+   if(m_max_number_of_bytes_per_request == 0 || m_max_number_of_bytes_per_request > 64 * 1024)
+      {
+      throw Invalid_Argument("Invalid value for max_number_of_bytes_per_request");
+      }
+
    clear();
    }
 
 HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                      RandomNumberGenerator& underlying_rng,
                      Entropy_Sources& entropy_sources,
-                     size_t reseed_interval) :
+                     size_t reseed_interval,
+                     size_t max_number_of_bytes_per_request ) :
    Stateful_RNG(underlying_rng, entropy_sources, reseed_interval),
-   m_mac(std::move(prf))
+   m_mac(std::move(prf)),
+   m_max_number_of_bytes_per_request(max_number_of_bytes_per_request)
    {
    BOTAN_ASSERT_NONNULL(m_mac);
+
+   if(m_max_number_of_bytes_per_request == 0 || m_max_number_of_bytes_per_request > 64 * 1024)
+      {
+      throw Invalid_Argument("Invalid value for max_number_of_bytes_per_request");
+      }
+
    clear();
    }
 
 HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                      Entropy_Sources& entropy_sources,
-                     size_t reseed_interval) :
+                     size_t reseed_interval,
+                     size_t max_number_of_bytes_per_request) :
    Stateful_RNG(entropy_sources, reseed_interval),
-   m_mac(std::move(prf))
+   m_mac(std::move(prf)),
+   m_max_number_of_bytes_per_request(max_number_of_bytes_per_request)
    {
    BOTAN_ASSERT_NONNULL(m_mac);
+
+   if(m_max_number_of_bytes_per_request == 0 || m_max_number_of_bytes_per_request > 64 * 1024)
+      {
+      throw Invalid_Argument("Invalid value for max_number_of_bytes_per_request");
+      }
+
    clear();
    }
 
 HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf) :
    Stateful_RNG(),
-   m_mac(std::move(prf))
+   m_mac(std::move(prf)),
+   m_max_number_of_bytes_per_request(64*1024)
    {
    BOTAN_ASSERT_NONNULL(m_mac);
    clear();
@@ -76,22 +101,9 @@ void HMAC_DRBG::randomize(byte output[], size_t output_len)
 void HMAC_DRBG::randomize_with_input(byte output[], size_t output_len,
                                      const byte input[], size_t input_len)
    {
-   /**
-   * SP 800-90A requires we reject any request for a DRBG output
-   * longer than max_number_of_bits_per_request. This is an
-   * implementation-dependent value, but NIST requires for HMAC_DRBG
-   * that every implementation set a value no more than 2**19 bits
-   * (or 64 KiB).
-   *
-   * To avoid inconveniencing the caller who wants a large output for
-   * whatever reason, instead treat very long output requests as
-   * if multiple maximum-length requests had been made.
-   */
-   const size_t max_number_of_bytes_per_request = 64*1024;
-
    while(output_len > 0)
       {
-      size_t this_req = std::min(max_number_of_bytes_per_request, output_len);
+      size_t this_req = std::min(m_max_number_of_bytes_per_request, output_len);
       output_len -= this_req;
 
       reseed_check();
