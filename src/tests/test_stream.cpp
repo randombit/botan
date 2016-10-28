@@ -1,5 +1,5 @@
 /*
-* (C) 2014,2015 Jack Lloyd
+* (C) 2014,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -57,13 +57,26 @@ class Stream_Cipher_Tests : public Text_Based_Test
             cipher->set_key(key);
 
             if(nonce.size())
+               {
                cipher->set_iv(nonce.data(), nonce.size());
+               }
+            else
+               {
+               /*
+               * If no nonce was set then implicitly the cipher is using a
+               * null/empty nonce. Call set_iv with such a nonce to make sure
+               * set_iv accepts it.
+               */
+               cipher->set_iv(nullptr, 0);
+               }
 
             if (seek != 0)
                cipher->seek(seek);
 
             std::vector<uint8_t> buf = input;
             cipher->encrypt(buf);
+
+            cipher->clear();
 
             result.test_eq(provider, "encrypt", buf, expected);
             }
