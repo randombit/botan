@@ -6,17 +6,14 @@
 
 #include <botan/auto_rng.h>
 #include <botan/entropy_src.h>
-
-#if defined(BOTAN_HAS_HMAC_DRBG)
-  #include <botan/hmac_drbg.h>
-#endif
-
-#if defined(BOTAN_HAS_HMAC_RNG)
-  #include <botan/hmac_rng.h>
-#endif
+#include <botan/hmac_drbg.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
+#endif
+
+#if !defined(BOTAN_AUTO_RNG_HMAC)
+#error "No hash function defined for AutoSeeded_RNG in build.h (try enabling sha2_32)"
 #endif
 
 namespace Botan {
@@ -29,18 +26,18 @@ AutoSeeded_RNG::~AutoSeeded_RNG()
 AutoSeeded_RNG::AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
                                size_t reseed_interval)
    {
-   m_rng.reset(new BOTAN_AUTO_RNG_DRBG(MessageAuthenticationCode::create(BOTAN_AUTO_RNG_HMAC),
-                                       underlying_rng,
-                                       reseed_interval));
+   m_rng.reset(new HMAC_DRBG(MessageAuthenticationCode::create_or_throw(BOTAN_AUTO_RNG_HMAC),
+                             underlying_rng,
+                             reseed_interval));
    force_reseed();
    }
 
 AutoSeeded_RNG::AutoSeeded_RNG(Entropy_Sources& entropy_sources,
                                size_t reseed_interval)
    {
-   m_rng.reset(new BOTAN_AUTO_RNG_DRBG(MessageAuthenticationCode::create(BOTAN_AUTO_RNG_HMAC),
-                                       entropy_sources,
-                                       reseed_interval));
+   m_rng.reset(new HMAC_DRBG(MessageAuthenticationCode::create_or_throw(BOTAN_AUTO_RNG_HMAC),
+                             entropy_sources,
+                             reseed_interval));
    force_reseed();
    }
 
@@ -48,10 +45,9 @@ AutoSeeded_RNG::AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
                                Entropy_Sources& entropy_sources,
                                size_t reseed_interval)
    {
-   m_rng.reset(new BOTAN_AUTO_RNG_DRBG(MessageAuthenticationCode::create(BOTAN_AUTO_RNG_HMAC),
-                                       underlying_rng,
-                                       entropy_sources,
-                                       reseed_interval));
+   m_rng.reset(new HMAC_DRBG(
+                  MessageAuthenticationCode::create_or_throw(BOTAN_AUTO_RNG_HMAC),
+                  underlying_rng, entropy_sources, reseed_interval));
    force_reseed();
    }
 

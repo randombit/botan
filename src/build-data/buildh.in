@@ -106,12 +106,6 @@
 #define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
 #define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
 
-/**
-* Controls how AutoSeeded_RNG is instantiated
-*/
-#define BOTAN_AUTO_RNG_DRBG HMAC_DRBG
-#define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-384)"
-
 /*
 * Specifies (in order) the list of entropy sources that will be used
 * to seed an in-memory RNG. The first few in the default list
@@ -121,8 +115,7 @@
 */
 #define BOTAN_ENTROPY_DEFAULT_SOURCES \
    { "timestamp", "rdseed", "rdrand", "proc_info", \
-   "darwin_secrandom", "dev_random", "win32_cryptoapi", "egd", \
-   "proc_walk", "system_stats", "unix_procs" }
+   "darwin_secrandom", "dev_random", "win32_cryptoapi", "proc_walk", "system_stats" }
 
 /*
 * These control the RNG used by the system RNG interface
@@ -272,6 +265,24 @@ Each read generates 32 bits of output
 * Local configuration options (if any) follow
 */
 %{local_config}
+
+/**
+* Controls how AutoSeeded_RNG is instantiated
+*/
+#if !defined(BOTAN_AUTO_RNG_HMAC)
+
+  #if defined(BOTAN_HAS_SHA2_64)
+    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-384)"
+  #elif defined(BOTAN_HAS_SHA2_32)
+    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-256)"
+  #elif defined(BOTAN_HAS_SHA3)
+    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-3(256))"
+  #elif defined(BOTAN_HAS_SHA1)
+    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-1)"
+  #endif
+  // Otherwise, no hash found: leave BOTAN_AUTO_RNG_HMAC undefined
+
+#endif
 
 // Append to macros living outside of functions, so that invocations must end with a semicolon.
 // The struct is only declared to force the semicolon, it is never defined.
