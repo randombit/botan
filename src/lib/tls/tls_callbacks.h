@@ -99,9 +99,35 @@ class BOTAN_DLL Callbacks
        virtual std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos);
 
        /**
-       * Optional callback: debug logging. (not currently used)
+       * Optional callback: error logging. (not currently called)
+       * @param err An error message related to this connection.
        */
-       virtual bool tls_log_debug(const char*) { return false; }
+       virtual void tls_log_error(const char* err)
+          {
+          BOTAN_UNUSED(err);
+          }
+
+       /**
+       * Optional callback: debug logging. (not currently called)
+       * @param what Some hopefully informative string
+       */
+       virtual void tls_log_debug(const char* what)
+          {
+          BOTAN_UNUSED(what);
+          }
+
+       /**
+       * Optional callback: debug logging taking a buffer. (not currently called)
+       * @param descr What this buffer is
+       * @param val the bytes
+       * @param val_len length of val
+       */
+       virtual void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t val_len)
+          {
+          BOTAN_UNUSED(descr);
+          BOTAN_UNUSED(val);
+          BOTAN_UNUSED(val_len);
+          }
    };
 
 /**
