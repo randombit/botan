@@ -4,6 +4,16 @@ Release Notes
 Version 1.11.34, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix TLS session resumption bugs, if an application used a single
+  session cache for both TLS and DTLS protocols. (GH #688)
+
+* Add MessageAuthenticationCode::start_msg interface, for
+  MACs which require or can use a nonce (GH #691)
+
+* Add GMAC (GH #488 / #691)
+
+* HMAC_DRBG allows configuring maximum number of bytes before
+  a forced reseed (GH #690)
 
 Version 1.11.33, 2016-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
