@@ -18,6 +18,7 @@ sha3
 # mac
 cmac
 hmac
+gmac
 
 # kdf
 kdf1_iso18033

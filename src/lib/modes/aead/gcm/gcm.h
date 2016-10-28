@@ -129,11 +129,7 @@ class BOTAN_DLL GHASH : public SymmetricAlgorithm
       void clear() override;
 
       std::string name() const override { return "GHASH"; }
-   private:
-      void key_schedule(const byte key[], size_t key_len) override;
-
-      void gcm_multiply(secure_vector<byte>& x) const;
-
+   protected:
       void ghash_update(secure_vector<byte>& x,
                         const byte input[], size_t input_len);
 
@@ -142,9 +138,16 @@ class BOTAN_DLL GHASH : public SymmetricAlgorithm
 
       secure_vector<byte> m_H;
       secure_vector<byte> m_H_ad;
-      secure_vector<byte> m_nonce;
       secure_vector<byte> m_ghash;
-      size_t m_ad_len = 0, m_text_len = 0;
+      size_t m_ad_len = 0;
+
+   private:
+      void key_schedule(const byte key[], size_t key_len) override;
+
+      void gcm_multiply(secure_vector<byte>& x) const;
+
+      secure_vector<byte> m_nonce;
+      size_t m_text_len = 0;
    };
 
 }
