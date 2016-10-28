@@ -14,7 +14,6 @@ sha3
 gcm
 ocb
 chacha20poly1305
-shake_cipher
 
 kdf2
 hkdf
@@ -49,6 +48,7 @@ ffi
 <if_available>
 tls
 prf_tls
+newhope
 
 clmul
 locking_allocator
@@ -57,8 +57,12 @@ aes_ni
 aes_ssse3
 serpent_simd
 threefish_avx2
+chacha_sse2
 
 simd
+
+sessions_sql
+certstor_sql
 
 rdrand_rng
 system_rng
@@ -75,6 +79,9 @@ win32_stats
 </if_available>
 
 <prohibited>
+# Just say no to TLS 1.0
+tls_cbc
+
 cast
 des
 gost_28147
