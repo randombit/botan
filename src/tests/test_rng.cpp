@@ -505,7 +505,7 @@ class HMAC_DRBG_Unit_Tests : public Test
             ::close(fd[0]); // close read end in child
             rng.randomize(&child_bytes[0], child_bytes.size());
             count = counting_rng.randomize_count();
-            ::write(fd[1], &count, sizeof(count));
+            ssize_t written = ::write(fd[1], &count, sizeof(count));
             try {
                rng.randomize(&child_bytes[0], child_bytes.size());
             }
@@ -513,7 +513,8 @@ class HMAC_DRBG_Unit_Tests : public Test
                {
                fprintf(stderr, "%s", e.what());
                }
-            ::write(fd[1], &child_bytes[0], child_bytes.size());
+            written = ::write(fd[1], &child_bytes[0], child_bytes.size());
+            BOTAN_UNUSED(written);
             ::close(fd[1]); // close write end in child
             ::_exit(0);
             }
