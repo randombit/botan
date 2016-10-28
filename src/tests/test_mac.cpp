@@ -11,10 +11,6 @@
   #include <botan/mac.h>
 #endif
 
-#if defined(BOTAN_HAS_GMAC)
-  #include <botan/gmac.h>
-#endif
-
 namespace Botan_Tests {
 
 namespace {
@@ -60,14 +56,7 @@ class Message_Auth_Tests : public Text_Based_Test
             result.test_eq(provider, mac->name(), algo);
 
             mac->set_key(key);
-
-#if defined(BOTAN_HAS_GMAC)
-            // GMAC needs to set an IV
-            if(Botan::GMAC* gmac = dynamic_cast<Botan::GMAC*>(mac.get()))
-               {
-               gmac->start(iv);
-               }
-#endif
+            mac->start(iv);
 
             mac->update(input);
 
@@ -80,13 +69,7 @@ class Message_Auth_Tests : public Text_Based_Test
 
             // do the same to test verify_mac()
             mac->set_key(key);
-#if defined(BOTAN_HAS_GMAC)
-            // GMAC needs to set an IV
-            if(Botan::GMAC* gmac = dynamic_cast<Botan::GMAC*>(mac.get()))
-               {
-               gmac->start(iv);
-               }
-#endif
+            mac->start(iv);
             mac->update(input);
 
             result.test_eq(provider + " correct mac", mac->verify_mac(expected.data(), expected.size()), true);
@@ -94,13 +77,8 @@ class Message_Auth_Tests : public Text_Based_Test
             if(input.size() > 2)
                {
                mac->set_key(key); // Poly1305 requires the re-key
-#if defined(BOTAN_HAS_GMAC)
-               // GMAC needs to set an IV
-               if(Botan::GMAC* gmac = dynamic_cast<Botan::GMAC*>(mac.get()))
-                  {
-                  gmac->start(iv);
-                  }
-#endif
+               mac->start(iv);
+
                mac->update(input[0]);
                mac->update(&input[1], input.size() - 2);
                mac->update(input[input.size()-1]);
@@ -109,13 +87,8 @@ class Message_Auth_Tests : public Text_Based_Test
 
                // do the same to test verify_mac()
                mac->set_key(key);
-#if defined(BOTAN_HAS_GMAC)
-               // GMAC needs to set an IV
-               if(Botan::GMAC* gmac = dynamic_cast<Botan::GMAC*>(mac.get()))
-                  {
-                  gmac->start(iv);
-                  }
-#endif
+               mac->start(iv);
+
                mac->update(input[ 0 ]);
                mac->update(&input[ 1 ], input.size() - 2);
                mac->update(input[ input.size() - 1 ]);

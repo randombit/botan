@@ -64,17 +64,7 @@ void GMAC::key_schedule(const byte key[], size_t size)
    m_cipher->encrypt(m_H_ad.data(), m_H.data());
    }
 
-void GMAC::start(const std::vector<byte>& nonce)
-   {
-   start(nonce.data(), nonce.size());
-   }
-
-void GMAC::start(const secure_vector<byte>& nonce)
-   {
-   start(nonce.data(), nonce.size());
-   }
-
-void GMAC::start(const byte nonce[], size_t nonce_len)
+void GMAC::start_msg(const byte nonce[], size_t nonce_len)
    {
    secure_vector<byte> y0(GCM_BS);
 
@@ -118,6 +108,6 @@ void GMAC::final_result(byte mac[])
 
 MessageAuthenticationCode* GMAC::clone() const
    {
-   return new GMAC(BlockCipher::create(m_cipher->name()).release());
+   return new GMAC(m_cipher->clone());
    }
 }

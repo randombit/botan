@@ -53,7 +53,7 @@ class BOTAN_DLL GMAC : public MessageAuthenticationCode,
       */
       void start(const std::vector<byte>& nonce);
 
-      Key_Length_Specification key_spec() const
+      Key_Length_Specification key_spec() const override
          {
          return m_cipher->key_spec();
          }
@@ -71,7 +71,7 @@ class BOTAN_DLL GMAC : public MessageAuthenticationCode,
    private:
       void add_data(const byte[], size_t) override;
       void final_result(byte[]) override;
-      void start_msg(const byte nonce[], size_t nonce_len);
+      void start_msg(const byte nonce[], size_t nonce_len) override;
       void key_schedule(const byte key[], size_t size) override;
 
       static const size_t GCM_BS = 16;
