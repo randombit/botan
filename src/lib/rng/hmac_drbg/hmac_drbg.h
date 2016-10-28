@@ -123,13 +123,10 @@ class BOTAN_DLL HMAC_DRBG final : public Stateful_RNG
       * Constructor taking a string for the hash
       */
       HMAC_DRBG(const std::string& hmac_hash) :
-         Stateful_RNG(), m_max_number_of_bytes_per_request(64 * 1024),
-         m_mac(MessageAuthenticationCode::create("HMAC(" + hmac_hash + ")"))
+         Stateful_RNG(),
+         m_mac(MessageAuthenticationCode::create_or_throw("HMAC(" + hmac_hash + ")")),
+         m_max_number_of_bytes_per_request(64 * 1024)
          {
-         if(!m_mac)
-            { 
-            throw Algorithm_Not_Found(hmac_hash);
-            }
          clear();
          }
 
