@@ -2,7 +2,6 @@ define THRESHOLD_SECRET_SHARING 20131128
 
 <requires>
 rng
-filters
 hex
 sha1
 sha2_32
