@@ -1,8 +1,5 @@
 Currently deprecated:
 
-- PRNGs X9.31 (no longer approved) and HMAC_RNG (non-standard)
-  Use HMAC_DRBG
-
 - ECB Cipher_Mode for block ciphers
 
 - 3DES and SEED ciphersuites in TLS
@@ -18,10 +15,3 @@ Currently deprecated:
 - All built in MODP groups < 2048 bits
 
 - All pre-created DSA groups
-
-- All support for BeOS/Haiku including BeOS entropy source
-
-- EGD entropy source
-
-- Unix process exec entropy source
-

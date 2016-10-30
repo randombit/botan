@@ -68,7 +68,6 @@ rdrand_rng
 system_rng
 
 # entropy sources
-beos_stats
 cryptoapi_rng
 darwin_secrandom
 dev_random
@@ -112,12 +111,7 @@ gost_3410
 emsa_x931
 pbkdf1
 prf_x942
-x931_rng
 
 passhash9
 cryptobox
-
-# questionable entropy sources
-egd
-unix_procs
 </prohibited>

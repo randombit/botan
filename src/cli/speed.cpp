@@ -37,10 +37,6 @@
   #include <botan/hmac_rng.h>
 #endif
 
-#if defined(BOTAN_HAS_X931_RNG)
-  #include <botan/x931_rng.h>
-#endif
-
 #if defined(BOTAN_HAS_FPE_FE1)
   #include <botan/fpe_fe1.h>
 #endif
@@ -447,24 +443,11 @@ class Speed final : public Command
                bench_rng(Botan::system_rng(), "System_RNG", msec, buf_size);
 #endif
 
-#if defined(BOTAN_HAS_X931_RNG)
-               Botan::ANSI_X931_RNG x931_rng(Botan::BlockCipher::create("AES-256").release(), new Botan::AutoSeeded_RNG);
-               bench_rng(x931_rng, x931_rng.name(), msec, buf_size);
-#endif
-
 #if defined(BOTAN_HAS_HMAC_DRBG)
                for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
                   {
                   Botan::HMAC_DRBG hmac_drbg(hash);
                   bench_rng(hmac_drbg, hmac_drbg.name(), msec, buf_size);
-                  }
-#endif
-
-#if defined(BOTAN_HAS_HMAC_RNG)
-               for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
-                  {
-                  Botan::HMAC_RNG hmac_rng(Botan::MessageAuthenticationCode::create("HMAC(" + hash + ")"));
-                  bench_rng(hmac_rng, hmac_rng.name(), msec, buf_size);
                   }
 #endif
                }
