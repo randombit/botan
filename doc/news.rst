@@ -4,16 +4,28 @@ Release Notes
 Version 1.11.34, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fix TLS session resumption bugs, if an application used a single
-  session cache for both TLS and DTLS protocols. (GH #688)
+* Fix TLS session resumption bugs which caused resumption failures if an
+  application used a single session cache for both TLS and DTLS. (GH #688)
 
-* Add MessageAuthenticationCode::start_msg interface, for
-  MACs which require or can use a nonce (GH #691)
+* Add MessageAuthenticationCode::start_msg interface, for MACs which require or
+  can use a nonce (GH #691)
 
-* Add GMAC (GH #488 / #691)
+* Add GMAC, a MAC based on GCM which requires a nonce (GH #488 / #691)
 
-* HMAC_DRBG allows configuring maximum number of bytes before
-  a forced reseed (GH #690)
+* HMAC_DRBG allows configuring maximum number of bytes before a forced reseed
+  (GH #690)
+
+* The deprecated RNGs HMAC_RNG and X9.31 RNG have been removed. Now the only
+  userspace PRNG included in the library is HMAC_DRBG. (GH #692)
+
+* The entropy sources for EGD and BeOS, as well as the Unix entropy source which
+  executed processes to get statistical data have been removed. (GH #692)
+
+* The openpgp module (which just implemented OpenPGP compatible base64 encoding
+  and decoding, nothing else) has been removed.
+
+* Add more tests for Pipe/Filter (GH #689 #693)
+
 
 Version 1.11.33, 2016-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
