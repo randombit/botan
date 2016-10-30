@@ -745,10 +745,10 @@ Test::Result test_rsa_encrypt_decrypt()
 
    auto encrypt_and_decrypt = [&keypair, &result](const std::vector<byte>& plaintext, const std::string& padding) -> void
       {
-      Botan::PK_Encryptor_EME encryptor(keypair.first, padding, "pkcs11");
+      Botan::PK_Encryptor_EME encryptor(keypair.first, Test::rng(), padding, "pkcs11");
       auto encrypted = encryptor.encrypt(plaintext, Test::rng());
 
-      Botan::PK_Decryptor_EME decryptor(keypair.second, padding, "pkcs11");
+      Botan::PK_Decryptor_EME decryptor(keypair.second, Test::rng(), padding, "pkcs11");
       auto decrypted = decryptor.decrypt(encrypted);
 
       // some token / middlewares do not remove the padding bytes
@@ -785,7 +785,7 @@ Test::Result test_rsa_sign_verify()
 
    auto sign_and_verify = [&keypair, &plaintext, &result](const std::string& emsa, bool multipart) -> void
       {
-      Botan::PK_Signer signer(keypair.second, emsa, Botan::IEEE_1363, "pkcs11");
+      Botan::PK_Signer signer(keypair.second, Test::rng(), emsa, Botan::IEEE_1363, "pkcs11");
       std::vector<byte> signature;
       if ( multipart )
          {
@@ -1038,7 +1038,7 @@ Test::Result test_ecdsa_sign_verify()
 
    auto sign_and_verify = [ &keypair, &plaintext, &result ](const std::string& emsa) -> void
       {
-      Botan::PK_Signer signer(keypair.second, emsa, Botan::IEEE_1363, "pkcs11");
+      Botan::PK_Signer signer(keypair.second, Test::rng(), emsa, Botan::IEEE_1363, "pkcs11");
       auto signature = signer.sign_message(plaintext, Test::rng());
 
       Botan::PK_Verifier token_verifier(keypair.first, emsa, Botan::IEEE_1363, "pkcs11");
@@ -1267,8 +1267,8 @@ Test::Result test_ecdh_derive()
    PKCS11_ECDH_KeyPair keypair2 = generate_ecdh_keypair(test_session, "Botan test ECDH key2");
 
    // SoftHSMv2 only supports CKD_NULL KDF at the moment
-   Botan::PK_Key_Agreement ka(keypair.second, "Raw", "pkcs11");
-   Botan::PK_Key_Agreement kb(keypair2.second, "Raw", "pkcs11");
+   Botan::PK_Key_Agreement ka(keypair.second, Test::rng(), "Raw", "pkcs11");
+   Botan::PK_Key_Agreement kb(keypair2.second, Test::rng(), "Raw", "pkcs11");
 
    Botan::SymmetricKey alice_key = ka.derive_key(32, unlock(EC2OSP(keypair2.first.public_point(),
                                    PointGFp::UNCOMPRESSED)));
