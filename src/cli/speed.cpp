@@ -590,7 +590,8 @@ class Speed final : public Command
             iv_timer.run([&] { dec.start(iv); });
             decrypt_timer.run([&] { dec.finish(buffer); });
 
-            iv[0] += 1;
+            if(iv.size() > 0)
+               iv[0] += 1;
             }
 
          output() << Timer::result_string_ops(ks_timer);
