@@ -2,6 +2,21 @@
 Pipe/Filter Message Processing
 ========================================
 
+.. note::
+
+    The system described below provides a message processing system with a
+    straightforward API. However it makes many extra memory copies and
+    allocations than would otherwise be required, and also tends to make
+    applications using it somewhat opaque because it is not obvious what this or
+    that Pipe& object actually does (type of operation, number of messages
+    output (if any!), and so on), whereas using say a HashFunction or AEAD_Mode
+    provides a much better idea in the code of what operation is occuring.
+
+    This filter interface is no longer used within the library itself
+    (outside a few dusty corners) and will likely not see any further major
+    development. However it will remain included because the API is often
+    convenient and many applications use it.
+
 Many common uses of cryptography involve processing one or more
 streams of data. Botan provides services that make setting up data
 flows through various operations, such as compression, encryption, and
