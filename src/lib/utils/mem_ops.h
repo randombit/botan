@@ -15,14 +15,21 @@
 namespace Botan {
 
 /**
-* Zeroize memory
+* Zeroize memory in a way that a compiler should not remove
+* Use this to zero memory before deallocating it.
+*
 * @param ptr a pointer to memory to zero out
 * @param n the number of bytes pointed to by ptr
 */
 BOTAN_DLL void zero_mem(void* ptr, size_t n);
 
 /**
-* Zeroize memory
+* Zero memory before use. This simply calls memset and should not be
+* used in cases where the compiler cannot see the call as a
+* side-effecting operation (for example, if calling clear_mem before
+* deallocating memory, the compiler would be allowed to omit the call
+* to memset entirely under the as-if rule.)
+*
 * @param ptr a pointer to an array
 * @param n the number of Ts pointed to by ptr
 */

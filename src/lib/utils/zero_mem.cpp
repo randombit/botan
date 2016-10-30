@@ -1,4 +1,4 @@
- /*
+/*
 * Zero Memory
 * (C) 2012,2015 Jack Lloyd
 *
@@ -9,6 +9,8 @@
 
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
   #include <windows.h>
+#elif defined(BOTAN_HAS_OPENSSL)
+  #include <openssl/crypto.h>
 #endif
 
 namespace Botan {
@@ -17,7 +19,12 @@ void zero_mem(void* ptr, size_t n)
    {
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
    ::RtlSecureZeroMemory(ptr, n);
+
+#elif defined(BOTAN_HAS_OPENSSL)
+   ::OPENSSL_cleanse(ptr, n);
+
 #elif defined(BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO) && (BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO == 1)
+
    /*
    Call memset through a static volatile pointer, which the compiler
    should not elide. This construct should be safe in conforming
@@ -27,11 +34,14 @@ void zero_mem(void* ptr, size_t n)
    */
    static void* (*const volatile memset_ptr)(void*, int, size_t) = std::memset;
    (memset_ptr)(ptr, 0, n);
+
 #else
+
    volatile byte* p = reinterpret_cast<volatile byte*>(ptr);
 
    for(size_t i = 0; i != n; ++i)
       p[i] = 0;
+
 #endif
    }
 
