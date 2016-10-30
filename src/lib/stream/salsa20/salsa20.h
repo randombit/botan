@@ -23,7 +23,7 @@ class BOTAN_DLL Salsa20 final : public StreamCipher
       void set_iv(const byte iv[], size_t iv_len) override;
 
       bool valid_iv_length(size_t iv_len) const override
-         { return (iv_len == 8 || iv_len == 24); }
+         { return (iv_len == 0 || iv_len == 8 || iv_len == 24); }
 
       Key_Length_Specification key_spec() const override
          {

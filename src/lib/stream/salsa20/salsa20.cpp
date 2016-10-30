@@ -158,8 +158,7 @@ void Salsa20::key_schedule(const byte key[], size_t length)
 
    m_position = 0;
 
-   const byte ZERO[8] = { 0 };
-   set_iv(ZERO, sizeof(ZERO));
+   set_iv(nullptr, 0); // all-zero IV
    }
 
 /*
@@ -170,7 +169,13 @@ void Salsa20::set_iv(const byte iv[], size_t length)
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
 
-   if(length == 8)
+   if(length == 0)
+      {
+      // Salsa20 null IV
+      m_state[6] = 0;
+      m_state[7] = 0;
+      }
+   else if(length == 8)
       {
       // Salsa20
       m_state[6] = load_le<u32bit>(iv, 0);
