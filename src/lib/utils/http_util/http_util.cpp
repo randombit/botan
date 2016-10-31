@@ -1,6 +1,6 @@
 /*
 * Sketchy HTTP client
-* (C) 2013 Jack Lloyd
+* (C) 2013,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -21,16 +21,27 @@
   #define BOOST_ASIO_DISABLE_SERIAL_PORT
   #include <boost/asio.hpp>
 
+#elif defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+  #include <sys/types.h>
+  #include <sys/socket.h>
+  #include <netdb.h>
+  #include <unistd.h>
 #endif
 
 namespace Botan {
 
 namespace HTTP {
 
-#if defined(BOTAN_HAS_BOOST_ASIO)
-std::string http_transact_asio(const std::string& hostname,
-                               const std::string& message)
+namespace {
+
+/*
+* Connect to a host, write some bytes, then read until the server
+* closes the socket.
+*/
+std::string http_transact(const std::string& hostname,
+                          const std::string& message)
    {
+#if defined(BOTAN_HAS_BOOST_ASIO)
    using namespace boost::asio::ip;
 
    boost::asio::ip::tcp::iostream tcp;
@@ -38,7 +49,7 @@ std::string http_transact_asio(const std::string& hostname,
    tcp.connect(hostname, "http");
 
    if(!tcp)
-      throw Exception("HTTP connection to " + hostname + " failed");
+      throw HTTP_Error("HTTP connection to " + hostname + " failed");
 
    tcp << message;
    tcp.flush();
@@ -47,15 +58,76 @@ std::string http_transact_asio(const std::string& hostname,
    oss << tcp.rdbuf();
 
    return oss.str();
-   }
-#endif
+#elif defined(BOTAN_TARGET_OS_HAS_SOCKETS)
 
-std::string http_transact_fail(const std::string& hostname,
-                               const std::string&)
-   {
-   throw Exception("Cannot connect to " + hostname +
+   hostent* host_addr = ::gethostbyname(hostname.c_str());
+   uint16_t port = 80;
+
+   if(!host_addr)
+      throw HTTP_Error("Name resolution failed for " + hostname);
+
+   if(host_addr->h_addrtype != AF_INET) // FIXME
+      throw HTTP_Error("Hostname " + hostname + " resolved to non-IPv4 address");
+
+   struct socket_raii {
+      socket_raii(int fd) : m_fd(fd) {}
+      ~socket_raii() { ::close(m_fd); }
+      int m_fd;
+      };
+
+   int fd = ::socket(PF_INET, SOCK_STREAM, 0);
+   if(fd == -1)
+      throw HTTP_Error("Unable to create TCP socket");
+   socket_raii raii(fd);
+
+   sockaddr_in socket_info;
+   ::memset(&socket_info, 0, sizeof(socket_info));
+   socket_info.sin_family = AF_INET;
+   socket_info.sin_port = htons(port);
+
+   ::memcpy(&socket_info.sin_addr,
+            host_addr->h_addr,
+            host_addr->h_length);
+
+   socket_info.sin_addr = *reinterpret_cast<struct in_addr*>(host_addr->h_addr); // FIXME
+
+   if(::connect(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
+      throw HTTP_Error("HTTP connection to " + hostname + " failed");
+
+   size_t sent_so_far = 0;
+   while(sent_so_far != message.size())
+      {
+      size_t left = message.size() - sent_so_far;
+      ssize_t sent = ::write(fd, &message[sent_so_far], left);
+
+      if(sent < 0)
+         throw HTTP_Error("HTTP server hung up on us");
+      else
+         sent_so_far += static_cast<size_t>(sent);
+      }
+
+   std::ostringstream oss;
+   std::vector<char> buf(1024); // arbitrary size
+   while(true)
+      {
+      ssize_t got = ::read(fd, buf.data(), buf.size());
+
+      if(got < 0)
+         throw HTTP_Error("HTTP server hung up on us");
+      else if(got > 0)
+         oss.write(buf.data(), static_cast<std::streamsize>(got));
+      else
+         break; // EOF
+      }
+   return oss.str();
+
+#else
+   throw HTTP_Error("Cannot connect to " + hostname +
                             ": network code disabled in build");
+#endif
    }
+
+}
 
 std::string url_encode(const std::string& in)
    {
@@ -97,7 +169,7 @@ Response http_sync(http_exch_fn http_transact,
    {
    const auto protocol_host_sep = url.find("://");
    if(protocol_host_sep == std::string::npos)
-      throw Exception("Invalid URL " + url);
+      throw HTTP_Error("Invalid URL " + url);
 
    const auto host_loc_sep = url.find('/', protocol_host_sep + 3);
 
@@ -137,7 +209,7 @@ Response http_sync(http_exch_fn http_transact,
    std::string line1;
    std::getline(io, line1);
    if(!io || line1.empty())
-      throw Exception("No response");
+      throw HTTP_Error("No response");
 
    std::stringstream response_stream(line1);
    std::string http_version;
@@ -149,7 +221,7 @@ Response http_sync(http_exch_fn http_transact,
    std::getline(response_stream, status_message);
 
    if(!response_stream || http_version.substr(0,5) != "HTTP/")
-      throw Exception("Not an HTTP response");
+      throw HTTP_Error("Not an HTTP response");
 
    std::map<std::string, std::string> headers;
    std::string header_line;
@@ -157,7 +229,7 @@ Response http_sync(http_exch_fn http_transact,
       {
       auto sep = header_line.find(": ");
       if(sep == std::string::npos || sep > header_line.size() - 2)
-         throw Exception("Invalid HTTP header " + header_line);
+         throw HTTP_Error("Invalid HTTP header " + header_line);
       const std::string key = header_line.substr(0, sep);
 
       if(sep + 2 < header_line.size() - 1)
@@ -170,7 +242,7 @@ Response http_sync(http_exch_fn http_transact,
    if(status_code == 301 && headers.count("Location"))
       {
       if(allowable_redirects == 0)
-         throw Exception("HTTP redirection count exceeded");
+         throw HTTP_Error("HTTP redirection count exceeded");
       return GET_sync(headers["Location"], allowable_redirects - 1);
       }
 
@@ -187,8 +259,8 @@ Response http_sync(http_exch_fn http_transact,
    if(!header_size.empty())
       {
       if(resp_body.size() != to_u32bit(header_size))
-         throw Exception("Content-Length disagreement, header says " +
-                                  header_size + " got " + std::to_string(resp_body.size()));
+         throw HTTP_Error("Content-Length disagreement, header says " +
+                          header_size + " got " + std::to_string(resp_body.size()));
       }
 
    return Response(status_code, status_message, resp_body, headers);
@@ -201,11 +273,7 @@ Response http_sync(const std::string& verb,
                    size_t allowable_redirects)
    {
    return http_sync(
-#if defined(BOTAN_HAS_BOOST_ASIO)
-      http_transact_asio,
-#else
-      http_transact_fail,
-#endif
+      http_transact,
       verb,
       url,
       content_type,
