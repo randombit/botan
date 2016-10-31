@@ -216,7 +216,8 @@ def main(args = None):
     for f in [f for f in os.listdir(cfg['doc_dir']) if f.endswith('.txt')]:
         copy_file(os.path.join(cfg['doc_dir'], f), os.path.join(target_doc_dir, f))
 
-    copy_file(os.path.join(cfg['doc_dir'], 'news.rst'), os.path.join(target_doc_dir, 'news.txt'))
+    copy_file(os.path.join(cfg['base_dir'], 'license.txt'), os.path.join(target_doc_dir, 'license.txt'))
+    copy_file(os.path.join(cfg['base_dir'], 'news.rst'), os.path.join(target_doc_dir, 'news.txt'))
 
     logging.info('Botan %s installation complete', cfg['version'])
 

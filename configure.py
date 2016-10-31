@@ -1303,7 +1303,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'version_datestamp': build_config.version_datestamp,
 
-        'src_dir': build_config.src_dir,
+        'base_dir': options.base_dir,
+        'src_dir': options.src_dir,
         'doc_dir': build_config.doc_dir,
 
         'command_line': ' '.join(sys.argv),
@@ -1323,7 +1324,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'out_dir': options.with_build_dir or os.path.curdir,
         'build_dir': build_config.build_dir,
-        'src_dir': options.src_dir,
 
         'scripts_dir': os.path.join(build_config.src_dir, 'scripts'),
 

@@ -64,7 +64,7 @@ year. Even if the years you are making the change are consecutive, avoid year
 ranges: specify each year separated by a comma.
 
 Also if you are a new contributor or making an addition in a new year, include
-an update to ``doc/license.txt`` in your PR.
+an update to ``license.txt`` in your PR.
 
 Style Conventions
 ========================================
