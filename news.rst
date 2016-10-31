@@ -15,6 +15,8 @@ Version 1.11.34, Not Yet Released
 * HMAC_DRBG allows configuring maximum number of bytes before a forced reseed
   (GH #690)
 
+* Salsa20 now accepts a null IV as equivalent to an all-zero one (GH #697)
+
 * The deprecated RNGs HMAC_RNG and X9.31 RNG have been removed. Now the only
   userspace PRNG included in the library is HMAC_DRBG. (GH #692)
 
@@ -26,6 +28,18 @@ Version 1.11.34, Not Yet Released
 
 * Add more tests for Pipe/Filter (GH #689 #693)
 
+* Merged the fuzzer tests, previously https://github.com/randombit/botan-fuzzers
+
+* The license and news files were moved from doc to the top level directory.
+  There should not be any other visible change (eg, to the installed version)
+  as a result of this move.
+
+* Fixed some problems when running configure.py outside of the base directory,
+  especially when using relative paths.
+
+* Add speed tests for ECGDSA and ECKCDSA (GH #696)
+
+* Fix a crash in speed command for Salsa20 (GH #697)
 
 Version 1.11.33, 2016-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
