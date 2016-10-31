@@ -1,0 +1,10 @@
+*.log
+
+/libFuzzer
+libFuzzer.a
+
+/output
+/botan
+/bin
+callgrind.out.*
+/corpus/

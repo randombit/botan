@@ -21,6 +21,8 @@
 #define BOTAN_VERSION_VC_REVISION "%{version_vc_rev}"
 
 #define BOTAN_DISTRIBUTION_INFO "%{distribution_info}"
+%{unsafe_fuzzer_mode_define}
+
 
 #define BOTAN_INSTALL_PREFIX R"(%{prefix})"
 #define BOTAN_INSTALL_HEADER_DIR "%{includedir}/botan-%{version_major}.%{version_minor}"

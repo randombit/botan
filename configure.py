@@ -381,6 +381,9 @@ def process_command_line(args):
     mods_group.add_option('--minimized-build', action='store_true', dest='no_autoload',
                           help='minimize build')
 
+    mods_group.add_option('--unsafe-fuzzer-mode', action='store_true',
+                          help='disable checks for fuzz testing')
+
     # Should be derived from info.txt but this runs too early
     third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib', 'tpm', 'pkcs11']
 
@@ -1362,6 +1365,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'include_files': makefile_list(build_config.public_headers),
 
+        'unsafe_fuzzer_mode_define': '' if not options.unsafe_fuzzer_mode else '#define BOTAN_UNSAFE_FUZZER_MODE',
+
         'ar_command': cc.ar_command or osinfo.ar_command,
         'ranlib_command': osinfo.ranlib_command(),
         'install_cmd_exec': osinfo.install_cmd_exec,
@@ -1417,13 +1422,13 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         else:
             vars['libname'] = 'botan'
 
-    vars["header_in"] = process_template('src/build-data/makefile/header.in', vars)
+    vars["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), vars)
 
     if vars["makefile_style"] == "gmake":
-        vars["gmake_commands_in"] = process_template('src/build-data/makefile/gmake_commands.in', vars)
-        vars["gmake_dso_in"]      = process_template('src/build-data/makefile/gmake_dso.in', vars) \
+        vars["gmake_commands_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_commands.in'), vars)
+        vars["gmake_dso_in"]      = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), vars) \
                                     if options.build_shared_lib else ''
-        vars["gmake_coverage_in"] = process_template('src/build-data/makefile/gmake_coverage.in', vars) \
+        vars["gmake_coverage_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_coverage.in'), vars) \
                                     if options.with_coverage else ''
 
     return vars
