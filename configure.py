@@ -1171,14 +1171,23 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
         for src in sources:
             (dir,file) = os.path.split(os.path.normpath(src))
 
-            parts = dir.split(os.sep)[2:]
+            parts = dir.split(os.sep)
+            if 'src' in parts:
+                parts = parts[parts.index('src')+2:]
+            elif 'tests' in parts:
+                parts = parts[parts.index('tests')+2:]
+            elif 'cli' in parts:
+                parts = parts[parts.index('cli'):]
+            else:
+                raise Exception("Unexpected file '%s/%s'" % (dir, file))
+
             if parts != []:
 
                 # Handle src/X/X.cpp -> X.o
                 if file == parts[-1] + '.cpp':
-                    name = '_'.join(dir.split(os.sep)[2:]) + '.cpp'
+                    name = '_'.join(parts) + '.cpp'
                 else:
-                    name = '_'.join(dir.split(os.sep)[2:]) + '_' + file
+                    name = '_'.join(parts) + '_' + file
 
                 def fixup_obj_name(name):
                     def remove_dups(parts):
