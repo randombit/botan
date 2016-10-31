@@ -1178,6 +1178,8 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
                 parts = parts[parts.index('tests')+2:]
             elif 'cli' in parts:
                 parts = parts[parts.index('cli'):]
+            elif file.find('botan_all') != -1:
+                parts = []
             else:
                 raise Exception("Unexpected file '%s/%s'" % (dir, file))
 
