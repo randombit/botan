@@ -1,17 +1,15 @@
 
 FUZZERS=$(patsubst jigs/%.cpp,%,$(wildcard jigs/*.cpp))
 
-BOTAN_DIR=botan
-
 AFL_SAN_FLAGS=-fsanitize=address,undefined -fno-sanitize-recover=undefined
 CLANG_SAN_FLAGS=-fsanitize=address,undefined -fno-sanitize-recover=undefined -fsanitize-coverage=edge,indirect-calls,8bit-counters
 
 SHARED_FLAGS=-O3 -g -std=c++11 -pthread
-LIBFUZZER_FLAGS=-DUSE_LLVM_FUZZER -I$(BOTAN_DIR)/llvm/build/include $(SHARED_FLAGS) $(CLANG_SAN_FLAGS)
-AFL_FLAGS=-I$(BOTAN_DIR)/afl/build/include $(SHARED_FLAGS)
+LIBFUZZER_FLAGS=-DUSE_LLVM_FUZZER -Illvm-build/build/include $(SHARED_FLAGS) $(CLANG_SAN_FLAGS)
+AFL_FLAGS=-Iafl-build/build/include $(SHARED_FLAGS)
 
-LIBFUZZER_LIBS=$(BOTAN_DIR)/llvm/libbotan-1.11.a libFuzzer.a
-AFL_LIBS=$(BOTAN_DIR)/afl/libbotan-1.11.a
+LIBFUZZER_LIBS=llvm-build/libbotan-1.11.a libFuzzer.a
+AFL_LIBS=afl-build/libbotan-1.11.a
 
 #AFL_CXX=AFL_USE_ASAN=1 afl-g++ -m32
 AFL_CXX=afl-clang-fast++
@@ -61,9 +59,5 @@ libFuzzer.a: libFuzzer
 	cd libFuzzer && clang -c -g -O2 -std=c++11 *.cpp
 	ar cr libFuzzer.a libFuzzer/*.o
 
-setup:
-	svn co http://llvm.org/svn/llvm-project/llvm/trunk/lib/Fuzzer libFuzzer
-
 update:
-	cd botan && git pull
 	svn co http://llvm.org/svn/llvm-project/llvm/trunk/lib/Fuzzer libFuzzer
