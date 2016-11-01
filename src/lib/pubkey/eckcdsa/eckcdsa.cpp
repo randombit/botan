@@ -158,7 +158,7 @@ bool ECKCDSA_Verification_Operation::verify(const byte msg[], size_t,
    const std::unique_ptr<HashFunction> hash = HashFunction::create(hash_for_signature());
    //calculate size of r
    size_t size_r = std::min(hash -> output_length(), m_order.bytes());
-   if(sig_len < size_r+m_order.bytes())
+   if(sig_len != size_r+m_order.bytes())
       {
       return false;
       }
