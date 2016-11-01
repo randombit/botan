@@ -53,14 +53,7 @@ class ECDH_Keygen_Tests : public PK_Key_Generation_Test
          return { "secp256r1", "secp384r1", "secp521r1",
                   "brainpool256r1", "brainpool384r1", "brainpool512r1", "frp256v1" };
          }
-
-      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
-                                                   const std::string& param) const override
-         {
-         Botan::EC_Group group(param);
-         std::unique_ptr<Botan::Private_Key> key(new Botan::ECDH_PrivateKey(rng, group));
-         return key;
-         }
+      std::string algo_name() const override { return "ECDH"; }
    };
 
 

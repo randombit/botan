@@ -121,10 +121,7 @@ class PK_Key_Generation_Test : public Test
 
       virtual std::vector<std::string> keygen_params() const = 0;
 
-      virtual std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
-                                                           const std::string& param) const = 0;
-   private:
-      Test::Result test_key(const std::string& algo, const Botan::Private_Key& key);
+      virtual std::string algo_name() const = 0;
    };
 
 void check_invalid_signatures(Test::Result& result,

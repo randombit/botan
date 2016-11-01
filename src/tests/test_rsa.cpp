@@ -106,14 +106,7 @@ class RSA_Keygen_Tests : public PK_Key_Generation_Test
    {
    public:
       std::vector<std::string> keygen_params() const override { return { "1024", "1280" }; }
-
-      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
-                                                   const std::string& param) const override
-         {
-         size_t bits = Botan::to_u32bit(param);
-         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(rng, bits));
-         return key;
-         }
+      std::string algo_name() const override { return "RSA"; }
    };
 
 BOTAN_REGISTER_TEST("rsa_encrypt", RSA_ES_KAT_Tests);

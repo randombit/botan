@@ -112,14 +112,7 @@ class Curve25519_Keygen_Tests : public PK_Key_Generation_Test
    {
    public:
       std::vector<std::string> keygen_params() const override { return { "" }; }
-
-      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
-                                                   const std::string&) const override
-         {
-         std::unique_ptr<Botan::Private_Key> key(new Botan::Curve25519_PrivateKey(rng));
-         return key;
-         }
-
+      std::string algo_name() const override { return "Curve25519"; }
    };
 
 BOTAN_REGISTER_TEST("curve25519_scalar", Curve25519_Sclarmult_Tests);

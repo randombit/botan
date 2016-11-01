@@ -56,14 +56,7 @@ class DSA_Keygen_Tests : public PK_Key_Generation_Test
    {
    public:
       std::vector<std::string> keygen_params() const override { return { "dsa/jce/1024", "dsa/botan/2048" }; }
-
-      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
-                                                   const std::string& param) const override
-         {
-         Botan::DL_Group group(param);
-         std::unique_ptr<Botan::Private_Key> key(new Botan::DSA_PrivateKey(rng, group));
-         return key;
-         }
+      std::string algo_name() const override { return "DSA"; }
    };
 
 BOTAN_REGISTER_TEST("dsa_sign", DSA_KAT_Tests);
