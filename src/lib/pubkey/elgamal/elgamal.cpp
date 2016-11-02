@@ -37,20 +37,13 @@ ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
       m_x.randomize(rng, dl_exponent_size(group_p().bits()));
 
    m_y = power_mod(group_g(), m_x, group_p());
-
-   if(x_arg == 0)
-      gen_check(rng);
-   else
-      load_check(rng);
    }
 
 ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
-                                       const secure_vector<byte>& key_bits,
-                                       RandomNumberGenerator& rng) :
+                                       const secure_vector<byte>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
    {
    m_y = power_mod(group_g(), m_x, group_p());
-   load_check(rng);
    }
 
 /*

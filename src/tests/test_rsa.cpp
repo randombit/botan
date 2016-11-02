@@ -33,7 +33,7 @@ class RSA_ES_KAT_Tests : public PK_Encryption_Decryption_Test
          const BigInt q = get_req_bn(vars, "Q");
          const BigInt e = get_req_bn(vars, "E");
 
-         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(Test::rng(), p, q, e));
+         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
          return key;
          }
    };
@@ -51,7 +51,7 @@ class RSA_KEM_Tests : public PK_KEM_Test
          const BigInt q = get_req_bn(vars, "Q");
          const BigInt e = get_req_bn(vars, "E");
 
-         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(Test::rng(), p, q, e));
+         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
          return key;
          }
 
@@ -75,7 +75,7 @@ class RSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
          const BigInt q = get_req_bn(vars, "Q");
          const BigInt e = get_req_bn(vars, "E");
 
-         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(Test::rng(), p, q, e));
+         std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(p, q, e));
          return key;
          }
    };

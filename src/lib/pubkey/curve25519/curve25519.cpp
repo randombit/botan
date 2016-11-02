@@ -78,8 +78,7 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(RandomNumberGenerator& rng)
    }
 
 Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
-                                             const secure_vector<byte>& key_bits,
-                                             RandomNumberGenerator& rng)
+                                             const secure_vector<byte>& key_bits)
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
@@ -90,8 +89,6 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
 
    size_check(m_public.size(), "public key");
    size_check(m_private.size(), "private key");
-
-   load_check(rng);
    }
 
 secure_vector<byte> Curve25519_PrivateKey::pkcs8_private_key() const

@@ -215,7 +215,7 @@ namespace {
 * Extract a private key (encrypted/unencrypted) and return it
 */
 Private_Key* load_key(DataSource& source,
-                      RandomNumberGenerator& rng,
+                      RandomNumberGenerator& /*rng*/,
                       std::function<std::string ()> get_pass,
                       bool is_encrypted)
    {
@@ -227,7 +227,7 @@ Private_Key* load_key(DataSource& source,
       throw PKCS8_Exception("Unknown algorithm OID: " +
                             alg_id.oid.as_string());
 
-   return load_private_key(alg_id, pkcs8_key, rng).release();
+   return load_private_key(alg_id, pkcs8_key).release();
    }
 
 }
