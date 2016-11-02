@@ -454,8 +454,7 @@ std::string Signature_Algorithms::sig_algo_name(byte code)
       {
       case 1:
          return "RSA";
-      case 2:
-         return "DSA";
+      // case 2 is DSA
       case 3:
          return "ECDSA";
       default:
@@ -467,9 +466,6 @@ byte Signature_Algorithms::sig_algo_code(const std::string& name)
    {
    if(name == "RSA")
       return 1;
-
-   if(name == "DSA")
-      return 2;
 
    if(name == "ECDSA")
       return 3;

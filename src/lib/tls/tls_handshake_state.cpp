@@ -379,9 +379,6 @@ std::string choose_hash(const std::string& sig_algo,
       if(sig_algo == "RSA")
          return "Parallel(MD5,SHA-160)";
 
-      if(sig_algo == "DSA")
-         return "SHA-1";
-
       if(sig_algo == "ECDSA")
          return "SHA-1";
 
@@ -445,7 +442,7 @@ Handshake_State::choose_sig_format(const Private_Key& key,
 
       return std::make_pair(padding, IEEE_1363);
       }
-   else if(sig_algo == "DSA" || sig_algo == "ECDSA")
+   else if(sig_algo == "ECDSA")
       {
       const std::string padding = "EMSA1(" + hash_algo + ")";
 
@@ -533,7 +530,7 @@ Handshake_State::parse_sig_format(const Public_Key& key,
          {
          hash_algo = "Parallel(MD5,SHA-160)";
          }
-      else if(key_type == "DSA" || key_type == "ECDSA")
+      else if(key_type == "ECDSA")
          {
          hash_algo = "SHA-1";
          }
@@ -553,7 +550,7 @@ Handshake_State::parse_sig_format(const Public_Key& key,
       const std::string padding = "EMSA3(" + hash_algo + ")";
       return std::make_pair(padding, IEEE_1363);
       }
-   else if(key_type == "DSA" || key_type == "ECDSA")
+   else if(key_type == "ECDSA")
       {
       const std::string padding = "EMSA1(" + hash_algo + ")";
       return std::make_pair(padding, DER_SEQUENCE);

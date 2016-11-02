@@ -25,8 +25,7 @@ std::string cert_type_code_to_name(byte code)
       {
       case 1:
          return "RSA";
-      case 2:
-         return "DSA";
+      // case 2 is DSA
       case 64:
          return "ECDSA";
       default:
@@ -38,8 +37,6 @@ byte cert_type_name_to_code(const std::string& name)
    {
    if(name == "RSA")
       return 1;
-   if(name == "DSA")
-      return 2;
    if(name == "ECDSA")
       return 64;
 
@@ -57,7 +54,7 @@ Certificate_Req::Certificate_Req(Handshake_IO& io,
                                  const std::vector<X509_DN>& ca_certs,
                                  Protocol_Version version) :
    m_names(ca_certs),
-   m_cert_key_types({ "RSA", "DSA", "ECDSA" })
+   m_cert_key_types({ "RSA", "ECDSA" })
    {
    if(version.supports_negotiable_signature_algorithms())
       {
