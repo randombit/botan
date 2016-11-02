@@ -379,6 +379,8 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
 
       const Botan::Private_Key& key = *key_p;
 
+      result.confirm("Key passes self tests", key.check_key(Test::rng(), true));
+
       // Test PEM public key round trips OK
       try
          {
