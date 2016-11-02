@@ -11,7 +11,6 @@
 #include <botan/exceptn.h>
 #include <string>
 #include <vector>
-#include <botan/mutex.h>
 #include <map>
 
 namespace Botan {
@@ -91,9 +90,6 @@ class BOTAN_DLL SCAN_Name
          { return (m_mode_info.size() >= 2) ? m_mode_info[1] : ""; }
 
    private:
-      static mutex_type g_alias_map_mutex;
-      static std::map<std::string, std::string> g_alias_map;
-
       std::string m_orig_algo_spec;
       std::string m_alg_name;
       std::vector<std::string> m_args;
