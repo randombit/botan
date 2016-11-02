@@ -56,6 +56,9 @@ Version 1.11.34, Not Yet Released
 
 * Fix a crash in speed command for Salsa20 (GH #697)
 
+* Add support to output bakefiles with new `configure.py` option `--with-bakefile`.
+  Bakefile creates Visual Studio or Xcode project files for example.
+
 Version 1.11.33, 2016-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
