@@ -26,8 +26,8 @@ std::vector<std::string> Policy::allowed_ciphers() const
       "ChaCha20Poly1305",
       "AES-256/CCM",
       "AES-128/CCM",
-      "AES-256/CCM(8)",
-      "AES-128/CCM(8)",
+      //"AES-256/CCM(8)",
+      //"AES-128/CCM(8)",
       //"Camellia-256/GCM",
       //"Camellia-128/GCM",
       "AES-256",
@@ -51,10 +51,15 @@ std::vector<std::string> Policy::allowed_signature_hashes() const
 
 std::vector<std::string> Policy::allowed_macs() const
    {
+   /*
+   SHA-256 is preferred because the Lucky13 countermeasure works
+   somewhat better for SHA-256 vs SHA-384:
+   https://github.com/randombit/botan/pull/675
+   */
    return {
       "AEAD",
-      "SHA-384",
       "SHA-256",
+      "SHA-384",
       "SHA-1",
       };
    }
@@ -68,7 +73,7 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
       //"PSK",
       "ECDH",
       "DH",
-      "RSA",
+      //"RSA",
       };
    }
 
@@ -77,7 +82,7 @@ std::vector<std::string> Policy::allowed_signature_methods() const
    return {
       "ECDSA",
       "RSA",
-      "DSA",
+      //"DSA",
       //"" (anon)
       };
    }
@@ -144,8 +149,8 @@ size_t Policy::minimum_ecdsa_group_size() const
 
 size_t Policy::minimum_ecdh_group_size() const
    {
-   // P-256 is smallest curve currently supplrted for TLS key exchange (after 1.11.29)
-   return 256;
+   // x25519 is smallest curve currently supported for TLS key exchange
+   return 255;
    }
 
 size_t Policy::minimum_rsa_bits() const
@@ -157,6 +162,12 @@ size_t Policy::minimum_rsa_bits() const
       (ie as a web browser or SMTP client) you'll probably have to reduce this
       to 1024 bits, or perhaps even lower.
    */
+   return 2048;
+   }
+
+size_t Policy::minimum_dsa_group_size() const
+   {
+   // FIPS 186-3
    return 2048;
    }
 
@@ -177,7 +188,11 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
       {
       expected_keylength = minimum_dh_group_size();
       }
-   else if(algo_name == "ECDH")
+   else if(algo_name == "DSA")
+      {
+      expected_keylength = minimum_dsa_group_size();
+      }
+   else if(algo_name == "ECDH" || algo_name == "Curve25519")
       {
       expected_keylength = minimum_ecdh_group_size();
       }

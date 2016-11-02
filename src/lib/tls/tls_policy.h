@@ -151,11 +151,12 @@ class BOTAN_DLL Policy
       * Return the minimum ECDH group size we're willing to use
       * for key exchange
       *
-      * Default 256, allowing P-256 and larger
-      * P-256 is the smallest curve we will negotiate
+      * Default 255, allowing x25519 and larger
+      * x25519 is the smallest curve we will negotiate
+      * P-521 is the largest
       */
       virtual size_t minimum_ecdh_group_size() const;
-      
+
       /**
       * Return the minimum bit size we're willing to accept for RSA
       * key exchange or server signatures.
@@ -168,6 +169,11 @@ class BOTAN_DLL Policy
       * for medium term security.
       */
       virtual size_t minimum_rsa_bits() const;
+
+      /**
+      * Minimum DSA group size, default 2048 bits
+      */
+      virtual size_t minimum_dsa_group_size() const;
 
       /**
       * Throw an exception if you don't like the peer's key.
