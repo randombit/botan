@@ -128,12 +128,17 @@
 */
 #define BOTAN_SYSTEM_RNG_POLL_DEVICES { "/dev/urandom", "/dev/random", "/dev/srandom" }
 
+/*
+* This directory will be monitored by ProcWalking_EntropySource and
+* the contents provided as entropy inputs to the RNG. May also be
+* usefully set to something like "/sys", depending on the system being
+* deployed to. Set to an empty string to disable.
+*/
+#define BOTAN_ENTROPY_PROC_FS_PATH "/proc"
+
 #define BOTAN_SYSTEM_RNG_POLL_REQUEST 64
 #define BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS 20
 
-#define BOTAN_ENTROPY_EGD_PATHS { "/var/run/egd-pool", "/dev/egd-pool" }
-#define BOTAN_ENTROPY_PROC_FS_PATH "/proc"
-#define BOTAN_ENTROPY_SAFE_PATHS { "/bin", "/sbin", "/usr/bin", "/usr/sbin" }
 
 /*
 How many times to read from the RDRAND/RDSEED RNGs.
