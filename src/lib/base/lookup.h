@@ -75,7 +75,7 @@ BOTAN_DEPRECATED("Use StreamCipher::create_or_throw")
 inline std::unique_ptr<StreamCipher> make_stream_cipher(const std::string& algo_spec,
                                                         const std::string& provider = "")
    {
-   return StreamCipher::create_or_throw(algo_spec, provider));
+   return StreamCipher::create_or_throw(algo_spec, provider);
    }
 
 BOTAN_DEPRECATED("Use StreamCipher::providers")
@@ -102,7 +102,7 @@ BOTAN_DEPRECATED("Use HashFunction::create_or_throw")
 inline std::unique_ptr<HashFunction> make_hash_function(const std::string& algo_spec,
                                                         const std::string& provider = "")
    {
-   return HashFunction::create_or_throw(algo_spec, provider));
+   return HashFunction::create_or_throw(algo_spec, provider);
    }
 
 BOTAN_DEPRECATED("Use HashFunction::create")
