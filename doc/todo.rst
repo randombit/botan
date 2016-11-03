@@ -16,6 +16,7 @@ Ciphers, Hashes, PBKDF
 * Camellia using AES-NI
 * Serpent using AVX2 or SSSE3/pshufb
 * ChaCha20 using AVX2, NEON
+* XSalsa20-Poly1305 AEAD compatible with NaCl
 * ARIA block cipher (RFCs 5794 and 6209)
 * ASCON 1.2 (CAESAR)
 * NORX-64 3.0 (CAESAR)
@@ -68,13 +69,12 @@ TLS
 * OpenPGP authentication (RFC 5081)
 * DTLS-SCTP (RFC 6083)
 * Perspectives (http://perspectives-project.org/)
-* Support for server key stored in TPM
+* Support for server key stored in TPM or PKCS #11
 
 PKIX
 ----------------------------------------
 
 * Test suite for validation of 'real world' cert chains (GH #611)
-* Support multiple DNS names in certificates
 * Improve output of X509_Certificate::to_string
   This is a free-form string for human consumption so the only constraints
   are being informative and concise. (GH #656)
@@ -116,6 +116,7 @@ FFI (Python, OCaml)
 Library Infrastructure
 ----------------------------------------
 
+* Guarded integer type to prevent overflow bugs
 * Add logging callbacks
 * Add latency tracing framework
 
