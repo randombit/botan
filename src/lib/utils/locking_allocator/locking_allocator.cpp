@@ -140,7 +140,7 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
    if(!ptr_in_pool(m_pool, m_poolsize, p, n))
       return false;
 
-   std::memset(ptr, 0, n);
+   std::memset(p, 0, n);
 
    lock_guard_type<mutex_type> lock(m_mutex);
 
