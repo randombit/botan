@@ -3,7 +3,7 @@
 """
 Configuration program for botan
 
-(C) 2009,2010,2011,2012,2013,2014,2015 Jack Lloyd
+(C) 2009,2010,2011,2012,2013,2014,2015,2016 Jack Lloyd
 (C) 2015,2016 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
@@ -1592,9 +1592,10 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
 
         if modname in options.disabled_modules:
             cannot_use_because(modname, 'disabled by user')
-        elif modname in options.enabled_modules:
-            to_load.append(modname) # trust the user
         elif usable:
+            if modname in options.enabled_modules:
+                to_load.append(modname) # trust the user
+
             if module.load_on == 'never':
                 cannot_use_because(modname, 'disabled as buggy')
             elif module.load_on == 'request':
@@ -1619,7 +1620,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                 else:
                     to_load.append(modname)
             else:
-                logging.warning('Unknown load_on %s in %s' % (
+                logging.error('Unknown load_on %s in %s' % (
                     module.load_on, modname))
 
     dependency_failure = True
