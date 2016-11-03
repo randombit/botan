@@ -145,13 +145,6 @@ class BOTAN_DLL Public_Key
       virtual std::unique_ptr<PK_Ops::Verification>
          create_verification_op(const std::string& params,
                                 const std::string& provider) const;
-
-   protected:
-      /**
-      * Self-test after loading a key
-      * @param rng a random number generator
-      */
-      virtual void load_check(RandomNumberGenerator& rng) const;
    };
 
 /**
@@ -247,19 +240,6 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
          create_key_agreement_op(RandomNumberGenerator& rng,
                                  const std::string& params,
                                  const std::string& provider) const;
-
-   protected:
-      /**
-      * Self-test after loading a key
-      * @param rng a random number generator
-      */
-      void load_check(RandomNumberGenerator& rng) const override;
-
-      /**
-      * Self-test after generating a key
-      * @param rng a random number generator
-      */
-      void gen_check(RandomNumberGenerator& rng) const;
    };
 
 /**

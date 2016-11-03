@@ -122,8 +122,7 @@ load_public_key(const AlgorithmIdentifier& alg_id,
 
 std::unique_ptr<Private_Key>
 load_private_key(const AlgorithmIdentifier& alg_id,
-                 const secure_vector<byte>& key_bits,
-                 RandomNumberGenerator& rng)
+                 const secure_vector<byte>& key_bits)
    {
    const std::string alg_name = OIDS::lookup(alg_id.oid);
    if(alg_name == "")
@@ -131,12 +130,12 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 
 #if defined(BOTAN_HAS_RSA)
    if(alg_name == "RSA")
-      return std::unique_ptr<Private_Key>(new RSA_PrivateKey(alg_id, key_bits, rng));
+      return std::unique_ptr<Private_Key>(new RSA_PrivateKey(alg_id, key_bits));
 #endif
 
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519")
-      return std::unique_ptr<Private_Key>(new Curve25519_PrivateKey(alg_id, key_bits, rng));
+      return std::unique_ptr<Private_Key>(new Curve25519_PrivateKey(alg_id, key_bits));
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
@@ -151,12 +150,12 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(alg_name == "DH")
-      return std::unique_ptr<Private_Key>(new DH_PrivateKey(alg_id, key_bits, rng));
+      return std::unique_ptr<Private_Key>(new DH_PrivateKey(alg_id, key_bits));
 #endif
 
 #if defined(BOTAN_HAS_DSA)
    if(alg_name == "DSA")
-      return std::unique_ptr<Private_Key>(new DSA_PrivateKey(alg_id, key_bits, rng));
+      return std::unique_ptr<Private_Key>(new DSA_PrivateKey(alg_id, key_bits));
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
@@ -181,7 +180,7 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 
 #if defined(BOTAN_HAS_ELGAMAL)
    if(alg_name == "ElGamal")
-      return std::unique_ptr<Private_Key>(new ElGamal_PrivateKey(alg_id, key_bits, rng));
+      return std::unique_ptr<Private_Key>(new ElGamal_PrivateKey(alg_id, key_bits));
 #endif
 
    throw Decoding_Error("Unhandled PK algorithm " + alg_name);

@@ -85,8 +85,7 @@ secure_vector<byte> RSA_PrivateKey::pkcs8_private_key() const
    }
 
 RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier&,
-                               const secure_vector<byte>& key_bits,
-                               RandomNumberGenerator& rng)
+                               const secure_vector<byte>& key_bits)
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
@@ -100,12 +99,9 @@ RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier&,
          .decode(m_d2)
          .decode(m_c)
       .end_cons();
-
-   load_check(rng);
    }
 
-RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
-                               const BigInt& prime1,
+RSA_PrivateKey::RSA_PrivateKey(const BigInt& prime1,
                                const BigInt& prime2,
                                const BigInt& exp,
                                const BigInt& d_exp,
@@ -126,8 +122,6 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
 
    m_d1 = m_d % (m_p - 1);
    m_d2 = m_d % (m_q - 1);
-
-   load_check(rng);
    }
 
 /*
@@ -155,8 +149,6 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
    m_d1 = m_d % (m_p - 1);
    m_d2 = m_d % (m_q - 1);
    m_c = inverse_mod(m_q, m_p);
-
-   gen_check(rng);
    }
 
 /*

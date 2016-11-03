@@ -94,11 +94,6 @@
 */
 #define BOTAN_BLINDING_REINIT_INTERVAL 32
 
-/* PK key consistency checking toggles */
-#define BOTAN_PUBLIC_KEY_STRONG_CHECKS_ON_LOAD 1
-#define BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_LOAD 0
-#define BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_GENERATE 1
-
 /*
 * Userspace RNGs like HMAC_DRBG will reseed after a specified number
 * of outputs are generated. Set to zero to disable automatic reseeding.

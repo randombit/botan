@@ -58,11 +58,9 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
       * Load a private key.
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits PKCS #8 structure
-      * @param rng a random number generator
       */
       DH_PrivateKey(const AlgorithmIdentifier& alg_id,
-                    const secure_vector<byte>& key_bits,
-                    RandomNumberGenerator& rng);
+                    const secure_vector<byte>& key_bits);
 
       /**
       * Create a private key.
