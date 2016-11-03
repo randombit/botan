@@ -143,8 +143,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<byte>& eph_publ
       throw Invalid_Argument("ECIES: other public key point is zero");
       }
 
-   std::unique_ptr<KDF> kdf = m_params.create_kdf();
-   BOTAN_ASSERT(kdf != nullptr, "KDF is found");
+   std::unique_ptr<KDF> kdf = Botan::KDF::create_or_throw(m_params.kdf_spec());
 
    PointGFp other_point = other_public_key_point;
 
@@ -184,17 +183,6 @@ ECIES_KA_Params::ECIES_KA_Params(const EC_Group& domain, const std::string& kdf_
    {
    }
 
-std::unique_ptr<KDF> ECIES_KA_Params::create_kdf() const
-   {
-   std::unique_ptr<KDF> kdf = Botan::KDF::create(m_kdf_spec);
-   if(kdf == nullptr)
-      {
-      throw Algorithm_Not_Found(m_kdf_spec);
-      }
-   return kdf;
-   }
-
-
 ECIES_System_Params::ECIES_System_Params(const EC_Group& domain, const std::string& kdf_spec,
                                          const std::string& dem_algo_spec, size_t dem_key_len,
                                          const std::string& mac_spec, size_t mac_key_len,
@@ -222,12 +210,7 @@ ECIES_System_Params::ECIES_System_Params(const EC_Group& domain, const std::stri
 
 std::unique_ptr<MessageAuthenticationCode> ECIES_System_Params::create_mac() const
    {
-   std::unique_ptr<MessageAuthenticationCode> mac = Botan::MessageAuthenticationCode::create(m_mac_spec);
-   if(mac == nullptr)
-      {
-      throw Algorithm_Not_Found(m_mac_spec);
-      }
-   return mac;
+   return Botan::MessageAuthenticationCode::create_or_throw(m_mac_spec);
    }
 
 std::unique_ptr<Cipher_Mode> ECIES_System_Params::create_cipher(Botan::Cipher_Dir direction) const

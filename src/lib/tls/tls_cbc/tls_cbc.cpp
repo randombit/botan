@@ -33,13 +33,8 @@ TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(const std::string& cipher_name,
    m_mac_keylen(mac_keylen),
    m_use_encrypt_then_mac(use_encrypt_then_mac)
    {
-   m_cipher = BlockCipher::create(m_cipher_name);
-   if(!m_cipher)
-      throw Algorithm_Not_Found(m_cipher_name);
-
-   m_mac = MessageAuthenticationCode::create("HMAC(" + m_mac_name + ")");
-   if(!m_mac)
-      throw Algorithm_Not_Found("HMAC(" + m_mac_name + ")");
+   m_cipher = BlockCipher::create_or_throw(m_cipher_name);
+   m_mac = MessageAuthenticationCode::create_or_throw("HMAC(" + m_mac_name + ")");
 
    m_tag_size = m_mac->output_length();
    m_block_size = m_cipher->block_size();

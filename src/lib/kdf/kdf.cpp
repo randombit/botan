@@ -195,7 +195,7 @@ KDF::create_or_throw(const std::string& algo,
       {
       return bc;
       }
-   throw Lookup_Error("Block cipher", algo, provider);
+   throw Lookup_Error("KDF", algo, provider);
    }
 
 std::vector<std::string> KDF::providers(const std::string& algo_spec)

@@ -29,11 +29,7 @@ secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
    };
 
    const std::string hash_algo = choose_hash();
-   std::unique_ptr<HashFunction> hash(HashFunction::create(hash_algo));
-   if(!hash)
-   {
-      throw Algorithm_Not_Found(hash_algo);
-   }
+   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_algo));
    hash->update(m_data);
    return hash->final();
    }

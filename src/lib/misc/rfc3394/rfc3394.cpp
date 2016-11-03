@@ -22,9 +22,7 @@ secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
       throw Invalid_Argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key wrap");
 
    const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
-   std::unique_ptr<BlockCipher> aes(BlockCipher::create(cipher_name));
-   if(!aes)
-      throw Algorithm_Not_Found(cipher_name);
+   std::unique_ptr<BlockCipher> aes(BlockCipher::create_or_throw(cipher_name));
    aes->set_key(kek);
 
    const size_t n = key.size() / 8;
@@ -69,9 +67,7 @@ secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
       throw Invalid_Argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key unwrap");
 
    const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
-   std::unique_ptr<BlockCipher> aes(BlockCipher::create(cipher_name));
-   if(!aes)
-      throw Algorithm_Not_Found(cipher_name);
+   std::unique_ptr<BlockCipher> aes(BlockCipher::create_or_throw(cipher_name));
    aes->set_key(kek);
 
    const size_t n = (key.size() - 8) / 8;
