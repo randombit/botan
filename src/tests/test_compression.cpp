@@ -26,7 +26,7 @@ const char* text_str =
    "The frumious Bandersnatch!'"
 
    "He took his vorpal sword in hand;"
-   "Long time the manxome foe he sought—"
+   "Long time the manxome foe he sought-"
    "So rested he by the Tumtum tree"
    "And stood awhile in thought."
 
@@ -45,7 +45,7 @@ const char* text_str =
    "O frabjous day! Callooh! Callay!'"
    "He chortled in his joy."
 
-   "’Twas brillig, and the slithy toves"
+   "'Twas brillig, and the slithy toves"
    "Did gyre and gimble in the wabe:"
    "All mimsy were the borogoves,"
    "And the mome raths outgrabe.";
