@@ -42,9 +42,6 @@ class BOTAN_DLL Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56>
                          const byte salt[16],
                          size_t salt_off) const;
 
-      static const u32bit P_INIT[18];
-      static const u32bit S_INIT[1024];
-
       secure_vector<u32bit> m_S, m_P;
    };
 
