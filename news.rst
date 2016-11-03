@@ -59,6 +59,9 @@ Version 1.11.34, Not Yet Released
 * Add support to output bakefiles with new `configure.py` option `--with-bakefile`.
   Bakefile creates Visual Studio or Xcode project files for example.
 
+* The LibraryInitializer type, which has been a no-op since 1.11.14,
+  is now officially deprecated.
+
 Version 1.11.33, 2016-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
