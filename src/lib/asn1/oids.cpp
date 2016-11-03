@@ -171,6 +171,11 @@ std::string lookup(const OID& oid)
    if(oid_str == "2.5.4.7") return "X520.Locality";
    if(oid_str == "2.5.4.8") return "X520.State";
    if(oid_str == "2.5.8.1.1") return "RSA";
+
+#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
+   if(oid_str == BOTAN_HOUSE_ECC_CURVE_OID) return BOTAN_HOUSE_ECC_CURVE_NAME;
+#endif
+
    return std::string();
    }
 
@@ -329,6 +334,11 @@ OID lookup(const std::string& name)
    if(name == "x962_p239v1") return OID("1.2.840.10045.3.1.4");
    if(name == "x962_p239v2") return OID("1.2.840.10045.3.1.5");
    if(name == "x962_p239v3") return OID("1.2.840.10045.3.1.6");
+
+#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
+   if(name == BOTAN_HOUSE_ECC_CURVE_NAME) return OID(BOTAN_HOUSE_ECC_CURVE_OID);
+#endif
+
    return OID();
    }
 
