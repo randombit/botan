@@ -97,7 +97,7 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       {
 #if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
       const std::string root_dir = BOTAN_ENTROPY_PROC_FS_PATH;
-      if(!path.empty())
+      if(!root_dir.empty())
          return std::unique_ptr<Entropy_Source>(new ProcWalking_EntropySource(root_dir));
 #endif
       }
