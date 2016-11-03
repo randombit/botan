@@ -602,6 +602,7 @@ Test::Result test_rsa_privkey_import()
 
    // create private key
    RSA_PrivateKey priv_key(Test::rng(), 2048);
+   result.confirm("Key self test OK", priv_key.check_key(Test::rng(), 2048));
 
    // import to card
    RSA_PrivateKeyImportProperties props(priv_key.get_n(), priv_key.get_d());
@@ -863,6 +864,7 @@ Test::Result test_ecdsa_privkey_import()
 
    // create ecdsa private key
    ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
+   result.confirm("Key self test OK", priv_key.check_key(Test::rng(), true));
    priv_key.set_parameter_encoding(EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
    // import to card
@@ -876,6 +878,7 @@ Test::Result test_ecdsa_privkey_import()
    props.set_label(label);
 
    PKCS11_ECDSA_PrivateKey pk(test_session.session(), props);
+   result.confirm("P11 key self test OK", pk.check_key(Test::rng(), true));
    result.test_success("ECDSA private key import was successful");
 
    pk.destroy();
