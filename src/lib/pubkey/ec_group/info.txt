@@ -4,6 +4,5 @@ define ECC_GROUP 20131128
 asn1
 ec_gfp
 numbertheory
-oid_lookup
 pem
 </requires>

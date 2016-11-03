@@ -25,8 +25,7 @@ namespace Botan {
 Certificate_Extension* Extensions::get_extension(const OID& oid, bool critical)
    {
 #define X509_EXTENSION(NAME, TYPE) \
-   if(OIDS::name_of(oid, NAME))    \
-      return new Cert_Extension::TYPE();
+   if(oid == OIDS::lookup(NAME)) { return new Cert_Extension::TYPE(); }
 
    X509_EXTENSION("X509v3.KeyUsage", Key_Usage);
    X509_EXTENSION("X509v3.BasicConstraints", Basic_Constraints);

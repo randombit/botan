@@ -1,8 +1,5 @@
-define ASN1 20131128
-
-load_on auto
+define ASN1 20161102
 
 <requires>
 bigint
-oid_lookup
 </requires>

@@ -40,7 +40,8 @@ Test::Result test_hash_larger_than_n()
    {
    Test::Result result("ECDSA Unit");
 
-   Botan::EC_Group dom_pars(Botan::OIDS::lookup("1.3.132.0.8")); // secp160r1
+   Botan::EC_Group dom_pars("secp160r1");
+   
    // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
 
    Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
