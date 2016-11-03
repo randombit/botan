@@ -287,6 +287,10 @@ def process_command_line(args):
                            action='store_false',
                            help='disable building shared library')
 
+    build_group.add_option('--optimize-for-size', dest='optimize_for_size',
+                           action='store_true', default=False,
+                           help='optimize for code size')
+
     build_group.add_option('--no-optimizations', dest='no_optimizations',
                            action='store_true', default=False,
                            help='disable all optimizations (for debugging)')
@@ -853,6 +857,7 @@ class CompilerInfo(object):
                         'compile_flags': '',
                         'debug_info_flags': '',
                         'optimization_flags': '',
+                        'size_optimization_flags': '',
                         'coverage_flags': '',
                         'sanitizer_flags': '',
                         'shared_flags': '',
@@ -963,7 +968,14 @@ class CompilerInfo(object):
                 yield self.debug_info_flags
 
             if not options.no_optimizations:
-                yield self.optimization_flags
+                if options.optimize_for_size:
+                    if self.size_optimization_flags != '':
+                        yield self.size_optimization_flags
+                    else:
+                        logging.warning("No size optimization flags set for current compiler")
+                        yield self.optimization_flags
+                else:
+                    yield self.optimization_flags
 
             def submodel_fixup(flags, tup):
                 return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))

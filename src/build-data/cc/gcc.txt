@@ -17,6 +17,7 @@ maintainer_warning_flags "-Wold-style-cast -Wsuggest-override -Wshadow -Werror -
 compile_flags "-c"
 debug_info_flags "-g"
 optimization_flags "-O3"
+size_optimization_flags "-Os"
 
 shared_flags "-fPIC"
 coverage_flags "--coverage"
