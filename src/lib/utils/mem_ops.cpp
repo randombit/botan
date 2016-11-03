@@ -1,6 +1,6 @@
- /*
-* Zero Memory
-* (C) 2012,2015 Jack Lloyd
+/*
+* Memory Scrubbing
+* (C) 2012,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-void zero_mem(void* ptr, size_t n)
+void secure_scrub_memory(void* ptr, size_t n)
    {
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
    ::RtlSecureZeroMemory(ptr, n);

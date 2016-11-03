@@ -59,8 +59,13 @@ Version 1.11.34, Not Yet Released
 * Add support to output bakefiles with new `configure.py` option `--with-bakefile`.
   Bakefile creates Visual Studio or Xcode project files for example.
 
+* The function `zero_mem` has been renamed `secure_scrub_memory` to be
+  more clear about this functions semantics and intended usage.
+
 * The LibraryInitializer type, which has been a no-op since 1.11.14,
-  is now officially deprecated.
+  is now officially deprecated. It does nothing, has done nothing, and
+  will continue not doing anything, until it is eventually removed in
+  a future release. At which point it may indeed cease doing nothing.
 
 Version 1.11.33, 2016-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

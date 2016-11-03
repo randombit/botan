@@ -46,7 +46,7 @@ void Compression_Alloc_Info::do_free(void* ptr)
       if(i == m_current_allocs.end())
          throw Exception("Compression_Alloc_Info::free got pointer not allocated by us");
 
-      zero_mem(ptr, i->second);
+      secure_scrub_memory(ptr, i->second);
       std::free(ptr);
       m_current_allocs.erase(i);
       }

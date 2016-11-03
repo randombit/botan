@@ -283,11 +283,11 @@ void free_locked_pages(void* ptr, size_t length)
       return;
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
-   zero_mem(ptr, length);
+   secure_scrub_memory(ptr, length);
    ::munlock(ptr, length);
    ::munmap(ptr, length);
 #elif defined BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK
-   zero_mem(ptr, length);
+   secure_scrub_memory(ptr, length);
    ::VirtualUnlock(ptr, length);
    ::VirtualFree(ptr, 0, MEM_RELEASE);
 #else
