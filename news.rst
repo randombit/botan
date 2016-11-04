@@ -52,6 +52,31 @@ Version 1.11.34, Not Yet Released
 * Fixed some problems when running configure.py outside of the base directory,
   especially when using relative paths.
 
+* Previously both public and private keys performed automatic self testing after
+  generation or loading. However this often caused unexpected application
+  performance problems, and so has been removed. Instead applications must call
+  check_key explicitly. (GH #704)
+
+* Added new configure.py argument `--optimize-for-size`. Currently just sets
+  the flag for code size optimizations with the compiler, but may have other
+  effects in the future.
+
+* Allow a custom ECC curve to be specified at build time, for application or
+  system specific curves. You probably don't need this. (GH #636 #710)
+
+* Add DSA deterministic parameter generation test from FIPS 186-3.
+
+* Fix PKCS11_ECDSA_PrivateKey::check_key (GH #712)
+
+* The ability to add OIDs at runtime has been removed. Now the OID
+  lookups are generated from a plain text file (src/build-data/oids.txt)
+  by a script. This additionally removes a global lock which was acquired
+  on each OID lookup. (GH #706)
+
+* Remove some unused values from build.h (GH #708)
+
+* The BOTAN_ENTROPY_PROC_FS_PATH value in build.h was being ignored (GH #708)
+
 * Add speed tests for ECGDSA and ECKCDSA (GH #696)
 
 * Fix a crash in speed command for Salsa20 (GH #697)
