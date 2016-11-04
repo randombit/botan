@@ -24,18 +24,6 @@
   #include <botan/internal/dev_random.h>
 #endif
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_EGD)
-  #include <botan/internal/es_egd.h>
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER)
-  #include <botan/internal/unix_procs.h>
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_BEOS)
-  #include <botan/internal/es_beos.h>
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
   #include <botan/internal/es_capi.h>
 #endif
@@ -108,7 +96,9 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    if(name == "proc_walk")
       {
 #if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
-      return std::unique_ptr<Entropy_Source>(new ProcWalking_EntropySource("/proc"));
+      const std::string root_dir = BOTAN_ENTROPY_PROC_FS_PATH;
+      if(!root_dir.empty())
+         return std::unique_ptr<Entropy_Source>(new ProcWalking_EntropySource(root_dir));
 #endif
       }
 
@@ -116,22 +106,6 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       {
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
       return std::unique_ptr<Entropy_Source>(new Win32_EntropySource);
-#elif defined(BOTAN_HAS_ENTROPY_SRC_BEOS)
-   return std::unique_ptr<Entropy_Source>(new BeOS_EntropySource);
-#endif
-      }
-
-   if(name == "unix_procs")
-      {
-#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER)
-      return std::unique_ptr<Entropy_Source>(new Unix_EntropySource(BOTAN_ENTROPY_SAFE_PATHS));
-#endif
-      }
-
-   if(name == "egd")
-      {
-#if defined(BOTAN_HAS_ENTROPY_SRC_EGD)
-      return std::unique_ptr<Entropy_Source>(new EGD_EntropySource(BOTAN_ENTROPY_EGD_PATHS));
 #endif
       }
 

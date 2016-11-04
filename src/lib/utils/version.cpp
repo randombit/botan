@@ -38,6 +38,9 @@ const char* version_cstr()
    return "Botan " STR(BOTAN_VERSION_MAJOR) "."
                    STR(BOTAN_VERSION_MINOR) "."
                    STR(BOTAN_VERSION_PATCH) " ("
+#if defined(BOTAN_UNSAFE_FUZZER_MODE)
+                   "UNSAFE FUZZER MODE BUILD "
+#endif
                    BOTAN_VERSION_RELEASE_TYPE
 #if (BOTAN_VERSION_DATESTAMP != 0)
                    ", dated " STR(BOTAN_VERSION_DATESTAMP)

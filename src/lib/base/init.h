@@ -19,14 +19,13 @@ namespace Botan {
 * case, and this class is no longer needed and kept only for backwards
 * compatibility.
 */
-class BOTAN_DLL LibraryInitializer
+class BOTAN_DLL BOTAN_DEPRECATED("LibraryInitializer is no longer required") LibraryInitializer
    {
    public:
-      explicit LibraryInitializer(const std::string& s = "") { initialize(s); }
-      ~LibraryInitializer() { deinitialize(); }
+      explicit LibraryInitializer(const std::string& /*ignored*/ = "") { }
 
-      static void initialize(const std::string& = "");
-      static void deinitialize();
+      static void initialize(const std::string& /*ignored*/ = "") {}
+      static void deinitialize() {}
    };
 
 }

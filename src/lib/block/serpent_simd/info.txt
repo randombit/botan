@@ -1,6 +1,0 @@
-define SERPENT_SIMD 20160903
-
-<requires>
-serpent
-simd
-</requires>

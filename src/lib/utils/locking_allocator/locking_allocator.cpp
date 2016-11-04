@@ -128,12 +128,6 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
    if(!m_pool)
       return false;
 
-   /*
-   We do not have to zero the memory here, as
-   secure_allocator::deallocate does that for all arguments before
-   invoking the deallocator (us or delete[])
-   */
-
    size_t n = num_elems * elem_size;
 
    /*
@@ -145,6 +139,8 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
 
    if(!ptr_in_pool(m_pool, m_poolsize, p, n))
       return false;
+
+   std::memset(p, 0, n);
 
    lock_guard_type<mutex_type> lock(m_mutex);
 
@@ -216,7 +212,7 @@ mlock_allocator::~mlock_allocator()
    {
    if(m_pool)
       {
-      zero_mem(m_pool, m_poolsize);
+      secure_scrub_memory(m_pool, m_poolsize);
       OS::free_locked_pages(m_pool, m_poolsize);
       m_pool = nullptr;
       }

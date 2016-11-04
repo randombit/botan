@@ -3,7 +3,7 @@
 """
 Configuration program for botan
 
-(C) 2009,2010,2011,2012,2013,2014,2015 Jack Lloyd
+(C) 2009,2010,2011,2012,2013,2014,2015,2016 Jack Lloyd
 (C) 2015,2016 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
@@ -145,7 +145,14 @@ class BuildConfigurationInformation(object):
                     if filename.endswith('.cpp') and not filename.startswith('.'):
                         yield os.path.join(dirpath, filename)
 
+        def find_headers_in(basedir, srcdir):
+            for (dirpath, dirnames, filenames) in os.walk(os.path.join(basedir, srcdir)):
+                for filename in filenames:
+                    if filename.endswith('.h') and not filename.startswith('.'):
+                        yield os.path.join(dirpath, filename)
+
         self.cli_sources = list(find_sources_in(self.src_dir, 'cli'))
+        self.cli_headers = list(find_headers_in(self.src_dir, 'cli'))
         self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
 
         self.python_dir = os.path.join(options.src_dir, 'python')
@@ -280,6 +287,10 @@ def process_command_line(args):
                            action='store_false',
                            help='disable building shared library')
 
+    build_group.add_option('--optimize-for-size', dest='optimize_for_size',
+                           action='store_true', default=False,
+                           help='optimize for code size')
+
     build_group.add_option('--no-optimizations', dest='no_optimizations',
                            action='store_true', default=False,
                            help='disable all optimizations (for debugging)')
@@ -361,6 +372,9 @@ def process_command_line(args):
     build_group.add_option('--with-valgrind', help='use valgrind API',
                            dest='with_valgrind', action='store_true', default=False)
 
+    build_group.add_option('--with-bakefile', action='store_true',
+                           default=False, help='Generate bakefile which can be used to create Visual Studio or Xcode project files')
+
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
     mods_group.add_option('--module-policy', dest='module_policy',
@@ -380,6 +394,9 @@ def process_command_line(args):
                           help=optparse.SUPPRESS_HELP)
     mods_group.add_option('--minimized-build', action='store_true', dest='no_autoload',
                           help='minimize build')
+
+    mods_group.add_option('--unsafe-fuzzer-mode', action='store_true',
+                          help='disable checks for fuzz testing')
 
     # Should be derived from info.txt but this runs too early
     third_party  = ['boost', 'bzip2', 'lzma', 'openssl', 'sqlite3', 'zlib', 'tpm', 'pkcs11']
@@ -840,6 +857,7 @@ class CompilerInfo(object):
                         'compile_flags': '',
                         'debug_info_flags': '',
                         'optimization_flags': '',
+                        'size_optimization_flags': '',
                         'coverage_flags': '',
                         'sanitizer_flags': '',
                         'shared_flags': '',
@@ -950,7 +968,14 @@ class CompilerInfo(object):
                 yield self.debug_info_flags
 
             if not options.no_optimizations:
-                yield self.optimization_flags
+                if options.optimize_for_size:
+                    if self.size_optimization_flags != '':
+                        yield self.size_optimization_flags
+                    else:
+                        logging.warning("No size optimization flags set for current compiler")
+                        yield self.optimization_flags
+                else:
+                    yield self.optimization_flags
 
             def submodel_fixup(flags, tup):
                 return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))
@@ -1131,6 +1156,82 @@ def makefile_list(items):
     items = list(items) # force evaluation so we can slice it
     return (' '*16).join([item + ' \\\n' for item in items[:-1]] + [items[-1]])
 
+def gen_bakefile(lib_sources, cli_sources, cli_headers, test_sources, external_headers, options):
+    def bakefile_sources(file, sources):
+        for src in sources:
+                (dir,filename) = os.path.split(os.path.normpath(src))
+                dir = dir.replace('\\','/')
+                try:
+                    param, dir = dir.split('/src/',1)
+                    file.write('\tsources { src/%s/%s } \n' % ( dir, filename))
+                except ValueError:
+                    pass
+                    file.write('\tsources { %s/%s } \n' % ( dir, filename))
+            
+    def bakefile_cli_headers(file, headers):
+        for header in headers:
+                (dir,filename) = os.path.split(os.path.normpath(header))
+                dir = dir.replace('\\','/')
+                try:
+                    param, dir = dir.split('/src/',1)
+                    file.write('\theaders { src/%s/%s } \n' % ( dir, filename))
+                except ValueError:
+                    pass
+                    file.write('\theaders { %s/%s } \n' % ( dir, filename))
+
+    def bakefile_test_sources(file, sources):
+        for src in sources:
+                (dir,filename) = os.path.split(os.path.normpath(src))
+                file.write('\tsources { src/tests/%s } \n' %filename)
+
+    f = open('botan.bkl','w')
+    f.write('toolsets = vs2013;\n')
+
+    # shared library project
+    f.write('shared-library botan {\n')
+    f.write('\tdefines = "BOTAN_DLL=__declspec(dllexport)";\n')
+    bakefile_sources( f, lib_sources )
+    f.write('}\n')
+
+    # cli project
+    f.write('program cli {\n')
+    f.write('\tdeps = botan;\n')
+    bakefile_sources( f, cli_sources )
+    bakefile_cli_headers( f, cli_headers )
+    f.write('}\n')
+
+    # tests project
+    f.write('program tests {\n')
+    f.write('\tdeps = botan;\n')
+    bakefile_test_sources( f, test_sources )
+    f.write('}\n')
+
+    # global options
+    f.write('includedirs += build/include/;\n')    
+
+    if options.with_external_includedir:
+        external_inc_dir = options.with_external_includedir.replace('\\','/')
+        f.write('includedirs += "%s";\n' %external_inc_dir )
+
+    if external_headers:
+        f.write('includedirs += build/include/external;\n')
+
+    if options.cpu in "x86_64":
+        f.write('archs = x86_64;\n')
+    else:
+        f.write('archs = x86;\n')
+
+    # vs2013 options
+    f.write('vs2013.option.ClCompile.DisableSpecificWarnings = "4250;4251;4275";\n')
+    f.write('vs2013.option.ClCompile.WarningLevel = Level4;\n')
+    f.write('vs2013.option.ClCompile.ExceptionHandling = SyncCThrow;\n')
+    f.write('vs2013.option.ClCompile.RuntimeTypeInfo = true;\n')
+    f.write('if ( $(config) == Release ) {\n')
+    f.write('vs2013.option.Configuration.WholeProgramOptimization = true;\n')
+    f.write('}\n')
+
+    f.close()
+
 def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     def get_isa_specific_flags(cc, isas):
         flags = []
@@ -1168,14 +1269,25 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
         for src in sources:
             (dir,file) = os.path.split(os.path.normpath(src))
 
-            parts = dir.split(os.sep)[2:]
+            parts = dir.split(os.sep)
+            if 'src' in parts:
+                parts = parts[parts.index('src')+2:]
+            elif 'tests' in parts:
+                parts = parts[parts.index('tests')+2:]
+            elif 'cli' in parts:
+                parts = parts[parts.index('cli'):]
+            elif file.find('botan_all') != -1:
+                parts = []
+            else:
+                raise Exception("Unexpected file '%s/%s'" % (dir, file))
+
             if parts != []:
 
                 # Handle src/X/X.cpp -> X.o
                 if file == parts[-1] + '.cpp':
-                    name = '_'.join(dir.split(os.sep)[2:]) + '.cpp'
+                    name = '_'.join(parts) + '.cpp'
                 else:
-                    name = '_'.join(dir.split(os.sep)[2:]) + '_' + file
+                    name = '_'.join(parts) + '_' + file
 
                 def fixup_obj_name(name):
                     def remove_dups(parts):
@@ -1289,7 +1401,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'version_datestamp': build_config.version_datestamp,
 
-        'src_dir': build_config.src_dir,
+        'base_dir': options.base_dir,
+        'src_dir': options.src_dir,
         'doc_dir': build_config.doc_dir,
 
         'command_line': ' '.join(sys.argv),
@@ -1309,7 +1422,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'out_dir': options.with_build_dir or os.path.curdir,
         'build_dir': build_config.build_dir,
-        'src_dir': options.src_dir,
 
         'scripts_dir': os.path.join(build_config.src_dir, 'scripts'),
 
@@ -1361,6 +1473,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'botan_include_dir': build_config.botan_include_dir,
 
         'include_files': makefile_list(build_config.public_headers),
+
+        'unsafe_fuzzer_mode_define': '' if not options.unsafe_fuzzer_mode else '#define BOTAN_UNSAFE_FUZZER_MODE',
 
         'ar_command': cc.ar_command or osinfo.ar_command,
         'ranlib_command': osinfo.ranlib_command(),
@@ -1417,13 +1531,13 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         else:
             vars['libname'] = 'botan'
 
-    vars["header_in"] = process_template('src/build-data/makefile/header.in', vars)
+    vars["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), vars)
 
     if vars["makefile_style"] == "gmake":
-        vars["gmake_commands_in"] = process_template('src/build-data/makefile/gmake_commands.in', vars)
-        vars["gmake_dso_in"]      = process_template('src/build-data/makefile/gmake_dso.in', vars) \
+        vars["gmake_commands_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_commands.in'), vars)
+        vars["gmake_dso_in"]      = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), vars) \
                                     if options.build_shared_lib else ''
-        vars["gmake_coverage_in"] = process_template('src/build-data/makefile/gmake_coverage.in', vars) \
+        vars["gmake_coverage_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_coverage.in'), vars) \
                                     if options.with_coverage else ''
 
     return vars
@@ -1490,9 +1604,10 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
 
         if modname in options.disabled_modules:
             cannot_use_because(modname, 'disabled by user')
-        elif modname in options.enabled_modules:
-            to_load.append(modname) # trust the user
         elif usable:
+            if modname in options.enabled_modules:
+                to_load.append(modname) # trust the user
+
             if module.load_on == 'never':
                 cannot_use_because(modname, 'disabled as buggy')
             elif module.load_on == 'request':
@@ -1517,7 +1632,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                 else:
                     to_load.append(modname)
             else:
-                logging.warning('Unknown load_on %s in %s' % (
+                logging.error('Unknown load_on %s in %s' % (
                     module.load_on, modname))
 
     dependency_failure = True

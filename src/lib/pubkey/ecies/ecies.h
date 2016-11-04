@@ -70,8 +70,6 @@ class BOTAN_DLL ECIES_KA_Params
 
       virtual ~ECIES_KA_Params() = default;
 
-      std::unique_ptr<KDF> create_kdf() const;
-
       inline const EC_Group& domain() const
          {
          return m_domain;
@@ -105,6 +103,11 @@ class BOTAN_DLL ECIES_KA_Params
       inline PointGFp::Compression_Type compression_type() const
          {
          return m_compression_mode;
+         }
+
+      const std::string& kdf_spec() const
+         {
+         return m_kdf_spec;
          }
 
    private:

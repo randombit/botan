@@ -17,6 +17,10 @@
   #include <botan/cmac.h>
 #endif
 
+#if defined(BOTAN_HAS_GMAC)
+  #include <botan/gmac.h>
+#endif
+
 #if defined(BOTAN_HAS_HMAC)
   #include <botan/hmac.h>
 #endif
@@ -40,6 +44,17 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
                                   const std::string& provider)
    {
    const SCAN_Name req(algo_spec);
+
+#if defined(BOTAN_HAS_GMAC)
+   if(req.algo_name() == "GMAC" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         if(auto bc = BlockCipher::create(req.arg(0)))
+            return std::unique_ptr<MessageAuthenticationCode>(new GMAC(bc.release()));
+         }
+      }
+#endif
 
 #if defined(BOTAN_HAS_HMAC)
    if(req.algo_name() == "HMAC" && req.arg_count() == 1)

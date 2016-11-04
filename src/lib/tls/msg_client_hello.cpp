@@ -84,7 +84,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
                 "Our policy accepts the version we are offering");
 
    /*
-   * Place all empty extensions in front to avoid a bug in some sytems
+   * Place all empty extensions in front to avoid a bug in some systems
    * which reject hellos when the last extension in the list is empty.
    */
    m_extensions.add(new Extended_Master_Secret);
@@ -170,14 +170,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       m_extensions.add(new Supported_Point_Formats());
    }
 
-   if(m_version.supports_negotiable_signature_algorithms())
-      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
-                                                policy.allowed_signature_methods()));
-
-   if(reneg_info.empty() && !next_protocols.empty())
-      m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
-   
-   if(policy.negotiate_encrypt_then_mac())
+   if(session.supports_encrypt_then_mac())
       m_extensions.add(new Encrypt_then_MAC);
 
 #if defined(BOTAN_HAS_SRP6)
@@ -188,6 +181,13 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       throw Invalid_State("Attempting to resume SRP session but TLS-SRP support disabled");
       }
 #endif
+
+   if(m_version.supports_negotiable_signature_algorithms())
+      m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
+                                                policy.allowed_signature_methods()));
+
+   if(reneg_info.empty() && !next_protocols.empty())
+      m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
 
    hash.update(io.send(*this));
    }

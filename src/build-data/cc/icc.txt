@@ -10,6 +10,7 @@ add_lib_option -l
 compile_flags "-c"
 debug_info_flags "-g"
 optimization_flags "-O2"
+size_optimization_flags "-Os"
 
 lang_flags "-std=c++0x"
 warning_flags "-w1"

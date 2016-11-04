@@ -216,7 +216,7 @@ class BOTAN_DLL PKCS11_EC_PrivateKey : public virtual Private_Key,
    private:
       EC_Group m_domain_params;
       PointGFp m_public_key;
-      PublicPointEncoding m_point_encoding;
+      PublicPointEncoding m_point_encoding = PublicPointEncoding::Der;
    };
 }
 

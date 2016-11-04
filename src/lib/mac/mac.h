@@ -51,6 +51,55 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       virtual ~MessageAuthenticationCode() {}
 
       /**
+      * Prepare for processing a message under the specified nonce
+      *
+      * Most MACs neither require nor support a nonce; for these algorithms
+      * calling `start_msg` is optional and calling it with anything other than
+      * an empty string is an error. One MAC which *requires* a per-message
+      * nonce be specified is GMAC.
+      *
+      * @param nonce the message nonce bytes
+      * @param nonce_len the size of len in bytes
+      * Default implementation simply rejects all non-empty nonces
+      * since most hash/MAC algorithms do not support randomization
+      */
+      virtual void start_msg(const byte nonce[], size_t nonce_len)
+         {
+         BOTAN_UNUSED(nonce);
+         if(nonce_len > 0)
+            throw Invalid_IV_Length(name(), nonce_len);
+         }
+
+      /**
+      * Begin processing a message with a nonce
+      *
+      * @param nonce the per message nonce
+      */
+      template<typename Alloc>
+      void start(const std::vector<byte, Alloc>& nonce)
+         {
+         start_msg(nonce.data(), nonce.size());
+         }
+
+      /**
+      * Begin processing a message.
+      * @param nonce the per message nonce
+      * @param nonce_len length of nonce
+      */
+      void start(const byte nonce[], size_t nonce_len)
+         {
+         start_msg(nonce, nonce_len);
+         }
+
+      /**
+      * Begin processing a message.
+      */
+      void start()
+         {
+         return start_msg(nullptr, 0);
+         }
+
+      /**
       * Verify a MAC.
       * @param in the MAC to verify as a byte array
       * @param length the length of param in
@@ -59,7 +108,27 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       virtual bool verify_mac(const byte in[], size_t length);
 
       /**
-      * @return a new object representing the same algorithm as *this
+      * Verify a MAC.
+      * @param in the MAC to verify as a byte array
+      * @return true if the MAC is valid, false otherwise
+      */
+      virtual bool verify_mac(const std::vector<byte>& in)
+         {
+         return verify_mac(in.data(), in.size());
+         }
+
+      /**
+      * Verify a MAC.
+      * @param in the MAC to verify as a byte array
+      * @return true if the MAC is valid, false otherwise
+      */
+      virtual bool verify_mac(const secure_vector<byte>& in)
+         {
+         return verify_mac(in.data(), in.size());
+         }
+
+      /**
+      * Get a new object representing the same algorithm as *this
       */
       virtual MessageAuthenticationCode* clone() const = 0;
 

@@ -1,15 +1,24 @@
-Currently deprecated:
+The following functionality is currently deprecated, and will likely
+be removed in a future release. If you think you have a good reason to
+be using one of the following, contact the developers to explain your
+use case if you want to make sure your code continues to work.
 
-- PRNGs X9.31 (no longer approved) and HMAC_RNG (non-standard)
-  Use HMAC_DRBG
+This is in addition to specific API calls marked with BOTAN_DEPRECATED
+in the source.
+
+Currently deprecated:
 
 - ECB Cipher_Mode for block ciphers
 
 - 3DES and SEED ciphersuites in TLS
 
-- PBKDF1 key derivation
+- DSA ciphersuites/certs in TLS
 
-- DSA auth in TLS (not ECDSA)
+- CAST-256, Kasumi, MISTY1, and DESX ciphers
+
+- CBC-MAC, X9.19-MAC
+
+- PBKDF1 key derivation
 
 - Old (Google specific) ChaCha20 TLS ciphersuites
 
@@ -18,10 +27,3 @@ Currently deprecated:
 - All built in MODP groups < 2048 bits
 
 - All pre-created DSA groups
-
-- All support for BeOS/Haiku including BeOS entropy source
-
-- EGD entropy source
-
-- Unix process exec entropy source
-

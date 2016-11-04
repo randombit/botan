@@ -1,9 +1,0 @@
-define PKCS5_PBES2 20141119
-
-<requires>
-asn1
-cbc
-hmac
-oid_lookup
-pbkdf2
-</requires>

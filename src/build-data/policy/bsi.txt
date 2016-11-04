@@ -18,6 +18,7 @@ sha3
 # mac
 cmac
 hmac
+gmac
 
 # kdf
 kdf1_iso18033
@@ -54,7 +55,6 @@ aes_ssse3
 clmul
 
 # entropy sources
-beos_stats
 cryptoapi_rng
 darwin_secrandom
 dev_random
@@ -148,13 +148,5 @@ cbc_mac
 poly1305
 siphash
 x919_mac
-
-# rng
-hmac_rng
-x931_rng
-
-# entropy sources
-egd
-unix_procs
 
 </prohibited>

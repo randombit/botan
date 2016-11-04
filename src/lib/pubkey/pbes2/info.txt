@@ -1,0 +1,8 @@
+define PKCS5_PBES2 20141119
+
+<requires>
+asn1
+cbc
+hmac
+pbkdf2
+</requires>

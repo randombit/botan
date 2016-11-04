@@ -64,6 +64,8 @@ class Block_Cipher_Tests : public Text_Based_Test
             buf = expected;
             cipher->decrypt(buf);
 
+            cipher->clear();
+
             result.test_eq(provider, "decrypt", buf, input);
             }
 

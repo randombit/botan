@@ -72,7 +72,7 @@ EC_PrivateKeyImportProperties::EC_PrivateKeyImportProperties(const std::vector<b
    }
 
 PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, ObjectHandle handle)
-   : Object(session, handle), m_domain_params(), m_public_key(), m_point_encoding(PublicPointEncoding::Der)
+   : Object(session, handle), m_domain_params(), m_public_key()
    {
    secure_vector<byte> ec_parameters = get_attribute_value(AttributeType::EcParams);
    m_domain_params = EC_Group(unlock(ec_parameters));

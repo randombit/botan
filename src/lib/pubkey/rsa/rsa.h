@@ -90,12 +90,10 @@ class BOTAN_DLL RSA_PrivateKey : public Private_Key, public RSA_PublicKey
       * @param rng a random number generator
       */
       RSA_PrivateKey(const AlgorithmIdentifier& alg_id,
-                     const secure_vector<byte>& key_bits,
-                     RandomNumberGenerator& rng);
+                     const secure_vector<byte>& key_bits);
 
       /**
       * Construct a private key from the specified parameters.
-      * @param rng a random number generator
       * @param p the first prime
       * @param q the second prime
       * @param e the exponent
@@ -105,8 +103,7 @@ class BOTAN_DLL RSA_PrivateKey : public Private_Key, public RSA_PublicKey
       * @param n if specified, this must be n = p * q. Leave it as 0
       * if you wish to the constructor to calculate it.
       */
-      RSA_PrivateKey(RandomNumberGenerator& rng,
-                     const BigInt& p, const BigInt& q,
+      RSA_PrivateKey(const BigInt& p, const BigInt& q,
                      const BigInt& e, const BigInt& d = 0,
                      const BigInt& n = 0);
 

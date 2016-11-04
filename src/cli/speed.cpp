@@ -37,10 +37,6 @@
   #include <botan/hmac_rng.h>
 #endif
 
-#if defined(BOTAN_HAS_X931_RNG)
-  #include <botan/x931_rng.h>
-#endif
-
 #if defined(BOTAN_HAS_FPE_FE1)
   #include <botan/fpe_fe1.h>
 #endif
@@ -65,6 +61,14 @@
 
 #if defined(BOTAN_HAS_ECDSA)
   #include <botan/ecdsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ECKCDSA)
+  #include <botan/eckcdsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ECGDSA)
+  #include <botan/ecgdsa.h>
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
@@ -313,6 +317,8 @@ std::vector<std::string> default_benchmark_list()
       "DH",
       "ECDH",
       "ECDSA",
+      "ECKCDSA",
+      "ECGDSA",
       "Curve25519",
       "McEliece",
       "NEWHOPE"
@@ -382,6 +388,18 @@ class Speed final : public Command
                bench_ecdsa(provider, msec);
                }
 #endif
+#if defined(BOTAN_HAS_ECKCDSA)
+            else if(algo == "ECKCDSA")
+               {
+               bench_eckcdsa(provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_ECGDSA)
+            else if(algo == "ECGDSA")
+               {
+               bench_ecgdsa(provider, msec);
+               }
+#endif
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
             else if(algo == "DH")
                {
@@ -447,24 +465,11 @@ class Speed final : public Command
                bench_rng(Botan::system_rng(), "System_RNG", msec, buf_size);
 #endif
 
-#if defined(BOTAN_HAS_X931_RNG)
-               Botan::ANSI_X931_RNG x931_rng(Botan::BlockCipher::create("AES-256").release(), new Botan::AutoSeeded_RNG);
-               bench_rng(x931_rng, x931_rng.name(), msec, buf_size);
-#endif
-
 #if defined(BOTAN_HAS_HMAC_DRBG)
                for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
                   {
                   Botan::HMAC_DRBG hmac_drbg(hash);
                   bench_rng(hmac_drbg, hmac_drbg.name(), msec, buf_size);
-                  }
-#endif
-
-#if defined(BOTAN_HAS_HMAC_RNG)
-               for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
-                  {
-                  Botan::HMAC_RNG hmac_rng(Botan::MessageAuthenticationCode::create("HMAC(" + hash + ")"));
-                  bench_rng(hmac_rng, hmac_rng.name(), msec, buf_size);
                   }
 #endif
                }
@@ -607,7 +612,8 @@ class Speed final : public Command
             iv_timer.run([&] { dec.start(iv); });
             decrypt_timer.run([&] { dec.finish(buffer); });
 
-            iv[0] += 1;
+            if(iv.size() > 0)
+               iv[0] += 1;
             }
 
          output() << Timer::result_string_ops(ks_timer);
@@ -1011,6 +1017,46 @@ class Speed final : public Command
 
             std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
                return new Botan::ECDSA_PrivateKey(rng(), Botan::EC_Group(grp));
+               }));
+
+            output() << Timer::result_string_ops(keygen_timer);
+            bench_pk_sig(*key, nm, provider, "EMSA1(SHA-256)", msec);
+            }
+         }
+#endif
+      
+#if defined(BOTAN_HAS_ECKCDSA)
+      void bench_eckcdsa(const std::string& provider,
+                       std::chrono::milliseconds msec)
+         {
+         for(std::string grp : { "secp256r1", "secp384r1", "secp521r1" })
+            {
+            const std::string nm = "ECKCDSA-" + grp;
+
+            Timer keygen_timer(nm, provider, "keygen");
+
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
+               return new Botan::ECKCDSA_PrivateKey(rng(), Botan::EC_Group(grp));
+               }));
+
+            output() << Timer::result_string_ops(keygen_timer);
+            bench_pk_sig(*key, nm, provider, "EMSA1(SHA-256)", msec);
+            }
+         }
+#endif
+      
+#if defined(BOTAN_HAS_ECGDSA)
+      void bench_ecgdsa(const std::string& provider,
+                       std::chrono::milliseconds msec)
+         {
+         for(std::string grp : { "secp256r1", "secp384r1", "secp521r1" })
+            {
+            const std::string nm = "ECGDSA-" + grp;
+
+            Timer keygen_timer(nm, provider, "keygen");
+
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
+               return new Botan::ECGDSA_PrivateKey(rng(), Botan::EC_Group(grp));
                }));
 
             output() << Timer::result_string_ops(keygen_timer);

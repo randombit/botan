@@ -64,7 +64,7 @@ year. Even if the years you are making the change are consecutive, avoid year
 ranges: specify each year separated by a comma.
 
 Also if you are a new contributor or making an addition in a new year, include
-an update to ``doc/license.txt`` in your PR.
+an update to ``license.txt`` in your PR.
 
 Style Conventions
 ========================================
@@ -123,7 +123,7 @@ See https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work for
 instructions on how to set this up.
 
 Depending on what your change is, your PR should probably also include an update
-to ``doc/news.rst`` with a note explaining the change. If your change is a
+to ``news.rst`` with a note explaining the change. If your change is a
 simple bug fix, a one sentence description is perhaps sufficient. If there is an
 existing ticket on GitHub with discussion or other information, reference it in
 your change note as 'GH #000'.

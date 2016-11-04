@@ -11,11 +11,9 @@
 namespace Botan {
 
 TLS_PRF::TLS_PRF() :
-   m_hmac_md5(MessageAuthenticationCode::create("HMAC(MD5)")),
-   m_hmac_sha1(MessageAuthenticationCode::create("HMAC(SHA-1)"))
+   m_hmac_md5(MessageAuthenticationCode::create_or_throw("HMAC(MD5)")),
+   m_hmac_sha1(MessageAuthenticationCode::create_or_throw("HMAC(SHA-1)"))
    {
-   if(!m_hmac_md5 || !m_hmac_sha1)
-      throw Algorithm_Not_Found("TLS_PRF HMACs not available");
    }
 
 namespace {

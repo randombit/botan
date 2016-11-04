@@ -1,5 +1,6 @@
 /*
 * (C) 2014,2015 Jack Lloyd
+* (C) 2016 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -20,13 +21,14 @@ class Message_Auth_Tests : public Text_Based_Test
    {
    public:
       Message_Auth_Tests() :
-         Text_Based_Test("mac", {"Key", "In", "Out"}) {}
+         Text_Based_Test("mac", {"Key", "In", "Out"}, {"IV"}) {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
          const std::vector<uint8_t> input    = get_req_bin(vars, "In");
          const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> iv       = get_opt_bin(vars, "IV");
 
          Test::Result result(algo);
 
@@ -54,6 +56,8 @@ class Message_Auth_Tests : public Text_Based_Test
             result.test_eq(provider, mac->name(), algo);
 
             mac->set_key(key);
+            mac->start(iv);
+
             mac->update(input);
 
             result.test_eq(provider, "correct mac", mac->final(), expected);
@@ -65,6 +69,7 @@ class Message_Auth_Tests : public Text_Based_Test
 
             // do the same to test verify_mac()
             mac->set_key(key);
+            mac->start(iv);
             mac->update(input);
 
             result.test_eq(provider + " correct mac", mac->verify_mac(expected.data(), expected.size()), true);
@@ -72,6 +77,8 @@ class Message_Auth_Tests : public Text_Based_Test
             if(input.size() > 2)
                {
                mac->set_key(key); // Poly1305 requires the re-key
+               mac->start(iv);
+
                mac->update(input[0]);
                mac->update(&input[1], input.size() - 2);
                mac->update(input[input.size()-1]);
@@ -80,6 +87,8 @@ class Message_Auth_Tests : public Text_Based_Test
 
                // do the same to test verify_mac()
                mac->set_key(key);
+               mac->start(iv);
+
                mac->update(input[ 0 ]);
                mac->update(&input[ 1 ], input.size() - 2);
                mac->update(input[ input.size() - 1 ]);

@@ -1,0 +1,4 @@
+define IDEA_SSE2 20131128
+
+need_isa sse2
+

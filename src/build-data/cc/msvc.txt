@@ -11,6 +11,7 @@ add_lib_option ""
 compile_flags "/nologo /c"
 
 optimization_flags "/O2"
+size_optimization_flags "/O1"
 
 # for debug info in the object file:
 #debug_info_flags "/Z7"

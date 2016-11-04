@@ -21,6 +21,8 @@
 #define BOTAN_VERSION_VC_REVISION "%{version_vc_rev}"
 
 #define BOTAN_DISTRIBUTION_INFO "%{distribution_info}"
+%{unsafe_fuzzer_mode_define}
+
 
 #define BOTAN_INSTALL_PREFIX R"(%{prefix})"
 #define BOTAN_INSTALL_HEADER_DIR "%{includedir}/botan-%{version_major}.%{version_minor}"
@@ -92,11 +94,6 @@
 */
 #define BOTAN_BLINDING_REINIT_INTERVAL 32
 
-/* PK key consistency checking toggles */
-#define BOTAN_PUBLIC_KEY_STRONG_CHECKS_ON_LOAD 1
-#define BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_LOAD 0
-#define BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_GENERATE 1
-
 /*
 * Userspace RNGs like HMAC_DRBG will reseed after a specified number
 * of outputs are generated. Set to zero to disable automatic reseeding.
@@ -105,12 +102,6 @@
 #define BOTAN_RNG_RESEED_POLL_BITS 256
 #define BOTAN_RNG_AUTO_RESEED_TIMEOUT std::chrono::milliseconds(10)
 #define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
-
-/**
-* Controls how AutoSeeded_RNG is instantiated
-*/
-#define BOTAN_AUTO_RNG_DRBG HMAC_DRBG
-#define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-384)"
 
 /*
 * Specifies (in order) the list of entropy sources that will be used
@@ -121,8 +112,7 @@
 */
 #define BOTAN_ENTROPY_DEFAULT_SOURCES \
    { "timestamp", "rdseed", "rdrand", "proc_info", \
-   "darwin_secrandom", "dev_random", "win32_cryptoapi", "egd", \
-   "proc_walk", "system_stats", "unix_procs" }
+   "darwin_secrandom", "dev_random", "win32_cryptoapi", "proc_walk", "system_stats" }
 
 /*
 * These control the RNG used by the system RNG interface
@@ -138,12 +128,17 @@
 */
 #define BOTAN_SYSTEM_RNG_POLL_DEVICES { "/dev/urandom", "/dev/random", "/dev/srandom" }
 
+/*
+* This directory will be monitored by ProcWalking_EntropySource and
+* the contents provided as entropy inputs to the RNG. May also be
+* usefully set to something like "/sys", depending on the system being
+* deployed to. Set to an empty string to disable.
+*/
+#define BOTAN_ENTROPY_PROC_FS_PATH "/proc"
+
 #define BOTAN_SYSTEM_RNG_POLL_REQUEST 64
 #define BOTAN_SYSTEM_RNG_POLL_TIMEOUT_MS 20
 
-#define BOTAN_ENTROPY_EGD_PATHS { "/var/run/egd-pool", "/dev/egd-pool" }
-#define BOTAN_ENTROPY_PROC_FS_PATH "/proc"
-#define BOTAN_ENTROPY_SAFE_PATHS { "/bin", "/sbin", "/usr/bin", "/usr/sbin" }
 
 /*
 How many times to read from the RDRAND/RDSEED RNGs.
@@ -272,6 +267,24 @@ Each read generates 32 bits of output
 * Local configuration options (if any) follow
 */
 %{local_config}
+
+/**
+* Controls how AutoSeeded_RNG is instantiated
+*/
+#if !defined(BOTAN_AUTO_RNG_HMAC)
+
+  #if defined(BOTAN_HAS_SHA2_64)
+    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-384)"
+  #elif defined(BOTAN_HAS_SHA2_32)
+    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-256)"
+  #elif defined(BOTAN_HAS_SHA3)
+    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-3(256))"
+  #elif defined(BOTAN_HAS_SHA1)
+    #define BOTAN_AUTO_RNG_HMAC "HMAC(SHA-1)"
+  #endif
+  // Otherwise, no hash found: leave BOTAN_AUTO_RNG_HMAC undefined
+
+#endif
 
 // Append to macros living outside of functions, so that invocations must end with a semicolon.
 // The struct is only declared to force the semicolon, it is never defined.

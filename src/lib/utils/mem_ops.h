@@ -15,23 +15,48 @@
 namespace Botan {
 
 /**
-* Zeroize memory
-* @param ptr a pointer to memory to zero out
+* Scrub memory contents in a way that a compiler should not elide,
+* using some system specific technique. Note that this function might
+* not zero the memory (for example, in some hypothetical
+* implementation it might combine the memory contents with the output
+* of a system PRNG), but if you can detect any difference in behavior
+* at runtime then the clearing is side-effecting and you can just
+* use `clear_mem`.
+*
+* Use this function to scrub memory just before deallocating it, or on
+* a stack buffer before returning from the function.
+*
+* @param ptr a pointer to memory to scrub
 * @param n the number of bytes pointed to by ptr
 */
-BOTAN_DLL void zero_mem(void* ptr, size_t n);
+BOTAN_DLL void secure_scrub_memory(void* ptr, size_t n);
 
 /**
-* Zeroize memory
-* @param ptr a pointer to an array
+* Zero out some bytes
+* @param ptr a pointer to memory to zero
+* @param bytes the number of bytes to zero in ptr
+*/
+inline void clear_bytes(void* ptr, size_t bytes)
+   {
+   if(bytes > 0)
+      {
+      std::memset(ptr, 0, bytes);
+      }
+   }
+
+/**
+* Zero memory before use. This simply calls memset and should not be
+* used in cases where the compiler cannot see the call as a
+* side-effecting operation (for example, if calling clear_mem before
+* deallocating memory, the compiler would be allowed to omit the call
+* to memset entirely under the as-if rule.)
+*
+* @param ptr a pointer to an array of Ts to zero
 * @param n the number of Ts pointed to by ptr
 */
 template<typename T> inline void clear_mem(T* ptr, size_t n)
    {
-   if(n > 0)
-      {
-      std::memset(ptr, 0, sizeof(T)*n);
-      }
+   clear_bytes(ptr, sizeof(T)*n);
    }
 
 /**

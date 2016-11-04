@@ -1,0 +1,3 @@
+define SHA1_SSE2 20160803
+
+need_isa sse2

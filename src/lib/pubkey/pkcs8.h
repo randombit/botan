@@ -82,7 +82,7 @@ PEM_encode(const Private_Key& key,
 /**
 * Load an encrypted key from a data source.
 * @param source the data source providing the encoded key
-* @param rng the rng to use
+* @param rng ignored for compatability
 * @param get_passphrase a function that returns passphrases
 * @return loaded private key object
 */
@@ -92,7 +92,7 @@ BOTAN_DLL Private_Key* load_key(DataSource& source,
 
 /** Load an encrypted key from a data source.
 * @param source the data source providing the encoded key
-* @param rng the rng to use
+* @param rng ignored for compatability
 * @param pass the passphrase to decrypt the key
 * @return loaded private key object
 */
@@ -102,7 +102,7 @@ BOTAN_DLL Private_Key* load_key(DataSource& source,
 
 /** Load an unencrypted key from a data source.
 * @param source the data source providing the encoded key
-* @param rng the rng to use
+* @param rng ignored for compatability
 * @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(DataSource& source,
@@ -112,7 +112,7 @@ BOTAN_DLL Private_Key* load_key(DataSource& source,
 /**
 * Load an encrypted key from a file.
 * @param filename the path to the file containing the encoded key
-* @param rng the rng to use
+* @param rng ignored for compatability
 * @param get_passphrase a function that returns passphrases
 * @return loaded private key object
 */
@@ -122,7 +122,7 @@ BOTAN_DLL Private_Key* load_key(const std::string& filename,
 
 /** Load an encrypted key from a file.
 * @param filename the path to the file containing the encoded key
-* @param rng the rng to use
+* @param rng ignored for compatability
 * @param pass the passphrase to decrypt the key
 * @return loaded private key object
 */
@@ -132,7 +132,7 @@ BOTAN_DLL Private_Key* load_key(const std::string& filename,
 
 /** Load an unencrypted key from a file.
 * @param filename the path to the file containing the encoded key
-* @param rng the rng to use
+* @param rng ignored for compatability
 * @return loaded private key object
 */
 BOTAN_DLL Private_Key* load_key(const std::string& filename,
@@ -142,7 +142,7 @@ BOTAN_DLL Private_Key* load_key(const std::string& filename,
 /**
 * Copy an existing encoded key object.
 * @param key the key to copy
-* @param rng the rng to use
+* @param rng ignored for compatability
 * @return new copy of the key
 */
 BOTAN_DLL Private_Key* copy_key(const Private_Key& key,

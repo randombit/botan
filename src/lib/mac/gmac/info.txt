@@ -1,0 +1,6 @@
+define GMAC 20160207
+
+<requires>
+gcm
+mac
+</requires>

@@ -12,10 +12,6 @@
   #include <botan/hmac_drbg.h>
 #endif
 
-#if defined(BOTAN_HAS_X931_RNG)
-  #include <botan/x931_rng.h>
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
   #include <botan/entropy_src.h>
 #endif
@@ -30,41 +26,6 @@
 namespace Botan_Tests {
 
 namespace {
-
-#if defined(BOTAN_HAS_X931_RNG)
-class X931_RNG_Tests : public Text_Based_Test
-   {
-   public:
-      X931_RNG_Tests() : Text_Based_Test("x931.vec", {"IKM", "Out"}) {}
-
-      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
-         {
-         const std::vector<uint8_t> ikm      = get_req_bin(vars, "IKM");
-         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
-
-         Test::Result result("X9.31-RNG(" + algo + ")");
-
-         std::unique_ptr<Botan::BlockCipher> bc = Botan::BlockCipher::create(algo);
-
-         if(!bc)
-            {
-            result.note_missing("X9.31 cipher " + algo);
-            return result;
-            }
-
-         Botan::ANSI_X931_RNG rng(bc.release(), new Fixed_Output_RNG(ikm));
-
-         std::vector<uint8_t> output(expected.size());
-         rng.randomize(output.data(), output.size());
-         result.test_eq("rng", output, expected);
-
-         return result;
-         }
-
-   };
-
-BOTAN_REGISTER_TEST("x931_rng", X931_RNG_Tests);
-#endif
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
 
@@ -144,7 +105,10 @@ class HMAC_DRBG_Unit_Tests : public Test
 
             bool is_seeded() const override { return true; }
 
-            void clear() override {}
+            void clear() override
+               {
+               m_randomize_count = 0;
+               }
 
             void randomize(byte[], size_t) override
                {
@@ -235,6 +199,61 @@ class HMAC_DRBG_Unit_Tests : public Test
 
          rng.random_vec(9*64*1024 + 1);
          result.test_eq("request exceeds output limit", counting_rng.randomize_count(), 9);
+
+         return result;
+         }
+
+      Test::Result test_max_number_of_bytes_per_request()
+         {
+         Test::Result result("HMAC_DRBG max_number_of_bytes_per_request");
+
+         std::string mac_string = "HMAC(SHA-256)";
+         auto mac = Botan::MessageAuthenticationCode::create(mac_string);
+         if(!mac)
+            {
+            result.note_missing(mac_string);
+            return result;
+            }
+
+         Request_Counting_RNG counting_rng;
+
+         result.test_throws("HMAC_DRBG does not accept 0 for max_number_of_bytes_per_request", [&mac_string, &counting_rng ]()
+            {
+            Botan::HMAC_DRBG rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 2, 0);
+            });
+
+         result.test_throws("HMAC_DRBG does not accept values higher than 64KB for max_number_of_bytes_per_request", [ &mac_string,
+                            &counting_rng ]()
+            {
+            Botan::HMAC_DRBG rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 2, 64 * 1024 + 1);
+            });
+
+         // set reseed_interval to 1 so we can test that a long request is split
+         // into multiple, max_number_of_bytes_per_request long requests
+         // for each smaller request, reseed_check() calls counting_rng::randomize(),
+         // which we can compare with
+         Botan::HMAC_DRBG rng(std::move(mac), counting_rng, 1, 64);
+
+         rng.random_vec(63);
+         result.test_eq("one request", counting_rng.randomize_count(), 1);
+
+         rng.clear();
+         counting_rng.clear();
+
+         rng.random_vec(64);
+         result.test_eq("one request", counting_rng.randomize_count(), 1);
+
+         rng.clear();
+         counting_rng.clear();
+
+         rng.random_vec(65);
+         result.test_eq("two requests", counting_rng.randomize_count(), 2);
+
+         rng.clear();
+         counting_rng.clear();
+
+         rng.random_vec(1025);
+         result.test_eq("17 requests", counting_rng.randomize_count(), 17);
 
          return result;
          }
@@ -394,13 +413,13 @@ class HMAC_DRBG_Unit_Tests : public Test
          size_t count = counting_rng.randomize_count();
          Botan::secure_vector<byte> parent_bytes(16), child_bytes(16);
          int fd[2];
-         int rc = pipe(fd);
+         int rc = ::pipe(fd);
          if(rc != 0)
             {
             result.test_failure("failed to create pipe");
             }
 
-         pid_t pid = fork();
+         pid_t pid = ::fork();
          if ( pid == -1 )
             {
             result.test_failure("failed to fork process");
@@ -409,33 +428,56 @@ class HMAC_DRBG_Unit_Tests : public Test
          else if ( pid != 0 )
             {
             // parent process, wait for randomize_count from child's rng
-            close(fd[1]);
-            read(fd[0], &count, sizeof(count));
-            close(fd[0]);
+            ::close(fd[1]); // close write end in parent
+            ssize_t got = ::read(fd[0], &count, sizeof(count));
 
-
-            result.test_eq("parent not reseeded",  counting_rng.randomize_count(), 1);
-            result.test_eq("child reseed occurred", count, 2);
+            if(got > 0)
+               {
+               result.test_eq("expected bytes from child", got, sizeof(count));
+               result.test_eq("parent not reseeded",  counting_rng.randomize_count(), 1);
+               result.test_eq("child reseed occurred", count, 2);
+               }
+            else
+               {
+               result.test_failure("Failed to read count size from child process");
+               }
 
             parent_bytes = rng.random_vec(16);
-            read(fd[0], &child_bytes[0], child_bytes.size());
-            result.test_ne("parent and child output sequences differ", parent_bytes, child_bytes);
-            close(fd[0]);
+            got = ::read(fd[0], &child_bytes[0], child_bytes.size());
 
+            if(got > 0)
+               {
+               result.test_eq("expected bytes from child", got, child_bytes.size());
+               result.test_ne("parent and child output sequences differ", parent_bytes, child_bytes);
+               }
+            else
+               {
+               result.test_failure("Failed to read RNG bytes from child process");
+               }
+            ::close(fd[0]); // close read end in parent
+
+            // wait for the child to exit
             int status = 0;
             ::waitpid(pid, &status, 0);
             }
          else
             {
             // child process, send randomize_count and first output sequence back to parent
-            close(fd[0]);
+            ::close(fd[0]); // close read end in child
             rng.randomize(&child_bytes[0], child_bytes.size());
             count = counting_rng.randomize_count();
-            write(fd[1], &count, sizeof(count));
-            rng.randomize(&child_bytes[0], child_bytes.size());
-            write(fd[1], &child_bytes[0], child_bytes.size());
-            close(fd[1]);
-            _exit(0);
+            ssize_t written = ::write(fd[1], &count, sizeof(count));
+            try {
+               rng.randomize(&child_bytes[0], child_bytes.size());
+            }
+            catch(std::exception& e)
+               {
+               fprintf(stderr, "%s", e.what());
+               }
+            written = ::write(fd[1], &child_bytes[0], child_bytes.size());
+            BOTAN_UNUSED(written);
+            ::close(fd[1]); // close write end in child
+            ::_exit(0);
             }
 #endif
          return result;
@@ -484,6 +526,7 @@ class HMAC_DRBG_Unit_Tests : public Test
          std::vector<Test::Result> results;
          results.push_back(test_reseed_kat());
          results.push_back(test_reseed());
+         results.push_back(test_max_number_of_bytes_per_request());
          results.push_back(test_broken_entropy_input());
          results.push_back(test_check_nonce());
          results.push_back(test_prediction_resistance());

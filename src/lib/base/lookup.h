@@ -44,14 +44,11 @@ inline BlockCipher* get_block_cipher(const std::string& algo_spec,
    return BlockCipher::create(algo_spec, provider).release();
    }
 
-BOTAN_DEPRECATED("Use BlockCipher::create")
+BOTAN_DEPRECATED("Use BlockCipher::create_or_throw")
 inline std::unique_ptr<BlockCipher> make_block_cipher(const std::string& algo_spec,
                                                       const std::string& provider = "")
    {
-   std::unique_ptr<BlockCipher> p(BlockCipher::create(algo_spec, provider));
-   if(p)
-      return p;
-   throw Algorithm_Not_Found(algo_spec);
+   return BlockCipher::create_or_throw(algo_spec, provider);
    }
 
 BOTAN_DEPRECATED("Use BlockCipher::providers")
@@ -74,14 +71,11 @@ inline StreamCipher* get_stream_cipher(const std::string& algo_spec,
    return StreamCipher::create(algo_spec, provider).release();
    }
 
-BOTAN_DEPRECATED("Use StreamCipher::create")
+BOTAN_DEPRECATED("Use StreamCipher::create_or_throw")
 inline std::unique_ptr<StreamCipher> make_stream_cipher(const std::string& algo_spec,
                                                         const std::string& provider = "")
    {
-   std::unique_ptr<StreamCipher> p(StreamCipher::create(algo_spec, provider));
-   if(p)
-      return p;
-   throw Algorithm_Not_Found(algo_spec);
+   return StreamCipher::create_or_throw(algo_spec, provider);
    }
 
 BOTAN_DEPRECATED("Use StreamCipher::providers")
@@ -104,14 +98,11 @@ inline HashFunction* get_hash_function(const std::string& algo_spec,
    return HashFunction::create(algo_spec, provider).release();
    }
 
-BOTAN_DEPRECATED("Use HashFunction::create")
+BOTAN_DEPRECATED("Use HashFunction::create_or_throw")
 inline std::unique_ptr<HashFunction> make_hash_function(const std::string& algo_spec,
                                                         const std::string& provider = "")
    {
-   std::unique_ptr<HashFunction> p(HashFunction::create(algo_spec, provider));
-   if(p)
-      return p;
-   throw Algorithm_Not_Found(algo_spec);
+   return HashFunction::create_or_throw(algo_spec, provider);
    }
 
 BOTAN_DEPRECATED("Use HashFunction::create")
@@ -141,14 +132,11 @@ inline MessageAuthenticationCode* get_mac(const std::string& algo_spec,
    return MessageAuthenticationCode::create(algo_spec, provider).release();
    }
 
-BOTAN_DEPRECATED("MessageAuthenticationCode::create")
+BOTAN_DEPRECATED("MessageAuthenticationCode::create_or_throw")
 inline std::unique_ptr<MessageAuthenticationCode> make_message_auth(const std::string& algo_spec,
                                                                        const std::string& provider = "")
    {
-   std::unique_ptr<MessageAuthenticationCode> p(MessageAuthenticationCode::create(algo_spec, provider));
-   if(p)
-      return p;
-   throw Algorithm_Not_Found(algo_spec);
+   return MessageAuthenticationCode::create(algo_spec, provider);
    }
 
 BOTAN_DEPRECATED("MessageAuthenticationCode::providers")

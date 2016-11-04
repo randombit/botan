@@ -7,7 +7,6 @@
 
 #include <botan/tss.h>
 #include <botan/loadstor.h>
-#include <botan/pipe.h>
 #include <botan/hex.h>
 #include <botan/sha2_32.h>
 #include <botan/sha160.h>

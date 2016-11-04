@@ -39,9 +39,9 @@
 
 namespace Botan {
 
-namespace {
-
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+
+namespace {
 
 secure_vector<byte> PKCS8_for_openssl(const EC_PrivateKey& ec)
    {
@@ -85,9 +85,13 @@ int OpenSSL_EC_nid_for(const OID& oid)
    return -1;
    }
 
+}
+
 #endif
 
 #if defined(BOTAN_HAS_ECDSA) && !defined(OPENSSL_NO_ECDSA)
+
+namespace {
 
 class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
    {
@@ -267,7 +271,6 @@ class OpenSSL_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
 
    private:
       std::unique_ptr<EC_KEY, std::function<void (EC_KEY*)>> m_ossl_ec;
-      size_t m_order_bits = 0;
    };
 
 }

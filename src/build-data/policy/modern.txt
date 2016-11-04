@@ -14,7 +14,6 @@ sha3
 gcm
 ocb
 chacha20poly1305
-shake_cipher
 
 kdf2
 hkdf
@@ -49,6 +48,7 @@ ffi
 <if_available>
 tls
 prf_tls
+newhope
 
 clmul
 locking_allocator
@@ -57,14 +57,17 @@ aes_ni
 aes_ssse3
 serpent_simd
 threefish_avx2
+chacha_sse2
 
 simd
+
+sessions_sql
+certstor_sql
 
 rdrand_rng
 system_rng
 
 # entropy sources
-beos_stats
 cryptoapi_rng
 darwin_secrandom
 dev_random
@@ -75,6 +78,9 @@ win32_stats
 </if_available>
 
 <prohibited>
+# Just say no to TLS 1.0
+tls_cbc
+
 cast
 des
 gost_28147
@@ -105,12 +111,7 @@ gost_3410
 emsa_x931
 pbkdf1
 prf_x942
-x931_rng
 
 passhash9
 cryptobox
-
-# questionable entropy sources
-egd
-unix_procs
 </prohibited>

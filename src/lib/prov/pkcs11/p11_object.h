@@ -716,7 +716,7 @@ class BOTAN_DLL Object
          {}
 
       const std::reference_wrapper<Session> m_session;
-      ObjectHandle m_handle;
+      ObjectHandle m_handle = CK_INVALID_HANDLE;
    };
 
 template<typename T>

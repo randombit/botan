@@ -12,7 +12,7 @@ rm -rf $WEBSITE_SRC_DIR $WEBSITE_DIR
 mkdir -p $WEBSITE_SRC_DIR
 
 cp readme.rst $WEBSITE_SRC_DIR/index.rst
-cp -r doc/news.rst doc/security.rst $WEBSITE_SRC_DIR
+cp -r news.rst doc/security.rst $WEBSITE_SRC_DIR
 echo -e ".. toctree::\n\n   index\n   news\n   security\n" > $WEBSITE_SRC_DIR/contents.rst
 
 sphinx-build -t website -c "$SPHINX_CONFIG" -b "$SPHINX_BUILDER" $WEBSITE_SRC_DIR $WEBSITE_DIR
@@ -21,7 +21,7 @@ rm -rf $WEBSITE_DIR/.doctrees
 rm -f $WEBSITE_DIR/.buildinfo
 rm -rf $WEBSITE_DIR/manual/.doctrees
 rm -f $WEBSITE_DIR/manual/.buildinfo
-cp doc/license.txt doc/pgpkey.txt $WEBSITE_DIR
+cp license.txt doc/pgpkey.txt $WEBSITE_DIR
 
 doxygen build/botan.doxy
 mv build/docs/doxygen $WEBSITE_DIR/doxygen

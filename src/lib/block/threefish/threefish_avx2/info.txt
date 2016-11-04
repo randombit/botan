@@ -1,0 +1,3 @@
+define THREEFISH_512_AVX2 20160903
+
+need_isa avx2

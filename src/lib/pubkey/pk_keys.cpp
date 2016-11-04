@@ -29,33 +29,6 @@ OID Public_Key::get_oid() const
    }
 
 /*
-* Run checks on a loaded public key
-*/
-void Public_Key::load_check(RandomNumberGenerator& rng) const
-   {
-   if(!check_key(rng, BOTAN_PUBLIC_KEY_STRONG_CHECKS_ON_LOAD))
-      throw Invalid_Argument("Invalid public key");
-   }
-
-/*
-* Run checks on a loaded private key
-*/
-void Private_Key::load_check(RandomNumberGenerator& rng) const
-   {
-   if(!check_key(rng, BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_LOAD))
-      throw Invalid_Argument("Invalid private key");
-   }
-
-/*
-* Run checks on a generated private key
-*/
-void Private_Key::gen_check(RandomNumberGenerator& rng) const
-   {
-   if(!check_key(rng, BOTAN_PRIVATE_KEY_STRONG_CHECKS_ON_GENERATE))
-      throw Self_Test_Failure("Private key generation failed");
-   }
-
-/*
 * Hash of the PKCS #8 encoding for this key object
 */
 std::string Private_Key::fingerprint(const std::string& alg) const

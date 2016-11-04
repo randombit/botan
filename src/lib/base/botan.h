@@ -37,7 +37,7 @@ namespace Botan {
 * <dt>Message Authentication Codes<dd>
 *        @ref CBC_MAC "CBC-MAC", CMAC, HMAC, Poly1305, SipHash, ANSI_X919_MAC
 * <dt>Random Number Generators<dd>
-*        AutoSeeded_RNG, HMAC_DRBG, HMAC_RNG, RDRAND_RNG, System_RNG, ANSI_X931_RNG
+*        AutoSeeded_RNG, HMAC_DRBG, RDRAND_RNG, System_RNG
 * <dt>Key Derivation<dd>
 *        HKDF, @ref KDF1 "KDF1 (IEEE 1363)", @ref KDF1_18033 "KDF1 (ISO 18033-2)", @ref KDF2 "KDF2 (IEEE 1363)",
 *        @ref sp800_108.h "SP800-108", @ref SP800_56C "SP800-56C", @ref PKCS5_PBKDF1 "PBKDF1 (PKCS#5),

@@ -16,12 +16,6 @@
 #include <botan/rng.h>
 #include <botan/blinding.h>
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   #include <botan/system_rng.h>
-#else
-   #include <botan/auto_rng.h>
-#endif
-
 namespace Botan {
 
 namespace PKCS11 {
@@ -101,14 +95,7 @@ RSA_PrivateKey PKCS11_RSA_PrivateKey::export_key() const
    auto d = get_attribute_value(AttributeType::PrivateExponent);
    auto n = get_attribute_value(AttributeType::Modulus);
 
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   System_RNG rng;
-#else
-   AutoSeeded_RNG rng;
-#endif
-
-   return RSA_PrivateKey(rng
-                         , BigInt::decode(p)
+   return RSA_PrivateKey(  BigInt::decode(p)
                          , BigInt::decode(q)
                          , BigInt::decode(e)
                          , BigInt::decode(d)

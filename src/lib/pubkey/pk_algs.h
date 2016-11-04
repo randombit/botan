@@ -20,8 +20,7 @@ load_public_key(const AlgorithmIdentifier& alg_id,
 
 BOTAN_DLL std::unique_ptr<Private_Key>
 load_private_key(const AlgorithmIdentifier& alg_id,
-                 const secure_vector<byte>& key_bits,
-                 RandomNumberGenerator& rng);
+                 const secure_vector<byte>& key_bits);
 
 /**
 * Create a new key

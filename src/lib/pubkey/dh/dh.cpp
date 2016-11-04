@@ -37,28 +37,21 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
                              const DL_Group& grp,
                              const BigInt& x_arg)
    {
-   const bool generate = (x_arg == 0) ? true : false;
    m_group = grp;
-   m_x = x_arg;
 
-   if(generate)
+   if(x_arg == 0)
       {
       const BigInt& p = group_p();
       m_x.randomize(rng, dl_exponent_size(p.bits()));
+      }
+   else
+      {
+      m_x = x_arg;
       }
 
    if(m_y == 0)
       {
       m_y = power_mod(group_g(), m_x, group_p());
-      }
-
-   if(generate)
-      {
-      gen_check(rng);
-      }
-   else
-      {
-      load_check(rng);
       }
    }
 
@@ -66,14 +59,11 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
 * Load a DH private key
 */
 DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
-                             const secure_vector<byte>& key_bits,
-                             RandomNumberGenerator& rng) :
+                             const secure_vector<byte>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
    {
    if(m_y == 0)
       m_y = power_mod(group_g(), m_x, group_p());
-
-   load_check(rng);
    }
 
 /*

@@ -63,9 +63,8 @@ information about the connection.
 
      For TLS the record number will always increase.
 
-     For DTLS, it is possible to receive records with the `rec_no` field
-     field out of order or repeated. It is even possible (from a malicious or
-     faulty peer) to receive multiple copies of a single record with differing plaintexts.
+     For DTLS, it is possible to receive records with the `rec_no` field out of
+     order, or with gaps, cooresponding to reordered or lost datagrams.
 
  .. cpp:function:: void tls_alert(Alert alert) 
 
@@ -98,10 +97,17 @@ information about the connection.
      This callback is optional, and can be used to inspect all handshake messages
      while the session establishment occurs.
 
- .. cpp:function:: void tls_log_debug(const char*)
+ .. cpp:function:: void tls_log_error(const char* msg)
 
-     This callback is for exerimental purposes and currently unused. It may be
-     removed or modified in a future release.
+     Optional logging for an error message. (Not currently used)
+
+ .. cpp:function:: void tls_log_debug(const char* msg)
+
+     Optional logging for an debug message. (Not currently used)
+
+ .. cpp:function:: void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t len)
+
+     Optional logging for an debug value. (Not currently used)
 
 Versions from 1.11.0 to 1.11.30 did not have ``TLS::Callbacks`` and instead
 used independent std::functions to pass the various callback functions.
@@ -514,14 +520,13 @@ policy settings from a file.
      authentication, sending data in cleartext) are also not supported
      by the implementation and cannot be negotiated.
 
-     Values without an explicit mode use old-style CBC with HMAC encryption.
+     Cipher names without an explicit mode refers to CBC+HMAC ciphersuites.
 
      Default value: "AES-256/GCM", "AES-128/GCM", "ChaCha20Poly1305",
-     "AES-256/CCM", "AES-128/CCM", "AES-256/CCM(8)", "AES-128/CCM(8)",
-     "AES-256", "AES-128"
+     "AES-256/CCM", "AES-128/CCM", "AES-256", "AES-128"
 
-     Also allowed: "Camellia-256/GCM", "Camellia-128/GCM",
-     "Camellia-256", "Camellia-128"
+     Also allowed: "AES-256/CCM(8)", "AES-128/CCM(8)",
+     "Camellia-256/GCM", "Camellia-128/GCM", "Camellia-256", "Camellia-128"
 
      Also allowed (though currently experimental): "AES-128/OCB(12)",
      "AES-256/OCB(12)"
@@ -547,18 +552,32 @@ policy settings from a file.
      Returns the list of algorithms we are willing to use for
      message authentication, in order of preference.
 
-     Default: "AEAD", "SHA-384", "SHA-256", "SHA-1"
+     Default: "AEAD", "SHA-256", "SHA-384", "SHA-1"
 
      A plain hash function indicates HMAC
 
- .. cpp:function:: std::vector<std::string> allowed_key_exchange_methods() const
+     .. note::
+
+        SHA-256 is preferred over SHA-384 in CBC mode because the
+        protections against the Lucky13 attack are somewhat more
+        effective for SHA-256 than SHA-384.
+
+.. cpp:function:: std::vector<std::string> allowed_key_exchange_methods() const
 
      Returns the list of key exchange methods we are willing to use,
      in order of preference.
 
-     Default: "ECDH", "DH", "RSA"
+     Default: "ECDH", "DH"
 
-     Also allowed: "SRP_SHA", "ECDHE_PSK", "DHE_PSK", "PSK"
+     Also allowed: "RSA", "SRP_SHA", "ECDHE_PSK", "DHE_PSK", "PSK"
+
+     .. note::
+
+        Static RSA ciphersuites are disabled by default since 1.11.34.
+        In addition to not providing forward security, any server which is
+        willing to negotiate these ciphersuites exposes themselves to a variety
+        of chosen ciphertext oracle attacks which are all easily avoided by
+        signing (as in PFS) instead of decrypting.
 
  .. cpp:function:: std::vector<std::string> allowed_signature_hashes() const
 
@@ -577,9 +596,9 @@ policy settings from a file.
 
  .. cpp:function:: std::vector<std::string> allowed_signature_methods() const
 
-     Default: "ECDSA", "RSA", "DSA"
+     Default: "ECDSA", "RSA"
 
-     Also allowed (disabled by default): "" (meaning anonymous)
+     Also allowed (disabled by default): "DSA", "" (empty string meaning anonymous)
 
      .. note::
 
@@ -614,7 +633,7 @@ policy settings from a file.
 
      .. note::
 
-        TLS compression is not currently supported.
+        TLS data compression is not currently supported.
 
  .. cpp:function:: bool acceptable_protocol_version(Protocol_Version version)
 
@@ -676,6 +695,29 @@ policy settings from a file.
      Diffie-Hellman.
 
      Default: 1024 bits
+
+.. cpp:function:: size_t minimum_rsa_bits() const
+
+     Minimum accepted RSA key size. Default 2048 bits.
+
+.. cpp:function:: size_t minimum_dsa_group_size() const
+
+     Minimum accepted DSA key size. Default 2048 bits.
+
+.. cpp:function:: size_t minimum_ecdsa_group_size() const
+
+     Minimum size for ECDSA keys (256 bits).
+
+.. cpp:function:: size_t minimum_ecdh_group_size() const
+
+     Minimum size for ECDH keys (255 bits).
+
+.. cpp:function:: void check_peer_key_acceptable(const Public_Key& public_key) const
+
+     Allows the policy to examine peer public keys. Throw an exception
+     if the key should be rejected. Default implementation checks
+     against policy values `minimum_dh_group_size`, `minimum_rsa_bits`,
+     `minimum_ecdsa_group_size`, and `minimum_ecdh_group_size`.
 
  .. cpp:function:: bool hide_unknown_users() const
 

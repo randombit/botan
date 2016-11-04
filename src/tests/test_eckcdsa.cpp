@@ -58,16 +58,10 @@ class ECKCDSA_Keygen_Tests : public PK_Key_Generation_Test
    {
    public:
       std::vector<std::string> keygen_params() const override { return { "secp256r1", "secp384r1", "secp521r1" }; }
-
-      std::unique_ptr<Botan::Private_Key> make_key(Botan::RandomNumberGenerator& rng,
-                                                   const std::string& param) const override
-         {
-         Botan::EC_Group group(param);
-         return std::unique_ptr<Botan::Private_Key>(new Botan::ECKCDSA_PrivateKey(rng, group));
-         }
+      std::string algo_name() const override { return "ECKCDSA"; }
    };
 
-BOTAN_REGISTER_TEST("eckcdsa", ECKCDSA_Signature_KAT_Tests);
+BOTAN_REGISTER_TEST("eckcdsa_sign", ECKCDSA_Signature_KAT_Tests);
 BOTAN_REGISTER_TEST("eckcdsa_keygen", ECKCDSA_Keygen_Tests);
 
 #endif

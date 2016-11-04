@@ -6,7 +6,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_BIGINT)
+#if defined(BOTAN_HAS_NUMBERTHEORY)
   #include <botan/bigint.h>
   #include <botan/numthry.h>
   #include <botan/reducer.h>
@@ -17,7 +17,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_BIGINT)
+#if defined(BOTAN_HAS_NUMBERTHEORY)
 
 using Botan::BigInt;
 
@@ -507,6 +507,48 @@ class BigInt_InvMod_Test : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("bn_invmod", BigInt_InvMod_Test);
+
+class DSA_ParamGen_Test : public Text_Based_Test
+   {
+   public:
+      DSA_ParamGen_Test() : Text_Based_Test("bn/dsa_gen.vec", {"P","Q","Seed"}) {}
+
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override
+         {
+         const std::vector<byte> seed = get_req_bin(vars, "Seed");
+         const Botan::BigInt P = get_req_bn(vars, "P");
+         const Botan::BigInt Q = get_req_bn(vars, "Q");
+
+         const std::vector<std::string> header_parts = Botan::split_on(header, ',');
+
+         if(header_parts.size() != 2)
+            throw Test_Error("Unexpected header '" + header + "' in DSA param gen test");
+
+         const size_t p_bits = Botan::to_u32bit(header_parts[1]);
+         const size_t q_bits = Botan::to_u32bit(header_parts[0]);
+
+         Test::Result result("DSA Parameter Generation");
+
+         // These tests are very slow so skip in normal runs
+         if(Test::soak_level() <= 5 && p_bits > 1024)
+            return result;
+
+         Botan::BigInt gen_P, gen_Q;
+         if(Botan::generate_dsa_primes(Test::rng(), gen_P, gen_Q, p_bits, q_bits, seed))
+            {
+            result.test_eq("P", gen_P, P);
+            result.test_eq("Q", gen_Q, Q);
+            }
+         else
+            {
+            result.test_failure("Seed did not generate a DSA parameter");
+            }
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("dsa_param", DSA_ParamGen_Test);
 
 #endif
 

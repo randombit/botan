@@ -1,5 +1,0 @@
-define OID_LOOKUP 20131128
-
-<requires>
-asn1
-</requires>

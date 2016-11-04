@@ -2,6 +2,5 @@ define X942_PRF 20131128
 
 <requires>
 asn1
-oid_lookup
 sha1
 </requires>
