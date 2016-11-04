@@ -52,15 +52,12 @@ class Entropy_Source_Tests : public Test
 #if defined(BOTAN_HAS_COMPRESSION)
                if(!rng.seed_material().empty())
                   {
-                  for(const std::string comp_algo : { "zlib", "bzip2", "lzma" })
+                  /*
+                  * Skip bzip2 both due to OS X problem (GH #394) and because bzip2's
+                  * large blocks cause the entropy differential test to fail sometimes.
+                  */
+                  for(const std::string comp_algo : { "zlib", "lzma" })
                      {
-#if defined(BOTAN_TARGET_OS_IS_DARWIN)
-                     if(comp_algo == "bzip2")
-                        {
-                        // Skip due to unresolved OS X specific issue GH #394
-                        continue;
-                        }
-#endif
                      std::unique_ptr<Botan::Compression_Algorithm> comp(Botan::make_compressor(comp_algo));
 
                      if(comp)
