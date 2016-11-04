@@ -299,6 +299,11 @@ std::string Supported_Elliptic_Curves::curve_id_to_name(u16bit id)
          return "x25519";
 #endif
 
+#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
+      case BOTAN_HOUSE_ECC_CURVE_TLS_ID:
+         return BOTAN_HOUSE_ECC_CURVE_NAME;
+#endif
+
       default:
          return ""; // something we don't know or support
       }
@@ -322,6 +327,11 @@ u16bit Supported_Elliptic_Curves::name_to_curve_id(const std::string& name)
 #if defined(BOTAN_HAS_CURVE_25519)
    if(name == "x25519")
       return 29;
+#endif
+
+#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
+   if(name == BOTAN_HOUSE_ECC_CURVE_NAME)
+      return BOTAN_HOUSE_ECC_CURVE_TLS_ID;
 #endif
 
    // Unknown/unavailable EC curves are ignored
