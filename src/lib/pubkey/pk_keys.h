@@ -12,22 +12,11 @@
 #include <botan/asn1_oid.h>
 #include <botan/alg_id.h>
 #include <botan/rng.h>
+#include <botan/pk_ops_fwd.h>
 
 namespace Botan {
 
 class RandomNumberGenerator;
-
-namespace PK_Ops {
-
-class Encryption;
-class Decryption;
-class Key_Agreement;
-class KEM_Encryption;
-class KEM_Decryption;
-class Verification;
-class Signature;
-
-}
 
 /**
 * Public Key Base Class.
