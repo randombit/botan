@@ -16,11 +16,12 @@ namespace KeyPair {
 * Check an encryption key pair for consistency
 */
 bool encryption_consistency_check(RandomNumberGenerator& rng,
-                                  const Private_Key& key,
+                                  const Private_Key& private_key,
+                                  const Public_Key& public_key,
                                   const std::string& padding)
    {
-   PK_Encryptor_EME encryptor(key, rng, padding);
-   PK_Decryptor_EME decryptor(key, rng, padding);
+   PK_Encryptor_EME encryptor(public_key, rng, padding);
+   PK_Decryptor_EME decryptor(private_key, rng, padding);
 
    /*
    Weird corner case, if the key is too small to encrypt anything at
@@ -45,13 +46,15 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
 * Check a signature key pair for consistency
 */
 bool signature_consistency_check(RandomNumberGenerator& rng,
-                                 const Private_Key& key,
+                                 const Private_Key& private_key,
+                                 const Public_Key& public_key,
                                  const std::string& padding)
    {
-   PK_Signer signer(key, rng, padding);
-   PK_Verifier verifier(key, padding);
+   PK_Signer signer(private_key, rng, padding);
+   PK_Verifier verifier(public_key, padding);
 
-   std::vector<byte> message = unlock(rng.random_vec(16));
+   std::vector<byte> message(32);
+   rng.randomize(message.data(), message.size());
 
    std::vector<byte> signature;
 
@@ -68,7 +71,7 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
       return false;
 
    // Now try to check a corrupt signature, ensure it does not succeed
-   ++message[0];
+   ++signature[0];
 
    if(verifier.verify_message(message, signature))
       return false;

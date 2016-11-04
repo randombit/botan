@@ -30,13 +30,13 @@ bool PKCS11_ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong)
       return false;
       }
 
-
    if(!strong)
       {
       return true;
       }
 
-   return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-1)");
+   ECDSA_PublicKey pubkey(domain(), public_point());
+   return KeyPair::signature_consistency_check(rng, *this, pubkey, "EMSA1(SHA-256)");
    }
 
 ECDSA_PrivateKey PKCS11_ECDSA_PrivateKey::export_key() const
@@ -57,8 +57,6 @@ namespace {
 class PKCS11_ECDSA_Signature_Operation : public PK_Ops::Signature
    {
    public:
-      typedef PKCS11_EC_PrivateKey Key_Type;
-
       PKCS11_ECDSA_Signature_Operation(const PKCS11_EC_PrivateKey& key, const std::string& emsa)
          : PK_Ops::Signature(), m_key(key), m_order(key.domain().get_order()), m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
          {}
@@ -124,8 +122,6 @@ class PKCS11_ECDSA_Signature_Operation : public PK_Ops::Signature
 class PKCS11_ECDSA_Verification_Operation : public PK_Ops::Verification
    {
    public:
-      typedef PKCS11_EC_PublicKey Key_Type;
-
       PKCS11_ECDSA_Verification_Operation(const PKCS11_EC_PublicKey& key, const std::string& emsa)
          : PK_Ops::Verification(), m_key(key), m_order(key.domain().get_order()), m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
          {}
