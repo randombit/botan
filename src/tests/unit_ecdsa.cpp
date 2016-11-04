@@ -45,10 +45,6 @@ Test::Result test_hash_larger_than_n()
       Botan::EC_Group dom_pars(Botan::OIDS::lookup(oid)); 
       // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
 
-      Botan::EC_Group dom_pars("secp160r1");
-   
-      // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
-
       Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
 
       std::vector<byte> message(20);
