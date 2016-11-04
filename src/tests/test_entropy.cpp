@@ -35,9 +35,6 @@ class Entropy_Source_Tests : public Test
 
             try
                {
-               std::vector<uint8_t> entropy;
-               double entropy_estimate = 0.0;
-
                SeedCapturing_RNG rng;
 
                size_t bits = srcs.poll_just(rng, src_name);
@@ -53,7 +50,7 @@ class Entropy_Source_Tests : public Test
                result.test_note("poll result", rng.seed_material());
 
 #if defined(BOTAN_HAS_COMPRESSION)
-               if(!entropy.empty())
+               if(!rng.seed_material().empty())
                   {
                   for(const std::string comp_algo : { "zlib", "bzip2", "lzma" })
                      {
@@ -73,14 +70,14 @@ class Entropy_Source_Tests : public Test
                         try
                            {
                            Botan::secure_vector<byte> compressed;
-                           compressed.assign(entropy.begin(), entropy.end());
+                           compressed.assign(rng.seed_material().begin(), rng.seed_material().end());
                            comp->start(9);
                            comp->finish(compressed);
 
                            comp1_size = compressed.size();
 
                            result.test_gte(comp_algo + " compressed entropy better than advertised",
-                                           compressed.size() * 8, static_cast<size_t>(entropy_estimate));
+                                           compressed.size() * 8, bits);
                            }
                         catch(std::exception& e)
                            {
