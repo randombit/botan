@@ -1635,6 +1635,14 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                 logging.error('Unknown load_on %s in %s' % (
                     module.load_on, modname))
 
+    if 'compression' in to_load:
+        # Confirm that we have at least one compression library enabled
+        # Otherwise we leave a lot of useless support code compiled in, plus a
+        # make_compressor call that always fails
+        if 'zlib' not in to_load and 'bzip2' not in to_load and 'lzma' not in to_load:
+            to_load.remove('compression')
+            cannot_use_because('compression', 'no enabled compression schemes')
+
     dependency_failure = True
 
     while dependency_failure:
