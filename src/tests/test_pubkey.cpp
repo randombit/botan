@@ -94,62 +94,69 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
 
    Test::Result result(algo_name() + "/" + padding + " signature generation");
 
-   std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
-   std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
-
-   for(auto&& sign_provider : possible_pk_providers())
+   try
       {
-      std::unique_ptr<Botan::PK_Signer> signer;
+      std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
+      std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
 
-      try
+      for(auto&& sign_provider : possible_pk_providers())
          {
-         signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::IEEE_1363, sign_provider));
-         }
-      catch(Botan::Lookup_Error&)
-         {
-         //result.test_note("Skipping signing with " + sign_provider);
-         continue;
-         }
-
-      std::unique_ptr<Botan::RandomNumberGenerator> rng;
-      if(vars.count("Nonce"))
-         {
-         rng.reset(test_rng(get_req_bin(vars, "Nonce")));
-         }
-
-      const std::vector<uint8_t> generated_signature =
-         signer->sign_message(message, rng ? *rng : Test::rng());
-
-      if(sign_provider == "base")
-         {
-         result.test_eq("generated signature matches KAT", generated_signature, signature);
-         }
-
-      for(auto&& verify_provider : possible_pk_providers())
-         {
-         std::unique_ptr<Botan::PK_Verifier> verifier;
+         std::unique_ptr<Botan::PK_Signer> signer;
 
          try
             {
-            verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
+            signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::IEEE_1363, sign_provider));
             }
          catch(Botan::Lookup_Error&)
             {
-            //result.test_note("Skipping verifying with " + verify_provider);
+            //result.test_note("Skipping signing with " + sign_provider);
             continue;
             }
 
-         if(!result.test_eq("generated signature valid",
-                            verifier->verify_message(message, generated_signature), true))
+         std::unique_ptr<Botan::RandomNumberGenerator> rng;
+         if(vars.count("Nonce"))
             {
-            result.test_failure("generated signature", generated_signature);
+            rng.reset(test_rng(get_req_bin(vars, "Nonce")));
             }
 
-         check_invalid_signatures(result, *verifier, message, signature);
-         result.test_eq("KAT signature valid", verifier->verify_message(message, signature), true);
+         const std::vector<uint8_t> generated_signature =
+            signer->sign_message(message, rng ? *rng : Test::rng());
+
+         if(sign_provider == "base")
+            {
+            result.test_eq("generated signature matches KAT", generated_signature, signature);
+            }
+
+         for(auto&& verify_provider : possible_pk_providers())
+            {
+            std::unique_ptr<Botan::PK_Verifier> verifier;
+
+            try
+               {
+               verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
+               }
+            catch(Botan::Lookup_Error&)
+               {
+               //result.test_note("Skipping verifying with " + verify_provider);
+               continue;
+               }
+
+            if(!result.test_eq("generated signature valid",
+                               verifier->verify_message(message, generated_signature), true))
+               {
+               result.test_failure("generated signature", generated_signature);
+               }
+
+            check_invalid_signatures(result, *verifier, message, signature);
+            result.test_eq("KAT signature valid", verifier->verify_message(message, signature), true);
+            }
          }
       }
-
+   catch(Botan::Lookup_Error&)
+      {
+         result.note_missing("Lookup Error ");
+      }
+      
    return result;
    }
 
@@ -340,24 +347,31 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
                        (header.empty() ? header : " " + header) +
                        " key agreement");
 
-   std::unique_ptr<Botan::Private_Key> privkey = load_our_key(header, vars);
-   const std::vector<uint8_t> pubkey = load_their_key(header, vars);
-
-   const size_t key_len = get_opt_sz(vars, "OutLen", 0);
-
-   for(auto&& provider : possible_pk_providers())
+   try
       {
-      std::unique_ptr<Botan::PK_Key_Agreement> kas;
+      std::unique_ptr<Botan::Private_Key> privkey = load_our_key(header, vars);
+      const std::vector<uint8_t> pubkey = load_their_key(header, vars);
 
-      try
+      const size_t key_len = get_opt_sz(vars, "OutLen", 0);
+
+      for(auto&& provider : possible_pk_providers())
          {
-         kas.reset(new Botan::PK_Key_Agreement(*privkey, Test::rng(), kdf, provider));
-         result.test_eq(provider, "agreement", kas->derive_key(key_len, pubkey).bits_of(), shared);
+         std::unique_ptr<Botan::PK_Key_Agreement> kas;
+
+         try
+            {
+            kas.reset(new Botan::PK_Key_Agreement(*privkey, Test::rng(), kdf, provider));
+            result.test_eq(provider, "agreement", kas->derive_key(key_len, pubkey).bits_of(), shared);
+            }
+         catch(Botan::Lookup_Error&)
+            {
+            //result.test_note("Skipping key agreement with with " + provider);
+            }
          }
-      catch(Botan::Lookup_Error&)
-         {
-         //result.test_note("Skipping key agreement with with " + provider);
-         }
+      }
+   catch(Botan::Lookup_Error&)
+      {
+         result.note_missing("Lookup Error " + header);
       }
 
    return result;

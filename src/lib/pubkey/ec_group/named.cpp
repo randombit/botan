@@ -11,6 +11,8 @@ namespace Botan {
 
 const char* EC_Group::PEM_for_named_group(const std::string& name)
    {
+   // Potentially avoiding unused-parameter warning
+   (void)name;
 #if defined(BOTAN_HAS_SECP160K1)
    if(name == "secp160k1")
       return

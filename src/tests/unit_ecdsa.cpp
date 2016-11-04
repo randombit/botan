@@ -129,20 +129,13 @@ Test::Result test_decode_ver_link_SHA1()
 Test::Result test_sign_then_ver()
    {
    Test::Result result("ECDSA Unit");
-   auto oid = "1.3.132.0.8"; // secp160r1
+   std::string oid = "1.3.132.0.8"; // secp160r1
    try
       {
-      Botan::EC_Group dom_pars(Botan::OID(oid)); 
+      Botan::EC_Group dom_pars(Botan::OIDS::lookup(oid)); 
       Botan::ECDSA_PrivateKey ecdsa(Test::rng(), dom_pars);
 
-<<<<<<< Updated upstream
-   Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
-   Botan::ECDSA_PrivateKey ecdsa(Test::rng(), dom_pars);
-
-   Botan::PK_Signer signer(ecdsa, Test::rng(), "EMSA1(SHA-256)");
-=======
-      Botan::PK_Signer signer(ecdsa, "EMSA1(SHA-256)");
->>>>>>> Stashed changes
+      Botan::PK_Signer signer(ecdsa, Test::rng(), "EMSA1(SHA-256)");
 
       auto msg = Botan::hex_decode("12345678901234567890abcdef12");
       std::vector<byte> sig = signer.sign_message(msg, Test::rng());
@@ -167,7 +160,7 @@ Test::Result test_ec_sign()
    std::string oid = "1.3.132.0.8"; // secp160r1
    try
       {
-      Botan::EC_Group dom_pars(Botan::OID(oid));
+      Botan::EC_Group dom_pars(Botan::OIDS::lookup(oid));
       Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
       Botan::PK_Signer signer(priv_key, Test::rng(), "EMSA1(SHA-224)");
       Botan::PK_Verifier verifier(priv_key, "EMSA1(SHA-224)");
@@ -224,7 +217,7 @@ Test::Result test_ecdsa_create_save_load()
 
    try
       {
-      Botan::EC_Group dom_pars(Botan::OID(oid));
+      Botan::EC_Group dom_pars(Botan::OIDS::lookup(oid));
 
       Botan::ECDSA_PrivateKey key(Test::rng(), dom_pars);
 
