@@ -7,8 +7,11 @@
 */
 
 #include <botan/comp_filter.h>
-#include <botan/compression.h>
 #include <botan/exceptn.h>
+
+#if defined(BOTAN_HAS_COMPRESSION)
+  #include <botan/compression.h>
+#endif
 
 namespace Botan {
 
