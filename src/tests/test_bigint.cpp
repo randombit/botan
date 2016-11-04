@@ -533,15 +533,20 @@ class DSA_ParamGen_Test : public Text_Based_Test
          if(Test::soak_level() <= 5 && p_bits > 1024)
             return result;
 
-         Botan::BigInt gen_P, gen_Q;
-         if(Botan::generate_dsa_primes(Test::rng(), gen_P, gen_Q, p_bits, q_bits, seed))
+         try {
+            Botan::BigInt gen_P, gen_Q;
+            if(Botan::generate_dsa_primes(Test::rng(), gen_P, gen_Q, p_bits, q_bits, seed))
+               {
+               result.test_eq("P", gen_P, P);
+               result.test_eq("Q", gen_Q, Q);
+               }
+            else
+               {
+               result.test_failure("Seed did not generate a DSA parameter");
+               }
+         }
+         catch(Botan::Algorithm_Not_Found&)
             {
-            result.test_eq("P", gen_P, P);
-            result.test_eq("Q", gen_Q, Q);
-            }
-         else
-            {
-            result.test_failure("Seed did not generate a DSA parameter");
             }
 
          return result;
