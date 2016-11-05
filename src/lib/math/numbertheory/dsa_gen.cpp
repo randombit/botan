@@ -20,7 +20,7 @@ namespace {
 bool fips186_3_valid_size(size_t pbits, size_t qbits)
    {
    if(qbits == 160)
-      return (pbits == 512 || pbits == 768 || pbits == 1024);
+      return (pbits == 1024);
 
    if(qbits == 224)
       return (pbits == 2048);
@@ -52,9 +52,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          "long q requires a seed at least as many bits long");
 
    const std::string hash_name = "SHA-" + std::to_string(qbits);
-   std::unique_ptr<HashFunction> hash(HashFunction::create(hash_name));
-   if(!hash)
-      throw Algorithm_Not_Found(hash_name);
+   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_name));
 
    const size_t HASH_SIZE = hash->output_length();
 
@@ -91,7 +89,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    BigInt X;
    std::vector<byte> V(HASH_SIZE * (n+1));
 
-   for(size_t j = 0; j != 4096; ++j)
+   for(size_t j = 0; j != 4*pbits; ++j)
       {
       for(size_t k = 0; k <= n; ++k)
          {
