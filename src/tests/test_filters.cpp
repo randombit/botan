@@ -35,7 +35,7 @@ class Filter_Tests : public Test
          results.push_back(test_pipe_codec());
          results.push_back(test_fork());
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS) && 0
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
          // Threaded_Fork is broken
          results.push_back(test_threaded_fork());
 #endif
