@@ -545,7 +545,7 @@ class DSA_ParamGen_Test : public Text_Based_Test
                result.test_failure("Seed did not generate a DSA parameter");
                }
          }
-         catch(Botan::Algorithm_Not_Found&)
+         catch(Botan::Lookup_Error&)
             {
             }
 
