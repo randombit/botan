@@ -92,6 +92,11 @@ Version 1.11.34, Not Yet Released
   will continue not doing anything, until it is eventually removed in
   a future release. At which point it may indeed cease doing nothing.
 
+* In 1.11.21 the Perl XS wrapper and sqlite encryption codec were
+  removed to standalone repos. But, it is easier to maintain all
+  related code inside a single repo so they have returned under
+  src/contrib.
+
 Version 1.11.33, 2016-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
