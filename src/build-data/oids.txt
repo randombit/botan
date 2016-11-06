@@ -1,3 +1,5 @@
+# Regenerate with ./src/scripts/oids.py > src/lib/asn1/oids.cpp
+
 # Public key types
 [pubkey]
 1.2.840.113549.1.1.1 = RSA
@@ -7,6 +9,7 @@
 1.3.6.1.4.1.3029.1.2.1 = ElGamal
 1.3.6.1.4.1.25258.1.3 = McEliece
 1.3.6.1.4.1.25258.1.4 = Curve25519
+1.3.6.1.4.1.25258.1.5 = XMSS
 
 # X9.62 ecPublicKey, valid for ECDSA and ECDH (RFC 3279 sec 2.3.5)
 1.2.840.10045.2.1 = ECDSA
