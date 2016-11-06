@@ -20,6 +20,10 @@
   #include <botan/dl_group.h>
 #endif
 
+#if defined(BOTAN_HAS_ECC_GROUP)
+  #include <botan/ec_group.h>
+#endif
+
 namespace Botan_CLI {
 
 class PK_Keygen final : public Command
@@ -143,6 +147,37 @@ class PK_Verify final : public Command
    };
 
 BOTAN_REGISTER_COMMAND("verify", PK_Verify);
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+
+class EC_Group_Info final : public Command
+   {
+   public:
+      EC_Group_Info() : Command("ec_group_info --pem name") {}
+
+      void go() override
+         {
+         Botan::EC_Group group(get_arg("name"));
+
+         if(flag_set("pem"))
+            {
+            output() << group.PEM_encode();
+            }
+         else
+            {
+            output() << "P = " << std::hex << group.get_curve().get_p() << "\n"
+                     << "A = " << std::hex << group.get_curve().get_a() << "\n"
+                     << "B = " << std::hex << group.get_curve().get_b() << "\n"
+                     << "G = " << group.get_base_point().get_affine_x() << ","
+                     << group.get_base_point().get_affine_y() << "\n";
+            }
+
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("ec_group_info", EC_Group_Info);
+
+#endif
 
 #if defined(BOTAN_HAS_DL_GROUP)
 
