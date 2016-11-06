@@ -11,6 +11,7 @@
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
 
 #include <botan/internal/semaphore.h>
+#include <botan/internal/barrier.h>
 
 namespace Botan {
 
@@ -23,14 +24,14 @@ struct Threaded_Fork_Data
    Semaphore m_input_ready_semaphore;
 
    /*
-   * Ensures that all threads have completed processing data.
+   * Synchronises all threads to complete processing data in lock-step.
    */
-   Semaphore m_input_complete_semaphore;
+   Barrier m_input_complete_barrier;
 
    /*
    * The work that needs to be done. This should be only when the threads
    * are NOT running (i.e. before notifying the work condition, after
-   * the input_complete_semaphore is completely reset.)
+   * the input_complete_barrier has reset.)
    */
    const byte* m_input = nullptr;
 
@@ -121,11 +122,11 @@ void Threaded_Fork::thread_delegate_work(const byte input[], size_t length)
    m_thread_data->m_input_length = length;
 
    //Let the workers start processing.
+   m_thread_data->m_input_complete_barrier.wait(total_ports() + 1);
    m_thread_data->m_input_ready_semaphore.release(total_ports());
 
    //Wait for all the filters to finish processing.
-   for(size_t i = 0; i != total_ports(); ++i)
-      m_thread_data->m_input_complete_semaphore.acquire();
+   m_thread_data->m_input_complete_barrier.sync();
 
    //Reset the thread data
    m_thread_data->m_input = nullptr;
@@ -136,18 +137,13 @@ void Threaded_Fork::thread_entry(Filter* filter)
    {
    while(true)
       {
-      /*
-      * This is plain wrong: a single thread can get the semaphore
-      * more than one time, meaning it will process the input twice
-      * and some other thread/filter will not see this input.
-      */
       m_thread_data->m_input_ready_semaphore.acquire();
 
       if(!m_thread_data->m_input)
          break;
 
       filter->write(m_thread_data->m_input, m_thread_data->m_input_length);
-      m_thread_data->m_input_complete_semaphore.release();
+      m_thread_data->m_input_complete_barrier.sync();
       }
    }
 
