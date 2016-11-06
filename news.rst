@@ -652,7 +652,7 @@ Version 1.11.27, 2016-02-01
 
 * Add Blake2b hash function. GH #413
 
-* Use m_ prefix on all member variables. GH #398 and #407
+* Use ``m_`` prefix on all member variables. GH #398 and #407
 
 * Use final qualifier on many classes. GH #408
 
@@ -833,8 +833,8 @@ Version 1.11.23, 2015-10-26
 * CVE-2015-7826: X.509 path validation violated RFC 6125 and would accept
   certificates which should not validate under those rules. In particular botan
   would accept wildcard certificates as matching in situations where it should
-  not (for example it would erroneously accept '*.example.com' as a valid
-  wildcard for 'foo.bar.example.com')
+  not (for example it would erroneously accept ``*.example.com`` as a valid
+  wildcard for ``foo.bar.example.com``)
 
 * CVE-2015-7827: The routines for decoding PKCS #1 encryption and OAEP blocks
   have been rewritten to run without secret indexes or branches. These
@@ -2046,9 +2046,8 @@ in Python 3.1 has been fixed (Bugzilla 157).
 The exception catching syntax of configure.py has been changed to the
 Python 3.x syntax. This syntax also works with Python 2.6 and 2.7, but
 not with any earlier Python 2 release. A simple search and replace
-will allow running it under Python 2.5::
-
-  perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
+will allow running it under Python 2.5:
+``perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py``
 
 Note that Python 2.4 is not supported at all.
 

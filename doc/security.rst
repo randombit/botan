@@ -1,4 +1,6 @@
 
+.. highlight:: none
+
 Security
 ========================================
 
@@ -167,9 +169,9 @@ Advisories
 
   Otherwise valid certificates using wildcards would be accepted as matching
   certain hostnames that should they should not according to RFC 6125. For
-  example a certificate issued for '*.example.com' should match
-  'foo.example.com' but not 'example.com' or 'bar.foo.example.com'. Previously
-  Botan would accept such a certificate as valid for 'bar.foo.example.com'.
+  example a certificate issued for ``*.example.com`` should match
+  ``foo.example.com`` but not ``example.com`` or ``bar.foo.example.com``. Previously
+  Botan would accept such a certificate as also valid for ``bar.foo.example.com``.
 
   RFC 6125 also requires that when matching a X.509 certificate against a DNS
   name, the CN entry is only compared if no subjectAlternativeName entry is
