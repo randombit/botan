@@ -15,8 +15,6 @@ namespace OIDS {
 std::string lookup(const OID& oid)
    {
    const std::string oid_str = oid.as_string();
-   if(oid_str == "0.0.0.0.0.0.0") return "XMSS"; // FIXME: Preliminary OID
-   // update once XMSS OIDs are available.
    if(oid_str == "1.0.14888.3.0.5") return "ECKCDSA";
    if(oid_str == "1.2.250.1.223.101.256.1") return "frp256v1";
    if(oid_str == "1.2.410.200004.1.100.4.3") return "ECKCDSA/EMSA1(SHA-1)";
@@ -184,8 +182,6 @@ std::string lookup(const OID& oid)
 
 OID lookup(const std::string& name)
    {
-   if(name == "XMSS") return OID("0.0.0.0.0.0.0"); // FIXME: Preliminary OID
-   // update once XMSS OIDs are available.
    if(name == "AES-128/CBC") return OID("2.16.840.1.101.3.4.1.2");
    if(name == "AES-128/GCM") return OID("2.16.840.1.101.3.4.1.6");
    if(name == "AES-128/OCB") return OID("1.3.6.1.4.1.25258.3.2.1");

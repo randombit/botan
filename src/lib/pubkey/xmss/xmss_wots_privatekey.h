@@ -234,10 +234,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
       virtual std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator&,
                              const std::string&,
-                             const std::string&) const override
-         {
-         BOTAN_ASSERT(false, "XMSS_WOTS_Signature_Operation not available.");
-         }
+                             const std::string& provider) const override;
 
       virtual secure_vector<byte> pkcs8_private_key() const override
          {
