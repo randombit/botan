@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 #include <botan/alg_id.h>
+#include <botan/asn1_attribute.h>
 #include <botan/asn1_alt_name.h>
 #include <botan/asn1_oid.h>
 #include <botan/filters.h>

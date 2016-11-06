@@ -9,8 +9,8 @@ if ( $^O eq 'MSWin32' )
 else
 {
     $cc = 'g++';
-    $cflags = $Config::Config{ccflags} . ' -Wno-write-strings -fexceptions ' . qx( botan config --cflags );
-    $libs = qx( botan config --libs );
+    $cflags = $Config::Config{ccflags} . ' -Wno-write-strings -fexceptions ' . qx( botan config cflags );
+    $libs = qx( botan config libs );
 }
 
 WriteMakefile(
