@@ -29,7 +29,6 @@ Ciphers, Hashes, PBKDF
 Public Key Crypto, Math
 ----------------------------------------
 
-* XMSS (draft-irtf-cfrg-xmss-hash-based-signatures)
 * SPHINCS-256
 * EdDSA (GH #283)
 * Ed448-Goldilocks
@@ -106,7 +105,7 @@ Compat Headers
   since the OpenSSL API handles both crypto and IO. Use Asio, since it
   is expected to be the base of future C++ standard network library.
 
-FFI (Python, OCaml)
+FFI and Bindings
 ----------------------------------------
 
 * Expose certificates
@@ -126,6 +125,17 @@ Build/Test
 * Code signing for Windows installers
 * Test runner python script that captures backtraces and other
   debug info during CI
+
+FIPS 140 Build
+---------------------------------------
+
+* Special build policy that disables all builtin crypto impls, then provides new
+  FIPS 140 versions implemented using just calls to the OpenSSL FIPS module API
+  plus wrapping the appropriate functions for self-tests and so on. This creates a
+  library in FIPS 140 validated form (since there is no 'crypto' anymore from
+  Botan, just the ASN.1 parser, TLS library, PKI etc all of which FIPS 140 does
+  not care about) without the enourmous hassle and expense of actually having to
+  maintain a FIPS validation on Botan.
 
 CLI
 ----------------------------------------
