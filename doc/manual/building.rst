@@ -300,13 +300,8 @@ by the user using
  - ``--with-sqlite3`` enables storing TLS session information to an
    encrypted SQLite database.
 
- - ``--with-gnump`` adds an alternative engine for public key
-   cryptography that uses the GNU MP library. GNU MP 4.1 or later is
-   required.
-
  - ``--with-openssl`` adds an engine that uses OpenSSL for some public
-   key operations and ciphers/hashes. OpenSSL 0.9.7 or later is
-   required.
+   key operations and ciphers/hashes. OpenSSL 1.0.1 or later is supported.
 
 Multiple Builds
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
