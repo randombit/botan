@@ -42,6 +42,15 @@ class BOTAN_DLL CPUID
          return g_cache_line_size;
          }
 
+      static bool is_little_endian()
+         {
+         if(!g_initialized)
+            {
+            initialize();
+            }
+         return g_little_endian;
+         }
+
       enum CPUID_bits {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
          // This matches the layout of cpuid(1)
@@ -184,6 +193,7 @@ class BOTAN_DLL CPUID
 
    private:
       static bool g_initialized;
+      static bool g_little_endian;
       static size_t g_cache_line_size;
       static u64bit g_processor_flags[2];
    };
