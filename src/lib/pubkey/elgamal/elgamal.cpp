@@ -69,7 +69,6 @@ namespace {
 class ElGamal_Encryption_Operation : public PK_Ops::Encryption_with_EME
    {
    public:
-      typedef ElGamal_PublicKey Key_Type;
 
       size_t max_raw_input_bits() const override { return m_mod_p.get_modulus().bits() - 1; }
 
@@ -122,7 +121,6 @@ ElGamal_Encryption_Operation::raw_encrypt(const byte msg[], size_t msg_len,
 class ElGamal_Decryption_Operation : public PK_Ops::Decryption_with_EME
    {
    public:
-      typedef ElGamal_PrivateKey Key_Type;
 
       size_t max_raw_input_bits() const override
          { return m_mod_p.get_modulus().bits() - 1; }

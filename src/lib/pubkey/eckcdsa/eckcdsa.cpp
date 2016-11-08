@@ -38,7 +38,6 @@ namespace {
 class ECKCDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
    {
    public:
-      typedef ECKCDSA_PrivateKey Key_Type;
 
       ECKCDSA_Signature_Operation(const ECKCDSA_PrivateKey& eckcdsa,
                                 const std::string& emsa) :
@@ -112,7 +111,6 @@ ECKCDSA_Signature_Operation::raw_sign(const byte msg[], size_t,
 class ECKCDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
    {
    public:
-      typedef ECKCDSA_PublicKey Key_Type;
 
       ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa,
                                    const std::string& emsa) :

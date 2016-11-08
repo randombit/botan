@@ -114,7 +114,6 @@ namespace {
 class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
    {
    public:
-      typedef PKCS11_RSA_PrivateKey Key_Type;
 
       PKCS11_RSA_Decryption_Operation(const PKCS11_RSA_PrivateKey& key,
                                       const std::string& padding,
@@ -173,7 +172,6 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
 class PKCS11_RSA_Encryption_Operation : public PK_Ops::Encryption
    {
    public:
-      typedef PKCS11_RSA_PublicKey Key_Type;
 
       PKCS11_RSA_Encryption_Operation(const PKCS11_RSA_PublicKey& key, const std::string& padding)
          : m_key(key), m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding))
@@ -205,7 +203,6 @@ class PKCS11_RSA_Encryption_Operation : public PK_Ops::Encryption
 class PKCS11_RSA_Signature_Operation : public PK_Ops::Signature
    {
    public:
-      typedef PKCS11_RSA_PrivateKey Key_Type;
 
       PKCS11_RSA_Signature_Operation(const PKCS11_RSA_PrivateKey& key, const std::string& padding)
          : m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(padding))
@@ -266,7 +263,6 @@ class PKCS11_RSA_Signature_Operation : public PK_Ops::Signature
 class PKCS11_RSA_Verification_Operation : public PK_Ops::Verification
    {
    public:
-      typedef PKCS11_RSA_PublicKey Key_Type;
 
       PKCS11_RSA_Verification_Operation(const PKCS11_RSA_PublicKey& key, const std::string& padding)
          : m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(padding))

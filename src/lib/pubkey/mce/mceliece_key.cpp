@@ -299,7 +299,6 @@ namespace {
 class MCE_KEM_Encryptor : public PK_Ops::KEM_Encryption_with_KDF
    {
    public:
-      typedef McEliece_PublicKey Key_Type;
 
       MCE_KEM_Encryptor(const McEliece_PublicKey& key,
                         const std::string& kdf) :
@@ -328,7 +327,6 @@ class MCE_KEM_Encryptor : public PK_Ops::KEM_Encryption_with_KDF
 class MCE_KEM_Decryptor : public PK_Ops::KEM_Decryption_with_KDF
    {
    public:
-      typedef McEliece_PrivateKey Key_Type;
 
       MCE_KEM_Decryptor(const McEliece_PrivateKey& key,
                         const std::string& kdf) :

@@ -40,7 +40,6 @@ std::pair<int, size_t> get_openssl_enc_pad(const std::string& eme)
 class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
    {
    public:
-      typedef RSA_PublicKey Key_Type;
 
       OpenSSL_RSA_Encryption_Operation(const RSA_PublicKey& rsa, int pad, size_t pad_overhead) :
          m_openssl_rsa(nullptr, ::RSA_free), m_padding(pad)
@@ -96,7 +95,6 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
 class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
    {
    public:
-      typedef RSA_PrivateKey Key_Type;
 
       OpenSSL_RSA_Decryption_Operation(const RSA_PrivateKey& rsa, int pad) :
          m_openssl_rsa(nullptr, ::RSA_free), m_padding(pad)
@@ -142,7 +140,6 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
 class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
    {
    public:
-      typedef RSA_PublicKey Key_Type;
 
       OpenSSL_RSA_Verification_Operation(const RSA_PublicKey& rsa, const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
@@ -183,7 +180,6 @@ class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
 class OpenSSL_RSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
    {
    public:
-      typedef RSA_PrivateKey Key_Type;
 
       OpenSSL_RSA_Signing_Operation(const RSA_PrivateKey& rsa, const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),

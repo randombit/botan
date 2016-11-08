@@ -26,7 +26,6 @@ namespace {
 class ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
-      typedef ECDH_PrivateKey Key_Type;
 
       ECDH_KA_Operation(const ECDH_PrivateKey& key, const std::string& kdf) :
          PK_Ops::Key_Agreement_with_KDF(kdf),

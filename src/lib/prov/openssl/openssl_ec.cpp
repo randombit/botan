@@ -223,7 +223,6 @@ namespace {
 class OpenSSL_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
-      typedef ECDH_PrivateKey Key_Type;
 
       OpenSSL_ECDH_KA_Operation(const ECDH_PrivateKey& ecdh, const std::string& kdf) :
          PK_Ops::Key_Agreement_with_KDF(kdf), m_ossl_ec(::EC_KEY_new(), ::EC_KEY_free)

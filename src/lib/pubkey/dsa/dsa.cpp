@@ -78,7 +78,6 @@ namespace {
 class DSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
    {
    public:
-      typedef DSA_PrivateKey Key_Type;
       DSA_Signature_Operation(const DSA_PrivateKey& dsa, const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),
          m_q(dsa.group_q()),
@@ -145,7 +144,6 @@ DSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
 class DSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
    {
    public:
-      typedef DSA_PublicKey Key_Type;
       DSA_Verification_Operation(const DSA_PublicKey& dsa,
                                  const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
