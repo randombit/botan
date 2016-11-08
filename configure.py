@@ -155,6 +155,9 @@ class BuildConfigurationInformation(object):
         self.cli_headers = list(find_headers_in(self.src_dir, 'cli'))
         self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
 
+        if options.with_bakefile:
+            gen_bakefile( self.sources, self.cli_sources, self.cli_headers, self.test_sources, self.external_headers, options )
+
         self.python_dir = os.path.join(options.src_dir, 'python')
 
         def build_doc_commands():
@@ -1218,6 +1221,7 @@ def gen_bakefile(lib_sources, cli_sources, cli_headers, test_sources, external_h
 
     if options.with_external_includedir:
         external_inc_dir = options.with_external_includedir.replace('\\','/')
+        # Attention: bakefile supports only relative paths
         f.write('includedirs += "%s";\n' %external_inc_dir )
 
     if external_headers:
