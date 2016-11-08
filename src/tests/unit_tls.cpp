@@ -917,6 +917,8 @@ class TLS_Unit_Tests : public Test
    public:
       std::vector<Test::Result> run() override
          {
+         std::vector<Test::Result> results;
+#if defined(BOTAN_HAS_SECP256R1)
          Botan::RandomNumberGenerator& rng = Test::rng();
 
          std::unique_ptr<Botan::TLS::Session_Manager> client_ses;
@@ -935,7 +937,6 @@ class TLS_Unit_Tests : public Test
 #endif
 
          std::unique_ptr<Botan::Credentials_Manager> creds(create_creds(rng));
-         std::vector<Test::Result> results;
 
 #if defined(BOTAN_HAS_TLS_CBC)
          for(std::string etm_setting : { "false", "true" })
@@ -1016,7 +1017,7 @@ class TLS_Unit_Tests : public Test
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDHE_PSK", "AES-128", "SHA-256");
          test_modern_versions(results, *client_ses, *server_ses, *creds, "DHE_PSK", "AES-128", "SHA-1");
 #endif
-
+#endif
          return results;
          }
 

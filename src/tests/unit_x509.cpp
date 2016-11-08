@@ -116,21 +116,21 @@ std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo)
       return std::unique_ptr<Botan::Private_Key>(new Botan::DSA_PrivateKey(Test::rng(), grp));
       }
 #endif
-#if defined(BOTAN_HAS_ECDSA)
+#if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SECP256R1)
    if(algo == "ECDSA")
       {
       Botan::EC_Group grp("secp256r1");
       return std::unique_ptr<Botan::Private_Key>(new Botan::ECDSA_PrivateKey(Test::rng(), grp));
       }
 #endif
-#if defined(BOTAN_HAS_ECGDSA)
+#if defined(BOTAN_HAS_ECGDSA) && defined(BOTAN_HAS_BRAINPOOL256R1)
    if(algo == "ECGDSA")
       {
       Botan::EC_Group grp("brainpool256r1");
       return std::unique_ptr<Botan::Private_Key>(new Botan::ECGDSA_PrivateKey(Test::rng(), grp));
       }
 #endif
-#if defined(BOTAN_HAS_ECKCDSA)
+#if defined(BOTAN_HAS_ECKCDSA) && defined(BOTAN_HAS_BRAINPOOL256R1)
    if(algo == "ECKCDSA")
       {
       Botan::EC_Group grp("brainpool256r1");
