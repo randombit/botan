@@ -64,7 +64,7 @@ class BOTAN_DLL Verification
       virtual void update(const byte msg[], size_t msg_len) = 0;
 
       /*
-      * Perform a signature operation
+      * Perform a verification operation
       * @param rng a random number generator
       */
       virtual bool is_valid_signature(const byte sig[], size_t sig_len) = 0;
