@@ -55,3 +55,9 @@ coverage/
 # Profiler outputs
 cachegrind.*
 callgrind.*
+
+src/contrib/perl-xs/Botan.bs
+src/contrib/perl-xs/Botan.c
+src/contrib/perl-xs/Botan.o
+src/contrib/perl-xs/MYMETA*
+src/contrib/perl-xs/*blib

@@ -52,6 +52,31 @@ Version 1.11.34, Not Yet Released
 * Fixed some problems when running configure.py outside of the base directory,
   especially when using relative paths.
 
+* Previously both public and private keys performed automatic self testing after
+  generation or loading. However this often caused unexpected application
+  performance problems, and so has been removed. Instead applications must call
+  check_key explicitly. (GH #704)
+
+* Added new configure.py argument `--optimize-for-size`. Currently just sets
+  the flag for code size optimizations with the compiler, but may have other
+  effects in the future.
+
+* Allow a custom ECC curve to be specified at build time, for application or
+  system specific curves. You probably don't need this. (GH #636 #710)
+
+* Add DSA deterministic parameter generation test from FIPS 186-3.
+
+* Fix PKCS11_ECDSA_PrivateKey::check_key (GH #712)
+
+* The ability to add OIDs at runtime has been removed. Now the OID
+  lookups are generated from a plain text file (src/build-data/oids.txt)
+  by a script. This additionally removes a global lock which was acquired
+  on each OID lookup. (GH #706)
+
+* Remove some unused values from build.h (GH #708)
+
+* The BOTAN_ENTROPY_PROC_FS_PATH value in build.h was being ignored (GH #708)
+
 * Add speed tests for ECGDSA and ECKCDSA (GH #696)
 
 * Fix a crash in speed command for Salsa20 (GH #697)
@@ -66,6 +91,11 @@ Version 1.11.34, Not Yet Released
   is now officially deprecated. It does nothing, has done nothing, and
   will continue not doing anything, until it is eventually removed in
   a future release. At which point it may indeed cease doing nothing.
+
+* In 1.11.21 the Perl XS wrapper and sqlite encryption codec were
+  removed to standalone repos. But, it is easier to maintain all
+  related code inside a single repo so they have returned under
+  src/contrib.
 
 Version 1.11.33, 2016-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -622,7 +652,7 @@ Version 1.11.27, 2016-02-01
 
 * Add Blake2b hash function. GH #413
 
-* Use m_ prefix on all member variables. GH #398 and #407
+* Use ``m_`` prefix on all member variables. GH #398 and #407
 
 * Use final qualifier on many classes. GH #408
 
@@ -803,8 +833,8 @@ Version 1.11.23, 2015-10-26
 * CVE-2015-7826: X.509 path validation violated RFC 6125 and would accept
   certificates which should not validate under those rules. In particular botan
   would accept wildcard certificates as matching in situations where it should
-  not (for example it would erroneously accept '*.example.com' as a valid
-  wildcard for 'foo.bar.example.com')
+  not (for example it would erroneously accept ``*.example.com`` as a valid
+  wildcard for ``foo.bar.example.com``)
 
 * CVE-2015-7827: The routines for decoding PKCS #1 encryption and OAEP blocks
   have been rewritten to run without secret indexes or branches. These
@@ -2016,9 +2046,8 @@ in Python 3.1 has been fixed (Bugzilla 157).
 The exception catching syntax of configure.py has been changed to the
 Python 3.x syntax. This syntax also works with Python 2.6 and 2.7, but
 not with any earlier Python 2 release. A simple search and replace
-will allow running it under Python 2.5::
-
-  perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py
+will allow running it under Python 2.5:
+``perl -pi -e 's/except (.*) as (.*):/except $1, $2:/g' configure.py``
 
 Note that Python 2.4 is not supported at all.
 

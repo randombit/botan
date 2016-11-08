@@ -35,7 +35,7 @@ class Filter_Tests : public Test
          results.push_back(test_pipe_codec());
          results.push_back(test_fork());
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS) && 0
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
          // Threaded_Fork is broken
          results.push_back(test_threaded_fork());
 #endif
@@ -308,6 +308,31 @@ class Filter_Tests : public Test
          // Test reading out of order
          result.test_eq("Hash 2", pipe.read_all_as_string(1), "d29v");
          result.test_eq("Hash 1", pipe.read_all_as_string(0), "776F6F");
+
+         pipe.reset();
+
+         const size_t filter_count = 5;
+         Botan::Filter* filters[filter_count];
+         for(size_t i = 0; i != filter_count; ++i)
+            filters[i] = new Botan::Hash_Filter("SHA-256");
+
+         pipe.append(new Botan::Threaded_Fork(filters, filter_count));
+
+         result.test_eq("Message count before start_msg", pipe.message_count(), 2);
+
+         pipe.start_msg();
+         for(size_t i = 0; i != 919; ++i)
+            {
+            std::vector<uint8_t> input(i + 5, static_cast<uint8_t>(i));
+            pipe.write(input);
+            }
+         pipe.end_msg();
+
+         result.test_eq("Message count after end_msg", pipe.message_count(), 2+filter_count);
+         for(size_t i = 0; i != filter_count; ++i)
+            result.test_eq("Output " + std::to_string(i),
+                           pipe.read_all(2+i),
+                           "327AD8055223F5926693D8BEA40F7B35BDEEB535647DFB93F464E40EA01939A9");
 
          return result;
          }

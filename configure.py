@@ -155,6 +155,9 @@ class BuildConfigurationInformation(object):
         self.cli_headers = list(find_headers_in(self.src_dir, 'cli'))
         self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
 
+        if options.with_bakefile:
+            gen_bakefile( self.sources, self.cli_sources, self.cli_headers, self.test_sources, self.external_headers, options )
+
         self.python_dir = os.path.join(options.src_dir, 'python')
 
         def build_doc_commands():
@@ -435,10 +438,16 @@ def process_command_line(args):
     install_group.add_option('--includedir', metavar='DIR',
                              help='set the include file install dir')
 
+    misc_group = optparse.OptionGroup(parser, 'Miscellaneous options')
+
+    misc_group.add_option('--house-curve', metavar='STRING', dest='house_curve',
+                          help='a custom in-house curve of the format: curve.pem,NAME,OID,CURVEID')
+
     parser.add_option_group(target_group)
     parser.add_option_group(build_group)
     parser.add_option_group(mods_group)
     parser.add_option_group(install_group)
+    parser.add_option_group(misc_group)
 
     # These exist only for autoconf compatibility (requested by zw for mtn)
     compat_with_autoconf_options = [
@@ -1133,6 +1142,7 @@ def guess_processor(archinfo):
 Read a whole file into memory as a string
 """
 def slurp_file(filename):
+    # type: (object) -> object
     if filename is None:
         return ''
     return ''.join(open(filename).readlines())
@@ -1211,6 +1221,7 @@ def gen_bakefile(lib_sources, cli_sources, cli_headers, test_sources, external_h
 
     if options.with_external_includedir:
         external_inc_dir = options.with_external_includedir.replace('\\','/')
+        # Attention: bakefile supports only relative paths
         f.write('includedirs += "%s";\n' %external_inc_dir )
 
     if external_headers:
@@ -1385,6 +1396,29 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                 logging.warn('Unknown arch in innosetup_arch %s' % (arch))
         return None
 
+    def read_pem(filename):
+        lines = [line.rstrip() for line in open(filename)]
+        for ndx, line in enumerate(lines):
+            lines[ndx] = ''.join(('\"', lines[ndx], '\" \\', '\n'))
+        return ''.join(lines)
+
+    def misc_config():
+        opts = list()
+        if options.house_curve:
+            p = options.house_curve.split(",")
+            if len(p) < 4:
+                logging.error('Too few parameters to --in-house-curve')
+            # make sure TLS curve id is in reserved for private use range (0xFE00..0xFEFF)
+            curve_id = int(p[3], 16)
+            if curve_id < 0xfe00 or curve_id > 0xfeff:
+                logging.error('TLS curve ID not in reserved range (see RFC 4492)')
+            opts.append('HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"')
+            opts.append('HOUSE_ECC_CURVE_OID \"' + p[2] + '\"')
+            opts.append('HOUSE_ECC_CURVE_PEM ' + read_pem(filename=p[0]))
+            opts.append('HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id))
+
+        return opts
+
     vars = {
         'version_major':  build_config.version_major,
         'version_minor':  build_config.version_minor,
@@ -1504,7 +1538,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
         'python_version': options.python_version,
-        'with_sphinx': options.with_sphinx
+        'with_sphinx': options.with_sphinx,
+
+        'misc_config': make_cpp_macros(misc_config())
         }
 
     if options.os == 'darwin' and options.build_shared_lib:
@@ -1634,6 +1670,14 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
             else:
                 logging.error('Unknown load_on %s in %s' % (
                     module.load_on, modname))
+
+    if 'compression' in to_load:
+        # Confirm that we have at least one compression library enabled
+        # Otherwise we leave a lot of useless support code compiled in, plus a
+        # make_compressor call that always fails
+        if 'zlib' not in to_load and 'bzip2' not in to_load and 'lzma' not in to_load:
+            to_load.remove('compression')
+            cannot_use_because('compression', 'no enabled compression schemes')
 
     dependency_failure = True
 

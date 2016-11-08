@@ -94,12 +94,22 @@ std::string lookup(const OID& oid)
    {
    const std::string oid_str = oid.as_string();
 %s
+
+#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
+   if(oid_str == BOTAN_HOUSE_ECC_CURVE_OID) return BOTAN_HOUSE_ECC_CURVE_NAME;
+#endif
+
    return std::string();
    }
 
 OID lookup(const std::string& name)
    {
 %s
+
+#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
+   if(name == BOTAN_HOUSE_ECC_CURVE_NAME) return OID(BOTAN_HOUSE_ECC_CURVE_OID);
+#endif
+
    return OID();
    }
 

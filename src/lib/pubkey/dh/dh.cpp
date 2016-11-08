@@ -82,7 +82,6 @@ namespace {
 class DH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
-      typedef DH_PrivateKey Key_Type;
 
       DH_KA_Operation(const DH_PrivateKey& key, const std::string& kdf, RandomNumberGenerator& rng) :
          PK_Ops::Key_Agreement_with_KDF(kdf),

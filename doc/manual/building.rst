@@ -300,13 +300,8 @@ by the user using
  - ``--with-sqlite3`` enables storing TLS session information to an
    encrypted SQLite database.
 
- - ``--with-gnump`` adds an alternative engine for public key
-   cryptography that uses the GNU MP library. GNU MP 4.1 or later is
-   required.
-
  - ``--with-openssl`` adds an engine that uses OpenSSL for some public
-   key operations and ciphers/hashes. OpenSSL 0.9.7 or later is
-   required.
+   key operations and ciphers/hashes. OpenSSL 1.0.1 or later is supported.
 
 Multiple Builds
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -415,3 +410,41 @@ build step is required, just import botan.py
 
 See :doc:`Python Bindings <python>` for more information about the
 Python bindings.
+
+Building the Perl XS wrappers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To build the Perl XS wrappers, after building the main library change
+your directory to ``src/contrib/perl-xs`` and run ``perl Makefile.PL``,
+then run ``make`` to build the module and ``make test`` to run the
+test suite::
+
+  $ perl Makefile.PL
+  Checking if your kit is complete...
+  Looks good
+  Writing Makefile for Botan
+  $ make
+  cp Botan.pm blib/lib/Botan.pm
+  AutoSplitting blib/lib/Botan.pm (blib/lib/auto/Botan)
+  /usr/bin/perl5.8.8 /usr/lib64/perl5/5.8.8/ExtUtils/xsubpp  [...]
+  g++ -c   -Wno-write-strings -fexceptions  -g   [...]
+  Running Mkbootstrap for Botan ()
+  chmod 644 Botan.bs
+  rm -f blib/arch/auto/Botan/Botan.so
+  g++  -shared Botan.o  -o blib/arch/auto/Botan/Botan.so  \
+             -lbotan -lbz2 -lpthread -lrt -lz     \
+
+  chmod 755 blib/arch/auto/Botan/Botan.so
+  cp Botan.bs blib/arch/auto/Botan/Botan.bs
+  chmod 644 blib/arch/auto/Botan/Botan.bs
+  Manifying blib/man3/Botan.3pm
+  $ make test
+  PERL_DL_NONLAZY=1 /usr/bin/perl5.8.8 [...]
+  t/base64......ok
+  t/filt........ok
+  t/hex.........ok
+  t/oid.........ok
+  t/pipe........ok
+  t/x509cert....ok
+  All tests successful.
+  Files=6, Tests=83,  0 wallclock secs ( 0.08 cusr +  0.02 csys =  0.10 CPU)

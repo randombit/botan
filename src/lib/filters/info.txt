@@ -35,6 +35,5 @@ out_buf.h
 </header:internal>
 
 <requires>
-compression
 modes
 </requires>

@@ -20,35 +20,12 @@ class EMSA;
 
 namespace PK_Ops {
 
-template<typename Key>
-class PK_Spec
-   {
-   public:
-      PK_Spec(const Key& key, const std::string& pad) :
-         m_key(key), m_pad(pad) {}
-
-      std::string algo_name() const { return m_key.algo_name(); }
-
-      std::string as_string() const { return algo_name() + "/" + padding(); }
-
-      const Key& key() const { return m_key; }
-      const std::string& padding() const { return m_pad; }
-   private:
-      const Key& m_key;
-      const std::string m_pad;
-   };
-
-typedef PK_Spec<Public_Key> PK_Spec_Public_Key;
-typedef PK_Spec<Private_Key> PK_Spec_Private_Key;
-
 /**
 * Public key encryption interface
 */
 class BOTAN_DLL Encryption
    {
    public:
-      typedef PK_Spec_Public_Key Spec;
-
       virtual size_t max_input_bits() const = 0;
 
       virtual secure_vector<byte> encrypt(const byte msg[],
@@ -64,8 +41,6 @@ class BOTAN_DLL Encryption
 class BOTAN_DLL Decryption
    {
    public:
-      typedef PK_Spec_Private_Key Spec;
-
       virtual size_t max_input_bits() const = 0;
 
       virtual secure_vector<byte> decrypt(byte& valid_mask,
@@ -81,8 +56,6 @@ class BOTAN_DLL Decryption
 class BOTAN_DLL Verification
    {
    public:
-      typedef PK_Spec_Public_Key Spec;
-
       /*
       * Add more data to the message currently being signed
       * @param msg the message
@@ -91,7 +64,7 @@ class BOTAN_DLL Verification
       virtual void update(const byte msg[], size_t msg_len) = 0;
 
       /*
-      * Perform a signature operation
+      * Perform a verification operation
       * @param rng a random number generator
       */
       virtual bool is_valid_signature(const byte sig[], size_t sig_len) = 0;
@@ -123,8 +96,6 @@ class BOTAN_DLL Verification
 class BOTAN_DLL Signature
    {
    public:
-      typedef PK_Spec_Private_Key Spec;
-
       /**
       * Find out the number of message parts supported by this scheme.
       * @return number of message parts
@@ -159,8 +130,6 @@ class BOTAN_DLL Signature
 class BOTAN_DLL Key_Agreement
    {
    public:
-      typedef PK_Spec_Private_Key Spec;
-
       virtual secure_vector<byte> agree(size_t key_len,
                                         const byte other_key[], size_t other_key_len,
                                         const byte salt[], size_t salt_len) = 0;
@@ -174,8 +143,6 @@ class BOTAN_DLL Key_Agreement
 class BOTAN_DLL KEM_Encryption
    {
    public:
-      typedef PK_Spec_Public_Key Spec;
-
       virtual void kem_encrypt(secure_vector<byte>& out_encapsulated_key,
                                secure_vector<byte>& out_shared_key,
                                size_t desired_shared_key_len,
@@ -189,8 +156,6 @@ class BOTAN_DLL KEM_Encryption
 class BOTAN_DLL KEM_Decryption
    {
    public:
-      typedef PK_Spec_Private_Key Spec;
-
       virtual secure_vector<byte> kem_decrypt(const byte encap_key[],
                                               size_t len,
                                               size_t desired_shared_key_len,

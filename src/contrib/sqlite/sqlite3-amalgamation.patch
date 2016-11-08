@@ -1,0 +1,15 @@
+--- ./sqlite3.c.orig	2011-05-12 10:03:32.051879390 +0800
++++ ./sqlite3.c	2011-05-12 10:09:04.028550281 +0800
+@@ -17,6 +17,7 @@
+ ** language. The code for the "sqlite3" command-line shell is also in a
+ ** separate file. This file contains only code for the core SQLite library.
+ */
++#define SQLITE_HAS_CODEC 1
+ #define SQLITE_CORE 1
+ #define SQLITE_AMALGAMATION 1
+ #ifndef SQLITE_PRIVATE
+@@ -125956,3 +125957,4 @@
+ #endif /* !defined(SQLITE_CORE) || defined(SQLITE_ENABLE_FTS3) */
+ 
+ /************** End of fts3_icu.c ********************************************/
++#include "codecext.c"

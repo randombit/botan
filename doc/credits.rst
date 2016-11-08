@@ -27,7 +27,7 @@ snail-mail address (S), and Bitcoin address (B).
   D: GF(p) arithmetic
 
   N: Olivier de Gaalon
-  D: SQLite encryption codec (src/wrap/sqlite)
+  D: SQLite encryption codec (src/contrib/sqlite)
 
   N: Matthew Gregan
   D: Binary file I/O support, allocator fixes
@@ -96,7 +96,7 @@ snail-mail address (S), and Bitcoin address (B).
 
   N: Vaclav Ovsik
   E: vaclav.ovsik@i.cz
-  D: Perl XS module (src/wrap/perl-xs)
+  D: Perl XS module (src/contrib/perl-xs)
 
   N: Luca Piccarreta
   E: luca.piccarreta@gmail.com

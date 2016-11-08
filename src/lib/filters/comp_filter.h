@@ -12,6 +12,8 @@
 
 namespace Botan {
 
+#if defined(BOTAN_HAS_COMPRESSION)
+
 class Compression_Algorithm;
 class Decompression_Algorithm;
 
@@ -57,6 +59,8 @@ class BOTAN_DLL Decompression_Filter : public Filter
       std::size_t m_buffersize;
       secure_vector<byte> m_buffer;
    };
+
+#endif
 
 }
 

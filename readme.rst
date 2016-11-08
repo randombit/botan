@@ -5,17 +5,21 @@ Botan (Japanese for peony) is a cryptography library written in C++11
 and released under the permissive `Simplified BSD
 <http://botan.randombit.net/license.txt>`_ license.
 
-It contains TLS client and server implementation, X.509 certificates,
-ECDSA, AES, GCM, ChaCha20Poly1305, McEliece, bcrypt and other useful
-tools.
-
-As part of the build there is also a `botan` program built for command
-line usage (similar to `openssl`). The sources for these are intended to
-act as good examples of library usage.
+Botan's goal is to be the best option for cryptography in new C++ code by
+offering the tools necessary to implement a range of practical systems, such as
+TLS/DTLS, PKIX certificate handling, PKCS#11 and TPM hardware support, password
+hashing, and post quantum crypto schemes. Find the full feature list below.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
-and contributions are welcome. Read `doc/contributing.rst` for more
-about how to contribute.
+and contributions are welcome (read `doc/contributing.rst` for more info).
+
+If you need help, open a GitHub issue, email the `mailing list
+<http://lists.randombit.net/mailman/listinfo/botan-devel/>`_, or try
+the botan `gitter.im <https://gitter.im/libbotan/Chat>`_ channel.
+
+If you think you've found a security bug, read the `security page
+<http://botan.randombit.net/security.html>`_ for contact information
+and procedures.
 
 .. highlight:: none
 
@@ -35,29 +39,8 @@ For all the details on building the library, read the
 The library can also be built into a single-file amalgamation for easy
 inclusion into external build systems.
 
-If you need help or have questions, open a ticket on
-`GitHub Issues <https://github.com/randombit/botan/issues>`_ or
-send a mail to the
-`mailing list <http://lists.randombit.net/mailman/listinfo/botan-devel/>`_.
-
-You can also try the chat room for botan on `gitter.im
-<https://gitter.im/libbotan/Chat>`_ where some of the developers hang
-out.
-
-If you think you've found a security bug, read the `security page
-<http://botan.randombit.net/security.html>`_ for contact information
-and procedures.
-
 In addition to C++, botan has a C89 API specifically designed to be easy
-to call from other languages. A Python binding using ctypes is included,
-there are also partial bindings for
-`Node.js <https://github.com/justinfreitag/node-botan>`_ and
-`OCaml <https://github.com/randombit/botan-ocaml>`_ among others.
-
-There is no support for the SSH protocol in Botan but there is a
-separately developed C++11 SSH library by `cdesjardins
-<https://github.com/cdesjardins/cppssh>`_ which uses Botan for crypto
-operations.
+to call from other languages. A Python binding using ctypes is included.
 
 Continuous integration status
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -92,11 +75,6 @@ Static analyzer status
     :target: https://sonarqube.com/dashboard/index/botan
     :alt: Sonarqube analysis
 
-Code coverage map
----------------------
-
-.. image:: https://codecov.io/gh/randombit/botan/graphs/tree.svg
-
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -117,11 +95,14 @@ source release is recommended.
 Current Development Work (1.11)
 ----------------------------------------
 
-The 1.11 branch is highly recommended, especially for new projects.
-Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and
-later, Clang 3.5 and later, and MSVC 2013/2015 are regularly tested.
+The 1.11 branch is highly recommended, especially for new projects. While still
+technically API unstable, the 1.11 branch is very close to an API freeze for
+a new stable release branch.
 
-The latest development release is
+Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and later,
+Clang 3.5 and later, and MSVC 2015 are regularly tested.
+
+The latest 1.11 release is
 `1.11.33 <http://botan.randombit.net/releases/Botan-1.11.33.tgz>`_
 `(sig) <http://botan.randombit.net/releases/Botan-1.11.33.tgz.asc>`_
 released on 2016-10-26
@@ -129,9 +110,10 @@ released on 2016-10-26
 Old Stable Series (1.10)
 ----------------------------------------
 
-The 1.10 branch is the last version of the library written in C++98
-and is the most commonly packaged version. It is still supported for
-security patches, but all development efforts are focused on 1.11.
+The 1.10 branch is the last version of the library written in C++98 and is still
+the most commonly packaged version. It is no longer supported except for
+critical security updates (with all support ending on 2018-1-1), and the
+developers do not recommend its use anymore.
 
 The latest 1.10 release is
 `1.10.13 <http://botan.randombit.net/releases/Botan-1.10.13.tgz>`_
@@ -247,3 +229,8 @@ Recommended Algorithms
 
 * Key Agreement: ECDH P-256 or Curve25519, with KDF2(SHA-256)
   If you are concerned about quantum computers, combine ECC with NewHope
+
+Code coverage map
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. image:: https://codecov.io/gh/randombit/botan/graphs/tree.svg

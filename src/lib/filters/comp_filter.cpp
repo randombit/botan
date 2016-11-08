@@ -7,10 +7,15 @@
 */
 
 #include <botan/comp_filter.h>
-#include <botan/compression.h>
 #include <botan/exceptn.h>
 
+#if defined(BOTAN_HAS_COMPRESSION)
+  #include <botan/compression.h>
+#endif
+
 namespace Botan {
+
+#if defined(BOTAN_HAS_COMPRESSION)
 
 Compression_Filter::Compression_Filter(const std::string& type, size_t level, size_t bs) :
    m_comp(make_compressor(type)),
@@ -107,5 +112,7 @@ void Decompression_Filter::end_msg()
    m_comp->finish(m_buffer);
    send(m_buffer);
    }
+
+#endif
 
 }

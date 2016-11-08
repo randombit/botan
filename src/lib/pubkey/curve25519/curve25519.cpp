@@ -120,7 +120,6 @@ namespace {
 class Curve25519_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
-      typedef Curve25519_PrivateKey Key_Type;
 
       Curve25519_KA_Operation(const Curve25519_PrivateKey& key, const std::string& kdf) :
          PK_Ops::Key_Agreement_with_KDF(kdf),

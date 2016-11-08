@@ -87,7 +87,6 @@ class BOTAN_DLL RSA_PrivateKey : public Private_Key, public RSA_PublicKey
       * Load a private key.
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits PKCS #8 structure
-      * @param rng a random number generator
       */
       RSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                      const secure_vector<byte>& key_bits);

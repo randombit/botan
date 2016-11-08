@@ -8,6 +8,7 @@
 #include <botan/cpuid.h>
 #include <botan/types.h>
 #include <botan/loadstor.h>
+#include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <ostream>
 
@@ -76,6 +77,7 @@ namespace Botan {
 u64bit CPUID::g_processor_flags[2] = { 0, 0 };
 size_t CPUID::g_cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
 bool CPUID::g_initialized = false;
+bool CPUID::g_little_endian = false;
 
 namespace {
 
@@ -254,6 +256,29 @@ void CPUID::initialize()
    */
    if(g_processor_flags[0] == 0)
       g_processor_flags[0] = (1 << CPUID_SSE2_BIT) | (1 << CPUID_RDTSC_BIT);
+#endif
+
+   const uint32_t endian32 = 0x01234567;
+   const uint8_t* e8 = reinterpret_cast<const uint8_t*>(&endian32);
+
+   if(e8[0] == 0x01 && e8[1] == 0x23 && e8[2] == 0x45 && e8[3] == 0x67)
+      {
+      g_little_endian = false;
+      }
+   else if(e8[0] == 0x67 && e8[1] == 0x45 && e8[2] == 0x23 && e8[3] == 0x01)
+      {
+      g_little_endian = true;
+      }
+   else
+      {
+      throw Internal_Error("Unexpected endian at runtime, neither big nor little");
+      }
+
+   // If we were compiled with a known endian, verify if matches at runtime
+#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+   BOTAN_ASSERT(g_little_endian, "Little-endian build but big-endian at runtime");
+#elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+   BOTAN_ASSERT(!g_little_endian, "Big-endian build but little-endian at runtime");
 #endif
 
    g_initialized = true;

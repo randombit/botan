@@ -317,6 +317,11 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "-----END EC PARAMETERS-----";
 #endif
 
+#if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
+   if(name == BOTAN_HOUSE_ECC_CURVE_NAME)
+      return BOTAN_HOUSE_ECC_CURVE_PEM;
+#endif
+
    return nullptr;
    }
 

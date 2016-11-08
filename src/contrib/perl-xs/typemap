@@ -1,0 +1,62 @@
+TYPEMAP
+
+Botan__ASN1_String *		O_OBJECT
+Botan__AlgorithmIdentifier *	O_OBJECT
+Botan__AlternativeName *	O_OBJECT
+Botan__Attribute *		O_OBJECT
+Botan__Base64_Decoder *		O_EXTOBJECT
+Botan__Base64_Encoder *		O_EXTOBJECT
+Botan__Chain *			O_EXTOBJECT
+Botan__Extension *		O_OBJECT
+Botan__Filter *			O_EXTOBJECT
+Botan__Fork *	    		O_EXTOBJECT
+Botan__Hex_Decoder *		O_EXTOBJECT
+Botan__Hex_Encoder *		O_EXTOBJECT
+Botan__OID *			O_OBJECT
+Botan__Pipe *			O_OBJECT
+Botan__X509_Certificate *	O_OBJECT
+Botan__X509_DN *		O_OBJECT
+Botan__X509_Time *		O_OBJECT
+Botan__u32bit			T_UV
+
+
+######################################################################
+OUTPUT
+
+# The Perl object is blessed into 'CLASS', which should be a
+# char* having the name of the package for the blessing.
+O_OBJECT
+	sv_setref_pv($arg, CLASS, (void*)$var);
+
+O_EXTOBJECT
+	sv_setref_pv($arg, CLASS, (void*)$var);
+	sv_magic(SvRV($arg), 0, '~', (char *)&oi_init, sizeof(oi_init));
+
+
+######################################################################
+INPUT
+
+O_OBJECT
+	if ( sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG) )
+	    $var = ($type)SvIV((SV*)SvRV( $arg ));
+	else
+	    croak(\"${Package}::$func_name() -- \"
+		    \"$var is not a blessed SV reference\");
+
+# The pointer variable "ObjectInfo *${var}_oi;" must be declared
+# in PREINIT section. I don't know how to emit this declaration safely here.
+O_EXTOBJECT
+	if ( sv_isobject($arg) && (SvTYPE(SvRV($arg)) == SVt_PVMG) )
+	    $var = ($type)SvIV((SV*)SvRV($arg));
+	else
+	    croak(\"${Package}::$func_name() -- \"
+		    \"$var is not a blessed SV reference\");
+	{
+	    MAGIC *mg = mg_find(SvRV($arg), '~');
+	    if ( mg == 0
+		    || mg->mg_len != sizeof(ObjectInfo)
+		    || *(I32 *)(mg->mg_ptr) != ObjectInfo::SIGNVAL )
+		croak(\"${Package}::$func_name() -- \"
+			\"private magic data for $var invalid\");
+	    ${var}_oi = (ObjectInfo *)(mg->mg_ptr);
+	}
