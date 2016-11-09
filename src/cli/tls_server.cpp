@@ -92,10 +92,10 @@ class TLS_Server final : public Command
                socklen_t from_len = sizeof(sockaddr_in);
 
                if(::recvfrom(server_fd, nullptr, 0, MSG_PEEK,
-                             (struct sockaddr*)&from, &from_len) != 0)
+                             reinterpret_cast<struct sockaddr*>(&from), &from_len) != 0)
                   throw CLI_Error("Could not peek next packet");
 
-               if(::connect(server_fd, (struct sockaddr*)&from, from_len) != 0)
+               if(::connect(server_fd, reinterpret_cast<struct sockaddr*>(&from), from_len) != 0)
                   throw CLI_Error("Could not connect UDP socket");
 
                fd = server_fd;
@@ -192,7 +192,7 @@ class TLS_Server final : public Command
          // FIXME: support limiting listeners
          socket_info.sin_addr.s_addr = INADDR_ANY;
 
-         if(::bind(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
+         if(::bind(fd, reinterpret_cast<struct sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0)
             {
             ::close(fd);
             throw CLI_Error("server bind failed");

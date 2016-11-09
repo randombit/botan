@@ -240,7 +240,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
          socket_info.sin_addr = *reinterpret_cast<struct in_addr*>(host_addr->h_addr); // FIXME
 
-         if(::connect(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
+         if(::connect(fd, reinterpret_cast<sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0)
             {
             ::close(fd);
             throw CLI_Error("connect failed");
@@ -289,8 +289,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
          while(length)
             {
-            ssize_t sent = ::send(m_sockfd, (const char*)buf + offset,
-                                  length, MSG_NOSIGNAL);
+            ssize_t sent = ::send(m_sockfd, buf + offset, length, MSG_NOSIGNAL);
 
             if(sent == -1)
                {
