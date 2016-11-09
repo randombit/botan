@@ -593,7 +593,7 @@ Version 1.11.29, 2016-03-20
 
 * Support for locking allocator on Windows using VirtualLock. GH #450
 
-Version 1.18.15, 2016-02-13
+Version 1.8.15, 2016-02-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 * NOTE WELL: Botan 1.8 is not supported for security issues anymore.
   Moving to 1.10 or 1.11 is certainly recommended.
