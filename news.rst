@@ -7,6 +7,9 @@ Version 1.11.34, Not Yet Released
 * Fix TLS session resumption bugs which caused resumption failures if an
   application used a single session cache for both TLS and DTLS. (GH #688)
 
+* Add SHAKE-128 and SHAKE-256 XOFs as hash functions supporting paramaterized
+  output lengths.
+
 * Add MessageAuthenticationCode::start_msg interface, for MACs which require or
   can use a nonce (GH #691)
 

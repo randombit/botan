@@ -44,47 +44,7 @@ void Keccak_1600::clear()
 
 void Keccak_1600::add_data(const byte input[], size_t length)
    {
-   if(length == 0)
-      return;
-
-   while(length)
-      {
-      size_t to_take = std::min(length, m_bitrate / 8 - m_S_pos);
-
-      length -= to_take;
-
-      while(to_take && m_S_pos % 8)
-         {
-         m_S[m_S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (m_S_pos % 8));
-
-         ++m_S_pos;
-         ++input;
-         --to_take;
-         }
-
-      while(to_take && to_take % 8 == 0)
-         {
-         m_S[m_S_pos / 8] ^= load_le<u64bit>(input, 0);
-         m_S_pos += 8;
-         input += 8;
-         to_take -= 8;
-         }
-
-      while(to_take)
-         {
-         m_S[m_S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (m_S_pos % 8));
-
-         ++m_S_pos;
-         ++input;
-         --to_take;
-         }
-
-      if(m_S_pos == m_bitrate / 8)
-         {
-         SHA_3::permute(m_S.data());
-         m_S_pos = 0;
-         }
-      }
+   m_S_pos = SHA_3::absorb(m_bitrate, m_S, m_S_pos, input, length);
    }
 
 void Keccak_1600::final_result(byte output[])

@@ -347,7 +347,13 @@ class Speed final : public Command
             {
             using namespace std::placeholders;
 
-            if(auto enc = Botan::get_cipher_mode(algo, Botan::ENCRYPTION))
+            if(Botan::HashFunction::providers(algo).size() > 0)
+               {
+               bench_providers_of<Botan::HashFunction>(
+                  algo, provider, msec, buf_size,
+                  std::bind(&Speed::bench_hash, this, _1, _2, _3, _4));
+               }
+            else if(auto enc = Botan::get_cipher_mode(algo, Botan::ENCRYPTION))
                {
                auto dec = Botan::get_cipher_mode(algo, Botan::DECRYPTION);
                bench_cipher_mode(*enc, *dec, msec, buf_size);
@@ -363,12 +369,6 @@ class Speed final : public Command
                bench_providers_of<Botan::StreamCipher>(
                   algo, provider, msec, buf_size,
                   std::bind(&Speed::bench_stream_cipher, this, _1, _2, _3, _4));
-               }
-            else if(Botan::HashFunction::providers(algo).size() > 0)
-               {
-               bench_providers_of<Botan::HashFunction>(
-                  algo, provider, msec, buf_size,
-                  std::bind(&Speed::bench_hash, this, _1, _2, _3, _4));
                }
             else if(Botan::MessageAuthenticationCode::providers(algo).size() > 0)
                {
