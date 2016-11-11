@@ -12,12 +12,12 @@
 #include <cstddef>
 #include <limits>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <botan/hash.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <botan/atomic.h>
+#include <botan/mutex.h>
 
 namespace Botan {
 
@@ -101,7 +101,7 @@ class XMSS_Index_Registry
 
       std::vector<uint64_t> m_key_ids;
       std::vector<std::shared_ptr<Atomic<size_t>>> m_leaf_indices;
-      std::mutex m_mutex;
+      mutex_type m_mutex;
    };
 
 }

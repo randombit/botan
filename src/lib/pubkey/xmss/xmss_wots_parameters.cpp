@@ -109,7 +109,7 @@ XMSS_WOTS_Parameters::base_w(size_t value) const
    size_t len_2_bytes = static_cast<size_t>(
       ceil(static_cast<float>(m_len_2 * m_lg_w) / 8.f));
    secure_vector<byte> result;
-   XMSS_Tools::get().concat(result, value, len_2_bytes);
+   XMSS_Tools::concat(result, value, len_2_bytes);
    return base_w(result, m_len_2);
    }
 

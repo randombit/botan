@@ -20,7 +20,7 @@ XMSS_WOTS_PrivateKey::generate(const secure_vector<byte>& priv_seed)
 
    for(size_t i = 0; i < m_wots_params.len(); i++)
       {
-      XMSS_Tools::get().concat<size_t>(priv_key[i], i, 32);
+      XMSS_Tools::concat<size_t>(priv_key[i], i, 32);
       m_hash.prf(priv_key[i], priv_seed, priv_key[i]);
       }
    return priv_key;

@@ -198,7 +198,7 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
 
       virtual bool check_key(RandomNumberGenerator&, bool) const override
          {
-         BOTAN_ASSERT(false, "No key strength check implemented for XMSS.");
+         return true;
          }
 
       virtual std::unique_ptr<PK_Ops::Verification>
@@ -212,17 +212,7 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
 
       virtual size_t max_input_bits() const override
          {
-         return std::numeric_limits<size_t>::infinity();
-         }
-
-      virtual size_t message_part_size() const override
-         {
-         return std::numeric_limits<size_t>::infinity();
-         }
-
-      virtual size_t message_parts() const override
-         {
-         return std::numeric_limits<size_t>::infinity();
+         throw Not_Implemented("XMSS doesn't support max_input_bits().");
          }
 
       /**

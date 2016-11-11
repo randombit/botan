@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <iterator>
 #include <type_traits>
+#include <botan/cpuid.h>
 #include <botan/types.h>
 #include <botan/secmem.h>
 
@@ -26,16 +27,6 @@ namespace Botan {
       XMSS_Tools(const XMSS_Tools&) = delete;
       void operator=(const XMSS_Tools&) = delete;
 
-      static const XMSS_Tools& get();
-
-      /**
-       * Retrieves information about endianess
-       *
-       * @return true if machine uses little-endian byte order, false
-       *         otherwise.
-       **/
-      inline bool is_little_endian() const { return m_is_little_endian; }
-
       /**
        * Concatenates the byte representation in big-endian order of any
        * integral value to a secure_vector.
@@ -47,7 +38,7 @@ namespace Botan {
       template<typename T,
                typename U = typename std::enable_if<std::is_integral<T>::value,
                                                     void>::type>
-      void concat(secure_vector<byte>& target, const T& src) const;
+      static void concat(secure_vector<byte>& target, const T& src);
 
       /**
        * Concatenates the last n bytes of the byte representation in big-endian
@@ -62,19 +53,17 @@ namespace Botan {
       template <typename T,
                 typename U = typename std::enable_if<std::is_integral<T>::value,
                 void>::type>
-      void concat(secure_vector<byte>& target, const T& src, size_t len) const;
+      static void concat(secure_vector<byte>& target, const T& src, size_t len);
 
    private:
       XMSS_Tools();
-
-      bool m_is_little_endian;
    };
 
 template <typename T, typename U>
-void XMSS_Tools::concat(secure_vector<byte>& target, const T& src) const
+void XMSS_Tools::concat(secure_vector<byte>& target, const T& src)
    {
    const byte* src_bytes = reinterpret_cast<const byte*>(&src);
-   if(is_little_endian())
+   if(CPUID::is_little_endian())
       std::reverse_copy(src_bytes,
                         src_bytes + sizeof(src),
                         std::back_inserter(target));
@@ -88,7 +77,7 @@ void XMSS_Tools::concat(secure_vector<byte>& target, const T& src) const
 template <typename T, typename U>
 void XMSS_Tools::concat(secure_vector<byte>& target,
                         const T& src,
-                        size_t len) const
+                        size_t len)
    {
    size_t c = static_cast<size_t>(std::min(len, sizeof(src)));
    if(len > sizeof(src))
@@ -97,7 +86,7 @@ void XMSS_Tools::concat(secure_vector<byte>& target,
       }
 
    const byte* src_bytes = reinterpret_cast<const byte*>(&src);
-   if(is_little_endian())
+   if(CPUID::is_little_endian())
       std::reverse_copy(src_bytes,
                         src_bytes + c,
                         std::back_inserter(target));

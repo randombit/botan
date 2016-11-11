@@ -26,7 +26,6 @@ class XMSS_Hash
    public:
       XMSS_Hash(const std::string& h_func_name);
       XMSS_Hash(const XMSS_Hash& hash);
-      XMSS_Hash& operator=(XMSS_Hash hash);
 
       /**
        * Pseudoranom function creating a hash out of a key and data using

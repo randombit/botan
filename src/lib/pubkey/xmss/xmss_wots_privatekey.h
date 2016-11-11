@@ -118,7 +118,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
       wots_keysig_t operator[](size_t i)
          {
          secure_vector<byte> idx_bytes;
-         XMSS_Tools::get().concat(idx_bytes, i, m_wots_params.element_size());
+         XMSS_Tools::concat(idx_bytes, i, m_wots_params.element_size());
          m_hash.h(idx_bytes, m_private_seed, idx_bytes);
          return generate(idx_bytes);
          }

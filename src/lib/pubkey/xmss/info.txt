@@ -9,7 +9,6 @@ xmss_privatekey.cpp
 xmss_publickey.cpp
 xmss_signature.cpp
 xmss_signature_operation.cpp
-xmss_tools.cpp
 xmss_verification_operation.cpp
 xmss_wots_parameters.cpp
 xmss_wots_privatekey.cpp

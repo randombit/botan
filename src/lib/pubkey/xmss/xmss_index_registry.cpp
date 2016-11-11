@@ -63,7 +63,7 @@ size_t XMSS_Index_Registry::get(uint64_t id) const
 
 size_t XMSS_Index_Registry::add(uint64_t id, size_t last_unused)
    {
-   std::lock_guard<std::mutex> lock(m_mutex);
+   lock_guard_type<mutex_type> lock(m_mutex);
    size_t pos = get(id);
    if(pos < m_key_ids.size())
       {

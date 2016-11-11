@@ -76,13 +76,4 @@ XMSS_Hash::h_msg(const secure_vector<byte>& randomness,
    return m_msg_hash->final();
    }
 
-XMSS_Hash& XMSS_Hash::operator=(XMSS_Hash hash)
-   {
-   std::swap(m_hash, hash.m_hash);
-   std::swap(m_msg_hash, hash.m_msg_hash);
-   std::swap(m_output_length, hash.m_output_length);
-   std::swap(m_zero_padding, hash.m_zero_padding);
-   return *this;
-   }
-
 }

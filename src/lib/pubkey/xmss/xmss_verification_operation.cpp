@@ -77,7 +77,7 @@ XMSS_Verification_Operation::verify(const XMSS_Signature& sig,
    {
    XMSS_Address adrs;
    secure_vector<byte> index_bytes;
-   XMSS_Tools::get().concat(index_bytes,
+   XMSS_Tools::concat(index_bytes,
                             sig.unused_leaf_index(),
                             m_xmss_params.element_size());
    secure_vector<byte> msg_digest =
