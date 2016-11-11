@@ -1,6 +1,7 @@
 /*
 * CFB mode
 * (C) 1999-2007,2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -34,6 +35,8 @@ class BOTAN_DLL CFB_Mode : public Cipher_Mode
       bool valid_nonce_length(size_t n) const override;
 
       void clear() override;
+
+      void reset() override;
    protected:
       CFB_Mode(BlockCipher* cipher, size_t feedback_bits);
 

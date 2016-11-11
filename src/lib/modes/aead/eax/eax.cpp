@@ -1,6 +1,7 @@
 /*
 * EAX Mode Encryption
 * (C) 1999-2007 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -22,7 +23,9 @@ secure_vector<byte> eax_prf(byte tag, size_t block_size,
                            const byte in[], size_t length)
    {
    for(size_t i = 0; i != block_size - 1; ++i)
+      {
       mac.update(0);
+      }
    mac.update(tag);
    mac.update(in, length);
    return mac.final();
@@ -45,11 +48,16 @@ EAX_Mode::EAX_Mode(BlockCipher* cipher, size_t tag_size) :
 
 void EAX_Mode::clear()
    {
-   m_cipher.reset();
-   m_ctr.reset();
-   m_cmac.reset();
-   zeroise(m_ad_mac);
-   zeroise(m_nonce_mac);
+   m_cipher->clear();
+   m_ctr->clear();
+   m_cmac->clear();
+   reset();
+   }
+
+void EAX_Mode::reset()
+   {
+   m_ad_mac.clear();
+   m_nonce_mac.clear();
    }
 
 std::string EAX_Mode::name() const
@@ -78,8 +86,6 @@ void EAX_Mode::key_schedule(const byte key[], size_t length)
    */
    m_ctr->set_key(key, length);
    m_cmac->set_key(key, length);
-
-   m_ad_mac = eax_prf(1, block_size(), *m_cmac, nullptr, 0);
    }
 
 /*
@@ -117,6 +123,12 @@ void EAX_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    secure_vector<byte> data_mac = m_cmac->final();
    xor_buf(data_mac, m_nonce_mac, data_mac.size());
+
+   if(m_ad_mac.empty())
+      {
+      m_ad_mac = eax_prf(1, block_size(), *m_cmac, nullptr, 0);
+      }
+
    xor_buf(data_mac, m_ad_mac, data_mac.size());
 
    buffer += std::make_pair(data_mac.data(), tag_size());
@@ -149,6 +161,12 @@ void EAX_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    secure_vector<byte> mac = m_cmac->final();
    mac ^= m_nonce_mac;
+
+   if(m_ad_mac.empty())
+      {
+      m_ad_mac = eax_prf(1, block_size(), *m_cmac, nullptr, 0);
+      }
+
    mac ^= m_ad_mac;
 
    if(!same_mem(mac.data(), included_tag, tag_size()))

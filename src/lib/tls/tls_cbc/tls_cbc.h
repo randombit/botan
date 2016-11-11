@@ -1,6 +1,7 @@
 /*
 * TLS CBC+HMAC AEAD
 * (C) 2016 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -40,6 +41,8 @@ class TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
       size_t default_nonce_length() const override final { return m_iv_size; }
 
       void clear() override final;
+
+      void reset() override final;
 
  protected:
       TLS_CBC_HMAC_AEAD_Mode(const std::string& cipher_name,

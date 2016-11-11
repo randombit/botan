@@ -65,7 +65,7 @@ class BOTAN_DLL Cipher_Mode
       *
       * Processes msg in place and returns bytes written. Normally
       * this will be either msg_len (indicating the entire message was
-      * processes) or for certain AEAD modes zero (indicating that the
+      * processed) or for certain AEAD modes zero (indicating that the
       * mode requires the entire message be processed in one pass).
       *
       * @param msg the message to be processed
@@ -127,7 +127,16 @@ class BOTAN_DLL Cipher_Mode
 
       virtual std::string name() const = 0;
 
+      /**
+      * Zeroise all state
+      * See also reset_msg()
+      */
       virtual void clear() = 0;
+
+      /**
+      * Resets just the message specific state and allows encrypting again under the existing key
+      */
+      virtual void reset() = 0;
 
       /**
       * @return true iff this mode provides authentication as well as

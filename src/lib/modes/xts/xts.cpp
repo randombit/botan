@@ -1,6 +1,7 @@
 /*
 * XTS Mode
 * (C) 2009,2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -61,6 +62,11 @@ void XTS_Mode::clear()
    {
    m_cipher->clear();
    m_tweak_cipher->clear();
+   reset();
+   }
+
+void XTS_Mode::reset()
+   {
    zeroise(m_tweak);
    }
 

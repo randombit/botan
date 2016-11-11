@@ -1,6 +1,7 @@
 /*
 * CCM Mode Encryption
 * (C) 2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -33,7 +34,13 @@ CCM_Mode::CCM_Mode(BlockCipher* cipher, size_t tag_size, size_t L) :
 
 void CCM_Mode::clear()
    {
-   m_cipher.reset();
+   m_cipher->clear();
+   reset();
+   }
+
+void CCM_Mode::reset()
+   {
+   m_nonce.clear();
    m_msg_buf.clear();
    m_ad_buf.clear();
    }

@@ -1,6 +1,7 @@
 /*
 * ChaCha20Poly1305 AEAD
 * (C) 2014,2016 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -26,8 +27,14 @@ void ChaCha20Poly1305_Mode::clear()
    {
    m_chacha->clear();
    m_poly1305->clear();
+   reset();
+   }
+
+void ChaCha20Poly1305_Mode::reset()
+   {
    m_ad.clear();
    m_ctext_len = 0;
+   m_nonce_len = 0;
    }
 
 void ChaCha20Poly1305_Mode::key_schedule(const byte key[], size_t length)
