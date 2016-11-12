@@ -21,13 +21,15 @@ XMSS_WOTS_Signature_Operation::XMSS_WOTS_Signature_Operation(
      m_priv_key(private_key),
      m_msg_buf(0)
    {
-   m_msg_buf.reserve(m_priv_key.message_part_size());
+   m_msg_buf.reserve(
+      m_priv_key.private_key().wots_parameters().element_size());
    }
 
 void
 XMSS_WOTS_Signature_Operation::update(const byte msg[], size_t msg_len)
    {
-   BOTAN_ASSERT(msg_len == message_part_size() &&
+   BOTAN_ASSERT(msg_len == m_priv_key.private_key().wots_parameters().
+                           element_size() &&
                 m_msg_buf.size() == 0,
                 "XMSS WOTS only supports one message part of size n.");
 

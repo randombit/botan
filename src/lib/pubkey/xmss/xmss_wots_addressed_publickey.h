@@ -77,19 +77,9 @@ class XMSS_WOTS_Addressed_PublicKey : public virtual Public_Key
          return m_pub_key.estimated_strength();
          }
 
-      virtual size_t max_input_bits() const override
+      virtual size_t key_length() const override
          {
-         return m_pub_key.max_input_bits();
-         }
-
-      virtual size_t message_part_size() const override
-         {
-         return m_pub_key.message_part_size();
-         }
-
-      virtual size_t message_parts() const override
-         {
-         return m_pub_key.message_parts();
+         return m_pub_key.estimated_strength();
          }
 
       virtual std::vector<byte> x509_subject_public_key() const override

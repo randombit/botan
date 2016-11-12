@@ -11,10 +11,7 @@
 #include <stdint.h>
 #include <iterator>
 #include <type_traits>
-<<<<<<< HEAD
 #include <botan/cpuid.h>
-=======
->>>>>>> 959425d... Added Extended Hash-Based Signatures (XMSS)
 #include <botan/types.h>
 #include <botan/secmem.h>
 

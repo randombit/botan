@@ -29,22 +29,10 @@ class XMSS_WOTS_Signature_Operation : public virtual PK_Ops::Signature,
                                       public XMSS_WOTS_Common_Ops
    {
    public:
-      typedef XMSS_WOTS_Addressed_PrivateKey Key_Type;
-
       XMSS_WOTS_Signature_Operation(
          const XMSS_WOTS_Addressed_PrivateKey& private_key);
 
       virtual ~XMSS_WOTS_Signature_Operation() {}
-
-      virtual size_t message_part_size() const override
-         {
-         return m_priv_key.message_part_size();
-         }
-
-      virtual size_t message_parts() const override
-         {
-         return m_priv_key.message_parts();
-         }
 
       /**
        * Creates a XMSS WOTS signature for the message provided through call

@@ -15,6 +15,7 @@
 #include <botan/alg_id.h>
 #include <botan/asn1_oid.h>
 #include <botan/assert.h>
+#include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 #include <botan/types.h>
 #include <botan/xmss_wots_parameters.h>
@@ -200,22 +201,28 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
       operator wots_keysig_t& () { return m_key; }
 
       const secure_vector<byte>& public_seed() const { return m_public_seed; }
+
       secure_vector<byte>& public_seed() { return m_public_seed; }
+
       void set_public_seed(const secure_vector<byte>& public_seed)
          {
          m_public_seed = public_seed;
          }
+
       void set_public_seed(secure_vector<byte>&& public_seed)
          {
          m_public_seed = std::move(public_seed);
          }
 
       const wots_keysig_t& key_data() const { return m_key; }
+
       wots_keysig_t& key_data() { return m_key; }
+
       void set_key_data(const wots_keysig_t& key_data)
          {
          m_key = key_data;
          }
+
       void set_key_data(wots_keysig_t&& key_data)
          {
          m_key = std::move(key_data);
@@ -233,12 +240,12 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
 
       virtual AlgorithmIdentifier algorithm_identifier() const override
          {
-         BOTAN_ASSERT(false, "No AlgorithmIdentifier available for XMSS-WOTS.");
+         throw Not_Implemented("No AlgorithmIdentifier available for XMSS-WOTS.");
          }
 
       virtual bool check_key(RandomNumberGenerator&, bool) const override
          {
-         BOTAN_ASSERT(false, "No key strength check implemented for XMSS-WOTS.");
+         return true;
          }
 
       virtual std::unique_ptr<PK_Ops::Verification>
@@ -255,19 +262,9 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
          return m_wots_params.estimated_strength();
          }
 
-      virtual size_t message_part_size() const override
-         {
-         return m_wots_params.element_size();
-         }
-
-      virtual size_t message_parts() const override
-         {
-         return 1;
-         }
-
       virtual std::vector<byte> x509_subject_public_key() const override
          {
-         BOTAN_ASSERT(false, "No x509 key format defined for XMSS-WOTS.");
+         throw Not_Implemented("No x509 key format defined for XMSS-WOTS.");
          }
 
       bool operator==(const XMSS_WOTS_PublicKey& key)
