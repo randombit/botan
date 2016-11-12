@@ -24,11 +24,14 @@ class XMSS_Signature_Tests : public PK_Signature_Generation_Test
       XMSS_Signature_Tests() : PK_Signature_Generation_Test(
          "XMSS",
          "pubkey/xmss_sig.vec",
-         {"Msg", "PrivateKey", "Signature"},
+         {"Params", "Msg", "PrivateKey", "Signature"},
          {})
          {}
 
-      std::string default_padding(const VarMap&) const override { return "Raw"; }
+      std::string default_padding(const VarMap& vars) const override
+         {
+         return get_req_str(vars, "Params");
+         }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
@@ -46,11 +49,14 @@ class XMSS_Signature_Verify_Tests : public PK_Signature_Verification_Test
       XMSS_Signature_Verify_Tests() : PK_Signature_Verification_Test(
          "XMSS",
          "pubkey/xmss_verify.vec",
-         {"Msg", "PublicKey", "Signature"},
+         {"Params", "Msg", "PublicKey", "Signature"},
          {})
          {}
 
-      std::string default_padding(const VarMap&) const override { return "Raw"; }
+      std::string default_padding(const VarMap& vars) const override
+         {
+         return get_req_str(vars, "Params");
+         }
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
