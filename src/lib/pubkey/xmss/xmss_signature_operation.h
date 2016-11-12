@@ -37,8 +37,6 @@ class BOTAN_DLL XMSS_Signature_Operation : public virtual PK_Ops::Signature,
                                            public XMSS_Common_Ops
    {
    public:
-      typedef XMSS_PrivateKey Key_Type;
-
       XMSS_Signature_Operation(const XMSS_PrivateKey& private_key);
       virtual ~XMSS_Signature_Operation() {}
 

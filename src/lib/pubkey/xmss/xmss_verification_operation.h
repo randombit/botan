@@ -30,8 +30,6 @@ namespace Botan {
      public XMSS_Common_Ops
    {
    public:
-      typedef XMSS_PublicKey Key_Type;
-
       XMSS_Verification_Operation(
          const XMSS_PublicKey& public_key);
 
