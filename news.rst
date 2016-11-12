@@ -4,6 +4,13 @@ Release Notes
 Version 1.11.34, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add XMSS hash based signature scheme (GH #717)
+
+* Previously both public and private keys performed automatic self testing after
+  generation or loading. However this often caused unexpected application
+  performance problems, and so has been removed. Instead applications must call
+  check_key explicitly. (GH #704)
+
 * Fix TLS session resumption bugs which caused resumption failures if an
   application used a single session cache for both TLS and DTLS. (GH #688)
 
@@ -14,6 +21,9 @@ Version 1.11.34, Not Yet Released
   can use a nonce (GH #691)
 
 * Add GMAC, a MAC based on GCM which requires a nonce (GH #488 / #691)
+
+* Add Cipher_Mode::reset which resets message-specific state, allowing
+  discarding state but allowing continued processing under the same key. (GH #552)
 
 * HMAC_DRBG allows configuring maximum number of bytes before a forced reseed
   (GH #690)
@@ -44,7 +54,7 @@ Version 1.11.34, Not Yet Released
 * The openpgp module (which just implemented OpenPGP compatible base64 encoding
   and decoding, nothing else) has been removed.
 
-* Add more tests for Pipe/Filter (GH #689 #693)
+* More tests for pipe/filter (GH #689 #693) and AEADs (GH #552)
 
 * Merged the fuzzer tests, previously https://github.com/randombit/botan-fuzzers
 
@@ -54,11 +64,6 @@ Version 1.11.34, Not Yet Released
 
 * Fixed some problems when running configure.py outside of the base directory,
   especially when using relative paths.
-
-* Previously both public and private keys performed automatic self testing after
-  generation or loading. However this often caused unexpected application
-  performance problems, and so has been removed. Instead applications must call
-  check_key explicitly. (GH #704)
 
 * Added new configure.py argument `--optimize-for-size`. Currently just sets
   the flag for code size optimizations with the compiler, but may have other
