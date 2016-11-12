@@ -81,8 +81,6 @@ class Cipher_Mode_Tests : public Text_Based_Test
 
             result.test_eq("correct number of bytes processed", bytes_written, bytes_to_process);
 
-            const size_t remaining = input_length - bytes_to_process;
-
             enc->finish(buf, bytes_to_process);
             result.test_eq("encrypt", buf, expected);
             }
@@ -122,8 +120,6 @@ class Cipher_Mode_Tests : public Text_Based_Test
             const size_t bytes_written = dec->process(buf.data(), bytes_to_process);
 
             result.test_eq("correct number of bytes processed", bytes_written, bytes_to_process);
-
-            const size_t remaining = input_length - bytes_to_process;
 
             dec->finish(buf, bytes_to_process);
             result.test_eq("decrypt", buf, input);
