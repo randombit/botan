@@ -198,24 +198,6 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
    //std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
    Botan::Public_Key* pubkey = privkey.get();
 
-   try {
-      // test EME::maximum_input_size()
-      std::unique_ptr<Botan::EME> eme(Botan::get_eme(padding));
-
-      if(eme)
-         {
-         size_t max_input_size = eme->maximum_input_size(1);
-         result.test_eq("maximum input size( 1 ) should always return 0", max_input_size, 0);
-         size_t keybits = pubkey->max_input_bits();
-         max_input_size = eme->maximum_input_size(keybits);
-         result.test_gte("maximum input size( keybits ) > 0", max_input_size, 1);
-         }
-   }
-   catch(Botan::Lookup_Error&)
-      {
-      result.note_missing("PK padding " + padding);
-      }
-
    for(auto&& enc_provider : possible_pk_providers())
       {
       std::unique_ptr<Botan::PK_Encryptor> encryptor;

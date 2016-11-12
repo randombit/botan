@@ -53,8 +53,7 @@ class BOTAN_DLL RSA_PublicKey : public virtual Public_Key
       */
       const BigInt& get_e() const { return m_e; }
 
-      size_t max_input_bits() const override { return (m_n.bits() - 1); }
-
+      size_t key_length() const override;
       size_t estimated_strength() const override;
 
       std::unique_ptr<PK_Ops::Encryption>

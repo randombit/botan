@@ -8,7 +8,7 @@
 #ifndef BOTAN_INTERNAL_OPENSSL_H__
 #define BOTAN_INTERNAL_OPENSSL_H__
 
-#include <botan/internal/pk_ops.h>
+#include <botan/pk_ops_fwd.h>
 #include <botan/secmem.h>
 #include <botan/exceptn.h>
 #include <memory>

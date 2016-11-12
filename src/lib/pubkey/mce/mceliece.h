@@ -35,14 +35,9 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
 
       std::string algo_name() const override { return "McEliece"; }
 
-      /**
-      * Get the maximum number of bits allowed to be fed to this key.
-      * @result the maximum number of input bits
-      */
-      size_t max_input_bits() const override { return get_message_word_bit_length(); }
-
       AlgorithmIdentifier algorithm_identifier() const override;
 
+      size_t key_length() const override;
       size_t estimated_strength() const override;
 
       std::vector<byte> x509_subject_public_key() const override;
@@ -75,11 +70,6 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
                                       public virtual Private_Key
    {
    public:
-      /**
-      * Get the maximum number of bits allowed to be fed to this key.
-      * @result the maximum number of input bits
-      */
-      size_t max_input_bits() const override { return m_Linv.size(); }
 
       /**
       Generate a McEliece key pair

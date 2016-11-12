@@ -89,6 +89,11 @@ McEliece_PublicKey::McEliece_PublicKey(const McEliece_PublicKey & other) :
    {
    }
 
+size_t McEliece_PublicKey::key_length() const
+   {
+   return m_code_length;
+   }
+
 size_t McEliece_PublicKey::estimated_strength() const
    {
    return mceliece_work_factor(m_code_length, m_t);

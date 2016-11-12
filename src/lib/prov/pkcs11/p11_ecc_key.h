@@ -89,8 +89,6 @@ class BOTAN_DLL PKCS11_EC_PublicKey : public virtual EC_PublicKey,
       * @param props the attributes of the public key
       */
       PKCS11_EC_PublicKey(Session& session, const EC_PublicKeyImportProperties& props);
-
-      size_t max_input_bits() const override;
    };
 
 /// Properties for generating a PKCS#11 EC private key
@@ -203,9 +201,9 @@ class BOTAN_DLL PKCS11_EC_PrivateKey : public virtual Private_Key,
 
       // Private_Key methods
 
-      std::size_t max_input_bits() const override;
-
       std::vector<byte> x509_subject_public_key() const override;
+
+      std::size_t key_length() const override;
 
       std::size_t estimated_strength() const override;
 

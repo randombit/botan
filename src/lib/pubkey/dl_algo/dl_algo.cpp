@@ -13,9 +13,14 @@
 
 namespace Botan {
 
+size_t DL_Scheme_PublicKey::key_length() const
+   {
+   return m_group.get_p().bits();
+   }
+
 size_t DL_Scheme_PublicKey::estimated_strength() const
    {
-   return dl_work_factor(m_group.get_p().bits());
+   return dl_work_factor(key_length());
    }
 
 AlgorithmIdentifier DL_Scheme_PublicKey::algorithm_identifier() const

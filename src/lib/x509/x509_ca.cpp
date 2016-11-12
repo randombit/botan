@@ -234,9 +234,6 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_fn));
 
-   if(key.max_input_bits() < hash->output_length() * 8)
-      throw Invalid_Argument("Key is too small for chosen hash function");
-
    std::string padding;
    if(algo_name == "RSA")
       {

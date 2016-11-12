@@ -117,8 +117,6 @@ class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EM
          m_order_bits = ::EC_GROUP_get_degree(group);
          }
 
-      size_t message_parts() const override { return 2; }
-      size_t message_part_size() const override { return (m_order_bits + 7) / 8; }
       size_t max_input_bits() const override { return m_order_bits; }
 
       bool with_recovery() const override { return false; }
@@ -126,7 +124,8 @@ class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EM
       bool verify(const byte msg[], size_t msg_len,
                   const byte sig_bytes[], size_t sig_len) override
          {
-         if(sig_len != message_part_size() * message_parts())
+         const size_t order_bytes = (m_order_bits + 7) / 8;
+         if(sig_len != 2 * order_bytes)
             return false;
 
          std::unique_ptr<ECDSA_SIG, std::function<void (ECDSA_SIG*)>> sig(nullptr, ECDSA_SIG_free);
@@ -172,7 +171,7 @@ class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
          if(!sig)
             throw OpenSSL_Error("ECDSA_do_sign");
 
-         const size_t order_bytes = message_part_size();
+         const size_t order_bytes = (m_order_bits + 7) / 8;
          const size_t r_bytes = BN_num_bytes(sig->r);
          const size_t s_bytes = BN_num_bytes(sig->s);
          secure_vector<byte> sigval(2*order_bytes);
@@ -181,8 +180,6 @@ class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
          return sigval;
          }
 
-      size_t message_parts() const override { return 2; }
-      size_t message_part_size() const override { return (m_order_bits + 7) / 8; }
       size_t max_input_bits() const override { return m_order_bits; }
 
    private:

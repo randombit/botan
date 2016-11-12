@@ -48,14 +48,6 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
 
       std::vector<byte> x509_subject_public_key() const override;
 
-      /**
-      * Get the maximum number of bits allowed to be fed to this key.
-      * This is the bitlength of the order of the base point.
-
-      * @result the maximum number of input bits
-      */
-      size_t max_input_bits() const override { return domain().get_order().bits(); }
-
       size_t message_parts() const override { return 2; }
 
       size_t message_part_size() const override

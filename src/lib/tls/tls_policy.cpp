@@ -175,14 +175,12 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
    {
    const std::string algo_name = public_key.algo_name();
 
-   // FIXME this is not really the right way to do this 
-   size_t keylength = public_key.max_input_bits();
+   const size_t keylength = public_key.key_length();
    size_t expected_keylength = 0;
 
    if(algo_name == "RSA")
       {
       expected_keylength = minimum_rsa_bits();
-      keylength += 1; // fixup for use of max_input_bits above
       }
    else if(algo_name == "DH")
       {

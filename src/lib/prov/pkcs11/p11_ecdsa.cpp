@@ -61,16 +61,6 @@ class PKCS11_ECDSA_Signature_Operation : public PK_Ops::Signature
          : PK_Ops::Signature(), m_key(key), m_order(key.domain().get_order()), m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
          {}
 
-      size_t message_parts() const override
-         {
-         return 2;
-         }
-
-      size_t message_part_size() const override
-         {
-         return m_order.bytes();
-         }
-
       void update(const byte msg[], size_t msg_len) override
          {
          if(!m_initialized)
@@ -125,21 +115,6 @@ class PKCS11_ECDSA_Verification_Operation : public PK_Ops::Verification
       PKCS11_ECDSA_Verification_Operation(const PKCS11_EC_PublicKey& key, const std::string& emsa)
          : PK_Ops::Verification(), m_key(key), m_order(key.domain().get_order()), m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
          {}
-
-      size_t message_parts() const override
-         {
-         return 2;
-         }
-
-      size_t message_part_size() const override
-         {
-         return m_order.bytes();
-         }
-
-      size_t max_input_bits() const override
-         {
-         return m_order.bits();
-         }
 
       void update(const byte msg[], size_t msg_len) override
          {

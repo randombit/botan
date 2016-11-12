@@ -1,3 +1,4 @@
+
 /*
 * (C) 2015 Jack Lloyd
 *
@@ -35,8 +36,6 @@ class Encryption_with_EME : public Encryption
 class Decryption_with_EME : public Decryption
    {
    public:
-      size_t max_input_bits() const override;
-
       secure_vector<byte> decrypt(byte& valid_mask,
                                   const byte msg[], size_t msg_len) override;
 
@@ -52,6 +51,8 @@ class Decryption_with_EME : public Decryption
 class Verification_with_EMSA : public Verification
    {
    public:
+      ~Verification_with_EMSA();
+
       void update(const byte msg[], size_t msg_len) override;
       bool is_valid_signature(const byte sig[], size_t sig_len) override;
 
@@ -59,10 +60,15 @@ class Verification_with_EMSA : public Verification
                     const byte sig[], size_t sig_len);
 
       std::string hash_for_signature() { return m_hash; }
-   protected:
 
+   protected:
       explicit Verification_with_EMSA(const std::string& emsa);
-      ~Verification_with_EMSA();
+
+      /**
+      * Get the maximum message size in bits supported by this public key.
+      * @return maximum message in bits
+      */
+      virtual size_t max_input_bits() const = 0;
 
       /**
       * @return boolean specifying if this signature scheme uses

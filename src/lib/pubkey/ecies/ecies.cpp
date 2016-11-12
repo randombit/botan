@@ -40,11 +40,6 @@ class ECIES_PrivateKey : public EC_PrivateKey, public PK_Key_Agreement_Key
          return "ECIES";
          }
 
-      size_t max_input_bits() const override
-         {
-         return m_key.max_input_bits();
-         }
-
       std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,
                                  const std::string& params,
