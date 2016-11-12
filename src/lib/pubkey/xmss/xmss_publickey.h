@@ -210,9 +210,9 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
          return m_xmss_params.estimated_strength();
          }
 
-      virtual size_t max_input_bits() const override
+      virtual size_t key_length() const override
          {
-         throw Not_Implemented("XMSS doesn't support max_input_bits().");
+         return m_xmss_params.estimated_strength();
          }
 
       /**

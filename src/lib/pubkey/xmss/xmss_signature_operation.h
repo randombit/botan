@@ -42,16 +42,6 @@ class BOTAN_DLL XMSS_Signature_Operation : public virtual PK_Ops::Signature,
       XMSS_Signature_Operation(const XMSS_PrivateKey& private_key);
       virtual ~XMSS_Signature_Operation() {}
 
-      virtual size_t message_part_size() const override
-         {
-         return m_priv_key.message_part_size();
-         }
-
-      virtual size_t message_parts() const override
-         {
-         return m_priv_key.message_parts();
-         }
-
       /**
        * Creates an XMSS signature for the message provided through call to
        * update().

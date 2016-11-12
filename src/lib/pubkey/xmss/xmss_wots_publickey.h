@@ -243,7 +243,7 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
 
       virtual std::unique_ptr<PK_Ops::Verification>
          create_verification_op(const std::string&,
-                                const std::string& provider) const override
+                                const std::string&) const override
          {
          BOTAN_ASSERT(false, "XMSS_WOTS_Verification_Operation not available.");
          }
@@ -253,9 +253,9 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
          return m_wots_params.estimated_strength();
          }
 
-      virtual size_t max_input_bits() const override
+      virtual size_t key_length() const override
          {
-         return message_part_size() * 8;
+         return m_wots_params.estimated_strength();
          }
 
       virtual size_t message_part_size() const override

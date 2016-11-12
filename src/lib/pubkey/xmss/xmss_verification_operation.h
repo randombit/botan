@@ -37,21 +37,6 @@ namespace Botan {
 
       virtual ~XMSS_Verification_Operation() {}
 
-      virtual size_t max_input_bits() const override
-         {
-         return m_pub_key.max_input_bits();
-         }
-
-      virtual size_t message_part_size() const override
-         {
-         return m_pub_key.message_part_size();
-         }
-
-      virtual size_t message_parts() const override
-         {
-         return m_pub_key.message_parts();
-         }
-
       virtual bool is_valid_signature(const byte sig[],
                                       size_t sig_len) override;
 
