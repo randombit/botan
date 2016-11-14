@@ -145,23 +145,22 @@ void ESP_Padding::add_padding(secure_vector<byte>& buffer,
 */
 size_t ESP_Padding::unpad(const byte block[], size_t size) const
    {
-   while(size)
-      {
-      if(block[size-1] == 0x01)
-         {
-         break;
-         }
-      if(block[size-1] == 0x00)
-         {
-         throw Decoding_Error(name());
-         }
-      size--;
-      }
-   if(!size)
+   byte last_byte = block[size-1];
+   if(last_byte > size)
       {
       throw Decoding_Error(name());
       }
-   return (size-1);
+
+   size_t i = size - 1;
+   while(i > size - last_byte)
+      {
+      if(block[i-1] != block[i]-1)
+         {
+         throw Decoding_Error(name());
+         }
+      --i;
+      }
+   return i;
    }
 
 
