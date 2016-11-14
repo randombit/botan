@@ -8,3 +8,7 @@ References
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :ref:`genindex` and :ref:`search` may be useful.
+
+.. toctree::
+   :maxdepth: 1
+   :numbered:
