@@ -1,6 +1,7 @@
 /*
 * CBC Padding Methods
 * (C) 1999-2007,2013 Jack Lloyd
+* (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -26,6 +27,9 @@ BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec)
 
    if(algo_spec == "X9.23")
       return new ANSI_X923_Padding;
+
+   if(algo_spec == "ESP")
+      return new ESP_Padding;
 
    return nullptr;
    }
@@ -118,6 +122,45 @@ size_t OneAndZeros_Padding::unpad(const byte block[], size_t size) const
       }
    if(!size)
       throw Decoding_Error(name());
+   return (size-1);
+   }
+
+/*
+* Pad with ESP Padding Method
+*/
+void ESP_Padding::add_padding(secure_vector<byte>& buffer,
+                                      size_t last_byte_pos,
+                                      size_t block_size) const
+   {
+   byte pad_value = 0x01;
+
+   for(size_t i = last_byte_pos; i < block_size; ++i)
+      {
+      buffer.push_back(pad_value++);
+      }
+   }
+
+/*
+* Unpad with ESP Padding Method
+*/
+size_t ESP_Padding::unpad(const byte block[], size_t size) const
+   {
+   while(size)
+      {
+      if(block[size-1] == 0x01)
+         {
+         break;
+         }
+      if(block[size-1] == 0x00)
+         {
+         throw Decoding_Error(name());
+         }
+      size--;
+      }
+   if(!size)
+      {
+      throw Decoding_Error(name());
+      }
    return (size-1);
    }
 

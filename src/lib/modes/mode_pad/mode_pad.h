@@ -1,6 +1,7 @@
 /*
 * ECB/CBC Padding Methods
 * (C) 1999-2008,2013 Jack Lloyd
+* (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -96,7 +97,7 @@ class BOTAN_DLL ANSI_X923_Padding final : public BlockCipherModePaddingMethod
    };
 
 /**
-* One And Zeros Padding
+* One And Zeros Padding (ISO/IEC 7816-4)
 */
 class BOTAN_DLL OneAndZeros_Padding final : public BlockCipherModePaddingMethod
    {
@@ -110,6 +111,23 @@ class BOTAN_DLL OneAndZeros_Padding final : public BlockCipherModePaddingMethod
       bool valid_blocksize(size_t bs) const override { return (bs > 0); }
 
       std::string name() const override { return "OneAndZeros"; }
+   };
+
+/**
+* ESP Padding (RFC 4304)
+*/
+class BOTAN_DLL ESP_Padding final : public BlockCipherModePaddingMethod
+   {
+   public:
+      void add_padding(secure_vector<byte>& buffer,
+                       size_t final_block_bytes,
+                       size_t block_size) const override;
+
+      size_t unpad(const byte[], size_t) const override;
+
+      bool valid_blocksize(size_t bs) const override { return (bs > 0); }
+
+      std::string name() const override { return "ESP"; }
    };
 
 /**
