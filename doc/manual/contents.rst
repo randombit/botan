@@ -29,3 +29,4 @@ Contents
    compression
    versions
    ffi
+   pkcs11
