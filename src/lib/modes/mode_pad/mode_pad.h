@@ -97,7 +97,7 @@ class BOTAN_DLL ANSI_X923_Padding final : public BlockCipherModePaddingMethod
    };
 
 /**
-* One And Zeros Padding (ISO/IEC 7816-4)
+* One And Zeros Padding (ISO/IEC 9797-1, padding method 2)
 */
 class BOTAN_DLL OneAndZeros_Padding final : public BlockCipherModePaddingMethod
    {
