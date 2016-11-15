@@ -50,6 +50,21 @@ class Cipher_Mode_Padding_Tests : public Text_Based_Test
 
          return result;
          }
+
+      std::vector<Test::Result> run_final_tests()
+         {
+         Test::Result result("ESP negative tests");
+
+         std::vector<uint8_t> invalid1 { 0xFF, 0x01, 0x02, 0x02 };
+         result.test_throws("ESP invalid last pad", [&invalid1]()
+                  { Botan::ESP_Padding().unpad(invalid1.data(), invalid1.size()); } );
+
+         std::vector<uint8_t> invalid2 { 0xFF, 0x01, 0x02, 0x04 };
+         result.test_throws("ESP invalid pad", [&invalid2]()
+                  { Botan::ESP_Padding().unpad(invalid2.data(), invalid2.size()); } );
+
+         return {result};
+         }
    };
 
 BOTAN_REGISTER_TEST("bc_pad", Cipher_Mode_Padding_Tests);
