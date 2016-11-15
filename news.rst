@@ -4,7 +4,14 @@ Release Notes
 Version 1.11.34, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add XMSS hash based signature scheme (GH #717)
+* Add post-quantum signature scheme XMSS. Provides either 128 or 256 bit
+  (post-quantum) security, with small public and private keys, fast
+  verification, and reasonably small signatures (2500 bytes for 128-bit
+  security). Signature generation is very slow, on the order of seconds. And
+  very importantly the signature scheme is stateful: each leaf index must only
+  be used once, or all security is lost. In the appropriate system where
+  signatures are rarely generated (like software update singing) XMSS makes an
+  excellent choice. (GH #717)
 
 * Previously both public and private keys performed automatic self testing after
   generation or loading. However this often caused unexpected application
@@ -20,30 +27,30 @@ Version 1.11.34, Not Yet Released
 * Add MessageAuthenticationCode::start_msg interface, for MACs which require or
   can use a nonce (GH #691)
 
-* Add GMAC, a MAC based on GCM which requires a nonce (GH #488 / #691)
+* Add GMAC, a MAC based on GCM (GH #488 / #691)
 
 * Add Cipher_Mode::reset which resets message-specific state, allowing
   discarding state but allowing continued processing under the same key. (GH #552)
 
-* HMAC_DRBG allows configuring maximum number of bytes before a forced reseed
-  (GH #690)
+* The ability to add OIDs at runtime has been removed. This additionally removes
+  a global lock which was acquired on each OID lookup. (GH #706)
+
+* The default TLS policy now disables static RSA ciphersuites, all DSA
+  ciphersuites, and the AES CCM-8 ciphersuites. Disabling static RSA by default
+  protects servers from oracle attacks, as well as enforcing a forward secure
+  ciphersuite. Some applications may be forced to re-enable RSA for interop
+  reasons. DSA and CCM-8 are rarely used, and likely should not be negotiated
+  outside of special circumstances.
+
+* Add a BSD sockets version of the HTTP client code used for OCSP. GH #699
+
+* Add MessageAuthenticationCode::start_msg interface for providing nonce (GH #691)
+
+* HMAC_DRBG allows configuring maximum number of bytes before reseed check (GH #690)
 
 * Salsa20 now accepts a null IV as equivalent to an all-zero one (GH #697)
 
 * Optimize ECKCDSA verification (GH #700 #701 #702)
-
-* A plain sockets version of the HTTP client has been added, so OCSP
-  checks occur even in non-Boost builds.
-
-* The default TLS policy now disables static RSA ciphersuites, all DSA ciphersuites,
-  and the AES CCM-8 ciphersuites.
-
-  Disabling static RSA by default protects servers from oracle attacks,
-  as well as enforcing a forward secure ciphersuite. Some applications
-  may be forced to re-enable RSA to interop with old or misconfigured peers.
-
-  DSA and CCM-8 are rarely used, and likely should not be negotiated
-  outside of special circumstances.
 
 * The deprecated RNGs HMAC_RNG and X9.31 RNG have been removed. Now the only
   userspace PRNG included in the library is HMAC_DRBG. (GH #692)
@@ -54,9 +61,37 @@ Version 1.11.34, Not Yet Released
 * The openpgp module (which just implemented OpenPGP compatible base64 encoding
   and decoding, nothing else) has been removed.
 
+* Added new configure.py argument `--optimize-for-size`. Currently just sets
+  the flag for code size optimizations with the compiler, but may have other
+  effects in the future.
+
+* Fixed bug in Threaded_Fork causing incorrect computations (GH #695 #716)
+
+* Add DSA deterministic parameter generation test from FIPS 186-3.
+
+* Fix PKCS11_ECDSA_PrivateKey::check_key (GH #712)
+
+* Fixed problems running configure.py outside of the base directory
+
+* The BOTAN_ENTROPY_PROC_FS_PATH value in build.h was being ignored (GH #708)
+
+* Add speed tests for ECGDSA and ECKCDSA (GH #696)
+
+* Fix a crash in speed command for Salsa20 (GH #697)
+
+* Allow a custom ECC curve to be specified at build time, for application or
+  system specific curves. (GH #636 #710)
+
+* Add support to output bakefiles with new `configure.py` option `--with-bakefile`.
+  (GH #360 #720)
+
+* The function `zero_mem` has been renamed `secure_scrub_memory`
+
 * More tests for pipe/filter (GH #689 #693) and AEADs (GH #552)
 
-* Merged the fuzzer tests, previously https://github.com/randombit/botan-fuzzers
+* Merged the fuzzer framework, previously https://github.com/randombit/botan-fuzzers
+
+* The LibraryInitializer type is no longer needed and is now deprecated.
 
 * The license and news files were moved from doc to the top level directory.
   There should not be any other visible change (eg, to the installed version)
@@ -65,45 +100,7 @@ Version 1.11.34, Not Yet Released
 * Fixed some problems when running configure.py outside of the base directory,
   especially when using relative paths.
 
-* Added new configure.py argument `--optimize-for-size`. Currently just sets
-  the flag for code size optimizations with the compiler, but may have other
-  effects in the future.
-
-* Allow a custom ECC curve to be specified at build time, for application or
-  system specific curves. You probably don't need this. (GH #636 #710)
-
-* Add DSA deterministic parameter generation test from FIPS 186-3.
-
-* Fix PKCS11_ECDSA_PrivateKey::check_key (GH #712)
-
-* The ability to add OIDs at runtime has been removed. Now the OID
-  lookups are generated from a plain text file (src/build-data/oids.txt)
-  by a script. This additionally removes a global lock which was acquired
-  on each OID lookup. (GH #706)
-
-* Remove some unused values from build.h (GH #708)
-
-* The BOTAN_ENTROPY_PROC_FS_PATH value in build.h was being ignored (GH #708)
-
-* Add speed tests for ECGDSA and ECKCDSA (GH #696)
-
-* Fix a crash in speed command for Salsa20 (GH #697)
-
-* Add support to output bakefiles with new `configure.py` option `--with-bakefile`.
-  Bakefile creates Visual Studio or Xcode project files for example.
-
-* The function `zero_mem` has been renamed `secure_scrub_memory` to be
-  more clear about this functions semantics and intended usage.
-
-* The LibraryInitializer type, which has been a no-op since 1.11.14,
-  is now officially deprecated. It does nothing, has done nothing, and
-  will continue not doing anything, until it is eventually removed in
-  a future release. At which point it may indeed cease doing nothing.
-
-* In 1.11.21 the Perl XS wrapper and sqlite encryption codec were
-  removed to standalone repos. But, it is easier to maintain all
-  related code inside a single repo so they have returned under
-  src/contrib.
+* Add (back) the Perl XS wrapper and sqlite encryption code.
 
 Version 1.11.33, 2016-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
