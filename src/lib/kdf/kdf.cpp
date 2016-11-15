@@ -78,7 +78,7 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
          }
       }
 
-   if(req.algo_name() == "HKDF_Extract" && req.arg_count() == 1)
+   if(req.algo_name() == "HKDF-Extract" && req.arg_count() == 1)
       {
       if(provider.empty() || provider == "base")
          {
@@ -86,7 +86,7 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
          }
       }
 
-   if(req.algo_name() == "HKDF_Expand" && req.arg_count() == 1)
+   if(req.algo_name() == "HKDF-Expand" && req.arg_count() == 1)
       {
       if(provider.empty() || provider == "base")
          {
