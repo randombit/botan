@@ -50,7 +50,7 @@ elif [ "$BUILD_MODE" = "valgrind" ]; then
 
 elif [ "${BUILD_MODE:0:5}" != "cross" ]; then
     # Only use external libraries when compiling natively
-    CFG_FLAGS+=(--with-bzip2 --with-lzma --with-sqlite --with-zlib --disable-modules=ffi)
+    CFG_FLAGS+=(--with-bzip2 --with-lzma --with-sqlite --with-zlib)
 
     if [ "$BUILD_MODE" = "coverage" ]; then
         CFG_FLAGS+=(--with-tpm)
@@ -79,6 +79,7 @@ if [ "${BUILD_MODE:0:6}" = "cross-" ]; then
             CFG_FLAGS+=(--cpu=armv8-a --cc-abi-flags="-arch arm64 -stdlib=libc++")
         fi
     elif [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        CFG_FLAGS+=(--disable-modules=ffi)
 
         if [ "$BUILD_MODE" = "cross-arm32" ]; then
             CC_BIN=arm-linux-gnueabihf-g++-4.8
