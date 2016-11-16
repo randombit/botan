@@ -11,13 +11,14 @@ Contents
    secmem
    rng
    filters
+   hash
+   symmetric_crypto
    pubkey
    mceliece
    x509
    ocsp
    tls
    credentials_manager
-   aead
    bigint
    lowlevel
    kdf
