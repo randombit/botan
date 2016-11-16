@@ -75,6 +75,12 @@ class BOTAN_DLL Callbacks
        virtual bool tls_session_established(const Session& session) = 0;
 
        /**
+       * Optional callback: session activated
+       * Called when a session is active and can be written to
+       */
+       virtual void tls_session_activated() {}
+
+       /**
        * Optional callback: inspect handshake message
        * Throw an exception to abort the handshake.
        * Default simply ignores the message.
