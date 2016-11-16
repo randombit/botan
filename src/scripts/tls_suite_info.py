@@ -87,6 +87,7 @@ def to_ciphersuite_info(code, name):
         'DHE_PSK': 'DHE_PSK',
         'PSK_DHE': 'DHE_PSK',
         'ECDHE_PSK': 'ECDHE_PSK',
+        'CECPQ1': 'CECPQ1',
         }
 
     mac_keylen = {
@@ -235,6 +236,12 @@ def main(args = None):
     define_custom_ciphersuite('ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC13')
     define_custom_ciphersuite('ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256', 'CC14')
     define_custom_ciphersuite('DHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC15')
+
+    # CECPQ1
+    define_custom_ciphersuite('CECPQ1_RSA_WITH_CHACHA20_POLY1305_SHA256', '16B7')
+    define_custom_ciphersuite('CECPQ1_ECDSA_WITH_CHACHA20_POLY1305_SHA256', '16B8')
+    define_custom_ciphersuite('CECPQ1_RSA_WITH_AES_256_GCM_SHA384', '16B9')
+    define_custom_ciphersuite('CECPQ1_ECDSA_WITH_AES_256_GCM_SHA384', '16BA')
 
     # Expermental things
     if options.with_ocb:

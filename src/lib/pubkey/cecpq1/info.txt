@@ -1,0 +1,7 @@
+define CECPQ1 20161116
+
+<requires>
+newhope
+curve25519
+</requires>
+

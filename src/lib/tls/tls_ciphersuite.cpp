@@ -143,6 +143,12 @@ bool Ciphersuite::is_usable() const
       return false;
 #endif
       }
+   else if(kex_algo() == "CECPQ1")
+      {
+#if !defined(BOTAN_HAS_CECPQ1)
+      return false;
+#endif
+      }
 
    if(sig_algo() == "DSA")
       {

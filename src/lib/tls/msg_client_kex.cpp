@@ -1,6 +1,6 @@
 /*
 * Client Key Exchange Message
-* (C) 2004-2010 Jack Lloyd
+* (C) 2004-2010,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -22,6 +22,10 @@
 
 #if defined(BOTAN_HAS_CURVE_25519)
   #include <botan/curve25519.h>
+#endif
+
+#if defined(BOTAN_HAS_CECPQ1)
+  #include <botan/cecpq1.h>
 #endif
 
 #if defined(BOTAN_HAS_SRP6)
@@ -55,9 +59,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          identity_hint = reader.get_string(2, 0, 65535);
          }
 
-      const std::string psk_identity = creds.psk_identity("tls-client",
-                                                          hostname,
-                                                          identity_hint);
+      const std::string psk_identity =
+         creds.psk_identity("tls-client", hostname, identity_hint);
 
       append_tls_length_value(m_key_material, psk_identity, 2);
 
@@ -78,9 +81,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          {
          std::string identity_hint = reader.get_string(2, 0, 65535);
 
-         const std::string psk_identity = creds.psk_identity("tls-client",
-                                                             hostname,
-                                                             identity_hint);
+         const std::string psk_identity =
+            creds.psk_identity("tls-client", hostname, identity_hint);
 
          append_tls_length_value(m_key_material, psk_identity, 2);
 
@@ -154,7 +156,6 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             }
 
          const std::vector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
-
          std::vector<byte> our_ecdh_public;
          secure_vector<byte> ecdh_secret;
 
@@ -229,10 +230,25 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          m_pre_master = srp_vals.second.bits_of();
          }
 #endif
+
+#if defined(BOTAN_HAS_CECPQ1)
+      else if(kex_algo == "CECPQ1")
+         {
+         const std::vector<byte> cecpq1_offer = reader.get_range<byte>(2, 1, 65535);
+
+         if(cecpq1_offer.size() != CECPQ1_OFFER_BYTES)
+            throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Invalid CECPQ1 key size");
+
+         std::vector<uint8_t> newhope_accept(CECPQ1_ACCEPT_BYTES);
+         secure_vector<uint8_t> shared_secret(CECPQ1_SHARED_KEY_BYTES);
+         CECPQ1_accept(shared_secret.data(), newhope_accept.data(), cecpq1_offer.data(), rng);
+         append_tls_length_value(m_key_material, newhope_accept, 2);
+         m_pre_master = shared_secret;
+         }
+#endif
       else
          {
-         throw Internal_Error("Client_Key_Exchange: Unknown kex " +
-                              kex_algo);
+         throw Internal_Error("Client_Key_Exchange: Unknown kex " + kex_algo);
          }
 
       reader.assert_done();
@@ -357,6 +373,19 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
          SRP6_Server_Session& srp = state.server_kex()->server_srp_params();
 
          m_pre_master = srp.step2(BigInt::decode(reader.get_range<byte>(2, 0, 65535))).bits_of();
+         }
+#endif
+#if defined(BOTAN_HAS_CECPQ1)
+      else if(kex_algo == "CECPQ1")
+         {
+         const CECPQ1_key& cecpq1_offer = state.server_kex()->cecpq1_key();
+
+         const std::vector<byte> cecpq1_accept = reader.get_range<byte>(2, 0, 65535);
+         if(cecpq1_accept.size() != CECPQ1_ACCEPT_BYTES)
+            throw Decoding_Error("Invalid size for CECPQ1 accept message");
+
+         m_pre_master.resize(CECPQ1_SHARED_KEY_BYTES);
+         CECPQ1_finish(m_pre_master.data(), cecpq1_offer, cecpq1_accept.data());
          }
 #endif
       else if(kex_algo == "DH" || kex_algo == "DHE_PSK" ||

@@ -1,6 +1,6 @@
 /*
 * Server Key Exchange Message
-* (C) 2004-2010,2012,2015 Jack Lloyd
+* (C) 2004-2010,2012,2015,2016 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -19,6 +19,10 @@
 
 #if defined(BOTAN_HAS_CURVE_25519)
   #include <botan/curve25519.h>
+#endif
+
+#if defined(BOTAN_HAS_CECPQ1)
+  #include <botan/cecpq1.h>
 #endif
 
 #if defined(BOTAN_HAS_SRP6)
@@ -139,8 +143,19 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       append_tls_length_value(m_params, BigInt::encode(B), 2);
       }
 #endif
+#if defined(BOTAN_HAS_CECPQ1)
+   else if(kex_algo == "CECPQ1")
+      {
+      std::vector<uint8_t> cecpq1_offer(CECPQ1_OFFER_BYTES);
+      m_cecpq1_key.reset(new CECPQ1_key);
+      CECPQ1_offer(cecpq1_offer.data(), m_cecpq1_key.get(), rng);
+      append_tls_length_value(m_params, cecpq1_offer, 2);
+      }
+#endif
    else if(kex_algo != "PSK")
+      {
       throw Internal_Error("Server_Key_Exchange: Unknown kex type " + kex_algo);
+      }
 
    if(state.ciphersuite().sig_algo() != "")
       {
@@ -203,6 +218,11 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
       reader.get_range<byte>(2, 1, 65535);
       reader.get_range<byte>(2, 1, 65535);
       reader.get_range<byte>(1, 1, 255);
+      reader.get_range<byte>(2, 1, 65535);
+      }
+   else if(kex_algo == "CECPQ1")
+      {
+      // u16 blob
       reader.get_range<byte>(2, 1, 65535);
       }
    else if(kex_algo != "PSK")
