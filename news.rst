@@ -10,7 +10,7 @@ Version 1.11.34, Not Yet Released
   security). Signature generation is very slow, on the order of seconds. And
   very importantly the signature scheme is stateful: each leaf index must only
   be used once, or all security is lost. In the appropriate system where
-  signatures are rarely generated (like software update singing) XMSS makes an
+  signatures are rarely generated (such as code signing) XMSS makes an
   excellent choice. (GH #717)
 
 * Previously both public and private keys performed automatic self testing after
