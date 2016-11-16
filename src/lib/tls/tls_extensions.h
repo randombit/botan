@@ -276,7 +276,8 @@ class Supported_Point_Formats final : public Extension
 
       std::vector<byte> serialize() const override;
 
-      explicit Supported_Point_Formats() : m_prefers_compressed(true) {}
+      explicit Supported_Point_Formats(bool prefer_compressed) :
+         m_prefers_compressed(prefer_compressed) {}
 
       Supported_Point_Formats(TLS_Data_Reader& reader,
                               u16bit extension_size);
