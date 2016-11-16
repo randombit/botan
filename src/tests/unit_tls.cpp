@@ -407,7 +407,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
 
                   if(corrupt_server_data)
                      {
-                     input = Test::mutate_vec(input, true);
+                     input = Test::mutate_vec(input, true, 5);
                      size_t needed = server->received_data(input.data(), input.size());
 
                      size_t total_consumed = needed;
@@ -438,7 +438,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
 
                   if(corrupt_client_data)
                      {
-                     input = Test::mutate_vec(input, true);
+                     input = Test::mutate_vec(input, true, 5);
                      size_t needed = client->received_data(input.data(), input.size());
 
                      size_t total_consumed = 0;
@@ -695,7 +695,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                      {
                      try
                         {
-                        input = Test::mutate_vec(input, true);
+                        input = Test::mutate_vec(input, true, 5);
                         size_t needed = server->received_data(input.data(), input.size());
 
                         if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
@@ -735,7 +735,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                      {
                      try
                         {
-                        input = Test::mutate_vec(input, true);
+                        input = Test::mutate_vec(input, true, 5);
                         size_t needed = client->received_data(input.data(), input.size());
 
                         if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
