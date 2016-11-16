@@ -50,7 +50,7 @@ elif [ "$BUILD_MODE" = "valgrind" ]; then
 
 elif [ "${BUILD_MODE:0:5}" != "cross" ]; then
     # Only use external libraries when compiling natively
-    CFG_FLAGS+=(--with-bzip2 --with-lzma --with-sqlite --with-zlib)
+    CFG_FLAGS+=(--with-bzip2 --with-lzma --with-sqlite --with-zlib --disable-modules=ffi)
 
     if [ "$BUILD_MODE" = "coverage" ]; then
         CFG_FLAGS+=(--with-tpm)
