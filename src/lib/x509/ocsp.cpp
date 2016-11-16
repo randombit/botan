@@ -81,9 +81,10 @@ std::string Request::base64_encode() const
    return Botan::base64_encode(BER_encode());
    }
 
-Response::Response(const std::vector<byte>& response_bits)
+Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
+   m_response_bits(response_bits, response_bits + response_bits_len)
    {
-   BER_Decoder response_outer = BER_Decoder(response_bits).start_cons(SEQUENCE);
+   BER_Decoder response_outer = BER_Decoder(m_response_bits).start_cons(SEQUENCE);
 
    size_t resp_status = 0;
 
@@ -233,8 +234,11 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
    if(!signing_cert)
       return Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND;
 
-   if(!signing_cert->allowed_extended_usage("PKIX.OCSPSigning"))
+   if(!signing_cert->allowed_usage(CRL_SIGN) &&
+      !signing_cert->allowed_extended_usage("PKIX.OCSPSigning"))
+      {
       return Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE;
+      }
 
    return this->verify_signature(*signing_cert);
    }

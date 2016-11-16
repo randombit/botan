@@ -27,6 +27,7 @@ std::string TLS::Callbacks::tls_server_choose_app_protocol(const std::vector<std
 
 void TLS::Callbacks::tls_verify_cert_chain(
    const std::vector<X509_Certificate>& cert_chain,
+   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses,
    const std::vector<Certificate_Store*>& trusted_roots,
    Usage_Type usage,
    const std::string& hostname,
@@ -44,7 +45,8 @@ void TLS::Callbacks::tls_verify_cert_chain(
                          (usage == Usage_Type::TLS_SERVER_AUTH ? hostname : ""),
                          usage,
                          std::chrono::system_clock::now(),
-                         tls_verify_cert_chain_ocsp_timeout());
+                         tls_verify_cert_chain_ocsp_timeout(),
+                         ocsp_responses);
 
    if(!result.successful_validation())
       throw Exception("Certificate validation failure: " + result.result_string());

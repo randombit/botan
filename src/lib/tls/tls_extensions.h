@@ -12,6 +12,7 @@
 
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
+#include <botan/ocsp.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -25,10 +26,7 @@ class TLS_Data_Reader;
 
 enum Handshake_Extension_Type {
    TLSEXT_SERVER_NAME_INDICATION = 0,
-   // 1 is maximum fragment length
-   TLSEXT_CLIENT_CERT_URL        = 2,
-   TLSEXT_TRUSTED_CA_KEYS        = 3,
-   TLSEXT_TRUNCATED_HMAC         = 4,
+   TLSEXT_CERT_STATUS_REQUEST    = 5,
 
    TLSEXT_CERTIFICATE_TYPES      = 9,
    TLSEXT_USABLE_ELLIPTIC_CURVES = 10,
@@ -394,6 +392,36 @@ class Encrypt_then_MAC final : public Extension
       Encrypt_then_MAC() {}
 
       Encrypt_then_MAC(TLS_Data_Reader& reader, u16bit extension_size);
+   };
+
+/**
+* Certificate Status Request (RFC 6066)
+*/
+class Certificate_Status_Request final : public Extension
+   {
+   public:
+      static Handshake_Extension_Type static_type()
+         { return TLSEXT_CERT_STATUS_REQUEST; }
+
+      Handshake_Extension_Type type() const override { return static_type(); }
+
+      std::vector<byte> serialize() const override;
+
+      bool empty() const override { return false; }
+
+      // Server generated version: empty
+      Certificate_Status_Request();
+
+      // Client version, both lists can be empty
+      Certificate_Status_Request(const std::vector<X509_DN>& ocsp_responder_ids,
+                                 const std::vector<std::vector<byte>>& ocsp_key_ids);
+
+      Certificate_Status_Request(TLS_Data_Reader& reader, u16bit extension_size);
+   private:
+      std::vector<X509_DN> m_ocsp_names;
+      std::vector<std::vector<byte>> m_ocsp_keys;
+      std::vector<byte> m_extension_bytes;
+      bool m_server_side;
    };
 
 /**

@@ -527,6 +527,7 @@ void Server::process_certificate_verify_msg(Server_Handshake_State& pending_stat
         auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-server", sni_hostname);
 
         callbacks().tls_verify_cert_chain(client_certs,
+                                          {}, // ocsp
                                           trusted_CAs,
                                           Usage_Type::TLS_CLIENT_AUTH,
                                           sni_hostname,

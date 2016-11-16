@@ -75,7 +75,17 @@ class BOTAN_DLL Response
       * Parses an OCSP response.
       * @param response_bits response bits received
       */
-      Response(const std::vector<byte>& response_bits);
+      Response(const std::vector<byte>& response_bits) :
+         Response(response_bits.data(), response_bits.size())
+         {}
+
+      /**
+      * Parses an OCSP response.
+      * @param response_bits response bits received
+      * @param response_bits_len length of response in bytes
+      */
+      Response(const uint8_t response_bits[],
+               size_t response_bits_len);
 
       /**
       * Check signature and return status
@@ -111,6 +121,8 @@ class BOTAN_DLL Response
       */
       const std::vector<byte>& signer_key_hash() const { return m_key_hash; }
 
+      const std::vector<byte>& raw_bits() const { return m_response_bits; }
+
       /**
        * Searches the OCSP response for issuer and subject certificate.
        * @param issuer issuer certificate
@@ -129,6 +141,7 @@ class BOTAN_DLL Response
                                          std::chrono::system_clock::time_point ref_time = std::chrono::system_clock::now()) const;
 
    private:
+      std::vector<byte> m_response_bits;
       X509_Time m_produced_at;
       X509_DN m_signer_name;
       std::vector<byte> m_key_hash;

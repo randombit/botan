@@ -16,9 +16,7 @@ namespace TLS {
 
 namespace {
 
-Extension* make_extension(TLS_Data_Reader& reader,
-                          u16bit code,
-                          u16bit size)
+Extension* make_extension(TLS_Data_Reader& reader, u16bit code, u16bit size)
    {
    switch(code)
       {
@@ -32,6 +30,9 @@ Extension* make_extension(TLS_Data_Reader& reader,
 
       case TLSEXT_USABLE_ELLIPTIC_CURVES:
          return new Supported_Elliptic_Curves(reader, size);
+
+      case TLSEXT_CERT_STATUS_REQUEST:
+         return new Certificate_Status_Request(reader, size);
 
       case TLSEXT_EC_POINT_FORMATS:
          return new Supported_Point_Formats(reader, size);
@@ -56,10 +57,9 @@ Extension* make_extension(TLS_Data_Reader& reader,
 
       case TLSEXT_SESSION_TICKET:
          return new Session_Ticket(reader, size);
-
-      default:
-         return nullptr; // not known
       }
+
+   return nullptr; // not known
    }
 
 }
@@ -606,7 +606,7 @@ std::vector<byte> Extended_Master_Secret::serialize() const
    }
 
 Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader&,
-                                               u16bit extension_size)
+                                   u16bit extension_size)
    {
    if(extension_size != 0)
       throw Decoding_Error("Invalid encrypt_then_mac extension");
@@ -615,6 +615,63 @@ Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader&,
 std::vector<byte> Encrypt_then_MAC::serialize() const
    {
    return std::vector<byte>();
+   }
+
+std::vector<byte> Certificate_Status_Request::serialize() const
+   {
+   std::vector<byte> buf;
+
+   if(m_server_side)
+      return buf; // server reply is empty
+
+   /*
+   opaque ResponderID<1..2^16-1>;
+   opaque Extensions<0..2^16-1>;
+
+   CertificateStatusType status_type = ocsp(1)
+   ResponderID responder_id_list<0..2^16-1>
+   Extensions  request_extensions;
+   */
+
+   buf.push_back(1); // CertificateStatusType ocsp
+
+   buf.push_back(0);
+   buf.push_back(0);
+   buf.push_back(0);
+   buf.push_back(0);
+
+   return buf;
+   }
+
+Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
+                                                       u16bit extension_size)
+   {
+   if(extension_size > 0)
+      {
+      const byte type = reader.get_byte();
+      if(type == 1)
+         {
+         reader.discard_next(extension_size - 1); // fixme
+         }
+      else
+         {
+         reader.discard_next(extension_size - 1);
+         }
+      }
+   }
+
+Certificate_Status_Request::Certificate_Status_Request(const std::vector<X509_DN>& ocsp_responder_ids,
+                                                       const std::vector<std::vector<byte>>& ocsp_key_ids) :
+   m_ocsp_names(ocsp_responder_ids),
+   m_ocsp_keys(ocsp_key_ids),
+   m_server_side(false)
+   {
+
+   }
+
+Certificate_Status_Request::Certificate_Status_Request() : m_server_side(true)
+   {
+
    }
 
 }

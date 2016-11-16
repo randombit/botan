@@ -76,8 +76,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
                            const std::vector<std::string>& next_protocols) :
    m_version(client_settings.protocol_version()),
    m_random(make_hello_random(rng, policy)),
-   m_suites(policy.ciphersuite_list(m_version,
-                                    client_settings.srp_identifier() != "")),
+   m_suites(policy.ciphersuite_list(m_version, !client_settings.srp_identifier().empty())),
    m_comp_methods(policy.compression())
    {
    BOTAN_ASSERT(policy.acceptable_protocol_version(client_settings.protocol_version()),
@@ -89,11 +88,15 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    */
    m_extensions.add(new Extended_Master_Secret);
    m_extensions.add(new Session_Ticket());
+   m_extensions.add(new Certificate_Status_Request);
+
    if(policy.negotiate_encrypt_then_mac())
       m_extensions.add(new Encrypt_then_MAC);
 
    m_extensions.add(new Renegotiation_Extension(reneg_info));
    m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
+
+   m_extensions.add(new Certificate_Status_Request({}, {}));
 
    if(reneg_info.empty() && !next_protocols.empty())
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
@@ -159,6 +162,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    attempt and upgrade us to a new session with the EMS protection.
    */
    m_extensions.add(new Extended_Master_Secret);
+   m_extensions.add(new Certificate_Status_Request);
 
    m_extensions.add(new Renegotiation_Extension(reneg_info));
    m_extensions.add(new Server_Name_Indicator(session.server_info().hostname()));

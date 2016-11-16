@@ -184,6 +184,11 @@ class BOTAN_DLL Client_Hello final : public Handshake_Message
          return m_extensions.has<Extended_Master_Secret>();
          }
 
+      bool supports_cert_status_message() const
+         {
+         return m_extensions.has<Certificate_Status_Request>();
+         }
+
       bool supports_encrypt_then_mac() const
          {
          return m_extensions.has<Encrypt_then_MAC>();
@@ -313,6 +318,11 @@ class BOTAN_DLL Server_Hello final : public Handshake_Message
          return m_extensions.has<Encrypt_then_MAC>();
          }
 
+      bool supports_certificate_status_message() const
+         {
+         return m_extensions.has<Certificate_Status_Request>();
+         }
+
       bool supports_session_ticket() const
          {
          return m_extensions.has<Session_Ticket>();
@@ -436,6 +446,27 @@ class Certificate final : public Handshake_Message
       std::vector<byte> serialize() const override;
 
       std::vector<X509_Certificate> m_certs;
+   };
+
+/**
+* Certificate Status (RFC 6066)
+*/
+class Certificate_Status final : public Handshake_Message
+   {
+   public:
+      Handshake_Type type() const override { return CERTIFICATE_STATUS; }
+
+      std::shared_ptr<const OCSP::Response> response() const { return m_response; }
+
+      Certificate_Status(const std::vector<byte>& buf);
+
+      Certificate_Status(Handshake_IO& io,
+                         Handshake_Hash& hash,
+                         std::shared_ptr<const OCSP::Response> response);
+
+   private:
+      std::vector<byte> serialize() const override;
+      std::shared_ptr<const OCSP::Response> m_response;
    };
 
 /**
