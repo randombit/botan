@@ -18,7 +18,7 @@ namespace Botan {
 class BOTAN_DLL X942_PRF final : public KDF
    {
    public:
-      std::string name() const override { return "X942_PRF(" + m_key_wrap_oid + ")"; }
+      std::string name() const override { return "X9.42-PRF(" + m_key_wrap_oid + ")"; }
 
       KDF* clone() const override { return new X942_PRF(m_key_wrap_oid); }
 
