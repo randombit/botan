@@ -24,7 +24,6 @@ siphash
 
 pbkdf2
 bcrypt
-compression
 
 # required for private key encryption
 pbes2
@@ -41,11 +40,11 @@ emsa1
 
 auto_rng
 hmac_drbg
-
-ffi
 </required>
 
 <if_available>
+ffi
+
 tls
 prf_tls
 newhope
