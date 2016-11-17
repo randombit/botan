@@ -7,6 +7,7 @@ Contents
    index
    building
    python
+   cli
    firststep
    secmem
    rng

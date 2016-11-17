@@ -65,17 +65,6 @@ Botan implements the following hash algorithms:
 
 .. note:: Checksums are not suitable for cryptographic use, but can be used for error checking purposes.
 
-CLI
----
-The Botan command line interface allows the user to compute hash digests of files or datastreams. ``botan hash --algo=SHA-256 --buf-size=4096 *files`` can be used to invoke a hash computation.
-
-CLI Example
-^^^^^^^^^^^^^
-.. code-block:: sh
-
-  $ echo -n randombit | botan hash --algo=SHA-3
-  783A78B369AA0DE71A6155180EA9D544E7A1834CC4951548C3CE7D5E012C8C6B7EAE1C27DBDFA4DA58EE7B79B5CF07E7E6691AE39BEC1A7DDC501249266BB050``
-
 Code Example
 ------------
 Assume we want to calculate the SHA-1, Whirlpool and SHA-3 hash digests of the STDIN stream using the Botan library.
