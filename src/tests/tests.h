@@ -348,7 +348,7 @@ class Test
 
          if(r.size() > min_offset)
             {
-            const size_t offset = std::min<size_t>(min_offset, rng.next_byte() % r.size());
+            const size_t offset = std::max<size_t>(min_offset, rng.next_byte() % r.size());
             const byte perturb = rng.next_nonzero_byte();
             r[offset] ^= perturb;
             }
