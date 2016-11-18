@@ -413,7 +413,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                      size_t total_consumed = needed;
 
                      while(needed > 0 &&
-                           result.test_lt("Never requesting more than max protocol len", needed, 18*1024) &&
+                           result.test_lt("Never requesting more than max protocol len", needed, Botan::TLS::MAX_CIPHERTEXT_SIZE+1) &&
                            result.test_lt("Total requested is readonable", total_consumed, 128*1024))
                         {
                         input.resize(needed);
@@ -443,7 +443,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
 
                      size_t total_consumed = 0;
 
-                     while(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
+                     while(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, Botan::TLS::MAX_CIPHERTEXT_SIZE+1))
                         {
                         input.resize(needed);
                         rng.randomize(input.data(), input.size());
@@ -698,7 +698,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                         input = Test::mutate_vec(input, true, 5);
                         size_t needed = server->received_data(input.data(), input.size());
 
-                        if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
+                        if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, Botan::TLS::MAX_CIPHERTEXT_SIZE+1))
                            {
                            input.resize(needed);
                            rng.randomize(input.data(), input.size());
@@ -738,7 +738,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                         input = Test::mutate_vec(input, true, 5);
                         size_t needed = client->received_data(input.data(), input.size());
 
-                        if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
+                        if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, Botan::TLS::MAX_CIPHERTEXT_SIZE+1))
                            {
                            input.resize(needed);
                            rng.randomize(input.data(), input.size());
