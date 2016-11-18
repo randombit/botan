@@ -11,7 +11,6 @@
 #include <cstddef>
 #include <string>
 #include <vector>
-#include <botan/auto_rng.h>
 #include <botan/alg_id.h>
 #include <botan/asn1_oid.h>
 #include <botan/assert.h>

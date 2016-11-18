@@ -45,7 +45,7 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
       /**
       * Creates a new XMSS private key for the chosen XMSS signature method.
       * New seeds for public/private key and pseudo random function input are
-      * generated using AutoSeeded_RNG. The appropriate WOTS signature method
+      * generated using the provided RNG. The appropriate WOTS signature method
       * will be automatically set based on the chosen XMSS signature method.
       *
       * @param xmss_algo_id Identifier for the selected XMSS signature method.

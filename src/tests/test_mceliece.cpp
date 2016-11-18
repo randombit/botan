@@ -13,13 +13,16 @@
 #include <botan/mceliece.h>
 #include <botan/pubkey.h>
 #include <botan/oids.h>
-#include <botan/hmac_drbg.h>
 #include <botan/loadstor.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
 
+#if defined(BOTAN_HAS_HMAC_DRBG)
+  #include <botan/hmac_drbg.h>
+#endif
+
 #if defined(BOTAN_HAS_MCEIES)
-#include <botan/mceies.h>
+  #include <botan/mceies.h>
 #endif
 
 #endif
@@ -30,21 +33,7 @@ namespace {
 
 #if defined(BOTAN_HAS_MCELIECE)
 
-std::vector<byte> hash_bytes(const byte b[], size_t len, const std::string& hash_fn = "SHA-256")
-   {
-   std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_fn));
-   hash->update(b, len);
-   std::vector<byte> r(hash->output_length());
-   hash->final(r.data());
-   return r;
-   }
-
-template<typename A>
-std::vector<byte> hash_bytes(const std::vector<byte, A>& v)
-   {
-   return hash_bytes(v.data(), v.size());
-   }
-
+#if defined(BOTAN_HAS_HMAC_DRBG)
 class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
    {
    public:
@@ -100,9 +89,26 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
          return result;
          }
 
+   private:
+      std::vector<byte> hash_bytes(const byte b[], size_t len, const std::string& hash_fn = "SHA-256")
+         {
+         std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_fn));
+         hash->update(b, len);
+         std::vector<byte> r(hash->output_length());
+         hash->final(r.data());
+         return r;
+         }
+
+      template<typename A>
+      std::vector<byte> hash_bytes(const std::vector<byte, A>& v)
+         {
+         return hash_bytes(v.data(), v.size());
+         }
+
    };
 
 BOTAN_REGISTER_TEST("mce_keygen", McEliece_Keygen_Encrypt_Test);
+#endif
 
 class McEliece_Tests : public Test
    {
