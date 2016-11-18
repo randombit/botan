@@ -10,6 +10,7 @@
 #define BOTAN_ENUMS_H__
 
 #include <botan/build.h>
+#include <string>
 
 namespace Botan {
 
@@ -40,6 +41,8 @@ class Public_Key;
 */
 BOTAN_DLL void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
                                                                 Key_Constraints constraints);
+
+std::string BOTAN_DLL key_constraints_to_string(Key_Constraints);
 
 }
 

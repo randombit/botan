@@ -239,7 +239,11 @@ PK_Signer* choose_sig_format(const Private_Key& key,
       {
       padding = "EMSA3";
       }
-   else if(algo_name == "DSA" || algo_name == "ECDSA" || algo_name == "ECGDSA" || algo_name == "ECKCDSA")
+   else if(algo_name == "DSA" ||
+           algo_name == "ECDSA" ||
+           algo_name == "ECGDSA" ||
+           algo_name == "ECKCDSA" ||
+           algo_name == "GOST-34.10")
       {
       padding = "EMSA1";
       }

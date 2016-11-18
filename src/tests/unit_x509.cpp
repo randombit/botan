@@ -16,26 +16,7 @@
 #include <botan/x509self.h>
 #include <botan/x509path.h>
 #include <botan/x509_ca.h>
-
-#if defined(BOTAN_HAS_RSA)
-  #include <botan/rsa.h>
-#endif
-
-#if defined(BOTAN_HAS_DSA)
-  #include <botan/dsa.h>
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ecdsa.h>
-#endif
-
-#if defined(BOTAN_HAS_ECGDSA)
-  #include <botan/ecgdsa.h>
-#endif
-
-#if defined(BOTAN_HAS_ECKCDSA)
-  #include <botan/eckcdsa.h>
-#endif
+#include <botan/pk_algs.h>
 
 #endif
 
@@ -103,41 +84,17 @@ Botan::X509_Cert_Options req_opts2()
 
 std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo)
    {
-#if defined(BOTAN_HAS_RSA)
+   std::string params = ""; // default "" means choose acceptable algo-specific params
+
+   // Here we override defaults as needed
    if(algo == "RSA")
-      {
-      return std::unique_ptr<Botan::Private_Key>(new Botan::RSA_PrivateKey(Test::rng(), 1024));
-      }
-#endif
-#if defined(BOTAN_HAS_DSA)
-   if(algo == "DSA")
-      {
-      Botan::DL_Group grp("dsa/botan/2048");
-      return std::unique_ptr<Botan::Private_Key>(new Botan::DSA_PrivateKey(Test::rng(), grp));
-      }
-#endif
-#if defined(BOTAN_HAS_ECDSA)
-   if(algo == "ECDSA")
-      {
-      Botan::EC_Group grp("secp256r1");
-      return std::unique_ptr<Botan::Private_Key>(new Botan::ECDSA_PrivateKey(Test::rng(), grp));
-      }
-#endif
-#if defined(BOTAN_HAS_ECGDSA)
-   if(algo == "ECGDSA")
-      {
-      Botan::EC_Group grp("brainpool256r1");
-      return std::unique_ptr<Botan::Private_Key>(new Botan::ECGDSA_PrivateKey(Test::rng(), grp));
-      }
-#endif
-#if defined(BOTAN_HAS_ECKCDSA)
-   if(algo == "ECKCDSA")
-      {
-      Botan::EC_Group grp("brainpool256r1");
-      return std::unique_ptr<Botan::Private_Key>(new Botan::ECKCDSA_PrivateKey(Test::rng(), grp));
-      }
-#endif
-   return std::unique_ptr<Botan::Private_Key>(nullptr);
+      params = "1024";
+   if(algo == "GOST-34.10")
+      params = "gost_256A";
+   if(algo == "ECKCDSA" || algo == "ECGDSA")
+      params = "brainpool256r1";
+
+   return Botan::create_private_key(algo, Test::rng(), params);
    }
 
 
@@ -302,6 +259,13 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
                       from_date(2008, 01, 01),
                       from_date(2033, 01, 01));
 
+   // user#1 creates a self-signed cert on the side
+   Botan::X509_Certificate user1_ss_cert =
+      Botan::X509::create_self_signed_cert(req_opts1(sig_algo),
+                                           *user1_key,
+                                           hash_fn,
+                                           Test::rng());
+
    result.test_eq("user1 key usage", (user1_cert.constraints() & req_opts1(sig_algo).constraints) == req_opts1(sig_algo).constraints, true);
 
    /* Copy, assign and compare */
@@ -329,11 +293,16 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
    Botan::X509_CRL crl1 = ca.new_crl(Test::rng());
 
    /* Verify the certs */
+   Botan::Path_Validation_Restrictions restrictions(false);
    Botan::Certificate_Store_In_Memory store;
 
-   store.add_certificate(ca.ca_certificate());
+   // First try with an empty store
+   Botan::Path_Validation_Result result_no_issuer = Botan::x509_path_validate(user1_cert, restrictions, store);
+   result.test_eq("user 1 issuer not found",
+                  result_no_issuer.result_string(),
+                  Botan::Path_Validation_Result::status_string(Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND));
 
-   Botan::Path_Validation_Restrictions restrictions(false);
+   store.add_certificate(ca.ca_certificate());
 
    Botan::Path_Validation_Result result_u1 = Botan::x509_path_validate(user1_cert, restrictions, store);
    if(!result.confirm("user 1 validates", result_u1.successful_validation()))
@@ -347,6 +316,10 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
       result.test_note("user 2 validation result was " + result_u2.result_string());
       }
 
+   Botan::Path_Validation_Result result_self_signed = Botan::x509_path_validate(user1_ss_cert, restrictions, store);
+   result.test_eq("user 1 issuer not found",
+                  result_no_issuer.result_string(),
+                  Botan::Path_Validation_Result::status_string(Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND));
    store.add_crl(crl1);
 
    std::vector<Botan::CRL_Entry> revoked;
@@ -632,12 +605,8 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
       result.test_throws("cert sign not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
             typical_usage.ca); });
 
-      verify_cert_constraints_valid_for_key_type(*key, typical_usage.non_repudiation);
-
-      result.test_throws("key encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_encipherment); });
-      result.test_throws("data encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.data_encipherment); });
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.data_encipherment);
+      verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_encipherment);
 
       result.test_throws("key agreement not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
             typical_usage.key_agreement); });
@@ -650,8 +619,7 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
       result.test_throws("sign, cert sign, crl sign not permitted not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
             typical_usage.sign_everything); });
       }
-   else if(pk_algo == "RW" || pk_algo == "NR" || pk_algo == "DSA" ||
-         pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA")
+   else if(pk_algo == "DSA" || pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA" || pk_algo == "GOST-34.10")
       {
       // these are signature algorithms only
       result.test_throws("all constraints not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
@@ -686,23 +654,44 @@ class X509_Cert_Unit_Tests : public Test
       std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
-         const std::vector<std::string> sig_algos { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA" };
+
+         const std::vector<std::string> sig_algos { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10" };
          Test::Result cert_result("X509 Unit");
          Test::Result usage_result("X509 Usage");
          Test::Result self_issued_result("X509 Self Issued");
 
          for(const auto& algo : sig_algos)
             {
-            cert_result.merge(test_x509_cert(algo));
-            usage_result.merge(test_usage(algo));
-            self_issued_result.merge(test_self_issued(algo));
+            try {
+               cert_result.merge(test_x509_cert(algo));
+            }
+            catch(std::exception& e)
+               {
+               cert_result.test_failure("test_x509_cert " + algo, e.what());
+               }
+
+            try {
+              usage_result.merge(test_usage(algo));
+            }
+            catch(std::exception& e)
+               {
+               usage_result.test_failure("test_usage " + algo, e.what());
+               }
+
+            try {
+              self_issued_result.merge(test_self_issued(algo));
+            }
+            catch(std::exception& e)
+               {
+               self_issued_result.test_failure("test_self_issued " + algo, e.what());
+               }
             }
 
          results.push_back(cert_result);
          results.push_back(usage_result);
          results.push_back(self_issued_result);
 
-         const std::vector<std::string> pk_algos { "DH", "ECDH", "RSA", "ElGamal", "RW", "NR",
+         const std::vector<std::string> pk_algos { "DH", "ECDH", "RSA", "ElGamal", "GOST-34.10",
                                                    "DSA", "ECDSA", "ECGDSA", "ECKCDSA" };
          Test::Result valid_constraints_result("X509 Valid Constraints");
 
