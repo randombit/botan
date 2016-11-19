@@ -607,9 +607,10 @@ policy settings from a file.
  .. cpp:function:: std::vector<std::string> allowed_ecc_curves() const
 
      Return a list of ECC curves we are willing to use, in order of preference.
+     The default ordering puts the best performing ECC first.
 
-     Default: "brainpool512r1", "secp521r1", "brainpool384r1",
-     "secp384r1", "brainpool256r1", "secp256r1", "x25519"
+     Default: "x25519", "secp256r1", "secp521r1", "secp384r1",
+     "brainpool256r1", "brainpool384r1", "brainpool512r1"
 
      No other values are currently defined.
 

@@ -95,14 +95,16 @@ bool Policy::allowed_signature_method(const std::string& sig_method) const
 
 std::vector<std::string> Policy::allowed_ecc_curves() const
    {
+   // Default list is ordered by performance
+
    return {
-      "brainpool512r1",
+      "x25519",
+      "secp256r1",
       "secp521r1",
-      "brainpool384r1",
       "secp384r1",
       "brainpool256r1",
-      "secp256r1",
-      "x25519",
+      "brainpool384r1",
+      "brainpool512r1",
       };
    }
 
