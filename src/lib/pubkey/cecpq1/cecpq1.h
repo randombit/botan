@@ -13,10 +13,12 @@
 
 namespace Botan {
 
-struct CECPQ1_key {
-   secure_vector<uint8_t> m_x25519;
-   newhope_poly m_newhope;
-};
+class CECPQ1_key
+   {
+   public:
+      secure_vector<uint8_t> m_x25519;
+      newhope_poly m_newhope;
+   };
 
 void BOTAN_DLL CECPQ1_offer(uint8_t* offer_message,
                             CECPQ1_key* offer_key_output,
