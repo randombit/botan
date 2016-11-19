@@ -984,8 +984,10 @@ class TLS_Unit_Tests : public Test
 
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
                               { { "use_ecc_point_compression", "true" } });
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-256/GCM", "AEAD",
+                              { { "ecc_curves", "secp521r1" } });
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
-                              { { "ecc_curves", "secp384r1" } });
+                              { { "ecc_curves", "brainpool256r1" } });
 
 #if defined(BOTAN_HAS_CURVE_25519)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
