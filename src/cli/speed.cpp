@@ -1246,7 +1246,7 @@ class Speed final : public Command
 
          while(sharedb_timer.under(msec))
             {
-            std::vector<uint8_t> send_a(NEWHOPE_SENDABYTES), send_b(NEWHOPE_SENDBBYTES);
+            std::vector<uint8_t> send_a(Botan::NEWHOPE_SENDABYTES), send_b(Botan::NEWHOPE_SENDBBYTES);
             std::vector<uint8_t> shared_a(32), shared_b(32);
 
             Botan::newhope_poly sk_a;

@@ -21,9 +21,9 @@ std::vector<std::string> Policy::allowed_ciphers() const
    return {
       //"AES-256/OCB(12)",
       //"AES-128/OCB(12)",
+      "ChaCha20Poly1305",
       "AES-256/GCM",
       "AES-128/GCM",
-      "ChaCha20Poly1305",
       "AES-256/CCM",
       "AES-128/CCM",
       //"AES-256/CCM(8)",
@@ -71,6 +71,7 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
       //"ECDHE_PSK",
       //"DHE_PSK",
       //"PSK",
+      "CECPQ1",
       "ECDH",
       "DH",
       //"RSA",

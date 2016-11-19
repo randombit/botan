@@ -29,6 +29,10 @@ class Credentials_Manager;
 class SRP6_Server_Session;
 #endif
 
+#if defined(BOTAN_HAS_CECPQ1)
+class CECPQ1_key;
+#endif
+
 namespace TLS {
 
 class Session;
@@ -566,6 +570,15 @@ class Server_Key_Exchange final : public Handshake_Message
          }
 #endif
 
+#if defined(BOTAN_HAS_CECPQ1)
+      // Only valid for CECPQ1 negotiation
+      const CECPQ1_key& cecpq1_key() const
+         {
+         BOTAN_ASSERT_NONNULL(m_cecpq1_key);
+         return *m_cecpq1_key;
+         }
+#endif
+
       Server_Key_Exchange(Handshake_IO& io,
                           Handshake_State& state,
                           const Policy& policy,
@@ -585,6 +598,11 @@ class Server_Key_Exchange final : public Handshake_Message
 #if defined(BOTAN_HAS_SRP6)
       std::unique_ptr<SRP6_Server_Session> m_srp_params;
 #endif
+
+#if defined(BOTAN_HAS_CECPQ1)
+      std::unique_ptr<CECPQ1_key> m_cecpq1_key;
+#endif
+
       std::unique_ptr<Private_Key> m_kex_key;
 
       std::vector<byte> m_params;

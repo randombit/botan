@@ -666,13 +666,13 @@ void gen_a(poly *a, const uint8_t *seed, Newhope_Mode mode)
 
    if(mode == Newhope_Mode::BoringSSL)
       {
-      xof = StreamCipher::create("CTR(AES-128)");
+      xof = StreamCipher::create_or_throw("CTR-BE(AES-128)");
       xof->set_key(seed, 16);
       xof->set_iv(seed + 16, 16);
       }
    else
       {
-      xof = StreamCipher::create("SHAKE-128");
+      xof = StreamCipher::create_or_throw("SHAKE-128");
       xof->set_key(seed, NEWHOPE_SEED_BYTES);
       }
 

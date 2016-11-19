@@ -522,7 +522,7 @@ policy settings from a file.
 
      Cipher names without an explicit mode refers to CBC+HMAC ciphersuites.
 
-     Default value: "AES-256/GCM", "AES-128/GCM", "ChaCha20Poly1305",
+     Default value: "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM",
      "AES-256/CCM", "AES-128/CCM", "AES-256", "AES-128"
 
      Also allowed: "AES-256/CCM(8)", "AES-128/CCM(8)",
@@ -567,7 +567,7 @@ policy settings from a file.
      Returns the list of key exchange methods we are willing to use,
      in order of preference.
 
-     Default: "ECDH", "DH"
+     Default: "CECPQ1", "ECDH", "DH"
 
      Also allowed: "RSA", "SRP_SHA", "ECDHE_PSK", "DHE_PSK", "PSK"
 
