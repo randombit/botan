@@ -138,31 +138,42 @@ class TLS_Server final : public Command
                {
                while(!server.is_closed())
                   {
-                  uint8_t buf[4*1024] = { 0 };
-                  ssize_t got = ::read(fd, buf, sizeof(buf));
-
-                  if(got == -1)
+                  try 
                      {
-                     std::cout << "Error in socket read - " << strerror(errno) << std::endl;
-                     break;
+                     uint8_t buf[4*1024] = { 0 };
+                     ssize_t got = ::read(fd, buf, sizeof(buf));
+
+                     if(got == -1)
+                        {
+                        std::cout << "Error in socket read - " << strerror(errno) << std::endl;
+                        break;
+                        }
+
+                     if(got == 0)
+                        {
+                        std::cout << "EOF on socket" << std::endl;
+                        break;
+                        }
+
+                     server.received_data(buf, got);
+
+                     while(server.is_active() && !pending_output.empty())
+                        {
+                        std::string output = pending_output.front();
+                        pending_output.pop_front();
+                        server.send(output);
+
+                        if(output == "quit\n")
+                           server.close();
+                        }
                      }
-
-                  if(got == 0)
+                  catch(std::exception& e) 
                      {
-                     std::cout << "EOF on socket" << std::endl;
-                     break;
-                     }
-
-                  server.received_data(buf, got);
-
-                  while(server.is_active() && !pending_output.empty())
-                     {
-                     std::string output = pending_output.front();
-                     pending_output.pop_front();
-                     server.send(output);
-
-                     if(output == "quit\n")
-                        server.close();
+                     std::cout << "Connection1 problem: " << e.what() << std::endl;
+                     if(is_tcp)
+                        {
+                        ::close(fd);
+                        }
                      }
                   }
                }
