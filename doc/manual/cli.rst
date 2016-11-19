@@ -27,9 +27,12 @@ and are listed whith their available arguments when botan is called with an inva
 Hash
 ----------------
 ``hash --algo=SHA-256 --buf-size=4096 files``
-  Compute the *algo* digest of the data at *file*. *file* defaults to STDIN.
+  Compute the *algo* digest over the data in *files*. *files* defaults to STDIN.
+  
+Password Hash
+----------------
 ``gen_bcrypt --work-factor=12 password``
-  Calculate the bcrypt password digest of *file*. *work-factor* is a integer between 1 and 18.
+  Calculate the bcrypt password digest of *file*. *work-factor* is an integer between 1 and 18.
   A higher *work-factor* value results in a more expensive hash calculation.
 ``check_bcrypt password hash``
   Checks if the bcrypt hash of the passed *password* equals the passed *hash* value.
@@ -38,30 +41,30 @@ Public Key Cryptography
 -------------------------------------
 ``keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --der-out``
   Generate a PKCS #8 *algo* private key. If *der-out* is passed, the pair is BER encoded.
-  Else PEM encoding is used. To protect the PKCS #8 formatted key, it is recommended to encrypt it with a provided
+  Otherwise, PEM encoding is used. To protect the PKCS #8 formatted key, it is recommended to encrypt it with a provided
   *passphrase*. *pbe* is the name of the desired encryption algorithm, which uses *pbe-millis* milliseconds to derive the encryption key from
-  the passed *passphrase*. Algorithm specific parameters, as the desired bitlength of a RSA key, can be passed with *params*.
+  the passed *passphrase*. Algorithm specific parameters, as the desired bitlength of an RSA key, can be passed with *params*.
 
-    - For RSA *params* specifies the bit length of the RSA modulus. Defaults to 3072.
-    - For DH *params* specifies the DH parameters. Defaults to modp/ietf/2048.
-    - For DSA *params* specifies the DSA parameters. Defaults to dsa/botan/2048.
-    - For EC algorithms *params* specifies the elliptic curve. Defaults to secp256r1.
+    - For RSA *params* specifies the bit length of the RSA modulus. It defaults to 3072.
+    - For DH *params* specifies the DH parameters. It defaults to modp/ietf/2048.
+    - For DSA *params* specifies the DSA parameters. It defaults to dsa/botan/2048.
+    - For EC algorithms *params* specifies the elliptic curve. It defaults to secp256r1.
 
 ``pkcs8 --pass-in= --pub-out --der-out --pass-out= --pbe= --pbe-millis=300 key``
   Open a PKCS #8 formatted key at *key*. If *key* is encrypted, the passphrase must be passed as
   *pass-in*. It is possible to (re)encrypt the read key with the passphrase passed as *pass-out*. The
-  parameters *pbe-millis* and *pbe* work similar to ``keygen``.
+  parameters *pbe-millis* and *pbe* work similarly to ``keygen``.
 
 ``sign --passphrase= --hash=SHA-256 --emsa= key file``
-  Sign a the data at *file* using the PKCS #8 private key *key*. If *key* is encrypted, the used passphrase must
+  Sign the data in *file* using the PKCS #8 private key *key*. If *key* is encrypted, the used passphrase must
   be passed as *pass-in*. *emsa* specifies the signature scheme and *hash* the cryptographic hash function used in the scheme.
 
     - For RSA signatures EMSA4 (RSA-PSS) is the default scheme.
     - For ECDSA and DSA *emsa* defaults to EMSA1.
 
 ``verify --hash=SHA-256 --emsa= pubkey file signature``
-  Verify the authenticity of the data at *file* with the provided signature *signature* and
-  the public key *pubkey*. Similar to the signing process, *emsa* specifies the signature scheme and *hash* the cryptographic hash function used in the scheme.
+  Verify the authenticity of the data in *file* with the provided signature *signature* and
+  the public key *pubkey*. Similarly to the signing process, *emsa* specifies the signature scheme and *hash* the cryptographic hash function used in the scheme.
 ``gen_dl_group --pbits=1024 --qbits=0 --type=subgroup``
   Generate ANSI X9.42 encoded Diffie-Hellman group parameters.
 
@@ -90,7 +93,7 @@ X.509
   passphrase *ca-key-pass* has to be passed. The created certificate has a validity period of *duration* days.
 
 ``ocsp_check subject issuer``
-  Verify a X.509 certificate against the issuers OCSP responder. Pass the certificate to validate as *subject* and the CA certificate as *issuer*.
+  Verify an X.509 certificate against the issuers OCSP responder. Pass the certificate to validate as *subject* and the CA certificate as *issuer*.
 
 ``cert_info --ber file``
   Parse X.509 PEM certificate and display data fields.
@@ -102,23 +105,23 @@ TLS Server/Client
 -----------------------
 ``tls_client host --port=443 --print-certs --policy= --tls1.0 --tls1.1 --tls1.2 --session-db= --session-db-pass= --next-protocols= --type=tcp``
   Implements a testing TLS client, which connects to *host* via TCP or UDP on port *port*. The TLS version can be set with the flags *tls1.0*, *tls1.1* and *tls1.2* of which the lowest specified version is automatically chosen.
-  If none of the TLS version flags is set, the latest supported version is chosen. The client honors the passed TLS policy *policy* and prints all certificates in the chain, if *print-certs* is passed.
+  If none of the TLS version flags is set, the latest supported version is chosen. The client honors the TLS policy defined in the *policy* file and prints all certificates in the chain, if *print-certs* is passed.
   *next-protocols* is a comma seperated list and specifies the protocols to advertise with Application-Layer Protocol Negotiation (ALPN).
 
 ``tls_server cert key --port=443 --type=tcp --policy=``
   Implements a testing TLS server, which allows TLS clients to connect. Binds to either TCP or UDP on port *port*. The server uses the certificate *cert* and the respective PKCS #8
-  private key *key*. The server honors the passed TLS policy *policy*.
+  private key *key*. The server honors the TLS policy defined in the *policy* file.
 
-Numbertheory
+Number Theory
 -----------------------
 ``is_prime --prob=56 n``
   Test if the integer *n* is composite or prime with a Miller-Rabin primality test with *(prob+2)/2* iterations.
 
 ``factor n``
-  Factor the integer *n* using a combination of trial division by small primes, and Pollard's Rho algorithm
+  Factor the integer *n* using a combination of trial division by small primes, and Pollard's Rho algorithm.
 
 ``gen_prime --count=1 bits``
-  Samples *count* primes with the a length of *bits* bits.
+  Samples *count* primes with a length of *bits* bits.
 
 Miscellaneous Commands
 -------------------------------------
@@ -153,7 +156,8 @@ Miscellaneous Commands
   If both are unset, the Botan AutoSeeded_RNG is used.
 
 ``cc_encrypt CC passphrase --tweak=``
-  Encrypt the passed valid credit card number *CC* using FPE encryption and the passphrase *passphrase*. Due to the nature of FPE,
+  Encrypt the passed valid credit card number *CC* using FPE encryption and the passphrase *passphrase*. The key is derived from the 
+  passphrase using PBKDF2 with SHA256. Due to the nature of FPE,
   the ciphertext is also a credit card number with a valid checksum. *tweak* is public and parameterizes the encryption function.
 ``cc_decrypt CC passphrase --tweak=``
   Decrypt the passed valid ciphertext *CC* using FPE decryption with the passphrase *passphrase* and the tweak *tweak*.
