@@ -13,6 +13,11 @@ Version 1.11.34, Not Yet Released
   signatures are rarely generated (such as code signing) XMSS makes an
   excellent choice. (GH #717)
 
+* Add support for CECPQ1 TLS ciphersuites. These use a combination of
+  x25519 ECDH and NewHope to provide post-quantum security. The
+  ciphersuites implemented are non-standard, but compatible with
+  BoringSSL's version. (GH #729)
+
 * Previously both public and private keys performed automatic self testing after
   generation or loading. However this often caused unexpected application
   performance problems, and so has been removed. Instead applications must call
@@ -41,6 +46,11 @@ Version 1.11.34, Not Yet Released
   ciphersuite. Some applications may be forced to re-enable RSA for interop
   reasons. DSA and CCM-8 are rarely used, and likely should not be negotiated
   outside of special circumstances.
+
+* The default TLS policy now prefers ChaCha20Poly1305 cipher over any AES mode.
+
+* The default TLS policy now orders ECC curve preferences in order by performance,
+  with x25519 first, then P-256, then P-521, then the rest.
 
 * Add a BSD sockets version of the HTTP client code used for OCSP. GH #699
 
