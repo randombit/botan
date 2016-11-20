@@ -13,10 +13,9 @@ Version 1.11.34, Not Yet Released
   signatures are rarely generated (such as code signing) XMSS makes an
   excellent choice. (GH #717)
 
-* Add support for CECPQ1 TLS ciphersuites. These use a combination of
-  x25519 ECDH and NewHope to provide post-quantum security. The
-  ciphersuites implemented are non-standard, but compatible with
-  BoringSSL's version. (GH #729)
+* Add support for CECPQ1 TLS ciphersuites. These use a combination of x25519
+  ECDH and NewHope to provide post-quantum security. The ciphersuites are not
+  IETF standard, but is compatible with BoringSSL. (GH #729)
 
 * Previously both public and private keys performed automatic self testing after
   generation or loading. However this often caused unexpected application
@@ -99,7 +98,15 @@ Version 1.11.34, Not Yet Released
 
 * More tests for pipe/filter (GH #689 #693) and AEADs (GH #552)
 
-* Merged the fuzzer framework, previously https://github.com/randombit/botan-fuzzers
+* Add a test suite for timing analysis for TLS CBC decryption, OAEP decryption,
+  and PKCS #1 v1.5 decryption. These operations all have the feature that if an
+  attacker can distinguish internal operations, such as through a variance in
+  timing, they can use this oracle to decrypt arbitrary ciphertexts. GH #733
+
+* Add a test suite for testing and fuzzing with TLS-Attacker, a tool for
+  analyzing TLS libraries. (https://github.com/RUB-NDS/TLS-Attacker)
+
+* Add a fuzzing framework. Supports fuzzing some APIs using AFL and libFuzzer.
 
 * The LibraryInitializer type is no longer needed and is now deprecated.
 
