@@ -21,7 +21,7 @@ namespace TLS {
 * TLS CBC+HMAC AEAD base class (GenericBlockCipher in TLS spec)
 * This is the weird TLS-specific mode, not for general consumption.
 */
-class TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
+class BOTAN_DLL TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
    {
    public:
       size_t process(uint8_t buf[], size_t sz) override final;
