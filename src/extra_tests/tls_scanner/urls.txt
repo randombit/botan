@@ -22,7 +22,6 @@ hp.com
 huawei.com
 ibm.com
 ietf.org
-intel.com
 intuit.com
 linkedin.com
 medium.com
@@ -32,6 +31,12 @@ nec.com
 netflix.com
 openssl.org
 oracle.com
+sgi.com
+chase.com
+bankofamerica.com
+citibank.com
+wellsfargo.com
+ebay.com
 paypal.com
 pwc.com
 randombit.net
@@ -42,7 +47,6 @@ sas.com
 siemens.com
 sony.com
 stripe.com
-swift.com
 symantec.com
 tls.mbed.org
 twitter.com

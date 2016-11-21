@@ -1,6 +1,7 @@
 #!/usr/bin/python2
 
 import sys
+import time
 import subprocess
 import re
 
@@ -27,16 +28,24 @@ def scanner(args = None):
     scanners = {}
 
     for url in [s.strip() for s in open(args[1]).readlines()]:
-        scanners[url] = subprocess.Popen(['../../../botan', 'tls_client', url], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+        scanners[url] = subprocess.Popen(['../../../botan', 'tls_client', '--policy=policy.txt', url],
+                                         stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
 
     for url in scanners.keys():
         scanners[url].stdin.close()
 
     report = {}
+    timeout = 10
 
     for url in scanners.keys():
         print "waiting for", url
-        scanners[url].wait()
+
+        for i in range(timeout):
+            scanners[url].poll()
+            if scanners[url].returncode != None:
+                break
+            #print "Waiting %d more seconds for %s" % (timeout-i, url)
+            time.sleep(1)
 
         if scanners[url].returncode != None:
             output = scanners[url].stdout.read() + scanners[url].stderr.read()
