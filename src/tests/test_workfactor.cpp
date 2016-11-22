@@ -12,6 +12,7 @@
 
 namespace Botan_Tests {
 
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
 class PK_Workfactor_Tests : public Text_Based_Test
    {
    public:
@@ -41,5 +42,6 @@ class PK_Workfactor_Tests : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("pk_workfactor", PK_Workfactor_Tests);
+#endif
 
 }
