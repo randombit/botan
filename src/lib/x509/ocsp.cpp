@@ -189,8 +189,9 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
          }
       }
 
-   if(!signing_cert)
+   if(!signing_cert && ee_cert_path.size() > 1)
       {
+      // End entity cert is not allowed to sign their own OCSP request :)
       for(size_t i = 1; i < ee_cert_path.size(); ++i)
          {
          // Check all CA certificates in the (assumed validated) EE cert path
@@ -208,7 +209,24 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
          }
       }
 
-   // TODO: this ignores m_certs
+   if(!signing_cert && m_certs.size() > 0)
+      {
+      for(size_t i = 0; i < m_certs.size(); ++i)
+         {
+         // Check all CA certificates in the (assumed validated) EE cert path
+         if(!m_signer_name.empty() && m_certs[i].subject_dn() == m_signer_name)
+            {
+            signing_cert = std::make_shared<const X509_Certificate>(m_certs[i]);
+            break;
+            }
+
+         if(m_key_hash.size() > 0 && m_certs[i].subject_public_key_bitstring_sha1() == m_key_hash)
+            {
+            signing_cert = std::make_shared<const X509_Certificate>(m_certs[i]);
+            break;
+            }
+         }
+      }
 
    if(!signing_cert)
       return Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND;
