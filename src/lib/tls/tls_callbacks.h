@@ -124,6 +124,15 @@ class BOTAN_DLL Callbacks
           const std::string& hostname);
 
        /**
+       * Called by default `tls_verify_cert_chain` to get the timeout to use for OCSP
+       * requests. Return 0 to disable online OCSP checks.
+       */
+       virtual std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
+          {
+          return std::chrono::milliseconds(0);
+          }
+
+       /**
        * Optional callback: inspect handshake message
        * Throw an exception to abort the handshake.
        * Default simply ignores the message.

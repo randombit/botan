@@ -35,8 +35,6 @@ void TLS::Callbacks::tls_verify_cert_chain(
 
    Path_Validation_Restrictions restrictions;
 
-   auto ocsp_timeout = std::chrono::milliseconds(300);
-
    Path_Validation_Result result =
       x509_path_validate(cert_chain,
                          restrictions,
@@ -44,7 +42,7 @@ void TLS::Callbacks::tls_verify_cert_chain(
                          (usage == Usage_Type::TLS_SERVER_AUTH ? hostname : ""),
                          usage,
                          std::chrono::system_clock::now(),
-                         ocsp_timeout);
+                         tls_verify_cert_chain_ocsp_timeout());
 
    if(!result.successful_validation())
       throw Exception("Certificate validation failure: " + result.result_string());
