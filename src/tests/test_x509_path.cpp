@@ -93,7 +93,7 @@ class X509test_Path_Validation_Tests : public Test
             if(path_result.successful_validation() && path_result.trust_root() != root)
                path_result = Botan::Path_Validation_Result(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
 
-            result.test_eq("validation result", path_result.result_string(), expected_result);
+            result.test_eq("test " + filename, path_result.result_string(), expected_result);
             results.push_back(result);
             }
 
