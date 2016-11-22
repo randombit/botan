@@ -104,7 +104,8 @@ class Cert_Info final : public Command
 
 BOTAN_REGISTER_COMMAND("cert_info", Cert_Info);
 
-#if defined(BOTAN_HAS_OCSP)
+#if defined(BOTAN_HAS_OCSP) && defined(BOTAN_HAS_HTTP_UTIL)
+
 class OCSP_Check final : public Command
    {
    public:
@@ -119,7 +120,7 @@ class OCSP_Check final : public Command
          cas.add_certificate(issuer);
          Botan::OCSP::Response resp = Botan::OCSP::online_check(issuer, subject, &cas);
 
-         auto status = resp.status_for(issuer, subject);
+         auto status = resp.status_for(issuer, subject, std::chrono::system_clock::now());
 
          if(status == Botan::Certificate_Status_Code::VERIFIED)
             {
@@ -135,7 +136,7 @@ class OCSP_Check final : public Command
 
 BOTAN_REGISTER_COMMAND("ocsp_check", OCSP_Check);
 
-#endif // OCSP
+#endif // OCSP && HTTP
 
 class Cert_Verify final : public Command
    {
