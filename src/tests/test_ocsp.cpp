@@ -23,7 +23,7 @@ class OCSP_Tests : public Test
       std::vector<uint8_t> slurp_data_file(const std::string& path)
          {
          const std::string fsname = Test::data_file(path);
-         std::ifstream file(fsname.c_str());
+         std::ifstream file(fsname.c_str(), std::ios::binary);
          if(!file.good())
             throw Test_Error("Error reading from " + fsname);
 
