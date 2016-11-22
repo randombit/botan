@@ -16,6 +16,10 @@
 #include <set>
 #include <chrono>
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)
+  #define BOTAN_HAS_ONLINE_REVOCATION_CHECKS
+#endif
+
 namespace Botan {
 
 /**
@@ -212,7 +216,7 @@ BOTAN_DLL check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& 
                     const std::vector<Certificate_Store*>& certstores,
                     std::chrono::system_clock::time_point ref_time);
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)
+#if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
 
 std::vector<std::set<Certificate_Status_Code>>
 BOTAN_DLL check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,

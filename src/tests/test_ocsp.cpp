@@ -143,6 +143,7 @@ class OCSP_Tests : public Test
          return result;
          }
 
+#if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
       Test::Result test_online_request()
          {
          Test::Result result("OCSP online check");
@@ -177,6 +178,7 @@ class OCSP_Tests : public Test
 
          return result;
          }
+#endif
 
    public:
       std::vector<Test::Result> run() override
@@ -187,8 +189,10 @@ class OCSP_Tests : public Test
          results.push_back(test_response_parsing());
          results.push_back(test_response_verification());
 
+#if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
          if(Test::run_online_tests())
             results.push_back(test_online_request());
+#endif
 
          return results;
          }

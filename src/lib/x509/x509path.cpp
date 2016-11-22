@@ -15,7 +15,7 @@
 #include <vector>
 #include <set>
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)
+#if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
   #include <future>
   #include <botan/http_util.h>
 #endif
@@ -239,7 +239,7 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
    return PKIX::check_crl(cert_path, crls, ref_time);
    }
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)
+#if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
 
 std::vector<std::set<Certificate_Status_Code>>
 PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
