@@ -1,0 +1,37 @@
+[RSA_Strength]
+ParamSize = 1024
+Workfactor = 80
+
+ParamSize = 1536
+Workfactor = 97
+
+ParamSize = 2048
+Workfactor = 111
+
+ParamSize = 3072
+Workfactor = 132
+
+ParamSize = 4096
+Workfactor = 150
+
+ParamSize = 8192
+Workfactor = 202
+
+[DL_Exponent_Size]
+ParamSize = 1024
+Workfactor = 86
+
+ParamSize = 1536
+Workfactor = 103
+
+ParamSize = 2048
+Workfactor = 116
+
+ParamSize = 3072
+Workfactor = 138
+
+ParamSize = 4096
+Workfactor = 156
+
+ParamSize = 8192
+Workfactor = 208
