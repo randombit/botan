@@ -143,11 +143,14 @@ void X509_Certificate::force_decode()
    m_issuer.add("X509.Certificate.v2.key_id", v2_issuer_key_id);
    m_subject.add("X509.Certificate.v2.key_id", v2_subject_key_id);
 
-   m_subject.add("X509.Certificate.public_key",
-               hex_encode(public_key.value));
+   m_subject.add("X509.Certificate.public_key", hex_encode(public_key.value));
 
-   std::unique_ptr<Public_Key> pub_key(subject_public_key());
-   m_self_signed = (dn_subject == dn_issuer) && check_signature(*pub_key);
+   m_self_signed = false;
+   if(dn_subject == dn_issuer)
+      {
+      std::unique_ptr<Public_Key> pub_key(subject_public_key());
+      m_self_signed = check_signature(*pub_key);
+      }
 
    if(m_self_signed && version == 0)
       {
@@ -219,6 +222,29 @@ Public_Key* X509_Certificate::subject_public_key() const
 std::vector<byte> X509_Certificate::subject_public_key_bits() const
    {
    return hex_decode(m_subject.get1("X509.Certificate.public_key"));
+   }
+
+std::vector<byte> X509_Certificate::subject_public_key_bitstring() const
+   {
+   // TODO: cache this
+   const std::vector<byte> key_bits = subject_public_key_bits();
+
+   AlgorithmIdentifier public_key_algid;
+   std::vector<byte> public_key_bitstr;
+
+   BER_Decoder(key_bits)
+      .decode(public_key_algid)
+      .decode(public_key_bitstr, BIT_STRING);
+
+   return public_key_bitstr;
+   }
+
+std::vector<byte> X509_Certificate::subject_public_key_bitstring_sha1() const
+   {
+   // TODO: cache this value
+   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-1"));
+   hash->update(this->subject_public_key_bitstring());
+   return hash->final_stdvec();
    }
 
 /*
