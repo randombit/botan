@@ -72,19 +72,6 @@ class Fuzzer_TLS_Server_Creds : public Credentials_Manager
          //m_rsa_key.reset(Botan::PKCS8::load_key(key_in, Botan::system_rng()));
          }
 
-      void verify_certificate_chain(const std::string& type,
-                                    const std::string& purported_hostname,
-                                    const std::vector<X509_Certificate>& cert_chain) override
-         {
-         try
-            {
-            Credentials_Manager::verify_certificate_chain(type,
-                                                          purported_hostname,
-                                                          cert_chain);
-            }
-         catch(std::exception& e) {}
-         }
-
       std::vector<Botan::X509_Certificate> cert_chain(
          const std::vector<std::string>& algos,
          const std::string& type,

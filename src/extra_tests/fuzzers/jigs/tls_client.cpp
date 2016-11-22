@@ -11,19 +11,6 @@
 class Fuzzer_TLS_Client_Creds : public Credentials_Manager
    {
    public:
-      void verify_certificate_chain(const std::string& type,
-                                    const std::string& purported_hostname,
-                                    const std::vector<X509_Certificate>& cert_chain) override
-         {
-         try
-            {
-            Credentials_Manager::verify_certificate_chain(type,
-                                                          purported_hostname,
-                                                          cert_chain);
-            }
-         catch(std::exception& e) {}
-         }
-
       std::string psk_identity_hint(const std::string&, const std::string&) override { return "psk_hint"; }
       std::string psk_identity(const std::string&, const std::string&, const std::string&) override { return "psk_id"; }
       SymmetricKey psk(const std::string&, const std::string&, const std::string&) override
