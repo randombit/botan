@@ -36,7 +36,7 @@ class BOTAN_DLL HKDF final : public KDF
                  const byte label[], size_t label_len) const override;
 
    private:
-      MessageAuthenticationCode* m_prf;
+      std::unique_ptr<MessageAuthenticationCode> m_prf;
    };
 
 /**
