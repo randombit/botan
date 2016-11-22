@@ -161,6 +161,9 @@ PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cer
          }
       }
 
+   while(cert_status.back().empty())
+      cert_status.pop_back();
+
    return cert_status;
    }
 
@@ -202,6 +205,9 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
             status.insert(Certificate_Status_Code::CERT_IS_REVOKED);
          }
       }
+
+   while(cert_status.back().empty())
+      cert_status.pop_back();
 
    return cert_status;
    }

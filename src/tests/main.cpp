@@ -35,7 +35,7 @@ namespace {
 class Test_Runner : public Botan_CLI::Command
    {
    public:
-      Test_Runner() : Command("test --threads=0 --soak=5 --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
+      Test_Runner() : Command("test --threads=0 --soak=5 --run-online-tests --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
 
       std::string help_text() const override
          {
@@ -76,6 +76,7 @@ class Test_Runner : public Botan_CLI::Command
          const size_t soak_level = get_arg_sz("soak");
          const std::string drbg_seed = get_arg("drbg-seed");
          const bool log_success = flag_set("log-success");
+         const bool run_online_tests = flag_set("run-online-tests");
          const std::string data_dir = get_arg_or("data-dir", "src/tests/data");
          const std::string pkcs11_lib = get_arg("pkcs11-lib");
 
@@ -179,7 +180,8 @@ class Test_Runner : public Botan_CLI::Command
              throw Botan_Tests::Test_Error("No usable RNG enabled in build, aborting tests");
              }
 
-         Botan_Tests::Test::setup_tests(soak_level, log_success, data_dir, pkcs11_lib, rng.get());
+         Botan_Tests::Test::setup_tests(soak_level, log_success, run_online_tests,
+                                        data_dir, pkcs11_lib, rng.get());
 
          const size_t failed = run_tests(req, output(), threads);
 

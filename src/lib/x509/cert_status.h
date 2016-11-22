@@ -1,5 +1,5 @@
 /*
-* Result enums
+* Path validation result enums
 * (C) 2013 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -7,6 +7,8 @@
 
 #ifndef BOTAN_X509_PATH_RESULT_H__
 #define BOTAN_X509_PATH_RESULT_H__
+
+#include <botan/build.h>
 
 namespace Botan {
 
@@ -77,7 +79,7 @@ enum class Certificate_Status_Code {
 * @param code the certifcate status
 * @return string literal constant, or nullptr if code unknown
 */
-const char* to_string(Certificate_Status_Code code);
+BOTAN_DLL const char* to_string(Certificate_Status_Code code);
 
 }
 

@@ -54,7 +54,7 @@ elif [ "${BUILD_MODE:0:5}" != "cross" ]; then
 
     if [ "$BUILD_MODE" = "coverage" ]; then
         CFG_FLAGS+=(--with-tpm)
-        TEST_FLAGS="--pkcs11-lib=/tmp/softhsm/lib/softhsm/libsofthsm2.so"
+        TEST_FLAGS="--run-online-tests --pkcs11-lib=/tmp/softhsm/lib/softhsm/libsofthsm2.so"
     fi
 
     # Avoid OpenSSL when using dynamic checkers...
