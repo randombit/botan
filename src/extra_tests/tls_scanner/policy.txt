@@ -1,0 +1,19 @@
+allow_tls10=true
+allow_tls11=true
+allow_tls12=true
+allow_dtls10=false
+allow_dtls12=false
+
+# Camellia first just to see if there is anyone out there who will negotiate it with us
+ciphers=Camellia-128 Camellia-256 Camellia-128/GCM Camellia-256/GCM ChaCha20Poly1305 AES-256/GCM AES-128/GCM AES-256 AES-128
+signature_hashes=SHA-384 SHA-256 SHA-1
+macs=AEAD SHA-384 SHA-256 SHA-1
+key_exchange_methods=CECPQ1 ECDH DH RSA
+signature_methods=ECDSA RSA DSA
+ecc_curves=x25519 secp256r1 secp384r1
+minimum_dh_group_size=1024
+minimum_ecdh_group_size=255
+minimum_rsa_bits=2048
+
+allow_insecure_renegotiation=false
+allow_server_initiated_renegotiation=false
