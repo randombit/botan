@@ -274,6 +274,13 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                                       ocsp_timeout);
 
          std::cout << "Certificate validation status: " << result.result_string() << "\n";
+         if(result.successful_validation())
+            {
+            auto status = result.all_statuses();
+
+            if(status.size() > 0 && status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD))
+               std::cout << "Valid OCSP response for this server\n";
+            }
          }
 
       bool tls_session_established(const Botan::TLS::Session& session) override
