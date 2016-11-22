@@ -101,6 +101,13 @@ class BOTAN_DLL Buffered_Computation
          return output;
          }
 
+      std::vector<byte> final_stdvec()
+         {
+         std::vector<byte> output(output_length());
+         final_result(output.data());
+         return output;
+         }
+
       template<typename Alloc>
          void final(std::vector<byte, Alloc>& out)
          {
