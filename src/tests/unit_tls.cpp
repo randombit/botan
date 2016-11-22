@@ -97,16 +97,6 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
          return chain;
          }
 
-      void verify_certificate_chain(
-         const std::string& type,
-         const std::string& purported_hostname,
-         const std::vector<Botan::X509_Certificate>& cert_chain) override
-         {
-         Credentials_Manager::verify_certificate_chain(type,
-                                                       purported_hostname,
-                                                       cert_chain);
-         }
-
       Botan::Private_Key* private_key_for(const Botan::X509_Certificate& crt,
                                           const std::string&,
                                           const std::string&) override

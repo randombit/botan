@@ -523,7 +523,13 @@ void Server::process_certificate_verify_msg(Server_Handshake_State& pending_stat
 
     try
         {
-        m_creds.verify_certificate_chain ( "tls-server", "", client_certs );
+        const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
+        auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-server", sni_hostname);
+
+        callbacks().tls_verify_cert_chain(client_certs,
+                                          trusted_CAs,
+                                          Usage_Type::TLS_CLIENT_AUTH,
+                                          sni_hostname);
         }
     catch ( std::exception& e )
         {

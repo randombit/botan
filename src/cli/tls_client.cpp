@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_SOCKETS)
 
 #include <botan/tls_client.h>
+#include <botan/x509path.h>
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
@@ -248,6 +249,31 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             }
 
          return fd;
+         }
+
+      void tls_verify_cert_chain(
+         const std::vector<Botan::X509_Certificate>& cert_chain,
+         const std::vector<Botan::Certificate_Store*>& trusted_roots,
+         Botan::Usage_Type usage,
+         const std::string& hostname) override
+         {
+         if(cert_chain.empty())
+            throw std::invalid_argument("Certificate chain was empty");
+
+         Botan::Path_Validation_Restrictions restrictions(true, 80);
+
+         auto ocsp_timeout = std::chrono::milliseconds(300);
+
+         Botan::Path_Validation_Result result =
+            Botan::x509_path_validate(cert_chain,
+                                      restrictions,
+                                      trusted_roots,
+                                      hostname,
+                                      usage,
+                                      std::chrono::system_clock::now(),
+                                      ocsp_timeout);
+
+         std::cout << "Certificate validation status: " << result.result_string() << "\n";
          }
 
       bool tls_session_established(const Botan::TLS::Session& session) override

@@ -19,18 +19,6 @@ namespace Botan {
 
 namespace TLS {
 
-Callbacks::~Callbacks() {}
-
-void Callbacks::tls_inspect_handshake_msg(const Handshake_Message&)
-   {
-   // default is no op
-   }
-
-std::string Callbacks::tls_server_choose_app_protocol(const std::vector<std::string>&)
-   {
-   return "";
-   }
-
 size_t TLS::Channel::IO_BUF_DEFAULT_SIZE = 10*1024;
 
 Channel::Channel(Callbacks& callbacks,

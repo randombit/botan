@@ -391,7 +391,12 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       try
          {
-         m_creds.verify_certificate_chain("tls-client", m_info.hostname(), server_certs);
+         auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-client", m_info.hostname());
+
+         callbacks().tls_verify_cert_chain(server_certs,
+                                           trusted_CAs,
+                                           Usage_Type::TLS_SERVER_AUTH,
+                                           m_info.hostname());
          }
       catch(std::exception& e)
          {
