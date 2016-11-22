@@ -27,7 +27,7 @@
   #include <netdb.h>
   #include <unistd.h>
 #else
-  #warning "No network support enabled in http_util"
+  //#warning "No network support enabled in http_util"
 #endif
 
 namespace Botan {
