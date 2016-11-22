@@ -56,6 +56,8 @@ Request::Request(const X509_Certificate& issuer_cert,
    m_subject(subject_cert),
    m_certid(m_issuer, m_subject)
    {
+   if(subject_cert.issuer_dn() != issuer_cert.subject_dn())
+      throw Invalid_Argument("Invalid cert pair to OCSP::Request (mismatched issuer,subject args?)");
    }
 
 std::vector<byte> Request::BER_encode() const
