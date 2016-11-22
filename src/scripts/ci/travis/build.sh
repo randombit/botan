@@ -139,6 +139,8 @@ ccache --show-stats
 
 if [ "$BUILD_MODE" = "sonarqube" ]; then
 
+    cp src/build-data/sonar-project.properties .
+
     if [ "$TRAVIS_BRANCH" = "master" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
        # => This will run a full analysis of the project and push results to the SonarQube server.
        #
