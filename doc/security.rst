@@ -21,7 +21,16 @@ Advisories
 2016
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* 2016-10-8871 (CVE-2016-8871) OAEP side channel
+* 2016-11-27 (CVE-2016-xxxx) Integer overflow in BER decoder
+
+  While decoding BER length fields, an integer overflow could occur. This could
+  occur while parsing untrusted inputs such as X.509 certificates. The overflow
+  does not seem to lead to any obviously exploitable condition, but exploitation
+  cannot be positively ruled out. Only 32-bit platforms are likely affected; to
+  cause an overflow on 64-bit the parsed data would have to be many gigabytes.
+  Bug found by Falko Strenzke, cryptosource GmbH.
+
+* 2016-10-26 (CVE-2016-8871) OAEP side channel
 
   A side channel in OAEP decoding could be used to distinguish RSA ciphertexts
   that did or did not have a leading 0 byte. For an attacker capable of
