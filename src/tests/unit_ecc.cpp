@@ -179,7 +179,7 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
             result.test_eq("R1", R1, R);
             }
          }
-      catch(Botan::Lookup_Error&)
+      catch(Botan::Lookup_Error &)
          {
          result.note_missing("ECC " + group_name);
          }
@@ -272,7 +272,7 @@ Test::Result test_coordinates()
       result.test_eq("Point affine x", p1.get_affine_x(), exp_affine_x);
       result.test_eq("Point affine y", p1.get_affine_y(), exp_affine_y);
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -313,7 +313,7 @@ Test::Result test_point_transformation ()
       result.test_eq("affine x after copy", p.get_affine_x(), q.get_affine_x());
       result.test_eq("affine y after copy", p.get_affine_y(), q.get_affine_y());
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + oid);
       }
@@ -338,7 +338,7 @@ Test::Result test_point_mult ()
       result.test_eq("affine x", Q_U.get_affine_x(), Botan::BigInt("466448783855397898016055842232266600516272889280"));
       result.test_eq("affine y", Q_U.get_affine_y(), Botan::BigInt("1110706324081757720403272427311003102474457754220"));
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -367,7 +367,7 @@ Test::Result test_point_negative()
       result.test_eq("affine x", p1_neg.get_affine_x(), p1.get_affine_x());
       result.test_eq("affine y", p1_neg.get_affine_y(),  Botan::BigInt("88408243403763901739989511495005261618427168388"));
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -395,7 +395,7 @@ Test::Result test_zeropoint()
 
       result.confirm("p - q with q = p results in zero", p1.is_zero());
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -426,7 +426,7 @@ Test::Result test_zeropoint_enc_dec()
       sv_p = unlock(EC2OSP(p, Botan::PointGFp::HYBRID));
       result.test_eq("encoded/decode hybrid rt works", OS2ECP(sv_p, curve), p);
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -465,7 +465,7 @@ Test::Result test_calc_with_zeropoint()
       res = zero * 32432243;
       result.confirm("point * 0 is the zero point", res.is_zero());
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -498,7 +498,7 @@ Test::Result test_add_point()
 
       result.test_eq("point addition", p1, expected);
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -529,7 +529,7 @@ Test::Result test_sub_point()
 
       result.test_eq("point subtraction", p1, expected);
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -560,7 +560,7 @@ Test::Result test_mult_point()
 
       result.test_eq("point mult", p1, expected);
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -608,7 +608,7 @@ Test::Result test_basic_operations()
       result.test_eq("point mult affine y", simpleMult.get_affine_y(),
                      Botan::BigInt("56841378500012376527163928510402662349220202981"));
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -636,7 +636,7 @@ Test::Result test_enc_dec_compressed_160()
 
       result.test_eq("result", sv_result, G_comp);
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -782,7 +782,7 @@ Test::Result test_gfp_store_restore()
 
       result.test_eq("original and restored points are same", p, new_p);
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -842,7 +842,7 @@ Test::Result test_more_zeropoint()
       result.confirm("zero point is on the curve", zero.on_the_curve());
       result.test_eq("addition of zero does nothing", p1, p1 + zero);
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + named_curve);
       }
@@ -864,7 +864,7 @@ Test::Result test_mult_by_order()
 
       result.confirm("G * order = 0", shouldBeZero.is_zero());
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + oid);
       }
@@ -892,7 +892,7 @@ Test::Result test_point_swap()
       result.test_eq("swap correct", a, d);
       result.test_eq("swap correct", b, c);
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + oid);
       }
@@ -931,7 +931,7 @@ Test::Result test_mult_sec_mass()
             }
          }
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + oid);
       }
@@ -950,7 +950,7 @@ Test::Result test_curve_cp_ctor()
       Botan::EC_Group dom_pars(Botan::OIDS::lookup(oid));
       Botan::CurveGFp curve(dom_pars.get_curve());
       }
-   catch(Botan::Lookup_Error const&)
+   catch(Botan::Lookup_Error&)
       {
       result.note_missing("ECC " + oid);
       }
