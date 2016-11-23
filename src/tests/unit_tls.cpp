@@ -409,13 +409,13 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
 
                   if(corrupt_server_data)
                      {
-                     input = Test::mutate_vec(input, true);
+                     input = Test::mutate_vec(input, true, 5);
                      size_t needed = server->received_data(input.data(), input.size());
 
                      size_t total_consumed = needed;
 
                      while(needed > 0 &&
-                           result.test_lt("Never requesting more than max protocol len", needed, 18*1024) &&
+                           result.test_lt("Never requesting more than max protocol len", needed, Botan::TLS::MAX_CIPHERTEXT_SIZE+1) &&
                            result.test_lt("Total requested is readonable", total_consumed, 128*1024))
                         {
                         input.resize(needed);
@@ -440,12 +440,12 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
 
                   if(corrupt_client_data)
                      {
-                     input = Test::mutate_vec(input, true);
+                     input = Test::mutate_vec(input, true, 5);
                      size_t needed = client->received_data(input.data(), input.size());
 
                      size_t total_consumed = 0;
 
-                     while(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
+                     while(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, Botan::TLS::MAX_CIPHERTEXT_SIZE+1))
                         {
                         input.resize(needed);
                         rng.randomize(input.data(), input.size());
@@ -697,10 +697,10 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                      {
                      try
                         {
-                        input = Test::mutate_vec(input, true);
+                        input = Test::mutate_vec(input, true, 5);
                         size_t needed = server->received_data(input.data(), input.size());
 
-                        if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
+                        if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, Botan::TLS::MAX_CIPHERTEXT_SIZE+1))
                            {
                            input.resize(needed);
                            rng.randomize(input.data(), input.size());
@@ -737,10 +737,10 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                      {
                      try
                         {
-                        input = Test::mutate_vec(input, true);
+                        input = Test::mutate_vec(input, true, 5);
                         size_t needed = client->received_data(input.data(), input.size());
 
-                        if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, 18*1024))
+                        if(needed > 0 && result.test_lt("Never requesting more than max protocol len", needed, Botan::TLS::MAX_CIPHERTEXT_SIZE+1))
                            {
                            input.resize(needed);
                            rng.randomize(input.data(), input.size());
@@ -981,10 +981,16 @@ class TLS_Unit_Tests : public Test
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
                               { { "signature_methods", "RSA" } });
 
+#if defined(BOTAN_HAS_CECPQ1)
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "CECPQ1", "AES-256/GCM", "AEAD");
+#endif
+
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
                               { { "use_ecc_point_compression", "true" } });
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-256/GCM", "AEAD",
+                              { { "ecc_curves", "secp521r1" } });
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
-                              { { "ecc_curves", "secp384r1" } });
+                              { { "ecc_curves", "brainpool256r1" } });
 
 #if defined(BOTAN_HAS_CURVE_25519)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",

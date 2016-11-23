@@ -16,10 +16,10 @@ namespace Botan {
 /**
 * SHAKE-128 XOF presented as a stream cipher
 */
-class BOTAN_DLL SHAKE_128 final : public StreamCipher
+class BOTAN_DLL SHAKE_128_Cipher final : public StreamCipher
    {
    public:
-      SHAKE_128();
+      SHAKE_128_Cipher();
 
       /**
       * Produce more XOF output
@@ -49,7 +49,7 @@ class BOTAN_DLL SHAKE_128 final : public StreamCipher
 
       void clear() override;
       std::string name() const override { return "SHAKE-128"; }
-      StreamCipher* clone() const override { return new SHAKE_128; }
+      StreamCipher* clone() const override { return new SHAKE_128_Cipher; }
 
    private:
       void key_schedule(const byte key[], size_t key_len) override;

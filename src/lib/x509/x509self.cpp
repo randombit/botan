@@ -9,6 +9,7 @@
 #include <botan/x509_ext.h>
 #include <botan/x509_ca.h>
 #include <botan/der_enc.h>
+#include <botan/pubkey.h>
 #include <botan/oids.h>
 
 namespace Botan {

@@ -335,10 +335,10 @@ BigInt TPM_PrivateKey::get_e() const
 
 size_t TPM_PrivateKey::estimated_strength() const
    {
-   return if_work_factor(get_n().bits());
+   return if_work_factor(key_length());
    }
 
-size_t TPM_PrivateKey::max_input_bits() const
+size_t TPM_PrivateKey::key_length() const
    {
    return get_n().bits();
    }

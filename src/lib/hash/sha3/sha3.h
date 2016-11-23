@@ -27,20 +27,37 @@ class BOTAN_DLL SHA_3 : public HashFunction
       */
       SHA_3(size_t output_bits);
 
-      /**
-      * @param output_bits the size of the hash output; must be a
-      * multiple of 8 (ie, byte-wide outputs)
-      * @param capacity the capacity of the spong, normally always
-      * 2*output_bits with SHA-3.
-      */
-      SHA_3(size_t output_bits, size_t capacity);
-
       size_t hash_block_size() const override { return m_bitrate / 8; }
       size_t output_length() const override { return m_output_bits / 8; }
 
       HashFunction* clone() const override;
       std::string name() const override;
       void clear() override;
+
+      // Static functions for internal usage
+
+      /**
+      * Absorb data into the provided state
+      * @param bitrate the bitrate to absorb into the sponge
+      * @param S the sponge state
+      * @param S_pos where to begin absorbing into S
+      * @param input the input data
+      * @param length size of input in bytes
+      */
+      static size_t absorb(size_t bitrate,
+                           secure_vector<uint64_t>& S, size_t S_pos,
+                           const byte input[], size_t length);
+
+      /**
+      * Expand from provided state
+      * @param bitrate sponge parameter
+      * @param S the state
+      * @param output the output buffer
+      * @param output_length the size of output in bytes
+      */
+      static void expand(size_t bitrate,
+                         secure_vector<uint64_t>& S,
+                         byte output[], size_t output_length);
 
       /**
       * The bare Keccak-1600 permutation

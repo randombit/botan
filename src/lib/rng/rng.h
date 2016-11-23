@@ -204,6 +204,8 @@ class BOTAN_DLL Null_RNG final : public RandomNumberGenerator
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
 /**
 * Wraps access to a RNG in a mutex
+* Note that most of the time it's much better to use a RNG per thread
+* otherwise the RNG will act as an unnecessary contention point
 */
 class BOTAN_DLL Serialized_RNG final : public RandomNumberGenerator
    {

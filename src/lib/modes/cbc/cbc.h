@@ -1,6 +1,7 @@
 /*
 * CBC mode
 * (C) 1999-2007,2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -31,6 +32,9 @@ class BOTAN_DLL CBC_Mode : public Cipher_Mode
       bool valid_nonce_length(size_t n) const override;
 
       void clear() override;
+
+      void reset() override;
+
    protected:
       CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding);
 
@@ -118,6 +122,9 @@ class BOTAN_DLL CBC_Decryption : public CBC_Mode
       size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override;
+
+      void reset() override;
+
    private:
       secure_vector<byte> m_tempbuf;
    };

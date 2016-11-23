@@ -57,7 +57,7 @@ bool maybe_BER(DataSource& source)
    byte first_byte;
    if(!source.peek_byte(first_byte))
       {
-      source.read_byte(first_byte); // force EOF
+      BOTAN_ASSERT_EQUAL(source.read_byte(first_byte), 0, "Expected EOF");
       throw Stream_IO_Error("ASN1::maybe_BER: Source was empty");
       }
 

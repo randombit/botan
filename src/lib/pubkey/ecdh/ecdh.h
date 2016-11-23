@@ -45,15 +45,6 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       std::string algo_name() const override { return "ECDH"; }
 
       /**
-      * Get the maximum number of bits allowed to be fed to this key.
-      * This is the bitlength of the order of the base point.
-
-      * @return maximum number of input bits
-      */
-      size_t max_input_bits() const override
-         { return domain().get_order().bits(); }
-
-      /**
       * @return public point value
       */
       std::vector<byte> public_value() const

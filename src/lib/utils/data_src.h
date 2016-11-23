@@ -30,7 +30,7 @@ class BOTAN_DLL DataSource
       * @return length in bytes that was actually read and put
       * into out
       */
-      virtual size_t read(byte out[], size_t length) = 0;
+      virtual size_t read(byte out[], size_t length) BOTAN_WARN_UNUSED_RESULT = 0;
 
       virtual bool check_available(size_t n) = 0;
 
@@ -45,8 +45,7 @@ class BOTAN_DLL DataSource
       * @return length in bytes that was actually read and put
       * into out
       */
-      virtual size_t peek(byte out[], size_t length,
-                          size_t peek_offset) const = 0;
+      virtual size_t peek(byte out[], size_t length, size_t peek_offset) const BOTAN_WARN_UNUSED_RESULT = 0;
 
       /**
       * Test whether the source still has data that can be read.

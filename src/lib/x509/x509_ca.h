@@ -12,13 +12,14 @@
 #include <botan/x509_crl.h>
 #include <botan/x509_ext.h>
 #include <botan/pkcs10.h>
-#include <botan/pubkey.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
   #include <botan/system_rng.h>
 #endif
 
 namespace Botan {
+
+class PK_Signer;
 
 /**
 * This class represents X.509 Certificate Authorities (CAs).

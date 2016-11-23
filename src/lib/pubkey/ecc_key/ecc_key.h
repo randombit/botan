@@ -88,6 +88,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       EC_Group_Encoding domain_format() const
          { return m_domain_encoding; }
 
+      size_t key_length() const override;
       size_t estimated_strength() const override;
 
    protected:

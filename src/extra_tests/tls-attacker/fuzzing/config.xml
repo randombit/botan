@@ -1,0 +1,14 @@
+<startupCommandsHolder>
+    <serverCommand>../../../../botan </serverCommand>
+    <serverPort>55020</serverPort>
+    <workflowFolder>../TLS-Attacker/resources/fuzzing/workflows</workflowFolder>
+    <modifiedVariableTypes>TLS_CONSTANT,LENGTH,COUNT,PUBLIC_KEY,PADDING,SIGNATURE,PLAIN_PROTOCOL_MESSAGE</modifiedVariableTypes>
+    <outputFolder>output/</outputFolder>
+    <startupCommandsList>
+        <startupCommands>
+            <fuzzerCommand>simple_fuzzer -connect localhost:$PORT</fuzzerCommand>
+            <serverCommandParameters>tls_server ../rsa2048cert.pem ../rsa2048key.pem --port=$PORT </serverCommandParameters>
+            <shortName>botan-rsa</shortName>
+        </startupCommands>
+    </startupCommandsList>
+</startupCommandsHolder>

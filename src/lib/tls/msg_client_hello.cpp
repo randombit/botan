@@ -116,10 +116,10 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
 
-   if(!policy.allowed_ecc_curves().empty() && policy.use_ecc_point_compression())
-   {
-      m_extensions.add(new Supported_Point_Formats());
-   }
+   if(!policy.allowed_ecc_curves().empty())
+      {
+      m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
+      }
 
    if(m_version.supports_negotiable_signature_algorithms())
       m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
@@ -165,10 +165,10 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(new Session_Ticket(session.session_ticket()));
    m_extensions.add(new Supported_Elliptic_Curves(policy.allowed_ecc_curves()));
 
-   if(!policy.allowed_ecc_curves().empty() && policy.use_ecc_point_compression())
-   {
-      m_extensions.add(new Supported_Point_Formats());
-   }
+   if(!policy.allowed_ecc_curves().empty())
+      {
+      m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
+      }
 
    if(session.supports_encrypt_then_mac())
       m_extensions.add(new Encrypt_then_MAC);

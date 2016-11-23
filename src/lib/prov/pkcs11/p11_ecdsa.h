@@ -48,11 +48,6 @@ class BOTAN_DLL PKCS11_ECDSA_PublicKey final : public PKCS11_EC_PublicKey, publi
          return "ECDSA";
          }
 
-      inline std::size_t max_input_bits() const override
-         {
-         return domain().get_order().bits();
-         }
-
       /// @return the exported ECDSA public key
       ECDSA_PublicKey export_key() const;
 
@@ -98,11 +93,6 @@ class BOTAN_DLL PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_PrivateKey
       inline std::string algo_name() const override
          {
          return "ECDSA";
-         }
-
-      inline size_t message_parts() const override
-         {
-         return 2;
          }
 
       /// @return the exported ECDSA private key

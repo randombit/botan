@@ -92,10 +92,10 @@ class TLS_Server final : public Command
                socklen_t from_len = sizeof(sockaddr_in);
 
                if(::recvfrom(server_fd, nullptr, 0, MSG_PEEK,
-                             (struct sockaddr*)&from, &from_len) != 0)
+                             reinterpret_cast<struct sockaddr*>(&from), &from_len) != 0)
                   throw CLI_Error("Could not peek next packet");
 
-               if(::connect(server_fd, (struct sockaddr*)&from, from_len) != 0)
+               if(::connect(server_fd, reinterpret_cast<struct sockaddr*>(&from), from_len) != 0)
                   throw CLI_Error("Could not connect UDP socket");
 
                fd = server_fd;
@@ -138,31 +138,42 @@ class TLS_Server final : public Command
                {
                while(!server.is_closed())
                   {
-                  uint8_t buf[4*1024] = { 0 };
-                  ssize_t got = ::read(fd, buf, sizeof(buf));
-
-                  if(got == -1)
+                  try 
                      {
-                     std::cout << "Error in socket read - " << strerror(errno) << std::endl;
-                     break;
+                     uint8_t buf[4*1024] = { 0 };
+                     ssize_t got = ::read(fd, buf, sizeof(buf));
+
+                     if(got == -1)
+                        {
+                        std::cout << "Error in socket read - " << strerror(errno) << std::endl;
+                        break;
+                        }
+
+                     if(got == 0)
+                        {
+                        std::cout << "EOF on socket" << std::endl;
+                        break;
+                        }
+
+                     server.received_data(buf, got);
+
+                     while(server.is_active() && !pending_output.empty())
+                        {
+                        std::string output = pending_output.front();
+                        pending_output.pop_front();
+                        server.send(output);
+
+                        if(output == "quit\n")
+                           server.close();
+                        }
                      }
-
-                  if(got == 0)
+                  catch(std::exception& e) 
                      {
-                     std::cout << "EOF on socket" << std::endl;
-                     break;
-                     }
-
-                  server.received_data(buf, got);
-
-                  while(server.is_active() && !pending_output.empty())
-                     {
-                     std::string output = pending_output.front();
-                     pending_output.pop_front();
-                     server.send(output);
-
-                     if(output == "quit\n")
-                        server.close();
+                     std::cout << "Connection1 problem: " << e.what() << std::endl;
+                     if(is_tcp)
+                        {
+                        ::close(fd);
+                        }
                      }
                   }
                }
@@ -192,7 +203,7 @@ class TLS_Server final : public Command
          // FIXME: support limiting listeners
          socket_info.sin_addr.s_addr = INADDR_ANY;
 
-         if(::bind(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
+         if(::bind(fd, reinterpret_cast<struct sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0)
             {
             ::close(fd);
             throw CLI_Error("server bind failed");

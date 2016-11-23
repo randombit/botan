@@ -60,6 +60,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       */
       virtual DL_Group::Format group_format() const = 0;
 
+      size_t key_length() const override;
       size_t estimated_strength() const override;
 
       /**

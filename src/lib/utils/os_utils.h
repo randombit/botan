@@ -20,11 +20,17 @@ namespace OS {
 uint32_t get_process_id();
 
 /**
+* Return the highest resolution clock available on the system.
+*
+* The epoch and update rate of this clock is arbitrary and depending
+* on the hardware it may not tick at a constant rate.
+*
 * Returns the value of the hardware cycle counter, if available.
-* Returns 0 if not available. On Windows uses QueryPerformanceCounter.
-* On other platforms reads the native cycle counter directly.
-* The epoch and update rate are arbitrary and may not be constant
-* (depending on the hardware).
+* On Windows calls QueryPerformanceCounter.
+* Under GCC or Clang on supported platforms the hardware cycle counter is queried:
+*  x86, PPC, Alpha, SPARC, IA-64, S/390x, and HP-PA
+* On other platforms clock_gettime is used with some monotonic timer, if available.
+* As a final callback std::chrono::high_resolution_clock is used.
 */
 uint64_t get_processor_timestamp();
 

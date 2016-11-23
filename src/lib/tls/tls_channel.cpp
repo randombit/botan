@@ -284,6 +284,8 @@ void Channel::activate_session()
       map_remove_if(not_current_epoch, m_write_cipher_states);
       map_remove_if(not_current_epoch, m_read_cipher_states);
       }
+
+   callbacks().tls_session_activated();
    }
 
 size_t Channel::received_data(const std::vector<byte>& buf)

@@ -170,6 +170,7 @@ Public Key Cryptography
 * RSA signatures and encryption
 * DH and ECDH key agreement
 * Signature schemes DSA, ECDSA, ECGDSA, ECKCDSA, GOST 34.10-2001
+* Post-quantum XMSS (hash based) signature scheme
 * Post-quantum KEM schemes McEliece (code based) and NewHope (Ring-LWE)
 * ElGamal encryption
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31

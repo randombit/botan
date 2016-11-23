@@ -1,5 +1,6 @@
 /*
 * (C) 2015 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -44,7 +45,13 @@ class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
 
       std::string name() const override { return m_cipher->name(); }
 
-      void clear() override { return m_cipher->clear(); }
+      void clear() override
+         {
+         m_cipher->clear();
+         reset();
+         }
+
+      void reset() override { /* no msg state */ return; }
 
    private:
       void start_msg(const byte nonce[], size_t nonce_len) override

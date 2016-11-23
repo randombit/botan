@@ -48,11 +48,6 @@ PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, ObjectHandle handle)
    m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
    }
 
-size_t PKCS11_EC_PublicKey::max_input_bits() const
-   {
-   return domain().get_order().bits();
-   }
-
 PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, const EC_PublicKeyImportProperties& props)
    : Object(session, props)
    {
@@ -106,7 +101,7 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, const std::vector<b
    m_public_key = decode_public_point(public_key.get_attribute_value(AttributeType::EcPoint), m_domain_params.get_curve());
    }
 
-size_t PKCS11_EC_PrivateKey::max_input_bits() const
+size_t PKCS11_EC_PrivateKey::key_length() const
    {
    return m_domain_params.get_order().bits();
    }
@@ -118,7 +113,7 @@ std::vector<byte> PKCS11_EC_PrivateKey::x509_subject_public_key() const
 
 size_t PKCS11_EC_PrivateKey::estimated_strength() const
    {
-   return ecp_work_factor(domain().get_curve().get_p().bits());
+   return ecp_work_factor(key_length());
    }
 
 bool PKCS11_EC_PrivateKey::check_key(RandomNumberGenerator&, bool) const

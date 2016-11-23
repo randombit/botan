@@ -79,6 +79,7 @@ if [ "${BUILD_MODE:0:6}" = "cross-" ]; then
             CFG_FLAGS+=(--cpu=armv8-a --cc-abi-flags="-arch arm64 -stdlib=libc++")
         fi
     elif [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        CFG_FLAGS+=(--disable-modules=ffi)
 
         if [ "$BUILD_MODE" = "cross-arm32" ]; then
             CC_BIN=arm-linux-gnueabihf-g++-4.8
@@ -137,6 +138,8 @@ ccache --show-stats
 # Run SonarQube analysis
 
 if [ "$BUILD_MODE" = "sonarqube" ]; then
+
+    cp src/build-data/sonar-project.properties .
 
     if [ "$TRAVIS_BRANCH" = "master" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
        # => This will run a full analysis of the project and push results to the SonarQube server.

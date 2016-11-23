@@ -1,6 +1,7 @@
 /*
 * GCM Mode Encryption
 * (C) 2013,2015 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -150,8 +151,14 @@ secure_vector<byte> GHASH::nonce_hash(const byte nonce[], size_t nonce_len)
 void GHASH::clear()
    {
    zeroise(m_H);
+   reset();
+   }
+
+void GHASH::reset()
+   {
    zeroise(m_H_ad);
    m_ghash.clear();
+   m_nonce.clear();
    m_text_len = m_ad_len = 0;
    }
 
@@ -177,11 +184,17 @@ void GCM_Mode::clear()
    {
    m_ctr->clear();
    m_ghash->clear();
+   reset();
+   }
+
+void GCM_Mode::reset()
+   {
+   m_ghash->reset();
    }
 
 std::string GCM_Mode::name() const
    {
-   return (m_cipher_name + "/GCM");
+   return (m_cipher_name + "/GCM(" + std::to_string(tag_size()) + ")");
    }
 
 std::string GCM_Mode::provider() const
@@ -294,7 +307,7 @@ void GCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    auto mac = m_ghash->final();
 
-   const byte* included_tag = &buffer[remaining];
+   const byte* included_tag = &buffer[remaining+offset];
 
    if(!same_mem(mac.data(), included_tag, tag_size()))
       throw Integrity_Failure("GCM tag check failed");

@@ -104,7 +104,7 @@ class NEWHOPE_Tests : public Text_Based_Test
 
          Botan::SHA_3_256 sha3;
 
-         std::vector<uint8_t> send_a(NEWHOPE_SENDABYTES);
+         std::vector<uint8_t> send_a(Botan::NEWHOPE_SENDABYTES);
          Botan::newhope_poly a_sk;
          Botan::newhope_keygen(send_a.data(), &a_sk, drbg_a);
 
@@ -114,7 +114,7 @@ class NEWHOPE_Tests : public Text_Based_Test
          result.test_eq("Hash Output A", h_send_a, h_output_a);
 
          std::vector<uint8_t> sharedkey_b(32);
-         std::vector<uint8_t> send_b(NEWHOPE_SENDBBYTES);
+         std::vector<uint8_t> send_b(Botan::NEWHOPE_SENDBBYTES);
          Botan::newhope_sharedb(sharedkey_b.data(), send_b.data(), send_a.data(), drbg_b);
          result.test_eq("Key B", sharedkey_b, shared_key);
 

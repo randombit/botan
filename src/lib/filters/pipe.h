@@ -134,7 +134,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * for which the information is desired
       * @return number of bytes that can still be read
       */
-      size_t remaining(message_id msg = DEFAULT_MESSAGE) const;
+      size_t remaining(message_id msg = DEFAULT_MESSAGE) const BOTAN_WARN_UNUSED_RESULT;
 
       /**
       * Read the default message from the pipe. Moves the internal
@@ -145,7 +145,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param length the length of the byte array output
       * @return number of bytes actually read into output
       */
-      size_t read(byte output[], size_t length) override;
+      size_t read(byte output[], size_t length) override BOTAN_WARN_UNUSED_RESULT;
 
       /**
       * Read a specified message from the pipe. Moves the internal
@@ -156,7 +156,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param msg the number identifying the message to read from
       * @return number of bytes actually read into output
       */
-      size_t read(byte output[], size_t length, message_id msg);
+      size_t read(byte output[], size_t length, message_id msg) BOTAN_WARN_UNUSED_RESULT;
 
       /**
       * Read a single byte from the pipe. Moves the internal offset so
@@ -167,23 +167,24 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param msg the message to read from
       * @return number of bytes actually read into output
       */
-      size_t read(byte& output, message_id msg = DEFAULT_MESSAGE);
+      size_t read(byte& output, message_id msg = DEFAULT_MESSAGE) BOTAN_WARN_UNUSED_RESULT;
 
       /**
       * Read the full contents of the pipe.
       * @param msg the number identifying the message to read from
       * @return secure_vector holding the contents of the pipe
       */
-      secure_vector<byte> read_all(message_id msg = DEFAULT_MESSAGE);
+      secure_vector<byte> read_all(message_id msg = DEFAULT_MESSAGE) BOTAN_WARN_UNUSED_RESULT;
 
       /**
       * Read the full contents of the pipe.
       * @param msg the number identifying the message to read from
       * @return string holding the contents of the pipe
       */
-      std::string read_all_as_string(message_id = DEFAULT_MESSAGE);
+      std::string read_all_as_string(message_id = DEFAULT_MESSAGE) BOTAN_WARN_UNUSED_RESULT;
 
-      /** Read from the default message but do not modify the internal
+      /**
+      * Read from the default message but do not modify the internal
       * offset. Consecutive calls to peek() will return portions of
       * the message starting at the same position.
       * @param output the byte array to write the peeked message part to
@@ -191,7 +192,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param offset the offset from the current position in message
       * @return number of bytes actually peeked and written into output
       */
-      size_t peek(byte output[], size_t length, size_t offset) const override;
+      size_t peek(byte output[], size_t length, size_t offset) const override BOTAN_WARN_UNUSED_RESULT;
 
       /** Read from the specified message but do not modify the
       * internal offset. Consecutive calls to peek() will return
@@ -203,7 +204,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * @return number of bytes actually peeked and written into output
       */
       size_t peek(byte output[], size_t length,
-                  size_t offset, message_id msg) const;
+                  size_t offset, message_id msg) const BOTAN_WARN_UNUSED_RESULT;
 
       /** Read a single byte from the specified message but do not
       * modify the internal offset. Consecutive calls to peek() will
@@ -214,7 +215,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * @return number of bytes actually peeked and written into output
       */
       size_t peek(byte& output, size_t offset,
-                  message_id msg = DEFAULT_MESSAGE) const;
+                  message_id msg = DEFAULT_MESSAGE) const BOTAN_WARN_UNUSED_RESULT;
 
       /**
       * @return the number of bytes read from the default message.

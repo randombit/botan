@@ -18,14 +18,24 @@ class Cipher_Mode_Padding_Tests : public Text_Based_Test
    {
    public:
       Cipher_Mode_Padding_Tests() :
-         Text_Based_Test("pad.vec", {"In", "Out", "Blocksize"})
+         Text_Based_Test("", "pad.vec", {"In", "Blocksize"},{"Out"})
          {}
 
-      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override
          {
          const std::vector<uint8_t> input    = get_req_bin(vars, "In");
-         const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> expected = get_opt_bin(vars, "Out");
          const size_t block_size = get_req_sz(vars, "Blocksize");
+
+         std::string algo = header;
+
+         auto underscore = algo.find('_');
+         if(underscore != std::string::npos)
+            {
+            if(algo.substr(underscore+1,std::string::npos) != "Invalid")
+               throw Test_Error("Unexpected padding header " + header);
+            algo = algo.substr(0, underscore);
+            }
 
          Test::Result result(algo);
 
@@ -37,16 +47,33 @@ class Cipher_Mode_Padding_Tests : public Text_Based_Test
             return result;
             }
 
-         Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
-         pad->add_padding(buf, input.size() % block_size, block_size);
-         result.test_eq("pad", buf, expected);
+         if(expected.empty())
+            {
+            // This is an unpad an invalid input and ensure we reject
+            try
+               {
+               pad->unpad(input.data(), block_size);
+               result.test_failure("Did not reject invalid padding", Botan::hex_encode(input));
+               }
+            catch(Botan::Decoding_Error&)
+               {
+               result.test_success("Rejected invalid padding");
+               }
+            }
+         else
+            {
+            // This is a pad plaintext and unpad valid padding round trip test
+            Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
+            pad->add_padding(buf, input.size() % block_size, block_size);
+            result.test_eq("pad", buf, expected);
 
-         buf.assign(expected.begin(), expected.end());
+            buf.assign(expected.begin(), expected.end());
 
-         const size_t last_block = ( buf.size() < block_size ) ? 0 : buf.size() - block_size;
-         const size_t pad_bytes = block_size - pad->unpad(&buf[last_block], block_size);
-         buf.resize(buf.size() - pad_bytes); // remove padding
-         result.test_eq("unpad", buf, input);
+            const size_t last_block = ( buf.size() < block_size ) ? 0 : buf.size() - block_size;
+            const size_t pad_bytes = block_size - pad->unpad(&buf[last_block], block_size);
+            buf.resize(buf.size() - pad_bytes); // remove padding
+            result.test_eq("unpad", buf, input);
+            }
 
          return result;
          }

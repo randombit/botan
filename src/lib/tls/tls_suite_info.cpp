@@ -2,8 +2,8 @@
 * TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* (tls-parameters.txt hash 9546b3c8be1a1202e1d4a07c2a9d7d6394ae4a21)
-* by ./src/scripts/tls_suite_info.py on 2016-08-16
+* (tls-parameters.txt hash 67a567fcf1ac67cb8cfc4af96c20c3efb05c1fc1)
+* by ./src/scripts/tls_suite_info.py on 2016-11-16
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -81,6 +81,10 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
       Ciphersuite(0x00C3, "DHE_DSS_WITH_CAMELLIA_256_CBC_SHA256", "DSA", "DH", "Camellia-256", 32, 16, 0, "SHA-256", 32, ""),
       Ciphersuite(0x00C4, "DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256", "RSA", "DH", "Camellia-256", 32, 16, 0, "SHA-256", 32, ""),
       Ciphersuite(0x00C5, "DH_anon_WITH_CAMELLIA_256_CBC_SHA256", "", "DH", "Camellia-256", 32, 16, 0, "SHA-256", 32, ""),
+      Ciphersuite(0x16B7, "CECPQ1_RSA_WITH_CHACHA20_POLY1305_SHA256", "RSA", "CECPQ1", "ChaCha20Poly1305", 32, 12, 0, "AEAD", 0, "SHA-256"),
+      Ciphersuite(0x16B8, "CECPQ1_ECDSA_WITH_CHACHA20_POLY1305_SHA256", "ECDSA", "CECPQ1", "ChaCha20Poly1305", 32, 12, 0, "AEAD", 0, "SHA-256"),
+      Ciphersuite(0x16B9, "CECPQ1_RSA_WITH_AES_256_GCM_SHA384", "RSA", "CECPQ1", "AES-256/GCM", 32, 4, 8, "AEAD", 0, "SHA-384"),
+      Ciphersuite(0x16BA, "CECPQ1_ECDSA_WITH_AES_256_GCM_SHA384", "ECDSA", "CECPQ1", "AES-256/GCM", 32, 4, 8, "AEAD", 0, "SHA-384"),
       Ciphersuite(0xC008, "ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA", "ECDSA", "ECDH", "3DES", 24, 8, 0, "SHA-1", 20, ""),
       Ciphersuite(0xC009, "ECDHE_ECDSA_WITH_AES_128_CBC_SHA", "ECDSA", "ECDH", "AES-128", 16, 16, 0, "SHA-1", 20, ""),
       Ciphersuite(0xC00A, "ECDHE_ECDSA_WITH_AES_256_CBC_SHA", "ECDSA", "ECDH", "AES-256", 32, 16, 0, "SHA-1", 20, ""),

@@ -44,11 +44,6 @@ PK_Ops::Decryption_with_EME::Decryption_with_EME(const std::string& eme)
 
 PK_Ops::Decryption_with_EME::~Decryption_with_EME() {}
 
-size_t PK_Ops::Decryption_with_EME::max_input_bits() const
-   {
-   return m_eme->maximum_input_size(max_raw_input_bits());
-   }
-
 secure_vector<byte>
 PK_Ops::Decryption_with_EME::decrypt(byte& valid_mask,
                                      const byte ciphertext[],

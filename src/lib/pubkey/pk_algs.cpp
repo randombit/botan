@@ -52,6 +52,10 @@
   #include <botan/mceliece.h>
 #endif
 
+#if defined(BOTAN_HAS_XMSS)
+  #include <botan/xmss.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<Public_Key>
@@ -115,6 +119,11 @@ load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_GOST_34_10_2001)
    if(alg_name == "GOST-34.10")
       return std::unique_ptr<Public_Key>(new GOST_3410_PublicKey(alg_id, key_bits));
+#endif
+
+#if defined(BOTAN_HAS_XMSS)
+   if(alg_name == "XMSS")
+      return std::unique_ptr<Public_Key>(new XMSS_PublicKey(key_bits));
 #endif
 
    throw Decoding_Error("Unhandled PK algorithm " + alg_name);
@@ -183,6 +192,11 @@ load_private_key(const AlgorithmIdentifier& alg_id,
       return std::unique_ptr<Private_Key>(new ElGamal_PrivateKey(alg_id, key_bits));
 #endif
 
+#if defined(BOTAN_HAS_XMSS)
+   if(alg_name == "XMSS")
+      return std::unique_ptr<Private_Key>(new XMSS_PrivateKey(key_bits));
+#endif
+
    throw Decoding_Error("Unhandled PK algorithm " + alg_name);
    }
 
@@ -221,6 +235,14 @@ create_private_key(const std::string& alg_name,
       size_t mce_t = Botan::to_u32bit(mce_param[1]);
 
       return std::unique_ptr<Botan::Private_Key>(new Botan::McEliece_PrivateKey(rng, mce_n, mce_t));
+      }
+#endif
+
+#if defined(BOTAN_HAS_XMSS)
+   if(alg_name == "XMSS")
+      {
+      return std::unique_ptr<Private_Key>(
+         new XMSS_PrivateKey(XMSS_Parameters(params).oid(), rng));
       }
 #endif
 

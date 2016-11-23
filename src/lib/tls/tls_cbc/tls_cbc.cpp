@@ -1,8 +1,9 @@
 /*
 * TLS CBC Record Handling
 * (C) 2012,2013,2014,2015,2016 Jack Lloyd
-*     2016 Juraj Somorovsky
-*     2016 Matthias Gierlings
+* (C) 2016 Juraj Somorovsky
+* (C) 2016 Matthias Gierlings
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -46,7 +47,14 @@ void TLS_CBC_HMAC_AEAD_Mode::clear()
    {
    cipher().clear();
    mac().clear();
+   reset();
+   }
+
+void TLS_CBC_HMAC_AEAD_Mode::reset()
+   {
    cbc_state().clear();
+   m_ad.clear();
+   m_msg.clear();
    }
 
 std::string TLS_CBC_HMAC_AEAD_Mode::name() const

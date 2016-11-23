@@ -91,13 +91,14 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          const std::string host = get_arg("host");
          const uint16_t port = get_arg_sz("port");
          const std::string transport = get_arg("type");
+         const std::string next_protos = get_arg("next-protocols");
 
          if(transport != "tcp" && transport != "udp")
             throw CLI_Usage_Error("Invalid transport type '" + transport + "' for TLS");
 
          const bool use_tcp = (transport == "tcp");
 
-         const std::vector<std::string> protocols_to_offer = Botan::split_on("next-protocols", ',');
+         const std::vector<std::string> protocols_to_offer = Botan::split_on(next_protos, ',');
 
          m_sockfd = connect_to_host(host, port, use_tcp);
 
@@ -240,7 +241,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
          socket_info.sin_addr = *reinterpret_cast<struct in_addr*>(host_addr->h_addr); // FIXME
 
-         if(::connect(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
+         if(::connect(fd, reinterpret_cast<sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0)
             {
             ::close(fd);
             throw CLI_Error("connect failed");
@@ -289,8 +290,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
          while(length)
             {
-            ssize_t sent = ::send(m_sockfd, (const char*)buf + offset,
-                                  length, MSG_NOSIGNAL);
+            ssize_t sent = ::send(m_sockfd, buf + offset, length, MSG_NOSIGNAL);
 
             if(sent == -1)
                {

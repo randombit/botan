@@ -155,9 +155,6 @@ class BuildConfigurationInformation(object):
         self.cli_headers = list(find_headers_in(self.src_dir, 'cli'))
         self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
 
-        if options.with_bakefile:
-            gen_bakefile( self.sources, self.cli_sources, self.cli_headers, self.test_sources, self.external_headers, options )
-
         self.python_dir = os.path.join(options.src_dir, 'python')
 
         def build_doc_commands():
@@ -1166,7 +1163,8 @@ def makefile_list(items):
     items = list(items) # force evaluation so we can slice it
     return (' '*16).join([item + ' \\\n' for item in items[:-1]] + [items[-1]])
 
-def gen_bakefile(lib_sources, cli_sources, cli_headers, test_sources, external_headers, options):
+def gen_bakefile(build_config, options):
+
     def bakefile_sources(file, sources):
         for src in sources:
                 (dir,filename) = os.path.split(os.path.normpath(src))
@@ -1200,20 +1198,20 @@ def gen_bakefile(lib_sources, cli_sources, cli_headers, test_sources, external_h
     # shared library project
     f.write('shared-library botan {\n')
     f.write('\tdefines = "BOTAN_DLL=__declspec(dllexport)";\n')
-    bakefile_sources( f, lib_sources )
+    bakefile_sources( f, build_config.sources )
     f.write('}\n')
 
     # cli project
     f.write('program cli {\n')
     f.write('\tdeps = botan;\n')
-    bakefile_sources( f, cli_sources )
-    bakefile_cli_headers( f, cli_headers )
+    bakefile_sources( f, build_config.cli_sources )
+    bakefile_cli_headers( f, build_config.cli_headers )
     f.write('}\n')
 
     # tests project
     f.write('program tests {\n')
     f.write('\tdeps = botan;\n')
-    bakefile_test_sources( f, test_sources )
+    bakefile_test_sources( f, build_config.test_sources )
     f.write('}\n')
 
     # global options
@@ -1224,7 +1222,7 @@ def gen_bakefile(lib_sources, cli_sources, cli_headers, test_sources, external_h
         # Attention: bakefile supports only relative paths
         f.write('includedirs += "%s";\n' %external_inc_dir )
 
-    if external_headers:
+    if build_config.external_headers:
         f.write('includedirs += build/include/external;\n')
 
     if options.cpu in "x86_64":
@@ -2294,6 +2292,9 @@ def main(argv = None):
         amalgamation_cpp_files = generate_amalgamation(build_config, options)
         build_config.build_sources = amalgamation_cpp_files
         gen_makefile_lists(template_vars, build_config, options, using_mods, cc, arch, osinfo)
+
+    if options.with_bakefile:
+        gen_bakefile(build_config, options)
 
     write_template(template_vars['makefile_path'], makefile_template)
 

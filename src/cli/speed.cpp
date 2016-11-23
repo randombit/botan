@@ -87,6 +87,10 @@
   #include <botan/mceliece.h>
 #endif
 
+#if defined(BOTAN_HAS_XMSS)
+  #include <botan/xmss.h>
+#endif
+
 #if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
   #include <botan/newhope.h>
   #include <botan/chacha.h>
@@ -347,7 +351,13 @@ class Speed final : public Command
             {
             using namespace std::placeholders;
 
-            if(auto enc = Botan::get_cipher_mode(algo, Botan::ENCRYPTION))
+            if(Botan::HashFunction::providers(algo).size() > 0)
+               {
+               bench_providers_of<Botan::HashFunction>(
+                  algo, provider, msec, buf_size,
+                  std::bind(&Speed::bench_hash, this, _1, _2, _3, _4));
+               }
+            else if(auto enc = Botan::get_cipher_mode(algo, Botan::ENCRYPTION))
                {
                auto dec = Botan::get_cipher_mode(algo, Botan::DECRYPTION);
                bench_cipher_mode(*enc, *dec, msec, buf_size);
@@ -363,12 +373,6 @@ class Speed final : public Command
                bench_providers_of<Botan::StreamCipher>(
                   algo, provider, msec, buf_size,
                   std::bind(&Speed::bench_stream_cipher, this, _1, _2, _3, _4));
-               }
-            else if(Botan::HashFunction::providers(algo).size() > 0)
-               {
-               bench_providers_of<Botan::HashFunction>(
-                  algo, provider, msec, buf_size,
-                  std::bind(&Speed::bench_hash, this, _1, _2, _3, _4));
                }
             else if(Botan::MessageAuthenticationCode::providers(algo).size() > 0)
                {
@@ -422,6 +426,12 @@ class Speed final : public Command
             else if(algo == "McEliece")
                {
                bench_mceliece(provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_XMSS)
+            else if(algo == "XMSS")
+               {
+               bench_xmss(provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
@@ -1173,6 +1183,30 @@ class Speed final : public Command
          }
 #endif
 
+#if defined(BOTAN_HAS_XMSS)
+        void bench_xmss(const std::string& provider,
+                        std::chrono::milliseconds msec)
+         {
+         std::vector<std::string> xmss_params{
+            "XMSS_SHA2-256_W16_H10",
+            "XMSS_SHA2-512_W16_H10",
+         };
+
+         for(std::string params : xmss_params)
+            {
+            Timer keygen_timer(params, provider, "keygen");
+
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
+               return new Botan::XMSS_PrivateKey(Botan::XMSS_Parameters::XMSS_SHA2_256_W16_H10, rng());
+            }));
+
+            output() << Timer::result_string_ops(keygen_timer);
+            bench_pk_sig(*key, params, provider, "", msec);
+            }
+         }
+#endif
+
+
 #if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
       void bench_newhope(const std::string& /*provider*/,
                          std::chrono::milliseconds msec)
@@ -1212,7 +1246,7 @@ class Speed final : public Command
 
          while(sharedb_timer.under(msec))
             {
-            std::vector<uint8_t> send_a(NEWHOPE_SENDABYTES), send_b(NEWHOPE_SENDBBYTES);
+            std::vector<uint8_t> send_a(Botan::NEWHOPE_SENDABYTES), send_b(Botan::NEWHOPE_SENDBBYTES);
             std::vector<uint8_t> shared_a(32), shared_b(32);
 
             Botan::newhope_poly sk_a;

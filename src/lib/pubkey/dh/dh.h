@@ -21,7 +21,6 @@ class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
       std::string algo_name() const override { return "DH"; }
 
       std::vector<byte> public_value() const;
-      size_t max_input_bits() const override { return group_p().bits(); }
 
       DL_Group::Format group_format() const override { return DL_Group::ANSI_X9_42; }
 

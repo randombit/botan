@@ -88,9 +88,13 @@ std::string encrypt(const byte input[], size_t input_len,
 
    copy_mem(&out_buf[VERSION_CODE_LEN], pbkdf_salt.data(), PBKDF_SALT_LEN);
 
-   pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN], MAC_OUTPUT_LEN, 1);
-   pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN],
-             ciphertext_len, 0);
+   BOTAN_ASSERT_EQUAL(
+      pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN], MAC_OUTPUT_LEN, 1),
+      MAC_OUTPUT_LEN, "MAC output");
+   BOTAN_ASSERT_EQUAL(
+      pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN],
+                ciphertext_len, 0),
+      ciphertext_len, "Ciphertext size");
 
    return PEM_Code::encode(out_buf, "BOTAN CRYPTOBOX MESSAGE");
    }
@@ -139,7 +143,7 @@ std::string decrypt(const byte input[], size_t input_len,
                     ciphertext.size() - ciphertext_offset);
 
    byte computed_mac[MAC_OUTPUT_LEN];
-   pipe.read(computed_mac, MAC_OUTPUT_LEN, 1);
+   BOTAN_ASSERT_EQUAL(MAC_OUTPUT_LEN, pipe.read(computed_mac, MAC_OUTPUT_LEN, 1), "MAC size");
 
    if(!same_mem(computed_mac,
                 &ciphertext[VERSION_CODE_LEN + PBKDF_SALT_LEN],

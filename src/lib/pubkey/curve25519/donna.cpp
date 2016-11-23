@@ -433,7 +433,7 @@ crecip(felem out, const felem z) {
   /* 2^255 - 21 */ fmul(out, t0, a);
 }
 
-int
+void
 curve25519_donna(u8 *mypublic, const u8 *secret, const u8 *basepoint) {
 
   CT::poison(secret, 32);
@@ -457,7 +457,6 @@ curve25519_donna(u8 *mypublic, const u8 *secret, const u8 *basepoint) {
   CT::unpoison(secret, 32);
   CT::unpoison(basepoint, 32);
   CT::unpoison(mypublic, 32);
-  return 0;
 }
 
 }

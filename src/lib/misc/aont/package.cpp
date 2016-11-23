@@ -31,7 +31,8 @@ void aont_package(RandomNumberGenerator& rng,
    Pipe pipe(new StreamCipher_Filter(new CTR_BE(cipher), package_key));
 
    pipe.process_msg(input, input_len);
-   pipe.read(output, pipe.remaining());
+   const size_t remaining = pipe.remaining();
+   BOTAN_ASSERT_EQUAL(remaining, pipe.read(output, remaining), "Expected read size");
 
    // Set K0 (the all zero key)
    cipher->set_key(SymmetricKey(all_zeros));
@@ -113,7 +114,8 @@ void aont_unpackage(BlockCipher* cipher,
 
    pipe.process_msg(input, input_len - BLOCK_SIZE);
 
-   pipe.read(output, pipe.remaining());
+   const size_t remaining = pipe.remaining();
+   BOTAN_ASSERT_EQUAL(remaining, pipe.read(output, remaining), "Expected read size");
    }
 
 }

@@ -109,16 +109,6 @@ SHA_3::SHA_3(size_t output_bits) :
                              std::to_string(output_bits));
    }
 
-SHA_3::SHA_3(size_t output_bits, size_t capacity) :
-   m_output_bits(output_bits),
-   m_bitrate(1600 - capacity),
-   m_S(25),
-   m_S_pos(0)
-   {
-   if(capacity == 0 || capacity >= 1600)
-      throw Invalid_Argument("Impossible SHA-3 capacity specified");
-   }
-
 std::string SHA_3::name() const
    {
    return "SHA-3(" + std::to_string(m_output_bits) + ")";
@@ -135,49 +125,84 @@ void SHA_3::clear()
    m_S_pos = 0;
    }
 
-void SHA_3::add_data(const byte input[], size_t length)
+//static
+size_t SHA_3::absorb(size_t bitrate,
+                     secure_vector<uint64_t>& S, size_t S_pos,
+                     const byte input[], size_t length)
    {
-   if(length == 0)
-      return;
-
-   while(length)
+   while(length > 0)
       {
-      size_t to_take = std::min(length, m_bitrate / 8 - m_S_pos);
+      size_t to_take = std::min(length, bitrate / 8 - S_pos);
 
       length -= to_take;
 
-      while(to_take && m_S_pos % 8)
+      while(to_take && S_pos % 8)
          {
-         m_S[m_S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (m_S_pos % 8));
+         S[S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (S_pos % 8));
 
-         ++m_S_pos;
+         ++S_pos;
          ++input;
          --to_take;
          }
 
       while(to_take && to_take % 8 == 0)
          {
-         m_S[m_S_pos / 8] ^= load_le<u64bit>(input, 0);
-         m_S_pos += 8;
+         S[S_pos / 8] ^= load_le<u64bit>(input, 0);
+         S_pos += 8;
          input += 8;
          to_take -= 8;
          }
 
       while(to_take)
          {
-         m_S[m_S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (m_S_pos % 8));
+         S[S_pos / 8] ^= static_cast<u64bit>(input[0]) << (8 * (S_pos % 8));
 
-         ++m_S_pos;
+         ++S_pos;
          ++input;
          --to_take;
          }
 
-      if(m_S_pos == m_bitrate / 8)
+      if(S_pos == bitrate / 8)
          {
-         SHA_3::permute(m_S.data());
-         m_S_pos = 0;
+         SHA_3::permute(S.data());
+         S_pos = 0;
          }
       }
+
+   return S_pos;
+   }
+
+//static
+void SHA_3::expand(size_t bitrate,
+                   secure_vector<uint64_t>& S,
+                   byte output[], size_t output_length)
+   {
+   BOTAN_ARG_CHECK(bitrate % 8 == 0);
+
+   size_t Si = 0;
+
+   for(size_t i = 0; i != output_length; ++i)
+      {
+      if(i > 0)
+         {
+         if(i % (bitrate / 8) == 0)
+            {
+            SHA_3::permute(S.data());
+            Si = 0;
+            }
+         else if(i % 8 == 0)
+            {
+            Si += 1;
+            }
+         }
+
+      output[i] = get_byte(7 - (i % 8), S[Si]);
+      }
+   }
+
+void SHA_3::add_data(const byte input[], size_t length)
+   {
+   m_S_pos = SHA_3::absorb(m_bitrate, m_S, m_S_pos, input, length);
    }
 
 void SHA_3::final_result(byte output[])

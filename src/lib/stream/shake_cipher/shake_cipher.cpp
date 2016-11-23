@@ -11,13 +11,13 @@
 
 namespace Botan {
 
-SHAKE_128::SHAKE_128() :
+SHAKE_128_Cipher::SHAKE_128_Cipher() :
    m_state(25),
    m_buffer((1600 - 256) / 8),
    m_buf_pos(0)
    {}
 
-void SHAKE_128::cipher(const byte in[], byte out[], size_t length)
+void SHAKE_128_Cipher::cipher(const byte in[], byte out[], size_t length)
    {
    while(length >= m_buffer.size() - m_buf_pos)
       {
@@ -35,7 +35,7 @@ void SHAKE_128::cipher(const byte in[], byte out[], size_t length)
    m_buf_pos += length;
    }
 
-void SHAKE_128::key_schedule(const byte key[], size_t length)
+void SHAKE_128_Cipher::key_schedule(const byte key[], size_t length)
    {
    zeroise(m_state);
 
@@ -51,14 +51,14 @@ void SHAKE_128::key_schedule(const byte key[], size_t length)
    copy_out_le(m_buffer.data(), m_buffer.size(), m_state.data());
    }
 
-void SHAKE_128::clear()
+void SHAKE_128_Cipher::clear()
    {
    zeroise(m_state);
    zeroise(m_buffer);
    m_buf_pos = 0;
    }
 
-void SHAKE_128::set_iv(const byte[], size_t length)
+void SHAKE_128_Cipher::set_iv(const byte[], size_t length)
    {
    /*
    * This could be supported in some way (say, by treating iv as
@@ -68,8 +68,8 @@ void SHAKE_128::set_iv(const byte[], size_t length)
       throw Invalid_IV_Length(name(), length);
    }
 
-void SHAKE_128::seek(u64bit)
+void SHAKE_128_Cipher::seek(u64bit)
    {
-   throw Not_Implemented("SHAKE_128::seek");
+   throw Not_Implemented("SHAKE_128_Cipher::seek");
    }
 }

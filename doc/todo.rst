@@ -60,10 +60,10 @@ TLS
 * Make DTLS support optional at build time
 * Make TLS v1.0 and v1.1 optional at build time
 * Make finite field DH optional at build time
-* NEWHOPE (CECPQ1) key exchange (GH #613)
 * TLS OCSP stapling (RFC 6066)
 * Authentication using TOFU (sqlite3 storage)
 * Certificate pinning (using TACK?)
+* Certificate Transparency
 * TLS supplemental authorization data (RFC 4680, RFC 5878)
 * OpenPGP authentication (RFC 5081)
 * DTLS-SCTP (RFC 6083)
@@ -80,6 +80,7 @@ PKIX
 * X.509 policy constraints
 * OCSP responder logic
 * X.509 attribute certificates (RFC 5755)
+* Roughtime client
 
 New Protocols / Formats
 ----------------------------------------

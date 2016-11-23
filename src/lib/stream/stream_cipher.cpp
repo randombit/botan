@@ -74,7 +74,7 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
    if(req.algo_name() == "SHAKE-128")
       {
       if(provider.empty() || provider == "base")
-         return std::unique_ptr<StreamCipher>(new SHAKE_128);
+         return std::unique_ptr<StreamCipher>(new SHAKE_128_Cipher);
       }
 #endif
 

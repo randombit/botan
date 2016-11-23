@@ -12,6 +12,12 @@
 
 namespace Botan {
 
+void curve25519_basepoint(uint8_t mypublic[32], const uint8_t secret[32])
+   {
+   const byte basepoint[32] = { 9 };
+   curve25519_donna(mypublic, secret, basepoint);
+   }
+
 namespace {
 
 void size_check(size_t size, const char* thing)
@@ -24,17 +30,7 @@ secure_vector<byte> curve25519(const secure_vector<byte>& secret,
                                const byte pubval[32])
    {
    secure_vector<byte> out(32);
-   const int rc = curve25519_donna(out.data(), secret.data(), pubval);
-   BOTAN_ASSERT_EQUAL(rc, 0, "Return value of curve25519_donna is ok");
-   return out;
-   }
-
-std::vector<byte> curve25519_basepoint(const secure_vector<byte>& secret)
-   {
-   const byte basepoint[32] = { 9 };
-   std::vector<byte> out(32);
-   const int rc = curve25519_donna(out.data(), secret.data(), basepoint);
-   BOTAN_ASSERT_EQUAL(rc, 0, "Return value of curve25519_donna is ok");
+   curve25519_donna(out.data(), secret.data(), pubval);
    return out;
    }
 
@@ -74,7 +70,8 @@ std::vector<byte> Curve25519_PublicKey::x509_subject_public_key() const
 Curve25519_PrivateKey::Curve25519_PrivateKey(RandomNumberGenerator& rng)
    {
    m_private = rng.random_vec(32);
-   m_public = curve25519_basepoint(m_private);
+   m_public.resize(32);
+   curve25519_basepoint(m_public.data(), m_private.data());
    }
 
 Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
@@ -103,7 +100,9 @@ secure_vector<byte> Curve25519_PrivateKey::pkcs8_private_key() const
 
 bool Curve25519_PrivateKey::check_key(RandomNumberGenerator&, bool) const
    {
-   return curve25519_basepoint(m_private) == m_public;
+   std::vector<uint8_t> public_point(32);
+   curve25519_basepoint(public_point.data(), m_private.data());
+   return public_point == m_public;
    }
 
 secure_vector<byte> Curve25519_PrivateKey::agree(const byte w[], size_t w_len) const

@@ -46,8 +46,6 @@ class ECGDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
       secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
                                    RandomNumberGenerator& rng) override;
 
-      size_t message_parts() const override { return 2; }
-      size_t message_part_size() const override { return m_order.bytes(); }
       size_t max_input_bits() const override { return m_order.bits(); }
 
    private:
@@ -93,8 +91,6 @@ class ECGDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
          {
          }
 
-      size_t message_parts() const override { return 2; }
-      size_t message_part_size() const override { return m_order.bytes(); }
       size_t max_input_bits() const override { return m_order.bits(); }
 
       bool with_recovery() const override { return false; }

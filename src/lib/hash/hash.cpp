@@ -56,6 +56,10 @@
   #include <botan/sha3.h>
 #endif
 
+#if defined(BOTAN_HAS_SHAKE)
+  #include <botan/shake.h>
+#endif
+
 #if defined(BOTAN_HAS_SKEIN_512)
   #include <botan/skein_512.h>
 #endif
@@ -239,6 +243,17 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
       {
       return std::unique_ptr<HashFunction>(
          new SHA_3(req.arg_as_integer(0, 512)));
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHAKE)
+   if(req.algo_name() == "SHAKE-128")
+      {
+      return std::unique_ptr<HashFunction>(new SHAKE_128(req.arg_as_integer(0, 128)));
+      }
+   if(req.algo_name() == "SHAKE-256")
+      {
+      return std::unique_ptr<HashFunction>(new SHAKE_256(req.arg_as_integer(0, 256)));
       }
 #endif
 

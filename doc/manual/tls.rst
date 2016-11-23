@@ -522,7 +522,7 @@ policy settings from a file.
 
      Cipher names without an explicit mode refers to CBC+HMAC ciphersuites.
 
-     Default value: "AES-256/GCM", "AES-128/GCM", "ChaCha20Poly1305",
+     Default value: "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM",
      "AES-256/CCM", "AES-128/CCM", "AES-256", "AES-128"
 
      Also allowed: "AES-256/CCM(8)", "AES-128/CCM(8)",
@@ -567,7 +567,7 @@ policy settings from a file.
      Returns the list of key exchange methods we are willing to use,
      in order of preference.
 
-     Default: "ECDH", "DH"
+     Default: "CECPQ1", "ECDH", "DH"
 
      Also allowed: "RSA", "SRP_SHA", "ECDHE_PSK", "DHE_PSK", "PSK"
 
@@ -607,9 +607,10 @@ policy settings from a file.
  .. cpp:function:: std::vector<std::string> allowed_ecc_curves() const
 
      Return a list of ECC curves we are willing to use, in order of preference.
+     The default ordering puts the best performing ECC first.
 
-     Default: "brainpool512r1", "secp521r1", "brainpool384r1",
-     "secp384r1", "brainpool256r1", "secp256r1", "x25519"
+     Default: "x25519", "secp256r1", "secp521r1", "secp384r1",
+     "brainpool256r1", "brainpool384r1", "brainpool512r1"
 
      No other values are currently defined.
 

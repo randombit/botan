@@ -1,6 +1,7 @@
 /*
 * CCM Mode
 * (C) 2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -37,6 +38,8 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
       size_t default_nonce_length() const override;
 
       void clear() override;
+
+      void reset() override;
 
       size_t tag_size() const override { return m_tag_size; }
 

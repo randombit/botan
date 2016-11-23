@@ -1,6 +1,7 @@
 /*
 * HKDF
 * (C) 2013,2015 Jack Lloyd
+* (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -15,9 +16,7 @@
 namespace Botan {
 
 /**
-* HKDF, see RFC 5869 for details.
-* This is only the expansion portion of HKDF.
-* An appropriate extraction function should be used before.
+* HKDF from RFC 5869.
 */
 class BOTAN_DLL HKDF final : public KDF
    {
@@ -31,7 +30,55 @@ class BOTAN_DLL HKDF final : public KDF
 
       std::string name() const override { return "HKDF(" + m_prf->name() + ")"; }
 
-      size_t kdf(byte out[], size_t out_len,
+      size_t kdf(byte key[], size_t key_len,
+                 const byte secret[], size_t secret_len,
+                 const byte salt[], size_t salt_len,
+                 const byte label[], size_t label_len) const override;
+
+   private:
+      std::unique_ptr<MessageAuthenticationCode> m_prf;
+   };
+
+/**
+* HKDF Extraction Step from RFC 5869.
+*/
+class BOTAN_DLL HKDF_Extract final : public KDF
+   {
+   public:
+      /**
+      * @param prf MAC algorithm to use
+      */
+      explicit HKDF_Extract(MessageAuthenticationCode* prf) : m_prf(prf) {}
+
+      KDF* clone() const override { return new HKDF_Extract(m_prf->clone()); }
+
+      std::string name() const override { return "HKDF-Extract(" + m_prf->name() + ")"; }
+
+      size_t kdf(byte key[], size_t key_len,
+                 const byte secret[], size_t secret_len,
+                 const byte salt[], size_t salt_len,
+                 const byte label[], size_t label_len) const override;
+
+   private:
+      std::unique_ptr<MessageAuthenticationCode> m_prf;
+   };
+
+/**
+* HKDF Expansion Step from RFC 5869.
+*/
+class BOTAN_DLL HKDF_Expand final : public KDF
+   {
+   public:
+      /**
+      * @param prf MAC algorithm to use
+      */
+      explicit HKDF_Expand(MessageAuthenticationCode* prf) : m_prf(prf) {}
+
+      KDF* clone() const override { return new HKDF_Expand(m_prf->clone()); }
+
+      std::string name() const override { return "HKDF-Expand(" + m_prf->name() + ")"; }
+
+      size_t kdf(byte key[], size_t key_len,
                  const byte secret[], size_t secret_len,
                  const byte salt[], size_t salt_len,
                  const byte label[], size_t label_len) const override;

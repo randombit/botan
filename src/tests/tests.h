@@ -330,7 +330,9 @@ class Test
 
       template<typename Alloc>
       static std::vector<uint8_t, Alloc>
-      mutate_vec(const std::vector<uint8_t, Alloc>& v, bool maybe_resize = false)
+      mutate_vec(const std::vector<uint8_t, Alloc>& v,
+                 bool maybe_resize = false,
+                 size_t min_offset = 0)
          {
          auto& rng = Test::rng();
 
@@ -344,10 +346,11 @@ class Test
             rng.randomize(&r[r.size() - add], add);
             }
 
-         if(r.size() > 0)
+         if(r.size() > min_offset)
             {
-            const size_t offset = rng.next_byte() % r.size();
-            r[offset] ^= rng.next_nonzero_byte();
+            const size_t offset = std::max<size_t>(min_offset, rng.next_byte() % r.size());
+            const byte perturb = rng.next_nonzero_byte();
+            r[offset] ^= perturb;
             }
 
          return r;

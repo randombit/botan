@@ -1,4 +1,3 @@
 <requires>
 entropy
-hmac_drbg
 </requires>

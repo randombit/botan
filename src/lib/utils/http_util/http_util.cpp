@@ -91,7 +91,7 @@ std::string http_transact(const std::string& hostname,
 
    socket_info.sin_addr = *reinterpret_cast<struct in_addr*>(host_addr->h_addr); // FIXME
 
-   if(::connect(fd, (sockaddr*)&socket_info, sizeof(struct sockaddr)) != 0)
+   if(::connect(fd, reinterpret_cast<sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0)
       throw HTTP_Error("HTTP connection to " + hostname + " failed");
 
    size_t sent_so_far = 0;

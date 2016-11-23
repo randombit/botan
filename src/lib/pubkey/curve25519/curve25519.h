@@ -19,7 +19,7 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
 
       size_t estimated_strength() const override { return 128; }
 
-      size_t max_input_bits() const override { return 256; }
+      size_t key_length() const override { return 255; }
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
@@ -103,9 +103,17 @@ class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
 * The types above are just wrappers for curve25519_donna, plus defining
 * encodings for public and private keys.
 */
-int BOTAN_DLL curve25519_donna(uint8_t mypublic[32],
-                               const uint8_t secret[32],
-                               const uint8_t basepoint[32]);
+void BOTAN_DLL curve25519_donna(uint8_t mypublic[32],
+                                const uint8_t secret[32],
+                                const uint8_t basepoint[32]);
+
+/**
+* Exponentiate by the x25519 base point
+* @param mypublic output value
+* @param secret random scalar
+*/
+void BOTAN_DLL curve25519_basepoint(uint8_t mypublic[32],
+                                    const uint8_t secret[32]);
 
 }
 

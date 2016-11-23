@@ -1,0 +1,5 @@
+define SHAKE 20161009
+
+<requires>
+sha3
+</requires>

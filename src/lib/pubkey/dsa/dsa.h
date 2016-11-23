@@ -23,7 +23,6 @@ class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
       DL_Group::Format group_format() const override { return DL_Group::ANSI_X9_57; }
       size_t message_parts() const override { return 2; }
       size_t message_part_size() const override { return group_q().bytes(); }
-      size_t max_input_bits() const override { return group_q().bits(); }
 
       /**
       * Load a public key.

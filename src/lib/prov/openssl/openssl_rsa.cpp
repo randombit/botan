@@ -106,8 +106,6 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
             throw OpenSSL_Error("d2i_RSAPrivateKey");
          }
 
-      size_t max_input_bits() const override { return ::BN_num_bits(m_openssl_rsa->n) - 1; }
-
       secure_vector<byte> decrypt(byte& valid_mask,
                                   const byte msg[], size_t msg_len) override
          {

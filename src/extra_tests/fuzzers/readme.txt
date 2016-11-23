@@ -3,7 +3,13 @@ The code in this directory is for testing various message decoders and
 math functions using the fuzzers AFL (http://lcamtuf.coredump.cx/afl/)
 and libFuzzer (http://llvm.org/docs/LibFuzzer.html).
 
-Run setup.sh to set up builds for both fuzzers
+To build for AFL, run
+
+  make afl
+
+For libFuzzer
+
+  make llvm
 
 To add a new fuzzer, create a new file in jigs/, include "driver.h",
 and implement the function with the signature

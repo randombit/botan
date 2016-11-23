@@ -1,6 +1,7 @@
 /*
 * GCM Mode
 * (C) 2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -36,6 +37,8 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
       size_t tag_size() const override { return m_tag_size; }
 
       void clear() override;
+
+      void reset() override;
 
       std::string provider() const override;
    protected:
@@ -127,6 +130,8 @@ class BOTAN_DLL GHASH : public SymmetricAlgorithm
          { return Key_Length_Specification(16); }
 
       void clear() override;
+
+      void reset();
 
       std::string name() const override { return "GHASH"; }
    protected:

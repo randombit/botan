@@ -12,17 +12,19 @@ LIBFUZZER_LIBS=llvm-build/libbotan-1.11.a libFuzzer.a
 AFL_LIBS=afl-build/libbotan-1.11.a
 
 #AFL_CXX=AFL_USE_ASAN=1 afl-g++ -m32
-AFL_CXX=afl-clang-fast++
+AFL_CXX=afl-g++
+AFL_CXX_TYPE=gcc
 CLANG_CXX=clang++
 
 LIBFUZZER_PROGS=$(patsubst %,bin/llvm_fuzz_%,$(FUZZERS))
 AFL_PROGS=$(patsubst %,bin/afl_fuzz_%,$(FUZZERS))
 
-all: afl_progs libfuzzer_progs
+all:
+	@echo "make afl for AFL, llvm for libFuzzer"
 
-afl_progs: $(AFL_PROGS)
+afl: dirs afl-build $(AFL_PROGS)
 
-libfuzzer_progs: $(LIBFUZZER_PROGS)
+llvm: dirs llvm-build $(LIBFUZZER_PROGS)
 
 bin/llvm_fuzz_%: jigs/%.cpp $(LIBFUZZER_LIBS)
 	$(CLANG_CXX) $(LIBFUZZER_FLAGS) -DUSE_LLVM_FUZZER $< $(LIBFUZZER_LIBS) -o $@
@@ -30,8 +32,21 @@ bin/llvm_fuzz_%: jigs/%.cpp $(LIBFUZZER_LIBS)
 bin/afl_fuzz_%: jigs/%.cpp $(AFL_LIBS)
 	$(AFL_CXX) $(AFL_FLAGS) $< $(AFL_LIBS) -o $@
 
-# libFuzzer default is max_len 64 this sets 140 but allows override via args=
 
+dirs:
+	mkdir -p bin
+	mkdir -p output
+	mkdir -p corpus
+
+afl-build:
+	../../../configure.py $(CFG_FLAGS) --with-build-dir=afl-build --cc=$(AFL_CXX_TYPE) --cc-bin=$(AFL_CXX)
+	make -f afl-build/Makefile afl-build/libbotan-1.11.a -j8
+
+llvm-build:
+	../../../configure.py $(CFG_FLAGS) --with-build-dir=llvm-build --cc=clang --cc-bin=$(CLANG_CXX) --cc-abi-flags="$(CLANG_SAN_FLAGS)"
+	make -f llvm-build/Makefile llvm-build/libbotan-1.11.a -j8
+
+# libFuzzer default is max_len 64 this sets 140 but allows override via args=
 run_llvm_%: bin/llvm_fuzz_%
 	$(eval FUZZER = $(subst bin/llvm_fuzz_,,$<))
 	mkdir -p output/$(FUZZER)/llvm/queue
@@ -54,6 +69,12 @@ cmin_%: bin/afl_fuzz_%
 
 clean:
 	rm -f $(LIBFUZZER_PROGS) $(AFL_PROGS)
+
+clean_builds:
+	rm -rf afl-build llvm-build
+
+libFuzzer:
+	svn co http://llvm.org/svn/llvm-project/llvm/trunk/lib/Fuzzer libFuzzer
 
 libFuzzer.a: libFuzzer
 	cd libFuzzer && clang -c -g -O2 -std=c++11 *.cpp

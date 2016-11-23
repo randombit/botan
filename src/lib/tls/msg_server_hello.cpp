@@ -43,11 +43,11 @@ Server_Hello::Server_Hello(Handshake_IO& io,
          m_extensions.add(new Encrypt_then_MAC);
       }
 
-   if(c.ecc_ciphersuite() && policy.use_ecc_point_compression())
+   if(c.ecc_ciphersuite())
       {
-      m_extensions.add(new Supported_Point_Formats());
+      m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
-      
+
    if(client_hello.secure_renegotiation())
       m_extensions.add(new Renegotiation_Extension(reneg_info));
 
@@ -105,6 +105,11 @@ Server_Hello::Server_Hello(Handshake_IO& io,
       Ciphersuite c = resumed_session.ciphersuite();
       if(c.cbc_ciphersuite())
          m_extensions.add(new Encrypt_then_MAC);
+      }
+
+   if(resumed_session.ciphersuite().ecc_ciphersuite())
+      {
+      m_extensions.add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
 
    if(client_hello.secure_renegotiation())

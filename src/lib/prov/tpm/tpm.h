@@ -150,7 +150,7 @@ class BOTAN_DLL TPM_PrivateKey : public Private_Key
 
       size_t estimated_strength() const override;
 
-      size_t max_input_bits() const override;
+      size_t key_length() const override;
 
       AlgorithmIdentifier algorithm_identifier() const override;
 

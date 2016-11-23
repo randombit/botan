@@ -234,15 +234,16 @@ PK_Signer* choose_sig_format(const Private_Key& key,
 
    std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_fn));
 
-   if(key.max_input_bits() < hash->output_length() * 8)
-      throw Invalid_Argument("Key is too small for chosen hash function");
-
    std::string padding;
    if(algo_name == "RSA")
       {
       padding = "EMSA3";
       }
-   else if(algo_name == "DSA" || algo_name == "ECDSA" || algo_name == "ECGDSA" || algo_name == "ECKCDSA")
+   else if(algo_name == "DSA" ||
+           algo_name == "ECDSA" ||
+           algo_name == "ECGDSA" ||
+           algo_name == "ECKCDSA" ||
+           algo_name == "GOST-34.10")
       {
       padding = "EMSA1";
       }

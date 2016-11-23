@@ -77,6 +77,22 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
          return kdf_create_mac_or_hash<HKDF>(req.arg(0));
          }
       }
+
+   if(req.algo_name() == "HKDF-Extract" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         return kdf_create_mac_or_hash<HKDF_Extract>(req.arg(0));
+         }
+      }
+
+   if(req.algo_name() == "HKDF-Expand" && req.arg_count() == 1)
+      {
+      if(provider.empty() || provider == "base")
+         {
+         return kdf_create_mac_or_hash<HKDF_Expand>(req.arg(0));
+         }
+      }
 #endif
 
 #if defined(BOTAN_HAS_KDF2)

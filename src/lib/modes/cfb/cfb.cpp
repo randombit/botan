@@ -1,6 +1,7 @@
 /*
 * CFB Mode
 * (C) 1999-2007,2013 Jack Lloyd
+* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -22,7 +23,13 @@ CFB_Mode::CFB_Mode(BlockCipher* cipher, size_t feedback_bits) :
 void CFB_Mode::clear()
    {
    m_cipher->clear();
+   reset();
+   }
+
+void CFB_Mode::reset()
+   {
    m_shift_register.clear();
+   m_keystream_buf.clear();
    }
 
 std::string CFB_Mode::name() const

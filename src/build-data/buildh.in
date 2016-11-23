@@ -201,6 +201,12 @@ Each read generates 32 bits of output
   #define BOTAN_FUNC_ISA(isa)
 #endif
 
+#if defined(__GNUG__) || defined(__clang__)
+  #define BOTAN_WARN_UNUSED_RESULT __attribute__ ((warn_unused_result))
+#else
+  #define BOTAN_WARN_UNUSED_RESULT
+#endif
+
 /*
 * Compile-time deprecation warnings
 */

@@ -44,6 +44,14 @@ class BOTAN_DLL Public_Key
       virtual size_t estimated_strength() const = 0;
 
       /**
+      * Return an integer value best approximating the length of the
+      * primary security parameter. For example for RSA this will be
+      * the size of the modulus, for ECDSA the size of the ECC group,
+      * and for McEliece the size of the code will be returned.
+      */
+      virtual size_t key_length() const = 0;
+
+      /**
       * Get the OID of the underlying public key scheme.
       * @return OID of the public key scheme
       */
@@ -59,23 +67,6 @@ class BOTAN_DLL Public_Key
       virtual bool check_key(RandomNumberGenerator& rng,
                              bool strong) const = 0;
 
-      /**
-      * Find out the number of message parts supported by this scheme.
-      * @return number of message parts
-      */
-      virtual size_t message_parts() const { return 1; }
-
-      /**
-      * Find out the message part size supported by this scheme/key.
-      * @return size of the message parts in bits
-      */
-      virtual size_t message_part_size() const { return 0; }
-
-      /**
-      * Get the maximum message size in bits supported by this public key.
-      * @return maximum message size in bits
-      */
-      virtual size_t max_input_bits() const = 0;
 
       /**
       * @return X.509 AlgorithmIdentifier for this key
@@ -88,6 +79,31 @@ class BOTAN_DLL Public_Key
       virtual std::vector<byte> x509_subject_public_key() const = 0;
 
       // Internal or non-public declarations follow
+
+      /**
+      * Returns more than 1 if the output of this algorithm
+      * (ciphertext, signature) should be treated as more than one
+      * value. This is used for algorithms like DSA and ECDSA, where
+      * the (r,s) output pair can be encoded as either a plain binary
+      * list or a TLV tagged DER encoding depending on the protocol.
+      *
+      * This function is public but applications should have few
+      * reasons to ever call this.
+      *
+      * @return number of message parts
+      */
+      virtual size_t message_parts() const { return 1; }
+
+      /**
+      * Returns how large each of the message parts refered to
+      * by message_parts() is
+      *
+      * This function is public but applications should have few
+      * reasons to ever call this.
+      *
+      * @return size of the message parts in bits
+      */
+      virtual size_t message_part_size() const { return 0; }
 
       /**
       * This is an internal library function exposed on key types.

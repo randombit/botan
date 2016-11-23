@@ -25,9 +25,14 @@
 
 namespace Botan {
 
+size_t RSA_PublicKey::key_length() const
+   {
+   return m_n.bits();
+   }
+
 size_t RSA_PublicKey::estimated_strength() const
    {
-   return if_work_factor(m_n.bits());
+   return if_work_factor(key_length());
    }
 
 AlgorithmIdentifier RSA_PublicKey::algorithm_identifier() const

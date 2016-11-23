@@ -384,10 +384,15 @@ Supported_Elliptic_Curves::Supported_Elliptic_Curves(TLS_Data_Reader& reader,
 
 std::vector<byte> Supported_Point_Formats::serialize() const
    {
-   // if we send this extension, we prefer compressed points,
-   // otherwise we don't send it (which is equal to supporting only uncompressed)
    // if this extension is sent, it MUST include uncompressed (RFC 4492, section 5.1)
-   return std::vector<byte>{2, ANSIX962_COMPRESSED_PRIME, UNCOMPRESSED};
+   if(m_prefers_compressed)
+      {
+      return std::vector<byte>{2, ANSIX962_COMPRESSED_PRIME, UNCOMPRESSED};
+      }
+   else
+      {
+      return std::vector<byte>{1, UNCOMPRESSED};
+      }
    }
 
 Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader,

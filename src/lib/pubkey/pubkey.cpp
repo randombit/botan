@@ -207,48 +207,6 @@ SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
    return m_op->agree(key_len, in, in_len, salt, salt_len);
    }
 
-namespace {
-
-std::vector<byte> der_encode_signature(const std::vector<byte>& sig, size_t parts)
-   {
-   if(sig.size() % parts)
-      throw Encoding_Error("PK_Signer: strange signature size found");
-   const size_t SIZE_OF_PART = sig.size() / parts;
-
-   std::vector<BigInt> sig_parts(parts);
-   for(size_t j = 0; j != sig_parts.size(); ++j)
-      sig_parts[j].binary_decode(&sig[SIZE_OF_PART*j], SIZE_OF_PART);
-
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
-      .encode_list(sig_parts)
-      .end_cons()
-      .get_contents_unlocked();
-   }
-
-std::vector<byte> der_decode_signature(const byte sig[], size_t len,
-                                       size_t part_size, size_t parts)
-   {
-   std::vector<byte> real_sig;
-   BER_Decoder decoder(sig, len);
-   BER_Decoder ber_sig = decoder.start_cons(SEQUENCE);
-
-   size_t count = 0;
-   while(ber_sig.more_items())
-      {
-      BigInt sig_part;
-      ber_sig.decode(sig_part);
-      real_sig += BigInt::encode_1363(sig_part, part_size);
-      ++count;
-      }
-
-   if(count != parts)
-      throw Decoding_Error("PK_Verifier: signature size invalid");
-   return real_sig;
-   }
-
-}
-
 PK_Signer::PK_Signer(const Private_Key& key,
                      RandomNumberGenerator& rng,
                      const std::string& emsa,
@@ -259,6 +217,8 @@ PK_Signer::PK_Signer(const Private_Key& key,
    if(!m_op)
       throw Invalid_Argument("Key type " + key.algo_name() + " does not support signature generation");
    m_sig_format = format;
+   m_parts = key.message_parts();
+   m_part_size = key.message_part_size();
    }
 
 PK_Signer::~PK_Signer() { /* for unique_ptr */ }
@@ -270,16 +230,29 @@ void PK_Signer::update(const byte in[], size_t length)
 
 std::vector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
    {
-   const std::vector<byte> plain_sig = unlock(m_op->sign(rng));
-   const size_t parts = m_op->message_parts();
+   const std::vector<byte> sig = unlock(m_op->sign(rng));
 
-   if(parts == 1 || m_sig_format == IEEE_1363)
-      return plain_sig;
+   if(m_sig_format == IEEE_1363)
+      {
+      return sig;
+      }
    else if(m_sig_format == DER_SEQUENCE)
-      return der_encode_signature(plain_sig, parts);
+      {
+      if(sig.size() % m_parts != 0 || sig.size() != m_parts * m_part_size)
+         throw Internal_Error("PK_Signer: DER signature sizes unexpected, cannot encode");
+
+      std::vector<BigInt> sig_parts(m_parts);
+      for(size_t i = 0; i != sig_parts.size(); ++i)
+         sig_parts[i].binary_decode(&sig[m_part_size*i], m_part_size);
+
+      return DER_Encoder()
+         .start_cons(SEQUENCE)
+         .encode_list(sig_parts)
+         .end_cons()
+         .get_contents_unlocked();
+      }
    else
-      throw Encoding_Error("PK_Signer: Unknown signature format " +
-                           std::to_string(m_sig_format));
+      throw Internal_Error("PK_Signer: Invalid signature format enum");
    }
 
 PK_Verifier::PK_Verifier(const Public_Key& key,
@@ -291,14 +264,16 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
    if(!m_op)
       throw Invalid_Argument("Key type " + key.algo_name() + " does not support signature verification");
    m_sig_format = format;
+   m_parts = key.message_parts();
+   m_part_size = key.message_part_size();
    }
 
 PK_Verifier::~PK_Verifier() { /* for unique_ptr */ }
 
 void PK_Verifier::set_input_format(Signature_Format format)
    {
-   if(m_op->message_parts() == 1 && format != IEEE_1363)
-      throw Invalid_State("PK_Verifier: This algorithm always uses IEEE 1363");
+   if(format != IEEE_1363 && m_parts == 1)
+      throw Invalid_Argument("PK_Verifier: This algorithm does not support DER encoding");
    m_sig_format = format;
    }
 
@@ -323,15 +298,26 @@ bool PK_Verifier::check_signature(const byte sig[], size_t length)
          }
       else if(m_sig_format == DER_SEQUENCE)
          {
-         std::vector<byte> real_sig = der_decode_signature(sig, length,
-                                                           m_op->message_part_size(),
-                                                           m_op->message_parts());
+         std::vector<byte> real_sig;
+         BER_Decoder decoder(sig, length);
+         BER_Decoder ber_sig = decoder.start_cons(SEQUENCE);
+
+         size_t count = 0;
+         while(ber_sig.more_items())
+            {
+            BigInt sig_part;
+            ber_sig.decode(sig_part);
+            real_sig += BigInt::encode_1363(sig_part, m_part_size);
+            ++count;
+            }
+
+         if(count != m_parts)
+            throw Decoding_Error("PK_Verifier: signature size invalid");
 
          return m_op->is_valid_signature(real_sig.data(), real_sig.size());
          }
       else
-         throw Decoding_Error("PK_Verifier: Unknown signature format " +
-                              std::to_string(m_sig_format));
+         throw Internal_Error("PK_Verifier: Invalid signature format enum");
       }
    catch(Invalid_Argument&) { return false; }
    }
