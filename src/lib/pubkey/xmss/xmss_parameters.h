@@ -36,13 +36,12 @@ class BOTAN_DLL XMSS_Parameters
          XMSS_SHA2_512_W16_H10 = 0x04000004,
          XMSS_SHA2_512_W16_H16 = 0x05000005,
          XMSS_SHA2_512_W16_H20 = 0x06000006,
-// FIXME: Uncomment once SHAKE128/256 implementation is available in Botan.
-//         XMSS_SHAKE128_W16_H10 = 0x07000007,
-//         XMSS_SHAKE128_W16_H16 = 0x08000008,
-//         XMSS_SHAKE128_W16_H20 = 0x09000009,
-//         XMSS_SHAKE256_W16_H10 = 0x0a00000a,
-//         XMSS_SHAKE256_W16_H16 = 0x0b00000b,
-//         XMSS_SHAKE256_W16_H20 = 0x0c00000c
+         XMSS_SHAKE128_W16_H10 = 0x07000007,
+         XMSS_SHAKE128_W16_H16 = 0x08000008,
+         XMSS_SHAKE128_W16_H20 = 0x09000009,
+         XMSS_SHAKE256_W16_H10 = 0x0a00000a,
+         XMSS_SHAKE256_W16_H16 = 0x0b00000b,
+         XMSS_SHAKE256_W16_H20 = 0x0c00000c
          };
 
       XMSS_Parameters(const std::string& algo_name);
