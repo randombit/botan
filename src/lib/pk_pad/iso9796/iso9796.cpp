@@ -1,0 +1,270 @@
+/*
+ * ISO-9796-2 - Digital signature schemes giving message recovery schemes 2 and 3
+ * (C) 2016 Tobias Niemann, Hackmanit GmbH
+ *
+ * Botan is released under the Simplified BSD License (see license.txt)
+ */
+
+#include <botan/iso9796.h>
+#include <botan/mgf1.h>
+#include <botan/internal/bit_ops.h>
+#include <botan/hash_id.h>
+
+namespace Botan {
+
+namespace {
+
+secure_vector<byte> iso9796_encoding(const secure_vector<byte>& msg,
+                                     size_t output_bits, std::unique_ptr<HashFunction>& hash, size_t SALT_SIZE, bool implicit, RandomNumberGenerator& rng)
+   {
+   const size_t output_length = (output_bits + 7) / 8;
+
+   //set trailer length
+   size_t tLength = 1;
+   if(!implicit)
+      {
+      tLength = 2;
+      }
+   const size_t HASH_SIZE = hash->output_length();
+
+   if(output_length <= HASH_SIZE + SALT_SIZE + tLength)
+      {
+      throw Encoding_Error("ISO9796-2::encoding_of: Output length is too small");
+      }
+
+   //calculate message capacity
+   const size_t capacity = output_length
+                           - HASH_SIZE - SALT_SIZE - tLength - 1;
+
+   //msg1 is the recoverable and msg2 the unrecoverable message part.
+   secure_vector<byte> msg1;
+   secure_vector<byte> msg2;
+   if(msg.size() > capacity)
+      {
+      msg1 = secure_vector<byte> (msg.begin(), msg.begin() + capacity);
+      msg2 = secure_vector<byte> (msg.begin() + capacity, msg.end());
+      hash->update(msg2);
+      }
+   else
+      {
+      msg1 = msg;
+      }
+   msg2 = hash->final();
+
+   //compute H(C||msg1 ||H(msg2)||S)
+   uint64_t msgLength = msg1.size();
+   secure_vector<byte> salt = rng.random_vec(SALT_SIZE);
+   hash->update_be(msgLength * 8);
+   hash->update(msg1);
+   hash->update(msg2);
+   hash->update(salt);
+   secure_vector<byte> H = hash->final();
+
+   secure_vector<byte> EM(output_length);
+
+   //compute message offset.
+   size_t offset = output_length - HASH_SIZE - SALT_SIZE - tLength
+                   - msgLength - 1;
+
+   //insert message border (0x01), msg1 and salt into the output buffer
+   EM[offset] = 0x01;
+   buffer_insert(EM, offset + 1, msg1);
+   buffer_insert(EM, offset + 1 + msgLength, salt);
+
+   //apply mask
+   mgf1_mask(*hash, H.data(), HASH_SIZE, EM.data(),
+             output_length - HASH_SIZE - tLength);
+   buffer_insert(EM, output_length - HASH_SIZE - tLength, H);
+   //set implicit/ISO trailer
+   if(!implicit)
+      {
+      byte hash_id = ieee1363_hash_id(hash->name());
+      if(!hash_id)
+         {
+         throw Encoding_Error("ISO9796-2::encoding_of: no hash identifier for " + hash->name());
+         }
+      EM[output_length - 1] = 0xCC;
+      EM[output_length - 2] = hash_id;
+
+      }
+   else
+      {
+      EM[output_length - 1] = 0xBC;
+      }
+   //clear the leftmost bit (confer bouncy castle)
+   EM[0] &= 0x7F;
+
+   return EM;
+   }
+
+bool iso9796_verification(const secure_vector<byte>& const_coded,
+                          const secure_vector<byte>& raw, size_t key_bits, std::unique_ptr<HashFunction>& hash, size_t SALT_SIZE)
+   {
+   const size_t HASH_SIZE = hash->output_length();
+   const size_t KEY_BYTES = (key_bits + 7) / 8;
+
+   if(const_coded.size() != KEY_BYTES)
+      {
+      return false;
+      }
+   //get trailer length
+   size_t tLength;
+   if(const_coded[const_coded.size() - 1] == 0xBC)
+      {
+      tLength = 1;
+      }
+   else
+      {
+      byte hash_id = ieee1363_hash_id(hash->name());
+      if((!const_coded[const_coded.size() - 2]) || (const_coded[const_coded.size() - 2] != hash_id) ||
+            (const_coded[const_coded.size() - 1] != 0xCC))
+         {
+         return false; //in case of wrong ISO trailer.
+         }
+      tLength = 2;
+      }
+
+   secure_vector<byte> coded = const_coded;
+
+   //remove mask
+   byte* DB = coded.data();
+   const size_t DB_size = coded.size() - HASH_SIZE - tLength;
+
+   const byte* H = &coded[DB_size];
+
+   mgf1_mask(*hash, H, HASH_SIZE, DB, DB_size);
+   //clear the leftmost bit (confer bouncy castle)
+   DB[0] &= 0x7F;
+
+   //recover msg1 and salt
+   size_t msg1_offset = 0;
+   for(size_t j = 0; j != DB_size; ++j)
+      {
+      if(DB[j] == 0x01)
+         {
+         msg1_offset = j + 1;
+         break;
+         }
+      }
+   if(msg1_offset == 0)
+      {
+      return false;
+      }
+   secure_vector<byte> msg1(coded.begin() + msg1_offset,
+                            coded.end() - tLength - HASH_SIZE - SALT_SIZE);
+   secure_vector<byte> salt(coded.begin() + msg1_offset + msg1.size(),
+                            coded.end() - tLength - HASH_SIZE);
+
+   //compute H2(C||msg1||H(msg2)||S*). * indicates a recovered value
+   const size_t capacity = (key_bits - 2 + 7) / 8 - HASH_SIZE
+                           - SALT_SIZE - tLength - 1;
+   secure_vector<byte> msg1raw;
+   secure_vector<byte> msg2;
+   if(raw.size() > capacity)
+      {
+      msg1raw = secure_vector<byte> (raw.begin(), raw.begin() + capacity);
+      msg2 = secure_vector<byte> (raw.begin() + capacity, raw.end());
+      hash->update(msg2);
+      }
+   else
+      {
+      msg1raw = raw;
+      }
+   msg2 = hash->final();
+
+   uint64_t msg1rawLength = msg1raw.size();
+   hash->update_be(msg1rawLength * 8);
+   hash->update(msg1raw);
+   hash->update(msg2);
+   hash->update(salt);
+   secure_vector<byte> H3 = hash->final();
+
+   //compute H3(C*||msg1*||H(msg2)||S*) * indicates a recovered value
+   uint64_t msgLength = msg1.size();
+   hash->update_be(msgLength * 8);
+   hash->update(msg1);
+   hash->update(msg2);
+   hash->update(salt);
+   secure_vector<byte> H2 = hash->final();
+
+   //check if H3 == H2
+   return same_mem(H3.data(), H2.data(), HASH_SIZE);
+   }
+
+}
+/*
+ *  ISO-9796-2 signature scheme 2
+ *  DS 2 is probabilistic
+ */
+void ISO_9796_DS2::update(const byte input[], size_t length)
+   {
+   //need to buffer message completely, before digest
+   m_msg_buffer.insert(m_msg_buffer.end(), input, input+length);
+   }
+
+/*
+ * Return the raw (unencoded) data
+ */
+secure_vector<byte> ISO_9796_DS2::raw_data()
+   {
+   secure_vector<byte> retbuffer = m_msg_buffer;
+   m_msg_buffer.clear();
+   return retbuffer;
+   }
+
+/*
+ *  ISO-9796-2 scheme 2 encode operation
+ */
+secure_vector<byte> ISO_9796_DS2::encoding_of(const secure_vector<byte>& msg,
+      size_t output_bits, RandomNumberGenerator& rng)
+   {
+   return iso9796_encoding(msg, output_bits, m_hash, m_SALT_SIZE, m_implicit, rng);
+   }
+
+/*
+ * ISO-9796-2 scheme 2 verify operation
+ */
+bool ISO_9796_DS2::verify(const secure_vector<byte>& const_coded,
+                          const secure_vector<byte>& raw, size_t key_bits)
+   {
+   return iso9796_verification(const_coded,raw,key_bits,m_hash,m_SALT_SIZE);
+   }
+
+/*
+ *  ISO-9796-2 signature scheme 3
+ *  DS 3 is deterministic and equals DS2 without salt
+ */
+void ISO_9796_DS3::update(const byte input[], size_t length)
+   {
+   //need to buffer message completely, before digest
+   m_msg_buffer.insert(m_msg_buffer.end(), input, input+length);
+   }
+
+/*
+ * Return the raw (unencoded) data
+ */
+secure_vector<byte> ISO_9796_DS3::raw_data()
+   {
+   secure_vector<byte> retbuffer = m_msg_buffer;
+   m_msg_buffer.clear();
+   return retbuffer;
+   }
+
+/*
+ *  ISO-9796-2 scheme 3 encode operation
+ */
+secure_vector<byte> ISO_9796_DS3::encoding_of(const secure_vector<byte>& msg,
+      size_t output_bits, RandomNumberGenerator& rng)
+   {
+   return iso9796_encoding(msg, output_bits, m_hash, 0, m_implicit, rng);
+   }
+
+/*
+ * ISO-9796-2 scheme 3 verify operation
+ */
+bool ISO_9796_DS3::verify(const secure_vector<byte>& const_coded,
+                          const secure_vector<byte>& raw, size_t key_bits)
+   {
+   return iso9796_verification(const_coded, raw, key_bits, m_hash, 0);
+   }
+}

@@ -1,0 +1,7 @@
+define ISO_9796 20161121
+
+<requires>
+mgf1
+hash_id
+</requires>
+
