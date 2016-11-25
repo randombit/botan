@@ -310,7 +310,9 @@ class BOTAN_DLL NSA_Suite_B_128 : public Policy
 
       std::vector<std::string> allowed_ecc_curves() const override
          { return std::vector<std::string>({"secp256r1"}); }
-            
+
+      size_t minimum_signature_strength() const override { return 128; }
+
       bool allow_tls10()  const override { return false; }
       bool allow_tls11()  const override { return false; }
       bool allow_tls12()  const override { return true;  }
@@ -428,7 +430,10 @@ class BOTAN_DLL Text_Policy : public Policy
 
       size_t minimum_rsa_bits() const override
          { return get_len("minimum_rsa_bits", Policy::minimum_rsa_bits()); }
-      
+
+      size_t minimum_signature_strength() const override
+         { return get_len("minimum_signature_strength", Policy::minimum_signature_strength()); }
+
       bool hide_unknown_users() const override
          { return get_bool("hide_unknown_users", Policy::hide_unknown_users()); }
 
