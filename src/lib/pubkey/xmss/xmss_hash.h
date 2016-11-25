@@ -147,17 +147,18 @@ class XMSS_Hash
       size_t output_length() const { return m_output_length; };
 
    private:
+      static const byte m_id_f = 0x00;
+      static const byte m_id_h = 0x01;
+      static const byte m_id_hmsg = 0x02;
+      static const byte m_id_prf = 0x03;
+
+      const std::string m_hash_func_name;
       std::unique_ptr<HashFunction> m_hash;
       std::unique_ptr<HashFunction> m_msg_hash;
       size_t m_output_length;
 
       //32 byte id prefixes prepended to the hash input.
       std::vector<byte> m_zero_padding;
-      static const byte m_id_f = 0x00;
-      static const byte m_id_h = 0x01;
-      static const byte m_id_hmsg = 0x02;
-      static const byte m_id_prf = 0x03;
-      const std::string m_hash_func_name;
    };
 
 }

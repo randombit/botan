@@ -43,7 +43,7 @@ XMSS_Parameters::xmss_algorithm_t XMSS_Parameters::xmss_id_from_string(const std
       return XMSS_SHAKE256_W16_H16;
    if(param_set == "XMSS_SHAKE256_W16_H20")
       return XMSS_SHAKE256_W16_H20;
-   throw Invalid_Argument("Unknown XMSS algorithm param '" + param_set + "'");
+   throw Lookup_Error("Unknown XMSS algorithm param '" + param_set + "'");
    }
 
 XMSS_Parameters::XMSS_Parameters(const std::string& param_set)

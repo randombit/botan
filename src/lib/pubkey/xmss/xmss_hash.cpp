@@ -8,6 +8,7 @@
  **/
 
 #include <botan/xmss_hash.h>
+#include <botan/exceptn.h>
 
 namespace Botan {
 
@@ -16,14 +17,19 @@ XMSS_Hash::XMSS_Hash(const XMSS_Hash& hash)
    {
    }
 
-XMSS_Hash::XMSS_Hash(const std::string& h_func_name)
-   : m_hash(HashFunction::create(h_func_name)),
-     m_msg_hash(HashFunction::create(h_func_name)),
-     m_output_length(m_hash->output_length()),
-     m_zero_padding(m_output_length - 1, 0x00),
-     m_hash_func_name(h_func_name)
+XMSS_Hash::XMSS_Hash(const std::string& h_func_name) :
+   m_hash_func_name(h_func_name),
+   m_hash(HashFunction::create(h_func_name))
    {
+   if(!m_hash)
+      throw Lookup_Error("XMSS cannot use hash " + h_func_name +
+                         " because it is unavailable");
+
+   m_output_length = m_hash->output_length();
    BOTAN_ASSERT(m_output_length > 0, "Hash output length of zero is invalid.");
+
+   m_zero_padding.resize(m_output_length - 1);
+   m_msg_hash.reset(m_hash->clone());
    }
 
 void

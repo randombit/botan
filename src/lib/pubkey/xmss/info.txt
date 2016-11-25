@@ -42,4 +42,5 @@ xmss_verification_operation.h
 asn1
 rng
 hash
+sha2_32
 </requires>
