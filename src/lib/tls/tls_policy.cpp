@@ -156,6 +156,11 @@ size_t Policy::minimum_ecdh_group_size() const
    return 255;
    }
 
+size_t Policy::minimum_signature_strength() const
+   {
+   return 110;
+   }
+
 size_t Policy::minimum_rsa_bits() const
    {
    /* Default assumption is all end-entity certificates should

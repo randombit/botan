@@ -255,12 +255,13 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          const std::vector<Botan::X509_Certificate>& cert_chain,
          const std::vector<Botan::Certificate_Store*>& trusted_roots,
          Botan::Usage_Type usage,
-         const std::string& hostname) override
+         const std::string& hostname,
+         const Botan::TLS::Policy& policy) override
          {
          if(cert_chain.empty())
             throw std::invalid_argument("Certificate chain was empty");
 
-         Botan::Path_Validation_Restrictions restrictions(true, 80);
+         Botan::Path_Validation_Restrictions restrictions(true, policy.minimum_signature_strength());
 
          auto ocsp_timeout = std::chrono::milliseconds(300);
 

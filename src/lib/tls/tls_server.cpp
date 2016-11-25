@@ -529,7 +529,8 @@ void Server::process_certificate_verify_msg(Server_Handshake_State& pending_stat
         callbacks().tls_verify_cert_chain(client_certs,
                                           trusted_CAs,
                                           Usage_Type::TLS_CLIENT_AUTH,
-                                          sni_hostname);
+                                          sni_hostname,
+                                          policy());
         }
     catch ( std::exception& e )
         {

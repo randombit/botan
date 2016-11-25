@@ -6,6 +6,7 @@
 */
 
 #include <botan/tls_callbacks.h>
+#include <botan/tls_policy.h>
 #include <botan/x509path.h>
 #include <botan/ocsp.h>
 #include <botan/certstor.h>
@@ -28,12 +29,13 @@ void TLS::Callbacks::tls_verify_cert_chain(
    const std::vector<X509_Certificate>& cert_chain,
    const std::vector<Certificate_Store*>& trusted_roots,
    Usage_Type usage,
-   const std::string& hostname)
+   const std::string& hostname,
+   const TLS::Policy& policy)
    {
    if(cert_chain.empty())
       throw Invalid_Argument("Certificate chain was empty");
 
-   Path_Validation_Restrictions restrictions;
+   Path_Validation_Restrictions restrictions(true, policy.minimum_signature_strength());
 
    Path_Validation_Result result =
       x509_path_validate(cert_chain,

@@ -57,6 +57,15 @@ class BOTAN_DLL Policy
       */
       virtual std::vector<std::string> allowed_signature_methods() const;
 
+      /**
+      * The minimum signature strength we will accept
+      * Returning 80 allows RSA 1024 and SHA-1. Values larger than 80 disable SHA-1 support.
+      * Returning 110 allows RSA 2048.
+      * Return 128 to force ECC (P-256) or large (~3000 bit) RSA keys.
+      * Default is 110
+      */
+      virtual size_t minimum_signature_strength() const;
+
       bool allowed_signature_method(const std::string& sig_method) const;
 
       /**

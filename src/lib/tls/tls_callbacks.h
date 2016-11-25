@@ -26,6 +26,7 @@ class Response;
 namespace TLS {
 
 class Handshake_Message;
+class Policy;
 
 /**
 * Encapsulates the callbacks that a TLS channel will make which are due to
@@ -122,7 +123,8 @@ class BOTAN_DLL Callbacks
           const std::vector<X509_Certificate>& cert_chain,
           const std::vector<Certificate_Store*>& trusted_roots,
           Usage_Type usage,
-          const std::string& hostname);
+          const std::string& hostname,
+          const TLS::Policy& policy);
 
        /**
        * Called by default `tls_verify_cert_chain` to get the timeout to use for OCSP

@@ -396,7 +396,8 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          callbacks().tls_verify_cert_chain(server_certs,
                                            trusted_CAs,
                                            Usage_Type::TLS_SERVER_AUTH,
-                                           m_info.hostname());
+                                           m_info.hostname(),
+                                           policy());
          }
       catch(std::exception& e)
          {
