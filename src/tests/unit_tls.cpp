@@ -309,10 +309,10 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                server_sent.clear();
 
                // TLS::Server object constructed by legacy constructor.
-               server.reset( 
+               server.reset(
                   new Botan::TLS::Server(queue_inserter(s2c_traffic),
                                          queue_inserter(server_recv),
-                                         alert_cb_with_data, 
+                                         alert_cb_with_data,
                                          handshake_complete,
                                          server_sessions,
                                          creds,
@@ -322,7 +322,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                                          false));
 
                // TLS::Client object constructed by legacy constructor.
-               client.reset( 
+               client.reset(
                   new Botan::TLS::Client(queue_inserter(c2s_traffic),
                                          queue_inserter(client_recv),
                                          alert_cb_with_data,
@@ -622,7 +622,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                server.reset(
                   new Botan::TLS::Server(queue_inserter(s2c_traffic),
                                          queue_inserter(server_recv),
-                                         alert_cb_with_data, 
+                                         alert_cb_with_data,
                                          handshake_complete,
                                          server_sessions,
                                          creds,
@@ -635,7 +635,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                client.reset(
                   new Botan::TLS::Client(queue_inserter(c2s_traffic),
                                          queue_inserter(client_recv),
-                                         alert_cb_with_data, 
+                                         alert_cb_with_data,
                                          handshake_complete,
                                          client_sessions,
                                          creds,
@@ -840,7 +840,60 @@ class Test_Policy : public Botan::TLS::Text_Policy
       size_t minimum_rsa_bits() const override { return 1024; }
    };
 
+Test::Result test_tls_alert_strings()
+   {
+   Test::Result result("TLS::Alert::type_string");
 
+   const std::vector<Botan::TLS::Alert::Type> alert_types = {
+      Botan::TLS::Alert::CLOSE_NOTIFY,
+      Botan::TLS::Alert::UNEXPECTED_MESSAGE,
+      Botan::TLS::Alert::BAD_RECORD_MAC,
+      Botan::TLS::Alert::DECRYPTION_FAILED,
+      Botan::TLS::Alert::RECORD_OVERFLOW,
+      Botan::TLS::Alert::DECOMPRESSION_FAILURE,
+      Botan::TLS::Alert::HANDSHAKE_FAILURE,
+      Botan::TLS::Alert::NO_CERTIFICATE,
+      Botan::TLS::Alert::BAD_CERTIFICATE,
+      Botan::TLS::Alert::UNSUPPORTED_CERTIFICATE,
+      Botan::TLS::Alert::CERTIFICATE_REVOKED,
+      Botan::TLS::Alert::CERTIFICATE_EXPIRED,
+      Botan::TLS::Alert::CERTIFICATE_UNKNOWN,
+      Botan::TLS::Alert::ILLEGAL_PARAMETER,
+      Botan::TLS::Alert::UNKNOWN_CA,
+      Botan::TLS::Alert::ACCESS_DENIED,
+      Botan::TLS::Alert::DECODE_ERROR,
+      Botan::TLS::Alert::DECRYPT_ERROR,
+      Botan::TLS::Alert::EXPORT_RESTRICTION,
+      Botan::TLS::Alert::PROTOCOL_VERSION,
+      Botan::TLS::Alert::INSUFFICIENT_SECURITY,
+      Botan::TLS::Alert::INTERNAL_ERROR,
+      Botan::TLS::Alert::INAPPROPRIATE_FALLBACK,
+      Botan::TLS::Alert::USER_CANCELED,
+      Botan::TLS::Alert::NO_RENEGOTIATION,
+      Botan::TLS::Alert::UNSUPPORTED_EXTENSION,
+      Botan::TLS::Alert::CERTIFICATE_UNOBTAINABLE,
+      Botan::TLS::Alert::UNRECOGNIZED_NAME,
+      Botan::TLS::Alert::BAD_CERTIFICATE_STATUS_RESPONSE,
+      Botan::TLS::Alert::BAD_CERTIFICATE_HASH_VALUE,
+      Botan::TLS::Alert::UNKNOWN_PSK_IDENTITY,
+      Botan::TLS::Alert:: NO_APPLICATION_PROTOCOL,
+   };
+
+   std::set<std::string> seen;
+
+   for(auto alert : alert_types)
+      {
+      const std::string str = Botan::TLS::Alert(alert).type_string();
+      result.test_eq("No duplicate strings", seen.count(str), 0);
+      seen.insert(str);
+      }
+
+   Botan::TLS::Alert unknown_alert = Botan::TLS::Alert(Botan::secure_vector<uint8_t>{01, 66});
+
+   result.test_eq("Unknown alert str", unknown_alert.type_string(), "unrecognized_alert_66");
+
+   return result;
+   }
 
 class TLS_Unit_Tests : public Test
    {
@@ -1027,6 +1080,9 @@ class TLS_Unit_Tests : public Test
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
                                        { { "ecc_curves", BOTAN_HOUSE_ECC_CURVE_NAME } });
 #endif
+
+         results.push_back(test_tls_alert_strings());
+
          return results;
          }
 
