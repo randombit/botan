@@ -8,6 +8,9 @@ Workfactor = 97
 ParamSize = 2048
 Workfactor = 111
 
+ParamSize = 2850
+Workfactor = 128
+
 ParamSize = 3072
 Workfactor = 132
 
@@ -16,6 +19,9 @@ Workfactor = 150
 
 ParamSize = 8192
 Workfactor = 202
+
+ParamSize = 14400
+Workfactor = 256
 
 [DL_Exponent_Size]
 ParamSize = 1024
