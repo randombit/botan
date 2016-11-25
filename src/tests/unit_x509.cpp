@@ -98,6 +98,69 @@ std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo)
    }
 
 
+Test::Result test_cert_status_strings()
+   {
+   Test::Result result("Certificate_Status_Code to_string");
+
+   std::set<std::string> seen;
+
+   result.test_eq("Same string",
+                  Botan::to_string(Botan::Certificate_Status_Code::OK),
+                  Botan::to_string(Botan::Certificate_Status_Code::VERIFIED));
+
+   const std::vector<Botan::Certificate_Status_Code> codes = {
+      Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD,
+      Botan::Certificate_Status_Code::OCSP_SIGNATURE_OK,
+      Botan::Certificate_Status_Code::VALID_CRL_CHECKED,
+      Botan::Certificate_Status_Code::OCSP_NO_HTTP,
+
+      Botan::Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK,
+      Botan::Certificate_Status_Code::UNTRUSTED_HASH,
+      Botan::Certificate_Status_Code::NO_REVOCATION_DATA,
+      Botan::Certificate_Status_Code::CERT_NOT_YET_VALID,
+      Botan::Certificate_Status_Code::CERT_HAS_EXPIRED,
+      Botan::Certificate_Status_Code::OCSP_NOT_YET_VALID,
+      Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED,
+      Botan::Certificate_Status_Code::CRL_NOT_YET_VALID,
+      Botan::Certificate_Status_Code::CRL_HAS_EXPIRED,
+      Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND,
+      Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST,
+      Botan::Certificate_Status_Code::CERT_CHAIN_LOOP,
+      Botan::Certificate_Status_Code::CHAIN_LACKS_TRUST_ROOT,
+      Botan::Certificate_Status_Code::CHAIN_NAME_MISMATCH,
+      Botan::Certificate_Status_Code::POLICY_ERROR,
+      Botan::Certificate_Status_Code::INVALID_USAGE,
+      Botan::Certificate_Status_Code::CERT_CHAIN_TOO_LONG,
+      Botan::Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER,
+      Botan::Certificate_Status_Code::NAME_CONSTRAINT_ERROR,
+      Botan::Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER,
+      Botan::Certificate_Status_Code::OCSP_CERT_NOT_LISTED,
+      Botan::Certificate_Status_Code::OCSP_BAD_STATUS,
+      Botan::Certificate_Status_Code::CERT_NAME_NOMATCH,
+      Botan::Certificate_Status_Code::UNKNOWN_CRITICAL_EXTENSION,
+      Botan::Certificate_Status_Code::OCSP_SIGNATURE_ERROR,
+      Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND,
+      Botan::Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE,
+      Botan::Certificate_Status_Code::OCSP_RESPONSE_INVALID,
+      Botan::Certificate_Status_Code::CERT_IS_REVOKED,
+      Botan::Certificate_Status_Code::CRL_BAD_SIGNATURE,
+      Botan::Certificate_Status_Code::SIGNATURE_ERROR,
+      Botan::Certificate_Status_Code::CERT_PUBKEY_INVALID,
+   };
+
+   for(auto code : codes)
+      {
+      std::string s = Botan::to_string(code);
+      result.confirm("String is long enough to be informative", s.size() > 12);
+      result.test_eq("No duplicates", seen.count(s), 0);
+      seen.insert(s);
+      }
+
+   return result;
+
+   }
+
+
 Test::Result test_x509_dates()
    {
    Test::Result result("X509_Time");
@@ -702,6 +765,7 @@ class X509_Cert_Unit_Tests : public Test
 
          results.push_back(valid_constraints_result);
          results.push_back(test_x509_dates());
+         results.push_back(test_cert_status_strings());
 
          return results;
          }

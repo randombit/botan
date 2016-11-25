@@ -27,7 +27,7 @@ const char* to_string(Certificate_Status_Code code)
       case Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK:
          return "Signature method too weak";
       case Certificate_Status_Code::UNTRUSTED_HASH:
-         return "Untrusted hash";
+         return "Hash function used is considered too weak for security";
 
       case Certificate_Status_Code::CERT_NOT_YET_VALID:
          return "Certificate is not yet valid";
@@ -36,9 +36,9 @@ const char* to_string(Certificate_Status_Code code)
       case Certificate_Status_Code::OCSP_NOT_YET_VALID:
          return "OCSP is not yet valid";
       case Certificate_Status_Code::OCSP_HAS_EXPIRED:
-         return "OCSP has expired";
+         return "OCSP response has expired";
       case Certificate_Status_Code::CRL_NOT_YET_VALID:
-         return "CRL is not yet valid";
+         return "CRL response is not yet valid";
       case Certificate_Status_Code::CRL_HAS_EXPIRED:
          return "CRL has expired";
 
@@ -54,9 +54,9 @@ const char* to_string(Certificate_Status_Code code)
          return "Certificate issuer does not match subject of issuing cert";
 
       case Certificate_Status_Code::POLICY_ERROR:
-         return "Policy error";
+         return "Certificate policy error";
       case Certificate_Status_Code::INVALID_USAGE:
-         return "Invalid usage";
+         return "Certificate does not allow the requested usage";
       case Certificate_Status_Code::CERT_CHAIN_TOO_LONG:
          return "Certificate chain too long";
       case Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER:
