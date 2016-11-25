@@ -77,7 +77,7 @@ class TLS_Policy_Unit_Tests : public Test
       Test::Result test_peer_key_acceptable_ecdh()
          {
          Test::Result result("TLS Policy ECDH key verification");
-#if defined(BOTAN_HAS_ECDH) 
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_SECP192R1) && defined(BOTAN_HAS_SECP256R1)
          Botan::EC_Group group_192("secp192r1");
          std::unique_ptr<Botan::Private_Key> ecdh_192 (new Botan::ECDH_PrivateKey(Test::rng(), group_192));
 
@@ -103,7 +103,7 @@ class TLS_Policy_Unit_Tests : public Test
       Test::Result test_peer_key_acceptable_ecdsa()
          {
          Test::Result result("TLS Policy ECDSA key verification");
-#if defined(BOTAN_HAS_ECDSA) 
+#if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SECP192R1) && defined(BOTAN_HAS_SECP256R1)
          Botan::EC_Group group_192("secp192r1");
          std::unique_ptr<Botan::Private_Key> ecdsa_192 (new Botan::ECDSA_PrivateKey(Test::rng(), group_192));
 

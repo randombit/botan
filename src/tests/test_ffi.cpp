@@ -534,9 +534,12 @@ class FFI_Unit_Tests : public Test
          {
          Test::Result result("FFI");
 
+#if defined(BOTAN_HAS_SECP384R1)
          botan_privkey_t priv;
 
-         if(TEST_FFI_OK(botan_privkey_create_ecdsa, (&priv, rng, "secp384r1")))
+         const std::string named_curve = "secp384r1";
+
+         if(TEST_FFI_OK(botan_privkey_create_ecdsa, (&priv, rng, named_curve.c_str())))
             {
             botan_pubkey_t pub;
             TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
@@ -598,6 +601,9 @@ class FFI_Unit_Tests : public Test
             TEST_FFI_OK(botan_privkey_destroy, (priv));
             }
 
+#else
+				 (void)rng;
+#endif
          return result;
          }
 
@@ -605,11 +611,14 @@ class FFI_Unit_Tests : public Test
          {
          Test::Result result("FFI");
 
+#if defined(BOTAN_HAS_SECP256R1)
+         const std::string named_curve = "secp256r1";
+
          botan_privkey_t priv1;
-         REQUIRE_FFI_OK(botan_privkey_create_ecdh, (&priv1, rng, "secp256r1"));
+         REQUIRE_FFI_OK(botan_privkey_create_ecdh, (&priv1, rng, named_curve.c_str()));
 
          botan_privkey_t priv2;
-         REQUIRE_FFI_OK(botan_privkey_create_ecdh, (&priv2, rng, "secp256r1"));
+         REQUIRE_FFI_OK(botan_privkey_create_ecdh, (&priv2, rng, named_curve.c_str()));
 
          botan_pubkey_t pub1;
          REQUIRE_FFI_OK(botan_privkey_export_pubkey, (&pub1, priv1));
@@ -661,6 +670,9 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_pubkey_destroy, (pub1));
          TEST_FFI_OK(botan_pubkey_destroy, (pub2));
 
+#else
+				 (void)rng;
+#endif
          return result;
          }
 

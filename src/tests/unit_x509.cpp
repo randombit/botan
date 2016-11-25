@@ -87,12 +87,18 @@ std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo)
    std::string params = ""; // default "" means choose acceptable algo-specific params
 
    // Here we override defaults as needed
+#if defined(BOTAN_HAS_RSA)
    if(algo == "RSA")
       params = "1024";
+#endif
+#if defined(BOTAN_HAS_GOST_256A) 
    if(algo == "GOST-34.10")
       params = "gost_256A";
+#endif
+#if (defined(BOTAN_HAS_ECGDSA) || defined(BOTAN_HAS_ECKCDSA)) && defined(BOTAN_HAS_BRAINPOOL256R1)
    if(algo == "ECKCDSA" || algo == "ECGDSA")
       params = "brainpool256r1";
+#endif
 
    return Botan::create_private_key(algo, Test::rng(), params);
    }

@@ -141,6 +141,7 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
       bool m_provides_client_certs;
    };
 
+#if defined(BOTAN_HAS_SECP256R1)
 Botan::Credentials_Manager*
 create_creds(Botan::RandomNumberGenerator& rng,
              bool with_client_certs = false)
@@ -191,6 +192,7 @@ create_creds(Botan::RandomNumberGenerator& rng,
    cmt->m_provides_client_certs = with_client_certs;
    return cmt;
    }
+#endif
 
 std::function<void (const byte[], size_t)> queue_inserter(std::vector<byte>& q)
    {
@@ -917,6 +919,8 @@ class TLS_Unit_Tests : public Test
    public:
       std::vector<Test::Result> run() override
          {
+         std::vector<Test::Result> results;
+#if defined(BOTAN_HAS_SECP256R1)
          Botan::RandomNumberGenerator& rng = Test::rng();
 
          std::unique_ptr<Botan::TLS::Session_Manager> client_ses;
@@ -935,7 +939,6 @@ class TLS_Unit_Tests : public Test
 #endif
 
          std::unique_ptr<Botan::Credentials_Manager> creds(create_creds(rng));
-         std::vector<Test::Result> results;
 
 #if defined(BOTAN_HAS_TLS_CBC)
          for(std::string etm_setting : { "false", "true" })
@@ -1026,6 +1029,8 @@ class TLS_Unit_Tests : public Test
 #if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
                                        { { "ecc_curves", BOTAN_HOUSE_ECC_CURVE_NAME } });
+#endif
+
 #endif
          return results;
          }

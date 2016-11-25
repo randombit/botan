@@ -1,0 +1,5 @@
+define SECP521R1 20160803
+
+<requires>
+ec_group
+</requires>

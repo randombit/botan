@@ -11,6 +11,9 @@ namespace Botan {
 
 const char* EC_Group::PEM_for_named_group(const std::string& name)
    {
+   // Potentially avoiding unused-parameter warning
+   (void)name;
+#if defined(BOTAN_HAS_SECP160K1)
    if(name == "secp160k1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -19,7 +22,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "kqQBnnYwNvT13U1+u5OM+TUxj9zta8KChlMXM8PwPE/uAhUBAAAAAAAAAAAAAbj6"
          "Ft+rmsoWtrMCAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_SECP160R1)
    if(name == "secp160r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -28,7 +33,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "KEZkaYlow4u5E8v8giOmKFUxaJR9WdzJEgQjUTd6xfsyAhUBAAAAAAAAAAAAAfTI"
          "+Seu08p1IlcCAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_SECP160R2)
    if(name == "secp160r2")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -37,7 +44,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "fh9P8Rsw9xmdMUTObf6v/vLjMfKW4HH6DfmYLP6n1D8uAhUBAAAAAAAAAAAAADUe"
          "54aoGPOhoWsCAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_SECP192K1)
    if(name == "secp192k1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -46,7 +55,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "AAMEMQTbT/EOwFfpriawfQKAt/Q0HaXRsergbH2bLy9tnFYop4RBY9AVvoY0QIKq"
          "iNleL50CGQD///////////////4m8vwXD2lGanTe/Y0CAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_SECP192R1)
    if(name == "secp192r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -55,7 +66,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "ubEEMQQYjagOsDCQ9ny/IOtDoYgA9P8K/YL/EBIHGSuV/8jaeGMQEe1rJM3Vc/l3"
          "oR55SBECGQD///////////////+Z3vg2FGvJsbTSKDECAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_SECP224K1)
    if(name == "secp224k1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -65,7 +78,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "7X+6NEKCyvvW9+MZ98CwvVniykvbVW1hpQIdAQAAAAAAAAAAAAAAAAAB3OjS7GGE"
          "yvCpcXafsfcCAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_SECP224R1)
    if(name == "secp224r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -75,7 +90,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "iLX3I/tMIt/mzUN1oFoHR2RE1YGZhQB+NAIdAP//////////////////FqLguPA+"
          "E90pRVxcKj0CAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_SECP256K1)
    if(name == "secp256k1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -85,7 +102,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "2y3OKNlZ8oFbFvgXmEg62ncmo8RlXaT7/A4RCKj9F7RIpoVUGZxH0I/7ENS4AiEA"
          "/////////////////////rqu3OavSKA7v9JejNA2QUECAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_SECP256R1)
    if(name == "secp256r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -95,7 +114,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1AiEA"
          "/////wAAAAD//////////7zm+q2nF56E87nKwvxjJVECAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_SECP384R1)
    if(name == "secp384r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -107,7 +128,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "Hb0omhR86doxE7XwuMAKYLHOHX6BnXpDHXyQ6g5fAjEA////////////////////"
          "////////////x2NNgfQ3Ld9YGg2ySLCneuzsGWrMxSlzAgEB"
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_SECP521R1)
    if(name == "secp521r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -121,7 +144,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "QMVQuQE/rQdhNTxwhqJywkCIvpR2n9FmUAJCAf//////////////////////////"
          "////////////////+lGGh4O/L5Zrf8wBSPcJpdA7tcm4iZxHrrtvtx6ROGQJAgEB"
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_BRAINPOOL160R1)
    if(name == "brainpool160r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -130,7 +155,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "T2KTjEYx61r3vbzbwxZny0d6Go7DOPlHQWacl2MW2mMhAhUA6V5KX3NwWdxg31mR"
          "1FApQJ5g/AkCAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_BRAINPOOL192R1)
    if(name == "brainpool192r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -139,7 +166,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "JckEMQTAoGR+qrakh1OwM8VssPCQCi9cSFM3X9YUtpCGar1buItfSCjBSQAC5nc/"
          "ovopm48CGQDDAvQdkyo2zaejRi+enpFrW+jxAprErMECAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_BRAINPOOL224R1)
    if(name == "brainpool224r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -149,7 +178,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "93LAcm8kxrieTs2sJDVLnpnKo/bTdhQCzQIdANfBNKomQ2aGKhgwJXXQ+5jRFrxL"
          "bd68o6Wnk58CAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_BRAINPOOL256R1)
    if(name == "brainpool256r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -159,7 +190,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "4eO9I8I6RFO9ms4yYlR++DXD2sT9l/hGGhRhHcnCd0UTLe2OVFwdVMcvBGmXAiEA"
          "qftX26Huqbw+ZgqQnYONcYw5eqO1Yab3kB4OgpdIVqcCAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_BRAINPOOL320R1)
    if(name == "brainpool320r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -170,7 +203,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "0FVF7BzIq0CTJH93J14HQ//tEXGC6qnHeHeqrGrH01JF0WkujuECKQDTXkcgNrxP"
          "t+E8eF7SAeBl+Y/PpbaPEqMtSC7H7oZY6YaRVVtExZMRAgEB"
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_BRAINPOOL384R1)
    if(name == "brainpool384r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -182,7 +217,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "Cyn+7Fhk4ZwFT/mRKSgORkYhd5GBEUKCA0EmPFMVAjEAjLkegqM4bSgPXW9+UOZB"
          "3xUvcQntVFazHxZubKwEJafPOrava3/DEDuIMgLpBGVlAgEB"
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_BRAINPOOL521R1)
    if(name == "brainpool512r1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -196,7 +233,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "0corL6jwVAZ4zR4POtgIkgJBAKrdnbjb6cSLP9TmrjPJ/AfLMI2zs8nSDtZjnMpw"
          "MwhwVT5cQUypJhlBhmEZf6wQRx2x04EIXdrdtYeWgpypAGkCAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_X962_P192V2)
    if(name == "x962_p192v2")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -205,7 +244,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "2VMEMQTuorrn4Ul4QvLed2nP6cmJwHKtaW9IA0pldNEdabbsemcruCoIPfLysIR9"
          "6XCy3hUCGQD///////////////5fsack3IBBhkjY3TECAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_X962_P192V3)
    if(name == "x962_p192v3")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -214,7 +255,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "aRYEMQR9KXeBAMZaHaF4NxZYjc4ri0rujiKPGJY4qQ8iY3M3M0tJ3LZqbcj5l4rK"
          "dkipQ7ACGQD///////////////96YtAxyD9ClPZA7BMCAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_X962_P239V1)
    if(name == "x962_p239v1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -224,7 +267,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "PLmqr33r6OTpCl2ubkBUylMLoEZUs2gYziJrOfzLewLxrgIef///////////////"
          "f///nl6an12QcfvRUiaIkJ0LAgEB"
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_X962_P239V2)
    if(name == "x962_p239v2")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -234,7 +279,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "h7gw51sBJeTb6g7HIG2g/AHZsIEyn7VV3m70YCN9/4vkugIef///////////////"
          "gAAAz6foWUN31BTAOCG8WCBjAgEB"
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_X962_P239V3)
    if(name == "x962_p239v3")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -244,7 +291,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "UF/pWhYH5omPOQwGvB1VK60ibztvz+SLboGEma8Y4+1s8wIef///////////////"
          "f///l13rQbOmBXw8QyFGUmVRAgEB"
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_GOST_256A)
    if(name == "gost_256A")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -254,7 +303,9 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "AAAAAAAAAAAAAAAAAY2R5HHgmJzaJ99QWkU/K3Y1KU8t3yPjsSKsyZyenx4UAiEA"
          "/////////////////////2xhEHCZWtEARYQbCbdhuJMCAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
+#if defined(BOTAN_HAS_FRP256V1)
    if(name == "frp256v1")
       return
          "-----BEGIN EC PARAMETERS-----"
@@ -264,6 +315,7 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
          "3K+YtwFkyXot2Y9c/2FC4PfIsgSRH5Jx8PPs74wnAcMH6OTJ4YMRWhVUBiz7AiEA"
          "8f0XjAs61Y8QEm3ozkJDW1PcZ+FA0r+UH/3UWcbWVeECAQE="
          "-----END EC PARAMETERS-----";
+#endif
 
 #if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
    if(name == BOTAN_HOUSE_ECC_CURVE_NAME)

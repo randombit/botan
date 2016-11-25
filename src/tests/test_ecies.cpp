@@ -232,14 +232,21 @@ class ECIES_Tests : public Text_Based_Test
          const std::vector<byte> plaintext = get_req_bin(vars, "Plaintext");
          const std::vector<byte> ciphertext = get_req_bin(vars, "Ciphertext");
 
-         const Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
-         const Botan::EC_Group domain(curve);
-         const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
-         const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, other_private_key_value);
+         try
+            {
+            const Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
+            const Botan::EC_Group domain(curve);
+            const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
+            const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, other_private_key_value);
 
-         const Botan::ECIES_System_Params ecies_params(private_key.domain(), kdf, dem, dem_key_len, mac, mac_key_len,
-               compression_type, flags);
-         check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, iv, label, plaintext, ciphertext);
+            const Botan::ECIES_System_Params ecies_params(private_key.domain(), kdf, dem, dem_key_len, mac, mac_key_len,
+                  compression_type, flags);
+            check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, iv, label, plaintext, ciphertext);
+            }
+         catch(Botan::Lookup_Error&)
+            {
+            result.note_missing("ECC " + curve);
+            }
 
          return result;
          }
@@ -254,23 +261,32 @@ Test::Result test_other_key_not_set()
    {
    Test::Result result("ECIES other key not set");
 
-   const Flags flags = ecies_flags(false, false, false, true);
-   const Botan::EC_Group domain("secp521r1");
-   const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
-                                         "5002761777100287880684822948852132235484464537021197213998300006"
-                                         "547176718172344447619746779823");
+   const std::string named_curve = "secp521r1";
 
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
-   const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
-         "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
-         flags);
-
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
-
-   result.test_throws("encrypt not possible without setting other public key", [ &ecies_enc ]()
+   try
       {
-      ecies_enc.encrypt(std::vector<byte>(8), Test::rng());
-      });
+      const Flags flags = ecies_flags(false, false, false, true);
+      const Botan::EC_Group domain(named_curve);
+      const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
+                                            "5002761777100287880684822948852132235484464537021197213998300006"
+                                            "547176718172344447619746779823");
+
+      const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
+      const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
+            "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
+            flags);
+
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
+
+      result.test_throws("encrypt not possible without setting other public key", [ &ecies_enc ]()
+         {
+         ecies_enc.encrypt(std::vector<byte>(8), Test::rng());
+         });
+      }
+   catch(Botan::Lookup_Error const&)
+      {
+      result.note_missing("ECC " + named_curve);
+      }
 
    return result;
    }
@@ -279,23 +295,32 @@ Test::Result test_kdf_not_found()
    {
    Test::Result result("ECIES kdf not found");
 
-   const Flags flags = ecies_flags(false, false, false, true);
-   const Botan::EC_Group domain("secp521r1");
-   const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
-                                         "5002761777100287880684822948852132235484464537021197213998300006"
-                                         "547176718172344447619746779823");
+   const std::string named_curve = "secp521r1";
 
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
-   const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF-XYZ(SHA-512)", "AES-256/CBC", 32,
-         "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
-         flags);
-
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
-
-   result.test_throws("kdf not found", [ &ecies_enc ]()
+   try
       {
-      ecies_enc.encrypt(std::vector<byte>(8), Test::rng());
-      });
+      const Flags flags = ecies_flags(false, false, false, true);
+      const Botan::EC_Group domain(named_curve);
+      const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
+                                            "5002761777100287880684822948852132235484464537021197213998300006"
+                                            "547176718172344447619746779823");
+
+      const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
+      const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF-XYZ(SHA-512)", "AES-256/CBC", 32,
+            "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
+            flags);
+
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
+
+      result.test_throws("kdf not found", [ &ecies_enc ]()
+         {
+         ecies_enc.encrypt(std::vector<byte>(8), Test::rng());
+         });
+      } 
+   catch(Botan::Lookup_Error const&)
+      {
+      result.note_missing("ECC " + named_curve);
+      }
 
    return result;
    }
@@ -304,23 +329,32 @@ Test::Result test_mac_not_found()
    {
    Test::Result result("ECIES mac not found");
 
-   const Flags flags = ecies_flags(false, false, false, true);
-   const Botan::EC_Group domain("secp521r1");
-   const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
-                                         "5002761777100287880684822948852132235484464537021197213998300006"
-                                         "547176718172344447619746779823");
+   const std::string named_curve = "secp521r1";
 
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
-   const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
-         "XYZMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
-         flags);
-
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
-
-   result.test_throws("mac not found", [ &ecies_enc ]()
+   try
       {
-      ecies_enc.encrypt(std::vector<byte>(8), Test::rng());
-      });
+      const Flags flags = ecies_flags(false, false, false, true);
+      const Botan::EC_Group domain(named_curve);
+      const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
+                                            "5002761777100287880684822948852132235484464537021197213998300006"
+                                            "547176718172344447619746779823");
+
+      const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
+      const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
+            "XYZMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
+            flags);
+
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
+
+      result.test_throws("mac not found", [ &ecies_enc ]()
+         {
+         ecies_enc.encrypt(std::vector<byte>(8), Test::rng());
+         });
+      }
+   catch(Botan::Lookup_Error const&)
+      {
+      result.note_missing("ECC " + named_curve);
+      }
 
    return result;
    }
@@ -329,23 +363,32 @@ Test::Result test_cipher_not_found()
    {
    Test::Result result("ECIES cipher not found");
 
-   const Flags flags = ecies_flags(false, false, false, true);
-   const Botan::EC_Group domain("secp521r1");
-   const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
-                                         "5002761777100287880684822948852132235484464537021197213998300006"
-                                         "547176718172344447619746779823");
+   const std::string named_curve = "secp521r1";
 
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
-   const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-XYZ-256/CBC", 32,
-         "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
-         flags);
-
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
-
-   result.test_throws("cipher not found", [ &ecies_enc ]()
+   try
       {
-      ecies_enc.encrypt(std::vector<byte>(8), Test::rng());
-      });
+      const Flags flags = ecies_flags(false, false, false, true);
+      const Botan::EC_Group domain(named_curve);
+      const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
+                                            "5002761777100287880684822948852132235484464537021197213998300006"
+                                            "547176718172344447619746779823");
+
+      const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
+      const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-XYZ-256/CBC", 32,
+            "HMAC(SHA-512)", 20, Botan::PointGFp::Compression_Type::COMPRESSED,
+            flags);
+
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
+
+      result.test_throws("cipher not found", [ &ecies_enc ]()
+         {
+         ecies_enc.encrypt(std::vector<byte>(8), Test::rng());
+         });
+      }
+   catch(Botan::Lookup_Error const&)
+      {
+      result.note_missing("ECC " + named_curve);
+      }
 
    return result;
    }
@@ -354,37 +397,46 @@ Test::Result test_system_params_short_ctor()
    {
    Test::Result result("ECIES short system params ctor");
 
-   const Botan::EC_Group domain("secp521r1");
-   const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
-                                         "5002761777100287880684822948852132235484464537021197213998300006"
-                                         "547176718172344447619746779823");
+   const std::string named_curve = "secp521r1";
 
-   const Botan::BigInt other_private_key_value("2294226772740614508941417891614236736606752960073669253551166842"
-         "5866095315090327914760325168219669828915074071456176066304457448"
-         "25404691681749451640151380153");
+   try
+      {
+      const Botan::EC_Group domain(named_curve);
+      const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
+                                            "5002761777100287880684822948852132235484464537021197213998300006"
+                                            "547176718172344447619746779823");
 
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
-   const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, other_private_key_value);
+      const Botan::BigInt other_private_key_value("2294226772740614508941417891614236736606752960073669253551166842"
+            "5866095315090327914760325168219669828915074071456176066304457448"
+            "25404691681749451640151380153");
 
-   const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
-         "HMAC(SHA-512)", 16);
+      const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
+      const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, other_private_key_value);
 
-   const Botan::InitializationVector iv("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-   const std::string label = "Test";
+      const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
+            "HMAC(SHA-512)", 16);
 
-   const std::vector<byte> plaintext = Botan::hex_decode("000102030405060708090A0B0C0D0E0F");
+      const Botan::InitializationVector iv("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+      const std::string label = "Test";
 
-   // generated with botan
-   const std::vector<byte> ciphertext = Botan::hex_decode("0401519EAA0489FF9D51E98E4C22349463E2001CD06F8CE47D81D4007A"
-                                        "79ACF98E92C814686477CEA666EFC277DC84E15FC95E38AFF8E16D478A"
-                                        "44CD5C5F1517F8B1F300000591317F261C3D04A7207F01EAE3EC70F2360"
-                                        "0F82C53CC0B85BE7AC9F6CE79EF2AB416E5934D61BA9D346385D7545C57F"
-                                        "77C7EA7C58E18C70CBFB0A24AE1B9943EC5A8D0657522CCDF30BA95674D81"
-                                        "B397635D215178CD13BD9504AE957A9888F4128FFC0F0D3F1CEC646AEC8CE"
-                                        "3F2463D233B22A7A12B679F4C06501F584D4DEFF6D26592A8D873398BD892"
-                                        "B477B3468813C053DA43C4F3D49009F7A12D6EF7");
+      const std::vector<byte> plaintext = Botan::hex_decode("000102030405060708090A0B0C0D0E0F");
 
-   check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, iv, label, plaintext, ciphertext);
+      // generated with botan
+      const std::vector<byte> ciphertext = Botan::hex_decode("0401519EAA0489FF9D51E98E4C22349463E2001CD06F8CE47D81D4007A"
+                                           "79ACF98E92C814686477CEA666EFC277DC84E15FC95E38AFF8E16D478A"
+                                           "44CD5C5F1517F8B1F300000591317F261C3D04A7207F01EAE3EC70F2360"
+                                           "0F82C53CC0B85BE7AC9F6CE79EF2AB416E5934D61BA9D346385D7545C57F"
+                                           "77C7EA7C58E18C70CBFB0A24AE1B9943EC5A8D0657522CCDF30BA95674D81"
+                                           "B397635D215178CD13BD9504AE957A9888F4128FFC0F0D3F1CEC646AEC8CE"
+                                           "3F2463D233B22A7A12B679F4C06501F584D4DEFF6D26592A8D873398BD892"
+                                           "B477B3468813C053DA43C4F3D49009F7A12D6EF7");
+
+      check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, iv, label, plaintext, ciphertext);
+      }
+   catch(Botan::Lookup_Error&)
+      {
+      result.note_missing("ECC " + named_curve);
+      }
 
    return result;
    }
@@ -393,27 +445,36 @@ Test::Result test_ciphertext_too_short()
    {
    Test::Result result("ECIES ciphertext too short");
 
-   const Botan::EC_Group domain("secp521r1");
-   const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
-                                         "5002761777100287880684822948852132235484464537021197213998300006"
-                                         "547176718172344447619746779823");
+   const std::string named_curve = "secp521r1";
 
-   const Botan::BigInt other_private_key_value("2294226772740614508941417891614236736606752960073669253551166842"
-         "5866095315090327914760325168219669828915074071456176066304457448"
-         "25404691681749451640151380153");
-
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
-   const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, other_private_key_value);
-
-   const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
-         "HMAC(SHA-512)", 16);
-
-   Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, Test::rng());
-
-   result.test_throws("ciphertext too short", [ &ecies_dec ]()
+   try
       {
-      ecies_dec.decrypt(Botan::hex_decode("0401519EAA0489FF9D51E98E4C22349A"));
-      });
+      const Botan::EC_Group domain("secp521r1");
+      const Botan::BigInt private_key_value("405029866705438137604064977397053031159826489755682166267763407"
+                                            "5002761777100287880684822948852132235484464537021197213998300006"
+                                            "547176718172344447619746779823");
+
+      const Botan::BigInt other_private_key_value("2294226772740614508941417891614236736606752960073669253551166842"
+            "5866095315090327914760325168219669828915074071456176066304457448"
+            "25404691681749451640151380153");
+
+      const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
+      const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, other_private_key_value);
+
+      const Botan::ECIES_System_Params ecies_params(private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32,
+            "HMAC(SHA-512)", 16);
+
+      Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, Test::rng());
+
+      result.test_throws("ciphertext too short", [ &ecies_dec ]()
+         {
+         ecies_dec.decrypt(Botan::hex_decode("0401519EAA0489FF9D51E98E4C22349A"));
+         });
+      }
+   catch(Botan::Lookup_Error const&)
+      {
+      result.note_missing("ECC " + named_curve);
+      }
 
    return result;
    }
