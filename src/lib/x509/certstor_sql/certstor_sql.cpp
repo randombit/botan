@@ -78,6 +78,13 @@ Certificate_Store_In_SQL::find_cert(const X509_DN& subject_dn, const std::vector
    return cert;
    }
 
+std::shared_ptr<const X509_Certificate>
+Certificate_Store_In_SQL::find_cert_by_pubkey_sha1(const std::vector<byte>& /*key_hash*/) const
+   {
+   // TODO!
+   return nullptr;
+   }
+
 std::shared_ptr<const X509_CRL>
 Certificate_Store_In_SQL::find_crl_for(const X509_Certificate& subject) const
    {

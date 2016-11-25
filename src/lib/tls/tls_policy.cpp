@@ -156,6 +156,11 @@ size_t Policy::minimum_ecdh_group_size() const
    return 255;
    }
 
+size_t Policy::minimum_signature_strength() const
+   {
+   return 110;
+   }
+
 size_t Policy::minimum_rsa_bits() const
    {
    /* Default assumption is all end-entity certificates should
@@ -466,6 +471,7 @@ void Policy::print(std::ostream& o) const
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
    o << "minimum_ecdh_group_size = " << minimum_ecdh_group_size() << '\n';
    o << "minimum_rsa_bits = " << minimum_rsa_bits() << '\n';
+   o << "minimum_signature_strength = " << minimum_signature_strength() << '\n';
    }
 
 std::vector<std::string> Strict_Policy::allowed_ciphers() const
@@ -485,7 +491,7 @@ std::vector<std::string> Strict_Policy::allowed_macs() const
 
 std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
    {
-   return { "ECDH" };
+   return { "CECPQ1", "ECDH" };
    }
 
 bool Strict_Policy::allow_tls10()  const { return false; }

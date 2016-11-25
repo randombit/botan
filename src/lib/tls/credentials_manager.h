@@ -44,25 +44,6 @@ class BOTAN_DLL Credentials_Manager
          const std::string& context);
 
       /**
-      * Check the certificate chain is valid up to a trusted root, and
-      * optionally (if hostname != "") that the hostname given is
-      * consistent with the leaf certificate.
-      *
-      * This function should throw an exception derived from
-      * std::exception with an informative what() result if the
-      * certificate chain cannot be verified.
-
-      * @param type specifies the type of operation occurring
-      * @param hostname specifies the purported hostname
-      * @param cert_chain specifies a certificate chain leading to a
-      *        trusted root CA certificate.
-      */
-      virtual void verify_certificate_chain(
-         const std::string& type,
-         const std::string& hostname,
-         const std::vector<X509_Certificate>& cert_chain);
-
-      /**
       * Return a cert chain we can use, ordered from leaf to root,
       * or else an empty vector.
       *

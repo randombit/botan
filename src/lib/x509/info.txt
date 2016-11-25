@@ -1,10 +1,9 @@
 define X509_CERTIFICATES 20151023
-define OCSP 20131128
+define OCSP 20161118
 
 <requires>
 asn1
 datastor
-http_util
 pubkey
 sha1
 </requires>

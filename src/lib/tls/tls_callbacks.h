@@ -11,11 +11,22 @@
 
 #include <botan/tls_session.h>
 #include <botan/tls_alert.h>
+
 namespace Botan {
+
+class Certificate_Store;
+class X509_Certificate;
+
+namespace OCSP {
+
+class Response;
+
+}
 
 namespace TLS {
 
 class Handshake_Message;
+class Policy;
 
 /**
 * Encapsulates the callbacks that a TLS channel will make which are due to
@@ -53,7 +64,7 @@ class BOTAN_DLL Callbacks
        virtual void tls_record_received(u64bit seq_no, const uint8_t data[], size_t size) = 0;
 
        /**
-       * Mandary callback: alert received
+       * Mandatory callback: alert received
        * Called when an alert is received from the peer
        * If fatal, the connection is closing. If not fatal, the connection may
        * still be closing (depending on the error and the peer).
@@ -79,6 +90,52 @@ class BOTAN_DLL Callbacks
        * Called when a session is active and can be written to
        */
        virtual void tls_session_activated() {}
+
+       /**
+       * Optional callback with default impl: verify cert chain
+       *
+       * Default implementation performs a standard PKIX validation
+       * and initiates network OCSP request for end-entity cert.
+       * Override to provide different behavior.
+       *
+       * Check the certificate chain is valid up to a trusted root, and
+       * optionally (if hostname != "") that the hostname given is
+       * consistent with the leaf certificate.
+       *
+       * This function should throw an exception derived from
+       * std::exception with an informative what() result if the
+       * certificate chain cannot be verified.
+       *
+       * @param cert_chain specifies a certificate chain leading to a
+       *        trusted root CA certificate.
+       * @param trusted_roots the list of trusted certificates
+
+       * @param usage what this cert chain is being used for
+       *        Usage_Type::TLS_SERVER_AUTH for server chains,
+       *        Usage_Type::TLS_CLIENT_AUTH for client chains,
+       *        Usage_Type::UNSPECIFIED for other uses
+       * @param hostname when authenticating a server, this is the hostname
+       *        the client requested (eg via SNI). When authenticating a client,
+       *        this is the server name the client is authenticating *to*.
+       *        Empty in other cases or if no hostname was used.
+       * @param policy the TLS policy associated with the session being authenticated
+       *        using the certificate chain
+       */
+       virtual void tls_verify_cert_chain(
+          const std::vector<X509_Certificate>& cert_chain,
+          const std::vector<Certificate_Store*>& trusted_roots,
+          Usage_Type usage,
+          const std::string& hostname,
+          const TLS::Policy& policy);
+
+       /**
+       * Called by default `tls_verify_cert_chain` to get the timeout to use for OCSP
+       * requests. Return 0 to disable online OCSP checks.
+       */
+       virtual std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
+          {
+          return std::chrono::milliseconds(0);
+          }
 
        /**
        * Optional callback: inspect handshake message

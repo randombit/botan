@@ -49,6 +49,19 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::vector<byte> subject_public_key_bits() const;
 
       /**
+      * Get the bit string of the public key associated with this certificate
+      * @return subject public key of this certificate
+      */
+      std::vector<byte> subject_public_key_bitstring() const;
+
+      /**
+      * Get the SHA-1 bit string of the public key associated with this certificate.
+      * This is used for OCSP among other protocols
+      * @return hash of subject public key of this certificate
+      */
+      std::vector<byte> subject_public_key_bitstring_sha1() const;
+
+      /**
       * Get the certificate's issuer distinguished name (DN).
       * @return issuer DN of this certificate
       */

@@ -14,7 +14,10 @@
 #include <botan/base64.h>
 #include <botan/pubkey.h>
 #include <botan/x509path.h>
-#include <botan/http_util.h>
+
+#if defined(BOTAN_HAS_HTTP_UTIL)
+  #include <botan/http_util.h>
+#endif
 
 namespace Botan {
 
@@ -22,6 +25,7 @@ namespace OCSP {
 
 namespace {
 
+// TODO: should this be in a header somewhere?
 void decode_optional_list(BER_Decoder& ber,
                           ASN1_Tag tag,
                           std::vector<X509_Certificate>& output)
@@ -44,65 +48,20 @@ void decode_optional_list(BER_Decoder& ber,
       }
    }
 
-void check_signature(const std::vector<byte>& tbs_response,
-                     const AlgorithmIdentifier& sig_algo,
-                     const std::vector<byte>& signature,
-                     const X509_Certificate& cert)
-   {
-   std::unique_ptr<Public_Key> pub_key(cert.subject_public_key());
-
-   const std::vector<std::string> sig_info =
-      split_on(OIDS::lookup(sig_algo.oid), '/');
-
-   if(sig_info.size() != 2 || sig_info[0] != pub_key->algo_name())
-      throw Exception("Information in OCSP response does not match cert");
-
-   std::string padding = sig_info[1];
-   Signature_Format format =
-      (pub_key->message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
-
-   PK_Verifier verifier(*pub_key, padding, format);
-
-   if(!verifier.verify_message(ASN1::put_in_sequence(tbs_response), signature))
-      throw Exception("Signature on OCSP response does not verify");
-   }
-
-void check_signature(const std::vector<byte>& tbs_response,
-                     const AlgorithmIdentifier& sig_algo,
-                     const std::vector<byte>& signature,
-                     const Certificate_Store& trusted_roots,
-                     const std::vector<X509_Certificate>& certs)
-   {
-   if(certs.size() < 1)
-      throw Invalid_Argument("Short cert chain for check_signature");
-
-   if(trusted_roots.certificate_known(certs[0]))
-      return check_signature(tbs_response, sig_algo, signature, certs[0]);
-
-   // Otherwise attempt to chain the signing cert to a trust root
-
-   if(!certs[0].allowed_extended_usage("PKIX.OCSPSigning"))
-      throw Exception("OCSP response cert does not allow OCSP signing");
-
-   auto result = x509_path_validate(certs, Path_Validation_Restrictions(), trusted_roots);
-
-   if(!result.successful_validation())
-      throw Exception("Certificate validation failure: " + result.result_string());
-
-   if(!trusted_roots.certificate_known(result.trust_root())) // not needed anymore?
-      throw Exception("Certificate chain roots in unknown/untrusted CA");
-
-   const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path = result.cert_path();
-
-   check_signature(tbs_response, sig_algo, signature, *cert_path[0]);
-   }
-
 }
+
+Request::Request(const X509_Certificate& issuer_cert,
+                 const X509_Certificate& subject_cert) :
+   m_issuer(issuer_cert),
+   m_subject(subject_cert),
+   m_certid(m_issuer, m_subject)
+   {
+   if(subject_cert.issuer_dn() != issuer_cert.subject_dn())
+      throw Invalid_Argument("Invalid cert pair to OCSP::Request (mismatched issuer,subject args?)");
+   }
 
 std::vector<byte> Request::BER_encode() const
    {
-   CertID certid(m_issuer, m_subject);
-
    return DER_Encoder().start_cons(SEQUENCE)
         .start_cons(SEQUENCE)
           .start_explicit(0)
@@ -110,7 +69,7 @@ std::vector<byte> Request::BER_encode() const
           .end_explicit()
             .start_cons(SEQUENCE)
               .start_cons(SEQUENCE)
-                .encode(certid)
+                .encode(m_certid)
               .end_cons()
             .end_cons()
           .end_cons()
@@ -122,8 +81,7 @@ std::string Request::base64_encode() const
    return Botan::base64_encode(BER_encode());
    }
 
-Response::Response(const Certificate_Store& trusted_roots,
-                   const std::vector<byte>& response_bits)
+Response::Response(const std::vector<byte>& response_bits)
    {
    BER_Decoder response_outer = BER_Decoder(response_bits).start_cons(SEQUENCE);
 
@@ -145,71 +103,159 @@ Response::Response(const Certificate_Store& trusted_roots,
       BER_Decoder basicresponse =
          BER_Decoder(response_bytes.get_next_octet_string()).start_cons(SEQUENCE);
 
-      std::vector<byte> tbs_bits;
-      AlgorithmIdentifier sig_algo;
-      std::vector<byte> signature;
-      std::vector<X509_Certificate> certs;
-
       basicresponse.start_cons(SEQUENCE)
-           .raw_bytes(tbs_bits)
+           .raw_bytes(m_tbs_bits)
          .end_cons()
-         .decode(sig_algo)
-         .decode(signature, BIT_STRING);
-      decode_optional_list(basicresponse, ASN1_Tag(0), certs);
+         .decode(m_sig_algo)
+         .decode(m_signature, BIT_STRING);
+      decode_optional_list(basicresponse, ASN1_Tag(0), m_certs);
 
       size_t responsedata_version = 0;
-      X509_DN name;
-      std::vector<byte> key_hash;
-      X509_Time produced_at;
       Extensions extensions;
 
-      BER_Decoder(tbs_bits)
+      BER_Decoder(m_tbs_bits)
          .decode_optional(responsedata_version, ASN1_Tag(0),
                           ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
 
-         .decode_optional(name, ASN1_Tag(1),
+         .decode_optional(m_signer_name, ASN1_Tag(1),
                           ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
 
-         .decode_optional_string(key_hash, OCTET_STRING, 2,
+         .decode_optional_string(m_key_hash, OCTET_STRING, 2,
                                  ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
 
-         .decode(produced_at)
+         .decode(m_produced_at)
 
          .decode_list(m_responses)
 
          .decode_optional(extensions, ASN1_Tag(1),
                           ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
-
-      if(certs.empty())
-         {
-         if(auto cert = trusted_roots.find_cert(name, std::vector<byte>()))
-            certs.push_back(*cert);
-         else
-            throw Exception("Could not find certificate that signed OCSP response");
-         }
-
-      check_signature(tbs_bits, sig_algo, signature, trusted_roots, certs);
       }
 
    response_outer.end_cons();
    }
 
+Certificate_Status_Code Response::verify_signature(const X509_Certificate& issuer) const
+   {
+   try
+      {
+      std::unique_ptr<Public_Key> pub_key(issuer.subject_public_key());
+
+      const std::vector<std::string> sig_info =
+         split_on(OIDS::lookup(m_sig_algo.oid), '/');
+
+      if(sig_info.size() != 2 || sig_info[0] != pub_key->algo_name())
+         return Certificate_Status_Code::OCSP_RESPONSE_INVALID;
+
+      std::string padding = sig_info[1];
+      Signature_Format format = (pub_key->message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
+
+      PK_Verifier verifier(*pub_key, padding, format);
+
+      if(verifier.verify_message(ASN1::put_in_sequence(m_tbs_bits), m_signature))
+         return Certificate_Status_Code::OCSP_SIGNATURE_OK;
+      else
+         return Certificate_Status_Code::OCSP_SIGNATURE_ERROR;
+      }
+   catch(Exception&)
+      {
+      return Certificate_Status_Code::OCSP_SIGNATURE_ERROR;
+      }
+   }
+
+Certificate_Status_Code Response::check_signature(const std::vector<Certificate_Store*>& trusted_roots,
+                                                  const std::vector<std::shared_ptr<const X509_Certificate>>& ee_cert_path) const
+   {
+   std::shared_ptr<const X509_Certificate> signing_cert;
+
+   for(size_t i = 0; i != trusted_roots.size(); ++i)
+      {
+      if(m_signer_name.empty() && m_key_hash.empty())
+         return Certificate_Status_Code::OCSP_RESPONSE_INVALID;
+
+      if(!m_signer_name.empty())
+         {
+         signing_cert = trusted_roots[i]->find_cert(m_signer_name, std::vector<byte>());
+         if(signing_cert)
+            {
+            break;
+            }
+         }
+
+      if(m_key_hash.size() > 0)
+         {
+         signing_cert = trusted_roots[i]->find_cert_by_pubkey_sha1(m_key_hash);
+         if(signing_cert)
+            {
+            break;
+            }
+         }
+      }
+
+   if(!signing_cert && ee_cert_path.size() > 1)
+      {
+      // End entity cert is not allowed to sign their own OCSP request :)
+      for(size_t i = 1; i < ee_cert_path.size(); ++i)
+         {
+         // Check all CA certificates in the (assumed validated) EE cert path
+         if(!m_signer_name.empty() && ee_cert_path[i]->subject_dn() == m_signer_name)
+            {
+            signing_cert = ee_cert_path[i];
+            break;
+            }
+
+         if(m_key_hash.size() > 0 && ee_cert_path[i]->subject_public_key_bitstring_sha1() == m_key_hash)
+            {
+            signing_cert = ee_cert_path[i];
+            break;
+            }
+         }
+      }
+
+   if(!signing_cert && m_certs.size() > 0)
+      {
+      for(size_t i = 0; i < m_certs.size(); ++i)
+         {
+         // Check all CA certificates in the (assumed validated) EE cert path
+         if(!m_signer_name.empty() && m_certs[i].subject_dn() == m_signer_name)
+            {
+            signing_cert = std::make_shared<const X509_Certificate>(m_certs[i]);
+            break;
+            }
+
+         if(m_key_hash.size() > 0 && m_certs[i].subject_public_key_bitstring_sha1() == m_key_hash)
+            {
+            signing_cert = std::make_shared<const X509_Certificate>(m_certs[i]);
+            break;
+            }
+         }
+      }
+
+   if(!signing_cert)
+      return Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND;
+
+   if(!signing_cert->allowed_extended_usage("PKIX.OCSPSigning"))
+      return Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE;
+
+   return this->verify_signature(*signing_cert);
+   }
+
 Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
-                                                   const X509_Certificate& subject) const
+                                             const X509_Certificate& subject,
+                                             std::chrono::system_clock::time_point ref_time) const
    {
    for(const auto& response : m_responses)
       {
       if(response.certid().is_id_for(issuer, subject))
          {
-         X509_Time current_time(std::chrono::system_clock::now());
+         X509_Time x509_ref_time(ref_time);
 
          if(response.cert_status() == 1)
             return Certificate_Status_Code::CERT_IS_REVOKED;
 
-         if(response.this_update() > current_time)
+         if(response.this_update() > x509_ref_time)
             return Certificate_Status_Code::OCSP_NOT_YET_VALID;
 
-         if(response.next_update().time_is_set() && current_time > response.next_update())
+         if(response.next_update().time_is_set() && x509_ref_time > response.next_update())
             return Certificate_Status_Code::OCSP_HAS_EXPIRED;
 
          if(response.cert_status() == 0)
@@ -222,9 +268,11 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
    return Certificate_Status_Code::OCSP_CERT_NOT_LISTED;
    }
 
+#if defined(BOTAN_HAS_HTTP_UTIL)
+
 Response online_check(const X509_Certificate& issuer,
                       const X509_Certificate& subject,
-                      const Certificate_Store* trusted_roots)
+                      Certificate_Store* trusted_roots)
    {
    const std::string responder_url = subject.ocsp_responder();
 
@@ -241,10 +289,18 @@ Response online_check(const X509_Certificate& issuer,
 
    // Check the MIME type?
 
-   OCSP::Response response(*trusted_roots, http.body());
+   OCSP::Response response(http.body());
+
+   std::vector<Certificate_Store*> trusted_roots_vec;
+   trusted_roots_vec.push_back(trusted_roots);
+
+   if(trusted_roots)
+      response.check_signature(trusted_roots_vec);
 
    return response;
    }
+
+#endif
 
 }
 

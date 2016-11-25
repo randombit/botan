@@ -1,4 +1,4 @@
-InvalidExtendedKeyUsage.pem:Invalid usage
+InvalidExtendedKeyUsage.pem:Certificate does not allow the requested usage
 InvalidIntCAFlag.pem:CA certificate not allowed to issue certs
 InvalidIntCAKeyUsage.pem:CA certificate not allowed to issue certs
 InvalidIntCALen.pem:Certificate chain too long
@@ -6,7 +6,7 @@ InvalidIntCALoop.pem:Loop in certificate chain
 InvalidIntCASelfSign.pem:Cannot establish trust
 InvalidIntCAVersionOne.pem:CA certificate not allowed to issue certs
 InvalidIntCAVersionTwo.pem:CA certificate not allowed to issue certs
-InvalidKeyUsage.pem:Invalid usage
+InvalidKeyUsage.pem:Certificate does not allow the requested usage
 InvalidName.pem:Certificate does not match provided name
 InvalidNameAltName.pem:Certificate does not match provided name
 InvalidNameAltNameWithSubj.pem:Certificate does not match provided name

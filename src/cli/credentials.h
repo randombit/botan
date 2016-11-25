@@ -92,24 +92,6 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
          return v;
          }
 
-      void verify_certificate_chain(
-         const std::string& type,
-         const std::string& purported_hostname,
-         const std::vector<Botan::X509_Certificate>& cert_chain) override
-         {
-         try
-            {
-            Credentials_Manager::verify_certificate_chain(type,
-                                                          purported_hostname,
-                                                          cert_chain);
-            }
-         catch(std::exception& e)
-            {
-            std::cout << e.what() << std::endl;
-            //throw;
-            }
-         }
-
       std::vector<Botan::X509_Certificate> cert_chain(
          const std::vector<std::string>& algos,
          const std::string& type,

@@ -66,12 +66,12 @@ information about the connection.
      For DTLS, it is possible to receive records with the `rec_no` field out of
      order, or with gaps, cooresponding to reordered or lost datagrams.
 
- .. cpp:function:: void tls_alert(Alert alert) 
+ .. cpp:function:: void tls_alert(Alert alert)
 
      Mandatory. Called when an alert is received from the peer. Note that alerts
      received before the handshake is complete are not authenticated and
      could have been inserted by a MITM attacker.
-     
+
  .. cpp:function:: bool tls_session_established(const TLS::Session& session)
 
      Mandatory. Called whenever a negotiation completes. This can happen more
@@ -84,6 +84,32 @@ information about the connection.
      If this function wishes to cancel the handshake, it can throw an
      exception which will send a close message to the counterparty and
      reset the connection state.
+
+ .. cpp::function:: void tls_verify_cert_chain(const std::vector<X509_Certificate>& cert_chain, \
+                   const std::vector<Certificate_Store*>& trusted_roots, \
+                   Usage_Type usage, \
+                   const std::string& hostname)
+
+     Optional - default implementation should work for many users.
+     It can be overrided for implementing extra validation routines
+     such as public key pinning.
+
+     Verifies the certificate chain in *cert_chain*, assuming the
+     leaf certificate is the first element.
+
+     If usage is `Usage_Type::TLS_SERVER_AUTH`, then *hostname* should
+     match the information in the server certificate. If usage is
+     `TLS_CLIENT_AUTH`, then *hostname* specifies the host the client
+     is authenticating against (from SNI); the callback can use this for
+     any special site specific auth logic.
+
+     The `trusted_roots` parameter was returned by a call from the
+     associated `Credentials_Manager`.
+
+ .. cpp::function:: std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
+
+     Called by default `tls_verify_cert_chain` to set timeout for online OCSP requests
+     on the certificate chain. Return 0 to disable OCSP. Current default is 0.
 
  .. cpp:function:: std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos)
 

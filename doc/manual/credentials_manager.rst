@@ -29,31 +29,6 @@ implementation.
 
       The default implementation returns an empty list.
 
-   .. cpp::function:: void verify_certificate_chain( \
-         const std::string& type, \
-         const std::string& hostname, \
-         const std::vector<X509_Certificate>& cert_chain)
-
-      Verifies the certificate chain in *cert_chain*, assuming the
-      leaf certificate is the first element.
-
-      If *hostname* is set, additionally ``verify_certificate_chain``
-      will check that the leaf certificate has a DNS entry matching
-      *hostname*.
-
-      In the default implementation the *type* argument is passed,
-      along with *hostname*, to ``trusted_certificate_authorities`` to
-      find out what root(s) should be trusted for verifying this
-      certificate.
-
-      This function indicates a validation failure by throwing an
-      exception.
-
-      This function has a default implementation that probably
-      sufficies for most uses, however can be overrided for
-      implementing extra validation routines such as public key
-      pinning.
-
    .. cpp:function:: std::vector<X509_Certificate> cert_chain( \
          const std::vector<std::string>& cert_key_types, \
          const std::string& type, \
@@ -77,6 +52,15 @@ implementation.
       Return the private key for this certificate. The *cert* will be
       the leaf cert of a chain returned previously by ``cert_chain``
       or ``cert_chain_single_type``.
+
+In versions before 1.11.34, there was an additional function on `Credentials_Manager`
+
+   .. cpp::function:: void verify_certificate_chain( \
+         const std::string& type, \
+         const std::string& hostname, \
+         const std::vector<X509_Certificate>& cert_chain)
+
+This function has been replaced by `TLS::Callbacks::tls_verify_cert_chain`.
 
 SRP Authentication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
