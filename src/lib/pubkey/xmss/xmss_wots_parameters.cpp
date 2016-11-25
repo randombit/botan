@@ -17,17 +17,23 @@
 
 namespace Botan {
 
-const std::map<std::string, XMSS_WOTS_Parameters::ots_algorithm_t>
-   XMSS_WOTS_Parameters::m_oid_name_lut =
+//static
+XMSS_WOTS_Parameters::ots_algorithm_t
+XMSS_WOTS_Parameters::xmss_wots_id_from_string(const std::string& param_set)
    {
-   { "WOTSP_SHA2-256_W16", WOTSP_SHA2_256_W16 },
-   { "WOTSP_SHA2-512_W16", WOTSP_SHA2_512_W16 },
-   { "WOTSP_SHAKE128_W16", WOTSP_SHAKE128_W16 },
-   { "WOTSP_SHAKE256_W16", WOTSP_SHAKE256_W16 }
-   };
+   if(param_set == "WOTSP_SHA2-256_W16")
+      return WOTSP_SHA2_256_W16;
+   if(param_set == "WOTSP_SHA2-512_W16")
+      return WOTSP_SHA2_512_W16;
+   if(param_set == "WOTSP_SHAKE128_W16")
+      return WOTSP_SHAKE128_W16;
+   if(param_set == "WOTSP_SHAKE256_W16")
+      return WOTSP_SHAKE256_W16;
+   throw Invalid_Argument("Unknown XMSS-WOTS algorithm param '" + param_set + "'");
+   }
 
-XMSS_WOTS_Parameters::XMSS_WOTS_Parameters(const std::string& algo_name)
-   : XMSS_WOTS_Parameters(m_oid_name_lut.at(algo_name))
+XMSS_WOTS_Parameters::XMSS_WOTS_Parameters(const std::string& param_set)
+   : XMSS_WOTS_Parameters(xmss_wots_id_from_string(param_set))
    {}
 
 XMSS_WOTS_Parameters::XMSS_WOTS_Parameters(ots_algorithm_t oid)

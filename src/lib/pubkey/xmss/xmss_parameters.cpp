@@ -16,26 +16,41 @@
 
 namespace Botan {
 
-const std::map<std::string, XMSS_Parameters::xmss_algorithm_t>
-   XMSS_Parameters::m_oid_name_lut =
-      {
-      { "XMSS_SHA2-256_W16_H10", XMSS_SHA2_256_W16_H10 },
-      { "XMSS_SHA2-256_W16_H16", XMSS_SHA2_256_W16_H16 },
-      { "XMSS_SHA2-256_W16_H20", XMSS_SHA2_256_W16_H20 },
-      { "XMSS_SHA2-512_W16_H10", XMSS_SHA2_512_W16_H10 },
-      { "XMSS_SHA2-512_W16_H16", XMSS_SHA2_512_W16_H16 },
-      { "XMSS_SHA2-512_W16_H20", XMSS_SHA2_512_W16_H20 },
-      { "XMSS_SHAKE128_W16_H10", XMSS_SHAKE128_W16_H10 },
-      { "XMSS_SHAKE128_W16_H16", XMSS_SHAKE128_W16_H16 },
-      { "XMSS_SHAKE128_W16_H20", XMSS_SHAKE128_W16_H20 },
-      { "XMSS_SHAKE256_W16_H10", XMSS_SHAKE256_W16_H10 },
-      { "XMSS_SHAKE256_W16_H16", XMSS_SHAKE256_W16_H16 },
-      { "XMSS_SHAKE256_W16_H20", XMSS_SHAKE256_W16_H20 }
-      };
+//static
+XMSS_Parameters::xmss_algorithm_t XMSS_Parameters::xmss_id_from_string(const std::string& param_set)
+   {
+   if(param_set == "XMSS_SHA2-256_W16_H10")
+      return XMSS_SHA2_256_W16_H10;
+   if(param_set == "XMSS_SHA2-256_W16_H16")
+      return XMSS_SHA2_256_W16_H16;
+   if(param_set == "XMSS_SHA2-256_W16_H20")
+      return XMSS_SHA2_256_W16_H20;
+   if(param_set == "XMSS_SHA2-512_W16_H10")
+      return XMSS_SHA2_512_W16_H10;
+   if(param_set == "XMSS_SHA2-512_W16_H16")
+      return XMSS_SHA2_512_W16_H16;
+   if(param_set == "XMSS_SHA2-512_W16_H20")
+      return XMSS_SHA2_512_W16_H20;
+   if(param_set == "XMSS_SHAKE128_W16_H10")
+      return XMSS_SHAKE128_W16_H10;
+   if(param_set == "XMSS_SHAKE128_W16_H16")
+      return XMSS_SHAKE128_W16_H16;
+   if(param_set == "XMSS_SHAKE128_W16_H20")
+      return XMSS_SHAKE128_W16_H20;
+   if(param_set == "XMSS_SHAKE256_W16_H10")
+      return XMSS_SHAKE256_W16_H10;
+   if(param_set == "XMSS_SHAKE256_W16_H16")
+      return XMSS_SHAKE256_W16_H16;
+   if(param_set == "XMSS_SHAKE256_W16_H20")
+      return XMSS_SHAKE256_W16_H20;
+   throw Invalid_Argument("Unknown XMSS algorithm param '" + param_set + "'");
+   }
 
-XMSS_Parameters::XMSS_Parameters(const std::string& algo_name)
-   : XMSS_Parameters(m_oid_name_lut.at(algo_name))
-   {}
+XMSS_Parameters::XMSS_Parameters(const std::string& param_set)
+   : XMSS_Parameters(XMSS_Parameters::xmss_id_from_string(param_set))
+   {
+   }
+
 
 XMSS_Parameters::XMSS_Parameters(xmss_algorithm_t oid)
    : m_oid(oid)

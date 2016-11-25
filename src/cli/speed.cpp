@@ -1188,8 +1188,9 @@ class Speed final : public Command
                         std::chrono::milliseconds msec)
          {
          std::vector<std::string> xmss_params{
-            "XMSS_SHA2-256_W16_H10",
             "XMSS_SHA2-512_W16_H10",
+            "XMSS_SHA2-512_W16_H16",
+            "XMSS_SHA2-512_W16_H20",
          };
 
          for(std::string params : xmss_params)

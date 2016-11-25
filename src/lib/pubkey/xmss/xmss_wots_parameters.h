@@ -45,6 +45,8 @@ class XMSS_WOTS_Parameters
       XMSS_WOTS_Parameters(const std::string& algo_name);
       XMSS_WOTS_Parameters(ots_algorithm_t ots_spec);
 
+      static ots_algorithm_t xmss_wots_id_from_string(const std::string& param_set);
+
       /**
        * Algorithm 1: convert input string to base.
        *
