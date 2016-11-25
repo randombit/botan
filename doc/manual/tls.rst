@@ -108,8 +108,8 @@ information about the connection.
 
  .. cpp::function:: std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
 
-     Called by default `tls_verify_cert_cert` to set timeout for OCSP requests.
-     Return 0 to disable OCSP. Current default is 0.
+     Called by default `tls_verify_cert_chain` to set timeout for online OCSP requests
+     on the certificate chain. Return 0 to disable OCSP. Current default is 0.
 
  .. cpp:function:: std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos)
 

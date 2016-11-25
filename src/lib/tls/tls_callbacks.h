@@ -107,6 +107,7 @@ class BOTAN_DLL Callbacks
        *
        * @param cert_chain specifies a certificate chain leading to a
        *        trusted root CA certificate.
+       * @param trusted_roots the list of trusted certificates
 
        * @param usage what this cert chain is being used for
        *        Usage_Type::TLS_SERVER_AUTH for server chains,

@@ -100,6 +100,12 @@ class BOTAN_DLL Certificate_Store_In_Memory : public Certificate_Store
       void add_crl(const X509_CRL& crl);
 
       /**
+      * Add a certificate revocation list (CRL) to the store as a shared_ptr
+      * @param crl CRL to be added
+      */
+      void add_crl(std::shared_ptr<const X509_CRL> crl);
+
+      /**
       * @return DNs for all certificates managed by the store
       */
       std::vector<X509_DN> all_subjects() const override;

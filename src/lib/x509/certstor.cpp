@@ -89,21 +89,27 @@ Certificate_Store_In_Memory::find_cert_by_pubkey_sha1(const std::vector<byte>& k
 
 void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl)
    {
-   X509_DN crl_issuer = crl.issuer_dn();
+   std::shared_ptr<const X509_CRL> crl_s = std::make_shared<const X509_CRL>(crl);
+   return add_crl(crl_s);
+   }
+
+void Certificate_Store_In_Memory::add_crl(std::shared_ptr<const X509_CRL> crl)
+   {
+   X509_DN crl_issuer = crl->issuer_dn();
 
    for(size_t i = 0; i != m_crls.size(); ++i)
       {
       // Found an update of a previously existing one; replace it
       if(m_crls[i]->issuer_dn() == crl_issuer)
          {
-         if(m_crls[i]->this_update() <= crl.this_update())
-            m_crls[i] = std::make_shared<X509_CRL>(crl);
+         if(m_crls[i]->this_update() <= crl->this_update())
+            m_crls[i] = crl;
          return;
          }
       }
 
    // Totally new CRL, add to the list
-   m_crls.push_back(std::make_shared<X509_CRL>(crl));
+   m_crls.push_back(crl);
    }
 
 std::shared_ptr<const X509_CRL> Certificate_Store_In_Memory::find_crl_for(const X509_Certificate& subject) const

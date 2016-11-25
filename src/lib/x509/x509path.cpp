@@ -321,6 +321,7 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
 std::vector<std::set<Certificate_Status_Code>>
 PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                        const std::vector<Certificate_Store*>& certstores,
+                       Certificate_Store_In_Memory* crl_store,
                        std::chrono::system_clock::time_point ref_time,
                        std::chrono::milliseconds timeout)
    {
@@ -391,7 +392,22 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
          }
       }
 
-   return PKIX::check_crl(cert_path, crls, ref_time);
+   const std::vector<std::set<Certificate_Status_Code>> crl_status = PKIX::check_crl(cert_path, crls, ref_time);
+
+   if(crl_store)
+      {
+      for(size_t i = 0; i != crl_status.size(); ++i)
+         {
+         if(crl_status[i].count(Certificate_Status_Code::VALID_CRL_CHECKED))
+            {
+            // better be non-null, we supposedly validated it
+            BOTAN_ASSERT_NONNULL(crls[i]);
+            crl_store->add_crl(crls[i]);
+            }
+         }
+      }
+
+   return crl_status;
    }
 
 #endif
@@ -473,15 +489,16 @@ PKIX::build_certificate_path(std::vector<std::shared_ptr<const X509_Certificate>
       }
    }
 
-namespace {
-
-void merge_results(std::vector<std::set<Certificate_Status_Code>>& results,
-                   const std::vector<std::set<Certificate_Status_Code>>& crl,
-                   const std::vector<std::set<Certificate_Status_Code>>& ocsp,
-                   bool require_rev_on_end_entity,
-                   bool require_rev_on_intermediates)
+void PKIX::merge_revocation_status(std::vector<std::set<Certificate_Status_Code>>& chain_status,
+                                   const std::vector<std::set<Certificate_Status_Code>>& crl,
+                                   const std::vector<std::set<Certificate_Status_Code>>& ocsp,
+                                   bool require_rev_on_end_entity,
+                                   bool require_rev_on_intermediates)
    {
-   for(size_t i = 0; i != results.size() - 1; ++i)
+   if(chain_status.empty())
+      throw Invalid_Argument("PKIX::merge_revocation_status chain_status was empty");
+
+   for(size_t i = 0; i != chain_status.size() - 1; ++i)
       {
       bool had_crl = false, had_ocsp = false;
 
@@ -493,7 +510,7 @@ void merge_results(std::vector<std::set<Certificate_Status_Code>>& results,
                {
                had_crl = true;
                }
-            results[i].insert(code);
+            chain_status[i].insert(code);
             }
          }
 
@@ -506,7 +523,7 @@ void merge_results(std::vector<std::set<Certificate_Status_Code>>& results,
                had_ocsp = true;
                }
 
-            results[i].insert(code);
+            chain_status[i].insert(code);
             }
          }
 
@@ -515,13 +532,34 @@ void merge_results(std::vector<std::set<Certificate_Status_Code>>& results,
          if((require_rev_on_end_entity && i == 0) ||
             (require_rev_on_intermediates && i > 0))
             {
-            results[i].insert(Certificate_Status_Code::NO_REVOCATION_DATA);
+            chain_status[i].insert(Certificate_Status_Code::NO_REVOCATION_DATA);
             }
          }
       }
    }
 
-}
+Certificate_Status_Code PKIX::overall_status(const std::vector<std::set<Certificate_Status_Code>>& cert_status)
+   {
+   if(cert_status.empty())
+      throw Invalid_Argument("PKIX::overall_status empty cert status");
+
+   Certificate_Status_Code overall_status = Certificate_Status_Code::OK;
+
+   // take the "worst" error as overall
+   for(const std::set<Certificate_Status_Code>& s : cert_status)
+      {
+      if(!s.empty())
+         {
+         auto worst = *s.rbegin();
+         // Leave informative OCSP/CRL confirmations on cert-level status only
+         if(worst >= Certificate_Status_Code::FIRST_ERROR_STATUS && worst > overall_status)
+            {
+            overall_status = worst;
+            }
+         }
+      }
+   return overall_status;
+   }
 
 Path_Validation_Result BOTAN_DLL x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
@@ -546,6 +584,7 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
    Certificate_Status_Code path_building_result =
       PKIX::build_certificate_path(cert_path, trusted_roots, end_entity, end_entity_extra);
 
+   // If we cannot successfully build a chain to a trusted self-signed root, stop now
    if(path_building_result != Certificate_Status_Code::OK)
       {
       return Path_Validation_Result(path_building_result);
@@ -556,9 +595,6 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
                         hostname, usage,
                         restrictions.minimum_key_strength(),
                         restrictions.trusted_hashes());
-
-   if(path_building_result != Certificate_Status_Code::OK)
-      status[0].insert(path_building_result);
 
    std::vector<std::set<Certificate_Status_Code>> crl_status =
       PKIX::check_crl(cert_path, trusted_roots, ref_time);
@@ -576,9 +612,9 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
 #endif
       }
 
-   merge_results(status, crl_status, ocsp_status,
-                 restrictions.require_revocation_information(),
-                 restrictions.ocsp_all_intermediates());
+   PKIX::merge_revocation_status(status, crl_status, ocsp_status,
+                                 restrictions.require_revocation_information(),
+                                 restrictions.ocsp_all_intermediates());
 
    return Path_Validation_Result(status, std::move(cert_path));
    }
@@ -648,23 +684,10 @@ Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
 
 Path_Validation_Result::Path_Validation_Result(std::vector<std::set<Certificate_Status_Code>> status,
                                                std::vector<std::shared_ptr<const X509_Certificate>>&& cert_chain) :
-   m_overall(Certificate_Status_Code::OK),
    m_all_status(status),
-   m_cert_path(cert_chain)
+   m_cert_path(cert_chain),
+   m_overall(PKIX::overall_status(m_all_status))
    {
-   // take the "worst" error as overall
-   for(const auto& s : m_all_status)
-      {
-      if(!s.empty())
-         {
-         auto worst = *s.rbegin();
-         // Leave informative OCSP/CRL confirmations on cert-level status only
-         if(worst >= Certificate_Status_Code::FIRST_ERROR_STATUS)
-            {
-            m_overall = worst;
-            }
-         }
-      }
    }
 
 const X509_Certificate& Path_Validation_Result::trust_root() const

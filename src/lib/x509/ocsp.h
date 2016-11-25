@@ -73,24 +73,32 @@ class BOTAN_DLL Response
 
       /**
       * Parses an OCSP response.
-      * @param request the OCSP request this is a respone to
       * @param response_bits response bits received
       */
       Response(const std::vector<byte>& response_bits);
 
-      /*
+      /**
       * Check signature and return status
       * The optional cert_path is the (already validated!) certificate path of
       * the end entity which is being inquired about
+      * @param trust_roots list of certstores containing trusted roots
+      * @param cert_path optionally, the (already verified!) certificate path for the certificate
+      * this is an OCSP response for. This is necessary to find the correct intermediate CA in
+      * some cases.
       */
       Certificate_Status_Code check_signature(const std::vector<Certificate_Store*>& trust_roots,
                                               const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path = {}) const;
 
-      /*
+      /**
       * Verify that issuer's key signed this response
+      * @param issuer certificate of issuer
+      * @return if signature valid OCSP_SIGNATURE_OK else an error code
       */
       Certificate_Status_Code verify_signature(const X509_Certificate& issuer) const;
 
+      /**
+      * @return the time this OCSP response was supposedly produced at
+      */
       const X509_Time& produced_at() const { return m_produced_at; }
 
       /**
@@ -107,6 +115,7 @@ class BOTAN_DLL Response
        * Searches the OCSP response for issuer and subject certificate.
        * @param issuer issuer certificate
        * @param subject subject certificate
+       * @param ref_time the reference time
        * @return OCSP status code, possible values:
        *         CERT_IS_REVOKED,
        *         OCSP_NOT_YET_VALID,
