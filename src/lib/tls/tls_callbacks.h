@@ -118,6 +118,8 @@ class BOTAN_DLL Callbacks
        *        the client requested (eg via SNI). When authenticating a client,
        *        this is the server name the client is authenticating *to*.
        *        Empty in other cases or if no hostname was used.
+       * @param policy the TLS policy associated with the session being authenticated
+       *        using the certificate chain
        */
        virtual void tls_verify_cert_chain(
           const std::vector<X509_Certificate>& cert_chain,
