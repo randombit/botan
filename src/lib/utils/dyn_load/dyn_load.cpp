@@ -1,4 +1,4 @@
-/**
+/*
 * Dynamically Loaded Object
 * (C) 2010 Jack Lloyd
 *

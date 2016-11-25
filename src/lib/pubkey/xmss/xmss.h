@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS
  * Includes XMSS headers.
  * (C) 2016 Matthias Gierlings

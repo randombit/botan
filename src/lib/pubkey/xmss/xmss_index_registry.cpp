@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Index Registry
  * A registry for XMSS private keys, keeps track of the leaf index for
  * independend copies of the same key.

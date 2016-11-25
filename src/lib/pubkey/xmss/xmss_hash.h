@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Hash
  * (C) 2016 Matthias Gierlings
  *

@@ -1,4 +1,4 @@
-/**
+/*
  * (C) Copyright Projet SECRET, INRIA, Rocquencourt
  * (C) Bhaskar Biswas and Nicolas Sendrier
  * (C) 2014 Jack Lloyd

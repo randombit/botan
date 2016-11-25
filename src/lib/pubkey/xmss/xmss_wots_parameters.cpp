@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS WOTS Parameters
  * Descibes a signature method for XMSS Winternitz One Time Signatures,
  * as defined in:

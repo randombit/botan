@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Public Key
  * An XMSS: Extended Hash-Based Siganture public key.
  * The XMSS public key does not support the X509 standard. Instead the

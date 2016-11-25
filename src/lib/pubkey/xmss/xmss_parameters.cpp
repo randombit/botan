@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Parameters
  * Descibes a signature method for XMSS, as defined in:
  * [1] XMSS: Extended Hash-Based Signatures,

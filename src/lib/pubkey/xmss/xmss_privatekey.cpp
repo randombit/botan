@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Private Key
  * An XMSS: Extended Hash-Based Siganture private key.
  * The XMSS private key does not support the X509 and PKCS7 standard. Instead

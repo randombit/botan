@@ -1,4 +1,4 @@
-/**
+/*
  * (C) Copyright Projet SECRET, INRIA, Rocquencourt
  * (C) Bhaskar Biswas and  Nicolas Sendrier
  *
@@ -18,7 +18,7 @@ namespace Botan {
 
 /**
 * Expand an input to a bit mask depending on it being being zero or non-zero
-* @ param tst the input
+* @param tst the input
 * @return the mask 0xFFFF if tst is non-zero and 0 otherwise
 */
 template<typename T>

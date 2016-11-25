@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Hash
  * A collection of pseudorandom hash functions required for XMSS and WOTS
  * computations.

@@ -1,4 +1,4 @@
-/**
+/*
  * Extended Hash-Based Signatures Tests
  *
  * (C) 2014,2015 Jack Lloyd

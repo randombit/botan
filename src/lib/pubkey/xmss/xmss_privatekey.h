@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS_PrivateKey.h
  * (C) 2016 Matthias Gierlings
  *

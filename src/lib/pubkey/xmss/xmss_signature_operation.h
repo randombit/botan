@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Signature Operation
  * (C) 2016 Matthias Gierlings
  *

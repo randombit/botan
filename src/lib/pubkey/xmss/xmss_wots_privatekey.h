@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS WOTS Private Key
  * (C) 2016 Matthias Gierlings
  *

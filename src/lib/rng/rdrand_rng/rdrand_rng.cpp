@@ -1,4 +1,4 @@
-/**
+/*
 * RDRAND RNG
 * (C) 2016 Jack Lloyd
 *

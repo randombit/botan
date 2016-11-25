@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Verification Operation
  * Provides signature verification capabilities for Extended Hash-Based
  * Signatures (XMSS).

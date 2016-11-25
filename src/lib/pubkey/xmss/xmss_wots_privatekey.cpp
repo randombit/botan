@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS WOTS Private Key
  * A Winternitz One Time Signature private key for use with Extended Hash-Based
  * Signatures.

@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Public Key
  * (C) 2016 Matthias Gierlings
  *

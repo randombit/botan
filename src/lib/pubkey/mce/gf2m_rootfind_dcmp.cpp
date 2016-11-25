@@ -1,4 +1,4 @@
-/**
+/*
  * (C) 2014 cryptosource GmbH
  * (C) 2014 Falko Strenzke fstrenzke@cryptosource.de
  *

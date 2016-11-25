@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Common Ops
  * (C) 2016 Matthias Gierlings
  *

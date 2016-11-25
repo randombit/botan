@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Signature Operation
  * Signature generation operation for Extended Hash-Based Signatures (XMSS) as
  * defined in:

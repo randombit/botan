@@ -1,4 +1,4 @@
-/**
+/*
  * XMSS Common Ops
  * Operations shared by XMSS signature generation and verification operations.
  * (C) 2016 Matthias Gierlings
