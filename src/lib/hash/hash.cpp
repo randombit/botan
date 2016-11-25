@@ -251,17 +251,9 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
       {
       return std::unique_ptr<HashFunction>(new SHAKE_128(req.arg_as_integer(0, 128)));
       }
-   if(req.algo_name() == "SHAKE-128(256)")
-      {
-      return std::unique_ptr<HashFunction>(new SHAKE_128(req.arg_as_integer(0, 256)));
-      }
    if(req.algo_name() == "SHAKE-256")
       {
       return std::unique_ptr<HashFunction>(new SHAKE_256(req.arg_as_integer(0, 256)));
-      }
-   if(req.algo_name() == "SHAKE-256(512)")
-      {
-      return std::unique_ptr<HashFunction>(new SHAKE_256(req.arg_as_integer(0, 512)));
       }
 #endif
 
