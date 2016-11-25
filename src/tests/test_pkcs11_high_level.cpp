@@ -1330,6 +1330,7 @@ Test::Result test_rng_generate_random()
 
    PKCS11_RNG rng(test_session.session());
 
+   result.confirm("RNG already seeded", rng.is_seeded());
    std::vector<byte> random(20);
    rng.randomize(random.data(), random.size());
    result.test_ne("random data generated", random, std::vector<byte>(20));
