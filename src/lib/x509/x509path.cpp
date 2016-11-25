@@ -227,10 +227,10 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
 
    for(size_t i = 0; i != cert_path.size(); ++i)
       {
-      BOTAN_ASSERT(cert_path[i] != nullptr, "Not null");
+      BOTAN_ASSERT_NONNULL(cert_path[i]);
       for(size_t c = 0; c != certstores.size(); ++c)
          {
-         crls[i] = certstores[c]->find_crl_for(*cert_path.at(i));
+         crls[i] = certstores[c]->find_crl_for(*cert_path[i]);
          if(crls[i])
             break;
          }
