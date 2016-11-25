@@ -10,8 +10,8 @@ Version 1.11.34, Not Yet Released
   security). Signature generation is very slow, on the order of seconds. And
   very importantly the signature scheme is stateful: each leaf index must only
   be used once, or all security is lost. In the appropriate system where
-  signatures are rarely generated (such as code signing) XMSS makes an
-  excellent choice. (GH #717)
+  signatures are rarely generated (such as code signing) XMSS makes an excellent
+  choice. (GH #717 #736)
 
 * Add support for CECPQ1 TLS ciphersuites. These use a combination of x25519
   ECDH and NewHope to provide post-quantum security. The ciphersuites are not
@@ -33,6 +33,13 @@ Version 1.11.34, Not Yet Released
 
 * Add GMAC, a MAC based on GCM (GH #488 / #691)
 
+* Add ESP block cipher padding from RFC 4304. GH #724
+
+* Incompatible change to HKDF: previously the HKDF type in Botan was only the
+  Expand half of HKDF. Now HKDF is the full Extract-then-Expand KDF, and
+  HKDF_Extract and HKDF_Expand are available. If you previously used HKDF, you
+  must switch to using HKDF_Expand. (GH #723)
+
 * Add Cipher_Mode::reset which resets message-specific state, allowing
   discarding state but allowing continued processing under the same key. (GH #552)
 
@@ -52,6 +59,8 @@ Version 1.11.34, Not Yet Released
   with x25519 first, then P-256, then P-521, then the rest.
 
 * Add a BSD sockets version of the HTTP client code used for OCSP. GH #699
+
+* Export the public key workfactor functions (GH #734) and add tests for them.
 
 * Add MessageAuthenticationCode::start_msg interface for providing nonce (GH #691)
 
@@ -96,7 +105,7 @@ Version 1.11.34, Not Yet Released
 
 * The function `zero_mem` has been renamed `secure_scrub_memory`
 
-* More tests for pipe/filter (GH #689 #693) and AEADs (GH #552)
+* More tests for pipe/filter (GH #689 #693), AEADs (GH #552), KDF::name (GH #727),
 
 * Add a test suite for timing analysis for TLS CBC decryption, OAEP decryption,
   and PKCS #1 v1.5 decryption. These operations all have the feature that if an
@@ -107,6 +116,8 @@ Version 1.11.34, Not Yet Released
   analyzing TLS libraries. (https://github.com/RUB-NDS/TLS-Attacker)
 
 * Add a fuzzing framework. Supports fuzzing some APIs using AFL and libFuzzer.
+
+* Added documentation for PKCS #11 (GH #725)
 
 * The LibraryInitializer type is no longer needed and is now deprecated.
 
