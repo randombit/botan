@@ -29,6 +29,13 @@ snail-mail address (S), and Bitcoin address (B).
   N: Olivier de Gaalon
   D: SQLite encryption codec (src/contrib/sqlite)
 
+  N: Matthias Gierlings
+  E: matthias.gierlings@hackmanit.de
+  W: https://www.hackmanit.de/
+  P: 39E0 D270 19A4 B356 05D0 29AE 1BD3 49CF 744A 02FF
+  D: GMAC, Extended Hash-Based Signatures (XMSS)
+  S: Bochum, Germany
+
   N: Matthew Gregan
   D: Binary file I/O support, allocator fixes
 
@@ -124,7 +131,7 @@ snail-mail address (S), and Bitcoin address (B).
   W: https://sirrix.com/
   D: KDF1-18033, ECIES
   S: Saarland, Germany
-  
+
   N: Daniel Neus
   E: d.neus@sirrix.com
   W: https://sirrix.com/
