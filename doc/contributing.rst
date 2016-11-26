@@ -46,6 +46,83 @@ Library Layout
 * ``misc`` contains odds and ends: format preserving encryption, SRP, threshold
   secret sharing, all or nothing transform, and others
 
+Sending patches
+========================================
+
+All contributions should be submitted as pull requests via GitHub
+(https://github.com/randombit/botan). If you are planning a large
+change email the mailing list or open a discussion ticket on github
+before starting out to make sure you are on the right path. And once
+you have something written, free to open a [WIP] PR for early review
+and comment.
+
+If possible please sign your git commits using a PGP key.
+See https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work for
+instructions on how to set this up.
+
+Depending on what your change is, your PR should probably also include an update
+to ``news.rst`` with a note explaining the change. If your change is a
+simple bug fix, a one sentence description is perhaps sufficient. If there is an
+existing ticket on GitHub with discussion or other information, reference it in
+your change note as 'GH #000'.
+
+Update ``doc/credits.txt`` with your information so people know what you did!
+
+If you are interested in contributing but don't know where to start check out
+``doc/todo.rst`` for some ideas - these are changes we would almost certainly
+accept once they've passed code review.
+
+Also, try building and testing it on whatever hardware you have handy,
+especially non-x86 platforms, or especially C++11 compilers other than the
+regularly tested GCC, Clang, and Visual Studio compilers.
+
+Git Usage
+========================================
+
+Do *NOT* merge ``master`` into your topic branch, this creates
+needless commits and noise in history. Instead, as needed, rebase your
+branch against master (``git rebase -i master``) and force push the
+branch to update the PR. If the GitHub PR page does not report any
+merge conflicts and nobody asks you to rebase, you don't need to
+rebase.
+
+Try to keep your history clean and use rebase to squash your commits
+as needed. If your diff is less than roughly 100 lines, it should
+probably be a single commit. Only split commits as needed to help with
+review/understanding of the change.
+
+Python
+========================================
+
+Scripts should be in Python whenever possible.
+
+For configure.py (and install.py) the target is stock (no modules outside the
+standard library) CPython 2.7 plus latest CPython 3.x. Support for CPython 2.6,
+PyPy, etc is great when viable (in the sense of not causing problems for 2.7 or
+3.x, and not requiring huge blocks of version dependent code). As running this
+program succesfully is required for a working build making it as portable as
+possible is considered key.
+
+The python wrapper botan.py targets CPython 2.7, 3.x, and latest PyPy. Note that
+a single file is used to avoid dealing with any of Python's various crazy module
+distribution issues.
+
+For random scripts not typically run by an end-user (codegen, visualization, and
+so on) there isn't any need to worry about 2.6 and even just running under
+Python2 xor Python3 is acceptable if needed. Here it's fine to depend on any
+useful modules such as graphviz or matplotlib, regardless if it is available
+from a stock CPython install.
+
+Build Tools and Hints
+========================================
+
+If you don't already use it for all your C/C++ development, install
+``ccache`` now and configure a large cache on a fast disk. It allows for
+very quick rebuilds by caching the compiler output.
+
+Use ``--with-sanitizers`` to enable ASan. UBSan has to be added separately
+with ``--cc-abi-flags`` at the moment as GCC 4.8 does not have UBSan.
+
 Copyright Notice
 ========================================
 
@@ -108,52 +185,7 @@ use ``std::bind``.
 Use ``::`` to explicitly refer to the global namespace (eg, when calling an OS
 or library function like ``::select`` or ``::sqlite3_open``).
 
-Sending patches
-========================================
-
-All contributions should be submitted as pull requests via GitHub
-(https://github.com/randombit/botan). If you are planning a large
-change email the mailing list or open a discussion ticket on github
-before starting out to make sure you are on the right path. And once
-you have something written, free to open a [WIP] PR for early review
-and comment.
-
-If possible please sign your git commits using a PGP key.
-See https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work for
-instructions on how to set this up.
-
-Depending on what your change is, your PR should probably also include an update
-to ``news.rst`` with a note explaining the change. If your change is a
-simple bug fix, a one sentence description is perhaps sufficient. If there is an
-existing ticket on GitHub with discussion or other information, reference it in
-your change note as 'GH #000'.
-
-Update ``doc/credits.txt`` with your information so people know what you did!
-
-If you are interested in contributing but don't know where to start check out
-``doc/todo.rst`` for some ideas - these are changes we would almost certainly
-accept once they've passed code review.
-
-Also, try building and testing it on whatever hardware you have handy,
-especially non-x86 platforms, or especially C++11 compilers other than the
-regularly tested GCC, Clang, and Visual Studio compilers.
-
-Git Usage
-========================================
-
-Do *NOT* merge ``master`` into your topic branch, this creates
-needless commits and noise in history. Instead, as needed, rebase your
-branch against master (``git rebase -i master``) and force push the
-branch to update the PR. If the GitHub PR page does not report any
-merge conflicts and nobody asks you to rebase, you don't need to
-rebase.
-
-Try to keep your history clean and use rebase to squash your commits
-as needed. If your diff is less than roughly 100 lines, it should
-probably be a single commit. Only split commits as needed to help with
-review/understanding of the change.
-
-External Dependencies
+Use of External Dependencies
 ========================================
 
 Compiler Dependencies
@@ -223,45 +255,3 @@ algorithms), potentially a parallelism framework such as Cilk (as part of a
 larger design for parallel message processing, say), or hypothentically use of a
 safe ASN.1 parser (that is, one written in a safe language like Rust or OCaml
 providing a C API).
-
-Test Tools
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Integration to better leverage specialized test or verification tools such as
-valgrind, ASan/UBSan, AFL, LLVM libFuzzer, KLEE, Coq, etc is fine. Typically
-these are not enabled or used during normal builds but are specially set up by
-developers or auditors.
-
-The fuzzer tests currently live at https://github.com/randombit/botan-fuzzers
-
-Python
-========================================
-
-Scripts should be in Python whenever possible.
-
-For configure.py (and install.py) the target is stock (no modules outside the
-standard library) CPython 2.7 plus latest CPython 3.x. Support for CPython 2.6,
-PyPy, etc is great when viable (in the sense of not causing problems for 2.7 or
-3.x, and not requiring huge blocks of version dependent code). As running this
-program succesfully is required for a working build making it as portable as
-possible is considered key.
-
-The python wrapper botan.py targets CPython 2.7, 3.x, and latest PyPy. Note that
-a single file is used to avoid dealing with any of Python's various crazy module
-distribution issues.
-
-For random scripts not typically run by an end-user (codegen, visualization, and
-so on) there isn't any need to worry about 2.6 and even just running under
-Python2 xor Python3 is acceptable if needed. Here it's fine to depend on any
-useful modules such as graphviz or matplotlib, regardless if it is available
-from a stock CPython install.
-
-Build Tools and Hints
-========================================
-
-If you don't already use it for all your C/C++ development, install
-``ccache`` now and configure a large cache on a fast disk. It allows for
-very quick rebuilds by caching the compiler output.
-
-Use ``--with-sanitizers`` to enable ASan. UBSan has to be added separately
-with ``--cc-abi-flags`` at the moment as GCC 4.8 does not have UBSan.
