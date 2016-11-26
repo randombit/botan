@@ -97,13 +97,45 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
    std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
    std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
 
+   std::vector<std::unique_ptr<Botan::PK_Verifier>> verifiers;
+
+   for(std::string verify_provider : possible_pk_providers())
+      {
+      std::unique_ptr<Botan::PK_Verifier> verifier;
+
+      try
+         {
+         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
+         }
+      catch(Botan::Lookup_Error&)
+         {
+         //result.test_note("Skipping verifying with " + verify_provider);
+         continue;
+         }
+
+      result.test_eq("KAT signature valid", verifier->verify_message(message, signature), true);
+
+      check_invalid_signatures(result, *verifier, message, signature);
+      verifiers.push_back(std::move(verifier));
+      }
+
    for(auto&& sign_provider : possible_pk_providers())
       {
+      std::unique_ptr<Botan::RandomNumberGenerator> rng;
+      if(vars.count("Nonce"))
+         {
+         rng.reset(test_rng(get_req_bin(vars, "Nonce")));
+         }
+
       std::unique_ptr<Botan::PK_Signer> signer;
+
+      std::vector<uint8_t> generated_signature;
 
       try
          {
          signer.reset(new Botan::PK_Signer(*privkey, Test::rng(), padding, Botan::IEEE_1363, sign_provider));
+
+         generated_signature = signer->sign_message(message, rng ? *rng : Test::rng());
          }
       catch(Botan::Lookup_Error&)
          {
@@ -111,42 +143,20 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
          continue;
          }
 
-      std::unique_ptr<Botan::RandomNumberGenerator> rng;
-      if(vars.count("Nonce"))
-         {
-         rng.reset(test_rng(get_req_bin(vars, "Nonce")));
-         }
-
-      const std::vector<uint8_t> generated_signature =
-         signer->sign_message(message, rng ? *rng : Test::rng());
-
       if(sign_provider == "base")
          {
          result.test_eq("generated signature matches KAT", generated_signature, signature);
          }
-
-      for(auto&& verify_provider : possible_pk_providers())
+      else if(generated_signature != signature)
          {
-         std::unique_ptr<Botan::PK_Verifier> verifier;
-
-         try
+         for(std::unique_ptr<Botan::PK_Verifier>& verifier : verifiers)
             {
-            verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
+            if(!result.test_eq("generated signature valid",
+                               verifier->verify_message(message, generated_signature), true))
+               {
+               result.test_failure("generated signature", generated_signature);
+               }
             }
-         catch(Botan::Lookup_Error&)
-            {
-            //result.test_note("Skipping verifying with " + verify_provider);
-            continue;
-            }
-
-         if(!result.test_eq("generated signature valid",
-                            verifier->verify_message(message, generated_signature), true))
-            {
-            result.test_failure("generated signature", generated_signature);
-            }
-
-         check_invalid_signatures(result, *verifier, message, signature);
-         result.test_eq("KAT signature valid", verifier->verify_message(message, signature), true);
          }
       }
 
@@ -198,6 +208,26 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
    //std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
    Botan::Public_Key* pubkey = privkey.get();
 
+   std::vector<std::unique_ptr<Botan::PK_Decryptor>> decryptors;
+
+   for(auto&& dec_provider : possible_pk_providers())
+      {
+      std::unique_ptr<Botan::PK_Decryptor> decryptor;
+
+      try
+         {
+         decryptor.reset(new Botan::PK_Decryptor_EME(*privkey, Test::rng(), padding, dec_provider));
+         }
+      catch(Botan::Lookup_Error&)
+         {
+         continue;
+         }
+
+      result.test_eq(dec_provider, "decryption of KAT", decryptor->decrypt(ciphertext), plaintext);
+      check_invalid_ciphertexts(result, *decryptor, plaintext, ciphertext);
+      }
+
+
    for(auto&& enc_provider : possible_pk_providers())
       {
       std::unique_ptr<Botan::PK_Encryptor> encryptor;
@@ -225,29 +255,15 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
          result.test_eq(enc_provider, "generated ciphertext matches KAT",
                         generated_ciphertext, ciphertext);
          }
-
-      for(auto&& dec_provider : possible_pk_providers())
+      else if(generated_ciphertext != ciphertext)
          {
-         std::unique_ptr<Botan::PK_Decryptor> decryptor;
-
-         try
+         for(std::unique_ptr<Botan::PK_Decryptor>& dec : decryptors)
             {
-            decryptor.reset(new Botan::PK_Decryptor_EME(*privkey, Test::rng(), padding, dec_provider));
-            }
-         catch(Botan::Lookup_Error&)
-            {
-            continue;
-            }
-
-         result.test_eq(dec_provider, "decryption of KAT", decryptor->decrypt(ciphertext), plaintext);
-         check_invalid_ciphertexts(result, *decryptor, plaintext, ciphertext);
-
-         if(generated_ciphertext != ciphertext)
-            {
-            result.test_eq(dec_provider, "decryption of generated ciphertext",
-                           decryptor->decrypt(generated_ciphertext), plaintext);
+            result.test_eq("decryption of generated ciphertext",
+                           dec->decrypt(generated_ciphertext), plaintext);
             }
          }
+
       }
 
    return result;
