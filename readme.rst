@@ -195,7 +195,7 @@ Hash functions and MACs
 * SHA-3 (and Keccak-1600)
 * Skein-512, BLAKE2b
 * RIPEMD-160, Tiger, Whirlpool, GOST 34.11
-* Authentication codes HMAC, CMAC, Poly1305, SipHash
+* Authentication codes CMAC, GMAC, HMAC, Poly1305, SipHash
 * Hash function combiners (Parallel and Comb4P)
 * Non-cryptographic checksums Adler32, CRC24, CRC32
 * Obsolete algorithms MD5, MD4, CBC-MAC, X9.19 DES-MAC
