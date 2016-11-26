@@ -38,7 +38,7 @@ class OpenSSL_RC4 : public StreamCipher
             }
          }
 
-      StreamCipher* clone() const override { return new OpenSSL_RC4; }
+      StreamCipher* clone() const override { return new OpenSSL_RC4(m_skip); }
 
       Key_Length_Specification key_spec() const override
          {
