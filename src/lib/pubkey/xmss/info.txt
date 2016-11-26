@@ -10,9 +10,12 @@ xmss_publickey.cpp
 xmss_signature.cpp
 xmss_signature_operation.cpp
 xmss_verification_operation.cpp
+xmss_wots_common_ops.cpp
 xmss_wots_parameters.cpp
 xmss_wots_privatekey.cpp
 xmss_wots_publickey.cpp
+xmss_wots_signature_operation.cpp
+xmss_wots_verification_operation.cpp
 </source>
 
 <header:public>
@@ -33,6 +36,11 @@ xmss_wots_publickey.h
 </header:public>
 
 <header:internal>
+xmss_wots_addressed_privatekey.h
+xmss_wots_addressed_publickey.h
+xmss_wots_common_ops.h
+xmss_wots_signature_operation.h
+xmss_wots_verification_operation.h
 xmss_signature.h
 xmss_signature_operation.h
 xmss_verification_operation.h

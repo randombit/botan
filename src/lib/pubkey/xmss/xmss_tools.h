@@ -64,13 +64,17 @@ void XMSS_Tools::concat(secure_vector<byte>& target, const T& src)
    {
    const byte* src_bytes = reinterpret_cast<const byte*>(&src);
    if(CPUID::is_little_endian())
+      {
       std::reverse_copy(src_bytes,
                         src_bytes + sizeof(src),
                         std::back_inserter(target));
+      }
    else
+      {
       std::copy(src_bytes,
                 src_bytes + sizeof(src),
                 std::back_inserter(target));
+      }
    }
 
 
@@ -87,13 +91,17 @@ void XMSS_Tools::concat(secure_vector<byte>& target,
 
    const byte* src_bytes = reinterpret_cast<const byte*>(&src);
    if(CPUID::is_little_endian())
+      {
       std::reverse_copy(src_bytes,
                         src_bytes + c,
                         std::back_inserter(target));
+      }
    else
+      {
       std::copy(src_bytes + sizeof(src) - c,
                 src_bytes + sizeof(src),
                 std::back_inserter(target));
+      }
    }
 }
 

@@ -12,6 +12,7 @@
 #include <memory>
 #include <botan/alg_id.h>
 #include <botan/assert.h>
+#include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 #include <botan/types.h>
 #include <botan/xmss_wots_parameters.h>
@@ -150,8 +151,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        *
        * @return A XMSS_WOTS_PublicKey.
        **/
-      XMSS_WOTS_PublicKey generate_public_key(
-         XMSS_Address& adrs);
+      XMSS_WOTS_PublicKey generate_public_key(XMSS_Address& adrs);
 
       /**
        * Algorithm 4: "WOTS_genPK"
@@ -165,10 +165,9 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        * @param adrs Hash function address encoding the address of
        *        the WOTS+ key pair within a greater structure.
        **/
-      void generate_public_key(
-         XMSS_WOTS_PublicKey& pub_key,
-         wots_keysig_t&& in_key_data,
-         XMSS_Address& adrs);
+      void generate_public_key(XMSS_WOTS_PublicKey& pub_key,
+                               wots_keysig_t&& in_key_data,
+                               XMSS_Address& adrs);
 
       /**
        * Algorithm 5: "WOTS_sign"
@@ -180,9 +179,8 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        *
        * @return signature for msg.
        **/
-      wots_keysig_t sign(
-         const secure_vector<byte>& msg,
-         XMSS_Address& adrs);
+      wots_keysig_t sign(const secure_vector<byte>& msg,
+                         XMSS_Address& adrs);
 
       /**
        * Retrieves the secret seed used to generate WOTS+ chains. The seed
@@ -194,14 +192,6 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
          {
          return m_private_seed;
          }
-
-      ///**
-      // * Retrieves the secret seed used to generate WOTS+ chains. The seed
-      // * should be a uniformly random n-byte value.
-      // *
-      // * @return secret seed.
-      // **/
-      //secure_vector<byte>& private_seed() { return m_private_seed; }
 
       /**
        * Sets the secret seed used to generate WOTS+ chains. The seed
@@ -228,20 +218,17 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
       virtual AlgorithmIdentifier
       pkcs8_algorithm_identifier() const override
          {
-         BOTAN_ASSERT(false, "No AlgorithmIdentifier available for XMSS-WOTS.");
+         throw Not_Implemented("No AlgorithmIdentifier available for XMSS-WOTS.");
          }
 
       virtual std::unique_ptr<PK_Ops::Signature>
          create_signature_op(RandomNumberGenerator&,
                              const std::string&,
-                             const std::string&) const override
-         {
-         BOTAN_ASSERT(false, "XMSS_WOTS_Signature_Operation not available.");
-         }
+                             const std::string& provider) const override;
 
       virtual secure_vector<byte> pkcs8_private_key() const override
          {
-         BOTAN_ASSERT(false, "No PKCS8 key format defined for XMSS-WOTS.");
+         throw Not_Implemented("No PKCS8 key format defined for XMSS-WOTS.");
          }
 
    private:
