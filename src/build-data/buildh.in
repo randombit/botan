@@ -21,8 +21,10 @@
 #define BOTAN_VERSION_VC_REVISION "%{version_vc_rev}"
 
 #define BOTAN_DISTRIBUTION_INFO "%{distribution_info}"
-%{unsafe_fuzzer_mode_define}
 
+/* How many bits per limb in a BigInt */
+#define BOTAN_MP_WORD_BITS %{mp_bits}
+%{unsafe_fuzzer_mode_define}
 
 #define BOTAN_INSTALL_PREFIX R"(%{prefix})"
 #define BOTAN_INSTALL_HEADER_DIR "%{includedir}/botan-%{version_major}.%{version_minor}"
@@ -32,6 +34,28 @@
 #ifndef BOTAN_DLL
   #define BOTAN_DLL %{visibility_attribute}
 #endif
+
+/* Target identification and feature test macros */
+%{target_os_defines}
+
+%{target_cpu_defines}
+
+%{target_compiler_defines}
+
+/*
+* Module availability definitions
+*/
+%{module_defines}
+
+/*
+* Local/misc configuration options (if any) follow
+*/
+%{local_config}
+%{misc_config}
+
+/*
+* Things you can edit (but probably shouldn't)
+*/
 
 /* How much to allocate for a buffer of no particular size */
 #define BOTAN_DEFAULT_BUFFER_SIZE 1024
@@ -48,12 +72,6 @@
 * if the OS would let us lock more
 */
 #define BOTAN_MLOCK_ALLOCATOR_MAX_LOCKED_KB 512
-
-/* Multiplier on a block cipher's native parallelism */
-#define BOTAN_BLOCK_CIPHER_PAR_MULT 4
-
-/* How many bits per limb in a BigInt */
-#define BOTAN_MP_WORD_BITS %{mp_bits}
 
 /*
 * If enabled uses memset via volatile function pointer to zero memory,
@@ -114,6 +132,10 @@
    { "timestamp", "rdseed", "rdrand", "proc_info", \
    "darwin_secrandom", "dev_random", "win32_cryptoapi", "proc_walk", "system_stats" }
 
+
+/* Multiplier on a block cipher's native parallelism */
+#define BOTAN_BLOCK_CIPHER_PAR_MULT 4
+
 /*
 * These control the RNG used by the system RNG interface
 */
@@ -156,32 +178,6 @@ Each read generates 32 bits of output
 #define BOTAN_ENTROPY_RDSEED_RETRIES 20
 
 /*
-* Compiler and target specific flags
-*/
-
-/* Should we use GCC-style inline assembler? */
-#if !defined(BOTAN_USE_GCC_INLINE_ASM) && defined(__GNUG__)
-  #define BOTAN_USE_GCC_INLINE_ASM 1
-#endif
-
-#ifdef __GNUC__
-  #define BOTAN_GCC_VERSION \
-     (__GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__)
-#else
-  #define BOTAN_GCC_VERSION 0
-#endif
-
-/* Target identification and feature test macros */
-%{target_os_defines}
-
-%{target_cpu_defines}
-
-#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN) || \
-    defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-  #define BOTAN_TARGET_CPU_HAS_KNOWN_ENDIANNESS
-#endif
-
-/*
 * If no way of dynamically determining the cache line size for the
 * system exists, this value is used as the default. Used by the side
 * channel countermeasures rather than for alignment purposes, so it is
@@ -191,139 +187,6 @@ Each read generates 32 bits of output
 #if !defined(BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE)
   #define BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE 32
 #endif
-
-%{target_compiler_defines}
-
-
-#if defined(__GNUG__) || defined(__clang__)
-  #define BOTAN_FUNC_ISA(isa) __attribute__ ((target(isa)))
-#else
-  #define BOTAN_FUNC_ISA(isa)
-#endif
-
-#if defined(__GNUG__) || defined(__clang__)
-  #define BOTAN_WARN_UNUSED_RESULT __attribute__ ((warn_unused_result))
-#else
-  #define BOTAN_WARN_UNUSED_RESULT
-#endif
-
-/*
-* Compile-time deprecation warnings
-*/
-#if !defined(BOTAN_NO_DEPRECATED_WARNINGS)
-
-  #if defined(__clang__)
-    #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated))
-
-  #elif defined(_MSC_VER)
-    #define BOTAN_DEPRECATED(msg) __declspec(deprecated(msg))
-
-  #elif defined(__GNUG__)
-
-    #if BOTAN_GCC_VERSION >= 450
-      #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated(msg)))
-    #else
-      #define BOTAN_DEPRECATED(msg) __attribute__ ((deprecated))
-    #endif
-
-  #endif
-
-#endif
-
-#if !defined(BOTAN_NORETURN)
-
-  #if defined (__clang__) || defined (__GNUG__)
-    #define BOTAN_NORETURN __attribute__ ((__noreturn__))
-
-  #elif defined (_MSC_VER)
-    #define BOTAN_NORETURN __declspec(noreturn)
-
-  #else
-    #define BOTAN_NORETURN
-	
-  #endif
-
-#endif
-
-
-#if defined(_MSC_VER)
-  #define BOTAN_CURRENT_FUNCTION __FUNCTION__
-#else
-  #define BOTAN_CURRENT_FUNCTION __func__
-#endif
-
-#if !defined(BOTAN_DEPRECATED)
-  #define BOTAN_DEPRECATED(msg)
-#endif
-
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
-  // noexcept is not supported in VS 2013
-  #include <yvals.h>
-  #define BOTAN_NOEXCEPT _NOEXCEPT
-#else
-  #define BOTAN_NOEXCEPT noexcept
-#endif
-
-#if !defined(BOTAN_PARALLEL_FOR)
-
-#if defined(BOTAN_TARGET_HAS_CILKPLUS)
-  #define BOTAN_PARALLEL_FOR _Cilk_for
-#elif defined(BOTAN_TARGET_HAS_OPENMP)
-  #define BOTAN_PARALLEL_FOR _Pragma("omp parallel for") for
-#else
-  #define BOTAN_PARALLEL_FOR for
-#endif
-
-#endif
-
-#if !defined(BOTAN_PARALLEL_SIMD_FOR)
-
-#if defined(BOTAN_TARGET_HAS_CILKPLUS)
-  #define BOTAN_PARALLEL_SIMD_FOR _Pragma("simd") for
-#elif defined(BOTAN_TARGET_HAS_OPENMP)
-  #define BOTAN_PARALLEL_SIMD_FOR _Pragma("omp simd") for
-#elif defined(BOTAN_TARGET_COMPILER_IS_GCC)
-  #define BOTAN_PARALLEL_FOR _Pragma("GCC ivdep") for
-#else
-  #define BOTAN_PARALLEL_SIMD_FOR for
-#endif
-
-#endif
-
-#if !defined(BOTAN_PARALLEL_SPAWN)
-
-#if defined(BOTAN_TARGET_HAS_CILKPLUS)
-  #define BOTAN_PARALLEL_SPAWN _Cilk_spawn
-#else
-  #define BOTAN_PARALLEL_SPAWN
-#endif
-
-#endif
-
-#if !defined(BOTAN_PARALLEL_SYNC)
-
-#if defined(BOTAN_TARGET_HAS_CILKPLUS)
-  #define BOTAN_PARALLEL_SYNC _Cilk_sync
-#else
-  #define BOTAN_PARALLEL_SYNC BOTAN_FORCE_SEMICOLON
-#endif
-
-#endif
-
-/*
-* Module availability definitions
-*/
-%{module_defines}
-
-/*
-* Local configuration options (if any) follow
-*/
-%{local_config}
-
-/*
-* Miscellaneous configuration options (if any) follow
-*/
-%{misc_config}
 
 /**
 * Controls how AutoSeeded_RNG is instantiated
@@ -347,20 +210,21 @@ Each read generates 32 bits of output
 // The struct is only declared to force the semicolon, it is never defined.
 #define BOTAN_FORCE_SEMICOLON struct BOTAN_DUMMY_STRUCT
 
-#if defined(BOTAN_TARGET_ARCH_IS_X86_64) && (\
-    (defined(_MSC_VER) && !defined(_WIN64)) || \
-    (defined(__clang__) && !defined(__x86_64__)) || \
-    (defined(__GNUG__) && !defined(__x86_64__)) \
-)
+// Check for a common build problem:
+
+#if defined(BOTAN_TARGET_ARCH_IS_X86_64) && ((defined(_MSC_VER) && !defined(_WIN64)) || \
+                                             (defined(__clang__) && !defined(__x86_64__)) || \
+                                             (defined(__GNUG__) && !defined(__x86_64__)))
     #error "Trying to compile Botan configured as x86_64 with non-x86_64 compiler."
 #endif
 
-#if defined(BOTAN_TARGET_ARCH_IS_X86_32) && (\
-    (defined(_MSC_VER) && defined(_WIN64)) || \
-    (defined(__clang__) && !defined(__i386__)) || \
-    (defined(__GNUG__) && !defined(__i386__)) \
-)
+#if defined(BOTAN_TARGET_ARCH_IS_X86_32) && ((defined(_MSC_VER) && defined(_WIN64)) || \
+                                             (defined(__clang__) && !defined(__i386__)) || \
+                                             (defined(__GNUG__) && !defined(__i386__)))
+
     #error "Trying to compile Botan configured as x86_32 with non-x86_32 compiler."
 #endif
 
 #endif
+
+#include <botan/compiler.h>
