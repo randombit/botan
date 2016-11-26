@@ -1,4 +1,4 @@
-[PBKDF1(SHA-1)]
+[PBKDF1(SHA-160)]
 Salt = 40AC5837560251C275AF5E30A6A3074E57CED38E
 Iterations = 6
 Passphrase = ftlkfbxdtbjbvllvbwiw

@@ -47,7 +47,7 @@ class Stream_Cipher_Tests : public Text_Based_Test
 
             if(!cipher)
                {
-               result.note_missing(algo + " from " + provider_ask);
+               result.test_failure("Stream " + algo + " supported by " + provider_ask + " but not found");
                continue;
                }
 
@@ -58,6 +58,8 @@ class Stream_Cipher_Tests : public Text_Based_Test
 
             if(nonce.size())
                {
+               if(!cipher->valid_iv_length(nonce.size()))
+                  throw Test_Error("Invalid nonce for " + algo);
                cipher->set_iv(nonce.data(), nonce.size());
                }
             else
@@ -67,11 +69,19 @@ class Stream_Cipher_Tests : public Text_Based_Test
                * null/empty nonce. Call set_iv with such a nonce to make sure
                * set_iv accepts it.
                */
+               if(!cipher->valid_iv_length(0))
+                  throw Test_Error("Stream cipher " + algo + " requires nonce but none provided");
                cipher->set_iv(nullptr, 0);
                }
 
             if (seek != 0)
                cipher->seek(seek);
+
+            // Test that clone works and does not affect parent object
+            std::unique_ptr<Botan::StreamCipher> clone(cipher->clone());
+            result.confirm("Clone has different pointer", cipher.get() != clone.get());
+            result.test_eq("Clone has same name", cipher->name(), clone->name());
+            clone->set_key(Test::rng().random_vec(cipher->maximum_keylength()));
 
             std::vector<uint8_t> buf = input;
             cipher->encrypt(buf);

@@ -373,6 +373,9 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
 
       result.confirm("Key passes self tests", key.check_key(Test::rng(), true));
 
+      result.test_gte("Key has reasonable estimated strength (lower)", key.estimated_strength(), 64);
+      result.test_lt("Key has reasonable estimated strength (upper)", key.estimated_strength(), 512);
+
       // Test PEM public key round trips OK
       try
          {

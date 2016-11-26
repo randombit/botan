@@ -230,6 +230,8 @@ class Test
 
             bool test_ne(const std::string& what, size_t produced, size_t expected);
 
+            bool test_ne(const std::string& what, const std::string& str1, const std::string& str2);
+
 #if defined(BOTAN_HAS_BIGINT)
             bool test_eq(const std::string& what, const BigInt& produced, const BigInt& expected);
             bool test_ne(const std::string& what, const BigInt& produced, const BigInt& expected);

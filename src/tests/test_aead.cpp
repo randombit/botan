@@ -32,6 +32,8 @@ class AEAD_Tests : public Text_Based_Test
 
          std::unique_ptr<Botan::AEAD_Mode> enc(Botan::get_aead(algo, Botan::ENCRYPTION));
 
+         result.test_eq("AEAD encrypt output_length is correct", enc->output_length(input.size()), expected.size());
+
          // First some tests for reset() to make sure it resets what we need it to
          // set garbage values
          enc->set_key(mutate_vec(key));
@@ -131,6 +133,8 @@ class AEAD_Tests : public Text_Based_Test
          Test::Result result(algo);
 
          std::unique_ptr<Botan::AEAD_Mode> dec(Botan::get_aead(algo, Botan::DECRYPTION));
+
+         result.test_eq("AEAD decrypt output_length is correct", dec->output_length(input.size()), expected.size());
 
          // First some tests for reset() to make sure it resets what we need it to
          // set garbage values

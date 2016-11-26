@@ -95,7 +95,7 @@ class BOTAN_DLL GCM_Decryption final : public GCM_Mode
 
       size_t output_length(size_t input_length) const override
          {
-         BOTAN_ASSERT(input_length > tag_size(), "Sufficient input");
+         BOTAN_ASSERT(input_length >= tag_size(), "Sufficient input");
          return input_length - tag_size();
          }
 

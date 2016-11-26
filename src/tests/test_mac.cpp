@@ -46,7 +46,7 @@ class Message_Auth_Tests : public Text_Based_Test
 
             if(!mac)
                {
-               result.note_missing(algo + " from " + provider_ask);
+               result.test_failure("MAC " + algo + " supported by " + provider_ask + " but not found");
                continue;
                }
 
@@ -71,6 +71,13 @@ class Message_Auth_Tests : public Text_Based_Test
             mac->set_key(key);
             mac->start(iv);
             mac->update(input);
+
+            // Test that clone works and does not affect parent object
+            std::unique_ptr<Botan::MessageAuthenticationCode> clone(mac->clone());
+            result.confirm("Clone has different pointer", mac.get() != clone.get());
+            result.test_eq("Clone has same name", mac->name(), clone->name());
+            clone->set_key(key);
+            clone->update(Test::rng().random_vec(32));
 
             result.test_eq(provider + " correct mac", mac->verify_mac(expected.data(), expected.size()), true);
 

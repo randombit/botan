@@ -38,7 +38,7 @@ class Hash_Function_Tests : public Text_Based_Test
 
             if(!hash)
                {
-               result.note_missing(algo + " from " + provider_ask);
+               result.test_failure("Hash " + algo + " supported by " + provider_ask + " but not found");
                continue;
                }
 
@@ -63,11 +63,18 @@ class Hash_Function_Tests : public Text_Based_Test
 
             result.test_eq(provider, "hashing after clear", hash->final(), expected);
 
+            // TODO: feed in random pieces to fully test buffering
             if(input.size() > 1)
                {
                hash->update(input[0]);
                hash->update(&input[1], input.size() - 1);
                result.test_eq(provider, "hashing split", hash->final(), expected);
+               }
+
+            if(hash->hash_block_size() > 0)
+               {
+               // GOST-34.11 uses 32 byte block
+               result.test_gte("If hash_block_size is set, it is large", hash->hash_block_size(), 32);
                }
             }
 

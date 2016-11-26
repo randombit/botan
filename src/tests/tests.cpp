@@ -264,6 +264,16 @@ bool Test::Result::test_gte(const std::string& what, size_t produced, size_t exp
    return test_success();
    }
 
+bool Test::Result::test_ne(const std::string& what, const std::string& str1, const std::string& str2)
+   {
+   if(str1 != str2)
+      {
+      return test_success(str1 + " != " + str2);
+      }
+
+   return test_failure(who() + " " + what + " produced matching strings " + str1);
+   }
+
 bool Test::Result::test_ne(const std::string& what, size_t produced, size_t expected)
    {
    if(produced != expected)
@@ -272,7 +282,7 @@ bool Test::Result::test_ne(const std::string& what, size_t produced, size_t expe
       }
 
    std::ostringstream err;
-   err << who() << " " << what << " produced " << produced << " prohibited value";
+   err << who() << " " << what << " produced " << produced << " unexpected value";
    return test_failure(err.str());
    }
 

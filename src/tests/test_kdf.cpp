@@ -44,6 +44,11 @@ class KDF_KAT_Tests : public Text_Based_Test
          result.test_eq("name", kdf->name(), kdf_name);
          result.test_eq("derived key", kdf->derive_key(outlen, secret, salt, label), expected);
 
+         // Test that clone works
+         std::unique_ptr<Botan::KDF> clone(kdf->clone());
+         result.confirm("Clone has different pointer", kdf.get() != clone.get());
+         result.test_eq("Clone has same name", kdf->name(), clone->name());
+
          return result;
          }
 

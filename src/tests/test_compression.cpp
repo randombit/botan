@@ -75,6 +75,8 @@ class Compression_Tests : public Test
                   continue;
                   }
 
+               result.test_ne("Not the same name", c->name(), d->name());
+
                const Botan::secure_vector<uint8_t> empty;
                const Botan::secure_vector<uint8_t> all_zeros(text_len, 0);
                const Botan::secure_vector<uint8_t> random_binary = Test::rng().random_vec(text_len);

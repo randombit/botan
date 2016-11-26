@@ -36,7 +36,7 @@ class Block_Cipher_Tests : public Text_Based_Test
 
             if(!cipher)
                {
-               result.note_missing(algo + " from " + provider_ask);
+               result.test_failure("Cipher " + algo + " supported by " + provider_ask + " but not found");
                continue;
                }
 
@@ -54,6 +54,14 @@ class Block_Cipher_Tests : public Text_Based_Test
             cipher->clear();
 
             cipher->set_key(key);
+
+            // Test that clone works and does not affect parent object
+            std::unique_ptr<Botan::BlockCipher> clone(cipher->clone());
+            result.confirm("Clone has different pointer", cipher.get() != clone.get());
+            result.test_eq("Clone has same name", cipher->name(), clone->name());
+            clone->set_key(Test::rng().random_vec(cipher->maximum_keylength()));
+
+            // have called set_key on clone: process input values
             std::vector<uint8_t> buf = input;
 
             cipher->encrypt(buf);
@@ -67,6 +75,7 @@ class Block_Cipher_Tests : public Text_Based_Test
             cipher->clear();
 
             result.test_eq(provider, "decrypt", buf, input);
+
             }
 
          return result;
