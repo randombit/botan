@@ -272,12 +272,15 @@ def process_command_line(args):
     build_group = optparse.OptionGroup(parser, 'Build options')
 
     build_group.add_option('--with-debug-info', action='store_true', default=False, dest='with_debug_info',
-                           help='enable debug info')
+                           help='include debug symbols')
 
     build_group.add_option('--with-sanitizers', action='store_true', default=False, dest='with_sanitizers',
-                           help='enable runtime checks')
+                           help='enable ASan/UBSan checks')
 
     build_group.add_option('--with-coverage', action='store_true', default=False, dest='with_coverage',
+                           help='enable coverage checking and disable opts')
+
+    build_group.add_option('--with-coverage-info', action='store_true', default=False, dest='with_coverage_info',
                            help='enable coverage checking')
 
     build_group.add_option('--enable-shared-library', dest='build_shared_lib',
@@ -483,6 +486,7 @@ def process_command_line(args):
         options.with_debug_info = True
 
     if options.with_coverage:
+        options.with_coverage_info = True
         options.no_optimizations = True
 
     def parse_multiple_enable(modules):
@@ -939,7 +943,7 @@ class CompilerInfo(object):
             if flag != None and flag != '' and flag not in abi_link:
                 abi_link.append(flag)
 
-        if options.with_coverage:
+        if options.with_coverage_info:
             if self.coverage_flags == '':
                 raise Exception('No coverage handling for %s' % (self.basename))
             abi_link.append(self.coverage_flags)
@@ -1572,7 +1576,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         vars["gmake_dso_in"]      = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), vars) \
                                     if options.build_shared_lib else ''
         vars["gmake_coverage_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_coverage.in'), vars) \
-                                    if options.with_coverage else ''
+                                    if options.with_coverage_info else ''
 
     return vars
 

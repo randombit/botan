@@ -32,7 +32,7 @@ elif [ "$BUILD_MODE" = "parallel" ]; then
     fi
 
 elif [ "$BUILD_MODE" = "coverage" ]; then
-    CFG_FLAGS+=(--with-coverage)
+    CFG_FLAGS+=(--with-coverage --no-optimizations)
 elif [ "$BUILD_MODE" = "sanitizer" ]; then
     export ASAN_OPTIONS=detect_leaks=0
     CFG_FLAGS+=(--with-sanitizers --disable-modules=locking_allocator)
