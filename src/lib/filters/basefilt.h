@@ -12,7 +12,7 @@
 #include <botan/filter.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-#include <thread>
+  #include <thread>
 #endif
 
 namespace Botan {
