@@ -898,6 +898,52 @@ Test::Result test_tls_alert_strings()
    return result;
    }
 
+
+std::string read_tls_policy(const std::string& policy_str)
+   {
+   const std::string fspath = Test::data_file("tls-policy/" + policy_str + ".txt");
+
+   std::ifstream is(fspath.c_str());
+   if(!is.good())
+      throw Test_Error("Missing policy file " + fspath);
+
+   Botan::TLS::Text_Policy policy(is);
+   return policy.to_string();
+   }
+
+std::string tls_policy_string(const std::string& policy_str)
+   {
+   std::unique_ptr<Botan::TLS::Policy> policy;
+   if(policy_str == "default")
+      policy.reset(new Botan::TLS::Policy);
+   else if(policy_str == "suiteb")
+      policy.reset(new Botan::TLS::NSA_Suite_B_128);
+   else if(policy_str == "strict")
+      policy.reset(new Botan::TLS::Strict_Policy);
+   else if(policy_str == "datagram")
+      policy.reset(new Botan::TLS::Datagram_Policy);
+   else
+      throw Test_Error("Unknown TLS policy type '" + policy_str + "'");
+
+   return policy->to_string();
+   }
+
+Test::Result test_tls_policy()
+   {
+   Test::Result result("TLS Policy");
+
+   const std::vector<std::string> policies = { "default", "suiteb", "strict", "datagram" };
+
+   for(std::string policy : policies)
+      {
+      result.test_eq("Values for TLS " + policy + " policy",
+                     tls_policy_string(policy),
+                     read_tls_policy(policy));
+      }
+
+   return result;
+   }
+
 class TLS_Unit_Tests : public Test
    {
    private:
@@ -933,6 +979,9 @@ class TLS_Unit_Tests : public Test
          policy.set("macs", mac_policy);
          policy.set("key_exchange_methods", kex_policy);
          policy.set("negotiate_encrypt_then_mac", etm_policy);
+
+         if(kex_policy == "RSA")
+            policy.set("signature_methods", "RSA");
 
          std::vector<Botan::TLS::Protocol_Version> versions = {
             Botan::TLS::Protocol_Version::TLS_V10,
@@ -973,6 +1022,10 @@ class TLS_Unit_Tests : public Test
    public:
       std::vector<Test::Result> run() override
          {
+         std::vector<Test::Result> results;
+         results.push_back(test_tls_alert_strings());
+         results.push_back(test_tls_policy());
+
          Botan::RandomNumberGenerator& rng = Test::rng();
 
          std::unique_ptr<Botan::TLS::Session_Manager> client_ses;
@@ -991,7 +1044,6 @@ class TLS_Unit_Tests : public Test
 #endif
 
          std::unique_ptr<Botan::Credentials_Manager> creds(create_creds(rng));
-         std::vector<Test::Result> results;
 
 #if defined(BOTAN_HAS_TLS_CBC)
          for(std::string etm_setting : { "false", "true" })
@@ -1018,6 +1070,7 @@ class TLS_Unit_Tests : public Test
 
             server_ses->remove_all();
             }
+         client_ses->remove_all();
 
          test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256");
 #endif
@@ -1026,16 +1079,25 @@ class TLS_Unit_Tests : public Test
          test_with_policy(results, *client_ses, *server_ses, *creds,
                           {Botan::TLS::Protocol_Version::TLS_V12}, strict_policy);
 
+         Botan::TLS::NSA_Suite_B_128 suiteb_128;
+         test_with_policy(results, *client_ses, *server_ses, *creds,
+                          {Botan::TLS::Protocol_Version::TLS_V12}, suiteb_128);
+
+         // Remove server sessions before client, so clients retry with session server doesn't know
+         server_ses->remove_all();
+
          test_modern_versions(results, *client_ses, *server_ses, *creds, "RSA", "AES-128/GCM");
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM");
-
-         client_ses->remove_all();
 
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
                               { { "signature_methods", "RSA" } });
 
+         client_ses->remove_all();
+
 #if defined(BOTAN_HAS_CECPQ1)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "CECPQ1", "AES-256/GCM", "AEAD");
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "CECPQ1", "ChaCha20Poly1305", "AEAD",
+                              { { "signature_methods", "RSA" }});
 #endif
 
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
@@ -1062,6 +1124,8 @@ class TLS_Unit_Tests : public Test
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/OCB(12)");
 #endif
 
+         server_ses->remove_all();
+
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "ChaCha20Poly1305");
 #endif
@@ -1083,8 +1147,6 @@ class TLS_Unit_Tests : public Test
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
                                        { { "ecc_curves", BOTAN_HOUSE_ECC_CURVE_NAME } });
 #endif
-
-         results.push_back(test_tls_alert_strings());
 
          return results;
          }
