@@ -1,4 +1,5 @@
 define AUTO_SEEDING_RNG 20160821
+define AUTO_RNG 20161126
 
 <requires>
 hmac_drbg

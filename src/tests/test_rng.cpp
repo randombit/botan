@@ -12,6 +12,10 @@
   #include <botan/hmac_drbg.h>
 #endif
 
+#if defined(BOTAN_HAS_AUTO_RNG)
+  #include <botan/auto_rng.h>
+#endif
+
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
   #include <botan/entropy_src.h>
 #endif
@@ -539,6 +543,97 @@ class HMAC_DRBG_Unit_Tests : public Test
 BOTAN_REGISTER_TEST("hmac_drbg_unit", HMAC_DRBG_Unit_Tests);
 
 #endif
+
+#if defined(BOTAN_HAS_AUTO_RNG)
+
+class AutoSeeded_RNG_Tests : public Test
+   {
+   private:
+      Test::Result auto_rng_tests()
+         {
+         Test::Result result("AutoSeeded_RNG");
+
+         Botan::Entropy_Sources no_entropy_for_you;
+         Botan::Null_RNG null_rng;
+
+         result.test_eq("Null_RNG is null", null_rng.is_seeded(), false);
+
+         try
+            {
+            Botan::AutoSeeded_RNG rng(no_entropy_for_you);
+            result.test_failure("AutoSeeded_RNG should have rejected useless entropy source");
+            }
+         catch(Botan::PRNG_Unseeded&)
+            {
+            result.test_success("AutoSeeded_RNG rejected empty entropy source");
+            }
+
+         try
+            {
+            Botan::AutoSeeded_RNG rng(null_rng);
+            }
+         catch(Botan::PRNG_Unseeded&)
+            {
+            result.test_success("AutoSeeded_RNG rejected useless RNG");
+            }
+
+         try
+            {
+            Botan::AutoSeeded_RNG rng(null_rng,
+                                      no_entropy_for_you);
+            }
+         catch(Botan::PRNG_Unseeded&)
+            {
+            result.test_success("AutoSeeded_RNG rejected useless RNG+entropy sources");
+            }
+
+         Botan::AutoSeeded_RNG rng;
+
+         result.test_eq("AutoSeeded_RNG::name", rng.name(),
+                        std::string("HMAC_DRBG(") + BOTAN_AUTO_RNG_HMAC + ")");
+
+         result.confirm("AutoSeeded_RNG starts seeded", rng.is_seeded());
+         rng.random_vec(16); // generate and discard output
+         rng.clear();
+         result.test_eq("AutoSeeded_RNG unseeded after calling clear", rng.is_seeded(), false);
+
+         // AutoSeeded_RNG automatically reseeds as required:
+         rng.random_vec(16);
+         result.confirm("AutoSeeded_RNG can be reseeded", rng.is_seeded());
+
+         result.confirm("AutoSeeded_RNG ", rng.is_seeded());
+         rng.random_vec(16); // generate and discard output
+         rng.clear();
+         result.test_eq("AutoSeeded_RNG unseeded after calling clear", rng.is_seeded(), false);
+
+         const size_t no_entropy_bits = rng.reseed(no_entropy_for_you, 256, std::chrono::milliseconds(300));
+         result.test_eq("AutoSeeded_RNG can't reseed from nothing", no_entropy_bits, 0);
+         result.test_eq("AutoSeeded_RNG still unseeded", rng.is_seeded(), false);
+
+         rng.random_vec(16); // generate and discard output
+         result.confirm("AutoSeeded_RNG can be reseeded", rng.is_seeded());
+
+         rng.clear();
+
+         return result;
+         }
+
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+
+         results.push_back(auto_rng_tests());
+
+         return results;
+         }
+
+   };
+
+BOTAN_REGISTER_TEST("auto_rng_unit", AutoSeeded_RNG_Tests);
+
+#endif
+
 
 }
 

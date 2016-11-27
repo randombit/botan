@@ -193,7 +193,7 @@ class BOTAN_DLL Null_RNG final : public RandomNumberGenerator
 
       void randomize(byte[], size_t) override
          {
-         throw Exception("Null_RNG called");
+         throw PRNG_Unseeded("Null_RNG called");
          }
 
       void add_entropy(const byte[], size_t) override {}
