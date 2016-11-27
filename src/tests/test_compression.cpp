@@ -142,8 +142,8 @@ class Compression_Tests : public Test
 
 BOTAN_REGISTER_TEST("compression", Compression_Tests);
 
-#endif
-
 }
+
+#endif
 
 }
