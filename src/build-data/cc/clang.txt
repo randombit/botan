@@ -73,6 +73,8 @@ ivybridge   -> "-march=core-avx-i"
 <mach_abi_linking>
 all     -> "-pthread"
 
+openmp  -> "-fopenmp"
+
 x86_32  -> "-m32"
 x86_64  -> "-m64"
 ppc64   -> "-m64"

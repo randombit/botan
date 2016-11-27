@@ -8,6 +8,7 @@ bswap.h
 calendar.h
 charset.h
 cpuid.h
+compiler.h
 data_src.h
 database.h
 exceptn.h

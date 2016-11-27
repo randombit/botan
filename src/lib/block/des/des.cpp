@@ -144,12 +144,12 @@ void des_decrypt(u32bit& L, u32bit& R,
 */
 void DES::encrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(size_t i = 0; i != blocks; ++i)
+   for(size_t i = 0; i < blocks; ++i)
       {
-      u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
-                 (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
-                 (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
-                 (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
+      u64bit T = (DES_IPTAB1[in[8*i+0]]     ) | (DES_IPTAB1[in[8*i+1]] << 1) |
+                 (DES_IPTAB1[in[8*i+2]] << 2) | (DES_IPTAB1[in[8*i+3]] << 3) |
+                 (DES_IPTAB1[in[8*i+4]] << 4) | (DES_IPTAB1[in[8*i+5]] << 5) |
+                 (DES_IPTAB1[in[8*i+6]] << 6) | (DES_IPTAB2[in[8*i+7]]     );
 
       u32bit L = static_cast<u32bit>(T >> 32);
       u32bit R = static_cast<u32bit>(T);
@@ -162,10 +162,7 @@ void DES::encrypt_n(const byte in[], byte out[], size_t blocks) const
           (DES_FPTAB1[get_byte(2, R)]     ) | (DES_FPTAB2[get_byte(3, R)]     );
       T = rotate_left(T, 32);
 
-      store_be(T, out);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      store_be(T, out + 8*i);
       }
    }
 
@@ -174,12 +171,12 @@ void DES::encrypt_n(const byte in[], byte out[], size_t blocks) const
 */
 void DES::decrypt_n(const byte in[], byte out[], size_t blocks) const
    {
-   for(size_t i = 0; i != blocks; ++i)
+   for(size_t i = 0; i < blocks; ++i)
       {
-      u64bit T = (DES_IPTAB1[in[0]]     ) | (DES_IPTAB1[in[1]] << 1) |
-                 (DES_IPTAB1[in[2]] << 2) | (DES_IPTAB1[in[3]] << 3) |
-                 (DES_IPTAB1[in[4]] << 4) | (DES_IPTAB1[in[5]] << 5) |
-                 (DES_IPTAB1[in[6]] << 6) | (DES_IPTAB2[in[7]]     );
+      u64bit T = (DES_IPTAB1[in[BLOCK_SIZE*i+0]]     ) | (DES_IPTAB1[in[BLOCK_SIZE*i+1]] << 1) |
+                 (DES_IPTAB1[in[BLOCK_SIZE*i+2]] << 2) | (DES_IPTAB1[in[BLOCK_SIZE*i+3]] << 3) |
+                 (DES_IPTAB1[in[BLOCK_SIZE*i+4]] << 4) | (DES_IPTAB1[in[BLOCK_SIZE*i+5]] << 5) |
+                 (DES_IPTAB1[in[BLOCK_SIZE*i+6]] << 6) | (DES_IPTAB2[in[BLOCK_SIZE*i+7]]     );
 
       u32bit L = static_cast<u32bit>(T >> 32);
       u32bit R = static_cast<u32bit>(T);
@@ -193,10 +190,7 @@ void DES::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
       T = rotate_left(T, 32);
 
-      store_be(T, out);
-
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      store_be(T, out + BLOCK_SIZE*i);
       }
    }
 
