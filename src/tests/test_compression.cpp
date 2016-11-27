@@ -12,6 +12,8 @@
 
 namespace Botan_Tests {
 
+#if defined(BOTAN_HAS_COMPRESSION)
+
 namespace {
 
 const char* text_str =
@@ -49,8 +51,6 @@ const char* text_str =
    "Did gyre and gimble in the wabe:"
    "All mimsy were the borogoves,"
    "And the mome raths outgrabe.";
-
-#if defined(BOTAN_HAS_COMPRESSION)
 
 class Compression_Tests : public Test
    {
