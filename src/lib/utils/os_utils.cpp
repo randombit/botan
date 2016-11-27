@@ -273,6 +273,7 @@ void* allocate_locked_pages(size_t length)
 
    return ptr;
 #else
+   BOTAN_UNUSED(length);
    return nullptr; /* not implemented */
 #endif
    }

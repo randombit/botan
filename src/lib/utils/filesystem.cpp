@@ -118,6 +118,7 @@ std::vector<std::string> get_files_recursive(const std::string& dir)
 #elif defined(BOTAN_TARGET_OS_HAS_READDIR)
    files = impl_readdir(dir);
 #else
+   BOTAN_UNUSED(dir);
    throw No_Filesystem_Access();
 #endif
 
