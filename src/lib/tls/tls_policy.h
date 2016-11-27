@@ -284,6 +284,12 @@ class BOTAN_DLL Policy
       */
       virtual void print(std::ostream& o) const;
 
+      /**
+      * Convert this policy to a printable format.
+      * Same as calling `print` on a ostringstream and reading o.str()
+      */
+      std::string to_string() const;
+
       virtual ~Policy() {}
    };
 

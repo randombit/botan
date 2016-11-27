@@ -474,6 +474,13 @@ void Policy::print(std::ostream& o) const
    o << "minimum_signature_strength = " << minimum_signature_strength() << '\n';
    }
 
+std::string Policy::to_string() const
+   {
+   std::ostringstream oss;
+   this->print(oss);
+   return oss.str();
+   }
+
 std::vector<std::string> Strict_Policy::allowed_ciphers() const
    {
    return { "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM" };
