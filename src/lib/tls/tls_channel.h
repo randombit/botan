@@ -71,8 +71,9 @@ class BOTAN_DLL Channel
       /**
        * DEPRECATED. This constructor is only provided for backward
        * compatibility and should not be used in new implementations.
+       * (Not marked deprecated since it is only called internally, by
+       * other deprecated constructors)
        */
-      BOTAN_DEPRECATED("Use TLS::Channel(TLS::Callbacks ...)")
       Channel(output_fn out,
               data_cb app_data_cb,
               alert_cb alert_cb,
