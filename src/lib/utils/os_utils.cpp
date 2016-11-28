@@ -20,6 +20,7 @@
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_WINDOWS) || defined(BOTAN_TARGET_OS_IS_MINGW)
+  #define NOMINMAX 1
   #include <windows.h>
 #endif
 

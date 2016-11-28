@@ -12,6 +12,7 @@
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
   #include <dlfcn.h>
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
+  #define NOMINMAX 1
   #include <windows.h>
 #endif
 
