@@ -107,8 +107,10 @@ Pooling_Allocator::Pooling_Allocator(Mutex* m) : mutex(m)
 Pooling_Allocator::~Pooling_Allocator()
    {
    delete mutex;
+   #if 0
    if(blocks.size())
       throw Invalid_State("Pooling_Allocator: Never released memory");
+   #endif
    }
 
 /*

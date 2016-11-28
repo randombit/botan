@@ -45,8 +45,7 @@ Mutex* Pthread_Mutex_Factory::make()
 
          ~Pthread_Mutex()
             {
-            if(pthread_mutex_destroy(&mutex) != 0)
-               throw Invalid_State("~Pthread_Mutex: mutex is still locked");
+            pthread_mutex_destroy(&mutex);
             }
       private:
          pthread_mutex_t mutex;
