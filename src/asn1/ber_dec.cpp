@@ -8,6 +8,7 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/get_byte.h>
+#include <botan/internal/safeint.h>
 
 namespace Botan {
 
@@ -125,7 +126,9 @@ size_t find_eoc(DataSource* ber)
       size_t item_size = decode_length(&source, length_size);
       source.discard_next(item_size);
 
-      length += item_size + length_size + tag_size;
+      length = BOTAN_CHECKED_ADD(length, item_size);
+      length = BOTAN_CHECKED_ADD(length, tag_size);
+      length = BOTAN_CHECKED_ADD(length, length_size);
 
       if(type_tag == EOC && class_tag == UNIVERSAL)
          break;

@@ -20,6 +20,7 @@ ct_utils.h
 mlock.h
 prefetch.h
 rounding.h
+safeint.h
 stl_util.h
 xor_buf.h
 </header:internal>
