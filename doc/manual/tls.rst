@@ -705,6 +705,26 @@ policy settings from a file.
 
      Default: false
 
+ .. cpp:function:: size_t minimum_signature_strength() const
+
+     Return the minimum strength (as ``n``, representing ``2**n`` work)
+     we will accept for a signature algorithm on any certificate.
+
+     Use 80 to enable RSA-1024 (*not recommended*), or 128 to require
+     either ECC or large (~3000 bit) RSA keys.
+
+     Default: 110 (allowing 2048 bit RSA)
+
+ .. cpp:function:: bool require_cert_revocation_info() const
+
+     If this function returns true, and a ciphersuite using certificates was
+     negotiated, then we must have access to a valid CRL or OCSP response in
+     order to trust the certificate.
+
+     .. warning:: Returning false here could expose you to attacks
+
+     Default: true
+
  .. cpp:function:: std::string dh_group() const
 
      For ephemeral Diffie-Hellman key exchange, the server sends a

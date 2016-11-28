@@ -263,7 +263,8 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          if(cert_chain.empty())
             throw std::invalid_argument("Certificate chain was empty");
 
-         Botan::Path_Validation_Restrictions restrictions(true, policy.minimum_signature_strength());
+         Botan::Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
+                                                          policy.minimum_signature_strength());
 
          auto ocsp_timeout = std::chrono::milliseconds(1000);
 
