@@ -161,6 +161,11 @@ size_t Policy::minimum_signature_strength() const
    return 110;
    }
 
+bool Policy::require_cert_revocation_info() const
+   {
+   return true;
+   }
+
 size_t Policy::minimum_rsa_bits() const
    {
    /* Default assumption is all end-entity certificates should

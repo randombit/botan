@@ -36,7 +36,8 @@ void TLS::Callbacks::tls_verify_cert_chain(
    if(cert_chain.empty())
       throw Invalid_Argument("Certificate chain was empty");
 
-   Path_Validation_Restrictions restrictions(true, policy.minimum_signature_strength());
+   Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
+                                             policy.minimum_signature_strength());
 
    Path_Validation_Result result =
       x509_path_validate(cert_chain,

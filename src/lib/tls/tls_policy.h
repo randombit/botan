@@ -66,6 +66,13 @@ class BOTAN_DLL Policy
       */
       virtual size_t minimum_signature_strength() const;
 
+      /**
+      * Return if cert revocation info (CRL/OCSP) is required
+      * If true, validation will fail unless a valid CRL or OCSP response
+      * was examined.
+      */
+      virtual bool require_cert_revocation_info() const;
+
       bool allowed_signature_method(const std::string& sig_method) const;
 
       /**
