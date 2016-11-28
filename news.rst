@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 1.11.34, Not Yet Released
+Version 1.11.34, 2016-11-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix integer overflow during BER decoding, found by Falko Strenzke.
@@ -137,6 +137,22 @@ Version 1.11.34, Not Yet Released
   especially when using relative paths.
 
 * Add (back) the Perl XS wrapper and sqlite encryption code.
+
+Version 1.10.14, 2016-11-28
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* NOTE WELL: Botan 1.10.x is supported for security patches only until
+  2017-12-31
+
+* Fix integer overflow during BER decoding, found by Falko Strenzke.
+  This bug is not thought to be directly exploitable but upgrading ASAP
+  is advised. (CVE-2016-9132)
+
+* Fix two cases where (in error situations) an exception would be
+  thrown from a destructor, causing a call to std::terminate.
+
+* When RC4 is disabled in the build, also prevent it from being
+  included in the OpenSSL provider. (GH #638)
 
 Version 1.11.33, 2016-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

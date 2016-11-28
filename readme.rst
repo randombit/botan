@@ -103,9 +103,9 @@ Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and later,
 Clang 3.5 and later, and MSVC 2015 are regularly tested.
 
 The latest 1.11 release is
-`1.11.33 <http://botan.randombit.net/releases/Botan-1.11.33.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.33.tgz.asc>`_
-released on 2016-10-26
+`1.11.34 <http://botan.randombit.net/releases/Botan-1.11.34.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.11.34.tgz.asc>`_
+released on 2016-11-28
 
 Old Stable Series (1.10)
 ----------------------------------------
@@ -116,9 +116,9 @@ critical security updates (with all support ending on 2018-1-1), and the
 developers do not recommend its use anymore.
 
 The latest 1.10 release is
-`1.10.13 <http://botan.randombit.net/releases/Botan-1.10.13.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.10.13.tgz.asc>`_
-released on 2016-04-23
+`1.10.14 <http://botan.randombit.net/releases/Botan-1.10.14.tgz>`_
+`(sig) <http://botan.randombit.net/releases/Botan-1.10.14.tgz.asc>`_
+released on 2016-11-28
 
 Books and other resources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
