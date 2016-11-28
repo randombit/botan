@@ -30,6 +30,8 @@ Advisories
   cause an overflow on 64-bit the parsed data would have to be many gigabytes.
   Bug found by Falko Strenzke, cryptosource GmbH.
 
+  Fixed in 1.10.14 and 1.11.34, all prior versions affected.
+
 * 2016-10-26 (CVE-2016-8871) OAEP side channel
 
   A side channel in OAEP decoding could be used to distinguish RSA ciphertexts
