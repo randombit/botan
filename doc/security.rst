@@ -21,7 +21,7 @@ Advisories
 2016
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* 2016-11-27 (CVE-2016-xxxx) Integer overflow in BER decoder
+* 2016-11-27 (CVE-2016-9132) Integer overflow in BER decoder
 
   While decoding BER length fields, an integer overflow could occur. This could
   occur while parsing untrusted inputs such as X.509 certificates. The overflow
