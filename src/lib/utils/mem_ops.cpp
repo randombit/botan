@@ -8,6 +8,7 @@
 #include <botan/mem_ops.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
+  #define NOMINMAX 1
   #include <windows.h>
 #endif
 

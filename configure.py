@@ -129,7 +129,7 @@ class BuildConfigurationInformation(object):
         self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
         self.external_headers = sorted(flatten([m.external_headers() for m in modules]))
 
-        if options.via_amalgamation:
+        if options.amalgamation:
             self.build_sources = ['botan_all.cpp']
         else:
             self.build_sources = self.sources

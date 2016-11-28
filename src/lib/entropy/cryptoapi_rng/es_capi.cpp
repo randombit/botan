@@ -7,10 +7,9 @@
 
 #include <botan/internal/es_capi.h>
 #include <botan/parsing.h>
+#define NOMINMAX 1
 #include <windows.h>
 #include <wincrypt.h>
-#undef min
-#undef max
 
 namespace Botan {
 

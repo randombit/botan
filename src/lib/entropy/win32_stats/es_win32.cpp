@@ -6,6 +6,7 @@
 */
 
 #include <botan/internal/es_win32.h>
+#define NOMINMAX 1
 #include <windows.h>
 #include <tlhelp32.h>
 

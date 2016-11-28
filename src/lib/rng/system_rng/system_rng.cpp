@@ -10,9 +10,8 @@
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
 #include <windows.h>
+#define NOMINMAX 1
 #include <wincrypt.h>
-#undef min
-#undef max
 
 #else
 
