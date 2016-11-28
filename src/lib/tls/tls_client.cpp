@@ -13,6 +13,8 @@
 #include <iterator>
 #include <sstream>
 
+#include <botan/hex.h>
+
 namespace Botan {
 
 namespace TLS {
@@ -26,7 +28,7 @@ class Client_Handshake_State : public Handshake_State
 
       Client_Handshake_State(Handshake_IO* io, Callbacks& cb) : Handshake_State(io, cb) {}
 
-      const Public_Key& get_server_public_Key() const
+      const Public_Key& get_server_public_key() const
          {
          BOTAN_ASSERT(server_public_key, "Server sent us a certificate");
          return *server_public_key.get();
@@ -370,6 +372,28 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
       }
    else if(type == CERTIFICATE)
       {
+      state.server_certs(new Certificate(contents, policy()));
+
+      const std::vector<X509_Certificate>& server_certs =
+         state.server_certs()->cert_chain();
+
+      if(server_certs.empty())
+         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                             "Client: No certificates sent by server");
+
+      /*
+      Certificate verification happens after we receive the server hello done,
+      in case an OCSP response was also available
+      */
+
+      std::unique_ptr<Public_Key> peer_key(server_certs[0].subject_public_key());
+
+      if(peer_key->algo_name() != state.ciphersuite().sig_algo())
+         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
+                             "Certificate key type did not match ciphersuite");
+
+      state.server_public_key.reset(peer_key.release());
+
       if(state.ciphersuite().kex_algo() != "RSA")
          {
          state.set_expected_next(SERVER_KEX);
@@ -380,37 +404,24 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          state.set_expected_next(SERVER_HELLO_DONE);
          }
 
-      state.server_certs(new Certificate(contents, policy()));
-
-      const std::vector<X509_Certificate>& server_certs =
-         state.server_certs()->cert_chain();
-
-      if(server_certs.empty())
-         throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                             "Client: No certificates sent by server");
-
-      try
+      if(state.server_hello()->supports_certificate_status_message())
          {
-         auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-client", m_info.hostname());
-
-         callbacks().tls_verify_cert_chain(server_certs,
-                                           trusted_CAs,
-                                           Usage_Type::TLS_SERVER_AUTH,
-                                           m_info.hostname(),
-                                           policy());
+         state.set_expected_next(CERTIFICATE_STATUS); // optional
          }
-      catch(std::exception& e)
+      }
+   else if(type == CERTIFICATE_STATUS)
+      {
+      state.server_cert_status(new Certificate_Status(contents));
+
+      if(state.ciphersuite().kex_algo() != "RSA")
          {
-         throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
+         state.set_expected_next(SERVER_KEX);
          }
-
-      std::unique_ptr<Public_Key> peer_key(server_certs[0].subject_public_key());
-
-      if(peer_key->algo_name() != state.ciphersuite().sig_algo())
-         throw TLS_Exception(Alert::ILLEGAL_PARAMETER,
-                             "Certificate key type did not match ciphersuite");
-
-      state.server_public_key.reset(peer_key.release());
+      else
+         {
+         state.set_expected_next(CERTIFICATE_REQUEST); // optional
+         state.set_expected_next(SERVER_HELLO_DONE);
+         }
       }
    else if(type == SERVER_KEX)
       {
@@ -426,7 +437,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
 
       if(state.ciphersuite().sig_algo() != "")
          {
-         const Public_Key& server_key = state.get_server_public_Key();
+         const Public_Key& server_key = state.get_server_public_key();
 
          if(!state.server_kex()->verify(server_key, state, policy()))
             {
@@ -443,6 +454,29 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
    else if(type == SERVER_HELLO_DONE)
       {
       state.server_hello_done(new Server_Hello_Done(contents));
+
+      if(state.server_certs() != nullptr)
+         {
+         try
+            {
+            auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-client", m_info.hostname());
+
+            std::vector<std::shared_ptr<const OCSP::Response>> ocsp;
+            if(state.server_cert_status() != nullptr)
+               ocsp.push_back(state.server_cert_status()->response());
+
+            callbacks().tls_verify_cert_chain(state.server_certs()->cert_chain(),
+                                              ocsp,
+                                              trusted_CAs,
+                                              Usage_Type::TLS_SERVER_AUTH,
+                                              m_info.hostname(),
+                                              policy());
+            }
+         catch(std::exception& e)
+            {
+            throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
+            }
+         }
 
       if(state.received_handshake_msg(CERTIFICATE_REQUEST))
          {

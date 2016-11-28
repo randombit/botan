@@ -11,6 +11,7 @@
 
 #include <botan/tls_client.h>
 #include <botan/x509path.h>
+#include <botan/ocsp.h>
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
@@ -253,6 +254,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
       void tls_verify_cert_chain(
          const std::vector<Botan::X509_Certificate>& cert_chain,
+         const std::vector<std::shared_ptr<const Botan::OCSP::Response>>& ocsp,
          const std::vector<Botan::Certificate_Store*>& trusted_roots,
          Botan::Usage_Type usage,
          const std::string& hostname,
@@ -263,7 +265,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
          Botan::Path_Validation_Restrictions restrictions(true, policy.minimum_signature_strength());
 
-         auto ocsp_timeout = std::chrono::milliseconds(300);
+         auto ocsp_timeout = std::chrono::milliseconds(1000);
 
          Botan::Path_Validation_Result result =
             Botan::x509_path_validate(cert_chain,
@@ -272,7 +274,8 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                                       hostname,
                                       usage,
                                       std::chrono::system_clock::now(),
-                                      ocsp_timeout);
+                                      ocsp_timeout,
+                                      ocsp);
 
          std::cout << "Certificate validation status: " << result.result_string() << "\n";
          if(result.successful_validation())

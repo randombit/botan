@@ -568,7 +568,8 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
    const std::string& hostname,
    Usage_Type usage,
    std::chrono::system_clock::time_point ref_time,
-   std::chrono::milliseconds ocsp_timeout)
+   std::chrono::milliseconds ocsp_timeout,
+   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp)
    {
    if(end_certs.empty())
       throw Invalid_Argument("x509_path_validate called with no subjects");
@@ -601,7 +602,12 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
 
    std::vector<std::set<Certificate_Status_Code>> ocsp_status;
 
-   if(ocsp_timeout != std::chrono::milliseconds(0))
+   if(ocsp_resp.size() > 0)
+      {
+      ocsp_status = PKIX::check_ocsp(cert_path, ocsp_resp, trusted_roots, ref_time);
+      }
+
+   if(ocsp_status.empty() && ocsp_timeout != std::chrono::milliseconds(0))
       {
 #if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)
       ocsp_status = PKIX::check_ocsp_online(cert_path, trusted_roots, ref_time,
@@ -626,11 +632,12 @@ Path_Validation_Result x509_path_validate(
    const std::string& hostname,
    Usage_Type usage,
    std::chrono::system_clock::time_point when,
-   std::chrono::milliseconds ocsp_timeout)
+   std::chrono::milliseconds ocsp_timeout,
+   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp)
    {
    std::vector<X509_Certificate> certs;
    certs.push_back(end_cert);
-   return x509_path_validate(certs, restrictions, trusted_roots, hostname, usage, when, ocsp_timeout);
+   return x509_path_validate(certs, restrictions, trusted_roots, hostname, usage, when, ocsp_timeout, ocsp_resp);
    }
 
 Path_Validation_Result x509_path_validate(
@@ -640,12 +647,13 @@ Path_Validation_Result x509_path_validate(
    const std::string& hostname,
    Usage_Type usage,
    std::chrono::system_clock::time_point when,
-   std::chrono::milliseconds ocsp_timeout)
+   std::chrono::milliseconds ocsp_timeout,
+   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp)
    {
    std::vector<Certificate_Store*> trusted_roots;
    trusted_roots.push_back(const_cast<Certificate_Store*>(&store));
 
-   return x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, when, ocsp_timeout);
+   return x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, when, ocsp_timeout, ocsp_resp);
    }
 
 Path_Validation_Result x509_path_validate(
@@ -655,7 +663,8 @@ Path_Validation_Result x509_path_validate(
    const std::string& hostname,
    Usage_Type usage,
    std::chrono::system_clock::time_point when,
-   std::chrono::milliseconds ocsp_timeout)
+   std::chrono::milliseconds ocsp_timeout,
+   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp)
    {
    std::vector<X509_Certificate> certs;
    certs.push_back(end_cert);
@@ -663,7 +672,7 @@ Path_Validation_Result x509_path_validate(
    std::vector<Certificate_Store*> trusted_roots;
    trusted_roots.push_back(const_cast<Certificate_Store*>(&store));
 
-   return x509_path_validate(certs, restrictions, trusted_roots, hostname, usage, when, ocsp_timeout);
+   return x509_path_validate(certs, restrictions, trusted_roots, hostname, usage, when, ocsp_timeout, ocsp_resp);
    }
 
 Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,

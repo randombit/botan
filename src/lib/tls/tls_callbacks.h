@@ -108,8 +108,8 @@ class BOTAN_DLL Callbacks
        *
        * @param cert_chain specifies a certificate chain leading to a
        *        trusted root CA certificate.
+       * @param ocsp_responses the server may have provided some
        * @param trusted_roots the list of trusted certificates
-
        * @param usage what this cert chain is being used for
        *        Usage_Type::TLS_SERVER_AUTH for server chains,
        *        Usage_Type::TLS_CLIENT_AUTH for client chains,
@@ -123,6 +123,7 @@ class BOTAN_DLL Callbacks
        */
        virtual void tls_verify_cert_chain(
           const std::vector<X509_Certificate>& cert_chain,
+          const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses,
           const std::vector<Certificate_Store*>& trusted_roots,
           Usage_Type usage,
           const std::string& hostname,

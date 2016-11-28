@@ -218,6 +218,12 @@ void Handshake_State::server_certs(Certificate* server_certs)
    note_message(*m_server_certs);
    }
 
+void Handshake_State::server_cert_status(Certificate_Status* server_cert_status)
+   {
+   m_server_cert_status.reset(server_cert_status);
+   note_message(*m_server_cert_status);
+   }
+
 void Handshake_State::server_kex(Server_Key_Exchange* server_kex)
    {
    m_server_kex.reset(server_kex);
