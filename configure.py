@@ -1903,7 +1903,7 @@ def generate_amalgamation(build_config, options):
 
     amalg_header = """/*
 * Botan %s Amalgamation
-* (C) 1999-2013,2014,2015 Jack Lloyd and others
+* (C) 1999-2013,2014,2015,2016 Jack Lloyd and others
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
