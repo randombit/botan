@@ -2201,8 +2201,7 @@ def main(argv = None):
         raise Exception("--gen-amalgamation was removed. Migrate to --amalgamation.")
 
     if options.via_amalgamation:
-        logging.warn("--via-amalgamation is deprecated. Use --amalgamation.")
-        options.amalgamation = True
+        raise Exception("--via-amalgamation was removed. Use --amalgamation instead.")
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         raise Exception('Botan does not support building as shared library on the target os. '
