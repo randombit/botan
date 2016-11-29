@@ -47,7 +47,7 @@ like key agreement, the two keys *must* use the same group.  There are
 currently two kinds of discrete logarithm groups supported in botan: the
 integers modulo a prime, represented by :ref:`dl_group`, and elliptic curves
 in GF(p), represented by :ref:`ec_group`. A rough generalization is that the
-larger the group is, the more secure the algorithm is, but coorespondingly the
+larger the group is, the more secure the algorithm is, but correspondingly the
 slower the operations will be.
 
 Given a ``DL_Group``, you can create new DSA, Diffie-Hellman, and
@@ -71,7 +71,7 @@ Nyberg-Rueppel key pairs with
   :ref:`pbkdf` for how to do that) as a private key value. Normally, you would
   leave the value as zero, letting the class generate a new random key.
 
-Finally, given an ``EC_Group`` object, you can create a new ECDSA,
+Finally, given an ``EC_Group`` object, you can create a new ECDSA, ECKCDSA, ECGDSA,
 ECDH, or GOST 34.10-2001 private key with
 
 .. cpp:function:: ECDSA_PrivateKey::ECDSA_PrivateKey(RandomNumberGenerator& rng, \
@@ -466,6 +466,14 @@ Signature generation is performed using
      the current version of the library, this includes RSA, DSA, ECDSA, ECKCDSA, ECGDSA, GOST
      34.10-2001, Nyberg-Rueppel, and Rabin-Williams. Other signature schemes
      may be supported in the future.
+
+     .. note::
+
+       Botan both supports non-deterministic and deterministic (as per RFC
+       6979) DSA and ECDSA signatures. Deterministic signatures are compatible
+       in the way that they can be verified with a non-deterministic implementation.
+       If the ``rfc6979`` module is enabled, deterministic DSA and ECDSA signatures
+       will be generated.
 
      Currently available values for *emsa* include EMSA1, EMSA2, EMSA3, EMSA4,
      and Raw. All of them, except Raw, take a parameter naming a message
