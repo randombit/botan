@@ -6,6 +6,7 @@
 */
 
 #include <botan/kdf.h>
+#include <botan/mac.h>
 #include <botan/scan_name.h>
 #include <botan/exceptn.h>
 
