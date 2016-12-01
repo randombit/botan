@@ -14,7 +14,6 @@ ctr
 sha2_32
 sha2_64
 sha3
-shake
 
 # mac
 cmac
@@ -141,6 +140,7 @@ md4
 rmd160
 #sha1 // needed for tls
 #sha1_sse2 // needed for tls
+shake
 skein
 tiger
 whirlpool

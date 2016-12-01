@@ -88,7 +88,17 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
 
    Test::Result result(algo_name() + "/" + padding + " signature generation");
 
-   std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
+   std::unique_ptr<Botan::Private_Key> privkey;
+   try
+      {
+      privkey = load_private_key(vars);
+      }
+   catch(Botan::Lookup_Error& e)
+      {
+      result.note_missing(e.what());
+      return result;
+      }
+
    std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(Botan::X509::BER_encode(*privkey)));
 
    std::vector<std::unique_ptr<Botan::PK_Verifier>> verifiers;
