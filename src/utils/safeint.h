@@ -17,7 +17,7 @@ class Integer_Overflow_Detected : public Exception
    {
    public:
       Integer_Overflow_Detected(const std::string& file, int line) :
-         Exception("Integer overflow detected at " + file + ":" + std::to_string(line))
+         Exception("Integer overflow detected at " + file + ":" + to_string(line))
          {}
    };
 
