@@ -254,13 +254,13 @@ is quite convenient if you plan to embed the library into another application.
 
 To generate the amalgamation, run ``configure.py`` with whatever
 options you would ordinarily use, along with the option
-``--gen-amalgamation``. This will create two (rather large) files,
+``--amalgamation``. This will create two (rather large) files,
 ``botan_all.h`` and ``botan_all.cpp``, plus (unless the option
 ``--single-amalgmation-file`` is used) also some number of files like
 ``botan_all_aesni.cpp`` and ``botan_all_sse2.cpp`` which need to be
 compiled with the appropriate compiler flags to enable that
 instruction set. The ISA specific files are only generated if there is
-code that requires them, so you can simplify your build The
+code that requires them, so you can simplify your build. The
 ``--minimized-build`` option (described elsewhere in this documentation)
 is also quite useful with the amalgamation.
 
@@ -272,11 +272,14 @@ to take advantage of prepackaged versions of botan on operating
 systems that support it), you can instead ignore ``botan_all.h`` and
 use the headers from ``build/include`` as normal.
 
-You can also build the library as normal but using the amalgamation
-instead of the individual source files using ``--via-amalgamation``.
+You can also build the library using Botan's build system (as normal)
+but utilizing the amalgamation instead of the individual source files
+by running something like ``./configure.py --amalgamation && make``.
 This is essentially a very simple form of link time optimization;
 because the entire library source is visible to the compiler, it has
 more opportunities for interprocedural optimizations.
+Additionally, amalgamation builds usually have significantly shorter
+compile times for full rebuilds.
 
 Modules Relying on Third Party Libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
