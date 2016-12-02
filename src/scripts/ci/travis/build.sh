@@ -14,7 +14,7 @@ CFG_FLAGS+=(--with-pkcs11)
 CC_BIN=$CXX
 
 if [ "$BUILD_MODE" = "static" ] || [ "$BUILD_MODE" = "mini-static" ]; then
-    CFG_FLAGS+=(--disable-shared --via-amalgamation)
+    CFG_FLAGS+=(--disable-shared --amalgamation)
 elif [ "$BUILD_MODE" = "shared" ] || [ "$BUILD_MODE" = "mini-shared" ]; then
     # No special flags required for shared lib build
     CFG_FLAGS+=()
