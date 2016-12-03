@@ -5,7 +5,7 @@ which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if avai
 MAKE_PREFIX=()
 TEST_PREFIX=()
 TEST_EXE=./botan-test
-TEST_FLAGS=""
+TEST_FLAGS=()
 CFG_FLAGS=(--prefix=/tmp/botan-installation --cc=$CC --os=$TRAVIS_OS_NAME)
 
 # PKCS11 is optional but doesn't pull in new dependencies
@@ -54,7 +54,7 @@ elif [ "${BUILD_MODE:0:5}" != "cross" ]; then
 
     if [ "$BUILD_MODE" = "coverage" ]; then
         CFG_FLAGS+=(--with-tpm)
-        TEST_FLAGS="--run-online-tests --pkcs11-lib=/tmp/softhsm/lib/softhsm/libsofthsm2.so"
+        TEST_FLAGS=(--run-online-tests --pkcs11-lib=/tmp/softhsm/lib/softhsm/libsofthsm2.so)
     fi
 
     # Avoid OpenSSL when using dynamic checkers...
@@ -171,7 +171,7 @@ if [ "$BUILD_MODE" = "sonarqube" ] || [ "$BUILD_MODE" = "docs" ] || \
        ( [ "${BUILD_MODE:0:5}" = "cross" ] && [ "$TRAVIS_OS_NAME" = "osx" ] ); then
     echo "Running tests disabled on this build type"
 else
-    TEST_CMD=("${TEST_PREFIX[@]}" $TEST_EXE $TEST_FLAGS)
+    TEST_CMD=("${TEST_PREFIX[@]}" $TEST_EXE "${TEST_FLAGS[@]}")
     echo "Running" "${TEST_CMD[@]}"
     time "${TEST_CMD[@]}"
 fi
