@@ -76,7 +76,7 @@ if [ "$TRAVIS_OS_NAME" = "osx" ]; then
 
     if [ "$BUILD_MODE" != "cross-arm32" ] && [ "$BUILD_MODE" != "cross-arm64" ]; then
         brew install xz
-        brew install python # python2
+        # Python2 is already installed
         brew install python3
 
         # Boost 1.58 is installed on Travis OS X images
