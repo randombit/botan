@@ -46,7 +46,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<byte> x509_subject_public_key() const override;
+      std::vector<byte> public_key_bits() const override;
 
       size_t message_parts() const override { return 2; }
 

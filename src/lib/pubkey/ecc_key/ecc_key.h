@@ -55,7 +55,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<byte> x509_subject_public_key() const override;
+      std::vector<byte> public_key_bits() const override;
 
       bool check_key(RandomNumberGenerator& rng,
                      bool strong) const override;

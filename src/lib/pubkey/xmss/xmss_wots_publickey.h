@@ -261,9 +261,9 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
          return m_wots_params.estimated_strength();
          }
 
-      virtual std::vector<byte> x509_subject_public_key() const override
+      virtual std::vector<byte> public_key_bits() const override
          {
-         throw Not_Implemented("No x509 key format defined for XMSS-WOTS.");
+         throw Not_Implemented("No key format defined for XMSS-WOTS");
          }
 
       bool operator==(const XMSS_WOTS_PublicKey& key)

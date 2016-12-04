@@ -41,7 +41,7 @@ AlgorithmIdentifier RSA_PublicKey::algorithm_identifier() const
                               AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
-std::vector<byte> RSA_PublicKey::x509_subject_public_key() const
+std::vector<byte> RSA_PublicKey::public_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)

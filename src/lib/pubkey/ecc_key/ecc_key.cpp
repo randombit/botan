@@ -55,7 +55,7 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
    return AlgorithmIdentifier(get_oid(), DER_domain());
    }
 
-std::vector<byte> EC_PublicKey::x509_subject_public_key() const
+std::vector<byte> EC_PublicKey::public_key_bits() const
    {
    return unlock(EC2OSP(public_point(), PointGFp::COMPRESSED));
    }

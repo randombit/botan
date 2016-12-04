@@ -25,7 +25,7 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<byte> x509_subject_public_key() const override;
+      std::vector<byte> public_key_bits() const override;
 
       std::vector<byte> public_value() const { return m_public; }
 

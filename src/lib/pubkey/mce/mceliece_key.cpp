@@ -69,7 +69,7 @@ AlgorithmIdentifier McEliece_PublicKey::algorithm_identifier() const
    return AlgorithmIdentifier(get_oid(), std::vector<byte>());
    }
 
-std::vector<byte> McEliece_PublicKey::x509_subject_public_key() const
+std::vector<byte> McEliece_PublicKey::public_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)

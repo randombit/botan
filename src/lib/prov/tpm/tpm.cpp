@@ -349,7 +349,7 @@ AlgorithmIdentifier TPM_PrivateKey::algorithm_identifier() const
                               AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
-std::vector<byte> TPM_PrivateKey::x509_subject_public_key() const
+std::vector<byte> TPM_PrivateKey::public_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)

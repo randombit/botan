@@ -58,7 +58,7 @@ Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier&,
    size_check(m_public.size(), "public key");
    }
 
-std::vector<byte> Curve25519_PublicKey::x509_subject_public_key() const
+std::vector<byte> Curve25519_PublicKey::public_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
