@@ -1,5 +1,4 @@
 /*
-* PK Operation Types
 * (C) 2010,2015 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -7,6 +6,17 @@
 
 #ifndef BOTAN_PK_OPERATIONS_H__
 #define BOTAN_PK_OPERATIONS_H__
+
+/**
+* Ordinary applications should never need to include or use this
+* header. It is exposed only for specialized applications which want
+* to implement new versions of public key crypto without merging them
+* as changes to the library. One actual example of such usage is an
+* application which creates RSA signatures using a custom TPM library.
+* Unless you're doing something like that, you don't need anything
+* here. Instead use pubkey.h which wraps these types safely and
+* provides a stable application-oriented API.
+*/
 
 #include <botan/pk_keys.h>
 #include <botan/secmem.h>

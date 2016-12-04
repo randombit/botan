@@ -6,7 +6,7 @@
 */
 
 #include <botan/pk_keys.h>
-#include <botan/internal/pk_ops.h>
+#include <botan/pk_ops.h>
 #include <botan/der_enc.h>
 #include <botan/oids.h>
 #include <botan/hash.h>

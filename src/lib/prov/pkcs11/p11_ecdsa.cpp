@@ -11,7 +11,7 @@
 #if defined(BOTAN_HAS_ECDSA)
 
 #include <botan/internal/p11_mechanism.h>
-#include <botan/internal/pk_ops.h>
+#include <botan/pk_ops.h>
 #include <botan/keypair.h>
 #include <botan/rng.h>
 

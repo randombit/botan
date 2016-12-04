@@ -16,7 +16,7 @@
 #include <botan/types.h>
 #include <botan/xmss_publickey.h>
 #include <botan/xmss_common_ops.h>
-#include <botan/internal/pk_ops.h>
+#include <botan/pk_ops.h>
 #include <botan/internal/xmss_signature.h>
 
 namespace Botan {

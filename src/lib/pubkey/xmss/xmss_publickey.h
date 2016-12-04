@@ -23,7 +23,7 @@
 #include <botan/pk_keys.h>
 #include <botan/xmss_parameters.h>
 #include <botan/xmss_wots_parameters.h>
-#include <botan/internal/pk_ops.h>
+#include <botan/pk_ops.h>
 
 namespace Botan {
 

@@ -11,7 +11,7 @@
 #include <cstddef>
 #include <iterator>
 #include <botan/types.h>
-#include <botan/internal/pk_ops.h>
+#include <botan/pk_ops.h>
 #include <botan/internal/xmss_wots_addressed_publickey.h>
 #include <botan/internal/xmss_wots_common_ops.h>
 

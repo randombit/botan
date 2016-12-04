@@ -30,6 +30,7 @@ enum Signature_Format { IEEE_1363, DER_SEQUENCE };
 
 /**
 * Public Key Encryptor
+* This is the primary interface for public key encryption
 */
 class BOTAN_DLL PK_Encryptor
    {

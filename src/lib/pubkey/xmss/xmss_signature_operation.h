@@ -17,7 +17,7 @@
 #include <botan/xmss_privatekey.h>
 #include <botan/xmss_address.h>
 #include <botan/xmss_common_ops.h>
-#include <botan/internal/pk_ops.h>
+#include <botan/pk_ops.h>
 #include <botan/internal/xmss_signature.h>
 #include <botan/xmss_wots_publickey.h>
 
