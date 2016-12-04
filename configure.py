@@ -1903,7 +1903,7 @@ def generate_amalgamation(build_config, options):
 
     amalg_header = """/*
 * Botan %s Amalgamation
-* (C) 1999-2013,2014,2015 Jack Lloyd and others
+* (C) 1999-2013,2014,2015,2016 Jack Lloyd and others
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -2201,8 +2201,7 @@ def main(argv = None):
         raise Exception("--gen-amalgamation was removed. Migrate to --amalgamation.")
 
     if options.via_amalgamation:
-        logging.warn("--via-amalgamation is deprecated. Use --amalgamation.")
-        options.amalgamation = True
+        raise Exception("--via-amalgamation was removed. Use --amalgamation instead.")
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         raise Exception('Botan does not support building as shared library on the target os. '
