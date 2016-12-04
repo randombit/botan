@@ -86,16 +86,19 @@ information about the connection.
      reset the connection state.
 
  .. cpp::function:: void tls_verify_cert_chain(const std::vector<X509_Certificate>& cert_chain, \
+                   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses, \
                    const std::vector<Certificate_Store*>& trusted_roots, \
                    Usage_Type usage, \
-                   const std::string& hostname)
+                   const std::string& hostname, \
+                   const Policy& policy)
 
      Optional - default implementation should work for many users.
      It can be overrided for implementing extra validation routines
      such as public key pinning.
 
-     Verifies the certificate chain in *cert_chain*, assuming the
-     leaf certificate is the first element.
+     Verifies the certificate chain in *cert_chain*, assuming the leaf
+     certificate is the first element. Throws an exception if any
+     error makes this certificate chain unacceptable.
 
      If usage is `Usage_Type::TLS_SERVER_AUTH`, then *hostname* should
      match the information in the server certificate. If usage is
@@ -103,8 +106,19 @@ information about the connection.
      is authenticating against (from SNI); the callback can use this for
      any special site specific auth logic.
 
-     The `trusted_roots` parameter was returned by a call from the
-     associated `Credentials_Manager`.
+     The `ocsp_responses` is a possibly empty list of OCSP responses provided by
+     the server. In the current implementation of TLS OCSP stapling, only a
+     single OCSP response can be returned. A existing TLS extension allows the
+     server to send multiple OCSP responses, this extension may be supported in
+     the future in which case more than one OCSP response may be given during
+     this callback.
+
+     The `trusted_roots` parameter was returned by a call from the associated
+     `Credentials_Manager`.
+
+     The `policy` provided is the policy for the TLS session which is
+     being authenticated using this certificate chain. It can be consulted
+     for values such as allowable signature methods and key sizes.
 
  .. cpp::function:: std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
 
