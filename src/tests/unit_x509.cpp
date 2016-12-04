@@ -19,6 +19,7 @@
 #include <botan/pk_algs.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/oids.h>
 
 #endif
 
@@ -718,11 +719,12 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
 class String_Extension : public Botan::Certificate_Extension
    {
    public:
-      String_Extension(const Botan::OID& oid, const std::string& val) : m_oid(oid), m_contents(val) {}
+      String_Extension() : m_contents() {}
+      String_Extension(const std::string& val) : m_contents(val) {}
 
       std::string value() const { return m_contents; }
 
-      String_Extension* copy() const override { return new String_Extension(m_oid, m_contents); }
+      String_Extension* copy() const override { return new String_Extension(m_contents); }
 
       Botan::OID oid_of() const override { return m_oid; }
       std::string oid_name() const override { return "String Extension"; }
@@ -742,7 +744,7 @@ class String_Extension : public Botan::Certificate_Extension
       }
 
    private:
-      Botan::OID m_oid;
+      Botan::OID m_oid {"1.2.3.4.5.6.7.8.9.1"};
       std::string m_contents;
    };
 
@@ -780,22 +782,25 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
    // include a custom extension in the request
    Botan::Extensions req_extensions;
    Botan::OID oid("1.2.3.4.5.6.7.8.9.1");
-   req_extensions.add(new String_Extension(oid, "1Test"), false);
+   req_extensions.add(new String_Extension("1Test"), false);
    opts.extensions = req_extensions;
 
    /* Create a self-signed certificate */
    Botan::X509_Certificate self_signed_cert = Botan::X509::create_self_signed_cert(opts, *user_key, hash_fn, Test::rng());
 
-   // check if custom extension is present in cert
-   // it would be nice if we could use v3_extensions().extensions() instead
-   auto ext_raw = self_signed_cert.v3_extensions().extensions_raw();
-   if(result.confirm("Custom extension present in self-signed certificate", ext_raw.count(oid) > 0))
+   // check if known Key_Usage extension is present in self-signed cert
+   auto key_usage_ext = self_signed_cert.v3_extensions().get(Botan::OIDS::lookup("X509v3.KeyUsage"));
+   if(result.confirm("Key_Usage extension present in self-signed certificate", key_usage_ext != nullptr))
       {
-      std::vector<byte> in = ext_raw.at(oid).first;
-      String_Extension ext(oid, "");
-      ext.decode_inner(in);
+      result.confirm("Key_Usage extension value matches in self-signed certificate",
+            dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == opts.constraints);
+      }
 
-      result.confirm("Custom extension value matches in self-signed certificate", ext.value() == "1Test");
+   // check if custom extension is present in self-signed cert
+   auto string_ext = self_signed_cert.v3_extensions().get_raw<String_Extension>(oid);
+   if(result.confirm("Custom extension present in self-signed certificate", string_ext != nullptr))
+      {
+      result.test_eq("Custom extension value matches in self-signed certificate", string_ext->value(), "1Test");
       }
 
 
@@ -811,15 +816,20 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
                       from_date(2008, 01, 01),
                       from_date(2033, 01, 01));
 
-   ext_raw = user_cert.v3_extensions().extensions_raw();
-   if(result.confirm("Custom extension present in user certificate", ext_raw.count(oid) > 0))
-   {
-      std::vector<byte> in = ext_raw.at(oid).first;
-      String_Extension ext(oid, "");
-      ext.decode_inner(in);
+   // check if known Key_Usage extension is present in CA-signed cert
+   key_usage_ext = self_signed_cert.v3_extensions().get(Botan::OIDS::lookup("X509v3.KeyUsage"));
+   if(result.confirm("Key_Usage extension present in user certificate", key_usage_ext != nullptr))
+      {
+      result.confirm("Key_Usage extension value matches in user certificate",
+            dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == Botan::DIGITAL_SIGNATURE);
+      }
 
-      result.confirm("Custom extension value matches in user certificate", ext.value() == "1Test");
-   }
+   // check if custom extension is present in CA-signed cert
+   string_ext = user_cert.v3_extensions().get_raw<String_Extension>(oid);
+   if(result.confirm("Custom extension present in user certificate", string_ext != nullptr))
+      {
+      result.test_eq("Custom extension value matches in user certificate", string_ext->value(), "1Test");
+      }
 
    return result;
    }

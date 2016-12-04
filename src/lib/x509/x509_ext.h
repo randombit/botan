@@ -88,16 +88,40 @@ class BOTAN_DLL Extensions : public ASN1_Object
    public:
       void encode_into(class DER_Encoder&) const override;
       void decode_from(class BER_Decoder&) override;
-
       void contents_to(Data_Store&, Data_Store&) const;
 
+      /**
+      * Adds a new extension to the list.
+      * @param extn the certificate extension
+      * @param critical whether this extension should be marked as critical
+      * @throw Invalid_Argument if the extension is already present in the list
+      */
       void add(Certificate_Extension* extn, bool critical = false);
+
+      /**
+      * Adds an extension to the list or replaces it.
+      * @param extn the certificate extension
+      * @param critical whether this extension should be marked as critical
+      */
       void replace(Certificate_Extension* extn, bool critical = false);
 
-      Certificate_Extension* get(const OID& oid) const;
+      /**
+      * Searches for an extension by OID and returns the result.
+      * Only the known extensions types declared in this header
+      * are searched for by this function.
+      * @return Pointer to extension with oid, nullptr if not found.
+      */
+      std::unique_ptr<Certificate_Extension> get(const OID& oid) const;
 
+      /**
+      * Searches for an extension by OID and returns the result.
+      * Only the unknown extensions, that is, extensions
+      * types that are not declared in this header, are searched
+      * for by this function.
+      * @return Pointer to extension with oid, nullptr if not found.
+      */
       template<typename T>
-      std::unique_ptr<T> get_extension(const OID& oid)
+      std::unique_ptr<T> get_raw(const OID& oid)
       {
       try
          {
@@ -116,18 +140,32 @@ class BOTAN_DLL Extensions : public ASN1_Object
       return nullptr;
       }
 
+      /**
+      * Returns the list of extensions together with the corresponding
+      * criticality flag. Only contains the known extensions
+      * types declared in this header.
+      */
       std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> extensions() const;
 
+      /**
+      * Returns the list of extensions as raw, encoded bytes
+      * together with the corresponding criticality flag.
+      * Contains all extensions, known as well as unknown extensions.
+      */
       std::map<OID, std::pair<std::vector<byte>, bool>> extensions_raw() const;
 
       Extensions& operator=(const Extensions&);
 
       Extensions(const Extensions&);
 
+      /**
+      * @param st whether to throw an exception when encountering an unknown
+      * extension type during decoding
+      */
       explicit Extensions(bool st = true) : m_throw_on_unknown_critical(st) {}
 
    private:
-      static Certificate_Extension* get_extension(const OID&, bool);
+      static Certificate_Extension* create_extension(const OID&, bool);
 
       std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> m_extensions;
       bool m_throw_on_unknown_critical;

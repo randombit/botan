@@ -171,7 +171,7 @@ AlternativeName PKCS10_Request::subject_alt_name() const
 */
 Key_Constraints PKCS10_Request::constraints() const
    {
-   if(Certificate_Extension* ext = m_extensions.get(OIDS::lookup("X509v3.KeyUsage")))
+   if(auto ext = m_extensions.get(OIDS::lookup("X509v3.KeyUsage")))
       {
       return dynamic_cast<Cert_Extension::Key_Usage&>(*ext).get_constraints();
       }
@@ -184,7 +184,7 @@ Key_Constraints PKCS10_Request::constraints() const
 */
 std::vector<OID> PKCS10_Request::ex_constraints() const
    {
-   if(Certificate_Extension* ext = m_extensions.get(OIDS::lookup("X509v3.ExtendedKeyUsage")))
+   if(auto ext = m_extensions.get(OIDS::lookup("X509v3.ExtendedKeyUsage")))
       {
       return dynamic_cast<Cert_Extension::Extended_Key_Usage&>(*ext).get_oids();
       }
@@ -197,7 +197,7 @@ std::vector<OID> PKCS10_Request::ex_constraints() const
 */
 bool PKCS10_Request::is_CA() const
    {
-   if(Certificate_Extension* ext = m_extensions.get(OIDS::lookup("X509v3.BasicConstraints")))
+   if(auto ext = m_extensions.get(OIDS::lookup("X509v3.BasicConstraints")))
       {
       return dynamic_cast<Cert_Extension::Basic_Constraints&>(*ext).get_is_ca();
       }
@@ -210,7 +210,7 @@ bool PKCS10_Request::is_CA() const
 */
 size_t PKCS10_Request::path_limit() const
    {
-   if(Certificate_Extension* ext = m_extensions.get(OIDS::lookup("X509v3.BasicConstraints")))
+   if(auto ext = m_extensions.get(OIDS::lookup("X509v3.BasicConstraints")))
       {
       Cert_Extension::Basic_Constraints& basic_constraints = dynamic_cast<Cert_Extension::Basic_Constraints&>(*ext);
       if(basic_constraints.get_is_ca())

@@ -22,7 +22,7 @@ namespace Botan {
 /*
 * List of X.509 Certificate Extensions
 */
-Certificate_Extension* Extensions::get_extension(const OID& oid, bool critical)
+Certificate_Extension* Extensions::create_extension(const OID& oid, bool critical)
    {
 #define X509_EXTENSION(NAME, TYPE) \
    if(oid == OIDS::lookup(NAME)) { return new Cert_Extension::TYPE(); }
@@ -123,13 +123,13 @@ void Extensions::replace(Certificate_Extension* extn, bool critical)
    m_extensions_raw[extn->oid_of()] = std::make_pair(extn->encode_inner(), critical);
    }
 
-Certificate_Extension* Extensions::get(const OID& oid) const
+std::unique_ptr<Certificate_Extension> Extensions::get(const OID& oid) const
    {
    for(auto& ext : m_extensions)
       {
       if(ext.first->oid_of() == oid)
          {
-         return ext.first.get();
+         return std::unique_ptr<Certificate_Extension>(ext.first->copy());
          }
       }
 
@@ -224,7 +224,7 @@ void Extensions::decode_from(BER_Decoder& from_source)
 
       m_extensions_raw.emplace(oid, std::make_pair(value, critical));
 
-      std::unique_ptr<Certificate_Extension> ext(get_extension(oid, critical));
+      std::unique_ptr<Certificate_Extension> ext(create_extension(oid, critical));
 
       if(!ext && critical && m_throw_on_unknown_critical)
          throw Decoding_Error("Encountered unknown X.509 extension marked "
