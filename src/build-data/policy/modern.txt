@@ -101,7 +101,6 @@ md4
 gost_3411
 
 cfb
-ecb
 ofb
 
 elgamal

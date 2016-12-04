@@ -1,5 +1,5 @@
 /*
-* ECB/CBC Padding Methods
+* CBC Padding Methods
 * (C) 1999-2008,2013 Jack Lloyd
 * (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *

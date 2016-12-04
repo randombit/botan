@@ -1,5 +1,0 @@
-define MODE_ECB 20131128
-
-<requires>
-mode_pad
-</requires>
