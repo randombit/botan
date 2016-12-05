@@ -226,7 +226,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
                              const std::string&,
                              const std::string& provider) const override;
 
-      virtual secure_vector<byte> pkcs8_private_key() const override
+      virtual secure_vector<byte> private_key_bits() const override
          {
          throw Not_Implemented("No PKCS8 key format defined for XMSS-WOTS.");
          }

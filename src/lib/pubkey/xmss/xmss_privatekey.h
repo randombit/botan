@@ -203,7 +203,7 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
                              const std::string&,
                              const std::string& provider) const override;
 
-      virtual secure_vector<byte> pkcs8_private_key() const override
+      virtual secure_vector<byte> private_key_bits() const override
          {
          return raw_private_key();
          }

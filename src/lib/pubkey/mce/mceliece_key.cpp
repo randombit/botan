@@ -115,7 +115,7 @@ McEliece_PublicKey::McEliece_PublicKey(const std::vector<byte>& key_bits)
    m_code_length = n;
    }
 
-secure_vector<byte> McEliece_PrivateKey::pkcs8_private_key() const
+secure_vector<byte> McEliece_PrivateKey::private_key_bits() const
    {
    DER_Encoder enc;
    enc.start_cons(SEQUENCE)

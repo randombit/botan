@@ -132,7 +132,7 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
                     const secure_vector<byte>& key_bits,
                     bool with_modular_inverse=false);
 
-      secure_vector<byte> pkcs8_private_key() const override;
+      secure_vector<byte> private_key_bits() const override;
 
       /**
       * Get the private key value of this key object.

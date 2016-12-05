@@ -63,7 +63,7 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
          Test::Result result("McEliece keygen");
 
          result.test_eq("public key fingerprint", hash_bytes(mce_priv.public_key_bits()), fprint_pub);
-         result.test_eq("private key fingerprint", hash_bytes(mce_priv.pkcs8_private_key()), fprint_priv);
+         result.test_eq("private key fingerprint", hash_bytes(mce_priv.private_key_bits()), fprint_priv);
 
          rng.clear();
          rng.initialize_with(encrypt_seed.data(), encrypt_seed.size());
@@ -120,7 +120,7 @@ class McEliece_Tests : public Test
          if(!hash)
             throw Test_Error("Hash " + hash_algo + " not available");
 
-         hash->update(key.pkcs8_private_key());
+         hash->update(key.private_key_bits());
          return Botan::hex_encode(hash->final());
          }
 
@@ -154,7 +154,7 @@ class McEliece_Tests : public Test
                const Botan::McEliece_PublicKey& pk1 = sk1;
 
                const std::vector<byte> pk_enc = pk1.public_key_bits();
-               const Botan::secure_vector<byte> sk_enc = sk1.pkcs8_private_key();
+               const Botan::secure_vector<byte> sk_enc = sk1.private_key_bits();
 
                Botan::McEliece_PublicKey pk(pk_enc);
                Botan::McEliece_PrivateKey sk(sk_enc);

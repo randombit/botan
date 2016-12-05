@@ -38,12 +38,25 @@ OID Public_Key::get_oid() const
       }
    }
 
+secure_vector<byte> Private_Key::private_key_info() const
+   {
+   const size_t PKCS8_VERSION = 0;
+
+   return DER_Encoder()
+         .start_cons(SEQUENCE)
+            .encode(PKCS8_VERSION)
+            .encode(pkcs8_algorithm_identifier())
+            .encode(private_key_bits(), OCTET_STRING)
+         .end_cons()
+      .get_contents();
+   }
+
 /*
 * Hash of the PKCS #8 encoding for this key object
 */
 std::string Private_Key::fingerprint(const std::string& alg) const
    {
-   secure_vector<byte> buf = pkcs8_private_key();
+   secure_vector<byte> buf = private_key_bits();
    std::unique_ptr<HashFunction> hash(HashFunction::create(alg));
    hash->update(buf);
    const auto hex_print = hex_encode(hash->final());

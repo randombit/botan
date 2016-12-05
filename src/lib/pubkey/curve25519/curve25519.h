@@ -86,7 +86,7 @@ class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
 
       const secure_vector<byte>& get_x() const { return m_private; }
 
-      secure_vector<byte> pkcs8_private_key() const override;
+      secure_vector<byte> private_key_bits() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 

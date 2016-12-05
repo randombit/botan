@@ -99,7 +99,7 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
       OpenSSL_RSA_Decryption_Operation(const RSA_PrivateKey& rsa, int pad) :
          m_openssl_rsa(nullptr, ::RSA_free), m_padding(pad)
          {
-         const secure_vector<byte> der = rsa.pkcs8_private_key();
+         const secure_vector<byte> der = rsa.private_key_bits();
          const byte* der_ptr = der.data();
          m_openssl_rsa.reset(d2i_RSAPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
@@ -183,7 +183,7 @@ class OpenSSL_RSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
          PK_Ops::Signature_with_EMSA(emsa),
          m_openssl_rsa(nullptr, ::RSA_free)
          {
-         const secure_vector<byte> der = rsa.pkcs8_private_key();
+         const secure_vector<byte> der = rsa.private_key_bits();
          const byte* der_ptr = der.data();
          m_openssl_rsa.reset(d2i_RSAPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)

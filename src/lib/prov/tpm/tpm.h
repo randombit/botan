@@ -156,7 +156,7 @@ class BOTAN_DLL TPM_PrivateKey : public Private_Key
 
       std::vector<byte> public_key_bits() const override;
 
-      secure_vector<byte> pkcs8_private_key() const override;
+      secure_vector<byte> private_key_bits() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 

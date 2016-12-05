@@ -98,7 +98,7 @@ class BOTAN_DLL PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_PrivateKey
       /// @return the exported ECDSA private key
       ECDSA_PrivateKey export_key() const;
 
-      secure_vector<byte> pkcs8_private_key() const override;
+      secure_vector<byte> private_key_bits() const override;
 
       bool check_key(RandomNumberGenerator&, bool) const override;
 

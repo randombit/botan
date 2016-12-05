@@ -164,9 +164,14 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
    {
    public:
       /**
+      * @return BER encoded private key bits
+      */
+      virtual secure_vector<byte> private_key_bits() const = 0;
+
+      /**
       * @return PKCS #8 private key encoding for this key object
       */
-      virtual secure_vector<byte> pkcs8_private_key() const = 0;
+      secure_vector<byte> private_key_info() const;
 
       /**
       * @return PKCS #8 AlgorithmIdentifier for this key

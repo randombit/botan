@@ -359,7 +359,7 @@ std::vector<byte> TPM_PrivateKey::public_key_bits() const
       .get_contents_unlocked();
    }
 
-secure_vector<byte> TPM_PrivateKey::pkcs8_private_key() const
+secure_vector<byte> TPM_PrivateKey::private_key_bits() const
    {
    throw TPM_Error("PKCS #8 export not supported for TPM keys");
    }

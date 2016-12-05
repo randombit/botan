@@ -101,7 +101,7 @@ class BOTAN_DLL PKCS11_ECDH_PrivateKey final : public virtual PKCS11_EC_PrivateK
       /// @return the exported ECDH private key
       ECDH_PrivateKey export_key() const;
 
-      secure_vector<byte> pkcs8_private_key() const override;
+      secure_vector<byte> private_key_bits() const override;
 
       std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,

@@ -104,7 +104,7 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
 
       inline u32bit get_codimension() const { return m_codimension; }
 
-      secure_vector<byte> pkcs8_private_key() const override;
+      secure_vector<byte> private_key_bits() const override;
 
       bool operator==(const McEliece_PrivateKey & other) const;
 

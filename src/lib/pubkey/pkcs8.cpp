@@ -129,15 +129,8 @@ secure_vector<byte> PKCS8_decode(
 */
 secure_vector<byte> BER_encode(const Private_Key& key)
    {
-   const size_t PKCS8_VERSION = 0;
-
-   return DER_Encoder()
-         .start_cons(SEQUENCE)
-            .encode(PKCS8_VERSION)
-            .encode(key.pkcs8_algorithm_identifier())
-            .encode(key.pkcs8_private_key(), OCTET_STRING)
-         .end_cons()
-      .get_contents();
+   // keeping around for compat
+   return key.private_key_info();
    }
 
 /*

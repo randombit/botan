@@ -47,9 +47,9 @@ ECDSA_PrivateKey PKCS11_ECDSA_PrivateKey::export_key() const
    return ECDSA_PrivateKey(rng, domain(), BigInt::decode(priv_key));
    }
 
-secure_vector<byte> PKCS11_ECDSA_PrivateKey::pkcs8_private_key() const
+secure_vector<byte> PKCS11_ECDSA_PrivateKey::private_key_bits() const
    {
-   return export_key().pkcs8_private_key();
+   return export_key().private_key_bits();
    }
 
 namespace {
