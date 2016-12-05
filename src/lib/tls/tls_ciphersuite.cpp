@@ -43,7 +43,7 @@ bool Ciphersuite::cbc_ciphersuite() const
 Ciphersuite Ciphersuite::by_id(u16bit suite)
    {
    const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
-   auto s = std::lower_bound(all_suites.begin(), all_suites.end(), suite);
+   auto s = std::lower_bound(all_suites.begin(), all_suites.end() - 1, suite);
 
    if(s->ciphersuite_code() == suite)
       {
