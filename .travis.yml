@@ -6,7 +6,7 @@ os:
 
 dist: trusty
 sudo: required
-osx_image: xcode7
+osx_image: xcode8.2
 
 compiler:
   - clang
@@ -42,8 +42,6 @@ env:
 matrix:
   # Ignore some problem builds for now
   allow_failures:
-    - os: linux
-      env: BUILD_MODE="cross-ppc32"
     - os: linux
       env: BUILD_MODE="cross-win32"
 
