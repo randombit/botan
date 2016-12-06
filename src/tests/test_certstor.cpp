@@ -54,7 +54,7 @@ Test::Result test_certstor_insert_find_remove_test(
 
       if(priv)
          {
-         result.test_eq("Got wrong private key",key->pkcs8_private_key(),priv->pkcs8_private_key());
+         result.test_eq("Got wrong private key",key->private_key_bits(),priv->private_key_bits());
 
          auto rev_certs = store.find_certs_for_key(*priv);
 

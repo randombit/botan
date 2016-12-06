@@ -201,7 +201,7 @@ class BOTAN_DLL PKCS11_EC_PrivateKey : public virtual Private_Key,
 
       // Private_Key methods
 
-      std::vector<byte> x509_subject_public_key() const override;
+      std::vector<byte> public_key_bits() const override;
 
       std::size_t key_length() const override;
 

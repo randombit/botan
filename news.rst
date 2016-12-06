@@ -4,6 +4,13 @@ Release Notes
 Version 1.11.35, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Rename Public_Key::x509_subject_public_key, which does not return a
+  X.509 SubjectPublicKey, to public_key_bits. Add a new non-virtual function
+  Public_Key::subject_public_key which does exactly that. (GH #685)
+
+* Rename Private_Key::pkcs8_private_key, which does not return a 
+  PKCS#8 private key, to private_key_bits. Add a new non-virtual function
+  Private_Key::private_key_info which does exactly that. (GH #685)
 
 Version 1.11.34, 2016-11-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

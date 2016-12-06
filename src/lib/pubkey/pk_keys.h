@@ -74,9 +74,14 @@ class BOTAN_DLL Public_Key
       virtual AlgorithmIdentifier algorithm_identifier() const = 0;
 
       /**
+      * @return BER encoded public key bits
+      */
+      virtual std::vector<byte> public_key_bits() const = 0;
+
+      /**
       * @return X.509 subject key encoding for this key object
       */
-      virtual std::vector<byte> x509_subject_public_key() const = 0;
+      std::vector<byte> subject_public_key() const;
 
       // Internal or non-public declarations follow
 
@@ -159,9 +164,14 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
    {
    public:
       /**
+      * @return BER encoded private key bits
+      */
+      virtual secure_vector<byte> private_key_bits() const = 0;
+
+      /**
       * @return PKCS #8 private key encoding for this key object
       */
-      virtual secure_vector<byte> pkcs8_private_key() const = 0;
+      secure_vector<byte> private_key_info() const;
 
       /**
       * @return PKCS #8 AlgorithmIdentifier for this key

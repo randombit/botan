@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-std::vector<byte> GOST_3410_PublicKey::x509_subject_public_key() const
+std::vector<byte> GOST_3410_PublicKey::public_key_bits() const
    {
    const BigInt x = public_point().get_affine_x();
    const BigInt y = public_point().get_affine_y();

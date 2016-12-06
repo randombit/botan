@@ -349,7 +349,7 @@ AlgorithmIdentifier TPM_PrivateKey::algorithm_identifier() const
                               AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
-std::vector<byte> TPM_PrivateKey::x509_subject_public_key() const
+std::vector<byte> TPM_PrivateKey::public_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -359,9 +359,9 @@ std::vector<byte> TPM_PrivateKey::x509_subject_public_key() const
       .get_contents_unlocked();
    }
 
-secure_vector<byte> TPM_PrivateKey::pkcs8_private_key() const
+secure_vector<byte> TPM_PrivateKey::private_key_bits() const
    {
-   throw TPM_Error("PKCS #8 export not supported for TPM keys");
+   throw TPM_Error("Private key export not supported for TPM keys");
    }
 
 std::vector<uint8_t> TPM_PrivateKey::export_blob() const

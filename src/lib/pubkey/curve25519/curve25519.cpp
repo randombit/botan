@@ -58,7 +58,7 @@ Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier&,
    size_check(m_public.size(), "public key");
    }
 
-std::vector<byte> Curve25519_PublicKey::x509_subject_public_key() const
+std::vector<byte> Curve25519_PublicKey::public_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -88,7 +88,7 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
    size_check(m_private.size(), "private key");
    }
 
-secure_vector<byte> Curve25519_PrivateKey::pkcs8_private_key() const
+secure_vector<byte> Curve25519_PrivateKey::private_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)

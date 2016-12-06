@@ -41,7 +41,7 @@ class BOTAN_DLL RSA_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<byte> x509_subject_public_key() const override;
+      std::vector<byte> public_key_bits() const override;
 
       /**
       * @return public modulus
@@ -138,7 +138,7 @@ class BOTAN_DLL RSA_PrivateKey : public Private_Key, public RSA_PublicKey
       const BigInt& get_d1() const { return m_d1; }
       const BigInt& get_d2() const { return m_d2; }
 
-      secure_vector<byte> pkcs8_private_key() const override;
+      secure_vector<byte> private_key_bits() const override;
 
       std::unique_ptr<PK_Ops::Decryption>
          create_decryption_op(RandomNumberGenerator& rng,

@@ -101,9 +101,9 @@ RSA_PrivateKey PKCS11_RSA_PrivateKey::export_key() const
                          , BigInt::decode(n));
    }
 
-secure_vector<byte> PKCS11_RSA_PrivateKey::pkcs8_private_key() const
+secure_vector<byte> PKCS11_RSA_PrivateKey::private_key_bits() const
    {
-   return export_key().pkcs8_private_key();
+   return export_key().private_key_bits();
    }
 
 

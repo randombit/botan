@@ -106,7 +106,7 @@ size_t PKCS11_EC_PrivateKey::key_length() const
    return m_domain_params.get_order().bits();
    }
 
-std::vector<byte> PKCS11_EC_PrivateKey::x509_subject_public_key() const
+std::vector<byte> PKCS11_EC_PrivateKey::public_key_bits() const
    {
    return unlock(EC2OSP(public_point(), PointGFp::COMPRESSED));
    }

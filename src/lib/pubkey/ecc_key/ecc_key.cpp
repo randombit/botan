@@ -55,7 +55,7 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
    return AlgorithmIdentifier(get_oid(), DER_domain());
    }
 
-std::vector<byte> EC_PublicKey::x509_subject_public_key() const
+std::vector<byte> EC_PublicKey::public_key_bits() const
    {
    return unlock(EC2OSP(public_point(), PointGFp::COMPRESSED));
    }
@@ -110,7 +110,7 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
                 "Generated public key point was on the curve");
    }
 
-secure_vector<byte> EC_PrivateKey::pkcs8_private_key() const
+secure_vector<byte> EC_PrivateKey::private_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)

@@ -40,7 +40,7 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
       size_t key_length() const override;
       size_t estimated_strength() const override;
 
-      std::vector<byte> x509_subject_public_key() const override;
+      std::vector<byte> public_key_bits() const override;
 
       bool check_key(RandomNumberGenerator&, bool) const override
          { return true; }
@@ -104,7 +104,7 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
 
       inline u32bit get_codimension() const { return m_codimension; }
 
-      secure_vector<byte> pkcs8_private_key() const override;
+      secure_vector<byte> private_key_bits() const override;
 
       bool operator==(const McEliece_PrivateKey & other) const;
 

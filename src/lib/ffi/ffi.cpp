@@ -998,7 +998,7 @@ int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash_fn,
    {
    return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
       std::unique_ptr<Botan::HashFunction> h(Botan::HashFunction::create(hash_fn));
-      return write_vec_output(out, out_len, h->process(k.x509_subject_public_key()));
+      return write_vec_output(out, out_len, h->process(k.public_key_bits()));
       });
    }
 

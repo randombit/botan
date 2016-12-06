@@ -23,7 +23,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<byte> x509_subject_public_key() const override;
+      std::vector<byte> public_key_bits() const override;
 
       /**
       * Get the DL domain parameters of this key.
@@ -102,7 +102,7 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       */
       const BigInt& get_x() const { return m_x; }
 
-      secure_vector<byte> pkcs8_private_key() const override;
+      secure_vector<byte> private_key_bits() const override;
 
       /**
       * Create a private key.

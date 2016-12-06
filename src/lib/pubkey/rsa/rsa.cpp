@@ -41,7 +41,7 @@ AlgorithmIdentifier RSA_PublicKey::algorithm_identifier() const
                               AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
-std::vector<byte> RSA_PublicKey::x509_subject_public_key() const
+std::vector<byte> RSA_PublicKey::public_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -72,7 +72,7 @@ bool RSA_PublicKey::check_key(RandomNumberGenerator&, bool) const
    return true;
    }
 
-secure_vector<byte> RSA_PrivateKey::pkcs8_private_key() const
+secure_vector<byte> RSA_PrivateKey::private_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)

@@ -18,12 +18,8 @@ namespace X509 {
 
 std::vector<byte> BER_encode(const Public_Key& key)
    {
-   return DER_Encoder()
-         .start_cons(SEQUENCE)
-            .encode(key.algorithm_identifier())
-            .encode(key.x509_subject_public_key(), BIT_STRING)
-         .end_cons()
-      .get_contents_unlocked();
+   // keeping it around for compat
+   return key.subject_public_key();
    }
 
 /*
@@ -31,7 +27,7 @@ std::vector<byte> BER_encode(const Public_Key& key)
 */
 std::string PEM_encode(const Public_Key& key)
    {
-   return PEM_Code::encode(X509::BER_encode(key),
+   return PEM_Code::encode(key.subject_public_key(),
                            "PUBLIC KEY");
    }
 
