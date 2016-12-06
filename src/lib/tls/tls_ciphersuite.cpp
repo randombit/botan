@@ -45,7 +45,7 @@ Ciphersuite Ciphersuite::by_id(u16bit suite)
    const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
    auto s = std::lower_bound(all_suites.begin(), all_suites.end(), suite);
 
-   if(s->ciphersuite_code() == suite)
+   if(s != all_suites.end() && s->ciphersuite_code() == suite)
       {
       return *s;
       }

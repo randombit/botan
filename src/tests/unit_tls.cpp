@@ -1019,12 +1019,37 @@ class TLS_Unit_Tests : public Test
          return test_with_policy(results, client_ses, server_ses, creds, versions, policy);
          }
 
+      Test::Result test_tls_ciphersuites()
+         {
+         Test::Result result("TLS::Ciphersuite");
+
+         for(size_t csuite_id = 0; csuite_id <= 0xFFFF; ++csuite_id)
+            {
+            Botan::TLS::Ciphersuite ciphersuite = Botan::TLS::Ciphersuite::by_id(csuite_id);
+
+            if(ciphersuite.valid())
+               {
+               result.test_eq("Valid Ciphersuite is not SCSV", Botan::TLS::Ciphersuite::is_scsv(csuite_id), false);
+
+               if(ciphersuite.cbc_ciphersuite() == false)
+                  result.test_eq("Expected MAC name for AEAD ciphersuites", ciphersuite.mac_algo(), "AEAD");
+               else
+                  result.test_eq("MAC algo and PRF algo same for CBC suites", ciphersuite.prf_algo(), ciphersuite.mac_algo());
+
+               // TODO more tests here
+               }
+            }
+
+         return result;
+         }
+
    public:
       std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
          results.push_back(test_tls_alert_strings());
          results.push_back(test_tls_policy());
+         results.push_back(test_tls_ciphersuites());
 
          Botan::RandomNumberGenerator& rng = Test::rng();
 
