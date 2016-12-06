@@ -26,9 +26,10 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
         # The version of Sphinx in 14.04 is too old (1.2.2) and does not support
         # all C++ features used in the manual. Install python-requests to avoid
-        # strange Ubuntu bug http://stackoverflow.com/questions/32779919/no-module-named-for-requests
-        sudo apt-get install python-requests
-        sudo pip install sphinx
+        # problem in Ubuntu packaged version, see
+        # http://stackoverflow.com/questions/32779919/no-module-named-for-requests
+        sudo apt-get remove python-requests
+        sudo pip install requests sphinx
     fi
 
     if [ "$BUILD_MODE" = "coverage" ]; then
