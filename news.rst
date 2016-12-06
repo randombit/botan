@@ -4,13 +4,22 @@ Release Notes
 Version 1.11.35, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix deref of invalid memory location in TLS client when the server chooses a
+  ciphersuite value larger than the largest TLS ciphersuite ID compiled into the
+  table. This might conceivably cause a crash in rare circumstances, but does
+  not seem to be further exploitable. (GH #758)
+
 * Rename Public_Key::x509_subject_public_key, which does not return a
   X.509 SubjectPublicKey, to public_key_bits. Add a new non-virtual function
-  Public_Key::subject_public_key which does exactly that. (GH #685)
+  Public_Key::subject_public_key which does exactly that. (GH #685 #757)
 
-* Rename Private_Key::pkcs8_private_key, which does not return a 
+* Rename Private_Key::pkcs8_private_key, which does not return a
   PKCS#8 private key, to private_key_bits. Add a new non-virtual function
-  Private_Key::private_key_info which does exactly that. (GH #685)
+  Private_Key::private_key_info which does exactly that. (GH #685 #757)
+
+* The deprecated ECB Cipher_Mode class has been removed (GH #756)
+
+* Fix tests errors when write only access to /dev/urandom is prohibited (GH #748)
 
 Version 1.11.34, 2016-11-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
