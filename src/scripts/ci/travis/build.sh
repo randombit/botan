@@ -57,8 +57,9 @@ elif [ "${BUILD_MODE:0:5}" != "cross" ]; then
         TEST_FLAGS=(--run-online-tests --pkcs11-lib=/tmp/softhsm/lib/softhsm/libsofthsm2.so)
     fi
 
-    # Avoid OpenSSL when using dynamic checkers...
-    if [ "$BUILD_MODE" != "sanitizer" ] && [ "$BUILD_MODE" != "valgrind" ]; then
+    # Avoid OpenSSL when using dynamic checkers, or on OS X where it sporadically
+    # is not installed on the CI image
+    if [ "$TRAVIS_OS_NAME" != "osx" ] && [ "$BUILD_MODE" != "sanitizer" ] && [ "$BUILD_MODE" != "valgrind" ]; then
         CFG_FLAGS+=(--with-openssl)
     fi
 fi
