@@ -88,8 +88,6 @@ Version 1.11.34, 2016-11-28
 
 * Export the public key workfactor functions (GH #734) and add tests for them.
 
-* Add MessageAuthenticationCode::start_msg interface for providing nonce (GH #691)
-
 * HMAC_DRBG allows configuring maximum number of bytes before reseed check (GH #690)
 
 * Salsa20 now accepts a null IV as equivalent to an all-zero one (GH #697)
