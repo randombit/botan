@@ -23,8 +23,11 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
     if [ "$BUILD_MODE" = "docs" ]; then
         sudo apt-get install doxygen
-        # The version of Sphinx in 14.04 is too old (1.2.2)
-        # and does not support all C++ features used in the manual
+
+        # The version of Sphinx in 14.04 is too old (1.2.2) and does not support
+        # all C++ features used in the manual. Install python-requests to avoid
+        # strange Ubuntu bug http://stackoverflow.com/questions/32779919/no-module-named-for-requests
+        sudo apt-get install python-requests
         sudo pip install sphinx
     fi
 
