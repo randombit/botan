@@ -103,7 +103,6 @@ eax
 ocb
 siv
 cfb
-ecb
 
 # stream
 chacha

@@ -18,10 +18,6 @@
   #include <botan/aead.h>
 #endif
 
-#if defined(BOTAN_HAS_MODE_ECB)
-  #include <botan/ecb.h>
-#endif
-
 #if defined(BOTAN_HAS_MODE_CBC)
   #include <botan/cbc.h>
 #endif
@@ -137,20 +133,6 @@ Cipher_Mode* get_cipher_mode(const std::string& algo, Cipher_Dir direction)
          return new CFB_Encryption(bc.release(), feedback_bits);
       else
          return new CFB_Decryption(bc.release(), feedback_bits);
-      }
-#endif
-
-#if defined(BOTAN_HAS_MODE_ECB)
-   if(spec.algo_name() == "ECB")
-      {
-      std::unique_ptr<BlockCipherModePaddingMethod> pad(get_bc_pad(spec.arg(1, "NoPadding")));
-      if(pad)
-         {
-         if(direction == ENCRYPTION)
-            return new ECB_Encryption(bc.release(), pad.release());
-         else
-            return new ECB_Decryption(bc.release(), pad.release());
-         }
       }
 #endif
 

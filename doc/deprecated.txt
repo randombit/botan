@@ -8,8 +8,6 @@ in the source.
 
 Currently deprecated:
 
-- ECB Cipher_Mode for block ciphers
-
 - 3DES and SEED ciphersuites in TLS
 
 - DSA ciphersuites/certs in TLS
