@@ -26,6 +26,7 @@
   #include <sys/socket.h>
   #include <netdb.h>
   #include <unistd.h>
+  #include <netinet/in.h>
 #else
   //#warning "No network support enabled in http_util"
 #endif
