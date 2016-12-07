@@ -293,7 +293,7 @@ The result of the validation is returned as a class:
      implicitly trusted for this validation to be correct.
 
 
-A :cpp:class:`Path_Validation_Restrictions` is passed to the path
+A ``Path_Validation_Restrictions`` is passed to the path
 validator and specifies restrictions and options for the validation
 step. The two constructors are:
 

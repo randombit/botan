@@ -1089,7 +1089,7 @@ implements the :cpp:class:`Hardware_RNG` interface.
 
    .. cpp:function:: PKCS11_RNG(Session& session)
 
-      A PKCS#11 :cpp:class:`Session` must be passed to instantiate a :cpp:class:`PKCS11_RNG`.
+      A PKCS#11 :cpp:class:`Session` must be passed to instantiate a ``PKCS11_RNG``.
 
    .. cpp:function:: void randomize(Botan::byte output[], std::size_t length) override
 
