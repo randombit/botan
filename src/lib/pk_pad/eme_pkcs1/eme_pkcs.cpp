@@ -48,6 +48,12 @@ secure_vector<byte> EME_PKCS1v15::pad(const byte in[], size_t inlen,
 secure_vector<byte> EME_PKCS1v15::unpad(byte& valid_mask,
                                         const byte in[], size_t inlen) const
    {
+   if(inlen < 2)
+      {
+      valid_mask = false;
+      return secure_vector<byte>();
+      }
+
    CT::poison(in, inlen);
 
    byte bad_input_m = 0;
