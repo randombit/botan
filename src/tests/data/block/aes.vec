@@ -1,3 +1,5 @@
+# Test vectors from NIST CAVP AESAVS
+# http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf
 
 #test cpuid aesni ssse3
 

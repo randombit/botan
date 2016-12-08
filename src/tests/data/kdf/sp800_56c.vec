@@ -1,3 +1,7 @@
+# Generated using PyCryptodome
+# it implements the very similar HKDF from RFC 5869,
+# which was slightly modified to be equivalent to SP800-56C
+
 [SP800-56C(HMAC(SHA-160))]
 OutputLen = 2
 Salt = 97ca00eac481e8b3556a
