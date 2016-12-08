@@ -20,9 +20,9 @@ reference to a ``Public_Key``, it can take any public key or private key, and
 similiarly for ``Private_Key``.
 
 Types of ``Public_Key`` include ``RSA_PublicKey``, ``DSA_PublicKey``,
-``ECDSA_PublicKey``, ``ECKCDSA_PublicKey``, ``ECGDSA_PublicKey``, ``DH_PublicKey``, ``ECDH_PublicKey``, ``RW_PublicKey``,
-``NR_PublicKey``,, and ``GOST_3410_PublicKey``.  There are cooresponding
-``Private_Key`` classes for each of these algorithms.
+``ECDSA_PublicKey``, ``ECKCDSA_PublicKey``, ``ECGDSA_PublicKey``, ``DH_PublicKey``, ``ECDH_PublicKey``,
+``Curve25519_PublicKey``, ``ElGamal_PublicKey``, ``McEliece_PublicKey``, ``XMSS_PublicKey``
+and ``GOST_3410_PublicKey``.  There are cooresponding ``Private_Key`` classes for each of these algorithms.
 
 .. _creating_new_private_keys:
 
@@ -50,16 +50,12 @@ in GF(p), represented by :ref:`ec_group`. A rough generalization is that the
 larger the group is, the more secure the algorithm is, but correspondingly the
 slower the operations will be.
 
-Given a ``DL_Group``, you can create new DSA, Diffie-Hellman, and
-Nyberg-Rueppel key pairs with
+Given a ``DL_Group``, you can create new DSA, Diffie-Hellman and ElGamal key pairs with
 
 .. cpp:function:: DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng, \
    const DL_Group& group, const BigInt& x = 0)
 
 .. cpp:function:: DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng, \
-   const DL_Group& group, const BigInt& x = 0)
-
-.. cpp:function:: NR_PrivateKey::NR_PrivateKey(RandomNumberGenerator& rng, \
    const DL_Group& group, const BigInt& x = 0)
 
 .. cpp:function:: ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng, \
@@ -245,17 +241,16 @@ Instantiating a ``DL_Group`` simply requires calling
 
   Currently all "modp" groups included in botan are ones defined by the
   Internet Engineering Task Force, so the provider is "ietf", and the strings
-  look like "modp/ietf/N" where N can be any of 768, 1024, 1536, 2048, 3072,
+  look like "modp/ietf/N" where N can be any of 1024, 1536, 2048, 3072,
   4096, 6144, or 8192. This group type is used for Diffie-Hellman and ElGamal
   algorithms.
 
-  The other type, "dsa" is used for DSA and Nyberg-Rueppel keys.  They can
-  also be used with Diffie-Hellman and ElGamal, but this is less common. The
-  currently available groups are "dsa/jce/N" for N in 512, 768, or 1024, and
-  "dsa/botan/N" with N being 2048 or 3072.  The "jce" groups are the standard
-  DSA groups used in the Java Cryptography Extensions, while the "botan"
-  groups were randomly generated using the FIPS 186-3 algorithm by the library
-  maintainers.
+  The other type, "dsa" is used for DSA keys. They can also be used with
+  Diffie-Hellman and ElGamal, but this is less common. The currently available
+  groups are "dsa/jce/1024" and "dsa/botan/N" with N being 2048 or 3072.  The
+  "jce" groups are the standard DSA groups used in the Java Cryptography
+  Extensions, while the "botan" groups were randomly generated using the
+  FIPS 186-3 algorithm by the library maintainers.
 
 You can generate a new random group using
 
@@ -370,12 +365,14 @@ The primary interface for encryption is
       than this the operation will fail with an exception.
 
 :cpp:class:`PK_Encryptor` is only an interface - to actually encrypt you have
-to create an implementation, of which there are currently two available in the
-library, :cpp:class:`PK_Encryptor_EME` and :cpp:class:`DLIES_Encryptor`. DLIES
-is a standard method (from IEEE 1363) that uses a key agreement technique such
-as DH or ECDH to perform message encryption. Normally, public key encryption
-is done using algorithms which support it directly, such as RSA or ElGamal;
-these use the EME class:
+to create an implementation, of which there are currently three available in the
+library, :cpp:class:`PK_Encryptor_EME`, :cpp:class:`DLIES_Encryptor` and
+:cpp:class:`ECIES_Encryptor`. DLIES is a hybrid encryption scheme (from
+IEEE 1363) that uses the DH key agreement technique in combination with a KDF, a
+MAC and a symmetric encryption algorithm to perform message encryption. ECIES is
+similar to DLIES, but uses ECDH for the key agreement. Normally, public key
+encryption is done using algorithms which support it directly, such as RSA or
+ElGamal; these use the EME class:
 
 .. cpp:class:: PK_Encryptor_EME
 
@@ -392,16 +389,48 @@ these use the EME class:
 
    Available in the header ``dlies.h``
 
-   .. cpp:function:: DLIES_Encryptor(const PK_Key_Agreement_Key& key, \
-         KDF* kdf, MessageAuthenticationCode* mac, size_t mac_key_len = 20)
+   .. cpp:function:: DLIES_Encryptor(const DH_PrivateKey& own_priv_key, \
+         RandomNumberGenerator& rng, KDF* kdf, MessageAuthenticationCode* mac, \
+         size_t mac_key_len = 20)
 
       Where *kdf* is a key derivation function (see
       :ref:`key_derivation_function`) and *mac* is a
-      MessageAuthenticationCode.
+      MessageAuthenticationCode. The encryption is performed by XORing the
+      message with a stream of bytes provided by the KDF.
 
-The decryption classes are named ``PK_Decryptor``, ``PK_Decryptor_EME``, and
-``DLIES_Decryptor``. They are created in the exact same way, except they take
-the private key, and the processing function is named ``decrypt``.
+   .. cpp:function:: DLIES_Encryptor(const DH_PrivateKey& own_priv_key, \
+         RandomNumberGenerator& rng, KDF* kdf, Cipher_Mode* cipher, \
+         size_t cipher_key_len, MessageAuthenticationCode* mac, \
+         size_t mac_key_len = 20)
+
+      Instead of XORing the message a block cipher can be specified.
+
+.. cpp:class:: ECIES_Encryptor
+
+   Available in the header ``ecies.h``.
+
+   Parameters for encryption and decryption are set by the
+   :cpp:class:`ECIES_System_Params` class which stores the EC domain parameters,
+   the KDF (see :ref:`key_derivation_function`), the cipher (see
+   :ref:`symmetric_crypto`) and the MAC.
+
+   .. cpp:function:: ECIES_Encryptor(const PK_Key_Agreement_Key& private_key, \
+         const ECIES_System_Params& ecies_params, \
+         RandomNumberGenerator& rng)
+
+      Where *private_key* is the key to use for the key agreement. The system
+      paramters are specified in *ecies_params* and the RNG to use is passed in
+      *rng*.
+
+   .. cpp:function:: ECIES_Encryptor(RandomNumberGenerator& rng, \
+         const ECIES_System_Params& ecies_params)
+
+      Creates an ephemeral private key which is used for the key agreement.
+
+The decryption classes are named :cpp:class:`PK_Decryptor`,
+:cpp:class:`PK_Decryptor_EME`, :cpp:class:`DLIES_Decryptor` and
+:cpp:class:`ECIES_Decryptor`. They are created in the exact same way, except
+they take the private key, and the processing function is named ``decrypt``.
 
 
 Botan implements the following encryption algorithms and padding schemes:
@@ -463,9 +492,8 @@ Signature generation is performed using
 
      Constructs a new signer object for the private key *key* using the
      signature format *emsa*. The key must support signature operations.  In
-     the current version of the library, this includes RSA, DSA, ECDSA, ECKCDSA, ECGDSA, GOST
-     34.10-2001, Nyberg-Rueppel, and Rabin-Williams. Other signature schemes
-     may be supported in the future.
+     the current version of the library, this includes RSA, DSA, ECDSA, ECKCDSA,
+     ECGDSA, GOST 34.10-2001. Other signature schemes may be supported in the future.
 
      .. note::
 
@@ -484,11 +512,11 @@ Signature generation is performed using
 
      For RSA, use EMSA4 (also called PSS) unless you need compatibility with
      software that uses the older PKCS #1 v1.5 standard, in which case use
-     EMSA3 (also called "EMSA-PKCS1-v1_5"). For DSA, ECDSA, ECKCDSA, ECGDSA GOST 34.10-2001,
-     and Nyberg-Rueppel, you should use EMSA1.
+     EMSA3 (also called "EMSA-PKCS1-v1_5"). For DSA, ECDSA, ECKCDSA, ECGDSA and
+     GOST 34.10-2001 you should use EMSA1.
 
      The *format* defaults to ``IEEE_1363`` which is the only available
-     format for RSA. For DSA and ECDSA, you can also use
+     format for RSA. For DSA, ECDSA, ECGDSA and ECKCDSA you can also use
      ``DER_SEQUENCE``, which will format the signature as an ASN.1
      SEQUENCE value.
 
@@ -580,17 +608,17 @@ and a ECDSA signature using EMSA1 with SHA-256. Subsequently the computed signat
   int main()
     {
     Botan::AutoSeeded_RNG rng;
-    //Generate ECDSA keypair
+    // Generate ECDSA keypair
     Botan::ECDSA_PrivateKey key(rng, Botan::EC_Group("secp521r1"));
 
     std::string text("This is a tasty burger!");
     std::vector<uint8_t> data(text.data(),text.data()+text.length());
-    //sign data
+    // sign data
     Botan::PK_Signer signer(key, rng, "EMSA1(SHA-256)");
     signer.update(data);
     std::vector<uint8_t> signature = signer.signature(rng);
     std::cout << "Signature:" << std::endl << Botan::hex_encode(signature);
-    //verify signature
+    // verify signature
     Botan::PK_Verifier verifier(key, "EMSA1(SHA-256)");
     verifier.update(data);
     std::cout << std::endl << "is " << (verifier.check_signature(signature)? "valid" : "invalid");
@@ -667,16 +695,16 @@ applies the key derivation function KDF2(SHA-256) with 256 bit output length to 
   int main()
      {
      Botan::AutoSeeded_RNG rng
-     //ec domain and
+     // ec domain and
      Botan::EC_Group domain("secp521r1");
      std::string kdf = "KDF2(SHA-256)";
-     //generate ECDH keys
+     // generate ECDH keys
      Botan::ECDH_PrivateKey keyA(rng, domain);
      Botan::ECDH_PrivateKey keyB(rng, domain);
-     //Construct key agreements
+     // Construct key agreements
      Botan::PK_Key_Agreement ecdhA(keyA,rng,kdf);
      Botan::PK_Key_Agreement ecdhB(keyB,rng,kdf);
-     //Agree on shared secret and derive symmetric key of 256 bit length
+     // Agree on shared secret and derive symmetric key of 256 bit length
      Botan::secure_vector<uint8_t> sA = ecdhA.derive_key(32,keyB.public_value()).bits_of();
      Botan::secure_vector<uint8_t> sB = ecdhB.derive_key(32,keyA.public_value()).bits_of();
 
