@@ -602,6 +602,20 @@ std::string Text_Based_Test::get_opt_str(const VarMap& vars,
    return i->second;
    }
 
+bool Text_Based_Test::get_req_bool(const VarMap& vars, const std::string& key) const
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      throw Test_Error("Test missing variable " + key);
+
+   if(i->second == "true")
+      return true;
+   else if(i->second == "false")
+      return false;
+   else
+      throw Test_Error("Invalid boolean for key '" + key + "' value '" + i->second + "'");
+   }
+
 size_t Text_Based_Test::get_req_sz(const VarMap& vars, const std::string& key) const
    {
    auto i = vars.find(key);

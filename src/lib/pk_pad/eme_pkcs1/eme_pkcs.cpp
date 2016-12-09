@@ -69,7 +69,7 @@ secure_vector<byte> EME_PKCS1v15::unpad(byte& valid_mask,
 
       delim_idx += CT::select<byte>(~seen_zero_m, 1, 0);
 
-      bad_input_m |= is_zero_m & CT::expand_mask<byte>(i < 9);
+      bad_input_m |= is_zero_m & CT::expand_mask<byte>(i < 10);
       seen_zero_m |= is_zero_m;
       }
 

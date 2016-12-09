@@ -430,6 +430,8 @@ class Text_Based_Test : public Test
 
       virtual std::vector<Test::Result> run_final_tests() { return std::vector<Test::Result>(); }
 
+      bool get_req_bool(const VarMap& vars, const std::string& key) const;
+
       std::vector<uint8_t> get_req_bin(const VarMap& vars, const std::string& key) const;
       std::vector<uint8_t> get_opt_bin(const VarMap& vars, const std::string& key) const;
 
