@@ -30,7 +30,7 @@ Public Key Crypto, Math
 ----------------------------------------
 
 * SPHINCS-256
-* EdDSA (GH #283)
+* Ed25519 / EdDSA (GH #283)
 * Ed448-Goldilocks
 * FHMQV
 * Support mixed hashes and non-empty param strings in OAEP
@@ -155,7 +155,6 @@ Documentation
 ----------------------------------------
 
 * TPM (no docs)
-* PKCS #11 (no docs)
 * X.509 certs, path validation
 * Specific docs covering one major topic (RSA, ECDSA, AES/GCM, ...)
 * Some howto style docs (setting up CA, ...)
