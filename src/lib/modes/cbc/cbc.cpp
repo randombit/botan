@@ -19,8 +19,8 @@ CBC_Mode::CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding) :
    {
    if(m_padding && !m_padding->valid_blocksize(cipher->block_size()))
       throw Invalid_Argument("Padding " + m_padding->name() +
-                                  " cannot be used with " +
-                                  cipher->name() + "/CBC");
+                             " cannot be used with " +
+                             cipher->name() + "/CBC");
    }
 
 void CBC_Mode::clear()
@@ -243,6 +243,10 @@ void CBC_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
 
    const size_t pad_bytes = BS - padding().unpad(&buffer[buffer.size()-BS], BS);
    buffer.resize(buffer.size() - pad_bytes); // remove padding
+   if(pad_bytes == 0 && padding().name() != "NoPadding")
+      {
+      throw Decoding_Error(name());
+      }
    }
 
 void CBC_Decryption::reset()

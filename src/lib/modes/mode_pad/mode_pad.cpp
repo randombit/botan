@@ -8,6 +8,7 @@
 
 #include <botan/mode_pad.h>
 #include <botan/exceptn.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -52,16 +53,23 @@ void PKCS7_Padding::add_padding(secure_vector<byte>& buffer,
 */
 size_t PKCS7_Padding::unpad(const byte block[], size_t size) const
    {
-   size_t position = block[size-1];
+   CT::poison(block,size);
+   size_t bad_input = 0;
+   const byte last_byte = block[size-1];
 
-   if(position > size)
-      throw Decoding_Error("Bad padding in " + name());
+   bad_input |= CT::expand_mask(last_byte > size);
 
-   for(size_t j = size-position; j != size-1; ++j)
-      if(block[j] != position)
-         throw Decoding_Error("Bad padding in " + name());
+   size_t pad_pos = size - last_byte;
+   size_t i = size - 2;
+   while(i)
+      {
+      bad_input |= ~CT::is_equal(block[i],last_byte) & CT::expand_mask(i >= pad_pos);
+      --i;
+      }
 
-   return (size-position);
+   CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
+   CT::unpoison(block,size);
+   return pad_pos;
    }
 
 /*
@@ -85,13 +93,22 @@ void ANSI_X923_Padding::add_padding(secure_vector<byte>& buffer,
 */
 size_t ANSI_X923_Padding::unpad(const byte block[], size_t size) const
    {
-   size_t position = block[size-1];
-   if(position > size)
-      throw Decoding_Error(name());
-   for(size_t j = size-position; j != size-1; ++j)
-      if(block[j] != 0)
-         throw Decoding_Error(name());
-   return (size-position);
+   CT::poison(block,size);
+   size_t bad_input = 0;
+   const size_t last_byte = block[size-1];
+
+   bad_input |= CT::expand_mask(last_byte > size);
+
+   size_t pad_pos = size - last_byte;
+   size_t i = size - 2;
+   while(i)
+      {
+      bad_input |= ~CT::is_zero(block[i]) & CT::expand_mask(i >= pad_pos);
+      --i;
+      }
+   CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
+   CT::unpoison(block,size);
+   return pad_pos;
    }
 
 /*
@@ -112,25 +129,33 @@ void OneAndZeros_Padding::add_padding(secure_vector<byte>& buffer,
 */
 size_t OneAndZeros_Padding::unpad(const byte block[], size_t size) const
    {
-   while(size)
+   CT::poison(block, size);
+   byte bad_input = 0;
+   byte seen_one = 0;
+   size_t pad_pos = size - 1;
+   size_t i = size;
+
+   while(i)
       {
-      if(block[size-1] == 0x80)
-         break;
-      if(block[size-1] != 0x00)
-         throw Decoding_Error(name());
-      size--;
+      seen_one |= CT::is_equal<byte>(block[i-1],0x80);
+      pad_pos -= CT::select<byte>(~seen_one, 1, 0);
+      bad_input |= ~CT::is_zero<byte>(block[i-1]) & ~seen_one;
+      i--;
       }
-   if(!size)
-      throw Decoding_Error(name());
-   return (size-1);
+   bad_input |= ~seen_one;
+
+   CT::conditional_copy_mem(size_t(bad_input),&pad_pos,&size,&pad_pos,1);
+   CT::unpoison(block, size);
+
+   return pad_pos;
    }
 
 /*
 * Pad with ESP Padding Method
 */
 void ESP_Padding::add_padding(secure_vector<byte>& buffer,
-                                      size_t last_byte_pos,
-                                      size_t block_size) const
+                              size_t last_byte_pos,
+                              size_t block_size) const
    {
    byte pad_value = 0x01;
 
@@ -145,26 +170,21 @@ void ESP_Padding::add_padding(secure_vector<byte>& buffer,
 */
 size_t ESP_Padding::unpad(const byte block[], size_t size) const
    {
-   const byte last_byte = block[size-1];
-   if(last_byte > size)
-      {
-      throw Decoding_Error(name());
-      }
+   CT::poison(block,size);
 
-   // try to do this in const time by looping over the entire block
-   const size_t pad_pos = size - last_byte;
+   const size_t last_byte = block[size-1];
+   size_t bad_input = 0;
+   bad_input |= CT::expand_mask(last_byte > size);
+
+   size_t pad_pos = size - last_byte;
    size_t i = size - 1;
    while(i)
       {
-      if(block[i-1] != block[i]-1)
-         {
-         if(i > pad_pos)
-            {
-            throw Decoding_Error(name());
-            }
-         }
+      bad_input |= ~CT::is_equal<size_t>(size_t(block[i-1]),size_t(block[i])-1) & CT::expand_mask(i > pad_pos);
       --i;
       }
+   CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
+   CT::unpoison(block, size);
    return pad_pos;
    }
 
