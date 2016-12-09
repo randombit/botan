@@ -65,7 +65,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
       constraints = opts.constraints;
       }
 
-   Extensions extensions;
+   Extensions extensions = opts.extensions;
 
    extensions.add(
       new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit),
@@ -119,7 +119,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       constraints = opts.constraints;
       }
 
-   Extensions extensions;
+   Extensions extensions = opts.extensions;
 
    extensions.add(
       new Cert_Extension::Basic_Constraints(opts.is_CA, opts.path_limit));

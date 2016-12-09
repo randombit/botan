@@ -17,6 +17,9 @@
 #include <botan/x509path.h>
 #include <botan/x509_ca.h>
 #include <botan/pk_algs.h>
+#include <botan/ber_dec.h>
+#include <botan/der_enc.h>
+#include <botan/oids.h>
 
 #endif
 
@@ -710,6 +713,126 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
    return result;
    }
 
+/**
+ * @brief X.509v3 extension that encodes a given string
+ */
+class String_Extension : public Botan::Certificate_Extension
+   {
+   public:
+      String_Extension() : m_contents() {}
+      String_Extension(const std::string& val) : m_contents(val) {}
+
+      std::string value() const { return m_contents; }
+
+      String_Extension* copy() const override { return new String_Extension(m_contents); }
+
+      Botan::OID oid_of() const override { return m_oid; }
+      std::string oid_name() const override { return "String Extension"; }
+
+      void contents_to(Botan::Data_Store&, Botan::Data_Store&) const override {}
+
+      std::vector<byte> encode_inner() const override
+      {
+         return Botan::DER_Encoder().encode(Botan::ASN1_String(m_contents, Botan::UTF8_STRING)).get_contents_unlocked();
+      }
+
+      void decode_inner(const std::vector<byte>& in) override
+      {
+         Botan::ASN1_String str;
+         Botan::BER_Decoder(in).decode(str, Botan::UTF8_STRING).verify_end();
+         m_contents = str.value();
+      }
+
+   private:
+      Botan::OID m_oid {"1.2.3.4.5.6.7.8.9.1"};
+      std::string m_contents;
+   };
+
+Test::Result test_x509_extensions(const std::string& sig_algo, const std::string& hash_fn = "SHA-256")
+   {
+   using Botan::Key_Constraints;
+
+   Test::Result result("X509 Extensions");
+
+   /* Create the CA's key and self-signed cert */
+   std::unique_ptr<Botan::Private_Key> ca_key(make_a_private_key(sig_algo));
+
+   if(!ca_key)
+      {
+      // Failure because X.509 enabled but requested signature algorithm is not present
+      result.test_note("Skipping due to missing signature algorithm: " + sig_algo);
+      return result;
+      }
+
+   /* Create the self-signed cert */
+   Botan::X509_Certificate ca_cert =
+        Botan::X509::create_self_signed_cert(ca_opts(),
+                                           *ca_key,
+                                           hash_fn,
+                                           Test::rng());
+
+   /* Create the CA object */
+   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn);
+
+   std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
+
+   Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
+   opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
+
+   // include a custom extension in the request
+   Botan::Extensions req_extensions;
+   Botan::OID oid("1.2.3.4.5.6.7.8.9.1");
+   req_extensions.add(new String_Extension("1Test"), false);
+   opts.extensions = req_extensions;
+
+   /* Create a self-signed certificate */
+   Botan::X509_Certificate self_signed_cert = Botan::X509::create_self_signed_cert(opts, *user_key, hash_fn, Test::rng());
+
+   // check if known Key_Usage extension is present in self-signed cert
+   auto key_usage_ext = self_signed_cert.v3_extensions().get(Botan::OIDS::lookup("X509v3.KeyUsage"));
+   if(result.confirm("Key_Usage extension present in self-signed certificate", key_usage_ext != nullptr))
+      {
+      result.confirm("Key_Usage extension value matches in self-signed certificate",
+            dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == opts.constraints);
+      }
+
+   // check if custom extension is present in self-signed cert
+   auto string_ext = self_signed_cert.v3_extensions().get_raw<String_Extension>(oid);
+   if(result.confirm("Custom extension present in self-signed certificate", string_ext != nullptr))
+      {
+      result.test_eq("Custom extension value matches in self-signed certificate", string_ext->value(), "1Test");
+      }
+
+
+   Botan::PKCS10_Request user_req =
+        Botan::X509::create_cert_req(opts,
+                                      *user_key,
+                                      hash_fn,
+                                      Test::rng());
+
+   /* Create a CA-signed certificate */
+   Botan::X509_Certificate user_cert =
+      ca.sign_request(user_req, Test::rng(),
+                      from_date(2008, 01, 01),
+                      from_date(2033, 01, 01));
+
+   // check if known Key_Usage extension is present in CA-signed cert
+   key_usage_ext = self_signed_cert.v3_extensions().get(Botan::OIDS::lookup("X509v3.KeyUsage"));
+   if(result.confirm("Key_Usage extension present in user certificate", key_usage_ext != nullptr))
+      {
+      result.confirm("Key_Usage extension value matches in user certificate",
+            dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == Botan::DIGITAL_SIGNATURE);
+      }
+
+   // check if custom extension is present in CA-signed cert
+   string_ext = user_cert.v3_extensions().get_raw<String_Extension>(oid);
+   if(result.confirm("Custom extension present in user certificate", string_ext != nullptr))
+      {
+      result.test_eq("Custom extension value matches in user certificate", string_ext->value(), "1Test");
+      }
+
+   return result;
+   }
 
 class X509_Cert_Unit_Tests : public Test
    {
@@ -722,6 +845,7 @@ class X509_Cert_Unit_Tests : public Test
          Test::Result cert_result("X509 Unit");
          Test::Result usage_result("X509 Usage");
          Test::Result self_issued_result("X509 Self Issued");
+         Test::Result extensions_result("X509 Extensions");
 
          for(const auto& algo : sig_algos)
             {
@@ -748,11 +872,20 @@ class X509_Cert_Unit_Tests : public Test
                {
                self_issued_result.test_failure("test_self_issued " + algo, e.what());
                }
+
+            try {
+              extensions_result.merge(test_x509_extensions(algo));
+            }
+            catch(std::exception& e)
+               {
+               extensions_result.test_failure("test_extensions " + algo, e.what());
+               }
             }
 
          results.push_back(cert_result);
          results.push_back(usage_result);
          results.push_back(self_issued_result);
+         results.push_back(extensions_result);
 
          const std::vector<std::string> pk_algos { "DH", "ECDH", "RSA", "ElGamal", "GOST-34.10",
                                                    "DSA", "ECDSA", "ECGDSA", "ECKCDSA" };

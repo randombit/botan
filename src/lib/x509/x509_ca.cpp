@@ -63,24 +63,24 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
       constraints = req.constraints();
       }
 
-   Extensions extensions;
+   Extensions extensions = req.extensions();
 
-   extensions.add(
+   extensions.replace(
       new Cert_Extension::Basic_Constraints(req.is_CA(), req.path_limit()),
       true);
 
    if(constraints != NO_CONSTRAINTS)
       {
-      extensions.add(new Cert_Extension::Key_Usage(constraints), true);
+      extensions.replace(new Cert_Extension::Key_Usage(constraints), true);
       }
 
-   extensions.add(new Cert_Extension::Authority_Key_ID(m_cert.subject_key_id()));
-   extensions.add(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
+   extensions.replace(new Cert_Extension::Authority_Key_ID(m_cert.subject_key_id()));
+   extensions.replace(new Cert_Extension::Subject_Key_ID(req.raw_public_key()));
 
-   extensions.add(
+   extensions.replace(
       new Cert_Extension::Subject_Alternative_Name(req.subject_alt_name()));
 
-   extensions.add(
+   extensions.replace(
       new Cert_Extension::Extended_Key_Usage(req.ex_constraints()));
 
    return make_cert(m_signer, rng, m_ca_sig_algo,

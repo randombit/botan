@@ -9,6 +9,7 @@
 #define BOTAN_X509_SELF_H__
 
 #include <botan/x509cert.h>
+#include <botan/x509_ext.h>
 #include <botan/pkcs10.h>
 #include <botan/asn1_time.h>
 
@@ -113,6 +114,11 @@ class BOTAN_DLL X509_Cert_Options
       * The key extended constraints for the subject public key
       */
       std::vector<OID> ex_constraints;
+
+      /**
+      * Additional X.509 extensions
+      */
+      Extensions extensions;
 
       /**
       * Mark the certificate as a CA certificate and set the path limit.
