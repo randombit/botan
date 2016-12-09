@@ -1,3 +1,5 @@
+# Test vectors generated with BouncyCastle
+
 [SP800-108-Feedback(HMAC(SHA-160))]
 OutputLen = 2
 Salt = 0976FDEC7817D94D60C4E0C9091D82E38BCFC58D7FFF0829A13D1B4455B8

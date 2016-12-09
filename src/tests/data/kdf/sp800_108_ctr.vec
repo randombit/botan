@@ -1,3 +1,5 @@
+# Test vectors generated with BouncyCastle
+
 [SP800-108-Counter(HMAC(SHA-160))]
 OutputLen = 2
 Salt = 876F7274958C9F920019
