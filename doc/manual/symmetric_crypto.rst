@@ -1,3 +1,5 @@
+.. _symmetric_crypto:
+
 Symmetric Key Cryptography
 ===========================================
 Block ciphers, stream ciphers and MACs are all keyed operations.
