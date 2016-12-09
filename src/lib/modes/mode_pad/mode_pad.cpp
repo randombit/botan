@@ -69,6 +69,7 @@ size_t PKCS7_Padding::unpad(const byte block[], size_t size) const
 
    CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
    CT::unpoison(block,size);
+   CT::unpoison(pad_pos);
    return pad_pos;
    }
 
@@ -108,6 +109,7 @@ size_t ANSI_X923_Padding::unpad(const byte block[], size_t size) const
       }
    CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
    CT::unpoison(block,size);
+   CT::unpoison(pad_pos);
    return pad_pos;
    }
 
@@ -146,6 +148,7 @@ size_t OneAndZeros_Padding::unpad(const byte block[], size_t size) const
 
    CT::conditional_copy_mem(size_t(bad_input),&pad_pos,&size,&pad_pos,1);
    CT::unpoison(block, size);
+   CT::unpoison(pad_pos);
 
    return pad_pos;
    }
@@ -185,6 +188,7 @@ size_t ESP_Padding::unpad(const byte block[], size_t size) const
       }
    CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
    CT::unpoison(block, size);
+   CT::unpoison(pad_pos);
    return pad_pos;
    }
 
