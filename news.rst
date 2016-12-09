@@ -4,6 +4,12 @@ Release Notes
 Version 1.11.35, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Allow use of custom extensions when creating X.509 certificates
+  (GH #744)
+
+* Add signature padding schemes from ISO 9796-2 providing message recovery.
+  (GH #759)
+
 * Fix deref of invalid memory location in TLS client when the server chooses a
   ciphersuite value larger than the largest TLS ciphersuite ID compiled into the
   table. This might conceivably cause a crash in rare circumstances, but does
@@ -19,7 +25,7 @@ Version 1.11.35, Not Yet Released
 
 * The deprecated ECB Cipher_Mode class has been removed (GH #756)
 
-* Fix tests errors when write only access to /dev/urandom is prohibited (GH #748)
+* Fix tests errors when write access to /dev/urandom is prohibited (GH #748)
 
 Version 1.11.34, 2016-11-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
