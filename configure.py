@@ -607,7 +607,7 @@ class ModuleInfo(object):
     def __init__(self, infofile):
 
         lex_me_harder(infofile, self,
-                      ['source', 'header:internal', 'header:public', 
+                      ['header:internal', 'header:public', 
                         'header:external', 'requires', 'os', 'arch', 
                         'cc', 'libs', 'frameworks', 'comment', 
                         'warning'],
@@ -632,8 +632,7 @@ class ModuleInfo(object):
         else:
             self.need_isa = self.need_isa.split(',')
 
-        if self.source == []:
-            self.source = list(extract_files_matching(self.lives_in, ['.cpp']))
+        self.source = list(extract_files_matching(self.lives_in, ['.cpp']))
 
         if self.header_internal == [] and self.header_public == []:
             self.header_public = list(extract_files_matching(self.lives_in, ['.h']))

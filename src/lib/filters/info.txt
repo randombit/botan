@@ -1,22 +1,5 @@
 define FILTERS 20160415
 
-<source>
-algo_filt.cpp
-basefilt.cpp
-buf_filt.cpp
-comp_filter.cpp
-data_snk.cpp
-filter.cpp
-key_filt.cpp
-out_buf.cpp
-pipe.cpp
-pipe_io.cpp
-pipe_rw.cpp
-secqueue.cpp
-threaded_fork.cpp
-cipher_filter.cpp
-</source>
-
 <header:public>
 basefilt.h
 buf_filt.h

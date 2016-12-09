@@ -7,16 +7,6 @@ bigint.h
 divide.h
 </header:public>
 
-<source>
-big_code.cpp
-big_io.cpp
-big_ops2.cpp
-big_ops3.cpp
-big_rand.cpp
-bigint.cpp
-divide.cpp
-</source>
-
 <requires>
 mp
 hex

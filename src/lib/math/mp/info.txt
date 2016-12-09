@@ -1,12 +1,5 @@
 define BIGINT_MP 20151225
 
-<source>
-mp_core.cpp
-mp_comba.cpp
-mp_karat.cpp
-mp_monty.cpp
-</source>
-
 <header:public>
 mp_types.h
 </header:public>

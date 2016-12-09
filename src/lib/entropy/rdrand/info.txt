@@ -4,10 +4,6 @@ define ENTROPY_SRC_RDRAND 20131128
 rdrand_rng
 </requires>
 
-<source>
-rdrand.cpp
-</source>
-
 <header:internal>
 rdrand.h
 </header:internal>

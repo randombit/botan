@@ -1,9 +1,5 @@
 define ENTROPY_SRC_CAPI 20131128
 
-<source>
-es_capi.cpp
-</source>
-
 <header:internal>
 es_capi.h
 </header:internal>

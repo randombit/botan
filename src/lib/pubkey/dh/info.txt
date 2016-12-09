@@ -4,10 +4,6 @@ define DIFFIE_HELLMAN 20131128
 dh.h
 </header:public>
 
-<source>
-dh.cpp
-</source>
-
 <requires>
 dl_algo
 dl_group

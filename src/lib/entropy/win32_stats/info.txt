@@ -1,9 +1,5 @@
 define ENTROPY_SRC_WIN32 20131128
 
-<source>
-es_win32.cpp
-</source>
-
 <header:internal>
 es_win32.h
 </header:internal>

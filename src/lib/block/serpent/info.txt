@@ -7,7 +7,3 @@ serpent.h
 <header:internal>
 serpent_sbox.h
 </header:internal>
-
-<source>
-serpent.cpp
-</source>

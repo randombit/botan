@@ -1,23 +1,5 @@
 define XMSS 20161008
 
-<source>
-xmss_common_ops.cpp
-xmss_hash.cpp
-xmss_index_registry.cpp
-xmss_parameters.cpp
-xmss_privatekey.cpp
-xmss_publickey.cpp
-xmss_signature.cpp
-xmss_signature_operation.cpp
-xmss_verification_operation.cpp
-xmss_wots_common_ops.cpp
-xmss_wots_parameters.cpp
-xmss_wots_privatekey.cpp
-xmss_wots_publickey.cpp
-xmss_wots_signature_operation.cpp
-xmss_wots_verification_operation.cpp
-</source>
-
 <header:public>
 atomic.h
 xmss.h

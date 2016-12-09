@@ -1,9 +1,5 @@
 define ENTROPY_SRC_PROC_WALKER 20131128
 
-<source>
-proc_walk.cpp
-</source>
-
 <header:internal>
 proc_walk.h
 </header:internal>

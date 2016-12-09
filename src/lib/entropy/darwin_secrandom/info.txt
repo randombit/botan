@@ -1,9 +1,5 @@
 define ENTROPY_SRC_DARWIN_SECRANDOM 20150925
 
-<source>
-darwin_secrandom.cpp
-</source>
-
 <header:internal>
 darwin_secrandom.h
 </header:internal>

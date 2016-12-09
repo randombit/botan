@@ -1,16 +1,5 @@
 define PUBLIC_KEY_CRYPTO 20131128
 
-<source>
-blinding.cpp
-pk_algs.cpp
-pk_keys.cpp
-pk_ops.cpp
-pkcs8.cpp
-pubkey.cpp
-workfactor.cpp
-x509_key.cpp
-</source>
-
 <header:public>
 blinding.h
 pk_algs.h

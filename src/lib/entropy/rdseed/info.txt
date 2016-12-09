@@ -2,10 +2,6 @@ define ENTROPY_SRC_RDSEED 20151218
 
 need_isa rdseed
 
-<source>
-rdseed.cpp
-</source>
-
 <header:internal>
 rdseed.h
 </header:internal>
