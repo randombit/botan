@@ -6,7 +6,6 @@
 
 #include "driver.h"
 #include <botan/tls_client.h>
-#include <botan/system_rng.h>
 
 class Fuzzer_TLS_Client_Creds : public Credentials_Manager
    {
@@ -29,7 +28,6 @@ void fuzz(const uint8_t in[], size_t len)
    auto ignore_alerts = [](TLS::Alert, const byte[], size_t) {};
    auto ignore_hs = [](const TLS::Session&) { abort(); return true; };
 
-   Botan::System_RNG rng;
    TLS::Session_Manager_Noop session_manager;
    TLS::Policy policy;
    TLS::Protocol_Version client_offer = TLS::Protocol_Version::TLS_V12;
@@ -44,7 +42,7 @@ void fuzz(const uint8_t in[], size_t len)
                       session_manager,
                       creds,
                       policy,
-                      rng,
+                      fuzzer_rng(),
                       info,
                       client_offer,
                       protocols_to_offer);

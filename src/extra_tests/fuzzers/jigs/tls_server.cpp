@@ -6,7 +6,6 @@
 
 #include "driver.h"
 #include <botan/tls_server.h>
-#include <botan/system_rng.h>
 
 const char* fixed_rsa_key =
    "-----BEGIN PRIVATE KEY-----\n"
@@ -69,7 +68,7 @@ class Fuzzer_TLS_Server_Creds : public Credentials_Manager
          DataSource_Memory key_in(fixed_rsa_key);
 
          m_rsa_cert.reset(new Botan::X509_Certificate(cert_in));
-         //m_rsa_key.reset(Botan::PKCS8::load_key(key_in, Botan::system_rng()));
+         //m_rsa_key.reset(Botan::PKCS8::load_key(key_in, fuzzer_rng());
          }
 
       std::vector<Botan::X509_Certificate> cert_chain(
@@ -119,7 +118,6 @@ void fuzz(const uint8_t in[], size_t len)
    auto ignore_alerts = [](TLS::Alert, const byte[], size_t) {};
    auto ignore_hs = [](const TLS::Session&) { return true; };
 
-   Botan::System_RNG rng;
    TLS::Session_Manager_Noop session_manager;
    TLS::Policy policy;
    TLS::Server_Information info("server.name", 443);
@@ -141,7 +139,7 @@ void fuzz(const uint8_t in[], size_t len)
                       session_manager,
                       creds,
                       policy,
-                      rng,
+                      fuzzer_rng(),
                       next_proto_fn,
                       is_datagram);
 

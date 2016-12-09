@@ -10,7 +10,6 @@
 #include <botan/curve_gfp.h>
 #include <botan/ec_group.h>
 #include <botan/reducer.h>
-#include <botan/system_rng.h>
 
 void check_redc(std::function<void (BigInt&, secure_vector<word>&)> redc_fn,
                 const Modular_Reducer& redc,
@@ -60,9 +59,9 @@ void check_ecc_math(const EC_Group& group, const uint8_t in[], size_t len)
 
    Botan::Blinded_Point_Multiply blind(base_point, group_order, 4);
 
-   const Botan::PointGFp P1 = blind.blinded_multiply(a, system_rng());
-   const Botan::PointGFp Q1 = blind.blinded_multiply(b, system_rng());
-   const Botan::PointGFp R1 = blind.blinded_multiply(c, system_rng());
+   const Botan::PointGFp P1 = blind.blinded_multiply(a, fuzzer_rng());
+   const Botan::PointGFp Q1 = blind.blinded_multiply(b, fuzzer_rng());
+   const Botan::PointGFp R1 = blind.blinded_multiply(c, fuzzer_rng());
 
    const Botan::PointGFp S1 = P1 + Q1;
    const Botan::PointGFp S2 = Q1 + P1;

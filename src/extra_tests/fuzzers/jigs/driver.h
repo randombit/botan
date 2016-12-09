@@ -12,6 +12,7 @@
 #include <vector>
 #include <stdlib.h> // for setenv
 #include <botan/exceptn.h>
+#include <botan/rng.h>
 
 using namespace Botan;
 
@@ -70,6 +71,38 @@ int main(int argc, char* argv[])
 #endif
 
 // Some helpers for the fuzzer jigs
+
+Botan::RandomNumberGenerator& fuzzer_rng()
+   {
+   class ChaCha20_RNG : public Botan::RandomNumberGenerator
+      {
+      public:
+         std::string name() const override { return "ChaCha20_RNG"; }
+         void clear() override { /* ignored */ }
+
+         void randomize(uint8_t out[], size_t len) override
+            {
+            Botan::clear_mem(out, len);
+            m_chacha.cipher1(out, len);
+            }
+
+         bool is_seeded() const override { return true; }
+
+         void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
+
+         ChaCha20_RNG()
+            {
+            std::vector<uint8_t> seed(32, 0x82);
+            m_chacha.set_key(seed);
+            }
+
+      private:
+         Botan::ChaCha m_chacha;
+      };
+
+   static ChaCha20_RNG rng;
+   return rng;
+   }
 
 #define FUZZER_ASSERT_EQUAL(x, y) do {                                  \
    if(x != y) {                                                         \

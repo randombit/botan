@@ -6,7 +6,6 @@
 
 #include "driver.h"
 #include <botan/numthry.h>
-#include <botan/system_rng.h>
 
 void fuzz(const uint8_t in[], size_t len)
    {
@@ -32,7 +31,7 @@ void fuzz(const uint8_t in[], size_t len)
          BigInt a_redc = a % n;
          if(z != a_redc)
             {
-            if(is_prime(n, system_rng(), 64))
+            if(is_prime(n, fuzzer_rng(), 64))
                {
                std::cout << "A = " << a << "\n";
                std::cout << "Ressol = " << a_sqrt << "\n";

@@ -6,15 +6,13 @@
 #include "driver.h"
 
 #include <botan/pkcs8.h>
-#include <botan/system_rng.h>
 
 void fuzz(const uint8_t in[], size_t len)
    {
    try
       {
-      System_RNG rng;
       DataSource_Memory input(in, len);
-      std::unique_ptr<Private_Key> key(PKCS8::load_key(input, rng));
+      std::unique_ptr<Private_Key> key(PKCS8::load_key(input, fuzzer_rng()));
       }
    catch(Botan::Exception& e) { }
    }
