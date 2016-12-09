@@ -27,8 +27,6 @@ class BOTAN_DLL Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
    private:
       void key_schedule(const byte[], size_t) override;
 
-      static void rs_mul(byte[4], byte, size_t);
-
       static const u32bit MDS0[256];
       static const u32bit MDS1[256];
       static const u32bit MDS2[256];

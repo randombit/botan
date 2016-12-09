@@ -127,7 +127,25 @@ void Twofish::key_schedule(const byte key[], size_t length)
    secure_vector<byte> S(16);
 
    for(size_t i = 0; i != length; ++i)
-      rs_mul(&S[4*(i/8)], key[i], i);
+      {
+      /*
+      * Do one column of the RS matrix multiplcation
+      */
+      if(key[i])
+         {
+         byte X = POLY_TO_EXP[key[i] - 1];
+
+         byte RS1 = RS[(4*i  ) % 32];
+         byte RS2 = RS[(4*i+1) % 32];
+         byte RS3 = RS[(4*i+2) % 32];
+         byte RS4 = RS[(4*i+3) % 32];
+
+         S[4*(i/8)  ] ^= EXP_TO_POLY[(X + POLY_TO_EXP[RS1 - 1]) % 255];
+         S[4*(i/8)+1] ^= EXP_TO_POLY[(X + POLY_TO_EXP[RS2 - 1]) % 255];
+         S[4*(i/8)+2] ^= EXP_TO_POLY[(X + POLY_TO_EXP[RS3 - 1]) % 255];
+         S[4*(i/8)+3] ^= EXP_TO_POLY[(X + POLY_TO_EXP[RS4 - 1]) % 255];
+         }
+      }
 
    if(length == 16)
       {
@@ -209,27 +227,6 @@ void Twofish::key_schedule(const byte key[], size_t length)
          m_RK[i] = X;
          m_RK[i+1] = rotate_left(Y, 9);
          }
-      }
-   }
-
-/*
-* Do one column of the RS matrix multiplcation
-*/
-void Twofish::rs_mul(byte S[4], byte key, size_t offset)
-   {
-   if(key)
-      {
-      byte X = POLY_TO_EXP[key - 1];
-
-      byte RS1 = RS[(4*offset  ) % 32];
-      byte RS2 = RS[(4*offset+1) % 32];
-      byte RS3 = RS[(4*offset+2) % 32];
-      byte RS4 = RS[(4*offset+3) % 32];
-
-      S[0] ^= EXP_TO_POLY[(X + POLY_TO_EXP[RS1 - 1]) % 255];
-      S[1] ^= EXP_TO_POLY[(X + POLY_TO_EXP[RS2 - 1]) % 255];
-      S[2] ^= EXP_TO_POLY[(X + POLY_TO_EXP[RS3 - 1]) % 255];
-      S[3] ^= EXP_TO_POLY[(X + POLY_TO_EXP[RS4 - 1]) % 255];
       }
    }
 
