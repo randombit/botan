@@ -13,6 +13,7 @@
 #include <stdlib.h> // for setenv
 #include <botan/exceptn.h>
 #include <botan/rng.h>
+#include <botan/chacha.h>
 
 using namespace Botan;
 
@@ -68,11 +69,9 @@ int main(int argc, char* argv[])
 
 #endif
 
-#endif
-
 // Some helpers for the fuzzer jigs
 
-Botan::RandomNumberGenerator& fuzzer_rng()
+inline Botan::RandomNumberGenerator& fuzzer_rng()
    {
    class ChaCha20_RNG : public Botan::RandomNumberGenerator
       {
@@ -118,3 +117,5 @@ Botan::RandomNumberGenerator& fuzzer_rng()
              << __LINE__ << ":" << __FILE__ << std::endl;               \
    abort();                                                             \
    } } while(0)
+
+#endif
