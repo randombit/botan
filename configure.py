@@ -2216,6 +2216,7 @@ def main(argv = None):
     using_mods = [modules[m] for m in loaded_mods]
 
     build_config = BuildConfigurationInformation(options, using_mods)
+
     build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
 
     template_vars = create_template_vars(build_config, options, using_mods, cc, arch, osinfo)
@@ -2326,8 +2327,9 @@ def main(argv = None):
             return 'undated'
         return 'dated %d' % (datestamp)
 
-    logging.info('Botan %s (%s %s) build setup is complete' % (
+    logging.info('Botan %s (VC %s) (%s %s) build setup is complete' % (
         build_config.version_string,
+        build_config.version_vc_rev,
         build_config.version_release_type,
         release_date(build_config.version_datestamp)))
 
