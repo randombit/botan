@@ -51,9 +51,6 @@ void check_ecc_math(const EC_Group& group, const uint8_t in[], size_t len)
    const Botan::PointGFp A1 = P + Q;
    const Botan::PointGFp A2 = Q + P;
 
-   if(a == 31337 && b == 31337)
-      abort();
-
    FUZZER_ASSERT_EQUAL(A1, R);
    FUZZER_ASSERT_EQUAL(A2, R);
 
