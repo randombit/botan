@@ -27,9 +27,13 @@ class EME_Decoding_Tests : public Text_Based_Test
          {
          Test::Result result(algo + " Decoding");
 
-         std::unique_ptr<Botan::EME> eme(Botan::get_eme(algo));
+         std::unique_ptr<Botan::EME> eme;
 
-         if(eme == nullptr)
+         try
+            {
+            eme.reset(Botan::get_eme(algo));
+            }
+         catch(Botan::Lookup_Error&)
             {
             result.note_missing(algo);
             return result;
