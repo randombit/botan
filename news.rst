@@ -11,8 +11,12 @@ Version 1.11.35, Not Yet Released
 * Allow use of custom extensions when creating X.509 certificates
   (GH #744)
 
-* Add signature padding schemes from ISO 9796-2 providing message recovery.
-  (GH #759)
+* Add ISO 9796-2 signature padding schemes DS2 and DS3. These schemes provide message recovery
+  (part or all of the plaintext message can be recovered from the signature alone) and are
+  used by some industry protocols. (GH #759)
+
+* Rewrite all the code that handles parsing CBC padding bytes to run
+  without conditional jumps or loads. (GH #765 #728)
 
 * Fix deref of invalid memory location in TLS client when the server chooses a
   ciphersuite value larger than the largest TLS ciphersuite ID compiled into the
