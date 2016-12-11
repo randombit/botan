@@ -27,8 +27,8 @@ namespace Botan {
 */
 std::string BOTAN_DLL generate_passhash9(const std::string& password,
                                          RandomNumberGenerator& rng,
-                                         u16bit work_factor = 10,
-                                         byte alg_id = 1);
+                                         uint16_t work_factor = 10,
+                                         uint8_t alg_id = 1);
 
 /**
 * Check a previously created password hash

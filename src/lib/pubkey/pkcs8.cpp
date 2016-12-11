@@ -24,10 +24,10 @@ namespace {
 /*
 * Get info from an EncryptedPrivateKeyInfo
 */
-secure_vector<byte> PKCS8_extract(DataSource& source,
+secure_vector<uint8_t> PKCS8_extract(DataSource& source,
                                   AlgorithmIdentifier& pbe_alg_id)
    {
-   secure_vector<byte> key_data;
+   secure_vector<uint8_t> key_data;
 
    BER_Decoder(source)
       .start_cons(SEQUENCE)
@@ -41,14 +41,14 @@ secure_vector<byte> PKCS8_extract(DataSource& source,
 /*
 * PEM decode and/or decrypt a private key
 */
-secure_vector<byte> PKCS8_decode(
+secure_vector<uint8_t> PKCS8_decode(
    DataSource& source,
    std::function<std::string ()> get_passphrase,
    AlgorithmIdentifier& pk_alg_id,
    bool is_encrypted)
    {
    AlgorithmIdentifier pbe_alg_id;
-   secure_vector<byte> key_data, key;
+   secure_vector<uint8_t> key_data, key;
 
    try {
       if(ASN1::maybe_BER(source) && !PEM_Code::matches(source))
@@ -62,7 +62,7 @@ secure_vector<byte> PKCS8_decode(
             // todo read more efficiently
             while ( !source.end_of_data() )
                {
-               byte b;
+               uint8_t b;
                size_t read = source.read_byte( b );
                if ( read )
                   {
@@ -127,7 +127,7 @@ secure_vector<byte> PKCS8_decode(
 /*
 * BER encode a PKCS #8 private key, unencrypted
 */
-secure_vector<byte> BER_encode(const Private_Key& key)
+secure_vector<uint8_t> BER_encode(const Private_Key& key)
    {
    // keeping around for compat
    return key.private_key_info();
@@ -166,7 +166,7 @@ choose_pbe_params(const std::string& pbe_algo, const std::string& key_algo)
 /*
 * BER encode a PKCS #8 private key, encrypted
 */
-std::vector<byte> BER_encode(const Private_Key& key,
+std::vector<uint8_t> BER_encode(const Private_Key& key,
                              RandomNumberGenerator& rng,
                              const std::string& pass,
                              std::chrono::milliseconds msec,
@@ -174,7 +174,7 @@ std::vector<byte> BER_encode(const Private_Key& key,
    {
    const auto pbe_params = choose_pbe_params(pbe_algo, key.algo_name());
 
-   const std::pair<AlgorithmIdentifier, std::vector<byte>> pbe_info =
+   const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
       pbes2_encrypt(PKCS8::BER_encode(key), pass, msec,
                     pbe_params.first, pbe_params.second, rng);
 
@@ -213,7 +213,7 @@ Private_Key* load_key(DataSource& source,
                       bool is_encrypted)
    {
    AlgorithmIdentifier alg_id;
-   secure_vector<byte> pkcs8_key = PKCS8_decode(source, get_pass, alg_id, is_encrypted);
+   secure_vector<uint8_t> pkcs8_key = PKCS8_decode(source, get_pass, alg_id, is_encrypted);
 
    const std::string alg_name = OIDS::lookup(alg_id.oid);
    if(alg_name.empty() || alg_name == alg_id.oid.as_string())

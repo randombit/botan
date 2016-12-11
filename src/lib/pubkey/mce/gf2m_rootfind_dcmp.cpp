@@ -15,11 +15,11 @@ namespace Botan {
 
 namespace {
 
-u32bit patch_root_array(gf2m* res_root_arr,
-                        u32bit res_root_arr_len,
-                        u32bit root_pos)
+uint32_t patch_root_array(gf2m* res_root_arr,
+                        uint32_t res_root_arr_len,
+                        uint32_t root_pos)
    {
-   volatile u32bit i;
+   volatile uint32_t i;
    volatile gf2m patch_elem = 0x01;
    volatile gf2m cond_mask = (root_pos == res_root_arr_len);
    cond_mask = expand_mask_16bit(cond_mask);
@@ -37,18 +37,18 @@ u32bit patch_root_array(gf2m* res_root_arr,
 class gf2m_decomp_rootfind_state
    {
    public:
-      gf2m_decomp_rootfind_state(const polyn_gf2m & p_polyn, u32bit code_length);
+      gf2m_decomp_rootfind_state(const polyn_gf2m & p_polyn, uint32_t code_length);
 
       void calc_LiK(const polyn_gf2m & sigma);
       gf2m calc_Fxj_j_neq_0( const polyn_gf2m & sigma, gf2m j_gray);
       void calc_next_Aij();
       void calc_Ai_zero(const polyn_gf2m & sigma);
       secure_vector<gf2m> find_roots(const polyn_gf2m & sigma);
-      u32bit get_code_length() const { return code_length; };
-      u32bit code_length;
+      uint32_t get_code_length() const { return code_length; };
+      uint32_t code_length;
       secure_vector<gf2m> m_Lik; // size is outer_summands * m
       secure_vector<gf2m> m_Aij; // ...
-      u32bit m_outer_summands;
+      uint32_t m_outer_summands;
       gf2m m_j;
       gf2m m_j_gray;
       gf2m m_sigma_3_l;
@@ -73,9 +73,9 @@ gf2m brootf_decomp__gray_to_lex(gf2m gray)
 /**
 * calculates ceil((t-4)/5) = outer_summands - 1
 */
-u32bit brootf_decomp__calc_sum_limit(u32bit t)
+uint32_t brootf_decomp__calc_sum_limit(uint32_t t)
    {
-   u32bit result;
+   uint32_t result;
    if(t < 4)
       {
       return 0;
@@ -86,7 +86,7 @@ u32bit brootf_decomp__calc_sum_limit(u32bit t)
    return result;
    }
 
-gf2m_decomp_rootfind_state::gf2m_decomp_rootfind_state(const polyn_gf2m & polyn, u32bit the_code_length) :
+gf2m_decomp_rootfind_state::gf2m_decomp_rootfind_state(const polyn_gf2m & polyn, uint32_t the_code_length) :
    code_length(the_code_length), m_j(0), m_j_gray(0)
    {
    gf2m coeff_3;
@@ -119,7 +119,7 @@ gf2m_decomp_rootfind_state::gf2m_decomp_rootfind_state(const polyn_gf2m & polyn,
 
 void gf2m_decomp_rootfind_state::calc_Ai_zero(const polyn_gf2m & sigma)
    {
-   u32bit i;
+   uint32_t i;
    /*
    * this function assumes this the first gray code element is zero
    */
@@ -138,9 +138,9 @@ void gf2m_decomp_rootfind_state::calc_next_Aij()
    * first thing, we declare Aij Aij_minusone and increase j.
    * Case j=0 upon function entry also included, then Aij contains A_{i,j=0}.
    */
-   u32bit i;
+   uint32_t i;
    gf2m diff, new_j_gray;
-   u32bit Lik_pos_base;
+   uint32_t Lik_pos_base;
 
    this->m_j++;
 
@@ -190,11 +190,11 @@ void gf2m_decomp_rootfind_state::calc_next_Aij()
 void gf2m_decomp_rootfind_state::calc_LiK(const polyn_gf2m & sigma)
    {
    std::shared_ptr<GF2m_Field> sp_field = sigma.get_sp_field();
-   u32bit i, k, d;
+   uint32_t i, k, d;
    d = sigma.get_degree();
    for(k = 0; k < sp_field->get_extension_degree(); k++)
       {
-      u32bit Lik_pos_base = k * this->m_outer_summands;
+      uint32_t Lik_pos_base = k * this->m_outer_summands;
       gf2m alpha_l_k_tt2_ttj[4];
       alpha_l_k_tt2_ttj[0] = sp_field->gf_l_from_n(static_cast<gf2m>(1) << k);
       alpha_l_k_tt2_ttj[1] = sp_field->gf_mul_rrr(alpha_l_k_tt2_ttj[0], alpha_l_k_tt2_ttj[0]);
@@ -203,14 +203,14 @@ void gf2m_decomp_rootfind_state::calc_LiK(const polyn_gf2m & sigma)
       alpha_l_k_tt2_ttj[3] = sp_field->gf_mul_rrr(alpha_l_k_tt2_ttj[2], alpha_l_k_tt2_ttj[2]);
       for(i = 0; i < this->m_outer_summands; i++)
          {
-         u32bit j;
-         u32bit five_i = 5*i;
-         u32bit Lik_pos = Lik_pos_base + i;
+         uint32_t j;
+         uint32_t five_i = 5*i;
+         uint32_t Lik_pos = Lik_pos_base + i;
          this->m_Lik[Lik_pos] = 0;
          for(j = 0; j <= 3; j++)
             {
             gf2m f, x;
-            u32bit f_ind = five_i + (static_cast<u32bit>(1) << j);
+            uint32_t f_ind = five_i + (static_cast<uint32_t>(1) << j);
             if(f_ind > d)
                {
                break;
@@ -228,7 +228,7 @@ gf2m gf2m_decomp_rootfind_state::calc_Fxj_j_neq_0( const polyn_gf2m & sigma, gf2
    {
    //needs the A_{ij} to compute F(x)_j
    gf2m sum = 0;
-   u32bit i;
+   uint32_t i;
    std::shared_ptr<GF2m_Field> sp_field = sigma.get_sp_field();
    const gf2m jl_gray = sp_field->gf_l_from_n(j_gray);
    gf2m xl_j_tt_5 = sp_field->gf_square_rr(jl_gray);
@@ -270,7 +270,7 @@ secure_vector<gf2m> gf2m_decomp_rootfind_state::find_roots(const polyn_gf2m & si
    const int sigma_degree = sigma.get_degree();
    BOTAN_ASSERT(sigma_degree > 0, "Valid sigma");
    secure_vector<gf2m> result(sigma_degree);
-   u32bit root_pos = 0;
+   uint32_t root_pos = 0;
 
    this->calc_Ai_zero(sigma);
    this->calc_LiK(sigma);
@@ -293,7 +293,7 @@ secure_vector<gf2m> gf2m_decomp_rootfind_state::find_roots(const polyn_gf2m & si
          root_pos++;
 
          }
-      if(this->m_j + static_cast<u32bit>(1) == this->get_code_length())
+      if(this->m_j + static_cast<uint32_t>(1) == this->get_code_length())
          {
          break;
          }
@@ -308,7 +308,7 @@ secure_vector<gf2m> gf2m_decomp_rootfind_state::find_roots(const polyn_gf2m & si
 
 } // end anonymous namespace
 
-secure_vector<gf2m> find_roots_gf2m_decomp(const polyn_gf2m & polyn, u32bit code_length)
+secure_vector<gf2m> find_roots_gf2m_decomp(const polyn_gf2m & polyn, uint32_t code_length)
    {
    gf2m_decomp_rootfind_state state(polyn, code_length);
    return state.find_roots(polyn);

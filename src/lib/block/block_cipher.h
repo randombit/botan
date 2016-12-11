@@ -77,7 +77,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param out The byte array designated to hold the encrypted block.
       * Must be of length block_size().
       */
-      void encrypt(const byte in[], byte out[]) const
+      void encrypt(const uint8_t in[], uint8_t out[]) const
          { encrypt_n(in, out, 1); }
 
       /**
@@ -87,7 +87,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param out The byte array designated to hold the decrypted block.
       * Must be of length block_size().
       */
-      void decrypt(const byte in[], byte out[]) const
+      void decrypt(const uint8_t in[], uint8_t out[]) const
          { decrypt_n(in, out, 1); }
 
       /**
@@ -96,7 +96,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * Must be of length block_size(). Will hold the result when the function
       * has finished.
       */
-      void encrypt(byte block[]) const { encrypt_n(block, block, 1); }
+      void encrypt(uint8_t block[]) const { encrypt_n(block, block, 1); }
 
       /**
       * Decrypt a block.
@@ -104,14 +104,14 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * Must be of length block_size(). Will hold the result when the function
       * has finished.
       */
-      void decrypt(byte block[]) const { decrypt_n(block, block, 1); }
+      void decrypt(uint8_t block[]) const { decrypt_n(block, block, 1); }
 
       /**
       * Encrypt one or more blocks
       * @param block the input/output buffer (multiple of block_size())
       */
       template<typename Alloc>
-      void encrypt(std::vector<byte, Alloc>& block) const
+      void encrypt(std::vector<uint8_t, Alloc>& block) const
          {
          return encrypt_n(block.data(), block.data(), block.size() / block_size());
          }
@@ -121,7 +121,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param block the input/output buffer (multiple of block_size())
       */
       template<typename Alloc>
-      void decrypt(std::vector<byte, Alloc>& block) const
+      void decrypt(std::vector<uint8_t, Alloc>& block) const
          {
          return decrypt_n(block.data(), block.data(), block.size() / block_size());
          }
@@ -132,8 +132,8 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param out the output buffer (same size as in)
       */
       template<typename Alloc, typename Alloc2>
-      void encrypt(const std::vector<byte, Alloc>& in,
-                   std::vector<byte, Alloc2>& out) const
+      void encrypt(const std::vector<uint8_t, Alloc>& in,
+                   std::vector<uint8_t, Alloc2>& out) const
          {
          return encrypt_n(in.data(), out.data(), in.size() / block_size());
          }
@@ -144,8 +144,8 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param out the output buffer (same size as in)
       */
       template<typename Alloc, typename Alloc2>
-      void decrypt(const std::vector<byte, Alloc>& in,
-                   std::vector<byte, Alloc2>& out) const
+      void decrypt(const std::vector<uint8_t, Alloc>& in,
+                   std::vector<uint8_t, Alloc2>& out) const
          {
          return decrypt_n(in.data(), out.data(), in.size() / block_size());
          }
@@ -156,7 +156,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param out the output buffer (same size as in)
       * @param blocks the number of blocks to process
       */
-      virtual void encrypt_n(const byte in[], byte out[],
+      virtual void encrypt_n(const uint8_t in[], uint8_t out[],
                              size_t blocks) const = 0;
 
       /**
@@ -165,7 +165,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @param out the output buffer (same size as in)
       * @param blocks the number of blocks to process
       */
-      virtual void decrypt_n(const byte in[], byte out[],
+      virtual void decrypt_n(const uint8_t in[], uint8_t out[],
                              size_t blocks) const = 0;
 
       /**

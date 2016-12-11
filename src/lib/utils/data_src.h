@@ -30,7 +30,7 @@ class BOTAN_DLL DataSource
       * @return length in bytes that was actually read and put
       * into out
       */
-      virtual size_t read(byte out[], size_t length) BOTAN_WARN_UNUSED_RESULT = 0;
+      virtual size_t read(uint8_t out[], size_t length) BOTAN_WARN_UNUSED_RESULT = 0;
 
       virtual bool check_available(size_t n) = 0;
 
@@ -45,7 +45,7 @@ class BOTAN_DLL DataSource
       * @return length in bytes that was actually read and put
       * into out
       */
-      virtual size_t peek(byte out[], size_t length, size_t peek_offset) const BOTAN_WARN_UNUSED_RESULT = 0;
+      virtual size_t peek(uint8_t out[], size_t length, size_t peek_offset) const BOTAN_WARN_UNUSED_RESULT = 0;
 
       /**
       * Test whether the source still has data that can be read.
@@ -64,7 +64,7 @@ class BOTAN_DLL DataSource
       * @return length in bytes that was actually read and put
       * into out
       */
-      size_t read_byte(byte& out);
+      size_t read_byte(uint8_t& out);
 
       /**
       * Peek at one byte.
@@ -72,7 +72,7 @@ class BOTAN_DLL DataSource
       * @return length in bytes that was actually read and put
       * into out
       */
-      size_t peek_byte(byte& out) const;
+      size_t peek_byte(uint8_t& out) const;
 
       /**
       * Discard the next N bytes of the data
@@ -98,8 +98,8 @@ class BOTAN_DLL DataSource
 class BOTAN_DLL DataSource_Memory : public DataSource
    {
    public:
-      size_t read(byte[], size_t) override;
-      size_t peek(byte[], size_t, size_t) const override;
+      size_t read(uint8_t[], size_t) override;
+      size_t peek(uint8_t[], size_t, size_t) const override;
       bool check_available(size_t n) override;
       bool end_of_data() const override;
 
@@ -114,26 +114,26 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       * @param in the byte array to read from
       * @param length the length of the byte array
       */
-      DataSource_Memory(const byte in[], size_t length) :
+      DataSource_Memory(const uint8_t in[], size_t length) :
          m_source(in, in + length), m_offset(0) {}
 
       /**
       * Construct a memory source that reads from a secure_vector
       * @param in the MemoryRegion to read from
       */
-      explicit DataSource_Memory(const secure_vector<byte>& in) :
+      explicit DataSource_Memory(const secure_vector<uint8_t>& in) :
          m_source(in), m_offset(0) {}
 
       /**
       * Construct a memory source that reads from a std::vector
       * @param in the MemoryRegion to read from
       */
-      explicit DataSource_Memory(const std::vector<byte>& in) :
+      explicit DataSource_Memory(const std::vector<uint8_t>& in) :
          m_source(in.begin(), in.end()), m_offset(0) {}
 
       size_t get_bytes_read() const override { return m_offset; }
    private:
-      secure_vector<byte> m_source;
+      secure_vector<uint8_t> m_source;
       size_t m_offset;
    };
 
@@ -145,8 +145,8 @@ class BOTAN_DLL DataSource_Memory : public DataSource
 class BOTAN_DLL DataSource_Stream : public DataSource
    {
    public:
-      size_t read(byte[], size_t) override;
-      size_t peek(byte[], size_t, size_t) const override;
+      size_t read(uint8_t[], size_t) override;
+      size_t peek(uint8_t[], size_t, size_t) const override;
       bool check_available(size_t n) override;
       bool end_of_data() const override;
       std::string id() const override;

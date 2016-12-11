@@ -33,7 +33,7 @@ EC_Group::EC_Group(const std::string& str)
 
    try
       {
-      std::vector<byte> ber =
+      std::vector<uint8_t> ber =
          unlock(PEM_Code::decode_check_label(str, "EC PARAMETERS"));
 
       *this = EC_Group(ber);
@@ -44,7 +44,7 @@ EC_Group::EC_Group(const std::string& str)
       }
    }
 
-EC_Group::EC_Group(const std::vector<byte>& ber_data)
+EC_Group::EC_Group(const std::vector<uint8_t>& ber_data)
    {
    BER_Decoder ber(ber_data);
    BER_Object obj = ber.get_next_object();
@@ -60,7 +60,7 @@ EC_Group::EC_Group(const std::vector<byte>& ber_data)
    else if(obj.type_tag == SEQUENCE)
       {
       BigInt p, a, b;
-      std::vector<byte> sv_base_point;
+      std::vector<uint8_t> sv_base_point;
 
       BER_Decoder(ber_data)
          .start_cons(SEQUENCE)
@@ -87,7 +87,7 @@ EC_Group::EC_Group(const std::vector<byte>& ber_data)
       throw Decoding_Error("Unexpected tag while decoding ECC domain params");
    }
 
-std::vector<byte>
+std::vector<uint8_t>
 EC_Group::DER_encode(EC_Group_Encoding form) const
    {
    if(form == EC_DOMPAR_ENC_EXPLICIT)
@@ -126,7 +126,7 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
 
 std::string EC_Group::PEM_encode() const
    {
-   const std::vector<byte> der = DER_encode(EC_DOMPAR_ENC_EXPLICIT);
+   const std::vector<uint8_t> der = DER_encode(EC_DOMPAR_ENC_EXPLICIT);
    return PEM_Code::encode(der, "EC PARAMETERS");
    }
 

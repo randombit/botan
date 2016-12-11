@@ -69,7 +69,7 @@ class BOTAN_DLL SymmetricAlgorithm
          }
 
       template<typename Alloc>
-      void set_key(const std::vector<byte, Alloc>& key)
+      void set_key(const std::vector<uint8_t, Alloc>& key)
          {
          set_key(key.data(), key.size());
          }
@@ -79,7 +79,7 @@ class BOTAN_DLL SymmetricAlgorithm
       * @param key the to be set as a byte array.
       * @param length in bytes of key param
       */
-      void set_key(const byte key[], size_t length)
+      void set_key(const uint8_t key[], size_t length)
          {
          if(!valid_keylength(length))
             throw Invalid_Key_Length(name(), length);
@@ -97,7 +97,7 @@ class BOTAN_DLL SymmetricAlgorithm
       * @param key the key
       * @param length of key
       */
-      virtual void key_schedule(const byte key[], size_t length) = 0;
+      virtual void key_schedule(const uint8_t key[], size_t length) = 0;
    };
 
 }

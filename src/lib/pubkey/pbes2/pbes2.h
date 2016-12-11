@@ -23,8 +23,8 @@ namespace Botan {
 * @param digest specifies the PRF to use with PBKDF2 (eg "HMAC(SHA-1)")
 * @param rng a random number generator
 */
-std::pair<AlgorithmIdentifier, std::vector<byte>>
-BOTAN_DLL pbes2_encrypt(const secure_vector<byte>& key_bits,
+std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
+BOTAN_DLL pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
                         const std::string& passphrase,
                         std::chrono::milliseconds msec,
                         const std::string& cipher,
@@ -37,10 +37,10 @@ BOTAN_DLL pbes2_encrypt(const secure_vector<byte>& key_bits,
 * @param passphrase the passphrase to use for decryption
 * @param params the PBES2 parameters
 */
-secure_vector<byte>
-BOTAN_DLL pbes2_decrypt(const secure_vector<byte>& key_bits,
+secure_vector<uint8_t>
+BOTAN_DLL pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
                         const std::string& passphrase,
-                        const std::vector<byte>& params);
+                        const std::vector<uint8_t>& params);
 
 }
 

@@ -23,10 +23,10 @@ namespace {
 /*
 * Encode PKCS#5 PBES2 parameters
 */
-std::vector<byte> encode_pbes2_params(const std::string& cipher,
+std::vector<uint8_t> encode_pbes2_params(const std::string& cipher,
                                       const std::string& prf,
-                                      const secure_vector<byte>& salt,
-                                      const secure_vector<byte>& iv,
+                                      const secure_vector<uint8_t>& salt,
+                                      const secure_vector<uint8_t>& iv,
                                       size_t iterations,
                                       size_t key_length)
    {
@@ -60,8 +60,8 @@ std::vector<byte> encode_pbes2_params(const std::string& cipher,
 /*
 * PKCS#5 v2.0 PBE Constructor
 */
-std::pair<AlgorithmIdentifier, std::vector<byte>>
-pbes2_encrypt(const secure_vector<byte>& key_bits,
+std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
+pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
               const std::string& passphrase,
               std::chrono::milliseconds msec,
               const std::string& cipher,
@@ -74,7 +74,7 @@ pbes2_encrypt(const secure_vector<byte>& key_bits,
    if(cipher_spec.size() != 2)
       throw Decoding_Error("PBE-PKCS5 v2.0: Invalid cipher spec " + cipher);
 
-   const secure_vector<byte> salt = rng.random_vec(12);
+   const secure_vector<uint8_t> salt = rng.random_vec(12);
 
    if(cipher_spec[1] != "CBC" && cipher_spec[1] != "GCM")
       throw Decoding_Error("PBE-PKCS5 v2.0: Don't know param format for " + cipher);
@@ -89,13 +89,13 @@ pbes2_encrypt(const secure_vector<byte>& key_bits,
    const size_t key_length = enc->key_spec().maximum_keylength();
    size_t iterations = 0;
 
-   secure_vector<byte> iv = rng.random_vec(enc->default_nonce_length());
+   secure_vector<uint8_t> iv = rng.random_vec(enc->default_nonce_length());
 
    enc->set_key(pbkdf->derive_key(key_length, passphrase, salt.data(), salt.size(),
                                   msec, iterations).bits_of());
 
    enc->start(iv);
-   secure_vector<byte> buf = key_bits;
+   secure_vector<uint8_t> buf = key_bits;
    enc->finish(buf);
 
    AlgorithmIdentifier id(
@@ -105,10 +105,10 @@ pbes2_encrypt(const secure_vector<byte>& key_bits,
    return std::make_pair(id, unlock(buf));
    }
 
-secure_vector<byte>
-pbes2_decrypt(const secure_vector<byte>& key_bits,
+secure_vector<uint8_t>
+pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
               const std::string& passphrase,
-              const std::vector<byte>& params)
+              const std::vector<uint8_t>& params)
    {
    AlgorithmIdentifier kdf_algo, enc_algo;
 
@@ -125,7 +125,7 @@ pbes2_decrypt(const secure_vector<byte>& key_bits,
       throw Decoding_Error("PBE-PKCS5 v2.0: Unknown KDF algorithm " +
                            kdf_algo.oid.as_string());
 
-   secure_vector<byte> salt;
+   secure_vector<uint8_t> salt;
    size_t iterations = 0, key_length = 0;
 
    BER_Decoder(kdf_algo.parameters)
@@ -149,7 +149,7 @@ pbes2_decrypt(const secure_vector<byte>& key_bits,
    if(salt.size() < 8)
       throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
 
-   secure_vector<byte> iv;
+   secure_vector<uint8_t> iv;
    BER_Decoder(enc_algo.parameters).decode(iv, OCTET_STRING).verify_end();
 
    const std::string prf = OIDS::lookup(prf_algo.oid);
@@ -167,7 +167,7 @@ pbes2_decrypt(const secure_vector<byte>& key_bits,
 
    dec->start(iv);
 
-   secure_vector<byte> buf = key_bits;
+   secure_vector<uint8_t> buf = key_bits;
    dec->finish(buf);
 
    return buf;

@@ -64,9 +64,9 @@ class BOTAN_DLL PBKDF
       *        run until msec milliseconds has passed.
       * @return the number of iterations performed
       */
-      virtual size_t pbkdf(byte out[], size_t out_len,
+      virtual size_t pbkdf(uint8_t out[], size_t out_len,
                            const std::string& passphrase,
-                           const byte salt[], size_t salt_len,
+                           const uint8_t salt[], size_t salt_len,
                            size_t iterations,
                            std::chrono::milliseconds msec) const = 0;
 
@@ -80,9 +80,9 @@ class BOTAN_DLL PBKDF
       * @param salt_len length of salt in bytes
       * @param iterations the number of iterations to use (use 10K or more)
       */
-      void pbkdf_iterations(byte out[], size_t out_len,
+      void pbkdf_iterations(uint8_t out[], size_t out_len,
                             const std::string& passphrase,
-                            const byte salt[], size_t salt_len,
+                            const uint8_t salt[], size_t salt_len,
                             size_t iterations) const;
 
       /**
@@ -97,9 +97,9 @@ class BOTAN_DLL PBKDF
       *        run until msec milliseconds has passed.
       * @param iterations set to the number iterations executed
       */
-      void pbkdf_timed(byte out[], size_t out_len,
+      void pbkdf_timed(uint8_t out[], size_t out_len,
                          const std::string& passphrase,
-                         const byte salt[], size_t salt_len,
+                         const uint8_t salt[], size_t salt_len,
                          std::chrono::milliseconds msec,
                          size_t& iterations) const;
 
@@ -113,9 +113,9 @@ class BOTAN_DLL PBKDF
       * @param iterations the number of iterations to use (use 10K or more)
       * @return the derived key
       */
-      secure_vector<byte> pbkdf_iterations(size_t out_len,
+      secure_vector<uint8_t> pbkdf_iterations(size_t out_len,
                                            const std::string& passphrase,
-                                           const byte salt[], size_t salt_len,
+                                           const uint8_t salt[], size_t salt_len,
                                            size_t iterations) const;
 
       /**
@@ -130,9 +130,9 @@ class BOTAN_DLL PBKDF
       * @param iterations set to the number iterations executed
       * @return the derived key
       */
-      secure_vector<byte> pbkdf_timed(size_t out_len,
+      secure_vector<uint8_t> pbkdf_timed(size_t out_len,
                                       const std::string& passphrase,
-                                      const byte salt[], size_t salt_len,
+                                      const uint8_t salt[], size_t salt_len,
                                       std::chrono::milliseconds msec,
                                       size_t& iterations) const;
 
@@ -148,7 +148,7 @@ class BOTAN_DLL PBKDF
       */
       OctetString derive_key(size_t out_len,
                              const std::string& passphrase,
-                             const byte salt[], size_t salt_len,
+                             const uint8_t salt[], size_t salt_len,
                              size_t iterations) const
          {
          return pbkdf_iterations(out_len, passphrase, salt, salt_len, iterations);
@@ -164,7 +164,7 @@ class BOTAN_DLL PBKDF
       template<typename Alloc>
       OctetString derive_key(size_t out_len,
                              const std::string& passphrase,
-                             const std::vector<byte, Alloc>& salt,
+                             const std::vector<uint8_t, Alloc>& salt,
                              size_t iterations) const
          {
          return pbkdf_iterations(out_len, passphrase, salt.data(), salt.size(), iterations);
@@ -181,7 +181,7 @@ class BOTAN_DLL PBKDF
       */
       OctetString derive_key(size_t out_len,
                              const std::string& passphrase,
-                             const byte salt[], size_t salt_len,
+                             const uint8_t salt[], size_t salt_len,
                              std::chrono::milliseconds msec,
                              size_t& iterations) const
          {
@@ -199,7 +199,7 @@ class BOTAN_DLL PBKDF
       template<typename Alloc>
       OctetString derive_key(size_t out_len,
                              const std::string& passphrase,
-                             const std::vector<byte, Alloc>& salt,
+                             const std::vector<uint8_t, Alloc>& salt,
                              std::chrono::milliseconds msec,
                              size_t& iterations) const
          {

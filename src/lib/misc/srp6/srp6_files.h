@@ -37,7 +37,7 @@ class BOTAN_DLL SRP6_Authenticator_File
       */
       bool lookup_user(const std::string& username,
                        BigInt& v,
-                       std::vector<byte>& salt,
+                       std::vector<uint8_t>& salt,
                        std::string& group_id) const;
    private:
       struct SRP6_Data
@@ -45,7 +45,7 @@ class BOTAN_DLL SRP6_Authenticator_File
          SRP6_Data() {}
 
          SRP6_Data(const BigInt& v_,
-                   const std::vector<byte>& salt_,
+                   const std::vector<uint8_t>& salt_,
                    const std::string& group_id_) :
             v(v_), salt(salt_), group_id(group_id_) {}
 
@@ -53,7 +53,7 @@ class BOTAN_DLL SRP6_Authenticator_File
          BigInt v;
 
          // public member variable:
-         std::vector<byte> salt;
+         std::vector<uint8_t> salt;
 
          // public member variable:
          std::string group_id;

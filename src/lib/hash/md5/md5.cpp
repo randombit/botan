@@ -14,8 +14,8 @@ namespace {
 /*
 * MD5 FF Function
 */
-inline void FF(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
-               byte S, u32bit magic)
+inline void FF(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t msg,
+               uint8_t S, uint32_t magic)
    {
    A += (D ^ (B & (C ^ D))) + msg + magic;
    A  = rotate_left(A, S) + B;
@@ -24,8 +24,8 @@ inline void FF(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
 /*
 * MD5 GG Function
 */
-inline void GG(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
-               byte S, u32bit magic)
+inline void GG(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t msg,
+               uint8_t S, uint32_t magic)
    {
    A += (C ^ (D & (B ^ C))) + msg + magic;
    A  = rotate_left(A, S) + B;
@@ -34,8 +34,8 @@ inline void GG(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
 /*
 * MD5 HH Function
 */
-inline void HH(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
-               byte S, u32bit magic)
+inline void HH(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t msg,
+               uint8_t S, uint32_t magic)
    {
    A += (B ^ C ^ D) + msg + magic;
    A  = rotate_left(A, S) + B;
@@ -44,8 +44,8 @@ inline void HH(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
 /*
 * MD5 II Function
 */
-inline void II(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
-               byte S, u32bit magic)
+inline void II(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t msg,
+               uint8_t S, uint32_t magic)
    {
    A += (C ^ (B | ~D)) + msg + magic;
    A  = rotate_left(A, S) + B;
@@ -56,9 +56,9 @@ inline void II(u32bit& A, u32bit B, u32bit C, u32bit D, u32bit msg,
 /*
 * MD5 Compression Function
 */
-void MD5::compress_n(const byte input[], size_t blocks)
+void MD5::compress_n(const uint8_t input[], size_t blocks)
    {
-   u32bit A = m_digest[0], B = m_digest[1], C = m_digest[2], D = m_digest[3];
+   uint32_t A = m_digest[0], B = m_digest[1], C = m_digest[2], D = m_digest[3];
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -112,7 +112,7 @@ void MD5::compress_n(const byte input[], size_t blocks)
 /*
 * Copy out the digest
 */
-void MD5::copy_out(byte output[])
+void MD5::copy_out(uint8_t output[])
    {
    copy_out_vec_le(output, output_length(), m_digest);
    }

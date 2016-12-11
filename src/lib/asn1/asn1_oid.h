@@ -33,7 +33,7 @@ class BOTAN_DLL OID final : public ASN1_Object
       * Get this OID as list (vector) of its components.
       * @return vector representing this OID
       */
-      const std::vector<u32bit>& get_id() const { return m_id; }
+      const std::vector<uint32_t>& get_id() const { return m_id; }
 
       /**
       * Get this OID as a string
@@ -57,7 +57,7 @@ class BOTAN_DLL OID final : public ASN1_Object
       * @param new_comp the new component to add to the end of this OID
       * @return reference to *this
       */
-      OID& operator+=(u32bit new_comp);
+      OID& operator+=(uint32_t new_comp);
 
       /**
       * Construct an OID from a string.
@@ -65,7 +65,7 @@ class BOTAN_DLL OID final : public ASN1_Object
       */
       OID(const std::string& str = "");
    private:
-      std::vector<u32bit> m_id;
+      std::vector<uint32_t> m_id;
    };
 
 /**
@@ -73,7 +73,7 @@ class BOTAN_DLL OID final : public ASN1_Object
 * @param oid the OID to add the new component to
 * @param new_comp the new component to add
 */
-OID BOTAN_DLL operator+(const OID& oid, u32bit new_comp);
+OID BOTAN_DLL operator+(const OID& oid, uint32_t new_comp);
 
 /**
 * Compare two OIDs.

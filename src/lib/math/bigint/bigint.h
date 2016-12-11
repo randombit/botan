@@ -48,7 +48,7 @@ class BOTAN_DLL BigInt
      * Create BigInt from 64 bit integer
      * @param n initial value of this BigInt
      */
-     BigInt(u64bit n);
+     BigInt(uint64_t n);
 
      /**
      * Copy Constructor
@@ -71,7 +71,7 @@ class BOTAN_DLL BigInt
      * @param length size of buf
      * @param base is the number base of the integer in buf
      */
-     BigInt(const byte buf[], size_t length, Base base = Binary);
+     BigInt(const uint8_t buf[], size_t length, Base base = Binary);
 
      /**
      * \brief Create a random BigInt of the specified size
@@ -223,7 +223,7 @@ class BOTAN_DLL BigInt
      * @result if (this<n) return -1, if (this>n) return 1, if both
      * values are identical return 0 [like Perl's <=> operator]
      */
-     s32bit cmp(const BigInt& n, bool check_signs = true) const;
+     int32_t cmp(const BigInt& n, bool check_signs = true) const;
 
      /**
      * Test if the integer has an even value
@@ -308,20 +308,20 @@ class BOTAN_DLL BigInt
      * @result the integer extracted from the register starting at
      * offset with specified length
      */
-     u32bit get_substring(size_t offset, size_t length) const;
+     uint32_t get_substring(size_t offset, size_t length) const;
 
      /**
-     * Convert this value into a u32bit, if it is in the range
+     * Convert this value into a uint32_t, if it is in the range
      * [0 ... 2**32-1], or otherwise throw an exception.
-     * @result the value as a u32bit if conversion is possible
+     * @result the value as a uint32_t if conversion is possible
      */
-     u32bit to_u32bit() const;
+     uint32_t to_u32bit() const;
 
      /**
      * @param n the offset to get a byte from
      * @result byte at offset n
      */
-     byte byte_at(size_t n) const
+     uint8_t byte_at(size_t n) const
         {
         return get_byte(sizeof(word) - (n % sizeof(word)) - 1,
                         word_at(n / sizeof(word)));
@@ -450,20 +450,20 @@ class BOTAN_DLL BigInt
      * Store BigInt-value in a given byte array
      * @param buf destination byte array for the integer value
      */
-     void binary_encode(byte buf[]) const;
+     void binary_encode(uint8_t buf[]) const;
 
      /**
      * Read integer value from a byte array with given size
      * @param buf byte array buffer containing the integer
      * @param length size of buf
      */
-     void binary_decode(const byte buf[], size_t length);
+     void binary_decode(const uint8_t buf[], size_t length);
 
      /**
-     * Read integer value from a byte array (secure_vector<byte>)
+     * Read integer value from a byte array (secure_vector<uint8_t>)
      * @param buf the array to load from
      */
-     void binary_decode(const secure_vector<byte>& buf)
+     void binary_decode(const secure_vector<uint8_t>& buf)
         {
         binary_decode(buf.data(), buf.size());
         }
@@ -502,7 +502,7 @@ class BOTAN_DLL BigInt
      * @param base number-base of resulting byte array representation
      * @result secure_vector of bytes containing the integer with given base
      */
-     static std::vector<byte> encode(const BigInt& n, Base base = Binary);
+     static std::vector<uint8_t> encode(const BigInt& n, Base base = Binary);
 
      /**
      * Encode the integer value from a BigInt to a secure_vector of bytes
@@ -510,7 +510,7 @@ class BOTAN_DLL BigInt
      * @param base number-base of resulting byte array representation
      * @result secure_vector of bytes containing the integer with given base
      */
-     static secure_vector<byte> encode_locked(const BigInt& n,
+     static secure_vector<uint8_t> encode_locked(const BigInt& n,
                                               Base base = Binary);
 
      /**
@@ -520,7 +520,7 @@ class BOTAN_DLL BigInt
      * @param n the BigInt to use as integer source
      * @param base number-base of resulting byte array representation
      */
-     static void encode(byte buf[], const BigInt& n, Base base = Binary);
+     static void encode(uint8_t buf[], const BigInt& n, Base base = Binary);
 
      /**
      * Create a BigInt from an integer in a byte array
@@ -529,7 +529,7 @@ class BOTAN_DLL BigInt
      * @param base number-base of the integer in buf
      * @result BigInt representing the integer in the byte array
      */
-     static BigInt decode(const byte buf[], size_t length,
+     static BigInt decode(const uint8_t buf[], size_t length,
                           Base base = Binary);
 
      /**
@@ -538,7 +538,7 @@ class BOTAN_DLL BigInt
      * @param base number-base of the integer in buf
      * @result BigInt representing the integer in the byte array
      */
-     static BigInt decode(const secure_vector<byte>& buf,
+     static BigInt decode(const secure_vector<uint8_t>& buf,
                           Base base = Binary)
         {
         return BigInt::decode(buf.data(), buf.size(), base);
@@ -550,7 +550,7 @@ class BOTAN_DLL BigInt
      * @param base number-base of the integer in buf
      * @result BigInt representing the integer in the byte array
      */
-     static BigInt decode(const std::vector<byte>& buf,
+     static BigInt decode(const std::vector<uint8_t>& buf,
                           Base base = Binary)
         {
         return BigInt::decode(buf.data(), buf.size(), base);
@@ -559,21 +559,21 @@ class BOTAN_DLL BigInt
      /**
      * Encode a BigInt to a byte array according to IEEE 1363
      * @param n the BigInt to encode
-     * @param bytes the length of the resulting secure_vector<byte>
-     * @result a secure_vector<byte> containing the encoded BigInt
+     * @param bytes the length of the resulting secure_vector<uint8_t>
+     * @result a secure_vector<uint8_t> containing the encoded BigInt
      */
-     static secure_vector<byte> encode_1363(const BigInt& n, size_t bytes);
+     static secure_vector<uint8_t> encode_1363(const BigInt& n, size_t bytes);
 
-     static void encode_1363(byte out[], size_t bytes, const BigInt& n);
+     static void encode_1363(uint8_t out[], size_t bytes, const BigInt& n);
 
      /**
      * Encode two BigInt to a byte array according to IEEE 1363
      * @param n1 the first BigInt to encode
      * @param n2 the second BigInt to encode
      * @param bytes the length of the encoding of each single BigInt
-     * @result a secure_vector<byte> containing the concatenation of the two encoded BigInt
+     * @result a secure_vector<uint8_t> containing the concatenation of the two encoded BigInt
      */
-     static secure_vector<byte> encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes);
+     static secure_vector<uint8_t> encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes);
 
    private:
       secure_vector<word> m_reg;

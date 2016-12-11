@@ -16,9 +16,9 @@ namespace {
 /*
 * CAST-256 Round Type 1
 */
-void round1(u32bit& out, u32bit in, u32bit mask, u32bit rot)
+void round1(uint32_t& out, uint32_t in, uint32_t mask, uint32_t rot)
    {
-   u32bit temp = rotate_left(mask + in, rot);
+   uint32_t temp = rotate_left(mask + in, rot);
    out  ^= (CAST_SBOX1[get_byte(0, temp)] ^ CAST_SBOX2[get_byte(1, temp)]) -
             CAST_SBOX3[get_byte(2, temp)] + CAST_SBOX4[get_byte(3, temp)];
    }
@@ -26,9 +26,9 @@ void round1(u32bit& out, u32bit in, u32bit mask, u32bit rot)
 /*
 * CAST-256 Round Type 2
 */
-void round2(u32bit& out, u32bit in, u32bit mask, u32bit rot)
+void round2(uint32_t& out, uint32_t in, uint32_t mask, uint32_t rot)
    {
-   u32bit temp = rotate_left(mask ^ in, rot);
+   uint32_t temp = rotate_left(mask ^ in, rot);
    out  ^= (CAST_SBOX1[get_byte(0, temp)]  - CAST_SBOX2[get_byte(1, temp)] +
             CAST_SBOX3[get_byte(2, temp)]) ^ CAST_SBOX4[get_byte(3, temp)];
    }
@@ -36,9 +36,9 @@ void round2(u32bit& out, u32bit in, u32bit mask, u32bit rot)
 /*
 * CAST-256 Round Type 3
 */
-void round3(u32bit& out, u32bit in, u32bit mask, u32bit rot)
+void round3(uint32_t& out, uint32_t in, uint32_t mask, uint32_t rot)
    {
-   u32bit temp = rotate_left(mask - in, rot);
+   uint32_t temp = rotate_left(mask - in, rot);
    out  ^= ((CAST_SBOX1[get_byte(0, temp)]  + CAST_SBOX2[get_byte(1, temp)]) ^
              CAST_SBOX3[get_byte(2, temp)]) - CAST_SBOX4[get_byte(3, temp)];
    }
@@ -48,14 +48,14 @@ void round3(u32bit& out, u32bit in, u32bit mask, u32bit rot)
 /*
 * CAST-256 Encryption
 */
-void CAST_256::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void CAST_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    for(size_t i = 0; i != blocks; ++i)
       {
-      u32bit A = load_be<u32bit>(in, 0);
-      u32bit B = load_be<u32bit>(in, 1);
-      u32bit C = load_be<u32bit>(in, 2);
-      u32bit D = load_be<u32bit>(in, 3);
+      uint32_t A = load_be<uint32_t>(in, 0);
+      uint32_t B = load_be<uint32_t>(in, 1);
+      uint32_t C = load_be<uint32_t>(in, 2);
+      uint32_t D = load_be<uint32_t>(in, 3);
 
       round1(C, D, m_MK[ 0], m_RK[ 0]); round2(B, C, m_MK[ 1], m_RK[ 1]);
       round3(A, B, m_MK[ 2], m_RK[ 2]); round1(D, A, m_MK[ 3], m_RK[ 3]);
@@ -92,14 +92,14 @@ void CAST_256::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * CAST-256 Decryption
 */
-void CAST_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void CAST_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    for(size_t i = 0; i != blocks; ++i)
       {
-      u32bit A = load_be<u32bit>(in, 0);
-      u32bit B = load_be<u32bit>(in, 1);
-      u32bit C = load_be<u32bit>(in, 2);
-      u32bit D = load_be<u32bit>(in, 3);
+      uint32_t A = load_be<uint32_t>(in, 0);
+      uint32_t B = load_be<uint32_t>(in, 1);
+      uint32_t C = load_be<uint32_t>(in, 2);
+      uint32_t D = load_be<uint32_t>(in, 3);
 
       round1(C, D, m_MK[44], m_RK[44]); round2(B, C, m_MK[45], m_RK[45]);
       round3(A, B, m_MK[46], m_RK[46]); round1(D, A, m_MK[47], m_RK[47]);
@@ -136,9 +136,9 @@ void CAST_256::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * CAST-256 Key Schedule
 */
-void CAST_256::key_schedule(const byte key[], size_t length)
+void CAST_256::key_schedule(const uint8_t key[], size_t length)
    {
-   static const u32bit KEY_MASK[192] = {
+   static const uint32_t KEY_MASK[192] = {
       0x5A827999, 0xC95C653A, 0x383650DB, 0xA7103C7C, 0x15EA281D, 0x84C413BE,
       0xF39DFF5F, 0x6277EB00, 0xD151D6A1, 0x402BC242, 0xAF05ADE3, 0x1DDF9984,
       0x8CB98525, 0xFB9370C6, 0x6A6D5C67, 0xD9474808, 0x482133A9, 0xB6FB1F4A,
@@ -172,7 +172,7 @@ void CAST_256::key_schedule(const byte key[], size_t length)
       0x4BBC26CD, 0xBA96126E, 0x296FFE0F, 0x9849E9B0, 0x0723D551, 0x75FDC0F2,
       0xE4D7AC93, 0x53B19834, 0xC28B83D5, 0x31656F76, 0xA03F5B17, 0x0F1946B8 };
 
-   static const byte KEY_ROT[32] = {
+   static const uint8_t KEY_ROT[32] = {
       0x13, 0x04, 0x15, 0x06, 0x17, 0x08, 0x19, 0x0A, 0x1B, 0x0C,
       0x1D, 0x0E, 0x1F, 0x10, 0x01, 0x12, 0x03, 0x14, 0x05, 0x16,
       0x07, 0x18, 0x09, 0x1A, 0x0B, 0x1C, 0x0D, 0x1E, 0x0F, 0x00,
@@ -181,11 +181,11 @@ void CAST_256::key_schedule(const byte key[], size_t length)
    m_MK.resize(48);
    m_RK.resize(48);
 
-   secure_vector<u32bit> K(8);
+   secure_vector<uint32_t> K(8);
    for(size_t i = 0; i != length; ++i)
       K[i/4] = (K[i/4] << 8) + key[i];
 
-   u32bit A = K[0], B = K[1], C = K[2], D = K[3],
+   uint32_t A = K[0], B = K[1], C = K[2], D = K[3],
           E = K[4], F = K[5], G = K[6], H = K[7];
 
    for(size_t i = 0; i != 48; i += 4)

@@ -38,7 +38,7 @@ Certificate_Verify::Certificate_Verify(Handshake_IO& io,
 /*
 * Deserialize a Certificate Verify message
 */
-Certificate_Verify::Certificate_Verify(const std::vector<byte>& buf,
+Certificate_Verify::Certificate_Verify(const std::vector<uint8_t>& buf,
                                        Protocol_Version version)
    {
    TLS_Data_Reader reader("CertificateVerify", buf);
@@ -49,15 +49,15 @@ Certificate_Verify::Certificate_Verify(const std::vector<byte>& buf,
       m_sig_algo = Signature_Algorithms::sig_algo_name(reader.get_byte());
       }
 
-   m_signature = reader.get_range<byte>(2, 0, 65535);
+   m_signature = reader.get_range<uint8_t>(2, 0, 65535);
    }
 
 /*
 * Serialize a Certificate Verify message
 */
-std::vector<byte> Certificate_Verify::serialize() const
+std::vector<uint8_t> Certificate_Verify::serialize() const
    {
-   std::vector<byte> buf;
+   std::vector<uint8_t> buf;
 
    if(!m_hash_algo.empty() && !m_sig_algo.empty())
       {
@@ -65,7 +65,7 @@ std::vector<byte> Certificate_Verify::serialize() const
       buf.push_back(Signature_Algorithms::sig_algo_code(m_sig_algo));
       }
 
-   const u16bit sig_len = static_cast<u16bit>(m_signature.size());
+   const uint16_t sig_len = static_cast<uint16_t>(m_signature.size());
    buf.push_back(get_byte(0, sig_len));
    buf.push_back(get_byte(1, sig_len));
    buf += m_signature;

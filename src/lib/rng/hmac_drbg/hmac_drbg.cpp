@@ -81,7 +81,7 @@ void HMAC_DRBG::clear()
    m_V.resize(m_mac->output_length());
    for(size_t i = 0; i != m_V.size(); ++i)
       m_V[i] = 0x01;
-   m_mac->set_key(std::vector<byte>(m_mac->output_length(), 0x00));
+   m_mac->set_key(std::vector<uint8_t>(m_mac->output_length(), 0x00));
    }
 
 std::string HMAC_DRBG::name() const
@@ -89,7 +89,7 @@ std::string HMAC_DRBG::name() const
    return "HMAC_DRBG(" + m_mac->name() + ")";
    }
 
-void HMAC_DRBG::randomize(byte output[], size_t output_len)
+void HMAC_DRBG::randomize(uint8_t output[], size_t output_len)
    {
    randomize_with_input(output, output_len, nullptr, 0);
    }
@@ -98,8 +98,8 @@ void HMAC_DRBG::randomize(byte output[], size_t output_len)
 * HMAC_DRBG generation
 * See NIST SP800-90A section 10.1.2.5
 */
-void HMAC_DRBG::randomize_with_input(byte output[], size_t output_len,
-                                     const byte input[], size_t input_len)
+void HMAC_DRBG::randomize_with_input(uint8_t output[], size_t output_len,
+                                     const uint8_t input[], size_t input_len)
    {
    while(output_len > 0)
       {
@@ -133,7 +133,7 @@ void HMAC_DRBG::randomize_with_input(byte output[], size_t output_len,
 * Reset V and the mac key with new values
 * See NIST SP800-90A section 10.1.2.2
 */
-void HMAC_DRBG::update(const byte input[], size_t input_len)
+void HMAC_DRBG::update(const uint8_t input[], size_t input_len)
    {
    m_mac->update(m_V);
    m_mac->update(0x00);
@@ -155,7 +155,7 @@ void HMAC_DRBG::update(const byte input[], size_t input_len)
       }
    }
 
-void HMAC_DRBG::add_entropy(const byte input[], size_t input_len)
+void HMAC_DRBG::add_entropy(const uint8_t input[], size_t input_len)
    {
    update(input, input_len);
    }

@@ -10,7 +10,7 @@
 namespace Botan {
 
 XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
-                               const secure_vector<byte>& raw_sig)
+                               const secure_vector<uint8_t>& raw_sig)
    : m_leaf_idx(0), m_randomness(0, 0x00), m_tree_sig()
    {
    BOTAN_ASSERT(sizeof(size_t) >= ceil(static_cast<float>(
@@ -38,7 +38,7 @@ XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
       {
       begin = end;
       end = begin + xmss_params.element_size();
-      m_tree_sig.ots_signature().push_back(secure_vector<byte>(0));
+      m_tree_sig.ots_signature().push_back(secure_vector<uint8_t>(0));
       m_tree_sig.ots_signature().back().reserve(
          xmss_params.element_size());
       std::copy(begin,
@@ -50,7 +50,7 @@ XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
       {
       begin = end;
       end = begin + xmss_params.element_size();
-      m_tree_sig.authentication_path().push_back(secure_vector<byte>(0));
+      m_tree_sig.authentication_path().push_back(secure_vector<uint8_t>(0));
       m_tree_sig.authentication_path().back().reserve(
          xmss_params.element_size());
       std::copy(begin,
@@ -59,18 +59,18 @@ XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
       }
    }
 
-secure_vector<byte> XMSS_Signature::bytes() const
+secure_vector<uint8_t> XMSS_Signature::bytes() const
    {
-   secure_vector<byte> result
+   secure_vector<uint8_t> result
       {
-      static_cast<byte>(static_cast<uint64_t>(m_leaf_idx) >> 56U),
-      static_cast<byte>(static_cast<uint64_t>(m_leaf_idx) >> 48U),
-      static_cast<byte>(static_cast<uint64_t>(m_leaf_idx) >> 40U),
-      static_cast<byte>(static_cast<uint64_t>(m_leaf_idx) >> 32U),
-      static_cast<byte>(static_cast<uint64_t>(m_leaf_idx) >> 24U),
-      static_cast<byte>(static_cast<uint64_t>(m_leaf_idx) >> 16U),
-      static_cast<byte>(static_cast<uint64_t>(m_leaf_idx) >>  8U),
-      static_cast<byte>(static_cast<uint64_t>(m_leaf_idx)       )
+      static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx) >> 56U),
+      static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx) >> 48U),
+      static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx) >> 40U),
+      static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx) >> 32U),
+      static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx) >> 24U),
+      static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx) >> 16U),
+      static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx) >>  8U),
+      static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx)       )
       };
 
    std::copy(m_randomness.begin(),

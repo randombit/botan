@@ -55,7 +55,7 @@ bool Session_Manager_In_Memory::load_from_session_str(
    }
 
 bool Session_Manager_In_Memory::load_from_session_id(
-   const std::vector<byte>& session_id, Session& session)
+   const std::vector<uint8_t>& session_id, Session& session)
    {
    lock_guard_type<mutex_type> lock(m_mutex);
 
@@ -85,7 +85,7 @@ bool Session_Manager_In_Memory::load_from_server_info(
    }
 
 void Session_Manager_In_Memory::remove_entry(
-   const std::vector<byte>& session_id)
+   const std::vector<uint8_t>& session_id)
    {
    lock_guard_type<mutex_type> lock(m_mutex);
 

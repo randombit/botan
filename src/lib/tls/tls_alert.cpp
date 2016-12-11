@@ -12,7 +12,7 @@ namespace Botan {
 
 namespace TLS {
 
-Alert::Alert(const secure_vector<byte>& buf)
+Alert::Alert(const secure_vector<uint8_t>& buf)
    {
    if(buf.size() != 2)
       throw Decoding_Error("Alert: Bad size " + std::to_string(buf.size()) +
@@ -23,16 +23,16 @@ Alert::Alert(const secure_vector<byte>& buf)
    else
       throw Decoding_Error("Alert: Bad code for alert level");
 
-   const byte dc = buf[1];
+   const uint8_t dc = buf[1];
 
    m_type_code = static_cast<Type>(dc);
    }
 
-std::vector<byte> Alert::serialize() const
+std::vector<uint8_t> Alert::serialize() const
    {
-   return std::vector<byte>({
-      static_cast<byte>(is_fatal() ? 2 : 1),
-      static_cast<byte>(type())
+   return std::vector<uint8_t>({
+      static_cast<uint8_t>(is_fatal() ? 2 : 1),
+      static_cast<uint8_t>(type())
       });
    }
 

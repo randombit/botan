@@ -27,7 +27,7 @@ class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
       * @param key_bits DER encoded public key bits
       */
       ElGamal_PublicKey(const AlgorithmIdentifier& alg_id,
-                        const std::vector<byte>& key_bits) :
+                        const std::vector<uint8_t>& key_bits) :
          DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
          {}
 
@@ -62,7 +62,7 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
       * @param key_bits PKCS #8 structure
       */
       ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
-                         const secure_vector<byte>& key_bits);
+                         const secure_vector<uint8_t>& key_bits);
 
       /**
       * Create a private key.

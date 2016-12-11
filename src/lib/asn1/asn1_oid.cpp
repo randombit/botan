@@ -75,7 +75,7 @@ bool OID::operator==(const OID& oid) const
 /*
 * Append another component to the OID
 */
-OID& OID::operator+=(u32bit component)
+OID& OID::operator+=(uint32_t component)
    {
    m_id.push_back(component);
    return (*this);
@@ -84,7 +84,7 @@ OID& OID::operator+=(u32bit component)
 /*
 * Append another component to the OID
 */
-OID operator+(const OID& oid, u32bit component)
+OID operator+(const OID& oid, uint32_t component)
    {
    OID new_oid(oid);
    new_oid += component;
@@ -104,8 +104,8 @@ bool operator!=(const OID& a, const OID& b)
 */
 bool operator<(const OID& a, const OID& b)
    {
-   const std::vector<u32bit>& oid1 = a.get_id();
-   const std::vector<u32bit>& oid2 = b.get_id();
+   const std::vector<uint32_t>& oid1 = a.get_id();
+   const std::vector<uint32_t>& oid2 = b.get_id();
 
    if(oid1.size() < oid2.size())
       return true;
@@ -129,7 +129,7 @@ void OID::encode_into(DER_Encoder& der) const
    if(m_id.size() < 2)
       throw Invalid_Argument("OID::encode_into: OID is invalid");
 
-   std::vector<byte> encoding;
+   std::vector<uint8_t> encoding;
    encoding.push_back(40 * m_id[0] + m_id[1]);
 
    for(size_t i = 2; i != m_id.size(); ++i)
@@ -171,7 +171,7 @@ void OID::decode_from(BER_Decoder& decoder)
    size_t i = 0;
    while(i != obj.value.size() - 1)
       {
-      u32bit component = 0;
+      uint32_t component = 0;
       while(i != obj.value.size() - 1)
          {
          ++i;

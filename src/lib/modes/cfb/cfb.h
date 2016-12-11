@@ -44,17 +44,17 @@ class BOTAN_DLL CFB_Mode : public Cipher_Mode
 
       size_t feedback() const { return m_feedback_bytes; }
 
-      secure_vector<byte>& shift_register() { return m_shift_register; }
+      secure_vector<uint8_t>& shift_register() { return m_shift_register; }
 
-      secure_vector<byte>& keystream_buf() { return m_keystream_buf; }
+      secure_vector<uint8_t>& keystream_buf() { return m_keystream_buf; }
 
    private:
-      void start_msg(const byte nonce[], size_t nonce_len) override;
-      void key_schedule(const byte key[], size_t length) override;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
+      void key_schedule(const uint8_t key[], size_t length) override;
 
       std::unique_ptr<BlockCipher> m_cipher;
-      secure_vector<byte> m_shift_register;
-      secure_vector<byte> m_keystream_buf;
+      secure_vector<uint8_t> m_shift_register;
+      secure_vector<uint8_t> m_keystream_buf;
       size_t m_feedback_bytes;
    };
 
@@ -75,7 +75,7 @@ class BOTAN_DLL CFB_Encryption final : public CFB_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 /**
@@ -95,7 +95,7 @@ class BOTAN_DLL CFB_Decryption final : public CFB_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 }

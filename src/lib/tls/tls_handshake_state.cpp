@@ -77,7 +77,7 @@ const char* handshake_type_to_string(Handshake_Type type)
 
 namespace {
 
-u32bit bitmask_for_handshake_type(Handshake_Type type)
+uint32_t bitmask_for_handshake_type(Handshake_Type type)
    {
    switch(type)
       {
@@ -134,7 +134,7 @@ u32bit bitmask_for_handshake_type(Handshake_Type type)
    throw Internal_Error("Unknown handshake type " + std::to_string(type));
    }
 
-std::string handshake_mask_to_string(u32bit mask)
+std::string handshake_mask_to_string(uint32_t mask)
    {
    const Handshake_Type types[] = {
       HELLO_VERIFY_REQUEST,
@@ -288,14 +288,14 @@ void Handshake_State::compute_session_keys()
    m_session_keys = Session_Keys(this, client_kex()->pre_master_secret(), false);
    }
 
-void Handshake_State::compute_session_keys(const secure_vector<byte>& resume_master_secret)
+void Handshake_State::compute_session_keys(const secure_vector<uint8_t>& resume_master_secret)
    {
    m_session_keys = Session_Keys(this, resume_master_secret, true);
    }
 
 void Handshake_State::confirm_transition_to(Handshake_Type handshake_msg)
    {
-   const u32bit mask = bitmask_for_handshake_type(handshake_msg);
+   const uint32_t mask = bitmask_for_handshake_type(handshake_msg);
 
    m_hand_received_mask |= mask;
 
@@ -321,12 +321,12 @@ void Handshake_State::set_expected_next(Handshake_Type handshake_msg)
 
 bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    {
-   const u32bit mask = bitmask_for_handshake_type(handshake_msg);
+   const uint32_t mask = bitmask_for_handshake_type(handshake_msg);
 
    return (m_hand_received_mask & mask) != 0;
    }
 
-std::pair<Handshake_Type, std::vector<byte>>
+std::pair<Handshake_Type, std::vector<uint8_t>>
 Handshake_State::get_next_handshake_msg()
    {
    const bool expecting_ccs =
@@ -347,7 +347,7 @@ std::string Handshake_State::srp_identifier() const
    }
 
 
-std::vector<byte> Handshake_State::session_ticket() const
+std::vector<uint8_t> Handshake_State::session_ticket() const
    {
    if(new_session_ticket() && !new_session_ticket()->ticket().empty())
       return new_session_ticket()->ticket();

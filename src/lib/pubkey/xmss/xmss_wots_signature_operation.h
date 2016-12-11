@@ -43,17 +43,17 @@ class XMSS_WOTS_Signature_Operation : public virtual PK_Ops::Signature,
        *
        * @return serialized Winternitz One Time Signature.
        **/
-      secure_vector<byte> sign(RandomNumberGenerator&) override;
+      secure_vector<uint8_t> sign(RandomNumberGenerator&) override;
 
-      void update(const byte msg[], size_t msg_len) override;
+      void update(const uint8_t msg[], size_t msg_len) override;
 
    private:
-      wots_keysig_t sign(const secure_vector<byte>& msg,
+      wots_keysig_t sign(const secure_vector<uint8_t>& msg,
                          const wots_keysig_t& priv_key,
                          XMSS_Address& adrs,
-                         const secure_vector<byte>& seed);
+                         const secure_vector<uint8_t>& seed);
       XMSS_WOTS_Addressed_PrivateKey m_priv_key;
-      secure_vector<byte> m_msg_buf;
+      secure_vector<uint8_t> m_msg_buf;
    };
 
 }

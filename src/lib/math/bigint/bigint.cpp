@@ -17,12 +17,12 @@ namespace Botan {
 /*
 * Construct a BigInt from a regular number
 */
-BigInt::BigInt(u64bit n)
+BigInt::BigInt(uint64_t n)
    {
    if(n == 0)
       return;
 
-   const size_t limbs_needed = sizeof(u64bit) / sizeof(word);
+   const size_t limbs_needed = sizeof(uint64_t) / sizeof(word);
 
    m_reg.resize(4*limbs_needed);
    for(size_t i = 0; i != limbs_needed; ++i)
@@ -69,7 +69,7 @@ BigInt::BigInt(const std::string& str)
       base = Hexadecimal;
       }
 
-   *this = decode(reinterpret_cast<const byte*>(str.data()) + markers,
+   *this = decode(reinterpret_cast<const uint8_t*>(str.data()) + markers,
                   str.length() - markers, base);
 
    if(negative) set_sign(Negative);
@@ -79,7 +79,7 @@ BigInt::BigInt(const std::string& str)
 /*
 * Construct a BigInt from an encoded BigInt
 */
-BigInt::BigInt(const byte input[], size_t length, Base base)
+BigInt::BigInt(const uint8_t input[], size_t length, Base base)
    {
    *this = decode(input, length, base);
    }
@@ -95,7 +95,7 @@ BigInt::BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit)
 /*
 * Comparison Function
 */
-s32bit BigInt::cmp(const BigInt& other, bool check_signs) const
+int32_t BigInt::cmp(const BigInt& other, bool check_signs) const
    {
    if(check_signs)
       {
@@ -117,35 +117,35 @@ s32bit BigInt::cmp(const BigInt& other, bool check_signs) const
 /*
 * Return bits {offset...offset+length}
 */
-u32bit BigInt::get_substring(size_t offset, size_t length) const
+uint32_t BigInt::get_substring(size_t offset, size_t length) const
    {
    if(length > 32)
       throw Invalid_Argument("BigInt::get_substring: Substring size too big");
 
-   u64bit piece = 0;
+   uint64_t piece = 0;
    for(size_t i = 0; i != 8; ++i)
       {
-      const byte part = byte_at((offset / 8) + (7-i));
+      const uint8_t part = byte_at((offset / 8) + (7-i));
       piece = (piece << 8) | part;
       }
 
-   const u64bit mask = (static_cast<u64bit>(1) << length) - 1;
+   const uint64_t mask = (static_cast<uint64_t>(1) << length) - 1;
    const size_t shift = (offset % 8);
 
-   return static_cast<u32bit>((piece >> shift) & mask);
+   return static_cast<uint32_t>((piece >> shift) & mask);
    }
 
 /*
-* Convert this number to a u32bit, if possible
+* Convert this number to a uint32_t, if possible
 */
-u32bit BigInt::to_u32bit() const
+uint32_t BigInt::to_u32bit() const
    {
    if(is_negative())
       throw Encoding_Error("BigInt::to_u32bit: Number is negative");
    if(bits() > 32)
       throw Encoding_Error("BigInt::to_u32bit: Number is too big to convert");
 
-   u32bit out = 0;
+   uint32_t out = 0;
    for(size_t i = 0; i != 4; ++i)
       out = (out << 8) | byte_at(3-i);
    return out;
@@ -267,7 +267,7 @@ void BigInt::grow_to(size_t n)
 /*
 * Encode this number into bytes
 */
-void BigInt::binary_encode(byte output[]) const
+void BigInt::binary_encode(uint8_t output[]) const
    {
    const size_t sig_bytes = bytes();
    for(size_t i = 0; i != sig_bytes; ++i)
@@ -277,7 +277,7 @@ void BigInt::binary_encode(byte output[]) const
 /*
 * Set this number to the value in buf
 */
-void BigInt::binary_decode(const byte buf[], size_t length)
+void BigInt::binary_decode(const uint8_t buf[], size_t length)
    {
    const size_t WORD_BYTES = sizeof(word);
 

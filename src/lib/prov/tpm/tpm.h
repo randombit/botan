@@ -77,12 +77,12 @@ class BOTAN_DLL TPM_RNG : public Hardware_RNG
    public:
       TPM_RNG(TPM_Context& ctx) : m_ctx(ctx) {}
 
-      void add_entropy(const byte in[], size_t in_len) override
+      void add_entropy(const uint8_t in[], size_t in_len) override
          {
          m_ctx.stir_random(in, in_len);
          }
 
-      void randomize(byte out[], size_t out_len) override
+      void randomize(uint8_t out[], size_t out_len) override
          {
          m_ctx.gen_random(out, out_len);
          }
@@ -154,9 +154,9 @@ class BOTAN_DLL TPM_PrivateKey : public Private_Key
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<byte> public_key_bits() const override;
+      std::vector<uint8_t> public_key_bits() const override;
 
-      secure_vector<byte> private_key_bits() const override;
+      secure_vector<uint8_t> private_key_bits() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 

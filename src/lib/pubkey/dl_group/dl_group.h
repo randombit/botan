@@ -78,14 +78,14 @@ class BOTAN_DLL DL_Group
       * @param format the encoding format
       * @return string holding the DER encoded group
       */
-      std::vector<byte> DER_encode(Format format) const;
+      std::vector<uint8_t> DER_encode(Format format) const;
 
       /**
       * Decode a DER/BER encoded group into this instance.
       * @param ber a vector containing the DER/BER encoded group
       * @param format the format of the encoded group
       */
-      void BER_decode(const std::vector<byte>& ber,
+      void BER_decode(const std::vector<uint8_t>& ber,
                       Format format);
 
       /**
@@ -134,7 +134,7 @@ class BOTAN_DLL DL_Group
       * @param qbits the desired bit size of the prime q.
       */
       DL_Group(RandomNumberGenerator& rng,
-               const std::vector<byte>& seed,
+               const std::vector<uint8_t>& seed,
                size_t pbits = 1024, size_t qbits = 0);
 
       /**

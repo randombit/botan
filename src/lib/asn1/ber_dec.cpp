@@ -20,7 +20,7 @@ namespace {
 */
 size_t decode_tag(DataSource* ber, ASN1_Tag& type_tag, ASN1_Tag& class_tag)
    {
-   byte b;
+   uint8_t b;
    if(!ber->read_byte(b))
       {
       class_tag = type_tag = NO_OBJECT;
@@ -62,7 +62,7 @@ size_t find_eoc(DataSource*);
 */
 size_t decode_length(DataSource* ber, size_t& field_size)
    {
-   byte b;
+   uint8_t b;
    if(!ber->read_byte(b))
       throw BER_Decoding_Error("Length field not found");
    field_size = 1;
@@ -101,7 +101,7 @@ size_t decode_length(DataSource* ber)
 */
 size_t find_eoc(DataSource* ber)
    {
-   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE), data;
+   secure_vector<uint8_t> buffer(DEFAULT_BUFFERSIZE), data;
 
    while(true)
       {
@@ -175,19 +175,19 @@ BER_Decoder& BER_Decoder::verify_end()
 /*
 * Save all the bytes remaining in the source
 */
-BER_Decoder& BER_Decoder::raw_bytes(secure_vector<byte>& out)
+BER_Decoder& BER_Decoder::raw_bytes(secure_vector<uint8_t>& out)
    {
    out.clear();
-   byte buf;
+   uint8_t buf;
    while(m_source->read_byte(buf))
       out.push_back(buf);
    return (*this);
    }
 
-BER_Decoder& BER_Decoder::raw_bytes(std::vector<byte>& out)
+BER_Decoder& BER_Decoder::raw_bytes(std::vector<uint8_t>& out)
    {
    out.clear();
-   byte buf;
+   uint8_t buf;
    while(m_source->read_byte(buf))
       out.push_back(buf);
    return (*this);
@@ -198,7 +198,7 @@ BER_Decoder& BER_Decoder::raw_bytes(std::vector<byte>& out)
 */
 BER_Decoder& BER_Decoder::discard_remaining()
    {
-   byte buf;
+   uint8_t buf;
    while(m_source->read_byte(buf))
       ;
    return (*this);
@@ -292,7 +292,7 @@ BER_Decoder::BER_Decoder(DataSource& src)
 /*
 * BER_Decoder Constructor
  */
-BER_Decoder::BER_Decoder(const byte data[], size_t length)
+BER_Decoder::BER_Decoder(const uint8_t data[], size_t length)
    {
    m_source = new DataSource_Memory(data, length);
    m_owns = true;
@@ -303,7 +303,7 @@ BER_Decoder::BER_Decoder(const byte data[], size_t length)
 /*
 * BER_Decoder Constructor
 */
-BER_Decoder::BER_Decoder(const secure_vector<byte>& data)
+BER_Decoder::BER_Decoder(const secure_vector<uint8_t>& data)
    {
    m_source = new DataSource_Memory(data);
    m_owns = true;
@@ -314,7 +314,7 @@ BER_Decoder::BER_Decoder(const secure_vector<byte>& data)
 /*
 * BER_Decoder Constructor
 */
-BER_Decoder::BER_Decoder(const std::vector<byte>& data)
+BER_Decoder::BER_Decoder(const std::vector<uint8_t>& data)
    {
    m_source = new DataSource_Memory(data.data(), data.size());
    m_owns = true;
@@ -396,15 +396,15 @@ BER_Decoder& BER_Decoder::decode(BigInt& out)
 
 BER_Decoder& BER_Decoder::decode_octet_string_bigint(BigInt& out)
    {
-   secure_vector<byte> out_vec;
+   secure_vector<uint8_t> out_vec;
    decode(out_vec, OCTET_STRING);
    out = BigInt::decode(out_vec.data(), out_vec.size());
    return (*this);
    }
 
-std::vector<byte> BER_Decoder::get_next_octet_string()
+std::vector<uint8_t> BER_Decoder::get_next_octet_string()
    {
-   std::vector<byte> out_vec;
+   std::vector<uint8_t> out_vec;
    decode(out_vec, OCTET_STRING);
    return out_vec;
    }
@@ -447,7 +447,7 @@ BER_Decoder& BER_Decoder::decode(size_t& out,
 /*
 * Decode a small BER encoded INTEGER
 */
-u64bit BER_Decoder::decode_constrained_integer(ASN1_Tag type_tag,
+uint64_t BER_Decoder::decode_constrained_integer(ASN1_Tag type_tag,
                                                ASN1_Tag class_tag,
                                                size_t T_bytes)
    {
@@ -460,7 +460,7 @@ u64bit BER_Decoder::decode_constrained_integer(ASN1_Tag type_tag,
    if(integer.bits() > 8*T_bytes)
       throw BER_Decoding_Error("Decoded integer value larger than expected");
 
-   u64bit out = 0;
+   uint64_t out = 0;
    for(size_t i = 0; i != 8; ++i)
       out = (out << 8) | integer.byte_at(7-i);
 
@@ -503,7 +503,7 @@ BER_Decoder& BER_Decoder::decode(BigInt& out,
 /*
 * BER decode a BIT STRING or OCTET STRING
 */
-BER_Decoder& BER_Decoder::decode(secure_vector<byte>& out, ASN1_Tag real_type)
+BER_Decoder& BER_Decoder::decode(secure_vector<uint8_t>& out, ASN1_Tag real_type)
    {
    return decode(out, real_type, real_type, UNIVERSAL);
    }
@@ -511,7 +511,7 @@ BER_Decoder& BER_Decoder::decode(secure_vector<byte>& out, ASN1_Tag real_type)
 /*
 * BER decode a BIT STRING or OCTET STRING
 */
-BER_Decoder& BER_Decoder::decode(std::vector<byte>& out, ASN1_Tag real_type)
+BER_Decoder& BER_Decoder::decode(std::vector<uint8_t>& out, ASN1_Tag real_type)
    {
    return decode(out, real_type, real_type, UNIVERSAL);
    }
@@ -519,7 +519,7 @@ BER_Decoder& BER_Decoder::decode(std::vector<byte>& out, ASN1_Tag real_type)
 /*
 * BER decode a BIT STRING or OCTET STRING
 */
-BER_Decoder& BER_Decoder::decode(secure_vector<byte>& buffer,
+BER_Decoder& BER_Decoder::decode(secure_vector<uint8_t>& buffer,
                                  ASN1_Tag real_type,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {
@@ -544,7 +544,7 @@ BER_Decoder& BER_Decoder::decode(secure_vector<byte>& buffer,
    return (*this);
    }
 
-BER_Decoder& BER_Decoder::decode(std::vector<byte>& buffer,
+BER_Decoder& BER_Decoder::decode(std::vector<uint8_t>& buffer,
                                  ASN1_Tag real_type,
                                  ASN1_Tag type_tag, ASN1_Tag class_tag)
    {

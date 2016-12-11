@@ -155,7 +155,7 @@ inline void poly_getnoise(Botan::RandomNumberGenerator& rng, poly *r)
 
   for(size_t i=0;i<PARAM_N;i++)
   {
-    uint32_t t = load_le<u32bit>(buf, i);
+    uint32_t t = load_le<uint32_t>(buf, i);
     uint32_t d = 0;
     for(int j=0;j<8;j++)
       d += (t >> j) & 0x01010101;

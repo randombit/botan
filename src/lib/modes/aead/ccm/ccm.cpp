@@ -65,7 +65,7 @@ size_t CCM_Mode::update_granularity() const
    /*
    This value does not particularly matter as regardless CCM_Mode::update
    buffers all input, so in theory this could be 1. However as for instance
-   Transform_Filter creates update_granularity() byte buffers, use a
+   Transform_Filter creates update_granularity() uint8_t buffers, use a
    somewhat large size to avoid bouncing on a tiny buffer.
    */
    return m_cipher->parallel_bytes();
@@ -76,12 +76,12 @@ Key_Length_Specification CCM_Mode::key_spec() const
    return m_cipher->key_spec();
    }
 
-void CCM_Mode::key_schedule(const byte key[], size_t length)
+void CCM_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);
    }
 
-void CCM_Mode::set_associated_data(const byte ad[], size_t length)
+void CCM_Mode::set_associated_data(const uint8_t ad[], size_t length)
    {
    m_ad_buf.clear();
 
@@ -90,15 +90,15 @@ void CCM_Mode::set_associated_data(const byte ad[], size_t length)
       // FIXME: support larger AD using length encoding rules
       BOTAN_ASSERT(length < (0xFFFF - 0xFF), "Supported CCM AD length");
 
-      m_ad_buf.push_back(get_byte(0, static_cast<u16bit>(length)));
-      m_ad_buf.push_back(get_byte(1, static_cast<u16bit>(length)));
+      m_ad_buf.push_back(get_byte(0, static_cast<uint16_t>(length)));
+      m_ad_buf.push_back(get_byte(1, static_cast<uint16_t>(length)));
       m_ad_buf += std::make_pair(ad, length);
       while(m_ad_buf.size() % CCM_BS)
          m_ad_buf.push_back(0); // pad with zeros to full block size
       }
    }
 
-void CCM_Mode::start_msg(const byte nonce[], size_t nonce_len)
+void CCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -113,7 +113,7 @@ size_t CCM_Mode::process(uint8_t buf[], size_t sz)
    return 0; // no output until finished
    }
 
-void CCM_Mode::encode_length(size_t len, byte out[])
+void CCM_Mode::encode_length(size_t len, uint8_t out[])
    {
    const size_t len_bytes = L();
 
@@ -125,18 +125,18 @@ void CCM_Mode::encode_length(size_t len, byte out[])
    BOTAN_ASSERT((len >> (len_bytes*8)) == 0, "Message length fits in field");
    }
 
-void CCM_Mode::inc(secure_vector<byte>& C)
+void CCM_Mode::inc(secure_vector<uint8_t>& C)
    {
    for(size_t i = 0; i != C.size(); ++i)
       if(++C[C.size()-i-1])
          break;
    }
 
-secure_vector<byte> CCM_Mode::format_b0(size_t sz)
+secure_vector<uint8_t> CCM_Mode::format_b0(size_t sz)
    {
-   secure_vector<byte> B0(CCM_BS);
+   secure_vector<uint8_t> B0(CCM_BS);
 
-   const byte b_flags = (m_ad_buf.size() ? 64 : 0) + (((tag_size()/2)-1) << 3) + (L()-1);
+   const uint8_t b_flags = (m_ad_buf.size() ? 64 : 0) + (((tag_size()/2)-1) << 3) + (L()-1);
 
    B0[0] = b_flags;
    copy_mem(&B0[1], m_nonce.data(), m_nonce.size());
@@ -145,11 +145,11 @@ secure_vector<byte> CCM_Mode::format_b0(size_t sz)
    return B0;
    }
 
-secure_vector<byte> CCM_Mode::format_c0()
+secure_vector<uint8_t> CCM_Mode::format_c0()
    {
-   secure_vector<byte> C(CCM_BS);
+   secure_vector<uint8_t> C(CCM_BS);
 
-   const byte a_flags = L()-1;
+   const uint8_t a_flags = L()-1;
 
    C[0] = a_flags;
    copy_mem(&C[1], m_nonce.data(), m_nonce.size());
@@ -157,21 +157,21 @@ secure_vector<byte> CCM_Mode::format_c0()
    return C;
    }
 
-void CCM_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
+void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
 
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
    const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
+   uint8_t* buf = buffer.data() + offset;
 
-   const secure_vector<byte>& ad = ad_buf();
+   const secure_vector<uint8_t>& ad = ad_buf();
    BOTAN_ASSERT(ad.size() % CCM_BS == 0, "AD is block size multiple");
 
    const BlockCipher& E = cipher();
 
-   secure_vector<byte> T(CCM_BS);
+   secure_vector<uint8_t> T(CCM_BS);
    E.encrypt(format_b0(sz), T);
 
    for(size_t i = 0; i != ad.size(); i += CCM_BS)
@@ -180,14 +180,14 @@ void CCM_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
       E.encrypt(T);
       }
 
-   secure_vector<byte> C = format_c0();
-   secure_vector<byte> S0(CCM_BS);
+   secure_vector<uint8_t> C = format_c0();
+   secure_vector<uint8_t> S0(CCM_BS);
    E.encrypt(C, S0);
    inc(C);
 
-   secure_vector<byte> X(CCM_BS);
+   secure_vector<uint8_t> X(CCM_BS);
 
-   const byte* buf_end = &buf[sz];
+   const uint8_t* buf_end = &buf[sz];
 
    while(buf != buf_end)
       {
@@ -208,23 +208,23 @@ void CCM_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
    buffer += std::make_pair(T.data(), tag_size());
    }
 
-void CCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
+void CCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
 
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
    const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
+   uint8_t* buf = buffer.data() + offset;
 
    BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
 
-   const secure_vector<byte>& ad = ad_buf();
+   const secure_vector<uint8_t>& ad = ad_buf();
    BOTAN_ASSERT(ad.size() % CCM_BS == 0, "AD is block size multiple");
 
    const BlockCipher& E = cipher();
 
-   secure_vector<byte> T(CCM_BS);
+   secure_vector<uint8_t> T(CCM_BS);
    E.encrypt(format_b0(sz - tag_size()), T);
 
    for(size_t i = 0; i != ad.size(); i += CCM_BS)
@@ -233,15 +233,15 @@ void CCM_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
       E.encrypt(T);
       }
 
-   secure_vector<byte> C = format_c0();
+   secure_vector<uint8_t> C = format_c0();
 
-   secure_vector<byte> S0(CCM_BS);
+   secure_vector<uint8_t> S0(CCM_BS);
    E.encrypt(C, S0);
    inc(C);
 
-   secure_vector<byte> X(CCM_BS);
+   secure_vector<uint8_t> X(CCM_BS);
 
-   const byte* buf_end = &buf[sz - tag_size()];
+   const uint8_t* buf_end = &buf[sz - tag_size()];
 
    while(buf != buf_end)
       {

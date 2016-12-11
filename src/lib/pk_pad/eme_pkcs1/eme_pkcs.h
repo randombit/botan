@@ -20,11 +20,11 @@ class BOTAN_DLL EME_PKCS1v15 final : public EME
    public:
       size_t maximum_input_size(size_t) const override;
    private:
-      secure_vector<byte> pad(const byte[], size_t, size_t,
+      secure_vector<uint8_t> pad(const uint8_t[], size_t, size_t,
                              RandomNumberGenerator&) const override;
 
-      secure_vector<byte> unpad(byte& valid_mask,
-                                const byte in[],
+      secure_vector<uint8_t> unpad(uint8_t& valid_mask,
+                                const uint8_t in[],
                                 size_t in_len) const override;
    };
 

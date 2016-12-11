@@ -21,10 +21,10 @@ class McEliece_PrivateKey;
 * Derive a shared key using MCE KEM and encrypt/authenticate the
 * plaintext and AD using AES-256 in OCB mode.
 */
-secure_vector<byte>
+secure_vector<uint8_t>
 BOTAN_DLL mceies_encrypt(const McEliece_PublicKey& pubkey,
-                         const byte pt[], size_t pt_len,
-                         const byte ad[], size_t ad_len,
+                         const uint8_t pt[], size_t pt_len,
+                         const uint8_t ad[], size_t ad_len,
                          RandomNumberGenerator& rng,
                          const std::string& aead = "AES-256/OCB");
 
@@ -33,10 +33,10 @@ BOTAN_DLL mceies_encrypt(const McEliece_PublicKey& pubkey,
 * Derive a shared key using MCE KEM and decrypt/authenticate the
 * ciphertext and AD using AES-256 in OCB mode.
 */
-secure_vector<byte>
+secure_vector<uint8_t>
 BOTAN_DLL mceies_decrypt(const McEliece_PrivateKey& privkey,
-                         const byte ct[], size_t ct_len,
-                         const byte ad[], size_t ad_len,
+                         const uint8_t ct[], size_t ct_len,
+                         const uint8_t ad[], size_t ad_len,
                          const std::string& aead = "AES-256/OCB");
 
 

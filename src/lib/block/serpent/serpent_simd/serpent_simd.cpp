@@ -57,7 +57,7 @@ namespace {
 /*
 * SIMD Serpent Encryption of 4 blocks in parallel
 */
-void Serpent::simd_encrypt_4(const byte in[64], byte out[64]) const
+void Serpent::simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const
    {
    SIMD_32 B0 = SIMD_32::load_le(in);
    SIMD_32 B1 = SIMD_32::load_le(in + 16);
@@ -113,7 +113,7 @@ void Serpent::simd_encrypt_4(const byte in[64], byte out[64]) const
 /*
 * SIMD Serpent Decryption of 4 blocks in parallel
 */
-void Serpent::simd_decrypt_4(const byte in[64], byte out[64]) const
+void Serpent::simd_decrypt_4(const uint8_t in[64], uint8_t out[64]) const
    {
    SIMD_32 B0 = SIMD_32::load_le(in);
    SIMD_32 B1 = SIMD_32::load_le(in + 16);

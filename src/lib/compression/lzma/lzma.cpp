@@ -17,7 +17,7 @@ namespace Botan {
 
 namespace {
 
-class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, byte>
+class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, uint8_t>
    {
    public:
       LZMA_Stream()
@@ -35,7 +35,7 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, byte>
          delete streamp()->allocator;
          }
 
-      bool run(u32bit flags) override
+      bool run(uint32_t flags) override
          {
          lzma_ret rc = ::lzma_code(streamp(), static_cast<lzma_action>(flags));
 
@@ -47,9 +47,9 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, byte>
          return (rc == LZMA_STREAM_END);
          }
 
-      u32bit run_flag() const override { return LZMA_RUN; }
-      u32bit flush_flag() const override { return LZMA_FULL_FLUSH; }
-      u32bit finish_flag() const override { return LZMA_FINISH; }
+      uint32_t run_flag() const override { return LZMA_RUN; }
+      uint32_t flush_flag() const override { return LZMA_FULL_FLUSH; }
+      uint32_t finish_flag() const override { return LZMA_FINISH; }
    };
 
 class LZMA_Compression_Stream : public LZMA_Stream

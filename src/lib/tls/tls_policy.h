@@ -94,7 +94,7 @@ class BOTAN_DLL Policy
       *
       * @note Compression is not currently supported
       */
-      virtual std::vector<byte> compression() const;
+      virtual std::vector<uint8_t> compression() const;
 
       /**
       * Choose an elliptic curve to use
@@ -215,14 +215,14 @@ class BOTAN_DLL Policy
       * tickets do not expire until the session ticket key rolls over.
       * Expired session tickets cannot be used to resume a session.
       */
-      virtual u32bit session_ticket_lifetime() const;
+      virtual uint32_t session_ticket_lifetime() const;
 
       /**
       * If this returns a non-empty vector, and DTLS is negotiated,
       * then we will also attempt to negotiate the SRTP extension from
       * RFC 5764 using the returned values as the profile ids.
       */
-      virtual std::vector<u16bit> srtp_profiles() const;
+      virtual std::vector<uint16_t> srtp_profiles() const;
 
       /**
       * @return true if and only if we are willing to accept this version
@@ -267,7 +267,7 @@ class BOTAN_DLL Policy
       /**
       * Return allowed ciphersuites, in order of preference
       */
-      virtual std::vector<u16bit> ciphersuite_list(Protocol_Version version,
+      virtual std::vector<uint16_t> ciphersuite_list(Protocol_Version version,
                                                    bool have_srp) const;
 
       /**
@@ -450,15 +450,15 @@ class BOTAN_DLL Text_Policy : public Policy
       bool hide_unknown_users() const override
          { return get_bool("hide_unknown_users", Policy::hide_unknown_users()); }
 
-      u32bit session_ticket_lifetime() const override
-         { return static_cast<u32bit>(get_len("session_ticket_lifetime", Policy::session_ticket_lifetime())); }
+      uint32_t session_ticket_lifetime() const override
+         { return static_cast<uint32_t>(get_len("session_ticket_lifetime", Policy::session_ticket_lifetime())); }
 
       bool send_fallback_scsv(Protocol_Version version) const override
          { return get_bool("send_fallback_scsv", false) ? Policy::send_fallback_scsv(version) : false; }
 
-      std::vector<u16bit> srtp_profiles() const override
+      std::vector<uint16_t> srtp_profiles() const override
          {
-         std::vector<u16bit> r;
+         std::vector<uint16_t> r;
          for(auto&& p : get_list("srtp_profiles", std::vector<std::string>()))
             {
             r.push_back(to_u32bit(p));

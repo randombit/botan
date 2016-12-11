@@ -27,11 +27,11 @@ class BOTAN_DLL Attribute final : public ASN1_Object
       OID oid;
 
       // public member variable:
-      std::vector<byte> parameters;
+      std::vector<uint8_t> parameters;
 
       Attribute() {}
-      Attribute(const OID&, const std::vector<byte>&);
-      Attribute(const std::string&, const std::vector<byte>&);
+      Attribute(const OID&, const std::vector<uint8_t>&);
+      Attribute(const std::string&, const std::vector<uint8_t>&);
    };
 
 }

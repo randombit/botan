@@ -38,16 +38,16 @@ class BOTAN_DLL Data_Store
       std::string get1(const std::string& key,
                        const std::string& default_value) const;
 
-      std::vector<byte> get1_memvec(const std::string&) const;
-      u32bit get1_u32bit(const std::string&, u32bit = 0) const;
+      std::vector<uint8_t> get1_memvec(const std::string&) const;
+      uint32_t get1_uint32(const std::string&, uint32_t = 0) const;
 
       bool has_value(const std::string&) const;
 
       void add(const std::multimap<std::string, std::string>&);
       void add(const std::string&, const std::string&);
-      void add(const std::string&, u32bit);
-      void add(const std::string&, const secure_vector<byte>&);
-      void add(const std::string&, const std::vector<byte>&);
+      void add(const std::string&, uint32_t);
+      void add(const std::string&, const secure_vector<uint8_t>&);
+      void add(const std::string&, const std::vector<uint8_t>&);
    private:
       std::multimap<std::string, std::string> m_contents;
    };

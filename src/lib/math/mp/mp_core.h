@@ -150,7 +150,7 @@ void bigint_monty_sqr(BigInt& z, const BigInt& x,
 /**
 * Compare x and y
 */
-s32bit bigint_cmp(const word x[], size_t x_size,
+int32_t bigint_cmp(const word x[], size_t x_size,
                   const word y[], size_t y_size);
 
 /**

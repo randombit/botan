@@ -36,7 +36,7 @@ namespace PK_Ops {
 class BOTAN_DLL Encryption
    {
    public:
-      virtual secure_vector<byte> encrypt(const byte msg[],
+      virtual secure_vector<uint8_t> encrypt(const uint8_t msg[],
                                           size_t msg_len,
                                           RandomNumberGenerator& rng) = 0;
 
@@ -51,8 +51,8 @@ class BOTAN_DLL Encryption
 class BOTAN_DLL Decryption
    {
    public:
-      virtual secure_vector<byte> decrypt(byte& valid_mask,
-                                          const byte ciphertext[],
+      virtual secure_vector<uint8_t> decrypt(uint8_t& valid_mask,
+                                          const uint8_t ciphertext[],
                                           size_t ciphertext_len) = 0;
 
       virtual ~Decryption() {}
@@ -69,13 +69,13 @@ class BOTAN_DLL Verification
       * @param msg the message
       * @param msg_len the length of msg in bytes
       */
-      virtual void update(const byte msg[], size_t msg_len) = 0;
+      virtual void update(const uint8_t msg[], size_t msg_len) = 0;
 
       /*
       * Perform a verification operation
       * @param rng a random number generator
       */
-      virtual bool is_valid_signature(const byte sig[], size_t sig_len) = 0;
+      virtual bool is_valid_signature(const uint8_t sig[], size_t sig_len) = 0;
 
       virtual ~Verification() {}
    };
@@ -91,13 +91,13 @@ class BOTAN_DLL Signature
       * @param msg the message
       * @param msg_len the length of msg in bytes
       */
-      virtual void update(const byte msg[], size_t msg_len) = 0;
+      virtual void update(const uint8_t msg[], size_t msg_len) = 0;
 
       /*
       * Perform a signature operation
       * @param rng a random number generator
       */
-      virtual secure_vector<byte> sign(RandomNumberGenerator& rng) = 0;
+      virtual secure_vector<uint8_t> sign(RandomNumberGenerator& rng) = 0;
 
       virtual ~Signature() {}
    };
@@ -108,9 +108,9 @@ class BOTAN_DLL Signature
 class BOTAN_DLL Key_Agreement
    {
    public:
-      virtual secure_vector<byte> agree(size_t key_len,
-                                        const byte other_key[], size_t other_key_len,
-                                        const byte salt[], size_t salt_len) = 0;
+      virtual secure_vector<uint8_t> agree(size_t key_len,
+                                        const uint8_t other_key[], size_t other_key_len,
+                                        const uint8_t salt[], size_t salt_len) = 0;
 
       virtual ~Key_Agreement() {}
    };
@@ -121,8 +121,8 @@ class BOTAN_DLL Key_Agreement
 class BOTAN_DLL KEM_Encryption
    {
    public:
-      virtual void kem_encrypt(secure_vector<byte>& out_encapsulated_key,
-                               secure_vector<byte>& out_shared_key,
+      virtual void kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
+                               secure_vector<uint8_t>& out_shared_key,
                                size_t desired_shared_key_len,
                                Botan::RandomNumberGenerator& rng,
                                const uint8_t salt[],
@@ -134,7 +134,7 @@ class BOTAN_DLL KEM_Encryption
 class BOTAN_DLL KEM_Decryption
    {
    public:
-      virtual secure_vector<byte> kem_decrypt(const byte encap_key[],
+      virtual secure_vector<uint8_t> kem_decrypt(const uint8_t encap_key[],
                                               size_t len,
                                               size_t desired_shared_key_len,
                                               const uint8_t salt[],

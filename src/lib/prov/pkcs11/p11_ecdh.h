@@ -83,7 +83,7 @@ class BOTAN_DLL PKCS11_ECDH_PrivateKey final : public virtual PKCS11_EC_PrivateK
       * @param props the attributes of the private key
       * @note no persistent public key object will be created
       */
-      PKCS11_ECDH_PrivateKey(Session& session, const std::vector<byte>& ec_params,
+      PKCS11_ECDH_PrivateKey(Session& session, const std::vector<uint8_t>& ec_params,
                              const EC_PrivateKeyGenerationProperties& props)
          : PKCS11_EC_PrivateKey(session, ec_params, props)
          {}
@@ -93,7 +93,7 @@ class BOTAN_DLL PKCS11_ECDH_PrivateKey final : public virtual PKCS11_EC_PrivateK
          return "ECDH";
          }
 
-      inline std::vector<byte> public_value() const override
+      inline std::vector<uint8_t> public_value() const override
          {
          return unlock(EC2OSP(public_point(), PointGFp::UNCOMPRESSED));
          }
@@ -101,7 +101,7 @@ class BOTAN_DLL PKCS11_ECDH_PrivateKey final : public virtual PKCS11_EC_PrivateK
       /// @return the exported ECDH private key
       ECDH_PrivateKey export_key() const;
 
-      secure_vector<byte> private_key_bits() const override;
+      secure_vector<uint8_t> private_key_bits() const override;
 
       std::unique_ptr<PK_Ops::Key_Agreement>
          create_key_agreement_op(RandomNumberGenerator& rng,

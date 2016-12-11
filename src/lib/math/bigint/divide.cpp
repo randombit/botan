@@ -69,7 +69,7 @@ void divide(const BigInt& x, const BigInt& y_arg, BigInt& q, BigInt& r)
    r.set_sign(BigInt::Positive);
    y.set_sign(BigInt::Positive);
 
-   s32bit compare = r.cmp(y);
+   int32_t compare = r.cmp(y);
 
    if(compare == 0)
       {

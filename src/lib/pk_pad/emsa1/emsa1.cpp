@@ -11,7 +11,7 @@ namespace Botan {
 
 namespace {
 
-secure_vector<byte> emsa1_encoding(const secure_vector<byte>& msg,
+secure_vector<uint8_t> emsa1_encoding(const secure_vector<uint8_t>& msg,
                                   size_t output_bits)
    {
    if(8*msg.size() <= output_bits)
@@ -20,17 +20,17 @@ secure_vector<byte> emsa1_encoding(const secure_vector<byte>& msg,
    size_t shift = 8*msg.size() - output_bits;
 
    size_t byte_shift = shift / 8, bit_shift = shift % 8;
-   secure_vector<byte> digest(msg.size() - byte_shift);
+   secure_vector<uint8_t> digest(msg.size() - byte_shift);
 
    for(size_t j = 0; j != msg.size() - byte_shift; ++j)
       digest[j] = msg[j];
 
    if(bit_shift)
       {
-      byte carry = 0;
+      uint8_t carry = 0;
       for(size_t j = 0; j != digest.size(); ++j)
          {
-         byte temp = digest[j];
+         uint8_t temp = digest[j];
          digest[j] = (temp >> bit_shift) | carry;
          carry = (temp << (8 - bit_shift));
          }
@@ -45,17 +45,17 @@ EMSA* EMSA1::clone()
    return new EMSA1(m_hash->clone());
    }
 
-void EMSA1::update(const byte input[], size_t length)
+void EMSA1::update(const uint8_t input[], size_t length)
    {
    m_hash->update(input, length);
    }
 
-secure_vector<byte> EMSA1::raw_data()
+secure_vector<uint8_t> EMSA1::raw_data()
    {
    return m_hash->final();
    }
 
-secure_vector<byte> EMSA1::encoding_of(const secure_vector<byte>& msg,
+secure_vector<uint8_t> EMSA1::encoding_of(const secure_vector<uint8_t>& msg,
                                        size_t output_bits,
                                        RandomNumberGenerator&)
    {
@@ -64,8 +64,8 @@ secure_vector<byte> EMSA1::encoding_of(const secure_vector<byte>& msg,
    return emsa1_encoding(msg, output_bits);
    }
 
-bool EMSA1::verify(const secure_vector<byte>& input,
-                   const secure_vector<byte>& raw,
+bool EMSA1::verify(const secure_vector<uint8_t>& input,
+                   const secure_vector<uint8_t>& raw,
                    size_t key_bits)
    {
    try {
@@ -73,7 +73,7 @@ bool EMSA1::verify(const secure_vector<byte>& input,
          throw Encoding_Error("EMSA1::encoding_of: Invalid size for input");
 
       // Call emsa1_encoding to handle any required bit shifting
-      const secure_vector<byte> our_coding = emsa1_encoding(raw, key_bits);
+      const secure_vector<uint8_t> our_coding = emsa1_encoding(raw, key_bits);
 
       if(our_coding.size() < input.size())
          return false;

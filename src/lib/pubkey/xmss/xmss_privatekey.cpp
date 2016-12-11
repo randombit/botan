@@ -20,7 +20,7 @@
 
 namespace Botan {
 
-XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<byte>& raw_key)
+XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
    : XMSS_PublicKey(unlock(raw_key)),
      XMSS_Common_Ops(XMSS_PublicKey::m_xmss_params.oid()),
      m_wots_priv_key(m_wots_params.oid(), m_public_seed),
@@ -58,7 +58,7 @@ XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<byte>& raw_key)
 
    begin = end;
    end = begin + m_wots_params.element_size();
-   m_wots_priv_key.set_private_seed(secure_vector<byte>(begin, end));
+   m_wots_priv_key.set_private_seed(secure_vector<uint8_t>(begin, end));
    set_unused_leaf_index(static_cast<size_t>(unused_leaf));
    }
 
@@ -79,27 +79,27 @@ XMSS_PrivateKey::XMSS_PrivateKey(
                       adrs));
    }
 
-secure_vector<byte>
+secure_vector<uint8_t>
 XMSS_PrivateKey::tree_hash(size_t start_idx,
                            size_t target_node_height,
                            XMSS_Address& adrs)
    {
-   const secure_vector<byte>& seed = this->public_seed();
+   const secure_vector<uint8_t>& seed = this->public_seed();
 
    BOTAN_ASSERT((start_idx % (1 << target_node_height)) == 0,
                 "Start index must be divisible by 2^{target node height}.");
 
-   std::vector<secure_vector<byte>> nodes(
+   std::vector<secure_vector<uint8_t>> nodes(
                                     XMSS_PublicKey::m_xmss_params.tree_height() + 1,
-                                    secure_vector<byte>(XMSS_PublicKey::m_xmss_params.element_size()));
+                                    secure_vector<uint8_t>(XMSS_PublicKey::m_xmss_params.element_size()));
 
    // node stack, holds all nodes on stack and one extra "pending" node. This
    // temporary node referred to as "node" in the XMSS standard document stays
    // a pending element, meaning it is not regarded as element on the stack
    // until level is increased.
-   std::vector<byte> node_levels(XMSS_PublicKey::m_xmss_params.tree_height() + 1);
+   std::vector<uint8_t> node_levels(XMSS_PublicKey::m_xmss_params.tree_height() + 1);
 
-   byte level = 0;
+   uint8_t level = 0;
    XMSS_WOTS_PublicKey pk(m_wots_priv_key.wots_parameters().oid(), seed);
 
    size_t last_idx = static_cast<size_t>(1 << target_node_height) + start_idx;
@@ -152,16 +152,16 @@ XMSS_PrivateKey::recover_global_leaf_index() const
                           m_prf);
    }
 
-secure_vector<byte> XMSS_PrivateKey::raw_private_key() const
+secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const
    {
-   std::vector<byte> pk { raw_public_key() };
-   secure_vector<byte> result(pk.begin(), pk.end());
+   std::vector<uint8_t> pk { raw_public_key() };
+   secure_vector<uint8_t> result(pk.begin(), pk.end());
    result.reserve(size());
 
    for(int i = 7; i >= 0; i--)
       {
       result.push_back(
-         static_cast<byte>(
+         static_cast<uint8_t>(
             static_cast<uint64_t>(unused_leaf_index()) >> 8 * i));
       }
 

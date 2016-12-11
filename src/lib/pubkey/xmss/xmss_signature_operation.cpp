@@ -28,7 +28,7 @@ XMSS_Signature_Operation::XMSS_Signature_Operation(
    {}
 
 XMSS_WOTS_PublicKey::TreeSignature
-XMSS_Signature_Operation::generate_tree_signature(const secure_vector<byte>& msg,
+XMSS_Signature_Operation::generate_tree_signature(const secure_vector<uint8_t>& msg,
       XMSS_PrivateKey& xmss_priv_key,
       XMSS_Address& adrs)
    {
@@ -42,7 +42,7 @@ XMSS_Signature_Operation::generate_tree_signature(const secure_vector<byte>& msg
    }
 
 XMSS_Signature
-XMSS_Signature_Operation::sign(const secure_vector<byte>& msg_hash,
+XMSS_Signature_Operation::sign(const secure_vector<uint8_t>& msg_hash,
                                XMSS_PrivateKey& xmss_priv_key)
    {
    XMSS_Address adrs;
@@ -68,18 +68,18 @@ XMSS_Signature_Operation::build_auth_path(XMSS_PrivateKey& priv_key,
    return auth_path;
    }
 
-void XMSS_Signature_Operation::update(const byte msg[], size_t msg_len)
+void XMSS_Signature_Operation::update(const uint8_t msg[], size_t msg_len)
    {
    initialize();
    m_hash.h_msg_update(msg, msg_len);
    }
 
 
-secure_vector<byte>
+secure_vector<uint8_t>
 XMSS_Signature_Operation::sign(RandomNumberGenerator&)
    {
    initialize();
-   secure_vector<byte> signature(sign(m_hash.h_msg_final(),
+   secure_vector<uint8_t> signature(sign(m_hash.h_msg_final(),
                                       m_priv_key).bytes());
    m_is_initialized = false;
    return signature;
@@ -91,7 +91,7 @@ void XMSS_Signature_Operation::initialize()
    if(m_is_initialized)
       return;
 
-   secure_vector<byte> index_bytes;
+   secure_vector<uint8_t> index_bytes;
    // reserve leaf index so it can not be reused in by another signature
    // operation using the same private key.
    m_leaf_idx = m_priv_key.reserve_unused_leaf_index();

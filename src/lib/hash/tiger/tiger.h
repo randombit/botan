@@ -34,19 +34,19 @@ class BOTAN_DLL Tiger final : public MDx_HashFunction
       */
       Tiger(size_t out_size = 24, size_t passes = 3);
    private:
-      void compress_n(const byte[], size_t block) override;
-      void copy_out(byte[]) override;
+      void compress_n(const uint8_t[], size_t block) override;
+      void copy_out(uint8_t[]) override;
 
-      static void pass(u64bit& A, u64bit& B, u64bit& C,
-                       const secure_vector<u64bit>& M,
-                       byte mul);
+      static void pass(uint64_t& A, uint64_t& B, uint64_t& C,
+                       const secure_vector<uint64_t>& M,
+                       uint8_t mul);
 
-      static const u64bit SBOX1[256];
-      static const u64bit SBOX2[256];
-      static const u64bit SBOX3[256];
-      static const u64bit SBOX4[256];
+      static const uint64_t SBOX1[256];
+      static const uint64_t SBOX2[256];
+      static const uint64_t SBOX3[256];
+      static const uint64_t SBOX4[256];
 
-      secure_vector<u64bit> m_X, m_digest;
+      secure_vector<uint64_t> m_X, m_digest;
       const size_t m_hash_len, m_passes;
    };
 

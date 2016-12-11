@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
+secure_vector<uint8_t> rfc3394_keywrap(const secure_vector<uint8_t>& key,
                                     const SymmetricKey& kek)
    {
    if(key.size() % 8 != 0)
@@ -27,8 +27,8 @@ secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
 
    const size_t n = key.size() / 8;
 
-   secure_vector<byte> R((n + 1) * 8);
-   secure_vector<byte> A(16);
+   secure_vector<uint8_t> R((n + 1) * 8);
+   secure_vector<uint8_t> A(16);
 
    for(size_t i = 0; i != 8; ++i)
       A[i] = 0xA6;
@@ -39,14 +39,14 @@ secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
       {
       for(size_t i = 1; i <= n; ++i)
          {
-         const u32bit t = (n * j) + i;
+         const uint32_t t = (n * j) + i;
 
          copy_mem(&A[8], &R[8*i], 8);
 
          aes->encrypt(A.data());
          copy_mem(&R[8*i], &A[8], 8);
 
-         byte t_buf[4] = { 0 };
+         uint8_t t_buf[4] = { 0 };
          store_be(t, t_buf);
          xor_buf(&A[4], t_buf, 4);
          }
@@ -57,7 +57,7 @@ secure_vector<byte> rfc3394_keywrap(const secure_vector<byte>& key,
    return R;
    }
 
-secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
+secure_vector<uint8_t> rfc3394_keyunwrap(const secure_vector<uint8_t>& key,
                                       const SymmetricKey& kek)
    {
    if(key.size() < 16 || key.size() % 8 != 0)
@@ -72,8 +72,8 @@ secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
 
    const size_t n = (key.size() - 8) / 8;
 
-   secure_vector<byte> R(n * 8);
-   secure_vector<byte> A(16);
+   secure_vector<uint8_t> R(n * 8);
+   secure_vector<uint8_t> A(16);
 
    for(size_t i = 0; i != 8; ++i)
       A[i] = key[i];
@@ -84,9 +84,9 @@ secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
       {
       for(size_t i = n; i != 0; --i)
          {
-         const u32bit t = (5 - j) * n + i;
+         const uint32_t t = (5 - j) * n + i;
 
-         byte t_buf[4] = { 0 };
+         uint8_t t_buf[4] = { 0 };
          store_be(t, t_buf);
 
          xor_buf(&A[4], t_buf, 4);
@@ -99,7 +99,7 @@ secure_vector<byte> rfc3394_keyunwrap(const secure_vector<byte>& key,
          }
       }
 
-   if(load_be<u64bit>(A.data(), 0) != 0xA6A6A6A6A6A6A6A6)
+   if(load_be<uint64_t>(A.data(), 0) != 0xA6A6A6A6A6A6A6A6)
       throw Integrity_Failure("NIST key unwrap failed");
 
    return R;

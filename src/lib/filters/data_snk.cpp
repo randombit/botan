@@ -19,7 +19,7 @@ namespace Botan {
 /*
 * Write to a stream
 */
-void DataSink_Stream::write(const byte out[], size_t length)
+void DataSink_Stream::write(const uint8_t out[], size_t length)
    {
    m_sink.write(reinterpret_cast<const char*>(out), length);
    if(!m_sink.good())

@@ -12,9 +12,9 @@ namespace Botan {
 
 namespace {
 
-void comb4p_round(secure_vector<byte>& out,
-                  const secure_vector<byte>& in,
-                  byte round_no,
+void comb4p_round(secure_vector<uint8_t>& out,
+                  const secure_vector<uint8_t>& in,
+                  uint8_t round_no,
                   HashFunction& h1,
                   HashFunction& h2)
    {
@@ -24,7 +24,7 @@ void comb4p_round(secure_vector<byte>& out,
    h1.update(in.data(), in.size());
    h2.update(in.data(), in.size());
 
-   secure_vector<byte> h_buf = h1.final();
+   secure_vector<uint8_t> h_buf = h1.final();
    xor_buf(out.data(), h_buf.data(), std::min(out.size(), h_buf.size()));
 
    h_buf = h2.final();
@@ -69,16 +69,16 @@ void Comb4P::clear()
    m_hash2->update(0);
    }
 
-void Comb4P::add_data(const byte input[], size_t length)
+void Comb4P::add_data(const uint8_t input[], size_t length)
    {
    m_hash1->update(input, length);
    m_hash2->update(input, length);
    }
 
-void Comb4P::final_result(byte out[])
+void Comb4P::final_result(uint8_t out[])
    {
-   secure_vector<byte> h1 = m_hash1->final();
-   secure_vector<byte> h2 = m_hash2->final();
+   secure_vector<uint8_t> h1 = m_hash1->final();
+   secure_vector<uint8_t> h2 = m_hash2->final();
 
    // First round
    xor_buf(h1.data(), h2.data(), std::min(h1.size(), h2.size()));

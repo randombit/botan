@@ -33,7 +33,7 @@ OctetString::OctetString(const std::string& hex_string)
 /*
 * Create an OctetString from a byte string
 */
-OctetString::OctetString(const byte in[], size_t n)
+OctetString::OctetString(const uint8_t in[], size_t n)
    {
    m_data.assign(in, in + n);
    }
@@ -43,7 +43,7 @@ OctetString::OctetString(const byte in[], size_t n)
 */
 void OctetString::set_odd_parity()
    {
-   const byte ODD_PARITY[256] = {
+   const uint8_t ODD_PARITY[256] = {
       0x01, 0x01, 0x02, 0x02, 0x04, 0x04, 0x07, 0x07, 0x08, 0x08, 0x0B, 0x0B,
       0x0D, 0x0D, 0x0E, 0x0E, 0x10, 0x10, 0x13, 0x13, 0x15, 0x15, 0x16, 0x16,
       0x19, 0x19, 0x1A, 0x1A, 0x1C, 0x1C, 0x1F, 0x1F, 0x20, 0x20, 0x23, 0x23,
@@ -110,7 +110,7 @@ bool operator!=(const OctetString& s1, const OctetString& s2)
 */
 OctetString operator+(const OctetString& k1, const OctetString& k2)
    {
-   secure_vector<byte> out;
+   secure_vector<uint8_t> out;
    out += k1.bits_of();
    out += k2.bits_of();
    return OctetString(out);
@@ -121,7 +121,7 @@ OctetString operator+(const OctetString& k1, const OctetString& k2)
 */
 OctetString operator^(const OctetString& k1, const OctetString& k2)
    {
-   secure_vector<byte> out(std::max(k1.length(), k2.length()));
+   secure_vector<uint8_t> out(std::max(k1.length(), k2.length()));
 
    copy_mem(out.data(), k1.begin(), k1.length());
    xor_buf(out.data(), k2.begin(), k2.length());

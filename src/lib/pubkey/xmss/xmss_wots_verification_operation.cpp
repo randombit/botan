@@ -26,7 +26,7 @@ XMSS_WOTS_Verification_Operation::XMSS_WOTS_Verification_Operation(
    }
 
 void
-XMSS_WOTS_Verification_Operation::update(const byte msg[], size_t msg_len)
+XMSS_WOTS_Verification_Operation::update(const uint8_t msg[], size_t msg_len)
    {
    BOTAN_ASSERT(msg_len == m_pub_key.public_key().wots_parameters().
                            element_size() &&
@@ -39,7 +39,7 @@ XMSS_WOTS_Verification_Operation::update(const byte msg[], size_t msg_len)
       }
    }
 
-bool XMSS_WOTS_Verification_Operation::is_valid_signature(const byte sig[],
+bool XMSS_WOTS_Verification_Operation::is_valid_signature(const uint8_t sig[],
                                                           size_t sig_len)
    {
    const XMSS_WOTS_Parameters& w = m_pub_key.public_key().wots_parameters();
@@ -56,7 +56,7 @@ bool XMSS_WOTS_Verification_Operation::is_valid_signature(const byte sig[],
       {
       begin = end;
       end = begin + w.element_size();
-      signature.push_back(secure_vector<byte>(sig + begin, sig + end));
+      signature.push_back(secure_vector<uint8_t>(sig + begin, sig + end));
       }
 
    XMSS_WOTS_PublicKey pubkey_msg(w.oid(),

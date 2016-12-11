@@ -46,7 +46,7 @@ class SIMD_4x32
 #endif
          }
 
-      explicit SIMD_4x32(const u32bit B[4])
+      explicit SIMD_4x32(const uint32_t B[4])
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
          m_reg = _mm_loadu_si128(reinterpret_cast<const __m128i*>(B));
@@ -60,7 +60,7 @@ class SIMD_4x32
 #endif
          }
 
-      SIMD_4x32(u32bit B0, u32bit B1, u32bit B2, u32bit B3)
+      SIMD_4x32(uint32_t B0, uint32_t B1, uint32_t B2, uint32_t B3)
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
          m_reg = _mm_set_epi32(B0, B1, B2, B3);
@@ -74,7 +74,7 @@ class SIMD_4x32
 #endif
          }
 
-      explicit SIMD_4x32(u32bit B)
+      explicit SIMD_4x32(uint32_t B)
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
          m_reg = _mm_set1_epi32(B);
@@ -93,7 +93,7 @@ class SIMD_4x32
 #if defined(BOTAN_SIMD_USE_SSE2)
          return SIMD_4x32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         const u32bit* in_32 = static_cast<const u32bit*>(in);
+         const uint32_t* in_32 = static_cast<const uint32_t*>(in);
 
          __vector unsigned int R0 = vec_ld(0, in_32);
          __vector unsigned int R1 = vec_ld(12, in_32);
@@ -119,7 +119,7 @@ class SIMD_4x32
 #if defined(BOTAN_SIMD_USE_SSE2)
          return load_le(in).bswap();
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         const u32bit* in_32 = static_cast<const u32bit*>(in);
+         const uint32_t* in_32 = static_cast<const uint32_t*>(in);
 
          __vector unsigned int R0 = vec_ld(0, in_32);
          __vector unsigned int R1 = vec_ld(12, in_32);
@@ -146,7 +146,7 @@ class SIMD_4x32
 #if defined(BOTAN_SIMD_USE_SSE2)
          _mm_storeu_si128(reinterpret_cast<__m128i*>(out), m_reg);
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         __vector unsigned char perm = vec_lvsl(0, static_cast<u32bit*>(nullptr));
+         __vector unsigned char perm = vec_lvsl(0, static_cast<uint32_t*>(nullptr));
 
 #if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
          perm = vec_xor(perm, vec_splat_u8(3)); // bswap vector
@@ -154,7 +154,7 @@ class SIMD_4x32
 
          union {
             __vector unsigned int V;
-            u32bit R[4];
+            uint32_t R[4];
             } vec;
 
          vec.V = vec_perm(m_reg, m_reg, perm);
@@ -174,7 +174,7 @@ class SIMD_4x32
 
          union {
             __vector unsigned int V;
-            u32bit R[4];
+            uint32_t R[4];
             } vec;
 
          vec.V = m_reg;
@@ -415,7 +415,7 @@ class SIMD_4x32
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
-         __vector unsigned char perm = vec_lvsl(0, static_cast<u32bit*>(nullptr));
+         __vector unsigned char perm = vec_lvsl(0, static_cast<uint32_t*>(nullptr));
 
          perm = vec_xor(perm, vec_splat_u8(3));
 

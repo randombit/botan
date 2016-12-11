@@ -63,7 +63,7 @@ namespace Botan {
 /*
 * Noekeon Encryption
 */
-void Noekeon::simd_encrypt_4(const byte in[], byte out[]) const
+void Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const
    {
    const SIMD_32 K0 = SIMD_32(m_EK[0]);
    const SIMD_32 K1 = SIMD_32(m_EK[1]);
@@ -108,7 +108,7 @@ void Noekeon::simd_encrypt_4(const byte in[], byte out[]) const
 /*
 * Noekeon Encryption
 */
-void Noekeon::simd_decrypt_4(const byte in[], byte out[]) const
+void Noekeon::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const
    {
    const SIMD_32 K0 = SIMD_32(m_DK[0]);
    const SIMD_32 K1 = SIMD_32(m_DK[1]);

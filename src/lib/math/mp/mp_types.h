@@ -13,13 +13,13 @@
 namespace Botan {
 
 #if (BOTAN_MP_WORD_BITS == 8)
-  typedef byte word;
+  typedef uint8_t word;
 #elif (BOTAN_MP_WORD_BITS == 16)
-  typedef u16bit word;
+  typedef uint16_t word;
 #elif (BOTAN_MP_WORD_BITS == 32)
-  typedef u32bit word;
+  typedef uint32_t word;
 #elif (BOTAN_MP_WORD_BITS == 64)
-  typedef u64bit word;
+  typedef uint64_t word;
 #else
   #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
 #endif

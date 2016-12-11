@@ -47,7 +47,7 @@ class EME_Decoding_Tests : public Text_Based_Test
             result.test_eq("Plaintext value is empty for invalid EME inputs", plaintext.size(), 0);
 
          uint8_t valid_mask = 0;
-         Botan::secure_vector<byte> decoded =
+         Botan::secure_vector<uint8_t> decoded =
             eme->unpad(valid_mask, ciphertext.data(), ciphertext.size());
 
          result.confirm("EME valid_mask has expected value", valid_mask == 0x00 || valid_mask == 0xFF);

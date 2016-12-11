@@ -10,15 +10,15 @@
 
 namespace Botan {
 
-void Parallel::add_data(const byte input[], size_t length)
+void Parallel::add_data(const uint8_t input[], size_t length)
    {
    for(auto&& hash : m_hashes)
        hash->update(input, length);
    }
 
-void Parallel::final_result(byte out[])
+void Parallel::final_result(uint8_t out[])
    {
-   u32bit offset = 0;
+   uint32_t offset = 0;
 
    for(auto&& hash : m_hashes)
       {

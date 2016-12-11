@@ -30,7 +30,7 @@ std::string ChaCha::provider() const
    }
 
 //static
-void ChaCha::chacha_x4(byte output[64*4], u32bit input[16], size_t rounds)
+void ChaCha::chacha_x4(uint8_t output[64*4], uint32_t input[16], size_t rounds)
    {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
 
@@ -44,7 +44,7 @@ void ChaCha::chacha_x4(byte output[64*4], u32bit input[16], size_t rounds)
    // TODO interleave rounds
    for(size_t i = 0; i != 4; ++i)
       {
-      u32bit x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
+      uint32_t x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
              x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
              x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
              x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
@@ -114,7 +114,7 @@ void ChaCha::chacha_x4(byte output[64*4], u32bit input[16], size_t rounds)
 /*
 * Combine cipher stream with message
 */
-void ChaCha::cipher(const byte in[], byte out[], size_t length)
+void ChaCha::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
    while(length >= m_buffer.size() - m_position)
       {
@@ -134,18 +134,18 @@ void ChaCha::cipher(const byte in[], byte out[], size_t length)
 /*
 * ChaCha Key Schedule
 */
-void ChaCha::key_schedule(const byte key[], size_t length)
+void ChaCha::key_schedule(const uint8_t key[], size_t length)
    {
-   static const u32bit TAU[] =
+   static const uint32_t TAU[] =
       { 0x61707865, 0x3120646e, 0x79622d36, 0x6b206574 };
 
-   static const u32bit SIGMA[] =
+   static const uint32_t SIGMA[] =
       { 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574 };
 
-   const u32bit* CONSTANTS = (length == 16) ? TAU : SIGMA;
+   const uint32_t* CONSTANTS = (length == 16) ? TAU : SIGMA;
 
    // Repeat the key if 128 bits
-   const byte* key2 = (length == 32) ? key + 16 : key;
+   const uint8_t* key2 = (length == 32) ? key + 16 : key;
 
    m_position = 0;
    m_state.resize(16);
@@ -156,22 +156,22 @@ void ChaCha::key_schedule(const byte key[], size_t length)
    m_state[2] = CONSTANTS[2];
    m_state[3] = CONSTANTS[3];
 
-   m_state[4] = load_le<u32bit>(key, 0);
-   m_state[5] = load_le<u32bit>(key, 1);
-   m_state[6] = load_le<u32bit>(key, 2);
-   m_state[7] = load_le<u32bit>(key, 3);
+   m_state[4] = load_le<uint32_t>(key, 0);
+   m_state[5] = load_le<uint32_t>(key, 1);
+   m_state[6] = load_le<uint32_t>(key, 2);
+   m_state[7] = load_le<uint32_t>(key, 3);
 
-   m_state[8] = load_le<u32bit>(key2, 0);
-   m_state[9] = load_le<u32bit>(key2, 1);
-   m_state[10] = load_le<u32bit>(key2, 2);
-   m_state[11] = load_le<u32bit>(key2, 3);
+   m_state[8] = load_le<uint32_t>(key2, 0);
+   m_state[9] = load_le<uint32_t>(key2, 1);
+   m_state[10] = load_le<uint32_t>(key2, 2);
+   m_state[11] = load_le<uint32_t>(key2, 3);
 
    // Default all-zero IV
-   const byte ZERO[8] = { 0 };
+   const uint8_t ZERO[8] = { 0 };
    set_iv(ZERO, sizeof(ZERO));
    }
 
-void ChaCha::set_iv(const byte iv[], size_t length)
+void ChaCha::set_iv(const uint8_t iv[], size_t length)
    {
    if(!valid_iv_length(length))
       throw Invalid_IV_Length(name(), length);
@@ -181,14 +181,14 @@ void ChaCha::set_iv(const byte iv[], size_t length)
 
    if(length == 8)
       {
-      m_state[14] = load_le<u32bit>(iv, 0);
-      m_state[15] = load_le<u32bit>(iv, 1);
+      m_state[14] = load_le<uint32_t>(iv, 0);
+      m_state[15] = load_le<uint32_t>(iv, 1);
       }
    else if(length == 12)
       {
-      m_state[13] = load_le<u32bit>(iv, 0);
-      m_state[14] = load_le<u32bit>(iv, 1);
-      m_state[15] = load_le<u32bit>(iv, 2);
+      m_state[13] = load_le<uint32_t>(iv, 0);
+      m_state[14] = load_le<uint32_t>(iv, 1);
+      m_state[15] = load_le<uint32_t>(iv, 2);
       }
 
    chacha_x4(m_buffer.data(), m_state.data(), m_rounds);
@@ -207,7 +207,7 @@ std::string ChaCha::name() const
    return "ChaCha(" + std::to_string(m_rounds) + ")";
    }
 
-void ChaCha::seek(u64bit offset)
+void ChaCha::seek(uint64_t offset)
    {
    if (m_state.size() == 0 && m_buffer.size() == 0)
       {
@@ -215,14 +215,14 @@ void ChaCha::seek(u64bit offset)
       }
 
    // Find the block offset
-   u64bit counter = offset / 64;
+   uint64_t counter = offset / 64;
 
-   byte out[8];
+   uint8_t out[8];
 
    store_le(counter, out);
 
-   m_state[12] = load_le<u32bit>(out, 0);
-   m_state[13] += load_le<u32bit>(out, 1);
+   m_state[12] = load_le<uint32_t>(out, 0);
+   m_state[13] += load_le<uint32_t>(out, 1);
 
    chacha_x4(m_buffer.data(), m_state.data(), m_rounds);
    m_position = offset % 64;

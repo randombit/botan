@@ -87,10 +87,10 @@ XMSS_WOTS_Parameters::XMSS_WOTS_Parameters(ots_algorithm_t oid)
                 "\"len\" detedted.");
    }
 
-secure_vector<byte>
-XMSS_WOTS_Parameters::base_w(const secure_vector<byte>& msg, size_t out_size) const
+secure_vector<uint8_t>
+XMSS_WOTS_Parameters::base_w(const secure_vector<uint8_t>& msg, size_t out_size) const
    {
-   secure_vector<byte> result;
+   secure_vector<uint8_t> result;
    size_t in = 0;
    size_t total = 0;
    size_t bits = 0;
@@ -104,24 +104,24 @@ XMSS_WOTS_Parameters::base_w(const secure_vector<byte>& msg, size_t out_size) co
          bits += 8;
          }
       bits -= m_lg_w;
-      result.push_back(static_cast<byte>((total >> bits) & (m_w - 1)));
+      result.push_back(static_cast<uint8_t>((total >> bits) & (m_w - 1)));
       }
    return result;
    }
 
-secure_vector<byte>
+secure_vector<uint8_t>
 XMSS_WOTS_Parameters::base_w(size_t value) const
    {
    value <<= (8 - ((m_len_2 * m_lg_w) % 8));
    size_t len_2_bytes = static_cast<size_t>(
       ceil(static_cast<float>(m_len_2 * m_lg_w) / 8.f));
-   secure_vector<byte> result;
+   secure_vector<uint8_t> result;
    XMSS_Tools::concat(result, value, len_2_bytes);
    return base_w(result, m_len_2);
    }
 
 void
-XMSS_WOTS_Parameters::append_checksum(secure_vector<byte>& data)
+XMSS_WOTS_Parameters::append_checksum(secure_vector<uint8_t>& data)
    {
    size_t csum = 0;
 
@@ -130,7 +130,7 @@ XMSS_WOTS_Parameters::append_checksum(secure_vector<byte>& data)
       csum += wots_parameter() - 1 - data[i];
       }
 
-   secure_vector<byte> csum_bytes = base_w(csum);
+   secure_vector<uint8_t> csum_bytes = base_w(csum);
    std::move(csum_bytes.begin(), csum_bytes.end(), std::back_inserter(data));
    }
 

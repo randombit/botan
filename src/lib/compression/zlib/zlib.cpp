@@ -27,9 +27,9 @@ class Zlib_Stream : public Zlib_Style_Stream<z_stream, Bytef>
          streamp()->zfree = Compression_Alloc_Info::free;
          }
 
-      u32bit run_flag() const override { return Z_NO_FLUSH; }
-      u32bit flush_flag() const override { return Z_SYNC_FLUSH; }
-      u32bit finish_flag() const override { return Z_FINISH; }
+      uint32_t run_flag() const override { return Z_NO_FLUSH; }
+      uint32_t flush_flag() const override { return Z_SYNC_FLUSH; }
+      uint32_t finish_flag() const override { return Z_FINISH; }
 
       int compute_window_bits(int wbits, int wbits_offset) const
          {
@@ -63,7 +63,7 @@ class Zlib_Compression_Stream : public Zlib_Stream
          ::deflateEnd(streamp());
          }
 
-      bool run(u32bit flags) override
+      bool run(uint32_t flags) override
          {
          int rc = ::deflate(streamp(), flags);
 
@@ -94,7 +94,7 @@ class Zlib_Decompression_Stream : public Zlib_Stream
          ::inflateEnd(streamp());
          }
 
-      bool run(u32bit flags) override
+      bool run(uint32_t flags) override
          {
          int rc = ::inflate(streamp(), flags);
 
@@ -123,7 +123,7 @@ class Deflate_Decompression_Stream : public Zlib_Decompression_Stream
 class Gzip_Compression_Stream : public Zlib_Compression_Stream
    {
    public:
-      Gzip_Compression_Stream(size_t level, int wbits, byte os_code) :
+      Gzip_Compression_Stream(size_t level, int wbits, uint8_t os_code) :
          Zlib_Compression_Stream(level, wbits, 16)
          {
          clear_mem(&m_header, 1);

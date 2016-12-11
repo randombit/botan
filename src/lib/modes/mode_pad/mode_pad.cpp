@@ -38,11 +38,11 @@ BlockCipherModePaddingMethod* get_bc_pad(const std::string& algo_spec)
 /*
 * Pad with PKCS #7 Method
 */
-void PKCS7_Padding::add_padding(secure_vector<byte>& buffer,
+void PKCS7_Padding::add_padding(secure_vector<uint8_t>& buffer,
                                 size_t last_byte_pos,
                                 size_t block_size) const
    {
-   const byte pad_value = static_cast<byte>(block_size - last_byte_pos);
+   const uint8_t pad_value = static_cast<uint8_t>(block_size - last_byte_pos);
 
    for(size_t i = 0; i != pad_value; ++i)
       buffer.push_back(pad_value);
@@ -51,11 +51,11 @@ void PKCS7_Padding::add_padding(secure_vector<byte>& buffer,
 /*
 * Unpad with PKCS #7 Method
 */
-size_t PKCS7_Padding::unpad(const byte block[], size_t size) const
+size_t PKCS7_Padding::unpad(const uint8_t block[], size_t size) const
    {
    CT::poison(block,size);
    size_t bad_input = 0;
-   const byte last_byte = block[size-1];
+   const uint8_t last_byte = block[size-1];
 
    bad_input |= CT::expand_mask(last_byte > size);
 
@@ -76,11 +76,11 @@ size_t PKCS7_Padding::unpad(const byte block[], size_t size) const
 /*
 * Pad with ANSI X9.23 Method
 */
-void ANSI_X923_Padding::add_padding(secure_vector<byte>& buffer,
+void ANSI_X923_Padding::add_padding(secure_vector<uint8_t>& buffer,
                                     size_t last_byte_pos,
                                     size_t block_size) const
    {
-   const byte pad_value = static_cast<byte>(block_size - last_byte_pos);
+   const uint8_t pad_value = static_cast<uint8_t>(block_size - last_byte_pos);
 
    for(size_t i = last_byte_pos; i < block_size-1; ++i)
       {
@@ -92,7 +92,7 @@ void ANSI_X923_Padding::add_padding(secure_vector<byte>& buffer,
 /*
 * Unpad with ANSI X9.23 Method
 */
-size_t ANSI_X923_Padding::unpad(const byte block[], size_t size) const
+size_t ANSI_X923_Padding::unpad(const uint8_t block[], size_t size) const
    {
    CT::poison(block,size);
    size_t bad_input = 0;
@@ -116,7 +116,7 @@ size_t ANSI_X923_Padding::unpad(const byte block[], size_t size) const
 /*
 * Pad with One and Zeros Method
 */
-void OneAndZeros_Padding::add_padding(secure_vector<byte>& buffer,
+void OneAndZeros_Padding::add_padding(secure_vector<uint8_t>& buffer,
                                       size_t last_byte_pos,
                                       size_t block_size) const
    {
@@ -129,19 +129,19 @@ void OneAndZeros_Padding::add_padding(secure_vector<byte>& buffer,
 /*
 * Unpad with One and Zeros Method
 */
-size_t OneAndZeros_Padding::unpad(const byte block[], size_t size) const
+size_t OneAndZeros_Padding::unpad(const uint8_t block[], size_t size) const
    {
    CT::poison(block, size);
-   byte bad_input = 0;
-   byte seen_one = 0;
+   uint8_t bad_input = 0;
+   uint8_t seen_one = 0;
    size_t pad_pos = size - 1;
    size_t i = size;
 
    while(i)
       {
-      seen_one |= CT::is_equal<byte>(block[i-1],0x80);
-      pad_pos -= CT::select<byte>(~seen_one, 1, 0);
-      bad_input |= ~CT::is_zero<byte>(block[i-1]) & ~seen_one;
+      seen_one |= CT::is_equal<uint8_t>(block[i-1],0x80);
+      pad_pos -= CT::select<uint8_t>(~seen_one, 1, 0);
+      bad_input |= ~CT::is_zero<uint8_t>(block[i-1]) & ~seen_one;
       i--;
       }
    bad_input |= ~seen_one;
@@ -156,11 +156,11 @@ size_t OneAndZeros_Padding::unpad(const byte block[], size_t size) const
 /*
 * Pad with ESP Padding Method
 */
-void ESP_Padding::add_padding(secure_vector<byte>& buffer,
+void ESP_Padding::add_padding(secure_vector<uint8_t>& buffer,
                               size_t last_byte_pos,
                               size_t block_size) const
    {
-   byte pad_value = 0x01;
+   uint8_t pad_value = 0x01;
 
    for(size_t i = last_byte_pos; i < block_size; ++i)
       {
@@ -171,7 +171,7 @@ void ESP_Padding::add_padding(secure_vector<byte>& buffer,
 /*
 * Unpad with ESP Padding Method
 */
-size_t ESP_Padding::unpad(const byte block[], size_t size) const
+size_t ESP_Padding::unpad(const uint8_t block[], size_t size) const
    {
    CT::poison(block,size);
 

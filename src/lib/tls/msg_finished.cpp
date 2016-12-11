@@ -17,21 +17,21 @@ namespace {
 /*
 * Compute the verify_data
 */
-std::vector<byte> finished_compute_verify(const Handshake_State& state,
+std::vector<uint8_t> finished_compute_verify(const Handshake_State& state,
                                           Connection_Side side)
    {
-   const byte TLS_CLIENT_LABEL[] = {
+   const uint8_t TLS_CLIENT_LABEL[] = {
       0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x20, 0x66, 0x69, 0x6E, 0x69,
       0x73, 0x68, 0x65, 0x64 };
 
-   const byte TLS_SERVER_LABEL[] = {
+   const uint8_t TLS_SERVER_LABEL[] = {
       0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x20, 0x66, 0x69, 0x6E, 0x69,
       0x73, 0x68, 0x65, 0x64 };
 
    std::unique_ptr<KDF> prf(state.protocol_specific_prf());
 
-   std::vector<byte> input;
-   std::vector<byte> label;
+   std::vector<uint8_t> input;
+   std::vector<uint8_t> label;
    if(side == CLIENT)
       label += std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL));
    else
@@ -57,7 +57,7 @@ Finished::Finished(Handshake_IO& io,
 /*
 * Serialize a Finished message
 */
-std::vector<byte> Finished::serialize() const
+std::vector<uint8_t> Finished::serialize() const
    {
    return m_verification_data;
    }
@@ -65,7 +65,7 @@ std::vector<byte> Finished::serialize() const
 /*
 * Deserialize a Finished message
 */
-Finished::Finished(const std::vector<byte>& buf) : m_verification_data(buf)
+Finished::Finished(const std::vector<uint8_t>& buf) : m_verification_data(buf)
    {}
 
 /*

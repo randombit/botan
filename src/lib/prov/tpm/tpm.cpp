@@ -59,7 +59,7 @@ TSS_FLAG bit_flag(size_t bits)
 #if 0
 bool is_srk_uuid(const UUID& uuid)
    {
-   static const byte srk[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+   static const uint8_t srk[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
    const std::vector<uint8_t>& b = uuid.binary_value();
    return (b.size() == 16 && same_mem(b.data(), srk, 16));
    }
@@ -349,7 +349,7 @@ AlgorithmIdentifier TPM_PrivateKey::algorithm_identifier() const
                               AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
-std::vector<byte> TPM_PrivateKey::public_key_bits() const
+std::vector<uint8_t> TPM_PrivateKey::public_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -359,7 +359,7 @@ std::vector<byte> TPM_PrivateKey::public_key_bits() const
       .get_contents_unlocked();
    }
 
-secure_vector<byte> TPM_PrivateKey::private_key_bits() const
+secure_vector<uint8_t> TPM_PrivateKey::private_key_bits() const
    {
    throw TPM_Error("Private key export not supported for TPM keys");
    }
@@ -394,12 +394,12 @@ class TPM_Signing_Operation : public PK_Ops::Signature
          {
          }
 
-      void update(const byte msg[], size_t msg_len) override
+      void update(const uint8_t msg[], size_t msg_len) override
          {
          m_hash->update(msg, msg_len);
          }
 
-      secure_vector<byte> sign(RandomNumberGenerator&) override
+      secure_vector<uint8_t> sign(RandomNumberGenerator&) override
          {
          /*
          * v1.2 TPMs will only sign with PKCS #1 v1.5 padding. SHA-1 is built
@@ -408,7 +408,7 @@ class TPM_Signing_Operation : public PK_Ops::Signature
          * 01FFFF... prefix. Even when using SHA-1 we compute the hash locally
          * since it is going to be much faster than pushing data over the LPC bus.
          */
-         secure_vector<byte> msg_hash = m_hash->final();
+         secure_vector<uint8_t> msg_hash = m_hash->final();
 
          std::vector<uint8_t> id_and_msg;
          id_and_msg.reserve(m_hash_id.size() + msg_hash.size());

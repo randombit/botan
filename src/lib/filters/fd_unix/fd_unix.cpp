@@ -16,7 +16,7 @@ namespace Botan {
 */
 int operator<<(int fd, Pipe& pipe)
    {
-   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
+   secure_vector<uint8_t> buffer(DEFAULT_BUFFERSIZE);
    while(pipe.remaining())
       {
       size_t got = pipe.read(buffer.data(), buffer.size());
@@ -38,7 +38,7 @@ int operator<<(int fd, Pipe& pipe)
 */
 int operator>>(int fd, Pipe& pipe)
    {
-   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
+   secure_vector<uint8_t> buffer(DEFAULT_BUFFERSIZE);
    while(true)
       {
       ssize_t ret = read(fd, buffer.data(), buffer.size());

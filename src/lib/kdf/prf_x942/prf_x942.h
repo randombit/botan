@@ -22,10 +22,10 @@ class BOTAN_DLL X942_PRF final : public KDF
 
       KDF* clone() const override { return new X942_PRF(m_key_wrap_oid); }
 
-      size_t kdf(byte key[], size_t key_len,
-                 const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len,
-                 const byte label[], size_t label_len) const override;
+      size_t kdf(uint8_t key[], size_t key_len,
+                 const uint8_t secret[], size_t secret_len,
+                 const uint8_t salt[], size_t salt_len,
+                 const uint8_t label[], size_t label_len) const override;
 
       explicit X942_PRF(const std::string& oid);
    private:

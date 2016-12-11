@@ -35,8 +35,8 @@
 
 namespace Botan {
 
-typedef byte u8;
-typedef u64bit limb;
+typedef uint8_t u8;
+typedef uint64_t limb;
 typedef limb felem[5];
 
 typedef struct
@@ -214,7 +214,7 @@ static inline void fsquare_times(felem output, const felem in, limb count) {
 /* Load a little-endian 64-bit number  */
 static limb
 load_limb(const u8 *in) {
-  return load_le<u64bit>(in, 0);
+  return load_le<uint64_t>(in, 0);
 }
 
 static void

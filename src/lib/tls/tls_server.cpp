@@ -51,8 +51,8 @@ bool check_for_resume(Session& session_info,
                       const Client_Hello* client_hello,
                       std::chrono::seconds session_ticket_lifetime)
    {
-   const std::vector<byte>& client_session_id = client_hello->session_id();
-   const std::vector<byte>& session_ticket = client_hello->session_ticket();
+   const std::vector<uint8_t>& client_session_id = client_hello->session_id();
+   const std::vector<uint8_t>& session_ticket = client_hello->session_ticket();
 
    if(session_ticket.empty())
       {
@@ -149,7 +149,7 @@ bool check_for_resume(Session& session_info,
 /*
 * Choose which ciphersuite to use
 */
-u16bit choose_ciphersuite(
+uint16_t choose_ciphersuite(
    const Policy& policy,
    Protocol_Version version,
    Credentials_Manager& creds,
@@ -158,8 +158,8 @@ u16bit choose_ciphersuite(
    {
    const bool our_choice = policy.server_uses_own_ciphersuite_preferences();
    const bool have_srp = creds.attempt_srp("tls-server", client_hello.sni_hostname());
-   const std::vector<u16bit> client_suites = client_hello.ciphersuites();
-   const std::vector<u16bit> server_suites = policy.ciphersuite_list(version, have_srp);
+   const std::vector<uint16_t> client_suites = client_hello.ciphersuites();
+   const std::vector<uint16_t> server_suites = policy.ciphersuite_list(version, have_srp);
 
    if(server_suites.empty())
       throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
@@ -172,8 +172,8 @@ u16bit choose_ciphersuite(
    Walk down one list in preference order
    */
 
-   std::vector<u16bit> pref_list = server_suites;
-   std::vector<u16bit> other_list = client_suites;
+   std::vector<uint16_t> pref_list = server_suites;
+   std::vector<uint16_t> other_list = client_suites;
 
    if(!our_choice)
       std::swap(pref_list, other_list);
@@ -230,10 +230,10 @@ u16bit choose_ciphersuite(
 /*
 * Choose which compression algorithm to use
 */
-byte choose_compression(const Policy& policy,
-                        const std::vector<byte>& c_comp)
+uint8_t choose_compression(const Policy& policy,
+                        const std::vector<uint8_t>& c_comp)
    {
-   std::vector<byte> s_comp = policy.compression();
+   std::vector<uint8_t> s_comp = policy.compression();
 
    for(size_t i = 0; i != s_comp.size(); ++i)
       for(size_t j = 0; j != c_comp.size(); ++j)
@@ -352,7 +352,7 @@ void Server::initiate_handshake(Handshake_State& state,
 */
 void Server::process_client_hello_msg(const Handshake_State* active_state,
                                       Server_Handshake_State& pending_state,
-                                      const std::vector<byte>& contents)
+                                      const std::vector<uint8_t>& contents)
 {
    const bool initial_handshake = !active_state;
 
@@ -470,14 +470,14 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
 }
 
 void Server::process_certificate_msg(Server_Handshake_State& pending_state,
-                                     const std::vector<byte>& contents)
+                                     const std::vector<uint8_t>& contents)
 {
    pending_state.client_certs(new Certificate(contents, policy()));
    pending_state.set_expected_next(CLIENT_KEX);
 }
 
 void Server::process_client_key_exchange_msg(Server_Handshake_State& pending_state,
-                                             const std::vector<byte>& contents)
+                                             const std::vector<uint8_t>& contents)
 {
    if(pending_state.received_handshake_msg(CERTIFICATE) && !pending_state.client_certs()->empty())
       pending_state.set_expected_next(CERTIFICATE_VERIFY);
@@ -501,7 +501,7 @@ void Server::process_change_cipher_spec_msg(Server_Handshake_State& pending_stat
 
 void Server::process_certificate_verify_msg(Server_Handshake_State& pending_state,
                                             Handshake_Type type,
-                                            const std::vector<byte>& contents)
+                                            const std::vector<uint8_t>& contents)
 {
     pending_state.client_verify ( new Certificate_Verify ( contents, pending_state.version() ) );
 
@@ -543,7 +543,7 @@ void Server::process_certificate_verify_msg(Server_Handshake_State& pending_stat
 
 void Server::process_finished_msg(Server_Handshake_State& pending_state,
                                   Handshake_Type type,
-                                  const std::vector<byte>& contents)
+                                  const std::vector<uint8_t>& contents)
 {
     pending_state.set_expected_next ( HANDSHAKE_NONE );
 
@@ -569,7 +569,7 @@ void Server::process_finished_msg(Server_Handshake_State& pending_state,
             pending_state.server_hello()->supports_extended_master_secret(),
             pending_state.server_hello()->supports_encrypt_then_mac(),
             get_peer_cert_chain ( pending_state ),
-            std::vector<byte>(),
+            std::vector<uint8_t>(),
             Server_Information(pending_state.client_hello()->sni_hostname()),
             pending_state.srp_identifier(),
             pending_state.server_hello()->srtp_profile()
@@ -621,7 +621,7 @@ void Server::process_finished_msg(Server_Handshake_State& pending_state,
 void Server::process_handshake_msg(const Handshake_State* active_state,
                                    Handshake_State& state_base,
                                    Handshake_Type type,
-                                   const std::vector<byte>& contents)
+                                   const std::vector<uint8_t>& contents)
    {
    Server_Handshake_State& state = dynamic_cast<Server_Handshake_State&>(state_base);
    state.confirm_transition_to(type);

@@ -21,7 +21,7 @@ class BOTAN_DLL BER_Decoder
    public:
       BER_Object get_next_object();
 
-      std::vector<byte> get_next_octet_string();
+      std::vector<uint8_t> get_next_octet_string();
 
       void push_back(const BER_Object& obj);
 
@@ -34,15 +34,15 @@ class BOTAN_DLL BER_Decoder
 
       BER_Decoder& get_next(BER_Object& ber);
 
-      BER_Decoder& raw_bytes(secure_vector<byte>& v);
-      BER_Decoder& raw_bytes(std::vector<byte>& v);
+      BER_Decoder& raw_bytes(secure_vector<uint8_t>& v);
+      BER_Decoder& raw_bytes(std::vector<uint8_t>& v);
 
       BER_Decoder& decode_null();
       BER_Decoder& decode(bool& v);
       BER_Decoder& decode(size_t& v);
       BER_Decoder& decode(class BigInt& v);
-      BER_Decoder& decode(std::vector<byte>& v, ASN1_Tag type_tag);
-      BER_Decoder& decode(secure_vector<byte>& v, ASN1_Tag type_tag);
+      BER_Decoder& decode(std::vector<uint8_t>& v, ASN1_Tag type_tag);
+      BER_Decoder& decode(secure_vector<uint8_t>& v, ASN1_Tag type_tag);
 
       BER_Decoder& decode(bool& v,
                           ASN1_Tag type_tag,
@@ -56,12 +56,12 @@ class BOTAN_DLL BER_Decoder
                           ASN1_Tag type_tag,
                           ASN1_Tag class_tag = CONTEXT_SPECIFIC);
 
-      BER_Decoder& decode(std::vector<byte>& v,
+      BER_Decoder& decode(std::vector<uint8_t>& v,
                           ASN1_Tag real_type,
                           ASN1_Tag type_tag,
                           ASN1_Tag class_tag = CONTEXT_SPECIFIC);
 
-      BER_Decoder& decode(secure_vector<byte>& v,
+      BER_Decoder& decode(secure_vector<uint8_t>& v,
                           ASN1_Tag real_type,
                           ASN1_Tag type_tag,
                           ASN1_Tag class_tag = CONTEXT_SPECIFIC);
@@ -72,7 +72,7 @@ class BOTAN_DLL BER_Decoder
 
       BER_Decoder& decode_octet_string_bigint(class BigInt& b);
 
-      u64bit decode_constrained_integer(ASN1_Tag type_tag,
+      uint64_t decode_constrained_integer(ASN1_Tag type_tag,
                                         ASN1_Tag class_tag,
                                         size_t T_bytes);
 
@@ -127,9 +127,9 @@ class BOTAN_DLL BER_Decoder
       * Decode an OPTIONAL string type
       */
       template<typename Alloc>
-      BER_Decoder& decode_optional_string(std::vector<byte, Alloc>& out,
+      BER_Decoder& decode_optional_string(std::vector<uint8_t, Alloc>& out,
                                           ASN1_Tag real_type,
-                                          u16bit type_no,
+                                          uint16_t type_no,
                                           ASN1_Tag class_tag = CONTEXT_SPECIFIC)
          {
          BER_Object obj = get_next_object();
@@ -159,11 +159,11 @@ class BOTAN_DLL BER_Decoder
 
       explicit BER_Decoder(DataSource&);
 
-      BER_Decoder(const byte[], size_t);
+      BER_Decoder(const uint8_t[], size_t);
 
-      explicit BER_Decoder(const secure_vector<byte>&);
+      explicit BER_Decoder(const secure_vector<uint8_t>&);
 
-      explicit BER_Decoder(const std::vector<byte>& vec);
+      explicit BER_Decoder(const std::vector<uint8_t>& vec);
 
       BER_Decoder(const BER_Decoder&);
       ~BER_Decoder();

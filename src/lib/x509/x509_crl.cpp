@@ -35,7 +35,7 @@ X509_CRL::X509_CRL(const std::string& fsname, bool touc) :
    }
 #endif
 
-X509_CRL::X509_CRL(const std::vector<byte>& in, bool touc) :
+X509_CRL::X509_CRL(const std::vector<uint8_t>& in, bool touc) :
    X509_Object(in, "CRL/X509 CRL"), m_throw_on_unknown_critical(touc)
    {
    do_decode();
@@ -62,14 +62,14 @@ bool X509_CRL::is_revoked(const X509_Certificate& cert) const
    if(cert.issuer_dn() != issuer_dn())
       return false;
 
-   std::vector<byte> crl_akid = authority_key_id();
-   std::vector<byte> cert_akid = cert.authority_key_id();
+   std::vector<uint8_t> crl_akid = authority_key_id();
+   std::vector<uint8_t> cert_akid = cert.authority_key_id();
 
    if(!crl_akid.empty() && !cert_akid.empty())
       if(crl_akid != cert_akid)
          return false;
 
-   std::vector<byte> cert_serial = cert.serial_number();
+   std::vector<uint8_t> cert_serial = cert.serial_number();
 
    bool is_revoked = false;
 
@@ -170,7 +170,7 @@ X509_DN X509_CRL::issuer_dn() const
 /*
 * Return the key identifier of the issuer
 */
-std::vector<byte> X509_CRL::authority_key_id() const
+std::vector<uint8_t> X509_CRL::authority_key_id() const
    {
    return m_info.get1_memvec("X509v3.AuthorityKeyIdentifier");
    }
@@ -178,9 +178,9 @@ std::vector<byte> X509_CRL::authority_key_id() const
 /*
 * Return the CRL number of this CRL
 */
-u32bit X509_CRL::crl_number() const
+uint32_t X509_CRL::crl_number() const
    {
-   return m_info.get1_u32bit("X509v3.CRLNumber");
+   return m_info.get1_uint32("X509v3.CRLNumber");
    }
 
 /*

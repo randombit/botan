@@ -15,7 +15,7 @@ namespace Botan {
 /*
 * Encode a BigInt
 */
-void BigInt::encode(byte output[], const BigInt& n, Base base)
+void BigInt::encode(uint8_t output[], const BigInt& n, Base base)
    {
    if(base == Binary)
       {
@@ -23,7 +23,7 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
       }
    else if(base == Hexadecimal)
       {
-      secure_vector<byte> binary(n.encoded_size(Binary));
+      secure_vector<uint8_t> binary(n.encoded_size(Binary));
       n.binary_encode(binary.data());
 
       hex_encode(reinterpret_cast<char*>(output),
@@ -39,7 +39,7 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
          {
          divide(copy, 10, copy, remainder);
          output[output_size - 1 - j] =
-            Charset::digit2char(static_cast<byte>(remainder.word_at(0)));
+            Charset::digit2char(static_cast<uint8_t>(remainder.word_at(0)));
          if(copy.is_zero())
             break;
          }
@@ -51,9 +51,9 @@ void BigInt::encode(byte output[], const BigInt& n, Base base)
 /*
 * Encode a BigInt
 */
-std::vector<byte> BigInt::encode(const BigInt& n, Base base)
+std::vector<uint8_t> BigInt::encode(const BigInt& n, Base base)
    {
-   std::vector<byte> output(n.encoded_size(base));
+   std::vector<uint8_t> output(n.encoded_size(base));
    encode(output.data(), n, base);
    if(base != Binary)
       for(size_t j = 0; j != output.size(); ++j)
@@ -65,9 +65,9 @@ std::vector<byte> BigInt::encode(const BigInt& n, Base base)
 /*
 * Encode a BigInt
 */
-secure_vector<byte> BigInt::encode_locked(const BigInt& n, Base base)
+secure_vector<uint8_t> BigInt::encode_locked(const BigInt& n, Base base)
    {
-   secure_vector<byte> output(n.encoded_size(base));
+   secure_vector<uint8_t> output(n.encoded_size(base));
    encode(output.data(), n, base);
    if(base != Binary)
       for(size_t j = 0; j != output.size(); ++j)
@@ -79,15 +79,15 @@ secure_vector<byte> BigInt::encode_locked(const BigInt& n, Base base)
 /*
 * Encode a BigInt, with leading 0s if needed
 */
-secure_vector<byte> BigInt::encode_1363(const BigInt& n, size_t bytes)
+secure_vector<uint8_t> BigInt::encode_1363(const BigInt& n, size_t bytes)
    {
-   secure_vector<byte> output(bytes);
+   secure_vector<uint8_t> output(bytes);
    BigInt::encode_1363(output.data(), output.size(), n);
    return output;
    }
 
 //static
-void BigInt::encode_1363(byte output[], size_t bytes, const BigInt& n)
+void BigInt::encode_1363(uint8_t output[], size_t bytes, const BigInt& n)
    {
    const size_t n_bytes = n.bytes();
    if(n_bytes > bytes)
@@ -100,9 +100,9 @@ void BigInt::encode_1363(byte output[], size_t bytes, const BigInt& n)
 /*
 * Encode two BigInt, with leading 0s if needed, and concatenate
 */
-secure_vector<byte> BigInt::encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes)
+secure_vector<uint8_t> BigInt::encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes)
    {
-   secure_vector<byte> output(2 * bytes);
+   secure_vector<uint8_t> output(2 * bytes);
    BigInt::encode_1363(output.data(), bytes, n1);
    BigInt::encode_1363(output.data() + bytes, bytes, n2);
    return output;
@@ -111,14 +111,14 @@ secure_vector<byte> BigInt::encode_fixed_length_int_pair(const BigInt& n1, const
 /*
 * Decode a BigInt
 */
-BigInt BigInt::decode(const byte buf[], size_t length, Base base)
+BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base)
    {
    BigInt r;
    if(base == Binary)
       r.binary_decode(buf, length);
    else if(base == Hexadecimal)
       {
-      secure_vector<byte> binary;
+      secure_vector<uint8_t> binary;
 
       if(length % 2)
          {
@@ -149,7 +149,7 @@ BigInt BigInt::decode(const byte buf[], size_t length, Base base)
             throw Invalid_Argument("BigInt::decode: "
                                    "Invalid character in decimal input");
 
-         const byte x = Charset::char2digit(buf[i]);
+         const uint8_t x = Charset::char2digit(buf[i]);
 
          if(x >= 10)
             throw Invalid_Argument("BigInt: Invalid decimal string");

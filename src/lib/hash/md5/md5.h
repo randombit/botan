@@ -27,19 +27,19 @@ class BOTAN_DLL MD5 final : public MDx_HashFunction
       MD5() : MDx_HashFunction(64, false, true), m_M(16), m_digest(4)
          { clear(); }
    protected:
-      void compress_n(const byte[], size_t blocks) override;
-      void copy_out(byte[]) override;
+      void compress_n(const uint8_t[], size_t blocks) override;
+      void copy_out(uint8_t[]) override;
 
    private:
       /**
       * The message buffer
       */
-      secure_vector<u32bit> m_M;
+      secure_vector<uint32_t> m_M;
 
       /**
       * The digest value
       */
-      secure_vector<u32bit> m_digest;
+      secure_vector<uint32_t> m_digest;
    };
 
 }

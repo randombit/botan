@@ -17,7 +17,7 @@
 
 namespace Botan {
 
-typedef std::vector<secure_vector<byte>> wots_keysig_t;
+typedef std::vector<secure_vector<uint8_t>> wots_keysig_t;
 
 /**
  * Operations shared by XMSS signature generation and verification operations.
@@ -41,11 +41,11 @@ class XMSS_Common_Ops
         * @param[in] seed The seed for G.
         **/
       void randomize_tree_hash(
-         secure_vector<byte>& result,
-         const secure_vector<byte>& left,
-         const secure_vector<byte>& right,
+         secure_vector<uint8_t>& result,
+         const secure_vector<uint8_t>& left,
+         const secure_vector<uint8_t>& right,
          XMSS_Address& adrs,
-         const secure_vector<byte>& seed);
+         const secure_vector<uint8_t>& seed);
 
       /**
        * Algorithm 8: "ltree"
@@ -59,10 +59,10 @@ class XMSS_Common_Ops
        * @param[in] seed The seed generated during the public key generation.
        **/
       void create_l_tree(
-         secure_vector<byte>& result,
+         secure_vector<uint8_t>& result,
          wots_keysig_t pk,
          XMSS_Address& adrs,
-         const secure_vector<byte>& seed);
+         const secure_vector<uint8_t>& seed);
 
    protected:
       XMSS_Parameters m_xmss_params;

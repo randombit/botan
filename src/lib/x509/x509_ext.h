@@ -76,8 +76,8 @@ class BOTAN_DLL Certificate_Extension
    protected:
       friend class Extensions;
       virtual bool should_encode() const { return true; }
-      virtual std::vector<byte> encode_inner() const = 0;
-      virtual void decode_inner(const std::vector<byte>&) = 0;
+      virtual std::vector<uint8_t> encode_inner() const = 0;
+      virtual void decode_inner(const std::vector<uint8_t>&) = 0;
    };
 
 /**
@@ -152,7 +152,7 @@ class BOTAN_DLL Extensions : public ASN1_Object
       * together with the corresponding criticality flag.
       * Contains all extensions, known as well as unknown extensions.
       */
-      std::map<OID, std::pair<std::vector<byte>, bool>> extensions_raw() const;
+      std::map<OID, std::pair<std::vector<uint8_t>, bool>> extensions_raw() const;
 
       Extensions& operator=(const Extensions&);
 
@@ -169,7 +169,7 @@ class BOTAN_DLL Extensions : public ASN1_Object
 
       std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> m_extensions;
       bool m_throw_on_unknown_critical;
-      std::map<OID, std::pair<std::vector<byte>, bool>> m_extensions_raw;
+      std::map<OID, std::pair<std::vector<uint8_t>, bool>> m_extensions_raw;
    };
 
 namespace Cert_Extension {
@@ -195,8 +195,8 @@ class BOTAN_DLL Basic_Constraints final : public Certificate_Extension
       std::string oid_name() const override
          { return "X509v3.BasicConstraints"; }
 
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
       bool m_is_ca;
@@ -220,8 +220,8 @@ class BOTAN_DLL Key_Usage final : public Certificate_Extension
 
       bool should_encode() const override
          { return (m_constraints != NO_CONSTRAINTS); }
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
       Key_Constraints m_constraints;
@@ -237,19 +237,19 @@ class BOTAN_DLL Subject_Key_ID final : public Certificate_Extension
          { return new Subject_Key_ID(m_key_id); }
 
       Subject_Key_ID() {}
-      explicit Subject_Key_ID(const std::vector<byte>&);
+      explicit Subject_Key_ID(const std::vector<uint8_t>&);
 
-      std::vector<byte> get_key_id() const { return m_key_id; }
+      std::vector<uint8_t> get_key_id() const { return m_key_id; }
    private:
       std::string oid_name() const override
          { return "X509v3.SubjectKeyIdentifier"; }
 
       bool should_encode() const override { return (m_key_id.size() > 0); }
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
-      std::vector<byte> m_key_id;
+      std::vector<uint8_t> m_key_id;
    };
 
 /**
@@ -262,20 +262,20 @@ class BOTAN_DLL Authority_Key_ID final : public Certificate_Extension
          { return new Authority_Key_ID(m_key_id); }
 
       Authority_Key_ID() {}
-      explicit Authority_Key_ID(const std::vector<byte>& k) : m_key_id(k) {}
+      explicit Authority_Key_ID(const std::vector<uint8_t>& k) : m_key_id(k) {}
 
-      std::vector<byte> get_key_id() const { return m_key_id; }
+      std::vector<uint8_t> get_key_id() const { return m_key_id; }
 
    private:
       std::string oid_name() const override
          { return "X509v3.AuthorityKeyIdentifier"; }
 
       bool should_encode() const override { return (m_key_id.size() > 0); }
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
-      std::vector<byte> m_key_id;
+      std::vector<uint8_t> m_key_id;
    };
 
 /**
@@ -295,8 +295,8 @@ class BOTAN_DLL Alternative_Name : public Certificate_Extension
       std::string oid_name() const override { return m_oid_name_str; }
 
       bool should_encode() const override { return m_alt_name.has_items(); }
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
       std::string m_oid_name_str;
@@ -346,8 +346,8 @@ class BOTAN_DLL Extended_Key_Usage final : public Certificate_Extension
          { return "X509v3.ExtendedKeyUsage"; }
 
       bool should_encode() const override { return (m_oids.size() > 0); }
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
       std::vector<OID> m_oids;
@@ -375,8 +375,8 @@ class BOTAN_DLL Name_Constraints : public Certificate_Extension
          { return "X509v3.NameConstraints"; }
 
       bool should_encode() const override { return true; }
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
       NameConstraints m_name_constraints;
@@ -401,8 +401,8 @@ class BOTAN_DLL Certificate_Policies final : public Certificate_Extension
          { return "X509v3.CertificatePolicies"; }
 
       bool should_encode() const override { return (m_oids.size() > 0); }
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
       std::vector<OID> m_oids;
@@ -425,8 +425,8 @@ class BOTAN_DLL Authority_Information_Access final : public Certificate_Extensio
 
       bool should_encode() const override { return (!m_ocsp_responder.empty()); }
 
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
 
       void contents_to(Data_Store&, Data_Store&) const override;
 
@@ -450,8 +450,8 @@ class BOTAN_DLL CRL_Number final : public Certificate_Extension
       std::string oid_name() const override { return "X509v3.CRLNumber"; }
 
       bool should_encode() const override { return m_has_value; }
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
       bool m_has_value;
@@ -475,8 +475,8 @@ class BOTAN_DLL CRL_ReasonCode final : public Certificate_Extension
       std::string oid_name() const override { return "X509v3.ReasonCode"; }
 
       bool should_encode() const override { return (m_reason != UNSPECIFIED); }
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
       CRL_Code m_reason;
@@ -517,8 +517,8 @@ class BOTAN_DLL CRL_Distribution_Points final : public Certificate_Extension
       bool should_encode() const override
          { return !m_distribution_points.empty(); }
 
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
       std::vector<Distribution_Point> m_distribution_points;
@@ -552,8 +552,8 @@ class BOTAN_DLL Unknown_Critical_Extension final : public Certificate_Extension
          { return "Unknown OID name"; }
 
       bool should_encode() const override { return false; }
-      std::vector<byte> encode_inner() const override;
-      void decode_inner(const std::vector<byte>&) override;
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
       void contents_to(Data_Store&, Data_Store&) const override;
 
       OID m_oid;

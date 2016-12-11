@@ -136,7 +136,7 @@ Test::Result test_xor()
          Botan::DLIES_Encryptor encryptor(alice, Test::rng(), kdf->clone(), mac->clone(), mac_key_len);
 
          // negative test: other pub key not set
-         Botan::secure_vector<byte> plaintext = Test::rng().random_vec(32);
+         Botan::secure_vector<uint8_t> plaintext = Test::rng().random_vec(32);
 
          result.test_throws("encrypt not possible without setting other public key", [&encryptor, &plaintext]()
             {
@@ -144,14 +144,14 @@ Test::Result test_xor()
             });
 
          encryptor.set_other_key(bob.public_value());
-         std::vector<byte> ciphertext = encryptor.encrypt(plaintext, Test::rng());
+         std::vector<uint8_t> ciphertext = encryptor.encrypt(plaintext, Test::rng());
 
          Botan::DLIES_Decryptor decryptor(bob, Test::rng(), kdf->clone(), mac->clone(), mac_key_len);
 
          // negative test: ciphertext too short
          result.test_throws("ciphertext too short", [ &decryptor ]()
             {
-            decryptor.decrypt(std::vector<byte>(2));
+            decryptor.decrypt(std::vector<uint8_t>(2));
             });
 
          result.test_eq("decryption", decryptor.decrypt(ciphertext), plaintext);

@@ -16,11 +16,11 @@ namespace {
 /*
 * Noekeon's Theta Operation
 */
-inline void theta(u32bit& A0, u32bit& A1,
-                  u32bit& A2, u32bit& A3,
-                  const u32bit EK[4])
+inline void theta(uint32_t& A0, uint32_t& A1,
+                  uint32_t& A2, uint32_t& A3,
+                  const uint32_t EK[4])
    {
-   u32bit T = A0 ^ A2;
+   uint32_t T = A0 ^ A2;
    T ^= rotate_left(T, 8) ^ rotate_right(T, 8);
    A1 ^= T;
    A3 ^= T;
@@ -39,10 +39,10 @@ inline void theta(u32bit& A0, u32bit& A1,
 /*
 * Theta With Null Key
 */
-inline void theta(u32bit& A0, u32bit& A1,
-                  u32bit& A2, u32bit& A3)
+inline void theta(uint32_t& A0, uint32_t& A1,
+                  uint32_t& A2, uint32_t& A3)
    {
-   u32bit T = A0 ^ A2;
+   uint32_t T = A0 ^ A2;
    T ^= rotate_left(T, 8) ^ rotate_right(T, 8);
    A1 ^= T;
    A3 ^= T;
@@ -56,12 +56,12 @@ inline void theta(u32bit& A0, u32bit& A1,
 /*
 * Noekeon's Gamma S-Box Layer
 */
-inline void gamma(u32bit& A0, u32bit& A1, u32bit& A2, u32bit& A3)
+inline void gamma(uint32_t& A0, uint32_t& A1, uint32_t& A2, uint32_t& A3)
    {
    A1 ^= ~A3 & ~A2;
    A0 ^= A2 & A1;
 
-   u32bit T = A3;
+   uint32_t T = A3;
    A3 = A0;
    A0 = T;
 
@@ -88,7 +88,7 @@ std::string Noekeon::provider() const
 /*
 * Noekeon Round Constants
 */
-const byte Noekeon::RC[] = {
+const uint8_t Noekeon::RC[] = {
    0x80, 0x1B, 0x36, 0x6C, 0xD8, 0xAB, 0x4D, 0x9A,
    0x2F, 0x5E, 0xBC, 0x63, 0xC6, 0x97, 0x35, 0x6A,
    0xD4 };
@@ -96,7 +96,7 @@ const byte Noekeon::RC[] = {
 /*
 * Noekeon Encryption
 */
-void Noekeon::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void Noekeon::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
    if(CPUID::has_simd_32())
@@ -113,10 +113,10 @@ void Noekeon::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      u32bit A0 = load_be<u32bit>(in, 0);
-      u32bit A1 = load_be<u32bit>(in, 1);
-      u32bit A2 = load_be<u32bit>(in, 2);
-      u32bit A3 = load_be<u32bit>(in, 3);
+      uint32_t A0 = load_be<uint32_t>(in, 0);
+      uint32_t A1 = load_be<uint32_t>(in, 1);
+      uint32_t A2 = load_be<uint32_t>(in, 2);
+      uint32_t A3 = load_be<uint32_t>(in, 3);
 
       for(size_t j = 0; j != 16; ++j)
          {
@@ -147,7 +147,7 @@ void Noekeon::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Noekeon Encryption
 */
-void Noekeon::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void Noekeon::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
    if(CPUID::has_simd_32())
@@ -177,10 +177,10 @@ void Noekeon::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      u32bit A0 = load_be<u32bit>(in, 0);
-      u32bit A1 = load_be<u32bit>(in, 1);
-      u32bit A2 = load_be<u32bit>(in, 2);
-      u32bit A3 = load_be<u32bit>(in, 3);
+      uint32_t A0 = load_be<uint32_t>(in, 0);
+      uint32_t A1 = load_be<uint32_t>(in, 1);
+      uint32_t A2 = load_be<uint32_t>(in, 2);
+      uint32_t A3 = load_be<uint32_t>(in, 3);
 
       for(size_t j = 16; j != 0; --j)
          {
@@ -211,12 +211,12 @@ void Noekeon::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Noekeon Key Schedule
 */
-void Noekeon::key_schedule(const byte key[], size_t)
+void Noekeon::key_schedule(const uint8_t key[], size_t)
    {
-   u32bit A0 = load_be<u32bit>(key, 0);
-   u32bit A1 = load_be<u32bit>(key, 1);
-   u32bit A2 = load_be<u32bit>(key, 2);
-   u32bit A3 = load_be<u32bit>(key, 3);
+   uint32_t A0 = load_be<uint32_t>(key, 0);
+   uint32_t A1 = load_be<uint32_t>(key, 1);
+   uint32_t A2 = load_be<uint32_t>(key, 2);
+   uint32_t A3 = load_be<uint32_t>(key, 3);
 
    for(size_t i = 0; i != 16; ++i)
       {

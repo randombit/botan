@@ -38,7 +38,7 @@ namespace TLS {
 class Session;
 class Handshake_IO;
 
-std::vector<byte> make_hello_random(RandomNumberGenerator& rng,
+std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
                                     const Policy& policy);
 
 /**
@@ -47,18 +47,18 @@ std::vector<byte> make_hello_random(RandomNumberGenerator& rng,
 class BOTAN_DLL Hello_Verify_Request final : public Handshake_Message
    {
    public:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
       Handshake_Type type() const override { return HELLO_VERIFY_REQUEST; }
 
-      std::vector<byte> cookie() const { return m_cookie; }
+      std::vector<uint8_t> cookie() const { return m_cookie; }
 
-      explicit Hello_Verify_Request(const std::vector<byte>& buf);
+      explicit Hello_Verify_Request(const std::vector<uint8_t>& buf);
 
-      Hello_Verify_Request(const std::vector<byte>& client_hello_bits,
+      Hello_Verify_Request(const std::vector<uint8_t>& client_hello_bits,
                            const std::string& client_identity,
                            const SymmetricKey& secret_key);
    private:
-      std::vector<byte> m_cookie;
+      std::vector<uint8_t> m_cookie;
    };
 
 /**
@@ -91,15 +91,15 @@ class BOTAN_DLL Client_Hello final : public Handshake_Message
 
       Protocol_Version version() const { return m_version; }
 
-      const std::vector<byte>& random() const { return m_random; }
+      const std::vector<uint8_t>& random() const { return m_random; }
 
-      const std::vector<byte>& session_id() const { return m_session_id; }
+      const std::vector<uint8_t>& session_id() const { return m_session_id; }
 
-      std::vector<u16bit> ciphersuites() const { return m_suites; }
+      std::vector<uint16_t> ciphersuites() const { return m_suites; }
 
-      std::vector<byte> compression_methods() const { return m_comp_methods; }
+      std::vector<uint8_t> compression_methods() const { return m_comp_methods; }
 
-      bool offered_suite(u16bit ciphersuite) const;
+      bool offered_suite(uint16_t ciphersuite) const;
 
       bool sent_fallback_scsv() const;
 
@@ -155,11 +155,11 @@ class BOTAN_DLL Client_Hello final : public Handshake_Message
          return m_extensions.has<Renegotiation_Extension>();
          }
 
-      std::vector<byte> renegotiation_info() const
+      std::vector<uint8_t> renegotiation_info() const
          {
          if(Renegotiation_Extension* reneg = m_extensions.get<Renegotiation_Extension>())
             return reneg->renegotiation_info();
-         return std::vector<byte>();
+         return std::vector<uint8_t>();
          }
 
       bool supports_session_ticket() const
@@ -167,11 +167,11 @@ class BOTAN_DLL Client_Hello final : public Handshake_Message
          return m_extensions.has<Session_Ticket>();
          }
 
-      std::vector<byte> session_ticket() const
+      std::vector<uint8_t> session_ticket() const
          {
          if(Session_Ticket* ticket = m_extensions.get<Session_Ticket>())
             return ticket->contents();
-         return std::vector<byte>();
+         return std::vector<uint8_t>();
          }
 
       bool supports_alpn() const
@@ -206,11 +206,11 @@ class BOTAN_DLL Client_Hello final : public Handshake_Message
          return std::vector<std::string>();
          }
 
-      std::vector<u16bit> srtp_profiles() const
+      std::vector<uint16_t> srtp_profiles() const
          {
          if(SRTP_Protection_Profiles* srtp = m_extensions.get<SRTP_Protection_Profiles>())
             return srtp->profiles();
-         return std::vector<u16bit>();
+         return std::vector<uint16_t>();
          }
 
       void update_hello_cookie(const Hello_Verify_Request& hello_verify);
@@ -222,7 +222,7 @@ class BOTAN_DLL Client_Hello final : public Handshake_Message
                    Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
-                   const std::vector<byte>& reneg_info,
+                   const std::vector<uint8_t>& reneg_info,
                    const Client_Hello::Settings& client_settings,
                    const std::vector<std::string>& next_protocols);
 
@@ -230,21 +230,21 @@ class BOTAN_DLL Client_Hello final : public Handshake_Message
                    Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
-                   const std::vector<byte>& reneg_info,
+                   const std::vector<uint8_t>& reneg_info,
                    const Session& resumed_session,
                    const std::vector<std::string>& next_protocols);
 
-      explicit Client_Hello(const std::vector<byte>& buf);
+      explicit Client_Hello(const std::vector<uint8_t>& buf);
 
    private:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       Protocol_Version m_version;
-      std::vector<byte> m_session_id;
-      std::vector<byte> m_random;
-      std::vector<u16bit> m_suites;
-      std::vector<byte> m_comp_methods;
-      std::vector<byte> m_hello_cookie; // DTLS only
+      std::vector<uint8_t> m_session_id;
+      std::vector<uint8_t> m_random;
+      std::vector<uint16_t> m_suites;
+      std::vector<uint8_t> m_comp_methods;
+      std::vector<uint8_t> m_hello_cookie; // DTLS only
 
       Extensions m_extensions;
    };
@@ -258,10 +258,10 @@ class BOTAN_DLL Server_Hello final : public Handshake_Message
       class Settings
       {
           public:
-              Settings(const std::vector<byte> new_session_id,
+              Settings(const std::vector<uint8_t> new_session_id,
                        Protocol_Version new_session_version,
-                       u16bit ciphersuite,
-                       byte compression,
+                       uint16_t ciphersuite,
+                       uint8_t compression,
                        bool offer_session_ticket)
                   : m_new_session_id(new_session_id),
                     m_new_session_version(new_session_version),
@@ -269,17 +269,17 @@ class BOTAN_DLL Server_Hello final : public Handshake_Message
                     m_compression(compression),
                     m_offer_session_ticket(offer_session_ticket) {};
 
-              const std::vector<byte>& session_id() const { return m_new_session_id; };
+              const std::vector<uint8_t>& session_id() const { return m_new_session_id; };
               Protocol_Version protocol_version() const { return m_new_session_version; };
-              u16bit ciphersuite() const { return m_ciphersuite; };
-              byte compression() const { return m_compression; }
+              uint16_t ciphersuite() const { return m_ciphersuite; };
+              uint8_t compression() const { return m_compression; }
               bool offer_session_ticket() const { return m_offer_session_ticket; }
 
           private:
-              const std::vector<byte> m_new_session_id;
+              const std::vector<uint8_t> m_new_session_id;
               Protocol_Version m_new_session_version;
-              u16bit m_ciphersuite;
-              byte m_compression;
+              uint16_t m_ciphersuite;
+              uint8_t m_compression;
               bool m_offer_session_ticket;
       };
 
@@ -288,24 +288,24 @@ class BOTAN_DLL Server_Hello final : public Handshake_Message
 
       Protocol_Version version() const { return m_version; }
 
-      const std::vector<byte>& random() const { return m_random; }
+      const std::vector<uint8_t>& random() const { return m_random; }
 
-      const std::vector<byte>& session_id() const { return m_session_id; }
+      const std::vector<uint8_t>& session_id() const { return m_session_id; }
 
-      u16bit ciphersuite() const { return m_ciphersuite; }
+      uint16_t ciphersuite() const { return m_ciphersuite; }
 
-      byte compression_method() const { return m_comp_method; }
+      uint8_t compression_method() const { return m_comp_method; }
 
       bool secure_renegotiation() const
          {
          return m_extensions.has<Renegotiation_Extension>();
          }
 
-      std::vector<byte> renegotiation_info() const
+      std::vector<uint8_t> renegotiation_info() const
          {
          if(Renegotiation_Extension* reneg = m_extensions.get<Renegotiation_Extension>())
             return reneg->renegotiation_info();
-         return std::vector<byte>();
+         return std::vector<uint8_t>();
          }
 
       bool supports_extended_master_secret() const
@@ -328,7 +328,7 @@ class BOTAN_DLL Server_Hello final : public Handshake_Message
          return m_extensions.has<Session_Ticket>();
          }
 
-      u16bit srtp_profile() const
+      uint16_t srtp_profile() const
          {
          if(auto srtp = m_extensions.get<SRTP_Protection_Profiles>())
             {
@@ -364,7 +364,7 @@ class BOTAN_DLL Server_Hello final : public Handshake_Message
                    Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
-                   const std::vector<byte>& secure_reneg_info,
+                   const std::vector<uint8_t>& secure_reneg_info,
                    const Client_Hello& client_hello,
                    const Server_Hello::Settings& settings,
                    const std::string next_protocol);
@@ -373,20 +373,20 @@ class BOTAN_DLL Server_Hello final : public Handshake_Message
                    Handshake_Hash& hash,
                    const Policy& policy,
                    RandomNumberGenerator& rng,
-                   const std::vector<byte>& secure_reneg_info,
+                   const std::vector<uint8_t>& secure_reneg_info,
                    const Client_Hello& client_hello,
                    Session& resumed_session,
                    bool offer_session_ticket,
                    const std::string& next_protocol);
 
-      explicit Server_Hello(const std::vector<byte>& buf);
+      explicit Server_Hello(const std::vector<uint8_t>& buf);
    private:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       Protocol_Version m_version;
-      std::vector<byte> m_session_id, m_random;
-      u16bit m_ciphersuite;
-      byte m_comp_method;
+      std::vector<uint8_t> m_session_id, m_random;
+      uint16_t m_ciphersuite;
+      uint8_t m_comp_method;
 
       Extensions m_extensions;
    };
@@ -399,7 +399,7 @@ class Client_Key_Exchange final : public Handshake_Message
    public:
       Handshake_Type type() const override { return CLIENT_KEX; }
 
-      const secure_vector<byte>& pre_master_secret() const
+      const secure_vector<uint8_t>& pre_master_secret() const
          { return m_pre_master; }
 
       Client_Key_Exchange(Handshake_IO& io,
@@ -410,7 +410,7 @@ class Client_Key_Exchange final : public Handshake_Message
                           const std::string& hostname,
                           RandomNumberGenerator& rng);
 
-      Client_Key_Exchange(const std::vector<byte>& buf,
+      Client_Key_Exchange(const std::vector<uint8_t>& buf,
                           const Handshake_State& state,
                           const Private_Key* server_rsa_kex_key,
                           Credentials_Manager& creds,
@@ -418,11 +418,11 @@ class Client_Key_Exchange final : public Handshake_Message
                           RandomNumberGenerator& rng);
 
    private:
-      std::vector<byte> serialize() const override
+      std::vector<uint8_t> serialize() const override
          { return m_key_material; }
 
-      std::vector<byte> m_key_material;
-      secure_vector<byte> m_pre_master;
+      std::vector<uint8_t> m_key_material;
+      secure_vector<uint8_t> m_pre_master;
    };
 
 /**
@@ -441,9 +441,9 @@ class Certificate final : public Handshake_Message
                   Handshake_Hash& hash,
                   const std::vector<X509_Certificate>& certs);
 
-      explicit Certificate(const std::vector<byte>& buf, const Policy &policy);
+      explicit Certificate(const std::vector<uint8_t>& buf, const Policy &policy);
    private:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       std::vector<X509_Certificate> m_certs;
    };
@@ -458,14 +458,14 @@ class Certificate_Status final : public Handshake_Message
 
       std::shared_ptr<const OCSP::Response> response() const { return m_response; }
 
-      Certificate_Status(const std::vector<byte>& buf);
+      Certificate_Status(const std::vector<uint8_t>& buf);
 
       Certificate_Status(Handshake_IO& io,
                          Handshake_Hash& hash,
                          std::shared_ptr<const OCSP::Response> response);
 
    private:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
       std::shared_ptr<const OCSP::Response> m_response;
    };
 
@@ -491,10 +491,10 @@ class Certificate_Req final : public Handshake_Message
                       const std::vector<X509_DN>& allowed_cas,
                       Protocol_Version version);
 
-      Certificate_Req(const std::vector<byte>& buf,
+      Certificate_Req(const std::vector<uint8_t>& buf,
                       Protocol_Version version);
    private:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       std::vector<X509_DN> m_names;
       std::vector<std::string> m_cert_key_types;
@@ -526,14 +526,14 @@ class BOTAN_DLL Certificate_Verify final : public Handshake_Message
                          RandomNumberGenerator& rng,
                          const Private_Key* key);
 
-      Certificate_Verify(const std::vector<byte>& buf,
+      Certificate_Verify(const std::vector<uint8_t>& buf,
                          Protocol_Version version);
    private:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       std::string m_sig_algo; // sig algo used to create signature
       std::string m_hash_algo; // hash used to create signature
-      std::vector<byte> m_signature;
+      std::vector<uint8_t> m_signature;
    };
 
 /**
@@ -544,7 +544,7 @@ class Finished final : public Handshake_Message
    public:
       Handshake_Type type() const override { return FINISHED; }
 
-      std::vector<byte> verify_data() const
+      std::vector<uint8_t> verify_data() const
          { return m_verification_data; }
 
       bool verify(const Handshake_State& state,
@@ -554,11 +554,11 @@ class Finished final : public Handshake_Message
                Handshake_State& state,
                Connection_Side side);
 
-      explicit Finished(const std::vector<byte>& buf);
+      explicit Finished(const std::vector<uint8_t>& buf);
    private:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
-      std::vector<byte> m_verification_data;
+      std::vector<uint8_t> m_verification_data;
    };
 
 /**
@@ -570,9 +570,9 @@ class BOTAN_DLL Hello_Request final : public Handshake_Message
       Handshake_Type type() const override { return HELLO_REQUEST; }
 
       explicit Hello_Request(Handshake_IO& io);
-      explicit Hello_Request(const std::vector<byte>& buf);
+      explicit Hello_Request(const std::vector<uint8_t>& buf);
    private:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
    };
 
 /**
@@ -583,7 +583,7 @@ class Server_Key_Exchange final : public Handshake_Message
    public:
       Handshake_Type type() const override { return SERVER_KEX; }
 
-      const std::vector<byte>& params() const { return m_params; }
+      const std::vector<uint8_t>& params() const { return m_params; }
 
       bool verify(const Public_Key& server_key,
                   const Handshake_State& state,
@@ -617,14 +617,14 @@ class Server_Key_Exchange final : public Handshake_Message
                           RandomNumberGenerator& rng,
                           const Private_Key* signing_key = nullptr);
 
-      Server_Key_Exchange(const std::vector<byte>& buf,
+      Server_Key_Exchange(const std::vector<uint8_t>& buf,
                           const std::string& kex_alg,
                           const std::string& sig_alg,
                           Protocol_Version version);
 
       ~Server_Key_Exchange();
    private:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
 #if defined(BOTAN_HAS_SRP6)
       std::unique_ptr<SRP6_Server_Session> m_srp_params;
@@ -636,11 +636,11 @@ class Server_Key_Exchange final : public Handshake_Message
 
       std::unique_ptr<Private_Key> m_kex_key;
 
-      std::vector<byte> m_params;
+      std::vector<uint8_t> m_params;
 
       std::string m_sig_algo; // sig algo used to create signature
       std::string m_hash_algo; // hash used to create signature
-      std::vector<byte> m_signature;
+      std::vector<uint8_t> m_signature;
    };
 
 /**
@@ -652,9 +652,9 @@ class Server_Hello_Done final : public Handshake_Message
       Handshake_Type type() const override { return SERVER_HELLO_DONE; }
 
       Server_Hello_Done(Handshake_IO& io, Handshake_Hash& hash);
-      explicit Server_Hello_Done(const std::vector<byte>& buf);
+      explicit Server_Hello_Done(const std::vector<uint8_t>& buf);
    private:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
    };
 
 /**
@@ -665,23 +665,23 @@ class BOTAN_DLL New_Session_Ticket final : public Handshake_Message
    public:
       Handshake_Type type() const override { return NEW_SESSION_TICKET; }
 
-      u32bit ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
-      const std::vector<byte>& ticket() const { return m_ticket; }
+      uint32_t ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
+      const std::vector<uint8_t>& ticket() const { return m_ticket; }
 
       New_Session_Ticket(Handshake_IO& io,
                          Handshake_Hash& hash,
-                         const std::vector<byte>& ticket,
-                         u32bit lifetime);
+                         const std::vector<uint8_t>& ticket,
+                         uint32_t lifetime);
 
       New_Session_Ticket(Handshake_IO& io,
                          Handshake_Hash& hash);
 
-      explicit New_Session_Ticket(const std::vector<byte>& buf);
+      explicit New_Session_Ticket(const std::vector<uint8_t>& buf);
    private:
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
-      u32bit m_ticket_lifetime_hint = 0;
-      std::vector<byte> m_ticket;
+      uint32_t m_ticket_lifetime_hint = 0;
+      std::vector<uint8_t> m_ticket;
    };
 
 /**
@@ -692,8 +692,8 @@ class Change_Cipher_Spec final : public Handshake_Message
    public:
       Handshake_Type type() const override { return HANDSHAKE_CCS; }
 
-      std::vector<byte> serialize() const override
-         { return std::vector<byte>(1, 1); }
+      std::vector<uint8_t> serialize() const override
+         { return std::vector<uint8_t>(1, 1); }
    };
 
 }

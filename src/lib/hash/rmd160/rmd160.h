@@ -27,10 +27,10 @@ class BOTAN_DLL RIPEMD_160 final : public MDx_HashFunction
       RIPEMD_160() : MDx_HashFunction(64, false, true), m_M(16), m_digest(5)
          { clear(); }
    private:
-      void compress_n(const byte[], size_t blocks) override;
-      void copy_out(byte[]) override;
+      void compress_n(const uint8_t[], size_t blocks) override;
+      void copy_out(uint8_t[]) override;
 
-      secure_vector<u32bit> m_M, m_digest;
+      secure_vector<uint32_t> m_M, m_digest;
    };
 
 }

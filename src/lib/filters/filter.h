@@ -31,7 +31,7 @@ class BOTAN_DLL Filter
       * @param input the input as a byte array
       * @param length the length of the byte array input
       */
-      virtual void write(const byte input[], size_t length) = 0;
+      virtual void write(const uint8_t input[], size_t length) = 0;
 
       /**
       * Start a new message. Must be closed by end_msg() before another
@@ -57,28 +57,28 @@ class BOTAN_DLL Filter
       * @param in some input for the filter
       * @param length the length of in
       */
-      virtual void send(const byte in[], size_t length);
+      virtual void send(const uint8_t in[], size_t length);
 
       /**
       * @param in some input for the filter
       */
-      void send(byte in) { send(&in, 1); }
+      void send(uint8_t in) { send(&in, 1); }
 
       /**
       * @param in some input for the filter
       */
-      void send(const secure_vector<byte>& in) { send(in.data(), in.size()); }
+      void send(const secure_vector<uint8_t>& in) { send(in.data(), in.size()); }
 
       /**
       * @param in some input for the filter
       */
-      void send(const std::vector<byte>& in) { send(in.data(), in.size()); }
+      void send(const std::vector<uint8_t>& in) { send(in.data(), in.size()); }
 
       /**
       * @param in some input for the filter
       * @param length the number of bytes of in to send
       */
-      void send(const secure_vector<byte>& in, size_t length)
+      void send(const secure_vector<uint8_t>& in, size_t length)
          {
          send(in.data(), length);
          }
@@ -87,7 +87,7 @@ class BOTAN_DLL Filter
       * @param in some input for the filter
       * @param length the number of bytes of in to send
       */
-      void send(const std::vector<byte>& in, size_t length)
+      void send(const std::vector<uint8_t>& in, size_t length)
          {
          send(in.data(), length);
          }
@@ -138,7 +138,7 @@ class BOTAN_DLL Filter
       void set_next(Filter* filters[], size_t count);
       Filter* get_next() const;
 
-      secure_vector<byte> m_write_queue;
+      secure_vector<uint8_t> m_write_queue;
       std::vector<Filter*> m_next;
       size_t m_port_num, m_filter_owns;
 

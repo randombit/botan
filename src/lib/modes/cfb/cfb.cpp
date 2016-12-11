@@ -70,12 +70,12 @@ bool CFB_Mode::valid_nonce_length(size_t n) const
    return (n == cipher().block_size());
    }
 
-void CFB_Mode::key_schedule(const byte key[], size_t length)
+void CFB_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);
    }
 
-void CFB_Mode::start_msg(const byte nonce[], size_t nonce_len)
+void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -89,7 +89,7 @@ size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
    {
    const size_t BS = cipher().block_size();
 
-   secure_vector<byte>& state = shift_register();
+   secure_vector<uint8_t>& state = shift_register();
    const size_t shift = feedback();
    size_t left = sz;
 
@@ -112,7 +112,7 @@ size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void CFB_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
+void CFB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    update(buffer, offset);
    }
@@ -121,7 +121,7 @@ size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
    {
    const size_t BS = cipher().block_size();
 
-   secure_vector<byte>& state = shift_register();
+   secure_vector<uint8_t>& state = shift_register();
    const size_t shift = feedback();
    size_t left = sz;
 
@@ -148,7 +148,7 @@ size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void CFB_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
+void CFB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    update(buffer, offset);
    }

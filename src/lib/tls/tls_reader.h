@@ -24,7 +24,7 @@ namespace TLS {
 class TLS_Data_Reader
    {
    public:
-      TLS_Data_Reader(const char* type, const std::vector<byte>& buf_in) :
+      TLS_Data_Reader(const char* type, const std::vector<uint8_t>& buf_in) :
          m_typename(type), m_buf(buf_in), m_offset(0) {}
 
       void assert_done() const
@@ -39,9 +39,9 @@ class TLS_Data_Reader
 
       bool has_remaining() const { return (remaining_bytes() > 0); }
 
-      std::vector<byte> get_remaining()
+      std::vector<uint8_t> get_remaining()
          {
-         return std::vector<byte>(m_buf.begin() + m_offset, m_buf.end());
+         return std::vector<uint8_t>(m_buf.begin() + m_offset, m_buf.end());
          }
 
       void discard_next(size_t bytes)
@@ -50,27 +50,27 @@ class TLS_Data_Reader
          m_offset += bytes;
          }
 
-      u32bit get_u32bit()
+      uint32_t get_uint32_t()
          {
          assert_at_least(4);
-         u32bit result = make_u32bit(m_buf[m_offset  ], m_buf[m_offset+1],
+         uint32_t result = make_uint32(m_buf[m_offset  ], m_buf[m_offset+1],
                                      m_buf[m_offset+2], m_buf[m_offset+3]);
          m_offset += 4;
          return result;
          }
 
-      u16bit get_u16bit()
+      uint16_t get_uint16_t()
          {
          assert_at_least(2);
-         u16bit result = make_u16bit(m_buf[m_offset], m_buf[m_offset+1]);
+         uint16_t result = make_uint16(m_buf[m_offset], m_buf[m_offset+1]);
          m_offset += 2;
          return result;
          }
 
-      byte get_byte()
+      uint8_t get_byte()
          {
          assert_at_least(1);
-         byte result = m_buf[m_offset];
+         uint8_t result = m_buf[m_offset];
          m_offset += 1;
          return result;
          }
@@ -116,8 +116,8 @@ class TLS_Data_Reader
                              size_t min_bytes,
                              size_t max_bytes)
          {
-         std::vector<byte> v =
-            get_range_vector<byte>(len_bytes, min_bytes, max_bytes);
+         std::vector<uint8_t> v =
+            get_range_vector<uint8_t>(len_bytes, min_bytes, max_bytes);
 
          return std::string(reinterpret_cast<char*>(v.data()), v.size());
          }
@@ -136,7 +136,7 @@ class TLS_Data_Reader
          if(len_bytes == 1)
             return get_byte();
          else if(len_bytes == 2)
-            return get_u16bit();
+            return get_uint16_t();
 
          throw decode_error("Bad length size");
          }
@@ -174,7 +174,7 @@ class TLS_Data_Reader
          }
 
       const char* m_typename;
-      const std::vector<byte>& m_buf;
+      const std::vector<uint8_t>& m_buf;
       size_t m_offset;
    };
 
@@ -182,7 +182,7 @@ class TLS_Data_Reader
 * Helper function for encoding length-tagged vectors
 */
 template<typename T, typename Alloc>
-void append_tls_length_value(std::vector<byte, Alloc>& buf,
+void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
                              const T* vals,
                              size_t vals_size,
                              size_t tag_size)
@@ -206,7 +206,7 @@ void append_tls_length_value(std::vector<byte, Alloc>& buf,
    }
 
 template<typename T, typename Alloc, typename Alloc2>
-void append_tls_length_value(std::vector<byte, Alloc>& buf,
+void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
                              const std::vector<T, Alloc2>& vals,
                              size_t tag_size)
    {
@@ -214,12 +214,12 @@ void append_tls_length_value(std::vector<byte, Alloc>& buf,
    }
 
 template<typename Alloc>
-void append_tls_length_value(std::vector<byte, Alloc>& buf,
+void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
                              const std::string& str,
                              size_t tag_size)
    {
    append_tls_length_value(buf,
-                           reinterpret_cast<const byte*>(str.data()),
+                           reinterpret_cast<const uint8_t*>(str.data()),
                            str.size(),
                            tag_size);
    }

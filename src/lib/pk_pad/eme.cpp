@@ -56,7 +56,7 @@ EME* get_eme(const std::string& algo_spec)
 /*
 * Encode a message
 */
-secure_vector<byte> EME::encode(const byte msg[], size_t msg_len,
+secure_vector<uint8_t> EME::encode(const uint8_t msg[], size_t msg_len,
                                 size_t key_bits,
                                 RandomNumberGenerator& rng) const
    {
@@ -66,7 +66,7 @@ secure_vector<byte> EME::encode(const byte msg[], size_t msg_len,
 /*
 * Encode a message
 */
-secure_vector<byte> EME::encode(const secure_vector<byte>& msg,
+secure_vector<uint8_t> EME::encode(const secure_vector<uint8_t>& msg,
                                 size_t key_bits,
                                 RandomNumberGenerator& rng) const
    {

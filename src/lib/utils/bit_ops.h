@@ -79,7 +79,7 @@ inline size_t significant_bytes(T n)
 template<typename T>
 inline size_t hamming_weight(T n)
    {
-   const byte NIBBLE_WEIGHTS[] = {
+   const uint8_t NIBBLE_WEIGHTS[] = {
       0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 };
 
    size_t weight = 0;

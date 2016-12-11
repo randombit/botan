@@ -50,7 +50,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    X509_DN subject_dn;
    AlternativeName subject_alt;
 
-   std::vector<byte> pub_key = X509::BER_encode(key);
+   std::vector<uint8_t> pub_key = X509::BER_encode(key);
    std::unique_ptr<PK_Signer> signer(choose_sig_format(key, rng, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
@@ -102,7 +102,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    X509_DN subject_dn;
    AlternativeName subject_alt;
 
-   std::vector<byte> pub_key = X509::BER_encode(key);
+   std::vector<uint8_t> pub_key = X509::BER_encode(key);
    std::unique_ptr<PK_Signer> signer(choose_sig_format(key, rng, hash_fn, sig_algo));
    load_info(opts, subject_dn, subject_alt);
 
@@ -165,7 +165,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       .end_explicit()
       .end_cons();
 
-   const std::vector<byte> req =
+   const std::vector<uint8_t> req =
       X509_Object::make_signed(signer.get(), rng, sig_algo,
                                tbs_req.get_contents());
 

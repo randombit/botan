@@ -34,7 +34,7 @@ class BOTAN_DLL CMAC final : public MessageAuthenticationCode
       * CMAC's polynomial doubling operation
       * @param in the input
       */
-      static secure_vector<byte> poly_double(const secure_vector<byte>& in);
+      static secure_vector<uint8_t> poly_double(const secure_vector<uint8_t>& in);
 
       /**
       * @param cipher the block cipher to use
@@ -44,12 +44,12 @@ class BOTAN_DLL CMAC final : public MessageAuthenticationCode
       CMAC(const CMAC&) = delete;
       CMAC& operator=(const CMAC&) = delete;
    private:
-      void add_data(const byte[], size_t) override;
-      void final_result(byte[]) override;
-      void key_schedule(const byte[], size_t) override;
+      void add_data(const uint8_t[], size_t) override;
+      void final_result(uint8_t[]) override;
+      void key_schedule(const uint8_t[], size_t) override;
 
       std::unique_ptr<BlockCipher> m_cipher;
-      secure_vector<byte> m_buffer, m_state, m_B, m_P;
+      secure_vector<uint8_t> m_buffer, m_state, m_B, m_P;
       size_t m_position;
    };
 

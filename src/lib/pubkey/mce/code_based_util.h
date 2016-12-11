@@ -22,9 +22,9 @@ namespace Botan {
 * @return the mask 0xFFFF if tst is non-zero and 0 otherwise
 */
 template<typename T>
-u16bit expand_mask_16bit(T tst)
+uint16_t expand_mask_16bit(T tst)
    {
-   const u16bit result = (tst != 0);
+   const uint16_t result = (tst != 0);
    return ~(result - 1);
    }
 
@@ -42,12 +42,12 @@ inline gf2m lex_to_gray(gf2m lex)
    return (lex >> 1) ^ lex;
    }
 
-inline u32bit bit_size_to_byte_size(u32bit bit_size)
+inline uint32_t bit_size_to_byte_size(uint32_t bit_size)
    {
    return (bit_size - 1) / 8 + 1;
    }
 
-inline u32bit bit_size_to_32bit_size(u32bit bit_size)
+inline uint32_t bit_size_to_32bit_size(uint32_t bit_size)
    {
    return (bit_size - 1) / 32 + 1;
    }

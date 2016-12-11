@@ -43,7 +43,7 @@ class ECGDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
          {
          }
 
-      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                    RandomNumberGenerator& rng) override;
 
       size_t max_input_bits() const override { return m_order.bits(); }
@@ -55,8 +55,8 @@ class ECGDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
       Modular_Reducer m_mod_order;
    };
 
-secure_vector<byte>
-ECGDSA_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
+secure_vector<uint8_t>
+ECGDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
                                      RandomNumberGenerator& rng)
    {
    const BigInt m(msg, msg_len);
@@ -95,8 +95,8 @@ class ECGDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
 
       bool with_recovery() const override { return false; }
 
-      bool verify(const byte msg[], size_t msg_len,
-                  const byte sig[], size_t sig_len) override;
+      bool verify(const uint8_t msg[], size_t msg_len,
+                  const uint8_t sig[], size_t sig_len) override;
    private:
       const PointGFp& m_base_point;
       const PointGFp& m_public_point;
@@ -105,8 +105,8 @@ class ECGDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
       Modular_Reducer m_mod_order;
    };
 
-bool ECGDSA_Verification_Operation::verify(const byte msg[], size_t msg_len,
-                                           const byte sig[], size_t sig_len)
+bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
+                                           const uint8_t sig[], size_t sig_len)
    {
    if(sig_len != m_order.bytes()*2)
       return false;

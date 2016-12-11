@@ -54,8 +54,8 @@ namespace Botan {
       THREEFISH_INJECT_KEY(R2);                               \
    } while(0)
 
-void Threefish_512::skein_feedfwd(const secure_vector<u64bit>& M,
-                                  const secure_vector<u64bit>& T)
+void Threefish_512::skein_feedfwd(const secure_vector<uint64_t>& M,
+                                  const secure_vector<uint64_t>& T)
    {
    BOTAN_ASSERT(m_K.size() == 9, "Key was set");
    BOTAN_ASSERT(M.size() == 8, "Single block");
@@ -64,14 +64,14 @@ void Threefish_512::skein_feedfwd(const secure_vector<u64bit>& M,
    m_T[1] = T[1];
    m_T[2] = T[0] ^ T[1];
 
-   u64bit X0 = M[0];
-   u64bit X1 = M[1];
-   u64bit X2 = M[2];
-   u64bit X3 = M[3];
-   u64bit X4 = M[4];
-   u64bit X5 = M[5];
-   u64bit X6 = M[6];
-   u64bit X7 = M[7];
+   uint64_t X0 = M[0];
+   uint64_t X1 = M[1];
+   uint64_t X2 = M[2];
+   uint64_t X3 = M[3];
+   uint64_t X4 = M[4];
+   uint64_t X5 = M[5];
+   uint64_t X6 = M[6];
+   uint64_t X7 = M[7];
 
    THREEFISH_INJECT_KEY(0);
 
@@ -110,7 +110,7 @@ std::string Threefish_512::provider() const
    return "base";
    }
 
-void Threefish_512::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void Threefish_512::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    BOTAN_ASSERT(m_K.size() == 9, "Key was set");
    BOTAN_ASSERT(m_T.size() == 3, "Tweak was set");
@@ -124,7 +124,7 @@ void Threefish_512::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u64bit X0, X1, X2, X3, X4, X5, X6, X7;
+      uint64_t X0, X1, X2, X3, X4, X5, X6, X7;
       load_le(in + BLOCK_SIZE*i, X0, X1, X2, X3, X4, X5, X6, X7);
 
       THREEFISH_INJECT_KEY(0);
@@ -147,7 +147,7 @@ void Threefish_512::encrypt_n(const byte in[], byte out[], size_t blocks) const
 #undef THREEFISH_INJECT_KEY
 #undef THREEFISH_ROUND
 
-void Threefish_512::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    BOTAN_ASSERT(m_K.size() == 9, "Key was set");
    BOTAN_ASSERT(m_T.size() == 3, "Tweak was set");
@@ -204,7 +204,7 @@ void Threefish_512::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u64bit X0, X1, X2, X3, X4, X5, X6, X7;
+      uint64_t X0, X1, X2, X3, X4, X5, X6, X7;
       load_le(in + BLOCK_SIZE*i, X0, X1, X2, X3, X4, X5, X6, X7);
 
       THREEFISH_INJECT_KEY(18);
@@ -227,23 +227,23 @@ void Threefish_512::decrypt_n(const byte in[], byte out[], size_t blocks) const
 #undef THREEFISH_ROUND
    }
 
-void Threefish_512::set_tweak(const byte tweak[], size_t len)
+void Threefish_512::set_tweak(const uint8_t tweak[], size_t len)
    {
    if(len != 16)
       throw Exception("Threefish-512 requires 128 bit tweak");
    m_T.resize(3);
-   m_T[0] = load_le<u64bit>(tweak, 0);
-   m_T[1] = load_le<u64bit>(tweak, 1);
+   m_T[0] = load_le<uint64_t>(tweak, 0);
+   m_T[1] = load_le<uint64_t>(tweak, 1);
    m_T[2] = m_T[0] ^ m_T[1];
    }
 
-void Threefish_512::key_schedule(const byte key[], size_t)
+void Threefish_512::key_schedule(const uint8_t key[], size_t)
    {
    // todo: define key schedule for smaller keys
    m_K.resize(9);
 
    for(size_t i = 0; i != 8; ++i)
-      m_K[i] = load_le<u64bit>(key, i);
+      m_K[i] = load_le<uint64_t>(key, i);
 
    m_K[8] = m_K[0] ^ m_K[1] ^ m_K[2] ^ m_K[3] ^
             m_K[4] ^ m_K[5] ^ m_K[6] ^ m_K[7] ^ 0x1BD11BDAA9FC1A22;

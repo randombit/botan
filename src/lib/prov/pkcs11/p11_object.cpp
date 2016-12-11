@@ -22,28 +22,28 @@ AttributeContainer::AttributeContainer(ObjectClass object_class)
 void AttributeContainer::add_class(ObjectClass object_class)
    {
    m_numerics.push_back(static_cast< uint64_t >(object_class));
-   add_attribute(AttributeType::Class, reinterpret_cast< byte* >(&m_numerics.back()), sizeof(ObjectClass));
+   add_attribute(AttributeType::Class, reinterpret_cast< uint8_t* >(&m_numerics.back()), sizeof(ObjectClass));
    }
 
 void AttributeContainer::add_string(AttributeType attribute, const std::string& value)
    {
    m_strings.push_back(value);
-   add_attribute(attribute, reinterpret_cast< const byte* >(m_strings.back().data()), value.size());
+   add_attribute(attribute, reinterpret_cast< const uint8_t* >(m_strings.back().data()), value.size());
    }
 
-void AttributeContainer::add_binary(AttributeType attribute, const byte* value, size_t length)
+void AttributeContainer::add_binary(AttributeType attribute, const uint8_t* value, size_t length)
    {
-   m_vectors.push_back(secure_vector<byte>(value, value + length));
-   add_attribute(attribute, reinterpret_cast< const byte* >(m_vectors.back().data()), length);
+   m_vectors.push_back(secure_vector<uint8_t>(value, value + length));
+   add_attribute(attribute, reinterpret_cast< const uint8_t* >(m_vectors.back().data()), length);
    }
 
 void AttributeContainer::add_bool(AttributeType attribute, bool value)
    {
    m_numerics.push_back(value ? True : False);
-   add_attribute(attribute, reinterpret_cast< byte* >(&m_numerics.back()), sizeof(Bbool));
+   add_attribute(attribute, reinterpret_cast< uint8_t* >(&m_numerics.back()), sizeof(Bbool));
    }
 
-void AttributeContainer::add_attribute(AttributeType attribute, const byte* value, uint32_t size)
+void AttributeContainer::add_attribute(AttributeType attribute, const uint8_t* value, uint32_t size)
    {
    bool exists = false;
    // check if the attribute has been added already
@@ -63,12 +63,12 @@ void AttributeContainer::add_attribute(AttributeType attribute, const byte* valu
             }), m_numerics.end());
 
          m_vectors.erase(std::remove_if(m_vectors.begin(),
-                                        m_vectors.end(), [ &existing_attribute ](const secure_vector<byte>& data)
+                                        m_vectors.end(), [ &existing_attribute ](const secure_vector<uint8_t>& data)
             {
             return data.data() == existing_attribute.pValue;
             }), m_vectors.end());
 
-         existing_attribute.pValue = const_cast< byte* >(value);
+         existing_attribute.pValue = const_cast< uint8_t* >(value);
          existing_attribute.ulValueLen = size;
          exists = true;
          break;
@@ -77,7 +77,7 @@ void AttributeContainer::add_attribute(AttributeType attribute, const byte* valu
 
    if(!exists)
       {
-      m_attributes.push_back(Attribute{ static_cast< CK_ATTRIBUTE_TYPE >(attribute), const_cast< byte* >(value), size });
+      m_attributes.push_back(Attribute{ static_cast< CK_ATTRIBUTE_TYPE >(attribute), const_cast< uint8_t* >(value), size });
       }
    }
 
@@ -188,16 +188,16 @@ Object::Object(Session& session, const ObjectProperties& obj_props)
    m_session.get().module()->C_CreateObject(m_session.get().handle(), obj_props.data(), obj_props.count(), &m_handle);
    }
 
-secure_vector<byte> Object::get_attribute_value(AttributeType attribute) const
+secure_vector<uint8_t> Object::get_attribute_value(AttributeType attribute) const
    {
-   std::map<AttributeType, secure_vector<byte>> attribute_map = { { attribute, secure_vector<byte>() } };
+   std::map<AttributeType, secure_vector<uint8_t>> attribute_map = { { attribute, secure_vector<uint8_t>() } };
    module()->C_GetAttributeValue(m_session.get().handle(), m_handle, attribute_map);
    return attribute_map.at(attribute);
    }
 
-void Object::set_attribute_value(AttributeType attribute, const secure_vector<byte>& value) const
+void Object::set_attribute_value(AttributeType attribute, const secure_vector<uint8_t>& value) const
    {
-   std::map<AttributeType, secure_vector<byte>> attribute_map = { { attribute, value } };
+   std::map<AttributeType, secure_vector<uint8_t>> attribute_map = { { attribute, value } };
    module()->C_SetAttributeValue(m_session.get().handle(), m_handle, attribute_map);
    }
 

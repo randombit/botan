@@ -112,27 +112,27 @@ class BOTAN_DLL Server final : public Channel
       void process_handshake_msg(const Handshake_State* active_state,
                                  Handshake_State& pending_state,
                                  Handshake_Type type,
-                                 const std::vector<byte>& contents) override;
+                                 const std::vector<uint8_t>& contents) override;
 
       void process_client_hello_msg(const Handshake_State* active_state,
                                     Server_Handshake_State& pending_state,
-                                    const std::vector<byte>& contents);
+                                    const std::vector<uint8_t>& contents);
 
       void process_certificate_msg(Server_Handshake_State& pending_state,
-                                   const std::vector<byte>& contents);
+                                   const std::vector<uint8_t>& contents);
 
       void process_client_key_exchange_msg(Server_Handshake_State& pending_state,
-                                           const std::vector<byte>& contents);
+                                           const std::vector<uint8_t>& contents);
 
       void process_change_cipher_spec_msg(Server_Handshake_State& pending_state);
 
       void process_certificate_verify_msg(Server_Handshake_State& pending_state,
                                           Handshake_Type type,
-                                          const std::vector<byte>& contents);
+                                          const std::vector<uint8_t>& contents);
 
       void process_finished_msg(Server_Handshake_State& pending_state,
                                 Handshake_Type type,
-                                const std::vector<byte>& contents);
+                                const std::vector<uint8_t>& contents);
 
       void session_resume(Server_Handshake_State& pending_state,
                           bool have_session_ticket_key,

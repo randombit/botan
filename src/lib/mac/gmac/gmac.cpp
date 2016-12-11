@@ -37,7 +37,7 @@ size_t GMAC::output_length() const
    return GCM_BS;
    }
 
-void GMAC::add_data(const byte input[], size_t size)
+void GMAC::add_data(const uint8_t input[], size_t size)
    {
    m_ad_len += size;
 
@@ -57,16 +57,16 @@ void GMAC::add_data(const byte input[], size_t size)
       }
    }
 
-void GMAC::key_schedule(const byte key[], size_t size)
+void GMAC::key_schedule(const uint8_t key[], size_t size)
    {
    clear();
    m_cipher->set_key(key, size);
    m_cipher->encrypt(m_H_ad.data(), m_H.data());
    }
 
-void GMAC::start_msg(const byte nonce[], size_t nonce_len)
+void GMAC::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
-   secure_vector<byte> y0(GCM_BS);
+   secure_vector<uint8_t> y0(GCM_BS);
 
    if(nonce_len == 12)
       {
@@ -79,13 +79,13 @@ void GMAC::start_msg(const byte nonce[], size_t nonce_len)
       add_final_block(y0, 0, nonce_len);
       }
 
-   secure_vector<byte> m_enc_y0(GCM_BS);
+   secure_vector<uint8_t> m_enc_y0(GCM_BS);
    m_cipher->encrypt(y0.data(), m_enc_y0.data());
    GHASH::start(m_enc_y0.data(), m_enc_y0.size());
    m_initialized = true;
    }
 
-void GMAC::final_result(byte mac[])
+void GMAC::final_result(uint8_t mac[])
    {
    // This ensures the GMAC computation has been initialized with a fresh
    // nonce. The aim of this check is to prevent developers from re-using
@@ -101,7 +101,7 @@ void GMAC::final_result(byte mac[])
                     m_aad_buf.data(),
                     m_aad_buf.size());
        }
-   secure_vector<byte> result = GHASH::final();
+   secure_vector<uint8_t> result = GHASH::final();
    std::copy(result.begin(), result.end(), mac);
    clear();
    }

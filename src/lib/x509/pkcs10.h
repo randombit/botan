@@ -36,7 +36,7 @@ class BOTAN_DLL PKCS10_Request final : public X509_Object
       * Get the raw DER encoded public key.
       * @return raw DER encoded public key
       */
-      std::vector<byte> raw_public_key() const;
+      std::vector<uint8_t> raw_public_key() const;
 
       /**
       * Get the subject DN.
@@ -107,7 +107,7 @@ class BOTAN_DLL PKCS10_Request final : public X509_Object
       * Create a PKCS#10 Request from binary data.
       * @param vec a std::vector containing the DER value
       */
-      explicit PKCS10_Request(const std::vector<byte>& vec);
+      explicit PKCS10_Request(const std::vector<uint8_t>& vec);
    private:
       void force_decode() override;
       void handle_attribute(const Attribute&);

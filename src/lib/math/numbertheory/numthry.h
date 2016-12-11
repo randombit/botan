@@ -116,7 +116,7 @@ BigInt BOTAN_DLL normalized_montgomery_inverse(const BigInt& a, const BigInt& b)
 * @param n is an odd integer > 1
 * @return (n / m)
 */
-s32bit BOTAN_DLL jacobi(const BigInt& a,
+int32_t BOTAN_DLL jacobi(const BigInt& a,
                         const BigInt& n);
 
 /**
@@ -210,7 +210,7 @@ BigInt BOTAN_DLL random_safe_prime(RandomNumberGenerator& rng,
 * @param qbits how long q will be in bits
 * @return random seed used to generate this parameter set
 */
-std::vector<byte> BOTAN_DLL
+std::vector<uint8_t> BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
                     BigInt& p_out, BigInt& q_out,
                     size_t pbits, size_t qbits);
@@ -230,7 +230,7 @@ bool BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
                     BigInt& p_out, BigInt& q_out,
                     size_t pbits, size_t qbits,
-                    const std::vector<byte>& seed);
+                    const std::vector<uint8_t>& seed);
 
 /**
 * The size of the PRIMES[] array
@@ -240,7 +240,7 @@ const size_t PRIME_TABLE_SIZE = 6541;
 /**
 * A const array of all primes less than 65535
 */
-extern const u16bit BOTAN_DLL PRIMES[];
+extern const uint16_t BOTAN_DLL PRIMES[];
 
 }
 

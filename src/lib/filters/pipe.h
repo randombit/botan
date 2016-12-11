@@ -63,20 +63,20 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param in the byte array to write
       * @param length the length of the byte array in
       */
-      void write(const byte in[], size_t length);
+      void write(const uint8_t in[], size_t length);
 
       /**
       * Write input to the pipe, i.e. to its first filter.
       * @param in the secure_vector containing the data to write
       */
-      void write(const secure_vector<byte>& in)
+      void write(const secure_vector<uint8_t>& in)
          { write(in.data(), in.size()); }
 
       /**
       * Write input to the pipe, i.e. to its first filter.
       * @param in the std::vector containing the data to write
       */
-      void write(const std::vector<byte>& in)
+      void write(const std::vector<uint8_t>& in)
          { write(in.data(), in.size()); }
 
       /**
@@ -95,26 +95,26 @@ class BOTAN_DLL Pipe final : public DataSource
       * Write input to the pipe, i.e. to its first filter.
       * @param in a single byte to be written
       */
-      void write(byte in);
+      void write(uint8_t in);
 
       /**
       * Perform start_msg(), write() and end_msg() sequentially.
       * @param in the byte array containing the data to write
       * @param length the length of the byte array to write
       */
-      void process_msg(const byte in[], size_t length);
+      void process_msg(const uint8_t in[], size_t length);
 
       /**
       * Perform start_msg(), write() and end_msg() sequentially.
       * @param in the secure_vector containing the data to write
       */
-      void process_msg(const secure_vector<byte>& in);
+      void process_msg(const secure_vector<uint8_t>& in);
 
       /**
       * Perform start_msg(), write() and end_msg() sequentially.
       * @param in the secure_vector containing the data to write
       */
-      void process_msg(const std::vector<byte>& in);
+      void process_msg(const std::vector<uint8_t>& in);
 
       /**
       * Perform start_msg(), write() and end_msg() sequentially.
@@ -145,7 +145,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param length the length of the byte array output
       * @return number of bytes actually read into output
       */
-      size_t read(byte output[], size_t length) override BOTAN_WARN_UNUSED_RESULT;
+      size_t read(uint8_t output[], size_t length) override BOTAN_WARN_UNUSED_RESULT;
 
       /**
       * Read a specified message from the pipe. Moves the internal
@@ -156,7 +156,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param msg the number identifying the message to read from
       * @return number of bytes actually read into output
       */
-      size_t read(byte output[], size_t length, message_id msg) BOTAN_WARN_UNUSED_RESULT;
+      size_t read(uint8_t output[], size_t length, message_id msg) BOTAN_WARN_UNUSED_RESULT;
 
       /**
       * Read a single byte from the pipe. Moves the internal offset so
@@ -167,14 +167,14 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param msg the message to read from
       * @return number of bytes actually read into output
       */
-      size_t read(byte& output, message_id msg = DEFAULT_MESSAGE) BOTAN_WARN_UNUSED_RESULT;
+      size_t read(uint8_t& output, message_id msg = DEFAULT_MESSAGE) BOTAN_WARN_UNUSED_RESULT;
 
       /**
       * Read the full contents of the pipe.
       * @param msg the number identifying the message to read from
       * @return secure_vector holding the contents of the pipe
       */
-      secure_vector<byte> read_all(message_id msg = DEFAULT_MESSAGE) BOTAN_WARN_UNUSED_RESULT;
+      secure_vector<uint8_t> read_all(message_id msg = DEFAULT_MESSAGE) BOTAN_WARN_UNUSED_RESULT;
 
       /**
       * Read the full contents of the pipe.
@@ -192,7 +192,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param offset the offset from the current position in message
       * @return number of bytes actually peeked and written into output
       */
-      size_t peek(byte output[], size_t length, size_t offset) const override BOTAN_WARN_UNUSED_RESULT;
+      size_t peek(uint8_t output[], size_t length, size_t offset) const override BOTAN_WARN_UNUSED_RESULT;
 
       /** Read from the specified message but do not modify the
       * internal offset. Consecutive calls to peek() will return
@@ -203,7 +203,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param msg the number identifying the message to peek from
       * @return number of bytes actually peeked and written into output
       */
-      size_t peek(byte output[], size_t length,
+      size_t peek(uint8_t output[], size_t length,
                   size_t offset, message_id msg) const BOTAN_WARN_UNUSED_RESULT;
 
       /** Read a single byte from the specified message but do not
@@ -214,7 +214,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param msg the number identifying the message to peek from
       * @return number of bytes actually peeked and written into output
       */
-      size_t peek(byte& output, size_t offset,
+      size_t peek(uint8_t& output, size_t offset,
                   message_id msg = DEFAULT_MESSAGE) const BOTAN_WARN_UNUSED_RESULT;
 
       /**

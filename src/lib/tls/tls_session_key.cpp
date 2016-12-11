@@ -17,7 +17,7 @@ namespace TLS {
 * Session_Keys Constructor
 */
 Session_Keys::Session_Keys(const Handshake_State* state,
-                           const secure_vector<byte>& pre_master_secret,
+                           const secure_vector<uint8_t>& pre_master_secret,
                            bool resuming)
    {
    const size_t cipher_keylen = state->ciphersuite().cipher_keylen();
@@ -28,14 +28,14 @@ Session_Keys::Session_Keys(const Handshake_State* state,
 
    const size_t prf_gen = 2 * (mac_keylen + cipher_keylen + cipher_nonce_bytes);
 
-   const byte MASTER_SECRET_MAGIC[] = {
+   const uint8_t MASTER_SECRET_MAGIC[] = {
       0x6D, 0x61, 0x73, 0x74, 0x65, 0x72, 0x20, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74 };
 
-   const byte EXT_MASTER_SECRET_MAGIC[] = {
+   const uint8_t EXT_MASTER_SECRET_MAGIC[] = {
       0x65, 0x78, 0x74, 0x65, 0x6E, 0x64, 0x65, 0x64, 0x20,
       0x6D, 0x61, 0x73, 0x74, 0x65, 0x72, 0x20, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74 };
 
-   const byte KEY_GEN_MAGIC[] = {
+   const uint8_t KEY_GEN_MAGIC[] = {
       0x6B, 0x65, 0x79, 0x20, 0x65, 0x78, 0x70, 0x61, 0x6E, 0x73, 0x69, 0x6F, 0x6E };
 
    std::unique_ptr<KDF> prf(state->protocol_specific_prf());
@@ -47,8 +47,8 @@ Session_Keys::Session_Keys(const Handshake_State* state,
       }
    else
       {
-      secure_vector<byte> salt;
-      secure_vector<byte> label;
+      secure_vector<uint8_t> salt;
+      secure_vector<uint8_t> label;
       if(extended_master_secret)
          {
          label += std::make_pair(EXT_MASTER_SECRET_MAGIC, sizeof(EXT_MASTER_SECRET_MAGIC));
@@ -65,15 +65,15 @@ Session_Keys::Session_Keys(const Handshake_State* state,
       m_master_sec = prf->derive_key(48, pre_master_secret, salt, label);
       }
 
-   secure_vector<byte> salt;
-   secure_vector<byte> label;
+   secure_vector<uint8_t> salt;
+   secure_vector<uint8_t> label;
    label += std::make_pair(KEY_GEN_MAGIC, sizeof(KEY_GEN_MAGIC));
    salt += state->server_hello()->random();
    salt += state->client_hello()->random();
 
    SymmetricKey keyblock = prf->derive_key(prf_gen, m_master_sec, salt, label);
 
-   const byte* key_data = keyblock.begin();
+   const uint8_t* key_data = keyblock.begin();
 
    m_c_mac = SymmetricKey(key_data, mac_keylen);
    key_data += mac_keylen;

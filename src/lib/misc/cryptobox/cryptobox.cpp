@@ -25,7 +25,7 @@ namespace {
 First 24 bits of SHA-256("Botan Cryptobox"), followed by 8 0 bits
 for later use as flags, etc if needed
 */
-const u32bit CRYPTOBOX_VERSION_CODE = 0xEFC22400;
+const uint32_t CRYPTOBOX_VERSION_CODE = 0xEFC22400;
 
 const size_t VERSION_CODE_LEN = 4;
 const size_t CIPHER_KEY_LEN = 32;
@@ -39,11 +39,11 @@ const size_t PBKDF_OUTPUT_LEN = CIPHER_KEY_LEN + CIPHER_IV_LEN + MAC_KEY_LEN;
 
 }
 
-std::string encrypt(const byte input[], size_t input_len,
+std::string encrypt(const uint8_t input[], size_t input_len,
                     const std::string& passphrase,
                     RandomNumberGenerator& rng)
    {
-   secure_vector<byte> pbkdf_salt(PBKDF_SALT_LEN);
+   secure_vector<uint8_t> pbkdf_salt(PBKDF_SALT_LEN);
    rng.randomize(pbkdf_salt.data(), pbkdf_salt.size());
 
    PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
@@ -55,7 +55,7 @@ std::string encrypt(const byte input[], size_t input_len,
       pbkdf_salt.size(),
       PBKDF_ITERATIONS);
 
-   const byte* mk = master_key.begin();
+   const uint8_t* mk = master_key.begin();
 
    SymmetricKey cipher_key(mk, CIPHER_KEY_LEN);
    SymmetricKey mac_key(&mk[CIPHER_KEY_LEN], MAC_KEY_LEN);
@@ -78,7 +78,7 @@ std::string encrypt(const byte input[], size_t input_len,
    */
    const size_t ciphertext_len = pipe.remaining(0);
 
-   std::vector<byte> out_buf(VERSION_CODE_LEN +
+   std::vector<uint8_t> out_buf(VERSION_CODE_LEN +
                              PBKDF_SALT_LEN +
                              MAC_OUTPUT_LEN +
                              ciphertext_len);
@@ -99,11 +99,11 @@ std::string encrypt(const byte input[], size_t input_len,
    return PEM_Code::encode(out_buf, "BOTAN CRYPTOBOX MESSAGE");
    }
 
-std::string decrypt(const byte input[], size_t input_len,
+std::string decrypt(const uint8_t input[], size_t input_len,
                     const std::string& passphrase)
    {
    DataSource_Memory input_src(input, input_len);
-   secure_vector<byte> ciphertext =
+   secure_vector<uint8_t> ciphertext =
       PEM_Code::decode_check_label(input_src,
                                    "BOTAN CRYPTOBOX MESSAGE");
 
@@ -114,7 +114,7 @@ std::string decrypt(const byte input[], size_t input_len,
       if(ciphertext[i] != get_byte(i, CRYPTOBOX_VERSION_CODE))
          throw Decoding_Error("Bad CryptoBox version");
 
-   const byte* pbkdf_salt = &ciphertext[VERSION_CODE_LEN];
+   const uint8_t* pbkdf_salt = &ciphertext[VERSION_CODE_LEN];
 
    PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
 
@@ -125,7 +125,7 @@ std::string decrypt(const byte input[], size_t input_len,
       PBKDF_SALT_LEN,
       PBKDF_ITERATIONS);
 
-   const byte* mk = master_key.begin();
+   const uint8_t* mk = master_key.begin();
 
    SymmetricKey cipher_key(mk, CIPHER_KEY_LEN);
    SymmetricKey mac_key(&mk[CIPHER_KEY_LEN], MAC_KEY_LEN);
@@ -142,7 +142,7 @@ std::string decrypt(const byte input[], size_t input_len,
    pipe.process_msg(&ciphertext[ciphertext_offset],
                     ciphertext.size() - ciphertext_offset);
 
-   byte computed_mac[MAC_OUTPUT_LEN];
+   uint8_t computed_mac[MAC_OUTPUT_LEN];
    BOTAN_ASSERT_EQUAL(MAC_OUTPUT_LEN, pipe.read(computed_mac, MAC_OUTPUT_LEN, 1), "MAC size");
 
    if(!same_mem(computed_mac,
@@ -156,7 +156,7 @@ std::string decrypt(const byte input[], size_t input_len,
 std::string decrypt(const std::string& input,
                     const std::string& passphrase)
    {
-   return decrypt(reinterpret_cast<const byte*>(input.data()),
+   return decrypt(reinterpret_cast<const uint8_t*>(input.data()),
                   input.size(),
                   passphrase);
    }

@@ -18,16 +18,16 @@ namespace Botan {
 class BOTAN_DLL KASUMI final : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
-      void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
-      void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
+      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
+      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
       std::string name() const override { return "KASUMI"; }
       BlockCipher* clone() const override { return new KASUMI; }
    private:
-      void key_schedule(const byte[], size_t) override;
+      void key_schedule(const uint8_t[], size_t) override;
 
-      secure_vector<u16bit> m_EK;
+      secure_vector<uint16_t> m_EK;
    };
 
 }

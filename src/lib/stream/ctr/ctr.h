@@ -19,9 +19,9 @@ namespace Botan {
 class BOTAN_DLL CTR_BE final : public StreamCipher
    {
    public:
-      void cipher(const byte in[], byte out[], size_t length) override;
+      void cipher(const uint8_t in[], uint8_t out[], size_t length) override;
 
-      void set_iv(const byte iv[], size_t iv_len) override;
+      void set_iv(const uint8_t iv[], size_t iv_len) override;
 
       bool valid_iv_length(size_t iv_len) const override
          { return (iv_len <= m_cipher->block_size()); }
@@ -45,13 +45,13 @@ class BOTAN_DLL CTR_BE final : public StreamCipher
 
       CTR_BE(BlockCipher* cipher, size_t ctr_size);
 
-      void seek(u64bit offset) override;
+      void seek(uint64_t offset) override;
    private:
-      void key_schedule(const byte key[], size_t key_len) override;
+      void key_schedule(const uint8_t key[], size_t key_len) override;
       void increment_counter();
 
       std::unique_ptr<BlockCipher> m_cipher;
-      secure_vector<byte> m_counter, m_pad;
+      secure_vector<uint8_t> m_counter, m_pad;
       size_t m_ctr_size;
       size_t m_pad_pos;
    };

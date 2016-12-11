@@ -86,13 +86,13 @@ class BOTAN_DLL Alert
       /**
       * Serialize an alert
       */
-      std::vector<byte> serialize() const;
+      std::vector<uint8_t> serialize() const;
 
       /**
       * Deserialize an Alert message
       * @param buf the serialized alert
       */
-      explicit Alert(const secure_vector<byte>& buf);
+      explicit Alert(const secure_vector<uint8_t>& buf);
 
       /**
       * Create a new Alert

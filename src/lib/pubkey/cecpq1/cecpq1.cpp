@@ -27,7 +27,7 @@ void CECPQ1_accept(uint8_t shared_key[CECPQ1_SHARED_KEY_BYTES],
                    const uint8_t received[CECPQ1_OFFER_BYTES],
                    RandomNumberGenerator& rng)
    {
-   secure_vector<byte> x25519_key = rng.random_vec(32);
+   secure_vector<uint8_t> x25519_key = rng.random_vec(32);
 
    curve25519_basepoint(send, x25519_key.data());
 

@@ -46,20 +46,20 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * Get the public key associated with this certificate.
       * @return subject public key of this certificate
       */
-      std::vector<byte> subject_public_key_bits() const;
+      std::vector<uint8_t> subject_public_key_bits() const;
 
       /**
       * Get the bit string of the public key associated with this certificate
       * @return subject public key of this certificate
       */
-      std::vector<byte> subject_public_key_bitstring() const;
+      std::vector<uint8_t> subject_public_key_bitstring() const;
 
       /**
       * Get the SHA-1 bit string of the public key associated with this certificate.
       * This is used for OCSP among other protocols
       * @return hash of subject public key of this certificate
       */
-      std::vector<byte> subject_public_key_bitstring_sha1() const;
+      std::vector<uint8_t> subject_public_key_bitstring_sha1() const;
 
       /**
       * Get the certificate's issuer distinguished name (DN).
@@ -98,12 +98,12 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       /**
       * Raw subject DN
       */
-      std::vector<byte> raw_issuer_dn() const;
+      std::vector<uint8_t> raw_issuer_dn() const;
 
       /**
       * Raw issuer DN
       */
-      std::vector<byte> raw_subject_dn() const;
+      std::vector<uint8_t> raw_subject_dn() const;
 
       /**
       * Get the notBefore of the certificate.
@@ -121,25 +121,25 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * Get the X509 version of this certificate object.
       * @return X509 version
       */
-      u32bit x509_version() const;
+      uint32_t x509_version() const;
 
       /**
       * Get the serial number of this certificate.
       * @return certificates serial number
       */
-      std::vector<byte> serial_number() const;
+      std::vector<uint8_t> serial_number() const;
 
       /**
       * Get the DER encoded AuthorityKeyIdentifier of this certificate.
       * @return DER encoded AuthorityKeyIdentifier
       */
-      std::vector<byte> authority_key_id() const;
+      std::vector<uint8_t> authority_key_id() const;
 
       /**
       * Get the DER encoded SubjectKeyIdentifier of this certificate.
       * @return DER encoded SubjectKeyIdentifier
       */
-      std::vector<byte> subject_key_id() const;
+      std::vector<uint8_t> subject_key_id() const;
 
       /**
       * Check whether this certificate is self signed.
@@ -191,7 +191,7 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * this certificate.
       * @return path limit
       */
-      u32bit path_limit() const;
+      uint32_t path_limit() const;
 
       /**
       * Check whenever a given X509 Extension is marked critical in this
@@ -293,7 +293,7 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       * Create a certificate from a buffer
       * @param in the buffer containing the DER-encoded certificate
       */
-      explicit X509_Certificate(const std::vector<byte>& in);
+      explicit X509_Certificate(const std::vector<uint8_t>& in);
 
       X509_Certificate(const X509_Certificate& other) = default;
 

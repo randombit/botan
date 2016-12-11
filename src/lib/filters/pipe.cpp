@@ -20,7 +20,7 @@ namespace {
 class Null_Filter : public Filter
    {
    public:
-      void write(const byte input[], size_t length) override
+      void write(const uint8_t input[], size_t length) override
          { send(input, length); }
 
       std::string name() const override { return "Null"; }
@@ -114,7 +114,7 @@ void Pipe::set_default_msg(message_id msg)
 /*
 * Process a full message at once
 */
-void Pipe::process_msg(const byte input[], size_t length)
+void Pipe::process_msg(const uint8_t input[], size_t length)
    {
    start_msg();
    write(input, length);
@@ -124,12 +124,12 @@ void Pipe::process_msg(const byte input[], size_t length)
 /*
 * Process a full message at once
 */
-void Pipe::process_msg(const secure_vector<byte>& input)
+void Pipe::process_msg(const secure_vector<uint8_t>& input)
    {
    process_msg(input.data(), input.size());
    }
 
-void Pipe::process_msg(const std::vector<byte>& input)
+void Pipe::process_msg(const std::vector<uint8_t>& input)
    {
    process_msg(input.data(), input.size());
    }
@@ -139,7 +139,7 @@ void Pipe::process_msg(const std::vector<byte>& input)
 */
 void Pipe::process_msg(const std::string& input)
    {
-   process_msg(reinterpret_cast<const byte*>(input.data()), input.length());
+   process_msg(reinterpret_cast<const uint8_t*>(input.data()), input.length());
    }
 
 /*

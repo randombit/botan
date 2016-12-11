@@ -10,28 +10,28 @@
 
 namespace Botan {
 
-size_t HKDF::kdf(byte key[], size_t key_len,
-                 const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len,
-                 const byte label[], size_t label_len) const
+size_t HKDF::kdf(uint8_t key[], size_t key_len,
+                 const uint8_t secret[], size_t secret_len,
+                 const uint8_t salt[], size_t salt_len,
+                 const uint8_t label[], size_t label_len) const
    {
    HKDF_Extract extract(m_prf->clone());
    HKDF_Expand expand(m_prf->clone());
-   secure_vector<byte> prk(m_prf->output_length());
+   secure_vector<uint8_t> prk(m_prf->output_length());
 
    extract.kdf(prk.data(), prk.size(), secret, secret_len, salt, salt_len, nullptr, 0);
    return expand.kdf(key, key_len, prk.data(), prk.size(), nullptr, 0, label, label_len);
    }
 
-size_t HKDF_Extract::kdf(byte key[], size_t key_len,
-                         const byte secret[], size_t secret_len,
-                         const byte salt[], size_t salt_len,
-                         const byte[], size_t) const
+size_t HKDF_Extract::kdf(uint8_t key[], size_t key_len,
+                         const uint8_t secret[], size_t secret_len,
+                         const uint8_t salt[], size_t salt_len,
+                         const uint8_t[], size_t) const
    {
-   secure_vector<byte> prk;
+   secure_vector<uint8_t> prk;
    if(salt_len == 0)
       {
-      m_prf->set_key(std::vector<byte>(m_prf->output_length()));
+      m_prf->set_key(std::vector<uint8_t>(m_prf->output_length()));
       }
    else
       {
@@ -46,15 +46,15 @@ size_t HKDF_Extract::kdf(byte key[], size_t key_len,
    return written;
    }
 
-size_t HKDF_Expand::kdf(byte key[], size_t key_len,
-                        const byte secret[], size_t secret_len,
-                        const byte salt[], size_t salt_len,
-                        const byte label[], size_t label_len) const
+size_t HKDF_Expand::kdf(uint8_t key[], size_t key_len,
+                        const uint8_t secret[], size_t secret_len,
+                        const uint8_t salt[], size_t salt_len,
+                        const uint8_t label[], size_t label_len) const
    {
    m_prf->set_key(secret, secret_len);
 
-   byte counter = 1;
-   secure_vector<byte> h;
+   uint8_t counter = 1;
+   secure_vector<uint8_t> h;
    size_t offset = 0;
 
    while(offset != key_len && counter != 0)

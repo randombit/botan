@@ -86,7 +86,7 @@ std::string AutoSeeded_RNG::name() const
    return m_rng->name();
    }
 
-void AutoSeeded_RNG::add_entropy(const byte in[], size_t len)
+void AutoSeeded_RNG::add_entropy(const uint8_t in[], size_t len)
    {
    m_rng->add_entropy(in, len);
    }
@@ -98,13 +98,13 @@ size_t AutoSeeded_RNG::reseed(Entropy_Sources& srcs,
    return m_rng->reseed(srcs, poll_bits, poll_timeout);
    }
 
-void AutoSeeded_RNG::randomize(byte output[], size_t output_len)
+void AutoSeeded_RNG::randomize(uint8_t output[], size_t output_len)
    {
    randomize_with_ts_input(output, output_len);
    }
 
-void AutoSeeded_RNG::randomize_with_input(byte output[], size_t output_len,
-                                          const byte ad[], size_t ad_len)
+void AutoSeeded_RNG::randomize_with_input(uint8_t output[], size_t output_len,
+                                          const uint8_t ad[], size_t ad_len)
    {
    m_rng->randomize_with_input(output, output_len, ad, ad_len);
    }

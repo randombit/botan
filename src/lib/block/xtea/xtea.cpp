@@ -13,16 +13,16 @@ namespace Botan {
 /*
 * XTEA Encryption
 */
-void XTEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void XTEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   const u32bit* EK = &m_EK[0];
+   const uint32_t* EK = &m_EK[0];
 
    const size_t blocks4 = blocks / 4;
    const size_t blocks_left = blocks % 4;
 
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks4; i++)
       {
-      u32bit L0, R0, L1, R1, L2, R2, L3, R3;
+      uint32_t L0, R0, L1, R1, L2, R2, L3, R3;
       load_be(in + 4*BLOCK_SIZE*i, L0, R0, L1, R1, L2, R2, L3, R3);
 
       for(size_t r = 0; r != 32; ++r)
@@ -43,7 +43,7 @@ void XTEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
       
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks_left; ++i)
       {
-      u32bit L, R;
+      uint32_t L, R;
       load_be(in + BLOCK_SIZE*(4*blocks4+i), L, R);
 
       for(size_t r = 0; r != 32; ++r)
@@ -59,16 +59,16 @@ void XTEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * XTEA Decryption
 */
-void XTEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void XTEA::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   const u32bit* EK = &m_EK[0];
+   const uint32_t* EK = &m_EK[0];
 
    const size_t blocks4 = blocks / 4;
    const size_t blocks_left = blocks % 4;
 
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks4; i++)
       {
-      u32bit L0, R0, L1, R1, L2, R2, L3, R3;
+      uint32_t L0, R0, L1, R1, L2, R2, L3, R3;
       load_be(in + 4*BLOCK_SIZE*i, L0, R0, L1, R1, L2, R2, L3, R3);
 
       for(size_t r = 0; r != 32; ++r)
@@ -89,7 +89,7 @@ void XTEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
       
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks_left; ++i)
       {
-      u32bit L, R;
+      uint32_t L, R;
       load_be(in + BLOCK_SIZE*(4*blocks4+i), L, R);
 
       for(size_t r = 0; r != 32; ++r)
@@ -105,15 +105,15 @@ void XTEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * XTEA Key Schedule
 */
-void XTEA::key_schedule(const byte key[], size_t)
+void XTEA::key_schedule(const uint8_t key[], size_t)
    {
    m_EK.resize(64);
 
-   secure_vector<u32bit> UK(4);
+   secure_vector<uint32_t> UK(4);
    for(size_t i = 0; i != 4; ++i)
-      UK[i] = load_be<u32bit>(key, i);
+      UK[i] = load_be<uint32_t>(key, i);
 
-   u32bit D = 0;
+   uint32_t D = 0;
    for(size_t i = 0; i != 64; i += 2)
       {
       m_EK[i  ] = D + UK[D % 4];

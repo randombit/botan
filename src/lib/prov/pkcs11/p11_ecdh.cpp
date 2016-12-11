@@ -33,7 +33,7 @@ ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const
    return ECDH_PrivateKey(rng, domain(), BigInt::decode(priv_key));
    }
 
-secure_vector<byte> PKCS11_ECDH_PrivateKey::private_key_bits() const
+secure_vector<uint8_t> PKCS11_ECDH_PrivateKey::private_key_bits() const
    {
    return export_key().private_key_bits();
    }
@@ -49,10 +49,10 @@ class PKCS11_ECDH_KA_Operation : public PK_Ops::Key_Agreement
 
       /// The encoding in V2.20 was not specified and resulted in different implementations choosing different encodings.
       /// Applications relying only on a V2.20 encoding (e.g. the DER variant) other than the one specified now (raw) may not work with all V2.30 compliant tokens.
-      secure_vector<byte> agree(size_t key_len, const byte other_key[], size_t other_key_len, const byte salt[],
+      secure_vector<uint8_t> agree(size_t key_len, const uint8_t other_key[], size_t other_key_len, const uint8_t salt[],
                                 size_t salt_len) override
          {
-         std::vector<byte> der_encoded_other_key;
+         std::vector<uint8_t> der_encoded_other_key;
          if(m_key.point_encoding() == PublicPointEncoding::Der)
             {
             der_encoded_other_key = DER_Encoder().encode(other_key, other_key_len, OCTET_STRING).get_contents_unlocked();
@@ -79,7 +79,7 @@ class PKCS11_ECDH_KA_Operation : public PK_Ops::Key_Agreement
                                      attributes.count(), &secret_handle);
 
          Object secret_object(m_key.session(), secret_handle);
-         secure_vector<byte> secret = secret_object.get_attribute_value(AttributeType::Value);
+         secure_vector<uint8_t> secret = secret_object.get_attribute_value(AttributeType::Value);
          if(secret.size() < key_len)
             {
             throw PKCS11_Error("ECDH key derivation secret length is too short");

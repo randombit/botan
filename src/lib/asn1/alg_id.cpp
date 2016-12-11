@@ -16,14 +16,14 @@ namespace Botan {
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
-                                         const std::vector<byte>& param) : oid(alg_id), parameters(param)
+                                         const std::vector<uint8_t>& param) : oid(alg_id), parameters(param)
    {}
 
 /*
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
-                                         const std::vector<byte>& param) : oid(OIDS::lookup(alg_id)), parameters(param)
+                                         const std::vector<uint8_t>& param) : oid(OIDS::lookup(alg_id)), parameters(param)
    {}
 
 /*
@@ -32,10 +32,10 @@ AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
                                          Encoding_Option option) : oid(alg_id), parameters()
    {
-   const byte DER_NULL[] = { 0x05, 0x00 };
+   const uint8_t DER_NULL[] = { 0x05, 0x00 };
 
    if(option == USE_NULL_PARAM)
-      parameters += std::pair<const byte*, size_t>(DER_NULL, sizeof(DER_NULL));
+      parameters += std::pair<const uint8_t*, size_t>(DER_NULL, sizeof(DER_NULL));
    }
 
 /*
@@ -44,10 +44,10 @@ AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
                                          Encoding_Option option) : oid(OIDS::lookup(alg_id)), parameters()
    {
-   const byte DER_NULL[] = { 0x05, 0x00 };
+   const uint8_t DER_NULL[] = { 0x05, 0x00 };
 
    if(option == USE_NULL_PARAM)
-      parameters += std::pair<const byte*, size_t>(DER_NULL, sizeof(DER_NULL));
+      parameters += std::pair<const uint8_t*, size_t>(DER_NULL, sizeof(DER_NULL));
    }
 
 /*
@@ -55,7 +55,7 @@ AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
 */
 namespace {
 
-bool param_null_or_empty(const std::vector<byte>& p)
+bool param_null_or_empty(const std::vector<uint8_t>& p)
    {
    if(p.size() == 2 && (p[0] == 0x05) && (p[1] == 0x00))
       return true;

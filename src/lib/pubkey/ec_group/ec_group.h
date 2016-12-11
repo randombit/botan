@@ -54,7 +54,7 @@ class BOTAN_DLL EC_Group
       * Decode a BER encoded ECC domain parameter set
       * @param ber_encoding the bytes of the BER encoding
       */
-      explicit EC_Group(const std::vector<byte>& ber_encoding);
+      explicit EC_Group(const std::vector<uint8_t>& ber_encoding);
 
       /**
       * Create an EC domain by OID (or throw if unknown)
@@ -74,7 +74,7 @@ class BOTAN_DLL EC_Group
       * @param form of encoding to use
       * @returns bytes encododed as DER
       */
-      std::vector<byte> DER_encode(EC_Group_Encoding form) const;
+      std::vector<uint8_t> DER_encode(EC_Group_Encoding form) const;
 
       /**
       * Return the PEM encoding (always in explicit form)

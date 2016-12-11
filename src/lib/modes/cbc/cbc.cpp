@@ -62,12 +62,12 @@ bool CBC_Mode::valid_nonce_length(size_t n) const
    return (n == 0 || n == cipher().block_size());
    }
 
-void CBC_Mode::key_schedule(const byte key[], size_t length)
+void CBC_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);
    }
 
-void CBC_Mode::start_msg(const byte nonce[], size_t nonce_len)
+void CBC_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -101,7 +101,7 @@ size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
    BOTAN_ASSERT(sz % BS == 0, "CBC input is full blocks");
    const size_t blocks = sz / BS;
 
-   const byte* prev_block = state_ptr();
+   const uint8_t* prev_block = state_ptr();
 
    if(blocks)
       {
@@ -118,7 +118,7 @@ size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void CBC_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
+void CBC_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
 
@@ -149,10 +149,10 @@ size_t CTS_Encryption::output_length(size_t input_length) const
    return input_length; // no ciphertext expansion in CTS
    }
 
-void CTS_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
+void CTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
-   byte* buf = buffer.data() + offset;
+   uint8_t* buf = buffer.data() + offset;
    const size_t sz = buffer.size() - offset;
 
    const size_t BS = cipher().block_size();
@@ -174,7 +174,7 @@ void CTS_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
       const size_t final_bytes = sz - full_blocks;
       BOTAN_ASSERT(final_bytes > BS && final_bytes < 2*BS, "Left over size in expected range");
 
-      secure_vector<byte> last(buf + full_blocks, buf + full_blocks + final_bytes);
+      secure_vector<uint8_t> last(buf + full_blocks, buf + full_blocks + final_bytes);
       buffer.resize(full_blocks + offset);
       update(buffer, offset);
 
@@ -229,7 +229,7 @@ size_t CBC_Decryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void CBC_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
+void CBC_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
@@ -265,11 +265,11 @@ size_t CTS_Decryption::minimum_final_size() const
    return cipher().block_size() + 1;
    }
 
-void CTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
+void CTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
+   uint8_t* buf = buffer.data() + offset;
 
    const size_t BS = cipher().block_size();
 
@@ -291,7 +291,7 @@ void CTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
       const size_t final_bytes = sz - full_blocks;
       BOTAN_ASSERT(final_bytes > BS && final_bytes < 2*BS, "Left over size in expected range");
 
-      secure_vector<byte> last(buf + full_blocks, buf + full_blocks + final_bytes);
+      secure_vector<uint8_t> last(buf + full_blocks, buf + full_blocks + final_bytes);
       buffer.resize(full_blocks + offset);
       update(buffer, offset);
 

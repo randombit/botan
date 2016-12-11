@@ -35,13 +35,13 @@ class BOTAN_DLL SHAKE_128 : public HashFunction
       void clear() override;
 
    private:
-      void add_data(const byte input[], size_t length) override;
-      void final_result(byte out[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t out[]) override;
 
       static const size_t SHAKE_128_BITRATE = 1600 - 256;
 
       size_t m_output_bits;
-      secure_vector<u64bit> m_S;
+      secure_vector<uint64_t> m_S;
       size_t m_S_pos;
    };
 
@@ -66,13 +66,13 @@ class BOTAN_DLL SHAKE_256 : public HashFunction
       void clear() override;
 
    private:
-      void add_data(const byte input[], size_t length) override;
-      void final_result(byte out[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t out[]) override;
 
       static const size_t SHAKE_256_BITRATE = 1600 - 512;
 
       size_t m_output_bits;
-      secure_vector<u64bit> m_S;
+      secure_vector<uint64_t> m_S;
       size_t m_S_pos;
    };
 

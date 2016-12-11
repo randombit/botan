@@ -11,26 +11,26 @@
 namespace Botan {
 
 void
-XMSS_Common_Ops::randomize_tree_hash(secure_vector<byte>& result,
-                                     const secure_vector<byte>& left,
-                                     const secure_vector<byte>& right,
+XMSS_Common_Ops::randomize_tree_hash(secure_vector<uint8_t>& result,
+                                     const secure_vector<uint8_t>& left,
+                                     const secure_vector<uint8_t>& right,
                                      XMSS_Address& adrs,
-                                     const secure_vector<byte>& seed)
+                                     const secure_vector<uint8_t>& seed)
    {
    adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Key_Mode);
-   secure_vector<byte> key { m_hash.prf(seed, adrs.bytes()) };
+   secure_vector<uint8_t> key { m_hash.prf(seed, adrs.bytes()) };
 
    adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Mask_MSB_Mode);
-   secure_vector<byte> bitmask_l { m_hash.prf(seed, adrs.bytes()) };
+   secure_vector<uint8_t> bitmask_l { m_hash.prf(seed, adrs.bytes()) };
 
    adrs.set_key_mask_mode(XMSS_Address::Key_Mask::Mask_LSB_Mode);
-   secure_vector<byte> bitmask_r { m_hash.prf(seed, adrs.bytes()) };
+   secure_vector<uint8_t> bitmask_r { m_hash.prf(seed, adrs.bytes()) };
 
    BOTAN_ASSERT(bitmask_l.size() == left.size() &&
                 bitmask_r.size() == right.size(),
                 "Bitmask size doesn't match node size.");
 
-   secure_vector<byte> concat_xor(m_xmss_params.element_size() * 2);
+   secure_vector<uint8_t> concat_xor(m_xmss_params.element_size() * 2);
    for(size_t i = 0; i < left.size(); i++)
       {
       concat_xor[i] = left[i] ^ bitmask_l[i];
@@ -42,10 +42,10 @@ XMSS_Common_Ops::randomize_tree_hash(secure_vector<byte>& result,
 
 
 void
-XMSS_Common_Ops::create_l_tree(secure_vector<byte>& result,
+XMSS_Common_Ops::create_l_tree(secure_vector<uint8_t>& result,
                                wots_keysig_t pk,
                                XMSS_Address& adrs,
-                               const secure_vector<byte>& seed)
+                               const secure_vector<uint8_t>& seed)
    {
    size_t l = m_xmss_params.len();
    adrs.set_tree_height(0);

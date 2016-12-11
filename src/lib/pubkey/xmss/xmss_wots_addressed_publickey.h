@@ -82,7 +82,7 @@ class XMSS_WOTS_Addressed_PublicKey : public virtual Public_Key
          return m_pub_key.estimated_strength();
          }
 
-      virtual std::vector<byte> public_key_bits() const override
+      virtual std::vector<uint8_t> public_key_bits() const override
          {
          return m_pub_key.public_key_bits();
          }

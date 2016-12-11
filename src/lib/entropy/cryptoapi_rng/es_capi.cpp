@@ -18,7 +18,7 @@ namespace {
 class CSP_Handle_Impl : public Win32_CAPI_EntropySource::CSP_Handle
    {
    public:
-      explicit CSP_Handle_Impl(u64bit capi_provider)
+      explicit CSP_Handle_Impl(uint64_t capi_provider)
          {
          m_valid = ::CryptAcquireContext(&m_handle,
                                          0,
@@ -33,7 +33,7 @@ class CSP_Handle_Impl : public Win32_CAPI_EntropySource::CSP_Handle
             ::CryptReleaseContext(m_handle, 0);
          }
 
-      size_t gen_random(byte out[], size_t n) const
+      size_t gen_random(uint8_t out[], size_t n) const
          {
          if(m_valid && ::CryptGenRandom(m_handle, static_cast<DWORD>(n), out))
             return n;

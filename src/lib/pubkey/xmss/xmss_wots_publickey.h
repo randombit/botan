@@ -23,7 +23,7 @@
 
 namespace Botan {
 
-typedef std::vector<secure_vector<byte>> wots_keysig_t;
+typedef std::vector<secure_vector<uint8_t>> wots_keysig_t;
 
 /**
  * A Winternitz One Time Signature public key for use with Extended Hash-Based
@@ -109,7 +109,7 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
        * @param public_seed A precomputed public seed of n-bytes length.
        **/
       XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                          secure_vector<byte> public_seed)
+                          secure_vector<uint8_t> public_seed)
          : m_wots_params(oid),
            m_hash(m_wots_params.hash_function_name()),
            m_public_seed(public_seed) {}
@@ -125,7 +125,7 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
        * @param key Precomputed raw key data of the XMSS_WOTS_PublicKey.
        **/
       XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                          secure_vector<byte>&& public_seed,
+                          secure_vector<uint8_t>&& public_seed,
                           wots_keysig_t&& key)
          : m_wots_params(oid),
            m_hash(m_wots_params.hash_function_name()),
@@ -144,7 +144,7 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
        * @param key Precomputed raw key data of the XMSS_WOTS_PublicKey.
        **/
       XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                          const secure_vector<byte>& public_seed,
+                          const secure_vector<uint8_t>& public_seed,
                           const wots_keysig_t& key)
          : m_wots_params(oid),
            m_hash(m_wots_params.hash_function_name()),
@@ -164,10 +164,10 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
        * @param public_seed The public public_seed.
        **/
       XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                          const secure_vector<byte>& msg,
+                          const secure_vector<uint8_t>& msg,
                           const wots_keysig_t& sig,
                           XMSS_Address& adrs,
-                          const secure_vector<byte>& public_seed)
+                          const secure_vector<uint8_t>& public_seed)
          : m_wots_params(oid),
            m_hash(m_wots_params.hash_function_name()),
            m_key(pub_key_from_signature(msg,
@@ -184,8 +184,8 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
        * @param i index of the element.
        * @returns n-byte element addressed by i.
        **/
-      const secure_vector<byte>& operator[](size_t i) const { return m_key[i]; }
-      secure_vector<byte>& operator[](size_t i) { return m_key[i]; }
+      const secure_vector<uint8_t>& operator[](size_t i) const { return m_key[i]; }
+      secure_vector<uint8_t>& operator[](size_t i) { return m_key[i]; }
 
       /**
        * Convert the key into the raw key data. The key becomes a length
@@ -199,16 +199,16 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
        **/
       operator wots_keysig_t& () { return m_key; }
 
-      const secure_vector<byte>& public_seed() const { return m_public_seed; }
+      const secure_vector<uint8_t>& public_seed() const { return m_public_seed; }
 
-      secure_vector<byte>& public_seed() { return m_public_seed; }
+      secure_vector<uint8_t>& public_seed() { return m_public_seed; }
 
-      void set_public_seed(const secure_vector<byte>& public_seed)
+      void set_public_seed(const secure_vector<uint8_t>& public_seed)
          {
          m_public_seed = public_seed;
          }
 
-      void set_public_seed(secure_vector<byte>&& public_seed)
+      void set_public_seed(secure_vector<uint8_t>&& public_seed)
          {
          m_public_seed = std::move(public_seed);
          }
@@ -261,7 +261,7 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
          return m_wots_params.estimated_strength();
          }
 
-      virtual std::vector<byte> public_key_bits() const override
+      virtual std::vector<uint8_t> public_key_bits() const override
          {
          throw Not_Implemented("No key format defined for XMSS-WOTS");
          }
@@ -293,17 +293,17 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
        * @param public_seed A public seed.
        *
        **/
-      void chain(secure_vector<byte>& x,
+      void chain(secure_vector<uint8_t>& x,
                  size_t start_idx,
                  size_t steps,
                  XMSS_Address& adrs,
-                 const secure_vector<byte>& public_seed);
+                 const secure_vector<uint8_t>& public_seed);
 
       XMSS_WOTS_Parameters m_wots_params;
       XMSS_Hash m_hash;
 
       wots_keysig_t m_key;
-      secure_vector<byte> m_public_seed;
+      secure_vector<uint8_t> m_public_seed;
 
    private:
       /**
@@ -319,10 +319,10 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
        * @return Temporary WOTS+ public key.
        **/
       wots_keysig_t pub_key_from_signature(
-         const secure_vector<byte>& msg,
+         const secure_vector<uint8_t>& msg,
          const wots_keysig_t& sig,
          XMSS_Address& adrs,
-         const secure_vector<byte>& public_seed);
+         const secure_vector<uint8_t>& public_seed);
    };
 
 }

@@ -41,7 +41,7 @@ class PBKDF_KAT_Tests : public Text_Based_Test
 
          result.test_eq("Expected name", pbkdf->name(), pbkdf_name);
 
-         const Botan::secure_vector<byte> derived =
+         const Botan::secure_vector<uint8_t> derived =
             pbkdf->derive_key(outlen, passphrase, salt.data(), salt.size(), iterations).bits_of();
 
          result.test_eq("derived key", derived, expected);

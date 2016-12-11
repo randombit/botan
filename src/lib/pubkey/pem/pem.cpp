@@ -40,7 +40,7 @@ std::string linewrap(size_t width, const std::string& in)
 /*
 * PEM encode BER/DER-encoded objects
 */
-std::string encode(const byte der[], size_t length, const std::string& label, size_t width)
+std::string encode(const uint8_t der[], size_t length, const std::string& label, size_t width)
    {
    const std::string PEM_HEADER = "-----BEGIN " + label + "-----\n";
    const std::string PEM_TRAILER = "-----END " + label + "-----\n";
@@ -51,11 +51,11 @@ std::string encode(const byte der[], size_t length, const std::string& label, si
 /*
 * Decode PEM down to raw BER/DER
 */
-secure_vector<byte> decode_check_label(DataSource& source,
+secure_vector<uint8_t> decode_check_label(DataSource& source,
                                       const std::string& label_want)
    {
    std::string label_got;
-   secure_vector<byte> ber = decode(source, label_got);
+   secure_vector<uint8_t> ber = decode(source, label_got);
    if(label_got != label_want)
       throw Decoding_Error("PEM: Label mismatch, wanted " + label_want +
                            ", got " + label_got);
@@ -65,7 +65,7 @@ secure_vector<byte> decode_check_label(DataSource& source,
 /*
 * Decode PEM down to raw BER/DER
 */
-secure_vector<byte> decode(DataSource& source, std::string& label)
+secure_vector<uint8_t> decode(DataSource& source, std::string& label)
    {
    const size_t RANDOM_CHAR_LIMIT = 8;
 
@@ -75,7 +75,7 @@ secure_vector<byte> decode(DataSource& source, std::string& label)
 
    while(position != PEM_HEADER1.length())
       {
-      byte b;
+      uint8_t b;
       if(!source.read_byte(b))
          throw Decoding_Error("PEM: No PEM header found");
       if(b == PEM_HEADER1[position])
@@ -88,7 +88,7 @@ secure_vector<byte> decode(DataSource& source, std::string& label)
    position = 0;
    while(position != PEM_HEADER2.length())
       {
-      byte b;
+      uint8_t b;
       if(!source.read_byte(b))
          throw Decoding_Error("PEM: No PEM header found");
       if(b == PEM_HEADER2[position])
@@ -106,7 +106,7 @@ secure_vector<byte> decode(DataSource& source, std::string& label)
    position = 0;
    while(position != PEM_TRAILER.length())
       {
-      byte b;
+      uint8_t b;
       if(!source.read_byte(b))
          throw Decoding_Error("PEM: No PEM trailer found");
       if(b == PEM_TRAILER[position])
@@ -121,14 +121,14 @@ secure_vector<byte> decode(DataSource& source, std::string& label)
    return base64_decode(b64.data(), b64.size());
    }
 
-secure_vector<byte> decode_check_label(const std::string& pem,
+secure_vector<uint8_t> decode_check_label(const std::string& pem,
                                       const std::string& label_want)
    {
    DataSource_Memory src(pem);
    return decode_check_label(src, label_want);
    }
 
-secure_vector<byte> decode(const std::string& pem, std::string& label)
+secure_vector<uint8_t> decode(const std::string& pem, std::string& label)
    {
    DataSource_Memory src(pem);
    return decode(src, label);
@@ -142,7 +142,7 @@ bool matches(DataSource& source, const std::string& extra,
    {
    const std::string PEM_HEADER = "-----BEGIN " + extra;
 
-   secure_vector<byte> search_buf(search_range);
+   secure_vector<uint8_t> search_buf(search_range);
    size_t got = source.peek(search_buf.data(), search_buf.size(), 0);
 
    if(got < PEM_HEADER.length())

@@ -48,14 +48,14 @@ std::vector<X509_DN> Certificate_Store_In_Memory::all_subjects() const
 
 std::shared_ptr<const X509_Certificate>
 Certificate_Store_In_Memory::find_cert(const X509_DN& subject_dn,
-                                       const std::vector<byte>& key_id) const
+                                       const std::vector<uint8_t>& key_id) const
    {
    for(size_t i = 0; i != m_certs.size(); ++i)
       {
       // Only compare key ids if set in both call and in the cert
       if(key_id.size())
          {
-         std::vector<byte> skid = m_certs[i]->subject_key_id();
+         std::vector<uint8_t> skid = m_certs[i]->subject_key_id();
 
          if(skid.size() && skid != key_id) // no match
             continue;
@@ -70,14 +70,14 @@ Certificate_Store_In_Memory::find_cert(const X509_DN& subject_dn,
 
 
 std::shared_ptr<const X509_Certificate>
-Certificate_Store_In_Memory::find_cert_by_pubkey_sha1(const std::vector<byte>& key_hash) const
+Certificate_Store_In_Memory::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const
    {
    if(key_hash.size() != 20)
       throw Invalid_Argument("Certificate_Store_In_Memory::find_cert_by_pubkey_sha1 invalid hash");
 
    for(size_t i = 0; i != m_certs.size(); ++i)
       {
-      const std::vector<byte> hash_i = m_certs[i]->subject_public_key_bitstring_sha1();
+      const std::vector<uint8_t> hash_i = m_certs[i]->subject_public_key_bitstring_sha1();
       if(key_hash == hash_i)
          {
          return m_certs[i];
@@ -114,14 +114,14 @@ void Certificate_Store_In_Memory::add_crl(std::shared_ptr<const X509_CRL> crl)
 
 std::shared_ptr<const X509_CRL> Certificate_Store_In_Memory::find_crl_for(const X509_Certificate& subject) const
    {
-   const std::vector<byte>& key_id = subject.authority_key_id();
+   const std::vector<uint8_t>& key_id = subject.authority_key_id();
 
    for(size_t i = 0; i != m_crls.size(); ++i)
       {
       // Only compare key ids if set in both call and in the CRL
       if(key_id.size())
          {
-         std::vector<byte> akid = m_crls[i]->authority_key_id();
+         std::vector<uint8_t> akid = m_crls[i]->authority_key_id();
 
          if(akid.size() && akid != key_id) // no match
             continue;

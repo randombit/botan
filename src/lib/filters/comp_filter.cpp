@@ -38,7 +38,7 @@ void Compression_Filter::start_msg()
    m_comp->start(m_level);
    }
 
-void Compression_Filter::write(const byte input[], size_t input_length)
+void Compression_Filter::write(const uint8_t input[], size_t input_length)
    {
    while(input_length)
       {
@@ -89,7 +89,7 @@ void Decompression_Filter::start_msg()
    m_comp->start();
    }
 
-void Decompression_Filter::write(const byte input[], size_t input_length)
+void Decompression_Filter::write(const uint8_t input[], size_t input_length)
    {
    while(input_length)
       {

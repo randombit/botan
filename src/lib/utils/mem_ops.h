@@ -80,7 +80,7 @@ template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
 * @param val the value to set each byte to
 */
 template<typename T>
-inline void set_mem(T* ptr, size_t n, byte val)
+inline void set_mem(T* ptr, size_t n, uint8_t val)
    {
    if(n > 0)
       {
@@ -139,25 +139,25 @@ template<typename T> void xor_buf(T out[],
    }
 
 template<typename Alloc, typename Alloc2>
-void xor_buf(std::vector<byte, Alloc>& out,
-             const std::vector<byte, Alloc2>& in,
+void xor_buf(std::vector<uint8_t, Alloc>& out,
+             const std::vector<uint8_t, Alloc2>& in,
              size_t n)
    {
    xor_buf(out.data(), in.data(), n);
    }
 
 template<typename Alloc>
-void xor_buf(std::vector<byte, Alloc>& out,
-             const byte* in,
+void xor_buf(std::vector<uint8_t, Alloc>& out,
+             const uint8_t* in,
              size_t n)
    {
    xor_buf(out.data(), in, n);
    }
 
 template<typename Alloc, typename Alloc2>
-void xor_buf(std::vector<byte, Alloc>& out,
-             const byte* in,
-             const std::vector<byte, Alloc2>& in2,
+void xor_buf(std::vector<uint8_t, Alloc>& out,
+             const uint8_t* in,
+             const std::vector<uint8_t, Alloc2>& in2,
              size_t n)
    {
    xor_buf(out.data(), in, in2.data(), n);

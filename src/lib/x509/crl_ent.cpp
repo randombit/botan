@@ -93,7 +93,7 @@ void CRL_Entry::decode_from(BER_Decoder& source)
       entry.decode(extensions);
       Data_Store info;
       extensions.contents_to(info, info);
-      m_reason = CRL_Code(info.get1_u32bit("X509v3.CRLReasonCode"));
+      m_reason = CRL_Code(info.get1_uint32("X509v3.CRLReasonCode"));
       }
 
    entry.end_cons();

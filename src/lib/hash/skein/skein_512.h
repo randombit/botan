@@ -47,10 +47,10 @@ class BOTAN_DLL Skein_512 final : public HashFunction
          SKEIN_OUTPUT = 63
       };
 
-      void add_data(const byte input[], size_t length) override;
-      void final_result(byte out[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t out[]) override;
 
-      void ubi_512(const byte msg[], size_t msg_len);
+      void ubi_512(const uint8_t msg[], size_t msg_len);
 
       void initial_block();
       void reset_tweak(type_code type, bool is_final);
@@ -59,8 +59,8 @@ class BOTAN_DLL Skein_512 final : public HashFunction
       size_t m_output_bits;
 
       std::unique_ptr<Threefish_512> m_threefish;
-      secure_vector<u64bit> m_T;
-      secure_vector<byte> m_buffer;
+      secure_vector<uint64_t> m_T;
+      secure_vector<uint8_t> m_buffer;
       size_t m_buf_pos;
    };
 

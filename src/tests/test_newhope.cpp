@@ -23,7 +23,7 @@ class NEWHOPE_RNG : public Botan::RandomNumberGenerator
       std::string name() const override { return "NEWHOPE_RNG"; }
       void clear() override { /* ignored */ }
 
-      void randomize(byte out[], size_t len) override
+      void randomize(uint8_t out[], size_t len) override
          {
          if(m_first.size() == len)
             {
@@ -44,7 +44,7 @@ class NEWHOPE_RNG : public Botan::RandomNumberGenerator
 
          m_calls += 1;
 
-         byte nonce[8] = { 0 };
+         uint8_t nonce[8] = { 0 };
 
          if(m_calls < 3)
             {
@@ -60,7 +60,7 @@ class NEWHOPE_RNG : public Botan::RandomNumberGenerator
 
       bool is_seeded() const override { return true; }
 
-      void add_entropy(const byte[], size_t) override { /* ignored */ }
+      void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
 
       NEWHOPE_RNG(const std::vector<uint8_t>& seed)
          {
@@ -83,7 +83,7 @@ class NEWHOPE_RNG : public Botan::RandomNumberGenerator
    private:
       Botan::ChaCha m_chacha;
       std::vector<uint8_t> m_first;
-      byte m_calls = 0;
+      uint8_t m_calls = 0;
    };
 
 class NEWHOPE_Tests : public Text_Based_Test

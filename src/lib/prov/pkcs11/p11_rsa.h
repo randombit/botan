@@ -200,7 +200,7 @@ class BOTAN_DLL PKCS11_RSA_PrivateKey final : public Private_Key,
       /// @return the exported RSA private key
       RSA_PrivateKey export_key() const;
 
-      secure_vector<byte> private_key_bits() const override;
+      secure_vector<uint8_t> private_key_bits() const override;
 
       std::unique_ptr<PK_Ops::Decryption>
          create_decryption_op(RandomNumberGenerator& rng,

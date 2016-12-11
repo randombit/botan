@@ -21,7 +21,7 @@ namespace Botan {
 /**
 * Swap a 16 bit integer
 */
-inline u16bit reverse_bytes(u16bit val)
+inline uint16_t reverse_bytes(uint16_t val)
    {
    return rotate_left(val, 8);
    }
@@ -29,7 +29,7 @@ inline u16bit reverse_bytes(u16bit val)
 /**
 * Swap a 32 bit integer
 */
-inline u32bit reverse_bytes(u32bit val)
+inline uint32_t reverse_bytes(uint32_t val)
    {
 #if BOTAN_GCC_VERSION >= 430 && !defined(BOTAN_TARGET_ARCH_IS_ARM32)
    /*
@@ -77,7 +77,7 @@ inline u32bit reverse_bytes(u32bit val)
 /**
 * Swap a 64 bit integer
 */
-inline u64bit reverse_bytes(u64bit val)
+inline uint64_t reverse_bytes(uint64_t val)
    {
 #if BOTAN_GCC_VERSION >= 430
 
@@ -95,13 +95,13 @@ inline u64bit reverse_bytes(u64bit val)
     * useful for 32-bit x86).
     */
 
-   u32bit hi = static_cast<u32bit>(val >> 32);
-   u32bit lo = static_cast<u32bit>(val);
+   uint32_t hi = static_cast<uint32_t>(val >> 32);
+   uint32_t lo = static_cast<uint32_t>(val);
 
    hi = reverse_bytes(hi);
    lo = reverse_bytes(lo);
 
-   return (static_cast<u64bit>(lo) << 32) | hi;
+   return (static_cast<uint64_t>(lo) << 32) | hi;
 #endif
    }
 
@@ -120,10 +120,10 @@ inline void bswap_4(T x[4])
 #if defined(BOTAN_TARGET_CPU_HAS_SSE2) && !defined(BOTAN_NO_SSE_INTRINSICS)
 
 /**
-* Swap 4 u32bits in an array using SSE2 shuffle instructions
+* Swap 4 uint32_ts in an array using SSE2 shuffle instructions
 */
 template<>
-inline void bswap_4(u32bit x[4])
+inline void bswap_4(uint32_t x[4])
    {
    __m128i T = _mm_loadu_si128(reinterpret_cast<const __m128i*>(x));
 

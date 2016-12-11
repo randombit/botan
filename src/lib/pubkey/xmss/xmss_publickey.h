@@ -62,7 +62,7 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
        * Creates an XMSS public key from a byte sequence produced by
        * raw_private_key().
        **/
-      XMSS_PublicKey(const std::vector<byte>& raw_key);
+      XMSS_PublicKey(const std::vector<uint8_t>& raw_key);
 
       /**
        * Creates a new XMSS public key for a chosen XMSS signature method as
@@ -73,8 +73,8 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
        * @param public_seed Public seed value.
        **/
       XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
-                     const secure_vector<byte>& root,
-                     const secure_vector<byte>& public_seed)
+                     const secure_vector<uint8_t>& root,
+                     const secure_vector<uint8_t>& public_seed)
          : m_xmss_params(xmss_oid), m_wots_params(m_xmss_params.ots_oid()),
            m_root(root), m_public_seed(public_seed) {}
 
@@ -87,8 +87,8 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
        * @param public_seed Public seed value.
        **/
       XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
-                     secure_vector<byte>&& root,
-                     secure_vector<byte>&& public_seed)
+                     secure_vector<uint8_t>&& root,
+                     secure_vector<uint8_t>&& public_seed)
          : m_xmss_params(xmss_oid), m_wots_params(m_xmss_params.ots_oid()),
            m_root(std::move(root)), m_public_seed(std::move(public_seed)) {}
 
@@ -146,42 +146,42 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
          return m_wots_params;
          }
 
-      secure_vector<byte>& root()
+      secure_vector<uint8_t>& root()
          {
          return m_root;
          }
 
-      void set_root(const secure_vector<byte>& root)
+      void set_root(const secure_vector<uint8_t>& root)
          {
          m_root = root;
          }
 
-      void set_root(secure_vector<byte>&& root)
+      void set_root(secure_vector<uint8_t>&& root)
          {
          m_root = std::move(root);
          }
 
-      const secure_vector<byte>& root() const
+      const secure_vector<uint8_t>& root() const
          {
          return m_root;
          }
 
-      virtual secure_vector<byte>& public_seed()
+      virtual secure_vector<uint8_t>& public_seed()
          {
          return m_public_seed;
          }
 
-      virtual void set_public_seed(const secure_vector<byte>& public_seed)
+      virtual void set_public_seed(const secure_vector<uint8_t>& public_seed)
          {
          m_public_seed = public_seed;
          }
 
-      virtual void set_public_seed(secure_vector<byte>&& public_seed)
+      virtual void set_public_seed(secure_vector<uint8_t>&& public_seed)
          {
          m_public_seed = std::move(public_seed);
          }
 
-      virtual const secure_vector<byte>& public_seed() const
+      virtual const secure_vector<uint8_t>& public_seed() const
          {
          return m_public_seed;
          }
@@ -221,7 +221,7 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
        *
        * @return raw public key bits.
        **/
-      virtual std::vector<byte> public_key_bits() const override
+      virtual std::vector<uint8_t> public_key_bits() const override
          {
          return raw_public_key();
          }
@@ -238,23 +238,23 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
          }
 
       /**
-       * Generates a non standartized byte sequence representing the XMSS
+       * Generates a non standardized byte sequence representing the XMSS
        * public key, as defined in [1] (p. 23, "XMSS Public Key")
        *
        * @return 4-byte OID, followed by n-byte root node, followed by
        *         public seed.
        **/
-      virtual std::vector<byte> raw_public_key() const;
+      virtual std::vector<uint8_t> raw_public_key() const;
 
    protected:
       XMSS_Parameters m_xmss_params;
       XMSS_WOTS_Parameters m_wots_params;
-      secure_vector<byte> m_root;
-      secure_vector<byte> m_public_seed;
+      secure_vector<uint8_t> m_root;
+      secure_vector<uint8_t> m_public_seed;
 
    private:
       XMSS_Parameters::xmss_algorithm_t deserialize_xmss_oid(
-         const std::vector<byte>& raw_key);
+         const std::vector<uint8_t>& raw_key);
    };
 
 }

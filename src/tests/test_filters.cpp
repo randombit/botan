@@ -138,7 +138,7 @@ class Filter_Tests : public Test
 #if defined(BOTAN_HAS_CRC32)
          pipe.prepend(new Botan::Hash_Filter("CRC32"));
          pipe.append(new Botan::Hash_Filter("CRC32"));
-         pipe.process_msg(std::vector<byte>(1024, 0));
+         pipe.process_msg(std::vector<uint8_t>(1024, 0));
          result.test_eq("Expected CRC32d", pipe.read_all(1), "99841F60");
 #endif
 
@@ -171,13 +171,13 @@ class Filter_Tests : public Test
          dec_cipher->set_iv(Botan::InitializationVector("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB"));
          cipher->set_iv(Botan::InitializationVector("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB"));
 
-         const std::vector<byte> zeros_in(1024);
+         const std::vector<uint8_t> zeros_in(1024);
          Botan::DataSource_Memory src(zeros_in);
          pipe.start_msg();
          pipe.write(src);
          pipe.end_msg();
 
-         Botan::secure_vector<byte> zeros_out = pipe.read_all(1);
+         Botan::secure_vector<uint8_t> zeros_out = pipe.read_all(1);
 
          result.test_eq("Cipher roundtrip", zeros_in, zeros_out);
          return result;

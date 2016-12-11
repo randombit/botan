@@ -48,13 +48,13 @@ class BOTAN_DLL Session_Manager_SQL : public Session_Manager
 
       Session_Manager_SQL& operator=(const Session_Manager_SQL&) = delete;
 
-      bool load_from_session_id(const std::vector<byte>& session_id,
+      bool load_from_session_id(const std::vector<uint8_t>& session_id,
                                 Session& session) override;
 
       bool load_from_server_info(const Server_Information& info,
                                  Session& session) override;
 
-      void remove_entry(const std::vector<byte>& session_id) override;
+      void remove_entry(const std::vector<uint8_t>& session_id) override;
 
       size_t remove_all() override;
 
@@ -67,7 +67,7 @@ class BOTAN_DLL Session_Manager_SQL : public Session_Manager
       void prune_session_cache();
 
       std::shared_ptr<SQL_Database> m_db;
-      secure_vector<byte> m_session_key;
+      secure_vector<uint8_t> m_session_key;
       RandomNumberGenerator& m_rng;
       size_t m_max_sessions;
       std::chrono::seconds m_session_lifetime;

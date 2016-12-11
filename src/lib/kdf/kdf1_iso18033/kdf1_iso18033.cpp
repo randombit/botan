@@ -9,13 +9,13 @@
 
 namespace Botan {
 
-size_t KDF1_18033::kdf(byte key[], size_t key_len,
-                       const byte secret[], size_t secret_len,
-                       const byte salt[], size_t salt_len,
-                       const byte label[], size_t label_len) const
+size_t KDF1_18033::kdf(uint8_t key[], size_t key_len,
+                       const uint8_t secret[], size_t secret_len,
+                       const uint8_t salt[], size_t salt_len,
+                       const uint8_t label[], size_t label_len) const
    {
-   u32bit counter = 0;
-   secure_vector<byte> h;
+   uint32_t counter = 0;
+   secure_vector<uint8_t> h;
 
    size_t offset = 0;
    while(offset != key_len && counter != 0xFFFFFFFF)

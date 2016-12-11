@@ -24,7 +24,7 @@ Filter::Filter()
 /*
 * Send data to all ports
 */
-void Filter::send(const byte input[], size_t length)
+void Filter::send(const uint8_t input[], size_t length)
    {
    if(!length)
       return;

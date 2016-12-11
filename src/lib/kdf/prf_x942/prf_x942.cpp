@@ -19,27 +19,27 @@ namespace {
 /*
 * Encode an integer as an OCTET STRING
 */
-std::vector<byte> encode_x942_int(u32bit n)
+std::vector<uint8_t> encode_x942_int(uint32_t n)
    {
-   byte n_buf[4] = { 0 };
+   uint8_t n_buf[4] = { 0 };
    store_be(n, n_buf);
    return DER_Encoder().encode(n_buf, 4, OCTET_STRING).get_contents_unlocked();
    }
 
 }
 
-size_t X942_PRF::kdf(byte key[], size_t key_len,
-                     const byte secret[], size_t secret_len,
-                     const byte salt[], size_t salt_len,
-                     const byte label[], size_t label_len) const
+size_t X942_PRF::kdf(uint8_t key[], size_t key_len,
+                     const uint8_t secret[], size_t secret_len,
+                     const uint8_t salt[], size_t salt_len,
+                     const uint8_t label[], size_t label_len) const
    {
    std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-160"));
    const OID kek_algo(m_key_wrap_oid);
 
-   secure_vector<byte> h;
-   secure_vector<byte> in;
+   secure_vector<uint8_t> h;
+   secure_vector<uint8_t> in;
    size_t offset = 0;
-   u32bit counter = 1;
+   uint32_t counter = 1;
 
    in.reserve(salt_len + label_len);
    in += std::make_pair(label,label_len);
@@ -65,7 +65,7 @@ size_t X942_PRF::kdf(byte key[], size_t key_len,
                )
 
             .start_explicit(2)
-               .raw_bytes(encode_x942_int(static_cast<u32bit>(8 * key_len)))
+               .raw_bytes(encode_x942_int(static_cast<uint32_t>(8 * key_len)))
             .end_explicit()
 
          .end_cons().get_contents()

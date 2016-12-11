@@ -36,7 +36,7 @@ StreamCipher_Filter::StreamCipher_Filter(const std::string& sc_name, const Symme
    m_cipher->set_key(key);
    }
 
-void StreamCipher_Filter::write(const byte input[], size_t length)
+void StreamCipher_Filter::write(const uint8_t input[], size_t length)
    {
    while(length)
       {
@@ -56,7 +56,7 @@ Hash_Filter::Hash_Filter(const std::string& hash_name, size_t len) :
 
 void Hash_Filter::end_msg()
    {
-   secure_vector<byte> output = m_hash->final();
+   secure_vector<uint8_t> output = m_hash->final();
    if(m_out_len)
       send(output, std::min<size_t>(m_out_len, output.size()));
    else
@@ -78,7 +78,7 @@ MAC_Filter::MAC_Filter(const std::string& mac_name, const SymmetricKey& key, siz
 
 void MAC_Filter::end_msg()
    {
-   secure_vector<byte> output = m_mac->final();
+   secure_vector<uint8_t> output = m_mac->final();
    if(m_out_len)
       send(output, std::min<size_t>(m_out_len, output.size()));
    else

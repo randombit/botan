@@ -25,11 +25,11 @@ class TSS_Tests : public Test
          std::vector<Test::Result> results;
 
          Test::Result result("TSS");
-         byte id[16];
+         uint8_t id[16];
          for(int i = 0; i != 16; ++i)
             id[i] = i;
 
-         const std::vector<byte> S = Botan::hex_decode("7465737400");
+         const std::vector<uint8_t> S = Botan::hex_decode("7465737400");
 
          std::vector<Botan::RTSS_Share> shares =
             Botan::RTSS_Share::split(2, 4, S.data(), S.size(), id, Test::rng());

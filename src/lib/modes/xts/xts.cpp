@@ -13,10 +13,10 @@ namespace Botan {
 
 namespace {
 
-void poly_double_128(byte out[], const byte in[])
+void poly_double_128(uint8_t out[], const uint8_t in[])
    {
-   u64bit X0 = load_le<u64bit>(in, 0);
-   u64bit X1 = load_le<u64bit>(in, 1);
+   uint64_t X0 = load_le<uint64_t>(in, 0);
+   uint64_t X1 = load_le<uint64_t>(in, 1);
 
    const bool carry = static_cast<bool>((X1 >> 63) != 0);
 
@@ -29,9 +29,9 @@ void poly_double_128(byte out[], const byte in[])
    store_le(out, X0, X1);
    }
 
-void poly_double_64(byte out[], const byte in[])
+void poly_double_64(uint8_t out[], const uint8_t in[])
    {
-   u64bit X = load_le<u64bit>(in, 0);
+   uint64_t X = load_le<uint64_t>(in, 0);
    const bool carry = static_cast<bool>((X >> 63) != 0);
    X <<= 1;
    if(carry)
@@ -39,7 +39,7 @@ void poly_double_64(byte out[], const byte in[])
    store_le(X, out);
    }
 
-inline void poly_double(byte out[], const byte in[], size_t size)
+inline void poly_double(uint8_t out[], const uint8_t in[], size_t size)
    {
    if(size == 8)
       poly_double_64(out, in);
@@ -100,7 +100,7 @@ bool XTS_Mode::valid_nonce_length(size_t n) const
    return cipher().block_size() == n;
    }
 
-void XTS_Mode::key_schedule(const byte key[], size_t length)
+void XTS_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    const size_t key_half = length / 2;
 
@@ -111,7 +111,7 @@ void XTS_Mode::key_schedule(const byte key[], size_t length)
    m_tweak_cipher->set_key(&key[key_half], key_half);
    }
 
-void XTS_Mode::start_msg(const byte nonce[], size_t nonce_len)
+void XTS_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -167,11 +167,11 @@ size_t XTS_Encryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void XTS_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
+void XTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
+   uint8_t* buf = buffer.data() + offset;
 
    BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input");
 
@@ -188,7 +188,7 @@ void XTS_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
       const size_t final_bytes = sz - full_blocks;
       BOTAN_ASSERT(final_bytes > BS && final_bytes < 2*BS, "Left over size in expected range");
 
-      secure_vector<byte> last(buf + full_blocks, buf + full_blocks + final_bytes);
+      secure_vector<uint8_t> last(buf + full_blocks, buf + full_blocks + final_bytes);
       buffer.resize(full_blocks + offset);
       update(buffer, offset);
 
@@ -243,11 +243,11 @@ size_t XTS_Decryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void XTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
+void XTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
+   uint8_t* buf = buffer.data() + offset;
 
    BOTAN_ASSERT(sz >= minimum_final_size(), "Have sufficient final input");
 
@@ -264,7 +264,7 @@ void XTS_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
       const size_t final_bytes = sz - full_blocks;
       BOTAN_ASSERT(final_bytes > BS && final_bytes < 2*BS, "Left over size in expected range");
 
-      secure_vector<byte> last(buf + full_blocks, buf + full_blocks + final_bytes);
+      secure_vector<uint8_t> last(buf + full_blocks, buf + full_blocks + final_bytes);
       buffer.resize(full_blocks + offset);
       update(buffer, offset);
 

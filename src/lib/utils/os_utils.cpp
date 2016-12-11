@@ -53,13 +53,13 @@ uint64_t get_processor_timestamp()
       {
       uint32_t rtc_low = 0, rtc_high = 0;
       asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
-      return (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
+      return (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
       }
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    uint32_t rtc_low = 0, rtc_high = 0;
    asm volatile("mftbu %0; mftb %1" : "=r" (rtc_high), "=r" (rtc_low));
-   return (static_cast<u64bit>(rtc_high) << 32) | rtc_low;
+   return (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_ALPHA)
    uint64_t rtc = 0;

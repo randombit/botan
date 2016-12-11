@@ -31,12 +31,12 @@ class BOTAN_DLL CertID final : public ASN1_Object
 
       void decode_from(class BER_Decoder& from) override;
 
-      const std::vector<byte>& issuer_key_hash() const { return m_issuer_key_hash; }
+      const std::vector<uint8_t>& issuer_key_hash() const { return m_issuer_key_hash; }
 
    private:
       AlgorithmIdentifier m_hash_id;
-      std::vector<byte> m_issuer_dn_hash;
-      std::vector<byte> m_issuer_key_hash;
+      std::vector<uint8_t> m_issuer_dn_hash;
+      std::vector<uint8_t> m_issuer_key_hash;
       BigInt m_subject_serial;
    };
 

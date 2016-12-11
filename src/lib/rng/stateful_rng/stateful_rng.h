@@ -71,7 +71,7 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
       * of the length of the input or the current seeded state of
       * the RNG.
       */
-      void initialize_with(const byte input[], size_t length);
+      void initialize_with(const uint8_t input[], size_t length);
 
       bool is_seeded() const override final;
 
@@ -87,7 +87,7 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
       * Overrides default implementation and also includes the current
       * process ID and the reseed counter.
       */
-      void randomize_with_ts_input(byte output[], size_t output_len) override final;
+      void randomize_with_ts_input(uint8_t output[], size_t output_len) override final;
 
       /**
       * Poll provided sources for up to poll_bits bits of entropy

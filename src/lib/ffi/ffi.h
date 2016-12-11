@@ -522,12 +522,12 @@ BOTAN_DLL int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int
 typedef struct botan_tls_session_struct* botan_tls_session_t;
 
 BOTAN_DLL int botan_tls_session_decrypt(botan_tls_session_t* session,
-                                        const byte key[], size_t key_len,
-                                        const byte blob[], size_t blob_len);
+                                        const uint8_t key[], size_t key_len,
+                                        const uint8_t blob[], size_t blob_len);
 
 BOTAN_DLL int botan_tls_session_get_version(botan_tls_session_t session, uint16_t* tls_version);
 BOTAN_DLL int botan_tls_session_get_ciphersuite(botan_tls_session_t session, uint16_t* ciphersuite);
-BOTAN_DLL int botan_tls_session_encrypt(botan_tls_session_t session, botan_rng_t rng, byte key[], size_t* key_len);
+BOTAN_DLL int botan_tls_session_encrypt(botan_tls_session_t session, botan_rng_t rng, uint8_t key[], size_t* key_len);
 
 BOTAN_DLL int botan_tls_session_get_peer_certs(botan_tls_session_t session, botan_x509_cert_t certs[], size_t* cert_len);
 

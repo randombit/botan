@@ -44,8 +44,8 @@ class BOTAN_DLL Comb4P final : public HashFunction
 
       void clear() override;
    private:
-      void add_data(const byte input[], size_t length) override;
-      void final_result(byte out[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t out[]) override;
 
       std::unique_ptr<HashFunction> m_hash1, m_hash2;
    };

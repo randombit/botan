@@ -112,7 +112,7 @@ class RAII_LowLevel
          m_is_session_open = false;
          }
 
-      inline void login(UserType user_type, const secure_vector<byte>& pin)
+      inline void login(UserType user_type, const secure_vector<uint8_t>& pin)
          {
          if(!m_is_session_open)
             {
@@ -395,8 +395,8 @@ Test::Result test_c_init_token()
    const std::string label = "Botan PKCS#11 tests";
 
    auto sec_vec_binder = std::bind(
-                            static_cast< bool (LowLevel::*)(SlotId, const secure_vector<byte>&, const std::string&, ReturnValue*) const>
-                            (&LowLevel::C_InitToken<secure_allocator<byte>>), *p11_low_level.get(), slot_vec.at(0), std::ref(SO_PIN_SECVEC),
+                            static_cast< bool (LowLevel::*)(SlotId, const secure_vector<uint8_t>&, const std::string&, ReturnValue*) const>
+                            (&LowLevel::C_InitToken<secure_allocator<uint8_t>>), *p11_low_level.get(), slot_vec.at(0), std::ref(SO_PIN_SECVEC),
                             std::ref(label), std::placeholders::_1);
 
    return test_function("C_InitToken", sec_vec_binder);
@@ -493,11 +493,11 @@ Test::Result test_c_get_session_info()
 Test::Result login_logout_helper(const RAII_LowLevel& p11_low_level, SessionHandle handle, UserType user_type,
                                  const std::string& pin)
    {
-   secure_vector<byte> pin_as_sec_vec(pin.begin(), pin.end());
+   secure_vector<uint8_t> pin_as_sec_vec(pin.begin(), pin.end());
 
    auto login_secvec_binder = std::bind(static_cast< bool (LowLevel::*)(SessionHandle, UserType,
-                                        const secure_vector<byte>&, ReturnValue*) const>
-                                        (&LowLevel::C_Login<secure_allocator<byte>>), *p11_low_level.get(),
+                                        const secure_vector<uint8_t>&, ReturnValue*) const>
+                                        (&LowLevel::C_Login<secure_allocator<uint8_t>>), *p11_low_level.get(),
                                         handle, user_type, std::ref(pin_as_sec_vec), std::placeholders::_1);
 
    auto logout_binder = std::bind(static_cast< bool (LowLevel::*)(SessionHandle, ReturnValue*) const>
@@ -547,8 +547,8 @@ Test::Result test_c_init_pin()
    p11_low_level.login(UserType::SO, SO_PIN_SECVEC);
 
    auto sec_vec_binder = std::bind(
-                            static_cast< bool (LowLevel::*)(SessionHandle, const secure_vector<byte>&, ReturnValue*) const>
-                            (&LowLevel::C_InitPIN<secure_allocator<byte>>), *p11_low_level.get(), session_handle, std::ref(PIN_SECVEC),
+                            static_cast< bool (LowLevel::*)(SessionHandle, const secure_vector<uint8_t>&, ReturnValue*) const>
+                            (&LowLevel::C_InitPIN<secure_allocator<uint8_t>>), *p11_low_level.get(), session_handle, std::ref(PIN_SECVEC),
                             std::placeholders::_1);
 
    return test_function("C_InitPIN", sec_vec_binder);
@@ -564,17 +564,17 @@ Test::Result test_c_set_pin()
 
    // now we are in "R / W Public Session" state: this will change the pin of the user
 
-   auto get_pin_bind = [ &session_handle, &p11_low_level ](const secure_vector<byte>& old_pin,
-                       const secure_vector<byte>& new_pin) -> PKCS11_BoundTestFunction
+   auto get_pin_bind = [ &session_handle, &p11_low_level ](const secure_vector<uint8_t>& old_pin,
+                       const secure_vector<uint8_t>& new_pin) -> PKCS11_BoundTestFunction
       {
-      return std::bind(static_cast< bool (LowLevel::*)(SessionHandle, const secure_vector<byte>&,
-      const secure_vector<byte>&, ReturnValue*) const>
-      (&LowLevel::C_SetPIN<secure_allocator<byte>>), *p11_low_level.get(), session_handle,
+      return std::bind(static_cast< bool (LowLevel::*)(SessionHandle, const secure_vector<uint8_t>&,
+      const secure_vector<uint8_t>&, ReturnValue*) const>
+      (&LowLevel::C_SetPIN<secure_allocator<uint8_t>>), *p11_low_level.get(), session_handle,
       old_pin, new_pin, std::placeholders::_1);
       };
 
    const std::string test_pin("654321");
-   const auto test_pin_secvec = secure_vector<byte>(test_pin.begin(), test_pin.end());
+   const auto test_pin_secvec = secure_vector<uint8_t>(test_pin.begin(), test_pin.end());
 
    PKCS11_BoundTestFunction set_pin_bind = get_pin_bind(PIN_SECVEC, test_pin_secvec);
    PKCS11_BoundTestFunction revert_pin_bind = get_pin_bind(test_pin_secvec, PIN_SECVEC);
@@ -589,7 +589,7 @@ Test::Result test_c_set_pin()
 
    // change so_pin in "R / W SO Functions" state
    const std::string test_so_pin = "87654321";
-   secure_vector<byte> test_so_pin_secvec(test_so_pin.begin(), test_so_pin.end());
+   secure_vector<uint8_t> test_so_pin_secvec(test_so_pin.begin(), test_so_pin.end());
    p11_low_level.login(UserType::SO, SO_PIN_SECVEC);
 
    PKCS11_BoundTestFunction set_so_pin_bind = get_pin_bind(SO_PIN_SECVEC, test_so_pin_secvec);
@@ -671,15 +671,15 @@ Test::Result test_c_get_attribute_value()
 
    ObjectHandle object_handle = create_simple_data_object(p11_low_level);
 
-   std::map < AttributeType, secure_vector<byte>> getter =
+   std::map < AttributeType, secure_vector<uint8_t>> getter =
       {
-         { AttributeType::Label, secure_vector<byte>() },
-         { AttributeType::Value, secure_vector<byte>() }
+         { AttributeType::Label, secure_vector<uint8_t>() },
+         { AttributeType::Value, secure_vector<uint8_t>() }
       };
 
    auto bind = std::bind(static_cast< bool (LowLevel::*)(SessionHandle, ObjectHandle,
-                         std::map<AttributeType, secure_vector<byte>>&, ReturnValue*) const>
-                         (&LowLevel::C_GetAttributeValue<secure_allocator<byte>>), *p11_low_level.get(), session_handle,
+                         std::map<AttributeType, secure_vector<uint8_t>>&, ReturnValue*) const>
+                         (&LowLevel::C_GetAttributeValue<secure_allocator<uint8_t>>), *p11_low_level.get(), session_handle,
                          object_handle, std::ref(getter), std::placeholders::_1);
 
    Test::Result result = test_function("C_GetAttributeValue", bind);
@@ -695,15 +695,15 @@ Test::Result test_c_get_attribute_value()
    return result;
    }
 
-std::map < AttributeType, std::vector<byte>> get_attribute_values(const RAII_LowLevel& p11_low_level,
+std::map < AttributeType, std::vector<uint8_t>> get_attribute_values(const RAII_LowLevel& p11_low_level,
       SessionHandle session_handle,
       ObjectHandle object_handle, const std::vector<AttributeType>& attribute_types)
    {
-   std::map < AttributeType, std::vector<byte>> received_attributes;
+   std::map < AttributeType, std::vector<uint8_t>> received_attributes;
 
    for(const auto& type : attribute_types)
       {
-      received_attributes.emplace(type, std::vector<byte>());
+      received_attributes.emplace(type, std::vector<uint8_t>());
       }
 
    p11_low_level.get()->C_GetAttributeValue(session_handle, object_handle, received_attributes);
@@ -724,14 +724,14 @@ Test::Result test_c_set_attribute_value()
 
    std::string new_label = "A modified data object";
 
-   std::map < AttributeType, secure_vector<byte>> new_attributes =
+   std::map < AttributeType, secure_vector<uint8_t>> new_attributes =
       {
-         { AttributeType::Label, secure_vector<byte>(new_label.begin(), new_label.end()) }
+         { AttributeType::Label, secure_vector<uint8_t>(new_label.begin(), new_label.end()) }
       };
 
    auto bind = std::bind(static_cast< bool (LowLevel::*)(SessionHandle, ObjectHandle,
-                         std::map<AttributeType, secure_vector<byte>>&, ReturnValue*) const>
-                         (&LowLevel::C_SetAttributeValue<secure_allocator<byte>>), *p11_low_level.get(), session_handle,
+                         std::map<AttributeType, secure_vector<uint8_t>>&, ReturnValue*) const>
+                         (&LowLevel::C_SetAttributeValue<secure_allocator<uint8_t>>), *p11_low_level.get(), session_handle,
                          object_handle, std::ref(new_attributes), std::placeholders::_1);
 
    Test::Result result = test_function("C_SetAttributeValue", bind);

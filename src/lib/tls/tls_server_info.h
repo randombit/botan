@@ -32,7 +32,7 @@ class BOTAN_DLL Server_Information
       *        TCP/UDP). Zero represents unknown.
       */
       Server_Information(const std::string& hostname,
-                        u16bit port = 0) :
+                        uint16_t port = 0) :
          m_hostname(hostname), m_service(""), m_port(port) {}
 
       /**
@@ -44,7 +44,7 @@ class BOTAN_DLL Server_Information
       */
       Server_Information(const std::string& hostname,
                         const std::string& service,
-                        u16bit port = 0) :
+                        uint16_t port = 0) :
          m_hostname(hostname), m_service(service), m_port(port) {}
 
       /**
@@ -61,7 +61,7 @@ class BOTAN_DLL Server_Information
       /**
       * @return the protocol port of the server, or zero if unknown
       */
-      u16bit port() const { return m_port; }
+      uint16_t port() const { return m_port; }
 
       /**
       * @return whether the hostname is known
@@ -70,7 +70,7 @@ class BOTAN_DLL Server_Information
 
    private:
       std::string m_hostname, m_service;
-      u16bit m_port;
+      uint16_t m_port;
    };
 
 inline bool operator==(const Server_Information& a, const Server_Information& b)

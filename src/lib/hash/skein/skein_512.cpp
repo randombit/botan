@@ -50,20 +50,20 @@ void Skein_512::reset_tweak(type_code type, bool is_final)
    {
    m_T[0] = 0;
 
-   m_T[1] = (static_cast<u64bit>(type) << 56) |
-          (static_cast<u64bit>(1) << 62) |
-          (static_cast<u64bit>(is_final) << 63);
+   m_T[1] = (static_cast<uint64_t>(type) << 56) |
+          (static_cast<uint64_t>(1) << 62) |
+          (static_cast<uint64_t>(is_final) << 63);
    }
 
 void Skein_512::initial_block()
    {
-   const byte zeros[64] = { 0 };
+   const uint8_t zeros[64] = { 0 };
 
    m_threefish->set_key(zeros, sizeof(zeros));
 
    // ASCII("SHA3") followed by version (0x0001) code
-   byte config_str[32] = { 0x53, 0x48, 0x41, 0x33, 0x01, 0x00, 0 };
-   store_le(u32bit(m_output_bits), config_str + 8);
+   uint8_t config_str[32] = { 0x53, 0x48, 0x41, 0x33, 0x01, 0x00, 0 };
+   store_le(uint32_t(m_output_bits), config_str + 8);
 
    reset_tweak(SKEIN_CONFIG, true);
    ubi_512(config_str, sizeof(config_str));
@@ -78,7 +78,7 @@ void Skein_512::initial_block()
       if(m_personalization.length() > 64)
          throw Invalid_Argument("Skein personalization must be less than 64 bytes");
 
-      const byte* bits = reinterpret_cast<const byte*>(m_personalization.data());
+      const uint8_t* bits = reinterpret_cast<const uint8_t*>(m_personalization.data());
       reset_tweak(SKEIN_PERSONALIZATION, true);
       ubi_512(bits, m_personalization.length());
       }
@@ -86,9 +86,9 @@ void Skein_512::initial_block()
    reset_tweak(SKEIN_MSG, false);
    }
 
-void Skein_512::ubi_512(const byte msg[], size_t msg_len)
+void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len)
    {
-   secure_vector<u64bit> M(8);
+   secure_vector<uint64_t> M(8);
 
    do
       {
@@ -100,20 +100,20 @@ void Skein_512::ubi_512(const byte msg[], size_t msg_len)
       if(to_proc % 8)
          {
          for(size_t j = 0; j != to_proc % 8; ++j)
-           M[to_proc/8] |= static_cast<u64bit>(msg[8*(to_proc/8)+j]) << (8*j);
+           M[to_proc/8] |= static_cast<uint64_t>(msg[8*(to_proc/8)+j]) << (8*j);
          }
 
       m_threefish->skein_feedfwd(M, m_T);
 
       // clear first flag if set
-      m_T[1] &= ~(static_cast<u64bit>(1) << 62);
+      m_T[1] &= ~(static_cast<uint64_t>(1) << 62);
 
       msg_len -= to_proc;
       msg += to_proc;
       } while(msg_len);
    }
 
-void Skein_512::add_data(const byte input[], size_t length)
+void Skein_512::add_data(const uint8_t input[], size_t length)
    {
    if(length == 0)
       return;
@@ -142,16 +142,16 @@ void Skein_512::add_data(const byte input[], size_t length)
    m_buf_pos += length;
    }
 
-void Skein_512::final_result(byte out[])
+void Skein_512::final_result(uint8_t out[])
    {
-   m_T[1] |= (static_cast<u64bit>(1) << 63); // final block flag
+   m_T[1] |= (static_cast<uint64_t>(1) << 63); // final block flag
 
    for(size_t i = m_buf_pos; i != m_buffer.size(); ++i)
       m_buffer[i] = 0;
 
    ubi_512(m_buffer.data(), m_buf_pos);
 
-   const byte counter[8] = { 0 };
+   const uint8_t counter[8] = { 0 };
 
    reset_tweak(SKEIN_OUTPUT, true);
    ubi_512(counter, sizeof(counter));

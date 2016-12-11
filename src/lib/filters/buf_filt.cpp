@@ -31,7 +31,7 @@ Buffered_Filter::Buffered_Filter(size_t b, size_t f) :
 /*
 * Buffer input into blocks, trying to minimize copying
 */
-void Buffered_Filter::write(const byte input[], size_t input_size)
+void Buffered_Filter::write(const uint8_t input[], size_t input_size)
    {
    if(!input_size)
       return;

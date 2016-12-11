@@ -25,7 +25,7 @@ class Cryptobox_Tests : public Test
          std::vector<Test::Result> results;
          Test::Result result("cryptobox");
 
-         const std::vector<byte> msg = Botan::hex_decode("AABBCC");
+         const std::vector<uint8_t> msg = Botan::hex_decode("AABBCC");
          const std::string password = "secret";
 
          std::string ciphertext = Botan::CryptoBox::encrypt(msg.data(), msg.size(),
@@ -36,9 +36,9 @@ class Cryptobox_Tests : public Test
             {
             std::string plaintext = Botan::CryptoBox::decrypt(ciphertext, password);
 
-            const byte* pt_b = reinterpret_cast<const byte*>(plaintext.data());
+            const uint8_t* pt_b = reinterpret_cast<const uint8_t*>(plaintext.data());
 
-            std::vector<byte> pt_vec(pt_b, pt_b + plaintext.size());
+            std::vector<uint8_t> pt_vec(pt_b, pt_b + plaintext.size());
 
             result.test_eq("decrypt", pt_vec, msg);
             }

@@ -17,17 +17,17 @@ namespace {
 /*
 * Multiplication modulo 65537
 */
-inline u16bit mul(u16bit x, u16bit y)
+inline uint16_t mul(uint16_t x, uint16_t y)
    {
-   const u32bit P = static_cast<u32bit>(x) * y;
+   const uint32_t P = static_cast<uint32_t>(x) * y;
 
-   const u16bit Z_mask = static_cast<u16bit>(CT::expand_mask(P) & 0xFFFF);
+   const uint16_t Z_mask = static_cast<uint16_t>(CT::expand_mask(P) & 0xFFFF);
 
-   const u32bit P_hi = P >> 16;
-   const u32bit P_lo = P & 0xFFFF;
+   const uint32_t P_hi = P >> 16;
+   const uint32_t P_lo = P & 0xFFFF;
 
-   const u16bit r_1 = (P_lo - P_hi) + (P_lo < P_hi);
-   const u16bit r_2 = 1 - x - y;
+   const uint16_t r_1 = (P_lo - P_hi) + (P_lo < P_hi);
+   const uint16_t r_2 = 1 - x - y;
 
    return CT::select(Z_mask, r_1, r_2);
    }
@@ -43,9 +43,9 @@ inline u16bit mul(u16bit x, u16bit y)
 * Do the exponentiation with a basic square and multiply: all bits are
 * of exponent are 1 so we always multiply
 */
-u16bit mul_inv(u16bit x)
+uint16_t mul_inv(uint16_t x)
    {
-   u16bit y = x;
+   uint16_t y = x;
 
    for(size_t i = 0; i != 15; ++i)
       {
@@ -59,7 +59,7 @@ u16bit mul_inv(u16bit x)
 /**
 * IDEA is involutional, depending only on the key schedule
 */
-void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
+void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[52])
    {
    const size_t BLOCK_SIZE = 8;
 
@@ -69,7 +69,7 @@ void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
 
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u16bit X1, X2, X3, X4;
+      uint16_t X1, X2, X3, X4;
       load_be(in + BLOCK_SIZE*i, X1, X2, X3, X4);
 
       for(size_t j = 0; j != 8; ++j)
@@ -79,10 +79,10 @@ void idea_op(const byte in[], byte out[], size_t blocks, const u16bit K[52])
          X3 += K[6*j+2];
          X4 = mul(X4, K[6*j+3]);
 
-         u16bit T0 = X3;
+         uint16_t T0 = X3;
          X3 = mul(X3 ^ X1, K[6*j+4]);
 
-         u16bit T1 = X2;
+         uint16_t T1 = X2;
          X2 = mul((X2 ^ X4) + X3, K[6*j+5]);
          X3 += X2;
 
@@ -122,7 +122,7 @@ std::string IDEA::provider() const
 /*
 * IDEA Encryption
 */
-void IDEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void IDEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(CPUID::has_sse2())
@@ -143,7 +143,7 @@ void IDEA::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * IDEA Decryption
 */
-void IDEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void IDEA::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(CPUID::has_sse2())
@@ -164,7 +164,7 @@ void IDEA::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * IDEA Key Schedule
 */
-void IDEA::key_schedule(const byte key[], size_t)
+void IDEA::key_schedule(const uint8_t key[], size_t)
    {
    m_EK.resize(52);
    m_DK.resize(52);
@@ -174,11 +174,11 @@ void IDEA::key_schedule(const byte key[], size_t)
    CT::poison(m_DK.data(), 52);
 
    for(size_t i = 0; i != 8; ++i)
-      m_EK[i] = load_be<u16bit>(key, i);
+      m_EK[i] = load_be<uint16_t>(key, i);
 
    for(size_t i = 1, j = 8, offset = 0; j != 52; i %= 8, ++i, ++j)
       {
-      m_EK[i+7+offset] = static_cast<u16bit>((m_EK[(i     % 8) + offset] << 9) |
+      m_EK[i+7+offset] = static_cast<uint16_t>((m_EK[(i     % 8) + offset] << 9) |
                                            (m_EK[((i+1) % 8) + offset] >> 7));
       offset += (i == 8) ? 8 : 0;
       }

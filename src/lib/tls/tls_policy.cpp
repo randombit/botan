@@ -224,12 +224,12 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
 /*
 * Return allowed compression algorithms
 */
-std::vector<byte> Policy::compression() const
+std::vector<uint8_t> Policy::compression() const
    {
-   return std::vector<byte>{ NO_COMPRESSION };
+   return std::vector<uint8_t>{ NO_COMPRESSION };
    }
 
-u32bit Policy::session_ticket_lifetime() const
+uint32_t Policy::session_ticket_lifetime() const
    {
    return 86400; // ~1 day
    }
@@ -289,9 +289,9 @@ size_t Policy::dtls_default_mtu() const
    return 1280 - 40 - 8;
    }
 
-std::vector<u16bit> Policy::srtp_profiles() const
+std::vector<uint16_t> Policy::srtp_profiles() const
    {
-   return std::vector<u16bit>();
+   return std::vector<uint16_t>();
    }
 
 namespace {
@@ -367,7 +367,7 @@ class Ciphersuite_Preference_Ordering
 
 }
 
-std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
+std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
                                              bool have_srp) const
    {
    const std::vector<std::string> ciphers = allowed_ciphers();
@@ -421,7 +421,7 @@ std::vector<u16bit> Policy::ciphersuite_list(Protocol_Version version,
    Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);
    std::sort(ciphersuites.begin(), ciphersuites.end(), order);
 
-   std::vector<u16bit> ciphersuite_codes;
+   std::vector<uint16_t> ciphersuite_codes;
    for(auto i : ciphersuites)
       ciphersuite_codes.push_back(i.ciphersuite_code());
    return ciphersuite_codes;

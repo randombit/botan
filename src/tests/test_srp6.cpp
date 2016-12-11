@@ -28,7 +28,7 @@ class SRP6_Unit_Tests : public Test
          const std::string group_id = "modp/srp/1024";
          const std::string hash_id = "SHA-256";
 
-         const std::vector<byte> salt = unlock(Test::rng().random_vec(16));
+         const std::vector<uint8_t> salt = unlock(Test::rng().random_vec(16));
 
          const Botan::BigInt verifier = Botan::generate_srp6_verifier(username, password, salt, group_id, hash_id);
 

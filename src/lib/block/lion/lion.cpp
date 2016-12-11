@@ -13,13 +13,13 @@ namespace Botan {
 /*
 * Lion Encryption
 */
-void Lion::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void Lion::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const size_t LEFT_SIZE = left_size();
    const size_t RIGHT_SIZE = right_size();
 
-   secure_vector<byte> buffer_vec(LEFT_SIZE);
-   byte* buffer = buffer_vec.data();
+   secure_vector<uint8_t> buffer_vec(LEFT_SIZE);
+   uint8_t* buffer = buffer_vec.data();
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -43,13 +43,13 @@ void Lion::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Lion Decryption
 */
-void Lion::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void Lion::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const size_t LEFT_SIZE = left_size();
    const size_t RIGHT_SIZE = right_size();
 
-   secure_vector<byte> buffer_vec(LEFT_SIZE);
-   byte* buffer = buffer_vec.data();
+   secure_vector<uint8_t> buffer_vec(LEFT_SIZE);
+   uint8_t* buffer = buffer_vec.data();
 
    for(size_t i = 0; i != blocks; ++i)
       {
@@ -73,7 +73,7 @@ void Lion::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Lion Key Schedule
 */
-void Lion::key_schedule(const byte key[], size_t length)
+void Lion::key_schedule(const uint8_t key[], size_t length)
    {
    clear();
 

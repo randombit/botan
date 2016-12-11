@@ -34,7 +34,7 @@ class BOTAN_DLL Request
       /**
       * @return BER-encoded OCSP request
       */
-      std::vector<byte> BER_encode() const;
+      std::vector<uint8_t> BER_encode() const;
 
       /**
       * @return Base64-encoded OCSP request
@@ -51,7 +51,7 @@ class BOTAN_DLL Request
       */
       const X509_Certificate& subject() const { return m_subject; }
 
-      const std::vector<byte>& issuer_key_hash() const
+      const std::vector<uint8_t>& issuer_key_hash() const
          { return m_certid.issuer_key_hash(); }
    private:
       X509_Certificate m_issuer, m_subject;
@@ -75,7 +75,7 @@ class BOTAN_DLL Response
       * Parses an OCSP response.
       * @param response_bits response bits received
       */
-      Response(const std::vector<byte>& response_bits) :
+      Response(const std::vector<uint8_t>& response_bits) :
          Response(response_bits.data(), response_bits.size())
          {}
 
@@ -119,9 +119,9 @@ class BOTAN_DLL Response
       /**
       * @return key hash, if provided in response (may be empty)
       */
-      const std::vector<byte>& signer_key_hash() const { return m_key_hash; }
+      const std::vector<uint8_t>& signer_key_hash() const { return m_key_hash; }
 
-      const std::vector<byte>& raw_bits() const { return m_response_bits; }
+      const std::vector<uint8_t>& raw_bits() const { return m_response_bits; }
 
       /**
        * Searches the OCSP response for issuer and subject certificate.
@@ -141,13 +141,13 @@ class BOTAN_DLL Response
                                          std::chrono::system_clock::time_point ref_time = std::chrono::system_clock::now()) const;
 
    private:
-      std::vector<byte> m_response_bits;
+      std::vector<uint8_t> m_response_bits;
       X509_Time m_produced_at;
       X509_DN m_signer_name;
-      std::vector<byte> m_key_hash;
-      std::vector<byte> m_tbs_bits;
+      std::vector<uint8_t> m_key_hash;
+      std::vector<uint8_t> m_tbs_bits;
       AlgorithmIdentifier m_sig_algo;
-      std::vector<byte> m_signature;
+      std::vector<uint8_t> m_signature;
       std::vector<X509_Certificate> m_certs;
 
       std::vector<SingleResponse> m_responses;

@@ -39,7 +39,7 @@ class BOTAN_DLL Handshake_Message
       /**
       * @return DER representation of this message
       */
-      virtual std::vector<byte> serialize() const = 0;
+      virtual std::vector<uint8_t> serialize() const = 0;
 
       virtual ~Handshake_Message() {}
    };

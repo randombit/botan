@@ -55,10 +55,10 @@ class BOTAN_DLL PKCS11_RNG final : public Hardware_RNG
          }
 
       /// Calls `C_GenerateRandom` to generate random data
-      void randomize(Botan::byte output[], std::size_t length) override;
+      void randomize(uint8_t output[], std::size_t length) override;
 
       /// Calls `C_SeedRandom` to add entropy to the random generation function of the token/middleware
-      void add_entropy(const Botan::byte in[], std::size_t length) override;
+      void add_entropy(const uint8_t in[], std::size_t length) override;
 
    private:
       const std::reference_wrapper<Session> m_session;

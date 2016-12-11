@@ -28,6 +28,11 @@ using std::int32_t;
 using std::int64_t;
 using std::size_t;
 
+/*
+* These typedefs are no longer used within the library headers
+* or code. They are kept only for compatability with software
+* written against older versions.
+*/
 using byte   = std::uint8_t;
 using u16bit = std::uint16_t;
 using u32bit = std::uint32_t;

@@ -14,11 +14,11 @@
 namespace Botan {
 
 void
-XMSS_WOTS_PublicKey::chain(secure_vector<byte>& result,
+XMSS_WOTS_PublicKey::chain(secure_vector<uint8_t>& result,
                            size_t start_idx,
                            size_t steps,
                            XMSS_Address& adrs,
-                           const secure_vector<byte>& seed)
+                           const secure_vector<uint8_t>& seed)
    {
    for(size_t i = start_idx;
          i < (start_idx + steps) && i < m_wots_params.wots_parameter();
@@ -39,12 +39,12 @@ XMSS_WOTS_PublicKey::chain(secure_vector<byte>& result,
    }
 
 wots_keysig_t
-XMSS_WOTS_PublicKey::pub_key_from_signature(const secure_vector<byte>& msg,
+XMSS_WOTS_PublicKey::pub_key_from_signature(const secure_vector<uint8_t>& msg,
       const wots_keysig_t& sig,
       XMSS_Address& adrs,
-      const secure_vector<byte>& seed)
+      const secure_vector<uint8_t>& seed)
    {
-   secure_vector<byte> msg_digest
+   secure_vector<uint8_t> msg_digest
       {
       m_wots_params.base_w(msg, m_wots_params.len_1())
       };

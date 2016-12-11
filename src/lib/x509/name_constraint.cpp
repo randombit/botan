@@ -79,10 +79,10 @@ void GeneralName::decode_from(class BER_Decoder& ber)
       {
       if(obj.value.size() == 8)
          {
-         const std::vector<byte> ip(obj.value.begin(), obj.value.begin() + 4);
-         const std::vector<byte> net(obj.value.begin() + 4, obj.value.end());
+         const std::vector<uint8_t> ip(obj.value.begin(), obj.value.begin() + 4);
+         const std::vector<uint8_t> net(obj.value.begin() + 4, obj.value.end());
          m_type = "IP";
-         m_name = ipv4_to_string(load_be<u32bit>(ip.data(), 0)) + "/" + ipv4_to_string(load_be<u32bit>(net.data(), 0));
+         m_name = ipv4_to_string(load_be<uint32_t>(ip.data(), 0)) + "/" + ipv4_to_string(load_be<uint32_t>(net.data(), 0));
          }
       else if(obj.value.size() == 32)
          {
@@ -210,14 +210,14 @@ bool GeneralName::matches_dn(const std::string& nam) const
 
 bool GeneralName::matches_ip(const std::string& nam) const
    {
-   u32bit ip = string_to_ipv4(nam);
+   uint32_t ip = string_to_ipv4(nam);
    std::vector<std::string> p = split_on(name(), '/');
 
    if(p.size() != 2)
       throw Decoding_Error("failed to parse IPv4 address");
 
-   u32bit net = string_to_ipv4(p.at(0));
-   u32bit mask = string_to_ipv4(p.at(1));
+   uint32_t net = string_to_ipv4(p.at(0));
+   uint32_t mask = string_to_ipv4(p.at(1));
 
    return (ip & mask) == net;
    }

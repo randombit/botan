@@ -23,7 +23,7 @@ class GHASH;
 class BOTAN_DLL GCM_Mode : public AEAD_Mode
    {
    public:
-      void set_associated_data(const byte ad[], size_t ad_len) override;
+      void set_associated_data(const uint8_t ad[], size_t ad_len) override;
 
       std::string name() const override;
 
@@ -52,9 +52,9 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
       std::unique_ptr<StreamCipher> m_ctr;
       std::unique_ptr<GHASH> m_ghash;
    private:
-      void start_msg(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
 
-      void key_schedule(const byte key[], size_t length) override;
+      void key_schedule(const uint8_t key[], size_t length) override;
    };
 
 /**
@@ -77,7 +77,7 @@ class BOTAN_DLL GCM_Encryption final : public GCM_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 /**
@@ -103,7 +103,7 @@ class BOTAN_DLL GCM_Decryption final : public GCM_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 /**
@@ -113,18 +113,18 @@ class BOTAN_DLL GCM_Decryption final : public GCM_Mode
 class BOTAN_DLL GHASH : public SymmetricAlgorithm
    {
    public:
-      void set_associated_data(const byte ad[], size_t ad_len);
+      void set_associated_data(const uint8_t ad[], size_t ad_len);
 
-      secure_vector<byte> nonce_hash(const byte nonce[], size_t len);
+      secure_vector<uint8_t> nonce_hash(const uint8_t nonce[], size_t len);
 
-      void start(const byte nonce[], size_t len);
+      void start(const uint8_t nonce[], size_t len);
 
       /*
       * Assumes input len is multiple of 16
       */
-      void update(const byte in[], size_t len);
+      void update(const uint8_t in[], size_t len);
 
-      secure_vector<byte> final();
+      secure_vector<uint8_t> final();
 
       Key_Length_Specification key_spec() const override
          { return Key_Length_Specification(16); }
@@ -135,23 +135,23 @@ class BOTAN_DLL GHASH : public SymmetricAlgorithm
 
       std::string name() const override { return "GHASH"; }
    protected:
-      void ghash_update(secure_vector<byte>& x,
-                        const byte input[], size_t input_len);
+      void ghash_update(secure_vector<uint8_t>& x,
+                        const uint8_t input[], size_t input_len);
 
-      void add_final_block(secure_vector<byte>& x,
+      void add_final_block(secure_vector<uint8_t>& x,
                            size_t ad_len, size_t pt_len);
 
-      secure_vector<byte> m_H;
-      secure_vector<byte> m_H_ad;
-      secure_vector<byte> m_ghash;
+      secure_vector<uint8_t> m_H;
+      secure_vector<uint8_t> m_H_ad;
+      secure_vector<uint8_t> m_ghash;
       size_t m_ad_len = 0;
 
    private:
-      void key_schedule(const byte key[], size_t key_len) override;
+      void key_schedule(const uint8_t key[], size_t key_len) override;
 
-      void gcm_multiply(secure_vector<byte>& x) const;
+      void gcm_multiply(secure_vector<uint8_t>& x) const;
 
-      secure_vector<byte> m_nonce;
+      secure_vector<uint8_t> m_nonce;
       size_t m_text_len = 0;
    };
 

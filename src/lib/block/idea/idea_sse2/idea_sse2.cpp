@@ -14,7 +14,7 @@ namespace Botan {
 namespace {
 
 BOTAN_FUNC_ISA("sse2")
-inline __m128i mul(__m128i X, u16bit K_16)
+inline __m128i mul(__m128i X, uint16_t K_16)
    {
    const __m128i zeros = _mm_set1_epi16(0);
    const __m128i ones = _mm_set1_epi16(1);
@@ -134,7 +134,7 @@ void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
 * 8 wide IDEA encryption/decryption in SSE2
 */
 BOTAN_FUNC_ISA("sse2")
-void IDEA::sse2_idea_op_8(const byte in[64], byte out[64], const u16bit EK[52]) const
+void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t EK[52]) const
    {
    CT::poison(in, 64);
    CT::poison(out, 64);

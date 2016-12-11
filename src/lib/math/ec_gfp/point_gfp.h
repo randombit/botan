@@ -274,13 +274,13 @@ inline PointGFp operator*(const PointGFp& point, const BigInt& scalar)
    }
 
 // encoding and decoding
-secure_vector<byte> BOTAN_DLL EC2OSP(const PointGFp& point, byte format);
+secure_vector<uint8_t> BOTAN_DLL EC2OSP(const PointGFp& point, uint8_t format);
 
-PointGFp BOTAN_DLL OS2ECP(const byte data[], size_t data_len,
+PointGFp BOTAN_DLL OS2ECP(const uint8_t data[], size_t data_len,
                           const CurveGFp& curve);
 
 template<typename Alloc>
-PointGFp OS2ECP(const std::vector<byte, Alloc>& data, const CurveGFp& curve)
+PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve)
    { return OS2ECP(data.data(), data.size(), curve); }
 
 /**

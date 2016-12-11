@@ -24,7 +24,7 @@ namespace Botan {
 class BOTAN_DLL ChaCha20Poly1305_Mode : public AEAD_Mode
    {
    public:
-      void set_associated_data(const byte ad[], size_t ad_len) override;
+      void set_associated_data(const uint8_t ad[], size_t ad_len) override;
 
       std::string name() const override { return "ChaCha20Poly1305"; }
 
@@ -47,16 +47,16 @@ class BOTAN_DLL ChaCha20Poly1305_Mode : public AEAD_Mode
 
       ChaCha20Poly1305_Mode();
 
-      secure_vector<byte> m_ad;
+      secure_vector<uint8_t> m_ad;
       size_t m_nonce_len = 0;
       size_t m_ctext_len = 0;
 
       bool cfrg_version() const { return m_nonce_len == 12; }
       void update_len(size_t len);
    private:
-      void start_msg(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
 
-      void key_schedule(const byte key[], size_t length) override;
+      void key_schedule(const uint8_t key[], size_t length) override;
    };
 
 /**
@@ -72,7 +72,7 @@ class BOTAN_DLL ChaCha20Poly1305_Encryption final : public ChaCha20Poly1305_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 /**
@@ -91,7 +91,7 @@ class BOTAN_DLL ChaCha20Poly1305_Decryption final : public ChaCha20Poly1305_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 }

@@ -26,7 +26,7 @@ class BOTAN_DLL Hex_Encoder final : public Filter
 
       std::string name() const override { return "Hex_Encoder"; }
 
-      void write(const byte in[], size_t length) override;
+      void write(const uint8_t in[], size_t length) override;
       void end_msg() override;
 
       /**
@@ -45,11 +45,11 @@ class BOTAN_DLL Hex_Encoder final : public Filter
                   size_t line_length = 72,
                   Case the_case = Uppercase);
    private:
-      void encode_and_send(const byte[], size_t);
+      void encode_and_send(const uint8_t[], size_t);
 
       const Case m_casing;
       const size_t m_line_length;
-      std::vector<byte> m_in, m_out;
+      std::vector<uint8_t> m_in, m_out;
       size_t m_position, m_counter;
    };
 
@@ -61,7 +61,7 @@ class BOTAN_DLL Hex_Decoder final : public Filter
    public:
       std::string name() const override { return "Hex_Decoder"; }
 
-      void write(const byte[], size_t) override;
+      void write(const uint8_t[], size_t) override;
       void end_msg() override;
 
       /**
@@ -72,7 +72,7 @@ class BOTAN_DLL Hex_Decoder final : public Filter
       explicit Hex_Decoder(Decoder_Checking checking = NONE);
    private:
       const Decoder_Checking m_checking;
-      std::vector<byte> m_in, m_out;
+      std::vector<uint8_t> m_in, m_out;
       size_t m_position;
    };
 

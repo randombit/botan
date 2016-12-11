@@ -52,14 +52,14 @@ class BOTAN_DLL Protocol_Version
       * @param named_version a specific named version of the protocol
       */
       Protocol_Version(Version_Code named_version) :
-         m_version(static_cast<u16bit>(named_version)) {}
+         m_version(static_cast<uint16_t>(named_version)) {}
 
       /**
       * @param major the major version
       * @param minor the minor version
       */
-      Protocol_Version(byte major, byte minor) :
-         m_version((static_cast<u16bit>(major) << 8) | minor) {}
+      Protocol_Version(uint8_t major, uint8_t minor) :
+         m_version((static_cast<uint16_t>(major) << 8) | minor) {}
 
       /**
       * @return true if this is a valid protocol version
@@ -74,12 +74,12 @@ class BOTAN_DLL Protocol_Version
       /**
       * @return major version of the protocol version
       */
-      byte major_version() const { return get_byte(0, m_version); }
+      uint8_t major_version() const { return get_byte(0, m_version); }
 
       /**
       * @return minor version of the protocol version
       */
-      byte minor_version() const { return get_byte(1, m_version); }
+      uint8_t minor_version() const { return get_byte(1, m_version); }
 
       /**
       * @return human-readable description of this version
@@ -138,7 +138,7 @@ class BOTAN_DLL Protocol_Version
          }
 
    private:
-      u16bit m_version;
+      uint16_t m_version;
    };
 
 }

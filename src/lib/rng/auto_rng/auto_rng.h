@@ -20,10 +20,10 @@ class Stateful_RNG;
 class BOTAN_DLL AutoSeeded_RNG final : public RandomNumberGenerator
    {
    public:
-      void randomize(byte out[], size_t len) override;
+      void randomize(uint8_t out[], size_t len) override;
 
-      void randomize_with_input(byte output[], size_t output_len,
-                                const byte input[], size_t input_len) override;
+      void randomize_with_input(uint8_t output[], size_t output_len,
+                                const uint8_t input[], size_t input_len) override;
 
       bool is_seeded() const override;
 
@@ -36,7 +36,7 @@ class BOTAN_DLL AutoSeeded_RNG final : public RandomNumberGenerator
                     size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS,
                     std::chrono::milliseconds poll_timeout = BOTAN_RNG_RESEED_DEFAULT_TIMEOUT) override;
 
-      void add_entropy(const byte in[], size_t len) override;
+      void add_entropy(const uint8_t in[], size_t len) override;
 
       std::string name() const override;
 

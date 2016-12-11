@@ -31,13 +31,13 @@ class BOTAN_DLL Buffered_Computation
       * @param in the input to process as a byte array
       * @param length of param in in bytes
       */
-      void update(const byte in[], size_t length) { add_data(in, length); }
+      void update(const uint8_t in[], size_t length) { add_data(in, length); }
 
       /**
       * Add new input to process.
       * @param in the input to process as a secure_vector
       */
-      void update(const secure_vector<byte>& in)
+      void update(const secure_vector<uint8_t>& in)
          {
          add_data(in.data(), in.size());
          }
@@ -46,7 +46,7 @@ class BOTAN_DLL Buffered_Computation
       * Add new input to process.
       * @param in the input to process as a std::vector
       */
-      void update(const std::vector<byte>& in)
+      void update(const std::vector<uint8_t>& in)
          {
          add_data(in.data(), in.size());
          }
@@ -59,7 +59,7 @@ class BOTAN_DLL Buffered_Computation
          {
          for(size_t i = 0; i != sizeof(T); ++i)
             {
-            byte b = get_byte(i, in);
+            uint8_t b = get_byte(i, in);
             add_data(&b, 1);
             }
          }
@@ -67,19 +67,18 @@ class BOTAN_DLL Buffered_Computation
       /**
       * Add new input to process.
       * @param str the input to process as a std::string. Will be interpreted
-      * as a byte array based on
-      * the strings encoding.
+      * as a byte array based on the strings encoding.
       */
       void update(const std::string& str)
          {
-         add_data(reinterpret_cast<const byte*>(str.data()), str.size());
+         add_data(reinterpret_cast<const uint8_t*>(str.data()), str.size());
          }
 
       /**
       * Process a single byte.
       * @param in the byte to process
       */
-      void update(byte in) { add_data(&in, 1); }
+      void update(uint8_t in) { add_data(&in, 1); }
 
       /**
       * Complete the computation and retrieve the
@@ -87,29 +86,29 @@ class BOTAN_DLL Buffered_Computation
       * @param out The byte array to be filled with the result.
       * Must be of length output_length()
       */
-      void final(byte out[]) { final_result(out); }
+      void final(uint8_t out[]) { final_result(out); }
 
       /**
       * Complete the computation and retrieve the
       * final result.
       * @return secure_vector holding the result
       */
-      secure_vector<byte> final()
+      secure_vector<uint8_t> final()
          {
-         secure_vector<byte> output(output_length());
+         secure_vector<uint8_t> output(output_length());
          final_result(output.data());
          return output;
          }
 
-      std::vector<byte> final_stdvec()
+      std::vector<uint8_t> final_stdvec()
          {
-         std::vector<byte> output(output_length());
+         std::vector<uint8_t> output(output_length());
          final_result(output.data());
          return output;
          }
 
       template<typename Alloc>
-         void final(std::vector<byte, Alloc>& out)
+         void final(std::vector<uint8_t, Alloc>& out)
          {
          out.resize(output_length());
          final_result(out.data());
@@ -122,7 +121,7 @@ class BOTAN_DLL Buffered_Computation
       * @param length the length of the byte array
       * @result the result of the call to final()
       */
-      secure_vector<byte> process(const byte in[], size_t length)
+      secure_vector<uint8_t> process(const uint8_t in[], size_t length)
          {
          add_data(in, length);
          return final();
@@ -134,7 +133,7 @@ class BOTAN_DLL Buffered_Computation
       * @param in the input to process
       * @result the result of the call to final()
       */
-      secure_vector<byte> process(const secure_vector<byte>& in)
+      secure_vector<uint8_t> process(const secure_vector<uint8_t>& in)
          {
          add_data(in.data(), in.size());
          return final();
@@ -146,7 +145,7 @@ class BOTAN_DLL Buffered_Computation
       * @param in the input to process
       * @result the result of the call to final()
       */
-      secure_vector<byte> process(const std::vector<byte>& in)
+      secure_vector<uint8_t> process(const std::vector<uint8_t>& in)
          {
          add_data(in.data(), in.size());
          return final();
@@ -158,7 +157,7 @@ class BOTAN_DLL Buffered_Computation
       * @param in the input to process as a string
       * @result the result of the call to final()
       */
-      secure_vector<byte> process(const std::string& in)
+      secure_vector<uint8_t> process(const std::string& in)
          {
          update(in);
          return final();
@@ -171,13 +170,13 @@ class BOTAN_DLL Buffered_Computation
       * @param input is an input buffer
       * @param length is the length of input in bytes
       */
-      virtual void add_data(const byte input[], size_t length) = 0;
+      virtual void add_data(const uint8_t input[], size_t length) = 0;
 
       /**
       * Write the final output to out
       * @param out is an output buffer of output_length()
       */
-      virtual void final_result(byte out[]) = 0;
+      virtual void final_result(uint8_t out[]) = 0;
    };
 
 }

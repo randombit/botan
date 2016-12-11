@@ -46,7 +46,7 @@ Test::Result test_hash_larger_than_n()
 
    Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
 
-   std::vector<byte> message(20);
+   std::vector<uint8_t> message(20);
    for(size_t i = 0; i != message.size(); ++i)
       message[i] = i;
 
@@ -63,12 +63,12 @@ Test::Result test_hash_larger_than_n()
    Botan::PK_Verifier pk_verifier_160(priv_key, "EMSA1(SHA-1)");
 
    // Verify we can sign and verify with SHA-160
-   std::vector<byte> signature_160 = pk_signer_160.sign_message(message, Test::rng());
+   std::vector<uint8_t> signature_160 = pk_signer_160.sign_message(message, Test::rng());
    result.test_eq("message verifies", pk_verifier_160.verify_message(message, signature_160), true);
 
    // Verify we can sign and verify with SHA-224
    Botan::PK_Signer pk_signer(priv_key, Test::rng(), "EMSA1(SHA-224)");
-   std::vector<byte> signature = pk_signer.sign_message(message, Test::rng());
+   std::vector<uint8_t> signature = pk_signer.sign_message(message, Test::rng());
    Botan::PK_Verifier pk_verifier(priv_key, "EMSA1(SHA-224)");
    result.test_eq("message verifies", pk_verifier.verify_message(message, signature), true);
 
@@ -126,7 +126,7 @@ Test::Result test_sign_then_ver()
    Botan::PK_Signer signer(ecdsa, Test::rng(), "EMSA1(SHA-256)");
 
    auto msg = Botan::hex_decode("12345678901234567890abcdef12");
-   std::vector<byte> sig = signer.sign_message(msg, Test::rng());
+   std::vector<uint8_t> sig = signer.sign_message(msg, Test::rng());
 
    Botan::PK_Verifier verifier(ecdsa, "EMSA1(SHA-256)");
 
@@ -150,13 +150,13 @@ Test::Result test_ec_sign()
 
       for(size_t i = 0; i != 256; ++i)
          {
-         signer.update(static_cast<byte>(i));
+         signer.update(static_cast<uint8_t>(i));
          }
-      std::vector<byte> sig = signer.signature(Test::rng());
+      std::vector<uint8_t> sig = signer.signature(Test::rng());
 
       for(size_t i = 0; i != 256; ++i)
          {
-         verifier.update(static_cast<byte>(i));
+         verifier.update(static_cast<uint8_t>(i));
          }
 
       result.test_eq("ECDSA signature valid", verifier.check_signature(sig), true);
@@ -164,7 +164,7 @@ Test::Result test_ec_sign()
       // now check valid signature, different input
       for(size_t i = 1; i != 256; ++i) //starting from 1
          {
-         verifier.update(static_cast<byte>(i));
+         verifier.update(static_cast<uint8_t>(i));
          }
 
       result.test_eq("invalid ECDSA signature invalid", verifier.check_signature(sig), false);
@@ -173,7 +173,7 @@ Test::Result test_ec_sign()
 
       sig[sig.size()/2]++;
       for(size_t i = 0; i != 256; ++i)
-         verifier.update(static_cast<byte>(i));
+         verifier.update(static_cast<uint8_t>(i));
 
       result.test_eq("invalid ECDSA signature invalid", verifier.check_signature(sig), false);
       }
@@ -190,8 +190,8 @@ Test::Result test_ecdsa_create_save_load()
    Test::Result result("ECDSA Unit");
 
    std::string ecc_private_key_pem;
-   const std::vector<byte> msg = Botan::hex_decode("12345678901234567890abcdef12");
-   std::vector<byte> msg_signature;
+   const std::vector<uint8_t> msg = Botan::hex_decode("12345678901234567890abcdef12");
+   std::vector<uint8_t> msg_signature;
 
    try
       {
@@ -254,7 +254,7 @@ Test::Result test_read_pkcs8()
    {
    Test::Result result("ECDSA Unit");
 
-   const std::vector<byte> msg = Botan::hex_decode("12345678901234567890abcdef12");
+   const std::vector<uint8_t> msg = Botan::hex_decode("12345678901234567890abcdef12");
 
    try
       {
@@ -267,7 +267,7 @@ Test::Result test_read_pkcs8()
       Botan::PK_Signer signer(*ecdsa_nodp, Test::rng(), "EMSA1(SHA-256)");
       Botan::PK_Verifier verifier(*ecdsa_nodp, "EMSA1(SHA-256)");
 
-      std::vector<byte> signature_nodp = signer.sign_message(msg, Test::rng());
+      std::vector<uint8_t> signature_nodp = signer.sign_message(msg, Test::rng());
 
       result.confirm("signature valid", verifier.verify_message(msg, signature_nodp));
 
@@ -335,7 +335,7 @@ Test::Result test_curve_registry()
          Botan::PK_Verifier verifier(ecdsa, "EMSA1(SHA-256)");
 
          auto msg = Botan::hex_decode("12345678901234567890abcdef12");
-         std::vector<byte> sig = signer.sign_message(msg, Test::rng());
+         std::vector<uint8_t> sig = signer.sign_message(msg, Test::rng());
 
          result.confirm("verified signature", verifier.verify_message(msg, sig));
          }

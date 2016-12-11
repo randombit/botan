@@ -15,7 +15,7 @@ namespace Botan {
 */
 std::ostream& operator<<(std::ostream& stream, Pipe& pipe)
    {
-   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
+   secure_vector<uint8_t> buffer(DEFAULT_BUFFERSIZE);
    while(stream.good() && pipe.remaining())
       {
       size_t got = pipe.read(buffer.data(), buffer.size());
@@ -31,7 +31,7 @@ std::ostream& operator<<(std::ostream& stream, Pipe& pipe)
 */
 std::istream& operator>>(std::istream& stream, Pipe& pipe)
    {
-   secure_vector<byte> buffer(DEFAULT_BUFFERSIZE);
+   secure_vector<uint8_t> buffer(DEFAULT_BUFFERSIZE);
    while(stream.good())
       {
       stream.read(reinterpret_cast<char*>(buffer.data()), buffer.size());

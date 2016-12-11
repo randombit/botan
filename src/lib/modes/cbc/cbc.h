@@ -46,18 +46,18 @@ class BOTAN_DLL CBC_Mode : public Cipher_Mode
          return *m_padding;
          }
 
-      secure_vector<byte>& state() { return m_state; }
+      secure_vector<uint8_t>& state() { return m_state; }
 
-      byte* state_ptr() { return m_state.data(); }
+      uint8_t* state_ptr() { return m_state.data(); }
 
    private:
-      void start_msg(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
 
-      void key_schedule(const byte key[], size_t length) override;
+      void key_schedule(const uint8_t key[], size_t length) override;
 
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<BlockCipherModePaddingMethod> m_padding;
-      secure_vector<byte> m_state;
+      secure_vector<uint8_t> m_state;
    };
 
 /**
@@ -75,7 +75,7 @@ class BOTAN_DLL CBC_Encryption : public CBC_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
 
@@ -95,7 +95,7 @@ class BOTAN_DLL CTS_Encryption final : public CBC_Encryption
 
       size_t output_length(size_t input_length) const override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       size_t minimum_final_size() const override;
 
@@ -117,7 +117,7 @@ class BOTAN_DLL CBC_Decryption : public CBC_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override;
 
@@ -126,7 +126,7 @@ class BOTAN_DLL CBC_Decryption : public CBC_Mode
       void reset() override;
 
    private:
-      secure_vector<byte> m_tempbuf;
+      secure_vector<uint8_t> m_tempbuf;
    };
 
 /**
@@ -140,7 +140,7 @@ class BOTAN_DLL CTS_Decryption final : public CBC_Decryption
       */
       explicit CTS_Decryption(BlockCipher* cipher) : CBC_Decryption(cipher, nullptr) {}
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       size_t minimum_final_size() const override;
 

@@ -27,19 +27,19 @@ class BOTAN_DLL Whirlpool final : public MDx_HashFunction
       Whirlpool() : MDx_HashFunction(64, true, true, 32), m_M(8), m_digest(8)
          { clear(); }
    private:
-      void compress_n(const byte[], size_t blocks) override;
-      void copy_out(byte[]) override;
+      void compress_n(const uint8_t[], size_t blocks) override;
+      void copy_out(uint8_t[]) override;
 
-      static const u64bit C0[256];
-      static const u64bit C1[256];
-      static const u64bit C2[256];
-      static const u64bit C3[256];
-      static const u64bit C4[256];
-      static const u64bit C5[256];
-      static const u64bit C6[256];
-      static const u64bit C7[256];
+      static const uint64_t C0[256];
+      static const uint64_t C1[256];
+      static const uint64_t C2[256];
+      static const uint64_t C3[256];
+      static const uint64_t C4[256];
+      static const uint64_t C5[256];
+      static const uint64_t C6[256];
+      static const uint64_t C7[256];
 
-      secure_vector<u64bit> m_M, m_digest;
+      secure_vector<uint64_t> m_M, m_digest;
    };
 
 }

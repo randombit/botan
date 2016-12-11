@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-u32bit to_u32bit(const std::string& str)
+uint32_t to_u32bit(const std::string& str)
    {
    try
       {
@@ -32,7 +32,7 @@ u32bit to_u32bit(const std::string& str)
       const auto integerValue = std::stoul(str);
 
       // integerValue might be uint64
-      if (integerValue > std::numeric_limits<u32bit>::max())
+      if (integerValue > std::numeric_limits<uint32_t>::max())
          {
          throw Invalid_Argument("Integer value exceeds 32 bit range: " + std::to_string(integerValue));
          }
@@ -51,7 +51,7 @@ u32bit to_u32bit(const std::string& str)
 /*
 * Convert a string into a time duration
 */
-u32bit timespec_to_u32bit(const std::string& timespec)
+uint32_t timespec_to_u32bit(const std::string& timespec)
    {
    if(timespec.empty())
       return 0;
@@ -59,7 +59,7 @@ u32bit timespec_to_u32bit(const std::string& timespec)
    const char suffix = timespec[timespec.size()-1];
    std::string value = timespec.substr(0, timespec.size()-1);
 
-   u32bit scale = 1;
+   uint32_t scale = 1;
 
    if(Charset::is_digit(suffix))
       value += suffix;
@@ -186,10 +186,10 @@ std::string string_join(const std::vector<std::string>& strs, char delim)
 /*
 * Parse an ASN.1 OID string
 */
-std::vector<u32bit> parse_asn1_oid(const std::string& oid)
+std::vector<uint32_t> parse_asn1_oid(const std::string& oid)
    {
    std::string substring;
-   std::vector<u32bit> oid_elems;
+   std::vector<uint32_t> oid_elems;
 
    for(auto i = oid.begin(); i != oid.end(); ++i)
       {
@@ -258,18 +258,18 @@ bool x500_name_cmp(const std::string& name1, const std::string& name2)
 /*
 * Convert a decimal-dotted string to binary IP
 */
-u32bit string_to_ipv4(const std::string& str)
+uint32_t string_to_ipv4(const std::string& str)
    {
    std::vector<std::string> parts = split_on(str, '.');
 
    if(parts.size() != 4)
       throw Decoding_Error("Invalid IP string " + str);
 
-   u32bit ip = 0;
+   uint32_t ip = 0;
 
    for(auto part = parts.begin(); part != parts.end(); ++part)
       {
-      u32bit octet = to_u32bit(*part);
+      uint32_t octet = to_u32bit(*part);
 
       if(octet > 255)
          throw Decoding_Error("Invalid IP string " + str);
@@ -283,7 +283,7 @@ u32bit string_to_ipv4(const std::string& str)
 /*
 * Convert an IP address to decimal-dotted string
 */
-std::string ipv4_to_string(u32bit ip)
+std::string ipv4_to_string(uint32_t ip)
    {
    std::string str;
 

@@ -43,7 +43,7 @@ Hex_Encoder::Hex_Encoder(Case c) : m_casing(c), m_line_length(0)
 /*
 * Encode and send a block
 */
-void Hex_Encoder::encode_and_send(const byte block[], size_t length)
+void Hex_Encoder::encode_and_send(const uint8_t block[], size_t length)
    {
    hex_encode(reinterpret_cast<char*>(m_out.data()),
               block, length,
@@ -73,7 +73,7 @@ void Hex_Encoder::encode_and_send(const byte block[], size_t length)
 /*
 * Convert some data into hex format
 */
-void Hex_Encoder::write(const byte input[], size_t length)
+void Hex_Encoder::write(const uint8_t input[], size_t length)
    {
    buffer_insert(m_in, m_position, input, length);
    if(m_position + length >= m_in.size())
@@ -117,7 +117,7 @@ Hex_Decoder::Hex_Decoder(Decoder_Checking c) : m_checking(c)
 /*
 * Convert some data from hex format
 */
-void Hex_Decoder::write(const byte input[], size_t length)
+void Hex_Decoder::write(const uint8_t input[], size_t length)
    {
    while(length)
       {

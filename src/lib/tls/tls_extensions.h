@@ -58,7 +58,7 @@ class Extension
       /**
       * @return serialized binary for the extension
       */
-      virtual std::vector<byte> serialize() const = 0;
+      virtual std::vector<uint8_t> serialize() const = 0;
 
       /**
       * @return if we should encode this extension or not
@@ -83,11 +83,11 @@ class Server_Name_Indicator final : public Extension
          m_sni_host_name(host_name) {}
 
       Server_Name_Indicator(TLS_Data_Reader& reader,
-                            u16bit extension_size);
+                            uint16_t extension_size);
 
       std::string host_name() const { return m_sni_host_name; }
 
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       bool empty() const override { return m_sni_host_name.empty(); }
    private:
@@ -110,11 +110,11 @@ class SRP_Identifier final : public Extension
          m_srp_identifier(identifier) {}
 
       SRP_Identifier(TLS_Data_Reader& reader,
-                     u16bit extension_size);
+                     uint16_t extension_size);
 
       std::string identifier() const { return m_srp_identifier; }
 
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       bool empty() const override { return m_srp_identifier.empty(); }
    private:
@@ -135,20 +135,20 @@ class Renegotiation_Extension final : public Extension
 
       Renegotiation_Extension() {}
 
-      explicit Renegotiation_Extension(const std::vector<byte>& bits) :
+      explicit Renegotiation_Extension(const std::vector<uint8_t>& bits) :
          m_reneg_data(bits) {}
 
       Renegotiation_Extension(TLS_Data_Reader& reader,
-                             u16bit extension_size);
+                             uint16_t extension_size);
 
-      const std::vector<byte>& renegotiation_info() const
+      const std::vector<uint8_t>& renegotiation_info() const
          { return m_reneg_data; }
 
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       bool empty() const override { return false; } // always send this
    private:
-      std::vector<byte> m_reneg_data;
+      std::vector<uint8_t> m_reneg_data;
    };
 
 /**
@@ -178,9 +178,9 @@ class Application_Layer_Protocol_Notification final : public Extension
          m_protocols(protocols) {}
 
       Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,
-                                              u16bit extension_size);
+                                              uint16_t extension_size);
 
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       bool empty() const override { return m_protocols.empty(); }
    private:
@@ -201,7 +201,7 @@ class Session_Ticket final : public Extension
       /**
       * @return contents of the session ticket
       */
-      const std::vector<byte>& contents() const { return m_ticket; }
+      const std::vector<uint8_t>& contents() const { return m_ticket; }
 
       /**
       * Create empty extension, used by both client and server
@@ -211,19 +211,19 @@ class Session_Ticket final : public Extension
       /**
       * Extension with ticket, used by client
       */
-      explicit Session_Ticket(const std::vector<byte>& session_ticket) :
+      explicit Session_Ticket(const std::vector<uint8_t>& session_ticket) :
          m_ticket(session_ticket) {}
 
       /**
       * Deserialize a session ticket
       */
-      Session_Ticket(TLS_Data_Reader& reader, u16bit extension_size);
+      Session_Ticket(TLS_Data_Reader& reader, uint16_t extension_size);
 
-      std::vector<byte> serialize() const override { return m_ticket; }
+      std::vector<uint8_t> serialize() const override { return m_ticket; }
 
       bool empty() const override { return false; }
    private:
-      std::vector<byte> m_ticket;
+      std::vector<uint8_t> m_ticket;
    };
 
 /**
@@ -237,18 +237,18 @@ class Supported_Elliptic_Curves final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      static std::string curve_id_to_name(u16bit id);
-      static u16bit name_to_curve_id(const std::string& name);
+      static std::string curve_id_to_name(uint16_t id);
+      static uint16_t name_to_curve_id(const std::string& name);
 
       const std::vector<std::string>& curves() const { return m_curves; }
 
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       explicit Supported_Elliptic_Curves(const std::vector<std::string>& curves) :
          m_curves(curves) {}
 
       Supported_Elliptic_Curves(TLS_Data_Reader& reader,
-                                u16bit extension_size);
+                                uint16_t extension_size);
 
       bool empty() const override { return m_curves.empty(); }
    private:
@@ -261,7 +261,7 @@ class Supported_Elliptic_Curves final : public Extension
 class Supported_Point_Formats final : public Extension
    {
    public:
-      enum ECPointFormat : byte {
+      enum ECPointFormat : uint8_t {
          UNCOMPRESSED = 0,
          ANSIX962_COMPRESSED_PRIME = 1,
          ANSIX962_COMPRESSED_CHAR2 = 2, // don't support these curves
@@ -272,13 +272,13 @@ class Supported_Point_Formats final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       explicit Supported_Point_Formats(bool prefer_compressed) :
          m_prefers_compressed(prefer_compressed) {}
 
       Supported_Point_Formats(TLS_Data_Reader& reader,
-                              u16bit extension_size);
+                              uint16_t extension_size);
 
       bool empty() const override { return false; }
 
@@ -299,11 +299,11 @@ class Signature_Algorithms final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      static std::string hash_algo_name(byte code);
-      static byte hash_algo_code(const std::string& name);
+      static std::string hash_algo_name(uint8_t code);
+      static uint8_t hash_algo_code(const std::string& name);
 
-      static std::string sig_algo_name(byte code);
-      static byte sig_algo_code(const std::string& name);
+      static std::string sig_algo_name(uint8_t code);
+      static uint8_t sig_algo_code(const std::string& name);
 
       // [(hash,sig),(hash,sig),...]
       const std::vector<std::pair<std::string, std::string>>&
@@ -312,7 +312,7 @@ class Signature_Algorithms final : public Extension
          return m_supported_algos;
          }
 
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       bool empty() const override { return false; }
 
@@ -323,7 +323,7 @@ class Signature_Algorithms final : public Extension
          m_supported_algos(algos) {}
 
       Signature_Algorithms(TLS_Data_Reader& reader,
-                           u16bit extension_size);
+                           uint16_t extension_size);
    private:
       std::vector<std::pair<std::string, std::string>> m_supported_algos;
    };
@@ -339,19 +339,19 @@ class SRTP_Protection_Profiles final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      const std::vector<u16bit>& profiles() const { return m_pp; }
+      const std::vector<uint16_t>& profiles() const { return m_pp; }
 
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       bool empty() const override { return m_pp.empty(); }
 
-      explicit SRTP_Protection_Profiles(const std::vector<u16bit>& pp) : m_pp(pp) {}
+      explicit SRTP_Protection_Profiles(const std::vector<uint16_t>& pp) : m_pp(pp) {}
 
-      explicit SRTP_Protection_Profiles(u16bit pp) : m_pp(1, pp) {}
+      explicit SRTP_Protection_Profiles(uint16_t pp) : m_pp(1, pp) {}
 
-      SRTP_Protection_Profiles(TLS_Data_Reader& reader, u16bit extension_size);
+      SRTP_Protection_Profiles(TLS_Data_Reader& reader, uint16_t extension_size);
    private:
-      std::vector<u16bit> m_pp;
+      std::vector<uint16_t> m_pp;
    };
 
 /**
@@ -365,13 +365,13 @@ class Extended_Master_Secret final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       bool empty() const override { return false; }
 
       Extended_Master_Secret() {}
 
-      Extended_Master_Secret(TLS_Data_Reader& reader, u16bit extension_size);
+      Extended_Master_Secret(TLS_Data_Reader& reader, uint16_t extension_size);
    };
 
 /**
@@ -385,13 +385,13 @@ class Encrypt_then_MAC final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       bool empty() const override { return false; }
 
       Encrypt_then_MAC() {}
 
-      Encrypt_then_MAC(TLS_Data_Reader& reader, u16bit extension_size);
+      Encrypt_then_MAC(TLS_Data_Reader& reader, uint16_t extension_size);
    };
 
 /**
@@ -405,7 +405,7 @@ class Certificate_Status_Request final : public Extension
 
       Handshake_Extension_Type type() const override { return static_type(); }
 
-      std::vector<byte> serialize() const override;
+      std::vector<uint8_t> serialize() const override;
 
       bool empty() const override { return false; }
 
@@ -414,13 +414,13 @@ class Certificate_Status_Request final : public Extension
 
       // Client version, both lists can be empty
       Certificate_Status_Request(const std::vector<X509_DN>& ocsp_responder_ids,
-                                 const std::vector<std::vector<byte>>& ocsp_key_ids);
+                                 const std::vector<std::vector<uint8_t>>& ocsp_key_ids);
 
-      Certificate_Status_Request(TLS_Data_Reader& reader, u16bit extension_size);
+      Certificate_Status_Request(TLS_Data_Reader& reader, uint16_t extension_size);
    private:
       std::vector<X509_DN> m_ocsp_names;
-      std::vector<std::vector<byte>> m_ocsp_keys;
-      std::vector<byte> m_extension_bytes;
+      std::vector<std::vector<uint8_t>> m_ocsp_keys;
+      std::vector<uint8_t> m_extension_bytes;
       bool m_server_side;
    };
 
@@ -455,7 +455,7 @@ class BOTAN_DLL Extensions
          m_extensions[extn->type()].reset(extn);
          }
 
-      std::vector<byte> serialize() const;
+      std::vector<uint8_t> serialize() const;
 
       void deserialize(TLS_Data_Reader& reader);
 

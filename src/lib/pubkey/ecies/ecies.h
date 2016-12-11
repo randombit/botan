@@ -198,7 +198,7 @@ class BOTAN_DLL ECIES_KA_Operation
       * @param eph_public_key_bin the encoded (ephemeral) public key which belongs to the used (ephemeral) private key
       * @param other_public_key_point public key point of the other party
       */
-      SymmetricKey derive_secret(const std::vector<byte>& eph_public_key_bin,
+      SymmetricKey derive_secret(const std::vector<uint8_t>& eph_public_key_bin,
                                  const PointGFp& other_public_key_point) const;
 
    private:
@@ -244,11 +244,11 @@ class BOTAN_DLL ECIES_Encryptor : public PK_Encryptor
       /// Set the label which is appended to the input for the message authentication code
       inline void set_label(const std::string& label)
          {
-         m_label = std::vector<byte>(label.begin(), label.end());
+         m_label = std::vector<uint8_t>(label.begin(), label.end());
          }
 
    private:
-      std::vector<byte> enc(const byte data[], size_t length, RandomNumberGenerator&) const override;
+      std::vector<uint8_t> enc(const uint8_t data[], size_t length, RandomNumberGenerator&) const override;
 
       inline size_t maximum_input_size() const override
          {
@@ -257,10 +257,10 @@ class BOTAN_DLL ECIES_Encryptor : public PK_Encryptor
 
       const ECIES_KA_Operation m_ka;
       const ECIES_System_Params m_params;
-      std::vector<byte> m_eph_public_key_bin;
+      std::vector<uint8_t> m_eph_public_key_bin;
       InitializationVector m_iv;
       PointGFp m_other_point;
-      std::vector<byte> m_label;
+      std::vector<uint8_t> m_label;
    };
 
 
@@ -288,16 +288,16 @@ class BOTAN_DLL ECIES_Decryptor : public PK_Decryptor
       /// Set the label which is appended to the input for the message authentication code
       inline void set_label(const std::string& label)
          {
-         m_label = std::vector<byte>(label.begin(), label.end());
+         m_label = std::vector<uint8_t>(label.begin(), label.end());
          }
 
    private:
-      secure_vector<byte> do_decrypt(byte& valid_mask, const byte in[], size_t in_len) const override;
+      secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const override;
 
       const ECIES_KA_Operation m_ka;
       const ECIES_System_Params m_params;
       InitializationVector m_iv;
-      std::vector<byte> m_label;
+      std::vector<uint8_t> m_label;
    };
 
 }

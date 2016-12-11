@@ -17,7 +17,7 @@ namespace Botan {
 
 namespace TLS {
 
-bool Ciphersuite::is_scsv(u16bit suite)
+bool Ciphersuite::is_scsv(uint16_t suite)
    {
    // TODO: derive from IANA file in script
    return (suite == 0x00FF || suite == 0x5600);
@@ -40,7 +40,7 @@ bool Ciphersuite::cbc_ciphersuite() const
    return (mac_algo() != "AEAD");
    }
 
-Ciphersuite Ciphersuite::by_id(u16bit suite)
+Ciphersuite Ciphersuite::by_id(uint16_t suite)
    {
    const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
    auto s = std::lower_bound(all_suites.begin(), all_suites.end(), suite);

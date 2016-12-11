@@ -13,7 +13,7 @@
 namespace Botan {
 namespace PKCS11 {
 
-X509_CertificateProperties::X509_CertificateProperties(const std::vector<byte>& subject, const std::vector<byte>& value)
+X509_CertificateProperties::X509_CertificateProperties(const std::vector<uint8_t>& subject, const std::vector<uint8_t>& value)
    : CertificateProperties(CertificateType::X509), m_subject(subject), m_value(value)
    {
    add_binary(AttributeType::Subject, m_subject);

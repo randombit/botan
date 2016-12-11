@@ -34,10 +34,10 @@ class BOTAN_DLL Sqlite3_Database  : public SQL_Database
             void bind(int column, const std::string& val) override;
             void bind(int column, size_t val) override;
             void bind(int column, std::chrono::system_clock::time_point time) override;
-            void bind(int column, const std::vector<byte>& val) override;
-            void bind(int column, const byte* data, size_t len) override;
+            void bind(int column, const std::vector<uint8_t>& val) override;
+            void bind(int column, const uint8_t* data, size_t len) override;
 
-            std::pair<const byte*, size_t> get_blob(int column) override;
+            std::pair<const uint8_t*, size_t> get_blob(int column) override;
             size_t get_size_t(int column) override;
 
             size_t spin() override;

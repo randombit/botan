@@ -83,7 +83,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
 * DL_Group Constructor
 */
 DL_Group::DL_Group(RandomNumberGenerator& rng,
-                   const std::vector<byte>& seed,
+                   const std::vector<uint8_t>& seed,
                    size_t pbits, size_t qbits)
    {
    if(!generate_dsa_primes(rng, m_p, m_q, pbits, qbits, seed))
@@ -193,7 +193,7 @@ const BigInt& DL_Group::get_q() const
 /*
 * DER encode the parameters
 */
-std::vector<byte> DL_Group::DER_encode(Format format) const
+std::vector<uint8_t> DL_Group::DER_encode(Format format) const
    {
    init_check();
 
@@ -238,7 +238,7 @@ std::vector<byte> DL_Group::DER_encode(Format format) const
 */
 std::string DL_Group::PEM_encode(Format format) const
    {
-   const std::vector<byte> encoding = DER_encode(format);
+   const std::vector<uint8_t> encoding = DER_encode(format);
 
    if(format == PKCS_3)
       return PEM_Code::encode(encoding, "DH PARAMETERS");
@@ -253,7 +253,7 @@ std::string DL_Group::PEM_encode(Format format) const
 /*
 * Decode BER encoded parameters
 */
-void DL_Group::BER_decode(const std::vector<byte>& data,
+void DL_Group::BER_decode(const std::vector<uint8_t>& data,
                           Format format)
    {
    BigInt new_p, new_q, new_g;

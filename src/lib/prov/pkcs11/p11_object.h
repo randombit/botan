@@ -83,7 +83,7 @@ class BOTAN_DLL AttributeContainer
       * @param value binary attribute value to add
       * @param length size of the binary attribute value in bytes
       */
-      void add_binary(AttributeType attribute, const byte* value, size_t length);
+      void add_binary(AttributeType attribute, const uint8_t* value, size_t length);
 
       /**
       * Add a binary attribute (e.g. CKA_ID / AttributeType::Id).
@@ -91,7 +91,7 @@ class BOTAN_DLL AttributeContainer
       * @param binary binary attribute value to add
       */
       template<typename TAlloc>
-      void add_binary(AttributeType attribute, const std::vector<byte, TAlloc>& binary)
+      void add_binary(AttributeType attribute, const std::vector<uint8_t, TAlloc>& binary)
          {
          add_binary(attribute, binary.data(), binary.size());
          }
@@ -113,18 +113,18 @@ class BOTAN_DLL AttributeContainer
          {
          static_assert(std::is_integral<T>::value, "Numeric value required.");
          m_numerics.push_back(static_cast< uint64_t >(value));
-         add_attribute(attribute, reinterpret_cast< byte* >(&m_numerics.back()), sizeof(T));
+         add_attribute(attribute, reinterpret_cast< uint8_t* >(&m_numerics.back()), sizeof(T));
          }
 
    protected:
       /// Add an attribute with the given value and size to the attribute collection `m_attributes`
-      void add_attribute(AttributeType attribute, const byte* value, uint32_t size);
+      void add_attribute(AttributeType attribute, const uint8_t* value, uint32_t size);
 
    private:
       std::vector<Attribute> m_attributes;
       std::list<uint64_t> m_numerics;
       std::list<std::string> m_strings;
-      std::list<secure_vector<byte>> m_vectors;
+      std::list<secure_vector<uint8_t>> m_vectors;
    };
 
 /// Manages calls to C_FindObjects* functions (C_FindObjectsInit -> C_FindObjects -> C_FindObjectsFinal)
@@ -249,13 +249,13 @@ class BOTAN_DLL DataObjectProperties : public StorageObjectProperties
          }
 
       /// @param object_id DER-encoding of the object identifier indicating the data object type
-      inline void set_object_id(const std::vector<byte>& object_id)
+      inline void set_object_id(const std::vector<uint8_t>& object_id)
          {
          add_binary(AttributeType::ObjectId, object_id);
          }
 
       /// @param value value of the object
-      inline void set_value(const secure_vector<byte>& value)
+      inline void set_value(const secure_vector<uint8_t>& value)
          {
          add_binary(AttributeType::Value, value);
          }
@@ -284,7 +284,7 @@ class BOTAN_DLL CertificateProperties : public StorageObjectProperties
       * @param checksum the value of this attribute is derived from the certificate by taking the
       * first three bytes of the SHA - 1 hash of the certificate object's `CKA_VALUE` attribute
       */
-      inline void set_check_value(const std::vector<byte>& checksum)
+      inline void set_check_value(const std::vector<uint8_t>& checksum)
          {
          add_binary(AttributeType::CheckValue, checksum);
          }
@@ -292,17 +292,17 @@ class BOTAN_DLL CertificateProperties : public StorageObjectProperties
       /// @param date start date for the certificate
       inline void set_start_date(Date date)
          {
-         add_binary(AttributeType::StartDate, reinterpret_cast<byte*>(&date), sizeof(Date));
+         add_binary(AttributeType::StartDate, reinterpret_cast<uint8_t*>(&date), sizeof(Date));
          }
 
       /// @param date end date for the certificate
       inline void set_end_date(Date date)
          {
-         add_binary(AttributeType::EndDate, reinterpret_cast<byte*>(&date), sizeof(Date));
+         add_binary(AttributeType::EndDate, reinterpret_cast<uint8_t*>(&date), sizeof(Date));
          }
 
       /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for the public key contained in this certificate
-      inline void set_public_key_info(const std::vector<byte>& pubkey_info)
+      inline void set_public_key_info(const std::vector<uint8_t>& pubkey_info)
          {
          add_binary(AttributeType::PublicKeyInfo, pubkey_info);
          }
@@ -328,7 +328,7 @@ class BOTAN_DLL KeyProperties : public StorageObjectProperties
       KeyProperties(ObjectClass object_class, KeyType key_type);
 
       /// @param id key identifier for key
-      inline void set_id(const std::vector<byte>& id)
+      inline void set_id(const std::vector<uint8_t>& id)
          {
          add_binary(AttributeType::Id, id);
          }
@@ -336,13 +336,13 @@ class BOTAN_DLL KeyProperties : public StorageObjectProperties
       /// @param date start date for the key
       inline void set_start_date(Date date)
          {
-         add_binary(AttributeType::StartDate, reinterpret_cast<byte*>(&date), sizeof(Date));
+         add_binary(AttributeType::StartDate, reinterpret_cast<uint8_t*>(&date), sizeof(Date));
          }
 
       /// @param date end date for the key
       inline void set_end_date(Date date)
          {
-         add_binary(AttributeType::EndDate, reinterpret_cast<byte*>(&date), sizeof(Date));
+         add_binary(AttributeType::EndDate, reinterpret_cast<uint8_t*>(&date), sizeof(Date));
          }
 
       /// @param value true if key supports key derivation (i.e., if other keys can be derived from this one)
@@ -378,7 +378,7 @@ class BOTAN_DLL PublicKeyProperties : public KeyProperties
       PublicKeyProperties(KeyType key_type);
 
       /// @param subject DER-encoding of the key subject name
-      inline void set_subject(const std::vector<byte>& subject)
+      inline void set_subject(const std::vector<uint8_t>& subject)
          {
          add_binary(AttributeType::Subject, subject);
          }
@@ -428,7 +428,7 @@ class BOTAN_DLL PublicKeyProperties : public KeyProperties
          }
 
       /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public	key
-      inline void set_public_key_info(const std::vector<byte>& pubkey_info)
+      inline void set_public_key_info(const std::vector<uint8_t>& pubkey_info)
          {
          add_binary(AttributeType::PublicKeyInfo, pubkey_info);
          }
@@ -442,7 +442,7 @@ class BOTAN_DLL PrivateKeyProperties : public KeyProperties
       PrivateKeyProperties(KeyType key_type);
 
       /// @param subject DER-encoding of the key subject name
-      inline void set_subject(const std::vector<byte>& subject)
+      inline void set_subject(const std::vector<uint8_t>& subject)
          {
          add_binary(AttributeType::Subject, subject);
          }
@@ -507,7 +507,7 @@ class BOTAN_DLL PrivateKeyProperties : public KeyProperties
          }
 
       /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public	key
-      inline void set_public_key_info(const std::vector<byte>& pubkey_info)
+      inline void set_public_key_info(const std::vector<uint8_t>& pubkey_info)
          {
          add_binary(AttributeType::PublicKeyInfo, pubkey_info);
          }
@@ -590,7 +590,7 @@ class BOTAN_DLL SecretKeyProperties : public KeyProperties
          }
 
       /// @param checksum the key check value of this key
-      inline void set_check_value(const std::vector<byte>& checksum)
+      inline void set_check_value(const std::vector<uint8_t>& checksum)
          {
          add_binary(AttributeType::CheckValue, checksum);
          }
@@ -668,21 +668,21 @@ class BOTAN_DLL Object
 
       /// Searches for all objects of the given type using the id (`CKA_ID`)
       template<typename T>
-      static std::vector<T> search(Session& session, const std::vector<byte>& id);
+      static std::vector<T> search(Session& session, const std::vector<uint8_t>& id);
 
       /// Searches for all objects of the given type using the label (`CKA_LABEL`) and id (`CKA_ID`)
       template<typename T>
-      static std::vector<T> search(Session& session, const std::string& label, const std::vector<byte>& id);
+      static std::vector<T> search(Session& session, const std::string& label, const std::vector<uint8_t>& id);
 
       /// Searches for all objects of the given type
       template<typename T>
       static std::vector<T> search(Session& session);
 
       /// @returns the value of the given attribute (using `C_GetAttributeValue`)
-      secure_vector<byte> get_attribute_value(AttributeType attribute) const;
+      secure_vector<uint8_t> get_attribute_value(AttributeType attribute) const;
 
       /// Sets the given value for the attribute (using `C_SetAttributeValue`)
-      void set_attribute_value(AttributeType attribute, const secure_vector<byte>& value) const;
+      void set_attribute_value(AttributeType attribute, const secure_vector<uint8_t>& value) const;
 
       /// Destroys the object
       void destroy() const;
@@ -742,7 +742,7 @@ std::vector<T> Object::search(Session& session, const std::string& label)
    }
 
 template<typename T>
-std::vector<T> Object::search(Session& session, const std::vector<byte>& id)
+std::vector<T> Object::search(Session& session, const std::vector<uint8_t>& id)
    {
    AttributeContainer search_template(T::Class);
    search_template.add_binary(AttributeType::Id, id);
@@ -750,7 +750,7 @@ std::vector<T> Object::search(Session& session, const std::vector<byte>& id)
    }
 
 template<typename T>
-std::vector<T> Object::search(Session& session, const std::string& label, const std::vector<byte>& id)
+std::vector<T> Object::search(Session& session, const std::string& label, const std::vector<uint8_t>& id)
    {
    AttributeContainer search_template(T::Class);
    search_template.add_string(AttributeType::Label, label);

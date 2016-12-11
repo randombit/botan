@@ -28,7 +28,7 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
 
       std::string name() const override final;
 
-      void set_associated_data(const byte ad[], size_t ad_len) override;
+      void set_associated_data(const uint8_t ad[], size_t ad_len) override;
 
       size_t update_granularity() const override final;
 
@@ -71,16 +71,16 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
          return *m_mac;
          }
 
-      secure_vector<byte>& cbc_state() { return m_cbc_state; }
-      std::vector<byte>& assoc_data() { return m_ad; }
-      secure_vector<byte>& msg() { return m_msg; }
+      secure_vector<uint8_t>& cbc_state() { return m_cbc_state; }
+      std::vector<uint8_t>& assoc_data() { return m_ad; }
+      secure_vector<uint8_t>& msg() { return m_msg; }
 
-      std::vector<byte> assoc_data_with_len(uint16_t len);
+      std::vector<uint8_t> assoc_data_with_len(uint16_t len);
 
    private:
-      void start_msg(const byte nonce[], size_t nonce_len) override final;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
 
-      void key_schedule(const byte key[], size_t length) override final;
+      void key_schedule(const uint8_t key[], size_t length) override final;
 
       const std::string m_cipher_name;
       const std::string m_mac_name;
@@ -94,9 +94,9 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<MessageAuthenticationCode> m_mac;
 
-      secure_vector<byte> m_cbc_state;
-      std::vector<byte> m_ad;
-      secure_vector<byte> m_msg;
+      secure_vector<uint8_t> m_cbc_state;
+      std::vector<uint8_t> m_ad;
+      secure_vector<uint8_t> m_msg;
    };
 
 /**
@@ -121,15 +121,15 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Encryption final : public TLS_CBC_HMAC_AEAD_Mo
                                 use_encrypt_then_mac)
          {}
 
-      void set_associated_data(const byte ad[], size_t ad_len) override;
+      void set_associated_data(const uint8_t ad[], size_t ad_len) override;
 
       size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override { return 0; }
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    private:
-      void cbc_encrypt_record(byte record_contents[], size_t record_len);
+      void cbc_encrypt_record(uint8_t record_contents[], size_t record_len);
    };
 
 /**
@@ -158,10 +158,10 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AEAD_Mo
 
       size_t minimum_final_size() const override { return tag_size(); }
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
    private:
-      void cbc_decrypt_record(byte record_contents[], size_t record_len);
+      void cbc_decrypt_record(uint8_t record_contents[], size_t record_len);
       
       void perform_additional_compressions(size_t plen, size_t padlen);
    };

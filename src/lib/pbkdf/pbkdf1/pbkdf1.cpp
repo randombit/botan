@@ -10,9 +10,9 @@
 
 namespace Botan {
 
-size_t PKCS5_PBKDF1::pbkdf(byte output_buf[], size_t output_len,
+size_t PKCS5_PBKDF1::pbkdf(uint8_t output_buf[], size_t output_len,
                            const std::string& passphrase,
-                           const byte salt[], size_t salt_len,
+                           const uint8_t salt[], size_t salt_len,
                            size_t iterations,
                            std::chrono::milliseconds msec) const
    {
@@ -21,7 +21,7 @@ size_t PKCS5_PBKDF1::pbkdf(byte output_buf[], size_t output_len,
 
    m_hash->update(passphrase);
    m_hash->update(salt, salt_len);
-   secure_vector<byte> key = m_hash->final();
+   secure_vector<uint8_t> key = m_hash->final();
 
    const auto start = std::chrono::high_resolution_clock::now();
    size_t iterations_performed = 1;
