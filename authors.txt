@@ -1,0 +1,41 @@
+The original author and current release manager is
+
+Jack Lloyd
+
+With extensive and ongoing contributions by several individuals
+
+Daniel Neus (Rohde & Schwarz Cybersecurity)
+Falko Strenzke (cryptosource GmbH)
+Juraj Somorovsky (Hackmanit GmbH)
+Matthias Gierlings (Hackmanit GmbH)
+René Korthaus (Rohde & Schwarz Cybersecurity)
+Simon Warta (Kullo GmbH)
+
+And with many other contributors including
+
+Peter J Jones
+Justin Karneges
+Vaclav Ovsik
+Matthew Gregan
+Matt Johnston
+Luca Piccarreta
+Yves Jerschow
+FlexSecure GmbH
+Technische Universitat Darmstadt
+Martin Doering
+Manuel Hartl
+Christoph Ludwig
+Patrick Sona
+Projet SECRET, INRIA, Rocquencourt
+Bhaskar Biswas and Nicolas Sendrier
+cryptosource GmbH
+Markus Wanner
+Joel Low
+Daniel Seither (Kullo GmbH)
+Matej Kenda (TopIT d.o.o.)
+Uri Blumenthal
+Simon Cogliani
+Christian Mainka (Hackmanit GmbH)
+Kai Michaelis (Rohde & Schwarz Cybersecurity)
+Philipp Weber (Rohde & Schwarz Cybersecurity)
+Tobias @neverhub
