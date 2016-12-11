@@ -616,26 +616,31 @@ class ModuleInfo(object):
                         'define': [],
                         'need_isa': ''})
 
-        def extract_files_matching(basedir, suffixes):
-            for (dirpath, dirnames, filenames) in os.walk(basedir):
-                if dirpath == basedir:
-                    for filename in filenames:
-                        if filename.startswith('.'):
-                            continue
+        all_source_files = []
+        all_header_files = []
 
-                        for suffix in suffixes:
-                            if filename.endswith(suffix):
-                                yield filename
+        for fspath in os.listdir(self.lives_in):
+            if fspath.endswith('.cpp'):
+                all_source_files.append(fspath)
+            elif fspath.endswith('.h'):
+                all_header_files.append(fspath)
+
+        self.source = all_source_files
 
         if self.need_isa == '':
             self.need_isa = []
         else:
             self.need_isa = self.need_isa.split(',')
 
-        self.source = list(extract_files_matching(self.lives_in, ['.cpp']))
-
+        # If not entry for the headers, all are assumed public
         if self.header_internal == [] and self.header_public == []:
-            self.header_public = list(extract_files_matching(self.lives_in, ['.h']))
+            self.header_public = list(all_header_files)
+        else:
+            pub_header = set(self.header_public)
+            int_header = set(self.header_internal)
+
+            if pub_header.isdisjoint(int_header) == False:
+                logging.error("Module %s header contains same header in public and internal sections" % (infofile))
 
         # Coerce to more useful types
         def convert_lib_list(l):
