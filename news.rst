@@ -4,6 +4,10 @@ Release Notes
 Version 1.11.35, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Changes all Public_Key derived class ctors to take a
+  std::vector instead of a secure_vector for the DER encoded
+  public key bits. (GH #768)
+
 * Allow use of custom extensions when creating X.509 certificates
   (GH #744)
 

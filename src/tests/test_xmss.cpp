@@ -61,9 +61,7 @@ class XMSS_Signature_Verify_Tests : public PK_Signature_Verification_Test
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
          const std::vector<byte> raw_key = get_req_bin(vars, "PublicKey");
-         const Botan::secure_vector<byte> sec_key(raw_key.begin(), raw_key.end());
-
-         std::unique_ptr<Botan::Public_Key> key(new Botan::XMSS_PublicKey(sec_key));
+         std::unique_ptr<Botan::Public_Key> key(new Botan::XMSS_PublicKey(raw_key));
          return key;
          }
    };

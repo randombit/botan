@@ -66,11 +66,11 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       /**
       * Create a public key.
       * @param alg_id the X.509 algorithm identifier
-      * @param key_bits X.509 subject public key info structure
+      * @param key_bits DER encoded public key bits
       * @param group_format the underlying groups encoding format
       */
       DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
-                          const secure_vector<byte>& key_bits,
+                          const std::vector<byte>& key_bits,
                           DL_Group::Format group_format);
 
    protected:

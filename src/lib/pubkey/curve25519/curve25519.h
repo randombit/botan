@@ -32,10 +32,10 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
       /**
       * Create a Curve25519 Public Key.
       * @param alg_id the X.509 algorithm identifier
-      * @param key_bits X.509 subject public key info structure
+      * @param key_bits DER encoded public key bits
       */
       Curve25519_PublicKey(const AlgorithmIdentifier& alg_id,
-                           const secure_vector<byte>& key_bits);
+                           const std::vector<byte>& key_bits);
 
       /**
       * Create a Curve25519 Public Key.

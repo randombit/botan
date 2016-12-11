@@ -62,7 +62,7 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
        * Creates an XMSS public key from a byte sequence produced by
        * raw_private_key().
        **/
-      XMSS_PublicKey(const secure_vector<byte>& raw_key);
+      XMSS_PublicKey(const std::vector<byte>& raw_key);
 
       /**
        * Creates a new XMSS public key for a chosen XMSS signature method as
@@ -137,7 +137,7 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
 
       /**
        * Retrieves the Winternitz One Time Signature (WOTS) parameters
-       * corrseponding to the chosen XMSS signature method.
+       * corresponding to the chosen XMSS signature method.
        *
        * @return XMSS WOTS signature method parameters.
        **/
@@ -254,7 +254,7 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
 
    private:
       XMSS_Parameters::xmss_algorithm_t deserialize_xmss_oid(
-         const secure_vector<byte>& raw_key);
+         const std::vector<byte>& raw_key);
    };
 
 }

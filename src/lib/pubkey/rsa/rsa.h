@@ -22,10 +22,10 @@ class BOTAN_DLL RSA_PublicKey : public virtual Public_Key
       /**
       * Load a public key.
       * @param alg_id the X.509 algorithm identifier
-      * @param key_bits X.509 subject public key info structure
+      * @param key_bits DER encoded public key bits
       */
       RSA_PublicKey(const AlgorithmIdentifier& alg_id,
-                    const secure_vector<byte>& key_bits);
+                    const std::vector<byte>& key_bits);
 
       /**
       * Create a public key.

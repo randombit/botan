@@ -16,7 +16,7 @@ namespace Botan {
 
 BOTAN_DLL std::unique_ptr<Public_Key>
 load_public_key(const AlgorithmIdentifier& alg_id,
-                const secure_vector<byte>& key_bits);
+                const std::vector<byte>& key_bits);
 
 BOTAN_DLL std::unique_ptr<Private_Key>
 load_private_key(const AlgorithmIdentifier& alg_id,

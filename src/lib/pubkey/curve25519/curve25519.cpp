@@ -47,7 +47,7 @@ bool Curve25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
    }
 
 Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier&,
-                                           const secure_vector<byte>& key_bits)
+                                           const std::vector<byte>& key_bits)
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)

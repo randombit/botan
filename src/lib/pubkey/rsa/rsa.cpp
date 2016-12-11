@@ -52,7 +52,7 @@ std::vector<byte> RSA_PublicKey::public_key_bits() const
    }
 
 RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier&,
-                                         const secure_vector<byte>& key_bits)
+                             const std::vector<byte>& key_bits)
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
