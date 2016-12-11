@@ -21,7 +21,7 @@
 namespace Botan {
 
 XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<byte>& raw_key)
-   : XMSS_PublicKey(raw_key),
+   : XMSS_PublicKey(unlock(raw_key)),
      XMSS_Common_Ops(XMSS_PublicKey::m_xmss_params.oid()),
      m_wots_priv_key(m_wots_params.oid(), m_public_seed),
      m_index_reg(XMSS_Index_Registry::get_instance())

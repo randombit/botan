@@ -20,7 +20,7 @@
 
 namespace Botan {
 
-XMSS_PublicKey::XMSS_PublicKey(const secure_vector<byte>& raw_key)
+XMSS_PublicKey::XMSS_PublicKey(const std::vector<byte>& raw_key)
    : m_xmss_params(XMSS_PublicKey::deserialize_xmss_oid(raw_key)),
      m_wots_params(m_xmss_params.ots_oid())
    {
@@ -45,7 +45,7 @@ XMSS_PublicKey::XMSS_PublicKey(const secure_vector<byte>& raw_key)
    }
 
 XMSS_Parameters::xmss_algorithm_t
-XMSS_PublicKey::deserialize_xmss_oid(const secure_vector<byte>& raw_key)
+XMSS_PublicKey::deserialize_xmss_oid(const std::vector<byte>& raw_key)
    {
    if(raw_key.size() < 4)
       {

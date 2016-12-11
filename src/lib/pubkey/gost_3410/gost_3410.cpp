@@ -49,7 +49,7 @@ AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
    }
 
 GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
-                                         const secure_vector<byte>& key_bits)
+                                         const std::vector<byte>& key_bits)
    {
    OID ecc_param_id;
 

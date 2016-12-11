@@ -38,7 +38,7 @@ Public_Key* load_key(DataSource& source)
    {
    try {
       AlgorithmIdentifier alg_id;
-      secure_vector<byte> key_bits;
+      std::vector<byte> key_bits;
 
       if(ASN1::maybe_BER(source) && !PEM_Code::matches(source))
          {

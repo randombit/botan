@@ -40,10 +40,10 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       /**
       * Load a public key.
       * @param alg_id the X.509 algorithm identifier
-      * @param key_bits PKCS #8 structure
+      * @param key_bits DER encoded public key bits
       */
       EC_PublicKey(const AlgorithmIdentifier& alg_id,
-                   const secure_vector<byte>& key_bits);
+                   const std::vector<byte>& key_bits);
 
       /**
       * Get the public point of this key.

@@ -33,10 +33,10 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
       /**
       * Load a public key.
       * @param alg_id the X.509 algorithm identifier
-      * @param key_bits X.509 subject public key info structure
+      * @param key_bits DER encoded public key bits
       */
       ECDSA_PublicKey(const AlgorithmIdentifier& alg_id,
-                      const secure_vector<byte>& key_bits) :
+                      const std::vector<byte>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
 
       /**

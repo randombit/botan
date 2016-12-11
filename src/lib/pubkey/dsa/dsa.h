@@ -30,7 +30,7 @@ class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
       * @param key_bits DER encoded public key bits
       */
       DSA_PublicKey(const AlgorithmIdentifier& alg_id,
-                    const secure_vector<byte>& key_bits) :
+                    const std::vector<byte>& key_bits) :
          DL_Scheme_PublicKey(alg_id, key_bits, DL_Group::ANSI_X9_57)
          {
          }

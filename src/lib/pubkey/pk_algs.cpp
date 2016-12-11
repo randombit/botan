@@ -60,7 +60,7 @@ namespace Botan {
 
 std::unique_ptr<Public_Key>
 load_public_key(const AlgorithmIdentifier& alg_id,
-                const secure_vector<byte>& key_bits)
+                const std::vector<byte>& key_bits)
    {
    const std::string alg_name = OIDS::lookup(alg_id.oid);
    if(alg_name == "")
@@ -78,7 +78,7 @@ load_public_key(const AlgorithmIdentifier& alg_id,
 
 #if defined(BOTAN_HAS_MCELIECE)
    if(alg_name == "McEliece")
-      return std::unique_ptr<Public_Key>(new McEliece_PublicKey(unlock(key_bits)));
+      return std::unique_ptr<Public_Key>(new McEliece_PublicKey(key_bits));
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)

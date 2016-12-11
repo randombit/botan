@@ -26,7 +26,7 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       * @param key_bits DER encoded public key bits
       */
       ECDH_PublicKey(const AlgorithmIdentifier& alg_id,
-                     const secure_vector<byte>& key_bits) :
+                     const std::vector<byte>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
 
       /**
