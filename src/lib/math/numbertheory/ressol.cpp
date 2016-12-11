@@ -19,14 +19,16 @@ BigInt ressol(const BigInt& a, const BigInt& p)
    if(a == 0)
       return 0;
    else if(a < 0)
-      throw Invalid_Argument("ressol(): a to solve for must be positive");
+      throw Invalid_Argument("ressol: value to solve for must be positive");
+   else if(a >= p)
+      throw Invalid_Argument("ressol: value to solve for must be less than p");
 
    if(p == 2)
       return a;
    else if(p <= 1)
-      throw Invalid_Argument("ressol(): prime must be > 1 a");
+      throw Invalid_Argument("ressol: prime must be > 1 a");
    else if(p.is_even())
-      throw Invalid_Argument("ressol(): invalid prime");
+      throw Invalid_Argument("ressol: invalid prime");
 
    if(jacobi(a, p) != 1) // not a quadratic residue
       return -BigInt(1);
