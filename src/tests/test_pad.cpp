@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_CIPHER_MODE_PADDING)
-  #include <botan/mode_pad.h>
+   #include <botan/mode_pad.h>
 #endif
 
 namespace Botan_Tests {
@@ -18,7 +18,7 @@ class Cipher_Mode_Padding_Tests : public Text_Based_Test
    {
    public:
       Cipher_Mode_Padding_Tests() :
-         Text_Based_Test("", "pad.vec", {"In", "Blocksize"},{"Out"})
+         Text_Based_Test("", "pad.vec", {"In", "Blocksize"}, {"Out"})
          {}
 
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override
@@ -50,12 +50,11 @@ class Cipher_Mode_Padding_Tests : public Text_Based_Test
          if(expected.empty())
             {
             // This is an unpad an invalid input and ensure we reject
-            try
+            if(pad->unpad(input.data(), block_size) != block_size)
                {
-               pad->unpad(input.data(), block_size);
                result.test_failure("Did not reject invalid padding", Botan::hex_encode(input));
                }
-            catch(Botan::Decoding_Error&)
+            else
                {
                result.test_success("Rejected invalid padding");
                }
@@ -69,7 +68,7 @@ class Cipher_Mode_Padding_Tests : public Text_Based_Test
 
             buf.assign(expected.begin(), expected.end());
 
-            const size_t last_block = ( buf.size() < block_size ) ? 0 : buf.size() - block_size;
+            const size_t last_block = (buf.size() < block_size) ? 0 : buf.size() - block_size;
             const size_t pad_bytes = block_size - pad->unpad(&buf[last_block], block_size);
             buf.resize(buf.size() - pad_bytes); // remove padding
             result.test_eq("unpad", buf, input);
