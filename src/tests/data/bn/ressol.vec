@@ -20,42 +20,18 @@ Input = 64
 Modulus = 85
 Output = -1
 
-Input = 206
-Modulus = 153
-Output = -1
-
 Input = 181
 Modulus = 217
-Output = -1
-
-Input = 166
-Modulus = 85
 Output = -1
 
 Input = 4225
 Modulus = 33153
 Output = -1
 
-Input = 57700
-Modulus = 153
-Output = -1
-
 Input = 2048
 Modulus = 31417
 Output = -1
 
-Input = 65151
-Modulus = 2405
-Output = -1
-
 Input = 2
 Modulus = 4369
-Output = -1
-
-Input = 61508
-Modulus = 4141
-Output = -1
-
-Input = 6553700
-Modulus = 33153
 Output = -1
