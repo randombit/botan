@@ -10,6 +10,9 @@
 
 void fuzz(const uint8_t in[], size_t len)
    {
+   if(len > 2*(521+7)/8)
+      return;
+
    static const BigInt& prime = Botan::prime_p521();
    static const BigInt prime_2 = prime * prime;
    static Botan::Modular_Reducer prime_redc(prime);

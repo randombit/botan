@@ -18,6 +18,9 @@ void check_os2ecp(const EC_Group& group, const uint8_t in[], size_t len)
 
 void fuzz(const uint8_t in[], size_t len)
    {
+   if(len >= 256)
+      return;
+
    static EC_Group p192("secp192r1");
    static EC_Group p224("secp224r1");
    static EC_Group p256("secp256r1");

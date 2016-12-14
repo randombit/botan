@@ -39,9 +39,9 @@ void fuzz(const uint8_t in[], size_t len)
             if(is_prime(n, fuzzer_rng(), 64))
                {
                std::cout << "A = " << a << "\n";
-               std::cout << "Ressol = " << a_sqrt << "\n";
                std::cout << "N = " << n << "\n";
-               std::cout << "Z = " << z << "\n";
+               std::cout << "Ressol = " << a_sqrt << "\n";
+               std::cout << "recomputed = " << z << "\n";
                abort();
                }
             }

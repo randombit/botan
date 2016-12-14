@@ -9,6 +9,9 @@
 
 void fuzz(const uint8_t in[], size_t len)
    {
+   if(len > 4096)
+      return;
+
    try
       {
       DataSource_Memory input(in, len);

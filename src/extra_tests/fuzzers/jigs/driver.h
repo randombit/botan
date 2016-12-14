@@ -17,32 +17,26 @@
 
 using namespace Botan;
 
-void fuzz(const uint8_t in[], size_t len);
+extern void fuzz(const uint8_t in[], size_t len);
 
-void fuzzer_init()
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
    {
    /*
    * This disables the mlock pool, as overwrites within the pool are
    * opaque to ASan or other instrumentation.
    */
    ::setenv("BOTAN_MLOCK_POOL_SIZE", "0", 1);
+   return 0;
    }
 
-#if defined(USE_LLVM_FUZZER)
-
-// Called by main() in libFuzzer
+// Called by main() in libFuzzer or in main for AFL below
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len)
    {
    fuzz(in, len);
    return 0;
    }
 
-int LLVMFuzzerInitialize(int *argc, char ***argv) {
-  fuzzer_init();
-  return 0;
-}
-
-#else
+#if defined(INCLUDE_AFL_MAIN)
 
 // Read stdin for AFL
 
@@ -50,7 +44,7 @@ int main(int argc, char* argv[])
    {
    const size_t max_read = 4096;
 
-   fuzzer_init();
+   LLVMFuzzerInitialize();
 
 #if defined(__AFL_LOOP)
    while(__AFL_LOOP(1000))

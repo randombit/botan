@@ -8,6 +8,9 @@
 
 void fuzz(const uint8_t in[], size_t len)
    {
+   if(len % 2 == 1 || len > 2*4096/8)
+      return;
+
    const BigInt x = BigInt::decode(in, len / 2);
    const BigInt y = BigInt::decode(in + len / 2, len / 2);
 

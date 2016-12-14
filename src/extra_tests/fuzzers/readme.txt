@@ -16,7 +16,7 @@ and implement the function with the signature
 
 void fuzz(const uint8_t buf[], size_t len);
 
-This function should abort or crash if something is incorrect.
+This function should abort/crash if something is incorrect.
 
 Run it with
 

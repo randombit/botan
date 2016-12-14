@@ -3,11 +3,12 @@ FUZZERS=$(patsubst jigs/%.cpp,%,$(wildcard jigs/*.cpp))
 
 AFL_SAN_FLAGS=-fsanitize=address,undefined -fno-sanitize-recover=undefined
 CLANG_SAN_FLAGS=-fsanitize=address,undefined -fno-sanitize-recover=undefined -fsanitize-coverage=edge,indirect-calls,8bit-counters
+CLANG_SAN_FLAGS=-fsanitize-coverage=edge,indirect-calls,8bit-counters
 
-CFG_FLAGS=--enable-debug --unsafe-fuzzer-mode
+CFG_FLAGS=--with-debug-info --unsafe-fuzzer-mode
 SHARED_FLAGS=-O3 -g -std=c++11 -pthread
-LIBFUZZER_FLAGS=-DUSE_LLVM_FUZZER -Illvm-build/build/include $(SHARED_FLAGS) $(CLANG_SAN_FLAGS)
-AFL_FLAGS=-Iafl-build/build/include $(SHARED_FLAGS)
+LIBFUZZER_FLAGS=-Illvm-build/build/include $(SHARED_FLAGS) $(CLANG_SAN_FLAGS)
+AFL_FLAGS=-DINCLUDE_AFL_MAIN -Iafl-build/build/include $(SHARED_FLAGS)
 
 LIBFUZZER_LIBS=llvm-build/libbotan-1.11.a libFuzzer.a
 AFL_LIBS=afl-build/libbotan-1.11.a
@@ -28,7 +29,7 @@ afl: dirs afl-build $(AFL_PROGS)
 llvm: dirs llvm-build $(LIBFUZZER_PROGS)
 
 bin/llvm_fuzz_%: jigs/%.cpp $(LIBFUZZER_LIBS)
-	$(CLANG_CXX) $(LIBFUZZER_FLAGS) -DUSE_LLVM_FUZZER $< $(LIBFUZZER_LIBS) -o $@
+	$(CLANG_CXX) $(LIBFUZZER_FLAGS) $< $(LIBFUZZER_LIBS) -o $@
 
 bin/afl_fuzz_%: jigs/%.cpp $(AFL_LIBS)
 	$(AFL_CXX) $(AFL_FLAGS) $< $(AFL_LIBS) -o $@

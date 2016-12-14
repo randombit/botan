@@ -51,6 +51,9 @@ BigInt inverse_mod_ref(const BigInt& n, const BigInt& mod)
 
 void fuzz(const uint8_t in[], size_t len)
    {
+   if(len % 2 == 1 || len > 2*4096/8)
+      return;
+
    const BigInt x = BigInt::decode(in, len / 2);
    BigInt mod = BigInt::decode(in + len / 2, len / 2);
 
