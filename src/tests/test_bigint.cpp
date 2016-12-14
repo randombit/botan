@@ -404,12 +404,37 @@ class BigInt_Powmod_Test : public Text_Based_Test
          {
          Test::Result result("BigInt Powmod");
 
-         const BigInt value = get_req_bn(vars, "Base");
+         const BigInt base = get_req_bn(vars, "Base");
          const BigInt exponent = get_req_bn(vars, "Exponent");
          const BigInt modulus = get_req_bn(vars, "Modulus");
-         const BigInt output = get_req_bn(vars, "Output");
+         const BigInt expected = get_req_bn(vars, "Output");
 
-         result.test_eq("power_mod", Botan::power_mod(value, exponent, modulus), output);
+         result.test_eq("power_mod", Botan::power_mod(base, exponent, modulus), expected);
+
+         Botan::Power_Mod pow_mod1(modulus);
+
+         pow_mod1.set_base(base);
+         pow_mod1.set_exponent(exponent);
+         result.test_eq("pow_mod1", pow_mod1.execute(), expected);
+
+         Botan::Power_Mod pow_mod2(modulus);
+
+         // Reverses ordering which affects window size
+         pow_mod2.set_exponent(exponent);
+         pow_mod2.set_base(base);
+         result.test_eq("pow_mod2", pow_mod2.execute(), expected);
+         result.test_eq("pow_mod2 #2", pow_mod2.execute(), expected);
+
+         if(modulus.is_odd())
+            {
+            // TODO: test different hints
+            // also TODO: remove bogus hinting arguments :)
+            Botan::Power_Mod pow_mod3(modulus, Botan::Power_Mod::NO_HINTS, /*disable_montgomery=*/true);
+
+            pow_mod3.set_exponent(exponent);
+            pow_mod3.set_base(base);
+            result.test_eq("pow_mod_fixed_window", pow_mod3.execute(), expected);
+            }
 
          return result;
          }

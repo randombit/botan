@@ -255,53 +255,58 @@ size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw)
 */
 void bigint_mul(BigInt& z, const BigInt& x, const BigInt& y, word workspace[])
    {
-   if(x.sig_words() == 1)
+   const size_t x_sig_words = x.sig_words();
+   const size_t y_sig_words = y.sig_words();
+
+   clear_mem(z.mutable_data(), z.size());
+
+   if(x_sig_words == 1)
       {
-      bigint_linmul3(z.mutable_data(), y.data(), y.sig_words(), x.data()[0]);
+      bigint_linmul3(z.mutable_data(), y.data(), y_sig_words, x.data()[0]);
       }
-   else if(y.sig_words() == 1)
+   else if(y_sig_words == 1)
       {
-      bigint_linmul3(z.mutable_data(), x.data(), x.sig_words(), y.data()[0]);
+      bigint_linmul3(z.mutable_data(), x.data(), x_sig_words, y.data()[0]);
       }
-   else if(x.sig_words() <= 4 && x.size() >= 4 &&
-           y.sig_words() <= 4 && y.size() >= 4 && z.size() >= 8)
+   else if(x_sig_words <= 4 && x.size() >= 4 &&
+           y_sig_words <= 4 && y.size() >= 4 && z.size() >= 8)
       {
       bigint_comba_mul4(z.mutable_data(), x.data(), y.data());
       }
-   else if(x.sig_words() <= 6 && x.size() >= 6 &&
-           y.sig_words() <= 6 && y.size() >= 6 && z.size() >= 12)
+   else if(x_sig_words <= 6 && x.size() >= 6 &&
+           y_sig_words <= 6 && y.size() >= 6 && z.size() >= 12)
       {
       bigint_comba_mul6(z.mutable_data(), x.data(), y.data());
       }
-   else if(x.sig_words() <= 8 && x.size() >= 8 &&
-           y.sig_words() <= 8 && y.size() >= 8 && z.size() >= 16)
+   else if(x_sig_words <= 8 && x.size() >= 8 &&
+           y_sig_words <= 8 && y.size() >= 8 && z.size() >= 16)
       {
       bigint_comba_mul8(z.mutable_data(), x.data(), y.data());
       }
-   else if(x.sig_words() <= 9 && x.size() >= 9 &&
-           y.sig_words() <= 9 && y.size() >= 9 && z.size() >= 18)
+   else if(x_sig_words <= 9 && x.size() >= 9 &&
+           y_sig_words <= 9 && y.size() >= 9 && z.size() >= 18)
       {
       bigint_comba_mul9(z.mutable_data(), x.data(), y.data());
       }
-   else if(x.sig_words() <= 16 && x.size() >= 16 &&
-           y.sig_words() <= 16 && y.size() >= 16 && z.size() >= 32)
+   else if(x_sig_words <= 16 && x.size() >= 16 &&
+           y_sig_words <= 16 && y.size() >= 16 && z.size() >= 32)
       {
       bigint_comba_mul16(z.mutable_data(), x.data(), y.data());
       }
-   else if(x.sig_words() < KARATSUBA_MULTIPLY_THRESHOLD ||
-           y.sig_words() < KARATSUBA_MULTIPLY_THRESHOLD ||
+   else if(x_sig_words < KARATSUBA_MULTIPLY_THRESHOLD ||
+           y_sig_words < KARATSUBA_MULTIPLY_THRESHOLD ||
            !workspace)
       {
-      basecase_mul(z.mutable_data(), x.data(), x.sig_words(), y.data(), y.sig_words());
+      basecase_mul(z.mutable_data(), x.data(), x_sig_words, y.data(), y_sig_words);
       }
    else
       {
-      const size_t N = karatsuba_size(z.size(), x.size(), x.sig_words(), y.size(), y.sig_words());
+      const size_t N = karatsuba_size(z.size(), x.size(), x_sig_words, y.size(), y_sig_words);
 
       if(N)
          karatsuba_mul(z.mutable_data(), x.data(), y.data(), N, workspace);
       else
-         basecase_mul(z.mutable_data(), x.data(), x.sig_words(), y.data(), y.sig_words());
+         basecase_mul(z.mutable_data(), x.data(), x_sig_words, y.data(), y_sig_words);
       }
    }
 

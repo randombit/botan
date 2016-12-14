@@ -358,6 +358,9 @@ word monty_inverse(word input)
       y1 = y;
       }
 
+   const word check = y2 * input;
+   BOTAN_ASSERT_EQUAL(check, 1, "monty_inverse result is inverse of input");
+
    // Now invert in addition space
    y2 = (MP_WORD_MAX - y2) + 1;
 

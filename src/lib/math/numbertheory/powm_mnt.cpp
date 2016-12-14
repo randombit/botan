@@ -41,7 +41,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
                     workspace.data());
    m_g[0] = z;
 
-   m_g[1] = (base >= m_modulus) ? (base % m_modulus) : base;
+   m_g[1] = m_reducer.reduce(base);
 
    bigint_monty_mul(z, m_g[1], m_R2_mod,
                     m_modulus.data(), m_mod_words, m_mod_prime,
@@ -112,6 +112,7 @@ BigInt Montgomery_Exponentiator::execute() const
 Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
                                                    Power_Mod::Usage_Hints hints) :
    m_modulus(mod),
+   m_reducer(m_modulus),
    m_mod_words(m_modulus.sig_words()),
    m_window_bits(1),
    m_hints(hints)
@@ -123,8 +124,8 @@ Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
    m_mod_prime = monty_inverse(mod.word_at(0));
 
    const BigInt r = BigInt::power_of_2(m_mod_words * BOTAN_MP_WORD_BITS);
-   m_R_mod = r % m_modulus;
-   m_R2_mod = (m_R_mod * m_R_mod) % m_modulus;
+   m_R_mod = m_reducer.reduce(r);
+   m_R2_mod = m_reducer.square(m_R_mod);
    m_exp_bits = 0;
    }
 
