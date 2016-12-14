@@ -64,7 +64,7 @@ void Power_Mod::set_modulus(const BigInt& n, Usage_Hints hints, bool disable_mon
 
    delete m_core;
    m_core = nullptr;
-   disable_monty =true;
+
    if(n != 0)
       {
       if(n.is_odd() && disable_monty == false)
