@@ -199,7 +199,7 @@ htmlhelp_basename = 'botandoc'
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('contents', 'botan.tex', u'Botan Reference Manual',
-   u'Jack Lloyd \\and Daniel Neus \\and René Korthaus \\and Juraj Somorovsky \\and Tobias Niemann', 'manual'),
+   u'Jack Lloyd \\and Daniel Neus \\and Ren\u00e9 Korthaus \\and Juraj Somorovsky \\and Tobias Niemann', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
