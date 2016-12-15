@@ -4,6 +4,14 @@ Release Notes
 Version 1.11.35, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix a longstanding bug in modular exponentiation which caused most
+  exponentiations modulo an even number to have an incorrect result; such moduli
+  occur only rarely in cryptographic contexts. GH #754
+
+* Fix a bug in BigInt multiply operation, introduced in 1.11.30, which could
+  cause incorrect results. Found by OSS-Fuzz fuzzing the ressol function, where
+  the bug manifested as an incorrect modular exponentiation. OSS-Fuzz bug #287
+
 * Changes all Public_Key derived class ctors to take a
   std::vector instead of a secure_vector for the DER encoded
   public key bits. (GH #768)
