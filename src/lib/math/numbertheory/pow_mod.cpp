@@ -13,10 +13,10 @@ namespace Botan {
 /*
 * Power_Mod Constructor
 */
-Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints)
+Power_Mod::Power_Mod(const BigInt& n, Usage_Hints hints, bool disable_monty)
    {
    m_core = nullptr;
-   set_modulus(n, hints);
+   set_modulus(n, hints, disable_monty);
    }
 
 /*
@@ -58,14 +58,21 @@ Power_Mod::~Power_Mod()
 /*
 * Set the modulus
 */
-void Power_Mod::set_modulus(const BigInt& n, Usage_Hints hints) const
+void Power_Mod::set_modulus(const BigInt& n, Usage_Hints hints, bool disable_monty) const
    {
-   delete m_core;
+   // Allow set_modulus(0) to mean "drop old state"
 
-   if(n.is_odd())
-      m_core = new Montgomery_Exponentiator(n, hints);
-   else if(n != 0)
-      m_core = new Fixed_Window_Exponentiator(n, hints);
+   delete m_core;
+   m_core = nullptr;
+
+   if(n != 0)
+      {
+      if(n.is_odd() && disable_monty == false)
+         m_core = new Montgomery_Exponentiator(n, hints);
+
+      if(!m_core)
+         m_core = new Fixed_Window_Exponentiator(n, hints);
+      }
    }
 
 /*

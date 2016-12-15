@@ -51,15 +51,43 @@ class BOTAN_DLL Power_Mod
       static size_t window_bits(size_t exp_bits, size_t base_bits,
                                 Power_Mod::Usage_Hints hints);
 
-      void set_modulus(const BigInt&, Usage_Hints = NO_HINTS) const;
-      void set_base(const BigInt&) const;
-      void set_exponent(const BigInt&) const;
+      /**
+      * @param modulus the modulus
+      * @param hints Passed to set_modulus if modulus > 0
+      * @param disable_montgomery_arith Disables use of Montgomery
+      * representation. Likely only useful for testing.
+      */
+      void set_modulus(const BigInt& modulus,
+                       Usage_Hints = NO_HINTS,
+                       bool disable_montgomery_arith = false) const;
 
+      /**
+      * Set the base
+      */
+      void set_base(const BigInt& base) const;
+
+      /**
+      * Set the exponent
+      */
+      void set_exponent(const BigInt& exponent) const;
+
+      /**
+      * All three of the above functions must have already been called.
+      * @return result of g^x%p
+      */
       BigInt execute() const;
 
       Power_Mod& operator=(const Power_Mod&);
 
-      Power_Mod(const BigInt& = 0, Usage_Hints = NO_HINTS);
+      /**
+      * @param modulus Optionally call set_modulus
+      * @param hints Passed to set_modulus if modulus > 0
+      * @param disable_montgomery_arith Disables use of Montgomery
+      * representation. Likely only useful for testing.
+      */
+      Power_Mod(const BigInt& modulus = 0,
+                Usage_Hints hints = NO_HINTS,
+                bool disable_montgomery_arith = false);
       Power_Mod(const Power_Mod&);
       virtual ~Power_Mod();
    private:

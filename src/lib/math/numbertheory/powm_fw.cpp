@@ -31,7 +31,7 @@ void Fixed_Window_Exponentiator::set_base(const BigInt& base)
    m_g[1] = base;
 
    for(size_t i = 2; i != m_g.size(); ++i)
-      m_g[i] = m_reducer.multiply(m_g[i-1], m_g[0]);
+      m_g[i] = m_reducer.multiply(m_g[i-1], m_g[1]);
    }
 
 /*
