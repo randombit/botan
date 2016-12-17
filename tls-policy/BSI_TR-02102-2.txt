@@ -7,13 +7,16 @@ allow_dtls12=false
 ciphers=AES-256/GCM AES-128/GCM AES-256 AES-128
 signature_hashes=SHA-384 SHA-256
 macs=AEAD SHA-384 SHA-256
-key_exchange_methods=ECDH DH ECDHE_PSK DHE_PSK ECDH_PSK
+key_exchange_methods=ECDH DH PSK ECDHE_PSK DHE_PSK 
 signature_methods=ECDSA RSA DSA
 ecc_curves=brainpool512r1 brainpool384r1 brainpool256r1 secp384r1 secp256r1
 minimum_dh_group_size=2000
+minimum_dsa_group_size=2000
 minimum_ecdh_group_size=250
+minimum_ecdsa_group_size=250
 minimum_rsa_bits=2000
 
 allow_insecure_renegotiation=false
 allow_server_initiated_renegotiation=true
 server_uses_own_ciphersuite_preferences=true
+negotiate_encrypt_then_mac=true
