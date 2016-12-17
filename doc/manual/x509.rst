@@ -35,6 +35,10 @@ in the :doc:`tls` protocol. A X.509 certificate is represented by
 
      Returns the point in time the certificate expires
 
+ .. cpp:function:: Extensions v3_extensions() const
+
+     Returns all extensions of this certificate
+
 When working with certificates, the main class to remember is
 ``X509_Certificate``. You can read an object of this type, but you
 can't create one on the fly; a CA object is necessary for making a new
@@ -110,9 +114,9 @@ X.509v3 Extensions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 X.509v3 specifies a large number of possible extensions. Botan
-supports some, but by no means all of them. This section lists which
-ones are supported, and notes areas where there may be problems with
-the handling.
+supports some, but by no means all of them.
+The following listing lists which X.509v3 extensions are supported
+and notes areas where there may be problems with the handling.
 
  - Key Usage and Extended Key Usage: No problems known.
 
@@ -136,6 +140,56 @@ the handling.
    GeneralNames ignored.
 
  - Subject Key Identifier: No problems known.
+
+ - Name Constraints: No problems known (though encoding is not supported).
+
+Any unknown critical extension in a certificate will lead to an
+exception during path validation.
+
+Extensions are handled by a special class taking care of encoding
+and decoding. It also supports encoding and decoding of custom extensions.
+To do this, it internally keeps two lists of extensions. Different lookup
+functions are provided to search them.
+
+.. note::
+
+  Validation of custom extensions during path validation
+  is currently not supported.
+
+.. cpp:class:: Extensions
+
+ .. cpp:function:: void add(Certificate_Extension* extn, bool critical = false)
+
+     Adds a new extension to the list. ``critical`` specifies whether the extension
+     should be marked as critical.
+
+ .. cpp:function:: replace(Certificate_Extension* extn, bool critical = false)
+
+     Adds an extension to the list or replaces it, if the same
+     extension was already added
+
+ .. cpp:function:: std::unique_ptr<Certificate_Extension> get(const OID& oid) const
+
+     Searches for an extension by OID and returns the result
+
+ .. cpp:function:: template<typename T> \
+      std::unique_ptr<T> get_raw(const OID& oid)
+
+     Searches for an extension by OID and returns the result.
+     Only the unknown extensions, that is, extensions types that are not
+     listed above, are searched for by this function.
+
+ .. cpp:function:: std::vector<std::pair<std::unique_ptr<Certificate_Extension>, bool>> extensions() const
+
+     Returns the list of extensions together with the corresponding
+     criticality flag. Only contains the supported extension types
+     listed above.
+
+ .. cpp:function:: std::map<OID, std::pair<std::vector<byte>, bool>> extensions_raw() const
+
+     Returns the list of extensions as raw, encoded bytes
+     together with the corresponding criticality flag.
+     Contains all extensions, known as well as unknown extensions.
 
 Revocation Lists
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -163,17 +217,13 @@ information. For example::
    DataSource_Stream in("crl2.pem");
    X509_CRL crl2(in);
 
-After that, pass the ``X509_CRL`` object to a ``X509_Store`` object
+After that, pass the ``X509_CRL`` object to a ``Certificate_Store`` object
 with
 
-.. cpp:function:: X509_Code X509_Store::add_crl(const X509_CRL& crl)
+.. cpp:function:: void Certificate_Store::add_crl(const X509_CRL& crl)
 
 and all future verifications will take into account the certificates
-listed, assuming ``add_crl`` returns ``VERIFIED``. If it doesn't
-return ``VERIFIED``, then the return value is an error code signifying
-that the CRL could not be processed due to some problem (which could
-be something like the issuing certificate could not being found, an
-invalid signature, or the CRL having some format problem).
+listed.
 
 Reading Certificates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -198,40 +248,138 @@ store would be one that looked up the certificates in a SQL database,
 or by contacting a CGI script running on a HTTP server. There are
 currently three mechanisms for looking up a certificate, and one for
 retrieving CRLs. By default, most of these mechanisms will return an
-empty ``std::vector`` of ``X509_Certificate``. This storage mechanism
+empty ``std::shared_ptr`` of ``X509_Certificate``. This storage mechanism
 is *only* queried when doing certificate validation: it allows you to
 distribute only the root key with an application, and let some online
 method handle getting all the other certificates that are needed to
 validate an end entity certificate. In particular, the search routines
 will not attempt to access the external database.
 
-The three certificate lookup methods are ``by_SKID`` (Subject Key
-Identifier), ``by_name`` (the CommonName DN entry), and ``by_email``
-(stored in either the distinguished name, or in a
-subjectAlternativeName extension). The name and email versions take a
-``std::string``, while the SKID version takes a
-``secure_vector<byte>`` containing the subject key identifier in raw
-binary. You can choose not to implement ``by_name`` or ``by_email``,
-but ``by_SKID`` is mandatory to implement, and, currently, is the only
-version that is used by ``X509_Store``.
+The certificate lookup methods are ``find_cert`` (by Subject
+Distinguished Name and optional Subject Key Identifier) and
+``find_cert_by_pubkey_sha1`` (by SHA-1 hash of the certificate's
+public key). The Subject Distinguished Name is given as a ``X509_DN``,
+while the SKID parameter takes a ``std::vector<byte>`` containing
+the subject key identifier in raw binary. Both lookup methods are
+mandatory to implement.
 
-Finally, there is a method for finding CRLs, called ``get_crls_for``,
+Finally, there is a method for finding a CRL, called ``find_crl_for``,
 that takes an ``X509_Certificate`` object, and returns a
-``std::vector`` of ``X509_CRL``. While normally there will be only one
-CRL, the use of the vector makes it easy to return no CRLs (eg, if the
-certificate store doesn't support retrieving them), or return multiple
-ones (for example, if the certificate store can't determine precisely
-which key was used to sign the certificate). Implementing the function
-is optional, and by default will return no CRLs. If it is available,
-it will be used by ``X509_CRL``.
+``std::shared_ptr`` of ``X509_CRL``. The ``std::shared_ptr`` return
+type makes it easy to return no CRLs by returning ``nullptr``
+(eg, if the certificate store doesn't support retrieving CRLs).
+Implementing the function is optional, and by default will return
+``nullptr``.
 
-As for using such a store, you have to tell ``X509_Store`` about it
-with
+Certificate stores are used in the :doc:`tls` module to store a
+list of trusted certificate authorities.
 
-.. cpp:function:: void X509_Store::add_new_certstore(Certificate_Store* new_store)
+In Memory Certificate Store
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  The store object will be owned by (and deleted by) ``X509_Store``,
-  so make sure to allocate it with ``new``.
+The in memory certificate store keeps all objects in memory only.
+Certificates can be loaded from disk initially, but also added
+later.
+
+.. cpp:class:: Certificate_Store_In_Memory
+
+ .. cpp:function:: Certificate_Store_In_Memory(const std::string& dir)
+
+     Attempt to parse all files in ``dir`` (including subdirectories)
+     as certificates. Ignores errors.
+
+ .. cpp:function:: Certificate_Store_In_Memory(const X509_Certificate& cert)
+
+     Adds given certificate to the store
+
+ .. cpp:function:: Certificate_Store_In_Memory()
+
+     Create an empty store
+
+ .. cpp:function:: void add_certificate(const X509_Certificate& cert)
+
+     Add a certificate to the store
+
+ .. cpp:function:: void add_certificate(std::shared_ptr<const X509_Certificate> cert)
+
+     Add a certificate already in a shared_ptr to the store
+
+ .. cpp:function:: void add_crl(const X509_CRL& crl)
+
+     Add a certificate revocation list (CRL) to the store.
+
+ .. cpp:function:: void add_crl(std::shared_ptr<const X509_CRL> crl)
+
+     Add a certificate revocation list (CRL) to the store as a shared_ptr
+
+SQL-backed Certificate Stores
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The SQL-backed certificate stores store all objects in an SQL
+database. They also additionally provide private key storage
+and revocation of individual certificates.
+
+.. cpp:class:: Certificate_Store_In_SQL
+
+ .. cpp:function:: Certificate_Store_In_SQL(const std::shared_ptr<SQL_Database> db, \
+    const std::string& passwd, RandomNumberGenerator& rng, const std::string& table_prefix = "")
+
+     Create or open an existing certificate store from an SQL database.
+     The password in ``passwd`` will be used to encrypt private keys.
+
+ .. cpp:function:: bool insert_cert(const X509_Certificate& cert)
+
+     Inserts ``cert`` into the store. Returns `false` if the certificate is
+     already known and `true` if insertion was successful.
+
+ .. cpp:function:: remove_cert(const X509_Certificate& cert)
+
+     Removes ``cert`` from the store. Returns `false` if the certificate could not
+     be found and `true` if removal was successful.
+
+
+ .. cpp:function:: std::shared_ptr<const Private_Key> find_key(const X509_Certificate&) const
+
+     Returns the private key for "cert" or an empty shared_ptr if none was found
+
+ .. cpp:function:: std::vector<std::shared_ptr<const X509_Certificate>> \
+    find_certs_for_key(const Private_Key& key) const
+
+     Returns all certificates for private key ``key``
+
+ .. cpp:function:: bool insert_key(const X509_Certificate& cert, const Private_Key& key)
+
+     Inserts ``key`` for ``cert`` into the store, returns `false` if the key is
+     already known and `true` if insertion was successful.
+
+ .. cpp:function:: void remove_key(const Private_Key& key)
+
+     Removes ``key`` from the store
+
+ .. cpp:function:: void revoke_cert(const X509_Certificate&, CRL_Code, \
+    const X509_Time& time = X509_Time())
+
+     Marks ``cert`` as revoked starting from ``time``
+
+ .. cpp:function:: void affirm_cert(const X509_Certificate&)
+
+     Reverses the revokation for ``cert``
+
+ .. cpp:function:: std::vector<X509_CRL> generate_crls() const
+
+     Generates CRLs for all certificates marked as revoked.
+     A CRL is returned for each unique issuer DN.
+
+Botan currently only provides one SQL-backed certificate store using
+sqlite.
+
+.. cpp:class:: Certificate_Store_In_SQLite
+
+ .. cpp:function:: Certificate_Store_In_SQLite(const std::string& db_path, \
+    const std::string& passwd, RandomNumberGenerator& rng, const std::string& table_prefix = "")
+
+     Create or open an existing certificate store from an sqlite database file.
+     The password in ``passwd`` will be used to encrypt private keys. 
 
 Path Validation
 ----------------------------------------
@@ -241,9 +389,27 @@ called `path validation`, and in botan that operation is handled by a
 set of functions in ``x509path.h`` named ``x509_path_validate``:
 
 .. cpp:function:: Path_Validation_Result \
-     x509_path_validate(const X509_Certificate& end_cert, \
-     const Path_Validation_Restrictions& restrictions, \
-     const Certificate_Store& store)
+   x509_path_validate(const X509_Certificate& end_cert, \
+   const Path_Validation_Restrictions& restrictions, \
+   const Certificate_Store& store, const std::string& hostname = "", \
+   Usage_Type usage = Usage_Type::UNSPECIFIED, \
+   std::chrono::system_clock::time_point validation_time = std::chrono::system_clock::now(), \
+   std::chrono::milliseconds ocsp_timeout = std::chrono::milliseconds(0), \
+   const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_resp = {})
+
+   The last five parameters are optional. ``hostname`` specifies a hostname which is
+   matched against the subject DN in ``end_cert`` according to RFC 6125.
+   An empty hostname disables hostname validation.
+   ``usage`` specifies key usage restrictions that are compared
+   to the key usage fields in `end_cert` according to RFC 5280, if not set to
+   ``UNSPECIFIED``. ``validation_time`` allows setting the time point at which all certificates
+   are validated. This is really only useful for testing. The default is the
+   current system clock's current time. ``ocsp_timeout`` sets the timeout for
+   OCSP requests. The default of 0 disables OCSP checks alltogether.
+   ``ocsp_resp`` allows adding additional OCSP responses retrieved from outside
+   of the path validation.
+
+   For the different flavours of ``x509_path_validate``, check ``x509path.h``.
 
 The result of the validation is returned as a class:
 
@@ -330,12 +496,15 @@ issued by another CA (see the section on PKCS #10 requests). Creating
 a CA object is done by the following constructor:
 
 .. cpp:function:: X509_CA::X509_CA(const X509_Certificate& cert, \
-   const Private_Key& key)
+                                   const Private_Key& key, \
+                                   const std::string& hash_fn, \
+                                   RandomNumberGenerator& rng)
 
-The private key is the private key corresponding to the public key in the
-CA's certificate.
+The private ``key`` is the private key corresponding to the public key in the
+CA's certificate. ``hash_fn`` is the name of the hash function to use
+for signing, e.g., `SHA-256`. ``rng`` is queried for random during signing.
 
-Requests for new certificates are supplied to a CA in the form on PKCS
+Requests for new certificates are supplied to a CA in the form of PKCS
 #10 certificate requests (called a ``PKCS10_Request`` object in
 Botan). These are decoded in a similar manner to
 certificates/CRLs/etc. A request is vetted by humans (who somehow
@@ -344,7 +513,10 @@ entity who requested it), and then signed by a CA key, generating a
 new certificate:
 
 .. cpp:function:: X509_Certificate \
-   X509_CA::sign_request(const PKCS10_Request& req) const
+   X509_CA::sign_request(const PKCS10_Request& req, \
+                         RandomNumberGenerator& rng, \
+                         const X509_Time& not_before, \
+                         const X509_Time& not_after)
 
 Generating CRLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -359,10 +531,11 @@ Of course, you might be wondering what to do if no certificates have
 been revoked. Never fear; empty CRLs, which revoke nothing at all, can
 be issued. To generate a new, empty CRL, just call
 
-.. cpp:function:: X509_CRL X509_CA::new_crl(u32bit seconds_to_expiration = 0)
+.. cpp:function:: X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng, \
+                                            uint32_t next_update = 0)
 
   This function will return a new, empty CRL. The
-  ``seconds_to_expiration`` parameter is the number of seconds before
+  ``next_update`` parameter is the number of seconds before
   the CRL expires. If it is set to the (default) value of zero, then a
   reasonable default (currently 7 days) will be used.
 
@@ -370,11 +543,12 @@ On the other hand, you may have issued a CRL before. In that case, you will
 want to issue a new CRL that contains all previously revoked
 certificates, along with any new ones. This is done by calling
 
-.. cpp:function:: X509_CRL X509_CA::update_crl(const X509_CRL& old_crl, \
-   std::vector<CRL_Entry> new_revoked, size_t seconds_to_expiration = 0)
+.. cpp:function:: X509_CRL X509_CA::update_crl(const X509_CRL& last_crl, \
+   std::vector<CRL_Entry> new_entries, RandomNumberGenerator& rng, \
+   size_t next_update = 0)
 
-  Where ``X509_CRL`` is the last CRL this CA issued, and
-  ``new_revoked`` is a list of any newly revoked certificates. The
+  Where ``last_crl`` is the last CRL this CA issued, and
+  ``new_entries`` is a list of any newly revoked certificates. The
   function returns a new ``X509_CRL`` to make available for
   clients.
 
@@ -388,7 +562,7 @@ revocation (``reason``), and an object that represents the time that the
 certificate became invalid (if this information is known).
 
 If you wish to remove an old entry from the CRL, insert a new entry for the
-same cert, with a ``reason`` code of ``DELETE_CRL_ENTRY``. For example, if a
+same cert, with a ``reason`` code of ``REMOVE_FROM_CRL``. For example, if a
 revoked certificate has expired 'normally', there is no reason to continue to
 explicitly revoke it, since clients will reject the cert as expired in any
 case.
@@ -401,11 +575,12 @@ example when setting up a new root CA, or for use in specialized
 protocols. The library provides a utility function for this:
 
 .. cpp:function:: X509_Certificate create_self_signed_cert( \
-   const X509_Cert_Options& opts, const Private_Key& key)
+   const X509_Cert_Options& opts, const Private_Key& key, \
+   const std::string& hash_fn, RandomNumberGenerator& rng)
 
-   Where *key* is the private key you wish to use (the public key,
-   used in the certificate itself, is extracted from the private key),
-   and *opts* is an structure that has various bits of information
+   Where ``key`` is the private key you wish to use (the public key,
+   used in the certificate itself is extracted from the private key),
+   and ``opts`` is an structure that has various bits of information
    that will be used in creating the certificate (this structure, and
    its use, is discussed below).
 
@@ -416,7 +591,8 @@ Also in ``x509self.h``, there is a function for generating new PKCS #10
 certificate requests:
 
 .. cpp:function:: PKCS10_Request create_cert_req( \
-   const X509_Cert_Options& opts, const Private_Key& key)
+   const X509_Cert_Options& opts, const Private_Key& key, \
+   const std::string& hash_fn, RandomNumberGenerator& rng)
 
 This function acts quite similarly to
 :cpp:func:`create_self_signed_cert`, except it instead returns a PKCS
@@ -432,7 +608,8 @@ It's a class representing a bunch of information that will end up
 being stored into the certificate. This information comes in 3 major
 flavors: information about the subject (CA or end-user), the validity
 period of the certificate, and restrictions on the usage of the
-certificate.
+certificate. For special cases, you can also add custom X.509v3
+extensions.
 
 First and foremost is a number of ``std::string`` members, which
 contains various bits of information about the user: ``common_name``,
@@ -460,7 +637,7 @@ year/month/day. The date must be specified, but you can omit the time
 or trailing parts of it, for example "2002/11/27 1:50" or
 "2002/11/27".
 
-Lastly, you can set constraints on a key. The one you're mostly likely
+Third, you can set constraints on a key. The one you're mostly likely
 to want to use is to create (or request) a CA certificate, which can
 be done by calling the member function ``CA_key``. This should only be
 used when needed.
@@ -475,7 +652,7 @@ usage, OR them together): ``DIGITAL_SIGNATURE``, ``NON_REPUDIATION``,
 ``KEY_CERT_SIGN``, ``CRL_SIGN``, ``ENCIPHER_ONLY``,
 ``DECIPHER_ONLY``. Many of these have quite special semantics, so you
 should either consult the appropriate standards document (such as RFC
-3280), or just not call ``add_constraints``, in which case the
+5280), or just not call ``add_constraints``, in which case the
 appropriate values will be chosen for you.
 
 The second function, ``add_ex_constraints``, allows you to specify an
@@ -490,3 +667,11 @@ are named "PKIX.ServerAuth" (for TLS server authentication),
 "PKIX.TimeStamping". You can call "add_ex_constraints" any number of
 times - each new OID will be added to the list to include in the
 certificate.
+
+Lastly, you can add any X.509v3 extensions in the `extensions`
+member. This is really only useful if you want to encode custom
+extensions in the certificate. Most users probably won't need this.
+Note that extensions added this way will be overwritten by an
+``X509_CA`` if also added by the ``X509_CA`` itself. This currently
+includes the Basic Constraints, Key Usage, Authority Key ID, Subject
+Key ID, Subject Alternative Name and Extended Key Usage extension.
