@@ -8,7 +8,7 @@ CLANG_COV_FLAGS=-fsanitize-coverage=edge,indirect-calls,8bit-counters
 SHARED_FLAGS=-O3 -g -std=c++11 -pthread
 CFG_FLAGS=--with-debug-info --unsafe-fuzzer-mode
 
-LIBFUZZER_FLAGS=-Illvm-build/build/include $(SHARED_FLAGS) $(CLANG_COV_FLAGS)
+LIBFUZZER_FLAGS=-Illvm-build/build/include $(SHARED_FLAGS) $(CLANG_COV_FLAGS) $(CLANG_SAN_FLAGS)
 AFL_FLAGS=-Iafl-build/build/include $(SHARED_FLAGS) -DINCLUDE_AFL_MAIN
 
 LIBFUZZER_LIBS=llvm-build/libbotan-1.11.a libFuzzer.a
