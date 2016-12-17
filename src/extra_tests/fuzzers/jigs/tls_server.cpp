@@ -145,18 +145,7 @@ void fuzz(const uint8_t in[], size_t len)
 
    try
       {
-      while(len > 0)
-         {
-         const size_t write_len = in[0];
-         const size_t left = len - 1;
-
-         const size_t consumed = std::min(left, write_len);
-
-         server.received_data(in + 1, consumed);
-
-         in += consumed + 1;
-         len -= consumed + 1;
-         }
+      server.received_data(in, len);
       }
    catch(std::exception& e)
       {
