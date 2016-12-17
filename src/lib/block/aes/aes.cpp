@@ -345,12 +345,6 @@ void aes_key_schedule(const byte key[], size_t length,
                       secure_vector<byte>& ME,
                       secure_vector<byte>& MD)
    {
-
-   // if length is < 4, X = 0, the first for loop is not entered and in
-   // the second for loop "RC[(i-X)/X]" = division by zero
-   // But obviously valid aes length values are only 16, 24 and 32
-   BOTAN_ASSERT( length >= 4, "aes key length has valid size" );
-
    static const u32bit RC[10] = {
       0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
       0x20000000, 0x40000000, 0x80000000, 0x1B000000, 0x36000000 };
@@ -360,6 +354,10 @@ void aes_key_schedule(const byte key[], size_t length,
    secure_vector<u32bit> XEK(length + 32), XDK(length + 32);
 
    const size_t X = length / 4;
+
+   // Make clang-analyzer happy
+   BOTAN_ASSERT(X == 4 || X == 6 || X == 8, "Valid AES key size");
+
    for(size_t i = 0; i != X; ++i)
       XEK[i] = load_be<u32bit>(key, i);
 
