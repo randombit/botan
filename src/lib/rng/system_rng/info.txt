@@ -13,6 +13,7 @@ haiku
 hpux
 hurd
 irix
+includeos
 linux
 mingw
 netbsd
