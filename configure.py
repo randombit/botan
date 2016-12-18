@@ -700,6 +700,17 @@ class ModuleInfo(object):
         intersect_check('public', self.header_public, 'external', self.header_external)
         intersect_check('external', self.header_external, 'internal', self.header_internal)
 
+    def cross_check(self, arch_info, os_info, cc_info):
+        for os in self.os:
+            if os not in os_info:
+                raise Exception('Module %s mentions unknown OS %s' % (self.infofile, os))
+        for cc in self.cc:
+            if cc not in cc_info:
+                raise Exception('Module %s mentions unknown compiler %s' % (self.infofile, cc))
+        for arch in self.arch:
+            if arch not in arch_info:
+                raise Exception('Module %s mentions unknown arch %s' % (self.infofile, arch))
+
     def sources(self):
         return self.source
 
@@ -2098,6 +2109,9 @@ def main(argv = None):
     info_arch = load_build_data('CPU info', 'arch', ArchInfo)
     info_os   = load_build_data('OS info', 'os', OsInfo)
     info_cc   = load_build_data('compiler info', 'cc', CompilerInfo)
+
+    for mod in modules.values():
+        mod.cross_check(info_arch, info_os, info_cc)
 
     module_policies = load_build_data('module policy', 'policy', ModulePolicyInfo)
 
