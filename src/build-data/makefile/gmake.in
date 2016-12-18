@@ -33,6 +33,8 @@ all: $(CLI) $(TEST)
 # Link Commands
 %{gmake_dso_in}
 
+libs: $(LIBRARIES)
+
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(CLI_LINK_CMD) $(LDFLAGS) $(CLIOBJS) -L%{out_dir} -l%{libname} $(CLI_LINKS_TO) -o $(CLI)
 	$(CLI_POST_LINK_CMD)

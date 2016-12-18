@@ -51,6 +51,8 @@ all: $(CLI) $(TEST)
 
 %{test_build_cmds}
 
+libs: $(LIBRARIES)
+
 # Link Commands
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(CLI_LINK_CMD) /OUT:$@ $(CLIOBJS) $(LIB_FILENAME) $(CLI_LINKS_TO)
