@@ -17,7 +17,6 @@ Contents
    pubkey
    mceliece
    x509
-   ocsp
    tls
    credentials_manager
    bigint

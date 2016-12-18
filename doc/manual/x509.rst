@@ -675,3 +675,119 @@ Note that extensions added this way will be overwritten by an
 ``X509_CA`` if also added by the ``X509_CA`` itself. This currently
 includes the Basic Constraints, Key Usage, Authority Key ID, Subject
 Key ID, Subject Alternative Name and Extended Key Usage extension.
+
+OCSP Requests
+----------------------------------------
+
+A client makes an OCSP request to what is termed an 'OCSP responder'. This
+responder returns a signed response attesting that the certificate in question
+has not been revoked. The most recent OCSP specification is as of this
+writing :rfc:`6960`.
+
+Normally OCSP validation happens automatically as part of X.509 certificate
+validation, as long as OCSP is enabled (by setting a non-zero ``ocsp_timeout``
+in the call to ``x509_path_validate``, or for TLS by implementing the related
+``tls_verify_cert_chain_ocsp_timeout`` callback and returning a non-zero value
+from that). So most applications should not need to directly manipulate OCSP
+request and response objects.
+
+For those that do, the primary ocsp interface is in ``ocsp.h``. First a request
+must be formed, using information contained in the subject certificate and in
+the subject's issuing certificate.
+
+.. cpp:class:: OCSP::Request
+
+ .. cpp:function:: OCSP::Request(const X509_Certificate& issuer_cert, \
+                                 const X509_Certificate& subject_cert)
+
+      Create a new OCSP request
+
+ .. cpp:function:: std::vector<byte> BER_encode() const
+
+      Encode the current OCSP request as a binary string.
+
+ .. cpp:function:: std::string base64_encode() const
+
+      Encode the current OCSP request as a base64 string.
+
+Then the response is parsed and validated, and if valid, can be consulted
+for certificate status information.
+
+.. cpp:class:: OCSP::Response
+
+  .. cpp:function:: OCSP::Response(const uint8_t response_bits[], size_t response_bits_len)
+
+     Attempts to parse ``response_bits`` as an OCSP response. Throws an
+     exception if parsing fails. Note that this does not verify that the OCSP
+     response is valid (ie that the signature is correct), merely that the
+     ASN.1 structure matches an OCSP response.
+
+  .. cpp:function:: Certificate_Status_Code check_signature( \
+                    const std::vector<Certificate_Store*>& trust_roots, \
+                    const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path = {}) const
+
+     Find the issuing certificate of the OCSP response, and check the signature.
+
+     If possible, pass the full certificate path being validated in
+     the optional ``cert_path`` argument: this additional information
+     helps locate the OCSP signer's certificate in some cases. If this
+     does not return ``Certificate_Status_Code::OCSP_SIGNATURE_OK``,
+     then the request must not be be used further.
+
+  .. cpp:function:: Certificate_Status_Code verify_signature(const X509_Certificate& issuing_cert) const
+
+     If the certificate that issued the OCSP response is already known (eg,
+     because in some specific application all the OCSP responses will always
+     be signed by a single trusted issuer whose cert is baked into the code)
+     this provides an alternate version of `check_signature`.
+
+  .. cpp:function:: Certificate_Status_Code status_for(const X509_Certificate& issuer, \
+                        const X509_Certificate& subject, \
+                        std::chrono::system_clock::time_point ref_time = std::chrono::system_clock::now()) const
+
+     Assuming the signature is valid, returns the status for the subject certificate.
+     Make sure to get the ordering of the issuer and subject certificates correct.
+
+     The ``ref_time`` is normally just the system clock, but can be used if
+     validation against some other reference time is desired (such as for
+     testing, to verify an old previously valid OCSP response, or to use an
+     alternate time source such as the Roughtime protocol instead of the local
+     client system clock).
+
+  .. cpp:function:: const X509_Time& produced_at() const
+
+     Return the time this OCSP response was (claimed to be) produced at.
+
+  .. cpp:function::  const X509_DN& signer_name() const
+
+     Return the distinguished name of the signer. This is used to help
+     find the issuing certificate.
+
+     This field is optional in OCSP responses, and may not be set.
+
+  .. cpp:function:: const std::vector<uint8_t>& signer_key_hash() const
+
+     Return the SHA-1 hash of the public key of the signer. This is used to
+     help find the issuing certificate. The ``Certificate_Store`` API
+     ``find_cert_by_pubkey_sha1`` can search on this value.
+
+     This field is optional in OCSP responses, and may not be set.
+
+  .. cpp:function:: const std::vector<byte>& raw_bits() const
+
+     Return the entire raw ASN.1 blob (for debugging or specialized decoding needs)
+
+One common way of making OCSP requests is via HTTP, see :rfc:`2560`
+Appendix A for details. A basic implementation of this is the function
+``online_check``, which is available as long as the ``http_util`` module
+was compiled in; check by testing for the macro ``BOTAN_HAS_HTTP_UTIL``.
+
+.. cpp:function:: OCSP::Response online_check(const X509_Certificate& issuer, \
+                                              const X509_Certificate& subject, \
+                                              const Certificate_Store* trusted_roots)
+
+   Attempts to contact the OCSP responder specified in the subject certificate
+   over a new HTTP socket, parses and returns the response. If trusted_roots is
+   not null, then the response is additionally validated using OCSP response API
+   ``check_signature``. Otherwise, this call must be performed later by the
+   application.
