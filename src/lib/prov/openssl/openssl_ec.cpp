@@ -80,7 +80,23 @@ int OpenSSL_EC_nid_for(const OID& oid)
    if(name == "secp521r1")
       return NID_secp521r1;
 
-   // TODO: OpenSSL 1.0.2 added brainpool curves
+   // OpenSSL 1.0.2 added brainpool curves
+#if OPENSSL_VERSION_NUMBER >= 0x1000200fL
+   if(name == "brainpool160r1")
+      return NID_brainpoolP160r1;
+   if(name == "brainpool192r1")
+      return NID_brainpoolP192r1;
+   if(name == "brainpool224r1")
+      return NID_brainpoolP224r1;
+   if(name == "brainpool256r1")
+      return NID_brainpoolP256r1;
+   if(name == "brainpool320r1")
+      return NID_brainpoolP320r1;
+   if(name == "brainpool384r1")
+      return NID_brainpoolP384r1;
+   if(name == "brainpool512r1")
+      return NID_brainpoolP512r1;
+#endif
 
    return -1;
    }
