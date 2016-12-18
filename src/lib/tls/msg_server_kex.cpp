@@ -287,7 +287,13 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
    verifier.update(state.server_hello()->random());
    verifier.update(params());
 
-   return verifier.check_signature(m_signature);
+   const bool signature_valid = verifier.check_signature(m_signature);
+
+#if defined(BOTAN_UNSAFE_FUZZER_MODE)
+   return true;
+#else
+   return signature_valid;
+#endif
    }
 
 const Private_Key& Server_Key_Exchange::server_kex_key() const

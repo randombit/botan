@@ -90,7 +90,14 @@ bool Certificate_Verify::verify(const X509_Certificate& cert,
 
    PK_Verifier verifier(*key, format.first, format.second);
 
-   return verifier.verify_message(state.hash().get_contents(), m_signature);
+   const bool signature_valid =
+      verifier.verify_message(state.hash().get_contents(), m_signature);
+
+#if defined(BOTAN_UNSAFE_FUZZER_MODE)
+   return true;
+#else
+   return signature_valid;
+#endif
    }
 
 }

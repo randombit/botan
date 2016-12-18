@@ -74,7 +74,14 @@ Finished::Finished(const std::vector<byte>& buf) : m_verification_data(buf)
 bool Finished::verify(const Handshake_State& state,
                       Connection_Side side) const
    {
-   return (m_verification_data == finished_compute_verify(state, side));
+   std::vector<byte> computed_verify = finished_compute_verify(state, side);
+
+#if defined(BOTAN_UNSAFE_FUZZER_MODE)
+   return true;
+#else
+   return (m_verification_data.size() == computed_verify.size()) &&
+      same_mem(m_verification_data.data(), computed_verify.data(), computed_verify.size());
+#endif
    }
 
 }
