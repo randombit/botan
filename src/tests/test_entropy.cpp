@@ -66,7 +66,7 @@ class Entropy_Source_Tests : public Test
 
                         try
                            {
-                           Botan::secure_vector<byte> compressed;
+                           Botan::secure_vector<uint8_t> compressed;
                            compressed.assign(rng.seed_material().begin(), rng.seed_material().end());
                            comp->start(9);
                            comp->finish(compressed);
@@ -89,7 +89,7 @@ class Entropy_Source_Tests : public Test
 
                         try
                            {
-                           Botan::secure_vector<byte> compressed;
+                           Botan::secure_vector<uint8_t> compressed;
                            compressed.insert(compressed.end(), rng.seed_material().begin(), rng.seed_material().end());
                            compressed.insert(compressed.end(), rng2.seed_material().begin(), rng2.seed_material().end());
 

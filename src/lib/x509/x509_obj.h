@@ -26,12 +26,12 @@ class BOTAN_DLL X509_Object : public ASN1_Object
       * The underlying data that is to be or was signed
       * @return data that is or was signed
       */
-      std::vector<byte> tbs_data() const;
+      std::vector<uint8_t> tbs_data() const;
 
       /**
       * @return signature on tbs_data()
       */
-      std::vector<byte> signature() const;
+      std::vector<uint8_t> signature() const;
 
       /**
       * @return signature algorithm that was used to generate signature
@@ -51,10 +51,10 @@ class BOTAN_DLL X509_Object : public ASN1_Object
       * @param tbs the tbs bits to be signed
       * @return signed X509 object
       */
-      static std::vector<byte> make_signed(class PK_Signer* signer,
+      static std::vector<uint8_t> make_signed(class PK_Signer* signer,
                                            RandomNumberGenerator& rng,
                                            const AlgorithmIdentifier& alg_id,
-                                           const secure_vector<byte>& tbs);
+                                           const secure_vector<uint8_t>& tbs);
 
       /**
       * Check the signature on this data
@@ -86,7 +86,7 @@ class BOTAN_DLL X509_Object : public ASN1_Object
       /**
       * @return BER encoding of this
       */
-      std::vector<byte> BER_encode() const;
+      std::vector<uint8_t> BER_encode() const;
 
       /**
       * @return PEM encoding of this
@@ -96,7 +96,7 @@ class BOTAN_DLL X509_Object : public ASN1_Object
       virtual ~X509_Object() {}
    protected:
       X509_Object(DataSource& src, const std::string& pem_labels);
-      X509_Object(const std::vector<byte>& vec, const std::string& labels);
+      X509_Object(const std::vector<uint8_t>& vec, const std::string& labels);
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       X509_Object(const std::string& file, const std::string& pem_labels);
@@ -105,7 +105,7 @@ class BOTAN_DLL X509_Object : public ASN1_Object
       void do_decode();
       X509_Object() {}
       AlgorithmIdentifier m_sig_algo;
-      std::vector<byte> m_tbs_bits, m_sig;
+      std::vector<uint8_t> m_tbs_bits, m_sig;
    private:
       virtual void force_decode() = 0;
       void init(DataSource&, const std::string&);

@@ -152,12 +152,12 @@ class BigInt_Unit_Tests : public Test
          const BigInt n1(0xffff);
          const BigInt n2(1023);
 
-         Botan::secure_vector<byte> encoded_n1 = BigInt::encode_1363(n1, 256);
-         Botan::secure_vector<byte> encoded_n2 = BigInt::encode_1363(n2, 256);
-         Botan::secure_vector<byte> expected = encoded_n1;
+         Botan::secure_vector<uint8_t> encoded_n1 = BigInt::encode_1363(n1, 256);
+         Botan::secure_vector<uint8_t> encoded_n2 = BigInt::encode_1363(n2, 256);
+         Botan::secure_vector<uint8_t> expected = encoded_n1;
          expected += encoded_n2;
 
-         Botan::secure_vector<byte> encoded_n1_n2 = BigInt::encode_fixed_length_int_pair(n1, n2, 256);
+         Botan::secure_vector<uint8_t> encoded_n1_n2 = BigInt::encode_fixed_length_int_pair(n1, n2, 256);
          result.test_eq("encode_fixed_length_int_pair", encoded_n1_n2, expected);
 
          for (size_t i = 0; i < 256 - n1.bytes(); ++i)
@@ -540,7 +540,7 @@ class DSA_ParamGen_Test : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override
          {
-         const std::vector<byte> seed = get_req_bin(vars, "Seed");
+         const std::vector<uint8_t> seed = get_req_bin(vars, "Seed");
          const Botan::BigInt P = get_req_bn(vars, "P");
          const Botan::BigInt Q = get_req_bn(vars, "Q");
 

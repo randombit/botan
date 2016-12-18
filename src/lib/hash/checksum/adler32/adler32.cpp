@@ -12,11 +12,11 @@ namespace Botan {
 
 namespace {
 
-void adler32_update(const byte input[], size_t length,
-                    u16bit& S1, u16bit& S2)
+void adler32_update(const uint8_t input[], size_t length,
+                    uint16_t& S1, uint16_t& S2)
    {
-   u32bit S1x = S1;
-   u32bit S2x = S2;
+   uint32_t S1x = S1;
+   uint32_t S2x = S2;
 
    while(length >= 16)
       {
@@ -55,7 +55,7 @@ void adler32_update(const byte input[], size_t length,
 /*
 * Update an Adler32 Checksum
 */
-void Adler32::add_data(const byte input[], size_t length)
+void Adler32::add_data(const uint8_t input[], size_t length)
    {
    const size_t PROCESS_AMOUNT = 5552;
 
@@ -72,7 +72,7 @@ void Adler32::add_data(const byte input[], size_t length)
 /*
 * Finalize an Adler32 Checksum
 */
-void Adler32::final_result(byte output[])
+void Adler32::final_result(uint8_t output[])
    {
    store_be(output, m_S2, m_S1);
    clear();

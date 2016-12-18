@@ -22,20 +22,20 @@ namespace TLS {
 class Handshake_Hash
    {
    public:
-      void update(const byte in[], size_t length)
+      void update(const uint8_t in[], size_t length)
          { m_data += std::make_pair(in, length); }
 
-      void update(const std::vector<byte>& in)
+      void update(const std::vector<uint8_t>& in)
          { m_data += in; }
 
-      secure_vector<byte> final(Protocol_Version version,
+      secure_vector<uint8_t> final(Protocol_Version version,
                                 const std::string& mac_algo) const;
 
-      const std::vector<byte>& get_contents() const { return m_data; }
+      const std::vector<uint8_t>& get_contents() const { return m_data; }
 
       void reset() { m_data.clear(); }
    private:
-      std::vector<byte> m_data;
+      std::vector<uint8_t> m_data;
    };
 
 }

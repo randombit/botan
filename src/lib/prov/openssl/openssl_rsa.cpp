@@ -44,8 +44,8 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
       OpenSSL_RSA_Encryption_Operation(const RSA_PublicKey& rsa, int pad, size_t pad_overhead) :
          m_openssl_rsa(nullptr, ::RSA_free), m_padding(pad)
          {
-         const std::vector<byte> der = rsa.public_key_bits();
-         const byte* der_ptr = der.data();
+         const std::vector<uint8_t> der = rsa.public_key_bits();
+         const uint8_t* der_ptr = der.data();
          m_openssl_rsa.reset(::d2i_RSAPublicKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
             throw OpenSSL_Error("d2i_RSAPublicKey");
@@ -55,7 +55,7 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
 
       size_t max_input_bits() const override { return m_bits; };
 
-      secure_vector<byte> encrypt(const byte msg[], size_t msg_len,
+      secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len,
                                   RandomNumberGenerator&) override
          {
          const size_t mod_sz = n_size();
@@ -63,9 +63,9 @@ class OpenSSL_RSA_Encryption_Operation : public PK_Ops::Encryption
          if(msg_len > mod_sz)
             throw Invalid_Argument("Input too large for RSA key");
 
-         secure_vector<byte> outbuf(mod_sz);
+         secure_vector<uint8_t> outbuf(mod_sz);
 
-         secure_vector<byte> inbuf;
+         secure_vector<uint8_t> inbuf;
 
          if(m_padding == RSA_NO_PADDING)
             {
@@ -99,17 +99,17 @@ class OpenSSL_RSA_Decryption_Operation : public PK_Ops::Decryption
       OpenSSL_RSA_Decryption_Operation(const RSA_PrivateKey& rsa, int pad) :
          m_openssl_rsa(nullptr, ::RSA_free), m_padding(pad)
          {
-         const secure_vector<byte> der = rsa.private_key_bits();
-         const byte* der_ptr = der.data();
+         const secure_vector<uint8_t> der = rsa.private_key_bits();
+         const uint8_t* der_ptr = der.data();
          m_openssl_rsa.reset(d2i_RSAPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
             throw OpenSSL_Error("d2i_RSAPrivateKey");
          }
 
-      secure_vector<byte> decrypt(byte& valid_mask,
-                                  const byte msg[], size_t msg_len) override
+      secure_vector<uint8_t> decrypt(uint8_t& valid_mask,
+                                  const uint8_t msg[], size_t msg_len) override
          {
-         secure_vector<byte> buf(::RSA_size(m_openssl_rsa.get()));
+         secure_vector<uint8_t> buf(::RSA_size(m_openssl_rsa.get()));
          int rc = ::RSA_private_decrypt(msg_len, msg, buf.data(), m_openssl_rsa.get(), m_padding);
          if(rc < 0 || static_cast<size_t>(rc) > buf.size())
             {
@@ -143,8 +143,8 @@ class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
          PK_Ops::Verification_with_EMSA(emsa),
          m_openssl_rsa(nullptr, ::RSA_free)
          {
-         const std::vector<byte> der = rsa.public_key_bits();
-         const byte* der_ptr = der.data();
+         const std::vector<uint8_t> der = rsa.public_key_bits();
+         const uint8_t* der_ptr = der.data();
          m_openssl_rsa.reset(::d2i_RSAPublicKey(nullptr, &der_ptr, der.size()));
          }
 
@@ -152,17 +152,17 @@ class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
 
       bool with_recovery() const override { return true; }
 
-      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len) override
+      secure_vector<uint8_t> verify_mr(const uint8_t msg[], size_t msg_len) override
          {
          const size_t mod_sz = ::RSA_size(m_openssl_rsa.get());
 
          if(msg_len > mod_sz)
             throw Invalid_Argument("OpenSSL RSA verify input too large");
 
-         secure_vector<byte> inbuf(mod_sz);
+         secure_vector<uint8_t> inbuf(mod_sz);
          copy_mem(&inbuf[mod_sz - msg_len], msg, msg_len);
 
-         secure_vector<byte> outbuf(mod_sz);
+         secure_vector<uint8_t> outbuf(mod_sz);
 
          int rc = ::RSA_public_decrypt(inbuf.size(), inbuf.data(), outbuf.data(),
                                        m_openssl_rsa.get(), RSA_NO_PADDING);
@@ -183,14 +183,14 @@ class OpenSSL_RSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
          PK_Ops::Signature_with_EMSA(emsa),
          m_openssl_rsa(nullptr, ::RSA_free)
          {
-         const secure_vector<byte> der = rsa.private_key_bits();
-         const byte* der_ptr = der.data();
+         const secure_vector<uint8_t> der = rsa.private_key_bits();
+         const uint8_t* der_ptr = der.data();
          m_openssl_rsa.reset(d2i_RSAPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_openssl_rsa)
             throw OpenSSL_Error("d2i_RSAPrivateKey");
          }
 
-      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                    RandomNumberGenerator&) override
          {
          const size_t mod_sz = ::RSA_size(m_openssl_rsa.get());
@@ -198,10 +198,10 @@ class OpenSSL_RSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
          if(msg_len > mod_sz)
             throw Invalid_Argument("OpenSSL RSA sign input too large");
 
-         secure_vector<byte> inbuf(mod_sz);
+         secure_vector<uint8_t> inbuf(mod_sz);
          copy_mem(&inbuf[mod_sz - msg_len], msg, msg_len);
 
-         secure_vector<byte> outbuf(mod_sz);
+         secure_vector<uint8_t> outbuf(mod_sz);
 
          int rc = ::RSA_private_encrypt(inbuf.size(), inbuf.data(), outbuf.data(),
                                         m_openssl_rsa.get(), RSA_NO_PADDING);

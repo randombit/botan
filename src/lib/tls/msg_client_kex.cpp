@@ -66,7 +66,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
       SymmetricKey psk = creds.psk("tls-client", hostname, psk_identity);
 
-      std::vector<byte> zeros(psk.length());
+      std::vector<uint8_t> zeros(psk.length());
 
       append_tls_length_value(m_pre_master, zeros, 2);
       append_tls_length_value(m_pre_master, psk.bits_of(), 2);
@@ -91,9 +91,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
       if(kex_algo == "DH" || kex_algo == "DHE_PSK")
          {
-         BigInt p = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-         BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-         BigInt Y = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+         BigInt p = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
+         BigInt g = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
+         BigInt Y = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
 
          if(reader.remaining_bytes())
             throw Decoding_Error("Bad params size for DH key exchange");
@@ -122,7 +122,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          PK_Key_Agreement ka(priv_key, rng, "Raw");
 
-         secure_vector<byte> dh_secret = CT::strip_leading_zeros(
+         secure_vector<uint8_t> dh_secret = CT::strip_leading_zeros(
             ka.derive_key(0, counterparty_key.public_value()).bits_of());
 
          if(kex_algo == "DH")
@@ -137,12 +137,12 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          }
       else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
          {
-         const byte curve_type = reader.get_byte();
+         const uint8_t curve_type = reader.get_byte();
 
          if(curve_type != 3)
             throw Decoding_Error("Server sent non-named ECC curve");
 
-         const u16bit curve_id = reader.get_u16bit();
+         const uint16_t curve_id = reader.get_uint16_t();
 
          const std::string curve_name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
 
@@ -155,9 +155,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
                                 "Server sent ECC curve prohibited by policy");
             }
 
-         const std::vector<byte> ecdh_key = reader.get_range<byte>(1, 1, 255);
-         std::vector<byte> our_ecdh_public;
-         secure_vector<byte> ecdh_secret;
+         const std::vector<uint8_t> ecdh_key = reader.get_range<uint8_t>(1, 1, 255);
+         std::vector<uint8_t> our_ecdh_public;
+         secure_vector<uint8_t> ecdh_secret;
 
          if(curve_name == "x25519")
             {
@@ -204,10 +204,10 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 #if defined(BOTAN_HAS_SRP6)
       else if(kex_algo == "SRP_SHA")
          {
-         const BigInt N = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-         const BigInt g = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
-         std::vector<byte> salt = reader.get_range<byte>(1, 1, 255);
-         const BigInt B = BigInt::decode(reader.get_range<byte>(2, 1, 65535));
+         const BigInt N = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
+         const BigInt g = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
+         std::vector<uint8_t> salt = reader.get_range<uint8_t>(1, 1, 255);
+         const BigInt B = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
 
          const std::string srp_group = srp6_group_identifier(N, g);
 
@@ -234,7 +234,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 #if defined(BOTAN_HAS_CECPQ1)
       else if(kex_algo == "CECPQ1")
          {
-         const std::vector<byte> cecpq1_offer = reader.get_range<byte>(2, 1, 65535);
+         const std::vector<uint8_t> cecpq1_offer = reader.get_range<uint8_t>(2, 1, 65535);
 
          if(cecpq1_offer.size() != CECPQ1_OFFER_BYTES)
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Invalid CECPQ1 key size");
@@ -273,7 +273,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          PK_Encryptor_EME encryptor(*rsa_pub, rng, "PKCS1v15");
 
-         const std::vector<byte> encrypted_key = encryptor.encrypt(m_pre_master, rng);
+         const std::vector<uint8_t> encrypted_key = encryptor.encrypt(m_pre_master, rng);
 
          append_tls_length_value(m_key_material, encrypted_key, 2);
          }
@@ -289,7 +289,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 /*
 * Read a Client Key Exchange message
 */
-Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
+Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
                                          const Handshake_State& state,
                                          const Private_Key* server_rsa_kex_key,
                                          Credentials_Manager& creds,
@@ -310,12 +310,12 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
          throw Internal_Error("Expected RSA key but got " + server_rsa_kex_key->algo_name());
 
       TLS_Data_Reader reader("ClientKeyExchange", contents);
-      const std::vector<byte> encrypted_pre_master = reader.get_range<byte>(2, 0, 65535);
+      const std::vector<uint8_t> encrypted_pre_master = reader.get_range<uint8_t>(2, 0, 65535);
 
       PK_Decryptor_EME decryptor(*server_rsa_kex_key, rng, "PKCS1v15");
 
-      const byte client_major = state.client_hello()->version().major_version();
-      const byte client_minor = state.client_hello()->version().minor_version();
+      const uint8_t client_major = state.client_hello()->version().major_version();
+      const uint8_t client_minor = state.client_hello()->version().minor_version();
 
       /*
       * PK_Decryptor::decrypt_or_random will return a random value if
@@ -325,8 +325,8 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
       */
       const size_t expected_plaintext_size = 48;
       const size_t expected_content_size = 2;
-      const byte expected_content_bytes[expected_content_size] = { client_major, client_minor };
-      const byte expected_content_pos[expected_content_size] = { 0, 1 };
+      const uint8_t expected_content_bytes[expected_content_size] = { client_major, client_minor };
+      const uint8_t expected_content_pos[expected_content_size] = { 0, 1 };
 
       m_pre_master =
          decryptor.decrypt_or_random(encrypted_pre_master.data(),
@@ -363,7 +363,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
 
       if(kex_algo == "PSK")
          {
-         std::vector<byte> zeros(psk.length());
+         std::vector<uint8_t> zeros(psk.length());
          append_tls_length_value(m_pre_master, zeros, 2);
          append_tls_length_value(m_pre_master, psk.bits_of(), 2);
          }
@@ -372,7 +372,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
          {
          SRP6_Server_Session& srp = state.server_kex()->server_srp_params();
 
-         m_pre_master = srp.step2(BigInt::decode(reader.get_range<byte>(2, 0, 65535))).bits_of();
+         m_pre_master = srp.step2(BigInt::decode(reader.get_range<uint8_t>(2, 0, 65535))).bits_of();
          }
 #endif
 #if defined(BOTAN_HAS_CECPQ1)
@@ -380,7 +380,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
          {
          const CECPQ1_key& cecpq1_offer = state.server_kex()->cecpq1_key();
 
-         const std::vector<byte> cecpq1_accept = reader.get_range<byte>(2, 0, 65535);
+         const std::vector<uint8_t> cecpq1_accept = reader.get_range<uint8_t>(2, 0, 65535);
          if(cecpq1_accept.size() != CECPQ1_ACCEPT_BYTES)
             throw Decoding_Error("Invalid size for CECPQ1 accept message");
 
@@ -404,14 +404,14 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<byte>& contents,
             {
             PK_Key_Agreement ka(*ka_key, rng, "Raw");
 
-            std::vector<byte> client_pubkey;
+            std::vector<uint8_t> client_pubkey;
 
             if(ka_key->algo_name() == "DH")
-               client_pubkey = reader.get_range<byte>(2, 0, 65535);
+               client_pubkey = reader.get_range<uint8_t>(2, 0, 65535);
             else
-               client_pubkey = reader.get_range<byte>(1, 0, 255);
+               client_pubkey = reader.get_range<uint8_t>(1, 0, 255);
 
-            secure_vector<byte> shared_secret = ka.derive_key(0, client_pubkey).bits_of();
+            secure_vector<uint8_t> shared_secret = ka.derive_key(0, client_pubkey).bits_of();
 
             if(ka_key->algo_name() == "DH")
                shared_secret = CT::strip_leading_zeros(shared_secret);

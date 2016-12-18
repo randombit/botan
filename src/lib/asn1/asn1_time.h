@@ -35,7 +35,7 @@ class BOTAN_DLL X509_Time final : public ASN1_Object
       bool time_is_set() const;
 
       ///  Compare this time against another
-      s32bit cmp(const X509_Time& other) const;
+      int32_t cmp(const X509_Time& other) const;
 
       /// Create an invalid X509_Time
       X509_Time() {}
@@ -53,12 +53,12 @@ class BOTAN_DLL X509_Time final : public ASN1_Object
       void set_to(const std::string& t_spec, ASN1_Tag);
       bool passes_sanity_check() const;
 
-      u32bit m_year = 0;
-      u32bit m_month = 0;
-      u32bit m_day = 0;
-      u32bit m_hour = 0;
-      u32bit m_minute = 0;
-      u32bit m_second = 0;
+      uint32_t m_year = 0;
+      uint32_t m_month = 0;
+      uint32_t m_day = 0;
+      uint32_t m_hour = 0;
+      uint32_t m_minute = 0;
+      uint32_t m_second = 0;
       ASN1_Tag m_tag = NO_OBJECT;
    };
 

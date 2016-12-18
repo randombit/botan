@@ -86,7 +86,7 @@ BOTAN_DLL std::string string_join(const std::vector<std::string>& strs,
 * @param oid the OID in string form
 * @return OID components
 */
-BOTAN_DLL std::vector<u32bit> parse_asn1_oid(const std::string& oid);
+BOTAN_DLL std::vector<uint32_t> parse_asn1_oid(const std::string& oid);
 
 /**
 * Compare two names using the X.509 comparison algorithm
@@ -102,28 +102,28 @@ BOTAN_DLL bool x500_name_cmp(const std::string& name1,
 * @param str the string to convert
 * @return number value of the string
 */
-BOTAN_DLL u32bit to_u32bit(const std::string& str);
+BOTAN_DLL uint32_t to_u32bit(const std::string& str);
 
 /**
 * Convert a time specification to a number
 * @param timespec the time specification
 * @return number of seconds represented by timespec
 */
-BOTAN_DLL u32bit timespec_to_u32bit(const std::string& timespec);
+BOTAN_DLL uint32_t timespec_to_u32bit(const std::string& timespec);
 
 /**
 * Convert a string representation of an IPv4 address to a number
 * @param ip_str the string representation
 * @return integer IPv4 address
 */
-BOTAN_DLL u32bit string_to_ipv4(const std::string& ip_str);
+BOTAN_DLL uint32_t string_to_ipv4(const std::string& ip_str);
 
 /**
 * Convert an IPv4 address to a string
 * @param ip_addr the IPv4 address to convert
 * @return string representation of the IPv4 address
 */
-BOTAN_DLL std::string ipv4_to_string(u32bit ip_addr);
+BOTAN_DLL std::string ipv4_to_string(uint32_t ip_addr);
 
 std::map<std::string, std::string> BOTAN_DLL read_cfg(std::istream& is);
 

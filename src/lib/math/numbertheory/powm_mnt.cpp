@@ -86,7 +86,7 @@ BigInt Montgomery_Exponentiator::execute() const
          x = z;
          }
 
-      const u32bit nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits);
+      const uint32_t nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits);
 
       const BigInt& y = m_g[nibble];
 

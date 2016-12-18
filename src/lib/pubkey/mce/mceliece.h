@@ -21,9 +21,9 @@ namespace Botan {
 class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
    {
    public:
-      explicit McEliece_PublicKey(const std::vector<byte>& key_bits);
+      explicit McEliece_PublicKey(const std::vector<uint8_t>& key_bits);
 
-      McEliece_PublicKey(std::vector<byte> const& pub_matrix, u32bit the_t, u32bit the_code_length) :
+      McEliece_PublicKey(std::vector<uint8_t> const& pub_matrix, uint32_t the_t, uint32_t the_code_length) :
          m_public_matrix(pub_matrix),
          m_t(the_t),
          m_code_length(the_code_length)
@@ -31,7 +31,7 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
 
       McEliece_PublicKey(const McEliece_PublicKey& other);
 
-      secure_vector<byte> random_plaintext_element(RandomNumberGenerator& rng) const;
+      secure_vector<uint8_t> random_plaintext_element(RandomNumberGenerator& rng) const;
 
       std::string algo_name() const override { return "McEliece"; }
 
@@ -40,15 +40,15 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
       size_t key_length() const override;
       size_t estimated_strength() const override;
 
-      std::vector<byte> public_key_bits() const override;
+      std::vector<uint8_t> public_key_bits() const override;
 
       bool check_key(RandomNumberGenerator&, bool) const override
          { return true; }
 
-      u32bit get_t() const { return m_t; }
-      u32bit get_code_length() const { return m_code_length; }
-      u32bit get_message_word_bit_length() const;
-      const std::vector<byte>& get_public_matrix() const { return m_public_matrix; }
+      uint32_t get_t() const { return m_t; }
+      uint32_t get_code_length() const { return m_code_length; }
+      uint32_t get_message_word_bit_length() const;
+      const std::vector<uint8_t>& get_public_matrix() const { return m_public_matrix; }
 
       bool operator==(const McEliece_PublicKey& other) const;
       bool operator!=(const McEliece_PublicKey& other) const { return !(*this == other); }
@@ -61,9 +61,9 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
    protected:
       McEliece_PublicKey() : m_t(0), m_code_length(0) {}
 
-      std::vector<byte> m_public_matrix;
-      u32bit m_t;
-      u32bit m_code_length;
+      std::vector<uint8_t> m_public_matrix;
+      uint32_t m_t;
+      uint32_t m_code_length;
    };
 
 class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
@@ -85,26 +85,26 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
       */
       McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code_length, size_t t);
 
-      explicit McEliece_PrivateKey(const secure_vector<byte>& key_bits);
+      explicit McEliece_PrivateKey(const secure_vector<uint8_t>& key_bits);
 
       McEliece_PrivateKey(polyn_gf2m const& goppa_polyn,
-                          std::vector<u32bit> const& parity_check_matrix_coeffs,
+                          std::vector<uint32_t> const& parity_check_matrix_coeffs,
                           std::vector<polyn_gf2m> const& square_root_matrix,
                           std::vector<gf2m> const& inverse_support,
-                          std::vector<byte> const& public_matrix );
+                          std::vector<uint8_t> const& public_matrix );
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       polyn_gf2m const& get_goppa_polyn() const { return m_g; }
-      std::vector<u32bit> const& get_H_coeffs() const { return m_coeffs; }
+      std::vector<uint32_t> const& get_H_coeffs() const { return m_coeffs; }
       std::vector<gf2m> const& get_Linv() const { return m_Linv; }
       std::vector<polyn_gf2m> const& get_sqrtmod() const { return m_sqrtmod; }
 
-      inline u32bit get_dimension() const { return m_dimension; }
+      inline uint32_t get_dimension() const { return m_dimension; }
 
-      inline u32bit get_codimension() const { return m_codimension; }
+      inline uint32_t get_codimension() const { return m_codimension; }
 
-      secure_vector<byte> private_key_bits() const override;
+      secure_vector<uint8_t> private_key_bits() const override;
 
       bool operator==(const McEliece_PrivateKey & other) const;
 
@@ -118,10 +118,10 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
       polyn_gf2m m_g;
       std::vector<polyn_gf2m> m_sqrtmod;
       std::vector<gf2m> m_Linv;
-      std::vector<u32bit> m_coeffs;
+      std::vector<uint32_t> m_coeffs;
 
-      u32bit m_codimension;
-      u32bit m_dimension;
+      uint32_t m_codimension;
+      uint32_t m_dimension;
    };
 
 /**

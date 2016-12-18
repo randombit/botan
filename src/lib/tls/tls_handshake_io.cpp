@@ -18,22 +18,22 @@ namespace TLS {
 
 namespace {
 
-inline size_t load_be24(const byte q[3])
+inline size_t load_be24(const uint8_t q[3])
    {
-   return make_u32bit(0,
+   return make_uint32(0,
                       q[0],
                       q[1],
                       q[2]);
    }
 
-void store_be24(byte out[3], size_t val)
+void store_be24(uint8_t out[3], size_t val)
    {
-   out[0] = get_byte(1, static_cast<u32bit>(val));
-   out[1] = get_byte(2, static_cast<u32bit>(val));
-   out[2] = get_byte(3, static_cast<u32bit>(val));
+   out[0] = get_byte(1, static_cast<uint32_t>(val));
+   out[1] = get_byte(2, static_cast<uint32_t>(val));
+   out[2] = get_byte(3, static_cast<uint32_t>(val));
    }
 
-u64bit steady_clock_ms()
+uint64_t steady_clock_ms()
    {
    return std::chrono::duration_cast<std::chrono::milliseconds>(
       std::chrono::steady_clock::now().time_since_epoch()).count();
@@ -58,8 +58,8 @@ Protocol_Version Stream_Handshake_IO::initial_record_version() const
    return Protocol_Version::TLS_V10;
    }
 
-void Stream_Handshake_IO::add_record(const std::vector<byte>& record,
-                                     Record_Type record_type, u64bit)
+void Stream_Handshake_IO::add_record(const std::vector<uint8_t>& record,
+                                     Record_Type record_type, uint64_t)
    {
    if(record_type == HANDSHAKE)
       {
@@ -71,25 +71,25 @@ void Stream_Handshake_IO::add_record(const std::vector<byte>& record,
          throw Decoding_Error("Invalid ChangeCipherSpec");
 
       // Pretend it's a regular handshake message of zero length
-      const byte ccs_hs[] = { HANDSHAKE_CCS, 0, 0, 0 };
+      const uint8_t ccs_hs[] = { HANDSHAKE_CCS, 0, 0, 0 };
       m_queue.insert(m_queue.end(), ccs_hs, ccs_hs + sizeof(ccs_hs));
       }
    else
       throw Decoding_Error("Unknown message type " + std::to_string(record_type) + " in handshake processing");
    }
 
-std::pair<Handshake_Type, std::vector<byte>>
+std::pair<Handshake_Type, std::vector<uint8_t>>
 Stream_Handshake_IO::get_next_record(bool)
    {
    if(m_queue.size() >= 4)
       {
-      const size_t length = make_u32bit(0, m_queue[1], m_queue[2], m_queue[3]);
+      const size_t length = make_uint32(0, m_queue[1], m_queue[2], m_queue[3]);
 
       if(m_queue.size() >= length + 4)
          {
          Handshake_Type type = static_cast<Handshake_Type>(m_queue[0]);
 
-         std::vector<byte> contents(m_queue.begin() + 4,
+         std::vector<uint8_t> contents(m_queue.begin() + 4,
                                     m_queue.begin() + 4 + length);
 
          m_queue.erase(m_queue.begin(), m_queue.begin() + 4 + length);
@@ -98,14 +98,14 @@ Stream_Handshake_IO::get_next_record(bool)
          }
       }
 
-   return std::make_pair(HANDSHAKE_NONE, std::vector<byte>());
+   return std::make_pair(HANDSHAKE_NONE, std::vector<uint8_t>());
    }
 
-std::vector<byte>
-Stream_Handshake_IO::format(const std::vector<byte>& msg,
+std::vector<uint8_t>
+Stream_Handshake_IO::format(const std::vector<uint8_t>& msg,
                             Handshake_Type type) const
    {
-   std::vector<byte> send_buf(4 + msg.size());
+   std::vector<uint8_t> send_buf(4 + msg.size());
 
    const size_t buf_size = msg.size();
 
@@ -121,17 +121,17 @@ Stream_Handshake_IO::format(const std::vector<byte>& msg,
    return send_buf;
    }
 
-std::vector<byte> Stream_Handshake_IO::send(const Handshake_Message& msg)
+std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg)
    {
-   const std::vector<byte> msg_bits = msg.serialize();
+   const std::vector<uint8_t> msg_bits = msg.serialize();
 
    if(msg.type() == HANDSHAKE_CCS)
       {
       m_send_hs(CHANGE_CIPHER_SPEC, msg_bits);
-      return std::vector<byte>(); // not included in handshake hashes
+      return std::vector<uint8_t>(); // not included in handshake hashes
       }
 
-   const std::vector<byte> buf = format(msg_bits, msg.type());
+   const std::vector<uint8_t> buf = format(msg_bits, msg.type());
    m_send_hs(HANDSHAKE, buf);
    return buf;
    }
@@ -149,11 +149,11 @@ void Datagram_Handshake_IO::retransmit_last_flight()
 
 void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx)
    {
-   const std::vector<u16bit>& flight = m_flights.at(flight_idx);
+   const std::vector<uint16_t>& flight = m_flights.at(flight_idx);
 
    BOTAN_ASSERT(flight.size() > 0, "Nonempty flight to retransmit");
 
-   u16bit epoch = m_flight_data[flight[0]].epoch;
+   uint16_t epoch = m_flight_data[flight[0]].epoch;
 
    for(auto msg_seq : flight)
       {
@@ -162,7 +162,7 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx)
       if(msg.epoch != epoch)
          {
          // Epoch gap: insert the CCS
-         std::vector<byte> ccs(1, 1);
+         std::vector<uint8_t> ccs(1, 1);
          m_send_hs(epoch, CHANGE_CIPHER_SPEC, ccs);
          }
 
@@ -182,7 +182,7 @@ bool Datagram_Handshake_IO::timeout_check()
       return false;
       }
 
-   const u64bit ms_since_write = steady_clock_ms() - m_last_write;
+   const uint64_t ms_since_write = steady_clock_ms() - m_last_write;
 
    if(ms_since_write < m_next_timeout)
       return false;
@@ -193,11 +193,11 @@ bool Datagram_Handshake_IO::timeout_check()
    return true;
    }
 
-void Datagram_Handshake_IO::add_record(const std::vector<byte>& record,
+void Datagram_Handshake_IO::add_record(const std::vector<uint8_t>& record,
                                        Record_Type record_type,
-                                       u64bit record_sequence)
+                                       uint64_t record_sequence)
    {
-   const u16bit epoch = static_cast<u16bit>(record_sequence >> 48);
+   const uint16_t epoch = static_cast<uint16_t>(record_sequence >> 48);
 
    if(record_type == CHANGE_CIPHER_SPEC)
       {
@@ -208,7 +208,7 @@ void Datagram_Handshake_IO::add_record(const std::vector<byte>& record,
 
    const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
 
-   const byte* record_bits = record.data();
+   const uint8_t* record_bits = record.data();
    size_t record_size = record.size();
 
    while(record_size)
@@ -216,9 +216,9 @@ void Datagram_Handshake_IO::add_record(const std::vector<byte>& record,
       if(record_size < DTLS_HANDSHAKE_HEADER_LEN)
          return; // completely bogus? at least degenerate/weird
 
-      const byte msg_type = record_bits[0];
+      const uint8_t msg_type = record_bits[0];
       const size_t msg_len = load_be24(&record_bits[1]);
-      const u16bit message_seq = load_be<u16bit>(&record_bits[4], 0);
+      const uint16_t message_seq = load_be<uint16_t>(&record_bits[4], 0);
       const size_t fragment_offset = load_be24(&record_bits[6]);
       const size_t fragment_length = load_be24(&record_bits[9]);
 
@@ -246,29 +246,29 @@ void Datagram_Handshake_IO::add_record(const std::vector<byte>& record,
       }
    }
 
-std::pair<Handshake_Type, std::vector<byte>>
+std::pair<Handshake_Type, std::vector<uint8_t>>
 Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
    {
    // Expecting a message means the last flight is concluded
    if(!m_flights.rbegin()->empty())
-      m_flights.push_back(std::vector<u16bit>());
+      m_flights.push_back(std::vector<uint16_t>());
 
    if(expecting_ccs)
       {
       if(!m_messages.empty())
          {
-         const u16bit current_epoch = m_messages.begin()->second.epoch();
+         const uint16_t current_epoch = m_messages.begin()->second.epoch();
 
          if(m_ccs_epochs.count(current_epoch))
-            return std::make_pair(HANDSHAKE_CCS, std::vector<byte>());
+            return std::make_pair(HANDSHAKE_CCS, std::vector<uint8_t>());
          }
-      return std::make_pair(HANDSHAKE_NONE, std::vector<byte>());
+      return std::make_pair(HANDSHAKE_NONE, std::vector<uint8_t>());
       }
 
    auto i = m_messages.find(m_in_message_seq);
 
    if(i == m_messages.end() || !i->second.complete())
-      return std::make_pair(HANDSHAKE_NONE, std::vector<byte>());
+      return std::make_pair(HANDSHAKE_NONE, std::vector<uint8_t>());
 
    m_in_message_seq += 1;
 
@@ -276,11 +276,11 @@ Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
    }
 
 void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
-   const byte fragment[],
+   const uint8_t fragment[],
    size_t fragment_length,
    size_t fragment_offset,
-   u16bit epoch,
-   byte msg_type,
+   uint16_t epoch,
+   uint8_t msg_type,
    size_t msg_length)
    {
    if(complete())
@@ -335,7 +335,7 @@ bool Datagram_Handshake_IO::Handshake_Reassembly::complete() const
    return (m_msg_type != HANDSHAKE_NONE && m_message.size() == m_msg_length);
    }
 
-std::pair<Handshake_Type, std::vector<byte>>
+std::pair<Handshake_Type, std::vector<uint8_t>>
 Datagram_Handshake_IO::Handshake_Reassembly::message() const
    {
    if(!complete())
@@ -344,15 +344,15 @@ Datagram_Handshake_IO::Handshake_Reassembly::message() const
    return std::make_pair(static_cast<Handshake_Type>(m_msg_type), m_message);
    }
 
-std::vector<byte>
-Datagram_Handshake_IO::format_fragment(const byte fragment[],
+std::vector<uint8_t>
+Datagram_Handshake_IO::format_fragment(const uint8_t fragment[],
                                        size_t frag_len,
-                                       u16bit frag_offset,
-                                       u16bit msg_len,
+                                       uint16_t frag_offset,
+                                       uint16_t msg_len,
                                        Handshake_Type type,
-                                       u16bit msg_sequence) const
+                                       uint16_t msg_sequence) const
    {
-   std::vector<byte> send_buf(12 + frag_len);
+   std::vector<uint8_t> send_buf(12 + frag_len);
 
    send_buf[0] = type;
 
@@ -371,33 +371,33 @@ Datagram_Handshake_IO::format_fragment(const byte fragment[],
    return send_buf;
    }
 
-std::vector<byte>
-Datagram_Handshake_IO::format_w_seq(const std::vector<byte>& msg,
+std::vector<uint8_t>
+Datagram_Handshake_IO::format_w_seq(const std::vector<uint8_t>& msg,
                                     Handshake_Type type,
-                                    u16bit msg_sequence) const
+                                    uint16_t msg_sequence) const
    {
-   return format_fragment(msg.data(), msg.size(), 0, static_cast<u16bit>(msg.size()), type, msg_sequence);
+   return format_fragment(msg.data(), msg.size(), 0, static_cast<uint16_t>(msg.size()), type, msg_sequence);
    }
 
-std::vector<byte>
-Datagram_Handshake_IO::format(const std::vector<byte>& msg,
+std::vector<uint8_t>
+Datagram_Handshake_IO::format(const std::vector<uint8_t>& msg,
                               Handshake_Type type) const
    {
    return format_w_seq(msg, type, m_in_message_seq - 1);
    }
 
 
-std::vector<byte>
+std::vector<uint8_t>
 Datagram_Handshake_IO::send(const Handshake_Message& msg)
    {
-   const std::vector<byte> msg_bits = msg.serialize();
-   const u16bit epoch = m_seqs.current_write_epoch();
+   const std::vector<uint8_t> msg_bits = msg.serialize();
+   const uint16_t epoch = m_seqs.current_write_epoch();
    const Handshake_Type msg_type = msg.type();
 
    if(msg_type == HANDSHAKE_CCS)
       {
       m_send_hs(epoch, CHANGE_CIPHER_SPEC, msg_bits);
-      return std::vector<byte>(); // not included in handshake hashes
+      return std::vector<uint8_t>(); // not included in handshake hashes
       }
 
    // Note: not saving CCS, instead we know it was there due to change in epoch
@@ -411,12 +411,12 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
    return send_message(m_out_message_seq - 1, epoch, msg_type, msg_bits);
    }
 
-std::vector<byte> Datagram_Handshake_IO::send_message(u16bit msg_seq,
-                                                      u16bit epoch,
+std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
+                                                      uint16_t epoch,
                                                       Handshake_Type msg_type,
-                                                      const std::vector<byte>& msg_bits)
+                                                      const std::vector<uint8_t>& msg_bits)
    {
-   const std::vector<byte> no_fragment =
+   const std::vector<uint8_t> no_fragment =
       format_w_seq(msg_bits, msg_type, msg_seq);
 
    if(no_fragment.size() + DTLS_HEADER_SIZE <= m_mtu)
@@ -441,8 +441,8 @@ std::vector<byte> Datagram_Handshake_IO::send_message(u16bit msg_seq,
                    HANDSHAKE,
                    format_fragment(&msg_bits[frag_offset],
                                    frag_len,
-                                   static_cast<u16bit>(frag_offset),
-                                   static_cast<u16bit>(msg_bits.size()),
+                                   static_cast<uint16_t>(frag_offset),
+                                   static_cast<uint16_t>(msg_bits.size()),
                                    msg_type,
                                    msg_seq));
 

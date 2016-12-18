@@ -25,9 +25,9 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<byte> public_key_bits() const override;
+      std::vector<uint8_t> public_key_bits() const override;
 
-      std::vector<byte> public_value() const { return m_public; }
+      std::vector<uint8_t> public_value() const { return m_public; }
 
       /**
       * Create a Curve25519 Public Key.
@@ -35,24 +35,24 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
       * @param key_bits DER encoded public key bits
       */
       Curve25519_PublicKey(const AlgorithmIdentifier& alg_id,
-                           const std::vector<byte>& key_bits);
+                           const std::vector<uint8_t>& key_bits);
 
       /**
       * Create a Curve25519 Public Key.
       * @param pub 32-byte raw public key
       */
-      explicit Curve25519_PublicKey(const std::vector<byte>& pub) : m_public(pub) {}
+      explicit Curve25519_PublicKey(const std::vector<uint8_t>& pub) : m_public(pub) {}
 
       /**
       * Create a Curve25519 Public Key.
       * @param pub 32-byte raw public key
       */
-      explicit Curve25519_PublicKey(const secure_vector<byte>& pub) :
+      explicit Curve25519_PublicKey(const secure_vector<uint8_t>& pub) :
          m_public(pub.begin(), pub.end()) {}
 
    protected:
       Curve25519_PublicKey() {}
-      std::vector<byte> m_public;
+      std::vector<uint8_t> m_public;
    };
 
 class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
@@ -66,7 +66,7 @@ class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
       * @param key_bits PKCS #8 structure
       */
       Curve25519_PrivateKey(const AlgorithmIdentifier& alg_id,
-                            const secure_vector<byte>& key_bits);
+                            const secure_vector<uint8_t>& key_bits);
 
       /**
       * Generate a private key.
@@ -78,15 +78,15 @@ class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
       * Construct a private key from the specified parameters.
       * @param secret_key DER encoded private key bits
       */
-      explicit Curve25519_PrivateKey(const secure_vector<byte>& secret_key);
+      explicit Curve25519_PrivateKey(const secure_vector<uint8_t>& secret_key);
 
-      std::vector<byte> public_value() const override { return Curve25519_PublicKey::public_value(); }
+      std::vector<uint8_t> public_value() const override { return Curve25519_PublicKey::public_value(); }
 
-      secure_vector<byte> agree(const byte w[], size_t w_len) const;
+      secure_vector<uint8_t> agree(const uint8_t w[], size_t w_len) const;
 
-      const secure_vector<byte>& get_x() const { return m_private; }
+      const secure_vector<uint8_t>& get_x() const { return m_private; }
 
-      secure_vector<byte> private_key_bits() const override;
+      secure_vector<uint8_t> private_key_bits() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
@@ -96,7 +96,7 @@ class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
                                  const std::string& provider) const override;
 
    private:
-      secure_vector<byte> m_private;
+      secure_vector<uint8_t> m_private;
    };
 
 /*

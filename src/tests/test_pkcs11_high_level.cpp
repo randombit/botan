@@ -404,7 +404,7 @@ Test::Result test_attribute_container()
    std::string label("test");
    attributes.add_string(AttributeType::Label, label);
 
-   std::vector<byte> bin(4);
+   std::vector<uint8_t> bin(4);
    attributes.add_binary(AttributeType::Value, bin);
 
    attributes.add_bool(AttributeType::Sensitive, true);
@@ -423,7 +423,7 @@ Test::Result test_create_destroy_data_object()
    TestSession test_session(true);
 
    std::string value_string("test data");
-   secure_vector<byte> value(value_string.begin(), value_string.end());
+   secure_vector<uint8_t> value(value_string.begin(), value_string.end());
 
    std::size_t id = 1337;
    std::string label = "Botan test data object";
@@ -453,7 +453,7 @@ Test::Result test_get_set_attribute_values()
 
    // create object
    std::string value_string("test data");
-   secure_vector<byte> value(value_string.begin(), value_string.end());
+   secure_vector<uint8_t> value(value_string.begin(), value_string.end());
 
    std::size_t id = 1337;
    std::string label = "Botan test data object";
@@ -468,13 +468,13 @@ Test::Result test_get_set_attribute_values()
    Object data_obj(test_session.session(), data_obj_props);
 
    // get attribute
-   secure_vector<byte> retrieved_label = data_obj.get_attribute_value(AttributeType::Label);
+   secure_vector<uint8_t> retrieved_label = data_obj.get_attribute_value(AttributeType::Label);
    std::string retrieved_label_string(retrieved_label.begin(), retrieved_label.end());
    result.test_eq("label was set correctly", retrieved_label_string, label);
 
    // set attribute
    std::string new_label = "Botan test modified data object label";
-   secure_vector<byte> new_label_secvec(new_label.begin(), new_label.end());
+   secure_vector<uint8_t> new_label_secvec(new_label.begin(), new_label.end());
    data_obj.set_attribute_value(AttributeType::Label, new_label_secvec);
 
    // get and check attribute
@@ -494,7 +494,7 @@ Test::Result test_object_finder()
 
    // create object
    std::string value_string("test data");
-   secure_vector<byte> value(value_string.begin(), value_string.end());
+   secure_vector<uint8_t> value(value_string.begin(), value_string.end());
 
    std::size_t id = 1337;
    std::string label = "Botan test data object";
@@ -537,7 +537,7 @@ Test::Result test_object_copy()
 
    // create object
    std::string value_string("test data");
-   secure_vector<byte> value(value_string.begin(), value_string.end());
+   secure_vector<uint8_t> value(value_string.begin(), value_string.end());
 
    std::size_t id = 1337;
    std::string label = "Botan test data object";
@@ -747,7 +747,7 @@ Test::Result test_rsa_encrypt_decrypt()
    // generate key pair
    PKCS11_RSA_KeyPair keypair = generate_rsa_keypair(test_session);
 
-   auto encrypt_and_decrypt = [&keypair, &result](const std::vector<byte>& plaintext, const std::string& padding) -> void
+   auto encrypt_and_decrypt = [&keypair, &result](const std::vector<uint8_t>& plaintext, const std::string& padding) -> void
       {
       Botan::PK_Encryptor_EME encryptor(keypair.first, Test::rng(), padding, "pkcs11");
       auto encrypted = encryptor.encrypt(plaintext, Test::rng());
@@ -761,7 +761,7 @@ Test::Result test_rsa_encrypt_decrypt()
       result.test_eq("RSA PKCS11 encrypt and decrypt: " + padding, decrypted, plaintext);
       };
 
-   std::vector<byte> plaintext(256);
+   std::vector<uint8_t> plaintext(256);
    std::iota(std::begin(plaintext), std::end(plaintext), 0);
    encrypt_and_decrypt(plaintext, "Raw");
 
@@ -784,13 +784,13 @@ Test::Result test_rsa_sign_verify()
    // generate key pair
    PKCS11_RSA_KeyPair keypair = generate_rsa_keypair(test_session);
 
-   std::vector<byte> plaintext(256);
+   std::vector<uint8_t> plaintext(256);
    std::iota(std::begin(plaintext), std::end(plaintext), 0);
 
    auto sign_and_verify = [&keypair, &plaintext, &result](const std::string& emsa, bool multipart) -> void
       {
       Botan::PK_Signer signer(keypair.second, Test::rng(), emsa, Botan::IEEE_1363, "pkcs11");
-      std::vector<byte> signature;
+      std::vector<uint8_t> signature;
       if ( multipart )
          {
          signer.update(plaintext.data(), plaintext.size() / 2);
@@ -1046,7 +1046,7 @@ Test::Result test_ecdsa_sign_verify()
    // generate key pair
    PKCS11_ECDSA_KeyPair keypair = generate_ecdsa_keypair(test_session);
 
-   std::vector<byte> plaintext(20, 0x01);
+   std::vector<uint8_t> plaintext(20, 0x01);
 
    auto sign_and_verify = [ &keypair, &plaintext, &result ](const std::string& emsa) -> void
       {
@@ -1331,9 +1331,9 @@ Test::Result test_rng_generate_random()
    PKCS11_RNG rng(test_session.session());
 
    result.confirm("RNG already seeded", rng.is_seeded());
-   std::vector<byte> random(20);
+   std::vector<uint8_t> random(20);
    rng.randomize(random.data(), random.size());
-   result.test_ne("random data generated", random, std::vector<byte>(20));
+   result.test_ne("random data generated", random, std::vector<uint8_t>(20));
 
    return result;
    }
@@ -1364,15 +1364,15 @@ Test::Result test_pkcs11_hmac_drbg()
    // result.test_success("HMAC_DRBG(HMAC(SHA512)) instantiated with PKCS11_RNG");
 
    result.test_eq("HMAC_DRBG is not seeded yet.", drbg.is_seeded(), false);
-   secure_vector<byte> rnd = drbg.random_vec(64);
+   secure_vector<uint8_t> rnd = drbg.random_vec(64);
    result.test_eq("HMAC_DRBG is seeded now", drbg.is_seeded(), true);
 
    std::string personalization_string = "Botan PKCS#11 Tests";
-   std::vector<byte> personalization_data(personalization_string.begin(), personalization_string.end());
+   std::vector<uint8_t> personalization_data(personalization_string.begin(), personalization_string.end());
    drbg.add_entropy(personalization_data.data(), personalization_data.size());
 
    auto rnd_vec = drbg.random_vec(256);
-   result.test_ne("HMAC_DRBG generated a random vector", rnd_vec, std::vector<byte>(256));
+   result.test_ne("HMAC_DRBG generated a random vector", rnd_vec, std::vector<uint8_t>(256));
 
    return result;
    }

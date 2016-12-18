@@ -13,10 +13,10 @@ namespace Botan {
 
 size_t
 pbkdf2(MessageAuthenticationCode& prf,
-       byte out[],
+       uint8_t out[],
        size_t out_len,
        const std::string& passphrase,
-       const byte salt[], size_t salt_len,
+       const uint8_t salt[], size_t salt_len,
        size_t iterations,
        std::chrono::milliseconds msec)
    {
@@ -27,7 +27,7 @@ pbkdf2(MessageAuthenticationCode& prf,
 
    try
       {
-      prf.set_key(reinterpret_cast<const byte*>(passphrase.data()), passphrase.size());
+      prf.set_key(reinterpret_cast<const uint8_t*>(passphrase.data()), passphrase.size());
       }
    catch(Invalid_Key_Length&)
       {
@@ -37,14 +37,14 @@ pbkdf2(MessageAuthenticationCode& prf,
       }
 
    const size_t prf_sz = prf.output_length();
-   secure_vector<byte> U(prf_sz);
+   secure_vector<uint8_t> U(prf_sz);
 
    const size_t blocks_needed = round_up(out_len, prf_sz) / prf_sz;
 
    std::chrono::microseconds usec_per_block =
       std::chrono::duration_cast<std::chrono::microseconds>(msec) / blocks_needed;
 
-   u32bit counter = 1;
+   uint32_t counter = 1;
    while(out_len)
       {
       const size_t prf_output = std::min<size_t>(prf_sz, out_len);
@@ -105,9 +105,9 @@ pbkdf2(MessageAuthenticationCode& prf,
    }
 
 size_t
-PKCS5_PBKDF2::pbkdf(byte key[], size_t key_len,
+PKCS5_PBKDF2::pbkdf(uint8_t key[], size_t key_len,
                     const std::string& passphrase,
-                    const byte salt[], size_t salt_len,
+                    const uint8_t salt[], size_t salt_len,
                     size_t iterations,
                     std::chrono::milliseconds msec) const
    {

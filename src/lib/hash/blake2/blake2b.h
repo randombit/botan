@@ -39,21 +39,21 @@ class BOTAN_DLL Blake2b final : public HashFunction
       void clear() override;
 
    private:
-      void add_data(const byte input[], size_t length) override;
-      void final_result(byte out[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t out[]) override;
 
       inline void state_init();
-      inline void increment_counter(const u64bit inc);
+      inline void increment_counter(const uint64_t inc);
       void compress(bool lastblock = false);
 
       size_t m_output_bits;
 
-      secure_vector<byte> m_buffer;
+      secure_vector<uint8_t> m_buffer;
       size_t m_buflen;
 
-      secure_vector<u64bit> m_H;
-      u64bit m_T[2];
-      u64bit m_F[2];
+      secure_vector<uint64_t> m_H;
+      uint64_t m_T[2];
+      uint64_t m_F[2];
    };
 
 }

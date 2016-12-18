@@ -36,7 +36,7 @@ class BOTAN_DLL EME
       * @param rng a random number generator
       * @return encoded plaintext
       */
-      secure_vector<byte> encode(const byte in[],
+      secure_vector<uint8_t> encode(const uint8_t in[],
                                  size_t in_length,
                                  size_t key_length,
                                  RandomNumberGenerator& rng) const;
@@ -48,7 +48,7 @@ class BOTAN_DLL EME
       * @param rng a random number generator
       * @return encoded plaintext
       */
-      secure_vector<byte> encode(const secure_vector<byte>& in,
+      secure_vector<uint8_t> encode(const secure_vector<uint8_t>& in,
                                  size_t key_length,
                                  RandomNumberGenerator& rng) const;
 
@@ -60,8 +60,8 @@ class BOTAN_DLL EME
       * @return bytes of out[] written to along with
       *         validity mask (0xFF if valid, else 0x00)
       */
-      virtual secure_vector<byte> unpad(byte& valid_mask,
-                                        const byte in[],
+      virtual secure_vector<uint8_t> unpad(uint8_t& valid_mask,
+                                        const uint8_t in[],
                                         size_t in_len) const = 0;
 
       /**
@@ -72,7 +72,7 @@ class BOTAN_DLL EME
       * @param rng a random number generator
       * @return encoded plaintext
       */
-      virtual secure_vector<byte> pad(const byte in[],
+      virtual secure_vector<uint8_t> pad(const uint8_t in[],
                                       size_t in_length,
                                       size_t key_length,
                                       RandomNumberGenerator& rng) const = 0;

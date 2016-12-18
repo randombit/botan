@@ -25,7 +25,7 @@ struct Response
       Response() : m_status_code(0), m_status_message("Uninitialized") {}
 
       Response(unsigned int status_code, const std::string& status_message,
-               const std::vector<byte>& body,
+               const std::vector<uint8_t>& body,
                const std::map<std::string, std::string>& headers) :
          m_status_code(status_code),
          m_status_message(status_message),
@@ -34,7 +34,7 @@ struct Response
 
       unsigned int status_code() const { return m_status_code; }
 
-      const std::vector<byte>& body() const { return m_body; }
+      const std::vector<uint8_t>& body() const { return m_body; }
 
       const std::map<std::string, std::string>& headers() const { return m_headers; }
 
@@ -49,7 +49,7 @@ struct Response
    private:
       unsigned int m_status_code;
       std::string m_status_message;
-      std::vector<byte> m_body;
+      std::vector<uint8_t> m_body;
       std::map<std::string, std::string> m_headers;
    };
 
@@ -71,13 +71,13 @@ BOTAN_DLL Response http_sync(http_exch_fn fn,
                              const std::string& verb,
                              const std::string& url,
                              const std::string& content_type,
-                             const std::vector<byte>& body,
+                             const std::vector<uint8_t>& body,
                              size_t allowable_redirects);
 
 BOTAN_DLL Response http_sync(const std::string& verb,
                              const std::string& url,
                              const std::string& content_type,
-                             const std::vector<byte>& body,
+                             const std::vector<uint8_t>& body,
                              size_t allowable_redirects);
 
 BOTAN_DLL Response GET_sync(const std::string& url,
@@ -85,7 +85,7 @@ BOTAN_DLL Response GET_sync(const std::string& url,
 
 BOTAN_DLL Response POST_sync(const std::string& url,
                              const std::string& content_type,
-                             const std::vector<byte>& body,
+                             const std::vector<uint8_t>& body,
                              size_t allowable_redirects = 1);
 
 BOTAN_DLL std::string url_encode(const std::string& url);

@@ -39,12 +39,12 @@ class BOTAN_DLL HMAC final : public MessageAuthenticationCode
       HMAC(const HMAC&) = delete;
       HMAC& operator=(const HMAC&) = delete;
    private:
-      void add_data(const byte[], size_t) override;
-      void final_result(byte[]) override;
-      void key_schedule(const byte[], size_t) override;
+      void add_data(const uint8_t[], size_t) override;
+      void final_result(uint8_t[]) override;
+      void key_schedule(const uint8_t[], size_t) override;
 
       std::unique_ptr<HashFunction> m_hash;
-      secure_vector<byte> m_ikey, m_okey;
+      secure_vector<uint8_t> m_ikey, m_okey;
    };
 
 }

@@ -14,15 +14,15 @@ namespace Botan {
 const std::string XMSS_Index_Registry::m_index_hash_function = "SHA-256";
 
 uint64_t XMSS_Index_Registry::make_key_id(
-   const secure_vector<byte>& private_seed,
-   const secure_vector<byte>& prf) const
+   const secure_vector<uint8_t>& private_seed,
+   const secure_vector<uint8_t>& prf) const
    {
    std::unique_ptr<HashFunction> hash =
       HashFunction::create(m_index_hash_function);
    BOTAN_ASSERT(hash != nullptr, "XMSS_Index_Registry requires SHA-256");
    hash->update(private_seed);
    hash->update(prf);
-   secure_vector<byte> result = hash->final();
+   secure_vector<uint8_t> result = hash->final();
    uint64_t key_id = 0;
    for(size_t i = 0; i < sizeof(key_id); i++)
       {
@@ -33,8 +33,8 @@ uint64_t XMSS_Index_Registry::make_key_id(
    }
 
 std::shared_ptr<Atomic<size_t>>
-XMSS_Index_Registry::get(const secure_vector<byte>& private_seed,
-                         const secure_vector<byte>& prf)
+XMSS_Index_Registry::get(const secure_vector<uint8_t>& private_seed,
+                         const secure_vector<uint8_t>& prf)
    {
    size_t pos = get(make_key_id(private_seed, prf));
 

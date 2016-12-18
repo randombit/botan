@@ -18,26 +18,26 @@ namespace Botan {
 class BOTAN_DLL Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
    {
    public:
-      void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
-      void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
+      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
+      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
       std::string name() const override { return "Twofish"; }
       BlockCipher* clone() const override { return new Twofish; }
    private:
-      void key_schedule(const byte[], size_t) override;
+      void key_schedule(const uint8_t[], size_t) override;
 
-      static const u32bit MDS0[256];
-      static const u32bit MDS1[256];
-      static const u32bit MDS2[256];
-      static const u32bit MDS3[256];
-      static const byte Q0[256];
-      static const byte Q1[256];
-      static const byte RS[32];
-      static const byte EXP_TO_POLY[255];
-      static const byte POLY_TO_EXP[255];
+      static const uint32_t MDS0[256];
+      static const uint32_t MDS1[256];
+      static const uint32_t MDS2[256];
+      static const uint32_t MDS3[256];
+      static const uint8_t Q0[256];
+      static const uint8_t Q1[256];
+      static const uint8_t RS[32];
+      static const uint8_t EXP_TO_POLY[255];
+      static const uint8_t POLY_TO_EXP[255];
 
-      secure_vector<u32bit> m_SB, m_RK;
+      secure_vector<uint32_t> m_SB, m_RK;
    };
 
 }

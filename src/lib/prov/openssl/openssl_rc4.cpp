@@ -48,26 +48,26 @@ class OpenSSL_RC4 : public StreamCipher
       explicit OpenSSL_RC4(size_t skip = 0) : m_skip(skip) { clear(); }
       ~OpenSSL_RC4() { clear(); }
 
-      void set_iv(const byte*, size_t len) override
+      void set_iv(const uint8_t*, size_t len) override
          {
          if(len > 0)
             throw Exception("RC4 does not support an IV");
          }
 
-      void seek(u64bit) override
+      void seek(uint64_t) override
          {
          throw Exception("RC4 does not support seeking");
          }
    private:
-      void cipher(const byte in[], byte out[], size_t length) override
+      void cipher(const uint8_t in[], uint8_t out[], size_t length) override
          {
          ::RC4(&m_rc4, length, in, out);
          }
 
-      void key_schedule(const byte key[], size_t length) override
+      void key_schedule(const uint8_t key[], size_t length) override
          {
          ::RC4_set_key(&m_rc4, length, key);
-         byte d = 0;
+         uint8_t d = 0;
          for(size_t i = 0; i != m_skip; ++i)
             ::RC4(&m_rc4, 1, &d, &d);
          }

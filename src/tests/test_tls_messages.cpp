@@ -24,8 +24,8 @@ Test::Result test_hello_verify_request()
    {
    Test::Result result("hello_verify_request construction");
    
-   std::vector<byte> test_data;
-   std::vector<byte> key_data(32);
+   std::vector<uint8_t> test_data;
+   std::vector<uint8_t> key_data(32);
    Botan::SymmetricKey sk(key_data);
    
    // Compute cookie over an empty string with an empty test data
@@ -36,7 +36,7 @@ Test::Result test_hello_verify_request()
    hmac->set_key(sk);
    hmac->update_be(size_t(0));
    hmac->update_be(size_t(0));
-   std::vector<byte> test = unlock(hmac->final());
+   std::vector<uint8_t> test = unlock(hmac->final());
    
    result.test_eq("Cookie comparison", hfr.cookie(), test);
    return result;
@@ -74,10 +74,10 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
                   Botan::TLS::Client_Hello message(buffer);
                   result.test_eq("Protocol version", message.version().to_string(), pv.to_string());
-                  std::vector<byte> buf;
+                  std::vector<uint8_t> buf;
                   for(Botan::TLS::Handshake_Extension_Type const& type : message.extension_types())
                      {
-                     Botan::u16bit u16type = type;
+                     uint16_t u16type = type;
                      buf.push_back(Botan::get_byte(0, u16type));
                      buf.push_back(Botan::get_byte(1, u16type));
                      }
@@ -99,14 +99,14 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
                   {
                   const std::string extensions = get_req_str(vars, "AdditionalData");
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
-                  Botan::TLS::Ciphersuite cs = Botan::TLS::Ciphersuite::by_id(Botan::make_u16bit(ciphersuite[0], ciphersuite[1]));
+                  Botan::TLS::Ciphersuite cs = Botan::TLS::Ciphersuite::by_id(Botan::make_uint16(ciphersuite[0], ciphersuite[1]));
                   Botan::TLS::Server_Hello message(buffer);
                   result.test_eq("Protocol version", message.version().to_string(), pv.to_string());
                   result.confirm("Ciphersuite", (message.ciphersuite() == cs.ciphersuite_code()));
-                  std::vector<byte> buf;
+                  std::vector<uint8_t> buf;
                   for(Botan::TLS::Handshake_Extension_Type const& type : message.extension_types())
                      {
-                     Botan::u16bit u16type = type;
+                     uint16_t u16type = type;
                      buf.push_back(Botan::get_byte(0, u16type));
                      buf.push_back(Botan::get_byte(1, u16type));
                      }

@@ -88,7 +88,7 @@ class BOTAN_DLL BER_Object
       ASN1_Tag type_tag, class_tag;
 
       // public member variable:
-      secure_vector<byte> value;
+      secure_vector<uint8_t> value;
    };
 
 /*
@@ -98,7 +98,7 @@ class DataSource;
 
 namespace ASN1 {
 
-std::vector<byte> put_in_sequence(const std::vector<byte>& val);
+std::vector<uint8_t> put_in_sequence(const std::vector<uint8_t>& val);
 std::string to_string(const BER_Object& obj);
 
 /**

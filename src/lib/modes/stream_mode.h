@@ -27,7 +27,7 @@ class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
          return sz;
          }
 
-      void finish(secure_vector<byte>& buf, size_t offset) override
+      void finish(secure_vector<uint8_t>& buf, size_t offset) override
          { return update(buf, offset); }
 
       size_t output_length(size_t input_length) const override { return input_length; }
@@ -54,12 +54,12 @@ class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
       void reset() override { /* no msg state */ return; }
 
    private:
-      void start_msg(const byte nonce[], size_t nonce_len) override
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override
          {
          m_cipher->set_iv(nonce, nonce_len);
          }
 
-      void key_schedule(const byte key[], size_t length) override
+      void key_schedule(const uint8_t key[], size_t length) override
          {
          m_cipher->set_key(key, length);
          }

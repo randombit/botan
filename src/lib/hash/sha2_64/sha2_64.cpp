@@ -16,7 +16,7 @@ namespace SHA2_64 {
 /*
 * SHA-{384,512} Rho Function
 */
-inline u64bit rho(u64bit X, u32bit rot1, u32bit rot2, u32bit rot3)
+inline uint64_t rho(uint64_t X, uint32_t rot1, uint32_t rot2, uint32_t rot3)
    {
    return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^
            rotate_right(X, rot3));
@@ -25,7 +25,7 @@ inline u64bit rho(u64bit X, u32bit rot1, u32bit rot2, u32bit rot3)
 /*
 * SHA-{384,512} Sigma Function
 */
-inline u64bit sigma(u64bit X, u32bit rot1, u32bit rot2, u32bit shift)
+inline uint64_t sigma(uint64_t X, uint32_t rot1, uint32_t rot2, uint32_t shift)
    {
    return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^ (X >> shift));
    }
@@ -47,31 +47,31 @@ inline u64bit sigma(u64bit X, u32bit rot1, u32bit rot2, u32bit shift)
 /*
 * SHA-{384,512} Compression Function
 */
-void compress(secure_vector<u64bit>& digest,
-              const byte input[], size_t blocks)
+void compress(secure_vector<uint64_t>& digest,
+              const uint8_t input[], size_t blocks)
    {
-   u64bit A = digest[0], B = digest[1], C = digest[2],
+   uint64_t A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4], F = digest[5],
           G = digest[6], H = digest[7];
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      u64bit W00 = load_be<u64bit>(input,  0);
-      u64bit W01 = load_be<u64bit>(input,  1);
-      u64bit W02 = load_be<u64bit>(input,  2);
-      u64bit W03 = load_be<u64bit>(input,  3);
-      u64bit W04 = load_be<u64bit>(input,  4);
-      u64bit W05 = load_be<u64bit>(input,  5);
-      u64bit W06 = load_be<u64bit>(input,  6);
-      u64bit W07 = load_be<u64bit>(input,  7);
-      u64bit W08 = load_be<u64bit>(input,  8);
-      u64bit W09 = load_be<u64bit>(input,  9);
-      u64bit W10 = load_be<u64bit>(input, 10);
-      u64bit W11 = load_be<u64bit>(input, 11);
-      u64bit W12 = load_be<u64bit>(input, 12);
-      u64bit W13 = load_be<u64bit>(input, 13);
-      u64bit W14 = load_be<u64bit>(input, 14);
-      u64bit W15 = load_be<u64bit>(input, 15);
+      uint64_t W00 = load_be<uint64_t>(input,  0);
+      uint64_t W01 = load_be<uint64_t>(input,  1);
+      uint64_t W02 = load_be<uint64_t>(input,  2);
+      uint64_t W03 = load_be<uint64_t>(input,  3);
+      uint64_t W04 = load_be<uint64_t>(input,  4);
+      uint64_t W05 = load_be<uint64_t>(input,  5);
+      uint64_t W06 = load_be<uint64_t>(input,  6);
+      uint64_t W07 = load_be<uint64_t>(input,  7);
+      uint64_t W08 = load_be<uint64_t>(input,  8);
+      uint64_t W09 = load_be<uint64_t>(input,  9);
+      uint64_t W10 = load_be<uint64_t>(input, 10);
+      uint64_t W11 = load_be<uint64_t>(input, 11);
+      uint64_t W12 = load_be<uint64_t>(input, 12);
+      uint64_t W13 = load_be<uint64_t>(input, 13);
+      uint64_t W14 = load_be<uint64_t>(input, 14);
+      uint64_t W15 = load_be<uint64_t>(input, 15);
 
       SHA2_64_F(A, B, C, D, E, F, G, H, W00, W14, W09, W01, 0x428A2F98D728AE22);
       SHA2_64_F(H, A, B, C, D, E, F, G, W01, W15, W10, W02, 0x7137449123EF65CD);
@@ -171,32 +171,32 @@ void compress(secure_vector<u64bit>& digest,
 
 }
 
-void SHA_512_256::compress_n(const byte input[], size_t blocks)
+void SHA_512_256::compress_n(const uint8_t input[], size_t blocks)
    {
    SHA2_64::compress(m_digest, input, blocks);
    }
 
-void SHA_384::compress_n(const byte input[], size_t blocks)
+void SHA_384::compress_n(const uint8_t input[], size_t blocks)
    {
    SHA2_64::compress(m_digest, input, blocks);
    }
 
-void SHA_512::compress_n(const byte input[], size_t blocks)
+void SHA_512::compress_n(const uint8_t input[], size_t blocks)
    {
    SHA2_64::compress(m_digest, input, blocks);
    }
 
-void SHA_512_256::copy_out(byte output[])
+void SHA_512_256::copy_out(uint8_t output[])
    {
    copy_out_vec_be(output, output_length(), m_digest);
    }
 
-void SHA_384::copy_out(byte output[])
+void SHA_384::copy_out(uint8_t output[])
    {
    copy_out_vec_be(output, output_length(), m_digest);
    }
 
-void SHA_512::copy_out(byte output[])
+void SHA_512::copy_out(uint8_t output[])
    {
    copy_out_vec_be(output, output_length(), m_digest);
    }

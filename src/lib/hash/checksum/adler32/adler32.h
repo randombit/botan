@@ -27,9 +27,9 @@ class BOTAN_DLL Adler32 final : public HashFunction
       Adler32() { clear(); }
       ~Adler32() { clear(); }
    private:
-      void add_data(const byte[], size_t) override;
-      void final_result(byte[]) override;
-      u16bit m_S1, m_S2;
+      void add_data(const uint8_t[], size_t) override;
+      void final_result(uint8_t[]) override;
+      uint16_t m_S1, m_S2;
    };
 
 }

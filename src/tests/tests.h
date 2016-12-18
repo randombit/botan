@@ -34,8 +34,6 @@
 
 namespace Botan_Tests {
 
-using Botan::byte;
-
 #if defined(BOTAN_HAS_BIGINT)
 using Botan::BigInt;
 #endif
@@ -276,7 +274,7 @@ class Test
                          const std::vector<uint8_t, Alloc>& produced,
                          const char* expected_hex)
                {
-               const std::vector<byte> expected = Botan::hex_decode(expected_hex);
+               const std::vector<uint8_t> expected = Botan::hex_decode(expected_hex);
                return test_eq(nullptr, what,
                               produced.data(), produced.size(),
                               expected.data(), expected.size());
@@ -351,7 +349,7 @@ class Test
          if(r.size() > min_offset)
             {
             const size_t offset = std::max<size_t>(min_offset, rng.next_byte() % r.size());
-            const byte perturb = rng.next_nonzero_byte();
+            const uint8_t perturb = rng.next_nonzero_byte();
             r[offset] ^= perturb;
             }
 

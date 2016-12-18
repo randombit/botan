@@ -11,13 +11,13 @@
 
 namespace Botan {
 
-size_t SP800_56C::kdf(byte key[], size_t key_len,
-                      const byte secret[], size_t secret_len,
-                      const byte salt[], size_t salt_len,
-                      const byte label[], size_t label_len) const
+size_t SP800_56C::kdf(uint8_t key[], size_t key_len,
+                      const uint8_t secret[], size_t secret_len,
+                      const uint8_t salt[], size_t salt_len,
+                      const uint8_t label[], size_t label_len) const
    {
       // Randomness Extraction
-      secure_vector< byte > k_dk;
+      secure_vector< uint8_t > k_dk;
 
       m_prf->set_key(salt, salt_len);
       m_prf->update(secret, secret_len);

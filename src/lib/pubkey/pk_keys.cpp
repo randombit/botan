@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-std::vector<byte> Public_Key::subject_public_key() const
+std::vector<uint8_t> Public_Key::subject_public_key() const
    {
    return DER_Encoder()
          .start_cons(SEQUENCE)
@@ -38,7 +38,7 @@ OID Public_Key::get_oid() const
       }
    }
 
-secure_vector<byte> Private_Key::private_key_info() const
+secure_vector<uint8_t> Private_Key::private_key_info() const
    {
    const size_t PKCS8_VERSION = 0;
 
@@ -56,7 +56,7 @@ secure_vector<byte> Private_Key::private_key_info() const
 */
 std::string Private_Key::fingerprint(const std::string& alg) const
    {
-   secure_vector<byte> buf = private_key_bits();
+   secure_vector<uint8_t> buf = private_key_bits();
    std::unique_ptr<HashFunction> hash(HashFunction::create(alg));
    hash->update(buf);
    const auto hex_print = hex_encode(hash->final());

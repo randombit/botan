@@ -40,10 +40,10 @@ class BOTAN_DLL SP800_56C : public KDF
       *
       * @throws Invalid_Argument key_len > 2^32
       */
-      size_t kdf(byte key[], size_t key_len,
-                 const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len,
-                 const byte label[], size_t label_len) const override;
+      size_t kdf(uint8_t key[], size_t key_len,
+                 const uint8_t secret[], size_t secret_len,
+                 const uint8_t salt[], size_t salt_len,
+                 const uint8_t label[], size_t label_len) const override;
 
       /**
       * @param mac MAC algorithm used for randomness extraction

@@ -37,7 +37,7 @@ class ProcWalking_EntropySource final : public Entropy_Source
       const std::string m_path;
       mutex_type m_mutex;
       std::unique_ptr<File_Descriptor_Source> m_dir;
-      secure_vector<byte> m_buf;
+      secure_vector<uint8_t> m_buf;
    };
 
 }

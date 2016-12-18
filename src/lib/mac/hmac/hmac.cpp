@@ -13,7 +13,7 @@ namespace Botan {
 /*
 * Update a HMAC Calculation
 */
-void HMAC::add_data(const byte input[], size_t length)
+void HMAC::add_data(const uint8_t input[], size_t length)
    {
    m_hash->update(input, length);
    }
@@ -21,7 +21,7 @@ void HMAC::add_data(const byte input[], size_t length)
 /*
 * Finalize a HMAC Calculation
 */
-void HMAC::final_result(byte mac[])
+void HMAC::final_result(uint8_t mac[])
    {
    m_hash->final(mac);
    m_hash->update(m_okey);
@@ -33,7 +33,7 @@ void HMAC::final_result(byte mac[])
 /*
 * HMAC Key Schedule
 */
-void HMAC::key_schedule(const byte key[], size_t length)
+void HMAC::key_schedule(const uint8_t key[], size_t length)
    {
    m_hash->clear();
 
@@ -45,7 +45,7 @@ void HMAC::key_schedule(const byte key[], size_t length)
 
    if(length > m_hash->hash_block_size())
       {
-      secure_vector<byte> hmac_key = m_hash->process(key, length);
+      secure_vector<uint8_t> hmac_key = m_hash->process(key, length);
       xor_buf(m_ikey, hmac_key, hmac_key.size());
       xor_buf(m_okey, hmac_key, hmac_key.size());
       }

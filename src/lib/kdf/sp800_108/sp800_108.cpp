@@ -12,18 +12,18 @@
 
 namespace Botan {
 
-size_t SP800_108_Counter::kdf(byte key[], size_t key_len,
-                              const byte secret[], size_t secret_len,
-                              const byte salt[], size_t salt_len,
-                              const byte label[], size_t label_len) const
+size_t SP800_108_Counter::kdf(uint8_t key[], size_t key_len,
+                              const uint8_t secret[], size_t secret_len,
+                              const uint8_t salt[], size_t salt_len,
+                              const uint8_t label[], size_t label_len) const
    {
       const std::size_t prf_len =  m_prf->output_length();
-      const byte delim = 0;
-      byte *p = key;
+      const uint8_t delim = 0;
+      uint8_t *p = key;
       uint32_t counter = 1;
       uint32_t length = key_len * 8;
-      byte be_len[4] = { 0 };
-      secure_vector<byte> tmp;
+      uint8_t be_len[4] = { 0 };
+      secure_vector<uint8_t> tmp;
 
       store_be(length, be_len);
       m_prf->set_key(secret, secret_len);
@@ -31,7 +31,7 @@ size_t SP800_108_Counter::kdf(byte key[], size_t key_len,
       while(p < key + key_len && counter != 0)
          {
          const std::size_t to_copy = std::min< std::size_t >(key + key_len - p, prf_len);
-         byte be_cnt[4] = { 0 };
+         uint8_t be_cnt[4] = { 0 };
 
          store_be(counter, be_cnt);
 
@@ -54,21 +54,21 @@ size_t SP800_108_Counter::kdf(byte key[], size_t key_len,
    return key_len;
    }
 
-size_t SP800_108_Feedback::kdf(byte key[], size_t key_len,
-                               const byte secret[], size_t secret_len,
-                               const byte salt[], size_t salt_len,
-                               const byte label[], size_t label_len) const
+size_t SP800_108_Feedback::kdf(uint8_t key[], size_t key_len,
+                               const uint8_t secret[], size_t secret_len,
+                               const uint8_t salt[], size_t salt_len,
+                               const uint8_t label[], size_t label_len) const
    {
       const std::size_t prf_len =  m_prf->output_length();
       const std::size_t iv_len = (salt_len >= prf_len ? prf_len : 0);
-      const byte delim = 0;
+      const uint8_t delim = 0;
 
-      byte *p = key;
+      uint8_t *p = key;
       uint32_t counter = 1;
       uint32_t length = key_len * 8;
-      byte be_len[4] = { 0 };
-      secure_vector< byte > prev(salt, salt + iv_len);
-      secure_vector< byte > ctx(salt + iv_len, salt + salt_len);
+      uint8_t be_len[4] = { 0 };
+      secure_vector< uint8_t > prev(salt, salt + iv_len);
+      secure_vector< uint8_t > ctx(salt + iv_len, salt + salt_len);
 
       store_be(length, be_len);
       m_prf->set_key(secret, secret_len);
@@ -76,7 +76,7 @@ size_t SP800_108_Feedback::kdf(byte key[], size_t key_len,
       while(p < key + key_len && counter != 0)
          {
          const std::size_t to_copy = std::min< std::size_t >(key + key_len - p, prf_len);
-         byte be_cnt[4] = { 0 };
+         uint8_t be_cnt[4] = { 0 };
 
          store_be(counter, be_cnt);
 
@@ -100,19 +100,19 @@ size_t SP800_108_Feedback::kdf(byte key[], size_t key_len,
    return key_len;
    }
 
-size_t SP800_108_Pipeline::kdf(byte key[], size_t key_len,
-                    const byte secret[], size_t secret_len,
-                    const byte salt[], size_t salt_len,
-                    const byte label[], size_t label_len) const
+size_t SP800_108_Pipeline::kdf(uint8_t key[], size_t key_len,
+                    const uint8_t secret[], size_t secret_len,
+                    const uint8_t salt[], size_t salt_len,
+                    const uint8_t label[], size_t label_len) const
    {
       const std::size_t prf_len =  m_prf->output_length();
-      const byte delim = 0;
+      const uint8_t delim = 0;
 
-      byte *p = key;
+      uint8_t *p = key;
       uint32_t counter = 1;
       uint32_t length = key_len * 8;
-      byte be_len[4] = { 0 };
-      secure_vector<byte> ai, ki;
+      uint8_t be_len[4] = { 0 };
+      secure_vector<uint8_t> ai, ki;
 
       store_be(length, be_len);
       m_prf->set_key(secret,secret_len);
@@ -131,7 +131,7 @@ size_t SP800_108_Pipeline::kdf(byte key[], size_t key_len,
 
          // K(i)
          const std::size_t to_copy = std::min< std::size_t >(key + key_len - p, prf_len);
-         byte be_cnt[4] = { 0 };
+         uint8_t be_cnt[4] = { 0 };
 
          store_be(counter, be_cnt);
 

@@ -20,7 +20,7 @@
 
 namespace Botan {
 
-XMSS_PublicKey::XMSS_PublicKey(const std::vector<byte>& raw_key)
+XMSS_PublicKey::XMSS_PublicKey(const std::vector<uint8_t>& raw_key)
    : m_xmss_params(XMSS_PublicKey::deserialize_xmss_oid(raw_key)),
      m_wots_params(m_xmss_params.ots_oid())
    {
@@ -45,7 +45,7 @@ XMSS_PublicKey::XMSS_PublicKey(const std::vector<byte>& raw_key)
    }
 
 XMSS_Parameters::xmss_algorithm_t
-XMSS_PublicKey::deserialize_xmss_oid(const std::vector<byte>& raw_key)
+XMSS_PublicKey::deserialize_xmss_oid(const std::vector<uint8_t>& raw_key)
    {
    if(raw_key.size() < 4)
       {
@@ -72,14 +72,14 @@ XMSS_PublicKey::create_verification_op(const std::string&,
    throw Provider_Not_Found(algo_name(), provider);
    }
 
-std::vector<byte> XMSS_PublicKey::raw_public_key() const
+std::vector<uint8_t> XMSS_PublicKey::raw_public_key() const
    {
-   std::vector<byte> result
+   std::vector<uint8_t> result
       {
-      static_cast<byte>(m_xmss_params.oid() >> 24),
-      static_cast<byte>(m_xmss_params.oid() >> 16),
-      static_cast<byte>(m_xmss_params.oid() >>  8),
-      static_cast<byte>(m_xmss_params.oid())
+      static_cast<uint8_t>(m_xmss_params.oid() >> 24),
+      static_cast<uint8_t>(m_xmss_params.oid() >> 16),
+      static_cast<uint8_t>(m_xmss_params.oid() >>  8),
+      static_cast<uint8_t>(m_xmss_params.oid())
       };
 
    std::copy(m_root.begin(), m_root.end(), std::back_inserter(result));

@@ -26,7 +26,7 @@ bool Stateful_RNG::is_seeded() const
    return m_reseed_counter > 0;
    }
 
-void Stateful_RNG::initialize_with(const byte input[], size_t len)
+void Stateful_RNG::initialize_with(const uint8_t input[], size_t len)
    {
    add_entropy(input, len);
 
@@ -36,9 +36,9 @@ void Stateful_RNG::initialize_with(const byte input[], size_t len)
       }
    }
 
-void Stateful_RNG::randomize_with_ts_input(byte output[], size_t output_len)
+void Stateful_RNG::randomize_with_ts_input(uint8_t output[], size_t output_len)
    {
-   byte additional_input[24] = { 0 };
+   uint8_t additional_input[24] = { 0 };
    store_le(OS::get_system_timestamp_ns(), additional_input);
    store_le(OS::get_processor_timestamp(), additional_input + 8);
    store_le(m_last_pid, additional_input + 16);

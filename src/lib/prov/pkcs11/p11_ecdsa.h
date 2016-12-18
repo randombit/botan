@@ -85,7 +85,7 @@ class BOTAN_DLL PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_PrivateKey
       * @param props the attributes of the private key
       * @note no persistent public key object will be created
       */
-      PKCS11_ECDSA_PrivateKey(Session& session, const std::vector<byte>& ec_params,
+      PKCS11_ECDSA_PrivateKey(Session& session, const std::vector<uint8_t>& ec_params,
                               const EC_PrivateKeyGenerationProperties& props)
          : PKCS11_EC_PrivateKey(session, ec_params, props)
          {}
@@ -98,7 +98,7 @@ class BOTAN_DLL PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_PrivateKey
       /// @return the exported ECDSA private key
       ECDSA_PrivateKey export_key() const;
 
-      secure_vector<byte> private_key_bits() const override;
+      secure_vector<uint8_t> private_key_bits() const override;
 
       bool check_key(RandomNumberGenerator&, bool) const override;
 

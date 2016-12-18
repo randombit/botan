@@ -36,8 +36,8 @@ bool BOTAN_DLL is_digit(char c);
 bool BOTAN_DLL is_space(char c);
 bool BOTAN_DLL caseless_cmp(char x, char y);
 
-byte BOTAN_DLL char2digit(char c);
-char BOTAN_DLL digit2char(byte b);
+uint8_t BOTAN_DLL char2digit(char c);
+char BOTAN_DLL digit2char(uint8_t b);
 
 }
 

@@ -26,7 +26,7 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       * @param key_bits DER encoded public key bits
       */
       ECDH_PublicKey(const AlgorithmIdentifier& alg_id,
-                     const std::vector<byte>& key_bits) :
+                     const std::vector<uint8_t>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
 
       /**
@@ -47,13 +47,13 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       /**
       * @return public point value
       */
-      std::vector<byte> public_value() const
+      std::vector<uint8_t> public_value() const
          { return unlock(EC2OSP(public_point(), PointGFp::UNCOMPRESSED)); }
 
       /**
       * @return public point value
       */
-      std::vector<byte> public_value(PointGFp::Compression_Type type) const
+      std::vector<uint8_t> public_value(PointGFp::Compression_Type type) const
          { return unlock(EC2OSP(public_point(), type)); }
 
    protected:
@@ -75,7 +75,7 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
       * @param key_bits X.509 subject public key info structure
       */
       ECDH_PrivateKey(const AlgorithmIdentifier& alg_id,
-                      const secure_vector<byte>& key_bits) :
+                      const secure_vector<uint8_t>& key_bits) :
          EC_PrivateKey(alg_id, key_bits) {}
 
       /**
@@ -89,10 +89,10 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
                       const BigInt& x = 0) :
          EC_PrivateKey(rng, domain, x) {}
 
-      std::vector<byte> public_value() const override
+      std::vector<uint8_t> public_value() const override
          { return ECDH_PublicKey::public_value(PointGFp::UNCOMPRESSED); }
 
-      std::vector<byte> public_value(PointGFp::Compression_Type type) const
+      std::vector<uint8_t> public_value(PointGFp::Compression_Type type) const
          { return ECDH_PublicKey::public_value(type); }
 
       std::unique_ptr<PK_Ops::Key_Agreement>

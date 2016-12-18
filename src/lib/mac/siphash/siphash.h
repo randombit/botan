@@ -29,15 +29,15 @@ class BOTAN_DLL SipHash final : public MessageAuthenticationCode
          return Key_Length_Specification(16);
          }
    private:
-      void add_data(const byte[], size_t) override;
-      void final_result(byte[]) override;
-      void key_schedule(const byte[], size_t) override;
+      void add_data(const uint8_t[], size_t) override;
+      void final_result(uint8_t[]) override;
+      void key_schedule(const uint8_t[], size_t) override;
 
       const size_t m_C, m_D;
-      secure_vector<u64bit> m_V;
-      u64bit m_mbuf = 0;
+      secure_vector<uint64_t> m_V;
+      uint64_t m_mbuf = 0;
       size_t m_mbuf_pos = 0;
-      byte m_words = 0;
+      uint8_t m_words = 0;
    };
 
 }

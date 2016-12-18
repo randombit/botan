@@ -12,7 +12,7 @@ namespace Botan {
 /*
 * EMSA-Raw Encode Operation
 */
-void EMSA_Raw::update(const byte input[], size_t length)
+void EMSA_Raw::update(const uint8_t input[], size_t length)
    {
    m_message += std::make_pair(input, length);
    }
@@ -20,9 +20,9 @@ void EMSA_Raw::update(const byte input[], size_t length)
 /*
 * Return the raw (unencoded) data
 */
-secure_vector<byte> EMSA_Raw::raw_data()
+secure_vector<uint8_t> EMSA_Raw::raw_data()
    {
-   secure_vector<byte> output;
+   secure_vector<uint8_t> output;
    std::swap(m_message, output);
    return output;
    }
@@ -30,7 +30,7 @@ secure_vector<byte> EMSA_Raw::raw_data()
 /*
 * EMSA-Raw Encode Operation
 */
-secure_vector<byte> EMSA_Raw::encoding_of(const secure_vector<byte>& msg,
+secure_vector<uint8_t> EMSA_Raw::encoding_of(const secure_vector<uint8_t>& msg,
                                          size_t,
                                          RandomNumberGenerator&)
    {
@@ -40,8 +40,8 @@ secure_vector<byte> EMSA_Raw::encoding_of(const secure_vector<byte>& msg,
 /*
 * EMSA-Raw Verify Operation
 */
-bool EMSA_Raw::verify(const secure_vector<byte>& coded,
-                      const secure_vector<byte>& raw,
+bool EMSA_Raw::verify(const secure_vector<uint8_t>& coded,
+                      const secure_vector<uint8_t>& raw,
                       size_t)
    {
    if(coded.size() == raw.size())

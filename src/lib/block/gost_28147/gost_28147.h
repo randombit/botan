@@ -26,7 +26,7 @@ class BOTAN_DLL GOST_28147_89_Params
       * @param col the column
       * @return sbox entry at this row/column
       */
-      byte sbox_entry(size_t row, size_t col) const;
+      uint8_t sbox_entry(size_t row, size_t col) const;
 
       /**
       * @return name of this parameter set
@@ -42,7 +42,7 @@ class BOTAN_DLL GOST_28147_89_Params
       */
       GOST_28147_89_Params(const std::string& name = "R3411_94_TestParam");
    private:
-      const byte* m_sboxes;
+      const uint8_t* m_sboxes;
       std::string m_name;
    };
 
@@ -52,8 +52,8 @@ class BOTAN_DLL GOST_28147_89_Params
 class BOTAN_DLL GOST_28147_89 final : public Block_Cipher_Fixed_Params<8, 32>
    {
    public:
-      void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
-      void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
+      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
+      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
 
@@ -65,18 +65,18 @@ class BOTAN_DLL GOST_28147_89 final : public Block_Cipher_Fixed_Params<8, 32>
       */
       explicit GOST_28147_89(const GOST_28147_89_Params& params);
    private:
-      explicit GOST_28147_89(const std::vector<u32bit>& other_SBOX) :
+      explicit GOST_28147_89(const std::vector<uint32_t>& other_SBOX) :
          m_SBOX(other_SBOX), m_EK(8) {}
 
-      void key_schedule(const byte[], size_t) override;
+      void key_schedule(const uint8_t[], size_t) override;
 
       /*
       * The sbox is not secret, this is just a larger expansion of it
       * which we generate at runtime for faster execution
       */
-      std::vector<u32bit> m_SBOX;
+      std::vector<uint32_t> m_SBOX;
 
-      secure_vector<u32bit> m_EK;
+      secure_vector<uint32_t> m_EK;
    };
 
 }

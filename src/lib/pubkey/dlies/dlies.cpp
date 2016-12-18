@@ -41,7 +41,7 @@ DLIES_Encryptor::DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
    BOTAN_ASSERT_NONNULL(mac);
    }
 
-std::vector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
+std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length,
                                        RandomNumberGenerator&) const
    {
    if(m_other_pub_key.empty())
@@ -54,14 +54,14 @@ std::vector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
 
    // derive secret key from secret value
    const size_t required_key_length = m_cipher ? m_cipher_key_len + m_mac_keylen : length + m_mac_keylen;
-   const secure_vector<byte> secret_keys = m_kdf->derive_key(required_key_length, secret_value.bits_of());
+   const secure_vector<uint8_t> secret_keys = m_kdf->derive_key(required_key_length, secret_value.bits_of());
 
    if(secret_keys.size() != required_key_length)
       {
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
       }
 
-   secure_vector<byte> ciphertext(in, in + length);
+   secure_vector<uint8_t> ciphertext(in, in + length);
    const size_t cipher_key_len = m_cipher ? m_cipher_key_len : length;
 
    if(m_cipher)
@@ -83,10 +83,10 @@ std::vector<byte> DLIES_Encryptor::enc(const byte in[], size_t length,
 
    // calculate MAC
    m_mac->set_key(secret_keys.data() + cipher_key_len, m_mac_keylen);
-   secure_vector<byte> tag = m_mac->process(ciphertext);
+   secure_vector<uint8_t> tag = m_mac->process(ciphertext);
 
    // out = (ephemeral) public key + ciphertext + tag
-   secure_vector<byte> out(m_own_pub_key.size() + ciphertext.size() + tag.size());
+   secure_vector<uint8_t> out(m_own_pub_key.size() + ciphertext.size() + tag.size());
    buffer_insert(out, 0, m_own_pub_key);
    buffer_insert(out, 0 + m_own_pub_key.size(), ciphertext);
    buffer_insert(out, 0 + m_own_pub_key.size() + ciphertext.size(), tag);
@@ -140,8 +140,8 @@ DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
    DLIES_Decryptor(own_priv_key, rng, kdf, nullptr, 0, mac, mac_key_length)
    {}
 
-secure_vector<byte> DLIES_Decryptor::do_decrypt(byte& valid_mask,
-      const byte msg[], size_t length) const
+secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask,
+      const uint8_t msg[], size_t length) const
    {
    if(length < m_pub_key_size + m_mac->output_length())
       {
@@ -149,7 +149,7 @@ secure_vector<byte> DLIES_Decryptor::do_decrypt(byte& valid_mask,
       }
 
    // calculate secret value
-   std::vector<byte> other_pub_key(msg, msg + m_pub_key_size);
+   std::vector<uint8_t> other_pub_key(msg, msg + m_pub_key_size);
    const SymmetricKey secret_value = m_ka.derive_key(0, other_pub_key);
 
    const size_t ciphertext_len = length - m_pub_key_size - m_mac->output_length();
@@ -157,24 +157,24 @@ secure_vector<byte> DLIES_Decryptor::do_decrypt(byte& valid_mask,
 
    // derive secret key from secret value
    const size_t required_key_length = cipher_key_len + m_mac_keylen;
-   secure_vector<byte> secret_keys = m_kdf->derive_key(required_key_length, secret_value.bits_of());
+   secure_vector<uint8_t> secret_keys = m_kdf->derive_key(required_key_length, secret_value.bits_of());
 
    if(secret_keys.size() != required_key_length)
       {
       throw Encoding_Error("DLIES: KDF did not provide sufficient output");
       }
 
-   secure_vector<byte> ciphertext(msg + m_pub_key_size, msg + m_pub_key_size + ciphertext_len);
+   secure_vector<uint8_t> ciphertext(msg + m_pub_key_size, msg + m_pub_key_size + ciphertext_len);
 
    // calculate MAC
    m_mac->set_key(secret_keys.data() + cipher_key_len, m_mac_keylen);
-   secure_vector<byte> calculated_tag = m_mac->process(ciphertext);
+   secure_vector<uint8_t> calculated_tag = m_mac->process(ciphertext);
 
    // calculated tag == received tag ?
-   secure_vector<byte> tag(msg + m_pub_key_size + ciphertext_len,
+   secure_vector<uint8_t> tag(msg + m_pub_key_size + ciphertext_len,
                            msg + m_pub_key_size + ciphertext_len + m_mac->output_length());
 
-   valid_mask = CT::expand_mask<byte>(same_mem(tag.data(), calculated_tag.data(), tag.size()));
+   valid_mask = CT::expand_mask<uint8_t>(same_mem(tag.data(), calculated_tag.data(), tag.size()));
 
    // decrypt
    if(m_cipher)
@@ -204,7 +204,7 @@ secure_vector<byte> DLIES_Decryptor::do_decrypt(byte& valid_mask,
          }
       else
          {
-         return secure_vector<byte>();
+         return secure_vector<uint8_t>();
          }
       }
    else

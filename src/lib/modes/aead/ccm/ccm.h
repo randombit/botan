@@ -25,7 +25,7 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
    public:
       size_t process(uint8_t buf[], size_t sz) override;
 
-      void set_associated_data(const byte ad[], size_t ad_len) override;
+      void set_associated_data(const uint8_t ad[], size_t ad_len) override;
 
       std::string name() const override;
 
@@ -50,26 +50,26 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
 
       const BlockCipher& cipher() const { return *m_cipher; }
 
-      void encode_length(size_t len, byte out[]);
+      void encode_length(size_t len, uint8_t out[]);
 
-      void inc(secure_vector<byte>& C);
+      void inc(secure_vector<uint8_t>& C);
 
-      const secure_vector<byte>& ad_buf() const { return m_ad_buf; }
+      const secure_vector<uint8_t>& ad_buf() const { return m_ad_buf; }
 
-      secure_vector<byte>& msg_buf() { return m_msg_buf; }
+      secure_vector<uint8_t>& msg_buf() { return m_msg_buf; }
 
-      secure_vector<byte> format_b0(size_t msg_size);
-      secure_vector<byte> format_c0();
+      secure_vector<uint8_t> format_b0(size_t msg_size);
+      secure_vector<uint8_t> format_c0();
    private:
-      void start_msg(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
 
-      void key_schedule(const byte key[], size_t length) override;
+      void key_schedule(const uint8_t key[], size_t length) override;
 
       const size_t m_tag_size;
       const size_t m_L;
 
       std::unique_ptr<BlockCipher> m_cipher;
-      secure_vector<byte> m_nonce, m_msg_buf, m_ad_buf;
+      secure_vector<uint8_t> m_nonce, m_msg_buf, m_ad_buf;
    };
 
 /**
@@ -88,7 +88,7 @@ class BOTAN_DLL CCM_Encryption final : public CCM_Mode
       CCM_Encryption(BlockCipher* cipher, size_t tag_size = 16, size_t L = 3) :
          CCM_Mode(cipher, tag_size, L) {}
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override
          { return input_length + tag_size(); }
@@ -112,7 +112,7 @@ class BOTAN_DLL CCM_Decryption final : public CCM_Mode
       CCM_Decryption(BlockCipher* cipher, size_t tag_size = 16, size_t L = 3) :
          CCM_Mode(cipher, tag_size, L) {}
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override
          {

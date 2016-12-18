@@ -34,12 +34,12 @@ class BOTAN_DLL Poly1305 final : public MessageAuthenticationCode
          }
 
    private:
-      void add_data(const byte[], size_t) override;
-      void final_result(byte[]) override;
-      void key_schedule(const byte[], size_t) override;
+      void add_data(const uint8_t[], size_t) override;
+      void final_result(uint8_t[]) override;
+      void key_schedule(const uint8_t[], size_t) override;
 
-      secure_vector<u64bit> m_poly;
-      secure_vector<byte> m_buf;
+      secure_vector<uint64_t> m_poly;
+      secure_vector<uint8_t> m_buf;
       size_t m_buf_pos = 0;
    };
 

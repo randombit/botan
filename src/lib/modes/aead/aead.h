@@ -36,7 +36,7 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
       * @param ad the associated data
       * @param ad_len length of add in bytes
       */
-      virtual void set_associated_data(const byte ad[], size_t ad_len) = 0;
+      virtual void set_associated_data(const uint8_t ad[], size_t ad_len) = 0;
 
       /**
       * Set associated data that is not included in the ciphertext but
@@ -48,7 +48,7 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
       * @param ad the associated data
       */
       template<typename Alloc>
-      void set_associated_data_vec(const std::vector<byte, Alloc>& ad)
+      void set_associated_data_vec(const std::vector<uint8_t, Alloc>& ad)
          {
          set_associated_data(ad.data(), ad.size());
          }
@@ -63,7 +63,7 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
       * @param ad the associated data
       */
       template<typename Alloc>
-      void set_ad(const std::vector<byte, Alloc>& ad)
+      void set_ad(const std::vector<uint8_t, Alloc>& ad)
          {
          set_associated_data(ad.data(), ad.size());
          }

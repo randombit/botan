@@ -21,8 +21,8 @@ namespace Botan {
 * @param out_len size of the output buffer in bytes
 */
 void BOTAN_DLL mgf1_mask(HashFunction& hash,
-                         const byte in[], size_t in_len,
-                         byte out[], size_t out_len);
+                         const uint8_t in[], size_t in_len,
+                         uint8_t out[], size_t out_len);
 
 }
 

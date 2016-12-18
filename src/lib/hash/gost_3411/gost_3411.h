@@ -28,15 +28,15 @@ class BOTAN_DLL GOST_34_11 final : public HashFunction
 
       GOST_34_11();
    private:
-      void compress_n(const byte input[], size_t blocks);
+      void compress_n(const uint8_t input[], size_t blocks);
 
-      void add_data(const byte[], size_t) override;
-      void final_result(byte[]) override;
+      void add_data(const uint8_t[], size_t) override;
+      void final_result(uint8_t[]) override;
 
       GOST_28147_89 m_cipher;
-      secure_vector<byte> m_buffer, m_sum, m_hash;
+      secure_vector<uint8_t> m_buffer, m_sum, m_hash;
       size_t m_position;
-      u64bit m_count;
+      uint64_t m_count;
    };
 
 }

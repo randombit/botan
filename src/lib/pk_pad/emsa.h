@@ -26,12 +26,12 @@ class BOTAN_DLL EMSA
       * @param input some data
       * @param length length of input in bytes
       */
-      virtual void update(const byte input[], size_t length) = 0;
+      virtual void update(const uint8_t input[], size_t length) = 0;
 
       /**
       * @return raw hash
       */
-      virtual secure_vector<byte> raw_data() = 0;
+      virtual secure_vector<uint8_t> raw_data() = 0;
 
       /**
       * Return the encoding of a message
@@ -40,7 +40,7 @@ class BOTAN_DLL EMSA
       * @param rng a random number generator
       * @return encoded signature
       */
-      virtual secure_vector<byte> encoding_of(const secure_vector<byte>& msg,
+      virtual secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>& msg,
                                              size_t output_bits,
                                              RandomNumberGenerator& rng) = 0;
 
@@ -51,8 +51,8 @@ class BOTAN_DLL EMSA
       * @param key_bits the size of the key in bits
       * @return true if coded is a valid encoding of raw, otherwise false
       */
-      virtual bool verify(const secure_vector<byte>& coded,
-                          const secure_vector<byte>& raw,
+      virtual bool verify(const secure_vector<uint8_t>& coded,
+                          const secure_vector<uint8_t>& raw,
                           size_t key_bits) = 0;
 
       virtual ~EMSA();

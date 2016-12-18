@@ -41,7 +41,7 @@ AlgorithmIdentifier RSA_PublicKey::algorithm_identifier() const
                               AlgorithmIdentifier::USE_NULL_PARAM);
    }
 
-std::vector<byte> RSA_PublicKey::public_key_bits() const
+std::vector<uint8_t> RSA_PublicKey::public_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -52,7 +52,7 @@ std::vector<byte> RSA_PublicKey::public_key_bits() const
    }
 
 RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier&,
-                             const std::vector<byte>& key_bits)
+                             const std::vector<uint8_t>& key_bits)
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
@@ -72,7 +72,7 @@ bool RSA_PublicKey::check_key(RandomNumberGenerator&, bool) const
    return true;
    }
 
-secure_vector<byte> RSA_PrivateKey::private_key_bits() const
+secure_vector<uint8_t> RSA_PrivateKey::private_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -90,7 +90,7 @@ secure_vector<byte> RSA_PrivateKey::private_key_bits() const
    }
 
 RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier&,
-                               const secure_vector<byte>& key_bits)
+                               const secure_vector<uint8_t>& key_bits)
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
@@ -253,7 +253,7 @@ class RSA_Signature_Operation : public PK_Ops::Signature_with_EMSA,
          {
          }
 
-      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                    RandomNumberGenerator&) override
          {
          const BigInt m(msg, msg_len);
@@ -277,7 +277,7 @@ class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
          {
          }
 
-      secure_vector<byte> raw_decrypt(const byte msg[], size_t msg_len) override
+      secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t msg_len) override
          {
          const BigInt m(msg, msg_len);
          const BigInt x = blinded_private_op(m);
@@ -299,8 +299,8 @@ class RSA_KEM_Decryption_Operation : public PK_Ops::KEM_Decryption_with_KDF,
          RSA_Private_Operation(key, rng)
          {}
 
-      secure_vector<byte>
-      raw_kem_decrypt(const byte encap_key[], size_t len) override
+      secure_vector<uint8_t>
+      raw_kem_decrypt(const uint8_t encap_key[], size_t len) override
          {
          const BigInt m(encap_key, len);
          const BigInt x = blinded_private_op(m);
@@ -349,7 +349,7 @@ class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
 
       size_t max_raw_input_bits() const override { return get_max_input_bits(); };
 
-      secure_vector<byte> raw_encrypt(const byte msg[], size_t msg_len,
+      secure_vector<uint8_t> raw_encrypt(const uint8_t msg[], size_t msg_len,
                                       RandomNumberGenerator&) override
          {
          BigInt m(msg, msg_len);
@@ -372,7 +372,7 @@ class RSA_Verify_Operation : public PK_Ops::Verification_with_EMSA,
 
       bool with_recovery() const override { return true; }
 
-      secure_vector<byte> verify_mr(const byte msg[], size_t msg_len) override
+      secure_vector<uint8_t> verify_mr(const uint8_t msg[], size_t msg_len) override
          {
          BigInt m(msg, msg_len);
          return BigInt::encode_locked(public_op(m));
@@ -390,8 +390,8 @@ class RSA_KEM_Encryption_Operation : public PK_Ops::KEM_Encryption_with_KDF,
          RSA_Public_Operation(key) {}
 
    private:
-      void raw_kem_encrypt(secure_vector<byte>& out_encapsulated_key,
-                           secure_vector<byte>& raw_shared_key,
+      void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
+                           secure_vector<uint8_t>& raw_shared_key,
                            Botan::RandomNumberGenerator& rng) override
          {
          const BigInt r = BigInt::random_integer(rng, 1, get_n());

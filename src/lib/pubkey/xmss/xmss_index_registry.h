@@ -54,8 +54,8 @@ class XMSS_Index_Registry
        * @return last unused leaf index for private_key.
        **/
       std::shared_ptr<Atomic<size_t>>
-                                   get(const secure_vector<byte>& private_seed,
-                                       const secure_vector<byte>& prf);
+                                   get(const secure_vector<uint8_t>& private_seed,
+                                       const secure_vector<uint8_t>& prf);
 
    private:
       XMSS_Index_Registry()
@@ -70,8 +70,8 @@ class XMSS_Index_Registry
        *
        * @return unique integral identifier for an XMSS private key.
        **/
-      uint64_t make_key_id(const secure_vector<byte>& private_seed,
-                           const secure_vector<byte>& prf) const;
+      uint64_t make_key_id(const secure_vector<uint8_t>& private_seed,
+                           const secure_vector<uint8_t>& prf) const;
 
       /**
        * Retrieves the index position of a key within the registry or

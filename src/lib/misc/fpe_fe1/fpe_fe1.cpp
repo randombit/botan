@@ -80,31 +80,31 @@ class FPE_Encryptor
    public:
       FPE_Encryptor(const SymmetricKey& key,
                     const BigInt& n,
-                    const std::vector<byte>& tweak);
+                    const std::vector<uint8_t>& tweak);
 
       BigInt operator()(size_t i, const BigInt& R);
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_mac;
-      std::vector<byte> m_mac_n_t;
+      std::vector<uint8_t> m_mac_n_t;
    };
 
 FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
                              const BigInt& n,
-                             const std::vector<byte>& tweak)
+                             const std::vector<uint8_t>& tweak)
    {
    m_mac.reset(new HMAC(new SHA_256));
    m_mac->set_key(key);
 
-   std::vector<byte> n_bin = BigInt::encode(n);
+   std::vector<uint8_t> n_bin = BigInt::encode(n);
 
    if(n_bin.size() > MAX_N_BYTES)
       throw Exception("N is too large for FPE encryption");
 
-   m_mac->update_be(static_cast<u32bit>(n_bin.size()));
+   m_mac->update_be(static_cast<uint32_t>(n_bin.size()));
    m_mac->update(n_bin.data(), n_bin.size());
 
-   m_mac->update_be(static_cast<u32bit>(tweak.size()));
+   m_mac->update_be(static_cast<uint32_t>(tweak.size()));
    m_mac->update(tweak.data(), tweak.size());
 
    m_mac_n_t = unlock(m_mac->final());
@@ -112,15 +112,15 @@ FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
 
 BigInt FPE_Encryptor::operator()(size_t round_no, const BigInt& R)
    {
-   secure_vector<byte> r_bin = BigInt::encode_locked(R);
+   secure_vector<uint8_t> r_bin = BigInt::encode_locked(R);
 
    m_mac->update(m_mac_n_t);
-   m_mac->update_be(static_cast<u32bit>(round_no));
+   m_mac->update_be(static_cast<uint32_t>(round_no));
 
-   m_mac->update_be(static_cast<u32bit>(r_bin.size()));
+   m_mac->update_be(static_cast<uint32_t>(r_bin.size()));
    m_mac->update(r_bin.data(), r_bin.size());
 
-   secure_vector<byte> X = m_mac->final();
+   secure_vector<uint8_t> X = m_mac->final();
    return BigInt(X.data(), X.size());
    }
 
@@ -131,7 +131,7 @@ BigInt FPE_Encryptor::operator()(size_t round_no, const BigInt& R)
 */
 BigInt fe1_encrypt(const BigInt& n, const BigInt& X0,
                    const SymmetricKey& key,
-                   const std::vector<byte>& tweak)
+                   const std::vector<uint8_t>& tweak)
    {
    FPE_Encryptor F(key, n, tweak);
 
@@ -159,7 +159,7 @@ BigInt fe1_encrypt(const BigInt& n, const BigInt& X0,
 */
 BigInt fe1_decrypt(const BigInt& n, const BigInt& X0,
                    const SymmetricKey& key,
-                   const std::vector<byte>& tweak)
+                   const std::vector<uint8_t>& tweak)
    {
    FPE_Encryptor F(key, n, tweak);
 

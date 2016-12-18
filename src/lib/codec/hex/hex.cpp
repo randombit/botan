@@ -12,29 +12,29 @@
 namespace Botan {
 
 void hex_encode(char output[],
-                const byte input[],
+                const uint8_t input[],
                 size_t input_length,
                 bool uppercase)
    {
-   static const byte BIN_TO_HEX_UPPER[16] = {
+   static const uint8_t BIN_TO_HEX_UPPER[16] = {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
       'A', 'B', 'C', 'D', 'E', 'F' };
 
-   static const byte BIN_TO_HEX_LOWER[16] = {
+   static const uint8_t BIN_TO_HEX_LOWER[16] = {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
       'a', 'b', 'c', 'd', 'e', 'f' };
 
-   const byte* tbl = uppercase ? BIN_TO_HEX_UPPER : BIN_TO_HEX_LOWER;
+   const uint8_t* tbl = uppercase ? BIN_TO_HEX_UPPER : BIN_TO_HEX_LOWER;
 
    for(size_t i = 0; i != input_length; ++i)
       {
-      byte x = input[i];
+      uint8_t x = input[i];
       output[2*i  ] = tbl[(x >> 4) & 0x0F];
       output[2*i+1] = tbl[(x     ) & 0x0F];
       }
    }
 
-std::string hex_encode(const byte input[],
+std::string hex_encode(const uint8_t input[],
                        size_t input_length,
                        bool uppercase)
    {
@@ -46,7 +46,7 @@ std::string hex_encode(const byte input[],
    return output;
    }
 
-size_t hex_decode(byte output[],
+size_t hex_decode(uint8_t output[],
                   const char input[],
                   size_t input_length,
                   size_t& input_consumed,
@@ -61,7 +61,7 @@ size_t hex_decode(byte output[],
    * Warning: this table assumes ASCII character encodings
    */
 
-   static const byte HEX_TO_BIN[256] = {
+   static const uint8_t HEX_TO_BIN[256] = {
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80,
       0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -89,14 +89,14 @@ size_t hex_decode(byte output[],
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-   byte* out_ptr = output;
+   uint8_t* out_ptr = output;
    bool top_nibble = true;
 
    clear_mem(output, input_length / 2);
 
    for(size_t i = 0; i != input_length; ++i)
       {
-      const byte bin = HEX_TO_BIN[static_cast<byte>(input[i])];
+      const uint8_t bin = HEX_TO_BIN[static_cast<uint8_t>(input[i])];
 
       if(bin >= 0x10)
          {
@@ -125,7 +125,7 @@ size_t hex_decode(byte output[],
    size_t written = (out_ptr - output);
 
    /*
-   * We only got half of a byte at the end; zap the half-written
+   * We only got half of a uint8_t at the end; zap the half-written
    * output and mark it as unread
    */
    if(!top_nibble)
@@ -137,7 +137,7 @@ size_t hex_decode(byte output[],
    return written;
    }
 
-size_t hex_decode(byte output[],
+size_t hex_decode(uint8_t output[],
                   const char input[],
                   size_t input_length,
                   bool ignore_ws)
@@ -152,18 +152,18 @@ size_t hex_decode(byte output[],
    return written;
    }
 
-size_t hex_decode(byte output[],
+size_t hex_decode(uint8_t output[],
                   const std::string& input,
                   bool ignore_ws)
    {
    return hex_decode(output, input.data(), input.length(), ignore_ws);
    }
 
-secure_vector<byte> hex_decode_locked(const char input[],
+secure_vector<uint8_t> hex_decode_locked(const char input[],
                                       size_t input_length,
                                       bool ignore_ws)
    {
-   secure_vector<byte> bin(1 + input_length / 2);
+   secure_vector<uint8_t> bin(1 + input_length / 2);
 
    size_t written = hex_decode(bin.data(),
                                input,
@@ -174,17 +174,17 @@ secure_vector<byte> hex_decode_locked(const char input[],
    return bin;
    }
 
-secure_vector<byte> hex_decode_locked(const std::string& input,
+secure_vector<uint8_t> hex_decode_locked(const std::string& input,
                                       bool ignore_ws)
    {
    return hex_decode_locked(input.data(), input.size(), ignore_ws);
    }
 
-std::vector<byte> hex_decode(const char input[],
+std::vector<uint8_t> hex_decode(const char input[],
                              size_t input_length,
                              bool ignore_ws)
    {
-   std::vector<byte> bin(1 + input_length / 2);
+   std::vector<uint8_t> bin(1 + input_length / 2);
 
    size_t written = hex_decode(bin.data(),
                                input,
@@ -195,7 +195,7 @@ std::vector<byte> hex_decode(const char input[],
    return bin;
    }
 
-std::vector<byte> hex_decode(const std::string& input,
+std::vector<uint8_t> hex_decode(const std::string& input,
                              bool ignore_ws)
    {
    return hex_decode(input.data(), input.size(), ignore_ws);

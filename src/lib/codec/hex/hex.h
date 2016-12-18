@@ -21,7 +21,7 @@ namespace Botan {
 * @param uppercase should output be upper or lower case?
 */
 void BOTAN_DLL hex_encode(char output[],
-                          const byte input[],
+                          const uint8_t input[],
                           size_t input_length,
                           bool uppercase = true);
 
@@ -32,7 +32,7 @@ void BOTAN_DLL hex_encode(char output[],
 * @param uppercase should output be upper or lower case?
 * @return hexadecimal representation of input
 */
-std::string BOTAN_DLL hex_encode(const byte input[],
+std::string BOTAN_DLL hex_encode(const uint8_t input[],
                                  size_t input_length,
                                  bool uppercase = true);
 
@@ -43,7 +43,7 @@ std::string BOTAN_DLL hex_encode(const byte input[],
 * @return hexadecimal representation of input
 */
 template<typename Alloc>
-std::string hex_encode(const std::vector<byte, Alloc>& input,
+std::string hex_encode(const std::vector<uint8_t, Alloc>& input,
                        bool uppercase = true)
    {
    return hex_encode(input.data(), input.size(), uppercase);
@@ -62,7 +62,7 @@ std::string hex_encode(const std::vector<byte, Alloc>& input,
                    exception if whitespace is encountered
 * @return number of bytes written to output
 */
-size_t BOTAN_DLL hex_decode(byte output[],
+size_t BOTAN_DLL hex_decode(uint8_t output[],
                             const char input[],
                             size_t input_length,
                             size_t& input_consumed,
@@ -77,7 +77,7 @@ size_t BOTAN_DLL hex_decode(byte output[],
                    exception if whitespace is encountered
 * @return number of bytes written to output
 */
-size_t BOTAN_DLL hex_decode(byte output[],
+size_t BOTAN_DLL hex_decode(uint8_t output[],
                             const char input[],
                             size_t input_length,
                             bool ignore_ws = true);
@@ -90,7 +90,7 @@ size_t BOTAN_DLL hex_decode(byte output[],
                    exception if whitespace is encountered
 * @return number of bytes written to output
 */
-size_t BOTAN_DLL hex_decode(byte output[],
+size_t BOTAN_DLL hex_decode(uint8_t output[],
                             const std::string& input,
                             bool ignore_ws = true);
 
@@ -102,7 +102,7 @@ size_t BOTAN_DLL hex_decode(byte output[],
                    exception if whitespace is encountered
 * @return decoded hex output
 */
-std::vector<byte> BOTAN_DLL
+std::vector<uint8_t> BOTAN_DLL
 hex_decode(const char input[],
            size_t input_length,
            bool ignore_ws = true);
@@ -114,7 +114,7 @@ hex_decode(const char input[],
                    exception if whitespace is encountered
 * @return decoded hex output
 */
-std::vector<byte> BOTAN_DLL
+std::vector<uint8_t> BOTAN_DLL
 hex_decode(const std::string& input,
            bool ignore_ws = true);
 
@@ -127,7 +127,7 @@ hex_decode(const std::string& input,
                    exception if whitespace is encountered
 * @return decoded hex output
 */
-secure_vector<byte> BOTAN_DLL
+secure_vector<uint8_t> BOTAN_DLL
 hex_decode_locked(const char input[],
                   size_t input_length,
                   bool ignore_ws = true);
@@ -139,7 +139,7 @@ hex_decode_locked(const char input[],
                    exception if whitespace is encountered
 * @return decoded hex output
 */
-secure_vector<byte> BOTAN_DLL
+secure_vector<uint8_t> BOTAN_DLL
 hex_decode_locked(const std::string& input,
                   bool ignore_ws = true);
 

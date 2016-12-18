@@ -81,7 +81,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       if(named_curve_id == 0)
          throw Internal_Error("TLS does not support ECC with " + curve_name);
 
-      std::vector<byte> ecdh_public_val;
+      std::vector<uint8_t> ecdh_public_val;
 
       if(curve_name == "x25519")
          {
@@ -119,7 +119,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       std::string group_id;
       BigInt v;
-      std::vector<byte> salt;
+      std::vector<uint8_t> salt;
 
       const bool found = creds.srp_verifier("tls-server", hostname,
                                             srp_identifier,
@@ -178,7 +178,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 /**
 * Deserialize a Server Key Exchange message
 */
-Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
+Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
                                          const std::string& kex_algo,
                                          const std::string& sig_algo,
                                          Protocol_Version version)
@@ -202,28 +202,28 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
 
       for(size_t i = 0; i != 3; ++i)
          {
-         reader.get_range<byte>(2, 1, 65535);
+         reader.get_range<uint8_t>(2, 1, 65535);
          }
       }
    else if(kex_algo == "ECDH" || kex_algo == "ECDHE_PSK")
       {
       reader.get_byte(); // curve type
-      reader.get_u16bit(); // curve id
-      reader.get_range<byte>(1, 1, 255); // public key
+      reader.get_uint16_t(); // curve id
+      reader.get_range<uint8_t>(1, 1, 255); // public key
       }
    else if(kex_algo == "SRP_SHA")
       {
       // 2 bigints (N,g) then salt, then server B
 
-      reader.get_range<byte>(2, 1, 65535);
-      reader.get_range<byte>(2, 1, 65535);
-      reader.get_range<byte>(1, 1, 255);
-      reader.get_range<byte>(2, 1, 65535);
+      reader.get_range<uint8_t>(2, 1, 65535);
+      reader.get_range<uint8_t>(2, 1, 65535);
+      reader.get_range<uint8_t>(1, 1, 255);
+      reader.get_range<uint8_t>(2, 1, 65535);
       }
    else if(kex_algo == "CECPQ1")
       {
       // u16 blob
-      reader.get_range<byte>(2, 1, 65535);
+      reader.get_range<uint8_t>(2, 1, 65535);
       }
    else if(kex_algo != "PSK")
       throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " + kex_algo);
@@ -238,7 +238,7 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<byte>& buf,
          m_sig_algo = Signature_Algorithms::sig_algo_name(reader.get_byte());
          }
 
-      m_signature = reader.get_range<byte>(2, 0, 65535);
+      m_signature = reader.get_range<uint8_t>(2, 0, 65535);
       }
 
    reader.assert_done();
@@ -249,9 +249,9 @@ Server_Key_Exchange::~Server_Key_Exchange() {}
 /**
 * Serialize a Server Key Exchange message
 */
-std::vector<byte> Server_Key_Exchange::serialize() const
+std::vector<uint8_t> Server_Key_Exchange::serialize() const
    {
-   std::vector<byte> buf = params();
+   std::vector<uint8_t> buf = params();
 
    if(m_signature.size())
       {

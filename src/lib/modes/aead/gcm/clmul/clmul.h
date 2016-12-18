@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-void gcm_multiply_clmul(byte x[16], const byte H[16]);
+void gcm_multiply_clmul(uint8_t x[16], const uint8_t H[16]);
 
 }
 

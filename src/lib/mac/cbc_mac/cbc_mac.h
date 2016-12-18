@@ -34,12 +34,12 @@ class BOTAN_DLL CBC_MAC final : public MessageAuthenticationCode
       */
       explicit CBC_MAC(BlockCipher* cipher);
    private:
-      void add_data(const byte[], size_t) override;
-      void final_result(byte[]) override;
-      void key_schedule(const byte[], size_t) override;
+      void add_data(const uint8_t[], size_t) override;
+      void final_result(uint8_t[]) override;
+      void key_schedule(const uint8_t[], size_t) override;
 
       std::unique_ptr<BlockCipher> m_cipher;
-      secure_vector<byte> m_state;
+      secure_vector<uint8_t> m_state;
       size_t m_position = 0;
    };
 

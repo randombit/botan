@@ -22,10 +22,10 @@ class BOTAN_DLL SecureQueue : public Fanout_Filter, public DataSource
    public:
       std::string name() const override { return "Queue"; }
 
-      void write(const byte[], size_t) override;
+      void write(const uint8_t[], size_t) override;
 
-      size_t read(byte[], size_t) override;
-      size_t peek(byte[], size_t, size_t = 0) const override;
+      size_t read(uint8_t[], size_t) override;
+      size_t peek(uint8_t[], size_t, size_t = 0) const override;
       size_t get_bytes_read() const override;
 
       bool end_of_data() const override;

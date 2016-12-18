@@ -36,7 +36,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
       * @param key_bits DER encoded public key bits
       */
       GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
-                          const std::vector<byte>& key_bits);
+                          const std::vector<uint8_t>& key_bits);
 
       /**
       * Get this keys algorithm name.
@@ -46,7 +46,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<byte> public_key_bits() const override;
+      std::vector<uint8_t> public_key_bits() const override;
 
       size_t message_parts() const override { return 2; }
 
@@ -74,7 +74,7 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
       * @param key_bits PKCS #8 structure
       */
       GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id,
-                           const secure_vector<byte>& key_bits) :
+                           const secure_vector<uint8_t>& key_bits) :
          EC_PrivateKey(alg_id, key_bits) {}
 
       /**

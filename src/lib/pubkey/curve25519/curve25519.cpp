@@ -14,7 +14,7 @@ namespace Botan {
 
 void curve25519_basepoint(uint8_t mypublic[32], const uint8_t secret[32])
    {
-   const byte basepoint[32] = { 9 };
+   const uint8_t basepoint[32] = { 9 };
    curve25519_donna(mypublic, secret, basepoint);
    }
 
@@ -26,10 +26,10 @@ void size_check(size_t size, const char* thing)
       throw Decoding_Error("Invalid size " + std::to_string(size) + " for Curve25519 " + thing);
    }
 
-secure_vector<byte> curve25519(const secure_vector<byte>& secret,
-                               const byte pubval[32])
+secure_vector<uint8_t> curve25519(const secure_vector<uint8_t>& secret,
+                               const uint8_t pubval[32])
    {
-   secure_vector<byte> out(32);
+   secure_vector<uint8_t> out(32);
    curve25519_donna(out.data(), secret.data(), pubval);
    return out;
    }
@@ -47,7 +47,7 @@ bool Curve25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
    }
 
 Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier&,
-                                           const std::vector<byte>& key_bits)
+                                           const std::vector<uint8_t>& key_bits)
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
@@ -58,7 +58,7 @@ Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier&,
    size_check(m_public.size(), "public key");
    }
 
-std::vector<byte> Curve25519_PublicKey::public_key_bits() const
+std::vector<uint8_t> Curve25519_PublicKey::public_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -75,7 +75,7 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(RandomNumberGenerator& rng)
    }
 
 Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
-                                             const secure_vector<byte>& key_bits)
+                                             const secure_vector<uint8_t>& key_bits)
    {
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
@@ -88,7 +88,7 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
    size_check(m_private.size(), "private key");
    }
 
-secure_vector<byte> Curve25519_PrivateKey::private_key_bits() const
+secure_vector<uint8_t> Curve25519_PrivateKey::private_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -105,7 +105,7 @@ bool Curve25519_PrivateKey::check_key(RandomNumberGenerator&, bool) const
    return public_point == m_public;
    }
 
-secure_vector<byte> Curve25519_PrivateKey::agree(const byte w[], size_t w_len) const
+secure_vector<uint8_t> Curve25519_PrivateKey::agree(const uint8_t w[], size_t w_len) const
    {
    size_check(w_len, "public value");
    return curve25519(m_private, w);
@@ -124,7 +124,7 @@ class Curve25519_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
          PK_Ops::Key_Agreement_with_KDF(kdf),
          m_key(key) {}
 
-      secure_vector<byte> raw_agree(const byte w[], size_t w_len) override
+      secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
          return m_key.agree(w, w_len);
          }

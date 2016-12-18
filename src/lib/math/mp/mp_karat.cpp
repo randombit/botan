@@ -75,8 +75,8 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    word* z0 = z;
    word* z1 = z + N;
 
-   const s32bit cmp0 = bigint_cmp(x0, N2, x1, N2);
-   const s32bit cmp1 = bigint_cmp(y1, N2, y0, N2);
+   const int32_t cmp0 = bigint_cmp(x0, N2, x1, N2);
+   const int32_t cmp1 = bigint_cmp(y1, N2, y0, N2);
 
    clear_mem(workspace, 2*N);
 
@@ -143,7 +143,7 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    word* z0 = z;
    word* z1 = z + N;
 
-   const s32bit cmp = bigint_cmp(x0, N2, x1, N2);
+   const int32_t cmp = bigint_cmp(x0, N2, x1, N2);
 
    clear_mem(workspace, 2*N);
 

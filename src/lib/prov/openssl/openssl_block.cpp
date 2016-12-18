@@ -34,19 +34,19 @@ class OpenSSL_BlockCipher : public BlockCipher
 
       Key_Length_Specification key_spec() const override { return m_cipher_key_spec; }
 
-      void encrypt_n(const byte in[], byte out[], size_t blocks) const override
+      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
          {
          int out_len = 0;
          EVP_EncryptUpdate(&m_encrypt, out, &out_len, in, blocks * m_block_sz);
          }
 
-      void decrypt_n(const byte in[], byte out[], size_t blocks) const override
+      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
          {
          int out_len = 0;
          EVP_DecryptUpdate(&m_decrypt, out, &out_len, in, blocks * m_block_sz);
          }
 
-      void key_schedule(const byte key[], size_t key_len) override;
+      void key_schedule(const uint8_t key[], size_t key_len) override;
 
       size_t m_block_sz;
       Key_Length_Specification m_cipher_key_spec;
@@ -104,9 +104,9 @@ OpenSSL_BlockCipher::~OpenSSL_BlockCipher()
 /*
 * Set the key
 */
-void OpenSSL_BlockCipher::key_schedule(const byte key[], size_t length)
+void OpenSSL_BlockCipher::key_schedule(const uint8_t key[], size_t length)
    {
-   secure_vector<byte> full_key(key, key + length);
+   secure_vector<uint8_t> full_key(key, key + length);
 
    if(m_cipher_name == "TripleDES" && length == 16)
       {

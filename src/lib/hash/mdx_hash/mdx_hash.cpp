@@ -38,7 +38,7 @@ void MDx_HashFunction::clear()
 /*
 * Update the hash
 */
-void MDx_HashFunction::add_data(const byte input[], size_t length)
+void MDx_HashFunction::add_data(const uint8_t input[], size_t length)
    {
    m_count += length;
 
@@ -68,7 +68,7 @@ void MDx_HashFunction::add_data(const byte input[], size_t length)
 /*
 * Finalize a hash
 */
-void MDx_HashFunction::final_result(byte output[])
+void MDx_HashFunction::final_result(uint8_t output[])
    {
    m_buffer[m_position] = (BIG_BIT_ENDIAN ? 0x80 : 0x01);
    for(size_t i = m_position+1; i != m_buffer.size(); ++i)
@@ -90,14 +90,14 @@ void MDx_HashFunction::final_result(byte output[])
 /*
 * Write the count bits to the buffer
 */
-void MDx_HashFunction::write_count(byte out[])
+void MDx_HashFunction::write_count(uint8_t out[])
    {
    if(COUNT_SIZE < 8)
       throw Invalid_State("MDx_HashFunction::write_count: COUNT_SIZE < 8");
    if(COUNT_SIZE >= output_length() || COUNT_SIZE >= hash_block_size())
       throw Invalid_Argument("MDx_HashFunction: COUNT_SIZE is too big");
 
-   const u64bit bit_count = m_count * 8;
+   const uint64_t bit_count = m_count * 8;
 
    if(BIG_BYTE_ENDIAN)
       store_be(bit_count, out + COUNT_SIZE - 8);

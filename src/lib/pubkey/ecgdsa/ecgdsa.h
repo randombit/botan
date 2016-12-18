@@ -34,7 +34,7 @@ class BOTAN_DLL ECGDSA_PublicKey : public virtual EC_PublicKey
       * @param key_bits DER encoded public key bits
       */
       ECGDSA_PublicKey(const AlgorithmIdentifier& alg_id,
-                      const std::vector<byte>& key_bits) :
+                      const std::vector<uint8_t>& key_bits) :
          EC_PublicKey(alg_id, key_bits) {}
 
       /**
@@ -69,7 +69,7 @@ class BOTAN_DLL ECGDSA_PrivateKey : public ECGDSA_PublicKey,
       * @param key_bits PKCS #8 structure
       */
       ECGDSA_PrivateKey(const AlgorithmIdentifier& alg_id,
-                       const secure_vector<byte>& key_bits) :
+                       const secure_vector<uint8_t>& key_bits) :
          EC_PrivateKey(alg_id, key_bits, true) {}
 
       /**

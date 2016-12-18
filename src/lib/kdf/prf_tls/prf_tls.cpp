@@ -21,10 +21,10 @@ namespace {
 /*
 * TLS PRF P_hash function
 */
-void P_hash(byte out[], size_t out_len,
+void P_hash(uint8_t out[], size_t out_len,
             MessageAuthenticationCode& mac,
-            const byte secret[], size_t secret_len,
-            const byte salt[], size_t salt_len)
+            const uint8_t secret[], size_t secret_len,
+            const uint8_t salt[], size_t salt_len)
    {
    try
       {
@@ -37,8 +37,8 @@ void P_hash(byte out[], size_t out_len,
                            " bytes is too long for the PRF");
       }
 
-   secure_vector<byte> A(salt, salt + salt_len);
-   secure_vector<byte> h;
+   secure_vector<uint8_t> A(salt, salt + salt_len);
+   secure_vector<uint8_t> h;
 
    size_t offset = 0;
 
@@ -58,16 +58,16 @@ void P_hash(byte out[], size_t out_len,
 
 }
 
-size_t TLS_PRF::kdf(byte key[], size_t key_len,
-                    const byte secret[], size_t secret_len,
-                    const byte salt[], size_t salt_len,
-                    const byte label[], size_t label_len) const
+size_t TLS_PRF::kdf(uint8_t key[], size_t key_len,
+                    const uint8_t secret[], size_t secret_len,
+                    const uint8_t salt[], size_t salt_len,
+                    const uint8_t label[], size_t label_len) const
    {
    const size_t S1_len = (secret_len + 1) / 2,
                 S2_len = (secret_len + 1) / 2;
-   const byte* S1 = secret;
-   const byte* S2 = secret + (secret_len - S2_len);
-   secure_vector<byte> msg;
+   const uint8_t* S1 = secret;
+   const uint8_t* S2 = secret + (secret_len - S2_len);
+   secure_vector<uint8_t> msg;
 
    msg.reserve(label_len + salt_len);
    msg += std::make_pair(label, label_len);
@@ -78,12 +78,12 @@ size_t TLS_PRF::kdf(byte key[], size_t key_len,
    return key_len;
    }
 
-size_t TLS_12_PRF::kdf(byte key[], size_t key_len,
-                       const byte secret[], size_t secret_len,
-                       const byte salt[], size_t salt_len,
-                       const byte label[], size_t label_len) const
+size_t TLS_12_PRF::kdf(uint8_t key[], size_t key_len,
+                       const uint8_t secret[], size_t secret_len,
+                       const uint8_t salt[], size_t salt_len,
+                       const uint8_t label[], size_t label_len) const
    {
-   secure_vector<byte> msg;
+   secure_vector<uint8_t> msg;
 
    msg.reserve(label_len + salt_len);
    msg += std::make_pair(label, label_len);

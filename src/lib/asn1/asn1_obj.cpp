@@ -32,7 +32,7 @@ namespace ASN1 {
 /*
 * Put some arbitrary bytes into a SEQUENCE
 */
-std::vector<byte> put_in_sequence(const std::vector<byte>& contents)
+std::vector<uint8_t> put_in_sequence(const std::vector<uint8_t>& contents)
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -54,14 +54,14 @@ std::string to_string(const BER_Object& obj)
 */
 bool maybe_BER(DataSource& source)
    {
-   byte first_byte;
-   if(!source.peek_byte(first_byte))
+   uint8_t first_u8;
+   if(!source.peek_byte(first_u8))
       {
-      BOTAN_ASSERT_EQUAL(source.read_byte(first_byte), 0, "Expected EOF");
+      BOTAN_ASSERT_EQUAL(source.read_byte(first_u8), 0, "Expected EOF");
       throw Stream_IO_Error("ASN1::maybe_BER: Source was empty");
       }
 
-   if(first_byte == (SEQUENCE | CONSTRUCTED))
+   if(first_u8 == (SEQUENCE | CONSTRUCTED))
       return true;
    return false;
    }

@@ -18,8 +18,8 @@ namespace Botan {
 class BOTAN_DLL Noekeon final : public Block_Cipher_Fixed_Params<16, 16>
    {
    public:
-      void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
-      void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
+      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
+      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       std::string provider() const override;
       void clear() override;
@@ -27,17 +27,17 @@ class BOTAN_DLL Noekeon final : public Block_Cipher_Fixed_Params<16, 16>
       BlockCipher* clone() const override { return new Noekeon; }
    private:
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
-      void simd_encrypt_4(const byte in[], byte out[]) const;
-      void simd_decrypt_4(const byte in[], byte out[]) const;
+      void simd_encrypt_4(const uint8_t in[], uint8_t out[]) const;
+      void simd_decrypt_4(const uint8_t in[], uint8_t out[]) const;
 #endif
 
       /**
       * The Noekeon round constants
       */
-      static const byte RC[17];
+      static const uint8_t RC[17];
 
-      void key_schedule(const byte[], size_t) override;
-      secure_vector<u32bit> m_EK, m_DK;
+      void key_schedule(const uint8_t[], size_t) override;
+      secure_vector<uint32_t> m_EK, m_DK;
    };
 
 }

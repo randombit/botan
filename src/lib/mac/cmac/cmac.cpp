@@ -12,16 +12,16 @@ namespace Botan {
 /*
 * Perform CMAC's multiplication in GF(2^n)
 */
-secure_vector<byte> CMAC::poly_double(const secure_vector<byte>& in)
+secure_vector<uint8_t> CMAC::poly_double(const secure_vector<uint8_t>& in)
    {
    const bool top_carry = static_cast<bool>((in[0] & 0x80) != 0);
 
-   secure_vector<byte> out = in;
+   secure_vector<uint8_t> out = in;
 
-   byte carry = 0;
+   uint8_t carry = 0;
    for(size_t i = out.size(); i != 0; --i)
       {
-      byte temp = out[i-1];
+      uint8_t temp = out[i-1];
       out[i-1] = (temp << 1) | carry;
       carry = (temp >> 7);
       }
@@ -55,7 +55,7 @@ secure_vector<byte> CMAC::poly_double(const secure_vector<byte>& in)
 /*
 * Update an CMAC Calculation
 */
-void CMAC::add_data(const byte input[], size_t length)
+void CMAC::add_data(const uint8_t input[], size_t length)
    {
    buffer_insert(m_buffer, m_position, input, length);
    if(m_position + length > output_length())
@@ -80,7 +80,7 @@ void CMAC::add_data(const byte input[], size_t length)
 /*
 * Finalize an CMAC Calculation
 */
-void CMAC::final_result(byte mac[])
+void CMAC::final_result(uint8_t mac[])
    {
    xor_buf(m_state, m_buffer, m_position);
 
@@ -107,7 +107,7 @@ void CMAC::final_result(byte mac[])
 /*
 * CMAC Key Schedule
 */
-void CMAC::key_schedule(const byte key[], size_t length)
+void CMAC::key_schedule(const uint8_t key[], size_t length)
    {
    clear();
    m_cipher->set_key(key, length);

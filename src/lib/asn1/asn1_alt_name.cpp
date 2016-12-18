@@ -137,8 +137,8 @@ void encode_entries(DER_Encoder& encoder,
          }
       else if(type == "IP")
          {
-         const u32bit ip = string_to_ipv4(i->second);
-         byte ip_buf[4] = { 0 };
+         const uint32_t ip = string_to_ipv4(i->second);
+         uint8_t ip_buf[4] = { 0 };
          store_be(ip, ip_buf);
          encoder.add_object(tagging, CONTEXT_SPECIFIC, ip_buf, 4);
          }
@@ -230,7 +230,7 @@ void AlternativeName::decode_from(BER_Decoder& source)
          {
          if(obj.value.size() == 4)
             {
-            const u32bit ip = load_be<u32bit>(&obj.value[0], 0);
+            const uint32_t ip = load_be<uint32_t>(&obj.value[0], 0);
             add_attribute("IP", ipv4_to_string(ip));
             }
          }

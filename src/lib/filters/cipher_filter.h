@@ -39,12 +39,12 @@ class BOTAN_DLL Cipher_Mode_Filter : public Keyed_Filter,
       Cipher_Mode& get_mode() { return *m_mode; }
 
    private:
-      void write(const byte input[], size_t input_length) override;
+      void write(const uint8_t input[], size_t input_length) override;
       void start_msg() override;
       void end_msg() override;
 
-      void buffered_block(const byte input[], size_t input_length) override;
-      void buffered_final(const byte input[], size_t input_length) override;
+      void buffered_block(const uint8_t input[], size_t input_length) override;
+      void buffered_final(const uint8_t input[], size_t input_length) override;
 
       class Nonce_State
          {
@@ -52,15 +52,15 @@ class BOTAN_DLL Cipher_Mode_Filter : public Keyed_Filter,
             explicit Nonce_State(bool allow_null_nonce) : m_fresh_nonce(allow_null_nonce) {}
 
             void update(const InitializationVector& iv);
-            std::vector<byte> get();
+            std::vector<uint8_t> get();
          private:
             bool m_fresh_nonce;
-            std::vector<byte> m_nonce;
+            std::vector<uint8_t> m_nonce;
          };
 
       Nonce_State m_nonce;
       std::unique_ptr<Cipher_Mode> m_mode;
-      secure_vector<byte> m_buffer;
+      secure_vector<uint8_t> m_buffer;
    };
 
 // deprecated aliases, will be removed before 2.0

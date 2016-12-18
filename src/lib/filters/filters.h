@@ -39,7 +39,7 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       * @param input data
       * @param input_len length of input in bytes
       */
-      void write(const byte input[], size_t input_len) override;
+      void write(const uint8_t input[], size_t input_len) override;
 
       bool valid_iv_length(size_t iv_len) const override
          { return m_cipher->valid_iv_length(iv_len); }
@@ -87,7 +87,7 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       */
       StreamCipher_Filter(const std::string& cipher, const SymmetricKey& key);
    private:
-      secure_vector<byte> m_buffer;
+      secure_vector<uint8_t> m_buffer;
       std::unique_ptr<StreamCipher> m_cipher;
    };
 
@@ -97,7 +97,7 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
 class BOTAN_DLL Hash_Filter : public Filter
    {
    public:
-      void write(const byte input[], size_t len) override { m_hash->update(input, len); }
+      void write(const uint8_t input[], size_t len) override { m_hash->update(input, len); }
       void end_msg() override;
 
       std::string name() const override { return m_hash->name(); }
@@ -134,7 +134,7 @@ class BOTAN_DLL Hash_Filter : public Filter
 class BOTAN_DLL MAC_Filter : public Keyed_Filter
    {
    public:
-      void write(const byte input[], size_t len) override { m_mac->update(input, len); }
+      void write(const uint8_t input[], size_t len) override { m_mac->update(input, len); }
       void end_msg() override;
 
       std::string name() const override { return m_mac->name(); }

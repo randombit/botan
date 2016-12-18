@@ -33,7 +33,7 @@ struct polyn_gf2m
          :m_deg(-1)
          {};
 
-      polyn_gf2m(const secure_vector<byte>& encoded, std::shared_ptr<GF2m_Field> sp_field );
+      polyn_gf2m(const secure_vector<uint8_t>& encoded, std::shared_ptr<GF2m_Field> sp_field );
 
       polyn_gf2m& operator=(const polyn_gf2m&) = default;
 
@@ -57,7 +57,7 @@ struct polyn_gf2m
 
       void swap(polyn_gf2m& other);
 
-      secure_vector<byte> encode() const;
+      secure_vector<uint8_t> encode() const;
       /**
       * create zero polynomial with reservation of space for a degree d polynomial
       */
@@ -82,14 +82,14 @@ struct polyn_gf2m
 
       gf2m get_lead_coef() const { return coeff[m_deg]; }
 
-      gf2m get_coef(u32bit i) const { return coeff[i]; }
+      gf2m get_coef(uint32_t i) const { return coeff[i]; }
 
-      inline void set_coef(u32bit i, gf2m v)
+      inline void set_coef(uint32_t i, gf2m v)
          {
          coeff[i] = v;
          };
 
-      inline void add_to_coef(u32bit i, gf2m v)
+      inline void add_to_coef(uint32_t i, gf2m v)
          {
          coeff[i] = coeff[i] ^ v;
          }
@@ -97,14 +97,14 @@ struct polyn_gf2m
       std::string to_string() const;
 
       /** decode a polynomial from memory: **/
-      polyn_gf2m(const byte* mem, u32bit mem_len, std::shared_ptr<GF2m_Field> sp_field);
+      polyn_gf2m(const uint8_t* mem, uint32_t mem_len, std::shared_ptr<GF2m_Field> sp_field);
       // remove one! ^v!
       /**
       *  create a polynomial from memory area (encoded)
       */
-      polyn_gf2m(int degree, const unsigned  char* mem, u32bit mem_byte_len, std::shared_ptr<GF2m_Field> sp_field);
+      polyn_gf2m(int degree, const unsigned  char* mem, uint32_t mem_byte_len, std::shared_ptr<GF2m_Field> sp_field);
 
-      void encode(u32bit min_numo_coeffs, byte* mem, u32bit mem_len) const;
+      void encode(uint32_t min_numo_coeffs, uint8_t* mem, uint32_t mem_len) const;
 
       int get_degree() const;
 
@@ -130,14 +130,14 @@ struct polyn_gf2m
                                                                      const polyn_gf2m & g,
                                                                      int break_deg);
 
-      void patchup_deg_secure( u32bit trgt_deg, volatile gf2m patch_elem);
+      void patchup_deg_secure( uint32_t trgt_deg, volatile gf2m patch_elem);
 
    private:
 
       void set_degree(int d) { m_deg = d; }
 
       void poly_shiftmod( const polyn_gf2m & g);
-      void realloc(u32bit new_size);
+      void realloc(uint32_t new_size);
       static polyn_gf2m gcd(polyn_gf2m const& p1, polyn_gf2m const& p2);
 
       /**
@@ -166,7 +166,7 @@ std::vector<polyn_gf2m> syndrome_init(polyn_gf2m const& generator, std::vector<g
 * Find the roots of a polynomial over GF(2^m) using the method by Federenko
 * et al.
 */
-secure_vector<gf2m> find_roots_gf2m_decomp(const polyn_gf2m & polyn, u32bit code_length);
+secure_vector<gf2m> find_roots_gf2m_decomp(const polyn_gf2m & polyn, uint32_t code_length);
 
 }
 

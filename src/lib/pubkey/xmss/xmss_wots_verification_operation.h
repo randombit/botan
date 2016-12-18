@@ -34,14 +34,14 @@ class XMSS_WOTS_Verification_Operation
 
       virtual ~XMSS_WOTS_Verification_Operation() {}
 
-      virtual bool is_valid_signature(const byte sig[],
+      virtual bool is_valid_signature(const uint8_t sig[],
                                       size_t sig_len) override;
 
-      void update(const byte msg[], size_t msg_len) override;
+      void update(const uint8_t msg[], size_t msg_len) override;
 
    private:
       XMSS_WOTS_Addressed_PublicKey m_pub_key;
-      secure_vector<byte> m_msg_buf;
+      secure_vector<uint8_t> m_msg_buf;
    };
 
 }

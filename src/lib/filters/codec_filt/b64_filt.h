@@ -25,7 +25,7 @@ class BOTAN_DLL Base64_Encoder final : public Filter
       * @param input the message to input as a byte array
       * @param length the length of the byte array input
       */
-      void write(const byte input[], size_t length) override;
+      void write(const uint8_t input[], size_t length) override;
 
       /**
       * Inform the Encoder that the current message shall be closed.
@@ -41,13 +41,13 @@ class BOTAN_DLL Base64_Encoder final : public Filter
       Base64_Encoder(bool breaks = false, size_t length = 72,
                      bool t_n = false);
    private:
-      void encode_and_send(const byte input[], size_t length,
+      void encode_and_send(const uint8_t input[], size_t length,
                            bool final_inputs = false);
-      void do_output(const byte output[], size_t length);
+      void do_output(const uint8_t output[], size_t length);
 
       const size_t m_line_length;
       const bool m_trailing_newline;
-      std::vector<byte> m_in, m_out;
+      std::vector<uint8_t> m_in, m_out;
       size_t m_position, m_out_position;
    };
 
@@ -64,7 +64,7 @@ class BOTAN_DLL Base64_Decoder final : public Filter
       * @param input the message to input as a byte array
       * @param length the length of the byte array input
       */
-      void write(const byte input[], size_t length) override;
+      void write(const uint8_t input[], size_t length) override;
 
       /**
       * Finish up the current message
@@ -79,7 +79,7 @@ class BOTAN_DLL Base64_Decoder final : public Filter
       explicit Base64_Decoder(Decoder_Checking checking = NONE);
    private:
       const Decoder_Checking m_checking;
-      std::vector<byte> m_in, m_out;
+      std::vector<uint8_t> m_in, m_out;
       size_t m_position;
    };
 

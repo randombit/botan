@@ -25,7 +25,7 @@ __m128i aes_128_key_expansion(__m128i key, __m128i key_with_rcon)
 
 BOTAN_FUNC_ISA("ssse3")
 void aes_192_key_expansion(__m128i* K1, __m128i* K2, __m128i key2_with_rcon,
-                           u32bit out[], bool last)
+                           uint32_t out[], bool last)
    {
    __m128i key1 = *K1;
    __m128i key2 = *K2;
@@ -107,7 +107,7 @@ __m128i aes_256_key_expansion(__m128i key, __m128i key2)
 * AES-128 Encryption
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_128::aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_128::aesni_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -184,7 +184,7 @@ void AES_128::aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const
 * AES-128 Decryption
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_128::aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_128::aesni_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -261,7 +261,7 @@ void AES_128::aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const
 * AES-128 Key Schedule
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_128::aesni_key_schedule(const byte key[], size_t)
+void AES_128::aesni_key_schedule(const uint8_t key[], size_t)
    {
    m_EK.resize(44);
    m_DK.resize(44);
@@ -314,7 +314,7 @@ void AES_128::aesni_key_schedule(const byte key[], size_t)
 * AES-192 Encryption
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_192::aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_192::aesni_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -397,7 +397,7 @@ void AES_192::aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const
 * AES-192 Decryption
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_192::aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_192::aesni_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -480,7 +480,7 @@ void AES_192::aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const
 * AES-192 Key Schedule
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_192::aesni_key_schedule(const byte key[], size_t)
+void AES_192::aesni_key_schedule(const uint8_t key[], size_t)
    {
    m_EK.resize(52);
    m_DK.resize(52);
@@ -530,7 +530,7 @@ void AES_192::aesni_key_schedule(const byte key[], size_t)
 * AES-256 Encryption
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_256::aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_256::aesni_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -619,7 +619,7 @@ void AES_256::aesni_encrypt_n(const byte in[], byte out[], size_t blocks) const
 * AES-256 Decryption
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_256::aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const
+void AES_256::aesni_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
@@ -708,7 +708,7 @@ void AES_256::aesni_decrypt_n(const byte in[], byte out[], size_t blocks) const
 * AES-256 Key Schedule
 */
 BOTAN_FUNC_ISA("ssse3,aes")
-void AES_256::aesni_key_schedule(const byte key[], size_t)
+void AES_256::aesni_key_schedule(const uint8_t key[], size_t)
    {
    m_EK.resize(60);
    m_DK.resize(60);

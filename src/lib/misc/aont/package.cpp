@@ -15,8 +15,8 @@ namespace Botan {
 
 void aont_package(RandomNumberGenerator& rng,
                   BlockCipher* cipher,
-                  const byte input[], size_t input_len,
-                  byte output[])
+                  const uint8_t input[], size_t input_len,
+                  uint8_t output[])
    {
    const size_t BLOCK_SIZE = cipher->block_size();
 
@@ -37,12 +37,12 @@ void aont_package(RandomNumberGenerator& rng,
    // Set K0 (the all zero key)
    cipher->set_key(SymmetricKey(all_zeros));
 
-   secure_vector<byte> buf(BLOCK_SIZE);
+   secure_vector<uint8_t> buf(BLOCK_SIZE);
 
    const size_t blocks =
       (input_len + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-   byte* final_block = output + input_len;
+   uint8_t* final_block = output + input_len;
    clear_mem(final_block, BLOCK_SIZE);
 
    // XOR the hash blocks into the final block
@@ -67,8 +67,8 @@ void aont_package(RandomNumberGenerator& rng,
    }
 
 void aont_unpackage(BlockCipher* cipher,
-                    const byte input[], size_t input_len,
-                    byte output[])
+                    const uint8_t input[], size_t input_len,
+                    uint8_t output[])
    {
    const size_t BLOCK_SIZE = cipher->block_size();
 
@@ -83,8 +83,8 @@ void aont_unpackage(BlockCipher* cipher,
 
    cipher->set_key(SymmetricKey(all_zeros));
 
-   secure_vector<byte> package_key(BLOCK_SIZE);
-   secure_vector<byte> buf(BLOCK_SIZE);
+   secure_vector<uint8_t> package_key(BLOCK_SIZE);
+   secure_vector<uint8_t> buf(BLOCK_SIZE);
 
    // Copy the package key (masked with the block hashes)
    copy_mem(package_key.data(),

@@ -55,16 +55,16 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
 
       if(stmt->step())
          {
-         std::pair<const byte*, size_t> salt = stmt->get_blob(0);
+         std::pair<const uint8_t*, size_t> salt = stmt->get_blob(0);
          const size_t iterations = stmt->get_size_t(1);
          const size_t check_val_db = stmt->get_size_t(2);
 
-         secure_vector<byte> x = pbkdf->pbkdf_iterations(32 + 2,
+         secure_vector<uint8_t> x = pbkdf->pbkdf_iterations(32 + 2,
                                                          passphrase,
                                                          salt.first, salt.second,
                                                          iterations);
 
-         const size_t check_val_created = make_u16bit(x[0], x[1]);
+         const size_t check_val_created = make_uint16(x[0], x[1]);
          m_session_key.assign(x.begin() + 2, x.end());
 
          if(check_val_created != check_val_db)
@@ -79,16 +79,16 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
 
       // new database case
 
-      std::vector<byte> salt = unlock(rng.random_vec(16));
+      std::vector<uint8_t> salt = unlock(rng.random_vec(16));
       size_t iterations = 0;
 
-      secure_vector<byte> x = pbkdf->pbkdf_timed(32 + 2,
+      secure_vector<uint8_t> x = pbkdf->pbkdf_timed(32 + 2,
                                                  passphrase,
                                                  salt.data(), salt.size(),
                                                  std::chrono::milliseconds(100),
                                                  iterations);
 
-      size_t check_val = make_u16bit(x[0], x[1]);
+      size_t check_val = make_uint16(x[0], x[1]);
       m_session_key.assign(x.begin() + 2, x.end());
 
       auto stmt = m_db->new_statement("insert into tls_sessions_metadata values(?1, ?2, ?3)");
@@ -101,7 +101,7 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
       }
    }
 
-bool Session_Manager_SQL::load_from_session_id(const std::vector<byte>& session_id,
+bool Session_Manager_SQL::load_from_session_id(const std::vector<uint8_t>& session_id,
                                                Session& session)
    {
    auto stmt = m_db->new_statement("select session from tls_sessions where session_id = ?1");
@@ -110,7 +110,7 @@ bool Session_Manager_SQL::load_from_session_id(const std::vector<byte>& session_
 
    while(stmt->step())
       {
-      std::pair<const byte*, size_t> blob = stmt->get_blob(0);
+      std::pair<const uint8_t*, size_t> blob = stmt->get_blob(0);
 
       try
          {
@@ -137,7 +137,7 @@ bool Session_Manager_SQL::load_from_server_info(const Server_Information& server
 
    while(stmt->step())
       {
-      std::pair<const byte*, size_t> blob = stmt->get_blob(0);
+      std::pair<const uint8_t*, size_t> blob = stmt->get_blob(0);
 
       try
          {
@@ -152,7 +152,7 @@ bool Session_Manager_SQL::load_from_server_info(const Server_Information& server
    return false;
    }
 
-void Session_Manager_SQL::remove_entry(const std::vector<byte>& session_id)
+void Session_Manager_SQL::remove_entry(const std::vector<uint8_t>& session_id)
    {
    auto stmt = m_db->new_statement("delete from tls_sessions where session_id = ?1");
 

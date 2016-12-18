@@ -42,12 +42,12 @@ class HMAC_DRBG_Tests : public Text_Based_Test
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
-         const std::vector<byte> seed_input   = get_req_bin(vars, "EntropyInput");
-         const std::vector<byte> reseed_input = get_req_bin(vars, "EntropyInputReseed");
-         const std::vector<byte> expected     = get_req_bin(vars, "Out");
+         const std::vector<uint8_t> seed_input   = get_req_bin(vars, "EntropyInput");
+         const std::vector<uint8_t> reseed_input = get_req_bin(vars, "EntropyInputReseed");
+         const std::vector<uint8_t> expected     = get_req_bin(vars, "Out");
 
-         const std::vector<byte> ad1 = get_opt_bin(vars, "AdditionalInput1");
-         const std::vector<byte> ad2 = get_opt_bin(vars, "AdditionalInput2");
+         const std::vector<uint8_t> ad1 = get_opt_bin(vars, "AdditionalInput1");
+         const std::vector<uint8_t> ad2 = get_opt_bin(vars, "AdditionalInput2");
 
          Test::Result result("HMAC_DRBG(" + algo + ")");
 
@@ -64,7 +64,7 @@ class HMAC_DRBG_Tests : public Text_Based_Test
          // now reseed
          rng->add_entropy(reseed_input.data(), reseed_input.size());
 
-         std::vector<byte> out(expected.size());
+         std::vector<uint8_t> out(expected.size());
          // first block is discarded
          rng->randomize_with_input(out.data(), out.size(), ad1.data(), ad1.size());
          rng->randomize_with_input(out.data(), out.size(), ad2.data(), ad2.size());
@@ -114,12 +114,12 @@ class HMAC_DRBG_Unit_Tests : public Test
                m_randomize_count = 0;
                }
 
-            void randomize(byte[], size_t) override
+            void randomize(uint8_t[], size_t) override
                {
                m_randomize_count++;
                }
 
-            void add_entropy(const byte[], size_t) override {}
+            void add_entropy(const uint8_t[], size_t) override {}
 
             std::string name() const override { return "Request_Counting_RNG"; }
 
@@ -143,17 +143,17 @@ class HMAC_DRBG_Unit_Tests : public Test
 
          Request_Counting_RNG counting_rng;
          Botan::HMAC_DRBG rng(std::move(mac), counting_rng, Botan::Entropy_Sources::global_sources(), 2);
-         Botan::secure_vector<Botan::byte> seed_input(
+         Botan::secure_vector<uint8_t> seed_input(
                {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF});
-         Botan::secure_vector<Botan::byte> output_after_initialization(
+         Botan::secure_vector<uint8_t> output_after_initialization(
                {0x26,0x06,0x95,0xF4,0xB8,0x96,0x0D,0x0B,0x27,0x4E,0xA2,0x9E,0x8D,0x2B,0x5A,0x35});
-         Botan::secure_vector<Botan::byte> output_without_reseed(
+         Botan::secure_vector<uint8_t> output_without_reseed(
                {0xC4,0x90,0x04,0x5B,0x35,0x4F,0x50,0x09,0x68,0x45,0xF0,0x4B,0x11,0x03,0x58,0xF0});
          result.test_eq("is_seeded",rng.is_seeded(),false);
 
          rng.initialize_with(seed_input.data(), seed_input.size());
 
-         Botan::secure_vector<Botan::byte> out(16);
+         Botan::secure_vector<uint8_t> out(16);
 
          rng.randomize(out.data(), out.size());
          result.test_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(0));
@@ -347,7 +347,7 @@ class HMAC_DRBG_Unit_Tests : public Test
 
             Botan::HMAC_DRBG rng(std::move(mac));
             result.test_eq("not seeded", rng.is_seeded(), false);
-            std::vector<Botan::byte> nonce(nonce_size);
+            std::vector<uint8_t> nonce(nonce_size);
             rng.initialize_with(nonce.data(), nonce.size());
 
             if(nonce_size < 16)
@@ -415,7 +415,7 @@ class HMAC_DRBG_Unit_Tests : public Test
 
          // fork and request from parent and child, both should output different sequences
          size_t count = counting_rng.randomize_count();
-         Botan::secure_vector<byte> parent_bytes(16), child_bytes(16);
+         Botan::secure_vector<uint8_t> parent_bytes(16), child_bytes(16);
          int fd[2];
          int rc = ::pipe(fd);
          if(rc != 0)
@@ -506,13 +506,13 @@ class HMAC_DRBG_Unit_Tests : public Test
          // and possibly additional data, such as process id
          Fixed_Output_RNG fixed_output_rng1(seed);
          Botan::HMAC_DRBG rng1(std::move(mac), fixed_output_rng1, reseed_interval);
-         Botan::secure_vector<byte> output1(request_bytes);
+         Botan::secure_vector<uint8_t> output1(request_bytes);
          rng1.randomize(output1.data(), output1.size());
 
          mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
          Fixed_Output_RNG fixed_output_rng2(seed);
          Botan::HMAC_DRBG rng2(std::move(mac), fixed_output_rng2, reseed_interval);
-         Botan::secure_vector<byte> output2(request_bytes);
+         Botan::secure_vector<uint8_t> output2(request_bytes);
          rng2.randomize(output2.data(), output2.size());
 
          result.test_eq("equal output due to same seed", output1, output2);

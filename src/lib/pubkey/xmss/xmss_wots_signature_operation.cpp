@@ -26,7 +26,7 @@ XMSS_WOTS_Signature_Operation::XMSS_WOTS_Signature_Operation(
    }
 
 void
-XMSS_WOTS_Signature_Operation::update(const byte msg[], size_t msg_len)
+XMSS_WOTS_Signature_Operation::update(const uint8_t msg[], size_t msg_len)
    {
    BOTAN_ASSERT(msg_len == m_priv_key.private_key().wots_parameters().
                            element_size() &&
@@ -37,10 +37,10 @@ XMSS_WOTS_Signature_Operation::update(const byte msg[], size_t msg_len)
       m_msg_buf.push_back(msg[i]);
    }
 
-secure_vector<byte>
+secure_vector<uint8_t>
 XMSS_WOTS_Signature_Operation::sign(RandomNumberGenerator&)
    {
-   secure_vector<byte> result(0);
+   secure_vector<uint8_t> result(0);
    result.reserve(m_wots_params.len() * m_wots_params.element_size());
    XMSS_WOTS_PrivateKey& priv_key = m_priv_key.private_key();
    for(const auto& node : priv_key.sign(m_msg_buf, m_priv_key.address()))

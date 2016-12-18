@@ -31,24 +31,24 @@ Certificate::Certificate(Handshake_IO& io,
 /**
 * Deserialize a Certificate message
 */
-Certificate::Certificate(const std::vector<byte>& buf, const Policy& /*policy_currently_unused*/)
+Certificate::Certificate(const std::vector<uint8_t>& buf, const Policy& /*policy_currently_unused*/)
    {
    if(buf.size() < 3)
       throw Decoding_Error("Certificate: Message malformed");
 
-   const size_t total_size = make_u32bit(0, buf[0], buf[1], buf[2]);
+   const size_t total_size = make_uint32(0, buf[0], buf[1], buf[2]);
 
    if(total_size != buf.size() - 3)
       throw Decoding_Error("Certificate: Message malformed");
 
-   const byte* certs = buf.data() + 3;
+   const uint8_t* certs = buf.data() + 3;
 
    while(size_t remaining_bytes = buf.data() + buf.size() - certs)
       {
       if(remaining_bytes < 3)
          throw Decoding_Error("Certificate: Message malformed");
 
-      const size_t cert_size = make_u32bit(0, certs[0], certs[1], certs[2]);
+      const size_t cert_size = make_uint32(0, certs[0], certs[1], certs[2]);
 
       if(remaining_bytes < (3 + cert_size))
          throw Decoding_Error("Certificate: Message malformed");
@@ -63,24 +63,24 @@ Certificate::Certificate(const std::vector<byte>& buf, const Policy& /*policy_cu
 /**
 * Serialize a Certificate message
 */
-std::vector<byte> Certificate::serialize() const
+std::vector<uint8_t> Certificate::serialize() const
    {
-   std::vector<byte> buf(3);
+   std::vector<uint8_t> buf(3);
 
    for(size_t i = 0; i != m_certs.size(); ++i)
       {
-      std::vector<byte> raw_cert = m_certs[i].BER_encode();
+      std::vector<uint8_t> raw_cert = m_certs[i].BER_encode();
       const size_t cert_size = raw_cert.size();
       for(size_t j = 0; j != 3; ++j)
          {
-         buf.push_back(get_byte(j+1, static_cast<u32bit>(cert_size)));
+         buf.push_back(get_byte(j+1, static_cast<uint32_t>(cert_size)));
          }
       buf += raw_cert;
       }
 
    const size_t buf_size = buf.size() - 3;
    for(size_t i = 0; i != 3; ++i)
-      buf[i] = get_byte(i+1, static_cast<u32bit>(buf_size));
+      buf[i] = get_byte(i+1, static_cast<uint32_t>(buf_size));
 
    return buf;
    }

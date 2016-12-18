@@ -27,10 +27,10 @@ class BOTAN_DLL SHA_384 final : public MDx_HashFunction
       SHA_384() : MDx_HashFunction(128, true, true, 16), m_digest(8)
          { clear(); }
    private:
-      void compress_n(const byte[], size_t blocks) override;
-      void copy_out(byte[]) override;
+      void compress_n(const uint8_t[], size_t blocks) override;
+      void copy_out(uint8_t[]) override;
 
-      secure_vector<u64bit> m_digest;
+      secure_vector<uint64_t> m_digest;
    };
 
 /**
@@ -48,10 +48,10 @@ class BOTAN_DLL SHA_512 final : public MDx_HashFunction
       SHA_512() : MDx_HashFunction(128, true, true, 16), m_digest(8)
          { clear(); }
    private:
-      void compress_n(const byte[], size_t blocks) override;
-      void copy_out(byte[]) override;
+      void compress_n(const uint8_t[], size_t blocks) override;
+      void copy_out(uint8_t[]) override;
 
-      secure_vector<u64bit> m_digest;
+      secure_vector<uint64_t> m_digest;
    };
 
 /**
@@ -68,10 +68,10 @@ class BOTAN_DLL SHA_512_256 final : public MDx_HashFunction
 
       SHA_512_256() : MDx_HashFunction(128, true, true, 16), m_digest(8) { clear(); }
    private:
-      void compress_n(const byte[], size_t blocks) override;
-      void copy_out(byte[]) override;
+      void compress_n(const uint8_t[], size_t blocks) override;
+      void copy_out(uint8_t[]) override;
 
-      secure_vector<u64bit> m_digest;
+      secure_vector<uint64_t> m_digest;
    };
 
 }

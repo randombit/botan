@@ -66,7 +66,7 @@ X509_Certificate::X509_Certificate(const std::string& fsname) :
 /*
 * X509_Certificate Constructor
 */
-X509_Certificate::X509_Certificate(const std::vector<byte>& in) :
+X509_Certificate::X509_Certificate(const std::vector<uint8_t>& in) :
    X509_Object(in, "CERTIFICATE/X509 CERTIFICATE"),
    m_self_signed(false),
    m_v3_extensions(false)
@@ -116,7 +116,7 @@ void X509_Certificate::force_decode()
       throw BER_Bad_Tag("X509_Certificate: Unexpected tag for public key",
                         public_key.type_tag, public_key.class_tag);
 
-   std::vector<byte> v2_issuer_key_id, v2_subject_key_id;
+   std::vector<uint8_t> v2_issuer_key_id, v2_subject_key_id;
 
    tbs_cert.decode_optional_string(v2_issuer_key_id, BIT_STRING, 1);
    tbs_cert.decode_optional_string(v2_subject_key_id, BIT_STRING, 2);
@@ -135,7 +135,7 @@ void X509_Certificate::force_decode()
    if(tbs_cert.more_items())
       throw Decoding_Error("TBSCertificate has more items that expected");
 
-   m_subject.add("X509.Certificate.version", static_cast<u32bit>(version));
+   m_subject.add("X509.Certificate.version", static_cast<uint32_t>(version));
    m_subject.add("X509.Certificate.serial", BigInt::encode(serial_bn));
    m_subject.add("X509.Certificate.start", start.to_string());
    m_subject.add("X509.Certificate.end", end.to_string());
@@ -164,16 +164,16 @@ void X509_Certificate::force_decode()
       const size_t limit = (x509_version() < 3) ?
         Cert_Extension::NO_CERT_PATH_LIMIT : 0;
 
-      m_subject.add("X509v3.BasicConstraints.path_constraint", static_cast<u32bit>(limit));
+      m_subject.add("X509v3.BasicConstraints.path_constraint", static_cast<uint32_t>(limit));
       }
    }
 
 /*
 * Return the X.509 version in use
 */
-u32bit X509_Certificate::x509_version() const
+uint32_t X509_Certificate::x509_version() const
    {
-   return (m_subject.get1_u32bit("X509.Certificate.version") + 1);
+   return (m_subject.get1_uint32("X509.Certificate.version") + 1);
    }
 
 /*
@@ -219,18 +219,18 @@ Public_Key* X509_Certificate::subject_public_key() const
       ASN1::put_in_sequence(this->subject_public_key_bits()));
    }
 
-std::vector<byte> X509_Certificate::subject_public_key_bits() const
+std::vector<uint8_t> X509_Certificate::subject_public_key_bits() const
    {
    return hex_decode(m_subject.get1("X509.Certificate.public_key"));
    }
 
-std::vector<byte> X509_Certificate::subject_public_key_bitstring() const
+std::vector<uint8_t> X509_Certificate::subject_public_key_bitstring() const
    {
    // TODO: cache this
-   const std::vector<byte> key_bits = subject_public_key_bits();
+   const std::vector<uint8_t> key_bits = subject_public_key_bits();
 
    AlgorithmIdentifier public_key_algid;
-   std::vector<byte> public_key_bitstr;
+   std::vector<uint8_t> public_key_bitstr;
 
    BER_Decoder(key_bits)
       .decode(public_key_algid)
@@ -239,7 +239,7 @@ std::vector<byte> X509_Certificate::subject_public_key_bitstring() const
    return public_key_bitstr;
    }
 
-std::vector<byte> X509_Certificate::subject_public_key_bitstring_sha1() const
+std::vector<uint8_t> X509_Certificate::subject_public_key_bitstring_sha1() const
    {
    // TODO: cache this value
    std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-1"));
@@ -252,7 +252,7 @@ std::vector<byte> X509_Certificate::subject_public_key_bitstring_sha1() const
 */
 bool X509_Certificate::is_CA_cert() const
    {
-   if(!m_subject.get1_u32bit("X509v3.BasicConstraints.is_ca"))
+   if(!m_subject.get1_uint32("X509v3.BasicConstraints.is_ca"))
       return false;
 
    return allowed_usage(Key_Constraints(KEY_CERT_SIGN));
@@ -333,9 +333,9 @@ bool X509_Certificate::has_ex_constraint(const std::string& ex_constraint) const
 /*
 * Return the path length constraint
 */
-u32bit X509_Certificate::path_limit() const
+uint32_t X509_Certificate::path_limit() const
    {
-   return m_subject.get1_u32bit("X509v3.BasicConstraints.path_constraint", 0);
+   return m_subject.get1_uint32("X509v3.BasicConstraints.path_constraint", 0);
    }
 
 /*
@@ -343,7 +343,7 @@ u32bit X509_Certificate::path_limit() const
 */
 bool X509_Certificate::is_critical(const std::string& ex_name) const
    {
-   return !!m_subject.get1_u32bit(ex_name + ".is_critical",0);
+   return !!m_subject.get1_uint32(ex_name + ".is_critical",0);
    }
 
 /*
@@ -351,7 +351,7 @@ bool X509_Certificate::is_critical(const std::string& ex_name) const
 */
 Key_Constraints X509_Certificate::constraints() const
    {
-   return Key_Constraints(m_subject.get1_u32bit("X509v3.KeyUsage",
+   return Key_Constraints(m_subject.get1_uint32("X509v3.KeyUsage",
                                               NO_CONSTRAINTS));
    }
 
@@ -409,7 +409,7 @@ std::string X509_Certificate::crl_distribution_point() const
 /*
 * Return the authority key id
 */
-std::vector<byte> X509_Certificate::authority_key_id() const
+std::vector<uint8_t> X509_Certificate::authority_key_id() const
    {
    return m_issuer.get1_memvec("X509v3.AuthorityKeyIdentifier");
    }
@@ -417,7 +417,7 @@ std::vector<byte> X509_Certificate::authority_key_id() const
 /*
 * Return the subject key id
 */
-std::vector<byte> X509_Certificate::subject_key_id() const
+std::vector<uint8_t> X509_Certificate::subject_key_id() const
    {
    return m_subject.get1_memvec("X509v3.SubjectKeyIdentifier");
    }
@@ -425,7 +425,7 @@ std::vector<byte> X509_Certificate::subject_key_id() const
 /*
 * Return the certificate serial number
 */
-std::vector<byte> X509_Certificate::serial_number() const
+std::vector<uint8_t> X509_Certificate::serial_number() const
    {
    return m_subject.get1_memvec("X509.Certificate.serial");
    }
@@ -435,7 +435,7 @@ X509_DN X509_Certificate::issuer_dn() const
    return create_dn(m_issuer);
    }
 
-std::vector<byte> X509_Certificate::raw_issuer_dn() const
+std::vector<uint8_t> X509_Certificate::raw_issuer_dn() const
    {
    return m_issuer.get1_memvec("X509.Certificate.dn_bits");
    }
@@ -445,7 +445,7 @@ X509_DN X509_Certificate::subject_dn() const
    return create_dn(m_subject);
    }
 
-std::vector<byte> X509_Certificate::raw_subject_dn() const
+std::vector<uint8_t> X509_Certificate::raw_subject_dn() const
    {
    return m_subject.get1_memvec("X509.Certificate.dn_bits");
    }

@@ -22,7 +22,7 @@ class SecureQueueNode
 
       ~SecureQueueNode() { m_next = nullptr; m_start = m_end = 0; }
 
-      size_t write(const byte input[], size_t length)
+      size_t write(const uint8_t input[], size_t length)
          {
          size_t copied = std::min<size_t>(length, m_buffer.size() - m_end);
          copy_mem(m_buffer.data() + m_end, input, copied);
@@ -30,7 +30,7 @@ class SecureQueueNode
          return copied;
          }
 
-      size_t read(byte output[], size_t length)
+      size_t read(uint8_t output[], size_t length)
          {
          size_t copied = std::min(length, m_end - m_start);
          copy_mem(output, m_buffer.data() + m_start, copied);
@@ -38,7 +38,7 @@ class SecureQueueNode
          return copied;
          }
 
-      size_t peek(byte output[], size_t length, size_t offset = 0)
+      size_t peek(uint8_t output[], size_t length, size_t offset = 0)
          {
          const size_t left = m_end - m_start;
          if(offset >= left) return 0;
@@ -51,7 +51,7 @@ class SecureQueueNode
    private:
       friend class SecureQueue;
       SecureQueueNode* m_next;
-      secure_vector<byte> m_buffer;
+      secure_vector<uint8_t> m_buffer;
       size_t m_start, m_end;
    };
 
@@ -118,7 +118,7 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input)
 /*
 * Add some bytes to the queue
 */
-void SecureQueue::write(const byte input[], size_t length)
+void SecureQueue::write(const uint8_t input[], size_t length)
    {
    if(!m_head)
       m_head = m_tail = new SecureQueueNode;
@@ -138,7 +138,7 @@ void SecureQueue::write(const byte input[], size_t length)
 /*
 * Read some bytes from the queue
 */
-size_t SecureQueue::read(byte output[], size_t length)
+size_t SecureQueue::read(uint8_t output[], size_t length)
    {
    size_t got = 0;
    while(length && m_head)
@@ -161,7 +161,7 @@ size_t SecureQueue::read(byte output[], size_t length)
 /*
 * Read data, but do not remove it from queue
 */
-size_t SecureQueue::peek(byte output[], size_t length, size_t offset) const
+size_t SecureQueue::peek(uint8_t output[], size_t length, size_t offset) const
    {
    SecureQueueNode* current = m_head;
 

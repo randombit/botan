@@ -27,16 +27,16 @@ class BOTAN_DLL OAEP final : public EME
       */
       OAEP(HashFunction* hash, const std::string& P = "");
    private:
-      secure_vector<byte> pad(const byte in[],
+      secure_vector<uint8_t> pad(const uint8_t in[],
                               size_t in_length,
                               size_t key_length,
                               RandomNumberGenerator& rng) const override;
 
-      secure_vector<byte> unpad(byte& valid_mask,
-                                const byte in[],
+      secure_vector<uint8_t> unpad(uint8_t& valid_mask,
+                                const uint8_t in[],
                                 size_t in_len) const override;
 
-      secure_vector<byte> m_Phash;
+      secure_vector<uint8_t> m_Phash;
       std::unique_ptr<HashFunction> m_hash;
    };
 

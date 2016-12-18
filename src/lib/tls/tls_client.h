@@ -150,7 +150,7 @@ class BOTAN_DLL Client final : public Channel
       void process_handshake_msg(const Handshake_State* active_state,
                                  Handshake_State& pending_state,
                                  Handshake_Type type,
-                                 const std::vector<byte>& contents) override;
+                                 const std::vector<uint8_t>& contents) override;
 
       Handshake_State* new_handshake_state(Handshake_IO* io) override;
 

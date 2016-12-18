@@ -37,7 +37,7 @@ class BOTAN_DLL DataSink_Stream : public DataSink
    public:
       std::string name() const override { return m_identifier; }
 
-      void write(const byte[], size_t) override;
+      void write(const uint8_t[], size_t) override;
 
       /**
       * Construct a DataSink_Stream from a stream.

@@ -21,24 +21,24 @@ namespace Botan {
 struct BOTAN_DLL calendar_point
    {
    /** The year */
-   u32bit year;
+   uint32_t year;
 
    /** The month, 1 through 12 for Jan to Dec */
-   u32bit month;
+   uint32_t month;
 
    /** The day of the month, 1 through 31 (or 28 or 30 based on month */
-   u32bit day;
+   uint32_t day;
 
    /** Hour in 24-hour form, 0 to 23 */
-   u32bit hour;
+   uint32_t hour;
 
    /** Minutes in the hour, 0 to 60 */
-   u32bit minutes;
+   uint32_t minutes;
 
    /** Seconds in the minute, 0 to 60, but might be slightly
        larger to deal with leap seconds on some systems
    */
-   u32bit seconds;
+   uint32_t seconds;
 
    /**
    * Initialize a calendar_point
@@ -49,7 +49,7 @@ struct BOTAN_DLL calendar_point
    * @param min the minute
    * @param sec the second
    */
-   calendar_point(u32bit y, u32bit mon, u32bit d, u32bit h, u32bit min, u32bit sec) :
+   calendar_point(uint32_t y, uint32_t mon, uint32_t d, uint32_t h, uint32_t min, uint32_t sec) :
       year(y), month(mon), day(d), hour(h), minutes(min), seconds(sec) {}
 
    /**

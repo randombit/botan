@@ -195,10 +195,10 @@ inline secure_vector<uint8_t> strip_leading_zeros(const uint8_t in[], size_t len
       leading_zeros += CT::select<uint8_t>(only_zeros, 1, 0);
       }
 
-   return secure_vector<byte>(in + leading_zeros, in + length);
+   return secure_vector<uint8_t>(in + leading_zeros, in + length);
    }
 
-inline secure_vector<byte> strip_leading_zeros(const secure_vector<uint8_t>& in)
+inline secure_vector<uint8_t> strip_leading_zeros(const secure_vector<uint8_t>& in)
    {
    return strip_leading_zeros(in.data(), in.size());
    }

@@ -30,7 +30,7 @@ gf2m generate_gf2m_mask(gf2m a)
 /**
 * number of leading zeros
 */
-unsigned nlz_16bit(u16bit x)
+unsigned nlz_16bit(uint16_t x)
    {
    unsigned n;
    if(x == 0) return 16;
@@ -47,8 +47,8 @@ int polyn_gf2m::calc_degree_secure() const
    {
    int i = this->coeff.size() - 1;
    int result = 0;
-   u32bit found_mask = 0;
-   u32bit tracker_mask = 0xffff;
+   uint32_t found_mask = 0;
+   uint32_t tracker_mask = 0xffff;
    for( ; i >= 0; i--)
       {
       found_mask = expand_mask_16bit(this->coeff[i]);
@@ -63,9 +63,9 @@ int polyn_gf2m::calc_degree_secure() const
 
 gf2m random_gf2m(RandomNumberGenerator& rng)
    {
-   byte b[2];
+   uint8_t b[2];
    rng.randomize(b, sizeof(b));
-   return make_u16bit(b[1], b[0]);
+   return make_uint16(b[1], b[0]);
    }
 
 gf2m random_code_element(unsigned code_length, RandomNumberGenerator& rng)
@@ -118,12 +118,12 @@ std::string polyn_gf2m::to_string() const
 /**
 * doesn't save coefficients:
 */
-void polyn_gf2m::realloc(u32bit new_size)
+void polyn_gf2m::realloc(uint32_t new_size)
    {
    this->coeff = secure_vector<gf2m>(new_size);
    }
 
-polyn_gf2m::polyn_gf2m(const byte* mem, u32bit mem_len, std::shared_ptr<GF2m_Field> sp_field)
+polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, std::shared_ptr<GF2m_Field> sp_field)
    :msp_field(sp_field)
    {
    if(mem_len % sizeof(gf2m))
@@ -131,15 +131,15 @@ polyn_gf2m::polyn_gf2m(const byte* mem, u32bit mem_len, std::shared_ptr<GF2m_Fie
       throw new Botan::Decoding_Error("illegal length of memory to decode ");
       }
 
-   u32bit size = (mem_len / sizeof(this->coeff[0])) ;
+   uint32_t size = (mem_len / sizeof(this->coeff[0])) ;
    this->coeff = secure_vector<gf2m>(size);
    this->m_deg = -1;
-   for(u32bit i = 0; i < size; i++)
+   for(uint32_t i = 0; i < size; i++)
       {
       this->coeff[i] = decode_gf2m(mem);
       mem += sizeof(this->coeff[0]);
       }
-   for(u32bit i = 0; i < size; i++)
+   for(uint32_t i = 0; i < size; i++)
       {
       if(this->coeff[i] >= (1 << sp_field->get_extension_degree()))
          {
@@ -156,12 +156,12 @@ polyn_gf2m::polyn_gf2m( std::shared_ptr<GF2m_Field> sp_field )
      msp_field(sp_field)
    {}
 
-polyn_gf2m::polyn_gf2m(int degree, const unsigned  char* mem, u32bit mem_byte_len, std::shared_ptr<GF2m_Field> sp_field)
+polyn_gf2m::polyn_gf2m(int degree, const unsigned  char* mem, uint32_t mem_byte_len, std::shared_ptr<GF2m_Field> sp_field)
    :msp_field(sp_field)
    {
-   u32bit j, k, l;
+   uint32_t j, k, l;
    gf2m a;
-   u32bit polyn_size;
+   uint32_t polyn_size;
    polyn_size = degree + 1;
    if(polyn_size * sp_field->get_extension_degree() > 8 * mem_byte_len)
       {
@@ -191,12 +191,12 @@ polyn_gf2m::polyn_gf2m(int degree, const unsigned  char* mem, u32bit mem_byte_le
    }
 
 #if 0
-void polyn_gf2m::encode(u32bit min_numo_coeffs, byte* mem, u32bit mem_len) const
+void polyn_gf2m::encode(uint32_t min_numo_coeffs, uint8_t* mem, uint32_t mem_len) const
    {
-   u32bit i;
-   u32bit numo_coeffs, needed_size;
+   uint32_t i;
+   uint32_t numo_coeffs, needed_size;
    this->get_degree();
-   numo_coeffs = (min_numo_coeffs > static_cast<u32bit>(this->m_deg+1)) ? min_numo_coeffs : this->m_deg+1;
+   numo_coeffs = (min_numo_coeffs > static_cast<uint32_t>(this->m_deg+1)) ? min_numo_coeffs : this->m_deg+1;
    needed_size = sizeof(this->coeff[0]) * numo_coeffs;
    if(mem_len < needed_size)
       {
@@ -206,7 +206,7 @@ void polyn_gf2m::encode(u32bit min_numo_coeffs, byte* mem, u32bit mem_len) const
    for(i = 0; i < numo_coeffs; i++)
       {
       gf2m to_enc;
-      if(i >= static_cast<u32bit>(this->m_deg+1))
+      if(i >= static_cast<uint32_t>(this->m_deg+1))
          {
          /* encode a zero */
          to_enc = 0;
@@ -295,10 +295,10 @@ std::vector<polyn_gf2m> polyn_gf2m::sqmod_init(const polyn_gf2m & g)
    if(signed_deg <= 0)
       throw Invalid_Argument("cannot compute sqmod for such low degree");
 
-   const u32bit d = static_cast<u32bit>(signed_deg);
-   u32bit t = g.m_deg;
+   const uint32_t d = static_cast<uint32_t>(signed_deg);
+   uint32_t t = g.m_deg;
    // create t zero polynomials
-   u32bit i;
+   uint32_t i;
    for (i = 0; i < t; ++i)
       {
       sq.push_back(polyn_gf2m(t+1, g.get_sp_field()));
@@ -428,16 +428,16 @@ void polyn_gf2m::degppf(const polyn_gf2m & g, int* p_result)
 
    }
 
-void polyn_gf2m::patchup_deg_secure( u32bit trgt_deg, volatile gf2m patch_elem)
+void polyn_gf2m::patchup_deg_secure( uint32_t trgt_deg, volatile gf2m patch_elem)
    {
-   u32bit i;
+   uint32_t i;
    if(this->coeff.size() < trgt_deg)
       {
       return;
       }
    for(i = 0; i < this->coeff.size(); i++)
       {
-      u32bit equal, equal_mask;
+      uint32_t equal, equal_mask;
       this->coeff[i] |= patch_elem;
       equal = (i == trgt_deg);
       equal_mask = expand_mask_16bit(equal);
@@ -539,7 +539,7 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
       if(break_deg == 1) /* syndrome inversion */
          {
          volatile gf2m fake_elem = 0x00;
-         volatile u32bit trgt_deg = 0;
+         volatile uint32_t trgt_deg = 0;
          r0.calc_degree_secure();
          u0.calc_degree_secure();
          /**
@@ -559,7 +559,7 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
          */
          if(u0.get_degree() == 4)
             {
-            u32bit mask = 0;
+            uint32_t mask = 0;
             /**
             * Condition that the EEA would break now
             */
@@ -587,7 +587,7 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
             }
          else if(u0.get_degree() == 6)
             {
-            u32bit mask = 0;
+            uint32_t mask = 0;
             int cond_r= r0.get_degree() == 0;
             int cond_u1 = msp_field->gf_mul(u0.coeff[1], msp_field->gf_inv(r0.coeff[0])) == 1;
             int cond_u3 = u0.coeff[3] == 0;
@@ -601,7 +601,7 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
             }
          else if(u0.get_degree() == 8)
             {
-            u32bit mask = 0;
+            uint32_t mask = 0;
             int cond_r= r0.get_degree() == 0;
             int cond_u1 = msp_field->gf_mul(u0[1], msp_field->gf_inv(r0[0])) == 1;
             int cond_u3 = u0.coeff[3] == 0;
@@ -677,8 +677,8 @@ void polyn_gf2m::poly_shiftmod( const polyn_gf2m & g)
 
 std::vector<polyn_gf2m> polyn_gf2m::sqrt_mod_init(const polyn_gf2m & g)
    {
-   u32bit i, t;
-   u32bit nb_polyn_sqrt_mat;
+   uint32_t i, t;
+   uint32_t nb_polyn_sqrt_mat;
    std::shared_ptr<GF2m_Field> msp_field = g.msp_field;
    std::vector<polyn_gf2m> result;
    t = g.get_degree();
@@ -753,14 +753,14 @@ std::vector<polyn_gf2m> syndrome_init(polyn_gf2m const& generator, std::vector<g
    return result;
    }
 
-polyn_gf2m::polyn_gf2m(const secure_vector<byte>& encoded, std::shared_ptr<GF2m_Field> sp_field )
+polyn_gf2m::polyn_gf2m(const secure_vector<uint8_t>& encoded, std::shared_ptr<GF2m_Field> sp_field )
    :msp_field(sp_field)
    {
    if(encoded.size() % 2)
       {
       throw Decoding_Error("encoded polynomial has odd length");
       }
-   for(u32bit i = 0; i < encoded.size(); i += 2)
+   for(uint32_t i = 0; i < encoded.size(); i += 2)
       {
       gf2m el = (encoded[i] << 8) | encoded[i + 1];
       coeff.push_back(el);
@@ -768,9 +768,9 @@ polyn_gf2m::polyn_gf2m(const secure_vector<byte>& encoded, std::shared_ptr<GF2m_
    get_degree();
 
    }
-secure_vector<byte> polyn_gf2m::encode() const
+secure_vector<uint8_t> polyn_gf2m::encode() const
    {
-   secure_vector<byte> result;
+   secure_vector<uint8_t> result;
 
    if(m_deg < 1)
       {
@@ -779,7 +779,7 @@ secure_vector<byte> polyn_gf2m::encode() const
       return result;
       }
 
-   u32bit len = m_deg+1;
+   uint32_t len = m_deg+1;
    for(unsigned i = 0; i < len; i++)
       {
       // "big endian" encoding of the GF(2^m) elements

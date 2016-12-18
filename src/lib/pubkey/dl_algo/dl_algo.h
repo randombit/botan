@@ -23,7 +23,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<byte> public_key_bits() const override;
+      std::vector<uint8_t> public_key_bits() const override;
 
       /**
       * Get the DL domain parameters of this key.
@@ -70,7 +70,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       * @param group_format the underlying groups encoding format
       */
       DL_Scheme_PublicKey(const AlgorithmIdentifier& alg_id,
-                          const std::vector<byte>& key_bits,
+                          const std::vector<uint8_t>& key_bits,
                           DL_Group::Format group_format);
 
    protected:
@@ -102,7 +102,7 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       */
       const BigInt& get_x() const { return m_x; }
 
-      secure_vector<byte> private_key_bits() const override;
+      secure_vector<uint8_t> private_key_bits() const override;
 
       /**
       * Create a private key.
@@ -111,7 +111,7 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       * @param group_format the underlying groups encoding format
       */
       DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
-                           const secure_vector<byte>& key_bits,
+                           const secure_vector<uint8_t>& key_bits,
                            DL_Group::Format group_format);
 
    protected:

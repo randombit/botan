@@ -62,7 +62,7 @@ std::string X509_Time::to_string() const
    if(time_is_set() == false)
       throw Invalid_State("X509_Time::as_string: No time set");
 
-   u32bit full_year = m_year;
+   uint32_t full_year = m_year;
 
    if(m_tag == UTC_TIME)
       {
@@ -86,7 +86,7 @@ std::string X509_Time::to_string() const
                                      factor_i * m_minute +
                                      m_second) + "Z";
 
-   u32bit desired_size = (m_tag == UTC_TIME) ? 13 : 15;
+   uint32_t desired_size = (m_tag == UTC_TIME) ? 13 : 15;
 
    while(repr.size() < desired_size)
       repr = "0" + repr;
@@ -117,12 +117,12 @@ bool X509_Time::time_is_set() const
    return (m_year != 0);
    }
 
-s32bit X509_Time::cmp(const X509_Time& other) const
+int32_t X509_Time::cmp(const X509_Time& other) const
    {
    if(time_is_set() == false)
       throw Invalid_State("X509_Time::cmp: No time set");
 
-   const s32bit EARLIER = -1, LATER = 1, SAME_TIME = 0;
+   const int32_t EARLIER = -1, LATER = 1, SAME_TIME = 0;
 
    if(m_year < other.m_year)     return EARLIER;
    if(m_year > other.m_year)     return LATER;

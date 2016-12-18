@@ -134,20 +134,20 @@ class BOTAN_DLL HMAC_DRBG final : public Stateful_RNG
 
       void clear() override;
 
-      void randomize(byte output[], size_t output_len) override;
+      void randomize(uint8_t output[], size_t output_len) override;
 
-      void randomize_with_input(byte output[], size_t output_len,
-                                const byte input[], size_t input_len) override;
+      void randomize_with_input(uint8_t output[], size_t output_len,
+                                const uint8_t input[], size_t input_len) override;
 
-      void add_entropy(const byte input[], size_t input_len) override;
+      void add_entropy(const uint8_t input[], size_t input_len) override;
 
       size_t security_level() const override;
 
    private:
-      void update(const byte input[], size_t input_len);
+      void update(const uint8_t input[], size_t input_len);
 
       std::unique_ptr<MessageAuthenticationCode> m_mac;
-      secure_vector<byte> m_V;
+      secure_vector<uint8_t> m_V;
       const size_t m_max_number_of_bytes_per_request;
    };
 

@@ -17,12 +17,12 @@
 
 namespace Botan {
 
-inline std::vector<byte> to_byte_vector(const std::string& s)
+inline std::vector<uint8_t> to_byte_vector(const std::string& s)
    {
-   return std::vector<byte>(s.cbegin(), s.cend());
+   return std::vector<uint8_t>(s.cbegin(), s.cend());
    }
 
-inline std::string to_string(const secure_vector<byte> &bytes)
+inline std::string to_string(const secure_vector<uint8_t> &bytes)
    {
    return std::string(bytes.cbegin(), bytes.cend());
    }

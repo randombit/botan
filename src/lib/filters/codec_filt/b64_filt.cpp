@@ -29,7 +29,7 @@ Base64_Encoder::Base64_Encoder(bool breaks, size_t length, bool t_n) :
 /*
 * Encode and send a block
 */
-void Base64_Encoder::encode_and_send(const byte input[], size_t length,
+void Base64_Encoder::encode_and_send(const uint8_t input[], size_t length,
                                      bool final_inputs)
    {
    while(length)
@@ -51,7 +51,7 @@ void Base64_Encoder::encode_and_send(const byte input[], size_t length,
 /*
 * Handle the output
 */
-void Base64_Encoder::do_output(const byte input[], size_t length)
+void Base64_Encoder::do_output(const uint8_t input[], size_t length)
    {
    if(m_line_length == 0)
       send(input, length);
@@ -77,7 +77,7 @@ void Base64_Encoder::do_output(const byte input[], size_t length)
 /*
 * Convert some data into Base64
 */
-void Base64_Encoder::write(const byte input[], size_t length)
+void Base64_Encoder::write(const uint8_t input[], size_t length)
    {
    buffer_insert(m_in, m_position, input, length);
    if(m_position + length >= m_in.size())
@@ -121,7 +121,7 @@ Base64_Decoder::Base64_Decoder(Decoder_Checking c) :
 /*
 * Convert some data from Base64
 */
-void Base64_Decoder::write(const byte input[], size_t length)
+void Base64_Decoder::write(const uint8_t input[], size_t length)
    {
    while(length)
       {

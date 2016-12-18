@@ -27,7 +27,7 @@ class Bcrypt_Tests : public Text_Based_Test
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
          // Encoded as binary so we can test binary inputs
-         const std::vector<byte> password_vec = get_req_bin(vars, "Password");
+         const std::vector<uint8_t> password_vec = get_req_bin(vars, "Password");
          const std::string password(reinterpret_cast<const char*>(password_vec.data()),
                                     password_vec.size());
 
@@ -61,7 +61,7 @@ class Passhash9_Tests : public Text_Based_Test
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
          // Encoded as binary so we can test binary inputs
-         const std::vector<byte> password_vec = get_req_bin(vars, "Password");
+         const std::vector<uint8_t> password_vec = get_req_bin(vars, "Password");
          const std::string password(reinterpret_cast<const char*>(password_vec.data()),
                                     password_vec.size());
 
@@ -70,7 +70,7 @@ class Passhash9_Tests : public Text_Based_Test
          Test::Result result("passhash9");
          result.test_eq("correct hash accepted", Botan::check_passhash9(password, passhash), true);
 
-         for(byte alg_id = 0; alg_id <= 4; ++alg_id)
+         for(uint8_t alg_id = 0; alg_id <= 4; ++alg_id)
             {
             const std::string gen_hash = Botan::generate_passhash9(password, Test::rng(), 2, alg_id);
 

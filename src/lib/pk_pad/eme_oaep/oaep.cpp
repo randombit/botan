@@ -14,7 +14,7 @@ namespace Botan {
 /*
 * OAEP Pad Operation
 */
-secure_vector<byte> OAEP::pad(const byte in[], size_t in_length,
+secure_vector<uint8_t> OAEP::pad(const uint8_t in[], size_t in_length,
                              size_t key_length,
                              RandomNumberGenerator& rng) const
    {
@@ -25,7 +25,7 @@ secure_vector<byte> OAEP::pad(const byte in[], size_t in_length,
       throw Invalid_Argument("OAEP: Input is too large");
       }
 
-   secure_vector<byte> out(key_length);
+   secure_vector<uint8_t> out(key_length);
 
    rng.randomize(out.data(), m_Phash.size());
 
@@ -47,8 +47,8 @@ secure_vector<byte> OAEP::pad(const byte in[], size_t in_length,
 /*
 * OAEP Unpad Operation
 */
-secure_vector<byte> OAEP::unpad(byte& valid_mask,
-                                const byte in[], size_t in_length) const
+secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
+                                const uint8_t in[], size_t in_length) const
    {
    /*
    Must be careful about error messages here; if an attacker can
@@ -70,9 +70,9 @@ secure_vector<byte> OAEP::unpad(byte& valid_mask,
    Therefore, the first byte can always be skipped safely.
    */
 
-   byte skip_first = CT::is_zero<byte>(in[0]) & 0x01;
+   uint8_t skip_first = CT::is_zero<uint8_t>(in[0]) & 0x01;
    
-   secure_vector<byte> input(in + skip_first, in + in_length);
+   secure_vector<uint8_t> input(in + skip_first, in + in_length);
 
    CT::poison(input.data(), input.size());
 
@@ -87,26 +87,26 @@ secure_vector<byte> OAEP::unpad(byte& valid_mask,
              &input[hlen], input.size() - hlen);
 
    size_t delim_idx = 2 * hlen;
-   byte waiting_for_delim = 0xFF;
-   byte bad_input = 0;
+   uint8_t waiting_for_delim = 0xFF;
+   uint8_t bad_input = 0;
 
    for(size_t i = delim_idx; i < input.size(); ++i)
       {
-      const byte zero_m = CT::is_zero<byte>(input[i]);
-      const byte one_m = CT::is_equal<byte>(input[i], 1);
+      const uint8_t zero_m = CT::is_zero<uint8_t>(input[i]);
+      const uint8_t one_m = CT::is_equal<uint8_t>(input[i], 1);
 
-      const byte add_m = waiting_for_delim & zero_m;
+      const uint8_t add_m = waiting_for_delim & zero_m;
 
       bad_input |= waiting_for_delim & ~(zero_m | one_m);
 
-      delim_idx += CT::select<byte>(add_m, 1, 0);
+      delim_idx += CT::select<uint8_t>(add_m, 1, 0);
 
       waiting_for_delim &= zero_m;
       }
 
    // If we never saw any non-zero byte, then it's not valid input
    bad_input |= waiting_for_delim;
-   bad_input |= CT::is_equal<byte>(same_mem(&input[hlen], m_Phash.data(), hlen), false);
+   bad_input |= CT::is_equal<uint8_t>(same_mem(&input[hlen], m_Phash.data(), hlen), false);
 
    CT::unpoison(input.data(), input.size());
    CT::unpoison(&bad_input, 1);
@@ -114,7 +114,7 @@ secure_vector<byte> OAEP::unpad(byte& valid_mask,
 
    valid_mask = ~bad_input;
 
-   secure_vector<byte> output(input.begin() + delim_idx + 1, input.end());
+   secure_vector<uint8_t> output(input.begin() + delim_idx + 1, input.end());
    CT::cond_zero_mem(bad_input, output.data(), output.size());
 
    return output;

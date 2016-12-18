@@ -144,7 +144,7 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
 
    lock_guard_type<mutex_type> lock(m_mutex);
 
-   const size_t start = static_cast<byte*>(p) - m_pool;
+   const size_t start = static_cast<uint8_t*>(p) - m_pool;
 
    auto comp = [](std::pair<size_t, size_t> x, std::pair<size_t, size_t> y){ return x.first < y.first; };
 
@@ -198,7 +198,7 @@ mlock_allocator::mlock_allocator()
 
    if(mem_to_lock)
       {
-      m_pool = static_cast<byte*>(OS::allocate_locked_pages(mem_to_lock));
+      m_pool = static_cast<uint8_t*>(OS::allocate_locked_pages(mem_to_lock));
 
       if(m_pool != nullptr)
          {

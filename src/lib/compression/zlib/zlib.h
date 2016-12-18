@@ -63,12 +63,12 @@ class BOTAN_DLL Deflate_Decompression final : public Stream_Decompression
 class BOTAN_DLL Gzip_Compression final : public Stream_Compression
    {
    public:
-      Gzip_Compression(byte os_code = 255) : m_os_code(os_code) {}
+      Gzip_Compression(uint8_t os_code = 255) : m_os_code(os_code) {}
 
       std::string name() const override { return "Gzip_Compression"; }
    private:
       Compression_Stream* make_stream(size_t level) const override;
-      const byte m_os_code;
+      const uint8_t m_os_code;
    };
 
 /**

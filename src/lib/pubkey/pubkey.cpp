@@ -13,11 +13,11 @@
 
 namespace Botan {
 
-secure_vector<byte> PK_Decryptor::decrypt(const byte in[], size_t length) const
+secure_vector<uint8_t> PK_Decryptor::decrypt(const uint8_t in[], size_t length) const
    {
-   byte valid_mask = 0;
+   uint8_t valid_mask = 0;
 
-   secure_vector<byte> decoded = do_decrypt(valid_mask, in, length);
+   secure_vector<uint8_t> decoded = do_decrypt(valid_mask, in, length);
 
    if(valid_mask == 0)
       throw Decoding_Error("Invalid public key ciphertext, cannot decrypt");
@@ -25,19 +25,19 @@ secure_vector<byte> PK_Decryptor::decrypt(const byte in[], size_t length) const
    return decoded;
    }
 
-secure_vector<byte>
-PK_Decryptor::decrypt_or_random(const byte in[],
+secure_vector<uint8_t>
+PK_Decryptor::decrypt_or_random(const uint8_t in[],
                                 size_t length,
                                 size_t expected_pt_len,
                                 RandomNumberGenerator& rng,
-                                const byte required_content_bytes[],
-                                const byte required_content_offsets[],
+                                const uint8_t required_content_bytes[],
+                                const uint8_t required_content_offsets[],
                                 size_t required_contents_length) const
    {
-   const secure_vector<byte> fake_pms = rng.random_vec(expected_pt_len);
+   const secure_vector<uint8_t> fake_pms = rng.random_vec(expected_pt_len);
 
-   byte valid_mask = 0;
-   secure_vector<byte> decoded = do_decrypt(valid_mask, in, length);
+   uint8_t valid_mask = 0;
+   secure_vector<uint8_t> decoded = do_decrypt(valid_mask, in, length);
 
    valid_mask &= CT::is_equal(decoded.size(), expected_pt_len);
 
@@ -56,8 +56,8 @@ PK_Decryptor::decrypt_or_random(const byte in[],
       Alternately could always reduce the offset modulo the length?
       */
 
-      const byte exp = required_content_bytes[i];
-      const byte off = required_content_offsets[i];
+      const uint8_t exp = required_content_bytes[i];
+      const uint8_t off = required_content_offsets[i];
 
       BOTAN_ASSERT(off < expected_pt_len, "Offset in range of plaintext");
 
@@ -73,8 +73,8 @@ PK_Decryptor::decrypt_or_random(const byte in[],
    return decoded;
    }
 
-secure_vector<byte>
-PK_Decryptor::decrypt_or_random(const byte in[],
+secure_vector<uint8_t>
+PK_Decryptor::decrypt_or_random(const uint8_t in[],
                                 size_t length,
                                 size_t expected_pt_len,
                                 RandomNumberGenerator& rng) const
@@ -95,8 +95,8 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
 
 PK_Encryptor_EME::~PK_Encryptor_EME() { /* for unique_ptr */ }
 
-std::vector<byte>
-PK_Encryptor_EME::enc(const byte in[], size_t length, RandomNumberGenerator& rng) const
+std::vector<uint8_t>
+PK_Encryptor_EME::enc(const uint8_t in[], size_t length, RandomNumberGenerator& rng) const
    {
    return unlock(m_op->encrypt(in, length, rng));
    }
@@ -118,8 +118,8 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
 
 PK_Decryptor_EME::~PK_Decryptor_EME() { /* for unique_ptr */ }
 
-secure_vector<byte> PK_Decryptor_EME::do_decrypt(byte& valid_mask,
-                                                 const byte in[], size_t in_len) const
+secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask,
+                                                 const uint8_t in[], size_t in_len) const
    {
    return m_op->decrypt(valid_mask, in, in_len);
    }
@@ -136,8 +136,8 @@ PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
 
 PK_KEM_Encryptor::~PK_KEM_Encryptor() { /* for unique_ptr */ }
 
-void PK_KEM_Encryptor::encrypt(secure_vector<byte>& out_encapsulated_key,
-                               secure_vector<byte>& out_shared_key,
+void PK_KEM_Encryptor::encrypt(secure_vector<uint8_t>& out_encapsulated_key,
+                               secure_vector<uint8_t>& out_shared_key,
                                size_t desired_shared_key_len,
                                Botan::RandomNumberGenerator& rng,
                                const uint8_t salt[],
@@ -163,7 +163,7 @@ PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
 
 PK_KEM_Decryptor::~PK_KEM_Decryptor() { /* for unique_ptr */ }
 
-secure_vector<byte> PK_KEM_Decryptor::decrypt(const byte encap_key[],
+secure_vector<uint8_t> PK_KEM_Decryptor::decrypt(const uint8_t encap_key[],
                                               size_t encap_key_len,
                                               size_t desired_shared_key_len,
                                               const uint8_t salt[],
@@ -200,8 +200,8 @@ PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&& other) :
    {}
 
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
-                                          const byte in[], size_t in_len,
-                                          const byte salt[],
+                                          const uint8_t in[], size_t in_len,
+                                          const uint8_t salt[],
                                           size_t salt_len) const
    {
    return m_op->agree(key_len, in, in_len, salt, salt_len);
@@ -223,14 +223,14 @@ PK_Signer::PK_Signer(const Private_Key& key,
 
 PK_Signer::~PK_Signer() { /* for unique_ptr */ }
 
-void PK_Signer::update(const byte in[], size_t length)
+void PK_Signer::update(const uint8_t in[], size_t length)
    {
    m_op->update(in, length);
    }
 
-std::vector<byte> PK_Signer::signature(RandomNumberGenerator& rng)
+std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng)
    {
-   const std::vector<byte> sig = unlock(m_op->sign(rng));
+   const std::vector<uint8_t> sig = unlock(m_op->sign(rng));
 
    if(m_sig_format == IEEE_1363)
       {
@@ -277,19 +277,19 @@ void PK_Verifier::set_input_format(Signature_Format format)
    m_sig_format = format;
    }
 
-bool PK_Verifier::verify_message(const byte msg[], size_t msg_length,
-                                 const byte sig[], size_t sig_length)
+bool PK_Verifier::verify_message(const uint8_t msg[], size_t msg_length,
+                                 const uint8_t sig[], size_t sig_length)
    {
    update(msg, msg_length);
    return check_signature(sig, sig_length);
    }
 
-void PK_Verifier::update(const byte in[], size_t length)
+void PK_Verifier::update(const uint8_t in[], size_t length)
    {
    m_op->update(in, length);
    }
 
-bool PK_Verifier::check_signature(const byte sig[], size_t length)
+bool PK_Verifier::check_signature(const uint8_t sig[], size_t length)
    {
    try {
       if(m_sig_format == IEEE_1363)
@@ -298,7 +298,7 @@ bool PK_Verifier::check_signature(const byte sig[], size_t length)
          }
       else if(m_sig_format == DER_SEQUENCE)
          {
-         std::vector<byte> real_sig;
+         std::vector<uint8_t> real_sig;
          BER_Decoder decoder(sig, length);
          BER_Decoder ber_sig = decoder.start_cons(SEQUENCE);
 

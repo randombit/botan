@@ -30,7 +30,7 @@ class Curve25519_Sclarmult_Tests : public Text_Based_Test
          const std::vector<uint8_t> basepoint = get_req_bin(vars, "Basepoint");
          const std::vector<uint8_t> expected  = get_req_bin(vars, "Out");
 
-         std::vector<byte> got(32);
+         std::vector<uint8_t> got(32);
          Botan::curve25519_donna(got.data(), secret.data(), basepoint.data());
 
          Test::Result result("Curve25519 scalarmult");

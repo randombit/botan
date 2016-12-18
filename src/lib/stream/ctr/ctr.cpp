@@ -38,7 +38,7 @@ void CTR_BE::clear()
    m_pad_pos = 0;
    }
 
-void CTR_BE::key_schedule(const byte key[], size_t key_len)
+void CTR_BE::key_schedule(const uint8_t key[], size_t key_len)
    {
    m_cipher->set_key(key, key_len);
 
@@ -51,7 +51,7 @@ std::string CTR_BE::name() const
    return ("CTR-BE(" + m_cipher->name() + ")");
    }
 
-void CTR_BE::cipher(const byte in[], byte out[], size_t length)
+void CTR_BE::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
    while(length >= m_pad.size() - m_pad_pos)
       {
@@ -65,7 +65,7 @@ void CTR_BE::cipher(const byte in[], byte out[], size_t length)
    m_pad_pos += length;
    }
 
-void CTR_BE::set_iv(const byte iv[], size_t iv_len)
+void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
    {
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);
@@ -106,7 +106,7 @@ void CTR_BE::increment_counter()
          {
          const size_t off = i*bs + (bs-1-j);
          const uint16_t cnt = static_cast<uint16_t>(m_counter[off]) + carry;
-         m_counter[off] = static_cast<byte>(cnt);
+         m_counter[off] = static_cast<uint8_t>(cnt);
          carry = (cnt >> 8);
          }
       }
@@ -115,7 +115,7 @@ void CTR_BE::increment_counter()
    m_pad_pos = 0;
    }
 
-void CTR_BE::seek(u64bit)
+void CTR_BE::seek(uint64_t)
    {
    throw Not_Implemented("CTR_BE::seek");
    }

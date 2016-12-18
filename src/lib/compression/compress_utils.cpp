@@ -62,7 +62,7 @@ void Stream_Compression::start(size_t level)
    m_stream.reset(make_stream(level));
    }
 
-void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit flags)
+void Stream_Compression::process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags)
    {
    BOTAN_ASSERT(m_stream, "Initialized");
    BOTAN_ASSERT(buf.size() >= offset, "Offset is sane");
@@ -102,13 +102,13 @@ void Stream_Compression::process(secure_vector<byte>& buf, size_t offset, u32bit
    buf.swap(m_buffer);
    }
 
-void Stream_Compression::update(secure_vector<byte>& buf, size_t offset, bool flush)
+void Stream_Compression::update(secure_vector<uint8_t>& buf, size_t offset, bool flush)
    {
    BOTAN_ASSERT(m_stream, "Initialized");
    process(buf, offset, flush ? m_stream->flush_flag() : m_stream->run_flag());
    }
 
-void Stream_Compression::finish(secure_vector<byte>& buf, size_t offset)
+void Stream_Compression::finish(secure_vector<uint8_t>& buf, size_t offset)
    {
    BOTAN_ASSERT(m_stream, "Initialized");
    process(buf, offset, m_stream->finish_flag());
@@ -125,7 +125,7 @@ void Stream_Decompression::start()
    m_stream.reset(make_stream());
    }
 
-void Stream_Decompression::process(secure_vector<byte>& buf, size_t offset, u32bit flags)
+void Stream_Decompression::process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags)
    {
    BOTAN_ASSERT(m_stream, "Initialized");
    BOTAN_ASSERT(buf.size() >= offset, "Offset is sane");
@@ -172,12 +172,12 @@ void Stream_Decompression::process(secure_vector<byte>& buf, size_t offset, u32b
    buf.swap(m_buffer);
    }
 
-void Stream_Decompression::update(secure_vector<byte>& buf, size_t offset)
+void Stream_Decompression::update(secure_vector<uint8_t>& buf, size_t offset)
    {
    process(buf, offset, m_stream->run_flag());
    }
 
-void Stream_Decompression::finish(secure_vector<byte>& buf, size_t offset)
+void Stream_Decompression::finish(secure_vector<uint8_t>& buf, size_t offset)
    {
    if(buf.size() != offset || m_stream.get())
       process(buf, offset, m_stream->finish_flag());

@@ -27,12 +27,12 @@ class BOTAN_DLL Ciphersuite
       * @param suite the ciphersuite code number
       * @return ciphersuite object
       */
-      static Ciphersuite by_id(u16bit suite);
+      static Ciphersuite by_id(uint16_t suite);
 
       /**
       * Returns true iff this suite is a known SCSV
       */
-      static bool is_scsv(u16bit suite);
+      static bool is_scsv(uint16_t suite);
 
       /**
       * Generate a static list of all known ciphersuites and return it.
@@ -50,7 +50,7 @@ class BOTAN_DLL Ciphersuite
       /**
       * @return ciphersuite number
       */
-      u16bit ciphersuite_code() const { return m_ciphersuite_code; }
+      uint16_t ciphersuite_code() const { return m_ciphersuite_code; }
 
       /**
       * @return true if this is a PSK ciphersuite
@@ -111,7 +111,7 @@ class BOTAN_DLL Ciphersuite
       bool valid() const { return m_usable; }
 
       bool operator<(const Ciphersuite& o) const { return ciphersuite_code() < o.ciphersuite_code(); }
-      bool operator<(const u16bit c) const { return ciphersuite_code() < c; }
+      bool operator<(const uint16_t c) const { return ciphersuite_code() < c; }
 
       Ciphersuite() {}
 
@@ -119,7 +119,7 @@ class BOTAN_DLL Ciphersuite
 
       bool is_usable() const;
 
-      Ciphersuite(u16bit ciphersuite_code,
+      Ciphersuite(uint16_t ciphersuite_code,
                   const char* iana_id,
                   const char* sig_algo,
                   const char* kex_algo,
@@ -145,7 +145,7 @@ class BOTAN_DLL Ciphersuite
          m_usable = is_usable();
          }
 
-      u16bit m_ciphersuite_code = 0;
+      uint16_t m_ciphersuite_code = 0;
 
       /*
       All of these const char* strings are references to compile time

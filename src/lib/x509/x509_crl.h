@@ -54,13 +54,13 @@ class BOTAN_DLL X509_CRL final : public X509_Object
       * Get the AuthorityKeyIdentifier of this CRL.
       * @return this CRLs AuthorityKeyIdentifier
       */
-      std::vector<byte> authority_key_id() const;
+      std::vector<uint8_t> authority_key_id() const;
 
       /**
       * Get the serial number of this CRL.
       * @return CRLs serial number
       */
-      u32bit crl_number() const;
+      uint32_t crl_number() const;
 
       /**
       * Get the CRL's thisUpdate value.
@@ -99,7 +99,7 @@ class BOTAN_DLL X509_CRL final : public X509_Object
       * @param throw_on_unknown_critical should we throw an exception
       * if an unknown CRL extension marked as critical is encountered.
       */
-      X509_CRL(const std::vector<byte>& vec,
+      X509_CRL(const std::vector<uint8_t>& vec,
                bool throw_on_unknown_critical = false);
 
       /**

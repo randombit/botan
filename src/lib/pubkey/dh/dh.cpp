@@ -25,7 +25,7 @@ DH_PublicKey::DH_PublicKey(const DL_Group& grp, const BigInt& y1)
 /*
 * Return the public value for key agreement
 */
-std::vector<byte> DH_PublicKey::public_value() const
+std::vector<uint8_t> DH_PublicKey::public_value() const
    {
    return unlock(BigInt::encode_1363(m_y, group_p().bytes()));
    }
@@ -59,7 +59,7 @@ DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng,
 * Load a DH private key
 */
 DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
-                             const secure_vector<byte>& key_bits) :
+                             const secure_vector<uint8_t>& key_bits) :
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
    {
    if(m_y == 0)
@@ -69,7 +69,7 @@ DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
 /*
 * Return the public value for key agreement
 */
-std::vector<byte> DH_PrivateKey::public_value() const
+std::vector<uint8_t> DH_PrivateKey::public_value() const
    {
    return DH_PublicKey::public_value();
    }
@@ -93,7 +93,7 @@ class DH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
                    [this](const BigInt& k) { return m_powermod_x_p(inverse_mod(k, m_p)); })
          {}
 
-      secure_vector<byte> raw_agree(const byte w[], size_t w_len) override;
+      secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override;
    private:
       const BigInt& m_p;
 
@@ -101,7 +101,7 @@ class DH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
       Blinder m_blinder;
    };
 
-secure_vector<byte> DH_KA_Operation::raw_agree(const byte w[], size_t w_len)
+secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_len)
    {
    BigInt input = BigInt::decode(w, w_len);
 

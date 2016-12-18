@@ -29,7 +29,7 @@ BigInt hash_seq(const std::string& hash_id,
 BigInt compute_x(const std::string& hash_id,
                  const std::string& identifier,
                  const std::string& password,
-                 const std::vector<byte>& salt)
+                 const std::vector<uint8_t>& salt)
    {
    std::unique_ptr<HashFunction> hash_fn(HashFunction::create_or_throw(hash_id));
 
@@ -37,12 +37,12 @@ BigInt compute_x(const std::string& hash_id,
    hash_fn->update(":");
    hash_fn->update(password);
 
-   secure_vector<byte> inner_h = hash_fn->final();
+   secure_vector<uint8_t> inner_h = hash_fn->final();
 
    hash_fn->update(salt);
    hash_fn->update(inner_h);
 
-   secure_vector<byte> outer_h = hash_fn->final();
+   secure_vector<uint8_t> outer_h = hash_fn->final();
 
    return BigInt::decode(outer_h);
    }
@@ -77,7 +77,7 @@ srp6_client_agree(const std::string& identifier,
                   const std::string& password,
                   const std::string& group_id,
                   const std::string& hash_id,
-                  const std::vector<byte>& salt,
+                  const std::vector<uint8_t>& salt,
                   const BigInt& B,
                   RandomNumberGenerator& rng)
    {
@@ -109,7 +109,7 @@ srp6_client_agree(const std::string& identifier,
 
 BigInt generate_srp6_verifier(const std::string& identifier,
                               const std::string& password,
-                              const std::vector<byte>& salt,
+                              const std::vector<uint8_t>& salt,
                               const std::string& group_id,
                               const std::string& hash_id)
    {

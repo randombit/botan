@@ -45,13 +45,13 @@ template<typename Stream, typename ByteType>
 class Zlib_Style_Stream : public Compression_Stream
    {
    public:
-      void next_in(byte* b, size_t len) override
+      void next_in(uint8_t* b, size_t len) override
          {
          m_stream.next_in = reinterpret_cast<ByteType*>(b);
          m_stream.avail_in = len;
          }
 
-      void next_out(byte* b, size_t len) override
+      void next_out(uint8_t* b, size_t len) override
          {
          m_stream.next_out = reinterpret_cast<ByteType*>(b);
          m_stream.avail_out = len;

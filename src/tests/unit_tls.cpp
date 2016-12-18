@@ -193,16 +193,16 @@ create_creds(Botan::RandomNumberGenerator& rng,
    return cmt;
    }
 
-std::function<void (const byte[], size_t)> queue_inserter(std::vector<byte>& q)
+std::function<void (const uint8_t[], size_t)> queue_inserter(std::vector<uint8_t>& q)
    {
-   return [&](const byte buf[], size_t sz) { q.insert(q.end(), buf, buf + sz); };
+   return [&](const uint8_t buf[], size_t sz) { q.insert(q.end(), buf, buf + sz); };
    }
 
 void print_alert(Botan::TLS::Alert)
    {
    }
 
-void alert_cb_with_data(Botan::TLS::Alert, const byte[], size_t)
+void alert_cb_with_data(Botan::TLS::Alert, const uint8_t[], size_t)
    {
    }
 
@@ -259,12 +259,12 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
 
       try
          {
-         std::vector<byte> c2s_traffic, s2c_traffic, client_recv, server_recv, client_sent, server_sent;
+         std::vector<uint8_t> c2s_traffic, s2c_traffic, client_recv, server_recv, client_sent, server_sent;
 
          std::unique_ptr<Botan::TLS::Callbacks> server_cb(new Botan::TLS::Compat_Callbacks(
                  queue_inserter(s2c_traffic),
                  queue_inserter(server_recv),
-                 std::function<void (Botan::TLS::Alert, const byte[], size_t)>(alert_cb_with_data),
+                 std::function<void (Botan::TLS::Alert, const uint8_t[], size_t)>(alert_cb_with_data),
                  handshake_complete,
                  nullptr,
                  next_protocol_chooser));
@@ -281,7 +281,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
          std::unique_ptr<Botan::TLS::Callbacks> client_cb(new Botan::TLS::Compat_Callbacks(
                  queue_inserter(c2s_traffic),
                  queue_inserter(client_recv),
-                 std::function<void (Botan::TLS::Alert, const byte[], size_t)>(alert_cb_with_data),
+                 std::function<void (Botan::TLS::Alert, const uint8_t[], size_t)>(alert_cb_with_data),
                  handshake_complete));
 
          // TLS::Client object constructed by new constructor using virtual callback interface.
@@ -403,7 +403,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
                   * might end up appending more in response to messages during the
                   * handshake.
                   */
-                  std::vector<byte> input;
+                  std::vector<uint8_t> input;
                   std::swap(c2s_traffic, input);
 
                   if(corrupt_server_data)
@@ -434,7 +434,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
 
                if(s2c_traffic.size() > 0)
                   {
-                  std::vector<byte> input;
+                  std::vector<uint8_t> input;
                   std::swap(s2c_traffic, input);
 
                   if(corrupt_client_data)
@@ -570,7 +570,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
 
       try
          {
-         std::vector<byte> c2s_traffic, s2c_traffic, client_recv, server_recv, client_sent, server_sent;
+         std::vector<uint8_t> c2s_traffic, s2c_traffic, client_recv, server_recv, client_sent, server_sent;
 
          std::unique_ptr<Botan::TLS::Callbacks> server_cb(new Botan::TLS::Compat_Callbacks(
                  queue_inserter(s2c_traffic),
@@ -689,7 +689,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
                   * might end up appending more in response to messages during the
                   * handshake.
                   */
-                  std::vector<byte> input;
+                  std::vector<uint8_t> input;
                   std::swap(c2s_traffic, input);
 
                   if(corrupt_server_data)
@@ -729,7 +729,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
 
                if(s2c_traffic.size() > 0)
                   {
-                  std::vector<byte> input;
+                  std::vector<uint8_t> input;
                   std::swap(s2c_traffic, input);
 
                   if(corrupt_client_data)

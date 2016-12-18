@@ -24,7 +24,7 @@ class BOTAN_DLL Compression_Filter : public Filter
    {
    public:
       void start_msg() override;
-      void write(const byte input[], size_t input_length) override;
+      void write(const uint8_t input[], size_t input_length) override;
       void end_msg() override;
 
       void flush();
@@ -37,7 +37,7 @@ class BOTAN_DLL Compression_Filter : public Filter
    private:
       std::unique_ptr<Compression_Algorithm> m_comp;
       size_t m_buffersize, m_level;
-      secure_vector<byte> m_buffer;
+      secure_vector<uint8_t> m_buffer;
    };
 
 /**
@@ -47,7 +47,7 @@ class BOTAN_DLL Decompression_Filter : public Filter
    {
    public:
       void start_msg() override;
-      void write(const byte input[], size_t input_length) override;
+      void write(const uint8_t input[], size_t input_length) override;
       void end_msg() override;
 
       std::string name() const override;
@@ -57,7 +57,7 @@ class BOTAN_DLL Decompression_Filter : public Filter
    private:
       std::unique_ptr<Decompression_Algorithm> m_comp;
       std::size_t m_buffersize;
-      secure_vector<byte> m_buffer;
+      secure_vector<uint8_t> m_buffer;
    };
 
 #endif

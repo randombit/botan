@@ -22,7 +22,7 @@ namespace Botan {
 class BOTAN_DLL EAX_Mode : public AEAD_Mode
    {
    public:
-      void set_associated_data(const byte ad[], size_t ad_len) override;
+      void set_associated_data(const uint8_t ad[], size_t ad_len) override;
 
       std::string name() const override;
 
@@ -54,13 +54,13 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode
       std::unique_ptr<StreamCipher> m_ctr;
       std::unique_ptr<MessageAuthenticationCode> m_cmac;
 
-      secure_vector<byte> m_ad_mac;
+      secure_vector<uint8_t> m_ad_mac;
 
-      secure_vector<byte> m_nonce_mac;
+      secure_vector<uint8_t> m_nonce_mac;
    private:
-      void start_msg(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
 
-      void key_schedule(const byte key[], size_t length) override;
+      void key_schedule(const uint8_t key[], size_t length) override;
    };
 
 /**
@@ -83,7 +83,7 @@ class BOTAN_DLL EAX_Encryption final : public EAX_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 /**
@@ -109,7 +109,7 @@ class BOTAN_DLL EAX_Decryption final : public EAX_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    };
 
 }

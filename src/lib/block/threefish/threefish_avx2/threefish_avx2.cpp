@@ -75,10 +75,10 @@ inline void rotate_keys(__m256i& R0, __m256i& R1, __m256i R2)
 }
 
 BOTAN_FUNC_ISA("avx2")
-void Threefish_512::avx2_encrypt_n(const byte in[], byte out[], size_t blocks) const
+void Threefish_512::avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   const u64bit* K = &get_K()[0];
-   const u64bit* T_64 = &get_T()[0];
+   const uint64_t* K = &get_K()[0];
+   const uint64_t* T_64 = &get_T()[0];
 
    const __m256i ROTATE_1 = _mm256_set_epi64x(37,19,36,46);
    const __m256i ROTATE_2 = _mm256_set_epi64x(42,14,27,33);
@@ -250,10 +250,10 @@ void Threefish_512::avx2_encrypt_n(const byte in[], byte out[], size_t blocks) c
    }
 
 BOTAN_FUNC_ISA("avx2")
-void Threefish_512::avx2_decrypt_n(const byte in[], byte out[], size_t blocks) const
+void Threefish_512::avx2_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   const u64bit* K = &get_K()[0];
-   const u64bit* T_64 = &get_T()[0];
+   const uint64_t* K = &get_K()[0];
+   const uint64_t* T_64 = &get_T()[0];
 
    const __m256i ROTATE_1 = _mm256_set_epi64x(37,19,36,46);
    const __m256i ROTATE_2 = _mm256_set_epi64x(42,14,27,33);

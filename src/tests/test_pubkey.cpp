@@ -301,7 +301,7 @@ Test::Result PK_KEM_Test::run_one_test(const std::string&, const VarMap& vars)
 
    Fixed_Output_RNG fixed_output_rng(get_req_bin(vars, "R"));
 
-   Botan::secure_vector<byte> produced_encap_key, shared_key;
+   Botan::secure_vector<uint8_t> produced_encap_key, shared_key;
    enc->encrypt(produced_encap_key,
                 shared_key,
                 desired_key_len,

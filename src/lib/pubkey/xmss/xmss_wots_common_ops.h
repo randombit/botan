@@ -40,11 +40,11 @@ class XMSS_WOTS_Common_Ops
        * @param[in] adrs An OTS Hash Address.
        * @param[in] seed A Seed.
        **/
-      void chain(secure_vector<byte>& result,
+      void chain(secure_vector<uint8_t>& result,
                  size_t start_idx,
                  size_t steps,
                  XMSS_Address& adrs,
-                 const secure_vector<byte>& seed);
+                 const secure_vector<uint8_t>& seed);
 
       XMSS_WOTS_Parameters m_wots_params;
       XMSS_Hash m_hash;

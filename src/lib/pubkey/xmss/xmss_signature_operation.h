@@ -46,9 +46,9 @@ class BOTAN_DLL XMSS_Signature_Operation : public virtual PK_Ops::Signature,
        *
        * @return serialized XMSS signature.
        **/
-      secure_vector<byte> sign(RandomNumberGenerator&) override;
+      secure_vector<uint8_t> sign(RandomNumberGenerator&) override;
 
-      void update(const byte msg[], size_t msg_len) override;
+      void update(const uint8_t msg[], size_t msg_len) override;
 
    private:
       /**
@@ -60,7 +60,7 @@ class BOTAN_DLL XMSS_Signature_Operation : public virtual PK_Ops::Signature,
        * @param adrs A XMSS Address.
        **/
       XMSS_WOTS_PublicKey::TreeSignature generate_tree_signature(
-         const secure_vector<byte>& msg,
+         const secure_vector<uint8_t>& msg,
          XMSS_PrivateKey& xmss_priv_key,
          XMSS_Address& adrs);
 
@@ -75,7 +75,7 @@ class BOTAN_DLL XMSS_Signature_Operation : public virtual PK_Ops::Signature,
        * @return The signature of msg signed using xmss_priv_key.
        **/
       XMSS_Signature sign(
-         const secure_vector<byte>& msg,
+         const secure_vector<uint8_t>& msg,
          XMSS_PrivateKey& xmss_priv_key);
 
       wots_keysig_t build_auth_path(XMSS_PrivateKey& priv_key,
@@ -84,7 +84,7 @@ class BOTAN_DLL XMSS_Signature_Operation : public virtual PK_Ops::Signature,
       void initialize();
 
       XMSS_PrivateKey m_priv_key;
-      secure_vector<byte> m_randomness;
+      secure_vector<uint8_t> m_randomness;
       size_t m_leaf_idx;
       bool m_is_initialized;
    };

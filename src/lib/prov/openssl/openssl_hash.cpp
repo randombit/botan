@@ -54,12 +54,12 @@ class OpenSSL_HashFunction : public HashFunction
          }
 
    private:
-      void add_data(const byte input[], size_t length) override
+      void add_data(const uint8_t input[], size_t length) override
          {
          EVP_DigestUpdate(&m_md, input, length);
          }
 
-      void final_result(byte output[]) override
+      void final_result(uint8_t output[]) override
          {
          EVP_DigestFinal_ex(&m_md, output, nullptr);
          const EVP_MD* algo = EVP_MD_CTX_md(&m_md);

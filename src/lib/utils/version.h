@@ -34,25 +34,25 @@ BOTAN_DLL const char* version_cstr();
 *
 * @return release date, or zero if unreleased
 */
-BOTAN_DLL u32bit version_datestamp();
+BOTAN_DLL uint32_t version_datestamp();
 
 /**
 * Get the major version number.
 * @return major version number
 */
-BOTAN_DLL u32bit version_major();
+BOTAN_DLL uint32_t version_major();
 
 /**
 * Get the minor version number.
 * @return minor version number
 */
-BOTAN_DLL u32bit version_minor();
+BOTAN_DLL uint32_t version_minor();
 
 /**
 * Get the patch number.
 * @return patch number
 */
-BOTAN_DLL u32bit version_patch();
+BOTAN_DLL uint32_t version_patch();
 
 /**
 * Usable for checking that the DLL version loaded at runtime exactly
@@ -61,9 +61,9 @@ BOTAN_DLL u32bit version_patch();
 * appropriate message. Added with 1.11.26.
 */
 BOTAN_DLL std::string
-runtime_version_check(u32bit major,
-                      u32bit minor,
-                      u32bit patch);
+runtime_version_check(uint32_t major,
+                      uint32_t minor,
+                      uint32_t patch);
 
 /*
 * Macros for compile-time version checks

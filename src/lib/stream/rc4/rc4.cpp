@@ -13,7 +13,7 @@ namespace Botan {
 /*
 * Combine cipher stream with message
 */
-void RC4::cipher(const byte in[], byte out[], size_t length)
+void RC4::cipher(const uint8_t in[], uint8_t out[], size_t length)
    {
    while(length >= m_buffer.size() - m_position)
       {
@@ -27,7 +27,7 @@ void RC4::cipher(const byte in[], byte out[], size_t length)
    m_position += length;
    }
 
-void RC4::set_iv(const byte*, size_t length)
+void RC4::set_iv(const uint8_t*, size_t length)
    {
    if(length > 0)
       throw Exception("RC4 does not support an IV");
@@ -38,7 +38,7 @@ void RC4::set_iv(const byte*, size_t length)
 */
 void RC4::generate()
    {
-   byte SX, SY;
+   uint8_t SX, SY;
    for(size_t i = 0; i != m_buffer.size(); i += 4)
       {
       SX = m_state[m_X+1]; m_Y = (m_Y + SX) % 256; SY = m_state[m_Y];
@@ -64,7 +64,7 @@ void RC4::generate()
 /*
 * RC4 Key Schedule
 */
-void RC4::key_schedule(const byte key[], size_t length)
+void RC4::key_schedule(const uint8_t key[], size_t length)
    {
    m_state.resize(256);
    m_buffer.resize(256);
@@ -72,7 +72,7 @@ void RC4::key_schedule(const byte key[], size_t length)
    m_position = m_X = m_Y = 0;
 
    for(size_t i = 0; i != 256; ++i)
-      m_state[i] = static_cast<byte>(i);
+      m_state[i] = static_cast<uint8_t>(i);
 
    for(size_t i = 0, state_index = 0; i != 256; ++i)
       {
@@ -111,7 +111,7 @@ void RC4::clear()
 */
 RC4::RC4(size_t s) : m_SKIP(s) {}
 
-void RC4::seek(u64bit)
+void RC4::seek(uint64_t)
    {
    throw Exception("RC4 does not support seeking");
    }

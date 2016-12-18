@@ -16,14 +16,14 @@ PKCS11_RNG::PKCS11_RNG(Session& session)
    : m_session(session)
    {}
 
-void PKCS11_RNG::randomize(Botan::byte output[], std::size_t length)
+void PKCS11_RNG::randomize(uint8_t output[], std::size_t length)
    {
    module()->C_GenerateRandom(m_session.get().handle(), output, length);
    }
 
-void PKCS11_RNG::add_entropy(const Botan::byte in[], std::size_t length)
+void PKCS11_RNG::add_entropy(const uint8_t in[], std::size_t length)
    {
-   module()->C_SeedRandom(m_session.get().handle(), const_cast<Botan::byte*>(in), length);
+   module()->C_SeedRandom(m_session.get().handle(), const_cast<uint8_t*>(in), length);
    }
 
 }

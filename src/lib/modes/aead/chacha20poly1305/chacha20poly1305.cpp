@@ -37,12 +37,12 @@ void ChaCha20Poly1305_Mode::reset()
    m_nonce_len = 0;
    }
 
-void ChaCha20Poly1305_Mode::key_schedule(const byte key[], size_t length)
+void ChaCha20Poly1305_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    m_chacha->set_key(key, length);
    }
 
-void ChaCha20Poly1305_Mode::set_associated_data(const byte ad[], size_t length)
+void ChaCha20Poly1305_Mode::set_associated_data(const uint8_t ad[], size_t length)
    {
    if(m_ctext_len)
       throw Exception("Too late to set AD for ChaCha20Poly1305");
@@ -51,12 +51,12 @@ void ChaCha20Poly1305_Mode::set_associated_data(const byte ad[], size_t length)
 
 void ChaCha20Poly1305_Mode::update_len(size_t len)
    {
-   byte len8[8] = { 0 };
-   store_le(static_cast<u64bit>(len), len8);
+   uint8_t len8[8] = { 0 };
+   store_le(static_cast<uint64_t>(len), len8);
    m_poly1305->update(len8, 8);
    }
 
-void ChaCha20Poly1305_Mode::start_msg(const byte nonce[], size_t nonce_len)
+void ChaCha20Poly1305_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
@@ -66,7 +66,7 @@ void ChaCha20Poly1305_Mode::start_msg(const byte nonce[], size_t nonce_len)
 
    m_chacha->set_iv(nonce, nonce_len);
 
-   secure_vector<byte> init(64); // zeros
+   secure_vector<uint8_t> init(64); // zeros
    m_chacha->encrypt(init);
 
    m_poly1305->set_key(init.data(), 32);
@@ -78,7 +78,7 @@ void ChaCha20Poly1305_Mode::start_msg(const byte nonce[], size_t nonce_len)
       {
       if(m_ad.size() % 16)
          {
-         const byte zeros[16] = { 0 };
+         const uint8_t zeros[16] = { 0 };
          m_poly1305->update(zeros, 16 - m_ad.size() % 16);
          }
       }
@@ -96,21 +96,21 @@ size_t ChaCha20Poly1305_Encryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void ChaCha20Poly1305_Encryption::finish(secure_vector<byte>& buffer, size_t offset)
+void ChaCha20Poly1305_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    update(buffer, offset);
    if(cfrg_version())
       {
       if(m_ctext_len % 16)
          {
-         const byte zeros[16] = { 0 };
+         const uint8_t zeros[16] = { 0 };
          m_poly1305->update(zeros, 16 - m_ctext_len % 16);
          }
       update_len(m_ad.size());
       }
    update_len(m_ctext_len);
 
-   const secure_vector<byte> mac = m_poly1305->final();
+   const secure_vector<uint8_t> mac = m_poly1305->final();
    buffer += std::make_pair(mac.data(), tag_size());
    m_ctext_len = 0;
    }
@@ -123,11 +123,11 @@ size_t ChaCha20Poly1305_Decryption::process(uint8_t buf[], size_t sz)
    return sz;
    }
 
-void ChaCha20Poly1305_Decryption::finish(secure_vector<byte>& buffer, size_t offset)
+void ChaCha20Poly1305_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    {
    BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
    const size_t sz = buffer.size() - offset;
-   byte* buf = buffer.data() + offset;
+   uint8_t* buf = buffer.data() + offset;
 
    BOTAN_ASSERT(sz >= tag_size(), "Have the tag as part of final input");
 
@@ -144,16 +144,16 @@ void ChaCha20Poly1305_Decryption::finish(secure_vector<byte>& buffer, size_t off
       {
       if(m_ctext_len % 16)
          {
-         const byte zeros[16] = { 0 };
+         const uint8_t zeros[16] = { 0 };
          m_poly1305->update(zeros, 16 - m_ctext_len % 16);
          }
       update_len(m_ad.size());
       }
 
    update_len(m_ctext_len);
-   const secure_vector<byte> mac = m_poly1305->final();
+   const secure_vector<uint8_t> mac = m_poly1305->final();
 
-   const byte* included_tag = &buf[remaining];
+   const uint8_t* included_tag = &buf[remaining];
 
    m_ctext_len = 0;
 

@@ -61,7 +61,7 @@ class BOTAN_DLL Callbacks
        *
        * @param size the length of the received record, in bytes
        */
-       virtual void tls_record_received(u64bit seq_no, const uint8_t data[], size_t size) = 0;
+       virtual void tls_record_received(uint64_t seq_no, const uint8_t data[], size_t size) = 0;
 
        /**
        * Mandatory callback: alert received
@@ -202,9 +202,9 @@ class BOTAN_DLL Callbacks
 class BOTAN_DLL Compat_Callbacks final : public Callbacks
    {
    public:
-      typedef std::function<void (const byte[], size_t)> output_fn;
-      typedef std::function<void (const byte[], size_t)> data_cb;
-      typedef std::function<void (Alert, const byte[], size_t)> alert_cb;
+      typedef std::function<void (const uint8_t[], size_t)> output_fn;
+      typedef std::function<void (const uint8_t[], size_t)> data_cb;
+      typedef std::function<void (Alert, const uint8_t[], size_t)> alert_cb;
       typedef std::function<bool (const Session&)> handshake_cb;
       typedef std::function<void (const Handshake_Message&)> handshake_msg_cb;
       typedef std::function<std::string (std::vector<std::string>)> next_protocol_fn;
@@ -240,14 +240,14 @@ class BOTAN_DLL Compat_Callbacks final : public Callbacks
             m_alert_cb(alert_cb),
             m_hs_cb(hs_cb), m_hs_msg_cb(hs_msg_cb), m_next_proto(next_proto) {}
 
-       void tls_emit_data(const byte data[], size_t size) override
+       void tls_emit_data(const uint8_t data[], size_t size) override
           {
           BOTAN_ASSERT(m_output_function != nullptr,
                        "Invalid TLS output function callback.");
           m_output_function(data, size);
           }
 
-       void tls_record_received(u64bit /*seq_no*/, const byte data[], size_t size) override
+       void tls_record_received(uint64_t /*seq_no*/, const uint8_t data[], size_t size) override
           {
           BOTAN_ASSERT(m_app_data_cb != nullptr,
                        "Invalid TLS app data callback.");

@@ -45,26 +45,26 @@ class BOTAN_DLL Session
       /**
       * New session (sets session start time)
       */
-      Session(const std::vector<byte>& session_id,
-              const secure_vector<byte>& master_secret,
+      Session(const std::vector<uint8_t>& session_id,
+              const secure_vector<uint8_t>& master_secret,
               Protocol_Version version,
-              u16bit ciphersuite,
-              byte compression_method,
+              uint16_t ciphersuite,
+              uint8_t compression_method,
               Connection_Side side,
               bool supports_extended_master_secret,
               bool supports_encrypt_then_mac,
               const std::vector<X509_Certificate>& peer_certs,
-              const std::vector<byte>& session_ticket,
+              const std::vector<uint8_t>& session_ticket,
               const Server_Information& server_info,
               const std::string& srp_identifier,
-              u16bit srtp_profile);
+              uint16_t srtp_profile);
 
       /**
       * Load a session from DER representation (created by DER_encode)
       * @param ber DER representation buffer
       * @param ber_len size of buffer in bytes
       */
-      Session(const byte ber[], size_t ber_len);
+      Session(const uint8_t ber[], size_t ber_len);
 
       /**
       * Load a session from PEM representation (created by PEM_encode)
@@ -77,12 +77,12 @@ class BOTAN_DLL Session
       * @warning if the master secret is compromised so is the
       * session traffic
       */
-      secure_vector<byte> DER_encode() const;
+      secure_vector<uint8_t> DER_encode() const;
 
       /**
       * Encrypt a session (useful for serialization or session tickets)
       */
-      std::vector<byte> encrypt(const SymmetricKey& key,
+      std::vector<uint8_t> encrypt(const SymmetricKey& key,
                                 RandomNumberGenerator& rng) const;
 
 
@@ -92,7 +92,7 @@ class BOTAN_DLL Session
       * @param ctext_size the size of ctext in bytes
       * @param key the same key used by the encrypting side
       */
-      static Session decrypt(const byte ctext[],
+      static Session decrypt(const uint8_t ctext[],
                              size_t ctext_size,
                              const SymmetricKey& key);
 
@@ -101,7 +101,7 @@ class BOTAN_DLL Session
       * @param ctext the ciphertext returned by encrypt
       * @param key the same key used by the encrypting side
       */
-      static inline Session decrypt(const std::vector<byte>& ctext,
+      static inline Session decrypt(const std::vector<uint8_t>& ctext,
                                     const SymmetricKey& key)
          {
          return Session::decrypt(ctext.data(), ctext.size(), key);
@@ -122,7 +122,7 @@ class BOTAN_DLL Session
       /**
       * Get the ciphersuite code of the saved session
       */
-      u16bit ciphersuite_code() const { return m_ciphersuite; }
+      uint16_t ciphersuite_code() const { return m_ciphersuite; }
 
       /**
       * Get the ciphersuite info of the saved session
@@ -132,7 +132,7 @@ class BOTAN_DLL Session
       /**
       * Get the compression method used in the saved session
       */
-      byte compression_method() const { return m_compression_method; }
+      uint8_t compression_method() const { return m_compression_method; }
 
       /**
       * Get which side of the connection the resumed session we are/were
@@ -148,17 +148,17 @@ class BOTAN_DLL Session
       /**
       * Get the saved master secret
       */
-      const secure_vector<byte>& master_secret() const { return m_master_secret; }
+      const secure_vector<uint8_t>& master_secret() const { return m_master_secret; }
 
       /**
       * Get the session identifier
       */
-      const std::vector<byte>& session_id() const { return m_identifier; }
+      const std::vector<uint8_t>& session_id() const { return m_identifier; }
 
       /**
       * Get the negotiated DTLS-SRTP algorithm (RFC 5764)
       */
-      u16bit dtls_srtp_profile() const { return m_srtp_profile; }
+      uint16_t dtls_srtp_profile() const { return m_srtp_profile; }
 
       bool supports_extended_master_secret() const { return m_extended_master_secret; }
 
@@ -182,7 +182,7 @@ class BOTAN_DLL Session
       /**
       * Return the session ticket the server gave us
       */
-      const std::vector<byte>& session_ticket() const { return m_session_ticket; }
+      const std::vector<uint8_t>& session_ticket() const { return m_session_ticket; }
 
       /**
       * @return information about the TLS server
@@ -194,15 +194,15 @@ class BOTAN_DLL Session
 
       std::chrono::system_clock::time_point m_start_time;
 
-      std::vector<byte> m_identifier;
-      std::vector<byte> m_session_ticket; // only used by client side
-      secure_vector<byte> m_master_secret;
+      std::vector<uint8_t> m_identifier;
+      std::vector<uint8_t> m_session_ticket; // only used by client side
+      secure_vector<uint8_t> m_master_secret;
 
       Protocol_Version m_version;
-      u16bit m_ciphersuite;
-      byte m_compression_method;
+      uint16_t m_ciphersuite;
+      uint8_t m_compression_method;
       Connection_Side m_connection_side;
-      u16bit m_srtp_profile;
+      uint16_t m_srtp_profile;
       bool m_extended_master_secret;
       bool m_encrypt_then_mac;
 

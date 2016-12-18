@@ -55,11 +55,11 @@ class XMSS_WOTS_Parameters
        *
        * @return Input string converted to the given base.
        **/
-      secure_vector<byte> base_w(const secure_vector<byte>& msg, size_t out_size) const;
+      secure_vector<uint8_t> base_w(const secure_vector<uint8_t>& msg, size_t out_size) const;
 
-      secure_vector<byte> base_w(size_t value) const;
+      secure_vector<uint8_t> base_w(size_t value) const;
 
-      void append_checksum(secure_vector<byte>& data);
+      void append_checksum(secure_vector<uint8_t>& data);
 
       /**
        * @return XMSS WOTS registry name for the chosen parameter set.

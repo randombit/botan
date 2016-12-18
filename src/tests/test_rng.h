@@ -141,7 +141,7 @@ class SeedCapturing_RNG : public Botan::RandomNumberGenerator
       void randomize(uint8_t[], size_t) override
          { throw Botan::Exception("SeedCapturing_RNG has no output"); }
 
-      void add_entropy(const byte input[], size_t len) override
+      void add_entropy(const uint8_t input[], size_t len) override
          {
          m_samples++;
          m_seed.insert(m_seed.end(), input, input + len);

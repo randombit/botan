@@ -111,7 +111,7 @@ W0 = W[t]..W[t+3]
 /*
 * SHA-160 F1 Function
 */
-inline void F1(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
+inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
    E += (D ^ (B & (C ^ D))) + msg + rotate_left(A, 5);
    B  = rotate_left(B, 30);
@@ -120,7 +120,7 @@ inline void F1(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 /*
 * SHA-160 F2 Function
 */
-inline void F2(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
+inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
    E += (B ^ C ^ D) + msg + rotate_left(A, 5);
    B  = rotate_left(B, 30);
@@ -129,7 +129,7 @@ inline void F2(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 /*
 * SHA-160 F3 Function
 */
-inline void F3(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
+inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
    E += ((B & C) | ((B | C) & D)) + msg + rotate_left(A, 5);
    B  = rotate_left(B, 30);
@@ -138,7 +138,7 @@ inline void F3(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 /*
 * SHA-160 F4 Function
 */
-inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
+inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
    E += (B ^ C ^ D) + msg + rotate_left(A, 5);
    B  = rotate_left(B, 30);
@@ -153,7 +153,7 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 */
 //static
 BOTAN_FUNC_ISA("sse2")
-void SHA_160::sse2_compress_n(secure_vector<uint32_t>& digest, const byte input[], size_t blocks)
+void SHA_160::sse2_compress_n(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks)
    {
    using namespace SHA1_SSE2_F;
 
@@ -162,7 +162,7 @@ void SHA_160::sse2_compress_n(secure_vector<uint32_t>& digest, const byte input[
    const __m128i K40_59 = _mm_set1_epi32(0x8F1BBCDC);
    const __m128i K60_79 = _mm_set1_epi32(0xCA62C1D6);
 
-   u32bit A = digest[0],
+   uint32_t A = digest[0],
           B = digest[1],
           C = digest[2],
           D = digest[3],
@@ -173,7 +173,7 @@ void SHA_160::sse2_compress_n(secure_vector<uint32_t>& digest, const byte input[
    for(size_t i = 0; i != blocks; ++i)
       {
       union v4si {
-         u32bit u32[4];
+         uint32_t u32[4];
          __m128i u128;
          };
 

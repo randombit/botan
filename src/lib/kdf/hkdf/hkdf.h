@@ -30,10 +30,10 @@ class BOTAN_DLL HKDF final : public KDF
 
       std::string name() const override { return "HKDF(" + m_prf->name() + ")"; }
 
-      size_t kdf(byte key[], size_t key_len,
-                 const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len,
-                 const byte label[], size_t label_len) const override;
+      size_t kdf(uint8_t key[], size_t key_len,
+                 const uint8_t secret[], size_t secret_len,
+                 const uint8_t salt[], size_t salt_len,
+                 const uint8_t label[], size_t label_len) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
@@ -54,10 +54,10 @@ class BOTAN_DLL HKDF_Extract final : public KDF
 
       std::string name() const override { return "HKDF-Extract(" + m_prf->name() + ")"; }
 
-      size_t kdf(byte key[], size_t key_len,
-                 const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len,
-                 const byte label[], size_t label_len) const override;
+      size_t kdf(uint8_t key[], size_t key_len,
+                 const uint8_t secret[], size_t secret_len,
+                 const uint8_t salt[], size_t salt_len,
+                 const uint8_t label[], size_t label_len) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
@@ -78,10 +78,10 @@ class BOTAN_DLL HKDF_Expand final : public KDF
 
       std::string name() const override { return "HKDF-Expand(" + m_prf->name() + ")"; }
 
-      size_t kdf(byte key[], size_t key_len,
-                 const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len,
-                 const byte label[], size_t label_len) const override;
+      size_t kdf(uint8_t key[], size_t key_len,
+                 const uint8_t secret[], size_t secret_len,
+                 const uint8_t salt[], size_t salt_len,
+                 const uint8_t label[], size_t label_len) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;

@@ -15,10 +15,10 @@
 namespace Botan {
 
 BOTAN_DLL size_t pbkdf2(MessageAuthenticationCode& prf,
-                        byte out[],
+                        uint8_t out[],
                         size_t out_len,
                         const std::string& passphrase,
-                        const byte salt[], size_t salt_len,
+                        const uint8_t salt[], size_t salt_len,
                         size_t iterations,
                         std::chrono::milliseconds msec);
 
@@ -38,9 +38,9 @@ class BOTAN_DLL PKCS5_PBKDF2 final : public PBKDF
          return new PKCS5_PBKDF2(m_mac->clone());
          }
 
-      size_t pbkdf(byte output_buf[], size_t output_len,
+      size_t pbkdf(uint8_t output_buf[], size_t output_len,
                    const std::string& passphrase,
-                   const byte salt[], size_t salt_len,
+                   const uint8_t salt[], size_t salt_len,
                    size_t iterations,
                    std::chrono::milliseconds msec) const override;
 

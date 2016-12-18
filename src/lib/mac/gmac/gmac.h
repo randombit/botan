@@ -35,7 +35,7 @@ class BOTAN_DLL GMAC : public MessageAuthenticationCode,
       * @param nonce Initialization vector.
       * @param nonce_len size of initialization vector.
       */
-      void start(const byte nonce[], size_t nonce_len);
+      void start(const uint8_t nonce[], size_t nonce_len);
 
       /**
       * Must be called to set the initialization vector prior to GMAC
@@ -43,7 +43,7 @@ class BOTAN_DLL GMAC : public MessageAuthenticationCode,
       *
       * @param nonce Initialization vector.
       */
-      void start(const secure_vector<byte>& nonce);
+      void start(const secure_vector<uint8_t>& nonce);
 
       /**
       * Must be called to set the initialization vector prior to GMAC
@@ -51,7 +51,7 @@ class BOTAN_DLL GMAC : public MessageAuthenticationCode,
       *
       * @param nonce Initialization vector.
       */
-      void start(const std::vector<byte>& nonce);
+      void start(const std::vector<uint8_t>& nonce);
 
       Key_Length_Specification key_spec() const override
          {
@@ -69,13 +69,13 @@ class BOTAN_DLL GMAC : public MessageAuthenticationCode,
       GMAC& operator=(const GMAC&) = delete;
 
    private:
-      void add_data(const byte[], size_t) override;
-      void final_result(byte[]) override;
-      void start_msg(const byte nonce[], size_t nonce_len) override;
-      void key_schedule(const byte key[], size_t size) override;
+      void add_data(const uint8_t[], size_t) override;
+      void final_result(uint8_t[]) override;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
+      void key_schedule(const uint8_t key[], size_t size) override;
 
       static const size_t GCM_BS = 16;
-      secure_vector<byte> m_aad_buf;
+      secure_vector<uint8_t> m_aad_buf;
       std::unique_ptr<BlockCipher> m_cipher;
       bool m_initialized;
    };

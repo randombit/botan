@@ -18,16 +18,16 @@ namespace Botan {
 class BOTAN_DLL DES final : public Block_Cipher_Fixed_Params<8, 8>
    {
    public:
-      void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
-      void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
+      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
+      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
       std::string name() const override { return "DES"; }
       BlockCipher* clone() const override { return new DES; }
    private:
-      void key_schedule(const byte[], size_t) override;
+      void key_schedule(const uint8_t[], size_t) override;
 
-      secure_vector<u32bit> m_round_key;
+      secure_vector<uint32_t> m_round_key;
    };
 
 /**
@@ -36,34 +36,34 @@ class BOTAN_DLL DES final : public Block_Cipher_Fixed_Params<8, 8>
 class BOTAN_DLL TripleDES final : public Block_Cipher_Fixed_Params<8, 16, 24, 8>
    {
    public:
-      void encrypt_n(const byte in[], byte out[], size_t blocks) const override;
-      void decrypt_n(const byte in[], byte out[], size_t blocks) const override;
+      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
+      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
       std::string name() const override { return "TripleDES"; }
       BlockCipher* clone() const override { return new TripleDES; }
    private:
-      void key_schedule(const byte[], size_t) override;
+      void key_schedule(const uint8_t[], size_t) override;
 
-      secure_vector<u32bit> m_round_key;
+      secure_vector<uint32_t> m_round_key;
    };
 
 /*
 * DES Tables
 */
-extern const u32bit DES_SPBOX1[256];
-extern const u32bit DES_SPBOX2[256];
-extern const u32bit DES_SPBOX3[256];
-extern const u32bit DES_SPBOX4[256];
-extern const u32bit DES_SPBOX5[256];
-extern const u32bit DES_SPBOX6[256];
-extern const u32bit DES_SPBOX7[256];
-extern const u32bit DES_SPBOX8[256];
+extern const uint32_t DES_SPBOX1[256];
+extern const uint32_t DES_SPBOX2[256];
+extern const uint32_t DES_SPBOX3[256];
+extern const uint32_t DES_SPBOX4[256];
+extern const uint32_t DES_SPBOX5[256];
+extern const uint32_t DES_SPBOX6[256];
+extern const uint32_t DES_SPBOX7[256];
+extern const uint32_t DES_SPBOX8[256];
 
-extern const u64bit DES_IPTAB1[256];
-extern const u64bit DES_IPTAB2[256];
-extern const u64bit DES_FPTAB1[256];
-extern const u64bit DES_FPTAB2[256];
+extern const uint64_t DES_IPTAB1[256];
+extern const uint64_t DES_IPTAB2[256];
+extern const uint64_t DES_FPTAB1[256];
+extern const uint64_t DES_FPTAB2[256];
 
 }
 

@@ -163,7 +163,7 @@ class BOTAN_DLL X509_Cert_Options
       * @param expire_time the expiration time (from the current clock in seconds)
       */
       X509_Cert_Options(const std::string& opts = "",
-                        u32bit expire_time = 365 * 24 * 60 * 60);
+                        uint32_t expire_time = 365 * 24 * 60 * 60);
    };
 
 namespace X509 {

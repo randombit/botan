@@ -145,9 +145,9 @@ MessageAuthenticationCode::create_or_throw(const std::string& algo,
 /*
 * Default (deterministic) MAC verification operation
 */
-bool MessageAuthenticationCode::verify_mac(const byte mac[], size_t length)
+bool MessageAuthenticationCode::verify_mac(const uint8_t mac[], size_t length)
    {
-   secure_vector<byte> our_mac = final();
+   secure_vector<uint8_t> our_mac = final();
 
    if(our_mac.size() != length)
       return false;

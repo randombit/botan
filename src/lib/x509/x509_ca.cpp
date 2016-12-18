@@ -96,7 +96,7 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
 X509_Certificate X509_CA::make_cert(PK_Signer* signer,
                                     RandomNumberGenerator& rng,
                                     const AlgorithmIdentifier& sig_algo,
-                                    const std::vector<byte>& pub_key,
+                                    const std::vector<uint8_t>& pub_key,
                                     const X509_Time& not_before,
                                     const X509_Time& not_after,
                                     const X509_DN& issuer_dn,
@@ -144,7 +144,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
 * Create a new, empty CRL
 */
 X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
-                          u32bit next_update) const
+                          uint32_t next_update) const
    {
    std::vector<CRL_Entry> empty;
    return make_crl(empty, 1, next_update, rng);
@@ -156,7 +156,7 @@ X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
 X509_CRL X509_CA::update_crl(const X509_CRL& crl,
                              const std::vector<CRL_Entry>& new_revoked,
                              RandomNumberGenerator& rng,
-                             u32bit next_update) const
+                             uint32_t next_update) const
    {
    std::vector<CRL_Entry> revoked = crl.get_revoked();
 
@@ -170,7 +170,7 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
 * Create a CRL
 */
 X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
-                           u32bit crl_number, u32bit next_update,
+                           uint32_t crl_number, uint32_t next_update,
                            RandomNumberGenerator& rng) const
    {
    const size_t X509_CRL_VERSION = 2;
@@ -188,7 +188,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    extensions.add(new Cert_Extension::CRL_Number(crl_number));
 
    // clang-format off
-   const std::vector<byte> crl = X509_Object::make_signed(
+   const std::vector<uint8_t> crl = X509_Object::make_signed(
       m_signer, rng, m_ca_sig_algo,
       DER_Encoder().start_cons(SEQUENCE)
          .encode(X509_CRL_VERSION-1)

@@ -195,7 +195,7 @@ class BOTAN_DLL CPUID
       static bool g_initialized;
       static bool g_little_endian;
       static size_t g_cache_line_size;
-      static u64bit g_processor_flags[2];
+      static uint64_t g_processor_flags[2];
    };
 
 }

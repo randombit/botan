@@ -44,7 +44,7 @@ void Cipher_Mode_Filter::Nonce_State::update(const InitializationVector& iv)
    m_fresh_nonce = true;
    }
 
-std::vector<byte> Cipher_Mode_Filter::Nonce_State::get()
+std::vector<uint8_t> Cipher_Mode_Filter::Nonce_State::get()
    {
    BOTAN_ASSERT(m_fresh_nonce, "The nonce is fresh for this message");
 
@@ -73,7 +73,7 @@ bool Cipher_Mode_Filter::valid_iv_length(size_t length) const
    return m_mode->valid_nonce_length(length);
    }
 
-void Cipher_Mode_Filter::write(const byte input[], size_t input_length)
+void Cipher_Mode_Filter::write(const uint8_t input[], size_t input_length)
    {
    Buffered_Filter::write(input, input_length);
    }
@@ -88,7 +88,7 @@ void Cipher_Mode_Filter::start_msg()
    m_mode->start(m_nonce.get());
    }
 
-void Cipher_Mode_Filter::buffered_block(const byte input[], size_t input_length)
+void Cipher_Mode_Filter::buffered_block(const uint8_t input[], size_t input_length)
    {
    while(input_length)
       {
@@ -104,9 +104,9 @@ void Cipher_Mode_Filter::buffered_block(const byte input[], size_t input_length)
       }
    }
 
-void Cipher_Mode_Filter::buffered_final(const byte input[], size_t input_length)
+void Cipher_Mode_Filter::buffered_final(const uint8_t input[], size_t input_length)
    {
-   secure_vector<byte> buf(input, input + input_length);
+   secure_vector<uint8_t> buf(input, input + input_length);
    m_mode->finish(buf);
    send(buf);
    }

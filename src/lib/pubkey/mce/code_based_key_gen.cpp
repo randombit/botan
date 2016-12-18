@@ -22,27 +22,27 @@ namespace {
 struct binary_matrix
    {
    public:
-      binary_matrix(u32bit m_rown, u32bit m_coln);
+      binary_matrix(uint32_t m_rown, uint32_t m_coln);
 
-      void row_xor(u32bit a, u32bit b);
+      void row_xor(uint32_t a, uint32_t b);
       secure_vector<int> row_reduced_echelon_form();
 
       /**
       * return the coefficient out of F_2
       */
-      u32bit coef(u32bit i, u32bit j)
+      uint32_t coef(uint32_t i, uint32_t j)
          {
          return (m_elem[(i) * m_rwdcnt + (j) / 32] >> (j % 32)) & 1;
          };
 
-      void set_coef_to_one(u32bit i, u32bit j)
+      void set_coef_to_one(uint32_t i, uint32_t j)
          {
-         m_elem[(i) * m_rwdcnt + (j) / 32] |= (static_cast<u32bit>(1) << ((j) % 32)) ;
+         m_elem[(i) * m_rwdcnt + (j) / 32] |= (static_cast<uint32_t>(1) << ((j) % 32)) ;
          };
 
-      void toggle_coeff(u32bit i, u32bit j)
+      void toggle_coeff(uint32_t i, uint32_t j)
          {
-         m_elem[(i) * m_rwdcnt + (j) / 32] ^= (static_cast<u32bit>(1) << ((j) % 32)) ;
+         m_elem[(i) * m_rwdcnt + (j) / 32] ^= (static_cast<uint32_t>(1) << ((j) % 32)) ;
          }
 
       void set_to_zero()
@@ -51,23 +51,23 @@ struct binary_matrix
          }
 
       //private:
-      u32bit m_rown;  // number of rows.
-      u32bit m_coln; // number of columns.
-      u32bit m_rwdcnt; // number of words in a row
-      std::vector<u32bit> m_elem;
+      uint32_t m_rown;  // number of rows.
+      uint32_t m_coln; // number of columns.
+      uint32_t m_rwdcnt; // number of words in a row
+      std::vector<uint32_t> m_elem;
    };
 
-binary_matrix::binary_matrix (u32bit rown, u32bit coln)
+binary_matrix::binary_matrix (uint32_t rown, uint32_t coln)
    {
    m_coln = coln;
    m_rown = rown;
    m_rwdcnt = 1 + ((m_coln - 1) / 32);
-   m_elem = std::vector<u32bit>(m_rown * m_rwdcnt);
+   m_elem = std::vector<uint32_t>(m_rown * m_rwdcnt);
    }
 
-void binary_matrix::row_xor(u32bit a, u32bit b)
+void binary_matrix::row_xor(uint32_t a, uint32_t b)
    {
-   u32bit i;
+   uint32_t i;
    for(i=0;i<m_rwdcnt;i++)
       {
       m_elem[a*m_rwdcnt+i]^=m_elem[b*m_rwdcnt+i];
@@ -77,7 +77,7 @@ void binary_matrix::row_xor(u32bit a, u32bit b)
 //the matrix is reduced from LSB...(from right)
 secure_vector<int> binary_matrix::row_reduced_echelon_form()
    {
-   u32bit i, failcnt, findrow, max=m_coln - 1;
+   uint32_t i, failcnt, findrow, max=m_coln - 1;
 
    secure_vector<int> perm(m_coln);
    for(i=0;i<m_coln;i++)
@@ -89,7 +89,7 @@ secure_vector<int> binary_matrix::row_reduced_echelon_form()
    for(i=0;i<m_rown;i++,max--)
       {
       findrow=0;
-      for(u32bit j=i;j<m_rown;j++)
+      for(uint32_t j=i;j<m_rown;j++)
          {
          if(coef(j,max))
             {
@@ -115,7 +115,7 @@ secure_vector<int> binary_matrix::row_reduced_echelon_form()
       else
          {
          perm[i+m_coln - m_rown] = max;
-         for(u32bit j=i+1;j<m_rown;j++)//fill the column downwards with 0's
+         for(uint32_t j=i+1;j<m_rown;j++)//fill the column downwards with 0's
             {
             if(coef(j,(max)))
                {
@@ -137,7 +137,7 @@ secure_vector<int> binary_matrix::row_reduced_echelon_form()
 
 void randomize_support(std::vector<gf2m>& L, RandomNumberGenerator& rng)
    {
-   for(u32bit i = 0; i != L.size(); ++i)
+   for(uint32_t i = 0; i != L.size(); ++i)
       {
       gf2m rnd = random_gf2m(rng);
 
@@ -146,7 +146,7 @@ void randomize_support(std::vector<gf2m>& L, RandomNumberGenerator& rng)
       }
    }
 
-std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, std::shared_ptr<GF2m_Field> sp_field, u32bit code_length, u32bit t )
+std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, std::shared_ptr<GF2m_Field> sp_field, uint32_t code_length, uint32_t t )
    {
    //L- Support
    //t- Number of errors
@@ -154,7 +154,7 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
    //m- The extension degree of the GF
    //g- The generator polynomial.
    gf2m x,y;
-   u32bit i,j,k,r,n;
+   uint32_t i,j,k,r,n;
    std::vector<int> Laux(code_length);
    n=code_length;
    r=t*sp_field->get_extension_degree();
@@ -210,12 +210,12 @@ std::unique_ptr<binary_matrix> generate_R(std::vector<gf2m> &L, polyn_gf2m* g, s
    }
 }
 
-McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, u32bit ext_deg, u32bit code_length, u32bit t)
+McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, uint32_t ext_deg, uint32_t code_length, uint32_t t)
    {
-   u32bit i, j, k, l;
+   uint32_t i, j, k, l;
    std::unique_ptr<binary_matrix> R;
 
-   u32bit codimension = t * ext_deg;
+   uint32_t codimension = t * ext_deg;
    if(code_length <= codimension)
       {
       throw Invalid_Argument("invalid McEliece parameters");
@@ -256,15 +256,15 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, u32bit e
    // speed up the syndrome computation)
    //
    //
-   std::vector<u32bit> H(bit_size_to_32bit_size(codimension) * code_length );
-   u32bit* sk = H.data();
+   std::vector<uint32_t> H(bit_size_to_32bit_size(codimension) * code_length );
+   uint32_t* sk = H.data();
    for (i = 0; i < code_length; ++i)
       {
       for (l = 0; l < t; ++l)
          {
          k = (l * ext_deg) / 32;
          j = (l * ext_deg) % 32;
-         sk[k] ^= static_cast<u32bit>(F[i].get_coef(l)) << j;
+         sk[k] ^= static_cast<uint32_t>(F[i].get_coef(l)) << j;
          if (j + ext_deg > 32)
             {
             sk[k + 1] ^= F[i].get_coef( l) >> (32 - j);
@@ -281,7 +281,7 @@ McEliece_PrivateKey generate_mceliece_key( RandomNumberGenerator & rng, u32bit e
       {
       Linv[L[i]] = i;
       }
-   std::vector<byte> pubmat (R->m_elem.size() * 4);
+   std::vector<uint8_t> pubmat (R->m_elem.size() * 4);
    for(i = 0; i < R->m_elem.size(); i++)
       {
       store_le(R->m_elem[i], &pubmat[i*4]);

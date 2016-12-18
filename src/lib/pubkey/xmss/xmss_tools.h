@@ -38,7 +38,7 @@ namespace Botan {
       template<typename T,
                typename U = typename std::enable_if<std::is_integral<T>::value,
                                                     void>::type>
-      static void concat(secure_vector<byte>& target, const T& src);
+      static void concat(secure_vector<uint8_t>& target, const T& src);
 
       /**
        * Concatenates the last n bytes of the byte representation in big-endian
@@ -53,16 +53,16 @@ namespace Botan {
       template <typename T,
                 typename U = typename std::enable_if<std::is_integral<T>::value,
                 void>::type>
-      static void concat(secure_vector<byte>& target, const T& src, size_t len);
+      static void concat(secure_vector<uint8_t>& target, const T& src, size_t len);
 
    private:
       XMSS_Tools();
    };
 
 template <typename T, typename U>
-void XMSS_Tools::concat(secure_vector<byte>& target, const T& src)
+void XMSS_Tools::concat(secure_vector<uint8_t>& target, const T& src)
    {
-   const byte* src_bytes = reinterpret_cast<const byte*>(&src);
+   const uint8_t* src_bytes = reinterpret_cast<const uint8_t*>(&src);
    if(CPUID::is_little_endian())
       {
       std::reverse_copy(src_bytes,
@@ -79,7 +79,7 @@ void XMSS_Tools::concat(secure_vector<byte>& target, const T& src)
 
 
 template <typename T, typename U>
-void XMSS_Tools::concat(secure_vector<byte>& target,
+void XMSS_Tools::concat(secure_vector<uint8_t>& target,
                         const T& src,
                         size_t len)
    {
@@ -89,7 +89,7 @@ void XMSS_Tools::concat(secure_vector<byte>& target,
       target.resize(target.size() + len - sizeof(src), 0);
       }
 
-   const byte* src_bytes = reinterpret_cast<const byte*>(&src);
+   const uint8_t* src_bytes = reinterpret_cast<const uint8_t*>(&src);
    if(CPUID::is_little_endian())
       {
       std::reverse_copy(src_bytes,

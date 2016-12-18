@@ -42,14 +42,14 @@ void Keccak_1600::clear()
    m_S_pos = 0;
    }
 
-void Keccak_1600::add_data(const byte input[], size_t length)
+void Keccak_1600::add_data(const uint8_t input[], size_t length)
    {
    m_S_pos = SHA_3::absorb(m_bitrate, m_S, m_S_pos, input, length);
    }
 
-void Keccak_1600::final_result(byte output[])
+void Keccak_1600::final_result(uint8_t output[])
    {
-   std::vector<byte> padding(m_bitrate / 8 - m_S_pos);
+   std::vector<uint8_t> padding(m_bitrate / 8 - m_S_pos);
 
    padding[0] = 0x01;
    padding[padding.size()-1] |= 0x80;

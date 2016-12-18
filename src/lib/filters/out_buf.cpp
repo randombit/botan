@@ -14,7 +14,7 @@ namespace Botan {
 /*
 * Read data from a message
 */
-size_t Output_Buffers::read(byte output[], size_t length,
+size_t Output_Buffers::read(uint8_t output[], size_t length,
                             Pipe::message_id msg)
    {
    SecureQueue* q = get(msg);
@@ -26,7 +26,7 @@ size_t Output_Buffers::read(byte output[], size_t length,
 /*
 * Peek at data in a message
 */
-size_t Output_Buffers::peek(byte output[], size_t length,
+size_t Output_Buffers::peek(uint8_t output[], size_t length,
                             size_t stream_offset,
                             Pipe::message_id msg) const
    {

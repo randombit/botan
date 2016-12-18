@@ -43,7 +43,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * @param key_bits DER encoded public key bits
       */
       EC_PublicKey(const AlgorithmIdentifier& alg_id,
-                   const std::vector<byte>& key_bits);
+                   const std::vector<uint8_t>& key_bits);
 
       /**
       * Get the public point of this key.
@@ -55,7 +55,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<byte> public_key_bits() const override;
+      std::vector<uint8_t> public_key_bits() const override;
 
       bool check_key(RandomNumberGenerator& rng,
                      bool strong) const override;
@@ -78,7 +78,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * Return the DER encoding of this keys domain in whatever format
       * is preset for this particular key
       */
-      std::vector<byte> DER_domain() const
+      std::vector<uint8_t> DER_domain() const
          { return domain().DER_encode(domain_format()); }
 
       /**
@@ -129,10 +129,10 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
       * multiplying directly with x (as in ECDSA).
       */
       EC_PrivateKey(const AlgorithmIdentifier& alg_id,
-                    const secure_vector<byte>& key_bits,
+                    const secure_vector<uint8_t>& key_bits,
                     bool with_modular_inverse=false);
 
-      secure_vector<byte> private_key_bits() const override;
+      secure_vector<uint8_t> private_key_bits() const override;
 
       /**
       * Get the private key value of this key object.

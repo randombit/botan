@@ -16,14 +16,14 @@ namespace Botan {
 
 namespace {
 
-const u64bit blake2b_IV[BLAKE2B_IVU64COUNT] = {
+const uint64_t blake2b_IV[BLAKE2B_IVU64COUNT] = {
    0x6a09e667f3bcc908ULL, 0xbb67ae8584caa73bULL,
    0x3c6ef372fe94f82bULL, 0xa54ff53a5f1d36f1ULL,
    0x510e527fade682d1ULL, 0x9b05688c2b3e6c1fULL,
    0x1f83d9abfb41bd6bULL, 0x5be0cd19137e2179ULL
 };
 
-const u64bit blake2b_sigma[12][16] = {
+const uint64_t blake2b_sigma[12][16] = {
    {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15 } ,
    { 14, 10,  4,  8,  9, 15, 13,  6,  1, 12,  0,  2, 11,  7,  5,  3 } ,
    { 11,  8, 12,  0,  5,  2, 15, 13, 10, 14,  3,  6,  7,  1,  9,  4 } ,
@@ -57,17 +57,17 @@ Blake2b::Blake2b(size_t output_bits) :
 void Blake2b::state_init()
    {
    std::copy(std::begin(blake2b_IV), std::end(blake2b_IV), m_H.begin());
-   m_H[0] ^= 0x01010000 ^ static_cast<byte>(output_length());
+   m_H[0] ^= 0x01010000 ^ static_cast<uint8_t>(output_length());
    m_T[0] = m_T[1] = 0;
    m_F[0] = m_F[1] = 0;
    }
 
 void Blake2b::compress(bool lastblock)
    {
-   u64bit m[16];
-   u64bit v[16];
-   u64bit* const H = m_H.data();
-   const byte* const block = m_buffer.data();
+   uint64_t m[16];
+   uint64_t v[16];
+   uint64_t* const H = m_H.data();
+   const uint8_t* const block = m_buffer.data();
 
    if(lastblock)
       {
@@ -76,7 +76,7 @@ void Blake2b::compress(bool lastblock)
 
    for(int i = 0; i < 16; i++)
       {
-      m[i] = load_le<u64bit>(block, i);
+      m[i] = load_le<uint64_t>(block, i);
       }
 
    for(int i = 0; i < 8; i++)
@@ -93,13 +93,13 @@ void Blake2b::compress(bool lastblock)
 #define G(r, i, a, b, c, d)                     \
    do {                                         \
    a = a + b + m[blake2b_sigma[r][2 * i + 0]];  \
-   d = rotate_right<u64bit>(d ^ a, 32);         \
+   d = rotate_right<uint64_t>(d ^ a, 32);         \
    c = c + d;                                   \
-   b = rotate_right<u64bit>(b ^ c, 24);         \
+   b = rotate_right<uint64_t>(b ^ c, 24);         \
    a = a + b + m[blake2b_sigma[r][2 * i + 1]];  \
-   d = rotate_right<u64bit>(d ^ a, 16);         \
+   d = rotate_right<uint64_t>(d ^ a, 16);         \
    c = c + d;                                   \
-   b = rotate_right<u64bit>(b ^ c, 63);         \
+   b = rotate_right<uint64_t>(b ^ c, 63);         \
    } while(0)
 
 #define ROUND(r)                                \
@@ -136,7 +136,7 @@ void Blake2b::compress(bool lastblock)
 #undef ROUND
    }
 
-void Blake2b::increment_counter(const u64bit inc)
+void Blake2b::increment_counter(const uint64_t inc)
    {
    m_T[0] += inc;
    if(m_T[0] < inc)
@@ -145,14 +145,14 @@ void Blake2b::increment_counter(const u64bit inc)
       }
    }
 
-void Blake2b::add_data(const byte input[], size_t length)
+void Blake2b::add_data(const uint8_t input[], size_t length)
    {
    if(!input || length == 0)
       {
       return;
       }
 
-   byte* const buffer = m_buffer.data();
+   uint8_t* const buffer = m_buffer.data();
 
    while(length > 0)
       {
@@ -175,22 +175,22 @@ void Blake2b::add_data(const byte input[], size_t length)
       }
    }
 
-void Blake2b::final_result(byte output[])
+void Blake2b::final_result(uint8_t output[])
    {
    if(!output)
       {
       return;
       }
 
-   byte* const buffer = m_buffer.data();
-   const u64bit* const H = static_cast<const u64bit*>(m_H.data());
-   u16bit outlen = static_cast<u16bit>(output_length());
+   uint8_t* const buffer = m_buffer.data();
+   const uint64_t* const H = static_cast<const uint64_t*>(m_H.data());
+   uint16_t outlen = static_cast<uint16_t>(output_length());
 
    std::memset(buffer + m_buflen, 0, BLAKE2B_BLOCKBYTES - m_buflen);
    increment_counter(m_buflen);
    compress(true);
 
-   for (u16bit i = 0; i < outlen; i++)
+   for (uint16_t i = 0; i < outlen; i++)
       {
       output[i] = (H[i >> 3] >> (8 * (i & 7))) & 0xFF;
       }

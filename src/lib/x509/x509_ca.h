@@ -54,7 +54,7 @@ class BOTAN_DLL X509_CA
       * @return new CRL
       */
       X509_CRL new_crl(RandomNumberGenerator& rng,
-                       u32bit next_update = 0) const;
+                       uint32_t next_update = 0) const;
 
       /**
       * Create a new CRL by with additional entries.
@@ -67,7 +67,7 @@ class BOTAN_DLL X509_CA
       X509_CRL update_crl(const X509_CRL& last_crl,
                           const std::vector<CRL_Entry>& new_entries,
                           RandomNumberGenerator& rng,
-                          u32bit next_update = 0) const;
+                          uint32_t next_update = 0) const;
 
       /**
       * Interface for creating new certificates
@@ -85,7 +85,7 @@ class BOTAN_DLL X509_CA
       static X509_Certificate make_cert(PK_Signer* signer,
                                         RandomNumberGenerator& rng,
                                         const AlgorithmIdentifier& sig_algo,
-                                        const std::vector<byte>& pub_key,
+                                        const std::vector<uint8_t>& pub_key,
                                         const X509_Time& not_before,
                                         const X509_Time& not_after,
                                         const X509_DN& issuer_dn,
@@ -119,7 +119,7 @@ class BOTAN_DLL X509_CA
       ~X509_CA();
    private:
       X509_CRL make_crl(const std::vector<CRL_Entry>& entries,
-                        u32bit crl_number, u32bit next_update,
+                        uint32_t crl_number, uint32_t next_update,
                         RandomNumberGenerator& rng) const;
 
       AlgorithmIdentifier m_ca_sig_algo;

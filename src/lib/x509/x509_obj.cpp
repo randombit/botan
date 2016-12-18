@@ -39,7 +39,7 @@ X509_Object::X509_Object(const std::string& file, const std::string& labels)
 /*
 * Create a generic X.509 object
 */
-X509_Object::X509_Object(const std::vector<byte>& vec, const std::string& labels)
+X509_Object::X509_Object(const std::vector<uint8_t>& vec, const std::string& labels)
    {
    DataSource_Memory stream(vec.data(), vec.size());
    init(stream, labels);
@@ -112,7 +112,7 @@ void X509_Object::decode_from(BER_Decoder& from)
 /*
 * Return a BER encoded X.509 object
 */
-std::vector<byte> X509_Object::BER_encode() const
+std::vector<uint8_t> X509_Object::BER_encode() const
    {
    DER_Encoder der;
    encode_into(der);
@@ -130,7 +130,7 @@ std::string X509_Object::PEM_encode() const
 /*
 * Return the TBS data
 */
-std::vector<byte> X509_Object::tbs_data() const
+std::vector<uint8_t> X509_Object::tbs_data() const
    {
    return ASN1::put_in_sequence(m_tbs_bits);
    }
@@ -138,7 +138,7 @@ std::vector<byte> X509_Object::tbs_data() const
 /*
 * Return the signature of this object
 */
-std::vector<byte> X509_Object::signature() const
+std::vector<uint8_t> X509_Object::signature() const
    {
    return m_sig;
    }
@@ -212,10 +212,10 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const
 /*
 * Apply the X.509 SIGNED macro
 */
-std::vector<byte> X509_Object::make_signed(PK_Signer* signer,
+std::vector<uint8_t> X509_Object::make_signed(PK_Signer* signer,
                                             RandomNumberGenerator& rng,
                                             const AlgorithmIdentifier& algo,
-                                            const secure_vector<byte>& tbs_bits)
+                                            const secure_vector<uint8_t>& tbs_bits)
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)

@@ -94,14 +94,14 @@ const std::vector<gf2m>& log_table(size_t deg)
 
 }
 
-u32bit encode_gf2m(gf2m to_enc, byte* mem)
+uint32_t encode_gf2m(gf2m to_enc, uint8_t* mem)
    {
    mem[0] = to_enc >> 8;
    mem[1] = to_enc & 0xFF;
    return sizeof(to_enc);
    }
 
-gf2m decode_gf2m(const byte* mem)
+gf2m decode_gf2m(const uint8_t* mem)
    {
    gf2m result;
    result = mem[0] << 8;
@@ -118,9 +118,9 @@ GF2m_Field::GF2m_Field(size_t extdeg) : m_gf_extension_degree(extdeg),
 
 gf2m GF2m_Field::gf_div(gf2m x, gf2m y) const
    {
-   const s32bit sub_res = static_cast<s32bit>(gf_log(x) - static_cast<s32bit>(gf_log(y)));
-   const s32bit modq_res = static_cast<s32bit>(_gf_modq_1(sub_res));
-   const s32bit div_res = static_cast<s32bit>(x) ? static_cast<s32bit>(gf_exp(modq_res)) : 0;
+   const int32_t sub_res = static_cast<int32_t>(gf_log(x) - static_cast<int32_t>(gf_log(y)));
+   const int32_t modq_res = static_cast<int32_t>(_gf_modq_1(sub_res));
+   const int32_t div_res = static_cast<int32_t>(x) ? static_cast<int32_t>(gf_exp(modq_res)) : 0;
    return static_cast<gf2m>(div_res);
    }
 

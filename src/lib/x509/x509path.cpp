@@ -443,7 +443,7 @@ PKIX::build_certificate_path(std::vector<std::shared_ptr<const X509_Certificate>
       {
       const X509_Certificate& last = *cert_path.back();
       const X509_DN issuer_dn = last.issuer_dn();
-      const std::vector<byte> auth_key_id = last.authority_key_id();
+      const std::vector<uint8_t> auth_key_id = last.authority_key_id();
 
       std::shared_ptr<const X509_Certificate> issuer;
       bool trusted_issuer = false;

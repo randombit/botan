@@ -43,7 +43,7 @@ namespace Botan {
 
 namespace {
 
-secure_vector<byte> PKCS8_for_openssl(const EC_PrivateKey& ec)
+secure_vector<uint8_t> PKCS8_for_openssl(const EC_PrivateKey& ec)
    {
    const PointGFp& pub_key = ec.public_point();
    const BigInt& priv_key = ec.private_value();
@@ -123,8 +123,8 @@ class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EM
 
          ::EC_KEY_set_group(m_ossl_ec.get(), grp.get());
 
-         const secure_vector<byte> enc = EC2OSP(ecdsa.public_point(), PointGFp::UNCOMPRESSED);
-         const byte* enc_ptr = enc.data();
+         const secure_vector<uint8_t> enc = EC2OSP(ecdsa.public_point(), PointGFp::UNCOMPRESSED);
+         const uint8_t* enc_ptr = enc.data();
          EC_KEY* key_ptr = m_ossl_ec.get();
          if(!::o2i_ECPublicKey(&key_ptr, &enc_ptr, enc.size()))
             throw OpenSSL_Error("o2i_ECPublicKey");
@@ -137,8 +137,8 @@ class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EM
 
       bool with_recovery() const override { return false; }
 
-      bool verify(const byte msg[], size_t msg_len,
-                  const byte sig_bytes[], size_t sig_len) override
+      bool verify(const uint8_t msg[], size_t msg_len,
+                  const uint8_t sig_bytes[], size_t sig_len) override
          {
          const size_t order_bytes = (m_order_bits + 7) / 8;
          if(sig_len != 2 * order_bytes)
@@ -168,8 +168,8 @@ class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
          PK_Ops::Signature_with_EMSA(emsa),
          m_ossl_ec(nullptr, ::EC_KEY_free)
          {
-         const secure_vector<byte> der = PKCS8_for_openssl(ecdsa);
-         const byte* der_ptr = der.data();
+         const secure_vector<uint8_t> der = PKCS8_for_openssl(ecdsa);
+         const uint8_t* der_ptr = der.data();
          m_ossl_ec.reset(d2i_ECPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_ossl_ec)
             throw OpenSSL_Error("d2i_ECPrivateKey");
@@ -178,7 +178,7 @@ class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
          m_order_bits = ::EC_GROUP_get_degree(group);
          }
 
-      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                    RandomNumberGenerator&) override
          {
          std::unique_ptr<ECDSA_SIG, std::function<void (ECDSA_SIG*)>> sig(nullptr, ECDSA_SIG_free);
@@ -190,7 +190,7 @@ class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
          const size_t order_bytes = (m_order_bits + 7) / 8;
          const size_t r_bytes = BN_num_bytes(sig->r);
          const size_t s_bytes = BN_num_bytes(sig->s);
-         secure_vector<byte> sigval(2*order_bytes);
+         secure_vector<uint8_t> sigval(2*order_bytes);
          BN_bn2bin(sig->r, &sigval[order_bytes - r_bytes]);
          BN_bn2bin(sig->s, &sigval[2*order_bytes - s_bytes]);
          return sigval;
@@ -240,18 +240,18 @@ class OpenSSL_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
       OpenSSL_ECDH_KA_Operation(const ECDH_PrivateKey& ecdh, const std::string& kdf) :
          PK_Ops::Key_Agreement_with_KDF(kdf), m_ossl_ec(::EC_KEY_new(), ::EC_KEY_free)
          {
-         const secure_vector<byte> der = PKCS8_for_openssl(ecdh);
-         const byte* der_ptr = der.data();
+         const secure_vector<uint8_t> der = PKCS8_for_openssl(ecdh);
+         const uint8_t* der_ptr = der.data();
          m_ossl_ec.reset(d2i_ECPrivateKey(nullptr, &der_ptr, der.size()));
          if(!m_ossl_ec)
             throw OpenSSL_Error("d2i_ECPrivateKey");
          }
 
-      secure_vector<byte> raw_agree(const byte w[], size_t w_len) override
+      secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
          const EC_GROUP* group = ::EC_KEY_get0_group(m_ossl_ec.get());
          const size_t out_len = (::EC_GROUP_get_degree(group) + 7) / 8;
-         secure_vector<byte> out(out_len);
+         secure_vector<uint8_t> out(out_len);
          EC_POINT* pub_key = ::EC_POINT_new(group);
 
          if(!pub_key)

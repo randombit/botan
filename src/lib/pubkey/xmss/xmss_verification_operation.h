@@ -35,10 +35,10 @@ namespace Botan {
 
       virtual ~XMSS_Verification_Operation() {}
 
-      virtual bool is_valid_signature(const byte sig[],
+      virtual bool is_valid_signature(const uint8_t sig[],
                                       size_t sig_len) override;
 
-      void update(const byte msg[], size_t msg_len) override;
+      void update(const uint8_t msg[], size_t msg_len) override;
 
    private:
       /**
@@ -53,11 +53,11 @@ namespace Botan {
        * @return An n-byte string holding the value of the root of a tree
        *         defined by the input parameters.
        **/
-      secure_vector<byte> root_from_signature(
+      secure_vector<uint8_t> root_from_signature(
          const XMSS_Signature& sig,
-         const secure_vector<byte>& msg,
+         const secure_vector<uint8_t>& msg,
          XMSS_Address& ards,
-         const secure_vector<byte>& seed);
+         const secure_vector<uint8_t>& seed);
 
       /**
        * Algorithm 14: "XMSS_verify"
@@ -70,11 +70,11 @@ namespace Botan {
        * @return true if signature sig is valid for msg, false otherwise.
        **/
       bool verify(const XMSS_Signature& sig,
-                  const secure_vector<byte>& msg,
+                  const secure_vector<uint8_t>& msg,
                   const XMSS_PublicKey& pub_key);
 
       XMSS_PublicKey m_pub_key;
-      secure_vector<byte> m_msg_buf;
+      secure_vector<uint8_t> m_msg_buf;
    };
 
 }

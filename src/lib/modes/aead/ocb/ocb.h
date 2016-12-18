@@ -28,7 +28,7 @@ class L_computer;
 class BOTAN_DLL OCB_Mode : public AEAD_Mode
    {
    public:
-      void set_associated_data(const byte ad[], size_t ad_len) override;
+      void set_associated_data(const uint8_t ad[], size_t ad_len) override;
 
       std::string name() const override;
 
@@ -58,19 +58,19 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
 
       size_t m_block_index = 0;
 
-      secure_vector<byte> m_checksum;
-      secure_vector<byte> m_offset;
-      secure_vector<byte> m_ad_hash;
+      secure_vector<uint8_t> m_checksum;
+      secure_vector<uint8_t> m_offset;
+      secure_vector<uint8_t> m_ad_hash;
    private:
-      void start_msg(const byte nonce[], size_t nonce_len) override;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
 
-      void key_schedule(const byte key[], size_t length) override;
+      void key_schedule(const uint8_t key[], size_t length) override;
 
-      secure_vector<byte> update_nonce(const byte nonce[], size_t nonce_len);
+      secure_vector<uint8_t> update_nonce(const uint8_t nonce[], size_t nonce_len);
 
       size_t m_tag_size = 0;
-      secure_vector<byte> m_last_nonce;
-      secure_vector<byte> m_stretch;
+      secure_vector<uint8_t> m_last_nonce;
+      secure_vector<uint8_t> m_stretch;
    };
 
 class BOTAN_DLL OCB_Encryption final : public OCB_Mode
@@ -90,9 +90,9 @@ class BOTAN_DLL OCB_Encryption final : public OCB_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    private:
-      void encrypt(byte input[], size_t blocks);
+      void encrypt(uint8_t input[], size_t blocks);
    };
 
 class BOTAN_DLL OCB_Decryption final : public OCB_Mode
@@ -115,9 +115,9 @@ class BOTAN_DLL OCB_Decryption final : public OCB_Mode
 
       size_t process(uint8_t buf[], size_t size) override;
 
-      void finish(secure_vector<byte>& final_block, size_t offset = 0) override;
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    private:
-      void decrypt(byte input[], size_t blocks);
+      void decrypt(uint8_t input[], size_t blocks);
    };
 
 }

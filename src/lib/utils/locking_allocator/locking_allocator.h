@@ -34,7 +34,7 @@ class BOTAN_DLL mlock_allocator
 
       mutex_type m_mutex;
       std::vector<std::pair<size_t, size_t>> m_freelist;
-      byte* m_pool = nullptr;
+      uint8_t* m_pool = nullptr;
       size_t m_poolsize = 0;
    };
 

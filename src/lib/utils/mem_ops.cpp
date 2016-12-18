@@ -29,7 +29,7 @@ void secure_scrub_memory(void* ptr, size_t n)
    static void* (*const volatile memset_ptr)(void*, int, size_t) = std::memset;
    (memset_ptr)(ptr, 0, n);
 #else
-   volatile byte* p = reinterpret_cast<volatile byte*>(ptr);
+   volatile uint8_t* p = reinterpret_cast<volatile uint8_t*>(ptr);
 
    for(size_t i = 0; i != n; ++i)
       p[i] = 0;

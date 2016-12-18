@@ -88,13 +88,13 @@ std::string Data_Store::get1(const std::string& key,
 /*
 * Get a single std::vector atom
 */
-std::vector<byte>
+std::vector<uint8_t>
 Data_Store::get1_memvec(const std::string& key) const
    {
    std::vector<std::string> vals = get(key);
 
    if(vals.empty())
-      return std::vector<byte>();
+      return std::vector<uint8_t>();
 
    if(vals.size() > 1)
       throw Invalid_State("Data_Store::get1_memvec: Multiple values for " +
@@ -104,18 +104,17 @@ Data_Store::get1_memvec(const std::string& key) const
    }
 
 /*
-* Get a single u32bit atom
+* Get a single uint32_t atom
 */
-u32bit Data_Store::get1_u32bit(const std::string& key,
-                               u32bit default_val) const
+uint32_t Data_Store::get1_uint32(const std::string& key,
+                                 uint32_t default_val) const
    {
    std::vector<std::string> vals = get(key);
 
    if(vals.empty())
       return default_val;
    else if(vals.size() > 1)
-      throw Invalid_State("Data_Store::get1_u32bit: Multiple values for " +
-                          key);
+      throw Invalid_State("Data_Store::get1_uint32: Multiple values for " + key);
 
    return to_u32bit(vals[0]);
    }
@@ -131,7 +130,7 @@ void Data_Store::add(const std::string& key, const std::string& val)
 /*
 * Insert a single key and value
 */
-void Data_Store::add(const std::string& key, u32bit val)
+void Data_Store::add(const std::string& key, uint32_t val)
    {
    add(key, std::to_string(val));
    }
@@ -139,12 +138,12 @@ void Data_Store::add(const std::string& key, u32bit val)
 /*
 * Insert a single key and value
 */
-void Data_Store::add(const std::string& key, const secure_vector<byte>& val)
+void Data_Store::add(const std::string& key, const secure_vector<uint8_t>& val)
    {
    add(key, hex_encode(val.data(), val.size()));
    }
 
-void Data_Store::add(const std::string& key, const std::vector<byte>& val)
+void Data_Store::add(const std::string& key, const std::vector<uint8_t>& val)
    {
    add(key, hex_encode(val.data(), val.size()));
    }

@@ -35,7 +35,7 @@ class ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
          m_l_times_priv = inverse_mod(m_cofactor, key.domain().get_order()) * key.private_value();
          }
 
-      secure_vector<byte> raw_agree(const byte w[], size_t w_len) override
+      secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
          PointGFp point = OS2ECP(w, w_len, m_curve);
          // TODO: add blinding

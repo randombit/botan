@@ -144,7 +144,7 @@ class FFI_Unit_Tests : public Test
                {
                result.test_eq("MAC output length", output_len, 32);
 
-               const byte mac_key[] = { 0xAA, 0xBB, 0xCC, 0xDD };
+               const uint8_t mac_key[] = { 0xAA, 0xBB, 0xCC, 0xDD };
                outbuf.resize(output_len);
 
                // Test that after clear or final the object can be reused
@@ -684,12 +684,12 @@ class FFI_Unit_Tests : public Test
                result.test_eq("algo name", std::string(namebuf), "McEliece");
                }
 
-            size_t i = 0;
+            const uint64_t zero_seq = 0;
             uint8_t ad[8];
-            Botan::store_be(static_cast<Botan::u64bit>(i), ad);
+            Botan::store_be(zero_seq, ad);
             const size_t ad_len = sizeof(ad);
 
-            const Botan::secure_vector<byte> plaintext = Test::rng().random_vec(Test::rng().next_byte());
+            const Botan::secure_vector<uint8_t> plaintext = Test::rng().random_vec(Test::rng().next_byte());
             size_t plaintext_len = plaintext.size();
             size_t ciphertext_len = 0;
 

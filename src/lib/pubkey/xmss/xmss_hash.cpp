@@ -33,9 +33,9 @@ XMSS_Hash::XMSS_Hash(const std::string& h_func_name) :
    }
 
 void
-XMSS_Hash::h(secure_vector<byte>& result,
-             const secure_vector<byte>& key,
-             const secure_vector<byte>& data)
+XMSS_Hash::h(secure_vector<uint8_t>& result,
+             const secure_vector<uint8_t>& key,
+             const secure_vector<uint8_t>& data)
    {
    m_hash->update(m_zero_padding);
    m_hash->update(m_id_h);
@@ -44,9 +44,9 @@ XMSS_Hash::h(secure_vector<byte>& result,
    m_hash->final(result);
    }
 
-void XMSS_Hash::h_msg_init(const secure_vector<byte>& randomness,
-                           const secure_vector<byte>& root,
-                           const secure_vector<byte>& index_bytes)
+void XMSS_Hash::h_msg_init(const secure_vector<uint8_t>& randomness,
+                           const secure_vector<uint8_t>& root,
+                           const secure_vector<uint8_t>& index_bytes)
    {
    m_msg_hash->clear();
    m_msg_hash->update(m_zero_padding);
@@ -56,26 +56,26 @@ void XMSS_Hash::h_msg_init(const secure_vector<byte>& randomness,
    m_msg_hash->update(index_bytes);
    }
 
-void XMSS_Hash::h_msg_update(const secure_vector<byte>& data)
+void XMSS_Hash::h_msg_update(const secure_vector<uint8_t>& data)
    {
    m_msg_hash->update(data);
    }
 
-void XMSS_Hash::h_msg_update(const byte data[], size_t size)
+void XMSS_Hash::h_msg_update(const uint8_t data[], size_t size)
    {
    m_msg_hash->update(data, size);
    }
 
-secure_vector<byte> XMSS_Hash::h_msg_final()
+secure_vector<uint8_t> XMSS_Hash::h_msg_final()
    {
    return m_msg_hash->final();
    }
 
-secure_vector<byte>
-XMSS_Hash::h_msg(const secure_vector<byte>& randomness,
-                 const secure_vector<byte>& root,
-                 const secure_vector<byte>& index_bytes,
-                 const secure_vector<byte>& data)
+secure_vector<uint8_t>
+XMSS_Hash::h_msg(const secure_vector<uint8_t>& randomness,
+                 const secure_vector<uint8_t>& root,
+                 const secure_vector<uint8_t>& index_bytes,
+                 const secure_vector<uint8_t>& data)
    {
    h_msg_init(randomness, root, index_bytes);
    m_msg_hash->update(data);

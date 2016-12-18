@@ -39,7 +39,7 @@ PKCS10_Request::PKCS10_Request(const std::string& fsname) :
 /*
 * PKCS10_Request Constructor
 */
-PKCS10_Request::PKCS10_Request(const std::vector<byte>& in) :
+PKCS10_Request::PKCS10_Request(const std::vector<uint8_t>& in) :
    X509_Object(in, "CERTIFICATE REQUEST/NEW CERTIFICATE REQUEST")
    {
    do_decode();
@@ -143,7 +143,7 @@ X509_DN PKCS10_Request::subject_dn() const
 /*
 * Return the public key of the requestor
 */
-std::vector<byte> PKCS10_Request::raw_public_key() const
+std::vector<uint8_t> PKCS10_Request::raw_public_key() const
    {
    DataSource_Memory source(m_info.get1("X509.Certificate.public_key"));
    return unlock(PEM_Code::decode_check_label(source, "PUBLIC KEY"));

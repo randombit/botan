@@ -20,7 +20,7 @@ namespace {
 /*
 * Serpent's Linear Transform
 */
-inline void transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
+inline void transform(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3)
    {
    B0  = rotate_left(B0, 13);   B2  = rotate_left(B2, 3);
    B1 ^= B0 ^ B2;               B3 ^= B2 ^ (B0 << 3);
@@ -32,7 +32,7 @@ inline void transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
 /*
 * Serpent's Inverse Linear Transform
 */
-inline void i_transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
+inline void i_transform(uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3)
    {
    B2  = rotate_right(B2, 22);  B0  = rotate_right(B0, 5);
    B2 ^= B3 ^ (B1 << 7);        B0 ^= B1 ^ B3;
@@ -55,7 +55,7 @@ inline void i_transform(u32bit& B0, u32bit& B1, u32bit& B2, u32bit& B3)
 /*
 * Serpent Encryption
 */
-void Serpent::encrypt_n(const byte in[], byte out[], size_t blocks) const
+void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
 #if defined(BOTAN_HAS_SERPENT_SIMD)
    if(CPUID::has_simd_32())
@@ -72,7 +72,7 @@ void Serpent::encrypt_n(const byte in[], byte out[], size_t blocks) const
 
    BOTAN_PARALLEL_SIMD_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u32bit B0, B1, B2, B3;
+      uint32_t B0, B1, B2, B3;
       load_le(in + 16*i, B0, B1, B2, B3);
 
       key_xor( 0,B0,B1,B2,B3); SBoxE1(B0,B1,B2,B3); transform(B0,B1,B2,B3);
@@ -115,7 +115,7 @@ void Serpent::encrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Serpent Decryption
 */
-void Serpent::decrypt_n(const byte in[], byte out[], size_t blocks) const
+void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
 #if defined(BOTAN_HAS_SERPENT_SIMD)
    if(CPUID::has_simd_32())
@@ -132,7 +132,7 @@ void Serpent::decrypt_n(const byte in[], byte out[], size_t blocks) const
 
    BOTAN_PARALLEL_SIMD_FOR(size_t i = 0; i < blocks; ++i)
       {
-      u32bit B0, B1, B2, B3;
+      uint32_t B0, B1, B2, B3;
       load_le(in + 16*i, B0, B1, B2, B3);
 
       key_xor(32,B0,B1,B2,B3);  SBoxD8(B0,B1,B2,B3); key_xor(31,B0,B1,B2,B3);
@@ -179,19 +179,19 @@ void Serpent::decrypt_n(const byte in[], byte out[], size_t blocks) const
 /*
 * Serpent Key Schedule
 */
-void Serpent::key_schedule(const byte key[], size_t length)
+void Serpent::key_schedule(const uint8_t key[], size_t length)
    {
-   const u32bit PHI = 0x9E3779B9;
+   const uint32_t PHI = 0x9E3779B9;
 
-   secure_vector<u32bit> W(140);
+   secure_vector<uint32_t> W(140);
    for(size_t i = 0; i != length / 4; ++i)
-      W[i] = load_le<u32bit>(key, i);
+      W[i] = load_le<uint32_t>(key, i);
 
-   W[length / 4] |= u32bit(1) << ((length%4)*8);
+   W[length / 4] |= uint32_t(1) << ((length%4)*8);
 
    for(size_t i = 8; i != 140; ++i)
       {
-      u32bit wi = W[i-8] ^ W[i-5] ^ W[i-3] ^ W[i-1] ^ PHI ^ u32bit(i-8);
+      uint32_t wi = W[i-8] ^ W[i-5] ^ W[i-3] ^ W[i-1] ^ PHI ^ uint32_t(i-8);
       W[i] = rotate_left(wi, 11);
       }
 

@@ -22,7 +22,7 @@ namespace Botan {
 */
 std::string BOTAN_DLL generate_bcrypt(const std::string& password,
                                       RandomNumberGenerator& rng,
-                                      u16bit work_factor = 10);
+                                      uint16_t work_factor = 10);
 
 /**
 * Check a previously created password hash

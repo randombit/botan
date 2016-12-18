@@ -74,10 +74,10 @@ class Handshake_State
       */
       void set_expected_next(Handshake_Type msg_type);
 
-      std::pair<Handshake_Type, std::vector<byte>>
+      std::pair<Handshake_Type, std::vector<uint8_t>>
          get_next_handshake_msg();
 
-      std::vector<byte> session_ticket() const;
+      std::vector<uint8_t> session_ticket() const;
 
       std::pair<std::string, Signature_Format>
          parse_sig_format(const Public_Key& key,
@@ -162,7 +162,7 @@ class Handshake_State
 
       void compute_session_keys();
 
-      void compute_session_keys(const secure_vector<byte>& resume_master_secret);
+      void compute_session_keys(const secure_vector<uint8_t>& resume_master_secret);
 
       Handshake_Hash& hash() { return m_handshake_hash; }
 
@@ -175,8 +175,8 @@ class Handshake_State
 
       std::unique_ptr<Handshake_IO> m_handshake_io;
 
-      u32bit m_hand_expecting_mask = 0;
-      u32bit m_hand_received_mask = 0;
+      uint32_t m_hand_expecting_mask = 0;
+      uint32_t m_hand_received_mask = 0;
       Protocol_Version m_version;
       Ciphersuite m_ciphersuite;
       Session_Keys m_session_keys;

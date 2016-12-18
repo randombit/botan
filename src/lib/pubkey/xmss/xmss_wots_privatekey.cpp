@@ -14,10 +14,10 @@
 namespace Botan {
 
 wots_keysig_t
-XMSS_WOTS_PrivateKey::generate(const secure_vector<byte>& priv_seed)
+XMSS_WOTS_PrivateKey::generate(const secure_vector<uint8_t>& priv_seed)
    {
    wots_keysig_t priv_key(m_wots_params.len(),
-                          secure_vector<byte>(0));
+                          secure_vector<uint8_t>(0));
 
    for(size_t i = 0; i < m_wots_params.len(); i++)
       {
@@ -57,11 +57,11 @@ XMSS_WOTS_PrivateKey::generate_public_key(XMSS_WOTS_PublicKey& pub_key,
 
 wots_keysig_t
 XMSS_WOTS_PrivateKey::sign(
-   const secure_vector<byte>& msg,
+   const secure_vector<uint8_t>& msg,
    XMSS_Address& adrs)
 
    {
-   secure_vector<byte> msg_digest
+   secure_vector<uint8_t> msg_digest
       {
       m_wots_params.base_w(msg, m_wots_params.len_1())
       };

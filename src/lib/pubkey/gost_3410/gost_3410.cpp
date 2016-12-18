@@ -15,14 +15,14 @@
 
 namespace Botan {
 
-std::vector<byte> GOST_3410_PublicKey::public_key_bits() const
+std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const
    {
    const BigInt x = public_point().get_affine_x();
    const BigInt y = public_point().get_affine_y();
 
    size_t part_size = std::max(x.bytes(), y.bytes());
 
-   std::vector<byte> bits(2*part_size);
+   std::vector<uint8_t> bits(2*part_size);
 
    x.binary_encode(&bits[part_size - x.bytes()]);
    y.binary_encode(&bits[2*part_size - y.bytes()]);
@@ -39,7 +39,7 @@ std::vector<byte> GOST_3410_PublicKey::public_key_bits() const
 
 AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
    {
-   std::vector<byte> params =
+   std::vector<uint8_t> params =
       DER_Encoder().start_cons(SEQUENCE)
          .encode(OID(domain().get_oid()))
          .end_cons()
@@ -49,7 +49,7 @@ AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
    }
 
 GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
-                                         const std::vector<byte>& key_bits)
+                                         const std::vector<uint8_t>& key_bits)
    {
    OID ecc_param_id;
 
@@ -58,7 +58,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
 
    m_domain_params = EC_Group(ecc_param_id);
 
-   secure_vector<byte> bits;
+   secure_vector<uint8_t> bits;
    BER_Decoder(key_bits).decode(bits, OCTET_STRING);
 
    const size_t part_size = bits.size() / 2;
@@ -81,9 +81,9 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
 
 namespace {
 
-BigInt decode_le(const byte msg[], size_t msg_len)
+BigInt decode_le(const uint8_t msg[], size_t msg_len)
    {
-   secure_vector<byte> msg_le(msg, msg + msg_len);
+   secure_vector<uint8_t> msg_le(msg, msg + msg_len);
 
    for(size_t i = 0; i != msg_le.size() / 2; ++i)
       std::swap(msg_le[i], msg_le[msg_le.size()-1-i]);
@@ -107,7 +107,7 @@ class GOST_3410_Signature_Operation : public PK_Ops::Signature_with_EMSA
 
       size_t max_input_bits() const override { return m_order.bits(); }
 
-      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                    RandomNumberGenerator& rng) override;
 
    private:
@@ -117,8 +117,8 @@ class GOST_3410_Signature_Operation : public PK_Ops::Signature_with_EMSA
       const BigInt& m_x;
    };
 
-secure_vector<byte>
-GOST_3410_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
+secure_vector<uint8_t>
+GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
                                         RandomNumberGenerator& rng)
    {
    BigInt k;
@@ -141,7 +141,7 @@ GOST_3410_Signature_Operation::raw_sign(const byte msg[], size_t msg_len,
    if(r == 0 || s == 0)
       throw Invalid_State("GOST 34.10: r == 0 || s == 0");
 
-   secure_vector<byte> output(2*m_order.bytes());
+   secure_vector<uint8_t> output(2*m_order.bytes());
    s.binary_encode(&output[output.size() / 2 - s.bytes()]);
    r.binary_encode(&output[output.size() - r.bytes()]);
    return output;
@@ -165,16 +165,16 @@ class GOST_3410_Verification_Operation : public PK_Ops::Verification_with_EMSA
 
       bool with_recovery() const override { return false; }
 
-      bool verify(const byte msg[], size_t msg_len,
-                  const byte sig[], size_t sig_len) override;
+      bool verify(const uint8_t msg[], size_t msg_len,
+                  const uint8_t sig[], size_t sig_len) override;
    private:
       const PointGFp& m_base_point;
       const PointGFp& m_public_point;
       const BigInt& m_order;
    };
 
-bool GOST_3410_Verification_Operation::verify(const byte msg[], size_t msg_len,
-                                              const byte sig[], size_t sig_len)
+bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
+                                              const uint8_t sig[], size_t sig_len)
    {
    if(sig_len != m_order.bytes()*2)
       return false;

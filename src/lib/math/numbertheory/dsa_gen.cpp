@@ -39,7 +39,7 @@ bool fips186_3_valid_size(size_t pbits, size_t qbits)
 bool generate_dsa_primes(RandomNumberGenerator& rng,
                          BigInt& p, BigInt& q,
                          size_t pbits, size_t qbits,
-                         const std::vector<byte>& seed_c)
+                         const std::vector<uint8_t>& seed_c)
    {
    if(!fips186_3_valid_size(pbits, qbits))
       throw Invalid_Argument(
@@ -59,9 +59,9 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    class Seed
       {
       public:
-         explicit Seed(const std::vector<byte>& s) : m_seed(s) {}
+         explicit Seed(const std::vector<uint8_t>& s) : m_seed(s) {}
 
-         operator std::vector<byte>& () { return m_seed; }
+         operator std::vector<uint8_t>& () { return m_seed; }
 
          Seed& operator++()
             {
@@ -71,7 +71,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
             return (*this);
             }
       private:
-         std::vector<byte> m_seed;
+         std::vector<uint8_t> m_seed;
       };
 
    Seed seed(seed_c);
@@ -87,7 +87,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
                 b = (pbits-1) % (HASH_SIZE * 8);
 
    BigInt X;
-   std::vector<byte> V(HASH_SIZE * (n+1));
+   std::vector<uint8_t> V(HASH_SIZE * (n+1));
 
    for(size_t j = 0; j != 4*pbits; ++j)
       {
@@ -113,13 +113,13 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 /*
 * Generate DSA Primes
 */
-std::vector<byte> generate_dsa_primes(RandomNumberGenerator& rng,
+std::vector<uint8_t> generate_dsa_primes(RandomNumberGenerator& rng,
                                       BigInt& p, BigInt& q,
                                       size_t pbits, size_t qbits)
    {
    while(true)
       {
-      std::vector<byte> seed(qbits / 8);
+      std::vector<uint8_t> seed(qbits / 8);
       rng.randomize(seed.data(), seed.size());
 
       if(generate_dsa_primes(rng, p, q, pbits, qbits, seed))

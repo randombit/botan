@@ -22,15 +22,15 @@ enum {
    TLS_FALLBACK_SCSV                        = 0x5600
 };
 
-std::vector<byte> make_hello_random(RandomNumberGenerator& rng,
+std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
                                     const Policy& policy)
    {
-   std::vector<byte> buf(32);
+   std::vector<uint8_t> buf(32);
    rng.randomize(buf.data(), buf.size());
 
    if(policy.include_time_in_hello_random())
       {
-      const u32bit time32 = static_cast<u32bit>(
+      const uint32_t time32 = static_cast<uint32_t>(
          std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 
       store_be(time32, buf.data());
@@ -50,7 +50,7 @@ Hello_Request::Hello_Request(Handshake_IO& io)
 /*
 * Deserialize a Hello Request message
 */
-Hello_Request::Hello_Request(const std::vector<byte>& buf)
+Hello_Request::Hello_Request(const std::vector<uint8_t>& buf)
    {
    if(buf.size())
       throw Decoding_Error("Bad Hello_Request, has non-zero size");
@@ -59,9 +59,9 @@ Hello_Request::Hello_Request(const std::vector<byte>& buf)
 /*
 * Serialize a Hello Request message
 */
-std::vector<byte> Hello_Request::serialize() const
+std::vector<uint8_t> Hello_Request::serialize() const
    {
-   return std::vector<byte>();
+   return std::vector<uint8_t>();
    }
 
 /*
@@ -71,7 +71,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
-                           const std::vector<byte>& reneg_info,
+                           const std::vector<uint8_t>& reneg_info,
                            const Client_Hello::Settings& client_settings,
                            const std::vector<std::string>& next_protocols) :
    m_version(client_settings.protocol_version()),
@@ -141,7 +141,7 @@ Client_Hello::Client_Hello(Handshake_IO& io,
                            Handshake_Hash& hash,
                            const Policy& policy,
                            RandomNumberGenerator& rng,
-                           const std::vector<byte>& reneg_info,
+                           const std::vector<uint8_t>& reneg_info,
                            const Session& session,
                            const std::vector<std::string>& next_protocols) :
    m_version(session.version()),
@@ -207,9 +207,9 @@ void Client_Hello::update_hello_cookie(const Hello_Verify_Request& hello_verify)
 /*
 * Serialize a Client Hello message
 */
-std::vector<byte> Client_Hello::serialize() const
+std::vector<uint8_t> Client_Hello::serialize() const
    {
-   std::vector<byte> buf;
+   std::vector<uint8_t> buf;
 
    buf.push_back(m_version.major_version());
    buf.push_back(m_version.minor_version());
@@ -237,32 +237,32 @@ std::vector<byte> Client_Hello::serialize() const
 /*
 * Read a counterparty client hello
 */
-Client_Hello::Client_Hello(const std::vector<byte>& buf)
+Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
    {
    if(buf.size() < 41)
       throw Decoding_Error("Client_Hello: Packet corrupted");
 
    TLS_Data_Reader reader("ClientHello", buf);
 
-   const byte major_version = reader.get_byte();
-   const byte minor_version = reader.get_byte();
+   const uint8_t major_version = reader.get_byte();
+   const uint8_t minor_version = reader.get_byte();
 
    m_version = Protocol_Version(major_version, minor_version);
 
-   m_random = reader.get_fixed<byte>(32);
+   m_random = reader.get_fixed<uint8_t>(32);
 
-   m_session_id = reader.get_range<byte>(1, 0, 32);
+   m_session_id = reader.get_range<uint8_t>(1, 0, 32);
 
    if(m_version.is_datagram_protocol())
-      m_hello_cookie = reader.get_range<byte>(1, 0, 255);
+      m_hello_cookie = reader.get_range<uint8_t>(1, 0, 255);
 
-   m_suites = reader.get_range_vector<u16bit>(2, 1, 32767);
+   m_suites = reader.get_range_vector<uint16_t>(2, 1, 32767);
 
-   m_comp_methods = reader.get_range_vector<byte>(1, 1, 255);
+   m_comp_methods = reader.get_range_vector<uint8_t>(1, 1, 255);
 
    m_extensions.deserialize(reader);
 
-   if(offered_suite(static_cast<u16bit>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
+   if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV)))
       {
       if(Renegotiation_Extension* reneg = m_extensions.get<Renegotiation_Extension>())
          {
@@ -289,13 +289,13 @@ Client_Hello::Client_Hello(const std::vector<byte>& buf)
 
 bool Client_Hello::sent_fallback_scsv() const
    {
-   return offered_suite(static_cast<u16bit>(TLS_FALLBACK_SCSV));
+   return offered_suite(static_cast<uint16_t>(TLS_FALLBACK_SCSV));
    }
 
 /*
 * Check if we offered this ciphersuite
 */
-bool Client_Hello::offered_suite(u16bit ciphersuite) const
+bool Client_Hello::offered_suite(uint16_t ciphersuite) const
    {
    for(size_t i = 0; i != m_suites.size(); ++i)
       if(m_suites[i] == ciphersuite)

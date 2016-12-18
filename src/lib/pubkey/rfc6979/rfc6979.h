@@ -34,7 +34,7 @@ class BOTAN_DLL RFC6979_Nonce_Generator
       BigInt m_k;
       size_t m_qlen, m_rlen;
       std::unique_ptr<HMAC_DRBG> m_hmac_drbg;
-      secure_vector<byte> m_rng_in, m_rng_out;
+      secure_vector<uint8_t> m_rng_in, m_rng_out;
    };
 
 /**

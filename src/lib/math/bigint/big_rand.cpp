@@ -25,7 +25,7 @@ void BigInt::randomize(RandomNumberGenerator& rng,
       }
    else
       {
-      secure_vector<byte> array = rng.random_vec(round_up(bitsize, 8) / 8);
+      secure_vector<uint8_t> array = rng.random_vec(round_up(bitsize, 8) / 8);
 
       // Always cut unwanted bits
       if(bitsize % 8)

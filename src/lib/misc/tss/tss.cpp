@@ -18,7 +18,7 @@ namespace {
 /**
 Table for GF(2^8) arithmetic (exponentials)
 */
-const byte RTSS_EXP[256] = {
+const uint8_t RTSS_EXP[256] = {
 0x01, 0x03, 0x05, 0x0F, 0x11, 0x33, 0x55, 0xFF, 0x1A, 0x2E, 0x72,
 0x96, 0xA1, 0xF8, 0x13, 0x35, 0x5F, 0xE1, 0x38, 0x48, 0xD8, 0x73,
 0x95, 0xA4, 0xF7, 0x02, 0x06, 0x0A, 0x1E, 0x22, 0x66, 0xAA, 0xE5,
@@ -47,7 +47,7 @@ const byte RTSS_EXP[256] = {
 /**
 Table for GF(2^8) arithmetic (logarithms)
 */
-const byte RTSS_LOG[] = {
+const uint8_t RTSS_LOG[] = {
 0x90, 0x00, 0x19, 0x01, 0x32, 0x02, 0x1A, 0xC6, 0x4B, 0xC7, 0x1B,
 0x68, 0x33, 0xEE, 0xDF, 0x03, 0x64, 0x04, 0xE0, 0x0E, 0x34, 0x8D,
 0x81, 0xEF, 0x4C, 0x71, 0x08, 0xC8, 0xF8, 0x69, 0x1C, 0xC1, 0x7D,
@@ -73,14 +73,14 @@ const byte RTSS_LOG[] = {
 0xED, 0xDE, 0xC5, 0x31, 0xFE, 0x18, 0x0D, 0x63, 0x8C, 0x80, 0xC0,
 0xF7, 0x70, 0x07 };
 
-byte gfp_mul(byte x, byte y)
+uint8_t gfp_mul(uint8_t x, uint8_t y)
    {
    if(x == 0 || y == 0)
       return 0;
    return RTSS_EXP[(RTSS_LOG[x] + RTSS_LOG[y]) % 255];
    }
 
-byte rtss_hash_id(const std::string& hash_name)
+uint8_t rtss_hash_id(const std::string& hash_name)
    {
    if(hash_name == "SHA-160")
       return 1;
@@ -90,7 +90,7 @@ byte rtss_hash_id(const std::string& hash_name)
       throw Invalid_Argument("RTSS only supports SHA-1 and SHA-256");
    }
 
-HashFunction* get_rtss_hash_by_id(byte id)
+HashFunction* get_rtss_hash_by_id(uint8_t id)
    {
    if(id == 1)
       return new SHA_160;
@@ -107,7 +107,7 @@ RTSS_Share::RTSS_Share(const std::string& hex_input)
    m_contents = hex_decode_locked(hex_input);
    }
 
-byte RTSS_Share::share_id() const
+uint8_t RTSS_Share::share_id() const
    {
    if(!initialized())
       throw Invalid_State("RTSS_Share::share_id not initialized");
@@ -121,9 +121,9 @@ std::string RTSS_Share::to_string() const
    }
 
 std::vector<RTSS_Share>
-RTSS_Share::split(byte M, byte N,
-                  const byte S[], u16bit S_len,
-                  const byte identifier[16],
+RTSS_Share::split(uint8_t M, uint8_t N,
+                  const uint8_t S[], uint16_t S_len,
+                  const uint8_t identifier[16],
                   RandomNumberGenerator& rng)
    {
    if(M == 0 || N == 0 || M > N)
@@ -134,7 +134,7 @@ RTSS_Share::split(byte M, byte N,
    std::vector<RTSS_Share> shares(N);
 
    // Create RTSS header in each share
-   for(byte i = 0; i != N; ++i)
+   for(uint8_t i = 0; i != N; ++i)
       {
       shares[i].m_contents += std::make_pair(identifier, 16);
       shares[i].m_contents += rtss_hash_id(hash.name());
@@ -144,24 +144,24 @@ RTSS_Share::split(byte M, byte N,
       }
 
    // Choose sequential values for X starting from 1
-   for(byte i = 0; i != N; ++i)
+   for(uint8_t i = 0; i != N; ++i)
       shares[i].m_contents.push_back(i+1);
 
    // secret = S || H(S)
-   secure_vector<byte> secret(S, S + S_len);
+   secure_vector<uint8_t> secret(S, S + S_len);
    secret += hash.process(S, S_len);
 
    for(size_t i = 0; i != secret.size(); ++i)
       {
-      std::vector<byte> coefficients(M-1);
+      std::vector<uint8_t> coefficients(M-1);
       rng.randomize(coefficients.data(), coefficients.size());
 
-      for(byte j = 0; j != N; ++j)
+      for(uint8_t j = 0; j != N; ++j)
          {
-         const byte X = j + 1;
+         const uint8_t X = j + 1;
 
-         byte sum = secret[i];
-         byte X_i = X;
+         uint8_t sum = secret[i];
+         uint8_t X_i = X;
 
          for(size_t k = 0; k != coefficients.size(); ++k)
             {
@@ -176,7 +176,7 @@ RTSS_Share::split(byte M, byte N,
    return shares;
    }
 
-secure_vector<byte>
+secure_vector<uint8_t>
 RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
    {
    const size_t RTSS_HEADER_SIZE = 20;
@@ -198,41 +198,41 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
    if(shares.size() < shares[0].m_contents[17])
       throw Decoding_Error("Insufficient shares to do TSS reconstruction");
 
-   u16bit secret_len = make_u16bit(shares[0].m_contents[18],
+   uint16_t secret_len = make_uint16(shares[0].m_contents[18],
                                    shares[0].m_contents[19]);
 
-   byte hash_id = shares[0].m_contents[16];
+   uint8_t hash_id = shares[0].m_contents[16];
 
    std::unique_ptr<HashFunction> hash(get_rtss_hash_by_id(hash_id));
 
    if(shares[0].size() != secret_len + hash->output_length() + RTSS_HEADER_SIZE + 1)
       throw Decoding_Error("Bad RTSS length field in header");
 
-   std::vector<byte> V(shares.size());
-   secure_vector<byte> secret;
+   std::vector<uint8_t> V(shares.size());
+   secure_vector<uint8_t> secret;
 
    for(size_t i = RTSS_HEADER_SIZE + 1; i != shares[0].size(); ++i)
       {
       for(size_t j = 0; j != V.size(); ++j)
          V[j] = shares[j].m_contents[i];
 
-      byte r = 0;
+      uint8_t r = 0;
       for(size_t k = 0; k != shares.size(); ++k)
          {
          // L_i function:
-         byte r2 = 1;
+         uint8_t r2 = 1;
          for(size_t l = 0; l != shares.size(); ++l)
             {
             if(k == l)
                continue;
 
-            byte share_k = shares[k].share_id();
-            byte share_l = shares[l].share_id();
+            uint8_t share_k = shares[k].share_id();
+            uint8_t share_l = shares[l].share_id();
 
             if(share_k == share_l)
                throw Decoding_Error("Duplicate shares found in RTSS recovery");
 
-            byte div = RTSS_EXP[(255 +
+            uint8_t div = RTSS_EXP[(255 +
                                  RTSS_LOG[share_l] -
                                  RTSS_LOG[share_k ^ share_l]) % 255];
 
@@ -248,13 +248,13 @@ RTSS_Share::reconstruct(const std::vector<RTSS_Share>& shares)
       throw Decoding_Error("Bad length in RTSS output");
 
    hash->update(secret.data(), secret_len);
-   secure_vector<byte> hash_check = hash->final();
+   secure_vector<uint8_t> hash_check = hash->final();
 
    if(!same_mem(hash_check.data(),
                 &secret[secret_len], hash->output_length()))
       throw Decoding_Error("RTSS hash check failed");
 
-   return secure_vector<byte>(secret.cbegin(), secret.cbegin() + secret_len);
+   return secure_vector<uint8_t>(secret.cbegin(), secret.cbegin() + secret_len);
    }
 
 }

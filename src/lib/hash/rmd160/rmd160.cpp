@@ -14,8 +14,8 @@ namespace {
 /*
 * RIPEMD-160 F1 Function
 */
-inline void F1(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
-               u32bit msg, u32bit shift)
+inline void F1(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
+               uint32_t msg, uint32_t shift)
    {
    A += (B ^ C ^ D) + msg;
    A  = rotate_left(A, shift) + E;
@@ -25,8 +25,8 @@ inline void F1(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
 /*
 * RIPEMD-160 F2 Function
 */
-inline void F2(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
-               u32bit msg, u32bit shift, u32bit magic)
+inline void F2(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
+               uint32_t msg, uint32_t shift, uint32_t magic)
    {
    A += (D ^ (B & (C ^ D))) + msg + magic;
    A  = rotate_left(A, shift) + E;
@@ -36,8 +36,8 @@ inline void F2(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
 /*
 * RIPEMD-160 F3 Function
 */
-inline void F3(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
-               u32bit msg, u32bit shift, u32bit magic)
+inline void F3(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
+               uint32_t msg, uint32_t shift, uint32_t magic)
    {
    A += (D ^ (B | ~C)) + msg + magic;
    A  = rotate_left(A, shift) + E;
@@ -47,8 +47,8 @@ inline void F3(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
 /*
 * RIPEMD-160 F4 Function
 */
-inline void F4(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
-               u32bit msg, u32bit shift, u32bit magic)
+inline void F4(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
+               uint32_t msg, uint32_t shift, uint32_t magic)
    {
    A += (C ^ (D & (B ^ C))) + msg + magic;
    A  = rotate_left(A, shift) + E;
@@ -58,8 +58,8 @@ inline void F4(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
 /*
 * RIPEMD-160 F5 Function
 */
-inline void F5(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
-               u32bit msg, u32bit shift, u32bit magic)
+inline void F5(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E,
+               uint32_t msg, uint32_t shift, uint32_t magic)
    {
    A += (B ^ (C | ~D)) + msg + magic;
    A  = rotate_left(A, shift) + E;
@@ -71,9 +71,9 @@ inline void F5(u32bit& A, u32bit B, u32bit& C, u32bit D, u32bit E,
 /*
 * RIPEMD-160 Compression Function
 */
-void RIPEMD_160::compress_n(const byte input[], size_t blocks)
+void RIPEMD_160::compress_n(const uint8_t input[], size_t blocks)
    {
-   const u32bit MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1,
+   const uint32_t MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1,
                 MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0xA953FD4E,
                 MAGIC6 = 0x50A28BE6, MAGIC7 = 0x5C4DD124,
                 MAGIC8 = 0x6D703EF3, MAGIC9 = 0x7A6D76E9;
@@ -82,7 +82,7 @@ void RIPEMD_160::compress_n(const byte input[], size_t blocks)
       {
       load_le(m_M.data(), input, m_M.size());
 
-      u32bit A1 = m_digest[0], A2 = A1, B1 = m_digest[1], B2 = B1,
+      uint32_t A1 = m_digest[0], A2 = A1, B1 = m_digest[1], B2 = B1,
              C1 = m_digest[2], C2 = C1, D1 = m_digest[3], D2 = D1,
              E1 = m_digest[4], E2 = E1;
 
@@ -185,7 +185,7 @@ void RIPEMD_160::compress_n(const byte input[], size_t blocks)
 /*
 * Copy out the digest
 */
-void RIPEMD_160::copy_out(byte output[])
+void RIPEMD_160::copy_out(uint8_t output[])
    {
    copy_out_vec_le(output, output_length(), m_digest);
    }

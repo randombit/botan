@@ -46,7 +46,7 @@ class BOTAN_DLL SHA_3 : public HashFunction
       */
       static size_t absorb(size_t bitrate,
                            secure_vector<uint64_t>& S, size_t S_pos,
-                           const byte input[], size_t length);
+                           const uint8_t input[], size_t length);
 
       /**
       * Expand from provided state
@@ -57,19 +57,19 @@ class BOTAN_DLL SHA_3 : public HashFunction
       */
       static void expand(size_t bitrate,
                          secure_vector<uint64_t>& S,
-                         byte output[], size_t output_length);
+                         uint8_t output[], size_t output_length);
 
       /**
       * The bare Keccak-1600 permutation
       */
-      static void permute(u64bit A[25]);
+      static void permute(uint64_t A[25]);
 
    private:
-      void add_data(const byte input[], size_t length) override;
-      void final_result(byte out[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t out[]) override;
 
       size_t m_output_bits, m_bitrate;
-      secure_vector<u64bit> m_S;
+      secure_vector<uint64_t> m_S;
       size_t m_S_pos;
    };
 

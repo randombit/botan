@@ -30,16 +30,16 @@ class BOTAN_DLL EC_PublicKeyGenerationProperties final : public PublicKeyPropert
    {
    public:
       /// @param ec_params DER-encoding of an ANSI X9.62 Parameters value
-      EC_PublicKeyGenerationProperties(const std::vector<byte>& ec_params);
+      EC_PublicKeyGenerationProperties(const std::vector<uint8_t>& ec_params);
 
       /// @return the DER-encoding of the ec parameters according to ANSI X9.62
-      inline const std::vector<byte>& ec_params() const
+      inline const std::vector<uint8_t>& ec_params() const
          {
          return m_ec_params;
          }
 
    private:
-      const std::vector<byte> m_ec_params;
+      const std::vector<uint8_t> m_ec_params;
    };
 
 /// Properties for importing a PKCS#11 EC public key
@@ -50,23 +50,23 @@ class BOTAN_DLL EC_PublicKeyImportProperties final : public PublicKeyProperties
       * @param ec_params DER-encoding of an ANSI X9.62 Parameters value
       * @param ec_point DER-encoding of ANSI X9.62 ECPoint value Q
       */
-      EC_PublicKeyImportProperties(const std::vector<byte>& ec_params, const std::vector<byte>& ec_point);
+      EC_PublicKeyImportProperties(const std::vector<uint8_t>& ec_params, const std::vector<uint8_t>& ec_point);
 
       /// @return the DER-encoding of the ec parameters according to ANSI X9.62
-      inline const std::vector<byte>& ec_params() const
+      inline const std::vector<uint8_t>& ec_params() const
          {
          return m_ec_params;
          }
 
       /// @return the DER-encoding of the ec public point according to ANSI X9.62
-      inline const std::vector<byte>& ec_point() const
+      inline const std::vector<uint8_t>& ec_point() const
          {
          return m_ec_point;
          }
 
    private:
-      const std::vector<byte> m_ec_params;
-      const std::vector<byte> m_ec_point;
+      const std::vector<uint8_t> m_ec_params;
+      const std::vector<uint8_t> m_ec_point;
    };
 
 /// Represents a PKCS#11 EC public key
@@ -108,10 +108,10 @@ class BOTAN_DLL EC_PrivateKeyImportProperties final : public PrivateKeyPropertie
       * @param ec_params DER-encoding of an ANSI X9.62 Parameters value
       * @param value ANSI X9.62 private value d
       */
-      EC_PrivateKeyImportProperties(const std::vector<byte>& ec_params, const BigInt& value);
+      EC_PrivateKeyImportProperties(const std::vector<uint8_t>& ec_params, const BigInt& value);
 
       /// @return the DER-encoding of the ec parameters according to ANSI X9.62
-      inline const std::vector<byte>& ec_params() const
+      inline const std::vector<uint8_t>& ec_params() const
          {
          return m_ec_params;
          }
@@ -123,7 +123,7 @@ class BOTAN_DLL EC_PrivateKeyImportProperties final : public PrivateKeyPropertie
          }
 
    private:
-      const std::vector<byte> m_ec_params;
+      const std::vector<uint8_t> m_ec_params;
       const BigInt m_value;
    };
 
@@ -157,7 +157,7 @@ class BOTAN_DLL PKCS11_EC_PrivateKey : public virtual Private_Key,
       * @param props the attributes of the private key
       * @note no persistent public key object will be created
       */
-      PKCS11_EC_PrivateKey(Session& session, const std::vector<byte>& ec_params,
+      PKCS11_EC_PrivateKey(Session& session, const std::vector<uint8_t>& ec_params,
                            const EC_PrivateKeyGenerationProperties& props);
 
       /// @returns the domain of the EC private key
@@ -201,7 +201,7 @@ class BOTAN_DLL PKCS11_EC_PrivateKey : public virtual Private_Key,
 
       // Private_Key methods
 
-      std::vector<byte> public_key_bits() const override;
+      std::vector<uint8_t> public_key_bits() const override;
 
       std::size_t key_length() const override;
 

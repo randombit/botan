@@ -11,9 +11,9 @@ namespace Botan {
 
 namespace {
 
-void SipRounds(u64bit M, secure_vector<u64bit>& V, size_t r)
+void SipRounds(uint64_t M, secure_vector<uint64_t>& V, size_t r)
    {
-   u64bit V0 = V[0], V1 = V[1], V2 = V[2], V3 = V[3];
+   uint64_t V0 = V[0], V1 = V[1], V2 = V[2], V3 = V[3];
 
    V3 ^= M;
    for(size_t i = 0; i != r; ++i)
@@ -37,7 +37,7 @@ void SipRounds(u64bit M, secure_vector<u64bit>& V, size_t r)
 
 }
 
-void SipHash::add_data(const byte input[], size_t length)
+void SipHash::add_data(const uint8_t input[], size_t length)
    {
    m_words += length;
 
@@ -45,7 +45,7 @@ void SipHash::add_data(const byte input[], size_t length)
       {
       while(length && m_mbuf_pos != 8)
          {
-         m_mbuf = (m_mbuf >> 8) | (static_cast<u64bit>(input[0]) << 56);
+         m_mbuf = (m_mbuf >> 8) | (static_cast<uint64_t>(input[0]) << 56);
          ++m_mbuf_pos;
          ++input;
          length--;
@@ -61,37 +61,37 @@ void SipHash::add_data(const byte input[], size_t length)
 
    while(length >= 8)
       {
-      SipRounds(load_le<u64bit>(input, 0), m_V, m_C);
+      SipRounds(load_le<uint64_t>(input, 0), m_V, m_C);
       input += 8;
       length -= 8;
       }
 
    for(size_t i = 0; i != length; ++i)
       {
-      m_mbuf = (m_mbuf >> 8) | (static_cast<u64bit>(input[i]) << 56);
+      m_mbuf = (m_mbuf >> 8) | (static_cast<uint64_t>(input[i]) << 56);
       m_mbuf_pos++;
       }
    }
 
-void SipHash::final_result(byte mac[])
+void SipHash::final_result(uint8_t mac[])
    {
-   m_mbuf = (m_mbuf >> (64-m_mbuf_pos*8)) | (static_cast<u64bit>(m_words) << 56);
+   m_mbuf = (m_mbuf >> (64-m_mbuf_pos*8)) | (static_cast<uint64_t>(m_words) << 56);
    SipRounds(m_mbuf, m_V, m_C);
 
    m_V[2] ^= 0xFF;
    SipRounds(0, m_V, m_D);
 
-   const u64bit X = m_V[0] ^ m_V[1] ^ m_V[2] ^ m_V[3];
+   const uint64_t X = m_V[0] ^ m_V[1] ^ m_V[2] ^ m_V[3];
 
    store_le(X, mac);
 
    clear();
    }
 
-void SipHash::key_schedule(const byte key[], size_t)
+void SipHash::key_schedule(const uint8_t key[], size_t)
    {
-   const u64bit K0 = load_le<u64bit>(key, 0);
-   const u64bit K1 = load_le<u64bit>(key, 1);
+   const uint64_t K0 = load_le<uint64_t>(key, 0);
+   const uint64_t K1 = load_le<uint64_t>(key, 1);
 
    m_V.resize(4);
    m_V[0] = K0 ^ 0x736F6D6570736575;

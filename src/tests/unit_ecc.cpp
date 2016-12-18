@@ -359,7 +359,7 @@ Test::Result test_zeropoint_enc_dec()
    Botan::PointGFp p(curve);
    result.confirm("zero point is zero", p.is_zero());
 
-   std::vector<byte> sv_p = unlock(EC2OSP(p, Botan::PointGFp::UNCOMPRESSED));
+   std::vector<uint8_t> sv_p = unlock(EC2OSP(p, Botan::PointGFp::UNCOMPRESSED));
    result.test_eq("encoded/decode rt works", OS2ECP(sv_p, curve), p);
 
    sv_p = unlock(EC2OSP(p, Botan::PointGFp::COMPRESSED));
@@ -509,11 +509,11 @@ Test::Result test_enc_dec_compressed_160()
    Botan::EC_Group secp160r1(Botan::OIDS::lookup("secp160r1"));
    const Botan::CurveGFp& curve = secp160r1.get_curve();
 
-   const std::vector<byte> G_comp = Botan::hex_decode("024A96B5688EF573284664698968C38BB913CBFC82");
+   const std::vector<uint8_t> G_comp = Botan::hex_decode("024A96B5688EF573284664698968C38BB913CBFC82");
 
    const Botan::PointGFp p = Botan::OS2ECP(G_comp, curve);
 
-   std::vector<byte> sv_result = unlock(Botan::EC2OSP(p, Botan::PointGFp::COMPRESSED));
+   std::vector<uint8_t> sv_result = unlock(Botan::EC2OSP(p, Botan::PointGFp::COMPRESSED));
 
    result.test_eq("result", sv_result, G_comp);
    return result;
@@ -529,10 +529,10 @@ Test::Result test_enc_dec_compressed_256()
    std::string b_secp = "5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B";
    std::string G_secp_comp = "036B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296";
 
-   std::vector<byte> sv_p_secp = Botan::hex_decode ( p_secp );
-   std::vector<byte> sv_a_secp = Botan::hex_decode ( a_secp );
-   std::vector<byte> sv_b_secp = Botan::hex_decode ( b_secp );
-   std::vector<byte> sv_G_secp_comp = Botan::hex_decode ( G_secp_comp );
+   std::vector<uint8_t> sv_p_secp = Botan::hex_decode ( p_secp );
+   std::vector<uint8_t> sv_a_secp = Botan::hex_decode ( a_secp );
+   std::vector<uint8_t> sv_b_secp = Botan::hex_decode ( b_secp );
+   std::vector<uint8_t> sv_G_secp_comp = Botan::hex_decode ( G_secp_comp );
 
    Botan::BigInt bi_p_secp = Botan::BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
    Botan::BigInt bi_a_secp = Botan::BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
@@ -541,7 +541,7 @@ Test::Result test_enc_dec_compressed_256()
    Botan::CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
 
    Botan::PointGFp p_G = OS2ECP ( sv_G_secp_comp, curve );
-   std::vector<byte> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::COMPRESSED));
+   std::vector<uint8_t> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::COMPRESSED));
 
    result.test_eq("compressed_256", sv_result, sv_G_secp_comp);
    return result;
@@ -559,10 +559,10 @@ Test::Result test_enc_dec_uncompressed_112()
    std::string b_secp = "51DEF1815DB5ED74FCC34C85D709";
    std::string G_secp_uncomp = "044BA30AB5E892B4E1649DD0928643ADCD46F5882E3747DEF36E956E97";
 
-   std::vector<byte> sv_p_secp = Botan::hex_decode ( p_secp );
-   std::vector<byte> sv_a_secp = Botan::hex_decode ( a_secp );
-   std::vector<byte> sv_b_secp = Botan::hex_decode ( b_secp );
-   std::vector<byte> sv_G_secp_uncomp = Botan::hex_decode ( G_secp_uncomp );
+   std::vector<uint8_t> sv_p_secp = Botan::hex_decode ( p_secp );
+   std::vector<uint8_t> sv_a_secp = Botan::hex_decode ( a_secp );
+   std::vector<uint8_t> sv_b_secp = Botan::hex_decode ( b_secp );
+   std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode ( G_secp_uncomp );
 
    Botan::BigInt bi_p_secp = Botan::BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
    Botan::BigInt bi_a_secp = Botan::BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
@@ -571,7 +571,7 @@ Test::Result test_enc_dec_uncompressed_112()
    Botan::CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
 
    Botan::PointGFp p_G = OS2ECP ( sv_G_secp_uncomp, curve );
-   std::vector<byte> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::UNCOMPRESSED));
+   std::vector<uint8_t> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::UNCOMPRESSED));
 
    result.test_eq("uncompressed_112", sv_result, sv_G_secp_uncomp);
    return result;
@@ -587,10 +587,10 @@ Test::Result test_enc_dec_uncompressed_521()
    std::string b_secp = "0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00";
    std::string G_secp_uncomp = "0400C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2ffA8DE3348B3C1856A429BF97E7E31C2E5BD66011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650";
 
-   std::vector<byte> sv_p_secp = Botan::hex_decode ( p_secp );
-   std::vector<byte> sv_a_secp = Botan::hex_decode ( a_secp );
-   std::vector<byte> sv_b_secp = Botan::hex_decode ( b_secp );
-   std::vector<byte> sv_G_secp_uncomp = Botan::hex_decode ( G_secp_uncomp );
+   std::vector<uint8_t> sv_p_secp = Botan::hex_decode ( p_secp );
+   std::vector<uint8_t> sv_a_secp = Botan::hex_decode ( a_secp );
+   std::vector<uint8_t> sv_b_secp = Botan::hex_decode ( b_secp );
+   std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode ( G_secp_uncomp );
 
    Botan::BigInt bi_p_secp = Botan::BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
    Botan::BigInt bi_a_secp = Botan::BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
@@ -600,7 +600,7 @@ Test::Result test_enc_dec_uncompressed_521()
 
    Botan::PointGFp p_G = Botan::OS2ECP ( sv_G_secp_uncomp, curve );
 
-   std::vector<byte> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::UNCOMPRESSED));
+   std::vector<uint8_t> sv_result = unlock(EC2OSP(p_G, Botan::PointGFp::UNCOMPRESSED));
 
    result.test_eq("expected", sv_result, sv_G_secp_uncomp);
    return result;
@@ -616,10 +616,10 @@ Test::Result test_enc_dec_uncompressed_521_prime_too_large()
    std::string b_secp = "0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00";
    std::string G_secp_uncomp = "0400C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2ffA8DE3348B3C1856A429BF97E7E31C2E5BD66011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650";
 
-   std::vector<byte> sv_p_secp = Botan::hex_decode ( p_secp );
-   std::vector<byte> sv_a_secp = Botan::hex_decode ( a_secp );
-   std::vector<byte> sv_b_secp = Botan::hex_decode ( b_secp );
-   std::vector<byte> sv_G_secp_uncomp = Botan::hex_decode ( G_secp_uncomp );
+   std::vector<uint8_t> sv_p_secp = Botan::hex_decode ( p_secp );
+   std::vector<uint8_t> sv_a_secp = Botan::hex_decode ( a_secp );
+   std::vector<uint8_t> sv_b_secp = Botan::hex_decode ( b_secp );
+   std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode ( G_secp_uncomp );
 
    Botan::BigInt bi_p_secp = Botan::BigInt::decode ( sv_p_secp.data(), sv_p_secp.size() );
    Botan::BigInt bi_a_secp = Botan::BigInt::decode ( sv_a_secp.data(), sv_a_secp.size() );
@@ -649,7 +649,7 @@ Test::Result test_gfp_store_restore()
    Botan::EC_Group dom_pars(Botan::OID("1.3.132.0.8"));
    Botan::PointGFp p = dom_pars.get_base_point();
 
-   std::vector<byte> sv_mes = unlock(EC2OSP(p, Botan::PointGFp::COMPRESSED));
+   std::vector<uint8_t> sv_mes = unlock(EC2OSP(p, Botan::PointGFp::COMPRESSED));
    Botan::PointGFp new_p = Botan::OS2ECP(sv_mes, dom_pars.get_curve());
 
    result.test_eq("original and restored points are same", p, new_p);
@@ -664,7 +664,7 @@ Test::Result test_cdc_curve_33()
 
    std::string G_secp_uncomp = "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
 
-   std::vector<byte> sv_G_uncomp = Botan::hex_decode ( G_secp_uncomp );
+   std::vector<uint8_t> sv_G_uncomp = Botan::hex_decode ( G_secp_uncomp );
 
    Botan::BigInt bi_p_secp = Botan::BigInt("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
    Botan::BigInt bi_a_secp("0xa377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe");

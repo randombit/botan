@@ -30,26 +30,26 @@ class BOTAN_DLL SHA_160 final : public MDx_HashFunction
          }
 
    private:
-      void compress_n(const byte[], size_t blocks) override;
+      void compress_n(const uint8_t[], size_t blocks) override;
 
 #if defined(BOTAN_HAS_SHA1_SSE2)
-      static void sse2_compress_n(secure_vector<u32bit>& digest,
-                                  const byte blocks[],
+      static void sse2_compress_n(secure_vector<uint32_t>& digest,
+                                  const uint8_t blocks[],
                                   size_t block_count);
 #endif
 
 
-      void copy_out(byte[]) override;
+      void copy_out(uint8_t[]) override;
 
       /**
       * The digest value
       */
-      secure_vector<u32bit> m_digest;
+      secure_vector<uint32_t> m_digest;
 
       /**
       * The message buffer
       */
-      secure_vector<u32bit> m_W;
+      secure_vector<uint32_t> m_W;
    };
 
 typedef SHA_160 SHA_1;

@@ -36,12 +36,12 @@ class BOTAN_DLL SQL_Database
 
             virtual void bind(int column, std::chrono::system_clock::time_point time) = 0;
 
-            virtual void bind(int column, const std::vector<byte>& blob) = 0;
+            virtual void bind(int column, const std::vector<uint8_t>& blob) = 0;
 
-            virtual void bind(int column, const byte* data, size_t len) = 0;
+            virtual void bind(int column, const uint8_t* data, size_t len) = 0;
 
             /* Get output */
-            virtual std::pair<const byte*, size_t> get_blob(int column) = 0;
+            virtual std::pair<const uint8_t*, size_t> get_blob(int column) = 0;
 
             virtual size_t get_size_t(int column) = 0;
 

@@ -16,7 +16,7 @@ namespace TLS {
 /**
 * Return a TLS Handshake Hash
 */
-secure_vector<byte> Handshake_Hash::final(Protocol_Version version,
+secure_vector<uint8_t> Handshake_Hash::final(Protocol_Version version,
                                           const std::string& mac_algo) const
    {
    std::string hash_algo = mac_algo;

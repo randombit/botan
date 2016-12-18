@@ -65,7 +65,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        * @param rng A random number generator to use for key generation.
        **/
       XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                           const secure_vector<byte>& public_seed,
+                           const secure_vector<uint8_t>& public_seed,
                            RandomNumberGenerator &rng)
          : XMSS_WOTS_PublicKey(oid, public_seed),
            m_private_seed(rng.random_vec(m_wots_params.element_size()))
@@ -85,7 +85,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        *        of public keys derived from this private key.
        **/
       XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                           const secure_vector<byte>& public_seed)
+                           const secure_vector<uint8_t>& public_seed)
          : XMSS_WOTS_PublicKey(oid, public_seed)
          {}
 
@@ -100,8 +100,8 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        * @param private_seed A secret uniformly random n-byte value.
        **/
       XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
-                           const secure_vector<byte>& public_seed,
-                           const secure_vector<byte>& private_seed)
+                           const secure_vector<uint8_t>& public_seed,
+                           const secure_vector<uint8_t>& private_seed)
          : XMSS_WOTS_PublicKey(oid, public_seed),
            m_private_seed(private_seed)
          {
@@ -118,7 +118,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        **/
       wots_keysig_t operator[](size_t i)
          {
-         secure_vector<byte> idx_bytes;
+         secure_vector<uint8_t> idx_bytes;
          XMSS_Tools::concat(idx_bytes, i, m_wots_params.element_size());
          m_hash.h(idx_bytes, m_private_seed, idx_bytes);
          return generate(idx_bytes);
@@ -134,12 +134,12 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        **/
       wots_keysig_t operator[](const XMSS_Address& adrs)
          {
-         secure_vector<byte> result;
+         secure_vector<uint8_t> result;
          m_hash.prf(result, m_private_seed, adrs.bytes());
          return generate(result);
          }
 
-      wots_keysig_t generate_private_key(const secure_vector<byte>& priv_seed);
+      wots_keysig_t generate_private_key(const secure_vector<uint8_t>& priv_seed);
 
       /**
        * Algorithm 4: "WOTS_genPK"
@@ -179,7 +179,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        *
        * @return signature for msg.
        **/
-      wots_keysig_t sign(const secure_vector<byte>& msg,
+      wots_keysig_t sign(const secure_vector<uint8_t>& msg,
                          XMSS_Address& adrs);
 
       /**
@@ -188,7 +188,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        *
        * @return secret seed.
        **/
-      const secure_vector<byte>& private_seed() const
+      const secure_vector<uint8_t>& private_seed() const
          {
          return m_private_seed;
          }
@@ -199,7 +199,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        *
        * @param private_seed Uniformly random n-byte value.
        **/
-      void set_private_seed(const secure_vector<byte>& private_seed)
+      void set_private_seed(const secure_vector<uint8_t>& private_seed)
          {
          m_private_seed = private_seed;
          }
@@ -210,7 +210,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        *
        * @param private_seed Uniformly random n-byte value.
        **/
-      void set_private_seed(secure_vector<byte>&& private_seed)
+      void set_private_seed(secure_vector<uint8_t>&& private_seed)
          {
          m_private_seed = std::move(private_seed);
          }
@@ -226,7 +226,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
                              const std::string&,
                              const std::string& provider) const override;
 
-      virtual secure_vector<byte> private_key_bits() const override
+      virtual secure_vector<uint8_t> private_key_bits() const override
          {
          throw Not_Implemented("No PKCS8 key format defined for XMSS-WOTS.");
          }
@@ -241,9 +241,9 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        * @returns a vector of length key_size() of vectors of n bytes length
        *          containing uniformly random data.
        **/
-      wots_keysig_t generate(const secure_vector<byte>& private_seed);
+      wots_keysig_t generate(const secure_vector<uint8_t>& private_seed);
 
-      secure_vector<byte> m_private_seed;
+      secure_vector<uint8_t> m_private_seed;
    };
 
 }

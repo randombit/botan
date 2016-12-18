@@ -60,7 +60,7 @@ namespace Botan {
 
 std::unique_ptr<Public_Key>
 load_public_key(const AlgorithmIdentifier& alg_id,
-                const std::vector<byte>& key_bits)
+                const std::vector<uint8_t>& key_bits)
    {
    const std::string alg_name = OIDS::lookup(alg_id.oid);
    if(alg_name == "")
@@ -131,7 +131,7 @@ load_public_key(const AlgorithmIdentifier& alg_id,
 
 std::unique_ptr<Private_Key>
 load_private_key(const AlgorithmIdentifier& alg_id,
-                 const secure_vector<byte>& key_bits)
+                 const secure_vector<uint8_t>& key_bits)
    {
    const std::string alg_name = OIDS::lookup(alg_id.oid);
    if(alg_name == "")

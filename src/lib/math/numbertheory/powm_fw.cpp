@@ -48,7 +48,7 @@ BigInt Fixed_Window_Exponentiator::execute() const
       for(size_t j = 0; j != m_window_bits; ++j)
          x = m_reducer.square(x);
 
-      const u32bit nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits);
+      const uint32_t nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits);
 
       x = m_reducer.multiply(x, m_g[nibble]);
       }

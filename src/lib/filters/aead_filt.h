@@ -29,7 +29,7 @@ class AEAD_Filter : public Cipher_Mode_Filter
       * @param ad the associated data
       * @param ad_len length of add in bytes
       */
-      void set_associated_data(const byte ad[], size_t ad_len)
+      void set_associated_data(const uint8_t ad[], size_t ad_len)
          {
          dynamic_cast<AEAD_Mode&>(get_transform()).set_associated_data(ad, ad_len);
          }

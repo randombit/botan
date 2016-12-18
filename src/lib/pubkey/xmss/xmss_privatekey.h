@@ -60,7 +60,7 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
        *
        * @param raw_key An XMSS private key serialized using raw_private_key().
        **/
-      XMSS_PrivateKey(const secure_vector<byte>& raw_key);
+      XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key);
 
       /**
        * Creates a new XMSS private key for the chosen XMSS signature method
@@ -79,10 +79,10 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
        **/
       XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                       size_t idx_leaf,
-                      const secure_vector<byte>& wots_priv_seed,
-                      const secure_vector<byte>& prf,
-                      const secure_vector<byte>& root,
-                      const secure_vector<byte>& public_seed)
+                      const secure_vector<uint8_t>& wots_priv_seed,
+                      const secure_vector<uint8_t>& prf,
+                      const secure_vector<uint8_t>& root,
+                      const secure_vector<uint8_t>& public_seed)
          : XMSS_PublicKey(xmss_algo_id, root, public_seed),
            XMSS_Common_Ops(xmss_algo_id),
            m_wots_priv_key(XMSS_PublicKey::m_xmss_params.ots_oid(),
@@ -170,30 +170,30 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
          return m_wots_priv_key;
          }
 
-      const secure_vector<byte>& prf() const
+      const secure_vector<uint8_t>& prf() const
          {
          return m_prf;
          }
 
-      secure_vector<byte>& prf()
+      secure_vector<uint8_t>& prf()
          {
          return m_prf;
          }
 
       virtual void set_public_seed(
-         const secure_vector<byte>& public_seed) override
+         const secure_vector<uint8_t>& public_seed) override
          {
          m_public_seed = public_seed;
          m_wots_priv_key.set_public_seed(public_seed);
          }
 
-      virtual void set_public_seed(secure_vector<byte>&& public_seed) override
+      virtual void set_public_seed(secure_vector<uint8_t>&& public_seed) override
          {
          m_public_seed = std::move(public_seed);
          m_wots_priv_key.set_public_seed(m_public_seed);
          }
 
-      virtual const secure_vector<byte>& public_seed() const override
+      virtual const secure_vector<uint8_t>& public_seed() const override
          {
          return m_public_seed;
          }
@@ -203,7 +203,7 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
                              const std::string&,
                              const std::string& provider) const override;
 
-      virtual secure_vector<byte> private_key_bits() const override
+      virtual secure_vector<uint8_t> private_key_bits() const override
          {
          return raw_private_key();
          }
@@ -223,7 +223,7 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
        *         4-byte OID, n-byte root node, n-byte public seed,
        *         8-byte unused leaf index, n-byte prf seed, n-byte private seed.
        **/
-      virtual secure_vector<byte> raw_private_key() const;
+      virtual secure_vector<uint8_t> raw_private_key() const;
       /**
        * Algorithm 9: "treeHash"
        * Computes the internal n-byte nodes of a Merkle tree.
@@ -236,7 +236,7 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
        *         leftmost leaf being the hash of the WOTS+ pk with index
        *         start_idx.
        **/
-      secure_vector<byte> tree_hash(
+      secure_vector<uint8_t> tree_hash(
          size_t start_idx,
          size_t target_node_height,
          XMSS_Address& adrs);
@@ -248,7 +248,7 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
       std::shared_ptr<Atomic<size_t>> recover_global_leaf_index() const;
 
       XMSS_WOTS_PrivateKey m_wots_priv_key;
-      secure_vector<byte> m_prf;
+      secure_vector<uint8_t> m_prf;
       XMSS_Index_Registry& m_index_reg;
    };
 

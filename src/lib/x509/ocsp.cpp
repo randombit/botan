@@ -60,7 +60,7 @@ Request::Request(const X509_Certificate& issuer_cert,
       throw Invalid_Argument("Invalid cert pair to OCSP::Request (mismatched issuer,subject args?)");
    }
 
-std::vector<byte> Request::BER_encode() const
+std::vector<uint8_t> Request::BER_encode() const
    {
    return DER_Encoder().start_cons(SEQUENCE)
         .start_cons(SEQUENCE)
@@ -175,7 +175,7 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
 
       if(!m_signer_name.empty())
          {
-         signing_cert = trusted_roots[i]->find_cert(m_signer_name, std::vector<byte>());
+         signing_cert = trusted_roots[i]->find_cert(m_signer_name, std::vector<uint8_t>());
          if(signing_cert)
             {
             break;

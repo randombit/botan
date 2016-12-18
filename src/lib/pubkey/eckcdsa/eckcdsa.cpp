@@ -57,36 +57,36 @@ class ECKCDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
          m_prefix.resize(HashFunction::create(hash_for_signature())->hash_block_size()); // use only the "hash input block size" leftmost bits
          }
 
-      secure_vector<byte> raw_sign(const byte msg[], size_t msg_len,
+      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
                                    RandomNumberGenerator& rng) override;
 
       size_t max_input_bits() const override { return m_order.bits(); }
 
       bool has_prefix() override { return true; }
-      secure_vector<byte> message_prefix() const override { return m_prefix; }
+      secure_vector<uint8_t> message_prefix() const override { return m_prefix; }
 
    private:
       const BigInt& m_order;
       Blinded_Point_Multiply m_base_point;
       const BigInt& m_x;
       Modular_Reducer m_mod_order;
-      secure_vector<byte> m_prefix;
+      secure_vector<uint8_t> m_prefix;
    };
 
-secure_vector<byte>
-ECKCDSA_Signature_Operation::raw_sign(const byte msg[], size_t,
+secure_vector<uint8_t>
+ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t,
                                      RandomNumberGenerator& rng)
    {
    const BigInt k = BigInt::random_integer(rng, 1, m_order);
    const PointGFp k_times_P = m_base_point.blinded_multiply(k, rng);
    const BigInt k_times_P_x = k_times_P.get_affine_x();
 
-   secure_vector<byte> to_be_hashed(k_times_P_x.bytes());
+   secure_vector<uint8_t> to_be_hashed(k_times_P_x.bytes());
    k_times_P_x.binary_encode(to_be_hashed.data());
 
    std::unique_ptr<EMSA> emsa(m_emsa->clone());
    emsa->update(to_be_hashed.data(), to_be_hashed.size());
-   secure_vector<byte> c = emsa->raw_data();
+   secure_vector<uint8_t> c = emsa->raw_data();
    c = emsa->encoding_of(c, max_input_bits(), rng);
 
    const BigInt r(c.data(), c.size());
@@ -98,7 +98,7 @@ ECKCDSA_Signature_Operation::raw_sign(const byte msg[], size_t,
    const BigInt s = m_mod_order.multiply(m_x, k - w);
    BOTAN_ASSERT(s != 0, "invalid s");
 
-   secure_vector<byte> output = BigInt::encode_1363(r, c.size());
+   secure_vector<uint8_t> output = BigInt::encode_1363(r, c.size());
    output += BigInt::encode_1363(s, m_order.bytes());
    return output;
    }
@@ -129,25 +129,25 @@ class ECKCDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
          }
 
       bool has_prefix() override { return true; }
-      secure_vector<byte> message_prefix() const override { return m_prefix; }
+      secure_vector<uint8_t> message_prefix() const override { return m_prefix; }
 
       size_t max_input_bits() const override { return m_order.bits(); }
 
       bool with_recovery() const override { return false; }
 
-      bool verify(const byte msg[], size_t msg_len,
-                  const byte sig[], size_t sig_len) override;
+      bool verify(const uint8_t msg[], size_t msg_len,
+                  const uint8_t sig[], size_t sig_len) override;
    private:
       const PointGFp& m_base_point;
       const PointGFp& m_public_point;
       const BigInt& m_order;
       // FIXME: should be offered by curve
       Modular_Reducer m_mod_order;
-      secure_vector<byte> m_prefix;
+      secure_vector<uint8_t> m_prefix;
    };
 
-bool ECKCDSA_Verification_Operation::verify(const byte msg[], size_t,
-                                           const byte sig[], size_t sig_len)
+bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t,
+                                           const uint8_t sig[], size_t sig_len)
    {
    const std::unique_ptr<HashFunction> hash = HashFunction::create(hash_for_signature());
    //calculate size of r
@@ -157,7 +157,7 @@ bool ECKCDSA_Verification_Operation::verify(const byte msg[], size_t,
       return false;
       }
 
-   secure_vector<byte> r(sig, sig + size_r);
+   secure_vector<uint8_t> r(sig, sig + size_r);
 
    // check that 0 < s < q
    const BigInt s(sig + size_r, m_order.bytes());
@@ -167,18 +167,18 @@ bool ECKCDSA_Verification_Operation::verify(const byte msg[], size_t,
       return false;
       }
 
-   secure_vector<byte> r_xor_e(r);
+   secure_vector<uint8_t> r_xor_e(r);
    xor_buf(r_xor_e, msg, r.size());
    BigInt w(r_xor_e.data(), r_xor_e.size());
    w = m_mod_order.reduce(w);
    
    const PointGFp q = multi_exponentiate(m_base_point, w, m_public_point, s);
    const BigInt q_x = q.get_affine_x();
-   secure_vector<byte> c(q_x.bytes());
+   secure_vector<uint8_t> c(q_x.bytes());
    q_x.binary_encode(c.data());
    std::unique_ptr<EMSA> emsa(m_emsa->clone());
    emsa->update(c.data(), c.size());
-   secure_vector<byte> v = emsa->raw_data();
+   secure_vector<uint8_t> v = emsa->raw_data();
    Null_RNG rng;
    v = emsa->encoding_of(v, max_input_bits(), rng);
 

@@ -146,7 +146,7 @@ std::string url_encode(const std::string& in)
       else if(c == '-' || c == '_' || c == '.' || c == '~')
          out << c;
       else
-         out << '%' << hex_encode(reinterpret_cast<byte*>(&c), 1);
+         out << '%' << hex_encode(reinterpret_cast<uint8_t*>(&c), 1);
       }
 
    return out.str();
@@ -166,7 +166,7 @@ Response http_sync(http_exch_fn http_transact,
                    const std::string& verb,
                    const std::string& url,
                    const std::string& content_type,
-                   const std::vector<byte>& body,
+                   const std::vector<uint8_t>& body,
                    size_t allowable_redirects)
    {
    if(url.empty())
@@ -251,8 +251,8 @@ Response http_sync(http_exch_fn http_transact,
       return GET_sync(headers["Location"], allowable_redirects - 1);
       }
 
-   std::vector<byte> resp_body;
-   std::vector<byte> buf(4096);
+   std::vector<uint8_t> resp_body;
+   std::vector<uint8_t> buf(4096);
    while(io.good())
       {
       io.read(reinterpret_cast<char*>(buf.data()), buf.size());
@@ -274,7 +274,7 @@ Response http_sync(http_exch_fn http_transact,
 Response http_sync(const std::string& verb,
                    const std::string& url,
                    const std::string& content_type,
-                   const std::vector<byte>& body,
+                   const std::vector<uint8_t>& body,
                    size_t allowable_redirects)
    {
    return http_sync(
@@ -288,12 +288,12 @@ Response http_sync(const std::string& verb,
 
 Response GET_sync(const std::string& url, size_t allowable_redirects)
    {
-   return http_sync("GET", url, "", std::vector<byte>(), allowable_redirects);
+   return http_sync("GET", url, "", std::vector<uint8_t>(), allowable_redirects);
    }
 
 Response POST_sync(const std::string& url,
                    const std::string& content_type,
-                   const std::vector<byte>& body,
+                   const std::vector<uint8_t>& body,
                    size_t allowable_redirects)
    {
    return http_sync("POST", url, content_type, body, allowable_redirects);

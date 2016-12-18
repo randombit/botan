@@ -21,7 +21,7 @@ namespace {
 ASN1_Tag choose_encoding(const std::string& str,
                          const std::string& type)
    {
-   static const byte IS_PRINTABLE[256] = {
+   static const uint8_t IS_PRINTABLE[256] = {
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
@@ -47,7 +47,7 @@ ASN1_Tag choose_encoding(const std::string& str,
 
    for(size_t i = 0; i != str.size(); ++i)
       {
-      if(!IS_PRINTABLE[static_cast<byte>(str[i])])
+      if(!IS_PRINTABLE[static_cast<uint8_t>(str[i])])
          {
          if(type == "utf8")   return UTF8_STRING;
          if(type == "latin1") return T61_STRING;

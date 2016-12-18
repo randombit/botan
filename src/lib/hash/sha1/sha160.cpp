@@ -17,7 +17,7 @@ namespace {
 /*
 * SHA-160 F1 Function
 */
-inline void F1(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
+inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
    E += (D ^ (B & (C ^ D))) + msg + 0x5A827999 + rotate_left(A, 5);
    B  = rotate_left(B, 30);
@@ -26,7 +26,7 @@ inline void F1(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 /*
 * SHA-160 F2 Function
 */
-inline void F2(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
+inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
    E += (B ^ C ^ D) + msg + 0x6ED9EBA1 + rotate_left(A, 5);
    B  = rotate_left(B, 30);
@@ -35,7 +35,7 @@ inline void F2(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 /*
 * SHA-160 F3 Function
 */
-inline void F3(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
+inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
    E += ((B & C) | ((B | C) & D)) + msg + 0x8F1BBCDC + rotate_left(A, 5);
    B  = rotate_left(B, 30);
@@ -44,7 +44,7 @@ inline void F3(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 /*
 * SHA-160 F4 Function
 */
-inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
+inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg)
    {
    E += (B ^ C ^ D) + msg + 0xCA62C1D6 + rotate_left(A, 5);
    B  = rotate_left(B, 30);
@@ -57,7 +57,7 @@ inline void F4(u32bit A, u32bit& B, u32bit C, u32bit D, u32bit& E, u32bit msg)
 /*
 * SHA-160 Compression Function
 */
-void SHA_160::compress_n(const byte input[], size_t blocks)
+void SHA_160::compress_n(const uint8_t input[], size_t blocks)
    {
    using namespace SHA1_F;
 
@@ -69,7 +69,7 @@ void SHA_160::compress_n(const byte input[], size_t blocks)
 
 #endif
 
-   u32bit A = m_digest[0], B = m_digest[1], C = m_digest[2],
+   uint32_t A = m_digest[0], B = m_digest[1], C = m_digest[2],
           D = m_digest[3], E = m_digest[4];
 
    m_W.resize(80);
@@ -147,7 +147,7 @@ void SHA_160::compress_n(const byte input[], size_t blocks)
 /*
 * Copy out the digest
 */
-void SHA_160::copy_out(byte output[])
+void SHA_160::copy_out(uint8_t output[])
    {
    copy_out_vec_be(output, output_length(), m_digest);
    }

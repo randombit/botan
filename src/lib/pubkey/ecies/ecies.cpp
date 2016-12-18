@@ -30,7 +30,7 @@ class ECIES_PrivateKey : public EC_PrivateKey, public PK_Key_Agreement_Key
          {
          }
 
-      std::vector<byte> public_value() const override
+      std::vector<uint8_t> public_value() const override
          {
          return m_key.public_value();
          }
@@ -61,7 +61,7 @@ class ECIES_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
          {
          }
 
-      secure_vector<byte> raw_agree(const byte w[], size_t w_len) override
+      secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override
          {
          const CurveGFp& curve = m_key.domain().get_curve();
          PointGFp point = OS2ECP(w, w_len, curve);
@@ -130,7 +130,7 @@ ECIES_KA_Operation::ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key,
 /**
 * ECIES secret derivation according to ISO 18033-2
 */
-SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<byte>& eph_public_key_bin,
+SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_public_key_bin,
       const PointGFp& other_public_key_point) const
    {
    if(other_public_key_point.is_zero())
@@ -148,7 +148,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<byte>& eph_publ
       other_point *= m_params.domain().get_cofactor();
       }
 
-   secure_vector<byte> derivation_input;
+   secure_vector<uint8_t> derivation_input;
 
    // ISO 18033: encryption step e / decryption step g
    if(!m_params.single_hash_mode())
@@ -157,7 +157,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<byte>& eph_publ
       }
 
    // ISO 18033: encryption step f / decryption step h
-   secure_vector<byte> other_public_key_bin = EC2OSP(other_point, static_cast<byte>(m_params.compression_type()));
+   secure_vector<uint8_t> other_public_key_bin = EC2OSP(other_point, static_cast<uint8_t>(m_params.compression_type()));
     // Note: the argument `m_params.secret_length()` passed for `key_len` will only be used by providers because
    // "Raw" is passed to the `PK_Key_Agreement` if the implementation of botan is used.
    const SymmetricKey peh = m_ka.derive_key(m_params.domain().get_order().bytes(), other_public_key_bin.data(), other_public_key_bin.size());
@@ -237,7 +237,7 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
       // ISO 18033: step d 
       // convert only if necessary; m_eph_public_key_bin has been initialized with the uncompressed format
       m_eph_public_key_bin = unlock(EC2OSP(OS2ECP(m_eph_public_key_bin, m_params.domain().get_curve()),
-                                           static_cast<byte>(ecies_params.compression_type())));
+                                           static_cast<uint8_t>(ecies_params.compression_type())));
       }
    }
 
@@ -253,7 +253,7 @@ ECIES_Encryptor::ECIES_Encryptor(RandomNumberGenerator& rng, const ECIES_System_
 /*
 * ECIES Encryption according to ISO 18033-2
 */
-std::vector<byte> ECIES_Encryptor::enc(const byte data[], size_t length, RandomNumberGenerator&) const
+std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[], size_t length, RandomNumberGenerator&) const
    {
    if(m_other_point.is_zero())
       {
@@ -271,14 +271,14 @@ std::vector<byte> ECIES_Encryptor::enc(const byte data[], size_t length, RandomN
       {
       cipher->start(m_iv.bits_of());
       }
-   secure_vector<byte> encrypted_data(data, data + length);
+   secure_vector<uint8_t> encrypted_data(data, data + length);
    cipher->finish(encrypted_data);
 
    // concat elements
    std::unique_ptr<MessageAuthenticationCode> mac = m_params.create_mac();
    BOTAN_ASSERT(mac != nullptr, "MAC is found");
 
-   secure_vector<byte> out(m_eph_public_key_bin.size() + encrypted_data.size() + mac->output_length());
+   secure_vector<uint8_t> out(m_eph_public_key_bin.size() + encrypted_data.size() + mac->output_length());
    buffer_insert(out, 0, m_eph_public_key_bin);
    buffer_insert(out, m_eph_public_key_bin.size(), encrypted_data);
 
@@ -317,7 +317,7 @@ ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
 /**
 * ECIES Decryption according to ISO 18033-2
 */
-secure_vector<byte> ECIES_Decryptor::do_decrypt(byte& valid_mask, const byte in[], size_t in_len) const
+secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const
    {
    size_t point_size = m_params.domain().get_curve().get_p().bytes();
    if(m_params.compression_type() != PointGFp::COMPRESSED)
@@ -335,9 +335,9 @@ secure_vector<byte> ECIES_Decryptor::do_decrypt(byte& valid_mask, const byte in[
       }
 
    // extract data
-   const std::vector<byte> other_public_key_bin(in, in + point_size);	// the received (ephemeral) public key
-   const std::vector<byte> encrypted_data(in + point_size, in + in_len - mac->output_length());
-   const std::vector<byte> mac_data(in + in_len - mac->output_length(), in + in_len);
+   const std::vector<uint8_t> other_public_key_bin(in, in + point_size);	// the received (ephemeral) public key
+   const std::vector<uint8_t> encrypted_data(in + point_size, in + in_len - mac->output_length());
+   const std::vector<uint8_t> mac_data(in + in_len - mac->output_length(), in + in_len);
 
    // ISO 18033: step a
    PointGFp other_public_key = OS2ECP(other_public_key_bin, m_params.domain().get_curve());
@@ -359,8 +359,8 @@ secure_vector<byte> ECIES_Decryptor::do_decrypt(byte& valid_mask, const byte in[
       {
       mac->update(m_label);
       }
-   const secure_vector<byte> calculated_mac = mac->final();
-   valid_mask = CT::expand_mask<byte>(same_mem(mac_data.data(), calculated_mac.data(), mac_data.size()));
+   const secure_vector<uint8_t> calculated_mac = mac->final();
+   valid_mask = CT::expand_mask<uint8_t>(same_mem(mac_data.data(), calculated_mac.data(), mac_data.size()));
 
    if(valid_mask)
       {
@@ -378,7 +378,7 @@ secure_vector<byte> ECIES_Decryptor::do_decrypt(byte& valid_mask, const byte in[
          {
          // the decryption can fail:
          // e.g. Integrity_Failure is thrown if GCM is used and the message does not have a valid tag
-         secure_vector<byte> decrypted_data(encrypted_data.begin(), encrypted_data.end());
+         secure_vector<uint8_t> decrypted_data(encrypted_data.begin(), encrypted_data.end());
          cipher->finish(decrypted_data);
          return decrypted_data;
          }
@@ -387,7 +387,7 @@ secure_vector<byte> ECIES_Decryptor::do_decrypt(byte& valid_mask, const byte in[
          valid_mask = 0;
          }
       }
-   return secure_vector<byte>();
+   return secure_vector<uint8_t>();
    }
 
 }

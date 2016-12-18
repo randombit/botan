@@ -406,7 +406,7 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
    if(windows > 0)
       {
       windows--;
-      const u32bit nibble = scalar.get_substring(windows*m_h, m_h);
+      const uint32_t nibble = scalar.get_substring(windows*m_h, m_h);
       R.add(m_U[nibble], m_ws);
 
       /*
@@ -421,7 +421,7 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
          for(size_t i = 0; i != m_h; ++i)
             R.mult2(m_ws);
 
-         const u32bit inner_nibble = scalar.get_substring((windows-1)*m_h, m_h);
+         const uint32_t inner_nibble = scalar.get_substring((windows-1)*m_h, m_h);
          R.add(m_U[inner_nibble], m_ws);
          windows--;
          }
@@ -513,22 +513,22 @@ bool PointGFp::operator==(const PointGFp& other) const
    }
 
 // encoding and decoding
-secure_vector<byte> EC2OSP(const PointGFp& point, byte format)
+secure_vector<uint8_t> EC2OSP(const PointGFp& point, uint8_t format)
    {
    if(point.is_zero())
-      return secure_vector<byte>(1); // single 0 byte
+      return secure_vector<uint8_t>(1); // single 0 byte
 
    const size_t p_bytes = point.get_curve().get_p().bytes();
 
    BigInt x = point.get_affine_x();
    BigInt y = point.get_affine_y();
 
-   secure_vector<byte> bX = BigInt::encode_1363(x, p_bytes);
-   secure_vector<byte> bY = BigInt::encode_1363(y, p_bytes);
+   secure_vector<uint8_t> bX = BigInt::encode_1363(x, p_bytes);
+   secure_vector<uint8_t> bY = BigInt::encode_1363(y, p_bytes);
 
    if(format == PointGFp::UNCOMPRESSED)
       {
-      secure_vector<byte> result;
+      secure_vector<uint8_t> result;
       result.push_back(0x04);
 
       result += bX;
@@ -538,8 +538,8 @@ secure_vector<byte> EC2OSP(const PointGFp& point, byte format)
       }
    else if(format == PointGFp::COMPRESSED)
       {
-      secure_vector<byte> result;
-      result.push_back(0x02 | static_cast<byte>(y.get_bit(0)));
+      secure_vector<uint8_t> result;
+      result.push_back(0x02 | static_cast<uint8_t>(y.get_bit(0)));
 
       result += bX;
 
@@ -547,8 +547,8 @@ secure_vector<byte> EC2OSP(const PointGFp& point, byte format)
       }
    else if(format == PointGFp::HYBRID)
       {
-      secure_vector<byte> result;
-      result.push_back(0x06 | static_cast<byte>(y.get_bit(0)));
+      secure_vector<uint8_t> result;
+      result.push_back(0x06 | static_cast<uint8_t>(y.get_bit(0)));
 
       result += bX;
       result += bY;
@@ -587,13 +587,13 @@ BigInt decompress_point(bool yMod2,
 
 }
 
-PointGFp OS2ECP(const byte data[], size_t data_len,
+PointGFp OS2ECP(const uint8_t data[], size_t data_len,
                 const CurveGFp& curve)
    {
    if(data_len <= 1)
       return PointGFp(curve); // return zero
 
-   const byte pc = data[0];
+   const uint8_t pc = data[0];
 
    BigInt x, y;
 

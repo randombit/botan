@@ -35,11 +35,11 @@ class BOTAN_DLL Keccak_1600 final : public HashFunction
       void clear() override;
 
    private:
-      void add_data(const byte input[], size_t length) override;
-      void final_result(byte out[]) override;
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t out[]) override;
 
       size_t m_output_bits, m_bitrate;
-      secure_vector<u64bit> m_S;
+      secure_vector<uint64_t> m_S;
       size_t m_S_pos;
    };
 

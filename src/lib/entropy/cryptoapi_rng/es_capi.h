@@ -32,7 +32,7 @@ class Win32_CAPI_EntropySource final : public Entropy_Source
       class CSP_Handle
          {
          public:
-            virtual size_t gen_random(byte out[], size_t n) const = 0;
+            virtual size_t gen_random(uint8_t out[], size_t n) const = 0;
          };
    private:
       std::vector<std::unique_ptr<CSP_Handle>> m_csp_provs;

@@ -28,7 +28,7 @@ class BOTAN_DLL Certificate_Store
       * @return a matching certificate or nullptr otherwise
       */
       virtual std::shared_ptr<const X509_Certificate>
-         find_cert(const X509_DN& subject_dn, const std::vector<byte>& key_id) const = 0;
+         find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const = 0;
 
       /**
       * Find a certificate by searching for one with a matching SHA-1 hash of
@@ -37,7 +37,7 @@ class BOTAN_DLL Certificate_Store
       * @return a matching certificate or nullptr otherwise
       */
       virtual std::shared_ptr<const X509_Certificate>
-         find_cert_by_pubkey_sha1(const std::vector<byte>& key_hash) const = 0;
+         find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const = 0;
 
       /**
       * Finds a CRL for the given certificate
@@ -115,10 +115,10 @@ class BOTAN_DLL Certificate_Store_In_Memory : public Certificate_Store
       */
       std::shared_ptr<const X509_Certificate> find_cert(
          const X509_DN& subject_dn,
-         const std::vector<byte>& key_id) const override;
+         const std::vector<uint8_t>& key_id) const override;
 
       std::shared_ptr<const X509_Certificate>
-         find_cert_by_pubkey_sha1(const std::vector<byte>& key_hash) const override;
+         find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
 
       /**
       * Finds a CRL for the given certificate

@@ -47,12 +47,12 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
-         const std::vector<byte> keygen_seed  = get_req_bin(vars, "McElieceSeed");
-         const std::vector<byte> fprint_pub   = get_req_bin(vars, "PublicKeyFingerprint");
-         const std::vector<byte> fprint_priv  = get_req_bin(vars, "PrivateKeyFingerprint");
-         const std::vector<byte> encrypt_seed = get_req_bin(vars, "EncryptPRNGSeed");
-         const std::vector<byte> ciphertext   = get_req_bin(vars, "Ciphertext");
-         const std::vector<byte> shared_key   = get_req_bin(vars, "SharedKey");
+         const std::vector<uint8_t> keygen_seed  = get_req_bin(vars, "McElieceSeed");
+         const std::vector<uint8_t> fprint_pub   = get_req_bin(vars, "PublicKeyFingerprint");
+         const std::vector<uint8_t> fprint_priv  = get_req_bin(vars, "PrivateKeyFingerprint");
+         const std::vector<uint8_t> encrypt_seed = get_req_bin(vars, "EncryptPRNGSeed");
+         const std::vector<uint8_t> ciphertext   = get_req_bin(vars, "Ciphertext");
+         const std::vector<uint8_t> shared_key   = get_req_bin(vars, "SharedKey");
          const size_t keygen_n = get_req_sz(vars, "KeyN");
          const size_t keygen_t = get_req_sz(vars, "KeyT");
 
@@ -73,10 +73,10 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
             Botan::PK_KEM_Encryptor kem_enc(mce_priv, Test::rng(), "KDF1(SHA-512)");
             Botan::PK_KEM_Decryptor kem_dec(mce_priv, Test::rng(), "KDF1(SHA-512)");
 
-            Botan::secure_vector<byte> encap_key, prod_shared_key;
+            Botan::secure_vector<uint8_t> encap_key, prod_shared_key;
             kem_enc.encrypt(encap_key, prod_shared_key, 64, rng);
 
-            Botan::secure_vector<byte> dec_shared_key = kem_dec.decrypt(encap_key.data(), encap_key.size(), 64);
+            Botan::secure_vector<uint8_t> dec_shared_key = kem_dec.decrypt(encap_key.data(), encap_key.size(), 64);
 
             result.test_eq("ciphertext", encap_key, ciphertext);
             result.test_eq("encrypt shared", prod_shared_key, shared_key);
@@ -90,17 +90,17 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
          }
 
    private:
-      std::vector<byte> hash_bytes(const byte b[], size_t len, const std::string& hash_fn = "SHA-256")
+      std::vector<uint8_t> hash_bytes(const uint8_t b[], size_t len, const std::string& hash_fn = "SHA-256")
          {
          std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_fn));
          hash->update(b, len);
-         std::vector<byte> r(hash->output_length());
+         std::vector<uint8_t> r(hash->output_length());
          hash->final(r.data());
          return r;
          }
 
       template<typename A>
-      std::vector<byte> hash_bytes(const std::vector<byte, A>& v)
+      std::vector<uint8_t> hash_bytes(const std::vector<uint8_t, A>& v)
          {
          return hash_bytes(v.data(), v.size());
          }
@@ -153,8 +153,8 @@ class McEliece_Tests : public Test
                Botan::McEliece_PrivateKey sk1(Test::rng(), param_sets[i].code_length, t);
                const Botan::McEliece_PublicKey& pk1 = sk1;
 
-               const std::vector<byte> pk_enc = pk1.public_key_bits();
-               const Botan::secure_vector<byte> sk_enc = sk1.private_key_bits();
+               const std::vector<uint8_t> pk_enc = pk1.public_key_bits();
+               const Botan::secure_vector<uint8_t> sk_enc = sk1.private_key_bits();
 
                Botan::McEliece_PublicKey pk(pk_enc);
                Botan::McEliece_PrivateKey sk(sk_enc);
@@ -191,12 +191,12 @@ class McEliece_Tests : public Test
 
          for(size_t i = 0; i <= Test::soak_level(); i++)
             {
-            Botan::secure_vector<byte> salt = Test::rng().random_vec(i);
+            Botan::secure_vector<uint8_t> salt = Test::rng().random_vec(i);
 
-            Botan::secure_vector<byte> encap_key, shared_key;
+            Botan::secure_vector<uint8_t> encap_key, shared_key;
             enc_op.encrypt(encap_key, shared_key, 64, Test::rng(), salt);
 
-            Botan::secure_vector<byte> shared_key2 = dec_op.decrypt(encap_key, 64, salt);
+            Botan::secure_vector<uint8_t> shared_key2 = dec_op.decrypt(encap_key, 64, salt);
 
             result.test_eq("same key", shared_key, shared_key2);
             }
@@ -212,17 +212,17 @@ class McEliece_Tests : public Test
          for(size_t i = 0; i <= Test::soak_level(); ++i)
             {
             uint8_t ad[8];
-            Botan::store_be(static_cast<Botan::u64bit>(i), ad);
+            Botan::store_be(static_cast<uint64_t>(i), ad);
             const size_t ad_len = sizeof(ad);
 
-            const Botan::secure_vector<byte> pt = Test::rng().random_vec(Test::rng().next_byte());
+            const Botan::secure_vector<uint8_t> pt = Test::rng().random_vec(Test::rng().next_byte());
 
-            const Botan::secure_vector<byte> ct = mceies_encrypt(pk, pt.data(), pt.size(), ad, ad_len, Test::rng());
-            const Botan::secure_vector<byte> dec = mceies_decrypt(sk, ct.data(), ct.size(), ad, ad_len);
+            const Botan::secure_vector<uint8_t> ct = mceies_encrypt(pk, pt.data(), pt.size(), ad, ad_len, Test::rng());
+            const Botan::secure_vector<uint8_t> dec = mceies_decrypt(sk, ct.data(), ct.size(), ad, ad_len);
 
             result.test_eq("decrypted ok", dec, pt);
 
-            Botan::secure_vector<byte> bad_ct = ct;
+            Botan::secure_vector<uint8_t> bad_ct = ct;
             for(size_t j = 0; j != 3; ++j)
                {
                bad_ct = mutate_vec(ct, true);

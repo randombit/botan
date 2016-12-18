@@ -30,9 +30,9 @@ class RFC3394_Keywrap_Tests : public Text_Based_Test
 
          try
             {
-            const std::vector<byte> expected = get_req_bin(vars, "Output");
-            const std::vector<byte> key = get_req_bin(vars, "Key");
-            const std::vector<byte> kek = get_req_bin(vars, "KEK");
+            const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
+            const std::vector<uint8_t> key = get_req_bin(vars, "Key");
+            const std::vector<uint8_t> kek = get_req_bin(vars, "KEK");
 
             const Botan::SymmetricKey kek_sym(kek);
             const Botan::secure_vector<uint8_t> key_l(key.begin(), key.end());

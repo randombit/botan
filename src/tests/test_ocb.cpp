@@ -27,7 +27,7 @@ class OCB_Long_KAT_Tests : public Text_Based_Test
          {
          const size_t keylen = get_req_sz(vars, "Keylen");
          const size_t taglen = get_req_sz(vars, "Taglen");
-         const std::vector<byte> expected = get_req_bin(vars, "Output");
+         const std::vector<uint8_t> expected = get_req_bin(vars, "Output");
 
          // Test from RFC 7253 Appendix A
 
@@ -45,19 +45,19 @@ class OCB_Long_KAT_Tests : public Text_Based_Test
          Botan::OCB_Encryption enc(aes->clone(), taglen / 8);
          Botan::OCB_Decryption dec(aes->clone(), taglen / 8);
 
-         std::vector<byte> key(keylen/8);
+         std::vector<uint8_t> key(keylen/8);
          key[keylen/8-1] = taglen;
 
          enc.set_key(key);
          dec.set_key(key);
 
-         const std::vector<byte> empty;
-         std::vector<byte> N(12);
-         std::vector<byte> C;
+         const std::vector<uint8_t> empty;
+         std::vector<uint8_t> N(12);
+         std::vector<uint8_t> C;
 
          for(size_t i = 0; i != 128; ++i)
             {
-            const std::vector<byte> S(i);
+            const std::vector<uint8_t> S(i);
 
             Botan::store_be(static_cast<uint32_t>(3*i+1), &N[8]);
 
@@ -69,7 +69,7 @@ class OCB_Long_KAT_Tests : public Text_Based_Test
             }
 
          Botan::store_be(static_cast<uint32_t>(385), &N[8]);
-         std::vector<byte> final_result;
+         std::vector<uint8_t> final_result;
          ocb_encrypt(result, final_result, enc, dec, N, empty, C);
 
          result.test_eq("correct value", final_result, expected);
@@ -78,18 +78,18 @@ class OCB_Long_KAT_Tests : public Text_Based_Test
          }
    private:
       void ocb_encrypt(Test::Result& result,
-                       std::vector<byte>& output_to,
+                       std::vector<uint8_t>& output_to,
                        Botan::OCB_Encryption& enc,
                        Botan::OCB_Decryption& dec,
-                       const std::vector<byte>& nonce,
-                       const std::vector<byte>& pt,
-                       const std::vector<byte>& ad)
+                       const std::vector<uint8_t>& nonce,
+                       const std::vector<uint8_t>& pt,
+                       const std::vector<uint8_t>& ad)
          {
          enc.set_associated_data(ad.data(), ad.size());
 
          enc.start(nonce.data(), nonce.size());
 
-         Botan::secure_vector<byte> buf(pt.begin(), pt.end());
+         Botan::secure_vector<uint8_t> buf(pt.begin(), pt.end());
          enc.finish(buf, 0);
          output_to.insert(output_to.end(), buf.begin(), buf.end());
 

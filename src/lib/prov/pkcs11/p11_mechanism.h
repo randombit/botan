@@ -63,9 +63,9 @@ class MechanismWrapper final
       * @param salt the salt
       * @param salt_len size of the salt in bytes
       */
-      inline void set_ecdh_salt(const byte salt[], size_t salt_len)
+      inline void set_ecdh_salt(const uint8_t salt[], size_t salt_len)
          {
-         m_parameters->ecdh_params.pSharedData = const_cast<byte*>(salt);
+         m_parameters->ecdh_params.pSharedData = const_cast<uint8_t*>(salt);
          m_parameters->ecdh_params.ulSharedDataLen = salt_len;
          }
 
@@ -74,9 +74,9 @@ class MechanismWrapper final
       * @param other_key key of the other party
       * @param other_key_len size of the key of the other party in bytes
       */
-      inline void set_ecdh_other_key(const byte other_key[], size_t other_key_len)
+      inline void set_ecdh_other_key(const uint8_t other_key[], size_t other_key_len)
          {
-         m_parameters->ecdh_params.pPublicData = const_cast<byte*>(other_key);
+         m_parameters->ecdh_params.pPublicData = const_cast<uint8_t*>(other_key);
          m_parameters->ecdh_params.ulPublicDataLen = other_key_len;
          }
 

@@ -24,8 +24,8 @@ namespace Botan {
 */
 void BOTAN_DLL aont_package(RandomNumberGenerator& rng,
                             BlockCipher* cipher,
-                            const byte input[], size_t input_len,
-                            byte output[]);
+                            const uint8_t input[], size_t input_len,
+                            uint8_t output[]);
 
 /**
 * Rivest's Package Tranform (Inversion)
@@ -36,8 +36,8 @@ void BOTAN_DLL aont_package(RandomNumberGenerator& rng,
 *        input_len - cipher->BLOCK_SIZE bytes long)
 */
 void BOTAN_DLL aont_unpackage(BlockCipher* cipher,
-                              const byte input[], size_t input_len,
-                              byte output[]);
+                              const uint8_t input[], size_t input_len,
+                              uint8_t output[]);
 
 }
 

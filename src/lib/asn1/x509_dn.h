@@ -35,7 +35,7 @@ class BOTAN_DLL X509_DN final : public ASN1_Object
 
       static std::string deref_info_field(const std::string&);
 
-      std::vector<byte> get_bits() const;
+      std::vector<uint8_t> get_bits() const;
 
       bool empty() const { return m_dn_info.empty(); }
 
@@ -44,7 +44,7 @@ class BOTAN_DLL X509_DN final : public ASN1_Object
       explicit X509_DN(const std::multimap<std::string, std::string>&);
    private:
       std::multimap<OID, ASN1_String> m_dn_info;
-      std::vector<byte> m_dn_bits;
+      std::vector<uint8_t> m_dn_bits;
    };
 
 bool BOTAN_DLL operator==(const X509_DN&, const X509_DN&);

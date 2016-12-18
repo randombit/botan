@@ -9,10 +9,10 @@
 
 namespace Botan {
 
-size_t KDF1::kdf(byte key[], size_t key_len,
-                 const byte secret[], size_t secret_len,
-                 const byte salt[], size_t salt_len,
-                 const byte label[], size_t label_len) const
+size_t KDF1::kdf(uint8_t key[], size_t key_len,
+                 const uint8_t secret[], size_t secret_len,
+                 const uint8_t salt[], size_t salt_len,
+                 const uint8_t label[], size_t label_len) const
    {
    m_hash->update(secret, secret_len);
    m_hash->update(label, label_len);
@@ -20,7 +20,7 @@ size_t KDF1::kdf(byte key[], size_t key_len,
 
    if(key_len < m_hash->output_length())
       {
-      secure_vector<byte> v = m_hash->final();
+      secure_vector<uint8_t> v = m_hash->final();
       copy_mem(key, v.data(), key_len);
       return key_len;
       }

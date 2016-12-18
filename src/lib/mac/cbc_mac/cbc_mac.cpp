@@ -12,7 +12,7 @@ namespace Botan {
 /*
 * Update an CBC-MAC Calculation
 */
-void CBC_MAC::add_data(const byte input[], size_t length)
+void CBC_MAC::add_data(const uint8_t input[], size_t length)
    {
    size_t xored = std::min(output_length() - m_position, length);
    xor_buf(&m_state[m_position], input, xored);
@@ -39,7 +39,7 @@ void CBC_MAC::add_data(const byte input[], size_t length)
 /*
 * Finalize an CBC-MAC Calculation
 */
-void CBC_MAC::final_result(byte mac[])
+void CBC_MAC::final_result(uint8_t mac[])
    {
    if(m_position)
       m_cipher->encrypt(m_state);
@@ -52,7 +52,7 @@ void CBC_MAC::final_result(byte mac[])
 /*
 * CBC-MAC Key Schedule
 */
-void CBC_MAC::key_schedule(const byte key[], size_t length)
+void CBC_MAC::key_schedule(const uint8_t key[], size_t length)
    {
    m_cipher->set_key(key, length);
    }

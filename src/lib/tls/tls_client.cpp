@@ -35,7 +35,7 @@ class Client_Handshake_State : public Handshake_State
          }
 
       // Used during session resumption
-      secure_vector<byte> resume_master_secret;
+      secure_vector<uint8_t> resume_master_secret;
 
       std::unique_ptr<Public_Key> server_public_key;
    };
@@ -196,7 +196,7 @@ void Client::send_client_hello(Handshake_State& state_base,
 void Client::process_handshake_msg(const Handshake_State* active_state,
                                    Handshake_State& state_base,
                                    Handshake_Type type,
-                                   const std::vector<byte>& contents)
+                                   const std::vector<uint8_t>& contents)
    {
    Client_Handshake_State& state = dynamic_cast<Client_Handshake_State&>(state_base);
 
@@ -281,7 +281,7 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE, msg.str());
          }
 
-      if(u16bit srtp = state.server_hello()->srtp_profile())
+      if(uint16_t srtp = state.server_hello()->srtp_profile())
          {
          if(!value_exists(state.client_hello()->srtp_profiles(), srtp))
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
@@ -561,9 +561,9 @@ void Client::process_handshake_msg(const Handshake_State* active_state,
          state.client_finished(new Finished(state.handshake_io(), state, CLIENT));
          }
 
-      std::vector<byte> session_id = state.server_hello()->session_id();
+      std::vector<uint8_t> session_id = state.server_hello()->session_id();
 
-      const std::vector<byte>& session_ticket = state.session_ticket();
+      const std::vector<uint8_t>& session_ticket = state.session_ticket();
 
       if(session_id.empty() && !session_ticket.empty())
          session_id = make_hello_random(rng(), policy());

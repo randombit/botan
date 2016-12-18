@@ -38,7 +38,7 @@ EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
    }
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
-                           const std::vector<byte>& key_bits) :
+                           const std::vector<uint8_t>& key_bits) :
    m_domain_params{EC_Group(alg_id.parameters)},
    m_public_key{OS2ECP(key_bits, domain().get_curve())},
    m_domain_encoding{EC_DOMPAR_ENC_EXPLICIT}
@@ -55,7 +55,7 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
    return AlgorithmIdentifier(get_oid(), DER_domain());
    }
 
-std::vector<byte> EC_PublicKey::public_key_bits() const
+std::vector<uint8_t> EC_PublicKey::public_key_bits() const
    {
    return unlock(EC2OSP(public_point(), PointGFp::COMPRESSED));
    }
@@ -110,7 +110,7 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
                 "Generated public key point was on the curve");
    }
 
-secure_vector<byte> EC_PrivateKey::private_key_bits() const
+secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const
    {
    return DER_Encoder()
       .start_cons(SEQUENCE)
@@ -122,14 +122,14 @@ secure_vector<byte> EC_PrivateKey::private_key_bits() const
    }
 
 EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
-                             const secure_vector<byte>& key_bits,
+                             const secure_vector<uint8_t>& key_bits,
                              bool with_modular_inverse)
    {
    m_domain_params = EC_Group(alg_id.parameters);
    m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
    OID key_parameters;
-   secure_vector<byte> public_key_bits;
+   secure_vector<uint8_t> public_key_bits;
 
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)

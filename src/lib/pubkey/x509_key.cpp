@@ -16,7 +16,7 @@ namespace Botan {
 
 namespace X509 {
 
-std::vector<byte> BER_encode(const Public_Key& key)
+std::vector<uint8_t> BER_encode(const Public_Key& key)
    {
    // keeping it around for compat
    return key.subject_public_key();
@@ -38,7 +38,7 @@ Public_Key* load_key(DataSource& source)
    {
    try {
       AlgorithmIdentifier alg_id;
-      std::vector<byte> key_bits;
+      std::vector<uint8_t> key_bits;
 
       if(ASN1::maybe_BER(source) && !PEM_Code::matches(source))
          {
@@ -88,7 +88,7 @@ Public_Key* load_key(const std::string& fsname)
 /*
 * Extract a public key and return it
 */
-Public_Key* load_key(const std::vector<byte>& mem)
+Public_Key* load_key(const std::vector<uint8_t>& mem)
    {
    DataSource_Memory source(mem);
    return X509::load_key(source);

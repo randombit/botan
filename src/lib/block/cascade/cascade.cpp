@@ -9,7 +9,7 @@
 
 namespace Botan {
 
-void Cascade_Cipher::encrypt_n(const byte in[], byte out[],
+void Cascade_Cipher::encrypt_n(const uint8_t in[], uint8_t out[],
                                size_t blocks) const
    {
    size_t c1_blocks = blocks * (block_size() / m_cipher1->block_size());
@@ -19,7 +19,7 @@ void Cascade_Cipher::encrypt_n(const byte in[], byte out[],
    m_cipher2->encrypt_n(out, out, c2_blocks);
    }
 
-void Cascade_Cipher::decrypt_n(const byte in[], byte out[],
+void Cascade_Cipher::decrypt_n(const uint8_t in[], uint8_t out[],
                                size_t blocks) const
    {
    size_t c1_blocks = blocks * (block_size() / m_cipher1->block_size());
@@ -29,9 +29,9 @@ void Cascade_Cipher::decrypt_n(const byte in[], byte out[],
    m_cipher1->decrypt_n(out, out, c1_blocks);
    }
 
-void Cascade_Cipher::key_schedule(const byte key[], size_t)
+void Cascade_Cipher::key_schedule(const uint8_t key[], size_t)
    {
-   const byte* key2 = key + m_cipher1->maximum_keylength();
+   const uint8_t* key2 = key + m_cipher1->maximum_keylength();
 
    m_cipher1->set_key(key , m_cipher1->maximum_keylength());
    m_cipher2->set_key(key2, m_cipher2->maximum_keylength());

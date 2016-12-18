@@ -47,7 +47,7 @@ ECDSA_PrivateKey PKCS11_ECDSA_PrivateKey::export_key() const
    return ECDSA_PrivateKey(rng, domain(), BigInt::decode(priv_key));
    }
 
-secure_vector<byte> PKCS11_ECDSA_PrivateKey::private_key_bits() const
+secure_vector<uint8_t> PKCS11_ECDSA_PrivateKey::private_key_bits() const
    {
    return export_key().private_key_bits();
    }
@@ -61,14 +61,14 @@ class PKCS11_ECDSA_Signature_Operation : public PK_Ops::Signature
          : PK_Ops::Signature(), m_key(key), m_order(key.domain().get_order()), m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
          {}
 
-      void update(const byte msg[], size_t msg_len) override
+      void update(const uint8_t msg[], size_t msg_len) override
          {
          if(!m_initialized)
             {
             // first call to update: initialize and cache message because we can not determine yet whether a single- or multiple-part operation will be performed
             m_key.module()->C_SignInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
             m_initialized = true;
-            m_first_message = secure_vector<byte>(msg, msg + msg_len);
+            m_first_message = secure_vector<uint8_t>(msg, msg + msg_len);
             return;
             }
 
@@ -82,9 +82,9 @@ class PKCS11_ECDSA_Signature_Operation : public PK_Ops::Signature
          m_key.module()->C_SignUpdate(m_key.session().handle(), const_cast<Byte*>(msg), msg_len);
          }
 
-      secure_vector<byte> sign(RandomNumberGenerator&) override
+      secure_vector<uint8_t> sign(RandomNumberGenerator&) override
          {
-         secure_vector<byte> signature;
+         secure_vector<uint8_t> signature;
          if(!m_first_message.empty())
             {
             // single call to update: perform single-part operation
@@ -104,7 +104,7 @@ class PKCS11_ECDSA_Signature_Operation : public PK_Ops::Signature
       const PKCS11_EC_PrivateKey& m_key;
       const BigInt& m_order;
       MechanismWrapper m_mechanism;
-      secure_vector<byte> m_first_message;
+      secure_vector<uint8_t> m_first_message;
       bool m_initialized = false;
    };
 
@@ -116,14 +116,14 @@ class PKCS11_ECDSA_Verification_Operation : public PK_Ops::Verification
          : PK_Ops::Verification(), m_key(key), m_order(key.domain().get_order()), m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
          {}
 
-      void update(const byte msg[], size_t msg_len) override
+      void update(const uint8_t msg[], size_t msg_len) override
          {
          if(!m_initialized)
             {
             // first call to update: initialize and cache message because we can not determine yet whether a single- or multiple-part operation will be performed
             m_key.module()->C_VerifyInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
             m_initialized = true;
-            m_first_message = secure_vector<byte>(msg, msg + msg_len);
+            m_first_message = secure_vector<uint8_t>(msg, msg + msg_len);
             return;
             }
 
@@ -137,7 +137,7 @@ class PKCS11_ECDSA_Verification_Operation : public PK_Ops::Verification
          m_key.module()->C_VerifyUpdate(m_key.session().handle(), const_cast<Byte*>(msg), msg_len);
          }
 
-      bool is_valid_signature(const byte sig[], size_t sig_len) override
+      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override
          {
          ReturnValue return_value = ReturnValue::SignatureInvalid;
          if(!m_first_message.empty())
@@ -164,7 +164,7 @@ class PKCS11_ECDSA_Verification_Operation : public PK_Ops::Verification
       const PKCS11_EC_PublicKey& m_key;
       const BigInt& m_order;
       MechanismWrapper m_mechanism;
-      secure_vector<byte> m_first_message;
+      secure_vector<uint8_t> m_first_message;
       bool m_initialized = false;
    };
 
