@@ -12,6 +12,7 @@
 #include <botan/ber_dec.h>
 #include <botan/pem.h>
 #include <botan/workfactor.h>
+#include <botan/pow_mod.h>
 
 namespace Botan {
 
@@ -149,15 +150,28 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng,
 
    if(m_g < 2 || m_p < 3 || m_q < 0)
       return false;
-   if((m_q != 0) && ((m_p - 1) % m_q != 0))
-      return false;
 
-   const size_t prob = (strong) ? 56 : 10;
+   const size_t prob = (strong) ? 128 : 10;
 
+   if(m_q != 0)
+      {
+      if((m_p - 1) % m_q != 0)
+         {
+         return false;
+         }
+      if(power_mod(m_g, m_q, m_p) != 1)
+         {
+         return false;
+         }
+      if(!is_prime(m_q, rng, prob))
+         {
+         return false;
+         }
+      }
    if(!is_prime(m_p, rng, prob))
+      {
       return false;
-   if((m_q > 0) && !is_prime(m_q, rng, prob))
-      return false;
+      }
    return true;
    }
 
