@@ -20,46 +20,41 @@ namespace {
 
 #if defined(BOTAN_HAS_ECKCDSA)
 
-class ECKCDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
-   {
-   public:
-      ECKCDSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
-         "ECKCDSA",
-         "pubkey/eckcdsa.vec",
-         "Group,X,Hash,Msg,Nonce,Signature")
-         {}
+class ECKCDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test {
+public:
+  ECKCDSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
+      "ECKCDSA",
+      "pubkey/eckcdsa.vec",
+      "Group,X,Hash,Msg,Nonce,Signature")
+  {}
 
-      bool clear_between_callbacks() const override { return false; }
+  bool clear_between_callbacks() const override { return false; }
 
-      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
-         {
-         const std::string group_id = get_req_str(vars, "Group");
-         const BigInt x = get_req_bn(vars, "X");
-         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
+  std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override {
+    const std::string group_id = get_req_str(vars, "Group");
+    const BigInt x = get_req_bn(vars, "X");
+    Botan::EC_Group group(Botan::OIDS::lookup(group_id));
 
-         std::unique_ptr<Botan::Private_Key> key(new Botan::ECKCDSA_PrivateKey(Test::rng(), group, x));
-         return key;
-         }
+    std::unique_ptr<Botan::Private_Key> key(new Botan::ECKCDSA_PrivateKey(Test::rng(), group, x));
+    return key;
+  }
 
-      std::string default_padding(const VarMap& vars) const override
-         {
-         return "EMSA1(" + get_req_str(vars, "Hash") + ")";
-         }
+  std::string default_padding(const VarMap& vars) const override {
+    return "EMSA1(" + get_req_str(vars, "Hash") + ")";
+  }
 
-      Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override
-         {
-         // eckcdsa signature generation extracts more random than just the nonce,
-         // but the nonce is extracted first
-         return new Fixed_Output_Position_RNG(nonce, 1);
-         }
-   };
+  Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const override {
+    // eckcdsa signature generation extracts more random than just the nonce,
+    // but the nonce is extracted first
+    return new Fixed_Output_Position_RNG(nonce, 1);
+  }
+};
 
-class ECKCDSA_Keygen_Tests : public PK_Key_Generation_Test
-   {
-   public:
-      std::vector<std::string> keygen_params() const override { return { "secp256r1", "secp384r1", "secp521r1" }; }
-      std::string algo_name() const override { return "ECKCDSA"; }
-   };
+class ECKCDSA_Keygen_Tests : public PK_Key_Generation_Test {
+public:
+  std::vector<std::string> keygen_params() const override { return { "secp256r1", "secp384r1", "secp521r1" }; }
+  std::string algo_name() const override { return "ECKCDSA"; }
+};
 
 BOTAN_REGISTER_TEST("eckcdsa_sign", ECKCDSA_Signature_KAT_Tests);
 BOTAN_REGISTER_TEST("eckcdsa_keygen", ECKCDSA_Keygen_Tests);

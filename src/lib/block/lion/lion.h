@@ -22,42 +22,40 @@ namespace Botan {
 
 * http://www.cl.cam.ac.uk/~rja14/Papers/bear-lion.pdf
 */
-class BOTAN_DLL Lion final : public BlockCipher
-   {
-   public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
+class BOTAN_DLL Lion final : public BlockCipher {
+public:
+  void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
+  void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
-      size_t block_size() const override { return m_block_size; }
+  size_t block_size() const override { return m_block_size; }
 
-      Key_Length_Specification key_spec() const override
-         {
-         return Key_Length_Specification(2, 2*m_hash->output_length(), 2);
-         }
+  Key_Length_Specification key_spec() const override {
+    return Key_Length_Specification(2, 2*m_hash->output_length(), 2);
+  }
 
-      void clear() override;
-      std::string name() const override;
-      BlockCipher* clone() const override;
+  void clear() override;
+  std::string name() const override;
+  BlockCipher* clone() const override;
 
-      /**
-      * @param hash the hash to use internally
-      * @param cipher the stream cipher to use internally
-      * @param block_size the size of the block to use
-      */
-      Lion(HashFunction* hash,
-           StreamCipher* cipher,
-           size_t block_size);
-   private:
-      void key_schedule(const uint8_t[], size_t) override;
+  /**
+  * @param hash the hash to use internally
+  * @param cipher the stream cipher to use internally
+  * @param block_size the size of the block to use
+  */
+  Lion(HashFunction* hash,
+       StreamCipher* cipher,
+       size_t block_size);
+private:
+  void key_schedule(const uint8_t[], size_t) override;
 
-      size_t left_size() const { return m_hash->output_length(); }
-      size_t right_size() const { return m_block_size - left_size(); }
+  size_t left_size() const { return m_hash->output_length(); }
+  size_t right_size() const { return m_block_size - left_size(); }
 
-      const size_t m_block_size;
-      std::unique_ptr<HashFunction> m_hash;
-      std::unique_ptr<StreamCipher> m_cipher;
-      secure_vector<uint8_t> m_key1, m_key2;
-   };
+  const size_t m_block_size;
+  std::unique_ptr<HashFunction> m_hash;
+  std::unique_ptr<StreamCipher> m_cipher;
+  secure_vector<uint8_t> m_key1, m_key2;
+};
 
 }
 

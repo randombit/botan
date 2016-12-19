@@ -36,13 +36,11 @@ BOTAN_DLL void secure_scrub_memory(void* ptr, size_t n);
 * @param ptr a pointer to memory to zero
 * @param bytes the number of bytes to zero in ptr
 */
-inline void clear_bytes(void* ptr, size_t bytes)
-   {
-   if(bytes > 0)
-      {
-      std::memset(ptr, 0, bytes);
-      }
-   }
+inline void clear_bytes(void* ptr, size_t bytes) {
+  if (bytes > 0) {
+    std::memset(ptr, 0, bytes);
+  }
+}
 
 /**
 * Zero memory before use. This simply calls memset and should not be
@@ -54,10 +52,9 @@ inline void clear_bytes(void* ptr, size_t bytes)
 * @param ptr a pointer to an array of Ts to zero
 * @param n the number of Ts pointed to by ptr
 */
-template<typename T> inline void clear_mem(T* ptr, size_t n)
-   {
-   clear_bytes(ptr, sizeof(T)*n);
-   }
+template<typename T> inline void clear_mem(T* ptr, size_t n) {
+  clear_bytes(ptr, sizeof(T)*n);
+}
 
 /**
 * Copy memory
@@ -65,13 +62,11 @@ template<typename T> inline void clear_mem(T* ptr, size_t n)
 * @param in the source array
 * @param n the number of elements of in/out
 */
-template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
-   {
-   if(n > 0)
-      {
-      std::memmove(out, in, sizeof(T)*n);
-      }
-   }
+template<typename T> inline void copy_mem(T* out, const T* in, size_t n) {
+  if (n > 0) {
+    std::memmove(out, in, sizeof(T)*n);
+  }
+}
 
 /**
 * Set memory to a fixed value
@@ -80,13 +75,11 @@ template<typename T> inline void copy_mem(T* out, const T* in, size_t n)
 * @param val the value to set each byte to
 */
 template<typename T>
-inline void set_mem(T* ptr, size_t n, uint8_t val)
-   {
-   if(n > 0)
-      {
-      std::memset(ptr, val, sizeof(T)*n);
-      }
-   }
+inline void set_mem(T* ptr, size_t n, uint8_t val) {
+  if (n > 0) {
+    std::memset(ptr, val, sizeof(T)*n);
+  }
+}
 
 /**
 * Memory comparison, input insensitive
@@ -95,15 +88,15 @@ inline void set_mem(T* ptr, size_t n, uint8_t val)
 * @param n the number of Ts in p1 and p2
 * @return true iff p1[i] == p2[i] forall i in [0...n)
 */
-template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n)
-   {
-   volatile T difference = 0;
+template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n) {
+  volatile T difference = 0;
 
-   for(size_t i = 0; i != n; ++i)
-      difference |= (p1[i] ^ p2[i]);
+  for (size_t i = 0; i != n; ++i) {
+    difference |= (p1[i] ^ p2[i]);
+  }
 
-   return difference == 0;
-   }
+  return difference == 0;
+}
 
 /**
 * XOR_ arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
@@ -112,13 +105,11 @@ template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n)
 * @param length the length of the buffers
 */
 template<typename T>
-void xor_buf(T out[], const T in[], size_t length)
-   {
-   for(size_t i = 0; i != length; ++i)
-      {
-      out[i] ^= in[i];
-      }
-   }
+void xor_buf(T out[], const T in[], size_t length) {
+  for (size_t i = 0; i != length; ++i) {
+    out[i] ^= in[i];
+  }
+}
 
 /**
 * XOR arrays. Postcondition out[i] = in[i] ^ in2[i] forall i = 0...length
@@ -130,50 +121,45 @@ void xor_buf(T out[], const T in[], size_t length)
 template<typename T> void xor_buf(T out[],
                                   const T in[],
                                   const T in2[],
-                                  size_t length)
-   {
-   for(size_t i = 0; i != length; ++i)
-      {
-      out[i] = in[i] ^ in2[i];
-      }
-   }
+                                  size_t length) {
+  for (size_t i = 0; i != length; ++i) {
+    out[i] = in[i] ^ in2[i];
+  }
+}
 
 template<typename Alloc, typename Alloc2>
 void xor_buf(std::vector<uint8_t, Alloc>& out,
              const std::vector<uint8_t, Alloc2>& in,
-             size_t n)
-   {
-   xor_buf(out.data(), in.data(), n);
-   }
+             size_t n) {
+  xor_buf(out.data(), in.data(), n);
+}
 
 template<typename Alloc>
 void xor_buf(std::vector<uint8_t, Alloc>& out,
              const uint8_t* in,
-             size_t n)
-   {
-   xor_buf(out.data(), in, n);
-   }
+             size_t n) {
+  xor_buf(out.data(), in, n);
+}
 
 template<typename Alloc, typename Alloc2>
 void xor_buf(std::vector<uint8_t, Alloc>& out,
              const uint8_t* in,
              const std::vector<uint8_t, Alloc2>& in2,
-             size_t n)
-   {
-   xor_buf(out.data(), in, in2.data(), n);
-   }
+             size_t n) {
+  xor_buf(out.data(), in, in2.data(), n);
+}
 
 template<typename T, typename Alloc, typename Alloc2>
 std::vector<T, Alloc>&
 operator^=(std::vector<T, Alloc>& out,
-           const std::vector<T, Alloc2>& in)
-   {
-   if(out.size() < in.size())
-      out.resize(in.size());
+           const std::vector<T, Alloc2>& in) {
+  if (out.size() < in.size()) {
+    out.resize(in.size());
+  }
 
-   xor_buf(out.data(), in.data(), in.size());
-   return out;
-   }
+  xor_buf(out.data(), in.data(), in.size());
+  return out;
+}
 
 }
 

@@ -16,94 +16,92 @@ namespace Botan {
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
-                                         const std::vector<uint8_t>& param) : oid(alg_id), parameters(param)
-   {}
+    const std::vector<uint8_t>& param) : oid(alg_id), parameters(param)
+{}
 
 /*
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
-                                         const std::vector<uint8_t>& param) : oid(OIDS::lookup(alg_id)), parameters(param)
-   {}
+    const std::vector<uint8_t>& param) : oid(OIDS::lookup(alg_id)), parameters(param)
+{}
 
 /*
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& alg_id,
-                                         Encoding_Option option) : oid(alg_id), parameters()
-   {
-   const uint8_t DER_NULL[] = { 0x05, 0x00 };
+    Encoding_Option option) : oid(alg_id), parameters() {
+  const uint8_t DER_NULL[] = { 0x05, 0x00 };
 
-   if(option == USE_NULL_PARAM)
-      parameters += std::pair<const uint8_t*, size_t>(DER_NULL, sizeof(DER_NULL));
-   }
+  if (option == USE_NULL_PARAM) {
+    parameters += std::pair<const uint8_t*, size_t>(DER_NULL, sizeof(DER_NULL));
+  }
+}
 
 /*
 * Create an AlgorithmIdentifier
 */
 AlgorithmIdentifier::AlgorithmIdentifier(const std::string& alg_id,
-                                         Encoding_Option option) : oid(OIDS::lookup(alg_id)), parameters()
-   {
-   const uint8_t DER_NULL[] = { 0x05, 0x00 };
+    Encoding_Option option) : oid(OIDS::lookup(alg_id)), parameters() {
+  const uint8_t DER_NULL[] = { 0x05, 0x00 };
 
-   if(option == USE_NULL_PARAM)
-      parameters += std::pair<const uint8_t*, size_t>(DER_NULL, sizeof(DER_NULL));
-   }
+  if (option == USE_NULL_PARAM) {
+    parameters += std::pair<const uint8_t*, size_t>(DER_NULL, sizeof(DER_NULL));
+  }
+}
 
 /*
 * Compare two AlgorithmIdentifiers
 */
 namespace {
 
-bool param_null_or_empty(const std::vector<uint8_t>& p)
-   {
-   if(p.size() == 2 && (p[0] == 0x05) && (p[1] == 0x00))
-      return true;
-   return p.empty();
-   }
+bool param_null_or_empty(const std::vector<uint8_t>& p) {
+  if (p.size() == 2 && (p[0] == 0x05) && (p[1] == 0x00)) {
+    return true;
+  }
+  return p.empty();
+}
 
 }
 
-bool operator==(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2)
-   {
-   if(a1.oid != a2.oid)
-      return false;
+bool operator==(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2) {
+  if (a1.oid != a2.oid) {
+    return false;
+  }
 
-   if(param_null_or_empty(a1.parameters) &&
-      param_null_or_empty(a2.parameters))
-      return true;
+  if (param_null_or_empty(a1.parameters) &&
+      param_null_or_empty(a2.parameters)) {
+    return true;
+  }
 
-   return (a1.parameters == a2.parameters);
-   }
+  return (a1.parameters == a2.parameters);
+}
 
 /*
 * Compare two AlgorithmIdentifiers
 */
-bool operator!=(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2)
-   {
-   return !(a1 == a2);
-   }
+bool operator!=(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2) {
+  return !(a1 == a2);
+}
 
 /*
 * DER encode an AlgorithmIdentifier
 */
-void AlgorithmIdentifier::encode_into(DER_Encoder& codec) const
-   {
-   codec.start_cons(SEQUENCE)
-      .encode(oid)
-      .raw_bytes(parameters)
-   .end_cons();
-   }
+void AlgorithmIdentifier::encode_into(DER_Encoder& codec) const {
+  codec.start_cons(SEQUENCE)
+  .encode(oid)
+  .raw_bytes(parameters)
+  .end_cons();
+}
 
 /*
 * Decode a BER encoded AlgorithmIdentifier
 */
-void AlgorithmIdentifier::decode_from(BER_Decoder& codec)
-   {
-   codec.start_cons(SEQUENCE)
-      .decode(oid)
-      .raw_bytes(parameters)
-   .end_cons();
-   }
+void AlgorithmIdentifier::decode_from(BER_Decoder& codec) {
+  codec.start_cons(SEQUENCE)
+  .decode(oid)
+  .raw_bytes(parameters)
+  .end_cons();
+}
 
 }

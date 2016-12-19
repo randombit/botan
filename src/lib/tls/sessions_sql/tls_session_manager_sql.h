@@ -24,54 +24,53 @@ namespace TLS {
 * sessions are stored in the database in plaintext. This may be a
 * serious privacy risk in some situations.
 */
-class BOTAN_DLL Session_Manager_SQL : public Session_Manager
-   {
-   public:
-      /**
-      * @param db A connection to the database to use
-               The table names botan_tls_sessions and
-               botan_tls_sessions_metadata will be used
-      * @param passphrase used to encrypt the session data
-      * @param rng a random number generator
-      * @param max_sessions a hint on the maximum number of sessions
-      *        to keep in memory at any one time. (If zero, don't cap)
-      * @param session_lifetime sessions are expired after this many
-      *        seconds have elapsed from initial handshake.
-      */
-      Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
-                          const std::string& passphrase,
-                          RandomNumberGenerator& rng,
-                          size_t max_sessions = 1000,
-                          std::chrono::seconds session_lifetime = std::chrono::seconds(7200));
+class BOTAN_DLL Session_Manager_SQL : public Session_Manager {
+public:
+  /**
+  * @param db A connection to the database to use
+           The table names botan_tls_sessions and
+           botan_tls_sessions_metadata will be used
+  * @param passphrase used to encrypt the session data
+  * @param rng a random number generator
+  * @param max_sessions a hint on the maximum number of sessions
+  *        to keep in memory at any one time. (If zero, don't cap)
+  * @param session_lifetime sessions are expired after this many
+  *        seconds have elapsed from initial handshake.
+  */
+  Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
+                      const std::string& passphrase,
+                      RandomNumberGenerator& rng,
+                      size_t max_sessions = 1000,
+                      std::chrono::seconds session_lifetime = std::chrono::seconds(7200));
 
-      Session_Manager_SQL(const Session_Manager_SQL&) = delete;
+  Session_Manager_SQL(const Session_Manager_SQL&) = delete;
 
-      Session_Manager_SQL& operator=(const Session_Manager_SQL&) = delete;
+  Session_Manager_SQL& operator=(const Session_Manager_SQL&) = delete;
 
-      bool load_from_session_id(const std::vector<uint8_t>& session_id,
-                                Session& session) override;
+  bool load_from_session_id(const std::vector<uint8_t>& session_id,
+                            Session& session) override;
 
-      bool load_from_server_info(const Server_Information& info,
-                                 Session& session) override;
+  bool load_from_server_info(const Server_Information& info,
+                             Session& session) override;
 
-      void remove_entry(const std::vector<uint8_t>& session_id) override;
+  void remove_entry(const std::vector<uint8_t>& session_id) override;
 
-      size_t remove_all() override;
+  size_t remove_all() override;
 
-      void save(const Session& session_data) override;
+  void save(const Session& session_data) override;
 
-      std::chrono::seconds session_lifetime() const override
-         { return m_session_lifetime; }
+  std::chrono::seconds session_lifetime() const override
+  { return m_session_lifetime; }
 
-   private:
-      void prune_session_cache();
+private:
+  void prune_session_cache();
 
-      std::shared_ptr<SQL_Database> m_db;
-      secure_vector<uint8_t> m_session_key;
-      RandomNumberGenerator& m_rng;
-      size_t m_max_sessions;
-      std::chrono::seconds m_session_lifetime;
-   };
+  std::shared_ptr<SQL_Database> m_db;
+  secure_vector<uint8_t> m_session_key;
+  RandomNumberGenerator& m_rng;
+  size_t m_max_sessions;
+  std::chrono::seconds m_session_lifetime;
+};
 
 }
 

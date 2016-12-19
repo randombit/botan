@@ -16,24 +16,22 @@ namespace Botan {
 /**
 * Bzip2 Compression
 */
-class BOTAN_DLL Bzip2_Compression final : public Stream_Compression
-   {
-   public:
-      std::string name() const override { return "Bzip2_Compression"; }
-   private:
-      Compression_Stream* make_stream(size_t comp_level) const override;
-   };
+class BOTAN_DLL Bzip2_Compression final : public Stream_Compression {
+public:
+  std::string name() const override { return "Bzip2_Compression"; }
+private:
+  Compression_Stream* make_stream(size_t comp_level) const override;
+};
 
 /**
 * Bzip2 Deccompression
 */
-class BOTAN_DLL Bzip2_Decompression final : public Stream_Decompression
-   {
-   public:
-      std::string name() const override { return "Bzip2_Decompression"; }
-   private:
-      Compression_Stream* make_stream() const override;
-   };
+class BOTAN_DLL Bzip2_Decompression final : public Stream_Decompression {
+public:
+  std::string name() const override { return "Bzip2_Decompression"; }
+private:
+  Compression_Stream* make_stream() const override;
+};
 
 }
 

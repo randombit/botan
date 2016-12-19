@@ -19,16 +19,16 @@ namespace Botan {
 * If updating update copy in ffi.h
 */
 enum Key_Constraints {
-   NO_CONSTRAINTS     = 0,
-   DIGITAL_SIGNATURE  = 1 << 15,
-   NON_REPUDIATION    = 1 << 14,
-   KEY_ENCIPHERMENT   = 1 << 13,
-   DATA_ENCIPHERMENT  = 1 << 12,
-   KEY_AGREEMENT      = 1 << 11,
-   KEY_CERT_SIGN      = 1 << 10,
-   CRL_SIGN           = 1 << 9,
-   ENCIPHER_ONLY      = 1 << 8,
-   DECIPHER_ONLY      = 1 << 7
+  NO_CONSTRAINTS     = 0,
+  DIGITAL_SIGNATURE  = 1 << 15,
+  NON_REPUDIATION    = 1 << 14,
+  KEY_ENCIPHERMENT   = 1 << 13,
+  DATA_ENCIPHERMENT  = 1 << 12,
+  KEY_AGREEMENT      = 1 << 11,
+  KEY_CERT_SIGN      = 1 << 10,
+  CRL_SIGN           = 1 << 9,
+  ENCIPHER_ONLY      = 1 << 8,
+  DECIPHER_ONLY      = 1 << 7
 };
 
 class Public_Key;
@@ -40,7 +40,7 @@ class Public_Key;
 * @throw Exception if the given constraints are not permitted for this key
 */
 BOTAN_DLL void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
-                                                                Key_Constraints constraints);
+    Key_Constraints constraints);
 
 std::string BOTAN_DLL key_constraints_to_string(Key_Constraints);
 

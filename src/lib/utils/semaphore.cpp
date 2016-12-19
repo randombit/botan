@@ -13,32 +13,27 @@
 
 namespace Botan {
 
-void Semaphore::release(size_t n)
-   {
-   for(size_t i = 0; i != n; ++i)
-      {
-      lock_guard_type<mutex_type> lock(m_mutex);
+void Semaphore::release(size_t n) {
+  for (size_t i = 0; i != n; ++i) {
+    lock_guard_type<mutex_type> lock(m_mutex);
 
-      ++m_value;
+    ++m_value;
 
-      if(m_value <= 0)
-         {
-         ++m_wakeups;
-         m_cond.notify_one();
-         }
-      }
-   }
+    if (m_value <= 0) {
+      ++m_wakeups;
+      m_cond.notify_one();
+    }
+  }
+}
 
-void Semaphore::acquire()
-   {
-   std::unique_lock<mutex_type> lock(m_mutex);
-   --m_value;
-   if(m_value < 0)
-      {
-      m_cond.wait(lock, [this] { return m_wakeups > 0; });
-      --m_wakeups;
-      }
-   }
+void Semaphore::acquire() {
+  std::unique_lock<mutex_type> lock(m_mutex);
+  --m_value;
+  if (m_value < 0) {
+    m_cond.wait(lock, [this] { return m_wakeups > 0; });
+    --m_wakeups;
+  }
+}
 
 }
 

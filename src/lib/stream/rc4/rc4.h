@@ -16,42 +16,40 @@ namespace Botan {
 /**
 * RC4 stream cipher
 */
-class BOTAN_DLL RC4 final : public StreamCipher
-   {
-   public:
-      void cipher(const uint8_t in[], uint8_t out[], size_t length) override;
+class BOTAN_DLL RC4 final : public StreamCipher {
+public:
+  void cipher(const uint8_t in[], uint8_t out[], size_t length) override;
 
-      void set_iv(const uint8_t iv[], size_t iv_len) override;
+  void set_iv(const uint8_t iv[], size_t iv_len) override;
 
-      void clear() override;
-      std::string name() const override;
+  void clear() override;
+  std::string name() const override;
 
-      StreamCipher* clone() const override { return new RC4(m_SKIP); }
+  StreamCipher* clone() const override { return new RC4(m_SKIP); }
 
-      Key_Length_Specification key_spec() const override
-         {
-         return Key_Length_Specification(1, 256);
-         }
+  Key_Length_Specification key_spec() const override {
+    return Key_Length_Specification(1, 256);
+  }
 
-      /**
-      * @param skip skip this many initial bytes in the keystream
-      */
-      explicit RC4(size_t skip = 0);
+  /**
+  * @param skip skip this many initial bytes in the keystream
+  */
+  explicit RC4(size_t skip = 0);
 
-      ~RC4() { clear(); }
+  ~RC4() { clear(); }
 
-      void seek(uint64_t offset) override;
-   private:
-      void key_schedule(const uint8_t[], size_t) override;
-      void generate();
+  void seek(uint64_t offset) override;
+private:
+  void key_schedule(const uint8_t[], size_t) override;
+  void generate();
 
-      const size_t m_SKIP;
-      uint8_t m_X = 0;
-      uint8_t m_Y = 0;
-      secure_vector<uint8_t> m_state;
-      secure_vector<uint8_t> m_buffer;
-      size_t m_position = 0;
-   };
+  const size_t m_SKIP;
+  uint8_t m_X = 0;
+  uint8_t m_Y = 0;
+  secure_vector<uint8_t> m_state;
+  secure_vector<uint8_t> m_buffer;
+  size_t m_position = 0;
+};
 
 }
 

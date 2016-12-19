@@ -23,38 +23,37 @@ enum blake2b_constant {
 /**
 * BLAKE2B
 */
-class BOTAN_DLL Blake2b final : public HashFunction
-   {
-   public:
-      /**
-      * @param output_bits the output size of Blake2b in bits
-      */
-      explicit Blake2b(size_t output_bits = 512);
+class BOTAN_DLL Blake2b final : public HashFunction {
+public:
+  /**
+  * @param output_bits the output size of Blake2b in bits
+  */
+  explicit Blake2b(size_t output_bits = 512);
 
-      size_t hash_block_size() const override { return BLAKE2B_BLOCKBYTES; }
-      size_t output_length() const override { return m_output_bits / 8; }
+  size_t hash_block_size() const override { return BLAKE2B_BLOCKBYTES; }
+  size_t output_length() const override { return m_output_bits / 8; }
 
-      HashFunction* clone() const override;
-      std::string name() const override;
-      void clear() override;
+  HashFunction* clone() const override;
+  std::string name() const override;
+  void clear() override;
 
-   private:
-      void add_data(const uint8_t input[], size_t length) override;
-      void final_result(uint8_t out[]) override;
+private:
+  void add_data(const uint8_t input[], size_t length) override;
+  void final_result(uint8_t out[]) override;
 
-      inline void state_init();
-      inline void increment_counter(const uint64_t inc);
-      void compress(bool lastblock = false);
+  inline void state_init();
+  inline void increment_counter(const uint64_t inc);
+  void compress(bool lastblock = false);
 
-      size_t m_output_bits;
+  size_t m_output_bits;
 
-      secure_vector<uint8_t> m_buffer;
-      size_t m_buflen;
+  secure_vector<uint8_t> m_buffer;
+  size_t m_buflen;
 
-      secure_vector<uint64_t> m_H;
-      uint64_t m_T[2];
-      uint64_t m_F[2];
-   };
+  secure_vector<uint64_t> m_H;
+  uint64_t m_T[2];
+  uint64_t m_F[2];
+};
 
 }
 

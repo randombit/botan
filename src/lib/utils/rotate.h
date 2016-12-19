@@ -18,10 +18,9 @@ namespace Botan {
 * @param rot the number of bits to rotate
 * @return input rotated left by rot bits
 */
-template<typename T> inline T rotate_left(T input, size_t rot)
-   {
-   return (rot == 0) ? input : static_cast<T>((input << rot) | (input >> (8*sizeof(T)-rot)));;
-   }
+template<typename T> inline T rotate_left(T input, size_t rot) {
+  return (rot == 0) ? input : static_cast<T>((input << rot) | (input >> (8*sizeof(T)-rot)));;
+}
 
 /**
 * Bit rotation right
@@ -29,10 +28,9 @@ template<typename T> inline T rotate_left(T input, size_t rot)
 * @param rot the number of bits to rotate
 * @return input rotated right by rot bits
 */
-template<typename T> inline T rotate_right(T input, size_t rot)
-   {
-   return (rot == 0) ? input : static_cast<T>((input >> rot) | (input << (8*sizeof(T)-rot)));
-   }
+template<typename T> inline T rotate_right(T input, size_t rot) {
+  return (rot == 0) ? input : static_cast<T>((input >> rot) | (input << (8*sizeof(T)-rot)));
+}
 
 }
 

@@ -17,85 +17,83 @@ namespace Botan {
 /**
 * GOST-34.10 Public Key
 */
-class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
-   {
-   public:
+class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey {
+public:
 
-      /**
-      * Construct a public key from a given public point.
-      * @param dom_par the domain parameters associated with this key
-      * @param public_point the public point defining this key
-      */
-      GOST_3410_PublicKey(const EC_Group& dom_par,
-                          const PointGFp& public_point) :
-         EC_PublicKey(dom_par, public_point) {}
+  /**
+  * Construct a public key from a given public point.
+  * @param dom_par the domain parameters associated with this key
+  * @param public_point the public point defining this key
+  */
+  GOST_3410_PublicKey(const EC_Group& dom_par,
+                      const PointGFp& public_point) :
+    EC_PublicKey(dom_par, public_point) {}
 
-      /**
-      * Load a public key.
-      * @param alg_id the X.509 algorithm identifier
-      * @param key_bits DER encoded public key bits
-      */
-      GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
-                          const std::vector<uint8_t>& key_bits);
+  /**
+  * Load a public key.
+  * @param alg_id the X.509 algorithm identifier
+  * @param key_bits DER encoded public key bits
+  */
+  GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
+                      const std::vector<uint8_t>& key_bits);
 
-      /**
-      * Get this keys algorithm name.
-      * @result this keys algorithm name
-      */
-      std::string algo_name() const override { return "GOST-34.10"; }
+  /**
+  * Get this keys algorithm name.
+  * @result this keys algorithm name
+  */
+  std::string algo_name() const override { return "GOST-34.10"; }
 
-      AlgorithmIdentifier algorithm_identifier() const override;
+  AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<uint8_t> public_key_bits() const override;
+  std::vector<uint8_t> public_key_bits() const override;
 
-      size_t message_parts() const override { return 2; }
+  size_t message_parts() const override { return 2; }
 
-      size_t message_part_size() const override
-         { return domain().get_order().bytes(); }
+  size_t message_part_size() const override
+  { return domain().get_order().bytes(); }
 
-      std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override;
+  std::unique_ptr<PK_Ops::Verification>
+  create_verification_op(const std::string& params,
+                         const std::string& provider) const override;
 
-   protected:
-      GOST_3410_PublicKey() {}
-   };
+protected:
+  GOST_3410_PublicKey() {}
+};
 
 /**
 * GOST-34.10 Private Key
 */
 class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
-                                       public EC_PrivateKey
-   {
-   public:
-      /**
-      * Load a private key.
-      * @param alg_id the X.509 algorithm identifier
-      * @param key_bits PKCS #8 structure
-      */
-      GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id,
-                           const secure_vector<uint8_t>& key_bits) :
-         EC_PrivateKey(alg_id, key_bits) {}
+  public EC_PrivateKey {
+public:
+  /**
+  * Load a private key.
+  * @param alg_id the X.509 algorithm identifier
+  * @param key_bits PKCS #8 structure
+  */
+  GOST_3410_PrivateKey(const AlgorithmIdentifier& alg_id,
+                       const secure_vector<uint8_t>& key_bits) :
+    EC_PrivateKey(alg_id, key_bits) {}
 
-      /**
-      * Generate a new private key
-      * @param rng a random number generator
-      * @param domain parameters to used for this key
-      * @param x the private key; if zero, a new random key is generated
-      */
-      GOST_3410_PrivateKey(RandomNumberGenerator& rng,
-                           const EC_Group& domain,
-                           const BigInt& x = 0) :
-         EC_PrivateKey(rng, domain, x) {}
+  /**
+  * Generate a new private key
+  * @param rng a random number generator
+  * @param domain parameters to used for this key
+  * @param x the private key; if zero, a new random key is generated
+  */
+  GOST_3410_PrivateKey(RandomNumberGenerator& rng,
+                       const EC_Group& domain,
+                       const BigInt& x = 0) :
+    EC_PrivateKey(rng, domain, x) {}
 
-      AlgorithmIdentifier pkcs8_algorithm_identifier() const override
-         { return EC_PublicKey::algorithm_identifier(); }
+  AlgorithmIdentifier pkcs8_algorithm_identifier() const override
+  { return EC_PublicKey::algorithm_identifier(); }
 
-      std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
-   };
+  std::unique_ptr<PK_Ops::Signature>
+  create_signature_op(RandomNumberGenerator& rng,
+                      const std::string& params,
+                      const std::string& provider) const override;
+};
 
 }
 

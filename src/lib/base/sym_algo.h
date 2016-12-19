@@ -18,87 +18,81 @@ namespace Botan {
 /**
 * This class represents a symmetric algorithm object.
 */
-class BOTAN_DLL SymmetricAlgorithm
-   {
-   public:
-      virtual ~SymmetricAlgorithm() {}
+class BOTAN_DLL SymmetricAlgorithm {
+public:
+  virtual ~SymmetricAlgorithm() {}
 
-      /**
-      * Reset the state.
-      */
-      virtual void clear() = 0;
+  /**
+  * Reset the state.
+  */
+  virtual void clear() = 0;
 
-      /**
-      * @return object describing limits on key size
-      */
-      virtual Key_Length_Specification key_spec() const = 0;
+  /**
+  * @return object describing limits on key size
+  */
+  virtual Key_Length_Specification key_spec() const = 0;
 
-      /**
-      * @return minimum allowed key length
-      */
-      size_t maximum_keylength() const
-         {
-         return key_spec().maximum_keylength();
-         }
+  /**
+  * @return minimum allowed key length
+  */
+  size_t maximum_keylength() const {
+    return key_spec().maximum_keylength();
+  }
 
-      /**
-      * @return maximum allowed key length
-      */
-      size_t minimum_keylength() const
-         {
-         return key_spec().minimum_keylength();
-         }
+  /**
+  * @return maximum allowed key length
+  */
+  size_t minimum_keylength() const {
+    return key_spec().minimum_keylength();
+  }
 
-      /**
-      * Check whether a given key length is valid for this algorithm.
-      * @param length the key length to be checked.
-      * @return true if the key length is valid.
-      */
-      bool valid_keylength(size_t length) const
-         {
-         return key_spec().valid_keylength(length);
-         }
+  /**
+  * Check whether a given key length is valid for this algorithm.
+  * @param length the key length to be checked.
+  * @return true if the key length is valid.
+  */
+  bool valid_keylength(size_t length) const {
+    return key_spec().valid_keylength(length);
+  }
 
-      /**
-      * Set the symmetric key of this object.
-      * @param key the SymmetricKey to be set.
-      */
-      void set_key(const SymmetricKey& key)
-         {
-         set_key(key.begin(), key.length());
-         }
+  /**
+  * Set the symmetric key of this object.
+  * @param key the SymmetricKey to be set.
+  */
+  void set_key(const SymmetricKey& key) {
+    set_key(key.begin(), key.length());
+  }
 
-      template<typename Alloc>
-      void set_key(const std::vector<uint8_t, Alloc>& key)
-         {
-         set_key(key.data(), key.size());
-         }
+  template<typename Alloc>
+  void set_key(const std::vector<uint8_t, Alloc>& key) {
+    set_key(key.data(), key.size());
+  }
 
-      /**
-      * Set the symmetric key of this object.
-      * @param key the to be set as a byte array.
-      * @param length in bytes of key param
-      */
-      void set_key(const uint8_t key[], size_t length)
-         {
-         if(!valid_keylength(length))
-            throw Invalid_Key_Length(name(), length);
-         key_schedule(key, length);
-         }
+  /**
+  * Set the symmetric key of this object.
+  * @param key the to be set as a byte array.
+  * @param length in bytes of key param
+  */
+  void set_key(const uint8_t key[], size_t length) {
+    if (!valid_keylength(length)) {
+      throw Invalid_Key_Length(name(), length);
+    }
+    key_schedule(key, length);
+  }
 
-      /**
-      * @return the algorithm name
-      */
-      virtual std::string name() const = 0;
+  /**
+  * @return the algorithm name
+  */
+  virtual std::string name() const = 0;
 
-   private:
-      /**
-      * Run the key schedule
-      * @param key the key
-      * @param length of key
-      */
-      virtual void key_schedule(const uint8_t key[], size_t length) = 0;
-   };
+private:
+  /**
+  * Run the key schedule
+  * @param key the key
+  * @param length of key
+  */
+  virtual void key_schedule(const uint8_t key[], size_t length) = 0;
+};
 
 }
 

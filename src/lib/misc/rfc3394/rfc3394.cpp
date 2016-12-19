@@ -13,96 +13,97 @@
 namespace Botan {
 
 secure_vector<uint8_t> rfc3394_keywrap(const secure_vector<uint8_t>& key,
-                                    const SymmetricKey& kek)
-   {
-   if(key.size() % 8 != 0)
-      throw Invalid_Argument("Bad input key size for NIST key wrap");
+                                       const SymmetricKey& kek) {
+  if (key.size() % 8 != 0) {
+    throw Invalid_Argument("Bad input key size for NIST key wrap");
+  }
 
-   if(kek.size() != 16 && kek.size() != 24 && kek.size() != 32)
-      throw Invalid_Argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key wrap");
+  if (kek.size() != 16 && kek.size() != 24 && kek.size() != 32) {
+    throw Invalid_Argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key wrap");
+  }
 
-   const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
-   std::unique_ptr<BlockCipher> aes(BlockCipher::create_or_throw(cipher_name));
-   aes->set_key(kek);
+  const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
+  std::unique_ptr<BlockCipher> aes(BlockCipher::create_or_throw(cipher_name));
+  aes->set_key(kek);
 
-   const size_t n = key.size() / 8;
+  const size_t n = key.size() / 8;
 
-   secure_vector<uint8_t> R((n + 1) * 8);
-   secure_vector<uint8_t> A(16);
+  secure_vector<uint8_t> R((n + 1) * 8);
+  secure_vector<uint8_t> A(16);
 
-   for(size_t i = 0; i != 8; ++i)
-      A[i] = 0xA6;
+  for (size_t i = 0; i != 8; ++i) {
+    A[i] = 0xA6;
+  }
 
-   copy_mem(&R[8], key.data(), key.size());
+  copy_mem(&R[8], key.data(), key.size());
 
-   for(size_t j = 0; j <= 5; ++j)
-      {
-      for(size_t i = 1; i <= n; ++i)
-         {
-         const uint32_t t = (n * j) + i;
+  for (size_t j = 0; j <= 5; ++j) {
+    for (size_t i = 1; i <= n; ++i) {
+      const uint32_t t = (n * j) + i;
 
-         copy_mem(&A[8], &R[8*i], 8);
+      copy_mem(&A[8], &R[8*i], 8);
 
-         aes->encrypt(A.data());
-         copy_mem(&R[8*i], &A[8], 8);
+      aes->encrypt(A.data());
+      copy_mem(&R[8*i], &A[8], 8);
 
-         uint8_t t_buf[4] = { 0 };
-         store_be(t, t_buf);
-         xor_buf(&A[4], t_buf, 4);
-         }
-      }
+      uint8_t t_buf[4] = { 0 };
+      store_be(t, t_buf);
+      xor_buf(&A[4], t_buf, 4);
+    }
+  }
 
-   copy_mem(R.data(), A.data(), 8);
+  copy_mem(R.data(), A.data(), 8);
 
-   return R;
-   }
+  return R;
+}
 
 secure_vector<uint8_t> rfc3394_keyunwrap(const secure_vector<uint8_t>& key,
-                                      const SymmetricKey& kek)
-   {
-   if(key.size() < 16 || key.size() % 8 != 0)
-      throw Invalid_Argument("Bad input key size for NIST key unwrap");
+    const SymmetricKey& kek) {
+  if (key.size() < 16 || key.size() % 8 != 0) {
+    throw Invalid_Argument("Bad input key size for NIST key unwrap");
+  }
 
-   if(kek.size() != 16 && kek.size() != 24 && kek.size() != 32)
-      throw Invalid_Argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key unwrap");
+  if (kek.size() != 16 && kek.size() != 24 && kek.size() != 32) {
+    throw Invalid_Argument("Bad KEK length " + std::to_string(kek.size()) + " for NIST key unwrap");
+  }
 
-   const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
-   std::unique_ptr<BlockCipher> aes(BlockCipher::create_or_throw(cipher_name));
-   aes->set_key(kek);
+  const std::string cipher_name = "AES-" + std::to_string(8*kek.size());
+  std::unique_ptr<BlockCipher> aes(BlockCipher::create_or_throw(cipher_name));
+  aes->set_key(kek);
 
-   const size_t n = (key.size() - 8) / 8;
+  const size_t n = (key.size() - 8) / 8;
 
-   secure_vector<uint8_t> R(n * 8);
-   secure_vector<uint8_t> A(16);
+  secure_vector<uint8_t> R(n * 8);
+  secure_vector<uint8_t> A(16);
 
-   for(size_t i = 0; i != 8; ++i)
-      A[i] = key[i];
+  for (size_t i = 0; i != 8; ++i) {
+    A[i] = key[i];
+  }
 
-   copy_mem(R.data(), &key[8], key.size() - 8);
+  copy_mem(R.data(), &key[8], key.size() - 8);
 
-   for(size_t j = 0; j <= 5; ++j)
-      {
-      for(size_t i = n; i != 0; --i)
-         {
-         const uint32_t t = (5 - j) * n + i;
+  for (size_t j = 0; j <= 5; ++j) {
+    for (size_t i = n; i != 0; --i) {
+      const uint32_t t = (5 - j) * n + i;
 
-         uint8_t t_buf[4] = { 0 };
-         store_be(t, t_buf);
+      uint8_t t_buf[4] = { 0 };
+      store_be(t, t_buf);
 
-         xor_buf(&A[4], t_buf, 4);
+      xor_buf(&A[4], t_buf, 4);
 
-         copy_mem(&A[8], &R[8*(i-1)], 8);
+      copy_mem(&A[8], &R[8*(i-1)], 8);
 
-         aes->decrypt(A.data());
+      aes->decrypt(A.data());
 
-         copy_mem(&R[8*(i-1)], &A[8], 8);
-         }
-      }
+      copy_mem(&R[8*(i-1)], &A[8], 8);
+    }
+  }
 
-   if(load_be<uint64_t>(A.data(), 0) != 0xA6A6A6A6A6A6A6A6)
-      throw Integrity_Failure("NIST key unwrap failed");
+  if (load_be<uint64_t>(A.data(), 0) != 0xA6A6A6A6A6A6A6A6) {
+    throw Integrity_Failure("NIST key unwrap failed");
+  }
 
-   return R;
-   }
+  return R;
+}
 
 }

@@ -15,117 +15,111 @@ namespace Botan {
 * Read data from a message
 */
 size_t Output_Buffers::read(uint8_t output[], size_t length,
-                            Pipe::message_id msg)
-   {
-   SecureQueue* q = get(msg);
-   if(q)
-      return q->read(output, length);
-   return 0;
-   }
+                            Pipe::message_id msg) {
+  SecureQueue* q = get(msg);
+  if (q) {
+    return q->read(output, length);
+  }
+  return 0;
+}
 
 /*
 * Peek at data in a message
 */
 size_t Output_Buffers::peek(uint8_t output[], size_t length,
                             size_t stream_offset,
-                            Pipe::message_id msg) const
-   {
-   SecureQueue* q = get(msg);
-   if(q)
-      return q->peek(output, length, stream_offset);
-   return 0;
-   }
+                            Pipe::message_id msg) const {
+  SecureQueue* q = get(msg);
+  if (q) {
+    return q->peek(output, length, stream_offset);
+  }
+  return 0;
+}
 
 /*
 * Check available bytes in a message
 */
-size_t Output_Buffers::remaining(Pipe::message_id msg) const
-   {
-   SecureQueue* q = get(msg);
-   if(q)
-      return q->size();
-   return 0;
-   }
+size_t Output_Buffers::remaining(Pipe::message_id msg) const {
+  SecureQueue* q = get(msg);
+  if (q) {
+    return q->size();
+  }
+  return 0;
+}
 
 /*
 * Return the total bytes of a message that have already been read.
 */
-size_t Output_Buffers::get_bytes_read(Pipe::message_id msg) const
-   {
-   SecureQueue* q = get(msg);
-   if (q)
-      return q->get_bytes_read();
-   return 0;
-   }
+size_t Output_Buffers::get_bytes_read(Pipe::message_id msg) const {
+  SecureQueue* q = get(msg);
+  if (q) {
+    return q->get_bytes_read();
+  }
+  return 0;
+}
 
 /*
 * Add a new output queue
 */
-void Output_Buffers::add(SecureQueue* queue)
-   {
-   BOTAN_ASSERT(queue, "queue was provided");
+void Output_Buffers::add(SecureQueue* queue) {
+  BOTAN_ASSERT(queue, "queue was provided");
 
-   BOTAN_ASSERT(m_buffers.size() < m_buffers.max_size(),
-                "Room was available in container");
+  BOTAN_ASSERT(m_buffers.size() < m_buffers.max_size(),
+               "Room was available in container");
 
-   m_buffers.push_back(queue);
-   }
+  m_buffers.push_back(queue);
+}
 
 /*
 * Retire old output queues
 */
-void Output_Buffers::retire()
-   {
-   for(size_t i = 0; i != m_buffers.size(); ++i)
-      if(m_buffers[i] && m_buffers[i]->size() == 0)
-         {
-         delete m_buffers[i];
-         m_buffers[i] = nullptr;
-         }
+void Output_Buffers::retire() {
+  for (size_t i = 0; i != m_buffers.size(); ++i)
+    if (m_buffers[i] && m_buffers[i]->size() == 0) {
+      delete m_buffers[i];
+      m_buffers[i] = nullptr;
+    }
 
-   while(m_buffers.size() && !m_buffers[0])
-      {
-      m_buffers.pop_front();
-      m_offset = m_offset + Pipe::message_id(1);
-      }
-   }
+  while (m_buffers.size() && !m_buffers[0]) {
+    m_buffers.pop_front();
+    m_offset = m_offset + Pipe::message_id(1);
+  }
+}
 
 /*
 * Get a particular output queue
 */
-SecureQueue* Output_Buffers::get(Pipe::message_id msg) const
-   {
-   if(msg < m_offset)
-      return nullptr;
+SecureQueue* Output_Buffers::get(Pipe::message_id msg) const {
+  if (msg < m_offset) {
+    return nullptr;
+  }
 
-   BOTAN_ASSERT(msg < message_count(), "Message number is in range");
+  BOTAN_ASSERT(msg < message_count(), "Message number is in range");
 
-   return m_buffers[msg-m_offset];
-   }
+  return m_buffers[msg-m_offset];
+}
 
 /*
 * Return the total number of messages
 */
-Pipe::message_id Output_Buffers::message_count() const
-   {
-   return (m_offset + m_buffers.size());
-   }
+Pipe::message_id Output_Buffers::message_count() const {
+  return (m_offset + m_buffers.size());
+}
 
 /*
 * Output_Buffers Constructor
 */
-Output_Buffers::Output_Buffers()
-   {
-   m_offset = 0;
-   }
+Output_Buffers::Output_Buffers() {
+  m_offset = 0;
+}
 
 /*
 * Output_Buffers Destructor
 */
-Output_Buffers::~Output_Buffers()
-   {
-   for(size_t j = 0; j != m_buffers.size(); ++j)
-      delete m_buffers[j];
-   }
+Output_Buffers::~Output_Buffers() {
+  for (size_t j = 0; j != m_buffers.size(); ++j) {
+    delete m_buffers[j];
+  }
+}
 
 }

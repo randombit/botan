@@ -16,32 +16,30 @@ namespace Botan {
 /**
 * CBC-MAC
 */
-class BOTAN_DLL CBC_MAC final : public MessageAuthenticationCode
-   {
-   public:
-      std::string name() const override;
-      MessageAuthenticationCode* clone() const override;
-      size_t output_length() const override { return m_cipher->block_size(); }
-      void clear() override;
+class BOTAN_DLL CBC_MAC final : public MessageAuthenticationCode {
+public:
+  std::string name() const override;
+  MessageAuthenticationCode* clone() const override;
+  size_t output_length() const override { return m_cipher->block_size(); }
+  void clear() override;
 
-      Key_Length_Specification key_spec() const override
-         {
-         return m_cipher->key_spec();
-         }
+  Key_Length_Specification key_spec() const override {
+    return m_cipher->key_spec();
+  }
 
-      /**
-      * @param cipher the block cipher to use
-      */
-      explicit CBC_MAC(BlockCipher* cipher);
-   private:
-      void add_data(const uint8_t[], size_t) override;
-      void final_result(uint8_t[]) override;
-      void key_schedule(const uint8_t[], size_t) override;
+  /**
+  * @param cipher the block cipher to use
+  */
+  explicit CBC_MAC(BlockCipher* cipher);
+private:
+  void add_data(const uint8_t[], size_t) override;
+  void final_result(uint8_t[]) override;
+  void key_schedule(const uint8_t[], size_t) override;
 
-      std::unique_ptr<BlockCipher> m_cipher;
-      secure_vector<uint8_t> m_state;
-      size_t m_position = 0;
-   };
+  std::unique_ptr<BlockCipher> m_cipher;
+  secure_vector<uint8_t> m_state;
+  size_t m_position = 0;
+};
 
 }
 

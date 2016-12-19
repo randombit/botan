@@ -16,25 +16,24 @@ namespace Botan {
 /**
 * KDF1, from IEEE 1363
 */
-class BOTAN_DLL KDF1 final : public KDF
-   {
-   public:
-      std::string name() const override { return "KDF1(" + m_hash->name() + ")"; }
+class BOTAN_DLL KDF1 final : public KDF {
+public:
+  std::string name() const override { return "KDF1(" + m_hash->name() + ")"; }
 
-      KDF* clone() const override { return new KDF1(m_hash->clone()); }
+  KDF* clone() const override { return new KDF1(m_hash->clone()); }
 
-      size_t kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const override;
+  size_t kdf(uint8_t key[], size_t key_len,
+             const uint8_t secret[], size_t secret_len,
+             const uint8_t salt[], size_t salt_len,
+             const uint8_t label[], size_t label_len) const override;
 
-      /**
-      * @param h hash function to use
-      */
-      explicit KDF1(HashFunction* h) : m_hash(h) {}
-   private:
-      std::unique_ptr<HashFunction> m_hash;
-   };
+  /**
+  * @param h hash function to use
+  */
+  explicit KDF1(HashFunction* h) : m_hash(h) {}
+private:
+  std::unique_ptr<HashFunction> m_hash;
+};
 
 }
 

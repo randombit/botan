@@ -34,10 +34,9 @@ BOTAN_DLL OID lookup(const std::string& name);
 * @param oid the oid to check for
 * @return true if the oid is registered
 */
-inline bool have_oid(const std::string& oid)
-   {
-   return (lookup(oid).empty() == false);
-   }
+inline bool have_oid(const std::string& oid) {
+  return (lookup(oid).empty() == false);
+}
 
 }
 

@@ -15,23 +15,22 @@ namespace Botan {
 /**
 * Simple String
 */
-class BOTAN_DLL ASN1_String final : public ASN1_Object
-   {
-   public:
-      void encode_into(class DER_Encoder&) const override;
-      void decode_from(class BER_Decoder&) override;
+class BOTAN_DLL ASN1_String final : public ASN1_Object {
+public:
+  void encode_into(class DER_Encoder&) const override;
+  void decode_from(class BER_Decoder&) override;
 
-      std::string value() const;
-      std::string iso_8859() const;
+  std::string value() const;
+  std::string iso_8859() const;
 
-      ASN1_Tag tagging() const;
+  ASN1_Tag tagging() const;
 
-      explicit ASN1_String(const std::string& = "");
-      ASN1_String(const std::string&, ASN1_Tag);
-   private:
-      std::string m_iso_8859_str;
-      ASN1_Tag m_tag;
-   };
+  explicit ASN1_String(const std::string& = "");
+  ASN1_String(const std::string&, ASN1_Tag);
+private:
+  std::string m_iso_8859_str;
+  ASN1_Tag m_tag;
+};
 
 }
 

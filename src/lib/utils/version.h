@@ -77,8 +77,8 @@ runtime_version_check(uint32_t major,
 *  # endif
 */
 #define BOTAN_VERSION_CODE BOTAN_VERSION_CODE_FOR(BOTAN_VERSION_MAJOR, \
-                                                  BOTAN_VERSION_MINOR, \
-                                                  BOTAN_VERSION_PATCH)
+    BOTAN_VERSION_MINOR, \
+    BOTAN_VERSION_PATCH)
 
 }
 

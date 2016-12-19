@@ -16,12 +16,11 @@ namespace Botan {
 * Entropy source using the rdrand instruction first introduced on
 * Intel's Ivy Bridge architecture.
 */
-class Intel_Rdrand final : public Entropy_Source
-   {
-   public:
-      std::string name() const override { return "rdrand"; }
-      size_t poll(RandomNumberGenerator& rng) override;
-   };
+class Intel_Rdrand final : public Entropy_Source {
+public:
+  std::string name() const override { return "rdrand"; }
+  size_t poll(RandomNumberGenerator& rng) override;
+};
 
 }
 

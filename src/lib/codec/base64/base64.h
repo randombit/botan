@@ -47,10 +47,9 @@ std::string BOTAN_DLL base64_encode(const uint8_t input[],
 * @return base64adecimal representation of input
 */
 template<typename Alloc>
-std::string base64_encode(const std::vector<uint8_t, Alloc>& input)
-   {
-   return base64_encode(input.data(), input.size());
-   }
+std::string base64_encode(const std::vector<uint8_t, Alloc>& input) {
+  return base64_encode(input.data(), input.size());
+}
 
 /**
 * Perform base64 decoding
@@ -109,8 +108,8 @@ size_t BOTAN_DLL base64_decode(uint8_t output[],
 * @return decoded base64 output
 */
 secure_vector<uint8_t> BOTAN_DLL base64_decode(const char input[],
-                                           size_t input_length,
-                                           bool ignore_ws = true);
+    size_t input_length,
+    bool ignore_ws = true);
 
 /**
 * Perform base64 decoding
@@ -120,7 +119,7 @@ secure_vector<uint8_t> BOTAN_DLL base64_decode(const char input[],
 * @return decoded base64 output
 */
 secure_vector<uint8_t> BOTAN_DLL base64_decode(const std::string& input,
-                                           bool ignore_ws = true);
+    bool ignore_ws = true);
 
 }
 

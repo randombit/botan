@@ -14,17 +14,16 @@
 namespace Botan {
 
 size_t Intel_Rdrand::poll(RandomNumberGenerator& rng) {
-   if(CPUID::has_rdrand() && BOTAN_ENTROPY_INTEL_RNG_POLLS > 0)
-      {
-      RDRAND_RNG rdrand_rng;
-      secure_vector<uint8_t> buf(4 * BOTAN_ENTROPY_INTEL_RNG_POLLS);
+  if (CPUID::has_rdrand() && BOTAN_ENTROPY_INTEL_RNG_POLLS > 0) {
+    RDRAND_RNG rdrand_rng;
+    secure_vector<uint8_t> buf(4 * BOTAN_ENTROPY_INTEL_RNG_POLLS);
 
-      rdrand_rng.randomize(buf.data(), buf.size());
-      rng.add_entropy(buf.data(), buf.size());
-      }
+    rdrand_rng.randomize(buf.data(), buf.size());
+    rng.add_entropy(buf.data(), buf.size());
+  }
 
-   // RDRAND is used but not trusted
-   return 0;
-   }
+  // RDRAND is used but not trusted
+  return 0;
+}
 
 }

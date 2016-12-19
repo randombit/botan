@@ -13,29 +13,25 @@ namespace Botan {
 namespace PKCS11 {
 
 Module::Module(const std::string& file_path, C_InitializeArgs init_args)
-   : m_file_path(file_path)
-   {
-   reload(init_args);
-   }
+  : m_file_path(file_path) {
+  reload(init_args);
+}
 
-Module::~Module() BOTAN_NOEXCEPT
-   {
-   m_low_level->C_Finalize(nullptr, nullptr);
-   }
+Module::~Module() BOTAN_NOEXCEPT {
+  m_low_level->C_Finalize(nullptr, nullptr);
+}
 
-void Module::reload(C_InitializeArgs init_args)
-   {
-   if(m_low_level)
-      {
-      m_low_level->C_Finalize(nullptr);
-      }
+void Module::reload(C_InitializeArgs init_args) {
+  if (m_low_level) {
+    m_low_level->C_Finalize(nullptr);
+  }
 
-   m_library.reset(new Dynamically_Loaded_Library(m_file_path));
-   LowLevel::C_GetFunctionList(*m_library, &m_func_list);
-   m_low_level.reset(new LowLevel(m_func_list));
+  m_library.reset(new Dynamically_Loaded_Library(m_file_path));
+  LowLevel::C_GetFunctionList(*m_library, &m_func_list);
+  m_low_level.reset(new LowLevel(m_func_list));
 
-   m_low_level->C_Initialize(&init_args);
-   }
+  m_low_level->C_Initialize(&init_args);
+}
 
 }
 }

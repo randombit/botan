@@ -356,10 +356,10 @@ CK_PKCS11_FUNCTION_INFO(C_FindObjectsInit)
 CK_PKCS11_FUNCTION_INFO(C_FindObjects)
 #ifdef CK_NEED_ARG_LIST
 (
- CK_SESSION_HANDLE    hSession,          /* session's handle */
- CK_OBJECT_HANDLE_PTR phObject,          /* gets obj. handles */
- CK_ULONG             ulMaxObjectCount,  /* max handles to get */
- CK_ULONG_PTR         pulObjectCount     /* actual # returned */
+  CK_SESSION_HANDLE    hSession,          /* session's handle */
+  CK_OBJECT_HANDLE_PTR phObject,          /* gets obj. handles */
+  CK_ULONG             ulMaxObjectCount,  /* max handles to get */
+  CK_ULONG_PTR         pulObjectCount     /* actual # returned */
 );
 #endif
 

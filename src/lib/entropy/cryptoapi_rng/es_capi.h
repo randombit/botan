@@ -16,27 +16,25 @@ namespace Botan {
 /**
 * Win32 CAPI Entropy Source
 */
-class Win32_CAPI_EntropySource final : public Entropy_Source
-   {
-   public:
-      std::string name() const override { return "win32_cryptoapi"; }
+class Win32_CAPI_EntropySource final : public Entropy_Source {
+public:
+  std::string name() const override { return "win32_cryptoapi"; }
 
-      size_t poll(RandomNumberGenerator& rng) override;
+  size_t poll(RandomNumberGenerator& rng) override;
 
-      /**
-      * Win32_Capi_Entropysource Constructor
-      * @param provs list of providers, separated by ':'
-      */
-      explicit Win32_CAPI_EntropySource(const std::string& provs = "");
+  /**
+  * Win32_Capi_Entropysource Constructor
+  * @param provs list of providers, separated by ':'
+  */
+  explicit Win32_CAPI_EntropySource(const std::string& provs = "");
 
-      class CSP_Handle
-         {
-         public:
-            virtual size_t gen_random(uint8_t out[], size_t n) const = 0;
-         };
-   private:
-      std::vector<std::unique_ptr<CSP_Handle>> m_csp_provs;
-   };
+  class CSP_Handle {
+  public:
+    virtual size_t gen_random(uint8_t out[], size_t n) const = 0;
+  };
+private:
+  std::vector<std::unique_ptr<CSP_Handle>> m_csp_provs;
+};
 
 }
 

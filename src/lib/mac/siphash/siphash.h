@@ -12,33 +12,31 @@
 
 namespace Botan {
 
-class BOTAN_DLL SipHash final : public MessageAuthenticationCode
-   {
-   public:
-      SipHash(size_t c = 2, size_t d = 4) : m_C(c), m_D(d) {}
+class BOTAN_DLL SipHash final : public MessageAuthenticationCode {
+public:
+  SipHash(size_t c = 2, size_t d = 4) : m_C(c), m_D(d) {}
 
-      void clear() override;
-      std::string name() const override;
+  void clear() override;
+  std::string name() const override;
 
-      MessageAuthenticationCode* clone() const override;
+  MessageAuthenticationCode* clone() const override;
 
-      size_t output_length() const override { return 8; }
+  size_t output_length() const override { return 8; }
 
-      Key_Length_Specification key_spec() const override
-         {
-         return Key_Length_Specification(16);
-         }
-   private:
-      void add_data(const uint8_t[], size_t) override;
-      void final_result(uint8_t[]) override;
-      void key_schedule(const uint8_t[], size_t) override;
+  Key_Length_Specification key_spec() const override {
+    return Key_Length_Specification(16);
+  }
+private:
+  void add_data(const uint8_t[], size_t) override;
+  void final_result(uint8_t[]) override;
+  void key_schedule(const uint8_t[], size_t) override;
 
-      const size_t m_C, m_D;
-      secure_vector<uint64_t> m_V;
-      uint64_t m_mbuf = 0;
-      size_t m_mbuf_pos = 0;
-      uint8_t m_words = 0;
-   };
+  const size_t m_C, m_D;
+  secure_vector<uint64_t> m_V;
+  uint64_t m_mbuf = 0;
+  size_t m_mbuf_pos = 0;
+  uint8_t m_words = 0;
+};
 
 }
 

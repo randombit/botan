@@ -11,20 +11,19 @@
 
 namespace Botan {
 
-class BOTAN_DLL EME_Raw final : public EME
-   {
-   public:
-      size_t maximum_input_size(size_t i) const override;
+class BOTAN_DLL EME_Raw final : public EME {
+public:
+  size_t maximum_input_size(size_t i) const override;
 
-      EME_Raw() {}
-   private:
-      secure_vector<uint8_t> pad(const uint8_t[], size_t, size_t,
+  EME_Raw() {}
+private:
+  secure_vector<uint8_t> pad(const uint8_t[], size_t, size_t,
                              RandomNumberGenerator&) const override;
 
-      secure_vector<uint8_t> unpad(uint8_t& valid_mask,
-                                const uint8_t in[],
-                                size_t in_len) const override;
-   };
+  secure_vector<uint8_t> unpad(uint8_t& valid_mask,
+                               const uint8_t in[],
+                               size_t in_len) const override;
+};
 
 }
 

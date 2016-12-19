@@ -56,105 +56,103 @@ namespace Botan {
 /*
 * Word Multiply/Add
 */
-inline word word_madd2(word a, word b, word* c)
-   {
+inline word word_madd2(word a, word b, word* c) {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(
-      ASM("mull %[b]")
-      ASM("addl %[c],%[a]")
-      ASM("adcl $0,%[carry]")
+  asm(
+    ASM("mull %[b]")
+    ASM("addl %[c],%[a]")
+    ASM("adcl $0,%[carry]")
 
-      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*c)
-      : "0"(a), "1"(b), [c]"g"(*c) : "cc");
+    : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*c)
+    : "0"(a), "1"(b), [c]"g"(*c) : "cc");
 
-   return a;
+  return a;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-      asm(
-      ASM("mulq %[b]")
-      ASM("addq %[c],%[a]")
-      ASM("adcq $0,%[carry]")
+  asm(
+    ASM("mulq %[b]")
+    ASM("addq %[c],%[a]")
+    ASM("adcq $0,%[carry]")
 
-      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*c)
-      : "0"(a), "1"(b), [c]"g"(*c) : "cc");
+    : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*c)
+    : "0"(a), "1"(b), [c]"g"(*c) : "cc");
 
-   return a;
+  return a;
 
 #elif defined(BOTAN_HAS_MP_DWORD)
-   const dword s = static_cast<dword>(a) * b + *c;
-   *c = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
-   return static_cast<word>(s);
+  const dword s = static_cast<dword>(a) * b + *c;
+  *c = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
+  return static_cast<word>(s);
 #else
-   static_assert(BOTAN_MP_WORD_BITS == 64, "Unexpected word size");
+  static_assert(BOTAN_MP_WORD_BITS == 64, "Unexpected word size");
 
-   word hi = 0, lo = 0;
+  word hi = 0, lo = 0;
 
-   mul64x64_128(a, b, &lo, &hi);
+  mul64x64_128(a, b, &lo, &hi);
 
-   lo += *c;
-   hi += (lo < *c); // carry?
+  lo += *c;
+  hi += (lo < *c); // carry?
 
-   *c = hi;
-   return lo;
+  *c = hi;
+  return lo;
 #endif
-   }
+}
 
 /*
 * Word Multiply/Add
 */
-inline word word_madd3(word a, word b, word c, word* d)
-   {
+inline word word_madd3(word a, word b, word c, word* d) {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(
-      ASM("mull %[b]")
+  asm(
+    ASM("mull %[b]")
 
-      ASM("addl %[c],%[a]")
-      ASM("adcl $0,%[carry]")
+    ASM("addl %[c],%[a]")
+    ASM("adcl $0,%[carry]")
 
-      ASM("addl %[d],%[a]")
-      ASM("adcl $0,%[carry]")
+    ASM("addl %[d],%[a]")
+    ASM("adcl $0,%[carry]")
 
-      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*d)
-      : "0"(a), "1"(b), [c]"g"(c), [d]"g"(*d) : "cc");
+    : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*d)
+    : "0"(a), "1"(b), [c]"g"(c), [d]"g"(*d) : "cc");
 
-   return a;
+  return a;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(
-      ASM("mulq %[b]")
+  asm(
+    ASM("mulq %[b]")
 
-      ASM("addq %[c],%[a]")
-      ASM("adcq $0,%[carry]")
+    ASM("addq %[c],%[a]")
+    ASM("adcq $0,%[carry]")
 
-      ASM("addq %[d],%[a]")
-      ASM("adcq $0,%[carry]")
+    ASM("addq %[d],%[a]")
+    ASM("adcq $0,%[carry]")
 
-      : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*d)
-      : "0"(a), "1"(b), [c]"g"(c), [d]"g"(*d) : "cc");
+    : [a]"=a"(a), [b]"=rm"(b), [carry]"=&d"(*d)
+    : "0"(a), "1"(b), [c]"g"(c), [d]"g"(*d) : "cc");
 
-   return a;
+  return a;
 
 #elif defined(BOTAN_HAS_MP_DWORD)
-   const dword s = static_cast<dword>(a) * b + c + *d;
-   *d = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
-   return static_cast<word>(s);
+  const dword s = static_cast<dword>(a) * b + c + *d;
+  *d = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
+  return static_cast<word>(s);
 #else
-   static_assert(BOTAN_MP_WORD_BITS == 64, "Unexpected word size");
+  static_assert(BOTAN_MP_WORD_BITS == 64, "Unexpected word size");
 
-   word hi = 0, lo = 0;
+  word hi = 0, lo = 0;
 
-   mul64x64_128(a, b, &lo, &hi);
+  mul64x64_128(a, b, &lo, &hi);
 
-   lo += c;
-   hi += (lo < c); // carry?
+  lo += c;
+  hi += (lo < c); // carry?
 
-   lo += *d;
-   hi += (lo < *d); // carry?
+  lo += *d;
+  hi += (lo < *d); // carry?
 
-   *d = hi;
-   return lo;
+  *d = hi;
+  return lo;
 #endif
-   }
+}
 
 #if defined(ASM)
   #undef ASM

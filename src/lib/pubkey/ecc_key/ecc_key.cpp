@@ -18,70 +18,65 @@
 
 namespace Botan {
 
-size_t EC_PublicKey::key_length() const
-   {
-   return domain().get_curve().get_p().bits();
-   }
+size_t EC_PublicKey::key_length() const {
+  return domain().get_curve().get_p().bits();
+}
 
-size_t EC_PublicKey::estimated_strength() const
-   {
-   return ecp_work_factor(key_length());
-   }
+size_t EC_PublicKey::estimated_strength() const {
+  return ecp_work_factor(key_length());
+}
 
 EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
                            const PointGFp& pub_point) :
-   m_domain_params(dom_par), m_public_key(pub_point),
-   m_domain_encoding(EC_DOMPAR_ENC_EXPLICIT)
-   {
-   if(domain().get_curve() != public_point().get_curve())
-      throw Invalid_Argument("EC_PublicKey: curve mismatch in constructor");
-   }
+  m_domain_params(dom_par), m_public_key(pub_point),
+  m_domain_encoding(EC_DOMPAR_ENC_EXPLICIT) {
+  if (domain().get_curve() != public_point().get_curve()) {
+    throw Invalid_Argument("EC_PublicKey: curve mismatch in constructor");
+  }
+}
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
                            const std::vector<uint8_t>& key_bits) :
-   m_domain_params{EC_Group(alg_id.parameters)},
-   m_public_key{OS2ECP(key_bits, domain().get_curve())},
-   m_domain_encoding{EC_DOMPAR_ENC_EXPLICIT}
-   {}
+  m_domain_params{EC_Group(alg_id.parameters)},
+  m_public_key{OS2ECP(key_bits, domain().get_curve())},
+  m_domain_encoding{EC_DOMPAR_ENC_EXPLICIT}
+{}
 
 bool EC_PublicKey::check_key(RandomNumberGenerator&,
-                             bool) const
-   {
-   return public_point().on_the_curve();
-   }
+                             bool) const {
+  return public_point().on_the_curve();
+}
 
-AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
-   {
-   return AlgorithmIdentifier(get_oid(), DER_domain());
-   }
+AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const {
+  return AlgorithmIdentifier(get_oid(), DER_domain());
+}
 
-std::vector<uint8_t> EC_PublicKey::public_key_bits() const
-   {
-   return unlock(EC2OSP(public_point(), PointGFp::COMPRESSED));
-   }
+std::vector<uint8_t> EC_PublicKey::public_key_bits() const {
+  return unlock(EC2OSP(public_point(), PointGFp::COMPRESSED));
+}
 
-void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form)
-   {
-   if(form != EC_DOMPAR_ENC_EXPLICIT &&
+void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form) {
+  if (form != EC_DOMPAR_ENC_EXPLICIT &&
       form != EC_DOMPAR_ENC_IMPLICITCA &&
-      form != EC_DOMPAR_ENC_OID)
-      throw Invalid_Argument("Invalid encoding form for EC-key object specified");
+      form != EC_DOMPAR_ENC_OID) {
+    throw Invalid_Argument("Invalid encoding form for EC-key object specified");
+  }
 
-   if((form == EC_DOMPAR_ENC_OID) && (m_domain_params.get_oid() == ""))
-      throw Invalid_Argument("Invalid encoding form OID specified for "
-                             "EC-key object whose corresponding domain "
-                             "parameters are without oid");
+  if ((form == EC_DOMPAR_ENC_OID) && (m_domain_params.get_oid() == ""))
+    throw Invalid_Argument("Invalid encoding form OID specified for "
+                           "EC-key object whose corresponding domain "
+                           "parameters are without oid");
 
-   m_domain_encoding = form;
-   }
+  m_domain_encoding = form;
+}
 
-const BigInt& EC_PrivateKey::private_value() const
-   {
-   if(m_private_key == 0)
-      throw Invalid_State("EC_PrivateKey::private_value - uninitialized");
+const BigInt& EC_PrivateKey::private_value() const {
+  if (m_private_key == 0) {
+    throw Invalid_State("EC_PrivateKey::private_value - uninitialized");
+  }
 
-   return m_private_key;
-   }
+  return m_private_key;
+}
 
 /**
 * EC_PrivateKey constructor
@@ -89,72 +84,66 @@ const BigInt& EC_PrivateKey::private_value() const
 EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
                              const EC_Group& ec_group,
                              const BigInt& x,
-                             bool with_modular_inverse)
-   {
-   m_domain_params = ec_group;
-   m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
+                             bool with_modular_inverse) {
+  m_domain_params = ec_group;
+  m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
-   if(x == 0)
-      {
-      m_private_key = BigInt::random_integer(rng, 1, domain().get_order());
-      }
-   else
-      {
-      m_private_key = x;
-      }
+  if (x == 0) {
+    m_private_key = BigInt::random_integer(rng, 1, domain().get_order());
+  }
+  else {
+    m_private_key = x;
+  }
 
-   m_public_key = domain().get_base_point() *
-                  ((with_modular_inverse) ? inverse_mod(m_private_key, m_domain_params.get_order()) : m_private_key);
+  m_public_key = domain().get_base_point() *
+                 ((with_modular_inverse) ? inverse_mod(m_private_key, m_domain_params.get_order()) : m_private_key);
 
-   BOTAN_ASSERT(m_public_key.on_the_curve(),
-                "Generated public key point was on the curve");
-   }
+  BOTAN_ASSERT(m_public_key.on_the_curve(),
+               "Generated public key point was on the curve");
+}
 
-secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const
-   {
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
+secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const {
+  return DER_Encoder()
+         .start_cons(SEQUENCE)
          .encode(static_cast<size_t>(1))
          .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()),
                  OCTET_STRING)
-      .end_cons()
-      .get_contents();
-   }
+         .end_cons()
+         .get_contents();
+}
 
 EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                              const secure_vector<uint8_t>& key_bits,
-                             bool with_modular_inverse)
-   {
-   m_domain_params = EC_Group(alg_id.parameters);
-   m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
+                             bool with_modular_inverse) {
+  m_domain_params = EC_Group(alg_id.parameters);
+  m_domain_encoding = EC_DOMPAR_ENC_EXPLICIT;
 
-   OID key_parameters;
-   secure_vector<uint8_t> public_key_bits;
+  OID key_parameters;
+  secure_vector<uint8_t> public_key_bits;
 
-   BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
-         .decode_and_check<size_t>(1, "Unknown version code for ECC key")
-         .decode_octet_string_bigint(m_private_key)
-         .decode_optional(key_parameters, ASN1_Tag(0), PRIVATE)
-         .decode_optional_string(public_key_bits, BIT_STRING, 1, PRIVATE)
-      .end_cons();
+  BER_Decoder(key_bits)
+  .start_cons(SEQUENCE)
+  .decode_and_check<size_t>(1, "Unknown version code for ECC key")
+  .decode_octet_string_bigint(m_private_key)
+  .decode_optional(key_parameters, ASN1_Tag(0), PRIVATE)
+  .decode_optional_string(public_key_bits, BIT_STRING, 1, PRIVATE)
+  .end_cons();
 
-   if(!key_parameters.empty() && key_parameters != alg_id.oid)
-      throw Decoding_Error("EC_PrivateKey - inner and outer OIDs did not match");
+  if (!key_parameters.empty() && key_parameters != alg_id.oid) {
+    throw Decoding_Error("EC_PrivateKey - inner and outer OIDs did not match");
+  }
 
-   if(public_key_bits.empty())
-      {
-      m_public_key = domain().get_base_point() *
-                     ((with_modular_inverse) ? inverse_mod(m_private_key, m_domain_params.get_order()) : m_private_key);
+  if (public_key_bits.empty()) {
+    m_public_key = domain().get_base_point() *
+                   ((with_modular_inverse) ? inverse_mod(m_private_key, m_domain_params.get_order()) : m_private_key);
 
-      BOTAN_ASSERT(m_public_key.on_the_curve(),
-                   "Public point derived from loaded key was on the curve");
-      }
-   else
-      {
-      m_public_key = OS2ECP(public_key_bits, domain().get_curve());
-      // OS2ECP verifies that the point is on the curve
-      }
-   }
+    BOTAN_ASSERT(m_public_key.on_the_curve(),
+                 "Public point derived from loaded key was on the curve");
+  }
+  else {
+    m_public_key = OS2ECP(public_key_bits, domain().get_curve());
+    // OS2ECP verifies that the point is on the curve
+  }
+}
 
 }

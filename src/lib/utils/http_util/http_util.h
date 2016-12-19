@@ -19,53 +19,51 @@ namespace Botan {
 
 namespace HTTP {
 
-struct Response
-   {
-   public:
-      Response() : m_status_code(0), m_status_message("Uninitialized") {}
+struct Response {
+public:
+  Response() : m_status_code(0), m_status_message("Uninitialized") {}
 
-      Response(unsigned int status_code, const std::string& status_message,
-               const std::vector<uint8_t>& body,
-               const std::map<std::string, std::string>& headers) :
-         m_status_code(status_code),
-         m_status_message(status_message),
-         m_body(body),
-         m_headers(headers) {}
+  Response(unsigned int status_code, const std::string& status_message,
+           const std::vector<uint8_t>& body,
+           const std::map<std::string, std::string>& headers) :
+    m_status_code(status_code),
+    m_status_message(status_message),
+    m_body(body),
+    m_headers(headers) {}
 
-      unsigned int status_code() const { return m_status_code; }
+  unsigned int status_code() const { return m_status_code; }
 
-      const std::vector<uint8_t>& body() const { return m_body; }
+  const std::vector<uint8_t>& body() const { return m_body; }
 
-      const std::map<std::string, std::string>& headers() const { return m_headers; }
+  const std::map<std::string, std::string>& headers() const { return m_headers; }
 
-      std::string status_message() const { return m_status_message; }
+  std::string status_message() const { return m_status_message; }
 
-      void throw_unless_ok()
-         {
-         if(status_code() != 200)
-            throw Exception("HTTP error: " + status_message());
-         }
+  void throw_unless_ok() {
+    if (status_code() != 200) {
+      throw Exception("HTTP error: " + status_message());
+    }
+  }
 
-   private:
-      unsigned int m_status_code;
-      std::string m_status_message;
-      std::vector<uint8_t> m_body;
-      std::map<std::string, std::string> m_headers;
-   };
+private:
+  unsigned int m_status_code;
+  std::string m_status_message;
+  std::vector<uint8_t> m_body;
+  std::map<std::string, std::string> m_headers;
+};
 
 /**
 * HTTP_Error Exception
 */
-struct BOTAN_DLL HTTP_Error : public Exception
-   {
-   explicit HTTP_Error(const std::string& msg) :
-      Exception("HTTP error " + msg)
-      {}
-   };
+struct BOTAN_DLL HTTP_Error : public Exception {
+  explicit HTTP_Error(const std::string& msg) :
+    Exception("HTTP error " + msg)
+  {}
+};
 
 BOTAN_DLL std::ostream& operator<<(std::ostream& o, const Response& resp);
 
-typedef std::function<std::string (const std::string&, const std::string&)> http_exch_fn;
+typedef std::function<std::string(const std::string&, const std::string&)> http_exch_fn;
 
 BOTAN_DLL Response http_sync(http_exch_fn fn,
                              const std::string& verb,

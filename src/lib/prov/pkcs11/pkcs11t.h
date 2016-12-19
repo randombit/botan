@@ -24,12 +24,12 @@
 #define CK_FALSE        0
 
 #ifndef CK_DISABLE_TRUE_FALSE
-#ifndef FALSE
-#define FALSE CK_FALSE
-#endif
-#ifndef TRUE
-#define TRUE CK_TRUE
-#endif
+  #ifndef FALSE
+    #define FALSE CK_FALSE
+  #endif
+  #ifndef TRUE
+    #define TRUE CK_TRUE
+  #endif
 #endif
 
 /* an unsigned 8-bit value */
@@ -570,7 +570,7 @@ typedef struct CK_ATTRIBUTE {
 typedef CK_ATTRIBUTE CK_PTR CK_ATTRIBUTE_PTR;
 
 /* CK_DATE is a structure that defines a date */
-typedef struct CK_DATE{
+typedef struct CK_DATE {
   CK_CHAR       year[4];   /* the year ("1900" - "9999") */
   CK_CHAR       month[2];  /* the month ("01" - "12") */
   CK_CHAR       day[2];    /* the day   ("01" - "31") */
@@ -993,9 +993,9 @@ typedef CK_MECHANISM CK_PTR CK_MECHANISM_PTR;
  * mechanism
  */
 typedef struct CK_MECHANISM_INFO {
-    CK_ULONG    ulMinKeySize;
-    CK_ULONG    ulMaxKeySize;
-    CK_FLAGS    flags;
+  CK_ULONG    ulMinKeySize;
+  CK_ULONG    ulMaxKeySize;
+  CK_FLAGS    flags;
 } CK_MECHANISM_INFO;
 
 /* The flags are defined as follows:
@@ -1264,11 +1264,11 @@ typedef CK_RSA_PKCS_OAEP_SOURCE_TYPE CK_PTR CK_RSA_PKCS_OAEP_SOURCE_TYPE_PTR;
  * CKM_RSA_PKCS_OAEP mechanism.
  */
 typedef struct CK_RSA_PKCS_OAEP_PARAMS {
-        CK_MECHANISM_TYPE hashAlg;
-        CK_RSA_PKCS_MGF_TYPE mgf;
-        CK_RSA_PKCS_OAEP_SOURCE_TYPE source;
-        CK_VOID_PTR pSourceData;
-        CK_ULONG ulSourceDataLen;
+  CK_MECHANISM_TYPE hashAlg;
+  CK_RSA_PKCS_MGF_TYPE mgf;
+  CK_RSA_PKCS_OAEP_SOURCE_TYPE source;
+  CK_VOID_PTR pSourceData;
+  CK_ULONG ulSourceDataLen;
 } CK_RSA_PKCS_OAEP_PARAMS;
 
 typedef CK_RSA_PKCS_OAEP_PARAMS CK_PTR CK_RSA_PKCS_OAEP_PARAMS_PTR;
@@ -1277,9 +1277,9 @@ typedef CK_RSA_PKCS_OAEP_PARAMS CK_PTR CK_RSA_PKCS_OAEP_PARAMS_PTR;
  * CKM_RSA_PKCS_PSS mechanism(s).
  */
 typedef struct CK_RSA_PKCS_PSS_PARAMS {
-        CK_MECHANISM_TYPE    hashAlg;
-        CK_RSA_PKCS_MGF_TYPE mgf;
-        CK_ULONG             sLen;
+  CK_MECHANISM_TYPE    hashAlg;
+  CK_RSA_PKCS_MGF_TYPE mgf;
+  CK_ULONG             sLen;
 } CK_RSA_PKCS_PSS_PARAMS;
 
 typedef CK_RSA_PKCS_PSS_PARAMS CK_PTR CK_RSA_PKCS_PSS_PARAMS_PTR;
@@ -1444,7 +1444,7 @@ typedef struct CK_RC2_MAC_GENERAL_PARAMS {
 } CK_RC2_MAC_GENERAL_PARAMS;
 
 typedef CK_RC2_MAC_GENERAL_PARAMS CK_PTR \
-  CK_RC2_MAC_GENERAL_PARAMS_PTR;
+CK_RC2_MAC_GENERAL_PARAMS_PTR;
 
 
 /* CK_RC5_PARAMS provides the parameters to the CKM_RC5_ECB and
@@ -1481,7 +1481,7 @@ typedef struct CK_RC5_MAC_GENERAL_PARAMS {
 } CK_RC5_MAC_GENERAL_PARAMS;
 
 typedef CK_RC5_MAC_GENERAL_PARAMS CK_PTR \
-  CK_RC5_MAC_GENERAL_PARAMS_PTR;
+CK_RC5_MAC_GENERAL_PARAMS_PTR;
 
 /* CK_MAC_GENERAL_PARAMS provides the parameters to most block
  * ciphers' MAC_GENERAL mechanisms.  Its value is the length of
@@ -1525,7 +1525,7 @@ typedef struct CK_SKIPJACK_PRIVATE_WRAP_PARAMS {
 } CK_SKIPJACK_PRIVATE_WRAP_PARAMS;
 
 typedef CK_SKIPJACK_PRIVATE_WRAP_PARAMS CK_PTR \
-  CK_SKIPJACK_PRIVATE_WRAP_PARAMS_PTR;
+CK_SKIPJACK_PRIVATE_WRAP_PARAMS_PTR;
 
 
 /* CK_SKIPJACK_RELAYX_PARAMS provides the parameters to the
@@ -1549,7 +1549,7 @@ typedef struct CK_SKIPJACK_RELAYX_PARAMS {
 } CK_SKIPJACK_RELAYX_PARAMS;
 
 typedef CK_SKIPJACK_RELAYX_PARAMS CK_PTR \
-  CK_SKIPJACK_RELAYX_PARAMS_PTR;
+CK_SKIPJACK_RELAYX_PARAMS_PTR;
 
 
 typedef struct CK_PBE_PARAMS {
@@ -1641,7 +1641,7 @@ typedef struct CK_WTLS_MASTER_KEY_DERIVE_PARAMS {
 } CK_WTLS_MASTER_KEY_DERIVE_PARAMS;
 
 typedef CK_WTLS_MASTER_KEY_DERIVE_PARAMS CK_PTR \
-  CK_WTLS_MASTER_KEY_DERIVE_PARAMS_PTR;
+CK_WTLS_MASTER_KEY_DERIVE_PARAMS_PTR;
 
 typedef struct CK_WTLS_PRF_PARAMS {
   CK_MECHANISM_TYPE DigestMechanism;
@@ -1695,7 +1695,7 @@ typedef struct CK_KEY_DERIVATION_STRING_DATA {
 } CK_KEY_DERIVATION_STRING_DATA;
 
 typedef CK_KEY_DERIVATION_STRING_DATA CK_PTR \
-  CK_KEY_DERIVATION_STRING_DATA_PTR;
+CK_KEY_DERIVATION_STRING_DATA_PTR;
 
 
 /* The CK_EXTRACT_PARAMS is used for the
@@ -1714,7 +1714,7 @@ typedef CK_EXTRACT_PARAMS CK_PTR CK_EXTRACT_PARAMS_PTR;
 typedef CK_ULONG CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE;
 
 typedef CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE CK_PTR \
-                        CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE_PTR;
+CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE_PTR;
 
 #define CKP_PKCS5_PBKD2_HMAC_SHA1          0x00000001UL
 #define CKP_PKCS5_PBKD2_HMAC_GOSTR3411     0x00000002UL
@@ -1732,7 +1732,7 @@ typedef CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE CK_PTR \
 typedef CK_ULONG CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE;
 
 typedef CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE CK_PTR \
-                        CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE_PTR;
+CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE_PTR;
 
 /* The following salt value sources are defined in PKCS #5 v2.0. */
 #define CKZ_SALT_SPECIFIED        0x00000001UL
@@ -1741,15 +1741,15 @@ typedef CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE CK_PTR \
  * parameters to the CKM_PKCS5_PBKD2 mechanism.
  */
 typedef struct CK_PKCS5_PBKD2_PARAMS {
-        CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE           saltSource;
-        CK_VOID_PTR                                pSaltSourceData;
-        CK_ULONG                                   ulSaltSourceDataLen;
-        CK_ULONG                                   iterations;
-        CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE prf;
-        CK_VOID_PTR                                pPrfData;
-        CK_ULONG                                   ulPrfDataLen;
-        CK_UTF8CHAR_PTR                            pPassword;
-        CK_ULONG_PTR                               ulPasswordLen;
+  CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE           saltSource;
+  CK_VOID_PTR                                pSaltSourceData;
+  CK_ULONG                                   ulSaltSourceDataLen;
+  CK_ULONG                                   iterations;
+  CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE prf;
+  CK_VOID_PTR                                pPrfData;
+  CK_ULONG                                   ulPrfDataLen;
+  CK_UTF8CHAR_PTR                            pPassword;
+  CK_ULONG_PTR                               ulPasswordLen;
 } CK_PKCS5_PBKD2_PARAMS;
 
 typedef CK_PKCS5_PBKD2_PARAMS CK_PTR CK_PKCS5_PBKD2_PARAMS_PTR;
@@ -1759,15 +1759,15 @@ typedef CK_PKCS5_PBKD2_PARAMS CK_PTR CK_PKCS5_PBKD2_PARAMS_PTR;
  * noting that the ulPasswordLen field is a CK_ULONG and not a CK_ULONG_PTR.
  */
 typedef struct CK_PKCS5_PBKD2_PARAMS2 {
-        CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE saltSource;
-        CK_VOID_PTR pSaltSourceData;
-        CK_ULONG ulSaltSourceDataLen;
-        CK_ULONG iterations;
-        CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE prf;
-        CK_VOID_PTR pPrfData;
-        CK_ULONG ulPrfDataLen;
-        CK_UTF8CHAR_PTR pPassword;
-        CK_ULONG ulPasswordLen;
+  CK_PKCS5_PBKDF2_SALT_SOURCE_TYPE saltSource;
+  CK_VOID_PTR pSaltSourceData;
+  CK_ULONG ulSaltSourceDataLen;
+  CK_ULONG iterations;
+  CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE prf;
+  CK_VOID_PTR pPrfData;
+  CK_ULONG ulPrfDataLen;
+  CK_UTF8CHAR_PTR pPassword;
+  CK_ULONG ulPasswordLen;
 } CK_PKCS5_PBKD2_PARAMS2;
 
 typedef CK_PKCS5_PBKD2_PARAMS2 CK_PTR CK_PKCS5_PBKD2_PARAMS2_PTR;
@@ -1776,23 +1776,23 @@ typedef CK_ULONG CK_OTP_PARAM_TYPE;
 typedef CK_OTP_PARAM_TYPE CK_PARAM_TYPE; /* backward compatibility */
 
 typedef struct CK_OTP_PARAM {
-    CK_OTP_PARAM_TYPE type;
-    CK_VOID_PTR pValue;
-    CK_ULONG ulValueLen;
+  CK_OTP_PARAM_TYPE type;
+  CK_VOID_PTR pValue;
+  CK_ULONG ulValueLen;
 } CK_OTP_PARAM;
 
 typedef CK_OTP_PARAM CK_PTR CK_OTP_PARAM_PTR;
 
 typedef struct CK_OTP_PARAMS {
-    CK_OTP_PARAM_PTR pParams;
-    CK_ULONG ulCount;
+  CK_OTP_PARAM_PTR pParams;
+  CK_ULONG ulCount;
 } CK_OTP_PARAMS;
 
 typedef CK_OTP_PARAMS CK_PTR CK_OTP_PARAMS_PTR;
 
 typedef struct CK_OTP_SIGNATURE_INFO {
-    CK_OTP_PARAM_PTR pParams;
-    CK_ULONG ulCount;
+  CK_OTP_PARAM_PTR pParams;
+  CK_ULONG ulCount;
 } CK_OTP_SIGNATURE_INFO;
 
 typedef CK_OTP_SIGNATURE_INFO CK_PTR CK_OTP_SIGNATURE_INFO_PTR;
@@ -1814,39 +1814,39 @@ typedef CK_OTP_SIGNATURE_INFO CK_PTR CK_OTP_SIGNATURE_INFO_PTR;
 #define CKF_USER_FRIENDLY_OTP 0x00000020UL
 
 typedef struct CK_KIP_PARAMS {
-    CK_MECHANISM_PTR  pMechanism;
-    CK_OBJECT_HANDLE  hKey;
-    CK_BYTE_PTR       pSeed;
-    CK_ULONG          ulSeedLen;
+  CK_MECHANISM_PTR  pMechanism;
+  CK_OBJECT_HANDLE  hKey;
+  CK_BYTE_PTR       pSeed;
+  CK_ULONG          ulSeedLen;
 } CK_KIP_PARAMS;
 
 typedef CK_KIP_PARAMS CK_PTR CK_KIP_PARAMS_PTR;
 
 typedef struct CK_AES_CTR_PARAMS {
-    CK_ULONG ulCounterBits;
-    CK_BYTE cb[16];
+  CK_ULONG ulCounterBits;
+  CK_BYTE cb[16];
 } CK_AES_CTR_PARAMS;
 
 typedef CK_AES_CTR_PARAMS CK_PTR CK_AES_CTR_PARAMS_PTR;
 
 typedef struct CK_GCM_PARAMS {
-    CK_BYTE_PTR       pIv;
-    CK_ULONG          ulIvLen;
-    CK_ULONG          ulIvBits;
-    CK_BYTE_PTR       pAAD;
-    CK_ULONG          ulAADLen;
-    CK_ULONG          ulTagBits;
+  CK_BYTE_PTR       pIv;
+  CK_ULONG          ulIvLen;
+  CK_ULONG          ulIvBits;
+  CK_BYTE_PTR       pAAD;
+  CK_ULONG          ulAADLen;
+  CK_ULONG          ulTagBits;
 } CK_GCM_PARAMS;
 
 typedef CK_GCM_PARAMS CK_PTR CK_GCM_PARAMS_PTR;
 
 typedef struct CK_CCM_PARAMS {
-    CK_ULONG          ulDataLen;
-    CK_BYTE_PTR       pNonce;
-    CK_ULONG          ulNonceLen;
-    CK_BYTE_PTR       pAAD;
-    CK_ULONG          ulAADLen;
-    CK_ULONG          ulMACLen;
+  CK_ULONG          ulDataLen;
+  CK_BYTE_PTR       pNonce;
+  CK_ULONG          ulNonceLen;
+  CK_BYTE_PTR       pAAD;
+  CK_ULONG          ulAADLen;
+  CK_ULONG          ulMACLen;
 } CK_CCM_PARAMS;
 
 typedef CK_CCM_PARAMS CK_PTR CK_CCM_PARAMS_PTR;
@@ -1865,55 +1865,55 @@ typedef CK_AES_GCM_PARAMS CK_PTR CK_AES_GCM_PARAMS_PTR;
 
 /* Deprecated. Use CK_CCM_PARAMS */
 typedef struct CK_AES_CCM_PARAMS {
-    CK_ULONG          ulDataLen;
-    CK_BYTE_PTR       pNonce;
-    CK_ULONG          ulNonceLen;
-    CK_BYTE_PTR       pAAD;
-    CK_ULONG          ulAADLen;
-    CK_ULONG          ulMACLen;
+  CK_ULONG          ulDataLen;
+  CK_BYTE_PTR       pNonce;
+  CK_ULONG          ulNonceLen;
+  CK_BYTE_PTR       pAAD;
+  CK_ULONG          ulAADLen;
+  CK_ULONG          ulMACLen;
 } CK_AES_CCM_PARAMS;
 
 typedef CK_AES_CCM_PARAMS CK_PTR CK_AES_CCM_PARAMS_PTR;
 
 typedef struct CK_CAMELLIA_CTR_PARAMS {
-    CK_ULONG          ulCounterBits;
-    CK_BYTE           cb[16];
+  CK_ULONG          ulCounterBits;
+  CK_BYTE           cb[16];
 } CK_CAMELLIA_CTR_PARAMS;
 
 typedef CK_CAMELLIA_CTR_PARAMS CK_PTR CK_CAMELLIA_CTR_PARAMS_PTR;
 
 typedef struct CK_CAMELLIA_CBC_ENCRYPT_DATA_PARAMS {
-    CK_BYTE           iv[16];
-    CK_BYTE_PTR       pData;
-    CK_ULONG          length;
+  CK_BYTE           iv[16];
+  CK_BYTE_PTR       pData;
+  CK_ULONG          length;
 } CK_CAMELLIA_CBC_ENCRYPT_DATA_PARAMS;
 
 typedef CK_CAMELLIA_CBC_ENCRYPT_DATA_PARAMS CK_PTR \
-                                CK_CAMELLIA_CBC_ENCRYPT_DATA_PARAMS_PTR;
+CK_CAMELLIA_CBC_ENCRYPT_DATA_PARAMS_PTR;
 
 typedef struct CK_ARIA_CBC_ENCRYPT_DATA_PARAMS {
-    CK_BYTE           iv[16];
-    CK_BYTE_PTR       pData;
-    CK_ULONG          length;
+  CK_BYTE           iv[16];
+  CK_BYTE_PTR       pData;
+  CK_ULONG          length;
 } CK_ARIA_CBC_ENCRYPT_DATA_PARAMS;
 
 typedef CK_ARIA_CBC_ENCRYPT_DATA_PARAMS CK_PTR \
-                                CK_ARIA_CBC_ENCRYPT_DATA_PARAMS_PTR;
+CK_ARIA_CBC_ENCRYPT_DATA_PARAMS_PTR;
 
 typedef struct CK_DSA_PARAMETER_GEN_PARAM {
-    CK_MECHANISM_TYPE  hash;
-    CK_BYTE_PTR        pSeed;
-    CK_ULONG           ulSeedLen;
-    CK_ULONG           ulIndex;
+  CK_MECHANISM_TYPE  hash;
+  CK_BYTE_PTR        pSeed;
+  CK_ULONG           ulSeedLen;
+  CK_ULONG           ulIndex;
 } CK_DSA_PARAMETER_GEN_PARAM;
 
 typedef CK_DSA_PARAMETER_GEN_PARAM CK_PTR CK_DSA_PARAMETER_GEN_PARAM_PTR;
 
 typedef struct CK_ECDH_AES_KEY_WRAP_PARAMS {
-    CK_ULONG           ulAESKeyBits;
-    CK_EC_KDF_TYPE     kdf;
-    CK_ULONG           ulSharedDataLen;
-    CK_BYTE_PTR        pSharedData;
+  CK_ULONG           ulAESKeyBits;
+  CK_EC_KDF_TYPE     kdf;
+  CK_ULONG           ulSharedDataLen;
+  CK_BYTE_PTR        pSharedData;
 } CK_ECDH_AES_KEY_WRAP_PARAMS;
 
 typedef CK_ECDH_AES_KEY_WRAP_PARAMS CK_PTR CK_ECDH_AES_KEY_WRAP_PARAMS_PTR;
@@ -1923,80 +1923,80 @@ typedef CK_ULONG CK_JAVA_MIDP_SECURITY_DOMAIN;
 typedef CK_ULONG CK_CERTIFICATE_CATEGORY;
 
 typedef struct CK_RSA_AES_KEY_WRAP_PARAMS {
-    CK_ULONG                      ulAESKeyBits;
-    CK_RSA_PKCS_OAEP_PARAMS_PTR   pOAEPParams;
+  CK_ULONG                      ulAESKeyBits;
+  CK_RSA_PKCS_OAEP_PARAMS_PTR   pOAEPParams;
 } CK_RSA_AES_KEY_WRAP_PARAMS;
 
 typedef CK_RSA_AES_KEY_WRAP_PARAMS CK_PTR CK_RSA_AES_KEY_WRAP_PARAMS_PTR;
 
 typedef struct CK_TLS12_MASTER_KEY_DERIVE_PARAMS {
-    CK_SSL3_RANDOM_DATA       RandomInfo;
-    CK_VERSION_PTR            pVersion;
-    CK_MECHANISM_TYPE         prfHashMechanism;
+  CK_SSL3_RANDOM_DATA       RandomInfo;
+  CK_VERSION_PTR            pVersion;
+  CK_MECHANISM_TYPE         prfHashMechanism;
 } CK_TLS12_MASTER_KEY_DERIVE_PARAMS;
 
 typedef CK_TLS12_MASTER_KEY_DERIVE_PARAMS CK_PTR \
-                                CK_TLS12_MASTER_KEY_DERIVE_PARAMS_PTR;
+CK_TLS12_MASTER_KEY_DERIVE_PARAMS_PTR;
 
 typedef struct CK_TLS12_KEY_MAT_PARAMS {
-    CK_ULONG                  ulMacSizeInBits;
-    CK_ULONG                  ulKeySizeInBits;
-    CK_ULONG                  ulIVSizeInBits;
-    CK_BBOOL                  bIsExport;
-    CK_SSL3_RANDOM_DATA       RandomInfo;
-    CK_SSL3_KEY_MAT_OUT_PTR   pReturnedKeyMaterial;
-    CK_MECHANISM_TYPE         prfHashMechanism;
+  CK_ULONG                  ulMacSizeInBits;
+  CK_ULONG                  ulKeySizeInBits;
+  CK_ULONG                  ulIVSizeInBits;
+  CK_BBOOL                  bIsExport;
+  CK_SSL3_RANDOM_DATA       RandomInfo;
+  CK_SSL3_KEY_MAT_OUT_PTR   pReturnedKeyMaterial;
+  CK_MECHANISM_TYPE         prfHashMechanism;
 } CK_TLS12_KEY_MAT_PARAMS;
 
 typedef CK_TLS12_KEY_MAT_PARAMS CK_PTR CK_TLS12_KEY_MAT_PARAMS_PTR;
 
 typedef struct CK_TLS_KDF_PARAMS {
-    CK_MECHANISM_TYPE         prfMechanism;
-    CK_BYTE_PTR               pLabel;
-    CK_ULONG                  ulLabelLength;
-    CK_SSL3_RANDOM_DATA       RandomInfo;
-    CK_BYTE_PTR               pContextData;
-    CK_ULONG                  ulContextDataLength;
+  CK_MECHANISM_TYPE         prfMechanism;
+  CK_BYTE_PTR               pLabel;
+  CK_ULONG                  ulLabelLength;
+  CK_SSL3_RANDOM_DATA       RandomInfo;
+  CK_BYTE_PTR               pContextData;
+  CK_ULONG                  ulContextDataLength;
 } CK_TLS_KDF_PARAMS;
 
 typedef CK_TLS_KDF_PARAMS CK_PTR CK_TLS_KDF_PARAMS_PTR;
 
 typedef struct CK_TLS_MAC_PARAMS {
-    CK_MECHANISM_TYPE         prfHashMechanism;
-    CK_ULONG                  ulMacLength;
-    CK_ULONG                  ulServerOrClient;
+  CK_MECHANISM_TYPE         prfHashMechanism;
+  CK_ULONG                  ulMacLength;
+  CK_ULONG                  ulServerOrClient;
 } CK_TLS_MAC_PARAMS;
 
 typedef CK_TLS_MAC_PARAMS CK_PTR CK_TLS_MAC_PARAMS_PTR;
 
 typedef struct CK_GOSTR3410_DERIVE_PARAMS {
-    CK_EC_KDF_TYPE            kdf;
-    CK_BYTE_PTR               pPublicData;
-    CK_ULONG                  ulPublicDataLen;
-    CK_BYTE_PTR               pUKM;
-    CK_ULONG                  ulUKMLen;
+  CK_EC_KDF_TYPE            kdf;
+  CK_BYTE_PTR               pPublicData;
+  CK_ULONG                  ulPublicDataLen;
+  CK_BYTE_PTR               pUKM;
+  CK_ULONG                  ulUKMLen;
 } CK_GOSTR3410_DERIVE_PARAMS;
 
 typedef CK_GOSTR3410_DERIVE_PARAMS CK_PTR CK_GOSTR3410_DERIVE_PARAMS_PTR;
 
 typedef struct CK_GOSTR3410_KEY_WRAP_PARAMS {
-    CK_BYTE_PTR               pWrapOID;
-    CK_ULONG                  ulWrapOIDLen;
-    CK_BYTE_PTR               pUKM;
-    CK_ULONG                  ulUKMLen;
-    CK_OBJECT_HANDLE          hKey;
+  CK_BYTE_PTR               pWrapOID;
+  CK_ULONG                  ulWrapOIDLen;
+  CK_BYTE_PTR               pUKM;
+  CK_ULONG                  ulUKMLen;
+  CK_OBJECT_HANDLE          hKey;
 } CK_GOSTR3410_KEY_WRAP_PARAMS;
 
 typedef CK_GOSTR3410_KEY_WRAP_PARAMS CK_PTR CK_GOSTR3410_KEY_WRAP_PARAMS_PTR;
 
 typedef struct CK_SEED_CBC_ENCRYPT_DATA_PARAMS {
-    CK_BYTE                   iv[16];
-    CK_BYTE_PTR               pData;
-    CK_ULONG                  length;
+  CK_BYTE                   iv[16];
+  CK_BYTE_PTR               pData;
+  CK_ULONG                  length;
 } CK_SEED_CBC_ENCRYPT_DATA_PARAMS;
 
 typedef CK_SEED_CBC_ENCRYPT_DATA_PARAMS CK_PTR \
-                                        CK_SEED_CBC_ENCRYPT_DATA_PARAMS_PTR;
+CK_SEED_CBC_ENCRYPT_DATA_PARAMS_PTR;
 
 #endif /* _PKCS11T_H_ */
 

@@ -44,10 +44,9 @@ std::string BOTAN_DLL hex_encode(const uint8_t input[],
 */
 template<typename Alloc>
 std::string hex_encode(const std::vector<uint8_t, Alloc>& input,
-                       bool uppercase = true)
-   {
-   return hex_encode(input.data(), input.size(), uppercase);
-   }
+                       bool uppercase = true) {
+  return hex_encode(input.data(), input.size(), uppercase);
+}
 
 /**
 * Perform hex decoding

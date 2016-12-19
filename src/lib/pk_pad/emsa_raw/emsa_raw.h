@@ -16,22 +16,21 @@ namespace Botan {
 * EMSA-Raw - sign inputs directly
 * Don't use this unless you know what you are doing.
 */
-class BOTAN_DLL EMSA_Raw final : public EMSA
-   {
-   public:
-      EMSA* clone() override { return new EMSA_Raw(); }
+class BOTAN_DLL EMSA_Raw final : public EMSA {
+public:
+  EMSA* clone() override { return new EMSA_Raw(); }
 
-   private:
-      void update(const uint8_t[], size_t) override;
-      secure_vector<uint8_t> raw_data() override;
+private:
+  void update(const uint8_t[], size_t) override;
+  secure_vector<uint8_t> raw_data() override;
 
-      secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
+  secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
                                      RandomNumberGenerator&) override;
-      bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
-                  size_t) override;
+  bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
+              size_t) override;
 
-      secure_vector<uint8_t> m_message;
-   };
+  secure_vector<uint8_t> m_message;
+};
 
 }
 

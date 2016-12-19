@@ -14,15 +14,13 @@ namespace Botan {
 /**
 * Gather entropy from SecRandomCopyBytes
 */
-size_t Darwin_SecRandom::poll(RandomNumberGenerator& rng)
-   {
-   secure_vector<uint8_t> buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
+size_t Darwin_SecRandom::poll(RandomNumberGenerator& rng) {
+  secure_vector<uint8_t> buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
 
-   if(0 == SecRandomCopyBytes(kSecRandomDefault, buf.size(), buf.data()))
-      {
-      rng.add_entropy(buf.data(), buf.size());
-      return buf.size() * 8;
-      }
-   }
+  if (0 == SecRandomCopyBytes(kSecRandomDefault, buf.size(), buf.data())) {
+    rng.add_entropy(buf.data(), buf.size());
+    return buf.size() * 8;
+  }
+}
 
 }

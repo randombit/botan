@@ -15,7 +15,7 @@
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-#include <botan/tls_session_manager_sqlite.h>
+  #include <botan/tls_session_manager_sqlite.h>
 #endif
 
 #include <string>
@@ -38,325 +38,304 @@
 
 namespace Botan_CLI {
 
-class TLS_Client final : public Command, public Botan::TLS::Callbacks
-   {
-   public:
-      TLS_Client() : Command("tls_client host --port=443 --print-certs --policy= "
-                             "--tls1.0 --tls1.1 --tls1.2 "
-                             "--session-db= --session-db-pass= --next-protocols= --type=tcp") {}
+class TLS_Client final : public Command, public Botan::TLS::Callbacks {
+public:
+  TLS_Client() : Command("tls_client host --port=443 --print-certs --policy= "
+                           "--tls1.0 --tls1.1 --tls1.2 "
+                           "--session-db= --session-db-pass= --next-protocols= --type=tcp") {}
 
-      void go() override
-         {
-         // TODO client cert auth
+  void go() override {
+    // TODO client cert auth
 
-         std::unique_ptr<Botan::TLS::Session_Manager> session_mgr;
+    std::unique_ptr<Botan::TLS::Session_Manager> session_mgr;
 
-         const std::string sessions_db = get_arg("session-db");
+    const std::string sessions_db = get_arg("session-db");
 
-         if(!sessions_db.empty())
-            {
+    if (!sessions_db.empty()) {
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-            const std::string sessions_passphrase = get_arg("session-db-pass");
-            session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng(), sessions_db));
+      const std::string sessions_passphrase = get_arg("session-db-pass");
+      session_mgr.reset(new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng(), sessions_db));
 #else
-            error_output() << "Ignoring session DB file, sqlite not enabled\n";
+      error_output() << "Ignoring session DB file, sqlite not enabled\n";
 #endif
-            }
+    }
 
-         if(!session_mgr)
-            {
-            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
-            }
+    if (!session_mgr) {
+      session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
+    }
 
-         std::string policy_file = get_arg("policy");
+    std::string policy_file = get_arg("policy");
 
-         std::unique_ptr<Botan::TLS::Policy> policy;
+    std::unique_ptr<Botan::TLS::Policy> policy;
 
-         if(policy_file.size() > 0)
-            {
-            std::ifstream policy_stream(policy_file);
-            if(!policy_stream.good())
-               {
-               error_output() << "Failed reading policy file\n";
-               return;
-               }
-            policy.reset(new Botan::TLS::Text_Policy(policy_stream));
-            }
+    if (policy_file.size() > 0) {
+      std::ifstream policy_stream(policy_file);
+      if (!policy_stream.good()) {
+        error_output() << "Failed reading policy file\n";
+        return;
+      }
+      policy.reset(new Botan::TLS::Text_Policy(policy_stream));
+    }
 
-         if(!policy)
-            {
-            policy.reset(new Botan::TLS::Policy);
-            }
+    if (!policy) {
+      policy.reset(new Botan::TLS::Policy);
+    }
 
-         Basic_Credentials_Manager creds;
+    Basic_Credentials_Manager creds;
 
-         const std::string host = get_arg("host");
-         const uint16_t port = get_arg_sz("port");
-         const std::string transport = get_arg("type");
-         const std::string next_protos = get_arg("next-protocols");
+    const std::string host = get_arg("host");
+    const uint16_t port = get_arg_sz("port");
+    const std::string transport = get_arg("type");
+    const std::string next_protos = get_arg("next-protocols");
 
-         if(transport != "tcp" && transport != "udp")
-            throw CLI_Usage_Error("Invalid transport type '" + transport + "' for TLS");
+    if (transport != "tcp" && transport != "udp") {
+      throw CLI_Usage_Error("Invalid transport type '" + transport + "' for TLS");
+    }
 
-         const bool use_tcp = (transport == "tcp");
+    const bool use_tcp = (transport == "tcp");
 
-         const std::vector<std::string> protocols_to_offer = Botan::split_on(next_protos, ',');
+    const std::vector<std::string> protocols_to_offer = Botan::split_on(next_protos, ',');
 
-         m_sockfd = connect_to_host(host, port, use_tcp);
+    m_sockfd = connect_to_host(host, port, use_tcp);
 
-         using namespace std::placeholders;
+    using namespace std::placeholders;
 
-         auto version = policy->latest_supported_version(!use_tcp);
+    auto version = policy->latest_supported_version(!use_tcp);
 
-         if(flag_set("tls1.0"))
-            {
-            version = Botan::TLS::Protocol_Version::TLS_V10;
-            }
-         else if(flag_set("tls1.1"))
-            {
-            version = Botan::TLS::Protocol_Version::TLS_V11;
-            }
+    if (flag_set("tls1.0")) {
+      version = Botan::TLS::Protocol_Version::TLS_V10;
+    }
+    else if (flag_set("tls1.1")) {
+      version = Botan::TLS::Protocol_Version::TLS_V11;
+    }
 
-         Botan::TLS::Client client(*this,
-                                   *session_mgr,
-                                   creds,
-                                   *policy,
-                                   rng(),
-                                   Botan::TLS::Server_Information(host, port),
-                                   version,
-                                   protocols_to_offer);
+    Botan::TLS::Client client(*this,
+                              *session_mgr,
+                              creds,
+                              *policy,
+                              rng(),
+                              Botan::TLS::Server_Information(host, port),
+                              version,
+                              protocols_to_offer);
 
-         bool first_active = true;
+    bool first_active = true;
 
-         while(!client.is_closed())
-            {
-            fd_set readfds;
-            FD_ZERO(&readfds);
-            FD_SET(m_sockfd, &readfds);
+    while (!client.is_closed()) {
+      fd_set readfds;
+      FD_ZERO(&readfds);
+      FD_SET(m_sockfd, &readfds);
 
-            if(client.is_active())
-               {
-               FD_SET(STDIN_FILENO, &readfds);
-               if(first_active && !protocols_to_offer.empty())
-                  {
-                  std::string app = client.application_protocol();
-                  if(app != "")
-                     output() << "Server choose protocol: " << client.application_protocol() << "\n";
-                  first_active = false;
-                  }
-               }
+      if (client.is_active()) {
+        FD_SET(STDIN_FILENO, &readfds);
+        if (first_active && !protocols_to_offer.empty()) {
+          std::string app = client.application_protocol();
+          if (app != "") {
+            output() << "Server choose protocol: " << client.application_protocol() << "\n";
+          }
+          first_active = false;
+        }
+      }
 
-            struct timeval timeout = { 1, 0 };
+      struct timeval timeout = { 1, 0 };
 
-            ::select(m_sockfd + 1, &readfds, nullptr, nullptr, &timeout);
+      ::select(m_sockfd + 1, &readfds, nullptr, nullptr, &timeout);
 
-            if(FD_ISSET(m_sockfd, &readfds))
-               {
-               uint8_t buf[4*1024] = { 0 };
+      if (FD_ISSET(m_sockfd, &readfds)) {
+        uint8_t buf[4*1024] = { 0 };
 
-               ssize_t got = ::read(m_sockfd, buf, sizeof(buf));
+        ssize_t got = ::read(m_sockfd, buf, sizeof(buf));
 
-               if(got == 0)
-                  {
-                  output() << "EOF on socket\n";
-                  break;
-                  }
-               else if(got == -1)
-                  {
-                  output() << "Socket error: " << errno << " " << strerror(errno) << "\n";
-                  continue;
-                  }
+        if (got == 0) {
+          output() << "EOF on socket\n";
+          break;
+        }
+        else if (got == -1) {
+          output() << "Socket error: " << errno << " " << strerror(errno) << "\n";
+          continue;
+        }
 
-               client.received_data(buf, got);
-               }
+        client.received_data(buf, got);
+      }
 
-            if(FD_ISSET(STDIN_FILENO, &readfds))
-               {
-               uint8_t buf[1024] = { 0 };
-               ssize_t got = read(STDIN_FILENO, buf, sizeof(buf));
+      if (FD_ISSET(STDIN_FILENO, &readfds)) {
+        uint8_t buf[1024] = { 0 };
+        ssize_t got = read(STDIN_FILENO, buf, sizeof(buf));
 
-               if(got == 0)
-                  {
-                  output() << "EOF on stdin\n";
-                  client.close();
-                  break;
-                  }
-               else if(got == -1)
-                  {
-                  output() << "Stdin error: " << errno << " " << strerror(errno) << "\n";
-                  continue;
-                  }
+        if (got == 0) {
+          output() << "EOF on stdin\n";
+          client.close();
+          break;
+        }
+        else if (got == -1) {
+          output() << "Stdin error: " << errno << " " << strerror(errno) << "\n";
+          continue;
+        }
 
-               if(got == 2 && buf[1] == '\n')
-                  {
-                  char cmd = buf[0];
+        if (got == 2 && buf[1] == '\n') {
+          char cmd = buf[0];
 
-                  if(cmd == 'R' || cmd == 'r')
-                     {
-                     output() << "Client initiated renegotiation\n";
-                     client.renegotiate(cmd == 'R');
-                     }
-                  else if(cmd == 'Q')
-                     {
-                     output() << "Client initiated close\n";
-                     client.close();
-                     }
-                  }
-               else
-                  client.send(buf, got);
-               }
+          if (cmd == 'R' || cmd == 'r') {
+            output() << "Client initiated renegotiation\n";
+            client.renegotiate(cmd == 'R');
+          }
+          else if (cmd == 'Q') {
+            output() << "Client initiated close\n";
+            client.close();
+          }
+        }
+        else {
+          client.send(buf, got);
+        }
+      }
 
-            if(client.timeout_check())
-               {
-               output() << "Timeout detected\n";
-               }
-            }
+      if (client.timeout_check()) {
+        output() << "Timeout detected\n";
+      }
+    }
 
-         ::close(m_sockfd);
-         }
+    ::close(m_sockfd);
+  }
 
-   private:
-      int connect_to_host(const std::string& host, uint16_t port, bool tcp)
-         {
-         hostent* host_addr = ::gethostbyname(host.c_str());
+private:
+  int connect_to_host(const std::string& host, uint16_t port, bool tcp) {
+    hostent* host_addr = ::gethostbyname(host.c_str());
 
-         if(!host_addr)
-            throw CLI_Error("gethostbyname failed for " + host);
+    if (!host_addr) {
+      throw CLI_Error("gethostbyname failed for " + host);
+    }
 
-         if(host_addr->h_addrtype != AF_INET) // FIXME
-            throw CLI_Error(host + " has IPv6 address, not supported");
+    if (host_addr->h_addrtype != AF_INET) { // FIXME
+      throw CLI_Error(host + " has IPv6 address, not supported");
+    }
 
-         int type = tcp ? SOCK_STREAM : SOCK_DGRAM;
+    int type = tcp ? SOCK_STREAM : SOCK_DGRAM;
 
-         int fd = ::socket(PF_INET, type, 0);
-         if(fd == -1)
-            throw CLI_Error("Unable to acquire socket");
+    int fd = ::socket(PF_INET, type, 0);
+    if (fd == -1) {
+      throw CLI_Error("Unable to acquire socket");
+    }
 
-         sockaddr_in socket_info;
-         ::memset(&socket_info, 0, sizeof(socket_info));
-         socket_info.sin_family = AF_INET;
-         socket_info.sin_port = htons(port);
+    sockaddr_in socket_info;
+    ::memset(&socket_info, 0, sizeof(socket_info));
+    socket_info.sin_family = AF_INET;
+    socket_info.sin_port = htons(port);
 
-         ::memcpy(&socket_info.sin_addr,
-                  host_addr->h_addr,
-                  host_addr->h_length);
+    ::memcpy(&socket_info.sin_addr,
+             host_addr->h_addr,
+             host_addr->h_length);
 
-         socket_info.sin_addr = *reinterpret_cast<struct in_addr*>(host_addr->h_addr); // FIXME
+    socket_info.sin_addr = *reinterpret_cast<struct in_addr*>(host_addr->h_addr); // FIXME
 
-         if(::connect(fd, reinterpret_cast<sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0)
-            {
-            ::close(fd);
-            throw CLI_Error("connect failed");
-            }
+    if (::connect(fd, reinterpret_cast<sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0) {
+      ::close(fd);
+      throw CLI_Error("connect failed");
+    }
 
-         return fd;
-         }
+    return fd;
+  }
 
-      void tls_verify_cert_chain(
-         const std::vector<Botan::X509_Certificate>& cert_chain,
-         const std::vector<std::shared_ptr<const Botan::OCSP::Response>>& ocsp,
-         const std::vector<Botan::Certificate_Store*>& trusted_roots,
-         Botan::Usage_Type usage,
-         const std::string& hostname,
-         const Botan::TLS::Policy& policy) override
-         {
-         if(cert_chain.empty())
-            throw std::invalid_argument("Certificate chain was empty");
+  void tls_verify_cert_chain(
+    const std::vector<Botan::X509_Certificate>& cert_chain,
+    const std::vector<std::shared_ptr<const Botan::OCSP::Response>>& ocsp,
+    const std::vector<Botan::Certificate_Store*>& trusted_roots,
+    Botan::Usage_Type usage,
+    const std::string& hostname,
+    const Botan::TLS::Policy& policy) override {
+    if (cert_chain.empty()) {
+      throw std::invalid_argument("Certificate chain was empty");
+    }
 
-         Botan::Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
-                                                          policy.minimum_signature_strength());
+    Botan::Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
+        policy.minimum_signature_strength());
 
-         auto ocsp_timeout = std::chrono::milliseconds(1000);
+    auto ocsp_timeout = std::chrono::milliseconds(1000);
 
-         Botan::Path_Validation_Result result =
-            Botan::x509_path_validate(cert_chain,
-                                      restrictions,
-                                      trusted_roots,
-                                      hostname,
-                                      usage,
-                                      std::chrono::system_clock::now(),
-                                      ocsp_timeout,
-                                      ocsp);
+    Botan::Path_Validation_Result result =
+      Botan::x509_path_validate(cert_chain,
+                                restrictions,
+                                trusted_roots,
+                                hostname,
+                                usage,
+                                std::chrono::system_clock::now(),
+                                ocsp_timeout,
+                                ocsp);
 
-         std::cout << "Certificate validation status: " << result.result_string() << "\n";
-         if(result.successful_validation())
-            {
-            auto status = result.all_statuses();
+    std::cout << "Certificate validation status: " << result.result_string() << "\n";
+    if (result.successful_validation()) {
+      auto status = result.all_statuses();
 
-            if(status.size() > 0 && status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD))
-               std::cout << "Valid OCSP response for this server\n";
-            }
-         }
+      if (status.size() > 0 && status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD)) {
+        std::cout << "Valid OCSP response for this server\n";
+      }
+    }
+  }
 
-      bool tls_session_established(const Botan::TLS::Session& session) override
-         {
-         output() << "Handshake complete, " << session.version().to_string()
-                   << " using " << session.ciphersuite().to_string() << "\n";
+  bool tls_session_established(const Botan::TLS::Session& session) override {
+    output() << "Handshake complete, " << session.version().to_string()
+             << " using " << session.ciphersuite().to_string() << "\n";
 
-         if(!session.session_id().empty())
-            output() << "Session ID " << Botan::hex_encode(session.session_id()) << "\n";
+    if (!session.session_id().empty()) {
+      output() << "Session ID " << Botan::hex_encode(session.session_id()) << "\n";
+    }
 
-         if(!session.session_ticket().empty())
-            output() << "Session ticket " << Botan::hex_encode(session.session_ticket()) << "\n";
+    if (!session.session_ticket().empty()) {
+      output() << "Session ticket " << Botan::hex_encode(session.session_ticket()) << "\n";
+    }
 
-         if(flag_set("print-certs"))
-            {
-            const std::vector<Botan::X509_Certificate>& certs = session.peer_certs();
+    if (flag_set("print-certs")) {
+      const std::vector<Botan::X509_Certificate>& certs = session.peer_certs();
 
-            for(size_t i = 0; i != certs.size(); ++i)
-               {
-               output() << "Certificate " << i+1 << "/" << certs.size() << "\n";
-               output() << certs[i].to_string();
-               output() << certs[i].PEM_encode();
-               }
-            }
+      for (size_t i = 0; i != certs.size(); ++i) {
+        output() << "Certificate " << i+1 << "/" << certs.size() << "\n";
+        output() << certs[i].to_string();
+        output() << certs[i].PEM_encode();
+      }
+    }
 
-         return true;
-         }
+    return true;
+  }
 
-      static void dgram_socket_write(int sockfd, const uint8_t buf[], size_t length)
-         {
-         int r = send(sockfd, buf, length, MSG_NOSIGNAL);
+  static void dgram_socket_write(int sockfd, const uint8_t buf[], size_t length) {
+    int r = send(sockfd, buf, length, MSG_NOSIGNAL);
 
-         if(r == -1)
-            throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
-         }
+    if (r == -1) {
+      throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
+    }
+  }
 
-      void tls_emit_data(const uint8_t buf[], size_t length) override
-         {
-         size_t offset = 0;
+  void tls_emit_data(const uint8_t buf[], size_t length) override {
+    size_t offset = 0;
 
-         while(length)
-            {
-            ssize_t sent = ::send(m_sockfd, buf + offset, length, MSG_NOSIGNAL);
+    while (length) {
+      ssize_t sent = ::send(m_sockfd, buf + offset, length, MSG_NOSIGNAL);
 
-            if(sent == -1)
-               {
-               if(errno == EINTR)
-                  sent = 0;
-               else
-                  throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
-               }
+      if (sent == -1) {
+        if (errno == EINTR) {
+          sent = 0;
+        }
+        else {
+          throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
+        }
+      }
 
-            offset += sent;
-            length -= sent;
-            }
-         }
+      offset += sent;
+      length -= sent;
+    }
+  }
 
-      void tls_alert(Botan::TLS::Alert alert) override
-         {
-         output() << "Alert: " << alert.type_string() << "\n";
-         }
+  void tls_alert(Botan::TLS::Alert alert) override {
+    output() << "Alert: " << alert.type_string() << "\n";
+  }
 
-      void tls_record_received(uint64_t /*seq_no*/, const uint8_t buf[], size_t buf_size) override
-         {
-         for(size_t i = 0; i != buf_size; ++i)
-            output() << buf[i];
-         }
+  void tls_record_received(uint64_t /*seq_no*/, const uint8_t buf[], size_t buf_size) override {
+    for (size_t i = 0; i != buf_size; ++i) {
+      output() << buf[i];
+    }
+  }
 
-      private:
-         int m_sockfd = -1;
-   };
+private:
+  int m_sockfd = -1;
+};
 
 BOTAN_REGISTER_COMMAND("tls_client", TLS_Client);
 

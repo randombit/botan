@@ -19,94 +19,88 @@
 namespace Botan {
 
 XMSS_Signature_Operation::XMSS_Signature_Operation(
-   const XMSS_PrivateKey& private_key)
-   : XMSS_Common_Ops(private_key.xmss_oid()),
-     m_priv_key(private_key),
-     m_randomness(0),
-     m_leaf_idx(0),
-     m_is_initialized(false)
-   {}
+  const XMSS_PrivateKey& private_key)
+  : XMSS_Common_Ops(private_key.xmss_oid()),
+    m_priv_key(private_key),
+    m_randomness(0),
+    m_leaf_idx(0),
+    m_is_initialized(false)
+{}
 
 XMSS_WOTS_PublicKey::TreeSignature
 XMSS_Signature_Operation::generate_tree_signature(const secure_vector<uint8_t>& msg,
-      XMSS_PrivateKey& xmss_priv_key,
-      XMSS_Address& adrs)
-   {
+    XMSS_PrivateKey& xmss_priv_key,
+    XMSS_Address& adrs) {
 
-   wots_keysig_t auth_path = build_auth_path(xmss_priv_key, adrs);
-   adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
-   adrs.set_ots_address(m_leaf_idx);
+  wots_keysig_t auth_path = build_auth_path(xmss_priv_key, adrs);
+  adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
+  adrs.set_ots_address(m_leaf_idx);
 
-   wots_keysig_t sig_ots = xmss_priv_key.wots_private_key().sign(msg, adrs);
-   return XMSS_WOTS_PublicKey::TreeSignature(sig_ots, auth_path);
-   }
+  wots_keysig_t sig_ots = xmss_priv_key.wots_private_key().sign(msg, adrs);
+  return XMSS_WOTS_PublicKey::TreeSignature(sig_ots, auth_path);
+}
 
 XMSS_Signature
 XMSS_Signature_Operation::sign(const secure_vector<uint8_t>& msg_hash,
-                               XMSS_PrivateKey& xmss_priv_key)
-   {
-   XMSS_Address adrs;
-   XMSS_Signature sig(m_leaf_idx,
-                      m_randomness,
-                      generate_tree_signature(msg_hash, xmss_priv_key,adrs));
-   return sig;
-   }
+                               XMSS_PrivateKey& xmss_priv_key) {
+  XMSS_Address adrs;
+  XMSS_Signature sig(m_leaf_idx,
+                     m_randomness,
+                     generate_tree_signature(msg_hash, xmss_priv_key,adrs));
+  return sig;
+}
 
 wots_keysig_t
 XMSS_Signature_Operation::build_auth_path(XMSS_PrivateKey& priv_key,
-      XMSS_Address& adrs)
-   {
-   wots_keysig_t auth_path(m_xmss_params.tree_height());
-   adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
+    XMSS_Address& adrs) {
+  wots_keysig_t auth_path(m_xmss_params.tree_height());
+  adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
 
-   for(size_t j = 0; j < m_xmss_params.tree_height(); j++)
-      {
-      size_t k = (m_leaf_idx / (1 << j)) ^ 0x01;
-      auth_path[j] = priv_key.tree_hash(k * (1 << j), j, adrs);
-      }
+  for (size_t j = 0; j < m_xmss_params.tree_height(); j++) {
+    size_t k = (m_leaf_idx / (1 << j)) ^ 0x01;
+    auth_path[j] = priv_key.tree_hash(k * (1 << j), j, adrs);
+  }
 
-   return auth_path;
-   }
+  return auth_path;
+}
 
-void XMSS_Signature_Operation::update(const uint8_t msg[], size_t msg_len)
-   {
-   initialize();
-   m_hash.h_msg_update(msg, msg_len);
-   }
+void XMSS_Signature_Operation::update(const uint8_t msg[], size_t msg_len) {
+  initialize();
+  m_hash.h_msg_update(msg, msg_len);
+}
 
 
 secure_vector<uint8_t>
-XMSS_Signature_Operation::sign(RandomNumberGenerator&)
-   {
-   initialize();
-   secure_vector<uint8_t> signature(sign(m_hash.h_msg_final(),
-                                      m_priv_key).bytes());
-   m_is_initialized = false;
-   return signature;
-   }
+XMSS_Signature_Operation::sign(RandomNumberGenerator&) {
+  initialize();
+  secure_vector<uint8_t> signature(sign(m_hash.h_msg_final(),
+                                        m_priv_key).bytes());
+  m_is_initialized = false;
+  return signature;
+}
 
-void XMSS_Signature_Operation::initialize()
-   {
-   // return if we already initialized and reserved a leaf index for signing.
-   if(m_is_initialized)
-      return;
+void XMSS_Signature_Operation::initialize() {
+  // return if we already initialized and reserved a leaf index for signing.
+  if (m_is_initialized) {
+    return;
+  }
 
-   secure_vector<uint8_t> index_bytes;
-   // reserve leaf index so it can not be reused in by another signature
-   // operation using the same private key.
-   m_leaf_idx = m_priv_key.reserve_unused_leaf_index();
+  secure_vector<uint8_t> index_bytes;
+  // reserve leaf index so it can not be reused in by another signature
+  // operation using the same private key.
+  m_leaf_idx = m_priv_key.reserve_unused_leaf_index();
 
-   // write prefix for message hashing into buffer.
-   XMSS_Tools::concat(index_bytes, m_leaf_idx, 32);
-   m_randomness = m_hash.prf(m_priv_key.prf(), index_bytes);
-   index_bytes.clear();
-   XMSS_Tools::concat(index_bytes, m_leaf_idx,
-                      m_priv_key.xmss_parameters().element_size());
-   m_hash.h_msg_init(m_randomness,
-                     m_priv_key.root(),
-                     index_bytes);
-   m_is_initialized = true;
-   }
+  // write prefix for message hashing into buffer.
+  XMSS_Tools::concat(index_bytes, m_leaf_idx, 32);
+  m_randomness = m_hash.prf(m_priv_key.prf(), index_bytes);
+  index_bytes.clear();
+  XMSS_Tools::concat(index_bytes, m_leaf_idx,
+                     m_priv_key.xmss_parameters().element_size());
+  m_hash.h_msg_init(m_randomness,
+                    m_priv_key.root(),
+                    index_bytes);
+  m_is_initialized = true;
+}
 
 }
 

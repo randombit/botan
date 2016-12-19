@@ -34,7 +34,7 @@ parse_algorithm_name(const std::string& scan_name);
 * @return string split by delim
 */
 BOTAN_DLL std::vector<std::string> split_on(
-   const std::string& str, char delim);
+  const std::string& str, char delim);
 
 /**
 * Split a string on a character predicate

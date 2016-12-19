@@ -15,40 +15,38 @@ namespace Botan {
 /**
 * Tiger
 */
-class BOTAN_DLL Tiger final : public MDx_HashFunction
-   {
-   public:
-      std::string name() const override;
-      size_t output_length() const override { return m_hash_len; }
+class BOTAN_DLL Tiger final : public MDx_HashFunction {
+public:
+  std::string name() const override;
+  size_t output_length() const override { return m_hash_len; }
 
-      HashFunction* clone() const override
-         {
-         return new Tiger(output_length(), m_passes);
-         }
+  HashFunction* clone() const override {
+    return new Tiger(output_length(), m_passes);
+  }
 
-      void clear() override;
+  void clear() override;
 
-      /**
-      * @param out_size specifies the output length; can be 16, 20, or 24
-      * @param passes to make in the algorithm
-      */
-      Tiger(size_t out_size = 24, size_t passes = 3);
-   private:
-      void compress_n(const uint8_t[], size_t block) override;
-      void copy_out(uint8_t[]) override;
+  /**
+  * @param out_size specifies the output length; can be 16, 20, or 24
+  * @param passes to make in the algorithm
+  */
+  Tiger(size_t out_size = 24, size_t passes = 3);
+private:
+  void compress_n(const uint8_t[], size_t block) override;
+  void copy_out(uint8_t[]) override;
 
-      static void pass(uint64_t& A, uint64_t& B, uint64_t& C,
-                       const secure_vector<uint64_t>& M,
-                       uint8_t mul);
+  static void pass(uint64_t& A, uint64_t& B, uint64_t& C,
+                   const secure_vector<uint64_t>& M,
+                   uint8_t mul);
 
-      static const uint64_t SBOX1[256];
-      static const uint64_t SBOX2[256];
-      static const uint64_t SBOX3[256];
-      static const uint64_t SBOX4[256];
+  static const uint64_t SBOX1[256];
+  static const uint64_t SBOX2[256];
+  static const uint64_t SBOX3[256];
+  static const uint64_t SBOX4[256];
 
-      secure_vector<uint64_t> m_X, m_digest;
-      const size_t m_hash_len, m_passes;
-   };
+  secure_vector<uint64_t> m_X, m_digest;
+  const size_t m_hash_len, m_passes;
+};
 
 }
 

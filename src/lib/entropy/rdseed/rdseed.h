@@ -16,12 +16,11 @@ namespace Botan {
 * Entropy source using the rdseed instruction first introduced on
 * Intel's Broadwell architecture.
 */
-class Intel_Rdseed final : public Entropy_Source
-   {
-   public:
-      std::string name() const override { return "rdseed"; }
-      size_t poll(RandomNumberGenerator& rng) override;
-   };
+class Intel_Rdseed final : public Entropy_Source {
+public:
+  std::string name() const override { return "rdseed"; }
+  size_t poll(RandomNumberGenerator& rng) override;
+};
 
 }
 
