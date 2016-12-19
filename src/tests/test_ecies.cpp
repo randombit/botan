@@ -203,7 +203,7 @@ class ECIES_Tests : public Text_Based_Test
    public:
       ECIES_Tests() : Text_Based_Test(
          "pubkey/ecies.vec",
-         "Curve,PrivateKey,OtherPrivateKey,Kdf,Dem,DemKeyLen,Iv,Mac,MacKeyLen,Format",
+         "Curve,PrivateKey,OtherPrivateKey,Kdf,Dem,DemKeyLen,Iv,Mac,MacKeyLen,Format,"
          "CofactorMode,OldCofactorMode,CheckMode,SingleHashMode,Label,Plaintext,Ciphertext")
          {}
 
