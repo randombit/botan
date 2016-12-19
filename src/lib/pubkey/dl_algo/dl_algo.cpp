@@ -67,6 +67,8 @@ bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,
       return false;
    if(!m_group.verify_group(rng, strong))
       return false;
+   if(power_mod(m_y,group_q(),group_p()) != 1)
+      return false;
    return true;
    }
 
