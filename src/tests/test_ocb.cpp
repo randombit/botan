@@ -21,7 +21,7 @@ class OCB_Long_KAT_Tests : public Text_Based_Test
    {
    public:
       OCB_Long_KAT_Tests() : Text_Based_Test("ocb_long.vec",
-                                             {"Keylen", "Taglen", "Output"}) {}
+                                             "Keylen,Taglen,Output") {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {

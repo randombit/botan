@@ -15,7 +15,7 @@ namespace {
 class Hash_Function_Tests : public Text_Based_Test
    {
    public:
-      Hash_Function_Tests() : Text_Based_Test("hash", {"In", "Out"}) {}
+      Hash_Function_Tests() : Text_Based_Test("hash", "In,Out") {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {

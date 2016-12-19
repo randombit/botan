@@ -21,7 +21,7 @@ class Curve25519_Sclarmult_Tests : public Text_Based_Test
    public:
       Curve25519_Sclarmult_Tests() : Text_Based_Test(
          "pubkey/c25519_scalar.vec",
-         {"Secret","Basepoint","Out"})
+         "Secret,Basepoint,Out")
          {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override

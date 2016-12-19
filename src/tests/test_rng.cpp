@@ -37,8 +37,8 @@ class HMAC_DRBG_Tests : public Text_Based_Test
    {
    public:
       HMAC_DRBG_Tests() : Text_Based_Test("hmac_drbg.vec",
-                                          {"EntropyInput", "EntropyInputReseed", "Out"},
-                                          {"AdditionalInput1", "AdditionalInput2"}) {}
+                                          "EntropyInput,EntropyInputReseed,Out",
+                                          "AdditionalInput1,AdditionalInput2") {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {

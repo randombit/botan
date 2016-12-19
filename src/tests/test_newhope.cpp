@@ -89,7 +89,10 @@ class NEWHOPE_RNG : public Botan::RandomNumberGenerator
 class NEWHOPE_Tests : public Text_Based_Test
    {
    public:
-      NEWHOPE_Tests() : Text_Based_Test("pubkey/newhope.vec", {"DRBG_SeedA", "H_OutputA", "DRBG_SeedB", "H_OutputB", "SharedKey"}) {}
+      NEWHOPE_Tests() : Text_Based_Test(
+         "pubkey/newhope.vec",
+         "DRBG_SeedA,H_OutputA,DRBG_SeedB,H_OutputB,SharedKey")
+         {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {

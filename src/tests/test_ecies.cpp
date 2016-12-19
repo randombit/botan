@@ -106,9 +106,8 @@ class ECIES_ISO_Tests : public Text_Based_Test
    public:
       ECIES_ISO_Tests() : Text_Based_Test(
             "pubkey/ecies-18033.vec",
-         { "format", "p", "a", "b", "mu", "nu", "gx", "gy", "hx", "hy", "x", "r", "C0", "K" })
-         {
-         }
+            "format,p,a,b,mu,nu,gx,gy,hx,hy,x,r,C0,K")
+         {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
@@ -203,11 +202,10 @@ class ECIES_Tests : public Text_Based_Test
    {
    public:
       ECIES_Tests() : Text_Based_Test(
-            "pubkey/ecies.vec",
-         { "Curve", "PrivateKey", "OtherPrivateKey", "Kdf", "Dem", "DemKeyLen", "Iv", "Mac", "MacKeyLen", "Format",
-            "CofactorMode", "OldCofactorMode", "CheckMode", "SingleHashMode", "Label", "Plaintext", "Ciphertext" })
-         {
-         }
+         "pubkey/ecies.vec",
+         "Curve,PrivateKey,OtherPrivateKey,Kdf,Dem,DemKeyLen,Iv,Mac,MacKeyLen,Format",
+         "CofactorMode,OldCofactorMode,CheckMode,SingleHashMode,Label,Plaintext,Ciphertext")
+         {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {

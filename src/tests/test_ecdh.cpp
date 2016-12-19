@@ -24,8 +24,8 @@ class ECDH_KAT_Tests : public PK_Key_Agreement_Test
       ECDH_KAT_Tests() : PK_Key_Agreement_Test(
          "ECDH",
          "pubkey/ecdh.vec",
-         {"Group", "Secret", "CounterKey", "K"},
-         {"KDF"})
+         "Group,Secret,CounterKey,K",
+         "KDF")
          {}
 
       std::string default_kdf(const VarMap&) const override { return "Raw"; }

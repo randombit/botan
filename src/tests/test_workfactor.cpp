@@ -16,8 +16,8 @@ namespace Botan_Tests {
 class PK_Workfactor_Tests : public Text_Based_Test
    {
    public:
-      PK_Workfactor_Tests() : Text_Based_Test("pubkey/workfactor.vec",
-                                              {"ParamSize", "Workfactor"})
+      PK_Workfactor_Tests() :
+         Text_Based_Test("pubkey/workfactor.vec", "ParamSize,Workfactor")
          {}
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override

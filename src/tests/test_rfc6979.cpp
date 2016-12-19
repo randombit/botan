@@ -22,8 +22,7 @@ namespace {
 class RFC6979_KAT_Tests : public Text_Based_Test
    {
    public:
-      RFC6979_KAT_Tests() : Text_Based_Test("rfc6979.vec",
-                                            {"Q", "X", "H", "K"}) {}
+      RFC6979_KAT_Tests() : Text_Based_Test("rfc6979.vec", "Q,X,H,K") {}
 
       Test::Result run_one_test(const std::string& hash, const VarMap& vars) override
          {

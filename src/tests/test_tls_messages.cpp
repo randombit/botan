@@ -46,7 +46,7 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
    {
    public:
       TLS_Message_Parsing_Test() :
-         Text_Based_Test("tls", {"Buffer", "Protocol", "Ciphersuite", "AdditionalData", "Exception"})
+         Text_Based_Test("tls", "Buffer,Protocol,Ciphersuite,AdditionalData,Exception")
          {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override

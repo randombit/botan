@@ -23,8 +23,8 @@ class RSA_ES_KAT_Tests : public PK_Encryption_Decryption_Test
       RSA_ES_KAT_Tests() : PK_Encryption_Decryption_Test(
          "RSA",
          "pubkey/rsaes.vec",
-         {"E", "P", "Q", "Msg", "Ciphertext"},
-         {"Padding", "Nonce"})
+         "E,P,Q,Msg,Ciphertext",
+         "Padding,Nonce")
          {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
@@ -41,8 +41,10 @@ class RSA_ES_KAT_Tests : public PK_Encryption_Decryption_Test
 class RSA_KEM_Tests : public PK_KEM_Test
    {
    public:
-      RSA_KEM_Tests() : PK_KEM_Test("RSA", "pubkey/rsa_kem.vec",
-                                    {"E", "P", "Q", "R", "C0", "KDF", "OutLen", "K"})
+      RSA_KEM_Tests() : PK_KEM_Test(
+         "RSA",
+         "pubkey/rsa_kem.vec",
+         "E,P,Q,R,C0,KDF,OutLen,K")
          {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
@@ -63,8 +65,8 @@ class RSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
       RSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
          "RSA",
          "pubkey/rsa_sig.vec",
-         {"E", "P", "Q", "Msg", "Signature"},
-         {"Padding", "Nonce"})
+         "E,P,Q,Msg,Signature",
+         "Padding,Nonce")
          {}
 
       std::string default_padding(const VarMap&) const override { return "Raw"; }
@@ -86,8 +88,8 @@ class RSA_Signature_Verify_Tests : public PK_Signature_Verification_Test
       RSA_Signature_Verify_Tests() : PK_Signature_Verification_Test(
          "RSA",
          "pubkey/rsa_verify.vec",
-         {"E", "N", "Msg", "Signature"},
-         {"Padding"})
+         "E,N,Msg,Signature",
+         "Padding")
          {}
 
       std::string default_padding(const VarMap&) const override { return "Raw"; }

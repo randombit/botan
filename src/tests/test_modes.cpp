@@ -19,7 +19,7 @@ class Cipher_Mode_Tests : public Text_Based_Test
    {
    public:
       Cipher_Mode_Tests() :
-         Text_Based_Test("modes", {"Key", "Nonce", "In", "Out"})
+         Text_Based_Test("modes", "Key,Nonce,In,Out")
          {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override

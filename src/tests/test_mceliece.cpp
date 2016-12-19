@@ -38,11 +38,10 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
    {
    public:
       McEliece_Keygen_Encrypt_Test() :
-         Text_Based_Test("McEliece",
-                         "pubkey/mce.vec",
-                         {"McElieceSeed", "KeyN","KeyT","PublicKeyFingerprint",
-                          "PrivateKeyFingerprint", "EncryptPRNGSeed",
-                            "SharedKey", "Ciphertext" })
+         Text_Based_Test("pubkey/mce.vec",
+                         "McElieceSeed,KeyN,KeyT,PublicKeyFingerprint,PrivateKeyFingerprint,"
+                         "EncryptPRNGSeed,SharedKey,Ciphertext",
+                         "")
          {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override

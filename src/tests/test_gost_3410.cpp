@@ -24,7 +24,7 @@ class GOST_3410_2001_Verification_Tests : public PK_Signature_Verification_Test
       GOST_3410_2001_Verification_Tests() : PK_Signature_Verification_Test(
          "GOST 34.10-2001",
          "pubkey/gost_3410_verify.vec",
-         {"Group", "Pubkey", "Hash", "Msg", "Signature"})
+         "Group,Pubkey,Hash,Msg,Signature")
          {}
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
@@ -49,7 +49,7 @@ class GOST_3410_2001_Signature_Tests : public PK_Signature_Generation_Test
       GOST_3410_2001_Signature_Tests() : PK_Signature_Generation_Test(
          "GOST 34.10-2001",
          "pubkey/gost_3410_sign.vec",
-         {"Group", "Privkey", "Hash", "Nonce", "Msg", "Signature"}, {})
+         "Group,Privkey,Hash,Nonce,Msg,Signature")
          {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override

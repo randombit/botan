@@ -19,8 +19,8 @@ class KDF_KAT_Tests : public Text_Based_Test
    {
    public:
       KDF_KAT_Tests() : Text_Based_Test("kdf",
-                                        {"OutputLen", "Salt", "Secret", "Label", "Output"},
-                                        {"IKM","XTS"})
+                                        "OutputLen,Salt,Secret,Label,Output",
+                                        "IKM,XTS")
          {}
 
       Test::Result run_one_test(const std::string& kdf_name, const VarMap& vars) override

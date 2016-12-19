@@ -408,13 +408,8 @@ class Text_Based_Test : public Test
    {
    public:
       Text_Based_Test(const std::string& input_file,
-                      const std::vector<std::string>& required_keys,
-                      const std::vector<std::string>& optional_keys = {});
-
-      Text_Based_Test(const std::string& algo,
-                      const std::string& input_file,
-                      const std::vector<std::string>& required_keys,
-                      const std::vector<std::string>& optional_keys = {});
+                      const std::string& required_keys,
+                      const std::string& optional_keys = "");
 
       virtual bool clear_between_callbacks() const { return true; }
 
@@ -444,10 +439,7 @@ class Text_Based_Test : public Test
 
       size_t get_req_sz(const VarMap& vars, const std::string& key) const;
       size_t get_opt_sz(const VarMap& vars, const std::string& key, const size_t def_value) const;
-
-      std::string algo_name() const { return m_algo; }
    private:
-      std::string m_algo;
       std::string m_data_src;
       std::set<std::string> m_required_keys;
       std::set<std::string> m_optional_keys;

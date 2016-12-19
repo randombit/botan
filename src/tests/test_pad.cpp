@@ -18,7 +18,7 @@ class Cipher_Mode_Padding_Tests : public Text_Based_Test
    {
    public:
       Cipher_Mode_Padding_Tests() :
-         Text_Based_Test("", "pad.vec", {"In", "Blocksize"}, {"Out"})
+         Text_Based_Test("pad.vec", "In,Blocksize", "Out")
          {}
 
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override

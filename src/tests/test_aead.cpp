@@ -20,9 +20,7 @@ namespace {
 class AEAD_Tests : public Text_Based_Test
    {
    public:
-      AEAD_Tests() :
-         Text_Based_Test("aead", {"Key", "Nonce", "In", "Out"}, {"AD"})
-         {}
+      AEAD_Tests() : Text_Based_Test("aead", "Key,Nonce,In,Out", "AD") {}
 
       Test::Result test_enc(const std::vector<uint8_t>& key, const std::vector<uint8_t>& nonce,
                             const std::vector<uint8_t>& input, const std::vector<uint8_t>& expected,

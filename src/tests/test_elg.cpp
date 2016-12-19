@@ -23,8 +23,8 @@ class ElGamal_KAT_Tests : public PK_Encryption_Decryption_Test
       ElGamal_KAT_Tests() : PK_Encryption_Decryption_Test(
          "ElGamal",
          "pubkey/elgamal.vec",
-         {"P", "G", "X", "Msg", "Nonce", "Ciphertext"},
-         {"Padding"})
+         "P,G,X,Msg,Nonce,Ciphertext",
+         "Padding")
          {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override

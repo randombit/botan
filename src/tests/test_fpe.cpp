@@ -17,7 +17,7 @@ namespace Botan_Tests {
 class FPE_FE1_Tests : public Text_Based_Test
    {
    public:
-      FPE_FE1_Tests() : Text_Based_Test("fpe_fe1.vec", {"Mod", "In", "Out", "Key", "Tweak"}) {}
+      FPE_FE1_Tests() : Text_Based_Test("fpe_fe1.vec", "Mod,In,Out,Key,Tweak") {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {

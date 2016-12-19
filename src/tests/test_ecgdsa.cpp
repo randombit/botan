@@ -26,7 +26,7 @@ class ECGDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
       ECGDSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
          "ECGDSA",
          "pubkey/ecgdsa.vec",
-         {"Group", "X", "Hash", "Msg", "Nonce", "Signature"})
+         "Group,X,Hash,Msg,Nonce,Signature")
          {}
 
       bool clear_between_callbacks() const override { return false; }

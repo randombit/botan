@@ -27,10 +27,10 @@ class ECDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
          "ECDSA",
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
          "pubkey/ecdsa_rfc6979.vec",
-         {"Group", "X", "Hash", "Msg", "Signature"})
+         "Group,X,Hash,Msg,Signature")
 #else
          "pubkey/ecdsa_prob.vec",
-         {"Group", "X", "Hash", "Msg", "Nonce", "Signature"})
+         "Group,X,Hash,Msg,Nonce,Signature")
 #endif
          {}
 

@@ -547,27 +547,15 @@ std::string Test::random_password()
    }
 
 Text_Based_Test::Text_Based_Test(const std::string& data_src,
-                                 const std::vector<std::string>& required_keys,
-                                 const std::vector<std::string>& optional_keys) :
+                                 const std::string& required_keys_str,
+                                 const std::string& optional_keys_str) :
    m_data_src(data_src)
    {
-   if(required_keys.empty())
+   if(required_keys_str.empty())
       throw Test_Error("Invalid test spec");
 
-   m_required_keys.insert(required_keys.begin(), required_keys.end());
-   m_optional_keys.insert(optional_keys.begin(), optional_keys.end());
-   m_output_key = required_keys.at(required_keys.size() - 1);
-   }
-
-Text_Based_Test::Text_Based_Test(const std::string& algo,
-                                 const std::string& data_src,
-                                 const std::vector<std::string>& required_keys,
-                                 const std::vector<std::string>& optional_keys) :
-   m_algo(algo),
-   m_data_src(data_src)
-   {
-   if(required_keys.empty())
-      throw Test_Error("Invalid test spec");
+   std::vector<std::string> required_keys = Botan::split_on(required_keys_str, ',');
+   std::vector<std::string> optional_keys = Botan::split_on(optional_keys_str, ',');
 
    m_required_keys.insert(required_keys.begin(), required_keys.end());
    m_optional_keys.insert(optional_keys.begin(), optional_keys.end());

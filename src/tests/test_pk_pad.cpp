@@ -20,8 +20,8 @@ class EME_Decoding_Tests : public Text_Based_Test
    public:
       EME_Decoding_Tests() :
          Text_Based_Test("pk_pad_eme",
-                         std::vector<std::string>{"RawCiphertext","ValidInput"},
-                         std::vector<std::string>{"Plaintext"}) {}
+                         "RawCiphertext,ValidInput",
+                         "Plaintext") {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {

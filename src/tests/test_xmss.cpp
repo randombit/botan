@@ -24,8 +24,7 @@ class XMSS_Signature_Tests : public PK_Signature_Generation_Test
       XMSS_Signature_Tests() : PK_Signature_Generation_Test(
          "XMSS",
          "pubkey/xmss_sig.vec",
-         {"Params", "Msg", "PrivateKey", "Signature"},
-         {})
+         "Params,Msg,PrivateKey,Signature")
          {}
 
       std::string default_padding(const VarMap& vars) const override
@@ -49,8 +48,7 @@ class XMSS_Signature_Verify_Tests : public PK_Signature_Verification_Test
       XMSS_Signature_Verify_Tests() : PK_Signature_Verification_Test(
          "XMSS",
          "pubkey/xmss_verify.vec",
-         {"Params", "Msg", "PublicKey", "Signature"},
-         {})
+         "Params,Msg,PublicKey,Signature")
          {}
 
       std::string default_padding(const VarMap& vars) const override

@@ -20,8 +20,7 @@ namespace {
 class Message_Auth_Tests : public Text_Based_Test
    {
    public:
-      Message_Auth_Tests() :
-         Text_Based_Test("mac", {"Key", "In", "Out"}, {"IV"}) {}
+      Message_Auth_Tests() : Text_Based_Test("mac", "Key,In,Out", "IV") {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
