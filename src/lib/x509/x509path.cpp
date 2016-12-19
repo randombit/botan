@@ -25,7 +25,7 @@ namespace Botan {
 /*
 * PKIX path validation
 */
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                   std::chrono::system_clock::time_point ref_time,
                   const std::string& hostname,
@@ -40,7 +40,7 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
 
    X509_Time validation_time(ref_time);
 
-   std::vector<std::set<Certificate_Status_Code>> cert_status(cert_path.size());
+   CertificatePathStatusCodes cert_status(cert_path.size());
 
    if(!hostname.empty() && !cert_path[0]->matches_dns_name(hostname))
       cert_status[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
@@ -118,7 +118,7 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
    return cert_status;
    }
 
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                  const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses,
                  const std::vector<Certificate_Store*>& trusted_certstores,
@@ -127,7 +127,7 @@ PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cer
    if(cert_path.empty())
       throw Invalid_Argument("PKIX::check_ocsp cert_path empty");
 
-   std::vector<std::set<Certificate_Status_Code>> cert_status(cert_path.size() - 1);
+   CertificatePathStatusCodes cert_status(cert_path.size() - 1);
 
    for(size_t i = 0; i != cert_path.size() - 1; ++i)
       {
@@ -167,7 +167,7 @@ PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cer
    return cert_status;
    }
 
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                 const std::vector<std::shared_ptr<const X509_CRL>>& crls,
                 std::chrono::system_clock::time_point ref_time)
@@ -175,7 +175,7 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
    if(cert_path.empty())
       throw Invalid_Argument("PKIX::check_crl cert_path empty");
 
-   std::vector<std::set<Certificate_Status_Code>> cert_status(cert_path.size());
+   CertificatePathStatusCodes cert_status(cert_path.size());
    const X509_Time validation_time(ref_time);
 
    for(size_t i = 0; i != cert_path.size() - 1; ++i)
@@ -212,7 +212,7 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
    return cert_status;
    }
 
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                 const std::vector<Certificate_Store*>& certstores,
                 std::chrono::system_clock::time_point ref_time)
@@ -241,7 +241,7 @@ PKIX::check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert
 
 #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
 
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                         const std::vector<Certificate_Store*>& trusted_certstores,
                         std::chrono::system_clock::time_point ref_time,
@@ -318,7 +318,7 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
    return PKIX::check_ocsp(cert_path, ocsp_responses, trusted_certstores, ref_time);
    }
 
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                        const std::vector<Certificate_Store*>& certstores,
                        Certificate_Store_In_Memory* crl_store,
@@ -392,7 +392,7 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
          }
       }
 
-   const std::vector<std::set<Certificate_Status_Code>> crl_status = PKIX::check_crl(cert_path, crls, ref_time);
+   const CertificatePathStatusCodes crl_status = PKIX::check_crl(cert_path, crls, ref_time);
 
    if(crl_store)
       {
@@ -489,9 +489,9 @@ PKIX::build_certificate_path(std::vector<std::shared_ptr<const X509_Certificate>
       }
    }
 
-void PKIX::merge_revocation_status(std::vector<std::set<Certificate_Status_Code>>& chain_status,
-                                   const std::vector<std::set<Certificate_Status_Code>>& crl,
-                                   const std::vector<std::set<Certificate_Status_Code>>& ocsp,
+void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
+                                   const CertificatePathStatusCodes& crl,
+                                   const CertificatePathStatusCodes& ocsp,
                                    bool require_rev_on_end_entity,
                                    bool require_rev_on_intermediates)
    {
@@ -538,7 +538,7 @@ void PKIX::merge_revocation_status(std::vector<std::set<Certificate_Status_Code>
       }
    }
 
-Certificate_Status_Code PKIX::overall_status(const std::vector<std::set<Certificate_Status_Code>>& cert_status)
+Certificate_Status_Code PKIX::overall_status(const CertificatePathStatusCodes& cert_status)
    {
    if(cert_status.empty())
       throw Invalid_Argument("PKIX::overall_status empty cert status");
@@ -591,16 +591,16 @@ Path_Validation_Result BOTAN_DLL x509_path_validate(
       return Path_Validation_Result(path_building_result);
       }
 
-   std::vector<std::set<Certificate_Status_Code>> status =
+   CertificatePathStatusCodes status =
       PKIX::check_chain(cert_path, ref_time,
                         hostname, usage,
                         restrictions.minimum_key_strength(),
                         restrictions.trusted_hashes());
 
-   std::vector<std::set<Certificate_Status_Code>> crl_status =
+   CertificatePathStatusCodes crl_status =
       PKIX::check_crl(cert_path, trusted_roots, ref_time);
 
-   std::vector<std::set<Certificate_Status_Code>> ocsp_status;
+   CertificatePathStatusCodes ocsp_status;
 
    if(ocsp_resp.size() > 0)
       {
@@ -691,7 +691,7 @@ Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
    m_trusted_hashes.insert("SHA-512");
    }
 
-Path_Validation_Result::Path_Validation_Result(std::vector<std::set<Certificate_Status_Code>> status,
+Path_Validation_Result::Path_Validation_Result(CertificatePathStatusCodes status,
                                                std::vector<std::shared_ptr<const X509_Certificate>>&& cert_chain) :
    m_all_status(status),
    m_cert_path(cert_chain),

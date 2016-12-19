@@ -23,6 +23,12 @@
 namespace Botan {
 
 /**
+* This type represents the validation status of an entire certificate path.
+* There is one set of status codes for each certificate in the path.
+*/
+typedef std::vector<std::set<Certificate_Status_Code>> CertificatePathStatusCodes;
+
+/**
 * Specifies restrictions on the PKIX path validation
 */
 class BOTAN_DLL Path_Validation_Restrictions
@@ -135,7 +141,7 @@ class BOTAN_DLL Path_Validation_Result
       /**
       * @return a set of status codes for each certificate in the chain
       */
-      const std::vector<std::set<Certificate_Status_Code>>& all_statuses() const
+      const CertificatePathStatusCodes& all_statuses() const
          { return m_all_status; }
 
       /**
@@ -154,7 +160,7 @@ class BOTAN_DLL Path_Validation_Result
       * @param status list of validation status codes
       * @param cert_chain the certificate chain that was validated
       */
-      Path_Validation_Result(std::vector<std::set<Certificate_Status_Code>> status,
+      Path_Validation_Result(CertificatePathStatusCodes status,
                              std::vector<std::shared_ptr<const X509_Certificate>>&& cert_chain);
 
       /**
@@ -164,7 +170,7 @@ class BOTAN_DLL Path_Validation_Result
       explicit Path_Validation_Result(Certificate_Status_Code status) : m_overall(status) {}
 
    private:
-      std::vector<std::set<Certificate_Status_Code>> m_all_status;
+      CertificatePathStatusCodes m_all_status;
       std::vector<std::shared_ptr<const X509_Certificate>> m_cert_path;
       Certificate_Status_Code m_overall;
    };
@@ -297,7 +303,7 @@ BOTAN_DLL build_certificate_path(std::vector<std::shared_ptr<const X509_Certific
 * results. If all codes in the set are < Certificate_Status_Code::FIRST_ERROR_STATUS,
 * then the result for that certificate is successful. If all results are
 */
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 BOTAN_DLL check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                       std::chrono::system_clock::time_point ref_time,
                       const std::string& hostname,
@@ -314,7 +320,7 @@ BOTAN_DLL check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>
 * (normally current system clock)
 * @return revocation status
 */
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 BOTAN_DLL check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                      const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses,
                      const std::vector<Certificate_Store*>& certstores,
@@ -329,7 +335,7 @@ BOTAN_DLL check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>&
 * (normally current system clock)
 * @return revocation status
 */
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 BOTAN_DLL check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                     const std::vector<std::shared_ptr<const X509_CRL>>& crls,
                     std::chrono::system_clock::time_point ref_time);
@@ -342,7 +348,7 @@ BOTAN_DLL check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& 
 * (normally current system clock)
 * @return revocation status
 */
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 BOTAN_DLL check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                     const std::vector<Certificate_Store*>& certstores,
                     std::chrono::system_clock::time_point ref_time);
@@ -363,7 +369,7 @@ BOTAN_DLL check_crl(const std::vector<std::shared_ptr<const X509_Certificate>>& 
 * CA certificates. If false, only does OCSP on the end entity cert.
 * @return revocation status
 */
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 BOTAN_DLL check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                             const std::vector<Certificate_Store*>& trusted_certstores,
                             std::chrono::system_clock::time_point ref_time,
@@ -384,7 +390,7 @@ BOTAN_DLL check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certifi
 * may block for up to timeout*cert_path.size()*C for some small C.
 * @return revocation status
 */
-std::vector<std::set<Certificate_Status_Code>>
+CertificatePathStatusCodes
 BOTAN_DLL check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
                            const std::vector<Certificate_Store*>& trusted_certstores,
                            Certificate_Store_In_Memory* certstore_to_recv_crls,
@@ -397,7 +403,7 @@ BOTAN_DLL check_crl_online(const std::vector<std::shared_ptr<const X509_Certific
 * Find overall status (OK, error) of a validation
 * @param cert_status result of merge_revocation_status or check_chain
 */
-Certificate_Status_Code BOTAN_DLL overall_status(const std::vector<std::set<Certificate_Status_Code>>& cert_status);
+Certificate_Status_Code BOTAN_DLL overall_status(const CertificatePathStatusCodes& cert_status);
 
 /**
 * Merge the results from CRL and/or OCSP checks into chain_status
@@ -407,9 +413,9 @@ Certificate_Status_Code BOTAN_DLL overall_status(const std::vector<std::set<Cert
 * @param require_rev_on_end_entity require valid CRL or OCSP on end-entity cert
 * @param require_rev_on_intermediates require valid CRL or OCSP on all intermediate certificates
 */
-void BOTAN_DLL merge_revocation_status(std::vector<std::set<Certificate_Status_Code>>& chain_status,
-                                       const std::vector<std::set<Certificate_Status_Code>>& crl_status,
-                                       const std::vector<std::set<Certificate_Status_Code>>& ocsp_status,
+void BOTAN_DLL merge_revocation_status(CertificatePathStatusCodes& chain_status,
+                                       const CertificatePathStatusCodes& crl_status,
+                                       const CertificatePathStatusCodes& ocsp_status,
                                        bool require_rev_on_end_entity,
                                        bool require_rev_on_intermediates);
 
