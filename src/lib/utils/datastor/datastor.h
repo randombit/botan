@@ -20,37 +20,36 @@ namespace Botan {
 /**
 * Data Store
 */
-class BOTAN_DLL Data_Store
-   {
-   public:
-      /**
-      * A search function
-      */
-      bool operator==(const Data_Store&) const;
+class BOTAN_DLL Data_Store {
+public:
+  /**
+  * A search function
+  */
+  bool operator==(const Data_Store&) const;
 
-      std::multimap<std::string, std::string> search_for(
-         std::function<bool (std::string, std::string)> predicate) const;
+  std::multimap<std::string, std::string> search_for(
+    std::function<bool (std::string, std::string)> predicate) const;
 
-      std::vector<std::string> get(const std::string&) const;
+  std::vector<std::string> get(const std::string&) const;
 
-      std::string get1(const std::string& key) const;
+  std::string get1(const std::string& key) const;
 
-      std::string get1(const std::string& key,
-                       const std::string& default_value) const;
+  std::string get1(const std::string& key,
+                   const std::string& default_value) const;
 
-      std::vector<uint8_t> get1_memvec(const std::string&) const;
-      uint32_t get1_uint32(const std::string&, uint32_t = 0) const;
+  std::vector<uint8_t> get1_memvec(const std::string&) const;
+  uint32_t get1_uint32(const std::string&, uint32_t = 0) const;
 
-      bool has_value(const std::string&) const;
+  bool has_value(const std::string&) const;
 
-      void add(const std::multimap<std::string, std::string>&);
-      void add(const std::string&, const std::string&);
-      void add(const std::string&, uint32_t);
-      void add(const std::string&, const secure_vector<uint8_t>&);
-      void add(const std::string&, const std::vector<uint8_t>&);
-   private:
-      std::multimap<std::string, std::string> m_contents;
-   };
+  void add(const std::multimap<std::string, std::string>&);
+  void add(const std::string&, const std::string&);
+  void add(const std::string&, uint32_t);
+  void add(const std::string&, const secure_vector<uint8_t>&);
+  void add(const std::string&, const std::vector<uint8_t>&);
+private:
+  std::multimap<std::string, std::string> m_contents;
+};
 
 }
 

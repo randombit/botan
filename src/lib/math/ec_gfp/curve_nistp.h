@@ -25,19 +25,19 @@ BOTAN_DLL void redc_p521(BigInt& x, secure_vector<word>& ws);
 
 #if (BOTAN_MP_WORD_BITS == 32) || (BOTAN_MP_WORD_BITS == 64)
 
-#define BOTAN_HAS_NIST_PRIME_REDUCERS_W32
+  #define BOTAN_HAS_NIST_PRIME_REDUCERS_W32
 
-BOTAN_DLL const BigInt& prime_p384();
-BOTAN_DLL void redc_p384(BigInt& x, secure_vector<word>& ws);
+  BOTAN_DLL const BigInt& prime_p384();
+  BOTAN_DLL void redc_p384(BigInt& x, secure_vector<word>& ws);
 
-BOTAN_DLL const BigInt& prime_p256();
-BOTAN_DLL void redc_p256(BigInt& x, secure_vector<word>& ws);
+  BOTAN_DLL const BigInt& prime_p256();
+  BOTAN_DLL void redc_p256(BigInt& x, secure_vector<word>& ws);
 
-BOTAN_DLL const BigInt& prime_p224();
-BOTAN_DLL void redc_p224(BigInt& x, secure_vector<word>& ws);
+  BOTAN_DLL const BigInt& prime_p224();
+  BOTAN_DLL void redc_p224(BigInt& x, secure_vector<word>& ws);
 
-BOTAN_DLL const BigInt& prime_p192();
-BOTAN_DLL void redc_p192(BigInt& x, secure_vector<word>& ws);
+  BOTAN_DLL const BigInt& prime_p192();
+  BOTAN_DLL void redc_p192(BigInt& x, secure_vector<word>& ws);
 
 #endif
 

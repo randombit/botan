@@ -98,8 +98,8 @@ BigInt BOTAN_DLL ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod);
 * Not const time
 */
 size_t BOTAN_DLL almost_montgomery_inverse(BigInt& result,
-                                           const BigInt& a,
-                                           const BigInt& b);
+    const BigInt& a,
+    const BigInt& b);
 
 /**
 * Call almost_montgomery_inverse and correct the result to a^-1 mod b
@@ -117,7 +117,7 @@ BigInt BOTAN_DLL normalized_montgomery_inverse(const BigInt& a, const BigInt& b)
 * @return (n / m)
 */
 int32_t BOTAN_DLL jacobi(const BigInt& a,
-                        const BigInt& n);
+                         const BigInt& n);
 
 /**
 * Modular exponentation
@@ -169,13 +169,13 @@ bool BOTAN_DLL is_prime(const BigInt& n,
                         bool is_random = false);
 
 inline bool quick_check_prime(const BigInt& n, RandomNumberGenerator& rng)
-   { return is_prime(n, rng, 32); }
+{ return is_prime(n, rng, 32); }
 
 inline bool check_prime(const BigInt& n, RandomNumberGenerator& rng)
-   { return is_prime(n, rng, 56); }
+{ return is_prime(n, rng, 56); }
 
 inline bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
-   { return is_prime(n, rng, 80); }
+{ return is_prime(n, rng, 80); }
 
 
 /**

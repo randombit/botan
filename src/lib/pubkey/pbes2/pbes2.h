@@ -24,12 +24,12 @@ namespace Botan {
 * @param rng a random number generator
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-BOTAN_DLL pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
-                        const std::string& passphrase,
-                        std::chrono::milliseconds msec,
-                        const std::string& cipher,
-                        const std::string& digest,
-                        RandomNumberGenerator& rng);
+    BOTAN_DLL pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
+                            const std::string& passphrase,
+                            std::chrono::milliseconds msec,
+                            const std::string& cipher,
+                            const std::string& digest,
+                            RandomNumberGenerator& rng);
 
 /**
 * Decrypt a PKCS #5 v2.0 encrypted stream

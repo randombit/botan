@@ -17,115 +17,106 @@
 namespace Botan {
 
 Certificate_Store_In_SQL::Certificate_Store_In_SQL(std::shared_ptr<SQL_Database> db,
-                                                   const std::string& passwd,
-                                                   RandomNumberGenerator& rng,
-                                                   const std::string& table_prefix) :
-   m_rng(rng),
-   m_database(db),
-   m_prefix(table_prefix),
-   m_password(passwd)
-   {
-   m_database->create_table("CREATE TABLE IF NOT EXISTS " +
-                             m_prefix + "certificates (                \
+    const std::string& passwd,
+    RandomNumberGenerator& rng,
+    const std::string& table_prefix) :
+  m_rng(rng),
+  m_database(db),
+  m_prefix(table_prefix),
+  m_password(passwd) {
+  m_database->create_table("CREATE TABLE IF NOT EXISTS " +
+                           m_prefix + "certificates (                \
                                  fingerprint       BLOB PRIMARY KEY,   \
                                  subject_dn        BLOB,               \
                                  key_id            BLOB,               \
                                  priv_fingerprint  BLOB,               \
                                  certificate       BLOB UNIQUE NOT NULL\
                              )");
-   m_database->create_table("CREATE TABLE IF NOT EXISTS " + m_prefix + "keys (\
+  m_database->create_table("CREATE TABLE IF NOT EXISTS " + m_prefix + "keys (\
                                  fingerprint BLOB PRIMARY KEY,                \
                                  key         BLOB UNIQUE NOT NULL             \
                              )");
-   m_database->create_table("CREATE TABLE IF NOT EXISTS " + m_prefix + "revoked (\
+  m_database->create_table("CREATE TABLE IF NOT EXISTS " + m_prefix + "revoked (\
                                  fingerprint BLOB PRIMARY KEY,                   \
                                  reason      BLOB NOT NULL,                      \
                                  time        BLOB NOT NULL                       \
                             )");
-   }
+}
 
 // Certificate handling
 std::shared_ptr<const X509_Certificate>
-Certificate_Store_In_SQL::find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const
-   {
-   DER_Encoder enc;
-   std::shared_ptr<SQL_Database::Statement> stmt;
+Certificate_Store_In_SQL::find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const {
+  DER_Encoder enc;
+  std::shared_ptr<SQL_Database::Statement> stmt;
 
-   subject_dn.encode_into(enc);
+  subject_dn.encode_into(enc);
 
-   if(key_id.empty())
-      {
-      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE subject_dn == ?1");
-      stmt->bind(1,enc.get_contents_unlocked());
-      }
-   else
-      {
-      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE\
+  if (key_id.empty()) {
+    stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE subject_dn == ?1");
+    stmt->bind(1,enc.get_contents_unlocked());
+  }
+  else {
+    stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE\
                                         subject_dn == ?1 AND (key_id == NULL OR key_id == ?2)");
-      stmt->bind(1,enc.get_contents_unlocked());
-      stmt->bind(2,key_id);
-      }
+    stmt->bind(1,enc.get_contents_unlocked());
+    stmt->bind(2,key_id);
+  }
 
-   std::shared_ptr<const X509_Certificate> cert;
-   while(stmt->step())
-      {
-      auto blob = stmt->get_blob(0);
-      cert = std::make_shared<X509_Certificate>(
-            std::vector<uint8_t>(blob.first,blob.first + blob.second));
+  std::shared_ptr<const X509_Certificate> cert;
+  while (stmt->step()) {
+    auto blob = stmt->get_blob(0);
+    cert = std::make_shared<X509_Certificate>(
+             std::vector<uint8_t>(blob.first,blob.first + blob.second));
 
-      }
+  }
 
-   return cert;
-   }
+  return cert;
+}
 
 std::shared_ptr<const X509_Certificate>
-Certificate_Store_In_SQL::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& /*key_hash*/) const
-   {
-   // TODO!
-   return nullptr;
-   }
+Certificate_Store_In_SQL::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& /*key_hash*/) const {
+  // TODO!
+  return nullptr;
+}
 
 std::shared_ptr<const X509_CRL>
-Certificate_Store_In_SQL::find_crl_for(const X509_Certificate& subject) const
-   {
-   auto all_crls = generate_crls();
+Certificate_Store_In_SQL::find_crl_for(const X509_Certificate& subject) const {
+  auto all_crls = generate_crls();
 
-   for(auto crl: all_crls)
-      {
-      if(!crl.get_revoked().empty() && crl.issuer_dn() == subject.issuer_dn())
-         return std::shared_ptr<X509_CRL>(new X509_CRL(crl));
-      }
+  for (auto crl: all_crls) {
+    if (!crl.get_revoked().empty() && crl.issuer_dn() == subject.issuer_dn()) {
+      return std::shared_ptr<X509_CRL>(new X509_CRL(crl));
+    }
+  }
 
-   return std::shared_ptr<X509_CRL>();
-   }
+  return std::shared_ptr<X509_CRL>();
+}
 
-std::vector<X509_DN> Certificate_Store_In_SQL::all_subjects() const
-   {
-   std::vector<X509_DN> ret;
-   auto stmt = m_database->new_statement("SELECT subject_dn FROM " + m_prefix + "certificates");
+std::vector<X509_DN> Certificate_Store_In_SQL::all_subjects() const {
+  std::vector<X509_DN> ret;
+  auto stmt = m_database->new_statement("SELECT subject_dn FROM " + m_prefix + "certificates");
 
-   while(stmt->step())
-      {
-      auto blob = stmt->get_blob(0);
-      BER_Decoder dec(blob.first,blob.second);
-      X509_DN dn;
+  while (stmt->step()) {
+    auto blob = stmt->get_blob(0);
+    BER_Decoder dec(blob.first,blob.second);
+    X509_DN dn;
 
-      dn.decode_from(dec);
+    dn.decode_from(dec);
 
-      ret.push_back(dn);
-      }
+    ret.push_back(dn);
+  }
 
-   return ret;
-   }
+  return ret;
+}
 
-bool Certificate_Store_In_SQL::insert_cert(const X509_Certificate& cert)
-   {
-   if(find_cert(cert.subject_dn(),cert.subject_key_id()))
-      return false;
+bool Certificate_Store_In_SQL::insert_cert(const X509_Certificate& cert) {
+  if (find_cert(cert.subject_dn(),cert.subject_key_id())) {
+    return false;
+  }
 
-   DER_Encoder enc;
-   auto stmt = m_database->new_statement("INSERT OR REPLACE INTO " +
-                                     m_prefix + "certificates (\
+  DER_Encoder enc;
+  auto stmt = m_database->new_statement("INSERT OR REPLACE INTO " +
+                                        m_prefix + "certificates (\
                                          fingerprint,          \
                                          subject_dn,           \
                                          key_id,               \
@@ -133,176 +124,164 @@ bool Certificate_Store_In_SQL::insert_cert(const X509_Certificate& cert)
                                          certificate           \
                                      ) VALUES ( ?1, ?2, ?3, ?4, ?5 )");
 
-   stmt->bind(1,cert.fingerprint("SHA-256"));
-   cert.subject_dn().encode_into(enc);
-   stmt->bind(2,enc.get_contents_unlocked());
-   stmt->bind(3,cert.subject_key_id());
-   stmt->bind(4,std::vector<uint8_t>());
-   enc = DER_Encoder();
-   cert.encode_into(enc);
-   stmt->bind(5,enc.get_contents_unlocked());
-   stmt->spin();
+  stmt->bind(1,cert.fingerprint("SHA-256"));
+  cert.subject_dn().encode_into(enc);
+  stmt->bind(2,enc.get_contents_unlocked());
+  stmt->bind(3,cert.subject_key_id());
+  stmt->bind(4,std::vector<uint8_t>());
+  enc = DER_Encoder();
+  cert.encode_into(enc);
+  stmt->bind(5,enc.get_contents_unlocked());
+  stmt->spin();
 
-   return true;
-   }
+  return true;
+}
 
 
-bool Certificate_Store_In_SQL::remove_cert(const X509_Certificate& cert)
-   {
-   if(!find_cert(cert.subject_dn(),cert.subject_key_id()))
-      return false;
+bool Certificate_Store_In_SQL::remove_cert(const X509_Certificate& cert) {
+  if (!find_cert(cert.subject_dn(),cert.subject_key_id())) {
+    return false;
+  }
 
-   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "certificates WHERE fingerprint == ?1");
+  auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "certificates WHERE fingerprint == ?1");
 
-   stmt->bind(1,cert.fingerprint("SHA-256"));
-   stmt->spin();
+  stmt->bind(1,cert.fingerprint("SHA-256"));
+  stmt->spin();
 
-   return true;
-   }
+  return true;
+}
 
 // Private key handling
-std::shared_ptr<const Private_Key> Certificate_Store_In_SQL::find_key(const X509_Certificate& cert) const
-   {
-   auto stmt = m_database->new_statement("SELECT key FROM " + m_prefix + "keys "
-       "JOIN " + m_prefix + "certificates ON " +
-       m_prefix + "keys.fingerprint == " + m_prefix + "certificates.priv_fingerprint "
-       "WHERE " + m_prefix + "certificates.fingerprint == ?1");
-   stmt->bind(1,cert.fingerprint("SHA-256"));
+std::shared_ptr<const Private_Key> Certificate_Store_In_SQL::find_key(const X509_Certificate& cert) const {
+  auto stmt = m_database->new_statement("SELECT key FROM " + m_prefix + "keys "
+                                        "JOIN " + m_prefix + "certificates ON " +
+                                        m_prefix + "keys.fingerprint == " + m_prefix + "certificates.priv_fingerprint "
+                                        "WHERE " + m_prefix + "certificates.fingerprint == ?1");
+  stmt->bind(1,cert.fingerprint("SHA-256"));
 
-   std::shared_ptr<const Private_Key> key;
-   while(stmt->step())
-      {
-      auto blob = stmt->get_blob(0);
-      DataSource_Memory src(blob.first,blob.second);
-      key.reset(PKCS8::load_key(src, m_rng, m_password));
-      }
+  std::shared_ptr<const Private_Key> key;
+  while (stmt->step()) {
+    auto blob = stmt->get_blob(0);
+    DataSource_Memory src(blob.first,blob.second);
+    key.reset(PKCS8::load_key(src, m_rng, m_password));
+  }
 
-   return key;
-   }
+  return key;
+}
 
 std::vector<std::shared_ptr<const X509_Certificate>>
-Certificate_Store_In_SQL::find_certs_for_key(const Private_Key& key) const
-   {
-   auto fpr = key.fingerprint("SHA-256");
-   auto stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE priv_fingerprint == ?1");
+Certificate_Store_In_SQL::find_certs_for_key(const Private_Key& key) const {
+  auto fpr = key.fingerprint("SHA-256");
+  auto stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix +
+                                        "certificates WHERE priv_fingerprint == ?1");
 
-   stmt->bind(1,fpr);
+  stmt->bind(1,fpr);
 
-   std::vector<std::shared_ptr<const X509_Certificate>> certs;
-   while(stmt->step())
-      {
-      auto blob = stmt->get_blob(0);
-      certs.push_back(std::make_shared<X509_Certificate>(
-            std::vector<uint8_t>(blob.first,blob.first + blob.second)));
-      }
+  std::vector<std::shared_ptr<const X509_Certificate>> certs;
+  while (stmt->step()) {
+    auto blob = stmt->get_blob(0);
+    certs.push_back(std::make_shared<X509_Certificate>(
+                      std::vector<uint8_t>(blob.first,blob.first + blob.second)));
+  }
 
-   return certs;
-   }
+  return certs;
+}
 
 bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Private_Key& key) {
-   insert_cert(cert);
+  insert_cert(cert);
 
-   if(find_key(cert))
-      return false;
+  if (find_key(cert)) {
+    return false;
+  }
 
-   auto pkcs8 = PKCS8::BER_encode(key, m_rng, m_password);
-   auto fpr = key.fingerprint("SHA-256");
+  auto pkcs8 = PKCS8::BER_encode(key, m_rng, m_password);
+  auto fpr = key.fingerprint("SHA-256");
 
-   auto stmt1 = m_database->new_statement(
-         "INSERT OR REPLACE INTO " + m_prefix + "keys ( fingerprint, key ) VALUES ( ?1, ?2 )");
+  auto stmt1 = m_database->new_statement(
+                 "INSERT OR REPLACE INTO " + m_prefix + "keys ( fingerprint, key ) VALUES ( ?1, ?2 )");
 
-   stmt1->bind(1,fpr);
-   stmt1->bind(2,pkcs8.data(),pkcs8.size());
-   stmt1->spin();
+  stmt1->bind(1,fpr);
+  stmt1->bind(2,pkcs8.data(),pkcs8.size());
+  stmt1->spin();
 
-   auto stmt2 = m_database->new_statement(
-         "UPDATE " + m_prefix + "certificates SET priv_fingerprint = ?1 WHERE fingerprint == ?2");
+  auto stmt2 = m_database->new_statement(
+                 "UPDATE " + m_prefix + "certificates SET priv_fingerprint = ?1 WHERE fingerprint == ?2");
 
-   stmt2->bind(1,fpr);
-   stmt2->bind(2,cert.fingerprint("SHA-256"));
-   stmt2->spin();
+  stmt2->bind(1,fpr);
+  stmt2->bind(2,cert.fingerprint("SHA-256"));
+  stmt2->spin();
 
-   return true;
-   }
+  return true;
+}
 
-void Certificate_Store_In_SQL::remove_key(const Private_Key& key)
-   {
-   auto fpr = key.fingerprint("SHA-256");
-   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "keys WHERE fingerprint == ?1");
+void Certificate_Store_In_SQL::remove_key(const Private_Key& key) {
+  auto fpr = key.fingerprint("SHA-256");
+  auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "keys WHERE fingerprint == ?1");
 
-   stmt->bind(1,fpr);
-   stmt->spin();
-   }
+  stmt->bind(1,fpr);
+  stmt->spin();
+}
 
 // Revocation
-void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Code code, const X509_Time& time)
-   {
-   insert_cert(cert);
+void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Code code, const X509_Time& time) {
+  insert_cert(cert);
 
-   auto stmt1 = m_database->new_statement(
-         "INSERT OR REPLACE INTO " + m_prefix + "revoked ( fingerprint, reason, time ) VALUES ( ?1, ?2, ?3 )");
+  auto stmt1 = m_database->new_statement(
+                 "INSERT OR REPLACE INTO " + m_prefix + "revoked ( fingerprint, reason, time ) VALUES ( ?1, ?2, ?3 )");
 
-   stmt1->bind(1,cert.fingerprint("SHA-256"));
-   stmt1->bind(2,code);
+  stmt1->bind(1,cert.fingerprint("SHA-256"));
+  stmt1->bind(2,code);
 
-   if(time.time_is_set())
-      {
-      DER_Encoder der;
-      time.encode_into(der);
-      stmt1->bind(3,der.get_contents_unlocked());
-      }
-   else
-      {
-      stmt1->bind(3,-1);
-      }
+  if (time.time_is_set()) {
+    DER_Encoder der;
+    time.encode_into(der);
+    stmt1->bind(3,der.get_contents_unlocked());
+  }
+  else {
+    stmt1->bind(3,-1);
+  }
 
-   stmt1->spin();
-   }
+  stmt1->spin();
+}
 
-void Certificate_Store_In_SQL::affirm_cert(const X509_Certificate& cert)
-   {
-   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "revoked WHERE fingerprint == ?1");
+void Certificate_Store_In_SQL::affirm_cert(const X509_Certificate& cert) {
+  auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "revoked WHERE fingerprint == ?1");
 
-   stmt->bind(1,cert.fingerprint("SHA-256"));
-   stmt->spin();
-   }
+  stmt->bind(1,cert.fingerprint("SHA-256"));
+  stmt->spin();
+}
 
-std::vector<X509_CRL> Certificate_Store_In_SQL::generate_crls() const
-   {
-   auto stmt = m_database->new_statement(
-         "SELECT certificate,reason,time FROM " + m_prefix + "revoked "
-         "JOIN " + m_prefix + "certificates ON " +
-         m_prefix + "certificates.fingerprint == " + m_prefix + "revoked.fingerprint");
+std::vector<X509_CRL> Certificate_Store_In_SQL::generate_crls() const {
+  auto stmt = m_database->new_statement(
+                "SELECT certificate,reason,time FROM " + m_prefix + "revoked "
+                "JOIN " + m_prefix + "certificates ON " +
+                m_prefix + "certificates.fingerprint == " + m_prefix + "revoked.fingerprint");
 
-   std::map<X509_DN,std::vector<CRL_Entry>> crls;
-   while(stmt->step())
-      {
-      auto blob = stmt->get_blob(0);
-      auto cert = X509_Certificate(
-            std::vector<uint8_t>(blob.first,blob.first + blob.second));
-      auto code = static_cast<CRL_Code>(stmt->get_size_t(1));
-      auto ent = CRL_Entry(cert,code);
+  std::map<X509_DN,std::vector<CRL_Entry>> crls;
+  while (stmt->step()) {
+    auto blob = stmt->get_blob(0);
+    auto cert = X509_Certificate(
+                  std::vector<uint8_t>(blob.first,blob.first + blob.second));
+    auto code = static_cast<CRL_Code>(stmt->get_size_t(1));
+    auto ent = CRL_Entry(cert,code);
 
-      auto i = crls.find(cert.issuer_dn());
-      if(i == crls.end())
-         {
-         crls.insert(std::make_pair(cert.issuer_dn(),std::vector<CRL_Entry>({ent})));
-         }
-      else
-         {
-         i->second.push_back(ent);
-         }
-      }
+    auto i = crls.find(cert.issuer_dn());
+    if (i == crls.end()) {
+      crls.insert(std::make_pair(cert.issuer_dn(),std::vector<CRL_Entry>({ent})));
+    }
+    else {
+      i->second.push_back(ent);
+    }
+  }
 
-   std::vector<X509_CRL> ret;
-   X509_Time t(std::chrono::system_clock::now());
+  std::vector<X509_CRL> ret;
+  X509_Time t(std::chrono::system_clock::now());
 
-   for(auto p: crls)
-      {
-      ret.push_back(X509_CRL(p.first,t,t,p.second));
-      }
+  for (auto p: crls) {
+    ret.push_back(X509_CRL(p.first,t,t,p.second));
+  }
 
-   return ret;
-   }
+  return ret;
+}
 
 }

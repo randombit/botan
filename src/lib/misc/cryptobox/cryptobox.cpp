@@ -41,125 +41,126 @@ const size_t PBKDF_OUTPUT_LEN = CIPHER_KEY_LEN + CIPHER_IV_LEN + MAC_KEY_LEN;
 
 std::string encrypt(const uint8_t input[], size_t input_len,
                     const std::string& passphrase,
-                    RandomNumberGenerator& rng)
-   {
-   secure_vector<uint8_t> pbkdf_salt(PBKDF_SALT_LEN);
-   rng.randomize(pbkdf_salt.data(), pbkdf_salt.size());
+                    RandomNumberGenerator& rng) {
+  secure_vector<uint8_t> pbkdf_salt(PBKDF_SALT_LEN);
+  rng.randomize(pbkdf_salt.data(), pbkdf_salt.size());
 
-   PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
+  PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
 
-   OctetString master_key = pbkdf.derive_key(
-      PBKDF_OUTPUT_LEN,
-      passphrase,
-      pbkdf_salt.data(),
-      pbkdf_salt.size(),
-      PBKDF_ITERATIONS);
+  OctetString master_key = pbkdf.derive_key(
+                             PBKDF_OUTPUT_LEN,
+                             passphrase,
+                             pbkdf_salt.data(),
+                             pbkdf_salt.size(),
+                             PBKDF_ITERATIONS);
 
-   const uint8_t* mk = master_key.begin();
+  const uint8_t* mk = master_key.begin();
 
-   SymmetricKey cipher_key(mk, CIPHER_KEY_LEN);
-   SymmetricKey mac_key(&mk[CIPHER_KEY_LEN], MAC_KEY_LEN);
-   InitializationVector iv(&mk[CIPHER_KEY_LEN + MAC_KEY_LEN], CIPHER_IV_LEN);
+  SymmetricKey cipher_key(mk, CIPHER_KEY_LEN);
+  SymmetricKey mac_key(&mk[CIPHER_KEY_LEN], MAC_KEY_LEN);
+  InitializationVector iv(&mk[CIPHER_KEY_LEN + MAC_KEY_LEN], CIPHER_IV_LEN);
 
-   Pipe pipe(get_cipher("Serpent/CTR-BE", cipher_key, iv, ENCRYPTION),
-             new Fork(
-                nullptr,
-                new MAC_Filter(new HMAC(new SHA_512),
-                               mac_key, MAC_OUTPUT_LEN)));
+  Pipe pipe(get_cipher("Serpent/CTR-BE", cipher_key, iv, ENCRYPTION),
+            new Fork(
+              nullptr,
+              new MAC_Filter(new HMAC(new SHA_512),
+                             mac_key, MAC_OUTPUT_LEN)));
 
-   pipe.process_msg(input, input_len);
+  pipe.process_msg(input, input_len);
 
-   /*
-   Output format is:
-      version # (4 bytes)
-      salt (10 bytes)
-      mac (20 bytes)
-      ciphertext
-   */
-   const size_t ciphertext_len = pipe.remaining(0);
+  /*
+  Output format is:
+     version # (4 bytes)
+     salt (10 bytes)
+     mac (20 bytes)
+     ciphertext
+  */
+  const size_t ciphertext_len = pipe.remaining(0);
 
-   std::vector<uint8_t> out_buf(VERSION_CODE_LEN +
-                             PBKDF_SALT_LEN +
-                             MAC_OUTPUT_LEN +
-                             ciphertext_len);
+  std::vector<uint8_t> out_buf(VERSION_CODE_LEN +
+                               PBKDF_SALT_LEN +
+                               MAC_OUTPUT_LEN +
+                               ciphertext_len);
 
-   for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
-     out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
+  for (size_t i = 0; i != VERSION_CODE_LEN; ++i) {
+    out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
+  }
 
-   copy_mem(&out_buf[VERSION_CODE_LEN], pbkdf_salt.data(), PBKDF_SALT_LEN);
+  copy_mem(&out_buf[VERSION_CODE_LEN], pbkdf_salt.data(), PBKDF_SALT_LEN);
 
-   BOTAN_ASSERT_EQUAL(
-      pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN], MAC_OUTPUT_LEN, 1),
-      MAC_OUTPUT_LEN, "MAC output");
-   BOTAN_ASSERT_EQUAL(
-      pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN],
-                ciphertext_len, 0),
-      ciphertext_len, "Ciphertext size");
+  BOTAN_ASSERT_EQUAL(
+    pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN], MAC_OUTPUT_LEN, 1),
+    MAC_OUTPUT_LEN, "MAC output");
+  BOTAN_ASSERT_EQUAL(
+    pipe.read(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN],
+              ciphertext_len, 0),
+    ciphertext_len, "Ciphertext size");
 
-   return PEM_Code::encode(out_buf, "BOTAN CRYPTOBOX MESSAGE");
-   }
+  return PEM_Code::encode(out_buf, "BOTAN CRYPTOBOX MESSAGE");
+}
 
 std::string decrypt(const uint8_t input[], size_t input_len,
-                    const std::string& passphrase)
-   {
-   DataSource_Memory input_src(input, input_len);
-   secure_vector<uint8_t> ciphertext =
-      PEM_Code::decode_check_label(input_src,
-                                   "BOTAN CRYPTOBOX MESSAGE");
+                    const std::string& passphrase) {
+  DataSource_Memory input_src(input, input_len);
+  secure_vector<uint8_t> ciphertext =
+    PEM_Code::decode_check_label(input_src,
+                                 "BOTAN CRYPTOBOX MESSAGE");
 
-   if(ciphertext.size() < (VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN))
-      throw Decoding_Error("Invalid CryptoBox input");
+  if (ciphertext.size() < (VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN)) {
+    throw Decoding_Error("Invalid CryptoBox input");
+  }
 
-   for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
-      if(ciphertext[i] != get_byte(i, CRYPTOBOX_VERSION_CODE))
-         throw Decoding_Error("Bad CryptoBox version");
+  for (size_t i = 0; i != VERSION_CODE_LEN; ++i)
+    if (ciphertext[i] != get_byte(i, CRYPTOBOX_VERSION_CODE)) {
+      throw Decoding_Error("Bad CryptoBox version");
+    }
 
-   const uint8_t* pbkdf_salt = &ciphertext[VERSION_CODE_LEN];
+  const uint8_t* pbkdf_salt = &ciphertext[VERSION_CODE_LEN];
 
-   PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
+  PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
 
-   OctetString master_key = pbkdf.derive_key(
-      PBKDF_OUTPUT_LEN,
-      passphrase,
-      pbkdf_salt,
-      PBKDF_SALT_LEN,
-      PBKDF_ITERATIONS);
+  OctetString master_key = pbkdf.derive_key(
+                             PBKDF_OUTPUT_LEN,
+                             passphrase,
+                             pbkdf_salt,
+                             PBKDF_SALT_LEN,
+                             PBKDF_ITERATIONS);
 
-   const uint8_t* mk = master_key.begin();
+  const uint8_t* mk = master_key.begin();
 
-   SymmetricKey cipher_key(mk, CIPHER_KEY_LEN);
-   SymmetricKey mac_key(&mk[CIPHER_KEY_LEN], MAC_KEY_LEN);
-   InitializationVector iv(&mk[CIPHER_KEY_LEN + MAC_KEY_LEN], CIPHER_IV_LEN);
+  SymmetricKey cipher_key(mk, CIPHER_KEY_LEN);
+  SymmetricKey mac_key(&mk[CIPHER_KEY_LEN], MAC_KEY_LEN);
+  InitializationVector iv(&mk[CIPHER_KEY_LEN + MAC_KEY_LEN], CIPHER_IV_LEN);
 
-   Pipe pipe(new Fork(
-                get_cipher("Serpent/CTR-BE", cipher_key, iv, DECRYPTION),
-                new MAC_Filter(new HMAC(new SHA_512),
-                               mac_key, MAC_OUTPUT_LEN)));
+  Pipe pipe(new Fork(
+              get_cipher("Serpent/CTR-BE", cipher_key, iv, DECRYPTION),
+              new MAC_Filter(new HMAC(new SHA_512),
+                             mac_key, MAC_OUTPUT_LEN)));
 
-   const size_t ciphertext_offset =
-      VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN;
+  const size_t ciphertext_offset =
+    VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN;
 
-   pipe.process_msg(&ciphertext[ciphertext_offset],
-                    ciphertext.size() - ciphertext_offset);
+  pipe.process_msg(&ciphertext[ciphertext_offset],
+                   ciphertext.size() - ciphertext_offset);
 
-   uint8_t computed_mac[MAC_OUTPUT_LEN];
-   BOTAN_ASSERT_EQUAL(MAC_OUTPUT_LEN, pipe.read(computed_mac, MAC_OUTPUT_LEN, 1), "MAC size");
+  uint8_t computed_mac[MAC_OUTPUT_LEN];
+  BOTAN_ASSERT_EQUAL(MAC_OUTPUT_LEN, pipe.read(computed_mac, MAC_OUTPUT_LEN, 1), "MAC size");
 
-   if(!same_mem(computed_mac,
+  if (!same_mem(computed_mac,
                 &ciphertext[VERSION_CODE_LEN + PBKDF_SALT_LEN],
-                MAC_OUTPUT_LEN))
-      throw Decoding_Error("CryptoBox integrity failure");
+                MAC_OUTPUT_LEN)) {
+    throw Decoding_Error("CryptoBox integrity failure");
+  }
 
-   return pipe.read_all_as_string(0);
-   }
+  return pipe.read_all_as_string(0);
+}
 
 std::string decrypt(const std::string& input,
-                    const std::string& passphrase)
-   {
-   return decrypt(reinterpret_cast<const uint8_t*>(input.data()),
-                  input.size(),
-                  passphrase);
-   }
+                    const std::string& passphrase) {
+  return decrypt(reinterpret_cast<const uint8_t*>(input.data()),
+                 input.size(),
+                 passphrase);
+}
 
 }
 

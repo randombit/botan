@@ -31,9 +31,9 @@ void mceliece_decrypt(secure_vector<uint8_t>& plaintext_out,
                       const McEliece_PrivateKey& key);
 
 secure_vector<uint8_t> mceliece_decrypt(
-   secure_vector<gf2m> & error_pos,
-   const uint8_t *ciphertext, uint32_t ciphertext_len,
-   const McEliece_PrivateKey & key);
+  secure_vector<gf2m>& error_pos,
+  const uint8_t* ciphertext, uint32_t ciphertext_len,
+  const McEliece_PrivateKey& key);
 
 void mceliece_encrypt(secure_vector<uint8_t>& ciphertext_out,
                       secure_vector<uint8_t>& error_mask_out,
@@ -41,10 +41,10 @@ void mceliece_encrypt(secure_vector<uint8_t>& ciphertext_out,
                       const McEliece_PublicKey& key,
                       RandomNumberGenerator& rng);
 
-McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator &rng,
-                                          uint32_t ext_deg,
-                                          uint32_t code_length,
-                                          uint32_t t);
+McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator& rng,
+    uint32_t ext_deg,
+    uint32_t code_length,
+    uint32_t t);
 
 }
 

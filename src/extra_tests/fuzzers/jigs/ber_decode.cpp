@@ -7,21 +7,19 @@
 
 #include <botan/ber_dec.h>
 
-void fuzz(const uint8_t in[], size_t len)
-   {
-   if(len > 4096)
-      return;
+void fuzz(const uint8_t in[], size_t len) {
+  if (len > 4096) {
+    return;
+  }
 
-   try
-      {
-      DataSource_Memory input(in, len);
-      BER_Decoder dec(input);
+  try {
+    DataSource_Memory input(in, len);
+    BER_Decoder dec(input);
 
-      while(dec.more_items())
-         {
-         BER_Object obj;
-         dec.get_next(obj);
-         }
-      }
-   catch(Botan::Exception& e) { }
-   }
+    while (dec.more_items()) {
+      BER_Object obj;
+      dec.get_next(obj);
+    }
+  }
+  catch (Botan::Exception& e) { }
+}

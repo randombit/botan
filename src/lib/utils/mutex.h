@@ -28,26 +28,24 @@ typedef std::mutex mutex_type;
 namespace Botan {
 
 template<typename Mutex>
-class lock_guard
-   {
-   public:
-      explicit lock_guard(Mutex& m) : m_mutex(m)
-         { m_mutex.lock(); }
+class lock_guard {
+public:
+  explicit lock_guard(Mutex& m) : m_mutex(m)
+  { m_mutex.lock(); }
 
-      ~lock_guard() { m_mutex.unlock(); }
+  ~lock_guard() { m_mutex.unlock(); }
 
-      lock_guard(const lock_guard& other) = delete;
-      lock_guard& operator=(const lock_guard& other) = delete;
-   private:
-      Mutex& m_mutex;
-   };
+  lock_guard(const lock_guard& other) = delete;
+  lock_guard& operator=(const lock_guard& other) = delete;
+private:
+  Mutex& m_mutex;
+};
 
-class noop_mutex
-   {
-   public:
-      void lock() {}
-      void unlock() {}
-   };
+class noop_mutex {
+public:
+  void lock() {}
+  void unlock() {}
+};
 
 typedef noop_mutex mutex_type;
 template<typename T> using lock_guard_type = lock_guard<T>;
@@ -55,7 +53,7 @@ template<typename T> using lock_guard_type = lock_guard<T>;
 }
 
 #else
-  #error "Threads unexpectedly disabled in non unikernel build"
+#error "Threads unexpectedly disabled in non unikernel build"
 #endif
 
 #endif

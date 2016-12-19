@@ -18,33 +18,30 @@ namespace Botan {
 * Can only generate a key up to the size of the hash output.
 * Unless needed for backwards compatibility, use PKCS5_PBKDF2
 */
-class BOTAN_DLL PKCS5_PBKDF1 final : public PBKDF
-   {
-   public:
-      /**
-      * Create a PKCS #5 instance using the specified hash function.
-      * @param hash pointer to a hash function object to use
-      */
-      explicit PKCS5_PBKDF1(HashFunction* hash) : m_hash(hash) {}
+class BOTAN_DLL PKCS5_PBKDF1 final : public PBKDF {
+public:
+  /**
+  * Create a PKCS #5 instance using the specified hash function.
+  * @param hash pointer to a hash function object to use
+  */
+  explicit PKCS5_PBKDF1(HashFunction* hash) : m_hash(hash) {}
 
-      std::string name() const override
-         {
-         return "PBKDF1(" + m_hash->name() + ")";
-         }
+  std::string name() const override {
+    return "PBKDF1(" + m_hash->name() + ")";
+  }
 
-      PBKDF* clone() const override
-         {
-         return new PKCS5_PBKDF1(m_hash->clone());
-         }
+  PBKDF* clone() const override {
+    return new PKCS5_PBKDF1(m_hash->clone());
+  }
 
-      size_t pbkdf(uint8_t output_buf[], size_t output_len,
-                           const std::string& passphrase,
-                           const uint8_t salt[], size_t salt_len,
-                           size_t iterations,
-                           std::chrono::milliseconds msec) const override;
-   private:
-      std::unique_ptr<HashFunction> m_hash;
-   };
+  size_t pbkdf(uint8_t output_buf[], size_t output_len,
+               const std::string& passphrase,
+               const uint8_t salt[], size_t salt_len,
+               size_t iterations,
+               std::chrono::milliseconds msec) const override;
+private:
+  std::unique_ptr<HashFunction> m_hash;
+};
 
 }
 

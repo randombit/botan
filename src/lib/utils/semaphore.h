@@ -11,27 +11,26 @@
 #include <botan/mutex.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-#include <condition_variable>
+  #include <condition_variable>
 #endif
 
 namespace Botan {
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-class Semaphore
-   {
-   public:
-      explicit Semaphore(int value = 0) : m_value(value), m_wakeups(0) {}
+class Semaphore {
+public:
+  explicit Semaphore(int value = 0) : m_value(value), m_wakeups(0) {}
 
-      void acquire();
+  void acquire();
 
-      void release(size_t n = 1);
+  void release(size_t n = 1);
 
-   private:
-      int m_value;
-      int m_wakeups;
-      mutex_type m_mutex;
-      std::condition_variable m_cond;
-   };
+private:
+  int m_value;
+  int m_wakeups;
+  mutex_type m_mutex;
+  std::condition_variable m_cond;
+};
 #endif
 
 }

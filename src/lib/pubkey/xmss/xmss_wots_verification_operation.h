@@ -25,24 +25,23 @@ namespace Botan {
  * in the Botan algorithm registry.
  **/
 class XMSS_WOTS_Verification_Operation
-   : public virtual PK_Ops::Verification,
-     public XMSS_WOTS_Common_Ops
-   {
-   public:
-      XMSS_WOTS_Verification_Operation(
-         const XMSS_WOTS_Addressed_PublicKey& public_key);
+  : public virtual PK_Ops::Verification,
+    public XMSS_WOTS_Common_Ops {
+public:
+  XMSS_WOTS_Verification_Operation(
+    const XMSS_WOTS_Addressed_PublicKey& public_key);
 
-      virtual ~XMSS_WOTS_Verification_Operation() {}
+  virtual ~XMSS_WOTS_Verification_Operation() {}
 
-      virtual bool is_valid_signature(const uint8_t sig[],
-                                      size_t sig_len) override;
+  virtual bool is_valid_signature(const uint8_t sig[],
+                                  size_t sig_len) override;
 
-      void update(const uint8_t msg[], size_t msg_len) override;
+  void update(const uint8_t msg[], size_t msg_len) override;
 
-   private:
-      XMSS_WOTS_Addressed_PublicKey m_pub_key;
-      secure_vector<uint8_t> m_msg_buf;
-   };
+private:
+  XMSS_WOTS_Addressed_PublicKey m_pub_key;
+  secure_vector<uint8_t> m_msg_buf;
+};
 
 }
 

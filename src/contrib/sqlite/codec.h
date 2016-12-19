@@ -54,53 +54,52 @@ const int IV_DERIVATION_KEY_SIZE = 256/8; //256 bit, 32 byte key
 //This is definited in sqlite.h and very unlikely to change
 #define SQLITE_MAX_PAGE_SIZE 32768
 
-class Codec
-{
+class Codec {
 public:
-    Codec(void *db);
-    Codec(const Codec* other, void *db);
+  Codec(void* db);
+  Codec(const Codec* other, void* db);
 
-    void GenerateWriteKey(const char *userPassword, int passwordLength);
-    void DropWriteKey();
-    void SetWriteIsRead();
-    void SetReadIsWrite();
+  void GenerateWriteKey(const char* userPassword, int passwordLength);
+  void DropWriteKey();
+  void SetWriteIsRead();
+  void SetReadIsWrite();
 
-    unsigned char* Encrypt(int page, unsigned char *data, bool useWriteKey);
-    void Decrypt(int page, unsigned char *data);
+  unsigned char* Encrypt(int page, unsigned char* data, bool useWriteKey);
+  void Decrypt(int page, unsigned char* data);
 
-    void SetPageSize(int pageSize) { m_pageSize = pageSize; }
+  void SetPageSize(int pageSize) { m_pageSize = pageSize; }
 
-    bool HasReadKey() { return m_hasReadKey; }
-    bool HasWriteKey() { return m_hasWriteKey; }
-    void* GetDB() { return m_db; }
-    const char* GetAndResetError();
+  bool HasReadKey() { return m_hasReadKey; }
+  bool HasWriteKey() { return m_hasWriteKey; }
+  void* GetDB() { return m_db; }
+  const char* GetAndResetError();
 
 private:
-    bool m_hasReadKey;
-    bool m_hasWriteKey;
+  bool m_hasReadKey;
+  bool m_hasWriteKey;
 
-    SymmetricKey
-        m_readKey,
-        m_writeKey,
-        m_ivReadKey,
-        m_ivWriteKey;
+  SymmetricKey
+  m_readKey,
+  m_writeKey,
+  m_ivReadKey,
+  m_ivWriteKey;
 
-    Pipe
-        m_encipherPipe,
-        m_decipherPipe,
-        m_macPipe;
+  Pipe
+  m_encipherPipe,
+  m_decipherPipe,
+  m_macPipe;
 
-    Keyed_Filter *m_encipherFilter;
-    Keyed_Filter *m_decipherFilter;
-    MAC_Filter *m_cmac;
+  Keyed_Filter* m_encipherFilter;
+  Keyed_Filter* m_decipherFilter;
+  MAC_Filter* m_cmac;
 
-    int m_pageSize;
-    unsigned char m_page[SQLITE_MAX_PAGE_SIZE];
-    void *m_db;
-    const char *m_botanErrorMsg;
+  int m_pageSize;
+  unsigned char m_page[SQLITE_MAX_PAGE_SIZE];
+  void* m_db;
+  const char* m_botanErrorMsg;
 
-    InitializationVector GetIVForPage(u32bit page, bool useWriteKey);
-    void InitializeCodec(void *db);
+  InitializationVector GetIVForPage(u32bit page, bool useWriteKey);
+  void InitializeCodec(void* db);
 };
 
 #endif

@@ -10,7 +10,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PKCS11)
-   #include <botan/p11.h>
+  #include <botan/p11.h>
 #endif
 
 #include <botan/secmem.h>
@@ -37,12 +37,11 @@ const auto SO_PIN_SECVEC = Botan::PKCS11::secure_string(SO_PIN.begin(), SO_PIN.e
 const std::string TEST_SO_PIN = "87654321";
 const auto TEST_SO_PIN_SECVEC = Botan::PKCS11::secure_string(TEST_SO_PIN.begin(), TEST_SO_PIN.end());
 
-class PKCS11_Test : public Test
-   {
-   protected:
-      static std::vector<Test::Result> run_pkcs11_tests(const std::string& name,
-            std::vector<std::function<Test::Result()>>& fns);
-   };
+class PKCS11_Test : public Test {
+protected:
+  static std::vector<Test::Result> run_pkcs11_tests(const std::string& name,
+      std::vector<std::function<Test::Result()>>& fns);
+};
 
 #endif
 }

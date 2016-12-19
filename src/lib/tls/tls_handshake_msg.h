@@ -23,26 +23,25 @@ class Handshake_Hash;
 /**
 * TLS Handshake Message Base Class
 */
-class BOTAN_DLL Handshake_Message
-   {
-   public:
-      /**
-      * @return string representation of this message type
-      */
-      std::string type_string() const;
+class BOTAN_DLL Handshake_Message {
+public:
+  /**
+  * @return string representation of this message type
+  */
+  std::string type_string() const;
 
-      /**
-      * @return the message type
-      */
-      virtual Handshake_Type type() const = 0;
+  /**
+  * @return the message type
+  */
+  virtual Handshake_Type type() const = 0;
 
-      /**
-      * @return DER representation of this message
-      */
-      virtual std::vector<uint8_t> serialize() const = 0;
+  /**
+  * @return DER representation of this message
+  */
+  virtual std::vector<uint8_t> serialize() const = 0;
 
-      virtual ~Handshake_Message() {}
-   };
+  virtual ~Handshake_Message() {}
+};
 
 }
 

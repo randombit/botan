@@ -21,73 +21,66 @@
 namespace Botan {
 
 XMSS_PublicKey::XMSS_PublicKey(const std::vector<uint8_t>& raw_key)
-   : m_xmss_params(XMSS_PublicKey::deserialize_xmss_oid(raw_key)),
-     m_wots_params(m_xmss_params.ots_oid())
-   {
-   if(raw_key.size() < size())
-      {
-      throw Integrity_Failure("Invalid XMSS public key size detected.");
-      }
+  : m_xmss_params(XMSS_PublicKey::deserialize_xmss_oid(raw_key)),
+    m_wots_params(m_xmss_params.ots_oid()) {
+  if (raw_key.size() < size()) {
+    throw Integrity_Failure("Invalid XMSS public key size detected.");
+  }
 
-   // extract & copy root from raw key.
-   m_root.clear();
-   m_root.reserve(m_xmss_params.element_size());
-   auto begin = raw_key.begin() + sizeof(uint32_t);
-   auto end = begin + m_xmss_params.element_size();
-   std::copy(begin, end, std::back_inserter(m_root));
+  // extract & copy root from raw key.
+  m_root.clear();
+  m_root.reserve(m_xmss_params.element_size());
+  auto begin = raw_key.begin() + sizeof(uint32_t);
+  auto end = begin + m_xmss_params.element_size();
+  std::copy(begin, end, std::back_inserter(m_root));
 
-   // extract & copy public seed from raw key.
-   begin = end;
-   end = begin + m_xmss_params.element_size();
-   m_public_seed.clear();
-   m_public_seed.reserve(m_xmss_params.element_size());
-   std::copy(begin, end, std::back_inserter(m_public_seed));
-   }
+  // extract & copy public seed from raw key.
+  begin = end;
+  end = begin + m_xmss_params.element_size();
+  m_public_seed.clear();
+  m_public_seed.reserve(m_xmss_params.element_size());
+  std::copy(begin, end, std::back_inserter(m_public_seed));
+}
 
 XMSS_Parameters::xmss_algorithm_t
-XMSS_PublicKey::deserialize_xmss_oid(const std::vector<uint8_t>& raw_key)
-   {
-   if(raw_key.size() < 4)
-      {
-      throw Integrity_Failure("XMSS signature OID missing.");
-      }
+XMSS_PublicKey::deserialize_xmss_oid(const std::vector<uint8_t>& raw_key) {
+  if (raw_key.size() < 4) {
+    throw Integrity_Failure("XMSS signature OID missing.");
+  }
 
-   // extract and convert algorithm id to enum type
-   uint32_t raw_id = 0;
-   for(size_t i = 0; i < 4; i++)
-      raw_id = ((raw_id << 8) | raw_key[i]);
+  // extract and convert algorithm id to enum type
+  uint32_t raw_id = 0;
+  for (size_t i = 0; i < 4; i++) {
+    raw_id = ((raw_id << 8) | raw_key[i]);
+  }
 
-   return static_cast<XMSS_Parameters::xmss_algorithm_t>(raw_id);
-   }
+  return static_cast<XMSS_Parameters::xmss_algorithm_t>(raw_id);
+}
 
 std::unique_ptr<PK_Ops::Verification>
 XMSS_PublicKey::create_verification_op(const std::string&,
-                                       const std::string& provider) const
-   {
-   if(provider == "base" || provider.empty())
-      {
-      return std::unique_ptr<PK_Ops::Verification>(
-         new XMSS_Verification_Operation(*this));
-      }
-   throw Provider_Not_Found(algo_name(), provider);
-   }
+                                       const std::string& provider) const {
+  if (provider == "base" || provider.empty()) {
+    return std::unique_ptr<PK_Ops::Verification>(
+             new XMSS_Verification_Operation(*this));
+  }
+  throw Provider_Not_Found(algo_name(), provider);
+}
 
-std::vector<uint8_t> XMSS_PublicKey::raw_public_key() const
-   {
-   std::vector<uint8_t> result
-      {
-      static_cast<uint8_t>(m_xmss_params.oid() >> 24),
-      static_cast<uint8_t>(m_xmss_params.oid() >> 16),
-      static_cast<uint8_t>(m_xmss_params.oid() >>  8),
-      static_cast<uint8_t>(m_xmss_params.oid())
-      };
+std::vector<uint8_t> XMSS_PublicKey::raw_public_key() const {
+  std::vector<uint8_t> result {
+    static_cast<uint8_t>(m_xmss_params.oid() >> 24),
+    static_cast<uint8_t>(m_xmss_params.oid() >> 16),
+    static_cast<uint8_t>(m_xmss_params.oid() >>  8),
+    static_cast<uint8_t>(m_xmss_params.oid())
+  };
 
-   std::copy(m_root.begin(), m_root.end(), std::back_inserter(result));
-   std::copy(m_public_seed.begin(),
-             m_public_seed.end(),
-             std::back_inserter(result));
+  std::copy(m_root.begin(), m_root.end(), std::back_inserter(result));
+  std::copy(m_public_seed.begin(),
+            m_public_seed.end(),
+            std::back_inserter(result));
 
-   return result;
-   }
+  return result;
+}
 
 }

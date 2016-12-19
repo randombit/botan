@@ -20,31 +20,28 @@ template <typename T>
  * std::vector. The construction of instances of this wrapper is NOT atomic
  * and needs to be properly guarded.
  **/
-class Atomic
-   {
-   public:
-      Atomic() : m_data() {};
-      Atomic(const Atomic& data) : m_data(data.m_data.load()) {}
-      Atomic(const std::atomic<T>& data) : m_data(data.load()) {}
+class Atomic {
+public:
+  Atomic() : m_data() {};
+  Atomic(const Atomic& data) : m_data(data.m_data.load()) {}
+  Atomic(const std::atomic<T>& data) : m_data(data.load()) {}
 
-      Atomic& operator=(const Atomic& a)
-         {
-         m_data.store(a.m_data.load());
-         return *this;
-         }
+  Atomic& operator=(const Atomic& a) {
+    m_data.store(a.m_data.load());
+    return *this;
+  }
 
-      Atomic& operator=(const std::atomic<T>& a)
-         {
-         m_data.store(a.load());
-         return *this;
-         }
+  Atomic& operator=(const std::atomic<T>& a) {
+    m_data.store(a.load());
+    return *this;
+  }
 
-      operator std::atomic<T>& () { return m_data; }
-      operator T() { return m_data.load(); }
+  operator std::atomic<T>& () { return m_data; }
+  operator T() { return m_data.load(); }
 
-   private:
-      std::atomic<T> m_data;
-   };
+private:
+  std::atomic<T> m_data;
+};
 
 }
 

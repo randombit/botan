@@ -34,10 +34,9 @@ BOTAN_DLL std::string encode(const uint8_t data[],
 */
 inline std::string encode(const std::vector<uint8_t>& data,
                           const std::string& label,
-                          size_t line_width = 64)
-   {
-   return encode(data.data(), data.size(), label, line_width);
-   }
+                          size_t line_width = 64) {
+  return encode(data.data(), data.size(), label, line_width);
+}
 
 /**
 * Encode some binary data in PEM format
@@ -47,10 +46,9 @@ inline std::string encode(const std::vector<uint8_t>& data,
 */
 inline std::string encode(const secure_vector<uint8_t>& data,
                           const std::string& label,
-                          size_t line_width = 64)
-   {
-   return encode(data.data(), data.size(), label, line_width);
-   }
+                          size_t line_width = 64) {
+  return encode(data.data(), data.size(), label, line_width);
+}
 
 /**
 * Decode PEM data
@@ -58,7 +56,7 @@ inline std::string encode(const secure_vector<uint8_t>& data,
 * @param label is set to the PEM label found for later inspection
 */
 BOTAN_DLL secure_vector<uint8_t> decode(DataSource& pem,
-                                     std::string& label);
+                                        std::string& label);
 
 /**
 * Decode PEM data
@@ -66,7 +64,7 @@ BOTAN_DLL secure_vector<uint8_t> decode(DataSource& pem,
 * @param label is set to the PEM label found for later inspection
 */
 BOTAN_DLL secure_vector<uint8_t> decode(const std::string& pem,
-                                     std::string& label);
+                                        std::string& label);
 
 /**
 * Decode PEM data
@@ -74,8 +72,8 @@ BOTAN_DLL secure_vector<uint8_t> decode(const std::string& pem,
 * @param label is what we expect the label to be
 */
 BOTAN_DLL secure_vector<uint8_t> decode_check_label(
-   DataSource& pem,
-   const std::string& label);
+  DataSource& pem,
+  const std::string& label);
 
 /**
 * Decode PEM data
@@ -83,8 +81,8 @@ BOTAN_DLL secure_vector<uint8_t> decode_check_label(
 * @param label is what we expect the label to be
 */
 BOTAN_DLL secure_vector<uint8_t> decode_check_label(
-   const std::string& pem,
-   const std::string& label);
+  const std::string& pem,
+  const std::string& label);
 
 /**
 * Heuristic test for PEM data.

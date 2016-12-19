@@ -19,28 +19,27 @@ namespace Botan {
 /**
 * Alternative Name
 */
-class BOTAN_DLL AlternativeName final : public ASN1_Object
-   {
-   public:
-      void encode_into(class DER_Encoder&) const override;
-      void decode_from(class BER_Decoder&) override;
+class BOTAN_DLL AlternativeName final : public ASN1_Object {
+public:
+  void encode_into(class DER_Encoder&) const override;
+  void decode_from(class BER_Decoder&) override;
 
-      std::multimap<std::string, std::string> contents() const;
+  std::multimap<std::string, std::string> contents() const;
 
-      void add_attribute(const std::string&, const std::string&);
-      std::multimap<std::string, std::string> get_attributes() const;
+  void add_attribute(const std::string&, const std::string&);
+  std::multimap<std::string, std::string> get_attributes() const;
 
-      void add_othername(const OID&, const std::string&, ASN1_Tag);
-      std::multimap<OID, ASN1_String> get_othernames() const;
+  void add_othername(const OID&, const std::string&, ASN1_Tag);
+  std::multimap<OID, ASN1_String> get_othernames() const;
 
-      bool has_items() const;
+  bool has_items() const;
 
-      AlternativeName(const std::string& = "", const std::string& = "",
-                      const std::string& = "", const std::string& = "");
-   private:
-      std::multimap<std::string, std::string> m_alt_info;
-      std::multimap<OID, ASN1_String> m_othernames;
-   };
+  AlternativeName(const std::string& = "", const std::string& = "",
+                  const std::string& = "", const std::string& = "");
+private:
+  std::multimap<std::string, std::string> m_alt_info;
+  std::multimap<OID, ASN1_String> m_othernames;
+};
 
 }
 

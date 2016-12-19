@@ -18,251 +18,236 @@ static const size_t CCM_BS = 16;
 * CCM_Mode Constructor
 */
 CCM_Mode::CCM_Mode(BlockCipher* cipher, size_t tag_size, size_t L) :
-   m_tag_size(tag_size),
-   m_L(L),
-   m_cipher(cipher)
-   {
-   if(m_cipher->block_size() != CCM_BS)
-      throw Invalid_Argument(m_cipher->name() + " cannot be used with CCM mode");
-
-   if(L < 2 || L > 8)
-      throw Invalid_Argument("Invalid CCM L value " + std::to_string(L));
-
-   if(tag_size < 4 || tag_size > 16 || tag_size % 2 != 0)
-      throw Invalid_Argument("invalid CCM tag length " + std::to_string(tag_size));
-   }
-
-void CCM_Mode::clear()
-   {
-   m_cipher->clear();
-   reset();
-   }
-
-void CCM_Mode::reset()
-   {
-   m_nonce.clear();
-   m_msg_buf.clear();
-   m_ad_buf.clear();
-   }
-
-std::string CCM_Mode::name() const
-   {
-   return (m_cipher->name() + "/CCM(" + std::to_string(tag_size()) + "," + std::to_string(L())) + ")";
-   }
-
-bool CCM_Mode::valid_nonce_length(size_t n) const
-   {
-   return (n == (15-L()));
-   }
-
-size_t CCM_Mode::default_nonce_length() const
-   {
-   return (15-L());
-   }
-
-size_t CCM_Mode::update_granularity() const
-   {
-   /*
-   This value does not particularly matter as regardless CCM_Mode::update
-   buffers all input, so in theory this could be 1. However as for instance
-   Transform_Filter creates update_granularity() uint8_t buffers, use a
-   somewhat large size to avoid bouncing on a tiny buffer.
-   */
-   return m_cipher->parallel_bytes();
-   }
-
-Key_Length_Specification CCM_Mode::key_spec() const
-   {
-   return m_cipher->key_spec();
-   }
-
-void CCM_Mode::key_schedule(const uint8_t key[], size_t length)
-   {
-   m_cipher->set_key(key, length);
-   }
-
-void CCM_Mode::set_associated_data(const uint8_t ad[], size_t length)
-   {
-   m_ad_buf.clear();
-
-   if(length)
-      {
-      // FIXME: support larger AD using length encoding rules
-      BOTAN_ASSERT(length < (0xFFFF - 0xFF), "Supported CCM AD length");
-
-      m_ad_buf.push_back(get_byte(0, static_cast<uint16_t>(length)));
-      m_ad_buf.push_back(get_byte(1, static_cast<uint16_t>(length)));
-      m_ad_buf += std::make_pair(ad, length);
-      while(m_ad_buf.size() % CCM_BS)
-         m_ad_buf.push_back(0); // pad with zeros to full block size
-      }
-   }
-
-void CCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
-   {
-   if(!valid_nonce_length(nonce_len))
-      throw Invalid_IV_Length(name(), nonce_len);
-
-   m_nonce.assign(nonce, nonce + nonce_len);
-   m_msg_buf.clear();
-   }
-
-size_t CCM_Mode::process(uint8_t buf[], size_t sz)
-   {
-   m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
-   return 0; // no output until finished
-   }
-
-void CCM_Mode::encode_length(size_t len, uint8_t out[])
-   {
-   const size_t len_bytes = L();
-
-   BOTAN_ASSERT(len_bytes < sizeof(size_t), "Length field fits");
-
-   for(size_t i = 0; i != len_bytes; ++i)
-      out[len_bytes-1-i] = get_byte(sizeof(size_t)-1-i, len);
+  m_tag_size(tag_size),
+  m_L(L),
+  m_cipher(cipher) {
+  if (m_cipher->block_size() != CCM_BS) {
+    throw Invalid_Argument(m_cipher->name() + " cannot be used with CCM mode");
+  }
+
+  if (L < 2 || L > 8) {
+    throw Invalid_Argument("Invalid CCM L value " + std::to_string(L));
+  }
+
+  if (tag_size < 4 || tag_size > 16 || tag_size % 2 != 0) {
+    throw Invalid_Argument("invalid CCM tag length " + std::to_string(tag_size));
+  }
+}
+
+void CCM_Mode::clear() {
+  m_cipher->clear();
+  reset();
+}
+
+void CCM_Mode::reset() {
+  m_nonce.clear();
+  m_msg_buf.clear();
+  m_ad_buf.clear();
+}
+
+std::string CCM_Mode::name() const {
+  return (m_cipher->name() + "/CCM(" + std::to_string(tag_size()) + "," + std::to_string(L())) + ")";
+}
+
+bool CCM_Mode::valid_nonce_length(size_t n) const {
+  return (n == (15-L()));
+}
+
+size_t CCM_Mode::default_nonce_length() const {
+  return (15-L());
+}
+
+size_t CCM_Mode::update_granularity() const {
+  /*
+  This value does not particularly matter as regardless CCM_Mode::update
+  buffers all input, so in theory this could be 1. However as for instance
+  Transform_Filter creates update_granularity() uint8_t buffers, use a
+  somewhat large size to avoid bouncing on a tiny buffer.
+  */
+  return m_cipher->parallel_bytes();
+}
+
+Key_Length_Specification CCM_Mode::key_spec() const {
+  return m_cipher->key_spec();
+}
+
+void CCM_Mode::key_schedule(const uint8_t key[], size_t length) {
+  m_cipher->set_key(key, length);
+}
+
+void CCM_Mode::set_associated_data(const uint8_t ad[], size_t length) {
+  m_ad_buf.clear();
 
-   BOTAN_ASSERT((len >> (len_bytes*8)) == 0, "Message length fits in field");
-   }
+  if (length) {
+    // FIXME: support larger AD using length encoding rules
+    BOTAN_ASSERT(length < (0xFFFF - 0xFF), "Supported CCM AD length");
 
-void CCM_Mode::inc(secure_vector<uint8_t>& C)
-   {
-   for(size_t i = 0; i != C.size(); ++i)
-      if(++C[C.size()-i-1])
-         break;
-   }
+    m_ad_buf.push_back(get_byte(0, static_cast<uint16_t>(length)));
+    m_ad_buf.push_back(get_byte(1, static_cast<uint16_t>(length)));
+    m_ad_buf += std::make_pair(ad, length);
+    while (m_ad_buf.size() % CCM_BS) {
+      m_ad_buf.push_back(0);  // pad with zeros to full block size
+    }
+  }
+}
 
-secure_vector<uint8_t> CCM_Mode::format_b0(size_t sz)
-   {
-   secure_vector<uint8_t> B0(CCM_BS);
+void CCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
+  if (!valid_nonce_length(nonce_len)) {
+    throw Invalid_IV_Length(name(), nonce_len);
+  }
 
-   const uint8_t b_flags = (m_ad_buf.size() ? 64 : 0) + (((tag_size()/2)-1) << 3) + (L()-1);
+  m_nonce.assign(nonce, nonce + nonce_len);
+  m_msg_buf.clear();
+}
 
-   B0[0] = b_flags;
-   copy_mem(&B0[1], m_nonce.data(), m_nonce.size());
-   encode_length(sz, &B0[m_nonce.size()+1]);
+size_t CCM_Mode::process(uint8_t buf[], size_t sz) {
+  m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
+  return 0; // no output until finished
+}
 
-   return B0;
-   }
+void CCM_Mode::encode_length(size_t len, uint8_t out[]) {
+  const size_t len_bytes = L();
 
-secure_vector<uint8_t> CCM_Mode::format_c0()
-   {
-   secure_vector<uint8_t> C(CCM_BS);
+  BOTAN_ASSERT(len_bytes < sizeof(size_t), "Length field fits");
 
-   const uint8_t a_flags = L()-1;
+  for (size_t i = 0; i != len_bytes; ++i) {
+    out[len_bytes-1-i] = get_byte(sizeof(size_t)-1-i, len);
+  }
 
-   C[0] = a_flags;
-   copy_mem(&C[1], m_nonce.data(), m_nonce.size());
+  BOTAN_ASSERT((len >> (len_bytes*8)) == 0, "Message length fits in field");
+}
 
-   return C;
-   }
+void CCM_Mode::inc(secure_vector<uint8_t>& C) {
+  for (size_t i = 0; i != C.size(); ++i)
+    if (++C[C.size()-i-1]) {
+      break;
+    }
+}
 
-void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
-   {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+secure_vector<uint8_t> CCM_Mode::format_b0(size_t sz) {
+  secure_vector<uint8_t> B0(CCM_BS);
 
-   buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
+  const uint8_t b_flags = (m_ad_buf.size() ? 64 : 0) + (((tag_size()/2)-1) << 3) + (L()-1);
 
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
+  B0[0] = b_flags;
+  copy_mem(&B0[1], m_nonce.data(), m_nonce.size());
+  encode_length(sz, &B0[m_nonce.size()+1]);
 
-   const secure_vector<uint8_t>& ad = ad_buf();
-   BOTAN_ASSERT(ad.size() % CCM_BS == 0, "AD is block size multiple");
+  return B0;
+}
 
-   const BlockCipher& E = cipher();
+secure_vector<uint8_t> CCM_Mode::format_c0() {
+  secure_vector<uint8_t> C(CCM_BS);
 
-   secure_vector<uint8_t> T(CCM_BS);
-   E.encrypt(format_b0(sz), T);
+  const uint8_t a_flags = L()-1;
 
-   for(size_t i = 0; i != ad.size(); i += CCM_BS)
-      {
-      xor_buf(T.data(), &ad[i], CCM_BS);
-      E.encrypt(T);
-      }
+  C[0] = a_flags;
+  copy_mem(&C[1], m_nonce.data(), m_nonce.size());
 
-   secure_vector<uint8_t> C = format_c0();
-   secure_vector<uint8_t> S0(CCM_BS);
-   E.encrypt(C, S0);
-   inc(C);
+  return C;
+}
 
-   secure_vector<uint8_t> X(CCM_BS);
+void CCM_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset) {
+  BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
 
-   const uint8_t* buf_end = &buf[sz];
+  buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
-   while(buf != buf_end)
-      {
-      const size_t to_proc = std::min<size_t>(CCM_BS, buf_end - buf);
+  const size_t sz = buffer.size() - offset;
+  uint8_t* buf = buffer.data() + offset;
 
-      xor_buf(T.data(), buf, to_proc);
-      E.encrypt(T);
+  const secure_vector<uint8_t>& ad = ad_buf();
+  BOTAN_ASSERT(ad.size() % CCM_BS == 0, "AD is block size multiple");
 
-      E.encrypt(C, X);
-      xor_buf(buf, X.data(), to_proc);
-      inc(C);
+  const BlockCipher& E = cipher();
 
-      buf += to_proc;
-      }
+  secure_vector<uint8_t> T(CCM_BS);
+  E.encrypt(format_b0(sz), T);
 
-   T ^= S0;
+  for (size_t i = 0; i != ad.size(); i += CCM_BS) {
+    xor_buf(T.data(), &ad[i], CCM_BS);
+    E.encrypt(T);
+  }
 
-   buffer += std::make_pair(T.data(), tag_size());
-   }
+  secure_vector<uint8_t> C = format_c0();
+  secure_vector<uint8_t> S0(CCM_BS);
+  E.encrypt(C, S0);
+  inc(C);
 
-void CCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
-   {
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
+  secure_vector<uint8_t> X(CCM_BS);
 
-   buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
+  const uint8_t* buf_end = &buf[sz];
 
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
+  while (buf != buf_end) {
+    const size_t to_proc = std::min<size_t>(CCM_BS, buf_end - buf);
 
-   BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
+    xor_buf(T.data(), buf, to_proc);
+    E.encrypt(T);
 
-   const secure_vector<uint8_t>& ad = ad_buf();
-   BOTAN_ASSERT(ad.size() % CCM_BS == 0, "AD is block size multiple");
+    E.encrypt(C, X);
+    xor_buf(buf, X.data(), to_proc);
+    inc(C);
 
-   const BlockCipher& E = cipher();
+    buf += to_proc;
+  }
 
-   secure_vector<uint8_t> T(CCM_BS);
-   E.encrypt(format_b0(sz - tag_size()), T);
+  T ^= S0;
 
-   for(size_t i = 0; i != ad.size(); i += CCM_BS)
-      {
-      xor_buf(T.data(), &ad[i], CCM_BS);
-      E.encrypt(T);
-      }
+  buffer += std::make_pair(T.data(), tag_size());
+}
 
-   secure_vector<uint8_t> C = format_c0();
+void CCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset) {
+  BOTAN_ASSERT(buffer.size() >= offset, "Offset is sane");
 
-   secure_vector<uint8_t> S0(CCM_BS);
-   E.encrypt(C, S0);
-   inc(C);
+  buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
 
-   secure_vector<uint8_t> X(CCM_BS);
+  const size_t sz = buffer.size() - offset;
+  uint8_t* buf = buffer.data() + offset;
 
-   const uint8_t* buf_end = &buf[sz - tag_size()];
+  BOTAN_ASSERT(sz >= tag_size(), "We have the tag");
 
-   while(buf != buf_end)
-      {
-      const size_t to_proc = std::min<size_t>(CCM_BS, buf_end - buf);
+  const secure_vector<uint8_t>& ad = ad_buf();
+  BOTAN_ASSERT(ad.size() % CCM_BS == 0, "AD is block size multiple");
 
-      E.encrypt(C, X);
-      xor_buf(buf, X.data(), to_proc);
-      inc(C);
+  const BlockCipher& E = cipher();
 
-      xor_buf(T.data(), buf, to_proc);
-      E.encrypt(T);
+  secure_vector<uint8_t> T(CCM_BS);
+  E.encrypt(format_b0(sz - tag_size()), T);
 
-      buf += to_proc;
-      }
+  for (size_t i = 0; i != ad.size(); i += CCM_BS) {
+    xor_buf(T.data(), &ad[i], CCM_BS);
+    E.encrypt(T);
+  }
 
-   T ^= S0;
+  secure_vector<uint8_t> C = format_c0();
 
-   if(!same_mem(T.data(), buf_end, tag_size()))
-      throw Integrity_Failure("CCM tag check failed");
+  secure_vector<uint8_t> S0(CCM_BS);
+  E.encrypt(C, S0);
+  inc(C);
 
-   buffer.resize(buffer.size() - tag_size());
-   }
+  secure_vector<uint8_t> X(CCM_BS);
+
+  const uint8_t* buf_end = &buf[sz - tag_size()];
+
+  while (buf != buf_end) {
+    const size_t to_proc = std::min<size_t>(CCM_BS, buf_end - buf);
+
+    E.encrypt(C, X);
+    xor_buf(buf, X.data(), to_proc);
+    inc(C);
+
+    xor_buf(T.data(), buf, to_proc);
+    E.encrypt(T);
+
+    buf += to_proc;
+  }
+
+  T ^= S0;
+
+  if (!same_mem(T.data(), buf_end, tag_size())) {
+    throw Integrity_Failure("CCM tag check failed");
+  }
+
+  buffer.resize(buffer.size() - tag_size());
+}
 
 }

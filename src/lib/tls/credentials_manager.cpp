@@ -11,43 +11,37 @@
 namespace Botan {
 
 std::string Credentials_Manager::psk_identity_hint(const std::string&,
-                                                   const std::string&)
-   {
-   return "";
-   }
+    const std::string&) {
+  return "";
+}
 
 std::string Credentials_Manager::psk_identity(const std::string&,
-                                              const std::string&,
-                                              const std::string&)
-   {
-   return "";
-   }
+    const std::string&,
+    const std::string&) {
+  return "";
+}
 
 SymmetricKey Credentials_Manager::psk(const std::string&,
                                       const std::string&,
-                                      const std::string& identity)
-   {
-   throw Internal_Error("No PSK set for identity " + identity);
-   }
+                                      const std::string& identity) {
+  throw Internal_Error("No PSK set for identity " + identity);
+}
 
 bool Credentials_Manager::attempt_srp(const std::string&,
-                                      const std::string&)
-   {
-   return false;
-   }
+                                      const std::string&) {
+  return false;
+}
 
 std::string Credentials_Manager::srp_identifier(const std::string&,
-                                                const std::string&)
-   {
-   return "";
-   }
+    const std::string&) {
+  return "";
+}
 
 std::string Credentials_Manager::srp_password(const std::string&,
-                                              const std::string&,
-                                              const std::string&)
-   {
-   return "";
-   }
+    const std::string&,
+    const std::string&) {
+  return "";
+}
 
 bool Credentials_Manager::srp_verifier(const std::string&,
                                        const std::string&,
@@ -55,42 +49,37 @@ bool Credentials_Manager::srp_verifier(const std::string&,
                                        std::string&,
                                        BigInt&,
                                        std::vector<uint8_t>&,
-                                       bool)
-   {
-   return false;
-   }
+                                       bool) {
+  return false;
+}
 
 std::vector<X509_Certificate> Credentials_Manager::cert_chain(
-   const std::vector<std::string>&,
-   const std::string&,
-   const std::string&)
-   {
-   return std::vector<X509_Certificate>();
-   }
+  const std::vector<std::string>&,
+  const std::string&,
+  const std::string&) {
+  return std::vector<X509_Certificate>();
+}
 
 std::vector<X509_Certificate> Credentials_Manager::cert_chain_single_type(
-   const std::string& cert_key_type,
-   const std::string& type,
-   const std::string& context)
-   {
-   std::vector<std::string> cert_types;
-   cert_types.push_back(cert_key_type);
-   return cert_chain(cert_types, type, context);
-   }
+  const std::string& cert_key_type,
+  const std::string& type,
+  const std::string& context) {
+  std::vector<std::string> cert_types;
+  cert_types.push_back(cert_key_type);
+  return cert_chain(cert_types, type, context);
+}
 
 Private_Key* Credentials_Manager::private_key_for(const X509_Certificate&,
-                                                  const std::string&,
-                                                  const std::string&)
-   {
-   return nullptr;
-   }
+    const std::string&,
+    const std::string&) {
+  return nullptr;
+}
 
 std::vector<Certificate_Store*>
 Credentials_Manager::trusted_certificate_authorities(
-   const std::string&,
-   const std::string&)
-   {
-   return std::vector<Certificate_Store*>();
-   }
+  const std::string&,
+  const std::string&) {
+  return std::vector<Certificate_Store*>();
+}
 
 }

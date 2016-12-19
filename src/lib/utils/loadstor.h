@@ -16,23 +16,23 @@
 
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
 
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+  #if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
 
-#define BOTAN_ENDIAN_N2B(x) (x)
-#define BOTAN_ENDIAN_B2N(x) (x)
+    #define BOTAN_ENDIAN_N2B(x) (x)
+    #define BOTAN_ENDIAN_B2N(x) (x)
 
-#define BOTAN_ENDIAN_N2L(x) reverse_bytes(x)
-#define BOTAN_ENDIAN_L2N(x) reverse_bytes(x)
+    #define BOTAN_ENDIAN_N2L(x) reverse_bytes(x)
+    #define BOTAN_ENDIAN_L2N(x) reverse_bytes(x)
 
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+  #elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
 
-#define BOTAN_ENDIAN_N2L(x) (x)
-#define BOTAN_ENDIAN_L2N(x) (x)
+    #define BOTAN_ENDIAN_N2L(x) (x)
+    #define BOTAN_ENDIAN_L2N(x) (x)
 
-#define BOTAN_ENDIAN_N2B(x) reverse_bytes(x)
-#define BOTAN_ENDIAN_B2N(x) reverse_bytes(x)
+    #define BOTAN_ENDIAN_N2B(x) reverse_bytes(x)
+    #define BOTAN_ENDIAN_B2N(x) reverse_bytes(x)
 
-#endif
+  #endif
 
 #endif
 
@@ -44,12 +44,11 @@ namespace Botan {
 * @param input the value to extract from
 * @return byte byte_num of input
 */
-template<typename T> inline uint8_t get_byte(size_t byte_num, T input)
-   {
-   return static_cast<uint8_t>(
-      input >> (((~byte_num)&(sizeof(T)-1)) << 3)
-      );
-   }
+template<typename T> inline uint8_t get_byte(size_t byte_num, T input) {
+  return static_cast<uint8_t>(
+           input >>(((~byte_num)&(sizeof(T)-1)) << 3)
+         );
+}
 
 /**
 * Make a uint16_t from two bytes
@@ -57,10 +56,9 @@ template<typename T> inline uint8_t get_byte(size_t byte_num, T input)
 * @param i1 the second byte
 * @return i0 || i1
 */
-inline uint16_t make_uint16(uint8_t i0, uint8_t i1)
-   {
-   return ((static_cast<uint16_t>(i0) << 8) | i1);
-   }
+inline uint16_t make_uint16(uint8_t i0, uint8_t i1) {
+  return ((static_cast<uint16_t>(i0) << 8) | i1);
+}
 
 /**
 * Make a uint32_t from four bytes
@@ -70,13 +68,12 @@ inline uint16_t make_uint16(uint8_t i0, uint8_t i1)
 * @param i3 the fourth byte
 * @return i0 || i1 || i2 || i3
 */
-inline uint32_t make_uint32(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3)
-   {
-   return ((static_cast<uint32_t>(i0) << 24) |
-           (static_cast<uint32_t>(i1) << 16) |
-           (static_cast<uint32_t>(i2) <<  8) |
-           (static_cast<uint32_t>(i3)));
-   }
+inline uint32_t make_uint32(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3) {
+  return ((static_cast<uint32_t>(i0) << 24) |
+          (static_cast<uint32_t>(i1) << 16) |
+          (static_cast<uint32_t>(i2) <<  8) |
+          (static_cast<uint32_t>(i3)));
+}
 
 /**
 * Make a uint32_t from eight bytes
@@ -91,17 +88,16 @@ inline uint32_t make_uint32(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3)
 * @return i0 || i1 || i2 || i3 || i4 || i5 || i6 || i7
 */
 inline uint64_t make_uint64(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3,
-                          uint8_t i4, uint8_t i5, uint8_t i6, uint8_t i7)
-    {
-   return ((static_cast<uint64_t>(i0) << 56) |
-           (static_cast<uint64_t>(i1) << 48) |
-           (static_cast<uint64_t>(i2) << 40) |
-           (static_cast<uint64_t>(i3) << 32) |
-           (static_cast<uint64_t>(i4) << 24) |
-           (static_cast<uint64_t>(i5) << 16) |
-           (static_cast<uint64_t>(i6) <<  8) |
-           (static_cast<uint64_t>(i7)));
-    }
+                            uint8_t i4, uint8_t i5, uint8_t i6, uint8_t i7) {
+  return ((static_cast<uint64_t>(i0) << 56) |
+          (static_cast<uint64_t>(i1) << 48) |
+          (static_cast<uint64_t>(i2) << 40) |
+          (static_cast<uint64_t>(i3) << 32) |
+          (static_cast<uint64_t>(i4) << 24) |
+          (static_cast<uint64_t>(i5) << 16) |
+          (static_cast<uint64_t>(i6) <<  8) |
+          (static_cast<uint64_t>(i7)));
+}
 
 /**
 * Load a big-endian word
@@ -110,14 +106,14 @@ inline uint64_t make_uint64(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3,
 * @return off'th T of in, as a big-endian value
 */
 template<typename T>
-inline T load_be(const uint8_t in[], size_t off)
-   {
-   in += off * sizeof(T);
-   T out = 0;
-   for(size_t i = 0; i != sizeof(T); ++i)
-      out = (out << 8) | in[i];
-   return out;
-   }
+inline T load_be(const uint8_t in[], size_t off) {
+  in += off * sizeof(T);
+  T out = 0;
+  for (size_t i = 0; i != sizeof(T); ++i) {
+    out = (out << 8) | in[i];
+  }
+  return out;
+}
 
 /**
 * Load a little-endian word
@@ -126,14 +122,14 @@ inline T load_be(const uint8_t in[], size_t off)
 * @return off'th T of in, as a litte-endian value
 */
 template<typename T>
-inline T load_le(const uint8_t in[], size_t off)
-   {
-   in += off * sizeof(T);
-   T out = 0;
-   for(size_t i = 0; i != sizeof(T); ++i)
-      out = (out << 8) | in[sizeof(T)-1-i];
-   return out;
-   }
+inline T load_le(const uint8_t in[], size_t off) {
+  in += off * sizeof(T);
+  T out = 0;
+  for (size_t i = 0; i != sizeof(T); ++i) {
+    out = (out << 8) | in[sizeof(T)-1-i];
+  }
+  return out;
+}
 
 /**
 * Load a big-endian uint16_t
@@ -142,18 +138,17 @@ inline T load_le(const uint8_t in[], size_t off)
 * @return off'th uint16_t of in, as a big-endian value
 */
 template<>
-inline uint16_t load_be<uint16_t>(const uint8_t in[], size_t off)
-   {
-   in += off * sizeof(uint16_t);
+inline uint16_t load_be<uint16_t>(const uint8_t in[], size_t off) {
+  in += off * sizeof(uint16_t);
 
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint16_t x;
-   std::memcpy(&x, in, sizeof(x));
-   return BOTAN_ENDIAN_N2B(x);
+  uint16_t x;
+  std::memcpy(&x, in, sizeof(x));
+  return BOTAN_ENDIAN_N2B(x);
 #else
-   return make_uint16(in[0], in[1]);
+  return make_uint16(in[0], in[1]);
 #endif
-   }
+}
 
 /**
 * Load a little-endian uint16_t
@@ -162,18 +157,17 @@ inline uint16_t load_be<uint16_t>(const uint8_t in[], size_t off)
 * @return off'th uint16_t of in, as a little-endian value
 */
 template<>
-inline uint16_t load_le<uint16_t>(const uint8_t in[], size_t off)
-   {
-   in += off * sizeof(uint16_t);
+inline uint16_t load_le<uint16_t>(const uint8_t in[], size_t off) {
+  in += off * sizeof(uint16_t);
 
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint16_t x;
-   std::memcpy(&x, in, sizeof(x));
-   return BOTAN_ENDIAN_N2L(x);
+  uint16_t x;
+  std::memcpy(&x, in, sizeof(x));
+  return BOTAN_ENDIAN_N2L(x);
 #else
-   return make_uint16(in[1], in[0]);
+  return make_uint16(in[1], in[0]);
 #endif
-   }
+}
 
 /**
 * Load a big-endian uint32_t
@@ -182,17 +176,16 @@ inline uint16_t load_le<uint16_t>(const uint8_t in[], size_t off)
 * @return off'th uint32_t of in, as a big-endian value
 */
 template<>
-inline uint32_t load_be<uint32_t>(const uint8_t in[], size_t off)
-   {
-   in += off * sizeof(uint32_t);
+inline uint32_t load_be<uint32_t>(const uint8_t in[], size_t off) {
+  in += off * sizeof(uint32_t);
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint32_t x;
-   std::memcpy(&x, in, sizeof(x));
-   return BOTAN_ENDIAN_N2B(x);
+  uint32_t x;
+  std::memcpy(&x, in, sizeof(x));
+  return BOTAN_ENDIAN_N2B(x);
 #else
-   return make_uint32(in[0], in[1], in[2], in[3]);
+  return make_uint32(in[0], in[1], in[2], in[3]);
 #endif
-   }
+}
 
 /**
 * Load a little-endian uint32_t
@@ -201,17 +194,16 @@ inline uint32_t load_be<uint32_t>(const uint8_t in[], size_t off)
 * @return off'th uint32_t of in, as a little-endian value
 */
 template<>
-inline uint32_t load_le<uint32_t>(const uint8_t in[], size_t off)
-   {
-   in += off * sizeof(uint32_t);
+inline uint32_t load_le<uint32_t>(const uint8_t in[], size_t off) {
+  in += off * sizeof(uint32_t);
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint32_t x;
-   std::memcpy(&x, in, sizeof(x));
-   return BOTAN_ENDIAN_N2L(x);
+  uint32_t x;
+  std::memcpy(&x, in, sizeof(x));
+  return BOTAN_ENDIAN_N2L(x);
 #else
-   return make_uint32(in[3], in[2], in[1], in[0]);
+  return make_uint32(in[3], in[2], in[1], in[0]);
 #endif
-   }
+}
 
 /**
 * Load a big-endian uint64_t
@@ -220,18 +212,17 @@ inline uint32_t load_le<uint32_t>(const uint8_t in[], size_t off)
 * @return off'th uint64_t of in, as a big-endian value
 */
 template<>
-inline uint64_t load_be<uint64_t>(const uint8_t in[], size_t off)
-   {
-   in += off * sizeof(uint64_t);
+inline uint64_t load_be<uint64_t>(const uint8_t in[], size_t off) {
+  in += off * sizeof(uint64_t);
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint64_t x;
-   std::memcpy(&x, in, sizeof(x));
-   return BOTAN_ENDIAN_N2B(x);
+  uint64_t x;
+  std::memcpy(&x, in, sizeof(x));
+  return BOTAN_ENDIAN_N2B(x);
 #else
-   return make_uint64(in[0], in[1], in[2], in[3],
-                      in[4], in[5], in[6], in[7]);
+  return make_uint64(in[0], in[1], in[2], in[3],
+                     in[4], in[5], in[6], in[7]);
 #endif
-   }
+}
 
 /**
 * Load a little-endian uint64_t
@@ -240,18 +231,17 @@ inline uint64_t load_be<uint64_t>(const uint8_t in[], size_t off)
 * @return off'th uint64_t of in, as a little-endian value
 */
 template<>
-inline uint64_t load_le<uint64_t>(const uint8_t in[], size_t off)
-   {
-   in += off * sizeof(uint64_t);
+inline uint64_t load_le<uint64_t>(const uint8_t in[], size_t off) {
+  in += off * sizeof(uint64_t);
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint64_t x;
-   std::memcpy(&x, in, sizeof(x));
-   return BOTAN_ENDIAN_N2L(x);
+  uint64_t x;
+  std::memcpy(&x, in, sizeof(x));
+  return BOTAN_ENDIAN_N2L(x);
 #else
-   return make_uint64(in[7], in[6], in[5], in[4],
-                      in[3], in[2], in[1], in[0]);
+  return make_uint64(in[7], in[6], in[5], in[4],
+                     in[3], in[2], in[1], in[0]);
 #endif
-   }
+}
 
 /**
 * Load two little-endian words
@@ -260,11 +250,10 @@ inline uint64_t load_le<uint64_t>(const uint8_t in[], size_t off)
 * @param x1 where the second word will be written
 */
 template<typename T>
-inline void load_le(const uint8_t in[], T& x0, T& x1)
-   {
-   x0 = load_le<T>(in, 0);
-   x1 = load_le<T>(in, 1);
-   }
+inline void load_le(const uint8_t in[], T& x0, T& x1) {
+  x0 = load_le<T>(in, 0);
+  x1 = load_le<T>(in, 1);
+}
 
 /**
 * Load four little-endian words
@@ -276,13 +265,12 @@ inline void load_le(const uint8_t in[], T& x0, T& x1)
 */
 template<typename T>
 inline void load_le(const uint8_t in[],
-                    T& x0, T& x1, T& x2, T& x3)
-   {
-   x0 = load_le<T>(in, 0);
-   x1 = load_le<T>(in, 1);
-   x2 = load_le<T>(in, 2);
-   x3 = load_le<T>(in, 3);
-   }
+                    T& x0, T& x1, T& x2, T& x3) {
+  x0 = load_le<T>(in, 0);
+  x1 = load_le<T>(in, 1);
+  x2 = load_le<T>(in, 2);
+  x3 = load_le<T>(in, 3);
+}
 
 /**
 * Load eight little-endian words
@@ -299,17 +287,16 @@ inline void load_le(const uint8_t in[],
 template<typename T>
 inline void load_le(const uint8_t in[],
                     T& x0, T& x1, T& x2, T& x3,
-                    T& x4, T& x5, T& x6, T& x7)
-   {
-   x0 = load_le<T>(in, 0);
-   x1 = load_le<T>(in, 1);
-   x2 = load_le<T>(in, 2);
-   x3 = load_le<T>(in, 3);
-   x4 = load_le<T>(in, 4);
-   x5 = load_le<T>(in, 5);
-   x6 = load_le<T>(in, 6);
-   x7 = load_le<T>(in, 7);
-   }
+                    T& x4, T& x5, T& x6, T& x7) {
+  x0 = load_le<T>(in, 0);
+  x1 = load_le<T>(in, 1);
+  x2 = load_le<T>(in, 2);
+  x3 = load_le<T>(in, 3);
+  x4 = load_le<T>(in, 4);
+  x5 = load_le<T>(in, 5);
+  x6 = load_le<T>(in, 6);
+  x7 = load_le<T>(in, 7);
+}
 
 /**
 * Load a variable number of little-endian words
@@ -320,28 +307,29 @@ inline void load_le(const uint8_t in[],
 template<typename T>
 inline void load_le(T out[],
                     const uint8_t in[],
-                    size_t count)
-   {
-   if(count > 0)
-      {
+                    size_t count) {
+  if (count > 0) {
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-      std::memcpy(out, in, sizeof(T)*count);
+    std::memcpy(out, in, sizeof(T)*count);
 #elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-      std::memcpy(out, in, sizeof(T)*count);
-      const size_t blocks = count - (count % 4);
-      const size_t left = count - blocks;
+    std::memcpy(out, in, sizeof(T)*count);
+    const size_t blocks = count - (count % 4);
+    const size_t left = count - blocks;
 
-      for(size_t i = 0; i != blocks; i += 4)
-         bswap_4(out + i);
+    for (size_t i = 0; i != blocks; i += 4) {
+      bswap_4(out + i);
+    }
 
-      for(size_t i = 0; i != left; ++i)
-         out[blocks+i] = reverse_bytes(out[blocks+i]);
+    for (size_t i = 0; i != left; ++i) {
+      out[blocks+i] = reverse_bytes(out[blocks+i]);
+    }
 #else
-      for(size_t i = 0; i != count; ++i)
-         out[i] = load_le<T>(in, i);
+    for (size_t i = 0; i != count; ++i) {
+      out[i] = load_le<T>(in, i);
+    }
 #endif
-      }
-   }
+  }
+}
 
 /**
 * Load two big-endian words
@@ -350,11 +338,10 @@ inline void load_le(T out[],
 * @param x1 where the second word will be written
 */
 template<typename T>
-inline void load_be(const uint8_t in[], T& x0, T& x1)
-   {
-   x0 = load_be<T>(in, 0);
-   x1 = load_be<T>(in, 1);
-   }
+inline void load_be(const uint8_t in[], T& x0, T& x1) {
+  x0 = load_be<T>(in, 0);
+  x1 = load_be<T>(in, 1);
+}
 
 /**
 * Load four big-endian words
@@ -366,13 +353,12 @@ inline void load_be(const uint8_t in[], T& x0, T& x1)
 */
 template<typename T>
 inline void load_be(const uint8_t in[],
-                    T& x0, T& x1, T& x2, T& x3)
-   {
-   x0 = load_be<T>(in, 0);
-   x1 = load_be<T>(in, 1);
-   x2 = load_be<T>(in, 2);
-   x3 = load_be<T>(in, 3);
-   }
+                    T& x0, T& x1, T& x2, T& x3) {
+  x0 = load_be<T>(in, 0);
+  x1 = load_be<T>(in, 1);
+  x2 = load_be<T>(in, 2);
+  x3 = load_be<T>(in, 3);
+}
 
 /**
 * Load eight big-endian words
@@ -389,17 +375,16 @@ inline void load_be(const uint8_t in[],
 template<typename T>
 inline void load_be(const uint8_t in[],
                     T& x0, T& x1, T& x2, T& x3,
-                    T& x4, T& x5, T& x6, T& x7)
-   {
-   x0 = load_be<T>(in, 0);
-   x1 = load_be<T>(in, 1);
-   x2 = load_be<T>(in, 2);
-   x3 = load_be<T>(in, 3);
-   x4 = load_be<T>(in, 4);
-   x5 = load_be<T>(in, 5);
-   x6 = load_be<T>(in, 6);
-   x7 = load_be<T>(in, 7);
-   }
+                    T& x4, T& x5, T& x6, T& x7) {
+  x0 = load_be<T>(in, 0);
+  x1 = load_be<T>(in, 1);
+  x2 = load_be<T>(in, 2);
+  x3 = load_be<T>(in, 3);
+  x4 = load_be<T>(in, 4);
+  x5 = load_be<T>(in, 5);
+  x6 = load_be<T>(in, 6);
+  x7 = load_be<T>(in, 7);
+}
 
 /**
 * Load a variable number of big-endian words
@@ -410,140 +395,135 @@ inline void load_be(const uint8_t in[],
 template<typename T>
 inline void load_be(T out[],
                     const uint8_t in[],
-                    size_t count)
-   {
-   if(count > 0)
-      {
+                    size_t count) {
+  if (count > 0) {
 #if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-      std::memcpy(out, in, sizeof(T)*count);
+    std::memcpy(out, in, sizeof(T)*count);
 #elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-      std::memcpy(out, in, sizeof(T)*count);
-      const size_t blocks = count - (count % 4);
-      const size_t left = count - blocks;
+    std::memcpy(out, in, sizeof(T)*count);
+    const size_t blocks = count - (count % 4);
+    const size_t left = count - blocks;
 
-      for(size_t i = 0; i != blocks; i += 4)
-         bswap_4(out + i);
+    for (size_t i = 0; i != blocks; i += 4) {
+      bswap_4(out + i);
+    }
 
-      for(size_t i = 0; i != left; ++i)
-         out[blocks+i] = reverse_bytes(out[blocks+i]);
+    for (size_t i = 0; i != left; ++i) {
+      out[blocks+i] = reverse_bytes(out[blocks+i]);
+    }
 #else
-      for(size_t i = 0; i != count; ++i)
-         out[i] = load_be<T>(in, i);
+    for (size_t i = 0; i != count; ++i) {
+      out[i] = load_be<T>(in, i);
+    }
 #endif
-      }
-   }
+  }
+}
 
 /**
 * Store a big-endian uint16_t
 * @param in the input uint16_t
 * @param out the byte array to write to
 */
-inline void store_be(uint16_t in, uint8_t out[2])
-   {
+inline void store_be(uint16_t in, uint8_t out[2]) {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint16_t o = BOTAN_ENDIAN_N2B(in);
-   std::memcpy(out, &o, sizeof(o));
+  uint16_t o = BOTAN_ENDIAN_N2B(in);
+  std::memcpy(out, &o, sizeof(o));
 #else
-   out[0] = get_byte(0, in);
-   out[1] = get_byte(1, in);
+  out[0] = get_byte(0, in);
+  out[1] = get_byte(1, in);
 #endif
-   }
+}
 
 /**
 * Store a little-endian uint16_t
 * @param in the input uint16_t
 * @param out the byte array to write to
 */
-inline void store_le(uint16_t in, uint8_t out[2])
-   {
+inline void store_le(uint16_t in, uint8_t out[2]) {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint16_t o = BOTAN_ENDIAN_N2L(in);
-   std::memcpy(out, &o, sizeof(o));
+  uint16_t o = BOTAN_ENDIAN_N2L(in);
+  std::memcpy(out, &o, sizeof(o));
 #else
-   out[0] = get_byte(1, in);
-   out[1] = get_byte(0, in);
+  out[0] = get_byte(1, in);
+  out[1] = get_byte(0, in);
 #endif
-   }
+}
 
 /**
 * Store a big-endian uint32_t
 * @param in the input uint32_t
 * @param out the byte array to write to
 */
-inline void store_be(uint32_t in, uint8_t out[4])
-   {
+inline void store_be(uint32_t in, uint8_t out[4]) {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint32_t o = BOTAN_ENDIAN_B2N(in);
-   std::memcpy(out, &o, sizeof(o));
+  uint32_t o = BOTAN_ENDIAN_B2N(in);
+  std::memcpy(out, &o, sizeof(o));
 #else
-   out[0] = get_byte(0, in);
-   out[1] = get_byte(1, in);
-   out[2] = get_byte(2, in);
-   out[3] = get_byte(3, in);
+  out[0] = get_byte(0, in);
+  out[1] = get_byte(1, in);
+  out[2] = get_byte(2, in);
+  out[3] = get_byte(3, in);
 #endif
-   }
+}
 
 /**
 * Store a little-endian uint32_t
 * @param in the input uint32_t
 * @param out the byte array to write to
 */
-inline void store_le(uint32_t in, uint8_t out[4])
-   {
+inline void store_le(uint32_t in, uint8_t out[4]) {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint32_t o = BOTAN_ENDIAN_L2N(in);
-   std::memcpy(out, &o, sizeof(o));
+  uint32_t o = BOTAN_ENDIAN_L2N(in);
+  std::memcpy(out, &o, sizeof(o));
 #else
-   out[0] = get_byte(3, in);
-   out[1] = get_byte(2, in);
-   out[2] = get_byte(1, in);
-   out[3] = get_byte(0, in);
+  out[0] = get_byte(3, in);
+  out[1] = get_byte(2, in);
+  out[2] = get_byte(1, in);
+  out[3] = get_byte(0, in);
 #endif
-   }
+}
 
 /**
 * Store a big-endian uint64_t
 * @param in the input uint64_t
 * @param out the byte array to write to
 */
-inline void store_be(uint64_t in, uint8_t out[8])
-   {
+inline void store_be(uint64_t in, uint8_t out[8]) {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint64_t o = BOTAN_ENDIAN_B2N(in);
-   std::memcpy(out, &o, sizeof(o));
+  uint64_t o = BOTAN_ENDIAN_B2N(in);
+  std::memcpy(out, &o, sizeof(o));
 #else
-   out[0] = get_byte(0, in);
-   out[1] = get_byte(1, in);
-   out[2] = get_byte(2, in);
-   out[3] = get_byte(3, in);
-   out[4] = get_byte(4, in);
-   out[5] = get_byte(5, in);
-   out[6] = get_byte(6, in);
-   out[7] = get_byte(7, in);
+  out[0] = get_byte(0, in);
+  out[1] = get_byte(1, in);
+  out[2] = get_byte(2, in);
+  out[3] = get_byte(3, in);
+  out[4] = get_byte(4, in);
+  out[5] = get_byte(5, in);
+  out[6] = get_byte(6, in);
+  out[7] = get_byte(7, in);
 #endif
-   }
+}
 
 /**
 * Store a little-endian uint64_t
 * @param in the input uint64_t
 * @param out the byte array to write to
 */
-inline void store_le(uint64_t in, uint8_t out[8])
-   {
+inline void store_le(uint64_t in, uint8_t out[8]) {
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
-   uint64_t o = BOTAN_ENDIAN_L2N(in);
-   std::memcpy(out, &o, sizeof(o));
+  uint64_t o = BOTAN_ENDIAN_L2N(in);
+  std::memcpy(out, &o, sizeof(o));
 #else
-   out[0] = get_byte(7, in);
-   out[1] = get_byte(6, in);
-   out[2] = get_byte(5, in);
-   out[3] = get_byte(4, in);
-   out[4] = get_byte(3, in);
-   out[5] = get_byte(2, in);
-   out[6] = get_byte(1, in);
-   out[7] = get_byte(0, in);
+  out[0] = get_byte(7, in);
+  out[1] = get_byte(6, in);
+  out[2] = get_byte(5, in);
+  out[3] = get_byte(4, in);
+  out[4] = get_byte(3, in);
+  out[5] = get_byte(2, in);
+  out[6] = get_byte(1, in);
+  out[7] = get_byte(0, in);
 #endif
-   }
+}
 
 /**
 * Store two little-endian words
@@ -552,11 +532,10 @@ inline void store_le(uint64_t in, uint8_t out[8])
 * @param x1 the second word
 */
 template<typename T>
-inline void store_le(uint8_t out[], T x0, T x1)
-   {
-   store_le(x0, out + (0 * sizeof(T)));
-   store_le(x1, out + (1 * sizeof(T)));
-   }
+inline void store_le(uint8_t out[], T x0, T x1) {
+  store_le(x0, out + (0 * sizeof(T)));
+  store_le(x1, out + (1 * sizeof(T)));
+}
 
 /**
 * Store two big-endian words
@@ -565,11 +544,10 @@ inline void store_le(uint8_t out[], T x0, T x1)
 * @param x1 the second word
 */
 template<typename T>
-inline void store_be(uint8_t out[], T x0, T x1)
-   {
-   store_be(x0, out + (0 * sizeof(T)));
-   store_be(x1, out + (1 * sizeof(T)));
-   }
+inline void store_be(uint8_t out[], T x0, T x1) {
+  store_be(x0, out + (0 * sizeof(T)));
+  store_be(x1, out + (1 * sizeof(T)));
+}
 
 /**
 * Store four little-endian words
@@ -580,13 +558,12 @@ inline void store_be(uint8_t out[], T x0, T x1)
 * @param x3 the fourth word
 */
 template<typename T>
-inline void store_le(uint8_t out[], T x0, T x1, T x2, T x3)
-   {
-   store_le(x0, out + (0 * sizeof(T)));
-   store_le(x1, out + (1 * sizeof(T)));
-   store_le(x2, out + (2 * sizeof(T)));
-   store_le(x3, out + (3 * sizeof(T)));
-   }
+inline void store_le(uint8_t out[], T x0, T x1, T x2, T x3) {
+  store_le(x0, out + (0 * sizeof(T)));
+  store_le(x1, out + (1 * sizeof(T)));
+  store_le(x2, out + (2 * sizeof(T)));
+  store_le(x3, out + (3 * sizeof(T)));
+}
 
 /**
 * Store four big-endian words
@@ -597,13 +574,12 @@ inline void store_le(uint8_t out[], T x0, T x1, T x2, T x3)
 * @param x3 the fourth word
 */
 template<typename T>
-inline void store_be(uint8_t out[], T x0, T x1, T x2, T x3)
-   {
-   store_be(x0, out + (0 * sizeof(T)));
-   store_be(x1, out + (1 * sizeof(T)));
-   store_be(x2, out + (2 * sizeof(T)));
-   store_be(x3, out + (3 * sizeof(T)));
-   }
+inline void store_be(uint8_t out[], T x0, T x1, T x2, T x3) {
+  store_be(x0, out + (0 * sizeof(T)));
+  store_be(x1, out + (1 * sizeof(T)));
+  store_be(x2, out + (2 * sizeof(T)));
+  store_be(x3, out + (3 * sizeof(T)));
+}
 
 /**
 * Store eight little-endian words
@@ -619,17 +595,16 @@ inline void store_be(uint8_t out[], T x0, T x1, T x2, T x3)
 */
 template<typename T>
 inline void store_le(uint8_t out[], T x0, T x1, T x2, T x3,
-                                 T x4, T x5, T x6, T x7)
-   {
-   store_le(x0, out + (0 * sizeof(T)));
-   store_le(x1, out + (1 * sizeof(T)));
-   store_le(x2, out + (2 * sizeof(T)));
-   store_le(x3, out + (3 * sizeof(T)));
-   store_le(x4, out + (4 * sizeof(T)));
-   store_le(x5, out + (5 * sizeof(T)));
-   store_le(x6, out + (6 * sizeof(T)));
-   store_le(x7, out + (7 * sizeof(T)));
-   }
+                     T x4, T x5, T x6, T x7) {
+  store_le(x0, out + (0 * sizeof(T)));
+  store_le(x1, out + (1 * sizeof(T)));
+  store_le(x2, out + (2 * sizeof(T)));
+  store_le(x3, out + (3 * sizeof(T)));
+  store_le(x4, out + (4 * sizeof(T)));
+  store_le(x5, out + (5 * sizeof(T)));
+  store_le(x6, out + (6 * sizeof(T)));
+  store_le(x7, out + (7 * sizeof(T)));
+}
 
 /**
 * Store eight big-endian words
@@ -645,59 +620,54 @@ inline void store_le(uint8_t out[], T x0, T x1, T x2, T x3,
 */
 template<typename T>
 inline void store_be(uint8_t out[], T x0, T x1, T x2, T x3,
-                                 T x4, T x5, T x6, T x7)
-   {
-   store_be(x0, out + (0 * sizeof(T)));
-   store_be(x1, out + (1 * sizeof(T)));
-   store_be(x2, out + (2 * sizeof(T)));
-   store_be(x3, out + (3 * sizeof(T)));
-   store_be(x4, out + (4 * sizeof(T)));
-   store_be(x5, out + (5 * sizeof(T)));
-   store_be(x6, out + (6 * sizeof(T)));
-   store_be(x7, out + (7 * sizeof(T)));
-   }
+                     T x4, T x5, T x6, T x7) {
+  store_be(x0, out + (0 * sizeof(T)));
+  store_be(x1, out + (1 * sizeof(T)));
+  store_be(x2, out + (2 * sizeof(T)));
+  store_be(x3, out + (3 * sizeof(T)));
+  store_be(x4, out + (4 * sizeof(T)));
+  store_be(x5, out + (5 * sizeof(T)));
+  store_be(x6, out + (6 * sizeof(T)));
+  store_be(x7, out + (7 * sizeof(T)));
+}
 
 template<typename T>
-void copy_out_be(uint8_t out[], size_t out_bytes, const T in[])
-   {
-   while(out_bytes >= sizeof(T))
-      {
-      store_be(in[0], out);
-      out += sizeof(T);
-      out_bytes -= sizeof(T);
-      in += 1;
-   }
+void copy_out_be(uint8_t out[], size_t out_bytes, const T in[]) {
+  while (out_bytes >= sizeof(T)) {
+    store_be(in[0], out);
+    out += sizeof(T);
+    out_bytes -= sizeof(T);
+    in += 1;
+  }
 
-   for(size_t i = 0; i != out_bytes; ++i)
-      out[i] = get_byte(i%8, in[0]);
-   }
+  for (size_t i = 0; i != out_bytes; ++i) {
+    out[i] = get_byte(i%8, in[0]);
+  }
+}
 
 template<typename T, typename Alloc>
-void copy_out_vec_be(uint8_t out[], size_t out_bytes, const std::vector<T, Alloc>& in)
-   {
-   copy_out_be(out, out_bytes, in.data());
-   }
+void copy_out_vec_be(uint8_t out[], size_t out_bytes, const std::vector<T, Alloc>& in) {
+  copy_out_be(out, out_bytes, in.data());
+}
 
 template<typename T>
-void copy_out_le(uint8_t out[], size_t out_bytes, const T in[])
-   {
-   while(out_bytes >= sizeof(T))
-      {
-      store_le(in[0], out);
-      out += sizeof(T);
-      out_bytes -= sizeof(T);
-      in += 1;
-   }
+void copy_out_le(uint8_t out[], size_t out_bytes, const T in[]) {
+  while (out_bytes >= sizeof(T)) {
+    store_le(in[0], out);
+    out += sizeof(T);
+    out_bytes -= sizeof(T);
+    in += 1;
+  }
 
-   for(size_t i = 0; i != out_bytes; ++i)
-      out[i] = get_byte(sizeof(T) - 1 - (i % 8), in[0]);
-   }
+  for (size_t i = 0; i != out_bytes; ++i) {
+    out[i] = get_byte(sizeof(T) - 1 - (i % 8), in[0]);
+  }
+}
 
 template<typename T, typename Alloc>
-void copy_out_vec_le(uint8_t out[], size_t out_bytes, const std::vector<T, Alloc>& in)
-   {
-   copy_out_le(out, out_bytes, in.data());
-   }
+void copy_out_vec_le(uint8_t out[], size_t out_bytes, const std::vector<T, Alloc>& in) {
+  copy_out_le(out, out_bytes, in.data());
+}
 
 }
 

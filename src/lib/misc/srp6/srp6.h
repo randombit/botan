@@ -63,34 +63,33 @@ std::string BOTAN_DLL srp6_group_identifier(const BigInt& N, const BigInt& g);
 /**
 * Represents a SRP-6a server session
 */
-class BOTAN_DLL SRP6_Server_Session
-   {
-   public:
-      /**
-      * Server side step 1
-      * @param v the verification value saved from client registration
-      * @param group_id the SRP group id
-      * @param hash_id the SRP hash in use
-      * @param rng a random number generator
-      * @return SRP-6 B value
-      */
-      BigInt step1(const BigInt& v,
-                   const std::string& group_id,
-                   const std::string& hash_id,
-                   RandomNumberGenerator& rng);
+class BOTAN_DLL SRP6_Server_Session {
+public:
+  /**
+  * Server side step 1
+  * @param v the verification value saved from client registration
+  * @param group_id the SRP group id
+  * @param hash_id the SRP hash in use
+  * @param rng a random number generator
+  * @return SRP-6 B value
+  */
+  BigInt step1(const BigInt& v,
+               const std::string& group_id,
+               const std::string& hash_id,
+               RandomNumberGenerator& rng);
 
-      /**
-      * Server side step 2
-      * @param A the client's value
-      * @return shared symmetric key
-      */
-      SymmetricKey step2(const BigInt& A);
+  /**
+  * Server side step 2
+  * @param A the client's value
+  * @return shared symmetric key
+  */
+  SymmetricKey step2(const BigInt& A);
 
-   private:
-      std::string m_hash_id;
-      BigInt m_B, m_b, m_v, m_S, m_p;
-      size_t m_p_bytes = 0;
-   };
+private:
+  std::string m_hash_id;
+  BigInt m_B, m_b, m_v, m_S, m_p;
+  size_t m_p_bytes = 0;
+};
 
 }
 

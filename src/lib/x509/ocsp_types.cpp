@@ -17,88 +17,83 @@ namespace Botan {
 namespace OCSP {
 
 CertID::CertID(const X509_Certificate& issuer,
-               const X509_Certificate& subject)
-   {
-   /*
-   In practice it seems some responders, including, notably,
-   ocsp.verisign.com, will reject anything but SHA-1 here
-   */
-   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-160"));
+               const X509_Certificate& subject) {
+  /*
+  In practice it seems some responders, including, notably,
+  ocsp.verisign.com, will reject anything but SHA-1 here
+  */
+  std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-160"));
 
-   m_hash_id = AlgorithmIdentifier(hash->name(), AlgorithmIdentifier::USE_NULL_PARAM);
-   m_issuer_key_hash = unlock(hash->process(issuer.subject_public_key_bitstring()));
-   m_issuer_dn_hash = unlock(hash->process(subject.raw_issuer_dn()));
-   m_subject_serial = BigInt::decode(subject.serial_number());
-   }
+  m_hash_id = AlgorithmIdentifier(hash->name(), AlgorithmIdentifier::USE_NULL_PARAM);
+  m_issuer_key_hash = unlock(hash->process(issuer.subject_public_key_bitstring()));
+  m_issuer_dn_hash = unlock(hash->process(subject.raw_issuer_dn()));
+  m_subject_serial = BigInt::decode(subject.serial_number());
+}
 
 bool CertID::is_id_for(const X509_Certificate& issuer,
-                       const X509_Certificate& subject) const
-   {
-   try
-      {
-      if(BigInt::decode(subject.serial_number()) != m_subject_serial)
-         return false;
-
-      std::unique_ptr<HashFunction> hash(HashFunction::create(OIDS::lookup(m_hash_id.oid)));
-
-      if(m_issuer_dn_hash != unlock(hash->process(subject.raw_issuer_dn())))
-         return false;
-
-      if(m_issuer_key_hash != unlock(hash->process(issuer.subject_public_key_bitstring())))
-         return false;
-      }
-   catch(...)
-      {
+                       const X509_Certificate& subject) const {
+  try {
+    if (BigInt::decode(subject.serial_number()) != m_subject_serial) {
       return false;
-      }
+    }
 
-   return true;
-   }
+    std::unique_ptr<HashFunction> hash(HashFunction::create(OIDS::lookup(m_hash_id.oid)));
 
-void CertID::encode_into(class DER_Encoder& to) const
-   {
-   to.start_cons(SEQUENCE)
-      .encode(m_hash_id)
-      .encode(m_issuer_dn_hash, OCTET_STRING)
-      .encode(m_issuer_key_hash, OCTET_STRING)
-      .encode(m_subject_serial)
-      .end_cons();
-   }
+    if (m_issuer_dn_hash != unlock(hash->process(subject.raw_issuer_dn()))) {
+      return false;
+    }
 
-void CertID::decode_from(class BER_Decoder& from)
-   {
-   from.start_cons(SEQUENCE)
-      .decode(m_hash_id)
-      .decode(m_issuer_dn_hash, OCTET_STRING)
-      .decode(m_issuer_key_hash, OCTET_STRING)
-      .decode(m_subject_serial)
-      .end_cons();
+    if (m_issuer_key_hash != unlock(hash->process(issuer.subject_public_key_bitstring()))) {
+      return false;
+    }
+  }
+  catch (...) {
+    return false;
+  }
 
-   }
+  return true;
+}
 
-void SingleResponse::encode_into(class DER_Encoder&) const
-   {
-   throw Not_Implemented("SingleResponse::encode_into");
-   }
+void CertID::encode_into(class DER_Encoder& to) const {
+  to.start_cons(SEQUENCE)
+  .encode(m_hash_id)
+  .encode(m_issuer_dn_hash, OCTET_STRING)
+  .encode(m_issuer_key_hash, OCTET_STRING)
+  .encode(m_subject_serial)
+  .end_cons();
+}
 
-void SingleResponse::decode_from(class BER_Decoder& from)
-   {
-   BER_Object cert_status;
-   Extensions extensions;
+void CertID::decode_from(class BER_Decoder& from) {
+  from.start_cons(SEQUENCE)
+  .decode(m_hash_id)
+  .decode(m_issuer_dn_hash, OCTET_STRING)
+  .decode(m_issuer_key_hash, OCTET_STRING)
+  .decode(m_subject_serial)
+  .end_cons();
 
-   from.start_cons(SEQUENCE)
-      .decode(m_certid)
-      .get_next(cert_status)
-      .decode(m_thisupdate)
-      .decode_optional(m_nextupdate, ASN1_Tag(0),
-                       ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED))
-      .decode_optional(extensions,
-                       ASN1_Tag(1),
-                       ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED))
-      .end_cons();
+}
 
-   m_cert_status = cert_status.type_tag;
-   }
+void SingleResponse::encode_into(class DER_Encoder&) const {
+  throw Not_Implemented("SingleResponse::encode_into");
+}
+
+void SingleResponse::decode_from(class BER_Decoder& from) {
+  BER_Object cert_status;
+  Extensions extensions;
+
+  from.start_cons(SEQUENCE)
+  .decode(m_certid)
+  .get_next(cert_status)
+  .decode(m_thisupdate)
+  .decode_optional(m_nextupdate, ASN1_Tag(0),
+                   ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED))
+  .decode_optional(extensions,
+                   ASN1_Tag(1),
+                   ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED))
+  .end_cons();
+
+  m_cert_status = cert_status.type_tag;
+}
 
 }
 

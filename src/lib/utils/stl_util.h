@@ -17,29 +17,25 @@
 
 namespace Botan {
 
-inline std::vector<uint8_t> to_byte_vector(const std::string& s)
-   {
-   return std::vector<uint8_t>(s.cbegin(), s.cend());
-   }
+inline std::vector<uint8_t> to_byte_vector(const std::string& s) {
+  return std::vector<uint8_t>(s.cbegin(), s.cend());
+}
 
-inline std::string to_string(const secure_vector<uint8_t> &bytes)
-   {
-   return std::string(bytes.cbegin(), bytes.cend());
-   }
+inline std::string to_string(const secure_vector<uint8_t>& bytes) {
+  return std::string(bytes.cbegin(), bytes.cend());
+}
 
 /**
 * Return the keys of a map as a std::set
 */
 template<typename K, typename V>
-std::set<K> map_keys_as_set(const std::map<K, V>& kv)
-   {
-   std::set<K> s;
-   for(auto&& i : kv)
-      {
-      s.insert(i.first);
-      }
-   return s;
-   }
+std::set<K> map_keys_as_set(const std::map<K, V>& kv) {
+  std::set<K> s;
+  for (auto&& i : kv) {
+    s.insert(i.first);
+  }
+  return s;
+}
 
 /*
 * Searching through a std::map
@@ -51,64 +47,63 @@ std::set<K> map_keys_as_set(const std::map<K, V>& kv)
 template<typename K, typename V>
 inline V search_map(const std::map<K, V>& mapping,
                     const K& key,
-                    const V& null_result = V())
-   {
-   auto i = mapping.find(key);
-   if(i == mapping.end())
-      return null_result;
-   return i->second;
-   }
+                    const V& null_result = V()) {
+  auto i = mapping.find(key);
+  if (i == mapping.end()) {
+    return null_result;
+  }
+  return i->second;
+}
 
 template<typename K, typename V, typename R>
 inline R search_map(const std::map<K, V>& mapping, const K& key,
-                    const R& null_result, const R& found_result)
-   {
-   auto i = mapping.find(key);
-   if(i == mapping.end())
-      return null_result;
-   return found_result;
-   }
+                    const R& null_result, const R& found_result) {
+  auto i = mapping.find(key);
+  if (i == mapping.end()) {
+    return null_result;
+  }
+  return found_result;
+}
 
 /*
 * Insert a key/value pair into a multimap
 */
 template<typename K, typename V>
 void multimap_insert(std::multimap<K, V>& multimap,
-                     const K& key, const V& value)
-   {
+                     const K& key, const V& value) {
 #if defined(BOTAN_BUILD_COMPILER_IS_SUN_STUDIO)
-   // Work around a strange bug in Sun Studio
-   multimap.insert(std::make_pair<const K, V>(key, value));
+  // Work around a strange bug in Sun Studio
+  multimap.insert(std::make_pair<const K, V>(key, value));
 #else
-   multimap.insert(std::make_pair(key, value));
+  multimap.insert(std::make_pair(key, value));
 #endif
-   }
+}
 
 /**
 * Existence check for values
 */
 template<typename T>
 bool value_exists(const std::vector<T>& vec,
-                  const T& val)
-   {
-   for(size_t i = 0; i != vec.size(); ++i)
-      if(vec[i] == val)
-         return true;
-   return false;
-   }
+                  const T& val) {
+  for (size_t i = 0; i != vec.size(); ++i)
+    if (vec[i] == val) {
+      return true;
+    }
+  return false;
+}
 
 template<typename T, typename Pred>
-void map_remove_if(Pred pred, T& assoc)
-   {
-   auto i = assoc.begin();
-   while(i != assoc.end())
-      {
-      if(pred(i->first))
-         assoc.erase(i++);
-      else
-         i++;
-      }
-   }
+void map_remove_if(Pred pred, T& assoc) {
+  auto i = assoc.begin();
+  while (i != assoc.end()) {
+    if (pred(i->first)) {
+      assoc.erase(i++);
+    }
+    else {
+      i++;
+    }
+  }
+}
 
 }
 

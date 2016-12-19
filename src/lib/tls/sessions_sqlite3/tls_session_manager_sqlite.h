@@ -24,25 +24,24 @@ namespace TLS {
 * serious privacy risk in some situations.
 */
 class BOTAN_DLL
-Session_Manager_SQLite : public Session_Manager_SQL
-   {
-   public:
-      /**
-      * @param passphrase used to encrypt the session data
-      * @param rng a random number generator
-      * @param db_filename filename of the SQLite database file.
-               The table names tls_sessions and tls_sessions_metadata
-               will be used
-      * @param max_sessions a hint on the maximum number of sessions
-      *        to keep in memory at any one time. (If zero, don't cap)
-      * @param session_lifetime sessions are expired after this many
-      *        seconds have elapsed from initial handshake.
-      */
-      Session_Manager_SQLite(const std::string& passphrase,
-                             RandomNumberGenerator& rng,
-                             const std::string& db_filename,
-                             size_t max_sessions = 1000,
-                             std::chrono::seconds session_lifetime = std::chrono::seconds(7200));
+  Session_Manager_SQLite : public Session_Manager_SQL {
+public:
+  /**
+  * @param passphrase used to encrypt the session data
+  * @param rng a random number generator
+  * @param db_filename filename of the SQLite database file.
+           The table names tls_sessions and tls_sessions_metadata
+           will be used
+  * @param max_sessions a hint on the maximum number of sessions
+  *        to keep in memory at any one time. (If zero, don't cap)
+  * @param session_lifetime sessions are expired after this many
+  *        seconds have elapsed from initial handshake.
+  */
+  Session_Manager_SQLite(const std::string& passphrase,
+                         RandomNumberGenerator& rng,
+                         const std::string& db_filename,
+                         size_t max_sessions = 1000,
+                         std::chrono::seconds session_lifetime = std::chrono::seconds(7200));
 };
 
 }

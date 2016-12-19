@@ -39,33 +39,30 @@ typedef uint8_t u8;
 typedef uint64_t limb;
 typedef limb felem[5];
 
-typedef struct
-   {
-       limb* x;
-       limb* z;
-   } fmonty_pair_t;
+typedef struct {
+  limb* x;
+  limb* z;
+} fmonty_pair_t;
 
-typedef struct
-   {
-     fmonty_pair_t q;
-     fmonty_pair_t q_dash;
-     const limb* q_minus_q_dash;
-   } fmonty_in_t;
+typedef struct {
+  fmonty_pair_t q;
+  fmonty_pair_t q_dash;
+  const limb* q_minus_q_dash;
+} fmonty_in_t;
 
-typedef struct
-   {
-     fmonty_pair_t two_q;
-     fmonty_pair_t q_plus_q_dash;
-   } fmonty_out_t;
+typedef struct {
+  fmonty_pair_t two_q;
+  fmonty_pair_t q_plus_q_dash;
+} fmonty_out_t;
 
 
 #if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
-typedef donna128 uint128_t;
+  typedef donna128 uint128_t;
 #endif
 
 /* Sum two numbers: output += in */
 static inline void
-fsum(limb *output, const limb *in) {
+fsum(limb* output, const limb* in) {
   output[0] += in[0];
   output[1] += in[1];
   output[2] += in[2];
@@ -154,7 +151,7 @@ fmul(felem output, const felem in2, const felem in) {
   t[2] += uint128_t(r4) * s3 + uint128_t(r3) * s4;
   t[3] += uint128_t(r4) * s4;
 
-                  r0 = t[0] & 0x7ffffffffffff; c = carry_shift(t[0], 51);
+  r0 = t[0] & 0x7ffffffffffff; c = carry_shift(t[0], 51);
   t[1] += c;      r1 = t[1] & 0x7ffffffffffff; c = carry_shift(t[1], 51);
   t[2] += c;      r2 = t[2] & 0x7ffffffffffff; c = carry_shift(t[2], 51);
   t[3] += c;      r3 = t[3] & 0x7ffffffffffff; c = carry_shift(t[3], 51);
@@ -188,13 +185,13 @@ static inline void fsquare_times(felem output, const felem in, limb count) {
     d419 = r4 * 19;
     d4 = d419 * 2;
 
-    t[0] = uint128_t(r0) * r0 + uint128_t(d4) * r1 + uint128_t(d2) * (r3     );
+    t[0] = uint128_t(r0) * r0 + uint128_t(d4) * r1 + uint128_t(d2) * (r3);
     t[1] = uint128_t(d0) * r1 + uint128_t(d4) * r2 + uint128_t(r3) * (r3 * 19);
-    t[2] = uint128_t(d0) * r2 + uint128_t(r1) * r1 + uint128_t(d4) * (r3     );
-    t[3] = uint128_t(d0) * r3 + uint128_t(d1) * r2 + uint128_t(r4) * (d419   );
-    t[4] = uint128_t(d0) * r4 + uint128_t(d1) * r3 + uint128_t(r2) * (r2     );
+    t[2] = uint128_t(d0) * r2 + uint128_t(r1) * r1 + uint128_t(d4) * (r3);
+    t[3] = uint128_t(d0) * r3 + uint128_t(d1) * r2 + uint128_t(r4) * (d419);
+    t[4] = uint128_t(d0) * r4 + uint128_t(d1) * r3 + uint128_t(r2) * (r2);
 
-                    r0 = t[0] & 0x7ffffffffffff; c = carry_shift(t[0], 51);
+    r0 = t[0] & 0x7ffffffffffff; c = carry_shift(t[0], 51);
     t[1] += c;      r1 = t[1] & 0x7ffffffffffff; c = carry_shift(t[1], 51);
     t[2] += c;      r2 = t[2] & 0x7ffffffffffff; c = carry_shift(t[2], 51);
     t[3] += c;      r3 = t[3] & 0x7ffffffffffff; c = carry_shift(t[3], 51);
@@ -202,7 +199,8 @@ static inline void fsquare_times(felem output, const felem in, limb count) {
     r0 +=   c * 19; c = r0 >> 51; r0 = r0 & 0x7ffffffffffff;
     r1 +=   c;      c = r1 >> 51; r1 = r1 & 0x7ffffffffffff;
     r2 +=   c;
-  } while(--count);
+  }
+  while (--count);
 
   output[0] = r0;
   output[1] = r1;
@@ -213,18 +211,18 @@ static inline void fsquare_times(felem output, const felem in, limb count) {
 
 /* Load a little-endian 64-bit number  */
 static limb
-load_limb(const u8 *in) {
+load_limb(const u8* in) {
   return load_le<uint64_t>(in, 0);
 }
 
 static void
-store_limb(u8 *out, limb in) {
+store_limb(u8* out, limb in) {
   store_le(in, out);
 }
 
 /* Take a little-endian, 32-byte number and expand it into polynomial form */
 static void
-fexpand(limb *output, const u8 *in) {
+fexpand(limb* output, const u8* in) {
   output[0] = load_limb(in) & 0x7ffffffffffff;
   output[1] = (load_limb(in+6) >> 3) & 0x7ffffffffffff;
   output[2] = (load_limb(in+12) >> 6) & 0x7ffffffffffff;
@@ -236,7 +234,7 @@ fexpand(limb *output, const u8 *in) {
  * little-endian, 32-byte array
  */
 static void
-fcontract(u8 *output, const felem input) {
+fcontract(u8* output, const felem input) {
   uint128_t t[5];
 
   t[0] = input[0];
@@ -300,8 +298,7 @@ fcontract(u8 *output, const felem input) {
  *   in.q_minus_q_dash: short form, preserved
  */
 static void
-fmonty(fmonty_out_t& result, fmonty_in_t& in)
-{
+fmonty(fmonty_out_t& result, fmonty_in_t& in) {
   limb origx[5], origxprime[5], zzz[5], xx[5], zz[5], xxprime[5],
        zzprime[5], zzzprime[5];
 
@@ -356,11 +353,11 @@ swap_conditional(limb a[5], limb b[5], limb iswap) {
  *   q: a point of the curve (short form)
  */
 static void
-cmult(limb *resultx, limb *resultz, const u8 *n, const limb *q) {
+cmult(limb* resultx, limb* resultz, const u8* n, const limb* q) {
   limb a[5] = {0}, b[5] = {1}, c[5] = {1}, d[5] = {0};
-  limb *nqpqx = a, *nqpqz = b, *nqx = c, *nqz = d, *t;
+  limb* nqpqx = a, *nqpqz = b, *nqx = c, *nqz = d, *t;
   limb e[5] = {0}, f[5] = {1}, g[5] = {0}, h[5] = {1};
-  limb *nqpqx2 = e, *nqpqz2 = f, *nqx2 = g, *nqz2 = h;
+  limb* nqpqx2 = e, *nqpqz2 = f, *nqx2 = g, *nqz2 = h;
 
   unsigned i, j;
 
@@ -434,7 +431,7 @@ crecip(felem out, const felem z) {
 }
 
 void
-curve25519_donna(u8 *mypublic, const u8 *secret, const u8 *basepoint) {
+curve25519_donna(u8* mypublic, const u8* secret, const u8* basepoint) {
 
   CT::poison(secret, 32);
   CT::poison(basepoint, 32);
@@ -443,7 +440,7 @@ curve25519_donna(u8 *mypublic, const u8 *secret, const u8 *basepoint) {
   uint8_t e[32];
   int i;
 
-  for (i = 0;i < 32;++i) e[i] = secret[i];
+  for (i = 0; i < 32; ++i) { e[i] = secret[i]; }
   e[0] &= 248;
   e[31] &= 127;
   e[31] |= 64;

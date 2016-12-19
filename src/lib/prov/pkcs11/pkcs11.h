@@ -243,10 +243,10 @@ struct CK_FUNCTION_LIST {
 
   CK_VERSION    version;  /* Cryptoki version */
 
-/* Pile all the function pointers into the CK_FUNCTION_LIST. */
-/* pkcs11f.h has all the information about the Cryptoki
- * function prototypes.
- */
+  /* Pile all the function pointers into the CK_FUNCTION_LIST. */
+  /* pkcs11f.h has all the information about the Cryptoki
+   * function prototypes.
+   */
 #include "pkcs11f.h"
 
 };

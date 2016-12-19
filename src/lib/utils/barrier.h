@@ -11,7 +11,7 @@
 #include <botan/mutex.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-#include <condition_variable>
+  #include <condition_variable>
 #endif
 
 namespace Botan {
@@ -23,21 +23,20 @@ namespace Botan {
 // m_syncs counter is incremented. m_syncs is a counter to ensure that wait()
 // can be called after a sync() even if the previously sleeping threads have
 // not awoken.)
-class Barrier
-    {
-    public:
-        explicit Barrier(int value = 0) : m_value(value), m_syncs(0) {}
+class Barrier {
+public:
+  explicit Barrier(int value = 0) : m_value(value), m_syncs(0) {}
 
-        void wait(unsigned delta);
+  void wait(unsigned delta);
 
-        void sync();
+  void sync();
 
-    private:
-        int m_value;
-        unsigned m_syncs;
-        mutex_type m_mutex;
-        std::condition_variable m_cond;
-    };
+private:
+  int m_value;
+  unsigned m_syncs;
+  mutex_type m_mutex;
+  std::condition_variable m_cond;
+};
 #endif
 
 }

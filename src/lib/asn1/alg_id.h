@@ -17,27 +17,26 @@ namespace Botan {
 /**
 * Algorithm Identifier
 */
-class BOTAN_DLL AlgorithmIdentifier final : public ASN1_Object
-   {
-   public:
-      enum Encoding_Option { USE_NULL_PARAM };
+class BOTAN_DLL AlgorithmIdentifier final : public ASN1_Object {
+public:
+  enum Encoding_Option { USE_NULL_PARAM };
 
-      void encode_into(class DER_Encoder&) const override;
-      void decode_from(class BER_Decoder&) override;
+  void encode_into(class DER_Encoder&) const override;
+  void decode_from(class BER_Decoder&) override;
 
-      AlgorithmIdentifier() {}
-      AlgorithmIdentifier(const OID&, Encoding_Option);
-      AlgorithmIdentifier(const std::string&, Encoding_Option);
+  AlgorithmIdentifier() {}
+  AlgorithmIdentifier(const OID&, Encoding_Option);
+  AlgorithmIdentifier(const std::string&, Encoding_Option);
 
-      AlgorithmIdentifier(const OID&, const std::vector<uint8_t>&);
-      AlgorithmIdentifier(const std::string&, const std::vector<uint8_t>&);
+  AlgorithmIdentifier(const OID&, const std::vector<uint8_t>&);
+  AlgorithmIdentifier(const std::string&, const std::vector<uint8_t>&);
 
-      // public member variable:
-      OID oid;
+  // public member variable:
+  OID oid;
 
-      // public member variable:
-      std::vector<uint8_t> parameters;
-   };
+  // public member variable:
+  std::vector<uint8_t> parameters;
+};
 
 /*
 * Comparison Operations

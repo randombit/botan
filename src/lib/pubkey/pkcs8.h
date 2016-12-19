@@ -17,11 +17,10 @@ namespace Botan {
 /**
 * PKCS #8 General Exception
 */
-struct BOTAN_DLL PKCS8_Exception : public Decoding_Error
-   {
-   explicit PKCS8_Exception(const std::string& error) :
-      Decoding_Error("PKCS #8: " + error) {}
-   };
+struct BOTAN_DLL PKCS8_Exception : public Decoding_Error {
+  explicit PKCS8_Exception(const std::string& error) :
+    Decoding_Error("PKCS #8: " + error) {}
+};
 
 /**
 * This namespace contains functions for handling PKCS #8 private keys
@@ -88,7 +87,7 @@ PEM_encode(const Private_Key& key,
 */
 BOTAN_DLL Private_Key* load_key(DataSource& source,
                                 RandomNumberGenerator& rng,
-                                std::function<std::string ()> get_passphrase);
+                                std::function<std::string()> get_passphrase);
 
 /** Load an encrypted key from a data source.
 * @param source the data source providing the encoded key
@@ -118,7 +117,7 @@ BOTAN_DLL Private_Key* load_key(DataSource& source,
 */
 BOTAN_DLL Private_Key* load_key(const std::string& filename,
                                 RandomNumberGenerator& rng,
-                                std::function<std::string ()> get_passphrase);
+                                std::function<std::string()> get_passphrase);
 
 /** Load an encrypted key from a file.
 * @param filename the path to the file containing the encoded key

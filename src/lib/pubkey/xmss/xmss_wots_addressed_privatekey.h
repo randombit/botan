@@ -22,46 +22,43 @@ namespace Botan {
  * XMSS_WOTS_Signature_Operation() on creation.
  **/
 class XMSS_WOTS_Addressed_PrivateKey
-   : public virtual XMSS_WOTS_Addressed_PublicKey,
-     public virtual Private_Key
-   {
-   public:
-      XMSS_WOTS_Addressed_PrivateKey(const XMSS_WOTS_PrivateKey& private_key)
-         : XMSS_WOTS_Addressed_PublicKey(private_key),
-           m_priv_key(private_key) {}
+  : public virtual XMSS_WOTS_Addressed_PublicKey,
+    public virtual Private_Key {
+public:
+  XMSS_WOTS_Addressed_PrivateKey(const XMSS_WOTS_PrivateKey& private_key)
+    : XMSS_WOTS_Addressed_PublicKey(private_key),
+      m_priv_key(private_key) {}
 
-      XMSS_WOTS_Addressed_PrivateKey(const XMSS_WOTS_PrivateKey& private_key,
-                                     const XMSS_Address& adrs)
-         : XMSS_WOTS_Addressed_PublicKey(private_key, adrs),
-           m_priv_key(private_key) {}
+  XMSS_WOTS_Addressed_PrivateKey(const XMSS_WOTS_PrivateKey& private_key,
+                                 const XMSS_Address& adrs)
+    : XMSS_WOTS_Addressed_PublicKey(private_key, adrs),
+      m_priv_key(private_key) {}
 
-      XMSS_WOTS_Addressed_PrivateKey(XMSS_WOTS_PrivateKey&& private_key)
-         : XMSS_WOTS_Addressed_PublicKey(XMSS_WOTS_PublicKey(private_key)),
-           m_priv_key(std::move(private_key)) {}
+  XMSS_WOTS_Addressed_PrivateKey(XMSS_WOTS_PrivateKey&& private_key)
+    : XMSS_WOTS_Addressed_PublicKey(XMSS_WOTS_PublicKey(private_key)),
+      m_priv_key(std::move(private_key)) {}
 
-      XMSS_WOTS_Addressed_PrivateKey(XMSS_WOTS_PrivateKey&& private_key,
-                                     XMSS_Address&& adrs)
-         : XMSS_WOTS_Addressed_PublicKey(XMSS_WOTS_PublicKey(private_key),
-                                         std::move(adrs)),
-           m_priv_key(std::move(private_key)) {}
+  XMSS_WOTS_Addressed_PrivateKey(XMSS_WOTS_PrivateKey&& private_key,
+                                 XMSS_Address&& adrs)
+    : XMSS_WOTS_Addressed_PublicKey(XMSS_WOTS_PublicKey(private_key),
+                                    std::move(adrs)),
+      m_priv_key(std::move(private_key)) {}
 
-      const XMSS_WOTS_PrivateKey& private_key() const { return m_priv_key; }
-      XMSS_WOTS_PrivateKey& private_key() { return m_priv_key; }
+  const XMSS_WOTS_PrivateKey& private_key() const { return m_priv_key; }
+  XMSS_WOTS_PrivateKey& private_key() { return m_priv_key; }
 
-      virtual AlgorithmIdentifier
-      pkcs8_algorithm_identifier() const override
-         {
-         return m_priv_key.pkcs8_algorithm_identifier();
-         }
+  virtual AlgorithmIdentifier
+  pkcs8_algorithm_identifier() const override {
+    return m_priv_key.pkcs8_algorithm_identifier();
+  }
 
-      virtual secure_vector<uint8_t> private_key_bits() const override
-         {
-         return m_priv_key.private_key_bits();
-         }
+  virtual secure_vector<uint8_t> private_key_bits() const override {
+    return m_priv_key.private_key_bits();
+  }
 
-   private:
-      XMSS_WOTS_PrivateKey m_priv_key;
-   };
+private:
+  XMSS_WOTS_PrivateKey m_priv_key;
+};
 
 }
 

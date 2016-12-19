@@ -19,11 +19,11 @@
 #include <botan/hash.h>
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
-#include <botan/hmac_drbg.h>
+  #include <botan/hmac_drbg.h>
 #endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-#include <botan/system_rng.h>
+  #include <botan/system_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
@@ -32,314 +32,283 @@
 
 namespace {
 
-class Test_Runner : public Botan_CLI::Command
-   {
-   public:
-      Test_Runner() : Command("test --threads=0 --soak=5 --run-online-tests --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
+class Test_Runner : public Botan_CLI::Command {
+public:
+  Test_Runner() :
+    Command("test --threads=0 --soak=5 --run-online-tests --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
 
-      std::string help_text() const override
-         {
-         std::ostringstream err;
+  std::string help_text() const override {
+    std::ostringstream err;
 
-         const std::string& spec = cmd_spec();
+    const std::string& spec = cmd_spec();
 
-         err << "Usage: botan-test"
-             << spec.substr(spec.find_first_of(' '), std::string::npos)
-             << "\n\nAvailable test suites\n"
-             << "----------------\n";
+    err << "Usage: botan-test"
+        << spec.substr(spec.find_first_of(' '), std::string::npos)
+        << "\n\nAvailable test suites\n"
+        << "----------------\n";
 
-         size_t line_len = 0;
+    size_t line_len = 0;
 
-         for(auto&& test : Botan_Tests::Test::registered_tests())
-            {
-            err << test << " ";
-            line_len += test.size() + 1;
+    for (auto&& test : Botan_Tests::Test::registered_tests()) {
+      err << test << " ";
+      line_len += test.size() + 1;
 
-            if(line_len > 64)
-               {
-               err << "\n";
-               line_len = 0;
-               }
-            }
+      if (line_len > 64) {
+        err << "\n";
+        line_len = 0;
+      }
+    }
 
-         if(line_len > 0)
-            {
-            err << "\n";
-            }
+    if (line_len > 0) {
+      err << "\n";
+    }
 
-         return err.str();
-         }
+    return err.str();
+  }
 
-      void go() override
-         {
-         const size_t threads = get_arg_sz("threads");
-         const size_t soak_level = get_arg_sz("soak");
-         const std::string drbg_seed = get_arg("drbg-seed");
-         const bool log_success = flag_set("log-success");
-         const bool run_online_tests = flag_set("run-online-tests");
-         const std::string data_dir = get_arg_or("data-dir", "src/tests/data");
-         const std::string pkcs11_lib = get_arg("pkcs11-lib");
+  void go() override {
+    const size_t threads = get_arg_sz("threads");
+    const size_t soak_level = get_arg_sz("soak");
+    const std::string drbg_seed = get_arg("drbg-seed");
+    const bool log_success = flag_set("log-success");
+    const bool run_online_tests = flag_set("run-online-tests");
+    const std::string data_dir = get_arg_or("data-dir", "src/tests/data");
+    const std::string pkcs11_lib = get_arg("pkcs11-lib");
 
-         std::vector<std::string> req = get_arg_list("suites");
+    std::vector<std::string> req = get_arg_list("suites");
 
-         if(req.empty())
-            {
-            /*
-            If nothing was requested on the command line, run everything. First
-            run the "essentials" to smoke test, then everything else in
-            alphabetical order.
-            */
-            req = {"block", "stream", "hash", "mac", "modes", "aead"
-                   "kdf", "pbkdf", "hmac_drbg", "x931_rng", "util"};
+    if (req.empty()) {
+      /*
+      If nothing was requested on the command line, run everything. First
+      run the "essentials" to smoke test, then everything else in
+      alphabetical order.
+      */
+      req = {"block", "stream", "hash", "mac", "modes", "aead"
+             "kdf", "pbkdf", "hmac_drbg", "x931_rng", "util"
+            };
 
-            std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
+      std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
 
-            if(pkcs11_lib.empty())
-               {
-               // do not run pkcs11 tests by default unless pkcs11-lib set
-               for(std::set<std::string>::iterator iter = all_others.begin(); iter != all_others.end();)
-                  {
-                  if((*iter).find("pkcs11") != std::string::npos)
-                     {
-                     iter = all_others.erase(iter);
-                     }
-                  else
-                     {
-                     ++iter;
-                     }
-                  }
-               }
+      if (pkcs11_lib.empty()) {
+        // do not run pkcs11 tests by default unless pkcs11-lib set
+        for (std::set<std::string>::iterator iter = all_others.begin(); iter != all_others.end();) {
+          if ((*iter).find("pkcs11") != std::string::npos) {
+            iter = all_others.erase(iter);
+          }
+          else {
+            ++iter;
+          }
+        }
+      }
 
-            for(auto f : req)
-               {
-               all_others.erase(f);
-               }
+      for (auto f : req) {
+        all_others.erase(f);
+      }
 
-            req.insert(req.end(), all_others.begin(), all_others.end());
-            }
-         else if(req.size() == 1 && req.at(0) == "pkcs11")
-            {
-            req = {"pkcs11-manage", "pkcs11-module", "pkcs11-slot", "pkcs11-session", "pkcs11-object", "pkcs11-rsa",
-                    "pkcs11-ecdsa", "pkcs11-ecdh", "pkcs11-rng", "pkcs11-x509"};
-            }
+      req.insert(req.end(), all_others.begin(), all_others.end());
+    }
+    else if (req.size() == 1 && req.at(0) == "pkcs11") {
+      req = {"pkcs11-manage", "pkcs11-module", "pkcs11-slot", "pkcs11-session", "pkcs11-object", "pkcs11-rsa",
+             "pkcs11-ecdsa", "pkcs11-ecdh", "pkcs11-rng", "pkcs11-x509"
+            };
+    }
 
-         output() << "Testing " << Botan::version_string() << "\n";
-         output() << "Starting tests";
+    output() << "Testing " << Botan::version_string() << "\n";
+    output() << "Starting tests";
 
-         if(threads > 1)
-            output() << " threads:" << threads;
+    if (threads > 1) {
+      output() << " threads:" << threads;
+    }
 
-         output() << " soak level:" << soak_level;
+    output() << " soak level:" << soak_level;
 
-         if(! pkcs11_lib.empty())
-            {
-            output() << " pkcs11 library:" << pkcs11_lib;
-            }
+    if (! pkcs11_lib.empty()) {
+      output() << " pkcs11 library:" << pkcs11_lib;
+    }
 
-         std::unique_ptr<Botan::RandomNumberGenerator> rng;
+    std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
 #if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_64)
-         std::vector<uint8_t> seed = Botan::hex_decode(drbg_seed);
-         if(seed.empty())
-            {
-            const uint64_t ts = Botan_Tests::Test::timestamp();
-            seed.resize(8);
-            Botan::store_be(ts, seed.data());
-            }
+    std::vector<uint8_t> seed = Botan::hex_decode(drbg_seed);
+    if (seed.empty()) {
+      const uint64_t ts = Botan_Tests::Test::timestamp();
+      seed.resize(8);
+      Botan::store_be(ts, seed.data());
+    }
 
-         output() << " rng:HMAC_DRBG with seed '" << Botan::hex_encode(seed) << "'";
+    output() << " rng:HMAC_DRBG with seed '" << Botan::hex_encode(seed) << "'";
 
-         // Expand out the seed to 512 bits to make the DRBG happy
-         std::unique_ptr<Botan::HashFunction> sha512(Botan::HashFunction::create("SHA-512"));
-         sha512->update(seed);
-         seed.resize(sha512->output_length());
-         sha512->final(seed.data());
+    // Expand out the seed to 512 bits to make the DRBG happy
+    std::unique_ptr<Botan::HashFunction> sha512(Botan::HashFunction::create("SHA-512"));
+    sha512->update(seed);
+    seed.resize(sha512->output_length());
+    sha512->final(seed.data());
 
-         std::unique_ptr<Botan::HMAC_DRBG> drbg(new Botan::HMAC_DRBG("SHA-384"));
-         drbg->initialize_with(seed.data(), seed.size());
-         rng.reset(new Botan::Serialized_RNG(drbg.release()));
+    std::unique_ptr<Botan::HMAC_DRBG> drbg(new Botan::HMAC_DRBG("SHA-384"));
+    drbg->initialize_with(seed.data(), seed.size());
+    rng.reset(new Botan::Serialized_RNG(drbg.release()));
 
 #else
 
-         if(drbg_seed != "")
-            throw Botan_Tests::Test_Error("HMAC_DRBG disabled in build, cannot specify DRBG seed");
+    if (drbg_seed != "") {
+      throw Botan_Tests::Test_Error("HMAC_DRBG disabled in build, cannot specify DRBG seed");
+    }
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-         output() << " rng:system";
-         rng.reset(new Botan::System_RNG);
+    output() << " rng:system";
+    rng.reset(new Botan::System_RNG);
 #elif defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-         output() << " rng:autoseeded";
-         rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
+    output() << " rng:autoseeded";
+    rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
 #endif
 
 #endif
-         output() << "\n";
+    output() << "\n";
 
-         if(rng.get() == nullptr)
-             {
-             throw Botan_Tests::Test_Error("No usable RNG enabled in build, aborting tests");
-             }
+    if (rng.get() == nullptr) {
+      throw Botan_Tests::Test_Error("No usable RNG enabled in build, aborting tests");
+    }
 
-         Botan_Tests::Test::setup_tests(soak_level, log_success, run_online_tests,
-                                        data_dir, pkcs11_lib, rng.get());
+    Botan_Tests::Test::setup_tests(soak_level, log_success, run_online_tests,
+                                   data_dir, pkcs11_lib, rng.get());
 
-         const size_t failed = run_tests(req, output(), threads);
+    const size_t failed = run_tests(req, output(), threads);
 
-         // Throw so main returns an error
-         if(failed)
-            throw Botan_Tests::Test_Error("Test suite failure");
-         }
+    // Throw so main returns an error
+    if (failed) {
+      throw Botan_Tests::Test_Error("Test suite failure");
+    }
+  }
 
-   private:
+private:
 
-      std::string report_out(const std::vector<Botan_Tests::Test::Result>& results,
-                             size_t& tests_failed,
-                             size_t& tests_ran)
-         {
-         std::ostringstream out;
+  std::string report_out(const std::vector<Botan_Tests::Test::Result>& results,
+                         size_t& tests_failed,
+                         size_t& tests_ran) {
+    std::ostringstream out;
 
-         std::map<std::string, Botan_Tests::Test::Result> combined;
-         for(auto&& result : results)
-            {
-            const std::string who = result.who();
-            auto i = combined.find(who);
-            if(i == combined.end())
-               {
-               combined.insert(std::make_pair(who, Botan_Tests::Test::Result(who)));
-               i = combined.find(who);
-               }
+    std::map<std::string, Botan_Tests::Test::Result> combined;
+    for (auto&& result : results) {
+      const std::string who = result.who();
+      auto i = combined.find(who);
+      if (i == combined.end()) {
+        combined.insert(std::make_pair(who, Botan_Tests::Test::Result(who)));
+        i = combined.find(who);
+      }
 
-            i->second.merge(result);
-            }
+      i->second.merge(result);
+    }
 
-         for(auto&& result : combined)
-            {
-            out << result.second.result_string(verbose());
-            tests_failed += result.second.tests_failed();
-            tests_ran += result.second.tests_run();
-            }
+    for (auto&& result : combined) {
+      out << result.second.result_string(verbose());
+      tests_failed += result.second.tests_failed();
+      tests_ran += result.second.tests_run();
+    }
 
-         return out.str();
-         }
+    return out.str();
+  }
 
 
-      size_t run_tests(const std::vector<std::string>& tests_to_run,
-                       std::ostream& out,
-                       size_t threads)
-         {
-         size_t tests_ran = 0, tests_failed = 0;
+  size_t run_tests(const std::vector<std::string>& tests_to_run,
+                   std::ostream& out,
+                   size_t threads) {
+    size_t tests_ran = 0, tests_failed = 0;
 
-         if(threads <= 1)
-            {
-            for(auto&& test_name : tests_to_run)
-               {
-               try {
-                  const auto results = Botan_Tests::Test::run_test(test_name, false);
-                  out << report_out(results, tests_failed, tests_ran) << std::flush;
-               }
-               catch(std::exception& e)
-                  {
-                  out << "Test " << test_name << " failed with exception " << e.what() << std::flush;
-                  }
-               }
-            }
-         else
-            {
+    if (threads <= 1) {
+      for (auto&& test_name : tests_to_run) {
+        try {
+          const auto results = Botan_Tests::Test::run_test(test_name, false);
+          out << report_out(results, tests_failed, tests_ran) << std::flush;
+        }
+        catch (std::exception& e) {
+          out << "Test " << test_name << " failed with exception " << e.what() << std::flush;
+        }
+      }
+    }
+    else {
 
-            /*
-            We're not doing this in a particularly nice way, and variance in time is
-            high so commonly we'll 'run dry' by blocking on the first future. But
-            plain C++11 <thread> is missing a lot of tools we'd need (like
-            wait_for_any on a set of futures) and there is no point pulling in an
-            additional dependency just for this. In any case it helps somewhat
-            (50-100% speedup) and provides a proof of concept for parallel testing.
-            */
+      /*
+      We're not doing this in a particularly nice way, and variance in time is
+      high so commonly we'll 'run dry' by blocking on the first future. But
+      plain C++11 <thread> is missing a lot of tools we'd need (like
+      wait_for_any on a set of futures) and there is no point pulling in an
+      additional dependency just for this. In any case it helps somewhat
+      (50-100% speedup) and provides a proof of concept for parallel testing.
+      */
 
-            typedef std::future<std::vector<Botan_Tests::Test::Result>> FutureResults;
-            std::deque<FutureResults> fut_results;
+      typedef std::future<std::vector<Botan_Tests::Test::Result>> FutureResults;
+      std::deque<FutureResults> fut_results;
 
-            for(auto&& test_name : tests_to_run)
-               {
-               auto run_it = [test_name] {
-                  try {
-                     return Botan_Tests::Test::run_test(test_name, false);
-                  }
-                  catch(std::exception& e)
-                     {
-                     Botan_Tests::Test::Result r(test_name);
-                     r.test_failure("Exception thrown", e.what());
-                     return std::vector<Botan_Tests::Test::Result>{r};
-                     }
-               };
+      for (auto&& test_name : tests_to_run) {
+        auto run_it = [test_name] {
+          try {
+            return Botan_Tests::Test::run_test(test_name, false);
+          }
+          catch (std::exception& e) {
+            Botan_Tests::Test::Result r(test_name);
+            r.test_failure("Exception thrown", e.what());
+            return std::vector<Botan_Tests::Test::Result> {r};
+          }
+        };
 
-               fut_results.push_back(std::async(std::launch::async, run_it));
+        fut_results.push_back(std::async(std::launch::async, run_it));
 
-               while(fut_results.size() > threads)
-                  {
-                  out << report_out(fut_results[0].get(), tests_failed, tests_ran) << std::flush;
-                  fut_results.pop_front();
-                  }
-               }
+        while (fut_results.size() > threads) {
+          out << report_out(fut_results[0].get(), tests_failed, tests_ran) << std::flush;
+          fut_results.pop_front();
+        }
+      }
 
-            while(fut_results.size() > 0)
-               {
-               out << report_out(fut_results[0].get(), tests_failed, tests_ran) << std::flush;
-               fut_results.pop_front();
-               }
-            }
+      while (fut_results.size() > 0) {
+        out << report_out(fut_results[0].get(), tests_failed, tests_ran) << std::flush;
+        fut_results.pop_front();
+      }
+    }
 
-         out << "Tests complete ran " << tests_ran << " tests ";
+    out << "Tests complete ran " << tests_ran << " tests ";
 
-         if(tests_failed > 0)
-            {
-            out << tests_failed << " tests failed";
-            }
-         else if(tests_ran > 0)
-            {
-            out << "all tests ok";
-            }
+    if (tests_failed > 0) {
+      out << tests_failed << " tests failed";
+    }
+    else if (tests_ran > 0) {
+      out << "all tests ok";
+    }
 
-         out << std::endl;
+    out << std::endl;
 
-         return tests_failed;
-         }
+    return tests_failed;
+  }
 
 
-   };
+};
 
 BOTAN_REGISTER_COMMAND("test", Test_Runner);
 
 }
 
-int main(int argc, char* argv[])
-   {
-   std::cerr << Botan::runtime_version_check(BOTAN_VERSION_MAJOR,
-                                             BOTAN_VERSION_MINOR,
-                                             BOTAN_VERSION_PATCH);
+int main(int argc, char* argv[]) {
+  std::cerr << Botan::runtime_version_check(BOTAN_VERSION_MAJOR,
+            BOTAN_VERSION_MINOR,
+            BOTAN_VERSION_PATCH);
 
-   try
-      {
-      std::unique_ptr<Botan_CLI::Command> cmd(Botan_CLI::Command::get_cmd("test"));
+  try {
+    std::unique_ptr<Botan_CLI::Command> cmd(Botan_CLI::Command::get_cmd("test"));
 
-      if(!cmd)
-         {
-         std::cout << "Unable to retrieve testing helper (program bug)\n"; // WTF
-         return 1;
-         }
+    if (!cmd) {
+      std::cout << "Unable to retrieve testing helper (program bug)\n"; // WTF
+      return 1;
+    }
 
-      std::vector<std::string> args(argv + 1, argv + argc);
-      return cmd->run(args);
-      }
-   catch(Botan::Exception& e)
-      {
-      std::cout << "Exiting with library exception " << e.what() << std::endl;
-      }
-   catch(std::exception& e)
-      {
-      std::cout << "Exiting with std exception " << e.what() << std::endl;
-      }
-   catch(...)
-      {
-      std::cout << "Exiting with unknown exception\n";
-      }
-   }
+    std::vector<std::string> args(argv + 1, argv + argc);
+    return cmd->run(args);
+  }
+  catch (Botan::Exception& e) {
+    std::cout << "Exiting with library exception " << e.what() << std::endl;
+  }
+  catch (std::exception& e) {
+    std::cout << "Exiting with std exception " << e.what() << std::endl;
+  }
+  catch (...) {
+    std::cout << "Exiting with unknown exception\n";
+  }
+}

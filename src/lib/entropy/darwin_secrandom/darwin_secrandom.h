@@ -15,13 +15,12 @@ namespace Botan {
 /**
 * Entropy source using SecRandomCopyBytes from Darwin's Security.framework
 */
-class Darwin_SecRandom final : public Entropy_Source
-   {
-   public:
-      std::string name() const override { return "darwin_secrandom"; }
+class Darwin_SecRandom final : public Entropy_Source {
+public:
+  std::string name() const override { return "darwin_secrandom"; }
 
-      size_t poll(RandomNumberGenerator& rng) override;
-   };
+  size_t poll(RandomNumberGenerator& rng) override;
+};
 
 }
 

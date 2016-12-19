@@ -18,29 +18,28 @@ namespace Botan {
 * Useful for Rabin-Williams, also sometimes used with RSA in
 * odd protocols.
 */
-class BOTAN_DLL EMSA_X931 final : public EMSA
-   {
-   public:
-      /**
-      * @param hash the hash function to use
-      */
-      explicit EMSA_X931(HashFunction* hash);
+class BOTAN_DLL EMSA_X931 final : public EMSA {
+public:
+  /**
+  * @param hash the hash function to use
+  */
+  explicit EMSA_X931(HashFunction* hash);
 
-      EMSA* clone() override { return new EMSA_X931(m_hash->clone()); }
-   private:
-      void update(const uint8_t[], size_t) override;
-      secure_vector<uint8_t> raw_data() override;
+  EMSA* clone() override { return new EMSA_X931(m_hash->clone()); }
+private:
+  void update(const uint8_t[], size_t) override;
+  secure_vector<uint8_t> raw_data() override;
 
-      secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
+  secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
                                      RandomNumberGenerator& rng) override;
 
-      bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
-                  size_t) override;
+  bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
+              size_t) override;
 
-      secure_vector<uint8_t> m_empty_hash;
-      std::unique_ptr<HashFunction> m_hash;
-      uint8_t m_hash_id;
-   };
+  secure_vector<uint8_t> m_empty_hash;
+  std::unique_ptr<HashFunction> m_hash;
+  uint8_t m_hash_id;
+};
 
 }
 

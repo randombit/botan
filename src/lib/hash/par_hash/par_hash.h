@@ -16,31 +16,30 @@ namespace Botan {
 /**
 * Parallel Hashes
 */
-class BOTAN_DLL Parallel final : public HashFunction
-   {
-   public:
-      void clear() override;
-      std::string name() const override;
-      HashFunction* clone() const override;
+class BOTAN_DLL Parallel final : public HashFunction {
+public:
+  void clear() override;
+  std::string name() const override;
+  HashFunction* clone() const override;
 
-      size_t output_length() const override;
+  size_t output_length() const override;
 
-      /**
-      * @param hashes a set of hashes to compute in parallel
-      * Takes ownership of all pointers
-      */
-      explicit Parallel(std::vector<std::unique_ptr<HashFunction>>& hashes);
+  /**
+  * @param hashes a set of hashes to compute in parallel
+  * Takes ownership of all pointers
+  */
+  explicit Parallel(std::vector<std::unique_ptr<HashFunction>>& hashes);
 
-      Parallel(const Parallel&) = delete;
-      Parallel& operator=(const Parallel&) = delete;
-   private:
-      Parallel() {}
+  Parallel(const Parallel&) = delete;
+  Parallel& operator=(const Parallel&) = delete;
+private:
+  Parallel() {}
 
-      void add_data(const uint8_t[], size_t) override;
-      void final_result(uint8_t[]) override;
+  void add_data(const uint8_t[], size_t) override;
+  void final_result(uint8_t[]) override;
 
-      std::vector<std::unique_ptr<HashFunction>> m_hashes;
-   };
+  std::vector<std::unique_ptr<HashFunction>> m_hashes;
+};
 
 }
 
