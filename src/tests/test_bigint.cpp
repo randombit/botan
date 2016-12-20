@@ -445,17 +445,18 @@ BOTAN_REGISTER_TEST("bn_powmod", BigInt_Powmod_Test);
 class BigInt_IsPrime_Test : public Text_Based_Test
    {
    public:
-      BigInt_IsPrime_Test() : Text_Based_Test("bn/isprime.vec", "Value,IsPrime") {}
+      BigInt_IsPrime_Test() : Text_Based_Test("bn/isprime.vec", "X") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override
          {
-         Test::Result result("BigInt IsPrime");
+         if(header != "Prime" && header != "NonPrime")
+            throw Test_Error("Bad header for prime test " + header);
 
-         const BigInt value = get_req_bn(vars, "Value");
-         const bool v_is_prime = get_req_sz(vars, "IsPrime") > 0;
+         const BigInt value = get_req_bn(vars, "X");
+         const bool is_prime = (header == "Prime");
 
-         result.test_eq("is_prime", Botan::is_prime(value, Test::rng()), v_is_prime);
-
+         Test::Result result("BigInt Test " + header);
+         result.test_eq("is_prime", Botan::is_prime(value, Test::rng()), is_prime);
          return result;
          }
    };
