@@ -672,6 +672,27 @@ Botan::BigInt Text_Based_Test::get_req_bn(const VarMap& vars,
       throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key);
       }
    }
+
+Botan::BigInt Text_Based_Test::get_opt_bn(const VarMap& vars,
+                                        const std::string& key,
+                                        const Botan::BigInt& def_value) const
+
+   {
+   auto i = vars.find(key);
+   if(i == vars.end())
+      {
+      return def_value;
+      }
+
+   try
+      {
+      return Botan::BigInt(i->second);
+      }
+   catch(std::exception&)
+      {
+      throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key);
+      }
+   }
 #endif
 
 std::string Text_Based_Test::get_next_line()

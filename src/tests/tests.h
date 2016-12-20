@@ -436,6 +436,7 @@ class Text_Based_Test : public Test
 
 #if defined(BOTAN_HAS_BIGINT)
       Botan::BigInt get_req_bn(const VarMap& vars, const std::string& key) const;
+      Botan::BigInt get_opt_bn(const VarMap& vars, const std::string& key, const Botan::BigInt& def_value) const;
 #endif
 
       std::string get_req_str(const VarMap& vars, const std::string& key) const;

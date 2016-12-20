@@ -25,7 +25,7 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
          "Diffie-Hellman",
          "pubkey/dh.vec",
          "P,G,X,Y,Msg,OutLen,K",
-         "KDF")
+         "Q,KDF")
          {}
 
       std::string default_kdf(const VarMap&) const override { return "Raw"; }
@@ -35,8 +35,17 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
          const Botan::BigInt p = get_req_bn(vars, "P");
          const Botan::BigInt g = get_req_bn(vars, "G");
          const Botan::BigInt x = get_req_bn(vars, "X");
+         const Botan::BigInt q = get_opt_bn(vars, "Q", 0);
 
-         const Botan::DL_Group grp(p, g);
+         Botan::DL_Group grp;
+         if(q == 0)
+            {
+            grp = Botan::DL_Group(p, g);
+            }
+         else
+            {
+            grp = Botan::DL_Group(p, q, g);
+            }
 
          std::unique_ptr<Botan::Private_Key> key(new Botan::DH_PrivateKey(Test::rng(), grp, x));
          return key;
