@@ -78,6 +78,27 @@ class PK_Signature_Verification_Test : public PK_Test
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override;
    };
 
+class PK_Signature_NonVerification_Test : public PK_Test
+   {
+   public:
+      PK_Signature_NonVerification_Test(const std::string& algo,
+                                        const std::string& test_src,
+                                        const std::string& required_keys,
+                                        const std::string& optional_keys = "") :
+         PK_Test(algo, test_src, required_keys, optional_keys) {}
+
+      bool clear_between_callbacks() const override { return false; }
+
+      virtual std::string default_padding(const VarMap&) const
+         {
+         throw Test_Error("No default padding scheme set for " + algo_name());
+         }
+
+      virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) = 0;
+   private:
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override;
+   };
+
 class PK_Encryption_Decryption_Test : public PK_Test
    {
    public:

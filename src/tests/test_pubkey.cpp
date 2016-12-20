@@ -197,6 +197,35 @@ PK_Signature_Verification_Test::run_one_test(const std::string&, const VarMap& v
    }
 
 Test::Result
+PK_Signature_NonVerification_Test::run_one_test(const std::string&, const VarMap& vars)
+   {
+   const std::string padding = get_opt_str(vars, "Padding", default_padding(vars));
+   const std::vector<uint8_t> message   = get_req_bin(vars, "Msg");
+   std::unique_ptr<Botan::Public_Key> pubkey = load_public_key(vars);
+
+   const std::vector<uint8_t> invalid_signature = get_req_bin(vars, "InvalidSignature");
+
+   Test::Result result(algo_name() + "/" + padding + " verify invalid signature");
+
+   for(auto&& verify_provider : possible_pk_providers())
+      {
+      std::unique_ptr<Botan::PK_Verifier> verifier;
+
+      try
+         {
+         verifier.reset(new Botan::PK_Verifier(*pubkey, padding, Botan::IEEE_1363, verify_provider));
+         result.test_eq("incorrect signature rejected", verifier->verify_message(message, invalid_signature), false);
+         }
+      catch(Botan::Lookup_Error&)
+         {
+         result.test_note("Skipping verifying with " + verify_provider);
+         }
+      }
+
+   return result;
+   }
+
+Test::Result
 PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& vars)
    {
    const std::vector<uint8_t> plaintext  = get_req_bin(vars, "Msg");

@@ -104,6 +104,26 @@ class RSA_Signature_Verify_Tests : public PK_Signature_Verification_Test
          }
    };
 
+class RSA_Signature_Verify_Invalid_Tests : public PK_Signature_NonVerification_Test
+   {
+   public:
+      RSA_Signature_Verify_Invalid_Tests() : PK_Signature_NonVerification_Test(
+         "RSA",
+         "pubkey/rsa_invalid.vec",
+         "Padding,E,N,Msg,InvalidSignature")
+         {}
+
+      std::string default_padding(const VarMap&) const override { return "Raw"; }
+
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
+         {
+         const BigInt n = get_req_bn(vars, "N");
+         const BigInt e = get_req_bn(vars, "E");
+         std::unique_ptr<Botan::Public_Key> key(new Botan::RSA_PublicKey(n, e));
+         return key;
+         }
+   };
+
 class RSA_Keygen_Tests : public PK_Key_Generation_Test
    {
    public:
@@ -114,6 +134,7 @@ class RSA_Keygen_Tests : public PK_Key_Generation_Test
 BOTAN_REGISTER_TEST("rsa_encrypt", RSA_ES_KAT_Tests);
 BOTAN_REGISTER_TEST("rsa_sign", RSA_Signature_KAT_Tests);
 BOTAN_REGISTER_TEST("rsa_verify", RSA_Signature_Verify_Tests);
+BOTAN_REGISTER_TEST("rsa_verify_invalid", RSA_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("rsa_kem", RSA_KEM_Tests);
 BOTAN_REGISTER_TEST("rsa_keygen", RSA_Keygen_Tests);
 
