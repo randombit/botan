@@ -3,7 +3,7 @@ Botan: Crypto and TLS for C++11
 
 Botan (Japanese for peony) is a cryptography library written in C++11
 and released under the permissive `Simplified BSD
-<http://botan.randombit.net/license.txt>`_ license.
+<https://botan.randombit.net/license.txt>`_ license.
 
 Botan's goal is to be the best option for cryptography in new C++ code by
 offering the tools necessary to implement a range of practical systems, such as
@@ -18,13 +18,13 @@ If you need help, open a GitHub issue, email the `mailing list
 the botan `gitter.im <https://gitter.im/libbotan/Chat>`_ channel.
 
 If you think you've found a security bug, read the `security page
-<http://botan.randombit.net/security.html>`_ for contact information
+<https://botan.randombit.net/security.html>`_ for contact information
 and procedures.
 
 .. highlight:: none
 
 For all the details on building the library, read the
-`users manual <http://botan.randombit.net/manual>`_, but basically::
+`users manual <https://botan.randombit.net/manual>`_, but basically::
 
   $ ./configure.py --help
   $ ./configure.py [probably some options]
@@ -78,11 +78,11 @@ Static analyzer status
 Download
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-See the `change notes <http://botan.randombit.net/news.html>`_ and
-`security page <http://botan.randombit.net/security.html>`_
+See the `change notes <https://botan.randombit.net/news.html>`_ and
+`security page <https://botan.randombit.net/security.html>`_
 
 All releases are signed with a
-`PGP key <http://botan.randombit.net/pgpkey.txt>`_::
+`PGP key <https://botan.randombit.net/pgpkey.txt>`_::
 
   pub   2048R/EFBADFBC 2004-10-30
         Key fingerprint = 621D AF64 11E1 851C 4CF9  A2E1 6211 EBF1 EFBA DFBC
@@ -103,8 +103,8 @@ Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and later,
 Clang 3.5 and later, and MSVC 2015 are regularly tested.
 
 The latest 1.11 release is
-`1.11.34 <http://botan.randombit.net/releases/Botan-1.11.34.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.11.34.tgz.asc>`_
+`1.11.34 <https://botan.randombit.net/releases/Botan-1.11.34.tgz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-1.11.34.tgz.asc>`_
 released on 2016-11-28
 
 Old Stable Series (1.10)
@@ -116,8 +116,8 @@ critical security updates (with all support ending on 2018-1-1), and the
 developers do not recommend its use anymore.
 
 The latest 1.10 release is
-`1.10.14 <http://botan.randombit.net/releases/Botan-1.10.14.tgz>`_
-`(sig) <http://botan.randombit.net/releases/Botan-1.10.14.tgz.asc>`_
+`1.10.14 <https://botan.randombit.net/releases/Botan-1.10.14.tgz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-1.10.14.tgz.asc>`_
 released on 2016-11-28
 
 Books and other resources
@@ -169,67 +169,52 @@ Public Key Cryptography
 
 * RSA signatures and encryption
 * DH and ECDH key agreement
-* Signature schemes DSA, ECDSA, ECGDSA, ECKCDSA, GOST 34.10-2001
-* Post-quantum XMSS (hash based) signature scheme
-* Post-quantum KEM schemes McEliece (code based) and NewHope (Ring-LWE)
+* Signature schemes ECDSA, DSA, ECGDSA, ECKCDSA, and GOST 34.10-2001
+* Post-quantum signature scheme XMSS (hash based)
+* Post-quantum key agreement schemes McEliece (code based) and NewHope (Ring-LWE)
 * ElGamal encryption
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
-Ciphers and cipher modes
+Ciphers, hashes, MACs, and checksums
 ----------------------------------------
 
 * Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, and ChaCha20Poly1305
-* Unauthenticated cipher modes CTR, CBC, XTS, CFB, OFB, and ECB
-* AES (including constant time SSSE3 and AES-NI versions)
-* AES candidates Serpent, Twofish, CAST-256
+* Cipher modes CTR, CBC, XTS, CFB, OFB
+* Block ciphers AES, Serpent, Twofish, DES/3DES, Threefish-512,
+  Blowfish, Noekeon, IDEA, CAST-128, CAST-256, XTEA, SEED, KASUMI,
+  MISTY1, GOST 28147, and Lion
 * Stream ciphers Salsa20/XSalsa20, ChaCha20, SHAKE-128, and RC4
-* DES, 3DES and DESX
-* Threefish-512, Noekeon, Blowfish, CAST-128, IDEA, XTEA
-* National/telecom block ciphers SEED, KASUMI, MISTY1, GOST 28147
-* Large block cipher construction Lion
+* Hash functions SHA-1, SHA-2, SHA-3, RIPEMD-160, Skein-512,
+  BLAKE2b, Tiger, Whirlpool, GOST 34.11, MD5, MD4
+* Hash function combiners Parallel and Comb4P
+* Authentication codes HMAC, CMAC, Poly1305, SipHash, GMAC, CBC-MAC, X9.19 DES-MAC
+* Non-cryptographic checksums Adler32, CRC24, and CRC32
 
-Hash functions and MACs
+Misc Useful Things
 ----------------------------------------
 
-* SHA-1, SHA-224, SHA-256, SHA-384, and SHA-512
-* SHA-3 (and Keccak-1600)
-* Skein-512, BLAKE2b
-* RIPEMD-160, Tiger, Whirlpool, GOST 34.11
-* Authentication codes CMAC, GMAC, HMAC, Poly1305, SipHash
-* Hash function combiners (Parallel and Comb4P)
-* Non-cryptographic checksums Adler32, CRC24, CRC32
-* Obsolete algorithms MD5, MD4, CBC-MAC, X9.19 DES-MAC
-
-Other Useful Things
-----------------------------------------
-
+* Compression API wrapping zlib, bzip2, and lzma libraries
 * Interfaces for accessing PKCS #11 and TPM hardware
 * Key derivation functions for passwords, including PBKDF2
 * Password hashing functions, including bcrypt and a PBKDF based scheme
-* General key derivation functions KDF1 and KDF2 from IEEE 1363
+* Various key derivation functions including HKDF
 * Format preserving encryption scheme FE1
 * Threshold secret sharing
 * RFC 3394 keywrapping
-* Rivest's all or nothing transform
 
 Recommended Algorithms
 ----------------------------------------
 
 * For encryption of network traffic use TLS v1.2
-
 * Packet encryption: AES-256/GCM, AES-256/OCB, Serpent/OCB, or ChaCha20Poly1305
-
 * General hash functions: SHA-256 or SHA-384
-
-* Message authentication: HMAC with SHA-256
-
-* Public Key Encryption: RSA, 2048+ bit keys, with OAEP and SHA-256
-
-* Public Key Signatures: RSA, 2048+ bit keys with PSS and SHA-512,
-  or ECDSA with P-256/SHA-256 or P-384/SHA-384
-
-* Key Agreement: ECDH P-256 or Curve25519, with KDF2(SHA-256)
-  If you are concerned about quantum computers, combine ECC with NewHope
+* Message authentication or PRF: HMAC with SHA-256
+* Key derivation function: KDF2 or HKDF
+* Public Key Encryption: RSA, 2048+ bit keys, with OAEP/SHA-256
+* Public Key Signatures: RSA, 2048+ bit keys with PSS/SHA-512,
+  or ECDSA using P-256/SHA-256 or P-521/SHA-512
+* Key Agreement: ECDH using P-256 or X25519. If you are concerned
+  about quantum computers, combine ECC with NewHope.
 
 Code coverage map
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
