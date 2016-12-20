@@ -213,6 +213,39 @@ Test::Result test_get_slot_info()
    return result;
    }
 
+SlotId get_invalid_slot_id(Module& module)
+   {
+   std::vector<SlotId> slot_vec = Slot::get_available_slots(module, false);
+
+   SlotId invalid_id = 0;
+
+   // find invalid slot id
+   while(std::find(slot_vec.begin(), slot_vec.end(), invalid_id) != slot_vec.end())
+      {
+      invalid_id++;
+      }
+
+   return invalid_id;
+   }
+
+Test::Result test_slot_invalid_id()
+   {
+   Test::Result result("Slot get_slot_info with invalid slot id");
+
+   Module module(Test::pkcs11_lib());
+
+   SlotId invalid_id = get_invalid_slot_id(module);
+
+   Slot slot(module, invalid_id);
+
+   result.test_throws("get_slot_info fails for non existent slot id", [ &slot ]()
+      {
+      slot.get_slot_info();
+      });
+
+   return result;
+   }
+
 Test::Result test_get_token_info()
    {
    Test::Result result("Slot get_token_info");
@@ -266,6 +299,7 @@ class Slot_Tests : public PKCS11_Test
             test_slot_get_available_slots,
             test_slot_ctor,
             test_get_slot_info,
+            test_slot_invalid_id,
             test_get_token_info,
             test_get_mechanism_list,
             test_get_mechanisms_info
@@ -305,6 +339,23 @@ Test::Result test_session_ctor()
       Session read_write_session(slot, false);
       result.test_success("Opened multiple sessions successfully");
       }
+
+   return result;
+   }
+
+Test::Result test_session_ctor_invalid_slot()
+   {
+   Test::Result result("Session ctor with invalid slot id");
+
+   Module module(Test::pkcs11_lib());
+
+   SlotId invalid_id = get_invalid_slot_id(module);
+   Slot slot(module, invalid_id);
+
+   result.test_throws("Session ctor with invalid slot id fails", [&slot]()
+      {
+      Session session(slot, true);
+      });
 
    return result;
    }
@@ -381,6 +432,7 @@ class Session_Tests : public PKCS11_Test
          std::vector<std::function<Test::Result()>> fns =
             {
             test_session_ctor,
+            test_session_ctor_invalid_slot,
             test_session_release,
             test_session_login_logout,
             test_session_info
