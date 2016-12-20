@@ -160,6 +160,9 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
    std::map<std::string, std::string> expected =
       read_results(Test::data_file("nist_x509/expected.txt"));
 
+   const Botan::X509_Certificate root_cert(nist_test_dir + "/root.crt");
+   const Botan::X509_CRL root_crl(nist_test_dir + "/root.crl");
+
    for(auto i = expected.begin(); i != expected.end(); ++i)
       {
       const std::string test_name = i->first;
@@ -179,6 +182,9 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
          }
 
       Botan::Certificate_Store_In_Memory store;
+
+      store.add_certificate(root_cert);
+      store.add_crl(root_crl);
 
       for(auto&& file : all_files)
          {
