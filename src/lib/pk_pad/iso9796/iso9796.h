@@ -21,15 +21,15 @@ class BOTAN_DLL ISO_9796_DS2 final : public EMSA
    public:
       /**
        * @param hash function to use
-       * @param use implicit ISO trailer
+       * @param implicit whether or not the trailer is implicit
        */
       explicit ISO_9796_DS2(HashFunction* hash, bool implicit = false) : m_hash(hash), m_implicit(implicit),
          m_SALT_SIZE(hash->output_length()) {}
 
       /**
        * @param hash function to use
-       * @param whether or not the trailer is implicit
-       * @param size of the salt to use in bytes
+       * @param implicit whether or not the trailer is implicit
+       * @param salt_size size of the salt to use in bytes
        */
       ISO_9796_DS2(HashFunction* hash, bool implicit, size_t salt_size) : m_hash(hash), m_implicit(implicit),
          m_SALT_SIZE(salt_size) {}
@@ -63,7 +63,7 @@ class BOTAN_DLL ISO_9796_DS3 final : public EMSA
    public:
       /**
        * @param hash function to use
-       * @param whether or not the trailer is implicit
+       * @param implicit whether or not the trailer is implicit
        */
       ISO_9796_DS3(HashFunction* hash, bool implicit = false) : m_hash(hash), m_implicit(implicit)
          {}
