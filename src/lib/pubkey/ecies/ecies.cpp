@@ -55,9 +55,10 @@ class ECIES_PrivateKey : public EC_PrivateKey, public PK_Key_Agreement_Key
 class ECIES_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
    {
    public:
-      ECIES_ECDH_KA_Operation(const ECIES_PrivateKey& private_key) :
+      ECIES_ECDH_KA_Operation(const ECIES_PrivateKey& private_key, RandomNumberGenerator& rng) :
          PK_Ops::Key_Agreement_with_KDF("Raw"),
-         m_key(private_key)
+         m_key(private_key),
+         m_rng(rng)
          {
          }
 
@@ -65,21 +66,23 @@ class ECIES_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
          {
          const CurveGFp& curve = m_key.domain().get_curve();
          PointGFp point = OS2ECP(w, w_len, curve);
-         PointGFp S = point * m_key.private_value();
+         Blinded_Point_Multiply blinder(point, m_key.domain().get_order());
+         PointGFp S = blinder.blinded_multiply(m_key.private_value(), m_rng);
          BOTAN_ASSERT(S.on_the_curve(), "ECDH agreed value was on the curve");
          return BigInt::encode_1363(S.get_affine_x(), curve.get_p().bytes());
          }
 
    private:
       ECIES_PrivateKey m_key;
+      RandomNumberGenerator& m_rng;
    };
 
 std::unique_ptr<PK_Ops::Key_Agreement>
-ECIES_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
+ECIES_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
                                           const std::string& /*params*/,
                                           const std::string& /*provider*/) const
    {
-   return std::unique_ptr<PK_Ops::Key_Agreement>(new ECIES_ECDH_KA_Operation(*this));
+   return std::unique_ptr<PK_Ops::Key_Agreement>(new ECIES_ECDH_KA_Operation(*this, rng));
    }
 
 /**

@@ -63,10 +63,24 @@ DL_Scheme_PrivateKey::DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
 bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,
                                     bool strong) const
    {
-   if(m_y < 2 || m_y >= group_p())
+   const BigInt& p = group_p();
+
+   if(m_y < 2 || m_y >= p)
       return false;
    if(!m_group.verify_group(rng, strong))
       return false;
+
+   try
+      {
+      const BigInt& q = group_q();
+      if(power_mod(m_y, q, p) != 1)
+         return false;
+      }
+   catch(const Invalid_State& e)
+      {
+      return true;
+      }
+
    return true;
    }
 
