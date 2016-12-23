@@ -32,6 +32,9 @@ class AEAD_Tests : public Text_Based_Test
 
          result.test_eq("AEAD encrypt output_length is correct", enc->output_length(input.size()), expected.size());
 
+         result.confirm("AEAD name is not empty", !enc->name().empty());
+         result.confirm("AEAD default nonce size is accepted", enc->valid_nonce_length(enc->default_nonce_length()));
+
          // First some tests for reset() to make sure it resets what we need it to
          // set garbage values
          enc->set_key(mutate_vec(key));
