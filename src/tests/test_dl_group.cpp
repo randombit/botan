@@ -12,6 +12,8 @@
 
 namespace Botan_Tests {
 
+#if defined(BOTAN_HAS_DL_GROUP)
+
 namespace {
 
 class DL_Group_Tests : public Test
@@ -142,5 +144,7 @@ class DL_Group_Tests : public Test
 BOTAN_REGISTER_TEST("dl_group", DL_Group_Tests);
 
 }
+
+#endif
 
 }
