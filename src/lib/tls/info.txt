@@ -11,8 +11,10 @@ tls_channel.h
 tls_ciphersuite.h
 tls_client.h
 tls_exceptn.h
+tls_extensions.h
 tls_handshake_msg.h
 tls_magic.h
+tls_messages.h
 tls_server_info.h
 tls_policy.h
 tls_server.h
@@ -22,11 +24,9 @@ tls_version.h
 </header:public>
 
 <header:internal>
-tls_extensions.h
 tls_handshake_hash.h
 tls_handshake_io.h
 tls_handshake_state.h
-tls_messages.h
 tls_reader.h
 tls_record.h
 tls_seq_numbers.h

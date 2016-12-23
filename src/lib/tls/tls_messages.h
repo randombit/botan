@@ -9,8 +9,7 @@
 #ifndef BOTAN_TLS_MESSAGES_H__
 #define BOTAN_TLS_MESSAGES_H__
 
-#include <botan/internal/tls_handshake_state.h>
-#include <botan/internal/tls_extensions.h>
+#include <botan/tls_extensions.h>
 #include <botan/tls_handshake_msg.h>
 #include <botan/tls_session.h>
 #include <botan/tls_policy.h>
@@ -37,6 +36,7 @@ namespace TLS {
 
 class Session;
 class Handshake_IO;
+class Handshake_State;
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
                                     const Policy& policy);
