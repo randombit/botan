@@ -101,8 +101,6 @@ DataSource_Memory::DataSource_Memory(const std::string& in) :
    {
    }
 
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-
 /*
 * Read from a stream
 */
@@ -176,6 +174,8 @@ std::string DataSource_Stream::id() const
    return m_identifier;
    }
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
 /*
 * DataSource_Stream Constructor
 */
@@ -194,26 +194,22 @@ DataSource_Stream::DataSource_Stream(const std::string& path,
       }
    }
 
+#endif
+
 /*
 * DataSource_Stream Constructor
 */
 DataSource_Stream::DataSource_Stream(std::istream& in,
                                      const std::string& name) :
    m_identifier(name),
-   m_source_p(nullptr),
    m_source(in),
    m_total_read(0)
    {
    }
 
-/*
-* DataSource_Stream Destructor
-*/
 DataSource_Stream::~DataSource_Stream()
    {
-   delete m_source_p;
+   // for ~unique_ptr
    }
-
-#endif
 
 }

@@ -15,7 +15,6 @@
 
 namespace Botan {
 
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /*
 * Write to a stream
 */
@@ -33,10 +32,11 @@ void DataSink_Stream::write(const uint8_t out[], size_t length)
 DataSink_Stream::DataSink_Stream(std::ostream& out,
                                  const std::string& name) :
    m_identifier(name),
-   m_sink_p(nullptr),
    m_sink(out)
    {
    }
+
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 /*
 * DataSink_Stream Constructor
@@ -44,24 +44,22 @@ DataSink_Stream::DataSink_Stream(std::ostream& out,
 DataSink_Stream::DataSink_Stream(const std::string& path,
                                  bool use_binary) :
    m_identifier(path),
-   m_sink_p(new std::ofstream(path,
-                            use_binary ? std::ios::binary : std::ios::out)),
-   m_sink(*m_sink_p)
+   m_sink_memory(new std::ofstream(path, use_binary ? std::ios::binary : std::ios::out)),
+   m_sink(*m_sink_memory)
    {
    if(!m_sink.good())
       {
-      delete m_sink_p;
       throw Stream_IO_Error("DataSink_Stream: Failure opening " + path);
       }
    }
+#endif
 
 /*
 * DataSink_Stream Destructor
 */
 DataSink_Stream::~DataSink_Stream()
    {
-   delete m_sink_p;
+   // for ~unique_ptr
    }
-#endif
 
 }

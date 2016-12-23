@@ -11,6 +11,7 @@
   #include <botan/secqueue.h>
   #include <botan/pipe.h>
   #include <botan/filters.h>
+  #include <botan/data_snk.h>
   #include <botan/comp_filter.h>
   #include <botan/cipher_filter.h>
 #endif
@@ -27,6 +28,8 @@ class Filter_Tests : public Test
          std::vector<Test::Result> results;
 
          results.push_back(test_secqueue());
+         results.push_back(test_data_src_sink());
+         results.push_back(test_pipe_io());
          results.push_back(test_pipe_hash());
          results.push_back(test_pipe_mac());
          results.push_back(test_pipe_stream());
@@ -36,7 +39,6 @@ class Filter_Tests : public Test
          results.push_back(test_fork());
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-         // Threaded_Fork is broken
          results.push_back(test_threaded_fork());
 #endif
 
@@ -76,6 +78,55 @@ class Filter_Tests : public Test
             result.test_failure("SecureQueue", e.what());
             }
 
+         return result;
+         }
+
+      Test::Result test_data_src_sink()
+         {
+         Test::Result result("DataSink");
+         std::ostringstream oss;
+
+         Botan::Pipe pipe(new Botan::Hex_Decoder, new Botan::DataSink_Stream(oss));
+
+         Botan::DataSource_Memory input_mem("65666768");
+         pipe.process_msg(input_mem);
+
+         result.test_eq("output string", oss.str(), "efgh");
+
+         Botan::DataSource_Memory input_mem2("41414141");
+         pipe.process_msg(input_mem2);
+
+         result.test_eq("output string", oss.str(), "efghAAAA");
+
+         std::istringstream iss("4343");
+         Botan::DataSource_Stream input_strm(iss);
+         pipe.process_msg(input_strm);
+
+         result.test_eq("output string", oss.str(), "efghAAAACC");
+
+         return result;
+         }
+
+      Test::Result test_pipe_io()
+         {
+         Test::Result result("Pipe I/O operators");
+
+         Botan::Pipe pipe(new Botan::Hex_Encoder);
+
+         pipe.process_msg("ABCD");
+
+         std::ostringstream oss;
+         oss << pipe;
+         result.test_eq("output string", oss.str(), "41424344");
+
+         std::istringstream iss("AAAA");
+         pipe.start_msg();
+         iss >> pipe;
+         pipe.end_msg();
+
+         pipe.set_default_msg(1);
+         oss << pipe;
+         result.test_eq("output string2", oss.str(), "4142434441414141");
          return result;
          }
 
@@ -261,10 +312,12 @@ class Filter_Tests : public Test
          Test::Result result("Pipe");
 
          Botan::Keyed_Filter* aes = nullptr;
+         const Botan::SymmetricKey some_other_key("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE");
          const Botan::SymmetricKey key("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
          const Botan::InitializationVector iv("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-         Botan::Pipe pipe(aes = new Botan::StreamCipher_Filter("CTR-BE(AES-128)", key));
+         Botan::Pipe pipe(aes = new Botan::StreamCipher_Filter("CTR-BE(AES-128)", some_other_key));
 
+         aes->set_key(key);
          aes->set_iv(iv);
 
          pipe.process_msg("ABCDEF");

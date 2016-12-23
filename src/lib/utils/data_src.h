@@ -137,8 +137,6 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       size_t m_offset;
    };
 
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-
 /**
 * This class represents a Stream-Based DataSource.
 */
@@ -154,12 +152,14 @@ class BOTAN_DLL DataSource_Stream : public DataSource
       DataSource_Stream(std::istream&,
                         const std::string& id = "<std::istream>");
 
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       /**
-      * Construct a Stream-Based DataSource from file
-      * @param file the name of the file
+      * Construct a Stream-Based DataSource from filesystem path
+      * @param file the path to the file
       * @param use_binary whether to treat the file as binary or not
       */
       DataSource_Stream(const std::string& file, bool use_binary = false);
+#endif
 
       DataSource_Stream(const DataSource_Stream&) = delete;
 
@@ -171,12 +171,11 @@ class BOTAN_DLL DataSource_Stream : public DataSource
    private:
       const std::string m_identifier;
 
+      std::unique_ptr<std::istream> m_source_memory;
       std::istream* m_source_p;
       std::istream& m_source;
       size_t m_total_read;
    };
-
-#endif
 
 }
 
