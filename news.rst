@@ -6,25 +6,30 @@ Version 1.11.35, Not Yet Released
 
 * Fix a longstanding bug in modular exponentiation which caused most
   exponentiations modulo an even number to have an incorrect result; such moduli
-  occur only rarely in cryptographic contexts. GH #754
+  occur only rarely in cryptographic contexts. (GH #754)
 
 * Fix a bug in BigInt multiply operation, introduced in 1.11.30, which could
   cause incorrect results. Found by OSS-Fuzz fuzzing the ressol function, where
   the bug manifested as an incorrect modular exponentiation. OSS-Fuzz bug #287
 
-* Changes all Public_Key derived class ctors to take a
-  std::vector instead of a secure_vector for the DER encoded
-  public key bits. (GH #768)
+* Fix a bug that meant the "ietf/modp/6144" and "ietf/modp/8192" discrete log
+  groups used an incorrect value for the generator, specifically the value
+  (p-1)/2 was used instead of the correct value of 2.
 
-* Allow use of custom extensions when creating X.509 certificates
-  (GH #744)
+* The DL_Group enum value X942_DH_PARAMETERS has been renamed
+  ANSI_X9_42_DH_PARAMETERS to avoid a conflict with Windows headers (GH #482)
 
-* Add ISO 9796-2 signature padding schemes DS2 and DS3. These schemes provide message recovery
-  (part or all of the plaintext message can be recovered from the signature alone) and are
-  used by some industry protocols. (GH #759)
+* Changes all Public_Key derived class ctors to take a std::vector instead of a
+  secure_vector for the DER encoded public key bits. (GH #768)
 
-* Rewrite all the code that handles parsing CBC padding bytes to run
-  without conditional jumps or loads. (GH #765 #728)
+* Allow use of custom extensions when creating X.509 certificates (GH #744)
+
+* Add ISO 9796-2 signature padding schemes DS2 and DS3. These schemes provide
+  message recovery (part or all of the plaintext message can be recovered from
+  the signature alone) and are used by some industry protocols. (GH #759)
+
+* Rewrite all the code that handles parsing CBC padding bytes to run without
+  conditional jumps or loads. (GH #765 #728)
 
 * Fix deref of invalid memory location in TLS client when the server chooses a
   ciphersuite value larger than the largest TLS ciphersuite ID compiled into the

@@ -170,7 +170,7 @@ const char* DL_Group::PEM_for_named_group(const std::string& name)
 
    if(name == "modp/ietf/6144")
       return
-         "-----BEGIN X942 DH PARAMETERS-----"
+         "-----BEGIN DSA PARAMETERS-----"
          "MIIGDAKCAwEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb"
          "IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft"
          "awv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXT"
@@ -204,7 +204,7 @@ const char* DL_Group::PEM_for_named_group(const std::string& name)
          "2/+sLWKl6gPZFaCqVWZHtr9fpHDsCmYvaQfAG/BTy4r3eU3xlANQ6sXb4u07eqhV"
          "HsUP3/h1jOZY0Ynqrm0rZPYXeUsZHD/0a7ceAjQCH0ezH6Qwdwlflq2Fujprc0p8"
          "jzbmIBJ//////////wIBAg=="
-         "-----END X942 DH PARAMETERS-----";
+         "-----END DSA PARAMETERS-----";
 
    if(name == "modp/srp/6144")
       return
@@ -230,7 +230,7 @@ const char* DL_Group::PEM_for_named_group(const std::string& name)
 
    if(name == "modp/ietf/8192")
       return
-         "-----BEGIN X942 DH PARAMETERS-----"
+         "-----BEGIN DSA PARAMETERS-----"
          "MIIIDAKCBAEA///////////JD9qiIWjCNMTGYouA3BzRKQJOCIpnzHQCC76mOxOb"
          "IlFKCHmONATd75UZs806QxswKwpt8l8UN0/hNW1tUcJF5IW1dmJefsb0TELppjft"
          "awv/XLb0Brft7jhr+1qJn6WunyQRfEsf5kkoZlHs5Fs9wgB8uKFjvwWY2kg2HFXT"
@@ -274,7 +274,7 @@ const char* DL_Group::PEM_for_named_group(const std::string& name)
          "gfat7p0DFZ562dE8UzaVCfwfonwW75iHcDpVtRsiy/RM0BKu4LJ5jmKEI0KO/NWk"
          "DK72v1DY6ohev3Omuf15teGPZ9E0GsgjenXDz8kgBKHFpA42a8RNABdq9xwV5IyG"
          "034BNyPKrHIjqzv01U8YKHE7K0pv5A+rdEBctziwZMBuzHbp7///////////AgEC"
-         "-----END X942 DH PARAMETERS-----";
+         "-----END DSA PARAMETERS-----";
 
    if(name == "modp/srp/8192")
       return

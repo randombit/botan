@@ -49,7 +49,7 @@ class BOTAN_DLL DL_Group
 
          DSA_PARAMETERS = ANSI_X9_57,
          DH_PARAMETERS = ANSI_X9_42,
-         X942_DH_PARAMETERS = ANSI_X9_42,
+         ANSI_X9_42_DH_PARAMETERS = ANSI_X9_42,
          PKCS3_DH_PARAMETERS = PKCS_3
       };
 
@@ -106,7 +106,7 @@ class BOTAN_DLL DL_Group
       * @param name the name that is configured in the global configuration
       * for the desired group. If no configuration file is specified,
       * the default values from the file policy.cpp will be used. For instance,
-      * use "modp/ietf/768" as name.
+      * use "modp/ietf/3072".
       */
       DL_Group(const std::string& name);
 

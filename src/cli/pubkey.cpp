@@ -192,7 +192,7 @@ class DL_Group_Info final : public Command
 
          if(flag_set("pem"))
             {
-            output() << group.PEM_encode(Botan::DL_Group::X942_DH_PARAMETERS);
+            output() << group.PEM_encode(Botan::DL_Group::ANSI_X9_42_DH_PARAMETERS);
             }
          else
             {
