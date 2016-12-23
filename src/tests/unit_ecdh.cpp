@@ -12,8 +12,6 @@
 #if defined(BOTAN_HAS_ECDH)
   #include <botan/pubkey.h>
   #include <botan/ecdh.h>
-  #include <botan/der_enc.h>
-  #include <botan/oids.h>
 #endif
 
 namespace Botan_Tests {
@@ -36,16 +34,15 @@ class ECDH_Unit_Tests : public Test
 
       Test::Result test_ecdh_normal_derivation()
          {
-         Test::Result result("ECDH kex");
+         Test::Result result("ECDH key exchange");
 
-         std::vector<std::string> oids = { "1.2.840.10045.3.1.7",
-                                           "1.3.132.0.8",
-                                           "1.2.840.10045.3.1.1" };
-         try
+         std::vector<std::string> params = { "secp256r1", "secp384r1", "secp521r1", "brainpool256r1" };
+
+         for(auto&& param : params)
             {
-            for(auto&& oid : oids)
+            try
                {
-               Botan::EC_Group dom_pars(Botan::OIDS::lookup(oid));
+               Botan::EC_Group dom_pars(param);
                Botan::ECDH_PrivateKey private_a(Test::rng(), dom_pars);
                Botan::ECDH_PrivateKey private_b(Test::rng(), dom_pars);
 
@@ -60,10 +57,10 @@ class ECDH_Unit_Tests : public Test
                   result.test_note("Keys where " + alice_key.as_string() + " and " + bob_key.as_string());
                   }
                }
-            }
-         catch(Botan::Lookup_Error&)
-            {
-            result.test_note("Skipping due to missing KFD2 or SHA-512");
+            catch(Botan::Lookup_Error& e)
+               {
+               result.test_note("Skipping because ", e.what());
+               }
             }
 
          return result;
