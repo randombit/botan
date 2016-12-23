@@ -172,7 +172,6 @@ class BOTAN_DLL DataSource_Stream : public DataSource
       const std::string m_identifier;
 
       std::unique_ptr<std::istream> m_source_memory;
-      std::istream* m_source_p;
       std::istream& m_source;
       size_t m_total_read;
    };

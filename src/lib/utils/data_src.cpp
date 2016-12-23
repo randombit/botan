@@ -182,14 +182,11 @@ std::string DataSource_Stream::id() const
 DataSource_Stream::DataSource_Stream(const std::string& path,
                                      bool use_binary) :
    m_identifier(path),
-   m_source_p(new std::ifstream(path,
-                              use_binary ? std::ios::binary : std::ios::in)),
-   m_source(*m_source_p),
+   m_source_memory(new std::ifstream(path, use_binary ? std::ios::binary : std::ios::in)),
    m_total_read(0)
    {
    if(!m_source.good())
       {
-      delete m_source_p;
       throw Stream_IO_Error("DataSource: Failure opening file " + path);
       }
    }
