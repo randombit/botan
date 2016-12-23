@@ -118,7 +118,7 @@ class DL_Group_Tests : public Test
             Botan::DL_Group group(name);
 
             // These two groups fail verification because pow(g,q,p) != 1
-            if(name != "modp/srp/1024" && name != "modp/srp/1536")
+            if(name != "modp/srp/1024" && name != "modp/srp/2048")
                {
                result.test_eq(name + " verifies", group.verify_group(rng, false), true);
                }
