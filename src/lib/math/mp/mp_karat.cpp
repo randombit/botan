@@ -17,8 +17,6 @@ namespace {
 const size_t KARATSUBA_MULTIPLY_THRESHOLD = 32;
 const size_t KARATSUBA_SQUARE_THRESHOLD = 32;
 
-namespace {
-
 /*
 * Simple O(N^2) Multiplication
 */
@@ -45,8 +43,6 @@ void basecase_mul(word z[],
       z[x_size+i] = carry;
       }
    }
-
-}
 
 /*
 * Karatsuba Multiplication Operation
