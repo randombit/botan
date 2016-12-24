@@ -7,8 +7,8 @@
 */
 
 #include <botan/tls_client.h>
+#include <botan/tls_messages.h>
 #include <botan/internal/tls_handshake_state.h>
-#include <botan/internal/tls_messages.h>
 #include <botan/internal/stl_util.h>
 #include <iterator>
 #include <sstream>

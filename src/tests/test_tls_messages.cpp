@@ -12,7 +12,8 @@
   #include <botan/mac.h>
   #include <botan/tls_ciphersuite.h>
   #include <botan/tls_handshake_msg.h>
-  #include <botan/internal/tls_messages.h>
+  #include <botan/tls_messages.h>
+  #include <botan/tls_alert.h>
 #endif
 
 namespace Botan_Tests {

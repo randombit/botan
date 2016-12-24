@@ -5,8 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/tls_messages.h>
+#include <botan/tls_messages.h>
 #include <botan/internal/tls_handshake_io.h>
+#include <botan/internal/tls_handshake_state.h>
 
 namespace Botan {
 
