@@ -8,6 +8,7 @@ Contents
    building
    python
    cli
+   versions
    firststep
    secmem
    rng
@@ -28,6 +29,6 @@ Contents
    srp
    fpe
    compression
-   versions
    ffi
    pkcs11
+   tpm
