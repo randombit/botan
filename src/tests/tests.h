@@ -328,6 +328,8 @@ class Test
 
       static std::string data_file(const std::string& what);
 
+      static std::string format_time(uint64_t nanoseconds);
+
       template<typename Alloc>
       static std::vector<uint8_t, Alloc>
       mutate_vec(const std::vector<uint8_t, Alloc>& v,
@@ -356,16 +358,16 @@ class Test
          return r;
          }
 
-      static void setup_tests(size_t soak,
-                              bool log_succcss,
+      static void setup_tests(bool log_succcss,
                               bool run_online_tests,
+                              bool run_long_tests,
                               const std::string& data_dir,
                               const std::string& pkcs11_lib,
                               Botan::RandomNumberGenerator* rng);
 
-      static size_t soak_level();
       static bool log_success();
       static bool run_online_tests();
+      static bool run_long_tests();
       static std::string pkcs11_lib();
 
       static const std::string& data_dir();
@@ -377,8 +379,7 @@ class Test
    private:
       static std::string m_data_dir;
       static Botan::RandomNumberGenerator* m_test_rng;
-      static size_t m_soak_level;
-      static bool m_log_success, m_run_online_tests;
+      static bool m_log_success, m_run_online_tests, m_run_long_tests;
       static std::string m_pkcs11_lib;
    };
 
@@ -420,6 +421,10 @@ class Text_Based_Test : public Test
 
       virtual Test::Result run_one_test(const std::string& header,
                                         const VarMap& vars) = 0;
+
+      // Called before run_one_test
+      virtual bool skip_this_test(const std::string& header,
+                                  const VarMap& vars);
 
       virtual std::vector<Test::Result> run_final_tests() { return std::vector<Test::Result>(); }
 

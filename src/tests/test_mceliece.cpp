@@ -55,11 +55,20 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
          const size_t keygen_n = get_req_sz(vars, "KeyN");
          const size_t keygen_t = get_req_sz(vars, "KeyT");
 
+         Test::Result result("McEliece keygen");
+         result.start_timer();
+
+         if(Test::run_long_tests() == false && keygen_n > 3072)
+            {
+            result.test_note("Skipping because long");
+            return result;
+            }
+
+         result.start_timer();
+
          Botan::HMAC_DRBG rng("SHA-384");
          rng.initialize_with(keygen_seed.data(), keygen_seed.size());
          Botan::McEliece_PrivateKey mce_priv(rng, keygen_n, keygen_t);
-
-         Test::Result result("McEliece keygen");
 
          result.test_eq("public key fingerprint", hash_bytes(mce_priv.public_key_bits()), fprint_pub);
          result.test_eq("private key fingerprint", hash_bytes(mce_priv.private_key_bits()), fprint_priv);
@@ -85,6 +94,7 @@ class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
             {
             }
 
+         result.end_timer();
          return result;
          }
 
@@ -147,8 +157,14 @@ class McEliece_Tests : public Test
 
          for(size_t i = 0; i < sizeof(param_sets)/sizeof(param_sets[0]); ++i)
             {
+            if(Test::run_long_tests() == false && param_sets[i].code_length >= 2048)
+               continue;
+
             for(size_t t = param_sets[i].t_min; t <= param_sets[i].t_max; ++t)
                {
+               Test::Result result("McEliece keygen");
+               result.start_timer();
+
                Botan::McEliece_PrivateKey sk1(Test::rng(), param_sets[i].code_length, t);
                const Botan::McEliece_PublicKey& pk1 = sk1;
 
@@ -158,13 +174,12 @@ class McEliece_Tests : public Test
                Botan::McEliece_PublicKey pk(pk_enc);
                Botan::McEliece_PrivateKey sk(sk_enc);
 
-               Test::Result result("McEliece keygen");
-
                result.test_eq("decoded public key equals original", fingerprint(pk1), fingerprint(pk));
-
                result.test_eq("decoded private key equals original", fingerprint(sk1), fingerprint(sk));
-
                result.test_eq("key validation passes", sk.check_key(Test::rng(), false), true);
+               result.end_timer();
+
+               result.end_timer();
 
                results.push_back(result);
 
@@ -184,11 +199,13 @@ class McEliece_Tests : public Test
                             const Botan::McEliece_PublicKey& pk)
          {
          Test::Result result("McEliece KEM");
+         result.start_timer();
 
          Botan::PK_KEM_Encryptor enc_op(pk, Test::rng(), "KDF2(SHA-256)");
          Botan::PK_KEM_Decryptor dec_op(sk, Test::rng(), "KDF2(SHA-256)");
 
-         for(size_t i = 0; i <= Test::soak_level(); i++)
+         const size_t trials = (Test::run_long_tests() ? 30 : 10);
+         for(size_t i = 0; i < trials; i++)
             {
             Botan::secure_vector<uint8_t> salt = Test::rng().random_vec(i);
 
@@ -199,6 +216,7 @@ class McEliece_Tests : public Test
 
             result.test_eq("same key", shared_key, shared_key2);
             }
+         result.end_timer();
          return result;
          }
 
@@ -207,8 +225,9 @@ class McEliece_Tests : public Test
                                const Botan::McEliece_PublicKey& pk)
          {
          Test::Result result("McEliece IES");
+         result.start_timer();
 
-         for(size_t i = 0; i <= Test::soak_level(); ++i)
+         for(size_t i = 0; i <= 10; ++i)
             {
             uint8_t ad[8];
             Botan::store_be(static_cast<uint64_t>(i), ad);
@@ -243,6 +262,7 @@ class McEliece_Tests : public Test
                }
             }
 
+         result.end_timer();
          return result;
          }
 #endif

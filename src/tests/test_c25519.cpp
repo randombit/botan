@@ -46,7 +46,7 @@ class Curve25519_Roundtrip_Test : public Test
          {
          std::vector<Test::Result> results;
 
-         for(size_t i = 0; i <= Test::soak_level(); ++i)
+         for(size_t i = 0; i < 10; ++i)
             {
             Test::Result result("Curve25519 roundtrip");
 

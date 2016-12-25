@@ -134,6 +134,8 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
       {
       Test::Result result("ECC randomized " + group_name);
 
+      result.start_timer();
+
       Botan::EC_Group group(group_name);
 
       const Botan::PointGFp& base_point = group.get_base_point();
@@ -145,7 +147,8 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
 
       try
          {
-         for(size_t i = 0; i <= Test::soak_level(); ++i)
+         const size_t trials = (Test::run_long_tests() ? 10 : 3);
+         for(size_t i = 0; i < trials; ++i)
             {
             const size_t h = 1 + (Test::rng().next_byte() % 8);
             Botan::Blinded_Point_Multiply blind(base_point, group_order, h);
@@ -171,8 +174,6 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
             result.test_eq("p on the curve", P.on_the_curve(), true);
             result.test_eq("q on the curve", Q.on_the_curve(), true);
             result.test_eq("r on the curve", R.on_the_curve(), true);
-            result.test_eq("a1 on the curve", A1.on_the_curve(), true);
-            result.test_eq("a2 on the curve", A2.on_the_curve(), true);
 
             result.test_eq("P1", P1, P);
             result.test_eq("Q1", Q1, Q);
@@ -183,6 +184,7 @@ std::vector<Test::Result> ECC_Randomized_Tests::run()
          {
          result.test_failure(group_name, e.what());
          }
+      result.end_timer();
       results.push_back(result);
       }
 
@@ -220,8 +222,11 @@ class NIST_Curve_Reduction_Tests : public Test
          Botan::secure_vector<Botan::word> ws;
 
          Test::Result result("NIST " + prime_name + " reduction");
+         result.start_timer();
 
-         for(size_t i = 0; i <= 10 * Test::soak_level(); ++i)
+         const size_t trials = (Test::run_long_tests() ? 128 : 16);
+
+         for(size_t i = 0; i <= trials; ++i)
             {
             const Botan::BigInt x = test_integer(Test::rng(), 2*p_bits, p2);
 
@@ -238,6 +243,8 @@ class NIST_Curve_Reduction_Tests : public Test
                result.test_note("failing input" + Botan::hex_encode(Botan::BigInt::encode(x)));
                }
             }
+
+         result.end_timer();
 
          return result;
          }

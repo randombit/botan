@@ -27,6 +27,22 @@ class XMSS_Signature_Tests : public PK_Signature_Generation_Test
          "Params,Msg,PrivateKey,Signature")
          {}
 
+      bool skip_this_test(const std::string&,
+                          const VarMap& vars) override
+         {
+         if(Test::run_long_tests() == false)
+            {
+            const std::string params = get_req_str(vars, "Params");
+
+            if(params == "SHAKE128_W16_H10")
+               return false;
+
+            return true;
+            }
+
+         return false;
+         }
+
       std::string default_padding(const VarMap& vars) const override
          {
          return get_req_str(vars, "Params");

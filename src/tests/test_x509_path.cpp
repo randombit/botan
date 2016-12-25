@@ -76,6 +76,7 @@ class X509test_Path_Validation_Tests : public Test
          for(auto i = expected.begin(); i != expected.end(); ++i)
             {
             Test::Result result("X509test path validation");
+            result.start_timer();
             const std::string filename = i->first;
             const std::string expected_result = i->second;
 
@@ -94,6 +95,7 @@ class X509test_Path_Validation_Tests : public Test
                path_result = Botan::Path_Validation_Result(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
 
             result.test_eq("test " + filename, path_result.result_string(), expected_result);
+            result.end_timer();
             results.push_back(result);
             }
 
@@ -171,6 +173,7 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
       const std::string test_dir = nist_test_dir + "/" + test_name;
 
       Test::Result result("NIST path validation");
+      result.start_timer();
 
       const std::vector<std::string> all_files = Botan::get_files_recursive(test_dir);
 
@@ -213,6 +216,7 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
                      validation_result.result_string(),
                      expected_result);
 
+      result.end_timer();
       results.push_back(result);
       }
 

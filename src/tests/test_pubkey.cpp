@@ -33,10 +33,12 @@ void check_invalid_signatures(Test::Result& result,
                               const std::vector<uint8_t>& message,
                               const std::vector<uint8_t>& signature)
    {
+   const size_t tests_to_run = (Test::run_long_tests() ? 20 : 5);
+
    const std::vector<uint8_t> zero_sig(signature.size());
    result.test_eq("all zero signature invalid", verifier.verify_message(message, zero_sig), false);
 
-   for(size_t i = 0; i < Test::soak_level(); ++i)
+   for(size_t i = 0; i < tests_to_run; ++i)
       {
       const std::vector<uint8_t> bad_sig = Test::mutate_vec(signature);
 
@@ -53,9 +55,11 @@ void check_invalid_ciphertexts(Test::Result& result,
                                const std::vector<uint8_t>& plaintext,
                                const std::vector<uint8_t>& ciphertext)
    {
+   const size_t tests_to_run = (Test::run_long_tests() ? 20 : 5);
+
    size_t ciphertext_accepted = 0, ciphertext_rejected = 0;
 
-   for(size_t i = 0; i < Test::soak_level(); ++i)
+   for(size_t i = 0; i < tests_to_run; ++i)
       {
       const std::vector<uint8_t> bad_ctext = Test::mutate_vec(ciphertext);
 

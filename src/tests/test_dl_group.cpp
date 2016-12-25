@@ -115,13 +115,11 @@ class DL_Group_Tests : public Test
 
          for(std::string name : dl_named)
             {
+            // Confirm we can load every group we expect
             Botan::DL_Group group(name);
 
-            // These two groups fail verification because pow(g,q,p) != 1
-            if(name != "modp/srp/1024" && name != "modp/srp/2048")
-               {
-               result.test_eq(name + " verifies", group.verify_group(rng, false), true);
-               }
+            result.test_ne("DL_Group p is set", group.get_p(), 0);
+            result.test_ne("DL_Group g is set", group.get_g(), 0);
 
             if(name.find("/srp/") == std::string::npos)
                {
@@ -134,6 +132,16 @@ class DL_Group_Tests : public Test
                   result.test_failure("Group " + name + " has no q");
                   }
                }
+
+            if(group.get_p().bits() < 2048 || Test::run_long_tests())
+               {
+               // These two groups fail verification because pow(g,q,p) != 1
+               if(name != "modp/srp/1024" && name != "modp/srp/2048")
+                  {
+                  result.test_eq(name + " verifies", group.verify_group(rng, false), true);
+                  }
+               }
+
             }
          result.end_timer();
 

@@ -36,7 +36,7 @@ class Bcrypt_Tests : public Text_Based_Test
          Test::Result result("bcrypt");
          result.test_eq("correct hash accepted", Botan::check_bcrypt(password, passhash), true);
 
-         const size_t max_level = 1 + std::min<size_t>(Test::soak_level() / 2, 10);
+         const size_t max_level = (Test::run_long_tests() ? 18 : 11);
 
          for(size_t level = 1; level <= max_level; ++level)
             {
@@ -80,7 +80,7 @@ class Passhash9_Tests : public Text_Based_Test
                }
             }
 
-         const size_t max_level = 1 + std::min<size_t>(Test::soak_level() / 2, 10);
+         const size_t max_level = (Test::run_long_tests() ? 16 : 8);
 
          for(size_t level = 1; level <= max_level; ++level)
             {

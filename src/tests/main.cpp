@@ -35,7 +35,7 @@ namespace {
 class Test_Runner : public Botan_CLI::Command
    {
    public:
-      Test_Runner() : Command("test --threads=0 --soak=5 --run-online-tests --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
+      Test_Runner() : Command("test --threads=0 --run-long-tests --run-online-tests --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
 
       std::string help_text() const override
          {
@@ -73,10 +73,10 @@ class Test_Runner : public Botan_CLI::Command
       void go() override
          {
          const size_t threads = get_arg_sz("threads");
-         const size_t soak_level = get_arg_sz("soak");
          const std::string drbg_seed = get_arg("drbg-seed");
          const bool log_success = flag_set("log-success");
          const bool run_online_tests = flag_set("run-online-tests");
+         const bool run_long_tests = flag_set("run-long-tests");
          const std::string data_dir = get_arg_or("data-dir", "src/tests/data");
          const std::string pkcs11_lib = get_arg("pkcs11-lib");
 
@@ -129,9 +129,7 @@ class Test_Runner : public Botan_CLI::Command
          if(threads > 1)
             output() << " threads:" << threads;
 
-         output() << " soak level:" << soak_level;
-
-         if(! pkcs11_lib.empty())
+         if(!pkcs11_lib.empty())
             {
             output() << " pkcs11 library:" << pkcs11_lib;
             }
@@ -180,7 +178,7 @@ class Test_Runner : public Botan_CLI::Command
              throw Botan_Tests::Test_Error("No usable RNG enabled in build, aborting tests");
              }
 
-         Botan_Tests::Test::setup_tests(soak_level, log_success, run_online_tests,
+         Botan_Tests::Test::setup_tests(log_success, run_online_tests, run_long_tests,
                                         data_dir, pkcs11_lib, rng.get());
 
          const size_t failed = run_tests(req, output(), threads);
@@ -228,6 +226,8 @@ class Test_Runner : public Botan_CLI::Command
                        size_t threads)
          {
          size_t tests_ran = 0, tests_failed = 0;
+
+         const uint64_t start_time = Botan_Tests::Test::timestamp();
 
          if(threads <= 1)
             {
@@ -288,7 +288,9 @@ class Test_Runner : public Botan_CLI::Command
                }
             }
 
-         out << "Tests complete ran " << tests_ran << " tests ";
+         const uint64_t total_ns = Botan_Tests::Test::timestamp() - start_time;
+         out << "Tests complete ran " << tests_ran << " tests in "
+             << Botan_Tests::Test::format_time(total_ns) << " ";
 
          if(tests_failed > 0)
             {
