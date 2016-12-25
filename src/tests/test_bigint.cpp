@@ -86,7 +86,7 @@ class BigInt_Unit_Tests : public Test
 
          result.start_timer();
 
-         const size_t ITERATIONS = 5000;
+         const size_t ITERATIONS = 500;
 
          std::vector<size_t> min_ranges{ 0 };
          std::vector<size_t> max_ranges{ 10 };
@@ -94,11 +94,8 @@ class BigInt_Unit_Tests : public Test
          if(Test::run_long_tests())
             {
             // This gets slow quickly:
-            min_ranges.push_back(10);
-            max_ranges.push_back(100);
-
-            min_ranges.push_back(79);
-            max_ranges.push_back(293);
+            min_ranges.push_back(7);
+            max_ranges.push_back(113);
             }
 
          for(size_t range_min : min_ranges)
