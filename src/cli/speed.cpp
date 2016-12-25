@@ -1187,10 +1187,12 @@ class Speed final : public Command
         void bench_xmss(const std::string& provider,
                         std::chrono::milliseconds msec)
          {
+         // H16 and H20 signatures take an hour or more to generate
          std::vector<std::string> xmss_params{
-            "XMSS_SHA2-512_W16_H10",
-            "XMSS_SHA2-512_W16_H16",
-            "XMSS_SHA2-512_W16_H20",
+            "XMSS_SHA2-256_W16_H10",
+            "XMSS_SHA2-256_W16_H10",
+            "XMSS_SHAKE128_W16_H10",
+            "XMSS_SHAKE256_W16_H10",
          };
 
          for(std::string params : xmss_params)
@@ -1198,7 +1200,7 @@ class Speed final : public Command
             Timer keygen_timer(params, provider, "keygen");
 
             std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
-               return new Botan::XMSS_PrivateKey(Botan::XMSS_Parameters::XMSS_SHA2_256_W16_H10, rng());
+               return new Botan::XMSS_PrivateKey(Botan::XMSS_Parameters::xmss_id_from_string(params), rng());
             }));
 
             output() << Timer::result_string_ops(keygen_timer);
