@@ -531,13 +531,15 @@ BOTAN_REGISTER_TEST("bn_invmod", BigInt_InvMod_Test);
 class DSA_ParamGen_Test : public Text_Based_Test
    {
    public:
-      DSA_ParamGen_Test() : Text_Based_Test("bn/dsa_gen.vec", "P,Q,Seed") {}
+      DSA_ParamGen_Test() : Text_Based_Test("bn/dsa_gen.vec", "P,Q,Counter,Seed") {}
 
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override
          {
          const std::vector<uint8_t> seed = get_req_bin(vars, "Seed");
-         const Botan::BigInt P = get_req_bn(vars, "P");
-         const Botan::BigInt Q = get_req_bn(vars, "Q");
+         const size_t offset = get_req_sz(vars, "Counter");
+
+         const Botan::BigInt exp_P = get_req_bn(vars, "P");
+         const Botan::BigInt exp_Q = get_req_bn(vars, "Q");
 
          const std::vector<std::string> header_parts = Botan::split_on(header, ',');
 
@@ -555,10 +557,10 @@ class DSA_ParamGen_Test : public Text_Based_Test
 
          try {
             Botan::BigInt gen_P, gen_Q;
-            if(Botan::generate_dsa_primes(Test::rng(), gen_P, gen_Q, p_bits, q_bits, seed))
+            if(Botan::generate_dsa_primes(Test::rng(), gen_P, gen_Q, p_bits, q_bits, seed, offset))
                {
-               result.test_eq("P", gen_P, P);
-               result.test_eq("Q", gen_Q, Q);
+               result.test_eq("P", gen_P, exp_P);
+               result.test_eq("Q", gen_Q, exp_Q);
                }
             else
                {

@@ -223,6 +223,7 @@ generate_dsa_primes(RandomNumberGenerator& rng,
 * @param pbits how long p will be in bits
 * @param qbits how long q will be in bits
 * @param seed the seed used to generate the parameters
+* @param offset optional offset from seed to start searching at
 * @return true if seed generated a valid DSA parameter set, otherwise
           false. p_out and q_out are only valid if true was returned.
 */
@@ -230,7 +231,8 @@ bool BOTAN_DLL
 generate_dsa_primes(RandomNumberGenerator& rng,
                     BigInt& p_out, BigInt& q_out,
                     size_t pbits, size_t qbits,
-                    const std::vector<uint8_t>& seed);
+                    const std::vector<uint8_t>& seed,
+                    size_t offset = 0);
 
 /**
 * The size of the PRIMES[] array

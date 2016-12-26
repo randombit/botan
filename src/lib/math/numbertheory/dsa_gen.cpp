@@ -39,7 +39,8 @@ bool fips186_3_valid_size(size_t pbits, size_t qbits)
 bool generate_dsa_primes(RandomNumberGenerator& rng,
                          BigInt& p, BigInt& q,
                          size_t pbits, size_t qbits,
-                         const std::vector<uint8_t>& seed_c)
+                         const std::vector<uint8_t>& seed_c,
+                         size_t offset)
    {
    if(!fips186_3_valid_size(pbits, qbits))
       throw Invalid_Argument(
@@ -98,14 +99,17 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          hash->final(&V[HASH_SIZE * (n-k)]);
          }
 
-      X.binary_decode(&V[HASH_SIZE - 1 - b/8],
-                      V.size() - (HASH_SIZE - 1 - b/8));
-      X.set_bit(pbits-1);
+      if(j >= offset)
+         {
+         X.binary_decode(&V[HASH_SIZE - 1 - b/8],
+                         V.size() - (HASH_SIZE - 1 - b/8));
+         X.set_bit(pbits-1);
 
-      p = X - (X % (2*q) - 1);
+         p = X - (X % (2*q) - 1);
 
-      if(p.bits() == pbits && is_prime(p, rng))
-         return true;
+         if(p.bits() == pbits && is_prime(p, rng))
+            return true;
+         }
       }
    return false;
    }
