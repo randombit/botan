@@ -42,21 +42,6 @@ Botan 1.10.x is supported (for security patches only) through 2017-12-31
 
 All prior versions are no longer supported in any way.
 
-Supported Targets
-----------------------------------------
-
-The primary supported targets, which are tested with every commit by
-continuous integration, are GCC and Clang on Linux/x86-64, Clang on
-OSX/x86-64, and MSVC 2015 on Windows/x86-64. We also test arm, arm64,
-and ppc64 builds via GCC cross compilation and qemu emulation, and for
-iOS cross-compilation is checked (but the tests are not run).
-
-Other processors and OSes, like MIPS and OpenBSD, are occasionally
-tested on an ad-hoc basis, but breakage is somewhat more likely.
-
-As a policy we do not support any OS which is not supported by its
-original vendor. So for example no consideration whatsoever is given
-to supporting such EOLed systems as Windows 2000 or Solaris 2.6.
 
 Ongoing Issues
 ----------------------------------------

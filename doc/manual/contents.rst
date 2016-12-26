@@ -6,6 +6,7 @@ Contents
 
    index
    building
+   platforms
    python
    cli
    versions
