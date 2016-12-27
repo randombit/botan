@@ -18,7 +18,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL XMSS_Signature
+class XMSS_Signature
    {
    public:
       /**

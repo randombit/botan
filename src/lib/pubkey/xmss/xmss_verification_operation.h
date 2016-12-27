@@ -25,7 +25,7 @@ namespace Botan {
  * Provides signature verification capabilities for Extended Hash-Based
  * Signatures (XMSS).
  **/
- class BOTAN_DLL XMSS_Verification_Operation
+ class XMSS_Verification_Operation
    : public virtual PK_Ops::Verification,
      public XMSS_Common_Ops
    {

@@ -561,7 +561,7 @@ Certificate_Status_Code PKIX::overall_status(const CertificatePathStatusCodes& c
    return overall_status;
    }
 
-Path_Validation_Result BOTAN_DLL x509_path_validate(
+Path_Validation_Result x509_path_validate(
    const std::vector<X509_Certificate>& end_certs,
    const Path_Validation_Restrictions& restrictions,
    const std::vector<Certificate_Store*>& trusted_roots,
