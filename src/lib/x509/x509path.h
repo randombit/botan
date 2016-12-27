@@ -36,18 +36,20 @@ class BOTAN_DLL Path_Validation_Restrictions
    public:
       /**
       * @param require_rev if true, revocation information is required
+
       * @param minimum_key_strength is the minimum strength (in terms of
-      *        operations, eg 80 means 2^80) of a signature. Signatures
-      *        weaker than this are rejected. If more than 80, SHA-1
-      *        signatures are also rejected.
+      *    operations, eg 80 means 2^80) of a signature. Signatures weaker than
+      *    this are rejected. If more than 80, SHA-1 signatures are also
+      *    rejected. If possible use at least setting 110.
+      *
       *        80 bit strength requires 1024 bit RSA
-      *        110 bit strength requires 2048 bit RSA
-      *        Using 128 requires ECC (P-256) or ~3000 bit RSA keys.
+      *        110 bit strength requires 2k bit RSA
+      *        128 bit strength requires ~3k bit RSA or P-256
       * @param ocsp_all_intermediates Make OCSP requests for all CAs as
       * well as end entity (if OCSP enabled in path validation request)
       */
       Path_Validation_Restrictions(bool require_rev = false,
-                                   size_t minimum_key_strength = 80,
+                                   size_t minimum_key_strength = 110,
                                    bool ocsp_all_intermediates = false);
 
       /**

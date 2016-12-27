@@ -65,7 +65,8 @@ class X509test_Path_Validation_Tests : public Test
          std::map<std::string, std::string> expected =
             read_results(Test::data_file("x509test/expected.txt"));
 
-         const Botan::Path_Validation_Restrictions default_restrictions;
+         // Current tests use SHA-1
+         const Botan::Path_Validation_Restrictions restrictions(false, 80);
 
          Botan::X509_Certificate root(Test::data_file("x509test/root.pem"));
          Botan::Certificate_Store_In_Memory trusted;
@@ -87,7 +88,7 @@ class X509test_Path_Validation_Tests : public Test
                throw Test_Error("Failed to read certs from " + filename);
 
             Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
-               certs, default_restrictions, trusted,
+               certs, restrictions, trusted,
                "www.tls.test", Botan::Usage_Type::TLS_SERVER_AUTH,
                validation_time);
 
@@ -205,7 +206,8 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
 
       Botan::X509_Certificate end_user(test_dir + "/end.crt");
 
-      Botan::Path_Validation_Restrictions restrictions(true);
+      // 1024 bit root cert
+      Botan::Path_Validation_Restrictions restrictions(true, 80);
 
       Botan::Path_Validation_Result validation_result =
          Botan::x509_path_validate(end_user,
