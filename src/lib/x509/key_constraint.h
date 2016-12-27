@@ -39,10 +39,10 @@ class Public_Key;
 * @param constraints the constraints that shall be enforced on the key
 * @throw Exception if the given constraints are not permitted for this key
 */
-BOTAN_DLL void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
+BOTAN_PUBLIC_API(2,0) void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
                                                                 Key_Constraints constraints);
 
-std::string BOTAN_DLL key_constraints_to_string(Key_Constraints);
+std::string BOTAN_PUBLIC_API(2,0) key_constraints_to_string(Key_Constraints);
 
 }
 

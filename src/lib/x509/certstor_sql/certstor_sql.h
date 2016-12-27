@@ -20,7 +20,7 @@ class RandomNumberGenerator;
 /**
  * Certificate and private key store backed by an SQL database.
  */
-class BOTAN_DLL Certificate_Store_In_SQL : public Certificate_Store
+class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_SQL : public Certificate_Store
    {
    public:
       /**

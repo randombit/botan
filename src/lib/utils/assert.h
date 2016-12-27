@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Called when an assertion fails
 */
-BOTAN_NORETURN void BOTAN_DLL assertion_failure(const char* expr_str,
+BOTAN_NORETURN void BOTAN_PUBLIC_API(2,0) assertion_failure(const char* expr_str,
                                  const char* assertion_made,
                                  const char* func,
                                  const char* file,

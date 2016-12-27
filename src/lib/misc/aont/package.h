@@ -23,10 +23,11 @@ namespace Botan {
 *        input_len + cipher->BLOCK_SIZE bytes long)
 */
 BOTAN_DEPRECATED("Possibly broken, avoid")
-void BOTAN_DLL aont_package(RandomNumberGenerator& rng,
-                            BlockCipher* cipher,
-                            const uint8_t input[], size_t input_len,
-                            uint8_t output[]);
+void BOTAN_PUBLIC_API(2,0)
+aont_package(RandomNumberGenerator& rng,
+             BlockCipher* cipher,
+             const uint8_t input[], size_t input_len,
+             uint8_t output[]);
 
 /**
 * Rivest's Package Tranform (Inversion)
@@ -37,9 +38,10 @@ void BOTAN_DLL aont_package(RandomNumberGenerator& rng,
 *        input_len - cipher->BLOCK_SIZE bytes long)
 */
 BOTAN_DEPRECATED("Possibly broken, avoid")
-void BOTAN_DLL aont_unpackage(BlockCipher* cipher,
-                              const uint8_t input[], size_t input_len,
-                              uint8_t output[]);
+void BOTAN_PUBLIC_API(2,0)
+aont_unpackage(BlockCipher* cipher,
+               const uint8_t input[], size_t input_len,
+               uint8_t output[]);
 
 }
 

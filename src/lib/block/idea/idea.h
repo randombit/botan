@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * IDEA
 */
-class BOTAN_DLL IDEA final : public Block_Cipher_Fixed_Params<8, 16>
+class BOTAN_PUBLIC_API(2,0) IDEA final : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

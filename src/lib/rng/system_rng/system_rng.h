@@ -17,12 +17,12 @@ namespace Botan {
 * operating system. For instance might be instantiated by /dev/urandom
 * or CryptGenRandom.
 */
-BOTAN_DLL RandomNumberGenerator& system_rng();
+BOTAN_PUBLIC_API(2,0) RandomNumberGenerator& system_rng();
 
 /*
 * Instantiable reference to the system RNG.
 */
-class BOTAN_DLL System_RNG final : public RandomNumberGenerator
+class BOTAN_PUBLIC_API(2,0) System_RNG final : public RandomNumberGenerator
    {
    public:
       std::string name() const override { return system_rng().name(); }

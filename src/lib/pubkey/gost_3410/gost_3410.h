@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * GOST-34.10 Public Key
 */
-class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
+class BOTAN_PUBLIC_API(2,0) GOST_3410_PublicKey : public virtual EC_PublicKey
    {
    public:
 
@@ -64,7 +64,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
 /**
 * GOST-34.10 Private Key
 */
-class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
+class BOTAN_PUBLIC_API(2,0) GOST_3410_PrivateKey : public GOST_3410_PublicKey,
                                        public EC_PrivateKey
    {
    public:

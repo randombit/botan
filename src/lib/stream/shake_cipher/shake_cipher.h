@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * SHAKE-128 XOF presented as a stream cipher
 */
-class BOTAN_DLL SHAKE_128_Cipher final : public StreamCipher
+class BOTAN_PUBLIC_API(2,0) SHAKE_128_Cipher final : public StreamCipher
    {
    public:
       SHAKE_128_Cipher();

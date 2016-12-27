@@ -23,7 +23,7 @@ namespace KeyPair {
 * @param padding the encryption padding method to use
 * @return true if consistent otherwise false
 */
-BOTAN_DLL bool
+BOTAN_PUBLIC_API(2,0) bool
 encryption_consistency_check(RandomNumberGenerator& rng,
                              const Private_Key& private_key,
                              const Public_Key& public_key,
@@ -38,7 +38,7 @@ encryption_consistency_check(RandomNumberGenerator& rng,
 * @param padding the signature padding method to use
 * @return true if consistent otherwise false
 */
-BOTAN_DLL bool
+BOTAN_PUBLIC_API(2,0) bool
 signature_consistency_check(RandomNumberGenerator& rng,
                             const Private_Key& private_key,
                             const Public_Key& public_key,

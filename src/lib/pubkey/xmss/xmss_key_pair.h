@@ -20,7 +20,7 @@ namespace Botan {
 /**
  * A pair of XMSS public and private key.
  **/
-class BOTAN_DLL XMSS_Key_Pair
+class BOTAN_PUBLIC_API(2,0) XMSS_Key_Pair
    {
    public:
       XMSS_Key_Pair(XMSS_Parameters::xmss_algorithm_t xmss_oid,

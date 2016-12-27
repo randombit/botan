@@ -22,7 +22,7 @@ namespace PKCS11 {
 class Module;
 
 /// A random generator that only fetches random from the PKCS#11 RNG
-class BOTAN_DLL PKCS11_RNG final : public Hardware_RNG
+class BOTAN_PUBLIC_API(2,0) PKCS11_RNG final : public Hardware_RNG
    {
    public:
       /// Initialize the RNG with the PKCS#11 session that provides access to the cryptoki functions

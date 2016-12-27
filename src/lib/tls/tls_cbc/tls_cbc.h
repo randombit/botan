@@ -21,7 +21,7 @@ namespace TLS {
 * TLS CBC+HMAC AEAD base class (GenericBlockCipher in TLS spec)
 * This is the weird TLS-specific mode, not for general consumption.
 */
-class BOTAN_DLL TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
+class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
    {
    public:
       size_t process(uint8_t buf[], size_t sz) override final;
@@ -102,7 +102,7 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
 /**
 * TLS_CBC_HMAC_AEAD Encryption
 */
-class BOTAN_DLL TLS_CBC_HMAC_AEAD_Encryption final : public TLS_CBC_HMAC_AEAD_Mode
+class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Encryption final : public TLS_CBC_HMAC_AEAD_Mode
    {
    public:
       /**
@@ -135,7 +135,7 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Encryption final : public TLS_CBC_HMAC_AEAD_Mo
 /**
 * TLS_CBC_HMAC_AEAD Decryption
 */
-class BOTAN_DLL TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AEAD_Mode
+class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AEAD_Mode
    {
    public:
       /**

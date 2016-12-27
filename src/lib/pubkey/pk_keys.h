@@ -21,7 +21,7 @@ class RandomNumberGenerator;
 /**
 * Public Key Base Class.
 */
-class BOTAN_DLL Public_Key
+class BOTAN_PUBLIC_API(2,0) Public_Key
    {
    public:
       Public_Key() =default;
@@ -163,7 +163,7 @@ class BOTAN_DLL Public_Key
 /**
 * Private Key Base Class
 */
-class BOTAN_DLL Private_Key : public virtual Public_Key
+class BOTAN_PUBLIC_API(2,0) Private_Key : public virtual Public_Key
    {
    public:
       Private_Key() = default;
@@ -268,7 +268,7 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
 /**
 * PK Secret Value Derivation Key
 */
-class BOTAN_DLL PK_Key_Agreement_Key : public virtual Private_Key
+class BOTAN_PUBLIC_API(2,0) PK_Key_Agreement_Key : public virtual Private_Key
    {
    public:
       /*

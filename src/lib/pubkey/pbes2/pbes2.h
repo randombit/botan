@@ -24,7 +24,7 @@ namespace Botan {
 * @param rng a random number generator
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-BOTAN_DLL pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
+BOTAN_PUBLIC_API(2,0) pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
                         const std::string& passphrase,
                         std::chrono::milliseconds msec,
                         const std::string& cipher,
@@ -75,7 +75,7 @@ BOTAN_DLL pbes2_encrypt_iter(const secure_vector<uint8_t>& key_bits,
 * @param params the PBES2 parameters
 */
 secure_vector<uint8_t>
-BOTAN_DLL pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
+BOTAN_PUBLIC_API(2,0) pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
                         const std::string& passphrase,
                         const std::vector<uint8_t>& params);
 

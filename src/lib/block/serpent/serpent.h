@@ -16,7 +16,7 @@ namespace Botan {
 * Serpent is the most conservative of the AES finalists
 * http://www.cl.cam.ac.uk/~rja14/serpent.html
 */
-class BOTAN_DLL Serpent final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
+class BOTAN_PUBLIC_API(2,0) Serpent final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

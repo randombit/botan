@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Octet String
 */
-class BOTAN_DLL OctetString
+class BOTAN_PUBLIC_API(2,0) OctetString
    {
    public:
       /**
@@ -99,7 +99,7 @@ class BOTAN_DLL OctetString
 * @param y an octet string
 * @return if x is equal to y
 */
-BOTAN_DLL bool operator==(const OctetString& x,
+BOTAN_PUBLIC_API(2,0) bool operator==(const OctetString& x,
                           const OctetString& y);
 
 /**
@@ -108,7 +108,7 @@ BOTAN_DLL bool operator==(const OctetString& x,
 * @param y an octet string
 * @return if x is not equal to y
 */
-BOTAN_DLL bool operator!=(const OctetString& x,
+BOTAN_PUBLIC_API(2,0) bool operator!=(const OctetString& x,
                           const OctetString& y);
 
 /**
@@ -117,7 +117,7 @@ BOTAN_DLL bool operator!=(const OctetString& x,
 * @param y an octet string
 * @return x concatenated with y
 */
-BOTAN_DLL OctetString operator+(const OctetString& x,
+BOTAN_PUBLIC_API(2,0) OctetString operator+(const OctetString& x,
                                 const OctetString& y);
 
 /**
@@ -126,7 +126,7 @@ BOTAN_DLL OctetString operator+(const OctetString& x,
 * @param y an octet string
 * @return x XORed with y
 */
-BOTAN_DLL OctetString operator^(const OctetString& x,
+BOTAN_PUBLIC_API(2,0) OctetString operator^(const OctetString& x,
                                 const OctetString& y);
 
 

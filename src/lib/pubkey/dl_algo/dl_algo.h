@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * This class represents discrete logarithm (DL) public keys.
 */
-class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
+class BOTAN_PUBLIC_API(2,0) DL_Scheme_PublicKey : public virtual Public_Key
    {
    public:
       bool check_key(RandomNumberGenerator& rng, bool) const override;
@@ -92,7 +92,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
 /**
 * This class represents discrete logarithm (DL) private keys.
 */
-class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
+class BOTAN_PUBLIC_API(2,0) DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
                                        public virtual Private_Key
    {
    public:

@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * BER Decoding Object
 */
-class BOTAN_DLL BER_Decoder
+class BOTAN_PUBLIC_API(2,0) BER_Decoder
    {
    public:
       BER_Object get_next_object();

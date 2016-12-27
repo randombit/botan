@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * SHA-224
 */
-class BOTAN_DLL SHA_224 final : public MDx_HashFunction
+class BOTAN_PUBLIC_API(2,0) SHA_224 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-224"; }
@@ -38,7 +38,7 @@ class BOTAN_DLL SHA_224 final : public MDx_HashFunction
 /**
 * SHA-256
 */
-class BOTAN_DLL SHA_256 final : public MDx_HashFunction
+class BOTAN_PUBLIC_API(2,0) SHA_256 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-256"; }

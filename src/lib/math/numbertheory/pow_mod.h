@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Modular Exponentiator Interface
 */
-class BOTAN_DLL Modular_Exponentiator
+class BOTAN_PUBLIC_API(2,0) Modular_Exponentiator
    {
    public:
       virtual void set_base(const BigInt&) = 0;
@@ -32,7 +32,7 @@ class BOTAN_DLL Modular_Exponentiator
 /**
 * Modular Exponentiator Proxy
 */
-class BOTAN_DLL Power_Mod
+class BOTAN_PUBLIC_API(2,0) Power_Mod
    {
    public:
 
@@ -101,7 +101,7 @@ class BOTAN_DLL Power_Mod
 /**
 * Fixed Exponent Modular Exponentiator Proxy
 */
-class BOTAN_DLL Fixed_Exponent_Power_Mod : public Power_Mod
+class BOTAN_PUBLIC_API(2,0) Fixed_Exponent_Power_Mod : public Power_Mod
    {
    public:
       BigInt operator()(const BigInt& b) const
@@ -117,7 +117,7 @@ class BOTAN_DLL Fixed_Exponent_Power_Mod : public Power_Mod
 /**
 * Fixed Base Modular Exponentiator Proxy
 */
-class BOTAN_DLL Fixed_Base_Power_Mod : public Power_Mod
+class BOTAN_PUBLIC_API(2,0) Fixed_Base_Power_Mod : public Power_Mod
    {
    public:
       BigInt operator()(const BigInt& e) const

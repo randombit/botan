@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * KDF1, from IEEE 1363
 */
-class BOTAN_DLL KDF1 final : public KDF
+class BOTAN_PUBLIC_API(2,0) KDF1 final : public KDF
    {
    public:
       std::string name() const override { return "KDF1(" + m_hash->name() + ")"; }

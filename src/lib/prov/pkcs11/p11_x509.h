@@ -24,7 +24,7 @@ namespace PKCS11 {
 class Session;
 
 /// Common attributes of all PKCS#11 X509 certificates
-class BOTAN_DLL X509_CertificateProperties final : public CertificateProperties
+class BOTAN_PUBLIC_API(2,0) X509_CertificateProperties final : public CertificateProperties
    {
    public:
       /**
@@ -87,7 +87,7 @@ class BOTAN_DLL X509_CertificateProperties final : public CertificateProperties
    };
 
 /// Represents a PKCS#11 X509 certificate
-class BOTAN_DLL PKCS11_X509_Certificate final : public Object, public X509_Certificate
+class BOTAN_PUBLIC_API(2,0) PKCS11_X509_Certificate final : public Object, public X509_Certificate
    {
    public:
       static const ObjectClass Class = ObjectClass::Certificate;

@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * This class represents a block cipher object.
 */
-class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
+class BOTAN_PUBLIC_API(2,0) BlockCipher : public SymmetricAlgorithm
    {
    public:
 

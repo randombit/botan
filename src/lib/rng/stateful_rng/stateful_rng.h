@@ -22,7 +22,7 @@ namespace Botan {
 * Not implemented by RNGs which access an external RNG, such as the
 * system PRNG or a hardware RNG.
 */
-class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
+class BOTAN_PUBLIC_API(2,0) Stateful_RNG : public RandomNumberGenerator
    {
    public:
       /**

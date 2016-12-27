@@ -21,13 +21,13 @@ class X509_Certificate;
 /**
 * This class represents X.509 Certificate Revocation Lists (CRLs).
 */
-class BOTAN_DLL X509_CRL final : public X509_Object
+class BOTAN_PUBLIC_API(2,0) X509_CRL final : public X509_Object
    {
    public:
       /**
       * This class represents CRL related errors.
       */
-      struct BOTAN_DLL X509_CRL_Error : public Exception
+      struct BOTAN_PUBLIC_API(2,0) X509_CRL_Error : public Exception
          {
          explicit X509_CRL_Error(const std::string& error) :
             Exception("X509_CRL: " + error) {}

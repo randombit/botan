@@ -23,7 +23,7 @@ namespace TLS {
 * Blocking TLS Client
 * Can be used directly, or subclass to get handshake and alert notifications
 */
-class BOTAN_DLL Blocking_Client
+class BOTAN_PUBLIC_API(2,0) Blocking_Client
    {
    public:
       /*

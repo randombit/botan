@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * IEEE P1619 XTS Mode
 */
-class BOTAN_DLL XTS_Mode : public Cipher_Mode
+class BOTAN_PUBLIC_API(2,0) XTS_Mode : public Cipher_Mode
    {
    public:
       std::string name() const override;
@@ -56,7 +56,7 @@ class BOTAN_DLL XTS_Mode : public Cipher_Mode
 /**
 * IEEE P1619 XTS Encryption
 */
-class BOTAN_DLL XTS_Encryption final : public XTS_Mode
+class BOTAN_PUBLIC_API(2,0) XTS_Encryption final : public XTS_Mode
    {
    public:
       /**
@@ -74,7 +74,7 @@ class BOTAN_DLL XTS_Encryption final : public XTS_Mode
 /**
 * IEEE P1619 XTS Decryption
 */
-class BOTAN_DLL XTS_Decryption final : public XTS_Mode
+class BOTAN_PUBLIC_API(2,0) XTS_Decryption final : public XTS_Mode
    {
    public:
       /**

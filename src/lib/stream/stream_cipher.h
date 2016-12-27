@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Base class for all stream ciphers
 */
-class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
+class BOTAN_PUBLIC_API(2,0) StreamCipher : public SymmetricAlgorithm
    {
    public:
       virtual ~StreamCipher() = default;

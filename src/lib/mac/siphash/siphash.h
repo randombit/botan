@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL SipHash final : public MessageAuthenticationCode
+class BOTAN_PUBLIC_API(2,0) SipHash final : public MessageAuthenticationCode
    {
    public:
       SipHash(size_t c = 2, size_t d = 4) : m_C(c), m_D(d) {}

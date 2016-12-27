@@ -18,7 +18,7 @@ namespace Botan {
 * @param out file descriptor for an open output stream
 * @param pipe the pipe
 */
-int BOTAN_DLL operator<<(int out, Pipe& pipe);
+int BOTAN_PUBLIC_API(2,0) operator<<(int out, Pipe& pipe);
 
 /**
 * File descriptor input operator; dumps the remaining bytes of input
@@ -26,7 +26,7 @@ int BOTAN_DLL operator<<(int out, Pipe& pipe);
 * @param in file descriptor for an open input stream
 * @param pipe the pipe
 */
-int BOTAN_DLL operator>>(int in, Pipe& pipe);
+int BOTAN_PUBLIC_API(2,0) operator>>(int in, Pipe& pipe);
 
 }
 

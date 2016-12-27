@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * HKDF from RFC 5869.
 */
-class BOTAN_DLL HKDF final : public KDF
+class BOTAN_PUBLIC_API(2,0) HKDF final : public KDF
    {
    public:
       /**
@@ -42,7 +42,7 @@ class BOTAN_DLL HKDF final : public KDF
 /**
 * HKDF Extraction Step from RFC 5869.
 */
-class BOTAN_DLL HKDF_Extract final : public KDF
+class BOTAN_PUBLIC_API(2,0) HKDF_Extract final : public KDF
    {
    public:
       /**
@@ -66,7 +66,7 @@ class BOTAN_DLL HKDF_Extract final : public KDF
 /**
 * HKDF Expansion Step from RFC 5869.
 */
-class BOTAN_DLL HKDF_Expand final : public KDF
+class BOTAN_PUBLIC_API(2,0) HKDF_Expand final : public KDF
    {
    public:
       /**

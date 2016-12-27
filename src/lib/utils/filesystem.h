@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-BOTAN_DLL std::vector<std::string> get_files_recursive(const std::string& dir);
+BOTAN_TEST_API std::vector<std::string> get_files_recursive(const std::string& dir);
 
 }
 

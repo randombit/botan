@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * This class represents an abstract data source object.
 */
-class BOTAN_DLL DataSource
+class BOTAN_PUBLIC_API(2,0) DataSource
    {
    public:
       /**
@@ -95,7 +95,7 @@ class BOTAN_DLL DataSource
 /**
 * This class represents a Memory-Based DataSource
 */
-class BOTAN_DLL DataSource_Memory : public DataSource
+class BOTAN_PUBLIC_API(2,0) DataSource_Memory : public DataSource
    {
    public:
       size_t read(uint8_t[], size_t) override;
@@ -140,7 +140,7 @@ class BOTAN_DLL DataSource_Memory : public DataSource
 /**
 * This class represents a Stream-Based DataSource.
 */
-class BOTAN_DLL DataSource_Stream : public DataSource
+class BOTAN_PUBLIC_API(2,0) DataSource_Stream : public DataSource
    {
    public:
       size_t read(uint8_t[], size_t) override;

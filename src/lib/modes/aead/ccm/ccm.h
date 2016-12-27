@@ -20,7 +20,7 @@ namespace Botan {
 * Base class for CCM encryption and decryption
 * @see RFC 3610
 */
-class BOTAN_DLL CCM_Mode : public AEAD_Mode
+class BOTAN_PUBLIC_API(2,0) CCM_Mode : public AEAD_Mode
    {
    public:
       size_t process(uint8_t buf[], size_t sz) override;
@@ -75,7 +75,7 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
 /**
 * CCM Encryption
 */
-class BOTAN_DLL CCM_Encryption final : public CCM_Mode
+class BOTAN_PUBLIC_API(2,0) CCM_Encryption final : public CCM_Mode
    {
    public:
       /**
@@ -99,7 +99,7 @@ class BOTAN_DLL CCM_Encryption final : public CCM_Mode
 /**
 * CCM Decryption
 */
-class BOTAN_DLL CCM_Decryption final : public CCM_Mode
+class BOTAN_PUBLIC_API(2,0) CCM_Decryption final : public CCM_Mode
    {
    public:
       /**

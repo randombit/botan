@@ -20,7 +20,7 @@ namespace OCSP {
 /**
 * An OCSP request.
 */
-class BOTAN_DLL Request
+class BOTAN_PUBLIC_API(2,0) Request
    {
    public:
       /**
@@ -66,7 +66,7 @@ class BOTAN_DLL Request
 *
 * Note this class is only usable as an OCSP client
 */
-class BOTAN_DLL Response
+class BOTAN_PUBLIC_API(2,0) Response
    {
    public:
       /**
@@ -175,7 +175,7 @@ BOTAN_DLL Response online_check(const X509_Certificate& issuer,
 * @param trusted_roots trusted roots for the OCSP response
 * @return OCSP response
 */
-BOTAN_DLL Response online_check(const X509_Certificate& issuer,
+BOTAN_PUBLIC_API(2,0) Response online_check(const X509_Certificate& issuer,
                                 const X509_Certificate& subject,
                                 Certificate_Store* trusted_roots);
 

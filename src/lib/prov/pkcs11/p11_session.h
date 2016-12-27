@@ -19,7 +19,7 @@ namespace PKCS11 {
 class Module;
 
 /// Represents a PKCS#11 session
-class BOTAN_DLL Session final
+class BOTAN_PUBLIC_API(2,0) Session final
    {
    public:
       /**

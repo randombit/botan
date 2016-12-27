@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * This class represents hash function (message digest) objects
 */
-class BOTAN_DLL HashFunction : public Buffered_Computation
+class BOTAN_PUBLIC_API(2,0) HashFunction : public Buffered_Computation
    {
    public:
       /**

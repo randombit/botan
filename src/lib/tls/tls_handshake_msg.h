@@ -23,7 +23,7 @@ class Handshake_Hash;
 /**
 * TLS Handshake Message Base Class
 */
-class BOTAN_DLL Handshake_Message
+class BOTAN_PUBLIC_API(2,0) Handshake_Message
    {
    public:
       /**

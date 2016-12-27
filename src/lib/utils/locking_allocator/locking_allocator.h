@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL mlock_allocator
+class BOTAN_PUBLIC_API(2,0) mlock_allocator
    {
    public:
       static mlock_allocator& instance();

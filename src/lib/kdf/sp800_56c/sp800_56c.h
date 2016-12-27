@@ -16,7 +16,7 @@ namespace Botan {
 /**
  * NIST SP 800-56C KDF
  */
-class BOTAN_DLL SP800_56C : public KDF
+class BOTAN_PUBLIC_API(2,0) SP800_56C : public KDF
    {
    public:
       std::string name() const override { return "SP800-56C(" + m_prf->name() + ")"; }

@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Block Cipher Cascade
 */
-class BOTAN_DLL Cascade_Cipher final : public BlockCipher
+class BOTAN_PUBLIC_API(2,0) Cascade_Cipher final : public BlockCipher
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

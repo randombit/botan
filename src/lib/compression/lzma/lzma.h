@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * LZMA Compression
 */
-class BOTAN_DLL LZMA_Compression final : public Stream_Compression
+class BOTAN_PUBLIC_API(2,0) LZMA_Compression final : public Stream_Compression
    {
    public:
       std::string name() const override { return "LZMA_Compression"; }
@@ -29,7 +29,7 @@ class BOTAN_DLL LZMA_Compression final : public Stream_Compression
 /**
 * LZMA Deccompression
 */
-class BOTAN_DLL LZMA_Decompression final : public Stream_Decompression
+class BOTAN_PUBLIC_API(2,0) LZMA_Decompression final : public Stream_Decompression
    {
    public:
       std::string name() const override { return "LZMA_Decompression"; }

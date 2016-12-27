@@ -29,7 +29,7 @@ namespace Botan {
 * @param ptr a pointer to memory to scrub
 * @param n the number of bytes pointed to by ptr
 */
-BOTAN_DLL void secure_scrub_memory(void* ptr, size_t n);
+BOTAN_PUBLIC_API(2,0) void secure_scrub_memory(void* ptr, size_t n);
 
 /**
 * Memory comparison, input insensitive

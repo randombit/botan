@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
+class BOTAN_PUBLIC_API(2,0) Stream_Cipher_Mode : public Cipher_Mode
    {
    public:
       /**

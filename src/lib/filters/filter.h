@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * This class represents general abstract filter objects.
 */
-class BOTAN_DLL Filter
+class BOTAN_PUBLIC_API(2,0) Filter
    {
    public:
       /**
@@ -149,7 +149,7 @@ class BOTAN_DLL Filter
 /**
 * This is the abstract Fanout_Filter base class.
 **/
-class BOTAN_DLL Fanout_Filter : public Filter
+class BOTAN_PUBLIC_API(2,0) Fanout_Filter : public Filter
    {
    protected:
       /**

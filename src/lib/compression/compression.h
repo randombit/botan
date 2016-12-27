@@ -16,7 +16,7 @@ namespace Botan {
 /*
 * Interface for a compression algorithm.
 */
-class BOTAN_DLL Compression_Algorithm
+class BOTAN_PUBLIC_API(2,0) Compression_Algorithm
    {
    public:
       /**
@@ -62,7 +62,7 @@ class BOTAN_DLL Compression_Algorithm
 /*
 * Interface for a decompression algorithm.
 */
-class BOTAN_DLL Decompression_Algorithm
+class BOTAN_PUBLIC_API(2,0) Decompression_Algorithm
    {
    public:
       /**
@@ -100,8 +100,8 @@ class BOTAN_DLL Decompression_Algorithm
       virtual ~Decompression_Algorithm() {}
    };
 
-BOTAN_DLL Compression_Algorithm* make_compressor(const std::string& type);
-BOTAN_DLL Decompression_Algorithm* make_decompressor(const std::string& type);
+BOTAN_PUBLIC_API(2,0) Compression_Algorithm* make_compressor(const std::string& type);
+BOTAN_PUBLIC_API(2,0) Decompression_Algorithm* make_decompressor(const std::string& type);
 
 /**
 * Adapts a zlib style API

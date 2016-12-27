@@ -18,7 +18,7 @@ namespace TLS {
 /**
 * SSL/TLS Alert Message
 */
-class BOTAN_DLL Alert
+class BOTAN_PUBLIC_API(2,0) Alert
    {
    public:
       /**

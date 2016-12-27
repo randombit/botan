@@ -19,7 +19,7 @@ namespace Botan {
 * implementations. Converts a password into a key using a salt
 * and iterated hashing to make brute force attacks harder.
 */
-class BOTAN_DLL PBKDF
+class BOTAN_PUBLIC_API(2,0) PBKDF
    {
    public:
       /**

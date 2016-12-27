@@ -25,7 +25,7 @@ namespace Botan {
 *        4 is HMAC(SHA-512)
 *        all other values are currently undefined
 */
-std::string BOTAN_DLL generate_passhash9(const std::string& password,
+std::string BOTAN_PUBLIC_API(2,0) generate_passhash9(const std::string& password,
                                          RandomNumberGenerator& rng,
                                          uint16_t work_factor = 10,
                                          uint8_t alg_id = 1);
@@ -35,7 +35,7 @@ std::string BOTAN_DLL generate_passhash9(const std::string& password,
 * @param password the password to check against
 * @param hash the stored hash to check against
 */
-bool BOTAN_DLL check_passhash9(const std::string& password,
+bool BOTAN_PUBLIC_API(2,0) check_passhash9(const std::string& password,
                                const std::string& hash);
 
 /**

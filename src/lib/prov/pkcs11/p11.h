@@ -850,7 +850,7 @@ using RsaPkcsPssParams = CK_RSA_PKCS_PSS_PARAMS;
 using Ecdh1DeriveParams = CK_ECDH1_DERIVE_PARAMS;
 using Date = CK_DATE;
 
-BOTAN_DLL extern ReturnValue* ThrowException;
+BOTAN_PUBLIC_API(2,0) extern ReturnValue* ThrowException;
 
 const Bbool True = CK_TRUE;
 const Bbool False = CK_FALSE;
@@ -869,7 +869,7 @@ class Slot;
 * @param so_pin PIN of the security officer. Will be set if the token is uninitialized other this has to be the current SO_PIN
 * @param pin The user PIN that will be set
 */
-BOTAN_DLL void initialize_token(Slot& slot, const std::string& label, const secure_string& so_pin,
+BOTAN_PUBLIC_API(2,0) void initialize_token(Slot& slot, const std::string& label, const secure_string& so_pin,
                                 const secure_string& pin);
 
 /**
@@ -879,7 +879,7 @@ BOTAN_DLL void initialize_token(Slot& slot, const std::string& label, const secu
 * @param new_pin The new user PIN
 */
 
-BOTAN_DLL void change_pin(Slot& slot, const secure_string& old_pin, const secure_string& new_pin);
+BOTAN_PUBLIC_API(2,0) void change_pin(Slot& slot, const secure_string& old_pin, const secure_string& new_pin);
 
 /**
 * Change SO_PIN with old SO_PIN to new SO_PIN
@@ -887,7 +887,7 @@ BOTAN_DLL void change_pin(Slot& slot, const secure_string& old_pin, const secure
 * @param old_so_pin The old SO_PIN
 * @param new_so_pin The new SO_PIN
 */
-BOTAN_DLL void change_so_pin(Slot& slot, const secure_string& old_so_pin, const secure_string& new_so_pin);
+BOTAN_PUBLIC_API(2,0) void change_so_pin(Slot& slot, const secure_string& old_so_pin, const secure_string& new_so_pin);
 
 /**
 * Sets user PIN with SO_PIN
@@ -895,10 +895,10 @@ BOTAN_DLL void change_so_pin(Slot& slot, const secure_string& old_so_pin, const 
 * @param so_pin PIN of the security officer
 * @param pin The user PIN that should be set
 */
-BOTAN_DLL void set_pin(Slot& slot, const secure_string& so_pin, const secure_string& pin);
+BOTAN_PUBLIC_API(2,0) void set_pin(Slot& slot, const secure_string& so_pin, const secure_string& pin);
 
 /// Provides access to all PKCS#11 functions
-class BOTAN_DLL LowLevel
+class BOTAN_PUBLIC_API(2,0) LowLevel
    {
    public:
       /// @param ptr the functon list pointer to use. Can be retrieved via `LowLevel::C_GetFunctionList`

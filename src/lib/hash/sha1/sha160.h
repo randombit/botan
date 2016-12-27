@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * NIST's SHA-160
 */
-class BOTAN_DLL SHA_160 final : public MDx_HashFunction
+class BOTAN_PUBLIC_API(2,0) SHA_160 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "SHA-160"; }

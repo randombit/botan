@@ -16,7 +16,7 @@ namespace Botan {
 * EMSA-Raw - sign inputs directly
 * Don't use this unless you know what you are doing.
 */
-class BOTAN_DLL EMSA_Raw final : public EMSA
+class BOTAN_PUBLIC_API(2,0) EMSA_Raw final : public EMSA
    {
    public:
       EMSA* clone() override { return new EMSA_Raw(); }

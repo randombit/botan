@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * ISO-9796-2 - Digital signature scheme 2 (probabilistic)
 */
-class BOTAN_DLL ISO_9796_DS2 final : public EMSA
+class BOTAN_PUBLIC_API(2,0) ISO_9796_DS2 final : public EMSA
    {
    public:
       /**
@@ -58,7 +58,7 @@ class BOTAN_DLL ISO_9796_DS2 final : public EMSA
 /**
 * ISO-9796-2 - Digital signature scheme 3 (deterministic)
 */
-class BOTAN_DLL ISO_9796_DS3 final : public EMSA
+class BOTAN_PUBLIC_API(2,0) ISO_9796_DS3 final : public EMSA
    {
    public:
       /**

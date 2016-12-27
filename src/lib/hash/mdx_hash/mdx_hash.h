@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * MDx Hash Function Base Class
 */
-class BOTAN_DLL MDx_HashFunction : public HashFunction
+class BOTAN_PUBLIC_API(2,0) MDx_HashFunction : public HashFunction
    {
    public:
       /**

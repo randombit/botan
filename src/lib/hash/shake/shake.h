@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * SHAKE-128
 */
-class BOTAN_DLL SHAKE_128 : public HashFunction
+class BOTAN_PUBLIC_API(2,0) SHAKE_128 : public HashFunction
    {
    public:
 
@@ -49,7 +49,7 @@ class BOTAN_DLL SHAKE_128 : public HashFunction
 /**
 * SHAKE-256
 */
-class BOTAN_DLL SHAKE_256 : public HashFunction
+class BOTAN_PUBLIC_API(2,0) SHAKE_256 : public HashFunction
    {
    public:
 

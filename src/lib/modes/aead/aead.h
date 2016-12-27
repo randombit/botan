@@ -19,7 +19,7 @@ namespace Botan {
 * which is not included in the ciphertext (for instance a sequence
 * number).
 */
-class BOTAN_DLL AEAD_Mode : public Cipher_Mode
+class BOTAN_PUBLIC_API(2,0) AEAD_Mode : public Cipher_Mode
    {
    public:
       bool authenticated() const override { return true; }
@@ -82,7 +82,7 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
 * @param name AEAD name
 * @param direction ENCRYPTION or DECRYPTION
 */
-BOTAN_DLL AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction);
+BOTAN_PUBLIC_API(2,0) AEAD_Mode* get_aead(const std::string& name, Cipher_Dir direction);
 
 }
 

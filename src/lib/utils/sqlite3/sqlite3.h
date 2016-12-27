@@ -15,7 +15,7 @@ class sqlite3_stmt;
 
 namespace Botan {
 
-class BOTAN_DLL Sqlite3_Database  : public SQL_Database
+class BOTAN_PUBLIC_API(2,0) Sqlite3_Database  : public SQL_Database
    {
    public:
       Sqlite3_Database(const std::string& file);

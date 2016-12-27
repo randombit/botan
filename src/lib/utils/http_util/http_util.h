@@ -56,39 +56,39 @@ struct Response
 /**
 * HTTP_Error Exception
 */
-struct BOTAN_DLL HTTP_Error : public Exception
+struct BOTAN_PUBLIC_API(2,0) HTTP_Error : public Exception
    {
    explicit HTTP_Error(const std::string& msg) :
       Exception("HTTP error " + msg)
       {}
    };
 
-BOTAN_DLL std::ostream& operator<<(std::ostream& o, const Response& resp);
+BOTAN_PUBLIC_API(2,0) std::ostream& operator<<(std::ostream& o, const Response& resp);
 
 typedef std::function<std::string (const std::string&, const std::string&)> http_exch_fn;
 
-BOTAN_DLL Response http_sync(http_exch_fn fn,
+BOTAN_PUBLIC_API(2,0) Response http_sync(http_exch_fn fn,
                              const std::string& verb,
                              const std::string& url,
                              const std::string& content_type,
                              const std::vector<uint8_t>& body,
                              size_t allowable_redirects);
 
-BOTAN_DLL Response http_sync(const std::string& verb,
+BOTAN_PUBLIC_API(2,0) Response http_sync(const std::string& verb,
                              const std::string& url,
                              const std::string& content_type,
                              const std::vector<uint8_t>& body,
                              size_t allowable_redirects);
 
-BOTAN_DLL Response GET_sync(const std::string& url,
+BOTAN_PUBLIC_API(2,0) Response GET_sync(const std::string& url,
                             size_t allowable_redirects = 1);
 
-BOTAN_DLL Response POST_sync(const std::string& url,
+BOTAN_PUBLIC_API(2,0) Response POST_sync(const std::string& url,
                              const std::string& content_type,
                              const std::vector<uint8_t>& body,
                              size_t allowable_redirects = 1);
 
-BOTAN_DLL std::string url_encode(const std::string& url);
+BOTAN_PUBLIC_API(2,0) std::string url_encode(const std::string& url);
 
 }
 

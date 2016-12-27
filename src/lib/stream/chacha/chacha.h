@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * DJB's ChaCha (http://cr.yp.to/chacha.html)
 */
-class BOTAN_DLL ChaCha final : public StreamCipher
+class BOTAN_PUBLIC_API(2,0) ChaCha final : public StreamCipher
    {
    public:
       StreamCipher* clone() const override { return new ChaCha(m_rounds); }

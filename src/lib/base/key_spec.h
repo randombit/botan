@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * Represents the length requirements on an algorithm key
 */
-class BOTAN_DLL Key_Length_Specification
+class BOTAN_PUBLIC_API(2,0) Key_Length_Specification
    {
    public:
       /**

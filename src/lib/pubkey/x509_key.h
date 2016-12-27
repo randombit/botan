@@ -30,21 +30,21 @@ namespace X509 {
 * @param key the public key to encode
 * @return BER encoding of this key
 */
-BOTAN_DLL std::vector<uint8_t> BER_encode(const Public_Key& key);
+BOTAN_PUBLIC_API(2,0) std::vector<uint8_t> BER_encode(const Public_Key& key);
 
 /**
 * PEM encode a public key into a string.
 * @param key the key to encode
 * @return PEM encoded key
 */
-BOTAN_DLL std::string PEM_encode(const Public_Key& key);
+BOTAN_PUBLIC_API(2,0) std::string PEM_encode(const Public_Key& key);
 
 /**
 * Create a public key from a data source.
 * @param source the source providing the DER or PEM encoded key
 * @return new public key object
 */
-BOTAN_DLL Public_Key* load_key(DataSource& source);
+BOTAN_PUBLIC_API(2,0) Public_Key* load_key(DataSource& source);
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /**
@@ -52,7 +52,7 @@ BOTAN_DLL Public_Key* load_key(DataSource& source);
 * @param filename pathname to the file to load
 * @return new public key object
 */
-BOTAN_DLL Public_Key* load_key(const std::string& filename);
+BOTAN_PUBLIC_API(2,0) Public_Key* load_key(const std::string& filename);
 #endif
 
 /**
@@ -60,14 +60,14 @@ BOTAN_DLL Public_Key* load_key(const std::string& filename);
 * @param enc the memory region containing the DER or PEM encoded key
 * @return new public key object
 */
-BOTAN_DLL Public_Key* load_key(const std::vector<uint8_t>& enc);
+BOTAN_PUBLIC_API(2,0) Public_Key* load_key(const std::vector<uint8_t>& enc);
 
 /**
 * Copy a key.
 * @param key the public key to copy
 * @return new public key object
 */
-BOTAN_DLL Public_Key* copy_key(const Public_Key& key);
+BOTAN_PUBLIC_API(2,0) Public_Key* copy_key(const Public_Key& key);
 
 }
 

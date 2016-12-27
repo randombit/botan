@@ -24,7 +24,7 @@ namespace Botan {
 /** A Winternitz One Time Signature private key for use with Extended Hash-Based
  * Signatures.
  **/
-class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
+class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
                                        public virtual Private_Key
    {
    public:

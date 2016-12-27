@@ -24,7 +24,7 @@ namespace TLS {
 /**
 * Class representing a TLS session state
 */
-class BOTAN_DLL Session
+class BOTAN_PUBLIC_API(2,0) Session
    {
    public:
 

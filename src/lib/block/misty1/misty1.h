@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * MISTY1 with 8 rounds
 */
-class BOTAN_DLL MISTY1 final : public Block_Cipher_Fixed_Params<8, 16>
+class BOTAN_PUBLIC_API(2,0) MISTY1 final : public Block_Cipher_Fixed_Params<8, 16>
    {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;

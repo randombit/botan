@@ -25,7 +25,7 @@ namespace PKCS11 {
 class Module;
 
 /// Helper class to build the Attribute / CK_ATTRIBUTE structures
-class BOTAN_DLL AttributeContainer
+class BOTAN_PUBLIC_API(2,0) AttributeContainer
    {
    public:
       AttributeContainer() = default;
@@ -128,7 +128,7 @@ class BOTAN_DLL AttributeContainer
    };
 
 /// Manages calls to C_FindObjects* functions (C_FindObjectsInit -> C_FindObjects -> C_FindObjectsFinal)
-class BOTAN_DLL ObjectFinder final
+class BOTAN_PUBLIC_API(2,0) ObjectFinder final
    {
    public:
       /**
@@ -173,7 +173,7 @@ class BOTAN_DLL ObjectFinder final
    };
 
 /// Common attributes of all objects
-class BOTAN_DLL ObjectProperties : public AttributeContainer
+class BOTAN_PUBLIC_API(2,0) ObjectProperties : public AttributeContainer
    {
    public:
       /// @param object_class the object class of the object
@@ -190,7 +190,7 @@ class BOTAN_DLL ObjectProperties : public AttributeContainer
    };
 
 /// Common attributes of all storage objects
-class BOTAN_DLL StorageObjectProperties : public ObjectProperties
+class BOTAN_PUBLIC_API(2,0) StorageObjectProperties : public ObjectProperties
    {
    public:
       /// @param object_class the CK_OBJECT_CLASS this storage object belongs to
@@ -237,7 +237,7 @@ class BOTAN_DLL StorageObjectProperties : public ObjectProperties
    };
 
 /// Common attributes of all data objects
-class BOTAN_DLL DataObjectProperties : public StorageObjectProperties
+class BOTAN_PUBLIC_API(2,0) DataObjectProperties : public StorageObjectProperties
    {
    public:
       DataObjectProperties();
@@ -262,7 +262,7 @@ class BOTAN_DLL DataObjectProperties : public StorageObjectProperties
    };
 
 /// Common attributes of all certificate objects
-class BOTAN_DLL CertificateProperties : public StorageObjectProperties
+class BOTAN_PUBLIC_API(2,0) CertificateProperties : public StorageObjectProperties
    {
    public:
       /// @param cert_type type of certificate
@@ -318,7 +318,7 @@ class BOTAN_DLL CertificateProperties : public StorageObjectProperties
    };
 
 /// Common attributes of all key objects
-class BOTAN_DLL KeyProperties : public StorageObjectProperties
+class BOTAN_PUBLIC_API(2,0) KeyProperties : public StorageObjectProperties
    {
    public:
       /**
@@ -371,7 +371,7 @@ class BOTAN_DLL KeyProperties : public StorageObjectProperties
    };
 
 /// Common attributes of all public key objects
-class BOTAN_DLL PublicKeyProperties : public KeyProperties
+class BOTAN_PUBLIC_API(2,0) PublicKeyProperties : public KeyProperties
    {
    public:
       /// @param key_type type of key
@@ -435,7 +435,7 @@ class BOTAN_DLL PublicKeyProperties : public KeyProperties
    };
 
 /// Common attributes of all private keys
-class BOTAN_DLL PrivateKeyProperties : public KeyProperties
+class BOTAN_PUBLIC_API(2,0) PrivateKeyProperties : public KeyProperties
    {
    public:
       /// @param key_type type of key
@@ -514,7 +514,7 @@ class BOTAN_DLL PrivateKeyProperties : public KeyProperties
    };
 
 /// Common attributes of all secret (symmetric) keys
-class BOTAN_DLL SecretKeyProperties : public KeyProperties
+class BOTAN_PUBLIC_API(2,0) SecretKeyProperties : public KeyProperties
    {
    public:
       /// @param key_type type of key
@@ -619,7 +619,7 @@ class BOTAN_DLL SecretKeyProperties : public KeyProperties
    };
 
 /// Common attributes of domain parameter
-class BOTAN_DLL DomainParameterProperties : public StorageObjectProperties
+class BOTAN_PUBLIC_API(2,0) DomainParameterProperties : public StorageObjectProperties
    {
    public:
       /// @param key_type type of key the domain parameters can be used to generate
@@ -638,7 +638,7 @@ class BOTAN_DLL DomainParameterProperties : public StorageObjectProperties
 /**
 * Represents a PKCS#11 object.
 */
-class BOTAN_DLL Object
+class BOTAN_PUBLIC_API(2,0) Object
    {
    public:
       /**

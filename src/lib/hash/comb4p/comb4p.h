@@ -16,7 +16,7 @@ namespace Botan {
 * Combines two hash functions using a Feistel scheme. Described in
 * "On the Security of Hash Function Combiners", Anja Lehmann
 */
-class BOTAN_DLL Comb4P final : public HashFunction
+class BOTAN_PUBLIC_API(2,0) Comb4P final : public HashFunction
    {
    public:
       /**

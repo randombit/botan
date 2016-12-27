@@ -15,7 +15,7 @@ namespace Botan {
 /**
 * MD4
 */
-class BOTAN_DLL MD4 final : public MDx_HashFunction
+class BOTAN_PUBLIC_API(2,0) MD4 final : public MDx_HashFunction
    {
    public:
       std::string name() const override { return "MD4"; }

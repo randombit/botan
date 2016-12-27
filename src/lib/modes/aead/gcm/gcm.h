@@ -20,7 +20,7 @@ class GHASH;
 /**
 * GCM Mode
 */
-class BOTAN_DLL GCM_Mode : public AEAD_Mode
+class BOTAN_PUBLIC_API(2,0) GCM_Mode : public AEAD_Mode
    {
    public:
       void set_associated_data(const uint8_t ad[], size_t ad_len) override;
@@ -60,7 +60,7 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
 /**
 * GCM Encryption
 */
-class BOTAN_DLL GCM_Encryption final : public GCM_Mode
+class BOTAN_PUBLIC_API(2,0) GCM_Encryption final : public GCM_Mode
    {
    public:
       /**
@@ -83,7 +83,7 @@ class BOTAN_DLL GCM_Encryption final : public GCM_Mode
 /**
 * GCM Decryption
 */
-class BOTAN_DLL GCM_Decryption final : public GCM_Mode
+class BOTAN_PUBLIC_API(2,0) GCM_Decryption final : public GCM_Mode
    {
    public:
       /**
@@ -110,7 +110,7 @@ class BOTAN_DLL GCM_Decryption final : public GCM_Mode
 * GCM's GHASH
 * Maybe a Transform?
 */
-class BOTAN_DLL GHASH : public SymmetricAlgorithm
+class BOTAN_PUBLIC_API(2,0) GHASH : public SymmetricAlgorithm
    {
    public:
       void set_associated_data(const uint8_t ad[], size_t ad_len);
