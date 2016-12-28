@@ -1121,15 +1121,22 @@ class TLS_Unit_Tests : public Test
 
 #if defined(BOTAN_HAS_CAMELLIA)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "RSA", "Camellia-128", "SHA-256");
-         test_modern_versions(results, *client_ses, *server_ses, *creds, "RSA", "Camellia-256", "SHA-384");
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "RSA", "Camellia-256", "SHA-384 SHA-256");
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "Camellia-128/GCM", "AEAD");
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "Camellia-256/GCM", "AEAD");
 #endif
 
 #if defined(BOTAN_HAS_CECPQ1)
+
+#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "CECPQ1", "AES-256/GCM", "AEAD");
+#endif
+
+#if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "CECPQ1", "ChaCha20Poly1305", "AEAD",
                               { { "signature_methods", "RSA" }});
+#endif
+
 #endif
 
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
