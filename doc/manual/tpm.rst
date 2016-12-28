@@ -28,9 +28,9 @@ using ``shared_ptr`` to remove this problem.
 
     .. cpp:function:: TPM_Context(pin_cb cb, const char* srk_password)
 
-     The PIN callback takes a std::string as an argument, which is
-     an informative message for the user. It should return a string
-     containing the PIN entered by the user.
+     The (somewhat improperly named) pin_cb callback type takes a std::string as
+     an argument, which is an informative message for the user. It should return
+     a string containing the password entered by the user.
 
      Normally the SRK password is null. Use nullptr to signal this.
 
@@ -42,7 +42,7 @@ off, you can use it with ``TPM_RNG`` which implements the standard
 
    .. cpp:function:: TPM_RNG(TPM_Context& ctx)
 
-      Initialze a TPM RNG object. After initialization, reading from
+      Initialize a TPM RNG object. After initialization, reading from
       this RNG reads from the hardware? RNG on the TPM.
 
 The v1.2 TPM uses only RSA, but because this key is implemented completely in
