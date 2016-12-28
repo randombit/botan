@@ -1,0 +1,351 @@
+Side Channels
+=========================
+
+Many cryptographic systems can be broken by side channels. This document notes
+side channel protections which are currently implemented, as well as areas of
+the code which are known to be vulnerable to side channels. The latter are
+obviously all open for future improvement.
+
+The following text assumes the reader is already familiar with cryptographic
+implementations, side channel attacks, and common countermeasures.
+
+RSA
+----------------------
+
+Blinding is always used to protect private key operations (there is no way to
+turn it off). As an optimization, instead of choosing a new random mask and
+inverse with each decryption, both the mask and its inverse are simply squared
+to choose the next blinding factor. This is much faster than computing a fresh
+value each time, and the additional relation is thought to provide only minimal
+useful information for an attacker. Every BOTAN_BLINDING_REINIT_INTERVAL
+(default 32) operations, a new starting point is chosen.
+
+RSA signing uses the CRT optimization, which is much faster but vulnerable to
+trivial fault attacks [RsaFault] which can result in the key being entirely
+compromised. To protect against this (or any other computational error which
+would have the same effect as a fault attack in this case), after every private
+key operation the result is checked for consistency with the public key. This
+introduces only slight additional overhead and blocks most fault attacks; it is
+possible to use a second fault attack to bypass this check but
+
+See blinding.cpp and rsa.cpp for details.
+
+If the OpenSSL provider is enabled, then no explicit blinding is done; we assume
+OpenSSL handles this. See openssl_rsa.cpp for details.
+
+OAEP
+----------------------
+
+OAEP decoding is vulnerable to a side channel attack. If an attacker can
+determine where in the decoding process an error occurred, they can use this to
+decrypt arbitrary RSA ciphertexts. See [OaepTiming] for details. This is avoided
+in Botan by making the decoding operation const time. This is verified using
+valgrind. See eme_oaep.cpp for details.
+
+PKCS #1 v1.5 Decryption
+-------------------------
+
+This padding scheme is used with RSA, and is very vulnerable to errors. In an
+scenario where an attacker can repeatedly present RSA ciphertexts, and a
+legitimate key holder will attempt to decrypt each ciphertext and simply
+indicates to the attacker if the PKCS padding was valid or not (without
+revealing any additional information), the attacker can use this behavior as an
+oracle to perform iterative decryption of arbitrary RSA ciphertexts encrypted
+under that key. This is the famous million message attack [MillionMsg]. For
+example, simply a difference in timing between a valid and invalid RSA
+ciphertext due to an early error exit may be enough to mount an attack.
+
+Preventing this issue in full requires some application level changes. In
+protocols which know the expected length of the encrypted key, PK_Decryptor
+provides the function `decrypt_or_random` which first generates a random fake
+key, then decrypts the presented ciphertext, then in constant time either copies
+out the random key or the decrypted plaintext depending on if the ciphertext was
+valid or not. Then, the protocol can carry on with a randomly chosen key, which
+will presumably cause total failure in a way that does not allow an attacker to
+distinguish (via any timing or other side channel, nor any error messages
+specific to the one situation vs the other) if it was the RSA decryption
+
+One very important user of PKCS #1 v1.5 encryption is the TLS protocol. In TLS,
+some extra versioning information is embedded in the plaintext message, along
+with the key. It turns out that this version information must be treated in an
+identical (constant-time) way with the PKCS padding, or again the system is
+broken. [VersionOracle]. This is supported by a special version of
+PK_Decryptor::decrypt_or_random that additionally allows verifying one or more
+content bytes, in addition to the PKCS padding.
+
+See eme_pkcs.cpp and pubkey.cpp for details.
+
+Modular Exponentiation
+------------------------
+
+Modular exponentiation uses a fixed window algorithm with Montgomery representation.
+In the current code, information about the exponent is leaked through the
+sequence of memory indexes; we currently rely on randomized blinding at higher
+levels of the cryptographic stack to hide this. A future project would be to
+change this to use either Montgomery ladder or use a side channel silent table
+lookup. See powm_mnt.cpp for details.
+
+The Karatsuba multiplication algorithm has some conditional branches that
+probably expose information through the branch predictor, but probably? does not
+expose a timing channel since the same amount of work is done on both sides of
+the conditional. There is certainly room for improvement here. See mp_karat.cpp
+for details.
+
+The Montgomery reduction is written (and tested) to run in constant time. See
+mp_monty.cpp for details.
+
+ECC point decoding
+----------------------
+
+The API function OS2ECP, which is used to convert byte strings to ECC points,
+verifies that all points satisfy the ECC curve equation. Points that do not
+satisfy the equation are invalid, and can sometimes be used to break
+protocols. See point_gfp.cpp for details.
+
+ECC scalar multiply
+----------------------
+
+There are two implementations of scalar multiply, PointGFp::operator* and the
+class Blinded_Point_Multiply. The default scalar multiply uses the Montgomery
+ladder. However it currently leaks the size of the scalar, because the loop
+iterations are bounded by the scalar size.
+
+Blinded_Point_Multiply (used by ECDH, ECDSA, etc) applies several additional
+side channel countermeasures. The scalar is masked by a small multiple of the
+group order (this is commonly called Coron's first countermeasure [CoronDpa]),
+the size of the scalar mask is currently controlled by build.h value
+BOTAN_POINTGFP_SCALAR_BLINDING_BITS which defaults to 20 bits.
+
+Botan stores all ECC points in Jacobian representation. This form allows faster
+computation by representing points (x,y) as (X,Y,Z) where x=X/Z^2 and
+y=Y/Z^3. As the representation is redundant, for any randomly chosen r,
+(X*r^2,Y*r^3,Z*r) is an equivalent point. Changing the point values prevents an
+attacker from mounting attacks based on the input point remaining unchanged over
+multiple executions. This is commonly called Coron's third countermeasure, see
+again [CoronDpa].
+
+Currently Blinded_Point_Multiply uses one of two different algorithms, depending
+on a build-time flag. If BOTAN_POINTGFP_BLINDED_MULTIPLY_USE_MONTGOMERY_LADDER
+is set in build.h (default is for it *not* to be set), then a randomized
+Montgomery ladder algorithm from [RandomMonty] is used. Otherwise, a simple
+fixed window exponentiation is used; the current version leaks exponent bits
+through memory index values. We rely on scalar blinding to reduce this
+leakage. It would obviously be better for Blinded_Point_Multiply to converge on
+a single side channel silent algorithm.
+
+See point_gfp.cpp for details.
+
+ECDH
+----------------------
+
+ECDH verifies (through its use of OS2ECP) that all input points
+received from the other party satisfy the curve equation. This
+prevents twist attacks. The same check is performed on the output
+point, which helps prevent fault attacks.
+
+ECDSA
+----------------------
+
+Inversion of the ECDSA nonce k must be done in constant time, as any
+leak of even a single bit of the nonce can be sufficient to allow
+recovering the private key. In Botan all inverses modulo an odd number
+are performed using a constant time algorithm due to Niels Möller.
+
+x25519
+----------------------
+
+The x25519 code is independent of the main Weiserstrass form ECC code, instead
+based on curve25519-donna-c64.c by Adam Langley. The code seems immune to cache
+based side channels. It does make use of integer multiplications; on some old
+CPUs these multiplications take variable time and might allow a side channel
+attack. This is not considered a problem on modern processors.
+
+TLS CBC ciphersuites
+----------------------
+
+The original TLS v1.0 CBC Mac-then-Encrypt mode is vulnerable to an oracle
+attack.  If an attacker can distinguish padding errors through different error
+messages [TlsCbcOracle] or via a side channel attack like [Lucky13], they can
+abuse the server as a decryption oracle.
+
+The side channel protection for Lucky13 follows the approach proposed in the
+Lucky13 paper. It is not perfectly constant time, but does hide the padding
+oracle in practice. Tools to test TLS CBC decoding are included in the timing
+tests. See https://github.com/randombit/botan/pull/675 for more information.
+
+The Encrypt-then-MAC extension, which completely avoids the side channel, is
+implemented and used by default for CBC ciphersuites.
+
+CBC mode padding
+----------------------
+
+In theory, any good protocol protects CBC ciphertexts with a MAC. But in
+practice, some protocols are not good and cannot be fixed immediately. To avoid
+making a bad problem worse, the code to handle decoding CBC ciphertext padding
+bytes runs in constant time, depending only on the block size of the cipher.
+
+AES
+----------------------
+
+The basic implementation uses table lookup, an approach known to be very
+vulnerable to side channels. Modifications to the first and last round increase
+the cost of some known attacks (by reducing the number of cache lines accessed),
+but these truly can only slightly increase the samples required to recover the
+AES key.
+
+For x86 processors with SSSE3 extension (most CPUs since Atom, Core2 Duo, and
+AMD Bulldozer), there is an AES implementation which is included that is both
+faster than the table lookup code, and immune to cache-based side channel
+attacks as it does not perform any memory lookups using secret data.
+
+A version of AES which is side channel silent on x86 processors with SSSE3
+extension is included.  This instruction set is available on many older or low
+end x86 processors that do not have AES-NI (including old Atom, Core2 Duo, and
+AMD Bobcat). On most processors it is significantly faster than the table lookup
+version. It is based on a design by Mike Hamburg [VectorAes]. See aes_ssse3.cpp
+for the code. This same technique could be applied with NEON or AltiVec, and the
+paper has some optimizations for the AltiVec shuffle.
+
+On x86 processors which support it, AES-NI instruction set is used, as it is
+fast and (presumed) side channel silent. There is no support at the moment for
+the similar ARMv8 or POWER AES instructions; patches would be welcome.
+
+GCM
+---------------------
+
+On x86 platforms which support the clmul instruction, GCM support is fast and
+constant time.
+
+On all other platforms, GCM is slow and constant time. It uses a simple bit at
+at time loop. It would be much faster using a table lookup,
+
+OCB
+-----------------------
+
+It is straightforward to implement OCB mode in a efficient way that does not
+depend on any secret branches or lookups. See ocb.cpp for the implementation.
+
+Poly1305
+----------------------
+
+The Poly1305 implementation does not have any secret lookups or conditionals.
+The code is based on the public domain version by Andrew Moon.
+
+DES/3DES
+----------------------
+
+The DES implementation uses table lookups, and is likely vulnerable to side
+channel attacks. DES or 3DES should be avoided in new systems. The proper fix
+would be a scalar bitsliced implementation, this is not seen as worth the
+engineering investment given these algorithms end of life status.
+
+Twofish
+------------------------
+
+This algorithm uses table lookups with secret sboxes. No cache-based side
+channel attack on Twofish has ever been published, but it is possible nobody
+sufficiently skilled has ever tried.
+
+ChaCha20, Serpent, Threefish, ...
+-----------------------------------
+
+Some algorithms including ChaCha, Salsa, Serpent and Threefish are 'naturally'
+silent to cache and timing side channels on all recent processors.
+
+IDEA
+---------------
+
+IDEA encryption, decryption, and key schedule are implemented to take constant
+time regardless of their inputs.
+
+Hash Functions
+-------------------------
+
+Most hash functions included in Botan such as MD5, SHA-1, SHA-2, SHA-3, Skein,
+and BLAKE2 do not require any input-dependent memory lookups, and so seem to not be
+affected by common CPU side channels.
+
+Memory comparisons
+----------------------
+
+The function same_mem in header mem_ops.h provides a constant-time comparison
+function. It is used when comparing MACs or other secret values. It is also
+exposed for application use.
+
+Memory zeroizing
+----------------------
+
+There is no way in portable C/C++ to zero out an array before freeing it, in
+such a way that it is guaranteed that the compiler will not elide the
+'additional' (seemingly unnecessary) writes to zero out the memory.
+
+The function secure_scrub_memory (in mem_ops.cpp) uses some system specific
+trick to zero out an array. On Windows it uses the directly supported API
+function RtlSecureZeroMemory.
+
+On other platforms, by default the trick of referencing memset through a
+volatile function pointer is used. This approach is not guaranteed to work on
+all platforms, and currently there is no systematic check of the resulting
+binary function that it is compiled as expected. But, it is the best approach
+currently known and has been verified to work as expected on common platforms.
+
+If BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO is set to 0 in build.h (not the default) a
+byte at a time loop through a volatile pointer is used to overwrite the array.
+
+Botan's secure_vector type is a std::vector with a custom allocator. The
+allocator simply calls secure_scrub_memory before freeing memory.
+
+Memory allocation
+----------------------
+
+Some systems including Linux and FreeBSD support applications pinning a small
+amount (typically 64 KB, sometimes more) of virtual memory pages in RAM, such
+that they will not be paged to disk. If available, Botan uses such a region for
+storing key material. It is created in anonymous mapped memory (not disk
+backed), locked in memory, and zeroized before freeing.
+
+This memory pool is used by secure_vector when available. It can be disabled by
+setting the environment variable BOTAN_MLOCK_POOL_SIZE to 0.
+
+Automated Analysis
+---------------------
+
+Currently the main tool used by the Botan developers for testing for side
+channels at runtime is valgrind; valgrind's runtime API is used to taint memory
+values, and any jumps or indexes using data derived from these values will cause
+a valgrind warning. This technique was first used by Adam Langley in ctgrind.
+See the header ct_utils.h for details.
+
+To check, install valgrind, configure the build with --with-valgrind, and run
+the tests.
+
+References
+---------------
+
+[CoronDpa] Coron,
+"Resistance against Differential Power Analysis for Elliptic Curve Cryptosystems"
+(http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.1.5695)
+
+[Lucky13] AlFardan, Paterson "Lucky Thirteen: Breaking the TLS and DTLS Record Protocols"
+(http://www.isg.rhul.ac.uk/tls/TLStiming.pdf)
+
+[MillionMsg] Bleichenbacher "Chosen Ciphertext Attacks Against Protocols Based
+on the RSA Encryption Standard PKCS1"
+(http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.19.8543)
+
+[OaepTiming] Manger, "A Chosen Ciphertext Attack on RSA Optimal Asymmetric
+Encryption Padding (OAEP) as Standardized in PKCS #1 v2.0"
+(http://archiv.infsec.ethz.ch/education/fs08/secsem/Manger01.pdf)
+
+[RsaFault] Boneh, Demillo, Lipton
+"On the importance of checking cryptographic protocols for faults"
+(http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.48.9764)
+
+[RandomMonty] Le, Tan, Tunstall "Randomizing the Montgomery Powering Ladder"
+(https://eprint.iacr.org/2015/657)
+
+[VectorAes] Hamburg, "Accelerating AES with Vector Permute Instructions"
+https://shiftleft.org/papers/vector_aes/vector_aes.pdf
+
+[VersionOracle] Klíma, Pokorný, Rosa "Attacking RSA-based Sessions in SSL/TLS"
+(https://eprint.iacr.org/2003/052)
