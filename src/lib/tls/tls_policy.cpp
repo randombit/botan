@@ -391,9 +391,16 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
       if(!have_srp && suite.kex_algo() == "SRP_SHA")
          continue;
 
-      // Are we doing AEAD in a non-AEAD version
-      if(!version.supports_aead_modes() && suite.mac_algo() == "AEAD")
-         continue;
+      if(!version.supports_aead_modes())
+         {
+         // Are we doing AEAD in a non-AEAD version?
+         if(suite.mac_algo() == "AEAD")
+            continue;
+
+         // Older (v1.0/v1.1) versions also do not support any hash but SHA-1
+         if(suite.mac_algo() != "SHA-1")
+            continue;
+         }
 
       if(!value_exists(kex, suite.kex_algo()))
          continue; // unsupported key exchange
