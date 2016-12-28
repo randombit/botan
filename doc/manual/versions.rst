@@ -1,5 +1,5 @@
 
-Version Checking
+Checking the Version
 ========================================
 
 The library has functions for checking compile-time and runtime

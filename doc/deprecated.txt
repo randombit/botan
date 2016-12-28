@@ -6,13 +6,13 @@ use case if you want to make sure your code continues to work.
 This is in addition to specific API calls marked with BOTAN_DEPRECATED
 in the source.
 
-Currently deprecated:
+- Platform support for BeOS and IRIX operating systems
 
 - 3DES and SEED ciphersuites in TLS
 
 - DSA ciphersuites/certs in TLS
 
-- CAST-256, Kasumi, MISTY1, and DESX ciphers
+- Block ciphers CAST-256, Kasumi, MISTY1, and DESX.
 
 - CBC-MAC, X9.19-MAC
 

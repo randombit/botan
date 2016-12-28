@@ -137,7 +137,7 @@ FIPS 140 Build
   library in FIPS 140 validated form (since there is no 'crypto' anymore from
   Botan, just the ASN.1 parser, TLS library, PKI etc all of which FIPS 140 does
   not care about) without the enourmous hassle and expense of actually having to
-  maintain a FIPS validation on Botan.
+  maintain a FIPS validation on Botan. Email Jack if you are interested in this.
 
 CLI
 ----------------------------------------
