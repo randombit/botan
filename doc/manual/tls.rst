@@ -609,6 +609,22 @@ policy settings from a file.
 
      Default: "CECPQ1", "ECDH", "DH"
 
+     .. note::
+
+        CECPQ1 key exchange provides post-quantum security to the key exchange
+        by combining NewHope with a standard x25519 ECDH exchange. This prevents
+        an attacker, even one with a quantum computer, from later decrypting the
+        contents of a recorded TLS transcript. The NewHope algorithm is very
+        fast, but adds roughly 4 KiB of additional data transfer to every TLS
+        handshake. And even if NewHope ends up completely broken, the 'extra'
+        x25519 exchange secures the handshake.
+
+        For applications where the additional data transfer size is unacceptable,
+        simply allow only ECDH key exchange in the application policy. DH
+        exchange also often involves transferring several additional Kb (without
+        the benefit of post quantum security) so if CECPQ1 is being disabled for
+        traffic overhread reasons, DH should also be avoid.
+
      Also allowed: "RSA", "SRP_SHA", "ECDHE_PSK", "DHE_PSK", "PSK"
 
      .. note::
