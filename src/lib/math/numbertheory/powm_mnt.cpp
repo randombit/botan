@@ -88,9 +88,7 @@ BigInt Montgomery_Exponentiator::execute() const
 
       const uint32_t nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits);
 
-      const BigInt& y = m_g[nibble];
-
-      bigint_monty_mul(z, x, y,
+      bigint_monty_mul(z, x, m_g[nibble],
                        m_modulus.data(), m_mod_words, m_mod_prime,
                        workspace.data());
 
