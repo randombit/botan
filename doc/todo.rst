@@ -54,6 +54,7 @@ External Providers, Hardware Support
 * ARMv8-A crypto extensions (AES, SHA-2)
 * POWER8 crypto extensions (AES, SHA-2)
 * Better TPM support: NVRAM, PCR measurements, sealing
+* Intel SGX support
 
 TLS
 ----------------------------------------
@@ -74,6 +75,7 @@ TLS
 PKIX
 ----------------------------------------
 
+* Further tests of validation API (see GH #785)
 * Test suite for validation of 'real world' cert chains (GH #611)
 * Improve output of X509_Certificate::to_string
   This is a free-form string for human consumption so the only constraints
