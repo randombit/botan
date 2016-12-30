@@ -2,18 +2,15 @@
 API/ABI Stability
 ====================
 
-The API and ABI in development branches (those with an odd number, such as 1.11
-or 2.1) is subject to change without notice. We don't go out of our way to break
-client code, but if a possibility for serious improvement is seen it is taken.
+API of release branches is stable; that is to say code that compiles and works
+against 2.0.0 should also compile with all later 2.x.x versions. The API on
+master is completely fair game and may change at any time.
 
-For stable branches (1.10, 2.0) API stability is considered important.
-Coorespondingly they see mostly security and bug fixes, or improvements
-backported from the devel tree when doing so would not cause problems for
-existing code. Code written and working for .0 of a stable release should
-continue to work with later releases from the same branch.
+Maintaining a consistent ABI while evolving a complex C++ API is exceedingly
+expensive in development time. It is likely ABI breakage will occur at least
+occasionally even in release branches. In these cases, the soname revision will
+increase to prevent applications from linking against a potentially incompatible
+version at runtime.
 
-However maintaining a consistent ABI while changing a complex C++ API is
-exceedingly expensive in development time, and even in the stable branches ABI
-breakage may be necessary to fix a security issue or other major bug. If ABI
-breakage knowingly occurs in the stable tree it will be documented accordingly
-in the release notes and the soname revision will be ticked up.
+You can review a report on ABI changes to Botan at
+https://abi-laboratory.pro/tracker/timeline/botan/
