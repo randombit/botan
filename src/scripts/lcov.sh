@@ -1,6 +1,6 @@
 #!/bin/sh
 
-./configure.py --with-debug-info --with-coverage-info --with-bzip2 --with-lzma --with-sqlite --with-zlib --with-pkcs11 --with-openssl --with-sqlite3
+./configure.py --with-debug-info --with-coverage-info --with-bzip2 --with-lzma --with-sqlite --with-zlib --with-pkcs11 --with-sqlite3
 
 make -l4 -j$(nproc) -k
 ./botan-test --pkcs11-lib=/usr/lib/libsofthsm2.so --run-online-tests
