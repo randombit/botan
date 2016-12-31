@@ -85,6 +85,7 @@ class DL_Group_Tests : public Test
          result.test_lte("DH g size", dh1050.get_g().bits(), 1050);
          result.test_eq("DH group verifies", dh1050.verify_group(rng, true), true);
 
+#if defined(BOTAN_HAS_SHA1)
          // From FIPS 186-3 test data
          const std::vector<uint8_t> seed = Botan::hex_decode("1F5DA0AF598EEADEE6E6665BF880E63D8B609BA2");
 
@@ -101,6 +102,8 @@ class DL_Group_Tests : public Test
          result.test_eq("DSA p from seed", dsa_from_seed.get_p() % 4294967291, 2513712339);
 
          result.test_eq("DSA group from seed verifies", dsa_from_seed.verify_group(rng, true), true);
+#endif
+
          result.end_timer();
 
          return result;
