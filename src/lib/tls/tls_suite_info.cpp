@@ -3,7 +3,7 @@
 *
 * This file was automatically generated from the IANA assignments
 * (tls-parameters.txt hash 67a567fcf1ac67cb8cfc4af96c20c3efb05c1fc1)
-* by ./src/scripts/tls_suite_info.py on 2016-11-16
+* by ./src/scripts/tls_suite_info.py on 2016-12-30
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -183,6 +183,8 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
       Ciphersuite(0xFFC9, "DHE_PSK_WITH_AES_256_OCB_SHA256", "", "DHE_PSK", "AES-256/OCB(12)", 32, 12, 0, "AEAD", 0, "SHA-256"),
       Ciphersuite(0xFFCA, "ECDHE_PSK_WITH_AES_128_OCB_SHA256", "", "ECDHE_PSK", "AES-128/OCB(12)", 16, 12, 0, "AEAD", 0, "SHA-256"),
       Ciphersuite(0xFFCB, "ECDHE_PSK_WITH_AES_256_OCB_SHA256", "", "ECDHE_PSK", "AES-256/OCB(12)", 32, 12, 0, "AEAD", 0, "SHA-256"),
+      Ciphersuite(0xFFCC, "CECPQ1_RSA_WITH_AES_256_OCB_SHA256", "RSA", "CECPQ1", "AES-256/OCB(12)", 32, 12, 0, "AEAD", 0, "SHA-256"),
+      Ciphersuite(0xFFCD, "CECPQ1_ECDSA_WITH_AES_256_OCB_SHA256", "ECDSA", "CECPQ1", "AES-256/OCB(12)", 32, 12, 0, "AEAD", 0, "SHA-256"),
       };
 
    return g_ciphersuite_list;

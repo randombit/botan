@@ -1132,6 +1132,13 @@ class TLS_Unit_Tests : public Test
          test_modern_versions(results, *client_ses, *server_ses, *creds, "CECPQ1", "AES-256/GCM", "AEAD");
 #endif
 
+#if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_OCB)
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "CECPQ1", "AES-256/OCB(12)", "AEAD");
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "CECPQ1", "AES-256/OCB(12)", "AEAD",
+                              {{ "signature_methods", "RSA" }});
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "CECPQ1_PSK", "AES-256/OCB(12)", "AEAD");
+#endif
+
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
          test_modern_versions(results, *client_ses, *server_ses, *creds, "CECPQ1", "ChaCha20Poly1305", "AEAD",
                               { { "signature_methods", "RSA" }});

@@ -3,7 +3,7 @@
 """
 Used to generate lib/tls/tls_suite_info.cpp from IANA params
 
-(C) 2011, 2012, 2013, 2014, 2015 Jack Lloyd
+(C) 2011, 2012, 2013, 2014, 2015, 2016 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -88,6 +88,7 @@ def to_ciphersuite_info(code, name):
         'PSK_DHE': 'DHE_PSK',
         'ECDHE_PSK': 'ECDHE_PSK',
         'CECPQ1': 'CECPQ1',
+        'CECPQ1_PSK': 'CECPQ1_PSK',
         }
 
     mac_keylen = {
@@ -168,17 +169,22 @@ def process_command_line(args):
     parser = optparse.OptionParser()
 
     parser.add_option('--with-ocb', action='store_true', default=True,
-                      help='enable experimental OCB AEAD suites')
+                      help='enable OCB AEAD suites')
     parser.add_option('--without-ocb', action='store_false', dest='with_ocb',
-                      help='disable experimental OCB AEAD suites')
+                      help='disable OCB AEAD suites')
+
+    parser.add_option('--with-cecpq1', action='store_true', default=True,
+                      help='enable CECPQ1 suites')
+    parser.add_option('--without-cecpq1', action='store_false', dest='with_cecpq1',
+                      help='disable CECPQ1 suites')
 
     parser.add_option('--with-srp-aead', action='store_true', default=False,
-                      help='add experimental SRP AEAD suites')
-    parser.add_option('--with-eax', action='store_true', default=False,
-                      help='add experimental EAX AEAD suites')
+                      help='add SRP AEAD suites')
+    parser.add_option('--without-srp-aead', action='store_false', dest='with_srp_aead',
+                      help='disable SRP AEAD suites')
 
-    parser.add_option('--save-download', action='store_true', default=True,
-                      help='save downloaded tls-parameters.txt')
+    parser.add_option('--save-download', action='store_true', default=False,
+                      help='save downloaded tls-parameters.txt to cwd')
 
     parser.add_option('--output', '-o',
                       help='file to write output to (default %default)',
@@ -237,14 +243,15 @@ def main(args = None):
     define_custom_ciphersuite('ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256', 'CC14')
     define_custom_ciphersuite('DHE_RSA_WITH_CHACHA20_POLY1305_SHA256', 'CC15')
 
-    # CECPQ1
-    define_custom_ciphersuite('CECPQ1_RSA_WITH_CHACHA20_POLY1305_SHA256', '16B7')
-    define_custom_ciphersuite('CECPQ1_ECDSA_WITH_CHACHA20_POLY1305_SHA256', '16B8')
-    define_custom_ciphersuite('CECPQ1_RSA_WITH_AES_256_GCM_SHA384', '16B9')
-    define_custom_ciphersuite('CECPQ1_ECDSA_WITH_AES_256_GCM_SHA384', '16BA')
+    if options.with_cecpq1:
+        # CECPQ1 key exchange
+        define_custom_ciphersuite('CECPQ1_RSA_WITH_CHACHA20_POLY1305_SHA256', '16B7')
+        define_custom_ciphersuite('CECPQ1_ECDSA_WITH_CHACHA20_POLY1305_SHA256', '16B8')
+        define_custom_ciphersuite('CECPQ1_RSA_WITH_AES_256_GCM_SHA384', '16B9')
+        define_custom_ciphersuite('CECPQ1_ECDSA_WITH_AES_256_GCM_SHA384', '16BA')
 
-    # Expermental things
     if options.with_ocb:
+        # OCB ciphersuites draft-zauner-tls-aes-ocb-04
         define_custom_ciphersuite('DHE_RSA_WITH_AES_128_OCB_SHA256', 'FFC0')
         define_custom_ciphersuite('DHE_RSA_WITH_AES_256_OCB_SHA256', 'FFC1')
         define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_OCB_SHA256', 'FFC2')
@@ -259,23 +266,24 @@ def main(args = None):
         define_custom_ciphersuite('ECDHE_PSK_WITH_AES_128_OCB_SHA256', 'FFCA')
         define_custom_ciphersuite('ECDHE_PSK_WITH_AES_256_OCB_SHA256', 'FFCB')
 
-    if options.with_eax:
-        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_128_EAX_SHA256', 'FF90')
-        define_custom_ciphersuite('ECDHE_ECDSA_WITH_AES_256_EAX_SHA384', 'FF91')
-        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_128_EAX_SHA256', 'FF92')
-        define_custom_ciphersuite('ECDHE_RSA_WITH_AES_256_EAX_SHA384', 'FF93')
+    if options.with_cecpq1 and options.with_ocb:
+        # CECPQ1 OCB ciphersuites - Botan extension
+        define_custom_ciphersuite('CECPQ1_RSA_WITH_AES_256_OCB_SHA256', 'FFCC')
+        define_custom_ciphersuite('CECPQ1_ECDSA_WITH_AES_256_OCB_SHA256', 'FFCD')
+        #define_custom_ciphersuite('CECPQ1_PSK_WITH_AES_256_OCB_SHA256', 'FFCE')
 
     if options.with_srp_aead:
+        # SRP using GCM or OCB - Botan extension
         define_custom_ciphersuite('SRP_SHA_WITH_AES_256_GCM_SHA384', 'FFA0')
         define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_GCM_SHA384', 'FFA1')
         define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_GCM_SHA384', 'FFA2')
         define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_GCM_SHA384', 'FFA3')
 
-        if options.with_eax:
-            define_custom_ciphersuite('SRP_SHA_WITH_AES_256_EAX_SHA384', 'FFA8')
-            define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_EAX_SHA384', 'FFA9')
-            define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_EAX_SHA384', 'FFAA')
-            define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_EAX_SHA384', 'FFAB')
+        if options.with_ocb:
+            define_custom_ciphersuite('SRP_SHA_WITH_AES_256_OCB_SHA256', 'FFA4')
+            define_custom_ciphersuite('SRP_SHA_RSA_WITH_AES_256_OCB_SHA256', 'FFA5')
+            define_custom_ciphersuite('SRP_SHA_DSS_WITH_AES_256_OCB_SHA256', 'FFA6')
+            define_custom_ciphersuite('SRP_SHA_ECDSA_WITH_AES_256_OCB_SHA256', 'FFA7')
 
     suite_info = ''
 
