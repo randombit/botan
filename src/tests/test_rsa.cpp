@@ -138,12 +138,18 @@ class RSA_Blinding_Tests : public Test
          {
          Test::Result result("RSA blinding");
 
+#if defined(BOTAN_HAS_EME_RAW)
+
          /*
          * The blinder chooses a new starting point BOTAN_BLINDING_REINIT_INTERVAL
-         * so sign several times that with a single key
+         * so sign several times that with a single key.
+         *
+         * Very small values (padding/hashing disabled, only low byte set on input)
+         * are used as an additional test on the blinders.
          */
 
          Botan::RSA_PrivateKey rsa(Test::rng(), 1024);
+
          Botan::PK_Signer signer(rsa, "Raw"); // don't try this at home
          Botan::PK_Verifier verifier(rsa, "Raw");
 
@@ -161,6 +167,7 @@ class RSA_Blinding_Tests : public Test
             result.test_eq("Signature verifies",
                            verifier.verify_message(input, signature), true);
             }
+#endif
 
          return std::vector<Test::Result>{result};
          }
