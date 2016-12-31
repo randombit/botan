@@ -5,9 +5,14 @@
 */
 
 #include "tests.h"
-#include <botan/package.h>
+
+#if defined(BOTAN_HAS_PACKAGE_TRANSFORM)
+  #include <botan/package.h>
+#endif
 
 namespace Botan_Tests {
+
+#if defined(BOTAN_HAS_PACKAGE_TRANSFORM)
 
 class Package_Transform_Tests : public Test
    {
@@ -52,5 +57,6 @@ class Package_Transform_Tests : public Test
 
 BOTAN_REGISTER_TEST("package_transform", Package_Transform_Tests);
 
+#endif
 
 }
