@@ -131,12 +131,48 @@ class RSA_Keygen_Tests : public PK_Key_Generation_Test
       std::string algo_name() const override { return "RSA"; }
    };
 
+class RSA_Blinding_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("RSA blinding");
+
+         /*
+         * The blinder chooses a new starting point BOTAN_BLINDING_REINIT_INTERVAL
+         * so sign several times that with a single key
+         */
+
+         Botan::RSA_PrivateKey rsa(Test::rng(), 1024);
+         Botan::PK_Signer signer(rsa, "Raw"); // don't try this at home
+         Botan::PK_Verifier verifier(rsa, "Raw");
+
+         Botan::Null_RNG null_rng;
+         for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL * 6; ++i)
+            {
+            std::vector<uint8_t> input(16);
+            input[input.size()-1] = static_cast<uint8_t>(i);
+
+            signer.update(input);
+
+            // assert RNG is not called in this situation
+            std::vector<uint8_t> signature = signer.signature(null_rng);
+
+            result.test_eq("Signature verifies",
+                           verifier.verify_message(input, signature), true);
+            }
+
+         return std::vector<Test::Result>{result};
+         }
+   };
+
 BOTAN_REGISTER_TEST("rsa_encrypt", RSA_ES_KAT_Tests);
 BOTAN_REGISTER_TEST("rsa_sign", RSA_Signature_KAT_Tests);
 BOTAN_REGISTER_TEST("rsa_verify", RSA_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("rsa_verify_invalid", RSA_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("rsa_kem", RSA_KEM_Tests);
 BOTAN_REGISTER_TEST("rsa_keygen", RSA_Keygen_Tests);
+BOTAN_REGISTER_TEST("rsa_blinding", RSA_Blinding_Tests);
 
 #endif
 
