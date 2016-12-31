@@ -162,7 +162,7 @@ class Test
                   }
                else
                   {
-                  out << " produced unexpected result " << produced << " expected " << expected;
+                  out << " produced unexpected result '" << produced << "' expected '" << expected << "'";
                   return test_failure(out.str());
                   }
                }

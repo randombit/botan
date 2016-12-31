@@ -159,7 +159,7 @@ size_t Pipe::peek(uint8_t& out, size_t offset, message_id msg) const
 
 size_t Pipe::get_bytes_read() const
    {
-   return m_outputs->get_bytes_read(DEFAULT_MESSAGE);
+   return m_outputs->get_bytes_read(default_msg());
    }
 
 size_t Pipe::get_bytes_read(message_id msg) const
@@ -169,7 +169,7 @@ size_t Pipe::get_bytes_read(message_id msg) const
 
 bool Pipe::check_available(size_t n)
    {
-   return (n <= remaining(DEFAULT_MESSAGE));
+   return (n <= remaining(default_msg()));
    }
 
 bool Pipe::check_available_msg(size_t n, message_id msg)

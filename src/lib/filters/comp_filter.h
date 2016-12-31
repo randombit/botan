@@ -34,6 +34,8 @@ class BOTAN_DLL Compression_Filter : public Filter
       Compression_Filter(const std::string& type,
                          size_t compression_level,
                          size_t buffer_size = 4096);
+
+      ~Compression_Filter();
    private:
       std::unique_ptr<Compression_Algorithm> m_comp;
       size_t m_buffersize, m_level;
@@ -54,6 +56,8 @@ class BOTAN_DLL Decompression_Filter : public Filter
 
       Decompression_Filter(const std::string& type,
                            size_t buffer_size = 4096);
+
+      ~Decompression_Filter();
    private:
       std::unique_ptr<Decompression_Algorithm> m_comp;
       std::size_t m_buffersize;

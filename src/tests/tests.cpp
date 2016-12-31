@@ -232,7 +232,7 @@ bool Test::Result::test_eq(const std::string& what, OctetString produced, OctetS
       }
    else
       {
-      out << " produced unexpected result " << produced.as_string() << " expected " << expected.as_string();
+      out << " produced unexpected result '" << produced.as_string() << "' expected '" << expected.as_string() << "'";
       return test_failure(out.str());
       }
    }

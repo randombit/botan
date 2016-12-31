@@ -28,6 +28,8 @@ Compression_Filter::Compression_Filter(const std::string& type, size_t level, si
       }
    }
 
+Compression_Filter::~Compression_Filter() { /* for unique_ptr */ }
+
 std::string Compression_Filter::name() const
    {
    return m_comp->name();
@@ -78,6 +80,8 @@ Decompression_Filter::Decompression_Filter(const std::string& type, size_t bs) :
       throw Invalid_Argument("Compression type '" + type + "' not found");
       }
    }
+
+Decompression_Filter::~Decompression_Filter() { /* for unique_ptr */ }
 
 std::string Decompression_Filter::name() const
    {
