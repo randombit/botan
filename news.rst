@@ -24,6 +24,12 @@ Version 1.11.35, Not Yet Released
 
 * Allow use of custom extensions when creating X.509 certificates (GH #744)
 
+* The default Path_Validation_Restrictions constructor has changed to
+  require at least 110 bit signature strength. This means 1024 bit RSA
+  certificates and also SHA-1 certificates are rejected by default.
+  Both settings were already the default for certificate validation in
+  TLS handshake, but this changes it for applications also.
+
 * Add ISO 9796-2 signature padding schemes DS2 and DS3. These schemes provide
   message recovery (part or all of the plaintext message can be recovered from
   the signature alone) and are used by some industry protocols. (GH #759)

@@ -63,7 +63,7 @@ class Name_Constraint_Tests : public Test
             "Certificate does not pass name constraint"),
          };
          std::vector<Test::Result> results;
-         const Botan::Path_Validation_Restrictions default_restrictions;
+         const Botan::Path_Validation_Restrictions restrictions(false, 80);
 
          for(const auto& t: test_cases)
             {
@@ -74,7 +74,7 @@ class Name_Constraint_Tests : public Test
 
             trusted.add_certificate(root);
             Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
-               sub, default_restrictions, trusted, std::get<2>(t), Botan::Usage_Type::TLS_SERVER_AUTH);
+               sub, restrictions, trusted, std::get<2>(t), Botan::Usage_Type::TLS_SERVER_AUTH);
 
             if(path_result.successful_validation() && path_result.trust_root() != root)
                path_result = Botan::Path_Validation_Result(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);

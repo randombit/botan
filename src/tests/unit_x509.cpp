@@ -359,7 +359,7 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
    Botan::X509_CRL crl1 = ca.new_crl(Test::rng());
 
    /* Verify the certs */
-   Botan::Path_Validation_Restrictions restrictions(false);
+   Botan::Path_Validation_Restrictions restrictions(false, 80);
    Botan::Certificate_Store_In_Memory store;
 
    // First try with an empty store
@@ -558,7 +558,7 @@ Test::Result test_self_issued(const std::string& sig_algo, const std::string& ha
    // check that this chain can can be verified successfully
    Botan::Certificate_Store_In_Memory trusted(ca.ca_certificate());
 
-   Botan::Path_Validation_Restrictions restrictions;
+   Botan::Path_Validation_Restrictions restrictions(false, 80);
 
    Botan::Path_Validation_Result validation_result =
          Botan::x509_path_validate(self_issued_cert,
