@@ -178,7 +178,7 @@ else
 fi
 
 # Run Python tests (need shared libs)
-if [ "$BUILD_MODE" = "shared" ]
+if [ "$BUILD_MODE" = "shared" ] || [ "$BUILD_MODE" = "coverage" ];
 then
     # TODO: find all things in PATH that begin with python- and execute them :)
     for py in python2 python3
