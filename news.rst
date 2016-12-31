@@ -56,6 +56,12 @@ Version 1.11.35, Not Yet Released
 
 * The deprecated ECB Cipher_Mode class has been removed (GH #756)
 
+* The class SRP6_Authenticator_File (in srp6_files.h) was meant to parse GnuTLS
+  SRP files. But it was completely untested, and it turns out due to several
+  problems it was completely unable to parse any SRP file correctly. It has
+  been removed, with a future replacement planned that can handle both
+  flat files (in the actual SRP format) or using a SQL database.
+
 * Fix tests errors when write access to /dev/urandom is prohibited (GH #748)
 
 Version 1.11.34, 2016-11-28
