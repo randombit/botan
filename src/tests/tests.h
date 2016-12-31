@@ -188,6 +188,7 @@ class Test
                }
 
             bool test_lt(const std::string& what, size_t produced, size_t expected);
+            bool test_lte(const std::string& what, size_t produced, size_t expected);
             bool test_gte(const std::string& what, size_t produced, size_t expected);
 
             template<typename T>
