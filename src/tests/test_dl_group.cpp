@@ -72,18 +72,19 @@ class DL_Group_Tests : public Test
 
          result.start_timer();
 
-         Botan::DL_Group dsa1024(rng, Botan::DL_Group::DSA_Kosherizer, 1024);
-
-         result.test_eq("DSA p size", dsa1024.get_p().bits(), 1024);
-         result.test_eq("DSA q size", dsa1024.get_q().bits(), 160);
-         result.test_lte("DSA g size", dsa1024.get_g().bits(), 1024);
-         result.test_eq("DSA group verifies", dsa1024.verify_group(rng, true), true);
-
          Botan::DL_Group dh1050(rng, Botan::DL_Group::Prime_Subgroup, 1050, 175);
          result.test_eq("DH p size", dh1050.get_p().bits(), 1050);
          result.test_eq("DH q size", dh1050.get_q().bits(), 175);
          result.test_lte("DH g size", dh1050.get_g().bits(), 1050);
          result.test_eq("DH group verifies", dh1050.verify_group(rng, true), true);
+
+#if defined(BOTAN_HAS_SHA1)
+         Botan::DL_Group dsa1024(rng, Botan::DL_Group::DSA_Kosherizer, 1024);
+         result.test_eq("DSA p size", dsa1024.get_p().bits(), 1024);
+         result.test_eq("DSA q size", dsa1024.get_q().bits(), 160);
+         result.test_lte("DSA g size", dsa1024.get_g().bits(), 1024);
+         result.test_eq("DSA group verifies", dsa1024.verify_group(rng, true), true);
+#endif
 
 #if defined(BOTAN_HAS_SHA1)
          // From FIPS 186-3 test data
@@ -99,7 +100,7 @@ class DL_Group_Tests : public Test
                         Botan::BigInt("0xAB1A788BCE3C557A965A5BFA6908FAA665FDEB7D"));
 
          // Modulo just to avoid embedding entire 1024-bit P in src file
-         result.test_eq("DSA p from seed", dsa_from_seed.get_p() % 4294967291, 2513712339);
+         result.test_eq("DSA p from seed", static_cast<size_t>(dsa_from_seed.get_p() % 4294967291), size_t(2513712339));
 
          result.test_eq("DSA group from seed verifies", dsa_from_seed.verify_group(rng, true), true);
 #endif
