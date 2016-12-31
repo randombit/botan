@@ -16,7 +16,7 @@ namespace Botan {
 /**
 * Rivest's Package Tranform
 * @param rng the random number generator to use
-* @param cipher the block cipher to use
+* @param cipher the block cipher to use (aont_package takes ownership)
 * @param input the input data buffer
 * @param input_len the length of the input data in bytes
 * @param output the output data buffer (must be at least
@@ -29,7 +29,7 @@ void BOTAN_DLL aont_package(RandomNumberGenerator& rng,
 
 /**
 * Rivest's Package Tranform (Inversion)
-* @param cipher the block cipher to use
+* @param cipher the block cipher to use (aont_package takes ownership)
 * @param input the input data buffer
 * @param input_len the length of the input data in bytes
 * @param output the output data buffer (must be at least
