@@ -3,7 +3,9 @@ Lossless Data Compression
 
 Some lossless data compression algorithms are available in botan, currently all
 via third party libraries - these include zlib (including deflate and gzip
-formats), bzip2, and lzma.
+formats), bzip2, and lzma. Support for these must be enabled at build time;
+you can check for them using the macros ``BOTAN_HAS_ZLIB``, ``BOTAN_HAS_BZIP2``,
+and ``BOTAN_HAS_LZMA``.
 
 .. note::
    You should always compress *before* you encrypt, because encryption seeks to

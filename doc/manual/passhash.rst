@@ -75,8 +75,13 @@ Bcrypt Password Hashing
 
 :wikipedia:`Bcrypt` is a password hashing scheme originally designed
 for use in OpenBSD, but numerous other implementations exist.
-It is made available by including ``bcrypt.h``. Bcrypt provides
-outputs that look like this::
+It is made available by including ``bcrypt.h``.
+
+It has the advantage that it requires a small amount (4K) of fast RAM
+to compute, which can make hardware password cracking somewhat more
+expensive.
+
+Bcrypt provides outputs that look like this::
 
   "$2a$12$7KIYdyv8Bp32WAvc.7YvI.wvRlyVn0HP/EhPmmOyMQA4YKxINO0p2"
 
@@ -103,6 +108,10 @@ Botan also provides a password hashing technique called passhash9, in
 ``passhash9.h``, which is based on PBKDF2. Its outputs look like::
 
   "$9$AAAKxwMGNPSdPkOKJS07Xutm3+1Cr3ytmbnkjO6LjHzCMcMQXvcT"
+
+This function should be secure with the proper parameters, and will remain in
+the library for the forseeable future, but it is specific to Botan rather than
+being a widely used password hash. Prefer bcrypt.
 
 .. cpp:function:: std::string generate_passhash9(const std::string& password, \
    RandomNumberGenerator& rng, u16bit work_factor = 10, byte alg_id = 1)
