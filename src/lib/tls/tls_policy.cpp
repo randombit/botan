@@ -140,8 +140,7 @@ std::string Policy::dh_group() const
 
 size_t Policy::minimum_dh_group_size() const
    {
-   // Many servers still send 1024 bit
-   return 1024;
+   return 2048;
    }
 
 size_t Policy::minimum_ecdsa_group_size() const

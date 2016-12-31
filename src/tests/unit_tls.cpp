@@ -918,6 +918,8 @@ std::string tls_policy_string(const std::string& policy_str)
       policy.reset(new Botan::TLS::Policy);
    else if(policy_str == "suiteb")
       policy.reset(new Botan::TLS::NSA_Suite_B_128);
+   else if(policy_str == "bsi")
+      policy.reset(new Botan::TLS::BSI_TR_02102_2);
    else if(policy_str == "strict")
       policy.reset(new Botan::TLS::Strict_Policy);
    else if(policy_str == "datagram")
@@ -932,7 +934,7 @@ Test::Result test_tls_policy()
    {
    Test::Result result("TLS Policy");
 
-   const std::vector<std::string> policies = { "default", "suiteb", "strict", "datagram" };
+   const std::vector<std::string> policies = { "default", "suiteb", "strict", "datagram", "bsi" };
 
    for(std::string policy : policies)
       {

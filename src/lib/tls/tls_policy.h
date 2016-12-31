@@ -334,6 +334,61 @@ class BOTAN_DLL NSA_Suite_B_128 : public Policy
    };
 
 /**
+* BSI TR-02102-2 Policy
+*/
+class BOTAN_DLL BSI_TR_02102_2 : public Policy
+   {
+   public:
+      std::vector<std::string> allowed_ciphers() const override
+         {
+         return std::vector<std::string>({"AES-256/GCM", "AES-128/GCM", "AES-256", "AES-128" });
+         }
+
+      std::vector<std::string> allowed_signature_hashes() const override
+         {
+         return std::vector<std::string>({"SHA-384", "SHA-256"});
+         }
+
+      std::vector<std::string> allowed_macs() const override
+         {
+         return std::vector<std::string>({"AEAD", "SHA-384", "SHA-256"});
+         }
+
+      std::vector<std::string> allowed_key_exchange_methods() const override
+         {
+         return std::vector<std::string>({"ECDH", "DH", "PSK", "ECDHE_PSK", "DHE_PSK"});
+         }
+
+      std::vector<std::string> allowed_signature_methods() const override
+         {
+         return std::vector<std::string>({"ECDSA", "RSA", "DSA"});
+         }
+
+      std::vector<std::string> allowed_ecc_curves() const override
+         {
+         return std::vector<std::string>({"brainpool512r1", "brainpool384r1", "brainpool256r1", "secp384r1", "secp256r1"});
+         }
+
+      bool allow_insecure_renegotiation() const override { return false; }
+      bool allow_server_initiated_renegotiation() const override { return true; }
+      bool server_uses_own_ciphersuite_preferences() const override { return true; }
+      bool negotiate_encrypt_then_mac() const override { return true; }
+
+      size_t minimum_rsa_bits() const override { return 2000; }
+      size_t minimum_dh_group_size() const override { return 2000; }
+      size_t minimum_dsa_group_size() const override { return 2000; }
+
+      size_t minimum_ecdh_group_size() const override { return 250; }
+      size_t minimum_ecdsa_group_size() const override { return 250; }
+
+      bool allow_tls10()  const override { return false; }
+      bool allow_tls11()  const override { return false; }
+      bool allow_tls12()  const override { return true;  }
+      bool allow_dtls10() const override { return false; }
+      bool allow_dtls12() const override { return false; }
+   };
+
+/**
 * Policy for DTLS. We require DTLS v1.2 and an AEAD mode.
 */
 class BOTAN_DLL Datagram_Policy : public Policy

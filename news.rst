@@ -24,6 +24,10 @@ Version 1.11.35, Not Yet Released
 
 * Allow use of custom extensions when creating X.509 certificates (GH #744)
 
+* The default TLS policy now requires 2048 or larger DH groups by default.
+
+* Add BSI_TR_02102_2 TLS::Policy subclass representing BSI TR-02102-2 recomendations.
+
 * The default Path_Validation_Restrictions constructor has changed to
   require at least 110 bit signature strength. This means 1024 bit RSA
   certificates and also SHA-1 certificates are rejected by default.
