@@ -153,16 +153,26 @@ security company to review your design and code.
 Find Enclosed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TLS/Public Key Infrastructure
+Transport Layer Security (TLS) Protocol
 ----------------------------------------
 
-* TLS and DTLS (v1.0 to v1.2), including using preshared keys
-  (TLS-PSK) and passwords (TLS-SRP) and most important extensions,
-  such as session tickets, SNI, and ALPN.
-* X.509v3 certificates and CRLs
-* PKIX certificate path validation
-* OCSP requests
-* PKCS #10 certificate requests
+* TLS v1.0, v1.1, and v1.2. The broken SSLv3 protocol is no longer supported.
+* DTLS v1.0 and v1.2 are adaptations of TLS to datagram operation.
+* Extensions include session tickets, SNI, ALPN, OCSP staple requests (client
+  side only right now), encrypt-then-mac CBC, and extended master secret.
+* Supports authentication using preshared keys (PSK) or passwords (SRP)
+* Supports record encryption with ChaCha20Poly1305, AES/OCB, AES/GCM, AES/CCM,
+  Camellia/GCM, and legacy CBC ciphersuites with AES, Camellia, SEED, or 3DES.
+* Key exchange using Diffie-Hellman, ECDH, RSA, or CECPQ1
+
+Public Key Infrastructure
+----------------------------------------
+
+* X.509v3 certificates and CRL creation and handling
+* PKIX certificate path validation, including name constraints.
+* OCSP request creation and response handling
+* PKCS #10 certificate request generation and processing
+* SQL database backed certificate store
 
 Public Key Cryptography
 ----------------------------------------
@@ -170,8 +180,8 @@ Public Key Cryptography
 * RSA signatures and encryption
 * DH and ECDH key agreement
 * Signature schemes ECDSA, DSA, ECGDSA, ECKCDSA, and GOST 34.10-2001
-* Post-quantum signature scheme XMSS (hash based)
-* Post-quantum key agreement schemes McEliece (code based) and NewHope (Ring-LWE)
+* Post-quantum signature scheme XMSS
+* Post-quantum key agreement schemes McEliece and NewHope
 * ElGamal encryption
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
@@ -179,35 +189,39 @@ Ciphers, hashes, MACs, and checksums
 ----------------------------------------
 
 * Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, and ChaCha20Poly1305
-* Cipher modes CTR, CBC, XTS, CFB, OFB
-* Block ciphers AES, Serpent, Twofish, DES/3DES, Threefish-512,
-  Blowfish, Noekeon, IDEA, CAST-128, CAST-256, XTEA, SEED, KASUMI,
-  MISTY1, GOST 28147, and Lion
-* Stream ciphers Salsa20/XSalsa20, ChaCha20, SHAKE-128, and RC4
+* Cipher modes CTR, CBC, XTS, CFB, and OFB
+* Block ciphers AES, Serpent, Blowfish, Twofish, Threefish-512,
+  DES/3DES, Noekeon, IDEA, CAST-128, XTEA, SEED, KASUMI, GOST 28147,
+  MISTY1, Lion, CAST-256
+* Stream ciphers ChaCha20, Salsa20/XSalsa20, SHAKE-128, and RC4
 * Hash functions SHA-1, SHA-2, SHA-3, RIPEMD-160, Skein-512,
   BLAKE2b, Tiger, Whirlpool, GOST 34.11, MD5, MD4
 * Hash function combiners Parallel and Comb4P
 * Authentication codes HMAC, CMAC, Poly1305, SipHash, GMAC, CBC-MAC, X9.19 DES-MAC
 * Non-cryptographic checksums Adler32, CRC24, and CRC32
 
-Misc Useful Things
+Other Useful Things
 ----------------------------------------
 
-* Compression API wrapping zlib, bzip2, and lzma libraries
-* Interfaces for accessing PKCS #11 and TPM hardware
-* Key derivation functions for passwords, including PBKDF2
-* Password hashing functions, including bcrypt and a PBKDF based scheme
-* Various key derivation functions including HKDF
+* Full C++ PKCS #11 API wrapper
+* Interfaces for TPM v1.2 device access
+* Simple compression API wrapping zlib, bzip2, and lzma libraries
+* RNG wrappers for system RNG and hardware RNGs
+* HMAC_DRBG and entropy collection system for userspace RNGs
+* PBKDF2 password based key derivation
+* Password hashing function bcrypt and passhash9 (custom PBKDF scheme)
+* SRP-6a password authenticated key exchange
+* Key derivation functions including HKDF, KDF2, SP 800-108, SP 800-56C
 * Format preserving encryption scheme FE1
 * Threshold secret sharing
-* RFC 3394 keywrapping
+* RFC 3394 AES key wrap
 
 Recommended Algorithms
 ----------------------------------------
 
 * For encryption of network traffic use TLS v1.2
 * Packet encryption: AES-256/GCM, AES-256/OCB, Serpent/OCB, or ChaCha20Poly1305
-* General hash functions: SHA-256 or SHA-384
+* General hash function: BLAKE2b, SHA-2, SHA-3, or Skein-512
 * Message authentication or PRF: HMAC with SHA-256
 * Key derivation function: KDF2 or HKDF
 * Public Key Encryption: RSA, 2048+ bit keys, with OAEP/SHA-256
