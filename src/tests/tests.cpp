@@ -250,6 +250,18 @@ bool Test::Result::test_lt(const std::string& what, size_t produced, size_t expe
    return test_success();
    }
 
+bool Test::Result::test_lte(const std::string& what, size_t produced, size_t expected)
+   {
+   if(produced > expected)
+      {
+      std::ostringstream err;
+      err << m_who << " " << what << " unexpected result " << produced << " > " << expected;
+      return test_failure(err.str());
+      }
+
+   return test_success();
+   }
+
 bool Test::Result::test_gte(const std::string& what, size_t produced, size_t expected)
    {
    if(produced < expected)
