@@ -150,7 +150,7 @@ class RSA_Blinding_Tests : public Test
 
          Botan::RSA_PrivateKey rsa(Test::rng(), 1024);
 
-         Botan::PK_Signer signer(rsa, "Raw"); // don't try this at home
+         Botan::PK_Signer signer(rsa, Test::rng(), "Raw"); // don't try this at home
          Botan::PK_Verifier verifier(rsa, "Raw");
 
          Botan::Null_RNG null_rng;
