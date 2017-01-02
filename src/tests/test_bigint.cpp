@@ -165,17 +165,15 @@ class BigInt_Unit_Tests : public Test
                for(size_t i = 0; i != counts.size(); ++i)
                   {
                   double ratio = static_cast<double>(counts[i]) / ITERATIONS_PER_POSSIBLE_VALUE;
-                  double dev = std::min(ratio, std::fabs(1.0 - ratio));
 
-                  if(dev < .15)
+                  if(ratio >= 0.85 && ratio <= 1.15) // +/-15 %
                      {
                      result.test_success("distribution within expected range");
                      }
                   else
                      {
-                     result.test_failure("distribution " + std::to_string(dev) +
-                                         " outside expected range with count" +
-                                         std::to_string(counts[i]));
+                     result.test_failure("distribution ratio outside expected range (+/-15 %): " +
+                                         std::to_string(ratio));
                      }
                   }
                }
