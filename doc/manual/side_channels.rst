@@ -208,28 +208,29 @@ bytes runs in constant time, depending only on the block size of the cipher.
 AES
 ----------------------
 
-The basic implementation uses table lookup, an approach known to be very
-vulnerable to side channels. Modifications to the first and last round increase
-the cost of some known attacks (by reducing the number of cache lines accessed),
-but these truly can only slightly increase the samples required to recover the
-AES key.
-
-For x86 processors with SSSE3 extension (most CPUs since Atom, Core2 Duo, and
-AMD Bulldozer), there is an AES implementation which is included that is both
-faster than the table lookup code, and immune to cache-based side channel
-attacks as it does not perform any memory lookups using secret data.
-
-A version of AES which is side channel silent on x86 processors with SSSE3
-extension is included.  This instruction set is available on many older or low
-end x86 processors that do not have AES-NI (including old Atom, Core2 Duo, and
-AMD Bobcat). On most processors it is significantly faster than the table lookup
-version. It is based on a design by Mike Hamburg [VectorAes]. See aes_ssse3.cpp
-for the code. This same technique could be applied with NEON or AltiVec, and the
-paper has some optimizations for the AltiVec shuffle.
-
 On x86 processors which support it, AES-NI instruction set is used, as it is
 fast and (presumed) side channel silent. There is no support at the moment for
 the similar ARMv8 or POWER AES instructions; patches would be welcome.
+
+On x86 processors without AES-NI but with SSSE3 (which includes older Intel
+Atoms and Core2 Duos, and even now some embedded or low power x86 chips), a
+version of AES using pshufb is used which is both fast and side channel silent.
+It is based on code by Mike Hamburg [VectorAes], see aes_ssse3.cpp. This same
+technique could be applied with NEON or AltiVec, and the paper suggests some
+optimizations for the AltiVec shuffle.
+
+On all other processors, a class 4K table lookup version based on the original
+Rijndael code is used. This approach relatively fast, but now known to be very
+vulnerable to side channels. The implementation does make modifications in the
+first and last rounds to reduce the cache signature, but these merely increase
+the number of observations required. See [AesCacheColl] for one paper which
+analyzes a number of implementations including Botan. Botan already follows both
+of their suggested countermeasures, which increased the number of samples
+required from 2**13 to the only slightly less pitiful 2**19 samples.
+
+The Botan block cipher API already supports bitslicing implementations, so a
+const time 8x bitsliced AES could be added fairly easily. ARMv8 and POWER also
+have AES instructions which could be called.
 
 GCM
 ---------------------
@@ -238,7 +239,9 @@ On x86 platforms which support the clmul instruction, GCM support is fast and
 constant time.
 
 On all other platforms, GCM is slow and constant time. It uses a simple bit at
-at time loop. It would be much faster using a table lookup,
+at time loop. It would be much faster using a table lookup, but we wish to avoid
+side channels. One improvement here would be the option of using a 2K or 4K
+table, but using a side-channel silent (masked) table lookup.
 
 OCB
 -----------------------
@@ -345,6 +348,9 @@ the tests.
 
 References
 ---------------
+
+[AesCacheColl] Bonneau, Mironov "Cache-Collision Timing Attacks Against AES"
+(http://www.jbonneau.com/doc/BM06-CHES-aes_cache_timing.pdf)
 
 [CoronDpa] Coron,
 "Resistance against Differential Power Analysis for Elliptic Curve Cryptosystems"
