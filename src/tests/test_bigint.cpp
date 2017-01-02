@@ -133,7 +133,8 @@ class BigInt_Unit_Tests : public Test
 
          result.start_timer();
 
-         const size_t ITERATIONS = 500;
+         // A value of 500 caused a non-negligible amount of test failures
+         const size_t ITERATIONS_PER_POSSIBLE_VALUE = 750;
 
          std::vector<size_t> min_ranges{ 0 };
          std::vector<size_t> max_ranges{ 10 };
@@ -154,7 +155,7 @@ class BigInt_Unit_Tests : public Test
 
                std::vector<size_t> counts(range_max - range_min);
 
-               for(size_t i = 0; i != counts.size() * ITERATIONS; ++i)
+               for(size_t i = 0; i != counts.size() * ITERATIONS_PER_POSSIBLE_VALUE; ++i)
                   {
                   uint32_t r = BigInt::random_integer(Test::rng(), range_min, range_max).to_u32bit();
                   result.test_gte("random_integer", r, range_min);
@@ -162,20 +163,18 @@ class BigInt_Unit_Tests : public Test
                   counts[r - range_min] += 1;
                   }
 
-               for(size_t i = 0; i != counts.size(); ++i)
+               for(const auto count : counts)
                   {
-                  double ratio = static_cast<double>(counts[i]) / ITERATIONS;
-                  double dev = std::min(ratio, std::fabs(1.0 - ratio));
+                  double ratio = static_cast<double>(count) / ITERATIONS_PER_POSSIBLE_VALUE;
 
-                  if(dev < .15)
+                  if(ratio >= 0.85 && ratio <= 1.15) // +/-15 %
                      {
                      result.test_success("distribution within expected range");
                      }
                   else
                      {
-                     result.test_failure("distribution " + std::to_string(dev) +
-                                         " outside expected range with count" +
-                                         std::to_string(counts[i]));
+                     result.test_failure("distribution ratio outside expected range (+/-15 %): " +
+                                         std::to_string(ratio));
                      }
                   }
                }
