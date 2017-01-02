@@ -56,7 +56,17 @@ class Diffie_Hellman_KAT_Tests : public PK_Key_Agreement_Test
          const Botan::BigInt p = get_req_bn(vars, "P");
          const Botan::BigInt g = get_req_bn(vars, "G");
          const Botan::BigInt y = get_req_bn(vars, "Y");
-         const Botan::DL_Group grp(p, g);
+         const Botan::BigInt q = get_opt_bn(vars, "Q", 0);
+
+         Botan::DL_Group grp;
+         if(q == 0)
+            {
+            grp = Botan::DL_Group(p, g);
+            }
+         else
+            {
+            grp = Botan::DL_Group(p, q, g);
+            }
 
          Botan::DH_PublicKey key(grp, y);
          return key.public_value();
