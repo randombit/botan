@@ -133,7 +133,7 @@ class BigInt_Unit_Tests : public Test
 
          result.start_timer();
 
-         const size_t ITERATIONS = 500;
+         const size_t ITERATIONS_PER_POSSIBLE_VALUE = 500;
 
          std::vector<size_t> min_ranges{ 0 };
          std::vector<size_t> max_ranges{ 10 };
@@ -154,7 +154,7 @@ class BigInt_Unit_Tests : public Test
 
                std::vector<size_t> counts(range_max - range_min);
 
-               for(size_t i = 0; i != counts.size() * ITERATIONS; ++i)
+               for(size_t i = 0; i != counts.size() * ITERATIONS_PER_POSSIBLE_VALUE; ++i)
                   {
                   uint32_t r = BigInt::random_integer(Test::rng(), range_min, range_max).to_u32bit();
                   result.test_gte("random_integer", r, range_min);
@@ -164,7 +164,7 @@ class BigInt_Unit_Tests : public Test
 
                for(size_t i = 0; i != counts.size(); ++i)
                   {
-                  double ratio = static_cast<double>(counts[i]) / ITERATIONS;
+                  double ratio = static_cast<double>(counts[i]) / ITERATIONS_PER_POSSIBLE_VALUE;
                   double dev = std::min(ratio, std::fabs(1.0 - ratio));
 
                   if(dev < .15)
