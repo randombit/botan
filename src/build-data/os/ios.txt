@@ -1,0 +1,26 @@
+os_type unix
+
+soname_pattern_base  "libbotan-{version_major}.{version_minor}.dylib"
+soname_pattern_abi   "libbotan-{version_major}.{version_minor}.{abi_rev}.dylib"
+soname_pattern_patch "libbotan-{version_major}.{version_minor}.{abi_rev}.{version_patch}.dylib"
+
+# It doesn't have the 's' option; you need to use needs ranlib
+ar_command "ar cr"
+ar_needs_ranlib yes
+
+doc_dir doc
+
+<target_features>
+dlopen
+gettimeofday
+gmtime_r
+memset_s
+readdir
+timegm
+sockets
+threads
+filesystem
+</target_features>
+
+<aliases>
+</aliases>

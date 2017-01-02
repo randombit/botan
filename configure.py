@@ -2150,7 +2150,7 @@ def main(argv = None):
                 options.compiler = 'gcc'
             else:
                 options.compiler = 'msvc'
-        elif options.os == 'darwin' or options.os == 'freebsd':
+        elif options.os in ['darwin', 'freebsd', 'ios']:
             if have_program('clang++'):
                 options.compiler = 'clang'
         elif options.os == 'openbsd':

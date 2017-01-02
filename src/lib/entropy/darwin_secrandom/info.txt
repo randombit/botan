@@ -6,8 +6,10 @@ darwin_secrandom.h
 
 <os>
 darwin
+ios
 </os>
 
 <frameworks>
 darwin -> Security
+ios -> Security
 </frameworks>

@@ -75,8 +75,10 @@ if [ "${BUILD_MODE:0:6}" = "cross-" ]; then
         CFG_FLAGS+=(--disable-shared)
         MAKE_PREFIX=(xcrun --sdk iphoneos)
         if [ "$BUILD_MODE" = "cross-arm32" ]; then
+            CFG_FLAGS+=(--os=ios)
             CFG_FLAGS+=(--cpu=armv7 --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++")
         elif [ "$BUILD_MODE" = "cross-arm64" ]; then
+            CFG_FLAGS+=(--os=ios)
             CFG_FLAGS+=(--cpu=armv8-a --cc-abi-flags="-arch arm64 -stdlib=libc++")
         fi
     elif [ "$TRAVIS_OS_NAME" = "linux" ]; then
