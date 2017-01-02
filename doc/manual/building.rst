@@ -186,8 +186,8 @@ your documentation and/or local expert for details).
 For iOS using XCode
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For iOS, you typically build for 3 architectures: armv7 (32 bit, o
-lder iOS devices), armv8-a (64 bit, recent iOS devices) and x86_64 for
+For iOS, you typically build for 3 architectures: armv7 (32 bit, older
+iOS devices), armv8-a (64 bit, recent iOS devices) and x86_64 for
 the iPhone simulator. You can build for these 3 architectures and then
 create a universal binary containing code for all of these
 architectures, so you can link to Botan for the simulator as well as
@@ -195,20 +195,20 @@ for an iOS device.
 
 To cross compile for armv7, configure and make with::
 
-   $ ./configure.py --prefix="iphone-32" --cpu=armv7 --cc=clang \
-                    --cc-abi-flags="-arch armv7 -stdlib=libc++"
+   $ ./configure.py --os=ios --prefix="iphone-32" --cpu=armv7 --cc=clang \
+                    --cc-abi-flags="-arch armv7"
    xcrun --sdk iphoneos make install
 
 To cross compile for armv8-a, configure and make with::
 
-   $ ./configure.py --prefix="iphone-64" --cpu=armv8-a --cc=clang \
-                    --cc-abi-flags="-arch arm64 -stdlib=libc++"
+   $ ./configure.py --os=ios --prefix="iphone-64" --cpu=armv8-a --cc=clang \
+                    --cc-abi-flags="-arch arm64"
    xcrun --sdk iphoneos make install
 
 To compile for the iPhone Simulator, configure and make with::
 
-   $ ./configure.py --prefix="iphone-simulator" --cpu=x86_64 --cc=clang \
-                    --cc-abi-flags="-arch x86_64 -stdlib=libc++"
+   $ ./configure.py --os=ios --prefix="iphone-simulator" --cpu=x86_64 --cc=clang \
+                    --cc-abi-flags="-arch x86_64"
    xcrun --sdk iphonesimulator make install
 
 Now create the universal binary and confirm the library is compiled
