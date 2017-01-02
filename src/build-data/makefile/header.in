@@ -6,9 +6,13 @@ CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
 SO_OBJ_FLAGS   = %{shared_flags}
 
-LIB_LINK_CMD   = %{lib_link_cmd} $(LDFLAGS)
-CLI_LINK_CMD   = %{cli_link_cmd} $(LDFLAGS)
-TEST_LINK_CMD  = %{test_link_cmd} $(LDFLAGS)
+# Additional $(LDFLAGS) can be set via environment variable
+# Use internal name BOTAN_* because nmake does not support gmake's variable assignments (:=)
+BOTAN_LDFLAGS  = $(LDFLAGS)
+
+LIB_LINK_CMD   = %{lib_link_cmd} $(BOTAN_LDFLAGS)
+CLI_LINK_CMD   = %{cli_link_cmd} $(BOTAN_LDFLAGS)
+TEST_LINK_CMD  = %{test_link_cmd} $(BOTAN_LDFLAGS)
 
 LIB_LINKS_TO   = %{link_to}
 CLI_LINKS_TO   = $(LIB_LINKS_TO)
