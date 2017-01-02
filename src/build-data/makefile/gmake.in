@@ -36,11 +36,11 @@ all: $(CLI) $(TEST)
 libs: $(LIBRARIES)
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
-	$(CLI_LINK_CMD) $(LDFLAGS) $(CLIOBJS) -L%{out_dir} -l%{libname} $(CLI_LINKS_TO) -o $(CLI)
+	$(CLI_LINK_CMD) $(CLIOBJS) -L%{out_dir} -l%{libname} $(CLI_LINKS_TO) -o $(CLI)
 	$(CLI_POST_LINK_CMD)
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
-	$(TEST_LINK_CMD) $(LDFLAGS) $(TESTOBJS) -L%{out_dir} -l%{libname} $(TEST_LINKS_TO) -o $(TEST)
+	$(TEST_LINK_CMD) $(TESTOBJS) -L%{out_dir} -l%{libname} $(TEST_LINKS_TO) -o $(TEST)
 	$(TEST_POST_LINK_CMD)
 
 $(STATIC_LIB): $(LIBOBJS)

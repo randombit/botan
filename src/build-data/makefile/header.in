@@ -6,9 +6,9 @@ CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
 SO_OBJ_FLAGS   = %{shared_flags}
 
-LIB_LINK_CMD   = %{lib_link_cmd}
-CLI_LINK_CMD   = %{cli_link_cmd}
-TEST_LINK_CMD  = %{test_link_cmd}
+LIB_LINK_CMD   = %{lib_link_cmd} $(LDFLAGS)
+CLI_LINK_CMD   = %{cli_link_cmd} $(LDFLAGS)
+TEST_LINK_CMD  = %{test_link_cmd} $(LDFLAGS)
 
 LIB_LINKS_TO   = %{link_to}
 CLI_LINKS_TO   = $(LIB_LINKS_TO)
