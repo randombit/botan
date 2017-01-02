@@ -8,7 +8,6 @@ Contents
    goals
    building
    platforms
-   firststep
    versions
    secmem
    rng
