@@ -5,6 +5,7 @@ Contents
 .. toctree::
 
    index
+   goals
    building
    platforms
    firststep
