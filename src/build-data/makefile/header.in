@@ -1,13 +1,16 @@
+# Note: Use internal name BOTAN_* for variables that are used from environment
+# because nmake does not support gmake's variable assignments (:=)
+
 # Compiler Options
 CXX            = %{cxx} %{cxx_abi_flags}
 LINKER         = %{linker}
 
-CXXFLAGS       = %{cc_compile_flags}
+# Additional $(CXXFLAGS) can be set via environment variable
+BOTAN_CXXFLAGS = %{cc_compile_flags} $(CXXFLAGS)
 WARN_FLAGS     = %{cc_warning_flags}
 SO_OBJ_FLAGS   = %{shared_flags}
 
 # Additional $(LDFLAGS) can be set via environment variable
-# Use internal name BOTAN_* because nmake does not support gmake's variable assignments (:=)
 BOTAN_LDFLAGS  = $(LDFLAGS)
 
 LIB_LINK_CMD   = %{lib_link_cmd} $(BOTAN_LDFLAGS)
@@ -18,9 +21,9 @@ LIB_LINKS_TO   = %{link_to}
 CLI_LINKS_TO   = $(LIB_LINKS_TO)
 TEST_LINKS_TO  = $(LIB_LINKS_TO)
 
-LIB_FLAGS      = $(SO_OBJ_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
-CLI_FLAGS      = $(CXXFLAGS) $(WARN_FLAGS)
-TEST_FLAGS     = $(CXXFLAGS) $(WARN_FLAGS)
+LIB_FLAGS      = $(SO_OBJ_FLAGS) $(BOTAN_CXXFLAGS) $(WARN_FLAGS)
+CLI_FLAGS      = $(BOTAN_CXXFLAGS) $(WARN_FLAGS)
+TEST_FLAGS     = $(BOTAN_CXXFLAGS) $(WARN_FLAGS)
 
 SCRIPTS_DIR    = %{scripts_dir}
 INSTALLED_LIB_DIR = %{destdir}/%{libdir}
