@@ -956,7 +956,7 @@ class CompilerInfo(object):
     """
     Return the machine specific ABI flags
     """
-    def mach_abi_link_flags(self, options):
+    def mach_abi_flags(self, options):
         def all():
             if options.with_debug_info and 'all-debug' in self.mach_abi_linking:
                 return 'all-debug'
@@ -1516,7 +1516,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'mp_bits': choose_mp_bits(),
 
         'cxx': (options.compiler_binary or cc.binary_name),
-        'cxx_abi_flags': cc.mach_abi_link_flags(options),
+        'cxx_abi_flags': cc.mach_abi_flags(options),
         'linker': cc.linker_name or '$(CXX)',
 
         'cc_compile_flags': cc.cc_compile_flags(options),
