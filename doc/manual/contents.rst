@@ -7,10 +7,8 @@ Contents
    index
    building
    platforms
-   python
-   cli
-   versions
    firststep
+   versions
    secmem
    rng
    filters
@@ -30,6 +28,10 @@ Contents
    srp
    fpe
    compression
-   ffi
    pkcs11
    tpm
+   ffi
+   python
+   cli
+   side_channels
+

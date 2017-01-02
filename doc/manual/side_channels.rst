@@ -26,34 +26,30 @@ compromised. To protect against this (or any other computational error which
 would have the same effect as a fault attack in this case), after every private
 key operation the result is checked for consistency with the public key. This
 introduces only slight additional overhead and blocks most fault attacks; it is
-possible to use a second fault attack to bypass this check but
+possible to use a second fault attack to bypass this verification, but such a
+double fault attack requires significantly more control on the part of an
+attacker than a BellCore style attack, which is possible if any error at all
+occurs during either modular exponentiation involved in the RSA signature
+operation.
 
-See blinding.cpp and rsa.cpp for details.
+See blinding.cpp and rsa.cpp.
 
 If the OpenSSL provider is enabled, then no explicit blinding is done; we assume
-OpenSSL handles this. See openssl_rsa.cpp for details.
+OpenSSL handles this. See openssl_rsa.cpp.
 
-OAEP
-----------------------
+Decryption of PKCS #1 v1.5 Ciphertexts
+----------------------------------------
 
-OAEP decoding is vulnerable to a side channel attack. If an attacker can
-determine where in the decoding process an error occurred, they can use this to
-decrypt arbitrary RSA ciphertexts. See [OaepTiming] for details. This is avoided
-in Botan by making the decoding operation const time. This is verified using
-valgrind. See eme_oaep.cpp for details.
-
-PKCS #1 v1.5 Decryption
--------------------------
-
-This padding scheme is used with RSA, and is very vulnerable to errors. In an
+This padding scheme is used with RSA, and is very vulnerable to errors. In a
 scenario where an attacker can repeatedly present RSA ciphertexts, and a
 legitimate key holder will attempt to decrypt each ciphertext and simply
 indicates to the attacker if the PKCS padding was valid or not (without
 revealing any additional information), the attacker can use this behavior as an
 oracle to perform iterative decryption of arbitrary RSA ciphertexts encrypted
-under that key. This is the famous million message attack [MillionMsg]. For
-example, simply a difference in timing between a valid and invalid RSA
-ciphertext due to an early error exit may be enough to mount an attack.
+under that key. This is the famous million message attack [MillionMsg]
+[MillionMsgTiming]. For example, simply a difference in timing between a valid
+and invalid RSA ciphertext due to an early error exit may be enough to mount an
+attack.
 
 Preventing this issue in full requires some application level changes. In
 protocols which know the expected length of the encrypted key, PK_Decryptor
@@ -73,7 +69,32 @@ broken. [VersionOracle]. This is supported by a special version of
 PK_Decryptor::decrypt_or_random that additionally allows verifying one or more
 content bytes, in addition to the PKCS padding.
 
-See eme_pkcs.cpp and pubkey.cpp for details.
+See eme_pkcs.cpp and pubkey.cpp.
+
+Verification of PKCS #1 v1.5 Signatures
+----------------------------------------
+
+One way of verifying PKCS #1 v1.5 padding is to decode it with an ASN.1 BER
+parser.  However such a design commonly leads to accepting, and needlessly
+exposes the BER parser to untrusted inputs. It is possible (and simpler) to
+instead re-encode the hash value we are expecting, and const time compare it
+with the output of the RSA operation.
+
+See emsa_pkcs.cpp.
+
+OAEP
+----------------------
+
+RSA OAEP is (PKCS#1 v2) is the recommended version of RSA encoding standard,
+because it is not directly vulnerable to Bleichenbacher attack. However, if
+implemented incorrectly, a side channel can be presented to an attacker and
+create an oracle for decrypting RSA ciphertexts [OaepTiming].
+
+This attack is avoided in Botan by making the OAEP decoding operation run
+without any conditional jumps or indexes, with the only variance in runtime
+coming from the length of the RSA key (which is public information).
+
+See eme_oaep.cpp.
 
 Modular Exponentiation
 ------------------------
@@ -83,7 +104,7 @@ In the current code, information about the exponent is leaked through the
 sequence of memory indexes; we currently rely on randomized blinding at higher
 levels of the cryptographic stack to hide this. A future project would be to
 change this to use either Montgomery ladder or use a side channel silent table
-lookup. See powm_mnt.cpp for details.
+lookup. See powm_mnt.cpp.
 
 The Karatsuba multiplication algorithm has some conditional branches that
 probably expose information through the branch predictor, but probably? does not
@@ -92,7 +113,7 @@ the conditional. There is certainly room for improvement here. See mp_karat.cpp
 for details.
 
 The Montgomery reduction is written (and tested) to run in constant time. See
-mp_monty.cpp for details.
+mp_monty.cpp.
 
 ECC point decoding
 ----------------------
@@ -100,7 +121,7 @@ ECC point decoding
 The API function OS2ECP, which is used to convert byte strings to ECC points,
 verifies that all points satisfy the ECC curve equation. Points that do not
 satisfy the equation are invalid, and can sometimes be used to break
-protocols. See point_gfp.cpp for details.
+protocols ([InvalidCurve] [InvalidCurveTLS]). See point_gfp.cpp.
 
 ECC scalar multiply
 ----------------------
@@ -133,7 +154,7 @@ through memory index values. We rely on scalar blinding to reduce this
 leakage. It would obviously be better for Blinded_Point_Multiply to converge on
 a single side channel silent algorithm.
 
-See point_gfp.cpp for details.
+See point_gfp.cpp.
 
 ECDH
 ----------------------
@@ -292,20 +313,23 @@ currently known and has been verified to work as expected on common platforms.
 If BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO is set to 0 in build.h (not the default) a
 byte at a time loop through a volatile pointer is used to overwrite the array.
 
-Botan's secure_vector type is a std::vector with a custom allocator. The
-allocator simply calls secure_scrub_memory before freeing memory.
-
 Memory allocation
 ----------------------
 
-Some systems including Linux and FreeBSD support applications pinning a small
-amount (typically 64 KB, sometimes more) of virtual memory pages in RAM, such
-that they will not be paged to disk. If available, Botan uses such a region for
-storing key material. It is created in anonymous mapped memory (not disk
-backed), locked in memory, and zeroized before freeing.
+Botan's secure_vector type is a std::vector with a custom allocator. The
+allocator calls secure_scrub_memory before freeing memory.
 
-This memory pool is used by secure_vector when available. It can be disabled by
-setting the environment variable BOTAN_MLOCK_POOL_SIZE to 0.
+Some operating systems support an API call to lock a range of pages
+into memory, such that they will never be swapped out (mlock on POSIX,
+VirtualLock on Windows). On many POSIX systems mlock is only usable by
+root, but on Linux, FreeBSD and possibly other systems a small amount
+of memory can be mlock'ed by processes without extra credentials.
+
+If available, Botan uses such a region for storing key material. It is
+created in anonymous mapped memory (not disk backed), locked in
+memory, and scrubbed on free. This memory pool is used by
+secure_vector when available. It can be disabled at runtime setting
+the environment variable BOTAN_MLOCK_POOL_SIZE to 0.
 
 Automated Analysis
 ---------------------
@@ -314,7 +338,7 @@ Currently the main tool used by the Botan developers for testing for side
 channels at runtime is valgrind; valgrind's runtime API is used to taint memory
 values, and any jumps or indexes using data derived from these values will cause
 a valgrind warning. This technique was first used by Adam Langley in ctgrind.
-See the header ct_utils.h for details.
+See header ct_utils.h.
 
 To check, install valgrind, configure the build with --with-valgrind, and run
 the tests.
@@ -326,12 +350,27 @@ References
 "Resistance against Differential Power Analysis for Elliptic Curve Cryptosystems"
 (http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.1.5695)
 
+[InvalidCurve] Biehl, Meyer, Müller: Differential fault attacks on
+elliptic curve cryptosystems
+(http://www.iacr.org/archive/crypto2000/18800131/18800131.pdf)
+
+[InvalidCurveTLS] Jager, Schwenk, Somorovsky: Practical Invalid Curve
+Attacks on TLS-ECDH
+(https://www.nds.rub.de/research/publications/ESORICS15/)
+
+[SafeCurves] Bernstein, Lange: SafeCurves: choosing safe curves for
+elliptic-curve cryptography. (http://safecurves.cr.yp.to)
+
 [Lucky13] AlFardan, Paterson "Lucky Thirteen: Breaking the TLS and DTLS Record Protocols"
 (http://www.isg.rhul.ac.uk/tls/TLStiming.pdf)
 
 [MillionMsg] Bleichenbacher "Chosen Ciphertext Attacks Against Protocols Based
 on the RSA Encryption Standard PKCS1"
 (http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.19.8543)
+
+[MillionMsgTiming] Meyer, Somorovsky, Weiss, Schwenk, Schinzel, Tews: Revisiting
+SSL/TLS Implementations: New Bleichenbacher Side Channels and Attacks
+(https://www.nds.rub.de/research/publications/mswsst2014-bleichenbacher-usenix14/)
 
 [OaepTiming] Manger, "A Chosen Ciphertext Attack on RSA Optimal Asymmetric
 Encryption Padding (OAEP) as Standardized in PKCS #1 v2.0"
