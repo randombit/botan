@@ -993,9 +993,7 @@ class CompilerInfo(object):
         if options.cc_abi_flags != '':
             abi_flags += ' ' + options.cc_abi_flags
 
-        if abi_flags != '':
-            return ' ' + abi_flags
-        return ''
+        return abi_flags
 
     def cc_warning_flags(self, options):
         def gen_flags():
