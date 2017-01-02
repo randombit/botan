@@ -162,9 +162,9 @@ class BigInt_Unit_Tests : public Test
                   counts[r - range_min] += 1;
                   }
 
-               for(size_t i = 0; i != counts.size(); ++i)
+               for(const auto count : counts)
                   {
-                  double ratio = static_cast<double>(counts[i]) / ITERATIONS_PER_POSSIBLE_VALUE;
+                  double ratio = static_cast<double>(count) / ITERATIONS_PER_POSSIBLE_VALUE;
 
                   if(ratio >= 0.85 && ratio <= 1.15) // +/-15 %
                      {
