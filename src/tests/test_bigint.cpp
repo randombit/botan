@@ -133,7 +133,8 @@ class BigInt_Unit_Tests : public Test
 
          result.start_timer();
 
-         const size_t ITERATIONS_PER_POSSIBLE_VALUE = 500;
+         // A value of 500 caused a non-negligible amount of test failures
+         const size_t ITERATIONS_PER_POSSIBLE_VALUE = 750;
 
          std::vector<size_t> min_ranges{ 0 };
          std::vector<size_t> max_ranges{ 10 };
