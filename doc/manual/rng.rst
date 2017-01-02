@@ -73,26 +73,20 @@ Note well: like most other classes in Botan, it is not safe to share
 an instance of ``AutoSeeded_RNG`` among multiple threads without
 serialization.
 
-The current version uses the HMAC_DRBG with SHA-384. The initial seed
-is generated either by the system PRNG (if available) or a default set
-of entropy sources. These are also used for periodic reseeding of the
-RNG state.
+The current version uses the HMAC_DRBG with SHA-384 or SHA-256. The
+initial seed is generated either by the system PRNG (if available) or
+a default set of entropy sources. These are also used for periodic
+reseeding of the RNG state.
 
-ANSI X9.31
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TPM_RNG
+^^^^^^^^^^^^^^^^^
 
-This generator is deprecated and will be removed in a future release.
+This RNG type allows using the RNG exported from a TPM chip.
 
-``ANSI_X931_PRNG`` is the standard issue X9.31 Appendix A.2.4 PRNG,
-though using AES-256 instead of 3DES as the block cipher. This PRNG
-implementation has been checked against official X9.31 test vectors.
+PKCS11_RNG
+^^^^^^^^^^^^^^^^^
 
-Internally, the PRNG holds a pointer to another RNG object. This
-internal PRNG generates the key and seed used by the X9.31 algorithm,
-as well as the date/time vectors. Each time an X9.31 PRNG object
-receives entropy, it passes it along to the PRNG it is holding, and
-then pulls out some random bits to generate a new key and seed. This
-PRNG considers itself seeded as soon as the internal PRNG is seeded.
+This RNG type allows using the RNG exported from a hardware token accessed via PKCS11.
 
 Entropy Sources
 ---------------------------------
