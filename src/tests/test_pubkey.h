@@ -56,7 +56,7 @@ class PK_Signature_Generation_Test : public PK_Test
          }
 
    private:
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override;
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override final;
    };
 
 class PK_Signature_Verification_Test : public PK_Test
@@ -75,7 +75,7 @@ class PK_Signature_Verification_Test : public PK_Test
 
       virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) = 0;
    private:
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) override;
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
    };
 
 class PK_Signature_NonVerification_Test : public PK_Test
@@ -96,7 +96,7 @@ class PK_Signature_NonVerification_Test : public PK_Test
 
       virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) = 0;
    private:
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) override;
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
    };
 
 class PK_Encryption_Decryption_Test : public PK_Test
@@ -112,7 +112,7 @@ class PK_Encryption_Decryption_Test : public PK_Test
 
       virtual std::string default_padding(const VarMap&) const { return "Raw"; }
    private:
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) override;
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
 };
 
 class PK_Key_Agreement_Test : public PK_Test
@@ -133,7 +133,7 @@ class PK_Key_Agreement_Test : public PK_Test
       virtual std::string default_kdf(const VarMap&) const { return "Raw"; }
 
    private:
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) override;
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
    };
 
 class PK_KEM_Test : public PK_Test
@@ -147,13 +147,13 @@ class PK_KEM_Test : public PK_Test
 
       virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) = 0;
    private:
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) override;
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
    };
 
 class PK_Key_Generation_Test : public Test
    {
    protected:
-      std::vector<Test::Result> run() override;
+      std::vector<Test::Result> run() override final;
 
       virtual std::vector<std::string> keygen_params() const = 0;
 
