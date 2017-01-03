@@ -46,20 +46,21 @@ legitimate key holder will attempt to decrypt each ciphertext and simply
 indicates to the attacker if the PKCS padding was valid or not (without
 revealing any additional information), the attacker can use this behavior as an
 oracle to perform iterative decryption of arbitrary RSA ciphertexts encrypted
-under that key. This is the famous million message attack [MillionMsg]
-[MillionMsgTiming]. For example, simply a difference in timing between a valid
-and invalid RSA ciphertext due to an early error exit may be enough to mount an
-attack.
+under that key. This is the famous million message attack [MillionMsg].  A side
+channel such as a difference in time taken to handle valid and invalid RSA
+ciphertexts is enough to mount the attack [MillionMsgTiming].
 
 Preventing this issue in full requires some application level changes. In
 protocols which know the expected length of the encrypted key, PK_Decryptor
 provides the function `decrypt_or_random` which first generates a random fake
 key, then decrypts the presented ciphertext, then in constant time either copies
 out the random key or the decrypted plaintext depending on if the ciphertext was
-valid or not. Then, the protocol can carry on with a randomly chosen key, which
-will presumably cause total failure in a way that does not allow an attacker to
+valid or not (valid padding and expected plaintext length). Then in the case of
+an attack, the protocol will carry on with a randomly chosen key, which will
+presumably cause total failure in a way that does not allow an attacker to
 distinguish (via any timing or other side channel, nor any error messages
-specific to the one situation vs the other) if it was the RSA decryption
+specific to the one situation vs the other) if the RSA padding was valid or
+invalid.
 
 One very important user of PKCS #1 v1.5 encryption is the TLS protocol. In TLS,
 some extra versioning information is embedded in the plaintext message, along
@@ -74,11 +75,15 @@ See eme_pkcs.cpp and pubkey.cpp.
 Verification of PKCS #1 v1.5 Signatures
 ----------------------------------------
 
-One way of verifying PKCS #1 v1.5 padding is to decode it with an ASN.1 BER
-parser.  However such a design commonly leads to accepting, and needlessly
-exposes the BER parser to untrusted inputs. It is possible (and simpler) to
-instead re-encode the hash value we are expecting, and const time compare it
-with the output of the RSA operation.
+One way of verifying PKCS #1 v1.5 signature padding is to decode it with an
+ASN.1 BER parser. However such a design commonly leads to accepting signatures
+besides the (single) valid RSA PKCS #1 v1.5 signature for any given message,
+because often the BER parser accepts variations of the encoding which are
+actually invalid. It also needlessly exposes the BER parser to untrusted inputs.
+
+It is safer and simpler to instead re-encode the hash value we are expecting
+using the PKCS #1 v1.5 encoding rules, and const time compare our expected
+encoding with the output of the RSA operation. So that is what Botan does.
 
 See emsa_pkcs.cpp.
 
@@ -229,8 +234,7 @@ of their suggested countermeasures, which increased the number of samples
 required from 2**13 to the only slightly less pitiful 2**19 samples.
 
 The Botan block cipher API already supports bitslicing implementations, so a
-const time 8x bitsliced AES could be added fairly easily. ARMv8 and POWER also
-have AES instructions which could be called.
+const time 8x bitsliced AES could be integrated fairly easily.
 
 GCM
 ---------------------
