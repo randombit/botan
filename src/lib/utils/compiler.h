@@ -34,7 +34,7 @@
 /*
 * Define BOTAN_FUNC_ISA
 */
-#if defined(__GNUG__) || defined(__clang__)
+#if defined(__GNUG__) || (BOTAN_CLANG_VERSION > 38)
   #define BOTAN_FUNC_ISA(isa) __attribute__ ((target(isa)))
 #else
   #define BOTAN_FUNC_ISA(isa)
