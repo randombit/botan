@@ -772,7 +772,7 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
                                            Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn);
+   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 

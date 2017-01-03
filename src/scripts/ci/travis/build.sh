@@ -75,8 +75,10 @@ if [ "${BUILD_MODE:0:6}" = "cross-" ]; then
         CFG_FLAGS+=(--disable-shared)
         MAKE_PREFIX=(xcrun --sdk iphoneos)
         if [ "$BUILD_MODE" = "cross-arm32" ]; then
+            CFG_FLAGS+=(--os=ios)
             CFG_FLAGS+=(--cpu=armv7 --cc-abi-flags="-arch armv7 -arch armv7s -stdlib=libc++")
         elif [ "$BUILD_MODE" = "cross-arm64" ]; then
+            CFG_FLAGS+=(--os=ios)
             CFG_FLAGS+=(--cpu=armv8-a --cc-abi-flags="-arch arm64 -stdlib=libc++")
         fi
     elif [ "$TRAVIS_OS_NAME" = "linux" ]; then
@@ -105,7 +107,8 @@ if [ "${BUILD_MODE:0:6}" = "cross-" ]; then
         elif [ "$BUILD_MODE" = "cross-win32" ]; then
             CC_BIN=i686-w64-mingw32-g++
             # No test prefix needed, PE executes as usual with Wine installed
-            CFG_FLAGS+=(--cpu=x86_32 --os=mingw --cc-abi-flags="-static" --disable-shared)
+            CFG_FLAGS+=(--os=mingw)
+            CFG_FLAGS+=(--cpu=x86_32 --cc-abi-flags="-static" --disable-shared)
             TEST_EXE=./botan-test.exe
         fi
     fi
