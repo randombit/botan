@@ -1800,29 +1800,19 @@ def choose_link_method(options):
 """
 Copy or link the file, depending on what the platform offers
 """
-def portable_symlink(filename, target_dir, method):
+def portable_symlink(file_path, target_dir, method):
 
-    if not os.access(filename, os.R_OK):
-        logging.warning('Missing file %s' % (filename))
+    if not os.access(file_path, os.R_OK):
+        logging.warning('Missing file %s' % (file_path))
         return
 
     if method == 'symlink':
-        def count_dirs(dir, accum = 0):
-            if dir in ['', '/', os.path.curdir]:
-                return accum
-            (dir,basename) = os.path.split(dir)
-            return accum + 1 + count_dirs(dir)
-
-        dirs_up = count_dirs(target_dir)
-        source = os.path.join(os.path.join(*[os.path.pardir] * dirs_up), filename)
-        target = os.path.join(target_dir, os.path.basename(filename))
-        os.symlink(source, target)
-
+        rel_file_path = os.path.relpath(file_path, start=target_dir)
+        os.symlink(rel_file_path, os.path.join(target_dir, os.path.basename(file_path)))
     elif method == 'hardlink':
-        os.link(filename, os.path.join(target_dir, os.path.basename(filename)))
-
+        os.link(file_path, os.path.join(target_dir, os.path.basename(file_path)))
     elif method == 'copy':
-        shutil.copy(filename, target_dir)
+        shutil.copy(file_path, target_dir)
     else:
         raise Exception('Unknown link method %s' % (method))
 
