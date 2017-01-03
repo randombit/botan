@@ -1807,20 +1807,10 @@ def portable_symlink(filename, target_dir, method):
         return
 
     if method == 'symlink':
-        def count_dirs(dir, accum = 0):
-            if dir in ['', '/', os.path.curdir]:
-                return accum
-            (dir,basename) = os.path.split(dir)
-            return accum + 1 + count_dirs(dir)
-
-        dirs_up = count_dirs(target_dir)
-        source = os.path.join(os.path.join(*[os.path.pardir] * dirs_up), filename)
-        target = os.path.join(target_dir, os.path.basename(filename))
-        os.symlink(source, target)
-
+        rel_filename = os.path.relpath(filename, start=target_dir)
+        os.symlink(rel_filename, os.path.join(target_dir, os.path.basename(filename)))
     elif method == 'hardlink':
         os.link(filename, os.path.join(target_dir, os.path.basename(filename)))
-
     elif method == 'copy':
         shutil.copy(filename, target_dir)
     else:
