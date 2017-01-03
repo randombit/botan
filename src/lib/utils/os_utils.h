@@ -30,7 +30,7 @@ uint32_t get_process_id();
 * Under GCC or Clang on supported platforms the hardware cycle counter is queried:
 *  x86, PPC, Alpha, SPARC, IA-64, S/390x, and HP-PA
 * On other platforms clock_gettime is used with some monotonic timer, if available.
-* As a final callback std::chrono::high_resolution_clock is used.
+* As a final fallback std::chrono::high_resolution_clock is used.
 */
 uint64_t get_processor_timestamp();
 
