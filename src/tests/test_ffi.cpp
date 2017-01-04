@@ -42,6 +42,7 @@ class FFI_Unit_Tests : public Test
          result.test_is_eq("Patch version", botan_version_patch(), Botan::version_patch());
          result.test_is_eq("Botan version", botan_version_string(), Botan::version_cstr());
          result.test_is_eq("Botan version datestamp", botan_version_datestamp(), Botan::version_datestamp());
+         result.test_is_eq("FFI supports its own version", botan_ffi_supports_api(botan_ffi_api_version()), 0);
 
          const std::vector<uint8_t> mem1 = { 0xFF, 0xAA, 0xFF };
          const std::vector<uint8_t> mem2 = mem1;

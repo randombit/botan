@@ -66,6 +66,12 @@ how to provide the cleanest API for such users would be most welcome.
 */
 BOTAN_DLL uint32_t botan_ffi_api_version();
 
+/*
+* Return 0 (ok) if the version given is one this library supports.
+* botan_ffi_supports_api(botan_ffi_api_version()) will always return 0.
+*/
+BOTAN_DLL int botan_ffi_supports_api(uint32_t api_version);
+
 BOTAN_DLL const char* botan_version_string();
 BOTAN_DLL uint32_t botan_version_major();
 BOTAN_DLL uint32_t botan_version_minor();
