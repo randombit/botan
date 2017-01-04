@@ -1,8 +1,6 @@
 os_type unix
 
-soname_pattern_base  "libbotan-{version_major}.{version_minor}.so"
-soname_pattern_abi   "libbotan-{version_major}.{version_minor}.so.{abi_rev}"
-soname_pattern_patch "libbotan-{version_major}.{version_minor}.so.{abi_rev}.{version_patch}"
+soname_suffix "so"
 
 <target_features>
 clock_gettime

@@ -205,7 +205,7 @@ class BuildConfigurationInformation(object):
             return (self.test_sources, self.testobj_dir)
 
     def pkg_config_file(self):
-        return 'botan-%d.%d.pc' % (self.version_major, self.version_minor)
+        return 'botan-%d.pc' % (self.version_major)
 
 
 """
@@ -1078,6 +1078,7 @@ class OsInfo(object):
                       { 'os_type': None,
                         'program_suffix': '',
                         'obj_suffix': 'o',
+                        'soname_suffix': '',
                         'soname_pattern_patch': '',
                         'soname_pattern_abi': '',
                         'soname_pattern_base': '',
@@ -1093,6 +1094,22 @@ class OsInfo(object):
                         'install_cmd_data': 'install -m 644',
                         'install_cmd_exec': 'install -m 755'
                         })
+
+        if self.soname_pattern_base != '':
+            if self.soname_pattern_patch == '' and self.soname_pattern_abi == '':
+                self.soname_pattern_patch = self.soname_pattern_base
+                self.soname_pattern_patch_abi = self.soname_pattern_base
+
+            elif self.soname_pattern_abi != '' and self.soname_pattern_abi != '':
+                pass # all 3 values set, nothing needs to happen here
+            else:
+                # base set, only one of patch/abi set
+                raise Exception("Invalid soname_patterns in %s" % (self.infofile))
+
+        if self.soname_pattern_base == '' and self.soname_suffix != '':
+            self.soname_pattern_base  = "libbotan-{version_major}.%s" % (self.soname_suffix)
+            self.soname_pattern_abi   = self.soname_pattern_base + ".{abi_rev}"
+            self.soname_pattern_patch = self.soname_pattern_abi + ".{version_minor}.{version_patch}"
 
         self.ar_needs_ranlib = bool(self.ar_needs_ranlib)
 
@@ -1612,9 +1629,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         vars['botan_pkgconfig'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
                                                                      build_config.pkg_config_file()))
 
-        # 'botan' or 'botan-1.11'. Used in Makefile and install script
+        # 'botan' or 'botan-2'. Used in Makefile and install script
         # This can be made consistent over all platforms in the future    
-        vars['libname'] = 'botan-%d.%d' % (build_config.version_major, build_config.version_minor)
+        vars['libname'] = 'botan-%d' % (build_config.version_major)
     else:
         if options.with_debug_info:
             vars['libname'] = 'botand'
@@ -2109,7 +2126,7 @@ def main(argv = None):
         if len(info) == 0:
             logging.warning('Failed to load any %s files' % (descr))
         else:
-            logging.debug('Loaded %d %s files' % (len(info), descr))
+            logging.debug('Loaded %d %s files (%s)' % (len(info), descr, ' '.join(sorted(map(str, info)))))
 
         return info
 
@@ -2241,8 +2258,8 @@ def main(argv = None):
         raise Exception("--via-amalgamation was removed. Use --amalgamation instead.")
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
-        raise Exception('Botan does not support building as shared library on the target os. '
-                'Build static using --disable-shared.')
+        logging.warning('Shared libs not supported on %s, disabling shared lib support' % (self.infofile))
+        options.build_shared_lib = False
 
     loaded_mods = choose_modules_to_use(modules, module_policy, arch, cc, options)
 

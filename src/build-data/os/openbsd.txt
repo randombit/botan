@@ -1,5 +1,7 @@
 os_type unix
 
+soname_suffix "so"
+
 <target_features>
 clock_gettime
 gettimeofday

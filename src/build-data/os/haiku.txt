@@ -1,5 +1,6 @@
 os_type unix
 
+building_shared_supported no
 install_root /boot
 header_dir develop/headers
 lib_dir system/lib

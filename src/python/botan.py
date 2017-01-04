@@ -27,9 +27,9 @@ import time
 Module initialization
 """
 if sys.platform == 'darwin':
-    botan = CDLL('libbotan-1.11.dylib')
+    botan = CDLL('libbotan-2.dylib')
 else:
-    botan = CDLL('libbotan-1.11.so')
+    botan = CDLL('libbotan-2.so')
 
 expected_api_rev = 20151015
 botan_api_rev = botan.botan_ffi_api_version()

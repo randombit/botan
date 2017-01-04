@@ -1,12 +1,12 @@
 prefix=%{prefix}
 exec_prefix=${prefix}
 libdir=${prefix}/%{libdir}
-includedir=${prefix}/include/botan-%{version_major}.%{version_minor}
+includedir=${prefix}/include/botan-%{version_major}
 
 Name: Botan
 Description: Crypto and TLS for C++11
 Version: %{version}
 
-Libs: -L${libdir} -lbotan-%{version_major}.%{version_minor}
+Libs: -L${libdir} -lbotan-%{version_major}
 Libs.private: %{link_to}
 Cflags: -I${includedir}
