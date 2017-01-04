@@ -2,70 +2,10 @@
 Botan Development Roadmap
 ========================================
 
-Branch Structure
+Near Term Plans
 ----------------------------------------
 
-Stability of branches is indicated by even or odd minor version numbers. The
-minor number of master is always odd, and devel releases come from it. Every
-once in a while a new even-numbered branch is forked. All development continues
-on the main trunk, with fixes and API compatible features backported to the
-stable branch. Stability of API and ABI is very important in the stable
-branches, whereas in master ABI changes happen with no warning, and API changes
-are made whenever it would serve the ends of justice.
-
-Current Status
-----------------------------------------
-
-Currently (as of 2016-11-03) git master is approaching feature freeze for a
-stable 2.0 branch by the end of December 2016.
-
-At some point between the final release candidate and the 2.0.0 release, a new
-release-2.0 branch will be created off of master. Development will continue on
-master (renumbered as 2.1.0), with chosen changes backported to release-2.0
-branch.
-
-Theoretically a new development release could be created at any time after this.
-But it is likely that for at least several months after branching, most
-development will be oriented towards being applied also to 2.0, and so there
-will not be any interesting diff between 2.1 and 2.0. At some point when the
-divergence grows enough to be 'interesting' a new development release will be
-created. These early development releases would only be for experimenters, with
-2.0 recommended for general use.
-
-Support Lifetimes
-----------------------------------------
-
-Botan 2.0.x will be supported for at least 24 months from the date of 2.0.0
-(probably longer)
-
-Botan 1.10.x is supported (for security patches only) through 2017-12-31
-
-All prior versions are no longer supported in any way.
-
-
-Ongoing Issues
-----------------------------------------
-
-Documentation could always use help. Many things are completely undocumented,
-few things are documented well.
-
-Plans for 2017
-----------------------------------------
-
-It's an open question how many of these will end up being backported to 2.0.x,
-versus being features only in 2.1.x development snapshots.
-
-TLS 1.3
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The RFC process seems to be approaching consensus so hopefully there will be a
-final spec soon.
-
-The handshake differences are quite substantial, it's an open question how to
-implement that without overly complicating the existing TLS v1.0-v1.2 handshake
-code. There will also be some API changes to support 0-RTT data.
-
-This is a major project and probably will not start until later in the year.
+Here are the development plans for the next 12-18 months, as of January 2017.
 
 TLS Hardening/Testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -104,6 +44,11 @@ copies.
 It will probably be easier to be consistently allocation free in machine
 generated code, so the two goals of the redesign seem to reinforce each other.
 
+Expose TLS to C89 and Python
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Exposing TLS to C would allow for many new applications to make use of Botan.
+
 Interface to PSK and SRP databases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -114,3 +59,29 @@ Ed25519 signatures
 
 Used by many protocols these days including SSH and Tor.
 Probably will be done by importing from SUPERCOP or similar.
+
+TLS 1.3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The RFC process seems to be approaching consensus so hopefully there will be a
+final spec soon.
+
+The handshake differences are quite substantial, it's an open question how to
+implement that without overly complicating the existing TLS v1.0-v1.2 handshake
+code. There will also be some API extensions required to support 0-RTT data.
+
+This is a major project, and probably will not start until late in 2017.
+
+Longer View (Future Major Release)
+----------------------------------------
+
+Eventually (target is early 2019), Botan 3.x will be released. This
+schedule allows some substantial time with Botan 2.x and 3.x supported
+simultaneously, to allow for application switch over.
+
+This version will adopt C++17 and use new std types such as
+string_view, optional, and any, along with adopting memory span and
+guarded integer types. Likely C++17 constexpr will also be leveraged.
+
+In this future 3.x release, all deprecated features/APIs of 2.x will
+be removed.

@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 1.11.35, Not Yet Released
+Version 2.0.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix a longstanding bug in modular exponentiation which caused most

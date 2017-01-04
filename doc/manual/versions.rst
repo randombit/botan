@@ -1,6 +1,11 @@
 
-Checking the Version
+Versioning
 ========================================
+
+As of Botan 2.0.0, Botan uses semantic versioning. So in a future
+release, if even a small feature is added, the minor number will
+increase and the next release will be 2.1.0. If an incompatible API
+change is required, the major version will be increased.
 
 The library has functions for checking compile-time and runtime
 versions.
