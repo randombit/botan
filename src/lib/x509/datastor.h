@@ -19,6 +19,10 @@ namespace Botan {
 
 /**
 * Data Store
+*
+* This class is used internally by the library, and exposed for ABI
+* reasons. There is no reason for applications to use this type directly.
+* It will be removed in a future major release.
 */
 class BOTAN_DLL Data_Store
    {
