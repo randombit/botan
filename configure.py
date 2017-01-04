@@ -1151,15 +1151,19 @@ def system_cpu_info():
 
     cpu_info = []
 
-    with open('/proc/cpuinfo') as f:
-        for line in f.readlines():
-            if line.find(':') != -1:
-                (key,val) = [s.strip() for s in line.split(':')]
+    try:
+        with open('/proc/cpuinfo') as f:
+            for line in f.readlines():
+                if line.find(':') != -1:
+                    (key,val) = [s.strip() for s in line.split(':')]
 
-                # Different Linux arch use different names for this field in cpuinfo
-                if key in ["model name", "cpu model", "Processor"]:
-                    cpu_info.append(val)
-                    break
+                    # Different Linux arch use different names for this field in cpuinfo
+                    if key in ["model name", "cpu model", "Processor"]:
+                        cpu_info.append(val)
+                        break
+
+    except IOError:
+        pass
 
     if platform.processor() != '':
         cpu_info.append(platform.processor())
