@@ -47,7 +47,7 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
    {
    public:
       TLS_Message_Parsing_Test() :
-         Text_Based_Test("tls", "Buffer,Protocol,Ciphersuite,AdditionalData,Exception")
+         Text_Based_Test("tls", "Buffer,Protocol,Ciphersuite,AdditionalData,Name,Exception")
          {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
@@ -56,6 +56,7 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
          const std::vector<uint8_t> protocol    = get_opt_bin(vars, "Protocol");
          const std::vector<uint8_t> ciphersuite = get_opt_bin(vars, "Ciphersuite");
          const std::string exception            = get_req_str(vars, "Exception");
+         const std::string expected_name        = get_opt_str(vars, "Name", "");
          const bool is_positive_test            = exception.empty();
          
          Test::Result result(algo + " parsing");
@@ -69,7 +70,7 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
                   Botan::TLS::Certificate_Verify message(buffer, pv);
                   }
-               if(algo == "client_hello")
+               else if(algo == "client_hello")
                   {
                   const std::string extensions = get_req_str(vars, "AdditionalData");
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
@@ -96,7 +97,7 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
                   {
                   Botan::TLS::New_Session_Ticket message(buffer);
                   }
-               if(algo == "server_hello")
+               else if(algo == "server_hello")
                   {
                   const std::string extensions = get_req_str(vars, "AdditionalData");
                   Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
@@ -119,6 +120,26 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
                   Botan::TLS::Alert message(sb);
                   result.test_lt("Alert type vectors result to UNKNOWN_CA or ACCESS_DENIED, which is shorter than 15", 
                           message.type_string().size(), 15);
+                  }
+               else if(algo == "cert_status")
+                  {
+                  Botan::TLS::Certificate_Status message(buffer);
+                  std::shared_ptr<const Botan::OCSP::Response> resp = message.response();
+
+                  if(result.confirm("Decoded response", resp != nullptr))
+                     {
+                     const std::vector<std::string> CNs = resp->signer_name().get_attribute("CN");
+
+                     // This is not requird by OCSP protocol, we are just using it as a test here
+                     if(result.test_eq("OCSP response has signer name", CNs.size(), 1))
+                        {
+                        result.test_eq("Expected name", CNs[0], expected_name);
+                        }
+                     }
+                  }
+               else
+                  {
+                  throw Test_Error("Unknown message type " + algo + " in TLS parsing tests");
                   }
                result.test_success("Correct parsing"); 
                }
@@ -158,6 +179,13 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
                   Botan::TLS::Hello_Request message(buffer);
                   });
                }
+            else if(algo == "cert_status")
+               {
+               result.test_throws("invalid cert_status input", exception, [&buffer]()
+                  {
+                  Botan::TLS::Certificate_Status message(buffer);
+                  });
+               }
             else if(algo == "new_session_ticket")
                {
                result.test_throws("invalid new_session_ticket input", exception, [&buffer]()
@@ -180,11 +208,15 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
                   Botan::TLS::Alert message(sb);
                   });
                }
+            else
+               {
+               throw Test_Error("Unknown message type " + algo + " in TLS parsing tests");
+               }
             }
 
          return result;
          }
-      
+
       std::vector<Test::Result> run_final_tests() override
          {
          std::vector<Test::Result> results;
