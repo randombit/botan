@@ -33,8 +33,10 @@ the desired end result. Over time further progress is made in each.
 
 * Well tested. The code should be correct against the spec, with as close to
   100% test coverage as possible. All available static and dynamic analysis
-  tools at our disposal should be used, including fuzzers and specialized attack
-  tools for common protocols.
+  tools at our disposal should be used, including fuzzers, symbolic execution,
+  and protocol specific tools. Within reason, all warnings from compilers and
+  static analyzers should be addressed, even if they seem like false positives,
+  because that maximizes the signal value of new warnings from the tool.
 
 * Safe defaults. Policies should aim to be highly restrictive by default, and if
   they must be made less restrictive by certain applications, it should be
