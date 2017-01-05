@@ -1147,32 +1147,47 @@ def canon_processor(archinfo, proc):
                     proc, match, submodel))
                 return (ainfo.basename, submodel)
 
-    logging.debug('Known CPU names: ' + ' '.join(
-        sorted(flatten([[ainfo.basename] + \
-                        ainfo.aliases + \
-                        [x for (x,_) in ainfo.all_submodels()]
-                        for ainfo in archinfo.values()]))))
+def system_cpu_info():
 
-    raise Exception('Unknown or unidentifiable processor "%s"' % (proc))
+    cpu_info = []
+
+    try:
+        with open('/proc/cpuinfo') as f:
+            for line in f.readlines():
+                if line.find(':') != -1:
+                    (key,val) = [s.strip() for s in line.split(':')]
+
+                    # Different Linux arch use different names for this field in cpuinfo
+                    if key in ["model name", "cpu model", "Processor"]:
+                        cpu_info.append(val)
+                        break
+
+    except IOError:
+        pass
+
+    if platform.machine() != '':
+        cpu_info.append(platform.machine())
+
+    if platform.processor() != '':
+        cpu_info.append(platform.processor())
+
+    return cpu_info
 
 def guess_processor(archinfo):
-    base_proc = platform.machine()
+    cpu_info = system_cpu_info()
 
-    if base_proc == '':
-        raise Exception('Could not determine target CPU; set with --cpu')
+    for input in cpu_info:
 
-    full_proc = fixup_proc_name(platform.processor()) or base_proc
+        if input != '':
+            try:
+                match = canon_processor(archinfo, input)
+                if match != None:
+                    logging.debug("Matched '%s' to processor '%s'" % (input, match))
+                    return match
+            except Exception as e:
+                logging.debug("Failed to deduce CPU from '%s'" % (input))
 
-    for ainfo in archinfo.values():
-        if ainfo.basename == base_proc or base_proc in ainfo.aliases:
-            for (match,submodel) in ainfo.all_submodels():
-                if re.search(match, full_proc) != None:
-                    return (ainfo.basename, submodel)
-
-            return canon_processor(archinfo, ainfo.basename)
-
-    # No matches, so just use the base proc type
-    return canon_processor(archinfo, base_proc)
+    raise Exception('Could not determine target CPU; set with --cpu')
 
 """
 Read a whole file into memory as a string
@@ -2108,6 +2123,12 @@ def main(argv = None):
     for policy in module_policies.values():
         policy.cross_check(modules)
 
+    logging.debug('Known CPU names: ' + ' '.join(
+        sorted(flatten([[ainfo.basename] + \
+                        ainfo.aliases + \
+                        [x for (x,_) in ainfo.all_submodels()]
+                        for ainfo in info_arch.values()]))))
+
     if options.list_modules:
         for k in sorted(modules.keys()):
             print(k)
@@ -2180,9 +2201,15 @@ def main(argv = None):
             options.arch, options.cpu))
     else:
         cpu_from_user = options.cpu
-        (options.arch, options.cpu) = canon_processor(info_arch, options.cpu)
-        logging.info('Canonicalizized CPU target %s to %s/%s' % (
-            cpu_from_user, options.arch, options.cpu))
+
+        results = canon_processor(info_arch, options.cpu)
+
+        if results != None:
+            (options.arch, options.cpu) = results
+            logging.info('Canonicalizized CPU target %s to %s/%s' % (
+                cpu_from_user, options.arch, options.cpu))
+        else:
+            logging.error('Unknown or unidentifiable processor "%s"' % (options.cpu))
 
     logging.info('Target is %s-%s-%s-%s' % (
         options.compiler, options.os, options.arch, options.cpu))
