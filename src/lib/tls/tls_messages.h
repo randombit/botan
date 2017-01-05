@@ -394,7 +394,7 @@ class BOTAN_DLL Server_Hello final : public Handshake_Message
 /**
 * Client Key Exchange Message
 */
-class Client_Key_Exchange final : public Handshake_Message
+class BOTAN_DLL Client_Key_Exchange final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return CLIENT_KEX; }
@@ -428,7 +428,7 @@ class Client_Key_Exchange final : public Handshake_Message
 /**
 * Certificate Message
 */
-class Certificate final : public Handshake_Message
+class BOTAN_DLL Certificate final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return CERTIFICATE; }
@@ -451,7 +451,7 @@ class Certificate final : public Handshake_Message
 /**
 * Certificate Status (RFC 6066)
 */
-class Certificate_Status final : public Handshake_Message
+class BOTAN_DLL Certificate_Status final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return CERTIFICATE_STATUS; }
@@ -472,7 +472,7 @@ class Certificate_Status final : public Handshake_Message
 /**
 * Certificate Request Message
 */
-class Certificate_Req final : public Handshake_Message
+class BOTAN_DLL Certificate_Req final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return CERTIFICATE_REQUEST; }
@@ -539,7 +539,7 @@ class BOTAN_DLL Certificate_Verify final : public Handshake_Message
 /**
 * Finished Message
 */
-class Finished final : public Handshake_Message
+class BOTAN_DLL Finished final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return FINISHED; }
@@ -578,7 +578,7 @@ class BOTAN_DLL Hello_Request final : public Handshake_Message
 /**
 * Server Key Exchange Message
 */
-class Server_Key_Exchange final : public Handshake_Message
+class BOTAN_DLL Server_Key_Exchange final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return SERVER_KEX; }
@@ -646,7 +646,7 @@ class Server_Key_Exchange final : public Handshake_Message
 /**
 * Server Hello Done Message
 */
-class Server_Hello_Done final : public Handshake_Message
+class BOTAN_DLL Server_Hello_Done final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return SERVER_HELLO_DONE; }
@@ -687,7 +687,7 @@ class BOTAN_DLL New_Session_Ticket final : public Handshake_Message
 /**
 * Change Cipher Spec
 */
-class Change_Cipher_Spec final : public Handshake_Message
+class BOTAN_DLL Change_Cipher_Spec final : public Handshake_Message
    {
    public:
       Handshake_Type type() const override { return HANDSHAKE_CCS; }
