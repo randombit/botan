@@ -1165,11 +1165,11 @@ def system_cpu_info():
     except IOError:
         pass
 
-    if platform.processor() != '':
-        cpu_info.append(platform.processor())
-
     if platform.machine() != '':
         cpu_info.append(platform.machine())
+
+    if platform.processor() != '':
+        cpu_info.append(platform.processor())
 
     return cpu_info
 
