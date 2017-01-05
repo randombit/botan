@@ -3,7 +3,6 @@ define OCSP 20161118
 
 <requires>
 asn1
-datastor
 pubkey
 sha1
 </requires>
