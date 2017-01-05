@@ -1002,8 +1002,21 @@ class TLS_Unit_Tests : public Test
                                 Botan::Credentials_Manager& creds,
                                 const std::string& kex_policy,
                                 const std::string& cipher_policy,
-                                const std::string& mac_policy = "AEAD",
-                                const std::map<std::string, std::string>& extra_policies = {})
+                                const std::string& mac_policy = "AEAD")
+         {
+         std::map<std::string, std::string> no_extra_policies;
+         return test_modern_versions(results, client_ses, server_ses, creds,
+                                     kex_policy, cipher_policy, mac_policy, no_extra_policies);
+         }
+
+      void test_modern_versions(std::vector<Test::Result>& results,
+                                Botan::TLS::Session_Manager& client_ses,
+                                Botan::TLS::Session_Manager& server_ses,
+                                Botan::Credentials_Manager& creds,
+                                const std::string& kex_policy,
+                                const std::string& cipher_policy,
+                                const std::string& mac_policy,
+                                const std::map<std::string, std::string>& extra_policies)
          {
          Test_Policy policy;
          policy.set("ciphers", cipher_policy);
