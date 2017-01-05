@@ -14,7 +14,17 @@ Versioning
 
 .. cpp:function:: uint32_t botan_ffi_api_version()
 
-   Returns the FFI version
+   Returns the version of the currently supported FFI API.  This is
+   expressed in the form YYYYMMDD of the release date of this version
+   of the API.
+
+.. cpp:function int botan_ffi_supports_api(uint32_t version)
+
+   Return 0 iff the FFI version specified is supported by this
+   library. Otherwise returns -1. The expression
+   botan_ffi_supports_api(botan_ffi_api_version()) will always
+   evaluate to 0. A particular version of the library may also support
+   other (older) versions of the FFI API.
 
 .. cpp:function:: const char* botan_version_string()
 

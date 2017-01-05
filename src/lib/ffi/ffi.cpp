@@ -208,6 +208,17 @@ uint32_t botan_ffi_api_version()
    return BOTAN_HAS_FFI;
    }
 
+int botan_ffi_supports_api(uint32_t api_version)
+   {
+   /*
+   * In the future if multiple versions are supported, this
+   * function would accept any of them.
+   */
+   if(api_version == BOTAN_HAS_FFI)
+      return 0;
+   return -1;
+   }
+
 const char* botan_version_string()
    {
    return Botan::version_cstr();
