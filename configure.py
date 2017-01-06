@@ -1151,6 +1151,12 @@ def system_cpu_info():
 
     cpu_info = []
 
+    if platform.machine() != '':
+        cpu_info.append(platform.machine())
+
+    if platform.processor() != '':
+        cpu_info.append(platform.processor())
+
     try:
         with open('/proc/cpuinfo') as f:
             for line in f.readlines():
@@ -1159,17 +1165,13 @@ def system_cpu_info():
 
                     # Different Linux arch use different names for this field in cpuinfo
                     if key in ["model name", "cpu model", "Processor"]:
+                        val = ' '.join(val.split())
+                        logging.debug('Found CPU model "%s" in /proc/cpuinfo' % (val))
                         cpu_info.append(val)
                         break
 
     except IOError:
         pass
-
-    if platform.machine() != '':
-        cpu_info.append(platform.machine())
-
-    if platform.processor() != '':
-        cpu_info.append(platform.processor())
 
     return cpu_info
 
@@ -1759,7 +1761,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                     cannot_use_because(modname, 'dependency failure')
 
     for not_a_dep in maybe_dep:
-        cannot_use_because(not_a_dep, 'only used if needed or requested')
+        cannot_use_because(not_a_dep, 'not requested')
 
     for reason in sorted(not_using_because.keys()):
         disabled_mods = sorted(set([mod for mod in not_using_because[reason]]))
