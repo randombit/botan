@@ -417,12 +417,22 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
             continue;
          }
 
+      /*
+      CECPQ1 always uses x25519 for ECDH, so treat the applications
+      removal of x25519 from the ECC curve list as equivalent to
+      saying they do not trust CECPQ1
+      */
+      if(suite.kex_algo() == "CECPQ1" && allowed_ecc_curve("x25519") == false)
+         continue;
+
       // OK, consider it
       ciphersuites.push_back(suite);
       }
 
    if(ciphersuites.empty())
+      {
       throw Exception("Policy does not allow any available cipher suite");
+      }
 
    Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);
    std::sort(ciphersuites.begin(), ciphersuites.end(), order);
