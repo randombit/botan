@@ -1,8 +1,8 @@
 
-release_major = 1
-release_minor = 11
-release_patch = 35
-release_so_abi_rev = release_patch
+release_major = 2
+release_minor = 0
+release_patch = 0
+release_so_abi_rev = 0
 
 # These are set by the distribution script
 release_vc_rev = None

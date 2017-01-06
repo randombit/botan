@@ -1,5 +1,7 @@
 os_type unix
 
+soname_suffix "so"
+
 install_cmd_data '/usr/ucb/install -m 644'
 install_cmd_exec '/usr/ucb/install -m 755'
 

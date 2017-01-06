@@ -1,4 +1,6 @@
 
+building_shared_supported no
+
 <target_features>
 gettimeofday
 threads

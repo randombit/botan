@@ -1,8 +1,8 @@
 os_type unix
 
-soname_pattern_base  "libbotan-{version_major}.{version_minor}.dylib"
-soname_pattern_abi   "libbotan-{version_major}.{version_minor}.{abi_rev}.dylib"
-soname_pattern_patch "libbotan-{version_major}.{version_minor}.{abi_rev}.{version_patch}.dylib"
+soname_pattern_base  "libbotan-{version_major}.dylib"
+soname_pattern_abi   "libbotan-{version_major}.{abi_rev}.dylib"
+soname_pattern_patch "libbotan-{version_major}.{abi_rev}.{version_minor}.{version_patch}.dylib"
 
 # It doesn't have the 's' option; you need to use needs ranlib
 ar_command "ar cr"

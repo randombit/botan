@@ -1,5 +1,8 @@
 os_type unix
 
+# It is "sl" on HP-PA, but HP-UX on PA is EOL
+soname_suffix "so"
+
 <target_features>
 gettimeofday
 threads

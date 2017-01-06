@@ -214,12 +214,12 @@ To compile for the iPhone Simulator, configure and make with::
 Now create the universal binary and confirm the library is compiled
 for all three architectures::
 
-   $ xcrun --sdk iphoneos lipo -create -output libbotan-1.11.a \
-                  iphone-32/lib/libbotan-1.11.a \
-                  iphone-64/lib/libbotan-1.11.a \
-                  iphone-simulator/lib/libbotan-1.11.a
-   $ xcrun --sdk iphoneos lipo -info libbotan-1.11.a
-   Architectures in the fat file: libbotan-1.11.a are: armv7 x86_64 armv64
+   $ xcrun --sdk iphoneos lipo -create -output libbotan-2.a \
+                  iphone-32/lib/libbotan-2.a \
+                  iphone-64/lib/libbotan-2.a \
+                  iphone-simulator/lib/libbotan-2.a
+   $ xcrun --sdk iphoneos lipo -info libbotan-2.a
+   Architectures in the fat file: libbotan-2.a are: armv7 x86_64 armv64
 
 The resulting static library can be linked to your app in Xcode.
 
