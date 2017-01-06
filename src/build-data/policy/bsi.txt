@@ -29,6 +29,7 @@ sp800_56c
 eme_oaep
 emsa_pssr
 emsa1
+iso9796
 
 # pubkey
 dlies
@@ -117,6 +118,7 @@ kdf2
 prf_x942
 
 # pubkey
+cecpq1
 curve25519
 elgamal
 gost_3410
