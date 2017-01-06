@@ -155,7 +155,7 @@ class BOTAN_DLL DL_Group
       /**
       * Return PEM representation of named DL group
       */
-      static const char* PEM_for_named_group(const std::string& name);
+      static std::string PEM_for_named_group(const std::string& name);
    private:
       static BigInt make_dsa_generator(const BigInt&, const BigInt&);
 

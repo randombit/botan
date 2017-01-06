@@ -9,7 +9,7 @@
 
 namespace Botan {
 
-const char* DL_Group::PEM_for_named_group(const std::string& name)
+std::string DL_Group::PEM_for_named_group(const std::string& name)
    {
    if(name == "modp/ietf/1024")
       return
@@ -354,7 +354,7 @@ const char* DL_Group::PEM_for_named_group(const std::string& name)
          "eMFVkc39EVZP+I/zi3IdQjkv2kcyEtz9jS2IqXagCv/m//tDCjWeZMorNRyiQSOU"
          "-----END DSA PARAMETERS-----";
 
-   return nullptr;
+   return "";
    }
 
 }
