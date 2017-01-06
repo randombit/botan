@@ -9,7 +9,7 @@
 #include <botan/reducer.h>
 #include <botan/pow_mod.h>
 
-BigInt simple_power_mod(BigInt x, BigInt n, const BigInt& p)
+BigInt simple_power_mod(BigInt x, BigInt n, const BigInt& p, const Modular_Reducer& mod_p)
    {
    if(n == 0)
       {
@@ -18,7 +18,6 @@ BigInt simple_power_mod(BigInt x, BigInt n, const BigInt& p)
       return 1;
       }
 
-   Modular_Reducer mod_p(p);
    BigInt y = 1;
 
    while(n > 1)
@@ -35,17 +34,19 @@ BigInt simple_power_mod(BigInt x, BigInt n, const BigInt& p)
 
 void fuzz(const uint8_t in[], size_t len)
    {
-   if(len % 3 != 0 || len > 3 * (2048/8))
-      return;
+   static const size_t p_bits = 1024;
+   static const BigInt p = random_prime(fuzzer_rng(), p_bits);
+   static Modular_Reducer mod_p(p);
 
-   const size_t part_size = len / 3;
+   if(len == 0 || len > p_bits/8)
+      return;
 
    try
       {
-      const BigInt g = BigInt::decode(in, part_size);
-      const BigInt x = BigInt::decode(in + part_size, part_size);
-      const BigInt p = BigInt::decode(in + 2 * (part_size), part_size);
-      const BigInt ref = simple_power_mod(g, x, p);
+      const BigInt g = BigInt::decode(in, len / 2);
+      const BigInt x = BigInt::decode(in + len / 2, len / 2);
+
+      const BigInt ref = simple_power_mod(g, x, p, mod_p);
       const BigInt z = Botan::power_mod(g, x, p);
 
       if(ref != z)
