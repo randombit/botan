@@ -34,4 +34,5 @@ Contents
    python
    cli
    side_channels
+   packaging
    support
