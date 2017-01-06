@@ -38,14 +38,21 @@ Session::Session(Slot& slot, SessionHandle handle)
 
 Session::~Session() BOTAN_NOEXCEPT
    {
-   if(m_handle)
+   try
       {
-      if(m_logged_in)
+      if(m_handle)
          {
-         module()->C_Logout(m_handle, nullptr);
+         if(m_logged_in)
+            {
+            module()->C_Logout(m_handle, nullptr);
+            }
+         module()->C_CloseSession(m_handle, nullptr);
+         m_handle = 0;
          }
-      module()->C_CloseSession(m_handle, nullptr);
-      m_handle = 0;
+      }
+   catch(...)
+      {
+      // exception during noexcept destructor is ignored
       }
    }
 

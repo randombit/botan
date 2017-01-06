@@ -20,7 +20,14 @@ Module::Module(const std::string& file_path, C_InitializeArgs init_args)
 
 Module::~Module() BOTAN_NOEXCEPT
    {
-   m_low_level->C_Finalize(nullptr, nullptr);
+   try
+      {
+      m_low_level->C_Finalize(nullptr, nullptr);
+      }
+   catch(...)
+      {
+      // we are noexcept and must swallow any exception here
+      }
    }
 
 void Module::reload(C_InitializeArgs init_args)
