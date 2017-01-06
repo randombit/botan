@@ -29,6 +29,7 @@ env:
     - BUILD_MODE="shared"
     - BUILD_MODE="static"
     - BUILD_MODE="bsi"
+    - BUILD_MODE="nist"
     - BUILD_MODE="sanitizer"
     - BUILD_MODE="coverage"
     - BUILD_MODE="cross-arm32"
@@ -50,13 +51,15 @@ matrix:
     - os: osx
       compiler: gcc
 
-    # Run docs, bsi, coverage, valgrind, sonarqube, sanitizer,
+    # Run docs, bsi, nist, coverage, valgrind, sonarqube, sanitizer,
     # minimized and non-ARM cross builds on Linux/gcc only. The
     # sanitizer builds under Clang run the tests very slowly and cause
     # CI timeouts.
 
     - compiler: clang
       env: BUILD_MODE="bsi"
+    - compiler: clang
+      env: BUILD_MODE="nist"
     - compiler: clang
       env: BUILD_MODE="docs"
     - compiler: clang
