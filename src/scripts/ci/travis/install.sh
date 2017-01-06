@@ -5,8 +5,7 @@ which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if avai
 if [ "$BUILD_MODE" = "coverage" ]; then
     wget http://ftp.de.debian.org/debian/pool/main/l/lcov/lcov_1.13.orig.tar.gz
     tar -xvf lcov_1.13.orig.tar.gz
-    export PREFIX="/tmp"
-    make -C lcov-1.13/ install
+    make PREFIX="/tmp" -C lcov-1.13/ install
 
     pip install --user coverage
 
