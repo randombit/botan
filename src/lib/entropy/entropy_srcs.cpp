@@ -8,10 +8,6 @@
 #include <botan/entropy_src.h>
 #include <botan/rng.h>
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
-  #include <botan/internal/hres_timer.h>
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
   #include <botan/internal/rdrand.h>
 #endif
@@ -44,13 +40,6 @@ namespace Botan {
 
 std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    {
-   if(name == "timestamp")
-      {
-#if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
-   return std::unique_ptr<Entropy_Source>(new High_Resolution_Timestamp);
-#endif
-      }
-
    if(name == "rdrand")
       {
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
@@ -62,13 +51,6 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       {
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDSEED)
       return std::unique_ptr<Entropy_Source>(new Intel_Rdseed);
-#endif
-      }
-
-   if(name == "proc_info")
-      {
-#if defined(BOTAN_HAS_ENTROPY_SRC_UNIX_PROCESS_RUNNER)
-   return std::unique_ptr<Entropy_Source>(new UnixProcessInfo_EntropySource);
 #endif
       }
 
