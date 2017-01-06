@@ -92,9 +92,16 @@ ObjectFinder::ObjectFinder(Session& session, const std::vector<Attribute>& searc
 
 ObjectFinder::~ObjectFinder() BOTAN_NOEXCEPT
    {
-   if(m_search_terminated == false)
+   try
       {
-      module()->C_FindObjectsFinal(m_session.get().handle(), nullptr);
+      if(m_search_terminated == false)
+         {
+         module()->C_FindObjectsFinal(m_session.get().handle(), nullptr);
+         }
+      }
+   catch(...)
+      {
+      // ignore error during noexcept function
       }
    }
 
