@@ -20,6 +20,8 @@ elif [ "$BUILD_MODE" = "shared" ] || [ "$BUILD_MODE" = "mini-shared" ]; then
     CFG_FLAGS+=()
 elif [ "$BUILD_MODE" = "bsi" ]; then
     CFG_FLAGS+=(--module-policy=bsi)
+elif [ "$BUILD_MODE" = "nist" ]; then
+    CFG_FLAGS+=(--module-policy=nist)
 elif [ "$BUILD_MODE" = "sonarqube" ]; then
     # No special flags required
     CFG_FLAGS+=()
