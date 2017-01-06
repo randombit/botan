@@ -8,10 +8,6 @@
 #include <botan/entropy_src.h>
 #include <botan/rng.h>
 
-#if defined(BOTAN_HAS_ENTROPY_SRC_HIGH_RESOLUTION_TIMER)
-  #include <botan/internal/hres_timer.h>
-#endif
-
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
   #include <botan/internal/rdrand.h>
 #endif
