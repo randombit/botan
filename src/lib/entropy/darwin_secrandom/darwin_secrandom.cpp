@@ -23,6 +23,8 @@ size_t Darwin_SecRandom::poll(RandomNumberGenerator& rng)
       rng.add_entropy(buf.data(), buf.size());
       return buf.size() * 8;
       }
+
+   return 0;
    }
 
 }
