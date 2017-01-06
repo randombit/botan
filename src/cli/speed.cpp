@@ -1190,7 +1190,7 @@ class Speed final : public Command
          // H16 and H20 signatures take an hour or more to generate
          std::vector<std::string> xmss_params{
             "XMSS_SHA2-256_W16_H10",
-            "XMSS_SHA2-256_W16_H10",
+            "XMSS_SHA2-512_W16_H10",
             "XMSS_SHAKE128_W16_H10",
             "XMSS_SHAKE256_W16_H10",
          };
