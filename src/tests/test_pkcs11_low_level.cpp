@@ -49,18 +49,23 @@ class RAII_LowLevel
          }
       ~RAII_LowLevel() BOTAN_NOEXCEPT
          {
-
-         if(m_is_session_open)
+         try
             {
-            if(m_is_logged_in)
+            if(m_is_session_open)
                {
-               m_low_level.get()->C_Logout(m_session_handle, nullptr);
+               if(m_is_logged_in)
+                  {
+                  m_low_level.get()->C_Logout(m_session_handle, nullptr);
+                  }
+
+               m_low_level.get()->C_CloseSession(m_session_handle, nullptr);
                }
-
-            m_low_level.get()->C_CloseSession(m_session_handle, nullptr);
+            m_low_level.get()->C_Finalize(nullptr, nullptr);
             }
-
-         m_low_level.get()->C_Finalize(nullptr, nullptr);
+         catch(...)
+            {
+            // ignore errors here
+            }
          }
 
       std::vector<SlotId> get_slots(bool token_present) const
