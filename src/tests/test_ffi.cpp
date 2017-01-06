@@ -79,10 +79,17 @@ class FFI_Unit_Tests : public Test
             TEST_FFI_OK(botan_rng_destroy, (rng));
             }
 
-         TEST_FFI_OK(botan_rng_init, (&rng, "user"));
-         TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
-         TEST_FFI_OK(botan_rng_reseed, (rng, 256));
-         // used for the rest of this function and destroyed at the end
+         if(TEST_FFI_OK(botan_rng_init, (&rng, "user")))
+            {
+            TEST_FFI_OK(botan_rng_get, (rng, outbuf.data(), outbuf.size()));
+            TEST_FFI_OK(botan_rng_reseed, (rng, 256));
+            // used for the rest of this function and destroyed at the end
+            }
+         else
+            {
+            result.test_note("Existing early due to missing FFI RNG");
+            return {result};
+            }
 
          // hashing test
          botan_hash_t hash;
