@@ -8,7 +8,7 @@ branches, including 1.8.x and 1.11.x, are no longer supported in any way.
 Branch         First Release  End of Life
 ============== ============== ==============
 1.10           2011-06-20     2017-12-31
-2              2017-01-05     2020-12-31
+2              2017-01-06     2020-12-31
 ============== ============== ==============
 
 Getting Support

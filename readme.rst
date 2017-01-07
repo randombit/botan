@@ -92,22 +92,18 @@ Some distributions such as Arch, Fedora and Debian include packages
 for Botan. However these are often out of date; using the latest
 source release is recommended.
 
-Current Development Work (1.11)
+Current Stable Release
 ----------------------------------------
 
-The 1.11 branch is highly recommended, especially for new projects. While still
-technically API unstable, the 1.11 branch is very close to an API freeze for
-a new stable release branch.
+Version 2 requires a C++11 compiler; GCC 4.8 and later, Clang 3.5 and
+later, and MSVC 2015 are regularly tested.
 
-Versions 1.11 and later require a working C++11 compiler; GCC 4.8 and later,
-Clang 3.5 and later, and MSVC 2015 are regularly tested.
+The latest 2.x release is
+`2.0.0 <https://botan.randombit.net/releases/Botan-2.0.0.tgz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-2.0.0.tgz.asc>`_
+released on 2017-01-06
 
-The latest 1.11 release is
-`1.11.34 <https://botan.randombit.net/releases/Botan-1.11.34.tgz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-1.11.34.tgz.asc>`_
-released on 2016-11-28
-
-Old Stable Series (1.10)
+Old Stable Release
 ----------------------------------------
 
 The 1.10 branch is the last version of the library written in C++98 and is still
