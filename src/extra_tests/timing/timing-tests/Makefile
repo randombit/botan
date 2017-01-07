@@ -3,7 +3,7 @@ BOTAN_DIR=../../../../../botan/
 LDIR=$(BOTAN_DIR)
 IDIR=$(BOTAN_DIR)build/include
 DBG_FLAGS=-g -O3
-LIBS=-lbotan-1.11
+LIBS=-lbotan-2
 
 CPPFLAGS=$(DBG_FLAGS) -std=c++11 -I$(IDIR) -L$(LDIR) -Wl,-R$(LDIR) '-Wl,-R$$ORIGIN'
 LDFLAGS=$(DBG_FLAGS) -I$(IDIR) -L$(LDIR) -Wl,-R$(LDIR) '-Wl,-R$$ORIGIN' $(LIBS)
