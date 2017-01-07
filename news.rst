@@ -19,6 +19,17 @@ Version 2.0.0, Not Yet Released
 * The DL_Group enum value X942_DH_PARAMETERS has been renamed
   ANSI_X9_42_DH_PARAMETERS to avoid a conflict with Windows headers (GH #482)
 
+* Change default PEM header for X942 DH to match OpenSSL. Either version is
+  accepted on reading. (GH #818)
+
+* DL_Group strong generation previously set the generator to 2. However
+  sometimes 2 generates the entire group mod p, rather than the subgroup mod q.
+  This is invalid by X9.42 standard, and exposes incautious applications to
+  small subgroup attacks. Now DL_Group uses the smallest g which is a quadratic
+  residue. (GH #818)
+
+* Add iOS build target instead of piggybacking on OS X configuration. (GH #793)
+
 * Changes all Public_Key derived class ctors to take a std::vector instead of a
   secure_vector for the DER encoded public key bits. (GH #768)
 
@@ -63,6 +74,17 @@ Version 2.0.0, Not Yet Released
   flat files (in the actual SRP format) or using a SQL database.
 
 * Fix tests errors when write access to /dev/urandom is prohibited (GH #748)
+
+* Add more Diffie-Hellman tests (GH #790), tests for RSA blinding, others.
+
+* Add `tls_ciphers` command which prints the ciphersuites a client
+  hello will contain, depending on the policy specified.
+
+* Prevent TLS from negotiating SHA-2 ciphersuites in TLS v1.0/v1.1. These
+  ciphersuites are technically not defined except for v1.2, so disable
+  them in older protocols. (GH #496)
+
+* Documentation: add project goals (GH #788) and side channel info (GH #787)
 
 Version 1.11.34, 2016-11-28
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
