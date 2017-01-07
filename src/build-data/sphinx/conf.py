@@ -21,16 +21,12 @@ def check_for_tag(tag):
         return False
 
 is_website_build = check_for_tag('website')
-use_disqus = is_website_build and check_for_tag('disqus')
 
 needs_sphinx = '1.1'
 
 extensions = ['sphinx.ext.extlinks']
 
 templates_path = ['templates']
-
-if is_website_build and use_disqus:
-    templates_path += ['disqus']
 
 files_dir = 'https://botan.randombit.net/releases'
 
@@ -42,8 +38,6 @@ extlinks = {
 
     'tgz': (files_dir + '/Botan-%s.tgz', 'tar/gz for '),
     'tgz_sig': (files_dir + '/Botan-%s.tgz.asc', 'tar/gz sig '),
-#    'tbz': (files_dir + '/Botan-%s.tbz', 'tar/bzip for '),
-#    'tbz_sig': (files_dir + '/Botan-%s.tbz.asc', 'tar/bzip sig '),
 
     'installer_x86_32': (files_dir + '/win32/botan-%s-x86_32.exe', 'x86-32 '),
     'installer_x86_64': (files_dir + '/win32/botan-%s-x86_64.exe', 'x86-64 '),
@@ -59,7 +53,7 @@ source_encoding = 'utf-8-sig'
 master_doc = 'contents'
 
 project = u'botan'
-copyright = u'2000-2016, Jack Lloyd'
+copyright = u'2000-2017, The Botan Authors'
 
 version = '%d.%d' % (botan_version.release_major, botan_version.release_minor)
 
@@ -101,23 +95,16 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'agogo'
 
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {
-    'linkcolor': 'blue',
-    'headerlinkcolor': 'blue',
-    'headercolor1': 'darkblue',
-    'headercolor2': 'darkblue',
-    'textalign': 'left',
-    'pagewidth': '70em',
-    'documentwidth': '50em'
-    }
-
-# Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = []
+try:
+    # On Arch this is python-sphinx_rtd_theme
+    import sphinx_rtd_theme
+    html_theme = "sphinx_rtd_theme"
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+except ImportError as e:
+    html_theme = 'agogo'
+    html_theme_path = []
+    print("Ignoring ImportError and using old theme")
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
