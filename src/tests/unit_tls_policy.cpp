@@ -12,6 +12,7 @@
   #include <botan/pubkey.h>
   #include <botan/oids.h>
   #include <botan/tls_policy.h>
+  #include <botan/tls_exceptn.h>
 #endif
 
 #if defined(BOTAN_HAS_RSA)
@@ -62,7 +63,7 @@ class TLS_Policy_Unit_Tests : public Test
             policy.check_peer_key_acceptable(*rsa_key_1024);
             result.test_failure("Incorrectly accepting 1024 bit RSA keys");
             }
-         catch(std::exception& e)
+         catch(Botan::TLS::TLS_Exception&)
             {
             result.test_success("Correctly rejecting 1024 bit RSA keys");
             }
@@ -87,7 +88,7 @@ class TLS_Policy_Unit_Tests : public Test
             policy.check_peer_key_acceptable(*ecdh_192);
             result.test_failure("Incorrectly accepting 192 bit EC keys");
             }
-         catch(std::exception& e)
+         catch(Botan::TLS::TLS_Exception&)
             {
             result.test_success("Correctly rejecting 192 bit EC keys");
             }
@@ -113,7 +114,7 @@ class TLS_Policy_Unit_Tests : public Test
             policy.check_peer_key_acceptable(*ecdsa_192);
             result.test_failure("Incorrectly accepting 192 bit EC keys");
             }
-         catch(std::exception& e)
+         catch(Botan::TLS::TLS_Exception&)
             {
             result.test_success("Correctly rejecting 192 bit EC keys");
             }
@@ -142,7 +143,7 @@ class TLS_Policy_Unit_Tests : public Test
             policy.check_peer_key_acceptable(*dhkey);
             result.test_failure("Incorrectly accepting short bit DH keys");
             }
-         catch(std::exception& e)
+         catch(Botan::TLS::TLS_Exception&)
             {
             result.test_success("Correctly rejecting short bit DH keys");
             }
