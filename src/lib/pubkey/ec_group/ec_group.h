@@ -125,7 +125,7 @@ class BOTAN_DLL EC_Group
       /**
       * Return PEM representation of named EC group
       */
-      static const char* PEM_for_named_group(const std::string& name);
+      static std::string PEM_for_named_group(const std::string& name);
 
    private:
       CurveGFp m_curve;

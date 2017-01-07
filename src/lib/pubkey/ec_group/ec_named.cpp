@@ -9,7 +9,8 @@
 
 namespace Botan {
 
-const char* EC_Group::PEM_for_named_group(const std::string& name)
+//static
+std::string EC_Group::PEM_for_named_group(const std::string& name)
    {
    if(name == "secp160k1")
       return
@@ -270,7 +271,7 @@ const char* EC_Group::PEM_for_named_group(const std::string& name)
       return BOTAN_HOUSE_ECC_CURVE_PEM;
 #endif
 
-   return nullptr;
+   return "";
    }
 
 }

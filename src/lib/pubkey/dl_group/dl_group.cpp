@@ -29,9 +29,9 @@ DL_Group::DL_Group()
 */
 DL_Group::DL_Group(const std::string& name)
    {
-   const char* pem = PEM_for_named_group(name);
+   const std::string pem = PEM_for_named_group(name);
 
-   if(!pem)
+   if(pem == "")
       throw Invalid_Argument("DL_Group: Unknown group " + name);
 
    PEM_decode(pem);
@@ -52,6 +52,21 @@ DL_Group::DL_Group(RandomNumberGenerator& rng,
       m_p = random_safe_prime(rng, pbits);
       m_q = (m_p - 1) / 2;
       m_g = 2;
+
+      /*
+      Always choose a generator that is quadratic reside mod p,
+      this forces g to be a generator of the subgroup of size q.
+      */
+      if(jacobi(m_g, m_p) != 1)
+         {
+         // prime table does not contain 2
+         for(size_t i = 0; i < PRIME_TABLE_SIZE; ++i)
+            {
+            m_g = PRIMES[i];
+            if(jacobi(m_g, m_p) == 1)
+               break;
+            }
+         }
       }
    else if(type == Prime_Subgroup)
       {
@@ -259,7 +274,7 @@ std::string DL_Group::PEM_encode(Format format) const
    else if(format == ANSI_X9_57)
       return PEM_Code::encode(encoding, "DSA PARAMETERS");
    else if(format == ANSI_X9_42)
-      return PEM_Code::encode(encoding, "X942 DH PARAMETERS");
+      return PEM_Code::encode(encoding, "X9.42 DH PARAMETERS");
    else
       throw Invalid_Argument("Unknown DL_Group encoding " + std::to_string(format));
    }
@@ -314,7 +329,7 @@ void DL_Group::PEM_decode(const std::string& pem)
       BER_decode(ber, PKCS_3);
    else if(label == "DSA PARAMETERS")
       BER_decode(ber, ANSI_X9_57);
-   else if(label == "X942 DH PARAMETERS")
+   else if(label == "X942 DH PARAMETERS" || label == "X9.42 DH PARAMETERS")
       BER_decode(ber, ANSI_X9_42);
    else
       throw Decoding_Error("DL_Group: Invalid PEM label " + label);
