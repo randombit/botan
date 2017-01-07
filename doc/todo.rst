@@ -22,7 +22,6 @@ Ciphers, Hashes, PBKDF
 * NORX-64 3.0 (CAESAR)
 * scrypt PBKDF
 * Argon2 PBKDF (draft-irtf-cfrg-argon2)
-* bcrypt PBKDF
 * Skein-MAC
 * Extend Cascade_Cipher to support arbitrary number of ciphers
 
