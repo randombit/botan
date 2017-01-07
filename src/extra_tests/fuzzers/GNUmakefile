@@ -3,6 +3,7 @@ FUZZERS=$(patsubst jigs/%.cpp,%,$(wildcard jigs/*.cpp))
 
 AFL_SAN_FLAGS=-fsanitize=address,undefined -fno-sanitize-recover=undefined
 CLANG_SAN_FLAGS=-fsanitize=address,undefined -fno-sanitize-recover=undefined
+#CLANG_SAN_FLAGS=-fsanitize=address
 
 CLANG_COV_FLAGS=-fsanitize-coverage=edge,indirect-calls,8bit-counters
 SHARED_FLAGS=-O3 -g -std=c++11 -pthread
@@ -11,8 +12,8 @@ CFG_FLAGS=--with-debug-info --unsafe-fuzzer-mode
 LIBFUZZER_FLAGS=-Illvm-build/build/include $(SHARED_FLAGS) $(CLANG_COV_FLAGS) $(CLANG_SAN_FLAGS)
 AFL_FLAGS=-Iafl-build/build/include $(SHARED_FLAGS) -DINCLUDE_AFL_MAIN
 
-LIBFUZZER_LIBS=llvm-build/libbotan-1.11.a libFuzzer.a
-AFL_LIBS=afl-build/libbotan-1.11.a
+LIBFUZZER_LIBS=llvm-build/libbotan-2.a libFuzzer.a
+AFL_LIBS=afl-build/libbotan-2.a
 
 #AFL_CXX=AFL_USE_ASAN=1 afl-g++ -m32
 AFL_CXX=afl-g++
@@ -43,11 +44,11 @@ dirs:
 
 afl-build:
 	../../../configure.py $(CFG_FLAGS) --with-build-dir=afl-build --cc=$(AFL_CXX_TYPE) --cc-bin=$(AFL_CXX)
-	make -j2 -f afl-build/Makefile afl-build/libbotan-1.11.a
+	make -j2 -f afl-build/Makefile afl-build/libbotan-2.a
 
 llvm-build:
 	../../../configure.py $(CFG_FLAGS) --with-build-dir=llvm-build --cc=clang --cc-bin=$(CLANG_CXX) --cc-abi-flags="$(CLANG_COV_FLAGS) $(CLANG_SAN_FLAGS)"
-	make -j2 -f llvm-build/Makefile llvm-build/libbotan-1.11.a
+	make -j2 -f llvm-build/Makefile llvm-build/libbotan-2.a
 
 # libFuzzer default is max_len 64 this sets 140 but allows override via args=
 run_llvm_%: bin/llvm_fuzz_%
@@ -73,7 +74,7 @@ cmin_%: bin/afl_fuzz_%
 clean:
 	rm -f $(LIBFUZZER_PROGS) $(AFL_PROGS)
 
-clean_builds:
+clean_builds: clean
 	rm -rf afl-build llvm-build
 
 libFuzzer:
