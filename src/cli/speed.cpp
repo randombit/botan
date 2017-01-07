@@ -434,6 +434,8 @@ class Speed final : public Command
                Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_AVX2_BIT);
             else if(cpuid_to_clear == "sse2")
                Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_SSE2_BIT);
+            else if(cpuid_to_clear == "sha")
+               Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_SHA_BIT);
 #endif
             }
 

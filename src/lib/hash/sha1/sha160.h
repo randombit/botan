@@ -38,6 +38,13 @@ class BOTAN_DLL SHA_160 final : public MDx_HashFunction
                                   size_t block_count);
 #endif
 
+#if defined(BOTAN_HAS_SHA1_X86_SHA_NI)
+      // Using x86 SHA instructions in Intel Goldmont and Cannonlake
+      static void sha1_compress_x86(secure_vector<uint32_t>& digest,
+                                    const uint8_t blocks[],
+                                    size_t block_count);
+#endif
+
 
       void copy_out(uint8_t[]) override;
 

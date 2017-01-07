@@ -1,0 +1,5 @@
+<defines>
+SHA2_32_X86 -> 20170518
+</defines>
+
+need_isa sha,sse4.1

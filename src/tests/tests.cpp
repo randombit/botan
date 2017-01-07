@@ -885,6 +885,8 @@ std::vector<Botan::CPUID::CPUID_bits> map_cpuid_string(const std::string& tok)
       return {Botan::CPUID::CPUID_CLMUL_BIT};
    if(tok == "avx2")
       return {Botan::CPUID::CPUID_AVX2_BIT};
+   if(tok == "sha")
+      return {Botan::CPUID::CPUID_SHA_BIT};
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
