@@ -693,10 +693,10 @@ class ModuleInfo(object):
         else:
             self.warning = None
 
-        def intersect_check(typeA, listA, typeB, listB):
-           intersection = set.intersection(set(listA), set(listB))
+        def intersect_check(type_a, list_a, type_b, list_b):
+           intersection = set.intersection(set(list_a), set(list_b))
            if len(intersection) > 0:
-              logging.error('Headers %s marked both %s and %s' % (' '.join(intersection), typeA, typeB))
+              logging.error('Headers %s marked both %s and %s' % (' '.join(intersection), type_a, type_b))
 
         intersect_check('public', self.header_public, 'internal', self.header_internal)
         intersect_check('public', self.header_public, 'external', self.header_external)
@@ -1898,7 +1898,7 @@ def generate_amalgamation(build_config, options):
     std_include_matcher = re.compile('^#include <([^/\.]+|stddef.h)>$')
     any_include_matcher = re.compile('#include <(.*)>$')
 
-    class Amalgamation_Generator:
+    class AmalgamationGenerator:
         def __init__(self, input_list):
 
             self.included_already = set()
@@ -1955,7 +1955,7 @@ def generate_amalgamation(build_config, options):
     botan_h = open(header_name, 'w')
     botan_int_h = open(header_int_name, 'w')
 
-    pub_header_amalag = Amalgamation_Generator(build_config.public_headers)
+    pub_header_amalag = AmalgamationGenerator(build_config.public_headers)
 
     amalg_header = """/*
 * Botan %s Amalgamation
@@ -1977,7 +1977,7 @@ def generate_amalgamation(build_config, options):
     botan_h.write(pub_header_amalag.contents)
     botan_h.write("\n#endif\n")
 
-    internal_headers = Amalgamation_Generator([s for s in build_config.internal_headers])
+    internal_headers = AmalgamationGenerator([s for s in build_config.internal_headers])
 
     botan_int_h.write("""
 #ifndef BOTAN_AMALGAMATION_INTERNAL_H__
