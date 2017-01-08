@@ -49,7 +49,7 @@ def chunks(l, n):
 
 def get_vc_revision():
 
-    def get_vc_revision(cmdlist):
+    def get_vc_revision_impl(cmdlist):
         try:
             cmdname = cmdlist[0]
 
@@ -77,7 +77,7 @@ def get_vc_revision():
             return None
 
     vc_command = ['git', 'rev-parse', 'HEAD']
-    rev = get_vc_revision(vc_command)
+    rev = get_vc_revision_impl(vc_command)
     if rev is not None:
         return rev
     else:
@@ -745,8 +745,8 @@ class ModuleInfo(object):
 
         return True
 
-    def compatible_os(self, os):
-        return self.os == [] or os in self.os
+    def compatible_os(self, os_name):
+        return self.os == [] or os_name in self.os
 
     def compatible_compiler(self, cc, arch):
         if self.cc != [] and cc.basename not in self.cc:
@@ -1474,8 +1474,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             return os.path.join(options.with_build_dir, path)
         return path
 
-    def innosetup_arch(os, arch):
-        if os == 'windows':
+    def innosetup_arch(os_name, arch):
+        if os_name == 'windows':
             inno_arch = { 'x86_32': '', 'x86_64': 'x64', 'ia64': 'ia64' }
             if arch in inno_arch:
                 return inno_arch[arch]
@@ -2220,11 +2220,11 @@ def main(argv = None):
 
     if options.os not in info_os:
 
-        def find_canonical_os_name(os):
-            for (name, info) in info_os.items():
-                if os in info.aliases:
-                    return name
-            return os # not found
+        def find_canonical_os_name(os_name_variant):
+            for (canonical_os_name, info) in info_os.items():
+                if os_name_variant in info.aliases:
+                    return canonical_os_name
+            return os_name_variant # not found
 
         options.os = find_canonical_os_name(options.os)
 
