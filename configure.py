@@ -28,16 +28,17 @@ import shlex
 import shutil
 import string
 import subprocess
+import traceback
 import logging
 import time
 import errno
 import optparse
 
+import botan_version
+
 # Avoid useless botan_version.pyc (Python 2.6 or higher)
 if 'dont_write_bytecode' in sys.__dict__:
     sys.dont_write_bytecode = True
-
-import botan_version
 
 def flatten(l):
     return sum(l, [])
@@ -2394,7 +2395,6 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        import traceback
         logging.debug(traceback.format_exc())
         logging.error(e)
     sys.exit(0)
