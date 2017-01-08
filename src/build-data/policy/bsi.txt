@@ -107,9 +107,11 @@ cfb
 
 # stream
 chacha
+chacha_sse2
 ofb
 rc4
 salsa20
+shake_cipher
 
 # kdf
 hkdf
@@ -125,6 +127,7 @@ gost_3410
 mce
 mceies
 rfc6979
+newhope
 
 # pk_pad
 #eme_pkcs1 // needed for tls
@@ -145,6 +148,7 @@ shake
 skein
 tiger
 whirlpool
+keccak
 
 # mac
 cbc_mac
