@@ -523,6 +523,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
     class LexerError(Exception):
         def __init__(self, msg, line):
+            super(LexerError, self).__init__(msg)
             self.msg = msg
             self.line = line
 
