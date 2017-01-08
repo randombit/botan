@@ -209,10 +209,10 @@ class BuildConfigurationInformation(object):
         return 'botan-%d.pc' % (self.version_major)
 
 
-"""
-Handle command line options
-"""
 def process_command_line(args):
+    """
+    Handle command line options
+    """
 
     parser = optparse.OptionParser(
         formatter = optparse.IndentedHelpFormatter(max_help_position = 50),
@@ -510,10 +510,10 @@ def process_command_line(args):
 
     return options
 
-"""
-Generic lexer function for info.txt and src/build-data files
-"""
 def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
+    """
+    Generic lexer function for info.txt and src/build-data files
+    """
 
     to_obj.infofile = infofile
 
@@ -594,16 +594,17 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
         else: # No match -> error
             raise LexerError('Bad token "%s"' % (token), lexer.lineno)
 
-"""
-Convert a lex'ed map (from build-data files) from a list to a dict
-"""
 def force_to_dict(l):
+    """
+    Convert a lex'ed map (from build-data files) from a list to a dict
+    """
+
     return dict(zip(l[::3],l[2::3]))
 
-"""
-Represents the information about a particular module
-"""
 class ModuleInfo(object):
+    """
+    Represents the information about a particular module
+    """
 
     def __init__(self, infofile):
 
@@ -764,11 +765,12 @@ class ModuleInfo(object):
             deps.append(self.parent_module)
         return deps
 
-    """
-    Ensure that all dependencies of this module actually exist, warning
-    about any that do not
-    """
     def dependencies_exist(self, modules):
+        """
+        Ensure that all dependencies of this module actually exist, warning
+        about any that do not
+        """
+
         all_deps = [s.split('|') for s in self.dependencies()]
 
         for missing in [s for s in flatten(all_deps) if s not in modules]:
@@ -816,19 +818,21 @@ class ArchInfo(object):
 
         self.wordsize = int(self.wordsize)
 
-    """
-    Return a list of all submodels for this arch, ordered longest
-    to shortest
-    """
     def all_submodels(self):
+        """
+        Return a list of all submodels for this arch, ordered longest
+        to shortest
+        """
+
         return sorted([(k,k) for k in self.submodels] +
                       [k for k in self.submodel_aliases.items()],
                       key = lambda k: len(k[0]), reverse = True)
 
-    """
-    Return CPU-specific defines for build.h
-    """
     def defines(self, options):
+        """
+        Return CPU-specific defines for build.h
+        """
+
         def form_macro(cpu_name):
             return cpu_name.upper().replace('.', '').replace('-', '_')
 
@@ -937,10 +941,11 @@ class CompilerInfo(object):
             return self.isa_flags[arch_isa]
         return None
 
-    """
-    Return the shared library build flags, if any
-    """
     def gen_shared_flags(self, options):
+        """
+        Return the shared library build flags, if any
+        """
+
         def flag_builder():
             if options.build_shared_lib:
                 yield self.shared_flags
@@ -954,10 +959,11 @@ class CompilerInfo(object):
             return self.visibility_attribute
         return ''
 
-    """
-    Return the machine specific ABI flags
-    """
     def mach_abi_link_flags(self, options):
+        """
+        Return the machine specific ABI flags
+        """
+
         def all():
             if options.with_debug_info and 'all-debug' in self.mach_abi_linking:
                 return 'all-debug'
@@ -1045,10 +1051,11 @@ class CompilerInfo(object):
         else:
             return [osname, 'default']
 
-    """
-    Return the command needed to link a shared object
-    """
     def so_link_command_for(self, osname, options):
+        """
+        Return the command needed to link a shared object
+        """
+
         for s in self._so_link_search(osname, options.with_debug_info):
             if s in self.so_link_commands:
                 return self.so_link_commands[s]
@@ -1056,20 +1063,22 @@ class CompilerInfo(object):
         raise Exception("No shared library link command found for target '%s' in compiler settings '%s'" %
                     (osname, self.infofile))
 
-    """
-    Return the command needed to link an app/test object
-    """
     def binary_link_command_for(self, osname, options):
+        """
+        Return the command needed to link an app/test object
+        """
+
         for s in self._so_link_search(osname, options.with_debug_info):
             if s in self.binary_link_commands:
                 return self.binary_link_commands[s]
 
         return '$(LINKER)'
 
-    """
-    Return defines for build.h
-    """
     def defines(self):
+        """
+        Return defines for build.h
+        """
+
         return ['BUILD_COMPILER_IS_' + self.macro_name]
 
 class OsInfo(object):
@@ -1209,19 +1218,21 @@ def guess_processor(archinfo):
 
     raise Exception('Could not determine target CPU; set with --cpu')
 
-"""
-Read a whole file into memory as a string
-"""
 def slurp_file(filename):
+    """
+    Read a whole file into memory as a string
+    """
+
     # type: (object) -> object
     if filename is None:
         return ''
     return ''.join(open(filename).readlines())
 
-"""
-Perform template substitution
-"""
 def process_template(template_file, variables):
+    """
+    Perform template substitution
+    """
+
     class PercentSignTemplate(string.Template):
         delimiter = '%'
 
@@ -1391,10 +1402,11 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
 
             yield os.path.join(obj_dir, name)
 
-    """
-    Form snippets of makefile for building each source file
-    """
     def build_commands(sources, obj_dir, flags):
+        """
+        Form snippets of makefile for building each source file
+        """
+
         includes = cc.add_include_dir_option + build_config.include_dir
         includes+= ' ' + cc.add_include_dir_option + build_config.external_include_dir if build_config.external_headers else ''
         includes+= ' ' + cc.add_include_dir_option + options.with_external_includedir if options.with_external_includedir else ''
@@ -1416,23 +1428,26 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
         build_key = '%s_build_cmds' % (t)
         var[build_key] = '\n'.join(build_commands(src_list, src_dir, t.upper()))
 
-"""
-Create the template variables needed to process the makefile, build.h, etc
-"""
 def create_template_vars(build_config, options, modules, cc, arch, osinfo):
+    """
+    Create the template variables needed to process the makefile, build.h, etc
+    """
+
     def make_cpp_macros(macros):
         return '\n'.join(['#define BOTAN_' + macro for macro in macros])
 
-    """
-    Figure out what external libraries are needed based on selected modules
-    """
     def link_to():
+        """
+        Figure out what external libraries are needed based on selected modules
+        """
+
         return do_link_to('libs')
 
-    """
-    Figure out what external frameworks are needed based on selected modules
-    """
     def link_to_frameworks():
+        """
+        Figure out what external frameworks are needed based on selected modules
+        """
+
         return do_link_to('frameworks')
 
     def do_link_to(module_member_name):
@@ -1650,10 +1665,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
     return vars
 
-"""
-Determine which modules to load based on options, target, etc
-"""
 def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
+    """
+    Determine which modules to load based on options, target, etc
+    """
 
     for mod in modules.values():
         mod.dependencies_exist(modules)
@@ -1803,10 +1818,10 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
 
     return to_load
 
-"""
-Choose the link method based on system availablity and user request
-"""
 def choose_link_method(options):
+    """
+    Choose the link method based on system availablity and user request
+    """
 
     req = options.link_method
 
@@ -1832,10 +1847,10 @@ def choose_link_method(options):
     logging.warning('Could not use link method "%s", will copy instead' % (req))
     return 'copy'
 
-"""
-Copy or link the file, depending on what the platform offers
-"""
 def portable_symlink(file_path, target_dir, method):
+    """
+    Copy or link the file, depending on what the platform offers
+    """
 
     if not os.access(file_path, os.R_OK):
         logging.warning('Missing file %s' % (file_path))
@@ -1851,10 +1866,11 @@ def portable_symlink(file_path, target_dir, method):
     else:
         raise Exception('Unknown link method %s' % (method))
 
-"""
-Generate the amalgamation
-"""
 def generate_amalgamation(build_config, options):
+    """
+    Generate the amalgamation
+    """
+
     def strip_header_goop(header_name, contents):
         header_guard = re.compile('^#define BOTAN_.*_H__$')
 
@@ -2037,10 +2053,10 @@ def generate_amalgamation(build_config, options):
 
     return botan_amalgs_fs
 
-"""
-Test for the existence of a program
-"""
 def have_program(program):
+    """
+    Test for the existence of a program
+    """
 
     def exe_test(path, program):
         exe_file = os.path.join(path, program)
@@ -2061,10 +2077,11 @@ def have_program(program):
     logging.debug('Program %s not found' % (program))
     return False
 
-"""
-Main driver
-"""
 def main(argv = None):
+    """
+    Main driver
+    """
+
     if argv is None:
         argv = sys.argv
 
