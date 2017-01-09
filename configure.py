@@ -642,7 +642,7 @@ class ModuleInfo(object):
             pub_header = set(self.header_public)
             int_header = set(self.header_internal)
 
-            if pub_header.isdisjoint(int_header) == False:
+            if not pub_header.isdisjoint(int_header):
                 logging.error("Module %s header contains same header in public and internal sections" % (infofile))
 
         # Coerce to more useful types
@@ -681,7 +681,7 @@ class ModuleInfo(object):
         self.header_external = [add_dir_name(s) for s in self.header_external]
 
         for src in self.source + self.header_internal + self.header_public + self.header_external:
-            if os.access(src, os.R_OK) == False:
+            if not os.access(src, os.R_OK):
                 logging.error("Missing file %s in %s" % (src, infofile))
 
         if self.comment != []:
@@ -1779,7 +1779,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                         to_load.append(mod)
                         dep_met = True
 
-                if dep_met == False:
+                if not dep_met:
                     dependency_failure = True
                     if modname in to_load:
                         to_load.remove(modname)
