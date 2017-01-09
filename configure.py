@@ -807,7 +807,7 @@ class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
                       ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
-                      { 'endian': None,
+                      {'endian': None,
                         'family': None,
                         'unaligned': 'no',
                         'wordsize': 32
@@ -827,7 +827,7 @@ class ArchInfo(object):
 
         return sorted([(k, k) for k in self.submodels] +
                       [k for k in self.submodel_aliases.items()],
-                      key = lambda k: len(k[0]), reverse = True)
+                      key=lambda k: len(k[0]), reverse=True)
 
     def defines(self, options):
         """
@@ -1253,24 +1253,24 @@ def gen_bakefile(build_config, options):
 
     def bakefile_sources(file, sources):
         for src in sources:
-            (dir,filename) = os.path.split(os.path.normpath(src))
-            dir = dir.replace('\\','/')
-            param, dir = dir.split('src/',1)
-            file.write('\tsources { src/%s/%s } \n' % ( dir, filename))
+            (dir, filename) = os.path.split(os.path.normpath(src))
+            dir = dir.replace('\\', '/')
+            param, dir = dir.split('src/', 1)
+            file.write('\tsources { src/%s/%s } \n' % (dir, filename))
 
     def bakefile_cli_headers(file, headers):
         for header in headers:
             (dir, filename) = os.path.split(os.path.normpath(header))
-            dir = dir.replace('\\','/')
-            param, dir = dir.split('src/',1)
-            file.write('\theaders { src/%s/%s } \n' % ( dir, filename))
+            dir = dir.replace('\\', '/')
+            param, dir = dir.split('src/', 1)
+            file.write('\theaders { src/%s/%s } \n' % (dir, filename))
 
     def bakefile_test_sources(file, sources):
         for src in sources:
-            (dir,filename) = os.path.split(os.path.normpath(src))
+            (dir, filename) = os.path.split(os.path.normpath(src))
             file.write('\tsources { src/tests/%s } \n' %filename)
 
-    f = open('botan.bkl','w')
+    f = open('botan.bkl', 'w')
     f.write('toolsets = vs2013;\n')
 
     # shared library project
@@ -1296,7 +1296,7 @@ def gen_bakefile(build_config, options):
     f.write('includedirs += build/include/;\n')
 
     if options.with_external_includedir:
-        external_inc_dir = options.with_external_includedir.replace('\\','/')
+        external_inc_dir = options.with_external_includedir.replace('\\', '/')
         # Attention: bakefile supports only relative paths
         f.write('includedirs += "%s";\n' %external_inc_dir)
 
@@ -1347,14 +1347,14 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
                 return get_isa_specific_flags(cc, isas)
 
         if src.startswith('botan_all_'):
-            isa =  src.replace('botan_all_','').replace('.cpp', '').split('_')
+            isa = src.replace('botan_all_', '').replace('.cpp', '').split('_')
             return get_isa_specific_flags(cc, isa)
 
         return ''
 
     def objectfile_list(sources, obj_dir):
         for src in sources:
-            (dir,file) = os.path.split(os.path.normpath(src))
+            (dir, file) = os.path.split(os.path.normpath(src))
 
             parts = dir.split(os.sep)
             if 'src' in parts:
@@ -1600,20 +1600,20 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'static_suffix': osinfo.static_suffix,
 
         'soname_base': osinfo.soname_pattern_base.format(
-                            version_major = build_config.version_major,
-                            version_minor = build_config.version_minor,
-                            version_patch = build_config.version_patch,
-                            abi_rev       = build_config.version_so_rev),
+            version_major=build_config.version_major,
+            version_minor=build_config.version_minor,
+            version_patch=build_config.version_patch,
+            abi_rev=build_config.version_so_rev),
         'soname_abi': osinfo.soname_pattern_abi.format(
-                            version_major = build_config.version_major,
-                            version_minor = build_config.version_minor,
-                            version_patch = build_config.version_patch,
-                            abi_rev       = build_config.version_so_rev),
+            version_major=build_config.version_major,
+            version_minor=build_config.version_minor,
+            version_patch=build_config.version_patch,
+            abi_rev=build_config.version_so_rev),
         'soname_patch': osinfo.soname_pattern_patch.format(
-                            version_major = build_config.version_major,
-                            version_minor = build_config.version_minor,
-                            version_patch = build_config.version_patch,
-                            abi_rev       = build_config.version_so_rev),
+            version_major=build_config.version_major,
+            version_minor=build_config.version_minor,
+            version_patch=build_config.version_patch,
+            abi_rev=build_config.version_so_rev),
 
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
@@ -1626,7 +1626,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     if options.os == 'darwin' and options.build_shared_lib:
         # In order that these executables work from the build directory,
         # we need to change the install names
-        vars['cli_post_link_cmd']  = 'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(CLI)'
+        vars['cli_post_link_cmd'] = 'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(CLI)'
         vars['test_post_link_cmd'] = 'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
     else:
         vars['cli_post_link_cmd'] = ''
@@ -1651,7 +1651,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
     if vars["makefile_style"] == "gmake":
         vars["gmake_commands_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_commands.in'), vars)
-        vars["gmake_dso_in"]      = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), vars) \
+        vars["gmake_dso_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), vars) \
                                     if options.build_shared_lib else ''
         vars["gmake_coverage_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_coverage.in'), vars) \
                                     if options.with_coverage_info else ''
@@ -1986,7 +1986,7 @@ def generate_amalgamation(build_config, options):
     botan_amalgs_fs = []
 
     def open_amalg_file(tgt):
-        fsname = '%s%s.cpp' % (amalg_basename, '_' + tgt if tgt else '' )
+        fsname = '%s%s.cpp' % (amalg_basename, '_' + tgt if tgt else '')
         botan_amalgs_fs.append(fsname)
         logging.info('Writing amalgamation source to %s' % (fsname))
         f = open(fsname, 'w')
@@ -2156,7 +2156,7 @@ def main(argv=None):
     logging.debug('Known CPU names: ' + ' '.join(
         sorted(flatten([[ainfo.basename] + \
                         ainfo.aliases + \
-                        [x for (x,_) in ainfo.all_submodels()]
+                        [x for (x, _) in ainfo.all_submodels()]
                         for ainfo in info_arch.values()]))))
 
     if options.list_modules:
