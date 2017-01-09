@@ -808,10 +808,10 @@ class ArchInfo(object):
         lex_me_harder(infofile, self,
                       ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
                       {'endian': None,
-                        'family': None,
-                        'unaligned': 'no',
-                        'wordsize': 32
-                        })
+                       'family': None,
+                       'unaligned': 'no',
+                       'wordsize': 32
+                      })
 
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
@@ -909,7 +909,7 @@ class CompilerInfo(object):
                        'visibility_attribute': '',
                        'ar_command': None,
                        'makefile_style': ''
-                       })
+                      })
 
         self.so_link_commands = force_to_dict(self.so_link_commands)
         self.binary_link_commands = force_to_dict(self.binary_link_commands)
@@ -1061,8 +1061,9 @@ class CompilerInfo(object):
             if s in self.so_link_commands:
                 return self.so_link_commands[s]
 
-        raise ConfigureError("No shared library link command found for target '%s' in compiler settings '%s'" %
-                    (osname, self.infofile))
+        raise ConfigureError(
+            "No shared library link command found for target '%s' in compiler settings '%s'" %
+            (osname, self.infofile))
 
     def binary_link_command_for(self, osname, options):
         """
@@ -1104,7 +1105,7 @@ class OsInfo(object):
                        'building_shared_supported': 'yes',
                        'install_cmd_data': 'install -m 644',
                        'install_cmd_exec': 'install -m 755'
-                       })
+                      })
 
         if self.soname_pattern_base != '':
             if self.soname_pattern_patch == '' and self.soname_pattern_abi == '':
