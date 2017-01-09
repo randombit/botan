@@ -210,5 +210,5 @@ latex_show_urls = 'inline'
 #latex_appendices = []
 
 # If false, no module index is generated.
-#latex_domain_indices = True
+latex_domain_indices = False
 
