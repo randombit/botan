@@ -652,7 +652,7 @@ class ModuleInfo(object):
             result = {}
 
             for sep in l[1::3]:
-                if(sep != '->'):
+                if sep != '->':
                     raise ConfigureError("Bad <libs> in module %s" % (self.basename))
 
             for (targetlist, vallist) in zip(l[::3], l[2::3]):
@@ -1128,7 +1128,7 @@ class OsInfo(object):
         self.building_shared_supported = (True if self.building_shared_supported == 'yes' else False)
 
     def ranlib_command(self):
-        return ('ranlib' if self.ar_needs_ranlib else 'true')
+        return 'ranlib' if self.ar_needs_ranlib else 'true'
 
     def defines(self, options):
         r = []
