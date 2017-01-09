@@ -1888,9 +1888,9 @@ def generate_amalgamation(build_config, options):
 
         return contents
 
-    botan_include_matcher = re.compile('#include <botan/(.*)>$')
-    std_include_matcher = re.compile('^#include <([^/\.]+|stddef.h)>$')
-    any_include_matcher = re.compile('#include <(.*)>$')
+    botan_include_matcher = re.compile(r'#include <botan/(.*)>$')
+    std_include_matcher = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
+    any_include_matcher = re.compile(r'#include <(.*)>$')
 
     class AmalgamationGenerator:
         def __init__(self, input_list):
