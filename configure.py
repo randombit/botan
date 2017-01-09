@@ -32,7 +32,7 @@ import traceback
 import logging
 import time
 import errno
-import optparse
+import optparse # pylint: disable=deprecated-module
 
 import botan_version
 
