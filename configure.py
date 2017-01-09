@@ -1256,19 +1256,19 @@ def gen_bakefile(build_config, options):
         for src in sources:
             (dir, filename) = os.path.split(os.path.normpath(src))
             dir = dir.replace('\\', '/')
-            param, dir = dir.split('src/', 1)
+            _, dir = dir.split('src/', 1)
             file.write('\tsources { src/%s/%s } \n' % (dir, filename))
 
     def bakefile_cli_headers(file, headers):
         for header in headers:
             (dir, filename) = os.path.split(os.path.normpath(header))
             dir = dir.replace('\\', '/')
-            param, dir = dir.split('src/', 1)
+            _, dir = dir.split('src/', 1)
             file.write('\theaders { src/%s/%s } \n' % (dir, filename))
 
     def bakefile_test_sources(file, sources):
         for src in sources:
-            (dir, filename) = os.path.split(os.path.normpath(src))
+            (_, filename) = os.path.split(os.path.normpath(src))
             file.write('\tsources { src/tests/%s } \n' %filename)
 
     f = open('botan.bkl', 'w')
@@ -1479,7 +1479,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
     def read_pem(filename):
         lines = [line.rstrip() for line in open(filename)]
-        for ndx, line in enumerate(lines):
+        for ndx, _ in enumerate(lines):
             lines[ndx] = ''.join(('\"', lines[ndx], '\" \\', '\n'))
         return ''.join(lines)
 
@@ -2119,7 +2119,7 @@ def main(argv=None):
     options.makefile_dir = os.path.join(options.build_data, 'makefile')
 
     def find_files_named(desired_name, in_path):
-        for (dirpath, dirnames, filenames) in os.walk(in_path):
+        for (dirpath, _, filenames) in os.walk(in_path):
             if desired_name in filenames:
                 yield os.path.join(dirpath, desired_name)
 
