@@ -1474,7 +1474,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             if arch in inno_arch:
                 return inno_arch[arch]
             else:
-                logging.warn('Unknown arch in innosetup_arch %s' % (arch))
+                logging.warning('Unknown arch in innosetup_arch %s' % (arch))
         return None
 
     def read_pem(filename):
