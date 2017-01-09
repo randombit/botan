@@ -375,7 +375,7 @@ def process_command_line(args):
 
     build_group.add_option('--with-python-versions', dest='python_version',
                            metavar='N.M',
-                           default='.'.join(map(str, sys.version_info[0:2])),
+                           default='%d.%d' % (sys.version_info[0], sys.version_info[1]),
                            help='where to install botan.py (def %default)')
 
     build_group.add_option('--with-valgrind', help='use valgrind API',
@@ -2138,7 +2138,8 @@ def main(argv=None):
         if len(info) == 0:
             logging.warning('Failed to load any %s files' % (descr))
         else:
-            logging.debug('Loaded %d %s files (%s)' % (len(info), descr, ' '.join(sorted(map(str, info)))))
+            infotxt_basenames = ' '.join(sorted([key for key in info]))
+            logging.debug('Loaded %d %s files (%s)' % (len(info), descr, infotxt_basenames))
 
         return info
 
