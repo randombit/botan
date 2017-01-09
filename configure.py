@@ -578,7 +578,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
                                      lexer.lineno)
 
         elif token in name_val_pairs.keys():
-            if type(to_obj.__dict__[token]) is list:
+            if isinstance(to_obj.__dict__[token], list):
                 to_obj.__dict__[token].append(lexer.get_token())
 
                 # Dirty hack
