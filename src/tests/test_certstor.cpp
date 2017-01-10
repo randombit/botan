@@ -12,9 +12,6 @@
    #include <botan/internal/filesystem.h>
    #include <botan/pkcs8.h>
    #include <sstream>
-   extern "C" {
-   #include <unistd.h> // unlink()
-   }
 #endif
 
 
@@ -209,11 +206,11 @@ class Certstor_Tests : public Test
 
             try
                {
-               unlink((fn.first + ".db").c_str());
-
                auto& rng = Test::rng();
                std::string passwd(reinterpret_cast<const char*>(rng.random_vec(8).data()),8);
-               Botan::Certificate_Store_In_SQLite store(fn.first + ".db", passwd, rng);
+
+               // Just create a database in memory for testing (https://sqlite.org/inmemorydb.html)
+               Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
                std::vector<std::pair<Botan::X509_Certificate,std::shared_ptr<Botan::Private_Key>>> retrieve;
 
                for(auto&& cert_key_pair : test_data)
