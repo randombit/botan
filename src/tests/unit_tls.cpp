@@ -5,6 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+// Deprecated TLS APIs are tested below
+#define BOTAN_NO_DEPRECATED_WARNINGS
+
 #include "tests.h"
 #include <vector>
 #include <memory>
