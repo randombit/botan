@@ -130,7 +130,7 @@ def main(args = None):
                                   'botan-%d.%d.%d' % (ver_major, ver_minor, ver_patch))
     target_include_dir = os.path.join(options.destdir,
                                       options.includedir,
-                                      'botan-%d.%d' % (ver_major, ver_minor),
+                                      'botan-%d' % (ver_major),
                                       'botan')
 
     out_dir = process_template('%{out_dir}')
