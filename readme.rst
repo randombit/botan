@@ -71,6 +71,10 @@ external build systems, see the manual for details.
     :target: https://sonarqube.com/dashboard/index/botan
     :alt: Sonarqube analysis
 
+.. image:: https://bestpractices.coreinfrastructure.org/projects/531/badge
+    :target: https://bestpractices.coreinfrastructure.org/projects/531
+    :alt: CII Best Practices statement
+
 Release Downloads
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
