@@ -20,6 +20,11 @@ fi
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     sudo apt-get -qq update
 
+    if [ "$BUILD_MODE" = "lint" ]; then
+        pip install --user pylint
+        pip3 install --user pylint
+    fi
+
     if [ "$BUILD_MODE" = "docs" ]; then
         sudo apt-get install doxygen
 
