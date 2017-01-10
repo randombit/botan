@@ -27,7 +27,7 @@
 %{unsafe_fuzzer_mode_define}
 
 #define BOTAN_INSTALL_PREFIX R"(%{prefix})"
-#define BOTAN_INSTALL_HEADER_DIR "%{includedir}/botan-%{version_major}.%{version_minor}"
+#define BOTAN_INSTALL_HEADER_DIR "%{includedir}/botan-%{version_major}"
 #define BOTAN_INSTALL_LIB_DIR "%{libdir}"
 #define BOTAN_LIB_LINK "%{link_to}"
 
