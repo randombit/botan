@@ -1,7 +1,7 @@
 
 release_major = 2
 release_minor = 0
-release_patch = 0
+release_patch = 1
 release_so_abi_rev = 0
 
 # These are set by the distribution script
