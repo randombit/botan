@@ -1255,23 +1255,15 @@ def gen_bakefile(build_config, options):
         for src in sources:
             (dir,filename) = os.path.split(os.path.normpath(src))
             dir = dir.replace('\\','/')
-            try:
-                param, dir = dir.split('/src/',1)
-                file.write('\tsources { src/%s/%s } \n' % ( dir, filename))
-            except ValueError:
-                pass
-            file.write('\tsources { %s/%s } \n' % ( dir, filename))
+            param, dir = dir.split('src/',1)
+            file.write('\tsources { src/%s/%s } \n' % ( dir, filename))
 
     def bakefile_cli_headers(file, headers):
         for header in headers:
             (dir, filename) = os.path.split(os.path.normpath(header))
             dir = dir.replace('\\','/')
-            try:
-                param, dir = dir.split('/src/',1)
-                file.write('\theaders { src/%s/%s } \n' % ( dir, filename))
-            except ValueError:
-                pass
-            file.write('\theaders { %s/%s } \n' % ( dir, filename))
+            param, dir = dir.split('src/',1)
+            file.write('\theaders { src/%s/%s } \n' % ( dir, filename))
 
     def bakefile_test_sources(file, sources):
         for src in sources:
