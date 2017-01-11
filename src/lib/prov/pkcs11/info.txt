@@ -1,7 +1,5 @@
 define PKCS11 20160219
 
-load_on vendor
-
 <requires>
 dyn_load
 rng
