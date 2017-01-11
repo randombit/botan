@@ -8,9 +8,6 @@ TEST_EXE=./botan-test
 TEST_FLAGS=()
 CFG_FLAGS=(--prefix=/tmp/botan-installation --cc=$CC --os=$TRAVIS_OS_NAME)
 
-# PKCS11 is optional but doesn't pull in new dependencies
-CFG_FLAGS+=(--with-pkcs11)
-
 CC_BIN=$CXX
 
 if [ "$BUILD_MODE" = "static" ] || [ "$BUILD_MODE" = "mini-static" ]; then

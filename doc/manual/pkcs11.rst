@@ -24,7 +24,7 @@ access to all functions that are specified by the standard. The high level API r
 an object oriented approach to use PKCS#11 compatible devices but only provides a subset
 of the functions described in the standard.
 
-To use the PKCS#11 implementation Botan has to be configured with ``--with-pkcs11``.
+To use the PKCS#11 implementation the ``pkcs11`` module has to be enabled.
 
    .. note::
 
