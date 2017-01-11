@@ -1,6 +1,6 @@
 define PKCS11 20160219
 
-load_on vendor
+load_on request
 
 <requires>
 dyn_load
