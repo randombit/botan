@@ -73,10 +73,10 @@ install:
 
 build_script:
   - if %CONFIG% == Release (
-       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11
+       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE%
     )
   - if %CONFIG% == Debug (
-       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --with-pkcs11 --debug-mode
+       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --debug-mode
     )
   - jom -j2
   - botan-test
