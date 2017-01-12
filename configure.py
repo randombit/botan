@@ -32,7 +32,7 @@ import traceback
 import logging
 import time
 import errno
-import optparse
+import optparse # pylint: disable=deprecated-module
 
 import botan_version
 
@@ -375,7 +375,7 @@ def process_command_line(args):
 
     build_group.add_option('--with-python-versions', dest='python_version',
                            metavar='N.M',
-                           default='.'.join(map(str, sys.version_info[0:2])),
+                           default='%d.%d' % (sys.version_info[0], sys.version_info[1]),
                            help='where to install botan.py (def %default)')
 
     build_group.add_option('--with-valgrind', help='use valgrind API',
@@ -578,7 +578,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
                                      lexer.lineno)
 
         elif token in name_val_pairs.keys():
-            if type(to_obj.__dict__[token]) is list:
+            if isinstance(to_obj.__dict__[token], list):
                 to_obj.__dict__[token].append(lexer.get_token())
 
                 # Dirty hack
@@ -642,7 +642,7 @@ class ModuleInfo(object):
             pub_header = set(self.header_public)
             int_header = set(self.header_internal)
 
-            if pub_header.isdisjoint(int_header) == False:
+            if not pub_header.isdisjoint(int_header):
                 logging.error("Module %s header contains same header in public and internal sections" % (infofile))
 
         # Coerce to more useful types
@@ -652,7 +652,7 @@ class ModuleInfo(object):
             result = {}
 
             for sep in l[1::3]:
-                if(sep != '->'):
+                if sep != '->':
                     raise ConfigureError("Bad <libs> in module %s" % (self.basename))
 
             for (targetlist, vallist) in zip(l[::3], l[2::3]):
@@ -681,7 +681,7 @@ class ModuleInfo(object):
         self.header_external = [add_dir_name(s) for s in self.header_external]
 
         for src in self.source + self.header_internal + self.header_public + self.header_external:
-            if os.access(src, os.R_OK) == False:
+            if not os.access(src, os.R_OK):
                 logging.error("Missing file %s in %s" % (src, infofile))
 
         if self.comment != []:
@@ -695,9 +695,9 @@ class ModuleInfo(object):
             self.warning = None
 
         def intersect_check(type_a, list_a, type_b, list_b):
-           intersection = set.intersection(set(list_a), set(list_b))
-           if len(intersection) > 0:
-              logging.error('Headers %s marked both %s and %s' % (' '.join(intersection), type_a, type_b))
+            intersection = set.intersection(set(list_a), set(list_b))
+            if len(intersection) > 0:
+                logging.error('Headers %s marked both %s and %s' % (' '.join(intersection), type_a, type_b))
 
         intersect_check('public', self.header_public, 'internal', self.header_internal)
         intersect_check('public', self.header_public, 'external', self.header_external)
@@ -807,11 +807,11 @@ class ArchInfo(object):
     def __init__(self, infofile):
         lex_me_harder(infofile, self,
                       ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
-                      { 'endian': None,
-                        'family': None,
-                        'unaligned': 'no',
-                        'wordsize': 32
-                        })
+                      {'endian': None,
+                       'family': None,
+                       'unaligned': 'no',
+                       'wordsize': 32
+                      })
 
         self.submodel_aliases = force_to_dict(self.submodel_aliases)
 
@@ -827,7 +827,7 @@ class ArchInfo(object):
 
         return sorted([(k, k) for k in self.submodels] +
                       [k for k in self.submodel_aliases.items()],
-                      key = lambda k: len(k[0]), reverse = True)
+                      key=lambda k: len(k[0]), reverse=True)
 
     def defines(self, options):
         """
@@ -909,7 +909,7 @@ class CompilerInfo(object):
                        'visibility_attribute': '',
                        'ar_command': None,
                        'makefile_style': ''
-                       })
+                      })
 
         self.so_link_commands = force_to_dict(self.so_link_commands)
         self.binary_link_commands = force_to_dict(self.binary_link_commands)
@@ -1061,8 +1061,9 @@ class CompilerInfo(object):
             if s in self.so_link_commands:
                 return self.so_link_commands[s]
 
-        raise ConfigureError("No shared library link command found for target '%s' in compiler settings '%s'" %
-                    (osname, self.infofile))
+        raise ConfigureError(
+            "No shared library link command found for target '%s' in compiler settings '%s'" %
+            (osname, self.infofile))
 
     def binary_link_command_for(self, osname, options):
         """
@@ -1104,7 +1105,7 @@ class OsInfo(object):
                        'building_shared_supported': 'yes',
                        'install_cmd_data': 'install -m 644',
                        'install_cmd_exec': 'install -m 755'
-                       })
+                      })
 
         if self.soname_pattern_base != '':
             if self.soname_pattern_patch == '' and self.soname_pattern_abi == '':
@@ -1127,7 +1128,7 @@ class OsInfo(object):
         self.building_shared_supported = (True if self.building_shared_supported == 'yes' else False)
 
     def ranlib_command(self):
-        return ('ranlib' if self.ar_needs_ranlib else 'true')
+        return 'ranlib' if self.ar_needs_ranlib else 'true'
 
     def defines(self, options):
         r = []
@@ -1253,32 +1254,24 @@ def gen_bakefile(build_config, options):
 
     def bakefile_sources(file, sources):
         for src in sources:
-            (dir,filename) = os.path.split(os.path.normpath(src))
-            dir = dir.replace('\\','/')
-            try:
-                param, dir = dir.split('/src/',1)
-                file.write('\tsources { src/%s/%s } \n' % ( dir, filename))
-            except ValueError:
-                pass
-            file.write('\tsources { %s/%s } \n' % ( dir, filename))
+            (dir, filename) = os.path.split(os.path.normpath(src))
+            dir = dir.replace('\\', '/')
+            _, dir = dir.split('src/', 1)
+            file.write('\tsources { src/%s/%s } \n' % (dir, filename))
 
     def bakefile_cli_headers(file, headers):
         for header in headers:
             (dir, filename) = os.path.split(os.path.normpath(header))
-            dir = dir.replace('\\','/')
-            try:
-                param, dir = dir.split('/src/',1)
-                file.write('\theaders { src/%s/%s } \n' % ( dir, filename))
-            except ValueError:
-                pass
-            file.write('\theaders { %s/%s } \n' % ( dir, filename))
+            dir = dir.replace('\\', '/')
+            _, dir = dir.split('src/', 1)
+            file.write('\theaders { src/%s/%s } \n' % (dir, filename))
 
     def bakefile_test_sources(file, sources):
         for src in sources:
-            (dir,filename) = os.path.split(os.path.normpath(src))
+            (_, filename) = os.path.split(os.path.normpath(src))
             file.write('\tsources { src/tests/%s } \n' %filename)
 
-    f = open('botan.bkl','w')
+    f = open('botan.bkl', 'w')
     f.write('toolsets = vs2013;\n')
 
     # shared library project
@@ -1304,7 +1297,7 @@ def gen_bakefile(build_config, options):
     f.write('includedirs += build/include/;\n')
 
     if options.with_external_includedir:
-        external_inc_dir = options.with_external_includedir.replace('\\','/')
+        external_inc_dir = options.with_external_includedir.replace('\\', '/')
         # Attention: bakefile supports only relative paths
         f.write('includedirs += "%s";\n' %external_inc_dir)
 
@@ -1355,14 +1348,14 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
                 return get_isa_specific_flags(cc, isas)
 
         if src.startswith('botan_all_'):
-            isa =  src.replace('botan_all_','').replace('.cpp', '').split('_')
+            isa = src.replace('botan_all_', '').replace('.cpp', '').split('_')
             return get_isa_specific_flags(cc, isa)
 
         return ''
 
     def objectfile_list(sources, obj_dir):
         for src in sources:
-            (dir,file) = os.path.split(os.path.normpath(src))
+            (dir, file) = os.path.split(os.path.normpath(src))
 
             parts = dir.split(os.sep)
             if 'src' in parts:
@@ -1481,12 +1474,12 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
             if arch in inno_arch:
                 return inno_arch[arch]
             else:
-                logging.warn('Unknown arch in innosetup_arch %s' % (arch))
+                logging.warning('Unknown arch in innosetup_arch %s' % (arch))
         return None
 
     def read_pem(filename):
         lines = [line.rstrip() for line in open(filename)]
-        for ndx, line in enumerate(lines):
+        for ndx, _ in enumerate(lines):
             lines[ndx] = ''.join(('\"', lines[ndx], '\" \\', '\n'))
         return ''.join(lines)
 
@@ -1608,20 +1601,20 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'static_suffix': osinfo.static_suffix,
 
         'soname_base': osinfo.soname_pattern_base.format(
-                            version_major = build_config.version_major,
-                            version_minor = build_config.version_minor,
-                            version_patch = build_config.version_patch,
-                            abi_rev       = build_config.version_so_rev),
+            version_major=build_config.version_major,
+            version_minor=build_config.version_minor,
+            version_patch=build_config.version_patch,
+            abi_rev=build_config.version_so_rev),
         'soname_abi': osinfo.soname_pattern_abi.format(
-                            version_major = build_config.version_major,
-                            version_minor = build_config.version_minor,
-                            version_patch = build_config.version_patch,
-                            abi_rev       = build_config.version_so_rev),
+            version_major=build_config.version_major,
+            version_minor=build_config.version_minor,
+            version_patch=build_config.version_patch,
+            abi_rev=build_config.version_so_rev),
         'soname_patch': osinfo.soname_pattern_patch.format(
-                            version_major = build_config.version_major,
-                            version_minor = build_config.version_minor,
-                            version_patch = build_config.version_patch,
-                            abi_rev       = build_config.version_so_rev),
+            version_major=build_config.version_major,
+            version_minor=build_config.version_minor,
+            version_patch=build_config.version_patch,
+            abi_rev=build_config.version_so_rev),
 
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
@@ -1634,7 +1627,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     if options.os == 'darwin' and options.build_shared_lib:
         # In order that these executables work from the build directory,
         # we need to change the install names
-        vars['cli_post_link_cmd']  = 'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(CLI)'
+        vars['cli_post_link_cmd'] = 'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(CLI)'
         vars['test_post_link_cmd'] = 'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
     else:
         vars['cli_post_link_cmd'] = ''
@@ -1659,7 +1652,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
     if vars["makefile_style"] == "gmake":
         vars["gmake_commands_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_commands.in'), vars)
-        vars["gmake_dso_in"]      = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), vars) \
+        vars["gmake_dso_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), vars) \
                                     if options.build_shared_lib else ''
         vars["gmake_coverage_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_coverage.in'), vars) \
                                     if options.with_coverage_info else ''
@@ -1786,7 +1779,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                         to_load.append(mod)
                         dep_met = True
 
-                if dep_met == False:
+                if not dep_met:
                     dependency_failure = True
                     if modname in to_load:
                         to_load.remove(modname)
@@ -1895,9 +1888,9 @@ def generate_amalgamation(build_config, options):
 
         return contents
 
-    botan_include_matcher = re.compile('#include <botan/(.*)>$')
-    std_include_matcher = re.compile('^#include <([^/\.]+|stddef.h)>$')
-    any_include_matcher = re.compile('#include <(.*)>$')
+    botan_include_matcher = re.compile(r'#include <botan/(.*)>$')
+    std_include_matcher = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
+    any_include_matcher = re.compile(r'#include <(.*)>$')
 
     class AmalgamationGenerator:
         def __init__(self, input_list):
@@ -1994,7 +1987,7 @@ def generate_amalgamation(build_config, options):
     botan_amalgs_fs = []
 
     def open_amalg_file(tgt):
-        fsname = '%s%s.cpp' % (amalg_basename, '_' + tgt if tgt else '' )
+        fsname = '%s%s.cpp' % (amalg_basename, '_' + tgt if tgt else '')
         botan_amalgs_fs.append(fsname)
         logging.info('Writing amalgamation source to %s' % (fsname))
         f = open(fsname, 'w')
@@ -2126,7 +2119,7 @@ def main(argv=None):
     options.makefile_dir = os.path.join(options.build_data, 'makefile')
 
     def find_files_named(desired_name, in_path):
-        for (dirpath, dirnames, filenames) in os.walk(in_path):
+        for (dirpath, _, filenames) in os.walk(in_path):
             if desired_name in filenames:
                 yield os.path.join(dirpath, desired_name)
 
@@ -2145,7 +2138,8 @@ def main(argv=None):
         if len(info) == 0:
             logging.warning('Failed to load any %s files' % (descr))
         else:
-            logging.debug('Loaded %d %s files (%s)' % (len(info), descr, ' '.join(sorted(map(str, info)))))
+            infotxt_basenames = ' '.join(sorted([key for key in info]))
+            logging.debug('Loaded %d %s files (%s)' % (len(info), descr, infotxt_basenames))
 
         return info
 
@@ -2164,7 +2158,7 @@ def main(argv=None):
     logging.debug('Known CPU names: ' + ' '.join(
         sorted(flatten([[ainfo.basename] + \
                         ainfo.aliases + \
-                        [x for (x,_) in ainfo.all_submodels()]
+                        [x for (x, _) in ainfo.all_submodels()]
                         for ainfo in info_arch.values()]))))
 
     if options.list_modules:
