@@ -18,7 +18,7 @@ module should be used only with the library version it accompanied.
 """
 
 import sys
-from ctypes import *
+from ctypes import CDLL, POINTER, byref, c_void_p, c_size_t, c_uint32, c_char, c_char_p, create_string_buffer
 from binascii import hexlify, unhexlify, b2a_base64
 from datetime import datetime
 import time
@@ -117,7 +117,7 @@ class rng(object):
         self.rng = c_void_p(0)
         rc = botan.botan_rng_init(byref(self.rng), _ctype_str(rng_type))
         if rc != 0 or self.rng is None:
-            raise Exception("No rng " + algo + " for you!")
+            raise Exception("No rng " + rng_type + " available")
 
     def __del__(self):
         botan.botan_rng_destroy.argtypes = [c_void_p]
@@ -132,7 +132,10 @@ class rng(object):
         out = create_string_buffer(length)
         l = c_size_t(length)
         rc = botan.botan_rng_get(self.rng, out, l)
-        return _ctype_bufout(out)
+        if rc == 0:
+            return _ctype_bufout(out)
+        else:
+            return None
 
 """
 Hash function
@@ -158,7 +161,9 @@ class hash_function(object):
         botan.botan_hash_output_length.argtypes = [c_void_p,POINTER(c_size_t)]
         l = c_size_t(0)
         rc = botan.botan_hash_output_length(self.hash, byref(l))
-        return l.value
+        if rc == 0:
+            return l.value
+        raise Exception("botan_hash_output_length failed")
 
     def update(self, x):
         botan.botan_hash_update.argtypes = [c_void_p, POINTER(c_char), c_size_t]
@@ -194,7 +199,9 @@ class message_authentication_code(object):
         botan.botan_mac_output_length.argtypes = [c_void_p, POINTER(c_size_t)]
         l = c_size_t(0)
         rc = botan.botan_mac_output_length(self.mac, byref(l))
-        return l.value
+        if rc == 0:
+            return l.value
+        raise Exception("botan_mac_output_length failed")
 
     def set_key(self, key):
         botan.botan_mac_set_key.argtypes = [c_void_p, POINTER(c_char), c_size_t]
@@ -603,9 +610,9 @@ X.509 certificates
 class x509_cert(object):
     def __init__(self, filename=None, buf=None):
         if filename is None and buf is None:
-            raise ArgumentError("No filename or buf given")
+            raise Exception("No filename or buf given")
         if filename is not None and buf is not None:
-            raise ArgumentError("Both filename and buf given")
+            raise Exception("Both filename and buf given")
         elif filename is not None:
             botan.botan_x509_cert_load_file.argtypes = [POINTER(c_void_p), c_char_p]
             self.x509_cert = c_void_p(0)
@@ -861,26 +868,24 @@ def test():
         for dh_grp in ['secp256r1', 'curve25519']:
             dh_kdf = 'KDF2(SHA-384)'.encode('utf-8')
             a_dh_priv = private_key('ecdh', dh_grp, rng())
-            a_dh_pub = a_dh_priv.get_public_key()
-
             b_dh_priv = private_key('ecdh', dh_grp, rng())
-            b_dh_pub = b_dh_priv.get_public_key()
 
             a_dh = pk_op_key_agreement(a_dh_priv, dh_kdf)
             b_dh = pk_op_key_agreement(b_dh_priv, dh_kdf)
+
+            a_dh_pub = a_dh.public_value()
+            b_dh_pub = b_dh.public_value()
 
             a_salt = a_rng.get(8)
             b_salt = b_rng.get(8)
 
             print("ecdh %s pubs:\n  %s (salt %s)\n  %s (salt %s)\n" %
                   (dh_grp,
-                   hex_encode(a_dh.public_value()),
-                   hex_encode(a_salt),
-                   hex_encode(b_dh.public_value()),
-                   hex_encode(b_salt)))
+                   hex_encode(a_dh_pub), hex_encode(a_salt),
+                   hex_encode(b_dh_pub), hex_encode(b_salt)))
 
-            a_key = a_dh.agree(b_dh.public_value(), 32, a_salt + b_salt)
-            b_key = b_dh.agree(a_dh.public_value(), 32, a_salt + b_salt)
+            a_key = a_dh.agree(b_dh_pub, 32, a_salt + b_salt)
+            b_key = b_dh.agree(a_dh_pub, 32, a_salt + b_salt)
 
             print("ecdh %s shared:\n  %s\n  %s\n" %
                   (dh_grp, hex_encode(a_key), hex_encode(b_key)))
