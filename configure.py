@@ -1807,7 +1807,8 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
         if modules[mod].warning:
             logging.warning('%s: %s' % (mod, modules[mod].warning))
 
-    to_load.sort()
+    # force through set to dedup if required
+    to_load = sorted(list(set(to_load)))
     logging.info('Loading modules %s', ' '.join(to_load))
 
     return to_load
