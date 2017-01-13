@@ -112,9 +112,9 @@ critical security updates (with all support ending on 2018-1-1), and the
 developers do not recommend its use anymore.
 
 The latest 1.10 release is
-`1.10.14 <https://botan.randombit.net/releases/Botan-1.10.14.tgz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-1.10.14.tgz.asc>`_
-released on 2016-11-28
+`1.10.15 <https://botan.randombit.net/releases/Botan-1.10.15.tgz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-1.10.15.tgz.asc>`_
+released on 2017-01-12
 
 Find Enclosed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

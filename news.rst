@@ -1,6 +1,15 @@
 Release Notes
 ========================================
 
+Version 1.10.15, 2017-01-12
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a bug causing modular exponentiations done modulo even numbers
+  to almost always be incorrect, unless the values were small. This
+  bug is not known to affect any cryptographic operation in Botan. (GH #754)
+
+* Avoid use of C++11 std::to_string in some code added in 1.10.14 (GH #747 #834)
+
 Version 2.0.1, 2017-01-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
