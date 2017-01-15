@@ -34,11 +34,11 @@ import time
 import errno
 import optparse # pylint: disable=deprecated-module
 
-import botan_version
-
 # Avoid useless botan_version.pyc (Python 2.6 or higher)
 if 'dont_write_bytecode' in sys.__dict__:
     sys.dont_write_bytecode = True
+
+import botan_version
 
 class ConfigureError(Exception):
     pass
@@ -1191,16 +1191,16 @@ def system_cpu_info():
     try:
         with open('/proc/cpuinfo') as f:
             for line in f.readlines():
-                if line.find(':') != -1:
-                    (key, val) = [s.strip() for s in line.split(':')]
+                colon = line.find(':')
+                if colon > 1:
+                    key = line[0:colon].strip()
+                    val = ' '.join([s.strip() for s in line[colon+1:].split(' ') if s != ''])
 
                     # Different Linux arch use different names for this field in cpuinfo
                     if key in ["model name", "cpu model", "Processor"]:
-                        val = ' '.join(val.split())
-                        logging.debug('Found CPU model "%s" in /proc/cpuinfo' % (val))
+                        logging.info('Detected CPU model "%s" in /proc/cpuinfo' % (val))
                         cpu_info.append(val)
                         break
-
     except IOError:
         pass
 
