@@ -62,7 +62,9 @@ how to provide the cleanest API for such users would be most welcome.
 #include <stddef.h>
 
 /*
-* Versioning
+* Return the version of the currently supported FFI API. This is
+* expressed in the form YYYYMMDD of the release date of this version
+* of the API.
 */
 BOTAN_DLL uint32_t botan_ffi_api_version();
 
@@ -72,10 +74,30 @@ BOTAN_DLL uint32_t botan_ffi_api_version();
 */
 BOTAN_DLL int botan_ffi_supports_api(uint32_t api_version);
 
+/*
+* Return a free-form version string, e.g., 2.0.0
+*/
 BOTAN_DLL const char* botan_version_string();
+
+/*
+* Return the major version of the library
+*/
 BOTAN_DLL uint32_t botan_version_major();
+
+/*
+* Return the minor version of the library
+*/
 BOTAN_DLL uint32_t botan_version_minor();
+
+/*
+* Return the patch version of the library
+*/
 BOTAN_DLL uint32_t botan_version_patch();
+
+/*
+* Return the date this version was released as
+* an integer, or 0 if an unreleased version
+*/
 BOTAN_DLL uint32_t botan_version_datestamp();
 
 /*
@@ -127,6 +149,14 @@ BOTAN_DLL int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len);
 
 #define BOTAN_FFI_HEX_LOWER_CASE 1
 
+/*
+* Perform hex encoding
+* @param x is some binary data
+* @param len length of x in bytes
+* @param out an array of at least x*2 bytes
+* @param flags flags out be upper or lower case?
+* @return 0 on success, 1 on failure
+*/
 BOTAN_DLL int botan_hex_encode(const uint8_t* x, size_t len, char* out, uint32_t flags);
 // TODO: botan_hex_decode
 // TODO: botan_base64_encode

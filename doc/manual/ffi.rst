@@ -7,7 +7,7 @@ FFI Interface
 Botan's ffi module provides a C API intended to be easily usable with
 other language's foreign function interface (FFI) libraries. For
 instance the Python module using the FFI interface needs only the
-ctypes module (included in default Python) and works with
+ctypes module (included in default Python) and works with ???
 
 Versioning
 ----------------------------------------
@@ -20,7 +20,7 @@ Versioning
 
 .. cpp:function int botan_ffi_supports_api(uint32_t version)
 
-   Return 0 iff the FFI version specified is supported by this
+   Returns 0 iff the FFI version specified is supported by this
    library. Otherwise returns -1. The expression
    botan_ffi_supports_api(botan_ffi_api_version()) will always
    evaluate to 0. A particular version of the library may also support
@@ -28,7 +28,7 @@ Versioning
 
 .. cpp:function:: const char* botan_version_string()
 
-    Returns a free-from version string
+    Returns a free-from version string, e.g., 2.0.0
 
 .. cpp:function:: uint32_t botan_version_major()
 
@@ -37,6 +37,7 @@ Versioning
 .. cpp:function:: uint32_t botan_version_minor()
 
     Returns the minor version of the library
+
 .. cpp:function:: uint32_t botan_version_patch()
 
     Returns the patch version of the library
@@ -45,6 +46,26 @@ Versioning
 
     Returns the date this version was released as an integer, or 0
     if an unreleased version
+
+Utility Functions
+----------------------------------------
+
+.. cpp:function:: int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len)
+
+   Returns 0 if x[0..len] == y[0..len], or otherwise -1
+
+.. cpp:function:: int botan_hex_encode(const uint8_t* x, size_t len, char* out, uint32_t flags)
+
+   Performs hex encoding of binary data in *x* of size *len* bytes.
+   The output buffer *out* must be of at least *x*2* bytes in size.
+   If *flags* contains ``BOTAN_FFI_HEX_LOWER_CASE``, hex encoding
+   will only contain lower-case letters, upper-case letters otherwise.
+   Returns 0 on success, 1 otherwise.
+
+Random Number Generators
+----------------------------------------
+
+TODO
 
 Hash Functions
 ----------------------------------------
@@ -137,3 +158,52 @@ Ciphers
 
 .. cpp:function:: size_t botan_cipher_default_nonce_length(botan_cipher_t cipher)
 
+PBKDF
+----------------------------------------
+
+TODO
+
+KDF
+----------------------------------------
+
+TODO
+
+Password Hashing
+----------------------------------------
+
+TODO
+
+PBKDF
+----------------------------------------
+
+TODO
+
+Public Key Import/Export
+----------------------------------------
+
+TODO
+
+Public Key Encryption
+----------------------------------------
+
+TODO
+
+Public Key Signatures
+----------------------------------------
+
+TODO
+
+Key Agreement
+----------------------------------------
+
+TODO
+
+X.509 Certificates
+----------------------------------------
+
+TODO
+
+TLS
+----------------------------------------
+
+TODO
