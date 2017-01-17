@@ -109,7 +109,7 @@ uint64_t powerpc_detect_cpu_featutures()
    int error = sysctl(sels, 2, &vector_type, &length, NULL, 0);
 
    if(error == 0 && vector_type > 0)
-      return (1ULL << CPUID_ALTIVEC_BIT);
+      return (1ULL << CPUID::CPUID_ALTIVEC_BIT);
 
 #elif defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_NETBSD)
    /*
@@ -145,7 +145,7 @@ uint64_t powerpc_detect_cpu_featutures()
       pvr == PVR_POWER6 || pvr == PVR_POWER7 || pvr == PVR_POWER8 ||
       pvr == PVR_CELL_PPU)
       {
-      return (1ULL << CPUID_ALTIVEC_BIT);
+      return (1ULL << CPUID::CPUID_ALTIVEC_BIT);
       }
 #else
   #warning "No PowerPC feature detection available for this platform"
