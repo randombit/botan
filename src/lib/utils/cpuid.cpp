@@ -1,6 +1,6 @@
 /*
 * Runtime CPU detection
-* (C) 2009-2010,2013 Jack Lloyd
+* (C) 2009,2010,2013,2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,59 +14,66 @@
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
 
+/*
+* On Darwin and OpenBSD ppc, use sysctl to detect AltiVec
+*/
 #if defined(BOTAN_TARGET_OS_IS_DARWIN)
   #include <sys/sysctl.h>
-#endif
-
-#if defined(BOTAN_TARGET_OS_IS_OPENBSD)
+#elif defined(BOTAN_TARGET_OS_IS_OPENBSD)
   #include <sys/param.h>
   #include <sys/sysctl.h>
   #include <machine/cpu.h>
 #endif
 
+#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+
+/*
+* On ARM, use getauxval if available, otherwise fall back to
+* running probe functions with a SIGILL handler.
+*/
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
+  #include <sys/auxv.h>
 #endif
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#include <botan/internal/os_utils.h>
+
+#elif defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
 
-#include <intrin.h>
-
-#define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
-#define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
+  #include <intrin.h>
+  #define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
+  #define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
 
-#include <ia32intrin.h>
-
-#define X86_CPUID(type, out) do { __cpuid(out, type); } while(0)
-#define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
+  #include <ia32intrin.h>
+  #define X86_CPUID(type, out) do { __cpuid(out, type); } while(0)
+  #define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
 
 #elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && defined(BOTAN_USE_GCC_INLINE_ASM)
 
-#define X86_CPUID(type, out)                                                    \
-   asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
-       : "0" (type))
+  #define X86_CPUID(type, out)                                                    \
+     asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
+         : "0" (type))
 
-#define X86_CPUID_SUBLEVEL(type, level, out)                                    \
-   asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
-       : "0" (type), "2" (level))
+  #define X86_CPUID_SUBLEVEL(type, level, out)                                    \
+     asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
+         : "0" (type), "2" (level))
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
 
-#include <cpuid.h>
+  #include <cpuid.h>
 
-#define X86_CPUID(type, out) do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0)
+  #define X86_CPUID(type, out) do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0)
 
-#define X86_CPUID_SUBLEVEL(type, level, out) \
-   do { __cpuid_count(type, level, out[0], out[1], out[2], out[3]); } while(0)
+  #define X86_CPUID_SUBLEVEL(type, level, out) \
+     do { __cpuid_count(type, level, out[0], out[1], out[2], out[3]); } while(0)
 
 #else
-
-#warning "No way of calling cpuid for this compiler"
-
-#define X86_CPUID(type, out) do { clear_mem(out, 4); } while(0)
-#define X86_CPUID_SUBLEVEL(type, level, out) do { clear_mem(out, 4); } while(0)
+  #warning "No way of calling cpuid for this compiler"
+  #define X86_CPUID(type, out) do { clear_mem(out, 4); } while(0)
+  #define X86_CPUID_SUBLEVEL(type, level, out) do { clear_mem(out, 4); } while(0)
 
 #endif
 
@@ -74,18 +81,22 @@
 
 namespace Botan {
 
-uint64_t CPUID::g_processor_flags[2] = { 0, 0 };
+uint64_t CPUID::g_processor_features = 0;
 size_t CPUID::g_cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
-bool CPUID::g_initialized = false;
 bool CPUID::g_little_endian = false;
 
 namespace {
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
 
-bool altivec_check_sysctl()
+/*
+* PowerPC specific block: check for AltiVec using either
+* sysctl or by reading processor version number register.
+*/
+uint64_t powerpc_detect_cpu_featutures()
    {
 #if defined(BOTAN_TARGET_OS_IS_DARWIN) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
+   // On Darwin/OS X and OpenBSD, use sysctl
 
 #if defined(BOTAN_TARGET_OS_IS_OPENBSD)
    int sels[2] = { CTL_MACHDEP, CPU_ALTIVEC };
@@ -98,18 +109,9 @@ bool altivec_check_sysctl()
    int error = sysctl(sels, 2, &vector_type, &length, NULL, 0);
 
    if(error == 0 && vector_type > 0)
-      return true;
-#endif
+      return (1ULL << CPUID_ALTIVEC_BIT);
 
-   return false;
-   }
-
-bool altivec_check_pvr_emul()
-   {
-   bool altivec_capable = false;
-
-#if defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_NETBSD)
-
+#elif defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_NETBSD)
    /*
    On PowerPC, MSR 287 is PVR, the Processor Version Number
    Normally it is only accessible to ring 0, but Linux and NetBSD
@@ -118,6 +120,14 @@ bool altivec_check_pvr_emul()
    PVR identifiers for various AltiVec enabled CPUs. Taken from
    PearPC and Linux sources, mostly.
    */
+
+   uint32_t pvr = 0;
+
+   // TODO: we could run inside SIGILL handler block
+   asm volatile("mfspr %0, 287" : "=r" (pvr));
+
+   // Top 16 bit suffice to identify model
+   pvr >>= 16;
 
    const uint16_t PVR_G4_7400  = 0x000C;
    const uint16_t PVR_G5_970   = 0x0039;
@@ -129,29 +139,166 @@ bool altivec_check_pvr_emul()
    const uint16_t PVR_POWER8   = 0x004B;
    const uint16_t PVR_CELL_PPU = 0x0070;
 
-   // Motorola produced G4s with PVR 0x800[0123C] (at least)
-   const uint16_t PVR_G4_74xx_24  = 0x800;
-
-   uint32_t pvr = 0;
-
-   asm volatile("mfspr %0, 287" : "=r" (pvr));
-
-   // Top 16 bit suffice to identify model
-   pvr >>= 16;
-
-   altivec_capable |= (pvr == PVR_G4_7400);
-   altivec_capable |= ((pvr >> 4) == PVR_G4_74xx_24);
-   altivec_capable |= (pvr == PVR_G5_970);
-   altivec_capable |= (pvr == PVR_G5_970FX);
-   altivec_capable |= (pvr == PVR_G5_970MP);
-   altivec_capable |= (pvr == PVR_G5_970GX);
-   altivec_capable |= (pvr == PVR_POWER6);
-   altivec_capable |= (pvr == PVR_POWER7);
-   altivec_capable |= (pvr == PVR_POWER8);
-   altivec_capable |= (pvr == PVR_CELL_PPU);
+   if(pvr == PVR_G4_7400 ||
+      pvr == PVR_G5_970 || pvr == PVR_G5_970FX ||
+      pvr == PVR_G5_970MP || pvr == PVR_G5_970GX ||
+      pvr == PVR_POWER6 || pvr == PVR_POWER7 || pvr == PVR_POWER8 ||
+      pvr == PVR_CELL_PPU)
+      {
+      return (1ULL << CPUID_ALTIVEC_BIT);
+      }
+#else
+  #warning "No PowerPC feature detection available for this platform"
 #endif
 
-   return altivec_capable;
+   return 0;
+   }
+
+#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+
+uint64_t arm_detect_cpu_features(size_t* cache_line_size)
+   {
+   uint64_t detected_features = 0;
+   *cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
+
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
+   errno = 0;
+
+#if defined(BOTAN_TARGET_ARCH_IS_ARM32)
+   const unsigned long hwcap = ::getauxval(AT_HWCAP2);
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   const unsigned long hwcap = ::getauxval(AT_HWCAP);
+#endif
+
+   if(hwcap & HWCAP_ASIMD)
+      detected_features |= CPUID::CPUID_ARM_NEON_BIT;
+   if(hwcap & HWCAP_AES)
+      detected_features |= CPUID::CPUID_ARM_AES_BIT;
+   if(hwcap & HWCAP_PMULL)
+      detected_features |= CPUID::CPUID_ARM_PMULL_BIT;
+   if(hwcap & HWCAP_SHA1)
+      detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
+   if(hwcap & HWCAP_SHA2)
+      detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
+
+   const unsigned long dcache_line = ::getauxval(AT_DCACHEBSIZE);
+
+   // plausibility check
+   if(dcache_line == 32 || dcache_line == 64 || dcache_line == 128)
+      *cache_line_size = static_cast<size_t>(dcache_line);
+#endif
+
+   // TODO: probe functions
+
+   return detected_features;
+   }
+
+#elif defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+
+uint64_t x86_detect_cpu_features(size_t* cache_line_size)
+   {
+   uint64_t features_detected = 0;
+   uint32_t cpuid[4] = { 0 };
+
+   // CPUID 0: vendor identification, max sublevel
+   X86_CPUID(0, cpuid);
+
+   const uint32_t max_supported_sublevel = cpuid[0];
+
+   const uint32_t INTEL_CPUID[3] = { 0x756E6547, 0x6C65746E, 0x49656E69 };
+   const uint32_t AMD_CPUID[3] = { 0x68747541, 0x444D4163, 0x69746E65 };
+   const bool is_intel = same_mem(cpuid + 1, INTEL_CPUID, 3);
+   const bool is_amd = same_mem(cpuid + 1, AMD_CPUID, 3);
+
+   if(max_supported_sublevel >= 1)
+      {
+      // CPUID 1: feature bits
+      X86_CPUID(1, cpuid);
+      const uint64_t flags0 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[3];
+
+      enum x86_CPUID_1_bits : uint64_t {
+         RDTSC = (1ULL << 4),
+         SSE2 = (1ULL << 26),
+         CLMUL = (1ULL << 33),
+         SSSE3 = (1ULL << 41),
+         SSE41 = (1ULL << 51),
+         SSE42 = (1ULL << 52),
+         AESNI = (1ULL << 57),
+         RDRAND = (1ULL << 62)
+      };
+
+      if(flags0 & x86_CPUID_1_bits::RDTSC)
+         features_detected |= CPUID::CPUID_RDTSC_BIT;
+      if(flags0 & x86_CPUID_1_bits::SSE2)
+         features_detected |= CPUID::CPUID_SSE2_BIT;
+      if(flags0 & x86_CPUID_1_bits::CLMUL)
+         features_detected |= CPUID::CPUID_CLMUL_BIT;
+      if(flags0 & x86_CPUID_1_bits::SSSE3)
+         features_detected |= CPUID::CPUID_SSSE3_BIT;
+      if(flags0 & x86_CPUID_1_bits::SSE41)
+         features_detected |= CPUID::CPUID_SSE41_BIT;
+      if(flags0 & x86_CPUID_1_bits::SSE42)
+         features_detected |= CPUID::CPUID_SSE42_BIT;
+      if(flags0 & x86_CPUID_1_bits::AESNI)
+         features_detected |= CPUID::CPUID_AESNI_BIT;
+      if(flags0 & x86_CPUID_1_bits::RDRAND)
+         features_detected |= CPUID::CPUID_RDRAND_BIT;
+      }
+
+   if(is_intel)
+      {
+      // Intel cache line size is in cpuid(1) output
+      *cache_line_size = 8 * get_byte(2, cpuid[1]);
+      }
+   else if(is_amd)
+      {
+      // AMD puts it in vendor zone
+      X86_CPUID(0x80000005, cpuid);
+      *cache_line_size = get_byte(3, cpuid[2]);
+      }
+
+   if(max_supported_sublevel >= 7)
+      {
+      clear_mem(cpuid, 4);
+      X86_CPUID_SUBLEVEL(7, 0, cpuid);
+
+      enum x86_CPUID_7_bits : uint64_t {
+         AVX2 = (1ULL << 5),
+         BMI2 = (1ULL << 8),
+         AVX512F = (1ULL << 16),
+         RDSEED = (1ULL << 18),
+         ADX = (1ULL << 19),
+         SHA = (1ULL << 29),
+      };
+      uint64_t flags7 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[1];
+
+      if(flags7 & x86_CPUID_7_bits::AVX2)
+         features_detected |= CPUID::CPUID_AVX2_BIT;
+      if(flags7 & x86_CPUID_7_bits::BMI2)
+         features_detected |= CPUID::CPUID_BMI2_BIT;
+      if(flags7 & x86_CPUID_7_bits::AVX512F)
+         features_detected |= CPUID::CPUID_AVX512F_BIT;
+      if(flags7 & x86_CPUID_7_bits::RDSEED)
+         features_detected |= CPUID::CPUID_RDSEED_BIT;
+      if(flags7 & x86_CPUID_7_bits::ADX)
+         features_detected |= CPUID::CPUID_ADX_BIT;
+      if(flags7 & x86_CPUID_7_bits::SHA)
+         features_detected |= CPUID::CPUID_SHA_BIT;
+      }
+
+   /*
+   * If we don't have access to CPUID, we can still safely assume that
+   * any x86-64 processor has SSE2 and RDTSC
+   */
+#if defined(BOTAN_TARGET_ARCH_IS_X86_64)
+   if(features_detected == 0)
+      {
+      features_detected |= CPUID::CPUID_SSE2_BIT;
+      features_detected |= CPUID::CPUID_RDTSC_BIT;
+      }
+#endif
+
+   return features_detected;
    }
 
 #endif
@@ -185,16 +332,25 @@ void CPUID::print(std::ostream& o)
 
    CPUID_PRINT(rdtsc);
    CPUID_PRINT(bmi2);
-   CPUID_PRINT(clmul);
+   CPUID_PRINT(adx);
+
    CPUID_PRINT(aes_ni);
+   CPUID_PRINT(clmul);
    CPUID_PRINT(rdrand);
    CPUID_PRINT(rdseed);
    CPUID_PRINT(intel_sha);
-   CPUID_PRINT(adx);
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    CPUID_PRINT(altivec);
+#endif
+
+#if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+   CPUID_PRINT(neon);
+   CPUID_PRINT(arm_sha1);
+   CPUID_PRINT(arm_sha2);
+   CPUID_PRINT(arm_aes);
+   CPUID_PRINT(arm_pmull);
 #endif
 
 #undef CPUID_PRINT
@@ -203,61 +359,19 @@ void CPUID::print(std::ostream& o)
 
 void CPUID::initialize()
    {
-   clear_mem(g_processor_flags, 2);
+   g_processor_features = 0;
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-   if(altivec_check_sysctl() || altivec_check_pvr_emul())
-      {
-      g_processor_flags[0] |= CPUID_ALTIVEC_BIT;
-      }
+   g_processor_features = powerpc_detect_cpu_featutures();
+#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+   g_processor_features = arm_detect_cpu_features(&g_cache_line_size);
+#elif defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+   g_processor_features = x86_detect_cpu_features(&g_cache_line_size);
 #endif
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-   const uint32_t INTEL_CPUID[3] = { 0x756E6547, 0x6C65746E, 0x49656E69 };
-   const uint32_t AMD_CPUID[3] = { 0x68747541, 0x444D4163, 0x69746E65 };
+   g_processor_features |= CPUID::CPUID_INITIALIZED_BIT;
 
-   uint32_t cpuid[4] = { 0 };
-   X86_CPUID(0, cpuid);
-
-   const uint32_t max_supported_sublevel = cpuid[0];
-
-   if(max_supported_sublevel == 0)
-      return;
-
-   const bool is_intel = same_mem(cpuid + 1, INTEL_CPUID, 3);
-   const bool is_amd = same_mem(cpuid + 1, AMD_CPUID, 3);
-
-   X86_CPUID(1, cpuid);
-
-   g_processor_flags[0] = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[3];
-
-   if(is_intel)
-      g_cache_line_size = 8 * get_byte(2, cpuid[1]);
-
-   if(max_supported_sublevel >= 7)
-      {
-      clear_mem(cpuid, 4);
-      X86_CPUID_SUBLEVEL(7, 0, cpuid);
-      g_processor_flags[1] = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[1];
-      }
-
-   if(is_amd)
-      {
-      X86_CPUID(0x80000005, cpuid);
-      g_cache_line_size = get_byte(3, cpuid[2]);
-      }
-
-#endif
-
-#if defined(BOTAN_TARGET_ARCH_IS_X86_64)
-   /*
-   * If we don't have access to CPUID, we can still safely assume that
-   * any x86-64 processor has SSE2 and RDTSC
-   */
-   if(g_processor_flags[0] == 0)
-      g_processor_flags[0] = (1 << CPUID_SSE2_BIT) | (1 << CPUID_RDTSC_BIT);
-#endif
-
+   // Check runtime endian
    const uint32_t endian32 = 0x01234567;
    const uint8_t* e8 = reinterpret_cast<const uint8_t*>(&endian32);
 
@@ -274,14 +388,13 @@ void CPUID::initialize()
       throw Internal_Error("Unexpected endian at runtime, neither big nor little");
       }
 
-   // If we were compiled with a known endian, verify if matches at runtime
+   // If we were compiled with a known endian, verify it matches at runtime
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   BOTAN_ASSERT(g_little_endian, "Little-endian build but big-endian at runtime");
+   BOTAN_ASSERT(g_little_endian == true, "Build and runtime endian match");
 #elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   BOTAN_ASSERT(!g_little_endian, "Big-endian build but little-endian at runtime");
+   BOTAN_ASSERT(g_little_endian == false, "Build and runtime endian match");
 #endif
 
-   g_initialized = true;
    }
 
 }
