@@ -1,0 +1,6 @@
+define SHA2_32_ARMV8 20170117
+
+<arch>
+arm32
+arm64
+</arch>

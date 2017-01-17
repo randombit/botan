@@ -49,7 +49,21 @@ class BOTAN_DLL SHA_256 final : public MDx_HashFunction
       SHA_256() : MDx_HashFunction(64, true, true), m_digest(8)
          { clear(); }
 
+      /*
+      * Perform a SHA-256 compression. For internal use
+      */
+      static void compress_digest(secure_vector<uint32_t>& digest,
+                                  const uint8_t input[],
+                                  size_t blocks);
+
    private:
+
+#if defined(BOTAN_HAS_SHA2_32_ARMV8)
+      static void compress_digest_armv8(secure_vector<uint32_t>& digest,
+                                        const uint8_t input[],
+                                        size_t blocks);
+#endif
+
       void compress_n(const uint8_t[], size_t blocks) override;
       void copy_out(uint8_t[]) override;
 

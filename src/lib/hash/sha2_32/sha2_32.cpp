@@ -11,51 +11,40 @@
 
 namespace Botan {
 
-namespace {
-
-namespace SHA2_32 {
-
-/*
-* SHA-256 Rho Function
-*/
-inline uint32_t rho(uint32_t X, uint32_t rot1, uint32_t rot2, uint32_t rot3)
-   {
-   return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^
-           rotate_right(X, rot3));
-   }
-
-/*
-* SHA-256 Sigma Function
-*/
-inline uint32_t sigma(uint32_t X, uint32_t rot1, uint32_t rot2, uint32_t shift)
-   {
-   return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^ (X >> shift));
-   }
-
 /*
 * SHA-256 F1 Function
 *
 * Use a macro as many compilers won't inline a function this big,
 * even though it is much faster if inlined.
 */
-#define SHA2_32_F(A, B, C, D, E, F, G, H, M1, M2, M3, M4, magic)   \
-   do {                                                            \
-      H += magic + rho(E, 6, 11, 25) + ((E & F) ^ (~E & G)) + M1;  \
-      D += H;                                                      \
-      H += rho(A, 2, 13, 22) + ((A & B) | ((A | B) & C));          \
-      M1 += sigma(M2, 17, 19, 10) + M3 + sigma(M4, 7, 18, 3);      \
+#define SHA2_32_F(A, B, C, D, E, F, G, H, M1, M2, M3, M4, magic) do {               \
+   uint32_t A_rho = rotate_right(A, 2) ^ rotate_right(A, 13) ^ rotate_right(A, 22); \
+   uint32_t E_rho = rotate_right(E, 6) ^ rotate_right(E, 11) ^ rotate_right(E, 25); \
+   uint32_t M2_sigma = rotate_right(M2, 17) ^ rotate_right(M2, 19) ^ (M2 >> 10);    \
+   uint32_t M4_sigma = rotate_right(M4, 7) ^ rotate_right(M4, 18) ^ (M4 >> 3);      \
+   H += magic + E_rho + ((E & F) ^ (~E & G)) + M1;                                  \
+   D += H;                                                                          \
+   H += A_rho + ((A & B) | ((A | B) & C));                                          \
+   M1 += M2_sigma + M3 + M4_sigma;                                                  \
    } while(0);
 
 /*
 * SHA-224 / SHA-256 compression function
 */
-void compress(secure_vector<uint32_t>& digest,
-              const uint8_t input[], size_t blocks)
+void SHA_256::compress_digest(secure_vector<uint32_t>& digest,
+                              const uint8_t input[], size_t blocks)
    {
 #if defined(BOTAN_HAS_SHA2_32_X86)
    if(CPUID::has_intel_sha())
       {
       return sha2_compress_x86(digest.data(), input, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_32_ARMV8)
+   if(CPUID::has_arm_sha2())
+      {
+      return SHA_256::compress_digest_armv8(digest, input, blocks);
       }
 #endif
 
@@ -160,16 +149,12 @@ void compress(secure_vector<uint32_t>& digest,
       }
    }
 
-}
-
-}
-
 /*
 * SHA-224 compression function
 */
 void SHA_224::compress_n(const uint8_t input[], size_t blocks)
    {
-   SHA2_32::compress(m_digest, input, blocks);
+   SHA_256::compress_digest(m_digest, input, blocks);
    }
 
 /*
@@ -201,7 +186,7 @@ void SHA_224::clear()
 */
 void SHA_256::compress_n(const uint8_t input[], size_t blocks)
    {
-   SHA2_32::compress(m_digest, input, blocks);
+   SHA_256::compress_digest(m_digest, input, blocks);
    }
 
 /*
