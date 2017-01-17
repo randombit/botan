@@ -1,3 +1,5 @@
+#test cpuid aesni ssse3 clmul
+
 # Testvectors in this file have been generated using the Bouncy Castle Crypto
 # API version 1.54 (https://www.bouncycastle.org)
 
