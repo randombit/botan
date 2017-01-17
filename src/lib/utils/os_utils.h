@@ -9,6 +9,7 @@
 #define BOTAN_OS_UTILS_H__
 
 #include <botan/types.h>
+#include <functional>
 
 namespace Botan {
 

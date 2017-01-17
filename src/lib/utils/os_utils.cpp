@@ -320,7 +320,7 @@ int run_cpu_instruction_probe(std::function<int ()> probe_fn)
    struct sigaction sigaction;
 
    sigaction.sa_handler = botan_sigill_handler;
-   ::sigemptyset(&sigaction.sa_mask);
+   sigemptyset(&sigaction.sa_mask);
    sigaction.sa_flags = 0;
 
    int rc = ::sigaction(SIGILL, &sigaction, &old_sigaction);
