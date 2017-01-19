@@ -772,7 +772,12 @@ class ModuleInfo(InfoObject):
                 raise InternalError('Module %s mentions unknown OS %s' % (self.infofile, supp_os))
         for supp_cc in self.cc:
             if supp_cc not in cc_info:
-                raise InternalError('Module %s mentions unknown compiler %s' % (self.infofile, supp_cc))
+                colon_idx = supp_cc.find(':')
+                # a versioned compiler dependency
+                if colon_idx > 0 and supp_cc[0:colon_idx] in cc_info:
+                    pass
+                else:
+                    raise InternalError('Module %s mentions unknown compiler %s' % (self.infofile, supp_cc))
         for supp_arch in self.arch:
             if supp_arch not in arch_info:
                 raise InternalError('Module %s mentions unknown arch %s' % (self.infofile, supp_arch))
@@ -812,15 +817,32 @@ class ModuleInfo(InfoObject):
     def compatible_os(self, os_name):
         return self.os == [] or os_name in self.os
 
-    def compatible_compiler(self, cc, arch):
-        if self.cc != [] and cc.basename not in self.cc:
-            return False
+    def compatible_compiler(self, ccinfo, cc_version, arch):
+        # Check if this compiler supports the flags we need
+        def supported_isa_flags(ccinfo, arch):
+            for isa in self.need_isa:
+                if ccinfo.isa_flags_for(isa, arch) is None:
+                    return False
+            return True
 
-        for isa in self.need_isa:
-            if cc.isa_flags_for(isa, arch) is None:
-                return False
+        # Check if module gives explicit compiler dependencies
+        def supported_compiler(ccinfo, cc_version):
 
-        return True
+            if self.cc == [] or ccinfo.basename in self.cc:
+                return True
+
+            # Maybe a versioned compiler dep
+            if cc_version != None:
+                for cc in self.cc:
+                    with_version = cc.find(':')
+                    if with_version > 0:
+                        if cc[0:with_version] == ccinfo.basename:
+                            min_cc_version = [int(v) for v in cc[with_version+1:].split('.')]
+                            cur_cc_version = [int(v) for v in cc_version.split('.')]
+                            # With lists of ints, this does what we want
+                            return cur_cc_version >= min_cc_version
+
+        return supported_isa_flags(ccinfo, arch) and supported_compiler(ccinfo, cc_version)
 
     def dependencies(self):
         # base is an implicit dep for all submodules
@@ -1978,11 +2000,12 @@ class ModulesChooser(object):
     Determine which modules to load based on options, target, etc
     """
 
-    def __init__(self, modules, module_policy, archinfo, ccinfo, options):
+    def __init__(self, modules, module_policy, archinfo, ccinfo, cc_version, options):
         self._modules = modules
         self._module_policy = module_policy
         self._archinfo = archinfo
         self._ccinfo = ccinfo
+        self._cc_version = cc_version
         self._options = options
 
         self._maybe_dep = set()
@@ -1998,7 +2021,7 @@ class ModulesChooser(object):
         if not module.compatible_os(self._options.os):
             self._not_using_because['incompatible OS'].add(modname)
             return False
-        elif not module.compatible_compiler(self._ccinfo, self._archinfo.basename):
+        elif not module.compatible_compiler(self._ccinfo, self._cc_version, self._archinfo.basename):
             self._not_using_because['incompatible compiler'].add(modname)
             return False
         elif not module.compatible_cpu(self._archinfo, self._options):
@@ -2515,6 +2538,42 @@ class AmalgamationGenerator(object):
         return amalgamation_sources
 
 
+def detect_compiler_version(ccinfo, cc_bin):
+
+    cc_version_flag = {
+        'msvc': ([], r'Compiler Version ([0-9]+).[0-9\.]+ for'),
+        'gcc': (['-v'], r'gcc version ([0-9]+.[0-9])+.[0-9]+'),
+        'clang': (['-v'], r'clang version ([0-9]+.[0-9])+.[0-9]+')
+    }
+
+    if ccinfo.basename not in cc_version_flag.keys():
+        logging.info("No compiler version detection available for %s" % (ccinfo.basename))
+        return None
+
+    (flags, version_re_str) = cc_version_flag[ccinfo.basename]
+    cc_cmd = cc_bin.split(' ') + flags
+
+    try:
+        version = re.compile(version_re_str)
+        cc_output = subprocess.Popen(cc_cmd,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     universal_newlines=True).communicate()
+
+        cc_output = str(cc_output)
+
+        match = version.search(cc_output)
+        if match is None:
+            logging.error("Ran '%s' to get %s compiler version, but no %s version found in %s" % (
+                ' '.join(cc_cmd), ccinfo.basename, ccinfo.basename, cc_output))
+
+        cc_version = match.group(1)
+        logging.info('Detected %s compiler version %s' % (ccinfo.basename, cc_version))
+        return cc_version
+    except OSError as e:
+        logging.warning('Could not execute %s for version check: %s' % (cc_cmd, e))
+        return None
+
 def have_program(program):
     """
     Test for the existence of a program
@@ -2721,15 +2780,14 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.os == 'windows' and options.compiler == 'gcc':
         logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
 
-
-
 def main_action_list_available_modules(info_modules):
     for modname in sorted(info_modules.keys()):
         print(modname)
 
 
-def prepare_configure_build(info_modules, source_paths, options, cc, arch, osinfo, module_policy):
-    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, cc, options).choose()
+def prepare_configure_build(info_modules, source_paths, options,
+                            cc, cc_version, arch, osinfo, module_policy):
+    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, cc, cc_version, options).choose()
     using_mods = [info_modules[modname] for modname in loaded_module_names]
 
     build_config = BuildPaths(source_paths, options, using_mods)
@@ -2743,10 +2801,12 @@ def prepare_configure_build(info_modules, source_paths, options, cc, arch, osinf
     return using_mods, build_config, template_vars, makefile_template
 
 
-def main_action_configure_build(info_modules, source_paths, options, cc, arch, osinfo, module_policy): # pylint: disable=too-many-locals
+def main_action_configure_build(info_modules, source_paths, options,
+                                cc, cc_version, arch, osinfo, module_policy):
+    # pylint: disable=too-many-locals
 
     using_mods, build_config, template_vars, makefile_template = prepare_configure_build(
-        info_modules, source_paths, options, cc, arch, osinfo, module_policy)
+        info_modules, source_paths, options, cc, cc_version, arch, osinfo, module_policy)
 
     # Now we start writing to disk
 
@@ -2879,6 +2939,8 @@ def main(argv):
     osinfo = info_os[options.os]
     module_policy = info_module_policies[options.module_policy] if options.module_policy else None
 
+    cc_version = detect_compiler_version(cc, options.compiler_binary or cc.binary_name)
+
     if options.build_shared_lib and not osinfo.building_shared_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
         options.build_shared_lib = False
@@ -2887,7 +2949,7 @@ def main(argv):
         main_action_list_available_modules(info_modules)
         return 0
     else:
-        main_action_configure_build(info_modules, source_paths, options, cc, arch, osinfo, module_policy)
+        main_action_configure_build(info_modules, source_paths, options, cc, cc_version, arch, osinfo, module_policy)
         return 0
 
 
