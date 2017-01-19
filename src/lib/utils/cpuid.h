@@ -1,6 +1,6 @@
 /*
 * Runtime CPU detection
-* (C) 2009-2010,2013 Jack Lloyd
+* (C) 2009,2010,2013,2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,9 +14,22 @@
 namespace Botan {
 
 /**
-* A class handling runtime CPU feature detection
+* A class handling runtime CPU feature detection. It is limited to
+* just the features necessary to implement CPU specific code in Botan,
+* rather than being a general purpose utility.
 *
-* Currently this class supports only x86 (via CPUID) and PowerPC (AltiVec detection)
+* This class supports:
+*
+*  - x86 features using CPUID. x86 is also the only processor with
+*    accurate cache line detection currently.
+*
+*  - PowerPC AltiVec detection on Linux, NetBSD, OpenBSD, and Darwin
+*
+*  - ARM NEON and crypto extensions detection. On Linux and Android
+*    systems which support getauxval, that is used to access CPU
+*    feature information. Otherwise a relatively portable but
+*    thread-unsafe mechanism involving executing probe functions which
+*    catching SIGILL signal is used.
 */
 class BOTAN_DLL CPUID
    {
@@ -35,7 +48,7 @@ class BOTAN_DLL CPUID
       */
       static size_t cache_line_size()
          {
-         if(!g_initialized)
+         if(g_processor_features == 0)
             {
             initialize();
             }
@@ -44,38 +57,51 @@ class BOTAN_DLL CPUID
 
       static bool is_little_endian()
          {
-         if(!g_initialized)
+         if(g_processor_features == 0)
             {
             initialize();
             }
          return g_little_endian;
          }
 
-      enum CPUID_bits {
+      enum CPUID_bits : uint64_t {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-         // This matches the layout of cpuid(1)
-         CPUID_RDTSC_BIT = 4,
-         CPUID_SSE2_BIT = 26,
-         CPUID_CLMUL_BIT = 33,
-         CPUID_SSSE3_BIT = 41,
-         CPUID_SSE41_BIT = 51,
-         CPUID_SSE42_BIT = 52,
-         CPUID_AESNI_BIT = 57,
-         CPUID_RDRAND_BIT = 62,
+         // These values have no relation to cpuid bitfields
 
-         CPUID_AVX2_BIT = 64+5,
-         CPUID_BMI2_BIT = 64+8,
-         CPUID_AVX512F_BIT = 64+16,
-         CPUID_RDSEED_BIT = 64+18,
-         CPUID_ADX_BIT = 64+19,
-         CPUID_SHA_BIT = 64+29,
+         // SIMD instruction sets
+         CPUID_SSE2_BIT    = (1ULL << 0),
+         CPUID_SSSE3_BIT   = (1ULL << 1),
+         CPUID_SSE41_BIT   = (1ULL << 2),
+         CPUID_SSE42_BIT   = (1ULL << 3),
+         CPUID_AVX2_BIT    = (1ULL << 4),
+         CPUID_AVX512F_BIT = (1ULL << 5),
+
+         // Misc useful instructions
+         CPUID_RDTSC_BIT   = (1ULL << 10),
+         CPUID_BMI2_BIT    = (1ULL << 11),
+         CPUID_ADX_BIT     = (1ULL << 12),
+
+         // Crypto-specific ISAs
+         CPUID_AESNI_BIT   = (1ULL << 16),
+         CPUID_CLMUL_BIT   = (1ULL << 17),
+         CPUID_RDRAND_BIT  = (1ULL << 18),
+         CPUID_RDSEED_BIT  = (1ULL << 19),
+         CPUID_SHA_BIT     = (1ULL << 20),
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-         CPUID_ALTIVEC_BIT = 0
+         CPUID_ALTIVEC_BIT = (1ULL << 0),
 #endif
 
-         // TODO: ARMv8 feature detection
+#if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+         CPUID_ARM_NEON_BIT  = (1ULL << 0),
+         CPUID_ARM_AES_BIT   = (1ULL << 16),
+         CPUID_ARM_PMULL_BIT = (1ULL << 17),
+         CPUID_ARM_SHA1_BIT  = (1ULL << 18),
+         CPUID_ARM_SHA2_BIT  = (1ULL << 19),
+#endif
+
+         CPUID_INITIALIZED_BIT = (1ULL << 63)
       };
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
@@ -84,6 +110,38 @@ class BOTAN_DLL CPUID
       */
       static bool has_altivec()
          { return has_cpuid_bit(CPUID_ALTIVEC_BIT); }
+#endif
+
+#if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+      /**
+      * Check if the processor supports NEON SIMD
+      */
+      static bool has_neon()
+         { return has_cpuid_bit(CPUID_ARM_NEON_BIT); }
+
+      /**
+      * Check if the processor supports ARMv8 SHA1
+      */
+      static bool has_arm_sha1()
+         { return has_cpuid_bit(CPUID_ARM_SHA1_BIT); }
+
+      /**
+      * Check if the processor supports ARMv8 SHA2
+      */
+      static bool has_arm_sha2()
+         { return has_cpuid_bit(CPUID_ARM_SHA2_BIT); }
+
+      /**
+      * Check if the processor supports ARMv8 AES
+      */
+      static bool has_arm_aes()
+         { return has_cpuid_bit(CPUID_ARM_AES_BIT); }
+
+      /**
+      * Check if the processor supports ARMv8 PMULL
+      */
+      static bool has_arm_pmull()
+         { return has_cpuid_bit(CPUID_ARM_PMULL_BIT); }
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
@@ -176,26 +234,31 @@ class BOTAN_DLL CPUID
       /*
       * Clear a CPUID bit
       * Call CPUID::initialize to reset
+      *
+      * This is only exposed for testing, don't use unless you know
+      * what you are doing.
       */
       static void clear_cpuid_bit(CPUID_bits bit)
          {
-         const uint64_t mask = ~(static_cast<uint64_t>(1) << (bit % 64));
-         g_processor_flags[bit/64] &= mask;
+         const uint64_t mask = ~(static_cast<uint64_t>(bit));
+         g_processor_features &= mask;
          }
 
+      /*
+      * Don't call this function, use CPUID::has_xxx above
+      * It should have been private.
+      */
       static bool has_cpuid_bit(CPUID_bits elem)
          {
-         if(!g_initialized)
+         if(g_processor_features == 0)
             initialize();
-         const size_t bit = static_cast<size_t>(elem);
-         return ((g_processor_flags[bit/64] >> (bit % 64)) & 1);
+         return ((g_processor_features & static_cast<uint64_t>(elem)) != 0);
          }
 
    private:
-      static bool g_initialized;
       static bool g_little_endian;
       static size_t g_cache_line_size;
-      static uint64_t g_processor_flags[2];
+      static uint64_t g_processor_features;
    };
 
 }

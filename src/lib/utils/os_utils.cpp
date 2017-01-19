@@ -17,6 +17,8 @@
   #include <sys/mman.h>
   #include <sys/resource.h>
   #include <unistd.h>
+  #include <signal.h>
+  #include <setjmp.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_WINDOWS) || defined(BOTAN_TARGET_OS_IS_MINGW)
@@ -297,6 +299,74 @@ void free_locked_pages(void* ptr, size_t length)
    throw Invalid_Argument("Invalid ptr to free_locked_pages");
 #endif
    }
+
+#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
+namespace {
+
+static ::sigjmp_buf g_sigill_jmp_buf;
+
+void botan_sigill_handler(int)
+   {
+   ::siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/1);
+   }
+
+}
+#endif
+
+int run_cpu_instruction_probe(std::function<int ()> probe_fn)
+   {
+#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
+   struct sigaction old_sigaction;
+   struct sigaction sigaction;
+
+   sigaction.sa_handler = botan_sigill_handler;
+   sigemptyset(&sigaction.sa_mask);
+   sigaction.sa_flags = 0;
+
+   int rc = ::sigaction(SIGILL, &sigaction, &old_sigaction);
+
+   if(rc != 0)
+      throw Exception("run_cpu_instruction_probe sigaction failed");
+
+   /*
+   There doesn't seem to be any way for probe_result to not be initialized
+   by some code path below, but this initializer is left as error just in case.
+   */
+   int probe_result = -3;
+
+   try
+      {
+      rc = ::sigsetjmp(g_sigill_jmp_buf, /*save sigs*/1);
+
+      if(rc == 0)
+         {
+         // first call to sigsetjmp
+         probe_result = probe_fn();
+         }
+      else if(rc == 1)
+         {
+         // non-local return from siglongjmp in signal handler: return error
+         probe_result = -1;
+         }
+      else
+         throw Exception("run_cpu_instruction_probe unexpected sigsetjmp return value");
+      }
+   catch(...)
+      {
+      probe_result = -2;
+      }
+
+   rc = ::sigaction(SIGILL, &old_sigaction, nullptr);
+   if(rc != 0)
+      throw Exception("run_cpu_instruction_probe sigaction restore failed");
+
+   return probe_result;
+#else
+   // TODO: Windows support
+   return -9; // not supported
+#endif
+   }
+
 
 }
 
