@@ -212,11 +212,14 @@ uint64_t arm_detect_cpu_features(size_t* cache_line_size)
    if(hwcap_crypto & ARM_hwcap_bit::SHA2_bit)
       detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
 
+#if defined(AT_DCACHEBSIZE)
    const unsigned long dcache_line = ::getauxval(AT_DCACHEBSIZE);
 
    // plausibility check
    if(dcache_line == 32 || dcache_line == 64 || dcache_line == 128)
       *cache_line_size = static_cast<size_t>(dcache_line);
+#endif
+
 #endif
 
    // TODO: probe functions
