@@ -9,7 +9,6 @@
 #include <botan/internal/def_powm.h>
 #include <botan/numthry.h>
 #include <botan/internal/mp_core.h>
-#include <iostream>
 
 namespace Botan {
 
