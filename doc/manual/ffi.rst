@@ -7,7 +7,7 @@ FFI Interface
 Botan's ffi module provides a C API intended to be easily usable with
 other language's foreign function interface (FFI) libraries. For
 instance the Python module using the FFI interface needs only the
-ctypes module (included in default Python) and works with ???
+ctypes module (included in default Python) and works with ??? 
 
 Versioning
 ----------------------------------------
@@ -65,7 +65,17 @@ Utility Functions
 Random Number Generators
 ----------------------------------------
 
-TODO
+.. cpp:type:: opaque* botan_rng_t
+
+   An opaque data type for a random number generator. Don't mess with it.
+
+.. cpp:function:: int botan_rng_init(botan_rng_t* rng, const char* rng_type)
+
+.. cpp:function:: int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
+
+.. cpp:function:: int botan_rng_reseed(botan_rng_t rng, size_t bits)
+
+.. cpp:function:: int botan_rng_destroy(botan_rng_t rng)
 
 Hash Functions
 ----------------------------------------
@@ -161,49 +171,256 @@ Ciphers
 PBKDF
 ----------------------------------------
 
-TODO
+.. cpp:function:: int botan_pbkdf(const char* pbkdf_algo, \
+                          uint8_t out[], size_t out_len, \
+                          const char* password, \
+                          const uint8_t salt[], size_t salt_len, \
+                          size_t iterations)
+
+.. cpp:function:: int botan_pbkdf_timed(const char* pbkdf_algo, \
+                                uint8_t out[], size_t out_len, \
+                                const char* password, \
+                                const uint8_t salt[], size_t salt_len, \
+                                size_t milliseconds_to_run, \
+                                size_t* out_iterations_used)
 
 KDF
 ----------------------------------------
 
-TODO
+.. cpp:function:: int botan_kdf(const char* kdf_algo, \
+                        uint8_t out[], size_t out_len, \
+                        const uint8_t secret[], size_t secret_len, \
+                        const uint8_t salt[], size_t salt_len, \
+                        const uint8_t label[], size_t label_len)
 
 Password Hashing
 ----------------------------------------
 
-TODO
+.. cpp:function:: int botan_bcrypt_generate(uint8_t* out, size_t* out_len, \
+                                    const char* password, \
+                                    botan_rng_t rng, \
+                                    size_t work_factor, \
+                                    uint32_t flags)
 
-PBKDF
+.. cpp:function:: int botan_bcrypt_is_valid(const char* pass, const char* hash)
+
+Public Key Creation, Import and Export
 ----------------------------------------
 
-TODO
+.. cpp:type:: opaque* botan_privkey_t
 
-Public Key Import/Export
+   An opaque data type for a private key. Don't mess with it.
+
+.. cpp:function:: int botan_privkey_create(botan_privkey_t* key, \
+                                   const char* algo_name, \
+                                   const char* algo_params, \
+                                   botan_rng_t rng)
+
+.. cpp:function:: int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng, size_t n_bits)
+
+.. cpp:function:: int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng, const char* params)
+
+.. cpp:function:: int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, const char* params)
+
+.. cpp:function:: int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t)
+
+.. cpp:function:: int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng, \
+                                 const uint8_t bits[], size_t len, \
+                                 const char* password)
+
+.. cpp:function:: int botan_privkey_destroy(botan_privkey_t key)
+
+.. cpp:function:: int botan_privkey_export(botan_privkey_t key, \
+                                   uint8_t out[], size_t* out_len, \
+                                   uint32_t flags)
+
+.. cpp:function:: int botan_privkey_export_encrypted(botan_privkey_t key, \
+                                             uint8_t out[], size_t* out_len, \
+                                             botan_rng_t rng, \
+                                             const char* passphrase, \
+                                             const char* encryption_algo, \
+                                             uint32_t flags)
+
+.. cpp:type:: opaque* botan_pubkey_t
+
+   An opaque data type for a public key. Don't mess with it.
+
+.. cpp:function:: int botan_pubkey_load(botan_pubkey_t* key, const uint8_t bits[], size_t len)
+
+.. cpp:function:: int botan_privkey_export_pubkey(botan_pubkey_t* out, botan_privkey_t in)
+
+.. cpp:function:: int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
+
+.. cpp:function:: int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len)
+
+.. cpp:function:: int botan_pubkey_estimated_strength(botan_pubkey_t key, size_t* estimate)
+
+.. cpp:function:: int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash, \
+                                       uint8_t out[], size_t* out_len)
+
+.. cpp:function:: int botan_pubkey_destroy(botan_pubkey_t key)
+
+Public Key Encryption/Decryption
 ----------------------------------------
 
-TODO
+.. cpp:type:: opaque* botan_pk_op_encrypt_t
 
-Public Key Encryption
+   An opaque data type for an encryption operation. Don't mess with it.
+
+.. cpp:function:: int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op, \
+                                         botan_pubkey_t key, \
+                                         const char* padding, \
+                                         uint32_t flags)
+
+.. cpp:function:: int botan_pk_op_encrypt_destroy(botan_pk_op_encrypt_t op)
+
+.. cpp:function:: int botan_pk_op_encrypt(botan_pk_op_encrypt_t op, \
+                                  botan_rng_t rng, \
+                                  uint8_t out[], size_t* out_len, \
+                                  const uint8_t plaintext[], size_t plaintext_len)
+
+.. cpp:type:: opaque* botan_pk_op_decrypt_t
+
+   An opaque data type for a decryption operation. Don't mess with it.
+
+.. cpp:function:: int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op, \
+                                         botan_privkey_t key, \
+                                         const char* padding, \
+                                         uint32_t flags)
+
+.. cpp:function:: int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op)
+
+.. cpp:function:: int botan_pk_op_decrypt(botan_pk_op_decrypt_t op, \
+                                  uint8_t out[], size_t* out_len, \
+                                  uint8_t ciphertext[], size_t ciphertext_len)
+
+Signatures
 ----------------------------------------
 
-TODO
+.. cpp:type:: opaque* botan_pk_op_sign_t
 
-Public Key Signatures
-----------------------------------------
+   An opaque data type for a signature generation operation. Don't mess with it.
 
-TODO
+.. cpp:function:: int botan_pk_op_sign_create(botan_pk_op_sign_t* op, \
+                                      botan_privkey_t key, \
+                                      const char* hash_and_padding, \
+                                      uint32_t flags)
+
+.. cpp:function:: int botan_pk_op_sign_destroy(botan_pk_op_sign_t op)
+
+.. cpp:function:: int botan_pk_op_sign_update(botan_pk_op_sign_t op, \
+                                      const uint8_t in[], size_t in_len)
+
+.. cpp:function:: int botan_pk_op_sign_finish(botan_pk_op_sign_t op, botan_rng_t rng, \
+                                      uint8_t sig[], size_t* sig_len)
+
+.. cpp:type:: opaque* botan_pk_op_verify_t
+
+   An opaque data type for a signature verification operation. Don't mess with it.
+
+.. cpp:function:: int botan_pk_op_verify_create(botan_pk_op_verify_t* op, \
+                                        botan_pubkey_t key, \
+                                        const char* hash_and_padding, \
+                                        uint32_t flags)
+
+.. cpp:function:: int botan_pk_op_verify_destroy(botan_pk_op_verify_t op)
+
+.. cpp:function:: int botan_pk_op_verify_update(botan_pk_op_verify_t op, \
+                                        const uint8_t in[], size_t in_len)
+
+.. cpp:function:: int botan_pk_op_verify_finish(botan_pk_op_verify_t op, \
+                                        const uint8_t sig[], size_t sig_len)
 
 Key Agreement
 ----------------------------------------
 
-TODO
+.. cpp:type:: opaque* botan_pk_op_ka_t
+
+   An opaque data type for a key agreement operation. Don't mess with it.
+
+.. cpp:function:: int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op, \
+                                               botan_privkey_t key, \
+                                               const char* kdf, \
+                                               uint32_t flags)
+
+.. cpp:function:: int botan_pk_op_key_agreement_destroy(botan_pk_op_ka_t op)
+
+.. cpp:function:: int botan_pk_op_key_agreement_export_public(botan_privkey_t key, \
+                                                      uint8_t out[], size_t* out_len)
+
+.. cpp:function:: int botan_pk_op_key_agreement(botan_pk_op_ka_t op, \
+                                        uint8_t out[], size_t* out_len, \
+                                        const uint8_t other_key[], size_t other_key_len, \
+                                        const uint8_t salt[], size_t salt_len)
+
+.. cpp:function:: int botan_mceies_encrypt(botan_pubkey_t mce_key, \
+                                   botan_rng_t rng, \
+                                   const char* aead, \
+                                   const uint8_t pt[], size_t pt_len, \
+                                   const uint8_t ad[], size_t ad_len, \
+                                   uint8_t ct[], size_t* ct_len)
+
+.. cpp:function:: int botan_mceies_decrypt(botan_privkey_t mce_key, \
+                                   const char* aead, \
+                                   const uint8_t ct[], size_t ct_len, \
+                                   const uint8_t ad[], size_t ad_len, \
+                                   uint8_t pt[], size_t* pt_len)
 
 X.509 Certificates
 ----------------------------------------
 
-TODO
+.. cpp:type:: opaque* botan_x509_cert_t
 
-TLS
-----------------------------------------
+   An opaque data type for an X.509 certificate. Don't mess with it.
 
-TODO
+.. cpp:function:: int botan_x509_cert_load(botan_x509_cert_t* cert_obj, \
+                                        const uint8_t cert[], size_t cert_len)
+
+.. cpp:function:: int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* filename)
+
+.. cpp:function:: int botan_x509_cert_destroy(botan_x509_cert_t cert)
+
+.. cpp:function:: int botan_x509_cert_gen_selfsigned(botan_x509_cert_t* cert, \
+                                             botan_privkey_t key, \
+                                             botan_rng_t rng, \
+                                             const char* common_name, \
+                                             const char* org_name)
+
+.. cpp:function:: int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len)
+
+.. cpp:function:: int botan_x509_cert_get_time_expires(botan_x509_cert_t cert, char out[], size_t* out_len)
+
+.. cpp:function:: int botan_x509_cert_get_fingerprint(botan_x509_cert_t cert, const char* hash, uint8_t out[], size_t* out_len)
+
+.. cpp:function:: int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
+
+.. cpp:function:: int botan_x509_cert_get_authority_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
+
+.. cpp:function:: int botan_x509_cert_get_subject_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
+
+.. cpp:function:: int botan_x509_cert_path_verify(botan_x509_cert_t cert, \
+                                          const char* ca_dir)
+
+.. cpp:function:: int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert, \
+                                                  uint8_t out[], size_t* out_len)
+
+.. cpp:function:: int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key)
+
+.. cpp:function:: int botan_x509_cert_get_issuer_dn(botan_x509_cert_t cert, \
+                                            const char* key, size_t index, \
+                                            uint8_t out[], size_t* out_len)
+
+.. cpp:function:: int botan_x509_cert_get_subject_dn(botan_x509_cert_t cert, \
+                                             const char* key, size_t index, \
+                                             uint8_t out[], size_t* out_len)
+
+.. cpp:function:: int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len)
+
+.. cpp:enum:: botan_x509_cert_key_constraints
+
+   Certificate key usage constraints. Allowed values: `NO_CONSTRAINTS`,
+   `DIGITAL_SIGNATURE`, `NON_REPUDIATION`, `KEY_ENCIPHERMENT`,
+   `DATA_ENCIPHERMENT`, `KEY_AGREEMENT`, `KEY_CERT_SIGN`,
+   `CRL_SIGN`, `ENCIPHER_ONLY`, `DECIPHER_ONLY`.
+
+.. cpp:function:: int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage)
