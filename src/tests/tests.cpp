@@ -545,7 +545,7 @@ std::string Test::pkcs11_lib()
 Botan::RandomNumberGenerator& Test::rng()
    {
    if(!m_test_rng)
-      throw Test_Error("Test RNG not initialized");
+      throw Test_Error("No usable RNG in build, and this test requires an RNG");
    return *m_test_rng;
    }
 
