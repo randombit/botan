@@ -43,7 +43,6 @@ sse4.1
 sse4.2
 avx2
 aesni
-clmul
 rdrand
 rdseed
 sha

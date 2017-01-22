@@ -54,3 +54,18 @@ linux      -> "-library=stlport4"
 sparc64    -> "-xarch=v9"
 x86_64     -> "-m64"
 </mach_abi_linking>
+
+<isa_flags>
+# Botan needs C++11, and that requires Sun Studio 12.4 or above.
+#  Sun Studio 12.4 supports upto -xarch=avx2, but the processor must support it
+#  AESNI requires -xarch=aes, and RDRAND requires -xarch=avx_i.
+#  https://docs.oracle.com/cd/E37069_01/html/E37074/bjapp.html#OSSCGbkazd
+sse2       -> "-xarch=sse2"
+ssse3      -> "-xarch=ssse3"
+sse4.1     -> "-xarch=sse4_1"
+sse4.2     -> "-xarch=sse4_2"
+aesni      -> "-xarch=aes"
+avx        -> "-xarch=avx"
+rdrand     -> "-xarch=avx_i"
+avx2       -> "-xarch=avx2"
+</isa_flags>

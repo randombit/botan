@@ -829,7 +829,7 @@ class ArchInfo(object):
                       [k for k in self.submodel_aliases.items()],
                       key=lambda k: len(k[0]), reverse=True)
 
-    def defines(self, options):
+    def defines(self, cc, options):
         """
         Return CPU-specific defines for build.h
         """
@@ -837,8 +837,9 @@ class ArchInfo(object):
         def form_macro(cpu_name):
             return cpu_name.upper().replace('.', '').replace('-', '_')
 
-        macros = ['TARGET_ARCH_IS_%s' %
-                  (form_macro(self.basename.upper()))]
+        macros = []
+
+        macros.append('TARGET_ARCH_IS_%s' % (form_macro(self.basename.upper())))
 
         if self.basename != options.cpu:
             macros.append('TARGET_CPU_IS_%s' % (form_macro(options.cpu)))
@@ -849,7 +850,10 @@ class ArchInfo(object):
         isa_extensions = sorted(enabled_isas - disabled_isas)
 
         for isa in isa_extensions:
-            macros.append('TARGET_SUPPORTS_%s' % (form_macro(isa)))
+            if cc.isa_flags_for(isa, self.basename) is not None:
+                macros.append('TARGET_SUPPORTS_%s' % (form_macro(isa)))
+            else:
+                logging.warning("Disabling support for %s intrinsics due to missing flag for compiler" % (isa))
 
         endian = options.with_endian or self.endian
 
@@ -1333,10 +1337,12 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
     def isa_specific_flags(cc, src):
 
         def simd_dependencies():
-            if 'sse2' in arch.isa_extensions:
-                return ['sse2']
-            elif 'altivec' in arch.isa_extensions:
-                return ['altivec']
+
+            for simd32_impl in ['sse2', 'altivec']:
+                if simd32_impl in arch.isa_extensions and cc.isa_flags_for(simd32_impl, arch.basename) is not None:
+                    return [simd32_impl]
+
+            # default scalar
             return []
 
         for mod in modules:
@@ -1583,7 +1589,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'target_compiler_defines': make_cpp_macros(cc.defines()),
 
-        'target_cpu_defines': make_cpp_macros(arch.defines(options)),
+        'target_cpu_defines': make_cpp_macros(arch.defines(cc, options)),
 
         'botan_include_dir': build_config.botan_include_dir,
 
