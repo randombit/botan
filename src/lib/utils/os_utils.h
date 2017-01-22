@@ -15,13 +15,21 @@ namespace Botan {
 
 namespace OS {
 
+/*
+* This header is internal (not installed) and these functions are not
+* intended to be called by applications. However they are given public
+* visibility (using BOTAN_DLL macro) for the tests. This also probably
+* allows them to be overridden by the application on ELF systems, but
+* this hasn't been tested.
+*/
+
 /**
 * @return process ID assigned by the operating system.
 * On Unix and Windows systems, this always returns a result
 * On IncludeOS it returns 0 since there is no process ID to speak of
 * in a unikernel.
 */
-uint32_t get_process_id();
+uint32_t BOTAN_DLL get_process_id();
 
 /**
 * @return highest resolution clock available on the system.
@@ -36,13 +44,13 @@ uint32_t get_process_id();
 * On other platforms clock_gettime is used with some monotonic timer, if available.
 * As a final fallback std::chrono::high_resolution_clock is used.
 */
-uint64_t get_processor_timestamp();
+uint64_t BOTAN_DLL get_processor_timestamp();
 
 /**
 * @return system clock with best resolution available, normalized to
 * nanoseconds resolution.
 */
-uint64_t get_system_timestamp_ns();
+uint64_t BOTAN_DLL get_system_timestamp_ns();
 
 /**
 * @return maximum amount of memory (in bytes) Botan could/should
@@ -82,7 +90,7 @@ void free_locked_pages(void* ptr, size_t length);
 * -1 illegal instruction detected
 * -2 exception thrown
 */
-int run_cpu_instruction_probe(std::function<int ()> probe_fn);
+int BOTAN_DLL run_cpu_instruction_probe(std::function<int ()> probe_fn);
 
 }
 
