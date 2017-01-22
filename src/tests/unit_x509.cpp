@@ -375,6 +375,15 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
       {
       result.test_note("user 1 validation result was " + result_u1.result_string());
       }
+   else
+      {
+      const std::set<std::string> u1_hashes = result_u1.trusted_hashes();
+
+      if(result.test_eq("Single trusted hash", u1_hashes.size(), 1))
+         {
+         result.test_eq("Hash matches test", *u1_hashes.begin(), hash_fn);
+         }
+      }
 
    Botan::Path_Validation_Result result_u2 = Botan::x509_path_validate(user2_cert, restrictions, store);
    if(!result.confirm("user 2 validates", result_u2.successful_validation()))
