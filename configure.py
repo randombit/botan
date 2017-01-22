@@ -2408,6 +2408,7 @@ if __name__ == '__main__':
     try:
         main()
     except ConfigureError as e:
+        logging.debug(traceback.format_exc())
         logging.error(e)
     except Exception as e: # pylint: disable=broad-except
         logging.debug(traceback.format_exc())
