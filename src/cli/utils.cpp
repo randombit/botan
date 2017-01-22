@@ -110,7 +110,7 @@ class Print_Cpuid final : public Command
 
       void go() override
          {
-         Botan::CPUID::print(output());
+         output() << "CPUID flags: " << Botan::CPUID::to_string() << "\n";
          }
    };
 

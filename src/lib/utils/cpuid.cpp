@@ -10,6 +10,7 @@
 #include <botan/loadstor.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
+#include <botan/parsing.h>
 #include <ostream>
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
@@ -33,48 +34,22 @@
 */
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
   #include <sys/auxv.h>
+#else
+  #include <botan/internal/os_utils.h>
 #endif
-
-#include <botan/internal/os_utils.h>
 
 #elif defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
+/*
+* On x86, use CPUID instruction
+*/
+
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-
   #include <intrin.h>
-  #define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
-  #define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
-
 #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
-
   #include <ia32intrin.h>
-  #define X86_CPUID(type, out) do { __cpuid(out, type); } while(0)
-  #define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
-
-#elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && defined(BOTAN_USE_GCC_INLINE_ASM)
-
-  #define X86_CPUID(type, out)                                                    \
-     asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
-         : "0" (type))
-
-  #define X86_CPUID_SUBLEVEL(type, level, out)                                    \
-     asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
-         : "0" (type), "2" (level))
-
 #elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-
   #include <cpuid.h>
-
-  #define X86_CPUID(type, out) do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0)
-
-  #define X86_CPUID_SUBLEVEL(type, level, out) \
-     do { __cpuid_count(type, level, out[0], out[1], out[2], out[3]); } while(0)
-
-#else
-  #warning "No way of calling cpuid for this compiler"
-  #define X86_CPUID(type, out) do { clear_mem(out, 4); } while(0)
-  #define X86_CPUID_SUBLEVEL(type, level, out) do { clear_mem(out, 4); } while(0)
-
 #endif
 
 #endif
@@ -199,7 +174,7 @@ uint64_t arm_detect_cpu_features(size_t* cache_line_size)
 
    /*
    On aarch64 this ends up calling getauxval twice with AT_HWCAP
-   This doesn't seem worth optimizing this out, since getauxval is
+   It doesn't seem worth optimizing this out, since getauxval is
    just reading a field in the ELF header.
    */
    const unsigned long hwcap_crypto = ::getauxval(ARM_hwcap_bit::ARCH_hwcap_crypto);
@@ -231,6 +206,34 @@ uint64_t arm_detect_cpu_features(size_t* cache_line_size)
 
 uint64_t x86_detect_cpu_features(size_t* cache_line_size)
    {
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+  #define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
+  #define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
+
+#elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
+  #define X86_CPUID(type, out) do { __cpuid(out, type); } while(0)
+  #define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
+
+#elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && defined(BOTAN_USE_GCC_INLINE_ASM)
+  #define X86_CPUID(type, out)                                                    \
+     asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
+         : "0" (type))
+
+  #define X86_CPUID_SUBLEVEL(type, level, out)                                    \
+     asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
+         : "0" (type), "2" (level))
+
+#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+  #define X86_CPUID(type, out) do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0)
+
+  #define X86_CPUID_SUBLEVEL(type, level, out) \
+     do { __cpuid_count(type, level, out[0], out[1], out[2], out[3]); } while(0)
+#else
+  #warning "No way of calling x86 cpuid instruction for this compiler"
+  #define X86_CPUID(type, out) do { clear_mem(out, 4); } while(0)
+  #define X86_CPUID_SUBLEVEL(type, level, out) do { clear_mem(out, 4); } while(0)
+#endif
+
    uint64_t features_detected = 0;
    uint32_t cpuid[4] = { 0 };
 
@@ -320,6 +323,9 @@ uint64_t x86_detect_cpu_features(size_t* cache_line_size)
          features_detected |= CPUID::CPUID_SHA_BIT;
       }
 
+#undef X86_CPUID
+#undef X86_CPUID_SUBLEVEL
+
    /*
    * If we don't have access to CPUID, we can still safely assume that
    * any x86-64 processor has SSE2 and RDTSC
@@ -350,11 +356,12 @@ bool CPUID::has_simd_32()
 #endif
    }
 
-void CPUID::print(std::ostream& o)
+//static
+std::string CPUID::to_string()
    {
-   o << "CPUID flags: ";
+   std::vector<std::string> flags;
 
-#define CPUID_PRINT(flag) do { if(has_##flag()) o << #flag << " "; } while(0)
+#define CPUID_PRINT(flag) do { if(has_##flag()) { flags.push_back(#flag); } } while(0)
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
    CPUID_PRINT(sse2);
@@ -388,7 +395,14 @@ void CPUID::print(std::ostream& o)
 #endif
 
 #undef CPUID_PRINT
-   o << "\n";
+
+   return string_join(flags, ' ');
+   }
+
+//static
+void CPUID::print(std::ostream& o)
+   {
+   o << "CPUID flags: " << CPUID::to_string() << "\n";
    }
 
 void CPUID::initialize()

@@ -9,6 +9,7 @@
 #define BOTAN_CPUID_H__
 
 #include <botan/types.h>
+#include <string>
 #include <iosfwd>
 
 namespace Botan {
@@ -41,7 +42,21 @@ class BOTAN_DLL CPUID
 
       static bool has_simd_32();
 
-      static void print(std::ostream& o);
+      /**
+      * Deprecated equivalent to
+      * o << "CPUID flags: " << CPUID::to_string() << "\n";
+      */
+      static void BOTAN_DEPRECATED("Use CPUID::to_string") print(std::ostream& o);
+
+      /**
+      * Return a possibly empty string containing list of known CPU
+      * extensions. Each name will be seperated by a space, and the ordering
+      * will be arbitrary. This list only contains values that are useful to
+      * Botan (for example FMA instructions are not checked).
+      *
+      * Example outputs "sse2 ssse3 rdtsc", "neon arm_aes", "altivec"
+      */
+      static std::string to_string();
 
       /**
       * Return a best guess of the cache line size
