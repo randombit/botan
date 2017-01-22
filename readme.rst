@@ -17,13 +17,20 @@ Find the full feature list below.
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
 and contributions are welcome (read `doc/contributing.rst` for more info).
 
-If you need help, open a GitHub issue, email the `mailing list
-<http://lists.randombit.net/mailman/listinfo/botan-devel/>`_, or try
-the botan `gitter.im <https://gitter.im/libbotan/Chat>`_ channel.
+If you need help with a problem, please open an `issue on GitHub
+<https://github.com/randombit/botan/issues>`_ or email the
+`botan-devel mailing list
+<https://lists.randombit.net/mailman/listinfo/botan-devel/>`_.
 
-If you think you've found a security bug, read the `security page
-<https://botan.randombit.net/security.html>`_ for contact information
-and procedures.
+New releases are announced on the
+`botan-announce mailing list
+<https://lists.randombit.net/mailman/listinfo/botan-announce/>`_.
+
+If you think you have found a security bug in Botan please contact
+Jack Lloyd by emailing jack@randombit.net. His PGP public key with
+fingerprint 4E60C73551AF2188DF0A5A6278E9804357123B60 can can be found
+in ``doc/pgpkey.txt`` in the distribution,
+https://keybase.io/jacklloyd, and some public PGP key servers.
 
 .. highlight:: none
 
