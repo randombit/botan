@@ -103,6 +103,9 @@ class OS_Utils_Tests : public Test
          {
          Test::Result result("OS::run_cpu_instruction_probe");
 
+#if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
+         // OS::run_cpu_instruction_probe only implemented for Unix signals right now
+
          std::function<int ()> ok_fn = []() { return 5; };
          const int run_rc = Botan::OS::run_cpu_instruction_probe(ok_fn);
          result.confirm("Correct result returned by working probe fn", run_rc == 5);
@@ -134,6 +137,8 @@ class OS_Utils_Tests : public Test
             const int crash_rc = Botan::OS::run_cpu_instruction_probe(crash_probe);
             result.confirm("Result for function executing undefined opcode", crash_rc < 0);
             }
+#endif
+
 #endif
 
          return result;
