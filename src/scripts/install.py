@@ -3,7 +3,7 @@
 """
 Botan install script
 
-(C) 2014,2015 Jack Lloyd
+(C) 2014,2015,2017 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -97,12 +97,12 @@ def main(args = None):
         exe_mode &= (umask ^ 0o777)
 
     def copy_file(src, dst):
+        logging.debug('Copying %s to %s' % (src, dst))
         shutil.copyfile(src, dst)
-        #logging.debug('Copied %s to %s' % (src, dst))
 
     def copy_executable(src, dst):
+        logging.debug('Copying %s to %s' % (src, dst))
         copy_file(src, dst)
-        logging.debug('Copied %s to %s' % (src, dst))
         os.chmod(dst, exe_mode)
 
     cfg = eval(open(os.path.join(options.build_dir, 'build_config.py')).read())
@@ -122,6 +122,8 @@ def main(args = None):
     ver_major = int(cfg['version_major'])
     ver_minor = int(cfg['version_minor'])
     ver_patch = int(cfg['version_patch'])
+    target_os = cfg['os']
+    build_shared_lib = bool(cfg['build_shared_lib'])
 
     bin_dir = os.path.join(options.destdir, options.bindir)
     lib_dir = os.path.join(options.destdir, options.libdir)
@@ -134,7 +136,10 @@ def main(args = None):
                                       'botan')
 
     out_dir = process_template('%{out_dir}')
-    app_exe = process_template('botan%{program_suffix}') if str(cfg['os']) != "windows" else 'botan-cli.exe'
+    if target_os == "windows":
+        app_exe = 'botan-cli.exe'
+    else:
+        app_exe = process_template('botan%{program_suffix}')
 
     for d in [options.destdir, lib_dir, bin_dir, target_doc_dir, target_include_dir]:
         makedirs(d)
@@ -157,8 +162,8 @@ def main(args = None):
     copy_file(os.path.join(out_dir, static_lib),
               os.path.join(lib_dir, os.path.basename(static_lib)))
 
-    if bool(cfg['build_shared_lib']):
-        if str(cfg['os']) == "windows":
+    if build_shared_lib:
+        if target_os == "windows":
             libname = process_template('%{libname}')
             soname_base = libname + '.dll'
             copy_executable(os.path.join(out_dir, soname_base),
@@ -187,7 +192,7 @@ def main(args = None):
     # we only need to do this because we previously changed it from a setting
     # that would be correct for installation to one that lets us run it from
     # the build directory
-    if str(cfg['os']) == 'darwin' and bool(cfg['build_shared_lib']):
+    if target_os == 'darwin' and build_shared_lib:
         soname_abi = process_template('%{soname_abi}')
 
         subprocess.check_call(['install_name_tool',
@@ -207,8 +212,10 @@ def main(args = None):
             py_lib_path = os.path.join(lib_dir, 'python%s' % (ver), 'site-packages')
             logging.debug('Installing python module to %s' % (py_lib_path))
             makedirs(py_lib_path)
-            for py in ['botan.py']:
-                copy_file(os.path.join(cfg['python_dir'], py), os.path.join(py_lib_path, py))
+
+            py_dir = cfg['python_dir']
+            for py in os.listdir(py_dir):
+                copy_file(os.path.join(py_dir, py), os.path.join(py_lib_path, py))
 
     shutil.rmtree(target_doc_dir, True)
     shutil.copytree(cfg['doc_output_dir'], target_doc_dir)
