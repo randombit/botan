@@ -8,6 +8,6 @@ python2 -m pylint configure.py
 echo "travis_fold:end:pylint_configure"
 
 echo "travis_fold:start:pylint_botanpy"
-python3 -m pylint src/python/botan.py
-python2 -m pylint src/python/botan.py
+python3 -m pylint src/python/botan2.py
+python2 -m pylint src/python/botan2.py
 echo "travis_fold:end:pylint_botanpy"

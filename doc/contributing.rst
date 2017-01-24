@@ -11,7 +11,7 @@ Under ``src`` there are directories
   example ``build-data/cc/gcc.txt`` describes various gcc options.
 * ``scripts`` contains misc scripts: install, distribution, various
   codegen things. Scripts controlling CI go under ``scripts/ci``.
-* ``python/botan.py`` is the Python ctypes wrapper
+* ``python/botan2.py`` is the Python ctypes wrapper
 
 Library Layout
 ========================================
@@ -103,7 +103,7 @@ PyPy, etc is great when viable (in the sense of not causing problems for 2.7 or
 program succesfully is required for a working build making it as portable as
 possible is considered key.
 
-The python wrapper botan.py targets CPython 2.7, 3.x, and latest PyPy. Note that
+The python wrapper botan2.py targets CPython 2.7, 3.x, and latest PyPy. Note that
 a single file is used to avoid dealing with any of Python's various crazy module
 distribution issues.
 

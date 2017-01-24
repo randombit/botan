@@ -186,7 +186,7 @@ then
     for py in python2 python3
     do
         $py --version
-        LD_LIBRARY_PATH=. $py src/python/botan.py
+        LD_LIBRARY_PATH=. $py src/python/botan2.py
     done
 fi
 

@@ -409,7 +409,7 @@ Building the Python wrappers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Python wrappers for Botan use ctypes and the C89 API so no special
-build step is required, just import botan.py
+build step is required, just import botan2.py
 
 See :doc:`Python Bindings <python>` for more information about the
 Python bindings.

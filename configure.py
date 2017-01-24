@@ -376,7 +376,7 @@ def process_command_line(args):
     build_group.add_option('--with-python-versions', dest='python_version',
                            metavar='N.M',
                            default='%d.%d' % (sys.version_info[0], sys.version_info[1]),
-                           help='where to install botan.py (def %default)')
+                           help='where to install botan2.py (def %default)')
 
     build_group.add_option('--with-valgrind', help='use valgrind API',
                            dest='with_valgrind', action='store_true', default=False)
