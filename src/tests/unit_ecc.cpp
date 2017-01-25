@@ -61,7 +61,7 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, BigIn
    */
    Botan::BigInt x = 0;
 
-   auto flip_prob = [](size_t i) {
+   auto flip_prob = [](size_t i) -> double {
       if(i % 64 == 0)
          return .5;
       if(i % 32 == 0)

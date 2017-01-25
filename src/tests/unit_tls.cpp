@@ -248,7 +248,7 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
          return false;
       };
 
-      auto next_protocol_chooser = [&](std::vector<std::string> protos) {
+      auto next_protocol_chooser = [&](std::vector<std::string> protos) -> std::string {
          if(r <= 2)
             {
             result.test_eq("protocol count", protos.size(), 2);
@@ -559,7 +559,7 @@ Test::Result test_dtls_handshake(Botan::TLS::Protocol_Version offer_version,
          return true;
       };
 
-      auto next_protocol_chooser = [&](std::vector<std::string> protos) {
+      auto next_protocol_chooser = [&](std::vector<std::string> protos) -> std::string {
          if(r <= 2)
             {
             result.test_eq("protocol count", protos.size(), 2);

@@ -15,10 +15,10 @@ namespace {
 
 #define key_xor(round, B0, B1, B2, B3)                             \
    do {                                                            \
-      B0 ^= SIMD_32(m_round_key[4*round  ]);                       \
-      B1 ^= SIMD_32(m_round_key[4*round+1]);                       \
-      B2 ^= SIMD_32(m_round_key[4*round+2]);                       \
-      B3 ^= SIMD_32(m_round_key[4*round+3]);                       \
+      B0 ^= SIMD_32::splat(m_round_key[4*round  ]);                \
+      B1 ^= SIMD_32::splat(m_round_key[4*round+1]);                \
+      B2 ^= SIMD_32::splat(m_round_key[4*round+2]);                \
+      B3 ^= SIMD_32::splat(m_round_key[4*round+3]);                \
    } while(0);
 
 /*

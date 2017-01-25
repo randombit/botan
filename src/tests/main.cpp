@@ -255,7 +255,7 @@ class Test_Runner : public Botan_CLI::Command
 
             for(auto&& test_name : tests_to_run)
                {
-               auto run_it = [test_name] {
+               auto run_it = [test_name]() -> std::vector<Botan_Tests::Test::Result> {
                   try {
                      return Botan_Tests::Test::run_test(test_name, false);
                   }

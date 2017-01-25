@@ -267,14 +267,14 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
 
       if(subject->ocsp_responder() == "")
          {
-         ocsp_response_futures.emplace_back(std::async(std::launch::deferred, [&]{
+         ocsp_response_futures.emplace_back(std::async(std::launch::deferred, [&]() -> std::shared_ptr<const OCSP::Response> {
                   throw Exception("No OCSP responder URL set for this certificate");
                   return std::shared_ptr<const OCSP::Response>();
                   }));
             }
          else
             {
-            ocsp_response_futures.emplace_back(std::async(std::launch::async, [&]{
+            ocsp_response_futures.emplace_back(std::async(std::launch::async, [&]() -> std::shared_ptr<const OCSP::Response> {
                   OCSP::Request req(*issuer, *subject);
 
                   auto http = HTTP::POST_sync(subject->ocsp_responder(),
@@ -356,14 +356,14 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
       else if(cert_path[i]->crl_distribution_point() == "")
          {
          // Avoid creating a thread for this case
-         future_crls.emplace_back(std::async(std::launch::deferred, [&]{
+         future_crls.emplace_back(std::async(std::launch::deferred, [&]() -> std::shared_ptr<const X509_CRL> {
                throw Exception("No CRL distribution point for this certificate");
                return std::shared_ptr<const X509_CRL>();
                }));
          }
       else
          {
-         future_crls.emplace_back(std::async(std::launch::async, [&]() {
+         future_crls.emplace_back(std::async(std::launch::async, [&]() -> std::shared_ptr<const X509_CRL> {
                auto http = HTTP::GET_sync(cert_path[i]->crl_distribution_point());
                http.throw_unless_ok();
                // check the mime type?

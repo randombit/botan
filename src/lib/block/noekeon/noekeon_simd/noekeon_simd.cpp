@@ -65,10 +65,10 @@ namespace Botan {
 */
 void Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const
    {
-   const SIMD_32 K0 = SIMD_32(m_EK[0]);
-   const SIMD_32 K1 = SIMD_32(m_EK[1]);
-   const SIMD_32 K2 = SIMD_32(m_EK[2]);
-   const SIMD_32 K3 = SIMD_32(m_EK[3]);
+   const SIMD_32 K0 = SIMD_32::splat(m_EK[0]);
+   const SIMD_32 K1 = SIMD_32::splat(m_EK[1]);
+   const SIMD_32 K2 = SIMD_32::splat(m_EK[2]);
+   const SIMD_32 K3 = SIMD_32::splat(m_EK[3]);
 
    SIMD_32 A0 = SIMD_32::load_be(in     );
    SIMD_32 A1 = SIMD_32::load_be(in + 16);
@@ -79,7 +79,7 @@ void Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const
 
    for(size_t i = 0; i != 16; ++i)
       {
-      A0 ^= SIMD_32(RC[i]);
+      A0 ^= SIMD_32::splat(RC[i]);
 
       NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
 
@@ -94,7 +94,7 @@ void Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const
       A3.rotate_right(2);
       }
 
-   A0 ^= SIMD_32(RC[16]);
+   A0 ^= SIMD_32::splat(RC[16]);
    NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
 
    SIMD_32::transpose(A0, A1, A2, A3);
@@ -110,10 +110,10 @@ void Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const
 */
 void Noekeon::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const
    {
-   const SIMD_32 K0 = SIMD_32(m_DK[0]);
-   const SIMD_32 K1 = SIMD_32(m_DK[1]);
-   const SIMD_32 K2 = SIMD_32(m_DK[2]);
-   const SIMD_32 K3 = SIMD_32(m_DK[3]);
+   const SIMD_32 K0 = SIMD_32::splat(m_DK[0]);
+   const SIMD_32 K1 = SIMD_32::splat(m_DK[1]);
+   const SIMD_32 K2 = SIMD_32::splat(m_DK[2]);
+   const SIMD_32 K3 = SIMD_32::splat(m_DK[3]);
 
    SIMD_32 A0 = SIMD_32::load_be(in     );
    SIMD_32 A1 = SIMD_32::load_be(in + 16);
@@ -126,7 +126,7 @@ void Noekeon::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const
       {
       NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
 
-      A0 ^= SIMD_32(RC[16-i]);
+      A0 ^= SIMD_32::splat(RC[16-i]);
 
       A1.rotate_left(1);
       A2.rotate_left(5);
@@ -140,7 +140,7 @@ void Noekeon::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const
       }
 
    NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
-   A0 ^= SIMD_32(RC[0]);
+   A0 ^= SIMD_32::splat(RC[0]);
 
    SIMD_32::transpose(A0, A1, A2, A3);
 

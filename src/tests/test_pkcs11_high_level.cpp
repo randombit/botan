@@ -102,7 +102,7 @@ Test::Result test_module_ctor()
 
    result.test_throws("Module ctor fails for non existent path", []()
       {
-      Module module("/a/b/c");
+      Module failing_module("/a/b/c");
       });
 
    Module module(Test::pkcs11_lib());

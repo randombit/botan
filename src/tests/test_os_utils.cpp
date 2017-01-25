@@ -25,7 +25,7 @@ int run_cpu_instruction_probe(std::function<int ()> probe_fn);
 class OS_Utils_Tests : public Test
    {
    public:
-      std::vector<Test::Result> run()
+      std::vector<Test::Result> run() override
          {
          std::vector<Test::Result> results;
 
@@ -106,11 +106,11 @@ class OS_Utils_Tests : public Test
 #if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
          // OS::run_cpu_instruction_probe only implemented for Unix signals right now
 
-         std::function<int ()> ok_fn = []() { return 5; };
+         std::function<int ()> ok_fn = []() -> int { return 5; };
          const int run_rc = Botan::OS::run_cpu_instruction_probe(ok_fn);
          result.confirm("Correct result returned by working probe fn", run_rc == 5);
 
-         std::function<int ()> throw_fn = []() { throw 3.14159; return 5; };
+         std::function<int ()> throw_fn = []() -> int { throw 3.14159; return 5; };
          const int throw_rc = Botan::OS::run_cpu_instruction_probe(throw_fn);
          result.confirm("Error return if probe function threw exception", throw_rc < 0);
 
@@ -119,11 +119,11 @@ class OS_Utils_Tests : public Test
          std::function<int ()> crash_probe;
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-         crash_probe = []() { asm volatile("ud2"); return 3; };
+         crash_probe = []() -> int { asm volatile("ud2"); return 3; };
 #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
          //ARM: asm volatile (".word 0xf7f0a000\n");
          // illegal instruction in both ARM and Thumb modes
-         crash_probe = []() { asm volatile(".word 0xe7f0def0\n"); return 3; };
+         crash_probe = []() -> int { asm volatile(".word 0xe7f0def0\n"); return 3; };
 #else
          /*
          PPC: "The instruction with primary opcode 0, when the instruction does not consist

@@ -223,13 +223,13 @@ class HMAC_DRBG_Unit_Tests : public Test
 
          result.test_throws("HMAC_DRBG does not accept 0 for max_number_of_bytes_per_request", [&mac_string, &counting_rng ]()
             {
-            Botan::HMAC_DRBG rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 2, 0);
+            Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 2, 0);
             });
 
          result.test_throws("HMAC_DRBG does not accept values higher than 64KB for max_number_of_bytes_per_request", [ &mac_string,
                             &counting_rng ]()
             {
-            Botan::HMAC_DRBG rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 2, 64 * 1024 + 1);
+            Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 2, 64 * 1024 + 1);
             });
 
          // set reseed_interval to 1 so we can test that a long request is split

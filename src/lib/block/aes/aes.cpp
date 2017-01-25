@@ -107,7 +107,7 @@ inline uint8_t xtime14(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ xtime(s); }
 
 const std::vector<uint32_t>& AES_TE()
    {
-   auto compute_TE = []() {
+   auto compute_TE = []() -> std::vector<uint32_t> {
       std::vector<uint32_t> TE(1024);
       for(size_t i = 0; i != 256; ++i)
          {
@@ -128,7 +128,7 @@ const std::vector<uint32_t>& AES_TE()
 
 const std::vector<uint32_t>& AES_TD()
    {
-   auto compute_TD = []() {
+   auto compute_TD = []() -> std::vector<uint32_t> {
       std::vector<uint32_t> TD(1024);
       for(size_t i = 0; i != 256; ++i)
          {

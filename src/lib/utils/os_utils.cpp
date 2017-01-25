@@ -182,6 +182,7 @@ size_t get_memory_locking_limit()
       catch(std::exception&) { /* ignore it */ }
       }
 
+#if defined(RLIMIT_MEMLOCK)
    if(mlock_requested > 0)
       {
       struct ::rlimit limits;
@@ -197,6 +198,14 @@ size_t get_memory_locking_limit()
 
       return std::min<size_t>(limits.rlim_cur, mlock_requested * 1024);
       }
+#else
+   /*
+   * If RLIMIT_MEMLOCK is not defined, likely the OS does not support
+   * unprivileged mlock calls.
+   */
+   return 0;
+#endif
+
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    SIZE_T working_min = 0, working_max = 0;
    DWORD working_flags = 0;

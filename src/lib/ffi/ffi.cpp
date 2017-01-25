@@ -168,7 +168,7 @@ inline int write_str_output(char out[], size_t* out_len, const std::string& str)
    return write_str_output(reinterpret_cast<uint8_t*>(out), out_len, str);
    }
 
-#define BOTAN_FFI_DO(T, obj, param, block) apply_fn(obj, BOTAN_CURRENT_FUNCTION, [=](T& param) { do { block } while(0); return 0; })
+#define BOTAN_FFI_DO(T, obj, param, block) apply_fn(obj, BOTAN_CURRENT_FUNCTION, [=](T& param) -> int { do { block } while(0); return 0; })
 
 }
 

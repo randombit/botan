@@ -74,17 +74,12 @@ class SIMD_4x32
 #endif
          }
 
-      explicit SIMD_4x32(uint32_t B)
+      static SIMD_4x32 splat(uint32_t B)
          {
 #if defined(BOTAN_SIMD_USE_SSE2)
-         m_reg = _mm_set1_epi32(B);
-#elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         m_reg = (__vector unsigned int){B, B, B, B};
+         return SIMD_4x32(_mm_set1_epi32(B));
 #else
-         m_reg[0] = B;
-         m_reg[1] = B;
-         m_reg[2] = B;
-         m_reg[3] = B;
+         return SIMD_4x32(B, B, B, B);
 #endif
          }
 
