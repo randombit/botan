@@ -34,26 +34,23 @@
    #include <botan/pubkey.h>
 #endif
 
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_PKCS11) 
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_PKCS11)
    #include <botan/rsa.h>
    #include <botan/p11_rsa.h>
 #endif
 
-#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO) && defined(BOTAN_HAS_PKCS11)
-   #include <botan/ecc_key.h>
+#if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_PKCS11)
    #include <botan/ecdsa.h>
-   #include <botan/ecdh.h>
-   #include <botan/p11_ecc_key.h>
-   #include <botan/p11_ecdh.h>
    #include <botan/p11_ecdsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ECDH) && defined(BOTAN_HAS_PKCS11)
+   #include <botan/ecdh.h>
+   #include <botan/p11_ecdh.h>
 #endif
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_PKCS11)
    #include <botan/p11_x509.h>
-#endif
-
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-   #include <botan/auto_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
@@ -909,7 +906,7 @@ BOTAN_REGISTER_TEST("pkcs11-rsa", PKCS11_RSA_Tests);
 
 /***************************** PKCS11 ECDSA *****************************/
 
-#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+#if defined(BOTAN_HAS_ECDSA)
 
 Test::Result test_ecdsa_privkey_import()
    {
@@ -1148,6 +1145,10 @@ class PKCS11_ECDSA_Tests : public PKCS11_Test
    };
 
 BOTAN_REGISTER_TEST("pkcs11-ecdsa", PKCS11_ECDSA_Tests);
+
+#endif
+
+#if defined(BOTAN_HAS_ECDH)
 
 /***************************** PKCS11 ECDH *****************************/
 
