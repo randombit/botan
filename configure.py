@@ -324,6 +324,9 @@ def process_command_line(args):
     build_group.add_option('--with-external-includedir', metavar='DIR', default='',
                            help='use DIR for external includes')
 
+    build_group.add_option('--with-external-libdir', metavar='DIR', default='',
+                           help='use DIR for external libs')
+
     build_group.add_option('--with-openmp', default=False, action='store_true',
                            help='enable use of OpenMP')
     build_group.add_option('--with-cilkplus', default=False, action='store_true',
@@ -1254,7 +1257,7 @@ def makefile_list(items):
     items = list(items) # force evaluation so we can slice it
     return (' '*16).join([item + ' \\\n' for item in items[:-1]] + [items[-1]])
 
-def gen_bakefile(build_config, options):
+def gen_bakefile(build_config, options, external_libs):
 
     def bakefile_sources(file, sources):
         for src in sources:
@@ -1299,11 +1302,19 @@ def gen_bakefile(build_config, options):
 
     # global options
     f.write('includedirs += build/include/;\n')
+    
+    for lib in external_libs.split(" "):
+        f.write('libs += "%s";\n' %lib.replace('.lib', ''))
 
     if options.with_external_includedir:
         external_inc_dir = options.with_external_includedir.replace('\\', '/')
         # Attention: bakefile supports only relative paths
         f.write('includedirs += "%s";\n' %external_inc_dir)
+
+    if options.with_external_libdir:
+        external_lib_dir = options.with_external_libdir.replace('\\', '/')
+        # Attention: bakefile supports only relative paths
+        f.write('libdirs += "%s";\n' %external_lib_dir)
 
     if build_config.external_headers:
         f.write('includedirs += build/include/external;\n')
@@ -1435,6 +1446,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
     def make_cpp_macros(macros):
         return '\n'.join(['#define BOTAN_' + macro for macro in macros])
+
+    def external_link_cmd():
+        return ' ' + cc.add_lib_dir_option + options.with_external_libdir if options.with_external_libdir else ''
 
     def link_to():
         """
@@ -1577,9 +1591,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'shared_flags': cc.gen_shared_flags(options),
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
-        'lib_link_cmd':  cc.so_link_command_for(osinfo.basename, options),
-        'cli_link_cmd':  cc.binary_link_command_for(osinfo.basename, options),
-        'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options),
+        'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + external_link_cmd(),
+        'cli_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
+        'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
 
         'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()] + [cc.add_framework_option + fw for fw in link_to_frameworks()]),
 
@@ -2392,7 +2406,7 @@ def main(argv=None):
         gen_makefile_lists(template_vars, build_config, options, using_mods, cc, arch, osinfo)
 
     if options.with_bakefile:
-        gen_bakefile(build_config, options)
+        gen_bakefile(build_config, options, template_vars['link_to'])
 
     write_template(template_vars['makefile_path'], makefile_template)
 
