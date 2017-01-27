@@ -121,8 +121,9 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
                     bool with_modular_inverse=false);
 
       /*
-      * Creates a new private key object from the given
-      * key_bits. If with_modular_inverse is set,
+      * Creates a new private key object from the
+      * ECPrivateKey structure given in key_bits.
+      * If with_modular_inverse is set,
       * the public key will be calculated by multiplying
       * the base point with the modular inverse of
       * x (as in ECGDSA and ECKCDSA), otherwise by

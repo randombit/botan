@@ -66,7 +66,7 @@ class BOTAN_DLL ECKCDSA_PrivateKey : public ECKCDSA_PublicKey,
       /**
       * Load a private key.
       * @param alg_id the X.509 algorithm identifier
-      * @param key_bits PKCS #8 structure
+      * @param key_bits ECPrivateKey bits
       */
       ECKCDSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                        const secure_vector<uint8_t>& key_bits) :

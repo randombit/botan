@@ -59,7 +59,7 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
       /**
       * Load a private key.
       * @param alg_id the X.509 algorithm identifier
-      * @param key_bits PKCS#8 structure
+      * @param key_bits DER encoded key bits in ANSI X9.57 format
       */
       DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
                      const secure_vector<uint8_t>& key_bits);
