@@ -40,7 +40,7 @@ void Stateful_RNG::randomize_with_ts_input(uint8_t output[], size_t output_len)
    {
    uint8_t additional_input[24] = { 0 };
    store_le(OS::get_system_timestamp_ns(), additional_input);
-   store_le(OS::get_processor_timestamp(), additional_input + 8);
+   store_le(OS::get_high_resolution_clock(), additional_input + 8);
    store_le(m_last_pid, additional_input + 16);
    store_le(static_cast<uint32_t>(m_reseed_counter), additional_input + 20);
 
