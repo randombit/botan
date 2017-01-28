@@ -70,9 +70,9 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
    public:
 
       /**
-      * Create an ECDH public key.
+      * Load a private key.
       * @param alg_id the X.509 algorithm identifier
-      * @param key_bits X.509 subject public key info structure
+      * @param key_bits ECPrivateKey bits
       */
       ECDH_PrivateKey(const AlgorithmIdentifier& alg_id,
                       const secure_vector<uint8_t>& key_bits) :
