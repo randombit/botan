@@ -79,6 +79,15 @@ class BOTAN_DLL CPUID
          return g_little_endian;
          }
 
+      static bool is_big_endian()
+         {
+         /*
+         * We do not support PDP endian, so the endian is
+         * always either big or little.
+         */
+         return is_little_endian() == false;
+         }
+
       enum CPUID_bits : uint64_t {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
          // These values have no relation to cpuid bitfields
@@ -261,7 +270,7 @@ class BOTAN_DLL CPUID
 
       /*
       * Don't call this function, use CPUID::has_xxx above
-      * It should have been private.
+      * It is only exposed for the tests.
       */
       static bool has_cpuid_bit(CPUID_bits elem)
          {

@@ -67,6 +67,8 @@ rdrand  -> "-mrdrnd"
 rdseed	-> "-mrdseed"
 sha     -> "-msha"
 altivec -> "-maltivec"
+
+neon    -> ""
 </isa_flags>
 
 <mach_opt>

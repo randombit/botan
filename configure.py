@@ -261,7 +261,7 @@ def process_command_line(args):
     target_group.add_option('--without-os-features', action='append', metavar='FEAT',
                             help='specify OS features to disable')
 
-    for isa_extn_name in ['SSE2', 'SSSE3', 'AVX2', 'AES-NI', 'AltiVec']:
+    for isa_extn_name in ['SSE2', 'SSSE3', 'AVX2', 'AES-NI', 'AltiVec', 'NEON']:
         isa_extn = isa_extn_name.lower()
 
         target_group.add_option('--disable-%s' % (isa_extn),
@@ -1349,7 +1349,7 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
 
         def simd_dependencies():
 
-            for simd32_impl in ['sse2', 'altivec']:
+            for simd32_impl in ['sse2', 'altivec', 'neon']:
                 if simd32_impl in arch.isa_extensions and cc.isa_flags_for(simd32_impl, arch.basename) is not None:
                     return [simd32_impl]
 
