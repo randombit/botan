@@ -121,6 +121,9 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       }
 #endif
 
+   BOTAN_UNUSED(req);
+   BOTAN_UNUSED(provider);
+
    return nullptr;
    }
 

@@ -274,6 +274,9 @@ BlockCipher::create(const std::string& algo,
       }
 #endif
 
+   BOTAN_UNUSED(req);
+   BOTAN_UNUSED(provider);
+
    return nullptr;
    }
 
