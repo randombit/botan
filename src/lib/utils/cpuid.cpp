@@ -195,9 +195,12 @@ uint64_t arm_detect_cpu_features(size_t* cache_line_size)
       *cache_line_size = static_cast<size_t>(dcache_line);
 #endif
 
-#endif
+#else
+   // No getauxval API available, fall back on probe functions
 
    // TODO: probe functions
+
+#endif
 
    return detected_features;
    }
@@ -351,6 +354,8 @@ bool CPUID::has_simd_32()
    return CPUID::has_sse2();
 #elif defined(BOTAN_TARGET_SUPPORTS_ALTIVEC)
    return CPUID::has_altivec();
+#elif defined(BOTAN_TARGET_SUPPORTS_NEON)
+   return CPUID::has_neon();
 #else
    return true;
 #endif

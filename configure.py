@@ -1356,6 +1356,10 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
             # default scalar
             return []
 
+        if os.path.basename(src) == 'test_simd.cpp':
+            isas = list(simd_dependencies())
+            return get_isa_specific_flags(cc, isas)
+
         for mod in modules:
             if src in mod.sources():
                 isas = mod.need_isa
