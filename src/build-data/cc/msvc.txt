@@ -5,7 +5,7 @@ linker_name link
 
 output_to_option "/Fo"
 add_include_dir_option "/I"
-add_lib_dir_option -L
+add_lib_dir_option "/LIBPATH:"
 add_lib_option ""
 
 compile_flags "/nologo /c"
