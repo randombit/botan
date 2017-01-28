@@ -73,6 +73,8 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
                           const std::vector<uint8_t>& key_bits,
                           DL_Group::Format group_format);
 
+      DL_Scheme_PublicKey& operator=(const DL_Scheme_PublicKey& other) = default;
+
    protected:
       DL_Scheme_PublicKey() {}
 
@@ -113,6 +115,8 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       DL_Scheme_PrivateKey(const AlgorithmIdentifier& alg_id,
                            const secure_vector<uint8_t>& key_bits,
                            DL_Group::Format group_format);
+
+      DL_Scheme_PrivateKey& operator=(const DL_Scheme_PrivateKey& other) = default;
 
    protected:
       DL_Scheme_PrivateKey() {}

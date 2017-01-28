@@ -45,6 +45,8 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       EC_PublicKey(const AlgorithmIdentifier& alg_id,
                    const std::vector<uint8_t>& key_bits);
 
+      EC_PublicKey& operator=(const EC_PublicKey& other) = default;
+
       /**
       * Get the public point of this key.
       * @throw Invalid_State is thrown if the
@@ -132,6 +134,8 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
       EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                     const secure_vector<uint8_t>& key_bits,
                     bool with_modular_inverse=false);
+
+      EC_PrivateKey& operator=(const EC_PrivateKey& other) = default;
 
       secure_vector<uint8_t> private_key_bits() const override;
 
