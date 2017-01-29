@@ -407,13 +407,13 @@ Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader,
       {
       uint8_t format = reader.get_byte();
 
-      if(format == UNCOMPRESSED)
+      if(static_cast<ECPointFormat>(format) == UNCOMPRESSED)
          {
          m_prefers_compressed = false;
          reader.discard_next(len-i-1);
          return;
          }
-      else if(format == ANSIX962_COMPRESSED_PRIME)
+      else if(static_cast<ECPointFormat>(format) == ANSIX962_COMPRESSED_PRIME)
          {
          m_prefers_compressed = true;
          reader.discard_next(len-i-1);
