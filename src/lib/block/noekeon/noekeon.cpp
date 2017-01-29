@@ -152,19 +152,6 @@ void Noekeon::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
    if(CPUID::has_simd_32())
       {
-      /*
-      const size_t blocks4 = blocks / 4;
-      const size_t blocks_left = blocks % 4;
-
-      in += blocks4 * BLOCK_SIZE;
-      out += blocks4 * BLOCK_SIZE;
-      blocks = blocks % 4;
-
-      BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks4; ++i)
-         {
-         simd_encrypt_4(in + i*4*BLOCK_SIZE, out + i*4*BLOCK_SIZE);
-         }
-      */
       while(blocks >= 4)
          {
          simd_decrypt_4(in, out);
