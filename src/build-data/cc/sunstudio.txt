@@ -13,7 +13,7 @@ optimization_flags "-xO2"
 
 shared_flags "-KPIC"
 warning_flags "+w -erroff=truncwarn,wnoretvalue"
-lang_flags "+p -features=extensions -D__FUNCTION__=__func__"
+lang_flags "-std=c++11 +p -features=extensions -D__FUNCTION__=__func__"
 
 ar_command "CC -xar -o"
 
