@@ -77,9 +77,9 @@ class OS_Utils_Tests : public Test
          uint64_t proc_ts2 = Botan::OS::get_processor_timestamp();
 
          if(proc_ts1 == 0)
-            result.test_eq("Disabled processor timestamp stays at zero", proc_ts1, proc_ts2);
+            result.test_is_eq("Disabled processor timestamp stays at zero", proc_ts1, proc_ts2);
          else
-            result.test_ne("Processor timestamp does not duplicate", proc_ts1, proc_ts2);
+            result.confirm("Processor timestamp does not duplicate", proc_ts1 != proc_ts2);
 
          return result;
          }
