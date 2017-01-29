@@ -9,6 +9,7 @@ install_cmd_exec '/usr/ucb/install -m 755'
 posix_mlock
 gettimeofday
 threads
+readdir
 filesystem
 </target_features>
 
