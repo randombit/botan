@@ -32,6 +32,14 @@
 #endif
 
 /*
+* Define special macro when building under MSVC 2013 since there are
+* many compiler workarounds required for that version.
+*/
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+  #define BOTAN_BUILD_COMPILER_IS_MSVC_2013
+#endif
+
+/*
 * Define BOTAN_FUNC_ISA
 */
 #if defined(__GNUG__) || (BOTAN_CLANG_VERSION > 38)
@@ -100,7 +108,7 @@
 /*
 * Define BOTAN_NOEXCEPT (for MSVC 2013)
 */
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
   // noexcept is not supported in VS 2013
   #include <yvals.h>
   #define BOTAN_NOEXCEPT _NOEXCEPT
