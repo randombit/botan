@@ -585,15 +585,33 @@ class SIMD_4x32 final
          B2.m_vmx = vec_mergeh(T2, T3);
          B3.m_vmx = vec_mergel(T2, T3);
 #elif defined(BOTAN_SIMD_USE_NEON)
+
+#if defined(BOTAN_TARGET_ARCH_IS_ARM32)
+
+         const uint32x4x2_t T0 = vzipq_u32(B0.m_neon, B2.m_neon);
+         const uint32x4x2_t T1 = vzipq_u32(B1.m_neon, B3.m_neon);
+         const uint32x4x2_t O0 = vzipq_u32(T0.val[0], T1.val[0]);
+         const uint32x4x2_t O1 = vzipq_u32(T0.val[1], T3.val[1]);
+
+         B0.m_neon = O0.val[0];
+         B1.m_neon = O0.val[1];
+         B2.m_neon = O1.val[0];
+         B3.m_neon = O1.val[1];
+
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
          const uint32x4_t T0 = vzip1q_u32(B0.m_neon, B2.m_neon);
-         const uint32x4_t T1 = vzip1q_u32(B1.m_neon, B3.m_neon);
          const uint32x4_t T2 = vzip2q_u32(B0.m_neon, B2.m_neon);
+
+         const uint32x4_t T1 = vzip1q_u32(B1.m_neon, B3.m_neon);
          const uint32x4_t T3 = vzip2q_u32(B1.m_neon, B3.m_neon);
 
          B0.m_neon = vzip1q_u32(T0, T1);
          B1.m_neon = vzip2q_u32(T0, T1);
+
          B2.m_neon = vzip1q_u32(T2, T3);
          B3.m_neon = vzip2q_u32(T2, T3);
+#endif
+
 #else
          // scalar
          SIMD_4x32 T0(B0.m_scalar[0], B1.m_scalar[0], B2.m_scalar[0], B3.m_scalar[0]);
