@@ -591,7 +591,7 @@ class SIMD_4x32 final
          const uint32x4x2_t T0 = vzipq_u32(B0.m_neon, B2.m_neon);
          const uint32x4x2_t T1 = vzipq_u32(B1.m_neon, B3.m_neon);
          const uint32x4x2_t O0 = vzipq_u32(T0.val[0], T1.val[0]);
-         const uint32x4x2_t O1 = vzipq_u32(T0.val[1], T3.val[1]);
+         const uint32x4x2_t O1 = vzipq_u32(T0.val[1], T1.val[1]);
 
          B0.m_neon = O0.val[0];
          B1.m_neon = O0.val[1];
