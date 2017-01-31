@@ -345,10 +345,6 @@ void botan_sigill_handler(int)
 
 int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    {
-   /*
-   There doesn't seem to be any way for probe_result to not be initialized
-   by some code path below, but this initializer is left as error just in case.
-   */
    int probe_result = -3;
 
 #if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
@@ -391,8 +387,6 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    if(rc != 0)
       throw Exception("run_cpu_instruction_probe sigaction restore failed");
 
-   return probe_result;
-
 #elif defined(BOTAN_TARGET_OS_IS_WINDOWS) && defined(BOTAN_TARGET_COMPILER_IS_MSVC)
 
    // Windows SEH
@@ -400,7 +394,7 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
       {
       try
          {
-         return probe_fn();
+         probe_result = probe_fn();
          }
       catch(...)
          {
@@ -414,6 +408,8 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
       }
 
 #endif
+
+   return probe_result;
    }
 
 }
