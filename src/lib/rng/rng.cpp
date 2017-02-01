@@ -22,7 +22,7 @@ void RandomNumberGenerator::randomize_with_ts_input(uint8_t output[], size_t out
    */
    uint8_t additional_input[16] = { 0 };
    store_le(OS::get_system_timestamp_ns(), additional_input);
-   store_le(OS::get_processor_timestamp(), additional_input + 8);
+   store_le(OS::get_high_resolution_clock(), additional_input + 8);
 
    randomize_with_input(output, output_len, additional_input, sizeof(additional_input));
    }

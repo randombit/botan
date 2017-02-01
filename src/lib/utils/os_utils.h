@@ -32,23 +32,31 @@ namespace OS {
 uint32_t BOTAN_DLL get_process_id();
 
 /**
-* @return highest resolution clock available on the system.
+* @return CPU processor clock, if available
+*
+* On Windows, calls QueryPerformanceCounter.
+*
+* Under GCC or Clang on supported platforms the hardware cycle counter is queried.
+* Currently supported processors are x86, PPC, Alpha, SPARC, IA-64, S/390x, and HP-PA.
+* If no CPU cycle counter is available on this system, returns zero.
+*/
+uint64_t BOTAN_DLL get_processor_timestamp();
+
+/*
+* @return best resolution timestamp available
 *
 * The epoch and update rate of this clock is arbitrary and depending
 * on the hardware it may not tick at a constant rate.
 *
 * Uses hardware cycle counter, if available.
-* On Windows, always calls QueryPerformanceCounter.
-* Under GCC or Clang on supported platforms the hardware cycle counter is queried:
-*  x86, PPC, Alpha, SPARC, IA-64, S/390x, and HP-PA
-* On other platforms clock_gettime is used with some monotonic timer, if available.
+* On POSIX platforms clock_gettime is used with a monotonic timer
 * As a final fallback std::chrono::high_resolution_clock is used.
 */
-uint64_t BOTAN_DLL get_processor_timestamp();
+uint64_t BOTAN_DLL get_high_resolution_clock();
 
 /**
-* @return system clock with best resolution available, normalized to
-* nanoseconds resolution.
+* @return system clock (reflecting wall clock) with best resolution
+* available, normalized to nanoseconds resolution.
 */
 uint64_t BOTAN_DLL get_system_timestamp_ns();
 
@@ -85,6 +93,10 @@ void free_locked_pages(void* ptr, size_t length);
 * CPUs, but also buggy on some subset of these - the probe function
 * can test to make sure the instruction works properly before
 * indicating that the instruction is available.
+*
+* @warning on Unix systems uses signal handling in a way that is not
+* thread safe. It should only be called in a single-threaded context
+* (ie, at static init time).
 *
 * Return codes:
 * -1 illegal instruction detected
