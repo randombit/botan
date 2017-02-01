@@ -799,6 +799,13 @@ std::vector<Botan::CPUID::CPUID_bits> map_cpuid_string(const std::string& tok)
       return {Botan::CPUID::CPUID_ALTIVEC_BIT};
 #endif
 
+#if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+   if(tok == "neon" || tok == "simd")
+      return {Botan::CPUID::CPUID_ARM_NEON_BIT};
+#endif
+
+   BOTAN_UNUSED(tok);
+
    return {};
    }
 

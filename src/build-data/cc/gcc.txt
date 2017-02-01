@@ -67,6 +67,11 @@ rdrand  -> "-mrdrnd"
 rdseed	-> "-mrdseed"
 sha     -> "-msha"
 altivec -> "-maltivec"
+
+# For Aarch32 -mfpu=neon is required
+# For Aarch64 NEON is enabled by default
+arm32:neon    -> "-mfpu=neon"
+arm64:neon    -> ""
 </isa_flags>
 
 <mach_opt>

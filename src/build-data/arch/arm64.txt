@@ -10,3 +10,7 @@ aarch64
 <submodels>
 armv8-a
 </submodels>
+
+<isa_extensions>
+neon
+</isa_extensions>
