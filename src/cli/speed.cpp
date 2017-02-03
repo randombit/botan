@@ -51,6 +51,7 @@
   #include <botan/pkcs8.h>
   #include <botan/pubkey.h>
   #include <botan/x509_key.h>
+  #include <botan/workfactor.h>
 #endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
@@ -473,6 +474,13 @@ class Speed final : public Command
                }
 #endif
 
+#if defined(BOTAN_HAS_DL_GROUP)
+            else if(algo == "modexp")
+               {
+               bench_modexp(msec);
+               }
+#endif
+
 #if defined(BOTAN_HAS_NUMBERTHEORY)
             else if(algo == "random_prime")
                {
@@ -879,8 +887,37 @@ class Speed final : public Command
          }
 #endif
 
-#if defined(BOTAN_HAS_NUMBERTHEORY)
+#if defined(BOTAN_HAS_DL_GROUP)
 
+      void bench_modexp(const std::chrono::milliseconds runtime)
+         {
+         for(size_t group_bits : { 1024, 1536, 2048, 3072, 4096 })
+            {
+            const std::string group_bits_str = std::to_string(group_bits);
+            const Botan::DL_Group group("modp/srp/" + group_bits_str);
+
+            const size_t e_bits = Botan::dl_exponent_size(group_bits);
+            const size_t f_bits = group_bits - 1;
+
+            const Botan::BigInt random_e(rng(), e_bits);
+            const Botan::BigInt random_f(rng(), f_bits);
+
+            Timer e_timer(group_bits_str + " short exponent", "", "modexp");
+            Timer f_timer(group_bits_str + "  full exponent", "", "modexp");
+
+            while(f_timer.under(runtime))
+               {
+               e_timer.run([&] { Botan::power_mod(group.get_g(), random_e, group.get_p()); });
+               f_timer.run([&] { Botan::power_mod(group.get_g(), random_f, group.get_p()); });
+               }
+
+            output() << Timer::result_string_ops(e_timer);
+            output() << Timer::result_string_ops(f_timer);
+            }
+         }
+#endif
+
+#if defined(BOTAN_HAS_NUMBERTHEORY)
       void bench_inverse_mod(const std::chrono::milliseconds runtime)
          {
          Botan::BigInt p;
