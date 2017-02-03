@@ -171,6 +171,11 @@ void ChaCha::key_schedule(const uint8_t key[], size_t length)
    set_iv(ZERO, sizeof(ZERO));
    }
 
+bool ChaCha::valid_iv_length(size_t iv_len) const
+   {
+   return (iv_len == 0 || iv_len == 8 || iv_len == 12);
+   }
+
 void ChaCha::set_iv(const uint8_t iv[], size_t length)
    {
    if(!valid_iv_length(length))
@@ -179,7 +184,13 @@ void ChaCha::set_iv(const uint8_t iv[], size_t length)
    m_state[12] = 0;
    m_state[13] = 0;
 
-   if(length == 8)
+   if(length == 0)
+      {
+      // Treat zero length IV same as an all-zero IV
+      m_state[14] = 0;
+      m_state[15] = 0;
+      }
+   else if(length == 8)
       {
       m_state[14] = load_le<uint32_t>(iv, 0);
       m_state[15] = load_le<uint32_t>(iv, 1);

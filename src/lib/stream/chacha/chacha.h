@@ -33,8 +33,11 @@ class BOTAN_DLL ChaCha final : public StreamCipher
 
       void set_iv(const uint8_t iv[], size_t iv_len) override;
 
-      bool valid_iv_length(size_t iv_len) const override
-         { return (iv_len == 8 || iv_len == 12); }
+      /*
+      * ChaCha accepts 0, 8, or 12 byte IVs. The default IV is a 8 zero bytes.
+      * An IV of length 0 is treated the same as the default zero IV.
+      */
+      bool valid_iv_length(size_t iv_len) const override;
 
       Key_Length_Specification key_spec() const override
          {
