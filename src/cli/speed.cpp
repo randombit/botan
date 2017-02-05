@@ -20,8 +20,14 @@
 #include <botan/mac.h>
 #include <botan/cipher_mode.h>
 #include <botan/entropy_src.h>
-
+#include <botan/cpuid.h>
 #include <botan/internal/os_utils.h>
+
+//#define INCLUDE_SIMD_PERF
+
+#if defined(BOTAN_HAS_SIMD_32) && defined(INCLUDE_SIMD_PERF)
+  #include <botan/internal/simd_32.h>
+#endif
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
   #include <botan/auto_rng.h>
@@ -103,10 +109,6 @@
   #include <botan/chacha.h>
 #endif
 
-#if defined(BOTAN_HAS_SIMD_32)
-  #include <botan/internal/simd_32.h>
-#endif
-
 namespace Botan_CLI {
 
 namespace {
@@ -114,29 +116,43 @@ namespace {
 class Timer
    {
    public:
-      Timer(const std::string& name, uint64_t event_mult = 1) :
-         m_name(name), m_event_mult(event_mult) {}
+      Timer(const std::string& name,
+            uint64_t event_mult = 1,
+            const std::string& doing = "",
+            const std::string& provider = "") :
+         m_name(name + (provider.empty() ? provider : " [" + provider + "]")),
+         m_doing(doing),
+         m_event_mult(event_mult)
+         {}
 
-      Timer(const std::string& what,
+      Timer(const std::string& name,
             const std::string& provider,
             const std::string& doing,
             uint64_t event_mult = 1) :
-         m_name(what + (provider.empty() ? provider : " [" + provider + "]")),
-         m_doing(doing),
-         m_event_mult(event_mult) {}
+         Timer(name, event_mult, doing, provider) {}
+
+      static uint64_t get_system_timestamp_ns()
+         {
+         return Botan::OS::get_system_timestamp_ns();
+         }
+
+      static uint64_t get_cpu_cycle_counter()
+         {
+         return Botan::OS::get_processor_timestamp();
+         }
 
       void start()
          {
          stop();
-         m_timer_start = Botan::OS::get_system_timestamp_ns();
-         m_cpu_cycles_start = Botan::OS::get_processor_timestamp();
+         m_timer_start = Timer::get_system_timestamp_ns();
+         m_cpu_cycles_start = Timer::get_cpu_cycle_counter();
          }
 
       void stop()
          {
          if(m_timer_start)
             {
-            const uint64_t now = Botan::OS::get_system_timestamp_ns();
+            const uint64_t now = Timer::get_system_timestamp_ns();
 
             if(now > m_timer_start)
                {
@@ -146,7 +162,7 @@ class Timer
 
                if(m_cpu_cycles_start != 0)
                   {
-                  uint64_t cycles_taken = Botan::OS::get_processor_timestamp() - m_cpu_cycles_start;
+                  uint64_t cycles_taken = Timer::get_cpu_cycle_counter() - m_cpu_cycles_start;
                   if(cycles_taken > 0)
                      {
                      m_cpu_cycles_used += cycles_taken;
@@ -357,8 +373,8 @@ std::vector<std::string> default_benchmark_list()
       "ECKCDSA",
       "ECGDSA",
       "Curve25519",
+      "NEWHOPE",
       "McEliece",
-      "NEWHOPE"
       };
    }
 
@@ -499,6 +515,10 @@ class Speed final : public Command
                }
 #endif
 #if defined(BOTAN_HAS_ECC_GROUP)
+            else if(algo == "ecc_mult")
+               {
+               bench_ecc_mult(msec);
+               }
             else if(algo == "os2ecp")
                {
                bench_os2ecp(msec);
@@ -523,10 +543,17 @@ class Speed final : public Command
                   }
 #endif
                }
-#if defined(BOTAN_HAS_SIMD_32)
+#if defined(BOTAN_HAS_SIMD_32) && defined(INCLUDE_SIMD_PERF)
             else if(algo == "simd")
                {
-               bench_simd32(msec);
+               if(Botan::CPUID::has_simd_32())
+                  {
+                  bench_simd32(msec);
+                  }
+               else
+                  {
+                  output() << "Skipping simd perf test, CPUID indicates SIMD not supported";
+                  }
                }
 #endif
             else if(algo == "entropy")
@@ -605,8 +632,11 @@ class Speed final : public Command
          const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
          cipher.set_key(key);
 
-         const Botan::InitializationVector iv(rng(), 12);
-         cipher.set_iv(iv.begin(), iv.size());
+         if(cipher.valid_iv_length(12))
+            {
+            const Botan::InitializationVector iv(rng(), 12);
+            cipher.set_iv(iv.begin(), iv.size());
+            }
 
          while(encrypt_timer.under(runtime))
             {
@@ -697,7 +727,7 @@ class Speed final : public Command
          output() << Timer::result_string_bps(timer);
          }
 
-#if defined(BOTAN_HAS_SIMD_32)
+#if defined(BOTAN_HAS_SIMD_32) && defined(INCLUDE_SIMD_PERF)
       void bench_simd32(const std::chrono::milliseconds msec)
          {
          const size_t SIMD_par = 32;
@@ -705,15 +735,15 @@ class Speed final : public Command
 
          Botan::SIMD_4x32 simd[SIMD_par];
 
-         Timer total_time("", "", "", 0);
+         Timer total_time("");
 
-         Timer load_le_op("SIMD_4x32", "", "load_le", SIMD_par);
-         Timer load_be_op("SIMD_4x32", "", "load_be", SIMD_par);
-         Timer add_op("SIMD_4x32", "", "add", SIMD_par);
-         Timer sub_op("SIMD_4x32", "", "sub", SIMD_par);
-         Timer xor_op("SIMD_4x32", "", "xor", SIMD_par);
-         Timer bswap_op("SIMD_4x32", "", "bswap", SIMD_par);
-         Timer transpose_op("SIMD_4x32", "", "transpose4", SIMD_par/4);
+         Timer load_le_op("SIMD_4x32", SIMD_par, "load_le");
+         Timer load_be_op("SIMD_4x32", SIMD_par, "load_be");
+         Timer add_op("SIMD_4x32", SIMD_par, "add");
+         Timer sub_op("SIMD_4x32", SIMD_par, "sub");
+         Timer xor_op("SIMD_4x32", SIMD_par, "xor");
+         Timer bswap_op("SIMD_4x32", SIMD_par, "bswap");
+         Timer transpose_op("SIMD_4x32", SIMD_par/4, "transpose4");
 
          std::chrono::milliseconds msec_part = msec / 5;
 
@@ -724,7 +754,7 @@ class Speed final : public Command
             {
             total_time.start();
 
-            load_le_op.run([&simd,rnd] {
+            load_le_op.run([&] {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
                   // Test that unaligned loads work ok
@@ -732,42 +762,42 @@ class Speed final : public Command
                   }
                });
 
-            load_be_op.run([&simd,rnd] {
+            load_be_op.run([&] {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
                   simd[i].load_be(rnd + i);
                   }
                });
 
-            add_op.run([&simd] {
+            add_op.run([&] {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
                   simd[i] += simd[(i+8) % SIMD_par];
                   }
                });
 
-            xor_op.run([&simd] {
+            xor_op.run([&] {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
                   simd[i] ^= simd[(i+8) % SIMD_par];
                   }
                });
 
-            transpose_op.run([&simd] {
+            transpose_op.run([&] {
                for(size_t i = 0; i != SIMD_par; i += 4)
                   {
                   Botan::SIMD_4x32::transpose(simd[i], simd[i+1], simd[i+2], simd[i+3]);
                   }
                });
 
-            sub_op.run([&simd] {
+            sub_op.run([&] {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
                   simd[i] -= simd[(i+8) % SIMD_par];
                   }
                });
 
-            bswap_op.run([&simd] {
+            bswap_op.run([&] {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
                   simd[i] = simd[i].bswap();
@@ -827,6 +857,40 @@ class Speed final : public Command
          }
 
 #if defined(BOTAN_HAS_ECC_GROUP)
+      void bench_ecc_mult(const std::chrono::milliseconds runtime)
+         {
+         const std::vector<std::string> groups = {
+            "secp256r1", "brainpool256r1",
+            "secp384r1", "brainpool384r1",
+            "secp521r1", "brainpool512r1"
+         };
+
+         for(std::string group_name : groups)
+            {
+            const Botan::EC_Group group(group_name);
+
+            Timer mult_timer(group_name + " scalar mult");
+            Timer blinded_mult_timer(group_name + " blinded scalar mult");
+
+            const Botan::BigInt scalar(rng(), group.get_curve().get_p().bits());
+            const Botan::PointGFp& base_point = group.get_base_point();
+            Botan::Blinded_Point_Multiply scalar_mult(base_point, group.get_order(), 4);
+
+            while(blinded_mult_timer.under(runtime))
+               {
+               const Botan::PointGFp r1 = mult_timer.run([&]() { return base_point * scalar; });
+
+               const Botan::PointGFp r2 = blinded_mult_timer.run(
+                  [&]() { return scalar_mult.blinded_multiply(scalar, rng()); });
+
+               BOTAN_ASSERT_EQUAL(r1, r2, "Same point computed by both methods");
+               }
+
+            output() << Timer::result_string_ops(mult_timer);
+            output() << Timer::result_string_ops(blinded_mult_timer);
+            }
+         }
+
       void bench_os2ecp(const std::chrono::milliseconds runtime)
          {
          Timer uncmp_timer("OS2ECP uncompressed");
@@ -1335,6 +1399,11 @@ class Speed final : public Command
             {
             size_t n = params.first;
             size_t t = params.second;
+
+            if((msec < std::chrono::milliseconds(5000)) && (n >= 3000))
+               {
+               continue;
+               }
 
             const std::string nm = "McEliece-" + std::to_string(n) + "," + std::to_string(t) +
                " (WF=" + std::to_string(Botan::mceliece_work_factor(n, t)) + ")";
