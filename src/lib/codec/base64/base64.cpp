@@ -78,7 +78,7 @@ size_t base64_encode(char out[],
 std::string base64_encode(const uint8_t input[],
                           size_t input_length)
    {
-   const size_t output_length = (round_up(input_length, 3) / 3) * 4;
+   const size_t output_length = base64_encode_max_output(input_length);
    std::string output(output_length, 0);
 
    size_t consumed = 0;
@@ -230,7 +230,7 @@ secure_vector<uint8_t> base64_decode(const char input[],
                                  size_t input_length,
                                  bool ignore_ws)
    {
-   const size_t output_length = (round_up(input_length, 4) * 3) / 4;
+   const size_t output_length = base64_decode_max_output(input_length);
    secure_vector<uint8_t> bin(output_length);
 
    size_t written = base64_decode(bin.data(),
@@ -248,5 +248,14 @@ secure_vector<uint8_t> base64_decode(const std::string& input,
    return base64_decode(input.data(), input.size(), ignore_ws);
    }
 
+size_t base64_encode_max_output(size_t input_length)
+   {
+   return (round_up(input_length, 3) / 3) * 4;
+   }
+
+size_t base64_decode_max_output(size_t input_length)
+   {
+   return (round_up(input_length, 4) * 3) / 4;
+   }
 
 }
