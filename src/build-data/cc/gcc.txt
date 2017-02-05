@@ -21,6 +21,7 @@ size_optimization_flags "-Os"
 
 shared_flags "-fPIC"
 coverage_flags "--coverage"
+stack_protector_flags "-fstack-protector"
 
 # GCC 4.8
 sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address"
@@ -123,7 +124,7 @@ all_x86_64 -> "-momit-leaf-frame-pointer"
 
 # Flags set here are included at compile and link time
 <mach_abi_linking>
-all     -> "-pthread -fstack-protector"
+all     -> "-pthread"
 
 cilkplus -> "-fcilkplus"
 openmp   -> "-fopenmp"

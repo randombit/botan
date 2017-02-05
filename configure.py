@@ -278,6 +278,9 @@ def process_command_line(args):
     build_group.add_option('--with-sanitizers', action='store_true', default=False, dest='with_sanitizers',
                            help='enable ASan/UBSan checks')
 
+    build_group.add_option('--without-stack-protector', action='store_false', default=True, dest='with_stack_protector',
+                           help='disable stack smashing protections')
+
     build_group.add_option('--with-coverage', action='store_true', default=False, dest='with_coverage',
                            help='add coverage info and disable opts')
 
@@ -908,6 +911,7 @@ class CompilerInfo(object):
                        'size_optimization_flags': '',
                        'coverage_flags': '',
                        'sanitizer_flags': '',
+                       'stack_protector_flags': '',
                        'shared_flags': '',
                        'lang_flags': '',
                        'warning_flags': '',
@@ -983,6 +987,9 @@ class CompilerInfo(object):
             if flag != None and flag != '' and flag not in abi_link:
                 abi_link.append(flag)
 
+        if options.with_stack_protector and self.stack_protector_flags != '':
+            abi_link.append(self.stack_protector_flags)
+
         if options.with_coverage_info:
             if self.coverage_flags == '':
                 raise ConfigureError('No coverage handling for %s' % (self.basename))
@@ -1008,9 +1015,7 @@ class CompilerInfo(object):
         if options.cc_abi_flags != '':
             abi_flags += ' ' + options.cc_abi_flags
 
-        if abi_flags != '':
-            return ' ' + abi_flags
-        return ''
+        return abi_flags
 
     def cc_warning_flags(self, options):
         def gen_flags():

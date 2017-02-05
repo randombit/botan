@@ -7,6 +7,6 @@ Name: Botan
 Description: Crypto and TLS for C++11
 Version: %{version}
 
-Libs: -L${libdir} -lbotan-%{version_major}
+Libs: -L${libdir} -lbotan-%{version_major} %{cxx_abi_flags}
 Libs.private: %{link_to}
 Cflags: -I${includedir}
