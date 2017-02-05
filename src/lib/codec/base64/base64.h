@@ -15,7 +15,7 @@ namespace Botan {
 
 /**
 * Perform base64 encoding
-* @param output an array of at least input_length*4/3 bytes
+* @param output an array of at least base64_encode_max_output bytes
 * @param input is some binary data
 * @param input_length length of input in bytes
 * @param input_consumed is an output parameter which says how many
@@ -54,7 +54,7 @@ std::string base64_encode(const std::vector<uint8_t, Alloc>& input)
 
 /**
 * Perform base64 decoding
-* @param output an array of at least input_length*3/4 bytes
+* @param output an array of at least base64_decode_max_output bytes
 * @param input some base64 input
 * @param input_length length of input in bytes
 * @param input_consumed is an output parameter which says how many
@@ -76,7 +76,7 @@ size_t BOTAN_DLL base64_decode(uint8_t output[],
 
 /**
 * Perform base64 decoding
-* @param output an array of at least input_length*3/4 bytes
+* @param output an array of at least base64_decode_max_output bytes
 * @param input some base64 input
 * @param input_length length of input in bytes
 * @param ignore_ws ignore whitespace on input; if false, throw an
@@ -90,7 +90,7 @@ size_t BOTAN_DLL base64_decode(uint8_t output[],
 
 /**
 * Perform base64 decoding
-* @param output an array of at least input_length/3*4 bytes
+* @param output an array of at least base64_decode_max_output bytes
 * @param input some base64 input
 * @param ignore_ws ignore whitespace on input; if false, throw an
                    exception if whitespace is encountered
@@ -121,6 +121,20 @@ secure_vector<uint8_t> BOTAN_DLL base64_decode(const char input[],
 */
 secure_vector<uint8_t> BOTAN_DLL base64_decode(const std::string& input,
                                            bool ignore_ws = true);
+
+/**
+* Calculate the size of output buffer for base64_encode
+* @param input_length the length of input in bytes
+* @return the size of output buffer in bytes
+*/
+size_t BOTAN_DLL base64_encode_max_output(size_t input_length);
+
+/**
+* Calculate the size of output buffer for base64_decode
+* @param input_length the length of input in bytes
+* @return the size of output buffer in bytes
+*/
+size_t BOTAN_DLL base64_decode_max_output(size_t input_length);
 
 }
 
