@@ -1,6 +1,7 @@
 /*
 * (C) 2014,2015 Jack Lloyd
 *     2016 Matthias Gierlings
+*     2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -27,6 +28,10 @@
 #include <botan/x509_ca.h>
 #include <botan/x509self.h>
 
+#if defined(BOTAN_HAS_DSA)
+  #include <botan/dsa.h>
+#endif
+
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
   #include <botan/tls_session_manager_sqlite.h>
 #endif
@@ -48,19 +53,36 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
                                const Botan::X509_Certificate& ecdsa_cert,
                                Botan::Private_Key* ecdsa_key,
                                const Botan::X509_Certificate& ecdsa_ca,
-                               const Botan::X509_CRL& ecdsa_crl) :
+                               const Botan::X509_CRL& ecdsa_crl,
+                               const Botan::X509_Certificate* dsa_cert,
+                               Botan::Private_Key* dsa_key,
+                               const Botan::X509_Certificate* dsa_ca,
+                               const Botan::X509_CRL* dsa_crl) :
          m_rsa_cert(rsa_cert),
          m_rsa_ca(rsa_ca),
          m_rsa_key(rsa_key),
          m_ecdsa_cert(ecdsa_cert),
          m_ecdsa_ca(ecdsa_ca),
-         m_ecdsa_key(ecdsa_key)
+         m_ecdsa_key(ecdsa_key),
+         m_dsa_cert(dsa_cert),
+         m_dsa_ca(dsa_ca),
+         m_dsa_key(dsa_key)
          {
          std::unique_ptr<Botan::Certificate_Store_In_Memory> store(new Botan::Certificate_Store_In_Memory);
          store->add_certificate(m_rsa_ca);
          store->add_certificate(m_ecdsa_ca);
-         store->add_crl(ecdsa_crl);
          store->add_crl(rsa_crl);
+         store->add_crl(ecdsa_crl);
+
+         if(m_dsa_ca != nullptr)
+            {
+            store->add_certificate(*m_dsa_ca);
+            }
+         if(dsa_crl != nullptr)
+            {
+            store->add_crl(*dsa_crl);
+            }
+
          m_stores.push_back(std::move(store));
          m_provides_client_certs = false;
          }
@@ -78,7 +100,7 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
       std::vector<Botan::X509_Certificate> cert_chain(
          const std::vector<std::string>& cert_key_types,
          const std::string& type,
-         const std::string&) override
+         const std::string& context) override
          {
          std::vector<Botan::X509_Certificate> chain;
 
@@ -98,6 +120,16 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
                   chain.push_back(m_ecdsa_ca);
                   break;
                   }
+               else if(key_type == "DSA")
+                  {
+                  if(m_dsa_cert == nullptr || m_dsa_ca == nullptr)
+                     {
+                     throw Test_Error("No DSA certificates set for " + type + "/" + context);
+                     }
+                  chain.push_back(*m_dsa_cert);
+                  chain.push_back(*m_dsa_ca);
+                  break;
+                  }
                }
             }
 
@@ -112,6 +144,8 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
             return m_rsa_key.get();
          if(crt == m_ecdsa_cert)
             return m_ecdsa_key.get();
+         if(crt == *m_dsa_cert)
+            return m_dsa_key.get();
          return nullptr;
          }
 
@@ -137,6 +171,9 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
 
       Botan::X509_Certificate m_ecdsa_cert, m_ecdsa_ca;
       std::unique_ptr<Botan::Private_Key> m_ecdsa_key;
+
+      std::unique_ptr<const Botan::X509_Certificate> m_dsa_cert, m_dsa_ca;
+      std::unique_ptr<Botan::Private_Key> m_dsa_key;
       std::vector<std::unique_ptr<Botan::Certificate_Store>> m_stores;
       bool m_provides_client_certs;
    };
@@ -145,6 +182,7 @@ Botan::Credentials_Manager*
 create_creds(Botan::RandomNumberGenerator& rng,
              bool with_client_certs = false)
    {
+   // rsa and ecdsa are required for the tls module
    const Botan::EC_Group ecdsa_params("secp256r1");
    const size_t rsa_params = 1024;
 
@@ -188,9 +226,39 @@ create_creds(Botan::RandomNumberGenerator& rng,
    Botan::X509_CRL rsa_crl = rsa_ca.new_crl(rng);
    Botan::X509_CRL ecdsa_crl = ecdsa_ca.new_crl(rng);
 
+   // dsa support is optional
+   std::unique_ptr<Botan::Private_Key> dsa_ca_key;
+   std::unique_ptr<Botan::Private_Key> dsa_srv_key;
+   std::unique_ptr<Botan::X509_CRL> dsa_crl;
+   std::unique_ptr<Botan::X509_Certificate> dsa_srv_cert;
+   std::unique_ptr<Botan::X509_Certificate> dsa_ca_cert;
+
+#if defined(BOTAN_HAS_DSA)
+   const Botan::DL_Group dsa_params("modp/ietf/2048");
+
+   dsa_ca_key.reset(new Botan::DSA_PrivateKey(rng, dsa_params));
+   dsa_srv_key.reset(new Botan::DSA_PrivateKey(rng, dsa_params));
+
+   Botan::X509_Cert_Options dsa_ca_opts("DSA Test CA/VT");
+   dsa_ca_opts.CA_key(1);
+
+   dsa_ca_cert.reset(new Botan::X509_Certificate(
+         Botan::X509::create_self_signed_cert(dsa_ca_opts, *dsa_ca_key, "SHA-256", rng)));
+
+   const Botan::PKCS10_Request dsa_req =
+         Botan::X509::create_cert_req(server_opts, *dsa_srv_key, "SHA-256", rng);
+
+   Botan::X509_CA dsa_ca(*dsa_ca_cert, *dsa_ca_key, "SHA-256", rng);
+   dsa_srv_cert.reset(new Botan::X509_Certificate(
+         dsa_ca.sign_request(dsa_req, rng, start_time, end_time)));
+
+   dsa_crl.reset(new Botan::X509_CRL(dsa_ca.new_crl(rng)));
+#endif
+
    Credentials_Manager_Test* cmt = new Credentials_Manager_Test(
       rsa_srv_cert, rsa_srv_key.release(), rsa_ca_cert, rsa_crl,
-      ecdsa_srv_cert, ecdsa_srv_key.release(), ecdsa_ca_cert, ecdsa_crl);
+      ecdsa_srv_cert, ecdsa_srv_key.release(), ecdsa_ca_cert, ecdsa_crl,
+      dsa_srv_cert.release(), dsa_srv_key.release(), dsa_ca_cert.release(), dsa_crl.release());
 
    cmt->m_provides_client_certs = with_client_certs;
    return cmt;
@@ -1116,6 +1184,14 @@ class TLS_Unit_Tests : public Test
          client_ses->remove_all();
 
          test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256");
+
+#if defined(BOTAN_HAS_DSA)
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256 SHA-384",
+               { { "signature_methods", "DSA" } });
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-256", "SHA-256 SHA-384",
+               { { "signature_methods", "DSA" } });
+#endif
+
 #endif
 
          Botan::TLS::Strict_Policy strict_policy;
@@ -1134,6 +1210,13 @@ class TLS_Unit_Tests : public Test
 
          test_modern_versions(results, *client_ses, *server_ses, *creds, "ECDH", "AES-128/GCM", "AEAD",
                               { { "signature_methods", "RSA" } });
+
+#if defined(BOTAN_HAS_DSA)
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-128/GCM", "AEAD",
+               { { "signature_methods", "DSA" } });
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-256/GCM", "AEAD",
+               { { "signature_methods", "DSA" } });
+#endif
 
          client_ses->remove_all();
 
