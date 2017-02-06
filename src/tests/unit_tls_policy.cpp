@@ -31,6 +31,10 @@
   #include <botan/dh.h>
 #endif
 
+#if defined(BOTAN_HAS_DSA)
+  #include <botan/dsa.h>
+#endif
+
 namespace Botan_Tests {
 
 namespace {
@@ -47,6 +51,7 @@ class TLS_Policy_Unit_Tests : public Test
          results.push_back(test_peer_key_acceptable_ecdh());
          results.push_back(test_peer_key_acceptable_ecdsa());
          results.push_back(test_peer_key_acceptable_dh());
+         results.push_back(test_peer_key_acceptable_dsa());
 
          return results;
          }
@@ -150,6 +155,33 @@ class TLS_Policy_Unit_Tests : public Test
 #endif
          return result;
          }
+
+      Test::Result test_peer_key_acceptable_dsa()
+         {
+         Test::Result result("TLS Policy DSA key verification");
+#if defined(BOTAN_HAS_DSA)
+         const Botan::DL_Group grp_1024("modp/ietf/1024");
+         std::unique_ptr<Botan::Private_Key> dsa_1024(new Botan::DSA_PrivateKey(Test::rng(), grp_1024));
+
+         Botan::TLS::Policy policy;
+         try
+            {
+            policy.check_peer_key_acceptable(*dsa_1024);
+            result.test_failure("Incorrectly accepting short bit DSA keys");
+            }
+         catch(Botan::TLS::TLS_Exception&)
+            {
+            result.test_success("Correctly rejecting short bit DSA keys");
+            }
+
+         const Botan::DL_Group grp_2048("modp/ietf/2048");
+         std::unique_ptr<Botan::Private_Key> dsa_2048(new Botan::DSA_PrivateKey(Test::rng(), grp_2048));
+         policy.check_peer_key_acceptable(*dsa_2048);
+         result.test_success("Correctly accepting 2048 bit DSA keys");
+#endif
+         return result;
+         }
+
 
    };
 
