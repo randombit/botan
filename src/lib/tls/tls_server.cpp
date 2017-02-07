@@ -353,7 +353,13 @@ void Server::initiate_handshake(Handshake_State& state,
 void Server::process_client_hello_msg(const Handshake_State* active_state,
                                       Server_Handshake_State& pending_state,
                                       const std::vector<uint8_t>& contents)
-{
+   {
+   if(policy().allow_client_initiated_renegotiation() == false)
+      {
+      send_warning_alert(Alert::NO_RENEGOTIATION);
+      return;
+      }
+
    const bool initial_handshake = !active_state;
 
    if(!policy().allow_insecure_renegotiation() &&
