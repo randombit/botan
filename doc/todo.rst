@@ -29,6 +29,8 @@ Ciphers, Hashes, PBKDF
 Public Key Crypto, Math
 ----------------------------------------
 
+* Curves for pairings (BN-256 is widely implemented)
+* Identity based encryption
 * SPHINCS-256
 * Ed25519 / EdDSA (GH #283)
 * Ed448-Goldilocks
@@ -61,6 +63,7 @@ TLS
 
 * Make DTLS support optional at build time
 * Make TLS v1.0 and v1.1 optional at build time
+* Make RSA optional at build time
 * Make finite field DH optional at build time
 * TLS OCSP stapling (RFC 6066)
 * Authentication using TOFU (sqlite3 storage)
@@ -83,6 +86,7 @@ PKIX
 * X.509 policy constraints
 * OCSP responder logic
 * X.509 attribute certificates (RFC 5755)
+* Support generating/verifying XMSS certificates
 * Roughtime client
 
 New Protocols / Formats
@@ -144,19 +148,17 @@ FIPS 140 Build
 CLI
 ----------------------------------------
 
-* Rewrite `tls_client` and `tls_server` to use asio. See `tls_proxy`
-  for an example
+* Change `tls_server` to be a tty<->socket app, like `tls_client` is,
+  instead of a bogus echo server.
 * `encrypt` / `decrypt` tools providing password and/or public key
   based file encryption
 * Make help output more helpful
-* More microbenchmarks in `speed`: modular exponentiation, ECC point
-  multiplication, other BigInt operations
-* Compute cycles/byte estimates for benchmark output
 
 Documentation
 ----------------------------------------
 
-* TPM (no docs)
 * X.509 certs, path validation
 * Specific docs covering one major topic (RSA, ECDSA, AES/GCM, ...)
 * Some howto style docs (setting up CA, ...)
+* List each cipher, hash, etc, describe its usage, and give the
+  header file and BOTAN_HAS_X macro associated with it.
