@@ -1190,9 +1190,9 @@ class TLS_Unit_Tests : public Test
          test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256");
 
 #if defined(BOTAN_HAS_DSA)
-         test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256 SHA-384",
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-128", "SHA-256",
                { { "signature_methods", "DSA" } });
-         test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-256", "SHA-384",
+         test_modern_versions(results, *client_ses, *server_ses, *creds, "DH", "AES-256", "SHA-256",
                { { "signature_methods", "DSA" } });
 #endif
 
