@@ -46,7 +46,8 @@ class BOTAN_DLL CPUID
       * Deprecated equivalent to
       * o << "CPUID flags: " << CPUID::to_string() << "\n";
       */
-      static void BOTAN_DEPRECATED("Use CPUID::to_string") print(std::ostream& o);
+      BOTAN_DEPRECATED("Use CPUID::to_string")
+      static void print(std::ostream& o);
 
       /**
       * Return a possibly empty string containing list of known CPU
