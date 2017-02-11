@@ -122,6 +122,7 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
                   chain.push_back(m_ecdsa_ca);
                   break;
                   }
+#if defined(BOTAN_HAS_DSA)
                else if(key_type == "DSA")
                   {
                   if(m_dsa_cert == nullptr || m_dsa_ca == nullptr)
@@ -132,6 +133,7 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
                   chain.push_back(*m_dsa_ca);
                   break;
                   }
+#endif
                }
             }
 
