@@ -366,6 +366,3 @@ InvalidKeyY = 0x1cf24be44e919e1576ecf51abdea113f8bb7121d670b86d8ee93ce1e6f79b17a
 # InvalidKeyX or InvalidKeyY out of range
 InvalidKeyX = 0x3d68ed9ce2bcb68f12ac37385ccdb6ee445f7b0a8f257593735abdf8bc0b98bc5ab5c5750e2e111fec2ecde6be321522ddc90d2b54634d30d28f43024f76e4653a7
 InvalidKeyY = 0x03f6f5f224d6aee43d781e3ad723062a61729a6ed959cd18c75d4982961ba8033767ed1168674a545b0a693d3587fbeaebc9b116143dbe1155ead48de89d980d617
-
-
-# TODO Google Wycheproof has some tests, too

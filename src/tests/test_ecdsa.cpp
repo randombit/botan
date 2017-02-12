@@ -89,17 +89,17 @@ class ECDSA_Invalid_Key_Tests : public Text_Based_Test
          std::unique_ptr<Botan::PointGFp> public_point;
 
          try
-         {
-         public_point.reset(new Botan::PointGFp(group.get_curve(), x, y));
-         }
+            {
+            public_point.reset(new Botan::PointGFp(group.get_curve(), x, y));
+            }
          catch(Botan::Invalid_Argument&)
-			{
-         // PointGFp() performs a range check on x, y in [0, p−1],
-         // which is also part of the EC public key checks, e.g.,
-         // in NIST SP800-56A rev2, sec. 5.6.2.3.2
-         result.test_success("public key fails check");
-         return result;
-			}
+            {
+            // PointGFp() performs a range check on x, y in [0, p−1],
+            // which is also part of the EC public key checks, e.g.,
+            // in NIST SP800-56A rev2, sec. 5.6.2.3.2
+            result.test_success("public key fails check");
+            return result;
+            }
 
          std::unique_ptr<Botan::Public_Key> key(new Botan::ECDSA_PublicKey(group, *public_point));
          result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
