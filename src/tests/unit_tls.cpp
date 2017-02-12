@@ -9,8 +9,6 @@
 // Deprecated TLS APIs are tested below
 #define BOTAN_NO_DEPRECATED_WARNINGS
 
-#include <iostream>
-
 #include "tests.h"
 #include <vector>
 #include <memory>
@@ -308,8 +306,6 @@ Test::Result test_tls_handshake(Botan::TLS::Protocol_Version offer_version,
             Botan::hex_encode(session.session_id());
 
          result.test_note(session_report);
-
-         std::cout << session_report << std::endl;
 
          if(session.version() != offer_version)
             {
