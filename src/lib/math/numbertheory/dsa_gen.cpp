@@ -81,7 +81,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    q.set_bit(qbits-1);
    q.set_bit(0);
 
-   if(!is_prime(q, rng))
+   if(!is_prime(q, rng, 126))
       return false;
 
    const size_t n = (pbits-1) / (HASH_SIZE * 8),
@@ -107,7 +107,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 
          p = X - (X % (2*q) - 1);
 
-         if(p.bits() == pbits && is_prime(p, rng))
+         if(p.bits() == pbits && is_prime(p, rng, 126))
             return true;
          }
       }
