@@ -47,7 +47,7 @@ class Test_Error : public Botan::Exception
    };
 
 /*
-* A generic test which retuns a set of results when run.
+* A generic test which returns a set of results when run.
 * The tests may not all have the same type (for example test
 * "block" returns results for "AES-128" and "AES-256").
 *

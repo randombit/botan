@@ -406,7 +406,7 @@ std::string Test::Result::result_string(bool verbose) const
       report << "Failure " << (i+1) << ": " << m_fail_log[i] << "\n";
       }
 
-   if(m_fail_log.size() > 0 || tests_run() == 0)
+   if(m_fail_log.size() > 0 || tests_run() == 0 || verbose)
       {
       for(size_t i = 0; i != m_log.size(); ++i)
          {
