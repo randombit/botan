@@ -1,5 +1,5 @@
 CC=g++
-BOTAN_DIR=../../../../../botan/
+BOTAN_DIR=../../../../
 LDIR=$(BOTAN_DIR)
 IDIR=$(BOTAN_DIR)build/include
 DBG_FLAGS=-g -O3
