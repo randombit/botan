@@ -122,7 +122,7 @@ class OCSP_Check final : public Command
 
          auto status = resp.status_for(issuer, subject, std::chrono::system_clock::now());
 
-         if(status == Botan::Certificate_Status_Code::VERIFIED)
+         if(status == Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD)
             {
             output() << "OCSP check OK\n";
             }
