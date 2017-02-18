@@ -144,16 +144,18 @@ class HMAC_DRBG_Unit_Tests : public Test
          Request_Counting_RNG counting_rng;
          Botan::HMAC_DRBG rng(std::move(mac), counting_rng, Botan::Entropy_Sources::global_sources(), 2);
          Botan::secure_vector<uint8_t> seed_input(
-               {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF});
+               {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF,
+                  0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF});
          Botan::secure_vector<uint8_t> output_after_initialization(
-               {0x26,0x06,0x95,0xF4,0xB8,0x96,0x0D,0x0B,0x27,0x4E,0xA2,0x9E,0x8D,0x2B,0x5A,0x35});
+               {0x48,0xD3,0xB4,0x5A,0xAB,0x65,0xEF,0x92,0xCC,0xFC,0xB9,0x42,0x7E,0xF2,0x0C,0x90,
+               0x29,0x70,0x65,0xEC,0xC1,0xB8,0xA5,0x25,0xBF,0xE4,0xDC,0x6F,0xF3,0x6D,0x0E,0x38});
          Botan::secure_vector<uint8_t> output_without_reseed(
                {0xC4,0x90,0x04,0x5B,0x35,0x4F,0x50,0x09,0x68,0x45,0xF0,0x4B,0x11,0x03,0x58,0xF0});
          result.test_eq("is_seeded",rng.is_seeded(),false);
 
          rng.initialize_with(seed_input.data(), seed_input.size());
 
-         Botan::secure_vector<uint8_t> out(16);
+         Botan::secure_vector<uint8_t> out(32);
 
          rng.randomize(out.data(), out.size());
          result.test_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(0));
@@ -337,8 +339,8 @@ class HMAC_DRBG_Unit_Tests : public Test
 
          // make sure the nonce has at least 1/2*security_strength bits
 
-         // SHA-256 -> 128 bits security strength
-         for( auto nonce_size : { 0, 4, 15, 16, 17, 32 } )
+         // SHA-256 -> 256 bits security strength
+         for( auto nonce_size : { 0, 4, 8, 16, 31, 32, 34 } )
             {
             if(!mac)
                {
@@ -350,15 +352,15 @@ class HMAC_DRBG_Unit_Tests : public Test
             std::vector<uint8_t> nonce(nonce_size);
             rng.initialize_with(nonce.data(), nonce.size());
 
-            if(nonce_size < 16)
+            if(nonce_size < 32)
                {
                result.test_eq("not seeded", rng.is_seeded(), false);
-               result.test_throws("invalid nonce size", [&rng, &nonce] () { rng.random_vec(16); });
+               result.test_throws("invalid nonce size", [&rng, &nonce] () { rng.random_vec(32); });
                }
             else
                {
                result.test_eq("is seeded", rng.is_seeded(), true);
-               rng.random_vec(16);
+               rng.random_vec(32);
                }
             }
 

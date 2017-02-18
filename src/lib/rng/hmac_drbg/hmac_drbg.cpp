@@ -158,12 +158,18 @@ void HMAC_DRBG::update(const uint8_t input[], size_t input_len)
 void HMAC_DRBG::add_entropy(const uint8_t input[], size_t input_len)
    {
    update(input, input_len);
+
+   if(8*input_len >= security_level())
+      {
+      m_reseed_counter = 1;
+      }
    }
 
 size_t HMAC_DRBG::security_level() const
    {
-   // sqrt of hash size
-   return m_mac->output_length() * 8 / 2;
+   // security strength of the hash function
+   // for pre-image resistance (see NIST SP800-57),
+   // but NIST SP800-90A only supports up to 256 bits
+   return std::min(m_mac->output_length(), size_t(32)) * 8;
    }
-
 }
