@@ -174,7 +174,8 @@ class BOTAN_DLL RandomNumberGenerator
 typedef RandomNumberGenerator RNG;
 
 /**
-* Hardware RNG has no members but exists to tag hardware RNG types
+* Hardware_RNG has no members but exists to tag hardware RNG types
+* (PKCS11_RNG, TPM_RNG, RDRAND_RNG)
 */
 class BOTAN_DLL Hardware_RNG : public RandomNumberGenerator
    {
