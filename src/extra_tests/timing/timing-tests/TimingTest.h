@@ -19,6 +19,8 @@
 #include <botan/internal/tls_cbc.h>
 #include <botan/tls_exceptn.h>
 #include <botan/cipher_mode.h>
+#include <botan/ecdsa.h>
+#include <botan/reducer.h>
 
 using namespace Botan;
 
@@ -96,6 +98,23 @@ class Lucky13Test : public TimingTest
    public:
       Lucky13Test(std::vector<std::string> &inputs, std::string result_file,
             const std::string& mac_name, size_t mac_keylen);
+   };
+   
+class ECDSATest : public TimingTest
+   {
+   private:
+      const ECDSA_PrivateKey m_privkey;
+      const BigInt m_order;
+      Blinded_Point_Multiply m_base_point;
+      const BigInt m_x;
+      const Modular_Reducer m_mod_order;
+
+   protected:
+      std::vector<byte> prepare_input(std::string input) override;
+      ticks measure_critical_function(std::vector<byte> input) override;
+
+   public:
+      ECDSATest(std::vector<std::string> &inputs, std::string result_folder, std::string ecgroup);
    };
 
 

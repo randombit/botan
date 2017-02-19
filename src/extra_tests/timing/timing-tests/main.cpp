@@ -130,6 +130,12 @@ int main(int argc, char* argv[])
          std::string result_folder_sha384 = "results/lucky13sha384";
          std::unique_ptr<Lucky13Test> test_sha384(new Lucky13Test(inputs, result_folder_sha384, "SHA-384", 48));
          test_sha384->execute_evaluation();
+         }
+      else if (executeEvaluationWithFile("ecdsa", file, test_arg)) 
+         {
+         std::string result_folder_ecdsa = "results/ecdsa";
+         std::unique_ptr<ECDSATest> test_ecdsa(new ECDSATest(inputs, result_folder_ecdsa, "secp384r1"));
+         test_ecdsa->execute_evaluation();
          } 
       else 
          {
