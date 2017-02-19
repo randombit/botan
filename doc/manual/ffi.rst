@@ -7,7 +7,8 @@ FFI Interface
 Botan's ffi module provides a C API intended to be easily usable with
 other language's foreign function interface (FFI) libraries. For
 instance the Python module using the FFI interface needs only the
-ctypes module (included in default Python) and works with ??? 
+ctypes module (included in default Python). Code examples can be found
+in `src/tests/test_ffi.cpp`.
 
 Versioning
 ----------------------------------------
@@ -18,7 +19,7 @@ Versioning
    expressed in the form YYYYMMDD of the release date of this version
    of the API.
 
-.. cpp:function int botan_ffi_supports_api(uint32_t version)
+.. cpp:function:: int botan_ffi_supports_api(uint32_t version)
 
    Returns 0 iff the FFI version specified is supported by this
    library. Otherwise returns -1. The expression
@@ -28,31 +29,31 @@ Versioning
 
 .. cpp:function:: const char* botan_version_string()
 
-    Returns a free-from version string, e.g., 2.0.0
+   Returns a free-from version string, e.g., 2.0.0
 
 .. cpp:function:: uint32_t botan_version_major()
 
-    Returns the major version of the library
+   Returns the major version of the library
 
 .. cpp:function:: uint32_t botan_version_minor()
 
-    Returns the minor version of the library
+   Returns the minor version of the library
 
 .. cpp:function:: uint32_t botan_version_patch()
 
-    Returns the patch version of the library
+   Returns the patch version of the library
 
 .. cpp:function:: uint32_t botan_version_datestamp()
 
-    Returns the date this version was released as an integer, or 0
-    if an unreleased version
+   Returns the date this version was released as an integer, or 0
+   if an unreleased version
 
 Utility Functions
 ----------------------------------------
 
 .. cpp:function:: int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len)
 
-   Returns 0 if x[0..len] == y[0..len], or otherwise -1
+   Returns 0 if `x[0..len] == y[0..len]`, -1 otherwise.
 
 .. cpp:function:: int botan_hex_encode(const uint8_t* x, size_t len, char* out, uint32_t flags)
 
@@ -71,47 +72,57 @@ Random Number Generators
 
 .. cpp:function:: int botan_rng_init(botan_rng_t* rng, const char* rng_type)
 
+   Initialize a random number generator object from the given
+   *rng_type*: "system" or `nullptr`: `System_RNG`, "user": `AutoSeeded_RNG`.
+
 .. cpp:function:: int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
+
+   Get random bytes from a random number generator.
 
 .. cpp:function:: int botan_rng_reseed(botan_rng_t rng, size_t bits)
 
+   Reseeds the random number generator with *bits* number of bits
+   from the `System_RNG`.
+
 .. cpp:function:: int botan_rng_destroy(botan_rng_t rng)
+
+   Destroy the object created by :cpp:func:`botan_rng_init`.
 
 Hash Functions
 ----------------------------------------
 
 .. cpp:type:: opaque* botan_hash_t
 
-    An opaque data type for a hash. Don't mess with it.
+   An opaque data type for a hash. Don't mess with it.
 
 .. cpp:function:: botan_hash_t botan_hash_init(const char* hash, uint32_t flags)
 
-    Creates a hash of the given name. Returns null on failure. Flags should
-    always be zero in this version of the API.
+   Creates a hash of the given name, e.g., "SHA-384".
+   Returns null on failure. Flags should always be zero in this version of the API.
 
 .. cpp:function:: int botan_hash_destroy(botan_hash_t hash)
 
-    Destroy the object created by botan_hash_init
+   Destroy the object created by :cpp:func:`botan_hash_init`.
 
 .. cpp:function:: int botan_hash_clear(botan_hash_t hash)
 
-    Reset the state of this object back to clean, as if no input has
-    been supplied
+   Reset the state of this object back to clean, as if no input has
+   been supplied.
 
 .. cpp:function:: size_t botan_hash_output_length(botan_hash_t hash)
 
-     Return the output length of the hash
+   Return the output length of the hash function.
 
 .. cpp:function:: int botan_hash_update(botan_hash_t hash, const uint8_t* input, size_t len)
 
-    Add input to the hash computation
+   Add input to the hash computation.
 
 .. cpp:function:: int botan_hash_final(botan_hash_t hash, uint8_t out[])
 
-    Finalize the hash and place the output in out. Exactly
-    botan_hash_output_length() bytes will be written.
+   Finalize the hash and place the output in out. Exactly
+   :cpp:func:`botan_hash_output_length` bytes will be written.
 
-Authentication Codes
+Message Authentication Codes
 ----------------------------------------
 .. cpp:type:: opaque* botan_mac_t
 
@@ -120,17 +131,34 @@ Authentication Codes
 
 .. cpp:function:: botan_mac_t botan_mac_init(const char* mac, uint32_t flags)
 
+   Creates a MAC of the given name, e.g., "HMAC(SHA-384)".
+   Returns null on failure. Flags should always be zero in this version of the API.
+
 .. cpp:function:: int botan_mac_destroy(botan_mac_t mac)
 
-.. cpp:function:: int botan_mac_clear(botan_mac_t hash)
+   Destroy the object created by :cpp:func:`botan_mac_init`.
+
+.. cpp:function:: int botan_mac_clear(botan_mac_t mac)
+
+   Reset the state of this object back to clean, as if no key and input have
+   been supplied.
+
+.. cpp:function:: size_t botan_mac_output_length(botan_mac_t mac)
+
+   Return the output length of the MAC.
 
 .. cpp:function:: int botan_mac_set_key(botan_mac_t mac, const uint8_t* key, size_t key_len)
 
+   Set the random key.
+
 .. cpp:function:: int botan_mac_update(botan_mac_t mac, uint8_t buf[], size_t len)
+
+   Add input to the MAC computation.
 
 .. cpp:function:: int botan_mac_final(botan_mac_t mac, uint8_t out[], size_t* out_len)
 
-.. cpp:function:: size_t botan_mac_output_length(botan_mac_t mac)
+   Finalize the MAC and place the output in out. Exactly
+   :cpp:func:`botan_mac_output_length` bytes will be written.
 
 Ciphers
 ----------------------------------------
@@ -173,16 +201,25 @@ PBKDF
 
 .. cpp:function:: int botan_pbkdf(const char* pbkdf_algo, \
                           uint8_t out[], size_t out_len, \
-                          const char* password, \
+                          const char* passphrase, \
                           const uint8_t salt[], size_t salt_len, \
                           size_t iterations)
 
+   Derive a key from a passphrase for a number of iterations
+   using the given PBKDF algorithm, e.g., "PBKDF2".
+
 .. cpp:function:: int botan_pbkdf_timed(const char* pbkdf_algo, \
                                 uint8_t out[], size_t out_len, \
-                                const char* password, \
+                                const char* passphrase, \
                                 const uint8_t salt[], size_t salt_len, \
                                 size_t milliseconds_to_run, \
                                 size_t* out_iterations_used)
+
+   Derive a key from a passphrase using the given PBKDF algorithm,
+   e.g., "PBKDF2". If *out_iterations_used* is zero, instead the
+   PBKDF is run until *milliseconds_to_run* milliseconds have passed.
+   In this case, the number of iterations run will be written to
+   *out_iterations_used*.
 
 KDF
 ----------------------------------------
@@ -193,6 +230,9 @@ KDF
                         const uint8_t salt[], size_t salt_len, \
                         const uint8_t label[], size_t label_len)
 
+   Derive a key using the given KDF algorithm, e.g., "SP800-56C".
+   The derived key of length *out_len* bytes will be placed in *out*.
+
 Password Hashing
 ----------------------------------------
 
@@ -202,7 +242,16 @@ Password Hashing
                                     size_t work_factor, \
                                     uint32_t flags)
 
+   Create a password hash using Bcrypt.
+   The output buffer *out* should be of length 64 bytes.
+   The output is formatted bcrypt $2a$...
+
 .. cpp:function:: int botan_bcrypt_is_valid(const char* pass, const char* hash)
+
+   Check a previously created password hash.
+   Returns 0 if if this password/hash combination is valid,
+   1 if the combination is not valid (but otherwise well formed),
+   negative on error.
 
 Public Key Creation, Import and Export
 ----------------------------------------
