@@ -61,21 +61,43 @@ how to provide the cleanest API for such users would be most welcome.
 #include <stdint.h>
 #include <stddef.h>
 
-/*
-* Versioning
+/**
+* Return the version of the currently supported FFI API. This is
+* expressed in the form YYYYMMDD of the release date of this version
+* of the API.
 */
 BOTAN_DLL uint32_t botan_ffi_api_version();
 
-/*
+/**
 * Return 0 (ok) if the version given is one this library supports.
 * botan_ffi_supports_api(botan_ffi_api_version()) will always return 0.
 */
 BOTAN_DLL int botan_ffi_supports_api(uint32_t api_version);
 
+/**
+* Return a free-form version string, e.g., 2.0.0
+*/
 BOTAN_DLL const char* botan_version_string();
+
+/**
+* Return the major version of the library
+*/
 BOTAN_DLL uint32_t botan_version_major();
+
+/**
+* Return the minor version of the library
+*/
 BOTAN_DLL uint32_t botan_version_minor();
+
+/**
+* Return the patch version of the library
+*/
 BOTAN_DLL uint32_t botan_version_patch();
+
+/**
+* Return the date this version was released as
+* an integer, or 0 if an unreleased version
+*/
 BOTAN_DLL uint32_t botan_version_datestamp();
 
 /*
@@ -120,60 +142,100 @@ doesn't exactly work well either!
 
 //const char* botan_error_description(int err);
 
-/*
+/**
 * Returns 0 if x[0..len] == y[0..len], or otherwise -1
 */
 BOTAN_DLL int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len);
 
 #define BOTAN_FFI_HEX_LOWER_CASE 1
 
+/**
+* Perform hex encoding
+* @param x is some binary data
+* @param len length of x in bytes
+* @param out an array of at least x*2 bytes
+* @param flags flags out be upper or lower case?
+* @return 0 on success, 1 on failure
+*/
 BOTAN_DLL int botan_hex_encode(const uint8_t* x, size_t len, char* out, uint32_t flags);
 // TODO: botan_hex_decode
 // TODO: botan_base64_encode
 // TODO: botan_base64_decode
 
-/*
-* RNG
+/**
+* RNG type
 */
 typedef struct botan_rng_struct* botan_rng_t;
 
 /**
+* Initialize a random number generator object
+* @param rng rng object
+* @param rng_type type of the rng, possible values:
+*    "system" or nullptr: System_RNG, "user": AutoSeeded_RNG
+*
 * TODO: replace rng_type with simple flags? 
 */
 BOTAN_DLL int botan_rng_init(botan_rng_t* rng, const char* rng_type);
 
 /**
+* Get random bytes from a random number generator
+* @param rng rng object
+* @param out output buffer of size out_len
+* @param out_len number of requested bytes
+* @return 0 on success, -1 on failure
+*
 * TODO: better name
 */
 BOTAN_DLL int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len);
+
+/**
+* Reseed a random number generator
+* Uses the System_RNG as a seed generator.
+*
+* @param rng rng object
+* @param bits number of bits to to reseed with
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_DLL int botan_rng_reseed(botan_rng_t rng, size_t bits);
+
+/**
+* Frees all resources of the random number generator object
+* @param rng rng object
+* @return always returns 0
+*/
 BOTAN_DLL int botan_rng_destroy(botan_rng_t rng);
 
 /*
-* Hashing
+* Hash type
 */
 typedef struct botan_hash_struct* botan_hash_t;
 
 /**
-* Initialize a hash object:
-*   botan_hash_t hash
-*   botan_hash_init(&hash, "SHA-384", 0);
+* Initialize a hash function object
+* @param hash hash object
+* @param hash_name name of the hash function, e.g., "SHA-384"
+* @param flags should be 0 in current API revision, all other uses are reserved
+*       and return BOTAN_FFI_ERROR_BAD_FLAG
 *
-* Flags should be 0 in current API revision, all other uses are reserved.
-*  and return BOTAN_FFI_ERROR_BAD_FLAG.
-
 * TODO: since output_length is effectively required to use this API,
 * return it from init as an output parameter
 */
 BOTAN_DLL int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags);
 
 /**
-* Writes the output length of the hash object to *output_length
+* Writes the output length of the hash function to *output_length
+* @param hash hash object
+* @param output_length output buffer to hold the hash function output length
+* @return 0 on success, a negative value on failure
 */
 BOTAN_DLL int botan_hash_output_length(botan_hash_t hash, size_t* output_length);
 
 /**
-* Send more input to the hash function.
+* Send more input to the hash function
+* @param hash hash object
+* @param in input buffer
+* @param in_len number of bytes to read from the input buffer
+* @return 0 on success, a negative value on failure
 */
 BOTAN_DLL int botan_hash_update(botan_hash_t hash, const uint8_t* in, size_t in_len);
 
@@ -181,33 +243,96 @@ BOTAN_DLL int botan_hash_update(botan_hash_t hash, const uint8_t* in, size_t in_
 * Finalizes the hash computation and writes the output to
 * out[0:botan_hash_output_length()] then reinitializes for computing
 * another digest as if botan_hash_clear had been called.
+* @param hash hash object
+* @param out output buffer
+* @return 0 on success, a negative value on failure
 */
 BOTAN_DLL int botan_hash_final(botan_hash_t hash, uint8_t out[]);
 
 /**
 * Reinitializes the state of the hash computation. A hash can
 * be computed (with update/final) immediately.
+* @param hash hash object
+* @return 0 on success, a negative value on failure
 */
 BOTAN_DLL int botan_hash_clear(botan_hash_t hash);
 
 /**
-* Frees all resources of this object
+* Frees all resources of the hash object
+* @param hash hash object
+* @return always returns 0
 */
 BOTAN_DLL int botan_hash_destroy(botan_hash_t hash);
 
+/**
+* TODO has no implementation
+*/
 BOTAN_DLL int botan_hash_name(botan_hash_t hash, char* name, size_t name_len);
 
 /*
-* Message Authentication
+* Message Authentication type
 */
 typedef struct botan_mac_struct* botan_mac_t;
 
+/**
+* Initialize a message authentication code object
+* @param mac mac object
+* @param mac_name name of the hash function, e.g., "HMAC(SHA-384)"
+* @param flags should be 0 in current API revision, all other uses are reserved
+*       and return -1
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_DLL int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags);
+
+/**
+* Writes the output length of the message authentication code to *output_length
+* @param mac mac object
+* @param output_length output buffer to hold the MAC output length
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_DLL int botan_mac_output_length(botan_mac_t mac, size_t* output_length);
+
+/**
+* Sets the key on the MAC
+* @param mac mac object
+* @param key buffer holding the key
+* @param key_len size of the key buffer in bytes
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_DLL int botan_mac_set_key(botan_mac_t mac, const uint8_t* key, size_t key_len);
+
+/**
+* Send more input to the message authentication code
+* @param mac mac object
+* @param buf input buffer
+* @param len number of bytes to read from the input buffer
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_DLL int botan_mac_update(botan_mac_t mac, const uint8_t* buf, size_t len);
+
+/**
+* Finalizes the MAC computation and writes the output to
+* out[0:botan_mac_output_length()] then reinitializes for computing
+* another MAC as if botan_mac_clear had been called.
+* @param mac mac object
+* @param out output buffer
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_DLL int botan_mac_final(botan_mac_t mac, uint8_t out[]);
-BOTAN_DLL int botan_mac_clear(botan_mac_t hash);
+
+/**
+* Reinitializes the state of the MAC computation. A MAC can
+* be computed (with update/final) immediately.
+* @param mac mac object
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_DLL int botan_mac_clear(botan_mac_t mac);
+
+/**
+* Frees all resources of the MAC object
+* @param mac mac object
+* @return always returns 0
+*/
 BOTAN_DLL int botan_mac_destroy(botan_mac_t mac);
 
 /*
@@ -254,23 +379,54 @@ BOTAN_DLL int botan_cipher_clear(botan_cipher_t hash);
 BOTAN_DLL int botan_cipher_destroy(botan_cipher_t cipher);
 
 /*
-* PBKDF
+* Derive a key from a passphrase for a number of iterations
+* @param pbkdf_algo PBKDF algorithm, e.g., "PBKDF2"
+* @param out buffer to store the derived key, must be of out_len bytes
+* @param out_len the desired length of the key to produce
+* @param passphrase the password to derive the key from
+* @param salt a randomly chosen salt
+* @param salt_len length of salt in bytes
+* @param iterations the number of iterations to use (use 10K or more)
+* @return 0 on success, a negative value on failure
 */
 BOTAN_DLL int botan_pbkdf(const char* pbkdf_algo,
                           uint8_t out[], size_t out_len,
-                          const char* password,
+                          const char* passphrase,
                           const uint8_t salt[], size_t salt_len,
                           size_t iterations);
 
+/**
+* Derive a key from a passphrase, running until msec time has elapsed.
+* @param pbkdf_algo PBKDF algorithm, e.g., "PBKDF2"
+* @param out buffer to store the derived key, must be of out_len bytes
+* @param out_len the desired length of the key to produce
+* @param passphrase the password to derive the key from
+* @param salt a randomly chosen salt
+* @param salt_len length of salt in bytes
+* @param milliseconds_to_run if iterations is zero, then instead the PBKDF is
+*        run until milliseconds_to_run milliseconds has passed
+* @param out_iterations_used set to the number iterations executed
+* @return 0 on success, a negative value on failure
+*/
 BOTAN_DLL int botan_pbkdf_timed(const char* pbkdf_algo,
                                 uint8_t out[], size_t out_len,
-                                const char* password,
+                                const char* passphrase,
                                 const uint8_t salt[], size_t salt_len,
                                 size_t milliseconds_to_run,
                                 size_t* out_iterations_used);
 
-/*
-* KDF
+/**
+* Derive a key
+* @param kdf_algo KDF algorithm, e.g., "SP800-56C"
+* @param out buffer holding the derived key, must be of length out_len
+* @param out_len the desired output length in bytes
+* @param secret the secret input
+* @param secret_len size of secret in bytes
+* @param salt a diversifier
+* @param salt_len size of salt in bytes
+* @param label purpose for the derived keying material
+* @param label_len size of label in bytes
+* @return 0 on success, a negative value on failure
 */
 BOTAN_DLL int botan_kdf(const char* kdf_algo,
                         uint8_t out[], size_t out_len,
@@ -278,9 +434,17 @@ BOTAN_DLL int botan_kdf(const char* kdf_algo,
                         const uint8_t salt[], size_t salt_len,
                         const uint8_t label[], size_t label_len);
 
-/*
-* Bcrypt
-* *out_len should be 64 bytes
+/**
+* Create a password hash using Bcrypt
+* @param out buffer holding the password hash, should be of length 64 bytes
+* @param out_len the desired output length in bytes
+* @param password the password
+* @param rng a random number generator
+* @param work_factor how much work to do to slow down guessing attacks
+* @param flags should be 0 in current API revision, all other uses are reserved
+*       and return BOTAN_FFI_ERROR_BAD_FLAG
+* @return 0 on success, a negative value on failure
+
 * Output is formatted bcrypt $2a$...
 */
 BOTAN_DLL int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
@@ -290,9 +454,12 @@ BOTAN_DLL int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
                                     uint32_t flags);
 
 /**
-* Returns 0 if if this password/hash combination is valid
-* Returns 1 if the combination is not valid (but otherwise well formed)
-* Returns negative on error
+* Check a previously created password hash
+* @param pass the password to check against
+* @param hash the stored hash to check against
+* @return 0 if if this password/hash combination is valid,
+*       1 if the combination is not valid (but otherwise well formed),
+*       negative on error
 */
 BOTAN_DLL int botan_bcrypt_is_valid(const char* pass, const char* hash);
 
