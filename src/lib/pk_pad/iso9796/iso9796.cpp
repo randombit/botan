@@ -140,6 +140,7 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
    size_t msg1_offset = 0;
    for(size_t j = 0; j != DB_size; ++j)
       {
+      // FIXME this loop is probably vulnerable to side channels
       if(DB[j] == 0x01)
          {
          msg1_offset = j + 1;
@@ -150,10 +151,16 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
       {
       return false;
       }
+
+   // No overflow possible because tLength and msg1_offset both bounded
+   // FIXME does this early exit expose a side channel oracle?
+   if(coded.size() < tLength + HASH_SIZE + msg1_offset + SALT_SIZE)
+      return false;
+
    secure_vector<uint8_t> msg1(coded.begin() + msg1_offset,
-                            coded.end() - tLength - HASH_SIZE - SALT_SIZE);
+                               coded.end() - tLength - HASH_SIZE - SALT_SIZE);
    secure_vector<uint8_t> salt(coded.begin() + msg1_offset + msg1.size(),
-                            coded.end() - tLength - HASH_SIZE);
+                               coded.end() - tLength - HASH_SIZE);
 
    //compute H2(C||msg1||H(msg2)||S*). * indicates a recovered value
    const size_t capacity = (key_bits - 2 + 7) / 8 - HASH_SIZE
