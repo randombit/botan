@@ -285,7 +285,7 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite&) const
    return true;
    }
 
-bool Policy::allow_client_initiated_renegotiation() const { return true; }
+bool Policy::allow_client_initiated_renegotiation() const { return false; }
 bool Policy::allow_server_initiated_renegotiation() const { return false; }
 bool Policy::allow_insecure_renegotiation() const { return false; }
 bool Policy::allow_tls10()  const { return true; }
