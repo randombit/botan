@@ -9,6 +9,7 @@
 #include <botan/mgf1.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/hash_id.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -125,7 +126,8 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
       }
 
    secure_vector<uint8_t> coded = const_coded;
-
+   
+   CT::poison(coded.data(), coded.size());
    //remove mask
    uint8_t* DB = coded.data();
    const size_t DB_size = coded.size() - HASH_SIZE - tLength;
@@ -137,19 +139,26 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
    DB[0] &= 0x7F;
 
    //recover msg1 and salt
-   size_t msg1_offset = 0;
-   for(size_t j = 0; j != DB_size; ++j)
+   size_t msg1_offset = 1;
+   uint8_t waiting_for_delim = 0xFF;
+   uint8_t bad_input = 0;
+   for(size_t j = 0; j < DB_size; ++j)
       {
-      if(DB[j] == 0x01)
-         {
-         msg1_offset = j + 1;
-         break;
-         }
+      const uint8_t one_m = CT::is_equal<uint8_t>(DB[j], 0x01);
+      const uint8_t zero_m = CT::is_zero(DB[j]);
+      const uint8_t add_m = waiting_for_delim & zero_m;
+      
+      bad_input |= waiting_for_delim & ~(zero_m | one_m);
+      msg1_offset += CT::select<uint8_t>(add_m, 1, 0);
+      
+      waiting_for_delim &= zero_m;
       }
-   if(msg1_offset == 0)
-      {
-      return false;
-      }
+   
+   //invalid, if delimiter 0x01 was not found or msg1_offset is too big
+   bad_input |= waiting_for_delim;
+   bad_input |= CT::is_less(coded.size(), tLength + HASH_SIZE + msg1_offset + SALT_SIZE);
+   //in case that msg1_offset is too big, just continue with offset = 0. 
+   msg1_offset = CT::select<size_t>(bad_input, 0, msg1_offset);
    secure_vector<uint8_t> msg1(coded.begin() + msg1_offset,
                             coded.end() - tLength - HASH_SIZE - SALT_SIZE);
    secure_vector<uint8_t> salt(coded.begin() + msg1_offset + msg1.size(),
@@ -186,9 +195,12 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
    hash->update(msg2);
    hash->update(salt);
    secure_vector<uint8_t> H2 = hash->final();
-
+   
    //check if H3 == H2
-   return same_mem(H3.data(), H2.data(), HASH_SIZE);
+   bad_input |= CT::is_equal<uint8_t>(same_mem(H3.data(), H2.data(), HASH_SIZE), false);
+   CT::unpoison(coded.data(), coded.size());
+   
+   return (bad_input == 0);
    }
 
 }
