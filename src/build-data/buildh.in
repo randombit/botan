@@ -80,21 +80,14 @@
 #define BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO 1
 
 /*
-* If enabled the ECC implementation will use Montgomery ladder
-* instead of a fixed window implementation.
+* If enabled the ECC implementation will use scalar blinding with order.bits()/2
+* bit long masks.
 */
-#define BOTAN_POINTGFP_BLINDED_MULTIPLY_USE_MONTGOMERY_LADDER 0
-
-/*
-* Set number of bits used to generate mask for blinding the scalar of
-* a point multiplication. Set to zero to disable this side-channel
-* countermeasure.
-*/
-#define BOTAN_POINTGFP_SCALAR_BLINDING_BITS 20
+#define BOTAN_POINTGFP_USE_SCALAR_BLINDING 1
 
 /*
 * Set number of bits used to generate mask for blinding the
-* representation of an ECC point. Set to zero to diable this
+* representation of an ECC point. Set to zero to disable this
 * side-channel countermeasure.
 */
 #define BOTAN_POINTGFP_RANDOMIZE_BLINDING_BITS 80
@@ -104,7 +97,7 @@
 * its inverse, of a form appropriate to the algorithm being blinded), and
 * then choosing new blinding operands by successive squaring of both
 * values. This is much faster than computing a new starting point but
-* introduces some possible coorelation
+* introduces some possible corelation
 *
 * To avoid possible leakage problems in long-running processes, the blinder
 * periodically reinitializes the sequence. This value specifies how often
