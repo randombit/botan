@@ -62,6 +62,8 @@ TLS
 ----------------------------------------
 
 * Make DTLS support optional at build time
+* Improve/optimize DTLS defragmentation and retransmission
+* Implement logging callbacks for TLS
 * Make TLS v1.0 and v1.1 optional at build time
 * Make RSA optional at build time
 * Make finite field DH optional at build time
@@ -87,7 +89,8 @@ PKIX
 * OCSP responder logic
 * X.509 attribute certificates (RFC 5755)
 * Support generating/verifying XMSS certificates
-* Roughtime client
+* Roughtime client (https://roughtime.googlesource.com/roughtime/),
+  requires Ed25519
 
 New Protocols / Formats
 ----------------------------------------
