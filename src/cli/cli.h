@@ -317,7 +317,14 @@ class Command
          m_spec_flags.insert("help");
          m_spec_opts.insert(std::make_pair("output", ""));
          m_spec_opts.insert(std::make_pair("error-output", ""));
-         m_spec_opts.insert(std::make_pair("rng-type", "auto"));
+
+         m_spec_opts.insert(std::make_pair("rng-type",
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+                                           "system"
+#else
+                                           "auto"
+#endif
+                               ));
          }
 
       /*

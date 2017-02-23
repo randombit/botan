@@ -131,11 +131,11 @@ class Hash final : public Command
 
          const size_t buf_size = get_arg_sz("buf-size");
 
-         auto files = get_arg_list("files");
+         std::vector<std::string> files = get_arg_list("files");
          if(files.empty())
             files.push_back("-"); // read stdin if no arguments on command line
 
-         for(auto fsname : files)
+         for(const std::string& fsname : files)
             {
             try
                {
