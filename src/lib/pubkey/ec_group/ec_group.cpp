@@ -12,6 +12,7 @@
 #include <botan/der_enc.h>
 #include <botan/oids.h>
 #include <botan/pem.h>
+#include <botan/reducer.h>
 
 namespace Botan {
 
@@ -128,6 +129,46 @@ std::string EC_Group::PEM_encode() const
    {
    const std::vector<uint8_t> der = DER_encode(EC_DOMPAR_ENC_EXPLICIT);
    return PEM_Code::encode(der, "EC PARAMETERS");
+   }
+
+bool EC_Group::verify_group(RandomNumberGenerator& rng,
+                            bool) const
+   {
+   //compute the discriminant
+   Modular_Reducer p(m_curve.get_p());
+   BigInt discriminant = p.multiply(4, m_curve.get_a());
+   discriminant += p.multiply(27, m_curve.get_b());
+   discriminant = p.reduce(discriminant);
+   //check the discriminant
+   if(discriminant == 0)
+      {
+      return false;
+      }
+   //check for valid cofactor
+   if(m_cofactor < 1)
+      {
+      return false;
+      }
+   //check if the base point is on the curve
+   if(!m_base_point.on_the_curve())
+      {
+      return false;
+      }
+   if((m_base_point * m_cofactor).is_zero())
+      {
+      return false;
+      }
+   //check if order is prime
+   if(!is_prime(m_order, rng, 128))
+      {
+      return false;
+      }
+   //check if order of the base point is correct
+   if(!(m_base_point * m_order).is_zero())
+      {
+      return false;
+      }
+   return true;
    }
 
 }

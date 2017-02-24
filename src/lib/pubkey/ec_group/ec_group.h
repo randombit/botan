@@ -113,7 +113,14 @@ class BOTAN_DLL EC_Group
       * @result the OID
       */
       std::string get_oid() const { return m_oid; }
-
+      
+      /**
+       * Verify EC_Group domain
+       * @returns true if group is valid. false otherwise
+       */
+      bool verify_group(RandomNumberGenerator& rng,
+                            bool strong = false) const;
+      
       bool operator==(const EC_Group& other) const
          {
          return ((get_curve() == other.get_curve()) &&
