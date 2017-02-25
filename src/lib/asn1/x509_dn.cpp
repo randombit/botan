@@ -269,7 +269,6 @@ void X509_DN::decode_from(BER_Decoder& source)
          rdn.start_cons(SEQUENCE)
             .decode(oid)
             .decode(str)
-            .verify_end()
         .end_cons();
 
          add_attribute(oid, str.value());

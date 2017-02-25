@@ -95,7 +95,6 @@ void X509_Certificate::force_decode()
       .start_cons(SEQUENCE)
          .decode(start)
          .decode(end)
-         .verify_end()
       .end_cons()
       .decode(dn_subject);
 

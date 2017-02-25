@@ -219,7 +219,6 @@ void Extensions::decode_from(BER_Decoder& from_source)
             .decode(oid)
             .decode_optional(critical, BOOLEAN, UNIVERSAL, false)
             .decode(value, OCTET_STRING)
-            .verify_end()
          .end_cons();
 
       m_extensions_raw.emplace(oid, std::make_pair(value, critical));
@@ -300,7 +299,6 @@ void Basic_Constraints::decode_inner(const std::vector<uint8_t>& in)
       .start_cons(SEQUENCE)
          .decode_optional(m_is_ca, BOOLEAN, UNIVERSAL, false)
          .decode_optional(m_path_limit, INTEGER, UNIVERSAL, NO_CERT_PATH_LIMIT)
-         .verify_end()
       .end_cons();
 
    if(m_is_ca == false)
