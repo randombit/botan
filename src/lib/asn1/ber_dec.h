@@ -34,6 +34,38 @@ class BOTAN_DLL BER_Decoder
 
       BER_Decoder& get_next(BER_Object& ber);
 
+      /**
+      * Get next object and copy value to POD type
+      * Asserts value length is equal to POD type sizeof.
+      * Asserts Type tag and optional Class tag according to parameters.
+      * Copy value to POD type (struct, union, C-style array, std::array, etc.).
+      * @param out POD type reference where to copy object value
+      * @param type_tag ASN1_Tag enum to assert type on object read
+      * @param class_tag ASN1_Tag enum to assert class on object read (default: CONTEXT_SPECIFIC)
+      * @return this reference  
+      */
+      template <typename T>
+         BER_Decoder& get_next_value(T &out,
+                                     ASN1_Tag type_tag,
+                                     ASN1_Tag class_tag = CONTEXT_SPECIFIC)
+         {
+         static_assert(std::is_pod<T>::value, "Type must be POD");
+
+         BER_Object obj = get_next_object();
+         obj.assert_is_a(type_tag, class_tag);
+
+         if (obj.value.size() != sizeof(T))
+            throw BER_Decoding_Error(
+                    "Size mismatch. Object value size is " +
+                    std::to_string(obj.value.size()) +
+                    "; Output type size is " +
+                    std::to_string(sizeof(T)));
+
+         copy_mem((uint8_t *)&out, obj.value.data(), obj.value.size());
+
+         return (*this);
+         }
+
       BER_Decoder& raw_bytes(secure_vector<uint8_t>& v);
       BER_Decoder& raw_bytes(std::vector<uint8_t>& v);
 
