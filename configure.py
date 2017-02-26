@@ -2367,12 +2367,12 @@ def main(argv=None):
         if e.errno != errno.ENOENT:
             logging.error('Problem while removing build dir: %s' % (e))
 
-    for dir in build_config.build_dirs:
+    for build_dir in build_config.build_dirs:
         try:
-            robust_makedirs(dir)
+            robust_makedirs(build_dir)
         except OSError as e:
             if e.errno != errno.EEXIST:
-                logging.error('Error while creating "%s": %s' % (dir, e))
+                logging.error('Error while creating "%s": %s' % (build_dir, e))
 
     def write_template(sink, template):
         try:
@@ -2397,15 +2397,15 @@ def main(argv=None):
 
     link_method = choose_link_method(options)
 
-    def link_headers(headers, type, dir):
-        logging.debug('Linking %d %s header files in %s' % (len(headers), type, dir))
+    def link_headers(headers, visibility, directory):
+        logging.debug('Linking %d %s header files in %s' % (len(headers), visibility, directory))
 
         for header_file in headers:
             try:
-                portable_symlink(header_file, dir, link_method)
+                portable_symlink(header_file, directory, link_method)
             except OSError as e:
                 if e.errno != errno.EEXIST:
-                    raise ConfigureError('Error linking %s into %s: %s' % (header_file, dir, e))
+                    raise ConfigureError('Error linking %s into %s: %s' % (header_file, directory, e))
 
     link_headers(build_config.public_headers, 'public',
                  build_config.botan_include_dir)
