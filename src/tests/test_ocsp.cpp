@@ -148,6 +148,7 @@ class OCSP_Tests : public Test
          {
          Test::Result result("OCSP online check");
 
+         // Expired end-entity certificate:
          std::shared_ptr<const Botan::X509_Certificate> ee = load_test_X509_cert("ocsp/randombit.pem");
          std::shared_ptr<const Botan::X509_Certificate> ca = load_test_X509_cert("ocsp/letsencrypt.pem");
          std::shared_ptr<const Botan::X509_Certificate> trust_root = load_test_X509_cert("ocsp/identrust.pem");
@@ -168,7 +169,7 @@ class OCSP_Tests : public Test
             {
             if(result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1))
                {
-               result.confirm("Status good", ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD));
+               result.confirm("Status expired", ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED));
                }
             if(result.test_eq("Expected size of ocsp_status[1]", ocsp_status[1].size(), 1))
                {
