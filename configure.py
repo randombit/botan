@@ -38,7 +38,7 @@ import optparse # pylint: disable=deprecated-module
 if 'dont_write_bytecode' in sys.__dict__:
     sys.dont_write_bytecode = True
 
-import botan_version
+import botan_version # pylint: disable=wrong-import-position
 
 class ConfigureError(Exception):
     pass
@@ -521,8 +521,6 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
     Generic lexer function for info.txt and src/build-data files
     """
 
-    to_obj.infofile = infofile
-
     # Format as a nameable Python variable
     def py_var(group):
         return group.replace(':', '_')
@@ -535,18 +533,6 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
         def __str__(self):
             return '%s at %s:%d' % (self.msg, infofile, self.line)
-
-    (dirname, basename) = os.path.split(infofile)
-
-    to_obj.lives_in = dirname
-    if basename == 'info.txt':
-        (obj_dir, to_obj.basename) = os.path.split(dirname)
-        if os.access(os.path.join(obj_dir, 'info.txt'), os.R_OK):
-            to_obj.parent_module = os.path.basename(obj_dir)
-        else:
-            to_obj.parent_module = None
-    else:
-        to_obj.basename = basename.replace('.txt', '')
 
     lexer = shlex.shlex(open(infofile), infofile, posix=True)
     lexer.wordchars += '|:.<>/,-!+' # handle various funky chars in info.txt
@@ -609,13 +595,33 @@ def force_to_dict(l):
 
     return dict(zip(l[::3], l[2::3]))
 
-class ModuleInfo(object):
+
+class InfoObject(object):
+    def __init__(self, infofile):
+        """
+        Constructor sets members `infofile`, `lives_in`, `parent_module` and `basename`
+        """
+
+        self.infofile = infofile
+        (dirname, basename) = os.path.split(infofile)
+        self.lives_in = dirname
+        if basename == 'info.txt':
+            (obj_dir, self.basename) = os.path.split(dirname)
+            if os.access(os.path.join(obj_dir, 'info.txt'), os.R_OK):
+                self.parent_module = os.path.basename(obj_dir)
+            else:
+                self.parent_module = None
+        else:
+            self.basename = basename.replace('.txt', '')
+
+
+class ModuleInfo(InfoObject):
     """
     Represents the information about a particular module
     """
 
     def __init__(self, infofile):
-
+        super(ModuleInfo, self).__init__(infofile)
         lex_me_harder(infofile, self,
                       ['header:internal', 'header:public',
                        'header:external', 'requires', 'os', 'arch',
@@ -791,8 +797,9 @@ class ModuleInfo(object):
             return 0
         return 1
 
-class ModulePolicyInfo(object):
+class ModulePolicyInfo(InfoObject):
     def __init__(self, infofile):
+        super(ModulePolicyInfo, self).__init__(infofile)
         lex_me_harder(infofile, self,
                       ['required', 'if_available', 'prohibited'], {})
 
@@ -809,8 +816,9 @@ class ModulePolicyInfo(object):
         check('prohibited', self.prohibited)
 
 
-class ArchInfo(object):
+class ArchInfo(InfoObject):
     def __init__(self, infofile):
+        super(ArchInfo, self).__init__(infofile)
         lex_me_harder(infofile, self,
                       ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
                       {'endian': None,
@@ -893,8 +901,9 @@ class ArchInfo(object):
 
         return macros
 
-class CompilerInfo(object):
+class CompilerInfo(InfoObject):
     def __init__(self, infofile):
+        super(CompilerInfo, self).__init__(infofile)
         lex_me_harder(infofile, self,
                       ['so_link_commands', 'binary_link_commands', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
                       {'binary_name': None,
@@ -1095,8 +1104,9 @@ class CompilerInfo(object):
 
         return ['BUILD_COMPILER_IS_' + self.macro_name]
 
-class OsInfo(object):
+class OsInfo(InfoObject):
     def __init__(self, infofile):
+        super(OsInfo, self).__init__(infofile)
         lex_me_harder(infofile, self,
                       ['aliases', 'target_features'],
                       {'os_type': None,
@@ -1307,7 +1317,7 @@ def gen_bakefile(build_config, options, external_libs):
 
     # global options
     f.write('includedirs += build/include/;\n')
-    
+
     for lib in external_libs.split(" "):
         f.write('libs += "%s";\n' %lib.replace('.lib', ''))
 
@@ -2348,7 +2358,7 @@ def main(argv=None):
                     time.sleep(0.1)
 
         # Final attempt, pass any exceptions up to caller.
-        os.makedirs(dir)
+        os.makedirs(directory)
 
     try:
         if options.clean_build_tree:
@@ -2357,12 +2367,12 @@ def main(argv=None):
         if e.errno != errno.ENOENT:
             logging.error('Problem while removing build dir: %s' % (e))
 
-    for dir in build_config.build_dirs:
+    for build_dir in build_config.build_dirs:
         try:
-            robust_makedirs(dir)
+            robust_makedirs(build_dir)
         except OSError as e:
             if e.errno != errno.EEXIST:
-                logging.error('Error while creating "%s": %s' % (dir, e))
+                logging.error('Error while creating "%s": %s' % (build_dir, e))
 
     def write_template(sink, template):
         try:
@@ -2387,15 +2397,15 @@ def main(argv=None):
 
     link_method = choose_link_method(options)
 
-    def link_headers(headers, type, dir):
-        logging.debug('Linking %d %s header files in %s' % (len(headers), type, dir))
+    def link_headers(headers, visibility, directory):
+        logging.debug('Linking %d %s header files in %s' % (len(headers), visibility, directory))
 
         for header_file in headers:
             try:
-                portable_symlink(header_file, dir, link_method)
+                portable_symlink(header_file, directory, link_method)
             except OSError as e:
                 if e.errno != errno.EEXIST:
-                    raise ConfigureError('Error linking %s into %s: %s' % (header_file, dir, e))
+                    raise ConfigureError('Error linking %s into %s: %s' % (header_file, directory, e))
 
     link_headers(build_config.public_headers, 'public',
                  build_config.botan_include_dir)
