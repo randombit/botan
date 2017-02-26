@@ -2358,7 +2358,7 @@ def main(argv=None):
                     time.sleep(0.1)
 
         # Final attempt, pass any exceptions up to caller.
-        os.makedirs(dir)
+        os.makedirs(directory)
 
     try:
         if options.clean_build_tree:
