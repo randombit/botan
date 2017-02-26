@@ -332,7 +332,7 @@ std::vector<std::vector<ticks>> Timing_Test::execute_evaluation(const std::vecto
 class Timing_Test_Command : public Command
    {
    public:
-      Timing_Test_Command() : Command("timing_test test_type --test-data-file= --test-data-dir=src/extra_tests/timing/timing-tests/data/ --warmup-runs=100 --measurement-runs=1000")
+      Timing_Test_Command() : Command("timing_test test_type --test-data-file= --test-data-dir=src/extra_tests/timing/timing-tests/data/ --warmup-runs=1000 --measurement-runs=10000")
          {}
 
       virtual void go()
