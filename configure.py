@@ -1317,7 +1317,7 @@ def gen_bakefile(build_config, options, external_libs):
 
     # global options
     f.write('includedirs += build/include/;\n')
-    
+
     for lib in external_libs.split(" "):
         f.write('libs += "%s";\n' %lib.replace('.lib', ''))
 
