@@ -38,7 +38,7 @@ import optparse # pylint: disable=deprecated-module
 if 'dont_write_bytecode' in sys.__dict__:
     sys.dont_write_bytecode = True
 
-import botan_version
+import botan_version # pylint: disable=wrong-import-position
 
 class ConfigureError(Exception):
     pass
