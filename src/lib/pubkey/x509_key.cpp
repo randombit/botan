@@ -46,7 +46,6 @@ Public_Key* load_key(DataSource& source)
             .start_cons(SEQUENCE)
             .decode(alg_id)
             .decode(key_bits, BIT_STRING)
-            .verify_end()
          .end_cons();
          }
       else
@@ -59,7 +58,6 @@ Public_Key* load_key(DataSource& source)
             .start_cons(SEQUENCE)
             .decode(alg_id)
             .decode(key_bits, BIT_STRING)
-            .verify_end()
          .end_cons();
          }
 

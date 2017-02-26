@@ -58,7 +58,6 @@ RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier&,
       .start_cons(SEQUENCE)
         .decode(m_n)
         .decode(m_e)
-      .verify_end()
       .end_cons();
    }
 

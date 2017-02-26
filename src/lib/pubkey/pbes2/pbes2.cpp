@@ -116,7 +116,6 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
       .start_cons(SEQUENCE)
          .decode(kdf_algo)
          .decode(enc_algo)
-         .verify_end()
       .end_cons();
 
    AlgorithmIdentifier prf_algo;
@@ -136,7 +135,6 @@ pbes2_decrypt(const secure_vector<uint8_t>& key_bits,
          .decode_optional(prf_algo, SEQUENCE, CONSTRUCTED,
                           AlgorithmIdentifier("HMAC(SHA-160)",
                                               AlgorithmIdentifier::USE_NULL_PARAM))
-      .verify_end()
       .end_cons();
 
    const std::string cipher = OIDS::lookup(enc_algo.oid);

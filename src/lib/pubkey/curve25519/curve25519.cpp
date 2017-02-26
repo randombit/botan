@@ -52,7 +52,6 @@ Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier&,
    BER_Decoder(key_bits)
       .start_cons(SEQUENCE)
       .decode(m_public, OCTET_STRING)
-      .verify_end()
    .end_cons();
 
    size_check(m_public.size(), "public key");
@@ -81,7 +80,6 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
       .start_cons(SEQUENCE)
       .decode(m_public, OCTET_STRING)
       .decode(m_private, OCTET_STRING)
-      .verify_end()
    .end_cons();
 
    size_check(m_public.size(), "public key");

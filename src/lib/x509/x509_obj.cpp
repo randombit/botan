@@ -105,7 +105,6 @@ void X509_Object::decode_from(BER_Decoder& from)
          .end_cons()
          .decode(m_sig_algo)
          .decode(m_sig, BIT_STRING)
-         .verify_end()
       .end_cons();
    }
 
