@@ -400,6 +400,8 @@ class FFI_Unit_Tests : public Test
    private:
       void ffi_test_pubkey_export(Test::Result& result, botan_pubkey_t pub, botan_privkey_t priv, botan_rng_t rng)
          {
+         const size_t pbkdf_iter = 1000;
+
          // export public key
          size_t pubkey_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pubkey_export, (pub, nullptr, &pubkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_DER));
@@ -417,24 +419,10 @@ class FFI_Unit_Tests : public Test
          std::vector<uint8_t> privkey;
          size_t privkey_len = 0;
 
-         /*
-         * botan_privkey_export is bogus for several reasons. first it hardcodes a 300 msec
-         * pbkdf, instead of taking that as an argument. secondly, calling it twice not only
-         * returns different results (due to the encryption) but they may have different sizes,
-         * if the number of PBKDF iterations that is used in the two runs differs greatly, and
-         * ends up encoding as fewer bytes in the variable length ASN.1 encoding used in PKCS #8
-         * private key encryption.
-         *
-         * here request the size but then add a few bytes. this is an attempt to avoid occasional
-         * cases on CI where the above case occurs, and the build fails because on the second
-         * call, more space was required than the first call had returned.
-         */
-         const size_t privkey_size_slop = 64;
-
          // call with nullptr to query the length
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export, (priv, nullptr, &privkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_DER));
 
-         privkey.resize(privkey_len + privkey_size_slop);
+         privkey.resize(privkey_len);
          privkey_len = privkey.size(); // set buffer size
 
          TEST_FFI_OK(botan_privkey_export, (priv, privkey.data(), &privkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_DER));
@@ -453,18 +441,18 @@ class FFI_Unit_Tests : public Test
 
          // export private key encrypted
          privkey_len = 0;
-         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export_encrypted, (priv, nullptr, &privkey_len, rng, "password", "", BOTAN_PRIVKEY_EXPORT_FLAG_DER));
-
-         privkey.resize(privkey_len + privkey_size_slop);
-         privkey_len = privkey.size();
-
-         TEST_FFI_OK(botan_privkey_export_encrypted, (priv, privkey.data(), &privkey_len, rng, "password", "", BOTAN_PRIVKEY_EXPORT_FLAG_DER));
-
-         privkey_len = 0;
-         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export_encrypted, (priv, nullptr, &privkey_len, rng, "password", "", BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export_encrypted_pbkdf_iter, (priv, nullptr, &privkey_len, rng, "password", pbkdf_iter, "", "", BOTAN_PRIVKEY_EXPORT_FLAG_DER));
 
          privkey.resize(privkey_len);
-         TEST_FFI_OK(botan_privkey_export_encrypted, (priv, privkey.data(), &privkey_len, rng, "password", "", BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
+         privkey_len = privkey.size();
+
+         TEST_FFI_OK(botan_privkey_export_encrypted_pbkdf_iter, (priv, privkey.data(), &privkey_len, rng, "password", pbkdf_iter, "", "", BOTAN_PRIVKEY_EXPORT_FLAG_DER));
+
+         privkey_len = 0;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export_encrypted_pbkdf_iter, (priv, nullptr, &privkey_len, rng, "password", pbkdf_iter, "", "", BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
+
+         privkey.resize(privkey_len);
+         TEST_FFI_OK(botan_privkey_export_encrypted_pbkdf_iter, (priv, privkey.data(), &privkey_len, rng, "password", pbkdf_iter, "", "", BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
 
          // calculate fingerprint
          size_t strength = 0;

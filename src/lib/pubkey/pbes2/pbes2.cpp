@@ -55,18 +55,17 @@ std::vector<uint8_t> encode_pbes2_params(const std::string& cipher,
       .get_contents_unlocked();
    }
 
-}
-
 /*
-* PKCS#5 v2.0 PBE Constructor
+* PKCS#5 v2.0 PBE Encryption
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
-              const std::string& passphrase,
-              std::chrono::milliseconds msec,
-              const std::string& cipher,
-              const std::string& digest,
-              RandomNumberGenerator& rng)
+pbes2_encrypt_shared(const secure_vector<uint8_t>& key_bits,
+                     const std::string& passphrase,
+                     size_t* msec_in_iterations_out,
+                     size_t iterations_if_msec_null,
+                     const std::string& cipher,
+                     const std::string& digest,
+                     RandomNumberGenerator& rng)
    {
    const std::string prf = "HMAC(" + digest + ")";
 
@@ -87,12 +86,22 @@ pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
    std::unique_ptr<PBKDF> pbkdf(get_pbkdf("PBKDF2(" + prf + ")"));
 
    const size_t key_length = enc->key_spec().maximum_keylength();
-   size_t iterations = 0;
+
 
    secure_vector<uint8_t> iv = rng.random_vec(enc->default_nonce_length());
 
-   enc->set_key(pbkdf->derive_key(key_length, passphrase, salt.data(), salt.size(),
-                                  msec, iterations).bits_of());
+   size_t iterations = iterations_if_msec_null;
+
+   if(msec_in_iterations_out)
+      {
+      std::chrono::milliseconds msec(*msec_in_iterations_out);
+      enc->set_key(pbkdf->derive_key(key_length, passphrase, salt.data(), salt.size(), msec, iterations).bits_of());
+      *msec_in_iterations_out = iterations;
+      }
+   else
+      {
+      enc->set_key(pbkdf->pbkdf_iterations(key_length, passphrase, salt.data(), salt.size(), iterations));
+      }
 
    enc->start(iv);
    secure_vector<uint8_t> buf = key_bits;
@@ -103,6 +112,52 @@ pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
       encode_pbes2_params(cipher, prf, salt, iv, iterations, key_length));
 
    return std::make_pair(id, unlock(buf));
+   }
+
+
+}
+
+std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
+pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
+              const std::string& passphrase,
+              std::chrono::milliseconds msec,
+              const std::string& cipher,
+              const std::string& digest,
+              RandomNumberGenerator& rng)
+   {
+   size_t msec_in_iterations_out = msec.count();
+   return pbes2_encrypt_shared(key_bits, passphrase, &msec_in_iterations_out, 0, cipher, digest, rng);
+   // return value msec_in_iterations_out discarded
+   }
+
+std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
+pbes2_encrypt_msec(const secure_vector<uint8_t>& key_bits,
+                   const std::string& passphrase,
+                   std::chrono::milliseconds msec,
+                   size_t* out_iterations_if_nonnull,
+                   const std::string& cipher,
+                   const std::string& digest,
+                   RandomNumberGenerator& rng)
+   {
+   size_t msec_in_iterations_out = msec.count();
+
+   auto ret = pbes2_encrypt_shared(key_bits, passphrase, &msec_in_iterations_out, 0, cipher, digest, rng);
+
+   if(out_iterations_if_nonnull)
+      *out_iterations_if_nonnull = msec_in_iterations_out;
+
+   return ret;
+   }
+
+std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
+pbes2_encrypt_iter(const secure_vector<uint8_t>& key_bits,
+                   const std::string& passphrase,
+                   size_t pbkdf_iter,
+                   const std::string& cipher,
+                   const std::string& digest,
+                   RandomNumberGenerator& rng)
+   {
+   return pbes2_encrypt_shared(key_bits, passphrase, nullptr, pbkdf_iter, cipher, digest, rng);
    }
 
 secure_vector<uint8_t>
