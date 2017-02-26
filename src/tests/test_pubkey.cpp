@@ -42,10 +42,18 @@ void check_invalid_signatures(Test::Result& result,
       {
       const std::vector<uint8_t> bad_sig = Test::mutate_vec(signature);
 
-      if(!result.test_eq("incorrect signature invalid",
-                         verifier.verify_message(message, bad_sig), false))
+      try
+         {
+         if(!result.test_eq("incorrect signature invalid",
+                            verifier.verify_message(message, bad_sig), false))
+            {
+            result.test_note("Accepted invalid signature " + Botan::hex_encode(bad_sig));
+            }
+         }
+      catch(std::exception& e)
          {
          result.test_note("Accepted invalid signature " + Botan::hex_encode(bad_sig));
+         result.test_failure("Modified signature rejected with exception", e.what());
          }
       }
    }
