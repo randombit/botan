@@ -44,9 +44,14 @@ EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
    m_domain_encoding{EC_DOMPAR_ENC_EXPLICIT}
    {}
 
-bool EC_PublicKey::check_key(RandomNumberGenerator&,
+bool EC_PublicKey::check_key(RandomNumberGenerator& rng,
                              bool) const
    {
+   //verify domain parameters
+   if(!m_domain_params.verify_group(rng))
+      {
+      return false;
+      }
    //check that public point is not at infinity
    if(public_point().is_zero())
       {
