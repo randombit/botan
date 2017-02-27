@@ -22,7 +22,7 @@ class BOTAN_DLL CertID final : public ASN1_Object
       CertID() {}
 
       CertID(const X509_Certificate& issuer,
-             const X509_Certificate& subject);
+             const BigInt& subject_serial);
 
       bool is_id_for(const X509_Certificate& issuer,
                      const X509_Certificate& subject) const;

@@ -275,7 +275,7 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
          else
             {
             ocsp_response_futures.emplace_back(std::async(std::launch::async, [&]() -> std::shared_ptr<const OCSP::Response> {
-                  OCSP::Request req(*issuer, *subject);
+                  OCSP::Request req(*issuer, BigInt::decode(subject->serial_number()));
 
                   auto http = HTTP::POST_sync(subject->ocsp_responder(),
                                               "application/ocsp-request",
