@@ -87,15 +87,16 @@ Botan::X509_Cert_Options req_opts2()
 
 std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo)
    {
-   std::string params = ""; // default "" means choose acceptable algo-specific params
-
-   // Here we override defaults as needed
-   if(algo == "RSA")
-      params = "1024";
-   if(algo == "GOST-34.10")
-      params = "gost_256A";
-   if(algo == "ECKCDSA" || algo == "ECGDSA")
-      params = "brainpool256r1";
+   const std::string params = [&]{
+      // Here we override defaults as needed
+      if(algo == "RSA")
+            return "1024";
+      if(algo == "GOST-34.10")
+            return "gost_256A";
+      if(algo == "ECKCDSA" || algo == "ECGDSA")
+            return "brainpool256r1";
+      return ""; // default "" means choose acceptable algo-specific params
+   }();
 
    return Botan::create_private_key(algo, Test::rng(), params);
    }
@@ -111,7 +112,7 @@ Test::Result test_cert_status_strings()
                   Botan::to_string(Botan::Certificate_Status_Code::OK),
                   Botan::to_string(Botan::Certificate_Status_Code::VERIFIED));
 
-   const std::vector<Botan::Certificate_Status_Code> codes = {
+   const Botan::Certificate_Status_Code codes[]{
       Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD,
       Botan::Certificate_Status_Code::OCSP_SIGNATURE_OK,
       Botan::Certificate_Status_Code::VALID_CRL_CHECKED,
@@ -151,9 +152,9 @@ Test::Result test_cert_status_strings()
       Botan::Certificate_Status_Code::CERT_PUBKEY_INVALID,
    };
 
-   for(auto code : codes)
+   for(const auto code : codes)
       {
-      std::string s = Botan::to_string(code);
+      const std::string s = Botan::to_string(code);
       result.confirm("String is long enough to be informative", s.size() > 12);
       result.test_eq("No duplicates", seen.count(s), 0);
       seen.insert(s);
@@ -166,7 +167,7 @@ Test::Result test_cert_status_strings()
 
 Test::Result test_x509_dates()
    {
-   Test::Result result("X509_Time");
+   Test::Result result("X509 Time");
 
    Botan::X509_Time time;
    result.confirm("unset time not set", !time.time_is_set());
@@ -187,7 +188,7 @@ Test::Result test_x509_dates()
    result.test_eq("GENERALIZED_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
 
    // Dates that are valid per X.500 but rejected as unsupported
-   const std::vector<std::string> valid_but_unsup = {
+   const std::string valid_but_unsup[]{
       "0802010000-0000",
       "0802011724+0000",
       "0406142334-0500",
@@ -204,7 +205,7 @@ Test::Result test_x509_dates()
    };
 
    // valid length 13
-   const std::vector<std::string> valid_utc = {
+   const std::string valid_utc[]{
       "080201000000Z",
       "080201172412Z",
       "040614233433Z",
@@ -212,7 +213,7 @@ Test::Result test_x509_dates()
       "000614233455Z",
    };
 
-   const std::vector<std::string> invalid_utc = {
+   const std::string invalid_utc[]{
       "",
       " ",
       "2008`02-01",
@@ -284,11 +285,11 @@ Test::Result test_x509_dates()
    };
 
    // valid length 15
-   const std::vector<std::string> valid_generalized_time = {
+   const std::string valid_generalized_time[]{
       "20000305100350Z",
    };
 
-   const std::vector<std::string> invalid_generalized = {
+   const std::string invalid_generalized[]{
       // No trailing Z
       "20000305100350",
 
@@ -314,27 +315,27 @@ Test::Result test_x509_dates()
       "170217180154Z",
    };
 
-   for(auto&& v : valid_but_unsup)
+   for(const auto& v : valid_but_unsup)
       {
       result.test_throws("valid but unsupported", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME); });
       }
 
-   for(auto&& v : valid_utc)
+   for(const auto& v : valid_utc)
       {
       Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME);
       }
 
-   for(auto&& v : valid_generalized_time)
+   for(const auto& v : valid_generalized_time)
       {
       Botan::X509_Time t(v, Botan::ASN1_Tag::GENERALIZED_TIME);
       }
 
-   for(auto&& v : invalid_utc)
+   for(const auto& v : invalid_utc)
       {
       result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME); });
       }
 
-   for (auto&& v : invalid_generalized)
+   for (const auto& v : invalid_generalized)
       {
       result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::GENERALIZED_TIME); });
       }
@@ -357,7 +358,7 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
       }
 
    /* Create the self-signed cert */
-   Botan::X509_Certificate ca_cert =
+   const Botan::X509_Certificate ca_cert =
       Botan::X509::create_self_signed_cert(ca_opts(),
                                            *ca_key,
                                            hash_fn,
@@ -429,7 +430,7 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
    result.test_eq("issuer info Orga", user1_cert.issuer_info("O").at(0), ca_opts().organization);
    result.test_eq("issuer info OrgaUnit", user1_cert.issuer_info("OU").at(0), ca_opts().org_unit);
 
-   Botan::X509_CRL crl1 = ca.new_crl(Test::rng());
+   const Botan::X509_CRL crl1 = ca.new_crl(Test::rng());
 
    /* Verify the certs */
    Botan::Path_Validation_Restrictions restrictions(false, 80);
@@ -474,7 +475,7 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
    revoked.push_back(Botan::CRL_Entry(user1_cert, Botan::CESSATION_OF_OPERATION));
    revoked.push_back(user2_cert);
 
-   Botan::X509_CRL crl2 = ca.update_crl(crl1, revoked, Test::rng());
+   const Botan::X509_CRL crl2 = ca.update_crl(crl1, revoked, Test::rng());
 
    store.add_crl(crl2);
 
@@ -522,27 +523,27 @@ Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn 
       }
 
    /* Create the self-signed cert */
-   Botan::X509_Certificate ca_cert =
+   const Botan::X509_Certificate ca_cert =
         Botan::X509::create_self_signed_cert(ca_opts(),
                                            *ca_key,
                                            hash_fn,
                                            Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
+   const Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(sig_algo));
 
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
    opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
 
-   Botan::PKCS10_Request user1_req =
+   const Botan::PKCS10_Request user1_req =
         Botan::X509::create_cert_req(opts,
                                       *user1_key,
                                       hash_fn,
                                       Test::rng());
 
-   Botan::X509_Certificate user1_cert =
+   const Botan::X509_Certificate user1_cert =
       ca.sign_request(user1_req, Test::rng(),
                       from_date(2008, 01, 01),
                       from_date(2033, 01, 01));
@@ -556,13 +557,13 @@ Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn 
 
    opts.constraints = Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN);
 
-   Botan::PKCS10_Request mult_usage_req =
+   const Botan::PKCS10_Request mult_usage_req =
         Botan::X509::create_cert_req(opts,
                                         *user1_key,
                                         hash_fn,
                                         Test::rng());
 
-   Botan::X509_Certificate mult_usage_cert =
+   const Botan::X509_Certificate mult_usage_cert =
          ca.sign_request(mult_usage_req, Test::rng(),
                          from_date(2008, 01, 01),
                          from_date(2033, 01, 01));
@@ -575,13 +576,13 @@ Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn 
 
    opts.constraints = Key_Constraints::NO_CONSTRAINTS;
 
-   Botan::PKCS10_Request no_usage_req =
+   const Botan::PKCS10_Request no_usage_req =
         Botan::X509::create_cert_req(opts,
                                         *user1_key,
                                         hash_fn,
                                         Test::rng());
 
-   Botan::X509_Certificate no_usage_cert =
+   const Botan::X509_Certificate no_usage_cert =
          ca.sign_request(no_usage_req, Test::rng(),
                          from_date(2008, 01, 01),
                          from_date(2033, 01, 01));
@@ -610,14 +611,14 @@ Test::Result test_self_issued(const std::string& sig_algo, const std::string& ha
       }
 
    // create the self-signed cert
-   Botan::X509_Certificate ca_cert =
+   const Botan::X509_Certificate ca_cert =
         Botan::X509::create_self_signed_cert(ca_opts(),
                                            *ca_key,
                                            hash_fn,
                                            Test::rng());
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
+   const Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
 
    std::unique_ptr<Botan::Private_Key> user_key(make_a_private_key(sig_algo));
 
@@ -626,23 +627,23 @@ Test::Result test_self_issued(const std::string& sig_algo, const std::string& ha
    Botan::X509_Cert_Options opts = ca_opts();
    opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
 
-   Botan::PKCS10_Request self_issued_req =
+   const Botan::PKCS10_Request self_issued_req =
         Botan::X509::create_cert_req(opts,
                                       *user_key,
                                       hash_fn,
                                       Test::rng());
 
-   Botan::X509_Certificate self_issued_cert =
+   const Botan::X509_Certificate self_issued_cert =
       ca.sign_request(self_issued_req, Test::rng(),
                       from_date(2008, 01, 01),
                       from_date(2033, 01, 01));
 
    // check that this chain can can be verified successfully
-   Botan::Certificate_Store_In_Memory trusted(ca.ca_certificate());
+   const Botan::Certificate_Store_In_Memory trusted(ca.ca_certificate());
 
-   Botan::Path_Validation_Restrictions restrictions(false, 80);
+   const Botan::Path_Validation_Restrictions restrictions(false, 80);
 
-   Botan::Path_Validation_Result validation_result =
+   const Botan::Path_Validation_Result validation_result =
          Botan::x509_path_validate(self_issued_cert,
                                    restrictions,
                                    trusted);
@@ -868,7 +869,7 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
    opts.extensions = req_extensions;
 
    /* Create a self-signed certificate */
-   Botan::X509_Certificate self_signed_cert = Botan::X509::create_self_signed_cert(opts, *user_key, hash_fn, Test::rng());
+   const Botan::X509_Certificate self_signed_cert = Botan::X509::create_self_signed_cert(opts, *user_key, hash_fn, Test::rng());
 
    // check if known Key_Usage extension is present in self-signed cert
    auto key_usage_ext = self_signed_cert.v3_extensions().get(Botan::OIDS::lookup("X509v3.KeyUsage"));
@@ -886,14 +887,14 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
       }
 
 
-   Botan::PKCS10_Request user_req =
+   const Botan::PKCS10_Request user_req =
         Botan::X509::create_cert_req(opts,
                                       *user_key,
                                       hash_fn,
                                       Test::rng());
 
    /* Create a CA-signed certificate */
-   Botan::X509_Certificate user_cert =
+   const Botan::X509_Certificate user_cert =
       ca.sign_request(user_req, Test::rng(),
                       from_date(2008, 01, 01),
                       from_date(2033, 01, 01));
@@ -923,7 +924,7 @@ class X509_Cert_Unit_Tests : public Test
          {
          std::vector<Test::Result> results;
 
-         const std::vector<std::string> sig_algos { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10" };
+         const std::string sig_algos[] { "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10" };
          Test::Result cert_result("X509 Unit");
          Test::Result usage_result("X509 Usage");
          Test::Result self_issued_result("X509 Self Issued");
