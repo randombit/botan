@@ -96,12 +96,12 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::vector<std::string> issuer_info(const std::string& name) const;
 
       /**
-      * Raw subject DN
+      * Raw issuer DN
       */
       std::vector<uint8_t> raw_issuer_dn() const;
 
       /**
-      * Raw issuer DN
+      * Raw subject DN
       */
       std::vector<uint8_t> raw_subject_dn() const;
 
