@@ -84,6 +84,12 @@ Certificate_Store_In_SQL::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& /
    throw Not_Implemented("TODO!");
    }
 
+std::shared_ptr<const X509_Certificate>
+Certificate_Store_In_SQL::find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& /*subject_hash*/) const
+   {
+   throw Not_Implemented("TODO!");
+   }
+
 std::shared_ptr<const X509_CRL>
 Certificate_Store_In_SQL::find_crl_for(const X509_Certificate& subject) const
    {

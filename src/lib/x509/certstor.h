@@ -40,6 +40,15 @@ class BOTAN_DLL Certificate_Store
          find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const = 0;
 
       /**
+      * Find a certificate by searching for one with a matching SHA-256 hash of
+      * raw subject name. Used for OCSP.
+      * @param subject_hash SHA-256 hash of the subject's raw name
+      * @return a matching certificate or nullptr otherwise
+      */
+      virtual std::shared_ptr<const X509_Certificate>
+         find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const = 0;
+
+      /**
       * Finds a CRL for the given certificate
       * @param subject the subject certificate
       * @return the CRL for subject or nullptr otherwise
@@ -119,6 +128,9 @@ class BOTAN_DLL Certificate_Store_In_Memory : public Certificate_Store
 
       std::shared_ptr<const X509_Certificate>
          find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
+
+      std::shared_ptr<const X509_Certificate>
+         find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const override;
 
       /**
       * Finds a CRL for the given certificate

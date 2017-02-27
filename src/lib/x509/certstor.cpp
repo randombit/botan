@@ -82,6 +82,23 @@ Certificate_Store_In_Memory::find_cert_by_pubkey_sha1(const std::vector<uint8_t>
    return nullptr;
    }
 
+std::shared_ptr<const X509_Certificate>
+Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const
+   {
+   if(subject_hash.size() != 32)
+      throw Invalid_Argument("Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256 invalid hash");
+
+   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-256"));
+
+   for(const auto& cert : m_certs){
+      hash->update(cert->raw_subject_dn());
+      if(subject_hash == hash->final_stdvec()) //final_stdvec also clears the hash to initial state
+         return cert;
+   }
+
+   return nullptr;
+   }
+
 void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl)
    {
    std::shared_ptr<const X509_CRL> crl_s = std::make_shared<const X509_CRL>(crl);
