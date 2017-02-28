@@ -845,7 +845,6 @@ class ECC_Invalid_Key_Tests : public Text_Based_Test
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
-         // TODO extract params from encoded key and move test vectors to ecdsa_invalid.vec
          Test::Result result("ECC invalid keys");
 
          const std::string encoded = get_req_str(vars, "SubjectPublicKey");
@@ -854,7 +853,6 @@ class ECC_Invalid_Key_Tests : public Text_Based_Test
          std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(key_data));
          result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
 
-         std::cout << key->algo_name() << std::endl;
 
          return result;
          }
