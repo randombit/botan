@@ -1,4 +1,5 @@
-# public keys failing checks from NIST CAVS file 20.1 (Generated on Mon Jun 20 09:02:25 2016)
+
+# Public keys failing checks from NIST CAVS file 20.1 (Generated on Mon Jun 20 09:02:25 2016)
 # http://csrc.nist.gov/groups/STM/cavp/documents/keymgmt/KASTestVectorsFFC2016.zip
 
 G = 0x1e2b67448a1869df1ce57517dc5e797b62c5d2c832e23f954bef8bcca74489db6caed2ea496b52a52cb664a168374cb176ddc4bc0068c6eef3a746e561f8dc65195fdaf12b363e90cfffdac18ab3ffefa4b2ad1904b45dd9f6b76b477ef8816802c7bd7cb0c0ab25d378098f5625e7ff737341af63f67cbd00509efbc6470ec38c17b7878a463cebda80053f36558a308923e6b41f465385a4f24fdb303c37fb998fc1e49e3c09ce345ff7cea18e9cd1457eb93daa87dba8a31508fa5695c32ce485962eb1834144413b41ef936db71b79d6fe985c018ac396e3af25054dbbc95e56ab5d4d4b7b61a70670e789c336b46b9f7be43cf6eb0e68b40e33a55d55cc
