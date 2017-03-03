@@ -314,8 +314,6 @@ Blinded_Point_Multiply::Blinded_Point_Multiply(const PointGFp& base, const BigIn
 
    const CurveGFp& curve = base.get_curve();
 
-#if BOTAN_POINTGFP_BLINDED_MULTIPLY_USE_MONTGOMERY_LADDER
-
    const PointGFp inv = -base;
 
    m_U.resize(6*m_h + 3);
@@ -332,17 +330,6 @@ Blinded_Point_Multiply::Blinded_Point_Multiply(const PointGFp& base, const BigIn
       m_U[3*m_h+1-i] = m_U[3*m_h+2-i];
       m_U[3*m_h+1-i].add(inv, m_ws);
       }
-#else
-   m_U.resize(1 << m_h);
-   m_U[0] = PointGFp::zero_of(curve);
-   m_U[1] = base;
-
-   for(size_t i = 2; i < m_U.size(); ++i)
-      {
-      m_U[i] = m_U[i-1];
-      m_U[i].add(base, m_ws);
-      }
-#endif
    }
 
 PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
@@ -351,9 +338,9 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
    if(scalar_in.is_negative())
       throw Invalid_Argument("Blinded_Point_Multiply scalar must be positive");
 
-#if BOTAN_POINTGFP_SCALAR_BLINDING_BITS > 0
+#if BOTAN_POINTGFP_USE_SCALAR_BLINDING
    // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
-   const BigInt mask(rng, BOTAN_POINTGFP_SCALAR_BLINDING_BITS, false);
+   const BigInt mask(rng, (m_order.bits()+1)/2, false);
    const BigInt scalar = scalar_in + m_order * mask;
 #else
    const BigInt& scalar = scalar_in;
@@ -365,7 +352,6 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
    for(size_t i = 0; i != m_U.size(); ++i)
       m_U[i].randomize_repr(rng);
 
-#if BOTAN_POINTGFP_BLINDED_MULTIPLY_USE_MONTGOMERY_LADDER
    PointGFp R = m_U.at(3*m_h + 2); // base point
    int32_t alpha = 0;
 
@@ -395,38 +381,6 @@ PointGFp Blinded_Point_Multiply::blinded_multiply(const BigInt& scalar_in,
    const int32_t k0 = scalar.get_bit(0);
    R.add(m_U[3*m_h + 1 - alpha - (k0 ^ 1)], m_ws);
 
-#else
-
-   // N-bit windowing exponentiation:
-
-   size_t windows = round_up(scalar_bits, m_h) / m_h;
-
-   PointGFp R = m_U[0];
-
-   if(windows > 0)
-      {
-      windows--;
-      const uint32_t nibble = scalar.get_substring(windows*m_h, m_h);
-      R.add(m_U[nibble], m_ws);
-
-      /*
-      Randomize after adding the first nibble as before the addition R
-      is zero, and we cannot effectively randomize the point
-      representation of the zero point.
-      */
-      R.randomize_repr(rng);
-
-      while(windows)
-         {
-         for(size_t i = 0; i != m_h; ++i)
-            R.mult2(m_ws);
-
-         const uint32_t inner_nibble = scalar.get_substring((windows-1)*m_h, m_h);
-         R.add(m_U[inner_nibble], m_ws);
-         windows--;
-         }
-      }
-#endif
 
    //BOTAN_ASSERT(R.on_the_curve(), "Output is on the curve");
 
