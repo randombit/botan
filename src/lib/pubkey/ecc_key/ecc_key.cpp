@@ -44,11 +44,39 @@ EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
    m_domain_encoding{EC_DOMPAR_ENC_EXPLICIT}
    {}
 
-bool EC_PublicKey::check_key(RandomNumberGenerator&,
+bool EC_PublicKey::check_key(RandomNumberGenerator& rng,
                              bool) const
    {
-   return public_point().on_the_curve();
+   //verify domain parameters
+   if(!m_domain_params.verify_group(rng))
+      {
+      return false;
+      }
+   //check that public point is not at infinity
+   if(public_point().is_zero())
+      {
+      return false;
+      }
+   //check that public point is on the curve
+   if(!public_point().on_the_curve())
+      {
+      return false;
+      }
+   if(m_domain_params.get_cofactor() > 1)
+      {
+      if((public_point() * m_domain_params.get_cofactor()).is_zero())
+         {
+         return false;
+         }
+      //check that public point has order q
+      if(!(public_point() * m_domain_params.get_order()).is_zero())
+         {
+         return false;
+         }
+      }
+   return true;
    }
+
 
 AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const
    {

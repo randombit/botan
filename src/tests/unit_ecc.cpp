@@ -18,6 +18,8 @@
   #include <botan/reducer.h>
   #include <botan/oids.h>
   #include <botan/hex.h>
+  #include <botan/data_src.h>
+  #include <botan/x509_key.h>
 #endif
 
 namespace Botan_Tests {
@@ -832,6 +834,31 @@ class ECC_Unit_Tests : public Test
    };
 
 BOTAN_REGISTER_TEST("ecc_unit", ECC_Unit_Tests);
+
+class ECC_Invalid_Key_Tests : public Text_Based_Test
+   {
+   public:
+      ECC_Invalid_Key_Tests() :
+         Text_Based_Test("pubkey/ecc_invalid.vec", "SubjectPublicKey") {}
+
+      bool clear_between_callbacks() const override { return false; }
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         Test::Result result("ECC invalid keys");
+
+         const std::string encoded = get_req_str(vars, "SubjectPublicKey");
+         Botan::DataSource_Memory key_data(Botan::hex_decode(encoded));
+
+         std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(key_data));
+         result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
+
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("ecc_invalid", ECC_Invalid_Key_Tests);
 
 #endif
 

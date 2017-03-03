@@ -1,5 +1,6 @@
 /*
 * (C) 2014,2015 Jack Lloyd
+* (C) 2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -68,8 +69,47 @@ class ECDSA_Keygen_Tests : public PK_Key_Generation_Test
       std::string algo_name() const override { return "ECDSA"; }
    };
 
+class ECDSA_Invalid_Key_Tests : public Text_Based_Test
+   {
+   public:
+      ECDSA_Invalid_Key_Tests() :
+         Text_Based_Test("pubkey/ecdsa_invalid.vec", "Group,InvalidKeyX,InvalidKeyY") {}
+
+      bool clear_between_callbacks() const override { return false; }
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         Test::Result result("ECDSA invalid keys");
+
+         const std::string group_id = get_req_str(vars, "Group");
+         Botan::EC_Group group(Botan::OIDS::lookup(group_id));
+         const Botan::BigInt x = get_req_bn(vars, "InvalidKeyX");
+         const Botan::BigInt y = get_req_bn(vars, "InvalidKeyY");
+
+         std::unique_ptr<Botan::PointGFp> public_point;
+
+         try
+            {
+            public_point.reset(new Botan::PointGFp(group.get_curve(), x, y));
+            }
+         catch(Botan::Invalid_Argument&)
+            {
+            // PointGFp() performs a range check on x, y in [0, p−1],
+            // which is also part of the EC public key checks, e.g.,
+            // in NIST SP800-56A rev2, sec. 5.6.2.3.2
+            result.test_success("public key fails check");
+            return result;
+            }
+
+         std::unique_ptr<Botan::Public_Key> key(new Botan::ECDSA_PublicKey(group, *public_point));
+         result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
+         return result;
+         }
+   };
+
 BOTAN_REGISTER_TEST("ecdsa_sign", ECDSA_Signature_KAT_Tests);
 BOTAN_REGISTER_TEST("ecdsa_keygen", ECDSA_Keygen_Tests);
+BOTAN_REGISTER_TEST("ecdsa_invalid", ECDSA_Invalid_Key_Tests);
 
 #endif
 
