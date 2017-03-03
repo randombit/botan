@@ -57,7 +57,7 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
                                const Botan::X509_Certificate* dsa_cert,
                                Botan::Private_Key* dsa_key,
                                const Botan::X509_Certificate* dsa_ca,
-                               const Botan::X509_CRL* dsa_crl) :
+                               Botan::X509_CRL* dsa_crl) :
          m_rsa_cert(rsa_cert),
          m_rsa_ca(rsa_ca),
          m_rsa_key(rsa_key),
@@ -66,7 +66,8 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
          m_ecdsa_key(ecdsa_key),
          m_dsa_cert(dsa_cert),
          m_dsa_ca(dsa_ca),
-         m_dsa_key(dsa_key)
+         m_dsa_key(dsa_key),
+         m_dsa_crl(dsa_crl)
          {
          std::unique_ptr<Botan::Certificate_Store_In_Memory> store(new Botan::Certificate_Store_In_Memory);
          store->add_certificate(m_rsa_ca);
@@ -78,9 +79,9 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
             {
             store->add_certificate(*m_dsa_ca);
             }
-         if(dsa_crl != nullptr)
+         if(m_dsa_crl != nullptr)
             {
-            store->add_crl(*dsa_crl);
+            store->add_crl(*m_dsa_crl);
             }
 
          m_stores.push_back(std::move(store));
@@ -176,6 +177,7 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
 
       std::unique_ptr<const Botan::X509_Certificate> m_dsa_cert, m_dsa_ca;
       std::unique_ptr<Botan::Private_Key> m_dsa_key;
+      std::unique_ptr<Botan::X509_CRL> m_dsa_crl;
       std::vector<std::unique_ptr<Botan::Certificate_Store>> m_stores;
       bool m_provides_client_certs;
    };
