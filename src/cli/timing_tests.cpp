@@ -335,7 +335,7 @@ class Timing_Test_Command : public Command
       Timing_Test_Command() : Command("timing_test test_type --test-data-file= --test-data-dir=src/extra_tests/timing/timing-tests/data/ --warmup-runs=1000 --measurement-runs=10000")
          {}
 
-      virtual void go()
+      virtual void go() override
          {
          const std::string test_type = get_arg("test_type");
          const size_t warmup_runs = get_arg_sz("warmup-runs");
@@ -390,7 +390,7 @@ class Timing_Test_Command : public Command
    private:
       std::unique_ptr<Timing_Test> lookup_timing_test(const std::string& test_type);
 
-      virtual std::string help_text() const
+      virtual std::string help_text() const override
          {
          // TODO check feature macros
          return (Command::help_text() +
@@ -446,6 +446,8 @@ std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(const std::
       return std::unique_ptr<Timing_Test>(new Lucky13_Timing_Test("SHA-384", 48));
       }
 #endif
+
+   BOTAN_UNUSED(test_type);
 
    return nullptr;
    }
