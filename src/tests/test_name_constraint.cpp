@@ -8,7 +8,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
   #include <botan/x509path.h>
-  #include <botan/internal/filesystem.h>
+  #include <botan/calendar.h>
 #endif
 
 #include <algorithm>
@@ -65,6 +65,9 @@ class Name_Constraint_Tests : public Test
          std::vector<Test::Result> results;
          const Botan::Path_Validation_Restrictions restrictions(false, 80);
 
+         std::chrono::system_clock::time_point validation_time =
+            Botan::calendar_point(2016,10,21,4,20,0).to_std_timepoint();
+
          for(const auto& t: test_cases)
             {
             Botan::X509_Certificate root(Test::data_file("name_constraint/" + std::get<0>(t)));
@@ -74,7 +77,8 @@ class Name_Constraint_Tests : public Test
 
             trusted.add_certificate(root);
             Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
-               sub, restrictions, trusted, std::get<2>(t), Botan::Usage_Type::TLS_SERVER_AUTH);
+               sub, restrictions, trusted, std::get<2>(t), Botan::Usage_Type::TLS_SERVER_AUTH,
+               validation_time);
 
             if(path_result.successful_validation() && path_result.trust_root() != root)
                path_result = Botan::Path_Validation_Result(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
