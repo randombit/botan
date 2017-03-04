@@ -27,7 +27,13 @@ secure_vector<uint8_t> emsa3_encoding(const secure_vector<uint8_t>& msg,
    T[0] = 0x01;
    set_mem(&T[1], P_LENGTH, 0xFF);
    T[P_LENGTH+1] = 0x00;
-   buffer_insert(T, P_LENGTH+2, hash_id, hash_id_length);
+
+   if(hash_id_length > 0)
+      {
+      BOTAN_ASSERT_NONNULL(hash_id);
+      buffer_insert(T, P_LENGTH+2, hash_id, hash_id_length);
+      }
+
    buffer_insert(T, output_length-msg.size(), msg.data(), msg.size());
    return T;
    }
