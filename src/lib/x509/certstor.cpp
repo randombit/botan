@@ -71,9 +71,13 @@ Certificate_Store_In_Memory::find_cert_by_pubkey_sha1(const std::vector<uint8_t>
    if(key_hash.size() != 20)
       throw Invalid_Argument("Certificate_Store_In_Memory::find_cert_by_pubkey_sha1 invalid hash");
 
-   for(const auto& cert : m_certs)
-      if(key_hash == cert->subject_public_key_bitstring_sha1())
+   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-1"));
+
+   for(const auto& cert : m_certs){
+      hash->update(cert->subject_public_key_bitstring());
+      if(key_hash == hash->final_stdvec()) //final_stdvec also clears the hash to initial state
          return cert;
+   }
 
    return nullptr;
    }
