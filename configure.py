@@ -517,11 +517,16 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     return options
 
-def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
+
+class LexResult(object):
+    pass
+
+
+def lex_me_harder(infofile, allowed_groups, name_val_pairs):
     """
     Generic lexer function for info.txt and src/build-data files
     """
-    out = {}
+    out = LexResult()
 
     # Format as a nameable Python variable
     def py_var(group):
@@ -540,9 +545,9 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
     lexer.wordchars += '|:.<>/,-!+' # handle various funky chars in info.txt
 
     for group in allowed_groups:
-        out[py_var(group)] = []
+        out.__dict__[py_var(group)] = []
     for (key, val) in name_val_pairs.items():
-        out[key] = val
+        out.__dict__[key] = val
 
     def lexed_tokens(): # Convert to an interator
         token = lexer.get_token()
@@ -565,15 +570,15 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
             token = lexer.get_token()
             while token != end_marker:
-                out[py_var(group)].append(token)
+                out.__dict__[py_var(group)].append(token)
                 token = lexer.get_token()
                 if token is None:
                     raise LexerError('Group "%s" not terminated' % (group),
                                      lexer.lineno)
 
         elif token in name_val_pairs.keys():
-            if isinstance(out[token], list):
-                out[token].append(lexer.get_token())
+            if isinstance(out.__dict__[token], list):
+                out.__dict__[token].append(lexer.get_token())
 
                 # Dirty hack
                 if token == 'define':
@@ -582,19 +587,14 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
                         raise LexerError('No version set for API', lexer.lineno)
                     if not re.match('^[0-9]{8}$', nxt):
                         raise LexerError('Bad API rev "%s"' % (nxt), lexer.lineno)
-                    out[token].append(nxt)
+                    out.__dict__[token].append(nxt)
             else:
-                out[token] = lexer.get_token()
+                out.__dict__[token] = lexer.get_token()
 
         else: # No match -> error
             raise LexerError('Bad token "%s"' % (token), lexer.lineno)
 
-    # Copy result into objects
-    for key in out:
-        if to_obj:
-            to_object.__dict__[key] = out[key]
-        out_object.__dict__[key] = out[key]
-    return out_object
+    return out
 
 def force_to_dict(l):
     """
@@ -633,7 +633,6 @@ class ModuleInfo(InfoObject):
         super(ModuleInfo, self).__init__(infofile)
         lex = lex_me_harder(
             infofile,
-            None,
             [
                 'header:internal', 'header:public', 'header:external', 'requires',
                 'os', 'arch', 'cc', 'libs', 'frameworks', 'comment', 'warning'
@@ -821,7 +820,6 @@ class ModulePolicyInfo(InfoObject):
         super(ModulePolicyInfo, self).__init__(infofile)
         self.lex = lex_me_harder(
             infofile,
-            None,
             ['required', 'if_available', 'prohibited'],
             {})
 
@@ -842,7 +840,6 @@ class ArchInfo(InfoObject):
         super(ArchInfo, self).__init__(infofile)
         self.lex = lex_me_harder(
             infofile,
-            None,
             ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
             {
                 'endian': None,
@@ -928,7 +925,6 @@ class CompilerInfo(InfoObject):
         super(CompilerInfo, self).__init__(infofile)
         self.lex = lex_me_harder(
             infofile,
-            None,
             ['so_link_commands', 'binary_link_commands', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
             {
                 'binary_name': None,
@@ -1135,7 +1131,6 @@ class OsInfo(InfoObject):
         super(OsInfo, self).__init__(infofile)
         self.lex = lex_me_harder(
             infofile,
-            None,
             ['aliases', 'target_features'],
             {
                 'os_type': None,
