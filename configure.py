@@ -209,7 +209,7 @@ class BuildConfigurationInformation(object):
         return 'botan-%d.pc' % (self.version_major)
 
 
-def process_command_line(args):
+def process_command_line(args): # pylint: disable=too-many-locals
     """
     Handle command line options
     """
