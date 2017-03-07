@@ -631,14 +631,26 @@ class ModuleInfo(InfoObject):
 
     def __init__(self, infofile):
         super(ModuleInfo, self).__init__(infofile)
-        lex_me_harder(infofile, self,
-                      ['header:internal', 'header:public',
-                       'header:external', 'requires', 'os', 'arch',
-                       'cc', 'libs', 'frameworks', 'comment',
-                       'warning'],
-                      {'load_on': 'auto',
-                       'define': [],
-                       'need_isa': ''})
+        lex = lex_me_harder(
+            infofile,
+            None,
+            [
+                'header:internal', 'header:public', 'header:external', 'requires',
+                'os', 'arch', 'cc', 'libs', 'frameworks', 'comment', 'warning'
+            ],
+            {
+                'load_on': 'auto',
+                'define': [],
+                'need_isa': ''
+            })
+
+        def check_header_duplicates(header_list_public, header_list_internal):
+            pub_header = set(header_list_public)
+            int_header = set(header_list_internal)
+            if not pub_header.isdisjoint(int_header):
+                logging.error("Module %s header contains same header in public and internal sections" % self.infofile)
+
+        check_header_duplicates(lex.header_public, lex.header_internal)
 
         all_source_files = []
         all_header_files = []
@@ -651,20 +663,14 @@ class ModuleInfo(InfoObject):
 
         self.source = all_source_files
 
-        if self.need_isa == '':
-            self.need_isa = []
-        else:
-            self.need_isa = self.need_isa.split(',')
-
         # If not entry for the headers, all are assumed public
-        if self.header_internal == [] and self.header_public == []:
+        if lex.header_internal == [] and lex.header_public == []:
             self.header_public = list(all_header_files)
+            self.header_internal = []
         else:
-            pub_header = set(self.header_public)
-            int_header = set(self.header_internal)
-
-            if not pub_header.isdisjoint(int_header):
-                logging.error("Module %s header contains same header in public and internal sections" % (infofile))
+            self.header_public = lex.header_public
+            self.header_internal = lex.header_internal
+        self.header_external = lex.header_external
 
         # Coerce to more useful types
         def convert_lib_list(l):
@@ -682,8 +688,18 @@ class ModuleInfo(InfoObject):
                     result[target] = result.setdefault(target, []) + vals
             return result
 
-        self.libs = convert_lib_list(self.libs)
-        self.frameworks = convert_lib_list(self.frameworks)
+        # Convert remaining lex result to members
+        self.arch = lex.arch
+        self.cc = lex.cc
+        self.comment = ' '.join(lex.comment) if lex.comment else None
+        self.define = lex.define
+        self.frameworks = convert_lib_list(lex.frameworks)
+        self.libs = convert_lib_list(lex.libs)
+        self.load_on = lex.load_on
+        self.need_isa = lex.need_isa.split(',') if lex.need_isa else []
+        self.os = lex.os
+        self.requires = lex.requires
+        self.warning = ' '.join(lex.warning) if lex.warning else None
 
         def add_dir_name(filename):
             if filename.count(':') == 0:
@@ -696,25 +712,18 @@ class ModuleInfo(InfoObject):
             return os.path.join(os.path.split(self.lives_in)[0],
                                 *filename.split(':'))
 
+        # Modify members
         self.source = [add_dir_name(s) for s in self.source]
         self.header_internal = [add_dir_name(s) for s in self.header_internal]
         self.header_public = [add_dir_name(s) for s in self.header_public]
         self.header_external = [add_dir_name(s) for s in self.header_external]
 
+        # Filesystem read access check
         for src in self.source + self.header_internal + self.header_public + self.header_external:
             if not os.access(src, os.R_OK):
                 logging.error("Missing file %s in %s" % (src, infofile))
 
-        if self.comment != []:
-            self.comment = ' '.join(self.comment)
-        else:
-            self.comment = None
-
-        if self.warning != []:
-            self.warning = ' '.join(self.warning)
-        else:
-            self.warning = None
-
+        # Check for duplicates
         def intersect_check(type_a, list_a, type_b, list_b):
             intersection = set.intersection(set(list_a), set(list_b))
             if len(intersection) > 0:
