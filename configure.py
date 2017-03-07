@@ -828,19 +828,20 @@ class ModulePolicyInfo(InfoObject):
 class ArchInfo(InfoObject):
     def __init__(self, infofile):
         super(ArchInfo, self).__init__(infofile)
-        lex_me_harder(infofile, self,
-                      ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
-                      {'endian': None,
-                       'family': None,
-                       'unaligned': 'no',
-                       'wordsize': 32
-                      })
+        self.lex = lex_me_harder(
+            infofile,
+            None,
+            ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
+            {
+                'endian': None,
+                'family': None,
+                'unaligned': 'no',
+                'wordsize': 32
+            })
 
-        self.submodel_aliases = force_to_dict(self.submodel_aliases)
-
-        self.unaligned_ok = (1 if self.unaligned == 'ok' else 0)
-
-        self.wordsize = int(self.wordsize)
+        self.lex.submodel_aliases = force_to_dict(self.lex.submodel_aliases)
+        self.lex.unaligned_ok = (1 if self.lex.unaligned == 'ok' else 0)
+        self.lex.wordsize = int(self.lex.wordsize)
 
     def all_submodels(self):
         """
@@ -848,8 +849,8 @@ class ArchInfo(InfoObject):
         to shortest
         """
 
-        return sorted([(k, k) for k in self.submodels] +
-                      [k for k in self.submodel_aliases.items()],
+        return sorted([(k, k) for k in self.lex.submodels] +
+                      [k for k in self.lex.submodel_aliases.items()],
                       key=lambda k: len(k[0]), reverse=True)
 
     def defines(self, cc, options):
@@ -867,7 +868,7 @@ class ArchInfo(InfoObject):
         if self.basename != options.cpu:
             macros.append('TARGET_CPU_IS_%s' % (form_macro(options.cpu)))
 
-        enabled_isas = set(self.isa_extensions)
+        enabled_isas = set(self.lex.isa_extensions)
         disabled_isas = set(options.disable_intrinsics)
 
         isa_extensions = sorted(enabled_isas - disabled_isas)
@@ -878,7 +879,7 @@ class ArchInfo(InfoObject):
             else:
                 logging.warning("Disabling support for %s intrinsics due to missing flag for compiler" % (isa))
 
-        endian = options.with_endian or self.endian
+        endian = options.with_endian or self.lex.endian
 
         if endian != None:
             macros.append('TARGET_CPU_IS_%s_ENDIAN' % (endian.upper()))
@@ -886,16 +887,16 @@ class ArchInfo(InfoObject):
 
         unaligned_ok = options.unaligned_mem
         if unaligned_ok is None:
-            unaligned_ok = self.unaligned_ok
+            unaligned_ok = self.lex.unaligned_ok
             if unaligned_ok:
                 logging.info('Assuming unaligned memory access works')
 
-        if self.family is not None:
-            macros.append('TARGET_CPU_IS_%s_FAMILY' % (self.family.upper()))
+        if self.lex.family is not None:
+            macros.append('TARGET_CPU_IS_%s_FAMILY' % (self.lex.family.upper()))
 
-        macros.append('TARGET_CPU_NATIVE_WORD_SIZE %d' % (self.wordsize))
+        macros.append('TARGET_CPU_NATIVE_WORD_SIZE %d' % (self.lex.wordsize))
 
-        if self.wordsize == 64:
+        if self.lex.wordsize == 64:
             macros.append('TARGET_CPU_HAS_NATIVE_64BIT')
 
         macros.append('TARGET_UNALIGNED_MEMORY_ACCESS_OK %d' % (unaligned_ok))
