@@ -388,7 +388,8 @@ def process_command_line(args): # pylint: disable=too-many-locals
                            dest='with_valgrind', action='store_true', default=False)
 
     build_group.add_option('--with-bakefile', action='store_true',
-                           default=False, help='Generate bakefile which can be used to create Visual Studio or Xcode project files')
+                           default=False,
+                           help='Generate bakefile which can be used to create Visual Studio or Xcode project files')
 
     build_group.add_option('--unsafe-fuzzer-mode', action='store_true', default=False,
                            help='disable essential checks for testing')
@@ -1439,8 +1440,11 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
         """
 
         includes = cc.add_include_dir_option + build_config.include_dir
-        includes += (' ' + cc.add_include_dir_option + build_config.external_include_dir) if build_config.external_headers else ''
-        includes += (' ' + cc.add_include_dir_option + options.with_external_includedir) if options.with_external_includedir else ''
+        if build_config.external_headers:
+            includes += ' ' + cc.add_include_dir_option + build_config.external_include_dir
+        if options.with_external_includedir:
+            includes += ' ' + cc.add_include_dir_option + options.with_external_includedir
+
         for (obj_file, src) in zip(objectfile_list(sources, obj_dir), sources):
             yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
                 obj_file, src,
@@ -1615,7 +1619,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'cli_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
         'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
 
-        'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()] + [cc.add_framework_option + fw for fw in link_to_frameworks()]),
+        'link_to': ' '.join(
+            [cc.add_lib_option + lib for lib in link_to()] +
+            [cc.add_framework_option + fw for fw in link_to_frameworks()]
+        ),
 
         'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
 
@@ -1667,8 +1674,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     if options.os == 'darwin' and options.build_shared_lib:
         # In order that these executables work from the build directory,
         # we need to change the install names
-        vars['cli_post_link_cmd'] = 'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(CLI)'
-        vars['test_post_link_cmd'] = 'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
+        vars['cli_post_link_cmd'] = \
+            'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(CLI)'
+        vars['test_post_link_cmd'] = \
+            'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
     else:
         vars['cli_post_link_cmd'] = ''
         vars['test_post_link_cmd'] = ''
