@@ -1120,64 +1120,67 @@ class CompilerInfo(InfoObject):
 class OsInfo(InfoObject):
     def __init__(self, infofile):
         super(OsInfo, self).__init__(infofile)
-        lex_me_harder(infofile, self,
-                      ['aliases', 'target_features'],
-                      {'os_type': None,
-                       'program_suffix': '',
-                       'obj_suffix': 'o',
-                       'soname_suffix': '',
-                       'soname_pattern_patch': '',
-                       'soname_pattern_abi': '',
-                       'soname_pattern_base': '',
-                       'static_suffix': 'a',
-                       'ar_command': 'ar crs',
-                       'ar_needs_ranlib': False,
-                       'install_root': '/usr/local',
-                       'header_dir': 'include',
-                       'bin_dir': 'bin',
-                       'lib_dir': 'lib',
-                       'doc_dir': 'share/doc',
-                       'building_shared_supported': 'yes',
-                       'install_cmd_data': 'install -m 644',
-                       'install_cmd_exec': 'install -m 755'
-                      })
+        self.lex = lex_me_harder(
+            infofile,
+            None,
+            ['aliases', 'target_features'],
+            {
+                'os_type': None,
+                'program_suffix': '',
+                'obj_suffix': 'o',
+                'soname_suffix': '',
+                'soname_pattern_patch': '',
+                'soname_pattern_abi': '',
+                'soname_pattern_base': '',
+                'static_suffix': 'a',
+                'ar_command': 'ar crs',
+                'ar_needs_ranlib': False,
+                'install_root': '/usr/local',
+                'header_dir': 'include',
+                'bin_dir': 'bin',
+                'lib_dir': 'lib',
+                'doc_dir': 'share/doc',
+                'building_shared_supported': 'yes',
+                'install_cmd_data': 'install -m 644',
+                'install_cmd_exec': 'install -m 755'
+            })
 
-        if self.soname_pattern_base != '':
-            if self.soname_pattern_patch == '' and self.soname_pattern_abi == '':
-                self.soname_pattern_patch = self.soname_pattern_base
-                self.soname_pattern_patch_abi = self.soname_pattern_base
+        if self.lex.soname_pattern_base != '':
+            if self.lex.soname_pattern_patch == '' and self.lex.soname_pattern_abi == '':
+                self.lex.soname_pattern_patch = self.lex.soname_pattern_base
+                self.lex.soname_pattern_patch_abi = self.lex.soname_pattern_base
 
-            elif self.soname_pattern_abi != '' and self.soname_pattern_abi != '':
+            elif self.lex.soname_pattern_abi != '' and self.lex.soname_pattern_abi != '':
                 pass # all 3 values set, nothing needs to happen here
             else:
                 # base set, only one of patch/abi set
                 raise ConfigureError("Invalid soname_patterns in %s" % (self.infofile))
 
-        if self.soname_pattern_base == '' and self.soname_suffix != '':
-            self.soname_pattern_base = "libbotan-{version_major}.%s" % (self.soname_suffix)
-            self.soname_pattern_abi = self.soname_pattern_base + ".{abi_rev}"
-            self.soname_pattern_patch = self.soname_pattern_abi + ".{version_minor}.{version_patch}"
+        if self.lex.soname_pattern_base == '' and self.lex.soname_suffix != '':
+            self.lex.soname_pattern_base = "libbotan-{version_major}.%s" % (self.lex.soname_suffix)
+            self.lex.soname_pattern_abi = self.lex.soname_pattern_base + ".{abi_rev}"
+            self.lex.soname_pattern_patch = self.lex.soname_pattern_abi + ".{version_minor}.{version_patch}"
 
-        self.ar_needs_ranlib = bool(self.ar_needs_ranlib)
+        self.lex.ar_needs_ranlib = bool(self.lex.ar_needs_ranlib)
 
-        self.building_shared_supported = (True if self.building_shared_supported == 'yes' else False)
+        self.lex.building_shared_supported = (True if self.lex.building_shared_supported == 'yes' else False)
 
     def ranlib_command(self):
-        return 'ranlib' if self.ar_needs_ranlib else 'true'
+        return 'ranlib' if self.lex.ar_needs_ranlib else 'true'
 
     def defines(self, options):
         r = []
         r += ['TARGET_OS_IS_%s' % (self.basename.upper())]
 
-        if self.os_type != None:
-            r += ['TARGET_OS_TYPE_IS_%s' % (self.os_type.upper())]
+        if self.lex.os_type != None:
+            r += ['TARGET_OS_TYPE_IS_%s' % (self.lex.os_type.upper())]
 
         def feat_macros():
-            for feat in self.target_features:
+            for feat in self.lex.target_features:
                 if feat not in options.without_os_features:
                     yield 'TARGET_OS_HAS_' + feat.upper()
             for feat in options.with_os_features:
-                if feat not in self.target_features:
+                if feat not in self.lex.target_features:
                     yield 'TARGET_OS_HAS_' + feat.upper()
 
         r += sorted(feat_macros())
