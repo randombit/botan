@@ -98,11 +98,17 @@ class OCSP_Tests : public Test
             result.test_success("Bad arguments rejected");
             }
 
-         const Botan::OCSP::Request req(issuer, end_entity);
+
          const std::string expected_request = "ME4wTKADAgEAMEUwQzBBMAkGBSsOAwIaBQAEFPLgavmFih2NcJtJGSN6qbUaKH5kBBRK3QYWG7z2aLV29YG2u2IaulqBLwIIQkg+DF+RYMY=";
 
+         const Botan::OCSP::Request req1(issuer, end_entity);
          result.test_eq("Encoded OCSP request",
-                        req.base64_encode(),
+                        req1.base64_encode(),
+                        expected_request);
+
+         const Botan::OCSP::Request req2(issuer, BigInt::decode(end_entity.serial_number()));
+         result.test_eq("Encoded OCSP request",
+                        req2.base64_encode(),
                         expected_request);
 
          return result;

@@ -31,6 +31,9 @@ class BOTAN_DLL Request
       Request(const X509_Certificate& issuer_cert,
               const X509_Certificate& subject_cert);
 
+      Request(const X509_Certificate& issuer_cert,
+              const BigInt& subject_serial);
+
       /**
       * @return BER-encoded OCSP request
       */
@@ -49,12 +52,12 @@ class BOTAN_DLL Request
       /**
       * @return subject certificate
       */
-      const X509_Certificate& subject() const { return m_subject; }
+      const X509_Certificate& subject() const { throw Not_Implemented("Method have been deprecated"); }
 
       const std::vector<uint8_t>& issuer_key_hash() const
          { return m_certid.issuer_key_hash(); }
    private:
-      X509_Certificate m_issuer, m_subject;
+      X509_Certificate m_issuer;
       CertID m_certid;
    };
 
@@ -154,6 +157,11 @@ class BOTAN_DLL Response
    };
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
+
+BOTAN_DLL Response online_check(const X509_Certificate& issuer,
+                                const BigInt& subject_serial,
+                                const std::string& ocsp_responder,
+                                Certificate_Store* trusted_roots);
 
 /**
 * Makes an online OCSP request via HTTP and returns the OCSP response.

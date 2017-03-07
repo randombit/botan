@@ -17,7 +17,7 @@ namespace Botan {
 namespace OCSP {
 
 CertID::CertID(const X509_Certificate& issuer,
-               const X509_Certificate& subject)
+               const BigInt& subject_serial)
    {
    /*
    In practice it seems some responders, including, notably,
@@ -27,8 +27,8 @@ CertID::CertID(const X509_Certificate& issuer,
 
    m_hash_id = AlgorithmIdentifier(hash->name(), AlgorithmIdentifier::USE_NULL_PARAM);
    m_issuer_key_hash = unlock(hash->process(issuer.subject_public_key_bitstring()));
-   m_issuer_dn_hash = unlock(hash->process(subject.raw_issuer_dn()));
-   m_subject_serial = BigInt::decode(subject.serial_number());
+   m_issuer_dn_hash = unlock(hash->process(issuer.raw_subject_dn()));
+   m_subject_serial = subject_serial;
    }
 
 bool CertID::is_id_for(const X509_Certificate& issuer,

@@ -53,11 +53,17 @@ void decode_optional_list(BER_Decoder& ber,
 Request::Request(const X509_Certificate& issuer_cert,
                  const X509_Certificate& subject_cert) :
    m_issuer(issuer_cert),
-   m_subject(subject_cert),
-   m_certid(m_issuer, m_subject)
+   m_certid(m_issuer, BigInt::decode(subject_cert.serial_number()))
    {
    if(subject_cert.issuer_dn() != issuer_cert.subject_dn())
       throw Invalid_Argument("Invalid cert pair to OCSP::Request (mismatched issuer,subject args?)");
+   }
+
+Request::Request(const X509_Certificate& issuer_cert,
+                 const BigInt& subject_serial) :
+   m_issuer(issuer_cert),
+   m_certid(m_issuer, subject_serial)
+   {
    }
 
 std::vector<uint8_t> Request::BER_encode() const
@@ -275,17 +281,16 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
 #if defined(BOTAN_HAS_HTTP_UTIL)
 
 Response online_check(const X509_Certificate& issuer,
-                      const X509_Certificate& subject,
+                      const BigInt& subject_serial,
+                      const std::string& ocsp_responder,
                       Certificate_Store* trusted_roots)
    {
-   const std::string responder_url = subject.ocsp_responder();
+   if(ocsp_responder.empty())
+      throw Invalid_Argument("No OCSP responder specified");
 
-   if(responder_url.empty())
-      throw Exception("No OCSP responder specified");
+   OCSP::Request req(issuer, subject_serial);
 
-   OCSP::Request req(issuer, subject);
-
-   auto http = HTTP::POST_sync(responder_url,
+   auto http = HTTP::POST_sync(ocsp_responder,
                                "application/ocsp-request",
                                req.BER_encode());
 
@@ -302,6 +307,20 @@ Response online_check(const X509_Certificate& issuer,
       response.check_signature(trusted_roots_vec);
 
    return response;
+   }
+
+
+Response online_check(const X509_Certificate& issuer,
+                      const X509_Certificate& subject,
+                      Certificate_Store* trusted_roots)
+   {
+   if(subject.issuer_dn() != issuer.subject_dn())
+      throw Invalid_Argument("Invalid cert pair to OCSP::online_check (mismatched issuer,subject args?)");
+
+   return online_check(issuer,
+                       BigInt::decode(subject.serial_number()),
+                       subject.ocsp_responder(),
+                       trusted_roots);
    }
 
 #endif

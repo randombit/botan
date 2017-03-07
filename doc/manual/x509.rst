@@ -698,9 +698,14 @@ the subject's issuing certificate.
 .. cpp:class:: OCSP::Request
 
  .. cpp:function:: OCSP::Request(const X509_Certificate& issuer_cert, \
-                                 const X509_Certificate& subject_cert)
+                                 const BigInt& subject_serial)
 
       Create a new OCSP request
+
+ .. cpp:function:: OCSP::Request(const X509_Certificate& issuer_cert, \
+                                 const X509_Certificate& subject_cert)
+
+      Variant of the above, using serial number from ``subject_cert``.
 
  .. cpp:function:: std::vector<byte> BER_encode() const
 
@@ -783,11 +788,18 @@ Appendix A for details. A basic implementation of this is the function
 was compiled in; check by testing for the macro ``BOTAN_HAS_HTTP_UTIL``.
 
 .. cpp:function:: OCSP::Response online_check(const X509_Certificate& issuer, \
+                                              const BigInt& subject_serial, \
+                                              const std::string& ocsp_responder, \
+                                              const Certificate_Store* trusted_roots)
+
+   Assemble a OCSP request for serial number ``subject_serial`` and attempt to request
+   it to responder at URI ``ocsp_responder`` over a new HTTP socket, parses and returns
+   the response. If trusted_roots is not null, then the response is additionally
+   validated using OCSP response API ``check_signature``. Otherwise, this call must be
+   performed later by the application.
+
+.. cpp:function:: OCSP::Response online_check(const X509_Certificate& issuer, \
                                               const X509_Certificate& subject, \
                                               const Certificate_Store* trusted_roots)
 
-   Attempts to contact the OCSP responder specified in the subject certificate
-   over a new HTTP socket, parses and returns the response. If trusted_roots is
-   not null, then the response is additionally validated using OCSP response API
-   ``check_signature``. Otherwise, this call must be performed later by the
-   application.
+   Variant of the above but uses serial number and OCSP responder URI from ``subject``.
