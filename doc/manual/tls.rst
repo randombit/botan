@@ -1006,7 +1006,7 @@ policy settings from a file.
      fatal alert then attempt to reconnect after disabling ephemeral
      Diffie-Hellman.
 
-     Default: 1024 bits
+     Default: 2048 bits
 
 .. cpp:function:: size_t minimum_rsa_bits() const
 
