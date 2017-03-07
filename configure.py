@@ -986,13 +986,13 @@ class CompilerInfo(InfoObject):
         Return the machine specific ABI flags
         """
 
-        def all():
+        def all_group():
             if options.with_debug_info and 'all-debug' in self.mach_abi_linking:
                 return 'all-debug'
             return 'all'
 
         abi_link = list()
-        for what in [all(), options.os, options.arch, options.cpu]:
+        for what in [all_group(), options.os, options.arch, options.cpu]:
             flag = self.mach_abi_linking.get(what)
             if flag != None and flag != '' and flag not in abi_link:
                 abi_link.append(flag)
@@ -1231,16 +1231,14 @@ def system_cpu_info():
     return cpu_info
 
 def guess_processor(archinfo):
-    cpu_info = system_cpu_info()
-
-    for input in cpu_info:
-        if input != '':
-            match = canon_processor(archinfo, input)
+    for info_part in system_cpu_info():
+        if info_part:
+            match = canon_processor(archinfo, info_part)
             if match != None:
-                logging.debug("Matched '%s' to processor '%s'" % (input, match))
+                logging.debug("Matched '%s' to processor '%s'" % (info_part, match))
                 return match
             else:
-                logging.debug("Failed to deduce CPU from '%s'" % (input))
+                logging.debug("Failed to deduce CPU from '%s'" % info_part)
 
     raise ConfigureError('Could not determine target CPU; set with --cpu')
 
@@ -1278,17 +1276,17 @@ def gen_bakefile(build_config, options, external_libs):
 
     def bakefile_sources(file, sources):
         for src in sources:
-            (dir, filename) = os.path.split(os.path.normpath(src))
-            dir = dir.replace('\\', '/')
-            _, dir = dir.split('src/', 1)
-            file.write('\tsources { src/%s/%s } \n' % (dir, filename))
+            (directory, filename) = os.path.split(os.path.normpath(src))
+            directory = directory.replace('\\', '/')
+            _, directory = directory.split('src/', 1)
+            file.write('\tsources { src/%s/%s } \n' % (directory, filename))
 
     def bakefile_cli_headers(file, headers):
         for header in headers:
-            (dir, filename) = os.path.split(os.path.normpath(header))
-            dir = dir.replace('\\', '/')
-            _, dir = dir.split('src/', 1)
-            file.write('\theaders { src/%s/%s } \n' % (dir, filename))
+            (directory, filename) = os.path.split(os.path.normpath(header))
+            directory = directory.replace('\\', '/')
+            _, directory = directory.split('src/', 1)
+            file.write('\theaders { src/%s/%s } \n' % (directory, filename))
 
     def bakefile_test_sources(file, sources):
         for src in sources:
@@ -1393,9 +1391,9 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
 
     def objectfile_list(sources, obj_dir):
         for src in sources:
-            (dir, file) = os.path.split(os.path.normpath(src))
+            (directory, file) = os.path.split(os.path.normpath(src))
 
-            parts = dir.split(os.sep)
+            parts = directory.split(os.sep)
             if 'src' in parts:
                 parts = parts[parts.index('src')+2:]
             elif 'tests' in parts:
@@ -1405,7 +1403,7 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
             elif file.find('botan_all') != -1:
                 parts = []
             else:
-                raise ConfigureError("Unexpected file '%s/%s'" % (dir, file))
+                raise ConfigureError("Unexpected file '%s/%s'" % (directory, file))
 
             if parts != []:
 
@@ -1544,7 +1542,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         return opts
 
-    vars = {
+    variables = {
         'version_major':  build_config.version_major,
         'version_minor':  build_config.version_minor,
         'version_patch':  build_config.version_patch,
@@ -1674,39 +1672,41 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     if options.os == 'darwin' and options.build_shared_lib:
         # In order that these executables work from the build directory,
         # we need to change the install names
-        vars['cli_post_link_cmd'] = \
+        variables['cli_post_link_cmd'] = \
             'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(CLI)'
-        vars['test_post_link_cmd'] = \
+        variables['test_post_link_cmd'] = \
             'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
     else:
-        vars['cli_post_link_cmd'] = ''
-        vars['test_post_link_cmd'] = ''
+        variables['cli_post_link_cmd'] = ''
+        variables['test_post_link_cmd'] = ''
 
-    gen_makefile_lists(vars, build_config, options, modules, cc, arch, osinfo)
+    gen_makefile_lists(variables, build_config, options, modules, cc, arch, osinfo)
 
     if options.os != 'windows':
-        vars['botan_pkgconfig'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
-                                                                     build_config.pkg_config_file()))
+        variables['botan_pkgconfig'] = prefix_with_build_dir(
+            os.path.join(build_config.build_dir, build_config.pkg_config_file()))
 
         # 'botan' or 'botan-2'. Used in Makefile and install script
         # This can be made consistent over all platforms in the future
-        vars['libname'] = 'botan-%d' % (build_config.version_major)
+        variables['libname'] = 'botan-%d' % (build_config.version_major)
     else:
         if options.with_debug_info:
-            vars['libname'] = 'botand'
+            variables['libname'] = 'botand'
         else:
-            vars['libname'] = 'botan'
+            variables['libname'] = 'botan'
 
-    vars["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), vars)
+    variables["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), variables)
 
-    if vars["makefile_style"] == "gmake":
-        vars["gmake_commands_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_commands.in'), vars)
-        vars["gmake_dso_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), vars) \
+    if variables["makefile_style"] == "gmake":
+        variables["gmake_commands_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_commands.in'),
+                                                          variables)
+        variables["gmake_dso_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), variables) \
                                     if options.build_shared_lib else ''
-        vars["gmake_coverage_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_coverage.in'), vars) \
-                                    if options.with_coverage_info else ''
+        variables["gmake_coverage_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_coverage.in'),
+                                                          variables) \
+                                         if options.with_coverage_info else ''
 
-    return vars
+    return variables
 
 def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
     """
