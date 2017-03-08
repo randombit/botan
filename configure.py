@@ -521,6 +521,7 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
     """
     Generic lexer function for info.txt and src/build-data files
     """
+    out = {}
 
     # Format as a nameable Python variable
     def py_var(group):
@@ -539,9 +540,9 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
     lexer.wordchars += '|:.<>/,-!+' # handle various funky chars in info.txt
 
     for group in allowed_groups:
-        to_obj.__dict__[py_var(group)] = []
+        out[py_var(group)] = []
     for (key, val) in name_val_pairs.items():
-        to_obj.__dict__[key] = val
+        out[key] = val
 
     def lexed_tokens(): # Convert to an interator
         token = lexer.get_token()
@@ -564,15 +565,15 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
             token = lexer.get_token()
             while token != end_marker:
-                to_obj.__dict__[py_var(group)].append(token)
+                out[py_var(group)].append(token)
                 token = lexer.get_token()
                 if token is None:
                     raise LexerError('Group "%s" not terminated' % (group),
                                      lexer.lineno)
 
         elif token in name_val_pairs.keys():
-            if isinstance(to_obj.__dict__[token], list):
-                to_obj.__dict__[token].append(lexer.get_token())
+            if isinstance(out[token], list):
+                out[token].append(lexer.get_token())
 
                 # Dirty hack
                 if token == 'define':
@@ -581,12 +582,19 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
                         raise LexerError('No version set for API', lexer.lineno)
                     if not re.match('^[0-9]{8}$', nxt):
                         raise LexerError('Bad API rev "%s"' % (nxt), lexer.lineno)
-                    to_obj.__dict__[token].append(nxt)
+                    out[token].append(nxt)
             else:
-                to_obj.__dict__[token] = lexer.get_token()
+                out[token] = lexer.get_token()
 
         else: # No match -> error
             raise LexerError('Bad token "%s"' % (token), lexer.lineno)
+
+    # Copy result into objects
+    for key in out:
+        if to_obj:
+            to_object.__dict__[key] = out[key]
+        out_object.__dict__[key] = out[key]
+    return out_object
 
 def force_to_dict(l):
     """
@@ -905,62 +913,65 @@ class ArchInfo(InfoObject):
 class CompilerInfo(InfoObject):
     def __init__(self, infofile):
         super(CompilerInfo, self).__init__(infofile)
-        lex_me_harder(infofile, self,
-                      ['so_link_commands', 'binary_link_commands', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
-                      {'binary_name': None,
-                       'linker_name': None,
-                       'macro_name': None,
-                       'output_to_option': '-o ',
-                       'add_include_dir_option': '-I',
-                       'add_lib_dir_option': '-L',
-                       'add_lib_option': '-l',
-                       'add_framework_option': '-framework ',
-                       'compile_flags': '',
-                       'debug_info_flags': '',
-                       'optimization_flags': '',
-                       'size_optimization_flags': '',
-                       'coverage_flags': '',
-                       'sanitizer_flags': '',
-                       'stack_protector_flags': '',
-                       'shared_flags': '',
-                       'lang_flags': '',
-                       'warning_flags': '',
-                       'maintainer_warning_flags': '',
-                       'visibility_build_flags': '',
-                       'visibility_attribute': '',
-                       'ar_command': None,
-                       'makefile_style': ''
-                      })
+        self.lex = lex_me_harder(
+            infofile,
+            None,
+            ['so_link_commands', 'binary_link_commands', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
+            {
+                'binary_name': None,
+                'linker_name': None,
+                'macro_name': None,
+                'output_to_option': '-o ',
+                'add_include_dir_option': '-I',
+                'add_lib_dir_option': '-L',
+                'add_lib_option': '-l',
+                'add_framework_option': '-framework ',
+                'compile_flags': '',
+                'debug_info_flags': '',
+                'optimization_flags': '',
+                'size_optimization_flags': '',
+                'coverage_flags': '',
+                'sanitizer_flags': '',
+                'stack_protector_flags': '',
+                'shared_flags': '',
+                'lang_flags': '',
+                'warning_flags': '',
+                'maintainer_warning_flags': '',
+                'visibility_build_flags': '',
+                'visibility_attribute': '',
+                'ar_command': None,
+                'makefile_style': ''
+            })
 
-        self.so_link_commands = force_to_dict(self.so_link_commands)
-        self.binary_link_commands = force_to_dict(self.binary_link_commands)
-        self.mach_abi_linking = force_to_dict(self.mach_abi_linking)
-        self.isa_flags = force_to_dict(self.isa_flags)
+        self.lex.so_link_commands = force_to_dict(self.lex.so_link_commands)
+        self.lex.binary_link_commands = force_to_dict(self.lex.binary_link_commands)
+        self.lex.mach_abi_linking = force_to_dict(self.lex.mach_abi_linking)
+        self.lex.isa_flags = force_to_dict(self.lex.isa_flags)
 
         self.mach_opt_flags = {}
 
-        while self.mach_opt != []:
-            proc = self.mach_opt.pop(0)
-            if self.mach_opt.pop(0) != '->':
+        while self.lex.mach_opt != []:
+            proc = self.lex.mach_opt.pop(0)
+            if self.lex.mach_opt.pop(0) != '->':
                 raise ConfigureError('Parsing err in %s mach_opt' % (self.basename))
 
-            flags = self.mach_opt.pop(0)
+            flags = self.lex.mach_opt.pop(0)
             regex = ''
 
-            if len(self.mach_opt) > 0 and \
-               (len(self.mach_opt) == 1 or self.mach_opt[1] != '->'):
-                regex = self.mach_opt.pop(0)
+            if len(self.lex.mach_opt) > 0 and \
+               (len(self.lex.mach_opt) == 1 or self.lex.mach_opt[1] != '->'):
+                regex = self.lex.mach_opt.pop(0)
 
             self.mach_opt_flags[proc] = (flags, regex)
 
-        del self.mach_opt
+        del self.lex.mach_opt
 
     def isa_flags_for(self, isa, arch):
-        if isa in self.isa_flags:
-            return self.isa_flags[isa]
+        if isa in self.lex.isa_flags:
+            return self.lex.isa_flags[isa]
         arch_isa = '%s:%s' % (arch, isa)
-        if arch_isa in self.isa_flags:
-            return self.isa_flags[arch_isa]
+        if arch_isa in self.lex.isa_flags:
+            return self.lex.isa_flags[arch_isa]
         return None
 
     def gen_shared_flags(self, options):
@@ -970,15 +981,15 @@ class CompilerInfo(InfoObject):
 
         def flag_builder():
             if options.build_shared_lib:
-                yield self.shared_flags
+                yield self.lex.shared_flags
                 if options.with_visibility:
-                    yield self.visibility_build_flags
+                    yield self.lex.visibility_build_flags
 
         return ' '.join(list(flag_builder()))
 
     def gen_visibility_attribute(self, options):
         if options.build_shared_lib and options.with_visibility:
-            return self.visibility_attribute
+            return self.lex.visibility_attribute
         return ''
 
     def mach_abi_link_flags(self, options):
@@ -987,38 +998,38 @@ class CompilerInfo(InfoObject):
         """
 
         def all_group():
-            if options.with_debug_info and 'all-debug' in self.mach_abi_linking:
+            if options.with_debug_info and 'all-debug' in self.lex.mach_abi_linking:
                 return 'all-debug'
             return 'all'
 
         abi_link = list()
         for what in [all_group(), options.os, options.arch, options.cpu]:
-            flag = self.mach_abi_linking.get(what)
+            flag = self.lex.mach_abi_linking.get(what)
             if flag != None and flag != '' and flag not in abi_link:
                 abi_link.append(flag)
 
-        if options.with_stack_protector and self.stack_protector_flags != '':
-            abi_link.append(self.stack_protector_flags)
+        if options.with_stack_protector and self.lex.stack_protector_flags != '':
+            abi_link.append(self.lex.stack_protector_flags)
 
         if options.with_coverage_info:
-            if self.coverage_flags == '':
+            if self.lex.coverage_flags == '':
                 raise ConfigureError('No coverage handling for %s' % (self.basename))
-            abi_link.append(self.coverage_flags)
+            abi_link.append(self.lex.coverage_flags)
 
         if options.with_sanitizers:
-            if self.sanitizer_flags == '':
+            if self.lex.sanitizer_flags == '':
                 raise ConfigureError('No sanitizer handling for %s' % (self.basename))
-            abi_link.append(self.sanitizer_flags)
+            abi_link.append(self.lex.sanitizer_flags)
 
         if options.with_openmp:
-            if 'openmp' not in self.mach_abi_linking:
+            if 'openmp' not in self.lex.mach_abi_linking:
                 raise ConfigureError('No support for OpenMP for %s' % (self.basename))
-            abi_link.append(self.mach_abi_linking['openmp'])
+            abi_link.append(self.lex.mach_abi_linking['openmp'])
 
         if options.with_cilkplus:
-            if 'cilkplus' not in self.mach_abi_linking:
+            if 'cilkplus' not in self.lex.mach_abi_linking:
                 raise ConfigureError('No support for Cilk Plus for %s' % (self.basename))
-            abi_link.append(self.mach_abi_linking['cilkplus'])
+            abi_link.append(self.lex.mach_abi_linking['cilkplus'])
 
         abi_flags = ' '.join(sorted(abi_link))
 
@@ -1029,28 +1040,28 @@ class CompilerInfo(InfoObject):
 
     def cc_warning_flags(self, options):
         def gen_flags():
-            yield self.warning_flags
+            yield self.lex.warning_flags
             if options.maintainer_mode:
-                yield self.maintainer_warning_flags
+                yield self.lex.maintainer_warning_flags
 
         return (' '.join(gen_flags())).strip()
 
     def cc_compile_flags(self, options):
         def gen_flags():
-            yield self.lang_flags
+            yield self.lex.lang_flags
 
             if options.with_debug_info:
-                yield self.debug_info_flags
+                yield self.lex.debug_info_flags
 
             if not options.no_optimizations:
                 if options.optimize_for_size:
-                    if self.size_optimization_flags != '':
-                        yield self.size_optimization_flags
+                    if self.lex.size_optimization_flags != '':
+                        yield self.lex.size_optimization_flags
                     else:
                         logging.warning("No size optimization flags set for current compiler")
-                        yield self.optimization_flags
+                        yield self.lex.optimization_flags
                 else:
-                    yield self.optimization_flags
+                    yield self.lex.optimization_flags
 
             def submodel_fixup(flags, tup):
                 return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))
@@ -1081,8 +1092,8 @@ class CompilerInfo(InfoObject):
         """
 
         for s in self._so_link_search(osname, options.with_debug_info):
-            if s in self.so_link_commands:
-                return self.so_link_commands[s]
+            if s in self.lex.so_link_commands:
+                return self.lex.so_link_commands[s]
 
         raise ConfigureError(
             "No shared library link command found for target '%s' in compiler settings '%s'" %
@@ -1094,8 +1105,8 @@ class CompilerInfo(InfoObject):
         """
 
         for s in self._so_link_search(osname, options.with_debug_info):
-            if s in self.binary_link_commands:
-                return self.binary_link_commands[s]
+            if s in self.lex.binary_link_commands:
+                return self.lex.binary_link_commands[s]
 
         return '$(LINKER)'
 
@@ -1104,7 +1115,7 @@ class CompilerInfo(InfoObject):
         Return defines for build.h
         """
 
-        return ['BUILD_COMPILER_IS_' + self.macro_name]
+        return ['BUILD_COMPILER_IS_' + self.lex.macro_name]
 
 class OsInfo(InfoObject):
     def __init__(self, infofile):
