@@ -1147,10 +1147,11 @@ class CompilerInfo(InfoObject):
 
         return ['BUILD_COMPILER_IS_' + self.macro_name]
 
+
 class OsInfo(InfoObject):
     def __init__(self, infofile):
         super(OsInfo, self).__init__(infofile)
-        self.lex = lex_me_harder(
+        lex = lex_me_harder(
             infofile,
             ['aliases', 'target_features'],
             {
@@ -1174,46 +1175,67 @@ class OsInfo(InfoObject):
                 'install_cmd_exec': 'install -m 755'
             })
 
-        if self.lex.soname_pattern_base != '':
-            if self.lex.soname_pattern_patch == '' and self.lex.soname_pattern_abi == '':
-                self.lex.soname_pattern_patch = self.lex.soname_pattern_base
-                self.lex.soname_pattern_patch_abi = self.lex.soname_pattern_base
-
-            elif self.lex.soname_pattern_abi != '' and self.lex.soname_pattern_abi != '':
-                pass # all 3 values set, nothing needs to happen here
+        if lex.soname_pattern_base:
+            self.soname_pattern_base = lex.soname_pattern_base
+            if lex.soname_pattern_patch == '' and lex.soname_pattern_abi == '':
+                self.soname_pattern_patch = lex.soname_pattern_base
+                self.soname_pattern_abi = lex.soname_pattern_base
+            elif lex.soname_pattern_abi != '' and lex.soname_pattern_abi != '':
+                self.soname_pattern_patch = lex.soname_pattern_patch
+                self.soname_pattern_abi = lex.soname_pattern_abi
             else:
                 # base set, only one of patch/abi set
                 raise ConfigureError("Invalid soname_patterns in %s" % (self.infofile))
+        else:
+            if lex.soname_suffix:
+                self.soname_pattern_base = "libbotan-{version_major}.%s" % (lex.soname_suffix)
+                self.soname_pattern_abi = self.soname_pattern_base + ".{abi_rev}"
+                self.soname_pattern_patch = self.soname_pattern_abi + ".{version_minor}.{version_patch}"
+            else:
+                # Could not calculate soname_pattern_*
+                # This happens for OSs without shared library support (e.g. nacl, mingw, includeos, cygwin)
+                self.soname_pattern_base = None
+                self.soname_pattern_abi = None
+                self.soname_pattern_patch = None
 
-        if self.lex.soname_pattern_base == '' and self.lex.soname_suffix != '':
-            self.lex.soname_pattern_base = "libbotan-{version_major}.%s" % (self.lex.soname_suffix)
-            self.lex.soname_pattern_abi = self.lex.soname_pattern_base + ".{abi_rev}"
-            self.lex.soname_pattern_patch = self.lex.soname_pattern_abi + ".{version_minor}.{version_patch}"
-
-        self.lex.ar_needs_ranlib = bool(self.lex.ar_needs_ranlib)
-
-        self.lex.building_shared_supported = (True if self.lex.building_shared_supported == 'yes' else False)
+        self.aliases = lex.aliases
+        self.ar_command = lex.ar_command
+        self.ar_needs_ranlib = bool(lex.ar_needs_ranlib)
+        self.bin_dir = lex.bin_dir
+        self.building_shared_supported = (True if lex.building_shared_supported == 'yes' else False)
+        self.doc_dir = lex.doc_dir
+        self.header_dir = lex.header_dir
+        self.install_cmd_data = lex.install_cmd_data
+        self.install_cmd_exec = lex.install_cmd_exec
+        self.install_root = lex.install_root
+        self.lib_dir = lex.lib_dir
+        self.os_type = lex.os_type
+        self.obj_suffix = lex.obj_suffix
+        self.program_suffix = lex.program_suffix
+        self.static_suffix = lex.static_suffix
+        self.target_features = lex.target_features
 
     def ranlib_command(self):
-        return 'ranlib' if self.lex.ar_needs_ranlib else 'true'
+        return 'ranlib' if self.ar_needs_ranlib else 'true'
 
     def defines(self, options):
         r = []
         r += ['TARGET_OS_IS_%s' % (self.basename.upper())]
 
-        if self.lex.os_type != None:
-            r += ['TARGET_OS_TYPE_IS_%s' % (self.lex.os_type.upper())]
+        if self.os_type != None:
+            r += ['TARGET_OS_TYPE_IS_%s' % (self.os_type.upper())]
 
         def feat_macros():
-            for feat in self.lex.target_features:
+            for feat in self.target_features:
                 if feat not in options.without_os_features:
                     yield 'TARGET_OS_HAS_' + feat.upper()
             for feat in options.with_os_features:
-                if feat not in self.lex.target_features:
+                if feat not in self.target_features:
                     yield 'TARGET_OS_HAS_' + feat.upper()
 
         r += sorted(feat_macros())
         return r
+
 
 def fixup_proc_name(proc):
     proc = proc.lower().replace(' ', '')
