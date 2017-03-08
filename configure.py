@@ -923,7 +923,7 @@ class ArchInfo(InfoObject):
 class CompilerInfo(InfoObject):
     def __init__(self, infofile):
         super(CompilerInfo, self).__init__(infofile)
-        self.lex = lex_me_harder(
+        lex = lex_me_harder(
             infofile,
             ['so_link_commands', 'binary_link_commands', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
             {
@@ -952,35 +952,51 @@ class CompilerInfo(InfoObject):
                 'makefile_style': ''
             })
 
-        self.lex.so_link_commands = force_to_dict(self.lex.so_link_commands)
-        self.lex.binary_link_commands = force_to_dict(self.lex.binary_link_commands)
-        self.lex.mach_abi_linking = force_to_dict(self.lex.mach_abi_linking)
-        self.lex.isa_flags = force_to_dict(self.lex.isa_flags)
+        self.add_framework_option = lex.add_framework_option
+        self.add_include_dir_option = lex.add_include_dir_option
+        self.add_lib_option = lex.add_lib_option
+        self.ar_command = lex.ar_command
+        self.binary_link_commands = force_to_dict(lex.binary_link_commands)
+        self.binary_name = lex.binary_name
+        self.compile_flags = lex.compile_flags
+        self.coverage_flags = lex.coverage_flags
+        self.debug_info_flags = lex.debug_info_flags
+        self.isa_flags = force_to_dict(lex.isa_flags)
+        self.lang_flags = lex.lang_flags
+        self.linker_name = lex.linker_name
+        self.mach_abi_linking = force_to_dict(lex.mach_abi_linking)
+        self.macro_name = lex.macro_name
+        self.maintainer_warning_flags = lex.maintainer_warning_flags
+        self.makefile_style = lex.makefile_style
+        self.optimization_flags = lex.optimization_flags
+        self.output_to_option = lex.output_to_option
+        self.sanitizer_flags = lex.sanitizer_flags
+        self.shared_flags = lex.shared_flags
+        self.size_optimization_flags = lex.size_optimization_flags
+        self.so_link_commands = force_to_dict(lex.so_link_commands)
+        self.stack_protector_flags = lex.stack_protector_flags
+        self.visibility_build_flags = lex.visibility_build_flags
+        self.visibility_attribute = lex.visibility_attribute
+        self.warning_flags = lex.warning_flags
 
         self.mach_opt_flags = {}
+        while lex.mach_opt:
+            proc = lex.mach_opt.pop(0)
+            if lex.mach_opt.pop(0) != '->':
+                raise ConfigureError('Parsing err in %s mach_opt' % self.basename)
 
-        while self.lex.mach_opt != []:
-            proc = self.lex.mach_opt.pop(0)
-            if self.lex.mach_opt.pop(0) != '->':
-                raise ConfigureError('Parsing err in %s mach_opt' % (self.basename))
-
-            flags = self.lex.mach_opt.pop(0)
+            flags = lex.mach_opt.pop(0)
             regex = ''
-
-            if len(self.lex.mach_opt) > 0 and \
-               (len(self.lex.mach_opt) == 1 or self.lex.mach_opt[1] != '->'):
-                regex = self.lex.mach_opt.pop(0)
-
+            if lex.mach_opt and (len(lex.mach_opt) == 1 or lex.mach_opt[1] != '->'):
+                regex = lex.mach_opt.pop(0)
             self.mach_opt_flags[proc] = (flags, regex)
 
-        del self.lex.mach_opt
-
     def isa_flags_for(self, isa, arch):
-        if isa in self.lex.isa_flags:
-            return self.lex.isa_flags[isa]
+        if isa in self.isa_flags:
+            return self.isa_flags[isa]
         arch_isa = '%s:%s' % (arch, isa)
-        if arch_isa in self.lex.isa_flags:
-            return self.lex.isa_flags[arch_isa]
+        if arch_isa in self.isa_flags:
+            return self.isa_flags[arch_isa]
         return None
 
     def gen_shared_flags(self, options):
@@ -990,15 +1006,15 @@ class CompilerInfo(InfoObject):
 
         def flag_builder():
             if options.build_shared_lib:
-                yield self.lex.shared_flags
+                yield self.shared_flags
                 if options.with_visibility:
-                    yield self.lex.visibility_build_flags
+                    yield self.visibility_build_flags
 
         return ' '.join(list(flag_builder()))
 
     def gen_visibility_attribute(self, options):
         if options.build_shared_lib and options.with_visibility:
-            return self.lex.visibility_attribute
+            return self.visibility_attribute
         return ''
 
     def mach_abi_link_flags(self, options):
@@ -1007,38 +1023,38 @@ class CompilerInfo(InfoObject):
         """
 
         def all_group():
-            if options.with_debug_info and 'all-debug' in self.lex.mach_abi_linking:
+            if options.with_debug_info and 'all-debug' in self.mach_abi_linking:
                 return 'all-debug'
             return 'all'
 
         abi_link = list()
         for what in [all_group(), options.os, options.arch, options.cpu]:
-            flag = self.lex.mach_abi_linking.get(what)
+            flag = self.mach_abi_linking.get(what)
             if flag != None and flag != '' and flag not in abi_link:
                 abi_link.append(flag)
 
-        if options.with_stack_protector and self.lex.stack_protector_flags != '':
-            abi_link.append(self.lex.stack_protector_flags)
+        if options.with_stack_protector and self.stack_protector_flags != '':
+            abi_link.append(self.stack_protector_flags)
 
         if options.with_coverage_info:
-            if self.lex.coverage_flags == '':
+            if self.coverage_flags == '':
                 raise ConfigureError('No coverage handling for %s' % (self.basename))
-            abi_link.append(self.lex.coverage_flags)
+            abi_link.append(self.coverage_flags)
 
         if options.with_sanitizers:
-            if self.lex.sanitizer_flags == '':
+            if self.sanitizer_flags == '':
                 raise ConfigureError('No sanitizer handling for %s' % (self.basename))
-            abi_link.append(self.lex.sanitizer_flags)
+            abi_link.append(self.sanitizer_flags)
 
         if options.with_openmp:
-            if 'openmp' not in self.lex.mach_abi_linking:
+            if 'openmp' not in self.mach_abi_linking:
                 raise ConfigureError('No support for OpenMP for %s' % (self.basename))
-            abi_link.append(self.lex.mach_abi_linking['openmp'])
+            abi_link.append(self.mach_abi_linking['openmp'])
 
         if options.with_cilkplus:
-            if 'cilkplus' not in self.lex.mach_abi_linking:
+            if 'cilkplus' not in self.mach_abi_linking:
                 raise ConfigureError('No support for Cilk Plus for %s' % (self.basename))
-            abi_link.append(self.lex.mach_abi_linking['cilkplus'])
+            abi_link.append(self.mach_abi_linking['cilkplus'])
 
         abi_flags = ' '.join(sorted(abi_link))
 
@@ -1049,28 +1065,28 @@ class CompilerInfo(InfoObject):
 
     def cc_warning_flags(self, options):
         def gen_flags():
-            yield self.lex.warning_flags
+            yield self.warning_flags
             if options.maintainer_mode:
-                yield self.lex.maintainer_warning_flags
+                yield self.maintainer_warning_flags
 
         return (' '.join(gen_flags())).strip()
 
     def cc_compile_flags(self, options):
         def gen_flags():
-            yield self.lex.lang_flags
+            yield self.lang_flags
 
             if options.with_debug_info:
-                yield self.lex.debug_info_flags
+                yield self.debug_info_flags
 
             if not options.no_optimizations:
                 if options.optimize_for_size:
-                    if self.lex.size_optimization_flags != '':
-                        yield self.lex.size_optimization_flags
+                    if self.size_optimization_flags != '':
+                        yield self.size_optimization_flags
                     else:
                         logging.warning("No size optimization flags set for current compiler")
-                        yield self.lex.optimization_flags
+                        yield self.optimization_flags
                 else:
-                    yield self.lex.optimization_flags
+                    yield self.optimization_flags
 
             def submodel_fixup(flags, tup):
                 return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))
@@ -1101,8 +1117,8 @@ class CompilerInfo(InfoObject):
         """
 
         for s in self._so_link_search(osname, options.with_debug_info):
-            if s in self.lex.so_link_commands:
-                return self.lex.so_link_commands[s]
+            if s in self.so_link_commands:
+                return self.so_link_commands[s]
 
         raise ConfigureError(
             "No shared library link command found for target '%s' in compiler settings '%s'" %
@@ -1114,8 +1130,8 @@ class CompilerInfo(InfoObject):
         """
 
         for s in self._so_link_search(osname, options.with_debug_info):
-            if s in self.lex.binary_link_commands:
-                return self.lex.binary_link_commands[s]
+            if s in self.binary_link_commands:
+                return self.binary_link_commands[s]
 
         return '$(LINKER)'
 
@@ -1124,7 +1140,7 @@ class CompilerInfo(InfoObject):
         Return defines for build.h
         """
 
-        return ['BUILD_COMPILER_IS_' + self.lex.macro_name]
+        return ['BUILD_COMPILER_IS_' + self.macro_name]
 
 class OsInfo(InfoObject):
     def __init__(self, infofile):
