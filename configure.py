@@ -1067,7 +1067,8 @@ class CompilerInfo(InfoObject):
 
         return (' '.join(gen_flags())).strip()
 
-    def _so_link_search(self, osname, debug_info):
+    @staticmethod
+    def _so_link_search(osname, debug_info):
         if debug_info:
             return [osname + '-debug', 'default-debug']
         else:
