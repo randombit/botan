@@ -38,7 +38,7 @@ class BOTAN_DLL X509_CA
       X509_Certificate sign_request(const PKCS10_Request& req,
                                     RandomNumberGenerator& rng,
                                     const X509_Time& not_before,
-                                    const X509_Time& not_after);
+                                    const X509_Time& not_after) const;
 
       /**
       * Get the certificate of this CA.
