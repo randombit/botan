@@ -818,10 +818,14 @@ class ModuleInfo(InfoObject):
 class ModulePolicyInfo(InfoObject):
     def __init__(self, infofile):
         super(ModulePolicyInfo, self).__init__(infofile)
-        self.lex = lex_me_harder(
+        lex = lex_me_harder(
             infofile,
             ['required', 'if_available', 'prohibited'],
             {})
+
+        self.if_available = lex.if_available
+        self.required = lex.required
+        self.prohibited = lex.prohibited
 
     def cross_check(self, modules):
         def check(tp, lst):
@@ -830,9 +834,9 @@ class ModulePolicyInfo(InfoObject):
                     logging.error("Module policy %s includes non-existent module %s in <%s>" % (
                         self.infofile, mod, tp))
 
-        check('required', self.lex.required)
-        check('if_available', self.lex.if_available)
-        check('prohibited', self.lex.prohibited)
+        check('required', self.required)
+        check('if_available', self.if_available)
+        check('prohibited', self.prohibited)
 
 
 class ArchInfo(InfoObject):
