@@ -25,6 +25,7 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <errno.h>
@@ -117,12 +118,21 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             version = Botan::TLS::Protocol_Version::TLS_V11;
             }
 
+         struct sockaddr_storage addrbuf;
+         std::string hostname;
+         if(!host.empty() &&
+            inet_pton(AF_INET, host.c_str(), &addrbuf) != 1 &&
+            inet_pton(AF_INET6, host.c_str(), &addrbuf) != 1)
+             {
+             hostname = host;
+             }
+
          Botan::TLS::Client client(*this,
                                    *session_mgr,
                                    creds,
                                    *policy,
                                    rng(),
-                                   Botan::TLS::Server_Information(host, port),
+                                   Botan::TLS::Server_Information(hostname, port),
                                    version,
                                    protocols_to_offer);
 
