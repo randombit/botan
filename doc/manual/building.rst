@@ -310,7 +310,7 @@ Multiple Builds
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It may be useful to run multiple builds with different configurations.
-Specify ``--build-dir=<dir>`` to set up a build environment in a
+Specify ``--with-build-dir=<dir>`` to set up a build environment in a
 different directory.
 
 Setting Distribution Info
