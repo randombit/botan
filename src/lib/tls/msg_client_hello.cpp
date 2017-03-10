@@ -16,6 +16,11 @@
 #include <botan/internal/stl_util.h>
 #include <chrono>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 namespace Botan {
 
 namespace TLS {
@@ -97,7 +102,15 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       m_extensions.add(new Encrypt_then_MAC);
 
    m_extensions.add(new Renegotiation_Extension(reneg_info));
-   m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
+
+   /* IP address is not allowed in SNI */
+   struct sockaddr_storage addrbuf;
+   if(!client_settings.hostname().empty() &&
+      inet_pton(AF_INET, client_settings.hostname().c_str(), &addrbuf) != 1 &&
+      inet_pton(AF_INET6, client_settings.hostname().c_str(), &addrbuf) != 1)
+      {
+      m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
+      }
 
    m_extensions.add(new Certificate_Status_Request({}, {}));
 
