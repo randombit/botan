@@ -176,14 +176,14 @@ def main(args = None):
             copy_executable(os.path.join(out_dir, soname_patch),
                             os.path.join(lib_dir, soname_patch))
 
-            prev_cwd = os.getcwd()
-
-            try:
-                os.chdir(lib_dir)
-                force_symlink(soname_patch, soname_abi)
-                force_symlink(soname_patch, soname_base)
-            finally:
-                os.chdir(prev_cwd)
+            if target_os != "openbsd":
+                prev_cwd = os.getcwd()
+                try:
+                    os.chdir(lib_dir)
+                    force_symlink(soname_patch, soname_abi)
+                    force_symlink(soname_patch, soname_base)
+                finally:
+                    os.chdir(prev_cwd)
 
     copy_executable(os.path.join(out_dir, app_exe), os.path.join(bin_dir, app_exe))
 
