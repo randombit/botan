@@ -57,8 +57,8 @@ Botan::X509_Cert_Options req_opts1(const std::string& algo)
    opts.dns = "botan.randombit.net";
    opts.email = "testing@randombit.net";
 
-   opts.not_before("1601012000Z");
-   opts.not_after("3001012000Z");
+   opts.not_before("160101200000Z");
+   opts.not_after("300101200000Z");
 
    if(algo == "RSA")
       {
@@ -170,23 +170,21 @@ Test::Result test_x509_dates()
 
    Botan::X509_Time time;
    result.confirm("unset time not set", !time.time_is_set());
-   time = Botan::X509_Time("0802011822Z", Botan::ASN1_Tag::UTC_TIME);
+   time = Botan::X509_Time("080201182200Z", Botan::ASN1_Tag::UTC_TIME);
    result.confirm("time set after construction", time.time_is_set());
    result.test_eq("time readable_string", time.readable_string(), "2008/02/01 18:22:00 UTC");
 
-   const std::vector<std::string> valid = {
-      "0802010000Z",
-      "0802011724Z",
-      "0406142334Z",
-      "9906142334Z",
-      "0006142334Z",
+   time = Botan::X509_Time("200305100350Z", Botan::ASN1_Tag::UTC_TIME);
+   result.test_eq("UTC_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
 
-      "080201000000Z",
-      "080201172412Z",
-      "040614233433Z",
-      "990614233444Z",
-      "000614233455Z",
-   };
+   time = Botan::X509_Time("200305100350Z", Botan::ASN1_Tag::UTC_OR_GENERALIZED_TIME);
+   result.test_eq("UTC_OR_GENERALIZED_TIME from UTC_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
+
+   time = Botan::X509_Time("20200305100350Z", Botan::ASN1_Tag::UTC_OR_GENERALIZED_TIME);
+   result.test_eq("UTC_OR_GENERALIZED_TIME from GENERALIZED_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
+
+   time = Botan::X509_Time("20200305100350Z", Botan::ASN1_Tag::GENERALIZED_TIME);
+   result.test_eq("GENERALIZED_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
 
    // Dates that are valid per X.500 but rejected as unsupported
    const std::vector<std::string> valid_but_unsup = {
@@ -205,13 +203,29 @@ Test::Result test_x509_dates()
       "000614233455+0530",
    };
 
-   const std::vector<std::string> invalid = {
+   // valid length 13
+   const std::vector<std::string> valid_utc = {
+      "080201000000Z",
+      "080201172412Z",
+      "040614233433Z",
+      "990614233444Z",
+      "000614233455Z",
+   };
+
+   const std::vector<std::string> invalid_utc = {
       "",
       " ",
       "2008`02-01",
       "9999-02-01",
       "2000-02-01 17",
       "999921",
+
+      // No seconds
+      "0802010000Z",
+      "0802011724Z",
+      "0406142334Z",
+      "9906142334Z",
+      "0006142334Z",
 
       // valid length 13 -> range check
       "080201000061Z", // seconds too big (61)
@@ -247,23 +261,82 @@ Test::Result test_x509_dates()
       "2\n2211221122Z",
 
       // wrong time zone
-      "0802010000",
-      "0802010000z"
+      "080201000000",
+      "080201000000z",
+
+      // Fractional seconds
+      "170217180154.001Z",
+
+      // Timezone offset
+      "170217180154+0100",
+
+      // Extra digits
+      "17021718015400Z",
+
+      // Non-digits
+      "17021718015aZ",
+
+      // Trailing garbage
+      "170217180154Zlongtrailinggarbage",
+
+      // Swapped type
+      "20170217180154Z",
    };
 
-   for(auto&& v : valid)
-      {
-      Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME);
-      }
+   // valid length 15
+   const std::vector<std::string> valid_generalized_time = {
+      "20000305100350Z",
+   };
+
+   const std::vector<std::string> invalid_generalized = {
+      // No trailing Z
+      "20000305100350",
+
+      // No seconds
+      "200003051003Z",
+
+      // Fractional seconds
+      "20000305100350.001Z",
+
+      // Timezone offset
+      "20170217180154+0100",
+
+      // Extra digits
+      "2017021718015400Z",
+
+      // Non-digits
+      "2017021718015aZ",
+
+      // Trailing garbage
+      "20170217180154Zlongtrailinggarbage",
+
+      // Swapped type
+      "170217180154Z",
+   };
 
    for(auto&& v : valid_but_unsup)
       {
       result.test_throws("valid but unsupported", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME); });
       }
 
-   for(auto&& v : invalid)
+   for(auto&& v : valid_utc)
+      {
+      Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME);
+      }
+
+   for(auto&& v : valid_generalized_time)
+      {
+      Botan::X509_Time t(v, Botan::ASN1_Tag::GENERALIZED_TIME);
+      }
+
+   for(auto&& v : invalid_utc)
       {
       result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME); });
+      }
+
+   for (auto&& v : invalid_generalized)
+      {
+      result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::GENERALIZED_TIME); });
       }
 
    return result;

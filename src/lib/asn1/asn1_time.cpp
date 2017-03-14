@@ -171,12 +171,12 @@ void X509_Time::set_to(const std::string& t_spec, ASN1_Tag spec_tag)
 
    if(spec_tag == GENERALIZED_TIME)
       {
-      if(t_spec.size() != 13 && t_spec.size() != 15)
+      if(t_spec.size() != 15)
          throw Invalid_Argument("Invalid GeneralizedTime string: '" + t_spec + "'");
       }
    else if(spec_tag == UTC_TIME)
       {
-      if(t_spec.size() != 11 && t_spec.size() != 13)
+      if(t_spec.size() != 13)
          throw Invalid_Argument("Invalid UTCTime string: '" + t_spec + "'");
       }
 
