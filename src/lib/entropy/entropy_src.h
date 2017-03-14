@@ -25,11 +25,11 @@ class RandomNumberGenerator;
 class BOTAN_DLL Entropy_Source
    {
    public:
-      /*
+      /**
       * Return a new entropy source of a particular type, or null
       * Each entropy source may require substantial resources (eg, a file handle
       * or socket instance), so try to share them among multiple RNGs, or just
-      * use the preconfigured global list accessed by global_entropy_sources()
+      * use the preconfigured global list accessed by Entropy_Sources::global_sources()
       */
       static std::unique_ptr<Entropy_Source> create(const std::string& type);
 
@@ -41,7 +41,7 @@ class BOTAN_DLL Entropy_Source
       /**
       * Perform an entropy gathering poll
       * @param rng will be provided with entropy via calls to add_entropy
-      @ @return conservative estimate of actual entropy added to rng during poll
+      * @return conservative estimate of actual entropy added to rng during poll
       */
       virtual size_t poll(RandomNumberGenerator& rng) = 0;
 
