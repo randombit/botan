@@ -176,7 +176,8 @@ htmlhelp_basename = 'botandoc'
 
 # -- Options for LaTeX output --------------------------------------------------
 
-# Various latex options, like papersize and pointsize
+# Various latex options, e.g.,
+# paper size option of the document class ('a4paper' or 'letterpaper'), default 'letterpaper'
 latex_elements = {
   'papersize': 'a4paper',
 }
