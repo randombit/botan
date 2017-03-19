@@ -40,7 +40,7 @@ namespace Botan {
   #if defined(BOTAN_USE_GCC_INLINE_ASM)
     #define BOTAN_MP_USE_X86_32_ASM
     #define ASM(x) x "\n\t"
-  #elif defined(BOTAN_TARGET_COMPILER_IS_MSVC)
+  #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
     #define BOTAN_MP_USE_X86_32_MSVC_ASM
   #endif
 
