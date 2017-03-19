@@ -9,4 +9,6 @@ posix_mlock
 sockets
 threads
 filesystem
+readdir
+dlopen
 </target_features>
