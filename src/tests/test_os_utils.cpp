@@ -146,10 +146,6 @@ class OS_Utils_Tests : public Test
 
          result.confirm("Correct result returned by working probe fn", run_rc == 5);
 
-         std::function<int ()> throw_fn = []() -> int { throw 3.14159; return 5; };
-         const int throw_rc = Botan::OS::run_cpu_instruction_probe(throw_fn);
-         result.confirm("Error return if probe function threw exception", throw_rc < 0);
-
          std::function<int ()> crash_probe;
 
 #if defined(BOTAN_TARGET_COMPILER_IS_MSVC)

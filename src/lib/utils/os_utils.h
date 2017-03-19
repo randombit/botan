@@ -98,9 +98,10 @@ void free_locked_pages(void* ptr, size_t length);
 * thread safe. It should only be called in a single-threaded context
 * (ie, at static init time).
 *
+* If probe_fn throws an exception the result is undefined.
+*
 * Return codes:
 * -1 illegal instruction detected
-* -2 exception thrown
 */
 int BOTAN_DLL run_cpu_instruction_probe(std::function<int ()> probe_fn);
 
