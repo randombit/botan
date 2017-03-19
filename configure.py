@@ -209,7 +209,7 @@ class BuildConfigurationInformation(object):
         return 'botan-%d.pc' % (self.version_major)
 
 
-def process_command_line(args):
+def process_command_line(args): # pylint: disable=too-many-locals
     """
     Handle command line options
     """
@@ -388,7 +388,8 @@ def process_command_line(args):
                            dest='with_valgrind', action='store_true', default=False)
 
     build_group.add_option('--with-bakefile', action='store_true',
-                           default=False, help='Generate bakefile which can be used to create Visual Studio or Xcode project files')
+                           default=False,
+                           help='Generate bakefile which can be used to create Visual Studio or Xcode project files')
 
     build_group.add_option('--unsafe-fuzzer-mode', action='store_true', default=False,
                            help='disable essential checks for testing')
@@ -516,10 +517,16 @@ def process_command_line(args):
 
     return options
 
-def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
+
+class LexResult(object):
+    pass
+
+
+def lex_me_harder(infofile, allowed_groups, name_val_pairs):
     """
     Generic lexer function for info.txt and src/build-data files
     """
+    out = LexResult()
 
     # Format as a nameable Python variable
     def py_var(group):
@@ -538,9 +545,9 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
     lexer.wordchars += '|:.<>/,-!+' # handle various funky chars in info.txt
 
     for group in allowed_groups:
-        to_obj.__dict__[py_var(group)] = []
+        out.__dict__[py_var(group)] = []
     for (key, val) in name_val_pairs.items():
-        to_obj.__dict__[key] = val
+        out.__dict__[key] = val
 
     def lexed_tokens(): # Convert to an interator
         token = lexer.get_token()
@@ -563,15 +570,15 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
 
             token = lexer.get_token()
             while token != end_marker:
-                to_obj.__dict__[py_var(group)].append(token)
+                out.__dict__[py_var(group)].append(token)
                 token = lexer.get_token()
                 if token is None:
                     raise LexerError('Group "%s" not terminated' % (group),
                                      lexer.lineno)
 
         elif token in name_val_pairs.keys():
-            if isinstance(to_obj.__dict__[token], list):
-                to_obj.__dict__[token].append(lexer.get_token())
+            if isinstance(out.__dict__[token], list):
+                out.__dict__[token].append(lexer.get_token())
 
                 # Dirty hack
                 if token == 'define':
@@ -580,12 +587,14 @@ def lex_me_harder(infofile, to_obj, allowed_groups, name_val_pairs):
                         raise LexerError('No version set for API', lexer.lineno)
                     if not re.match('^[0-9]{8}$', nxt):
                         raise LexerError('Bad API rev "%s"' % (nxt), lexer.lineno)
-                    to_obj.__dict__[token].append(nxt)
+                    out.__dict__[token].append(nxt)
             else:
-                to_obj.__dict__[token] = lexer.get_token()
+                out.__dict__[token] = lexer.get_token()
 
         else: # No match -> error
             raise LexerError('Bad token "%s"' % (token), lexer.lineno)
+
+    return out
 
 def force_to_dict(l):
     """
@@ -622,14 +631,25 @@ class ModuleInfo(InfoObject):
 
     def __init__(self, infofile):
         super(ModuleInfo, self).__init__(infofile)
-        lex_me_harder(infofile, self,
-                      ['header:internal', 'header:public',
-                       'header:external', 'requires', 'os', 'arch',
-                       'cc', 'libs', 'frameworks', 'comment',
-                       'warning'],
-                      {'load_on': 'auto',
-                       'define': [],
-                       'need_isa': ''})
+        lex = lex_me_harder(
+            infofile,
+            [
+                'header:internal', 'header:public', 'header:external', 'requires',
+                'os', 'arch', 'cc', 'libs', 'frameworks', 'comment', 'warning'
+            ],
+            {
+                'load_on': 'auto',
+                'define': [],
+                'need_isa': ''
+            })
+
+        def check_header_duplicates(header_list_public, header_list_internal):
+            pub_header = set(header_list_public)
+            int_header = set(header_list_internal)
+            if not pub_header.isdisjoint(int_header):
+                logging.error("Module %s header contains same header in public and internal sections" % self.infofile)
+
+        check_header_duplicates(lex.header_public, lex.header_internal)
 
         all_source_files = []
         all_header_files = []
@@ -642,20 +662,14 @@ class ModuleInfo(InfoObject):
 
         self.source = all_source_files
 
-        if self.need_isa == '':
-            self.need_isa = []
-        else:
-            self.need_isa = self.need_isa.split(',')
-
         # If not entry for the headers, all are assumed public
-        if self.header_internal == [] and self.header_public == []:
+        if lex.header_internal == [] and lex.header_public == []:
             self.header_public = list(all_header_files)
+            self.header_internal = []
         else:
-            pub_header = set(self.header_public)
-            int_header = set(self.header_internal)
-
-            if not pub_header.isdisjoint(int_header):
-                logging.error("Module %s header contains same header in public and internal sections" % (infofile))
+            self.header_public = lex.header_public
+            self.header_internal = lex.header_internal
+        self.header_external = lex.header_external
 
         # Coerce to more useful types
         def convert_lib_list(l):
@@ -673,8 +687,18 @@ class ModuleInfo(InfoObject):
                     result[target] = result.setdefault(target, []) + vals
             return result
 
-        self.libs = convert_lib_list(self.libs)
-        self.frameworks = convert_lib_list(self.frameworks)
+        # Convert remaining lex result to members
+        self.arch = lex.arch
+        self.cc = lex.cc
+        self.comment = ' '.join(lex.comment) if lex.comment else None
+        self.define = lex.define
+        self.frameworks = convert_lib_list(lex.frameworks)
+        self.libs = convert_lib_list(lex.libs)
+        self.load_on = lex.load_on
+        self.need_isa = lex.need_isa.split(',') if lex.need_isa else []
+        self.os = lex.os
+        self.requires = lex.requires
+        self.warning = ' '.join(lex.warning) if lex.warning else None
 
         def add_dir_name(filename):
             if filename.count(':') == 0:
@@ -687,25 +711,18 @@ class ModuleInfo(InfoObject):
             return os.path.join(os.path.split(self.lives_in)[0],
                                 *filename.split(':'))
 
+        # Modify members
         self.source = [add_dir_name(s) for s in self.source]
         self.header_internal = [add_dir_name(s) for s in self.header_internal]
         self.header_public = [add_dir_name(s) for s in self.header_public]
         self.header_external = [add_dir_name(s) for s in self.header_external]
 
+        # Filesystem read access check
         for src in self.source + self.header_internal + self.header_public + self.header_external:
             if not os.access(src, os.R_OK):
                 logging.error("Missing file %s in %s" % (src, infofile))
 
-        if self.comment != []:
-            self.comment = ' '.join(self.comment)
-        else:
-            self.comment = None
-
-        if self.warning != []:
-            self.warning = ' '.join(self.warning)
-        else:
-            self.warning = None
-
+        # Check for duplicates
         def intersect_check(type_a, list_a, type_b, list_b):
             intersection = set.intersection(set(list_a), set(list_b))
             if len(intersection) > 0:
@@ -797,14 +814,20 @@ class ModuleInfo(InfoObject):
             return 0
         return 1
 
+
 class ModulePolicyInfo(InfoObject):
     def __init__(self, infofile):
         super(ModulePolicyInfo, self).__init__(infofile)
-        lex_me_harder(infofile, self,
-                      ['required', 'if_available', 'prohibited'], {})
+        lex = lex_me_harder(
+            infofile,
+            ['required', 'if_available', 'prohibited'],
+            {})
+
+        self.if_available = lex.if_available
+        self.required = lex.required
+        self.prohibited = lex.prohibited
 
     def cross_check(self, modules):
-
         def check(tp, lst):
             for mod in lst:
                 if mod not in modules:
@@ -819,19 +842,24 @@ class ModulePolicyInfo(InfoObject):
 class ArchInfo(InfoObject):
     def __init__(self, infofile):
         super(ArchInfo, self).__init__(infofile)
-        lex_me_harder(infofile, self,
-                      ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
-                      {'endian': None,
-                       'family': None,
-                       'unaligned': 'no',
-                       'wordsize': 32
-                      })
+        lex = lex_me_harder(
+            infofile,
+            ['aliases', 'submodels', 'submodel_aliases', 'isa_extensions'],
+            {
+                'endian': None,
+                'family': None,
+                'unaligned': 'no',
+                'wordsize': 32
+            })
 
-        self.submodel_aliases = force_to_dict(self.submodel_aliases)
-
-        self.unaligned_ok = (1 if self.unaligned == 'ok' else 0)
-
-        self.wordsize = int(self.wordsize)
+        self.aliases = lex.aliases
+        self.endian = lex.endian
+        self.family = lex.family
+        self.isa_extensions = lex.isa_extensions
+        self.unaligned_ok = (1 if lex.unaligned == 'ok' else 0)
+        self.submodels = lex.submodels
+        self.submodel_aliases = force_to_dict(lex.submodel_aliases)
+        self.wordsize = int(lex.wordsize)
 
     def all_submodels(self):
         """
@@ -904,55 +932,73 @@ class ArchInfo(InfoObject):
 class CompilerInfo(InfoObject):
     def __init__(self, infofile):
         super(CompilerInfo, self).__init__(infofile)
-        lex_me_harder(infofile, self,
-                      ['so_link_commands', 'binary_link_commands', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
-                      {'binary_name': None,
-                       'linker_name': None,
-                       'macro_name': None,
-                       'output_to_option': '-o ',
-                       'add_include_dir_option': '-I',
-                       'add_lib_dir_option': '-L',
-                       'add_lib_option': '-l',
-                       'add_framework_option': '-framework ',
-                       'compile_flags': '',
-                       'debug_info_flags': '',
-                       'optimization_flags': '',
-                       'size_optimization_flags': '',
-                       'coverage_flags': '',
-                       'sanitizer_flags': '',
-                       'stack_protector_flags': '',
-                       'shared_flags': '',
-                       'lang_flags': '',
-                       'warning_flags': '',
-                       'maintainer_warning_flags': '',
-                       'visibility_build_flags': '',
-                       'visibility_attribute': '',
-                       'ar_command': None,
-                       'makefile_style': ''
-                      })
+        lex = lex_me_harder(
+            infofile,
+            ['so_link_commands', 'binary_link_commands', 'mach_opt', 'mach_abi_linking', 'isa_flags'],
+            {
+                'binary_name': None,
+                'linker_name': None,
+                'macro_name': None,
+                'output_to_option': '-o ',
+                'add_include_dir_option': '-I',
+                'add_lib_dir_option': '-L',
+                'add_lib_option': '-l',
+                'add_framework_option': '-framework ',
+                'compile_flags': '',
+                'debug_info_flags': '',
+                'optimization_flags': '',
+                'size_optimization_flags': '',
+                'coverage_flags': '',
+                'sanitizer_flags': '',
+                'stack_protector_flags': '',
+                'shared_flags': '',
+                'lang_flags': '',
+                'warning_flags': '',
+                'maintainer_warning_flags': '',
+                'visibility_build_flags': '',
+                'visibility_attribute': '',
+                'ar_command': None,
+                'makefile_style': ''
+            })
 
-        self.so_link_commands = force_to_dict(self.so_link_commands)
-        self.binary_link_commands = force_to_dict(self.binary_link_commands)
-        self.mach_abi_linking = force_to_dict(self.mach_abi_linking)
-        self.isa_flags = force_to_dict(self.isa_flags)
+        self.add_framework_option = lex.add_framework_option
+        self.add_include_dir_option = lex.add_include_dir_option
+        self.add_lib_option = lex.add_lib_option
+        self.ar_command = lex.ar_command
+        self.binary_link_commands = force_to_dict(lex.binary_link_commands)
+        self.binary_name = lex.binary_name
+        self.compile_flags = lex.compile_flags
+        self.coverage_flags = lex.coverage_flags
+        self.debug_info_flags = lex.debug_info_flags
+        self.isa_flags = force_to_dict(lex.isa_flags)
+        self.lang_flags = lex.lang_flags
+        self.linker_name = lex.linker_name
+        self.mach_abi_linking = force_to_dict(lex.mach_abi_linking)
+        self.macro_name = lex.macro_name
+        self.maintainer_warning_flags = lex.maintainer_warning_flags
+        self.makefile_style = lex.makefile_style
+        self.optimization_flags = lex.optimization_flags
+        self.output_to_option = lex.output_to_option
+        self.sanitizer_flags = lex.sanitizer_flags
+        self.shared_flags = lex.shared_flags
+        self.size_optimization_flags = lex.size_optimization_flags
+        self.so_link_commands = force_to_dict(lex.so_link_commands)
+        self.stack_protector_flags = lex.stack_protector_flags
+        self.visibility_build_flags = lex.visibility_build_flags
+        self.visibility_attribute = lex.visibility_attribute
+        self.warning_flags = lex.warning_flags
 
         self.mach_opt_flags = {}
+        while lex.mach_opt:
+            proc = lex.mach_opt.pop(0)
+            if lex.mach_opt.pop(0) != '->':
+                raise ConfigureError('Parsing err in %s mach_opt' % self.basename)
 
-        while self.mach_opt != []:
-            proc = self.mach_opt.pop(0)
-            if self.mach_opt.pop(0) != '->':
-                raise ConfigureError('Parsing err in %s mach_opt' % (self.basename))
-
-            flags = self.mach_opt.pop(0)
+            flags = lex.mach_opt.pop(0)
             regex = ''
-
-            if len(self.mach_opt) > 0 and \
-               (len(self.mach_opt) == 1 or self.mach_opt[1] != '->'):
-                regex = self.mach_opt.pop(0)
-
+            if lex.mach_opt and (len(lex.mach_opt) == 1 or lex.mach_opt[1] != '->'):
+                regex = lex.mach_opt.pop(0)
             self.mach_opt_flags[proc] = (flags, regex)
-
-        del self.mach_opt
 
     def isa_flags_for(self, isa, arch):
         if isa in self.isa_flags:
@@ -985,13 +1031,13 @@ class CompilerInfo(InfoObject):
         Return the machine specific ABI flags
         """
 
-        def all():
+        def all_group():
             if options.with_debug_info and 'all-debug' in self.mach_abi_linking:
                 return 'all-debug'
             return 'all'
 
         abi_link = list()
-        for what in [all(), options.os, options.arch, options.cpu]:
+        for what in [all_group(), options.os, options.arch, options.cpu]:
             flag = self.mach_abi_linking.get(what)
             if flag != None and flag != '' and flag not in abi_link:
                 abi_link.append(flag)
@@ -1067,7 +1113,8 @@ class CompilerInfo(InfoObject):
 
         return (' '.join(gen_flags())).strip()
 
-    def _so_link_search(self, osname, debug_info):
+    @staticmethod
+    def _so_link_search(osname, debug_info):
         if debug_info:
             return [osname + '-debug', 'default-debug']
         else:
@@ -1104,50 +1151,73 @@ class CompilerInfo(InfoObject):
 
         return ['BUILD_COMPILER_IS_' + self.macro_name]
 
+
 class OsInfo(InfoObject):
     def __init__(self, infofile):
         super(OsInfo, self).__init__(infofile)
-        lex_me_harder(infofile, self,
-                      ['aliases', 'target_features'],
-                      {'os_type': None,
-                       'program_suffix': '',
-                       'obj_suffix': 'o',
-                       'soname_suffix': '',
-                       'soname_pattern_patch': '',
-                       'soname_pattern_abi': '',
-                       'soname_pattern_base': '',
-                       'static_suffix': 'a',
-                       'ar_command': 'ar crs',
-                       'ar_needs_ranlib': False,
-                       'install_root': '/usr/local',
-                       'header_dir': 'include',
-                       'bin_dir': 'bin',
-                       'lib_dir': 'lib',
-                       'doc_dir': 'share/doc',
-                       'building_shared_supported': 'yes',
-                       'install_cmd_data': 'install -m 644',
-                       'install_cmd_exec': 'install -m 755'
-                      })
+        lex = lex_me_harder(
+            infofile,
+            ['aliases', 'target_features'],
+            {
+                'os_type': None,
+                'program_suffix': '',
+                'obj_suffix': 'o',
+                'soname_suffix': '',
+                'soname_pattern_patch': '',
+                'soname_pattern_abi': '',
+                'soname_pattern_base': '',
+                'static_suffix': 'a',
+                'ar_command': 'ar crs',
+                'ar_needs_ranlib': False,
+                'install_root': '/usr/local',
+                'header_dir': 'include',
+                'bin_dir': 'bin',
+                'lib_dir': 'lib',
+                'doc_dir': 'share/doc',
+                'building_shared_supported': 'yes',
+                'install_cmd_data': 'install -m 644',
+                'install_cmd_exec': 'install -m 755'
+            })
 
-        if self.soname_pattern_base != '':
-            if self.soname_pattern_patch == '' and self.soname_pattern_abi == '':
-                self.soname_pattern_patch = self.soname_pattern_base
-                self.soname_pattern_patch_abi = self.soname_pattern_base
-
-            elif self.soname_pattern_abi != '' and self.soname_pattern_abi != '':
-                pass # all 3 values set, nothing needs to happen here
+        if lex.soname_pattern_base:
+            self.soname_pattern_base = lex.soname_pattern_base
+            if lex.soname_pattern_patch == '' and lex.soname_pattern_abi == '':
+                self.soname_pattern_patch = lex.soname_pattern_base
+                self.soname_pattern_abi = lex.soname_pattern_base
+            elif lex.soname_pattern_abi != '' and lex.soname_pattern_abi != '':
+                self.soname_pattern_patch = lex.soname_pattern_patch
+                self.soname_pattern_abi = lex.soname_pattern_abi
             else:
                 # base set, only one of patch/abi set
                 raise ConfigureError("Invalid soname_patterns in %s" % (self.infofile))
+        else:
+            if lex.soname_suffix:
+                self.soname_pattern_base = "libbotan-{version_major}.%s" % (lex.soname_suffix)
+                self.soname_pattern_abi = self.soname_pattern_base + ".{abi_rev}"
+                self.soname_pattern_patch = self.soname_pattern_abi + ".{version_minor}.{version_patch}"
+            else:
+                # Could not calculate soname_pattern_*
+                # This happens for OSs without shared library support (e.g. nacl, mingw, includeos, cygwin)
+                self.soname_pattern_base = None
+                self.soname_pattern_abi = None
+                self.soname_pattern_patch = None
 
-        if self.soname_pattern_base == '' and self.soname_suffix != '':
-            self.soname_pattern_base = "libbotan-{version_major}.%s" % (self.soname_suffix)
-            self.soname_pattern_abi = self.soname_pattern_base + ".{abi_rev}"
-            self.soname_pattern_patch = self.soname_pattern_abi + ".{version_minor}.{version_patch}"
-
-        self.ar_needs_ranlib = bool(self.ar_needs_ranlib)
-
-        self.building_shared_supported = (True if self.building_shared_supported == 'yes' else False)
+        self.aliases = lex.aliases
+        self.ar_command = lex.ar_command
+        self.ar_needs_ranlib = bool(lex.ar_needs_ranlib)
+        self.bin_dir = lex.bin_dir
+        self.building_shared_supported = (True if lex.building_shared_supported == 'yes' else False)
+        self.doc_dir = lex.doc_dir
+        self.header_dir = lex.header_dir
+        self.install_cmd_data = lex.install_cmd_data
+        self.install_cmd_exec = lex.install_cmd_exec
+        self.install_root = lex.install_root
+        self.lib_dir = lex.lib_dir
+        self.os_type = lex.os_type
+        self.obj_suffix = lex.obj_suffix
+        self.program_suffix = lex.program_suffix
+        self.static_suffix = lex.static_suffix
+        self.target_features = lex.target_features
 
     def ranlib_command(self):
         return 'ranlib' if self.ar_needs_ranlib else 'true'
@@ -1169,6 +1239,7 @@ class OsInfo(InfoObject):
 
         r += sorted(feat_macros())
         return r
+
 
 def fixup_proc_name(proc):
     proc = proc.lower().replace(' ', '')
@@ -1229,16 +1300,14 @@ def system_cpu_info():
     return cpu_info
 
 def guess_processor(archinfo):
-    cpu_info = system_cpu_info()
-
-    for input in cpu_info:
-        if input != '':
-            match = canon_processor(archinfo, input)
+    for info_part in system_cpu_info():
+        if info_part:
+            match = canon_processor(archinfo, info_part)
             if match != None:
-                logging.debug("Matched '%s' to processor '%s'" % (input, match))
+                logging.debug("Matched '%s' to processor '%s'" % (info_part, match))
                 return match
             else:
-                logging.debug("Failed to deduce CPU from '%s'" % (input))
+                logging.debug("Failed to deduce CPU from '%s'" % info_part)
 
     raise ConfigureError('Could not determine target CPU; set with --cpu')
 
@@ -1276,17 +1345,17 @@ def gen_bakefile(build_config, options, external_libs):
 
     def bakefile_sources(file, sources):
         for src in sources:
-            (dir, filename) = os.path.split(os.path.normpath(src))
-            dir = dir.replace('\\', '/')
-            _, dir = dir.split('src/', 1)
-            file.write('\tsources { src/%s/%s } \n' % (dir, filename))
+            (directory, filename) = os.path.split(os.path.normpath(src))
+            directory = directory.replace('\\', '/')
+            _, directory = directory.split('src/', 1)
+            file.write('\tsources { src/%s/%s } \n' % (directory, filename))
 
     def bakefile_cli_headers(file, headers):
         for header in headers:
-            (dir, filename) = os.path.split(os.path.normpath(header))
-            dir = dir.replace('\\', '/')
-            _, dir = dir.split('src/', 1)
-            file.write('\theaders { src/%s/%s } \n' % (dir, filename))
+            (directory, filename) = os.path.split(os.path.normpath(header))
+            directory = directory.replace('\\', '/')
+            _, directory = directory.split('src/', 1)
+            file.write('\theaders { src/%s/%s } \n' % (directory, filename))
 
     def bakefile_test_sources(file, sources):
         for src in sources:
@@ -1391,9 +1460,9 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
 
     def objectfile_list(sources, obj_dir):
         for src in sources:
-            (dir, file) = os.path.split(os.path.normpath(src))
+            (directory, file) = os.path.split(os.path.normpath(src))
 
-            parts = dir.split(os.sep)
+            parts = directory.split(os.sep)
             if 'src' in parts:
                 parts = parts[parts.index('src')+2:]
             elif 'tests' in parts:
@@ -1403,7 +1472,7 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
             elif file.find('botan_all') != -1:
                 parts = []
             else:
-                raise ConfigureError("Unexpected file '%s/%s'" % (dir, file))
+                raise ConfigureError("Unexpected file '%s/%s'" % (directory, file))
 
             if parts != []:
 
@@ -1438,8 +1507,11 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
         """
 
         includes = cc.add_include_dir_option + build_config.include_dir
-        includes += (' ' + cc.add_include_dir_option + build_config.external_include_dir) if build_config.external_headers else ''
-        includes += (' ' + cc.add_include_dir_option + options.with_external_includedir) if options.with_external_includedir else ''
+        if build_config.external_headers:
+            includes += ' ' + cc.add_include_dir_option + build_config.external_include_dir
+        if options.with_external_includedir:
+            includes += ' ' + cc.add_include_dir_option + options.with_external_includedir
+
         for (obj_file, src) in zip(objectfile_list(sources, obj_dir), sources):
             yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
                 obj_file, src,
@@ -1539,7 +1611,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         return opts
 
-    vars = {
+    variables = {
         'version_major':  build_config.version_major,
         'version_minor':  build_config.version_minor,
         'version_patch':  build_config.version_patch,
@@ -1614,7 +1686,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'cli_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
         'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
 
-        'link_to': ' '.join([cc.add_lib_option + lib for lib in link_to()] + [cc.add_framework_option + fw for fw in link_to_frameworks()]),
+        'link_to': ' '.join(
+            [cc.add_lib_option + lib for lib in link_to()] +
+            [cc.add_framework_option + fw for fw in link_to_frameworks()]
+        ),
 
         'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
 
@@ -1666,37 +1741,41 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     if options.os == 'darwin' and options.build_shared_lib:
         # In order that these executables work from the build directory,
         # we need to change the install names
-        vars['cli_post_link_cmd'] = 'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(CLI)'
-        vars['test_post_link_cmd'] = 'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
+        variables['cli_post_link_cmd'] = \
+            'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(CLI)'
+        variables['test_post_link_cmd'] = \
+            'install_name_tool -change "$(INSTALLED_LIB_DIR)/$(SONAME_ABI)" "@executable_path/$(SONAME_ABI)" $(TEST)'
     else:
-        vars['cli_post_link_cmd'] = ''
-        vars['test_post_link_cmd'] = ''
+        variables['cli_post_link_cmd'] = ''
+        variables['test_post_link_cmd'] = ''
 
-    gen_makefile_lists(vars, build_config, options, modules, cc, arch, osinfo)
+    gen_makefile_lists(variables, build_config, options, modules, cc, arch, osinfo)
 
     if options.os != 'windows':
-        vars['botan_pkgconfig'] = prefix_with_build_dir(os.path.join(build_config.build_dir,
-                                                                     build_config.pkg_config_file()))
+        variables['botan_pkgconfig'] = prefix_with_build_dir(
+            os.path.join(build_config.build_dir, build_config.pkg_config_file()))
 
         # 'botan' or 'botan-2'. Used in Makefile and install script
         # This can be made consistent over all platforms in the future
-        vars['libname'] = 'botan-%d' % (build_config.version_major)
+        variables['libname'] = 'botan-%d' % (build_config.version_major)
     else:
         if options.with_debug_info:
-            vars['libname'] = 'botand'
+            variables['libname'] = 'botand'
         else:
-            vars['libname'] = 'botan'
+            variables['libname'] = 'botan'
 
-    vars["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), vars)
+    variables["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), variables)
 
-    if vars["makefile_style"] == "gmake":
-        vars["gmake_commands_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_commands.in'), vars)
-        vars["gmake_dso_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), vars) \
+    if variables["makefile_style"] == "gmake":
+        variables["gmake_commands_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_commands.in'),
+                                                          variables)
+        variables["gmake_dso_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), variables) \
                                     if options.build_shared_lib else ''
-        vars["gmake_coverage_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_coverage.in'), vars) \
-                                    if options.with_coverage_info else ''
+        variables["gmake_coverage_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_coverage.in'),
+                                                          variables) \
+                                         if options.with_coverage_info else ''
 
-    return vars
+    return variables
 
 def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
     """
