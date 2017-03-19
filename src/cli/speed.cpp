@@ -45,6 +45,10 @@
   #include <botan/hmac_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_RDRAND_RNG)
+  #include <botan/rdrand_rng.h>
+#endif
+
 #if defined(BOTAN_HAS_FPE_FE1)
   #include <botan/fpe_fe1.h>
 #endif
@@ -533,6 +537,14 @@ class Speed final : public Command
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
                bench_rng(Botan::system_rng(), "System_RNG", msec, buf_size);
+#endif
+
+#if defined(BOTAN_HAS_RDRAND_RNG)
+               if(Botan::CPUID::has_rdrand())
+                  {
+                  Botan::RDRAND_RNG rdrand;
+                  bench_rng(rdrand, "RDRAND", msec, buf_size);
+                  }
 #endif
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
