@@ -7,6 +7,7 @@
 
 #include "tests.h"
 #include <functional>
+#include <ctime>
 #include <botan/loadstor.h>
 #include <botan/calendar.h>
 #include <botan/internal/rounding.h>
@@ -201,7 +202,7 @@ class Date_Format_Tests : public Text_Based_Test
 
          const std::vector<uint32_t> d = parse_date(get_req_str(vars, "Date"));
 
-         if(type == "valid" || type == "valid.not_std")
+         if(type == "valid" || type == "valid.not_std" || type == "valid.64_bit_time_t")
             {
             Botan::calendar_point c(d[0], d[1], d[2], d[3], d[4], d[5]);
             result.test_is_eq("year", c.year, d[0]);
@@ -211,7 +212,7 @@ class Date_Format_Tests : public Text_Based_Test
             result.test_is_eq("minute", c.minutes, d[4]);
             result.test_is_eq("second", c.seconds, d[5]);
 
-            if(type == "valid.not_std")
+            if(type == "valid.not_std" || type == "valid.64_bit_time_t" && c.year > 2037 && sizeof(std::time_t) == 4)
                {
                result.test_throws("valid but out of std::timepoint range", [c]() { c.to_std_timepoint(); });
                }
