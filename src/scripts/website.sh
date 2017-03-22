@@ -11,6 +11,13 @@ WEBSITE_SRC_DIR=./www-src
 rm -rf $WEBSITE_SRC_DIR $WEBSITE_DIR
 mkdir -p $WEBSITE_SRC_DIR
 
+# build manual as pdf for download
+sphinx-build -t website -c "$SPHINX_CONFIG" -b "latex" doc/manual latex
+cd latex
+pdflatex botan.tex
+cd ..
+
+# build online manual
 cp readme.rst $WEBSITE_SRC_DIR/index.rst
 cp -r news.rst doc/security.rst $WEBSITE_SRC_DIR
 echo -e ".. toctree::\n\n   index\n   news\n   security\n" > $WEBSITE_SRC_DIR/contents.rst
@@ -23,5 +30,8 @@ rm -rf $WEBSITE_DIR/manual/.doctrees
 rm -f $WEBSITE_DIR/manual/.buildinfo
 cp license.txt doc/pgpkey.txt $WEBSITE_DIR
 
+
+
+# build doxygen
 doxygen build/botan.doxy
 mv build/docs/doxygen $WEBSITE_DIR/doxygen

@@ -6,7 +6,13 @@ If you need to build the library first, start with :doc:`building`.
 Some Linux distributions include packages for Botan, so building from
 source may not be required on your system.
 
-The :ref:`genindex` and :ref:`search` may be useful to get started.
+.. only:: html
+
+   The :ref:`genindex` and :ref:`search` may be useful to get started.
+
+.. only:: html and website
+
+   You can also download this manual as a :download:`PDF <../../latex/botan.pdf>`.
 
 Books and other references
 ----------------------------
