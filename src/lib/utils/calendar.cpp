@@ -121,10 +121,11 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const
 
    // 32 bit time_t ends at January 19, 2038
    // https://msdn.microsoft.com/en-us/library/2093ets1.aspx
-   // For consistency reasons, throw after 2037 as long as
-   // no other implementation is available.
-   if (year > 2037)
+   // Throw after 2037 if 32 bit time_t is used
+   if (year > 2037 && sizeof(std::time_t) == 4)
+      {
       throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2037.");
+      }
 
    // std::tm: struct without any timezone information
    std::tm tm;

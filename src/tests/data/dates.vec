@@ -9,6 +9,9 @@ Date = 2037,12,31,23,59,59
 Date = 1800,01,01,0,0,0
 Date = 1969,12,31,23,59,58
 Date = 1969,12,31,23,59,59
+
+[valid.64_bit_time_t]
+# only valid if 64 bit std::time_t is used
 Date = 2038,01,01,0,0,0
 Date = 2083,05,20,8,30,9
 
