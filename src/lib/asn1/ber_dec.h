@@ -61,7 +61,7 @@ class BOTAN_DLL BER_Decoder
                     "; Output type size is " +
                     std::to_string(sizeof(T)));
 
-         copy_mem((uint8_t *)&out, obj.value.data(), obj.value.size());
+         copy_mem(reinterpret_cast<uint8_t*>(&out), obj.value.data(), obj.value.size());
 
          return (*this);
          }

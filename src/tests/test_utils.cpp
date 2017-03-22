@@ -212,7 +212,7 @@ class Date_Format_Tests : public Text_Based_Test
             result.test_is_eq("minute", c.minutes, d[4]);
             result.test_is_eq("second", c.seconds, d[5]);
 
-            if(type == "valid.not_std" || type == "valid.64_bit_time_t" && c.year > 2037 && sizeof(std::time_t) == 4)
+            if(type == "valid.not_std" || (type == "valid.64_bit_time_t" && c.year > 2037 && sizeof(std::time_t) == 4))
                {
                result.test_throws("valid but out of std::timepoint range", [c]() { c.to_std_timepoint(); });
                }

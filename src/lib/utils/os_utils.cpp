@@ -345,7 +345,7 @@ void botan_sigill_handler(int)
 
 int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    {
-   int probe_result = -3;
+   volatile int probe_result = -3;
 
 #if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
    struct sigaction old_sigaction;
