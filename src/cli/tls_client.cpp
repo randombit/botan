@@ -218,36 +218,42 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
    private:
       int connect_to_host(const std::string& host, uint16_t port, bool tcp)
          {
-         hostent* host_addr = ::gethostbyname(host.c_str());
+         addrinfo hints = {};
+         hints.ai_family = AF_UNSPEC;
+         hints.ai_socktype = tcp ? SOCK_STREAM : SOCK_DGRAM;
+         addrinfo *res, *rp = nullptr;
 
-         if(!host_addr)
-            throw CLI_Error("gethostbyname failed for " + host);
-
-         if(host_addr->h_addrtype != AF_INET) // FIXME
-            throw CLI_Error(host + " has IPv6 address, not supported");
-
-         int type = tcp ? SOCK_STREAM : SOCK_DGRAM;
-
-         int fd = ::socket(PF_INET, type, 0);
-         if(fd == -1)
-            throw CLI_Error("Unable to acquire socket");
-
-         sockaddr_in socket_info;
-         ::memset(&socket_info, 0, sizeof(socket_info));
-         socket_info.sin_family = AF_INET;
-         socket_info.sin_port = htons(port);
-
-         ::memcpy(&socket_info.sin_addr,
-                  host_addr->h_addr,
-                  host_addr->h_length);
-
-         socket_info.sin_addr = *reinterpret_cast<struct in_addr*>(host_addr->h_addr); // FIXME
-
-         if(::connect(fd, reinterpret_cast<sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0)
+         if(::getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, &res) != 0)
             {
-            ::close(fd);
+            throw CLI_Error("getaddrinfo failed for " + host);
+            }
+
+         int fd = 0;
+
+         for(rp = res; rp != nullptr; rp = rp->ai_next)
+            {
+            fd = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+
+            if(fd == -1)
+               {
+               continue;
+               }
+
+            if(::connect(fd, rp->ai_addr, rp->ai_addrlen) != 0)
+               {
+               close(fd);
+               continue;
+               }
+
+            break;
+            }
+
+         if(rp == nullptr) // no address succeeded
+            {
             throw CLI_Error("connect failed");
             }
+
+         ::freeaddrinfo(res);
 
          return fd;
          }
