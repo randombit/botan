@@ -1,0 +1,22 @@
+endian little
+
+family ppc
+wordsize 64
+
+<aliases>
+powerpc64
+</aliases>
+
+<submodel_aliases>
+</submodel_aliases>
+
+<submodels>
+power8
+</submodels>
+
+<submodel_aliases>
+</submodel_aliases>
+
+<isa_extensions>
+altivec
+</isa_extensions>
