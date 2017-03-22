@@ -12,7 +12,7 @@ source may not be required on your system.
 
 .. only:: html and website
 
-   You can also download this manual as a :download:`PDF <../../latex/botan.pdf>`.
+   You can also download this manual as a `PDF <https://botan.randombit.net/manual/botan.pdf>`_.
 
 Books and other references
 ----------------------------
