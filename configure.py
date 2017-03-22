@@ -1751,18 +1751,18 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
     gen_makefile_lists(variables, build_config, options, modules, cc, arch, osinfo)
 
-    if options.os != 'windows':
+    if options.os == 'windows':
+        if options.with_debug_info:
+            variables['libname'] = 'botand'
+        else:
+            variables['libname'] = 'botan'
+    else:
         variables['botan_pkgconfig'] = prefix_with_build_dir(
             os.path.join(build_config.build_dir, build_config.pkg_config_file()))
 
         # 'botan' or 'botan-2'. Used in Makefile and install script
         # This can be made consistent over all platforms in the future
         variables['libname'] = 'botan-%d' % (build_config.version_major)
-    else:
-        if options.with_debug_info:
-            variables['libname'] = 'botand'
-        else:
-            variables['libname'] = 'botan'
 
     variables["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), variables)
 
