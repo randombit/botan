@@ -1,6 +1,56 @@
 Release Notes
 ========================================
 
+Version 2.1.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Support a 0-length IV in ChaCha stream cipher. Such an IV is treated
+  identically to an 8-byte IV of all zeros.
+
+* The PKCS11 module did not require any external dependencies, so it
+  has been enabled by default. The ``-with-pkcs11`` and ``--without-pkcs11``
+  flags to ``configure.py`` have been removed. (GH #837)
+
+* Add ``OS::run_cpu_instruction_probe`` for runtime probing of ISA extensions.
+  Supporting this requires system-specific techniques, currently Windows SEH and
+  Unix signal handling are supported.
+
+* Add support for ARM NEON in the SIMD_4x32 type
+
+* Add support for ARM CPU feature detection using getauxval (GH #843)
+
+* Previously Botan forbid any use of times past 2037 to avoid Y2038 issues.
+  Now this restriction is only in place on systems which have a 32-bit
+  ``time_t``. (GH #933 fixing #917)
+
+* Add generic type decoder function to BER decoder (GH #897)
+
+* Fix portability or build problems affecting Sun Studio compiler (GH #846),
+  Solaris, ppc64le, DragonflyBSD (GH #887)
+
+* Add ``--with-external-libdir`` to configure.py (GH #857 fixing #19 #767)
+
+* Add ``OS::get_high_resolution_clock`` which returns the best resolution
+  clock available on the system.
+
+* Change ``OS::get_processor_timestamp`` to return 0 if no hardware
+  cycle counter is available. Previously it silently fell back on some
+  other clock type.
+
+* Report cycles/byte in the output of ``botan speed``.
+
+* Add speed tests for modular exponentiations and ECC scalar multiplies.
+
+* Make it possible to disable `-fstack-protector` using a build-time flag.
+  GH #863
+
+* Add tests for TLS DSA ciphersuites, more Noekeon tests, others.
+
+* Avoid a GCC warning that triggered on the public key types (GH #849)
+
+* Fix various warnings flagged by pylint and pyflakes linters in
+  configure.py and botan.py (GH #832 #836 #839)
+
 Version 1.10.15, 2017-01-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
