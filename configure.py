@@ -19,6 +19,7 @@ CPython 2.5 and earlier are not supported.
 On Jython target detection does not work (use --os and --cpu).
 """
 
+import json
 import sys
 import os
 import os.path
@@ -2495,8 +2496,8 @@ def main(argv=None):
     link_headers(build_config.external_headers, 'external',
                  build_config.external_include_dir)
 
-    with open(os.path.join(build_config.build_dir, 'build_config.py'), 'w') as f:
-        f.write(str(template_vars))
+    with open(os.path.join(build_config.build_dir, 'build_config.json'), 'w') as f:
+        json.dump(template_vars, f, sort_keys=True, indent=2)
 
     if options.amalgamation:
         amalgamation_cpp_files = generate_amalgamation(build_config, options)
