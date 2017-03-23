@@ -36,9 +36,9 @@ class Bcrypt_Tests : public Text_Based_Test
          Test::Result result("bcrypt");
          result.test_eq("correct hash accepted", Botan::check_bcrypt(password, passhash), true);
 
-         const size_t max_level = (Test::run_long_tests() ? 14 : 11);
+         const size_t max_level = (Test::run_long_tests() ? 14 : 7);
 
-         for(size_t level = 1; level <= max_level; ++level)
+         for(size_t level = 4; level <= max_level; ++level)
             {
             const std::string gen_hash = generate_bcrypt(password, Test::rng(), level);
             result.test_eq("generated hash accepted", Botan::check_bcrypt(password, gen_hash), true);
