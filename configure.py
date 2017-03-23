@@ -1575,11 +1575,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         logging.debug('Using MP bits %d' % (mp_bits))
         return mp_bits
 
-    def prefix_with_build_dir(path):
-        if options.with_build_dir != None:
-            return os.path.join(options.with_build_dir, path)
-        return path
-
     def innosetup_arch(os_name, arch):
         if os_name == 'windows':
             inno_arch = {'x86_32': '', 'x86_64': 'x64', 'ia64': 'ia64'}
@@ -1636,7 +1631,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'local_config': slurp_file(options.local_config),
         'makefile_style': options.makefile_style or cc.makefile_style,
 
-        'makefile_path': prefix_with_build_dir('Makefile'),
+        'makefile_path': os.path.join(build_config.build_dir, '..', 'Makefile'),
 
         'program_suffix': options.program_suffix or osinfo.program_suffix,
 
@@ -1758,8 +1753,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         else:
             variables['libname'] = 'botan'
     else:
-        variables['botan_pkgconfig'] = prefix_with_build_dir(
-            os.path.join(build_config.build_dir, build_config.pkg_config_file()))
+        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, build_config.pkg_config_file())
 
         # 'botan' or 'botan-2'. Used in Makefile and install script
         # This can be made consistent over all platforms in the future
