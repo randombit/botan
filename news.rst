@@ -4,6 +4,10 @@ Release Notes
 Version 2.1.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix incorrect truncation in Bcrypt. Passwords in length between 56
+  and 72 characters were truncated at 56 characters. Found and
+  reported by Solar Designer. (CVE-2017-7252)
+
 * Support a 0-length IV in ChaCha stream cipher. Such an IV is treated
   identically to an 8-byte IV of all zeros.
 

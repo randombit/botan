@@ -18,7 +18,7 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2017
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* 2017-03-23: Incorrect bcrypt computation
+* 2017-03-23 (CVE-2016-7252): Incorrect bcrypt computation
 
   Botan's implementation of bcrypt password hashing scheme truncated long
   passwords at 56 characters, instead of at bcrypt's standard 72 characters
