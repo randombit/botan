@@ -24,11 +24,9 @@ rm -f $WEBSITE_DIR/manual/.buildinfo
 cp license.txt doc/pgpkey.txt $WEBSITE_DIR
 
 # build manual as pdf for download
-sphinx-build -t website -c "$SPHINX_CONFIG" -b "latex" doc/manual latex
-cd latex
-pdflatex botan.tex
-cd ..
-cp latex/botan.pdf $WEBSITE_DIR/manual/botan.pdf
+sphinx-build -t website -c "$SPHINX_CONFIG" -b "latex" doc/manual handbook-latex
+(cd handbook-latex && pdflatex botan.tex)
+cp handbook-latex/botan.pdf $WEBSITE_DIR/manual/botan.pdf
 
 # build doxygen
 doxygen build/botan.doxy
