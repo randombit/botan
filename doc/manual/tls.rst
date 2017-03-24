@@ -302,6 +302,10 @@ TLS Clients
    the server select what certificate to use and helps the client
    validate the connection.
 
+   Note that the server name indicator name must be a FQDN.  IP
+   addresses are not allowed by RFC 6066 and may lead to interoperability
+   problems.
+
    Use the optional *offer_version* to control the version of TLS you
    wish the client to offer. Normally, you'll want to offer the most
    recent version of (D)TLS that is available, however some broken
