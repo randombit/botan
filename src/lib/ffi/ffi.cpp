@@ -954,6 +954,21 @@ int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len)
    return BOTAN_FFI_DO(Botan::Public_Key, key, k, { return write_str_output(out, out_len, k.algo_name()); });
    }
 
+int botan_pubkey_check_key(botan_pubkey_t key, botan_rng_t rng, uint32_t flags)
+   {
+   const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS);
+
+   return BOTAN_FFI_DO(Botan::Public_Key, key, k,
+                       { return (k.check_key(safe_get(rng), strong) == true) ? 0 : 1; });
+   }
+
+int botan_privkey_check_key(botan_privkey_t key, botan_rng_t rng, uint32_t flags)
+   {
+   const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS);
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k,
+                       { return (k.check_key(safe_get(rng), strong) == true) ? 0 : 1; });
+   }
+
 int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
    {
    return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
