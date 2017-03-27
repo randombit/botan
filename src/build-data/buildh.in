@@ -122,7 +122,7 @@
 * seriously broken system RNG.
 */
 #define BOTAN_ENTROPY_DEFAULT_SOURCES \
-   { "rdseed", "rdrand", "darwin_secrandom", "dev_random", \
+   { "rdseed", "rdrand", "darwin_secrandom", "getentropy", "dev_random", \
     "win32_cryptoapi", "proc_walk", "system_stats" }
 
 

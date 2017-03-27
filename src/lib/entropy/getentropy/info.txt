@@ -1,0 +1,9 @@
+define ENTROPY_SRC_GETENTROPY 20170327
+
+<header:internal>
+getentropy.h
+</header:internal>
+
+<os>
+openbsd
+</os>
