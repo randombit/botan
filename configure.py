@@ -19,6 +19,7 @@ CPython 2.5 and earlier are not supported.
 On Jython target detection does not work (use --os and --cpu).
 """
 
+import json
 import sys
 import os
 import os.path
@@ -1574,11 +1575,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         logging.debug('Using MP bits %d' % (mp_bits))
         return mp_bits
 
-    def prefix_with_build_dir(path):
-        if options.with_build_dir != None:
-            return os.path.join(options.with_build_dir, path)
-        return path
-
     def innosetup_arch(os_name, arch):
         if os_name == 'windows':
             inno_arch = {'x86_32': '', 'x86_64': 'x64', 'ia64': 'ia64'}
@@ -1635,7 +1631,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'local_config': slurp_file(options.local_config),
         'makefile_style': options.makefile_style or cc.makefile_style,
 
-        'makefile_path': prefix_with_build_dir('Makefile'),
+        'makefile_path': os.path.join(build_config.build_dir, '..', 'Makefile'),
 
         'program_suffix': options.program_suffix or osinfo.program_suffix,
 
@@ -1751,18 +1747,17 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
     gen_makefile_lists(variables, build_config, options, modules, cc, arch, osinfo)
 
-    if options.os != 'windows':
-        variables['botan_pkgconfig'] = prefix_with_build_dir(
-            os.path.join(build_config.build_dir, build_config.pkg_config_file()))
-
-        # 'botan' or 'botan-2'. Used in Makefile and install script
-        # This can be made consistent over all platforms in the future
-        variables['libname'] = 'botan-%d' % (build_config.version_major)
-    else:
+    if options.os == 'windows':
         if options.with_debug_info:
             variables['libname'] = 'botand'
         else:
             variables['libname'] = 'botan'
+    else:
+        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, build_config.pkg_config_file())
+
+        # 'botan' or 'botan-2'. Used in Makefile and install script
+        # This can be made consistent over all platforms in the future
+        variables['libname'] = 'botan-%d' % (build_config.version_major)
 
     variables["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), variables)
 
@@ -2495,8 +2490,8 @@ def main(argv=None):
     link_headers(build_config.external_headers, 'external',
                  build_config.external_include_dir)
 
-    with open(os.path.join(build_config.build_dir, 'build_config.py'), 'w') as f:
-        f.write(str(template_vars))
+    with open(os.path.join(build_config.build_dir, 'build_config.json'), 'w') as f:
+        json.dump(template_vars, f, sort_keys=True, indent=2)
 
     if options.amalgamation:
         amalgamation_cpp_files = generate_amalgamation(build_config, options)

@@ -9,6 +9,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 """
 
 import errno
+import json
 import logging
 import optparse
 import os
@@ -105,7 +106,8 @@ def main(args = None):
         copy_file(src, dst)
         os.chmod(dst, exe_mode)
 
-    cfg = eval(open(os.path.join(options.build_dir, 'build_config.py')).read())
+    with open(os.path.join(options.build_dir, 'build_config.json')) as f:
+        cfg = json.load(f)
 
     def process_template(template_str):
         class PercentSignTemplate(string.Template):
