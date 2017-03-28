@@ -291,27 +291,31 @@ void Blowfish::key_expansion(const uint8_t key[],
 void Blowfish::eks_key_schedule(const uint8_t key[], size_t length,
                                 const uint8_t salt[16], size_t workfactor)
    {
-   // Truncate longer passwords to the 56 byte limit Blowfish enforces
-   length = std::min<size_t>(length, 55);
-
-   if(workfactor == 0)
-      throw Invalid_Argument("Bcrypt work factor must be at least 1");
 
    /*
    * On a 2.8 GHz Core-i7, workfactor == 18 takes about 25 seconds to
    * hash a password. This seems like a reasonable upper bound for the
    * time being.
+   * Bcrypt allows up to work factor 31 (2^31 iterations)
    */
    if(workfactor > 18)
       throw Invalid_Argument("Requested Bcrypt work factor " +
-                                  std::to_string(workfactor) + " too large");
+                             std::to_string(workfactor) + " too large");
+
+   if(workfactor < 4)
+      throw Invalid_Argument("Bcrypt requires work factor at least 4");
+
+   if(length > 72)
+      {
+      // Truncate longer passwords to the 72 char bcrypt limit
+      length = 72;
+      }
 
    m_P.resize(18);
    copy_mem(m_P.data(), P_INIT, 18);
 
    m_S.resize(1024);
    copy_mem(m_S.data(), S_INIT, 1024);
-
    key_expansion(key, length, salt);
 
    const uint8_t null_salt[16] = { 0 };

@@ -36,15 +36,35 @@ class Bcrypt_Tests : public Text_Based_Test
          Test::Result result("bcrypt");
          result.test_eq("correct hash accepted", Botan::check_bcrypt(password, passhash), true);
 
-         const size_t max_level = (Test::run_long_tests() ? 14 : 11);
-
-         for(size_t level = 1; level <= max_level; ++level)
+         // self-test low levels for each test password
+         for(size_t level = 4; level <= 6; ++level)
             {
             const std::string gen_hash = generate_bcrypt(password, Test::rng(), level);
             result.test_eq("generated hash accepted", Botan::check_bcrypt(password, gen_hash), true);
             }
 
          return result;
+         }
+
+      std::vector<Test::Result> run_final_tests()
+         {
+         Test::Result result("bcrypt");
+
+         uint64_t start = Test::timestamp();
+
+         const std::string password = "ag00d1_2BE5ur3";
+
+         const size_t max_level = (Test::run_long_tests() ? 15 : 10);
+
+         for(size_t level = 4; level <= max_level; ++level)
+            {
+            const std::string gen_hash = generate_bcrypt(password, Test::rng(), level);
+            result.test_eq("generated hash accepted", Botan::check_bcrypt(password, gen_hash), true);
+            }
+
+         result.set_ns_consumed(Test::timestamp() - start);
+
+         return {result};
          }
    };
 
