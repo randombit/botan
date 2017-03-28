@@ -8,8 +8,14 @@ Version 2.1.0, Not Yet Released
   and 72 characters were truncated at 56 characters. Found and
   reported by Solar Designer. (CVE-2017-7252)
 
+* Correct minimum work factor for Bcrypt password hashes. All other
+  implementations require the work factor be at least 4. Previously
+  Botan simply required it be greater than zero.
+
 * Support a 0-length IV in ChaCha stream cipher. Such an IV is treated
   identically to an 8-byte IV of all zeros.
+
+* New C89 API interfaces for testing key validity. (GH #944)
 
 * The PKCS11 module did not require any external dependencies, so it
   has been enabled by default. The ``-with-pkcs11`` and ``--without-pkcs11``
@@ -44,6 +50,15 @@ Version 2.1.0, Not Yet Released
 * Report cycles/byte in the output of ``botan speed``.
 
 * Add speed tests for modular exponentiations and ECC scalar multiplies.
+
+* Avoid using IP address for SNI in ``tls_client``. (GH #942)
+
+* Add command line util ``timing_test`` which enables running
+  timing-based side channel analysis of TLS CBC decryption, ECC scalar
+  multiplies, OAEP decoding, and other operations which are prone to
+  providing an oracle via side channel.
+
+* Fix pkg-config output when --build-dir was used (GH #936)
 
 * Make it possible to disable `-fstack-protector` using a build-time flag.
   GH #863
