@@ -23,8 +23,10 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
   Botan's implementation of bcrypt password hashing scheme truncated long
   passwords at 56 characters, instead of at bcrypt's standard 72 characters
   limit. Passwords with lengths between these two bounds could be cracked more
-  easily than should be the case due to the final password bytes being
-  ignored. Found and reported by Solar Designer.
+  easily than should be the case due to the final password bytes being ignored.
+  Found and reported by Solar Designer.
+
+  Bug introduced in 1.11.0, fixed in 2.1.0.
 
 2016
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
