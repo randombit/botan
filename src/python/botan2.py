@@ -3,7 +3,7 @@
 """Python wrapper of the botan crypto library
 http://botan.randombit.net
 
-(C) 2015 Jack Lloyd
+(C) 2015,2017 Jack Lloyd
 (C) 2015 Uri  Blumenthal (extensions and patches)
 
 Botan is released under the Simplified BSD License (see license.txt)
@@ -11,10 +11,8 @@ Botan is released under the Simplified BSD License (see license.txt)
 This module uses the ctypes module and is usable by programs running
 under at least CPython 2.7, CPython 3.4 and 3.5, or PyPy.
 
-It uses botan's ffi module, which exposes a C API. Right now the C API
-is versioned but as it is still in evolution, no provisions are made
-for handling more than a single API version in this module. So this
-module should be used only with the library version it accompanied.
+It uses botan's ffi module, which exposes a C API. It suppports all
+versions of Botan >= 2.0
 """
 
 import sys
@@ -31,11 +29,8 @@ if sys.platform == 'darwin':
 else:
     botan = CDLL('libbotan-2.so')
 
-expected_api_rev = 20151015
-botan_api_rev = botan.botan_ffi_api_version()
-
-if botan_api_rev != expected_api_rev:
-    raise Exception("Bad botan API rev got %d expected %d" % (botan_api_rev, expected_api_rev))
+if botan.botan_ffi_supports_api(20151015) == False:
+    raise Exception("The Botan library does not support the FFI API expected by this version of the Python module")
 
 # Internal utilities
 def _call_fn_returning_vec(guess, fn):

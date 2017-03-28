@@ -1,6 +1,6 @@
 /*
 * FFI (C89 API)
-* (C) 2015 Jack Lloyd
+* (C) 2015,2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -158,6 +158,7 @@ BOTAN_DLL int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len);
 * @return 0 on success, 1 on failure
 */
 BOTAN_DLL int botan_hex_encode(const uint8_t* x, size_t len, char* out, uint32_t flags);
+
 // TODO: botan_hex_decode
 // TODO: botan_base64_encode
 // TODO: botan_base64_decode
@@ -171,7 +172,8 @@ typedef struct botan_rng_struct* botan_rng_t;
 * Initialize a random number generator object
 * @param rng rng object
 * @param rng_type type of the rng, possible values:
-*    "system" or nullptr: System_RNG, "user": AutoSeeded_RNG
+*    "system": System_RNG, "user": AutoSeeded_RNG
+* Set rng_type to null or empty string to let the library choose
 *
 * TODO: replace rng_type with simple flags? 
 */
@@ -182,7 +184,7 @@ BOTAN_DLL int botan_rng_init(botan_rng_t* rng, const char* rng_type);
 * @param rng rng object
 * @param out output buffer of size out_len
 * @param out_len number of requested bytes
-* @return 0 on success, -1 on failure
+* @return 0 on success, negative on failure
 *
 * TODO: better name
 */
@@ -279,7 +281,7 @@ typedef struct botan_mac_struct* botan_mac_t;
 * @param mac mac object
 * @param mac_name name of the hash function, e.g., "HMAC(SHA-384)"
 * @param flags should be 0 in current API revision, all other uses are reserved
-*       and return -1
+*       and return a negative value (error code)
 * @return 0 on success, a negative value on failure
 */
 BOTAN_DLL int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags);
@@ -453,6 +455,92 @@ BOTAN_DLL int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
                                     size_t work_factor,
                                     uint32_t flags);
 
+/*
+* Multiple precision integers
+*/
+typedef struct botan_mp_struct* botan_mp_t;
+
+BOTAN_DLL int botan_mp_init(botan_mp_t* mp);
+BOTAN_DLL int botan_mp_destroy(botan_mp_t mp);
+
+// writes botan_mp_num_bytes(mp)*2 + 1 bytes to out[]
+BOTAN_DLL int botan_mp_to_hex(botan_mp_t mp, char* out);
+BOTAN_DLL int botan_mp_to_str(botan_mp_t mp, uint8_t base, char* out, size_t* out_len);
+
+BOTAN_DLL int botan_mp_set_from_int(botan_mp_t mp, int initial_value);
+BOTAN_DLL int botan_mp_set_from_mp(botan_mp_t dest, botan_mp_t source);
+BOTAN_DLL int botan_mp_set_from_str(botan_mp_t dest, const char* str);
+
+BOTAN_DLL int botan_mp_num_bits(botan_mp_t n, size_t* bits);
+BOTAN_DLL int botan_mp_num_bytes(botan_mp_t n, size_t* bytes);
+
+// Writes botan_mp_num_bytes(mp) to vec
+BOTAN_DLL int botan_mp_to_bin(botan_mp_t mp, uint8_t vec[]);
+BOTAN_DLL int botan_mp_from_bin(botan_mp_t mp, const uint8_t vec[], size_t vec_len);
+
+BOTAN_DLL int botan_mp_is_negative(botan_mp_t mp);
+BOTAN_DLL int botan_mp_flip_sign(botan_mp_t mp);
+
+BOTAN_DLL int botan_mp_add(botan_mp_t result, botan_mp_t x, botan_mp_t y);
+BOTAN_DLL int botan_mp_sub(botan_mp_t result, botan_mp_t x, botan_mp_t y);
+BOTAN_DLL int botan_mp_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y);
+
+BOTAN_DLL int botan_mp_div(botan_mp_t quotient,
+                           botan_mp_t remainder,
+                           botan_mp_t x, botan_mp_t y);
+
+BOTAN_DLL int botan_mp_mod_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y, botan_mp_t mod);
+
+/*
+* Returns 0 if x != y
+* Returns 1 if x == y
+* Returns negative number on error
+*/
+BOTAN_DLL int botan_mp_equal(botan_mp_t x, botan_mp_t y);
+
+/*
+* Sets *result to comparison result:
+* -1 if x < y, 0 if x == y, 1 if x > y
+* Returns negative number on error or zero on success
+*/
+BOTAN_DLL int botan_mp_cmp(int* result, botan_mp_t x, botan_mp_t y);
+
+/*
+* Swap two botan_mp_t
+*/
+BOTAN_DLL int botan_mp_swap(botan_mp_t x, botan_mp_t y);
+
+// Return (base^exponent) % modulus
+BOTAN_DLL int botan_mp_powmod(botan_mp_t out, botan_mp_t base, botan_mp_t exponent, botan_mp_t modulus);
+
+BOTAN_DLL int botan_mp_lshift(botan_mp_t out, botan_mp_t in, size_t shift);
+BOTAN_DLL int botan_mp_rshift(botan_mp_t out, botan_mp_t in, size_t shift);
+
+BOTAN_DLL int botan_mp_mod_inverse(botan_mp_t out, botan_mp_t in, botan_mp_t modulus);
+
+BOTAN_DLL int botan_mp_rand_bits(botan_mp_t rand_out, botan_rng_t rng, size_t bits);
+
+BOTAN_DLL int botan_mp_rand_range(botan_mp_t rand_out, botan_rng_t rng,
+                                  botan_mp_t lower_bound, botan_mp_t upper_bound);
+
+BOTAN_DLL int botan_mp_gcd(botan_mp_t out, botan_mp_t x, botan_mp_t y);
+
+/**
+* Returns 0 if n is not prime
+* Returns 1 if n is prime
+* Returns negative number on error
+*/
+BOTAN_DLL int botan_mp_is_prime(botan_mp_t n, botan_rng_t rng, size_t test_prob);
+
+/**
+* Returns 0 if specified bit of n is not set
+* Returns 1 if specified bit of n is set
+* Returns negative number on error
+*/
+BOTAN_DLL int botan_mp_bit_set(botan_mp_t n, size_t bit);
+
+/* Bcrypt password hashing */
+
 /**
 * Check a previously created password hash
 * @param pass the password to check against
@@ -526,6 +614,9 @@ BOTAN_DLL int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out
 
 BOTAN_DLL int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len);
 
+/**
+* Returns 0 if key is valid, negative if invalid key or some other error
+*/
 BOTAN_DLL int botan_pubkey_check_key(botan_pubkey_t key, botan_rng_t rng, uint32_t flags);
 
 BOTAN_DLL int botan_pubkey_estimated_strength(botan_pubkey_t key, size_t* estimate);
@@ -535,6 +626,27 @@ BOTAN_DLL int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash,
 
 BOTAN_DLL int botan_pubkey_destroy(botan_pubkey_t key);
 
+
+/*
+* Algorithm specific key operations: RSA
+*/
+BOTAN_DLL int botan_privkey_load_rsa(botan_privkey_t* key,
+                                     botan_mp_t p,
+                                     botan_mp_t q,
+                                     botan_mp_t d);
+
+BOTAN_DLL int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t rsa_key);
+BOTAN_DLL int botan_privkey_rsa_get_q(botan_mp_t q, botan_privkey_t rsa_key);
+BOTAN_DLL int botan_privkey_rsa_get_d(botan_mp_t d, botan_privkey_t rsa_key);
+BOTAN_DLL int botan_privkey_rsa_get_n(botan_mp_t n, botan_privkey_t rsa_key);
+BOTAN_DLL int botan_privkey_rsa_get_e(botan_mp_t e, botan_privkey_t rsa_key);
+
+BOTAN_DLL int botan_pubkey_load_rsa(botan_pubkey_t* key,
+                                    botan_mp_t n,
+                                    botan_mp_t e);
+
+BOTAN_DLL int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t rsa_key);
+BOTAN_DLL int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t rsa_key);
 
 /*
 * Public Key Encryption

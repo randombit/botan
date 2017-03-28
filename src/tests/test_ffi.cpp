@@ -224,7 +224,7 @@ class FFI_Unit_Tests : public Test
          outstr.resize(out_len);
 
          int rc = botan_bcrypt_generate(reinterpret_cast<uint8_t*>(&outstr[0]),
-                                        &out_len, passphrase.c_str(), rng, 3, 0);
+                                        &out_len, passphrase.c_str(), rng, 4, 0);
 
          if(rc == 0)
             {
@@ -386,6 +386,7 @@ class FFI_Unit_Tests : public Test
             }
 
          std::vector<Test::Result> results;
+         results.push_back(ffi_test_mp(rng));
          results.push_back(ffi_test_rsa(rng));
          results.push_back(ffi_test_ecdsa(rng));
          results.push_back(ffi_test_ecdh(rng));
@@ -398,6 +399,162 @@ class FFI_Unit_Tests : public Test
          }
 
    private:
+      Test::Result ffi_test_mp(botan_rng_t rng)
+         {
+         Test::Result result("FFI MP");
+
+         botan_mp_t x;
+         botan_mp_init(&x);
+         botan_mp_destroy(x);
+
+         botan_mp_init(&x);
+         size_t bn_bytes = 0;
+         TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
+         result.test_eq("Expected size for MP 0", bn_bytes, 0);
+
+         botan_mp_set_from_int(x, 5);
+         TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
+         result.test_eq("Expected size for MP 5", bn_bytes, 1);
+
+         botan_mp_set_from_int(x, 259);
+         TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
+         result.test_eq("Expected size for MP 259", bn_bytes, 2);
+
+         {
+         botan_mp_t zero;
+         botan_mp_init(&zero);
+         int cmp;
+         TEST_FFI_OK(botan_mp_cmp, (&cmp, x, zero));
+         result.confirm("bigint_mp_cmp(+, 0)", cmp == 1);
+
+         TEST_FFI_OK(botan_mp_cmp, (&cmp, zero, x));
+         result.confirm("bigint_mp_cmp(0, +)", cmp == -1);
+
+         TEST_FFI_OK(botan_mp_flip_sign, (x));
+
+         TEST_FFI_OK(botan_mp_cmp, (&cmp, x, zero));
+         result.confirm("bigint_mp_cmp(-, 0)", cmp == -1);
+
+         TEST_FFI_OK(botan_mp_cmp, (&cmp, zero, x));
+         result.confirm("bigint_mp_cmp(0, -)", cmp == 1);
+
+         TEST_FFI_OK(botan_mp_cmp, (&cmp, zero, zero));
+         result.confirm("bigint_mp_cmp(0, 0)", cmp == 0);
+
+         TEST_FFI_OK(botan_mp_cmp, (&cmp, x, x));
+         result.confirm("bigint_mp_cmp(x, x)", cmp == 0);
+
+         TEST_FFI_OK(botan_mp_flip_sign, (x));
+
+         botan_mp_destroy(zero);
+         }
+
+         size_t x_bits = 0;
+         TEST_FFI_OK(botan_mp_num_bits, (x, &x_bits));
+         result.test_eq("botan_mp_num_bits", x_bits, 9);
+
+         char str_buf[1024] = { 0 };
+         size_t str_len = 0;
+
+         TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
+         result.test_eq("botan_mp_to_hex", std::string(str_buf), "0103");
+
+         botan_mp_t y;
+         TEST_FFI_OK(botan_mp_init, (&y));
+         TEST_FFI_OK(botan_mp_set_from_int, (y, 0x1234567));
+
+         botan_mp_t r;
+         botan_mp_init(&r);
+
+         TEST_FFI_OK(botan_mp_add, (r, x, y));
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_add", std::string(str_buf), "19089002");
+
+         TEST_FFI_OK(botan_mp_mul, (r, x, y));
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_mul", std::string(str_buf), "4943984437");
+         TEST_FFI_RC(0, botan_mp_is_negative, (r));
+
+         botan_mp_t q;
+         botan_mp_init(&q);
+         TEST_FFI_OK(botan_mp_div, (q, r, y, x));
+
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (q, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_div_q", std::string(str_buf), "073701");
+
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_div_r", std::string(str_buf), "184");
+
+         TEST_FFI_OK(botan_mp_set_from_str, (y, "4943984437"));
+         TEST_FFI_OK(botan_mp_sub, (r, x, y));
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_sub", std::string(str_buf), "4943984178");
+         TEST_FFI_RC(1, botan_mp_is_negative, (r));
+
+         TEST_FFI_OK(botan_mp_lshift, (r, x, 39));
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_lshift", std::string(str_buf), "142386755796992");
+
+         TEST_FFI_OK(botan_mp_rshift, (r, r, 3));
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_rshift", std::string(str_buf), "17798344474624");
+
+         TEST_FFI_OK(botan_mp_gcd, (r, x, y));
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_gcd", std::string(str_buf), "259");
+
+         botan_mp_t p;
+         botan_mp_init(&p);
+         const uint8_t M127[] = { 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+         TEST_FFI_OK(botan_mp_from_bin, (p, M127, sizeof(M127)));
+         TEST_FFI_RC(1, botan_mp_is_prime, (p, rng, 64));
+
+         size_t p_bits = 0;
+         TEST_FFI_OK(botan_mp_num_bits, (p, &p_bits));
+         result.test_eq("botan_mp_num_bits", p_bits, 127);
+
+         TEST_FFI_OK(botan_mp_mod_inverse, (r, x, p));
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_mod_inverse", std::string(str_buf), "40728777507911553541948312086427855425");
+
+         TEST_FFI_OK(botan_mp_powmod, (r, x, r, p));
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_powmod", std::string(str_buf), "40550417419160441638948180641668117560");
+
+         TEST_FFI_OK(botan_mp_num_bytes, (r, &bn_bytes));
+         result.test_eq("botan_mp_num_bytes", bn_bytes, 16);
+
+         std::vector<uint8_t> bn_buf;
+         bn_buf.resize(bn_bytes);
+         botan_mp_to_bin(r, bn_buf.data());
+         result.test_eq("botan_mp_to_bin", bn_buf, "1E81B9EFE0BE1902F6D03F9F5E5FB438");
+
+         TEST_FFI_OK(botan_mp_set_from_mp, (y, r));
+         TEST_FFI_OK(botan_mp_mod_mul, (r, x, y, p));
+         str_len = sizeof(str_buf);
+         TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
+         result.test_eq("botan_mp_mod_mul", std::string(str_buf), "123945920473931248854653259523111998693");
+
+
+         botan_mp_destroy(p);
+         botan_mp_destroy(x);
+         botan_mp_destroy(y);
+         botan_mp_destroy(r);
+         botan_mp_destroy(q);
+
+         return result;
+         }
+
       void ffi_test_pubkey_export(Test::Result& result, botan_pubkey_t pub, botan_privkey_t priv, botan_rng_t rng)
          {
          // export public key
@@ -480,7 +637,7 @@ class FFI_Unit_Tests : public Test
 
       Test::Result ffi_test_rsa(botan_rng_t rng)
          {
-         Test::Result result("FFI");
+         Test::Result result("FFI RSA");
 
          botan_privkey_t priv;
          if(TEST_FFI_OK(botan_privkey_create_rsa, (&priv, rng, 1024)))
@@ -493,16 +650,76 @@ class FFI_Unit_Tests : public Test
 
             ffi_test_pubkey_export(result, pub, priv, rng);
 
+            botan_mp_t p, q, d, n, e;
+            botan_mp_init(&p);
+            botan_mp_init(&q);
+            botan_mp_init(&d);
+            botan_mp_init(&n);
+            botan_mp_init(&e);
+
+            TEST_FFI_OK(botan_privkey_rsa_get_p, (p, priv));
+            TEST_FFI_OK(botan_privkey_rsa_get_q, (q, priv));
+            TEST_FFI_OK(botan_privkey_rsa_get_d, (d, priv));
+            TEST_FFI_OK(botan_privkey_rsa_get_e, (e, priv));
+            TEST_FFI_OK(botan_privkey_rsa_get_n, (n, priv));
+
+            // Confirm same (e,n) values in public key
+            {
+            botan_mp_t pub_e, pub_n;
+            botan_mp_init(&pub_e);
+            botan_mp_init(&pub_n);
+            TEST_FFI_OK(botan_pubkey_rsa_get_e, (pub_e, pub));
+            TEST_FFI_OK(botan_pubkey_rsa_get_n, (pub_n, pub));
+
+            TEST_FFI_RC(1, botan_mp_equal, (pub_e, e));
+            TEST_FFI_RC(1, botan_mp_equal, (pub_n, n));
+            botan_mp_destroy(pub_e);
+            botan_mp_destroy(pub_n);
+            }
+
+            TEST_FFI_RC(1, botan_mp_is_prime, (p, rng, 64));
+            TEST_FFI_RC(1, botan_mp_is_prime, (q, rng, 64));
+
+            // Test p != q
+            TEST_FFI_RC(0, botan_mp_equal, (p, q));
+
+            // Test p * q == n
+            botan_mp_t x;
+            botan_mp_init(&x);
+            TEST_FFI_OK(botan_mp_mul, (x, p, q));
+
+            TEST_FFI_RC(1, botan_mp_equal, (x, n));
+            botan_mp_destroy(x);
+
+            botan_privkey_t loaded_privkey;
+            // First try loading a bogus key and verify check_key fails
+            TEST_FFI_OK(botan_privkey_load_rsa, (&loaded_privkey, n, d, q));
+            TEST_FFI_RC(-1, botan_privkey_check_key, (loaded_privkey, rng, 0));
+            botan_privkey_destroy(loaded_privkey);
+
+            TEST_FFI_OK(botan_privkey_load_rsa, (&loaded_privkey, p, q, d));
+            TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
+
+            botan_pubkey_t loaded_pubkey;
+            TEST_FFI_OK(botan_pubkey_load_rsa, (&loaded_pubkey, n, e));
+            TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
+
+            botan_mp_destroy(p);
+            botan_mp_destroy(q);
+            botan_mp_destroy(d);
+            botan_mp_destroy(e);
+            botan_mp_destroy(n);
+
             char namebuf[32] = { 0 };
             size_t name_len = sizeof(namebuf);
-            if(TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf, &name_len)))
+            if(TEST_FFI_OK(botan_pubkey_algo_name, (loaded_pubkey, namebuf, &name_len)))
                {
                result.test_eq("algo name", std::string(namebuf), "RSA");
                }
 
             botan_pk_op_encrypt_t encrypt;
 
-            if(TEST_FFI_OK(botan_pk_op_encrypt_create, (&encrypt, pub, "OAEP(SHA-256)", 0)))
+            if(TEST_FFI_OK(botan_pk_op_encrypt_create, (&encrypt, loaded_pubkey, "OAEP(SHA-256)", 0)))
                {
                std::vector<uint8_t> plaintext(32);
                TEST_FFI_OK(botan_rng_get, (rng, plaintext.data(), plaintext.size()));
@@ -534,7 +751,9 @@ class FFI_Unit_Tests : public Test
                TEST_FFI_OK(botan_pk_op_encrypt_destroy, (encrypt));
                }
 
+            TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
             TEST_FFI_OK(botan_pubkey_destroy, (pub));
+            TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey));
             TEST_FFI_OK(botan_privkey_destroy, (priv));
             }
 
@@ -543,7 +762,7 @@ class FFI_Unit_Tests : public Test
 
       Test::Result ffi_test_ecdsa(botan_rng_t rng)
          {
-         Test::Result result("FFI");
+         Test::Result result("FFI ECDSA");
 
          botan_privkey_t priv;
 
@@ -614,7 +833,7 @@ class FFI_Unit_Tests : public Test
 
       Test::Result ffi_test_ecdh(botan_rng_t rng)
          {
-         Test::Result result("FFI");
+         Test::Result result("FFI ECDH");
 
          botan_privkey_t priv1;
          REQUIRE_FFI_OK(botan_privkey_create_ecdh, (&priv1, rng, "secp256r1"));
@@ -677,7 +896,7 @@ class FFI_Unit_Tests : public Test
 
       Test::Result ffi_test_mceliece(botan_rng_t rng)
          {
-         Test::Result result("FFI");
+         Test::Result result("FFI McEliece");
 
          botan_privkey_t priv;
 #if defined(BOTAN_HAS_MCELIECE)
