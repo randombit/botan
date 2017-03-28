@@ -119,7 +119,10 @@ Compat Headers
 FFI and Bindings
 ----------------------------------------
 
-* Expose certificates
+* Expose BigInt
+* Expose compression
+* Expose a raw block cipher interface
+* Expose more of X.509 (CRLs, OCSP, cert signing, etc)
 * Expose TLS
 * Write a CLI or HTTPS client in Python
 

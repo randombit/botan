@@ -473,11 +473,14 @@ BOTAN_DLL int botan_privkey_create(botan_privkey_t* key,
                                    const char* algo_params,
                                    botan_rng_t rng);
 
+#define BOTAN_CHECK_KEY_EXPENSIVE_TESTS 1
+
+BOTAN_DLL int botan_privkey_check_key(botan_privkey_t key, botan_rng_t rng, uint32_t flags);
+
 BOTAN_DLL int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng, size_t n_bits);
 BOTAN_DLL int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng, const char* params);
 BOTAN_DLL int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, const char* params);
 BOTAN_DLL int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t);
-
 
 /*
 * Input currently assumed to be PKCS #8 structure;
@@ -522,6 +525,8 @@ BOTAN_DLL int botan_privkey_export_pubkey(botan_pubkey_t* out, botan_privkey_t i
 BOTAN_DLL int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags);
 
 BOTAN_DLL int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len);
+
+BOTAN_DLL int botan_pubkey_check_key(botan_pubkey_t key, botan_rng_t rng, uint32_t flags);
 
 BOTAN_DLL int botan_pubkey_estimated_strength(botan_pubkey_t key, size_t* estimate);
 

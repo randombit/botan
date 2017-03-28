@@ -485,8 +485,11 @@ class FFI_Unit_Tests : public Test
          botan_privkey_t priv;
          if(TEST_FFI_OK(botan_privkey_create_rsa, (&priv, rng, 1024)))
             {
+            TEST_FFI_OK(botan_privkey_check_key, (priv, rng, 0));
+
             botan_pubkey_t pub;
             TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+            TEST_FFI_OK(botan_pubkey_check_key, (pub, rng, 0));
 
             ffi_test_pubkey_export(result, pub, priv, rng);
 
