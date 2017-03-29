@@ -141,6 +141,7 @@ class RSA_Blinding_Tests : public Test
 
 #if defined(BOTAN_HAS_EMSA_RAW) || defined(BOTAN_HAS_EME_RAW)
          Botan::RSA_PrivateKey rsa(Test::rng(), 1024);
+         Botan::Null_RNG null_rng;
 #endif
 
 #if defined(BOTAN_HAS_EMSA_RAW)
@@ -153,10 +154,9 @@ class RSA_Blinding_Tests : public Test
          * are used as an additional test on the blinders.
          */
 
-         Botan::PK_Signer signer(rsa, Test::rng(), "Raw"); // don't try this at home
+         Botan::PK_Signer signer(rsa, Test::rng(), "Raw", Botan::IEEE_1363, "base"); // don't try this at home
          Botan::PK_Verifier verifier(rsa, "Raw");
 
-         Botan::Null_RNG null_rng;
          for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL * 6; ++i)
             {
             std::vector<uint8_t> input(16);
@@ -187,14 +187,14 @@ class RSA_Blinding_Tests : public Test
          // test blinding reinit interval
          // Seed Fixed_Output_RNG only with enough bytes for the initial blinder initialization
          Botan_Tests::Fixed_Output_RNG fixed_rng(Botan::unlock(Test::rng().random_vec(rsa.get_n().bytes())));
-         Botan::PK_Decryptor_EME decryptor(rsa, fixed_rng, "Raw");
+         Botan::PK_Decryptor_EME decryptor(rsa, fixed_rng, "Raw", "base");
 
          for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL ; ++i)
             {
             std::vector<uint8_t> input(16);
             input[ input.size() - 1 ] = static_cast<uint8_t>(i);
 
-            std::vector<uint8_t> ciphertext = encryptor.encrypt(input, Test::rng());
+            std::vector<uint8_t> ciphertext = encryptor.encrypt(input, null_rng);
 
             std::vector<uint8_t> plaintext = Botan::unlock(decryptor.decrypt(ciphertext));
             plaintext.insert(plaintext.begin(), input.size() - 1, 0);
@@ -202,12 +202,14 @@ class RSA_Blinding_Tests : public Test
             result.test_eq("Successful decryption", plaintext, input);
             }
 
+         result.test_eq("RNG is no longer seeded", fixed_rng.is_seeded(), false);
+
          // one more decryption should trigger a blinder reinitialization
          result.test_throws("RSA blinding reinit",
                             "Test error Fixed output RNG ran out of bytes, test bug?",
                             [&decryptor,&encryptor]()
             {
-            std::vector<uint8_t> ciphertext = encryptor.encrypt(std::vector<uint8_t>(16, 5), Test::rng());
+            std::vector<uint8_t> ciphertext = encryptor.encrypt(std::vector<uint8_t>(16, 5), null_rng);
             decryptor.decrypt(ciphertext);
             });
 
