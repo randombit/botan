@@ -429,6 +429,36 @@ Public Key Creation, Import and Export
                                              const char* encryption_algo, \
                                              uint32_t flags)
 
+   Deprecated, use ``botan_privkey_export_encrypted_msec`` or ``botan_privkey_export_encrypted_iter``
+
+.. cpp::function:: int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
+                                                        uint8_t out[], size_t* out_len, \
+                                                        botan_rng_t rng, \
+                                                        const char* passphrase, \
+                                                        uint32_t pbkdf_msec_runtime, \
+                                                        size_t* pbkdf_iterations_out, \
+                                                        const char* cipher_algo, \
+                                                        const char* pbkdf_algo, \
+                                                        uint32_t flags);
+
+    Encrypt a key, running the key derivation function for ``pbkdf_msec_runtime`` milliseconds.
+    Returns the number of iterations used in ``pbkdf_iterations_out``.
+
+    ``cipher_algo`` must specify a CBC mode cipher (such as "AES-128/CBC") or as
+    a Botan-specific extension a GCM mode may be used.
+
+.. cpp::function:: int botan_privkey_export_encrypted_pbkdf_iter(botan_privkey_t key, \
+                                                        uint8_t out[], size_t* out_len, \
+                                                        botan_rng_t rng, \
+                                                        const char* passphrase, \
+                                                        size_t pbkdf_iterations, \
+                                                        const char* cipher_algo, \
+                                                        const char* pbkdf_algo, \
+                                                        uint32_t flags);
+
+   Encrypt a private key. The PBKDF function runs for the specified number of iterations.
+   At least 100,000 is recommended.
+
 .. cpp:type:: opaque* botan_pubkey_t
 
    An opaque data type for a public key. Don't mess with it.
