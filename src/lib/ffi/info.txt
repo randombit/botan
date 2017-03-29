@@ -1,10 +1,11 @@
-define FFI 20151015
+define FFI 20170327
 
 <requires>
 aead
 kdf
 pbkdf
 pubkey
+bigint
 x509
 #tls
 system_rng

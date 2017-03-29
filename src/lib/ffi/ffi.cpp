@@ -1,5 +1,5 @@
 /*
-* (C) 2015 Jack Lloyd
+* (C) 2015,2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -21,6 +21,10 @@
 #include <botan/mem_ops.h>
 #include <botan/x509_key.h>
 #include <botan/pk_algs.h>
+#include <botan/bigint.h>
+#include <botan/reducer.h>
+#include <botan/numthry.h>
+#include <botan/divide.h>
 #include <cstring>
 #include <memory>
 
@@ -94,7 +98,7 @@ void log_exception(const char* func_name, const char* what)
 
 int ffi_error_exception_thrown(const char* exn)
    {
-   printf("exception %s\n", exn);
+   fprintf(stderr, "exception %s\n", exn);
    return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
    }
 
@@ -104,6 +108,16 @@ T& safe_get(botan_struct<T,M>* p)
    if(!p)
       throw FFI_Error("Null pointer argument");
    if(T* t = p->get())
+      return *t;
+   throw FFI_Error("Invalid object pointer");
+   }
+
+template<typename T, uint32_t M>
+const T& safe_get(const botan_struct<T,M>* p)
+   {
+   if(!p)
+      throw FFI_Error("Null pointer argument");
+   if(const T* t = p->get())
       return *t;
    throw FFI_Error("Invalid object pointer");
    }
@@ -167,6 +181,13 @@ inline int write_str_output(char out[], size_t* out_len, const std::string& str)
    return write_str_output(reinterpret_cast<uint8_t*>(out), out_len, str);
    }
 
+inline int write_str_output(char out[], size_t* out_len, const std::vector<uint8_t>& str_vec)
+   {
+   return write_output(reinterpret_cast<uint8_t*>(out), out_len,
+                       reinterpret_cast<const uint8_t*>(str_vec.data()),
+                       str_vec.size());
+   }
+
 #define BOTAN_FFI_DO(T, obj, param, block) apply_fn(obj, BOTAN_CURRENT_FUNCTION, [=](T& param) -> int { do { block } while(0); return 0; })
 
 }
@@ -183,6 +204,7 @@ struct botan_cipher_struct : public botan_struct<Botan::Cipher_Mode, 0xB4A2BF9C>
    };
 
 BOTAN_FFI_DECLARE_STRUCT(botan_rng_struct, Botan::RandomNumberGenerator, 0x4901F9C1);
+BOTAN_FFI_DECLARE_STRUCT(botan_mp_struct, Botan::BigInt, 0xC828B9D2);
 BOTAN_FFI_DECLARE_STRUCT(botan_hash_struct, Botan::HashFunction, 0x1F0A4F84);
 BOTAN_FFI_DECLARE_STRUCT(botan_mac_struct, Botan::MessageAuthenticationCode, 0xA06E8FC1);
 BOTAN_FFI_DECLARE_STRUCT(botan_pubkey_struct, Botan::Public_Key, 0x2C286519);
@@ -194,6 +216,7 @@ BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_verify_struct, Botan::PK_Verifier, 0x2B91F9
 BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_ka_struct, Botan::PK_Key_Agreement, 0x2939CAB1);
 
 BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_struct, Botan::X509_Certificate, 0x8F628937);
+
 
 #if defined(BOTAN_HAS_TLS)
 BOTAN_FFI_DECLARE_STRUCT(botan_tls_channel_struct, Botan::TLS::Channel, 0x0212FE99);
@@ -300,6 +323,203 @@ int botan_rng_reseed(botan_rng_t rng, size_t bits)
    {
    return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed_from_rng(Botan::system_rng(), bits); });
    }
+
+int botan_mp_init(botan_mp_t* mp)
+   {
+   *mp = new botan_mp_struct(new Botan::BigInt);
+   return 0;
+   }
+
+int botan_mp_set_from_int(botan_mp_t mp, int initial_value)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, {
+      if(initial_value >= 0)
+         {
+         bn = Botan::BigInt(static_cast<uint64_t>(initial_value));
+         }
+      else
+         {
+         bn = Botan::BigInt(static_cast<uint64_t>(-initial_value));
+         bn.flip_sign();
+         }
+      });
+   }
+
+int botan_mp_set_from_str(botan_mp_t mp, const char* str)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, { bn = Botan::BigInt(str); });
+   }
+
+int botan_mp_set_from_mp(botan_mp_t dest, botan_mp_t source)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, dest, bn, { bn = safe_get(source); });
+   }
+
+int botan_mp_is_negative(botan_mp_t mp)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, { return bn.is_negative() ? 1 : 0; });
+   }
+
+int botan_mp_flip_sign(botan_mp_t mp)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, { bn.flip_sign(); });
+   }
+
+int botan_mp_from_bin(botan_mp_t mp, const uint8_t bin[], size_t bin_len)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, { bn.binary_decode(bin, bin_len); });
+   }
+
+int botan_mp_to_hex(botan_mp_t mp, char* out)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, {
+      std::vector<uint8_t> hex = Botan::BigInt::encode(bn, Botan::BigInt::Hexadecimal);
+      std::memcpy(out, hex.data(), hex.size());
+      out[hex.size()] = 0; // null terminate
+      });
+   }
+
+int botan_mp_to_str(botan_mp_t mp, uint8_t digit_base, char* out, size_t* out_len)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, {
+      Botan::BigInt::Base base;
+      if(digit_base == 0 || digit_base == 10)
+         base = Botan::BigInt::Decimal;
+      else if(digit_base == 16)
+         base = Botan::BigInt::Hexadecimal;
+      else
+         throw FFI_Error("botan_mp_to_str invalid digit base");
+
+      std::vector<uint8_t> hex = Botan::BigInt::encode(bn, base);
+      hex.push_back(0); // null terminator
+      write_str_output(out, out_len, hex);
+      });
+   }
+
+int botan_mp_to_bin(botan_mp_t mp, uint8_t vec[])
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, bn, { bn.binary_encode(vec); });
+   }
+
+int botan_mp_destroy(botan_mp_t mp)
+   {
+   delete mp;
+   return 0;
+   }
+
+int botan_mp_add(botan_mp_t result, botan_mp_t x, botan_mp_t y)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, { res = safe_get(x) + safe_get(y); });
+   }
+
+int botan_mp_sub(botan_mp_t result, botan_mp_t x, botan_mp_t y)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, { res = safe_get(x) - safe_get(y); });
+   }
+
+int botan_mp_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, result, res, { res = safe_get(x) * safe_get(y); });
+   }
+
+int botan_mp_div(botan_mp_t quotient,
+                 botan_mp_t remainder,
+                 botan_mp_t x, botan_mp_t y)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, quotient, q, {
+      Botan::BigInt r;
+      Botan::divide(safe_get(x), safe_get(y), q, r);
+      safe_get(remainder) = r;
+      });
+   }
+
+int botan_mp_equal(botan_mp_t x_w, botan_mp_t y_w)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, x_w, x, { return x == safe_get(y_w); });
+   }
+
+int botan_mp_cmp(int* result, botan_mp_t x_w, botan_mp_t y_w)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, x_w, x, { *result = x.cmp(safe_get(y_w)); });
+   }
+
+int botan_mp_swap(botan_mp_t x_w, botan_mp_t y_w)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, x_w, x, { x.swap(safe_get(y_w)); });
+   }
+
+// Return (base^exponent) % modulus
+int botan_mp_powmod(botan_mp_t out, botan_mp_t base, botan_mp_t exponent, botan_mp_t modulus)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, out, o,
+                       { o = Botan::power_mod(safe_get(base), safe_get(exponent), safe_get(modulus)); });
+   }
+
+int botan_mp_lshift(botan_mp_t out, botan_mp_t in, size_t shift)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, out, o, { o = safe_get(in) << shift; });
+   }
+
+int botan_mp_rshift(botan_mp_t out, botan_mp_t in, size_t shift)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, out, o, { o = safe_get(in) >> shift; });
+   }
+
+int botan_mp_mod_inverse(botan_mp_t out, botan_mp_t in, botan_mp_t modulus)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, out, o, { o = Botan::inverse_mod(safe_get(in), safe_get(modulus)); });
+   }
+
+int botan_mp_mod_mul(botan_mp_t out, botan_mp_t x, botan_mp_t y, botan_mp_t modulus)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, out, o, {
+      Botan::Modular_Reducer reducer(safe_get(modulus));
+      o = reducer.multiply(safe_get(x), safe_get(y));
+      });
+   }
+
+int botan_mp_rand_bits(botan_mp_t rand_out, botan_rng_t rng, size_t bits)
+   {
+   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, {
+      safe_get(rand_out).randomize(r, bits); });
+   }
+
+int botan_mp_rand_range(botan_mp_t rand_out,
+                        botan_rng_t rng,
+                        botan_mp_t lower,
+                        botan_mp_t upper)
+   {
+   return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, {
+      safe_get(rand_out) = Botan::BigInt::random_integer(r, safe_get(lower), safe_get(upper)); });
+   }
+
+int botan_mp_gcd(botan_mp_t out, botan_mp_t x, botan_mp_t y)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, out, o, {
+      o = Botan::gcd(safe_get(x), safe_get(y)); });
+   }
+
+int botan_mp_is_prime(botan_mp_t mp, botan_rng_t rng, size_t test_prob)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, n,
+                       { return (Botan::is_prime(n, safe_get(rng), test_prob)) ? 1 : 0; });
+   }
+
+int botan_mp_bit_set(botan_mp_t mp, size_t bit)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, n, { return (n.get_bit(bit)); });
+   }
+
+int botan_mp_num_bits(botan_mp_t mp, size_t* bits)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, n, { *bits = n.bits(); });
+   }
+
+int botan_mp_num_bytes(botan_mp_t mp, size_t* bytes)
+   {
+   return BOTAN_FFI_DO(Botan::BigInt, mp, n, { *bytes = n.bytes(); });
+   }
+
 
 int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)
    {
@@ -801,7 +1021,7 @@ int botan_privkey_create_rsa(botan_privkey_t* key_obj, botan_rng_t rng_obj, size
 
 
 int botan_privkey_create_ecdsa(botan_privkey_t* key_obj, botan_rng_t rng_obj, const char* param_str)
-   {
+  {
    try
       {
       if(key_obj == nullptr || rng_obj == nullptr || param_str == nullptr || *param_str == 0)
@@ -919,6 +1139,163 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
    return -1;
    }
 
+int botan_privkey_load_rsa(botan_privkey_t* key,
+                           botan_mp_t p, botan_mp_t q, botan_mp_t d)
+   {
+   *key = nullptr;
+
+#if defined(BOTAN_HAS_RSA)
+   try
+      {
+      *key = new botan_privkey_struct(new Botan::RSA_PrivateKey(safe_get(p),
+                                                                safe_get(q),
+                                                                safe_get(d)));
+      return 0;
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+   return -1;
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_load_rsa(botan_pubkey_t* key,
+                          botan_mp_t n, botan_mp_t e)
+   {
+   *key = nullptr;
+
+#if defined(BOTAN_HAS_RSA)
+   try
+      {
+      *key = new botan_pubkey_struct(new Botan::RSA_PublicKey(safe_get(n), safe_get(e)));
+      return 0;
+      }
+   catch(std::exception& exn)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, exn.what());
+      }
+
+   return -1;
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t key)
+   {
+#if defined(BOTAN_HAS_RSA)
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<Botan::RSA_PrivateKey*>(&k))
+         {
+         safe_get(p) = rsa->get_p();
+         }
+      else
+         throw FFI_Error("Passed non-RSA key to botan_privkey_rsa_get_p");
+      });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_rsa_get_q(botan_mp_t q, botan_privkey_t key)
+   {
+#if defined(BOTAN_HAS_RSA)
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<Botan::RSA_PrivateKey*>(&k))
+         {
+         safe_get(q) = rsa->get_q();
+         }
+      else
+         throw FFI_Error("Passed non-RSA key to botan_privkey_rsa_get_q");
+      });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_rsa_get_n(botan_mp_t n, botan_privkey_t key)
+   {
+#if defined(BOTAN_HAS_RSA)
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<Botan::RSA_PrivateKey*>(&k))
+         {
+         safe_get(n) = rsa->get_n();
+         }
+      else
+         throw FFI_Error("Passed non-RSA key to botan_privkey_rsa_get_n");
+      });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_rsa_get_e(botan_mp_t e, botan_privkey_t key)
+   {
+#if defined(BOTAN_HAS_RSA)
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<Botan::RSA_PrivateKey*>(&k))
+         {
+         safe_get(e) = rsa->get_e();
+         }
+      else
+         throw FFI_Error("Passed non-RSA key to botan_privkey_rsa_get_e");
+      });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_rsa_get_d(botan_mp_t d, botan_privkey_t key)
+   {
+#if defined(BOTAN_HAS_RSA)
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<Botan::RSA_PrivateKey*>(&k))
+         {
+         safe_get(d) = rsa->get_e();
+         }
+      else
+         throw FFI_Error("Passed non-RSA key to botan_privkey_rsa_get_d");
+      });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t key)
+   {
+#if defined(BOTAN_HAS_RSA)
+   return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
+      if(const Botan::RSA_PublicKey* rsa = dynamic_cast<Botan::RSA_PublicKey*>(&k))
+         {
+         safe_get(e) = rsa->get_e();
+         }
+      else
+         throw FFI_Error("Passed non-RSA key to botan_pubkey_rsa_get_e");
+      });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t key)
+   {
+#if defined(BOTAN_HAS_RSA)
+   return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
+      if(const Botan::RSA_PublicKey* rsa = dynamic_cast<Botan::RSA_PublicKey*>(&k))
+         {
+         safe_get(n) = rsa->get_n();
+         }
+      else
+         throw FFI_Error("Passed non-RSA key to botan_pubkey_rsa_get_n");
+      });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 int botan_privkey_destroy(botan_privkey_t key)
    {
    delete key;
@@ -959,14 +1336,14 @@ int botan_pubkey_check_key(botan_pubkey_t key, botan_rng_t rng, uint32_t flags)
    const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS);
 
    return BOTAN_FFI_DO(Botan::Public_Key, key, k,
-                       { return (k.check_key(safe_get(rng), strong) == true) ? 0 : 1; });
+                       { return (k.check_key(safe_get(rng), strong) == true) ? 0 : -1; });
    }
 
 int botan_privkey_check_key(botan_privkey_t key, botan_rng_t rng, uint32_t flags)
    {
    const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS);
    return BOTAN_FFI_DO(Botan::Private_Key, key, k,
-                       { return (k.check_key(safe_get(rng), strong) == true) ? 0 : 1; });
+                       { return (k.check_key(safe_get(rng), strong) == true) ? 0 : -1; });
    }
 
 int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags)
