@@ -35,7 +35,7 @@ namespace {
 class Test_Runner : public Botan_CLI::Command
    {
    public:
-      Test_Runner() : Command("test --threads=0 --run-long-tests --run-online-tests --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
+      Test_Runner() : Command("test --threads=0 --run-long-tests --run-online-tests --test-runs=1 --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
 
       std::string help_text() const override
          {
@@ -79,6 +79,7 @@ class Test_Runner : public Botan_CLI::Command
          const bool run_long_tests = flag_set("run-long-tests");
          const std::string data_dir = get_arg_or("data-dir", "src/tests/data");
          const std::string pkcs11_lib = get_arg("pkcs11-lib");
+         const size_t runs = get_arg_sz("test-runs");
 
          std::vector<std::string> req = get_arg_list("suites");
 
@@ -176,11 +177,14 @@ class Test_Runner : public Botan_CLI::Command
          Botan_Tests::Test::setup_tests(log_success, run_online_tests, run_long_tests,
                                         data_dir, pkcs11_lib, rng.get());
 
-         const size_t failed = run_tests(req, output(), threads);
+         for(size_t i = 0; i != runs; ++i)
+            {
+            const size_t failed = run_tests(req, output(), threads);
 
-         // Throw so main returns an error
-         if(failed)
-            throw Botan_Tests::Test_Error("Test suite failure");
+            // Throw so main returns an error
+            if(failed)
+               throw Botan_Tests::Test_Error("Test suite failure");
+            }
          }
 
    private:
