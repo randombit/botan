@@ -10,6 +10,12 @@ snail-mail address (S), and Bitcoin address (B).
 
 ::
 
+  N: Alexander Bluhm
+  W: https://www.genua.de/
+  P: 1E3B BEA4 6C20 EA00 2FFC  DE4D C5F4 83AD DEE8 6380
+  D: improve support for OpenBSD
+  S: Kirchheim, Germany
+
   N: Charles Brockman
   W: http://www.securitygenetics.com/
   D: documentation editing
