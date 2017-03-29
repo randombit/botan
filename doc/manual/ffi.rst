@@ -4,11 +4,12 @@ FFI Interface
 
 .. versionadded:: 1.11.14
 
-Botan's ffi module provides a C API intended to be easily usable with
-other language's foreign function interface (FFI) libraries. For
-instance the Python module using the FFI interface needs only the
-ctypes module (included in default Python). Code examples can be found
-in `src/tests/test_ffi.cpp`.
+Botan's ffi module provides a C89 API intended to be easily usable with other
+language's foreign function interface (FFI) libraries. For instance the included
+Python module uses the ``ctypes`` module for all library access. This API is of
+course also useful for programs written directly in C.
+
+Code examples can be found in `src/tests/test_ffi.cpp`.
 
 Versioning
 ----------------------------------------
@@ -233,6 +234,144 @@ KDF
    Derive a key using the given KDF algorithm, e.g., "SP800-56C".
    The derived key of length *out_len* bytes will be placed in *out*.
 
+Multiple Precision Integers
+----------------------------------------
+
+.. versionadded: 2.1.0
+
+.. cpp:type:: opaque* botan_mp_t
+
+   An opaque data type for a multiple precision integer. Don't mess with it.
+
+.. cpp:function:: int botan_mp_init(botan_mp_t* mp)
+
+   Initialize a ``botan_mp_t``. Initial value is zero, use `botan_mp_set_X` to load a value.
+
+.. cpp:function:: int botan_mp_destroy(botan_mp_t mp)
+
+   Free a ``botan_mp_t``
+
+
+.. cpp:function:: int botan_mp_to_hex(botan_mp_t mp, char* out)
+
+   Writes exactly ``botan_mp_num_bytes(mp)*2 + 1`` bytes to out
+
+.. cpp:function:: int botan_mp_to_str(botan_mp_t mp, uint8_t base, char* out, size_t* out_len)
+
+   Base can be either 10 or 16.
+
+.. cpp:function:: int botan_mp_set_from_int(botan_mp_t mp, int initial_value)
+
+   Set ``botan_mp_t`` from an integer value.
+
+.. cpp:function:: int botan_mp_set_from_mp(botan_mp_t dest, botan_mp_t source)
+
+   Set ``botan_mp_t`` from another MP.
+
+.. cpp:function:: int botan_mp_set_from_str(botan_mp_t dest, const char* str)
+
+   Set ``botan_mp_t`` from a string. Leading prefix of "0x" is accepted.
+
+.. cpp:function:: int botan_mp_num_bits(botan_mp_t n, size_t* bits)
+
+   Return the size of ``n`` in bits.
+
+.. cpp:function:: int botan_mp_num_bytes(botan_mp_t n, size_t* bytes)
+
+   Return the size of ``n`` in bytes.
+
+.. cpp:function:: int botan_mp_to_bin(botan_mp_t mp, uint8_t vec[])
+
+   Writes exactly ``botan_mp_num_bytes(mp)`` to ``vec``.
+
+.. cpp:function:: int botan_mp_from_bin(botan_mp_t mp, const uint8_t vec[], size_t vec_len)
+
+   Loads ``botan_mp_t`` from a binary vector (as produced by ``botan_mp_to_bin``).
+
+.. cpp:function:: int botan_mp_is_negative(botan_mp_t mp)
+
+   Return 1 if ``mp`` is negative, otherwise 0.
+
+.. cpp:function:: int botan_mp_flip_sign(botan_mp_t mp)
+
+   Flip the sign of ``mp``.
+
+.. cpp:function:: int botan_mp_add(botan_mp_t result, botan_mp_t x, botan_mp_t y)
+
+   Add two ``botan_mp_t``s and store the output in ``result``.
+
+.. cpp:function:: int botan_mp_sub(botan_mp_t result, botan_mp_t x, botan_mp_t y)
+
+   Subtract two ``botan_mp_t``s and store the output in ``result``.
+
+.. cpp:function:: int botan_mp_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y)
+
+   Multiply two ``botan_mp_t``s and store the output in ``result``.
+
+.. cpp:function:: int botan_mp_div(botan_mp_t quotient, botan_mp_t remainder, \
+                           botan_mp_t x, botan_mp_t y)
+
+   Divide ``x`` by ``y`` and store the output in ``quotient`` and ``remainder``.
+
+.. cpp:function:: int botan_mp_mod_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y, botan_mp_t mod)
+
+   Set ``result`` to ``x`` times ``y`` modulo ``mod``.
+
+.. cpp:function:: int botan_mp_equal(botan_mp_t x, botan_mp_t y)
+
+   Return 1 if ``x`` is equal to ``y``, 0 if ``x`` is not equal to ``y``
+
+.. cpp:function:: int botan_mp_cmp(int* result, botan_mp_t x, botan_mp_t y)
+
+   Three way comparison: set result to -1 if ``x`` is less than ``y``,
+   0 if ``x`` is equal to ``y``, and 1 if ``x`` is greater than ``y``.
+
+.. cpp:function:: int botan_mp_swap(botan_mp_t x, botan_mp_t y)
+
+   Swap two ``botan_mp_t`` values.
+
+.. cpp:function:: int botan_mp_powmod(botan_mp_t out, botan_mp_t base, botan_mp_t exponent, botan_mp_t modulus)
+
+   Modular exponentiation.
+
+.. cpp:function:: int botan_mp_lshift(botan_mp_t out, botan_mp_t in, size_t shift)
+
+   Left shift by specified bit count, place result in ``out``.
+
+.. cpp:function:: int botan_mp_rshift(botan_mp_t out, botan_mp_t in, size_t shift)
+
+   Right shift by specified bit count, place result in ``out``.
+
+.. cpp:function:: int botan_mp_mod_inverse(botan_mp_t out, botan_mp_t in, botan_mp_t modulus)
+
+   Compute modular inverse. If no modular inverse exists (for instance because ``in`` and
+   ``modulus`` are not relatively prime), then sets ``out`` to -1.
+
+.. cpp:function:: int botan_mp_rand_bits(botan_mp_t rand_out, botan_rng_t rng, size_t bits)
+
+   Create a random ``botan_mp_t`` of the specified bit size.
+
+.. cpp:function:: int botan_mp_rand_range(botan_mp_t rand_out, botan_rng_t rng, \
+                                  botan_mp_t lower_bound, botan_mp_t upper_bound)
+
+   Create a random ``botan_mp_t`` within the provided range.
+
+.. cpp:function:: int botan_mp_gcd(botan_mp_t out, botan_mp_t x, botan_mp_t y)
+
+   Compute the greated common divisor of ``x`` and ``y``.
+
+.. cpp:function:: int botan_mp_is_prime(botan_mp_t n, botan_rng_t rng, size_t test_prob)
+
+   Test if ``n`` is prime. The algorithm used (Miller-Rabin) is probabalistic,
+   set ``test_prob`` to the desired assurance level. For example if
+   ``test_prob`` is 64, then sufficient Miller-Rabin iterations will run to
+   assure there is at most a ``1/2**64`` chance that ``n`` is composit.
+
+.. cpp:function:: int botan_mp_bit_set(botan_mp_t n, size_t bit)
+
+   Returns 0 if the specified bit of ``n`` is not set, 1 if it is set.
+
+
 Password Hashing
 ----------------------------------------
 
@@ -308,6 +447,48 @@ Public Key Creation, Import and Export
                                        uint8_t out[], size_t* out_len)
 
 .. cpp:function:: int botan_pubkey_destroy(botan_pubkey_t key)
+
+RSA specific functions
+----------------------------------------
+
+.. cpp:function:: int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t rsa_key)
+
+   Set ``p`` to the first RSA prime.
+
+.. cpp:function:: int botan_privkey_rsa_get_q(botan_mp_t q, botan_privkey_t rsa_key)
+
+   Set ``q`` to the second RSA prime.
+
+.. cpp:function:: int botan_privkey_rsa_get_d(botan_mp_t d, botan_privkey_t rsa_key)
+
+   Set ``d`` to the RSA private exponent.
+
+.. cpp:function:: int botan_privkey_rsa_get_n(botan_mp_t n, botan_privkey_t rsa_key)
+
+   Set ``n`` to the RSA modulus.
+
+.. cpp:function:: int botan_privkey_rsa_get_e(botan_mp_t e, botan_privkey_t rsa_key)
+
+   Set ``e`` to the RSA public exponent.
+
+.. cpp:function:: int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t rsa_key)
+
+   Set ``e`` to the RSA public exponent.
+
+.. cpp:function:: int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t rsa_key)
+
+   Set ``n`` to the RSA modulus.
+
+.. cpp:function:: int botan_privkey_load_rsa(botan_privkey_t* key, \
+                                     botan_mp_t p, botan_mp_t q, botan_mp_t d)
+
+   Initialize a private RSA key using parameters p, q, and d.
+
+.. cpp:function:: int botan_pubkey_load_rsa(botan_pubkey_t* key, \
+                                    botan_mp_t n, botan_mp_t e)
+
+   Initialize a public RSA key using parameters n and e.
+
 
 Public Key Encryption/Decryption
 ----------------------------------------
