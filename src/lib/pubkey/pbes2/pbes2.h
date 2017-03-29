@@ -32,6 +32,43 @@ BOTAN_DLL pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
                         RandomNumberGenerator& rng);
 
 /**
+* Encrypt with PBES2 from PKCS #5 v2.0
+* @param key_bits the input
+* @param passphrase the passphrase to use for encryption
+* @param msec how many milliseconds to run PBKDF2
+* @param out_iterations_if_nonnull if not null, set to the number
+* of PBKDF iterations used
+* @param cipher specifies the block cipher to use to encrypt
+* @param digest specifies the PRF to use with PBKDF2 (eg "HMAC(SHA-1)")
+* @param rng a random number generator
+*/
+std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
+BOTAN_DLL pbes2_encrypt_msec(const secure_vector<uint8_t>& key_bits,
+                             const std::string& passphrase,
+                             std::chrono::milliseconds msec,
+                             size_t* out_iterations_if_nonnull,
+                             const std::string& cipher,
+                             const std::string& digest,
+                             RandomNumberGenerator& rng);
+
+/**
+* Encrypt with PBES2 from PKCS #5 v2.0
+* @param key_bits the input
+* @param passphrase the passphrase to use for encryption
+* @param iterations how many iterations to run PBKDF2
+* @param cipher specifies the block cipher to use to encrypt
+* @param digest specifies the PRF to use with PBKDF2 (eg "HMAC(SHA-1)")
+* @param rng a random number generator
+*/
+std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
+BOTAN_DLL pbes2_encrypt_iter(const secure_vector<uint8_t>& key_bits,
+                             const std::string& passphrase,
+                             size_t iterations,
+                             const std::string& cipher,
+                             const std::string& digest,
+                             RandomNumberGenerator& rng);
+
+/**
 * Decrypt a PKCS #5 v2.0 encrypted stream
 * @param key_bits the input
 * @param passphrase the passphrase to use for decryption

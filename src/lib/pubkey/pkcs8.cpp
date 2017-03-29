@@ -175,8 +175,8 @@ std::vector<uint8_t> BER_encode(const Private_Key& key,
    const auto pbe_params = choose_pbe_params(pbe_algo, key.algo_name());
 
    const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
-      pbes2_encrypt(PKCS8::BER_encode(key), pass, msec,
-                    pbe_params.first, pbe_params.second, rng);
+      pbes2_encrypt_msec(PKCS8::BER_encode(key), pass, msec, nullptr,
+                         pbe_params.first, pbe_params.second, rng);
 
    return DER_Encoder()
          .start_cons(SEQUENCE)
@@ -200,6 +200,88 @@ std::string PEM_encode(const Private_Key& key,
 
    return PEM_Code::encode(PKCS8::BER_encode(key, rng, pass, msec, pbe_algo),
                            "ENCRYPTED PRIVATE KEY");
+   }
+
+/*
+* BER encode a PKCS #8 private key, encrypted
+*/
+std::vector<uint8_t> BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
+                                                     RandomNumberGenerator& rng,
+                                                     const std::string& pass,
+                                                     size_t pbkdf_iterations,
+                                                     const std::string& cipher,
+                                                     const std::string& pbkdf_hash)
+   {
+   const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
+      pbes2_encrypt_iter(key.private_key_info(),
+                         pass, pbkdf_iterations,
+                         cipher.empty() ? "AES-256/CBC" : cipher,
+                         pbkdf_hash.empty() ? "SHA-256" : pbkdf_hash,
+                         rng);
+
+   return DER_Encoder()
+         .start_cons(SEQUENCE)
+            .encode(pbe_info.first)
+            .encode(pbe_info.second, OCTET_STRING)
+         .end_cons()
+      .get_contents_unlocked();
+   }
+
+/*
+* PEM encode a PKCS #8 private key, encrypted
+*/
+std::string PEM_encode_encrypted_pbkdf_iter(const Private_Key& key,
+                                            RandomNumberGenerator& rng,
+                                            const std::string& pass,
+                                            size_t pbkdf_iterations,
+                                            const std::string& cipher,
+                                            const std::string& pbkdf_hash)
+   {
+   return PEM_Code::encode(
+      PKCS8::BER_encode_encrypted_pbkdf_iter(key, rng, pass, pbkdf_iterations, cipher, pbkdf_hash),
+      "ENCRYPTED PRIVATE KEY");
+   }
+
+/*
+* BER encode a PKCS #8 private key, encrypted
+*/
+std::vector<uint8_t> BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
+                                                     RandomNumberGenerator& rng,
+                                                     const std::string& pass,
+                                                     std::chrono::milliseconds pbkdf_msec,
+                                                     size_t* pbkdf_iterations,
+                                                     const std::string& cipher,
+                                                     const std::string& pbkdf_hash)
+   {
+   const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
+      pbes2_encrypt_msec(key.private_key_info(), pass,
+                         pbkdf_msec, pbkdf_iterations,
+                         cipher.empty() ? "AES-256/CBC" : cipher,
+                         pbkdf_hash.empty() ? "SHA-256" : pbkdf_hash,
+                         rng);
+
+   return DER_Encoder()
+         .start_cons(SEQUENCE)
+            .encode(pbe_info.first)
+            .encode(pbe_info.second, OCTET_STRING)
+         .end_cons()
+      .get_contents_unlocked();
+   }
+
+/*
+* PEM encode a PKCS #8 private key, encrypted
+*/
+std::string PEM_encode_encrypted_pbkdf_msec(const Private_Key& key,
+                                            RandomNumberGenerator& rng,
+                                            const std::string& pass,
+                                            std::chrono::milliseconds pbkdf_msec,
+                                            size_t* pbkdf_iterations,
+                                            const std::string& cipher,
+                                            const std::string& pbkdf_hash)
+   {
+   return PEM_Code::encode(
+      PKCS8::BER_encode_encrypted_pbkdf_msec(key, rng, pass, pbkdf_msec, pbkdf_iterations, cipher, pbkdf_hash),
+      "ENCRYPTED PRIVATE KEY");
    }
 
 namespace {

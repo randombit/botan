@@ -1374,19 +1374,93 @@ int botan_privkey_export_encrypted(botan_privkey_t key,
                                    uint8_t out[], size_t* out_len,
                                    botan_rng_t rng_obj,
                                    const char* pass,
-                                   const char* pbe,
+                                   const char* /*ignored - pbe*/,
                                    uint32_t flags)
    {
+   return botan_privkey_export_encrypted_pbkdf_iter(key, out, out_len, rng_obj, pass, 100000, nullptr, nullptr, flags);
+   }
+
+int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
+                                              uint8_t out[], size_t* out_len,
+                                              botan_rng_t rng_obj,
+                                              const char* pass,
+                                              uint32_t pbkdf_msec,
+                                              size_t* pbkdf_iters_out,
+                                              const char* maybe_cipher,
+                                              const char* maybe_pbkdf_hash,
+                                              uint32_t flags)
+   {
    return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
-      auto pbkdf_time = std::chrono::milliseconds(300);
+      const std::chrono::milliseconds pbkdf_time(pbkdf_msec);
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
+      std::string cipher;
+      if(maybe_cipher)
+         {
+         cipher = maybe_cipher;
+         }
+
+      std::string pbkdf_hash;
+      if(maybe_pbkdf_hash)
+         {
+         pbkdf_hash = maybe_pbkdf_hash;
+         }
+
       if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
-         return write_vec_output(out, out_len, Botan::PKCS8::BER_encode(k, rng, pass, pbkdf_time, pbe));
+         {
+         return write_vec_output(out, out_len,
+                                 Botan::PKCS8::BER_encode_encrypted_pbkdf_msec(k, rng, pass, pbkdf_time, pbkdf_iters_out, cipher, pbkdf_hash));
+         }
       else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
-         return write_str_output(out, out_len, Botan::PKCS8::PEM_encode(k, rng, pass, pbkdf_time, pbe));
+         {
+         return write_str_output(out, out_len,
+                                 Botan::PKCS8::PEM_encode_encrypted_pbkdf_msec(k, rng, pass, pbkdf_time, pbkdf_iters_out, cipher, pbkdf_hash));
+         }
       else
+         {
          return -2;
+         }
+      });
+   }
+
+int botan_privkey_export_encrypted_pbkdf_iter(botan_privkey_t key,
+                                              uint8_t out[], size_t* out_len,
+                                              botan_rng_t rng_obj,
+                                              const char* pass,
+                                              size_t pbkdf_iter,
+                                              const char* maybe_cipher,
+                                              const char* maybe_pbkdf_hash,
+                                              uint32_t flags)
+   {
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+
+      std::string cipher;
+      if(maybe_cipher)
+         {
+         cipher = maybe_cipher;
+         }
+
+      std::string pbkdf_hash;
+      if(maybe_pbkdf_hash)
+         {
+         pbkdf_hash = maybe_pbkdf_hash;
+         }
+
+      if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+         {
+         return write_vec_output(out, out_len,
+                                 Botan::PKCS8::BER_encode_encrypted_pbkdf_iter(k, rng, pass, pbkdf_iter, cipher, pbkdf_hash));
+         }
+      else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+         {
+         return write_str_output(out, out_len,
+                                 Botan::PKCS8::PEM_encode_encrypted_pbkdf_iter(k, rng, pass, pbkdf_iter, cipher, pbkdf_hash));
+         }
+      else
+         {
+         return -2;
+         }
       });
    }
 

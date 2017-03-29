@@ -597,12 +597,39 @@ BOTAN_DLL int botan_privkey_export(botan_privkey_t key,
 /*
 * Set encryption_algo to NULL or "" to have the library choose a default (recommended)
 */
+BOTAN_DEPRECATED("Use botan_privkey_export_encrypted_pbkdf_{msec,iter}")
 BOTAN_DLL int botan_privkey_export_encrypted(botan_privkey_t key,
                                              uint8_t out[], size_t* out_len,
                                              botan_rng_t rng,
                                              const char* passphrase,
                                              const char* encryption_algo,
                                              uint32_t flags);
+
+/*
+* Export a private key, running PBKDF for specified amount of time
+* @param key the private key to export
+*/
+BOTAN_DLL int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
+                                                        uint8_t out[], size_t* out_len,
+                                                        botan_rng_t rng,
+                                                        const char* passphrase,
+                                                        uint32_t pbkdf_msec_runtime,
+                                                        size_t* pbkdf_iterations_out,
+                                                        const char* cipher_algo,
+                                                        const char* pbkdf_algo,
+                                                        uint32_t flags);
+
+/*
+* Export a private key using the specified number of iterations.
+*/
+BOTAN_DLL int botan_privkey_export_encrypted_pbkdf_iter(botan_privkey_t key,
+                                                        uint8_t out[], size_t* out_len,
+                                                        botan_rng_t rng,
+                                                        const char* passphrase,
+                                                        size_t pbkdf_iterations,
+                                                        const char* cipher_algo,
+                                                        const char* pbkdf_algo,
+                                                        uint32_t flags);
 
 typedef struct botan_pubkey_struct* botan_pubkey_t;
 

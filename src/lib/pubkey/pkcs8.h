@@ -80,6 +80,95 @@ PEM_encode(const Private_Key& key,
            const std::string& pbe_algo = "");
 
 /**
+* Encrypt a key using PKCS #8 encryption and a fixed iteration count
+* @param key the key to encode
+* @param rng the rng to use
+* @param pass the password to use for encryption
+* @param pbkdf_iter number of interations to run PBKDF2
+* @param cipher if non-empty specifies the cipher to use. CBC and GCM modes
+*   are supported, for example "AES-128/CBC", "AES-256/GCM", "Serpent/CBC".
+*   If empty a suitable default is chosen.
+* @param pbkdf_hash if non-empty specifies the PBKDF hash function to use.
+*   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
+* @return encrypted key in binary BER form
+*/
+BOTAN_DLL std::vector<uint8_t>
+BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
+                                RandomNumberGenerator& rng,
+                                const std::string& pass,
+                                size_t pbkdf_iter,
+                                const std::string& cipher = "",
+                                const std::string& pbkdf_hash = "");
+
+/**
+* Get a string containing a PEM encoded private key, encrypting it with a
+* password.
+* @param key the key to encode
+* @param rng the rng to use
+* @param pass the password to use for encryption
+* @param pbkdf_iter number of iterations to run PBKDF
+* @param cipher if non-empty specifies the cipher to use. CBC and GCM modes
+*   are supported, for example "AES-128/CBC", "AES-256/GCM", "Serpent/CBC".
+*   If empty a suitable default is chosen.
+* @param pbkdf_hash if non-empty specifies the PBKDF hash function to use.
+*   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
+* @return encrypted key in PEM form
+*/
+BOTAN_DLL std::string
+PEM_encode_encrypted_pbkdf_iter(const Private_Key& key,
+                                RandomNumberGenerator& rng,
+                                const std::string& pass,
+                                size_t pbkdf_iter,
+                                const std::string& cipher = "",
+                                const std::string& pbkdf_hash = "");
+
+/**
+* Encrypt a key using PKCS #8 encryption and a variable iteration count
+* @param key the key to encode
+* @param rng the rng to use
+* @param pass the password to use for encryption
+* @param pbkdf_msec how long to run PBKDF2
+* @param pbkdf_iterations if non-null, set to the number of iterations used
+* @param cipher if non-empty specifies the cipher to use. CBC and GCM modes
+*   are supported, for example "AES-128/CBC", "AES-256/GCM", "Serpent/CBC".
+*   If empty a suitable default is chosen.
+* @param pbkdf_hash if non-empty specifies the PBKDF hash function to use.
+*   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
+* @return encrypted key in binary BER form
+*/
+BOTAN_DLL std::vector<uint8_t>
+BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
+                                RandomNumberGenerator& rng,
+                                const std::string& pass,
+                                std::chrono::milliseconds pbkdf_msec,
+                                size_t* pbkdf_iterations,
+                                const std::string& cipher = "",
+                                const std::string& pbkdf_hash = "");
+
+/**
+* Get a string containing a PEM encoded private key, encrypting it with a
+* password.
+* @param key the key to encode
+* @param rng the rng to use
+* @param pass the password to use for encryption
+* @param pbkdf_iter number of iterations to run PBKDF
+* @param cipher if non-empty specifies the cipher to use. CBC and GCM modes
+*   are supported, for example "AES-128/CBC", "AES-256/GCM", "Serpent/CBC".
+*   If empty a suitable default is chosen.
+* @param pbkdf_hash if non-empty specifies the PBKDF hash function to use.
+*   For example "SHA-256" or "SHA-384". If empty a suitable default is chosen.
+* @return encrypted key in PEM form
+*/
+BOTAN_DLL std::string
+PEM_encode_encrypted_pbkdf_msec(const Private_Key& key,
+                                RandomNumberGenerator& rng,
+                                const std::string& pass,
+                                std::chrono::milliseconds pbkdf_msec,
+                                size_t* pbkdf_iterations,
+                                const std::string& cipher = "",
+                                const std::string& pbkdf_hash = "");
+
+/**
 * Load an encrypted key from a data source.
 * @param source the data source providing the encoded key
 * @param rng ignored for compatability
