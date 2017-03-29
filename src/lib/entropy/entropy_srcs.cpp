@@ -36,6 +36,10 @@
   #include <botan/internal/darwin_secrandom.h>
 #endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_GETENTROPY)
+  #include <botan/internal/getentropy.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
@@ -58,6 +62,13 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
       {
 #if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
       return std::unique_ptr<Entropy_Source>(new Darwin_SecRandom);
+#endif
+      }
+
+   if(name == "getentropy")
+      {
+#if defined(BOTAN_HAS_ENTROPY_SRC_GETENTROPY)
+      return std::unique_ptr<Entropy_Source>(new Getentropy);
 #endif
       }
 
