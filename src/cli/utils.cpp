@@ -10,6 +10,7 @@
 #include <botan/hash.h>
 #include <botan/cpuid.h>
 #include <botan/hex.h>
+#include <botan/entropy_src.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
   #include <botan/base64.h>
@@ -156,7 +157,7 @@ BOTAN_REGISTER_COMMAND("hash", Hash);
 class RNG final : public Command
    {
    public:
-      RNG() : Command("rng --system --rdrand *bytes") {}
+      RNG() : Command("rng --system --rdrand --entropy *bytes") {}
 
       void go() override
          {
@@ -177,6 +178,15 @@ class RNG final : public Command
             rng.reset(new Botan::RDRAND_RNG);
 #else
             error_output() << "rdrand_rng disabled in build\n";
+            return;
+#endif
+            }
+         else if(flag_set("entropy"))
+            {
+#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+            rng.reset(new Botan::AutoSeeded_RNG(Botan::Entropy_Sources::global_sources()));
+#else
+            error_output() << "auto_rng disabled in build\n";
             return;
 #endif
             }
