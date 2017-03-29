@@ -5,6 +5,7 @@
 */
 
 #include "tests.h"
+#include "test_rng.h"
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
@@ -138,7 +139,11 @@ class RSA_Blinding_Tests : public Test
          {
          Test::Result result("RSA blinding");
 
-#if defined(BOTAN_HAS_EME_RAW)
+#if defined(BOTAN_HAS_EMSA_RAW) || defined(BOTAN_HAS_EME_RAW)
+         Botan::RSA_PrivateKey rsa(Test::rng(), 1024);
+#endif
+
+#if defined(BOTAN_HAS_EMSA_RAW)
 
          /*
          * The blinder chooses a new starting point BOTAN_BLINDING_REINIT_INTERVAL
@@ -147,8 +152,6 @@ class RSA_Blinding_Tests : public Test
          * Very small values (padding/hashing disabled, only low byte set on input)
          * are used as an additional test on the blinders.
          */
-
-         Botan::RSA_PrivateKey rsa(Test::rng(), 1024);
 
          Botan::PK_Signer signer(rsa, Test::rng(), "Raw"); // don't try this at home
          Botan::PK_Verifier verifier(rsa, "Raw");
@@ -167,6 +170,46 @@ class RSA_Blinding_Tests : public Test
             result.test_eq("Signature verifies",
                            verifier.verify_message(input, signature), true);
             }
+#endif
+
+#if defined(BOTAN_HAS_EME_RAW)
+
+         /*
+         * The blinder chooses a new starting point BOTAN_BLINDING_REINIT_INTERVAL
+         * so decrypt several times that with a single key.
+         *
+         * Very small values (padding/hashing disabled, only low byte set on input)
+         * are used as an additional test on the blinders.
+         */
+
+         Botan::PK_Encryptor_EME encryptor(rsa, Test::rng(), "Raw");   // don't try this at home
+
+         // test blinding reinit interval
+         // Seed Fixed_Output_RNG only with enough bytes for the initial blinder initialization
+         Botan_Tests::Fixed_Output_RNG fixed_rng(Botan::unlock(Test::rng().random_vec(rsa.get_n().bytes())));
+         Botan::PK_Decryptor_EME decryptor(rsa, fixed_rng, "Raw");
+
+         for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL ; ++i)
+            {
+            std::vector<uint8_t> input(16);
+            input[ input.size() - 1 ] = static_cast<uint8_t>(i);
+
+            std::vector<uint8_t> ciphertext = encryptor.encrypt(input, Test::rng());
+
+            std::vector<uint8_t> plaintext = Botan::unlock(decryptor.decrypt(ciphertext));
+            plaintext.insert(plaintext.begin(), input.size() - 1, 0);
+
+            // assert RNG is not called in this situation
+            result.test_eq("Successfull decryption", plaintext, input);
+            }
+
+         // one more decryption should trigger a blinder reinitialization
+         result.test_throws("", [&decryptor,&encryptor]()
+            {
+            std::vector<uint8_t> ciphertext = encryptor.encrypt(std::vector<uint8_t>(16), Test::rng());
+            decryptor.decrypt(ciphertext);
+            });
+
 #endif
 
          return std::vector<Test::Result>{result};
