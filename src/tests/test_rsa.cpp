@@ -199,14 +199,15 @@ class RSA_Blinding_Tests : public Test
             std::vector<uint8_t> plaintext = Botan::unlock(decryptor.decrypt(ciphertext));
             plaintext.insert(plaintext.begin(), input.size() - 1, 0);
 
-            // assert RNG is not called in this situation
-            result.test_eq("Successfull decryption", plaintext, input);
+            result.test_eq("Successful decryption", plaintext, input);
             }
 
          // one more decryption should trigger a blinder reinitialization
-         result.test_throws("", [&decryptor,&encryptor]()
+         result.test_throws("RSA blinding reinit",
+                            "Test error Fixed output RNG ran out of bytes, test bug?",
+                            [&decryptor,&encryptor]()
             {
-            std::vector<uint8_t> ciphertext = encryptor.encrypt(std::vector<uint8_t>(16), Test::rng());
+            std::vector<uint8_t> ciphertext = encryptor.encrypt(std::vector<uint8_t>(16, 5), Test::rng());
             decryptor.decrypt(ciphertext);
             });
 
