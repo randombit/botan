@@ -46,7 +46,7 @@ class Bcrypt_Tests : public Text_Based_Test
          return result;
          }
 
-      std::vector<Test::Result> run_final_tests()
+      std::vector<Test::Result> run_final_tests() override
          {
          Test::Result result("bcrypt");
 
