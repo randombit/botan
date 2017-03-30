@@ -6,12 +6,17 @@
 */
 
 #include <botan/system_rng.h>
+#include <botan/build.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
 #include <windows.h>
 #define NOMINMAX 1
 #include <wincrypt.h>
+
+#elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
+
+#include <stdlib.h>
 
 #else
 
@@ -55,6 +60,8 @@ std::string System_RNG_Impl::name() const
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
    return "cryptoapi";
+#elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
+   return "arc4random";
 #else
    return BOTAN_SYSTEM_RNG_DEVICE;
 #endif
@@ -67,6 +74,8 @@ System_RNG_Impl::System_RNG_Impl()
    if(!CryptAcquireContext(&m_prov, 0, 0, BOTAN_SYSTEM_RNG_CRYPTOAPI_PROV_TYPE, CRYPT_VERIFYCONTEXT))
       throw Exception("System_RNG failed to acquire crypto provider");
 
+#elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
+   // Nothing to do, arc4random(3) works from the beginning.
 #else
 
 #ifndef O_NOCTTY
@@ -89,6 +98,8 @@ System_RNG_Impl::~System_RNG_Impl()
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
    ::CryptReleaseContext(m_prov, 0);
+#elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
+   // Nothing to do.
 #else
    ::close(m_fd);
    m_fd = -1;
@@ -117,6 +128,8 @@ void System_RNG_Impl::add_entropy(const uint8_t input[], size_t len)
       secure_vector<uint8_t> buf(input, input + len);
       ::CryptGenRandom(m_prov, static_cast<DWORD>(buf.size()), buf.data());
       }
+#elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
+   // arc4random(3) reseeds itself from the OpenBSD kernel, not from user land.
 #else
    while(len)
       {
@@ -156,6 +169,8 @@ void System_RNG_Impl::randomize(uint8_t buf[], size_t len)
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
    ::CryptGenRandom(m_prov, static_cast<DWORD>(len), buf);
+#elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
+   ::arc4random_buf(buf, len);
 #else
    while(len)
       {
