@@ -5,6 +5,7 @@ soname_pattern_abi   "libbotan-{version_major}.so.{abi_rev}"
 soname_pattern_patch "libbotan-{version_major}.so.{abi_rev}.{version_minor}"
 
 <target_features>
+arc4random
 clock_gettime
 gettimeofday
 posix_mlock
