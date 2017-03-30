@@ -69,6 +69,20 @@ Version 2.1.0, Not Yet Released
 
 * Fix various warnings flagged by pylint and pyflakes linters in
   configure.py and botan.py (GH #832 #836 #839)
+  
+* Rename python wrapper to botan2.py (GH #847)
+
+* Change name constraint test to use a fixed reference time. Test certs have expired.
+
+* Increase miller-rabin iterations for DSA primes (FIPS-186-4) (GH #881)
+
+* Fix possible ISO 9796-2 padding side channel and add a length check (GH #891)
+
+* In CLI, if system RNG is available prefer it
+
+* Converge on a single side channel silent EC blinded multiply algorithm.
+  Uses montgomery ladder with order/2 bits scalar blinding and point randomization
+  now by default. (GH #893)
 
 Version 1.10.15, 2017-01-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
