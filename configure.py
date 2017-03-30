@@ -120,6 +120,8 @@ class BuildConfigurationInformation(object):
         self.testobj_dir = os.path.join(self.obj_dir, 'test')
 
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
+        self.doc_output_dir_manual = os.path.join(self.doc_output_dir, 'manual')
+        self.doc_output_dir_doxygen = os.path.join(self.doc_output_dir, 'doxygen') if options.with_doxygen else None
 
         self.include_dir = os.path.join(self.build_dir, 'include')
         self.botan_include_dir = os.path.join(self.include_dir, 'botan')
@@ -184,19 +186,19 @@ class BuildConfigurationInformation(object):
 
         self.build_doc_commands = '\n'.join(['\t' + s for s in build_doc_commands()])
 
-        def build_dirs():
-            yield self.libobj_dir
-            yield self.cliobj_dir
-            yield self.testobj_dir
-            yield self.botan_include_dir
-            yield self.internal_include_dir
-            yield self.external_include_dir
-            yield os.path.join(self.doc_output_dir, 'manual')
-
-            if options.with_doxygen:
-                yield os.path.join(self.doc_output_dir, 'doxygen')
-
-        self.build_dirs = list(build_dirs())
+    def build_dirs(self):
+        out = [
+            self.libobj_dir,
+            self.cliobj_dir,
+            self.testobj_dir,
+            self.botan_include_dir,
+            self.internal_include_dir,
+            self.external_include_dir,
+            self.doc_output_dir_manual,
+        ]
+        if self.doc_output_dir_doxygen:
+            out += [self.doc_output_dir_doxygen]
+        return out
 
     def src_info(self, typ):
         if typ == 'lib':
@@ -2441,7 +2443,7 @@ def main(argv=None):
         if e.errno != errno.ENOENT:
             logging.error('Problem while removing build dir: %s' % (e))
 
-    for build_dir in build_config.build_dirs:
+    for build_dir in build_config.build_dirs():
         try:
             robust_makedirs(build_dir)
         except OSError as e:
