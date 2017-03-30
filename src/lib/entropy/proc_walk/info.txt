@@ -16,7 +16,6 @@ hurd
 irix
 linux
 netbsd
-openbsd
 qnx
 solaris
 </os>
