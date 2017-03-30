@@ -12,12 +12,13 @@
 namespace Botan {
 
 /**
-* Gather BOTAN_SYSTEM_RNG_POLL_REQUEST bytes entropy from getentropy(2).
-* This is 64 bytes, note that maximum buffer size is limited to 256 bytes.
+* Gather 256 bytes entropy from getentropy(2).  Note that maximum
+* buffer size is limited to 256 bytes.  On OpenBSD this does neither
+* block nor fail.
 */
 size_t Getentropy::poll(RandomNumberGenerator& rng)
    {
-   secure_vector<uint8_t> buf(BOTAN_SYSTEM_RNG_POLL_REQUEST);
+   secure_vector<uint8_t> buf(256);
 
    if(::getentropy(buf.data(), buf.size()) == 0)
       {
