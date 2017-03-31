@@ -464,46 +464,66 @@ BOTAN_DLL int botan_mp_init(botan_mp_t* mp);
 BOTAN_DLL int botan_mp_destroy(botan_mp_t mp);
 
 // writes botan_mp_num_bytes(mp)*2 + 1 bytes to out[]
-BOTAN_DLL int botan_mp_to_hex(botan_mp_t mp, char* out);
-BOTAN_DLL int botan_mp_to_str(botan_mp_t mp, uint8_t base, char* out, size_t* out_len);
+BOTAN_DLL int botan_mp_to_hex(const botan_mp_t mp, char* out);
+BOTAN_DLL int botan_mp_to_str(const botan_mp_t mp, uint8_t base, char* out, size_t* out_len);
+
+BOTAN_DLL int botan_mp_clear(botan_mp_t mp);
 
 BOTAN_DLL int botan_mp_set_from_int(botan_mp_t mp, int initial_value);
-BOTAN_DLL int botan_mp_set_from_mp(botan_mp_t dest, botan_mp_t source);
+BOTAN_DLL int botan_mp_set_from_mp(botan_mp_t dest, const botan_mp_t source);
 BOTAN_DLL int botan_mp_set_from_str(botan_mp_t dest, const char* str);
+BOTAN_DLL int botan_mp_set_from_radix_str(botan_mp_t dest, const char* str, size_t radix);
 
-BOTAN_DLL int botan_mp_num_bits(botan_mp_t n, size_t* bits);
-BOTAN_DLL int botan_mp_num_bytes(botan_mp_t n, size_t* bytes);
+BOTAN_DLL int botan_mp_num_bits(const botan_mp_t n, size_t* bits);
+BOTAN_DLL int botan_mp_num_bytes(const botan_mp_t n, size_t* bytes);
 
 // Writes botan_mp_num_bytes(mp) to vec
-BOTAN_DLL int botan_mp_to_bin(botan_mp_t mp, uint8_t vec[]);
-BOTAN_DLL int botan_mp_from_bin(botan_mp_t mp, const uint8_t vec[], size_t vec_len);
+BOTAN_DLL int botan_mp_to_bin(const botan_mp_t mp, uint8_t vec[]);
+BOTAN_DLL int botan_mp_from_bin(const botan_mp_t mp, const uint8_t vec[], size_t vec_len);
 
-BOTAN_DLL int botan_mp_is_negative(botan_mp_t mp);
+BOTAN_DLL int botan_mp_to_uint32(const botan_mp_t mp, uint32_t* val);
+
+/**
+* Return true iff mp is greater than 0
+*/
+BOTAN_DLL int botan_mp_is_positive(const botan_mp_t mp);
+
+/**
+* Return true iff mp is less than 0
+*/
+BOTAN_DLL int botan_mp_is_negative(const botan_mp_t mp);
+
 BOTAN_DLL int botan_mp_flip_sign(botan_mp_t mp);
+//BOTAN_DLL int botan_mp_set_negative(botan_mp_t mp);
 
-BOTAN_DLL int botan_mp_add(botan_mp_t result, botan_mp_t x, botan_mp_t y);
-BOTAN_DLL int botan_mp_sub(botan_mp_t result, botan_mp_t x, botan_mp_t y);
-BOTAN_DLL int botan_mp_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y);
+BOTAN_DLL int botan_mp_is_zero(const botan_mp_t mp);
+BOTAN_DLL int botan_mp_is_odd(const botan_mp_t mp);
+BOTAN_DLL int botan_mp_is_even(const botan_mp_t mp);
+
+BOTAN_DLL int botan_mp_add(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
+BOTAN_DLL int botan_mp_sub(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
+BOTAN_DLL int botan_mp_mul(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
 
 BOTAN_DLL int botan_mp_div(botan_mp_t quotient,
                            botan_mp_t remainder,
-                           botan_mp_t x, botan_mp_t y);
+                           const botan_mp_t x, const botan_mp_t y);
 
-BOTAN_DLL int botan_mp_mod_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y, botan_mp_t mod);
+BOTAN_DLL int botan_mp_mod_mul(botan_mp_t result, const botan_mp_t x,
+                               const botan_mp_t y, const botan_mp_t mod);
 
 /*
 * Returns 0 if x != y
 * Returns 1 if x == y
 * Returns negative number on error
 */
-BOTAN_DLL int botan_mp_equal(botan_mp_t x, botan_mp_t y);
+BOTAN_DLL int botan_mp_equal(const botan_mp_t x, const botan_mp_t y);
 
 /*
 * Sets *result to comparison result:
 * -1 if x < y, 0 if x == y, 1 if x > y
 * Returns negative number on error or zero on success
 */
-BOTAN_DLL int botan_mp_cmp(int* result, botan_mp_t x, botan_mp_t y);
+BOTAN_DLL int botan_mp_cmp(int* result, const botan_mp_t x, const botan_mp_t y);
 
 /*
 * Swap two botan_mp_t
@@ -511,33 +531,43 @@ BOTAN_DLL int botan_mp_cmp(int* result, botan_mp_t x, botan_mp_t y);
 BOTAN_DLL int botan_mp_swap(botan_mp_t x, botan_mp_t y);
 
 // Return (base^exponent) % modulus
-BOTAN_DLL int botan_mp_powmod(botan_mp_t out, botan_mp_t base, botan_mp_t exponent, botan_mp_t modulus);
+BOTAN_DLL int botan_mp_powmod(botan_mp_t out, const botan_mp_t base, const botan_mp_t exponent, const botan_mp_t modulus);
 
-BOTAN_DLL int botan_mp_lshift(botan_mp_t out, botan_mp_t in, size_t shift);
-BOTAN_DLL int botan_mp_rshift(botan_mp_t out, botan_mp_t in, size_t shift);
+BOTAN_DLL int botan_mp_lshift(botan_mp_t out, const botan_mp_t in, size_t shift);
+BOTAN_DLL int botan_mp_rshift(botan_mp_t out, const botan_mp_t in, size_t shift);
 
-BOTAN_DLL int botan_mp_mod_inverse(botan_mp_t out, botan_mp_t in, botan_mp_t modulus);
+BOTAN_DLL int botan_mp_mod_inverse(botan_mp_t out, const botan_mp_t in, const botan_mp_t modulus);
 
 BOTAN_DLL int botan_mp_rand_bits(botan_mp_t rand_out, botan_rng_t rng, size_t bits);
 
 BOTAN_DLL int botan_mp_rand_range(botan_mp_t rand_out, botan_rng_t rng,
-                                  botan_mp_t lower_bound, botan_mp_t upper_bound);
+                                  const botan_mp_t lower_bound, const botan_mp_t upper_bound);
 
-BOTAN_DLL int botan_mp_gcd(botan_mp_t out, botan_mp_t x, botan_mp_t y);
+BOTAN_DLL int botan_mp_gcd(botan_mp_t out, const botan_mp_t x, const botan_mp_t y);
 
 /**
 * Returns 0 if n is not prime
 * Returns 1 if n is prime
 * Returns negative number on error
 */
-BOTAN_DLL int botan_mp_is_prime(botan_mp_t n, botan_rng_t rng, size_t test_prob);
+BOTAN_DLL int botan_mp_is_prime(const botan_mp_t n, botan_rng_t rng, size_t test_prob);
 
 /**
 * Returns 0 if specified bit of n is not set
 * Returns 1 if specified bit of n is set
 * Returns negative number on error
 */
-BOTAN_DLL int botan_mp_bit_set(botan_mp_t n, size_t bit);
+BOTAN_DLL int botan_mp_get_bit(const botan_mp_t n, size_t bit);
+
+/**
+* Set the specified bit
+*/
+BOTAN_DLL int botan_mp_set_bit(botan_mp_t n, size_t bit);
+
+/**
+* Clear the specified bit
+*/
+BOTAN_DLL int botan_mp_clear_bit(botan_mp_t n, size_t bit);
 
 /* Bcrypt password hashing */
 
