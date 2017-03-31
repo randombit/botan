@@ -233,6 +233,7 @@ class Test_Runner : public Botan_CLI::Command
             for(auto&& test_name : tests_to_run)
                {
                try {
+                  out << test_name << ':' << std::endl;
                   const auto results = Botan_Tests::Test::run_test(test_name, false);
                   out << report_out(results, tests_failed, tests_ran) << std::flush;
                }
