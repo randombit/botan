@@ -22,6 +22,11 @@ class Message_Auth_Tests : public Text_Based_Test
    public:
       Message_Auth_Tests() : Text_Based_Test("mac", "Key,In,Out", "IV") {}
 
+      std::vector<std::string> possible_providers(const std::string& algo) override
+         {
+         return provider_filter(Botan::MessageAuthenticationCode::providers(algo));
+         }
+
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
@@ -31,7 +36,7 @@ class Message_Auth_Tests : public Text_Based_Test
 
          Test::Result result(algo);
 
-         const std::vector<std::string> providers = Botan::MessageAuthenticationCode::providers(algo);
+         const std::vector<std::string> providers = possible_providers(algo);
 
          if(providers.empty())
             {

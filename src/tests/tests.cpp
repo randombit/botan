@@ -849,6 +849,11 @@ parse_cpuid_bits(const std::vector<std::string>& tok)
 
 }
 
+std::vector<std::string> Text_Based_Test::possible_providers(const std::string&)
+   {
+   return Test::provider_filter({ "base" });
+   }
+
 bool Text_Based_Test::skip_this_test(const std::string& /*header*/,
                                      const VarMap& /*vars*/)
    {
@@ -920,7 +925,8 @@ std::vector<Test::Result> Text_Based_Test::run()
          {
          try
             {
-            if(skip_this_test(header, vars))
+            if(possible_providers(header).empty() ||
+               skip_this_test(header, vars))
                {
                continue;
                }
@@ -961,6 +967,11 @@ std::vector<Test::Result> Text_Based_Test::run()
             vars.clear();
             }
          }
+      }
+
+   if(results.empty())
+      {
+      return results;
       }
 
    try

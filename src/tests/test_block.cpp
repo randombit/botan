@@ -14,6 +14,11 @@ class Block_Cipher_Tests : public Text_Based_Test
    public:
       Block_Cipher_Tests() : Text_Based_Test("block", "Key,In,Out") {}
 
+      std::vector<std::string> possible_providers(const std::string& algo) override
+         {
+         return provider_filter(Botan::BlockCipher::providers(algo));
+         }
+
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
@@ -22,7 +27,7 @@ class Block_Cipher_Tests : public Text_Based_Test
 
          Test::Result result(algo);
 
-         const std::vector<std::string> providers = Botan::BlockCipher::providers(algo);
+         const std::vector<std::string> providers = possible_providers(algo);
 
          if(providers.empty())
             {

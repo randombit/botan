@@ -19,15 +19,6 @@
 
 namespace Botan_Tests {
 
-namespace {
-
-std::vector<std::string> possible_pk_providers()
-   {
-   return { "base", "openssl", "tpm" };
-   }
-
-}
-
 void check_invalid_signatures(Test::Result& result,
                               Botan::PK_Verifier& verifier,
                               const std::vector<uint8_t>& message,
@@ -91,6 +82,11 @@ void check_invalid_ciphertexts(Test::Result& result,
                     " invalid ciphertexts, rejected " + std::to_string(ciphertext_rejected));
    }
 
+std::vector<std::string> PK_Test::possible_providers(const std::string&)
+   {
+   return Test::provider_filter({ "base", "openssl", "tpm" });
+   }
+
 Test::Result
 PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& vars)
    {
@@ -115,7 +111,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
 
    std::vector<std::unique_ptr<Botan::PK_Verifier>> verifiers;
 
-   for(std::string verify_provider : possible_pk_providers())
+   for(std::string verify_provider : possible_providers(algo_name()))
       {
       std::unique_ptr<Botan::PK_Verifier> verifier;
 
@@ -135,7 +131,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
       verifiers.push_back(std::move(verifier));
       }
 
-   for(auto&& sign_provider : possible_pk_providers())
+   for(auto&& sign_provider : possible_providers(algo_name()))
       {
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
       if(vars.count("Nonce"))
@@ -189,7 +185,7 @@ PK_Signature_Verification_Test::run_one_test(const std::string&, const VarMap& v
 
    Test::Result result(algo_name() + "/" + padding + " signature verification");
 
-   for(auto&& verify_provider : possible_pk_providers())
+   for(auto&& verify_provider : possible_providers(algo_name()))
       {
       std::unique_ptr<Botan::PK_Verifier> verifier;
 
@@ -219,7 +215,7 @@ PK_Signature_NonVerification_Test::run_one_test(const std::string&, const VarMap
 
    Test::Result result(algo_name() + "/" + padding + " verify invalid signature");
 
-   for(auto&& verify_provider : possible_pk_providers())
+   for(auto&& verify_provider : possible_providers(algo_name()))
       {
       std::unique_ptr<Botan::PK_Verifier> verifier;
 
@@ -255,7 +251,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
 
    std::vector<std::unique_ptr<Botan::PK_Decryptor>> decryptors;
 
-   for(auto&& dec_provider : possible_pk_providers())
+   for(auto&& dec_provider : possible_providers(algo_name()))
       {
       std::unique_ptr<Botan::PK_Decryptor> decryptor;
 
@@ -273,7 +269,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
       }
 
 
-   for(auto&& enc_provider : possible_pk_providers())
+   for(auto&& enc_provider : possible_providers(algo_name()))
       {
       std::unique_ptr<Botan::PK_Encryptor> encryptor;
 
@@ -388,7 +384,7 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
 
    const size_t key_len = get_opt_sz(vars, "OutLen", 0);
 
-   for(auto&& provider : possible_pk_providers())
+   for(auto&& provider : possible_providers(algo_name()))
       {
       std::unique_ptr<Botan::PK_Key_Agreement> kas;
 
