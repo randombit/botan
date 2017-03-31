@@ -25,7 +25,7 @@ cp license.txt doc/pgpkey.txt $WEBSITE_DIR
 
 # build manual as pdf for download
 sphinx-build -t website -c "$SPHINX_CONFIG" -b "latex" doc/manual handbook-latex
-(cd handbook-latex && pdflatex botan.tex)
+(cd handbook-latex && pdflatex botan.tex && pdflatex botan.tex)
 cp handbook-latex/botan.pdf $WEBSITE_DIR/manual/botan.pdf
 
 # build doxygen
