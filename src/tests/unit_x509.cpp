@@ -917,6 +917,61 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
    return result;
    }
 
+Test::Result test_hashes(const std::string &algo, const std::string &hash_fn = "SHA-256")
+   {
+	 Test::Result result("X509 Hashes");
+
+       const std::unique_ptr<Botan::Private_Key> key(make_a_private_key(algo));
+
+       struct TestData {
+	       const std::string issuer, subject, issuer_hash, subject_hash;
+	 } const cases[]{
+	     {"",
+	      "",
+	      "E4F60D0AA6D7F3D3B6A6494B1C861B99F649C6F9EC51ABAF201B20F297327C95",
+	      "E4F60D0AA6D7F3D3B6A6494B1C861B99F649C6F9EC51ABAF201B20F297327C95"},
+	     {"a",
+	      "b",
+	      "BC2E013472F39AC579964880E422737C82BA812CB8BC2FD17E013060D71E6E19",
+	      "5E31CFAA3FAFB1A5BA296A0D2BAB9CA44D7936E9BF0BBC54637D0C53DBC4A432"},
+	     {"A",
+	      "B",
+	      "4B3206201C4BC9B6CD6C36532A97687DF9238155D99ADB60C66BF2B2220643D8",
+	      "FFF635A52A16618B4A0E9CD26B5E5A2FA573D343C051E6DE8B0811B1ACC89B86"},
+	     {"Test Issuer/US/Botan Project/Testing",
+	      "Test Subject/US/Botan Project/Testing",
+	      "E2407027922619C0673E0AA59A9CD3673730C36A39F891BCE0806D1DD225A937",
+	      "42A63CB4FCCA81AC6D14D5E209B3156E033B90FF1007216927EA9324BA4EF2DB"},
+	     {"Test Subject/US/Botan Project/Testing",
+	      "Test Issuer/US/Botan Project/Testing",
+	      "42A63CB4FCCA81AC6D14D5E209B3156E033B90FF1007216927EA9324BA4EF2DB",
+	      "E2407027922619C0673E0AA59A9CD3673730C36A39F891BCE0806D1DD225A937"}};
+
+	 for (const auto& a : cases)
+	 {
+	       Botan::X509_Cert_Options opts{a.issuer};
+	       opts.CA_key();
+
+	       const Botan::X509_Certificate issuer_cert =
+		   Botan::X509::create_self_signed_cert(opts, *key, hash_fn, Test::rng());
+
+	       result.test_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_issuer_dn_sha256()), a.issuer_hash);
+	       result.test_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_subject_dn_sha256()), a.issuer_hash);
+
+	       const Botan::X509_CA ca(issuer_cert, *key, hash_fn, Test::rng());
+	       const Botan::PKCS10_Request req =
+		   Botan::X509::create_cert_req(a.subject, *key, hash_fn, Test::rng());
+	       const Botan::X509_Certificate subject_cert =
+		   ca.sign_request(req, Test::rng(),
+				   from_date(2008, 01, 01),
+				   from_date(2033, 01, 01));
+
+	       result.test_eq(a.subject, Botan::hex_encode(subject_cert.raw_issuer_dn_sha256()), a.issuer_hash);
+	       result.test_eq(a.subject, Botan::hex_encode(subject_cert.raw_subject_dn_sha256()), a.subject_hash);
+	 }
+	 return result;
+   }
+
 class X509_Cert_Unit_Tests : public Test
    {
    public:
@@ -982,6 +1037,7 @@ class X509_Cert_Unit_Tests : public Test
          results.push_back(valid_constraints_result);
          results.push_back(test_x509_dates());
          results.push_back(test_cert_status_strings());
+         results.push_back(test_hashes("ECDSA"));
 
          return results;
          }
