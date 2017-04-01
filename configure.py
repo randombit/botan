@@ -51,6 +51,7 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i+n]
 
+
 def get_vc_revision():
 
     def get_vc_revision_impl(cmdlist):
@@ -84,34 +85,30 @@ def get_vc_revision():
     else:
         return 'unknown'
 
+
+class Version(object):
+    """
+    Version information are all static members
+    """
+    major = botan_version.release_major
+    minor = botan_version.release_minor
+    patch = botan_version.release_patch
+    so_rev = botan_version.release_so_abi_rev
+    release_type = botan_version.release_type
+    datestamp = botan_version.release_datestamp
+    vc_rev = botan_version.release_vc_rev if botan_version.release_vc_rev else get_vc_revision()
+    packed = major * 1000 + minor # Used on Darwin for dylib versioning
+
+    @staticmethod
+    def as_string():
+        return '%d.%d.%d' % (Version.major, Version.minor, Version.patch)
+
+
 class BuildConfigurationInformation(object):
-
-    """
-    Version information
-    """
-    version_major = botan_version.release_major
-    version_minor = botan_version.release_minor
-    version_patch = botan_version.release_patch
-    version_so_rev = botan_version.release_so_abi_rev
-
-    version_release_type = botan_version.release_type
-
-    version_datestamp = botan_version.release_datestamp
-
-    version_vc_rev = botan_version.release_vc_rev
-    version_string = '%d.%d.%d' % (version_major, version_minor, version_patch)
-
-    # This is used on Darwin for dylib versioning
-    version_packed = version_major * 1000 + version_minor
-
     """
     Constructor
     """
     def __init__(self, options, modules):
-
-        if self.version_vc_rev is None:
-            self.version_vc_rev = get_vc_revision()
-
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
         self.obj_dir = os.path.join(self.build_dir, 'obj')
@@ -208,7 +205,7 @@ class BuildConfigurationInformation(object):
             return (self.test_sources, self.testobj_dir)
 
     def pkg_config_file(self):
-        return 'botan-%d.pc' % (self.version_major)
+        return 'botan-%d.pc' % (Version.major)
 
 
 def process_command_line(args): # pylint: disable=too-many-locals
@@ -218,7 +215,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     parser = optparse.OptionParser(
         formatter=optparse.IndentedHelpFormatter(max_help_position=50),
-        version=BuildConfigurationInformation.version_string)
+        version=Version.as_string())
 
     parser.add_option('--verbose', action='store_true', default=False,
                       help='Show debug messages')
@@ -1609,20 +1606,17 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         return opts
 
     variables = {
-        'version_major':  build_config.version_major,
-        'version_minor':  build_config.version_minor,
-        'version_patch':  build_config.version_patch,
-        'version_vc_rev': build_config.version_vc_rev,
-        'so_abi_rev':     build_config.version_so_rev,
-        'version':        build_config.version_string,
-
-        'version_packed': build_config.version_packed,
-
-        'release_type':   build_config.version_release_type,
+        'version_major':  Version.major,
+        'version_minor':  Version.minor,
+        'version_patch':  Version.patch,
+        'version_vc_rev': Version.vc_rev,
+        'so_abi_rev':     Version.so_rev,
+        'version':        Version.as_string(),
+        'version_packed': Version.packed,
+        'release_type':   Version.release_type,
+        'version_datestamp': Version.datestamp,
 
         'distribution_info': options.distribution_info,
-
-        'version_datestamp': build_config.version_datestamp,
 
         'base_dir': options.base_dir,
         'src_dir': options.src_dir,
@@ -1712,20 +1706,20 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'static_suffix': osinfo.static_suffix,
 
         'soname_base': osinfo.soname_pattern_base.format(
-            version_major=build_config.version_major,
-            version_minor=build_config.version_minor,
-            version_patch=build_config.version_patch,
-            abi_rev=build_config.version_so_rev),
+            version_major=Version.major,
+            version_minor=Version.minor,
+            version_patch=Version.patch,
+            abi_rev=Version.so_rev),
         'soname_abi': osinfo.soname_pattern_abi.format(
-            version_major=build_config.version_major,
-            version_minor=build_config.version_minor,
-            version_patch=build_config.version_patch,
-            abi_rev=build_config.version_so_rev),
+            version_major=Version.major,
+            version_minor=Version.minor,
+            version_patch=Version.patch,
+            abi_rev=Version.so_rev),
         'soname_patch': osinfo.soname_pattern_patch.format(
-            version_major=build_config.version_major,
-            version_minor=build_config.version_minor,
-            version_patch=build_config.version_patch,
-            abi_rev=build_config.version_so_rev),
+            version_major=Version.major,
+            version_minor=Version.minor,
+            version_patch=Version.patch,
+            abi_rev=Version.so_rev),
 
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
@@ -1758,7 +1752,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         # 'botan' or 'botan-2'. Used in Makefile and install script
         # This can be made consistent over all platforms in the future
-        variables['libname'] = 'botan-%d' % (build_config.version_major)
+        variables['libname'] = 'botan-%d' % (Version.major)
 
     variables["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), variables)
 
@@ -2072,7 +2066,7 @@ def generate_amalgamation(build_config, modules, options):
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-""" % (build_config.version_string)
+""" % (Version.as_string())
 
     botan_h.write(amalg_header)
 
@@ -2510,10 +2504,10 @@ def main(argv=None):
         return 'dated %d' % (datestamp)
 
     logging.info('Botan %s (VC %s) (%s %s) build setup is complete' % (
-        build_config.version_string,
-        build_config.version_vc_rev,
-        build_config.version_release_type,
-        release_date(build_config.version_datestamp)))
+        Version.as_string(),
+        Version.vc_rev,
+        Version.release_type,
+        release_date(Version.datestamp)))
 
     if options.unsafe_fuzzer_mode:
         logging.warning("The fuzzer mode flag is labeled unsafe for a reason, this version is for testing only")
