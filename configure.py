@@ -104,7 +104,7 @@ class Version(object):
         return '%d.%d.%d' % (Version.major, Version.minor, Version.patch)
 
 
-class BuildConfigurationInformation(object):
+class BuildPaths(object): # pylint: disable=too-many-instance-attributes
     """
     Constructor
     """
@@ -2383,7 +2383,7 @@ def main(argv=None):
 
     using_mods = [modules[m] for m in loaded_mods]
 
-    build_config = BuildConfigurationInformation(options, using_mods)
+    build_config = BuildPaths(options, using_mods)
 
     build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
 
