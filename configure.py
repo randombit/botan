@@ -513,6 +513,17 @@ class LexResult(object):
     pass
 
 
+class LexerError(ConfigureError):
+    def __init__(self, msg, lexfile, line):
+        super(LexerError, self).__init__(msg)
+        self.msg = msg
+        self.lexfile = lexfile
+        self.line = line
+
+    def __str__(self):
+        return '%s at %s:%d' % (self.msg, self.lexfile, self.line)
+
+
 def lex_me_harder(infofile, allowed_groups, name_val_pairs):
     """
     Generic lexer function for info.txt and src/build-data files
@@ -522,15 +533,6 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
     # Format as a nameable Python variable
     def py_var(group):
         return group.replace(':', '_')
-
-    class LexerError(ConfigureError):
-        def __init__(self, msg, line):
-            super(LexerError, self).__init__(msg)
-            self.msg = msg
-            self.line = line
-
-        def __str__(self):
-            return '%s at %s:%d' % (self.msg, infofile, self.line)
 
     lexer = shlex.shlex(open(infofile), infofile, posix=True)
     lexer.wordchars += '|:.<>/,-!+' # handle various funky chars in info.txt
@@ -555,7 +557,7 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
 
             if group not in allowed_groups:
                 raise LexerError('Unknown group "%s"' % (group),
-                                 lexer.lineno)
+                                 infofile, lexer.lineno)
 
             end_marker = '</' + group + '>'
 
@@ -565,7 +567,7 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
                 token = lexer.get_token()
                 if token is None:
                     raise LexerError('Group "%s" not terminated' % (group),
-                                     lexer.lineno)
+                                     infofile, lexer.lineno)
 
         elif token in name_val_pairs.keys():
             if isinstance(out.__dict__[token], list):
@@ -575,17 +577,18 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
                 if token == 'define':
                     nxt = lexer.get_token()
                     if not nxt:
-                        raise LexerError('No version set for API', lexer.lineno)
+                        raise LexerError('No version set for API', infofile, lexer.lineno)
                     if not re.match('^[0-9]{8}$', nxt):
-                        raise LexerError('Bad API rev "%s"' % (nxt), lexer.lineno)
+                        raise LexerError('Bad API rev "%s"' % (nxt), infofile, lexer.lineno)
                     out.__dict__[token].append(nxt)
             else:
                 out.__dict__[token] = lexer.get_token()
 
         else: # No match -> error
-            raise LexerError('Bad token "%s"' % (token), lexer.lineno)
+            raise LexerError('Bad token "%s"' % (token), infofile, lexer.lineno)
 
     return out
+
 
 def force_to_dict(l):
     """
