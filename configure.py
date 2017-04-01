@@ -155,31 +155,6 @@ class BuildConfigurationInformation(object):
 
         self.python_dir = os.path.join(options.src_dir, 'python')
 
-        def build_doc_commands():
-
-            def get_doc_cmd():
-                if options.with_sphinx:
-                    sphinx = 'sphinx-build -c $(SPHINX_CONFIG) $(SPHINX_OPTS) '
-                    if options.quiet:
-                        sphinx += '-q '
-                    sphinx += '%s %s'
-                    return sphinx
-                else:
-                    return '$(COPY) %s' + os.sep + '*.rst %s'
-
-            doc_cmd = get_doc_cmd()
-
-            def cmd_for(src):
-                return doc_cmd % (os.path.join(self.doc_dir, src),
-                                  os.path.join(self.doc_output_dir, src))
-
-            yield cmd_for('manual')
-
-            if options.with_doxygen:
-                yield 'doxygen %s%sbotan.doxy' % (self.build_dir, os.sep)
-
-        self.build_doc_commands = '\n'.join(['\t' + s for s in build_doc_commands()])
-
     def build_dirs(self):
         out = [
             self.libobj_dir,
@@ -204,6 +179,25 @@ class BuildConfigurationInformation(object):
 
     def pkg_config_file(self):
         return 'botan-%d.pc' % (Version.major)
+
+
+def make_build_doc_commands(build_paths, options):
+    def build_manual_command(src_dir, dst_dir):
+        if options.with_sphinx:
+            sphinx = 'sphinx-build -c $(SPHINX_CONFIG) $(SPHINX_OPTS) '
+            if options.quiet:
+                sphinx += '-q '
+            sphinx += '%s %s' % (src_dir, dst_dir)
+            return sphinx
+        else:
+            return '$(COPY) %s%s*.rst %s' %  (src_dir, os.sep, dst_dir)
+
+    cmds = [
+        build_manual_command(os.path.join(build_paths.doc_dir, 'manual'), build_paths.doc_output_dir_manual)
+    ]
+    if options.with_doxygen:
+        cmds += ['doxygen %s%sbotan.doxy' % (build_paths.build_dir, os.sep)]
+    return '\n'.join(['\t' + cmd for cmd in cmds])
 
 
 def process_command_line(args): # pylint: disable=too-many-locals
@@ -1648,7 +1642,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'doc_output_dir': build_config.doc_output_dir,
 
-        'build_doc_commands': build_config.build_doc_commands,
+        'build_doc_commands': make_build_doc_commands(build_config, options),
 
         'python_dir': build_config.python_dir,
         'sphinx_config_dir': os.path.join(options.build_data, 'sphinx'),
