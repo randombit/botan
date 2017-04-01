@@ -125,14 +125,13 @@ class BuildConfigurationInformation(object):
         self.internal_include_dir = os.path.join(self.botan_include_dir, 'internal')
         self.external_include_dir = os.path.join(self.include_dir, 'external')
 
-        self.sources = sorted(flatten([mod.sources() for mod in modules]))
         self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
         self.external_headers = sorted(flatten([m.external_headers() for m in modules]))
 
         if options.amalgamation:
-            self.build_sources = ['botan_all.cpp']
+            self.lib_sources = ['botan_all.cpp']
         else:
-            self.build_sources = self.sources
+            self.lib_sources = sorted(flatten([mod.sources() for mod in modules]))
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
@@ -198,7 +197,7 @@ class BuildConfigurationInformation(object):
 
     def src_info(self, typ):
         if typ == 'lib':
-            return (self.build_sources, self.libobj_dir)
+            return (self.lib_sources, self.libobj_dir)
         elif typ == 'cli':
             return (self.cli_sources, self.cliobj_dir)
         elif typ == 'test':
@@ -1367,7 +1366,7 @@ def gen_bakefile(build_config, options, external_libs):
     # shared library project
     f.write('shared-library botan {\n')
     f.write('\tdefines = "BOTAN_DLL=__declspec(dllexport)";\n')
-    bakefile_sources(f, build_config.sources)
+    bakefile_sources(f, build_config.lib_sources)
     f.write('}\n')
 
     # cli project
@@ -2490,7 +2489,7 @@ def main(argv=None):
 
     if options.amalgamation:
         amalgamation_cpp_files = generate_amalgamation(build_config, using_mods, options)
-        build_config.build_sources = amalgamation_cpp_files
+        build_config.lib_sources = amalgamation_cpp_files
         gen_makefile_lists(template_vars, build_config, options, using_mods, cc, arch, osinfo)
 
     if options.with_bakefile:
