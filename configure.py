@@ -177,8 +177,8 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         elif typ == 'test':
             return (self.test_sources, self.testobj_dir)
 
-    def pkg_config_file(self):
-        return 'botan-%d.pc' % (Version.major)
+
+PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major)
 
 
 def make_build_doc_commands(build_paths, options):
@@ -1740,7 +1740,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         else:
             variables['libname'] = 'botan'
     else:
-        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, build_config.pkg_config_file())
+        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, PKG_CONFIG_FILENAME)
 
         # 'botan' or 'botan-2'. Used in Makefile and install script
         # This can be made consistent over all platforms in the future
@@ -2451,7 +2451,7 @@ def main(argv=None):
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
 
     if options.os != 'windows':
-        write_template(in_build_dir(build_config.pkg_config_file()), in_build_data('botan.pc.in'))
+        write_template(in_build_dir(PKG_CONFIG_FILENAME), in_build_data('botan.pc.in'))
 
     if options.os == 'windows':
         write_template(in_build_dir('botan.iss'), in_build_data('innosetup.in'))
