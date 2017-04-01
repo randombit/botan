@@ -128,7 +128,6 @@ class BuildConfigurationInformation(object):
         self.internal_include_dir = os.path.join(self.botan_include_dir, 'internal')
         self.external_include_dir = os.path.join(self.include_dir, 'external')
 
-        self.modules = modules
         self.sources = sorted(flatten([mod.sources() for mod in modules]))
         self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
         self.external_headers = sorted(flatten([m.external_headers() for m in modules]))
@@ -1976,7 +1975,7 @@ def portable_symlink(file_path, target_dir, method):
     else:
         raise ConfigureError('Unknown link method %s' % (method))
 
-def generate_amalgamation(build_config, options):
+def generate_amalgamation(build_config, modules, options):
     """
     Generate the amalgamation
     """
@@ -2117,7 +2116,7 @@ def generate_amalgamation(build_config, options):
     botan_amalg_files = {}
     headers_written = {}
 
-    for mod in build_config.modules:
+    for mod in modules:
         tgt = ''
 
         if not options.single_amalgamation_file:
@@ -2496,7 +2495,7 @@ def main(argv=None):
         json.dump(template_vars, f, sort_keys=True, indent=2)
 
     if options.amalgamation:
-        amalgamation_cpp_files = generate_amalgamation(build_config, options)
+        amalgamation_cpp_files = generate_amalgamation(build_config, using_mods, options)
         build_config.build_sources = amalgamation_cpp_files
         gen_makefile_lists(template_vars, build_config, options, using_mods, cc, arch, osinfo)
 
