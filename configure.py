@@ -111,10 +111,9 @@ class BuildConfigurationInformation(object):
     def __init__(self, options, modules):
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
-        self.obj_dir = os.path.join(self.build_dir, 'obj')
-        self.libobj_dir = os.path.join(self.obj_dir, 'lib')
-        self.cliobj_dir = os.path.join(self.obj_dir, 'cli')
-        self.testobj_dir = os.path.join(self.obj_dir, 'test')
+        self.libobj_dir = os.path.join(self.build_dir, 'obj', 'lib')
+        self.cliobj_dir = os.path.join(self.build_dir, 'obj', 'cli')
+        self.testobj_dir = os.path.join(self.build_dir, 'obj', 'test')
 
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
         self.doc_output_dir_manual = os.path.join(self.doc_output_dir, 'manual')
