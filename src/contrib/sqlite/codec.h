@@ -32,7 +32,7 @@ const string PBKDF_STR = "PBKDF2(SHA-160)";
 const string SALT_STR = "&g#nB'9]";
 
 //SALT_SIZE: Size of the salt in bytes (as given in SALT_STR)
-const int SALT_SIZE = 64/8; //64 bit, 8 byte salt
+const int SALT_SIZE = 64 / 8; //64 bit, 8 byte salt
 
 //MAC_STR: CMAC used to derive the IV that is used for db page
 //encryption
@@ -45,62 +45,74 @@ const int PBKDF_ITERATIONS = 10000;
 //KEY_SIZE: Size of the encryption key. Note that XTS splits the key
 //between two ciphers, so if you're using XTS, double the intended key
 //size. (ie, "AES-128/XTS" should have a 256 bit KEY_SIZE)
-const int KEY_SIZE = 512/8; //512 bit, 64 byte key. (256 bit XTS key)
+const int KEY_SIZE = 512 / 8; //512 bit, 64 byte key. (256 bit XTS key)
 
 //IV_DERIVATION_KEY_SIZE: Size of the key used with the CMAC (MAC_STR)
 //above.
-const int IV_DERIVATION_KEY_SIZE = 256/8; //256 bit, 32 byte key
+const int IV_DERIVATION_KEY_SIZE = 256 / 8; //256 bit, 32 byte key
 
 //This is definited in sqlite.h and very unlikely to change
 #define SQLITE_MAX_PAGE_SIZE 32768
 
 class Codec
-{
-public:
-    Codec(void *db);
-    Codec(const Codec* other, void *db);
+   {
+   public:
+      Codec(void* db);
+      Codec(const Codec* other, void* db);
 
-    void GenerateWriteKey(const char *userPassword, int passwordLength);
-    void DropWriteKey();
-    void SetWriteIsRead();
-    void SetReadIsWrite();
+      void GenerateWriteKey(const char* userPassword, int passwordLength);
+      void DropWriteKey();
+      void SetWriteIsRead();
+      void SetReadIsWrite();
 
-    unsigned char* Encrypt(int page, unsigned char *data, bool useWriteKey);
-    void Decrypt(int page, unsigned char *data);
+      unsigned char* Encrypt(int page, unsigned char* data, bool useWriteKey);
+      void Decrypt(int page, unsigned char* data);
 
-    void SetPageSize(int pageSize) { m_pageSize = pageSize; }
+      void SetPageSize(int pageSize)
+         {
+         m_pageSize = pageSize;
+         }
 
-    bool HasReadKey() { return m_hasReadKey; }
-    bool HasWriteKey() { return m_hasWriteKey; }
-    void* GetDB() { return m_db; }
-    const char* GetAndResetError();
+      bool HasReadKey()
+         {
+         return m_hasReadKey;
+         }
+      bool HasWriteKey()
+         {
+         return m_hasWriteKey;
+         }
+      void* GetDB()
+         {
+         return m_db;
+         }
+      const char* GetAndResetError();
 
-private:
-    bool m_hasReadKey;
-    bool m_hasWriteKey;
+   private:
+      bool m_hasReadKey;
+      bool m_hasWriteKey;
 
-    SymmetricKey
-        m_readKey,
-        m_writeKey,
-        m_ivReadKey,
-        m_ivWriteKey;
+      SymmetricKey
+      m_readKey,
+      m_writeKey,
+      m_ivReadKey,
+      m_ivWriteKey;
 
-    Pipe
-        m_encipherPipe,
-        m_decipherPipe,
-        m_macPipe;
+      Pipe
+      m_encipherPipe,
+      m_decipherPipe,
+      m_macPipe;
 
-    Keyed_Filter *m_encipherFilter;
-    Keyed_Filter *m_decipherFilter;
-    MAC_Filter *m_cmac;
+      Keyed_Filter* m_encipherFilter;
+      Keyed_Filter* m_decipherFilter;
+      MAC_Filter* m_cmac;
 
-    int m_pageSize;
-    unsigned char m_page[SQLITE_MAX_PAGE_SIZE];
-    void *m_db;
-    const char *m_botanErrorMsg;
+      int m_pageSize;
+      unsigned char m_page[SQLITE_MAX_PAGE_SIZE];
+      void* m_db;
+      const char* m_botanErrorMsg;
 
-    InitializationVector GetIVForPage(u32bit page, bool useWriteKey);
-    void InitializeCodec(void *db);
-};
+      InitializationVector GetIVForPage(u32bit page, bool useWriteKey);
+      void InitializeCodec(void* db);
+   };
 
 #endif

@@ -11,8 +11,10 @@
 
 void fuzz(const uint8_t in[], size_t len)
    {
-   if(len > 8192/8)
+   if(len > 8192 / 8)
+      {
       return;
+      }
 
    Botan::BigInt x = Botan::BigInt::decode(in, len);
 

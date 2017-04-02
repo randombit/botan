@@ -18,8 +18,14 @@ namespace Botan {
 class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
    {
    public:
-      std::string algo_name() const override { return "ElGamal"; }
-      DL_Group::Format group_format() const override { return DL_Group::ANSI_X9_42; }
+      std::string algo_name() const override
+         {
+         return "ElGamal";
+         }
+      DL_Group::Format group_format() const override
+         {
+         return DL_Group::ANSI_X9_42;
+         }
 
       /**
       * Load a public key.
@@ -39,9 +45,9 @@ class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
       ElGamal_PublicKey(const DL_Group& group, const BigInt& y);
 
       std::unique_ptr<PK_Ops::Encryption>
-         create_encryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+      create_encryption_op(RandomNumberGenerator& rng,
+                           const std::string& params,
+                           const std::string& provider) const override;
 
    protected:
       ElGamal_PublicKey() {}
@@ -51,7 +57,7 @@ class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
 * ElGamal Private Key
 */
 class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
-                                     public virtual DL_Scheme_PrivateKey
+   public virtual DL_Scheme_PrivateKey
    {
    public:
       bool check_key(RandomNumberGenerator& rng, bool) const override;
@@ -75,9 +81,9 @@ class BOTAN_DLL ElGamal_PrivateKey : public ElGamal_PublicKey,
                          const BigInt& priv_key = 0);
 
       std::unique_ptr<PK_Ops::Decryption>
-         create_decryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+      create_decryption_op(RandomNumberGenerator& rng,
+                           const std::string& params,
+                           const std::string& provider) const override;
    };
 
 }

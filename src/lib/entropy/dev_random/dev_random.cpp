@@ -23,11 +23,11 @@ Open a file descriptor to each (available) device in fsnames
 Device_EntropySource::Device_EntropySource(const std::vector<std::string>& fsnames)
    {
 #ifndef O_NONBLOCK
-  #define O_NONBLOCK 0
+#define O_NONBLOCK 0
 #endif
 
 #ifndef O_NOCTTY
-  #define O_NOCTTY 0
+#define O_NOCTTY 0
 #endif
 
    const int flags = O_RDONLY | O_NONBLOCK | O_NOCTTY;

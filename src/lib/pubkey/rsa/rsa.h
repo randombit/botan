@@ -35,7 +35,10 @@ class BOTAN_DLL RSA_PublicKey : public virtual Public_Key
       RSA_PublicKey(const BigInt& n, const BigInt& e) :
          m_n(n), m_e(e) {}
 
-      std::string algo_name() const override { return "RSA"; }
+      std::string algo_name() const override
+         {
+         return "RSA";
+         }
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 
@@ -46,29 +49,35 @@ class BOTAN_DLL RSA_PublicKey : public virtual Public_Key
       /**
       * @return public modulus
       */
-      const BigInt& get_n() const { return m_n; }
+      const BigInt& get_n() const
+         {
+         return m_n;
+         }
 
       /**
       * @return public exponent
       */
-      const BigInt& get_e() const { return m_e; }
+      const BigInt& get_e() const
+         {
+         return m_e;
+         }
 
       size_t key_length() const override;
       size_t estimated_strength() const override;
 
       std::unique_ptr<PK_Ops::Encryption>
-         create_encryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+      create_encryption_op(RandomNumberGenerator& rng,
+                           const std::string& params,
+                           const std::string& provider) const override;
 
       std::unique_ptr<PK_Ops::KEM_Encryption>
-         create_kem_encryption_op(RandomNumberGenerator& rng,
-                                  const std::string& params,
-                                  const std::string& provider) const override;
+      create_kem_encryption_op(RandomNumberGenerator& rng,
+                               const std::string& params,
+                               const std::string& provider) const override;
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override;
+      create_verification_op(const std::string& params,
+                             const std::string& provider) const override;
 
    protected:
       RSA_PublicKey() {}
@@ -120,40 +129,58 @@ class BOTAN_DLL RSA_PrivateKey : public Private_Key, public RSA_PublicKey
       * Get the first prime p.
       * @return prime p
       */
-      const BigInt& get_p() const { return m_p; }
+      const BigInt& get_p() const
+         {
+         return m_p;
+         }
 
       /**
       * Get the second prime q.
       * @return prime q
       */
-      const BigInt& get_q() const { return m_q; }
+      const BigInt& get_q() const
+         {
+         return m_q;
+         }
 
       /**
       * Get d with exp * d = 1 mod (p - 1, q - 1).
       * @return d
       */
-      const BigInt& get_d() const { return m_d; }
+      const BigInt& get_d() const
+         {
+         return m_d;
+         }
 
-      const BigInt& get_c() const { return m_c; }
-      const BigInt& get_d1() const { return m_d1; }
-      const BigInt& get_d2() const { return m_d2; }
+      const BigInt& get_c() const
+         {
+         return m_c;
+         }
+      const BigInt& get_d1() const
+         {
+         return m_d1;
+         }
+      const BigInt& get_d2() const
+         {
+         return m_d2;
+         }
 
       secure_vector<uint8_t> private_key_bits() const override;
 
       std::unique_ptr<PK_Ops::Decryption>
-         create_decryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+      create_decryption_op(RandomNumberGenerator& rng,
+                           const std::string& params,
+                           const std::string& provider) const override;
 
       std::unique_ptr<PK_Ops::KEM_Decryption>
-         create_kem_decryption_op(RandomNumberGenerator& rng,
-                                  const std::string& params,
-                                  const std::string& provider) const override;
+      create_kem_decryption_op(RandomNumberGenerator& rng,
+                               const std::string& params,
+                               const std::string& provider) const override;
 
       std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
+      create_signature_op(RandomNumberGenerator& rng,
+                          const std::string& params,
+                          const std::string& provider) const override;
 
    private:
       BigInt m_d, m_p, m_q, m_d1, m_d2, m_c;

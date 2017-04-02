@@ -51,8 +51,8 @@ class BOTAN_DLL Blinder
       */
       Blinder(const BigInt& modulus,
               RandomNumberGenerator& rng,
-              std::function<BigInt (const BigInt&)> fwd_func,
-              std::function<BigInt (const BigInt&)> inv_func);
+              std::function<BigInt(const BigInt&)> fwd_func,
+              std::function<BigInt(const BigInt&)> inv_func);
 
       Blinder(const Blinder&) = delete;
 
@@ -63,8 +63,8 @@ class BOTAN_DLL Blinder
 
       Modular_Reducer m_reducer;
       RandomNumberGenerator& m_rng;
-      std::function<BigInt (const BigInt&)> m_fwd_fn;
-      std::function<BigInt (const BigInt&)> m_inv_fn;
+      std::function<BigInt(const BigInt&)> m_fwd_fn;
+      std::function<BigInt(const BigInt&)> m_inv_fn;
       size_t m_modulus_bits = 0;
 
       mutable BigInt m_e, m_d;

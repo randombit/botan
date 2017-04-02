@@ -58,7 +58,10 @@ class XMSS_Address
        *
        * @return Layer address, which is constant 0 for XMSS.
        **/
-      uint8_t get_layer_addr() const { return 0; }
+      uint8_t get_layer_addr() const
+         {
+         return 0;
+         }
 
       /**
        * Layer Address for XMSS is constantly zero and can not be changed this
@@ -76,7 +79,10 @@ class XMSS_Address
        *
        * @return Tree address, which is constant 0 for XMSS.
        **/
-      uint64_t get_tree_addr() const { return 0; }
+      uint64_t get_tree_addr() const
+         {
+         return 0;
+         }
 
       /**
        * Tree Address for XMSS is constantly zero and can not be changed this
@@ -384,7 +390,7 @@ class XMSS_Address
          m_data[offset * 8    ] = ((value >> 24) & 0xFF);
          m_data[offset * 8 + 1] = ((value >> 16) & 0xFF);
          m_data[offset * 8 + 2] = ((value >>  8) & 0xFF);
-         m_data[offset * 8 + 3] = ((value      ) & 0xFF);
+         m_data[offset * 8 + 3] = ((value) & 0xFF);
          }
 
       inline uint32_t get_lo32(size_t offset) const
@@ -400,7 +406,7 @@ class XMSS_Address
          m_data[offset * 8 + 4] = ((value >> 24) & 0xFF);
          m_data[offset * 8 + 5] = ((value >> 16) & 0xFF);
          m_data[offset * 8 + 6] = ((value >>  8) & 0xFF);
-         m_data[offset * 8 + 7] = ((value      ) & 0xFF);
+         m_data[offset * 8 + 7] = ((value) & 0xFF);
          }
    };
 

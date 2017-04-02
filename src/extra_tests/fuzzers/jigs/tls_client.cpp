@@ -10,8 +10,14 @@
 class Fuzzer_TLS_Client_Creds : public Credentials_Manager
    {
    public:
-      std::string psk_identity_hint(const std::string&, const std::string&) override { return "psk_hint"; }
-      std::string psk_identity(const std::string&, const std::string&, const std::string&) override { return "psk_id"; }
+      std::string psk_identity_hint(const std::string&, const std::string&) override
+         {
+         return "psk_hint";
+         }
+      std::string psk_identity(const std::string&, const std::string&, const std::string&) override
+         {
+         return "psk_id";
+         }
       SymmetricKey psk(const std::string&, const std::string&, const std::string&) override
          {
          return SymmetricKey("AABBCCDDEEFF00112233445566778899");
@@ -21,12 +27,18 @@ class Fuzzer_TLS_Client_Creds : public Credentials_Manager
 void fuzz(const uint8_t in[], size_t len)
    {
    if(len == 0)
+      {
       return;
+      }
 
    auto dev_null = [](const byte[], size_t) {};
 
    auto ignore_alerts = [](TLS::Alert, const byte[], size_t) {};
-   auto ignore_hs = [](const TLS::Session&) { abort(); return true; };
+   auto ignore_hs = [](const TLS::Session&)
+      {
+      abort();
+      return true;
+      };
 
    TLS::Session_Manager_Noop session_manager;
    TLS::Policy policy;

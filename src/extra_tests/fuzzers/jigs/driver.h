@@ -19,7 +19,7 @@ using namespace Botan;
 
 extern void fuzz(const uint8_t in[], size_t len);
 
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+extern "C" int LLVMFuzzerInitialize(int* argc, char** *argv)
    {
    /*
    * This disables the mlock pool, as overwrites within the pool are
@@ -70,7 +70,10 @@ inline Botan::RandomNumberGenerator& fuzzer_rng()
    class ChaCha20_RNG : public Botan::RandomNumberGenerator
       {
       public:
-         std::string name() const override { return "ChaCha20_RNG"; }
+         std::string name() const override
+            {
+            return "ChaCha20_RNG";
+            }
          void clear() override { /* ignored */ }
 
          void randomize(uint8_t out[], size_t len) override
@@ -79,7 +82,10 @@ inline Botan::RandomNumberGenerator& fuzzer_rng()
             m_chacha.cipher1(out, len);
             }
 
-         bool is_seeded() const override { return true; }
+         bool is_seeded() const override
+            {
+            return true;
+            }
 
          void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
 

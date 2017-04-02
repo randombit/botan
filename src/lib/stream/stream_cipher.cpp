@@ -9,37 +9,37 @@
 #include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_CHACHA)
-  #include <botan/chacha.h>
+   #include <botan/chacha.h>
 #endif
 
 #if defined(BOTAN_HAS_SALSA20)
-  #include <botan/salsa20.h>
+   #include <botan/salsa20.h>
 #endif
 
 #if defined(BOTAN_HAS_SHAKE_CIPHER)
-  #include <botan/shake_cipher.h>
+   #include <botan/shake_cipher.h>
 #endif
 
 #if defined(BOTAN_HAS_CTR_BE)
-  #include <botan/ctr.h>
+   #include <botan/ctr.h>
 #endif
 
 #if defined(BOTAN_HAS_OFB)
-  #include <botan/ofb.h>
+   #include <botan/ofb.h>
 #endif
 
 #if defined(BOTAN_HAS_RC4)
-  #include <botan/rc4.h>
+   #include <botan/rc4.h>
 #endif
 
 #if defined(BOTAN_HAS_OPENSSL)
-  #include <botan/internal/openssl.h>
+   #include <botan/internal/openssl.h>
 #endif
 
 namespace Botan {
 
 std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
-                                                   const std::string& provider)
+      const std::string& provider)
    {
    const SCAN_Name req(algo_spec);
 
@@ -49,7 +49,9 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto c = BlockCipher::create(req.arg(0)))
+            {
             return std::unique_ptr<StreamCipher>(new CTR_BE(c.release()));
+            }
          }
       }
 #endif
@@ -58,7 +60,9 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
    if(req.algo_name() == "ChaCha")
       {
       if(provider.empty() || provider == "base")
+         {
          return std::unique_ptr<StreamCipher>(new ChaCha(req.arg_as_integer(0, 20)));
+         }
       }
 #endif
 
@@ -66,7 +70,9 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
    if(req.algo_name() == "Salsa20")
       {
       if(provider.empty() || provider == "base")
+         {
          return std::unique_ptr<StreamCipher>(new Salsa20);
+         }
       }
 #endif
 
@@ -74,7 +80,9 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
    if(req.algo_name() == "SHAKE-128")
       {
       if(provider.empty() || provider == "base")
+         {
          return std::unique_ptr<StreamCipher>(new SHAKE_128_Cipher);
+         }
       }
 #endif
 
@@ -84,7 +92,9 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto c = BlockCipher::create(req.arg(0)))
+            {
             return std::unique_ptr<StreamCipher>(new OFB(c.release()));
+            }
          }
       }
 #endif
@@ -92,8 +102,8 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
 #if defined(BOTAN_HAS_RC4)
 
    if(req.algo_name() == "RC4" ||
-      req.algo_name() == "ARC4" ||
-      req.algo_name() == "MARK-4")
+         req.algo_name() == "ARC4" ||
+         req.algo_name() == "MARK-4")
       {
       const size_t skip = (req.algo_name() == "MARK-4") ? 256 : req.arg_as_integer(0, 0);
 
@@ -121,7 +131,7 @@ std::unique_ptr<StreamCipher> StreamCipher::create(const std::string& algo_spec,
 //static
 std::unique_ptr<StreamCipher>
 StreamCipher::create_or_throw(const std::string& algo,
-                             const std::string& provider)
+                              const std::string& provider)
    {
    if(auto sc = StreamCipher::create(algo, provider))
       {

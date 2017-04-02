@@ -15,42 +15,42 @@
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
 
-/*
-* On Darwin and OpenBSD ppc, use sysctl to detect AltiVec
-*/
-#if defined(BOTAN_TARGET_OS_IS_DARWIN)
-  #include <sys/sysctl.h>
-#elif defined(BOTAN_TARGET_OS_IS_OPENBSD)
-  #include <sys/param.h>
-  #include <sys/sysctl.h>
-  #include <machine/cpu.h>
-#endif
+   /*
+   * On Darwin and OpenBSD ppc, use sysctl to detect AltiVec
+   */
+   #if defined(BOTAN_TARGET_OS_IS_DARWIN)
+      #include <sys/sysctl.h>
+   #elif defined(BOTAN_TARGET_OS_IS_OPENBSD)
+      #include <sys/param.h>
+      #include <sys/sysctl.h>
+      #include <machine/cpu.h>
+   #endif
 
 #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
 
-/*
-* On ARM, use getauxval if available, otherwise fall back to
-* running probe functions with a SIGILL handler.
-*/
-#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
-  #include <sys/auxv.h>
-#else
-  #include <botan/internal/os_utils.h>
-#endif
+   /*
+   * On ARM, use getauxval if available, otherwise fall back to
+   * running probe functions with a SIGILL handler.
+   */
+   #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
+      #include <sys/auxv.h>
+   #else
+      #include <botan/internal/os_utils.h>
+   #endif
 
 #elif defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-/*
-* On x86, use CPUID instruction
-*/
+   /*
+   * On x86, use CPUID instruction
+   */
 
-#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-  #include <intrin.h>
-#elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
-  #include <ia32intrin.h>
-#elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-  #include <cpuid.h>
-#endif
+   #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+      #include <intrin.h>
+   #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
+      #include <ia32intrin.h>
+   #elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+      #include <cpuid.h>
+   #endif
 
 #endif
 
@@ -84,7 +84,9 @@ uint64_t powerpc_detect_cpu_featutures()
    int error = sysctl(sels, 2, &vector_type, &length, NULL, 0);
 
    if(error == 0 && vector_type > 0)
+      {
       return (1ULL << CPUID::CPUID_ALTIVEC_BIT);
+      }
 
 #elif defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_NETBSD)
    /*
@@ -99,7 +101,7 @@ uint64_t powerpc_detect_cpu_featutures()
    uint32_t pvr = 0;
 
    // TODO: we could run inside SIGILL handler block
-   asm volatile("mfspr %0, 287" : "=r" (pvr));
+   asm volatile("mfspr %0, 287" : "=r"(pvr));
 
    // Top 16 bit suffice to identify model
    pvr >>= 16;
@@ -115,15 +117,15 @@ uint64_t powerpc_detect_cpu_featutures()
    const uint16_t PVR_CELL_PPU = 0x0070;
 
    if(pvr == PVR_G4_7400 ||
-      pvr == PVR_G5_970 || pvr == PVR_G5_970FX ||
-      pvr == PVR_G5_970MP || pvr == PVR_G5_970GX ||
-      pvr == PVR_POWER6 || pvr == PVR_POWER7 || pvr == PVR_POWER8 ||
-      pvr == PVR_CELL_PPU)
+         pvr == PVR_G5_970 || pvr == PVR_G5_970FX ||
+         pvr == PVR_G5_970MP || pvr == PVR_G5_970GX ||
+         pvr == PVR_POWER6 || pvr == PVR_POWER7 || pvr == PVR_POWER8 ||
+         pvr == PVR_CELL_PPU)
       {
       return (1ULL << CPUID::CPUID_ALTIVEC_BIT);
       }
 #else
-  #warning "No PowerPC feature detection available for this platform"
+#warning "No PowerPC feature detection available for this platform"
 #endif
 
    return 0;
@@ -146,7 +148,8 @@ uint64_t arm_detect_cpu_features(size_t* cache_line_size)
    * so we just hardcode them in ARM_hwcap_bit enum.
    */
 
-   enum ARM_hwcap_bit {
+   enum ARM_hwcap_bit
+      {
 #if defined(BOTAN_TARGET_ARCH_IS_ARM32)
       NEON_bit  = (1 << 12),
       AES_bit   = (1 << 0),
@@ -166,11 +169,13 @@ uint64_t arm_detect_cpu_features(size_t* cache_line_size)
       ARCH_hwcap_neon   = 16, // AT_HWCAP
       ARCH_hwcap_crypto = 16, // AT_HWCAP
 #endif
-   };
+      };
 
    const unsigned long hwcap_neon = ::getauxval(ARM_hwcap_bit::ARCH_hwcap_neon);
    if(hwcap_neon & ARM_hwcap_bit::NEON_bit)
+      {
       detected_features |= CPUID::CPUID_ARM_NEON_BIT;
+      }
 
    /*
    On aarch64 this ends up calling getauxval twice with AT_HWCAP
@@ -179,20 +184,30 @@ uint64_t arm_detect_cpu_features(size_t* cache_line_size)
    */
    const unsigned long hwcap_crypto = ::getauxval(ARM_hwcap_bit::ARCH_hwcap_crypto);
    if(hwcap_crypto & ARM_hwcap_bit::AES_bit)
+      {
       detected_features |= CPUID::CPUID_ARM_AES_BIT;
+      }
    if(hwcap_crypto & ARM_hwcap_bit::PMULL_bit)
+      {
       detected_features |= CPUID::CPUID_ARM_PMULL_BIT;
+      }
    if(hwcap_crypto & ARM_hwcap_bit::SHA1_bit)
+      {
       detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
+      }
    if(hwcap_crypto & ARM_hwcap_bit::SHA2_bit)
+      {
       detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
+      }
 
 #if defined(AT_DCACHEBSIZE)
    const unsigned long dcache_line = ::getauxval(AT_DCACHEBSIZE);
 
    // plausibility check
    if(dcache_line == 32 || dcache_line == 64 || dcache_line == 128)
+      {
       *cache_line_size = static_cast<size_t>(dcache_line);
+      }
 #endif
 
 #else
@@ -210,31 +225,31 @@ uint64_t arm_detect_cpu_features(size_t* cache_line_size)
 uint64_t x86_detect_cpu_features(size_t* cache_line_size)
    {
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-  #define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
-  #define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
+#define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
+#define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
-  #define X86_CPUID(type, out) do { __cpuid(out, type); } while(0)
-  #define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
+#define X86_CPUID(type, out) do { __cpuid(out, type); } while(0)
+#define X86_CPUID_SUBLEVEL(type, level, out) do { __cpuidex((int*)out, type, level); } while(0)
 
 #elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && defined(BOTAN_USE_GCC_INLINE_ASM)
-  #define X86_CPUID(type, out)                                                    \
+#define X86_CPUID(type, out)                                                    \
      asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
          : "0" (type))
 
-  #define X86_CPUID_SUBLEVEL(type, level, out)                                    \
+#define X86_CPUID_SUBLEVEL(type, level, out)                                    \
      asm("cpuid\n\t" : "=a" (out[0]), "=b" (out[1]), "=c" (out[2]), "=d" (out[3]) \
          : "0" (type), "2" (level))
 
 #elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-  #define X86_CPUID(type, out) do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0)
+#define X86_CPUID(type, out) do { __get_cpuid(type, out, out+1, out+2, out+3); } while(0)
 
-  #define X86_CPUID_SUBLEVEL(type, level, out) \
+#define X86_CPUID_SUBLEVEL(type, level, out) \
      do { __cpuid_count(type, level, out[0], out[1], out[2], out[3]); } while(0)
 #else
-  #warning "No way of calling x86 cpuid instruction for this compiler"
-  #define X86_CPUID(type, out) do { clear_mem(out, 4); } while(0)
-  #define X86_CPUID_SUBLEVEL(type, level, out) do { clear_mem(out, 4); } while(0)
+#warning "No way of calling x86 cpuid instruction for this compiler"
+#define X86_CPUID(type, out) do { clear_mem(out, 4); } while(0)
+#define X86_CPUID_SUBLEVEL(type, level, out) do { clear_mem(out, 4); } while(0)
 #endif
 
    uint64_t features_detected = 0;
@@ -256,7 +271,8 @@ uint64_t x86_detect_cpu_features(size_t* cache_line_size)
       X86_CPUID(1, cpuid);
       const uint64_t flags0 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[3];
 
-      enum x86_CPUID_1_bits : uint64_t {
+      enum x86_CPUID_1_bits : uint64_t
+         {
          RDTSC = (1ULL << 4),
          SSE2 = (1ULL << 26),
          CLMUL = (1ULL << 33),
@@ -265,24 +281,40 @@ uint64_t x86_detect_cpu_features(size_t* cache_line_size)
          SSE42 = (1ULL << 52),
          AESNI = (1ULL << 57),
          RDRAND = (1ULL << 62)
-      };
+         };
 
       if(flags0 & x86_CPUID_1_bits::RDTSC)
+         {
          features_detected |= CPUID::CPUID_RDTSC_BIT;
+         }
       if(flags0 & x86_CPUID_1_bits::SSE2)
+         {
          features_detected |= CPUID::CPUID_SSE2_BIT;
+         }
       if(flags0 & x86_CPUID_1_bits::CLMUL)
+         {
          features_detected |= CPUID::CPUID_CLMUL_BIT;
+         }
       if(flags0 & x86_CPUID_1_bits::SSSE3)
+         {
          features_detected |= CPUID::CPUID_SSSE3_BIT;
+         }
       if(flags0 & x86_CPUID_1_bits::SSE41)
+         {
          features_detected |= CPUID::CPUID_SSE41_BIT;
+         }
       if(flags0 & x86_CPUID_1_bits::SSE42)
+         {
          features_detected |= CPUID::CPUID_SSE42_BIT;
+         }
       if(flags0 & x86_CPUID_1_bits::AESNI)
+         {
          features_detected |= CPUID::CPUID_AESNI_BIT;
+         }
       if(flags0 & x86_CPUID_1_bits::RDRAND)
+         {
          features_detected |= CPUID::CPUID_RDRAND_BIT;
+         }
       }
 
    if(is_intel)
@@ -302,28 +334,41 @@ uint64_t x86_detect_cpu_features(size_t* cache_line_size)
       clear_mem(cpuid, 4);
       X86_CPUID_SUBLEVEL(7, 0, cpuid);
 
-      enum x86_CPUID_7_bits : uint64_t {
+      enum x86_CPUID_7_bits : uint64_t
+         {
          AVX2 = (1ULL << 5),
          BMI2 = (1ULL << 8),
          AVX512F = (1ULL << 16),
          RDSEED = (1ULL << 18),
          ADX = (1ULL << 19),
          SHA = (1ULL << 29),
-      };
+         };
       uint64_t flags7 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[1];
 
       if(flags7 & x86_CPUID_7_bits::AVX2)
+         {
          features_detected |= CPUID::CPUID_AVX2_BIT;
+         }
       if(flags7 & x86_CPUID_7_bits::BMI2)
+         {
          features_detected |= CPUID::CPUID_BMI2_BIT;
+         }
       if(flags7 & x86_CPUID_7_bits::AVX512F)
+         {
          features_detected |= CPUID::CPUID_AVX512F_BIT;
+         }
       if(flags7 & x86_CPUID_7_bits::RDSEED)
+         {
          features_detected |= CPUID::CPUID_RDSEED_BIT;
+         }
       if(flags7 & x86_CPUID_7_bits::ADX)
+         {
          features_detected |= CPUID::CPUID_ADX_BIT;
+         }
       if(flags7 & x86_CPUID_7_bits::SHA)
+         {
          features_detected |= CPUID::CPUID_SHA_BIT;
+         }
       }
 
 #undef X86_CPUID

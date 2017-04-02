@@ -47,7 +47,8 @@ namespace Botan {
 
 namespace {
 
-const uint8_t SE[256] = {
+const uint8_t SE[256] =
+   {
    0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B,
    0xFE, 0xD7, 0xAB, 0x76, 0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0,
    0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0, 0xB7, 0xFD, 0x93, 0x26,
@@ -69,9 +70,11 @@ const uint8_t SE[256] = {
    0x61, 0x35, 0x57, 0xB9, 0x86, 0xC1, 0x1D, 0x9E, 0xE1, 0xF8, 0x98, 0x11,
    0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
    0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F,
-   0xB0, 0x54, 0xBB, 0x16 };
+   0xB0, 0x54, 0xBB, 0x16
+   };
 
-const uint8_t SD[256] = {
+const uint8_t SD[256] =
+   {
    0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E,
    0x81, 0xF3, 0xD7, 0xFB, 0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87,
    0x34, 0x8E, 0x43, 0x44, 0xC4, 0xDE, 0xE9, 0xCB, 0x54, 0x7B, 0x94, 0x32,
@@ -93,21 +96,47 @@ const uint8_t SD[256] = {
    0x2D, 0xE5, 0x7A, 0x9F, 0x93, 0xC9, 0x9C, 0xEF, 0xA0, 0xE0, 0x3B, 0x4D,
    0xAE, 0x2A, 0xF5, 0xB0, 0xC8, 0xEB, 0xBB, 0x3C, 0x83, 0x53, 0x99, 0x61,
    0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63,
-   0x55, 0x21, 0x0C, 0x7D };
+   0x55, 0x21, 0x0C, 0x7D
+   };
 
-inline uint8_t xtime(uint8_t s) { return (s << 1) ^ ((s >> 7) * 0x1B); }
-inline uint8_t xtime4(uint8_t s) { return xtime(xtime(s)); }
-inline uint8_t xtime8(uint8_t s) { return xtime(xtime(xtime(s))); }
+inline uint8_t xtime(uint8_t s)
+   {
+   return (s << 1) ^ ((s >> 7) * 0x1B);
+   }
+inline uint8_t xtime4(uint8_t s)
+   {
+   return xtime(xtime(s));
+   }
+inline uint8_t xtime8(uint8_t s)
+   {
+   return xtime(xtime(xtime(s)));
+   }
 
-inline uint8_t xtime3(uint8_t s) { return xtime(s) ^ s; }
-inline uint8_t xtime9(uint8_t s) { return xtime8(s) ^ s; }
-inline uint8_t xtime11(uint8_t s) { return xtime8(s) ^ xtime(s) ^ s; }
-inline uint8_t xtime13(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ s; }
-inline uint8_t xtime14(uint8_t s) { return xtime8(s) ^ xtime4(s) ^ xtime(s); }
+inline uint8_t xtime3(uint8_t s)
+   {
+   return xtime(s) ^ s;
+   }
+inline uint8_t xtime9(uint8_t s)
+   {
+   return xtime8(s) ^ s;
+   }
+inline uint8_t xtime11(uint8_t s)
+   {
+   return xtime8(s) ^ xtime(s) ^ s;
+   }
+inline uint8_t xtime13(uint8_t s)
+   {
+   return xtime8(s) ^ xtime4(s) ^ s;
+   }
+inline uint8_t xtime14(uint8_t s)
+   {
+   return xtime8(s) ^ xtime4(s) ^ xtime(s);
+   }
 
 const std::vector<uint32_t>& AES_TE()
    {
-   auto compute_TE = []() -> std::vector<uint32_t> {
+   auto compute_TE = []() -> std::vector<uint32_t>
+      {
       std::vector<uint32_t> TE(1024);
       for(size_t i = 0; i != 256; ++i)
          {
@@ -115,12 +144,12 @@ const std::vector<uint32_t>& AES_TE()
          const uint32_t x = make_uint32(xtime(s), s, s, xtime3(s));
 
          TE[i] = x;
-         TE[i+256] = rotate_right(x, 8);
-         TE[i+512] = rotate_right(x, 16);
-         TE[i+768] = rotate_right(x, 24);
+         TE[i + 256] = rotate_right(x, 8);
+         TE[i + 512] = rotate_right(x, 16);
+         TE[i + 768] = rotate_right(x, 24);
          }
       return TE;
-   };
+      };
 
    static const std::vector<uint32_t> TE = compute_TE();
    return TE;
@@ -128,7 +157,8 @@ const std::vector<uint32_t>& AES_TE()
 
 const std::vector<uint32_t>& AES_TD()
    {
-   auto compute_TD = []() -> std::vector<uint32_t> {
+   auto compute_TD = []() -> std::vector<uint32_t>
+      {
       std::vector<uint32_t> TD(1024);
       for(size_t i = 0; i != 256; ++i)
          {
@@ -136,12 +166,12 @@ const std::vector<uint32_t>& AES_TD()
          const uint32_t x = make_uint32(xtime14(s), xtime9(s), xtime13(s), xtime11(s));
 
          TD[i] = x;
-         TD[i+256] = rotate_right(x, 8);
-         TD[i+512] = rotate_right(x, 16);
-         TD[i+768] = rotate_right(x, 24);
+         TD[i + 256] = rotate_right(x, 8);
+         TD[i + 512] = rotate_right(x, 16);
+         TD[i + 768] = rotate_right(x, 24);
          }
       return TD;
-   };
+      };
    static const std::vector<uint32_t> TD = compute_TD();
    return TD;
    }
@@ -171,7 +201,7 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       uint32_t T0, T1, T2, T3;
-      load_be(in + 16*i, T0, T1, T2, T3);
+      load_be(in + 16 * i, T0, T1, T2, T3);
 
       T0 ^= EK[0];
       T1 ^= EK[1];
@@ -189,62 +219,62 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
       */
 
       uint32_t B0 = TE[get_byte(0, T0)] ^
-                  rotate_right(TE[get_byte(1, T1)],  8) ^
-                  rotate_right(TE[get_byte(2, T2)], 16) ^
-                  rotate_right(TE[get_byte(3, T3)], 24) ^ EK[4];
+                    rotate_right(TE[get_byte(1, T1)],  8) ^
+                    rotate_right(TE[get_byte(2, T2)], 16) ^
+                    rotate_right(TE[get_byte(3, T3)], 24) ^ EK[4];
 
       uint32_t B1 = TE[get_byte(0, T1)] ^
-                  rotate_right(TE[get_byte(1, T2)],  8) ^
-                  rotate_right(TE[get_byte(2, T3)], 16) ^
-                  rotate_right(TE[get_byte(3, T0)], 24) ^ EK[5];
+                    rotate_right(TE[get_byte(1, T2)],  8) ^
+                    rotate_right(TE[get_byte(2, T3)], 16) ^
+                    rotate_right(TE[get_byte(3, T0)], 24) ^ EK[5];
 
       uint32_t B2 = TE[get_byte(0, T2)] ^
-                  rotate_right(TE[get_byte(1, T3)],  8) ^
-                  rotate_right(TE[get_byte(2, T0)], 16) ^
-                  rotate_right(TE[get_byte(3, T1)], 24) ^ EK[6];
+                    rotate_right(TE[get_byte(1, T3)],  8) ^
+                    rotate_right(TE[get_byte(2, T0)], 16) ^
+                    rotate_right(TE[get_byte(3, T1)], 24) ^ EK[6];
 
       uint32_t B3 = TE[get_byte(0, T3)] ^
-                  rotate_right(TE[get_byte(1, T0)],  8) ^
-                  rotate_right(TE[get_byte(2, T1)], 16) ^
-                  rotate_right(TE[get_byte(3, T2)], 24) ^ EK[7];
+                    rotate_right(TE[get_byte(1, T0)],  8) ^
+                    rotate_right(TE[get_byte(2, T1)], 16) ^
+                    rotate_right(TE[get_byte(3, T2)], 24) ^ EK[7];
 
-      for(size_t r = 2*4; r < EK.size(); r += 2*4)
+      for(size_t r = 2 * 4; r < EK.size(); r += 2 * 4)
          {
          T0 = EK[r  ] ^ TE[get_byte(0, B0)      ] ^ TE[get_byte(1, B1) + 256] ^
-                        TE[get_byte(2, B2) + 512] ^ TE[get_byte(3, B3) + 768];
-         T1 = EK[r+1] ^ TE[get_byte(0, B1)      ] ^ TE[get_byte(1, B2) + 256] ^
-                        TE[get_byte(2, B3) + 512] ^ TE[get_byte(3, B0) + 768];
-         T2 = EK[r+2] ^ TE[get_byte(0, B2)      ] ^ TE[get_byte(1, B3) + 256] ^
-                        TE[get_byte(2, B0) + 512] ^ TE[get_byte(3, B1) + 768];
-         T3 = EK[r+3] ^ TE[get_byte(0, B3)      ] ^ TE[get_byte(1, B0) + 256] ^
-                        TE[get_byte(2, B1) + 512] ^ TE[get_byte(3, B2) + 768];
+              TE[get_byte(2, B2) + 512] ^ TE[get_byte(3, B3) + 768];
+         T1 = EK[r + 1] ^ TE[get_byte(0, B1)      ] ^ TE[get_byte(1, B2) + 256] ^
+              TE[get_byte(2, B3) + 512] ^ TE[get_byte(3, B0) + 768];
+         T2 = EK[r + 2] ^ TE[get_byte(0, B2)      ] ^ TE[get_byte(1, B3) + 256] ^
+              TE[get_byte(2, B0) + 512] ^ TE[get_byte(3, B1) + 768];
+         T3 = EK[r + 3] ^ TE[get_byte(0, B3)      ] ^ TE[get_byte(1, B0) + 256] ^
+              TE[get_byte(2, B1) + 512] ^ TE[get_byte(3, B2) + 768];
 
-         B0 = EK[r+4] ^ TE[get_byte(0, T0)      ] ^ TE[get_byte(1, T1) + 256] ^
-                        TE[get_byte(2, T2) + 512] ^ TE[get_byte(3, T3) + 768];
-         B1 = EK[r+5] ^ TE[get_byte(0, T1)      ] ^ TE[get_byte(1, T2) + 256] ^
-                        TE[get_byte(2, T3) + 512] ^ TE[get_byte(3, T0) + 768];
-         B2 = EK[r+6] ^ TE[get_byte(0, T2)      ] ^ TE[get_byte(1, T3) + 256] ^
-                        TE[get_byte(2, T0) + 512] ^ TE[get_byte(3, T1) + 768];
-         B3 = EK[r+7] ^ TE[get_byte(0, T3)      ] ^ TE[get_byte(1, T0) + 256] ^
-                        TE[get_byte(2, T1) + 512] ^ TE[get_byte(3, T2) + 768];
+         B0 = EK[r + 4] ^ TE[get_byte(0, T0)      ] ^ TE[get_byte(1, T1) + 256] ^
+              TE[get_byte(2, T2) + 512] ^ TE[get_byte(3, T3) + 768];
+         B1 = EK[r + 5] ^ TE[get_byte(0, T1)      ] ^ TE[get_byte(1, T2) + 256] ^
+              TE[get_byte(2, T3) + 512] ^ TE[get_byte(3, T0) + 768];
+         B2 = EK[r + 6] ^ TE[get_byte(0, T2)      ] ^ TE[get_byte(1, T3) + 256] ^
+              TE[get_byte(2, T0) + 512] ^ TE[get_byte(3, T1) + 768];
+         B3 = EK[r + 7] ^ TE[get_byte(0, T3)      ] ^ TE[get_byte(1, T0) + 256] ^
+              TE[get_byte(2, T1) + 512] ^ TE[get_byte(3, T2) + 768];
          }
 
-      out[16*i+ 0] = SE[get_byte(0, B0)] ^ ME[0];
-      out[16*i+ 1] = SE[get_byte(1, B1)] ^ ME[1];
-      out[16*i+ 2] = SE[get_byte(2, B2)] ^ ME[2];
-      out[16*i+ 3] = SE[get_byte(3, B3)] ^ ME[3];
-      out[16*i+ 4] = SE[get_byte(0, B1)] ^ ME[4];
-      out[16*i+ 5] = SE[get_byte(1, B2)] ^ ME[5];
-      out[16*i+ 6] = SE[get_byte(2, B3)] ^ ME[6];
-      out[16*i+ 7] = SE[get_byte(3, B0)] ^ ME[7];
-      out[16*i+ 8] = SE[get_byte(0, B2)] ^ ME[8];
-      out[16*i+ 9] = SE[get_byte(1, B3)] ^ ME[9];
-      out[16*i+10] = SE[get_byte(2, B0)] ^ ME[10];
-      out[16*i+11] = SE[get_byte(3, B1)] ^ ME[11];
-      out[16*i+12] = SE[get_byte(0, B3)] ^ ME[12];
-      out[16*i+13] = SE[get_byte(1, B0)] ^ ME[13];
-      out[16*i+14] = SE[get_byte(2, B1)] ^ ME[14];
-      out[16*i+15] = SE[get_byte(3, B2)] ^ ME[15];
+      out[16 * i + 0] = SE[get_byte(0, B0)] ^ ME[0];
+      out[16 * i + 1] = SE[get_byte(1, B1)] ^ ME[1];
+      out[16 * i + 2] = SE[get_byte(2, B2)] ^ ME[2];
+      out[16 * i + 3] = SE[get_byte(3, B3)] ^ ME[3];
+      out[16 * i + 4] = SE[get_byte(0, B1)] ^ ME[4];
+      out[16 * i + 5] = SE[get_byte(1, B2)] ^ ME[5];
+      out[16 * i + 6] = SE[get_byte(2, B3)] ^ ME[6];
+      out[16 * i + 7] = SE[get_byte(3, B0)] ^ ME[7];
+      out[16 * i + 8] = SE[get_byte(0, B2)] ^ ME[8];
+      out[16 * i + 9] = SE[get_byte(1, B3)] ^ ME[9];
+      out[16 * i + 10] = SE[get_byte(2, B0)] ^ ME[10];
+      out[16 * i + 11] = SE[get_byte(3, B1)] ^ ME[11];
+      out[16 * i + 12] = SE[get_byte(0, B3)] ^ ME[12];
+      out[16 * i + 13] = SE[get_byte(1, B0)] ^ ME[13];
+      out[16 * i + 14] = SE[get_byte(2, B1)] ^ ME[14];
+      out[16 * i + 15] = SE[get_byte(3, B2)] ^ ME[15];
       }
    }
 
@@ -277,44 +307,44 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks,
       T0 ^= Z;
 
       uint32_t B0 = TD[get_byte(0, T0)] ^
-                  rotate_right(TD[get_byte(1, T3)],  8) ^
-                  rotate_right(TD[get_byte(2, T2)], 16) ^
-                  rotate_right(TD[get_byte(3, T1)], 24) ^ DK[4];
+                    rotate_right(TD[get_byte(1, T3)],  8) ^
+                    rotate_right(TD[get_byte(2, T2)], 16) ^
+                    rotate_right(TD[get_byte(3, T1)], 24) ^ DK[4];
 
       uint32_t B1 = TD[get_byte(0, T1)] ^
-                  rotate_right(TD[get_byte(1, T0)],  8) ^
-                  rotate_right(TD[get_byte(2, T3)], 16) ^
-                  rotate_right(TD[get_byte(3, T2)], 24) ^ DK[5];
+                    rotate_right(TD[get_byte(1, T0)],  8) ^
+                    rotate_right(TD[get_byte(2, T3)], 16) ^
+                    rotate_right(TD[get_byte(3, T2)], 24) ^ DK[5];
 
       uint32_t B2 = TD[get_byte(0, T2)] ^
-                  rotate_right(TD[get_byte(1, T1)],  8) ^
-                  rotate_right(TD[get_byte(2, T0)], 16) ^
-                  rotate_right(TD[get_byte(3, T3)], 24) ^ DK[6];
+                    rotate_right(TD[get_byte(1, T1)],  8) ^
+                    rotate_right(TD[get_byte(2, T0)], 16) ^
+                    rotate_right(TD[get_byte(3, T3)], 24) ^ DK[6];
 
       uint32_t B3 = TD[get_byte(0, T3)] ^
-                  rotate_right(TD[get_byte(1, T2)],  8) ^
-                  rotate_right(TD[get_byte(2, T1)], 16) ^
-                  rotate_right(TD[get_byte(3, T0)], 24) ^ DK[7];
+                    rotate_right(TD[get_byte(1, T2)],  8) ^
+                    rotate_right(TD[get_byte(2, T1)], 16) ^
+                    rotate_right(TD[get_byte(3, T0)], 24) ^ DK[7];
 
-      for(size_t r = 2*4; r < DK.size(); r += 2*4)
+      for(size_t r = 2 * 4; r < DK.size(); r += 2 * 4)
          {
          T0 = DK[r  ] ^ TD[get_byte(0, B0)      ] ^ TD[get_byte(1, B3) + 256] ^
-                        TD[get_byte(2, B2) + 512] ^ TD[get_byte(3, B1) + 768];
-         T1 = DK[r+1] ^ TD[get_byte(0, B1)      ] ^ TD[get_byte(1, B0) + 256] ^
-                        TD[get_byte(2, B3) + 512] ^ TD[get_byte(3, B2) + 768];
-         T2 = DK[r+2] ^ TD[get_byte(0, B2)      ] ^ TD[get_byte(1, B1) + 256] ^
-                        TD[get_byte(2, B0) + 512] ^ TD[get_byte(3, B3) + 768];
-         T3 = DK[r+3] ^ TD[get_byte(0, B3)      ] ^ TD[get_byte(1, B2) + 256] ^
-                        TD[get_byte(2, B1) + 512] ^ TD[get_byte(3, B0) + 768];
+              TD[get_byte(2, B2) + 512] ^ TD[get_byte(3, B1) + 768];
+         T1 = DK[r + 1] ^ TD[get_byte(0, B1)      ] ^ TD[get_byte(1, B0) + 256] ^
+              TD[get_byte(2, B3) + 512] ^ TD[get_byte(3, B2) + 768];
+         T2 = DK[r + 2] ^ TD[get_byte(0, B2)      ] ^ TD[get_byte(1, B1) + 256] ^
+              TD[get_byte(2, B0) + 512] ^ TD[get_byte(3, B3) + 768];
+         T3 = DK[r + 3] ^ TD[get_byte(0, B3)      ] ^ TD[get_byte(1, B2) + 256] ^
+              TD[get_byte(2, B1) + 512] ^ TD[get_byte(3, B0) + 768];
 
-         B0 = DK[r+4] ^ TD[get_byte(0, T0)      ] ^ TD[get_byte(1, T3) + 256] ^
-                        TD[get_byte(2, T2) + 512] ^ TD[get_byte(3, T1) + 768];
-         B1 = DK[r+5] ^ TD[get_byte(0, T1)      ] ^ TD[get_byte(1, T0) + 256] ^
-                        TD[get_byte(2, T3) + 512] ^ TD[get_byte(3, T2) + 768];
-         B2 = DK[r+6] ^ TD[get_byte(0, T2)      ] ^ TD[get_byte(1, T1) + 256] ^
-                        TD[get_byte(2, T0) + 512] ^ TD[get_byte(3, T3) + 768];
-         B3 = DK[r+7] ^ TD[get_byte(0, T3)      ] ^ TD[get_byte(1, T2) + 256] ^
-                        TD[get_byte(2, T1) + 512] ^ TD[get_byte(3, T0) + 768];
+         B0 = DK[r + 4] ^ TD[get_byte(0, T0)      ] ^ TD[get_byte(1, T3) + 256] ^
+              TD[get_byte(2, T2) + 512] ^ TD[get_byte(3, T1) + 768];
+         B1 = DK[r + 5] ^ TD[get_byte(0, T1)      ] ^ TD[get_byte(1, T0) + 256] ^
+              TD[get_byte(2, T3) + 512] ^ TD[get_byte(3, T2) + 768];
+         B2 = DK[r + 6] ^ TD[get_byte(0, T2)      ] ^ TD[get_byte(1, T1) + 256] ^
+              TD[get_byte(2, T0) + 512] ^ TD[get_byte(3, T3) + 768];
+         B3 = DK[r + 7] ^ TD[get_byte(0, T3)      ] ^ TD[get_byte(1, T2) + 256] ^
+              TD[get_byte(2, T1) + 512] ^ TD[get_byte(3, T0) + 768];
          }
 
       out[ 0] = SD[get_byte(0, B0)] ^ MD[0];
@@ -345,9 +375,11 @@ void aes_key_schedule(const uint8_t key[], size_t length,
                       secure_vector<uint8_t>& ME,
                       secure_vector<uint8_t>& MD)
    {
-   static const uint32_t RC[10] = {
+   static const uint32_t RC[10] =
+      {
       0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
-      0x20000000, 0x40000000, 0x80000000, 0x1B000000, 0x36000000 };
+      0x20000000, 0x40000000, 0x80000000, 0x1B000000, 0x36000000
+      };
 
    const size_t rounds = (length / 4) + 6;
 
@@ -359,38 +391,42 @@ void aes_key_schedule(const uint8_t key[], size_t length,
    BOTAN_ASSERT(X == 4 || X == 6 || X == 8, "Valid AES key size");
 
    for(size_t i = 0; i != X; ++i)
-      XEK[i] = load_be<uint32_t>(key, i);
-
-   for(size_t i = X; i < 4*(rounds+1); i += X)
       {
-      XEK[i] = XEK[i-X] ^ RC[(i-X)/X] ^
-               make_uint32(SE[get_byte(1, XEK[i-1])],
-                           SE[get_byte(2, XEK[i-1])],
-                           SE[get_byte(3, XEK[i-1])],
-                           SE[get_byte(0, XEK[i-1])]);
+      XEK[i] = load_be<uint32_t>(key, i);
+      }
+
+   for(size_t i = X; i < 4 * (rounds + 1); i += X)
+      {
+      XEK[i] = XEK[i - X] ^ RC[(i - X) / X] ^
+               make_uint32(SE[get_byte(1, XEK[i - 1])],
+                           SE[get_byte(2, XEK[i - 1])],
+                           SE[get_byte(3, XEK[i - 1])],
+                           SE[get_byte(0, XEK[i - 1])]);
 
       for(size_t j = 1; j != X; ++j)
          {
-         XEK[i+j] = XEK[i+j-X];
+         XEK[i + j] = XEK[i + j - X];
 
          if(X == 8 && j == 4)
-            XEK[i+j] ^= make_uint32(SE[get_byte(0, XEK[i+j-1])],
-                                    SE[get_byte(1, XEK[i+j-1])],
-                                    SE[get_byte(2, XEK[i+j-1])],
-                                    SE[get_byte(3, XEK[i+j-1])]);
+            XEK[i + j] ^= make_uint32(SE[get_byte(0, XEK[i + j - 1])],
+                                      SE[get_byte(1, XEK[i + j - 1])],
+                                      SE[get_byte(2, XEK[i + j - 1])],
+                                      SE[get_byte(3, XEK[i + j - 1])]);
          else
-            XEK[i+j] ^= XEK[i+j-1];
+            {
+            XEK[i + j] ^= XEK[i + j - 1];
+            }
          }
       }
 
    const std::vector<uint32_t>& TD = AES_TD();
 
-   for(size_t i = 0; i != 4*(rounds+1); i += 4)
+   for(size_t i = 0; i != 4 * (rounds + 1); i += 4)
       {
-      XDK[i  ] = XEK[4*rounds-i  ];
-      XDK[i+1] = XEK[4*rounds-i+1];
-      XDK[i+2] = XEK[4*rounds-i+2];
-      XDK[i+3] = XEK[4*rounds-i+3];
+      XDK[i  ] = XEK[4 * rounds - i  ];
+      XDK[i + 1] = XEK[4 * rounds - i + 1];
+      XDK[i + 2] = XEK[4 * rounds - i + 2];
+      XDK[i + 3] = XEK[4 * rounds - i + 3];
       }
 
    for(size_t i = 4; i != length + 24; ++i)
@@ -404,8 +440,8 @@ void aes_key_schedule(const uint8_t key[], size_t length,
 
    for(size_t i = 0; i != 4; ++i)
       {
-      store_be(XEK[i+4*rounds], &ME[4*i]);
-      store_be(XEK[i], &MD[4*i]);
+      store_be(XEK[i + 4 * rounds], &ME[4 * i]);
+      store_be(XEK[i], &MD[4 * i]);
       }
 
    EK.resize(length + 24);
@@ -435,9 +471,18 @@ const char* aes_provider()
 
 }
 
-std::string AES_128::provider() const { return aes_provider(); }
-std::string AES_192::provider() const { return aes_provider(); }
-std::string AES_256::provider() const { return aes_provider(); }
+std::string AES_128::provider() const
+   {
+   return aes_provider();
+   }
+std::string AES_192::provider() const
+   {
+   return aes_provider();
+   }
+std::string AES_256::provider() const
+   {
+   return aes_provider();
+   }
 
 void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {

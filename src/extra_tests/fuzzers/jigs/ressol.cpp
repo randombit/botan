@@ -16,7 +16,9 @@ void fuzz(const uint8_t in[], size_t len)
    static const Modular_Reducer mod_p(p);
 
    if(len > p_bits / 8)
+      {
       return;
+      }
 
    try
       {

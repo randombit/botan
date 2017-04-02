@@ -18,7 +18,10 @@ namespace Botan {
 class BOTAN_DLL ChaCha final : public StreamCipher
    {
    public:
-      StreamCipher* clone() const override { return new ChaCha(m_rounds); }
+      StreamCipher* clone() const override
+         {
+         return new ChaCha(m_rounds);
+         }
 
       /**
       * @param rounds number of rounds
@@ -53,10 +56,10 @@ class BOTAN_DLL ChaCha final : public StreamCipher
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override;
 
-      void chacha_x4(uint8_t output[64*4], uint32_t state[16], size_t rounds);
+      void chacha_x4(uint8_t output[64 * 4], uint32_t state[16], size_t rounds);
 
 #if defined(BOTAN_HAS_CHACHA_SSE2)
-      void chacha_sse2_x4(uint8_t output[64*4], uint32_t state[16], size_t rounds);
+      void chacha_sse2_x4(uint8_t output[64 * 4], uint32_t state[16], size_t rounds);
 #endif
 
       size_t m_rounds;

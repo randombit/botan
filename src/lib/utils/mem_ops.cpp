@@ -8,8 +8,8 @@
 #include <botan/mem_ops.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
-  #define NOMINMAX 1
-  #include <windows.h>
+   #define NOMINMAX 1
+   #include <windows.h>
 #endif
 
 namespace Botan {
@@ -32,7 +32,9 @@ void secure_scrub_memory(void* ptr, size_t n)
    volatile uint8_t* p = reinterpret_cast<volatile uint8_t*>(ptr);
 
    for(size_t i = 0; i != n; ++i)
+      {
       p[i] = 0;
+      }
 #endif
    }
 

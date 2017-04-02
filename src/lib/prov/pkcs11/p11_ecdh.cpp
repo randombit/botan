@@ -50,7 +50,7 @@ class PKCS11_ECDH_KA_Operation : public PK_Ops::Key_Agreement
       /// The encoding in V2.20 was not specified and resulted in different implementations choosing different encodings.
       /// Applications relying only on a V2.20 encoding (e.g. the DER variant) other than the one specified now (raw) may not work with all V2.30 compliant tokens.
       secure_vector<uint8_t> agree(size_t key_len, const uint8_t other_key[], size_t other_key_len, const uint8_t salt[],
-                                size_t salt_len) override
+                                   size_t salt_len) override
          {
          std::vector<uint8_t> der_encoded_other_key;
          if(m_key.point_encoding() == PublicPointEncoding::Der)
@@ -97,8 +97,8 @@ class PKCS11_ECDH_KA_Operation : public PK_Ops::Key_Agreement
 
 std::unique_ptr<PK_Ops::Key_Agreement>
 PKCS11_ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator&,
-                                                const std::string& params,
-                                                const std::string& /*provider*/) const
+      const std::string& params,
+      const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Key_Agreement>(new PKCS11_ECDH_KA_Operation(*this, params));
    }

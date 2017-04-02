@@ -50,15 +50,20 @@ void Tiger::compress_n(const uint8_t input[], size_t blocks)
       {
       load_le(m_X.data(), input, m_X.size());
 
-      pass(A, B, C, m_X, 5); mix(m_X);
-      pass(C, A, B, m_X, 7); mix(m_X);
+      pass(A, B, C, m_X, 5);
+      mix(m_X);
+      pass(C, A, B, m_X, 7);
+      mix(m_X);
       pass(B, C, A, m_X, 9);
 
       for(size_t j = 3; j != m_passes; ++j)
          {
          mix(m_X);
          pass(A, B, C, m_X, 9);
-         uint64_t T = A; A = C; C = B; B = T;
+         uint64_t T = A;
+         A = C;
+         C = B;
+         B = T;
          }
 
       A = (m_digest[0] ^= A);
@@ -159,7 +164,7 @@ void Tiger::clear()
 std::string Tiger::name() const
    {
    return "Tiger(" + std::to_string(output_length()) + "," +
-                     std::to_string(m_passes) + ")";
+          std::to_string(m_passes) + ")";
    }
 
 /*

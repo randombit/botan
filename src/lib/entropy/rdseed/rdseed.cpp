@@ -10,13 +10,14 @@
 #include <botan/build.h>
 
 #if !defined(BOTAN_USE_GCC_INLINE_ASM)
-  #include <immintrin.h>
+   #include <immintrin.h>
 #endif
 
 namespace Botan {
 
 BOTAN_FUNC_ISA("rdseed")
-size_t Intel_Rdseed::poll(RandomNumberGenerator& rng) {
+size_t Intel_Rdseed::poll(RandomNumberGenerator& rng)
+   {
    if(CPUID::has_rdseed())
       {
       for(size_t p = 0; p != BOTAN_ENTROPY_INTEL_RNG_POLLS; ++p)
@@ -30,7 +31,7 @@ size_t Intel_Rdseed::poll(RandomNumberGenerator& rng) {
 
             // Encoding of rdseed %eax
             asm(".byte 0x0F, 0xC7, 0xF8; adcl $0,%1" :
-                "=a" (r), "=r" (cf) : "0" (r), "1" (cf) : "cc");
+                "=a"(r), "=r"(cf) : "0"(r), "1"(cf) : "cc");
 #else
             int cf = _rdseed32_step(&r);
 #endif

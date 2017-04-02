@@ -81,9 +81,17 @@ class TestSession
             }
          }
 
-      inline Module& module() const { return *m_module; }
-      inline Slot& slot() const { return *m_slot; }
-      inline Session& session() const { return *m_session; }
+      inline Module& module() const {
+         return *m_module;
+         }
+      inline Slot& slot() const
+         {
+         return *m_slot;
+         }
+      inline Session& session() const
+         {
+         return *m_session;
+         }
 
    private:
       std::unique_ptr<Module> m_module = nullptr;
@@ -568,7 +576,7 @@ Test::Result test_object_finder()
 
    Object obj_found(test_session.session(), search_result.at(0));
    result.test_eq("found the object just created (same application)",
-                  obj_found.get_attribute_value(AttributeType::Application) , data_obj.get_attribute_value(AttributeType::Application));
+                  obj_found.get_attribute_value(AttributeType::Application), data_obj.get_attribute_value(AttributeType::Application));
 
    auto search_result2 = Object::search<Object>(test_session.session(), search_template.attributes());
    result.test_eq("found the object just created (same label)", obj_found.get_attribute_value(AttributeType::Label),
@@ -626,10 +634,10 @@ class Object_Tests : public PKCS11_Test
             {
             test_attribute_container
 #if defined(BOTAN_HAS_ASN1)
-            ,test_create_destroy_data_object
-            ,test_get_set_attribute_values
-            ,test_object_finder
-            ,test_object_copy
+            , test_create_destroy_data_object
+            , test_get_set_attribute_values
+            , test_object_finder
+            , test_object_copy
 #endif
             };
 
@@ -796,7 +804,8 @@ Test::Result test_rsa_encrypt_decrypt()
    // generate key pair
    PKCS11_RSA_KeyPair keypair = generate_rsa_keypair(test_session);
 
-   auto encrypt_and_decrypt = [&keypair, &result](const std::vector<uint8_t>& plaintext, const std::string& padding) -> void
+   auto encrypt_and_decrypt = [&keypair, &result](const std::vector<uint8_t>& plaintext,
+                              const std::string & padding) -> void
       {
       Botan::PK_Encryptor_EME encryptor(keypair.first, Test::rng(), padding, "pkcs11");
       auto encrypted = encryptor.encrypt(plaintext, Test::rng());
@@ -836,11 +845,11 @@ Test::Result test_rsa_sign_verify()
    std::vector<uint8_t> plaintext(256);
    std::iota(std::begin(plaintext), std::end(plaintext), 0);
 
-   auto sign_and_verify = [&keypair, &plaintext, &result](const std::string& emsa, bool multipart) -> void
+   auto sign_and_verify = [&keypair, &plaintext, &result](const std::string & emsa, bool multipart) -> void
       {
       Botan::PK_Signer signer(keypair.second, Test::rng(), emsa, Botan::IEEE_1363, "pkcs11");
       std::vector<uint8_t> signature;
-      if ( multipart )
+      if(multipart)
          {
          signer.update(plaintext.data(), plaintext.size() / 2);
          signature = signer.sign_message(plaintext.data() + plaintext.size() / 2, plaintext.size() / 2, Test::rng());
@@ -853,10 +862,11 @@ Test::Result test_rsa_sign_verify()
 
       Botan::PK_Verifier verifier(keypair.first, emsa, Botan::IEEE_1363, "pkcs11");
       bool rsa_ok = false;
-      if ( multipart )
+      if(multipart)
          {
          verifier.update(plaintext.data(), plaintext.size() / 2);
-         rsa_ok = verifier.verify_message(plaintext.data() + plaintext.size() / 2, plaintext.size() / 2, signature.data(), signature.size());
+         rsa_ok = verifier.verify_message(plaintext.data() + plaintext.size() / 2, plaintext.size() / 2, signature.data(),
+         signature.size());
          }
       else
          {
@@ -1097,7 +1107,7 @@ Test::Result test_ecdsa_sign_verify()
 
    std::vector<uint8_t> plaintext(20, 0x01);
 
-   auto sign_and_verify = [ &keypair, &plaintext, &result ](const std::string& emsa) -> void
+   auto sign_and_verify = [ &keypair, &plaintext, &result ](const std::string & emsa) -> void
       {
       Botan::PK_Signer signer(keypair.second, Test::rng(), emsa, Botan::IEEE_1363, "pkcs11");
       auto signature = signer.sign_message(plaintext, Test::rng());
@@ -1439,9 +1449,9 @@ class PKCS11_RNG_Tests : public PKCS11_Test
          std::vector<std::function<Test::Result()>> fns =
             {
             test_rng_generate_random
-            ,test_rng_add_entropy
+            , test_rng_add_entropy
 #if defined(BOTAN_HAS_HMAC_DRBG )&& defined(BOTAN_HAS_SHA2_64)
-            ,test_pkcs11_hmac_drbg
+            , test_pkcs11_hmac_drbg
 #endif
             };
 

@@ -21,7 +21,7 @@ BER_Decoding_Error::BER_Decoding_Error(const std::string& str) :
    Decoding_Error("BER: " + str) {}
 
 BER_Bad_Tag::BER_Bad_Tag(const std::string& str, ASN1_Tag tag) :
-      BER_Decoding_Error(str + ": " + std::to_string(tag)) {}
+   BER_Decoding_Error(str + ": " + std::to_string(tag)) {}
 
 BER_Bad_Tag::BER_Bad_Tag(const std::string& str,
                          ASN1_Tag tag1, ASN1_Tag tag2) :
@@ -35,10 +35,10 @@ namespace ASN1 {
 std::vector<uint8_t> put_in_sequence(const std::vector<uint8_t>& contents)
    {
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-         .raw_bytes(contents)
-      .end_cons()
-   .get_contents_unlocked();
+          .start_cons(SEQUENCE)
+          .raw_bytes(contents)
+          .end_cons()
+          .get_contents_unlocked();
    }
 
 /*
@@ -62,7 +62,9 @@ bool maybe_BER(DataSource& source)
       }
 
    if(first_u8 == (SEQUENCE | CONSTRUCTED))
+      {
       return true;
+      }
    return false;
    }
 

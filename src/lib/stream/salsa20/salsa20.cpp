@@ -26,9 +26,9 @@ namespace {
 void hsalsa20(uint32_t output[8], const uint32_t input[16])
    {
    uint32_t x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
-          x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
-          x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
-          x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
+            x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
+            x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
+            x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
 
    for(size_t i = 0; i != 10; ++i)
       {
@@ -59,9 +59,9 @@ void hsalsa20(uint32_t output[8], const uint32_t input[16])
 void salsa20(uint8_t output[64], const uint32_t input[16])
    {
    uint32_t x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
-          x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
-          x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
-          x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
+            x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
+            x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
+            x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
 
    for(size_t i = 0; i != 10; ++i)
       {
@@ -149,7 +149,9 @@ void Salsa20::key_schedule(const uint8_t key[], size_t length)
    m_state[4] = load_le<uint32_t>(key, 3);
 
    if(length == 32)
+      {
       key += 16;
+      }
 
    m_state[11] = load_le<uint32_t>(key, 0);
    m_state[12] = load_le<uint32_t>(key, 1);
@@ -167,7 +169,9 @@ void Salsa20::key_schedule(const uint8_t key[], size_t length)
 void Salsa20::set_iv(const uint8_t iv[], size_t length)
    {
    if(!valid_iv_length(length))
+      {
       throw Invalid_IV_Length(name(), length);
+      }
 
    if(length == 0)
       {

@@ -33,8 +33,8 @@ uint64_t XMSS_Index_Registry::make_key_id(
    }
 
 std::shared_ptr<Atomic<size_t>>
-XMSS_Index_Registry::get(const secure_vector<uint8_t>& private_seed,
-                         const secure_vector<uint8_t>& prf)
+                             XMSS_Index_Registry::get(const secure_vector<uint8_t>& private_seed,
+                                   const secure_vector<uint8_t>& prf)
    {
    size_t pos = get(make_key_id(private_seed, prf));
 

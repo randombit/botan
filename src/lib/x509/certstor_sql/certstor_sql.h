@@ -39,10 +39,10 @@ class BOTAN_DLL Certificate_Store_In_SQL : public Certificate_Store
       * Returns the first certificate with matching subject DN and optional key ID.
       */
       virtual std::shared_ptr<const X509_Certificate>
-         find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const override;
+      find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const override;
 
       std::shared_ptr<const X509_Certificate>
-         find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
+      find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
 
       /**
       * Returns all subject DNs known to the store instance.
@@ -66,7 +66,7 @@ class BOTAN_DLL Certificate_Store_In_SQL : public Certificate_Store
 
       /// Returns all certificates for private key "key".
       std::vector<std::shared_ptr<const X509_Certificate>>
-         find_certs_for_key(const Private_Key& key) const;
+            find_certs_for_key(const Private_Key& key) const;
 
       /**
       * Inserts "key" for "cert" into the store, returns false if the key is
@@ -93,7 +93,7 @@ class BOTAN_DLL Certificate_Store_In_SQL : public Certificate_Store
       * Generates a CRL for all certificates issued by the given issuer.
       */
       virtual std::shared_ptr<const X509_CRL>
-         find_crl_for(const X509_Certificate& issuer) const override;
+      find_crl_for(const X509_Certificate& issuer) const override;
 
    private:
       RandomNumberGenerator& m_rng;

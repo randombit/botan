@@ -46,7 +46,7 @@ void SHAKE_128::final_result(uint8_t output[])
    std::vector<uint8_t> padding(SHAKE_128_BITRATE / 8 - m_S_pos);
 
    padding[0] = 0x1F;
-   padding[padding.size()-1] |= 0x80;
+   padding[padding.size() - 1] |= 0x80;
 
    add_data(padding.data(), padding.size());
 
@@ -89,7 +89,7 @@ void SHAKE_256::final_result(uint8_t output[])
    std::vector<uint8_t> padding(SHAKE_256_BITRATE / 8 - m_S_pos);
 
    padding[0] = 0x1F;
-   padding[padding.size()-1] |= 0x80;
+   padding[padding.size() - 1] |= 0x80;
 
    add_data(padding.data(), padding.size());
 

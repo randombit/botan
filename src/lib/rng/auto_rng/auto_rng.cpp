@@ -9,11 +9,11 @@
 #include <botan/hmac_drbg.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
+   #include <botan/system_rng.h>
 #endif
 
 #if !defined(BOTAN_AUTO_RNG_HMAC)
-#error "No hash function defined for AutoSeeded_RNG in build.h (try enabling sha2_32)"
+   #error "No hash function defined for AutoSeeded_RNG in build.h (try enabling sha2_32)"
 #endif
 
 namespace Botan {
@@ -104,7 +104,7 @@ void AutoSeeded_RNG::randomize(uint8_t output[], size_t output_len)
    }
 
 void AutoSeeded_RNG::randomize_with_input(uint8_t output[], size_t output_len,
-                                          const uint8_t ad[], size_t ad_len)
+      const uint8_t ad[], size_t ad_len)
    {
    m_rng->randomize_with_input(output, output_len, ad, ad_len);
    }

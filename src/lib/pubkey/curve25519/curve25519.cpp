@@ -23,11 +23,13 @@ namespace {
 void size_check(size_t size, const char* thing)
    {
    if(size != 32)
+      {
       throw Decoding_Error("Invalid size " + std::to_string(size) + " for Curve25519 " + thing);
+      }
    }
 
 secure_vector<uint8_t> curve25519(const secure_vector<uint8_t>& secret,
-                               const uint8_t pubval[32])
+                                  const uint8_t pubval[32])
    {
    secure_vector<uint8_t> out(32);
    curve25519_donna(out.data(), secret.data(), pubval);
@@ -47,11 +49,11 @@ bool Curve25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
    }
 
 Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier&,
-                                           const std::vector<uint8_t>& key_bits)
+      const std::vector<uint8_t>& key_bits)
    {
    BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
-      .decode(m_public, OCTET_STRING)
+   .start_cons(SEQUENCE)
+   .decode(m_public, OCTET_STRING)
    .end_cons();
 
    size_check(m_public.size(), "public key");
@@ -60,10 +62,10 @@ Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier&,
 std::vector<uint8_t> Curve25519_PublicKey::public_key_bits() const
    {
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-        .encode(m_public, OCTET_STRING)
-      .end_cons()
-      .get_contents_unlocked();
+          .start_cons(SEQUENCE)
+          .encode(m_public, OCTET_STRING)
+          .end_cons()
+          .get_contents_unlocked();
    }
 
 Curve25519_PrivateKey::Curve25519_PrivateKey(RandomNumberGenerator& rng)
@@ -74,12 +76,12 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(RandomNumberGenerator& rng)
    }
 
 Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
-                                             const secure_vector<uint8_t>& key_bits)
+      const secure_vector<uint8_t>& key_bits)
    {
    BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
-      .decode(m_public, OCTET_STRING)
-      .decode(m_private, OCTET_STRING)
+   .start_cons(SEQUENCE)
+   .decode(m_public, OCTET_STRING)
+   .decode(m_private, OCTET_STRING)
    .end_cons();
 
    size_check(m_public.size(), "public key");
@@ -89,11 +91,11 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
 secure_vector<uint8_t> Curve25519_PrivateKey::private_key_bits() const
    {
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-        .encode(m_public, OCTET_STRING)
-        .encode(m_private, OCTET_STRING)
-      .end_cons()
-      .get_contents();
+          .start_cons(SEQUENCE)
+          .encode(m_public, OCTET_STRING)
+          .encode(m_private, OCTET_STRING)
+          .end_cons()
+          .get_contents();
    }
 
 bool Curve25519_PrivateKey::check_key(RandomNumberGenerator&, bool) const
@@ -134,11 +136,13 @@ class Curve25519_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
 
 std::unique_ptr<PK_Ops::Key_Agreement>
 Curve25519_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
-                                               const std::string& params,
-                                               const std::string& provider) const
+      const std::string& params,
+      const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Key_Agreement>(new Curve25519_KA_Operation(*this, params));
+      }
    throw Provider_Not_Found(algo_name(), provider);
    }
 

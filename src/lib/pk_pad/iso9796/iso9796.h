@@ -35,15 +35,17 @@ class BOTAN_DLL ISO_9796_DS2 final : public EMSA
          m_SALT_SIZE(salt_size) {}
 
       EMSA* clone() override
-         {return new ISO_9796_DS2(m_hash->clone(), m_implicit, m_SALT_SIZE);}
+         {
+         return new ISO_9796_DS2(m_hash->clone(), m_implicit, m_SALT_SIZE);
+         }
    private:
       void update(const uint8_t input[], size_t length) override;
 
       secure_vector<uint8_t> raw_data() override;
 
       secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>& msg,
-                                      size_t output_bits,
-                                      RandomNumberGenerator& rng) override;
+                                         size_t output_bits,
+                                         RandomNumberGenerator& rng) override;
 
       bool verify(const secure_vector<uint8_t>& coded,
                   const secure_vector<uint8_t>& raw,
@@ -69,15 +71,17 @@ class BOTAN_DLL ISO_9796_DS3 final : public EMSA
          {}
 
       EMSA* clone() override
-         {return new ISO_9796_DS3(m_hash->clone(), m_implicit);}
+         {
+         return new ISO_9796_DS3(m_hash->clone(), m_implicit);
+         }
    private:
       void update(const uint8_t input[], size_t length) override;
 
       secure_vector<uint8_t> raw_data() override;
 
       secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>& msg,
-                                      size_t output_bits,
-                                      RandomNumberGenerator& rng) override;
+                                         size_t output_bits,
+                                         RandomNumberGenerator& rng) override;
 
       bool verify(const secure_vector<uint8_t>& coded,
                   const secure_vector<uint8_t>& raw,

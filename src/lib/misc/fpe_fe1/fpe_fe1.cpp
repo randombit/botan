@@ -17,7 +17,7 @@ namespace FPE {
 namespace {
 
 // Normally FPE is for SSNs, CC#s, etc, nothing too big
-const size_t MAX_N_BYTES = 128/8;
+const size_t MAX_N_BYTES = 128 / 8;
 
 /*
 * Factor n into a and b which are as close together as possible.
@@ -44,19 +44,27 @@ void factor(BigInt n, BigInt& a, BigInt& b)
          {
          a *= PRIMES[i];
          if(a > b)
+            {
             std::swap(a, b);
+            }
          n /= PRIMES[i];
          }
       }
 
    if(a > b)
+      {
       std::swap(a, b);
+      }
    a *= n;
    if(a < b)
+      {
       std::swap(a, b);
+      }
 
    if(a <= 1 || b <= 1)
+      {
       throw Exception("Could not factor n for use in FPE");
+      }
    }
 
 /*
@@ -68,7 +76,9 @@ void factor(BigInt n, BigInt& a, BigInt& b)
 size_t rounds(const BigInt& a, const BigInt& b)
    {
    if(a < b)
+      {
       throw Internal_Error("FPE rounds: a < b");
+      }
    return 3;
    }
 
@@ -99,7 +109,9 @@ FPE_Encryptor::FPE_Encryptor(const SymmetricKey& key,
    std::vector<uint8_t> n_bin = BigInt::encode(n);
 
    if(n_bin.size() > MAX_N_BYTES)
+      {
       throw Exception("N is too large for FPE encryption");
+      }
 
    m_mac->update_be(static_cast<uint32_t>(n_bin.size()));
    m_mac->update(n_bin.data(), n_bin.size());
@@ -175,7 +187,7 @@ BigInt fe1_decrypt(const BigInt& n, const BigInt& X0,
       BigInt W = X % a;
       BigInt R = X / a;
 
-      BigInt L = (W - F(r-i-1, R)) % a;
+      BigInt L = (W - F(r - i - 1, R)) % a;
       X = b * L + R;
       }
 

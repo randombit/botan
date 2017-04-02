@@ -22,14 +22,23 @@ class Server_Handshake_State : public Handshake_State
       Server_Handshake_State(Handshake_IO* io, Callbacks& cb)
          : Handshake_State(io, cb) {}
 
-      Private_Key* server_rsa_kex_key() { return m_server_rsa_kex_key; }
+      Private_Key* server_rsa_kex_key()
+         {
+         return m_server_rsa_kex_key;
+         }
       void set_server_rsa_kex_key(Private_Key* key)
-         { m_server_rsa_kex_key = key; }
+         {
+         m_server_rsa_kex_key = key;
+         }
 
       bool allow_session_resumption() const
-         { return m_allow_session_resumption; }
+         {
+         return m_allow_session_resumption;
+         }
       void set_allow_session_resumption(bool allow_session_resumption)
-         { m_allow_session_resumption = allow_session_resumption; }
+         {
+         m_allow_session_resumption = allow_session_resumption;
+         }
 
 
    private:
@@ -57,11 +66,15 @@ bool check_for_resume(Session& session_info,
    if(session_ticket.empty())
       {
       if(client_session_id.empty()) // not resuming
+         {
          return false;
+         }
 
       // not found
       if(!session_manager.load_from_session_id(client_session_id, session_info))
+         {
          return false;
+         }
       }
    else
       {
@@ -69,12 +82,14 @@ bool check_for_resume(Session& session_info,
       try
          {
          session_info = Session::decrypt(
-            session_ticket,
-            credentials.psk("tls-server", "session-ticket", ""));
+                           session_ticket,
+                           credentials.psk("tls-server", "session-ticket", ""));
 
          if(session_ticket_lifetime != std::chrono::seconds(0) &&
-            session_info.session_age() > session_ticket_lifetime)
-            return false; // ticket has expired
+               session_info.session_age() > session_ticket_lifetime)
+            {
+            return false;   // ticket has expired
+            }
          }
       catch(...)
          {
@@ -84,24 +99,32 @@ bool check_for_resume(Session& session_info,
 
    // wrong version
    if(client_hello->version() != session_info.version())
+      {
       return false;
+      }
 
    // client didn't send original ciphersuite
    if(!value_exists(client_hello->ciphersuites(),
                     session_info.ciphersuite_code()))
+      {
       return false;
+      }
 
    // client didn't send original compression method
    if(!value_exists(client_hello->compression_methods(),
                     session_info.compression_method()))
+      {
       return false;
+      }
 
 #if defined(BOTAN_HAS_SRP6)
    // client sent a different SRP identity
    if(client_hello->srp_identifier() != "")
       {
       if(client_hello->srp_identifier() != session_info.srp_identifier())
+         {
          return false;
+         }
       }
 #endif
 
@@ -109,7 +132,9 @@ bool check_for_resume(Session& session_info,
    if(client_hello->sni_hostname() != "")
       {
       if(client_hello->sni_hostname() != session_info.server_info().hostname())
+         {
          return false;
+         }
       }
 
    // Checking extended_master_secret on resume (RFC 7627 section 5.3)
@@ -131,16 +156,16 @@ bool check_for_resume(Session& session_info,
       }
 
    // Checking encrypt_then_mac on resume (RFC 7366 section 3.1)
-   if( !client_hello->supports_encrypt_then_mac() && session_info.supports_encrypt_then_mac())
+   if(!client_hello->supports_encrypt_then_mac() && session_info.supports_encrypt_then_mac())
       {
-      
+
       /*
       Client previously negotiated session with Encrypt-then-MAC,
       but has now attempted to resume without the extension: abort
       */
       throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
-                             "Client resumed Encrypt-then-MAC session without sending extension");
-         
+                          "Client resumed Encrypt-then-MAC session without sending extension");
+
       }
 
    return true;
@@ -176,33 +201,45 @@ uint16_t choose_ciphersuite(
    std::vector<uint16_t> other_list = client_suites;
 
    if(!our_choice)
+      {
       std::swap(pref_list, other_list);
+      }
 
    const std::set<std::string> client_sig_algos = client_hello.supported_sig_algos();
 
    for(auto suite_id : pref_list)
       {
       if(!value_exists(other_list, suite_id))
+         {
          continue;
+         }
 
       const Ciphersuite suite = Ciphersuite::by_id(suite_id);
 
       if(suite.valid() == false)
+         {
          continue;
+         }
 
       if(suite.ecc_ciphersuite() && have_shared_ecc_curve == false)
+         {
          continue;
+         }
 
       // For non-anon ciphersuites
       if(suite.sig_algo() != "")
          {
          // Do we have any certificates for this sig?
          if(cert_chains.count(suite.sig_algo()) == 0)
+            {
             continue;
+            }
 
          // Client reques
          if(!client_sig_algos.empty() && client_sig_algos.count(suite.sig_algo()) == 0)
+            {
             continue;
+            }
          }
 
 #if defined(BOTAN_HAS_SRP6)
@@ -231,14 +268,16 @@ uint16_t choose_ciphersuite(
 * Choose which compression algorithm to use
 */
 uint8_t choose_compression(const Policy& policy,
-                        const std::vector<uint8_t>& c_comp)
+                           const std::vector<uint8_t>& c_comp)
    {
    std::vector<uint8_t> s_comp = policy.compression();
 
    for(size_t i = 0; i != s_comp.size(); ++i)
       for(size_t j = 0; j != c_comp.size(); ++j)
          if(s_comp[i] == c_comp[j])
+            {
             return s_comp[i];
+            }
 
    return NO_COMPRESSION;
    }
@@ -257,7 +296,9 @@ get_server_certs(const std::string& hostname,
          creds.cert_chain_single_type(cert_types[i], "tls-server", hostname);
 
       if(!certs.empty())
+         {
          cert_chains[cert_types[i]] = certs;
+         }
       }
 
    return cert_chains;
@@ -331,7 +372,9 @@ std::vector<X509_Certificate>
 Server::get_peer_cert_chain(const Handshake_State& state) const
    {
    if(state.client_certs())
+      {
       return state.client_certs()->cert_chain();
+      }
    return std::vector<X509_Certificate>();
    }
 
@@ -342,7 +385,7 @@ void Server::initiate_handshake(Handshake_State& state,
                                 bool force_full_renegotiation)
    {
    dynamic_cast<Server_Handshake_State&>(state).
-       set_allow_session_resumption(!force_full_renegotiation);
+   set_allow_session_resumption(!force_full_renegotiation);
 
    Hello_Request hello_req(state.handshake_io());
    }
@@ -353,11 +396,11 @@ void Server::initiate_handshake(Handshake_State& state,
 void Server::process_client_hello_msg(const Handshake_State* active_state,
                                       Server_Handshake_State& pending_state,
                                       const std::vector<uint8_t>& contents)
-{
+   {
    const bool initial_handshake = !active_state;
 
    if(!policy().allow_insecure_renegotiation() &&
-      !(initial_handshake || secure_renegotiation_supported()))
+         !(initial_handshake || secure_renegotiation_supported()))
       {
       send_warning_alert(Alert::NO_RENEGOTIATION);
       return;
@@ -372,7 +415,7 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
       policy().latest_supported_version(client_version.is_datagram_protocol());
 
    if((initial_handshake && client_version.known_version()) ||
-      (!initial_handshake && client_version == active_state->version()))
+         (!initial_handshake && client_version == active_state->version()))
       {
       /*
       Common cases: new client hello with some known version, or a
@@ -394,13 +437,15 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
       if(active_state->version() > client_version)
          {
          throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                              "Client negotiated " +
-                              active_state->version().to_string() +
-                              " then renegotiated with " +
-                              client_version.to_string());
+                             "Client negotiated " +
+                             active_state->version().to_string() +
+                             " then renegotiated with " +
+                             client_version.to_string());
          }
       else
+         {
          negotiated_version = active_state->version();
+         }
       }
    else
       {
@@ -414,15 +459,15 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
    if(!policy().acceptable_protocol_version(negotiated_version))
       {
       throw TLS_Exception(Alert::PROTOCOL_VERSION,
-                           "Client version " + negotiated_version.to_string() +
-                           " is unacceptable by policy");
+                          "Client version " + negotiated_version.to_string() +
+                          " is unacceptable by policy");
       }
 
    if(pending_state.client_hello()->sent_fallback_scsv())
       {
       if(latest_supported > client_version)
          throw TLS_Exception(Alert::INAPPROPRIATE_FALLBACK,
-                              "Client signalled fallback SCSV, possible attack");
+                             "Client signalled fallback SCSV, possible attack");
       }
 
    secure_renegotiation_check(pending_state.client_hello());
@@ -467,153 +512,161 @@ void Server::process_client_hello_msg(const Handshake_State* active_state,
       {
       this->session_create(pending_state, have_session_ticket_key);
       }
-}
+   }
 
 void Server::process_certificate_msg(Server_Handshake_State& pending_state,
                                      const std::vector<uint8_t>& contents)
-{
+   {
    pending_state.client_certs(new Certificate(contents, policy()));
    pending_state.set_expected_next(CLIENT_KEX);
-}
+   }
 
 void Server::process_client_key_exchange_msg(Server_Handshake_State& pending_state,
-                                             const std::vector<uint8_t>& contents)
-{
+      const std::vector<uint8_t>& contents)
+   {
    if(pending_state.received_handshake_msg(CERTIFICATE) && !pending_state.client_certs()->empty())
+      {
       pending_state.set_expected_next(CERTIFICATE_VERIFY);
+      }
    else
+      {
       pending_state.set_expected_next(HANDSHAKE_CCS);
+      }
 
    pending_state.client_kex(
       new Client_Key_Exchange(contents, pending_state,
                               pending_state.server_rsa_kex_key(),
                               m_creds, policy(), rng())
-      );
+   );
 
    pending_state.compute_session_keys();
-}
+   }
 
 void Server::process_change_cipher_spec_msg(Server_Handshake_State& pending_state)
-{
+   {
    pending_state.set_expected_next(FINISHED);
    change_cipher_spec_reader(SERVER);
-}
+   }
 
 void Server::process_certificate_verify_msg(Server_Handshake_State& pending_state,
-                                            Handshake_Type type,
-                                            const std::vector<uint8_t>& contents)
-{
-    pending_state.client_verify ( new Certificate_Verify ( contents, pending_state.version() ) );
+      Handshake_Type type,
+      const std::vector<uint8_t>& contents)
+   {
+   pending_state.client_verify(new Certificate_Verify(contents, pending_state.version()));
 
-    const std::vector<X509_Certificate>& client_certs =
-        pending_state.client_certs()->cert_chain();
+   const std::vector<X509_Certificate>& client_certs =
+      pending_state.client_certs()->cert_chain();
 
-    const bool sig_valid =
-       pending_state.client_verify()->verify ( client_certs[0], pending_state, policy() );
+   const bool sig_valid =
+      pending_state.client_verify()->verify(client_certs[0], pending_state, policy());
 
-    pending_state.hash().update ( pending_state.handshake_io().format ( contents, type ) );
+   pending_state.hash().update(pending_state.handshake_io().format(contents, type));
 
-    /*
-    * Using DECRYPT_ERROR looks weird here, but per RFC 4346 is for
-    * "A handshake cryptographic operation failed, including being
-    * unable to correctly verify a signature, ..."
-    */
-    if ( !sig_valid )
-        throw TLS_Exception ( Alert::DECRYPT_ERROR, "Client cert verify failed" );
+   /*
+   * Using DECRYPT_ERROR looks weird here, but per RFC 4346 is for
+   * "A handshake cryptographic operation failed, including being
+   * unable to correctly verify a signature, ..."
+   */
+   if(!sig_valid)
+      {
+      throw TLS_Exception(Alert::DECRYPT_ERROR, "Client cert verify failed");
+      }
 
-    try
-        {
-        const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
-        auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-server", sni_hostname);
+   try
+      {
+      const std::string sni_hostname = pending_state.client_hello()->sni_hostname();
+      auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-server", sni_hostname);
 
-        callbacks().tls_verify_cert_chain(client_certs,
-                                          {}, // ocsp
-                                          trusted_CAs,
-                                          Usage_Type::TLS_CLIENT_AUTH,
-                                          sni_hostname,
-                                          policy());
-        }
-    catch ( std::exception& e )
-        {
-        throw TLS_Exception ( Alert::BAD_CERTIFICATE, e.what() );
-        }
+      callbacks().tls_verify_cert_chain(client_certs,
+                                        {}, // ocsp
+                                        trusted_CAs,
+                                        Usage_Type::TLS_CLIENT_AUTH,
+                                        sni_hostname,
+                                        policy());
+      }
+   catch(std::exception& e)
+      {
+      throw TLS_Exception(Alert::BAD_CERTIFICATE, e.what());
+      }
 
-    pending_state.set_expected_next ( HANDSHAKE_CCS );
-}
+   pending_state.set_expected_next(HANDSHAKE_CCS);
+   }
 
 void Server::process_finished_msg(Server_Handshake_State& pending_state,
                                   Handshake_Type type,
                                   const std::vector<uint8_t>& contents)
-{
-    pending_state.set_expected_next ( HANDSHAKE_NONE );
+   {
+   pending_state.set_expected_next(HANDSHAKE_NONE);
 
-    pending_state.client_finished ( new Finished ( contents ) );
+   pending_state.client_finished(new Finished(contents));
 
-    if ( !pending_state.client_finished()->verify ( pending_state, CLIENT ) )
-        throw TLS_Exception ( Alert::DECRYPT_ERROR,
-                              "Finished message didn't verify" );
+   if(!pending_state.client_finished()->verify(pending_state, CLIENT))
+      throw TLS_Exception(Alert::DECRYPT_ERROR,
+                          "Finished message didn't verify");
 
-    if ( !pending_state.server_finished() )
-        {
-        // already sent finished if resuming, so this is a new session
+   if(!pending_state.server_finished())
+      {
+      // already sent finished if resuming, so this is a new session
 
-        pending_state.hash().update ( pending_state.handshake_io().format ( contents, type ) );
+      pending_state.hash().update(pending_state.handshake_io().format(contents, type));
 
-        Session session_info(
-            pending_state.server_hello()->session_id(),
-            pending_state.session_keys().master_secret(),
-            pending_state.server_hello()->version(),
-            pending_state.server_hello()->ciphersuite(),
-            pending_state.server_hello()->compression_method(),
-            SERVER,
-            pending_state.server_hello()->supports_extended_master_secret(),
-            pending_state.server_hello()->supports_encrypt_then_mac(),
-            get_peer_cert_chain ( pending_state ),
-            std::vector<uint8_t>(),
-            Server_Information(pending_state.client_hello()->sni_hostname()),
-            pending_state.srp_identifier(),
-            pending_state.server_hello()->srtp_profile()
-            );
+      Session session_info(
+         pending_state.server_hello()->session_id(),
+         pending_state.session_keys().master_secret(),
+         pending_state.server_hello()->version(),
+         pending_state.server_hello()->ciphersuite(),
+         pending_state.server_hello()->compression_method(),
+         SERVER,
+         pending_state.server_hello()->supports_extended_master_secret(),
+         pending_state.server_hello()->supports_encrypt_then_mac(),
+         get_peer_cert_chain(pending_state),
+         std::vector<uint8_t>(),
+         Server_Information(pending_state.client_hello()->sni_hostname()),
+         pending_state.srp_identifier(),
+         pending_state.server_hello()->srtp_profile()
+      );
 
-        if ( save_session ( session_info ) )
+      if(save_session(session_info))
+         {
+         if(pending_state.server_hello()->supports_session_ticket())
             {
-            if ( pending_state.server_hello()->supports_session_ticket() )
-                {
-                try
-                    {
-                    const SymmetricKey ticket_key = m_creds.psk ( "tls-server", "session-ticket", "" );
+            try
+               {
+               const SymmetricKey ticket_key = m_creds.psk("tls-server", "session-ticket", "");
 
-                    pending_state.new_session_ticket (
-                        new New_Session_Ticket ( pending_state.handshake_io(),
-                                                 pending_state.hash(),
-                                                 session_info.encrypt ( ticket_key, rng() ),
-                                                 policy().session_ticket_lifetime() )
-                    );
-                    }
-                catch ( ... ) {}
-                }
-            else
-                session_manager().save ( session_info );
+               pending_state.new_session_ticket(
+                  new New_Session_Ticket(pending_state.handshake_io(),
+                                         pending_state.hash(),
+                                         session_info.encrypt(ticket_key, rng()),
+                                         policy().session_ticket_lifetime())
+               );
+               }
+            catch(...) {}
             }
-
-        if ( !pending_state.new_session_ticket() &&
-                pending_state.server_hello()->supports_session_ticket() )
+         else
             {
-            pending_state.new_session_ticket (
-                new New_Session_Ticket ( pending_state.handshake_io(), pending_state.hash() )
-            );
+            session_manager().save(session_info);
             }
+         }
 
-        pending_state.handshake_io().send ( Change_Cipher_Spec() );
+      if(!pending_state.new_session_ticket() &&
+            pending_state.server_hello()->supports_session_ticket())
+         {
+         pending_state.new_session_ticket(
+            new New_Session_Ticket(pending_state.handshake_io(), pending_state.hash())
+         );
+         }
 
-        change_cipher_spec_writer ( SERVER );
+      pending_state.handshake_io().send(Change_Cipher_Spec());
 
-        pending_state.server_finished ( new Finished ( pending_state.handshake_io(), pending_state, SERVER ) );
-        }
+      change_cipher_spec_writer(SERVER);
 
-    activate_session();
+      pending_state.server_finished(new Finished(pending_state.handshake_io(), pending_state, SERVER));
+      }
 
-}
+   activate_session();
+
+   }
 
 /*
 * Process a handshake message
@@ -667,72 +720,72 @@ void Server::session_resume(Server_Handshake_State& pending_state,
                             bool have_session_ticket_key,
                             Session& session_info)
    {
-      // Only offer a resuming client a new ticket if they didn't send one this time,
-      // ie, resumed via server-side resumption. TODO: also send one if expiring soon?
+   // Only offer a resuming client a new ticket if they didn't send one this time,
+   // ie, resumed via server-side resumption. TODO: also send one if expiring soon?
 
-      const bool offer_new_session_ticket =
-         (pending_state.client_hello()->supports_session_ticket() &&
-            pending_state.client_hello()->session_ticket().empty() &&
-            have_session_ticket_key);
+   const bool offer_new_session_ticket =
+      (pending_state.client_hello()->supports_session_ticket() &&
+       pending_state.client_hello()->session_ticket().empty() &&
+       have_session_ticket_key);
 
-      pending_state.server_hello(new Server_Hello(
-            pending_state.handshake_io(),
-            pending_state.hash(),
-            policy(),
-            rng(),
-            secure_renegotiation_data_for_server_hello(),
-            *pending_state.client_hello(),
-            session_info,
-            offer_new_session_ticket,
-            m_next_protocol
-         ));
+   pending_state.server_hello(new Server_Hello(
+                                 pending_state.handshake_io(),
+                                 pending_state.hash(),
+                                 policy(),
+                                 rng(),
+                                 secure_renegotiation_data_for_server_hello(),
+                                 *pending_state.client_hello(),
+                                 session_info,
+                                 offer_new_session_ticket,
+                                 m_next_protocol
+                              ));
 
-      secure_renegotiation_check(pending_state.server_hello());
+   secure_renegotiation_check(pending_state.server_hello());
 
-      pending_state.compute_session_keys(session_info.master_secret());
+   pending_state.compute_session_keys(session_info.master_secret());
 
-      if(!save_session(session_info))
+   if(!save_session(session_info))
+      {
+      session_manager().remove_entry(session_info.session_id());
+
+      if(pending_state.server_hello()->supports_session_ticket()) // send an empty ticket
          {
-         session_manager().remove_entry(session_info.session_id());
-
-         if(pending_state.server_hello()->supports_session_ticket()) // send an empty ticket
-            {
-            pending_state.new_session_ticket(
-               new New_Session_Ticket(pending_state.handshake_io(),
-                                       pending_state.hash())
-               );
-            }
+         pending_state.new_session_ticket(
+            new New_Session_Ticket(pending_state.handshake_io(),
+                                   pending_state.hash())
+         );
          }
+      }
 
-      if(pending_state.server_hello()->supports_session_ticket() && !pending_state.new_session_ticket())
+   if(pending_state.server_hello()->supports_session_ticket() && !pending_state.new_session_ticket())
+      {
+      try
          {
-         try
-            {
-            const SymmetricKey ticket_key = m_creds.psk("tls-server", "session-ticket", "");
+         const SymmetricKey ticket_key = m_creds.psk("tls-server", "session-ticket", "");
 
-            pending_state.new_session_ticket(
-               new New_Session_Ticket(pending_state.handshake_io(),
-                                      pending_state.hash(),
-                                      session_info.encrypt(ticket_key, rng()),
-                                      policy().session_ticket_lifetime())
-               );
-            }
-         catch(...) {}
-
-         if(!pending_state.new_session_ticket())
-            {
-            pending_state.new_session_ticket(
-               new New_Session_Ticket(pending_state.handshake_io(), pending_state.hash())
-               );
-            }
+         pending_state.new_session_ticket(
+            new New_Session_Ticket(pending_state.handshake_io(),
+                                   pending_state.hash(),
+                                   session_info.encrypt(ticket_key, rng()),
+                                   policy().session_ticket_lifetime())
+         );
          }
+      catch(...) {}
 
-      pending_state.handshake_io().send(Change_Cipher_Spec());
+      if(!pending_state.new_session_ticket())
+         {
+         pending_state.new_session_ticket(
+            new New_Session_Ticket(pending_state.handshake_io(), pending_state.hash())
+         );
+         }
+      }
 
-      change_cipher_spec_writer(SERVER);
+   pending_state.handshake_io().send(Change_Cipher_Spec());
 
-      pending_state.server_finished(new Finished(pending_state.handshake_io(), pending_state, SERVER));
-      pending_state.set_expected_next(HANDSHAKE_CCS);
+   change_cipher_spec_writer(SERVER);
+
+   pending_state.server_finished(new Finished(pending_state.handshake_io(), pending_state, SERVER));
+   pending_state.set_expected_next(HANDSHAKE_CCS);
    }
 
 void Server::session_create(Server_Handshake_State& pending_state,
@@ -756,31 +809,33 @@ void Server::session_create(Server_Handshake_State& pending_state,
       * anonymous operation.
       */
       if(!cert_chains.empty())
+         {
          send_alert(Alert(Alert::UNRECOGNIZED_NAME));
+         }
       }
 
-      Server_Hello::Settings srv_settings(
-         make_hello_random(rng(), policy()), // new session ID
-                           pending_state.version(),
-                           choose_ciphersuite(policy(),
-                                              pending_state.version(),
-                                              m_creds,
-                                              cert_chains,
-                                              *pending_state.client_hello()),
-                           choose_compression(policy(),
-                                              pending_state.client_hello()->compression_methods()),
-                           have_session_ticket_key);
+   Server_Hello::Settings srv_settings(
+      make_hello_random(rng(), policy()), // new session ID
+      pending_state.version(),
+      choose_ciphersuite(policy(),
+                         pending_state.version(),
+                         m_creds,
+                         cert_chains,
+                         *pending_state.client_hello()),
+      choose_compression(policy(),
+                         pending_state.client_hello()->compression_methods()),
+      have_session_ticket_key);
 
    pending_state.server_hello(new Server_Hello(
-         pending_state.handshake_io(),
-         pending_state.hash(),
-         policy(),
-         rng(),
-         secure_renegotiation_data_for_server_hello(),
-         *pending_state.client_hello(),
-         srv_settings,
-         m_next_protocol)
-      );
+                                 pending_state.handshake_io(),
+                                 pending_state.hash(),
+                                 policy(),
+                                 rng(),
+                                 secure_renegotiation_data_for_server_hello(),
+                                 *pending_state.client_hello(),
+                                 srv_settings,
+                                 m_next_protocol)
+                             );
 
    secure_renegotiation_check(pending_state.server_hello());
 
@@ -790,11 +845,11 @@ void Server::session_create(Server_Handshake_State& pending_state,
    if(sig_algo != "")
       {
       BOTAN_ASSERT(!cert_chains[sig_algo].empty(),
-                     "Attempting to send empty certificate chain");
+                   "Attempting to send empty certificate chain");
 
       pending_state.server_certs(new Certificate(pending_state.handshake_io(),
-                                                 pending_state.hash(),
-                                                 cert_chains[sig_algo]));
+                                 pending_state.hash(),
+                                 cert_chains[sig_algo]));
       }
 
    Private_Key* private_key = nullptr;
@@ -802,12 +857,14 @@ void Server::session_create(Server_Handshake_State& pending_state,
    if(kex_algo == "RSA" || sig_algo != "")
       {
       private_key = m_creds.private_key_for(
-         pending_state.server_certs()->cert_chain()[0],
-         "tls-server",
-         sni_hostname);
+                       pending_state.server_certs()->cert_chain()[0],
+                       "tls-server",
+                       sni_hostname);
 
       if(!private_key)
+         {
          throw Internal_Error("No private key located for associated server cert");
+         }
       }
 
    if(kex_algo == "RSA")
@@ -817,8 +874,8 @@ void Server::session_create(Server_Handshake_State& pending_state,
    else
       {
       pending_state.server_kex(new Server_Key_Exchange(pending_state.handshake_io(),
-                                                       pending_state, policy(),
-                                                       m_creds, rng(), private_key));
+                               pending_state, policy(),
+                               m_creds, rng(), private_key));
       }
 
    auto trusted_CAs = m_creds.trusted_certificate_authorities("tls-server", sni_hostname);

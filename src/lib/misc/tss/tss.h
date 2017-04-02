@@ -30,16 +30,16 @@ class BOTAN_DLL RTSS_Share
       * @param rng the random number generator to use
       */
       static std::vector<RTSS_Share>
-         split(uint8_t M, uint8_t N,
-               const uint8_t secret[], uint16_t secret_len,
-               const uint8_t identifier[16],
-               RandomNumberGenerator& rng);
+      split(uint8_t M, uint8_t N,
+            const uint8_t secret[], uint16_t secret_len,
+            const uint8_t identifier[16],
+            RandomNumberGenerator& rng);
 
       /**
       * @param shares the list of shares
       */
       static secure_vector<uint8_t>
-        reconstruct(const std::vector<RTSS_Share>& shares);
+      reconstruct(const std::vector<RTSS_Share>& shares);
 
       RTSS_Share() {}
 
@@ -61,12 +61,18 @@ class BOTAN_DLL RTSS_Share
       /**
       * @return size of this share in bytes
       */
-      size_t size() const { return m_contents.size(); }
+      size_t size() const
+         {
+         return m_contents.size();
+         }
 
       /**
       * @return if this TSS share was initialized or not
       */
-      bool initialized() const { return (m_contents.size() > 0); }
+      bool initialized() const
+         {
+         return (m_contents.size() > 0);
+         }
    private:
       secure_vector<uint8_t> m_contents;
    };

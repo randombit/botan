@@ -19,9 +19,15 @@ namespace Botan {
 class BOTAN_DLL SP800_56C : public KDF
    {
    public:
-      std::string name() const override { return "SP800-56C(" + m_prf->name() + ")"; }
+      std::string name() const override
+         {
+         return "SP800-56C(" + m_prf->name() + ")";
+         }
 
-      KDF* clone() const override { return new SP800_56C(m_prf->clone(), m_exp->clone()); }
+      KDF* clone() const override
+         {
+         return new SP800_56C(m_prf->clone(), m_exp->clone());
+         }
 
       /**
       * Derive a key using the SP800-56C KDF.

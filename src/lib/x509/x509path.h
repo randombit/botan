@@ -17,7 +17,7 @@
 #include <chrono>
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)
-  #define BOTAN_HAS_ONLINE_REVOCATION_CHECKS
+   #define BOTAN_HAS_ONLINE_REVOCATION_CHECKS
 #endif
 
 namespace Botan {
@@ -76,26 +76,34 @@ class BOTAN_DLL Path_Validation_Restrictions
       * @return whether revocation information is required
       */
       bool require_revocation_information() const
-         { return m_require_revocation_information; }
+         {
+         return m_require_revocation_information;
+         }
 
       /**
       * @return whether all intermediate CAs should also be OCSPed. If false
       * then only end entity OCSP is required/requested.
       */
       bool ocsp_all_intermediates() const
-         { return m_ocsp_all_intermediates; }
+         {
+         return m_ocsp_all_intermediates;
+         }
 
       /**
       * @return trusted signature hash functions
       */
       const std::set<std::string>& trusted_hashes() const
-         { return m_trusted_hashes; }
+         {
+         return m_trusted_hashes;
+         }
 
       /**
       * @return minimum required key strength
       */
       size_t minimum_key_strength() const
-         { return m_minimum_key_strength; }
+         {
+         return m_minimum_key_strength;
+         }
 
    private:
       bool m_require_revocation_information;
@@ -128,7 +136,10 @@ class BOTAN_DLL Path_Validation_Result
       * @return the full path from subject to trust root
       * This path may be empty
       */
-      const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path() const { return m_cert_path; }
+      const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path() const
+         {
+         return m_cert_path;
+         }
 
       /**
       * @return true iff the validation was successful
@@ -138,13 +149,18 @@ class BOTAN_DLL Path_Validation_Result
       /**
       * @return overall validation result code
       */
-      Certificate_Status_Code result() const { return m_overall; }
+      Certificate_Status_Code result() const
+         {
+         return m_overall;
+         }
 
       /**
       * @return a set of status codes for each certificate in the chain
       */
       const CertificatePathStatusCodes& all_statuses() const
-         { return m_all_status; }
+         {
+         return m_all_status;
+         }
 
       /**
       * @return string representation of the validation result

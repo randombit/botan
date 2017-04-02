@@ -19,9 +19,15 @@ namespace Botan {
 class BOTAN_DLL TLS_PRF final : public KDF
    {
    public:
-      std::string name() const override { return "TLS-PRF"; }
+      std::string name() const override
+         {
+         return "TLS-PRF";
+         }
 
-      KDF* clone() const override { return new TLS_PRF; }
+      KDF* clone() const override
+         {
+         return new TLS_PRF;
+         }
 
       size_t kdf(uint8_t key[], size_t key_len,
                  const uint8_t secret[], size_t secret_len,
@@ -40,9 +46,15 @@ class BOTAN_DLL TLS_PRF final : public KDF
 class BOTAN_DLL TLS_12_PRF final : public KDF
    {
    public:
-      std::string name() const override { return "TLS-12-PRF(" + m_mac->name() + ")"; }
+      std::string name() const override
+         {
+         return "TLS-12-PRF(" + m_mac->name() + ")";
+         }
 
-      KDF* clone() const override { return new TLS_12_PRF(m_mac->clone()); }
+      KDF* clone() const override
+         {
+         return new TLS_12_PRF(m_mac->clone());
+         }
 
       size_t kdf(uint8_t key[], size_t key_len,
                  const uint8_t secret[], size_t secret_len,

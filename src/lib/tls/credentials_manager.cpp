@@ -11,14 +11,14 @@
 namespace Botan {
 
 std::string Credentials_Manager::psk_identity_hint(const std::string&,
-                                                   const std::string&)
+      const std::string&)
    {
    return "";
    }
 
 std::string Credentials_Manager::psk_identity(const std::string&,
-                                              const std::string&,
-                                              const std::string&)
+      const std::string&,
+      const std::string&)
    {
    return "";
    }
@@ -37,14 +37,14 @@ bool Credentials_Manager::attempt_srp(const std::string&,
    }
 
 std::string Credentials_Manager::srp_identifier(const std::string&,
-                                                const std::string&)
+      const std::string&)
    {
    return "";
    }
 
 std::string Credentials_Manager::srp_password(const std::string&,
-                                              const std::string&,
-                                              const std::string&)
+      const std::string&,
+      const std::string&)
    {
    return "";
    }
@@ -79,8 +79,8 @@ std::vector<X509_Certificate> Credentials_Manager::cert_chain_single_type(
    }
 
 Private_Key* Credentials_Manager::private_key_for(const X509_Certificate&,
-                                                  const std::string&,
-                                                  const std::string&)
+      const std::string&,
+      const std::string&)
    {
    return nullptr;
    }

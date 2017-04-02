@@ -36,33 +36,36 @@ std::string PEM_encode(const Public_Key& key)
 */
 Public_Key* load_key(DataSource& source)
    {
-   try {
+   try
+      {
       AlgorithmIdentifier alg_id;
       std::vector<uint8_t> key_bits;
 
       if(ASN1::maybe_BER(source) && !PEM_Code::matches(source))
          {
          BER_Decoder(source)
-            .start_cons(SEQUENCE)
-            .decode(alg_id)
-            .decode(key_bits, BIT_STRING)
+         .start_cons(SEQUENCE)
+         .decode(alg_id)
+         .decode(key_bits, BIT_STRING)
          .end_cons();
          }
       else
          {
          DataSource_Memory ber(
             PEM_Code::decode_check_label(source, "PUBLIC KEY")
-            );
+         );
 
          BER_Decoder(ber)
-            .start_cons(SEQUENCE)
-            .decode(alg_id)
-            .decode(key_bits, BIT_STRING)
+         .start_cons(SEQUENCE)
+         .decode(alg_id)
+         .decode(key_bits, BIT_STRING)
          .end_cons();
          }
 
       if(key_bits.empty())
+         {
          throw Decoding_Error("X.509 public key decoding failed");
+         }
 
       return load_public_key(alg_id, key_bits).release();
       }

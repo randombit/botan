@@ -915,9 +915,9 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CantLock \li CryptokiAlreadyInitialized
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li NeedToCreateThreads \li OK
+      *  \li ArgumentsBad \li CantLock \li CryptokiAlreadyInitialized
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li NeedToCreateThreads \li OK
       * @return true on success, false otherwise
       */
       bool C_Initialize(VoidPtr init_args,
@@ -929,8 +929,8 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
       * @return true on success, false otherwise
       */
       bool C_Finalize(VoidPtr reserved,
@@ -942,8 +942,8 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
       * @return true on success, false otherwise
       */
       bool C_GetInfo(Info* info_ptr,
@@ -956,8 +956,8 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK
+      *  \li ArgumentsBad \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK
       * @return true on success, false otherwise
       */
       static bool C_GetFunctionList(Dynamically_Loaded_Library& pkcs11_module, FunctionListPtr* function_list_ptr_ptr,
@@ -973,9 +973,9 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK
       * @return true on success, false otherwise
       */
       bool C_GetSlotList(Bbool token_present,
@@ -990,9 +990,9 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK
       * @return true on success, false otherwise
       */
       bool C_GetSlotList(bool token_present,
@@ -1006,9 +1006,9 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li SlotIdInvalid
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li SlotIdInvalid
       * @return true on success, false otherwise
       */
       bool C_GetSlotInfo(SlotId slot_id,
@@ -1022,10 +1022,10 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li SlotIdInvalid
-      * 	\li TokenNotPresent \li TokenNotRecognized \li ArgumentsBad
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li SlotIdInvalid
+      *  \li TokenNotPresent \li TokenNotRecognized \li ArgumentsBad
       * @return true on success, false otherwise
       */
       bool C_GetTokenInfo(SlotId slot_id,
@@ -1040,9 +1040,9 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li NoEvent
-      * 	\li OK
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li NoEvent
+      *  \li OK
       * @return true on success, false otherwise
       */
       bool C_WaitForSlotEvent(Flags flags,
@@ -1058,11 +1058,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li SlotIdInvalid \li TokenNotPresent \li TokenNotRecognized
-      * 	\li ArgumentsBad
+      *  \li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li SlotIdInvalid \li TokenNotPresent \li TokenNotRecognized
+      *  \li ArgumentsBad
       * @return true on success, false otherwise
       */
       bool C_GetMechanismList(SlotId slot_id,
@@ -1077,11 +1077,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li SlotIdInvalid \li TokenNotPresent \li TokenNotRecognized
-      * 	\li ArgumentsBad
+      *  \li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li SlotIdInvalid \li TokenNotPresent \li TokenNotRecognized
+      *  \li ArgumentsBad
       * @return true on success, false otherwise
       */
       bool C_GetMechanismList(SlotId slot_id,
@@ -1096,11 +1096,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li MechanismInvalid \li OK
-      * 	\li SlotIdInvalid \li TokenNotPresent \li TokenNotRecognized
-      * 	\li ArgumentsBad
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li MechanismInvalid \li OK
+      *  \li SlotIdInvalid \li TokenNotPresent \li TokenNotRecognized
+      *  \li ArgumentsBad
       * @return true on success, false otherwise
       */
       bool C_GetMechanismInfo(SlotId slot_id,
@@ -1117,12 +1117,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li PinIncorrect \li PinLocked \li SessionExists
-      * 	\li SlotIdInvalid \li TokenNotPresent \li TokenNotRecognized
-      * 	\li TokenWriteProtected \li ArgumentsBad
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li PinIncorrect \li PinLocked \li SessionExists
+      *  \li SlotIdInvalid \li TokenNotPresent \li TokenNotRecognized
+      *  \li TokenWriteProtected \li ArgumentsBad
       * @return true on success, false otherwise
       */
       bool C_InitToken(SlotId slot_id,
@@ -1139,12 +1139,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li PinIncorrect \li PinLocked \li SessionExists
-      * 	\li SlotIdInvalid \li TokenNotPresent \li TokenNotRecognized
-      * 	\li TokenWriteProtected \li ArgumentsBad
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li PinIncorrect \li PinLocked \li SessionExists
+      *  \li SlotIdInvalid \li TokenNotPresent \li TokenNotRecognized
+      *  \li TokenWriteProtected \li ArgumentsBad
       * @return true on success, false otherwise
       */
       template<typename TAlloc>
@@ -1171,12 +1171,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li PinInvalid \li PinLenRange \li SessionClosed
-      * 	\li SessionReadOnly \li SessionHandleInvalid \li TokenWriteProtected
-      * 	\li UserNotLoggedIn \li ArgumentsBad
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li PinInvalid \li PinLenRange \li SessionClosed
+      *  \li SessionReadOnly \li SessionHandleInvalid \li TokenWriteProtected
+      *  \li UserNotLoggedIn \li ArgumentsBad
       * @return true on success, false otherwise
       */
       bool C_InitPIN(SessionHandle session,
@@ -1191,12 +1191,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li PinInvalid \li PinLenRange \li SessionClosed
-      * 	\li SessionReadOnly \li SessionHandleInvalid \li TokenWriteProtected
-      * 	\li UserNotLoggedIn \li ArgumentsBad
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li PinInvalid \li PinLenRange \li SessionClosed
+      *  \li SessionReadOnly \li SessionHandleInvalid \li TokenWriteProtected
+      *  \li UserNotLoggedIn \li ArgumentsBad
       * @return true on success, false otherwise
       */
       template<typename TAlloc>
@@ -1217,12 +1217,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li PinIncorrect \li PinInvalid \li PinLenRange
-      * 	\li PinLocked \li SessionClosed \li SessionHandleInvalid
-      * 	\li SessionReadOnly \li TokenWriteProtected \li ArgumentsBad
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li PinIncorrect \li PinInvalid \li PinLenRange
+      *  \li PinLocked \li SessionClosed \li SessionHandleInvalid
+      *  \li SessionReadOnly \li TokenWriteProtected \li ArgumentsBad
       * @return true on success, false otherwise
       */
       bool C_SetPIN(SessionHandle session,
@@ -1240,12 +1240,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li PinIncorrect \li PinInvalid \li PinLenRange
-      * 	\li PinLocked \li SessionClosed \li SessionHandleInvalid
-      * 	\li SessionReadOnly \li TokenWriteProtected \li ArgumentsBad
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li PinIncorrect \li PinInvalid \li PinLenRange
+      *  \li PinLocked \li SessionClosed \li SessionHandleInvalid
+      *  \li SessionReadOnly \li TokenWriteProtected \li ArgumentsBad
       * @return true on success, false otherwise
       */
       template<typename TAlloc>
@@ -1273,12 +1273,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li SessionCount
-      * 	\li SessionParallelNotSupported \li SessionReadWriteSoExists \li SlotIdInvalid
-      * 	\li TokenNotPresent \li TokenNotRecognized \li TokenWriteProtected
-      * 	\li ArgumentsBad
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li SessionCount
+      *  \li SessionParallelNotSupported \li SessionReadWriteSoExists \li SlotIdInvalid
+      *  \li TokenNotPresent \li TokenNotRecognized \li TokenWriteProtected
+      *  \li ArgumentsBad
       * @return true on success, false otherwise
       */
       bool C_OpenSession(SlotId slot_id,
@@ -1294,10 +1294,10 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li SessionClosed
-      * 	\li SessionHandleInvalid
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li SessionClosed
+      *  \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_CloseSession(SessionHandle session,
@@ -1309,10 +1309,10 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li SlotIdInvalid
-      * 	\li TokenNotPresent
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li SlotIdInvalid
+      *  \li TokenNotPresent
       * @return true on success, false otherwise
       */
       bool C_CloseAllSessions(SlotId slot_id,
@@ -1325,10 +1325,10 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li SessionClosed
-      * 	\li SessionHandleInvalid \li ArgumentsBad
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li SessionClosed
+      *  \li SessionHandleInvalid \li ArgumentsBad
       * @return true on success, false otherwise
       */
       bool C_GetSessionInfo(SessionHandle session,
@@ -1343,11 +1343,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
-      * 	\li StateUnsaveable \li ArgumentsBad
+      *  \li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
+      *  \li StateUnsaveable \li ArgumentsBad
       * @return true on success, false otherwise
       */
       bool C_GetOperationState(SessionHandle session,
@@ -1365,11 +1365,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li KeyChanged \li KeyNeeded
-      * 	\li KeyNotNeeded \li OK \li SavedStateInvalid
-      * 	\li SessionClosed \li SessionHandleInvalid \li ArgumentsBad
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li KeyChanged \li KeyNeeded
+      *  \li KeyNotNeeded \li OK \li SavedStateInvalid
+      *  \li SessionClosed \li SessionHandleInvalid \li ArgumentsBad
       * @return true on success, false otherwise
       */
       bool C_SetOperationState(SessionHandle session,
@@ -1388,13 +1388,13 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li PinIncorrect
-      * 	\li PinLocked \li SessionClosed \li SessionHandleInvalid
-      * 	\li SessionReadOnlyExists \li UserAlreadyLoggedIn \li UserAnotherAlreadyLoggedIn
-      * 	\li UserPinNotInitialized \li UserTooManyTypes \li UserTypeInvalid
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li PinIncorrect
+      *  \li PinLocked \li SessionClosed \li SessionHandleInvalid
+      *  \li SessionReadOnlyExists \li UserAlreadyLoggedIn \li UserAnotherAlreadyLoggedIn
+      *  \li UserPinNotInitialized \li UserTooManyTypes \li UserTypeInvalid
       * @return true on success, false otherwise
       */
       bool C_Login(SessionHandle session,
@@ -1411,13 +1411,13 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li PinIncorrect
-      * 	\li PinLocked \li SessionClosed \li SessionHandleInvalid
-      * 	\li SessionReadOnlyExists \li UserAlreadyLoggedIn \li UserAnotherAlreadyLoggedIn
-      * 	\li UserPinNotInitialized \li UserTooManyTypes \li UserTypeInvalid
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li PinIncorrect
+      *  \li PinLocked \li SessionClosed \li SessionHandleInvalid
+      *  \li SessionReadOnlyExists \li UserAlreadyLoggedIn \li UserAnotherAlreadyLoggedIn
+      *  \li UserPinNotInitialized \li UserTooManyTypes \li UserTypeInvalid
       * @return true on success, false otherwise
       */
       template<typename TAlloc>
@@ -1436,10 +1436,10 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li SessionClosed
-      * 	\li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li SessionClosed
+      *  \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_Logout(SessionHandle session,
@@ -1456,14 +1456,14 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
-      * 	\li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li DomainParamsInvalid \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li PinExpired
-      * 	\li SessionClosed \li SessionHandleInvalid \li SessionReadOnly
-      * 	\li TemplateIncomplete \li TemplateInconsistent \li TokenWriteProtected
-      * 	\li UserNotLoggedIn
+      *  \li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
+      *  \li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li DomainParamsInvalid \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li PinExpired
+      *  \li SessionClosed \li SessionHandleInvalid \li SessionReadOnly
+      *  \li TemplateIncomplete \li TemplateInconsistent \li TokenWriteProtected
+      *  \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_CreateObject(SessionHandle session,
@@ -1482,13 +1482,13 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ActionProhibited \li ArgumentsBad \li AttributeReadOnly
-      * 	\li AttributeTypeInvalid \li AttributeValueInvalid \li CryptokiNotInitialized
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li ObjectHandleInvalid \li OK \li PinExpired
-      * 	\li SessionClosed \li SessionHandleInvalid \li SessionReadOnly
-      * 	\li TemplateInconsistent \li TokenWriteProtected \li UserNotLoggedIn
+      *  \li ActionProhibited \li ArgumentsBad \li AttributeReadOnly
+      *  \li AttributeTypeInvalid \li AttributeValueInvalid \li CryptokiNotInitialized
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li ObjectHandleInvalid \li OK \li PinExpired
+      *  \li SessionClosed \li SessionHandleInvalid \li SessionReadOnly
+      *  \li TemplateInconsistent \li TokenWriteProtected \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_CopyObject(SessionHandle session,
@@ -1505,11 +1505,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ActionProhibited \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li ObjectHandleInvalid
-      * 	\li OK \li PinExpired \li SessionClosed
-      * 	\li SessionHandleInvalid \li SessionReadOnly \li TokenWriteProtected
+      *  \li ActionProhibited \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li ObjectHandleInvalid
+      *  \li OK \li PinExpired \li SessionClosed
+      *  \li SessionHandleInvalid \li SessionReadOnly \li TokenWriteProtected
       * @return true on success, false otherwise
       */
       bool C_DestroyObject(SessionHandle session,
@@ -1524,11 +1524,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li InformationSensitive
-      * 	\li ObjectHandleInvalid \li OK \li SessionClosed
-      * 	\li SessionHandleInvalid
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li InformationSensitive
+      *  \li ObjectHandleInvalid \li OK \li SessionClosed
+      *  \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_GetObjectSize(SessionHandle session,
@@ -1545,11 +1545,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li AttributeSensitive \li AttributeTypeInvalid
-      * 	\li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li ObjectHandleInvalid
-      * 	\li OK \li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li AttributeSensitive \li AttributeTypeInvalid
+      *  \li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li ObjectHandleInvalid
+      *  \li OK \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_GetAttributeValue(SessionHandle session,
@@ -1566,11 +1566,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li AttributeSensitive \li AttributeTypeInvalid
-      * 	\li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li ObjectHandleInvalid
-      * 	\li OK \li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li AttributeSensitive \li AttributeTypeInvalid
+      *  \li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li ObjectHandleInvalid
+      *  \li OK \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       template<typename TAlloc>
@@ -1616,13 +1616,13 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ActionProhibited \li ArgumentsBad \li AttributeReadOnly
-      * 	\li AttributeTypeInvalid \li AttributeValueInvalid \li CryptokiNotInitialized
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li ObjectHandleInvalid \li OK \li SessionClosed
-      * 	\li SessionHandleInvalid \li SessionReadOnly \li TemplateInconsistent
-      * 	\li TokenWriteProtected \li UserNotLoggedIn
+      *  \li ActionProhibited \li ArgumentsBad \li AttributeReadOnly
+      *  \li AttributeTypeInvalid \li AttributeValueInvalid \li CryptokiNotInitialized
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li ObjectHandleInvalid \li OK \li SessionClosed
+      *  \li SessionHandleInvalid \li SessionReadOnly \li TemplateInconsistent
+      *  \li TokenWriteProtected \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_SetAttributeValue(SessionHandle session,
@@ -1639,13 +1639,13 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ActionProhibited \li ArgumentsBad \li AttributeReadOnly
-      * 	\li AttributeTypeInvalid \li AttributeValueInvalid \li CryptokiNotInitialized
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li ObjectHandleInvalid \li OK \li SessionClosed
-      * 	\li SessionHandleInvalid \li SessionReadOnly \li TemplateInconsistent
-      * 	\li TokenWriteProtected \li UserNotLoggedIn
+      *  \li ActionProhibited \li ArgumentsBad \li AttributeReadOnly
+      *  \li AttributeTypeInvalid \li AttributeValueInvalid \li CryptokiNotInitialized
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li ObjectHandleInvalid \li OK \li SessionClosed
+      *  \li SessionHandleInvalid \li SessionReadOnly \li TemplateInconsistent
+      *  \li TokenWriteProtected \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       template<typename TAlloc>
@@ -1673,11 +1673,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li AttributeTypeInvalid \li AttributeValueInvalid
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li OperationActive
-      * 	\li PinExpired \li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li AttributeTypeInvalid \li AttributeValueInvalid
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li OperationActive
+      *  \li PinExpired \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_FindObjectsInit(SessionHandle session,
@@ -1694,10 +1694,10 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_FindObjects(SessionHandle session,
@@ -1712,10 +1712,10 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li OperationNotInitialized
-      * 	\li SessionClosed \li SessionHandleInvalid
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li OperationNotInitialized
+      *  \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_FindObjectsFinal(SessionHandle session,
@@ -1731,13 +1731,13 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li KeyFunctionNotPermitted
-      * 	\li KeyHandleInvalid \li KeySizeRange \li KeyTypeInconsistent
-      * 	\li MechanismInvalid \li MechanismParamInvalid \li OK
-      * 	\li OperationActive \li PinExpired \li SessionClosed
-      * 	\li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li KeyFunctionNotPermitted
+      *  \li KeyHandleInvalid \li KeySizeRange \li KeyTypeInconsistent
+      *  \li MechanismInvalid \li MechanismParamInvalid \li OK
+      *  \li OperationActive \li PinExpired \li SessionClosed
+      *  \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_EncryptInit(SessionHandle session,
@@ -1755,12 +1755,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataInvalid \li DataLenRange \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataInvalid \li DataLenRange \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_Encrypt(SessionHandle session,
@@ -1778,12 +1778,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataInvalid \li DataLenRange \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataInvalid \li DataLenRange \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       template<typename TAllocA, typename TAllocB>
@@ -1814,11 +1814,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataLenRange \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataLenRange \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_EncryptUpdate(SessionHandle session,
@@ -1836,11 +1836,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataLenRange \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataLenRange \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_EncryptFinal(SessionHandle session,
@@ -1858,13 +1858,13 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li KeyFunctionNotPermitted \li KeyHandleInvalid \li KeySizeRange
-      * 	\li KeyTypeInconsistent \li MechanismInvalid \li MechanismParamInvalid
-      * 	\li OK \li OperationActive \li PinExpired
-      * 	\li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li KeyFunctionNotPermitted \li KeyHandleInvalid \li KeySizeRange
+      *  \li KeyTypeInconsistent \li MechanismInvalid \li MechanismParamInvalid
+      *  \li OK \li OperationActive \li PinExpired
+      *  \li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_DecryptInit(SessionHandle session,
@@ -1882,12 +1882,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_Decrypt(SessionHandle session,
@@ -1905,12 +1905,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       template<typename TAllocA, typename TAllocB>
@@ -1941,12 +1941,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_DecryptUpdate(SessionHandle session,
@@ -1964,12 +1964,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_DecryptFinal(SessionHandle session,
@@ -1986,12 +1986,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li MechanismInvalid \li MechanismParamInvalid \li OK
-      * 	\li OperationActive \li PinExpired \li SessionClosed
-      * 	\li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li MechanismInvalid \li MechanismParamInvalid \li OK
+      *  \li OperationActive \li PinExpired \li SessionClosed
+      *  \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_DigestInit(SessionHandle session,
@@ -2008,11 +2008,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionCanceled \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li OperationNotInitialized
-      * 	\li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionCanceled \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li OperationNotInitialized
+      *  \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_Digest(SessionHandle session,
@@ -2030,11 +2030,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_DigestUpdate(SessionHandle session,
@@ -2049,11 +2049,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li KeyHandleInvalid
-      * 	\li KeyIndigestible \li KeySizeRange \li OK
-      * 	\li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
+      *  \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li KeyHandleInvalid
+      *  \li KeyIndigestible \li KeySizeRange \li OK
+      *  \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_DigestKey(SessionHandle session,
@@ -2068,11 +2068,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionCanceled \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li OperationNotInitialized
-      * 	\li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionCanceled \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li OperationNotInitialized
+      *  \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_DigestFinal(SessionHandle session,
@@ -2090,13 +2090,13 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li KeyFunctionNotPermitted \li KeyHandleInvalid \li KeySizeRange
-      * 	\li KeyTypeInconsistent \li MechanismInvalid \li MechanismParamInvalid
-      * 	\li OK \li OperationActive \li PinExpired
-      * 	\li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li KeyFunctionNotPermitted \li KeyHandleInvalid \li KeySizeRange
+      *  \li KeyTypeInconsistent \li MechanismInvalid \li MechanismParamInvalid
+      *  \li OK \li OperationActive \li PinExpired
+      *  \li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_SignInit(SessionHandle session,
@@ -2114,12 +2114,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataInvalid \li DataLenRange \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid \li UserNotLoggedIn \li FunctionRejected
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataInvalid \li DataLenRange \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid \li UserNotLoggedIn \li FunctionRejected
       * @return true on success, false otherwise
       */
       bool C_Sign(SessionHandle session,
@@ -2137,12 +2137,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataInvalid \li DataLenRange \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid \li UserNotLoggedIn \li FunctionRejected
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataInvalid \li DataLenRange \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid \li UserNotLoggedIn \li FunctionRejected
       * @return true on success, false otherwise
       */
       template<typename TAllocA, typename TAllocB>
@@ -2169,11 +2169,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionCanceled \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li OperationNotInitialized
-      * 	\li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionCanceled \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li OperationNotInitialized
+      *  \li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_SignUpdate(SessionHandle session,
@@ -2188,11 +2188,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionCanceled \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li OperationNotInitialized
-      * 	\li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionCanceled \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li OperationNotInitialized
+      *  \li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       template<typename TAlloc>
@@ -2211,12 +2211,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataLenRange \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
-      * 	\li UserNotLoggedIn \li FunctionRejected
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataLenRange \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
+      *  \li UserNotLoggedIn \li FunctionRejected
       * @return true on success, false otherwise
       */
       bool C_SignFinal(SessionHandle session,
@@ -2231,12 +2231,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataLenRange \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
-      * 	\li UserNotLoggedIn \li FunctionRejected
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataLenRange \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
+      *  \li UserNotLoggedIn \li FunctionRejected
       * @return true on success, false otherwise
       */
       template<typename TAlloc>
@@ -2262,13 +2262,13 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li KeyFunctionNotPermitted \li KeyHandleInvalid \li KeySizeRange
-      * 	\li KeyTypeInconsistent \li MechanismInvalid \li MechanismParamInvalid
-      * 	\li OK \li OperationActive \li PinExpired
-      * 	\li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li KeyFunctionNotPermitted \li KeyHandleInvalid \li KeySizeRange
+      *  \li KeyTypeInconsistent \li MechanismInvalid \li MechanismParamInvalid
+      *  \li OK \li OperationActive \li PinExpired
+      *  \li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_SignRecoverInit(SessionHandle session,
@@ -2286,12 +2286,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataInvalid \li DataLenRange \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataInvalid \li DataLenRange \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_SignRecover(SessionHandle session,
@@ -2311,13 +2311,13 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li KeyFunctionNotPermitted \li KeyHandleInvalid \li KeySizeRange
-      * 	\li KeyTypeInconsistent \li MechanismInvalid \li MechanismParamInvalid
-      * 	\li OK \li OperationActive \li PinExpired
-      * 	\li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li KeyFunctionNotPermitted \li KeyHandleInvalid \li KeySizeRange
+      *  \li KeyTypeInconsistent \li MechanismInvalid \li MechanismParamInvalid
+      *  \li OK \li OperationActive \li PinExpired
+      *  \li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_VerifyInit(SessionHandle session,
@@ -2335,12 +2335,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DataInvalid
-      * 	\li DataLenRange \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
-      * 	\li SignatureInvalid \li SignatureLenRange
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DataInvalid
+      *  \li DataLenRange \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
+      *  \li SignatureInvalid \li SignatureLenRange
       * @return true on success, false otherwise
       */
       bool C_Verify(SessionHandle session,
@@ -2358,12 +2358,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DataInvalid
-      * 	\li DataLenRange \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
-      * 	\li SignatureInvalid \li SignatureLenRange
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DataInvalid
+      *  \li DataLenRange \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
+      *  \li SignatureInvalid \li SignatureLenRange
       * @return true on success, false otherwise
       */
       template<typename TAllocA, typename TAllocB>
@@ -2383,11 +2383,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionCanceled \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li OperationNotInitialized
-      * 	\li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionCanceled \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li OperationNotInitialized
+      *  \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_VerifyUpdate(SessionHandle session,
@@ -2402,11 +2402,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionCanceled \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li OperationNotInitialized
-      * 	\li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionCanceled \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li OperationNotInitialized
+      *  \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       template<typename TAlloc>
@@ -2425,12 +2425,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionCanceled \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li OperationNotInitialized
-      * 	\li SessionClosed \li SessionHandleInvalid \li SignatureInvalid
-      * 	\li SignatureLenRange
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionCanceled \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li OperationNotInitialized
+      *  \li SessionClosed \li SessionHandleInvalid \li SignatureInvalid
+      *  \li SignatureLenRange
       * @return true on success, false otherwise
       */
       bool C_VerifyFinal(SessionHandle session,
@@ -2446,13 +2446,13 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li KeyFunctionNotPermitted \li KeyHandleInvalid \li KeySizeRange
-      * 	\li KeyTypeInconsistent \li MechanismInvalid \li MechanismParamInvalid
-      * 	\li OK \li OperationActive \li PinExpired
-      * 	\li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li KeyFunctionNotPermitted \li KeyHandleInvalid \li KeySizeRange
+      *  \li KeyTypeInconsistent \li MechanismInvalid \li MechanismParamInvalid
+      *  \li OK \li OperationActive \li PinExpired
+      *  \li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_VerifyRecoverInit(SessionHandle session,
@@ -2470,12 +2470,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataInvalid \li DataLenRange \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid \li SignatureLenRange \li SignatureInvalid
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataInvalid \li DataLenRange \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid \li SignatureLenRange \li SignatureInvalid
       * @return true on success, false otherwise
       */
       bool C_VerifyRecover(SessionHandle session,
@@ -2497,11 +2497,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataLenRange \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataLenRange \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_DigestEncryptUpdate(SessionHandle session,
@@ -2521,12 +2521,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationNotInitialized \li SessionClosed
-      * 	\li SessionHandleInvalid
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationNotInitialized \li SessionClosed
+      *  \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_DecryptDigestUpdate(SessionHandle session,
@@ -2546,12 +2546,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataLenRange \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li OK
-      * 	\li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
-      * 	\li UserNotLoggedIn
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataLenRange \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li OK
+      *  \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
+      *  \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_SignEncryptUpdate(SessionHandle session,
@@ -2571,12 +2571,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DataLenRange \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li EncryptedDataInvalid \li EncryptedDataLenRange
-      * 	\li FunctionCanceled \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li OK \li OperationNotInitialized
-      * 	\li SessionClosed \li SessionHandleInvalid
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DataLenRange \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li EncryptedDataInvalid \li EncryptedDataLenRange
+      *  \li FunctionCanceled \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li OK \li OperationNotInitialized
+      *  \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
       bool C_DecryptVerifyUpdate(SessionHandle session,
@@ -2598,15 +2598,15 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
-      * 	\li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionCanceled \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li MechanismInvalid \li MechanismParamInvalid
-      * 	\li OK \li OperationActive \li PinExpired
-      * 	\li SessionClosed \li SessionHandleInvalid \li SessionReadOnly
-      * 	\li TemplateIncomplete \li TemplateInconsistent \li TokenWriteProtected
-      * 	\li UserNotLoggedIn
+      *  \li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
+      *  \li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionCanceled \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li MechanismInvalid \li MechanismParamInvalid
+      *  \li OK \li OperationActive \li PinExpired
+      *  \li SessionClosed \li SessionHandleInvalid \li SessionReadOnly
+      *  \li TemplateIncomplete \li TemplateInconsistent \li TokenWriteProtected
+      *  \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_GenerateKey(SessionHandle session,
@@ -2629,15 +2629,15 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
-      * 	\li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li DomainParamsInvalid \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li MechanismInvalid
-      * 	\li MechanismParamInvalid \li OK \li OperationActive
-      * 	\li PinExpired \li SessionClosed \li SessionHandleInvalid
-      * 	\li SessionReadOnly \li TemplateIncomplete \li TemplateInconsistent
-      * 	\li TokenWriteProtected \li UserNotLoggedIn
+      *  \li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
+      *  \li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li DomainParamsInvalid \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li MechanismInvalid
+      *  \li MechanismParamInvalid \li OK \li OperationActive
+      *  \li PinExpired \li SessionClosed \li SessionHandleInvalid
+      *  \li SessionReadOnly \li TemplateIncomplete \li TemplateInconsistent
+      *  \li TokenWriteProtected \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_GenerateKeyPair(SessionHandle session,
@@ -2661,15 +2661,15 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li FunctionCanceled \li FunctionFailed \li GeneralError
-      * 	\li HostMemory \li KeyHandleInvalid \li KeyNotWrappable
-      * 	\li KeySizeRange \li KeyUnextractable \li MechanismInvalid
-      * 	\li MechanismParamInvalid \li OK \li OperationActive
-      * 	\li PinExpired \li SessionClosed \li SessionHandleInvalid
-      * 	\li UserNotLoggedIn \li WrappingKeyHandleInvalid \li WrappingKeySizeRange
-      * 	\li WrappingKeyTypeInconsistent
+      *  \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li FunctionCanceled \li FunctionFailed \li GeneralError
+      *  \li HostMemory \li KeyHandleInvalid \li KeyNotWrappable
+      *  \li KeySizeRange \li KeyUnextractable \li MechanismInvalid
+      *  \li MechanismParamInvalid \li OK \li OperationActive
+      *  \li PinExpired \li SessionClosed \li SessionHandleInvalid
+      *  \li UserNotLoggedIn \li WrappingKeyHandleInvalid \li WrappingKeySizeRange
+      *  \li WrappingKeyTypeInconsistent
       * @return true on success, false otherwise
       */
       bool C_WrapKey(SessionHandle session,
@@ -2693,17 +2693,17 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
-      * 	\li AttributeValueInvalid \li BufferTooSmall \li CryptokiNotInitialized
-      * 	\li CurveNotSupported \li DeviceError \li DeviceMemory
-      * 	\li DeviceRemoved \li DomainParamsInvalid \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li MechanismInvalid \li MechanismParamInvalid \li OK
-      * 	\li OperationActive \li PinExpired \li SessionClosed
-      * 	\li SessionHandleInvalid \li SessionReadOnly \li TemplateIncomplete
-      * 	\li TemplateInconsistent \li TokenWriteProtected \li UnwrappingKeyHandleInvalid
-      * 	\li UnwrappingKeySizeRange \li UnwrappingKeyTypeInconsistent \li UserNotLoggedIn
-      * 	\li WrappedKeyInvalid \li WrappedKeyLenRange
+      *  \li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
+      *  \li AttributeValueInvalid \li BufferTooSmall \li CryptokiNotInitialized
+      *  \li CurveNotSupported \li DeviceError \li DeviceMemory
+      *  \li DeviceRemoved \li DomainParamsInvalid \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li MechanismInvalid \li MechanismParamInvalid \li OK
+      *  \li OperationActive \li PinExpired \li SessionClosed
+      *  \li SessionHandleInvalid \li SessionReadOnly \li TemplateIncomplete
+      *  \li TemplateInconsistent \li TokenWriteProtected \li UnwrappingKeyHandleInvalid
+      *  \li UnwrappingKeySizeRange \li UnwrappingKeyTypeInconsistent \li UserNotLoggedIn
+      *  \li WrappedKeyInvalid \li WrappedKeyLenRange
       * @return true on success, false otherwise
       */
       bool C_UnwrapKey(SessionHandle session,
@@ -2727,16 +2727,16 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
-      * 	\li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
-      * 	\li DeviceError \li DeviceMemory \li DeviceRemoved
-      * 	\li DomainParamsInvalid \li FunctionCanceled \li FunctionFailed
-      * 	\li GeneralError \li HostMemory \li KeyHandleInvalid
-      * 	\li KeySizeRange \li KeyTypeInconsistent \li MechanismInvalid
-      * 	\li MechanismParamInvalid \li OK \li OperationActive
-      * 	\li PinExpired \li SessionClosed \li SessionHandleInvalid
-      * 	\li SessionReadOnly \li TemplateIncomplete \li TemplateInconsistent
-      * 	\li TokenWriteProtected \li UserNotLoggedIn
+      *  \li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
+      *  \li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
+      *  \li DeviceError \li DeviceMemory \li DeviceRemoved
+      *  \li DomainParamsInvalid \li FunctionCanceled \li FunctionFailed
+      *  \li GeneralError \li HostMemory \li KeyHandleInvalid
+      *  \li KeySizeRange \li KeyTypeInconsistent \li MechanismInvalid
+      *  \li MechanismParamInvalid \li OK \li OperationActive
+      *  \li PinExpired \li SessionClosed \li SessionHandleInvalid
+      *  \li SessionReadOnly \li TemplateIncomplete \li TemplateInconsistent
+      *  \li TokenWriteProtected \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_DeriveKey(SessionHandle session,
@@ -2757,12 +2757,12 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationActive \li RandomSeedNotSupported
-      * 	\li RandomNoRng \li SessionClosed \li SessionHandleInvalid
-      * 	\li UserNotLoggedIn
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationActive \li RandomSeedNotSupported
+      *  \li RandomNoRng \li SessionClosed \li SessionHandleInvalid
+      *  \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_SeedRandom(SessionHandle session,
@@ -2778,11 +2778,11 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
-      * 	\li DeviceMemory \li DeviceRemoved \li FunctionCanceled
-      * 	\li FunctionFailed \li GeneralError \li HostMemory
-      * 	\li OK \li OperationActive \li RandomNoRng
-      * 	\li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
+      *  \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
+      *  \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
+      *  \li FunctionFailed \li GeneralError \li HostMemory
+      *  \li OK \li OperationActive \li RandomNoRng
+      *  \li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
       bool C_GenerateRandom(SessionHandle session,
@@ -2798,9 +2798,9 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li FunctionFailed \li FunctionNotParallel
-      * 	\li GeneralError \li HostMemory \li SessionHandleInvalid
-      * 	\li SessionClosed
+      *  \li CryptokiNotInitialized \li FunctionFailed \li FunctionNotParallel
+      *  \li GeneralError \li HostMemory \li SessionHandleInvalid
+      *  \li SessionClosed
       * @return true on success, false otherwise
       */
       bool C_GetFunctionStatus(SessionHandle session,
@@ -2812,9 +2812,9 @@ class BOTAN_DLL LowLevel
       * @param return_value default value (`ThrowException`): throw exception on error.
       * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
       * At least the following PKCS#11 return values may be returned:
-      * 	\li CryptokiNotInitialized \li FunctionFailed \li FunctionNotParallel
-      * 	\li GeneralError \li HostMemory \li SessionHandleInvalid
-      * 	\li SessionClosed
+      *  \li CryptokiNotInitialized \li FunctionFailed \li FunctionNotParallel
+      *  \li GeneralError \li HostMemory \li SessionHandleInvalid
+      *  \li SessionClosed
       * @return true on success, false otherwise
       */
       bool C_CancelFunction(SessionHandle session,

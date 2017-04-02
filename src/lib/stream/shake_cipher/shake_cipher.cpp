@@ -39,12 +39,12 @@ void SHAKE_128_Cipher::key_schedule(const uint8_t key[], size_t length)
    {
    zeroise(m_state);
 
-   for(size_t i = 0; i < length/8; ++i)
+   for(size_t i = 0; i < length / 8; ++i)
       {
       m_state[i] ^= load_le<uint64_t>(key, i);
       }
 
-   m_state[length/8] ^= 0x000000000000001F;
+   m_state[length / 8] ^= 0x000000000000001F;
    m_state[20]       ^= 0x8000000000000000;
 
    SHA_3::permute(m_state.data());
@@ -65,7 +65,9 @@ void SHAKE_128_Cipher::set_iv(const uint8_t[], size_t length)
    * a prefix or suffix of the key).
    */
    if(length != 0)
+      {
       throw Invalid_IV_Length(name(), length);
+      }
    }
 
 void SHAKE_128_Cipher::seek(uint64_t)

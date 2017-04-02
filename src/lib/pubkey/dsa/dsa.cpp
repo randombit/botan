@@ -13,12 +13,12 @@
 #include <botan/internal/pk_ops_impl.h>
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-  #include <botan/emsa.h>
-  #include <botan/rfc6979.h>
+   #include <botan/emsa.h>
+   #include <botan/rfc6979.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-  #include <future>
+   #include <future>
 #endif
 
 namespace Botan {
@@ -42,9 +42,13 @@ DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
    m_group = grp;
 
    if(x_arg == 0)
+      {
       m_x = BigInt::random_integer(rng, 2, group_q() - 1);
+      }
    else
+      {
       m_x = x_arg;
+      }
 
    m_y = power_mod(group_g(), m_x, group_p());
    }
@@ -62,10 +66,14 @@ DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
 bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    {
    if(!DL_Scheme_PrivateKey::check_key(rng, strong) || m_x >= group_q())
+      {
       return false;
+      }
 
    if(!strong)
+      {
       return true;
+      }
 
    return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-256)");
    }
@@ -88,10 +96,13 @@ class DSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
          {
          }
 
-      size_t max_input_bits() const override { return m_q.bits(); }
+      size_t max_input_bits() const override
+         {
+         return m_q.bits();
+         }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                   RandomNumberGenerator& rng) override;
+                                      RandomNumberGenerator& rng) override;
    private:
       const BigInt& m_q;
       const BigInt& m_x;
@@ -107,7 +118,9 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    BigInt i(msg, msg_len);
 
    while(i >= m_q)
+      {
       i -= m_q;
+      }
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    BOTAN_UNUSED(rng);
@@ -118,7 +131,10 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
    auto future_r = std::async(std::launch::async,
-                              [&]() { return m_mod_q.reduce(m_powermod_g_p(k)); });
+                              [&]()
+      {
+      return m_mod_q.reduce(m_powermod_g_p(k));
+      });
 
    BigInt s = inverse_mod(k, m_q);
    const BigInt r = future_r.get();
@@ -150,9 +166,15 @@ class DSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
          m_mod_q{Modular_Reducer(dsa.group_q())}
          {}
 
-      size_t max_input_bits() const override { return m_q.bits(); }
+      size_t max_input_bits() const override
+         {
+         return m_q.bits();
+         }
 
-      bool with_recovery() const override { return false; }
+      bool with_recovery() const override
+         {
+         return false;
+         }
 
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len) override;
@@ -167,21 +189,28 @@ class DSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
 bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
                                         const uint8_t sig[], size_t sig_len)
    {
-   if(sig_len != 2*m_q.bytes() || msg_len > m_q.bytes())
+   if(sig_len != 2 * m_q.bytes() || msg_len > m_q.bytes())
+      {
       return false;
+      }
 
    BigInt r(sig, m_q.bytes());
    BigInt s(sig + m_q.bytes(), m_q.bytes());
    BigInt i(msg, msg_len);
 
    if(r <= 0 || r >= m_q || s <= 0 || s >= m_q)
+      {
       return false;
+      }
 
    s = inverse_mod(s, m_q);
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
    auto future_s_i = std::async(std::launch::async,
-      [&]() { return m_powermod_g_p(m_mod_q.multiply(s, i)); });
+                                [&]()
+      {
+      return m_powermod_g_p(m_mod_q.multiply(s, i));
+      });
 
    BigInt s_r = m_powermod_y_p(m_mod_q.multiply(s, r));
    BigInt s_i = future_s_i.get();
@@ -202,7 +231,9 @@ DSA_PublicKey::create_verification_op(const std::string& params,
                                       const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Verification>(new DSA_Verification_Operation(*this, params));
+      }
    throw Provider_Not_Found(algo_name(), provider);
    }
 
@@ -212,7 +243,9 @@ DSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                     const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Signature>(new DSA_Signature_Operation(*this, params));
+      }
    throw Provider_Not_Found(algo_name(), provider);
    }
 

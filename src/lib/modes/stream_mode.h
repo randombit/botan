@@ -28,22 +28,44 @@ class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
          }
 
       void finish(secure_vector<uint8_t>& buf, size_t offset) override
-         { return update(buf, offset); }
+         {
+         return update(buf, offset);
+         }
 
-      size_t output_length(size_t input_length) const override { return input_length; }
+      size_t output_length(size_t input_length) const override
+         {
+         return input_length;
+         }
 
-      size_t update_granularity() const override { return 1; }
+      size_t update_granularity() const override
+         {
+         return 1;
+         }
 
-      size_t minimum_final_size() const override { return 0; }
+      size_t minimum_final_size() const override
+         {
+         return 0;
+         }
 
-      size_t default_nonce_length() const override { return 0; }
+      size_t default_nonce_length() const override
+         {
+         return 0;
+         }
 
       bool valid_nonce_length(size_t nonce_len) const override
-         { return m_cipher->valid_iv_length(nonce_len); }
+         {
+         return m_cipher->valid_iv_length(nonce_len);
+         }
 
-      Key_Length_Specification key_spec() const override { return m_cipher->key_spec(); }
+      Key_Length_Specification key_spec() const override
+         {
+         return m_cipher->key_spec();
+         }
 
-      std::string name() const override { return m_cipher->name(); }
+      std::string name() const override
+         {
+         return m_cipher->name();
+         }
 
       void clear() override
          {
@@ -51,7 +73,10 @@ class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
          reset();
          }
 
-      void reset() override { /* no msg state */ return; }
+      void reset() override
+         {
+         /* no msg state */ return;
+         }
 
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override

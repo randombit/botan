@@ -14,20 +14,21 @@ namespace Botan {
 
 namespace {
 
-static const uint8_t BIN_TO_BASE64[64] = {
+static const uint8_t BIN_TO_BASE64[64] =
+   {
    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
-};
+   };
 
 void do_base64_encode(char out[4], const uint8_t in[3])
    {
    out[0] = BIN_TO_BASE64[((in[0] & 0xFC) >> 2)];
    out[1] = BIN_TO_BASE64[((in[0] & 0x03) << 4) | (in[1] >> 4)];
    out[2] = BIN_TO_BASE64[((in[1] & 0x0F) << 2) | (in[2] >> 6)];
-   out[3] = BIN_TO_BASE64[((in[2] & 0x3F)     )];
+   out[3] = BIN_TO_BASE64[((in[2] & 0x3F))];
    }
 
 }
@@ -56,7 +57,9 @@ size_t base64_encode(char out[],
       {
       uint8_t remainder[3] = { 0 };
       for(size_t i = 0; i != input_remaining; ++i)
+         {
          remainder[i] = in[input_consumed + i];
+         }
 
       do_base64_encode(out + output_produced, remainder);
 
@@ -83,13 +86,13 @@ std::string base64_encode(const uint8_t input[],
 
    size_t consumed = 0;
    size_t produced = 0;
-   
-   if (output_length > 0)
-   {
+
+   if(output_length > 0)
+      {
       produced = base64_encode(&output.front(),
                                input, input_length,
                                consumed, true);
-   }
+      }
 
    BOTAN_ASSERT_EQUAL(consumed, input_length, "Consumed the entire input");
    BOTAN_ASSERT_EQUAL(produced, output.size(), "Produced expected size");
@@ -108,7 +111,8 @@ size_t base64_decode(uint8_t output[],
    * Base64 Decoder Lookup Table
    * Warning: assumes ASCII encodings
    */
-   static const uint8_t BASE64_TO_BIN[256] = {
+   static const uint8_t BASE64_TO_BIN[256] =
+      {
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80,
       0x80, 0xFF, 0xFF, 0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -134,7 +138,8 @@ size_t base64_decode(uint8_t output[],
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+      };
 
    uint8_t* out_ptr = output;
    uint8_t decode_buf[4];
@@ -156,15 +161,21 @@ size_t base64_decode(uint8_t output[],
          {
          std::string bad_char(1, input[i]);
          if(bad_char == "\t")
-           bad_char = "\\t";
+            {
+            bad_char = "\\t";
+            }
          else if(bad_char == "\n")
-           bad_char = "\\n";
+            {
+            bad_char = "\\n";
+            }
          else if(bad_char == "\r")
-           bad_char = "\\r";
+            {
+            bad_char = "\\r";
+            }
 
          throw Invalid_Argument(
-           std::string("base64_decode: invalid base64 character '") +
-           bad_char + "'");
+            std::string("base64_decode: invalid base64 character '") +
+            bad_char + "'");
          }
 
       /*
@@ -175,7 +186,9 @@ size_t base64_decode(uint8_t output[],
          if(decode_buf_pos)
             {
             for(size_t j = decode_buf_pos; j != 4; ++j)
+               {
                decode_buf[j] = 0;
+               }
             final_truncate = (4 - decode_buf_pos);
             decode_buf_pos = 4;
             }
@@ -189,7 +202,7 @@ size_t base64_decode(uint8_t output[],
 
          out_ptr += 3;
          decode_buf_pos = 0;
-         input_consumed = i+1;
+         input_consumed = i + 1;
          }
       }
 
@@ -214,7 +227,9 @@ size_t base64_decode(uint8_t output[],
                                   consumed, true, ignore_ws);
 
    if(consumed != input_length)
+      {
       throw Invalid_Argument("base64_decode: input did not have full bytes");
+      }
 
    return written;
    }
@@ -227,8 +242,8 @@ size_t base64_decode(uint8_t output[],
    }
 
 secure_vector<uint8_t> base64_decode(const char input[],
-                                 size_t input_length,
-                                 bool ignore_ws)
+                                     size_t input_length,
+                                     bool ignore_ws)
    {
    const size_t output_length = base64_decode_max_output(input_length);
    secure_vector<uint8_t> bin(output_length);
@@ -243,7 +258,7 @@ secure_vector<uint8_t> base64_decode(const char input[],
    }
 
 secure_vector<uint8_t> base64_decode(const std::string& input,
-                                 bool ignore_ws)
+                                     bool ignore_ws)
    {
    return base64_decode(input.data(), input.size(), ignore_ws);
    }

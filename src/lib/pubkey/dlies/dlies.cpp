@@ -42,7 +42,7 @@ DLIES_Encryptor::DLIES_Encryptor(const DH_PrivateKey& own_priv_key,
    }
 
 std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length,
-                                       RandomNumberGenerator&) const
+      RandomNumberGenerator&) const
    {
    if(m_other_pub_key.empty())
       {
@@ -172,7 +172,7 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask,
 
    // calculated tag == received tag ?
    secure_vector<uint8_t> tag(msg + m_pub_key_size + ciphertext_len,
-                           msg + m_pub_key_size + ciphertext_len + m_mac->output_length());
+                              msg + m_pub_key_size + ciphertext_len + m_mac->output_length());
 
    valid_mask = CT::expand_mask<uint8_t>(same_mem(tag.data(), calculated_tag.data(), tag.size()));
 

@@ -70,20 +70,20 @@ void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       uint16_t X1, X2, X3, X4;
-      load_be(in + BLOCK_SIZE*i, X1, X2, X3, X4);
+      load_be(in + BLOCK_SIZE * i, X1, X2, X3, X4);
 
       for(size_t j = 0; j != 8; ++j)
          {
-         X1 = mul(X1, K[6*j+0]);
-         X2 += K[6*j+1];
-         X3 += K[6*j+2];
-         X4 = mul(X4, K[6*j+3]);
+         X1 = mul(X1, K[6 * j + 0]);
+         X2 += K[6 * j + 1];
+         X3 += K[6 * j + 2];
+         X4 = mul(X4, K[6 * j + 3]);
 
          uint16_t T0 = X3;
-         X3 = mul(X3 ^ X1, K[6*j+4]);
+         X3 = mul(X3 ^ X1, K[6 * j + 4]);
 
          uint16_t T1 = X2;
-         X2 = mul((X2 ^ X4) + X3, K[6*j+5]);
+         X2 = mul((X2 ^ X4) + X3, K[6 * j + 5]);
          X3 += X2;
 
          X1 ^= X2;
@@ -97,7 +97,7 @@ void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[
       X3 += K[49];
       X4  = mul(X4, K[51]);
 
-      store_be(out + BLOCK_SIZE*i, X1, X3, X2, X4);
+      store_be(out + BLOCK_SIZE * i, X1, X3, X2, X4);
       }
 
    CT::unpoison(in, blocks * 8);
@@ -174,12 +174,14 @@ void IDEA::key_schedule(const uint8_t key[], size_t)
    CT::poison(m_DK.data(), 52);
 
    for(size_t i = 0; i != 8; ++i)
+      {
       m_EK[i] = load_be<uint16_t>(key, i);
+      }
 
    for(size_t i = 1, j = 8, offset = 0; j != 52; i %= 8, ++i, ++j)
       {
-      m_EK[i+7+offset] = static_cast<uint16_t>((m_EK[(i     % 8) + offset] << 9) |
-                                           (m_EK[((i+1) % 8) + offset] >> 7));
+      m_EK[i + 7 + offset] = static_cast<uint16_t>((m_EK[(i     % 8) + offset] << 9) |
+                             (m_EK[((i + 1) % 8) + offset] >> 7));
       offset += (i == 8) ? 8 : 0;
       }
 
@@ -190,12 +192,12 @@ void IDEA::key_schedule(const uint8_t key[], size_t)
 
    for(size_t i = 1, j = 4, counter = 47; i != 8; ++i, j += 6)
       {
-      m_DK[counter--] = m_EK[j+1];
+      m_DK[counter--] = m_EK[j + 1];
       m_DK[counter--] = m_EK[j];
-      m_DK[counter--] = mul_inv(m_EK[j+5]);
-      m_DK[counter--] = -m_EK[j+3];
-      m_DK[counter--] = -m_EK[j+4];
-      m_DK[counter--] = mul_inv(m_EK[j+2]);
+      m_DK[counter--] = mul_inv(m_EK[j + 5]);
+      m_DK[counter--] = -m_EK[j + 3];
+      m_DK[counter--] = -m_EK[j + 4];
+      m_DK[counter--] = mul_inv(m_EK[j + 2]);
       }
 
    m_DK[5] = m_EK[47];

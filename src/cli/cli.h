@@ -12,11 +12,11 @@
 #include <botan/rng.h>
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-  #include <botan/auto_rng.h>
+   #include <botan/auto_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
+   #include <botan/system_rng.h>
 #endif
 
 #include <fstream>
@@ -124,7 +124,7 @@ class Command
             parse_spec();
 
             std::vector<std::string> args;
-            for(auto&& param : params)
+            for(auto && param : params)
                {
                if(param.find("--") == 0)
                   {
@@ -141,7 +141,9 @@ class Command
                            throw CLI_Usage_Error("Invalid usage of option --" + opt_name +
                                                  " without value");
                         else
+                           {
                            throw CLI_Usage_Error("Unknown flag --" + opt_name);
+                           }
                         }
 
                      m_user_flags.insert(opt_name);
@@ -168,7 +170,7 @@ class Command
 
             bool seen_stdin_flag = false;
             size_t arg_i = 0;
-            for(auto&& arg : m_spec_args)
+            for(auto && arg : m_spec_args)
                {
                if(arg_i >= args.size())
                   {
@@ -184,7 +186,9 @@ class Command
                if(args[arg_i] == "-")
                   {
                   if(seen_stdin_flag)
+                     {
                      throw CLI_Usage_Error("Cannot specifiy '-' (stdin) more than once");
+                     }
                   seen_stdin_flag = true;
                   }
 
@@ -194,7 +198,9 @@ class Command
             if(m_spec_rest.empty())
                {
                if(arg_i != args.size())
+                  {
                   throw CLI_Usage_Error("Too many arguments");
+                  }
                }
             else
                {
@@ -218,7 +224,7 @@ class Command
                }
 
             // Now insert any defaults for options not supplied by the user
-            for(auto&& opt : m_spec_opts)
+            for(auto && opt : m_spec_opts)
                {
                if(m_user_args.count(opt.first) == 0)
                   {
@@ -252,7 +258,10 @@ class Command
          return "Usage: " + m_spec;
          }
 
-      const std::string& cmd_spec() const { return m_spec; }
+      const std::string& cmd_spec() const
+         {
+         return m_spec;
+         }
 
       std::string cmd_name() const
          {
@@ -266,14 +275,18 @@ class Command
          const std::vector<std::string> parts = Botan::split_on(m_spec, ' ');
 
          if(parts.size() == 0)
+            {
             throw CLI_Error_Invalid_Spec(m_spec);
+            }
 
          for(size_t i = 1; i != parts.size(); ++i)
             {
             const std::string s = parts[i];
 
             if(s.empty()) // ?!? (shouldn't happen)
+               {
                throw CLI_Error_Invalid_Spec(m_spec);
+               }
 
             if(s.size() > 2 && s[0] == '-' && s[1] == '-')
                {
@@ -307,7 +320,9 @@ class Command
                {
                // named argument
                if(!m_spec_rest.empty()) // rest arg wasn't last
+                  {
                   throw CLI_Error("Invalid command spec " + m_spec);
+                  }
 
                m_spec_args.push_back(s);
                }
@@ -324,7 +339,7 @@ class Command
 #else
                                            "auto"
 #endif
-                               ));
+                                          ));
          }
 
       /*
@@ -335,14 +350,18 @@ class Command
       std::ostream& output()
          {
          if(m_output_stream.get())
+            {
             return *m_output_stream;
+            }
          return std::cout;
          }
 
       std::ostream& error_output()
          {
          if(m_error_output_stream.get())
+            {
             return *m_error_output_stream;
+            }
          return std::cerr;
          }
 
@@ -397,7 +416,9 @@ class Command
       std::vector<std::string> get_arg_list(const std::string& what) const
          {
          if(what != m_spec_rest)
+            {
             throw CLI_Error("Unexpected list name '" + what + "'");
+            }
 
          return m_user_rest;
          }
@@ -409,7 +430,9 @@ class Command
          {
          std::vector<uint8_t> buf;
          auto insert_fn = [&](const uint8_t b[], size_t l)
-            { buf.insert(buf.end(), b, b + l); };
+            {
+            buf.insert(buf.end(), b, b + l);
+            };
          this->read_file(input_file, insert_fn);
          return buf;
          }
@@ -418,7 +441,9 @@ class Command
          {
          std::string str;
          auto insert_fn = [&](const uint8_t b[], size_t l)
-            { str.append(reinterpret_cast<const char*>(b), l); };
+            {
+            str.append(reinterpret_cast<const char*>(b), l);
+            };
          this->read_file(input_file, insert_fn);
          return str;
          }
@@ -438,7 +463,9 @@ class Command
             {
             std::ifstream in(input_file, std::ios::binary);
             if(!in)
+               {
                throw CLI_IO_Error("reading file", input_file);
+               }
             do_read_file(in, consumer_fn, buf_size);
             }
          }

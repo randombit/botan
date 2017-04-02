@@ -41,9 +41,9 @@ class ECIES_PrivateKey : public EC_PrivateKey, public PK_Key_Agreement_Key
          }
 
       std::unique_ptr<PK_Ops::Key_Agreement>
-         create_key_agreement_op(RandomNumberGenerator& rng,
-                                 const std::string& params,
-                                 const std::string& provider) const override;
+      create_key_agreement_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const override;
 
    private:
       ECDH_PrivateKey m_key;
@@ -79,8 +79,8 @@ class ECIES_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
 
 std::unique_ptr<PK_Ops::Key_Agreement>
 ECIES_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
-                                          const std::string& /*params*/,
-                                          const std::string& /*provider*/) const
+      const std::string& /*params*/,
+      const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Key_Agreement>(new ECIES_ECDH_KA_Operation(*this, rng));
    }
@@ -117,7 +117,7 @@ PK_Key_Agreement create_key_agreement(const PK_Key_Agreement_Key& private_key,
       return PK_Key_Agreement(ECIES_PrivateKey(*ecdh_key), rng, "Raw");
       }
 
-   return PK_Key_Agreement(private_key, rng, "Raw");		// use default implementation
+   return PK_Key_Agreement(private_key, rng, "Raw");     // use default implementation
    }
 }
 
@@ -161,9 +161,10 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
 
    // ISO 18033: encryption step f / decryption step h
    secure_vector<uint8_t> other_public_key_bin = EC2OSP(other_point, static_cast<uint8_t>(m_params.compression_type()));
-    // Note: the argument `m_params.secret_length()` passed for `key_len` will only be used by providers because
+   // Note: the argument `m_params.secret_length()` passed for `key_len` will only be used by providers because
    // "Raw" is passed to the `PK_Key_Agreement` if the implementation of botan is used.
-   const SymmetricKey peh = m_ka.derive_key(m_params.domain().get_order().bytes(), other_public_key_bin.data(), other_public_key_bin.size());
+   const SymmetricKey peh = m_ka.derive_key(m_params.domain().get_order().bytes(), other_public_key_bin.data(),
+                            other_public_key_bin.size());
    derivation_input.insert(derivation_input.end(), peh.begin(), peh.end());
 
    // ISO 18033: encryption step g / decryption step i
@@ -182,9 +183,9 @@ ECIES_KA_Params::ECIES_KA_Params(const EC_Group& domain, const std::string& kdf_
    }
 
 ECIES_System_Params::ECIES_System_Params(const EC_Group& domain, const std::string& kdf_spec,
-                                         const std::string& dem_algo_spec, size_t dem_key_len,
-                                         const std::string& mac_spec, size_t mac_key_len,
-                                         PointGFp::Compression_Type compression_type, ECIES_Flags flags) :
+      const std::string& dem_algo_spec, size_t dem_key_len,
+      const std::string& mac_spec, size_t mac_key_len,
+      PointGFp::Compression_Type compression_type, ECIES_Flags flags) :
    ECIES_KA_Params(domain, kdf_spec, dem_key_len + mac_key_len, compression_type, flags),
    m_dem_spec(dem_algo_spec),
    m_dem_keylen(dem_key_len),
@@ -199,10 +200,10 @@ ECIES_System_Params::ECIES_System_Params(const EC_Group& domain, const std::stri
    }
 
 ECIES_System_Params::ECIES_System_Params(const EC_Group& domain, const std::string& kdf_spec,
-                                         const std::string& dem_algo_spec, size_t dem_key_len,
-                                         const std::string& mac_spec, size_t mac_key_len) :
+      const std::string& dem_algo_spec, size_t dem_key_len,
+      const std::string& mac_spec, size_t mac_key_len) :
    ECIES_System_Params(domain, kdf_spec, dem_algo_spec, dem_key_len, mac_spec, mac_key_len, PointGFp::UNCOMPRESSED,
-                         ECIES_Flags::NONE)
+                       ECIES_Flags::NONE)
    {
    }
 
@@ -230,14 +231,14 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
                                  RandomNumberGenerator& rng) :
    m_ka(private_key, ecies_params, true, rng),
    m_params(ecies_params),
-   m_eph_public_key_bin(private_key.public_value()),	// returns the uncompressed public key, see conversion below
+   m_eph_public_key_bin(private_key.public_value()),  // returns the uncompressed public key, see conversion below
    m_iv(),
    m_other_point(),
    m_label()
    {
    if(ecies_params.compression_type() != PointGFp::UNCOMPRESSED)
       {
-      // ISO 18033: step d 
+      // ISO 18033: step d
       // convert only if necessary; m_eph_public_key_bin has been initialized with the uncompressed format
       m_eph_public_key_bin = unlock(EC2OSP(OS2ECP(m_eph_public_key_bin, m_params.domain().get_curve()),
                                            static_cast<uint8_t>(ecies_params.compression_type())));
@@ -325,9 +326,9 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    size_t point_size = m_params.domain().get_curve().get_p().bytes();
    if(m_params.compression_type() != PointGFp::COMPRESSED)
       {
-      point_size *= 2;		// uncompressed and hybrid contains x AND y
+      point_size *= 2;     // uncompressed and hybrid contains x AND y
       }
-   point_size += 1;			// format byte
+   point_size += 1;        // format byte
 
    std::unique_ptr<MessageAuthenticationCode> mac = m_params.create_mac();
    BOTAN_ASSERT(mac != nullptr, "MAC is found");
@@ -338,7 +339,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
       }
 
    // extract data
-   const std::vector<uint8_t> other_public_key_bin(in, in + point_size);	// the received (ephemeral) public key
+   const std::vector<uint8_t> other_public_key_bin(in, in + point_size);   // the received (ephemeral) public key
    const std::vector<uint8_t> encrypted_data(in + point_size, in + in_len - mac->output_length());
    const std::vector<uint8_t> mac_data(in + in_len - mac->output_length(), in + in_len);
 
@@ -351,7 +352,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
       throw Decoding_Error("ECIES decryption: received public key is not on the curve");
       }
 
-   // ISO 18033: step e (and step f because get_affine_x (called by ECDH_KA_Operation::raw_agree) 
+   // ISO 18033: step e (and step f because get_affine_x (called by ECDH_KA_Operation::raw_agree)
    // throws Illegal_Transformation if the point is zero)
    const SymmetricKey secret_key = m_ka.derive_secret(other_public_key_bin, other_public_key);
 
@@ -376,7 +377,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
          {
          cipher->start(m_iv.bits_of());
          }
-      
+
       try
          {
          // the decryption can fail:

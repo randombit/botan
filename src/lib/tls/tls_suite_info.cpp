@@ -18,7 +18,8 @@ namespace TLS {
 const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
    {
    // Note that this list of ciphersuites is ordered by id!
-   static const std::vector<Ciphersuite> g_ciphersuite_list = {
+   static const std::vector<Ciphersuite> g_ciphersuite_list =
+      {
       Ciphersuite(0x000A, "RSA_WITH_3DES_EDE_CBC_SHA", "RSA", "RSA", "3DES", 24, 8, 0, "SHA-1", 20, ""),
       Ciphersuite(0x0013, "DHE_DSS_WITH_3DES_EDE_CBC_SHA", "DSA", "DH", "3DES", 24, 8, 0, "SHA-1", 20, ""),
       Ciphersuite(0x0016, "DHE_RSA_WITH_3DES_EDE_CBC_SHA", "RSA", "DH", "3DES", 24, 8, 0, "SHA-1", 20, ""),

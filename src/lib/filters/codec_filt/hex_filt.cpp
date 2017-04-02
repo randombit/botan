@@ -26,7 +26,7 @@ Hex_Encoder::Hex_Encoder(bool breaks, size_t length, Case c) :
    m_casing(c), m_line_length(breaks ? length : 0)
    {
    m_in.resize(HEX_CODEC_BUFFER_SIZE);
-   m_out.resize(2*m_in.size());
+   m_out.resize(2 * m_in.size());
    m_counter = m_position = 0;
    }
 
@@ -36,7 +36,7 @@ Hex_Encoder::Hex_Encoder(bool breaks, size_t length, Case c) :
 Hex_Encoder::Hex_Encoder(Case c) : m_casing(c), m_line_length(0)
    {
    m_in.resize(HEX_CODEC_BUFFER_SIZE);
-   m_out.resize(2*m_in.size());
+   m_out.resize(2 * m_in.size());
    m_counter = m_position = 0;
    }
 
@@ -50,10 +50,12 @@ void Hex_Encoder::encode_and_send(const uint8_t block[], size_t length)
               m_casing == Uppercase);
 
    if(m_line_length == 0)
-      send(m_out, 2*length);
+      {
+      send(m_out, 2 * length);
+      }
    else
       {
-      size_t remaining = 2*length, offset = 0;
+      size_t remaining = 2 * length, offset = 0;
       while(remaining)
          {
          size_t sent = std::min(m_line_length - m_counter, remaining);
@@ -100,7 +102,9 @@ void Hex_Encoder::end_msg()
    {
    encode_and_send(m_in.data(), m_position);
    if(m_counter && m_line_length)
+      {
       send('\n');
+      }
    m_counter = m_position = 0;
    }
 
@@ -140,7 +144,9 @@ void Hex_Decoder::write(const uint8_t input[], size_t length)
          m_position = m_position - consumed;
          }
       else
+         {
          m_position = 0;
+         }
 
       length -= to_copy;
       input += to_copy;
@@ -166,7 +172,9 @@ void Hex_Decoder::end_msg()
    m_position = 0;
 
    if(not_full_bytes)
+      {
       throw Invalid_Argument("Hex_Decoder: Input not full bytes");
+      }
    }
 
 }

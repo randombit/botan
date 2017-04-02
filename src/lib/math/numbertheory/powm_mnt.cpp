@@ -52,7 +52,7 @@ void Montgomery_Exponentiator::set_base(const BigInt& base)
 
    for(size_t i = 2; i != m_g.size(); ++i)
       {
-      const BigInt& y = m_g[i-1];
+      const BigInt& y = m_g[i - 1];
 
       bigint_monty_mul(z, x, y, m_modulus.data(), m_mod_words, m_mod_prime,
                        workspace.data());
@@ -70,7 +70,7 @@ BigInt Montgomery_Exponentiator::execute() const
 
    BigInt x = m_R_mod;
 
-   const size_t z_size = 2*(m_mod_words + 1);
+   const size_t z_size = 2 * (m_mod_words + 1);
 
    BigInt z(BigInt::Positive, z_size);
    secure_vector<word> workspace(z.size());
@@ -85,7 +85,7 @@ BigInt Montgomery_Exponentiator::execute() const
          x = z;
          }
 
-      const uint32_t nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits);
+      const uint32_t nibble = m_exp.get_substring(m_window_bits * (i - 1), m_window_bits);
 
       bigint_monty_mul(z, x, m_g[nibble],
                        m_modulus.data(), m_mod_words, m_mod_prime,
@@ -94,7 +94,7 @@ BigInt Montgomery_Exponentiator::execute() const
       x = z;
       }
 
-   x.grow_to(2*m_mod_words + 1);
+   x.grow_to(2 * m_mod_words + 1);
 
    bigint_monty_redc(x.mutable_data(),
                      m_modulus.data(), m_mod_words, m_mod_prime,
@@ -107,7 +107,7 @@ BigInt Montgomery_Exponentiator::execute() const
 * Montgomery_Exponentiator Constructor
 */
 Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
-                                                   Power_Mod::Usage_Hints hints) :
+      Power_Mod::Usage_Hints hints) :
    m_modulus(mod),
    m_reducer(m_modulus),
    m_mod_words(m_modulus.sig_words()),
@@ -116,7 +116,9 @@ Montgomery_Exponentiator::Montgomery_Exponentiator(const BigInt& mod,
    {
    // Montgomery reduction only works for positive odd moduli
    if(!m_modulus.is_positive() || m_modulus.is_even())
+      {
       throw Invalid_Argument("Montgomery_Exponentiator: invalid modulus");
+      }
 
    m_mod_prime = monty_inverse(mod.word_at(0));
 

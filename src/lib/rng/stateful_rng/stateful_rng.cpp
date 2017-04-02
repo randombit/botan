@@ -30,7 +30,7 @@ void Stateful_RNG::initialize_with(const uint8_t input[], size_t len)
    {
    add_entropy(input, len);
 
-   if(8*len >= security_level())
+   if(8 * len >= security_level())
       {
       m_reseed_counter = 1;
       }
@@ -78,8 +78,8 @@ void Stateful_RNG::reseed_check()
    const bool fork_detected = (m_last_pid > 0) && (cur_pid != m_last_pid);
 
    if(is_seeded() == false ||
-      fork_detected ||
-      (m_reseed_interval > 0 && m_reseed_counter >= m_reseed_interval))
+         fork_detected ||
+         (m_reseed_interval > 0 && m_reseed_counter >= m_reseed_interval))
       {
       m_reseed_counter = 0;
       m_last_pid = cur_pid;
@@ -97,9 +97,13 @@ void Stateful_RNG::reseed_check()
       if(!is_seeded())
          {
          if(fork_detected)
+            {
             throw Exception("Detected use of fork but cannot reseed DRBG");
+            }
          else
+            {
             throw PRNG_Unseeded(name());
+            }
          }
       }
    else

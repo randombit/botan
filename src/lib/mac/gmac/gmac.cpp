@@ -10,10 +10,10 @@
 namespace Botan {
 
 GMAC::GMAC(BlockCipher* cipher)
-    : GHASH(),
-      m_aad_buf(),
-      m_cipher(cipher),
-      m_initialized(false)
+   : GHASH(),
+     m_aad_buf(),
+     m_cipher(cipher),
+     m_initialized(false)
    {}
 
 void GMAC::clear()
@@ -96,11 +96,11 @@ void GMAC::final_result(uint8_t mac[])
    // process the rest of the aad buffer. Even if it is a partial block only
    // ghash_update will process it properly.
    if(m_aad_buf.size() > 0)
-       {
-       ghash_update(m_ghash,
-                    m_aad_buf.data(),
-                    m_aad_buf.size());
-       }
+      {
+      ghash_update(m_ghash,
+                   m_aad_buf.data(),
+                   m_aad_buf.size());
+      }
    secure_vector<uint8_t> result = GHASH::final();
    std::copy(result.begin(), result.end(), mac);
    clear();

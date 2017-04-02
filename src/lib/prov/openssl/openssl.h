@@ -18,7 +18,7 @@
 #include <openssl/evp.h>
 
 #if defined(BOTAN_HAS_RC4)
-#include <openssl/rc4.h>
+   #include <openssl/rc4.h>
 #endif
 
 namespace Botan {
@@ -48,18 +48,18 @@ make_openssl_hash(const std::string& name);
 
 #if defined(BOTAN_HAS_RSA)
 
-class RSA_PublicKey;
-class RSA_PrivateKey;
+   class RSA_PublicKey;
+   class RSA_PrivateKey;
 
-std::unique_ptr<PK_Ops::Encryption>
-make_openssl_rsa_enc_op(const RSA_PublicKey& key, const std::string& params);
-std::unique_ptr<PK_Ops::Decryption>
-make_openssl_rsa_dec_op(const RSA_PrivateKey& key, const std::string& params);
+   std::unique_ptr<PK_Ops::Encryption>
+   make_openssl_rsa_enc_op(const RSA_PublicKey& key, const std::string& params);
+   std::unique_ptr<PK_Ops::Decryption>
+   make_openssl_rsa_dec_op(const RSA_PrivateKey& key, const std::string& params);
 
-std::unique_ptr<PK_Ops::Verification>
-make_openssl_rsa_ver_op(const RSA_PublicKey& key, const std::string& params);
-std::unique_ptr<PK_Ops::Signature>
-make_openssl_rsa_sig_op(const RSA_PrivateKey& key, const std::string& params);
+   std::unique_ptr<PK_Ops::Verification>
+   make_openssl_rsa_ver_op(const RSA_PublicKey& key, const std::string& params);
+   std::unique_ptr<PK_Ops::Signature>
+   make_openssl_rsa_sig_op(const RSA_PrivateKey& key, const std::string& params);
 
 #endif
 
@@ -67,13 +67,13 @@ make_openssl_rsa_sig_op(const RSA_PrivateKey& key, const std::string& params);
 
 #if defined(BOTAN_HAS_ECDSA)
 
-class ECDSA_PublicKey;
-class ECDSA_PrivateKey;
+   class ECDSA_PublicKey;
+   class ECDSA_PrivateKey;
 
-std::unique_ptr<PK_Ops::Verification>
-make_openssl_ecdsa_ver_op(const ECDSA_PublicKey& key, const std::string& params);
-std::unique_ptr<PK_Ops::Signature>
-make_openssl_ecdsa_sig_op(const ECDSA_PrivateKey& key, const std::string& params);
+   std::unique_ptr<PK_Ops::Verification>
+   make_openssl_ecdsa_ver_op(const ECDSA_PublicKey& key, const std::string& params);
+   std::unique_ptr<PK_Ops::Signature>
+   make_openssl_ecdsa_sig_op(const ECDSA_PrivateKey& key, const std::string& params);
 
 #endif
 
@@ -81,17 +81,17 @@ make_openssl_ecdsa_sig_op(const ECDSA_PrivateKey& key, const std::string& params
 
 #if defined(BOTAN_HAS_ECDH)
 
-class ECDH_PrivateKey;
+   class ECDH_PrivateKey;
 
-std::unique_ptr<PK_Ops::Key_Agreement>
-make_openssl_ecdh_ka_op(const ECDH_PrivateKey& key, const std::string& params);
+   std::unique_ptr<PK_Ops::Key_Agreement>
+   make_openssl_ecdh_ka_op(const ECDH_PrivateKey& key, const std::string& params);
 
 #endif
 
 #if defined(BOTAN_HAS_RC4)
 
-std::unique_ptr<StreamCipher>
-make_openssl_rc4(size_t skip);
+   std::unique_ptr<StreamCipher>
+   make_openssl_rc4(size_t skip);
 
 #endif
 

@@ -18,11 +18,23 @@ namespace Botan {
 class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
    {
    public:
-      std::string algo_name() const override { return "DSA"; }
+      std::string algo_name() const override
+         {
+         return "DSA";
+         }
 
-      DL_Group::Format group_format() const override { return DL_Group::ANSI_X9_57; }
-      size_t message_parts() const override { return 2; }
-      size_t message_part_size() const override { return group_q().bytes(); }
+      DL_Group::Format group_format() const override
+         {
+         return DL_Group::ANSI_X9_57;
+         }
+      size_t message_parts() const override
+         {
+         return 2;
+         }
+      size_t message_part_size() const override
+         {
+         return group_q().bytes();
+         }
 
       /**
       * Load a public key.
@@ -43,8 +55,8 @@ class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
       DSA_PublicKey(const DL_Group& group, const BigInt& y);
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override;
+      create_verification_op(const std::string& params,
+                             const std::string& provider) const override;
    protected:
       DSA_PublicKey() {}
    };
@@ -53,7 +65,7 @@ class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
 * DSA Private Key
 */
 class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
-                                 public virtual DL_Scheme_PrivateKey
+   public virtual DL_Scheme_PrivateKey
    {
    public:
       /**
@@ -77,9 +89,9 @@ class BOTAN_DLL DSA_PrivateKey : public DSA_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
+      create_signature_op(RandomNumberGenerator& rng,
+                          const std::string& params,
+                          const std::string& provider) const override;
    };
 
 }

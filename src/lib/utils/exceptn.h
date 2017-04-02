@@ -23,7 +23,10 @@ class BOTAN_DLL Exception : public std::exception
    public:
       explicit Exception(const std::string& msg) : m_msg(msg) {}
       Exception(const char* prefix, const std::string& msg) : m_msg(std::string(prefix) + " " + msg) {}
-      const char* what() const BOTAN_NOEXCEPT override { return m_msg.c_str(); }
+      const char* what() const BOTAN_NOEXCEPT override
+         {
+         return m_msg.c_str();
+         }
    private:
       std::string m_msg;
    };
@@ -39,7 +42,7 @@ class BOTAN_DLL Invalid_Argument : public Exception
 
       explicit Invalid_Argument(const std::string& msg, const std::string& where) :
          Exception("Invalid argument", msg + " in " + where) {}
-};
+   };
 
 #define BOTAN_ARG_CHECK(expr) \
    do { if(!(expr)) throw Invalid_Argument(#expr, BOTAN_CURRENT_FUNCTION); } while(0)

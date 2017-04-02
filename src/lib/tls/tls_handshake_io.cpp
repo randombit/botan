@@ -36,7 +36,7 @@ void store_be24(uint8_t out[3], size_t val)
 uint64_t steady_clock_ms()
    {
    return std::chrono::duration_cast<std::chrono::milliseconds>(
-      std::chrono::steady_clock::now().time_since_epoch()).count();
+             std::chrono::steady_clock::now().time_since_epoch()).count();
    }
 
 size_t split_for_mtu(size_t mtu, size_t msg_size)
@@ -46,7 +46,9 @@ size_t split_for_mtu(size_t mtu, size_t msg_size)
    const size_t parts = (msg_size + mtu) / mtu;
 
    if(parts + DTLS_HEADERS_SIZE > mtu)
+      {
       return parts + 1;
+      }
 
    return parts;
    }
@@ -68,18 +70,22 @@ void Stream_Handshake_IO::add_record(const std::vector<uint8_t>& record,
    else if(record_type == CHANGE_CIPHER_SPEC)
       {
       if(record.size() != 1 || record[0] != 1)
+         {
          throw Decoding_Error("Invalid ChangeCipherSpec");
+         }
 
       // Pretend it's a regular handshake message of zero length
       const uint8_t ccs_hs[] = { HANDSHAKE_CCS, 0, 0, 0 };
       m_queue.insert(m_queue.end(), ccs_hs, ccs_hs + sizeof(ccs_hs));
       }
    else
+      {
       throw Decoding_Error("Unknown message type " + std::to_string(record_type) + " in handshake processing");
+      }
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
-Stream_Handshake_IO::get_next_record(bool)
+      Stream_Handshake_IO::get_next_record(bool)
    {
    if(m_queue.size() >= 4)
       {
@@ -90,7 +96,7 @@ Stream_Handshake_IO::get_next_record(bool)
          Handshake_Type type = static_cast<Handshake_Type>(m_queue[0]);
 
          std::vector<uint8_t> contents(m_queue.begin() + 4,
-                                    m_queue.begin() + 4 + length);
+                                       m_queue.begin() + 4 + length);
 
          m_queue.erase(m_queue.begin(), m_queue.begin() + 4 + length);
 
@@ -113,7 +119,7 @@ Stream_Handshake_IO::format(const std::vector<uint8_t>& msg,
 
    store_be24(&send_buf[1], buf_size);
 
-   if (msg.size() > 0)
+   if(msg.size() > 0)
       {
       copy_mem(&send_buf[4], msg.data(), msg.size());
       }
@@ -185,7 +191,9 @@ bool Datagram_Handshake_IO::timeout_check()
    const uint64_t ms_since_write = steady_clock_ms() - m_last_write;
 
    if(ms_since_write < m_next_timeout)
+      {
       return false;
+      }
 
    retransmit_last_flight();
 
@@ -214,7 +222,9 @@ void Datagram_Handshake_IO::add_record(const std::vector<uint8_t>& record,
    while(record_size)
       {
       if(record_size < DTLS_HANDSHAKE_HEADER_LEN)
-         return; // completely bogus? at least degenerate/weird
+         {
+         return;   // completely bogus? at least degenerate/weird
+         }
 
       const uint8_t msg_type = record_bits[0];
       const size_t msg_len = load_be24(&record_bits[1]);
@@ -225,7 +235,9 @@ void Datagram_Handshake_IO::add_record(const std::vector<uint8_t>& record,
       const size_t total_size = DTLS_HANDSHAKE_HEADER_LEN + fragment_length;
 
       if(record_size < total_size)
+         {
          throw Decoding_Error("Bad lengths in DTLS header");
+         }
 
       if(message_seq >= m_in_message_seq)
          {
@@ -247,11 +259,13 @@ void Datagram_Handshake_IO::add_record(const std::vector<uint8_t>& record,
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
-Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
+      Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
    {
    // Expecting a message means the last flight is concluded
    if(!m_flights.rbegin()->empty())
+      {
       m_flights.push_back(std::vector<uint16_t>());
+      }
 
    if(expecting_ccs)
       {
@@ -260,7 +274,9 @@ Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
          const uint16_t current_epoch = m_messages.begin()->second.epoch();
 
          if(m_ccs_epochs.count(current_epoch))
+            {
             return std::make_pair(HANDSHAKE_CCS, std::vector<uint8_t>());
+            }
          }
       return std::make_pair(HANDSHAKE_NONE, std::vector<uint8_t>());
       }
@@ -268,7 +284,9 @@ Datagram_Handshake_IO::get_next_record(bool expecting_ccs)
    auto i = m_messages.find(m_in_message_seq);
 
    if(i == m_messages.end() || !i->second.complete())
+      {
       return std::make_pair(HANDSHAKE_NONE, std::vector<uint8_t>());
+      }
 
    m_in_message_seq += 1;
 
@@ -284,7 +302,9 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
    size_t msg_length)
    {
    if(complete())
-      return; // already have entire message, ignore this
+      {
+      return;   // already have entire message, ignore this
+      }
 
    if(m_msg_type == HANDSHAKE_NONE)
       {
@@ -294,18 +314,24 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
       }
 
    if(msg_type != m_msg_type || msg_length != m_msg_length || epoch != m_epoch)
+      {
       throw Decoding_Error("Inconsistent values in fragmented DTLS handshake header");
+      }
 
    if(fragment_offset > m_msg_length)
+      {
       throw Decoding_Error("Fragment offset past end of message");
+      }
 
    if(fragment_offset + fragment_length > m_msg_length)
+      {
       throw Decoding_Error("Fragment overlaps past end of message");
+      }
 
    if(fragment_offset == 0 && fragment_length == m_msg_length)
       {
       m_fragments.clear();
-      m_message.assign(fragment, fragment+fragment_length);
+      m_message.assign(fragment, fragment + fragment_length);
       }
    else
       {
@@ -318,13 +344,17 @@ void Datagram_Handshake_IO::Handshake_Reassembly::add_fragment(
       * and IDS evasion attacks on IP fragmentation.
       */
       for(size_t i = 0; i != fragment_length; ++i)
-         m_fragments[fragment_offset+i] = fragment[i];
+         {
+         m_fragments[fragment_offset + i] = fragment[i];
+         }
 
       if(m_fragments.size() == m_msg_length)
          {
          m_message.resize(m_msg_length);
          for(size_t i = 0; i != m_msg_length; ++i)
+            {
             m_message[i] = m_fragments[i];
+            }
          m_fragments.clear();
          }
       }
@@ -336,10 +366,12 @@ bool Datagram_Handshake_IO::Handshake_Reassembly::complete() const
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
-Datagram_Handshake_IO::Handshake_Reassembly::message() const
+      Datagram_Handshake_IO::Handshake_Reassembly::message() const
    {
    if(!complete())
+      {
       throw Internal_Error("Datagram_Handshake_IO - message not complete");
+      }
 
    return std::make_pair(static_cast<Handshake_Type>(m_msg_type), m_message);
    }
@@ -363,7 +395,7 @@ Datagram_Handshake_IO::format_fragment(const uint8_t fragment[],
    store_be24(&send_buf[6], frag_offset);
    store_be24(&send_buf[9], frag_len);
 
-   if (frag_len > 0)
+   if(frag_len > 0)
       {
       copy_mem(&send_buf[12], fragment, frag_len);
       }
@@ -412,9 +444,9 @@ Datagram_Handshake_IO::send(const Handshake_Message& msg)
    }
 
 std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
-                                                      uint16_t epoch,
-                                                      Handshake_Type msg_type,
-                                                      const std::vector<uint8_t>& msg_bits)
+      uint16_t epoch,
+      Handshake_Type msg_type,
+      const std::vector<uint8_t>& msg_bits)
    {
    const std::vector<uint8_t> no_fragment =
       format_w_seq(msg_bits, msg_type, msg_seq);

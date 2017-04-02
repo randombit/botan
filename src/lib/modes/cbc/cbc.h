@@ -38,7 +38,10 @@ class BOTAN_DLL CBC_Mode : public Cipher_Mode
    protected:
       CBC_Mode(BlockCipher* cipher, BlockCipherModePaddingMethod* padding);
 
-      const BlockCipher& cipher() const { return *m_cipher; }
+      const BlockCipher& cipher() const
+         {
+         return *m_cipher;
+         }
 
       const BlockCipherModePaddingMethod& padding() const
          {
@@ -46,9 +49,15 @@ class BOTAN_DLL CBC_Mode : public Cipher_Mode
          return *m_padding;
          }
 
-      secure_vector<uint8_t>& state() { return m_state; }
+      secure_vector<uint8_t>& state()
+         {
+         return m_state;
+         }
 
-      uint8_t* state_ptr() { return m_state.data(); }
+      uint8_t* state_ptr()
+         {
+         return m_state.data();
+         }
 
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;

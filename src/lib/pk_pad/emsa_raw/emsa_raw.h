@@ -19,14 +19,17 @@ namespace Botan {
 class BOTAN_DLL EMSA_Raw final : public EMSA
    {
    public:
-      EMSA* clone() override { return new EMSA_Raw(); }
+      EMSA* clone() override
+         {
+         return new EMSA_Raw();
+         }
 
    private:
       void update(const uint8_t[], size_t) override;
       secure_vector<uint8_t> raw_data() override;
 
       secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
-                                     RandomNumberGenerator&) override;
+                                         RandomNumberGenerator&) override;
       bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
                   size_t) override;
 

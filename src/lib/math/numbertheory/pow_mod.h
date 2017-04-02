@@ -22,6 +22,9 @@ class BOTAN_DLL Modular_Exponentiator
       virtual void set_exponent(const BigInt&) = 0;
       virtual BigInt execute() const = 0;
       virtual Modular_Exponentiator* copy() const = 0;
+      Modular_Exponentiator() = default;
+      Modular_Exponentiator& operator=(Modular_Exponentiator const&) = default;
+      Modular_Exponentiator(Modular_Exponentiator const&) = default;
       virtual ~Modular_Exponentiator() {}
    };
 
@@ -32,7 +35,8 @@ class BOTAN_DLL Power_Mod
    {
    public:
 
-      enum Usage_Hints {
+      enum Usage_Hints
+         {
          NO_HINTS        = 0x0000,
 
          BASE_IS_FIXED   = 0x0001,
@@ -43,7 +47,7 @@ class BOTAN_DLL Power_Mod
          EXP_IS_FIXED    = 0x0100,
          EXP_IS_SMALL    = 0x0200,
          EXP_IS_LARGE    = 0x0400
-      };
+         };
 
       /*
       * Try to choose a good window size
@@ -101,7 +105,10 @@ class BOTAN_DLL Fixed_Exponent_Power_Mod : public Power_Mod
    {
    public:
       BigInt operator()(const BigInt& b) const
-         { set_base(b); return execute(); }
+         {
+         set_base(b);
+         return execute();
+         }
 
       Fixed_Exponent_Power_Mod() {}
 
@@ -117,7 +124,10 @@ class BOTAN_DLL Fixed_Base_Power_Mod : public Power_Mod
    {
    public:
       BigInt operator()(const BigInt& e) const
-         { set_exponent(e); return execute(); }
+         {
+         set_exponent(e);
+         return execute();
+         }
 
       Fixed_Base_Power_Mod() {}
 

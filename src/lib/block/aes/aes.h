@@ -24,8 +24,14 @@ class BOTAN_DLL AES_128 final : public Block_Cipher_Fixed_Params<16, 16>
       void clear() override;
 
       std::string provider() const override;
-      std::string name() const override { return "AES-128"; }
-      BlockCipher* clone() const override { return new AES_128; }
+      std::string name() const override
+         {
+         return "AES-128";
+         }
+      BlockCipher* clone() const override
+         {
+         return new AES_128;
+         }
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
@@ -57,8 +63,14 @@ class BOTAN_DLL AES_192 final : public Block_Cipher_Fixed_Params<16, 24>
       void clear() override;
 
       std::string provider() const override;
-      std::string name() const override { return "AES-192"; }
-      BlockCipher* clone() const override { return new AES_192; }
+      std::string name() const override
+         {
+         return "AES-192";
+         }
+      BlockCipher* clone() const override
+         {
+         return new AES_192;
+         }
    private:
 #if defined(BOTAN_HAS_AES_SSSE3)
       void ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
@@ -91,8 +103,14 @@ class BOTAN_DLL AES_256 final : public Block_Cipher_Fixed_Params<16, 32>
 
       std::string provider() const override;
 
-      std::string name() const override { return "AES-256"; }
-      BlockCipher* clone() const override { return new AES_256; }
+      std::string name() const override
+         {
+         return "AES-256";
+         }
+      BlockCipher* clone() const override
+         {
+         return new AES_256;
+         }
    private:
 #if defined(BOTAN_HAS_AES_SSSE3)
       void ssse3_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;

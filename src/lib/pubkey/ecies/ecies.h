@@ -68,8 +68,6 @@ class BOTAN_DLL ECIES_KA_Params
       ECIES_KA_Params(const EC_Group& domain, const std::string& kdf_spec, size_t length,
                       PointGFp::Compression_Type compression_type, ECIES_Flags flags);
 
-      virtual ~ECIES_KA_Params() = default;
-
       inline const EC_Group& domain() const
          {
          return m_domain;
@@ -146,8 +144,6 @@ class BOTAN_DLL ECIES_System_Params : public ECIES_KA_Params
       ECIES_System_Params(const EC_Group& domain, const std::string& kdf_spec, const std::string& dem_algo_spec,
                           size_t dem_key_len, const std::string& mac_spec, size_t mac_key_len,
                           PointGFp::Compression_Type compression_type, ECIES_Flags flags);
-
-      virtual ~ECIES_System_Params() = default;
 
       /// creates an instance of the message authentication code
       std::unique_ptr<MessageAuthenticationCode> create_mac() const;

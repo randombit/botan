@@ -28,11 +28,14 @@ class BOTAN_DLL Lion final : public BlockCipher
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
-      size_t block_size() const override { return m_block_size; }
+      size_t block_size() const override
+         {
+         return m_block_size;
+         }
 
       Key_Length_Specification key_spec() const override
          {
-         return Key_Length_Specification(2, 2*m_hash->output_length(), 2);
+         return Key_Length_Specification(2, 2 * m_hash->output_length(), 2);
          }
 
       void clear() override;
@@ -50,8 +53,14 @@ class BOTAN_DLL Lion final : public BlockCipher
    private:
       void key_schedule(const uint8_t[], size_t) override;
 
-      size_t left_size() const { return m_hash->output_length(); }
-      size_t right_size() const { return m_block_size - left_size(); }
+      size_t left_size() const
+         {
+         return m_hash->output_length();
+         }
+      size_t right_size() const
+         {
+         return m_block_size - left_size();
+         }
 
       const size_t m_block_size;
       std::unique_ptr<HashFunction> m_hash;

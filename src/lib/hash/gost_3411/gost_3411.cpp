@@ -55,7 +55,9 @@ void GOST_34_11::add_data(const uint8_t input[], size_t length)
    const size_t remaining   = length % hash_block_size();
 
    if(full_blocks)
+      {
       compress_n(input, full_blocks);
+      }
 
    buffer_insert(m_buffer, m_position, input + full_blocks * hash_block_size(), remaining);
    m_position += remaining;
@@ -70,7 +72,7 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks)
       {
       for(uint16_t j = 0, carry = 0; j != 32; ++j)
          {
-         uint16_t s = m_sum[j] + input[32*i+j] + carry;
+         uint16_t s = m_sum[j] + input[32 * i + j] + carry;
          carry = get_byte(0, s);
          m_sum[j] = get_byte(1, s);
          }
@@ -79,7 +81,7 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks)
 
       uint64_t U[4], V[4];
       load_be(U, m_hash.data(), 4);
-      load_be(V, input + 32*i, 4);
+      load_be(V, input + 32 * i, 4);
 
       for(size_t j = 0; j != 4; ++j)
          {
@@ -88,13 +90,17 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks)
          // P transformation
          for(size_t k = 0; k != 4; ++k)
             for(size_t l = 0; l != 8; ++l)
-               key[4*l+k] = get_byte(l, U[k]) ^ get_byte(l, V[k]);
+               {
+               key[4 * l + k] = get_byte(l, U[k]) ^ get_byte(l, V[k]);
+               }
 
          m_cipher.set_key(key, 32);
-         m_cipher.encrypt(&m_hash[8*j], S + 8*j);
+         m_cipher.encrypt(&m_hash[8 * j], S + 8 * j);
 
          if(j == 3)
+            {
             break;
+            }
 
          // A(x)
          uint64_t A_U = U[0];
@@ -156,12 +162,12 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks)
       S2[30] = S[ 0] ^ S[ 2] ^ S[ 4] ^ S[12] ^ S[18] ^ S[20] ^ S[28];
       S2[31] = S[ 1] ^ S[ 3] ^ S[ 5] ^ S[13] ^ S[19] ^ S[21] ^ S[29];
 
-      xor_buf(S, S2, input + 32*i, 32);
+      xor_buf(S, S2, input + 32 * i, 32);
 
       S2[0] = S[0] ^ S[2] ^ S[4] ^ S[6] ^ S[24] ^ S[30];
       S2[1] = S[1] ^ S[3] ^ S[5] ^ S[7] ^ S[25] ^ S[31];
 
-      copy_mem(S, S+2, 30);
+      copy_mem(S, S + 2, 30);
       S[30] = S2[0];
       S[31] = S2[1];
 

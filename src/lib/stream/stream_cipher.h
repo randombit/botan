@@ -29,8 +29,8 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<StreamCipher>
-         create(const std::string& algo_spec,
-                const std::string& provider = "");
+      create(const std::string& algo_spec,
+             const std::string& provider = "");
 
       /**
       * Create an instance based on a name
@@ -40,8 +40,8 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * Throws a Lookup_Error if the algo/provider combination cannot be found
       */
       static std::unique_ptr<StreamCipher>
-         create_or_throw(const std::string& algo_spec,
-                         const std::string& provider = "");
+      create_or_throw(const std::string& algo_spec,
+                      const std::string& provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -63,7 +63,9 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param len the length of buf in bytes
       */
       void cipher1(uint8_t buf[], size_t len)
-         { cipher(buf, buf, len); }
+         {
+         cipher(buf, buf, len);
+         }
 
       /**
       * Encrypt a message
@@ -71,8 +73,10 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param inout the plaintext / ciphertext
       */
       template<typename Alloc>
-         void encipher(std::vector<uint8_t, Alloc>& inout)
-         { cipher(inout.data(), inout.data(), inout.size()); }
+      void encipher(std::vector<uint8_t, Alloc>& inout)
+         {
+         cipher(inout.data(), inout.data(), inout.size());
+         }
 
       /**
       * Encrypt a message
@@ -80,8 +84,10 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param inout the plaintext / ciphertext
       */
       template<typename Alloc>
-         void encrypt(std::vector<uint8_t, Alloc>& inout)
-         { cipher(inout.data(), inout.data(), inout.size()); }
+      void encrypt(std::vector<uint8_t, Alloc>& inout)
+         {
+         cipher(inout.data(), inout.data(), inout.size());
+         }
 
       /**
       * Decrypt a message in place
@@ -89,8 +95,10 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param inout the plaintext / ciphertext
       */
       template<typename Alloc>
-         void decrypt(std::vector<uint8_t, Alloc>& inout)
-         { cipher(inout.data(), inout.data(), inout.size()); }
+      void decrypt(std::vector<uint8_t, Alloc>& inout)
+         {
+         cipher(inout.data(), inout.data(), inout.size());
+         }
 
       /**
       * Resync the cipher using the IV
@@ -103,7 +111,10 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @param iv_len the length of the IV in bytes
       * @return if the length is valid for this algorithm
       */
-      virtual bool valid_iv_length(size_t iv_len) const { return (iv_len == 0); }
+      virtual bool valid_iv_length(size_t iv_len) const
+         {
+         return (iv_len == 0);
+         }
 
       /**
       * @return a new object representing the same algorithm as *this
@@ -120,7 +131,10 @@ class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
       * @return provider information about this implementation. Default is "base",
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
-      virtual std::string provider() const { return "base"; }
+      virtual std::string provider() const
+         {
+         return "base";
+         }
    };
 
 }

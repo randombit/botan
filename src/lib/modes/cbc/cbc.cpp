@@ -37,9 +37,13 @@ void CBC_Mode::reset()
 std::string CBC_Mode::name() const
    {
    if(m_padding)
+      {
       return cipher().name() + "/CBC/" + padding().name();
+      }
    else
+      {
       return cipher().name() + "/CBC/CTS";
+      }
    }
 
 size_t CBC_Mode::update_granularity() const
@@ -70,7 +74,9 @@ void CBC_Mode::key_schedule(const uint8_t key[], size_t length)
 void CBC_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
+      {
       throw Invalid_IV_Length(name(), nonce_len);
+      }
 
    /*
    * A nonce of zero length means carry the last ciphertext value over
@@ -78,7 +84,9 @@ void CBC_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    * this is the first message then we use an IV of all zeros.
    */
    if(nonce_len)
+      {
       m_state.assign(nonce, nonce + nonce_len);
+      }
    }
 
 size_t CBC_Encryption::minimum_final_size() const
@@ -89,9 +97,13 @@ size_t CBC_Encryption::minimum_final_size() const
 size_t CBC_Encryption::output_length(size_t input_length) const
    {
    if(input_length == 0)
+      {
       return cipher().block_size();
+      }
    else
+      {
       return round_up(input_length, cipher().block_size());
+      }
    }
 
 size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
@@ -107,12 +119,12 @@ size_t CBC_Encryption::process(uint8_t buf[], size_t sz)
       {
       for(size_t i = 0; i != blocks; ++i)
          {
-         xor_buf(&buf[BS*i], prev_block, BS);
-         cipher().encrypt(&buf[BS*i]);
-         prev_block = &buf[BS*i];
+         xor_buf(&buf[BS * i], prev_block, BS);
+         cipher().encrypt(&buf[BS * i]);
+         prev_block = &buf[BS * i];
          }
 
-      state().assign(&buf[BS*(blocks-1)], &buf[BS*blocks]);
+      state().assign(&buf[BS * (blocks - 1)], &buf[BS * blocks]);
       }
 
    return sz;
@@ -124,12 +136,14 @@ void CBC_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
    const size_t BS = cipher().block_size();
 
-   const size_t bytes_in_final_block = (buffer.size()-offset) % BS;
+   const size_t bytes_in_final_block = (buffer.size() - offset) % BS;
 
    padding().add_padding(buffer, bytes_in_final_block, BS);
 
-   if((buffer.size()-offset) % BS)
+   if((buffer.size() - offset) % BS)
+      {
       throw Exception("Did not pad to full block size in " + name());
+      }
 
    update(buffer, offset);
    }
@@ -158,7 +172,9 @@ void CTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const size_t BS = cipher().block_size();
 
    if(sz < BS + 1)
+      {
       throw Encoding_Error(name() + ": insufficient data to encrypt");
+      }
 
    if(sz % BS == 0)
       {
@@ -166,13 +182,15 @@ void CTS_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
       // swap last two blocks
       for(size_t i = 0; i != BS; ++i)
-         std::swap(buffer[buffer.size()-BS+i], buffer[buffer.size()-2*BS+i]);
+         {
+         std::swap(buffer[buffer.size() - BS + i], buffer[buffer.size() - 2 * BS + i]);
+         }
       }
    else
       {
       const size_t full_blocks = ((sz / BS) - 1) * BS;
       const size_t final_bytes = sz - full_blocks;
-      BOTAN_ASSERT(final_bytes > BS && final_bytes < 2*BS, "Left over size in expected range");
+      BOTAN_ASSERT(final_bytes > BS && final_bytes < 2 * BS, "Left over size in expected range");
 
       secure_vector<uint8_t> last(buf + full_blocks, buf + full_blocks + final_bytes);
       buffer.resize(full_blocks + offset);
@@ -237,11 +255,13 @@ void CBC_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const size_t BS = cipher().block_size();
 
    if(sz == 0 || sz % BS)
+      {
       throw Decoding_Error(name() + ": Ciphertext not a multiple of block size");
+      }
 
    update(buffer, offset);
 
-   const size_t pad_bytes = BS - padding().unpad(&buffer[buffer.size()-BS], BS);
+   const size_t pad_bytes = BS - padding().unpad(&buffer[buffer.size() - BS], BS);
    buffer.resize(buffer.size() - pad_bytes); // remove padding
    if(pad_bytes == 0 && padding().name() != "NoPadding")
       {
@@ -274,14 +294,18 @@ void CTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const size_t BS = cipher().block_size();
 
    if(sz < BS + 1)
+      {
       throw Encoding_Error(name() + ": insufficient data to decrypt");
+      }
 
    if(sz % BS == 0)
       {
       // swap last two blocks
 
       for(size_t i = 0; i != BS; ++i)
-         std::swap(buffer[buffer.size()-BS+i], buffer[buffer.size()-2*BS+i]);
+         {
+         std::swap(buffer[buffer.size() - BS + i], buffer[buffer.size() - 2 * BS + i]);
+         }
 
       update(buffer, offset);
       }
@@ -289,7 +313,7 @@ void CTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
       {
       const size_t full_blocks = ((sz / BS) - 1) * BS;
       const size_t final_bytes = sz - full_blocks;
-      BOTAN_ASSERT(final_bytes > BS && final_bytes < 2*BS, "Left over size in expected range");
+      BOTAN_ASSERT(final_bytes > BS && final_bytes < 2 * BS, "Left over size in expected range");
 
       secure_vector<uint8_t> last(buf + full_blocks, buf + full_blocks + final_bytes);
       buffer.resize(full_blocks + offset);
@@ -300,7 +324,9 @@ void CTS_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
       xor_buf(last.data(), &last[BS], final_bytes - BS);
 
       for(size_t i = 0; i != final_bytes - BS; ++i)
+         {
          std::swap(last[i], last[i + BS]);
+         }
 
       cipher().decrypt(last.data());
       xor_buf(last.data(), state_ptr(), BS);

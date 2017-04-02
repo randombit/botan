@@ -9,35 +9,35 @@
 #include <botan/rng.h>
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
-  #include <botan/internal/rdrand.h>
+   #include <botan/internal/rdrand.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDSEED)
-  #include <botan/internal/rdseed.h>
+   #include <botan/internal/rdseed.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
-  #include <botan/internal/dev_random.h>
+   #include <botan/internal/dev_random.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
-  #include <botan/internal/es_capi.h>
+   #include <botan/internal/es_capi.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
-  #include <botan/internal/es_win32.h>
+   #include <botan/internal/es_win32.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
-  #include <botan/internal/proc_walk.h>
+   #include <botan/internal/proc_walk.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
-  #include <botan/internal/darwin_secrandom.h>
+   #include <botan/internal/darwin_secrandom.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_GETENTROPY)
-  #include <botan/internal/getentropy.h>
+   #include <botan/internal/getentropy.h>
 #endif
 
 namespace Botan {
@@ -91,7 +91,9 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
 #if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
       const std::string root_dir = BOTAN_ENTROPY_PROC_FS_PATH;
       if(!root_dir.empty())
+         {
          return std::unique_ptr<Entropy_Source>(new ProcWalking_EntropySource(root_dir));
+         }
 #endif
       }
 
@@ -137,8 +139,10 @@ size_t Entropy_Sources::poll(RandomNumberGenerator& rng,
       {
       bits_collected += src->poll(rng);
 
-      if (bits_collected >= poll_bits || clock::now() > deadline)
+      if(bits_collected >= poll_bits || clock::now() > deadline)
+         {
          break;
+         }
       }
 
    return bits_collected;
@@ -159,7 +163,7 @@ size_t Entropy_Sources::poll_just(RandomNumberGenerator& rng, const std::string&
 
 Entropy_Sources::Entropy_Sources(const std::vector<std::string>& sources)
    {
-   for(auto&& src_name : sources)
+   for(auto && src_name : sources)
       {
       add_source(Entropy_Source::create(src_name));
       }

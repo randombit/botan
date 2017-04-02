@@ -16,7 +16,9 @@ namespace Botan {
 Modular_Reducer::Modular_Reducer(const BigInt& mod)
    {
    if(mod <= 0)
+      {
       throw Invalid_Argument("Modular_Reducer: modulus must be positive");
+      }
 
    m_modulus = mod;
    m_mod_words = m_modulus.sig_words();
@@ -32,12 +34,16 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod)
 BigInt Modular_Reducer::reduce(const BigInt& x) const
    {
    if(m_mod_words == 0)
+      {
       throw Invalid_State("Modular_Reducer: Never initalized");
+      }
 
    if(x.cmp(m_modulus, false) < 0)
       {
       if(x.is_negative())
-         return x + m_modulus; // make positive
+         {
+         return x + m_modulus;   // make positive
+         }
       return x;
       }
    else if(x.cmp(m_modulus_2, false) < 0)
@@ -64,12 +70,18 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const
          }
 
       while(t2 >= m_modulus)
+         {
          t2 -= m_modulus;
+         }
 
       if(x.is_positive())
+         {
          return t2;
+         }
       else
+         {
          return (m_modulus - t2);
+         }
       }
    else
       {

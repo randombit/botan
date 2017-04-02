@@ -32,7 +32,7 @@ class BOTAN_DLL Server_Information
       *        TCP/UDP). Zero represents unknown.
       */
       Server_Information(const std::string& hostname,
-                        uint16_t port = 0) :
+                         uint16_t port = 0) :
          m_hostname(hostname), m_service(""), m_port(port) {}
 
       /**
@@ -43,30 +43,42 @@ class BOTAN_DLL Server_Information
       *        TCP/UDP). Zero represents unknown.
       */
       Server_Information(const std::string& hostname,
-                        const std::string& service,
-                        uint16_t port = 0) :
+                         const std::string& service,
+                         uint16_t port = 0) :
          m_hostname(hostname), m_service(service), m_port(port) {}
 
       /**
       * @return the host's DNS name, if known
       */
-      std::string hostname() const { return m_hostname; }
+      std::string hostname() const
+         {
+         return m_hostname;
+         }
 
       /**
       * @return text string of the service type, e.g.,
       * "https", "tor", or "git"
       */
-      std::string service() const { return m_service; }
+      std::string service() const
+         {
+         return m_service;
+         }
 
       /**
       * @return the protocol port of the server, or zero if unknown
       */
-      uint16_t port() const { return m_port; }
+      uint16_t port() const
+         {
+         return m_port;
+         }
 
       /**
       * @return whether the hostname is known
       */
-      bool empty() const { return m_hostname.empty(); }
+      bool empty() const
+         {
+         return m_hostname.empty();
+         }
 
    private:
       std::string m_hostname, m_service;
@@ -89,11 +101,17 @@ inline bool operator!=(const Server_Information& a, const Server_Information& b)
 inline bool operator<(const Server_Information& a, const Server_Information& b)
    {
    if(a.hostname() != b.hostname())
+      {
       return (a.hostname() < b.hostname());
+      }
    if(a.service() != b.service())
+      {
       return (a.service() < b.service());
+      }
    if(a.port() != b.port())
+      {
       return (a.port() < b.port());
+      }
    return false; // equal
    }
 

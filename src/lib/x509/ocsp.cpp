@@ -16,7 +16,7 @@
 #include <botan/x509path.h>
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
-  #include <botan/http_util.h>
+   #include <botan/http_util.h>
 #endif
 
 namespace Botan {
@@ -56,7 +56,9 @@ Request::Request(const X509_Certificate& issuer_cert,
    m_certid(m_issuer, BigInt::decode(subject_cert.serial_number()))
    {
    if(subject_cert.issuer_dn() != issuer_cert.subject_dn())
+      {
       throw Invalid_Argument("Invalid cert pair to OCSP::Request (mismatched issuer,subject args?)");
+      }
    }
 
 Request::Request(const X509_Certificate& issuer_cert,
@@ -69,17 +71,17 @@ Request::Request(const X509_Certificate& issuer_cert,
 std::vector<uint8_t> Request::BER_encode() const
    {
    return DER_Encoder().start_cons(SEQUENCE)
-        .start_cons(SEQUENCE)
+          .start_cons(SEQUENCE)
           .start_explicit(0)
-            .encode(static_cast<size_t>(0)) // version #
+          .encode(static_cast<size_t>(0)) // version #
           .end_explicit()
-            .start_cons(SEQUENCE)
-              .start_cons(SEQUENCE)
-                .encode(m_certid)
-              .end_cons()
-            .end_cons()
+          .start_cons(SEQUENCE)
+          .start_cons(SEQUENCE)
+          .encode(m_certid)
           .end_cons()
-      .end_cons().get_contents_unlocked();
+          .end_cons()
+          .end_cons()
+          .end_cons().get_contents_unlocked();
    }
 
 std::string Request::base64_encode() const
@@ -97,7 +99,9 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
    response_outer.decode(resp_status, ENUMERATED, UNIVERSAL);
 
    if(resp_status != 0)
+      {
       throw Exception("OCSP response status " + std::to_string(resp_status));
+      }
 
    if(response_outer.more_items())
       {
@@ -111,31 +115,31 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
          BER_Decoder(response_bytes.get_next_octet_string()).start_cons(SEQUENCE);
 
       basicresponse.start_cons(SEQUENCE)
-           .raw_bytes(m_tbs_bits)
-         .end_cons()
-         .decode(m_sig_algo)
-         .decode(m_signature, BIT_STRING);
+      .raw_bytes(m_tbs_bits)
+      .end_cons()
+      .decode(m_sig_algo)
+      .decode(m_signature, BIT_STRING);
       decode_optional_list(basicresponse, ASN1_Tag(0), m_certs);
 
       size_t responsedata_version = 0;
       Extensions extensions;
 
       BER_Decoder(m_tbs_bits)
-         .decode_optional(responsedata_version, ASN1_Tag(0),
-                          ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+      .decode_optional(responsedata_version, ASN1_Tag(0),
+                       ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
 
-         .decode_optional(m_signer_name, ASN1_Tag(1),
-                          ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+      .decode_optional(m_signer_name, ASN1_Tag(1),
+                       ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
 
-         .decode_optional_string(m_key_hash, OCTET_STRING, 2,
-                                 ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+      .decode_optional_string(m_key_hash, OCTET_STRING, 2,
+                              ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
 
-         .decode(m_produced_at)
+      .decode(m_produced_at)
 
-         .decode_list(m_responses)
+      .decode_list(m_responses)
 
-         .decode_optional(extensions, ASN1_Tag(1),
-                          ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+      .decode_optional(extensions, ASN1_Tag(1),
+                       ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
       }
 
    response_outer.end_cons();
@@ -151,7 +155,9 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
          split_on(OIDS::lookup(m_sig_algo.oid), '/');
 
       if(sig_info.size() != 2 || sig_info[0] != pub_key->algo_name())
+         {
          return Certificate_Status_Code::OCSP_RESPONSE_INVALID;
+         }
 
       std::string padding = sig_info[1];
       Signature_Format format = (pub_key->message_parts() >= 2) ? DER_SEQUENCE : IEEE_1363;
@@ -159,9 +165,13 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
       PK_Verifier verifier(*pub_key, padding, format);
 
       if(verifier.verify_message(ASN1::put_in_sequence(m_tbs_bits), m_signature))
+         {
          return Certificate_Status_Code::OCSP_SIGNATURE_OK;
+         }
       else
+         {
          return Certificate_Status_Code::OCSP_SIGNATURE_ERROR;
+         }
       }
    catch(Exception&)
       {
@@ -170,14 +180,16 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
    }
 
 Certificate_Status_Code Response::check_signature(const std::vector<Certificate_Store*>& trusted_roots,
-                                                  const std::vector<std::shared_ptr<const X509_Certificate>>& ee_cert_path) const
+      const std::vector<std::shared_ptr<const X509_Certificate>>& ee_cert_path) const
    {
    std::shared_ptr<const X509_Certificate> signing_cert;
 
    for(size_t i = 0; i != trusted_roots.size(); ++i)
       {
       if(m_signer_name.empty() && m_key_hash.empty())
+         {
          return Certificate_Status_Code::OCSP_RESPONSE_INVALID;
+         }
 
       if(!m_signer_name.empty())
          {
@@ -238,10 +250,12 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
       }
 
    if(!signing_cert)
+      {
       return Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND;
+      }
 
    if(!signing_cert->allowed_usage(CRL_SIGN) &&
-      !signing_cert->allowed_extended_usage("PKIX.OCSPSigning"))
+         !signing_cert->allowed_extended_usage("PKIX.OCSPSigning"))
       {
       return Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE;
       }
@@ -250,8 +264,8 @@ Certificate_Status_Code Response::check_signature(const std::vector<Certificate_
    }
 
 Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
-                                             const X509_Certificate& subject,
-                                             std::chrono::system_clock::time_point ref_time) const
+      const X509_Certificate& subject,
+      std::chrono::system_clock::time_point ref_time) const
    {
    for(const auto& response : m_responses)
       {
@@ -260,18 +274,28 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
          X509_Time x509_ref_time(ref_time);
 
          if(response.cert_status() == 1)
+            {
             return Certificate_Status_Code::CERT_IS_REVOKED;
+            }
 
          if(response.this_update() > x509_ref_time)
+            {
             return Certificate_Status_Code::OCSP_NOT_YET_VALID;
+            }
 
          if(response.next_update().time_is_set() && x509_ref_time > response.next_update())
+            {
             return Certificate_Status_Code::OCSP_HAS_EXPIRED;
+            }
 
          if(response.cert_status() == 0)
+            {
             return Certificate_Status_Code::OCSP_RESPONSE_GOOD;
+            }
          else
+            {
             return Certificate_Status_Code::OCSP_BAD_STATUS;
+            }
          }
       }
 
@@ -286,7 +310,9 @@ Response online_check(const X509_Certificate& issuer,
                       Certificate_Store* trusted_roots)
    {
    if(ocsp_responder.empty())
+      {
       throw Invalid_Argument("No OCSP responder specified");
+      }
 
    OCSP::Request req(issuer, subject_serial);
 
@@ -304,7 +330,9 @@ Response online_check(const X509_Certificate& issuer,
    trusted_roots_vec.push_back(trusted_roots);
 
    if(trusted_roots)
+      {
       response.check_signature(trusted_roots_vec);
+      }
 
    return response;
    }
@@ -315,7 +343,9 @@ Response online_check(const X509_Certificate& issuer,
                       Certificate_Store* trusted_roots)
    {
    if(subject.issuer_dn() != issuer.subject_dn())
+      {
       throw Invalid_Argument("Invalid cert pair to OCSP::online_check (mismatched issuer,subject args?)");
+      }
 
    return online_check(issuer,
                        BigInt::decode(subject.serial_number()),

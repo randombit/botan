@@ -22,7 +22,7 @@ namespace Botan {
 struct BOTAN_DLL Illegal_Transformation : public Exception
    {
    explicit Illegal_Transformation(const std::string& err =
-                          "Requested transformation is not possible") :
+                                      "Requested transformation is not possible") :
       Exception(err) {}
    };
 
@@ -41,11 +41,12 @@ struct BOTAN_DLL Illegal_Point : public Exception
 class BOTAN_DLL PointGFp
    {
    public:
-      enum Compression_Type {
+      enum Compression_Type
+         {
          UNCOMPRESSED = 0,
          COMPRESSED   = 1,
          HYBRID       = 2
-      };
+         };
 
       /**
       * Construct an uninitialized PointGFp
@@ -87,7 +88,9 @@ class BOTAN_DLL PointGFp
       PointGFp& operator=(PointGFp&& other)
          {
          if(this != &other)
+            {
             this->swap(other);
+            }
          return (*this);
          }
 
@@ -138,8 +141,8 @@ class BOTAN_DLL PointGFp
       * @result (p1 * z1 + p2 * z2)
       */
       friend BOTAN_DLL PointGFp multi_exponentiate(
-        const PointGFp& p1, const BigInt& z1,
-        const PointGFp& p2, const BigInt& z2);
+         const PointGFp& p1, const BigInt& z1,
+         const PointGFp& p2, const BigInt& z2);
 
       /**
       * Negate this point
@@ -148,7 +151,9 @@ class BOTAN_DLL PointGFp
       PointGFp& negate()
          {
          if(!is_zero())
+            {
             m_coord_y = m_curve.get_p() - m_coord_y;
+            }
          return *this;
          }
 
@@ -156,7 +161,10 @@ class BOTAN_DLL PointGFp
       * Return base curve of this point
       * @result the curve over GF(p) of this point
       */
-      const CurveGFp& get_curve() const { return m_curve; }
+      const CurveGFp& get_curve() const
+         {
+         return m_curve;
+         }
 
       /**
       * get affine x coordinate
@@ -175,7 +183,9 @@ class BOTAN_DLL PointGFp
       * @result true, if this point is at infinity, false otherwise.
       */
       bool is_zero() const
-         { return (m_coord_x.is_zero() && m_coord_z.is_zero()); }
+         {
+         return (m_coord_x.is_zero() && m_coord_z.is_zero());
+         }
 
       /**
       * Checks whether the point is to be found on the underlying
@@ -281,7 +291,9 @@ PointGFp BOTAN_DLL OS2ECP(const uint8_t data[], size_t data_len,
 
 template<typename Alloc>
 PointGFp OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve)
-   { return OS2ECP(data.data(), data.size(), curve); }
+   {
+   return OS2ECP(data.data(), data.size(), curve);
+   }
 
 /**
 
@@ -305,7 +317,9 @@ namespace std {
 
 template<>
 inline void swap<Botan::PointGFp>(Botan::PointGFp& x, Botan::PointGFp& y)
-   { x.swap(y); }
+   {
+   x.swap(y);
+   }
 
 }
 

@@ -25,7 +25,9 @@ class Fixed_Window_Exponentiator : public Modular_Exponentiator
       BigInt execute() const override;
 
       Modular_Exponentiator* copy() const override
-         { return new Fixed_Window_Exponentiator(*this); }
+         {
+         return new Fixed_Window_Exponentiator(*this);
+         }
 
       Fixed_Window_Exponentiator(const BigInt&, Power_Mod::Usage_Hints);
    private:
@@ -47,7 +49,9 @@ class Montgomery_Exponentiator : public Modular_Exponentiator
       BigInt execute() const override;
 
       Modular_Exponentiator* copy() const override
-         { return new Montgomery_Exponentiator(*this); }
+         {
+         return new Montgomery_Exponentiator(*this);
+         }
 
       Montgomery_Exponentiator(const BigInt&, Power_Mod::Usage_Hints);
    private:

@@ -20,7 +20,7 @@ inline void R1(uint32_t& L, uint32_t R, uint32_t MK, uint8_t RK)
    {
    uint32_t T = rotate_left(MK + R, RK);
    L ^= (CAST_SBOX1[get_byte(0, T)] ^ CAST_SBOX2[get_byte(1, T)]) -
-         CAST_SBOX3[get_byte(2, T)] + CAST_SBOX4[get_byte(3, T)];
+        CAST_SBOX3[get_byte(2, T)] + CAST_SBOX4[get_byte(3, T)];
    }
 
 /*
@@ -40,7 +40,7 @@ inline void R3(uint32_t& L, uint32_t R, uint32_t MK, uint8_t RK)
    {
    uint32_t T = rotate_left(MK - R, RK);
    L ^= ((CAST_SBOX1[get_byte(0, T)]  + CAST_SBOX2[get_byte(1, T)]) ^
-          CAST_SBOX3[get_byte(2, T)]) - CAST_SBOX4[get_byte(3, T)];
+         CAST_SBOX3[get_byte(2, T)]) - CAST_SBOX4[get_byte(3, T)];
    }
 
 }
@@ -53,7 +53,7 @@ void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       uint32_t L, R;
-      load_be(in + BLOCK_SIZE*i, L, R);
+      load_be(in + BLOCK_SIZE * i, L, R);
 
       R1(L, R, m_MK[ 0], m_RK[ 0]);
       R2(R, L, m_MK[ 1], m_RK[ 1]);
@@ -72,7 +72,7 @@ void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       R3(L, R, m_MK[14], m_RK[14]);
       R1(R, L, m_MK[15], m_RK[15]);
 
-      store_be(out + BLOCK_SIZE*i, R, L);
+      store_be(out + BLOCK_SIZE * i, R, L);
       }
    }
 
@@ -84,7 +84,7 @@ void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       uint32_t L, R;
-      load_be(in + BLOCK_SIZE*i, L, R);
+      load_be(in + BLOCK_SIZE * i, L, R);
 
       R1(L, R, m_MK[15], m_RK[15]);
       R3(R, L, m_MK[14], m_RK[14]);
@@ -103,7 +103,7 @@ void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       R2(L, R, m_MK[ 1], m_RK[ 1]);
       R1(R, L, m_MK[ 0], m_RK[ 0]);
 
-      store_be(out + BLOCK_SIZE*i, R, L);
+      store_be(out + BLOCK_SIZE * i, R, L);
       }
    }
 
@@ -117,7 +117,9 @@ void CAST_128::key_schedule(const uint8_t key[], size_t length)
 
    secure_vector<uint32_t> X(4);
    for(size_t i = 0; i != length; ++i)
-      X[i/4] = (X[i/4] << 8) + key[i];
+      {
+      X[i / 4] = (X[i / 4] << 8) + key[i];
+      }
 
    cast_ks(m_MK, X);
 
@@ -125,7 +127,9 @@ void CAST_128::key_schedule(const uint8_t key[], size_t length)
    cast_ks(RK32, X);
 
    for(size_t i = 0; i != 16; ++i)
+      {
       m_RK[i] = RK32[i] % 32;
+      }
    }
 
 void CAST_128::clear()
@@ -140,7 +144,8 @@ void CAST_128::clear()
 void CAST_128::cast_ks(secure_vector<uint32_t>& K,
                        secure_vector<uint32_t>& X)
    {
-   static const uint32_t S5[256] = {
+   static const uint32_t S5[256] =
+      {
       0x7EC90C04, 0x2C6E74B9, 0x9B0E66DF, 0xA6337911, 0xB86A7FFF, 0x1DD358F5,
       0x44DD9D44, 0x1731167F, 0x08FBF1FA, 0xE7F511CC, 0xD2051B00, 0x735ABA00,
       0x2AB722D8, 0x386381CB, 0xACF6243A, 0x69BEFD7A, 0xE6A2E77F, 0xF0C720CD,
@@ -183,9 +188,11 @@ void CAST_128::cast_ks(secure_vector<uint32_t>& K,
       0x6BAC307F, 0x376829D2, 0x85360FA9, 0x17E3FE2A, 0x24B79767, 0xF5A96B20,
       0xD6CD2595, 0x68FF1EBF, 0x7555442C, 0xF19F06BE, 0xF9E0659A, 0xEEB9491D,
       0x34010718, 0xBB30CAB8, 0xE822FE15, 0x88570983, 0x750E6249, 0xDA627E55,
-      0x5E76FFA8, 0xB1534546, 0x6D47DE08, 0xEFE9E7D4 };
+      0x5E76FFA8, 0xB1534546, 0x6D47DE08, 0xEFE9E7D4
+      };
 
-   static const uint32_t S6[256] = {
+   static const uint32_t S6[256] =
+      {
       0xF6FA8F9D, 0x2CAC6CE1, 0x4CA34867, 0xE2337F7C, 0x95DB08E7, 0x016843B4,
       0xECED5CBC, 0x325553AC, 0xBF9F0960, 0xDFA1E2ED, 0x83F0579D, 0x63ED86B9,
       0x1AB6A6B8, 0xDE5EBE39, 0xF38FF732, 0x8989B138, 0x33F14961, 0xC01937BD,
@@ -228,9 +235,11 @@ void CAST_128::cast_ks(secure_vector<uint32_t>& K,
       0x97C55B96, 0xEAEC991B, 0x29935913, 0x01FDB7F1, 0x088E8DFA, 0x9AB6F6F5,
       0x3B4CBF9F, 0x4A5DE3AB, 0xE6051D35, 0xA0E1D855, 0xD36B4CF1, 0xF544EDEB,
       0xB0E93524, 0xBEBB8FBD, 0xA2D762CF, 0x49C92F54, 0x38B5F331, 0x7128A454,
-      0x48392905, 0xA65B1DB8, 0x851C97BD, 0xD675CF2F };
+      0x48392905, 0xA65B1DB8, 0x851C97BD, 0xD675CF2F
+      };
 
-   static const uint32_t S7[256] = {
+   static const uint32_t S7[256] =
+      {
       0x85E04019, 0x332BF567, 0x662DBFFF, 0xCFC65693, 0x2A8D7F6F, 0xAB9BC912,
       0xDE6008A1, 0x2028DA1F, 0x0227BCE7, 0x4D642916, 0x18FAC300, 0x50F18B82,
       0x2CB2CB11, 0xB232E75C, 0x4B3695F2, 0xB28707DE, 0xA05FBCF6, 0xCD4181E9,
@@ -273,9 +282,11 @@ void CAST_128::cast_ks(secure_vector<uint32_t>& K,
       0x2D57539D, 0x569A58CF, 0xE84E63AD, 0x462E1B78, 0x6580F87E, 0xF3817914,
       0x91DA55F4, 0x40A230F3, 0xD1988F35, 0xB6E318D2, 0x3FFA50BC, 0x3D40F021,
       0xC3C0BDAE, 0x4958C24C, 0x518F36B2, 0x84B1D370, 0x0FEDCE83, 0x878DDADA,
-      0xF2A279C7, 0x94E01BE8, 0x90716F4B, 0x954B8AA3 };
+      0xF2A279C7, 0x94E01BE8, 0x90716F4B, 0x954B8AA3
+      };
 
-   static const uint32_t S8[256] = {
+   static const uint32_t S8[256] =
+      {
       0xE216300D, 0xBBDDFFFC, 0xA7EBDABD, 0x35648095, 0x7789F8B7, 0xE6C1121B,
       0x0E241600, 0x052CE8B5, 0x11A9CFB0, 0xE5952F11, 0xECE7990A, 0x9386D174,
       0x2A42931C, 0x76E38111, 0xB12DEF3A, 0x37DDDDFC, 0xDE9ADEB1, 0x0A0CC32C,
@@ -318,12 +329,16 @@ void CAST_128::cast_ks(secure_vector<uint32_t>& K,
       0x36997B07, 0x0E84093D, 0x4AA93E61, 0x8360D87B, 0x1FA98B0C, 0x1149382C,
       0xE97625A5, 0x0614D1B7, 0x0E25244B, 0x0C768347, 0x589E8D82, 0x0D2059D1,
       0xA466BB1E, 0xF8DA0A82, 0x04F19130, 0xBA6E4EC0, 0x99265164, 0x1EE7230D,
-      0x50B2AD80, 0xEAEE6801, 0x8DB2A283, 0xEA8BF59E };
+      0x50B2AD80, 0xEAEE6801, 0x8DB2A283, 0xEA8BF59E
+      };
 
    class ByteReader
       {
       public:
-         uint8_t operator()(size_t i) { return (m_X[i/4] >> (8*(3 - (i%4)))); }
+         uint8_t operator()(size_t i)
+            {
+            return (m_X[i / 4] >> (8 * (3 - (i % 4))));
+            }
          explicit ByteReader(const uint32_t* x) : m_X(x) {}
       private:
          const uint32_t* m_X;
@@ -332,38 +347,38 @@ void CAST_128::cast_ks(secure_vector<uint32_t>& K,
    secure_vector<uint32_t> Z(4);
    ByteReader x(X.data()), z(Z.data());
 
-   Z[0]  = X[0] ^ S5[x(13)] ^ S6[x(15)] ^ S7[x(12)] ^ S8[x(14)] ^ S7[x( 8)];
-   Z[1]  = X[2] ^ S5[z( 0)] ^ S6[z( 2)] ^ S7[z( 1)] ^ S8[z( 3)] ^ S8[x(10)];
-   Z[2]  = X[3] ^ S5[z( 7)] ^ S6[z( 6)] ^ S7[z( 5)] ^ S8[z( 4)] ^ S5[x( 9)];
-   Z[3]  = X[1] ^ S5[z(10)] ^ S6[z( 9)] ^ S7[z(11)] ^ S8[z( 8)] ^ S6[x(11)];
-   K[ 0] = S5[z( 8)] ^ S6[z( 9)] ^ S7[z( 7)] ^ S8[z( 6)] ^ S5[z( 2)];
-   K[ 1] = S5[z(10)] ^ S6[z(11)] ^ S7[z( 5)] ^ S8[z( 4)] ^ S6[z( 6)];
-   K[ 2] = S5[z(12)] ^ S6[z(13)] ^ S7[z( 3)] ^ S8[z( 2)] ^ S7[z( 9)];
-   K[ 3] = S5[z(14)] ^ S6[z(15)] ^ S7[z( 1)] ^ S8[z( 0)] ^ S8[z(12)];
-   X[0]  = Z[2] ^ S5[z( 5)] ^ S6[z( 7)] ^ S7[z( 4)] ^ S8[z( 6)] ^ S7[z( 0)];
-   X[1]  = Z[0] ^ S5[x( 0)] ^ S6[x( 2)] ^ S7[x( 1)] ^ S8[x( 3)] ^ S8[z( 2)];
-   X[2]  = Z[1] ^ S5[x( 7)] ^ S6[x( 6)] ^ S7[x( 5)] ^ S8[x( 4)] ^ S5[z( 1)];
-   X[3]  = Z[3] ^ S5[x(10)] ^ S6[x( 9)] ^ S7[x(11)] ^ S8[x( 8)] ^ S6[z( 3)];
-   K[ 4] = S5[x( 3)] ^ S6[x( 2)] ^ S7[x(12)] ^ S8[x(13)] ^ S5[x( 8)];
-   K[ 5] = S5[x( 1)] ^ S6[x( 0)] ^ S7[x(14)] ^ S8[x(15)] ^ S6[x(13)];
-   K[ 6] = S5[x( 7)] ^ S6[x( 6)] ^ S7[x( 8)] ^ S8[x( 9)] ^ S7[x( 3)];
-   K[ 7] = S5[x( 5)] ^ S6[x( 4)] ^ S7[x(10)] ^ S8[x(11)] ^ S8[x( 7)];
-   Z[0]  = X[0] ^ S5[x(13)] ^ S6[x(15)] ^ S7[x(12)] ^ S8[x(14)] ^ S7[x( 8)];
-   Z[1]  = X[2] ^ S5[z( 0)] ^ S6[z( 2)] ^ S7[z( 1)] ^ S8[z( 3)] ^ S8[x(10)];
-   Z[2]  = X[3] ^ S5[z( 7)] ^ S6[z( 6)] ^ S7[z( 5)] ^ S8[z( 4)] ^ S5[x( 9)];
-   Z[3]  = X[1] ^ S5[z(10)] ^ S6[z( 9)] ^ S7[z(11)] ^ S8[z( 8)] ^ S6[x(11)];
-   K[ 8] = S5[z( 3)] ^ S6[z( 2)] ^ S7[z(12)] ^ S8[z(13)] ^ S5[z( 9)];
-   K[ 9] = S5[z( 1)] ^ S6[z( 0)] ^ S7[z(14)] ^ S8[z(15)] ^ S6[z(12)];
-   K[10] = S5[z( 7)] ^ S6[z( 6)] ^ S7[z( 8)] ^ S8[z( 9)] ^ S7[z( 2)];
-   K[11] = S5[z( 5)] ^ S6[z( 4)] ^ S7[z(10)] ^ S8[z(11)] ^ S8[z( 6)];
-   X[0]  = Z[2] ^ S5[z( 5)] ^ S6[z( 7)] ^ S7[z( 4)] ^ S8[z( 6)] ^ S7[z( 0)];
-   X[1]  = Z[0] ^ S5[x( 0)] ^ S6[x( 2)] ^ S7[x( 1)] ^ S8[x( 3)] ^ S8[z( 2)];
-   X[2]  = Z[1] ^ S5[x( 7)] ^ S6[x( 6)] ^ S7[x( 5)] ^ S8[x( 4)] ^ S5[z( 1)];
-   X[3]  = Z[3] ^ S5[x(10)] ^ S6[x( 9)] ^ S7[x(11)] ^ S8[x( 8)] ^ S6[z( 3)];
-   K[12] = S5[x( 8)] ^ S6[x( 9)] ^ S7[x( 7)] ^ S8[x( 6)] ^ S5[x( 3)];
-   K[13] = S5[x(10)] ^ S6[x(11)] ^ S7[x( 5)] ^ S8[x( 4)] ^ S6[x( 7)];
-   K[14] = S5[x(12)] ^ S6[x(13)] ^ S7[x( 3)] ^ S8[x( 2)] ^ S7[x( 8)];
-   K[15] = S5[x(14)] ^ S6[x(15)] ^ S7[x( 1)] ^ S8[x( 0)] ^ S8[x(13)];
+   Z[0]  = X[0] ^ S5[x(13)] ^ S6[x(15)] ^ S7[x(12)] ^ S8[x(14)] ^ S7[x(8)];
+   Z[1]  = X[2] ^ S5[z(0)] ^ S6[z(2)] ^ S7[z(1)] ^ S8[z(3)] ^ S8[x(10)];
+   Z[2]  = X[3] ^ S5[z(7)] ^ S6[z(6)] ^ S7[z(5)] ^ S8[z(4)] ^ S5[x(9)];
+   Z[3]  = X[1] ^ S5[z(10)] ^ S6[z(9)] ^ S7[z(11)] ^ S8[z(8)] ^ S6[x(11)];
+   K[ 0] = S5[z(8)] ^ S6[z(9)] ^ S7[z(7)] ^ S8[z(6)] ^ S5[z(2)];
+   K[ 1] = S5[z(10)] ^ S6[z(11)] ^ S7[z(5)] ^ S8[z(4)] ^ S6[z(6)];
+   K[ 2] = S5[z(12)] ^ S6[z(13)] ^ S7[z(3)] ^ S8[z(2)] ^ S7[z(9)];
+   K[ 3] = S5[z(14)] ^ S6[z(15)] ^ S7[z(1)] ^ S8[z(0)] ^ S8[z(12)];
+   X[0]  = Z[2] ^ S5[z(5)] ^ S6[z(7)] ^ S7[z(4)] ^ S8[z(6)] ^ S7[z(0)];
+   X[1]  = Z[0] ^ S5[x(0)] ^ S6[x(2)] ^ S7[x(1)] ^ S8[x(3)] ^ S8[z(2)];
+   X[2]  = Z[1] ^ S5[x(7)] ^ S6[x(6)] ^ S7[x(5)] ^ S8[x(4)] ^ S5[z(1)];
+   X[3]  = Z[3] ^ S5[x(10)] ^ S6[x(9)] ^ S7[x(11)] ^ S8[x(8)] ^ S6[z(3)];
+   K[ 4] = S5[x(3)] ^ S6[x(2)] ^ S7[x(12)] ^ S8[x(13)] ^ S5[x(8)];
+   K[ 5] = S5[x(1)] ^ S6[x(0)] ^ S7[x(14)] ^ S8[x(15)] ^ S6[x(13)];
+   K[ 6] = S5[x(7)] ^ S6[x(6)] ^ S7[x(8)] ^ S8[x(9)] ^ S7[x(3)];
+   K[ 7] = S5[x(5)] ^ S6[x(4)] ^ S7[x(10)] ^ S8[x(11)] ^ S8[x(7)];
+   Z[0]  = X[0] ^ S5[x(13)] ^ S6[x(15)] ^ S7[x(12)] ^ S8[x(14)] ^ S7[x(8)];
+   Z[1]  = X[2] ^ S5[z(0)] ^ S6[z(2)] ^ S7[z(1)] ^ S8[z(3)] ^ S8[x(10)];
+   Z[2]  = X[3] ^ S5[z(7)] ^ S6[z(6)] ^ S7[z(5)] ^ S8[z(4)] ^ S5[x(9)];
+   Z[3]  = X[1] ^ S5[z(10)] ^ S6[z(9)] ^ S7[z(11)] ^ S8[z(8)] ^ S6[x(11)];
+   K[ 8] = S5[z(3)] ^ S6[z(2)] ^ S7[z(12)] ^ S8[z(13)] ^ S5[z(9)];
+   K[ 9] = S5[z(1)] ^ S6[z(0)] ^ S7[z(14)] ^ S8[z(15)] ^ S6[z(12)];
+   K[10] = S5[z(7)] ^ S6[z(6)] ^ S7[z(8)] ^ S8[z(9)] ^ S7[z(2)];
+   K[11] = S5[z(5)] ^ S6[z(4)] ^ S7[z(10)] ^ S8[z(11)] ^ S8[z(6)];
+   X[0]  = Z[2] ^ S5[z(5)] ^ S6[z(7)] ^ S7[z(4)] ^ S8[z(6)] ^ S7[z(0)];
+   X[1]  = Z[0] ^ S5[x(0)] ^ S6[x(2)] ^ S7[x(1)] ^ S8[x(3)] ^ S8[z(2)];
+   X[2]  = Z[1] ^ S5[x(7)] ^ S6[x(6)] ^ S7[x(5)] ^ S8[x(4)] ^ S5[z(1)];
+   X[3]  = Z[3] ^ S5[x(10)] ^ S6[x(9)] ^ S7[x(11)] ^ S8[x(8)] ^ S6[z(3)];
+   K[12] = S5[x(8)] ^ S6[x(9)] ^ S7[x(7)] ^ S8[x(6)] ^ S5[x(3)];
+   K[13] = S5[x(10)] ^ S6[x(11)] ^ S7[x(5)] ^ S8[x(4)] ^ S6[x(7)];
+   K[14] = S5[x(12)] ^ S6[x(13)] ^ S7[x(3)] ^ S8[x(2)] ^ S7[x(8)];
+   K[15] = S5[x(14)] ^ S6[x(15)] ^ S7[x(1)] ^ S8[x(0)] ^ S8[x(13)];
    }
 
 }

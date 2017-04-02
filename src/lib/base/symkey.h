@@ -22,23 +22,38 @@ class BOTAN_DLL OctetString
       /**
       * @return size of this octet string in bytes
       */
-      size_t length() const { return m_data.size(); }
-      size_t size() const { return m_data.size(); }
+      size_t length() const
+         {
+         return m_data.size();
+         }
+      size_t size() const
+         {
+         return m_data.size();
+         }
 
       /**
       * @return this object as a secure_vector<uint8_t>
       */
-      secure_vector<uint8_t> bits_of() const { return m_data; }
+      secure_vector<uint8_t> bits_of() const
+         {
+         return m_data;
+         }
 
       /**
       * @return start of this string
       */
-      const uint8_t* begin() const { return m_data.data(); }
+      const uint8_t* begin() const
+         {
+         return m_data.data();
+         }
 
       /**
       * @return end of this string
       */
-      const uint8_t* end() const   { return begin() + m_data.size(); }
+      const uint8_t* end() const
+         {
+         return begin() + m_data.size();
+         }
 
       /**
       * @return this encoded as hex

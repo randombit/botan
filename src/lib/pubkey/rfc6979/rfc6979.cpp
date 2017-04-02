@@ -12,8 +12,8 @@
 namespace Botan {
 
 RFC6979_Nonce_Generator::RFC6979_Nonce_Generator(const std::string& hash,
-                                                 const BigInt& order,
-                                                 const BigInt& x) :
+      const BigInt& order,
+      const BigInt& x) :
    m_order(order),
    m_qlen(m_order.bits()),
    m_rlen(m_qlen / 8 + (m_qlen % 8 ? 1 : 0)),
@@ -39,7 +39,7 @@ const BigInt& RFC6979_Nonce_Generator::nonce_for(const BigInt& m)
       {
       m_hmac_drbg->randomize(m_rng_out.data(), m_rng_out.size());
       m_k.binary_decode(m_rng_out.data(), m_rng_out.size());
-      m_k >>= (8*m_rlen - m_qlen);
+      m_k >>= (8 * m_rlen - m_qlen);
       }
    while(m_k == 0 || m_k >= m_order);
 

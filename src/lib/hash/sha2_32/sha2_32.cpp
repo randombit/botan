@@ -52,8 +52,8 @@ void compress(secure_vector<uint32_t>& digest,
               const uint8_t input[], size_t blocks)
    {
    uint32_t A = digest[0], B = digest[1], C = digest[2],
-          D = digest[3], E = digest[4], F = digest[5],
-          G = digest[6], H = digest[7];
+            D = digest[3], E = digest[4], F = digest[5],
+            G = digest[6], H = digest[7];
 
    for(size_t i = 0; i != blocks; ++i)
       {

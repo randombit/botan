@@ -28,8 +28,8 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<BlockCipher>
-         create(const std::string& algo_spec,
-                const std::string& provider = "");
+      create(const std::string& algo_spec,
+             const std::string& provider = "");
 
       /**
       * Create an instance based on a name, or throw if the
@@ -37,8 +37,8 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * empty then best available is chosen.
       */
       static std::unique_ptr<BlockCipher>
-         create_or_throw(const std::string& algo_spec,
-                         const std::string& provider = "");
+      create_or_throw(const std::string& algo_spec,
+                      const std::string& provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -54,7 +54,10 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       /**
       * @return native parallelism of this cipher in blocks
       */
-      virtual size_t parallelism() const { return 1; }
+      virtual size_t parallelism() const
+         {
+         return 1;
+         }
 
       /**
       * @return prefererred parallelism of this cipher in bytes
@@ -68,7 +71,10 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * @return provider information about this implementation. Default is "base",
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
-      virtual std::string provider() const { return "base"; }
+      virtual std::string provider() const
+         {
+         return "base";
+         }
 
       /**
       * Encrypt a block.
@@ -78,7 +84,9 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * Must be of length block_size().
       */
       void encrypt(const uint8_t in[], uint8_t out[]) const
-         { encrypt_n(in, out, 1); }
+         {
+         encrypt_n(in, out, 1);
+         }
 
       /**
       * Decrypt a block.
@@ -88,7 +96,9 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * Must be of length block_size().
       */
       void decrypt(const uint8_t in[], uint8_t out[]) const
-         { decrypt_n(in, out, 1); }
+         {
+         decrypt_n(in, out, 1);
+         }
 
       /**
       * Encrypt a block.
@@ -96,7 +106,10 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * Must be of length block_size(). Will hold the result when the function
       * has finished.
       */
-      void encrypt(uint8_t block[]) const { encrypt_n(block, block, 1); }
+      void encrypt(uint8_t block[]) const
+         {
+         encrypt_n(block, block, 1);
+         }
 
       /**
       * Decrypt a block.
@@ -104,7 +117,10 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       * Must be of length block_size(). Will hold the result when the function
       * has finished.
       */
-      void decrypt(uint8_t block[]) const { decrypt_n(block, block, 1); }
+      void decrypt(uint8_t block[]) const
+         {
+         decrypt_n(block, block, 1);
+         }
 
       /**
       * Encrypt one or more blocks
@@ -184,7 +200,10 @@ class Block_Cipher_Fixed_Params : public BlockCipher
    {
    public:
       enum { BLOCK_SIZE = BS };
-      size_t block_size() const override { return BS; }
+      size_t block_size() const override
+         {
+         return BS;
+         }
 
       Key_Length_Specification key_spec() const override
          {

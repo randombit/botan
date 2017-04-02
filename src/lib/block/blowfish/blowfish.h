@@ -28,8 +28,14 @@ class BOTAN_DLL Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56>
                             const uint8_t salt[16], size_t workfactor);
 
       void clear() override;
-      std::string name() const override { return "Blowfish"; }
-      BlockCipher* clone() const override { return new Blowfish; }
+      std::string name() const override
+         {
+         return "Blowfish";
+         }
+      BlockCipher* clone() const override
+         {
+         return new Blowfish;
+         }
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 

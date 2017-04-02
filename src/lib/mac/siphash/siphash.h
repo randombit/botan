@@ -22,7 +22,10 @@ class BOTAN_DLL SipHash final : public MessageAuthenticationCode
 
       MessageAuthenticationCode* clone() const override;
 
-      size_t output_length() const override { return 8; }
+      size_t output_length() const override
+         {
+         return 8;
+         }
 
       Key_Length_Specification key_spec() const override
          {

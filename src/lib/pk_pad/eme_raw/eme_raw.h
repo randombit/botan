@@ -19,11 +19,11 @@ class BOTAN_DLL EME_Raw final : public EME
       EME_Raw() {}
    private:
       secure_vector<uint8_t> pad(const uint8_t[], size_t, size_t,
-                             RandomNumberGenerator&) const override;
+                                 RandomNumberGenerator&) const override;
 
       secure_vector<uint8_t> unpad(uint8_t& valid_mask,
-                                const uint8_t in[],
-                                size_t in_len) const override;
+                                   const uint8_t in[],
+                                   size_t in_len) const override;
    };
 
 }

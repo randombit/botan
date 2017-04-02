@@ -32,8 +32,10 @@ class Cipher_Mode_Padding_Tests : public Text_Based_Test
          auto underscore = algo.find('_');
          if(underscore != std::string::npos)
             {
-            if(algo.substr(underscore+1,std::string::npos) != "Invalid")
+            if(algo.substr(underscore + 1, std::string::npos) != "Invalid")
+               {
                throw Test_Error("Unexpected padding header " + header);
+               }
             algo = algo.substr(0, underscore);
             }
 

@@ -28,7 +28,7 @@ namespace Botan {
 *
 * @return (A,K) the client public key and the shared secret key
 */
-std::pair<BigInt,SymmetricKey>
+std::pair<BigInt, SymmetricKey>
 BOTAN_DLL srp6_client_agree(const std::string& username,
                             const std::string& password,
                             const std::string& group_id,

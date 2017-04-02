@@ -26,13 +26,13 @@ class BOTAN_DLL GeneralName : public ASN1_Object
    {
    public:
       enum MatchResult : int
-            {
-            All,
-            Some,
-            None,
-            NotFound,
-            UnknownType,
-            };
+         {
+         All,
+         Some,
+         None,
+         NotFound,
+         UnknownType,
+         };
 
       /**
       * Creates an empty GeneralName.
@@ -52,12 +52,18 @@ class BOTAN_DLL GeneralName : public ASN1_Object
       /**
       * @return Type of the name. Can be DN, DNS, IP, RFC822 or URI.
       */
-      const std::string& type() const { return m_type; }
+      const std::string& type() const
+         {
+         return m_type;
+         }
 
       /**
       * @return The name as string. Format depends on type.
       */
-      const std::string& name() const { return m_name; }
+      const std::string& name() const
+         {
+         return m_name;
+         }
 
       /**
       * Checks whether a given certificate (partially) matches this name.
@@ -91,7 +97,7 @@ class BOTAN_DLL GeneralSubtree : public ASN1_Object
       * Creates an empty name constraint.
       */
       GeneralSubtree() : m_base(), m_minimum(0), m_maximum(std::numeric_limits<std::size_t>::max())
-      {}
+         {}
 
       /***
       * Creates a new name constraint.
@@ -100,8 +106,8 @@ class BOTAN_DLL GeneralSubtree : public ASN1_Object
       * @param max maximum path length
       */
       GeneralSubtree(GeneralName base, size_t min, size_t max)
-      : m_base(base), m_minimum(min), m_maximum(max)
-      {}
+         : m_base(base), m_minimum(min), m_maximum(max)
+         {}
 
       /**
       * Creates a new name constraint for its string format.
@@ -116,17 +122,26 @@ class BOTAN_DLL GeneralSubtree : public ASN1_Object
       /**
       * @return name
       */
-      GeneralName base() const { return m_base; }
+      GeneralName base() const
+         {
+         return m_base;
+         }
 
       /**
       * @return minimum path length
       */
-      size_t minimum() const { return m_minimum; }
+      size_t minimum() const
+         {
+         return m_minimum;
+         }
 
       /**
       * @return maximum path length
       */
-      size_t maximum() const { return m_maximum; }
+      size_t maximum() const
+         {
+         return m_maximum;
+         }
 
    private:
       GeneralName m_base;
@@ -155,24 +170,30 @@ class BOTAN_DLL NameConstraints
       * @param excluded_subtrees names for which the certificate is not permitted
       */
       NameConstraints(std::vector<GeneralSubtree>&& permitted_subtrees,
-                    std::vector<GeneralSubtree>&& excluded_subtrees)
-      : m_permitted_subtrees(permitted_subtrees), m_excluded_subtrees(excluded_subtrees)
-      {}
+                      std::vector<GeneralSubtree>&& excluded_subtrees)
+         : m_permitted_subtrees(permitted_subtrees), m_excluded_subtrees(excluded_subtrees)
+         {}
 
       /**
       * @return permitted names
       */
-      const std::vector<GeneralSubtree>& permitted() const { return m_permitted_subtrees; }
+      const std::vector<GeneralSubtree>& permitted() const
+         {
+         return m_permitted_subtrees;
+         }
 
       /**
       * @return excluded names
       */
-      const std::vector<GeneralSubtree>& excluded() const { return m_excluded_subtrees; }
+      const std::vector<GeneralSubtree>& excluded() const
+         {
+         return m_excluded_subtrees;
+         }
 
    private:
       std::vector<GeneralSubtree> m_permitted_subtrees;
       std::vector<GeneralSubtree> m_excluded_subtrees;
-};
+   };
 
 }
 

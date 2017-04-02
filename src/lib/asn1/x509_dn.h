@@ -37,7 +37,10 @@ class BOTAN_DLL X509_DN final : public ASN1_Object
 
       std::vector<uint8_t> get_bits() const;
 
-      bool empty() const { return m_dn_info.empty(); }
+      bool empty() const
+         {
+         return m_dn_info.empty();
+         }
 
       X509_DN();
       explicit X509_DN(const std::multimap<OID, std::string>&);

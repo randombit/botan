@@ -35,8 +35,8 @@ class BOTAN_DLL AttributeContainer
 
       virtual ~AttributeContainer() = default;
 
-/* Microsoft Visual Studio <= 2013 does not support default generated move special member functions.
-   Everything else we target should support it */
+      /* Microsoft Visual Studio <= 2013 does not support default generated move special member functions.
+         Everything else we target should support it */
 #if !defined( _MSC_VER ) || ( _MSC_VER >= 1900 )
       AttributeContainer(AttributeContainer&& other) = default;
       AttributeContainer& operator=(AttributeContainer&& other) = default;
@@ -141,8 +141,8 @@ class BOTAN_DLL ObjectFinder final
       ObjectFinder(const ObjectFinder& other) = default;
       ObjectFinder& operator=(const ObjectFinder& other) = default;
 
-/* Microsoft Visual Studio <= 2013 does not support default generated move special member functions.
-   Everything else we target should support it */
+      /* Microsoft Visual Studio <= 2013 does not support default generated move special member functions.
+         Everything else we target should support it */
 #if !defined( _MSC_VER ) || ( _MSC_VER >= 1900 )
       ObjectFinder(ObjectFinder&& other) = default;
       ObjectFinder& operator=(ObjectFinder&& other) = default;
@@ -162,8 +162,7 @@ class BOTAN_DLL ObjectFinder final
       void finish();
 
       /// @return the module this `ObjectFinder` belongs to
-      inline Module& module() const
-         {
+      inline Module& module() const {
          return m_session.get().module();
          }
 
@@ -427,7 +426,7 @@ class BOTAN_DLL PublicKeyProperties : public KeyProperties
          throw Exception("Not implemented (PublicKeyProperties::set_wrap_template)");
          }
 
-      /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public	key
+      /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public  key
       inline void set_public_key_info(const std::vector<uint8_t>& pubkey_info)
          {
          add_binary(AttributeType::PublicKeyInfo, pubkey_info);
@@ -506,7 +505,7 @@ class BOTAN_DLL PrivateKeyProperties : public KeyProperties
          throw Exception("Not implemented (PrivateKeyProperties::set_unwrap_template)");
          }
 
-      /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public	key
+      /// @param pubkey_info DER-encoding of the SubjectPublicKeyInfo for this public  key
       inline void set_public_key_info(const std::vector<uint8_t>& pubkey_info)
          {
          add_binary(AttributeType::PublicKeyInfo, pubkey_info);
@@ -656,6 +655,8 @@ class BOTAN_DLL Object
       */
       Object(Session& session, const ObjectProperties& obj_props);
 
+      Object(Object const&) = default;
+      Object& operator=(Object const&) = default;
       virtual ~Object() = default;
 
       /// Searches for all objects of the given type that match `search_template`
@@ -706,8 +707,7 @@ class BOTAN_DLL Object
          }
 
       /// @return the module this object belongs to
-      inline Module& module() const
-         {
+      inline Module& module() const {
          return m_session.get().module();
          }
    protected:

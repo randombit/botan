@@ -23,7 +23,7 @@ namespace {
 
 gf2m generate_gf2m_mask(gf2m a)
    {
-   gf2m result =  (a != 0);
+   gf2m result = (a != 0);
    return ~(result - 1);
    }
 
@@ -33,12 +33,30 @@ gf2m generate_gf2m_mask(gf2m a)
 unsigned nlz_16bit(uint16_t x)
    {
    unsigned n;
-   if(x == 0) return 16;
+   if(x == 0)
+      {
+      return 16;
+      }
    n = 0;
-   if(x <= 0x00FF) {n = n + 8; x = x << 8;}
-   if(x <= 0x0FFF) {n = n + 4; x = x << 4;}
-   if(x <= 0x3FFF) {n = n + 2; x = x << 2;}
-   if(x <= 0x7FFF) {n = n + 1;}
+   if(x <= 0x00FF)
+      {
+      n = n + 8;
+      x = x << 8;
+      }
+   if(x <= 0x0FFF)
+      {
+      n = n + 4;
+      x = x << 4;
+      }
+   if(x <= 0x3FFF)
+      {
+      n = n + 2;
+      x = x << 2;
+      }
+   if(x <= 0x7FFF)
+      {
+      n = n + 1;
+      }
    return n;
    }
 }
@@ -49,7 +67,7 @@ int polyn_gf2m::calc_degree_secure() const
    int result = 0;
    uint32_t found_mask = 0;
    uint32_t tracker_mask = 0xffff;
-   for( ; i >= 0; i--)
+   for(; i >= 0; i--)
       {
       found_mask = expand_mask_16bit(this->coeff[i]);
       result |= i & found_mask & tracker_mask;
@@ -74,8 +92,8 @@ gf2m random_code_element(unsigned code_length, RandomNumberGenerator& rng)
       {
       throw Invalid_Argument("random_code_element() was supplied a code length of zero");
       }
-   const unsigned nlz = nlz_16bit(code_length-1);
-   const gf2m mask = (1 << (16-nlz)) -1;
+   const unsigned nlz = nlz_16bit(code_length - 1);
+   const gf2m mask = (1 << (16 - nlz)) - 1;
 
    gf2m result;
 
@@ -83,21 +101,22 @@ gf2m random_code_element(unsigned code_length, RandomNumberGenerator& rng)
       {
       result = random_gf2m(rng);
       result &= mask;
-      } while(result >= code_length); // rejection sampling
+      }
+   while(result >= code_length);   // rejection sampling
 
    return result;
    }
 
 polyn_gf2m::polyn_gf2m(polyn_gf2m const& other)
-   :m_deg(other.m_deg),
-    coeff(other.coeff),
-    msp_field(other.msp_field)
+   : m_deg(other.m_deg),
+     coeff(other.coeff),
+     msp_field(other.msp_field)
    { }
 
-polyn_gf2m::polyn_gf2m(   int d, std::shared_ptr<GF2m_Field> sp_field)
-   :m_deg(-1),
-    coeff(d+1),
-    msp_field(sp_field)
+polyn_gf2m::polyn_gf2m(int d, std::shared_ptr<GF2m_Field> sp_field)
+   : m_deg(-1),
+     coeff(d + 1),
+     msp_field(sp_field)
    {
    }
 
@@ -124,7 +143,7 @@ void polyn_gf2m::realloc(uint32_t new_size)
    }
 
 polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, std::shared_ptr<GF2m_Field> sp_field)
-   :msp_field(sp_field)
+   : msp_field(sp_field)
    {
    if(mem_len % sizeof(gf2m))
       {
@@ -150,14 +169,15 @@ polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, std::shared_ptr<GF2
    }
 
 
-polyn_gf2m::polyn_gf2m( std::shared_ptr<GF2m_Field> sp_field )
+polyn_gf2m::polyn_gf2m(std::shared_ptr<GF2m_Field> sp_field)
    : m_deg(-1),
      coeff(1),
      msp_field(sp_field)
    {}
 
-polyn_gf2m::polyn_gf2m(int degree, const unsigned  char* mem, uint32_t mem_byte_len, std::shared_ptr<GF2m_Field> sp_field)
-   :msp_field(sp_field)
+polyn_gf2m::polyn_gf2m(int degree, const unsigned  char* mem, uint32_t mem_byte_len,
+                       std::shared_ptr<GF2m_Field> sp_field)
+   : msp_field(sp_field)
    {
    uint32_t j, k, l;
    gf2m a;
@@ -167,24 +187,24 @@ polyn_gf2m::polyn_gf2m(int degree, const unsigned  char* mem, uint32_t mem_byte_
       {
       throw Botan::Decoding_Error("memory vector for polynomial has wrong size");
       }
-   this->coeff = secure_vector<gf2m>(degree+1);
+   this->coeff = secure_vector<gf2m>(degree + 1);
    gf2m ext_deg = this->msp_field->get_extension_degree();
-   for (l = 0; l < polyn_size; l++)
+   for(l = 0; l < polyn_size; l++)
       {
       k = (l * ext_deg) / 8;
 
       j = (l * ext_deg) % 8;
       a = mem[k] >> j;
-      if (j + ext_deg > 8)
+      if(j + ext_deg > 8)
          {
-         a ^= mem[k + 1] << (8- j);
+         a ^= mem[k + 1] << (8 - j);
          }
       if(j + ext_deg > 16)
          {
-         a ^= mem[k + 2] << (16- j);
+         a ^= mem[k + 2] << (16 - j);
          }
       a &= ((1 << ext_deg) - 1);
-      (*this).set_coef( l, a);
+      (*this).set_coef(l, a);
       }
 
    this->get_degree();
@@ -196,7 +216,7 @@ void polyn_gf2m::encode(uint32_t min_numo_coeffs, uint8_t* mem, uint32_t mem_len
    uint32_t i;
    uint32_t numo_coeffs, needed_size;
    this->get_degree();
-   numo_coeffs = (min_numo_coeffs > static_cast<uint32_t>(this->m_deg+1)) ? min_numo_coeffs : this->m_deg+1;
+   numo_coeffs = (min_numo_coeffs > static_cast<uint32_t>(this->m_deg + 1)) ? min_numo_coeffs : this->m_deg + 1;
    needed_size = sizeof(this->coeff[0]) * numo_coeffs;
    if(mem_len < needed_size)
       {
@@ -206,7 +226,7 @@ void polyn_gf2m::encode(uint32_t min_numo_coeffs, uint8_t* mem, uint32_t mem_len
    for(i = 0; i < numo_coeffs; i++)
       {
       gf2m to_enc;
-      if(i >= static_cast<uint32_t>(this->m_deg+1))
+      if(i >= static_cast<uint32_t>(this->m_deg + 1))
          {
          /* encode a zero */
          to_enc = 0;
@@ -230,19 +250,21 @@ void polyn_gf2m::set_to_zero()
 int polyn_gf2m::get_degree() const
    {
    int d = this->coeff.size() - 1;
-   while ((d >= 0) && (this->coeff[d] == 0))
+   while((d >= 0) && (this->coeff[d] == 0))
+      {
       --d;
+      }
    const_cast<polyn_gf2m*>(this)->m_deg = d;
    return d;
    }
 
 
-static gf2m eval_aux(const gf2m * /*restrict*/ coeff, gf2m a, int d, std::shared_ptr<GF2m_Field> sp_field)
+static gf2m eval_aux(const gf2m* /*restrict*/ coeff, gf2m a, int d, std::shared_ptr<GF2m_Field> sp_field)
    {
    gf2m b;
    b = coeff[d--];
-   for (; d >= 0; --d)
-      if (b != 0)
+   for(; d >= 0; --d)
+      if(b != 0)
          {
          b = sp_field->gf_mul(b, a) ^ coeff[d];
          }
@@ -260,60 +282,67 @@ gf2m polyn_gf2m::eval(gf2m a)
 
 
 // p will contain it's remainder modulo g
-void polyn_gf2m::remainder(polyn_gf2m &p, const polyn_gf2m & g)
+void polyn_gf2m::remainder(polyn_gf2m& p, const polyn_gf2m& g)
    {
    int i, j, d;
    std::shared_ptr<GF2m_Field> msp_field = g.msp_field;
    d = p.get_degree() - g.get_degree();
-   if (d >= 0) {
-   gf2m la = msp_field->gf_inv_rn(g.get_lead_coef());
-
-   const int p_degree = p.get_degree();
-
-   BOTAN_ASSERT(p_degree > 0, "Valid polynomial");
-
-   for (i = p_degree; d >= 0; --i, --d) {
-   if (p[i] != 0) {
-   gf2m lb = msp_field->gf_mul_rrn(la, p[i]);
-   for (j = 0; j < g.get_degree(); ++j)
+   if(d >= 0)
       {
-      p[j+d] ^= msp_field->gf_mul_zrz(lb, g[j]);
+      gf2m la = msp_field->gf_inv_rn(g.get_lead_coef());
+
+      const int p_degree = p.get_degree();
+
+      BOTAN_ASSERT(p_degree > 0, "Valid polynomial");
+
+      for(i = p_degree; d >= 0; --i, --d)
+         {
+         if(p[i] != 0)
+            {
+            gf2m lb = msp_field->gf_mul_rrn(la, p[i]);
+            for(j = 0; j < g.get_degree(); ++j)
+               {
+               p[j + d] ^= msp_field->gf_mul_zrz(lb, g[j]);
+               }
+            (*& p).set_coef(i, 0);
+            }
+         }
+      p.set_degree(g.get_degree() - 1);
+      while((p.get_degree() >= 0) && (p[p.get_degree()] == 0))
+         {
+         p.set_degree(p.get_degree() - 1);
+         }
       }
-   (*&p).set_coef( i, 0);
-   }
-   }
-   p.set_degree( g.get_degree() - 1);
-   while ((p.get_degree() >= 0) && (p[p.get_degree()] == 0))
-      p.set_degree( p.get_degree() - 1);
-   }
    }
 
-std::vector<polyn_gf2m> polyn_gf2m::sqmod_init(const polyn_gf2m & g)
+std::vector<polyn_gf2m> polyn_gf2m::sqmod_init(const polyn_gf2m& g)
    {
    std::vector<polyn_gf2m> sq;
    const int signed_deg = g.get_degree();
    if(signed_deg <= 0)
+      {
       throw Invalid_Argument("cannot compute sqmod for such low degree");
+      }
 
    const uint32_t d = static_cast<uint32_t>(signed_deg);
    uint32_t t = g.m_deg;
    // create t zero polynomials
    uint32_t i;
-   for (i = 0; i < t; ++i)
+   for(i = 0; i < t; ++i)
       {
-      sq.push_back(polyn_gf2m(t+1, g.get_sp_field()));
+      sq.push_back(polyn_gf2m(t + 1, g.get_sp_field()));
       }
-   for (i = 0; i < d / 2; ++i)
+   for(i = 0; i < d / 2; ++i)
       {
-      sq[i].set_degree( 2 * i);
-      (*&sq[i]).set_coef( 2 * i, 1);
+      sq[i].set_degree(2 * i);
+      (*& sq[i]).set_coef(2 * i, 1);
       }
 
-   for (; i < d; ++i)
+   for(; i < d; ++i)
       {
       clear_mem(&sq[i].coeff[0], 2);
       copy_mem(&sq[i].coeff[0] + 2, &sq[i - 1].coeff[0], d);
-      sq[i].set_degree( sq[i - 1].get_degree() + 2);
+      sq[i].set_degree(sq[i - 1].get_degree() + 2);
       polyn_gf2m::remainder(sq[i], g);
       }
    return sq;
@@ -322,7 +351,7 @@ std::vector<polyn_gf2m> polyn_gf2m::sqmod_init(const polyn_gf2m & g)
 /*Modulo p square of a certain polynomial g, sq[] contains the square
 Modulo g of the base canonical polynomials of degree < d, where d is
 the degree of G. The table sq[] will be calculated by polyn_gf2m__sqmod_init*/
-polyn_gf2m polyn_gf2m::sqmod( const std::vector<polyn_gf2m> & sq, int d)
+polyn_gf2m polyn_gf2m::sqmod(const std::vector<polyn_gf2m>& sq, int d)
    {
    int i, j;
    gf2m la;
@@ -330,20 +359,20 @@ polyn_gf2m polyn_gf2m::sqmod( const std::vector<polyn_gf2m> & sq, int d)
 
    polyn_gf2m result(d - 1, sp_field);
    // terms of low degree
-   for (i = 0; i < d / 2; ++i)
+   for(i = 0; i < d / 2; ++i)
       {
-      (*&result).set_coef( i * 2, sp_field->gf_square((*this)[i]));
+      (*& result).set_coef(i * 2, sp_field->gf_square((*this)[i]));
       }
 
    // terms of high degree
-   for (; i < d; ++i)
+   for(; i < d; ++i)
       {
       gf2m lpi = (*this)[i];
-      if (lpi != 0)
+      if(lpi != 0)
          {
          lpi = sp_field->gf_log(lpi);
          la = sp_field->gf_mul_rrr(lpi, lpi);
-         for (j = 0; j < d; ++j)
+         for(j = 0; j < d; ++j)
             {
             result[j] ^= sp_field->gf_mul_zrz(la, sq[i][j]);
             }
@@ -351,9 +380,11 @@ polyn_gf2m polyn_gf2m::sqmod( const std::vector<polyn_gf2m> & sq, int d)
       }
 
    // Update degre
-   result.set_degree( d - 1);
-   while ((result.get_degree() >= 0) && (result[result.get_degree()] == 0))
-      result.set_degree( result.get_degree() - 1);
+   result.set_degree(d - 1);
+   while((result.get_degree() >= 0) && (result[result.get_degree()] == 0))
+      {
+      result.set_degree(result.get_degree() - 1);
+      }
    return result;
    }
 
@@ -361,12 +392,15 @@ polyn_gf2m polyn_gf2m::sqmod( const std::vector<polyn_gf2m> & sq, int d)
 // destructive
 polyn_gf2m polyn_gf2m::gcd_aux(polyn_gf2m& p1, polyn_gf2m& p2)
    {
-   if (p2.get_degree() == -1)
+   if(p2.get_degree() == -1)
+      {
       return p1;
-   else {
-   polyn_gf2m::remainder(p1, p2);
-   return polyn_gf2m::gcd_aux(p2, p1);
-   }
+      }
+   else
+      {
+      polyn_gf2m::remainder(p1, p2);
+      return polyn_gf2m::gcd_aux(p2, p1);
+      }
    }
 
 
@@ -374,7 +408,7 @@ polyn_gf2m polyn_gf2m::gcd(polyn_gf2m const& p1, polyn_gf2m const& p2)
    {
    polyn_gf2m a(p1);
    polyn_gf2m b(p2);
-   if (a.get_degree() < b.get_degree())
+   if(a.get_degree() < b.get_degree())
       {
       return polyn_gf2m(polyn_gf2m::gcd_aux(b, a));
       }
@@ -389,7 +423,7 @@ polyn_gf2m polyn_gf2m::gcd(polyn_gf2m const& p1, polyn_gf2m const& p2)
 
 
 // Returns the degree of the smallest factor
-void polyn_gf2m::degppf(const polyn_gf2m & g, int* p_result)
+void polyn_gf2m::degppf(const polyn_gf2m& g, int* p_result)
    {
    int i, d;
    polyn_gf2m s(g.get_sp_field());
@@ -397,21 +431,21 @@ void polyn_gf2m::degppf(const polyn_gf2m & g, int* p_result)
    d = g.get_degree();
    std::vector<polyn_gf2m> u = polyn_gf2m::sqmod_init(g);
 
-   polyn_gf2m p( d - 1, g.msp_field);
+   polyn_gf2m p(d - 1, g.msp_field);
 
-   p.set_degree( 1);
-   (*&p).set_coef( 1, 1);
+   p.set_degree(1);
+   (*& p).set_coef(1, 1);
    (*p_result) = d;
-   for (i = 1; i <= (d / 2) * g.msp_field->get_extension_degree(); ++i)
+   for(i = 1; i <= (d / 2) * g.msp_field->get_extension_degree(); ++i)
       {
       polyn_gf2m r = p.sqmod(u, d);
-      if ((i % g.msp_field->get_extension_degree()) == 0)
+      if((i % g.msp_field->get_extension_degree()) == 0)
          {
          r[1] ^= 1;
          r.get_degree(); // The degree may change
-         s = polyn_gf2m::gcd( g, r);
+         s = polyn_gf2m::gcd(g, r);
 
-         if (s.get_degree() > 0)
+         if(s.get_degree() > 0)
             {
             (*p_result) = i / g.msp_field->get_extension_degree();
             break;
@@ -428,7 +462,7 @@ void polyn_gf2m::degppf(const polyn_gf2m & g, int* p_result)
 
    }
 
-void polyn_gf2m::patchup_deg_secure( uint32_t trgt_deg, volatile gf2m patch_elem)
+void polyn_gf2m::patchup_deg_secure(uint32_t trgt_deg, volatile gf2m patch_elem)
    {
    uint32_t i;
    if(this->coeff.size() < trgt_deg)
@@ -447,7 +481,8 @@ void polyn_gf2m::patchup_deg_secure( uint32_t trgt_deg, volatile gf2m patch_elem
    }
 // We suppose m_deg(g) >= m_deg(p)
 // v is the problem
-std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn_gf2m & p, const polyn_gf2m & g, int break_deg)
+std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients(const polyn_gf2m& p, const polyn_gf2m& g,
+      int break_deg)
    {
 
    std::shared_ptr<GF2m_Field> msp_field = g.msp_field;
@@ -470,8 +505,8 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
    r1 = p;
    u0.set_to_zero();
    u1.set_to_zero();
-   (*&u1).set_coef( 0, 1);
-   u1.set_degree( 0);
+   (*& u1).set_coef(0, 1);
+   u1.set_degree(0);
 
 
    // invariants:
@@ -485,22 +520,22 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
    delta = r0.get_degree() - dr;
 
 
-   while (dr >= break_deg)
+   while(dr >= break_deg)
       {
 
-      for (j = delta; j >= 0; --j)
+      for(j = delta; j >= 0; --j)
          {
          a = msp_field->gf_div(r0[dr + j], r1[dr]);
-         if (a != 0)
+         if(a != 0)
             {
             gf2m la = msp_field->gf_log(a);
             // u0(z) <- u0(z) + a * u1(z) * z^j
-            for (i = 0; i <= du; ++i)
+            for(i = 0; i <= du; ++i)
                {
                u0[i + j] ^= msp_field->gf_mul_zrz(la, u1[i]);
                }
             // r0(z) <- r0(z) + a * r1(z) * z^j
-            for (i = 0; i <= dr; ++i)
+            for(i = 0; i <= dr; ++i)
                {
                r0[i + j] ^= msp_field->gf_mul_zrz(la, r1[i]);
                }
@@ -588,7 +623,7 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
          else if(u0.get_degree() == 6)
             {
             uint32_t mask = 0;
-            int cond_r= r0.get_degree() == 0;
+            int cond_r = r0.get_degree() == 0;
             int cond_u1 = msp_field->gf_mul(u0.coeff[1], msp_field->gf_inv(r0.coeff[0])) == 1;
             int cond_u3 = u0.coeff[3] == 0;
 
@@ -602,7 +637,7 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
          else if(u0.get_degree() == 8)
             {
             uint32_t mask = 0;
-            int cond_r= r0.get_degree() == 0;
+            int cond_r = r0.get_degree() == 0;
             int cond_u1 = msp_field->gf_mul(u0[1], msp_field->gf_inv(r0[0])) == 1;
             int cond_u3 = u0.coeff[3] == 0;
 
@@ -618,12 +653,16 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
          r0.patchup_deg_secure(trgt_deg, fake_elem);
          }
       // exchange
-      aux = r0; r0 = r1; r1 = aux;
-      aux = u0; u0 = u1; u1 = aux;
+      aux = r0;
+      r0 = r1;
+      r1 = aux;
+      aux = u0;
+      u0 = u1;
+      u1 = aux;
 
       du = du + delta;
       delta = 1;
-      while (r1[dr - delta] == 0)
+      while(r1[dr - delta] == 0)
          {
          delta++;
          }
@@ -633,32 +672,32 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients( const polyn
       } /* end  while loop (dr >= break_deg) */
 
 
-   u1.set_degree( du);
-   r1.set_degree( dr);
+   u1.set_degree(du);
+   r1.set_degree(dr);
    //return u1 and r1;
-   return std::make_pair(u1,r1); // coefficients u,v
+   return std::make_pair(u1, r1); // coefficients u,v
    }
 
 polyn_gf2m::polyn_gf2m(int t, Botan::RandomNumberGenerator& rng, std::shared_ptr<GF2m_Field> sp_field)
-   :m_deg(t),
-    coeff(t+1),
-    msp_field(sp_field)
+   : m_deg(t),
+     coeff(t + 1),
+     msp_field(sp_field)
    {
-   (*this).set_coef( t, 1);
+   (*this).set_coef(t, 1);
    int degree = 0;
    do
       {
-      for (int i = 0; i < t; ++i)
+      for(int i = 0; i < t; ++i)
          {
-         (*this).set_coef( i, random_code_element(sp_field->get_cardinality(), rng));
+         (*this).set_coef(i, random_code_element(sp_field->get_cardinality(), rng));
          }
       polyn_gf2m::degppf(*this, &degree);
       }
-   while (degree < t);
+   while(degree < t);
    }
 
 
-void polyn_gf2m::poly_shiftmod( const polyn_gf2m & g)
+void polyn_gf2m::poly_shiftmod(const polyn_gf2m& g)
    {
    if(g.get_degree() <= 1)
       {
@@ -667,32 +706,32 @@ void polyn_gf2m::poly_shiftmod( const polyn_gf2m & g)
    std::shared_ptr<GF2m_Field> field = g.msp_field;
 
    int t = g.get_degree();
-   gf2m a = field->gf_div(this->coeff[t-1], g.coeff[t]);
-   for (int i = t - 1; i > 0; --i)
+   gf2m a = field->gf_div(this->coeff[t - 1], g.coeff[t]);
+   for(int i = t - 1; i > 0; --i)
       {
       this->coeff[i] = this->coeff[i - 1] ^ this->msp_field->gf_mul(a, g.coeff[i]);
       }
    this->coeff[0] = field->gf_mul(a, g.coeff[0]);
    }
 
-std::vector<polyn_gf2m> polyn_gf2m::sqrt_mod_init(const polyn_gf2m & g)
+std::vector<polyn_gf2m> polyn_gf2m::sqrt_mod_init(const polyn_gf2m& g)
    {
    uint32_t i, t;
    uint32_t nb_polyn_sqrt_mat;
    std::shared_ptr<GF2m_Field> msp_field = g.msp_field;
    std::vector<polyn_gf2m> result;
    t = g.get_degree();
-   nb_polyn_sqrt_mat = t/2;
+   nb_polyn_sqrt_mat = t / 2;
 
    std::vector<polyn_gf2m> sq_aux = polyn_gf2m::sqmod_init(g);
 
 
-   polyn_gf2m p( t - 1, g.get_sp_field());
-   p.set_degree( 1);
+   polyn_gf2m p(t - 1, g.get_sp_field());
+   p.set_degree(1);
 
-   (*&p).set_coef( 1, 1);
+   (*& p).set_coef(1, 1);
    // q(z) = 0, p(z) = z
-   for (i = 0; i < t * msp_field->get_extension_degree() - 1; ++i)
+   for(i = 0; i < t * msp_field->get_extension_degree() - 1; ++i)
       {
       // q(z) <- p(z)^2 mod g(z)
       polyn_gf2m q = p.sqmod(sq_aux, t);
@@ -703,7 +742,7 @@ std::vector<polyn_gf2m> polyn_gf2m::sqrt_mod_init(const polyn_gf2m & g)
       }
    // p(z) = z^(2^(tm-1)) mod g(z) = sqrt(z) mod g(z)
 
-   for (i = 0; i < nb_polyn_sqrt_mat; ++i)
+   for(i = 0; i < nb_polyn_sqrt_mat; ++i)
       {
       result.push_back(polyn_gf2m(t - 1, g.get_sp_field()));
       }
@@ -714,7 +753,7 @@ std::vector<polyn_gf2m> polyn_gf2m::sqrt_mod_init(const polyn_gf2m & g)
       {
       result[i] = result[i - 1];
       result[i].poly_shiftmod(g),
-         result[i].get_degree();
+             result[i].get_degree();
       }
 
    return result;
@@ -722,7 +761,7 @@ std::vector<polyn_gf2m> polyn_gf2m::sqrt_mod_init(const polyn_gf2m & g)
 
 std::vector<polyn_gf2m> syndrome_init(polyn_gf2m const& generator, std::vector<gf2m> const& support, int n)
    {
-   int i,j,t;
+   int i, j, t;
    gf2m a;
 
 
@@ -734,27 +773,27 @@ std::vector<polyn_gf2m> syndrome_init(polyn_gf2m const& generator, std::vector<g
    //g(z)=g_t+g_(t-1).z^(t-1)+......+g_1.z+g_0
    //f(z)=f_(t-1).z^(t-1)+......+f_1.z+f_0
 
-   for(j=0;j<n;j++)
+   for(j = 0; j < n; j++)
       {
-      result.push_back(polyn_gf2m( t-1, msp_field));
+      result.push_back(polyn_gf2m(t - 1, msp_field));
 
-      (*&result[j]).set_coef(t-1,1);
-      for(i=t-2;i>=0;i--)
+      (*& result[j]).set_coef(t - 1, 1);
+      for(i = t - 2; i >= 0; i--)
          {
-         (*&result[j]).set_coef(i, (generator)[i+1]  ^
-                                msp_field->gf_mul(lex_to_gray(support[j]),result[j][i+1]));
+         (*& result[j]).set_coef(i, (generator)[i + 1]  ^
+                                 msp_field->gf_mul(lex_to_gray(support[j]), result[j][i + 1]));
          }
-      a = ((generator)[0] ^ msp_field->gf_mul(lex_to_gray(support[j]),result[j][0]));
-      for(i=0;i<t;i++)
+      a = ((generator)[0] ^ msp_field->gf_mul(lex_to_gray(support[j]), result[j][0]));
+      for(i = 0; i < t; i++)
          {
-         (*&result[j]).set_coef(i, msp_field->gf_div(result[j][i],a));
+         (*& result[j]).set_coef(i, msp_field->gf_div(result[j][i], a));
          }
       }
    return result;
    }
 
-polyn_gf2m::polyn_gf2m(const secure_vector<uint8_t>& encoded, std::shared_ptr<GF2m_Field> sp_field )
-   :msp_field(sp_field)
+polyn_gf2m::polyn_gf2m(const secure_vector<uint8_t>& encoded, std::shared_ptr<GF2m_Field> sp_field)
+   : msp_field(sp_field)
    {
    if(encoded.size() % 2)
       {
@@ -779,7 +818,7 @@ secure_vector<uint8_t> polyn_gf2m::encode() const
       return result;
       }
 
-   uint32_t len = m_deg+1;
+   uint32_t len = m_deg + 1;
    for(unsigned i = 0; i < len; i++)
       {
       // "big endian" encoding of the GF(2^m) elements
@@ -796,7 +835,7 @@ void polyn_gf2m::swap(polyn_gf2m& other)
    std::swap(this->coeff, other.coeff);
    }
 
-bool polyn_gf2m::operator==(const polyn_gf2m & other) const
+bool polyn_gf2m::operator==(const polyn_gf2m& other) const
    {
    if(m_deg != other.m_deg || coeff != other.coeff)
       {

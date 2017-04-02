@@ -135,7 +135,7 @@ PK_Signature_Generation_Test::run_one_test(const std::string&, const VarMap& var
       verifiers.push_back(std::move(verifier));
       }
 
-   for(auto&& sign_provider : possible_pk_providers())
+   for(auto && sign_provider : possible_pk_providers())
       {
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
       if(vars.count("Nonce"))
@@ -189,7 +189,7 @@ PK_Signature_Verification_Test::run_one_test(const std::string&, const VarMap& v
 
    Test::Result result(algo_name() + "/" + padding + " signature verification");
 
-   for(auto&& verify_provider : possible_pk_providers())
+   for(auto && verify_provider : possible_pk_providers())
       {
       std::unique_ptr<Botan::PK_Verifier> verifier;
 
@@ -219,7 +219,7 @@ PK_Signature_NonVerification_Test::run_one_test(const std::string&, const VarMap
 
    Test::Result result(algo_name() + "/" + padding + " verify invalid signature");
 
-   for(auto&& verify_provider : possible_pk_providers())
+   for(auto && verify_provider : possible_pk_providers())
       {
       std::unique_ptr<Botan::PK_Verifier> verifier;
 
@@ -255,7 +255,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
 
    std::vector<std::unique_ptr<Botan::PK_Decryptor>> decryptors;
 
-   for(auto&& dec_provider : possible_pk_providers())
+   for(auto && dec_provider : possible_pk_providers())
       {
       std::unique_ptr<Botan::PK_Decryptor> decryptor;
 
@@ -273,13 +273,13 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
       }
 
 
-   for(auto&& enc_provider : possible_pk_providers())
+   for(auto && enc_provider : possible_pk_providers())
       {
       std::unique_ptr<Botan::PK_Encryptor> encryptor;
 
       try
          {
-         encryptor.reset(new Botan::PK_Encryptor_EME(*pubkey, Test::rng(),padding, enc_provider));
+         encryptor.reset(new Botan::PK_Encryptor_EME(*pubkey, Test::rng(), padding, enc_provider));
          }
       catch(Botan::Lookup_Error&)
          {
@@ -388,7 +388,7 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
 
    const size_t key_len = get_opt_sz(vars, "OutLen", 0);
 
-   for(auto&& provider : possible_pk_providers())
+   for(auto && provider : possible_pk_providers())
       {
       std::unique_ptr<Botan::PK_Key_Agreement> kas;
 
@@ -410,7 +410,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run()
    {
    std::vector<Test::Result> results;
 
-   for(auto&& param : keygen_params())
+   for(auto && param : keygen_params())
       {
       const std::string report_name = algo_name() + (param.empty() ? param : " " + param);
 

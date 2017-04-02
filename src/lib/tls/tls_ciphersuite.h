@@ -45,12 +45,18 @@ class BOTAN_DLL Ciphersuite
       * Formats the ciphersuite back to an RFC-style ciphersuite string
       * @return RFC ciphersuite string identifier
       */
-      std::string to_string() const { return m_iana_id; }
+      std::string to_string() const
+         {
+         return m_iana_id;
+         }
 
       /**
       * @return ciphersuite number
       */
-      uint16_t ciphersuite_code() const { return m_ciphersuite_code; }
+      uint16_t ciphersuite_code() const
+         {
+         return m_ciphersuite_code;
+         }
 
       /**
       * @return true if this is a PSK ciphersuite
@@ -70,48 +76,83 @@ class BOTAN_DLL Ciphersuite
       /**
       * @return key exchange algorithm used by this ciphersuite
       */
-      std::string kex_algo() const { return m_kex_algo; }
+      std::string kex_algo() const
+         {
+         return m_kex_algo;
+         }
 
       /**
       * @return signature algorithm used by this ciphersuite
       */
-      std::string sig_algo() const { return m_sig_algo; }
+      std::string sig_algo() const
+         {
+         return m_sig_algo;
+         }
 
       /**
       * @return symmetric cipher algorithm used by this ciphersuite
       */
-      std::string cipher_algo() const { return m_cipher_algo; }
+      std::string cipher_algo() const
+         {
+         return m_cipher_algo;
+         }
 
       /**
       * @return message authentication algorithm used by this ciphersuite
       */
-      std::string mac_algo() const { return m_mac_algo; }
+      std::string mac_algo() const
+         {
+         return m_mac_algo;
+         }
 
       std::string prf_algo() const
          {
          if(m_prf_algo && *m_prf_algo)
+            {
             return m_prf_algo;
+            }
          return m_mac_algo;
          }
 
       /**
       * @return cipher key length used by this ciphersuite
       */
-      size_t cipher_keylen() const { return m_cipher_keylen; }
+      size_t cipher_keylen() const
+         {
+         return m_cipher_keylen;
+         }
 
-      size_t nonce_bytes_from_record() const { return m_nonce_bytes_from_record; }
+      size_t nonce_bytes_from_record() const
+         {
+         return m_nonce_bytes_from_record;
+         }
 
-      size_t nonce_bytes_from_handshake() const { return m_nonce_bytes_from_handshake; }
+      size_t nonce_bytes_from_handshake() const
+         {
+         return m_nonce_bytes_from_handshake;
+         }
 
-      size_t mac_keylen() const { return m_mac_keylen; }
+      size_t mac_keylen() const
+         {
+         return m_mac_keylen;
+         }
 
       /**
       * @return true if this is a valid/known ciphersuite
       */
-      bool valid() const { return m_usable; }
+      bool valid() const
+         {
+         return m_usable;
+         }
 
-      bool operator<(const Ciphersuite& o) const { return ciphersuite_code() < o.ciphersuite_code(); }
-      bool operator<(const uint16_t c) const { return ciphersuite_code() < c; }
+      bool operator<(const Ciphersuite& o) const
+         {
+         return ciphersuite_code() < o.ciphersuite_code();
+         }
+      bool operator<(const uint16_t c) const
+         {
+         return ciphersuite_code() < c;
+         }
 
       Ciphersuite() {}
 

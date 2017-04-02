@@ -31,7 +31,9 @@ void Fixed_Window_Exponentiator::set_base(const BigInt& base)
    m_g[1] = base;
 
    for(size_t i = 2; i != m_g.size(); ++i)
-      m_g[i] = m_reducer.multiply(m_g[i-1], m_g[1]);
+      {
+      m_g[i] = m_reducer.multiply(m_g[i - 1], m_g[1]);
+      }
    }
 
 /*
@@ -46,9 +48,11 @@ BigInt Fixed_Window_Exponentiator::execute() const
    for(size_t i = exp_nibbles; i > 0; --i)
       {
       for(size_t j = 0; j != m_window_bits; ++j)
+         {
          x = m_reducer.square(x);
+         }
 
-      const uint32_t nibble = m_exp.get_substring(m_window_bits*(i-1), m_window_bits);
+      const uint32_t nibble = m_exp.get_substring(m_window_bits * (i - 1), m_window_bits);
 
       x = m_reducer.multiply(x, m_g[nibble]);
       }
@@ -59,8 +63,8 @@ BigInt Fixed_Window_Exponentiator::execute() const
 * Fixed_Window_Exponentiator Constructor
 */
 Fixed_Window_Exponentiator::Fixed_Window_Exponentiator(const BigInt& n,
-                                                       Power_Mod::Usage_Hints hints)
-      : m_reducer{Modular_Reducer(n)}, m_exp{}, m_window_bits{}, m_g{}, m_hints{hints}
+      Power_Mod::Usage_Hints hints)
+   : m_reducer{Modular_Reducer(n)}, m_exp{}, m_window_bits{}, m_g{}, m_hints{hints}
    {}
 
 }

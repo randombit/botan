@@ -122,7 +122,7 @@ class BOTAN_DLL Channel
       * Throws an exception if is_active() is false
       */
       template<typename Alloc>
-         void send(const std::vector<unsigned char, Alloc>& val)
+      void send(const std::vector<unsigned char, Alloc>& val)
          {
          send(val.data(), val.size());
          }
@@ -137,17 +137,26 @@ class BOTAN_DLL Channel
       /**
       * Send a warning alert
       */
-      void send_warning_alert(Alert::Type type) { send_alert(Alert(type, false)); }
+      void send_warning_alert(Alert::Type type)
+         {
+         send_alert(Alert(type, false));
+         }
 
       /**
       * Send a fatal alert
       */
-      void send_fatal_alert(Alert::Type type) { send_alert(Alert(type, true)); }
+      void send_fatal_alert(Alert::Type type)
+         {
+         send_alert(Alert(type, true));
+         }
 
       /**
       * Send a close notification alert
       */
-      void close() { send_warning_alert(Alert::CLOSE_NOTIFY); }
+      void close()
+         {
+         send_warning_alert(Alert::CLOSE_NOTIFY);
+         }
 
       /**
       * @return true iff the connection is active for sending application data
@@ -208,7 +217,7 @@ class BOTAN_DLL Channel
                                       bool force_full_renegotiation) = 0;
 
       virtual std::vector<X509_Certificate>
-         get_peer_cert_chain(const Handshake_State& state) const = 0;
+      get_peer_cert_chain(const Handshake_State& state) const = 0;
 
       virtual Handshake_State* new_handshake_state(class Handshake_IO* io) = 0;
 
@@ -230,15 +239,30 @@ class BOTAN_DLL Channel
       std::vector<uint8_t> secure_renegotiation_data_for_client_hello() const;
       std::vector<uint8_t> secure_renegotiation_data_for_server_hello() const;
 
-      RandomNumberGenerator& rng() { return m_rng; }
+      RandomNumberGenerator& rng()
+         {
+         return m_rng;
+         }
 
-      Session_Manager& session_manager() { return m_session_manager; }
+      Session_Manager& session_manager()
+         {
+         return m_session_manager;
+         }
 
-      const Policy& policy() const { return m_policy; }
+      const Policy& policy() const
+         {
+         return m_policy;
+         }
 
-      bool save_session(const Session& session) const { return callbacks().tls_session_established(session); }
+      bool save_session(const Session& session) const
+         {
+         return callbacks().tls_session_established(session);
+         }
 
-      Callbacks& callbacks() const { return m_callbacks; }
+      Callbacks& callbacks() const
+         {
+         return m_callbacks;
+         }
    private:
       void init(size_t io_buf_sze);
 
@@ -261,9 +285,15 @@ class BOTAN_DLL Channel
 
       void reset_state();
 
-      const Handshake_State* active_state() const { return m_active_state.get(); }
+      const Handshake_State* active_state() const
+         {
+         return m_active_state.get();
+         }
 
-      const Handshake_State* pending_state() const { return m_pending_state.get(); }
+      const Handshake_State* pending_state() const
+         {
+         return m_pending_state.get();
+         }
 
       /* methods to handle incoming traffic through Channel::receive_data. */
       void process_handshake_ccs(const secure_vector<uint8_t>& record,

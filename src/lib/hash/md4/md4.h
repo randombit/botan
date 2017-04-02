@@ -18,14 +18,25 @@ namespace Botan {
 class BOTAN_DLL MD4 final : public MDx_HashFunction
    {
    public:
-      std::string name() const override { return "MD4"; }
-      size_t output_length() const override { return 16; }
-      HashFunction* clone() const override { return new MD4; }
+      std::string name() const override
+         {
+         return "MD4";
+         }
+      size_t output_length() const override
+         {
+         return 16;
+         }
+      HashFunction* clone() const override
+         {
+         return new MD4;
+         }
 
       void clear() override;
 
       MD4() : MDx_HashFunction(64, false, true), m_M(16), m_digest(4)
-         { clear(); }
+         {
+         clear();
+         }
    protected:
       void compress_n(const uint8_t input[], size_t blocks) override;
       void copy_out(uint8_t[]) override;

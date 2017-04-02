@@ -39,8 +39,14 @@ class Atomic
          return *this;
          }
 
-      operator std::atomic<T>& () { return m_data; }
-      operator T() { return m_data.load(); }
+      operator std::atomic<T>& ()
+         {
+         return m_data;
+         }
+      operator T()
+         {
+         return m_data.load();
+         }
 
    private:
       std::atomic<T> m_data;

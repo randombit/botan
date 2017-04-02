@@ -42,24 +42,36 @@ class Connection_Cipher_State
                               const Session_Keys& keys,
                               bool uses_encrypt_then_mac);
 
-      AEAD_Mode* aead() { return m_aead.get(); }
+      AEAD_Mode* aead()
+         {
+         return m_aead.get();
+         }
 
       std::vector<uint8_t> aead_nonce(uint64_t seq, RandomNumberGenerator& rng);
 
       std::vector<uint8_t> aead_nonce(const uint8_t record[], size_t record_len, uint64_t seq);
 
       std::vector<uint8_t> format_ad(uint64_t seq, uint8_t type,
-                                  Protocol_Version version,
-                                  uint16_t ptext_length);
+                                     Protocol_Version version,
+                                     uint16_t ptext_length);
 
-      size_t nonce_bytes_from_handshake() const { return m_nonce_bytes_from_handshake; }
-      size_t nonce_bytes_from_record() const { return m_nonce_bytes_from_record; }
-      bool cbc_nonce() const { return m_cbc_nonce; }
+      size_t nonce_bytes_from_handshake() const
+         {
+         return m_nonce_bytes_from_handshake;
+         }
+      size_t nonce_bytes_from_record() const
+         {
+         return m_nonce_bytes_from_record;
+         }
+      bool cbc_nonce() const
+         {
+         return m_cbc_nonce;
+         }
 
       std::chrono::seconds age() const
          {
          return std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::system_clock::now() - m_start_time);
+                   std::chrono::system_clock::now() - m_start_time);
          }
 
    private:
@@ -82,15 +94,30 @@ class Record
          : m_data(data), m_sequence(sequence), m_protocol_version(protocol_version),
            m_type(type), m_size(data.size()) {};
 
-      secure_vector<uint8_t>& get_data() { return m_data; }
+      secure_vector<uint8_t>& get_data()
+         {
+         return m_data;
+         }
 
-      Protocol_Version* get_protocol_version() { return m_protocol_version; }
+      Protocol_Version* get_protocol_version()
+         {
+         return m_protocol_version;
+         }
 
-      uint64_t* get_sequence() { return m_sequence; }
+      uint64_t* get_sequence()
+         {
+         return m_sequence;
+         }
 
-      Record_Type* get_type() { return m_type; }
+      Record_Type* get_type()
+         {
+         return m_type;
+         }
 
-      size_t& get_size() { return m_size; }
+      size_t& get_size()
+         {
+         return m_size;
+         }
 
    private:
       secure_vector<uint8_t>& m_data;
@@ -109,17 +136,29 @@ class Record_Message
          : m_type(type), m_sequence(sequence), m_data(data),
            m_size(size) {};
 
-      uint8_t& get_type() { return m_type; };
-      uint64_t& get_sequence() { return m_sequence; };
-      const uint8_t* get_data() { return m_data; };
-      size_t& get_size() { return m_size; };
+      uint8_t& get_type()
+         {
+         return m_type;
+         };
+      uint64_t& get_sequence()
+         {
+         return m_sequence;
+         };
+      const uint8_t* get_data()
+         {
+         return m_data;
+         };
+      size_t& get_size()
+         {
+         return m_size;
+         };
 
    private:
       uint8_t m_type;
       uint64_t m_sequence;
       const uint8_t* m_data;
       size_t m_size;
-};
+   };
 
 class Record_Raw_Input
    {
@@ -129,14 +168,29 @@ class Record_Raw_Input
          : m_data(data), m_size(size), m_consumed(consumed),
            m_is_datagram(is_datagram) {};
 
-      const uint8_t*& get_data() { return m_data; };
+      const uint8_t*& get_data()
+         {
+         return m_data;
+         };
 
-      size_t& get_size() { return m_size; };
+      size_t& get_size()
+         {
+         return m_size;
+         };
 
-      size_t& get_consumed() { return m_consumed; };
-      void set_consumed(size_t consumed) { m_consumed = consumed; }
+      size_t& get_consumed()
+         {
+         return m_consumed;
+         };
+      void set_consumed(size_t consumed)
+         {
+         m_consumed = consumed;
+         }
 
-      bool is_datagram() { return m_is_datagram; };
+      bool is_datagram()
+         {
+         return m_is_datagram;
+         };
 
    private:
       const uint8_t* m_data;

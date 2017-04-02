@@ -11,7 +11,7 @@
 #include <algorithm>
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-  #include <fstream>
+   #include <fstream>
 #endif
 
 namespace Botan {
@@ -47,7 +47,9 @@ size_t DataSource::discard_next(size_t n)
       n -= got;
 
       if(got == 0)
+         {
          break;
+         }
       }
 
    return discarded;
@@ -76,7 +78,10 @@ size_t DataSource_Memory::peek(uint8_t out[], size_t length,
                                size_t peek_offset) const
    {
    const size_t bytes_left = m_source.size() - m_offset;
-   if(peek_offset >= bytes_left) return 0;
+   if(peek_offset >= bytes_left)
+      {
+      return 0;
+      }
 
    size_t got = std::min(bytes_left - peek_offset, length);
    copy_mem(out, &m_source[m_offset + peek_offset], got);
@@ -96,7 +101,7 @@ bool DataSource_Memory::end_of_data() const
 */
 DataSource_Memory::DataSource_Memory(const std::string& in) :
    m_source(reinterpret_cast<const uint8_t*>(in.data()),
-          reinterpret_cast<const uint8_t*>(in.data()) + in.length()),
+            reinterpret_cast<const uint8_t*>(in.data()) + in.length()),
    m_offset(0)
    {
    }
@@ -108,7 +113,9 @@ size_t DataSource_Stream::read(uint8_t out[], size_t length)
    {
    m_source.read(reinterpret_cast<char*>(out), length);
    if(m_source.bad())
+      {
       throw Stream_IO_Error("DataSource_Stream::read: Source failure");
+      }
 
    size_t got = m_source.gcount();
    m_total_read += got;
@@ -130,7 +137,9 @@ bool DataSource_Stream::check_available(size_t n)
 size_t DataSource_Stream::peek(uint8_t out[], size_t length, size_t offset) const
    {
    if(end_of_data())
+      {
       throw Invalid_State("DataSource_Stream: Cannot peek when out of data");
+      }
 
    size_t got = 0;
 
@@ -139,7 +148,9 @@ size_t DataSource_Stream::peek(uint8_t out[], size_t length, size_t offset) cons
       secure_vector<uint8_t> buf(offset);
       m_source.read(reinterpret_cast<char*>(buf.data()), buf.size());
       if(m_source.bad())
+         {
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
+         }
       got = m_source.gcount();
       }
 
@@ -147,12 +158,16 @@ size_t DataSource_Stream::peek(uint8_t out[], size_t length, size_t offset) cons
       {
       m_source.read(reinterpret_cast<char*>(out), length);
       if(m_source.bad())
+         {
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
+         }
       got = m_source.gcount();
       }
 
    if(m_source.eof())
+      {
       m_source.clear();
+      }
    m_source.seekg(m_total_read, std::ios::beg);
 
    return got;

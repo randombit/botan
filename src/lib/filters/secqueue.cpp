@@ -18,9 +18,16 @@ class SecureQueueNode
    {
    public:
       SecureQueueNode() : m_buffer(DEFAULT_BUFFERSIZE)
-         { m_next = nullptr; m_start = m_end = 0; }
+         {
+         m_next = nullptr;
+         m_start = m_end = 0;
+         }
 
-      ~SecureQueueNode() { m_next = nullptr; m_start = m_end = 0; }
+      ~SecureQueueNode()
+         {
+         m_next = nullptr;
+         m_start = m_end = 0;
+         }
 
       size_t write(const uint8_t input[], size_t length)
          {
@@ -41,13 +48,19 @@ class SecureQueueNode
       size_t peek(uint8_t output[], size_t length, size_t offset = 0)
          {
          const size_t left = m_end - m_start;
-         if(offset >= left) return 0;
+         if(offset >= left)
+            {
+            return 0;
+            }
          size_t copied = std::min(length, left - offset);
          copy_mem(output, m_buffer.data() + m_start + offset, copied);
          return copied;
          }
 
-      size_t size() const { return (m_end - m_start); }
+      size_t size() const
+         {
+         return (m_end - m_start);
+         }
    private:
       friend class SecureQueue;
       SecureQueueNode* m_next;
@@ -121,7 +134,9 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input)
 void SecureQueue::write(const uint8_t input[], size_t length)
    {
    if(!m_head)
+      {
       m_head = m_tail = new SecureQueueNode;
+      }
    while(length)
       {
       const size_t n = m_tail->write(input, length);
@@ -173,7 +188,9 @@ size_t SecureQueue::peek(uint8_t output[], size_t length, size_t offset) const
          current = current->m_next;
          }
       else
+         {
          break;
+         }
       }
 
    size_t got = 0;

@@ -34,7 +34,9 @@ EC_PublicKey::EC_PublicKey(const EC_Group& dom_par,
    m_domain_encoding(EC_DOMPAR_ENC_EXPLICIT)
    {
    if(domain().get_curve() != public_point().get_curve())
+      {
       throw Invalid_Argument("EC_PublicKey: curve mismatch in constructor");
+      }
    }
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id,
@@ -91,9 +93,11 @@ std::vector<uint8_t> EC_PublicKey::public_key_bits() const
 void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form)
    {
    if(form != EC_DOMPAR_ENC_EXPLICIT &&
-      form != EC_DOMPAR_ENC_IMPLICITCA &&
-      form != EC_DOMPAR_ENC_OID)
+         form != EC_DOMPAR_ENC_IMPLICITCA &&
+         form != EC_DOMPAR_ENC_OID)
+      {
       throw Invalid_Argument("Invalid encoding form for EC-key object specified");
+      }
 
    if((form == EC_DOMPAR_ENC_OID) && (m_domain_params.get_oid() == ""))
       throw Invalid_Argument("Invalid encoding form OID specified for "
@@ -106,7 +110,9 @@ void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form)
 const BigInt& EC_PrivateKey::private_value() const
    {
    if(m_private_key == 0)
+      {
       throw Invalid_State("EC_PrivateKey::private_value - uninitialized");
+      }
 
    return m_private_key;
    }
@@ -141,12 +147,12 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
 secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const
    {
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-         .encode(static_cast<size_t>(1))
-         .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()),
-                 OCTET_STRING)
-      .end_cons()
-      .get_contents();
+          .start_cons(SEQUENCE)
+          .encode(static_cast<size_t>(1))
+          .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()),
+                  OCTET_STRING)
+          .end_cons()
+          .get_contents();
    }
 
 EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
@@ -160,15 +166,17 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
    secure_vector<uint8_t> public_key_bits;
 
    BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
-         .decode_and_check<size_t>(1, "Unknown version code for ECC key")
-         .decode_octet_string_bigint(m_private_key)
-         .decode_optional(key_parameters, ASN1_Tag(0), PRIVATE)
-         .decode_optional_string(public_key_bits, BIT_STRING, 1, PRIVATE)
-      .end_cons();
+   .start_cons(SEQUENCE)
+   .decode_and_check<size_t>(1, "Unknown version code for ECC key")
+   .decode_octet_string_bigint(m_private_key)
+   .decode_optional(key_parameters, ASN1_Tag(0), PRIVATE)
+   .decode_optional_string(public_key_bits, BIT_STRING, 1, PRIVATE)
+   .end_cons();
 
    if(!key_parameters.empty() && key_parameters != alg_id.oid)
+      {
       throw Decoding_Error("EC_PrivateKey - inner and outer OIDs did not match");
+      }
 
    if(public_key_bits.empty())
       {

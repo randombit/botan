@@ -69,12 +69,18 @@ class BOTAN_DLL XMSS_Parameters
        *
        * @return element length in bytes.
        **/
-      size_t element_size() const { return m_element_size; }
+      size_t element_size() const
+         {
+         return m_element_size;
+         }
 
       /**
        * @returns The height (number of levels - 1) of the tree
        **/
-      size_t tree_height() const { return m_tree_height; }
+      size_t tree_height() const
+         {
+         return m_tree_height;
+         }
 
       /**
        * The Winternitz parameter.
@@ -82,11 +88,20 @@ class BOTAN_DLL XMSS_Parameters
        * @return numeric base used for internal representation of
        *         data.
        **/
-      size_t wots_parameter() const { return m_w; }
+      size_t wots_parameter() const
+         {
+         return m_w;
+         }
 
-      size_t len() const { return m_len; }
+      size_t len() const
+         {
+         return m_len;
+         }
 
-      xmss_algorithm_t oid() const { return m_oid; }
+      xmss_algorithm_t oid() const
+         {
+         return m_oid;
+         }
 
       XMSS_WOTS_Parameters::ots_algorithm_t ots_oid() const
          {

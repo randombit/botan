@@ -12,7 +12,8 @@ namespace Botan {
 
 namespace {
 
-const uint32_t SEED_S0[256] = {
+const uint32_t SEED_S0[256] =
+   {
    0x2989A1A8, 0x05858184, 0x16C6D2D4, 0x13C3D3D0, 0x14445054, 0x1D0D111C,
    0x2C8CA0AC, 0x25052124, 0x1D4D515C, 0x03434340, 0x18081018, 0x1E0E121C,
    0x11415150, 0x3CCCF0FC, 0x0ACAC2C8, 0x23436360, 0x28082028, 0x04444044,
@@ -55,9 +56,11 @@ const uint32_t SEED_S0[256] = {
    0x2D4D616C, 0x1F4F535C, 0x24C4E0E4, 0x30C0F0F0, 0x0DCDC1CC, 0x08888088,
    0x16061214, 0x3A0A3238, 0x18485058, 0x14C4D0D4, 0x22426260, 0x29092128,
    0x07070304, 0x33033330, 0x28C8E0E8, 0x1B0B1318, 0x05050104, 0x39497178,
-   0x10809090, 0x2A4A6268, 0x2A0A2228, 0x1A8A9298 };
+   0x10809090, 0x2A4A6268, 0x2A0A2228, 0x1A8A9298
+   };
 
-const uint32_t SEED_S1[256] = {
+const uint32_t SEED_S1[256] =
+   {
    0x38380830, 0xE828C8E0, 0x2C2D0D21, 0xA42686A2, 0xCC0FCFC3, 0xDC1ECED2,
    0xB03383B3, 0xB83888B0, 0xAC2F8FA3, 0x60204060, 0x54154551, 0xC407C7C3,
    0x44044440, 0x6C2F4F63, 0x682B4B63, 0x581B4B53, 0xC003C3C3, 0x60224262,
@@ -100,9 +103,11 @@ const uint32_t SEED_S1[256] = {
    0x38390931, 0x24260622, 0x30320232, 0x84048480, 0x68294961, 0x90138393,
    0x34370733, 0xE427C7E3, 0x24240420, 0xA42484A0, 0xC80BCBC3, 0x50134353,
    0x080A0A02, 0x84078783, 0xD819C9D1, 0x4C0C4C40, 0x80038383, 0x8C0F8F83,
-   0xCC0ECEC2, 0x383B0B33, 0x480A4A42, 0xB43787B3 };
+   0xCC0ECEC2, 0x383B0B33, 0x480A4A42, 0xB43787B3
+   };
 
-const uint32_t SEED_S2[256] = {
+const uint32_t SEED_S2[256] =
+   {
    0xA1A82989, 0x81840585, 0xD2D416C6, 0xD3D013C3, 0x50541444, 0x111C1D0D,
    0xA0AC2C8C, 0x21242505, 0x515C1D4D, 0x43400343, 0x10181808, 0x121C1E0E,
    0x51501141, 0xF0FC3CCC, 0xC2C80ACA, 0x63602343, 0x20282808, 0x40440444,
@@ -145,9 +150,11 @@ const uint32_t SEED_S2[256] = {
    0x616C2D4D, 0x535C1F4F, 0xE0E424C4, 0xF0F030C0, 0xC1CC0DCD, 0x80880888,
    0x12141606, 0x32383A0A, 0x50581848, 0xD0D414C4, 0x62602242, 0x21282909,
    0x03040707, 0x33303303, 0xE0E828C8, 0x13181B0B, 0x01040505, 0x71783949,
-   0x90901080, 0x62682A4A, 0x22282A0A, 0x92981A8A };
+   0x90901080, 0x62682A4A, 0x22282A0A, 0x92981A8A
+   };
 
-const uint32_t SEED_S3[256] = {
+const uint32_t SEED_S3[256] =
+   {
    0x08303838, 0xC8E0E828, 0x0D212C2D, 0x86A2A426, 0xCFC3CC0F, 0xCED2DC1E,
    0x83B3B033, 0x88B0B838, 0x8FA3AC2F, 0x40606020, 0x45515415, 0xC7C3C407,
    0x44404404, 0x4F636C2F, 0x4B63682B, 0x4B53581B, 0xC3C3C003, 0x42626022,
@@ -190,7 +197,8 @@ const uint32_t SEED_S3[256] = {
    0x09313839, 0x06222426, 0x02323032, 0x84808404, 0x49616829, 0x83939013,
    0x07333437, 0xC7E3E427, 0x04202424, 0x84A0A424, 0xCBC3C80B, 0x43535013,
    0x0A02080A, 0x87838407, 0xC9D1D819, 0x4C404C0C, 0x83838003, 0x8F838C0F,
-   0xCEC2CC0E, 0x0B33383B, 0x4A42480A, 0x87B3B437 };
+   0xCEC2CC0E, 0x0B33383B, 0x4A42480A, 0x87B3B437
+   };
 
 /*
 * SEED G Function
@@ -219,15 +227,15 @@ void SEED::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          {
          uint32_t T0, T1;
 
-         T0 = B2 ^ m_K[2*j];
-         T1 = SEED_G(B2 ^ B3 ^ m_K[2*j+1]);
+         T0 = B2 ^ m_K[2 * j];
+         T1 = SEED_G(B2 ^ B3 ^ m_K[2 * j + 1]);
          T0 = SEED_G(T1 + T0);
          T1 = SEED_G(T1 + T0);
          B1 ^= T1;
          B0 ^= T0 + T1;
 
-         T0 = B0 ^ m_K[2*j+2];
-         T1 = SEED_G(B0 ^ B1 ^ m_K[2*j+3]);
+         T0 = B0 ^ m_K[2 * j + 2];
+         T1 = SEED_G(B0 ^ B1 ^ m_K[2 * j + 3]);
          T0 = SEED_G(T1 + T0);
          T1 = SEED_G(T1 + T0);
          B3 ^= T1;
@@ -257,15 +265,15 @@ void SEED::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
          {
          uint32_t T0, T1;
 
-         T0 = B2 ^ m_K[30-2*j];
-         T1 = SEED_G(B2 ^ B3 ^ m_K[31-2*j]);
+         T0 = B2 ^ m_K[30 - 2 * j];
+         T1 = SEED_G(B2 ^ B3 ^ m_K[31 - 2 * j]);
          T0 = SEED_G(T1 + T0);
          T1 = SEED_G(T1 + T0);
          B1 ^= T1;
          B0 ^= T0 + T1;
 
-         T0 = B0 ^ m_K[28-2*j];
-         T1 = SEED_G(B0 ^ B1 ^ m_K[29-2*j]);
+         T0 = B0 ^ m_K[28 - 2 * j];
+         T1 = SEED_G(B0 ^ B1 ^ m_K[29 - 2 * j]);
          T0 = SEED_G(T1 + T0);
          T1 = SEED_G(T1 + T0);
          B3 ^= T1;
@@ -284,31 +292,34 @@ void SEED::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void SEED::key_schedule(const uint8_t key[], size_t)
    {
-   const uint32_t RC[16] = {
+   const uint32_t RC[16] =
+      {
       0x9E3779B9, 0x3C6EF373, 0x78DDE6E6, 0xF1BBCDCC,
       0xE3779B99, 0xC6EF3733, 0x8DDE6E67, 0x1BBCDCCF,
       0x3779B99E, 0x6EF3733C, 0xDDE6E678, 0xBBCDCCF1,
       0x779B99E3, 0xEF3733C6, 0xDE6E678D, 0xBCDCCF1B
-   };
+      };
 
    secure_vector<uint32_t> WK(4);
 
    for(size_t i = 0; i != 4; ++i)
+      {
       WK[i] = load_be<uint32_t>(key, i);
+      }
 
    m_K.resize(32);
 
    for(size_t i = 0; i != 16; i += 2)
       {
-      m_K[2*i  ] = SEED_G(WK[0] + WK[2] - RC[i]);
-      m_K[2*i+1] = SEED_G(WK[1] - WK[3] + RC[i]) ^ m_K[2*i];
+      m_K[2 * i  ] = SEED_G(WK[0] + WK[2] - RC[i]);
+      m_K[2 * i + 1] = SEED_G(WK[1] - WK[3] + RC[i]) ^ m_K[2 * i];
 
       uint8_t T = get_byte(3, WK[0]);
       WK[0] = (WK[0] >> 8) | (get_byte(3, WK[1]) << 24);
       WK[1] = (WK[1] >> 8) | (T << 24);
 
-      m_K[2*i+2] = SEED_G(WK[0] + WK[2] - RC[i+1]);
-      m_K[2*i+3] = SEED_G(WK[1] - WK[3] + RC[i+1]) ^ m_K[2*i+2];
+      m_K[2 * i + 2] = SEED_G(WK[0] + WK[2] - RC[i + 1]);
+      m_K[2 * i + 3] = SEED_G(WK[1] - WK[3] + RC[i + 1]) ^ m_K[2 * i + 2];
 
       T = get_byte(0, WK[3]);
       WK[3] = (WK[3] << 8) | get_byte(0, WK[2]);

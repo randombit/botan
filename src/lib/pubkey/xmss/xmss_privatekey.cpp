@@ -27,9 +27,9 @@ XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
      m_index_reg(XMSS_Index_Registry::get_instance())
    {
    BOTAN_ASSERT(sizeof(size_t) >= ceil(
-      static_cast<float>(XMSS_PublicKey::m_xmss_params.tree_height()) / 8.f),
-      "System type \"size_t\" not big enough to support"
-      " leaf index.");
+                   static_cast<float>(XMSS_PublicKey::m_xmss_params.tree_height()) / 8.f),
+                "System type \"size_t\" not big enough to support"
+                " leaf index.");
 
    if(raw_key.size() != size())
       {
@@ -42,7 +42,9 @@ XMSS_PrivateKey::XMSS_PrivateKey(const secure_vector<uint8_t>& raw_key)
    auto end = raw_key.begin() + XMSS_PublicKey::size() + sizeof(uint64_t);
 
    for(auto& i = begin; i != end; i++)
+      {
       unused_leaf = ((unused_leaf << 8) | *i);
+      }
 
    if(unused_leaf >= (1ull << (XMSS_PublicKey::m_xmss_params.tree_height() - 1)))
       {
@@ -90,8 +92,8 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
                 "Start index must be divisible by 2^{target node height}.");
 
    std::vector<secure_vector<uint8_t>> nodes(
-                                    XMSS_PublicKey::m_xmss_params.tree_height() + 1,
-                                    secure_vector<uint8_t>(XMSS_PublicKey::m_xmss_params.element_size()));
+                                       XMSS_PublicKey::m_xmss_params.tree_height() + 1,
+                                       secure_vector<uint8_t>(XMSS_PublicKey::m_xmss_params.element_size()));
 
    // node stack, holds all nodes on stack and one extra "pending" node. This
    // temporary node referred to as "node" in the XMSS standard document stays
@@ -141,7 +143,7 @@ XMSS_PrivateKey::tree_hash(size_t start_idx,
    }
 
 std::shared_ptr<Atomic<size_t>>
-XMSS_PrivateKey::recover_global_leaf_index() const
+                             XMSS_PrivateKey::recover_global_leaf_index() const
    {
    BOTAN_ASSERT(m_wots_priv_key.private_seed().size() ==
                 XMSS_PublicKey::m_xmss_params.element_size() &&
@@ -180,7 +182,7 @@ XMSS_PrivateKey::create_signature_op(RandomNumberGenerator&,
    {
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Signature>(
-           new XMSS_Signature_Operation(*this));
+                new XMSS_Signature_Operation(*this));
 
    throw Provider_Not_Found(algo_name(), provider);
    }

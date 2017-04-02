@@ -14,7 +14,9 @@ BigInt simple_power_mod(BigInt x, BigInt n, const BigInt& p, const Modular_Reduc
    if(n == 0)
       {
       if(p == 1)
+         {
          return 0;
+         }
       return 1;
       }
 
@@ -38,8 +40,10 @@ void fuzz(const uint8_t in[], size_t len)
    static const BigInt p = random_prime(fuzzer_rng(), p_bits);
    static Modular_Reducer mod_p(p);
 
-   if(len == 0 || len > p_bits/8)
+   if(len == 0 || len > p_bits / 8)
+      {
       return;
+      }
 
    try
       {

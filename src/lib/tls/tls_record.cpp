@@ -18,7 +18,7 @@
 #include <botan/rng.h>
 
 #if defined(BOTAN_HAS_TLS_CBC)
-  #include <botan/internal/tls_cbc.h>
+   #include <botan/internal/tls_cbc.h>
 #endif
 
 namespace Botan {
@@ -26,11 +26,11 @@ namespace Botan {
 namespace TLS {
 
 Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
-                                                 Connection_Side side,
-                                                 bool our_side,
-                                                 const Ciphersuite& suite,
-                                                 const Session_Keys& keys,
-                                                 bool uses_encrypt_then_mac) :
+      Connection_Side side,
+      bool our_side,
+      const Ciphersuite& suite,
+      const Session_Keys& keys,
+      bool uses_encrypt_then_mac) :
    m_start_time(std::chrono::system_clock::now()),
    m_nonce_bytes_from_handshake(suite.nonce_bytes_from_handshake()),
    m_nonce_bytes_from_record(suite.nonce_bytes_from_record())
@@ -100,9 +100,13 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 
       m_cbc_nonce = true;
       if(version.supports_explicit_cbc_ivs())
+         {
          m_nonce_bytes_from_record = m_nonce_bytes_from_handshake;
+         }
       else if(our_side == false)
+         {
          m_aead->start(iv.bits_of());
+         }
 #else
       throw Exception("Negotiated disabled TLS CBC+HMAC ciphersuite");
 #endif
@@ -144,7 +148,9 @@ Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, u
    if(m_cbc_nonce)
       {
       if(record_len < nonce_bytes_from_record())
+         {
          throw Decoding_Error("Invalid CBC packet too short to be valid");
+         }
       std::vector<uint8_t> nonce(record, record + nonce_bytes_from_record());
       return nonce;
       }
@@ -163,7 +169,9 @@ Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, u
    else if(nonce_bytes_from_record() > 0)
       {
       if(record_len < nonce_bytes_from_record())
+         {
          throw Decoding_Error("Invalid AEAD packet too short to be valid");
+         }
       std::vector<uint8_t> nonce = m_nonce;
       copy_mem(&nonce[nonce_bytes_from_handshake()], record, nonce_bytes_from_record());
       return nonce;
@@ -226,7 +234,9 @@ void write_record(secure_vector<uint8_t>& output,
    if(version.is_datagram_protocol())
       {
       for(size_t i = 0; i != 8; ++i)
+         {
          output.push_back(get_byte(i, seq));
+         }
       }
 
    if(!cs) // initial unencrypted handshake records
@@ -252,9 +262,13 @@ void write_record(secure_vector<uint8_t>& output,
    if(cs->nonce_bytes_from_record() > 0)
       {
       if(cs->cbc_nonce())
+         {
          output += nonce;
+         }
       else
+         {
          output += std::make_pair(&nonce[cs->nonce_bytes_from_handshake()], cs->nonce_bytes_from_record());
+         }
       }
 
    const size_t header_size = output.size();
@@ -276,7 +290,9 @@ size_t fill_buffer_to(secure_vector<uint8_t>& readbuf,
                       size_t desired)
    {
    if(readbuf.size() >= desired)
-      return 0; // already have it
+      {
+      return 0;   // already have it
+      }
 
    const size_t taken = std::min(input_size, desired - readbuf.size());
 
@@ -306,7 +322,7 @@ void decrypt_record(secure_vector<uint8_t>& output,
 
    aead->set_associated_data_vec(
       cs.format_ad(record_sequence, record_type, record_version, static_cast<uint16_t>(ptext_size))
-      );
+   );
 
    aead->start(nonce);
 
@@ -326,7 +342,9 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
       if(size_t needed = fill_buffer_to(readbuf,
                                         raw_input.get_data(), raw_input.get_size(), raw_input.get_consumed(),
                                         TLS_HEADER_SIZE))
+         {
          return needed;
+         }
 
       BOTAN_ASSERT_EQUAL(readbuf.size(), TLS_HEADER_SIZE, "Have an entire header");
       }
@@ -335,8 +353,8 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
 
    BOTAN_ASSERT(!rec.get_protocol_version()->is_datagram_protocol(), "Expected TLS");
 
-   const size_t record_size = make_uint16(readbuf[TLS_HEADER_SIZE-2],
-                                         readbuf[TLS_HEADER_SIZE-1]);
+   const size_t record_size = make_uint16(readbuf[TLS_HEADER_SIZE - 2],
+                                          readbuf[TLS_HEADER_SIZE - 1]);
 
    if(record_size > MAX_CIPHERTEXT_SIZE)
       throw TLS_Exception(Alert::RECORD_OVERFLOW,
@@ -349,7 +367,9 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
    if(size_t needed = fill_buffer_to(readbuf,
                                      raw_input.get_data(), raw_input.get_size(), raw_input.get_consumed(),
                                      TLS_HEADER_SIZE + record_size))
+      {
       return needed;
+      }
 
    BOTAN_ASSERT_EQUAL(static_cast<size_t>(TLS_HEADER_SIZE) + record_size,
                       readbuf.size(),
@@ -394,7 +414,9 @@ size_t read_tls_record(secure_vector<uint8_t>& readbuf,
                   *cs);
 
    if(sequence_numbers)
+      {
       sequence_numbers->read_accept(*rec.get_sequence());
+      }
 
    readbuf.clear();
    return 0;
@@ -421,14 +443,15 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
 
    BOTAN_ASSERT(rec.get_protocol_version()->is_datagram_protocol(), "Expected DTLS");
 
-   const size_t record_size = make_uint16(readbuf[DTLS_HEADER_SIZE-2],
-                                          readbuf[DTLS_HEADER_SIZE-1]);
+   const size_t record_size = make_uint16(readbuf[DTLS_HEADER_SIZE - 2],
+                                          readbuf[DTLS_HEADER_SIZE - 1]);
 
    if(record_size > MAX_CIPHERTEXT_SIZE)
       throw TLS_Exception(Alert::RECORD_OVERFLOW,
                           "Got message that exceeds maximum size");
 
-   if(fill_buffer_to(readbuf, raw_input.get_data(), raw_input.get_size(), raw_input.get_consumed(), DTLS_HEADER_SIZE + record_size))
+   if(fill_buffer_to(readbuf, raw_input.get_data(), raw_input.get_size(), raw_input.get_consumed(),
+                     DTLS_HEADER_SIZE + record_size))
       {
       // Truncated packet?
       readbuf.clear();
@@ -483,7 +506,9 @@ size_t read_dtls_record(secure_vector<uint8_t>& readbuf,
       }
 
    if(sequence_numbers)
+      {
       sequence_numbers->read_accept(*rec.get_sequence());
+      }
 
    readbuf.clear();
    return 0;

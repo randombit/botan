@@ -15,7 +15,9 @@ ChaCha20Poly1305_Mode::ChaCha20Poly1305_Mode() :
    m_poly1305(MessageAuthenticationCode::create("Poly1305"))
    {
    if(!m_chacha || !m_poly1305)
+      {
       throw Algorithm_Not_Found("ChaCha20Poly1305");
+      }
    }
 
 bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const
@@ -45,7 +47,9 @@ void ChaCha20Poly1305_Mode::key_schedule(const uint8_t key[], size_t length)
 void ChaCha20Poly1305_Mode::set_associated_data(const uint8_t ad[], size_t length)
    {
    if(m_ctext_len)
+      {
       throw Exception("Too late to set AD for ChaCha20Poly1305");
+      }
    m_ad.assign(ad, ad + length);
    }
 
@@ -59,7 +63,9 @@ void ChaCha20Poly1305_Mode::update_len(size_t len)
 void ChaCha20Poly1305_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
+      {
       throw Invalid_IV_Length(name(), nonce_len);
+      }
 
    m_ctext_len = 0;
    m_nonce_len = nonce_len;
@@ -158,7 +164,9 @@ void ChaCha20Poly1305_Decryption::finish(secure_vector<uint8_t>& buffer, size_t 
    m_ctext_len = 0;
 
    if(!same_mem(mac.data(), included_tag, tag_size()))
+      {
       throw Integrity_Failure("ChaCha20Poly1305 tag check failed");
+      }
    buffer.resize(offset + remaining);
    }
 

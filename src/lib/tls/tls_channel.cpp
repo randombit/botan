@@ -19,7 +19,7 @@ namespace Botan {
 
 namespace TLS {
 
-size_t TLS::Channel::IO_BUF_DEFAULT_SIZE = 10*1024;
+size_t TLS::Channel::IO_BUF_DEFAULT_SIZE = 10 * 1024;
 
 Channel::Channel(Callbacks& callbacks,
                  Session_Manager& session_manager,
@@ -46,15 +46,15 @@ Channel::Channel(output_fn out,
                  const Policy& policy,
                  bool is_datagram,
                  size_t io_buf_sz) :
-    m_is_datagram(is_datagram),
-    m_compat_callbacks(new Compat_Callbacks(out, app_data_cb, alert_cb, hs_cb, hs_msg_cb)),
-    m_callbacks(*m_compat_callbacks.get()),
-    m_session_manager(session_manager),
-    m_policy(policy),
-    m_rng(rng)
-    {
-    init(io_buf_sz);
-    }
+   m_is_datagram(is_datagram),
+   m_compat_callbacks(new Compat_Callbacks(out, app_data_cb, alert_cb, hs_cb, hs_msg_cb)),
+   m_callbacks(*m_compat_callbacks.get()),
+   m_session_manager(session_manager),
+   m_policy(policy),
+   m_rng(rng)
+   {
+   init(io_buf_sz);
+   }
 
 void Channel::init(size_t io_buf_sz)
    {
@@ -90,7 +90,9 @@ std::shared_ptr<Connection_Cipher_State> Channel::read_cipher_state_epoch(uint16
    {
    auto i = m_read_cipher_states.find(epoch);
    if(i == m_read_cipher_states.end())
+      {
       throw Internal_Error("TLS::Channel No read cipherstate for epoch " + std::to_string(epoch));
+      }
    return i->second;
    }
 
@@ -98,21 +100,27 @@ std::shared_ptr<Connection_Cipher_State> Channel::write_cipher_state_epoch(uint1
    {
    auto i = m_write_cipher_states.find(epoch);
    if(i == m_write_cipher_states.end())
+      {
       throw Internal_Error("TLS::Channel No write cipherstate for epoch " + std::to_string(epoch));
+      }
    return i->second;
    }
 
 std::vector<X509_Certificate> Channel::peer_cert_chain() const
    {
    if(auto active = active_state())
+      {
       return get_peer_cert_chain(*active);
+      }
    return std::vector<X509_Certificate>();
    }
 
 Handshake_State& Channel::create_handshake_state(Protocol_Version version)
    {
    if(pending_state())
+      {
       throw Internal_Error("create_handshake_state called during handshake");
+      }
 
    if(auto active = active_state())
       {
@@ -120,18 +128,22 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
 
       if(active_version.is_datagram_protocol() != version.is_datagram_protocol())
          throw Exception("Active state using version " +
-                                  active_version.to_string() +
-                                  " cannot change to " +
-                                  version.to_string() +
-                                  " in pending");
+                         active_version.to_string() +
+                         " cannot change to " +
+                         version.to_string() +
+                         " in pending");
       }
 
    if(!m_sequence_numbers)
       {
       if(version.is_datagram_protocol())
+         {
          m_sequence_numbers.reset(new Datagram_Sequence_Numbers);
+         }
       else
+         {
          m_sequence_numbers.reset(new Stream_Sequence_Numbers);
+         }
       }
 
    using namespace std::placeholders;
@@ -154,7 +166,9 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
    m_pending_state.reset(new_handshake_state(io.release()));
 
    if(auto active = active_state())
+      {
       m_pending_state->set_version(active->version());
+      }
 
    return *m_pending_state.get();
    }
@@ -162,7 +176,9 @@ Handshake_State& Channel::create_handshake_state(Protocol_Version version)
 bool Channel::timeout_check()
    {
    if(m_pending_state)
+      {
       return m_pending_state->handshake_io().timeout_check();
+      }
 
    //FIXME: scan cipher suites and remove epochs older than 2*MSL
    return false;
@@ -171,13 +187,17 @@ bool Channel::timeout_check()
 void Channel::renegotiate(bool force_full_renegotiation)
    {
    if(pending_state()) // currently in handshake?
+      {
       return;
+      }
 
    if(auto active = active_state())
       initiate_handshake(create_handshake_state(active->version()),
                          force_full_renegotiation);
    else
+      {
       throw Exception("Cannot renegotiate on inactive connection");
+      }
    }
 
 void Channel::change_cipher_spec_reader(Connection_Side side)
@@ -188,7 +208,9 @@ void Channel::change_cipher_spec_reader(Connection_Side side)
                 "Have received server hello");
 
    if(pending->server_hello()->compression_method() != NO_COMPRESSION)
+      {
       throw Internal_Error("Negotiated unknown compression algorithm");
+      }
 
    sequence_numbers().new_read_cipher_state();
 
@@ -217,7 +239,9 @@ void Channel::change_cipher_spec_writer(Connection_Side side)
                 "Have received server hello");
 
    if(pending->server_hello()->compression_method() != NO_COMPRESSION)
+      {
       throw Internal_Error("Negotiated unknown compression algorithm");
+      }
 
    sequence_numbers().new_write_cipher_state();
 
@@ -245,7 +269,9 @@ bool Channel::is_active() const
 bool Channel::is_closed() const
    {
    if(active_state() || pending_state())
+      {
       return false;
+      }
 
    /*
    * If no active or pending state, then either we had a connection
@@ -267,7 +293,10 @@ void Channel::activate_session()
       const uint16_t current_epoch = sequence_numbers().current_write_epoch();
 
       const auto not_current_epoch =
-         [current_epoch](uint16_t epoch) { return (epoch != current_epoch); };
+         [current_epoch](uint16_t epoch)
+         {
+         return (epoch != current_epoch);
+         };
 
       map_remove_if(not_current_epoch, m_write_cipher_states);
       map_remove_if(not_current_epoch, m_read_cipher_states);
@@ -316,7 +345,9 @@ size_t Channel::received_data(const uint8_t input[], size_t input_size)
                       "Got a full record or consumed all input");
 
          if(input_size == 0 && needed != 0)
-            return needed; // need more data to complete record
+            {
+            return needed;   // need more data to complete record
+            }
 
          if(record_data.size() > MAX_PLAINTEXT_SIZE)
             throw TLS_Exception(Alert::RECORD_OVERFLOW,
@@ -392,8 +423,8 @@ void Channel::process_handshake_ccs(const secure_vector<uint8_t>& record,
                {
                BOTAN_ASSERT(m_active_state, "Have active state here");
                m_active_state->handshake_io().add_record(unlock(record),
-                                                         record_type,
-                                                         record_sequence);
+                     record_type,
+                     record_sequence);
                }
             }
          else if(record_sequence == 0)
@@ -411,15 +442,17 @@ void Channel::process_handshake_ccs(const secure_vector<uint8_t>& record,
    if(m_pending_state)
       {
       m_pending_state->handshake_io().add_record(unlock(record),
-                                                 record_type,
-                                                 record_sequence);
+            record_type,
+            record_sequence);
 
       while(auto pending = m_pending_state.get())
          {
          auto msg = pending->get_next_handshake_msg();
 
          if(msg.first == HANDSHAKE_NONE) // no full handshake yet
+            {
             break;
+            }
 
          process_handshake_msg(active_state(), *pending,
                                msg.first, msg.second);
@@ -430,7 +463,9 @@ void Channel::process_handshake_ccs(const secure_vector<uint8_t>& record,
 void Channel::process_application_data(uint64_t seq_no, const secure_vector<uint8_t>& record)
    {
    if(!active_state())
+      {
       throw Unexpected_Message("Application data before handshake done");
+      }
 
    /*
    * OpenSSL among others sends empty records in versions
@@ -438,32 +473,40 @@ void Channel::process_application_data(uint64_t seq_no, const secure_vector<uint
    * following record. Avoid spurious callbacks.
    */
    if(record.size() > 0)
+      {
       callbacks().tls_record_received(seq_no, record.data(), record.size());
+      }
    }
 
 void Channel::process_alert(const secure_vector<uint8_t>& record)
-    {
-    Alert alert_msg(record);
+   {
+   Alert alert_msg(record);
 
-    if(alert_msg.type() == Alert::NO_RENEGOTIATION)
-       m_pending_state.reset();
+   if(alert_msg.type() == Alert::NO_RENEGOTIATION)
+      {
+      m_pending_state.reset();
+      }
 
-    callbacks().tls_alert(alert_msg);
+   callbacks().tls_alert(alert_msg);
 
-    if(alert_msg.is_fatal())
-       {
-       if(auto active = active_state())
-          m_session_manager.remove_entry(active->server_hello()->session_id());
-       }
+   if(alert_msg.is_fatal())
+      {
+      if(auto active = active_state())
+         {
+         m_session_manager.remove_entry(active->server_hello()->session_id());
+         }
+      }
 
-    if(alert_msg.type() == Alert::CLOSE_NOTIFY)
-       send_warning_alert(Alert::CLOSE_NOTIFY); // reply in kind
+   if(alert_msg.type() == Alert::CLOSE_NOTIFY)
+      {
+      send_warning_alert(Alert::CLOSE_NOTIFY);   // reply in kind
+      }
 
-    if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
-       {
-       reset_state();
-       }
-    }
+   if(alert_msg.type() == Alert::CLOSE_NOTIFY || alert_msg.is_fatal())
+      {
+      reset_state();
+      }
+   }
 
 
 void Channel::write_record(Connection_Cipher_State* cipher_state, uint16_t epoch,
@@ -489,7 +532,9 @@ void Channel::write_record(Connection_Cipher_State* cipher_state, uint16_t epoch
 void Channel::send_record_array(uint16_t epoch, uint8_t type, const uint8_t input[], size_t length)
    {
    if(length == 0)
+      {
       return;
+      }
 
    /*
    * In versions without an explicit IV field (only TLS v1.0 now that
@@ -538,7 +583,9 @@ void Channel::send_record_under_epoch(uint16_t epoch, uint8_t record_type,
 void Channel::send(const uint8_t buf[], size_t buf_size)
    {
    if(!is_active())
+      {
       throw Exception("Data cannot be sent on inactive TLS connection");
+      }
 
    send_record_array(sequence_numbers().current_write_epoch(),
                      APPLICATION_DATA, buf, buf_size);
@@ -561,14 +608,20 @@ void Channel::send_alert(const Alert& alert)
       }
 
    if(alert.type() == Alert::NO_RENEGOTIATION)
+      {
       m_pending_state.reset();
+      }
 
    if(alert.is_fatal())
       if(auto active = active_state())
+         {
          m_session_manager.remove_entry(active->server_hello()->session_id());
+         }
 
    if(alert.type() == Alert::CLOSE_NOTIFY || alert.is_fatal())
+      {
       reset_state();
+      }
    }
 
 void Channel::secure_renegotiation_check(const Client_Hello* client_hello)
@@ -620,7 +673,9 @@ void Channel::secure_renegotiation_check(const Server_Hello* server_hello)
 std::vector<uint8_t> Channel::secure_renegotiation_data_for_client_hello() const
    {
    if(auto active = active_state())
+      {
       return active->client_finished()->verify_data();
+      }
    return std::vector<uint8_t>();
    }
 
@@ -639,18 +694,22 @@ std::vector<uint8_t> Channel::secure_renegotiation_data_for_server_hello() const
 bool Channel::secure_renegotiation_supported() const
    {
    if(auto active = active_state())
+      {
       return active->server_hello()->secure_renegotiation();
+      }
 
    if(auto pending = pending_state())
       if(auto hello = pending->server_hello())
+         {
          return hello->secure_renegotiation();
+         }
 
    return false;
    }
 
 SymmetricKey Channel::key_material_export(const std::string& label,
-                                          const std::string& context,
-                                          size_t length) const
+      const std::string& context,
+      size_t length) const
    {
    if(auto active = active_state())
       {
@@ -667,7 +726,9 @@ SymmetricKey Channel::key_material_export(const std::string& label,
          {
          size_t context_size = context.length();
          if(context_size > 0xFFFF)
+            {
             throw Exception("key_material_export context is too long");
+            }
          salt.push_back(get_byte(0, static_cast<uint16_t>(context_size)));
          salt.push_back(get_byte(1, static_cast<uint16_t>(context_size)));
          salt += to_byte_vector(context);
@@ -676,7 +737,9 @@ SymmetricKey Channel::key_material_export(const std::string& label,
       return prf->derive_key(length, master_secret, salt, to_byte_vector(label));
       }
    else
+      {
       throw Exception("Channel::key_material_export connection not active");
+      }
    }
 
 }

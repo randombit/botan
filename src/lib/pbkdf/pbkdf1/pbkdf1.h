@@ -38,10 +38,10 @@ class BOTAN_DLL PKCS5_PBKDF1 final : public PBKDF
          }
 
       size_t pbkdf(uint8_t output_buf[], size_t output_len,
-                           const std::string& passphrase,
-                           const uint8_t salt[], size_t salt_len,
-                           size_t iterations,
-                           std::chrono::milliseconds msec) const override;
+                   const std::string& passphrase,
+                   const uint8_t salt[], size_t salt_len,
+                   size_t iterations,
+                   std::chrono::milliseconds msec) const override;
    private:
       std::unique_ptr<HashFunction> m_hash;
    };

@@ -29,7 +29,7 @@ void
 XMSS_WOTS_Verification_Operation::update(const uint8_t msg[], size_t msg_len)
    {
    BOTAN_ASSERT(msg_len == m_pub_key.public_key().wots_parameters().
-                           element_size() &&
+                element_size() &&
                 m_msg_buf.size() == 0,
                 "XMSS WOTS only supports one message part of size n.");
 
@@ -40,7 +40,7 @@ XMSS_WOTS_Verification_Operation::update(const uint8_t msg[], size_t msg_len)
    }
 
 bool XMSS_WOTS_Verification_Operation::is_valid_signature(const uint8_t sig[],
-                                                          size_t sig_len)
+      size_t sig_len)
    {
    const XMSS_WOTS_Parameters& w = m_pub_key.public_key().wots_parameters();
 

@@ -23,15 +23,15 @@
 #include <botan/rsa.h>
 
 #if defined(BOTAN_HAS_CURVE_25519)
-  #include <botan/curve25519.h>
+   #include <botan/curve25519.h>
 #endif
 
 #if defined(BOTAN_HAS_CECPQ1)
-  #include <botan/cecpq1.h>
+   #include <botan/cecpq1.h>
 #endif
 
 #if defined(BOTAN_HAS_SRP6)
-  #include <botan/srp6.h>
+   #include <botan/srp6.h>
 #endif
 
 namespace Botan {
@@ -42,12 +42,12 @@ namespace TLS {
 * Create a new Client Key Exchange message
 */
 Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
-                                         Handshake_State& state,
-                                         const Policy& policy,
-                                         Credentials_Manager& creds,
-                                         const Public_Key* server_public_key,
-                                         const std::string& hostname,
-                                         RandomNumberGenerator& rng)
+      Handshake_State& state,
+      const Policy& policy,
+      Credentials_Manager& creds,
+      const Public_Key* server_public_key,
+      const std::string& hostname,
+      RandomNumberGenerator& rng)
    {
    const std::string kex_algo = state.ciphersuite().kex_algo();
 
@@ -98,7 +98,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          BigInt Y = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
 
          if(reader.remaining_bytes())
+            {
             throw Decoding_Error("Bad params size for DH key exchange");
+            }
 
          /*
          * A basic check for key validity. As we do not know q here we
@@ -125,10 +127,12 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          PK_Key_Agreement ka(priv_key, rng, "Raw");
 
          secure_vector<uint8_t> dh_secret = CT::strip_leading_zeros(
-            ka.derive_key(0, counterparty_key.public_value()).bits_of());
+                                               ka.derive_key(0, counterparty_key.public_value()).bits_of());
 
          if(kex_algo == "DH")
+            {
             m_pre_master = dh_secret;
+            }
          else
             {
             append_tls_length_value(m_pre_master, dh_secret, 2);
@@ -142,14 +146,18 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          const uint8_t curve_type = reader.get_byte();
 
          if(curve_type != 3)
+            {
             throw Decoding_Error("Server sent non-named ECC curve");
+            }
 
          const uint16_t curve_id = reader.get_uint16_t();
 
          const std::string curve_name = Supported_Elliptic_Curves::curve_id_to_name(curve_id);
 
          if(curve_name == "")
+            {
             throw Decoding_Error("Server sent unknown named curve " + std::to_string(curve_id));
+            }
 
          if(!policy.allowed_ecc_curve(curve_name))
             {
@@ -165,7 +173,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             {
 #if defined(BOTAN_HAS_CURVE_25519)
             if(ecdh_key.size() != 32)
+               {
                throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Invalid X25519 key size");
+               }
 
             Curve25519_PublicKey counterparty_key(ecdh_key);
             policy.check_peer_key_acceptable(counterparty_key);
@@ -190,11 +200,13 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
             // follow server's preference for point compression
             our_ecdh_public = priv_key.public_value(
-               state.server_hello()->prefers_compressed_ec_points() ? PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED);
+                                 state.server_hello()->prefers_compressed_ec_points() ? PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED);
             }
 
          if(kex_algo == "ECDH")
+            {
             m_pre_master = ecdh_secret;
+            }
          else
             {
             append_tls_length_value(m_pre_master, ecdh_secret, 2);
@@ -239,7 +251,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          const std::vector<uint8_t> cecpq1_offer = reader.get_range<uint8_t>(2, 1, 65535);
 
          if(cecpq1_offer.size() != CECPQ1_OFFER_BYTES)
+            {
             throw TLS_Exception(Alert::HANDSHAKE_FAILURE, "Invalid CECPQ1 key size");
+            }
 
          std::vector<uint8_t> newhope_accept(CECPQ1_ACCEPT_BYTES);
          secure_vector<uint8_t> shared_secret(CECPQ1_SHARED_KEY_BYTES);
@@ -260,10 +274,14 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       // No server key exchange msg better mean RSA kex + RSA key in cert
 
       if(kex_algo != "RSA")
+         {
          throw Unexpected_Message("No server kex but negotiated kex " + kex_algo);
+         }
 
       if(!server_public_key)
+         {
          throw Internal_Error("No server public key for RSA exchange");
+         }
 
       if(auto rsa_pub = dynamic_cast<const RSA_PublicKey*>(server_public_key))
          {
@@ -292,11 +310,11 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 * Read a Client Key Exchange message
 */
 Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
-                                         const Handshake_State& state,
-                                         const Private_Key* server_rsa_kex_key,
-                                         Credentials_Manager& creds,
-                                         const Policy& policy,
-                                         RandomNumberGenerator& rng)
+      const Handshake_State& state,
+      const Private_Key* server_rsa_kex_key,
+      Credentials_Manager& creds,
+      const Policy& policy,
+      RandomNumberGenerator& rng)
    {
    const std::string kex_algo = state.ciphersuite().kex_algo();
 
@@ -306,10 +324,14 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
                    "RSA key exchange negotiated so server sent a certificate");
 
       if(!server_rsa_kex_key)
+         {
          throw Internal_Error("Expected RSA kex but no server kex key set");
+         }
 
       if(!dynamic_cast<const RSA_PrivateKey*>(server_rsa_kex_key))
+         {
          throw Internal_Error("Expected RSA key but got " + server_rsa_kex_key->algo_name());
+         }
 
       TLS_Data_Reader reader("ClientKeyExchange", contents);
       const std::vector<uint8_t> encrypted_pre_master = reader.get_range<uint8_t>(2, 0, 65535);
@@ -356,7 +378,9 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
          if(psk.length() == 0)
             {
             if(policy.hide_unknown_users())
+               {
                psk = SymmetricKey(rng, 16);
+               }
             else
                throw TLS_Exception(Alert::UNKNOWN_PSK_IDENTITY,
                                    "No PSK for identifier " + psk_identity);
@@ -384,7 +408,9 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
 
          const std::vector<uint8_t> cecpq1_accept = reader.get_range<uint8_t>(2, 0, 65535);
          if(cecpq1_accept.size() != CECPQ1_ACCEPT_BYTES)
+            {
             throw Decoding_Error("Invalid size for CECPQ1 accept message");
+            }
 
          m_pre_master.resize(CECPQ1_SHARED_KEY_BYTES);
          CECPQ1_finish(m_pre_master.data(), cecpq1_offer, cecpq1_accept.data());
@@ -409,14 +435,20 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             std::vector<uint8_t> client_pubkey;
 
             if(ka_key->algo_name() == "DH")
+               {
                client_pubkey = reader.get_range<uint8_t>(2, 0, 65535);
+               }
             else
+               {
                client_pubkey = reader.get_range<uint8_t>(1, 0, 255);
+               }
 
             secure_vector<uint8_t> shared_secret = ka.derive_key(0, client_pubkey).bits_of();
 
             if(ka_key->algo_name() == "DH")
+               {
                shared_secret = CT::strip_leading_zeros(shared_secret);
+               }
 
             if(kex_algo == "DHE_PSK" || kex_algo == "ECDHE_PSK")
                {
@@ -424,9 +456,11 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
                append_tls_length_value(m_pre_master, psk.bits_of(), 2);
                }
             else
+               {
                m_pre_master = shared_secret;
+               }
             }
-         catch(std::exception &)
+         catch(std::exception&)
             {
             /*
             * Something failed in the DH computation. To avoid possible
@@ -438,7 +472,9 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             }
          }
       else
+         {
          throw Internal_Error("Client_Key_Exchange: Unknown kex type " + kex_algo);
+         }
       }
    }
 

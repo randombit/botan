@@ -26,16 +26,27 @@ class BOTAN_DLL ChaCha20Poly1305_Mode : public AEAD_Mode
    public:
       void set_associated_data(const uint8_t ad[], size_t ad_len) override;
 
-      std::string name() const override { return "ChaCha20Poly1305"; }
+      std::string name() const override
+         {
+         return "ChaCha20Poly1305";
+         }
 
-      size_t update_granularity() const override { return 64; }
+      size_t update_granularity() const override
+         {
+         return 64;
+         }
 
       Key_Length_Specification key_spec() const override
-         { return Key_Length_Specification(32); }
+         {
+         return Key_Length_Specification(32);
+         }
 
       bool valid_nonce_length(size_t n) const override;
 
-      size_t tag_size() const override { return 16; }
+      size_t tag_size() const override
+         {
+         return 16;
+         }
 
       void clear() override;
 
@@ -51,7 +62,10 @@ class BOTAN_DLL ChaCha20Poly1305_Mode : public AEAD_Mode
       size_t m_nonce_len = 0;
       size_t m_ctext_len = 0;
 
-      bool cfrg_version() const { return m_nonce_len == 12; }
+      bool cfrg_version() const
+         {
+         return m_nonce_len == 12;
+         }
       void update_len(size_t len);
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;
@@ -66,9 +80,14 @@ class BOTAN_DLL ChaCha20Poly1305_Encryption final : public ChaCha20Poly1305_Mode
    {
    public:
       size_t output_length(size_t input_length) const override
-         { return input_length + tag_size(); }
+         {
+         return input_length + tag_size();
+         }
 
-      size_t minimum_final_size() const override { return 0; }
+      size_t minimum_final_size() const override
+         {
+         return 0;
+         }
 
       size_t process(uint8_t buf[], size_t size) override;
 
@@ -87,7 +106,10 @@ class BOTAN_DLL ChaCha20Poly1305_Decryption final : public ChaCha20Poly1305_Mode
          return input_length - tag_size();
          }
 
-      size_t minimum_final_size() const override { return tag_size(); }
+      size_t minimum_final_size() const override
+         {
+         return tag_size();
+         }
 
       size_t process(uint8_t buf[], size_t size) override;
 

@@ -55,7 +55,9 @@ XMSS_PublicKey::deserialize_xmss_oid(const std::vector<uint8_t>& raw_key)
    // extract and convert algorithm id to enum type
    uint32_t raw_id = 0;
    for(size_t i = 0; i < 4; i++)
+      {
       raw_id = ((raw_id << 8) | raw_key[i]);
+      }
 
    return static_cast<XMSS_Parameters::xmss_algorithm_t>(raw_id);
    }
@@ -67,7 +69,7 @@ XMSS_PublicKey::create_verification_op(const std::string&,
    if(provider == "base" || provider.empty())
       {
       return std::unique_ptr<PK_Ops::Verification>(
-         new XMSS_Verification_Operation(*this));
+                new XMSS_Verification_Operation(*this));
       }
    throw Provider_Not_Found(algo_name(), provider);
    }

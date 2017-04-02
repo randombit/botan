@@ -77,22 +77,37 @@ class BOTAN_DLL CurveGFp
       /**
       * @return curve coefficient a
       */
-      const BigInt& get_a() const { return m_repr->get_a(); }
+      const BigInt& get_a() const
+         {
+         return m_repr->get_a();
+         }
 
       /**
       * @return curve coefficient b
       */
-      const BigInt& get_b() const { return m_repr->get_b(); }
+      const BigInt& get_b() const
+         {
+         return m_repr->get_b();
+         }
 
       /**
       * Get prime modulus of the field of the curve
       * @return prime modulus of the field of the curve
       */
-      const BigInt& get_p() const { return m_repr->get_p(); }
+      const BigInt& get_p() const
+         {
+         return m_repr->get_p();
+         }
 
-      const BigInt& get_a_rep() const { return m_repr->get_a_rep(); }
+      const BigInt& get_a_rep() const
+         {
+         return m_repr->get_a_rep();
+         }
 
-      const BigInt& get_b_rep() const { return m_repr->get_b_rep(); }
+      const BigInt& get_b_rep() const
+         {
+         return m_repr->get_b_rep();
+         }
 
       void to_rep(BigInt& x, secure_vector<word>& ws) const
          {
@@ -144,7 +159,7 @@ class BOTAN_DLL CurveGFp
 
    private:
       static std::shared_ptr<CurveGFp_Repr>
-         choose_repr(const BigInt& p, const BigInt& a, const BigInt& b);
+      choose_repr(const BigInt& p, const BigInt& a, const BigInt& b);
 
       std::shared_ptr<CurveGFp_Repr> m_repr;
    };

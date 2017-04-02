@@ -16,7 +16,7 @@
 #include <botan/x509self.h>
 
 #if defined(BOTAN_HAS_OCSP)
-  #include <botan/ocsp.h>
+   #include <botan/ocsp.h>
 #endif
 
 namespace Botan_CLI {
@@ -25,7 +25,7 @@ class Sign_Cert final : public Command
    {
    public:
       Sign_Cert() : Command("sign_cert --ca-key-pass= --hash=SHA-256 "
-                            "--duration=365 ca_cert ca_key pkcs10_req") {}
+                               "--duration=365 ca_cert ca_key pkcs10_req") {}
 
       void go() override
          {
@@ -35,17 +35,19 @@ class Sign_Cert final : public Command
          if(flag_set("ca_key_pass"))
             {
             key.reset(Botan::PKCS8::load_key(get_arg("ca_key"),
-                     rng(),
-                     get_arg("ca_key_pass")));
+                                             rng(),
+                                             get_arg("ca_key_pass")));
             }
          else
             {
             key.reset(Botan::PKCS8::load_key(get_arg("ca_key"),
-                     rng()));
+                                             rng()));
             }
 
          if(!key)
+            {
             throw CLI_Error("Failed to load key from " + get_arg("ca_key"));
+            }
 
          Botan::X509_CA ca(ca_cert, *key, get_arg("hash"), rng());
 
@@ -60,7 +62,7 @@ class Sign_Cert final : public Command
          Botan::X509_Time end_time(now + days(get_arg_sz("duration")));
 
          Botan::X509_Certificate new_cert = ca.sign_request(req, rng(),
-                                                            start_time, end_time);
+                                            start_time, end_time);
 
          output() << new_cert.PEM_encode();
          }
@@ -96,7 +98,9 @@ class Cert_Info final : public Command
             catch(Botan::Exception& e)
                {
                if(!in.end_of_data())
+                  {
                   output() << "X509_Certificate parsing failed " << e.what() << "\n";
+                  }
                }
             }
          }
@@ -129,7 +133,7 @@ class OCSP_Check final : public Command
          else
             {
             output() << "OCSP check failed " <<
-               Botan::Path_Validation_Result::status_string(status) << "\n";
+                     Botan::Path_Validation_Result::status_string(status) << "\n";
             }
          }
    };
@@ -148,7 +152,7 @@ class Cert_Verify final : public Command
          Botan::X509_Certificate subject_cert(get_arg("subject"));
          Botan::Certificate_Store_In_Memory trusted;
 
-         for(auto&& certfile : get_arg_list("ca_certs"))
+         for(auto && certfile : get_arg_list("ca_certs"))
             {
             trusted.add_certificate(Botan::X509_Certificate(certfile));
             }
@@ -177,7 +181,7 @@ class Gen_Self_Signed final : public Command
    {
    public:
       Gen_Self_Signed() : Command("gen_self_signed key CN --country= --dns= "
-                                  "--organization= --email= --key-pass= --ca --hash=SHA-256") {}
+                                     "--organization= --email= --key-pass= --ca --hash=SHA-256") {}
 
       void go() override
          {
@@ -187,7 +191,9 @@ class Gen_Self_Signed final : public Command
                                    get_arg("key-pass")));
 
          if(!key)
+            {
             throw CLI_Error("Failed to load key from " + get_arg("key"));
+            }
 
          Botan::X509_Cert_Options opts;
 
@@ -198,7 +204,9 @@ class Gen_Self_Signed final : public Command
          opts.dns          = get_arg("dns");
 
          if(flag_set("ca"))
+            {
             opts.CA_key();
+            }
 
          Botan::X509_Certificate cert =
             Botan::X509::create_self_signed_cert(opts, *key, get_arg("hash"), rng());
@@ -213,7 +221,7 @@ class Generate_PKCS10 final : public Command
    {
    public:
       Generate_PKCS10() : Command("gen_pkcs10 key CN --country= --organization= "
-                                  "--email= --key-pass= --hash=SHA-256") {}
+                                     "--email= --key-pass= --hash=SHA-256") {}
 
       void go() override
          {
@@ -223,7 +231,9 @@ class Generate_PKCS10 final : public Command
                                    get_arg("key-pass")));
 
          if(!key)
+            {
             throw CLI_Error("Failed to load key from " + get_arg("key"));
+            }
 
          Botan::X509_Cert_Options opts;
 

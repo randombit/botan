@@ -40,8 +40,10 @@ void GeneralName::decode_from(class BER_Decoder& ber)
    {
    BER_Object obj = ber.get_next_object();
    if((obj.class_tag != CONTEXT_SPECIFIC) &&
-      (obj.class_tag != (CONTEXT_SPECIFIC | CONSTRUCTED)))
+         (obj.class_tag != (CONTEXT_SPECIFIC | CONSTRUCTED)))
+      {
       throw Decoding_Error("Invalid class tag while decoding GeneralName");
+      }
 
    const ASN1_Tag tag = obj.type_tag;
 
@@ -141,7 +143,7 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
    bool some = false;
    bool all = true;
 
-   for(const std::string& n: nam)
+   for(const std::string& n : nam)
       {
       bool m = match_fn(this, n);
 
@@ -194,7 +196,7 @@ bool GeneralName::matches_dn(const std::string& nam) const
    bool ret = true;
    int trys = 0;
 
-   for(const std::pair<OID,std::string>& c: my_dn.get_attributes())
+   for(const std::pair<OID, std::string>& c : my_dn.get_attributes())
       {
       auto i = attr.equal_range(c.first);
 
@@ -214,7 +216,9 @@ bool GeneralName::matches_ip(const std::string& nam) const
    std::vector<std::string> p = split_on(name(), '/');
 
    if(p.size() != 2)
+      {
       throw Decoding_Error("failed to parse IPv4 address");
+      }
 
    uint32_t net = string_to_ipv4(p.at(0));
    uint32_t mask = string_to_ipv4(p.at(1));
@@ -255,12 +259,14 @@ void GeneralSubtree::encode_into(class DER_Encoder&) const
 void GeneralSubtree::decode_from(class BER_Decoder& ber)
    {
    ber.start_cons(SEQUENCE)
-      .decode(m_base)
-      .decode_optional(m_minimum,ASN1_Tag(0), CONTEXT_SPECIFIC,size_t(0))
+   .decode(m_base)
+   .decode_optional(m_minimum, ASN1_Tag(0), CONTEXT_SPECIFIC, size_t(0))
    .end_cons();
 
    if(m_minimum != 0)
-     throw Decoding_Error("GeneralSubtree minimum must be 0");
+      {
+      throw Decoding_Error("GeneralSubtree minimum must be 0");
+      }
 
    m_maximum = std::numeric_limits<std::size_t>::max();
    }

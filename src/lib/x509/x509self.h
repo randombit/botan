@@ -192,9 +192,9 @@ create_self_signed_cert(const X509_Cert_Options& opts,
 * @return newly created PKCS#10 request
 */
 BOTAN_DLL PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
-                                         const Private_Key& key,
-                                         const std::string& hash_fn,
-                                         RandomNumberGenerator& rng);
+      const Private_Key& key,
+      const std::string& hash_fn,
+      RandomNumberGenerator& rng);
 
 }
 

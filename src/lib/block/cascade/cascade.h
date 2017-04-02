@@ -21,7 +21,10 @@ class BOTAN_DLL Cascade_Cipher final : public BlockCipher
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
-      size_t block_size() const override { return m_block; }
+      size_t block_size() const override
+         {
+         return m_block;
+         }
 
       Key_Length_Specification key_spec() const override
          {

@@ -10,10 +10,10 @@
 #include <botan/exceptn.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_DLOPEN)
-  #include <dlfcn.h>
+   #include <dlfcn.h>
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
-  #define NOMINMAX 1
-  #include <windows.h>
+   #define NOMINMAX 1
+   #include <windows.h>
 #endif
 
 namespace Botan {
@@ -24,7 +24,7 @@ void raise_runtime_loader_exception(const std::string& lib_name,
                                     const char* msg)
    {
    throw Exception("Failed to load " + lib_name + ": " +
-                            (msg ? msg : "Unknown error"));
+                   (msg ? msg : "Unknown error"));
    }
 
 }
@@ -37,17 +37,23 @@ Dynamically_Loaded_Library::Dynamically_Loaded_Library(
    m_lib = ::dlopen(m_lib_name.c_str(), RTLD_LAZY);
 
    if(!m_lib)
+      {
       raise_runtime_loader_exception(m_lib_name, dlerror());
+      }
 
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
    m_lib = ::LoadLibraryA(m_lib_name.c_str());
 
    if(!m_lib)
+      {
       raise_runtime_loader_exception(m_lib_name, "LoadLibrary failed");
+      }
 #endif
 
    if(!m_lib)
+      {
       raise_runtime_loader_exception(m_lib_name, "Dynamic load not supported");
+      }
    }
 
 Dynamically_Loaded_Library::~Dynamically_Loaded_Library()
@@ -67,12 +73,12 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol)
    addr = ::dlsym(m_lib, symbol.c_str());
 #elif defined(BOTAN_TARGET_OS_HAS_LOADLIBRARY)
    addr = reinterpret_cast<void*>(::GetProcAddress((HMODULE)m_lib,
-                                                   symbol.c_str()));
+                                  symbol.c_str()));
 #endif
 
    if(!addr)
       throw Exception("Failed to resolve symbol " + symbol +
-                               " in " + m_lib_name);
+                      " in " + m_lib_name);
 
    return addr;
    }

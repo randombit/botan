@@ -17,7 +17,8 @@ class X509_Certificate;
 /**
 * X.509v2 CRL Reason Code.
 */
-enum CRL_Code {
+enum CRL_Code
+   {
    UNSPECIFIED            = 0,
    KEY_COMPROMISE         = 1,
    CA_COMPROMISE          = 2,
@@ -32,7 +33,7 @@ enum CRL_Code {
    DELETE_CRL_ENTRY       = 0xFF00,
    OCSP_GOOD              = 0xFF01,
    OCSP_UNKNOWN           = 0xFF02
-};
+   };
 
 /**
 * This class represents CRL entries
@@ -47,19 +48,28 @@ class BOTAN_DLL CRL_Entry final : public ASN1_Object
       * Get the serial number of the certificate associated with this entry.
       * @return certificate's serial number
       */
-      std::vector<uint8_t> serial_number() const { return m_serial; }
+      std::vector<uint8_t> serial_number() const
+         {
+         return m_serial;
+         }
 
       /**
       * Get the revocation date of the certificate associated with this entry
       * @return certificate's revocation date
       */
-      X509_Time expire_time() const { return m_time; }
+      X509_Time expire_time() const
+         {
+         return m_time;
+         }
 
       /**
       * Get the entries reason code
       * @return reason code
       */
-      CRL_Code reason_code() const { return m_reason; }
+      CRL_Code reason_code() const
+         {
+         return m_reason;
+         }
 
       /**
       * Construct an empty CRL entry.

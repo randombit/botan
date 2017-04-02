@@ -17,10 +17,10 @@ namespace Botan {
 namespace TLS {
 
 Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
-                                         const std::string& passphrase,
-                                         RandomNumberGenerator& rng,
-                                         size_t max_sessions,
-                                         std::chrono::seconds session_lifetime) :
+      const std::string& passphrase,
+      RandomNumberGenerator& rng,
+      size_t max_sessions,
+      std::chrono::seconds session_lifetime) :
    m_db(db),
    m_rng(rng),
    m_max_sessions(max_sessions),
@@ -60,22 +60,26 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
          const size_t check_val_db = stmt->get_size_t(2);
 
          secure_vector<uint8_t> x = pbkdf->pbkdf_iterations(32 + 2,
-                                                         passphrase,
-                                                         salt.first, salt.second,
-                                                         iterations);
+                                    passphrase,
+                                    salt.first, salt.second,
+                                    iterations);
 
          const size_t check_val_created = make_uint16(x[0], x[1]);
          m_session_key.assign(x.begin() + 2, x.end());
 
          if(check_val_created != check_val_db)
+            {
             throw Exception("Session database password not valid");
+            }
          }
       }
    else
       {
       // maybe just zap the salts + sessions tables in this case?
       if(salts != 0)
+         {
          throw Exception("Seemingly corrupted database, multiple salts found");
+         }
 
       // new database case
 
@@ -83,10 +87,10 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
       size_t iterations = 0;
 
       secure_vector<uint8_t> x = pbkdf->pbkdf_timed(32 + 2,
-                                                 passphrase,
-                                                 salt.data(), salt.size(),
-                                                 std::chrono::milliseconds(100),
-                                                 iterations);
+                                 passphrase,
+                                 salt.data(), salt.size(),
+                                 std::chrono::milliseconds(100),
+                                 iterations);
 
       size_t check_val = make_uint16(x[0], x[1]);
       m_session_key.assign(x.begin() + 2, x.end());
@@ -102,7 +106,7 @@ Session_Manager_SQL::Session_Manager_SQL(std::shared_ptr<SQL_Database> db,
    }
 
 bool Session_Manager_SQL::load_from_session_id(const std::vector<uint8_t>& session_id,
-                                               Session& session)
+      Session& session)
    {
    auto stmt = m_db->new_statement("select session from tls_sessions where session_id = ?1");
 
@@ -126,7 +130,7 @@ bool Session_Manager_SQL::load_from_session_id(const std::vector<uint8_t>& sessi
    }
 
 bool Session_Manager_SQL::load_from_server_info(const Server_Information& server,
-                                                Session& session)
+      Session& session)
    {
    auto stmt = m_db->new_statement("select session from tls_sessions"
                                    " where hostname = ?1 and hostport = ?2"

@@ -34,11 +34,15 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    m_comp_method(server_settings.compression())
    {
    if(client_hello.supports_extended_master_secret())
+      {
       m_extensions.add(new Extended_Master_Secret);
+      }
 
    // Sending the extension back does not commit us to sending a stapled response
    if(client_hello.supports_cert_status_message())
+      {
       m_extensions.add(new Certificate_Status_Request);
+      }
 
    Ciphersuite c = Ciphersuite::by_id(m_ciphersuite);
 
@@ -53,13 +57,19 @@ Server_Hello::Server_Hello(Handshake_IO& io,
       }
 
    if(client_hello.secure_renegotiation())
+      {
       m_extensions.add(new Renegotiation_Extension(reneg_info));
+      }
 
    if(client_hello.supports_session_ticket() && server_settings.offer_session_ticket())
+      {
       m_extensions.add(new Session_Ticket());
+      }
 
    if(!next_protocol.empty() && client_hello.supports_alpn())
+      {
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
+      }
 
    if(m_version.is_datagram_protocol())
       {
@@ -74,11 +84,15 @@ Server_Hello::Server_Hello(Handshake_IO& io,
             for(auto c_srtp : client_srtp)
                {
                if(shared == 0 && s_srtp == c_srtp)
+                  {
                   shared = s_srtp;
+                  }
                }
 
          if(shared)
+            {
             m_extensions.add(new SRTP_Protection_Profiles(shared));
+            }
          }
       }
 
@@ -102,17 +116,23 @@ Server_Hello::Server_Hello(Handshake_IO& io,
    m_comp_method(resumed_session.compression_method())
    {
    if(client_hello.supports_extended_master_secret())
+      {
       m_extensions.add(new Extended_Master_Secret);
+      }
 
    // Sending the extension back does not commit us to sending a stapled response
    if(client_hello.supports_cert_status_message())
+      {
       m_extensions.add(new Certificate_Status_Request);
+      }
 
    if(client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac())
       {
       Ciphersuite c = resumed_session.ciphersuite();
       if(c.cbc_ciphersuite())
+         {
          m_extensions.add(new Encrypt_then_MAC);
+         }
       }
 
    if(client_hello.supports_cert_status_message())
@@ -126,13 +146,19 @@ Server_Hello::Server_Hello(Handshake_IO& io,
       }
 
    if(client_hello.secure_renegotiation())
+      {
       m_extensions.add(new Renegotiation_Extension(reneg_info));
+      }
 
    if(client_hello.supports_session_ticket() && offer_session_ticket)
+      {
       m_extensions.add(new Session_Ticket());
+      }
 
    if(!next_protocol.empty() && client_hello.supports_alpn())
+      {
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
+      }
 
    hash.update(io.send(*this));
    }
@@ -143,7 +169,9 @@ Server_Hello::Server_Hello(Handshake_IO& io,
 Server_Hello::Server_Hello(const std::vector<uint8_t>& buf)
    {
    if(buf.size() < 38)
+      {
       throw Decoding_Error("Server_Hello: Packet corrupted");
+      }
 
    TLS_Data_Reader reader("ServerHello", buf);
 
@@ -201,7 +229,9 @@ Server_Hello_Done::Server_Hello_Done(Handshake_IO& io,
 Server_Hello_Done::Server_Hello_Done(const std::vector<uint8_t>& buf)
    {
    if(buf.size())
+      {
       throw Decoding_Error("Server_Hello_Done: Must be empty, and is not");
+      }
    }
 
 /*

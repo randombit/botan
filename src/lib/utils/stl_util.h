@@ -22,7 +22,7 @@ inline std::vector<uint8_t> to_byte_vector(const std::string& s)
    return std::vector<uint8_t>(s.cbegin(), s.cend());
    }
 
-inline std::string to_string(const secure_vector<uint8_t> &bytes)
+inline std::string to_string(const secure_vector<uint8_t>& bytes)
    {
    return std::string(bytes.cbegin(), bytes.cend());
    }
@@ -34,7 +34,7 @@ template<typename K, typename V>
 std::set<K> map_keys_as_set(const std::map<K, V>& kv)
    {
    std::set<K> s;
-   for(auto&& i : kv)
+   for(auto && i : kv)
       {
       s.insert(i.first);
       }
@@ -55,7 +55,9 @@ inline V search_map(const std::map<K, V>& mapping,
    {
    auto i = mapping.find(key);
    if(i == mapping.end())
+      {
       return null_result;
+      }
    return i->second;
    }
 
@@ -65,7 +67,9 @@ inline R search_map(const std::map<K, V>& mapping, const K& key,
    {
    auto i = mapping.find(key);
    if(i == mapping.end())
+      {
       return null_result;
+      }
    return found_result;
    }
 
@@ -88,7 +92,9 @@ bool value_exists(const std::vector<T>& vec,
    {
    for(size_t i = 0; i != vec.size(); ++i)
       if(vec[i] == val)
+         {
          return true;
+         }
    return false;
    }
 
@@ -99,9 +105,13 @@ void map_remove_if(Pred pred, T& assoc)
    while(i != assoc.end())
       {
       if(pred(i->first))
+         {
          assoc.erase(i++);
+         }
       else
+         {
          i++;
+         }
       }
    }
 

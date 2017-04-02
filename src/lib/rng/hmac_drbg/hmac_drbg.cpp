@@ -32,7 +32,7 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                      RandomNumberGenerator& underlying_rng,
                      Entropy_Sources& entropy_sources,
                      size_t reseed_interval,
-                     size_t max_number_of_bytes_per_request ) :
+                     size_t max_number_of_bytes_per_request) :
    Stateful_RNG(underlying_rng, entropy_sources, reseed_interval),
    m_mac(std::move(prf)),
    m_max_number_of_bytes_per_request(max_number_of_bytes_per_request)
@@ -68,7 +68,7 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
 HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf) :
    Stateful_RNG(),
    m_mac(std::move(prf)),
-   m_max_number_of_bytes_per_request(64*1024)
+   m_max_number_of_bytes_per_request(64 * 1024)
    {
    BOTAN_ASSERT_NONNULL(m_mac);
    clear();
@@ -80,7 +80,9 @@ void HMAC_DRBG::clear()
 
    m_V.resize(m_mac->output_length());
    for(size_t i = 0; i != m_V.size(); ++i)
+      {
       m_V[i] = 0x01;
+      }
    m_mac->set_key(std::vector<uint8_t>(m_mac->output_length(), 0x00));
    }
 

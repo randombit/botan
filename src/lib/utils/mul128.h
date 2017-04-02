@@ -17,9 +17,9 @@ namespace Botan {
 
    // Prefer TI mode over __int128 as GCC rejects the latter in pendantic mode
    #if defined(__GNUG__)
-     typedef unsigned int uint128_t __attribute__((mode(TI)));
+      typedef unsigned int uint128_t __attribute__((mode(TI)));
    #else
-     typedef unsigned __int128 uint128_t;
+      typedef unsigned __int128 uint128_t;
    #endif
 #endif
 

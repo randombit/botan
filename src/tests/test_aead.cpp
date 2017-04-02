@@ -8,7 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_AEAD_MODES)
-  #include <botan/aead.h>
+   #include <botan/aead.h>
 #endif
 
 namespace Botan_Tests {

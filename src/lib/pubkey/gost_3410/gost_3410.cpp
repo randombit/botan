@@ -22,16 +22,16 @@ std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const
 
    size_t part_size = std::max(x.bytes(), y.bytes());
 
-   std::vector<uint8_t> bits(2*part_size);
+   std::vector<uint8_t> bits(2 * part_size);
 
    x.binary_encode(&bits[part_size - x.bytes()]);
-   y.binary_encode(&bits[2*part_size - y.bytes()]);
+   y.binary_encode(&bits[2 * part_size - y.bytes()]);
 
    // Keys are stored in little endian format (WTF)
    for(size_t i = 0; i != part_size / 2; ++i)
       {
-      std::swap(bits[i], bits[part_size-1-i]);
-      std::swap(bits[part_size+i], bits[2*part_size-1-i]);
+      std::swap(bits[i], bits[part_size - 1 - i]);
+      std::swap(bits[part_size + i], bits[2 * part_size - 1 - i]);
       }
 
    return DER_Encoder().encode(bits, OCTET_STRING).get_contents_unlocked();
@@ -41,15 +41,15 @@ AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const
    {
    std::vector<uint8_t> params =
       DER_Encoder().start_cons(SEQUENCE)
-         .encode(OID(domain().get_oid()))
-         .end_cons()
+      .encode(OID(domain().get_oid()))
+      .end_cons()
       .get_contents_unlocked();
 
    return AlgorithmIdentifier(get_oid(), params);
    }
 
 GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
-                                         const std::vector<uint8_t>& key_bits)
+      const std::vector<uint8_t>& key_bits)
    {
    OID ecc_param_id;
 
@@ -66,8 +66,8 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id,
    // Keys are stored in little endian format (WTF)
    for(size_t i = 0; i != part_size / 2; ++i)
       {
-      std::swap(bits[i], bits[part_size-1-i]);
-      std::swap(bits[part_size+i], bits[2*part_size-1-i]);
+      std::swap(bits[i], bits[part_size - 1 - i]);
+      std::swap(bits[part_size + i], bits[2 * part_size - 1 - i]);
       }
 
    BigInt x(bits.data(), part_size);
@@ -86,7 +86,9 @@ BigInt decode_le(const uint8_t msg[], size_t msg_len)
    secure_vector<uint8_t> msg_le(msg, msg + msg_len);
 
    for(size_t i = 0; i != msg_le.size() / 2; ++i)
-      std::swap(msg_le[i], msg_le[msg_le.size()-1-i]);
+      {
+      std::swap(msg_le[i], msg_le[msg_le.size() - 1 - i]);
+      }
 
    return BigInt(msg_le.data(), msg_le.size());
    }
@@ -105,10 +107,13 @@ class GOST_3410_Signature_Operation : public PK_Ops::Signature_with_EMSA
          m_base_point(gost_3410.domain().get_base_point(), m_order),
          m_x(gost_3410.private_value()) {}
 
-      size_t max_input_bits() const override { return m_order.bits(); }
+      size_t max_input_bits() const override
+         {
+         return m_order.bits();
+         }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                   RandomNumberGenerator& rng) override;
+                                      RandomNumberGenerator& rng) override;
 
    private:
       const BigInt& m_order;
@@ -123,25 +128,31 @@ GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    {
    BigInt k;
    do
-      k.randomize(rng, m_order.bits()-1);
+      {
+      k.randomize(rng, m_order.bits() - 1);
+      }
    while(k >= m_order);
 
    BigInt e = decode_le(msg, msg_len);
 
    e = m_mod_order.reduce(e);
    if(e == 0)
+      {
       e = 1;
+      }
 
    const PointGFp k_times_P = m_base_point.blinded_multiply(k, rng);
    BOTAN_ASSERT(k_times_P.on_the_curve(), "GOST 34.10 k*g is on the curve");
 
    const BigInt r = m_mod_order.reduce(k_times_P.get_affine_x());
-   const BigInt s = m_mod_order.reduce(r*m_x + k*e);
+   const BigInt s = m_mod_order.reduce(r * m_x + k * e);
 
    if(r == 0 || s == 0)
+      {
       throw Invalid_State("GOST 34.10: r == 0 || s == 0");
+      }
 
-   secure_vector<uint8_t> output(2*m_order.bytes());
+   secure_vector<uint8_t> output(2 * m_order.bytes());
    s.binary_encode(&output[output.size() / 2 - s.bytes()]);
    r.binary_encode(&output[output.size() - r.bytes()]);
    return output;
@@ -161,9 +172,15 @@ class GOST_3410_Verification_Operation : public PK_Ops::Verification_with_EMSA
          m_public_point(gost.public_point()),
          m_order(gost.domain().get_order()) {}
 
-      size_t max_input_bits() const override { return m_order.bits(); }
+      size_t max_input_bits() const override
+         {
+         return m_order.bits();
+         }
 
-      bool with_recovery() const override { return false; }
+      bool with_recovery() const override
+         {
+         return false;
+         }
 
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len) override;
@@ -174,10 +191,12 @@ class GOST_3410_Verification_Operation : public PK_Ops::Verification_with_EMSA
    };
 
 bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
-                                              const uint8_t sig[], size_t sig_len)
+      const uint8_t sig[], size_t sig_len)
    {
-   if(sig_len != m_order.bytes()*2)
+   if(sig_len != m_order.bytes() * 2)
+      {
       return false;
+      }
 
    BigInt e = decode_le(msg, msg_len);
 
@@ -185,22 +204,28 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_le
    BigInt r(sig + sig_len / 2, sig_len / 2);
 
    if(r <= 0 || r >= m_order || s <= 0 || s >= m_order)
+      {
       return false;
+      }
 
    e %= m_order;
    if(e == 0)
+      {
       e = 1;
+      }
 
    BigInt v = inverse_mod(e, m_order);
 
-   BigInt z1 = (s*v) % m_order;
-   BigInt z2 = (-r*v) % m_order;
+   BigInt z1 = (s * v) % m_order;
+   BigInt z2 = (-r * v) % m_order;
 
    PointGFp R = multi_exponentiate(m_base_point, z1,
                                    m_public_point, z2);
 
    if(R.is_zero())
-     return false;
+      {
+      return false;
+      }
 
    return (R.get_affine_x() == r);
    }
@@ -209,20 +234,24 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[], size_t msg_le
 
 std::unique_ptr<PK_Ops::Verification>
 GOST_3410_PublicKey::create_verification_op(const std::string& params,
-                                            const std::string& provider) const
+      const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Verification>(new GOST_3410_Verification_Operation(*this, params));
+      }
    throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::Signature>
 GOST_3410_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                          const std::string& params,
-                                          const std::string& provider) const
+      const std::string& params,
+      const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Signature>(new GOST_3410_Signature_Operation(*this, params));
+      }
    throw Provider_Not_Found(algo_name(), provider);
    }
 

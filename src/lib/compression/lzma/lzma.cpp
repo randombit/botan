@@ -40,16 +40,29 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, uint8_t>
          lzma_ret rc = ::lzma_code(streamp(), static_cast<lzma_action>(flags));
 
          if(rc == LZMA_MEM_ERROR)
+            {
             throw Exception("lzma memory allocation failed");
-         else if (rc != LZMA_OK && rc != LZMA_STREAM_END)
+            }
+         else if(rc != LZMA_OK && rc != LZMA_STREAM_END)
+            {
             throw Exception("Lzma error");
+            }
 
          return (rc == LZMA_STREAM_END);
          }
 
-      uint32_t run_flag() const override { return LZMA_RUN; }
-      uint32_t flush_flag() const override { return LZMA_FULL_FLUSH; }
-      uint32_t finish_flag() const override { return LZMA_FINISH; }
+      uint32_t run_flag() const override
+         {
+         return LZMA_RUN;
+         }
+      uint32_t flush_flag() const override
+         {
+         return LZMA_FULL_FLUSH;
+         }
+      uint32_t finish_flag() const override
+         {
+         return LZMA_FINISH;
+         }
    };
 
 class LZMA_Compression_Stream : public LZMA_Stream
@@ -58,16 +71,24 @@ class LZMA_Compression_Stream : public LZMA_Stream
       explicit LZMA_Compression_Stream(size_t level)
          {
          if(level == 0)
-            level = 6; // default
+            {
+            level = 6;   // default
+            }
          else if(level > 9)
-            level = 9; // clamp to maximum allowed value
+            {
+            level = 9;   // clamp to maximum allowed value
+            }
 
          lzma_ret rc = ::lzma_easy_encoder(streamp(), level, LZMA_CHECK_CRC64);
 
          if(rc == LZMA_MEM_ERROR)
+            {
             throw Exception("lzma memory allocation failed");
+            }
          else if(rc != LZMA_OK)
+            {
             throw Exception("lzma compress initialization failed");
+            }
          }
    };
 
@@ -80,9 +101,13 @@ class LZMA_Decompression_Stream : public LZMA_Stream
                                              LZMA_TELL_UNSUPPORTED_CHECK);
 
          if(rc == LZMA_MEM_ERROR)
+            {
             throw Exception("lzma memory allocation failed");
+            }
          else if(rc != LZMA_OK)
+            {
             throw Exception("Bad setting in lzma_stream_decoder");
+            }
          }
    };
 

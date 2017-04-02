@@ -16,23 +16,23 @@
 
 #if BOTAN_TARGET_UNALIGNED_MEMORY_ACCESS_OK
 
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+   #if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
 
-#define BOTAN_ENDIAN_N2B(x) (x)
-#define BOTAN_ENDIAN_B2N(x) (x)
+      #define BOTAN_ENDIAN_N2B(x) (x)
+      #define BOTAN_ENDIAN_B2N(x) (x)
 
-#define BOTAN_ENDIAN_N2L(x) reverse_bytes(x)
-#define BOTAN_ENDIAN_L2N(x) reverse_bytes(x)
+      #define BOTAN_ENDIAN_N2L(x) reverse_bytes(x)
+      #define BOTAN_ENDIAN_L2N(x) reverse_bytes(x)
 
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+   #elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
 
-#define BOTAN_ENDIAN_N2L(x) (x)
-#define BOTAN_ENDIAN_L2N(x) (x)
+      #define BOTAN_ENDIAN_N2L(x) (x)
+      #define BOTAN_ENDIAN_L2N(x) (x)
 
-#define BOTAN_ENDIAN_N2B(x) reverse_bytes(x)
-#define BOTAN_ENDIAN_B2N(x) reverse_bytes(x)
+      #define BOTAN_ENDIAN_N2B(x) reverse_bytes(x)
+      #define BOTAN_ENDIAN_B2N(x) reverse_bytes(x)
 
-#endif
+   #endif
 
 #endif
 
@@ -47,8 +47,8 @@ namespace Botan {
 template<typename T> inline uint8_t get_byte(size_t byte_num, T input)
    {
    return static_cast<uint8_t>(
-      input >> (((~byte_num)&(sizeof(T)-1)) << 3)
-      );
+             input >>(((~byte_num) & (sizeof(T) - 1)) << 3)
+          );
    }
 
 /**
@@ -91,8 +91,8 @@ inline uint32_t make_uint32(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3)
 * @return i0 || i1 || i2 || i3 || i4 || i5 || i6 || i7
 */
 inline uint64_t make_uint64(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3,
-                          uint8_t i4, uint8_t i5, uint8_t i6, uint8_t i7)
-    {
+                            uint8_t i4, uint8_t i5, uint8_t i6, uint8_t i7)
+   {
    return ((static_cast<uint64_t>(i0) << 56) |
            (static_cast<uint64_t>(i1) << 48) |
            (static_cast<uint64_t>(i2) << 40) |
@@ -101,7 +101,7 @@ inline uint64_t make_uint64(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3,
            (static_cast<uint64_t>(i5) << 16) |
            (static_cast<uint64_t>(i6) <<  8) |
            (static_cast<uint64_t>(i7)));
-    }
+   }
 
 /**
 * Load a big-endian word
@@ -115,7 +115,9 @@ inline T load_be(const uint8_t in[], size_t off)
    in += off * sizeof(T);
    T out = 0;
    for(size_t i = 0; i != sizeof(T); ++i)
+      {
       out = (out << 8) | in[i];
+      }
    return out;
    }
 
@@ -131,7 +133,9 @@ inline T load_le(const uint8_t in[], size_t off)
    in += off * sizeof(T);
    T out = 0;
    for(size_t i = 0; i != sizeof(T); ++i)
-      out = (out << 8) | in[sizeof(T)-1-i];
+      {
+      out = (out << 8) | in[sizeof(T) - 1 - i];
+      }
    return out;
    }
 
@@ -332,13 +336,19 @@ inline void load_le(T out[],
       const size_t left = count - blocks;
 
       for(size_t i = 0; i != blocks; i += 4)
+         {
          bswap_4(out + i);
+         }
 
       for(size_t i = 0; i != left; ++i)
-         out[blocks+i] = reverse_bytes(out[blocks+i]);
+         {
+         out[blocks + i] = reverse_bytes(out[blocks + i]);
+         }
 #else
       for(size_t i = 0; i != count; ++i)
+         {
          out[i] = load_le<T>(in, i);
+         }
 #endif
       }
    }
@@ -422,13 +432,19 @@ inline void load_be(T out[],
       const size_t left = count - blocks;
 
       for(size_t i = 0; i != blocks; i += 4)
+         {
          bswap_4(out + i);
+         }
 
       for(size_t i = 0; i != left; ++i)
-         out[blocks+i] = reverse_bytes(out[blocks+i]);
+         {
+         out[blocks + i] = reverse_bytes(out[blocks + i]);
+         }
 #else
       for(size_t i = 0; i != count; ++i)
+         {
          out[i] = load_be<T>(in, i);
+         }
 #endif
       }
    }
@@ -619,7 +635,7 @@ inline void store_be(uint8_t out[], T x0, T x1, T x2, T x3)
 */
 template<typename T>
 inline void store_le(uint8_t out[], T x0, T x1, T x2, T x3,
-                                 T x4, T x5, T x6, T x7)
+                     T x4, T x5, T x6, T x7)
    {
    store_le(x0, out + (0 * sizeof(T)));
    store_le(x1, out + (1 * sizeof(T)));
@@ -645,7 +661,7 @@ inline void store_le(uint8_t out[], T x0, T x1, T x2, T x3,
 */
 template<typename T>
 inline void store_be(uint8_t out[], T x0, T x1, T x2, T x3,
-                                 T x4, T x5, T x6, T x7)
+                     T x4, T x5, T x6, T x7)
    {
    store_be(x0, out + (0 * sizeof(T)));
    store_be(x1, out + (1 * sizeof(T)));
@@ -666,10 +682,12 @@ void copy_out_be(uint8_t out[], size_t out_bytes, const T in[])
       out += sizeof(T);
       out_bytes -= sizeof(T);
       in += 1;
-   }
+      }
 
    for(size_t i = 0; i != out_bytes; ++i)
-      out[i] = get_byte(i%8, in[0]);
+      {
+      out[i] = get_byte(i % 8, in[0]);
+      }
    }
 
 template<typename T, typename Alloc>
@@ -687,10 +705,12 @@ void copy_out_le(uint8_t out[], size_t out_bytes, const T in[])
       out += sizeof(T);
       out_bytes -= sizeof(T);
       in += 1;
-   }
+      }
 
    for(size_t i = 0; i != out_bytes; ++i)
+      {
       out[i] = get_byte(sizeof(T) - 1 - (i % 8), in[0]);
+      }
    }
 
 template<typename T, typename Alloc>

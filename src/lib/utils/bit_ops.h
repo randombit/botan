@@ -24,7 +24,7 @@ namespace Botan {
 template<typename T>
 inline bool is_power_of_2(T arg)
    {
-   return ((arg != 0 && arg != 1) && ((arg & (arg-1)) == 0));
+   return ((arg != 0 && arg != 1) && ((arg & (arg - 1)) == 0));
    }
 
 /**
@@ -36,9 +36,11 @@ inline bool is_power_of_2(T arg)
 template<typename T>
 inline size_t high_bit(T n)
    {
-   for(size_t i = 8*sizeof(T); i > 0; --i)
+   for(size_t i = 8 * sizeof(T); i > 0; --i)
       if((n >> (i - 1)) & 0x01)
+         {
          return i;
+         }
    return 0;
    }
 
@@ -51,9 +53,11 @@ inline size_t high_bit(T n)
 template<typename T>
 inline size_t low_bit(T n)
    {
-   for(size_t i = 0; i != 8*sizeof(T); ++i)
+   for(size_t i = 0; i != 8 * sizeof(T); ++i)
       if((n >> i) & 0x01)
+         {
          return (i + 1);
+         }
    return 0;
    }
 
@@ -67,7 +71,9 @@ inline size_t significant_bytes(T n)
    {
    for(size_t i = 0; i != sizeof(T); ++i)
       if(get_byte(i, n))
-         return sizeof(T)-i;
+         {
+         return sizeof(T) - i;
+         }
    return 0;
    }
 
@@ -79,12 +85,16 @@ inline size_t significant_bytes(T n)
 template<typename T>
 inline size_t hamming_weight(T n)
    {
-   const uint8_t NIBBLE_WEIGHTS[] = {
-      0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 };
+   const uint8_t NIBBLE_WEIGHTS[] =
+      {
+      0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4
+      };
 
    size_t weight = 0;
-   for(size_t i = 0; i != 2*sizeof(T); ++i)
-      weight += NIBBLE_WEIGHTS[(n >> (4*i)) & 0x0F];
+   for(size_t i = 0; i != 2 * sizeof(T); ++i)
+      {
+      weight += NIBBLE_WEIGHTS[(n >> (4 * i)) & 0x0F];
+      }
    return weight;
    }
 
@@ -96,17 +106,21 @@ inline size_t hamming_weight(T n)
 template<typename T>
 inline size_t ctz(T n)
    {
-   for(size_t i = 0; i != 8*sizeof(T); ++i)
+   for(size_t i = 0; i != 8 * sizeof(T); ++i)
       if((n >> i) & 0x01)
+         {
          return i;
-   return 8*sizeof(T);
+         }
+   return 8 * sizeof(T);
    }
 
 template<typename T>
 size_t ceil_log2(T x)
    {
-   if(x >> (sizeof(T)*8-1))
-      return sizeof(T)*8;
+   if(x >> (sizeof(T) * 8 - 1))
+      {
+      return sizeof(T) * 8;
+      }
 
    size_t result = 0;
    T compare = 1;

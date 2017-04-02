@@ -31,7 +31,9 @@ bool Session_Manager_In_Memory::load_from_session_str(
    auto i = m_sessions.find(session_str);
 
    if(i == m_sessions.end())
+      {
       return false;
+      }
 
    try
       {
@@ -70,10 +72,14 @@ bool Session_Manager_In_Memory::load_from_server_info(
    auto i = m_info_sessions.find(info);
 
    if(i == m_info_sessions.end())
+      {
       return false;
+      }
 
    if(load_from_session_str(i->second, session))
+      {
       return true;
+      }
 
    /*
    * It existed at one point but was removed from the sessions map,
@@ -92,7 +98,9 @@ void Session_Manager_In_Memory::remove_entry(
    auto i = m_sessions.find(hex_encode(session_id));
 
    if(i != m_sessions.end())
+      {
       m_sessions.erase(i);
+      }
    }
 
 size_t Session_Manager_In_Memory::remove_all()
@@ -115,7 +123,9 @@ void Session_Manager_In_Memory::save(const Session& session)
       timestamp, so this actually removes the oldest sessions first.
       */
       while(m_sessions.size() >= m_max_sessions)
+         {
          m_sessions.erase(m_sessions.begin());
+         }
       }
 
    const std::string session_id_str = hex_encode(session.session_id());
@@ -123,7 +133,9 @@ void Session_Manager_In_Memory::save(const Session& session)
    m_sessions[session_id_str] = session.encrypt(m_session_key, m_rng);
 
    if(session.side() == CLIENT && !session.server_info().empty())
+      {
       m_info_sessions[session.server_info()] = session_id_str;
+      }
    }
 
 }

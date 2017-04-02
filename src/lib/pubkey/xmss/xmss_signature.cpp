@@ -14,14 +14,16 @@ XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
    : m_leaf_idx(0), m_randomness(0, 0x00), m_tree_sig()
    {
    BOTAN_ASSERT(sizeof(size_t) >= ceil(static_cast<float>(
-                   (XMSS_Parameters(oid)).tree_height()) / 8.f),
-                   "System type \"size_t\" not big enough to support"
-                   " leaf index.");
+                                          (XMSS_Parameters(oid)).tree_height()) / 8.f),
+                "System type \"size_t\" not big enough to support"
+                " leaf index.");
 
    XMSS_Parameters xmss_params(oid);
    uint64_t leaf_idx = 0;
    for(size_t i = 0; i < 8; i++)
+      {
       leaf_idx = ((leaf_idx << 8) | raw_sig[i]);
+      }
 
    if(leaf_idx >= (1ull << (xmss_params.tree_height() - 1)))
       {
@@ -70,7 +72,7 @@ secure_vector<uint8_t> XMSS_Signature::bytes() const
       static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx) >> 24U),
       static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx) >> 16U),
       static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx) >>  8U),
-      static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx)       )
+      static_cast<uint8_t>(static_cast<uint64_t>(m_leaf_idx))
       };
 
    std::copy(m_randomness.begin(),

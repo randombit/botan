@@ -54,7 +54,9 @@ void OFB::cipher(const uint8_t in[], uint8_t out[], size_t length)
 void OFB::set_iv(const uint8_t iv[], size_t iv_len)
    {
    if(!valid_iv_length(iv_len))
+      {
       throw Invalid_IV_Length(name(), iv_len);
+      }
 
    zeroise(m_buffer);
    buffer_insert(m_buffer, 0, iv, iv_len);

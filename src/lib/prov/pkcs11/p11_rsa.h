@@ -85,13 +85,13 @@ class BOTAN_DLL PKCS11_RSA_PublicKey final : public RSA_PublicKey,
       PKCS11_RSA_PublicKey(Session& session, const RSA_PublicKeyImportProperties& pubkey_props);
 
       std::unique_ptr<PK_Ops::Encryption>
-         create_encryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+      create_encryption_op(RandomNumberGenerator& rng,
+                           const std::string& params,
+                           const std::string& provider) const override;
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override;
+      create_verification_op(const std::string& params,
+                             const std::string& provider) const override;
    };
 
 /// Properties for importing a PKCS#11 RSA private key
@@ -203,14 +203,14 @@ class BOTAN_DLL PKCS11_RSA_PrivateKey final : public Private_Key,
       secure_vector<uint8_t> private_key_bits() const override;
 
       std::unique_ptr<PK_Ops::Decryption>
-         create_decryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const override;
+      create_decryption_op(RandomNumberGenerator& rng,
+                           const std::string& params,
+                           const std::string& provider) const override;
 
       std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
+      create_signature_op(RandomNumberGenerator& rng,
+                          const std::string& params,
+                          const std::string& provider) const override;
    };
 
 using PKCS11_RSA_KeyPair = std::pair<PKCS11_RSA_PublicKey, PKCS11_RSA_PrivateKey>;

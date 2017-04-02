@@ -100,7 +100,7 @@ class BOTAN_DLL GF2m_Field
       */
       gf2m gf_mul_zrz(gf2m a, gf2m y) const
          {
-         return ( (y == 0) ? 0 : gf_mul_nrn(a, y) );
+         return ((y == 0) ? 0 : gf_mul_nrn(a, y));
          }
 
       gf2m gf_mul_zzr(gf2m a, gf2m y) const
@@ -118,7 +118,7 @@ class BOTAN_DLL GF2m_Field
 
       gf2m gf_sqrt(gf2m x) const
          {
-         return ((x) ? gf_exp(_gf_modq_1(gf_log(x) << (get_extension_degree()-1))) : 0);
+         return ((x) ? gf_exp(_gf_modq_1(gf_log(x) << (get_extension_degree() - 1))) : 0);
          }
 
       gf2m gf_div_rnn(gf2m x, gf2m y) const

@@ -30,7 +30,9 @@ X509_CA::X509_CA(const X509_Certificate& c,
                  RandomNumberGenerator& rng) : m_cert(c)
    {
    if(!m_cert.is_CA_cert())
+      {
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
+      }
 
    m_signer = choose_sig_format(key, rng, hash_fn, m_ca_sig_algo);
    }
@@ -110,33 +112,33 @@ X509_Certificate X509_CA::make_cert(PK_Signer* signer,
 
    // clang-format off
    return X509_Certificate(X509_Object::make_signed(
-      signer, rng, sig_algo,
-      DER_Encoder().start_cons(SEQUENCE)
-         .start_explicit(0)
-            .encode(X509_CERT_VERSION-1)
-         .end_explicit()
+                              signer, rng, sig_algo,
+                              DER_Encoder().start_cons(SEQUENCE)
+                              .start_explicit(0)
+                              .encode(X509_CERT_VERSION - 1)
+                              .end_explicit()
 
-         .encode(serial_no)
+                              .encode(serial_no)
 
-         .encode(sig_algo)
-         .encode(issuer_dn)
+                              .encode(sig_algo)
+                              .encode(issuer_dn)
 
-         .start_cons(SEQUENCE)
-            .encode(not_before)
-            .encode(not_after)
-         .end_cons()
+                              .start_cons(SEQUENCE)
+                              .encode(not_before)
+                              .encode(not_after)
+                              .end_cons()
 
-         .encode(subject_dn)
-         .raw_bytes(pub_key)
+                              .encode(subject_dn)
+                              .raw_bytes(pub_key)
 
-         .start_explicit(3)
-            .start_cons(SEQUENCE)
-               .encode(extensions)
-             .end_cons()
-         .end_explicit()
-      .end_cons()
-      .get_contents()
-      ));;
+                              .start_explicit(3)
+                              .start_cons(SEQUENCE)
+                              .encode(extensions)
+                              .end_cons()
+                              .end_explicit()
+                              .end_cons()
+                              .get_contents()
+                           ));;
    // clang-format on
    }
 
@@ -176,7 +178,9 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    const size_t X509_CRL_VERSION = 2;
 
    if(next_update == 0)
+      {
       next_update = timespec_to_u32bit("7d");
+      }
 
    // Totally stupid: ties encoding logic to the return of std::time!!
    auto current_time = std::chrono::system_clock::now();
@@ -189,26 +193,26 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
 
    // clang-format off
    const std::vector<uint8_t> crl = X509_Object::make_signed(
-      m_signer, rng, m_ca_sig_algo,
-      DER_Encoder().start_cons(SEQUENCE)
-         .encode(X509_CRL_VERSION-1)
-         .encode(m_ca_sig_algo)
-         .encode(m_cert.issuer_dn())
-         .encode(X509_Time(current_time))
-         .encode(X509_Time(expire_time))
-         .encode_if(revoked.size() > 0,
-              DER_Encoder()
-                 .start_cons(SEQUENCE)
-                    .encode_list(revoked)
-                 .end_cons()
-            )
-         .start_explicit(0)
-            .start_cons(SEQUENCE)
-               .encode(extensions)
-            .end_cons()
-         .end_explicit()
-      .end_cons()
-      .get_contents());
+                                       m_signer, rng, m_ca_sig_algo,
+                                       DER_Encoder().start_cons(SEQUENCE)
+                                       .encode(X509_CRL_VERSION - 1)
+                                       .encode(m_ca_sig_algo)
+                                       .encode(m_cert.issuer_dn())
+                                       .encode(X509_Time(current_time))
+                                       .encode(X509_Time(expire_time))
+                                       .encode_if(revoked.size() > 0,
+                                             DER_Encoder()
+                                             .start_cons(SEQUENCE)
+                                             .encode_list(revoked)
+                                             .end_cons()
+                                                 )
+                                       .start_explicit(0)
+                                       .start_cons(SEQUENCE)
+                                       .encode(extensions)
+                                       .end_cons()
+                                       .end_explicit()
+                                       .end_cons()
+                                       .get_contents());
    // clang-format on
 
    return X509_CRL(crl);

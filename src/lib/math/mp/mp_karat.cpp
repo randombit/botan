@@ -35,12 +35,16 @@ void basecase_mul(word z[],
       word carry = 0;
 
       for(size_t j = 0; j != x_size_8; j += 8)
+         {
          carry = word8_madd3(z + i + j, x + j, y_i, carry);
+         }
 
       for(size_t j = x_size_8; j != x_size; ++j)
-         z[i+j] = word_madd3(x[j], y_i, z[i+j], &carry);
+         {
+         z[i + j] = word_madd3(x[j], y_i, z[i + j], &carry);
+         }
 
-      z[x_size+i] = carry;
+      z[x_size + i] = carry;
       }
    }
 
@@ -53,13 +57,21 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    if(N < KARATSUBA_MULTIPLY_THRESHOLD || N % 2)
       {
       if(N == 6)
+         {
          return bigint_comba_mul6(z, x, y);
+         }
       else if(N == 8)
+         {
          return bigint_comba_mul8(z, x, y);
+         }
       else if(N == 16)
+         {
          return bigint_comba_mul16(z, x, y);
+         }
       else
+         {
          return basecase_mul(z, x, N, y, N);
+         }
       }
 
    const size_t N2 = N / 2;
@@ -74,7 +86,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    const int32_t cmp0 = bigint_cmp(x0, N2, x1, N2);
    const int32_t cmp1 = bigint_cmp(y1, N2, y0, N2);
 
-   clear_mem(workspace, 2*N);
+   clear_mem(workspace, 2 * N);
 
    /*
    * If either of cmp0 or cmp1 is zero then z0 or z1 resp is zero here,
@@ -88,20 +100,28 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    //if(cmp0 && cmp1)
       {
       if(cmp0 > 0)
+         {
          bigint_sub3(z0, x0, N2, x1, N2);
+         }
       else
+         {
          bigint_sub3(z0, x1, N2, x0, N2);
+         }
 
       if(cmp1 > 0)
+         {
          bigint_sub3(z1, y1, N2, y0, N2);
+         }
       else
+         {
          bigint_sub3(z1, y0, N2, y1, N2);
+         }
 
-      karatsuba_mul(workspace, z0, z1, N2, workspace+N);
+      karatsuba_mul(workspace, z0, z1, N2, workspace + N);
       }
 
-   karatsuba_mul(z0, x0, y0, N2, workspace+N);
-   karatsuba_mul(z1, x1, y1, N2, workspace+N);
+   karatsuba_mul(z0, x0, y0, N2, workspace + N);
+   karatsuba_mul(z1, x1, y1, N2, workspace + N);
 
    const word ws_carry = bigint_add3_nc(workspace + N, z0, N, z1, N);
    word z_carry = bigint_add2_nc(z + N2, N, workspace + N, N);
@@ -110,9 +130,13 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N,
    bigint_add2_nc(z + N + N2, N2, &z_carry, 1);
 
    if((cmp0 == cmp1) || (cmp0 == 0) || (cmp1 == 0))
-      bigint_add2(z + N2, 2*N-N2, workspace, N);
+      {
+      bigint_add2(z + N2, 2 * N - N2, workspace, N);
+      }
    else
-      bigint_sub2(z + N2, 2*N-N2, workspace, N);
+      {
+      bigint_sub2(z + N2, 2 * N - N2, workspace, N);
+      }
    }
 
 /*
@@ -123,13 +147,21 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    if(N < KARATSUBA_SQUARE_THRESHOLD || N % 2)
       {
       if(N == 6)
+         {
          return bigint_comba_sqr6(z, x);
+         }
       else if(N == 8)
+         {
          return bigint_comba_sqr8(z, x);
+         }
       else if(N == 16)
+         {
          return bigint_comba_sqr16(z, x);
+         }
       else
+         {
          return basecase_mul(z, x, N, x, N);
+         }
       }
 
    const size_t N2 = N / 2;
@@ -141,22 +173,26 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
 
    const int32_t cmp = bigint_cmp(x0, N2, x1, N2);
 
-   clear_mem(workspace, 2*N);
+   clear_mem(workspace, 2 * N);
 
    // See comment in karatsuba_mul
 
    //if(cmp)
       {
       if(cmp > 0)
+         {
          bigint_sub3(z0, x0, N2, x1, N2);
+         }
       else
+         {
          bigint_sub3(z0, x1, N2, x0, N2);
+         }
 
-      karatsuba_sqr(workspace, z0, N2, workspace+N);
+      karatsuba_sqr(workspace, z0, N2, workspace + N);
       }
 
-   karatsuba_sqr(z0, x0, N2, workspace+N);
-   karatsuba_sqr(z1, x1, N2, workspace+N);
+   karatsuba_sqr(z0, x0, N2, workspace + N);
+   karatsuba_sqr(z1, x1, N2, workspace + N);
 
    const word ws_carry = bigint_add3_nc(workspace + N, z0, N, z1, N);
    word z_carry = bigint_add2_nc(z + N2, N, workspace + N, N);
@@ -169,7 +205,7 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[])
    * if cmp==0 then workspace[0:N] == 0 and avoiding the jump
    * hides a timing channel.
    */
-   bigint_sub2(z + N2, 2*N-N2, workspace, N);
+   bigint_sub2(z + N2, 2 * N - N2, workspace, N);
    }
 
 /*
@@ -180,11 +216,15 @@ size_t karatsuba_size(size_t z_size,
                       size_t y_size, size_t y_sw)
    {
    if(x_sw > x_size || x_sw > y_size || y_sw > x_size || y_sw > y_size)
+      {
       return 0;
+      }
 
    if(((x_size == x_sw) && (x_size % 2)) ||
-      ((y_size == y_sw) && (y_size % 2)))
+         ((y_size == y_sw) && (y_size % 2)))
+      {
       return 0;
+      }
 
    const size_t start = (x_sw > y_sw) ? x_sw : y_sw;
    const size_t end = (x_size < y_size) ? x_size : y_size;
@@ -192,23 +232,31 @@ size_t karatsuba_size(size_t z_size,
    if(start == end)
       {
       if(start % 2)
+         {
          return 0;
+         }
       return start;
       }
 
    for(size_t j = start; j <= end; ++j)
       {
       if(j % 2)
+         {
          continue;
+         }
 
-      if(2*j > z_size)
+      if(2 * j > z_size)
+         {
          return 0;
+         }
 
       if(x_sw <= j && j <= x_size && y_sw <= j && j <= y_size)
          {
          if(j % 4 == 2 &&
-            (j+2) <= x_size && (j+2) <= y_size && 2*(j+2) <= z_size)
-            return j+2;
+               (j + 2) <= x_size && (j + 2) <= y_size && 2 * (j + 2) <= z_size)
+            {
+            return j + 2;
+            }
          return j;
          }
       }
@@ -224,20 +272,28 @@ size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw)
    if(x_sw == x_size)
       {
       if(x_sw % 2)
+         {
          return 0;
+         }
       return x_sw;
       }
 
    for(size_t j = x_sw; j <= x_size; ++j)
       {
       if(j % 2)
+         {
          continue;
+         }
 
-      if(2*j > z_size)
+      if(2 * j > z_size)
+         {
          return 0;
+         }
 
-      if(j % 4 == 2 && (j+2) <= x_size && 2*(j+2) <= z_size)
-         return j+2;
+      if(j % 4 == 2 && (j + 2) <= x_size && 2 * (j + 2) <= z_size)
+         {
+         return j + 2;
+         }
       return j;
       }
 
@@ -300,9 +356,13 @@ void bigint_mul(BigInt& z, const BigInt& x, const BigInt& y, word workspace[])
       const size_t N = karatsuba_size(z.size(), x.size(), x_sig_words, y.size(), y_sig_words);
 
       if(N)
+         {
          karatsuba_mul(z.mutable_data(), x.data(), y.data(), N, workspace);
+         }
       else
+         {
          basecase_mul(z.mutable_data(), x.data(), x_sig_words, y.data(), y_sig_words);
+         }
       }
    }
 
@@ -312,7 +372,7 @@ void bigint_mul(BigInt& z, const BigInt& x, const BigInt& y, word workspace[])
 void bigint_sqr(word z[], size_t z_size, word workspace[],
                 const word x[], size_t x_size, size_t x_sw)
    {
-   BOTAN_ASSERT(z_size/2 >= x_sw, "Output size is sufficient");
+   BOTAN_ASSERT(z_size / 2 >= x_sw, "Output size is sufficient");
 
    if(x_sw == 1)
       {
@@ -347,9 +407,13 @@ void bigint_sqr(word z[], size_t z_size, word workspace[],
       const size_t N = karatsuba_size(z_size, x_size, x_sw);
 
       if(N)
+         {
          karatsuba_sqr(z, x, N, workspace);
+         }
       else
+         {
          basecase_mul(z, x, x_sw, x, x_sw);
+         }
       }
    }
 

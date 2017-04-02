@@ -25,11 +25,11 @@ Blocking_Client::Blocking_Client(read_fn reader,
                                  const std::vector<std::string>& next) :
    m_read(reader),
    m_callbacks(new TLS::Compat_Callbacks(
-               writer,
-               std::bind(&Blocking_Client::data_cb, this, _1, _2),
-               std::function<void (Alert)>(std::bind(&Blocking_Client::alert_cb, this, _1)),
-               std::bind(&Blocking_Client::handshake_cb, this, _1)
-             )),
+                  writer,
+                  std::bind(&Blocking_Client::data_cb, this, _1, _2),
+                  std::function<void (Alert)>(std::bind(&Blocking_Client::alert_cb, this, _1)),
+                  std::bind(&Blocking_Client::handshake_cb, this, _1)
+               )),
    m_channel(*m_callbacks.get(),
              session_manager,
              creds,
@@ -80,7 +80,9 @@ size_t Blocking_Client::read(uint8_t buf[], size_t buf_len)
    const size_t returned = std::min(buf_len, m_plaintext.size());
 
    for(size_t i = 0; i != returned; ++i)
+      {
       buf[i] = m_plaintext[i];
+      }
    m_plaintext.erase(m_plaintext.begin(), m_plaintext.begin() + returned);
 
    BOTAN_ASSERT_IMPLICATION(returned == 0, m_channel.is_closed(),

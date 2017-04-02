@@ -41,11 +41,15 @@ void BigInt::encode(uint8_t output[], const BigInt& n, Base base)
          output[output_size - 1 - j] =
             Charset::digit2char(static_cast<uint8_t>(remainder.word_at(0)));
          if(copy.is_zero())
+            {
             break;
+            }
          }
       }
    else
+      {
       throw Invalid_Argument("Unknown BigInt encoding method");
+      }
    }
 
 /*
@@ -58,7 +62,9 @@ std::vector<uint8_t> BigInt::encode(const BigInt& n, Base base)
    if(base != Binary)
       for(size_t j = 0; j != output.size(); ++j)
          if(output[j] == 0)
+            {
             output[j] = '0';
+            }
    return output;
    }
 
@@ -72,7 +78,9 @@ secure_vector<uint8_t> BigInt::encode_locked(const BigInt& n, Base base)
    if(base != Binary)
       for(size_t j = 0; j != output.size(); ++j)
          if(output[j] == 0)
+            {
             output[j] = '0';
+            }
    return output;
    }
 
@@ -91,7 +99,9 @@ void BigInt::encode_1363(uint8_t output[], size_t bytes, const BigInt& n)
    {
    const size_t n_bytes = n.bytes();
    if(n_bytes > bytes)
+      {
       throw Encoding_Error("encode_1363: n is too large to encode properly");
+      }
 
    const size_t leading_0s = bytes - n_bytes;
    encode(&output[leading_0s], n, Binary);
@@ -115,7 +125,9 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base)
    {
    BigInt r;
    if(base == Binary)
+      {
       r.binary_decode(buf, length);
+      }
    else if(base == Hexadecimal)
       {
       secure_vector<uint8_t> binary;
@@ -143,7 +155,9 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base)
       for(size_t i = 0; i != length; ++i)
          {
          if(Charset::is_space(buf[i]))
+            {
             continue;
+            }
 
          if(!Charset::is_digit(buf[i]))
             throw Invalid_Argument("BigInt::decode: "
@@ -152,14 +166,18 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base)
          const uint8_t x = Charset::char2digit(buf[i]);
 
          if(x >= 10)
+            {
             throw Invalid_Argument("BigInt: Invalid decimal string");
+            }
 
          r *= 10;
          r += x;
          }
       }
    else
+      {
       throw Invalid_Argument("Unknown BigInt decoding method");
+      }
    return r;
    }
 

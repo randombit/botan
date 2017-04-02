@@ -13,22 +13,22 @@
 
 #if defined(BOTAN_HAS_BOOST_ASIO)
 
-  /*
-  * We don't need serial port support anyway, and asking for it
-  * causes macro conflicts with Darwin's termios.h when this
-  * file is included in the amalgamation. GH #350
-  */
-  #define BOOST_ASIO_DISABLE_SERIAL_PORT
-  #include <boost/asio.hpp>
+   /*
+   * We don't need serial port support anyway, and asking for it
+   * causes macro conflicts with Darwin's termios.h when this
+   * file is included in the amalgamation. GH #350
+   */
+   #define BOOST_ASIO_DISABLE_SERIAL_PORT
+   #include <boost/asio.hpp>
 
 #elif defined(BOTAN_TARGET_OS_HAS_SOCKETS)
-  #include <sys/types.h>
-  #include <sys/socket.h>
-  #include <netdb.h>
-  #include <unistd.h>
-  #include <netinet/in.h>
+   #include <sys/types.h>
+   #include <sys/socket.h>
+   #include <netdb.h>
+   #include <unistd.h>
+   #include <netinet/in.h>
 #else
-  //#warning "No network support enabled in http_util"
+   //#warning "No network support enabled in http_util"
 #endif
 
 namespace Botan {
@@ -52,7 +52,9 @@ std::string http_transact(const std::string& hostname,
    tcp.connect(hostname, "http");
 
    if(!tcp)
+      {
       throw HTTP_Error("HTTP connection to " + hostname + " failed");
+      }
 
    tcp << message;
    tcp.flush();
@@ -67,20 +69,30 @@ std::string http_transact(const std::string& hostname,
    uint16_t port = 80;
 
    if(!host_addr)
+      {
       throw HTTP_Error("Name resolution failed for " + hostname);
+      }
 
    if(host_addr->h_addrtype != AF_INET) // FIXME
+      {
       throw HTTP_Error("Hostname " + hostname + " resolved to non-IPv4 address");
+      }
 
-   struct socket_raii {
+   struct socket_raii
+      {
       socket_raii(int fd) : m_fd(fd) {}
-      ~socket_raii() { ::close(m_fd); }
+      ~socket_raii()
+         {
+         ::close(m_fd);
+         }
       int m_fd;
       };
 
    int fd = ::socket(PF_INET, SOCK_STREAM, 0);
    if(fd == -1)
+      {
       throw HTTP_Error("Unable to create TCP socket");
+      }
    socket_raii raii(fd);
 
    sockaddr_in socket_info;
@@ -95,7 +107,9 @@ std::string http_transact(const std::string& hostname,
    socket_info.sin_addr = *reinterpret_cast<struct in_addr*>(host_addr->h_addr); // FIXME
 
    if(::connect(fd, reinterpret_cast<sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0)
+      {
       throw HTTP_Error("HTTP connection to " + hostname + " failed");
+      }
 
    size_t sent_so_far = 0;
    while(sent_so_far != message.size())
@@ -104,9 +118,13 @@ std::string http_transact(const std::string& hostname,
       ssize_t sent = ::write(fd, &message[sent_so_far], left);
 
       if(sent < 0)
+         {
          throw HTTP_Error("write to HTTP server failed, error '" + std::string(::strerror(errno)) + "'");
+         }
       else
+         {
          sent_so_far += static_cast<size_t>(sent);
+         }
       }
 
    std::ostringstream oss;
@@ -116,11 +134,17 @@ std::string http_transact(const std::string& hostname,
       ssize_t got = ::read(fd, buf.data(), buf.size());
 
       if(got < 0)
+         {
          throw HTTP_Error("read from HTTP server failed, error '" + std::string(::strerror(errno)) + "'");
+         }
       else if(got > 0)
+         {
          oss.write(buf.data(), static_cast<std::streamsize>(got));
+         }
       else
-         break; // EOF
+         {
+         break;   // EOF
+         }
       }
    return oss.str();
 
@@ -138,15 +162,25 @@ std::string url_encode(const std::string& in)
    for(auto c : in)
       {
       if(c >= 'A' && c <= 'Z')
+         {
          out << c;
+         }
       else if(c >= 'a' && c <= 'z')
+         {
          out << c;
+         }
       else if(c >= '0' && c <= '9')
+         {
          out << c;
+         }
       else if(c == '-' || c == '_' || c == '.' || c == '~')
+         {
          out << c;
+         }
       else
+         {
          out << '%' << hex_encode(reinterpret_cast<uint8_t*>(&c), 1);
+         }
       }
 
    return out.str();
@@ -156,7 +190,9 @@ std::ostream& operator<<(std::ostream& o, const Response& resp)
    {
    o << "HTTP " << resp.status_code() << " " << resp.status_message() << "\n";
    for(auto h : resp.headers())
+      {
       o << "Header '" << h.first << "' = '" << h.second << "'\n";
+      }
    o << "Body " << std::to_string(resp.body().size()) << " bytes:\n";
    o.write(reinterpret_cast<const char*>(&resp.body()[0]), resp.body().size());
    return o;
@@ -170,11 +206,15 @@ Response http_sync(http_exch_fn http_transact,
                    size_t allowable_redirects)
    {
    if(url.empty())
+      {
       throw HTTP_Error("URL empty");
+      }
 
    const auto protocol_host_sep = url.find("://");
    if(protocol_host_sep == std::string::npos)
+      {
       throw HTTP_Error("Invalid URL '" + url + "'");
+      }
 
    const auto host_loc_sep = url.find('/', protocol_host_sep + 3);
 
@@ -187,7 +227,7 @@ Response http_sync(http_exch_fn http_transact,
       }
    else
       {
-      hostname = url.substr(protocol_host_sep + 3, host_loc_sep-protocol_host_sep-3);
+      hostname = url.substr(protocol_host_sep + 3, host_loc_sep - protocol_host_sep - 3);
       loc = url.substr(host_loc_sep, std::string::npos);
       }
 
@@ -202,10 +242,14 @@ Response http_sync(http_exch_fn http_transact,
       outbuf << "Cache-Control: no-cache\r\n";
       }
    else if(verb == "POST")
+      {
       outbuf << "Content-Length: " << body.size() << "\r\n";
+      }
 
    if(!content_type.empty())
+      {
       outbuf << "Content-Type: " << content_type << "\r\n";
+      }
    outbuf << "Connection: close\r\n\r\n";
    outbuf.write(reinterpret_cast<const char*>(body.data()), body.size());
 
@@ -214,7 +258,9 @@ Response http_sync(http_exch_fn http_transact,
    std::string line1;
    std::getline(io, line1);
    if(!io || line1.empty())
+      {
       throw HTTP_Error("No response");
+      }
 
    std::stringstream response_stream(line1);
    std::string http_version;
@@ -225,16 +271,20 @@ Response http_sync(http_exch_fn http_transact,
 
    std::getline(response_stream, status_message);
 
-   if(!response_stream || http_version.substr(0,5) != "HTTP/")
+   if(!response_stream || http_version.substr(0, 5) != "HTTP/")
+      {
       throw HTTP_Error("Not an HTTP response");
+      }
 
    std::map<std::string, std::string> headers;
    std::string header_line;
-   while (std::getline(io, header_line) && header_line != "\r")
+   while(std::getline(io, header_line) && header_line != "\r")
       {
       auto sep = header_line.find(": ");
       if(sep == std::string::npos || sep > header_line.size() - 2)
+         {
          throw HTTP_Error("Invalid HTTP header " + header_line);
+         }
       const std::string key = header_line.substr(0, sep);
 
       if(sep + 2 < header_line.size() - 1)
@@ -247,7 +297,9 @@ Response http_sync(http_exch_fn http_transact,
    if(status_code == 301 && headers.count("Location"))
       {
       if(allowable_redirects == 0)
+         {
          throw HTTP_Error("HTTP redirection count exceeded");
+         }
       return GET_sync(headers["Location"], allowable_redirects - 1);
       }
 
@@ -278,12 +330,12 @@ Response http_sync(const std::string& verb,
                    size_t allowable_redirects)
    {
    return http_sync(
-      http_transact,
-      verb,
-      url,
-      content_type,
-      body,
-      allowable_redirects);
+             http_transact,
+             verb,
+             url,
+             content_type,
+             body,
+             allowable_redirects);
    }
 
 Response GET_sync(const std::string& url, size_t allowable_redirects)

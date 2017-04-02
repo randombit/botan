@@ -14,25 +14,38 @@ namespace Botan {
 */
 void Whirlpool::compress_n(const uint8_t in[], size_t blocks)
    {
-   static const uint64_t RC[10] = {
+   static const uint64_t RC[10] =
+      {
       0x1823C6E887B8014F, 0x36A6D2F5796F9152,
       0x60BC9B8EA30C7B35, 0x1DE0D7C22E4BFE57,
       0x157737E59FF04ADA, 0x58C9290AB1A06B85,
       0xBD5D10F4CB3E0567, 0xE427418BA77D95D8,
       0xFBEE7C66DD17479E, 0xCA2DBF07AD5A8333
-   };
+      };
 
    for(size_t i = 0; i != blocks; ++i)
       {
       load_be(m_M.data(), in, m_M.size());
 
       uint64_t K0, K1, K2, K3, K4, K5, K6, K7;
-      K0 = m_digest[0]; K1 = m_digest[1]; K2 = m_digest[2]; K3 = m_digest[3];
-      K4 = m_digest[4]; K5 = m_digest[5]; K6 = m_digest[6]; K7 = m_digest[7];
+      K0 = m_digest[0];
+      K1 = m_digest[1];
+      K2 = m_digest[2];
+      K3 = m_digest[3];
+      K4 = m_digest[4];
+      K5 = m_digest[5];
+      K6 = m_digest[6];
+      K7 = m_digest[7];
 
       uint64_t B0, B1, B2, B3, B4, B5, B6, B7;
-      B0 = K0 ^ m_M[0]; B1 = K1 ^ m_M[1]; B2 = K2 ^ m_M[2]; B3 = K3 ^ m_M[3];
-      B4 = K4 ^ m_M[4]; B5 = K5 ^ m_M[5]; B6 = K6 ^ m_M[6]; B7 = K7 ^ m_M[7];
+      B0 = K0 ^ m_M[0];
+      B1 = K1 ^ m_M[1];
+      B2 = K2 ^ m_M[2];
+      B3 = K3 ^ m_M[3];
+      B4 = K4 ^ m_M[4];
+      B5 = K5 ^ m_M[5];
+      B6 = K6 ^ m_M[6];
+      B7 = K7 ^ m_M[7];
 
       for(size_t j = 0; j != 10; ++j)
          {
@@ -70,8 +83,14 @@ void Whirlpool::compress_n(const uint8_t in[], size_t blocks)
               C4[get_byte(4, K3)] ^ C5[get_byte(5, K2)] ^
               C6[get_byte(6, K1)] ^ C7[get_byte(7, K0)];
 
-         K0 = T0; K1 = T1; K2 = T2; K3 = T3;
-         K4 = T4; K5 = T5; K6 = T6; K7 = T7;
+         K0 = T0;
+         K1 = T1;
+         K2 = T2;
+         K3 = T3;
+         K4 = T4;
+         K5 = T5;
+         K6 = T6;
+         K7 = T7;
 
          T0 = C0[get_byte(0, B0)] ^ C1[get_byte(1, B7)] ^
               C2[get_byte(2, B6)] ^ C3[get_byte(3, B5)] ^
@@ -106,8 +125,14 @@ void Whirlpool::compress_n(const uint8_t in[], size_t blocks)
               C4[get_byte(4, B3)] ^ C5[get_byte(5, B2)] ^
               C6[get_byte(6, B1)] ^ C7[get_byte(7, B0)] ^ K7;
 
-         B0 = T0; B1 = T1; B2 = T2; B3 = T3;
-         B4 = T4; B5 = T5; B6 = T6; B7 = T7;
+         B0 = T0;
+         B1 = T1;
+         B2 = T2;
+         B3 = T3;
+         B4 = T4;
+         B5 = T5;
+         B6 = T6;
+         B7 = T7;
          }
 
       m_digest[0] ^= B0 ^ m_M[0];

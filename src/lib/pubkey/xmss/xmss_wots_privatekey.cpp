@@ -72,7 +72,7 @@ XMSS_WOTS_PrivateKey::sign(
    for(size_t i = 0; i < m_wots_params.len(); i++)
       {
       adrs.set_chain_address(i);
-      chain(sig[i], 0 , msg_digest[i], adrs, m_public_seed);
+      chain(sig[i], 0, msg_digest[i], adrs, m_public_seed);
       }
 
    return sig;
@@ -80,12 +80,12 @@ XMSS_WOTS_PrivateKey::sign(
 
 std::unique_ptr<PK_Ops::Signature>
 XMSS_WOTS_PrivateKey::create_signature_op(RandomNumberGenerator&,
-                                          const std::string&,
-                                          const std::string& provider) const
+      const std::string&,
+      const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       return std::unique_ptr<PK_Ops::Signature>(
-           new XMSS_WOTS_Signature_Operation(*this));
+                new XMSS_WOTS_Signature_Operation(*this));
 
    throw Provider_Not_Found(algo_name(), provider);
    }

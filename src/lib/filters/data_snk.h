@@ -20,7 +20,10 @@ namespace Botan {
 class BOTAN_DLL DataSink : public Filter
    {
    public:
-      bool attachable() override { return false; }
+      bool attachable() override
+         {
+         return false;
+         }
       DataSink() {}
       virtual ~DataSink() {}
 
@@ -54,7 +57,10 @@ class BOTAN_DLL DataSink_Stream : public DataSink
                       bool use_binary = false);
 #endif
 
-      std::string name() const override { return m_identifier; }
+      std::string name() const override
+         {
+         return m_identifier;
+         }
 
       void write(const uint8_t[], size_t) override;
 

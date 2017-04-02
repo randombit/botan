@@ -21,14 +21,17 @@ class PK_Test : public Text_Based_Test
    {
    public:
       PK_Test(const std::string& algo,
-                                   const std::string& test_src,
-                                   const std::string& required_keys,
-                                   const std::string& optional_keys = {}) :
+              const std::string& test_src,
+              const std::string& required_keys,
+              const std::string& optional_keys = {}) :
          Text_Based_Test(test_src, required_keys, optional_keys),
          m_algo(algo)
          {}
 
-      std::string algo_name() const { return m_algo; }
+      std::string algo_name() const
+         {
+         return m_algo;
+         }
 
    private:
       std::string m_algo;
@@ -87,7 +90,10 @@ class PK_Signature_NonVerification_Test : public PK_Test
                                         const std::string& optional_keys = "") :
          PK_Test(algo, test_src, required_keys, optional_keys) {}
 
-      bool clear_between_callbacks() const override { return false; }
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
 
       virtual std::string default_padding(const VarMap&) const
          {
@@ -110,10 +116,13 @@ class PK_Encryption_Decryption_Test : public PK_Test
 
       virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) = 0;
 
-      virtual std::string default_padding(const VarMap&) const { return "Raw"; }
+      virtual std::string default_padding(const VarMap&) const
+         {
+         return "Raw";
+         }
    private:
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
-};
+   };
 
 class PK_Key_Agreement_Test : public PK_Test
    {
@@ -125,12 +134,15 @@ class PK_Key_Agreement_Test : public PK_Test
          PK_Test(algo, test_src, required_keys, optional_keys) {}
 
       virtual std::unique_ptr<Botan::Private_Key> load_our_key(const std::string& header,
-                                                               const VarMap& vars) = 0;
+            const VarMap& vars) = 0;
 
       virtual std::vector<uint8_t> load_their_key(const std::string& header,
-                                                  const VarMap& vars) = 0;
+            const VarMap& vars) = 0;
 
-      virtual std::string default_kdf(const VarMap&) const { return "Raw"; }
+      virtual std::string default_kdf(const VarMap&) const
+         {
+         return "Raw";
+         }
 
    private:
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;

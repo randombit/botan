@@ -11,39 +11,39 @@
 #include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_HKDF)
-#include <botan/hkdf.h>
+   #include <botan/hkdf.h>
 #endif
 
 #if defined(BOTAN_HAS_KDF1)
-#include <botan/kdf1.h>
+   #include <botan/kdf1.h>
 #endif
 
 #if defined(BOTAN_HAS_KDF2)
-#include <botan/kdf2.h>
+   #include <botan/kdf2.h>
 #endif
 
 #if defined(BOTAN_HAS_KDF1_18033)
-#include <botan/kdf1_iso18033.h>
+   #include <botan/kdf1_iso18033.h>
 #endif
 
 #if defined(BOTAN_HAS_TLS_V10_PRF)
-#include <botan/prf_tls.h>
+   #include <botan/prf_tls.h>
 #endif
 
 #if defined(BOTAN_HAS_TLS_V12_PRF)
-#include <botan/prf_tls.h>
+   #include <botan/prf_tls.h>
 #endif
 
 #if defined(BOTAN_HAS_X942_PRF)
-#include <botan/prf_x942.h>
+   #include <botan/prf_x942.h>
 #endif
 
 #if defined(BOTAN_HAS_SP800_108)
-#include <botan/sp800_108.h>
+   #include <botan/sp800_108.h>
 #endif
 
 #if defined(BOTAN_HAS_SP800_56C)
-#include <botan/sp800_56c.h>
+   #include <botan/sp800_56c.h>
 #endif
 
 namespace Botan {
@@ -55,10 +55,14 @@ std::unique_ptr<KDF>
 kdf_create_mac_or_hash(const std::string& nm)
    {
    if(auto mac = MessageAuthenticationCode::create(nm))
+      {
       return std::unique_ptr<KDF>(new KDF_Type(mac.release()));
+      }
 
    if(auto mac = MessageAuthenticationCode::create("HMAC(" + nm + ")"))
+      {
       return std::unique_ptr<KDF>(new KDF_Type(mac.release()));
+      }
 
    return nullptr;
    }
@@ -102,7 +106,9 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto hash = HashFunction::create(req.arg(0)))
+            {
             return std::unique_ptr<KDF>(new KDF2(hash.release()));
+            }
          }
       }
 #endif
@@ -113,7 +119,9 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto hash = HashFunction::create(req.arg(0)))
+            {
             return std::unique_ptr<KDF>(new KDF1_18033(hash.release()));
+            }
          }
       }
 #endif
@@ -124,7 +132,9 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto hash = HashFunction::create(req.arg(0)))
+            {
             return std::unique_ptr<KDF>(new KDF1(hash.release()));
+            }
          }
       }
 #endif
@@ -192,10 +202,14 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
       if(exp)
          {
          if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
+            {
             return std::unique_ptr<KDF>(new SP800_56C(mac.release(), exp.release()));
+            }
 
          if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
+            {
             return std::unique_ptr<KDF>(new SP800_56C(mac.release(), exp.release()));
+            }
          }
       }
 #endif
@@ -209,7 +223,7 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
 //static
 std::unique_ptr<KDF>
 KDF::create_or_throw(const std::string& algo,
-                             const std::string& provider)
+                     const std::string& provider)
    {
    if(auto bc = KDF::create(algo, provider))
       {
@@ -228,12 +242,16 @@ KDF* get_kdf(const std::string& algo_spec)
    SCAN_Name request(algo_spec);
 
    if(request.algo_name() == "Raw")
-      return nullptr; // No KDF
+      {
+      return nullptr;   // No KDF
+      }
 
    //return KDF::create_or_throw(algo_spec).release();
    auto kdf = KDF::create(algo_spec);
    if(!kdf)
+      {
       throw Algorithm_Not_Found(algo_spec);
+      }
    return kdf.release();
    }
 

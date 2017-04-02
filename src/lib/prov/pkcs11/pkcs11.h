@@ -239,17 +239,18 @@ extern "C" {
 #define CK_PKCS11_FUNCTION_INFO(name) \
   __PASTE(CK_,name) name;
 
-struct CK_FUNCTION_LIST {
+struct CK_FUNCTION_LIST
+   {
 
-  CK_VERSION    version;  /* Cryptoki version */
+   CK_VERSION    version;  /* Cryptoki version */
 
-/* Pile all the function pointers into the CK_FUNCTION_LIST. */
-/* pkcs11f.h has all the information about the Cryptoki
- * function prototypes.
- */
+   /* Pile all the function pointers into the CK_FUNCTION_LIST. */
+   /* pkcs11f.h has all the information about the Cryptoki
+    * function prototypes.
+    */
 #include "pkcs11f.h"
 
-};
+   };
 
 #undef CK_PKCS11_FUNCTION_INFO
 
@@ -257,7 +258,7 @@ struct CK_FUNCTION_LIST {
 #undef __PASTE
 
 #ifdef __cplusplus
-}
+   }
 #endif
 
 #endif /* _PKCS11_H_ */

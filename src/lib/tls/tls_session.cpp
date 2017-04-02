@@ -72,29 +72,29 @@ Session::Session(const uint8_t ber[], size_t ber_len)
    size_t fragment_size = 0;
 
    BER_Decoder(ber, ber_len)
-      .start_cons(SEQUENCE)
-        .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
-                          "Unknown version in serialized TLS session")
-        .decode_integer_type(start_time)
-        .decode_integer_type(major_version)
-        .decode_integer_type(minor_version)
-        .decode(m_identifier, OCTET_STRING)
-        .decode(m_session_ticket, OCTET_STRING)
-        .decode_integer_type(m_ciphersuite)
-        .decode_integer_type(m_compression_method)
-        .decode_integer_type(side_code)
-        .decode_integer_type(fragment_size)
-        .decode(m_extended_master_secret)
-        .decode(m_encrypt_then_mac)
-        .decode(m_master_secret, OCTET_STRING)
-        .decode(peer_cert_bits, OCTET_STRING)
-        .decode(server_hostname)
-        .decode(server_service)
-        .decode(server_port)
-        .decode(srp_identifier_str)
-        .decode(srtp_profile)
-      .end_cons()
-      .verify_end();
+   .start_cons(SEQUENCE)
+   .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
+                     "Unknown version in serialized TLS session")
+   .decode_integer_type(start_time)
+   .decode_integer_type(major_version)
+   .decode_integer_type(minor_version)
+   .decode(m_identifier, OCTET_STRING)
+   .decode(m_session_ticket, OCTET_STRING)
+   .decode_integer_type(m_ciphersuite)
+   .decode_integer_type(m_compression_method)
+   .decode_integer_type(side_code)
+   .decode_integer_type(fragment_size)
+   .decode(m_extended_master_secret)
+   .decode(m_encrypt_then_mac)
+   .decode(m_master_secret, OCTET_STRING)
+   .decode(peer_cert_bits, OCTET_STRING)
+   .decode(server_hostname)
+   .decode(server_service)
+   .decode(server_port)
+   .decode(srp_identifier_str)
+   .decode(srtp_profile)
+   .end_cons()
+   .verify_end();
 
    /*
    Fragment size is not supported anymore, but the field is still
@@ -122,7 +122,9 @@ Session::Session(const uint8_t ber[], size_t ber_len)
       DataSource_Memory certs(peer_cert_bits.data(), peer_cert_bits.size());
 
       while(!certs.end_of_data())
+         {
          m_peer_certs.push_back(X509_Certificate(certs));
+         }
       }
    }
 
@@ -130,31 +132,33 @@ secure_vector<uint8_t> Session::DER_encode() const
    {
    std::vector<uint8_t> peer_cert_bits;
    for(size_t i = 0; i != m_peer_certs.size(); ++i)
+      {
       peer_cert_bits += m_peer_certs[i].BER_encode();
+      }
 
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-         .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
-         .encode(static_cast<size_t>(std::chrono::system_clock::to_time_t(m_start_time)))
-         .encode(static_cast<size_t>(m_version.major_version()))
-         .encode(static_cast<size_t>(m_version.minor_version()))
-         .encode(m_identifier, OCTET_STRING)
-         .encode(m_session_ticket, OCTET_STRING)
-         .encode(static_cast<size_t>(m_ciphersuite))
-         .encode(static_cast<size_t>(m_compression_method))
-         .encode(static_cast<size_t>(m_connection_side))
-         .encode(static_cast<size_t>(/*old fragment size*/0))
-         .encode(m_extended_master_secret)
-         .encode(m_encrypt_then_mac)
-         .encode(m_master_secret, OCTET_STRING)
-         .encode(peer_cert_bits, OCTET_STRING)
-         .encode(ASN1_String(m_server_info.hostname(), UTF8_STRING))
-         .encode(ASN1_String(m_server_info.service(), UTF8_STRING))
-         .encode(static_cast<size_t>(m_server_info.port()))
-         .encode(ASN1_String(m_srp_identifier, UTF8_STRING))
-         .encode(static_cast<size_t>(m_srtp_profile))
-      .end_cons()
-   .get_contents();
+          .start_cons(SEQUENCE)
+          .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
+          .encode(static_cast<size_t>(std::chrono::system_clock::to_time_t(m_start_time)))
+          .encode(static_cast<size_t>(m_version.major_version()))
+          .encode(static_cast<size_t>(m_version.minor_version()))
+          .encode(m_identifier, OCTET_STRING)
+          .encode(m_session_ticket, OCTET_STRING)
+          .encode(static_cast<size_t>(m_ciphersuite))
+          .encode(static_cast<size_t>(m_compression_method))
+          .encode(static_cast<size_t>(m_connection_side))
+          .encode(static_cast<size_t>(/*old fragment size*/0))
+          .encode(m_extended_master_secret)
+          .encode(m_encrypt_then_mac)
+          .encode(m_master_secret, OCTET_STRING)
+          .encode(peer_cert_bits, OCTET_STRING)
+          .encode(ASN1_String(m_server_info.hostname(), UTF8_STRING))
+          .encode(ASN1_String(m_server_info.service(), UTF8_STRING))
+          .encode(static_cast<size_t>(m_server_info.port()))
+          .encode(ASN1_String(m_srp_identifier, UTF8_STRING))
+          .encode(static_cast<size_t>(m_srtp_profile))
+          .end_cons()
+          .get_contents();
    }
 
 std::string Session::PEM_encode() const
@@ -165,7 +169,7 @@ std::string Session::PEM_encode() const
 std::chrono::seconds Session::session_age() const
    {
    return std::chrono::duration_cast<std::chrono::seconds>(
-      std::chrono::system_clock::now() - m_start_time);
+             std::chrono::system_clock::now() - m_start_time);
    }
 
 std::vector<uint8_t>
@@ -198,7 +202,9 @@ Session Session::decrypt(const uint8_t in[], size_t in_len, const SymmetricKey& 
       const size_t nonce_len = aead->default_nonce_length();
 
       if(in_len < nonce_len + aead->tag_size())
+         {
          throw Decoding_Error("Encrypted session too short to be valid");
+         }
 
       // Support any length key for input
       std::unique_ptr<MessageAuthenticationCode> hmac(MessageAuthenticationCode::create("HMAC(SHA-256)"));

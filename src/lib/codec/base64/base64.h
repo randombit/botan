@@ -109,8 +109,8 @@ size_t BOTAN_DLL base64_decode(uint8_t output[],
 * @return decoded base64 output
 */
 secure_vector<uint8_t> BOTAN_DLL base64_decode(const char input[],
-                                           size_t input_length,
-                                           bool ignore_ws = true);
+      size_t input_length,
+      bool ignore_ws = true);
 
 /**
 * Perform base64 decoding
@@ -120,7 +120,7 @@ secure_vector<uint8_t> BOTAN_DLL base64_decode(const char input[],
 * @return decoded base64 output
 */
 secure_vector<uint8_t> BOTAN_DLL base64_decode(const std::string& input,
-                                           bool ignore_ws = true);
+      bool ignore_ws = true);
 
 /**
 * Calculate the size of output buffer for base64_encode

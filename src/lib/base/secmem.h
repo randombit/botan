@@ -15,7 +15,7 @@
 #include <type_traits>
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
-  #include <botan/locking_allocator.h>
+   #include <botan/locking_allocator.h>
 #endif
 
 namespace Botan {
@@ -51,19 +51,27 @@ class secure_allocator
       template<typename U>
       secure_allocator(const secure_allocator<U>&) BOTAN_NOEXCEPT {}
 
+      secure_allocator(secure_allocator const&) = default;
+      secure_allocator& operator=(secure_allocator const&) = default;
       ~secure_allocator() BOTAN_NOEXCEPT {}
 
       pointer address(reference x) const BOTAN_NOEXCEPT
-         { return std::addressof(x); }
+         {
+         return std::addressof(x);
+         }
 
       const_pointer address(const_reference x) const BOTAN_NOEXCEPT
-         { return std::addressof(x); }
+         {
+         return std::addressof(x);
+         }
 
       pointer allocate(size_type n, const void* = 0)
          {
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
          if(pointer p = static_cast<pointer>(mlock_allocator::instance().allocate(n, sizeof(T))))
+            {
             return p;
+            }
 #endif
 
          pointer p = new T[n];
@@ -77,7 +85,9 @@ class secure_allocator
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
          if(mlock_allocator::instance().deallocate(p, n, sizeof(T)))
+            {
             return;
+            }
 #endif
 
          delete [] p;
@@ -89,7 +99,7 @@ class secure_allocator
          }
 
       template<typename U, typename... Args>
-      void construct(U* p, Args&&... args)
+      void construct(U* p, Args&& ... args)
          {
          ::new(static_cast<void*>(p)) U(std::forward<Args>(args)...);
          }
@@ -97,18 +107,25 @@ class secure_allocator
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4100)
-      template<typename U> void destroy(U* p) { p->~U(); }
+      template<typename U> void destroy(U* p)
+         {
+         p->~U();
+         }
 #pragma warning(pop)
 #endif
    };
 
 template<typename T, typename U> inline bool
 operator==(const secure_allocator<T>&, const secure_allocator<U>&)
-   { return true; }
+   {
+   return true;
+   }
 
 template<typename T, typename U> inline bool
 operator!=(const secure_allocator<T>&, const secure_allocator<U>&)
-   { return false; }
+   {
+   return false;
+   }
 
 template<typename T> using secure_vector = std::vector<T, secure_allocator<T>>;
 template<typename T> using secure_deque = std::deque<T, secure_allocator<T>>;
@@ -128,7 +145,7 @@ size_t buffer_insert(std::vector<T, Alloc>& buf,
                      size_t input_length)
    {
    const size_t to_copy = std::min(input_length, buf.size() - buf_offset);
-   if (to_copy > 0)
+   if(to_copy > 0)
       {
       copy_mem(&buf[buf_offset], input, to_copy);
       }
@@ -141,7 +158,7 @@ size_t buffer_insert(std::vector<T, Alloc>& buf,
                      const std::vector<T, Alloc2>& input)
    {
    const size_t to_copy = std::min(input.size(), buf.size() - buf_offset);
-   if (to_copy > 0)
+   if(to_copy > 0)
       {
       copy_mem(&buf[buf_offset], input.data(), to_copy);
       }
@@ -155,7 +172,7 @@ operator+=(std::vector<T, Alloc>& out,
    {
    const size_t copy_offset = out.size();
    out.resize(out.size() + in.size());
-   if (in.size() > 0)
+   if(in.size() > 0)
       {
       copy_mem(&out[copy_offset], in.data(), in.size());
       }
@@ -175,7 +192,7 @@ std::vector<T, Alloc>& operator+=(std::vector<T, Alloc>& out,
    {
    const size_t copy_offset = out.size();
    out.resize(out.size() + in.second);
-   if (in.second > 0)
+   if(in.second > 0)
       {
       copy_mem(&out[copy_offset], in.first, in.second);
       }
@@ -188,7 +205,7 @@ std::vector<T, Alloc>& operator+=(std::vector<T, Alloc>& out,
    {
    const size_t copy_offset = out.size();
    out.resize(out.size() + in.second);
-   if (in.second > 0)
+   if(in.second > 0)
       {
       copy_mem(&out[copy_offset], in.first, in.second);
       }

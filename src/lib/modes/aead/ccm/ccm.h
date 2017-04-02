@@ -41,22 +41,37 @@ class BOTAN_DLL CCM_Mode : public AEAD_Mode
 
       void reset() override;
 
-      size_t tag_size() const override { return m_tag_size; }
+      size_t tag_size() const override
+         {
+         return m_tag_size;
+         }
 
    protected:
       CCM_Mode(BlockCipher* cipher, size_t tag_size, size_t L);
 
-      size_t L() const { return m_L; }
+      size_t L() const
+         {
+         return m_L;
+         }
 
-      const BlockCipher& cipher() const { return *m_cipher; }
+      const BlockCipher& cipher() const
+         {
+         return *m_cipher;
+         }
 
       void encode_length(size_t len, uint8_t out[]);
 
       void inc(secure_vector<uint8_t>& C);
 
-      const secure_vector<uint8_t>& ad_buf() const { return m_ad_buf; }
+      const secure_vector<uint8_t>& ad_buf() const
+         {
+         return m_ad_buf;
+         }
 
-      secure_vector<uint8_t>& msg_buf() { return m_msg_buf; }
+      secure_vector<uint8_t>& msg_buf()
+         {
+         return m_msg_buf;
+         }
 
       secure_vector<uint8_t> format_b0(size_t msg_size);
       secure_vector<uint8_t> format_c0();
@@ -91,9 +106,14 @@ class BOTAN_DLL CCM_Encryption final : public CCM_Mode
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
       size_t output_length(size_t input_length) const override
-         { return input_length + tag_size(); }
+         {
+         return input_length + tag_size();
+         }
 
-      size_t minimum_final_size() const override { return 0; }
+      size_t minimum_final_size() const override
+         {
+         return 0;
+         }
    };
 
 /**
@@ -120,7 +140,10 @@ class BOTAN_DLL CCM_Decryption final : public CCM_Mode
          return input_length - tag_size();
          }
 
-      size_t minimum_final_size() const override { return tag_size(); }
+      size_t minimum_final_size() const override
+         {
+         return tag_size();
+         }
    };
 
 }

@@ -19,9 +19,15 @@ namespace Botan {
 class BOTAN_DLL KDF1_18033 : public KDF
    {
    public:
-      std::string name() const override { return "KDF1-18033(" + m_hash->name() + ")"; }
+      std::string name() const override
+         {
+         return "KDF1-18033(" + m_hash->name() + ")";
+         }
 
-      KDF* clone() const override { return new KDF1_18033(m_hash->clone()); }
+      KDF* clone() const override
+         {
+         return new KDF1_18033(m_hash->clone());
+         }
 
       size_t kdf(uint8_t key[], size_t key_len,
                  const uint8_t secret[], size_t secret_len,

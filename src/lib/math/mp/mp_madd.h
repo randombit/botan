@@ -15,42 +15,42 @@
 namespace Botan {
 
 #if (BOTAN_MP_WORD_BITS == 8)
-  typedef uint16_t dword;
-  #define BOTAN_HAS_MP_DWORD
+   typedef uint16_t dword;
+   #define BOTAN_HAS_MP_DWORD
 #elif (BOTAN_MP_WORD_BITS == 16)
-  typedef uint32_t dword;
-  #define BOTAN_HAS_MP_DWORD
+   typedef uint32_t dword;
+   #define BOTAN_HAS_MP_DWORD
 #elif (BOTAN_MP_WORD_BITS == 32)
-  typedef uint64_t dword;
-  #define BOTAN_HAS_MP_DWORD
+   typedef uint64_t dword;
+   #define BOTAN_HAS_MP_DWORD
 #elif (BOTAN_MP_WORD_BITS == 64)
-  #if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
-    typedef uint128_t dword;
-    #define BOTAN_HAS_MP_DWORD
-  #else
-    // No native 128 bit integer type; use mul64x64_128 instead
-  #endif
+   #if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
+      typedef uint128_t dword;
+      #define BOTAN_HAS_MP_DWORD
+   #else
+      // No native 128 bit integer type; use mul64x64_128 instead
+   #endif
 
 #else
-  #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
+   #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
 #endif
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_32) && (BOTAN_MP_WORD_BITS == 32)
 
-  #if defined(BOTAN_USE_GCC_INLINE_ASM)
-    #define BOTAN_MP_USE_X86_32_ASM
-    #define ASM(x) x "\n\t"
-  #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-    #define BOTAN_MP_USE_X86_32_MSVC_ASM
-  #endif
+   #if defined(BOTAN_USE_GCC_INLINE_ASM)
+      #define BOTAN_MP_USE_X86_32_ASM
+      #define ASM(x) x "\n\t"
+   #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+      #define BOTAN_MP_USE_X86_32_MSVC_ASM
+   #endif
 
 #elif defined(BOTAN_TARGET_ARCH_IS_X86_64) && (BOTAN_MP_WORD_BITS == 64) && (BOTAN_USE_GCC_INLINE_ASM)
-  #define BOTAN_MP_USE_X86_64_ASM
-  #define ASM(x) x "\n\t"
+   #define BOTAN_MP_USE_X86_64_ASM
+   #define ASM(x) x "\n\t"
 #endif
 
 #if defined(BOTAN_MP_USE_X86_32_ASM) || defined(BOTAN_MP_USE_X86_64_ASM)
-  #define ASM(x) x "\n\t"
+   #define ASM(x) x "\n\t"
 #endif
 
 /*
@@ -70,7 +70,7 @@ inline word word_madd2(word a, word b, word* c)
    return a;
 
 #elif defined(BOTAN_MP_USE_X86_64_ASM)
-      asm(
+   asm(
       ASM("mulq %[b]")
       ASM("addq %[c],%[a]")
       ASM("adcq $0,%[carry]")
@@ -157,7 +157,7 @@ inline word word_madd3(word a, word b, word c, word* d)
    }
 
 #if defined(ASM)
-  #undef ASM
+   #undef ASM
 #endif
 
 }

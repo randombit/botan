@@ -72,7 +72,7 @@ namespace Botan {
 #include <botan/rng.h>
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-  #include <botan/auto_rng.h>
+   #include <botan/auto_rng.h>
 #endif
 
 #endif

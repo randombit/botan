@@ -24,12 +24,12 @@ namespace Botan {
 * @param rng a random number generator
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-BOTAN_DLL pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
-                        const std::string& passphrase,
-                        std::chrono::milliseconds msec,
-                        const std::string& cipher,
-                        const std::string& digest,
-                        RandomNumberGenerator& rng);
+      BOTAN_DLL pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
+                              const std::string& passphrase,
+                              std::chrono::milliseconds msec,
+                              const std::string& cipher,
+                              const std::string& digest,
+                              RandomNumberGenerator& rng);
 
 /**
 * Encrypt with PBES2 from PKCS #5 v2.0
@@ -43,13 +43,13 @@ BOTAN_DLL pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
 * @param rng a random number generator
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-BOTAN_DLL pbes2_encrypt_msec(const secure_vector<uint8_t>& key_bits,
-                             const std::string& passphrase,
-                             std::chrono::milliseconds msec,
-                             size_t* out_iterations_if_nonnull,
-                             const std::string& cipher,
-                             const std::string& digest,
-                             RandomNumberGenerator& rng);
+      BOTAN_DLL pbes2_encrypt_msec(const secure_vector<uint8_t>& key_bits,
+                                   const std::string& passphrase,
+                                   std::chrono::milliseconds msec,
+                                   size_t* out_iterations_if_nonnull,
+                                   const std::string& cipher,
+                                   const std::string& digest,
+                                   RandomNumberGenerator& rng);
 
 /**
 * Encrypt with PBES2 from PKCS #5 v2.0
@@ -61,12 +61,12 @@ BOTAN_DLL pbes2_encrypt_msec(const secure_vector<uint8_t>& key_bits,
 * @param rng a random number generator
 */
 std::pair<AlgorithmIdentifier, std::vector<uint8_t>>
-BOTAN_DLL pbes2_encrypt_iter(const secure_vector<uint8_t>& key_bits,
-                             const std::string& passphrase,
-                             size_t iterations,
-                             const std::string& cipher,
-                             const std::string& digest,
-                             RandomNumberGenerator& rng);
+      BOTAN_DLL pbes2_encrypt_iter(const secure_vector<uint8_t>& key_bits,
+                                   const std::string& passphrase,
+                                   size_t iterations,
+                                   const std::string& cipher,
+                                   const std::string& digest,
+                                   RandomNumberGenerator& rng);
 
 /**
 * Decrypt a PKCS #5 v2.0 encrypted stream

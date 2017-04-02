@@ -7,9 +7,9 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_CURVE_25519)
-  #include "test_pubkey.h"
-  #include <botan/curve25519.h>
-  #include <botan/pkcs8.h>
+   #include "test_pubkey.h"
+   #include <botan/curve25519.h>
+   #include <botan/pkcs8.h>
 #endif
 
 namespace Botan_Tests {
@@ -20,8 +20,8 @@ class Curve25519_Sclarmult_Tests : public Text_Based_Test
    {
    public:
       Curve25519_Sclarmult_Tests() : Text_Based_Test(
-         "pubkey/c25519_scalar.vec",
-         "Secret,Basepoint,Out")
+            "pubkey/c25519_scalar.vec",
+            "Secret,Basepoint,Out")
          {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
@@ -65,7 +65,10 @@ class Curve25519_Roundtrip_Test : public Test
             Botan::DataSource_Memory a_priv_ds(a_priv_pem);
             Botan::DataSource_Memory b_priv_ds(b_priv_pem);
 
-            std::unique_ptr<Botan::Private_Key> a_priv(Botan::PKCS8::load_key(a_priv_ds, Test::rng(), [a_pass]() { return a_pass; }));
+            std::unique_ptr<Botan::Private_Key> a_priv(Botan::PKCS8::load_key(a_priv_ds, Test::rng(), [a_pass]()
+               {
+               return a_pass;
+               }));
             std::unique_ptr<Botan::Private_Key> b_priv(Botan::PKCS8::load_key(b_priv_ds, Test::rng(), b_pass));
 
             // Export public keys as PEM
@@ -111,8 +114,14 @@ class Curve25519_Roundtrip_Test : public Test
 class Curve25519_Keygen_Tests : public PK_Key_Generation_Test
    {
    public:
-      std::vector<std::string> keygen_params() const override { return { "" }; }
-      std::string algo_name() const override { return "Curve25519"; }
+      std::vector<std::string> keygen_params() const override
+         {
+         return { "" };
+         }
+      std::string algo_name() const override
+         {
+         return "Curve25519";
+         }
    };
 
 BOTAN_REGISTER_TEST("curve25519_scalar", Curve25519_Sclarmult_Tests);

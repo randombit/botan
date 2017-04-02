@@ -23,7 +23,10 @@ class BOTAN_DLL HMAC final : public MessageAuthenticationCode
       std::string name() const override;
       MessageAuthenticationCode* clone() const override;
 
-      size_t output_length() const override { return m_hash->output_length(); }
+      size_t output_length() const override
+         {
+         return m_hash->output_length();
+         }
 
       Key_Length_Specification key_spec() const override
          {

@@ -88,7 +88,7 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, const std::vector<u
    EC_PublicKeyGenerationProperties pub_key_props(ec_params);
    pub_key_props.set_verify(true);
    pub_key_props.set_private(false);
-   pub_key_props.set_token(false);	// don't create a persistent public key object
+   pub_key_props.set_token(false);  // don't create a persistent public key object
 
    ObjectHandle pub_key_handle = 0;
    m_handle = 0;

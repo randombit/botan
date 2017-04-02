@@ -22,7 +22,10 @@ namespace Botan {
 class BOTAN_DLL AEAD_Mode : public Cipher_Mode
    {
    public:
-      bool authenticated() const override { return true; }
+      bool authenticated() const override
+         {
+         return true;
+         }
 
       /**
       * Set associated data that is not included in the ciphertext but
@@ -72,7 +75,10 @@ class BOTAN_DLL AEAD_Mode : public Cipher_Mode
       * @return default AEAD nonce size (a commonly supported value among AEAD
       * modes, and large enough that random collisions are unlikely)
       */
-      size_t default_nonce_length() const override { return 12; }
+      size_t default_nonce_length() const override
+         {
+         return 12;
+         }
 
       virtual ~AEAD_Mode() {}
    };

@@ -66,12 +66,12 @@ XMSS_WOTS_PublicKey::pub_key_from_signature(const secure_vector<uint8_t>& msg,
 
 std::unique_ptr<PK_Ops::Verification>
 XMSS_WOTS_PublicKey::create_verification_op(const std::string&,
-                                            const std::string& provider) const
+      const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
       {
       return std::unique_ptr<PK_Ops::Verification>(
-         new XMSS_WOTS_Verification_Operation(*this));
+                new XMSS_WOTS_Verification_Operation(*this));
       }
    throw Provider_Not_Found(algo_name(), provider);
    }

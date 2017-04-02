@@ -29,14 +29,21 @@ class BOTAN_DLL Skein_512 final : public HashFunction
       Skein_512(size_t output_bits = 512,
                 const std::string& personalization = "");
 
-      size_t hash_block_size() const override { return 64; }
-      size_t output_length() const override { return m_output_bits / 8; }
+      size_t hash_block_size() const override
+         {
+         return 64;
+         }
+      size_t output_length() const override
+         {
+         return m_output_bits / 8;
+         }
 
       HashFunction* clone() const override;
       std::string name() const override;
       void clear() override;
    private:
-      enum type_code {
+      enum type_code
+         {
          SKEIN_KEY = 0,
          SKEIN_CONFIG = 4,
          SKEIN_PERSONALIZATION = 8,
@@ -45,7 +52,7 @@ class BOTAN_DLL Skein_512 final : public HashFunction
          SKEIN_NONCE = 20,
          SKEIN_MSG = 48,
          SKEIN_OUTPUT = 63
-      };
+         };
 
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t out[]) override;

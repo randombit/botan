@@ -32,9 +32,15 @@ class BOTAN_DLL GCM_Mode : public AEAD_Mode
       Key_Length_Specification key_spec() const override;
 
       // GCM supports arbitrary nonce lengths
-      bool valid_nonce_length(size_t) const override { return true; }
+      bool valid_nonce_length(size_t) const override
+         {
+         return true;
+         }
 
-      size_t tag_size() const override { return m_tag_size; }
+      size_t tag_size() const override
+         {
+         return m_tag_size;
+         }
 
       void clear() override;
 
@@ -71,9 +77,14 @@ class BOTAN_DLL GCM_Encryption final : public GCM_Mode
          GCM_Mode(cipher, tag_size) {}
 
       size_t output_length(size_t input_length) const override
-         { return input_length + tag_size(); }
+         {
+         return input_length + tag_size();
+         }
 
-      size_t minimum_final_size() const override { return 0; }
+      size_t minimum_final_size() const override
+         {
+         return 0;
+         }
 
       size_t process(uint8_t buf[], size_t size) override;
 
@@ -99,7 +110,10 @@ class BOTAN_DLL GCM_Decryption final : public GCM_Mode
          return input_length - tag_size();
          }
 
-      size_t minimum_final_size() const override { return tag_size(); }
+      size_t minimum_final_size() const override
+         {
+         return tag_size();
+         }
 
       size_t process(uint8_t buf[], size_t size) override;
 
@@ -127,13 +141,18 @@ class BOTAN_DLL GHASH : public SymmetricAlgorithm
       secure_vector<uint8_t> final();
 
       Key_Length_Specification key_spec() const override
-         { return Key_Length_Specification(16); }
+         {
+         return Key_Length_Specification(16);
+         }
 
       void clear() override;
 
       void reset();
 
-      std::string name() const override { return "GHASH"; }
+      std::string name() const override
+         {
+         return "GHASH";
+         }
    protected:
       void ghash_update(secure_vector<uint8_t>& x,
                         const uint8_t input[], size_t input_len);

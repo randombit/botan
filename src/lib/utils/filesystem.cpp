@@ -10,16 +10,16 @@
 #include <algorithm>
 
 #if defined(BOTAN_TARGET_OS_HAS_STL_FILESYSTEM_MSVC) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-  #include <filesystem>
+   #include <filesystem>
 #elif defined(BOTAN_HAS_BOOST_FILESYSTEM)
-  #include <boost/filesystem.hpp>
+   #include <boost/filesystem.hpp>
 #elif defined(BOTAN_TARGET_OS_HAS_READDIR)
-  #include <sys/types.h>
-  #include <sys/stat.h>
-  #include <dirent.h>
-  #include <deque>
-  #include <memory>
-  #include <functional>
+   #include <sys/types.h>
+   #include <sys/stat.h>
+   #include <dirent.h>
+   #include <deque>
+   #include <memory>
+   #include <functional>
 #endif
 
 namespace Botan {
@@ -35,11 +35,11 @@ std::vector<std::string> impl_stl_filesystem(const std::string& dir)
 
    path p(dir);
 
-   if (is_directory(p))
+   if(is_directory(p))
       {
-      for (recursive_directory_iterator itr(p), end; itr != end; ++itr)
+      for(recursive_directory_iterator itr(p), end; itr != end; ++itr)
          {
-         if (is_regular_file(itr->path()))
+         if(is_regular_file(itr->path()))
             {
             out.push_back(itr->path().string());
             }
@@ -50,7 +50,7 @@ std::vector<std::string> impl_stl_filesystem(const std::string& dir)
    }
 #elif defined(BOTAN_HAS_BOOST_FILESYSTEM)
 std::vector<std::string> impl_boost_filesystem(const std::string& dir_path)
-{
+   {
    namespace fs = boost::filesystem;
 
    std::vector<std::string> out;
@@ -64,7 +64,7 @@ std::vector<std::string> impl_boost_filesystem(const std::string& dir_path)
       }
 
    return out;
-}
+   }
 #elif defined(BOTAN_TARGET_OS_HAS_READDIR)
 std::vector<std::string> impl_readdir(const std::string& dir_path)
    {
@@ -85,18 +85,26 @@ std::vector<std::string> impl_readdir(const std::string& dir_path)
             {
             const std::string filename = dirent->d_name;
             if(filename == "." || filename == "..")
+               {
                continue;
+               }
             const std::string full_path = cur_path + "/" + filename;
 
             struct stat stat_buf;
 
             if(::stat(full_path.c_str(), &stat_buf) == -1)
+               {
                continue;
+               }
 
             if(S_ISDIR(stat_buf.st_mode))
+               {
                dir_list.push_back(full_path);
+               }
             else if(S_ISREG(stat_buf.st_mode))
+               {
                out.push_back(full_path);
+               }
             }
          }
       }

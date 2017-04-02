@@ -69,16 +69,16 @@ void PKCS10_Request::force_decode()
                         public_key.type_tag, public_key.class_tag);
 
    m_info.add("X509.Certificate.public_key",
-            PEM_Code::encode(
-               ASN1::put_in_sequence(unlock(public_key.value)),
-               "PUBLIC KEY"
-               )
-      );
+              PEM_Code::encode(
+                 ASN1::put_in_sequence(unlock(public_key.value)),
+                 "PUBLIC KEY"
+              )
+             );
 
    BER_Object attr_bits = cert_req_info.get_next_object();
 
    if(attr_bits.type_tag == 0 &&
-      attr_bits.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
+         attr_bits.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       {
       BER_Decoder attributes(attr_bits.value);
       while(attributes.more_items())
@@ -96,7 +96,9 @@ void PKCS10_Request::force_decode()
    cert_req_info.verify_end();
 
    if(!this->check_signature(subject_public_key()))
+      {
       throw Decoding_Error("PKCS #10 request: Bad signature detected");
+      }
    }
 
 /*

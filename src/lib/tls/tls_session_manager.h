@@ -87,19 +87,28 @@ class BOTAN_DLL Session_Manager_Noop : public Session_Manager
    {
    public:
       bool load_from_session_id(const std::vector<uint8_t>&, Session&) override
-         { return false; }
+         {
+         return false;
+         }
 
       bool load_from_server_info(const Server_Information&, Session&) override
-         { return false; }
+         {
+         return false;
+         }
 
       void remove_entry(const std::vector<uint8_t>&) override {}
 
-      size_t remove_all() override { return 0; }
+      size_t remove_all() override
+         {
+         return 0;
+         }
 
       void save(const Session&) override {}
 
       std::chrono::seconds session_lifetime() const override
-         { return std::chrono::seconds(0); }
+         {
+         return std::chrono::seconds(0);
+         }
    };
 
 /**
@@ -134,7 +143,9 @@ class BOTAN_DLL Session_Manager_In_Memory : public Session_Manager
       void save(const Session& session_data) override;
 
       std::chrono::seconds session_lifetime() const override
-         { return m_session_lifetime; }
+         {
+         return m_session_lifetime;
+         }
 
    private:
       bool load_from_session_str(const std::string& session_str,

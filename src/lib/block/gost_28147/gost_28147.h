@@ -31,7 +31,10 @@ class BOTAN_DLL GOST_28147_89_Params
       /**
       * @return name of this parameter set
       */
-      std::string param_name() const { return m_name; }
+      std::string param_name() const
+         {
+         return m_name;
+         }
 
       /**
       * Default GOST parameters are the ones given in GOST R 34.11 for
@@ -58,7 +61,10 @@ class BOTAN_DLL GOST_28147_89 final : public Block_Cipher_Fixed_Params<8, 32>
       void clear() override;
 
       std::string name() const override;
-      BlockCipher* clone() const override { return new GOST_28147_89(m_SBOX); }
+      BlockCipher* clone() const override
+         {
+         return new GOST_28147_89(m_SBOX);
+         }
 
       /**
       * @param params the sbox parameters to use

@@ -15,7 +15,8 @@ namespace Botan {
 /*
 * Create an Attribute
 */
-Attribute::Attribute(const OID& attr_oid, const std::vector<uint8_t>& attr_value) : oid(attr_oid), parameters(attr_value)
+Attribute::Attribute(const OID& attr_oid, const std::vector<uint8_t>& attr_value) : oid(attr_oid),
+   parameters(attr_value)
    {}
 
 /*
@@ -31,10 +32,10 @@ Attribute::Attribute(const std::string& attr_oid,
 void Attribute::encode_into(DER_Encoder& codec) const
    {
    codec.start_cons(SEQUENCE)
-      .encode(oid)
-      .start_cons(SET)
-         .raw_bytes(parameters)
-      .end_cons()
+   .encode(oid)
+   .start_cons(SET)
+   .raw_bytes(parameters)
+   .end_cons()
    .end_cons();
    }
 
@@ -44,10 +45,10 @@ void Attribute::encode_into(DER_Encoder& codec) const
 void Attribute::decode_from(BER_Decoder& codec)
    {
    codec.start_cons(SEQUENCE)
-      .decode(oid)
-      .start_cons(SET)
-         .raw_bytes(parameters)
-      .end_cons()
+   .decode(oid)
+   .start_cons(SET)
+   .raw_bytes(parameters)
+   .end_cons()
    .end_cons();
    }
 

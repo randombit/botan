@@ -13,13 +13,17 @@
 namespace Botan {
 
 bool ECGDSA_PrivateKey::check_key(RandomNumberGenerator& rng,
-                                 bool strong) const
+                                  bool strong) const
    {
    if(!public_point().on_the_curve())
+      {
       return false;
+      }
 
    if(!strong)
+      {
       return true;
+      }
 
    return KeyPair::signature_consistency_check(rng, *this, "EMSA1(SHA-256)");
    }
@@ -34,7 +38,7 @@ class ECGDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
    public:
 
       ECGDSA_Signature_Operation(const ECGDSA_PrivateKey& ecgdsa,
-                                const std::string& emsa) :
+                                 const std::string& emsa) :
          PK_Ops::Signature_with_EMSA(emsa),
          m_order(ecgdsa.domain().get_order()),
          m_base_point(ecgdsa.domain().get_base_point(), m_order),
@@ -44,9 +48,12 @@ class ECGDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
          }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                   RandomNumberGenerator& rng) override;
+                                      RandomNumberGenerator& rng) override;
 
-      size_t max_input_bits() const override { return m_order.bits(); }
+      size_t max_input_bits() const override
+         {
+         return m_order.bits();
+         }
 
    private:
       const BigInt& m_order;
@@ -82,7 +89,7 @@ class ECGDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
    public:
 
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa,
-                                   const std::string& emsa) :
+                                    const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
          m_base_point(ecgdsa.domain().get_base_point()),
          m_public_point(ecgdsa.public_point()),
@@ -91,9 +98,15 @@ class ECGDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
          {
          }
 
-      size_t max_input_bits() const override { return m_order.bits(); }
+      size_t max_input_bits() const override
+         {
+         return m_order.bits();
+         }
 
-      bool with_recovery() const override { return false; }
+      bool with_recovery() const override
+         {
+         return false;
+         }
 
       bool verify(const uint8_t msg[], size_t msg_len,
                   const uint8_t sig[], size_t sig_len) override;
@@ -106,10 +119,12 @@ class ECGDSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
    };
 
 bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
-                                           const uint8_t sig[], size_t sig_len)
+      const uint8_t sig[], size_t sig_len)
    {
-   if(sig_len != m_order.bytes()*2)
+   if(sig_len != m_order.bytes() * 2)
+      {
       return false;
+      }
 
    BigInt e(msg, msg_len);
 
@@ -117,7 +132,9 @@ bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
    BigInt s(sig + sig_len / 2, sig_len / 2);
 
    if(r <= 0 || r >= m_order || s <= 0 || s >= m_order)
+      {
       return false;
+      }
 
    BigInt w = inverse_mod(r, m_order);
 
@@ -126,7 +143,9 @@ bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
    const PointGFp R = multi_exponentiate(m_base_point, u1, m_public_point, u2);
 
    if(R.is_zero())
+      {
       return false;
+      }
 
    const BigInt v = m_mod_order.reduce(R.get_affine_x());
    return (v == r);
@@ -136,10 +155,12 @@ bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
 std::unique_ptr<PK_Ops::Verification>
 ECGDSA_PublicKey::create_verification_op(const std::string& params,
-                                         const std::string& provider) const
+      const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Verification>(new ECGDSA_Verification_Operation(*this, params));
+      }
    throw Provider_Not_Found(algo_name(), provider);
    }
 
@@ -149,7 +170,9 @@ ECGDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                        const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Signature>(new ECGDSA_Signature_Operation(*this, params));
+      }
    throw Provider_Not_Found(algo_name(), provider);
    }
 

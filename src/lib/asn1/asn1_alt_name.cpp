@@ -56,12 +56,16 @@ void AlternativeName::add_attribute(const std::string& type,
                                     const std::string& str)
    {
    if(type.empty() || str.empty())
+      {
       return;
+      }
 
    auto range = m_alt_info.equal_range(type);
    for(auto j = range.first; j != range.second; ++j)
       if(j->second == str)
+         {
          return;
+         }
 
    multimap_insert(m_alt_info, type, str);
    }
@@ -73,7 +77,9 @@ void AlternativeName::add_othername(const OID& oid, const std::string& value,
                                     ASN1_Tag type)
    {
    if(value.empty())
+      {
       return;
+      }
    multimap_insert(m_othernames, oid, ASN1_String(value, type));
    }
 
@@ -101,10 +107,14 @@ std::multimap<std::string, std::string> AlternativeName::contents() const
    std::multimap<std::string, std::string> names;
 
    for(auto i = m_alt_info.begin(); i != m_alt_info.end(); ++i)
+      {
       multimap_insert(names, i->first, i->second);
+      }
 
    for(auto i = m_othernames.begin(); i != m_othernames.end(); ++i)
+      {
       multimap_insert(names, OIDS::lookup(i->first), i->second.value());
+      }
 
    return names;
    }
@@ -162,10 +172,10 @@ void AlternativeName::encode_into(DER_Encoder& der) const
    for(auto i = m_othernames.begin(); i != m_othernames.end(); ++i)
       {
       der.start_explicit(0)
-         .encode(i->first)
-         .start_explicit(0)
-            .encode(i->second)
-         .end_explicit()
+      .encode(i->first)
+      .start_explicit(0)
+      .encode(i->second)
+      .end_explicit()
       .end_explicit();
       }
 
@@ -183,8 +193,10 @@ void AlternativeName::decode_from(BER_Decoder& source)
       {
       BER_Object obj = names.get_next_object();
       if((obj.class_tag != CONTEXT_SPECIFIC) &&
-         (obj.class_tag != (CONTEXT_SPECIFIC | CONSTRUCTED)))
+            (obj.class_tag != (CONTEXT_SPECIFIC | CONSTRUCTED)))
+         {
          continue;
+         }
 
       const ASN1_Tag tag = obj.type_tag;
 
@@ -200,10 +212,12 @@ void AlternativeName::decode_from(BER_Decoder& source)
             othername.verify_end();
 
             if(othername_value_outer.type_tag != ASN1_Tag(0) ||
-               othername_value_outer.class_tag !=
-                   (CONTEXT_SPECIFIC | CONSTRUCTED)
-               )
+                  othername_value_outer.class_tag !=
+                  (CONTEXT_SPECIFIC | CONSTRUCTED)
+              )
+               {
                throw Decoding_Error("Invalid tags on otherName value");
+               }
 
             BER_Decoder othername_value_inner(othername_value_outer.value);
 
@@ -213,18 +227,29 @@ void AlternativeName::decode_from(BER_Decoder& source)
             const ASN1_Tag value_type = value.type_tag;
 
             if(is_string_type(value_type) && value.class_tag == UNIVERSAL)
+               {
                add_othername(oid, ASN1::to_string(value), value_type);
+               }
             }
          }
       else if(tag == 1 || tag == 2 || tag == 6)
          {
          const std::string value = Charset::transcode(ASN1::to_string(obj),
-                                                      LATIN1_CHARSET,
-                                                      LOCAL_CHARSET);
+                                   LATIN1_CHARSET,
+                                   LOCAL_CHARSET);
 
-         if(tag == 1) add_attribute("RFC822", value);
-         if(tag == 2) add_attribute("DNS", value);
-         if(tag == 6) add_attribute("URI", value);
+         if(tag == 1)
+            {
+            add_attribute("RFC822", value);
+            }
+         if(tag == 2)
+            {
+            add_attribute("DNS", value);
+            }
+         if(tag == 6)
+            {
+            add_attribute("URI", value);
+            }
          }
       else if(tag == 7)
          {

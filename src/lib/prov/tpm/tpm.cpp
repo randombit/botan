@@ -76,7 +76,7 @@ std::vector<uint8_t> get_obj_attr(TSS_HCONTEXT ctx,
                                   TSS_FLAG flag,
                                   TSS_FLAG sub_flag)
    {
-   BYTE *data = nullptr;
+   BYTE* data = nullptr;
    UINT32 data_len = 0;
    TSPI_CHECK_SUCCESS(::Tspi_GetAttribData(obj, flag, sub_flag, &data_len, &data));
 
@@ -93,18 +93,18 @@ void set_policy_secret(TSS_HPOLICY policy, const char* secret)
       {
       BYTE* as_b = const_cast<BYTE*>(reinterpret_cast<const BYTE*>(secret));
       TSPI_CHECK_SUCCESS(::Tspi_Policy_SetSecret(policy,
-                                                 TSS_SECRET_MODE_PLAIN,
-                                                 std::strlen(secret),
-                                                 as_b));
+                         TSS_SECRET_MODE_PLAIN,
+                         std::strlen(secret),
+                         as_b));
       }
    else
       {
       static const uint8_t nullpass[20] = { 0 };
 
       TSPI_CHECK_SUCCESS(::Tspi_Policy_SetSecret(policy,
-                                             TSS_SECRET_MODE_SHA1,
-                                             sizeof(nullpass),
-                                             const_cast<BYTE*>(nullpass)));
+                         TSS_SECRET_MODE_SHA1,
+                         sizeof(nullpass),
+                         const_cast<BYTE*>(nullpass)));
       }
    }
 
@@ -130,11 +130,17 @@ UUID from_tss_uuid(const TSS_UUID& tss_uuid)
 TPM_Storage_Type storage_type_from_tss_flag(TSS_FLAG flag)
    {
    if(flag == TSS_PS_TYPE_USER)
+      {
       return TPM_Storage_Type::User;
+      }
    else if(flag == TSS_PS_TYPE_SYSTEM)
+      {
       return TPM_Storage_Type::System;
+      }
    else
+      {
       throw TPM_Error("Invalid storage flag " + std::to_string(flag));
+      }
    }
 
 std::string format_url(const UUID& uuid, TPM_Storage_Type storage)
@@ -212,8 +218,8 @@ TPM_PrivateKey::TPM_PrivateKey(TPM_Context& ctx, size_t bits,
    TSPI_CHECK_SUCCESS(::Tspi_Context_CreateObject(m_ctx.handle(), TSS_OBJECT_TYPE_RSAKEY, key_flags, &key));
 
    TSPI_CHECK_SUCCESS(::Tspi_SetAttribUint32(key, TSS_TSPATTRIB_KEY_INFO,
-                                         TSS_TSPATTRIB_KEYINFO_SIGSCHEME,
-                                         TSS_SS_RSASSAPKCS1V15_DER));
+                      TSS_TSPATTRIB_KEYINFO_SIGSCHEME,
+                      TSS_SS_RSASSAPKCS1V15_DER));
 
    TSS_HPOLICY policy;
    TSPI_CHECK_SUCCESS(::Tspi_Context_CreateObject(m_ctx.handle(), TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE, &policy));
@@ -235,17 +241,17 @@ TPM_PrivateKey::TPM_PrivateKey(TPM_Context& ctx, const std::string& uuid_str,
       (m_storage == TPM_Storage_Type::User) ? TSS_PS_TYPE_USER : TSS_PS_TYPE_SYSTEM;
 
    TSPI_CHECK_SUCCESS(::Tspi_Context_LoadKeyByUUID(m_ctx.handle(),
-                                               key_ps_type,
-                                               to_tss_uuid(m_uuid),
-                                               &m_key));
+                      key_ps_type,
+                      to_tss_uuid(m_uuid),
+                      &m_key));
    }
 
 TPM_PrivateKey::TPM_PrivateKey(TPM_Context& ctx,
                                const std::vector<uint8_t>& blob) : m_ctx(ctx)
    {
    TSPI_CHECK_SUCCESS(::Tspi_Context_LoadKeyByBlob(m_ctx.handle(), m_ctx.srk(), blob.size(),
-                                               const_cast<uint8_t*>(blob.data()),
-                                               &m_key));
+                      const_cast<uint8_t*>(blob.data()),
+                      &m_key));
 
    //TSPI_CHECK_SUCCESS(::Tspi_Key_LoadKey(m_key, m_ctx.srk()));
    }
@@ -265,11 +271,11 @@ std::string TPM_PrivateKey::register_key(TPM_Storage_Type storage_type)
       const TSS_UUID srk_uuid = TSS_UUID_SRK;
 
       TSPI_CHECK_SUCCESS(::Tspi_Context_RegisterKey(m_ctx.handle(),
-                                                m_key,
-                                                key_ps_type,
-                                                key_uuid,
-                                                TSS_PS_TYPE_SYSTEM,
-                                                srk_uuid));
+                         m_key,
+                         key_ps_type,
+                         key_uuid,
+                         TSS_PS_TYPE_SYSTEM,
+                         srk_uuid));
 
       }
 
@@ -291,10 +297,10 @@ std::vector<std::string> TPM_PrivateKey::registered_keys(TPM_Context& ctx)
 
    // TODO: does the PS type matter here at all?
    TSPI_CHECK_SUCCESS(::Tspi_Context_GetRegisteredKeysByUUID2(ctx.handle(),
-                                                          TSS_PS_TYPE_SYSTEM,
-                                                          nullptr,
-                                                          &key_info_size,
-                                                          &key_info));
+                      TSS_PS_TYPE_SYSTEM,
+                      nullptr,
+                      &key_info_size,
+                      &key_info));
 
    std::vector<std::string> r(key_info_size);
 
@@ -352,11 +358,11 @@ AlgorithmIdentifier TPM_PrivateKey::algorithm_identifier() const
 std::vector<uint8_t> TPM_PrivateKey::public_key_bits() const
    {
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-        .encode(get_n())
-        .encode(get_e())
-      .end_cons()
-      .get_contents_unlocked();
+          .start_cons(SEQUENCE)
+          .encode(get_n())
+          .encode(get_e())
+          .end_cons()
+          .get_contents_unlocked();
    }
 
 secure_vector<uint8_t> TPM_PrivateKey::private_key_bits() const

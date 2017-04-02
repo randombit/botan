@@ -22,8 +22,14 @@ class BOTAN_DLL Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16>
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
-      std::string name() const override { return "Camellia-128"; }
-      BlockCipher* clone() const override { return new Camellia_128; }
+      std::string name() const override
+         {
+         return "Camellia-128";
+         }
+      BlockCipher* clone() const override
+         {
+         return new Camellia_128;
+         }
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
@@ -40,8 +46,14 @@ class BOTAN_DLL Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24>
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
-      std::string name() const override { return "Camellia-192"; }
-      BlockCipher* clone() const override { return new Camellia_192; }
+      std::string name() const override
+         {
+         return "Camellia-192";
+         }
+      BlockCipher* clone() const override
+         {
+         return new Camellia_192;
+         }
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
@@ -58,8 +70,14 @@ class BOTAN_DLL Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32>
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
-      std::string name() const override { return "Camellia-256"; }
-      BlockCipher* clone() const override { return new Camellia_256; }
+      std::string name() const override
+         {
+         return "Camellia-256";
+         }
+      BlockCipher* clone() const override
+         {
+         return new Camellia_256;
+         }
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 

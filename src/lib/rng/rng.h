@@ -155,7 +155,9 @@ class BOTAN_DLL RandomNumberGenerator
          {
          uint8_t b = this->next_byte();
          while(b == 0)
+            {
             b = this->next_byte();
+            }
          return b;
          }
 
@@ -188,7 +190,10 @@ class BOTAN_DLL Hardware_RNG : public RandomNumberGenerator
 class BOTAN_DLL Null_RNG final : public RandomNumberGenerator
    {
    public:
-      bool is_seeded() const override { return false; }
+      bool is_seeded() const override
+         {
+         return false;
+         }
 
       void clear() override {}
 
@@ -199,7 +204,10 @@ class BOTAN_DLL Null_RNG final : public RandomNumberGenerator
 
       void add_entropy(const uint8_t[], size_t) override {}
 
-      std::string name() const override { return "Null_RNG"; }
+      std::string name() const override
+         {
+         return "Null_RNG";
+         }
    };
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)

@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_STREAM_CIPHER)
-#include <botan/stream_cipher.h>
+   #include <botan/stream_cipher.h>
 #endif
 
 namespace Botan_Tests {
@@ -28,7 +28,9 @@ class Stream_Cipher_Tests : public Text_Based_Test
          std::vector<uint8_t> input          = get_opt_bin(vars, "In");
 
          if(input.empty())
+            {
             input.resize(expected.size());
+            }
 
          Test::Result result(algo);
 
@@ -40,7 +42,7 @@ class Stream_Cipher_Tests : public Text_Based_Test
             return result;
             }
 
-         for(auto&& provider_ask : providers)
+         for(auto && provider_ask : providers)
             {
             std::unique_ptr<Botan::StreamCipher> cipher(Botan::StreamCipher::create(algo, provider_ask));
 
@@ -58,7 +60,9 @@ class Stream_Cipher_Tests : public Text_Based_Test
             if(nonce.size())
                {
                if(!cipher->valid_iv_length(nonce.size()))
+                  {
                   throw Test_Error("Invalid nonce for " + algo);
+                  }
                cipher->set_iv(nonce.data(), nonce.size());
                }
             else
@@ -69,12 +73,16 @@ class Stream_Cipher_Tests : public Text_Based_Test
                * set_iv accepts it.
                */
                if(!cipher->valid_iv_length(0))
+                  {
                   throw Test_Error("Stream cipher " + algo + " requires nonce but none provided");
+                  }
                cipher->set_iv(nullptr, 0);
                }
 
-            if (seek != 0)
+            if(seek != 0)
+               {
                cipher->seek(seek);
+               }
 
             // Test that clone works and does not affect parent object
             std::unique_ptr<Botan::StreamCipher> clone(cipher->clone());

@@ -9,77 +9,77 @@
 #include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_AES)
-  #include <botan/aes.h>
+   #include <botan/aes.h>
 #endif
 
 #if defined(BOTAN_HAS_BLOWFISH)
-  #include <botan/blowfish.h>
+   #include <botan/blowfish.h>
 #endif
 
 #if defined(BOTAN_HAS_CAMELLIA)
-  #include <botan/camellia.h>
+   #include <botan/camellia.h>
 #endif
 
 #if defined(BOTAN_HAS_CAST)
-  #include <botan/cast128.h>
-  #include <botan/cast256.h>
+   #include <botan/cast128.h>
+   #include <botan/cast256.h>
 #endif
 
 #if defined(BOTAN_HAS_CASCADE)
-  #include <botan/cascade.h>
+   #include <botan/cascade.h>
 #endif
 
 #if defined(BOTAN_HAS_DES)
-  #include <botan/des.h>
-  #include <botan/desx.h>
+   #include <botan/des.h>
+   #include <botan/desx.h>
 #endif
 
 #if defined(BOTAN_HAS_GOST_28147_89)
-  #include <botan/gost_28147.h>
+   #include <botan/gost_28147.h>
 #endif
 
 #if defined(BOTAN_HAS_IDEA)
-  #include <botan/idea.h>
+   #include <botan/idea.h>
 #endif
 
 #if defined(BOTAN_HAS_KASUMI)
-  #include <botan/kasumi.h>
+   #include <botan/kasumi.h>
 #endif
 
 #if defined(BOTAN_HAS_LION)
-  #include <botan/lion.h>
+   #include <botan/lion.h>
 #endif
 
 #if defined(BOTAN_HAS_MISTY1)
-  #include <botan/misty1.h>
+   #include <botan/misty1.h>
 #endif
 
 #if defined(BOTAN_HAS_NOEKEON)
-  #include <botan/noekeon.h>
+   #include <botan/noekeon.h>
 #endif
 
 #if defined(BOTAN_HAS_SEED)
-  #include <botan/seed.h>
+   #include <botan/seed.h>
 #endif
 
 #if defined(BOTAN_HAS_SERPENT)
-  #include <botan/serpent.h>
+   #include <botan/serpent.h>
 #endif
 
 #if defined(BOTAN_HAS_TWOFISH)
-  #include <botan/twofish.h>
+   #include <botan/twofish.h>
 #endif
 
 #if defined(BOTAN_HAS_THREEFISH_512)
-  #include <botan/threefish.h>
+   #include <botan/threefish.h>
 #endif
 
 #if defined(BOTAN_HAS_XTEA)
-  #include <botan/xtea.h>
+   #include <botan/xtea.h>
 #endif
 
 #if defined(BOTAN_HAS_OPENSSL)
-  #include <botan/internal/openssl.h>
+   #include <botan/internal/openssl.h>
 #endif
 
 namespace Botan {
@@ -92,10 +92,14 @@ BlockCipher::create(const std::string& algo,
    if(provider.empty() || provider == "openssl")
       {
       if(auto bc = make_openssl_block_cipher(algo))
+         {
          return bc;
+         }
 
       if(!provider.empty())
+         {
          return nullptr;
+         }
       }
 #endif
 
@@ -105,7 +109,9 @@ BlockCipher::create(const std::string& algo,
 
    // Only base providers from here on out
    if(provider.empty() == false && provider != "base")
+      {
       return nullptr;
+      }
 
 #if defined(BOTAN_HAS_AES)
    if(algo == "AES-128")
@@ -256,7 +262,9 @@ BlockCipher::create(const std::string& algo,
       std::unique_ptr<BlockCipher> c2(BlockCipher::create(req.arg(1)));
 
       if(c1 && c2)
+         {
          return std::unique_ptr<BlockCipher>(new Cascade_Cipher(c1.release(), c2.release()));
+         }
       }
 #endif
 

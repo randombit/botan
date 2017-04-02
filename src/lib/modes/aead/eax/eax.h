@@ -31,9 +31,15 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode
       Key_Length_Specification key_spec() const override;
 
       // EAX supports arbitrary nonce lengths
-      bool valid_nonce_length(size_t) const override { return true; }
+      bool valid_nonce_length(size_t) const override
+         {
+         return true;
+         }
 
-      size_t tag_size() const override { return m_tag_size; }
+      size_t tag_size() const override
+         {
+         return m_tag_size;
+         }
 
       void clear() override;
 
@@ -46,7 +52,10 @@ class BOTAN_DLL EAX_Mode : public AEAD_Mode
       */
       EAX_Mode(BlockCipher* cipher, size_t tag_size);
 
-      size_t block_size() const { return m_cipher->block_size(); }
+      size_t block_size() const
+         {
+         return m_cipher->block_size();
+         }
 
       size_t m_tag_size;
 
@@ -77,9 +86,14 @@ class BOTAN_DLL EAX_Encryption final : public EAX_Mode
          EAX_Mode(cipher, tag_size) {}
 
       size_t output_length(size_t input_length) const override
-         { return input_length + tag_size(); }
+         {
+         return input_length + tag_size();
+         }
 
-      size_t minimum_final_size() const override { return 0; }
+      size_t minimum_final_size() const override
+         {
+         return 0;
+         }
 
       size_t process(uint8_t buf[], size_t size) override;
 
@@ -105,7 +119,10 @@ class BOTAN_DLL EAX_Decryption final : public EAX_Mode
          return input_length - tag_size();
          }
 
-      size_t minimum_final_size() const override { return tag_size(); }
+      size_t minimum_final_size() const override
+         {
+         return tag_size();
+         }
 
       size_t process(uint8_t buf[], size_t size) override;
 

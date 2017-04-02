@@ -142,12 +142,18 @@ class BOTAN_DLL Cipher_Mode
       * @return true iff this mode provides authentication as well as
       * confidentiality.
       */
-      virtual bool authenticated() const { return false; }
+      virtual bool authenticated() const
+         {
+         return false;
+         }
 
       /**
       * @return the size of the authentication tag used (in bytes)
       */
-      virtual size_t tag_size() const { return 0; }
+      virtual size_t tag_size() const
+         {
+         return 0;
+         }
 
       /**
       * @return object describing limits on key size
@@ -191,7 +197,9 @@ class BOTAN_DLL Cipher_Mode
       void set_key(const uint8_t key[], size_t length)
          {
          if(!valid_keylength(length))
+            {
             throw Invalid_Key_Length(name(), length);
+            }
          key_schedule(key, length);
          }
 
@@ -199,7 +207,10 @@ class BOTAN_DLL Cipher_Mode
       * @return provider information about this implementation. Default is "base",
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
-      virtual std::string provider() const { return "base"; }
+      virtual std::string provider() const
+         {
+         return "base";
+         }
 
    private:
       virtual void key_schedule(const uint8_t key[], size_t length) = 0;

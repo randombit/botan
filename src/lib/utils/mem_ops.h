@@ -100,7 +100,9 @@ template<typename T> inline bool same_mem(const T* p1, const T* p2, size_t n)
    volatile T difference = 0;
 
    for(size_t i = 0; i != n; ++i)
+      {
       difference |= (p1[i] ^ p2[i]);
+      }
 
    return difference == 0;
    }
@@ -169,7 +171,9 @@ operator^=(std::vector<T, Alloc>& out,
            const std::vector<T, Alloc2>& in)
    {
    if(out.size() < in.size())
+      {
       out.resize(in.size());
+      }
 
    xor_buf(out.data(), in.data(), in.size());
    return out;

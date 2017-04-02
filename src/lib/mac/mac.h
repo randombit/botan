@@ -18,7 +18,7 @@ namespace Botan {
 * This class represents Message Authentication Code (MAC) objects.
 */
 class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
-                                            public SymmetricAlgorithm
+   public SymmetricAlgorithm
    {
    public:
       /**
@@ -29,8 +29,8 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<MessageAuthenticationCode>
-         create(const std::string& algo_spec,
-                const std::string& provider = "");
+      create(const std::string& algo_spec,
+             const std::string& provider = "");
 
       /*
       * Create an instance based on a name
@@ -40,8 +40,8 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       * Throws a Lookup_Error if algo/provider combination cannot be found
       */
       static std::unique_ptr<MessageAuthenticationCode>
-         create_or_throw(const std::string& algo_spec,
-                         const std::string& provider = "");
+      create_or_throw(const std::string& algo_spec,
+                      const std::string& provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -67,7 +67,9 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
          {
          BOTAN_UNUSED(nonce);
          if(nonce_len > 0)
+            {
             throw Invalid_IV_Length(name(), nonce_len);
+            }
          }
 
       /**
@@ -136,7 +138,10 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       * @return provider information about this implementation. Default is "base",
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
-      virtual std::string provider() const { return "base"; }
+      virtual std::string provider() const
+         {
+         return "base";
+         }
 
    };
 

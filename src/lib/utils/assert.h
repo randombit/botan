@@ -16,10 +16,10 @@ namespace Botan {
 * Called when an assertion fails
 */
 BOTAN_NORETURN void BOTAN_DLL assertion_failure(const char* expr_str,
-                                 const char* assertion_made,
-                                 const char* func,
-                                 const char* file,
-                                 int line);
+      const char* assertion_made,
+      const char* func,
+      const char* file,
+      int line);
 
 /**
 * Make an assertion

@@ -10,31 +10,31 @@
 #include <botan/mem_ops.h>
 
 #if defined(BOTAN_HAS_CBC_MAC)
-  #include <botan/cbc_mac.h>
+   #include <botan/cbc_mac.h>
 #endif
 
 #if defined(BOTAN_HAS_CMAC)
-  #include <botan/cmac.h>
+   #include <botan/cmac.h>
 #endif
 
 #if defined(BOTAN_HAS_GMAC)
-  #include <botan/gmac.h>
+   #include <botan/gmac.h>
 #endif
 
 #if defined(BOTAN_HAS_HMAC)
-  #include <botan/hmac.h>
+   #include <botan/hmac.h>
 #endif
 
 #if defined(BOTAN_HAS_POLY1305)
-  #include <botan/poly1305.h>
+   #include <botan/poly1305.h>
 #endif
 
 #if defined(BOTAN_HAS_SIPHASH)
-  #include <botan/siphash.h>
+   #include <botan/siphash.h>
 #endif
 
 #if defined(BOTAN_HAS_ANSI_X919_MAC)
-  #include <botan/x919_mac.h>
+   #include <botan/x919_mac.h>
 #endif
 
 namespace Botan {
@@ -51,7 +51,9 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto bc = BlockCipher::create(req.arg(0)))
+            {
             return std::unique_ptr<MessageAuthenticationCode>(new GMAC(bc.release()));
+            }
          }
       }
 #endif
@@ -63,7 +65,9 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto h = HashFunction::create(req.arg(0)))
+            {
             return std::unique_ptr<MessageAuthenticationCode>(new HMAC(h.release()));
+            }
          }
       }
 #endif
@@ -72,7 +76,9 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
    if(req.algo_name() == "Poly1305" && req.arg_count() == 0)
       {
       if(provider.empty() || provider == "base")
+         {
          return std::unique_ptr<MessageAuthenticationCode>(new Poly1305);
+         }
       }
 #endif
 
@@ -82,7 +88,7 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          return std::unique_ptr<MessageAuthenticationCode>(
-            new SipHash(req.arg_as_integer(0, 2), req.arg_as_integer(1, 4)));
+                   new SipHash(req.arg_as_integer(0, 2), req.arg_as_integer(1, 4)));
          }
       }
 #endif
@@ -94,7 +100,9 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto bc = BlockCipher::create(req.arg(0)))
+            {
             return std::unique_ptr<MessageAuthenticationCode>(new CMAC(bc.release()));
+            }
          }
       }
 #endif
@@ -106,7 +114,9 @@ MessageAuthenticationCode::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto bc = BlockCipher::create(req.arg(0)))
+            {
             return std::unique_ptr<MessageAuthenticationCode>(new CBC_MAC(bc.release()));
+            }
          }
       }
 #endif
@@ -136,7 +146,7 @@ MessageAuthenticationCode::providers(const std::string& algo_spec)
 //static
 std::unique_ptr<MessageAuthenticationCode>
 MessageAuthenticationCode::create_or_throw(const std::string& algo,
-                                           const std::string& provider)
+      const std::string& provider)
    {
    if(auto mac = MessageAuthenticationCode::create(algo, provider))
       {
@@ -153,7 +163,9 @@ bool MessageAuthenticationCode::verify_mac(const uint8_t mac[], size_t length)
    secure_vector<uint8_t> our_mac = final();
 
    if(our_mac.size() != length)
+      {
       return false;
+      }
 
    return same_mem(our_mac.data(), mac, length);
    }

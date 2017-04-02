@@ -45,8 +45,14 @@ class XMSS_WOTS_Addressed_PrivateKey
                                          std::move(adrs)),
            m_priv_key(std::move(private_key)) {}
 
-      const XMSS_WOTS_PrivateKey& private_key() const { return m_priv_key; }
-      XMSS_WOTS_PrivateKey& private_key() { return m_priv_key; }
+      const XMSS_WOTS_PrivateKey& private_key() const
+         {
+         return m_priv_key;
+         }
+      XMSS_WOTS_PrivateKey& private_key()
+         {
+         return m_priv_key;
+         }
 
       virtual AlgorithmIdentifier
       pkcs8_algorithm_identifier() const override

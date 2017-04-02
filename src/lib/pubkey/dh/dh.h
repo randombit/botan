@@ -18,11 +18,17 @@ namespace Botan {
 class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
    {
    public:
-      std::string algo_name() const override { return "DH"; }
+      std::string algo_name() const override
+         {
+         return "DH";
+         }
 
       std::vector<uint8_t> public_value() const;
 
-      DL_Group::Format group_format() const override { return DL_Group::ANSI_X9_42; }
+      DL_Group::Format group_format() const override
+         {
+         return DL_Group::ANSI_X9_42;
+         }
 
       /**
       * Create a public key.
@@ -47,8 +53,8 @@ class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
 * This class represents Diffie-Hellman private keys.
 */
 class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
-                                public PK_Key_Agreement_Key,
-                                public virtual DL_Scheme_PrivateKey
+   public PK_Key_Agreement_Key,
+   public virtual DL_Scheme_PrivateKey
    {
    public:
       std::vector<uint8_t> public_value() const override;
@@ -71,9 +77,9 @@ class BOTAN_DLL DH_PrivateKey : public DH_PublicKey,
                     const BigInt& x = 0);
 
       std::unique_ptr<PK_Ops::Key_Agreement>
-         create_key_agreement_op(RandomNumberGenerator& rng,
-                                 const std::string& params,
-                                 const std::string& provider) const override;
+      create_key_agreement_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const override;
    };
 
 }

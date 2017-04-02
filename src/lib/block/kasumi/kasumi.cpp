@@ -15,7 +15,8 @@ namespace {
 /*
 * KASUMI S-Boxes
 */
-const uint8_t KASUMI_SBOX_S7[128] = {
+const uint8_t KASUMI_SBOX_S7[128] =
+   {
    0x36, 0x32, 0x3E, 0x38, 0x16, 0x22, 0x5E, 0x60, 0x26, 0x06, 0x3F, 0x5D,
    0x02, 0x12, 0x7B, 0x21, 0x37, 0x71, 0x27, 0x72, 0x15, 0x43, 0x41, 0x0C,
    0x2F, 0x49, 0x2E, 0x1B, 0x19, 0x6F, 0x7C, 0x51, 0x35, 0x09, 0x79, 0x4F,
@@ -26,9 +27,11 @@ const uint8_t KASUMI_SBOX_S7[128] = {
    0x5F, 0x0E, 0x5A, 0x54, 0x5B, 0x08, 0x23, 0x67, 0x20, 0x61, 0x1C, 0x42,
    0x66, 0x1F, 0x1A, 0x2D, 0x4B, 0x04, 0x55, 0x5C, 0x25, 0x4A, 0x50, 0x31,
    0x44, 0x1D, 0x73, 0x2C, 0x40, 0x6B, 0x6C, 0x18, 0x6E, 0x53, 0x24, 0x4E,
-   0x2A, 0x13, 0x0F, 0x29, 0x58, 0x77, 0x3B, 0x03 };
+   0x2A, 0x13, 0x0F, 0x29, 0x58, 0x77, 0x3B, 0x03
+   };
 
-const uint16_t KASUMI_SBOX_S9[512] = {
+const uint16_t KASUMI_SBOX_S9[512] =
+   {
    0x00A7, 0x00EF, 0x00A1, 0x017B, 0x0187, 0x014E, 0x0009, 0x0152, 0x0026,
    0x00E2, 0x0030, 0x0166, 0x01C4, 0x0181, 0x005A, 0x018D, 0x00B7, 0x00FD,
    0x0093, 0x014B, 0x019F, 0x0154, 0x0033, 0x016A, 0x0132, 0x01F4, 0x0106,
@@ -85,7 +88,8 @@ const uint16_t KASUMI_SBOX_S9[512] = {
    0x00CF, 0x0072, 0x0192, 0x01B6, 0x01DD, 0x0183, 0x007A, 0x00C0, 0x002A,
    0x017D, 0x0005, 0x0091, 0x0076, 0x00B4, 0x01C1, 0x0125, 0x0143, 0x0088,
    0x017C, 0x002B, 0x0042, 0x003C, 0x01C7, 0x0155, 0x01BD, 0x00CA, 0x01B0,
-   0x0008, 0x00ED, 0x000F, 0x0178, 0x01B4, 0x01D0, 0x003B, 0x01CD };
+   0x0008, 0x00ED, 0x000F, 0x0178, 0x01B4, 0x01D0, 0x003B, 0x01CD
+   };
 
 /*
 * KASUMI FI Function
@@ -119,7 +123,7 @@ void KASUMI::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
       for(size_t j = 0; j != 8; j += 2)
          {
-         const uint16_t* K = &m_EK[8*j];
+         const uint16_t* K = &m_EK[8 * j];
 
          uint16_t R = B1 ^ (rotate_left(B0, 1) & K[0]);
          uint16_t L = B0 ^ (rotate_left(R, 1) | K[1]);
@@ -163,7 +167,7 @@ void KASUMI::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 
       for(size_t j = 0; j != 8; j += 2)
          {
-         const uint16_t* K = &m_EK[8*(6-j)];
+         const uint16_t* K = &m_EK[8 * (6 - j)];
 
          uint16_t L = B2, R = B3;
 
@@ -201,27 +205,28 @@ void KASUMI::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 void KASUMI::key_schedule(const uint8_t key[], size_t)
    {
    static const uint16_t RC[] = { 0x0123, 0x4567, 0x89AB, 0xCDEF,
-                                0xFEDC, 0xBA98, 0x7654, 0x3210 };
+                                  0xFEDC, 0xBA98, 0x7654, 0x3210
+                                };
 
    secure_vector<uint16_t> K(16);
    for(size_t i = 0; i != 8; ++i)
       {
       K[i] = load_be<uint16_t>(key, i);
-      K[i+8] = K[i] ^ RC[i];
+      K[i + 8] = K[i] ^ RC[i];
       }
 
    m_EK.resize(64);
 
    for(size_t i = 0; i != 8; ++i)
       {
-      m_EK[8*i  ] = rotate_left(K[(i+0) % 8    ], 2);
-      m_EK[8*i+1] = rotate_left(K[(i+2) % 8 + 8], 1);
-      m_EK[8*i+2] = rotate_left(K[(i+1) % 8    ], 5);
-      m_EK[8*i+3] = K[(i+4) % 8 + 8];
-      m_EK[8*i+4] = rotate_left(K[(i+5) % 8    ], 8);
-      m_EK[8*i+5] = K[(i+3) % 8 + 8];
-      m_EK[8*i+6] = rotate_left(K[(i+6) % 8    ], 13);
-      m_EK[8*i+7] = K[(i+7) % 8 + 8];
+      m_EK[8 * i  ] = rotate_left(K[(i + 0) % 8    ], 2);
+      m_EK[8 * i + 1] = rotate_left(K[(i + 2) % 8 + 8], 1);
+      m_EK[8 * i + 2] = rotate_left(K[(i + 1) % 8    ], 5);
+      m_EK[8 * i + 3] = K[(i + 4) % 8 + 8];
+      m_EK[8 * i + 4] = rotate_left(K[(i + 5) % 8    ], 8);
+      m_EK[8 * i + 5] = K[(i + 3) % 8 + 8];
+      m_EK[8 * i + 6] = rotate_left(K[(i + 6) % 8    ], 13);
+      m_EK[8 * i + 7] = K[(i + 7) % 8 + 8];
       }
    }
 

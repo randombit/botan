@@ -37,8 +37,8 @@ class BOTAN_DLL Encryption
    {
    public:
       virtual secure_vector<uint8_t> encrypt(const uint8_t msg[],
-                                          size_t msg_len,
-                                          RandomNumberGenerator& rng) = 0;
+                                             size_t msg_len,
+                                             RandomNumberGenerator& rng) = 0;
 
       virtual size_t max_input_bits() const = 0;
 
@@ -52,8 +52,8 @@ class BOTAN_DLL Decryption
    {
    public:
       virtual secure_vector<uint8_t> decrypt(uint8_t& valid_mask,
-                                          const uint8_t ciphertext[],
-                                          size_t ciphertext_len) = 0;
+                                             const uint8_t ciphertext[],
+                                             size_t ciphertext_len) = 0;
 
       virtual ~Decryption() {}
    };
@@ -109,8 +109,8 @@ class BOTAN_DLL Key_Agreement
    {
    public:
       virtual secure_vector<uint8_t> agree(size_t key_len,
-                                        const uint8_t other_key[], size_t other_key_len,
-                                        const uint8_t salt[], size_t salt_len) = 0;
+                                           const uint8_t other_key[], size_t other_key_len,
+                                           const uint8_t salt[], size_t salt_len) = 0;
 
       virtual ~Key_Agreement() {}
    };
@@ -135,10 +135,10 @@ class BOTAN_DLL KEM_Decryption
    {
    public:
       virtual secure_vector<uint8_t> kem_decrypt(const uint8_t encap_key[],
-                                              size_t len,
-                                              size_t desired_shared_key_len,
-                                              const uint8_t salt[],
-                                              size_t salt_len) = 0;
+            size_t len,
+            size_t desired_shared_key_len,
+            const uint8_t salt[],
+            size_t salt_len) = 0;
 
       virtual ~KEM_Decryption() {}
    };

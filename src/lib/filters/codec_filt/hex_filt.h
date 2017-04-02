@@ -24,7 +24,10 @@ class BOTAN_DLL Hex_Encoder final : public Filter
       */
       enum Case { Uppercase, Lowercase };
 
-      std::string name() const override { return "Hex_Encoder"; }
+      std::string name() const override
+         {
+         return "Hex_Encoder";
+         }
 
       void write(const uint8_t in[], size_t length) override;
       void end_msg() override;
@@ -59,7 +62,10 @@ class BOTAN_DLL Hex_Encoder final : public Filter
 class BOTAN_DLL Hex_Decoder final : public Filter
    {
    public:
-      std::string name() const override { return "Hex_Decoder"; }
+      std::string name() const override
+         {
+         return "Hex_Decoder";
+         }
 
       void write(const uint8_t[], size_t) override;
       void end_msg() override;

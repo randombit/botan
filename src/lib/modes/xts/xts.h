@@ -39,9 +39,15 @@ class BOTAN_DLL XTS_Mode : public Cipher_Mode
    protected:
       explicit XTS_Mode(BlockCipher* cipher);
 
-      const uint8_t* tweak() const { return m_tweak.data(); }
+      const uint8_t* tweak() const
+         {
+         return m_tweak.data();
+         }
 
-      const BlockCipher& cipher() const { return *m_cipher; }
+      const BlockCipher& cipher() const
+         {
+         return *m_cipher;
+         }
 
       void update_tweak(size_t last_used);
 

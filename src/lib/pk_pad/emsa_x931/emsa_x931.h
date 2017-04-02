@@ -26,13 +26,16 @@ class BOTAN_DLL EMSA_X931 final : public EMSA
       */
       explicit EMSA_X931(HashFunction* hash);
 
-      EMSA* clone() override { return new EMSA_X931(m_hash->clone()); }
+      EMSA* clone() override
+         {
+         return new EMSA_X931(m_hash->clone());
+         }
    private:
       void update(const uint8_t[], size_t) override;
       secure_vector<uint8_t> raw_data() override;
 
       secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
-                                     RandomNumberGenerator& rng) override;
+                                         RandomNumberGenerator& rng) override;
 
       bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
                   size_t) override;

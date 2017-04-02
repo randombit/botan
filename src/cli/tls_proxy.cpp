@@ -28,7 +28,7 @@
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-  #include <botan/tls_session_manager_sqlite.h>
+   #include <botan/tls_session_manager_sqlite.h>
 #endif
 
 #include "credentials.h"
@@ -74,16 +74,19 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
                             tcp::resolver::iterator endpoints)
          {
          return pointer(
-            new tls_proxy_session(
-               io,
-               session_manager,
-               credentials,
-               policy,
-               endpoints)
-            );
+                   new tls_proxy_session(
+                      io,
+                      session_manager,
+                      credentials,
+                      policy,
+                      endpoints)
+                );
          }
 
-      tcp::socket& client_socket() { return m_client_socket; }
+      tcp::socket& client_socket()
+         {
+         return m_client_socket;
+         }
 
       void start()
          {
@@ -133,7 +136,9 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
          try
             {
             if(!m_tls.is_active())
+               {
                log_binary_message("From client", &m_c2p[0], bytes_transferred);
+               }
             m_tls.received_data(&m_c2p[0], bytes_transferred);
             }
          catch(Botan::Exception& e)
@@ -190,7 +195,9 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
       void tls_emit_data(const uint8_t buf[], size_t buf_len) override
          {
          if(buf_len > 0)
+            {
             m_p2c_pending.insert(m_p2c_pending.end(), buf, buf + buf_len);
+            }
 
          // no write now active and we still have output pending
          if(m_p2c.empty() && !m_p2c_pending.empty())
@@ -212,7 +219,9 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
       void proxy_write_to_server(const uint8_t buf[], size_t buf_len)
          {
          if(buf_len > 0)
+            {
             m_p2s_pending.insert(m_p2s_pending.end(), buf, buf + buf_len);
+            }
 
          // no write now active and we still have output pending
          if(m_p2s.empty() && !m_p2s_pending.empty())
@@ -273,20 +282,22 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
          m_hostname = session.server_info().hostname();
 
          if(m_hostname != "")
+            {
             std::cout << "Client requested hostname '" << m_hostname << "'" << std::endl;
+            }
 
          async_connect(m_server_socket, m_server_endpoints,
                        [this](boost::system::error_code ec, tcp::resolver::iterator endpoint)
-                       {
-                       if(ec)
-                          {
-                          log_error("Server connection", ec);
-                          return;
-                          }
+            {
+            if(ec)
+               {
+               log_error("Server connection", ec);
+               return;
+               }
 
-                       server_read(boost::system::error_code(), 0); // start read loop
-                       proxy_write_to_server(nullptr, 0);
-                       });
+            server_read(boost::system::error_code(), 0); // start read loop
+            proxy_write_to_server(nullptr, 0);
+            });
          return true;
          }
 
@@ -298,7 +309,9 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
             return;
             }
          else
+            {
             std::cout << "Alert " << alert.type_string() << std::endl;
+            }
          }
 
       boost::asio::io_service::strand m_strand;
@@ -346,25 +359,25 @@ class tls_proxy_server
                this,
                new_session,
                boost::asio::placeholders::error)
-            );
+         );
          }
 
    private:
       session::pointer make_session()
          {
          return session::create(
-            m_acceptor.get_io_service(),
-            m_session_manager,
-            m_creds,
-            m_policy,
-            m_server_endpoints
-            );
+                   m_acceptor.get_io_service(),
+                   m_session_manager,
+                   m_creds,
+                   m_policy,
+                   m_server_endpoints
+                );
          }
 
       void handle_accept(session::pointer new_session,
                          const boost::system::error_code& error)
          {
-         if (!error)
+         if(!error)
             {
             new_session->start();
 
@@ -377,7 +390,7 @@ class tls_proxy_server
                   this,
                   new_session,
                   boost::asio::placeholders::error)
-               );
+            );
             }
          }
 
@@ -395,7 +408,7 @@ class TLS_Proxy final : public Command
    {
    public:
       TLS_Proxy() : Command("tls_proxy listen_port target_host target_port server_cert server_key "
-                            "--threads=0 --session-db= --session-db-pass=") {}
+                               "--threads=0 --session-db= --session-db-pass=") {}
 
       void go() override
          {
@@ -439,12 +452,17 @@ class TLS_Proxy final : public Command
 
          // run forever... first thread is main calling io.run below
          for(size_t i = 2; i <= num_threads; ++i)
-            threads.push_back(std::make_shared<std::thread>([&io]() { io.run(); }));
+            threads.push_back(std::make_shared<std::thread>([&io]()
+            {
+            io.run();
+            }));
 
          io.run();
 
-         for (size_t i = 0; i < threads.size(); ++i)
+         for(size_t i = 0; i < threads.size(); ++i)
+            {
             threads[i]->join();
+            }
          }
    };
 

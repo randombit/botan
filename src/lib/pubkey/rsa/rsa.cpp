@@ -16,11 +16,11 @@
 #include <botan/ber_dec.h>
 
 #if defined(BOTAN_HAS_OPENSSL)
-  #include <botan/internal/openssl.h>
+   #include <botan/internal/openssl.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-  #include <future>
+   #include <future>
 #endif
 
 namespace Botan {
@@ -44,21 +44,21 @@ AlgorithmIdentifier RSA_PublicKey::algorithm_identifier() const
 std::vector<uint8_t> RSA_PublicKey::public_key_bits() const
    {
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-         .encode(m_n)
-         .encode(m_e)
-      .end_cons()
-      .get_contents_unlocked();
+          .start_cons(SEQUENCE)
+          .encode(m_n)
+          .encode(m_e)
+          .end_cons()
+          .get_contents_unlocked();
    }
 
 RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier&,
                              const std::vector<uint8_t>& key_bits)
    {
    BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
-        .decode(m_n)
-        .decode(m_e)
-      .end_cons();
+   .start_cons(SEQUENCE)
+   .decode(m_n)
+   .decode(m_e)
+   .end_cons();
    }
 
 /*
@@ -67,42 +67,44 @@ RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier&,
 bool RSA_PublicKey::check_key(RandomNumberGenerator&, bool) const
    {
    if(m_n < 35 || m_n.is_even() || m_e < 2)
+      {
       return false;
+      }
    return true;
    }
 
 secure_vector<uint8_t> RSA_PrivateKey::private_key_bits() const
    {
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-         .encode(static_cast<size_t>(0))
-         .encode(m_n)
-         .encode(m_e)
-         .encode(m_d)
-         .encode(m_p)
-         .encode(m_q)
-         .encode(m_d1)
-         .encode(m_d2)
-         .encode(m_c)
-      .end_cons()
-   .get_contents();
+          .start_cons(SEQUENCE)
+          .encode(static_cast<size_t>(0))
+          .encode(m_n)
+          .encode(m_e)
+          .encode(m_d)
+          .encode(m_p)
+          .encode(m_q)
+          .encode(m_d1)
+          .encode(m_d2)
+          .encode(m_c)
+          .end_cons()
+          .get_contents();
    }
 
 RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier&,
                                const secure_vector<uint8_t>& key_bits)
    {
    BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
-         .decode_and_check<size_t>(0, "Unknown PKCS #1 key format version")
-         .decode(m_n)
-         .decode(m_e)
-         .decode(m_d)
-         .decode(m_p)
-         .decode(m_q)
-         .decode(m_d1)
-         .decode(m_d2)
-         .decode(m_c)
-      .end_cons();
+   .start_cons(SEQUENCE)
+   .decode_and_check<size_t>(0, "Unknown PKCS #1 key format version")
+   .decode(m_n)
+   .decode(m_e)
+   .decode(m_d)
+   .decode(m_p)
+   .decode(m_q)
+   .decode(m_d1)
+   .decode(m_d2)
+   .decode(m_c)
+   .end_cons();
    }
 
 RSA_PrivateKey::RSA_PrivateKey(const BigInt& prime1,
@@ -110,7 +112,7 @@ RSA_PrivateKey::RSA_PrivateKey(const BigInt& prime1,
                                const BigInt& exp,
                                const BigInt& d_exp,
                                const BigInt& mod) :
-   m_d{ d_exp }, m_p{ prime1 }, m_q{ prime2 }, m_d1{}, m_d2{}, m_c{ inverse_mod( m_q, m_p ) }
+   m_d{ d_exp }, m_p{ prime1 }, m_q{ prime2 }, m_d1{}, m_d2{}, m_c{ inverse_mod(m_q, m_p) }
    {
    m_n = mod.is_nonzero() ? mod : m_p * m_q;
    m_e = exp;
@@ -119,7 +121,9 @@ RSA_PrivateKey::RSA_PrivateKey(const BigInt& prime1,
       {
       BigInt inv_for_d = lcm(m_p - 1, m_q - 1);
       if(m_e.is_even())
+         {
          inv_for_d >>= 1;
+         }
 
       m_d = inverse_mod(m_e, inv_for_d);
       }
@@ -138,7 +142,9 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
       throw Invalid_Argument(algo_name() + ": Can't make a key that is only " +
                              std::to_string(bits) + " bits long");
    if(exp < 3 || exp % 2 == 0)
+      {
       throw Invalid_Argument(algo_name() + ": Invalid encryption exponent");
+      }
 
    m_e = exp;
 
@@ -147,7 +153,8 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
       m_p = random_prime(rng, (bits + 1) / 2, m_e);
       m_q = random_prime(rng, bits - m_p.bits(), m_e);
       m_n = m_p * m_q;
-      } while(m_n.bits() != bits);
+      }
+   while(m_n.bits() != bits);
 
    m_d = inverse_mod(m_e, lcm(m_p - 1, m_q - 1));
    m_d1 = m_d % (m_p - 1);
@@ -160,21 +167,29 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng,
 */
 bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
    {
-   if(m_n < 35 || m_n.is_even() || m_e < 2 || m_d < 2 || m_p < 3 || m_q < 3 || m_p*m_q != m_n)
+   if(m_n < 35 || m_n.is_even() || m_e < 2 || m_d < 2 || m_p < 3 || m_q < 3 || m_p * m_q != m_n)
+      {
       return false;
+      }
 
    if(m_d1 != m_d % (m_p - 1) || m_d2 != m_d % (m_q - 1) || m_c != inverse_mod(m_q, m_p))
+      {
       return false;
+      }
 
    const size_t prob = (strong) ? 128 : 12;
 
    if(!is_prime(m_p, rng, prob) || !is_prime(m_q, rng, prob))
+      {
       return false;
+      }
 
    if(strong)
       {
       if((m_e * m_d) % lcm(m_p - 1, m_q - 1) != 1)
+         {
          return false;
+         }
 
       return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-256)");
       }
@@ -190,7 +205,10 @@ namespace {
 class RSA_Private_Operation
    {
    protected:
-      size_t get_max_input_bits() const { return (m_n.bits() - 1); }
+      size_t get_max_input_bits() const
+         {
+         return (m_n.bits() - 1);
+         }
 
       explicit RSA_Private_Operation(const RSA_PrivateKey& rsa, RandomNumberGenerator& rng) :
          m_n(rsa.get_n()),
@@ -202,15 +220,23 @@ class RSA_Private_Operation
          m_mod_p(rsa.get_p()),
          m_blinder(m_n,
                    rng,
-                   [this](const BigInt& k) { return m_powermod_e_n(k); },
-                   [this](const BigInt& k) { return inverse_mod(k, m_n); })
+                   [this](const BigInt & k)
+         {
+         return m_powermod_e_n(k);
+         },
+      [this](const BigInt& k)
+         {
+         return inverse_mod(k, m_n);
+         })
          {
          }
 
       BigInt blinded_private_op(const BigInt& m) const
          {
          if(m >= m_n)
+            {
             throw Invalid_Argument("RSA private op - input is too large");
+            }
 
          return m_blinder.unblind(private_op(m_blinder.blind(m)));
          }
@@ -240,11 +266,14 @@ class RSA_Private_Operation
    };
 
 class RSA_Signature_Operation : public PK_Ops::Signature_with_EMSA,
-                                private RSA_Private_Operation
+   private RSA_Private_Operation
    {
    public:
 
-      size_t max_input_bits() const override { return get_max_input_bits(); };
+      size_t max_input_bits() const override
+         {
+         return get_max_input_bits();
+         };
 
       RSA_Signature_Operation(const RSA_PrivateKey& rsa, const std::string& emsa, RandomNumberGenerator& rng) :
          PK_Ops::Signature_with_EMSA(emsa),
@@ -253,7 +282,7 @@ class RSA_Signature_Operation : public PK_Ops::Signature_with_EMSA,
          }
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                   RandomNumberGenerator&) override
+                                      RandomNumberGenerator&) override
          {
          const BigInt m(msg, msg_len);
          const BigInt x = blinded_private_op(m);
@@ -264,11 +293,14 @@ class RSA_Signature_Operation : public PK_Ops::Signature_with_EMSA,
    };
 
 class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
-                                 private RSA_Private_Operation
+   private RSA_Private_Operation
    {
    public:
 
-      size_t max_raw_input_bits() const override { return get_max_input_bits(); };
+      size_t max_raw_input_bits() const override
+         {
+         return get_max_input_bits();
+         };
 
       RSA_Decryption_Operation(const RSA_PrivateKey& rsa, const std::string& eme, RandomNumberGenerator& rng) :
          PK_Ops::Decryption_with_EME(eme),
@@ -287,7 +319,7 @@ class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
    };
 
 class RSA_KEM_Decryption_Operation : public PK_Ops::KEM_Decryption_with_KDF,
-                                     private RSA_Private_Operation
+   private RSA_Private_Operation
    {
    public:
 
@@ -319,24 +351,32 @@ class RSA_Public_Operation
          m_n(rsa.get_n()), m_powermod_e_n(rsa.get_e(), rsa.get_n())
          {}
 
-      size_t get_max_input_bits() const { return (m_n.bits() - 1); }
+      size_t get_max_input_bits() const
+         {
+         return (m_n.bits() - 1);
+         }
 
    protected:
       BigInt public_op(const BigInt& m) const
          {
          if(m >= m_n)
+            {
             throw Invalid_Argument("RSA public op - input is too large");
+            }
          return m_powermod_e_n(m);
          }
 
-      const BigInt& get_n() const { return m_n; }
+      const BigInt& get_n() const
+         {
+         return m_n;
+         }
 
       const BigInt& m_n;
       Fixed_Exponent_Power_Mod m_powermod_e_n;
    };
 
 class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
-                                 private RSA_Public_Operation
+   private RSA_Public_Operation
    {
    public:
 
@@ -346,10 +386,13 @@ class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
          {
          }
 
-      size_t max_raw_input_bits() const override { return get_max_input_bits(); };
+      size_t max_raw_input_bits() const override
+         {
+         return get_max_input_bits();
+         };
 
       secure_vector<uint8_t> raw_encrypt(const uint8_t msg[], size_t msg_len,
-                                      RandomNumberGenerator&) override
+                                         RandomNumberGenerator&) override
          {
          BigInt m(msg, msg_len);
          return BigInt::encode_1363(public_op(m), m_n.bytes());
@@ -357,11 +400,14 @@ class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
    };
 
 class RSA_Verify_Operation : public PK_Ops::Verification_with_EMSA,
-                             private RSA_Public_Operation
+   private RSA_Public_Operation
    {
    public:
 
-      size_t max_input_bits() const override { return get_max_input_bits(); };
+      size_t max_input_bits() const override
+         {
+         return get_max_input_bits();
+         };
 
       RSA_Verify_Operation(const RSA_PublicKey& rsa, const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),
@@ -369,7 +415,10 @@ class RSA_Verify_Operation : public PK_Ops::Verification_with_EMSA,
          {
          }
 
-      bool with_recovery() const override { return true; }
+      bool with_recovery() const override
+         {
+         return true;
+         }
 
       secure_vector<uint8_t> verify_mr(const uint8_t msg[], size_t msg_len) override
          {
@@ -379,7 +428,7 @@ class RSA_Verify_Operation : public PK_Ops::Verification_with_EMSA,
    };
 
 class RSA_KEM_Encryption_Operation : public PK_Ops::KEM_Encryption_with_KDF,
-                                     private RSA_Public_Operation
+   private RSA_Public_Operation
    {
    public:
 
@@ -423,13 +472,17 @@ RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
          * to the normal version.
          */
          if(provider == "openssl")
+            {
             throw Exception("OpenSSL RSA provider rejected key:", e.what());
+            }
          }
       }
 #endif
 
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Encryption>(new RSA_Encryption_Operation(*this, params));
+      }
    throw Provider_Not_Found(algo_name(), provider);
    }
 
@@ -439,7 +492,9 @@ RSA_PublicKey::create_kem_encryption_op(RandomNumberGenerator& /*rng*/,
                                         const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::KEM_Encryption>(new RSA_KEM_Encryption_Operation(*this, params));
+      }
    throw Provider_Not_Found(algo_name(), provider);
    }
 
@@ -452,12 +507,16 @@ RSA_PublicKey::create_verification_op(const std::string& params,
       {
       std::unique_ptr<PK_Ops::Verification> res = make_openssl_rsa_ver_op(*this, params);
       if(res)
+         {
          return res;
+         }
       }
 #endif
 
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Verification>(new RSA_Verify_Operation(*this, params));
+      }
 
    throw Provider_Not_Found(algo_name(), provider);
    }
@@ -477,24 +536,30 @@ RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
       catch(Exception& e)
          {
          if(provider == "openssl")
+            {
             throw Exception("OpenSSL RSA provider rejected key:", e.what());
+            }
          }
       }
 #endif
 
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Decryption>(new RSA_Decryption_Operation(*this, params, rng));
+      }
 
    throw Provider_Not_Found(algo_name(), provider);
    }
 
 std::unique_ptr<PK_Ops::KEM_Decryption>
 RSA_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
-                                         const std::string& params,
-                                         const std::string& provider) const
+      const std::string& params,
+      const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::KEM_Decryption>(new RSA_KEM_Decryption_Operation(*this, params, rng));
+      }
 
    throw Provider_Not_Found(algo_name(), provider);
    }
@@ -509,12 +574,16 @@ RSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
       {
       std::unique_ptr<PK_Ops::Signature> res = make_openssl_rsa_sig_op(*this, params);
       if(res)
+         {
          return res;
+         }
       }
 #endif
 
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Signature>(new RSA_Signature_Operation(*this, params, rng));
+      }
 
    throw Provider_Not_Found(algo_name(), provider);
    }

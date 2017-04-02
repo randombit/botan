@@ -32,18 +32,32 @@ struct Response
          m_body(body),
          m_headers(headers) {}
 
-      unsigned int status_code() const { return m_status_code; }
+      unsigned int status_code() const
+         {
+         return m_status_code;
+         }
 
-      const std::vector<uint8_t>& body() const { return m_body; }
+      const std::vector<uint8_t>& body() const
+         {
+         return m_body;
+         }
 
-      const std::map<std::string, std::string>& headers() const { return m_headers; }
+      const std::map<std::string, std::string>& headers() const
+         {
+         return m_headers;
+         }
 
-      std::string status_message() const { return m_status_message; }
+      std::string status_message() const
+         {
+         return m_status_message;
+         }
 
       void throw_unless_ok()
          {
          if(status_code() != 200)
+            {
             throw Exception("HTTP error: " + status_message());
+            }
          }
 
    private:
@@ -65,7 +79,7 @@ struct BOTAN_DLL HTTP_Error : public Exception
 
 BOTAN_DLL std::ostream& operator<<(std::ostream& o, const Response& resp);
 
-typedef std::function<std::string (const std::string&, const std::string&)> http_exch_fn;
+typedef std::function<std::string(const std::string&, const std::string&)> http_exch_fn;
 
 BOTAN_DLL Response http_sync(http_exch_fn fn,
                              const std::string& verb,

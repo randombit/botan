@@ -18,12 +18,18 @@ Pipe::message_id Pipe::get_message_no(const std::string& func_name,
                                       message_id msg) const
    {
    if(msg == DEFAULT_MESSAGE)
+      {
       msg = default_msg();
+      }
    else if(msg == LAST_MESSAGE)
+      {
       msg = message_count() - 1;
+      }
 
    if(msg >= message_count())
+      {
       throw Invalid_Message_Number(func_name, msg);
+      }
 
    return msg;
    }
@@ -34,7 +40,9 @@ Pipe::message_id Pipe::get_message_no(const std::string& func_name,
 void Pipe::write(const uint8_t input[], size_t length)
    {
    if(!m_inside_msg)
+      {
       throw Invalid_State("Cannot write to a Pipe while it is not processing");
+      }
    m_pipe->write(input, length);
    }
 
@@ -117,7 +125,9 @@ std::string Pipe::read_all_as_string(message_id msg)
       {
       size_t got = read(buffer.data(), buffer.size(), msg);
       if(got == 0)
+         {
          break;
+         }
       str.append(reinterpret_cast<const char*>(buffer.data()), got);
       }
 

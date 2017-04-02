@@ -29,11 +29,15 @@ void BigInt::randomize(RandomNumberGenerator& rng,
 
       // Always cut unwanted bits
       if(bitsize % 8)
+         {
          array[0] &= 0xFF >> (8 - (bitsize % 8));
+         }
 
       // Set the highest bit if wanted
-      if (set_high_bit)
+      if(set_high_bit)
+         {
          array[0] |= 0x80 >> ((bitsize % 8) ? (8 - bitsize % 8) : 0);
+         }
 
       binary_decode(array);
       }

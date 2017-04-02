@@ -18,14 +18,25 @@ namespace Botan {
 class BOTAN_DLL SHA_384 final : public MDx_HashFunction
    {
    public:
-      std::string name() const override { return "SHA-384"; }
-      size_t output_length() const override { return 48; }
-      HashFunction* clone() const override { return new SHA_384; }
+      std::string name() const override
+         {
+         return "SHA-384";
+         }
+      size_t output_length() const override
+         {
+         return 48;
+         }
+      HashFunction* clone() const override
+         {
+         return new SHA_384;
+         }
 
       void clear() override;
 
       SHA_384() : MDx_HashFunction(128, true, true, 16), m_digest(8)
-         { clear(); }
+         {
+         clear();
+         }
    private:
       void compress_n(const uint8_t[], size_t blocks) override;
       void copy_out(uint8_t[]) override;
@@ -39,14 +50,25 @@ class BOTAN_DLL SHA_384 final : public MDx_HashFunction
 class BOTAN_DLL SHA_512 final : public MDx_HashFunction
    {
    public:
-      std::string name() const override { return "SHA-512"; }
-      size_t output_length() const override { return 64; }
-      HashFunction* clone() const override { return new SHA_512; }
+      std::string name() const override
+         {
+         return "SHA-512";
+         }
+      size_t output_length() const override
+         {
+         return 64;
+         }
+      HashFunction* clone() const override
+         {
+         return new SHA_512;
+         }
 
       void clear() override;
 
       SHA_512() : MDx_HashFunction(128, true, true, 16), m_digest(8)
-         { clear(); }
+         {
+         clear();
+         }
    private:
       void compress_n(const uint8_t[], size_t blocks) override;
       void copy_out(uint8_t[]) override;
@@ -60,13 +82,25 @@ class BOTAN_DLL SHA_512 final : public MDx_HashFunction
 class BOTAN_DLL SHA_512_256 final : public MDx_HashFunction
    {
    public:
-      std::string name() const override { return "SHA-512-256"; }
-      size_t output_length() const override { return 32; }
-      HashFunction* clone() const override { return new SHA_512_256; }
+      std::string name() const override
+         {
+         return "SHA-512-256";
+         }
+      size_t output_length() const override
+         {
+         return 32;
+         }
+      HashFunction* clone() const override
+         {
+         return new SHA_512_256;
+         }
 
       void clear() override;
 
-      SHA_512_256() : MDx_HashFunction(128, true, true, 16), m_digest(8) { clear(); }
+      SHA_512_256() : MDx_HashFunction(128, true, true, 16), m_digest(8)
+         {
+         clear();
+         }
    private:
       void compress_n(const uint8_t[], size_t blocks) override;
       void copy_out(uint8_t[]) override;

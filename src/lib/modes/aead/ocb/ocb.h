@@ -38,7 +38,10 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
 
       bool valid_nonce_length(size_t) const override;
 
-      size_t tag_size() const override { return m_tag_size; }
+      size_t tag_size() const override
+         {
+         return m_tag_size;
+         }
 
       void clear() override;
 
@@ -84,9 +87,14 @@ class BOTAN_DLL OCB_Encryption final : public OCB_Mode
          OCB_Mode(cipher, tag_size) {}
 
       size_t output_length(size_t input_length) const override
-         { return input_length + tag_size(); }
+         {
+         return input_length + tag_size();
+         }
 
-      size_t minimum_final_size() const override { return 0; }
+      size_t minimum_final_size() const override
+         {
+         return 0;
+         }
 
       size_t process(uint8_t buf[], size_t size) override;
 
@@ -111,7 +119,10 @@ class BOTAN_DLL OCB_Decryption final : public OCB_Mode
          return input_length - tag_size();
          }
 
-      size_t minimum_final_size() const override { return tag_size(); }
+      size_t minimum_final_size() const override
+         {
+         return tag_size();
+         }
 
       size_t process(uint8_t buf[], size_t size) override;
 

@@ -42,19 +42,26 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       * Get this keys algorithm name.
       * @return this keys algorithm name
       */
-      std::string algo_name() const override { return "ECDH"; }
+      std::string algo_name() const override
+         {
+         return "ECDH";
+         }
 
       /**
       * @return public point value
       */
       std::vector<uint8_t> public_value() const
-         { return unlock(EC2OSP(public_point(), PointGFp::UNCOMPRESSED)); }
+         {
+         return unlock(EC2OSP(public_point(), PointGFp::UNCOMPRESSED));
+         }
 
       /**
       * @return public point value
       */
       std::vector<uint8_t> public_value(PointGFp::Compression_Type type) const
-         { return unlock(EC2OSP(public_point(), type)); }
+         {
+         return unlock(EC2OSP(public_point(), type));
+         }
 
    protected:
       ECDH_PublicKey();
@@ -64,8 +71,8 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
 * This class represents ECDH Private Keys.
 */
 class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
-                                  public EC_PrivateKey,
-                                  public PK_Key_Agreement_Key
+   public EC_PrivateKey,
+   public PK_Key_Agreement_Key
    {
    public:
 
@@ -90,15 +97,19 @@ class BOTAN_DLL ECDH_PrivateKey : public ECDH_PublicKey,
          EC_PrivateKey(rng, domain, x) {}
 
       std::vector<uint8_t> public_value() const override
-         { return ECDH_PublicKey::public_value(PointGFp::UNCOMPRESSED); }
+         {
+         return ECDH_PublicKey::public_value(PointGFp::UNCOMPRESSED);
+         }
 
       std::vector<uint8_t> public_value(PointGFp::Compression_Type type) const
-         { return ECDH_PublicKey::public_value(type); }
+         {
+         return ECDH_PublicKey::public_value(type);
+         }
 
       std::unique_ptr<PK_Ops::Key_Agreement>
-         create_key_agreement_op(RandomNumberGenerator& rng,
-                                 const std::string& params,
-                                 const std::string& provider) const override;
+      create_key_agreement_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const override;
    };
 
 }

@@ -21,10 +21,12 @@ void aont_package(RandomNumberGenerator& rng,
    const size_t BLOCK_SIZE = cipher->block_size();
 
    if(!cipher->valid_keylength(BLOCK_SIZE))
+      {
       throw Invalid_Argument("AONT::package: Invalid cipher");
+      }
 
    // The all-zero string which is used both as the CTR IV and as K0
-   const std::string all_zeros(BLOCK_SIZE*2, '0');
+   const std::string all_zeros(BLOCK_SIZE * 2, '0');
 
    SymmetricKey package_key(rng, BLOCK_SIZE);
 
@@ -55,7 +57,9 @@ void aont_package(RandomNumberGenerator& rng,
       copy_mem(buf.data(), output + (BLOCK_SIZE * i), left);
 
       for(size_t j = 0; j != sizeof(i); ++j)
-         buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i)-1-j, i);
+         {
+         buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i) - 1 - j, i);
+         }
 
       cipher->encrypt(buf.data());
 
@@ -73,13 +77,17 @@ void aont_unpackage(BlockCipher* cipher,
    const size_t BLOCK_SIZE = cipher->block_size();
 
    if(!cipher->valid_keylength(BLOCK_SIZE))
+      {
       throw Invalid_Argument("AONT::unpackage: Invalid cipher");
+      }
 
    if(input_len < BLOCK_SIZE)
+      {
       throw Invalid_Argument("AONT::unpackage: Input too short");
+      }
 
    // The all-zero string which is used both as the CTR IV and as K0
-   const std::string all_zeros(BLOCK_SIZE*2, '0');
+   const std::string all_zeros(BLOCK_SIZE * 2, '0');
 
    cipher->set_key(SymmetricKey(all_zeros));
 
@@ -97,13 +105,15 @@ void aont_unpackage(BlockCipher* cipher,
    for(size_t i = 0; i != blocks; ++i)
       {
       const size_t left = std::min<size_t>(BLOCK_SIZE,
-                                           input_len - BLOCK_SIZE * (i+1));
+                                           input_len - BLOCK_SIZE * (i + 1));
 
       zeroise(buf);
       copy_mem(buf.data(), input + (BLOCK_SIZE * i), left);
 
       for(size_t j = 0; j != sizeof(i); ++j)
-         buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i)-1-j, i);
+         {
+         buf[BLOCK_SIZE - 1 - j] ^= get_byte(sizeof(i) - 1 - j, i);
+         }
 
       cipher->encrypt(buf.data());
 

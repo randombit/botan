@@ -57,9 +57,15 @@ class Zlib_Style_Stream : public Compression_Stream
          m_stream.avail_out = len;
          }
 
-      size_t avail_in() const override { return m_stream.avail_in; }
+      size_t avail_in() const override
+         {
+         return m_stream.avail_in;
+         }
 
-      size_t avail_out() const override { return m_stream.avail_out; }
+      size_t avail_out() const override
+         {
+         return m_stream.avail_out;
+         }
 
       Zlib_Style_Stream()
          {
@@ -76,9 +82,15 @@ class Zlib_Style_Stream : public Compression_Stream
    protected:
       typedef Stream stream_t;
 
-      stream_t* streamp() { return &m_stream; }
+      stream_t* streamp()
+         {
+         return &m_stream;
+         }
 
-      Compression_Alloc_Info* alloc() { return m_allocs.get(); }
+      Compression_Alloc_Info* alloc()
+         {
+         return m_allocs.get();
+         }
    private:
       stream_t m_stream;
       std::unique_ptr<Compression_Alloc_Info> m_allocs;

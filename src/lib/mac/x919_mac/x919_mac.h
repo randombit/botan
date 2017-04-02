@@ -21,7 +21,10 @@ class BOTAN_DLL ANSI_X919_MAC final : public MessageAuthenticationCode
    public:
       void clear() override;
       std::string name() const override;
-      size_t output_length() const override { return 8; }
+      size_t output_length() const override
+         {
+         return 8;
+         }
 
       MessageAuthenticationCode* clone() const override;
 

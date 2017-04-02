@@ -75,38 +75,38 @@ W0 = W[t]..W[t+3]
 * efficeon, pentium-m, and opteron but shifts are available in
 * only one unit.
 */
-#define prep(prep, XW0, XW1, XW2, XW3, K)                               \
-   do {                                                                 \
-      __m128i r0, r1, r2, r3;                                           \
-                                                                        \
-      /* load W[t-4] 16-byte aligned, and shift */                      \
-      r3 = _mm_srli_si128((XW3), 4);                                    \
-      r0 = (XW0);                                                       \
-      /* get high 64-bits of XW0 into low 64-bits */                    \
-      r1 = _mm_shuffle_epi32((XW0), _MM_SHUFFLE(1,0,3,2));              \
-      /* load high 64-bits of r1 */                                     \
-      r1 = _mm_unpacklo_epi64(r1, (XW1));                               \
-      r2 = (XW2);                                                       \
-                                                                        \
-      r0 = _mm_xor_si128(r1, r0);                                       \
-      r2 = _mm_xor_si128(r3, r2);                                       \
-      r0 = _mm_xor_si128(r2, r0);                                       \
-      /* unrotated W[t]..W[t+2] in r0 ... still need W[t+3] */          \
-                                                                        \
-      r2 = _mm_slli_si128(r0, 12);                                      \
-      r1 = _mm_cmplt_epi32(r0, _mm_setzero_si128());                    \
-      r0 = _mm_add_epi32(r0, r0);   /* shift left by 1 */               \
-      r0 = _mm_sub_epi32(r0, r1);   /* r0 has W[t]..W[t+2] */           \
-                                                                        \
-      r3 = _mm_srli_epi32(r2, 30);                                      \
-      r2 = _mm_slli_epi32(r2, 2);                                       \
-                                                                        \
-      r0 = _mm_xor_si128(r0, r3);                                       \
-      r0 = _mm_xor_si128(r0, r2);   /* r0 now has W[t+3] */             \
-                                                                        \
-      (XW0) = r0;                                                       \
-      (prep).u128 = _mm_add_epi32(r0, K);                               \
-   } while(0)
+#define prep(prep, XW0, XW1, XW2, XW3, K)                         \
+   do {                                                           \
+      __m128i r0, r1, r2, r3;                                     \
+                                                                  \
+/* load W[t-4] 16-byte aligned, and shift */                      \
+r3 = _mm_srli_si128((XW3), 4);                                    \
+r0 = (XW0);                                                       \
+/* get high 64-bits of XW0 into low 64-bits */                    \
+r1 = _mm_shuffle_epi32((XW0), _MM_SHUFFLE(1,0,3,2));              \
+/* load high 64-bits of r1 */                                     \
+r1 = _mm_unpacklo_epi64(r1, (XW1));                               \
+r2 = (XW2);                                                       \
+                                                                  \
+r0 = _mm_xor_si128(r1, r0);                                       \
+r2 = _mm_xor_si128(r3, r2);                                       \
+r0 = _mm_xor_si128(r2, r0);                                       \
+/* unrotated W[t]..W[t+2] in r0 ... still need W[t+3] */          \
+                                                                  \
+r2 = _mm_slli_si128(r0, 12);                                      \
+r1 = _mm_cmplt_epi32(r0, _mm_setzero_si128());                    \
+r0 = _mm_add_epi32(r0, r0);   /* shift left by 1 */               \
+r0 = _mm_sub_epi32(r0, r1);   /* r0 has W[t]..W[t+2] */           \
+                                                                  \
+r3 = _mm_srli_epi32(r2, 30);                                      \
+r2 = _mm_slli_epi32(r2, 2);                                       \
+                                                                  \
+r0 = _mm_xor_si128(r0, r3);                                       \
+r0 = _mm_xor_si128(r0, r2);   /* r0 now has W[t+3] */             \
+                                                                  \
+(XW0) = r0;                                                       \
+(prep).u128 = _mm_add_epi32(r0, K);                               \
+} while(0)
 
 /*
 * SHA-160 F1 Function
@@ -163,16 +163,17 @@ void SHA_160::sse2_compress_n(secure_vector<uint32_t>& digest, const uint8_t inp
    const __m128i K60_79 = _mm_set1_epi32(0xCA62C1D6);
 
    uint32_t A = digest[0],
-          B = digest[1],
-          C = digest[2],
-          D = digest[3],
-          E = digest[4];
+            B = digest[1],
+            C = digest[2],
+            D = digest[3],
+            E = digest[4];
 
    const __m128i* input_mm = reinterpret_cast<const __m128i*>(input);
 
    for(size_t i = 0; i != blocks; ++i)
       {
-      union v4si {
+      union v4si
+         {
          uint32_t u32[4];
          __m128i u128;
          };

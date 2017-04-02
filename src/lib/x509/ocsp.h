@@ -47,15 +47,23 @@ class BOTAN_DLL Request
       /**
       * @return issuer certificate
       */
-      const X509_Certificate& issuer() const { return m_issuer; }
+      const X509_Certificate& issuer() const
+         {
+         return m_issuer;
+         }
 
       /**
       * @return subject certificate
       */
-      const X509_Certificate& subject() const { throw Not_Implemented("Method have been deprecated"); }
+      const X509_Certificate& subject() const
+         {
+         throw Not_Implemented("Method have been deprecated");
+         }
 
       const std::vector<uint8_t>& issuer_key_hash() const
-         { return m_certid.issuer_key_hash(); }
+         {
+         return m_certid.issuer_key_hash();
+         }
    private:
       X509_Certificate m_issuer;
       CertID m_certid;
@@ -112,19 +120,31 @@ class BOTAN_DLL Response
       /**
       * @return the time this OCSP response was supposedly produced at
       */
-      const X509_Time& produced_at() const { return m_produced_at; }
+      const X509_Time& produced_at() const
+         {
+         return m_produced_at;
+         }
 
       /**
       * @return DN of signer, if provided in response (may be empty)
       */
-      const X509_DN& signer_name() const { return m_signer_name; }
+      const X509_DN& signer_name() const
+         {
+         return m_signer_name;
+         }
 
       /**
       * @return key hash, if provided in response (may be empty)
       */
-      const std::vector<uint8_t>& signer_key_hash() const { return m_key_hash; }
+      const std::vector<uint8_t>& signer_key_hash() const
+         {
+         return m_key_hash;
+         }
 
-      const std::vector<uint8_t>& raw_bits() const { return m_response_bits; }
+      const std::vector<uint8_t>& raw_bits() const
+         {
+         return m_response_bits;
+         }
 
       /**
        * Searches the OCSP response for issuer and subject certificate.

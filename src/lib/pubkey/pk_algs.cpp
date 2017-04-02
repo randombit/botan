@@ -9,51 +9,51 @@
 #include <botan/oids.h>
 
 #if defined(BOTAN_HAS_RSA)
-  #include <botan/rsa.h>
+   #include <botan/rsa.h>
 #endif
 
 #if defined(BOTAN_HAS_DSA)
-  #include <botan/dsa.h>
+   #include <botan/dsa.h>
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-  #include <botan/dh.h>
+   #include <botan/dh.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ecdsa.h>
+   #include <botan/ecdsa.h>
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)
-  #include <botan/ecgdsa.h>
+   #include <botan/ecgdsa.h>
 #endif
 
 #if defined(BOTAN_HAS_ECKCDSA)
-  #include <botan/eckcdsa.h>
+   #include <botan/eckcdsa.h>
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
-  #include <botan/gost_3410.h>
+   #include <botan/gost_3410.h>
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
-  #include <botan/elgamal.h>
+   #include <botan/elgamal.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
-  #include <botan/ecdh.h>
+   #include <botan/ecdh.h>
 #endif
 
 #if defined(BOTAN_HAS_CURVE_25519)
-  #include <botan/curve25519.h>
+   #include <botan/curve25519.h>
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
-  #include <botan/mceliece.h>
+   #include <botan/mceliece.h>
 #endif
 
 #if defined(BOTAN_HAS_XMSS)
-  #include <botan/xmss.h>
+   #include <botan/xmss.h>
 #endif
 
 namespace Botan {
@@ -64,66 +64,92 @@ load_public_key(const AlgorithmIdentifier& alg_id,
    {
    const std::string alg_name = OIDS::lookup(alg_id.oid);
    if(alg_name == "")
+      {
       throw Decoding_Error("Unknown algorithm OID: " + alg_id.oid.as_string());
+      }
 
 #if defined(BOTAN_HAS_RSA)
    if(alg_name == "RSA")
+      {
       return std::unique_ptr<Public_Key>(new RSA_PublicKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519")
+      {
       return std::unique_ptr<Public_Key>(new Curve25519_PublicKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
    if(alg_name == "McEliece")
+      {
       return std::unique_ptr<Public_Key>(new McEliece_PublicKey(key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
    if(alg_name == "ECDSA")
+      {
       return std::unique_ptr<Public_Key>(new ECDSA_PublicKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
    if(alg_name == "ECDH")
+      {
       return std::unique_ptr<Public_Key>(new ECDH_PublicKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(alg_name == "DH")
+      {
       return std::unique_ptr<Public_Key>(new DH_PublicKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_DSA)
    if(alg_name == "DSA")
+      {
       return std::unique_ptr<Public_Key>(new DSA_PublicKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
    if(alg_name == "ElGamal")
+      {
       return std::unique_ptr<Public_Key>(new ElGamal_PublicKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)
    if(alg_name == "ECGDSA")
+      {
       return std::unique_ptr<Public_Key>(new ECGDSA_PublicKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_ECKCDSA)
    if(alg_name == "ECKCDSA")
+      {
       return std::unique_ptr<Public_Key>(new ECKCDSA_PublicKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
    if(alg_name == "GOST-34.10")
+      {
       return std::unique_ptr<Public_Key>(new GOST_3410_PublicKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_XMSS)
    if(alg_name == "XMSS")
+      {
       return std::unique_ptr<Public_Key>(new XMSS_PublicKey(key_bits));
+      }
 #endif
 
    throw Decoding_Error("Unhandled PK algorithm " + alg_name);
@@ -135,66 +161,92 @@ load_private_key(const AlgorithmIdentifier& alg_id,
    {
    const std::string alg_name = OIDS::lookup(alg_id.oid);
    if(alg_name == "")
+      {
       throw Decoding_Error("Unknown algorithm OID: " + alg_id.oid.as_string());
+      }
 
 #if defined(BOTAN_HAS_RSA)
    if(alg_name == "RSA")
+      {
       return std::unique_ptr<Private_Key>(new RSA_PrivateKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519")
+      {
       return std::unique_ptr<Private_Key>(new Curve25519_PrivateKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
    if(alg_name == "ECDSA")
+      {
       return std::unique_ptr<Private_Key>(new ECDSA_PrivateKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
    if(alg_name == "ECDH")
+      {
       return std::unique_ptr<Private_Key>(new ECDH_PrivateKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    if(alg_name == "DH")
+      {
       return std::unique_ptr<Private_Key>(new DH_PrivateKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_DSA)
    if(alg_name == "DSA")
+      {
       return std::unique_ptr<Private_Key>(new DSA_PrivateKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
    if(alg_name == "McEliece")
+      {
       return std::unique_ptr<Private_Key>(new McEliece_PrivateKey(key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)
    if(alg_name == "ECGDSA")
+      {
       return std::unique_ptr<Private_Key>(new ECGDSA_PrivateKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_ECKCDSA)
    if(alg_name == "ECKCDSA")
+      {
       return std::unique_ptr<Private_Key>(new ECKCDSA_PrivateKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
    if(alg_name == "GOST-34.10")
+      {
       return std::unique_ptr<Private_Key>(new GOST_3410_PrivateKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
    if(alg_name == "ElGamal")
+      {
       return std::unique_ptr<Private_Key>(new ElGamal_PrivateKey(alg_id, key_bits));
+      }
 #endif
 
 #if defined(BOTAN_HAS_XMSS)
    if(alg_name == "XMSS")
+      {
       return std::unique_ptr<Private_Key>(new XMSS_PrivateKey(key_bits));
+      }
 #endif
 
    throw Decoding_Error("Unhandled PK algorithm " + alg_name);
@@ -211,7 +263,9 @@ create_private_key(const std::string& alg_name,
 
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519")
+      {
       return std::unique_ptr<Private_Key>(new Curve25519_PrivateKey(rng));
+      }
 #endif
 
 #if defined(BOTAN_HAS_RSA)
@@ -229,7 +283,9 @@ create_private_key(const std::string& alg_name,
          Botan::split_on(params.empty() ? "2960,57" : params, ',');
 
       if(mce_param.size() != 2)
+         {
          throw Invalid_Argument("create_private_key bad McEliece parameters " + params);
+         }
 
       size_t mce_n = Botan::to_u32bit(mce_param[0]);
       size_t mce_t = Botan::to_u32bit(mce_param[1]);
@@ -242,7 +298,7 @@ create_private_key(const std::string& alg_name,
    if(alg_name == "XMSS")
       {
       return std::unique_ptr<Private_Key>(
-         new XMSS_PrivateKey(XMSS_Parameters(params.empty() ? "XMSS_SHA2-512_W16_H10" : params).oid(), rng));
+                new XMSS_PrivateKey(XMSS_Parameters(params.empty() ? "XMSS_SHA2-512_W16_H10" : params).oid(), rng));
       }
 #endif
 
@@ -250,36 +306,46 @@ create_private_key(const std::string& alg_name,
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
 
    if(alg_name == "ECDSA" ||
-      alg_name == "ECDH" ||
-      alg_name == "ECKCDSA" ||
-      alg_name == "ECGDSA" ||
-      alg_name == "GOST-34.10")
+         alg_name == "ECDH" ||
+         alg_name == "ECKCDSA" ||
+         alg_name == "ECGDSA" ||
+         alg_name == "GOST-34.10")
       {
       const EC_Group ec_group(params.empty() ? "secp256r1" : params);
 
 #if defined(BOTAN_HAS_ECDSA)
       if(alg_name == "ECDSA")
+         {
          return std::unique_ptr<Private_Key>(new ECDSA_PrivateKey(rng, ec_group));
+         }
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
       if(alg_name == "ECDH")
+         {
          return std::unique_ptr<Private_Key>(new ECDH_PrivateKey(rng, ec_group));
+         }
 #endif
 
 #if defined(BOTAN_HAS_ECKCDSA)
       if(alg_name == "ECKCDSA")
+         {
          return std::unique_ptr<Private_Key>(new ECKCDSA_PrivateKey(rng, ec_group));
+         }
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
       if(alg_name == "GOST-34.10")
+         {
          return std::unique_ptr<Private_Key>(new GOST_3410_PrivateKey(rng, ec_group));
+         }
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)
       if(alg_name == "ECGDSA")
+         {
          return std::unique_ptr<Private_Key>(new ECGDSA_PrivateKey(rng, ec_group));
+         }
 #endif
       }
 #endif
@@ -293,17 +359,23 @@ create_private_key(const std::string& alg_name,
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
       if(alg_name == "DH")
+         {
          return std::unique_ptr<Private_Key>(new DH_PrivateKey(rng, modp_group));
+         }
 #endif
 
 #if defined(BOTAN_HAS_DSA)
       if(alg_name == "DSA")
+         {
          return std::unique_ptr<Private_Key>(new DSA_PrivateKey(rng, modp_group));
+         }
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
       if(alg_name == "ElGamal")
+         {
          return std::unique_ptr<Private_Key>(new ElGamal_PrivateKey(rng, modp_group));
+         }
 #endif
       }
 #endif

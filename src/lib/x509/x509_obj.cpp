@@ -52,12 +52,15 @@ void X509_Object::init(DataSource& in, const std::string& labels)
    {
    m_PEM_labels_allowed = split_on(labels, '/');
    if(m_PEM_labels_allowed.size() < 1)
+      {
       throw Invalid_Argument("Bad labels argument to X509_Object");
+      }
 
    m_PEM_label_pref = m_PEM_labels_allowed[0];
    std::sort(m_PEM_labels_allowed.begin(), m_PEM_labels_allowed.end());
 
-   try {
+   try
+      {
       if(ASN1::maybe_BER(in) && !PEM_Code::matches(in))
          {
          BER_Decoder dec(in);
@@ -70,7 +73,9 @@ void X509_Object::init(DataSource& in, const std::string& labels)
 
          if(!std::binary_search(m_PEM_labels_allowed.begin(),
                                 m_PEM_labels_allowed.end(), got_label))
+            {
             throw Decoding_Error("Invalid PEM label: " + got_label);
+            }
 
          BER_Decoder dec(ber);
          decode_from(dec);
@@ -86,12 +91,12 @@ void X509_Object::init(DataSource& in, const std::string& labels)
 void X509_Object::encode_into(DER_Encoder& to) const
    {
    to.start_cons(SEQUENCE)
-         .start_cons(SEQUENCE)
-            .raw_bytes(m_tbs_bits)
-         .end_cons()
-         .encode(m_sig_algo)
-         .encode(m_sig, BIT_STRING)
-      .end_cons();
+   .start_cons(SEQUENCE)
+   .raw_bytes(m_tbs_bits)
+   .end_cons()
+   .encode(m_sig_algo)
+   .encode(m_sig, BIT_STRING)
+   .end_cons();
    }
 
 /*
@@ -100,12 +105,12 @@ void X509_Object::encode_into(DER_Encoder& to) const
 void X509_Object::decode_from(BER_Decoder& from)
    {
    from.start_cons(SEQUENCE)
-         .start_cons(SEQUENCE)
-            .raw_bytes(m_tbs_bits)
-         .end_cons()
-         .decode(m_sig_algo)
-         .decode(m_sig, BIT_STRING)
-      .end_cons();
+   .start_cons(SEQUENCE)
+   .raw_bytes(m_tbs_bits)
+   .end_cons()
+   .decode(m_sig_algo)
+   .decode(m_sig, BIT_STRING)
+   .end_cons();
    }
 
 /*
@@ -166,7 +171,9 @@ std::string X509_Object::hash_used_for_signature() const
       parse_algorithm_name(sig_info[1]);
 
    if(pad_and_hash.size() != 2)
+      {
       throw Internal_Error("Invalid name format " + sig_info[1]);
+      }
 
    return pad_and_hash[1];
    }
@@ -177,22 +184,27 @@ std::string X509_Object::hash_used_for_signature() const
 bool X509_Object::check_signature(const Public_Key* pub_key) const
    {
    if(!pub_key)
+      {
       throw Exception("No key provided for " + m_PEM_label_pref + " signature check");
+      }
    std::unique_ptr<const Public_Key> key(pub_key);
    return check_signature(*key);
-}
+   }
 
 /*
 * Check the signature on an object
 */
 bool X509_Object::check_signature(const Public_Key& pub_key) const
    {
-   try {
+   try
+      {
       std::vector<std::string> sig_info =
          split_on(OIDS::lookup(m_sig_algo.oid), '/');
 
       if(sig_info.size() != 2 || sig_info[0] != pub_key.algo_name())
+         {
          return false;
+         }
 
       std::string padding = sig_info[1];
       Signature_Format format =
@@ -212,17 +224,17 @@ bool X509_Object::check_signature(const Public_Key& pub_key) const
 * Apply the X.509 SIGNED macro
 */
 std::vector<uint8_t> X509_Object::make_signed(PK_Signer* signer,
-                                            RandomNumberGenerator& rng,
-                                            const AlgorithmIdentifier& algo,
-                                            const secure_vector<uint8_t>& tbs_bits)
+      RandomNumberGenerator& rng,
+      const AlgorithmIdentifier& algo,
+      const secure_vector<uint8_t>& tbs_bits)
    {
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-         .raw_bytes(tbs_bits)
-         .encode(algo)
-         .encode(signer->sign_message(tbs_bits, rng), BIT_STRING)
-      .end_cons()
-   .get_contents_unlocked();
+          .start_cons(SEQUENCE)
+          .raw_bytes(tbs_bits)
+          .encode(algo)
+          .encode(signer->sign_message(tbs_bits, rng), BIT_STRING)
+          .end_cons()
+          .get_contents_unlocked();
    }
 
 /*
@@ -230,7 +242,8 @@ std::vector<uint8_t> X509_Object::make_signed(PK_Signer* signer,
 */
 void X509_Object::do_decode()
    {
-   try {
+   try
+      {
       force_decode();
       }
    catch(Decoding_Error& e)

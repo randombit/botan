@@ -70,14 +70,18 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param in the secure_vector containing the data to write
       */
       void write(const secure_vector<uint8_t>& in)
-         { write(in.data(), in.size()); }
+         {
+         write(in.data(), in.size());
+         }
 
       /**
       * Write input to the pipe, i.e. to its first filter.
       * @param in the std::vector containing the data to write
       */
       void write(const std::vector<uint8_t>& in)
-         { write(in.data(), in.size()); }
+         {
+         write(in.data(), in.size());
+         }
 
       /**
       * Write input to the pipe, i.e. to its first filter.
@@ -233,7 +237,10 @@ class BOTAN_DLL Pipe final : public DataSource
       /**
       * @return currently set default message
       */
-      size_t default_msg() const { return m_default_read; }
+      size_t default_msg() const
+         {
+         return m_default_read;
+         }
 
       /**
       * Set the default message
@@ -337,7 +344,7 @@ BOTAN_DLL std::istream& operator>>(std::istream& in, Pipe& pipe);
 }
 
 #if defined(BOTAN_HAS_PIPE_UNIXFD_IO)
-  #include <botan/fd_unix.h>
+   #include <botan/fd_unix.h>
 #endif
 
 #endif

@@ -13,7 +13,7 @@
 #include <botan/rotate.h>
 
 #if defined(BOTAN_TARGET_CPU_HAS_SSE2) && !defined(BOTAN_NO_SSE_INTRINSICS)
-  #include <emmintrin.h>
+   #include <emmintrin.h>
 #endif
 
 namespace Botan {
@@ -44,18 +44,18 @@ inline uint32_t reverse_bytes(uint32_t val)
 #elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
    // GCC-style inline assembly for x86 or x86-64
-   asm("bswapl %0" : "=r" (val) : "0" (val));
+   asm("bswapl %0" : "=r"(val) : "0"(val));
    return val;
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_ARM32)
 
-   asm ("eor r3, %1, %1, ror #16\n\t"
-        "bic r3, r3, #0x00FF0000\n\t"
-        "mov %0, %1, ror #8\n\t"
-        "eor %0, %0, r3, lsr #8"
-        : "=r" (val)
-        : "0" (val)
-        : "r3", "cc");
+   asm("eor r3, %1, %1, ror #16\n\t"
+       "bic r3, r3, #0x00FF0000\n\t"
+       "mov %0, %1, ror #8\n\t"
+       "eor %0, %0, r3, lsr #8"
+       : "=r"(val)
+       : "0"(val)
+       : "r3", "cc");
 
    return val;
 
@@ -69,7 +69,7 @@ inline uint32_t reverse_bytes(uint32_t val)
 
    // Generic implementation
    return (rotate_right(val, 8) & 0xFF00FF00) |
-          (rotate_left (val, 8) & 0x00FF00FF);
+          (rotate_left(val, 8) & 0x00FF00FF);
 
 #endif
    }
@@ -86,7 +86,7 @@ inline uint64_t reverse_bytes(uint64_t val)
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_X86_64)
    // GCC-style inline assembly for x86-64
-   asm("bswapq %0" : "=r" (val) : "0" (val));
+   asm("bswapq %0" : "=r"(val) : "0"(val));
    return val;
 
 #else

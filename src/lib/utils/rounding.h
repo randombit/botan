@@ -24,7 +24,9 @@ inline size_t round_up(size_t n, size_t align_to)
    BOTAN_ASSERT(align_to != 0, "align_to must not be 0");
 
    if(n % align_to)
+      {
       n += align_to - (n % align_to);
+      }
    return n;
    }
 
@@ -38,7 +40,9 @@ template<typename T>
 inline T round_down(T n, T align_to)
    {
    if(align_to == 0)
+      {
       return n;
+      }
 
    return (n - (n % align_to));
    }
@@ -49,9 +53,13 @@ inline T round_down(T n, T align_to)
 inline size_t clamp(size_t n, size_t lower_bound, size_t upper_bound)
    {
    if(n < lower_bound)
+      {
       return lower_bound;
+      }
    if(n > upper_bound)
+      {
       return upper_bound;
+      }
    return n;
    }
 

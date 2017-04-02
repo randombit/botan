@@ -14,7 +14,9 @@ namespace Botan {
 ChaCha::ChaCha(size_t rounds) : m_rounds(rounds)
    {
    if(m_rounds != 8 && m_rounds != 12 && m_rounds != 20)
+      {
       throw Invalid_Argument("ChaCha only supports 8, 12 or 20 rounds");
+      }
    }
 
 std::string ChaCha::provider() const
@@ -30,7 +32,7 @@ std::string ChaCha::provider() const
    }
 
 //static
-void ChaCha::chacha_x4(uint8_t output[64*4], uint32_t input[16], size_t rounds)
+void ChaCha::chacha_x4(uint8_t output[64 * 4], uint32_t input[16], size_t rounds)
    {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
 
@@ -45,9 +47,9 @@ void ChaCha::chacha_x4(uint8_t output[64*4], uint32_t input[16], size_t rounds)
    for(size_t i = 0; i != 4; ++i)
       {
       uint32_t x00 = input[ 0], x01 = input[ 1], x02 = input[ 2], x03 = input[ 3],
-             x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
-             x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
-             x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
+               x04 = input[ 4], x05 = input[ 5], x06 = input[ 6], x07 = input[ 7],
+               x08 = input[ 8], x09 = input[ 9], x10 = input[10], x11 = input[11],
+               x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
 
 #define CHACHA_QUARTER_ROUND(a, b, c, d)        \
       do {                                      \
@@ -149,7 +151,7 @@ void ChaCha::key_schedule(const uint8_t key[], size_t length)
 
    m_position = 0;
    m_state.resize(16);
-   m_buffer.resize(4*64);
+   m_buffer.resize(4 * 64);
 
    m_state[0] = CONSTANTS[0];
    m_state[1] = CONSTANTS[1];
@@ -179,7 +181,9 @@ bool ChaCha::valid_iv_length(size_t iv_len) const
 void ChaCha::set_iv(const uint8_t iv[], size_t length)
    {
    if(!valid_iv_length(length))
+      {
       throw Invalid_IV_Length(name(), length);
+      }
 
    m_state[12] = 0;
    m_state[13] = 0;
@@ -220,7 +224,7 @@ std::string ChaCha::name() const
 
 void ChaCha::seek(uint64_t offset)
    {
-   if (m_state.size() == 0 && m_buffer.size() == 0)
+   if(m_state.size() == 0 && m_buffer.size() == 0)
       {
       throw Invalid_State("You have to setup the stream cipher (key and iv)");
       }

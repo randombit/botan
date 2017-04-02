@@ -136,7 +136,8 @@ uint32_t bitmask_for_handshake_type(Handshake_Type type)
 
 std::string handshake_mask_to_string(uint32_t mask)
    {
-   const Handshake_Type types[] = {
+   const Handshake_Type types[] =
+      {
       HELLO_VERIFY_REQUEST,
       HELLO_REQUEST,
       CLIENT_HELLO,
@@ -151,17 +152,19 @@ std::string handshake_mask_to_string(uint32_t mask)
       NEW_SESSION_TICKET,
       HANDSHAKE_CCS,
       FINISHED
-   };
+      };
 
    std::ostringstream o;
    bool empty = true;
 
-   for(auto&& t : types)
+   for(auto && t : types)
       {
       if(mask & bitmask_for_handshake_type(t))
          {
          if(!empty)
+            {
             o << ",";
+            }
          o << handshake_type_to_string(t);
          empty = false;
          }
@@ -327,7 +330,7 @@ bool Handshake_State::received_handshake_msg(Handshake_Type handshake_msg) const
    }
 
 std::pair<Handshake_Type, std::vector<uint8_t>>
-Handshake_State::get_next_handshake_msg()
+      Handshake_State::get_next_handshake_msg()
    {
    const bool expecting_ccs =
       (bitmask_for_handshake_type(HANDSHAKE_CCS) & m_hand_expecting_mask) != 0;
@@ -340,7 +343,9 @@ std::string Handshake_State::srp_identifier() const
 #if defined(BOTAN_HAS_SRP6)
    // Authenticated via the successful key exchange
    if(ciphersuite().valid() && ciphersuite().kex_algo() == "SRP_SHA")
+      {
       return client_hello()->srp_identifier();
+      }
 #endif
 
    return "";
@@ -350,7 +355,9 @@ std::string Handshake_State::srp_identifier() const
 std::vector<uint8_t> Handshake_State::session_ticket() const
    {
    if(new_session_ticket() && !new_session_ticket()->ticket().empty())
+      {
       return new_session_ticket()->ticket();
+      }
 
    return client_hello()->session_ticket();
    }
@@ -362,7 +369,9 @@ KDF* Handshake_State::protocol_specific_prf() const
       const std::string prf_algo = ciphersuite().prf_algo();
 
       if(prf_algo == "MD5" || prf_algo == "SHA-1")
+         {
          return get_kdf("TLS-12-PRF(SHA-256)");
+         }
 
       return get_kdf("TLS-12-PRF(" + prf_algo + ")");
       }
@@ -383,20 +392,26 @@ std::string choose_hash(const std::string& sig_algo,
    if(!negotiated_version.supports_negotiable_signature_algorithms())
       {
       if(sig_algo == "RSA")
+         {
          return "Parallel(MD5,SHA-160)";
+         }
 
       if(sig_algo == "DSA")
+         {
          return "SHA-1";
+         }
 
       if(sig_algo == "ECDSA")
+         {
          return "SHA-1";
+         }
 
       throw Internal_Error("Unknown TLS signature algo " + sig_algo);
       }
 
    const auto supported_algos = for_client_auth ?
-      cert_req->supported_algos() :
-      client_hello->supported_algos();
+                                cert_req->supported_algos() :
+                                client_hello->supported_algos();
 
    if(!supported_algos.empty())
       {
@@ -411,7 +426,9 @@ std::string choose_hash(const std::string& sig_algo,
          for(auto algo : supported_algos)
             {
             if(algo.first == hash && algo.second == sig_algo)
+               {
                return hash;
+               }
             }
          }
       }
@@ -468,7 +485,7 @@ bool supported_algos_include(
    const std::string& key_type,
    const std::string& hash_type)
    {
-   for(auto&& algo : algos)
+   for(auto && algo : algos)
       {
       if(algo.first == hash_type && algo.second == key_type)
          {
@@ -501,10 +518,14 @@ Handshake_State::parse_sig_format(const Public_Key& key,
    if(this->version().supports_negotiable_signature_algorithms())
       {
       if(input_sig_algo != key_type)
+         {
          throw Decoding_Error("Counterparty sent inconsistent key and sig types");
+         }
 
       if(input_hash_algo == "")
+         {
          throw Decoding_Error("Counterparty did not send hash/sig IDS");
+         }
 
       hash_algo = input_hash_algo;
 
@@ -521,7 +542,7 @@ Handshake_State::parse_sig_format(const Public_Key& key,
 
       const auto supported_algos =
          for_client_auth ? cert_req()->supported_algos() :
-                           client_hello()->supported_algos();
+         client_hello()->supported_algos();
 
       if(!supported_algos_include(supported_algos, key_type, hash_algo))
          {
@@ -533,7 +554,9 @@ Handshake_State::parse_sig_format(const Public_Key& key,
    else
       {
       if(input_hash_algo != "" || input_sig_algo != "")
+         {
          throw Decoding_Error("Counterparty sent hash/sig IDs with old version");
+         }
 
       if(key_type == "RSA")
          {

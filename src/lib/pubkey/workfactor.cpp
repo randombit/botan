@@ -26,7 +26,7 @@ size_t if_work_factor(size_t bits)
    const double log2_e = std::log2(std::exp(1));
    const double log_p = bits / log2_e;
 
-   const double est = 1.92 * std::pow(log_p * std::log(log_p) * std::log(log_p), 1.0/3.0);
+   const double est = 1.92 * std::pow(log_p * std::log(log_p) * std::log(log_p), 1.0 / 3.0);
 
    return static_cast<size_t>(std::log2(k) + log2_e * est);
    }
@@ -49,7 +49,7 @@ size_t dl_exponent_size(size_t bits)
    const double log2_e = std::log2(std::exp(1));
    const double log_p = bits / log2_e;
 
-   const double strength = 1.92 * std::pow(log_p, 1.0/3.0) * std::pow(std::log(log_p), 2.0/3.0);
+   const double strength = 1.92 * std::pow(log_p, 1.0 / 3.0) * std::pow(std::log(log_p), 2.0 / 3.0);
 
    return 2 * std::max<size_t>(MIN_WORKFACTOR, static_cast<size_t>(log2_e * strength));
    }

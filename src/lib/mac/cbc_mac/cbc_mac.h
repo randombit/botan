@@ -21,7 +21,10 @@ class BOTAN_DLL CBC_MAC final : public MessageAuthenticationCode
    public:
       std::string name() const override;
       MessageAuthenticationCode* clone() const override;
-      size_t output_length() const override { return m_cipher->block_size(); }
+      size_t output_length() const override
+         {
+         return m_cipher->block_size();
+         }
       void clear() override;
 
       Key_Length_Specification key_spec() const override
