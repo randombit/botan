@@ -405,6 +405,11 @@ class FFI_Unit_Tests : public Test
 
          botan_mp_t x;
          botan_mp_init(&x);
+         TEST_FFI_RC(0, botan_mp_is_odd, (x));
+         TEST_FFI_RC(1, botan_mp_is_even, (x));
+         TEST_FFI_RC(0, botan_mp_is_negative, (x));
+         TEST_FFI_RC(1, botan_mp_is_positive, (x));
+         TEST_FFI_RC(1, botan_mp_is_zero, (x));
          botan_mp_destroy(x);
 
          botan_mp_init(&x);
@@ -420,6 +425,13 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
          result.test_eq("Expected size for MP 259", bn_bytes, 2);
 
+         TEST_FFI_RC(1, botan_mp_is_odd, (x));
+         TEST_FFI_RC(0, botan_mp_is_even, (x));
+         TEST_FFI_RC(0, botan_mp_is_negative, (x));
+         TEST_FFI_RC(1, botan_mp_is_positive, (x));
+         TEST_FFI_RC(0, botan_mp_is_zero, (x));
+
+
          {
          botan_mp_t zero;
          botan_mp_init(&zero);
@@ -430,7 +442,18 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_mp_cmp, (&cmp, zero, x));
          result.confirm("bigint_mp_cmp(0, +)", cmp == -1);
 
+         TEST_FFI_RC(0, botan_mp_is_negative, (x));
+         TEST_FFI_RC(1, botan_mp_is_positive, (x));
          TEST_FFI_OK(botan_mp_flip_sign, (x));
+         TEST_FFI_RC(1, botan_mp_is_negative, (x));
+         TEST_FFI_RC(0, botan_mp_is_positive, (x));
+
+         // test no negative zero
+         TEST_FFI_RC(0, botan_mp_is_negative, (zero));
+         TEST_FFI_RC(1, botan_mp_is_positive, (zero));
+         TEST_FFI_OK(botan_mp_flip_sign, (zero));
+         TEST_FFI_RC(0, botan_mp_is_negative, (zero));
+         TEST_FFI_RC(1, botan_mp_is_positive, (zero));
 
          TEST_FFI_OK(botan_mp_cmp, (&cmp, x, zero));
          result.confirm("bigint_mp_cmp(-, 0)", cmp == -1);
@@ -458,6 +481,21 @@ class FFI_Unit_Tests : public Test
 
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
          result.test_eq("botan_mp_to_hex", std::string(str_buf), "0103");
+
+         uint32_t x_32;
+         TEST_FFI_OK(botan_mp_to_uint32, (x, &x_32));
+         result.test_eq("botan_mp_to_uint32", x, 0x103);
+
+         TEST_FFI_RC(1, botan_mp_get_bit, (x, 1));
+         TEST_FFI_RC(0, botan_mp_get_bit, (x, 87));
+         TEST_FFI_OK(botan_mp_set_bit, (x, 87));
+         TEST_FFI_RC(1, botan_mp_get_bit, (x, 87));
+         TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
+         result.test_eq("botan_mp_set_bit", std::string(str_buf), "8000000000000000000103");
+
+         TEST_FFI_OK(botan_mp_clear_bit, (x, 87));
+         TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
+         result.test_eq("botan_mp_set_bit", std::string(str_buf), "0103");
 
          botan_mp_t y;
          TEST_FFI_OK(botan_mp_init, (&y));
@@ -545,6 +583,18 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
          result.test_eq("botan_mp_mod_mul", std::string(str_buf), "123945920473931248854653259523111998693");
 
+         size_t x_bytes;
+         botan_mp_rand_bits(x, rng, 512);
+         TEST_FFI_OK(botan_mp_num_bytes, (x, &x_bytes));
+         result.test_lte("botan_mp_num_bytes", x_bytes, 512/8);
+
+         TEST_FFI_OK(botan_mp_set_from_radix_str, (x, "909A", 16));
+         TEST_FFI_OK(botan_mp_to_uint32, (x, &x_32));
+         result.test_eq("botan_mp_set_from_radix_str(16)", x_32, static_cast<size_t>(0x909A));
+
+         TEST_FFI_OK(botan_mp_set_from_radix_str, (x, "9098135", 10));
+         TEST_FFI_OK(botan_mp_to_uint32, (x, &x_32));
+         result.test_eq("botan_mp_set_from_radix_str(10)", x_32, static_cast<size_t>(9098135));
 
          botan_mp_destroy(p);
          botan_mp_destroy(x);

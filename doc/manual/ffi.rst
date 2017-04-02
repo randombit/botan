@@ -251,7 +251,6 @@ Multiple Precision Integers
 
    Free a ``botan_mp_t``
 
-
 .. cpp:function:: int botan_mp_to_hex(botan_mp_t mp, char* out)
 
    Writes exactly ``botan_mp_num_bytes(mp)*2 + 1`` bytes to out
@@ -321,6 +320,31 @@ Multiple Precision Integers
 
    Return 1 if ``x`` is equal to ``y``, 0 if ``x`` is not equal to ``y``
 
+.. cpp:function:: int botan_mp_is_zero(const botan_mp_t x)
+
+   Return 1 if ``x`` is equal to zero, otherwise 0.
+
+.. cpp:function:: int botan_mp_is_odd(const botan_mp_t x)
+
+   Return 1 if ``x`` is odd, otherwise 0.
+
+.. cpp:function:: int botan_mp_is_even(const botan_mp_t x)
+
+   Return 1 if ``x`` is even, otherwise 0.
+
+.. cpp:function:: int botan_mp_is_positive(const botan_mp_t x)
+
+   Return 1 if ``x`` is greater than or equal to zero.
+
+.. cpp:function:: int botan_mp_is_negative(const botan_mp_t x)
+
+   Return 1 if ``x`` is less than zero.
+
+.. cpp:function:: int botan_mp_to_uint32(const botan_mp_t x, uint32_t* val)
+
+   If x fits in a 32-bit integer, set val to it and return 0. If x is out of
+   range an error is returned.
+
 .. cpp:function:: int botan_mp_cmp(int* result, botan_mp_t x, botan_mp_t y)
 
    Three way comparison: set result to -1 if ``x`` is less than ``y``,
@@ -367,9 +391,17 @@ Multiple Precision Integers
    ``test_prob`` is 64, then sufficient Miller-Rabin iterations will run to
    assure there is at most a ``1/2**64`` chance that ``n`` is composit.
 
-.. cpp:function:: int botan_mp_bit_set(botan_mp_t n, size_t bit)
+.. cpp:function:: int botan_mp_get_bit(botan_mp_t n, size_t bit)
 
    Returns 0 if the specified bit of ``n`` is not set, 1 if it is set.
+
+.. cpp:function:: int botan_mp_set_bit(botan_mp_t n, size_t bit)
+
+   Set the specified bit of ``n``
+
+.. cpp:function:: int botan_mp_clear_bit(botan_mp_t n, size_t bit)
+
+   Clears the specified bit of ``n``
 
 
 Password Hashing
