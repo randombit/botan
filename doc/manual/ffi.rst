@@ -478,6 +478,21 @@ Public Key Creation, Import and Export
 
 .. cpp:function:: int botan_pubkey_destroy(botan_pubkey_t key)
 
+.. cpp:function:: int botan_pubkey_get_field(botan_mp_t output, \
+                                     botan_pubkey_t key, \
+                                     const char* field_name)
+
+    Read an algorithm specific field from the public key object, placing it into output.
+    For exampe "n" or "e" for RSA keys or "p", "q", "g", and "y" for DSA keys.
+
+.. cpp:function:: int botan_privkey_get_field(botan_mp_t output, \
+                                      botan_privkey_t key, \
+                                      const char* field_name)
+
+    Read an algorithm specific field from the private key object, placing it into output.
+    For exampe "p" or "q" for RSA keys, or "x" for DSA keys or ECC keys.
+
+
 RSA specific functions
 ----------------------------------------
 
@@ -518,6 +533,19 @@ RSA specific functions
                                     botan_mp_t n, botan_mp_t e)
 
    Initialize a public RSA key using parameters n and e.
+
+DSA specific functions
+----------------------------------------
+
+.. cpp:function:: int botan_privkey_load_dsa(botan_privkey_t* key, \
+                                     botan_mp_t p, botan_mp_t q, botan_mp_t g, botan_mp_t x)
+
+   Initialize a private DSA key using group parameters p, q, and g and private key x.
+
+.. cpp:function:: int botan_pubkey_load_dsa(botan_pubkey_t* key, \
+                                     botan_mp_t p, botan_mp_t q, botan_mp_t g, botan_mp_t y)
+
+   Initialize a private DSA key using group parameters p, q, and g and public key y.
 
 
 Public Key Encryption/Decryption
