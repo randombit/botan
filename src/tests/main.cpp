@@ -123,6 +123,17 @@ class Test_Runner : public Botan_CLI::Command
             req = {"pkcs11-manage", "pkcs11-module", "pkcs11-slot", "pkcs11-session", "pkcs11-object", "pkcs11-rsa",
                     "pkcs11-ecdsa", "pkcs11-ecdh", "pkcs11-rng", "pkcs11-x509"};
             }
+         else
+            {
+            std::set<std::string> all = Botan_Tests::Test::registered_tests();
+            for(auto&& r : req)
+               {
+               if(all.find(r) == all.end())
+                  {
+                  throw Botan_CLI::CLI_Usage_Error("Unknown test suite: " + r);
+                  }
+               }
+            }
 
          output() << "Testing " << Botan::version_string() << "\n";
          output() << "Starting tests";
