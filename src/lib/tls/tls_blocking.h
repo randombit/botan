@@ -73,7 +73,7 @@ class BOTAN_DLL Blocking_Client
       std::vector<X509_Certificate> peer_cert_chain() const
          { return m_channel.peer_cert_chain(); }
 
-      virtual ~Blocking_Client() {}
+      virtual ~Blocking_Client() = default;
 
    protected:
       /**

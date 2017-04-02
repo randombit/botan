@@ -86,8 +86,8 @@ class BOTAN_DLL DataSource
       */
       virtual size_t get_bytes_read() const = 0;
 
-      DataSource() {}
-      virtual ~DataSource() {}
+      DataSource() = default;
+      virtual ~DataSource() = default;
       DataSource& operator=(const DataSource&) = delete;
       DataSource(const DataSource&) = delete;
    };

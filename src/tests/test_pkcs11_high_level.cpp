@@ -80,9 +80,6 @@ class TestSession
             m_session->login(UserType::User, PIN_SECVEC);
             }
          }
-
-      inline Module& module() const { return *m_module; }
-      inline Slot& slot() const { return *m_slot; }
       inline Session& session() const { return *m_session; }
 
    private:

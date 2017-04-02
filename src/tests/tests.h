@@ -298,7 +298,7 @@ class Test
                }
 
             bool test_throws(const std::string& what, std::function<void ()> fn);
-            
+
             bool test_throws(const std::string& what, const std::string& expected,
                               std::function<void ()> fn);
 
@@ -323,7 +323,7 @@ class Test
          };
 
       virtual std::vector<Test::Result> run() = 0;
-      virtual ~Test() {}
+      virtual ~Test() = default;
 
       static std::vector<Test::Result> run_test(const std::string& what, bool fail_if_missing);
 

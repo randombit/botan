@@ -105,7 +105,7 @@ class HMAC_DRBG_Unit_Tests : public Test
       class Request_Counting_RNG : public Botan::RandomNumberGenerator
          {
          public:
-            Request_Counting_RNG() : m_randomize_count(0) {};
+            Request_Counting_RNG() : m_randomize_count(0) {}
 
             bool is_seeded() const override { return true; }
 

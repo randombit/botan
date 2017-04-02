@@ -44,7 +44,7 @@ class BOTAN_DLL ElGamal_PublicKey : public virtual DL_Scheme_PublicKey
                               const std::string& provider) const override;
 
    protected:
-      ElGamal_PublicKey() {}
+      ElGamal_PublicKey() = default;
    };
 
 /**

@@ -57,7 +57,7 @@ class Session_Keys
       */
       const secure_vector<uint8_t>& master_secret() const { return m_master_sec; }
 
-      Session_Keys() {}
+      Session_Keys() = default;
 
       /**
       * @param state state the handshake state

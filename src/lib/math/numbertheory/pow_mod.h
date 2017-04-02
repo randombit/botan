@@ -22,7 +22,11 @@ class BOTAN_DLL Modular_Exponentiator
       virtual void set_exponent(const BigInt&) = 0;
       virtual BigInt execute() const = 0;
       virtual Modular_Exponentiator* copy() const = 0;
-      virtual ~Modular_Exponentiator() {}
+
+      Modular_Exponentiator() = default;
+      Modular_Exponentiator(const Modular_Exponentiator&) = default;
+      Modular_Exponentiator & operator=(const Modular_Exponentiator&) = default;
+      virtual ~Modular_Exponentiator() = default;
    };
 
 /**
@@ -103,7 +107,7 @@ class BOTAN_DLL Fixed_Exponent_Power_Mod : public Power_Mod
       BigInt operator()(const BigInt& b) const
          { set_base(b); return execute(); }
 
-      Fixed_Exponent_Power_Mod() {}
+      Fixed_Exponent_Power_Mod() = default;
 
       Fixed_Exponent_Power_Mod(const BigInt& exponent,
                                const BigInt& modulus,
@@ -119,7 +123,7 @@ class BOTAN_DLL Fixed_Base_Power_Mod : public Power_Mod
       BigInt operator()(const BigInt& e) const
          { set_exponent(e); return execute(); }
 
-      Fixed_Base_Power_Mod() {}
+      Fixed_Base_Power_Mod() = default;
 
       Fixed_Base_Power_Mod(const BigInt& base,
                            const BigInt& modulus,

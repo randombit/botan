@@ -144,7 +144,7 @@ class XMSS_Hash
        **/
       secure_vector<uint8_t> h_msg_final();
 
-      size_t output_length() const { return m_output_length; };
+      size_t output_length() const { return m_output_length; }
 
    private:
       static const uint8_t m_id_f = 0x00;

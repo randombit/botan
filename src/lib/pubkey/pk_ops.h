@@ -42,7 +42,7 @@ class BOTAN_DLL Encryption
 
       virtual size_t max_input_bits() const = 0;
 
-      virtual ~Encryption() {}
+      virtual ~Encryption() = default;
    };
 
 /**
@@ -55,7 +55,7 @@ class BOTAN_DLL Decryption
                                           const uint8_t ciphertext[],
                                           size_t ciphertext_len) = 0;
 
-      virtual ~Decryption() {}
+      virtual ~Decryption() = default;
    };
 
 /**
@@ -77,7 +77,7 @@ class BOTAN_DLL Verification
       */
       virtual bool is_valid_signature(const uint8_t sig[], size_t sig_len) = 0;
 
-      virtual ~Verification() {}
+      virtual ~Verification() = default;
    };
 
 /**
@@ -99,7 +99,7 @@ class BOTAN_DLL Signature
       */
       virtual secure_vector<uint8_t> sign(RandomNumberGenerator& rng) = 0;
 
-      virtual ~Signature() {}
+      virtual ~Signature() = default;
    };
 
 /**
@@ -112,7 +112,7 @@ class BOTAN_DLL Key_Agreement
                                         const uint8_t other_key[], size_t other_key_len,
                                         const uint8_t salt[], size_t salt_len) = 0;
 
-      virtual ~Key_Agreement() {}
+      virtual ~Key_Agreement() = default;
    };
 
 /**
@@ -128,7 +128,7 @@ class BOTAN_DLL KEM_Encryption
                                const uint8_t salt[],
                                size_t salt_len) = 0;
 
-      virtual ~KEM_Encryption() {}
+      virtual ~KEM_Encryption() = default;
    };
 
 class BOTAN_DLL KEM_Decryption
@@ -140,7 +140,7 @@ class BOTAN_DLL KEM_Decryption
                                               const uint8_t salt[],
                                               size_t salt_len) = 0;
 
-      virtual ~KEM_Decryption() {}
+      virtual ~KEM_Decryption() = default;
    };
 
 }

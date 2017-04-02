@@ -40,7 +40,7 @@ class BOTAN_DLL DH_PublicKey : public virtual DL_Scheme_PublicKey
       */
       DH_PublicKey(const DL_Group& grp, const BigInt& y);
    protected:
-      DH_PublicKey() {}
+      DH_PublicKey() = default;
    };
 
 /**

@@ -82,13 +82,6 @@ std::vector<uint8_t> McEliece_PublicKey::public_key_bits() const
       .get_contents_unlocked();
    }
 
-McEliece_PublicKey::McEliece_PublicKey(const McEliece_PublicKey & other) :
-   m_public_matrix(other.m_public_matrix),
-   m_t(other.m_t),
-   m_code_length(other.m_code_length)
-   {
-   }
-
 size_t McEliece_PublicKey::key_length() const
    {
    return m_code_length;

@@ -37,7 +37,7 @@ class BOTAN_DLL GeneralName : public ASN1_Object
       /**
       * Creates an empty GeneralName.
       */
-      GeneralName() : m_type(), m_name() {}
+      GeneralName() = default;
 
       /**
       * Creates a new GeneralName for its string format.

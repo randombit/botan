@@ -76,7 +76,7 @@ class BOTAN_DLL DL_Scheme_PublicKey : public virtual Public_Key
       DL_Scheme_PublicKey& operator=(const DL_Scheme_PublicKey& other) = default;
 
    protected:
-      DL_Scheme_PublicKey() {}
+      DL_Scheme_PublicKey() = default;
 
       /**
       * The DL public key
@@ -119,7 +119,7 @@ class BOTAN_DLL DL_Scheme_PrivateKey : public virtual DL_Scheme_PublicKey,
       DL_Scheme_PrivateKey& operator=(const DL_Scheme_PrivateKey& other) = default;
 
    protected:
-      DL_Scheme_PrivateKey() {}
+      DL_Scheme_PrivateKey() = default;
 
       /**
       * The DL private key

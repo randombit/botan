@@ -52,7 +52,7 @@ class BOTAN_DLL ECGDSA_PublicKey : public virtual EC_PublicKey
          create_verification_op(const std::string& params,
                                 const std::string& provider) const override;
    protected:
-      ECGDSA_PublicKey() {}
+      ECGDSA_PublicKey() = default;
    };
 
 /**

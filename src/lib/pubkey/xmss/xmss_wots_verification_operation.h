@@ -32,7 +32,7 @@ class XMSS_WOTS_Verification_Operation
       XMSS_WOTS_Verification_Operation(
          const XMSS_WOTS_Addressed_PublicKey& public_key);
 
-      virtual ~XMSS_WOTS_Verification_Operation() {}
+      virtual ~XMSS_WOTS_Verification_Operation() = default;
 
       virtual bool is_valid_signature(const uint8_t sig[],
                                       size_t sig_len) override;

@@ -48,7 +48,7 @@ class TLS_All_Policy : public Botan::TLS::Policy
       std::vector<std::string> allowed_signature_methods() const override
          {
          return { "ECDSA", "RSA", "DSA" };
-         };
+         }
    };
 
 class TLS_Ciphersuites final : public Command

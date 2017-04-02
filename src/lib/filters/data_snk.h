@@ -21,8 +21,8 @@ class BOTAN_DLL DataSink : public Filter
    {
    public:
       bool attachable() override { return false; }
-      DataSink() {}
-      virtual ~DataSink() {}
+      DataSink() = default;
+      virtual ~DataSink() = default;
 
       DataSink& operator=(const DataSink&) = delete;
       DataSink(const DataSink&) = delete;

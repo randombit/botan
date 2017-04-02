@@ -49,7 +49,7 @@ class BOTAN_DLL Buffered_Filter
       */
       Buffered_Filter(size_t block_size, size_t final_minimum);
 
-      virtual ~Buffered_Filter() {}
+      virtual ~Buffered_Filter() = default;
    protected:
       /**
       * The block processor, implemented by subclasses

@@ -48,7 +48,7 @@ class BOTAN_DLL MessageAuthenticationCode : public Buffered_Computation,
       */
       static std::vector<std::string> providers(const std::string& algo_spec);
 
-      virtual ~MessageAuthenticationCode() {}
+      virtual ~MessageAuthenticationCode() = default;
 
       /**
       * Prepare for processing a message under the specified nonce

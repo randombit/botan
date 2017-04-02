@@ -68,8 +68,8 @@ class BOTAN_DLL PK_Encryptor
       */
       virtual size_t maximum_input_size() const = 0;
 
-      PK_Encryptor() {}
-      virtual ~PK_Encryptor() {}
+      PK_Encryptor() = default;
+      virtual ~PK_Encryptor() = default;
 
       PK_Encryptor(const PK_Encryptor&) = delete;
       PK_Encryptor& operator=(const PK_Encryptor&) = delete;
@@ -142,7 +142,7 @@ class BOTAN_DLL PK_Decryptor
                         const uint8_t required_content_offsets[],
                         size_t required_contents) const;
 
-      PK_Decryptor() {}
+      PK_Decryptor() = default;
       virtual ~PK_Decryptor() = default;
 
       PK_Decryptor(const PK_Decryptor&) = delete;

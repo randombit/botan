@@ -6,9 +6,6 @@
 */
 
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/eme.h>
-#include <botan/kdf.h>
-#include <botan/emsa.h>
 #include <botan/internal/bit_ops.h>
 
 namespace Botan {
@@ -19,8 +16,6 @@ PK_Ops::Encryption_with_EME::Encryption_with_EME(const std::string& eme)
    if(!m_eme.get())
       throw Algorithm_Not_Found(eme);
    }
-
-PK_Ops::Encryption_with_EME::~Encryption_with_EME() {}
 
 size_t PK_Ops::Encryption_with_EME::max_input_bits() const
    {
@@ -42,8 +37,6 @@ PK_Ops::Decryption_with_EME::Decryption_with_EME(const std::string& eme)
       throw Algorithm_Not_Found(eme);
    }
 
-PK_Ops::Decryption_with_EME::~Decryption_with_EME() {}
-
 secure_vector<uint8_t>
 PK_Ops::Decryption_with_EME::decrypt(uint8_t& valid_mask,
                                      const uint8_t ciphertext[],
@@ -58,8 +51,6 @@ PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(const std::string& kdf)
    if(kdf != "Raw")
       m_kdf.reset(get_kdf(kdf));
    }
-
-PK_Ops::Key_Agreement_with_KDF::~Key_Agreement_with_KDF() {}
 
 secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
                                                           const uint8_t w[], size_t w_len,
@@ -80,8 +71,6 @@ PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa) :
    if(!m_emsa)
       throw Algorithm_Not_Found(emsa);
    }
-
-PK_Ops::Signature_with_EMSA::~Signature_with_EMSA() {}
 
 void PK_Ops::Signature_with_EMSA::update(const uint8_t msg[], size_t msg_len)
    {
@@ -111,8 +100,6 @@ PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa) 
    if(!m_emsa)
       throw Algorithm_Not_Found(emsa);
    }
-
-PK_Ops::Verification_with_EMSA::~Verification_with_EMSA() {}
 
 void PK_Ops::Verification_with_EMSA::update(const uint8_t msg[], size_t msg_len)
    {
@@ -163,8 +150,6 @@ PK_Ops::KEM_Encryption_with_KDF::KEM_Encryption_with_KDF(const std::string& kdf)
    m_kdf.reset(get_kdf(kdf));
    }
 
-PK_Ops::KEM_Encryption_with_KDF::~KEM_Encryption_with_KDF() {}
-
 secure_vector<uint8_t>
 PK_Ops::KEM_Decryption_with_KDF::kem_decrypt(const uint8_t encap_key[],
                                              size_t len,
@@ -183,7 +168,5 @@ PK_Ops::KEM_Decryption_with_KDF::KEM_Decryption_with_KDF(const std::string& kdf)
    {
    m_kdf.reset(get_kdf(kdf));
    }
-
-PK_Ops::KEM_Decryption_with_KDF::~KEM_Decryption_with_KDF() {}
 
 }

@@ -33,8 +33,6 @@
 
 namespace Botan {
 
-EMSA::~EMSA() {}
-
 EMSA* get_emsa(const std::string& algo_spec)
    {
    SCAN_Name req(algo_spec);

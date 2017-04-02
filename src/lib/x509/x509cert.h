@@ -154,9 +154,9 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       bool is_CA_cert() const;
 
       /**
-      * Returns true if the specified @param usage is set in the key usage extension 
+      * Returns true if the specified @param usage is set in the key usage extension
       * or if no key usage constraints are set at all.
-      * To check if a certain key constraint is set in the certificate 
+      * To check if a certain key constraint is set in the certificate
       * use @see X509_Certificate#has_constraints.
       */
       bool allowed_usage(Key_Constraints usage) const;
@@ -178,7 +178,7 @@ class BOTAN_DLL X509_Certificate : public X509_Object
 
       /// Returns true if the specified @param constraints are included in the key usage extension.
       bool has_constraints(Key_Constraints constraints) const;
-      
+
       /**
       * Returns true if and only if @param ex_constraint (referring to an extended key
       * constraint, eg "PKIX.ServerAuth") is included in the extended
@@ -304,7 +304,7 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       friend class X509_CA;
       friend class BER_Decoder;
 
-      X509_Certificate() {}
+      X509_Certificate() = default;
 
       Data_Store m_subject, m_issuer;
       bool m_self_signed;

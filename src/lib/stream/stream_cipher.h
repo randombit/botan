@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL StreamCipher : public SymmetricAlgorithm
    {
    public:
-      virtual ~StreamCipher() {}
+      virtual ~StreamCipher() = default;
 
       /**
       * Create an instance based on a name

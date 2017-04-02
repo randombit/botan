@@ -18,7 +18,7 @@ namespace Botan {
 class CurveGFp_Repr
    {
    public:
-      virtual ~CurveGFp_Repr() {}
+      virtual ~CurveGFp_Repr() = default;
 
       virtual const BigInt& get_p() const = 0;
       virtual const BigInt& get_a() const = 0;
@@ -57,7 +57,7 @@ class BOTAN_DLL CurveGFp
       /**
       * Create an uninitialized CurveGFp
       */
-      CurveGFp() {}
+      CurveGFp() = default;
 
       /**
       * Construct the elliptic curve E: y^2 = x^3 + ax + b over GF(p)

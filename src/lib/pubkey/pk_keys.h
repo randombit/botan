@@ -24,9 +24,10 @@ class RandomNumberGenerator;
 class BOTAN_DLL Public_Key
    {
    public:
+      Public_Key() =default;
+      Public_Key(const Public_Key& other) = default;
+      Public_Key& operator=(const Public_Key& other) = default;
       virtual ~Public_Key() = default;
-
-      virtual Public_Key& operator=(const Public_Key& other) = default;
 
       /**
       * Get the name of the underlying public key scheme.
@@ -165,9 +166,10 @@ class BOTAN_DLL Public_Key
 class BOTAN_DLL Private_Key : public virtual Public_Key
    {
    public:
+      Private_Key() = default;
+      Private_Key(const Private_Key& other) = default;
+      Private_Key& operator=(const Private_Key& other) = default;
       virtual ~Private_Key() = default;
-
-      virtual Private_Key& operator=(const Private_Key& other) = default;
 
       /**
       * @return BER encoded private key bits
@@ -274,7 +276,10 @@ class BOTAN_DLL PK_Key_Agreement_Key : public virtual Private_Key
       */
       virtual std::vector<uint8_t> public_value() const = 0;
 
-      virtual ~PK_Key_Agreement_Key() {}
+      PK_Key_Agreement_Key() = default;
+      PK_Key_Agreement_Key(const PK_Key_Agreement_Key&) = default;
+      PK_Key_Agreement_Key& operator=(const PK_Key_Agreement_Key&) = default;
+      virtual ~PK_Key_Agreement_Key() = default;
    };
 
 /*

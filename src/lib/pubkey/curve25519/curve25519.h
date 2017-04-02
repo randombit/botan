@@ -51,7 +51,7 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
          m_public(pub.begin(), pub.end()) {}
 
    protected:
-      Curve25519_PublicKey() {}
+      Curve25519_PublicKey() = default;
       std::vector<uint8_t> m_public;
    };
 

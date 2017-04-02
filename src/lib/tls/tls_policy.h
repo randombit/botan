@@ -122,27 +122,27 @@ class BOTAN_DLL Policy
       * Allow servers to initiate a new handshake
       */
       virtual bool allow_server_initiated_renegotiation() const;
-      
+
       /**
       * Allow TLS v1.0
       */
       virtual bool allow_tls10() const;
-      
+
       /**
       * Allow TLS v1.1
       */
       virtual bool allow_tls11() const;
-      
+
       /**
       * Allow TLS v1.2
       */
       virtual bool allow_tls12() const;
-      
+
       /**
       * Allow DTLS v1.0
       */
       virtual bool allow_dtls10() const;
-      
+
       /**
       * Allow DTLS v1.2
       */
@@ -155,14 +155,14 @@ class BOTAN_DLL Policy
       * Default is currently 1024 (insecure), should be 2048
       */
       virtual size_t minimum_dh_group_size() const;
-      
+
       /**
       * For ECDSA authenticated ciphersuites, the smallest key size the
       * client will accept.
       * This policy is currently only enforced on the server by the client.
       */
       virtual size_t minimum_ecdsa_group_size() const;
-      
+
       /**
       * Return the minimum ECDH group size we're willing to use
       * for key exchange
@@ -199,7 +199,7 @@ class BOTAN_DLL Policy
       * (or logging of) the peer's keys.
       */
       virtual void check_peer_key_acceptable(const Public_Key& public_key) const;
-      
+
       /**
       * If this function returns false, unknown SRP/PSK identifiers
       * will be rejected with an unknown_psk_identifier alert as soon
@@ -297,7 +297,7 @@ class BOTAN_DLL Policy
       */
       std::string to_string() const;
 
-      virtual ~Policy() {}
+      virtual ~Policy() = default;
    };
 
 /**
@@ -396,7 +396,7 @@ class BOTAN_DLL Datagram_Policy : public Policy
    public:
       std::vector<std::string> allowed_macs() const override
          { return std::vector<std::string>({"AEAD"}); }
-            
+
       bool allow_tls10()  const override { return false; }
       bool allow_tls11()  const override { return false; }
       bool allow_tls12()  const override { return false; }
@@ -450,22 +450,22 @@ class BOTAN_DLL Text_Policy : public Policy
 
       std::vector<std::string> allowed_ecc_curves() const override
          { return get_list("ecc_curves", Policy::allowed_ecc_curves()); }
-      
+
       bool use_ecc_point_compression() const override
          { return get_bool("use_ecc_point_compression", Policy::use_ecc_point_compression()); }
 
       bool allow_tls10() const override
          { return get_bool("allow_tls10", Policy::allow_tls10()); }
-      
+
       bool allow_tls11() const override
          { return get_bool("allow_tls11", Policy::allow_tls11()); }
-      
+
       bool allow_tls12() const override
          { return get_bool("allow_tls12", Policy::allow_tls12()); }
-      
+
       bool allow_dtls10() const override
          { return get_bool("allow_dtls10", Policy::allow_dtls10()); }
-      
+
       bool allow_dtls12() const override
          { return get_bool("allow_dtls12", Policy::allow_dtls12()); }
 

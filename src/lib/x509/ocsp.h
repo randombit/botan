@@ -72,7 +72,7 @@ class BOTAN_DLL Response
       /**
       * Creates an empty OCSP response.
       */
-      Response() {}
+      Response() = default;
 
       /**
       * Parses an OCSP response.

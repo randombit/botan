@@ -173,7 +173,7 @@ class BOTAN_DLL BlockCipher : public SymmetricAlgorithm
       */
       virtual BlockCipher* clone() const = 0;
 
-      virtual ~BlockCipher() {}
+      virtual ~BlockCipher() = default;
    };
 
 /**

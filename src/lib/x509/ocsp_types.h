@@ -19,7 +19,7 @@ namespace OCSP {
 class BOTAN_DLL CertID final : public ASN1_Object
    {
    public:
-      CertID() {}
+      CertID() = default;
 
       CertID(const X509_Certificate& issuer,
              const BigInt& subject_serial);

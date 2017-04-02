@@ -23,7 +23,7 @@ namespace Botan {
 class BOTAN_DLL Cipher_Mode
    {
    public:
-      virtual ~Cipher_Mode() {}
+      virtual ~Cipher_Mode() = default;
 
       /*
       * Prepare for processing a message under the specified nonce

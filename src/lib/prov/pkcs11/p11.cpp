@@ -79,9 +79,6 @@ LowLevel::LowLevel(FunctionListPtr ptr) :
       }
    }
 
-LowLevel::~LowLevel() BOTAN_NOEXCEPT
-{}
-
 /****************************** General purpose functions ******************************/
 
 bool LowLevel::C_Initialize(VoidPtr init_args,

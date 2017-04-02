@@ -44,7 +44,7 @@ class gf2m_decomp_rootfind_state
       void calc_next_Aij();
       void calc_Ai_zero(const polyn_gf2m & sigma);
       secure_vector<gf2m> find_roots(const polyn_gf2m & sigma);
-      uint32_t get_code_length() const { return code_length; };
+      uint32_t get_code_length() const { return code_length; }
       uint32_t code_length;
       secure_vector<gf2m> m_Lik; // size is outer_summands * m
       secure_vector<gf2m> m_Aij; // ...

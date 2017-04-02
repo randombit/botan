@@ -16,7 +16,7 @@ class BOTAN_DLL EME_Raw final : public EME
    public:
       size_t maximum_input_size(size_t i) const override;
 
-      EME_Raw() {}
+      EME_Raw() = default;
    private:
       secure_vector<uint8_t> pad(const uint8_t[], size_t, size_t,
                              RandomNumberGenerator&) const override;

@@ -269,7 +269,6 @@ PKIX::check_ocsp_online(const std::vector<std::shared_ptr<const X509_Certificate
          {
          ocsp_response_futures.emplace_back(std::async(std::launch::deferred, [&]() -> std::shared_ptr<const OCSP::Response> {
                   throw Exception("No OCSP responder URL set for this certificate");
-                  return std::shared_ptr<const OCSP::Response>();
                   }));
             }
          else
@@ -358,7 +357,6 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
          // Avoid creating a thread for this case
          future_crls.emplace_back(std::async(std::launch::deferred, [&]() -> std::shared_ptr<const X509_CRL> {
                throw Exception("No CRL distribution point for this certificate");
-               return std::shared_ptr<const X509_CRL>();
                }));
          }
       else

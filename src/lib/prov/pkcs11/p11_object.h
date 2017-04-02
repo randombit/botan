@@ -656,6 +656,8 @@ class BOTAN_DLL Object
       */
       Object(Session& session, const ObjectProperties& obj_props);
 
+      Object(const Object&) = default;
+      Object& operator=(const Object&) = default;
       virtual ~Object() = default;
 
       /// Searches for all objects of the given type that match `search_template`

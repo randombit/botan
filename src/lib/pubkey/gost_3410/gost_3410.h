@@ -58,7 +58,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
                                 const std::string& provider) const override;
 
    protected:
-      GOST_3410_PublicKey() {}
+      GOST_3410_PublicKey() = default;
    };
 
 /**

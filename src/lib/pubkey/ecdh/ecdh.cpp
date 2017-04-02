@@ -16,8 +16,6 @@
 
 namespace Botan {
 
-ECDH_PublicKey::ECDH_PublicKey() {}
-
 namespace {
 
 /**
