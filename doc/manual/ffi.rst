@@ -342,7 +342,8 @@ Multiple Precision Integers
 
 .. cpp:function:: int botan_mp_to_uint32(const botan_mp_t x, uint32_t* val)
 
-   If x fits in a 32-bit integer, set *val to it and return 0.
+   If x fits in a 32-bit integer, set val to it and return 0. If x is out of
+   range an error is returned.
 
 .. cpp:function:: int botan_mp_cmp(int* result, botan_mp_t x, botan_mp_t y)
 
