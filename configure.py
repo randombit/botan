@@ -4,7 +4,7 @@
 Configuration program for botan
 
 (C) 2009,2010,2011,2012,2013,2014,2015,2016,2017 Jack Lloyd
-(C) 2015,2016 Simon Warta (Kullo GmbH)
+(C) 2015,2016,2017 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
 
