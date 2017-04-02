@@ -1,4 +1,6 @@
-define OPENSSL 20151219
+<defines>
+OPENSSL -> 20151219
+</defines>
 
 load_on vendor
 

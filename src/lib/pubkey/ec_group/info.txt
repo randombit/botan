@@ -1,4 +1,6 @@
-define ECC_GROUP 20131128
+<defines>
+ECC_GROUP -> 20131128
+</defines>
 
 <requires>
 asn1

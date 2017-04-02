@@ -1,1 +1,3 @@
-define MGF1 20140118
+<defines>
+MGF1 -> 20140118
+</defines>

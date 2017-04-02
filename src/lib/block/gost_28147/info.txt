@@ -1,1 +1,3 @@
-define GOST_28147_89 20131128
+<defines>
+GOST_28147_89 -> 20131128
+</defines>

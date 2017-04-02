@@ -1,4 +1,6 @@
-define XMSS 20161008
+<defines>
+XMSS -> 20161008
+</defines>
 
 <header:public>
 atomic.h

@@ -1,3 +1,5 @@
-define CHACHA_SSE2 20160831
+<defines>
+CHACHA_SSE2 -> 20160831
+</defines>
 
 need_isa sse2

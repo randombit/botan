@@ -1,4 +1,6 @@
-define FILTERS 20160415
+<defines>
+FILTERS -> 20160415
+</defines>
 
 <header:public>
 basefilt.h

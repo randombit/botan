@@ -1,4 +1,6 @@
-define WHIRLPOOL 20131128
+<defines>
+WHIRLPOOL -> 20131128
+</defines>
 
 <requires>
 mdx_hash

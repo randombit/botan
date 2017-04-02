@@ -1,1 +1,3 @@
-define TWOFISH 20131128
+<defines>
+TWOFISH -> 20131128
+</defines>

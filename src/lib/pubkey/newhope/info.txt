@@ -1,4 +1,6 @@
-define NEWHOPE 20161018
+<defines>
+NEWHOPE -> 20161018
+</defines>
 
 <requires>
 sha3

@@ -1,1 +1,3 @@
-define THREEFISH_512 20131224
+<defines>
+THREEFISH_512 -> 20131224
+</defines>

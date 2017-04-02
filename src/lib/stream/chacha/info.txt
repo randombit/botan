@@ -1,1 +1,3 @@
-define CHACHA 20140103
+<defines>
+CHACHA -> 20140103
+</defines>

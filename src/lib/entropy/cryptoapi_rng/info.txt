@@ -1,4 +1,6 @@
-define ENTROPY_SRC_CAPI 20131128
+<defines>
+ENTROPY_SRC_CAPI -> 20131128
+</defines>
 
 <header:internal>
 es_capi.h

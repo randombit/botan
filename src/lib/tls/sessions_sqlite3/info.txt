@@ -1,4 +1,6 @@
-define TLS_SQLITE3_SESSION_MANAGER 20131128
+<defines>
+TLS_SQLITE3_SESSION_MANAGER -> 20131128
+</defines>
 
 <requires>
 sessions_sql

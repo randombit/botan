@@ -1,4 +1,6 @@
-define GOST_34_10_2001 20131128
+<defines>
+GOST_34_10_2001 -> 20131128
+</defines>
 
 load_on auto
 

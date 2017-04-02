@@ -1,11 +1,11 @@
-define BOOST_FILESYSTEM 20131228
-define BOOST_ASIO 20131228
-define BOOST_DATETIME 20150720
+<defines>
+BOOST_FILESYSTEM -> 20131228
+BOOST_ASIO -> 20131228
+BOOST_DATETIME -> 20150720
+</defines>
 
 load_on vendor
 
 <libs>
 all -> boost_system,boost_filesystem
 </libs>
-
-

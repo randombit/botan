@@ -1,4 +1,6 @@
-define SHA1 20131128
+<defines>
+SHA1 -> 20131128
+</defines>
 
 <requires>
 mdx_hash

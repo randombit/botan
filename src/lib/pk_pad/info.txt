@@ -1,4 +1,6 @@
-define PK_PADDING 20131128
+<defines>
+PK_PADDING -> 20131128
+</defines>
 
 load_on auto
 

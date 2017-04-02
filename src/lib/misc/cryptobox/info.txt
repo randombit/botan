@@ -1,4 +1,6 @@
-define CRYPTO_BOX 20131128
+<defines>
+CRYPTO_BOX -> 20131128
+</defines>
 
 <requires>
 filters

@@ -1,4 +1,6 @@
-define SIMD_32 20131128
+<defines>
+SIMD_32 -> 20131128
+</defines>
 
 <header:internal>
 simd_32.h

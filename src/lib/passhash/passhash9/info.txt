@@ -1,4 +1,6 @@
-define PASSHASH9 20131128
+<defines>
+PASSHASH9 -> 20131128
+</defines>
 
 <requires>
 pbkdf2

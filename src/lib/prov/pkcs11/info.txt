@@ -1,4 +1,6 @@
-define PKCS11 20160219
+<defines>
+PKCS11 -> 20160219
+</defines>
 
 <requires>
 dyn_load

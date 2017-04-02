@@ -1,4 +1,6 @@
-define PBKDF2 20131128
+<defines>
+PBKDF2 -> 20131128
+</defines>
 
 <requires>
 hmac

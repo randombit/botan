@@ -1,4 +1,6 @@
-define TLS 20150319
+<defines>
+TLS -> 20150319
+</defines>
 
 load_on auto
 

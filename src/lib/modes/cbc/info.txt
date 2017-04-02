@@ -1,4 +1,6 @@
-define MODE_CBC 20131128
+<defines>
+MODE_CBC -> 20131128
+</defines>
 
 <requires>
 mode_pad

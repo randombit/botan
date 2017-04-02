@@ -1,4 +1,6 @@
-define ENTROPY_SRC_RDSEED 20151218
+<defines>
+ENTROPY_SRC_RDSEED -> 20151218
+</defines>
 
 need_isa rdseed
 

@@ -1,1 +1,3 @@
-define CIPHER_MODE_PADDING 20131128
+<defines>
+CIPHER_MODE_PADDING -> 20131128
+</defines>

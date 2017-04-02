@@ -1,4 +1,6 @@
-define HMAC_DRBG 20140319
+<defines>
+HMAC_DRBG -> 20140319
+</defines>
 
 <requires>
 hmac

@@ -1,4 +1,6 @@
-define POLY1305 20141227
+<defines>
+POLY1305 -> 20141227
+</defines>
 
 <header:public>
 poly1305.h

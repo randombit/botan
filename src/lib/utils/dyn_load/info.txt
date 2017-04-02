@@ -1,4 +1,6 @@
-define DYNAMIC_LOADER 20160310
+<defines>
+DYNAMIC_LOADER -> 20160310
+</defines>
 
 load_on dep
 

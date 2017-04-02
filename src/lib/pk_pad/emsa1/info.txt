@@ -1,1 +1,3 @@
-define EMSA1 20131128
+<defines>
+EMSA1 -> 20131128
+</defines>

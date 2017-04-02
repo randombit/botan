@@ -1,4 +1,6 @@
-define KECCAK 20131128
+<defines>
+KECCAK -> 20131128
+</defines>
 
 <requires>
 sha3

@@ -524,6 +524,18 @@ class LexerError(ConfigureError):
         return '%s at %s:%d' % (self.msg, self.lexfile, self.line)
 
 
+def parse_lex_dict(as_list):
+    if len(as_list) % 3 != 0:
+        raise ConfigureError("Lex dictionary has invalid format")
+
+    result = {}
+    for key, sep, value in [as_list[3*i:3*i+3] for i in range(0, len(as_list)/3)]:
+        if sep != '->':
+            raise ConfigureError("Lex dictionary has invalid format")
+        result[key] = value
+    return result
+
+
 def lex_me_harder(infofile, allowed_groups, name_val_pairs):
     """
     Generic lexer function for info.txt and src/build-data files
@@ -574,15 +586,6 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
         elif token in name_val_pairs.keys():
             if isinstance(out.__dict__[token], list):
                 out.__dict__[token].append(lexer.get_token())
-
-                # Dirty hack
-                if token == 'define':
-                    nxt = lexer.get_token()
-                    if not nxt:
-                        raise LexerError('No version set for API', infofile, lexer.lineno)
-                    if not re.match('^[0-9]{8}$', nxt):
-                        raise LexerError('Bad API rev "%s"' % (nxt), infofile, lexer.lineno)
-                    out.__dict__[token].append(nxt)
             else:
                 out.__dict__[token] = lexer.get_token()
 
@@ -630,12 +633,11 @@ class ModuleInfo(InfoObject):
         lex = lex_me_harder(
             infofile,
             [
-                'header:internal', 'header:public', 'header:external', 'requires',
+                'defines', 'header:internal', 'header:public', 'header:external', 'requires',
                 'os', 'arch', 'cc', 'libs', 'frameworks', 'comment', 'warning'
             ],
             {
                 'load_on': 'auto',
-                'define': [],
                 'need_isa': ''
             })
 
@@ -687,7 +689,8 @@ class ModuleInfo(InfoObject):
         self.arch = lex.arch
         self.cc = lex.cc
         self.comment = ' '.join(lex.comment) if lex.comment else None
-        self.define = lex.define
+        self._defines = parse_lex_dict(lex.defines)
+        self._validate_defines_content(self._defines)
         self.frameworks = convert_lib_list(lex.frameworks)
         self.libs = convert_lib_list(lex.libs)
         self.load_on = lex.load_on
@@ -728,6 +731,14 @@ class ModuleInfo(InfoObject):
         intersect_check('public', self.header_public, 'external', self.header_external)
         intersect_check('external', self.header_external, 'internal', self.header_internal)
 
+    @staticmethod
+    def _validate_defines_content(defines):
+        for key, value in defines.items():
+            if not re.match('^[0-9A-Za-z_]{3,30}$', key):
+                raise ConfigureError('Module defines key has invalid format: "%s"' % key)
+            if not re.match('^[0-9]{8}$', value):
+                raise ConfigureError('Module defines value has invalid format: "%s"' % value)
+
     def cross_check(self, arch_info, os_info, cc_info):
         for supp_os in self.os:
             if supp_os not in os_info:
@@ -752,7 +763,7 @@ class ModuleInfo(InfoObject):
         return self.header_external
 
     def defines(self):
-        return ['HAS_' + d[0] + ' ' + d[1] for d in chunks(self.define, 2)]
+        return ['HAS_%s %s' % (key, value) for key, value in self._defines.items()]
 
     def compatible_cpu(self, archinfo, options):
         arch_name = archinfo.basename

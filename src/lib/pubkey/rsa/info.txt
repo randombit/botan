@@ -1,4 +1,6 @@
-define RSA 20160730
+<defines>
+RSA -> 20160730
+</defines>
 
 <requires>
 keypair

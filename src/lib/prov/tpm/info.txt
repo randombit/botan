@@ -1,4 +1,6 @@
-define TPM 20151126
+<defines>
+TPM -> 20151126
+</defines>
 
 load_on vendor
 

@@ -1,4 +1,6 @@
-define THRESHOLD_SECRET_SHARING 20131128
+<defines>
+THRESHOLD_SECRET_SHARING -> 20131128
+</defines>
 
 <requires>
 rng

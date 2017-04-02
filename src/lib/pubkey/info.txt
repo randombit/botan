@@ -1,4 +1,6 @@
-define PUBLIC_KEY_CRYPTO 20131128
+<defines>
+PUBLIC_KEY_CRYPTO -> 20131128
+</defines>
 
 <header:public>
 blinding.h
