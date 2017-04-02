@@ -529,7 +529,7 @@ def parse_lex_dict(as_list):
         raise ConfigureError("Lex dictionary has invalid format")
 
     result = {}
-    for key, sep, value in [as_list[3*i:3*i+3] for i in range(0, len(as_list)/3)]:
+    for key, sep, value in [as_list[3*i:3*i+3] for i in range(0, len(as_list)//3)]:
         if sep != '->':
             raise ConfigureError("Lex dictionary has invalid format")
         result[key] = value
