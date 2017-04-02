@@ -543,10 +543,12 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
         out.__dict__[key] = val
 
     def lexed_tokens(): # Convert to an interator
-        token = lexer.get_token()
-        while token != None:
-            yield token
+        while True:
             token = lexer.get_token()
+            if token != lexer.eof:
+                yield token
+            else:
+                return
 
     for token in lexed_tokens():
         match = re.match('<(.*)>', token)
