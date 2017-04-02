@@ -61,7 +61,9 @@ class BOTAN_DLL Session_Manager_SQL : public Session_Manager
       void save(const Session& session_data) override;
 
       std::chrono::seconds session_lifetime() const override
-         { return m_session_lifetime; }
+         {
+         return m_session_lifetime;
+         }
 
    private:
       void prune_session_cache();

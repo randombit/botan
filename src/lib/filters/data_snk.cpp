@@ -10,7 +10,7 @@
 #include <botan/exceptn.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-  #include <fstream>
+   #include <fstream>
 #endif
 
 namespace Botan {

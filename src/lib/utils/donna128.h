@@ -15,7 +15,11 @@ namespace Botan {
 class donna128
    {
    public:
-      donna128(uint64_t ll = 0, uint64_t hh = 0) { l = ll; h = hh; }
+      donna128(uint64_t ll = 0, uint64_t hh = 0)
+         {
+         l = ll;
+         h = hh;
+         }
 
       donna128(const donna128&) = default;
       donna128& operator=(const donna128&) = default;
@@ -71,8 +75,14 @@ class donna128
          return *this;
          }
 
-      uint64_t lo() const { return l; }
-      uint64_t hi() const { return h; }
+      uint64_t lo() const
+         {
+         return l;
+         }
+      uint64_t hi() const
+         {
+         return h;
+         }
    private:
       uint64_t h = 0, l = 0;
    };
@@ -111,7 +121,7 @@ inline uint64_t carry_shift(const donna128& a, size_t shift)
    }
 
 inline uint64_t combine_lower(const donna128& a, size_t s1,
-                            const donna128& b, size_t s2)
+                              const donna128& b, size_t s2)
    {
    donna128 z = (a >> s1) | (b << s2);
    return z.lo();
@@ -124,7 +134,7 @@ inline uint64_t carry_shift(const uint128_t a, size_t shift)
    }
 
 inline uint64_t combine_lower(const uint128_t a, size_t s1,
-                            const uint128_t b, size_t s2)
+                              const uint128_t b, size_t s2)
    {
    return static_cast<uint64_t>((a >> s1) | (b << s2));
    }

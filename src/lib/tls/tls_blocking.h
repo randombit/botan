@@ -53,7 +53,10 @@ class BOTAN_DLL Blocking_Client
       * Number of bytes pending read in the plaintext buffer (bytes
       * readable without blocking)
       */
-      size_t pending() const { return m_plaintext.size(); }
+      size_t pending() const
+         {
+         return m_plaintext.size();
+         }
 
       /**
       * Blocking read, will return at least 1 byte (eventually) or else 0 if the connection
@@ -61,17 +64,34 @@ class BOTAN_DLL Blocking_Client
       */
       size_t read(uint8_t buf[], size_t buf_len);
 
-      void write(const uint8_t buf[], size_t buf_len) { m_channel.send(buf, buf_len); }
+      void write(const uint8_t buf[], size_t buf_len)
+         {
+         m_channel.send(buf, buf_len);
+         }
 
-      const TLS::Channel& underlying_channel() const { return m_channel; }
-      TLS::Channel& underlying_channel() { return m_channel; }
+      const TLS::Channel& underlying_channel() const
+         {
+         return m_channel;
+         }
+      TLS::Channel& underlying_channel()
+         {
+         return m_channel;
+         }
 
-      void close() { m_channel.close(); }
+      void close()
+         {
+         m_channel.close();
+         }
 
-      bool is_closed() const { return m_channel.is_closed(); }
+      bool is_closed() const
+         {
+         return m_channel.is_closed();
+         }
 
       std::vector<X509_Certificate> peer_cert_chain() const
-         { return m_channel.peer_cert_chain(); }
+         {
+         return m_channel.peer_cert_chain();
+         }
 
       virtual ~Blocking_Client() {}
 
@@ -79,7 +99,10 @@ class BOTAN_DLL Blocking_Client
       /**
       * Application can override to get the handshake complete notification
       */
-      virtual bool handshake_complete(const Session&) { return true; }
+      virtual bool handshake_complete(const Session&)
+         {
+         return true;
+         }
 
       /**
       * Application can override to get notification of alerts

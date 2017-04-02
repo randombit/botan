@@ -17,7 +17,9 @@ size_t choose_update_size(size_t update_granularity)
    const size_t target_size = 1024;
 
    if(update_granularity >= target_size)
+      {
       return update_granularity;
+      }
 
    return round_up(target_size, update_granularity);
    }
@@ -49,7 +51,9 @@ std::vector<uint8_t> Cipher_Mode_Filter::Nonce_State::get()
    BOTAN_ASSERT(m_fresh_nonce, "The nonce is fresh for this message");
 
    if(!m_nonce.empty())
+      {
       m_fresh_nonce = false;
+      }
    return m_nonce;
    }
 

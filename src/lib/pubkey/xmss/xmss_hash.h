@@ -55,7 +55,7 @@ class XMSS_Hash
        * @return result The hash calculated using key and data.
        **/
       inline secure_vector<uint8_t> prf(const secure_vector<uint8_t>& key,
-                                     const secure_vector<uint8_t>& data)
+                                        const secure_vector<uint8_t>& data)
          {
          m_hash->update(m_zero_padding);
          m_hash->update(m_id_prf);
@@ -106,9 +106,9 @@ class XMSS_Hash
        * @return hash value of n-bytes length.
        **/
       secure_vector<uint8_t> h_msg(const secure_vector<uint8_t>& randomness,
-                                const secure_vector<uint8_t>& root,
-                                const secure_vector<uint8_t>& index_bytes,
-                                const secure_vector<uint8_t>& data);
+                                   const secure_vector<uint8_t>& root,
+                                   const secure_vector<uint8_t>& index_bytes,
+                                   const secure_vector<uint8_t>& data);
 
       /**
        * Initializes buffered h_msg computation with prefix data.
@@ -144,7 +144,10 @@ class XMSS_Hash
        **/
       secure_vector<uint8_t> h_msg_final();
 
-      size_t output_length() const { return m_output_length; };
+      size_t output_length() const
+         {
+         return m_output_length;
+         };
 
    private:
       static const uint8_t m_id_f = 0x00;

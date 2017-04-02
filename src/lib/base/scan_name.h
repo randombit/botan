@@ -37,17 +37,26 @@ class BOTAN_DLL SCAN_Name
       /**
       * @return original input string
       */
-      const std::string& as_string() const { return m_orig_algo_spec; }
+      const std::string& as_string() const
+         {
+         return m_orig_algo_spec;
+         }
 
       /**
       * @return algorithm name
       */
-      const std::string& algo_name() const { return m_alg_name; }
+      const std::string& algo_name() const
+         {
+         return m_alg_name;
+         }
 
       /**
       * @return number of arguments
       */
-      size_t arg_count() const { return m_args.size(); }
+      size_t arg_count() const
+         {
+         return m_args.size();
+         }
 
       /**
       * @param lower is the lower bound
@@ -55,7 +64,9 @@ class BOTAN_DLL SCAN_Name
       * @return if the number of arguments is between lower and upper
       */
       bool arg_count_between(size_t lower, size_t upper) const
-         { return ((arg_count() >= lower) && (arg_count() <= upper)); }
+         {
+         return ((arg_count() >= lower) && (arg_count() <= upper));
+         }
 
       /**
       * @param i which argument
@@ -81,13 +92,17 @@ class BOTAN_DLL SCAN_Name
       * @return cipher mode (if any)
       */
       std::string cipher_mode() const
-         { return (m_mode_info.size() >= 1) ? m_mode_info[0] : ""; }
+         {
+         return (m_mode_info.size() >= 1) ? m_mode_info[0] : "";
+         }
 
       /**
       * @return cipher mode padding (if any)
       */
       std::string cipher_mode_pad() const
-         { return (m_mode_info.size() >= 2) ? m_mode_info[1] : ""; }
+         {
+         return (m_mode_info.size() >= 2) ? m_mode_info[1] : "";
+         }
 
    private:
       std::string m_orig_algo_spec;
@@ -99,10 +114,10 @@ class BOTAN_DLL SCAN_Name
 // This is unrelated but it is convenient to stash it here
 template<typename T>
 std::vector<std::string> probe_providers_of(const std::string& algo_spec,
-                                            const std::vector<std::string>& possible)
+      const std::vector<std::string>& possible)
    {
    std::vector<std::string> providers;
-   for(auto&& prov : possible)
+   for(auto && prov : possible)
       {
       std::unique_ptr<T> o(T::create(algo_spec, prov));
       if(o)

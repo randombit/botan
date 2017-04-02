@@ -31,7 +31,10 @@ class BOTAN_DLL CertID final : public ASN1_Object
 
       void decode_from(class BER_Decoder& from) override;
 
-      const std::vector<uint8_t>& issuer_key_hash() const { return m_issuer_key_hash; }
+      const std::vector<uint8_t>& issuer_key_hash() const
+         {
+         return m_issuer_key_hash;
+         }
 
    private:
       AlgorithmIdentifier m_hash_id;
@@ -43,13 +46,25 @@ class BOTAN_DLL CertID final : public ASN1_Object
 class BOTAN_DLL SingleResponse final : public ASN1_Object
    {
    public:
-      const CertID& certid() const { return m_certid; }
+      const CertID& certid() const
+         {
+         return m_certid;
+         }
 
-      size_t cert_status() const { return m_cert_status; }
+      size_t cert_status() const
+         {
+         return m_cert_status;
+         }
 
-      X509_Time this_update() const { return m_thisupdate; }
+      X509_Time this_update() const
+         {
+         return m_thisupdate;
+         }
 
-      X509_Time next_update() const { return m_nextupdate; }
+      X509_Time next_update() const
+         {
+         return m_nextupdate;
+         }
 
       void encode_into(class DER_Encoder& to) const override;
 

@@ -24,12 +24,17 @@ namespace Botan_Tests {
 class Fixed_Output_RNG : public Botan::RandomNumberGenerator
    {
    public:
-      bool is_seeded() const override { return !m_buf.empty(); }
+      bool is_seeded() const override
+         {
+         return !m_buf.empty();
+         }
 
       virtual uint8_t random()
          {
          if(!is_seeded())
+            {
             throw Test_Error("Fixed output RNG ran out of bytes, test bug?");
+            }
 
          uint8_t out = m_buf.front();
          m_buf.pop_front();
@@ -38,12 +43,17 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 
       size_t reseed(Botan::Entropy_Sources&,
                     size_t,
-                    std::chrono::milliseconds) override { return 0; }
+                    std::chrono::milliseconds) override
+         {
+         return 0;
+         }
 
       void randomize(uint8_t out[], size_t len) override
          {
          for(size_t j = 0; j != len; j++)
+            {
             out[j] = random();
+            }
          }
 
       void add_entropy(const uint8_t b[], size_t s) override
@@ -51,9 +61,12 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          m_buf.insert(m_buf.end(), b, b + s);
          }
 
-      std::string name() const override { return "Fixed_Output_RNG"; }
+      std::string name() const override
+         {
+         return "Fixed_Output_RNG";
+         }
 
-      void clear() throw() override {}
+      void clear() override {}
 
       explicit Fixed_Output_RNG(const std::vector<uint8_t>& in)
          {
@@ -68,7 +81,10 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 
       Fixed_Output_RNG() {}
    protected:
-      size_t remaining() const { return m_buf.size(); }
+      size_t remaining() const
+         {
+         return m_buf.size();
+         }
 
       std::deque<uint8_t> m_buf;
    };
@@ -80,7 +96,10 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 class Fixed_Output_Position_RNG : public Fixed_Output_RNG
    {
    public:
-      bool is_seeded() const override { return !m_buf.empty() || Test::rng().is_seeded(); }
+      bool is_seeded() const override
+         {
+         return !m_buf.empty() || Test::rng().is_seeded();
+         }
 
       uint8_t random() override
          {
@@ -99,15 +118,17 @@ class Fixed_Output_Position_RNG : public Fixed_Output_RNG
          ++m_requests;
 
          if(m_requests == m_pos)
-            { // return fixed output
+            {
+            // return fixed output
             for(size_t j = 0; j != len; j++)
                {
                out[j] = random();
                }
             }
          else
-            { // return random
-               Test::rng().randomize(out,len);
+            {
+            // return random
+            Test::rng().randomize(out, len);
             }
          }
 
@@ -116,17 +137,20 @@ class Fixed_Output_Position_RNG : public Fixed_Output_RNG
          throw Botan::Exception("add_entropy() not supported by this RNG, test bug?");
          }
 
-      std::string name() const override { return "Fixed_Output_Position_RNG"; }
+      std::string name() const override
+         {
+         return "Fixed_Output_Position_RNG";
+         }
 
       explicit Fixed_Output_Position_RNG(const std::vector<uint8_t>& in, uint32_t pos) :
-            Fixed_Output_RNG(in),
-            m_pos(pos)
+         Fixed_Output_RNG(in),
+         m_pos(pos)
          {
          }
 
       explicit Fixed_Output_Position_RNG(const std::string& in_str, uint32_t pos) :
-            Fixed_Output_RNG(in_str),
-            m_pos(pos)
+         Fixed_Output_RNG(in_str),
+         m_pos(pos)
          {
          }
 
@@ -139,7 +163,9 @@ class SeedCapturing_RNG : public Botan::RandomNumberGenerator
    {
    public:
       void randomize(uint8_t[], size_t) override
-         { throw Botan::Exception("SeedCapturing_RNG has no output"); }
+         {
+         throw Botan::Exception("SeedCapturing_RNG has no output");
+         }
 
       void add_entropy(const uint8_t input[], size_t len) override
          {
@@ -148,12 +174,24 @@ class SeedCapturing_RNG : public Botan::RandomNumberGenerator
          }
 
       void clear() override {}
-      bool is_seeded() const override { return false; }
-      std::string name() const override { return "SeedCapturing"; }
+      bool is_seeded() const override
+         {
+         return false;
+         }
+      std::string name() const override
+         {
+         return "SeedCapturing";
+         }
 
-      size_t samples() const { return m_samples; }
+      size_t samples() const
+         {
+         return m_samples;
+         }
 
-      const std::vector<uint8_t>& seed_material() const { return m_seed; }
+      const std::vector<uint8_t>& seed_material() const
+         {
+         return m_seed;
+         }
 
    private:
       std::vector<uint8_t> m_seed;

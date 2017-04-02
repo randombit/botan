@@ -21,14 +21,15 @@ namespace TLS {
 class BOTAN_DLL Protocol_Version
    {
    public:
-      enum Version_Code {
+      enum Version_Code
+         {
          TLS_V10            = 0x0301,
          TLS_V11            = 0x0302,
          TLS_V12            = 0x0303,
 
          DTLS_V10           = 0xFEFF,
          DTLS_V12           = 0xFEFD
-      };
+         };
 
       /**
       * @return latest known TLS version
@@ -64,7 +65,10 @@ class BOTAN_DLL Protocol_Version
       /**
       * @return true if this is a valid protocol version
       */
-      bool valid() const { return (m_version != 0); }
+      bool valid() const
+         {
+         return (m_version != 0);
+         }
 
       /**
       * @return true if this is a protocol version we know about
@@ -74,12 +78,18 @@ class BOTAN_DLL Protocol_Version
       /**
       * @return major version of the protocol version
       */
-      uint8_t major_version() const { return get_byte(0, m_version); }
+      uint8_t major_version() const
+         {
+         return get_byte(0, m_version);
+         }
 
       /**
       * @return minor version of the protocol version
       */
-      uint8_t minor_version() const { return get_byte(1, m_version); }
+      uint8_t minor_version() const
+         {
+         return get_byte(1, m_version);
+         }
 
       /**
       * @return human-readable description of this version

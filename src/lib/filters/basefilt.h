@@ -12,7 +12,7 @@
 #include <botan/filter.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
-  #include <thread>
+   #include <thread>
 #endif
 
 namespace Botan {
@@ -24,7 +24,10 @@ struct BOTAN_DLL BitBucket final : public Filter
    {
    void write(const uint8_t[], size_t) override {}
 
-   std::string name() const override { return "BitBucket"; }
+   std::string name() const override
+      {
+      return "BitBucket";
+      }
    };
 
 /**
@@ -36,7 +39,10 @@ struct BOTAN_DLL BitBucket final : public Filter
 class BOTAN_DLL Chain : public Fanout_Filter
    {
    public:
-      void write(const uint8_t input[], size_t length) override { send(input, length); }
+      void write(const uint8_t input[], size_t length) override
+         {
+         send(input, length);
+         }
 
       std::string name() const override;
 
@@ -63,8 +69,14 @@ class BOTAN_DLL Chain : public Fanout_Filter
 class BOTAN_DLL Fork : public Fanout_Filter
    {
    public:
-      void write(const uint8_t input[], size_t length) override { send(input, length); }
-      void set_port(size_t n) { Fanout_Filter::set_port(n); }
+      void write(const uint8_t input[], size_t length) override
+         {
+         send(input, length);
+         }
+      void set_port(size_t n)
+         {
+         Fanout_Filter::set_port(n);
+         }
 
       std::string name() const override;
 

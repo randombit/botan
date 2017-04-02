@@ -26,7 +26,10 @@ class BOTAN_DLL RC4 final : public StreamCipher
       void clear() override;
       std::string name() const override;
 
-      StreamCipher* clone() const override { return new RC4(m_SKIP); }
+      StreamCipher* clone() const override
+         {
+         return new RC4(m_SKIP);
+         }
 
       Key_Length_Specification key_spec() const override
          {
@@ -38,7 +41,10 @@ class BOTAN_DLL RC4 final : public StreamCipher
       */
       explicit RC4(size_t skip = 0);
 
-      ~RC4() { clear(); }
+      ~RC4()
+         {
+         clear();
+         }
 
       void seek(uint64_t offset) override;
    private:

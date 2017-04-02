@@ -18,7 +18,10 @@ namespace Botan {
 class Darwin_SecRandom final : public Entropy_Source
    {
    public:
-      std::string name() const override { return "darwin_secrandom"; }
+      std::string name() const override
+         {
+         return "darwin_secrandom";
+         }
 
       size_t poll(RandomNumberGenerator& rng) override;
    };

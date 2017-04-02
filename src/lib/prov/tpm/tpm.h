@@ -43,7 +43,7 @@ class BOTAN_DLL TPM_Context
       * User callback for getting the PIN. Will be passed the best available
       * description of what we are attempting to load.
       */
-      typedef std::function<std::string (std::string)> pin_cb;
+      typedef std::function<std::string(std::string)> pin_cb;
 
       TPM_Context(pin_cb cb, const char* srk_password);
 
@@ -62,11 +62,17 @@ class BOTAN_DLL TPM_Context
 
       uint32_t current_counter();
 
-      TSS_HCONTEXT handle() const { return m_ctx; }
-      TSS_HKEY srk() const { return m_srk; }
+      TSS_HCONTEXT handle() const
+         {
+         return m_ctx;
+         }
+      TSS_HKEY srk() const
+         {
+         return m_srk;
+         }
 
    private:
-      std::function<std::string (std::string)> m_pin_cb;
+      std::function<std::string(std::string)> m_pin_cb;
       TSS_HCONTEXT m_ctx;
       TSS_HKEY m_srk;
       TSS_HTPM m_tpm;
@@ -87,15 +93,21 @@ class BOTAN_DLL TPM_RNG : public Hardware_RNG
          m_ctx.gen_random(out, out_len);
          }
 
-      std::string name() const override { return "TPM_RNG"; }
+      std::string name() const override
+         {
+         return "TPM_RNG";
+         }
 
-      bool is_seeded() const override { return true; }
+      bool is_seeded() const override
+         {
+         return true;
+         }
 
       void clear() override {}
 
    private:
       TPM_Context& m_ctx;
-};
+   };
 
 enum class TPM_Storage_Type { User, System };
 
@@ -139,9 +151,15 @@ class BOTAN_DLL TPM_PrivateKey : public Private_Key
 
       std::vector<uint8_t> export_blob() const;
 
-      TPM_Context& ctx() const { return m_ctx; }
+      TPM_Context& ctx() const
+         {
+         return m_ctx;
+         }
 
-      TSS_HKEY handle() const { return m_key; }
+      TSS_HKEY handle() const
+         {
+         return m_key;
+         }
 
       /*
       * Returns the list of all keys (in URL format) registered with the system
@@ -160,12 +178,15 @@ class BOTAN_DLL TPM_PrivateKey : public Private_Key
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 
-      std::string algo_name() const override { return "RSA"; } // ???
+      std::string algo_name() const override
+         {
+         return "RSA";   // ???
+         }
 
       std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
+      create_signature_op(RandomNumberGenerator& rng,
+                          const std::string& params,
+                          const std::string& provider) const override;
 
    private:
       BigInt get_n() const;

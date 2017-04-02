@@ -96,13 +96,19 @@ word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_size)
    const size_t blocks = y_size - (y_size % 8);
 
    for(size_t i = 0; i != blocks; i += 8)
+      {
       carry = word8_add2(x + i, y + i, carry);
+      }
 
    for(size_t i = blocks; i != y_size; ++i)
+      {
       x[i] = word_add(x[i], y[i], &carry);
+      }
 
    for(size_t i = y_size; i != x_size; ++i)
+      {
       x[i] = word_add(x[i], 0, &carry);
+      }
 
    return carry;
    }
@@ -111,23 +117,31 @@ word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_size)
 * Three Operand Addition, No Carry
 */
 word bigint_add3_nc(word z[], const word x[], size_t x_size,
-                              const word y[], size_t y_size)
+                    const word y[], size_t y_size)
    {
    if(x_size < y_size)
-      { return bigint_add3_nc(z, y, y_size, x, x_size); }
+      {
+      return bigint_add3_nc(z, y, y_size, x, x_size);
+      }
 
    word carry = 0;
 
    const size_t blocks = y_size - (y_size % 8);
 
    for(size_t i = 0; i != blocks; i += 8)
+      {
       carry = word8_add3(z + i, x + i, y + i, carry);
+      }
 
    for(size_t i = blocks; i != y_size; ++i)
+      {
       z[i] = word_add(x[i], y[i], &carry);
+      }
 
    for(size_t i = y_size; i != x_size; ++i)
+      {
       z[i] = word_add(x[i], 0, &carry);
+      }
 
    return carry;
    }
@@ -138,14 +152,16 @@ word bigint_add3_nc(word z[], const word x[], size_t x_size,
 void bigint_add2(word x[], size_t x_size, const word y[], size_t y_size)
    {
    if(bigint_add2_nc(x, x_size, y, y_size))
+      {
       x[x_size] += 1;
+      }
    }
 
 /*
 * Three Operand Addition
 */
 void bigint_add3(word z[], const word x[], size_t x_size,
-                           const word y[], size_t y_size)
+                 const word y[], size_t y_size)
    {
    z[(x_size > y_size ? x_size : y_size)] +=
       bigint_add3_nc(z, x, x_size, y, y_size);
@@ -163,13 +179,19 @@ word bigint_sub2(word x[], size_t x_size, const word y[], size_t y_size)
    const size_t blocks = y_size - (y_size % 8);
 
    for(size_t i = 0; i != blocks; i += 8)
+      {
       borrow = word8_sub2(x + i, y + i, borrow);
+      }
 
    for(size_t i = blocks; i != y_size; ++i)
+      {
       x[i] = word_sub(x[i], y[i], &borrow);
+      }
 
    for(size_t i = y_size; i != x_size; ++i)
+      {
       x[i] = word_sub(x[i], 0, &borrow);
+      }
 
    return borrow;
    }
@@ -184,10 +206,14 @@ void bigint_sub2_rev(word x[],  const word y[], size_t y_size)
    const size_t blocks = y_size - (y_size % 8);
 
    for(size_t i = 0; i != blocks; i += 8)
+      {
       borrow = word8_sub2_rev(x + i, y + i, borrow);
+      }
 
    for(size_t i = blocks; i != y_size; ++i)
+      {
       x[i] = word_sub(y[i], x[i], &borrow);
+      }
 
    BOTAN_ASSERT(!borrow, "y must be greater than x");
    }
@@ -196,7 +222,7 @@ void bigint_sub2_rev(word x[],  const word y[], size_t y_size)
 * Three Operand Subtraction
 */
 word bigint_sub3(word z[], const word x[], size_t x_size,
-                           const word y[], size_t y_size)
+                 const word y[], size_t y_size)
    {
    word borrow = 0;
 
@@ -205,13 +231,19 @@ word bigint_sub3(word z[], const word x[], size_t x_size,
    const size_t blocks = y_size - (y_size % 8);
 
    for(size_t i = 0; i != blocks; i += 8)
+      {
       borrow = word8_sub3(z + i, x + i, y + i, borrow);
+      }
 
    for(size_t i = blocks; i != y_size; ++i)
+      {
       z[i] = word_sub(x[i], y[i], &borrow);
+      }
 
    for(size_t i = y_size; i != x_size; ++i)
+      {
       z[i] = word_sub(x[i], 0, &borrow);
+      }
 
    return borrow;
    }
@@ -226,10 +258,14 @@ void bigint_linmul2(word x[], size_t x_size, word y)
    word carry = 0;
 
    for(size_t i = 0; i != blocks; i += 8)
+      {
       carry = word8_linmul2(x + i, y, carry);
+      }
 
    for(size_t i = blocks; i != x_size; ++i)
+      {
       x[i] = word_madd2(x[i], y, &carry);
+      }
 
    x[x_size] = carry;
    }
@@ -244,10 +280,14 @@ void bigint_linmul3(word z[], const word x[], size_t x_size, word y)
    word carry = 0;
 
    for(size_t i = 0; i != blocks; i += 8)
+      {
       carry = word8_linmul3(z + i, x + i, y, carry);
+      }
 
    for(size_t i = blocks; i != x_size; ++i)
+      {
       z[i] = word_madd2(x[i], y, &carry);
+      }
 
    z[x_size] = carry;
    }
@@ -300,20 +340,20 @@ void bigint_shr1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
 
       while(top >= 4)
          {
-         word w = x[top-1];
-         x[top-1] = (w >> bit_shift) | carry;
+         word w = x[top - 1];
+         x[top - 1] = (w >> bit_shift) | carry;
          carry = (w << (MP_WORD_BITS - bit_shift));
 
-         w = x[top-2];
-         x[top-2] = (w >> bit_shift) | carry;
+         w = x[top - 2];
+         x[top - 2] = (w >> bit_shift) | carry;
          carry = (w << (MP_WORD_BITS - bit_shift));
 
-         w = x[top-3];
-         x[top-3] = (w >> bit_shift) | carry;
+         w = x[top - 3];
+         x[top - 3] = (w >> bit_shift) | carry;
          carry = (w << (MP_WORD_BITS - bit_shift));
 
-         w = x[top-4];
-         x[top-4] = (w >> bit_shift) | carry;
+         w = x[top - 4];
+         x[top - 4] = (w >> bit_shift) | carry;
          carry = (w << (MP_WORD_BITS - bit_shift));
 
          top -= 4;
@@ -321,8 +361,8 @@ void bigint_shr1(word x[], size_t x_size, size_t word_shift, size_t bit_shift)
 
       while(top)
          {
-         word w = x[top-1];
-         x[top-1] = (w >> bit_shift) | carry;
+         word w = x[top - 1];
+         x[top - 1] = (w >> bit_shift) | carry;
          carry = (w << (MP_WORD_BITS - bit_shift));
 
          top--;
@@ -337,7 +377,9 @@ void bigint_shl2(word y[], const word x[], size_t x_size,
                  size_t word_shift, size_t bit_shift)
    {
    for(size_t j = 0; j != x_size; ++j)
+      {
       y[j + word_shift] = x[j];
+      }
    if(bit_shift)
       {
       word carry = 0;
@@ -356,17 +398,22 @@ void bigint_shl2(word y[], const word x[], size_t x_size,
 void bigint_shr2(word y[], const word x[], size_t x_size,
                  size_t word_shift, size_t bit_shift)
    {
-   if(x_size < word_shift) return;
+   if(x_size < word_shift)
+      {
+      return;
+      }
 
    for(size_t j = 0; j != x_size - word_shift; ++j)
+      {
       y[j] = x[j + word_shift];
+      }
    if(bit_shift)
       {
       word carry = 0;
       for(size_t j = x_size - word_shift; j > 0; --j)
          {
-         word w = y[j-1];
-         y[j-1] = (w >> bit_shift) | carry;
+         word w = y[j - 1];
+         y[j - 1] = (w >> bit_shift) | carry;
          carry = (w << (MP_WORD_BITS - bit_shift));
          }
       }
@@ -376,23 +423,32 @@ void bigint_shr2(word y[], const word x[], size_t x_size,
 * Compare two MP integers
 */
 int32_t bigint_cmp(const word x[], size_t x_size,
-                  const word y[], size_t y_size)
+                   const word y[], size_t y_size)
    {
-   if(x_size < y_size) { return (-bigint_cmp(y, y_size, x, x_size)); }
+   if(x_size < y_size)
+      {
+      return (-bigint_cmp(y, y_size, x, x_size));
+      }
 
    while(x_size > y_size)
       {
-      if(x[x_size-1])
+      if(x[x_size - 1])
+         {
          return 1;
+         }
       x_size--;
       }
 
    for(size_t i = x_size; i > 0; --i)
       {
-      if(x[i-1] > y[i-1])
+      if(x[i - 1] > y[i - 1])
+         {
          return 1;
-      if(x[i-1] < y[i-1])
+         }
+      if(x[i - 1] < y[i - 1])
+         {
          return -1;
+         }
       }
 
    return 0;
@@ -404,7 +460,9 @@ int32_t bigint_cmp(const word x[], size_t x_size,
 word bigint_divop(word n1, word n0, word d)
    {
    if(d == 0)
+      {
       throw Invalid_Argument("bigint_divop divide by zero");
+      }
 
    word high = n1 % d, quotient = 0;
 
@@ -413,7 +471,7 @@ word bigint_divop(word n1, word n0, word d)
       word high_top_bit = (high & MP_WORD_TOP_BIT);
 
       high <<= 1;
-      high |= (n0 >> (MP_WORD_BITS-1-i)) & 1;
+      high |= (n0 >> (MP_WORD_BITS - 1 - i)) & 1;
       quotient <<= 1;
 
       if(high_top_bit || high >= d)
@@ -434,7 +492,7 @@ word bigint_modop(word n1, word n0, word d)
    word z = bigint_divop(n1, n0, d);
    word dummy = 0;
    z = word_madd2(z, d, &dummy);
-   return (n0-z);
+   return (n0 - z);
    }
 
 }

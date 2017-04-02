@@ -39,8 +39,8 @@ class BOTAN_DLL Session final
       /// Takes ownership of a session
       Session(Slot& slot, SessionHandle handle);
 
-/* Microsoft Visual Studio <= 2013 does not support default generated move special member functions.
-   Everything else we target should support it */
+      /* Microsoft Visual Studio <= 2013 does not support default generated move special member functions.
+         Everything else we target should support it */
 #if !defined( _MSC_VER ) || ( _MSC_VER >= 1900 )
       Session(Session&& other) = default;
       Session& operator=(Session&& other) = default;
@@ -66,8 +66,7 @@ class BOTAN_DLL Session final
          }
 
       /// @return a reference to the used module
-      inline Module& module() const
-         {
+      inline Module& module() const {
          return m_slot.module();
          }
 

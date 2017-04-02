@@ -24,7 +24,8 @@ class BOTAN_DLL Alert
       /**
       * Type codes for TLS alerts
       */
-      enum Type {
+      enum Type
+         {
          CLOSE_NOTIFY                    = 0,
          UNEXPECTED_MESSAGE              = 10,
          BAD_RECORD_MAC                  = 20,
@@ -61,22 +62,31 @@ class BOTAN_DLL Alert
 
          // pseudo alert values
          NULL_ALERT                      = 256
-      };
+         };
 
       /**
       * @return true iff this alert is non-empty
       */
-      bool is_valid() const { return (m_type_code != NULL_ALERT); }
+      bool is_valid() const
+         {
+         return (m_type_code != NULL_ALERT);
+         }
 
       /**
       * @return if this alert is a fatal one or not
       */
-      bool is_fatal() const { return m_fatal; }
+      bool is_fatal() const
+         {
+         return m_fatal;
+         }
 
       /**
       * @return type of alert
       */
-      Type type() const { return m_type_code; }
+      Type type() const
+         {
+         return m_type_code;
+         }
 
       /**
       * @return type of alert

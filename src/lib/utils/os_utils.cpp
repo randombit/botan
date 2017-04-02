@@ -13,17 +13,17 @@
 #include <chrono>
 
 #if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
-  #include <sys/types.h>
-  #include <sys/mman.h>
-  #include <sys/resource.h>
-  #include <unistd.h>
-  #include <signal.h>
-  #include <setjmp.h>
+   #include <sys/types.h>
+   #include <sys/mman.h>
+   #include <sys/resource.h>
+   #include <unistd.h>
+   #include <signal.h>
+   #include <setjmp.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_WINDOWS) || defined(BOTAN_TARGET_OS_IS_MINGW)
-  #define NOMINMAX 1
-  #include <windows.h>
+   #define NOMINMAX 1
+   #include <windows.h>
 #endif
 
 namespace Botan {
@@ -37,7 +37,7 @@ uint32_t OS::get_process_id()
 #elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIKERNEL)
    return 0; // truly no meaningful value
 #else
-   #error "Missing get_process_id"
+#error "Missing get_process_id"
 #endif
    }
 
@@ -54,13 +54,13 @@ uint64_t OS::get_processor_timestamp()
    if(CPUID::has_rdtsc()) // not available on all x86 CPUs
       {
       uint32_t rtc_low = 0, rtc_high = 0;
-      asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
+      asm volatile("rdtsc" : "=d"(rtc_high), "=a"(rtc_low));
       return (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
       }
 
 #elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
    uint32_t rtc_low = 0, rtc_high = 0;
-   asm volatile("mftbu %0; mftb %1" : "=r" (rtc_high), "=r" (rtc_low));
+   asm volatile("mftbu %0; mftb %1" : "=r"(rtc_high), "=r"(rtc_low));
 
    /*
    qemu-ppc seems to not support mftb instr, it always returns zero.
@@ -73,28 +73,28 @@ uint64_t OS::get_processor_timestamp()
 
 #elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
    uint64_t rtc = 0;
-   asm volatile("rpcc %0" : "=r" (rtc));
+   asm volatile("rpcc %0" : "=r"(rtc));
    return rtc;
 
    // OpenBSD does not trap access to the %tick register
 #elif defined(BOTAN_TARGET_ARCH_IS_SPARC64) && !defined(BOTAN_TARGET_OS_IS_OPENBSD)
    uint64_t rtc = 0;
-   asm volatile("rd %%tick, %0" : "=r" (rtc));
+   asm volatile("rd %%tick, %0" : "=r"(rtc));
    return rtc;
 
 #elif defined(BOTAN_TARGET_ARCH_IS_IA64)
    uint64_t rtc = 0;
-   asm volatile("mov %0=ar.itc" : "=r" (rtc));
+   asm volatile("mov %0=ar.itc" : "=r"(rtc));
    return rtc;
 
 #elif defined(BOTAN_TARGET_ARCH_IS_S390X)
    uint64_t rtc = 0;
-   asm volatile("stck 0(%0)" : : "a" (&rtc) : "memory", "cc");
+   asm volatile("stck 0(%0)" : : "a"(&rtc) : "memory", "cc");
    return rtc;
 
 #elif defined(BOTAN_TARGET_ARCH_IS_HPPA)
    uint64_t rtc = 0;
-   asm volatile("mfctl 16,%0" : "=r" (rtc)); // 64-bit only?
+   asm volatile("mfctl 16,%0" : "=r"(rtc));  // 64-bit only?
    return rtc;
 
 #else
@@ -109,7 +109,9 @@ uint64_t OS::get_processor_timestamp()
 uint64_t OS::get_high_resolution_clock()
    {
    if(uint64_t cpu_clock = OS::get_processor_timestamp())
+      {
       return cpu_clock;
+      }
 
    /*
    If we got here either we either don't have an asm instruction
@@ -121,7 +123,8 @@ uint64_t OS::get_high_resolution_clock()
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
 
    // The ordering here is somewhat arbitrary...
-   const clockid_t clock_types[] = {
+   const clockid_t clock_types[] =
+      {
 #if defined(CLOCK_MONOTONIC_HR)
       CLOCK_MONOTONIC_HR,
 #endif
@@ -137,7 +140,7 @@ uint64_t OS::get_high_resolution_clock()
 #if defined(CLOCK_THREAD_CPUTIME_ID)
       CLOCK_THREAD_CPUTIME_ID,
 #endif
-   };
+      };
 
    for(clockid_t clock : clock_types)
       {
@@ -232,7 +235,7 @@ size_t OS::get_memory_locking_limit()
 
    // According to Microsoft MSDN:
    // The maximum number of pages that a process can lock is equal to the number of pages in its minimum working set minus a small overhead
-   // In the book "Windows Internals Part 2": the maximum lockable pages are minimum working set size - 8 pages 
+   // In the book "Windows Internals Part 2": the maximum lockable pages are minimum working set size - 8 pages
    // But the information in the book seems to be inaccurate/outdated
    // I've tested this on Windows 8.1 x64, Windows 10 x64 and Windows 7 x86
    // On all three OS the value is 11 instead of 8
@@ -259,18 +262,18 @@ void* OS::allocate_locked_pages(size_t length)
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
 
 #if !defined(MAP_NOCORE)
-   #define MAP_NOCORE 0
+#define MAP_NOCORE 0
 #endif
 
 #if !defined(MAP_ANONYMOUS)
-   #define MAP_ANONYMOUS MAP_ANON
+#define MAP_ANONYMOUS MAP_ANON
 #endif
 
    void* ptr = ::mmap(nullptr,
                       length,
                       PROT_READ | PROT_WRITE,
                       MAP_ANONYMOUS | MAP_SHARED | MAP_NOCORE,
-                      /*fd*/-1,
+                      /*fd*/ -1,
                       /*offset*/0);
 
    if(ptr == MAP_FAILED)
@@ -314,7 +317,9 @@ void* OS::allocate_locked_pages(size_t length)
 void OS::free_locked_pages(void* ptr, size_t length)
    {
    if(ptr == nullptr || length == 0)
+      {
       return;
+      }
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
    secure_scrub_memory(ptr, length);
@@ -358,7 +363,9 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    int rc = ::sigaction(SIGILL, &sigaction, &old_sigaction);
 
    if(rc != 0)
+      {
       throw Exception("run_cpu_instruction_probe sigaction failed");
+      }
 
    rc = ::sigsetjmp(g_sigill_jmp_buf, /*save sigs*/1);
 
@@ -376,7 +383,9 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    // Restore old SIGILL handler, if any
    rc = ::sigaction(SIGILL, &old_sigaction, nullptr);
    if(rc != 0)
+      {
       throw Exception("run_cpu_instruction_probe sigaction restore failed");
+      }
 
 #elif defined(BOTAN_TARGET_OS_IS_WINDOWS) && defined(BOTAN_TARGET_COMPILER_IS_MSVC)
 

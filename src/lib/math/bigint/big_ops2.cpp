@@ -24,7 +24,9 @@ BigInt& BigInt::operator+=(const BigInt& y)
    grow_to(reg_size);
 
    if(sign() == y.sign())
+      {
       bigint_add2(mutable_data(), reg_size - 1, y.data(), y_sw);
+      }
    else
       {
       int32_t relative_size = bigint_cmp(data(), x_sw, y.data(), y_sw);
@@ -42,7 +44,9 @@ BigInt& BigInt::operator+=(const BigInt& y)
          set_sign(Positive);
          }
       else if(relative_size > 0)
+         {
          bigint_sub2(mutable_data(), x_sw, y.data(), y_sw);
+         }
       }
 
    return (*this);
@@ -63,9 +67,13 @@ BigInt& BigInt::operator-=(const BigInt& y)
    if(relative_size < 0)
       {
       if(sign() == y.sign())
+         {
          bigint_sub2_rev(mutable_data(), y.data(), y_sw);
+         }
       else
+         {
          bigint_add2(mutable_data(), reg_size - 1, y.data(), y_sw);
+         }
 
       set_sign(y.reverse_sign());
       }
@@ -77,14 +85,20 @@ BigInt& BigInt::operator-=(const BigInt& y)
          set_sign(Positive);
          }
       else
+         {
          bigint_shl1(mutable_data(), x_sw, 0, 1);
+         }
       }
    else if(relative_size > 0)
       {
       if(sign() == y.sign())
+         {
          bigint_sub2(mutable_data(), x_sw, y.data(), y_sw);
+         }
       else
+         {
          bigint_add2(mutable_data(), reg_size - 1, y.data(), y_sw);
+         }
       }
 
    return (*this);
@@ -131,9 +145,13 @@ BigInt& BigInt::operator*=(const BigInt& y)
 BigInt& BigInt::operator/=(const BigInt& y)
    {
    if(y.sig_words() == 1 && is_power_of_2(y.word_at(0)))
+      {
       (*this) >>= (y.bits() - 1);
+      }
    else
+      {
       (*this) = (*this) / y;
+      }
    return (*this);
    }
 
@@ -151,28 +169,36 @@ BigInt& BigInt::operator%=(const BigInt& mod)
 word BigInt::operator%=(word mod)
    {
    if(mod == 0)
+      {
       throw BigInt::DivideByZero();
+      }
 
    if(is_power_of_2(mod))
-       {
-       word result = (word_at(0) & (mod - 1));
-       clear();
-       grow_to(2);
-       m_reg[0] = result;
-       return result;
-       }
+      {
+      word result = (word_at(0) & (mod - 1));
+      clear();
+      grow_to(2);
+      m_reg[0] = result;
+      return result;
+      }
 
    word remainder = 0;
 
    for(size_t j = sig_words(); j > 0; --j)
-      remainder = bigint_modop(remainder, word_at(j-1), mod);
+      {
+      remainder = bigint_modop(remainder, word_at(j - 1), mod);
+      }
    clear();
    grow_to(2);
 
    if(remainder && sign() == BigInt::Negative)
+      {
       m_reg[0] = mod - remainder;
+      }
    else
+      {
       m_reg[0] = remainder;
+      }
 
    set_sign(BigInt::Positive);
 
@@ -210,7 +236,9 @@ BigInt& BigInt::operator>>=(size_t shift)
       bigint_shr1(mutable_data(), sig_words(), shift_words, shift_bits);
 
       if(is_zero())
+         {
          set_sign(Positive);
+         }
       }
 
    return (*this);

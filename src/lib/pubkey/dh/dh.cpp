@@ -63,7 +63,9 @@ DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id,
    DL_Scheme_PrivateKey(alg_id, key_bits, DL_Group::ANSI_X9_42)
    {
    if(m_y == 0)
+      {
       m_y = power_mod(group_g(), m_x, group_p());
+      }
    }
 
 /*
@@ -89,8 +91,14 @@ class DH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
          m_powermod_x_p(key.get_x(), m_p),
          m_blinder(m_p,
                    rng,
-                   [](const BigInt& k) { return k; },
-                   [this](const BigInt& k) { return m_powermod_x_p(inverse_mod(k, m_p)); })
+                   [](const BigInt & k)
+         {
+         return k;
+         },
+      [this](const BigInt& k)
+         {
+         return m_powermod_x_p(inverse_mod(k, m_p));
+         })
          {}
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override;
@@ -106,7 +114,9 @@ secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_le
    BigInt input = BigInt::decode(w, w_len);
 
    if(input <= 1 || input >= m_p - 1)
+      {
       throw Invalid_Argument("DH agreement - invalid key provided");
+      }
 
    BigInt r = m_blinder.unblind(m_powermod_x_p(m_blinder.blind(input)));
 
@@ -121,7 +131,9 @@ DH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
                                        const std::string& provider) const
    {
    if(provider == "base" || provider.empty())
+      {
       return std::unique_ptr<PK_Ops::Key_Agreement>(new DH_KA_Operation(*this, params, rng));
+      }
    throw Provider_Not_Found(algo_name(), provider);
    }
 

@@ -42,20 +42,28 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
       * Get this keys algorithm name.
       * @result this keys algorithm name
       */
-      std::string algo_name() const override { return "GOST-34.10"; }
+      std::string algo_name() const override
+         {
+         return "GOST-34.10";
+         }
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
       std::vector<uint8_t> public_key_bits() const override;
 
-      size_t message_parts() const override { return 2; }
+      size_t message_parts() const override
+         {
+         return 2;
+         }
 
       size_t message_part_size() const override
-         { return domain().get_order().bytes(); }
+         {
+         return domain().get_order().bytes();
+         }
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override;
+      create_verification_op(const std::string& params,
+                             const std::string& provider) const override;
 
    protected:
       GOST_3410_PublicKey() {}
@@ -65,7 +73,7 @@ class BOTAN_DLL GOST_3410_PublicKey : public virtual EC_PublicKey
 * GOST-34.10 Private Key
 */
 class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
-                                       public EC_PrivateKey
+   public EC_PrivateKey
    {
    public:
       /**
@@ -89,12 +97,14 @@ class BOTAN_DLL GOST_3410_PrivateKey : public GOST_3410_PublicKey,
          EC_PrivateKey(rng, domain, x) {}
 
       AlgorithmIdentifier pkcs8_algorithm_identifier() const override
-         { return EC_PublicKey::algorithm_identifier(); }
+         {
+         return EC_PublicKey::algorithm_identifier();
+         }
 
       std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
+      create_signature_op(RandomNumberGenerator& rng,
+                          const std::string& params,
+                          const std::string& provider) const override;
    };
 
 }

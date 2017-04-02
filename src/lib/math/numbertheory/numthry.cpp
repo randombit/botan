@@ -33,7 +33,9 @@ size_t low_zero_bits(const BigInt& n)
             break;
             }
          else
+            {
             low_zero += BOTAN_MP_WORD_BITS;
+            }
          }
       }
 
@@ -45,8 +47,14 @@ size_t low_zero_bits(const BigInt& n)
 */
 BigInt gcd(const BigInt& a, const BigInt& b)
    {
-   if(a.is_zero() || b.is_zero()) return 0;
-   if(a == 1 || b == 1)           return 1;
+   if(a.is_zero() || b.is_zero())
+      {
+      return 0;
+      }
+   if(a == 1 || b == 1)
+      {
+      return 1;
+      }
 
    BigInt x = a, y = b;
    x.set_sign(BigInt::Positive);
@@ -60,8 +68,16 @@ BigInt gcd(const BigInt& a, const BigInt& b)
       {
       x >>= low_zero_bits(x);
       y >>= low_zero_bits(y);
-      if(x >= y) { x -= y; x >>= 1; }
-      else       { y -= x; y >>= 1; }
+      if(x >= y)
+         {
+         x -= y;
+         x >>= 1;
+         }
+      else
+         {
+         y -= x;
+         y >>= 1;
+         }
       }
 
    return (y << shift);
@@ -143,7 +159,9 @@ BigInt normalized_montgomery_inverse(const BigInt& a, const BigInt& p)
    for(size_t i = 0; i != k; ++i)
       {
       if(r.is_odd())
+         {
          r += p;
+         }
       r >>= 1;
       }
 
@@ -153,9 +171,13 @@ BigInt normalized_montgomery_inverse(const BigInt& a, const BigInt& p)
 BigInt ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    {
    if(n.is_negative() || mod.is_negative())
+      {
       throw Invalid_Argument("ct_inverse_mod_odd_modulus: arguments must be non-negative");
+      }
    if(mod < 3 || mod.is_even())
+      {
       throw Invalid_Argument("Bad modulus to ct_inverse_mod_odd_modulus");
+      }
 
    /*
    This uses a modular inversion algorithm designed by Niels Möller
@@ -265,7 +287,9 @@ BigInt ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    BOTAN_ASSERT(a.is_zero(), "A is zero");
 
    if(b != 1)
+      {
       return 0;
+      }
 
    return v;
    }
@@ -276,15 +300,23 @@ BigInt ct_inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
 BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    {
    if(mod.is_zero())
+      {
       throw BigInt::DivideByZero();
+      }
    if(mod.is_negative() || n.is_negative())
+      {
       throw Invalid_Argument("inverse_mod: arguments must be non-negative");
+      }
 
    if(n.is_zero() || (n.is_even() && mod.is_even()))
-      return 0; // fast fail checks
+      {
+      return 0;   // fast fail checks
+      }
 
    if(mod.is_odd())
+      {
       return ct_inverse_mod_odd_modulus(n, mod);
+      }
 
    BigInt u = mod, v = n;
    BigInt A = 1, B = 0, C = 0, D = 1;
@@ -296,8 +328,12 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
       for(size_t i = 0; i != u_zero_bits; ++i)
          {
          if(A.is_odd() || B.is_odd())
-            { A += n; B -= mod; }
-         A >>= 1; B >>= 1;
+            {
+            A += n;
+            B -= mod;
+            }
+         A >>= 1;
+         B >>= 1;
          }
 
       const size_t v_zero_bits = low_zero_bits(v);
@@ -305,19 +341,41 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
       for(size_t i = 0; i != v_zero_bits; ++i)
          {
          if(C.is_odd() || D.is_odd())
-            { C += n; D -= mod; }
-         C >>= 1; D >>= 1;
+            {
+            C += n;
+            D -= mod;
+            }
+         C >>= 1;
+         D >>= 1;
          }
 
-      if(u >= v) { u -= v; A -= C; B -= D; }
-      else       { v -= u; C -= A; D -= B; }
+      if(u >= v)
+         {
+         u -= v;
+         A -= C;
+         B -= D;
+         }
+      else
+         {
+         v -= u;
+         C -= A;
+         D -= B;
+         }
       }
 
    if(v != 1)
-      return 0; // no modular inverse
+      {
+      return 0;   // no modular inverse
+      }
 
-   while(D.is_negative()) D += mod;
-   while(D >= mod) D -= mod;
+   while(D.is_negative())
+      {
+      D += mod;
+      }
+   while(D >= mod)
+      {
+      D -= mod;
+      }
 
    return D;
    }
@@ -325,16 +383,18 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
 word monty_inverse(word input)
    {
    if(input == 0)
+      {
       throw Exception("monty_inverse: divide by zero");
+      }
 
    word b = input;
    word x2 = 1, x1 = 0, y2 = 0, y1 = 1;
 
    // First iteration, a = n+1
    word q = bigint_divop(1, 0, b);
-   word r = (MP_WORD_MAX - q*b) + 1;
-   word x = x2 - q*x1;
-   word y = y2 - q*y1;
+   word r = (MP_WORD_MAX - q * b) + 1;
+   word x = x2 - q * x1;
+   word y = y2 - q * y1;
 
    word a = b;
    b = r;
@@ -346,9 +406,9 @@ word monty_inverse(word input)
    while(b > 0)
       {
       q = a / b;
-      r = a - q*b;
-      x = x2 - q*x1;
-      y = y2 - q*y1;
+      r = a - q * b;
+      x = x2 - q * x1;
+      y = y2 - q * y1;
 
       a = b;
       b = r;
@@ -391,17 +451,23 @@ bool mr_witness(BigInt&& y,
                 const BigInt& n_minus_1, size_t s)
    {
    if(y == 1 || y == n_minus_1)
+      {
       return false;
+      }
 
    for(size_t i = 1; i != s; ++i)
       {
       y = reducer_n.square(y);
 
       if(y == 1) // found a non-trivial square root
+         {
          return true;
+         }
 
       if(y == n_minus_1) // -1, trivial square root, so give up
+         {
          return false;
+         }
       }
 
    return true; // fails Fermat test
@@ -421,13 +487,21 @@ size_t mr_test_iterations(size_t n_bits, size_t prob, bool random)
    if(random && prob <= 80)
       {
       if(n_bits >= 1536)
-         return 2; // < 2^-89
+         {
+         return 2;   // < 2^-89
+         }
       if(n_bits >= 1024)
-         return 4; // < 2^-89
+         {
+         return 4;   // < 2^-89
+         }
       if(n_bits >= 512)
-         return 5; // < 2^-80
+         {
+         return 5;   // < 2^-80
+         }
       if(n_bits >= 256)
-         return 11; // < 2^-80
+         {
+         return 11;   // < 2^-80
+         }
       }
 
    return base;
@@ -442,12 +516,16 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
               size_t prob, bool is_random)
    {
    if(n == 2)
+      {
       return true;
+      }
    if(n <= 1 || n.is_even())
+      {
       return false;
+      }
 
    // Fast path testing for small numbers (<= 65521)
-   if(n <= PRIMES[PRIME_TABLE_SIZE-1])
+   if(n <= PRIMES[PRIME_TABLE_SIZE - 1])
       {
       const uint16_t num = static_cast<uint16_t>(n.word_at(0));
 
@@ -468,7 +546,9 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng,
       BigInt y = pow_mod(a);
 
       if(mr_witness(std::move(y), reducer, n_minus_1, s))
+         {
          return false;
+         }
       }
 
    return true;

@@ -24,10 +24,19 @@ class BOTAN_DLL Serpent final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
 
       void clear() override;
       std::string provider() const override;
-      std::string name() const override { return "Serpent"; }
-      BlockCipher* clone() const override { return new Serpent; }
+      std::string name() const override
+         {
+         return "Serpent";
+         }
+      BlockCipher* clone() const override
+         {
+         return new Serpent;
+         }
 
-      size_t parallelism() const override { return 4; }
+      size_t parallelism() const override
+         {
+         return 4;
+         }
 
    protected:
 #if defined(BOTAN_HAS_SERPENT_SIMD)
@@ -47,7 +56,9 @@ class BOTAN_DLL Serpent final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
       * @return const reference to the key schedule
       */
       const secure_vector<uint32_t>& get_round_keys() const
-         { return m_round_key; }
+         {
+         return m_round_key;
+         }
 
       /**
       * For use by subclasses that implement the key schedule

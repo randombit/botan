@@ -16,21 +16,25 @@ void hex_encode(char output[],
                 size_t input_length,
                 bool uppercase)
    {
-   static const uint8_t BIN_TO_HEX_UPPER[16] = {
+   static const uint8_t BIN_TO_HEX_UPPER[16] =
+      {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-      'A', 'B', 'C', 'D', 'E', 'F' };
+      'A', 'B', 'C', 'D', 'E', 'F'
+      };
 
-   static const uint8_t BIN_TO_HEX_LOWER[16] = {
+   static const uint8_t BIN_TO_HEX_LOWER[16] =
+      {
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-      'a', 'b', 'c', 'd', 'e', 'f' };
+      'a', 'b', 'c', 'd', 'e', 'f'
+      };
 
    const uint8_t* tbl = uppercase ? BIN_TO_HEX_UPPER : BIN_TO_HEX_LOWER;
 
    for(size_t i = 0; i != input_length; ++i)
       {
       uint8_t x = input[i];
-      output[2*i  ] = tbl[(x >> 4) & 0x0F];
-      output[2*i+1] = tbl[(x     ) & 0x0F];
+      output[2 * i  ] = tbl[(x >> 4) & 0x0F];
+      output[2 * i + 1] = tbl[(x) & 0x0F];
       }
    }
 
@@ -41,7 +45,9 @@ std::string hex_encode(const uint8_t input[],
    std::string output(2 * input_length, 0);
 
    if(input_length)
+      {
       hex_encode(&output.front(), input, input_length, uppercase);
+      }
 
    return output;
    }
@@ -61,7 +67,8 @@ size_t hex_decode(uint8_t output[],
    * Warning: this table assumes ASCII character encodings
    */
 
-   static const uint8_t HEX_TO_BIN[256] = {
+   static const uint8_t HEX_TO_BIN[256] =
+      {
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x80,
       0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -87,7 +94,8 @@ size_t hex_decode(uint8_t output[],
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+      };
 
    uint8_t* out_ptr = output;
    bool top_nibble = true;
@@ -101,24 +109,32 @@ size_t hex_decode(uint8_t output[],
       if(bin >= 0x10)
          {
          if(bin == 0x80 && ignore_ws)
+            {
             continue;
+            }
 
          std::string bad_char(1, input[i]);
          if(bad_char == "\t")
-           bad_char = "\\t";
+            {
+            bad_char = "\\t";
+            }
          else if(bad_char == "\n")
-           bad_char = "\\n";
+            {
+            bad_char = "\\n";
+            }
 
          throw Invalid_Argument(
-           std::string("hex_decode: invalid hex character '") +
-           bad_char + "'");
+            std::string("hex_decode: invalid hex character '") +
+            bad_char + "'");
          }
 
-      *out_ptr |= bin << (top_nibble*4);
+      *out_ptr |= bin << (top_nibble * 4);
 
       top_nibble = !top_nibble;
       if(top_nibble)
+         {
          ++out_ptr;
+         }
       }
 
    input_consumed = input_length;
@@ -147,7 +163,9 @@ size_t hex_decode(uint8_t output[],
                                consumed, ignore_ws);
 
    if(consumed != input_length)
+      {
       throw Invalid_Argument("hex_decode: input did not have full bytes");
+      }
 
    return written;
    }
@@ -160,8 +178,8 @@ size_t hex_decode(uint8_t output[],
    }
 
 secure_vector<uint8_t> hex_decode_locked(const char input[],
-                                      size_t input_length,
-                                      bool ignore_ws)
+      size_t input_length,
+      bool ignore_ws)
    {
    secure_vector<uint8_t> bin(1 + input_length / 2);
 
@@ -175,14 +193,14 @@ secure_vector<uint8_t> hex_decode_locked(const char input[],
    }
 
 secure_vector<uint8_t> hex_decode_locked(const std::string& input,
-                                      bool ignore_ws)
+      bool ignore_ws)
    {
    return hex_decode_locked(input.data(), input.size(), ignore_ws);
    }
 
 std::vector<uint8_t> hex_decode(const char input[],
-                             size_t input_length,
-                             bool ignore_ws)
+                                size_t input_length,
+                                bool ignore_ws)
    {
    std::vector<uint8_t> bin(1 + input_length / 2);
 
@@ -196,7 +214,7 @@ std::vector<uint8_t> hex_decode(const char input[],
    }
 
 std::vector<uint8_t> hex_decode(const std::string& input,
-                             bool ignore_ws)
+                                bool ignore_ws)
    {
    return hex_decode(input.data(), input.size(), ignore_ws);
    }

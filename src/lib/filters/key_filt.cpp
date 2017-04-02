@@ -14,7 +14,9 @@ Keyed_Filter* get_cipher(const std::string& algo_spec,
    {
    std::unique_ptr<Cipher_Mode> c(get_cipher_mode(algo_spec, direction));
    if(c)
+      {
       return new Cipher_Mode_Filter(c.release());
+      }
    throw Algorithm_Not_Found(algo_spec);
    }
 
@@ -25,7 +27,9 @@ Keyed_Filter* get_cipher(const std::string& algo_spec,
    {
    Keyed_Filter* cipher = get_cipher(algo_spec, key, direction);
    if(iv.length())
+      {
       cipher->set_iv(iv);
+      }
    return cipher;
    }
 

@@ -41,8 +41,8 @@ class BOTAN_DLL EMSA
       * @return encoded signature
       */
       virtual secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>& msg,
-                                             size_t output_bits,
-                                             RandomNumberGenerator& rng) = 0;
+            size_t output_bits,
+            RandomNumberGenerator& rng) = 0;
 
       /**
       * Verify the encoding

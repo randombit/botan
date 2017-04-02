@@ -90,7 +90,9 @@ MessageAuthenticationCode* HMAC::clone() const
 HMAC::HMAC(HashFunction* hash) : m_hash(hash)
    {
    if(m_hash->hash_block_size() == 0)
+      {
       throw Invalid_Argument("HMAC cannot be used with " + m_hash->name());
+      }
    }
 
 }

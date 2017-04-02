@@ -14,7 +14,7 @@
 #include <botan/pkcs10.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
+   #include <botan/system_rng.h>
 #endif
 
 namespace Botan {

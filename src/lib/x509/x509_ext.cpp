@@ -82,9 +82,9 @@ OID Certificate_Extension::oid_of() const
 * Validate the extension (the default implementation is a NOP)
 */
 void Certificate_Extension::validate(const X509_Certificate&, const X509_Certificate&,
-      const std::vector<std::shared_ptr<const X509_Certificate>>&,
-      std::vector<std::set<Certificate_Status_Code>>&,
-      size_t)
+                                     const std::vector<std::shared_ptr<const X509_Certificate>>&,
+                                     std::vector<std::set<Certificate_Status_Code>>&,
+                                     size_t)
    {
    }
 
@@ -167,10 +167,10 @@ void Extensions::encode_into(DER_Encoder& to_object) const
       if(should_encode)
          {
          to_object.start_cons(SEQUENCE)
-               .encode(ext->oid_of())
-               .encode_optional(is_critical, false)
-               .encode(ext->encode_inner(), OCTET_STRING)
-            .end_cons();
+         .encode(ext->oid_of())
+         .encode_optional(is_critical, false)
+         .encode(ext->encode_inner(), OCTET_STRING)
+         .end_cons();
          }
       }
 
@@ -182,19 +182,19 @@ void Extensions::encode_into(DER_Encoder& to_object) const
       const std::vector<uint8_t> value = ext_raw.second.first;
 
       auto pos = std::find_if(std::begin(m_extensions), std::end(m_extensions),
-            [&oid](const std::pair<std::unique_ptr<Certificate_Extension>, bool>& ext) -> bool
-            {
-            return ext.first->oid_of() == oid;
-            });
+                              [&oid](const std::pair<std::unique_ptr<Certificate_Extension>, bool>& ext) -> bool
+         {
+         return ext.first->oid_of() == oid;
+         });
 
       if(pos == std::end(m_extensions))
          {
          // not found in m_extensions, must be unknown
          to_object.start_cons(SEQUENCE)
-               .encode(oid)
-               .encode_optional(is_critical, false)
-               .encode(value, OCTET_STRING)
-            .end_cons();
+         .encode(oid)
+         .encode_optional(is_critical, false)
+         .encode(value, OCTET_STRING)
+         .end_cons();
          }
       }
    }
@@ -216,10 +216,10 @@ void Extensions::decode_from(BER_Decoder& from_source)
       bool critical;
 
       sequence.start_cons(SEQUENCE)
-            .decode(oid)
-            .decode_optional(critical, BOOLEAN, UNIVERSAL, false)
-            .decode(value, OCTET_STRING)
-         .end_cons();
+      .decode(oid)
+      .decode_optional(critical, BOOLEAN, UNIVERSAL, false)
+      .decode(value, OCTET_STRING)
+      .end_cons();
 
       m_extensions_raw.emplace(oid, std::make_pair(value, critical));
 
@@ -270,7 +270,9 @@ namespace Cert_Extension {
 size_t Basic_Constraints::get_path_limit() const
    {
    if(!m_is_ca)
+      {
       throw Invalid_State("Basic_Constraints::get_path_limit: Not a CA");
+      }
    return m_path_limit;
    }
 
@@ -280,14 +282,14 @@ size_t Basic_Constraints::get_path_limit() const
 std::vector<uint8_t> Basic_Constraints::encode_inner() const
    {
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-      .encode_if(m_is_ca,
-                 DER_Encoder()
-                    .encode(m_is_ca)
-                    .encode_optional(m_path_limit, NO_CERT_PATH_LIMIT)
-         )
-      .end_cons()
-   .get_contents_unlocked();
+          .start_cons(SEQUENCE)
+          .encode_if(m_is_ca,
+                     DER_Encoder()
+                     .encode(m_is_ca)
+                     .encode_optional(m_path_limit, NO_CERT_PATH_LIMIT)
+                    )
+          .end_cons()
+          .get_contents_unlocked();
    }
 
 /*
@@ -296,13 +298,15 @@ std::vector<uint8_t> Basic_Constraints::encode_inner() const
 void Basic_Constraints::decode_inner(const std::vector<uint8_t>& in)
    {
    BER_Decoder(in)
-      .start_cons(SEQUENCE)
-         .decode_optional(m_is_ca, BOOLEAN, UNIVERSAL, false)
-         .decode_optional(m_path_limit, INTEGER, UNIVERSAL, NO_CERT_PATH_LIMIT)
-      .end_cons();
+   .start_cons(SEQUENCE)
+   .decode_optional(m_is_ca, BOOLEAN, UNIVERSAL, false)
+   .decode_optional(m_path_limit, INTEGER, UNIVERSAL, NO_CERT_PATH_LIMIT)
+   .end_cons();
 
    if(m_is_ca == false)
+      {
       m_path_limit = 0;
+      }
    }
 
 /*
@@ -320,7 +324,9 @@ void Basic_Constraints::contents_to(Data_Store& subject, Data_Store&) const
 std::vector<uint8_t> Key_Usage::encode_inner() const
    {
    if(m_constraints == NO_CONSTRAINTS)
+      {
       throw Encoding_Error("Cannot encode zero usage constraints");
+      }
 
    const size_t unused_bits = low_bit(m_constraints) - 1;
 
@@ -330,7 +336,9 @@ std::vector<uint8_t> Key_Usage::encode_inner() const
    der.push_back(unused_bits % 8);
    der.push_back((m_constraints >> 8) & 0xFF);
    if(m_constraints & 0xFF)
+      {
       der.push_back(m_constraints & 0xFF);
+      }
 
    return der;
    }
@@ -349,17 +357,21 @@ void Key_Usage::decode_inner(const std::vector<uint8_t>& in)
                         obj.type_tag, obj.class_tag);
 
    if(obj.value.size() != 2 && obj.value.size() != 3)
+      {
       throw BER_Decoding_Error("Bad size for BITSTRING in usage constraint");
+      }
 
    if(obj.value[0] >= 8)
+      {
       throw BER_Decoding_Error("Invalid unused bits in usage constraint");
+      }
 
-   obj.value[obj.value.size()-1] &= (0xFF << obj.value[0]);
+   obj.value[obj.value.size() - 1] &= (0xFF << obj.value[0]);
 
    uint16_t usage = 0;
    for(size_t i = 1; i != obj.value.size(); ++i)
       {
-      usage = (obj.value[i] << 8*(sizeof(usage)-i)) | usage;
+      usage = (obj.value[i] << 8 * (sizeof(usage) - i)) | usage;
       }
 
    m_constraints = Key_Constraints(usage);
@@ -409,10 +421,10 @@ Subject_Key_ID::Subject_Key_ID(const std::vector<uint8_t>& pub_key) : m_key_id(u
 std::vector<uint8_t> Authority_Key_ID::encode_inner() const
    {
    return DER_Encoder()
-         .start_cons(SEQUENCE)
-            .encode(m_key_id, OCTET_STRING, ASN1_Tag(0), CONTEXT_SPECIFIC)
-         .end_cons()
-      .get_contents_unlocked();
+          .start_cons(SEQUENCE)
+          .encode(m_key_id, OCTET_STRING, ASN1_Tag(0), CONTEXT_SPECIFIC)
+          .end_cons()
+          .get_contents_unlocked();
    }
 
 /*
@@ -421,8 +433,8 @@ std::vector<uint8_t> Authority_Key_ID::encode_inner() const
 void Authority_Key_ID::decode_inner(const std::vector<uint8_t>& in)
    {
    BER_Decoder(in)
-      .start_cons(SEQUENCE)
-      .decode_optional_string(m_key_id, OCTET_STRING, 0);
+   .start_cons(SEQUENCE)
+   .decode_optional_string(m_key_id, OCTET_STRING, 0);
    }
 
 /*
@@ -431,7 +443,9 @@ void Authority_Key_ID::decode_inner(const std::vector<uint8_t>& in)
 void Authority_Key_ID::contents_to(Data_Store&, Data_Store& issuer) const
    {
    if(m_key_id.size())
+      {
       issuer.add("X509v3.AuthorityKeyIdentifier", m_key_id);
+      }
    }
 
 /*
@@ -460,9 +474,13 @@ void Alternative_Name::contents_to(Data_Store& subject_info,
       get_alt_name().contents();
 
    if(m_oid_name_str == "X509v3.SubjectAlternativeName")
+      {
       subject_info.add(contents);
+      }
    else if(m_oid_name_str == "X509v3.IssuerAlternativeName")
+      {
       issuer_info.add(contents);
+      }
    else
       throw Internal_Error("In Alternative_Name, unknown type " +
                            m_oid_name_str);
@@ -481,7 +499,7 @@ Alternative_Name::Alternative_Name(const AlternativeName& alt_name,
 * Subject_Alternative_Name Constructor
 */
 Subject_Alternative_Name::Subject_Alternative_Name(
-  const AlternativeName& name) :
+   const AlternativeName& name) :
    Alternative_Name(name, "X509v3.SubjectAlternativeName")
    {
    }
@@ -500,10 +518,10 @@ Issuer_Alternative_Name::Issuer_Alternative_Name(const AlternativeName& name) :
 std::vector<uint8_t> Extended_Key_Usage::encode_inner() const
    {
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-         .encode_list(m_oids)
-      .end_cons()
-   .get_contents_unlocked();
+          .start_cons(SEQUENCE)
+          .encode_list(m_oids)
+          .end_cons()
+          .get_contents_unlocked();
    }
 
 /*
@@ -520,7 +538,9 @@ void Extended_Key_Usage::decode_inner(const std::vector<uint8_t>& in)
 void Extended_Key_Usage::contents_to(Data_Store& subject, Data_Store&) const
    {
    for(size_t i = 0; i != m_oids.size(); ++i)
+      {
       subject.add("X509v3.ExtendedKeyUsage", m_oids[i].as_string());
+      }
    }
 
 /*
@@ -545,26 +565,32 @@ void Name_Constraints::decode_inner(const std::vector<uint8_t>& in)
    ext.push_back(per);
    if(per.type_tag == 0 && per.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       {
-      ext.decode_list(permit,ASN1_Tag(0),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+      ext.decode_list(permit, ASN1_Tag(0), ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
       if(permit.empty())
+         {
          throw Encoding_Error("Empty Name Contraint list");
+         }
       }
 
    BER_Object exc = ext.get_next_object();
    ext.push_back(exc);
    if(per.type_tag == 1 && per.class_tag == ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC))
       {
-      ext.decode_list(exclude,ASN1_Tag(1),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+      ext.decode_list(exclude, ASN1_Tag(1), ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
       if(exclude.empty())
+         {
          throw Encoding_Error("Empty Name Contraint list");
+         }
       }
 
    ext.end_cons();
 
    if(permit.empty() && exclude.empty())
+      {
       throw Encoding_Error("Empty Name Contraint extension");
+      }
 
-   m_name_constraints = NameConstraints(std::move(permit),std::move(exclude));
+   m_name_constraints = NameConstraints(std::move(permit), std::move(exclude));
    }
 
 /*
@@ -574,13 +600,13 @@ void Name_Constraints::contents_to(Data_Store& subject, Data_Store&) const
    {
    std::stringstream ss;
 
-   for(const GeneralSubtree& gs: m_name_constraints.permitted())
+   for(const GeneralSubtree& gs : m_name_constraints.permitted())
       {
       ss << gs;
       subject.add("X509v3.NameConstraints.permitted", ss.str());
       ss.str(std::string());
       }
-   for(const GeneralSubtree& gs: m_name_constraints.excluded())
+   for(const GeneralSubtree& gs : m_name_constraints.excluded())
       {
       ss << gs;
       subject.add("X509v3.NameConstraints.excluded", ss.str());
@@ -589,14 +615,16 @@ void Name_Constraints::contents_to(Data_Store& subject, Data_Store&) const
    }
 
 void Name_Constraints::validate(const X509_Certificate& subject, const X509_Certificate& issuer,
-      const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
-      std::vector<std::set<Certificate_Status_Code>>& cert_status,
-      size_t pos)
+                                const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
+                                std::vector<std::set<Certificate_Status_Code>>& cert_status,
+                                size_t pos)
    {
    if(!m_name_constraints.permitted().empty() || !m_name_constraints.excluded().empty())
       {
       if(!subject.is_CA_cert() || !subject.is_critical("X509v3.NameConstraints"))
+         {
          cert_status.at(pos).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
+         }
 
       const bool at_self_signed_root = (pos == cert_path.size() - 1);
 
@@ -604,41 +632,43 @@ void Name_Constraints::validate(const X509_Certificate& subject, const X509_Cert
       for(size_t j = 0; j <= pos; ++j)
          {
          if(pos == j && at_self_signed_root)
+            {
             continue;
+            }
 
          bool permitted = m_name_constraints.permitted().empty();
          bool failed = false;
 
-         for(auto c: m_name_constraints.permitted())
+         for(auto c : m_name_constraints.permitted())
             {
             switch(c.base().matches(*cert_path.at(j)))
                {
-            case GeneralName::MatchResult::NotFound:
-            case GeneralName::MatchResult::All:
-               permitted = true;
-               break;
-            case GeneralName::MatchResult::UnknownType:
-               failed = issuer.is_critical("X509v3.NameConstraints");
-               permitted = true;
-               break;
-            default:
-               break;
+               case GeneralName::MatchResult::NotFound:
+               case GeneralName::MatchResult::All:
+                  permitted = true;
+                  break;
+               case GeneralName::MatchResult::UnknownType:
+                  failed = issuer.is_critical("X509v3.NameConstraints");
+                  permitted = true;
+                  break;
+               default:
+                  break;
                }
             }
 
-         for(auto c: m_name_constraints.excluded())
+         for(auto c : m_name_constraints.excluded())
             {
             switch(c.base().matches(*cert_path.at(j)))
                {
-            case GeneralName::MatchResult::All:
-            case GeneralName::MatchResult::Some:
-               failed = true;
-               break;
-            case GeneralName::MatchResult::UnknownType:
-               failed = issuer.is_critical("X509v3.NameConstraints");
-               break;
-            default:
-               break;
+               case GeneralName::MatchResult::All:
+               case GeneralName::MatchResult::Some:
+                  failed = true;
+                  break;
+               case GeneralName::MatchResult::UnknownType:
+                  failed = issuer.is_critical("X509v3.NameConstraints");
+                  break;
+               default:
+                  break;
                }
             }
 
@@ -661,21 +691,24 @@ class Policy_Information : public ASN1_Object
       Policy_Information() {}
       explicit Policy_Information(const OID& oid) : m_oid(oid) {}
 
-      const OID& oid() const { return m_oid; }
+      const OID& oid() const
+         {
+         return m_oid;
+         }
 
       void encode_into(DER_Encoder& codec) const override
          {
          codec.start_cons(SEQUENCE)
-            .encode(m_oid)
-            .end_cons();
+         .encode(m_oid)
+         .end_cons();
          }
 
       void decode_from(BER_Decoder& codec) override
          {
          codec.start_cons(SEQUENCE)
-            .decode(m_oid)
-            .discard_remaining()
-            .end_cons();
+         .decode(m_oid)
+         .discard_remaining()
+         .end_cons();
          }
 
    private:
@@ -692,13 +725,15 @@ std::vector<uint8_t> Certificate_Policies::encode_inner() const
    std::vector<Policy_Information> policies;
 
    for(size_t i = 0; i != m_oids.size(); ++i)
+      {
       policies.push_back(Policy_Information(m_oids[i]));
+      }
 
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-         .encode_list(policies)
-      .end_cons()
-   .get_contents_unlocked();
+          .start_cons(SEQUENCE)
+          .encode_list(policies)
+          .end_cons()
+          .get_contents_unlocked();
    }
 
 /*
@@ -712,7 +747,9 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in)
 
    m_oids.clear();
    for(size_t i = 0; i != policies.size(); ++i)
+      {
       m_oids.push_back(policies[i].oid());
+      }
    }
 
 /*
@@ -721,7 +758,9 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in)
 void Certificate_Policies::contents_to(Data_Store& info, Data_Store&) const
    {
    for(size_t i = 0; i != m_oids.size(); ++i)
+      {
       info.add("X509v3.CertificatePolicies", m_oids[i].as_string());
+      }
    }
 
 std::vector<uint8_t> Authority_Information_Access::encode_inner() const
@@ -729,12 +768,12 @@ std::vector<uint8_t> Authority_Information_Access::encode_inner() const
    ASN1_String url(m_ocsp_responder, IA5_STRING);
 
    return DER_Encoder()
-      .start_cons(SEQUENCE)
-      .start_cons(SEQUENCE)
-      .encode(OIDS::lookup("PKIX.OCSP"))
-      .add_object(ASN1_Tag(6), CONTEXT_SPECIFIC, url.iso_8859())
-      .end_cons()
-      .end_cons().get_contents_unlocked();
+          .start_cons(SEQUENCE)
+          .start_cons(SEQUENCE)
+          .encode(OIDS::lookup("PKIX.OCSP"))
+          .add_object(ASN1_Tag(6), CONTEXT_SPECIFIC, url.iso_8859())
+          .end_cons()
+          .end_cons().get_contents_unlocked();
    }
 
 void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
@@ -767,7 +806,9 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in)
 void Authority_Information_Access::contents_to(Data_Store& subject, Data_Store&) const
    {
    if(!m_ocsp_responder.empty())
+      {
       subject.add("OCSP.responder", m_ocsp_responder);
+      }
    }
 
 /*
@@ -776,7 +817,9 @@ void Authority_Information_Access::contents_to(Data_Store& subject, Data_Store&)
 size_t CRL_Number::get_crl_number() const
    {
    if(!m_has_value)
+      {
       throw Invalid_State("CRL_Number::get_crl_number: Not set");
+      }
    return m_crl_number;
    }
 
@@ -786,7 +829,9 @@ size_t CRL_Number::get_crl_number() const
 CRL_Number* CRL_Number::copy() const
    {
    if(!m_has_value)
+      {
       throw Invalid_State("CRL_Number::copy: Not set");
+      }
    return new CRL_Number(m_crl_number);
    }
 
@@ -820,8 +865,8 @@ void CRL_Number::contents_to(Data_Store& info, Data_Store&) const
 std::vector<uint8_t> CRL_ReasonCode::encode_inner() const
    {
    return DER_Encoder()
-      .encode(static_cast<size_t>(m_reason), ENUMERATED, UNIVERSAL)
-   .get_contents_unlocked();
+          .encode(static_cast<size_t>(m_reason), ENUMERATED, UNIVERSAL)
+          .get_contents_unlocked();
    }
 
 /*
@@ -861,7 +906,9 @@ void CRL_Distribution_Points::contents_to(Data_Store& info, Data_Store&) const
       auto uris = point.equal_range("URI");
 
       for(auto uri = uris.first; uri != uris.second; ++uri)
+         {
          info.add("CRL.DistributionPoint", uri->second);
+         }
       }
    }
 
@@ -873,11 +920,11 @@ void CRL_Distribution_Points::Distribution_Point::encode_into(class DER_Encoder&
 void CRL_Distribution_Points::Distribution_Point::decode_from(class BER_Decoder& ber)
    {
    ber.start_cons(SEQUENCE)
-      .start_cons(ASN1_Tag(0), CONTEXT_SPECIFIC)
-        .decode_optional_implicit(m_point, ASN1_Tag(0),
-                                  ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED),
-                                  SEQUENCE, CONSTRUCTED)
-      .end_cons().end_cons();
+   .start_cons(ASN1_Tag(0), CONTEXT_SPECIFIC)
+   .decode_optional_implicit(m_point, ASN1_Tag(0),
+                             ASN1_Tag(CONTEXT_SPECIFIC | CONSTRUCTED),
+                             SEQUENCE, CONSTRUCTED)
+   .end_cons().end_cons();
    }
 
 std::vector<uint8_t> Unknown_Critical_Extension::encode_inner() const

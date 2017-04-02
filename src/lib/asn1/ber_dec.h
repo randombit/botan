@@ -42,24 +42,24 @@ class BOTAN_DLL BER_Decoder
       * @param out POD type reference where to copy object value
       * @param type_tag ASN1_Tag enum to assert type on object read
       * @param class_tag ASN1_Tag enum to assert class on object read (default: CONTEXT_SPECIFIC)
-      * @return this reference  
+      * @return this reference
       */
       template <typename T>
-         BER_Decoder& get_next_value(T &out,
-                                     ASN1_Tag type_tag,
-                                     ASN1_Tag class_tag = CONTEXT_SPECIFIC)
+      BER_Decoder& get_next_value(T& out,
+                                  ASN1_Tag type_tag,
+                                  ASN1_Tag class_tag = CONTEXT_SPECIFIC)
          {
          static_assert(std::is_pod<T>::value, "Type must be POD");
 
          BER_Object obj = get_next_object();
          obj.assert_is_a(type_tag, class_tag);
 
-         if (obj.value.size() != sizeof(T))
+         if(obj.value.size() != sizeof(T))
             throw BER_Decoding_Error(
-                    "Size mismatch. Object value size is " +
-                    std::to_string(obj.value.size()) +
-                    "; Output type size is " +
-                    std::to_string(sizeof(T)));
+               "Size mismatch. Object value size is " +
+               std::to_string(obj.value.size()) +
+               "; Output type size is " +
+               std::to_string(sizeof(T)));
 
          copy_mem(reinterpret_cast<uint8_t*>(&out), obj.value.data(), obj.value.size());
 
@@ -105,8 +105,8 @@ class BOTAN_DLL BER_Decoder
       BER_Decoder& decode_octet_string_bigint(class BigInt& b);
 
       uint64_t decode_constrained_integer(ASN1_Tag type_tag,
-                                        ASN1_Tag class_tag,
-                                        size_t T_bytes);
+                                          ASN1_Tag class_tag,
+                                          size_t T_bytes);
 
       template<typename T> BER_Decoder& decode_integer_type(T& out)
          {
@@ -114,43 +114,45 @@ class BOTAN_DLL BER_Decoder
          }
 
       template<typename T>
-         BER_Decoder& decode_integer_type(T& out,
-                                          ASN1_Tag type_tag,
-                                          ASN1_Tag class_tag = CONTEXT_SPECIFIC)
+      BER_Decoder& decode_integer_type(T& out,
+                                       ASN1_Tag type_tag,
+                                       ASN1_Tag class_tag = CONTEXT_SPECIFIC)
          {
          out = static_cast<T>(decode_constrained_integer(type_tag, class_tag, sizeof(out)));
          return (*this);
          }
 
       template<typename T>
-         BER_Decoder& decode_optional(T& out,
-                                      ASN1_Tag type_tag,
-                                      ASN1_Tag class_tag,
-                                      const T& default_value = T());
+      BER_Decoder& decode_optional(T& out,
+                                   ASN1_Tag type_tag,
+                                   ASN1_Tag class_tag,
+                                   const T& default_value = T());
 
       template<typename T>
-         BER_Decoder& decode_optional_implicit(
-            T& out,
-            ASN1_Tag type_tag,
-            ASN1_Tag class_tag,
-            ASN1_Tag real_type,
-            ASN1_Tag real_class,
-            const T& default_value = T());
+      BER_Decoder& decode_optional_implicit(
+         T& out,
+         ASN1_Tag type_tag,
+         ASN1_Tag class_tag,
+         ASN1_Tag real_type,
+         ASN1_Tag real_class,
+         const T& default_value = T());
 
       template<typename T>
-         BER_Decoder& decode_list(std::vector<T>& out,
-                                  ASN1_Tag type_tag = SEQUENCE,
-                                  ASN1_Tag class_tag = UNIVERSAL);
+      BER_Decoder& decode_list(std::vector<T>& out,
+                               ASN1_Tag type_tag = SEQUENCE,
+                               ASN1_Tag class_tag = UNIVERSAL);
 
       template<typename T>
-         BER_Decoder& decode_and_check(const T& expected,
-                                       const std::string& error_msg)
+      BER_Decoder& decode_and_check(const T& expected,
+                                    const std::string& error_msg)
          {
          T actual;
          decode(actual);
 
          if(actual != expected)
+            {
             throw Decoding_Error(error_msg);
+            }
 
          return (*this);
          }
@@ -171,7 +173,9 @@ class BOTAN_DLL BER_Decoder
          if(obj.type_tag == type_tag && obj.class_tag == class_tag)
             {
             if((class_tag & CONSTRUCTED) && (class_tag & CONTEXT_SPECIFIC))
+               {
                BER_Decoder(obj.value).decode(out, real_type).verify_end();
+               }
             else
                {
                push_back(obj);
@@ -211,16 +215,18 @@ class BOTAN_DLL BER_Decoder
 */
 template<typename T>
 BER_Decoder& BER_Decoder::decode_optional(T& out,
-                                          ASN1_Tag type_tag,
-                                          ASN1_Tag class_tag,
-                                          const T& default_value)
+      ASN1_Tag type_tag,
+      ASN1_Tag class_tag,
+      const T& default_value)
    {
    BER_Object obj = get_next_object();
 
    if(obj.type_tag == type_tag && obj.class_tag == class_tag)
       {
       if((class_tag & CONSTRUCTED) && (class_tag & CONTEXT_SPECIFIC))
+         {
          BER_Decoder(obj.value).decode(out).verify_end();
+         }
       else
          {
          push_back(obj);

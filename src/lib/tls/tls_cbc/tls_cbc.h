@@ -36,15 +36,21 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
 
       bool valid_nonce_length(size_t nl) const override final;
 
-      size_t tag_size() const override final { return m_tag_size; }
+      size_t tag_size() const override final
+         {
+         return m_tag_size;
+         }
 
-      size_t default_nonce_length() const override final { return m_iv_size; }
+      size_t default_nonce_length() const override final
+         {
+         return m_iv_size;
+         }
 
       void clear() override final;
 
       void reset() override final;
 
- protected:
+   protected:
       TLS_CBC_HMAC_AEAD_Mode(const std::string& cipher_name,
                              size_t cipher_keylen,
                              const std::string& mac_name,
@@ -52,12 +58,27 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
                              bool use_explicit_iv,
                              bool use_encrypt_then_mac);
 
-      size_t cipher_keylen() const { return m_cipher_keylen; }
-      size_t mac_keylen() const { return m_mac_keylen; }
-      size_t iv_size() const { return m_iv_size; }
-      size_t block_size() const { return m_block_size; }
+      size_t cipher_keylen() const
+         {
+         return m_cipher_keylen;
+         }
+      size_t mac_keylen() const
+         {
+         return m_mac_keylen;
+         }
+      size_t iv_size() const
+         {
+         return m_iv_size;
+         }
+      size_t block_size() const
+         {
+         return m_block_size;
+         }
 
-      bool use_encrypt_then_mac() const { return m_use_encrypt_then_mac; }
+      bool use_encrypt_then_mac() const
+         {
+         return m_use_encrypt_then_mac;
+         }
 
       BlockCipher& cipher() const
          {
@@ -71,9 +92,18 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode
          return *m_mac;
          }
 
-      secure_vector<uint8_t>& cbc_state() { return m_cbc_state; }
-      std::vector<uint8_t>& assoc_data() { return m_ad; }
-      secure_vector<uint8_t>& msg() { return m_msg; }
+      secure_vector<uint8_t>& cbc_state()
+         {
+         return m_cbc_state;
+         }
+      std::vector<uint8_t>& assoc_data()
+         {
+         return m_ad;
+         }
+      secure_vector<uint8_t>& msg()
+         {
+         return m_msg;
+         }
 
       std::vector<uint8_t> assoc_data_with_len(uint16_t len);
 
@@ -125,7 +155,10 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Encryption final : public TLS_CBC_HMAC_AEAD_Mo
 
       size_t output_length(size_t input_length) const override;
 
-      size_t minimum_final_size() const override { return 0; }
+      size_t minimum_final_size() const override
+         {
+         return 0;
+         }
 
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
    private:
@@ -156,13 +189,16 @@ class BOTAN_DLL TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AEAD_Mo
 
       size_t output_length(size_t input_length) const override;
 
-      size_t minimum_final_size() const override { return tag_size(); }
+      size_t minimum_final_size() const override
+         {
+         return tag_size();
+         }
 
       void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
 
    private:
       void cbc_decrypt_record(uint8_t record_contents[], size_t record_len);
-      
+
       void perform_additional_compressions(size_t plen, size_t padlen);
    };
 

@@ -19,13 +19,17 @@ void normalize(const BigInt& p, BigInt& x, secure_vector<word>& ws, size_t bound
    const size_t p_words = p.sig_words();
 
    while(x.is_negative())
+      {
       x += p;
+      }
 
    // TODO: provide a high level function for this compare-and-sub operation
    x.grow_to(p_words + 1);
 
    if(ws.size() < p_words + 1)
+      {
       ws.resize(p_words + 1);
+      }
 
    for(size_t i = 0; bound == 0 || i < bound; ++i)
       {
@@ -40,7 +44,9 @@ void normalize(const BigInt& p, BigInt& x, secure_vector<word>& ws, size_t bound
       ws[p_words] = word_sub(xd[p_words], 0, &borrow);
 
       if(borrow)
+         {
          break;
+         }
 
       x.swap_reg(ws);
       }
@@ -51,7 +57,7 @@ void normalize(const BigInt& p, BigInt& x, secure_vector<word>& ws, size_t bound
 const BigInt& prime_p521()
    {
    static const BigInt p521("0x1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-                               "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+                            "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 
    return p521;
    }
@@ -65,10 +71,14 @@ void redc_p521(BigInt& x, secure_vector<word>& ws)
    const size_t x_sw = x.sig_words();
 
    if(x_sw < p_words)
-      return; // already smaller
+      {
+      return;   // already smaller
+      }
 
    if(ws.size() < p_words + 1)
+      {
       ws.resize(p_words + 1);
+      }
 
    clear_mem(ws.data(), ws.size());
    bigint_shr2(ws.data(), x.data(), x_sw, p_full_words, p_top_bits);
@@ -94,9 +104,9 @@ inline uint32_t get_uint32_t(const BigInt& x, size_t i)
 #if (BOTAN_MP_WORD_BITS == 32)
    return x.word_at(i);
 #elif (BOTAN_MP_WORD_BITS == 64)
-   return static_cast<uint32_t>(x.word_at(i/2) >> ((i % 2)*32));
+   return static_cast<uint32_t>(x.word_at(i / 2) >> ((i % 2) * 32));
 #else
-  #error "Not implemented"
+#error "Not implemented"
 #endif
    }
 
@@ -112,10 +122,11 @@ inline void set_uint32_t(BigInt& x, size_t i, T v_in)
    x.set_word_at(i, v);
 #elif (BOTAN_MP_WORD_BITS == 64)
    const word shift_32 = (i % 2) * 32;
-   const word w = (x.word_at(i/2) & (static_cast<word>(0xFFFFFFFF) << (32-shift_32))) | (static_cast<word>(v) << shift_32);
-   x.set_word_at(i/2, w);
+   const word w = (x.word_at(i / 2) & (static_cast<word>(0xFFFFFFFF) << (32 - shift_32))) | (static_cast<word>
+                  (v) << shift_32);
+   x.set_word_at(i / 2, w);
 #else
-  #error "Not implemented"
+#error "Not implemented"
 #endif
    }
 
@@ -384,31 +395,33 @@ void redc_p256(BigInt& x, secure_vector<word>& ws)
 
    BOTAN_ASSERT_EQUAL(S >> 32, 0, "No underflow");
 
-   #if 0
+#if 0
    if(S >= 2)
       {
       BOTAN_ASSERT(S <= 10, "Expected overflow");
-      static const BigInt P256_mults[9] = {
-         2*CurveGFp_P256::prime(),
-         3*CurveGFp_P256::prime(),
-         4*CurveGFp_P256::prime(),
-         5*CurveGFp_P256::prime(),
-         6*CurveGFp_P256::prime(),
-         7*CurveGFp_P256::prime(),
-         8*CurveGFp_P256::prime(),
-         9*CurveGFp_P256::prime(),
-         10*CurveGFp_P256::prime()
-      };
+      static const BigInt P256_mults[9] =
+         {
+         2 * CurveGFp_P256::prime(),
+         3 * CurveGFp_P256::prime(),
+         4 * CurveGFp_P256::prime(),
+         5 * CurveGFp_P256::prime(),
+         6 * CurveGFp_P256::prime(),
+         7 * CurveGFp_P256::prime(),
+         8 * CurveGFp_P256::prime(),
+         9 * CurveGFp_P256::prime(),
+         10 * CurveGFp_P256::prime()
+         };
       x -= P256_mults[S - 2];
       }
-   #endif
+#endif
 
    normalize(prime_p256(), x, ws, 10);
    }
 
 const BigInt& prime_p384()
    {
-   static const BigInt p384("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF");
+   static const BigInt
+   p384("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF");
    return p384;
    }
 
@@ -558,20 +571,21 @@ void redc_p384(BigInt& x, secure_vector<word>& ws)
    BOTAN_ASSERT_EQUAL(S >> 32, 0, "No underflow");
    set_uint32_t(x, 12, S);
 
-   #if 0
+#if 0
    if(S >= 2)
       {
       BOTAN_ASSERT(S <= 4, "Expected overflow");
 
-      static const BigInt P384_mults[3] = {
-         2*CurveGFp_P384::prime(),
-         3*CurveGFp_P384::prime(),
-         4*CurveGFp_P384::prime()
-      };
+      static const BigInt P384_mults[3] =
+         {
+         2 * CurveGFp_P384::prime(),
+         3 * CurveGFp_P384::prime(),
+         4 * CurveGFp_P384::prime()
+         };
 
       x -= P384_mults[S - 2];
       }
-   #endif
+#endif
 
    normalize(prime_p384(), x, ws, 4);
    }

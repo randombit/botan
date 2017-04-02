@@ -63,7 +63,7 @@ bool have_hash(const std::string& prf)
 bool have_cipher(const std::string& cipher)
    {
    return (BlockCipher::providers(cipher).size() > 0) ||
-      (StreamCipher::providers(cipher).size() > 0);
+          (StreamCipher::providers(cipher).size() > 0);
    }
 
 }
@@ -71,14 +71,20 @@ bool have_cipher(const std::string& cipher)
 bool Ciphersuite::is_usable() const
    {
    if(!m_cipher_keylen) // uninitialized object
+      {
       return false;
+      }
 
    if(!have_hash(prf_algo()))
+      {
       return false;
+      }
 
 #if !defined(BOTAN_HAS_TLS_CBC)
    if(cbc_ciphersuite())
+      {
       return false;
+      }
 #endif
 
    if(mac_algo() == "AEAD")
@@ -94,23 +100,31 @@ bool Ciphersuite::is_usable() const
          auto cipher_and_mode = split_on(cipher_algo(), '/');
          BOTAN_ASSERT(cipher_and_mode.size() == 2, "Expected format for AEAD algo");
          if(!have_cipher(cipher_and_mode[0]))
+            {
             return false;
+            }
 
          const auto mode = cipher_and_mode[1];
 
 #if !defined(BOTAN_HAS_AEAD_CCM)
          if(mode == "CCM" || mode == "CCM-8")
+            {
             return false;
+            }
 #endif
 
 #if !defined(BOTAN_HAS_AEAD_GCM)
          if(mode == "GCM")
+            {
             return false;
+            }
 #endif
 
 #if !defined(BOTAN_HAS_AEAD_OCB)
          if(mode == "OCB(12)" || mode == "OCB")
+            {
             return false;
+            }
 #endif
          }
       }
@@ -118,9 +132,13 @@ bool Ciphersuite::is_usable() const
       {
       // Old non-AEAD schemes
       if(!have_cipher(cipher_algo()))
+         {
          return false;
+         }
       if(!have_hash(mac_algo())) // HMAC
+         {
          return false;
+         }
       }
 
    if(kex_algo() == "SRP_SHA")

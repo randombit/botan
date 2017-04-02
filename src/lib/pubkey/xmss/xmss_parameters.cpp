@@ -20,29 +20,53 @@ namespace Botan {
 XMSS_Parameters::xmss_algorithm_t XMSS_Parameters::xmss_id_from_string(const std::string& param_set)
    {
    if(param_set == "XMSS_SHA2-256_W16_H10")
+      {
       return XMSS_SHA2_256_W16_H10;
+      }
    if(param_set == "XMSS_SHA2-256_W16_H16")
+      {
       return XMSS_SHA2_256_W16_H16;
+      }
    if(param_set == "XMSS_SHA2-256_W16_H20")
+      {
       return XMSS_SHA2_256_W16_H20;
+      }
    if(param_set == "XMSS_SHA2-512_W16_H10")
+      {
       return XMSS_SHA2_512_W16_H10;
+      }
    if(param_set == "XMSS_SHA2-512_W16_H16")
+      {
       return XMSS_SHA2_512_W16_H16;
+      }
    if(param_set == "XMSS_SHA2-512_W16_H20")
+      {
       return XMSS_SHA2_512_W16_H20;
+      }
    if(param_set == "XMSS_SHAKE128_W16_H10")
+      {
       return XMSS_SHAKE128_W16_H10;
+      }
    if(param_set == "XMSS_SHAKE128_W16_H16")
+      {
       return XMSS_SHAKE128_W16_H16;
+      }
    if(param_set == "XMSS_SHAKE128_W16_H20")
+      {
       return XMSS_SHAKE128_W16_H20;
+      }
    if(param_set == "XMSS_SHAKE256_W16_H10")
+      {
       return XMSS_SHAKE256_W16_H10;
+      }
    if(param_set == "XMSS_SHAKE256_W16_H16")
+      {
       return XMSS_SHAKE256_W16_H16;
+      }
    if(param_set == "XMSS_SHAKE256_W16_H20")
+      {
       return XMSS_SHAKE256_W16_H20;
+      }
    throw Lookup_Error("Unknown XMSS algorithm param '" + param_set + "'");
    }
 

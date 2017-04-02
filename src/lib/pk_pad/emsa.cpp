@@ -43,7 +43,9 @@ EMSA* get_emsa(const std::string& algo_spec)
    if(req.algo_name() == "EMSA1" && req.arg_count() == 1)
       {
       if(auto hash = HashFunction::create(req.arg(0)))
+         {
          return new EMSA1(hash.release());
+         }
       }
 #endif
 
@@ -78,7 +80,9 @@ EMSA* get_emsa(const std::string& algo_spec)
       if(req.arg_count_between(1, 3))
          {
          if(req.arg(1, "MGF1") != "MGF1")
-            return nullptr; // not supported
+            {
+            return nullptr;   // not supported
+            }
 
          if(auto h = HashFunction::create(req.arg(0)))
             {

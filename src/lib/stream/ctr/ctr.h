@@ -24,7 +24,9 @@ class BOTAN_DLL CTR_BE final : public StreamCipher
       void set_iv(const uint8_t iv[], size_t iv_len) override;
 
       bool valid_iv_length(size_t iv_len) const override
-         { return (iv_len <= m_cipher->block_size()); }
+         {
+         return (iv_len <= m_cipher->block_size());
+         }
 
       Key_Length_Specification key_spec() const override
          {
@@ -34,7 +36,9 @@ class BOTAN_DLL CTR_BE final : public StreamCipher
       std::string name() const override;
 
       CTR_BE* clone() const override
-         { return new CTR_BE(m_cipher->clone()); }
+         {
+         return new CTR_BE(m_cipher->clone());
+         }
 
       void clear() override;
 

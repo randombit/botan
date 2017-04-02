@@ -22,7 +22,7 @@ double binomial(size_t n, size_t k)
    for(size_t i = 0; i != k; ++i)
       {
       x *= n - i;
-      x /= k -i;
+      x /= k - i;
       }
 
    return x;
@@ -74,7 +74,9 @@ double cout_total(size_t n, size_t k, size_t w, size_t p, size_t l)
 double best_wf(size_t n, size_t k, size_t w, size_t p)
    {
    if(p >= k / 2)
+      {
       return -1;
+      }
 
    double min = cout_total(n, k, w, p, 0);
 
@@ -82,9 +84,13 @@ double best_wf(size_t n, size_t k, size_t w, size_t p)
       {
       const double lwf = cout_total(n, k, w, p, l);
       if(lwf < min)
+         {
          min = lwf;
+         }
       else
+         {
          break;
+         }
       }
 
    return min;
@@ -101,7 +107,9 @@ size_t mceliece_work_factor(size_t n, size_t t)
       {
       double lwf = best_wf(n, k + 1, t, p);
       if(lwf < 0)
+         {
          break;
+         }
 
       min = std::min(min, lwf);
       }

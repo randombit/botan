@@ -62,7 +62,9 @@ std::string srp6_group_identifier(const BigInt& N, const BigInt& g)
       DL_Group group(group_name);
 
       if(group.get_p() == N && group.get_g() == g)
+         {
          return group_name;
+         }
 
       throw Exception("Unknown SRP params");
       }
@@ -88,7 +90,9 @@ srp6_client_agree(const std::string& identifier,
    const size_t p_bytes = group.get_p().bytes();
 
    if(B <= 0 || B >= p)
+      {
       throw Exception("Invalid SRP parameter from server");
+      }
 
    BigInt k = hash_seq(hash_id, p_bytes, p, g);
 
@@ -136,7 +140,7 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
 
    const BigInt k = hash_seq(hash_id, m_p_bytes, p, g);
 
-   m_B = (v*k + power_mod(g, m_b, p)) % p;
+   m_B = (v * k + power_mod(g, m_b, p)) % p;
 
    return m_B;
    }
@@ -144,7 +148,9 @@ BigInt SRP6_Server_Session::step1(const BigInt& v,
 SymmetricKey SRP6_Server_Session::step2(const BigInt& A)
    {
    if(A <= 0 || A >= m_p)
+      {
       throw Exception("Invalid SRP parameter from client");
+      }
 
    const BigInt u = hash_seq(m_hash_id, m_p_bytes, A, m_B);
 

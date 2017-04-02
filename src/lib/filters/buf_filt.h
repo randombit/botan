@@ -28,7 +28,7 @@ class BOTAN_DLL Buffered_Filter
       void write(const uint8_t in[], size_t length);
 
       template<typename Alloc>
-         void write(const std::vector<uint8_t, Alloc>& in, size_t length)
+      void write(const std::vector<uint8_t, Alloc>& in, size_t length)
          {
          write(in.data(), length);
          }
@@ -70,17 +70,26 @@ class BOTAN_DLL Buffered_Filter
       /**
       * @return block size of inputs
       */
-      size_t buffered_block_size() const { return m_main_block_mod; }
+      size_t buffered_block_size() const
+         {
+         return m_main_block_mod;
+         }
 
       /**
       * @return current position in the buffer
       */
-      size_t current_position() const { return m_buffer_pos; }
+      size_t current_position() const
+         {
+         return m_buffer_pos;
+         }
 
       /**
       * Reset the buffer position
       */
-      void buffer_reset() { m_buffer_pos = 0; }
+      void buffer_reset()
+         {
+         m_buffer_pos = 0;
+         }
    private:
       size_t m_main_block_mod, m_final_minimum;
 

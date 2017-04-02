@@ -26,7 +26,7 @@ class Server_Handshake_State;
 class BOTAN_DLL Server final : public Channel
    {
    public:
-      typedef std::function<std::string (std::vector<std::string>)> next_protocol_fn;
+      typedef std::function<std::string(std::vector<std::string>)> next_protocol_fn;
 
       /**
       * Server initialization
@@ -56,7 +56,7 @@ class BOTAN_DLL Server final : public Channel
              RandomNumberGenerator& rng,
              bool is_datagram = false,
              size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
-         );
+            );
 
       /**
        * DEPRECATED. This constructor is only provided for backward
@@ -74,7 +74,7 @@ class BOTAN_DLL Server final : public Channel
              next_protocol_fn next_proto = next_protocol_fn(),
              bool is_datagram = false,
              size_t reserved_io_buffer_size = TLS::Server::IO_BUF_DEFAULT_SIZE
-         );
+            );
 
       /**
        * DEPRECATED. This constructor is only provided for backward
@@ -92,7 +92,7 @@ class BOTAN_DLL Server final : public Channel
              RandomNumberGenerator& rng,
              next_protocol_fn next_proto = next_protocol_fn(),
              bool is_datagram = false
-         );
+            );
 
       /**
       * Return the protocol notification set by the client (using the
@@ -100,11 +100,14 @@ class BOTAN_DLL Server final : public Channel
       * tied to the session and a later renegotiation of the same
       * session can choose a new protocol.
       */
-      std::string next_protocol() const { return m_next_protocol; }
+      std::string next_protocol() const
+         {
+         return m_next_protocol;
+         }
 
    private:
       std::vector<X509_Certificate>
-         get_peer_cert_chain(const Handshake_State& state) const override;
+      get_peer_cert_chain(const Handshake_State& state) const override;
 
       void initiate_handshake(Handshake_State& state,
                               bool force_full_renegotiation) override;

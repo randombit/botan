@@ -48,7 +48,7 @@ XMSS_Signature_Operation::sign(const secure_vector<uint8_t>& msg_hash,
    XMSS_Address adrs;
    XMSS_Signature sig(m_leaf_idx,
                       m_randomness,
-                      generate_tree_signature(msg_hash, xmss_priv_key,adrs));
+                      generate_tree_signature(msg_hash, xmss_priv_key, adrs));
    return sig;
    }
 
@@ -80,7 +80,7 @@ XMSS_Signature_Operation::sign(RandomNumberGenerator&)
    {
    initialize();
    secure_vector<uint8_t> signature(sign(m_hash.h_msg_final(),
-                                      m_priv_key).bytes());
+                                         m_priv_key).bytes());
    m_is_initialized = false;
    return signature;
    }
@@ -89,7 +89,9 @@ void XMSS_Signature_Operation::initialize()
    {
    // return if we already initialized and reserved a leaf index for signing.
    if(m_is_initialized)
+      {
       return;
+      }
 
    secure_vector<uint8_t> index_bytes;
    // reserve leaf index so it can not be reused in by another signature

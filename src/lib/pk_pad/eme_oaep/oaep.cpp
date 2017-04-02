@@ -15,8 +15,8 @@ namespace Botan {
 * OAEP Pad Operation
 */
 secure_vector<uint8_t> OAEP::pad(const uint8_t in[], size_t in_length,
-                             size_t key_length,
-                             RandomNumberGenerator& rng) const
+                                 size_t key_length,
+                                 RandomNumberGenerator& rng) const
    {
    key_length /= 8;
 
@@ -48,7 +48,7 @@ secure_vector<uint8_t> OAEP::pad(const uint8_t in[], size_t in_length,
 * OAEP Unpad Operation
 */
 secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
-                                const uint8_t in[], size_t in_length) const
+                                   const uint8_t in[], size_t in_length) const
    {
    /*
    Must be careful about error messages here; if an attacker can
@@ -59,8 +59,8 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
 
    Also have to be careful about timing attacks! Pointed out by Falko
    Strenzke.
-    
-   According to the standard (Section 7.1.1), the encryptor always 
+
+   According to the standard (Section 7.1.1), the encryptor always
    creates a message as follows:
       i. Concatenate a single octet with hexadecimal value 0x00,
          maskedSeed, and maskedDB to form an encoded message EM of
@@ -71,7 +71,7 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
    */
 
    uint8_t skip_first = CT::is_zero<uint8_t>(in[0]) & 0x01;
-   
+
    secure_vector<uint8_t> input(in + skip_first, in + in_length);
 
    CT::poison(input.data(), input.size());
@@ -125,10 +125,14 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
 */
 size_t OAEP::maximum_input_size(size_t keybits) const
    {
-   if(keybits / 8 > 2*m_Phash.size() + 1)
-      return ((keybits / 8) - 2*m_Phash.size() - 1);
+   if(keybits / 8 > 2 * m_Phash.size() + 1)
+      {
+      return ((keybits / 8) - 2 * m_Phash.size() - 1);
+      }
    else
+      {
       return 0;
+      }
    }
 
 /*

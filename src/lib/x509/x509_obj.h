@@ -52,9 +52,9 @@ class BOTAN_DLL X509_Object : public ASN1_Object
       * @return signed X509 object
       */
       static std::vector<uint8_t> make_signed(class PK_Signer* signer,
-                                           RandomNumberGenerator& rng,
-                                           const AlgorithmIdentifier& alg_id,
-                                           const secure_vector<uint8_t>& tbs);
+                                              RandomNumberGenerator& rng,
+                                              const AlgorithmIdentifier& alg_id,
+                                              const secure_vector<uint8_t>& tbs);
 
       /**
       * Check the signature on this data
@@ -93,7 +93,9 @@ class BOTAN_DLL X509_Object : public ASN1_Object
       */
       std::string PEM_encode() const;
 
-      virtual ~X509_Object() {}
+      X509_Object(X509_Object const&) = default;
+      X509_Object& operator=(X509_Object const&) = default;
+      virtual ~X509_Object() = default;
    protected:
       X509_Object(DataSource& src, const std::string& pem_labels);
       X509_Object(const std::vector<uint8_t>& vec, const std::string& labels);

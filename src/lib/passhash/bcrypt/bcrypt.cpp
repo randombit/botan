@@ -17,7 +17,8 @@ namespace {
 std::string bcrypt_base64_encode(const uint8_t input[], size_t length)
    {
    // Bcrypt uses a non-standard base64 alphabet
-   const uint8_t OPENBSD_BASE64_SUB[256] = {
+   const uint8_t OPENBSD_BASE64_SUB[256] =
+      {
       0x00, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
       0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
       0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
@@ -40,22 +41,27 @@ std::string bcrypt_base64_encode(const uint8_t input[], size_t length)
       0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
       0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
       0x80, 0x80, 0x80, 0x80
-   };
+      };
 
    std::string b64 = base64_encode(input, length);
 
-   while(b64.size() && b64[b64.size()-1] == '=')
+   while(b64.size() && b64[b64.size() - 1] == '=')
+      {
       b64 = b64.substr(0, b64.size() - 1);
+      }
 
    for(size_t i = 0; i != b64.size(); ++i)
+      {
       b64[i] = OPENBSD_BASE64_SUB[static_cast<uint8_t>(b64[i])];
+      }
 
    return b64;
    }
 
 std::vector<uint8_t> bcrypt_base64_decode(std::string input)
    {
-   const uint8_t OPENBSD_BASE64_SUB[256] = {
+   const uint8_t OPENBSD_BASE64_SUB[256] =
+      {
       0x00, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
       0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
       0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
@@ -78,10 +84,12 @@ std::vector<uint8_t> bcrypt_base64_decode(std::string input)
       0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
       0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
       0x80, 0x80, 0x80, 0x80
-   };
+      };
 
    for(size_t i = 0; i != input.size(); ++i)
+      {
       input[i] = OPENBSD_BASE64_SUB[static_cast<uint8_t>(input[i])];
+      }
 
    return unlock(base64_decode(input));
    }
@@ -90,11 +98,12 @@ std::string make_bcrypt(const std::string& pass,
                         const std::vector<uint8_t>& salt,
                         uint16_t work_factor)
    {
-   auto magic = std::vector<uint8_t>{
+   auto magic = std::vector<uint8_t>
+      {
       0x4F, 0x72, 0x70, 0x68, 0x65, 0x61, 0x6E, 0x42,
       0x65, 0x68, 0x6F, 0x6C, 0x64, 0x65, 0x72, 0x53,
       0x63, 0x72, 0x79, 0x44, 0x6F, 0x75, 0x62, 0x74
-   };
+      };
 
    std::vector<uint8_t> ctext = magic;
 
@@ -107,13 +116,17 @@ std::string make_bcrypt(const std::string& pass,
                              work_factor);
 
    for(size_t i = 0; i != 64; ++i)
+      {
       blowfish.encrypt_n(ctext.data(), ctext.data(), 3);
+      }
 
    std::string salt_b64 = bcrypt_base64_encode(salt.data(), salt.size());
 
    std::string work_factor_str = std::to_string(work_factor);
    if(work_factor_str.length() == 1)
+      {
       work_factor_str = "0" + work_factor_str;
+      }
 
    return "$2a$" + work_factor_str +
           "$" + salt_b64.substr(0, 22) +
@@ -132,8 +145,8 @@ std::string generate_bcrypt(const std::string& pass,
 bool check_bcrypt(const std::string& pass, const std::string& hash)
    {
    if(hash.size() != 60 ||
-      hash[0] != '$' || hash[1] != '2' || hash[2] != 'a' ||
-      hash[3] != '$' || hash[6] != '$')
+         hash[0] != '$' || hash[1] != '2' || hash[2] != 'a' ||
+         hash[3] != '$' || hash[6] != '$')
       {
       return false;
       }
@@ -142,7 +155,9 @@ bool check_bcrypt(const std::string& pass, const std::string& hash)
 
    const std::vector<uint8_t> salt = bcrypt_base64_decode(hash.substr(7, 22));
    if(salt.size() != 16)
+      {
       return false;
+      }
 
    const std::string compare = make_bcrypt(pass, salt, workfactor);
 

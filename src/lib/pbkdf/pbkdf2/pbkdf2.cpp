@@ -23,7 +23,9 @@ pbkdf2(MessageAuthenticationCode& prf,
    clear_mem(out, out_len);
 
    if(out_len == 0)
+      {
       return 0;
+      }
 
    try
       {
@@ -32,8 +34,8 @@ pbkdf2(MessageAuthenticationCode& prf,
    catch(Invalid_Key_Length&)
       {
       throw Exception("PBKDF2 with " + prf.name() +
-                               " cannot accept passphrases of length " +
-                               std::to_string(passphrase.size()));
+                      " cannot accept passphrases of length " +
+                      std::to_string(passphrase.size()));
       }
 
    const size_t prf_sz = prf.output_length();
@@ -83,7 +85,9 @@ pbkdf2(MessageAuthenticationCode& prf,
                auto time_taken = std::chrono::high_resolution_clock::now() - start;
                auto usec_taken = std::chrono::duration_cast<std::chrono::microseconds>(time_taken);
                if(usec_taken > usec_per_block)
+                  {
                   break;
+                  }
                }
             }
          }

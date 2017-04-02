@@ -104,9 +104,9 @@ class BOTAN_DLL PKCS11_ECDH_PrivateKey final : public virtual PKCS11_EC_PrivateK
       secure_vector<uint8_t> private_key_bits() const override;
 
       std::unique_ptr<PK_Ops::Key_Agreement>
-         create_key_agreement_op(RandomNumberGenerator& rng,
-                                 const std::string& params,
-                                 const std::string& provider) const override;
+      create_key_agreement_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const override;
    };
 
 using PKCS11_ECDH_KeyPair = std::pair<PKCS11_ECDH_PublicKey, PKCS11_ECDH_PrivateKey>;

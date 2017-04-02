@@ -15,11 +15,20 @@ namespace Botan {
 class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
    {
    public:
-      std::string algo_name() const override { return "Curve25519"; }
+      std::string algo_name() const override
+         {
+         return "Curve25519";
+         }
 
-      size_t estimated_strength() const override { return 128; }
+      size_t estimated_strength() const override
+         {
+         return 128;
+         }
 
-      size_t key_length() const override { return 255; }
+      size_t key_length() const override
+         {
+         return 255;
+         }
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
@@ -27,7 +36,10 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
 
       std::vector<uint8_t> public_key_bits() const override;
 
-      std::vector<uint8_t> public_value() const { return m_public; }
+      std::vector<uint8_t> public_value() const
+         {
+         return m_public;
+         }
 
       /**
       * Create a Curve25519 Public Key.
@@ -56,8 +68,8 @@ class BOTAN_DLL Curve25519_PublicKey : public virtual Public_Key
    };
 
 class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
-                                        public virtual Private_Key,
-                                        public virtual PK_Key_Agreement_Key
+   public virtual Private_Key,
+   public virtual PK_Key_Agreement_Key
    {
    public:
       /**
@@ -80,20 +92,26 @@ class BOTAN_DLL Curve25519_PrivateKey : public Curve25519_PublicKey,
       */
       explicit Curve25519_PrivateKey(const secure_vector<uint8_t>& secret_key);
 
-      std::vector<uint8_t> public_value() const override { return Curve25519_PublicKey::public_value(); }
+      std::vector<uint8_t> public_value() const override
+         {
+         return Curve25519_PublicKey::public_value();
+         }
 
       secure_vector<uint8_t> agree(const uint8_t w[], size_t w_len) const;
 
-      const secure_vector<uint8_t>& get_x() const { return m_private; }
+      const secure_vector<uint8_t>& get_x() const
+         {
+         return m_private;
+         }
 
       secure_vector<uint8_t> private_key_bits() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<PK_Ops::Key_Agreement>
-         create_key_agreement_op(RandomNumberGenerator& rng,
-                                 const std::string& params,
-                                 const std::string& provider) const override;
+      create_key_agreement_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const override;
 
    private:
       secure_vector<uint8_t> m_private;

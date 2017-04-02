@@ -202,8 +202,8 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
          }
 
       virtual std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string&,
-                                const std::string& provider) const override;
+      create_verification_op(const std::string&,
+                             const std::string& provider) const override;
 
       virtual size_t estimated_strength() const override
          {

@@ -26,13 +26,25 @@ class OpenSSL_BlockCipher : public BlockCipher
       ~OpenSSL_BlockCipher();
 
       void clear() override;
-      std::string provider() const override { return "openssl"; }
-      std::string name() const override { return m_cipher_name; }
+      std::string provider() const override
+         {
+         return "openssl";
+         }
+      std::string name() const override
+         {
+         return m_cipher_name;
+         }
       BlockCipher* clone() const override;
 
-      size_t block_size() const override { return m_block_sz; }
+      size_t block_size() const override
+         {
+         return m_block_sz;
+         }
 
-      Key_Length_Specification key_spec() const override { return m_cipher_key_spec; }
+      Key_Length_Specification key_spec() const override
+         {
+         return m_cipher_key_spec;
+         }
 
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
          {
@@ -55,13 +67,15 @@ class OpenSSL_BlockCipher : public BlockCipher
    };
 
 OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
-                                         const EVP_CIPHER* algo) :
+      const EVP_CIPHER* algo) :
    m_block_sz(EVP_CIPHER_block_size(algo)),
    m_cipher_key_spec(EVP_CIPHER_key_length(algo)),
    m_cipher_name(algo_name)
    {
    if(EVP_CIPHER_mode(algo) != EVP_CIPH_ECB_MODE)
+      {
       throw Invalid_Argument("OpenSSL_BlockCipher: Non-ECB EVP was passed in");
+      }
 
    EVP_CIPHER_CTX_init(&m_encrypt);
    EVP_CIPHER_CTX_init(&m_decrypt);
@@ -74,16 +88,18 @@ OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
    }
 
 OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
-                                         const EVP_CIPHER* algo,
-                                         size_t key_min,
-                                         size_t key_max,
-                                         size_t key_mod) :
+      const EVP_CIPHER* algo,
+      size_t key_min,
+      size_t key_max,
+      size_t key_mod) :
    m_block_sz(EVP_CIPHER_block_size(algo)),
    m_cipher_key_spec(key_min, key_max, key_mod),
    m_cipher_name(algo_name)
    {
    if(EVP_CIPHER_mode(algo) != EVP_CIPH_ECB_MODE)
+      {
       throw Invalid_Argument("OpenSSL_BlockCipher: Non-ECB EVP was passed in");
+      }
 
    EVP_CIPHER_CTX_init(&m_encrypt);
    EVP_CIPHER_CTX_init(&m_decrypt);
@@ -112,11 +128,10 @@ void OpenSSL_BlockCipher::key_schedule(const uint8_t key[], size_t length)
       {
       full_key += std::make_pair(key, 8);
       }
-   else
-      if(EVP_CIPHER_CTX_set_key_length(&m_encrypt, length) == 0 ||
-         EVP_CIPHER_CTX_set_key_length(&m_decrypt, length) == 0)
-         throw Invalid_Argument("OpenSSL_BlockCipher: Bad key length for " +
-                                m_cipher_name);
+   else if(EVP_CIPHER_CTX_set_key_length(&m_encrypt, length) == 0 ||
+           EVP_CIPHER_CTX_set_key_length(&m_decrypt, length) == 0)
+      throw Invalid_Argument("OpenSSL_BlockCipher: Bad key length for " +
+                             m_cipher_name);
 
    EVP_EncryptInit_ex(&m_encrypt, nullptr, nullptr, full_key.data(), nullptr);
    EVP_DecryptInit_ex(&m_decrypt, nullptr, nullptr, full_key.data(), nullptr);
@@ -163,47 +178,71 @@ make_openssl_block_cipher(const std::string& name)
 
 #if defined(BOTAN_HAS_AES) && !defined(OPENSSL_NO_AES)
    if(name == "AES-128")
+      {
       return MAKE_OPENSSL_BLOCK(EVP_aes_128_ecb);
+      }
    if(name == "AES-192")
+      {
       return MAKE_OPENSSL_BLOCK(EVP_aes_192_ecb);
+      }
    if(name == "AES-256")
+      {
       return MAKE_OPENSSL_BLOCK(EVP_aes_256_ecb);
+      }
 #endif
 
 #if defined(BOTAN_HAS_CAMELLIA) && !defined(OPENSSL_NO_CAMELLIA)
    if(name == "Camellia-128")
+      {
       return MAKE_OPENSSL_BLOCK(EVP_camellia_128_ecb);
+      }
    if(name == "Camellia-192")
+      {
       return MAKE_OPENSSL_BLOCK(EVP_camellia_192_ecb);
+      }
    if(name == "Camellia-256")
+      {
       return MAKE_OPENSSL_BLOCK(EVP_camellia_256_ecb);
+      }
 #endif
 
 #if defined(BOTAN_HAS_DES) && !defined(OPENSSL_NO_DES)
    if(name == "DES")
+      {
       return MAKE_OPENSSL_BLOCK(EVP_des_ecb);
+      }
    if(name == "TripleDES")
+      {
       return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_des_ede3_ecb, 16, 24, 8);
+      }
 #endif
 
 #if defined(BOTAN_HAS_BLOWFISH) && !defined(OPENSSL_NO_BF)
    if(name == "Blowfish")
+      {
       return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_bf_ecb, 1, 56, 1);
+      }
 #endif
 
 #if defined(BOTAN_HAS_CAST) && !defined(OPENSSL_NO_CAST)
    if(name == "CAST-128")
+      {
       return MAKE_OPENSSL_BLOCK_KEYLEN(EVP_cast5_ecb, 1, 16, 1);
+      }
 #endif
 
 #if defined(BOTAN_HAS_IDEA) && !defined(OPENSSL_NO_IDEA)
    if(name == "IDEA")
+      {
       return MAKE_OPENSSL_BLOCK(EVP_idea_ecb);
+      }
 #endif
 
 #if defined(BOTAN_HAS_SEED) && !defined(OPENSSL_NO_SEED)
    if(name == "SEED")
+      {
       return MAKE_OPENSSL_BLOCK(EVP_seed_ecb);
+      }
 #endif
 
    return nullptr;

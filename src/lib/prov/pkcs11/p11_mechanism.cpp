@@ -75,7 +75,7 @@ static std::map<std::string, RSA_SignMechanism> SignMechanisms =
       { "EMSA2(Raw)", RSA_SignMechanism(MechanismType::RsaX931) },
       { "EMSA2(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaX931) },
 
-      // RSASSA PKCS#1 v1.5
+   // RSASSA PKCS#1 v1.5
       { "EMSA3(Raw)", RSA_SignMechanism(MechanismType::RsaPkcs) },
       { "EMSA3(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcs) },
       { "EMSA3(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcs) },
@@ -83,7 +83,7 @@ static std::map<std::string, RSA_SignMechanism> SignMechanisms =
       { "EMSA3(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcs) },
       { "EMSA3(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcs) },
 
-      // RSASSA PKCS#1 PSS
+   // RSASSA PKCS#1 PSS
       { "EMSA4(Raw)", RSA_SignMechanism(MechanismType::RsaPkcsPss) },
       { "EMSA4(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcsPss) },
       { "EMSA4(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss) },
@@ -150,7 +150,10 @@ static std::map<std::string, KeyDerivation> EcdhHash =
 }
 
 MechanismWrapper::MechanismWrapper(MechanismType mechanism_type)
-   : m_mechanism( { static_cast<CK_MECHANISM_TYPE>(mechanism_type), nullptr, 0 }), m_parameters(nullptr)
+   : m_mechanism(
+   {
+   static_cast<CK_MECHANISM_TYPE>(mechanism_type), nullptr, 0
+   }), m_parameters(nullptr)
    {}
 
 MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(const std::string& padding)
@@ -224,7 +227,9 @@ MechanismWrapper MechanismWrapper::create_ecdh_mechanism(const std::string& para
    std::vector<std::string> param_parts = split_on(params, ',');
 
    if(param_parts.empty() || param_parts.size() > 2)
+      {
       throw Invalid_Argument("PKCS #11 ECDH key derivation bad params " + params);
+      }
 
    const bool use_cofactor =
       (param_parts[0] == "Cofactor") ||

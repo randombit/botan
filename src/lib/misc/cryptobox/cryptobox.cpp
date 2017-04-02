@@ -49,11 +49,11 @@ std::string encrypt(const uint8_t input[], size_t input_len,
    PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
 
    OctetString master_key = pbkdf.derive_key(
-      PBKDF_OUTPUT_LEN,
-      passphrase,
-      pbkdf_salt.data(),
-      pbkdf_salt.size(),
-      PBKDF_ITERATIONS);
+                               PBKDF_OUTPUT_LEN,
+                               passphrase,
+                               pbkdf_salt.data(),
+                               pbkdf_salt.size(),
+                               PBKDF_ITERATIONS);
 
    const uint8_t* mk = master_key.begin();
 
@@ -79,12 +79,14 @@ std::string encrypt(const uint8_t input[], size_t input_len,
    const size_t ciphertext_len = pipe.remaining(0);
 
    std::vector<uint8_t> out_buf(VERSION_CODE_LEN +
-                             PBKDF_SALT_LEN +
-                             MAC_OUTPUT_LEN +
-                             ciphertext_len);
+                                PBKDF_SALT_LEN +
+                                MAC_OUTPUT_LEN +
+                                ciphertext_len);
 
    for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
-     out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
+      {
+      out_buf[i] = get_byte(i, CRYPTOBOX_VERSION_CODE);
+      }
 
    copy_mem(&out_buf[VERSION_CODE_LEN], pbkdf_salt.data(), PBKDF_SALT_LEN);
 
@@ -108,22 +110,26 @@ std::string decrypt(const uint8_t input[], size_t input_len,
                                    "BOTAN CRYPTOBOX MESSAGE");
 
    if(ciphertext.size() < (VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN))
+      {
       throw Decoding_Error("Invalid CryptoBox input");
+      }
 
    for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
       if(ciphertext[i] != get_byte(i, CRYPTOBOX_VERSION_CODE))
+         {
          throw Decoding_Error("Bad CryptoBox version");
+         }
 
    const uint8_t* pbkdf_salt = &ciphertext[VERSION_CODE_LEN];
 
    PKCS5_PBKDF2 pbkdf(new HMAC(new SHA_512));
 
    OctetString master_key = pbkdf.derive_key(
-      PBKDF_OUTPUT_LEN,
-      passphrase,
-      pbkdf_salt,
-      PBKDF_SALT_LEN,
-      PBKDF_ITERATIONS);
+                               PBKDF_OUTPUT_LEN,
+                               passphrase,
+                               pbkdf_salt,
+                               PBKDF_SALT_LEN,
+                               PBKDF_ITERATIONS);
 
    const uint8_t* mk = master_key.begin();
 
@@ -148,7 +154,9 @@ std::string decrypt(const uint8_t input[], size_t input_len,
    if(!same_mem(computed_mac,
                 &ciphertext[VERSION_CODE_LEN + PBKDF_SALT_LEN],
                 MAC_OUTPUT_LEN))
+      {
       throw Decoding_Error("CryptoBox integrity failure");
+      }
 
    return pipe.read_all_as_string(0);
    }

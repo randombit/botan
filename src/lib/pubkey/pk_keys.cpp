@@ -17,11 +17,11 @@ namespace Botan {
 std::vector<uint8_t> Public_Key::subject_public_key() const
    {
    return DER_Encoder()
-         .start_cons(SEQUENCE)
-            .encode(algorithm_identifier())
-            .encode(public_key_bits(), BIT_STRING)
-         .end_cons()
-      .get_contents_unlocked();
+          .start_cons(SEQUENCE)
+          .encode(algorithm_identifier())
+          .encode(public_key_bits(), BIT_STRING)
+          .end_cons()
+          .get_contents_unlocked();
    }
 
 /*
@@ -29,7 +29,8 @@ std::vector<uint8_t> Public_Key::subject_public_key() const
 */
 OID Public_Key::get_oid() const
    {
-   try {
+   try
+      {
       return OIDS::lookup(algo_name());
       }
    catch(Lookup_Error&)
@@ -43,12 +44,12 @@ secure_vector<uint8_t> Private_Key::private_key_info() const
    const size_t PKCS8_VERSION = 0;
 
    return DER_Encoder()
-         .start_cons(SEQUENCE)
-            .encode(PKCS8_VERSION)
-            .encode(pkcs8_algorithm_identifier())
-            .encode(private_key_bits(), OCTET_STRING)
-         .end_cons()
-      .get_contents();
+          .start_cons(SEQUENCE)
+          .encode(PKCS8_VERSION)
+          .encode(pkcs8_algorithm_identifier())
+          .encode(private_key_bits(), OCTET_STRING)
+          .end_cons()
+          .get_contents();
    }
 
 /*
@@ -66,10 +67,12 @@ std::string Private_Key::fingerprint(const std::string& alg) const
    for(size_t i = 0; i != hex_print.size(); i += 2)
       {
       formatted_print.push_back(hex_print[i]);
-      formatted_print.push_back(hex_print[i+1]);
+      formatted_print.push_back(hex_print[i + 1]);
 
       if(i != hex_print.size() - 2)
+         {
          formatted_print.push_back(':');
+         }
       }
 
    return formatted_print;

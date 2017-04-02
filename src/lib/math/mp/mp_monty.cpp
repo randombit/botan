@@ -23,11 +23,11 @@ void bigint_monty_redc(word z[],
                        const word p[], size_t p_size,
                        word p_dash, word ws[])
    {
-   const size_t z_size = 2*(p_size+1);
+   const size_t z_size = 2 * (p_size + 1);
 
    CT::poison(z, z_size);
    CT::poison(p, p_size);
-   CT::poison(ws, 2*(p_size+1));
+   CT::poison(ws, 2 * (p_size + 1));
 
    const size_t blocks_of_8 = p_size - (p_size % 8);
 
@@ -45,10 +45,14 @@ void bigint_monty_redc(word z[],
       word carry = 0;
 
       for(size_t j = 0; j != blocks_of_8; j += 8)
+         {
          carry = word8_madd3(z_i + j, p + j, y, carry);
+         }
 
       for(size_t j = blocks_of_8; j != p_size; ++j)
+         {
          z_i[j] = word_madd3(p[j], y, z_i[j], &carry);
+         }
 
       word z_sum = z_i[p_size] + carry;
       carry = (z_sum < z_i[p_size]);
@@ -76,9 +80,11 @@ void bigint_monty_redc(word z[],
 
    word borrow = 0;
    for(size_t i = 0; i != p_size; ++i)
+      {
       ws[i] = word_sub(z[p_size + i], p[i], &borrow);
+      }
 
-   ws[p_size] = word_sub(z[p_size+p_size], 0, &borrow);
+   ws[p_size] = word_sub(z[p_size + p_size], 0, &borrow);
 
    copy_mem(ws + p_size + 1, z + p_size, p_size + 1);
 
@@ -87,7 +93,7 @@ void bigint_monty_redc(word z[],
 
    CT::unpoison(z, z_size);
    CT::unpoison(p, p_size);
-   CT::unpoison(ws, 2*(p_size+1));
+   CT::unpoison(ws, 2 * (p_size + 1));
 
    // This check comes after we've used it but that's ok here
    CT::unpoison(&borrow, 1);

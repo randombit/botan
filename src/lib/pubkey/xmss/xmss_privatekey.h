@@ -38,8 +38,8 @@ namespace Botan {
  *       draft-irtf-cfrg-xmss-hash-based-signatures/?include_text=1
  **/
 class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
-                                  public XMSS_Common_Ops,
-                                  public virtual Private_Key
+   public XMSS_Common_Ops,
+   public virtual Private_Key
    {
    public:
       /**
@@ -130,7 +130,9 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
                {
                current = index.load();
                if(current > idx)
+                  {
                   return;
+                  }
                }
             while(!index.compare_exchange_strong(current, idx));
             }
@@ -139,12 +141,12 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
       size_t reserve_unused_leaf_index()
          {
          size_t idx = (static_cast<std::atomic<size_t>&>(
-             *recover_global_leaf_index())).fetch_add(1);
+                          *recover_global_leaf_index())).fetch_add(1);
          if(idx >= (1ull << (XMSS_PublicKey::m_xmss_params.tree_height() - 1)))
-           {
-           throw Integrity_Failure("XMSS private key, one time signatures "
-                                   "exhausted.");
-           }
+            {
+            throw Integrity_Failure("XMSS private key, one time signatures "
+                                    "exhausted.");
+            }
          return idx;
          }
 
@@ -199,9 +201,9 @@ class BOTAN_DLL XMSS_PrivateKey : public virtual XMSS_PublicKey,
          }
 
       virtual std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator&,
-                             const std::string&,
-                             const std::string& provider) const override;
+      create_signature_op(RandomNumberGenerator&,
+                          const std::string&,
+                          const std::string& provider) const override;
 
       virtual secure_vector<uint8_t> private_key_bits() const override
          {

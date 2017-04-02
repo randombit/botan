@@ -21,7 +21,8 @@ namespace {
 ASN1_Tag choose_encoding(const std::string& str,
                          const std::string& type)
    {
-   static const uint8_t IS_PRINTABLE[256] = {
+   static const uint8_t IS_PRINTABLE[256] =
+      {
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
@@ -43,14 +44,21 @@ ASN1_Tag choose_encoding(const std::string& str,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00 };
+      0x00, 0x00, 0x00, 0x00
+      };
 
    for(size_t i = 0; i != str.size(); ++i)
       {
       if(!IS_PRINTABLE[static_cast<uint8_t>(str[i])])
          {
-         if(type == "utf8")   return UTF8_STRING;
-         if(type == "latin1") return T61_STRING;
+         if(type == "utf8")
+            {
+            return UTF8_STRING;
+            }
+         if(type == "latin1")
+            {
+            return T61_STRING;
+            }
          throw Invalid_Argument("choose_encoding: Bad string type " + type);
          }
       }
@@ -62,19 +70,22 @@ ASN1_Tag choose_encoding(const std::string& str,
 /*
 * Create an ASN1_String
 */
-ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : m_iso_8859_str(Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET)), m_tag(t)
+ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : m_iso_8859_str(Charset::transcode(str, LOCAL_CHARSET,
+         LATIN1_CHARSET)), m_tag(t)
    {
 
    if(m_tag == DIRECTORY_STRING)
+      {
       m_tag = choose_encoding(m_iso_8859_str, "latin1");
+      }
 
    if(m_tag != NUMERIC_STRING &&
-      m_tag != PRINTABLE_STRING &&
-      m_tag != VISIBLE_STRING &&
-      m_tag != T61_STRING &&
-      m_tag != IA5_STRING &&
-      m_tag != UTF8_STRING &&
-      m_tag != BMP_STRING)
+         m_tag != PRINTABLE_STRING &&
+         m_tag != VISIBLE_STRING &&
+         m_tag != T61_STRING &&
+         m_tag != IA5_STRING &&
+         m_tag != UTF8_STRING &&
+         m_tag != BMP_STRING)
       throw Invalid_Argument("ASN1_String: Unknown string type " +
                              std::to_string(m_tag));
    }
@@ -82,7 +93,8 @@ ASN1_String::ASN1_String(const std::string& str, ASN1_Tag t) : m_iso_8859_str(Ch
 /*
 * Create an ASN1_String
 */
-ASN1_String::ASN1_String(const std::string& str) : m_iso_8859_str(Charset::transcode(str, LOCAL_CHARSET, LATIN1_CHARSET)), m_tag(choose_encoding(m_iso_8859_str, "latin1"))
+ASN1_String::ASN1_String(const std::string& str) : m_iso_8859_str(Charset::transcode(str, LOCAL_CHARSET,
+         LATIN1_CHARSET)), m_tag(choose_encoding(m_iso_8859_str, "latin1"))
    {}
 
 /*
@@ -116,7 +128,9 @@ void ASN1_String::encode_into(DER_Encoder& encoder) const
    {
    std::string value = iso_8859();
    if(tagging() == UTF8_STRING)
+      {
       value = Charset::transcode(value, LATIN1_CHARSET, UTF8_CHARSET);
+      }
    encoder.add_object(tagging(), UNIVERSAL, value);
    }
 
@@ -130,15 +144,21 @@ void ASN1_String::decode_from(BER_Decoder& source)
    Character_Set charset_is;
 
    if(obj.type_tag == BMP_STRING)
+      {
       charset_is = UCS2_CHARSET;
+      }
    else if(obj.type_tag == UTF8_STRING)
+      {
       charset_is = UTF8_CHARSET;
+      }
    else
+      {
       charset_is = LATIN1_CHARSET;
+      }
 
    *this = ASN1_String(
-      Charset::transcode(ASN1::to_string(obj), LOCAL_CHARSET, charset_is),
-      obj.type_tag);
+              Charset::transcode(ASN1::to_string(obj), LOCAL_CHARSET, charset_is),
+              obj.type_tag);
    }
 
 }

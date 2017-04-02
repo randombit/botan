@@ -15,27 +15,30 @@ namespace TLS {
 /**
 * Protocol Constants for SSL/TLS
 */
-enum Size_Limits {
+enum Size_Limits
+   {
    TLS_HEADER_SIZE    = 5,
    DTLS_HEADER_SIZE   = TLS_HEADER_SIZE + 8,
 
-   MAX_PLAINTEXT_SIZE = 16*1024,
+   MAX_PLAINTEXT_SIZE = 16 * 1024,
    MAX_COMPRESSED_SIZE = MAX_PLAINTEXT_SIZE + 1024,
    MAX_CIPHERTEXT_SIZE = MAX_COMPRESSED_SIZE + 1024,
-};
+   };
 
 enum Connection_Side { CLIENT = 1, SERVER = 2 };
 
-enum Record_Type {
+enum Record_Type
+   {
    CHANGE_CIPHER_SPEC = 20,
    ALERT              = 21,
    HANDSHAKE          = 22,
    APPLICATION_DATA   = 23,
 
    NO_RECORD          = 256
-};
+   };
 
-enum Handshake_Type {
+enum Handshake_Type
+   {
    HELLO_REQUEST        = 0,
    CLIENT_HELLO         = 1,
    SERVER_HELLO         = 2,
@@ -54,14 +57,15 @@ enum Handshake_Type {
 
    HANDSHAKE_CCS        = 254, // Not a wire value
    HANDSHAKE_NONE       = 255  // Null value
-};
+   };
 
 const char* handshake_type_to_string(Handshake_Type t);
 
-enum Compression_Method {
+enum Compression_Method
+   {
    NO_COMPRESSION       = 0x00,
    DEFLATE_COMPRESSION  = 0x01
-};
+   };
 
 }
 

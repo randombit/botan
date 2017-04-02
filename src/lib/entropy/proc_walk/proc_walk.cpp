@@ -12,7 +12,7 @@
 #include <deque>
 
 #ifndef _POSIX_C_SOURCE
-  #define _POSIX_C_SOURCE 199309
+   #define _POSIX_C_SOURCE 199309
 #endif
 
 #include <sys/types.h>
@@ -29,16 +29,20 @@ class Directory_Walker : public File_Descriptor_Source
    {
    public:
       explicit Directory_Walker(const std::string& root) :
-         m_cur_dir(std::make_pair<DIR*, std::string>(nullptr, ""))
+         m_cur_dir(std::make_pair<DIR *, std::string>(nullptr, ""))
          {
          if(DIR* root_dir = ::opendir(root.c_str()))
+            {
             m_cur_dir = std::make_pair(root_dir, root);
+            }
          }
 
       ~Directory_Walker()
          {
          if(m_cur_dir.first)
+            {
             ::closedir(m_cur_dir.first);
+            }
          }
 
       int next_fd() override;
@@ -54,7 +58,9 @@ std::pair<struct dirent*, std::string> Directory_Walker::get_next_dirent()
    while(m_cur_dir.first)
       {
       if(struct dirent* dir = ::readdir(m_cur_dir.first))
+         {
          return std::make_pair(dir, m_cur_dir.second);
+         }
 
       ::closedir(m_cur_dir.first);
       m_cur_dir = std::make_pair<DIR*, std::string>(nullptr, "");
@@ -65,7 +71,9 @@ std::pair<struct dirent*, std::string> Directory_Walker::get_next_dirent()
          m_dirlist.pop_front();
 
          if(DIR* next_dir = ::opendir(next_dir_name.c_str()))
+            {
             m_cur_dir = std::make_pair(next_dir, next_dir_name);
+            }
          }
       }
 
@@ -79,18 +87,24 @@ int Directory_Walker::next_fd()
       std::pair<struct dirent*, std::string> entry = get_next_dirent();
 
       if(!entry.first)
-         break; // no more dirs
+         {
+         break;   // no more dirs
+         }
 
       const std::string filename = entry.first->d_name;
 
       if(filename == "." || filename == "..")
+         {
          continue;
+         }
 
       const std::string full_path = entry.second + "/" + filename;
 
       struct stat stat_buf;
       if(::lstat(full_path.c_str(), &stat_buf) == -1)
+         {
          continue;
+         }
 
       if(S_ISDIR(stat_buf.st_mode))
          {
@@ -101,7 +115,9 @@ int Directory_Walker::next_fd()
          int fd = ::open(full_path.c_str(), O_RDONLY | O_NOCTTY);
 
          if(fd >= 0)
+            {
             return fd;
+            }
          }
       }
 
@@ -117,7 +133,9 @@ size_t ProcWalking_EntropySource::poll(RandomNumberGenerator& rng)
    lock_guard_type<mutex_type> lock(m_mutex);
 
    if(!m_dir)
+      {
       m_dir.reset(new Directory_Walker(m_path));
+      }
 
    m_buf.resize(4096);
 
@@ -146,7 +164,9 @@ size_t ProcWalking_EntropySource::poll(RandomNumberGenerator& rng)
          }
 
       if(bits > 128)
+         {
          break;
+         }
       }
 
    return bits;

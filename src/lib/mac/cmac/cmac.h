@@ -20,7 +20,10 @@ class BOTAN_DLL CMAC final : public MessageAuthenticationCode
    {
    public:
       std::string name() const override;
-      size_t output_length() const override { return m_cipher->block_size(); }
+      size_t output_length() const override
+         {
+         return m_cipher->block_size();
+         }
       MessageAuthenticationCode* clone() const override;
 
       void clear() override;

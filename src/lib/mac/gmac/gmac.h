@@ -19,7 +19,7 @@ namespace Botan {
 * GMAC
 */
 class BOTAN_DLL GMAC : public MessageAuthenticationCode,
-                       public GHASH
+   public GHASH
 
    {
    public:

@@ -9,7 +9,7 @@
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)
-  #include <botan/rfc3394.h>
+   #include <botan/rfc3394.h>
 #endif
 
 namespace Botan_Tests {

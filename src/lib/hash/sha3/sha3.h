@@ -27,8 +27,14 @@ class BOTAN_DLL SHA_3 : public HashFunction
       */
       SHA_3(size_t output_bits);
 
-      size_t hash_block_size() const override { return m_bitrate / 8; }
-      size_t output_length() const override { return m_output_bits / 8; }
+      size_t hash_block_size() const override
+         {
+         return m_bitrate / 8;
+         }
+      size_t output_length() const override
+         {
+         return m_output_bits / 8;
+         }
 
       HashFunction* clone() const override;
       std::string name() const override;

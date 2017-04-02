@@ -40,7 +40,7 @@ class BOTAN_DLL Session
          m_srtp_profile(0),
          m_extended_master_secret(false),
          m_encrypt_then_mac(false)
-            {}
+         {}
 
       /**
       * New session (sets session start time)
@@ -83,7 +83,7 @@ class BOTAN_DLL Session
       * Encrypt a session (useful for serialization or session tickets)
       */
       std::vector<uint8_t> encrypt(const SymmetricKey& key,
-                                RandomNumberGenerator& rng) const;
+                                   RandomNumberGenerator& rng) const;
 
 
       /**
@@ -117,62 +117,101 @@ class BOTAN_DLL Session
       /**
       * Get the version of the saved session
       */
-      Protocol_Version version() const { return m_version; }
+      Protocol_Version version() const
+         {
+         return m_version;
+         }
 
       /**
       * Get the ciphersuite code of the saved session
       */
-      uint16_t ciphersuite_code() const { return m_ciphersuite; }
+      uint16_t ciphersuite_code() const
+         {
+         return m_ciphersuite;
+         }
 
       /**
       * Get the ciphersuite info of the saved session
       */
-      Ciphersuite ciphersuite() const { return Ciphersuite::by_id(m_ciphersuite); }
+      Ciphersuite ciphersuite() const
+         {
+         return Ciphersuite::by_id(m_ciphersuite);
+         }
 
       /**
       * Get the compression method used in the saved session
       */
-      uint8_t compression_method() const { return m_compression_method; }
+      uint8_t compression_method() const
+         {
+         return m_compression_method;
+         }
 
       /**
       * Get which side of the connection the resumed session we are/were
       * acting as.
       */
-      Connection_Side side() const { return m_connection_side; }
+      Connection_Side side() const
+         {
+         return m_connection_side;
+         }
 
       /**
       * Get the SRP identity (if sent by the client in the initial handshake)
       */
-      const std::string& srp_identifier() const { return m_srp_identifier; }
+      const std::string& srp_identifier() const
+         {
+         return m_srp_identifier;
+         }
 
       /**
       * Get the saved master secret
       */
-      const secure_vector<uint8_t>& master_secret() const { return m_master_secret; }
+      const secure_vector<uint8_t>& master_secret() const
+         {
+         return m_master_secret;
+         }
 
       /**
       * Get the session identifier
       */
-      const std::vector<uint8_t>& session_id() const { return m_identifier; }
+      const std::vector<uint8_t>& session_id() const
+         {
+         return m_identifier;
+         }
 
       /**
       * Get the negotiated DTLS-SRTP algorithm (RFC 5764)
       */
-      uint16_t dtls_srtp_profile() const { return m_srtp_profile; }
+      uint16_t dtls_srtp_profile() const
+         {
+         return m_srtp_profile;
+         }
 
-      bool supports_extended_master_secret() const { return m_extended_master_secret; }
+      bool supports_extended_master_secret() const
+         {
+         return m_extended_master_secret;
+         }
 
-      bool supports_encrypt_then_mac() const { return m_encrypt_then_mac; }
+      bool supports_encrypt_then_mac() const
+         {
+         return m_encrypt_then_mac;
+         }
 
       /**
       * Return the certificate chain of the peer (possibly empty)
       */
-      const std::vector<X509_Certificate>& peer_certs() const { return m_peer_certs; }
+      const std::vector<X509_Certificate>& peer_certs() const
+         {
+         return m_peer_certs;
+         }
 
       /**
       * Get the wall clock time this session began
       */
-      std::chrono::system_clock::time_point start_time() const { return m_start_time; }
+      std::chrono::system_clock::time_point start_time() const
+         {
+         return m_start_time;
+         }
 
       /**
       * Return how long this session has existed (in seconds)
@@ -182,12 +221,18 @@ class BOTAN_DLL Session
       /**
       * Return the session ticket the server gave us
       */
-      const std::vector<uint8_t>& session_ticket() const { return m_session_ticket; }
+      const std::vector<uint8_t>& session_ticket() const
+         {
+         return m_session_ticket;
+         }
 
       /**
       * @return information about the TLS server
       */
-      const Server_Information& server_info() const { return m_server_info; }
+      const Server_Information& server_info() const
+         {
+         return m_server_info;
+         }
 
    private:
       enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20160812};

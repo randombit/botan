@@ -13,7 +13,8 @@
 
 namespace Botan {
 
-size_t Intel_Rdrand::poll(RandomNumberGenerator& rng) {
+size_t Intel_Rdrand::poll(RandomNumberGenerator& rng)
+   {
    if(CPUID::has_rdrand() && BOTAN_ENTROPY_INTEL_RNG_POLLS > 0)
       {
       RDRAND_RNG rdrand_rng;

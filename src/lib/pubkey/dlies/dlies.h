@@ -75,7 +75,7 @@ class BOTAN_DLL DLIES_Encryptor : public PK_Encryptor
 
    private:
       std::vector<uint8_t> enc(const uint8_t[], size_t,
-                            RandomNumberGenerator&) const override;
+                               RandomNumberGenerator&) const override;
 
       size_t maximum_input_size() const override;
 
@@ -142,7 +142,7 @@ class BOTAN_DLL DLIES_Decryptor : public PK_Decryptor
 
    private:
       secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask,
-                                     const uint8_t in[], size_t in_len) const override;
+                                        const uint8_t in[], size_t in_len) const override;
 
       const size_t m_pub_key_size;
       PK_Key_Agreement m_ka;

@@ -30,8 +30,7 @@ class BOTAN_DLL Slot final
       Slot(Module& module, SlotId slot_id);
 
       /// @return a reference to the module that is used
-      inline Module& module() const
-         {
+      inline Module& module() const {
          return m_module;
          }
 

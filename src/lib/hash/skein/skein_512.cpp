@@ -20,7 +20,9 @@ Skein_512::Skein_512(size_t arg_output_bits,
    m_T(2), m_buffer(64), m_buf_pos(0)
    {
    if(m_output_bits == 0 || m_output_bits % 8 != 0 || m_output_bits > 512)
+      {
       throw Invalid_Argument("Bad output bits size for Skein-512");
+      }
 
    initial_block();
    }
@@ -29,7 +31,7 @@ std::string Skein_512::name() const
    {
    if(m_personalization != "")
       return "Skein-512(" + std::to_string(m_output_bits) + "," +
-                            m_personalization + ")";
+             m_personalization + ")";
    return "Skein-512(" + std::to_string(m_output_bits) + ")";
    }
 
@@ -51,8 +53,8 @@ void Skein_512::reset_tweak(type_code type, bool is_final)
    m_T[0] = 0;
 
    m_T[1] = (static_cast<uint64_t>(type) << 56) |
-          (static_cast<uint64_t>(1) << 62) |
-          (static_cast<uint64_t>(is_final) << 63);
+            (static_cast<uint64_t>(1) << 62) |
+            (static_cast<uint64_t>(is_final) << 63);
    }
 
 void Skein_512::initial_block()
@@ -76,7 +78,9 @@ void Skein_512::initial_block()
         doesn't seem worth the trouble.
       */
       if(m_personalization.length() > 64)
+         {
          throw Invalid_Argument("Skein personalization must be less than 64 bytes");
+         }
 
       const uint8_t* bits = reinterpret_cast<const uint8_t*>(m_personalization.data());
       reset_tweak(SKEIN_PERSONALIZATION, true);
@@ -100,7 +104,9 @@ void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len)
       if(to_proc % 8)
          {
          for(size_t j = 0; j != to_proc % 8; ++j)
-           M[to_proc/8] |= static_cast<uint64_t>(msg[8*(to_proc/8)+j]) << (8*j);
+            {
+            M[to_proc / 8] |= static_cast<uint64_t>(msg[8 * (to_proc / 8) + j]) << (8 * j);
+            }
          }
 
       m_threefish->skein_feedfwd(M, m_T);
@@ -110,13 +116,16 @@ void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len)
 
       msg_len -= to_proc;
       msg += to_proc;
-      } while(msg_len);
+      }
+   while(msg_len);
    }
 
 void Skein_512::add_data(const uint8_t input[], size_t length)
    {
    if(length == 0)
+      {
       return;
+      }
 
    if(m_buf_pos)
       {
@@ -134,7 +143,9 @@ void Skein_512::add_data(const uint8_t input[], size_t length)
    const size_t full_blocks = (length - 1) / 64;
 
    if(full_blocks)
-      ubi_512(input, 64*full_blocks);
+      {
+      ubi_512(input, 64 * full_blocks);
+      }
 
    length -= full_blocks * 64;
 
@@ -147,7 +158,9 @@ void Skein_512::final_result(uint8_t out[])
    m_T[1] |= (static_cast<uint64_t>(1) << 63); // final block flag
 
    for(size_t i = m_buf_pos; i != m_buffer.size(); ++i)
+      {
       m_buffer[i] = 0;
+      }
 
    ubi_512(m_buffer.data(), m_buf_pos);
 

@@ -21,8 +21,8 @@ secure_vector<uint8_t> CMAC::poly_double(const secure_vector<uint8_t>& in)
    uint8_t carry = 0;
    for(size_t i = out.size(); i != 0; --i)
       {
-      uint8_t temp = out[i-1];
-      out[i-1] = (temp << 1) | carry;
+      uint8_t temp = out[i - 1];
+      out[i - 1] = (temp << 1) | carry;
       carry = (temp >> 7);
       }
 
@@ -31,18 +31,18 @@ secure_vector<uint8_t> CMAC::poly_double(const secure_vector<uint8_t>& in)
       switch(in.size())
          {
          case 8:
-            out[out.size()-1] ^= 0x1B;
+            out[out.size() - 1] ^= 0x1B;
             break;
          case 16:
-            out[out.size()-1] ^= 0x87;
+            out[out.size() - 1] ^= 0x87;
             break;
          case 32:
-            out[out.size()-2] ^= 0x4;
-            out[out.size()-1] ^= 0x25;
+            out[out.size() - 2] ^= 0x4;
+            out[out.size() - 1] ^= 0x25;
             break;
          case 64:
-            out[out.size()-2] ^= 0x1;
-            out[out.size()-1] ^= 0x25;
+            out[out.size() - 2] ^= 0x1;
+            out[out.size() - 1] ^= 0x25;
             break;
          default:
             throw Exception("Unsupported CMAC size " + std::to_string(in.size()));
@@ -97,7 +97,9 @@ void CMAC::final_result(uint8_t mac[])
    m_cipher->encrypt(m_state);
 
    for(size_t i = 0; i != output_length(); ++i)
+      {
       mac[i] = m_state[i];
+      }
 
    zeroise(m_state);
    zeroise(m_buffer);
@@ -151,7 +153,7 @@ MessageAuthenticationCode* CMAC::clone() const
 CMAC::CMAC(BlockCipher* cipher) : m_cipher(cipher)
    {
    if(m_cipher->block_size() !=  8 && m_cipher->block_size() != 16 &&
-      m_cipher->block_size() != 32 && m_cipher->block_size() != 64)
+         m_cipher->block_size() != 32 && m_cipher->block_size() != 64)
       {
       throw Invalid_Argument("CMAC cannot use the " +
                              std::to_string(m_cipher->block_size() * 8) +

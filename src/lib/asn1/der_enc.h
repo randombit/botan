@@ -25,7 +25,9 @@ class BOTAN_DLL DER_Encoder
       secure_vector<uint8_t> get_contents();
 
       std::vector<uint8_t> get_contents_unlocked()
-         { return unlock(get_contents()); }
+         {
+         return unlock(get_contents());
+         }
 
       DER_Encoder& start_cons(ASN1_Tag type_tag,
                               ASN1_Tag class_tag = UNIVERSAL);
@@ -77,7 +79,9 @@ class BOTAN_DLL DER_Encoder
       DER_Encoder& encode_optional(const T& value, const T& default_value)
          {
          if(value != default_value)
+            {
             encode(value);
+            }
          return (*this);
          }
 
@@ -85,7 +89,9 @@ class BOTAN_DLL DER_Encoder
       DER_Encoder& encode_list(const std::vector<T>& values)
          {
          for(size_t i = 0; i != values.size(); ++i)
+            {
             encode(values[i]);
+            }
          return (*this);
          }
 

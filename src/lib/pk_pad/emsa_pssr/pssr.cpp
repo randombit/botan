@@ -31,22 +31,28 @@ secure_vector<uint8_t> PSSR::raw_data()
 * PSSR Encode Operation
 */
 secure_vector<uint8_t> PSSR::encoding_of(const secure_vector<uint8_t>& msg,
-                                      size_t output_bits,
-                                      RandomNumberGenerator& rng)
+      size_t output_bits,
+      RandomNumberGenerator& rng)
    {
    const size_t HASH_SIZE = m_hash->output_length();
 
    if(msg.size() != HASH_SIZE)
+      {
       throw Encoding_Error("PSSR::encoding_of: Bad input length");
-   if(output_bits < 8*HASH_SIZE + 8*m_SALT_SIZE + 9)
+      }
+   if(output_bits < 8 * HASH_SIZE + 8 * m_SALT_SIZE + 9)
+      {
       throw Encoding_Error("PSSR::encoding_of: Output length is too small");
+      }
 
    const size_t output_length = (output_bits + 7) / 8;
 
    secure_vector<uint8_t> salt = rng.random_vec(m_SALT_SIZE);
 
    for(size_t j = 0; j != 8; ++j)
+      {
       m_hash->update(0);
+      }
    m_hash->update(msg);
    m_hash->update(salt);
    secure_vector<uint8_t> H = m_hash->final();
@@ -58,7 +64,7 @@ secure_vector<uint8_t> PSSR::encoding_of(const secure_vector<uint8_t>& msg,
    mgf1_mask(*m_hash, H.data(), HASH_SIZE, EM.data(), output_length - HASH_SIZE - 1);
    EM[0] &= 0xFF >> (8 * ((output_bits + 7) / 8) - output_bits);
    buffer_insert(EM, output_length - 1 - HASH_SIZE, H);
-   EM[output_length-1] = 0xBC;
+   EM[output_length - 1] = 0xBC;
 
    return EM;
    }
@@ -67,22 +73,30 @@ secure_vector<uint8_t> PSSR::encoding_of(const secure_vector<uint8_t>& msg,
 * PSSR Decode/Verify Operation
 */
 bool PSSR::verify(const secure_vector<uint8_t>& const_coded,
-                   const secure_vector<uint8_t>& raw, size_t key_bits)
+                  const secure_vector<uint8_t>& raw, size_t key_bits)
    {
    const size_t HASH_SIZE = m_hash->output_length();
    const size_t KEY_BYTES = (key_bits + 7) / 8;
 
-   if(key_bits < 8*HASH_SIZE + 9)
+   if(key_bits < 8 * HASH_SIZE + 9)
+      {
       return false;
+      }
 
    if(raw.size() != HASH_SIZE)
+      {
       return false;
+      }
 
    if(const_coded.size() > KEY_BYTES || const_coded.size() <= 1)
+      {
       return false;
+      }
 
-   if(const_coded[const_coded.size()-1] != 0xBC)
+   if(const_coded[const_coded.size() - 1] != 0xBC)
+      {
       return false;
+      }
 
    secure_vector<uint8_t> coded = const_coded;
    if(coded.size() < KEY_BYTES)
@@ -94,7 +108,9 @@ bool PSSR::verify(const secure_vector<uint8_t>& const_coded,
 
    const size_t TOP_BITS = 8 * ((key_bits + 7) / 8) - key_bits;
    if(TOP_BITS > 8 - high_bit(coded[0]))
+      {
       return false;
+      }
 
    uint8_t* DB = coded.data();
    const size_t DB_size = coded.size() - HASH_SIZE - 1;
@@ -109,15 +125,24 @@ bool PSSR::verify(const secure_vector<uint8_t>& const_coded,
    for(size_t j = 0; j != DB_size; ++j)
       {
       if(DB[j] == 0x01)
-         { salt_offset = j + 1; break; }
+         {
+         salt_offset = j + 1;
+         break;
+         }
       if(DB[j])
+         {
          return false;
+         }
       }
    if(salt_offset == 0)
+      {
       return false;
+      }
 
    for(size_t j = 0; j != 8; ++j)
+      {
       m_hash->update(0);
+      }
    m_hash->update(raw);
    m_hash->update(&DB[salt_offset], DB_size - salt_offset);
    secure_vector<uint8_t> H2 = m_hash->final();

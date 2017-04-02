@@ -36,30 +36,42 @@ const char* version_cstr()
    */
 
    return "Botan " STR(BOTAN_VERSION_MAJOR) "."
-                   STR(BOTAN_VERSION_MINOR) "."
-                   STR(BOTAN_VERSION_PATCH) " ("
+          STR(BOTAN_VERSION_MINOR) "."
+          STR(BOTAN_VERSION_PATCH) " ("
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
-                   "UNSAFE FUZZER MODE BUILD "
+          "UNSAFE FUZZER MODE BUILD "
 #endif
-                   BOTAN_VERSION_RELEASE_TYPE
+          BOTAN_VERSION_RELEASE_TYPE
 #if (BOTAN_VERSION_DATESTAMP != 0)
-                   ", dated " STR(BOTAN_VERSION_DATESTAMP)
+          ", dated " STR(BOTAN_VERSION_DATESTAMP)
 #endif
-                   ", revision " BOTAN_VERSION_VC_REVISION
-                   ", distribution " BOTAN_DISTRIBUTION_INFO ")";
+          ", revision " BOTAN_VERSION_VC_REVISION
+          ", distribution " BOTAN_DISTRIBUTION_INFO ")";
 
 #undef STR
 #undef QUOTE
    }
 
-uint32_t version_datestamp() { return BOTAN_VERSION_DATESTAMP; }
+uint32_t version_datestamp()
+   {
+   return BOTAN_VERSION_DATESTAMP;
+   }
 
 /*
 * Return parts of the version as integers
 */
-uint32_t version_major() { return BOTAN_VERSION_MAJOR; }
-uint32_t version_minor() { return BOTAN_VERSION_MINOR; }
-uint32_t version_patch() { return BOTAN_VERSION_PATCH; }
+uint32_t version_major()
+   {
+   return BOTAN_VERSION_MAJOR;
+   }
+uint32_t version_minor()
+   {
+   return BOTAN_VERSION_MINOR;
+   }
+uint32_t version_patch()
+   {
+   return BOTAN_VERSION_PATCH;
+   }
 
 std::string runtime_version_check(uint32_t major,
                                   uint32_t minor,
@@ -68,8 +80,8 @@ std::string runtime_version_check(uint32_t major,
    std::ostringstream oss;
 
    if(major != version_major() ||
-      minor != version_minor() ||
-      patch != version_patch())
+         minor != version_minor() ||
+         patch != version_patch())
       {
       oss << "Warning: linked version ("
           << Botan::version_major() << '.'

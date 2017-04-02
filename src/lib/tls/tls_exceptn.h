@@ -21,7 +21,10 @@ namespace TLS {
 class BOTAN_DLL TLS_Exception : public Exception
    {
    public:
-      Alert::Type type() const { return m_alert_type; }
+      Alert::Type type() const
+         {
+         return m_alert_type;
+         }
 
       TLS_Exception(Alert::Type type,
                     const std::string& err_msg = "Unknown error") :

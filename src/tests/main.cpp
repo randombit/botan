@@ -19,15 +19,15 @@
 #include <botan/hash.h>
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
-#include <botan/hmac_drbg.h>
+   #include <botan/hmac_drbg.h>
 #endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-#include <botan/system_rng.h>
+   #include <botan/system_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-  #include <botan/auto_rng.h>
+   #include <botan/auto_rng.h>
 #endif
 
 namespace {
@@ -35,7 +35,8 @@ namespace {
 class Test_Runner : public Botan_CLI::Command
    {
    public:
-      Test_Runner() : Command("test --threads=0 --run-long-tests --run-online-tests --test-runs=1 --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
+      Test_Runner() :
+         Command("test --threads=0 --run-long-tests --run-online-tests --test-runs=1 --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
 
       std::string help_text() const override
          {
@@ -50,7 +51,7 @@ class Test_Runner : public Botan_CLI::Command
 
          size_t line_len = 0;
 
-         for(auto&& test : Botan_Tests::Test::registered_tests())
+         for(auto && test : Botan_Tests::Test::registered_tests())
             {
             err << test << " ";
             line_len += test.size() + 1;
@@ -91,7 +92,8 @@ class Test_Runner : public Botan_CLI::Command
             alphabetical order.
             */
             req = {"block", "stream", "hash", "mac", "modes", "aead"
-                   "kdf", "pbkdf", "hmac_drbg", "x931_rng", "util"};
+                   "kdf", "pbkdf", "hmac_drbg", "x931_rng", "util"
+                  };
 
             std::set<std::string> all_others = Botan_Tests::Test::registered_tests();
 
@@ -121,14 +123,17 @@ class Test_Runner : public Botan_CLI::Command
          else if(req.size() == 1 && req.at(0) == "pkcs11")
             {
             req = {"pkcs11-manage", "pkcs11-module", "pkcs11-slot", "pkcs11-session", "pkcs11-object", "pkcs11-rsa",
-                    "pkcs11-ecdsa", "pkcs11-ecdh", "pkcs11-rng", "pkcs11-x509"};
+                   "pkcs11-ecdsa", "pkcs11-ecdh", "pkcs11-rng", "pkcs11-x509"
+                  };
             }
 
          output() << "Testing " << Botan::version_string() << "\n";
          output() << "Starting tests";
 
          if(threads > 1)
+            {
             output() << " threads:" << threads;
+            }
 
          if(!pkcs11_lib.empty())
             {
@@ -161,7 +166,9 @@ class Test_Runner : public Botan_CLI::Command
 #else
 
          if(drbg_seed != "")
+            {
             throw Botan_Tests::Test_Error("HMAC_DRBG disabled in build, cannot specify DRBG seed");
+            }
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
          output() << " rng:system";
@@ -183,7 +190,9 @@ class Test_Runner : public Botan_CLI::Command
 
             // Throw so main returns an error
             if(failed)
+               {
                throw Botan_Tests::Test_Error("Test suite failure");
+               }
             }
          }
 
@@ -196,7 +205,7 @@ class Test_Runner : public Botan_CLI::Command
          std::ostringstream out;
 
          std::map<std::string, Botan_Tests::Test::Result> combined;
-         for(auto&& result : results)
+         for(auto && result : results)
             {
             const std::string who = result.who();
             auto i = combined.find(who);
@@ -209,7 +218,7 @@ class Test_Runner : public Botan_CLI::Command
             i->second.merge(result);
             }
 
-         for(auto&& result : combined)
+         for(auto && result : combined)
             {
             out << result.second.result_string(verbose());
             tests_failed += result.second.tests_failed();
@@ -230,12 +239,13 @@ class Test_Runner : public Botan_CLI::Command
 
          if(threads <= 1)
             {
-            for(auto&& test_name : tests_to_run)
+            for(auto && test_name : tests_to_run)
                {
-               try {
+               try
+                  {
                   const auto results = Botan_Tests::Test::run_test(test_name, false);
                   out << report_out(results, tests_failed, tests_ran) << std::flush;
-               }
+                  }
                catch(std::exception& e)
                   {
                   out << "Test " << test_name << " failed with exception " << e.what() << std::flush;
@@ -257,19 +267,21 @@ class Test_Runner : public Botan_CLI::Command
             typedef std::future<std::vector<Botan_Tests::Test::Result>> FutureResults;
             std::deque<FutureResults> fut_results;
 
-            for(auto&& test_name : tests_to_run)
+            for(auto && test_name : tests_to_run)
                {
-               auto run_it = [test_name]() -> std::vector<Botan_Tests::Test::Result> {
-                  try {
+               auto run_it = [test_name]() -> std::vector<Botan_Tests::Test::Result>
+                  {
+                  try
+                     {
                      return Botan_Tests::Test::run_test(test_name, false);
-                  }
+                     }
                   catch(std::exception& e)
                      {
                      Botan_Tests::Test::Result r(test_name);
                      r.test_failure("Exception thrown", e.what());
-                     return std::vector<Botan_Tests::Test::Result>{r};
+                     return std::vector<Botan_Tests::Test::Result> {r};
                      }
-               };
+                  };
 
                fut_results.push_back(std::async(std::launch::async, run_it));
 
@@ -315,8 +327,8 @@ BOTAN_REGISTER_COMMAND("test", Test_Runner);
 int main(int argc, char* argv[])
    {
    std::cerr << Botan::runtime_version_check(BOTAN_VERSION_MAJOR,
-                                             BOTAN_VERSION_MINOR,
-                                             BOTAN_VERSION_PATCH);
+             BOTAN_VERSION_MINOR,
+             BOTAN_VERSION_PATCH);
 
    try
       {

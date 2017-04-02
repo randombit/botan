@@ -87,9 +87,9 @@ XMSS_Verification_Operation::verify(const XMSS_Signature& sig,
                    msg);
 
    secure_vector<uint8_t> node = root_from_signature(sig,
-                              msg_digest,
-                              adrs,
-                              public_key.public_seed());
+                                 msg_digest,
+                                 adrs,
+                                 public_key.public_seed());
 
    return (node == public_key.root());
    }

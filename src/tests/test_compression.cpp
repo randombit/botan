@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_COMPRESSION)
-  #include <botan/compression.h>
+   #include <botan/compression.h>
 #endif
 
 namespace Botan_Tests {
@@ -60,7 +60,9 @@ class Compression_Tests : public Test
          std::vector<Test::Result> results;
          const size_t text_len = strlen(text_str);
 
-         for(std::string algo : { "zlib", "deflate", "gzip", "bz2", "lzma" })
+         for(std::string algo :
+               { "zlib", "deflate", "gzip", "bz2", "lzma"
+               })
             {
             try
                {

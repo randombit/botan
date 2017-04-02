@@ -46,6 +46,8 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
                    const std::vector<uint8_t>& key_bits);
 
       EC_PublicKey& operator=(const EC_PublicKey& other) = default;
+      EC_PublicKey(EC_PublicKey const&) = default;
+      virtual ~EC_PublicKey() = default;
 
       /**
       * Get the public point of this key.
@@ -53,7 +55,10 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * domain parameters of this point are not set
       * @result the public point of this key
       */
-      const PointGFp& public_point() const { return m_public_key; }
+      const PointGFp& public_point() const
+         {
+         return m_public_key;
+         }
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
@@ -68,7 +73,10 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * domain parameters of this point are not set
       * @result the domain parameters of this key
       */
-      const EC_Group& domain() const { return m_domain_params; }
+      const EC_Group& domain() const
+         {
+         return m_domain_params;
+         }
 
       /**
       * Set the domain parameter encoding to be used when encoding this key.
@@ -81,21 +89,25 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       * is preset for this particular key
       */
       std::vector<uint8_t> DER_domain() const
-         { return domain().DER_encode(domain_format()); }
+         {
+         return domain().DER_encode(domain_format());
+         }
 
       /**
       * Get the domain parameter encoding to be used when encoding this key.
       * @result the encoding to use
       */
       EC_Group_Encoding domain_format() const
-         { return m_domain_encoding; }
+         {
+         return m_domain_encoding;
+         }
 
       size_t key_length() const override;
       size_t estimated_strength() const override;
 
    protected:
       EC_PublicKey() : m_domain_params{}, m_public_key{}, m_domain_encoding(EC_DOMPAR_ENC_EXPLICIT)
-      {}
+         {}
 
       EC_Group m_domain_params;
       PointGFp m_public_key;
@@ -106,7 +118,7 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
 * This abstract class represents ECC private keys
 */
 class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
-                                public virtual Private_Key
+   public virtual Private_Key
    {
    public:
       /*
@@ -120,7 +132,7 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
       EC_PrivateKey(RandomNumberGenerator& rng,
                     const EC_Group& domain,
                     const BigInt& x,
-                    bool with_modular_inverse=false);
+                    bool with_modular_inverse = false);
 
       /*
       * Creates a new private key object from the
@@ -133,9 +145,11 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
       */
       EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                     const secure_vector<uint8_t>& key_bits,
-                    bool with_modular_inverse=false);
+                    bool with_modular_inverse = false);
 
       EC_PrivateKey& operator=(const EC_PrivateKey& other) = default;
+      EC_PrivateKey(EC_PrivateKey const&) = default;
+      virtual ~EC_PrivateKey() = default;
 
       secure_vector<uint8_t> private_key_bits() const override;
 
@@ -145,7 +159,7 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
       */
       const BigInt& private_value() const;
    protected:
-      EC_PrivateKey() {}
+      EC_PrivateKey() = default;
 
       BigInt m_private_key;
    };

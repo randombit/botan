@@ -20,7 +20,10 @@ namespace Botan {
 class Device_EntropySource final : public Entropy_Source
    {
    public:
-      std::string name() const override { return "dev_random"; }
+      std::string name() const override
+         {
+         return "dev_random";
+         }
 
       size_t poll(RandomNumberGenerator& rng) override;
 

@@ -25,8 +25,9 @@ class BOTAN_DLL Public_Key
    {
    public:
       virtual ~Public_Key() = default;
-
-      virtual Public_Key& operator=(const Public_Key& other) = default;
+      Public_Key() = default;
+      Public_Key(Public_Key const&) = default;
+      Public_Key& operator=(const Public_Key& other) = default;
 
       /**
       * Get the name of the underlying public key scheme.
@@ -99,7 +100,10 @@ class BOTAN_DLL Public_Key
       *
       * @return number of message parts
       */
-      virtual size_t message_parts() const { return 1; }
+      virtual size_t message_parts() const
+         {
+         return 1;
+         }
 
       /**
       * Returns how large each of the message parts refered to
@@ -110,7 +114,10 @@ class BOTAN_DLL Public_Key
       *
       * @return size of the message parts in bits
       */
-      virtual size_t message_part_size() const { return 0; }
+      virtual size_t message_part_size() const
+         {
+         return 0;
+         }
 
       /**
       * This is an internal library function exposed on key types.
@@ -125,9 +132,9 @@ class BOTAN_DLL Public_Key
       * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::Encryption>
-         create_encryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const;
+      create_encryption_op(RandomNumberGenerator& rng,
+                           const std::string& params,
+                           const std::string& provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -142,9 +149,9 @@ class BOTAN_DLL Public_Key
       * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::KEM_Encryption>
-         create_kem_encryption_op(RandomNumberGenerator& rng,
-                                  const std::string& params,
-                                  const std::string& provider) const;
+      create_kem_encryption_op(RandomNumberGenerator& rng,
+                               const std::string& params,
+                               const std::string& provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -155,8 +162,8 @@ class BOTAN_DLL Public_Key
       * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const;
+      create_verification_op(const std::string& params,
+                             const std::string& provider) const;
    };
 
 /**
@@ -166,8 +173,9 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
    {
    public:
       virtual ~Private_Key() = default;
-
-      virtual Private_Key& operator=(const Private_Key& other) = default;
+      Private_Key() = default;
+      Private_Key(Private_Key const&) = default;
+      Private_Key& operator=(const Private_Key& other) = default;
 
       /**
       * @return BER encoded private key bits
@@ -184,7 +192,9 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       * Might be different from the X.509 identifier, but normally is not
       */
       virtual AlgorithmIdentifier pkcs8_algorithm_identifier() const
-         { return algorithm_identifier(); }
+         {
+         return algorithm_identifier();
+         }
 
       // Internal or non-public declarations follow
 
@@ -207,9 +217,9 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       *
       */
       virtual std::unique_ptr<PK_Ops::Decryption>
-         create_decryption_op(RandomNumberGenerator& rng,
-                              const std::string& params,
-                              const std::string& provider) const;
+      create_decryption_op(RandomNumberGenerator& rng,
+                           const std::string& params,
+                           const std::string& provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -224,9 +234,9 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::KEM_Decryption>
-         create_kem_decryption_op(RandomNumberGenerator& rng,
-                                  const std::string& params,
-                                  const std::string& provider) const;
+      create_kem_decryption_op(RandomNumberGenerator& rng,
+                               const std::string& params,
+                               const std::string& provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -241,9 +251,9 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const;
+      create_signature_op(RandomNumberGenerator& rng,
+                          const std::string& params,
+                          const std::string& provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -258,9 +268,9 @@ class BOTAN_DLL Private_Key : public virtual Public_Key
       * @param provider the provider to use
       */
       virtual std::unique_ptr<PK_Ops::Key_Agreement>
-         create_key_agreement_op(RandomNumberGenerator& rng,
-                                 const std::string& params,
-                                 const std::string& provider) const;
+      create_key_agreement_op(RandomNumberGenerator& rng,
+                              const std::string& params,
+                              const std::string& provider) const;
    };
 
 /**
@@ -274,7 +284,10 @@ class BOTAN_DLL PK_Key_Agreement_Key : public virtual Private_Key
       */
       virtual std::vector<uint8_t> public_value() const = 0;
 
-      virtual ~PK_Key_Agreement_Key() {}
+      PK_Key_Agreement_Key() = default;
+      PK_Key_Agreement_Key(PK_Key_Agreement_Key const&) = default;
+      PK_Key_Agreement_Key& operator=(PK_Key_Agreement_Key const&) = default;
+      virtual ~PK_Key_Agreement_Key() = default;
    };
 
 /*

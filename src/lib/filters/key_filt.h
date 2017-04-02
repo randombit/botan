@@ -55,7 +55,9 @@ class BOTAN_DLL Keyed_Filter : public Filter
       * @return true if the IV length is valid, false otherwise
       */
       virtual bool valid_iv_length(size_t length) const
-         { return (length == 0); }
+         {
+         return (length == 0);
+         }
    };
 
 

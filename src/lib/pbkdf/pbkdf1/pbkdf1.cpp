@@ -17,7 +17,9 @@ size_t PKCS5_PBKDF1::pbkdf(uint8_t output_buf[], size_t output_len,
                            std::chrono::milliseconds msec) const
    {
    if(output_len > m_hash->output_length())
+      {
       throw Invalid_Argument("PKCS5_PBKDF1: Requested output length too long");
+      }
 
    m_hash->update(passphrase);
    m_hash->update(salt, salt_len);
@@ -35,11 +37,15 @@ size_t PKCS5_PBKDF1::pbkdf(uint8_t output_buf[], size_t output_len,
             auto time_taken = std::chrono::high_resolution_clock::now() - start;
             auto msec_taken = std::chrono::duration_cast<std::chrono::milliseconds>(time_taken);
             if(msec_taken > msec)
+               {
                break;
+               }
             }
          }
       else if(iterations_performed == iterations)
+         {
          break;
+         }
 
       m_hash->update(key);
       m_hash->final(key.data());

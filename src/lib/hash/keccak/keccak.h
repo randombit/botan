@@ -27,8 +27,14 @@ class BOTAN_DLL Keccak_1600 final : public HashFunction
       */
       explicit Keccak_1600(size_t output_bits = 512);
 
-      size_t hash_block_size() const override { return m_bitrate / 8; }
-      size_t output_length() const override { return m_output_bits / 8; }
+      size_t hash_block_size() const override
+         {
+         return m_bitrate / 8;
+         }
+      size_t output_length() const override
+         {
+         return m_output_bits / 8;
+         }
 
       HashFunction* clone() const override;
       std::string name() const override;

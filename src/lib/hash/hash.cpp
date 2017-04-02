@@ -9,110 +9,116 @@
 #include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_ADLER32)
-  #include <botan/adler32.h>
+   #include <botan/adler32.h>
 #endif
 
 #if defined(BOTAN_HAS_CRC24)
-  #include <botan/crc24.h>
+   #include <botan/crc24.h>
 #endif
 
 #if defined(BOTAN_HAS_CRC32)
-  #include <botan/crc32.h>
+   #include <botan/crc32.h>
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_11)
-  #include <botan/gost_3411.h>
+   #include <botan/gost_3411.h>
 #endif
 
 #if defined(BOTAN_HAS_KECCAK)
-  #include <botan/keccak.h>
+   #include <botan/keccak.h>
 #endif
 
 #if defined(BOTAN_HAS_MD4)
-  #include <botan/md4.h>
+   #include <botan/md4.h>
 #endif
 
 #if defined(BOTAN_HAS_MD5)
-  #include <botan/md5.h>
+   #include <botan/md5.h>
 #endif
 
 #if defined(BOTAN_HAS_RIPEMD_160)
-  #include <botan/rmd160.h>
+   #include <botan/rmd160.h>
 #endif
 
 #if defined(BOTAN_HAS_SHA1)
-  #include <botan/sha160.h>
+   #include <botan/sha160.h>
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32)
-  #include <botan/sha2_32.h>
+   #include <botan/sha2_32.h>
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64)
-  #include <botan/sha2_64.h>
+   #include <botan/sha2_64.h>
 #endif
 
 #if defined(BOTAN_HAS_SHA3)
-  #include <botan/sha3.h>
+   #include <botan/sha3.h>
 #endif
 
 #if defined(BOTAN_HAS_SHAKE)
-  #include <botan/shake.h>
+   #include <botan/shake.h>
 #endif
 
 #if defined(BOTAN_HAS_SKEIN_512)
-  #include <botan/skein_512.h>
+   #include <botan/skein_512.h>
 #endif
 
 #if defined(BOTAN_HAS_TIGER)
-  #include <botan/tiger.h>
+   #include <botan/tiger.h>
 #endif
 
 #if defined(BOTAN_HAS_WHIRLPOOL)
-  #include <botan/whrlpool.h>
+   #include <botan/whrlpool.h>
 #endif
 
 #if defined(BOTAN_HAS_PARALLEL_HASH)
-  #include <botan/par_hash.h>
+   #include <botan/par_hash.h>
 #endif
 
 #if defined(BOTAN_HAS_COMB4P)
-  #include <botan/comb4p.h>
+   #include <botan/comb4p.h>
 #endif
 
 #if defined(BOTAN_HAS_BLAKE2B)
-  #include <botan/blake2b.h>
+   #include <botan/blake2b.h>
 #endif
 
 #if defined(BOTAN_HAS_OPENSSL)
-  #include <botan/internal/openssl.h>
+   #include <botan/internal/openssl.h>
 #endif
 
 namespace Botan {
 
 std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
-                                                   const std::string& provider)
+      const std::string& provider)
    {
 #if defined(BOTAN_HAS_OPENSSL)
    if(provider.empty() || provider == "openssl")
       {
       if(auto hash = make_openssl_hash(algo_spec))
+         {
          return hash;
+         }
 
       if(!provider.empty())
+         {
          return nullptr;
+         }
       }
 #endif
 
    // TODO: CommonCrypto hashes
 
    if(provider.empty() == false && provider != "base")
-      return nullptr; // unknown provider
+      {
+      return nullptr;   // unknown provider
+      }
 
 #if defined(BOTAN_HAS_SHA1)
    if(algo_spec == "SHA-160" ||
-      algo_spec == "SHA-1" ||
-      algo_spec == "SHA1")
+         algo_spec == "SHA-1" ||
+         algo_spec == "SHA1")
       {
       return std::unique_ptr<HashFunction>(new SHA_160);
       }
@@ -209,8 +215,8 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
    if(req.algo_name() == "Tiger")
       {
       return std::unique_ptr<HashFunction>(
-         new Tiger(req.arg_as_integer(0, 24),
-                   req.arg_as_integer(1, 3)));
+                new Tiger(req.arg_as_integer(0, 24),
+                          req.arg_as_integer(1, 3)));
       }
 #endif
 
@@ -218,7 +224,7 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
    if(req.algo_name() == "Skein-512")
       {
       return std::unique_ptr<HashFunction>(
-         new Skein_512(req.arg_as_integer(0, 512), req.arg(1, "")));
+                new Skein_512(req.arg_as_integer(0, 512), req.arg(1, "")));
       }
 #endif
 
@@ -226,15 +232,15 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
    if(req.algo_name() == "Blake2b")
       {
       return std::unique_ptr<HashFunction>(
-         new Blake2b(req.arg_as_integer(0, 512)));
-   }
+                new Blake2b(req.arg_as_integer(0, 512)));
+      }
 #endif
 
 #if defined(BOTAN_HAS_KECCAK)
    if(req.algo_name() == "Keccak-1600")
       {
       return std::unique_ptr<HashFunction>(
-         new Keccak_1600(req.arg_as_integer(0, 512)));
+                new Keccak_1600(req.arg_as_integer(0, 512)));
       }
 #endif
 
@@ -242,7 +248,7 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
    if(req.algo_name() == "SHA-3")
       {
       return std::unique_ptr<HashFunction>(
-         new SHA_3(req.arg_as_integer(0, 512)));
+                new SHA_3(req.arg_as_integer(0, 512)));
       }
 #endif
 
@@ -290,7 +296,9 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
       std::unique_ptr<HashFunction> h2(HashFunction::create(req.arg(1)));
 
       if(h1 && h2)
+         {
          return std::unique_ptr<HashFunction>(new Comb4P(h1.release(), h2.release()));
+         }
       }
 #endif
 

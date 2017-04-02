@@ -25,7 +25,9 @@ int operator<<(int fd, Pipe& pipe)
          {
          ssize_t ret = write(fd, &buffer[position], got);
          if(ret == -1)
+            {
             throw Stream_IO_Error("Pipe output operator (unixfd) has failed");
+            }
          position += ret;
          got -= ret;
          }
@@ -42,9 +44,14 @@ int operator>>(int fd, Pipe& pipe)
    while(true)
       {
       ssize_t ret = read(fd, buffer.data(), buffer.size());
-      if(ret == 0) break;
+      if(ret == 0)
+         {
+         break;
+         }
       if(ret == -1)
+         {
          throw Stream_IO_Error("Pipe input operator (unixfd) has failed");
+         }
       pipe.write(buffer.data(), ret);
       }
    return fd;

@@ -98,10 +98,10 @@ class BOTAN_DLL PBKDF
       * @param iterations set to the number iterations executed
       */
       void pbkdf_timed(uint8_t out[], size_t out_len,
-                         const std::string& passphrase,
-                         const uint8_t salt[], size_t salt_len,
-                         std::chrono::milliseconds msec,
-                         size_t& iterations) const;
+                       const std::string& passphrase,
+                       const uint8_t salt[], size_t salt_len,
+                       std::chrono::milliseconds msec,
+                       size_t& iterations) const;
 
       /**
       * Derive a key from a passphrase for a number of iterations.
@@ -114,9 +114,9 @@ class BOTAN_DLL PBKDF
       * @return the derived key
       */
       secure_vector<uint8_t> pbkdf_iterations(size_t out_len,
-                                           const std::string& passphrase,
-                                           const uint8_t salt[], size_t salt_len,
-                                           size_t iterations) const;
+                                              const std::string& passphrase,
+                                              const uint8_t salt[], size_t salt_len,
+                                              size_t iterations) const;
 
       /**
       * Derive a key from a passphrase, running until msec time has elapsed.
@@ -131,10 +131,10 @@ class BOTAN_DLL PBKDF
       * @return the derived key
       */
       secure_vector<uint8_t> pbkdf_timed(size_t out_len,
-                                      const std::string& passphrase,
-                                      const uint8_t salt[], size_t salt_len,
-                                      std::chrono::milliseconds msec,
-                                      size_t& iterations) const;
+                                         const std::string& passphrase,
+                                         const uint8_t salt[], size_t salt_len,
+                                         std::chrono::milliseconds msec,
+                                         size_t& iterations) const;
 
       // Following kept for compat with 1.10:
 
@@ -214,11 +214,13 @@ class BOTAN_DLL PBKDF
 * @return pointer to newly allocated object of that type
 */
 inline PBKDF* get_pbkdf(const std::string& algo_spec,
-                           const std::string& provider = "")
+                        const std::string& provider = "")
    {
    std::unique_ptr<PBKDF> p(PBKDF::create(algo_spec, provider));
    if(p)
+      {
       return p.release();
+      }
    throw Algorithm_Not_Found(algo_spec);
    }
 

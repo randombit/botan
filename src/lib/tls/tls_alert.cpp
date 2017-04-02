@@ -18,10 +18,18 @@ Alert::Alert(const secure_vector<uint8_t>& buf)
       throw Decoding_Error("Alert: Bad size " + std::to_string(buf.size()) +
                            " for alert message");
 
-   if(buf[0] == 1)      m_fatal = false;
-   else if(buf[0] == 2) m_fatal = true;
+   if(buf[0] == 1)
+      {
+      m_fatal = false;
+      }
+   else if(buf[0] == 2)
+      {
+      m_fatal = true;
+      }
    else
+      {
       throw Decoding_Error("Alert: Bad code for alert level");
+      }
 
    const uint8_t dc = buf[1];
 
@@ -30,7 +38,8 @@ Alert::Alert(const secure_vector<uint8_t>& buf)
 
 std::vector<uint8_t> Alert::serialize() const
    {
-   return std::vector<uint8_t>({
+   return std::vector<uint8_t>(
+      {
       static_cast<uint8_t>(is_fatal() ? 2 : 1),
       static_cast<uint8_t>(type())
       });

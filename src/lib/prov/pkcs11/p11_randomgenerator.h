@@ -49,8 +49,7 @@ class BOTAN_DLL PKCS11_RNG final : public Hardware_RNG
          }
 
       /// @return the module used by this RNG
-      inline Module& module() const
-         {
+      inline Module& module() const {
          return m_session.get().module();
          }
 

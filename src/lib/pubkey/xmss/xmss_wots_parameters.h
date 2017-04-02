@@ -84,7 +84,10 @@ class XMSS_WOTS_Parameters
        *
        * @return element length in bytes.
        **/
-      size_t element_size() const { return m_element_size; }
+      size_t element_size() const
+         {
+         return m_element_size;
+         }
 
       /**
        * The Winternitz parameter.
@@ -92,19 +95,40 @@ class XMSS_WOTS_Parameters
        * @return numeric base used for internal representation of
        *         data.
        **/
-      size_t wots_parameter() const { return m_w; }
+      size_t wots_parameter() const
+         {
+         return m_w;
+         }
 
-      size_t len() const { return m_len; }
+      size_t len() const
+         {
+         return m_len;
+         }
 
-      size_t len_1() const { return m_len_1; }
+      size_t len_1() const
+         {
+         return m_len_1;
+         }
 
-      size_t len_2() const { return m_len_2; }
+      size_t len_2() const
+         {
+         return m_len_2;
+         }
 
-      size_t lg_w() const { return m_lg_w; }
+      size_t lg_w() const
+         {
+         return m_lg_w;
+         }
 
-      ots_algorithm_t oid() const { return m_oid; }
+      ots_algorithm_t oid() const
+         {
+         return m_oid;
+         }
 
-      size_t estimated_strength() const { return m_strength; }
+      size_t estimated_strength() const
+         {
+         return m_strength;
+         }
 
       bool operator==(const XMSS_WOTS_Parameters& p) const
          {

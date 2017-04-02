@@ -11,7 +11,7 @@
 
 // For __ud2 intrinsic
 #if defined(BOTAN_TARGET_COMPILER_IS_MSVC)
-  #include <intrin.h>
+   #include <intrin.h>
 #endif
 
 namespace Botan_Tests {
@@ -78,9 +78,13 @@ class OS_Utils_Tests : public Test
          uint64_t proc_ts2 = Botan::OS::get_processor_timestamp();
 
          if(proc_ts1 == 0)
+            {
             result.test_is_eq("Disabled processor timestamp stays at zero", proc_ts1, proc_ts2);
+            }
          else
+            {
             result.confirm("Processor timestamp does not duplicate", proc_ts1 != proc_ts2);
+            }
 
          return result;
          }
@@ -180,7 +184,7 @@ class OS_Utils_Tests : public Test
 
          return result;
          }
-};
+   };
 
 BOTAN_REGISTER_TEST("os_utils", OS_Utils_Tests);
 

@@ -19,7 +19,9 @@ inline void prefetch_readonly(const T* addr, size_t length)
    const size_t Ts_per_cache_line = CPUID::cache_line_size() / sizeof(T);
 
    for(size_t i = 0; i <= length; i += Ts_per_cache_line)
+      {
       __builtin_prefetch(addr + i, 0);
+      }
 #endif
    }
 
@@ -30,7 +32,9 @@ inline void prefetch_readwrite(const T* addr, size_t length)
    const size_t Ts_per_cache_line = CPUID::cache_line_size() / sizeof(T);
 
    for(size_t i = 0; i <= length; i += Ts_per_cache_line)
+      {
       __builtin_prefetch(addr + i, 1);
+      }
 #endif
    }
 

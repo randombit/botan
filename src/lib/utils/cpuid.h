@@ -89,7 +89,8 @@ class BOTAN_DLL CPUID
          return is_little_endian() == false;
          }
 
-      enum CPUID_bits : uint64_t {
+      enum CPUID_bits : uint64_t
+         {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
          // These values have no relation to cpuid bitfields
 
@@ -127,14 +128,16 @@ class BOTAN_DLL CPUID
 #endif
 
          CPUID_INITIALIZED_BIT = (1ULL << 63)
-      };
+         };
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
       /**
       * Check if the processor supports AltiVec/VMX
       */
       static bool has_altivec()
-         { return has_cpuid_bit(CPUID_ALTIVEC_BIT); }
+         {
+         return has_cpuid_bit(CPUID_ALTIVEC_BIT);
+         }
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
@@ -142,31 +145,41 @@ class BOTAN_DLL CPUID
       * Check if the processor supports NEON SIMD
       */
       static bool has_neon()
-         { return has_cpuid_bit(CPUID_ARM_NEON_BIT); }
+         {
+         return has_cpuid_bit(CPUID_ARM_NEON_BIT);
+         }
 
       /**
       * Check if the processor supports ARMv8 SHA1
       */
       static bool has_arm_sha1()
-         { return has_cpuid_bit(CPUID_ARM_SHA1_BIT); }
+         {
+         return has_cpuid_bit(CPUID_ARM_SHA1_BIT);
+         }
 
       /**
       * Check if the processor supports ARMv8 SHA2
       */
       static bool has_arm_sha2()
-         { return has_cpuid_bit(CPUID_ARM_SHA2_BIT); }
+         {
+         return has_cpuid_bit(CPUID_ARM_SHA2_BIT);
+         }
 
       /**
       * Check if the processor supports ARMv8 AES
       */
       static bool has_arm_aes()
-         { return has_cpuid_bit(CPUID_ARM_AES_BIT); }
+         {
+         return has_cpuid_bit(CPUID_ARM_AES_BIT);
+         }
 
       /**
       * Check if the processor supports ARMv8 PMULL
       */
       static bool has_arm_pmull()
-         { return has_cpuid_bit(CPUID_ARM_PMULL_BIT); }
+         {
+         return has_cpuid_bit(CPUID_ARM_PMULL_BIT);
+         }
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
@@ -175,85 +188,113 @@ class BOTAN_DLL CPUID
       * Check if the processor supports RDTSC
       */
       static bool has_rdtsc()
-         { return has_cpuid_bit(CPUID_RDTSC_BIT); }
+         {
+         return has_cpuid_bit(CPUID_RDTSC_BIT);
+         }
 
       /**
       * Check if the processor supports SSE2
       */
       static bool has_sse2()
-         { return has_cpuid_bit(CPUID_SSE2_BIT); }
+         {
+         return has_cpuid_bit(CPUID_SSE2_BIT);
+         }
 
       /**
       * Check if the processor supports SSSE3
       */
       static bool has_ssse3()
-         { return has_cpuid_bit(CPUID_SSSE3_BIT); }
+         {
+         return has_cpuid_bit(CPUID_SSSE3_BIT);
+         }
 
       /**
       * Check if the processor supports SSE4.1
       */
       static bool has_sse41()
-         { return has_cpuid_bit(CPUID_SSE41_BIT); }
+         {
+         return has_cpuid_bit(CPUID_SSE41_BIT);
+         }
 
       /**
       * Check if the processor supports SSE4.2
       */
       static bool has_sse42()
-         { return has_cpuid_bit(CPUID_SSE42_BIT); }
+         {
+         return has_cpuid_bit(CPUID_SSE42_BIT);
+         }
 
       /**
       * Check if the processor supports AVX2
       */
       static bool has_avx2()
-         { return has_cpuid_bit(CPUID_AVX2_BIT); }
+         {
+         return has_cpuid_bit(CPUID_AVX2_BIT);
+         }
 
       /**
       * Check if the processor supports AVX-512F
       */
       static bool has_avx512f()
-         { return has_cpuid_bit(CPUID_AVX512F_BIT); }
+         {
+         return has_cpuid_bit(CPUID_AVX512F_BIT);
+         }
 
       /**
       * Check if the processor supports BMI2
       */
       static bool has_bmi2()
-         { return has_cpuid_bit(CPUID_BMI2_BIT); }
+         {
+         return has_cpuid_bit(CPUID_BMI2_BIT);
+         }
 
       /**
       * Check if the processor supports AES-NI
       */
       static bool has_aes_ni()
-         { return has_cpuid_bit(CPUID_AESNI_BIT); }
+         {
+         return has_cpuid_bit(CPUID_AESNI_BIT);
+         }
 
       /**
       * Check if the processor supports CLMUL
       */
       static bool has_clmul()
-         { return has_cpuid_bit(CPUID_CLMUL_BIT); }
+         {
+         return has_cpuid_bit(CPUID_CLMUL_BIT);
+         }
 
       /**
       * Check if the processor supports Intel SHA extension
       */
       static bool has_intel_sha()
-         { return has_cpuid_bit(CPUID_SHA_BIT); }
+         {
+         return has_cpuid_bit(CPUID_SHA_BIT);
+         }
 
       /**
       * Check if the processor supports ADX extension
       */
       static bool has_adx()
-         { return has_cpuid_bit(CPUID_ADX_BIT); }
+         {
+         return has_cpuid_bit(CPUID_ADX_BIT);
+         }
 
       /**
       * Check if the processor supports RDRAND
       */
       static bool has_rdrand()
-         { return has_cpuid_bit(CPUID_RDRAND_BIT); }
+         {
+         return has_cpuid_bit(CPUID_RDRAND_BIT);
+         }
 
       /**
       * Check if the processor supports RDSEED
       */
       static bool has_rdseed()
-         { return has_cpuid_bit(CPUID_RDSEED_BIT); }
+         {
+         return has_cpuid_bit(CPUID_RDSEED_BIT);
+         }
 #endif
 
       /*
@@ -276,7 +317,9 @@ class BOTAN_DLL CPUID
       static bool has_cpuid_bit(CPUID_bits elem)
          {
          if(g_processor_features == 0)
+            {
             initialize();
+            }
          return ((g_processor_features & static_cast<uint64_t>(elem)) != 0);
          }
 

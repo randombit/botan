@@ -8,8 +8,8 @@
 #include "test_rng.h"
 
 #if defined(BOTAN_HAS_RSA)
-  #include <botan/rsa.h>
-  #include "test_pubkey.h"
+   #include <botan/rsa.h>
+   #include "test_pubkey.h"
 #endif
 
 namespace Botan_Tests {
@@ -22,10 +22,10 @@ class RSA_ES_KAT_Tests : public PK_Encryption_Decryption_Test
    {
    public:
       RSA_ES_KAT_Tests() : PK_Encryption_Decryption_Test(
-         "RSA",
-         "pubkey/rsaes.vec",
-         "E,P,Q,Msg,Ciphertext",
-         "Padding,Nonce")
+            "RSA",
+            "pubkey/rsaes.vec",
+            "E,P,Q,Msg,Ciphertext",
+            "Padding,Nonce")
          {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
@@ -43,9 +43,9 @@ class RSA_KEM_Tests : public PK_KEM_Test
    {
    public:
       RSA_KEM_Tests() : PK_KEM_Test(
-         "RSA",
-         "pubkey/rsa_kem.vec",
-         "E,P,Q,R,C0,KDF,OutLen,K")
+            "RSA",
+            "pubkey/rsa_kem.vec",
+            "E,P,Q,R,C0,KDF,OutLen,K")
          {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
@@ -64,13 +64,16 @@ class RSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
    {
    public:
       RSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
-         "RSA",
-         "pubkey/rsa_sig.vec",
-         "E,P,Q,Msg,Signature",
-         "Padding,Nonce")
+            "RSA",
+            "pubkey/rsa_sig.vec",
+            "E,P,Q,Msg,Signature",
+            "Padding,Nonce")
          {}
 
-      std::string default_padding(const VarMap&) const override { return "Raw"; }
+      std::string default_padding(const VarMap&) const override
+         {
+         return "Raw";
+         }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
@@ -87,13 +90,16 @@ class RSA_Signature_Verify_Tests : public PK_Signature_Verification_Test
    {
    public:
       RSA_Signature_Verify_Tests() : PK_Signature_Verification_Test(
-         "RSA",
-         "pubkey/rsa_verify.vec",
-         "E,N,Msg,Signature",
-         "Padding")
+            "RSA",
+            "pubkey/rsa_verify.vec",
+            "E,N,Msg,Signature",
+            "Padding")
          {}
 
-      std::string default_padding(const VarMap&) const override { return "Raw"; }
+      std::string default_padding(const VarMap&) const override
+         {
+         return "Raw";
+         }
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
@@ -109,12 +115,15 @@ class RSA_Signature_Verify_Invalid_Tests : public PK_Signature_NonVerification_T
    {
    public:
       RSA_Signature_Verify_Invalid_Tests() : PK_Signature_NonVerification_Test(
-         "RSA",
-         "pubkey/rsa_invalid.vec",
-         "Padding,E,N,Msg,InvalidSignature")
+            "RSA",
+            "pubkey/rsa_invalid.vec",
+            "Padding,E,N,Msg,InvalidSignature")
          {}
 
-      std::string default_padding(const VarMap&) const override { return "Raw"; }
+      std::string default_padding(const VarMap&) const override
+         {
+         return "Raw";
+         }
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
          {
@@ -128,8 +137,14 @@ class RSA_Signature_Verify_Invalid_Tests : public PK_Signature_NonVerification_T
 class RSA_Keygen_Tests : public PK_Key_Generation_Test
    {
    public:
-      std::vector<std::string> keygen_params() const override { return { "1024", "1280" }; }
-      std::string algo_name() const override { return "RSA"; }
+      std::vector<std::string> keygen_params() const override
+         {
+         return { "1024", "1280" };
+         }
+      std::string algo_name() const override
+         {
+         return "RSA";
+         }
    };
 
 class RSA_Blinding_Tests : public Test
@@ -160,7 +175,7 @@ class RSA_Blinding_Tests : public Test
          for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL * 6; ++i)
             {
             std::vector<uint8_t> input(16);
-            input[input.size()-1] = static_cast<uint8_t>(i);
+            input[input.size() - 1] = static_cast<uint8_t>(i);
 
             signer.update(input);
 
@@ -207,7 +222,7 @@ class RSA_Blinding_Tests : public Test
          // one more decryption should trigger a blinder reinitialization
          result.test_throws("RSA blinding reinit",
                             "Test error Fixed output RNG ran out of bytes, test bug?",
-                            [&decryptor,&encryptor,&null_rng]()
+                            [&decryptor, &encryptor, &null_rng]()
             {
             std::vector<uint8_t> ciphertext = encryptor.encrypt(std::vector<uint8_t>(16, 5), null_rng);
             decryptor.decrypt(ciphertext);
@@ -215,7 +230,7 @@ class RSA_Blinding_Tests : public Test
 
 #endif
 
-         return std::vector<Test::Result>{result};
+         return std::vector<Test::Result> {result};
          }
    };
 

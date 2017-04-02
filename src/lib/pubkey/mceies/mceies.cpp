@@ -15,15 +15,19 @@ namespace Botan {
 namespace {
 
 secure_vector<uint8_t> aead_key(const secure_vector<uint8_t>& mk,
-                             const AEAD_Mode& aead)
+                                const AEAD_Mode& aead)
    {
    // Fold the key as required for the AEAD mode in use
    if(aead.valid_keylength(mk.size()))
+      {
       return mk;
+      }
 
    secure_vector<uint8_t> r(aead.key_spec().maximum_keylength());
    for(size_t i = 0; i != mk.size(); ++i)
+      {
       r[i % r.size()] ^= mk[i];
+      }
    return r;
    }
 
@@ -47,7 +51,9 @@ mceies_encrypt(const McEliece_PublicKey& pubkey,
 
    std::unique_ptr<AEAD_Mode> aead(get_aead(algo, ENCRYPTION));
    if(!aead)
+      {
       throw Exception("mce_encrypt unable to create AEAD instance '" + algo + "'");
+      }
 
    const size_t nonce_len = aead->default_nonce_length();
 
@@ -81,12 +87,16 @@ mceies_decrypt(const McEliece_PrivateKey& privkey,
 
       std::unique_ptr<AEAD_Mode> aead(get_aead(algo, DECRYPTION));
       if(!aead)
+         {
          throw Exception("Unable to create AEAD instance '" + algo + "'");
+         }
 
       const size_t nonce_len = aead->default_nonce_length();
 
       if(ct_len < mce_code_bytes + nonce_len + aead->tag_size())
+         {
          throw Exception("Input message too small to be valid");
+         }
 
       const secure_vector<uint8_t> mce_key = kem_op.decrypt(ct, mce_code_bytes, 64);
 

@@ -25,8 +25,8 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
       * empty then best available is chosen.
       */
       static std::unique_ptr<HashFunction>
-         create(const std::string& algo_spec,
-                const std::string& provider = "");
+      create(const std::string& algo_spec,
+             const std::string& provider = "");
 
       /**
       * Create an instance based on a name
@@ -36,8 +36,8 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
       * Throws Lookup_Error if not not found.
       */
       static std::unique_ptr<HashFunction>
-         create_or_throw(const std::string& algo_spec,
-                         const std::string& provider = "");
+      create_or_throw(const std::string& algo_spec,
+                      const std::string& provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -54,7 +54,10 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
       * @return provider information about this implementation. Default is "base",
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
-      virtual std::string provider() const { return "base"; }
+      virtual std::string provider() const
+         {
+         return "base";
+         }
 
       virtual ~HashFunction() {}
 
@@ -71,7 +74,10 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
       /**
       * @return hash block size as defined for this algorithm
       */
-      virtual size_t hash_block_size() const { return 0; }
+      virtual size_t hash_block_size() const
+         {
+         return 0;
+         }
    };
 
 }

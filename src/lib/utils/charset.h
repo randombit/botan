@@ -16,12 +16,13 @@ namespace Botan {
 /**
 * The different charsets (nominally) supported by Botan.
 */
-enum Character_Set {
+enum Character_Set
+   {
    LOCAL_CHARSET,
    UCS2_CHARSET,
    UTF8_CHARSET,
    LATIN1_CHARSET
-};
+   };
 
 namespace Charset {
 

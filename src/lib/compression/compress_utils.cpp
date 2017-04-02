@@ -44,7 +44,9 @@ void Compression_Alloc_Info::do_free(void* ptr)
       auto i = m_current_allocs.find(ptr);
 
       if(i == m_current_allocs.end())
+         {
          throw Exception("Compression_Alloc_Info::free got pointer not allocated by us");
+         }
 
       secure_scrub_memory(ptr, i->second);
       std::free(ptr);
@@ -68,7 +70,9 @@ void Stream_Compression::process(secure_vector<uint8_t>& buf, size_t offset, uin
    BOTAN_ASSERT(buf.size() >= offset, "Offset is sane");
 
    if(m_buffer.size() < buf.size() + offset)
+      {
       m_buffer.resize(buf.size() + offset);
+      }
 
    // If the output buffer has zero length, .data() might return nullptr. This would
    // make some compression algorithms (notably those provided by zlib) fail.
@@ -76,7 +80,9 @@ void Stream_Compression::process(secure_vector<uint8_t>& buf, size_t offset, uin
    // of two that is large enough to hold all the headers and trailers of the common
    // formats, preventing further resizings to make room for output data.
    if(m_buffer.size() == 0)
+      {
       m_buffer.resize(32);
+      }
 
    m_stream->next_in(buf.data() + offset, buf.size() - offset);
    m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
@@ -131,7 +137,9 @@ void Stream_Decompression::process(secure_vector<uint8_t>& buf, size_t offset, u
    BOTAN_ASSERT(buf.size() >= offset, "Offset is sane");
 
    if(m_buffer.size() < buf.size() + offset)
+      {
       m_buffer.resize(buf.size() + offset);
+      }
 
    m_stream->next_in(buf.data() + offset, buf.size() - offset);
    m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
@@ -180,10 +188,14 @@ void Stream_Decompression::update(secure_vector<uint8_t>& buf, size_t offset)
 void Stream_Decompression::finish(secure_vector<uint8_t>& buf, size_t offset)
    {
    if(buf.size() != offset || m_stream.get())
+      {
       process(buf, offset, m_stream->finish_flag());
+      }
 
    if(m_stream.get())
+      {
       throw Exception(name() + " finished but not at stream end");
+      }
    }
 
 }

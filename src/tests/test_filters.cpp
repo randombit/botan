@@ -9,17 +9,17 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_FILTERS)
-  #include <botan/secqueue.h>
-  #include <botan/pipe.h>
-  #include <botan/filters.h>
-  #include <botan/data_snk.h>
-  #include <botan/comp_filter.h>
-  #include <botan/cipher_filter.h>
+   #include <botan/secqueue.h>
+   #include <botan/pipe.h>
+   #include <botan/filters.h>
+   #include <botan/data_snk.h>
+   #include <botan/comp_filter.h>
+   #include <botan/cipher_filter.h>
 #endif
 
 #if defined(BOTAN_HAS_CODEC_FILTERS)
-  #include <botan/hex_filt.h>
-  #include <botan/b64_filt.h>
+   #include <botan/hex_filt.h>
+   #include <botan/b64_filt.h>
 #endif
 
 namespace Botan_Tests {
@@ -78,7 +78,7 @@ class Filter_Tests : public Test
             queue_a = queue_b;
             result.test_eq("bytes_read is set correctly", queue_a.get_bytes_read(), 0);
             }
-         catch (std::exception& e)
+         catch(std::exception& e)
             {
             result.test_failure("SecureQueue", e.what());
             }
@@ -152,19 +152,34 @@ class Filter_Tests : public Test
 
          // can't explicitly insert a queue into the pipe because they are implicit
          result.test_throws("pipe error", "Invalid argument Pipe::append: SecureQueue cannot be used",
-                            [&]() { pipe.append(new Botan::SecureQueue); });
+                            [&]()
+            {
+            pipe.append(new Botan::SecureQueue);
+            });
          result.test_throws("pipe error", "Invalid argument Pipe::prepend: SecureQueue cannot be used",
-                            [&]() { pipe.prepend(new Botan::SecureQueue); });
+                            [&]()
+            {
+            pipe.prepend(new Botan::SecureQueue);
+            });
 
          pipe.start_msg();
 
          // now inside a message, cannot modify pipe structure
          result.test_throws("pipe error", "Cannot append to a Pipe while it is processing",
-                            [&]() { pipe.append(nullptr); });
+                            [&]()
+            {
+            pipe.append(nullptr);
+            });
          result.test_throws("pipe error", "Cannot prepend to a Pipe while it is processing",
-                            [&]() { pipe.prepend(nullptr); });
+                            [&]()
+            {
+            pipe.prepend(nullptr);
+            });
          result.test_throws("pipe error", "Cannot pop off a Pipe while it is processing",
-                            [&]() { pipe.pop(); });
+                            [&]()
+            {
+            pipe.pop();
+            });
 
          pipe.end_msg();
 
@@ -263,7 +278,7 @@ class Filter_Tests : public Test
          result.test_eq("Cipher key length max", cipher->key_spec().maximum_keylength(), 16);
          result.test_eq("Cipher key length min", cipher->key_spec().minimum_keylength(), 16);
 
-          // takes ownership of cipher
+         // takes ownership of cipher
          Botan::Pipe pipe(cipher);
 
          cipher->set_key(Botan::SymmetricKey("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"));
@@ -383,8 +398,8 @@ class Filter_Tests : public Test
          pipe.reset();
          pipe.append(new Botan::Hex_Decoder);
          pipe.append(new Botan::Base64_Encoder(/*break_lines=*/true,
-                                               /*line_length=*/4,
-                                               /*trailing_newline=*/true));
+                     /*line_length=*/4,
+                     /*trailing_newline=*/true));
 
          pipe.process_msg("6dab1eeb8a2eb69bad");
          result.test_eq("base64 with linebreaks and trailing newline", pipe.read_all_as_string(5), "base\n64ou\ntput\n\n");
@@ -461,7 +476,7 @@ class Filter_Tests : public Test
             new Botan::Fork(
                new Botan::Chain(new Botan::Hash_Filter("SHA-256"), new Botan::Hex_Encoder),
                new Botan::Chain(new Botan::Hash_Filter("SHA-512-256"), new Botan::Hex_Encoder)
-               ));
+            ));
 
          result.test_eq("Fork has a name", fork->name(), "Fork");
          Botan::Pipe pipe(fork.release());
@@ -470,8 +485,10 @@ class Filter_Tests : public Test
          pipe.process_msg("OMG");
          result.test_eq("Message count", pipe.message_count(), 2);
 
-         result.test_eq("Hash 1", pipe.read_all_as_string(0), "C00862D1C6C1CF7C1B49388306E7B3C1BB79D8D6EC978B41035B556DBB3797DF");
-         result.test_eq("Hash 2", pipe.read_all_as_string(1), "610480FFA82F24F6926544B976FE387878E3D973C03DFD591C2E9896EFB903E0");
+         result.test_eq("Hash 1", pipe.read_all_as_string(0),
+                        "C00862D1C6C1CF7C1B49388306E7B3C1BB79D8D6EC978B41035B556DBB3797DF");
+         result.test_eq("Hash 2", pipe.read_all_as_string(1),
+                        "610480FFA82F24F6926544B976FE387878E3D973C03DFD591C2E9896EFB903E0");
 #endif
 
          return result;
@@ -480,11 +497,11 @@ class Filter_Tests : public Test
 
       Test::Result test_threaded_fork()
          {
-      	Test::Result result("Threaded_Fork");
+         Test::Result result("Threaded_Fork");
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_SHA2_32)
          Botan::Pipe pipe(new Botan::Threaded_Fork(new Botan::Hex_Encoder,
-                                                   new Botan::Base64_Encoder));
+                          new Botan::Base64_Encoder));
 
          result.test_eq("Message count", pipe.message_count(), 0);
          pipe.process_msg("woo");
@@ -499,7 +516,9 @@ class Filter_Tests : public Test
          const size_t filter_count = 5;
          Botan::Filter* filters[filter_count];
          for(size_t i = 0; i != filter_count; ++i)
+            {
             filters[i] = new Botan::Hash_Filter("SHA-256");
+            }
 
          pipe.append(new Botan::Threaded_Fork(filters, filter_count));
 
@@ -513,10 +532,10 @@ class Filter_Tests : public Test
             }
          pipe.end_msg();
 
-         result.test_eq("Message count after end_msg", pipe.message_count(), 2+filter_count);
+         result.test_eq("Message count after end_msg", pipe.message_count(), 2 + filter_count);
          for(size_t i = 0; i != filter_count; ++i)
             result.test_eq("Output " + std::to_string(i),
-                           pipe.read_all(2+i),
+                           pipe.read_all(2 + i),
                            "327AD8055223F5926693D8BEA40F7B35BDEEB535647DFB93F464E40EA01939A9");
 #endif
          return result;

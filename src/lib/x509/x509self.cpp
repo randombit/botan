@@ -42,9 +42,9 @@ namespace X509 {
 * Create a new self-signed X.509 certificate
 */
 X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
-                                         const Private_Key& key,
-                                         const std::string& hash_fn,
-                                         RandomNumberGenerator& rng)
+      const Private_Key& key,
+      const std::string& hash_fn,
+      RandomNumberGenerator& rng)
    {
    AlgorithmIdentifier sig_algo;
    X509_DN subject_dn;
@@ -137,10 +137,10 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    DER_Encoder tbs_req;
 
    tbs_req.start_cons(SEQUENCE)
-      .encode(PKCS10_VERSION)
-      .encode(subject_dn)
-      .raw_bytes(pub_key)
-      .start_explicit(0);
+   .encode(PKCS10_VERSION)
+   .encode(subject_dn)
+   .raw_bytes(pub_key)
+   .start_explicit(0);
 
    if(!opts.challenge.empty())
       {
@@ -149,21 +149,21 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       tbs_req.encode(
          Attribute("PKCS9.ChallengePassword",
                    DER_Encoder().encode(challenge).get_contents_unlocked()
-            )
-         );
+                  )
+      );
       }
 
    tbs_req.encode(
       Attribute("PKCS9.ExtensionRequest",
                 DER_Encoder()
-                   .start_cons(SEQUENCE)
-                      .encode(extensions)
-                   .end_cons()
-               .get_contents_unlocked()
-         )
-      )
-      .end_explicit()
-      .end_cons();
+                .start_cons(SEQUENCE)
+                .encode(extensions)
+                .end_cons()
+                .get_contents_unlocked()
+               )
+   )
+   .end_explicit()
+   .end_cons();
 
    const std::vector<uint8_t> req =
       X509_Object::make_signed(signer.get(), rng, sig_algo,

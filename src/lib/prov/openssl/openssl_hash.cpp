@@ -23,8 +23,14 @@ class OpenSSL_HashFunction : public HashFunction
          EVP_DigestInit_ex(&m_md, algo, nullptr);
          }
 
-      std::string provider() const override { return "openssl"; }
-      std::string name() const override { return m_name; }
+      std::string provider() const override
+         {
+         return "openssl";
+         }
+      std::string name() const override
+         {
+         return m_name;
+         }
 
       HashFunction* clone() const override
          {
@@ -80,36 +86,52 @@ make_openssl_hash(const std::string& name)
 
 #if defined(BOTAN_HAS_SHA2_32) && !defined(OPENSSL_NO_SHA256)
    if(name == "SHA-224")
+      {
       return MAKE_OPENSSL_HASH(EVP_sha224);
+      }
    if(name == "SHA-256")
+      {
       return MAKE_OPENSSL_HASH(EVP_sha256);
+      }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64) && !defined(OPENSSL_NO_SHA512)
    if(name == "SHA-384")
+      {
       return MAKE_OPENSSL_HASH(EVP_sha384);
+      }
    if(name == "SHA-512")
+      {
       return MAKE_OPENSSL_HASH(EVP_sha512);
+      }
 #endif
 
 #if defined(BOTAN_HAS_SHA1) && !defined(OPENSSL_NO_SHA)
    if(name == "SHA-160")
+      {
       return MAKE_OPENSSL_HASH(EVP_sha1);
+      }
 #endif
 
 #if defined(BOTAN_HAS_RIPEMD_160) && !defined(OPENSSL_NO_RIPEMD)
    if(name == "RIPEMD-160")
+      {
       return MAKE_OPENSSL_HASH(EVP_ripemd160);
+      }
 #endif
 
 #if defined(BOTAN_HAS_MD5) && !defined(OPENSSL_NO_MD5)
    if(name == "MD5")
+      {
       return MAKE_OPENSSL_HASH(EVP_md5);
-   #endif
+      }
+#endif
 
 #if defined(BOTAN_HAS_MD4) && !defined(OPENSSL_NO_MD4)
    if(name == "MD4")
+      {
       return MAKE_OPENSSL_HASH(EVP_md4);
+      }
 #endif
 
    return nullptr;

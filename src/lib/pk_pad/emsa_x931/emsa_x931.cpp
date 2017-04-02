@@ -13,18 +13,22 @@ namespace Botan {
 namespace {
 
 secure_vector<uint8_t> emsa2_encoding(const secure_vector<uint8_t>& msg,
-                                   size_t output_bits,
-                                   const secure_vector<uint8_t>& empty_hash,
-                                   uint8_t hash_id)
+                                      size_t output_bits,
+                                      const secure_vector<uint8_t>& empty_hash,
+                                      uint8_t hash_id)
    {
    const size_t HASH_SIZE = empty_hash.size();
 
    size_t output_length = (output_bits + 1) / 8;
 
    if(msg.size() != HASH_SIZE)
+      {
       throw Encoding_Error("EMSA_X931::encoding_of: Bad input length");
+      }
    if(output_length < HASH_SIZE + 4)
+      {
       throw Encoding_Error("EMSA_X931::encoding_of: Output length is too small");
+      }
 
    const bool empty_input = (msg == empty_hash);
 
@@ -34,8 +38,8 @@ secure_vector<uint8_t> emsa2_encoding(const secure_vector<uint8_t>& msg,
    output[output_length - 3 - HASH_SIZE] = 0xBA;
    set_mem(&output[1], output_length - 4 - HASH_SIZE, 0xBB);
    buffer_insert(output, output_length - (HASH_SIZE + 2), msg.data(), msg.size());
-   output[output_length-2] = hash_id;
-   output[output_length-1] = 0xCC;
+   output[output_length - 2] = hash_id;
+   output[output_length - 1] = 0xCC;
 
    return output;
    }
@@ -56,8 +60,8 @@ secure_vector<uint8_t> EMSA_X931::raw_data()
 * EMSA_X931 Encode Operation
 */
 secure_vector<uint8_t> EMSA_X931::encoding_of(const secure_vector<uint8_t>& msg,
-                                      size_t output_bits,
-                                      RandomNumberGenerator&)
+      size_t output_bits,
+      RandomNumberGenerator&)
    {
    return emsa2_encoding(msg, output_bits, m_empty_hash, m_hash_id);
    }
@@ -66,8 +70,8 @@ secure_vector<uint8_t> EMSA_X931::encoding_of(const secure_vector<uint8_t>& msg,
 * EMSA_X931 Verify Operation
 */
 bool EMSA_X931::verify(const secure_vector<uint8_t>& coded,
-                   const secure_vector<uint8_t>& raw,
-                   size_t key_bits)
+                       const secure_vector<uint8_t>& raw,
+                       size_t key_bits)
    {
    try
       {
@@ -90,7 +94,9 @@ EMSA_X931::EMSA_X931(HashFunction* hash) : m_hash(hash)
    m_hash_id = ieee1363_hash_id(hash->name());
 
    if(!m_hash_id)
+      {
       throw Encoding_Error("EMSA_X931 no hash identifier for " + hash->name());
+      }
    }
 
 }

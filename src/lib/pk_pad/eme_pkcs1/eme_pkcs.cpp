@@ -14,8 +14,8 @@ namespace Botan {
 * PKCS1 Pad Operation
 */
 secure_vector<uint8_t> EME_PKCS1v15::pad(const uint8_t in[], size_t inlen,
-                                     size_t key_length,
-                                     RandomNumberGenerator& rng) const
+      size_t key_length,
+      RandomNumberGenerator& rng) const
    {
    key_length /= 8;
 
@@ -46,7 +46,7 @@ secure_vector<uint8_t> EME_PKCS1v15::pad(const uint8_t in[], size_t inlen,
 * PKCS1 Unpad Operation
 */
 secure_vector<uint8_t> EME_PKCS1v15::unpad(uint8_t& valid_mask,
-                                        const uint8_t in[], size_t inlen) const
+      const uint8_t in[], size_t inlen) const
    {
    if(inlen < 2)
       {
@@ -92,9 +92,13 @@ secure_vector<uint8_t> EME_PKCS1v15::unpad(uint8_t& valid_mask,
 size_t EME_PKCS1v15::maximum_input_size(size_t keybits) const
    {
    if(keybits / 8 > 10)
+      {
       return ((keybits / 8) - 10);
+      }
    else
+      {
       return 0;
+      }
    }
 
 }

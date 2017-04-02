@@ -12,8 +12,8 @@
 #include <botan/ctr.h>
 
 #if defined(BOTAN_HAS_GCM_CLMUL)
-  #include <botan/internal/clmul.h>
-  #include <botan/cpuid.h>
+   #include <botan/internal/clmul.h>
+   #include <botan/cpuid.h>
 #endif
 
 namespace Botan {
@@ -24,15 +24,18 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x) const
    {
 #if defined(BOTAN_HAS_GCM_CLMUL)
    if(CPUID::has_clmul())
+      {
       return gcm_multiply_clmul(x.data(), m_H.data());
+      }
 #endif
 
    static const uint64_t R = 0xE100000000000000;
 
-   uint64_t H[2] = {
+   uint64_t H[2] =
+      {
       load_be<uint64_t>(m_H.data(), 0),
       load_be<uint64_t>(m_H.data(), 1)
-   };
+      };
 
    uint64_t Z[2] = { 0, 0 };
 
@@ -88,7 +91,7 @@ void GHASH::ghash_update(secure_vector<uint8_t>& ghash,
 
 void GHASH::key_schedule(const uint8_t key[], size_t length)
    {
-   m_H.assign(key, key+length);
+   m_H.assign(key, key + length);
    m_H_ad.resize(GCM_BS);
    m_ad_len = 0;
    m_text_len = 0;
@@ -121,7 +124,7 @@ void GHASH::add_final_block(secure_vector<uint8_t>& hash,
                             size_t ad_len, size_t text_len)
    {
    secure_vector<uint8_t> final_block(GCM_BS);
-   store_be<uint64_t>(final_block.data(), 8*ad_len, 8*text_len);
+   store_be<uint64_t>(final_block.data(), 8 * ad_len, 8 * text_len);
    ghash_update(hash, final_block.data(), final_block.size());
    }
 
@@ -170,14 +173,18 @@ GCM_Mode::GCM_Mode(BlockCipher* cipher, size_t tag_size) :
    m_cipher_name(cipher->name())
    {
    if(cipher->block_size() != GCM_BS)
+      {
       throw Invalid_Argument("Invalid block cipher for GCM");
+      }
 
    m_ghash.reset(new GHASH);
 
    m_ctr.reset(new CTR_BE(cipher, 4)); // CTR_BE takes ownership of cipher
 
    if(m_tag_size != 8 && m_tag_size != GCM_BS)
+      {
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(m_tag_size));
+      }
    }
 
 void GCM_Mode::clear()
@@ -201,7 +208,9 @@ std::string GCM_Mode::provider() const
    {
 #if defined(BOTAN_HAS_GCM_CLMUL)
    if(CPUID::has_clmul())
+      {
       return "clmul";
+      }
 #endif
 
    return "base";
@@ -237,7 +246,9 @@ void GCM_Mode::set_associated_data(const uint8_t ad[], size_t ad_len)
 void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
+      {
       throw Invalid_IV_Length(name(), nonce_len);
+      }
 
    secure_vector<uint8_t> y0(GCM_BS);
 
@@ -294,7 +305,9 @@ void GCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    uint8_t* buf = buffer.data() + offset;
 
    if(sz < tag_size())
+      {
       throw Exception("Insufficient input for GCM decryption, tag missing");
+      }
 
    const size_t remaining = sz - tag_size();
 
@@ -307,10 +320,12 @@ void GCM_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
    auto mac = m_ghash->final();
 
-   const uint8_t* included_tag = &buffer[remaining+offset];
+   const uint8_t* included_tag = &buffer[remaining + offset];
 
    if(!same_mem(mac.data(), included_tag, tag_size()))
+      {
       throw Integrity_Failure("GCM tag check failed");
+      }
 
    buffer.resize(offset + remaining);
    }

@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-  #include <botan/workfactor.h>
+   #include <botan/workfactor.h>
 #endif
 
 namespace Botan_Tests {
@@ -30,9 +30,13 @@ class PK_Workfactor_Tests : public Text_Based_Test
          // TODO: test McEliece strength tests also
 
          if(type == "RSA_Strength")
+            {
             output = Botan::if_work_factor(param_size);
+            }
          else if(type == "DL_Exponent_Size")
+            {
             output = Botan::dl_exponent_size(param_size) / 2;
+            }
 
          Test::Result result(type + " work factor calculation");
          result.test_eq("Calculated workfactor for " + std::to_string(param_size),

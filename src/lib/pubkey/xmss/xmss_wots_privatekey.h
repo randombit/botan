@@ -25,7 +25,7 @@ namespace Botan {
  * Signatures.
  **/
 class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
-                                       public virtual Private_Key
+   public virtual Private_Key
    {
    public:
       /**
@@ -66,7 +66,7 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
        **/
       XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters::ots_algorithm_t oid,
                            const secure_vector<uint8_t>& public_seed,
-                           RandomNumberGenerator &rng)
+                           RandomNumberGenerator& rng)
          : XMSS_WOTS_PublicKey(oid, public_seed),
            m_private_seed(rng.random_vec(m_wots_params.element_size()))
          {
@@ -222,9 +222,9 @@ class BOTAN_DLL XMSS_WOTS_PrivateKey : public virtual XMSS_WOTS_PublicKey,
          }
 
       virtual std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator&,
-                             const std::string&,
-                             const std::string& provider) const override;
+      create_signature_op(RandomNumberGenerator&,
+                          const std::string&,
+                          const std::string& provider) const override;
 
       virtual secure_vector<uint8_t> private_key_bits() const override
          {

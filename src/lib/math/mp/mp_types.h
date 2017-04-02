@@ -13,19 +13,19 @@
 namespace Botan {
 
 #if (BOTAN_MP_WORD_BITS == 8)
-  typedef uint8_t word;
+   typedef uint8_t word;
 #elif (BOTAN_MP_WORD_BITS == 16)
-  typedef uint16_t word;
+   typedef uint16_t word;
 #elif (BOTAN_MP_WORD_BITS == 32)
-  typedef uint32_t word;
+   typedef uint32_t word;
 #elif (BOTAN_MP_WORD_BITS == 64)
-  typedef uint64_t word;
+   typedef uint64_t word;
 #else
-  #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
+   #error BOTAN_MP_WORD_BITS must be 8, 16, 32, or 64
 #endif
 
 const word MP_WORD_MASK = ~static_cast<word>(0);
-const word MP_WORD_TOP_BIT = static_cast<word>(1) << (8*sizeof(word) - 1);
+const word MP_WORD_TOP_BIT = static_cast<word>(1) << (8 * sizeof(word) - 1);
 const word MP_WORD_MAX = MP_WORD_MASK;
 
 }

@@ -122,27 +122,27 @@ class BOTAN_DLL Policy
       * Allow servers to initiate a new handshake
       */
       virtual bool allow_server_initiated_renegotiation() const;
-      
+
       /**
       * Allow TLS v1.0
       */
       virtual bool allow_tls10() const;
-      
+
       /**
       * Allow TLS v1.1
       */
       virtual bool allow_tls11() const;
-      
+
       /**
       * Allow TLS v1.2
       */
       virtual bool allow_tls12() const;
-      
+
       /**
       * Allow DTLS v1.0
       */
       virtual bool allow_dtls10() const;
-      
+
       /**
       * Allow DTLS v1.2
       */
@@ -155,14 +155,14 @@ class BOTAN_DLL Policy
       * Default is currently 1024 (insecure), should be 2048
       */
       virtual size_t minimum_dh_group_size() const;
-      
+
       /**
       * For ECDSA authenticated ciphersuites, the smallest key size the
       * client will accept.
       * This policy is currently only enforced on the server by the client.
       */
       virtual size_t minimum_ecdsa_group_size() const;
-      
+
       /**
       * Return the minimum ECDH group size we're willing to use
       * for key exchange
@@ -199,7 +199,7 @@ class BOTAN_DLL Policy
       * (or logging of) the peer's keys.
       */
       virtual void check_peer_key_acceptable(const Public_Key& public_key) const;
-      
+
       /**
       * If this function returns false, unknown SRP/PSK identifiers
       * will be rejected with an unknown_psk_identifier alert as soon
@@ -268,7 +268,7 @@ class BOTAN_DLL Policy
       * Return allowed ciphersuites, in order of preference
       */
       virtual std::vector<uint16_t> ciphersuite_list(Protocol_Version version,
-                                                   bool have_srp) const;
+            bool have_srp) const;
 
       /**
       * @return the default MTU for DTLS
@@ -307,30 +307,60 @@ class BOTAN_DLL NSA_Suite_B_128 : public Policy
    {
    public:
       std::vector<std::string> allowed_ciphers() const override
-         { return std::vector<std::string>({"AES-128/GCM"}); }
+         {
+         return std::vector<std::string>({"AES-128/GCM"});
+         }
 
       std::vector<std::string> allowed_signature_hashes() const override
-         { return std::vector<std::string>({"SHA-256"}); }
+         {
+         return std::vector<std::string>({"SHA-256"});
+         }
 
       std::vector<std::string> allowed_macs() const override
-         { return std::vector<std::string>({"AEAD"}); }
+         {
+         return std::vector<std::string>({"AEAD"});
+         }
 
       std::vector<std::string> allowed_key_exchange_methods() const override
-         { return std::vector<std::string>({"ECDH"}); }
+         {
+         return std::vector<std::string>({"ECDH"});
+         }
 
       std::vector<std::string> allowed_signature_methods() const override
-         { return std::vector<std::string>({"ECDSA"}); }
+         {
+         return std::vector<std::string>({"ECDSA"});
+         }
 
       std::vector<std::string> allowed_ecc_curves() const override
-         { return std::vector<std::string>({"secp256r1"}); }
+         {
+         return std::vector<std::string>({"secp256r1"});
+         }
 
-      size_t minimum_signature_strength() const override { return 128; }
+      size_t minimum_signature_strength() const override
+         {
+         return 128;
+         }
 
-      bool allow_tls10()  const override { return false; }
-      bool allow_tls11()  const override { return false; }
-      bool allow_tls12()  const override { return true;  }
-      bool allow_dtls10() const override { return false; }
-      bool allow_dtls12() const override { return false; }
+      bool allow_tls10()  const override
+         {
+         return false;
+         }
+      bool allow_tls11()  const override
+         {
+         return false;
+         }
+      bool allow_tls12()  const override
+         {
+         return true;
+         }
+      bool allow_dtls10() const override
+         {
+         return false;
+         }
+      bool allow_dtls12() const override
+         {
+         return false;
+         }
    };
 
 /**
@@ -369,23 +399,65 @@ class BOTAN_DLL BSI_TR_02102_2 : public Policy
          return std::vector<std::string>({"brainpool512r1", "brainpool384r1", "brainpool256r1", "secp384r1", "secp256r1"});
          }
 
-      bool allow_insecure_renegotiation() const override { return false; }
-      bool allow_server_initiated_renegotiation() const override { return true; }
-      bool server_uses_own_ciphersuite_preferences() const override { return true; }
-      bool negotiate_encrypt_then_mac() const override { return true; }
+      bool allow_insecure_renegotiation() const override
+         {
+         return false;
+         }
+      bool allow_server_initiated_renegotiation() const override
+         {
+         return true;
+         }
+      bool server_uses_own_ciphersuite_preferences() const override
+         {
+         return true;
+         }
+      bool negotiate_encrypt_then_mac() const override
+         {
+         return true;
+         }
 
-      size_t minimum_rsa_bits() const override { return 2000; }
-      size_t minimum_dh_group_size() const override { return 2000; }
-      size_t minimum_dsa_group_size() const override { return 2000; }
+      size_t minimum_rsa_bits() const override
+         {
+         return 2000;
+         }
+      size_t minimum_dh_group_size() const override
+         {
+         return 2000;
+         }
+      size_t minimum_dsa_group_size() const override
+         {
+         return 2000;
+         }
 
-      size_t minimum_ecdh_group_size() const override { return 250; }
-      size_t minimum_ecdsa_group_size() const override { return 250; }
+      size_t minimum_ecdh_group_size() const override
+         {
+         return 250;
+         }
+      size_t minimum_ecdsa_group_size() const override
+         {
+         return 250;
+         }
 
-      bool allow_tls10()  const override { return false; }
-      bool allow_tls11()  const override { return false; }
-      bool allow_tls12()  const override { return true;  }
-      bool allow_dtls10() const override { return false; }
-      bool allow_dtls12() const override { return false; }
+      bool allow_tls10()  const override
+         {
+         return false;
+         }
+      bool allow_tls11()  const override
+         {
+         return false;
+         }
+      bool allow_tls12()  const override
+         {
+         return true;
+         }
+      bool allow_dtls10() const override
+         {
+         return false;
+         }
+      bool allow_dtls12() const override
+         {
+         return false;
+         }
    };
 
 /**
@@ -395,13 +467,30 @@ class BOTAN_DLL Datagram_Policy : public Policy
    {
    public:
       std::vector<std::string> allowed_macs() const override
-         { return std::vector<std::string>({"AEAD"}); }
-            
-      bool allow_tls10()  const override { return false; }
-      bool allow_tls11()  const override { return false; }
-      bool allow_tls12()  const override { return false; }
-      bool allow_dtls10() const override { return false; }
-      bool allow_dtls12() const override { return true;  }
+         {
+         return std::vector<std::string>({"AEAD"});
+         }
+
+      bool allow_tls10()  const override
+         {
+         return false;
+         }
+      bool allow_tls11()  const override
+         {
+         return false;
+         }
+      bool allow_tls12()  const override
+         {
+         return false;
+         }
+      bool allow_dtls10() const override
+         {
+         return false;
+         }
+      bool allow_dtls12() const override
+         {
+         return true;
+         }
    };
 
 /*
@@ -434,94 +523,149 @@ class BOTAN_DLL Text_Policy : public Policy
    public:
 
       std::vector<std::string> allowed_ciphers() const override
-         { return get_list("ciphers", Policy::allowed_ciphers()); }
+         {
+         return get_list("ciphers", Policy::allowed_ciphers());
+         }
 
       std::vector<std::string> allowed_signature_hashes() const override
-         { return get_list("signature_hashes", Policy::allowed_signature_hashes()); }
+         {
+         return get_list("signature_hashes", Policy::allowed_signature_hashes());
+         }
 
       std::vector<std::string> allowed_macs() const override
-         { return get_list("macs", Policy::allowed_macs()); }
+         {
+         return get_list("macs", Policy::allowed_macs());
+         }
 
       std::vector<std::string> allowed_key_exchange_methods() const override
-         { return get_list("key_exchange_methods", Policy::allowed_key_exchange_methods()); }
+         {
+         return get_list("key_exchange_methods", Policy::allowed_key_exchange_methods());
+         }
 
       std::vector<std::string> allowed_signature_methods() const override
-         { return get_list("signature_methods", Policy::allowed_signature_methods()); }
+         {
+         return get_list("signature_methods", Policy::allowed_signature_methods());
+         }
 
       std::vector<std::string> allowed_ecc_curves() const override
-         { return get_list("ecc_curves", Policy::allowed_ecc_curves()); }
-      
+         {
+         return get_list("ecc_curves", Policy::allowed_ecc_curves());
+         }
+
       bool use_ecc_point_compression() const override
-         { return get_bool("use_ecc_point_compression", Policy::use_ecc_point_compression()); }
+         {
+         return get_bool("use_ecc_point_compression", Policy::use_ecc_point_compression());
+         }
 
       bool allow_tls10() const override
-         { return get_bool("allow_tls10", Policy::allow_tls10()); }
-      
+         {
+         return get_bool("allow_tls10", Policy::allow_tls10());
+         }
+
       bool allow_tls11() const override
-         { return get_bool("allow_tls11", Policy::allow_tls11()); }
-      
+         {
+         return get_bool("allow_tls11", Policy::allow_tls11());
+         }
+
       bool allow_tls12() const override
-         { return get_bool("allow_tls12", Policy::allow_tls12()); }
-      
+         {
+         return get_bool("allow_tls12", Policy::allow_tls12());
+         }
+
       bool allow_dtls10() const override
-         { return get_bool("allow_dtls10", Policy::allow_dtls10()); }
-      
+         {
+         return get_bool("allow_dtls10", Policy::allow_dtls10());
+         }
+
       bool allow_dtls12() const override
-         { return get_bool("allow_dtls12", Policy::allow_dtls12()); }
+         {
+         return get_bool("allow_dtls12", Policy::allow_dtls12());
+         }
 
       bool allow_insecure_renegotiation() const override
-         { return get_bool("allow_insecure_renegotiation", Policy::allow_insecure_renegotiation()); }
+         {
+         return get_bool("allow_insecure_renegotiation", Policy::allow_insecure_renegotiation());
+         }
 
       bool include_time_in_hello_random() const override
-         { return get_bool("include_time_in_hello_random", Policy::include_time_in_hello_random()); }
+         {
+         return get_bool("include_time_in_hello_random", Policy::include_time_in_hello_random());
+         }
 
       bool allow_server_initiated_renegotiation() const override
-         { return get_bool("allow_server_initiated_renegotiation", Policy::allow_server_initiated_renegotiation()); }
+         {
+         return get_bool("allow_server_initiated_renegotiation", Policy::allow_server_initiated_renegotiation());
+         }
 
       bool server_uses_own_ciphersuite_preferences() const override
-         { return get_bool("server_uses_own_ciphersuite_preferences", Policy::server_uses_own_ciphersuite_preferences()); }
+         {
+         return get_bool("server_uses_own_ciphersuite_preferences", Policy::server_uses_own_ciphersuite_preferences());
+         }
 
       bool negotiate_encrypt_then_mac() const override
-         { return get_bool("negotiate_encrypt_then_mac", Policy::negotiate_encrypt_then_mac()); }
+         {
+         return get_bool("negotiate_encrypt_then_mac", Policy::negotiate_encrypt_then_mac());
+         }
 
       std::string dh_group() const override
-         { return get_str("dh_group", Policy::dh_group()); }
+         {
+         return get_str("dh_group", Policy::dh_group());
+         }
 
       size_t minimum_ecdh_group_size() const override
-         { return get_len("minimum_ecdh_group_size", Policy::minimum_ecdh_group_size()); }
+         {
+         return get_len("minimum_ecdh_group_size", Policy::minimum_ecdh_group_size());
+         }
 
       size_t minimum_ecdsa_group_size() const override
-         { return get_len("minimum_ecdsa_group_size", Policy::minimum_ecdsa_group_size()); }
+         {
+         return get_len("minimum_ecdsa_group_size", Policy::minimum_ecdsa_group_size());
+         }
 
       size_t minimum_dh_group_size() const override
-         { return get_len("minimum_dh_group_size", Policy::minimum_dh_group_size()); }
+         {
+         return get_len("minimum_dh_group_size", Policy::minimum_dh_group_size());
+         }
 
       size_t minimum_rsa_bits() const override
-         { return get_len("minimum_rsa_bits", Policy::minimum_rsa_bits()); }
+         {
+         return get_len("minimum_rsa_bits", Policy::minimum_rsa_bits());
+         }
 
       size_t minimum_signature_strength() const override
-         { return get_len("minimum_signature_strength", Policy::minimum_signature_strength()); }
+         {
+         return get_len("minimum_signature_strength", Policy::minimum_signature_strength());
+         }
 
       bool hide_unknown_users() const override
-         { return get_bool("hide_unknown_users", Policy::hide_unknown_users()); }
+         {
+         return get_bool("hide_unknown_users", Policy::hide_unknown_users());
+         }
 
       uint32_t session_ticket_lifetime() const override
-         { return static_cast<uint32_t>(get_len("session_ticket_lifetime", Policy::session_ticket_lifetime())); }
+         {
+         return static_cast<uint32_t>(get_len("session_ticket_lifetime", Policy::session_ticket_lifetime()));
+         }
 
       bool send_fallback_scsv(Protocol_Version version) const override
-         { return get_bool("send_fallback_scsv", false) ? Policy::send_fallback_scsv(version) : false; }
+         {
+         return get_bool("send_fallback_scsv", false) ? Policy::send_fallback_scsv(version) : false;
+         }
 
       std::vector<uint16_t> srtp_profiles() const override
          {
          std::vector<uint16_t> r;
-         for(auto&& p : get_list("srtp_profiles", std::vector<std::string>()))
+         for(auto && p : get_list("srtp_profiles", std::vector<std::string>()))
             {
             r.push_back(to_u32bit(p));
             }
          return r;
          }
 
-      void set(const std::string& k, const std::string& v) { m_kv[k] = v; }
+      void set(const std::string& k, const std::string& v)
+         {
+         m_kv[k] = v;
+         }
 
       explicit Text_Policy(const std::string& s)
          {
@@ -540,7 +684,9 @@ class BOTAN_DLL Text_Policy : public Policy
          const std::string v = get_str(key);
 
          if(v.empty())
+            {
             return def;
+            }
 
          return split_on(v, ' ');
          }
@@ -550,7 +696,9 @@ class BOTAN_DLL Text_Policy : public Policy
          const std::string v = get_str(key);
 
          if(v.empty())
+            {
             return def;
+            }
 
          return to_u32bit(v);
          }
@@ -560,21 +708,31 @@ class BOTAN_DLL Text_Policy : public Policy
          const std::string v = get_str(key);
 
          if(v.empty())
+            {
             return def;
+            }
 
          if(v == "true" || v == "True")
+            {
             return true;
+            }
          else if(v == "false" || v == "False")
+            {
             return false;
+            }
          else
+            {
             throw Exception("Invalid boolean '" + v + "'");
+            }
          }
 
       std::string get_str(const std::string& key, const std::string& def = "") const
          {
          auto i = m_kv.find(key);
          if(i == m_kv.end())
+            {
             return def;
+            }
 
          return i->second;
          }

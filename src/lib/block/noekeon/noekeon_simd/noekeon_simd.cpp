@@ -70,7 +70,7 @@ void Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const
    const SIMD_32 K2 = SIMD_32::splat(m_EK[2]);
    const SIMD_32 K3 = SIMD_32::splat(m_EK[3]);
 
-   SIMD_32 A0 = SIMD_32::load_be(in     );
+   SIMD_32 A0 = SIMD_32::load_be(in);
    SIMD_32 A1 = SIMD_32::load_be(in + 16);
    SIMD_32 A2 = SIMD_32::load_be(in + 32);
    SIMD_32 A3 = SIMD_32::load_be(in + 48);
@@ -115,7 +115,7 @@ void Noekeon::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const
    const SIMD_32 K2 = SIMD_32::splat(m_DK[2]);
    const SIMD_32 K3 = SIMD_32::splat(m_DK[3]);
 
-   SIMD_32 A0 = SIMD_32::load_be(in     );
+   SIMD_32 A0 = SIMD_32::load_be(in);
    SIMD_32 A1 = SIMD_32::load_be(in + 16);
    SIMD_32 A2 = SIMD_32::load_be(in + 32);
    SIMD_32 A3 = SIMD_32::load_be(in + 48);
@@ -126,7 +126,7 @@ void Noekeon::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const
       {
       NOK_SIMD_THETA(A0, A1, A2, A3, K0, K1, K2, K3);
 
-      A0 ^= SIMD_32::splat(RC[16-i]);
+      A0 ^= SIMD_32::splat(RC[16 - i]);
 
       A1.rotate_left(1);
       A2.rotate_left(5);

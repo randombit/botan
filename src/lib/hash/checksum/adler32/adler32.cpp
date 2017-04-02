@@ -20,22 +20,38 @@ void adler32_update(const uint8_t input[], size_t length,
 
    while(length >= 16)
       {
-      S1x += input[ 0]; S2x += S1x;
-      S1x += input[ 1]; S2x += S1x;
-      S1x += input[ 2]; S2x += S1x;
-      S1x += input[ 3]; S2x += S1x;
-      S1x += input[ 4]; S2x += S1x;
-      S1x += input[ 5]; S2x += S1x;
-      S1x += input[ 6]; S2x += S1x;
-      S1x += input[ 7]; S2x += S1x;
-      S1x += input[ 8]; S2x += S1x;
-      S1x += input[ 9]; S2x += S1x;
-      S1x += input[10]; S2x += S1x;
-      S1x += input[11]; S2x += S1x;
-      S1x += input[12]; S2x += S1x;
-      S1x += input[13]; S2x += S1x;
-      S1x += input[14]; S2x += S1x;
-      S1x += input[15]; S2x += S1x;
+      S1x += input[ 0];
+      S2x += S1x;
+      S1x += input[ 1];
+      S2x += S1x;
+      S1x += input[ 2];
+      S2x += S1x;
+      S1x += input[ 3];
+      S2x += S1x;
+      S1x += input[ 4];
+      S2x += S1x;
+      S1x += input[ 5];
+      S2x += S1x;
+      S1x += input[ 6];
+      S2x += S1x;
+      S1x += input[ 7];
+      S2x += S1x;
+      S1x += input[ 8];
+      S2x += S1x;
+      S1x += input[ 9];
+      S2x += S1x;
+      S1x += input[10];
+      S2x += S1x;
+      S1x += input[11];
+      S2x += S1x;
+      S1x += input[12];
+      S2x += S1x;
+      S1x += input[13];
+      S2x += S1x;
+      S1x += input[14];
+      S2x += S1x;
+      S1x += input[15];
+      S2x += S1x;
       input += 16;
       length -= 16;
       }

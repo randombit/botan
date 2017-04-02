@@ -36,7 +36,10 @@ class BOTAN_DLL SHAKE_128_Cipher final : public StreamCipher
       */
       void set_iv(const uint8_t iv[], size_t iv_len) override;
 
-      bool valid_iv_length(size_t iv_len) const override { return (iv_len == 0); }
+      bool valid_iv_length(size_t iv_len) const override
+         {
+         return (iv_len == 0);
+         }
 
       /**
       * In principle SHAKE can accept arbitrary length inputs, but this
@@ -48,8 +51,14 @@ class BOTAN_DLL SHAKE_128_Cipher final : public StreamCipher
          }
 
       void clear() override;
-      std::string name() const override { return "SHAKE-128"; }
-      StreamCipher* clone() const override { return new SHAKE_128_Cipher; }
+      std::string name() const override
+         {
+         return "SHAKE-128";
+         }
+      StreamCipher* clone() const override
+         {
+         return new SHAKE_128_Cipher;
+         }
 
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override;

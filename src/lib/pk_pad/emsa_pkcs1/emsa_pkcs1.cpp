@@ -13,28 +13,30 @@ namespace Botan {
 namespace {
 
 secure_vector<uint8_t> emsa3_encoding(const secure_vector<uint8_t>& msg,
-                                   size_t output_bits,
-                                   const uint8_t hash_id[],
-                                   size_t hash_id_length)
+                                      size_t output_bits,
+                                      const uint8_t hash_id[],
+                                      size_t hash_id_length)
    {
    size_t output_length = output_bits / 8;
    if(output_length < hash_id_length + msg.size() + 10)
+      {
       throw Encoding_Error("emsa3_encoding: Output length is too small");
+      }
 
    secure_vector<uint8_t> T(output_length);
    const size_t P_LENGTH = output_length - msg.size() - hash_id_length - 2;
 
    T[0] = 0x01;
    set_mem(&T[1], P_LENGTH, 0xFF);
-   T[P_LENGTH+1] = 0x00;
+   T[P_LENGTH + 1] = 0x00;
 
    if(hash_id_length > 0)
       {
       BOTAN_ASSERT_NONNULL(hash_id);
-      buffer_insert(T, P_LENGTH+2, hash_id, hash_id_length);
+      buffer_insert(T, P_LENGTH + 2, hash_id, hash_id_length);
       }
 
-   buffer_insert(T, output_length-msg.size(), msg.data(), msg.size());
+   buffer_insert(T, output_length - msg.size(), msg.data(), msg.size());
    return T;
    }
 
@@ -56,7 +58,9 @@ EMSA_PKCS1v15::encoding_of(const secure_vector<uint8_t>& msg,
                            RandomNumberGenerator&)
    {
    if(msg.size() != m_hash->output_length())
+      {
       throw Encoding_Error("EMSA_PKCS1v15::encoding_of: Bad input length");
+      }
 
    return emsa3_encoding(msg, output_bits,
                          m_hash_id.data(), m_hash_id.size());
@@ -67,7 +71,9 @@ bool EMSA_PKCS1v15::verify(const secure_vector<uint8_t>& coded,
                            size_t key_bits)
    {
    if(raw.size() != m_hash->output_length())
+      {
       return false;
+      }
 
    try
       {

@@ -19,7 +19,9 @@ SIV_Mode::SIV_Mode(BlockCipher* cipher) :
    m_cmac(new CMAC(cipher))
    {
    if(cipher->block_size() != 16)
+      {
       throw Invalid_Argument("SIV requires a 128 bit block cipher");
+      }
    }
 
 void SIV_Mode::clear()
@@ -73,7 +75,9 @@ void SIV_Mode::key_schedule(const uint8_t key[], size_t length)
 void SIV_Mode::set_associated_data_n(size_t n, const uint8_t ad[], size_t length)
    {
    if(n >= m_ad_macs.size())
-      m_ad_macs.resize(n+1);
+      {
+      m_ad_macs.resize(n + 1);
+      }
 
    m_ad_macs[n] = m_cmac->process(ad, length);
    }
@@ -81,12 +85,18 @@ void SIV_Mode::set_associated_data_n(size_t n, const uint8_t ad[], size_t length
 void SIV_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
+      {
       throw Invalid_IV_Length(name(), nonce_len);
+      }
 
    if(nonce_len)
+      {
       m_nonce = m_cmac->process(nonce, nonce_len);
+      }
    else
+      {
       m_nonce.clear();
+      }
 
    m_msg_buf.clear();
    }
@@ -174,7 +184,9 @@ void SIV_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    secure_vector<uint8_t> T = S2V(buffer.data() + offset, buffer.size() - offset - V.size());
 
    if(T != V)
+      {
       throw Integrity_Failure("SIV tag check failed");
+      }
 
    buffer.resize(buffer.size() - tag_size());
    }

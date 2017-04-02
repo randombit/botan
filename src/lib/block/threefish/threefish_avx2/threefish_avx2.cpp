@@ -21,15 +21,15 @@ inline void interleave_epi64(__m256i& X0, __m256i& X1)
    const __m256i T0 = _mm256_unpacklo_epi64(X0, X1);
    const __m256i T1 = _mm256_unpackhi_epi64(X0, X1);
 
-   X0 = _mm256_permute4x64_epi64(T0, _MM_SHUFFLE(3,1,2,0));
-   X1 = _mm256_permute4x64_epi64(T1, _MM_SHUFFLE(3,1,2,0));
+   X0 = _mm256_permute4x64_epi64(T0, _MM_SHUFFLE(3, 1, 2, 0));
+   X1 = _mm256_permute4x64_epi64(T1, _MM_SHUFFLE(3, 1, 2, 0));
    }
 
 BOTAN_FUNC_ISA("avx2")
 inline void deinterleave_epi64(__m256i& X0, __m256i& X1)
    {
-   const __m256i T0 = _mm256_permute4x64_epi64(X0, _MM_SHUFFLE(3,1,2,0));
-   const __m256i T1 = _mm256_permute4x64_epi64(X1, _MM_SHUFFLE(3,1,2,0));
+   const __m256i T0 = _mm256_permute4x64_epi64(X0, _MM_SHUFFLE(3, 1, 2, 0));
+   const __m256i T1 = _mm256_permute4x64_epi64(X1, _MM_SHUFFLE(3, 1, 2, 0));
 
    X0 = _mm256_unpacklo_epi64(T0, T1);
    X1 = _mm256_unpackhi_epi64(T0, T1);
@@ -60,13 +60,13 @@ inline void rotate_keys(__m256i& R0, __m256i& R1, __m256i R2)
      X0 is X2 from the last round
      X1 becomes (X0[4],X1[1:3])
      X2 becomes (X1[4],X2[1:3])
- 
-   Uses 3 permutes and 2 blends, is there a faster way?   
+
+   Uses 3 permutes and 2 blends, is there a faster way?
    */
-   __m256i T0 = _mm256_permute4x64_epi64(R0, _MM_SHUFFLE(0,0,0,0));
-   __m256i T1 = _mm256_permute4x64_epi64(R1, _MM_SHUFFLE(0,3,2,1));
-   __m256i T2 = _mm256_permute4x64_epi64(R2, _MM_SHUFFLE(0,3,2,1));
- 
+   __m256i T0 = _mm256_permute4x64_epi64(R0, _MM_SHUFFLE(0, 0, 0, 0));
+   __m256i T1 = _mm256_permute4x64_epi64(R1, _MM_SHUFFLE(0, 3, 2, 1));
+   __m256i T2 = _mm256_permute4x64_epi64(R2, _MM_SHUFFLE(0, 3, 2, 1));
+
    R0 = _mm256_blend_epi32(T1, T0, 0xC0);
    R1 = _mm256_blend_epi32(T2, T1, 0xC0);
    }
@@ -80,14 +80,14 @@ void Threefish_512::avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blo
    const uint64_t* K = &get_K()[0];
    const uint64_t* T_64 = &get_T()[0];
 
-   const __m256i ROTATE_1 = _mm256_set_epi64x(37,19,36,46);
-   const __m256i ROTATE_2 = _mm256_set_epi64x(42,14,27,33);
-   const __m256i ROTATE_3 = _mm256_set_epi64x(39,36,49,17);
-   const __m256i ROTATE_4 = _mm256_set_epi64x(56,54, 9,44);
-   const __m256i ROTATE_5 = _mm256_set_epi64x(24,34,30,39);
-   const __m256i ROTATE_6 = _mm256_set_epi64x(17,10,50,13);
-   const __m256i ROTATE_7 = _mm256_set_epi64x(43,39,29,25);
-   const __m256i ROTATE_8 = _mm256_set_epi64x(22,56,35, 8);
+   const __m256i ROTATE_1 = _mm256_set_epi64x(37, 19, 36, 46);
+   const __m256i ROTATE_2 = _mm256_set_epi64x(42, 14, 27, 33);
+   const __m256i ROTATE_3 = _mm256_set_epi64x(39, 36, 49, 17);
+   const __m256i ROTATE_4 = _mm256_set_epi64x(56, 54, 9, 44);
+   const __m256i ROTATE_5 = _mm256_set_epi64x(24, 34, 30, 39);
+   const __m256i ROTATE_6 = _mm256_set_epi64x(17, 10, 50, 13);
+   const __m256i ROTATE_7 = _mm256_set_epi64x(43, 39, 29, 25);
+   const __m256i ROTATE_8 = _mm256_set_epi64x(22, 56, 35, 8);
 
 #define THREEFISH_ROUND(X0, X1, SHL)                                                \
    do {                                                                             \
@@ -178,7 +178,7 @@ void Threefish_512::avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blo
 
    const __m256i* in_mm = reinterpret_cast<const __m256i*>(in);
    __m256i* out_mm = reinterpret_cast<__m256i*>(out);
-   
+
    while(blocks >= 2)
       {
       __m256i X0 = _mm256_loadu_si256(in_mm++);
@@ -193,15 +193,15 @@ void Threefish_512::avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blo
 
       THREEFISH_INJECT_KEY_2(X0, X1, X2, X3, 0, K1, K2, 2, 3);
 
-      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3,  1, K2,K0,K1, 1, 2, 3);
-      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3,  3, K1,K2,K0, 2, 3, 1);
-      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3,  5, K0,K1,K2, 3, 1, 2);
-      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3,  7, K2,K0,K1, 1, 2, 3);
-      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3,  9, K1,K2,K0, 2, 3, 1);
-      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3, 11, K0,K1,K2, 3, 1, 2);
-      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3, 13, K2,K0,K1, 1, 2, 3);
-      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3, 15, K1,K2,K0, 2, 3, 1);
-      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3, 17, K0,K1,K2, 3, 1, 2);
+      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3,  1, K2, K0, K1, 1, 2, 3);
+      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3,  3, K1, K2, K0, 2, 3, 1);
+      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3,  5, K0, K1, K2, 3, 1, 2);
+      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3,  7, K2, K0, K1, 1, 2, 3);
+      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3,  9, K1, K2, K0, 2, 3, 1);
+      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3, 11, K0, K1, K2, 3, 1, 2);
+      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3, 13, K2, K0, K1, 1, 2, 3);
+      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3, 15, K1, K2, K0, 2, 3, 1);
+      THREEFISH_ENC_2_8_ROUNDS(X0, X1, X2, X3, 17, K0, K1, K2, 3, 1, 2);
 
       deinterleave_epi64(X0, X1);
       deinterleave_epi64(X2, X3);
@@ -213,7 +213,7 @@ void Threefish_512::avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blo
 
       blocks -= 2;
       }
-   
+
    for(size_t i = 0; i != blocks; ++i)
       {
       __m256i X0 = _mm256_loadu_si256(in_mm++);
@@ -225,15 +225,15 @@ void Threefish_512::avx2_encrypt_n(const uint8_t in[], uint8_t out[], size_t blo
 
       THREEFISH_INJECT_KEY(X0, X1, 0, K1, K2, 2, 3);
 
-      THREEFISH_ENC_8_ROUNDS(X0, X1,  1, K2,K0,K1, 1, 2, 3);
-      THREEFISH_ENC_8_ROUNDS(X0, X1,  3, K1,K2,K0, 2, 3, 1);
-      THREEFISH_ENC_8_ROUNDS(X0, X1,  5, K0,K1,K2, 3, 1, 2);
-      THREEFISH_ENC_8_ROUNDS(X0, X1,  7, K2,K0,K1, 1, 2, 3);
-      THREEFISH_ENC_8_ROUNDS(X0, X1,  9, K1,K2,K0, 2, 3, 1);
-      THREEFISH_ENC_8_ROUNDS(X0, X1, 11, K0,K1,K2, 3, 1, 2);
-      THREEFISH_ENC_8_ROUNDS(X0, X1, 13, K2,K0,K1, 1, 2, 3);
-      THREEFISH_ENC_8_ROUNDS(X0, X1, 15, K1,K2,K0, 2, 3, 1);
-      THREEFISH_ENC_8_ROUNDS(X0, X1, 17, K0,K1,K2, 3, 1, 2);
+      THREEFISH_ENC_8_ROUNDS(X0, X1,  1, K2, K0, K1, 1, 2, 3);
+      THREEFISH_ENC_8_ROUNDS(X0, X1,  3, K1, K2, K0, 2, 3, 1);
+      THREEFISH_ENC_8_ROUNDS(X0, X1,  5, K0, K1, K2, 3, 1, 2);
+      THREEFISH_ENC_8_ROUNDS(X0, X1,  7, K2, K0, K1, 1, 2, 3);
+      THREEFISH_ENC_8_ROUNDS(X0, X1,  9, K1, K2, K0, 2, 3, 1);
+      THREEFISH_ENC_8_ROUNDS(X0, X1, 11, K0, K1, K2, 3, 1, 2);
+      THREEFISH_ENC_8_ROUNDS(X0, X1, 13, K2, K0, K1, 1, 2, 3);
+      THREEFISH_ENC_8_ROUNDS(X0, X1, 15, K1, K2, K0, 2, 3, 1);
+      THREEFISH_ENC_8_ROUNDS(X0, X1, 17, K0, K1, K2, 3, 1, 2);
 
       deinterleave_epi64(X0, X1);
 
@@ -255,14 +255,14 @@ void Threefish_512::avx2_decrypt_n(const uint8_t in[], uint8_t out[], size_t blo
    const uint64_t* K = &get_K()[0];
    const uint64_t* T_64 = &get_T()[0];
 
-   const __m256i ROTATE_1 = _mm256_set_epi64x(37,19,36,46);
-   const __m256i ROTATE_2 = _mm256_set_epi64x(42,14,27,33);
-   const __m256i ROTATE_3 = _mm256_set_epi64x(39,36,49,17);
-   const __m256i ROTATE_4 = _mm256_set_epi64x(56,54, 9,44);
-   const __m256i ROTATE_5 = _mm256_set_epi64x(24,34,30,39);
-   const __m256i ROTATE_6 = _mm256_set_epi64x(17,10,50,13);
-   const __m256i ROTATE_7 = _mm256_set_epi64x(43,39,29,25);
-   const __m256i ROTATE_8 = _mm256_set_epi64x(22,56,35, 8);
+   const __m256i ROTATE_1 = _mm256_set_epi64x(37, 19, 36, 46);
+   const __m256i ROTATE_2 = _mm256_set_epi64x(42, 14, 27, 33);
+   const __m256i ROTATE_3 = _mm256_set_epi64x(39, 36, 49, 17);
+   const __m256i ROTATE_4 = _mm256_set_epi64x(56, 54, 9, 44);
+   const __m256i ROTATE_5 = _mm256_set_epi64x(24, 34, 30, 39);
+   const __m256i ROTATE_6 = _mm256_set_epi64x(17, 10, 50, 13);
+   const __m256i ROTATE_7 = _mm256_set_epi64x(43, 39, 29, 25);
+   const __m256i ROTATE_8 = _mm256_set_epi64x(22, 56, 35, 8);
 
 #define THREEFISH_ROUND(X0, X1, SHR)                                                \
    do {                                                                             \
@@ -375,15 +375,15 @@ void Threefish_512::avx2_decrypt_n(const uint8_t in[], uint8_t out[], size_t blo
       interleave_epi64(X0, X1);
       interleave_epi64(X2, X3);
 
-      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 17, K8,K0,K1, 3, 1, 2);
-      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 15, K6,K7,K8, 2, 3, 1);
-      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 13, K4,K5,K6, 1, 2, 3);
-      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 11, K2,K3,K4, 3, 1, 2);
-      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 9, K0,K1,K2, 2, 3, 1);
-      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 7, K7,K8,K0, 1, 2, 3);
-      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 5, K5,K6,K7, 3, 1, 2);
-      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 3, K3,K4,K5, 2, 3, 1);
-      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 1, K1,K2,K3, 1, 2, 3);
+      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 17, K8, K0, K1, 3, 1, 2);
+      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 15, K6, K7, K8, 2, 3, 1);
+      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 13, K4, K5, K6, 1, 2, 3);
+      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 11, K2, K3, K4, 3, 1, 2);
+      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 9, K0, K1, K2, 2, 3, 1);
+      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 7, K7, K8, K0, 1, 2, 3);
+      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 5, K5, K6, K7, 3, 1, 2);
+      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 3, K3, K4, K5, 2, 3, 1);
+      THREEFISH_DEC_2_8_ROUNDS(X0, X1, X2, X3, 1, K1, K2, K3, 1, 2, 3);
 
       THREEFISH_INJECT_KEY_2(X0, X1, X2, X3, 0, K0, K1, 2, 3);
 
@@ -397,7 +397,7 @@ void Threefish_512::avx2_decrypt_n(const uint8_t in[], uint8_t out[], size_t blo
 
       blocks -= 2;
       }
-   
+
    for(size_t i = 0; i != blocks; ++i)
       {
       __m256i X0 = _mm256_loadu_si256(in_mm++);
@@ -407,15 +407,15 @@ void Threefish_512::avx2_decrypt_n(const uint8_t in[], uint8_t out[], size_t blo
 
       interleave_epi64(X0, X1);
 
-      THREEFISH_DEC_8_ROUNDS(X0, X1, 17, K8,K0,K1, 3, 1, 2);
-      THREEFISH_DEC_8_ROUNDS(X0, X1, 15, K6,K7,K8, 2, 3, 1);
-      THREEFISH_DEC_8_ROUNDS(X0, X1, 13, K4,K5,K6, 1, 2, 3);
-      THREEFISH_DEC_8_ROUNDS(X0, X1, 11, K2,K3,K4, 3, 1, 2);
-      THREEFISH_DEC_8_ROUNDS(X0, X1, 9, K0,K1,K2, 2, 3, 1);
-      THREEFISH_DEC_8_ROUNDS(X0, X1, 7, K7,K8,K0, 1, 2, 3);
-      THREEFISH_DEC_8_ROUNDS(X0, X1, 5, K5,K6,K7, 3, 1, 2);
-      THREEFISH_DEC_8_ROUNDS(X0, X1, 3, K3,K4,K5, 2, 3, 1);
-      THREEFISH_DEC_8_ROUNDS(X0, X1, 1, K1,K2,K3, 1, 2, 3);
+      THREEFISH_DEC_8_ROUNDS(X0, X1, 17, K8, K0, K1, 3, 1, 2);
+      THREEFISH_DEC_8_ROUNDS(X0, X1, 15, K6, K7, K8, 2, 3, 1);
+      THREEFISH_DEC_8_ROUNDS(X0, X1, 13, K4, K5, K6, 1, 2, 3);
+      THREEFISH_DEC_8_ROUNDS(X0, X1, 11, K2, K3, K4, 3, 1, 2);
+      THREEFISH_DEC_8_ROUNDS(X0, X1, 9, K0, K1, K2, 2, 3, 1);
+      THREEFISH_DEC_8_ROUNDS(X0, X1, 7, K7, K8, K0, 1, 2, 3);
+      THREEFISH_DEC_8_ROUNDS(X0, X1, 5, K5, K6, K7, 3, 1, 2);
+      THREEFISH_DEC_8_ROUNDS(X0, X1, 3, K3, K4, K5, 2, 3, 1);
+      THREEFISH_DEC_8_ROUNDS(X0, X1, 1, K1, K2, K3, 1, 2, 3);
 
       THREEFISH_INJECT_KEY(X0, X1, 0, K0, K1, 2, 3);
 

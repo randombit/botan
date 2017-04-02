@@ -20,7 +20,7 @@ BigInt square(const BigInt& x)
    {
    const size_t x_sw = x.sig_words();
 
-   BigInt z(BigInt::Positive, round_up(2*x_sw, 16));
+   BigInt z(BigInt::Positive, round_up(2 * x_sw, 16));
    secure_vector<word> workspace(z.size());
 
    bigint_sqr(z.mutable_data(), z.size(),
@@ -35,11 +35,15 @@ BigInt square(const BigInt& x)
 BigInt mul_add(const BigInt& a, const BigInt& b, const BigInt& c)
    {
    if(c.is_negative() || c.is_zero())
+      {
       throw Invalid_Argument("mul_add: Third argument must be > 0");
+      }
 
    BigInt::Sign sign = BigInt::Positive;
    if(a.sign() != b.sign())
+      {
       sign = BigInt::Negative;
+      }
 
    BigInt r(sign, std::max(a.size() + b.size(), c.sig_words()) + 1);
    secure_vector<word> workspace(r.size());
@@ -57,7 +61,9 @@ BigInt mul_add(const BigInt& a, const BigInt& b, const BigInt& c)
 BigInt sub_mul(const BigInt& a, const BigInt& b, const BigInt& c)
    {
    if(a.is_negative() || b.is_negative())
+      {
       throw Invalid_Argument("sub_mul: First two arguments must be >= 0");
+      }
 
    BigInt r = a;
    r -= b;
@@ -71,7 +77,9 @@ BigInt sub_mul(const BigInt& a, const BigInt& b, const BigInt& c)
 BigInt mul_sub(const BigInt& a, const BigInt& b, const BigInt& c)
    {
    if(c.is_negative() || c.is_zero())
+      {
       throw Invalid_Argument("mul_sub: Third argument must be > 0");
+      }
 
    BigInt r = a;
    r *= b;

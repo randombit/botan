@@ -16,41 +16,65 @@ std::string key_constraints_to_string(Key_Constraints constraints)
    std::vector<std::string> str;
 
    if(constraints == NO_CONSTRAINTS)
+      {
       return "no_constraints";
+      }
 
    if(constraints & DIGITAL_SIGNATURE)
+      {
       str.push_back("digital_signature");
+      }
 
    if(constraints & NON_REPUDIATION)
+      {
       str.push_back("non_repudiation");
+      }
 
    if(constraints & KEY_ENCIPHERMENT)
+      {
       str.push_back("key_encipherment");
+      }
 
    if(constraints & DATA_ENCIPHERMENT)
+      {
       str.push_back("data_encipherment");
+      }
 
    if(constraints & KEY_AGREEMENT)
+      {
       str.push_back("key_agreement");
+      }
 
    if(constraints & KEY_CERT_SIGN)
+      {
       str.push_back("key_cert_sign");
+      }
 
    if(constraints & CRL_SIGN)
+      {
       str.push_back("crl_sign");
+      }
 
    if(constraints & ENCIPHER_ONLY)
+      {
       str.push_back("encipher_only");
+      }
 
    if(constraints & DECIPHER_ONLY)
+      {
       str.push_back("decipher_only");
+      }
 
    // Not 0 (checked at start) but nothing matched above!
    if(str.empty())
+      {
       return "other_unknown_constraints";
+      }
 
    if(str.size() == 1)
+      {
       return str[0];
+      }
 
    std::string out;
    for(size_t i = 0; i < str.size() - 1; ++i)
@@ -67,7 +91,7 @@ std::string key_constraints_to_string(Key_Constraints constraints)
 * Make sure the given key constraints are permitted for the given key type
 */
 void verify_cert_constraints_valid_for_key_type(const Public_Key& pub_key,
-                                                      Key_Constraints constraints)
+      Key_Constraints constraints)
    {
    const std::string name = pub_key.algo_name();
 

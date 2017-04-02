@@ -19,15 +19,15 @@
 #include <botan/ecdh.h>
 
 #if defined(BOTAN_HAS_CURVE_25519)
-  #include <botan/curve25519.h>
+   #include <botan/curve25519.h>
 #endif
 
 #if defined(BOTAN_HAS_CECPQ1)
-  #include <botan/cecpq1.h>
+   #include <botan/cecpq1.h>
 #endif
 
 #if defined(BOTAN_HAS_SRP6)
-  #include <botan/srp6.h>
+   #include <botan/srp6.h>
 #endif
 
 namespace Botan {
@@ -38,11 +38,11 @@ namespace TLS {
 * Create a new Server Key Exchange message
 */
 Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
-                                         Handshake_State& state,
-                                         const Policy& policy,
-                                         Credentials_Manager& creds,
-                                         RandomNumberGenerator& rng,
-                                         const Private_Key* signing_key)
+      Handshake_State& state,
+      const Policy& policy,
+      Credentials_Manager& creds,
+      RandomNumberGenerator& rng,
+      const Private_Key* signing_key)
    {
    const std::string hostname = state.client_hello()->sni_hostname();
    const std::string kex_algo = state.ciphersuite().kex_algo();
@@ -70,7 +70,9 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          state.client_hello()->supported_ecc_curves();
 
       if(curves.empty())
+         {
          throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
+         }
 
       const std::string curve_name = policy.choose_curve(curves);
 
@@ -80,7 +82,9 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       const uint16_t named_curve_id = Supported_Elliptic_Curves::name_to_curve_id(curve_name);
       if(named_curve_id == 0)
+         {
          throw Internal_Error("TLS does not support ECC with " + curve_name);
+         }
 
       std::vector<uint8_t> ecdh_public_val;
 
@@ -101,8 +105,8 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
          // follow client's preference for point compression
          ecdh_public_val = ecdh->public_value(
-            state.client_hello()->prefers_compressed_ec_points() ?
-            PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED);
+                              state.client_hello()->prefers_compressed_ec_points() ?
+                              PointGFp::COMPRESSED : PointGFp::UNCOMPRESSED);
 
          m_kex_key.reset(ecdh.release());
          }
@@ -180,9 +184,9 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 * Deserialize a Server Key Exchange message
 */
 Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
-                                         const std::string& kex_algo,
-                                         const std::string& sig_algo,
-                                         Protocol_Version version)
+      const std::string& kex_algo,
+      const std::string& sig_algo,
+      Protocol_Version version)
    {
    TLS_Data_Reader reader("ServerKeyExchange", buf);
 
@@ -227,7 +231,9 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
       reader.get_range<uint8_t>(2, 1, 65535);
       }
    else if(kex_algo != "PSK")
+      {
       throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " + kex_algo);
+      }
 
    m_params.assign(buf.data(), buf.data() + reader.read_so_far());
 

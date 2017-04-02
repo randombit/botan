@@ -46,7 +46,7 @@ inline BlockCipher* get_block_cipher(const std::string& algo_spec,
 
 BOTAN_DEPRECATED("Use BlockCipher::create_or_throw")
 inline std::unique_ptr<BlockCipher> make_block_cipher(const std::string& algo_spec,
-                                                      const std::string& provider = "")
+      const std::string& provider = "")
    {
    return BlockCipher::create_or_throw(algo_spec, provider);
    }
@@ -73,7 +73,7 @@ inline StreamCipher* get_stream_cipher(const std::string& algo_spec,
 
 BOTAN_DEPRECATED("Use StreamCipher::create_or_throw")
 inline std::unique_ptr<StreamCipher> make_stream_cipher(const std::string& algo_spec,
-                                                        const std::string& provider = "")
+      const std::string& provider = "")
    {
    return StreamCipher::create_or_throw(algo_spec, provider);
    }
@@ -100,7 +100,7 @@ inline HashFunction* get_hash_function(const std::string& algo_spec,
 
 BOTAN_DEPRECATED("Use HashFunction::create_or_throw")
 inline std::unique_ptr<HashFunction> make_hash_function(const std::string& algo_spec,
-                                                        const std::string& provider = "")
+      const std::string& provider = "")
    {
    return HashFunction::create_or_throw(algo_spec, provider);
    }
@@ -127,14 +127,14 @@ inline std::vector<std::string> get_hash_function_providers(const std::string& a
 */
 BOTAN_DEPRECATED("MessageAuthenticationCode::create")
 inline MessageAuthenticationCode* get_mac(const std::string& algo_spec,
-                                             const std::string& provider = "")
+      const std::string& provider = "")
    {
    return MessageAuthenticationCode::create(algo_spec, provider).release();
    }
 
 BOTAN_DEPRECATED("MessageAuthenticationCode::create_or_throw")
 inline std::unique_ptr<MessageAuthenticationCode> make_message_auth(const std::string& algo_spec,
-                                                                       const std::string& provider = "")
+      const std::string& provider = "")
    {
    return MessageAuthenticationCode::create(algo_spec, provider);
    }

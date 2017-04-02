@@ -28,14 +28,18 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
    all. This can happen with very small RSA keys with PSS
    */
    if(encryptor.maximum_input_size() == 0)
+      {
       return true;
+      }
 
    std::vector<uint8_t> plaintext =
       unlock(rng.random_vec(encryptor.maximum_input_size() - 1));
 
    std::vector<uint8_t> ciphertext = encryptor.encrypt(plaintext, rng);
    if(ciphertext == plaintext)
+      {
       return false;
+      }
 
    std::vector<uint8_t> decrypted = unlock(decryptor.decrypt(ciphertext));
 
@@ -68,13 +72,17 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
       }
 
    if(!verifier.verify_message(message, signature))
+      {
       return false;
+      }
 
    // Now try to check a corrupt signature, ensure it does not succeed
    ++signature[0];
 
    if(verifier.verify_message(message, signature))
+      {
       return false;
+      }
 
    return true;
    }

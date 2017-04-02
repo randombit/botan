@@ -21,9 +21,15 @@ namespace {
 class OpenSSL_RC4 : public StreamCipher
    {
    public:
-      void clear() override { clear_mem(&m_rc4, 1); }
+      void clear() override
+         {
+         clear_mem(&m_rc4, 1);
+         }
 
-      std::string provider() const override { return "openssl"; }
+      std::string provider() const override
+         {
+         return "openssl";
+         }
 
       std::string name() const override
          {
@@ -38,20 +44,31 @@ class OpenSSL_RC4 : public StreamCipher
             }
          }
 
-      StreamCipher* clone() const override { return new OpenSSL_RC4(m_skip); }
+      StreamCipher* clone() const override
+         {
+         return new OpenSSL_RC4(m_skip);
+         }
 
       Key_Length_Specification key_spec() const override
          {
          return Key_Length_Specification(1, 32);
          }
 
-      explicit OpenSSL_RC4(size_t skip = 0) : m_skip(skip) { clear(); }
-      ~OpenSSL_RC4() { clear(); }
+      explicit OpenSSL_RC4(size_t skip = 0) : m_skip(skip)
+         {
+         clear();
+         }
+      ~OpenSSL_RC4()
+         {
+         clear();
+         }
 
       void set_iv(const uint8_t*, size_t len) override
          {
          if(len > 0)
+            {
             throw Exception("RC4 does not support an IV");
+            }
          }
 
       void seek(uint64_t) override
@@ -69,7 +86,9 @@ class OpenSSL_RC4 : public StreamCipher
          ::RC4_set_key(&m_rc4, length, key);
          uint8_t d = 0;
          for(size_t i = 0; i != m_skip; ++i)
+            {
             ::RC4(&m_rc4, 1, &d, &d);
+            }
          }
 
       size_t m_skip;

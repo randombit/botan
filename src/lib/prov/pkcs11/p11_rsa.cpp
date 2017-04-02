@@ -73,7 +73,7 @@ PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, uint32_t bits,
    RSA_PublicKeyGenerationProperties pub_key_props(bits);
    pub_key_props.set_encrypt(true);
    pub_key_props.set_verify(true);
-   pub_key_props.set_token(false);	// don't create a persistent public key object
+   pub_key_props.set_token(false);  // don't create a persistent public key object
 
    ObjectHandle pub_key_handle = 0;
    m_handle = 0;
@@ -94,7 +94,7 @@ RSA_PrivateKey PKCS11_RSA_PrivateKey::export_key() const
    auto d = get_attribute_value(AttributeType::PrivateExponent);
    auto n = get_attribute_value(AttributeType::Modulus);
 
-   return RSA_PrivateKey(  BigInt::decode(p)
+   return RSA_PrivateKey(BigInt::decode(p)
                          , BigInt::decode(q)
                          , BigInt::decode(e)
                          , BigInt::decode(d)
@@ -108,8 +108,8 @@ secure_vector<uint8_t> PKCS11_RSA_PrivateKey::private_key_bits() const
 
 
 namespace {
-// note:	multiple-part decryption operations (with C_DecryptUpdate/C_DecryptFinal)
-//			are not supported (PK_Ops::Decryption does not provide an `update` method)
+// note: multiple-part decryption operations (with C_DecryptUpdate/C_DecryptFinal)
+//       are not supported (PK_Ops::Decryption does not provide an `update` method)
 class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
    {
    public:
@@ -121,8 +121,14 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
            m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)),
            m_powermod(m_key.get_e(), m_key.get_n()),
            m_blinder(m_key.get_n(), rng,
-                     [ this ](const BigInt& k) { return m_powermod(k); },
-                     [ this ](const BigInt& k) { return inverse_mod(k, m_key.get_n()); })
+                     [ this ](const BigInt & k)
+         {
+         return m_powermod(k);
+         },
+      [ this ](const BigInt& k)
+         {
+         return inverse_mod(k, m_key.get_n());
+         })
          {
          m_bits = m_key.get_n().bits() - 1;
          }
@@ -146,7 +152,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
          // Unblind for RSA/RAW decryption
          if(!m_mechanism.padding_size())
             {
-            decrypted_data = BigInt::encode_1363(m_blinder.unblind(BigInt::decode(decrypted_data)), m_key.get_n().bits() / 8 );
+            decrypted_data = BigInt::encode_1363(m_blinder.unblind(BigInt::decode(decrypted_data)), m_key.get_n().bits() / 8);
             }
 
          valid_mask = 0xFF;
@@ -161,8 +167,8 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption
       Blinder m_blinder;
    };
 
-// note:	multiple-part encryption operations (with C_EncryptUpdate/C_EncryptFinal)
-//			are not supported (PK_Ops::Encryption does not provide an `update` method)
+// note: multiple-part encryption operations (with C_EncryptUpdate/C_EncryptFinal)
+//       are not supported (PK_Ops::Encryption does not provide an `update` method)
 class PKCS11_RSA_Encryption_Operation : public PK_Ops::Encryption
    {
    public:
@@ -312,31 +318,31 @@ class PKCS11_RSA_Verification_Operation : public PK_Ops::Verification
 
 std::unique_ptr<PK_Ops::Encryption>
 PKCS11_RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
-                                           const std::string& params,
-                                           const std::string& /*provider*/) const
+      const std::string& params,
+      const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Encryption>(new PKCS11_RSA_Encryption_Operation(*this, params));
    }
 
 std::unique_ptr<PK_Ops::Verification>
 PKCS11_RSA_PublicKey::create_verification_op(const std::string& params,
-                                             const std::string& /*provider*/) const
+      const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Verification>(new PKCS11_RSA_Verification_Operation(*this, params));
    }
 
 std::unique_ptr<PK_Ops::Decryption>
 PKCS11_RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
-                                            const std::string& params,
-                                            const std::string& /*provider*/) const
+      const std::string& params,
+      const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Decryption>(new PKCS11_RSA_Decryption_Operation(*this, params, rng));
    }
 
 std::unique_ptr<PK_Ops::Signature>
 PKCS11_RSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                           const std::string& params,
-                                           const std::string& /*provider*/) const
+      const std::string& params,
+      const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Signature>(new PKCS11_RSA_Signature_Operation(*this, params));
    }

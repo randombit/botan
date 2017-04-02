@@ -20,7 +20,7 @@ class Encryption_with_EME : public Encryption
       size_t max_input_bits() const override;
 
       secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len,
-                                  RandomNumberGenerator& rng) override;
+                                     RandomNumberGenerator& rng) override;
 
       ~Encryption_with_EME();
    protected:
@@ -29,7 +29,7 @@ class Encryption_with_EME : public Encryption
       virtual size_t max_raw_input_bits() const = 0;
 
       virtual secure_vector<uint8_t> raw_encrypt(const uint8_t msg[], size_t len,
-                                              RandomNumberGenerator& rng) = 0;
+            RandomNumberGenerator& rng) = 0;
       std::unique_ptr<EME> m_eme;
    };
 
@@ -37,7 +37,7 @@ class Decryption_with_EME : public Decryption
    {
    public:
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask,
-                                  const uint8_t msg[], size_t msg_len) override;
+                                     const uint8_t msg[], size_t msg_len) override;
 
       ~Decryption_with_EME();
    protected:
@@ -59,7 +59,10 @@ class Verification_with_EMSA : public Verification
       bool do_check(const secure_vector<uint8_t>& msg,
                     const uint8_t sig[], size_t sig_len);
 
-      std::string hash_for_signature() { return m_hash; }
+      std::string hash_for_signature()
+         {
+         return m_hash;
+         }
 
    protected:
       explicit Verification_with_EMSA(const std::string& emsa);
@@ -74,13 +77,19 @@ class Verification_with_EMSA : public Verification
       * @return boolean specifying if this signature scheme uses
       * a message prefix returned by message_prefix()
       */
-      virtual bool has_prefix() { return false; }
+      virtual bool has_prefix()
+         {
+         return false;
+         }
 
       /**
       * @return the message prefix if this signature scheme uses
       * a message prefix, signaled via has_prefix()
       */
-      virtual secure_vector<uint8_t> message_prefix() const { throw Exception( "No prefix" ); }
+      virtual secure_vector<uint8_t> message_prefix() const
+         {
+         throw Exception("No prefix");
+         }
 
       /**
       * @return boolean specifying if this key type supports message
@@ -131,19 +140,28 @@ class Signature_with_EMSA : public Signature
       explicit Signature_with_EMSA(const std::string& emsa);
       ~Signature_with_EMSA();
 
-      std::string hash_for_signature() { return m_hash; }
+      std::string hash_for_signature()
+         {
+         return m_hash;
+         }
 
       /**
       * @return boolean specifying if this signature scheme uses
       * a message prefix returned by message_prefix()
       */
-      virtual bool has_prefix() { return false; }
+      virtual bool has_prefix()
+         {
+         return false;
+         }
 
       /**
       * @return the message prefix if this signature scheme uses
       * a message prefix, signaled via has_prefix()
       */
-      virtual secure_vector<uint8_t> message_prefix() const { throw Exception( "No prefix" ); }
+      virtual secure_vector<uint8_t> message_prefix() const
+         {
+         throw Exception("No prefix");
+         }
 
       std::unique_ptr<EMSA> m_emsa;
    private:
@@ -158,7 +176,7 @@ class Signature_with_EMSA : public Signature
                                const std::vector<uint8_t>& sig) const;
 
       virtual secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                           RandomNumberGenerator& rng) = 0;
+                                              RandomNumberGenerator& rng) = 0;
 
       const std::string m_hash;
       bool m_prefix_used;
@@ -168,8 +186,8 @@ class Key_Agreement_with_KDF : public Key_Agreement
    {
    public:
       secure_vector<uint8_t> agree(size_t key_len,
-                                const uint8_t other_key[], size_t other_key_len,
-                                const uint8_t salt[], size_t salt_len) override;
+                                   const uint8_t other_key[], size_t other_key_len,
+                                   const uint8_t salt[], size_t salt_len) override;
 
    protected:
       explicit Key_Agreement_with_KDF(const std::string& kdf);
@@ -204,10 +222,10 @@ class KEM_Decryption_with_KDF : public KEM_Decryption
    {
    public:
       secure_vector<uint8_t> kem_decrypt(const uint8_t encap_key[],
-                                      size_t len,
-                                      size_t desired_shared_key_len,
-                                      const uint8_t salt[],
-                                      size_t salt_len) override;
+                                         size_t len,
+                                         size_t desired_shared_key_len,
+                                         const uint8_t salt[],
+                                         size_t salt_len) override;
 
    protected:
       virtual secure_vector<uint8_t>

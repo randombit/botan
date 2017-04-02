@@ -20,13 +20,17 @@ namespace Botan {
 BigInt::BigInt(uint64_t n)
    {
    if(n == 0)
+      {
       return;
+      }
 
    const size_t limbs_needed = sizeof(uint64_t) / sizeof(word);
 
-   m_reg.resize(4*limbs_needed);
+   m_reg.resize(4 * limbs_needed);
    for(size_t i = 0; i != limbs_needed; ++i)
-      m_reg[i] = ((n >> (i*MP_WORD_BITS)) & MP_WORD_MASK);
+      {
+      m_reg[i] = ((n >> (i * MP_WORD_BITS)) & MP_WORD_MASK);
+      }
    }
 
 /*
@@ -63,7 +67,7 @@ BigInt::BigInt(const std::string& str)
       }
 
    if(str.length() > markers + 2 && str[markers    ] == '0' &&
-                                    str[markers + 1] == 'x')
+         str[markers + 1] == 'x')
       {
       markers += 2;
       base = Hexadecimal;
@@ -72,8 +76,14 @@ BigInt::BigInt(const std::string& str)
    *this = decode(reinterpret_cast<const uint8_t*>(str.data()) + markers,
                   str.length() - markers, base);
 
-   if(negative) set_sign(Negative);
-   else         set_sign(Positive);
+   if(negative)
+      {
+      set_sign(Negative);
+      }
+   else
+      {
+      set_sign(Positive);
+      }
    }
 
 /*
@@ -100,10 +110,14 @@ int32_t BigInt::cmp(const BigInt& other, bool check_signs) const
    if(check_signs)
       {
       if(other.is_positive() && this->is_negative())
+         {
          return -1;
+         }
 
       if(other.is_negative() && this->is_positive())
+         {
          return 1;
+         }
 
       if(other.is_negative() && this->is_negative())
          return (-bigint_cmp(this->data(), this->sig_words(),
@@ -120,12 +134,14 @@ int32_t BigInt::cmp(const BigInt& other, bool check_signs) const
 uint32_t BigInt::get_substring(size_t offset, size_t length) const
    {
    if(length > 32)
+      {
       throw Invalid_Argument("BigInt::get_substring: Substring size too big");
+      }
 
    uint64_t piece = 0;
    for(size_t i = 0; i != 8; ++i)
       {
-      const uint8_t part = byte_at((offset / 8) + (7-i));
+      const uint8_t part = byte_at((offset / 8) + (7 - i));
       piece = (piece << 8) | part;
       }
 
@@ -141,13 +157,19 @@ uint32_t BigInt::get_substring(size_t offset, size_t length) const
 uint32_t BigInt::to_u32bit() const
    {
    if(is_negative())
+      {
       throw Encoding_Error("BigInt::to_u32bit: Number is negative");
+      }
    if(bits() > 32)
+      {
       throw Encoding_Error("BigInt::to_u32bit: Number is too big to convert");
+      }
 
    uint32_t out = 0;
    for(size_t i = 0; i != 4; ++i)
-      out = (out << 8) | byte_at(3-i);
+      {
+      out = (out << 8) | byte_at(3 - i);
+      }
    return out;
    }
 
@@ -158,7 +180,10 @@ void BigInt::set_bit(size_t n)
    {
    const size_t which = n / MP_WORD_BITS;
    const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
-   if(which >= size()) grow_to(which + 1);
+   if(which >= size())
+      {
+      grow_to(which + 1);
+      }
    m_reg[which] |= mask;
    }
 
@@ -170,7 +195,9 @@ void BigInt::clear_bit(size_t n)
    const size_t which = n / MP_WORD_BITS;
    const word mask = static_cast<word>(1) << (n % MP_WORD_BITS);
    if(which < size())
+      {
       m_reg[which] &= ~mask;
+      }
    }
 
 size_t BigInt::bytes() const
@@ -186,7 +213,9 @@ size_t BigInt::bits() const
    const size_t words = sig_words();
 
    if(words == 0)
+      {
       return 0;
+      }
 
    const size_t full_words = words - 1;
    return (full_words * MP_WORD_BITS + high_bit(word_at(full_words)));
@@ -200,13 +229,21 @@ size_t BigInt::encoded_size(Base base) const
    static const double LOG_2_BASE_10 = 0.30102999566;
 
    if(base == Binary)
+      {
       return bytes();
+      }
    else if(base == Hexadecimal)
-      return 2*bytes();
+      {
+      return 2 * bytes();
+      }
    else if(base == Decimal)
+      {
       return static_cast<size_t>((bits() * LOG_2_BASE_10) + 1);
+      }
    else
+      {
       throw Invalid_Argument("Unknown base for BigInt encoding");
+      }
    }
 
 /*
@@ -215,9 +252,13 @@ size_t BigInt::encoded_size(Base base) const
 void BigInt::set_sign(Sign s)
    {
    if(is_zero())
+      {
       m_signedness = Positive;
+      }
    else
+      {
       m_signedness = s;
+      }
    }
 
 /*
@@ -234,7 +275,9 @@ void BigInt::flip_sign()
 BigInt::Sign BigInt::reverse_sign() const
    {
    if(sign() == Positive)
+      {
       return Negative;
+      }
    return Positive;
    }
 
@@ -261,7 +304,9 @@ BigInt BigInt::abs() const
 void BigInt::grow_to(size_t n)
    {
    if(n > size())
+      {
       m_reg.resize(round_up(n, 8));
+      }
    }
 
 /*
@@ -271,7 +316,9 @@ void BigInt::binary_encode(uint8_t output[]) const
    {
    const size_t sig_bytes = bytes();
    for(size_t i = 0; i != sig_bytes; ++i)
-      output[sig_bytes-i-1] = byte_at(i);
+      {
+      output[sig_bytes - i - 1] = byte_at(i);
+      }
    }
 
 /*
@@ -286,13 +333,17 @@ void BigInt::binary_decode(const uint8_t buf[], size_t length)
 
    for(size_t i = 0; i != length / WORD_BYTES; ++i)
       {
-      const size_t top = length - WORD_BYTES*i;
+      const size_t top = length - WORD_BYTES * i;
       for(size_t j = WORD_BYTES; j > 0; --j)
+         {
          m_reg[i] = (m_reg[i] << 8) | buf[top - j];
+         }
       }
 
    for(size_t i = 0; i != length % WORD_BYTES; ++i)
+      {
       m_reg[length / WORD_BYTES] = (m_reg[length / WORD_BYTES] << 8) | buf[i];
+      }
    }
 
 }

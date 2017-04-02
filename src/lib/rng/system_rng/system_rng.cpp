@@ -10,21 +10,21 @@
 
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
-#include <windows.h>
-#define NOMINMAX 1
-#include <wincrypt.h>
+   #include <windows.h>
+   #define NOMINMAX 1
+   #include <wincrypt.h>
 
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
 
-#include <stdlib.h>
+   #include <stdlib.h>
 
 #else
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
+   #include <sys/types.h>
+   #include <sys/stat.h>
+   #include <fcntl.h>
+   #include <unistd.h>
+   #include <errno.h>
 
 #endif
 
@@ -38,7 +38,10 @@ class System_RNG_Impl final : public RandomNumberGenerator
       System_RNG_Impl();
       ~System_RNG_Impl();
 
-      bool is_seeded() const override { return true; }
+      bool is_seeded() const override
+         {
+         return true;
+         }
 
       void clear() override {}
 
@@ -72,25 +75,31 @@ System_RNG_Impl::System_RNG_Impl()
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
    if(!CryptAcquireContext(&m_prov, 0, 0, BOTAN_SYSTEM_RNG_CRYPTOAPI_PROV_TYPE, CRYPT_VERIFYCONTEXT))
+      {
       throw Exception("System_RNG failed to acquire crypto provider");
+      }
 
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)
    // Nothing to do, arc4random(3) works from the beginning.
 #else
 
 #ifndef O_NOCTTY
-  #define O_NOCTTY 0
+#define O_NOCTTY 0
 #endif
 
    m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDWR | O_NOCTTY);
-   
+
    // Cannot open in read-write mode. Fall back to read-only
    // Calls to add_entropy will fail, but randomize will work
    if(m_fd < 0)
+      {
       m_fd = ::open(BOTAN_SYSTEM_RNG_DEVICE, O_RDONLY | O_NOCTTY);
+      }
 
    if(m_fd < 0)
+      {
       throw Exception("System_RNG failed to open RNG device");
+      }
 #endif
    }
 
@@ -138,7 +147,9 @@ void System_RNG_Impl::add_entropy(const uint8_t input[], size_t len)
       if(got < 0)
          {
          if(errno == EINTR)
+            {
             continue;
+            }
 
          /*
          * This is seen on OS X CI, despite the fact that the man page
@@ -148,12 +159,14 @@ void System_RNG_Impl::add_entropy(const uint8_t input[], size_t len)
          * by the OS or sysadmin that additional entropy is not wanted
          * in the system pool, so we accept that and return here,
          * since there is no corrective action possible.
-	 *
-	 * In Linux EBADF or EPERM is returned if m_fd is not opened for
-	 * writing.
+         *
+         * In Linux EBADF or EPERM is returned if m_fd is not opened for
+         * writing.
          */
          if(errno == EPERM || errno == EBADF)
+            {
             return;
+            }
 
          // maybe just ignore any failure here and return?
          throw Exception("System_RNG write failed error " + std::to_string(errno));
@@ -179,11 +192,15 @@ void System_RNG_Impl::randomize(uint8_t buf[], size_t len)
       if(got < 0)
          {
          if(errno == EINTR)
+            {
             continue;
+            }
          throw Exception("System_RNG read failed error " + std::to_string(errno));
          }
       if(got == 0)
-         throw Exception("System_RNG EOF on device"); // ?!?
+         {
+         throw Exception("System_RNG EOF on device");   // ?!?
+         }
 
       buf += got;
       len -= got;

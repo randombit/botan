@@ -26,9 +26,15 @@ class BOTAN_DLL HKDF final : public KDF
       */
       explicit HKDF(MessageAuthenticationCode* prf) : m_prf(prf) {}
 
-      KDF* clone() const override { return new HKDF(m_prf->clone()); }
+      KDF* clone() const override
+         {
+         return new HKDF(m_prf->clone());
+         }
 
-      std::string name() const override { return "HKDF(" + m_prf->name() + ")"; }
+      std::string name() const override
+         {
+         return "HKDF(" + m_prf->name() + ")";
+         }
 
       size_t kdf(uint8_t key[], size_t key_len,
                  const uint8_t secret[], size_t secret_len,
@@ -50,9 +56,15 @@ class BOTAN_DLL HKDF_Extract final : public KDF
       */
       explicit HKDF_Extract(MessageAuthenticationCode* prf) : m_prf(prf) {}
 
-      KDF* clone() const override { return new HKDF_Extract(m_prf->clone()); }
+      KDF* clone() const override
+         {
+         return new HKDF_Extract(m_prf->clone());
+         }
 
-      std::string name() const override { return "HKDF-Extract(" + m_prf->name() + ")"; }
+      std::string name() const override
+         {
+         return "HKDF-Extract(" + m_prf->name() + ")";
+         }
 
       size_t kdf(uint8_t key[], size_t key_len,
                  const uint8_t secret[], size_t secret_len,
@@ -74,9 +86,15 @@ class BOTAN_DLL HKDF_Expand final : public KDF
       */
       explicit HKDF_Expand(MessageAuthenticationCode* prf) : m_prf(prf) {}
 
-      KDF* clone() const override { return new HKDF_Expand(m_prf->clone()); }
+      KDF* clone() const override
+         {
+         return new HKDF_Expand(m_prf->clone());
+         }
 
-      std::string name() const override { return "HKDF-Expand(" + m_prf->name() + ")"; }
+      std::string name() const override
+         {
+         return "HKDF-Expand(" + m_prf->name() + ")";
+         }
 
       size_t kdf(uint8_t key[], size_t key_len,
                  const uint8_t secret[], size_t secret_len,

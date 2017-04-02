@@ -88,8 +88,8 @@ void Lion::key_schedule(const uint8_t key[], size_t length)
 std::string Lion::name() const
    {
    return "Lion(" + m_hash->name() + "," +
-                    m_cipher->name() + "," +
-                    std::to_string(block_size()) + ")";
+          m_cipher->name() + "," +
+          std::to_string(block_size()) + ")";
    }
 
 /*
@@ -115,15 +115,19 @@ void Lion::clear()
 * Lion Constructor
 */
 Lion::Lion(HashFunction* hash, StreamCipher* cipher, size_t bs) :
-   m_block_size(std::max<size_t>(2*hash->output_length() + 1, bs)),
+   m_block_size(std::max<size_t>(2 * hash->output_length() + 1, bs)),
    m_hash(hash),
    m_cipher(cipher)
    {
-   if(2*left_size() + 1 > m_block_size)
+   if(2 * left_size() + 1 > m_block_size)
+      {
       throw Invalid_Argument(name() + ": Chosen block size is too small");
+      }
 
    if(!m_cipher->valid_keylength(left_size()))
+      {
       throw Invalid_Argument(name() + ": This stream/hash combo is invalid");
+      }
 
    m_key1.resize(left_size());
    m_key2.resize(left_size());

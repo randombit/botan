@@ -27,8 +27,14 @@ class BOTAN_DLL SHAKE_128 : public HashFunction
       */
       SHAKE_128(size_t output_bits);
 
-      size_t hash_block_size() const override { return SHAKE_128_BITRATE / 8; }
-      size_t output_length() const override { return m_output_bits / 8; }
+      size_t hash_block_size() const override
+         {
+         return SHAKE_128_BITRATE / 8;
+         }
+      size_t output_length() const override
+         {
+         return m_output_bits / 8;
+         }
 
       HashFunction* clone() const override;
       std::string name() const override;
@@ -58,8 +64,14 @@ class BOTAN_DLL SHAKE_256 : public HashFunction
       */
       SHAKE_256(size_t output_bits);
 
-      size_t hash_block_size() const override { return SHAKE_256_BITRATE / 8; }
-      size_t output_length() const override { return m_output_bits / 8; }
+      size_t hash_block_size() const override
+         {
+         return SHAKE_256_BITRATE / 8;
+         }
+      size_t output_length() const override
+         {
+         return m_output_bits / 8;
+         }
 
       HashFunction* clone() const override;
       std::string name() const override;

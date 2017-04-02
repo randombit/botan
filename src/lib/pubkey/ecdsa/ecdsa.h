@@ -43,16 +43,24 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
       * Get this keys algorithm name.
       * @result this keys algorithm name ("ECDSA")
       */
-      std::string algo_name() const override { return "ECDSA"; }
+      std::string algo_name() const override
+         {
+         return "ECDSA";
+         }
 
-      size_t message_parts() const override { return 2; }
+      size_t message_parts() const override
+         {
+         return 2;
+         }
 
       size_t message_part_size() const override
-         { return domain().get_order().bytes(); }
+         {
+         return domain().get_order().bytes();
+         }
 
       std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override;
+      create_verification_op(const std::string& params,
+                             const std::string& provider) const override;
    protected:
       ECDSA_PublicKey() {}
    };
@@ -61,7 +69,7 @@ class BOTAN_DLL ECDSA_PublicKey : public virtual EC_PublicKey
 * This class represents ECDSA Private Keys
 */
 class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
-                                   public EC_PrivateKey
+   public EC_PrivateKey
    {
    public:
 
@@ -88,9 +96,9 @@ class BOTAN_DLL ECDSA_PrivateKey : public ECDSA_PublicKey,
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 
       std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             const std::string& params,
-                             const std::string& provider) const override;
+      create_signature_op(RandomNumberGenerator& rng,
+                          const std::string& params,
+                          const std::string& provider) const override;
    };
 
 }

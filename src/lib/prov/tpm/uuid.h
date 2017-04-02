@@ -46,10 +46,10 @@ class UUID
       UUID(const std::string& uuid_str)
          {
          if(uuid_str.size() != 36 ||
-            uuid_str[8] != '-' ||
-            uuid_str[14] != '-' ||
-            uuid_str[19] != '-' ||
-            uuid_str[24] != '-')
+               uuid_str[8] != '-' ||
+               uuid_str[14] != '-' ||
+               uuid_str[19] != '-' ||
+               uuid_str[24] != '-')
             {
             throw Invalid_Argument("Bad UUID '" + uuid_str + "'");
             }
@@ -60,7 +60,9 @@ class UUID
             char c = uuid_str[i];
 
             if(c == '-')
+               {
                continue;
+               }
 
             just_hex += c;
             }
@@ -86,16 +88,25 @@ class UUID
          return h;
          }
 
-      const std::vector<uint8_t> binary_value() const { return m_uuid; }
+      const std::vector<uint8_t> binary_value() const
+         {
+         return m_uuid;
+         }
 
       bool operator==(const UUID& other)
          {
          return m_uuid == other.m_uuid;
          }
 
-      bool operator!=(const UUID& other) { return !(*this == other); }
+      bool operator!=(const UUID& other)
+         {
+         return !(*this == other);
+         }
 
-      bool is_valid() const { return m_uuid.size() == 16; }
+      bool is_valid() const
+         {
+         return m_uuid.size() == 16;
+         }
 
    private:
       std::vector<uint8_t> m_uuid;

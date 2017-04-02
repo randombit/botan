@@ -7,8 +7,8 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PK_PADDING)
-  #include <botan/emsa.h>
-  #include <botan/eme.h>
+   #include <botan/emsa.h>
+   #include <botan/eme.h>
 #endif
 
 namespace Botan_Tests {
@@ -44,7 +44,9 @@ class EME_Decoding_Tests : public Text_Based_Test
          const bool is_valid = get_req_bool(vars, "ValidInput");
 
          if(is_valid == false)
+            {
             result.test_eq("Plaintext value is empty for invalid EME inputs", plaintext.size(), 0);
+            }
 
          uint8_t valid_mask = 0;
          Botan::secure_vector<uint8_t> decoded =

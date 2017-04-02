@@ -9,20 +9,20 @@
 #include "test_rng.h"
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
-  #include <botan/hmac_drbg.h>
+   #include <botan/hmac_drbg.h>
 #endif
 
 #if defined(BOTAN_HAS_AUTO_RNG)
-  #include <botan/auto_rng.h>
+   #include <botan/auto_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
-  #include <botan/entropy_src.h>
+   #include <botan/entropy_src.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
-  #include <unistd.h>
-  #include <sys/wait.h>
+   #include <unistd.h>
+   #include <sys/wait.h>
 #endif
 
 #include <iostream>
@@ -37,8 +37,8 @@ class HMAC_DRBG_Tests : public Text_Based_Test
    {
    public:
       HMAC_DRBG_Tests() : Text_Based_Test("hmac_drbg.vec",
-                                          "EntropyInput,EntropyInputReseed,Out",
-                                          "AdditionalInput1,AdditionalInput2") {}
+                                             "EntropyInput,EntropyInputReseed,Out",
+                                             "AdditionalInput1,AdditionalInput2") {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
@@ -83,7 +83,10 @@ class HMAC_DRBG_Unit_Tests : public Test
       class Broken_Entropy_Source : public Botan::Entropy_Source
          {
          public:
-            std::string name() const override { return "Broken Entropy Source"; }
+            std::string name() const override
+               {
+               return "Broken Entropy Source";
+               }
 
             size_t poll(Botan::RandomNumberGenerator&) override
                {
@@ -94,7 +97,10 @@ class HMAC_DRBG_Unit_Tests : public Test
       class Insufficient_Entropy_Source : public Botan::Entropy_Source
          {
          public:
-            std::string name() const override { return "Insufficient Entropy Source"; }
+            std::string name() const override
+               {
+               return "Insufficient Entropy Source";
+               }
 
             size_t poll(Botan::RandomNumberGenerator&) override
                {
@@ -107,7 +113,10 @@ class HMAC_DRBG_Unit_Tests : public Test
          public:
             Request_Counting_RNG() : m_randomize_count(0) {};
 
-            bool is_seeded() const override { return true; }
+            bool is_seeded() const override
+               {
+               return true;
+               }
 
             void clear() override
                {
@@ -121,9 +130,15 @@ class HMAC_DRBG_Unit_Tests : public Test
 
             void add_entropy(const uint8_t[], size_t) override {}
 
-            std::string name() const override { return "Request_Counting_RNG"; }
+            std::string name() const override
+               {
+               return "Request_Counting_RNG";
+               }
 
-            size_t randomize_count() { return m_randomize_count; }
+            size_t randomize_count()
+               {
+               return m_randomize_count;
+               }
 
          private:
             size_t m_randomize_count;
@@ -144,12 +159,12 @@ class HMAC_DRBG_Unit_Tests : public Test
          Request_Counting_RNG counting_rng;
          Botan::HMAC_DRBG rng(std::move(mac), counting_rng, Botan::Entropy_Sources::global_sources(), 2);
          Botan::secure_vector<uint8_t> seed_input(
-               {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF});
+            {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF});
          Botan::secure_vector<uint8_t> output_after_initialization(
-               {0x26,0x06,0x95,0xF4,0xB8,0x96,0x0D,0x0B,0x27,0x4E,0xA2,0x9E,0x8D,0x2B,0x5A,0x35});
+            {0x26, 0x06, 0x95, 0xF4, 0xB8, 0x96, 0x0D, 0x0B, 0x27, 0x4E, 0xA2, 0x9E, 0x8D, 0x2B, 0x5A, 0x35});
          Botan::secure_vector<uint8_t> output_without_reseed(
-               {0xC4,0x90,0x04,0x5B,0x35,0x4F,0x50,0x09,0x68,0x45,0xF0,0x4B,0x11,0x03,0x58,0xF0});
-         result.test_eq("is_seeded",rng.is_seeded(),false);
+            {0xC4, 0x90, 0x04, 0x5B, 0x35, 0x4F, 0x50, 0x09, 0x68, 0x45, 0xF0, 0x4B, 0x11, 0x03, 0x58, 0xF0});
+         result.test_eq("is_seeded", rng.is_seeded(), false);
 
          rng.initialize_with(seed_input.data(), seed_input.size());
 
@@ -198,10 +213,10 @@ class HMAC_DRBG_Unit_Tests : public Test
          result.test_eq("still second reseed", counting_rng.randomize_count(), 3);
 
          // request > max_number_of_bits_per_request, do reseeds occur?
-         rng.random_vec(64*1024 + 1);
+         rng.random_vec(64 * 1024 + 1);
          result.test_eq("request exceeds output limit", counting_rng.randomize_count(), 4);
 
-         rng.random_vec(9*64*1024 + 1);
+         rng.random_vec(9 * 64 * 1024 + 1);
          result.test_eq("request exceeds output limit", counting_rng.randomize_count(), 9);
 
          return result;
@@ -281,7 +296,10 @@ class HMAC_DRBG_Unit_Tests : public Test
          Botan::Null_RNG broken_entropy_input_rng;
          Botan::HMAC_DRBG rng_with_broken_rng(std::move(mac), broken_entropy_input_rng, reseed_interval);
 
-         result.test_throws("broken underlying rng", [&rng_with_broken_rng] () { rng_with_broken_rng.random_vec(16); });
+         result.test_throws("broken underlying rng", [&rng_with_broken_rng]()
+            {
+            rng_with_broken_rng.random_vec(16);
+            });
 
          // entropy_sources throw exception
          std::unique_ptr<Broken_Entropy_Source> broken_entropy_source_1(new Broken_Entropy_Source());
@@ -293,7 +311,10 @@ class HMAC_DRBG_Unit_Tests : public Test
 
          mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
          Botan::HMAC_DRBG rng_with_broken_es(std::move(mac), broken_entropy_sources, reseed_interval);
-         result.test_throws("broken entropy sources", [&rng_with_broken_es] () { rng_with_broken_es.random_vec(16); });
+         result.test_throws("broken entropy sources", [&rng_with_broken_es]()
+            {
+            rng_with_broken_es.random_vec(16);
+            });
 
          // entropy source returns insufficient entropy
          Botan::Entropy_Sources insufficient_entropy_sources;
@@ -302,24 +323,34 @@ class HMAC_DRBG_Unit_Tests : public Test
 
          mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
          Botan::HMAC_DRBG rng_with_insufficient_es(std::move(mac), insufficient_entropy_sources, reseed_interval);
-         result.test_throws("insufficient entropy source", [&rng_with_insufficient_es] () { rng_with_insufficient_es.random_vec(16); });
+         result.test_throws("insufficient entropy source", [&rng_with_insufficient_es]()
+            {
+            rng_with_insufficient_es.random_vec(16);
+            });
 
          // one of or both underlying_rng and entropy_sources throw exception
          mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
          Botan::HMAC_DRBG rng_with_broken_rng_and_es(std::move(mac), broken_entropy_input_rng,
                Botan::Entropy_Sources::global_sources(), reseed_interval);
-         result.test_throws("broken underlying rng but good entropy sources", [&rng_with_broken_rng_and_es] ()
-                  { rng_with_broken_rng_and_es.random_vec(16); });
+         result.test_throws("broken underlying rng but good entropy sources", [&rng_with_broken_rng_and_es]()
+            {
+            rng_with_broken_rng_and_es.random_vec(16);
+            });
 
          mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
          Botan::HMAC_DRBG rng_with_rng_and_broken_es(std::move(mac), Test::rng(), broken_entropy_sources, reseed_interval);
-         result.test_throws("good underlying rng but broken entropy sources", [&rng_with_rng_and_broken_es] ()
-                  { rng_with_rng_and_broken_es.random_vec(16); });
+         result.test_throws("good underlying rng but broken entropy sources", [&rng_with_rng_and_broken_es]()
+            {
+            rng_with_rng_and_broken_es.random_vec(16);
+            });
 
          mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
-         Botan::HMAC_DRBG rng_with_broken_rng_and_broken_es(std::move(mac), broken_entropy_input_rng, broken_entropy_sources, reseed_interval);
-         result.test_throws("underlying rng and entropy sources broken", [&rng_with_broken_rng_and_broken_es] ()
-                  { rng_with_broken_rng_and_broken_es.random_vec(16); });
+         Botan::HMAC_DRBG rng_with_broken_rng_and_broken_es(std::move(mac), broken_entropy_input_rng, broken_entropy_sources,
+               reseed_interval);
+         result.test_throws("underlying rng and entropy sources broken", [&rng_with_broken_rng_and_broken_es]()
+            {
+            rng_with_broken_rng_and_broken_es.random_vec(16);
+            });
 
          return result;
          }
@@ -338,7 +369,10 @@ class HMAC_DRBG_Unit_Tests : public Test
          // make sure the nonce has at least 1/2*security_strength bits
 
          // SHA-256 -> 128 bits security strength
-         for( auto nonce_size : { 0, 4, 15, 16, 17, 32 } )
+         for(auto nonce_size :
+               {
+                  0, 4, 15, 16, 17, 32
+               })
             {
             if(!mac)
                {
@@ -353,7 +387,10 @@ class HMAC_DRBG_Unit_Tests : public Test
             if(nonce_size < 16)
                {
                result.test_eq("not seeded", rng.is_seeded(), false);
-               result.test_throws("invalid nonce size", [&rng, &nonce] () { rng.random_vec(16); });
+               result.test_throws("invalid nonce size", [&rng, &nonce]()
+                  {
+                  rng.random_vec(16);
+                  });
                }
             else
                {
@@ -424,12 +461,12 @@ class HMAC_DRBG_Unit_Tests : public Test
             }
 
          pid_t pid = ::fork();
-         if ( pid == -1 )
+         if(pid == -1)
             {
             result.test_failure("failed to fork process");
             return result;
             }
-         else if ( pid != 0 )
+         else if(pid != 0)
             {
             // parent process, wait for randomize_count from child's rng
             ::close(fd[1]); // close write end in parent
@@ -471,9 +508,10 @@ class HMAC_DRBG_Unit_Tests : public Test
             rng.randomize(&child_bytes[0], child_bytes.size());
             count = counting_rng.randomize_count();
             ssize_t written = ::write(fd[1], &count, sizeof(count));
-            try {
+            try
+               {
                rng.randomize(&child_bytes[0], child_bytes.size());
-            }
+               }
             catch(std::exception& e)
                {
                fprintf(stderr, "%s", e.what());

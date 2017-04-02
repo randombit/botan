@@ -14,18 +14,18 @@
 #include <botan/cpuid.h>
 
 #if defined(BOTAN_TARGET_SUPPORTS_SSE2)
-  #include <emmintrin.h>
-  #define BOTAN_SIMD_USE_SSE2
+   #include <emmintrin.h>
+   #define BOTAN_SIMD_USE_SSE2
 
 #elif defined(BOTAN_TARGET_SUPPORTS_ALTIVEC)
-  #include <altivec.h>
-  #undef vector
-  #undef bool
-  #define BOTAN_SIMD_USE_ALTIVEC
+   #include <altivec.h>
+   #undef vector
+   #undef bool
+   #define BOTAN_SIMD_USE_ALTIVEC
 
 #elif defined(BOTAN_TARGET_SUPPORTS_NEON)
-  #include <arm_neon.h>
-  #define BOTAN_SIMD_USE_NEON
+   #include <arm_neon.h>
+   #define BOTAN_SIMD_USE_NEON
 #endif
 
 namespace Botan {
@@ -76,7 +76,10 @@ class SIMD_4x32 final
 #if defined(BOTAN_SIMD_USE_SSE2)
          m_sse = _mm_loadu_si128(reinterpret_cast<const __m128i*>(B));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         m_vmx = (__vector unsigned int){B[0], B[1], B[2], B[3]};
+         m_vmx = (__vector unsigned int)
+            {
+            B[0], B[1], B[2], B[3]
+            };
 #elif defined(BOTAN_SIMD_USE_NEON)
          m_neon = vld1q_u32(B);
 #else
@@ -95,7 +98,10 @@ class SIMD_4x32 final
 #if defined(BOTAN_SIMD_USE_SSE2)
          m_sse = _mm_set_epi32(B3, B2, B1, B0);
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         m_vmx = (__vector unsigned int){B0, B1, B2, B3};
+         m_vmx = (__vector unsigned int)
+            {
+            B0, B1, B2, B3
+            };
 #elif defined(BOTAN_SIMD_USE_NEON)
          // Better way to do this?
          const uint32_t B[4] = { B0, B1, B2, B3 };
@@ -220,7 +226,8 @@ class SIMD_4x32 final
             perm = vec_xor(perm, vec_splat_u8(3)); // bswap vector
             }
 
-         union {
+         union
+            {
             __vector unsigned int V;
             uint32_t R[4];
             } vec;
@@ -256,7 +263,8 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
-         union {
+         union
+            {
             __vector unsigned int V;
             uint32_t R[4];
             } vec;
@@ -290,16 +298,19 @@ class SIMD_4x32 final
 #if defined(BOTAN_SIMD_USE_SSE2)
 
          m_sse = _mm_or_si128(_mm_slli_epi32(m_sse, static_cast<int>(rot)),
-                              _mm_srli_epi32(m_sse, static_cast<int>(32-rot)));
+                              _mm_srli_epi32(m_sse, static_cast<int>(32 - rot)));
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
          const unsigned int r = static_cast<unsigned int>(rot);
-         m_vmx = vec_rl(m_vmx, (__vector unsigned int){r, r, r, r});
+         m_vmx = vec_rl(m_vmx, (__vector unsigned int)
+            {
+            r, r, r, r
+            });
 
 #elif defined(BOTAN_SIMD_USE_NEON)
          m_neon = vorrq_u32(vshlq_n_u32(m_neon, static_cast<int>(rot)),
-                            vshrq_n_u32(m_neon, static_cast<int>(32-rot)));
+                            vshrq_n_u32(m_neon, static_cast<int>(32 - rot)));
 
 #else
          m_scalar[0] = Botan::rotate_left(m_scalar[0], rot);
@@ -455,7 +466,10 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
          const unsigned int s = static_cast<unsigned int>(shift);
-         return SIMD_4x32(vec_sl(m_vmx, (__vector unsigned int){s, s, s, s}));
+         return SIMD_4x32(vec_sl(m_vmx, (__vector unsigned int)
+            {
+            s, s, s, s
+            }));
 #elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(vshlq_n_u32(m_neon, static_cast<int>(shift)));
 #else
@@ -473,7 +487,10 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
          const unsigned int s = static_cast<unsigned int>(shift);
-         return SIMD_4x32(vec_sr(m_vmx, (__vector unsigned int){s, s, s, s}));
+         return SIMD_4x32(vec_sr(m_vmx, (__vector unsigned int)
+            {
+            s, s, s, s
+            }));
 #elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(vshrq_n_u32(m_neon, static_cast<int>(shift)));
 #else

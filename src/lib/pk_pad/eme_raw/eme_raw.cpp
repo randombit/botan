@@ -11,14 +11,14 @@
 namespace Botan {
 
 secure_vector<uint8_t> EME_Raw::pad(const uint8_t in[], size_t in_length,
-                                 size_t,
-                                 RandomNumberGenerator&) const
+                                    size_t,
+                                    RandomNumberGenerator&) const
    {
    return secure_vector<uint8_t>(in, in + in_length);
    }
 
 secure_vector<uint8_t> EME_Raw::unpad(uint8_t& valid_mask,
-                                   const uint8_t in[], size_t in_length) const
+                                      const uint8_t in[], size_t in_length) const
    {
    valid_mask = 0xFF;
    return CT::strip_leading_zeros(in, in_length);

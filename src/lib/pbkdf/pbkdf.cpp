@@ -9,11 +9,11 @@
 #include <botan/scan_name.h>
 
 #if defined(BOTAN_HAS_PBKDF1)
-#include <botan/pbkdf1.h>
+   #include <botan/pbkdf1.h>
 #endif
 
 #if defined(BOTAN_HAS_PBKDF2)
-#include <botan/pbkdf2.h>
+   #include <botan/pbkdf2.h>
 #endif
 
 namespace Botan {
@@ -33,10 +33,14 @@ std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
+            {
             return std::unique_ptr<PBKDF>(new PKCS5_PBKDF2(mac.release()));
+            }
 
          if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
+            {
             return std::unique_ptr<PBKDF>(new PKCS5_PBKDF2(mac.release()));
+            }
          }
 
       return nullptr;
@@ -47,7 +51,9 @@ std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
    if(req.algo_name() == "PBKDF1" && req.arg_count() == 1)
       {
       if(auto hash = HashFunction::create(req.arg(0)))
+         {
          return std::unique_ptr<PBKDF>(new PKCS5_PBKDF1(hash.release()));
+         }
 
       }
 #endif
@@ -78,7 +84,9 @@ void PBKDF::pbkdf_iterations(uint8_t out[], size_t out_len,
                              size_t iterations) const
    {
    if(iterations == 0)
+      {
       throw Invalid_Argument(name() + ": Invalid iteration count");
+      }
 
    const size_t iterations_run = pbkdf(out, out_len, passphrase,
                                        salt, salt_len, iterations,
@@ -87,9 +95,9 @@ void PBKDF::pbkdf_iterations(uint8_t out[], size_t out_len,
    }
 
 secure_vector<uint8_t> PBKDF::pbkdf_iterations(size_t out_len,
-                                            const std::string& passphrase,
-                                            const uint8_t salt[], size_t salt_len,
-                                            size_t iterations) const
+      const std::string& passphrase,
+      const uint8_t salt[], size_t salt_len,
+      size_t iterations) const
    {
    secure_vector<uint8_t> out(out_len);
    pbkdf_iterations(out.data(), out_len, passphrase, salt, salt_len, iterations);
@@ -97,10 +105,10 @@ secure_vector<uint8_t> PBKDF::pbkdf_iterations(size_t out_len,
    }
 
 secure_vector<uint8_t> PBKDF::pbkdf_timed(size_t out_len,
-                                       const std::string& passphrase,
-                                       const uint8_t salt[], size_t salt_len,
-                                       std::chrono::milliseconds msec,
-                                       size_t& iterations) const
+      const std::string& passphrase,
+      const uint8_t salt[], size_t salt_len,
+      std::chrono::milliseconds msec,
+      size_t& iterations) const
    {
    secure_vector<uint8_t> out(out_len);
    pbkdf_timed(out.data(), out_len, passphrase, salt, salt_len, msec, iterations);

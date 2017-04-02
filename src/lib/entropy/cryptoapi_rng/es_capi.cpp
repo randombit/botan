@@ -30,13 +30,17 @@ class CSP_Handle_Impl : public Win32_CAPI_EntropySource::CSP_Handle
       ~CSP_Handle_Impl()
          {
          if(m_valid)
+            {
             ::CryptReleaseContext(m_handle, 0);
+            }
          }
 
       size_t gen_random(uint8_t out[], size_t n) const
          {
          if(m_valid && ::CryptGenRandom(m_handle, static_cast<DWORD>(n), out))
+            {
             return n;
+            }
          return 0;
          }
 
@@ -79,13 +83,21 @@ Win32_CAPI_EntropySource::Win32_CAPI_EntropySource(const std::string& provs)
       DWORD prov_type;
 
       if(prov_name == "RSA_FULL")
+         {
          prov_type = PROV_RSA_FULL;
+         }
       else if(prov_name == "INTEL_SEC")
+         {
          prov_type = PROV_INTEL_SEC;
+         }
       else if(prov_name == "RNG")
+         {
          prov_type = PROV_RNG;
+         }
       else
+         {
          continue;
+         }
 
       m_csp_provs.push_back(std::unique_ptr<CSP_Handle>(new CSP_Handle_Impl(prov_type)));
       }

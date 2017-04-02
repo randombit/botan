@@ -42,7 +42,8 @@ class BOTAN_DLL DL_Group
       /**
       * The DL group encoding format variants.
       */
-      enum Format {
+      enum Format
+         {
          ANSI_X9_42,
          ANSI_X9_57,
          PKCS_3,
@@ -51,7 +52,7 @@ class BOTAN_DLL DL_Group
          DH_PARAMETERS = ANSI_X9_42,
          ANSI_X9_42_DH_PARAMETERS = ANSI_X9_42,
          PKCS3_DH_PARAMETERS = PKCS_3
-      };
+         };
 
       /**
       * Determine the prime creation for DL groups.

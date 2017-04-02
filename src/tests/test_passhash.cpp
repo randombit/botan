@@ -7,11 +7,11 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_BCRYPT)
-  #include <botan/bcrypt.h>
+   #include <botan/bcrypt.h>
 #endif
 
 #if defined(BOTAN_HAS_PASSHASH9)
-  #include <botan/passhash9.h>
+   #include <botan/passhash9.h>
 #endif
 
 namespace Botan_Tests {

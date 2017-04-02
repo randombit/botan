@@ -29,12 +29,14 @@ void
 XMSS_WOTS_Signature_Operation::update(const uint8_t msg[], size_t msg_len)
    {
    BOTAN_ASSERT(msg_len == m_priv_key.private_key().wots_parameters().
-                           element_size() &&
+                element_size() &&
                 m_msg_buf.size() == 0,
                 "XMSS WOTS only supports one message part of size n.");
 
    for(size_t i = 0; i < msg_len; i++)
+      {
       m_msg_buf.push_back(msg[i]);
+      }
    }
 
 secure_vector<uint8_t>

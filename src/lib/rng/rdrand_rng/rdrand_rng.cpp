@@ -10,7 +10,7 @@
 #include <botan/cpuid.h>
 
 #if !defined(BOTAN_USE_GCC_INLINE_ASM)
-  #include <immintrin.h>
+   #include <immintrin.h>
 #endif
 
 namespace Botan {
@@ -18,7 +18,9 @@ namespace Botan {
 RDRAND_RNG::RDRAND_RNG()
    {
    if(!CPUID::has_rdrand())
+      {
       throw Exception("Current CPU does not support RDRAND instruction");
+      }
    }
 
 //static
@@ -49,7 +51,7 @@ uint32_t RDRAND_RNG::rdrand_status(bool& ok)
 
       // Encoding of rdrand %eax
       asm(".byte 0x0F, 0xC7, 0xF0; adcl $0,%1" :
-          "=a" (r), "=r" (cf) : "0" (r), "1" (cf) : "cc");
+          "=a"(r), "=r"(cf) : "0"(r), "1"(cf) : "cc");
 #else
       int cf = _rdrand32_step(&r);
 #endif
@@ -78,7 +80,9 @@ void RDRAND_RNG::randomize(uint8_t out[], size_t out_len)
       {
       uint32_t r = RDRAND_RNG::rdrand();
       for(size_t i = 0; i != out_len; ++i)
+         {
          out[i] = get_byte(i, r);
+         }
       }
    }
 

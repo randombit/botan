@@ -93,13 +93,17 @@ size_t Win32_EntropySource::poll(RandomNumberGenerator& rng)
                   {
                   rng.add_entropy_T(heap_entry);
                   bits += 4;
-                  } while(::Heap32Next(&heap_entry));
+                  }
+               while(::Heap32Next(&heap_entry));
                }
 
             if(bits >= 256)
+               {
                break;
+               }
 
-            } while(::Heap32ListNext(snapshot, &heap_list));
+            }
+         while(::Heap32ListNext(snapshot, &heap_list));
          }
       }
 

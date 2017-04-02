@@ -18,7 +18,8 @@ class TLS_All_Policy : public Botan::TLS::Policy
    public:
       std::vector<std::string> allowed_ciphers() const override
          {
-         return std::vector<std::string>{
+         return std::vector<std::string>
+            {
             "ChaCha20Poly1305",
             "AES-256/OCB(12)",
             "AES-128/OCB(12)",
@@ -59,17 +60,29 @@ class TLS_Ciphersuites final : public Command
       static Botan::TLS::Protocol_Version::Version_Code tls_version_from_str(const std::string& str)
          {
          if(str == "tls1.2" || str == "TLS1.2" || str == "TLS-1.2")
+            {
             return Botan::TLS::Protocol_Version::TLS_V12;
+            }
          else if(str == "tls1.1" || str == "TLS1.1" || str == "TLS-1.1")
+            {
             return Botan::TLS::Protocol_Version::TLS_V11;
+            }
          else if(str == "tls1.0" || str == "TLS1.1" || str == "TLS-1.1")
+            {
             return Botan::TLS::Protocol_Version::TLS_V10;
+            }
          if(str == "dtls1.2" || str == "DTLS1.2" || str == "DTLS-1.2")
+            {
             return Botan::TLS::Protocol_Version::DTLS_V12;
+            }
          else if(str == "dtls1.0" || str == "DTLS1.0" || str == "DTLS-1.0")
+            {
             return Botan::TLS::Protocol_Version::DTLS_V10;
+            }
          else
+            {
             throw CLI_Error("Unknown TLS version '" + str + "'");
+            }
          }
 
       void go() override

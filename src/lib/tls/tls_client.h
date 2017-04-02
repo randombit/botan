@@ -49,21 +49,21 @@ class BOTAN_DLL Client final : public Channel
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
       */
-     Client(Callbacks& callbacks,
-            Session_Manager& session_manager,
-            Credentials_Manager& creds,
-            const Policy& policy,
-            RandomNumberGenerator& rng,
-            const Server_Information& server_info = Server_Information(),
-            const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
-            const std::vector<std::string>& next_protocols = {},
-            size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE
-         );
+      Client(Callbacks& callbacks,
+             Session_Manager& session_manager,
+             Credentials_Manager& creds,
+             const Policy& policy,
+             RandomNumberGenerator& rng,
+             const Server_Information& server_info = Server_Information(),
+             const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
+             const std::vector<std::string>& next_protocols = {},
+             size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE
+            );
 
       /**
       * DEPRECATED. This constructor is only provided for backward
       * compatibility and should not be used in new code.
-      * 
+      *
       * Set up a new TLS client session
       *
       * @param output_fn is called with data for the outbound socket
@@ -106,7 +106,7 @@ class BOTAN_DLL Client final : public Channel
              const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
              const std::vector<std::string>& next_protocols = {},
              size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE
-         );
+            );
 
       /**
        * DEPRECATED. This constructor is only provided for backward
@@ -125,18 +125,21 @@ class BOTAN_DLL Client final : public Channel
              const Server_Information& server_info = Server_Information(),
              const Protocol_Version& offer_version = Protocol_Version::latest_tls_version(),
              const std::vector<std::string>& next_protocols = {}
-         );
+            );
 
       /**
       * @return network protocol as advertised by the TLS server, if server sent the ALPN extension
       */
-      const std::string& application_protocol() const { return m_application_protocol; }
+      const std::string& application_protocol() const
+         {
+         return m_application_protocol;
+         }
    private:
       void init(const Protocol_Version& protocol_version,
                 const std::vector<std::string>& next_protocols);
 
       std::vector<X509_Certificate>
-         get_peer_cert_chain(const Handshake_State& state) const override;
+      get_peer_cert_chain(const Handshake_State& state) const override;
 
       void initiate_handshake(Handshake_State& state,
                               bool force_full_renegotiation) override;

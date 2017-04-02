@@ -14,7 +14,8 @@ namespace Botan {
 //static
 void SHA_3::permute(uint64_t A[25])
    {
-   static const uint64_t RC[24] = {
+   static const uint64_t RC[24] =
+      {
       0x0000000000000001, 0x0000000000008082, 0x800000000000808A,
       0x8000000080008000, 0x000000000000808B, 0x0000000080000001,
       0x8000000080008081, 0x8000000000008009, 0x000000000000008A,
@@ -23,7 +24,7 @@ void SHA_3::permute(uint64_t A[25])
       0x8000000000008003, 0x8000000000008002, 0x8000000000000080,
       0x000000000000800A, 0x800000008000000A, 0x8000000080008081,
       0x8000000000008080, 0x0000000080000001, 0x8000000080008008
-   };
+      };
 
    for(size_t i = 0; i != 24; ++i)
       {
@@ -97,14 +98,14 @@ void SHA_3::permute(uint64_t A[25])
 
 SHA_3::SHA_3(size_t output_bits) :
    m_output_bits(output_bits),
-   m_bitrate(1600 - 2*output_bits),
+   m_bitrate(1600 - 2 * output_bits),
    m_S(25),
    m_S_pos(0)
    {
    // We only support the parameters for SHA-3 in this constructor
 
    if(output_bits != 224 && output_bits != 256 &&
-      output_bits != 384 && output_bits != 512)
+         output_bits != 384 && output_bits != 512)
       throw Invalid_Argument("SHA_3: Invalid output length " +
                              std::to_string(output_bits));
    }
@@ -210,7 +211,7 @@ void SHA_3::final_result(uint8_t output[])
    std::vector<uint8_t> padding(m_bitrate / 8 - m_S_pos);
 
    padding[0] = 0x06;
-   padding[padding.size()-1] |= 0x80;
+   padding[padding.size() - 1] |= 0x80;
 
    add_data(padding.data(), padding.size());
 
@@ -218,8 +219,10 @@ void SHA_3::final_result(uint8_t output[])
    * We never have to run the permutation again because we only support
    * limited output lengths
    */
-   for(size_t i = 0; i != m_output_bits/8; ++i)
-      output[i] = get_byte(7 - (i % 8), m_S[i/8]);
+   for(size_t i = 0; i != m_output_bits / 8; ++i)
+      {
+      output[i] = get_byte(7 - (i % 8), m_S[i / 8]);
+      }
 
    clear();
    }

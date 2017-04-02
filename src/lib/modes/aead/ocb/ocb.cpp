@@ -24,22 +24,32 @@ class L_computer
          m_L.push_back(poly_double(dollar()));
          }
 
-      const secure_vector<uint8_t>& star() const { return m_L_star; }
+      const secure_vector<uint8_t>& star() const
+         {
+         return m_L_star;
+         }
 
-      const secure_vector<uint8_t>& dollar() const { return m_L_dollar; }
+      const secure_vector<uint8_t>& dollar() const
+         {
+         return m_L_dollar;
+         }
 
-      const secure_vector<uint8_t>& operator()(size_t i) const { return get(i); }
+      const secure_vector<uint8_t>& operator()(size_t i) const
+         {
+         return get(i);
+         }
 
       const secure_vector<uint8_t>& compute_offsets(secure_vector<uint8_t>& offset,
-                                                 size_t block_index,
-                                                 size_t blocks) const
+            size_t block_index,
+            size_t blocks) const
          {
          m_offset_buf.resize(blocks * 16);
 
          for(size_t i = 0; i != blocks; ++i)
-            { // could be done in parallel
+            {
+            // could be done in parallel
             offset ^= get(ctz(block_index + 1 + i));
-            copy_mem(&m_offset_buf[16*i], offset.data(), 16);
+            copy_mem(&m_offset_buf[16 * i], offset.data(), 16);
             }
 
          return m_offset_buf;
@@ -49,7 +59,9 @@ class L_computer
       const secure_vector<uint8_t>& get(size_t i) const
          {
          while(m_L.size() <= i)
+            {
             m_L.push_back(poly_double(m_L.back()));
+            }
 
          return m_L.at(i);
          }
@@ -70,8 +82,8 @@ namespace {
 * OCB's HASH
 */
 secure_vector<uint8_t> ocb_hash(const L_computer& L,
-                             const BlockCipher& cipher,
-                             const uint8_t ad[], size_t ad_len)
+                                const BlockCipher& cipher,
+                                const uint8_t ad[], size_t ad_len)
    {
    secure_vector<uint8_t> sum(16);
    secure_vector<uint8_t> offset(16);
@@ -84,10 +96,10 @@ secure_vector<uint8_t> ocb_hash(const L_computer& L,
    for(size_t i = 0; i != ad_blocks; ++i)
       {
       // this loop could run in parallel
-      offset ^= L(ctz(i+1));
+      offset ^= L(ctz(i + 1));
 
       buf = offset;
-      xor_buf(buf.data(), &ad[16*i], 16);
+      xor_buf(buf.data(), &ad[16 * i], 16);
 
       cipher.encrypt(buf);
 
@@ -99,7 +111,7 @@ secure_vector<uint8_t> ocb_hash(const L_computer& L,
       offset ^= L.star();
 
       buf = offset;
-      xor_buf(buf.data(), &ad[16*ad_blocks], ad_remainder);
+      xor_buf(buf.data(), &ad[16 * ad_blocks], ad_remainder);
       buf[ad_len % 16] ^= 0x80;
 
       cipher.encrypt(buf);
@@ -120,10 +132,14 @@ OCB_Mode::OCB_Mode(BlockCipher* cipher, size_t tag_size) :
    m_tag_size(tag_size)
    {
    if(m_cipher->block_size() != 16)
+      {
       throw Invalid_Argument("OCB requires 128 bit cipher");
+      }
 
    if(m_tag_size % 4 != 0 || m_tag_size < 8 || m_tag_size > 16)
+      {
       throw Invalid_Argument("Invalid OCB tag length");
+      }
    }
 
 OCB_Mode::~OCB_Mode() { /* for unique_ptr destructor */ }
@@ -188,8 +204,8 @@ OCB_Mode::update_nonce(const uint8_t nonce[], size_t nonce_len)
    nonce_buf[0] = ((tag_size() * 8) % 128) << 1;
    nonce_buf[16 - nonce_len - 1] = 1;
 
-   const uint8_t bottom = nonce_buf[16-1] & 0x3F;
-   nonce_buf[16-1] &= 0xC0;
+   const uint8_t bottom = nonce_buf[16 - 1] & 0x3F;
+   nonce_buf[16 - 1] &= 0xC0;
 
    const bool need_new_stretch = (m_last_nonce != nonce_buf);
 
@@ -200,7 +216,9 @@ OCB_Mode::update_nonce(const uint8_t nonce[], size_t nonce_len)
       m_cipher->encrypt(nonce_buf);
 
       for(size_t i = 0; i != 16 / 2; ++i)
-         nonce_buf.push_back(nonce_buf[i] ^ nonce_buf[i+1]);
+         {
+         nonce_buf.push_back(nonce_buf[i] ^ nonce_buf[i + 1]);
+         }
 
       m_stretch = nonce_buf;
       }
@@ -213,8 +231,8 @@ OCB_Mode::update_nonce(const uint8_t nonce[], size_t nonce_len)
    secure_vector<uint8_t> offset(16);
    for(size_t i = 0; i != 16; ++i)
       {
-      offset[i]  = (m_stretch[i+shift_bytes] << shift_bits);
-      offset[i] |= (m_stretch[i+shift_bytes+1] >> (8-shift_bits));
+      offset[i]  = (m_stretch[i + shift_bytes] << shift_bits);
+      offset[i] |= (m_stretch[i + shift_bytes + 1] >> (8 - shift_bits));
       }
 
    return offset;
@@ -223,7 +241,9 @@ OCB_Mode::update_nonce(const uint8_t nonce[], size_t nonce_len)
 void OCB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
+      {
       throw Invalid_IV_Length(name(), nonce_len);
+      }
 
    BOTAN_ASSERT(m_L, "A key was set");
 
@@ -295,7 +315,9 @@ void OCB_Encryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
    // fold checksum
    for(size_t i = 0; i != m_checksum.size(); ++i)
+      {
       checksum[i % checksum.size()] ^= m_checksum[i];
+      }
 
    // now compute the tag
    secure_vector<uint8_t> mac = m_offset;
@@ -386,7 +408,9 @@ void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
 
    // fold checksum
    for(size_t i = 0; i != m_checksum.size(); ++i)
+      {
       checksum[i % checksum.size()] ^= m_checksum[i];
+      }
 
    // compute the mac
    secure_vector<uint8_t> mac = m_offset;
@@ -406,7 +430,9 @@ void OCB_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    const uint8_t* included_tag = &buf[remaining];
 
    if(!same_mem(mac.data(), included_tag, tag_size()))
+      {
       throw Integrity_Failure("OCB tag check failed");
+      }
 
    // remove tag from end of message
    buffer.resize(remaining + offset);

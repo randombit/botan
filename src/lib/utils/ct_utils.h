@@ -18,7 +18,7 @@
 #include <vector>
 
 #if defined(BOTAN_HAS_VALGRIND)
-  #include <valgrind/memcheck.h>
+   #include <valgrind/memcheck.h>
 #endif
 
 namespace Botan {
@@ -87,8 +87,10 @@ inline T expand_mask(T x)
    {
    T r = x;
    // First fold r down to a single bit
-   for(size_t i = 1; i != sizeof(T)*8; i *= 2)
+   for(size_t i = 1; i != sizeof(T) * 8; i *= 2)
+      {
       r |= r >> i;
+      }
    r &= 1;
    r = ~(r - 1);
    return r;
@@ -166,7 +168,7 @@ inline void cond_zero_mem(T cond,
 template<typename T>
 inline T expand_top_bit(T a)
    {
-   return expand_mask<T>(a >> (sizeof(T)*8-1));
+   return expand_mask<T>(a >> (sizeof(T) * 8 - 1));
    }
 
 template<typename T>

@@ -16,7 +16,7 @@ namespace Botan {
 namespace {
 
 secure_vector<uint8_t> iso9796_encoding(const secure_vector<uint8_t>& msg,
-                                     size_t output_bits, std::unique_ptr<HashFunction>& hash, size_t SALT_SIZE, bool implicit, RandomNumberGenerator& rng)
+                                        size_t output_bits, std::unique_ptr<HashFunction>& hash, size_t SALT_SIZE, bool implicit, RandomNumberGenerator& rng)
    {
    const size_t output_length = (output_bits + 7) / 8;
 
@@ -126,7 +126,7 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
       }
 
    secure_vector<uint8_t> coded = const_coded;
-   
+
    CT::poison(coded.data(), coded.size());
    //remove mask
    uint8_t* DB = coded.data();
@@ -147,22 +147,22 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
       const uint8_t one_m = CT::is_equal<uint8_t>(DB[j], 0x01);
       const uint8_t zero_m = CT::is_zero(DB[j]);
       const uint8_t add_m = waiting_for_delim & zero_m;
-      
+
       bad_input |= waiting_for_delim & ~(zero_m | one_m);
       msg1_offset += CT::select<uint8_t>(add_m, 1, 0);
-      
+
       waiting_for_delim &= zero_m;
       }
-   
+
    //invalid, if delimiter 0x01 was not found or msg1_offset is too big
    bad_input |= waiting_for_delim;
    bad_input |= CT::is_less(coded.size(), tLength + HASH_SIZE + msg1_offset + SALT_SIZE);
-   //in case that msg1_offset is too big, just continue with offset = 0. 
+   //in case that msg1_offset is too big, just continue with offset = 0.
    msg1_offset = CT::select<size_t>(bad_input, 0, msg1_offset);
    secure_vector<uint8_t> msg1(coded.begin() + msg1_offset,
-                            coded.end() - tLength - HASH_SIZE - SALT_SIZE);
+                               coded.end() - tLength - HASH_SIZE - SALT_SIZE);
    secure_vector<uint8_t> salt(coded.begin() + msg1_offset + msg1.size(),
-                            coded.end() - tLength - HASH_SIZE);
+                               coded.end() - tLength - HASH_SIZE);
 
    //compute H2(C||msg1||H(msg2)||S*). * indicates a recovered value
    const size_t capacity = (key_bits - 2 + 7) / 8 - HASH_SIZE
@@ -195,11 +195,11 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
    hash->update(msg2);
    hash->update(salt);
    secure_vector<uint8_t> H2 = hash->final();
-   
+
    //check if H3 == H2
    bad_input |= CT::is_equal<uint8_t>(same_mem(H3.data(), H2.data(), HASH_SIZE), false);
    CT::unpoison(coded.data(), coded.size());
-   
+
    return (bad_input == 0);
    }
 
@@ -211,7 +211,7 @@ bool iso9796_verification(const secure_vector<uint8_t>& const_coded,
 void ISO_9796_DS2::update(const uint8_t input[], size_t length)
    {
    //need to buffer message completely, before digest
-   m_msg_buffer.insert(m_msg_buffer.end(), input, input+length);
+   m_msg_buffer.insert(m_msg_buffer.end(), input, input + length);
    }
 
 /*
@@ -239,7 +239,7 @@ secure_vector<uint8_t> ISO_9796_DS2::encoding_of(const secure_vector<uint8_t>& m
 bool ISO_9796_DS2::verify(const secure_vector<uint8_t>& const_coded,
                           const secure_vector<uint8_t>& raw, size_t key_bits)
    {
-   return iso9796_verification(const_coded,raw,key_bits,m_hash,m_SALT_SIZE);
+   return iso9796_verification(const_coded, raw, key_bits, m_hash, m_SALT_SIZE);
    }
 
 /*
@@ -249,7 +249,7 @@ bool ISO_9796_DS2::verify(const secure_vector<uint8_t>& const_coded,
 void ISO_9796_DS3::update(const uint8_t input[], size_t length)
    {
    //need to buffer message completely, before digest
-   m_msg_buffer.insert(m_msg_buffer.end(), input, input+length);
+   m_msg_buffer.insert(m_msg_buffer.end(), input, input + length);
    }
 
 /*

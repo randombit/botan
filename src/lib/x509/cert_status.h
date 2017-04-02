@@ -15,7 +15,8 @@ namespace Botan {
 /**
 * Certificate validation status code
 */
-enum class Certificate_Status_Code {
+enum class Certificate_Status_Code
+   {
    OK = 0,
    VERIFIED = 0,
 
@@ -72,7 +73,7 @@ enum class Certificate_Status_Code {
    CRL_BAD_SIGNATURE = 5001,
    SIGNATURE_ERROR = 5002,
    CERT_PUBKEY_INVALID = 5003,
-};
+   };
 
 /**
 * Convert a status code to a human readable diagnostic message

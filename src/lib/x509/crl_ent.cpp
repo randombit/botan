@@ -41,11 +41,17 @@ CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why) :
 bool operator==(const CRL_Entry& a1, const CRL_Entry& a2)
    {
    if(a1.serial_number() != a2.serial_number())
+      {
       return false;
+      }
    if(a1.expire_time() != a2.expire_time())
+      {
       return false;
+      }
    if(a1.reason_code() != a2.reason_code())
+      {
       return false;
+      }
    return true;
    }
 
@@ -67,12 +73,12 @@ void CRL_Entry::encode_into(DER_Encoder& der) const
    extensions.add(new Cert_Extension::CRL_ReasonCode(m_reason));
 
    der.start_cons(SEQUENCE)
-      .encode(BigInt::decode(m_serial))
-         .encode(m_time)
-         .start_cons(SEQUENCE)
-            .encode(extensions)
-          .end_cons()
-      .end_cons();
+   .encode(BigInt::decode(m_serial))
+   .encode(m_time)
+   .start_cons(SEQUENCE)
+   .encode(extensions)
+   .end_cons()
+   .end_cons();
    }
 
 /*

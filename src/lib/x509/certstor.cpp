@@ -21,7 +21,9 @@ void Certificate_Store_In_Memory::add_certificate(const X509_Certificate& cert)
    for(size_t i = 0; i != m_certs.size(); ++i)
       {
       if(*m_certs[i] == cert)
+         {
          return;
+         }
       }
 
    m_certs.push_back(std::make_shared<const X509_Certificate>(cert));
@@ -32,7 +34,9 @@ void Certificate_Store_In_Memory::add_certificate(std::shared_ptr<const X509_Cer
    for(size_t i = 0; i != m_certs.size(); ++i)
       {
       if(*m_certs[i] == *cert)
+         {
          return;
+         }
       }
 
    m_certs.push_back(cert);
@@ -42,7 +46,9 @@ std::vector<X509_DN> Certificate_Store_In_Memory::all_subjects() const
    {
    std::vector<X509_DN> subjects;
    for(size_t i = 0; i != m_certs.size(); ++i)
+      {
       subjects.push_back(m_certs[i]->subject_dn());
+      }
    return subjects;
    }
 
@@ -58,11 +64,15 @@ Certificate_Store_In_Memory::find_cert(const X509_DN& subject_dn,
          std::vector<uint8_t> skid = m_certs[i]->subject_key_id();
 
          if(skid.size() && skid != key_id) // no match
+            {
             continue;
+            }
          }
 
       if(m_certs[i]->subject_dn() == subject_dn)
+         {
          return m_certs[i];
+         }
       }
 
    return std::shared_ptr<const X509_Certificate>();
@@ -73,7 +83,9 @@ std::shared_ptr<const X509_Certificate>
 Certificate_Store_In_Memory::find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const
    {
    if(key_hash.size() != 20)
+      {
       throw Invalid_Argument("Certificate_Store_In_Memory::find_cert_by_pubkey_sha1 invalid hash");
+      }
 
    for(size_t i = 0; i != m_certs.size(); ++i)
       {
@@ -103,7 +115,9 @@ void Certificate_Store_In_Memory::add_crl(std::shared_ptr<const X509_CRL> crl)
       if(m_crls[i]->issuer_dn() == crl_issuer)
          {
          if(m_crls[i]->this_update() <= crl->this_update())
+            {
             m_crls[i] = crl;
+            }
          return;
          }
       }
@@ -124,11 +138,15 @@ std::shared_ptr<const X509_CRL> Certificate_Store_In_Memory::find_crl_for(const 
          std::vector<uint8_t> akid = m_crls[i]->authority_key_id();
 
          if(akid.size() && akid != key_id) // no match
+            {
             continue;
+            }
          }
 
       if(m_crls[i]->issuer_dn() == subject.issuer_dn())
+         {
          return m_crls[i];
+         }
       }
 
    return std::shared_ptr<const X509_CRL>();
@@ -143,10 +161,12 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const X509_Certificate&
 Certificate_Store_In_Memory::Certificate_Store_In_Memory(const std::string& dir)
    {
    if(dir.empty())
+      {
       return;
+      }
 
    std::vector<std::string> maybe_certs = get_files_recursive(dir);
-   for(auto&& cert_file : maybe_certs)
+   for(auto && cert_file : maybe_certs)
       {
       try
          {

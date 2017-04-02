@@ -31,7 +31,10 @@ class BOTAN_DLL Buffered_Computation
       * @param in the input to process as a byte array
       * @param length of param in in bytes
       */
-      void update(const uint8_t in[], size_t length) { add_data(in, length); }
+      void update(const uint8_t in[], size_t length)
+         {
+         add_data(in, length);
+         }
 
       /**
       * Add new input to process.
@@ -78,7 +81,10 @@ class BOTAN_DLL Buffered_Computation
       * Process a single byte.
       * @param in the byte to process
       */
-      void update(uint8_t in) { add_data(&in, 1); }
+      void update(uint8_t in)
+         {
+         add_data(&in, 1);
+         }
 
       /**
       * Complete the computation and retrieve the
@@ -86,7 +92,10 @@ class BOTAN_DLL Buffered_Computation
       * @param out The byte array to be filled with the result.
       * Must be of length output_length()
       */
-      void final(uint8_t out[]) { final_result(out); }
+      void final(uint8_t out[])
+         {
+         final_result(out);
+         }
 
       /**
       * Complete the computation and retrieve the
@@ -108,7 +117,7 @@ class BOTAN_DLL Buffered_Computation
          }
 
       template<typename Alloc>
-         void final(std::vector<uint8_t, Alloc>& out)
+      void final(std::vector<uint8_t, Alloc>& out)
          {
          out.resize(output_length());
          final_result(out.data());

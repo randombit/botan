@@ -20,13 +20,14 @@ namespace Botan {
 
 namespace TLS {
 
-enum {
+enum
+   {
    TLS_EMPTY_RENEGOTIATION_INFO_SCSV        = 0x00FF,
    TLS_FALLBACK_SCSV                        = 0x5600
-};
+   };
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
-                                    const Policy& policy)
+                                       const Policy& policy)
    {
    std::vector<uint8_t> buf(32);
    rng.randomize(buf.data(), buf.size());
@@ -34,7 +35,7 @@ std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng,
    if(policy.include_time_in_hello_random())
       {
       const uint32_t time32 = static_cast<uint32_t>(
-         std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+                                 std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 
       store_be(time32, buf.data());
       }
@@ -56,7 +57,9 @@ Hello_Request::Hello_Request(Handshake_IO& io)
 Hello_Request::Hello_Request(const std::vector<uint8_t>& buf)
    {
    if(buf.size())
+      {
       throw Decoding_Error("Bad Hello_Request, has non-zero size");
+      }
    }
 
 /*
@@ -94,7 +97,9 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(new Certificate_Status_Request);
 
    if(policy.negotiate_encrypt_then_mac())
+      {
       m_extensions.add(new Encrypt_then_MAC);
+      }
 
    m_extensions.add(new Renegotiation_Extension(reneg_info));
    m_extensions.add(new Server_Name_Indicator(client_settings.hostname()));
@@ -102,14 +107,18 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_extensions.add(new Certificate_Status_Request({}, {}));
 
    if(reneg_info.empty() && !next_protocols.empty())
+      {
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
+      }
 
    if(m_version.supports_negotiable_signature_algorithms())
       m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
-                                                policy.allowed_signature_methods()));
+                       policy.allowed_signature_methods()));
 
    if(m_version.is_datagram_protocol())
+      {
       m_extensions.add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
+      }
 
 #if defined(BOTAN_HAS_SRP6)
    m_extensions.add(new SRP_Identifier(client_settings.srp_identifier()));
@@ -129,10 +138,12 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    if(m_version.supports_negotiable_signature_algorithms())
       m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
-                                                policy.allowed_signature_methods()));
+                       policy.allowed_signature_methods()));
 
    if(policy.send_fallback_scsv(client_settings.protocol_version()))
+      {
       m_suites.push_back(TLS_FALLBACK_SCSV);
+      }
 
    hash.update(io.send(*this));
    }
@@ -154,10 +165,14 @@ Client_Hello::Client_Hello(Handshake_IO& io,
    m_comp_methods(policy.compression())
    {
    if(!value_exists(m_suites, session.ciphersuite_code()))
+      {
       m_suites.push_back(session.ciphersuite_code());
+      }
 
    if(!value_exists(m_comp_methods, session.compression_method()))
+      {
       m_comp_methods.push_back(session.compression_method());
+      }
 
    /*
    We always add the EMS extension, even if not used in the original session.
@@ -178,7 +193,9 @@ Client_Hello::Client_Hello(Handshake_IO& io,
       }
 
    if(session.supports_encrypt_then_mac())
+      {
       m_extensions.add(new Encrypt_then_MAC);
+      }
 
 #if defined(BOTAN_HAS_SRP6)
    m_extensions.add(new SRP_Identifier(session.srp_identifier()));
@@ -191,10 +208,12 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 
    if(m_version.supports_negotiable_signature_algorithms())
       m_extensions.add(new Signature_Algorithms(policy.allowed_signature_hashes(),
-                                                policy.allowed_signature_methods()));
+                       policy.allowed_signature_methods()));
 
    if(reneg_info.empty() && !next_protocols.empty())
+      {
       m_extensions.add(new Application_Layer_Protocol_Notification(next_protocols));
+      }
 
    hash.update(io.send(*this));
    }
@@ -202,7 +221,9 @@ Client_Hello::Client_Hello(Handshake_IO& io,
 void Client_Hello::update_hello_cookie(const Hello_Verify_Request& hello_verify)
    {
    if(!m_version.is_datagram_protocol())
+      {
       throw Exception("Cannot use hello cookie with stream protocol");
+      }
 
    m_hello_cookie = hello_verify.cookie();
    }
@@ -221,7 +242,9 @@ std::vector<uint8_t> Client_Hello::serialize() const
    append_tls_length_value(buf, m_session_id, 1);
 
    if(m_version.is_datagram_protocol())
+      {
       append_tls_length_value(buf, m_hello_cookie, 1);
+      }
 
    append_tls_length_value(buf, m_suites, 2);
    append_tls_length_value(buf, m_comp_methods, 1);
@@ -243,7 +266,9 @@ std::vector<uint8_t> Client_Hello::serialize() const
 Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
    {
    if(buf.size() < 41)
+      {
       throw Decoding_Error("Client_Hello: Packet corrupted");
+      }
 
    TLS_Data_Reader reader("ClientHello", buf);
 
@@ -257,7 +282,9 @@ Client_Hello::Client_Hello(const std::vector<uint8_t>& buf)
    m_session_id = reader.get_range<uint8_t>(1, 0, 32);
 
    if(m_version.is_datagram_protocol())
+      {
       m_hello_cookie = reader.get_range<uint8_t>(1, 0, 255);
+      }
 
    m_suites = reader.get_range_vector<uint16_t>(2, 1, 32767);
 
@@ -302,7 +329,9 @@ bool Client_Hello::offered_suite(uint16_t ciphersuite) const
    {
    for(size_t i = 0; i != m_suites.size(); ++i)
       if(m_suites[i] == ciphersuite)
+         {
          return true;
+         }
    return false;
    }
 

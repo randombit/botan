@@ -23,7 +23,9 @@ class BOTAN_DLL Salsa20 final : public StreamCipher
       void set_iv(const uint8_t iv[], size_t iv_len) override;
 
       bool valid_iv_length(size_t iv_len) const override
-         { return (iv_len == 0 || iv_len == 8 || iv_len == 24); }
+         {
+         return (iv_len == 0 || iv_len == 8 || iv_len == 24);
+         }
 
       Key_Length_Specification key_spec() const override
          {
@@ -32,7 +34,10 @@ class BOTAN_DLL Salsa20 final : public StreamCipher
 
       void clear() override;
       std::string name() const override;
-      StreamCipher* clone() const override { return new Salsa20; }
+      StreamCipher* clone() const override
+         {
+         return new Salsa20;
+         }
 
       void seek(uint64_t offset) override;
    private:

@@ -30,8 +30,8 @@ class BOTAN_DLL KDF
       * @return a null pointer if the algo/provider combination cannot be found
       */
       static std::unique_ptr<KDF>
-         create(const std::string& algo_spec,
-                const std::string& provider = "");
+      create(const std::string& algo_spec,
+             const std::string& provider = "");
 
       /**
       * Create an instance based on a name, or throw if the
@@ -39,8 +39,8 @@ class BOTAN_DLL KDF
       * empty then best available is chosen.
       */
       static std::unique_ptr<KDF>
-         create_or_throw(const std::string& algo_spec,
-                         const std::string& provider = "");
+      create_or_throw(const std::string& algo_spec,
+                      const std::string& provider = "");
 
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -81,12 +81,12 @@ class BOTAN_DLL KDF
       * @return the derived key
       */
       secure_vector<uint8_t> derive_key(size_t key_len,
-                                    const uint8_t secret[],
-                                    size_t secret_len,
-                                    const uint8_t salt[],
-                                    size_t salt_len,
-                                    const uint8_t label[] = nullptr,
-                                    size_t label_len = 0) const
+                                        const uint8_t secret[],
+                                        size_t secret_len,
+                                        const uint8_t salt[],
+                                        size_t salt_len,
+                                        const uint8_t label[] = nullptr,
+                                        size_t label_len = 0) const
          {
          secure_vector<uint8_t> key(key_len);
          key.resize(kdf(key.data(), key.size(), secret, secret_len, salt, salt_len, label, label_len));
@@ -102,9 +102,9 @@ class BOTAN_DLL KDF
       * @return the derived key
       */
       secure_vector<uint8_t> derive_key(size_t key_len,
-                                    const secure_vector<uint8_t>& secret,
-                                    const std::string& salt = "",
-                                    const std::string& label = "") const
+                                        const secure_vector<uint8_t>& secret,
+                                        const std::string& salt = "",
+                                        const std::string& label = "") const
          {
          return derive_key(key_len, secret.data(), secret.size(),
                            reinterpret_cast<const uint8_t*>(salt.data()),
@@ -124,9 +124,9 @@ class BOTAN_DLL KDF
       */
       template<typename Alloc, typename Alloc2, typename Alloc3>
       secure_vector<uint8_t> derive_key(size_t key_len,
-                                     const std::vector<uint8_t, Alloc>& secret,
-                                     const std::vector<uint8_t, Alloc2>& salt,
-                                     const std::vector<uint8_t, Alloc3>& label) const
+                                        const std::vector<uint8_t, Alloc>& secret,
+                                        const std::vector<uint8_t, Alloc2>& salt,
+                                        const std::vector<uint8_t, Alloc3>& label) const
          {
          return derive_key(key_len,
                            secret.data(), secret.size(),
@@ -144,10 +144,10 @@ class BOTAN_DLL KDF
       * @return the derived key
       */
       secure_vector<uint8_t> derive_key(size_t key_len,
-                                    const secure_vector<uint8_t>& secret,
-                                    const uint8_t salt[],
-                                    size_t salt_len,
-                                    const std::string& label = "") const
+                                        const secure_vector<uint8_t>& secret,
+                                        const uint8_t salt[],
+                                        size_t salt_len,
+                                        const std::string& label = "") const
          {
          return derive_key(key_len,
                            secret.data(), secret.size(),
@@ -166,10 +166,10 @@ class BOTAN_DLL KDF
       * @return the derived key
       */
       secure_vector<uint8_t> derive_key(size_t key_len,
-                                    const uint8_t secret[],
-                                    size_t secret_len,
-                                    const std::string& salt = "",
-                                    const std::string& label = "") const
+                                        const uint8_t secret[],
+                                        size_t secret_len,
+                                        const std::string& salt = "",
+                                        const std::string& label = "") const
          {
          return derive_key(key_len, secret, secret_len,
                            reinterpret_cast<const uint8_t*>(salt.data()),

@@ -9,7 +9,7 @@
 #include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-  #include <botan/auto_rng.h>
+   #include <botan/auto_rng.h>
 #endif
 
 namespace Botan {
@@ -28,7 +28,7 @@ void RandomNumberGenerator::randomize_with_ts_input(uint8_t output[], size_t out
    }
 
 void RandomNumberGenerator::randomize_with_input(uint8_t output[], size_t output_len,
-                                                 const uint8_t input[], size_t input_len)
+      const uint8_t input[], size_t input_len)
    {
    this->add_entropy(input, input_len);
    this->randomize(output, output_len);

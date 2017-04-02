@@ -58,7 +58,8 @@ class PKCS11_ECDSA_Signature_Operation : public PK_Ops::Signature
    {
    public:
       PKCS11_ECDSA_Signature_Operation(const PKCS11_EC_PrivateKey& key, const std::string& emsa)
-         : PK_Ops::Signature(), m_key(key), m_order(key.domain().get_order()), m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
+         : PK_Ops::Signature(), m_key(key), m_order(key.domain().get_order()),
+           m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
          {}
 
       void update(const uint8_t msg[], size_t msg_len) override
@@ -113,7 +114,8 @@ class PKCS11_ECDSA_Verification_Operation : public PK_Ops::Verification
    {
    public:
       PKCS11_ECDSA_Verification_Operation(const PKCS11_EC_PublicKey& key, const std::string& emsa)
-         : PK_Ops::Verification(), m_key(key), m_order(key.domain().get_order()), m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
+         : PK_Ops::Verification(), m_key(key), m_order(key.domain().get_order()),
+           m_mechanism(MechanismWrapper::create_ecdsa_mechanism(emsa))
          {}
 
       void update(const uint8_t msg[], size_t msg_len) override
@@ -172,15 +174,15 @@ class PKCS11_ECDSA_Verification_Operation : public PK_Ops::Verification
 
 std::unique_ptr<PK_Ops::Verification>
 PKCS11_ECDSA_PublicKey::create_verification_op(const std::string& params,
-                                               const std::string& /*provider*/) const
+      const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Verification>(new PKCS11_ECDSA_Verification_Operation(*this, params));
    }
 
 std::unique_ptr<PK_Ops::Signature>
 PKCS11_ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                             const std::string& params,
-                                             const std::string& /*provider*/) const
+      const std::string& params,
+      const std::string& /*provider*/) const
    {
    return std::unique_ptr<PK_Ops::Signature>(new PKCS11_ECDSA_Signature_Operation(*this, params));
    }

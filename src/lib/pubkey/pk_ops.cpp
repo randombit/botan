@@ -17,7 +17,9 @@ PK_Ops::Encryption_with_EME::Encryption_with_EME(const std::string& eme)
    {
    m_eme.reset(get_eme(eme));
    if(!m_eme.get())
+      {
       throw Algorithm_Not_Found(eme);
+      }
    }
 
 PK_Ops::Encryption_with_EME::~Encryption_with_EME() {}
@@ -28,7 +30,7 @@ size_t PK_Ops::Encryption_with_EME::max_input_bits() const
    }
 
 secure_vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(const uint8_t msg[], size_t msg_len,
-                                                         RandomNumberGenerator& rng)
+      RandomNumberGenerator& rng)
    {
    const size_t max_raw = max_raw_input_bits();
    const std::vector<uint8_t> encoded = unlock(m_eme->encode(msg, msg_len, max_raw, rng));
@@ -39,7 +41,9 @@ PK_Ops::Decryption_with_EME::Decryption_with_EME(const std::string& eme)
    {
    m_eme.reset(get_eme(eme));
    if(!m_eme.get())
+      {
       throw Algorithm_Not_Found(eme);
+      }
    }
 
 PK_Ops::Decryption_with_EME::~Decryption_with_EME() {}
@@ -56,20 +60,24 @@ PK_Ops::Decryption_with_EME::decrypt(uint8_t& valid_mask,
 PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(const std::string& kdf)
    {
    if(kdf != "Raw")
+      {
       m_kdf.reset(get_kdf(kdf));
+      }
    }
 
 PK_Ops::Key_Agreement_with_KDF::~Key_Agreement_with_KDF() {}
 
 secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
-                                                          const uint8_t w[], size_t w_len,
-                                                          const uint8_t salt[], size_t salt_len)
+      const uint8_t w[], size_t w_len,
+      const uint8_t salt[], size_t salt_len)
    {
    secure_vector<uint8_t> z = raw_agree(w, w_len);
    if(m_kdf)
+      {
       return m_kdf->derive_key(key_len, z, salt, salt_len);
+      }
    return z;
-  }
+   }
 
 PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa) :
    Signature(),
@@ -78,7 +86,9 @@ PK_Ops::Signature_with_EMSA::Signature_with_EMSA(const std::string& emsa) :
    m_prefix_used(false)
    {
    if(!m_emsa)
+      {
       throw Algorithm_Not_Found(emsa);
+      }
    }
 
 PK_Ops::Signature_with_EMSA::~Signature_with_EMSA() {}
@@ -109,7 +119,9 @@ PK_Ops::Verification_with_EMSA::Verification_with_EMSA(const std::string& emsa) 
    m_prefix_used(false)
    {
    if(!m_emsa)
+      {
       throw Algorithm_Not_Found(emsa);
+      }
    }
 
 PK_Ops::Verification_with_EMSA::~Verification_with_EMSA() {}
@@ -144,11 +156,11 @@ bool PK_Ops::Verification_with_EMSA::is_valid_signature(const uint8_t sig[], siz
    }
 
 void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
-                                                  secure_vector<uint8_t>& out_shared_key,
-                                                  size_t desired_shared_key_len,
-                                                  Botan::RandomNumberGenerator& rng,
-                                                  const uint8_t salt[],
-                                                  size_t salt_len)
+      secure_vector<uint8_t>& out_shared_key,
+      size_t desired_shared_key_len,
+      Botan::RandomNumberGenerator& rng,
+      const uint8_t salt[],
+      size_t salt_len)
    {
    secure_vector<uint8_t> raw_shared;
    this->raw_kem_encrypt(out_encapsulated_key, raw_shared, rng);
@@ -167,10 +179,10 @@ PK_Ops::KEM_Encryption_with_KDF::~KEM_Encryption_with_KDF() {}
 
 secure_vector<uint8_t>
 PK_Ops::KEM_Decryption_with_KDF::kem_decrypt(const uint8_t encap_key[],
-                                             size_t len,
-                                             size_t desired_shared_key_len,
-                                             const uint8_t salt[],
-                                             size_t salt_len)
+      size_t len,
+      size_t desired_shared_key_len,
+      const uint8_t salt[],
+      size_t salt_len)
    {
    secure_vector<uint8_t> raw_shared = this->raw_kem_decrypt(encap_key, len);
 

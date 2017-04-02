@@ -36,9 +36,7 @@ std::string main_help()
 
 int main(int argc, char* argv[])
    {
-   std::cerr << Botan::runtime_version_check(BOTAN_VERSION_MAJOR,
-                                             BOTAN_VERSION_MINOR,
-                                             BOTAN_VERSION_PATCH);
+   std::cerr << Botan::runtime_version_check(BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
 
    const std::string cmd_name = (argc <= 1) ? "help" : argv[1];
 

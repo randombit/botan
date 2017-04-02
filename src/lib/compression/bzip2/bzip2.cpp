@@ -28,9 +28,18 @@ class Bzip2_Stream : public Zlib_Style_Stream<bz_stream, char>
          streamp()->bzfree = Compression_Alloc_Info::free;
          }
 
-      uint32_t run_flag() const override { return BZ_RUN; }
-      uint32_t flush_flag() const override { return BZ_FLUSH; }
-      uint32_t finish_flag() const override { return BZ_FINISH; }
+      uint32_t run_flag() const override
+         {
+         return BZ_RUN;
+         }
+      uint32_t flush_flag() const override
+         {
+         return BZ_FLUSH;
+         }
+      uint32_t finish_flag() const override
+         {
+         return BZ_FINISH;
+         }
    };
 
 class Bzip2_Compression_Stream : public Bzip2_Stream
@@ -44,14 +53,20 @@ class Bzip2_Compression_Stream : public Bzip2_Stream
          * more memory is required.
          */
          if(block_size == 0 || block_size >= 9)
+            {
             block_size = 9;
+            }
 
          int rc = BZ2_bzCompressInit(streamp(), block_size, 0, 0);
 
          if(rc == BZ_MEM_ERROR)
+            {
             throw Exception("bzip memory allocation failure");
+            }
          else if(rc != BZ_OK)
+            {
             throw Exception("bzip compress initialization failed");
+            }
          }
 
       ~Bzip2_Compression_Stream()
@@ -64,9 +79,13 @@ class Bzip2_Compression_Stream : public Bzip2_Stream
          int rc = BZ2_bzCompress(streamp(), flags);
 
          if(rc == BZ_MEM_ERROR)
+            {
             throw Exception("bzip memory allocation failure");
+            }
          else if(rc < 0)
+            {
             throw Exception("bzip compress error " + std::to_string(-rc));
+            }
 
          return (rc == BZ_STREAM_END);
          }
@@ -80,9 +99,13 @@ class Bzip2_Decompression_Stream : public Bzip2_Stream
          int rc = BZ2_bzDecompressInit(streamp(), 0, 0);
 
          if(rc == BZ_MEM_ERROR)
+            {
             throw Exception("bzip memory allocation failure");
+            }
          else if(rc != BZ_OK)
+            {
             throw Exception("bzip decompress initialization failed");
+            }
          }
 
       ~Bzip2_Decompression_Stream()
@@ -95,9 +118,13 @@ class Bzip2_Decompression_Stream : public Bzip2_Stream
          int rc = BZ2_bzDecompress(streamp());
 
          if(rc == BZ_MEM_ERROR)
+            {
             throw Exception("bzip memory allocation failure");
+            }
          else if(rc != BZ_OK && rc != BZ_STREAM_END)
+            {
             throw Exception("bzip decompress error " + std::to_string(-rc));
+            }
 
          return (rc == BZ_STREAM_END);
          }

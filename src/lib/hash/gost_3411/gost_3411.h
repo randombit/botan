@@ -19,10 +19,22 @@ namespace Botan {
 class BOTAN_DLL GOST_34_11 final : public HashFunction
    {
    public:
-      std::string name() const override { return "GOST-R-34.11-94" ; }
-      size_t output_length() const override { return 32; }
-      size_t hash_block_size() const override { return 32; }
-      HashFunction* clone() const override { return new GOST_34_11; }
+      std::string name() const override
+         {
+         return "GOST-R-34.11-94" ;
+         }
+      size_t output_length() const override
+         {
+         return 32;
+         }
+      size_t hash_block_size() const override
+         {
+         return 32;
+         }
+      HashFunction* clone() const override
+         {
+         return new GOST_34_11;
+         }
 
       void clear() override;
 

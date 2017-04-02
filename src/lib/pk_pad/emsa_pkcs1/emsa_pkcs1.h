@@ -26,14 +26,17 @@ class BOTAN_DLL EMSA_PKCS1v15 final : public EMSA
       */
       explicit EMSA_PKCS1v15(HashFunction* hash);
 
-      EMSA* clone() override { return new EMSA_PKCS1v15(m_hash->clone()); }
+      EMSA* clone() override
+         {
+         return new EMSA_PKCS1v15(m_hash->clone());
+         }
 
       void update(const uint8_t[], size_t) override;
 
       secure_vector<uint8_t> raw_data() override;
 
       secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
-                                     RandomNumberGenerator& rng) override;
+                                         RandomNumberGenerator& rng) override;
 
       bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
                   size_t) override;
@@ -50,14 +53,17 @@ class BOTAN_DLL EMSA_PKCS1v15 final : public EMSA
 class BOTAN_DLL EMSA_PKCS1v15_Raw final : public EMSA
    {
    public:
-      EMSA* clone() override { return new EMSA_PKCS1v15_Raw(); }
+      EMSA* clone() override
+         {
+         return new EMSA_PKCS1v15_Raw();
+         }
 
       void update(const uint8_t[], size_t) override;
 
       secure_vector<uint8_t> raw_data() override;
 
       secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
-                                     RandomNumberGenerator& rng) override;
+                                         RandomNumberGenerator& rng) override;
 
       bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
                   size_t) override;

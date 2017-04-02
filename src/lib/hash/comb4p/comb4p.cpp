@@ -37,12 +37,14 @@ Comb4P::Comb4P(HashFunction* h1, HashFunction* h2) :
    m_hash1(h1), m_hash2(h2)
    {
    if(m_hash1->name() == m_hash2->name())
+      {
       throw Invalid_Argument("Comb4P: Must use two distinct hashes");
+      }
 
    if(m_hash1->output_length() != m_hash2->output_length())
       throw Invalid_Argument("Comb4P: Incompatible hashes " +
-                                  m_hash1->name() + " and " +
-                                  m_hash2->name());
+                             m_hash1->name() + " and " +
+                             m_hash2->name());
 
    clear();
    }
@@ -50,7 +52,9 @@ Comb4P::Comb4P(HashFunction* h1, HashFunction* h2) :
 size_t Comb4P::hash_block_size() const
    {
    if(m_hash1->hash_block_size() == m_hash2->hash_block_size())
+      {
       return m_hash1->hash_block_size();
+      }
 
    /*
    * Return LCM of the block sizes? This would probably be OK for
@@ -89,7 +93,7 @@ void Comb4P::final_result(uint8_t out[])
    // Third round
    comb4p_round(h1, h2, 2, *m_hash1, *m_hash2);
 
-   copy_mem(out            , h1.data(), h1.size());
+   copy_mem(out, h1.data(), h1.size());
    copy_mem(out + h1.size(), h2.data(), h2.size());
 
    // Prep for processing next message, if any

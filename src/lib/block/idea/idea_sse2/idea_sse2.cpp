@@ -32,7 +32,7 @@ inline __m128i mul(__m128i X, uint16_t K_16)
    // Unsigned compare; cmp = 1 if mul_lo < mul_hi else 0
    const __m128i subs = _mm_subs_epu16(mul_hi, mul_lo);
    const __m128i cmp = _mm_min_epu8(
-     _mm_or_si128(subs, _mm_srli_epi16(subs, 8)), ones);
+                          _mm_or_si128(subs, _mm_srli_epi16(subs, 8)), ones);
 
    T = _mm_add_epi16(T, cmp);
 
@@ -44,12 +44,12 @@ inline __m128i mul(__m128i X, uint16_t K_16)
    */
 
    T = _mm_or_si128(
-      _mm_andnot_si128(X_is_zero, T),
-      _mm_and_si128(_mm_sub_epi16(ones, K), X_is_zero));
+          _mm_andnot_si128(X_is_zero, T),
+          _mm_and_si128(_mm_sub_epi16(ones, K), X_is_zero));
 
    T = _mm_or_si128(
-      _mm_andnot_si128(K_is_zero, T),
-      _mm_and_si128(_mm_sub_epi16(ones, X), K_is_zero));
+          _mm_andnot_si128(K_is_zero, T),
+          _mm_and_si128(_mm_sub_epi16(ones, X), K_is_zero));
 
    return T;
    }
@@ -157,20 +157,20 @@ void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t 
 
    for(size_t i = 0; i != 8; ++i)
       {
-      B0 = mul(B0, EK[6*i+0]);
-      B1 = _mm_add_epi16(B1, _mm_set1_epi16(EK[6*i+1]));
-      B2 = _mm_add_epi16(B2, _mm_set1_epi16(EK[6*i+2]));
-      B3 = mul(B3, EK[6*i+3]);
+      B0 = mul(B0, EK[6 * i + 0]);
+      B1 = _mm_add_epi16(B1, _mm_set1_epi16(EK[6 * i + 1]));
+      B2 = _mm_add_epi16(B2, _mm_set1_epi16(EK[6 * i + 2]));
+      B3 = mul(B3, EK[6 * i + 3]);
 
       __m128i T0 = B2;
       B2 = _mm_xor_si128(B2, B0);
-      B2 = mul(B2, EK[6*i+4]);
+      B2 = mul(B2, EK[6 * i + 4]);
 
       __m128i T1 = B1;
 
       B1 = _mm_xor_si128(B1, B3);
       B1 = _mm_add_epi16(B1, B2);
-      B1 = mul(B1, EK[6*i+5]);
+      B1 = mul(B1, EK[6 * i + 5]);
 
       B2 = _mm_add_epi16(B2, B1);
 

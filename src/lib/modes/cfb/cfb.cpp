@@ -17,7 +17,7 @@ CFB_Mode::CFB_Mode(BlockCipher* cipher, size_t feedback_bits) :
    {
    if(feedback_bits % 8 || feedback() > cipher->block_size())
       throw Invalid_Argument(name() + ": feedback bits " +
-                                  std::to_string(feedback_bits) + " not supported");
+                             std::to_string(feedback_bits) + " not supported");
    }
 
 void CFB_Mode::clear()
@@ -35,9 +35,13 @@ void CFB_Mode::reset()
 std::string CFB_Mode::name() const
    {
    if(feedback() == cipher().block_size())
+      {
       return cipher().name() + "/CFB";
+      }
    else
-      return cipher().name() + "/CFB(" + std::to_string(feedback()*8) + ")";
+      {
+      return cipher().name() + "/CFB(" + std::to_string(feedback() * 8) + ")";
+      }
    }
 
 size_t CFB_Mode::output_length(size_t input_length) const
@@ -78,7 +82,9 @@ void CFB_Mode::key_schedule(const uint8_t key[], size_t length)
 void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
+      {
       throw Invalid_IV_Length(name(), nonce_len);
+      }
 
    m_shift_register.assign(nonce, nonce + nonce_len);
    m_keystream_buf.resize(m_shift_register.size());
@@ -99,11 +105,11 @@ size_t CFB_Encryption::process(uint8_t buf[], size_t sz)
       xor_buf(buf, &keystream_buf()[0], took);
 
       // Assumes feedback-sized block except for last input
-      if (BS - shift > 0)
+      if(BS - shift > 0)
          {
          copy_mem(state.data(), &state[shift], BS - shift);
          }
-      copy_mem(&state[BS-shift], buf, took);
+      copy_mem(&state[BS - shift], buf, took);
       cipher().encrypt(state, keystream_buf());
 
       buf += took;
@@ -130,11 +136,11 @@ size_t CFB_Decryption::process(uint8_t buf[], size_t sz)
       const size_t took = std::min(shift, left);
 
       // first update shift register with ciphertext
-      if (BS - shift > 0)
+      if(BS - shift > 0)
          {
          copy_mem(state.data(), &state[shift], BS - shift);
          }
-      copy_mem(&state[BS-shift], buf, took);
+      copy_mem(&state[BS - shift], buf, took);
 
       // then decrypt
       xor_buf(buf, &keystream_buf()[0], took);

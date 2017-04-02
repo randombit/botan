@@ -39,7 +39,9 @@ std::multimap<std::string, std::string> Data_Store::search_for(
 
    for(auto i = m_contents.begin(); i != m_contents.end(); ++i)
       if(predicate(i->first, i->second))
+         {
          out.insert(std::make_pair(i->first, i->second));
+         }
 
    return out;
    }
@@ -52,7 +54,9 @@ std::vector<std::string> Data_Store::get(const std::string& looking_for) const
    std::vector<std::string> out;
    auto range = m_contents.equal_range(looking_for);
    for(auto i = range.first; i != range.second; ++i)
+      {
       out.push_back(i->second);
+      }
    return out;
    }
 
@@ -64,9 +68,13 @@ std::string Data_Store::get1(const std::string& key) const
    std::vector<std::string> vals = get(key);
 
    if(vals.empty())
+      {
       throw Invalid_State("Data_Store::get1: No values set for " + key);
+      }
    if(vals.size() > 1)
+      {
       throw Invalid_State("Data_Store::get1: More than one value for " + key);
+      }
 
    return vals[0];
    }
@@ -77,10 +85,14 @@ std::string Data_Store::get1(const std::string& key,
    std::vector<std::string> vals = get(key);
 
    if(vals.size() > 1)
+      {
       throw Invalid_State("Data_Store::get1: More than one value for " + key);
+      }
 
    if(vals.empty())
+      {
       return default_value;
+      }
 
    return vals[0];
    }
@@ -94,7 +106,9 @@ Data_Store::get1_memvec(const std::string& key) const
    std::vector<std::string> vals = get(key);
 
    if(vals.empty())
+      {
       return std::vector<uint8_t>();
+      }
 
    if(vals.size() > 1)
       throw Invalid_State("Data_Store::get1_memvec: Multiple values for " +
@@ -112,9 +126,13 @@ uint32_t Data_Store::get1_uint32(const std::string& key,
    std::vector<std::string> vals = get(key);
 
    if(vals.empty())
+      {
       return default_val;
+      }
    else if(vals.size() > 1)
+      {
       throw Invalid_State("Data_Store::get1_uint32: Multiple values for " + key);
+      }
 
    return to_u32bit(vals[0]);
    }

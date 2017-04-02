@@ -48,7 +48,7 @@ class Handshake_IO
       * Returns (HANDSHAKE_NONE, std::vector<>()) if no message currently available
       */
       virtual std::pair<Handshake_Type, std::vector<uint8_t>>
-         get_next_record(bool expecting_ccs) = 0;
+            get_next_record(bool expecting_ccs) = 0;
 
       Handshake_IO() {}
 
@@ -71,7 +71,10 @@ class Stream_Handshake_IO final : public Handshake_IO
 
       Protocol_Version initial_record_version() const override;
 
-      bool timeout_check() override { return false; }
+      bool timeout_check() override
+         {
+         return false;
+         }
 
       std::vector<uint8_t> send(const Handshake_Message& msg) override;
 
@@ -84,7 +87,7 @@ class Stream_Handshake_IO final : public Handshake_IO
                       uint64_t sequence_number) override;
 
       std::pair<Handshake_Type, std::vector<uint8_t>>
-         get_next_record(bool expecting_ccs) override;
+            get_next_record(bool expecting_ccs) override;
    private:
       std::deque<uint8_t> m_queue;
       writer_fn m_send_hs;
@@ -124,7 +127,7 @@ class Datagram_Handshake_IO final : public Handshake_IO
                       uint64_t sequence_number) override;
 
       std::pair<Handshake_Type, std::vector<uint8_t>>
-         get_next_record(bool expecting_ccs) override;
+            get_next_record(bool expecting_ccs) override;
    private:
       void retransmit_flight(size_t flight);
       void retransmit_last_flight();
@@ -143,8 +146,8 @@ class Datagram_Handshake_IO final : public Handshake_IO
          uint16_t msg_sequence) const;
 
       std::vector<uint8_t> send_message(uint16_t msg_seq, uint16_t epoch,
-                                     Handshake_Type msg_type,
-                                     const std::vector<uint8_t>& msg);
+                                        Handshake_Type msg_type,
+                                        const std::vector<uint8_t>& msg);
 
       class Handshake_Reassembly
          {
@@ -158,7 +161,10 @@ class Datagram_Handshake_IO final : public Handshake_IO
 
             bool complete() const;
 
-            uint16_t epoch() const { return m_epoch; }
+            uint16_t epoch() const
+               {
+               return m_epoch;
+               }
 
             std::pair<Handshake_Type, std::vector<uint8_t>> message() const;
          private:
@@ -176,8 +182,6 @@ class Datagram_Handshake_IO final : public Handshake_IO
          {
          Message_Info(uint16_t e, Handshake_Type mt, const std::vector<uint8_t>& msg) :
             epoch(e), msg_type(mt), msg_bits(msg) {}
-
-         Message_Info(const Message_Info& other) = default;
 
          Message_Info() : epoch(0xFFFF), msg_type(HANDSHAKE_NONE) {}
 

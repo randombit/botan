@@ -18,7 +18,7 @@ namespace Botan {
 * Filter interface for cipher modes
 */
 class BOTAN_DLL Cipher_Mode_Filter : public Keyed_Filter,
-                                     private Buffered_Filter
+   private Buffered_Filter
    {
    public:
       explicit Cipher_Mode_Filter(Cipher_Mode* t);
@@ -34,9 +34,15 @@ class BOTAN_DLL Cipher_Mode_Filter : public Keyed_Filter,
       std::string name() const override;
 
    protected:
-      const Cipher_Mode& get_mode() const { return *m_mode; }
+      const Cipher_Mode& get_mode() const
+         {
+         return *m_mode;
+         }
 
-      Cipher_Mode& get_mode() { return *m_mode; }
+      Cipher_Mode& get_mode()
+         {
+         return *m_mode;
+         }
 
    private:
       void write(const uint8_t input[], size_t input_length) override;

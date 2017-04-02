@@ -30,9 +30,13 @@ OID::OID(const std::string& oid_str)
          }
 
       if(m_id.size() < 2 || m_id[0] > 2)
+         {
          throw Invalid_OID(oid_str);
+         }
       if((m_id[0] == 0 || m_id[0] == 1) && m_id[1] > 39)
+         {
          throw Invalid_OID(oid_str);
+         }
       }
    }
 
@@ -54,7 +58,9 @@ std::string OID::as_string() const
       {
       oid_str += std::to_string(m_id[i]);
       if(i != m_id.size() - 1)
+         {
          oid_str += ".";
+         }
       }
    return oid_str;
    }
@@ -65,10 +71,14 @@ std::string OID::as_string() const
 bool OID::operator==(const OID& oid) const
    {
    if(m_id.size() != oid.m_id.size())
+      {
       return false;
+      }
    for(size_t i = 0; i != m_id.size(); ++i)
       if(m_id[i] != oid.m_id[i])
+         {
          return false;
+         }
    return true;
    }
 
@@ -108,15 +118,23 @@ bool operator<(const OID& a, const OID& b)
    const std::vector<uint32_t>& oid2 = b.get_id();
 
    if(oid1.size() < oid2.size())
+      {
       return true;
+      }
    if(oid1.size() > oid2.size())
+      {
       return false;
+      }
    for(size_t i = 0; i != oid1.size(); ++i)
       {
       if(oid1[i] < oid2[i])
+         {
          return true;
+         }
       if(oid1[i] > oid2[i])
+         {
          return false;
+         }
       }
    return false;
    }
@@ -127,7 +145,9 @@ bool operator<(const OID& a, const OID& b)
 void OID::encode_into(DER_Encoder& der) const
    {
    if(m_id.size() < 2)
+      {
       throw Invalid_Argument("OID::encode_into: OID is invalid");
+      }
 
    std::vector<uint8_t> encoding;
    encoding.push_back(40 * m_id[0] + m_id[1]);
@@ -135,7 +155,9 @@ void OID::encode_into(DER_Encoder& der) const
    for(size_t i = 2; i != m_id.size(); ++i)
       {
       if(m_id[i] == 0)
+         {
          encoding.push_back(0);
+         }
       else
          {
          size_t blocks = high_bit(m_id[i]) + 6;
@@ -144,7 +166,9 @@ void OID::encode_into(DER_Encoder& der) const
          BOTAN_ASSERT(blocks > 0, "Math works");
 
          for(size_t j = 0; j != blocks - 1; ++j)
-            encoding.push_back(0x80 | ((m_id[i] >> 7*(blocks-j-1)) & 0x7F));
+            {
+            encoding.push_back(0x80 | ((m_id[i] >> 7 * (blocks - j - 1)) & 0x7F));
+            }
          encoding.push_back(m_id[i] & 0x7F);
          }
       }
@@ -161,7 +185,9 @@ void OID::decode_from(BER_Decoder& decoder)
       throw BER_Bad_Tag("Error decoding OID, unknown tag",
                         obj.type_tag, obj.class_tag);
    if(obj.value.size() < 2)
+      {
       throw BER_Decoding_Error("OID encoding is too short");
+      }
 
 
    clear();
@@ -176,13 +202,17 @@ void OID::decode_from(BER_Decoder& decoder)
          {
          ++i;
 
-         if(component >> (32-7))
+         if(component >> (32 - 7))
+            {
             throw Decoding_Error("OID component overflow");
+            }
 
          component = (component << 7) + (obj.value[i] & 0x7F);
 
          if(!(obj.value[i] & 0x80))
+            {
             break;
+            }
          }
       m_id.push_back(component);
       }

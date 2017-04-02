@@ -49,7 +49,10 @@ class BOTAN_DLL Filter
       * Check whether this filter is an attachable filter.
       * @return true if this filter is attachable, false otherwise
       */
-      virtual bool attachable() { return true; }
+      virtual bool attachable()
+         {
+         return true;
+         }
 
       virtual ~Filter() {}
    protected:
@@ -62,17 +65,26 @@ class BOTAN_DLL Filter
       /**
       * @param in some input for the filter
       */
-      void send(uint8_t in) { send(&in, 1); }
+      void send(uint8_t in)
+         {
+         send(&in, 1);
+         }
 
       /**
       * @param in some input for the filter
       */
-      void send(const secure_vector<uint8_t>& in) { send(in.data(), in.size()); }
+      void send(const secure_vector<uint8_t>& in)
+         {
+         send(in.data(), in.size());
+         }
 
       /**
       * @param in some input for the filter
       */
-      void send(const std::vector<uint8_t>& in) { send(in.data(), in.size()); }
+      void send(const std::vector<uint8_t>& in)
+         {
+         send(in.data(), in.size());
+         }
 
       /**
       * @param in some input for the filter
@@ -115,7 +127,10 @@ class BOTAN_DLL Filter
       friend class Fanout_Filter;
 
       size_t total_ports() const;
-      size_t current_port() const { return m_port_num; }
+      size_t current_port() const
+         {
+         return m_port_num;
+         }
 
       /**
       * Set the active port
@@ -123,7 +138,10 @@ class BOTAN_DLL Filter
       */
       void set_port(size_t new_port);
 
-      size_t owns() const { return m_filter_owns; }
+      size_t owns() const
+         {
+         return m_filter_owns;
+         }
 
       /**
       * Attach another filter to this one
@@ -155,13 +173,25 @@ class BOTAN_DLL Fanout_Filter : public Filter
       /**
       * Increment the number of filters past us that we own
       */
-      void incr_owns() { ++m_filter_owns; }
+      void incr_owns()
+         {
+         ++m_filter_owns;
+         }
 
-      void set_port(size_t n) { Filter::set_port(n); }
+      void set_port(size_t n)
+         {
+         Filter::set_port(n);
+         }
 
-      void set_next(Filter* f[], size_t n) { Filter::set_next(f, n); }
+      void set_next(Filter* f[], size_t n)
+         {
+         Filter::set_next(f, n);
+         }
 
-      void attach(Filter* f) { Filter::attach(f); }
+      void attach(Filter* f)
+         {
+         Filter::attach(f);
+         }
 
    private:
       friend class Threaded_Fork;

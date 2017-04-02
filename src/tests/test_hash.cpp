@@ -32,7 +32,7 @@ class Hash_Function_Tests : public Text_Based_Test
             return result;
             }
 
-         for(auto&& provider_ask : providers)
+         for(auto && provider_ask : providers)
             {
             std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(algo, provider_ask));
 

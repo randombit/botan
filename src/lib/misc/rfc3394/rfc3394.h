@@ -21,7 +21,7 @@ namespace Botan {
 * @return key encrypted under kek
 */
 secure_vector<uint8_t> BOTAN_DLL rfc3394_keywrap(const secure_vector<uint8_t>& key,
-                                              const SymmetricKey& kek);
+      const SymmetricKey& kek);
 
 /**
 * Decrypt a key under a key encryption key using the algorithm
@@ -32,7 +32,7 @@ secure_vector<uint8_t> BOTAN_DLL rfc3394_keywrap(const secure_vector<uint8_t>& k
 * @return key decrypted under kek
 */
 secure_vector<uint8_t> BOTAN_DLL rfc3394_keyunwrap(const secure_vector<uint8_t>& key,
-                                                const SymmetricKey& kek);
+      const SymmetricKey& kek);
 
 }
 

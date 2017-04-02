@@ -60,8 +60,14 @@ class XMSS_Signature
          : m_leaf_idx(leaf_idx), m_randomness(std::move(randomness)),
            m_tree_sig(std::move(tree_sig)) {};
 
-      size_t unused_leaf_index() const { return m_leaf_idx; }
-      void set_unused_leaf_idx(size_t idx) { m_leaf_idx = idx; }
+      size_t unused_leaf_index() const
+         {
+         return m_leaf_idx;
+         }
+      void set_unused_leaf_idx(size_t idx)
+         {
+         m_leaf_idx = idx;
+         }
 
       const secure_vector<uint8_t> randomness() const
          {

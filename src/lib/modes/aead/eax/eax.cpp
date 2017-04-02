@@ -19,8 +19,8 @@ namespace {
 * EAX MAC-based PRF
 */
 secure_vector<uint8_t> eax_prf(uint8_t tag, size_t block_size,
-                           MessageAuthenticationCode& mac,
-                           const uint8_t in[], size_t length)
+                               MessageAuthenticationCode& mac,
+                               const uint8_t in[], size_t length)
    {
    for(size_t i = 0; i != block_size - 1; ++i)
       {
@@ -43,7 +43,9 @@ EAX_Mode::EAX_Mode(BlockCipher* cipher, size_t tag_size) :
    m_cmac(new CMAC(m_cipher->clone()))
    {
    if(m_tag_size < 8 || m_tag_size > m_cmac->output_length())
+      {
       throw Invalid_Argument(name() + ": Bad tag size " + std::to_string(tag_size));
+      }
    }
 
 void EAX_Mode::clear()
@@ -99,14 +101,18 @@ void EAX_Mode::set_associated_data(const uint8_t ad[], size_t length)
 void EAX_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    {
    if(!valid_nonce_length(nonce_len))
+      {
       throw Invalid_IV_Length(name(), nonce_len);
+      }
 
    m_nonce_mac = eax_prf(0, block_size(), *m_cmac, nonce, nonce_len);
 
    m_ctr->set_iv(m_nonce_mac.data(), m_nonce_mac.size());
 
    for(size_t i = 0; i != block_size() - 1; ++i)
+      {
       m_cmac->update(0);
+      }
    m_cmac->update(2);
    }
 
@@ -170,7 +176,9 @@ void EAX_Decryption::finish(secure_vector<uint8_t>& buffer, size_t offset)
    mac ^= m_ad_mac;
 
    if(!same_mem(mac.data(), included_tag, tag_size()))
+      {
       throw Integrity_Failure("EAX tag check failed");
+      }
 
    buffer.resize(offset + remaining);
    }

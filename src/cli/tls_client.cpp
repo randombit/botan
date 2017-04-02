@@ -15,7 +15,7 @@
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-#include <botan/tls_session_manager_sqlite.h>
+   #include <botan/tls_session_manager_sqlite.h>
 #endif
 
 #include <string>
@@ -32,7 +32,7 @@
 #include <fcntl.h>
 
 #if !defined(MSG_NOSIGNAL)
-  #define MSG_NOSIGNAL 0
+   #define MSG_NOSIGNAL 0
 #endif
 
 #include "credentials.h"
@@ -42,9 +42,10 @@ namespace Botan_CLI {
 class TLS_Client final : public Command, public Botan::TLS::Callbacks
    {
    public:
-      TLS_Client() : Command("tls_client host --port=443 --print-certs --policy= "
-                             "--tls1.0 --tls1.1 --tls1.2 "
-                             "--session-db= --session-db-pass= --next-protocols= --type=tcp") {}
+      TLS_Client() :
+         Command("tls_client host --port=443 --print-certs --policy= "
+                 "--tls1.0 --tls1.1 --tls1.2 "
+                 "--session-db= --session-db-pass= --next-protocols= --type=tcp") {}
 
       void go() override
          {
@@ -97,7 +98,9 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          const std::string next_protos = get_arg("next-protocols");
 
          if(transport != "tcp" && transport != "udp")
+            {
             throw CLI_Usage_Error("Invalid transport type '" + transport + "' for TLS");
+            }
 
          const bool use_tcp = (transport == "tcp");
 
@@ -121,20 +124,21 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          struct sockaddr_storage addrbuf;
          std::string hostname;
          if(!host.empty() &&
-            inet_pton(AF_INET, host.c_str(), &addrbuf) != 1 &&
-            inet_pton(AF_INET6, host.c_str(), &addrbuf) != 1)
+               inet_pton(AF_INET, host.c_str(), &addrbuf) != 1 &&
+               inet_pton(AF_INET6, host.c_str(), &addrbuf) != 1)
             {
             hostname = host;
             }
 
-         Botan::TLS::Client client(*this,
-                                   *session_mgr,
-                                   creds,
-                                   *policy,
-                                   rng(),
-                                   Botan::TLS::Server_Information(hostname, port),
-                                   version,
-                                   protocols_to_offer);
+         Botan::TLS::Client client(
+            *this,
+            *session_mgr,
+            creds,
+            *policy,
+            rng(),
+            Botan::TLS::Server_Information(hostname, port),
+            version,
+            protocols_to_offer);
 
          bool first_active = true;
 
@@ -151,7 +155,9 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                   {
                   std::string app = client.application_protocol();
                   if(app != "")
+                     {
                      output() << "Server choose protocol: " << client.application_protocol() << "\n";
+                     }
                   first_active = false;
                   }
                }
@@ -162,7 +168,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
             if(FD_ISSET(m_sockfd, &readfds))
                {
-               uint8_t buf[4*1024] = { 0 };
+               uint8_t buf[4 * 1024] = { 0 };
 
                ssize_t got = ::read(m_sockfd, buf, sizeof(buf));
 
@@ -213,7 +219,9 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
                      }
                   }
                else
+                  {
                   client.send(buf, got);
+                  }
                }
 
             if(client.timeout_check())
@@ -231,7 +239,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          addrinfo hints = {};
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = tcp ? SOCK_STREAM : SOCK_DGRAM;
-         addrinfo *res, *rp = nullptr;
+         addrinfo* res, *rp = nullptr;
 
          if(::getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, &res) != 0)
             {
@@ -277,22 +285,25 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          const Botan::TLS::Policy& policy) override
          {
          if(cert_chain.empty())
+            {
             throw std::invalid_argument("Certificate chain was empty");
+            }
 
          Botan::Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
-                                                          policy.minimum_signature_strength());
+               policy.minimum_signature_strength());
 
          auto ocsp_timeout = std::chrono::milliseconds(1000);
 
-         Botan::Path_Validation_Result result =
-            Botan::x509_path_validate(cert_chain,
-                                      restrictions,
-                                      trusted_roots,
-                                      hostname,
-                                      usage,
-                                      std::chrono::system_clock::now(),
-                                      ocsp_timeout,
-                                      ocsp);
+         Botan::Path_Validation_Result result(
+            Botan::x509_path_validate(
+               cert_chain,
+               restrictions,
+               trusted_roots,
+               hostname,
+               usage,
+               std::chrono::system_clock::now(),
+               ocsp_timeout,
+               ocsp));
 
          std::cout << "Certificate validation status: " << result.result_string() << "\n";
          if(result.successful_validation())
@@ -300,20 +311,26 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             auto status = result.all_statuses();
 
             if(status.size() > 0 && status[0].count(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD))
+               {
                std::cout << "Valid OCSP response for this server\n";
+               }
             }
          }
 
       bool tls_session_established(const Botan::TLS::Session& session) override
          {
          output() << "Handshake complete, " << session.version().to_string()
-                   << " using " << session.ciphersuite().to_string() << "\n";
+                  << " using " << session.ciphersuite().to_string() << "\n";
 
          if(!session.session_id().empty())
+            {
             output() << "Session ID " << Botan::hex_encode(session.session_id()) << "\n";
+            }
 
          if(!session.session_ticket().empty())
+            {
             output() << "Session ticket " << Botan::hex_encode(session.session_ticket()) << "\n";
+            }
 
          if(flag_set("print-certs"))
             {
@@ -321,7 +338,7 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
             for(size_t i = 0; i != certs.size(); ++i)
                {
-               output() << "Certificate " << i+1 << "/" << certs.size() << "\n";
+               output() << "Certificate " << i + 1 << "/" << certs.size() << "\n";
                output() << certs[i].to_string();
                output() << certs[i].PEM_encode();
                }
@@ -335,7 +352,9 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
          int r = send(sockfd, buf, length, MSG_NOSIGNAL);
 
          if(r == -1)
+            {
             throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
+            }
          }
 
       void tls_emit_data(const uint8_t buf[], size_t length) override
@@ -349,9 +368,13 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             if(sent == -1)
                {
                if(errno == EINTR)
+                  {
                   sent = 0;
+                  }
                else
+                  {
                   throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
+                  }
                }
 
             offset += sent;
@@ -367,11 +390,13 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
       void tls_record_received(uint64_t /*seq_no*/, const uint8_t buf[], size_t buf_size) override
          {
          for(size_t i = 0; i != buf_size; ++i)
+            {
             output() << buf[i];
+            }
          }
 
-      private:
-         int m_sockfd = -1;
+   private:
+      int m_sockfd = -1;
    };
 
 BOTAN_REGISTER_COMMAND("tls_client", TLS_Client);

@@ -20,7 +20,9 @@ secure_vector<uint8_t> PK_Decryptor::decrypt(const uint8_t in[], size_t length) 
    secure_vector<uint8_t> decoded = do_decrypt(valid_mask, in, length);
 
    if(valid_mask == 0)
+      {
       throw Decoding_Error("Invalid public key ciphertext, cannot decrypt");
+      }
 
    return decoded;
    }
@@ -90,7 +92,9 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
    {
    m_op = key.create_encryption_op(rng, padding, provider);
    if(!m_op)
+      {
       throw Invalid_Argument("Key type " + key.algo_name() + " does not support encryption");
+      }
    }
 
 PK_Encryptor_EME::~PK_Encryptor_EME() { /* for unique_ptr */ }
@@ -113,13 +117,15 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
    {
    m_op = key.create_decryption_op(rng, padding, provider);
    if(!m_op)
+      {
       throw Invalid_Argument("Key type " + key.algo_name() + " does not support decryption");
+      }
    }
 
 PK_Decryptor_EME::~PK_Decryptor_EME() { /* for unique_ptr */ }
 
 secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask,
-                                                 const uint8_t in[], size_t in_len) const
+      const uint8_t in[], size_t in_len) const
    {
    return m_op->decrypt(valid_mask, in, in_len);
    }
@@ -131,7 +137,9 @@ PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
    {
    m_op = key.create_kem_encryption_op(rng, param, provider);
    if(!m_op)
+      {
       throw Invalid_Argument("Key type " + key.algo_name() + " does not support KEM encryption");
+      }
    }
 
 PK_KEM_Encryptor::~PK_KEM_Encryptor() { /* for unique_ptr */ }
@@ -158,16 +166,18 @@ PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
    {
    m_op = key.create_kem_decryption_op(rng, param, provider);
    if(!m_op)
+      {
       throw Invalid_Argument("Key type " + key.algo_name() + " does not support KEM decryption");
+      }
    }
 
 PK_KEM_Decryptor::~PK_KEM_Decryptor() { /* for unique_ptr */ }
 
 secure_vector<uint8_t> PK_KEM_Decryptor::decrypt(const uint8_t encap_key[],
-                                              size_t encap_key_len,
-                                              size_t desired_shared_key_len,
-                                              const uint8_t salt[],
-                                              size_t salt_len)
+      size_t encap_key_len,
+      size_t desired_shared_key_len,
+      const uint8_t salt[],
+      size_t salt_len)
    {
    return m_op->kem_decrypt(encap_key, encap_key_len,
                             desired_shared_key_len,
@@ -181,7 +191,9 @@ PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
    {
    m_op = key.create_key_agreement_op(rng, kdf, provider);
    if(!m_op)
+      {
       throw Invalid_Argument("Key type " + key.algo_name() + " does not support key agreement");
+      }
    }
 
 PK_Key_Agreement::~PK_Key_Agreement() { /* for unique_ptr */ }
@@ -200,9 +212,9 @@ PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&& other) :
    {}
 
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
-                                          const uint8_t in[], size_t in_len,
-                                          const uint8_t salt[],
-                                          size_t salt_len) const
+      const uint8_t in[], size_t in_len,
+      const uint8_t salt[],
+      size_t salt_len) const
    {
    return m_op->agree(key_len, in, in_len, salt, salt_len);
    }
@@ -215,7 +227,9 @@ PK_Signer::PK_Signer(const Private_Key& key,
    {
    m_op = key.create_signature_op(rng, emsa, provider);
    if(!m_op)
+      {
       throw Invalid_Argument("Key type " + key.algo_name() + " does not support signature generation");
+      }
    m_sig_format = format;
    m_parts = key.message_parts();
    m_part_size = key.message_part_size();
@@ -239,20 +253,26 @@ std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng)
    else if(m_sig_format == DER_SEQUENCE)
       {
       if(sig.size() % m_parts != 0 || sig.size() != m_parts * m_part_size)
+         {
          throw Internal_Error("PK_Signer: DER signature sizes unexpected, cannot encode");
+         }
 
       std::vector<BigInt> sig_parts(m_parts);
       for(size_t i = 0; i != sig_parts.size(); ++i)
-         sig_parts[i].binary_decode(&sig[m_part_size*i], m_part_size);
+         {
+         sig_parts[i].binary_decode(&sig[m_part_size * i], m_part_size);
+         }
 
       return DER_Encoder()
-         .start_cons(SEQUENCE)
-         .encode_list(sig_parts)
-         .end_cons()
-         .get_contents_unlocked();
+             .start_cons(SEQUENCE)
+             .encode_list(sig_parts)
+             .end_cons()
+             .get_contents_unlocked();
       }
    else
+      {
       throw Internal_Error("PK_Signer: Invalid signature format enum");
+      }
    }
 
 PK_Verifier::PK_Verifier(const Public_Key& key,
@@ -262,7 +282,9 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
    {
    m_op = key.create_verification_op(emsa, provider);
    if(!m_op)
+      {
       throw Invalid_Argument("Key type " + key.algo_name() + " does not support signature verification");
+      }
    m_sig_format = format;
    m_parts = key.message_parts();
    m_part_size = key.message_part_size();
@@ -273,7 +295,9 @@ PK_Verifier::~PK_Verifier() { /* for unique_ptr */ }
 void PK_Verifier::set_input_format(Signature_Format format)
    {
    if(format != IEEE_1363 && m_parts == 1)
+      {
       throw Invalid_Argument("PK_Verifier: This algorithm does not support DER encoding");
+      }
    m_sig_format = format;
    }
 
@@ -291,7 +315,8 @@ void PK_Verifier::update(const uint8_t in[], size_t length)
 
 bool PK_Verifier::check_signature(const uint8_t sig[], size_t length)
    {
-   try {
+   try
+      {
       if(m_sig_format == IEEE_1363)
          {
          return m_op->is_valid_signature(sig, length);
@@ -312,14 +337,21 @@ bool PK_Verifier::check_signature(const uint8_t sig[], size_t length)
             }
 
          if(count != m_parts)
+            {
             throw Decoding_Error("PK_Verifier: signature size invalid");
+            }
 
          return m_op->is_valid_signature(real_sig.data(), real_sig.size());
          }
       else
+         {
          throw Internal_Error("PK_Verifier: Invalid signature format enum");
+         }
       }
-   catch(Invalid_Argument&) { return false; }
+   catch(Invalid_Argument&)
+      {
+      return false;
+      }
    }
 
 }

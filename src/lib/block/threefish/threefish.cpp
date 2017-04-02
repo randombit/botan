@@ -75,15 +75,15 @@ void Threefish_512::skein_feedfwd(const secure_vector<uint64_t>& M,
 
    THREEFISH_INJECT_KEY(0);
 
-   THREEFISH_ENC_8_ROUNDS(1,2);
-   THREEFISH_ENC_8_ROUNDS(3,4);
-   THREEFISH_ENC_8_ROUNDS(5,6);
-   THREEFISH_ENC_8_ROUNDS(7,8);
-   THREEFISH_ENC_8_ROUNDS(9,10);
-   THREEFISH_ENC_8_ROUNDS(11,12);
-   THREEFISH_ENC_8_ROUNDS(13,14);
-   THREEFISH_ENC_8_ROUNDS(15,16);
-   THREEFISH_ENC_8_ROUNDS(17,18);
+   THREEFISH_ENC_8_ROUNDS(1, 2);
+   THREEFISH_ENC_8_ROUNDS(3, 4);
+   THREEFISH_ENC_8_ROUNDS(5, 6);
+   THREEFISH_ENC_8_ROUNDS(7, 8);
+   THREEFISH_ENC_8_ROUNDS(9, 10);
+   THREEFISH_ENC_8_ROUNDS(11, 12);
+   THREEFISH_ENC_8_ROUNDS(13, 14);
+   THREEFISH_ENC_8_ROUNDS(15, 16);
+   THREEFISH_ENC_8_ROUNDS(17, 18);
 
    m_K[0] = M[0] ^ X0;
    m_K[1] = M[1] ^ X1;
@@ -125,21 +125,21 @@ void Threefish_512::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       uint64_t X0, X1, X2, X3, X4, X5, X6, X7;
-      load_le(in + BLOCK_SIZE*i, X0, X1, X2, X3, X4, X5, X6, X7);
+      load_le(in + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
 
       THREEFISH_INJECT_KEY(0);
 
-      THREEFISH_ENC_8_ROUNDS(1,2);
-      THREEFISH_ENC_8_ROUNDS(3,4);
-      THREEFISH_ENC_8_ROUNDS(5,6);
-      THREEFISH_ENC_8_ROUNDS(7,8);
-      THREEFISH_ENC_8_ROUNDS(9,10);
-      THREEFISH_ENC_8_ROUNDS(11,12);
-      THREEFISH_ENC_8_ROUNDS(13,14);
-      THREEFISH_ENC_8_ROUNDS(15,16);
-      THREEFISH_ENC_8_ROUNDS(17,18);
+      THREEFISH_ENC_8_ROUNDS(1, 2);
+      THREEFISH_ENC_8_ROUNDS(3, 4);
+      THREEFISH_ENC_8_ROUNDS(5, 6);
+      THREEFISH_ENC_8_ROUNDS(7, 8);
+      THREEFISH_ENC_8_ROUNDS(9, 10);
+      THREEFISH_ENC_8_ROUNDS(11, 12);
+      THREEFISH_ENC_8_ROUNDS(13, 14);
+      THREEFISH_ENC_8_ROUNDS(15, 16);
+      THREEFISH_ENC_8_ROUNDS(17, 18);
 
-      store_le(out + BLOCK_SIZE*i, X0, X1, X2, X3, X4, X5, X6, X7);
+      store_le(out + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
       }
    }
 
@@ -205,21 +205,21 @@ void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
       {
       uint64_t X0, X1, X2, X3, X4, X5, X6, X7;
-      load_le(in + BLOCK_SIZE*i, X0, X1, X2, X3, X4, X5, X6, X7);
+      load_le(in + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
 
       THREEFISH_INJECT_KEY(18);
 
-      THREEFISH_DEC_8_ROUNDS(17,16);
-      THREEFISH_DEC_8_ROUNDS(15,14);
-      THREEFISH_DEC_8_ROUNDS(13,12);
-      THREEFISH_DEC_8_ROUNDS(11,10);
-      THREEFISH_DEC_8_ROUNDS(9,8);
-      THREEFISH_DEC_8_ROUNDS(7,6);
-      THREEFISH_DEC_8_ROUNDS(5,4);
-      THREEFISH_DEC_8_ROUNDS(3,2);
-      THREEFISH_DEC_8_ROUNDS(1,0);
+      THREEFISH_DEC_8_ROUNDS(17, 16);
+      THREEFISH_DEC_8_ROUNDS(15, 14);
+      THREEFISH_DEC_8_ROUNDS(13, 12);
+      THREEFISH_DEC_8_ROUNDS(11, 10);
+      THREEFISH_DEC_8_ROUNDS(9, 8);
+      THREEFISH_DEC_8_ROUNDS(7, 6);
+      THREEFISH_DEC_8_ROUNDS(5, 4);
+      THREEFISH_DEC_8_ROUNDS(3, 2);
+      THREEFISH_DEC_8_ROUNDS(1, 0);
 
-      store_le(out + BLOCK_SIZE*i, X0, X1, X2, X3, X4, X5, X6, X7);
+      store_le(out + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
       }
 
 #undef THREEFISH_DEC_8_ROUNDS
@@ -230,7 +230,9 @@ void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 void Threefish_512::set_tweak(const uint8_t tweak[], size_t len)
    {
    if(len != 16)
+      {
       throw Exception("Threefish-512 requires 128 bit tweak");
+      }
    m_T.resize(3);
    m_T[0] = load_le<uint64_t>(tweak, 0);
    m_T[1] = load_le<uint64_t>(tweak, 1);
@@ -243,7 +245,9 @@ void Threefish_512::key_schedule(const uint8_t key[], size_t)
    m_K.resize(9);
 
    for(size_t i = 0; i != 8; ++i)
+      {
       m_K[i] = load_le<uint64_t>(key, i);
+      }
 
    m_K[8] = m_K[0] ^ m_K[1] ^ m_K[2] ^ m_K[3] ^
             m_K[4] ^ m_K[5] ^ m_K[6] ^ m_K[7] ^ 0x1BD11BDAA9FC1A22;

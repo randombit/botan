@@ -9,7 +9,9 @@
 BigInt inverse_mod_ref(const BigInt& n, const BigInt& mod)
    {
    if(n == 0)
+      {
       return 0;
+      }
 
    BigInt u = mod, v = n;
    BigInt B = 0, D = 1;
@@ -22,7 +24,9 @@ BigInt inverse_mod_ref(const BigInt& n, const BigInt& mod)
          {
          //B.cond_sub(B.is_odd(), mod);
          if(B.is_odd())
-            { B -= mod; }
+            {
+            B -= mod;
+            }
          B >>= 1;
          }
 
@@ -31,19 +35,37 @@ BigInt inverse_mod_ref(const BigInt& n, const BigInt& mod)
       for(size_t i = 0; i != v_zero_bits; ++i)
          {
          if(D.is_odd())
-            { D -= mod; }
+            {
+            D -= mod;
+            }
          D >>= 1;
          }
 
-      if(u >= v) { u -= v; B -= D; }
-      else       { v -= u; D -= B; }
+      if(u >= v)
+         {
+         u -= v;
+         B -= D;
+         }
+      else
+         {
+         v -= u;
+         D -= B;
+         }
       }
 
    if(v != 1)
-      return 0; // no modular inverse
+      {
+      return 0;   // no modular inverse
+      }
 
-   while(D.is_negative()) D += mod;
-   while(D >= mod) D -= mod;
+   while(D.is_negative())
+      {
+      D += mod;
+      }
+   while(D >= mod)
+      {
+      D -= mod;
+      }
 
    return D;
    }
@@ -51,8 +73,10 @@ BigInt inverse_mod_ref(const BigInt& n, const BigInt& mod)
 
 void fuzz(const uint8_t in[], size_t len)
    {
-   if(len % 2 == 1 || len > 2*4096/8)
+   if(len % 2 == 1 || len > 2 * 4096 / 8)
+      {
       return;
+      }
 
    const BigInt x = BigInt::decode(in, len / 2);
    BigInt mod = BigInt::decode(in + len / 2, len / 2);
@@ -60,7 +84,9 @@ void fuzz(const uint8_t in[], size_t len)
    mod.set_bit(0);
 
    if(mod < 3 || x >= mod)
+      {
       return;
+      }
 
    BigInt ref = inverse_mod_ref(x, mod);
    BigInt ct = ct_inverse_mod_odd_modulus(x, mod);
@@ -75,8 +101,8 @@ void fuzz(const uint8_t in[], size_t len)
       std::cout << "CT  = " << ct << "\n";
       //std::cout << "Mon = " << mon << "\n";
 
-      std::cout << "RefCheck = " << (ref*ref)%mod << "\n";
-      std::cout << "CTCheck  = " << (ct*ct)%mod << "\n";
+      std::cout << "RefCheck = " << (ref * ref) % mod << "\n";
+      std::cout << "CTCheck  = " << (ct * ct) % mod << "\n";
       //std::cout << "MonCheck = " << (mon*mon)%mod << "\n";
       abort();
       }

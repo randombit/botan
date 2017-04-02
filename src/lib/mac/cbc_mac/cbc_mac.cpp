@@ -19,7 +19,9 @@ void CBC_MAC::add_data(const uint8_t input[], size_t length)
    m_position += xored;
 
    if(m_position < output_length())
+      {
       return;
+      }
 
    m_cipher->encrypt(m_state);
    input += xored;
@@ -42,7 +44,9 @@ void CBC_MAC::add_data(const uint8_t input[], size_t length)
 void CBC_MAC::final_result(uint8_t mac[])
    {
    if(m_position)
+      {
       m_cipher->encrypt(m_state);
+      }
 
    copy_mem(mac, m_state.data(), m_state.size());
    zeroise(m_state);

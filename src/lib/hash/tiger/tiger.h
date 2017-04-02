@@ -19,7 +19,10 @@ class BOTAN_DLL Tiger final : public MDx_HashFunction
    {
    public:
       std::string name() const override;
-      size_t output_length() const override { return m_hash_len; }
+      size_t output_length() const override
+         {
+         return m_hash_len;
+         }
 
       HashFunction* clone() const override
          {

@@ -184,24 +184,42 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
        * @param i index of the element.
        * @returns n-byte element addressed by i.
        **/
-      const secure_vector<uint8_t>& operator[](size_t i) const { return m_key[i]; }
-      secure_vector<uint8_t>& operator[](size_t i) { return m_key[i]; }
+      const secure_vector<uint8_t>& operator[](size_t i) const
+         {
+         return m_key[i];
+         }
+      secure_vector<uint8_t>& operator[](size_t i)
+         {
+         return m_key[i];
+         }
 
       /**
        * Convert the key into the raw key data. The key becomes a length
        * len vector of n-byte elements.
        **/
-      operator const wots_keysig_t& () const { return m_key; };
+      operator const wots_keysig_t& () const
+         {
+         return m_key;
+         };
 
       /**
        * Convert the key into the raw key data. The key becomes a length
        * len vector of n-byte elements.
        **/
-      operator wots_keysig_t& () { return m_key; }
+      operator wots_keysig_t& ()
+         {
+         return m_key;
+         }
 
-      const secure_vector<uint8_t>& public_seed() const { return m_public_seed; }
+      const secure_vector<uint8_t>& public_seed() const
+         {
+         return m_public_seed;
+         }
 
-      secure_vector<uint8_t>& public_seed() { return m_public_seed; }
+      secure_vector<uint8_t>& public_seed()
+         {
+         return m_public_seed;
+         }
 
       void set_public_seed(const secure_vector<uint8_t>& public_seed)
          {
@@ -213,9 +231,15 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
          m_public_seed = std::move(public_seed);
          }
 
-      const wots_keysig_t& key_data() const { return m_key; }
+      const wots_keysig_t& key_data() const
+         {
+         return m_key;
+         }
 
-      wots_keysig_t& key_data() { return m_key; }
+      wots_keysig_t& key_data()
+         {
+         return m_key;
+         }
 
       void set_key_data(const wots_keysig_t& key_data)
          {
@@ -248,8 +272,8 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
          }
 
       virtual std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string&,
-                                const std::string& provider) const override;
+      create_verification_op(const std::string&,
+                             const std::string& provider) const override;
 
       virtual size_t estimated_strength() const override
          {

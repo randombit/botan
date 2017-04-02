@@ -56,7 +56,10 @@ class BOTAN_DLL DataSource
       * return the id of this data source
       * @return std::string representing the id of this data source
       */
-      virtual std::string id() const { return ""; }
+      virtual std::string id() const
+         {
+         return "";
+         }
 
       /**
       * Read one byte.
@@ -131,7 +134,10 @@ class BOTAN_DLL DataSource_Memory : public DataSource
       explicit DataSource_Memory(const std::vector<uint8_t>& in) :
          m_source(in.begin(), in.end()), m_offset(0) {}
 
-      size_t get_bytes_read() const override { return m_offset; }
+      size_t get_bytes_read() const override
+         {
+         return m_offset;
+         }
    private:
       secure_vector<uint8_t> m_source;
       size_t m_offset;
@@ -167,7 +173,10 @@ class BOTAN_DLL DataSource_Stream : public DataSource
 
       ~DataSource_Stream();
 
-      size_t get_bytes_read() const override { return m_total_read; }
+      size_t get_bytes_read() const override
+         {
+         return m_total_read;
+         }
    private:
       const std::string m_identifier;
 

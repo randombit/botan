@@ -30,14 +30,25 @@ class TLS_Data_Reader
       void assert_done() const
          {
          if(has_remaining())
+            {
             throw decode_error("Extra bytes at end of message");
+            }
          }
 
-      size_t read_so_far() const { return m_offset; }
+      size_t read_so_far() const
+         {
+         return m_offset;
+         }
 
-      size_t remaining_bytes() const { return m_buf.size() - m_offset; }
+      size_t remaining_bytes() const
+         {
+         return m_buf.size() - m_offset;
+         }
 
-      bool has_remaining() const { return (remaining_bytes() > 0); }
+      bool has_remaining() const
+         {
+         return (remaining_bytes() > 0);
+         }
 
       std::vector<uint8_t> get_remaining()
          {
@@ -53,8 +64,8 @@ class TLS_Data_Reader
       uint32_t get_uint32_t()
          {
          assert_at_least(4);
-         uint32_t result = make_uint32(m_buf[m_offset  ], m_buf[m_offset+1],
-                                     m_buf[m_offset+2], m_buf[m_offset+3]);
+         uint32_t result = make_uint32(m_buf[m_offset  ], m_buf[m_offset + 1],
+                                       m_buf[m_offset + 2], m_buf[m_offset + 3]);
          m_offset += 4;
          return result;
          }
@@ -62,7 +73,7 @@ class TLS_Data_Reader
       uint16_t get_uint16_t()
          {
          assert_at_least(2);
-         uint16_t result = make_uint16(m_buf[m_offset], m_buf[m_offset+1]);
+         uint16_t result = make_uint16(m_buf[m_offset], m_buf[m_offset + 1]);
          m_offset += 2;
          return result;
          }
@@ -83,7 +94,9 @@ class TLS_Data_Reader
          Container result(num_elems);
 
          for(size_t i = 0; i != num_elems; ++i)
+            {
             result[i] = load_be<T>(&m_buf[m_offset], i);
+            }
 
          m_offset += num_elems * sizeof(T);
 
@@ -134,9 +147,13 @@ class TLS_Data_Reader
          assert_at_least(len_bytes);
 
          if(len_bytes == 1)
+            {
             return get_byte();
+            }
          else if(len_bytes == 2)
+            {
             return get_uint16_t();
+            }
 
          throw decode_error("Bad length size");
          }
@@ -149,12 +166,16 @@ class TLS_Data_Reader
          const size_t byte_length = get_length_field(len_bytes);
 
          if(byte_length % T_size != 0)
+            {
             throw decode_error("Size isn't multiple of T");
+            }
 
          const size_t num_elems = byte_length / T_size;
 
          if(num_elems < min_elems || num_elems > max_elems)
+            {
             throw decode_error("Length field outside parameters");
+            }
 
          return num_elems;
          }
@@ -164,7 +185,7 @@ class TLS_Data_Reader
          if(m_buf.size() - m_offset < n)
             throw decode_error("Expected " + std::to_string(n) +
                                " bytes remaining, only " +
-                               std::to_string(m_buf.size()-m_offset) +
+                               std::to_string(m_buf.size() - m_offset) +
                                " left");
          }
 
@@ -191,18 +212,26 @@ void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
    const size_t val_bytes = T_size * vals_size;
 
    if(tag_size != 1 && tag_size != 2)
+      {
       throw Invalid_Argument("append_tls_length_value: invalid tag size");
+      }
 
    if((tag_size == 1 && val_bytes > 255) ||
-      (tag_size == 2 && val_bytes > 65535))
+         (tag_size == 2 && val_bytes > 65535))
+      {
       throw Invalid_Argument("append_tls_length_value: value too large");
+      }
 
    for(size_t i = 0; i != tag_size; ++i)
-      buf.push_back(get_byte(sizeof(val_bytes)-tag_size+i, val_bytes));
+      {
+      buf.push_back(get_byte(sizeof(val_bytes) - tag_size + i, val_bytes));
+      }
 
    for(size_t i = 0; i != vals_size; ++i)
       for(size_t j = 0; j != T_size; ++j)
+         {
          buf.push_back(get_byte(j, vals[i]));
+         }
    }
 
 template<typename T, typename Alloc, typename Alloc2>

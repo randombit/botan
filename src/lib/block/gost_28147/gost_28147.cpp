@@ -22,29 +22,39 @@ GOST_28147_89_Params::GOST_28147_89_Params(const std::string& n) : m_name(n)
    // Encoded in the packed fromat from RFC 4357
 
    // GostR3411_94_TestParamSet (OID 1.2.643.2.2.31.0)
-   static const uint8_t GOST_R_3411_TEST_PARAMS[64] = {
+   static const uint8_t GOST_R_3411_TEST_PARAMS[64] =
+      {
       0x4E, 0x57, 0x64, 0xD1, 0xAB, 0x8D, 0xCB, 0xBF, 0x94, 0x1A, 0x7A,
       0x4D, 0x2C, 0xD1, 0x10, 0x10, 0xD6, 0xA0, 0x57, 0x35, 0x8D, 0x38,
       0xF2, 0xF7, 0x0F, 0x49, 0xD1, 0x5A, 0xEA, 0x2F, 0x8D, 0x94, 0x62,
       0xEE, 0x43, 0x09, 0xB3, 0xF4, 0xA6, 0xA2, 0x18, 0xC6, 0x98, 0xE3,
       0xC1, 0x7C, 0xE5, 0x7E, 0x70, 0x6B, 0x09, 0x66, 0xF7, 0x02, 0x3C,
-      0x8B, 0x55, 0x95, 0xBF, 0x28, 0x39, 0xB3, 0x2E, 0xCC };
+      0x8B, 0x55, 0x95, 0xBF, 0x28, 0x39, 0xB3, 0x2E, 0xCC
+      };
 
    // GostR3411-94-CryptoProParamSet (OID 1.2.643.2.2.31.1)
-   static const uint8_t GOST_R_3411_CRYPTOPRO_PARAMS[64] = {
+   static const uint8_t GOST_R_3411_CRYPTOPRO_PARAMS[64] =
+      {
       0xA5, 0x74, 0x77, 0xD1, 0x4F, 0xFA, 0x66, 0xE3, 0x54, 0xC7, 0x42,
       0x4A, 0x60, 0xEC, 0xB4, 0x19, 0x82, 0x90, 0x9D, 0x75, 0x1D, 0x4F,
       0xC9, 0x0B, 0x3B, 0x12, 0x2F, 0x54, 0x79, 0x08, 0xA0, 0xAF, 0xD1,
       0x3E, 0x1A, 0x38, 0xC7, 0xB1, 0x81, 0xC6, 0xE6, 0x56, 0x05, 0x87,
       0x03, 0x25, 0xEB, 0xFE, 0x9C, 0x6D, 0xF8, 0x6D, 0x2E, 0xAB, 0xDE,
-      0x20, 0xBA, 0x89, 0x3C, 0x92, 0xF8, 0xD3, 0x53, 0xBC };
+      0x20, 0xBA, 0x89, 0x3C, 0x92, 0xF8, 0xD3, 0x53, 0xBC
+      };
 
    if(m_name == "R3411_94_TestParam")
+      {
       m_sboxes = GOST_R_3411_TEST_PARAMS;
+      }
    else if(m_name == "R3411_CryptoPro")
+      {
       m_sboxes = GOST_R_3411_CRYPTOPRO_PARAMS;
+      }
    else
+      {
       throw Invalid_Argument("GOST_28147_89_Params: Unknown " + m_name);
+      }
    }
 
 /*
@@ -56,9 +66,9 @@ GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) : m_SBOX(1024)
    for(size_t i = 0; i != 4; ++i)
       for(size_t j = 0; j != 256; ++j)
          {
-         const uint32_t T = (param.sbox_entry(2*i  , j % 16)) |
-                          (param.sbox_entry(2*i+1, j / 16) << 4);
-         m_SBOX[256*i+j] = rotate_left(T, (11+8*i) % 32);
+         const uint32_t T = (param.sbox_entry(2 * i, j % 16)) |
+                            (param.sbox_entry(2 * i + 1, j / 16) << 4);
+         m_SBOX[256 * i + j] = rotate_left(T, (11 + 8 * i) % 32);
          }
    }
 
@@ -72,11 +82,17 @@ std::string GOST_28147_89::name() const
    */
    std::string sbox_name = "";
    if(m_SBOX[0] == 0x00072000)
+      {
       sbox_name = "R3411_94_TestParam";
+      }
    else if(m_SBOX[0] == 0x0002D000)
+      {
       sbox_name = "R3411_CryptoPro";
+      }
    else
+      {
       throw Internal_Error("GOST-28147 unrecognized sbox value");
+      }
 
    return "GOST-28147-89(" + sbox_name + ")";
    }
@@ -165,7 +181,9 @@ void GOST_28147_89::key_schedule(const uint8_t key[], size_t)
    {
    m_EK.resize(8);
    for(size_t i = 0; i != 8; ++i)
+      {
       m_EK[i] = load_le<uint32_t>(key, i);
+      }
    }
 
 void GOST_28147_89::clear()

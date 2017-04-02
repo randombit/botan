@@ -19,8 +19,8 @@
 #include <botan/data_snk.h>
 
 #if defined(BOTAN_HAS_CODEC_FILTERS)
-  #include <botan/b64_filt.h>
-  #include <botan/hex_filt.h>
+   #include <botan/b64_filt.h>
+   #include <botan/hex_filt.h>
 #endif
 
 namespace Botan {
@@ -32,7 +32,10 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
    {
    public:
 
-      std::string name() const override { return m_cipher->name(); }
+      std::string name() const override
+         {
+         return m_cipher->name();
+         }
 
       /**
       * Write input data
@@ -42,7 +45,9 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       void write(const uint8_t input[], size_t input_len) override;
 
       bool valid_iv_length(size_t iv_len) const override
-         { return m_cipher->valid_iv_length(iv_len); }
+         {
+         return m_cipher->valid_iv_length(iv_len);
+         }
 
       /**
       * Set the initialization vector for this filter.
@@ -57,9 +62,15 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
       * Set the key of this filter.
       * @param key the key to set
       */
-      void set_key(const SymmetricKey& key) override { m_cipher->set_key(key); }
+      void set_key(const SymmetricKey& key) override
+         {
+         m_cipher->set_key(key);
+         }
 
-      Key_Length_Specification key_spec() const override { return m_cipher->key_spec(); }
+      Key_Length_Specification key_spec() const override
+         {
+         return m_cipher->key_spec();
+         }
 
       /**
       * Construct a stream cipher filter.
@@ -97,10 +108,16 @@ class BOTAN_DLL StreamCipher_Filter : public Keyed_Filter
 class BOTAN_DLL Hash_Filter : public Filter
    {
    public:
-      void write(const uint8_t input[], size_t len) override { m_hash->update(input, len); }
+      void write(const uint8_t input[], size_t len) override
+         {
+         m_hash->update(input, len);
+         }
       void end_msg() override;
 
-      std::string name() const override { return m_hash->name(); }
+      std::string name() const override
+         {
+         return m_hash->name();
+         }
 
       /**
       * Construct a hash filter.
@@ -134,18 +151,30 @@ class BOTAN_DLL Hash_Filter : public Filter
 class BOTAN_DLL MAC_Filter : public Keyed_Filter
    {
    public:
-      void write(const uint8_t input[], size_t len) override { m_mac->update(input, len); }
+      void write(const uint8_t input[], size_t len) override
+         {
+         m_mac->update(input, len);
+         }
       void end_msg() override;
 
-      std::string name() const override { return m_mac->name(); }
+      std::string name() const override
+         {
+         return m_mac->name();
+         }
 
       /**
       * Set the key of this filter.
       * @param key the key to set
       */
-      void set_key(const SymmetricKey& key) override { m_mac->set_key(key); }
+      void set_key(const SymmetricKey& key) override
+         {
+         m_mac->set_key(key);
+         }
 
-      Key_Length_Specification key_spec() const override { return m_mac->key_spec(); }
+      Key_Length_Specification key_spec() const override
+         {
+         return m_mac->key_spec();
+         }
 
       /**
       * Construct a MAC filter. The MAC key will be left empty.

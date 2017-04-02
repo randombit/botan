@@ -24,7 +24,7 @@ namespace TLS {
 * serious privacy risk in some situations.
 */
 class BOTAN_DLL
-Session_Manager_SQLite : public Session_Manager_SQL
+   Session_Manager_SQLite : public Session_Manager_SQL
    {
    public:
       /**
@@ -43,7 +43,7 @@ Session_Manager_SQLite : public Session_Manager_SQL
                              const std::string& db_filename,
                              size_t max_sessions = 1000,
                              std::chrono::seconds session_lifetime = std::chrono::seconds(7200));
-};
+   };
 
 }
 

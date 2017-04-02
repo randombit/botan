@@ -60,13 +60,17 @@ BigInt random_prime(RandomNumberGenerator& rng,
       p.set_bit(0);
 
       if(p % modulo != equiv)
+         {
          p += (modulo - p % modulo) + equiv;
+         }
 
       const size_t sieve_size = std::min(bits / 2, PRIME_TABLE_SIZE);
       secure_vector<uint16_t> sieve(sieve_size);
 
       for(size_t j = 0; j != sieve.size(); ++j)
+         {
          sieve[j] = static_cast<uint16_t>(p % PRIMES[j]);
+         }
 
       size_t counter = 0;
       while(true)
@@ -81,7 +85,9 @@ BigInt random_prime(RandomNumberGenerator& rng,
          p += modulo;
 
          if(p.bits() > bits)
+            {
             break;
+            }
 
          bool passes_sieve = true;
          for(size_t j = 0; j != sieve.size(); ++j)
@@ -95,10 +101,14 @@ BigInt random_prime(RandomNumberGenerator& rng,
             }
 
          if(!passes_sieve)
+            {
             continue;
+            }
 
          if(gcd(p - 1, coprime) != 1)
+            {
             continue;
+            }
 
          if(is_prime(p, rng, 128, true))
             {
@@ -119,7 +129,9 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits)
 
    BigInt p;
    do
+      {
       p = (random_prime(rng, bits - 1) << 1) + 1;
+      }
    while(!is_prime(p, rng, 128, true));
 
    return p;

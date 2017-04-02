@@ -30,7 +30,9 @@ void RC4::cipher(const uint8_t in[], uint8_t out[], size_t length)
 void RC4::set_iv(const uint8_t*, size_t length)
    {
    if(length > 0)
+      {
       throw Exception("RC4 does not support an IV");
+      }
    }
 
 /*
@@ -41,22 +43,34 @@ void RC4::generate()
    uint8_t SX, SY;
    for(size_t i = 0; i != m_buffer.size(); i += 4)
       {
-      SX = m_state[m_X+1]; m_Y = (m_Y + SX) % 256; SY = m_state[m_Y];
-      m_state[m_X+1] = SY; m_state[m_Y] = SX;
+      SX = m_state[m_X + 1];
+      m_Y = (m_Y + SX) % 256;
+      SY = m_state[m_Y];
+      m_state[m_X + 1] = SY;
+      m_state[m_Y] = SX;
       m_buffer[i] = m_state[(SX + SY) % 256];
 
-      SX = m_state[m_X+2]; m_Y = (m_Y + SX) % 256; SY = m_state[m_Y];
-      m_state[m_X+2] = SY; m_state[m_Y] = SX;
-      m_buffer[i+1] = m_state[(SX + SY) % 256];
+      SX = m_state[m_X + 2];
+      m_Y = (m_Y + SX) % 256;
+      SY = m_state[m_Y];
+      m_state[m_X + 2] = SY;
+      m_state[m_Y] = SX;
+      m_buffer[i + 1] = m_state[(SX + SY) % 256];
 
-      SX = m_state[m_X+3]; m_Y = (m_Y + SX) % 256; SY = m_state[m_Y];
-      m_state[m_X+3] = SY; m_state[m_Y] = SX;
-      m_buffer[i+2] = m_state[(SX + SY) % 256];
+      SX = m_state[m_X + 3];
+      m_Y = (m_Y + SX) % 256;
+      SY = m_state[m_Y];
+      m_state[m_X + 3] = SY;
+      m_state[m_Y] = SX;
+      m_buffer[i + 2] = m_state[(SX + SY) % 256];
 
       m_X = (m_X + 4) % 256;
-      SX = m_state[m_X]; m_Y = (m_Y + SX) % 256; SY = m_state[m_Y];
-      m_state[m_X] = SY; m_state[m_Y] = SX;
-      m_buffer[i+3] = m_state[(SX + SY) % 256];
+      SX = m_state[m_X];
+      m_Y = (m_Y + SX) % 256;
+      SY = m_state[m_Y];
+      m_state[m_X] = SY;
+      m_state[m_Y] = SX;
+      m_buffer[i + 3] = m_state[(SX + SY) % 256];
       }
    m_position = 0;
    }
@@ -72,7 +86,9 @@ void RC4::key_schedule(const uint8_t key[], size_t length)
    m_position = m_X = m_Y = 0;
 
    for(size_t i = 0; i != 256; ++i)
+      {
       m_state[i] = static_cast<uint8_t>(i);
+      }
 
    for(size_t i = 0, state_index = 0; i != 256; ++i)
       {
@@ -81,7 +97,9 @@ void RC4::key_schedule(const uint8_t key[], size_t length)
       }
 
    for(size_t i = 0; i <= m_SKIP; i += m_buffer.size())
+      {
       generate();
+      }
 
    m_position += (m_SKIP % m_buffer.size());
    }
@@ -91,9 +109,18 @@ void RC4::key_schedule(const uint8_t key[], size_t length)
 */
 std::string RC4::name() const
    {
-   if(m_SKIP == 0)   return "RC4";
-   if(m_SKIP == 256) return "MARK-4";
-   else            return "RC4_skip(" + std::to_string(m_SKIP) + ")";
+   if(m_SKIP == 0)
+      {
+      return "RC4";
+      }
+   if(m_SKIP == 256)
+      {
+      return "MARK-4";
+      }
+   else
+      {
+      return "RC4_skip(" + std::to_string(m_SKIP) + ")";
+      }
    }
 
 /*

@@ -111,7 +111,10 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
       */
       void reseed_check();
 
-      uint32_t last_pid() const { return m_last_pid; }
+      uint32_t last_pid() const
+         {
+         return m_last_pid;
+         }
 
    private:
       // A non-owned and possibly null pointer to shared RNG

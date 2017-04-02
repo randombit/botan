@@ -19,7 +19,8 @@ class DER_Encoder;
 /**
 * ASN.1 Type and Class Tags
 */
-enum ASN1_Tag {
+enum ASN1_Tag
+   {
    UNIVERSAL        = 0x00,
    APPLICATION      = 0x40,
    CONTEXT_SPECIFIC = 0x80,
@@ -53,7 +54,7 @@ enum ASN1_Tag {
 
    NO_OBJECT        = 0xFF00,
    DIRECTORY_STRING = 0xFF01
-};
+   };
 
 /**
 * Basic ASN.1 Object Interface
@@ -73,7 +74,10 @@ class BOTAN_DLL ASN1_Object
       */
       virtual void decode_from(BER_Decoder& from) = 0;
 
-      virtual ~ASN1_Object() {}
+      ASN1_Object() = default;
+      ASN1_Object(ASN1_Object const&) = default;
+      ASN1_Object& operator=(ASN1_Object const&) = default;
+      virtual ~ASN1_Object() = default;
    };
 
 /**

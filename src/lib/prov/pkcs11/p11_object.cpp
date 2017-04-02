@@ -52,7 +52,7 @@ void AttributeContainer::add_attribute(AttributeType attribute, const uint8_t* v
       if(existing_attribute.type == static_cast< CK_ATTRIBUTE_TYPE >(attribute))
          {
          // remove old entries
-         m_strings.erase(std::remove_if(m_strings.begin(), m_strings.end(), [ &existing_attribute ](const std::string& data)
+         m_strings.erase(std::remove_if(m_strings.begin(), m_strings.end(), [ &existing_attribute ](const std::string & data)
             {
             return data.data() == existing_attribute.pValue;
             }), m_strings.end());

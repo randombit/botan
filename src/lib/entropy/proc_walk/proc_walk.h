@@ -26,7 +26,10 @@ class File_Descriptor_Source
 class ProcWalking_EntropySource final : public Entropy_Source
    {
    public:
-      std::string name() const override { return "proc_walk"; }
+      std::string name() const override
+         {
+         return "proc_walk";
+         }
 
       size_t poll(RandomNumberGenerator& rng) override;
 

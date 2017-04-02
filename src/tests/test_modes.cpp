@@ -8,7 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_MODES)
-  #include <botan/cipher_mode.h>
+   #include <botan/cipher_mode.h>
 #endif
 
 namespace Botan_Tests {

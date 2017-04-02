@@ -27,13 +27,18 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
          m_public_matrix(pub_matrix),
          m_t(the_t),
          m_code_length(the_code_length)
-            {}
+         {}
 
-      McEliece_PublicKey(const McEliece_PublicKey& other);
+      McEliece_PublicKey& operator=(McEliece_PublicKey const&) = default;
+      McEliece_PublicKey(const McEliece_PublicKey& other) = default;
+      virtual ~McEliece_PublicKey() = default;
 
       secure_vector<uint8_t> random_plaintext_element(RandomNumberGenerator& rng) const;
 
-      std::string algo_name() const override { return "McEliece"; }
+      std::string algo_name() const override
+         {
+         return "McEliece";
+         }
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
@@ -43,20 +48,34 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
       std::vector<uint8_t> public_key_bits() const override;
 
       bool check_key(RandomNumberGenerator&, bool) const override
-         { return true; }
+         {
+         return true;
+         }
 
-      uint32_t get_t() const { return m_t; }
-      uint32_t get_code_length() const { return m_code_length; }
+      uint32_t get_t() const
+         {
+         return m_t;
+         }
+      uint32_t get_code_length() const
+         {
+         return m_code_length;
+         }
       uint32_t get_message_word_bit_length() const;
-      const std::vector<uint8_t>& get_public_matrix() const { return m_public_matrix; }
+      const std::vector<uint8_t>& get_public_matrix() const
+         {
+         return m_public_matrix;
+         }
 
       bool operator==(const McEliece_PublicKey& other) const;
-      bool operator!=(const McEliece_PublicKey& other) const { return !(*this == other); }
+      bool operator!=(const McEliece_PublicKey& other) const
+         {
+         return !(*this == other);
+         }
 
       std::unique_ptr<PK_Ops::KEM_Encryption>
-         create_kem_encryption_op(RandomNumberGenerator& rng,
-                                  const std::string& params,
-                                  const std::string& provider) const override;
+      create_kem_encryption_op(RandomNumberGenerator& rng,
+                               const std::string& params,
+                               const std::string& provider) const override;
 
    protected:
       McEliece_PublicKey() : m_t(0), m_code_length(0) {}
@@ -67,7 +86,7 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
    };
 
 class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
-                                      public virtual Private_Key
+   public virtual Private_Key
    {
    public:
 
@@ -91,29 +110,50 @@ class BOTAN_DLL McEliece_PrivateKey : public virtual McEliece_PublicKey,
                           std::vector<uint32_t> const& parity_check_matrix_coeffs,
                           std::vector<polyn_gf2m> const& square_root_matrix,
                           std::vector<gf2m> const& inverse_support,
-                          std::vector<uint8_t> const& public_matrix );
+                          std::vector<uint8_t> const& public_matrix);
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
-      polyn_gf2m const& get_goppa_polyn() const { return m_g; }
-      std::vector<uint32_t> const& get_H_coeffs() const { return m_coeffs; }
-      std::vector<gf2m> const& get_Linv() const { return m_Linv; }
-      std::vector<polyn_gf2m> const& get_sqrtmod() const { return m_sqrtmod; }
+      polyn_gf2m const& get_goppa_polyn() const
+         {
+         return m_g;
+         }
+      std::vector<uint32_t> const& get_H_coeffs() const
+         {
+         return m_coeffs;
+         }
+      std::vector<gf2m> const& get_Linv() const
+         {
+         return m_Linv;
+         }
+      std::vector<polyn_gf2m> const& get_sqrtmod() const
+         {
+         return m_sqrtmod;
+         }
 
-      inline uint32_t get_dimension() const { return m_dimension; }
+      inline uint32_t get_dimension() const
+         {
+         return m_dimension;
+         }
 
-      inline uint32_t get_codimension() const { return m_codimension; }
+      inline uint32_t get_codimension() const
+         {
+         return m_codimension;
+         }
 
       secure_vector<uint8_t> private_key_bits() const override;
 
-      bool operator==(const McEliece_PrivateKey & other) const;
+      bool operator==(const McEliece_PrivateKey& other) const;
 
-      bool operator!=(const McEliece_PrivateKey& other) const { return !(*this == other); }
+      bool operator!=(const McEliece_PrivateKey& other) const
+         {
+         return !(*this == other);
+         }
 
       std::unique_ptr<PK_Ops::KEM_Decryption>
-         create_kem_decryption_op(RandomNumberGenerator& rng,
-                                  const std::string& params,
-                                  const std::string& provider) const override;
+      create_kem_decryption_op(RandomNumberGenerator& rng,
+                               const std::string& params,
+                               const std::string& provider) const override;
    private:
       polyn_gf2m m_g;
       std::vector<polyn_gf2m> m_sqrtmod;

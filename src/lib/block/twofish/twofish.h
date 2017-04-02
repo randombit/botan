@@ -22,8 +22,14 @@ class BOTAN_DLL Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8>
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
-      std::string name() const override { return "Twofish"; }
-      BlockCipher* clone() const override { return new Twofish; }
+      std::string name() const override
+         {
+         return "Twofish";
+         }
+      BlockCipher* clone() const override
+         {
+         return new Twofish;
+         }
    private:
       void key_schedule(const uint8_t[], size_t) override;
 

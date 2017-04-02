@@ -22,7 +22,9 @@ std::ostream& operator<<(std::ostream& stream, Pipe& pipe)
       stream.write(reinterpret_cast<const char*>(buffer.data()), got);
       }
    if(!stream.good())
+      {
       throw Stream_IO_Error("Pipe output operator (iostream) has failed");
+      }
    return stream;
    }
 
@@ -38,7 +40,9 @@ std::istream& operator>>(std::istream& stream, Pipe& pipe)
       pipe.write(buffer.data(), stream.gcount());
       }
    if(stream.bad() || (stream.fail() && !stream.eof()))
+      {
       throw Stream_IO_Error("Pipe input operator (iostream) has failed");
+      }
    return stream;
    }
 

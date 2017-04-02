@@ -27,22 +27,30 @@ Filter::Filter()
 void Filter::send(const uint8_t input[], size_t length)
    {
    if(!length)
+      {
       return;
+      }
 
    bool nothing_attached = true;
    for(size_t j = 0; j != total_ports(); ++j)
       if(m_next[j])
          {
          if(m_write_queue.size())
+            {
             m_next[j]->write(m_write_queue.data(), m_write_queue.size());
+            }
          m_next[j]->write(input, length);
          nothing_attached = false;
          }
 
    if(nothing_attached)
+      {
       m_write_queue += std::make_pair(input, length);
+      }
    else
+      {
       m_write_queue.clear();
+      }
    }
 
 /*
@@ -53,7 +61,9 @@ void Filter::new_msg()
    start_msg();
    for(size_t j = 0; j != total_ports(); ++j)
       if(m_next[j])
+         {
          m_next[j]->new_msg();
+         }
    }
 
 /*
@@ -64,7 +74,9 @@ void Filter::finish_msg()
    end_msg();
    for(size_t j = 0; j != total_ports(); ++j)
       if(m_next[j])
+         {
          m_next[j]->finish_msg();
+         }
    }
 
 /*
@@ -76,7 +88,9 @@ void Filter::attach(Filter* new_filter)
       {
       Filter* last = this;
       while(last->get_next())
+         {
          last = last->get_next();
+         }
       last->m_next[last->current_port()] = new_filter;
       }
    }
@@ -87,7 +101,9 @@ void Filter::attach(Filter* new_filter)
 void Filter::set_port(size_t new_port)
    {
    if(new_port >= total_ports())
+      {
       throw Invalid_Argument("Filter: Invalid port number");
+      }
    m_port_num = new_port;
    }
 
@@ -97,7 +113,9 @@ void Filter::set_port(size_t new_port)
 Filter* Filter::get_next() const
    {
    if(m_port_num < m_next.size())
+      {
       return m_next[m_port_num];
+      }
    return nullptr;
    }
 
@@ -111,11 +129,15 @@ void Filter::set_next(Filter* filters[], size_t size)
    m_port_num = 0;
    m_filter_owns = 0;
 
-   while(size && filters && (filters[size-1] == nullptr))
+   while(size && filters && (filters[size - 1] == nullptr))
+      {
       --size;
+      }
 
    if(filters && size)
+      {
       m_next.assign(filters, filters + size);
+      }
    }
 
 /*

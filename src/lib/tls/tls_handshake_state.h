@@ -54,7 +54,10 @@ class Handshake_State
       Handshake_State(const Handshake_State&) = delete;
       Handshake_State& operator=(const Handshake_State&) = delete;
 
-      Handshake_IO& handshake_io() { return *m_handshake_io; }
+      Handshake_IO& handshake_io()
+         {
+         return *m_handshake_io;
+         }
 
       /**
       * Return true iff we have received a particular message already
@@ -75,29 +78,32 @@ class Handshake_State
       void set_expected_next(Handshake_Type msg_type);
 
       std::pair<Handshake_Type, std::vector<uint8_t>>
-         get_next_handshake_msg();
+            get_next_handshake_msg();
 
       std::vector<uint8_t> session_ticket() const;
 
       std::pair<std::string, Signature_Format>
-         parse_sig_format(const Public_Key& key,
-                          const std::string& hash_algo,
-                          const std::string& sig_algo,
-                          bool for_client_auth,
-                          const Policy& policy) const;
+      parse_sig_format(const Public_Key& key,
+                       const std::string& hash_algo,
+                       const std::string& sig_algo,
+                       bool for_client_auth,
+                       const Policy& policy) const;
 
       std::pair<std::string, Signature_Format>
-         choose_sig_format(const Private_Key& key,
-                           std::string& hash_algo,
-                           std::string& sig_algo,
-                           bool for_client_auth,
-                           const Policy& policy) const;
+      choose_sig_format(const Private_Key& key,
+                        std::string& hash_algo,
+                        std::string& sig_algo,
+                        bool for_client_auth,
+                        const Policy& policy) const;
 
       std::string srp_identifier() const;
 
       KDF* protocol_specific_prf() const;
 
-      Protocol_Version version() const { return m_version; }
+      Protocol_Version version() const
+         {
+         return m_version;
+         }
 
       void set_version(const Protocol_Version& version);
 
@@ -118,55 +124,93 @@ class Handshake_State
       void client_finished(Finished* client_finished);
 
       const Client_Hello* client_hello() const
-         { return m_client_hello.get(); }
+         {
+         return m_client_hello.get();
+         }
 
       const Server_Hello* server_hello() const
-         { return m_server_hello.get(); }
+         {
+         return m_server_hello.get();
+         }
 
       const Certificate* server_certs() const
-         { return m_server_certs.get(); }
+         {
+         return m_server_certs.get();
+         }
 
       const Server_Key_Exchange* server_kex() const
-         { return m_server_kex.get(); }
+         {
+         return m_server_kex.get();
+         }
 
       const Certificate_Req* cert_req() const
-         { return m_cert_req.get(); }
+         {
+         return m_cert_req.get();
+         }
 
       const Server_Hello_Done* server_hello_done() const
-         { return m_server_hello_done.get(); }
+         {
+         return m_server_hello_done.get();
+         }
 
       const Certificate* client_certs() const
-         { return m_client_certs.get(); }
+         {
+         return m_client_certs.get();
+         }
 
       const Client_Key_Exchange* client_kex() const
-         { return m_client_kex.get(); }
+         {
+         return m_client_kex.get();
+         }
 
       const Certificate_Verify* client_verify() const
-         { return m_client_verify.get(); }
+         {
+         return m_client_verify.get();
+         }
 
       const Certificate_Status* server_cert_status() const
-         { return m_server_cert_status.get(); }
+         {
+         return m_server_cert_status.get();
+         }
 
       const New_Session_Ticket* new_session_ticket() const
-         { return m_new_session_ticket.get(); }
+         {
+         return m_new_session_ticket.get();
+         }
 
       const Finished* server_finished() const
-         { return m_server_finished.get(); }
+         {
+         return m_server_finished.get();
+         }
 
       const Finished* client_finished() const
-         { return m_client_finished.get(); }
+         {
+         return m_client_finished.get();
+         }
 
-      const Ciphersuite& ciphersuite() const { return m_ciphersuite; }
+      const Ciphersuite& ciphersuite() const
+         {
+         return m_ciphersuite;
+         }
 
-      const Session_Keys& session_keys() const { return m_session_keys; }
+      const Session_Keys& session_keys() const
+         {
+         return m_session_keys;
+         }
 
       void compute_session_keys();
 
       void compute_session_keys(const secure_vector<uint8_t>& resume_master_secret);
 
-      Handshake_Hash& hash() { return m_handshake_hash; }
+      Handshake_Hash& hash()
+         {
+         return m_handshake_hash;
+         }
 
-      const Handshake_Hash& hash() const { return m_handshake_hash; }
+      const Handshake_Hash& hash() const
+         {
+         return m_handshake_hash;
+         }
 
       void note_message(const Handshake_Message& msg);
    private:

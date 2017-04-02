@@ -24,7 +24,9 @@ bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
    const uintptr_t buf = reinterpret_cast<uintptr_t>(buf_ptr);
 
    if(buf < pool || buf >= pool + poolsize)
+      {
       return false;
+      }
 
    BOTAN_ASSERT(buf + bufsize <= pool + poolsize,
                 "Pointer does not partially overlap pool");
@@ -36,7 +38,9 @@ size_t padding_for_alignment(size_t offset, size_t desired_alignment)
    {
    size_t mod = offset % desired_alignment;
    if(mod == 0)
-      return 0; // already right on
+      {
+      return 0;   // already right on
+      }
    return desired_alignment - mod;
    }
 
@@ -45,18 +49,26 @@ size_t padding_for_alignment(size_t offset, size_t desired_alignment)
 void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
    {
    if(!m_pool)
+      {
       return nullptr;
+      }
 
    const size_t n = num_elems * elem_size;
    const size_t alignment = 16;
 
    if(n / elem_size != num_elems)
-      return nullptr; // overflow!
+      {
+      return nullptr;   // overflow!
+      }
 
    if(n > m_poolsize)
+      {
       return nullptr;
+      }
    if(n < BOTAN_MLOCK_ALLOCATOR_MIN_ALLOCATION || n > BOTAN_MLOCK_ALLOCATOR_MAX_ALLOCATION)
+      {
       return nullptr;
+      }
 
    lock_guard_type<mutex_type> lock(m_mutex);
 
@@ -78,7 +90,7 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
          }
 
       if((i->second >= (n + padding_for_alignment(i->first, alignment)) &&
-          ((best_fit == m_freelist.end()) || (best_fit->second > i->second))))
+            ((best_fit == m_freelist.end()) || (best_fit->second > i->second))))
          {
          best_fit = i;
          }
@@ -109,7 +121,9 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
             best_fit->second = alignment_padding;
             }
          else
+            {
             m_freelist.insert(best_fit, std::make_pair(offset, alignment_padding));
+            }
          }
 
       clear_mem(m_pool + offset + alignment_padding, n);
@@ -126,7 +140,9 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size)
 bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
    {
    if(!m_pool)
+      {
       return false;
+      }
 
    size_t n = num_elems * elem_size;
 
@@ -138,7 +154,9 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
                 "No overflow in deallocation");
 
    if(!ptr_in_pool(m_pool, m_poolsize, p, n))
+      {
       return false;
+      }
 
    std::memset(p, 0, n);
 
@@ -146,7 +164,10 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
 
    const size_t start = static_cast<uint8_t*>(p) - m_pool;
 
-   auto comp = [](std::pair<size_t, size_t> x, std::pair<size_t, size_t> y){ return x.first < y.first; };
+   auto comp = [](std::pair<size_t, size_t> x, std::pair<size_t, size_t> y)
+      {
+      return x.first < y.first;
+      };
 
    auto i = std::lower_bound(m_freelist.begin(), m_freelist.end(),
                              std::make_pair(start, 0), comp);
@@ -181,7 +202,9 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size)
       }
 
    if(n != 0) // no merge possible?
+      {
       m_freelist.insert(i, std::make_pair(start, n));
+      }
 
    return true;
    }

@@ -19,9 +19,15 @@ namespace Botan {
 class BOTAN_DLL SP800_108_Counter : public KDF
    {
    public:
-      std::string name() const override { return "SP800-108-Counter(" + m_prf->name() + ")"; }
+      std::string name() const override
+         {
+         return "SP800-108-Counter(" + m_prf->name() + ")";
+         }
 
-      KDF* clone() const override { return new SP800_108_Counter(m_prf->clone()); }
+      KDF* clone() const override
+         {
+         return new SP800_108_Counter(m_prf->clone());
+         }
 
       /**
       * Derive a key using the SP800-108 KDF in Counter mode.
@@ -59,9 +65,15 @@ class BOTAN_DLL SP800_108_Counter : public KDF
 class BOTAN_DLL SP800_108_Feedback : public KDF
    {
    public:
-      std::string name() const override { return "SP800-108-Feedback(" + m_prf->name() + ")"; }
+      std::string name() const override
+         {
+         return "SP800-108-Feedback(" + m_prf->name() + ")";
+         }
 
-      KDF* clone() const override { return new SP800_108_Feedback(m_prf->clone()); }
+      KDF* clone() const override
+         {
+         return new SP800_108_Feedback(m_prf->clone());
+         }
 
       /**
       * Derive a key using the SP800-108 KDF in Feedback mode.
@@ -96,9 +108,15 @@ class BOTAN_DLL SP800_108_Feedback : public KDF
 class BOTAN_DLL SP800_108_Pipeline : public KDF
    {
    public:
-      std::string name() const override { return "SP800-108-Pipeline(" + m_prf->name() + ")"; }
+      std::string name() const override
+         {
+         return "SP800-108-Pipeline(" + m_prf->name() + ")";
+         }
 
-      KDF* clone() const override { return new SP800_108_Pipeline(m_prf->clone()); }
+      KDF* clone() const override
+         {
+         return new SP800_108_Pipeline(m_prf->clone());
+         }
 
       /**
       * Derive a key using the SP800-108 KDF in Double Pipeline mode.

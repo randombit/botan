@@ -49,11 +49,19 @@ class BOTAN_DLL RDRAND_RNG : public Hardware_RNG
       * No way to reseed RDRAND generator, so reseed is ignored
       */
       size_t reseed(Entropy_Sources&, size_t, std::chrono::milliseconds) override
-         { return 0; /* no op */ }
+         {
+         return 0; /* no op */
+         }
 
-      std::string name() const override { return "RDRAND"; }
+      std::string name() const override
+         {
+         return "RDRAND";
+         }
 
-      bool is_seeded() const override { return true; }
+      bool is_seeded() const override
+         {
+         return true;
+         }
 
       void clear() override {}
    };

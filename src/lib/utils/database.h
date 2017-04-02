@@ -65,7 +65,7 @@ class BOTAN_DLL SQL_Database
       virtual void create_table(const std::string& table_schema) = 0;
 
       virtual ~SQL_Database() {}
-};
+   };
 
 }
 

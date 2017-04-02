@@ -11,9 +11,9 @@
 namespace Botan {
 
 Certificate_Store_In_SQLite::Certificate_Store_In_SQLite(const std::string& db_path,
-                                                         const std::string& passwd,
-                                                         RandomNumberGenerator& rng,
-                                                         const std::string& table_prefix) :
+      const std::string& passwd,
+      RandomNumberGenerator& rng,
+      const std::string& table_prefix) :
    Certificate_Store_In_SQL(std::make_shared<Sqlite3_Database>(db_path), passwd, rng, table_prefix)
    {}
 }

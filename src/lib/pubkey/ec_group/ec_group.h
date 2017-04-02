@@ -19,11 +19,12 @@ namespace Botan {
 /**
 * This class represents elliptic curce domain parameters
 */
-enum EC_Group_Encoding {
+enum EC_Group_Encoding
+   {
    EC_DOMPAR_ENC_EXPLICIT = 0,
    EC_DOMPAR_ENC_IMPLICITCA = 1,
    EC_DOMPAR_ENC_OID = 2
-};
+   };
 
 /**
 * Class representing an elliptic curve
@@ -86,41 +87,59 @@ class BOTAN_DLL EC_Group
       * Return domain parameter curve
       * @result domain parameter curve
       */
-      const CurveGFp& get_curve() const { return m_curve; }
+      const CurveGFp& get_curve() const
+         {
+         return m_curve;
+         }
 
       /**
       * Return group base point
       * @result base point
       */
-      const PointGFp& get_base_point() const { return m_base_point; }
+      const PointGFp& get_base_point() const
+         {
+         return m_base_point;
+         }
 
       /**
       * Return the order of the base point
       * @result order of the base point
       */
-      const BigInt& get_order() const { return m_order; }
+      const BigInt& get_order() const
+         {
+         return m_order;
+         }
 
       /**
       * Return the cofactor
       * @result the cofactor
       */
-      const BigInt& get_cofactor() const { return m_cofactor; }
+      const BigInt& get_cofactor() const
+         {
+         return m_cofactor;
+         }
 
-      bool initialized() const { return !m_base_point.is_zero(); }
+      bool initialized() const
+         {
+         return !m_base_point.is_zero();
+         }
 
       /**
       * Return the OID of these domain parameters
       * @result the OID
       */
-      std::string get_oid() const { return m_oid; }
-      
+      std::string get_oid() const
+         {
+         return m_oid;
+         }
+
       /**
        * Verify EC_Group domain
        * @returns true if group is valid. false otherwise
        */
       bool verify_group(RandomNumberGenerator& rng,
-                            bool strong = false) const;
-      
+                        bool strong = false) const;
+
       bool operator==(const EC_Group& other) const
          {
          return ((get_curve() == other.get_curve()) &&

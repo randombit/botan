@@ -22,8 +22,14 @@ class BOTAN_DLL CAST_128 final : public Block_Cipher_Fixed_Params<8, 11, 16>
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
-      std::string name() const override { return "CAST-128"; }
-      BlockCipher* clone() const override { return new CAST_128; }
+      std::string name() const override
+         {
+         return "CAST-128";
+         }
+      BlockCipher* clone() const override
+         {
+         return new CAST_128;
+         }
 
    private:
       void key_schedule(const uint8_t[], size_t) override;

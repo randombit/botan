@@ -38,11 +38,23 @@ class XMSS_WOTS_Addressed_PublicKey : public virtual Public_Key
                                     XMSS_Address&& adrs)
          : m_pub_key(std::move(public_key)), m_adrs(std::move(adrs)) {}
 
-      const XMSS_WOTS_PublicKey& public_key() const { return m_pub_key; }
-      XMSS_WOTS_PublicKey& public_key()  { return m_pub_key; }
+      const XMSS_WOTS_PublicKey& public_key() const
+         {
+         return m_pub_key;
+         }
+      XMSS_WOTS_PublicKey& public_key()
+         {
+         return m_pub_key;
+         }
 
-      const XMSS_Address& address() const { return m_adrs; }
-      XMSS_Address& address() { return m_adrs; }
+      const XMSS_Address& address() const
+         {
+         return m_adrs;
+         }
+      XMSS_Address& address()
+         {
+         return m_adrs;
+         }
 
       virtual std::string algo_name() const override
          {
@@ -61,8 +73,8 @@ class XMSS_WOTS_Addressed_PublicKey : public virtual Public_Key
          }
 
       virtual std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(const std::string& params,
-                                const std::string& provider) const override
+      create_verification_op(const std::string& params,
+                             const std::string& provider) const override
          {
          return m_pub_key.create_verification_op(params, provider);
          }

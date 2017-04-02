@@ -18,7 +18,8 @@ namespace TLS {
 
 std::vector<std::string> Policy::allowed_ciphers() const
    {
-   return {
+   return
+      {
       //"AES-256/OCB(12)",
       //"AES-128/OCB(12)",
       "ChaCha20Poly1305",
@@ -41,7 +42,8 @@ std::vector<std::string> Policy::allowed_ciphers() const
 
 std::vector<std::string> Policy::allowed_signature_hashes() const
    {
-   return {
+   return
+      {
       "SHA-512",
       "SHA-384",
       "SHA-256",
@@ -56,7 +58,8 @@ std::vector<std::string> Policy::allowed_macs() const
    somewhat better for SHA-256 vs SHA-384:
    https://github.com/randombit/botan/pull/675
    */
-   return {
+   return
+      {
       "AEAD",
       "SHA-256",
       "SHA-384",
@@ -66,7 +69,8 @@ std::vector<std::string> Policy::allowed_macs() const
 
 std::vector<std::string> Policy::allowed_key_exchange_methods() const
    {
-   return {
+   return
+      {
       //"SRP_SHA",
       //"ECDHE_PSK",
       //"DHE_PSK",
@@ -80,7 +84,8 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const
 
 std::vector<std::string> Policy::allowed_signature_methods() const
    {
-   return {
+   return
+      {
       "ECDSA",
       "RSA",
       //"DSA",
@@ -97,7 +102,8 @@ std::vector<std::string> Policy::allowed_ecc_curves() const
    {
    // Default list is ordered by performance
 
-   return {
+   return
+      {
       "x25519",
       "secp256r1",
       "secp521r1",
@@ -127,7 +133,9 @@ std::string Policy::choose_curve(const std::vector<std::string>& curve_names) co
 
    for(size_t i = 0; i != our_curves.size(); ++i)
       if(value_exists(curve_names, our_curves[i]))
+         {
          return our_curves[i];
+         }
 
    return ""; // no shared curve
    }
@@ -214,10 +222,10 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
 
    if(keylength < expected_keylength)
       throw TLS_Exception(Alert::INSUFFICIENT_SECURITY,
-                          "Peer sent " + 
-                           std::to_string(keylength) + " bit " + algo_name + " key"
-                           ", policy requires at least " +
-                           std::to_string(expected_keylength));
+                          "Peer sent " +
+                          std::to_string(keylength) + " bit " + algo_name + " key"
+                          ", policy requires at least " +
+                          std::to_string(expected_keylength));
    }
 
 /*
@@ -225,7 +233,7 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const
 */
 std::vector<uint8_t> Policy::compression() const
    {
-   return std::vector<uint8_t>{ NO_COMPRESSION };
+   return std::vector<uint8_t> { NO_COMPRESSION };
    }
 
 uint32_t Policy::session_ticket_lifetime() const
@@ -241,24 +249,28 @@ bool Policy::send_fallback_scsv(Protocol_Version version) const
 bool Policy::acceptable_protocol_version(Protocol_Version version) const
    {
    // Uses boolean optimization:
-   // First check the current version (left part), then if it is allowed 
+   // First check the current version (left part), then if it is allowed
    // (right part)
    // checks are ordered according to their probability
    return (
-           ( ( version == Protocol_Version::TLS_V12)  && allow_tls12()  ) ||
-           ( ( version == Protocol_Version::TLS_V10)  && allow_tls10()  ) ||
-           ( ( version == Protocol_Version::TLS_V11)  && allow_tls11()  ) ||
-           ( ( version == Protocol_Version::DTLS_V12) && allow_dtls12() ) ||
-           ( ( version == Protocol_Version::DTLS_V10) && allow_dtls10() )
-        );
+             ((version == Protocol_Version::TLS_V12)  && allow_tls12()) ||
+             ((version == Protocol_Version::TLS_V10)  && allow_tls10()) ||
+             ((version == Protocol_Version::TLS_V11)  && allow_tls11()) ||
+             ((version == Protocol_Version::DTLS_V12) && allow_dtls12()) ||
+             ((version == Protocol_Version::DTLS_V10) && allow_dtls10())
+          );
    }
 
 Protocol_Version Policy::latest_supported_version(bool datagram) const
    {
    if(datagram)
+      {
       return Protocol_Version::latest_dtls_version();
+      }
    else
+      {
       return Protocol_Version::latest_tls_version();
+      }
    }
 
 bool Policy::acceptable_ciphersuite(const Ciphersuite&) const
@@ -266,21 +278,60 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite&) const
    return true;
    }
 
-bool Policy::allow_server_initiated_renegotiation() const { return false; }
-bool Policy::allow_insecure_renegotiation() const { return false; }
-bool Policy::allow_tls10()  const { return true; }
-bool Policy::allow_tls11()  const { return true; }
-bool Policy::allow_tls12()  const { return true; }
-bool Policy::allow_dtls10() const { return false; }
-bool Policy::allow_dtls12() const { return true; }
-bool Policy::include_time_in_hello_random() const { return true; }
-bool Policy::hide_unknown_users() const { return false; }
-bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
-bool Policy::negotiate_encrypt_then_mac() const { return true; }
+bool Policy::allow_server_initiated_renegotiation() const
+   {
+   return false;
+   }
+bool Policy::allow_insecure_renegotiation() const
+   {
+   return false;
+   }
+bool Policy::allow_tls10()  const
+   {
+   return true;
+   }
+bool Policy::allow_tls11()  const
+   {
+   return true;
+   }
+bool Policy::allow_tls12()  const
+   {
+   return true;
+   }
+bool Policy::allow_dtls10() const
+   {
+   return false;
+   }
+bool Policy::allow_dtls12() const
+   {
+   return true;
+   }
+bool Policy::include_time_in_hello_random() const
+   {
+   return true;
+   }
+bool Policy::hide_unknown_users() const
+   {
+   return false;
+   }
+bool Policy::server_uses_own_ciphersuite_preferences() const
+   {
+   return true;
+   }
+bool Policy::negotiate_encrypt_then_mac() const
+   {
+   return true;
+   }
 
 // 1 second initial timeout, 60 second max - see RFC 6347 sec 4.2.4.1
-size_t Policy::dtls_initial_timeout() const { return 1*1000; }
-size_t Policy::dtls_maximum_timeout() const { return 60*1000; }
+size_t Policy::dtls_initial_timeout() const
+   {
+   return 1 * 1000;
+   }
+size_t Policy::dtls_maximum_timeout() const
+   {
+   return 60 * 1000;
+   }
 
 size_t Policy::dtls_default_mtu() const
    {
@@ -311,9 +362,13 @@ class Ciphersuite_Preference_Ordering
             for(size_t i = 0; i != m_kex.size(); ++i)
                {
                if(a.kex_algo() == m_kex[i])
+                  {
                   return true;
+                  }
                if(b.kex_algo() == m_kex[i])
+                  {
                   return false;
+                  }
                }
             }
 
@@ -322,18 +377,26 @@ class Ciphersuite_Preference_Ordering
             for(size_t i = 0; i != m_ciphers.size(); ++i)
                {
                if(a.cipher_algo() == m_ciphers[i])
+                  {
                   return true;
+                  }
                if(b.cipher_algo() == m_ciphers[i])
+                  {
                   return false;
+                  }
                }
             }
 
          if(a.cipher_keylen() != b.cipher_keylen())
             {
             if(a.cipher_keylen() < b.cipher_keylen())
+               {
                return false;
+               }
             if(a.cipher_keylen() > b.cipher_keylen())
+               {
                return true;
+               }
             }
 
          if(a.sig_algo() != b.sig_algo())
@@ -341,9 +404,13 @@ class Ciphersuite_Preference_Ordering
             for(size_t i = 0; i != m_sigs.size(); ++i)
                {
                if(a.sig_algo() == m_sigs[i])
+                  {
                   return true;
+                  }
                if(b.sig_algo() == m_sigs[i])
+                  {
                   return false;
+                  }
                }
             }
 
@@ -352,9 +419,13 @@ class Ciphersuite_Preference_Ordering
             for(size_t i = 0; i != m_macs.size(); ++i)
                {
                if(a.mac_algo() == m_macs[i])
+                  {
                   return true;
+                  }
                if(b.mac_algo() == m_macs[i])
+                  {
                   return false;
+                  }
                }
             }
 
@@ -367,7 +438,7 @@ class Ciphersuite_Preference_Ordering
 }
 
 std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
-                                             bool have_srp) const
+      bool have_srp) const
    {
    const std::vector<std::string> ciphers = allowed_ciphers();
    const std::vector<std::string> macs = allowed_macs();
@@ -376,45 +447,63 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
 
    std::vector<Ciphersuite> ciphersuites;
 
-   for(auto&& suite : Ciphersuite::all_known_ciphersuites())
+   for(auto && suite : Ciphersuite::all_known_ciphersuites())
       {
       // Can we use it?
       if(suite.valid() == false)
+         {
          continue;
+         }
 
       // Is it acceptable to the policy?
       if(!this->acceptable_ciphersuite(suite))
+         {
          continue;
+         }
 
       // Are we doing SRP?
       if(!have_srp && suite.kex_algo() == "SRP_SHA")
+         {
          continue;
+         }
 
       if(!version.supports_aead_modes())
          {
          // Are we doing AEAD in a non-AEAD version?
          if(suite.mac_algo() == "AEAD")
+            {
             continue;
+            }
 
          // Older (v1.0/v1.1) versions also do not support any hash but SHA-1
          if(suite.mac_algo() != "SHA-1")
+            {
             continue;
+            }
          }
 
       if(!value_exists(kex, suite.kex_algo()))
-         continue; // unsupported key exchange
+         {
+         continue;   // unsupported key exchange
+         }
 
       if(!value_exists(ciphers, suite.cipher_algo()))
-         continue; // unsupported cipher
+         {
+         continue;   // unsupported cipher
+         }
 
       if(!value_exists(macs, suite.mac_algo()))
-         continue; // unsupported MAC algo
+         {
+         continue;   // unsupported MAC algo
+         }
 
       if(!value_exists(sigs, suite.sig_algo()))
          {
          // allow if it's an empty sig algo and we want to use PSK
          if(suite.sig_algo() != "" || !suite.psk_ciphersuite())
+            {
             continue;
+            }
          }
 
       /*
@@ -423,7 +512,9 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
       saying they do not trust CECPQ1
       */
       if(suite.kex_algo() == "CECPQ1" && allowed_ecc_curve("x25519") == false)
+         {
          continue;
+         }
 
       // OK, consider it
       ciphersuites.push_back(suite);
@@ -439,7 +530,9 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version,
 
    std::vector<uint16_t> ciphersuite_codes;
    for(auto i : ciphersuites)
+      {
       ciphersuite_codes.push_back(i.ciphersuite_code());
+      }
    return ciphersuite_codes;
    }
 
@@ -454,7 +547,9 @@ void print_vec(std::ostream& o,
       {
       o << v[i];
       if(i != v.size() - 1)
+         {
          o << ' ';
+         }
       }
    o << '\n';
    }
@@ -522,11 +617,26 @@ std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const
    return { "CECPQ1", "ECDH" };
    }
 
-bool Strict_Policy::allow_tls10()  const { return false; }
-bool Strict_Policy::allow_tls11()  const { return false; }
-bool Strict_Policy::allow_tls12()  const { return true;  }
-bool Strict_Policy::allow_dtls10() const { return false; }
-bool Strict_Policy::allow_dtls12() const { return true;  }
+bool Strict_Policy::allow_tls10()  const
+   {
+   return false;
+   }
+bool Strict_Policy::allow_tls11()  const
+   {
+   return false;
+   }
+bool Strict_Policy::allow_tls12()  const
+   {
+   return true;
+   }
+bool Strict_Policy::allow_dtls10() const
+   {
+   return false;
+   }
+bool Strict_Policy::allow_dtls12() const
+   {
+   return true;
+   }
 
 }
 
