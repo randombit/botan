@@ -84,6 +84,8 @@ Version 2.1.0, Not Yet Released
   Uses montgomery ladder with order/2 bits scalar blinding and point randomization
   now by default. (GH #893)
 
+* Add the SM3 hash function
+
 Version 1.10.15, 2017-01-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

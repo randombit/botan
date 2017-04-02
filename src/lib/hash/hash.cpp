@@ -64,6 +64,10 @@
   #include <botan/skein_512.h>
 #endif
 
+#if defined(BOTAN_HAS_SM3)
+  #include <botan/sm3.h>
+#endif
+
 #if defined(BOTAN_HAS_TIGER)
   #include <botan/tiger.h>
 #endif
@@ -254,6 +258,13 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
    if(req.algo_name() == "SHAKE-256")
       {
       return std::unique_ptr<HashFunction>(new SHAKE_256(req.arg_as_integer(0, 256)));
+      }
+#endif
+
+#if defined(BOTAN_HAS_SM3)
+   if(algo_spec == "SM3")
+      {
+      return std::unique_ptr<HashFunction>(new SM3);
       }
 #endif
 
