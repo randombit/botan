@@ -67,11 +67,12 @@ class tls_proxy_session : public boost::enable_shared_from_this<tls_proxy_sessio
 
       typedef boost::shared_ptr<tls_proxy_session> pointer;
 
-      static pointer create(boost::asio::io_service& io,
-                            Botan::TLS::Session_Manager& session_manager,
-                            Botan::Credentials_Manager& credentials,
-                            Botan::TLS::Policy& policy,
-                            tcp::resolver::iterator endpoints)
+      static pointer create(
+         boost::asio::io_service& io,
+         Botan::TLS::Session_Manager& session_manager,
+         Botan::Credentials_Manager& credentials,
+         Botan::TLS::Policy& policy,
+         tcp::resolver::iterator endpoints)
          {
          return pointer(
                    new tls_proxy_session(

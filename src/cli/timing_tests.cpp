@@ -56,10 +56,10 @@ class Timing_Test
       Timing_Test() {}
       virtual ~Timing_Test() {}
 
-      std::vector<std::vector<ticks>>
-                                   execute_evaluation(const std::vector<std::string>& inputs,
-                                         size_t warmup_runs,
-                                         size_t measurement_runs);
+      std::vector<std::vector<ticks>> execute_evaluation(
+                                      const std::vector<std::string>& inputs,
+                                      size_t warmup_runs,
+                                      size_t measurement_runs);
 
       virtual std::vector<uint8_t> prepare_input(std::string input) = 0;
 
@@ -387,8 +387,7 @@ class Timing_Test_Command : public Command
                }
             }
 
-         std::vector<std::vector<ticks>> results =
-                                         test->execute_evaluation(lines, warmup_runs, measurement_runs);
+         auto results = test->execute_evaluation(lines, warmup_runs, measurement_runs);
 
          size_t unique_id = 0;
          std::ostringstream oss;
@@ -409,14 +408,14 @@ class Timing_Test_Command : public Command
          {
          // TODO check feature macros
          return (Command::help_text() +
-                 "\ntest_type can take on values " +
-                 "bleichenbacher " +
+                 "\ntest_type can take on values "
+                 "bleichenbacher "
                  "manger "
-                 "ecdsa " +
-                 "lucky13sha1sec3 " +
-                 "lucky13sha256sec3 " +
-                 "lucky13sec4sha1 " +
-                 "lucky13sec4sha256 " +
+                 "ecdsa "
+                 "lucky13sha1sec3 "
+                 "lucky13sha256sec3 "
+                 "lucky13sec4sha1 "
+                 "lucky13sec4sha256 "
                  "lucky13sec4sha384 "
                 );
          }

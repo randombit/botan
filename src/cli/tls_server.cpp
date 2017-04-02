@@ -134,16 +134,17 @@ class TLS_Server final : public Command
                   }
                };
 
-            Botan::TLS::Server server(socket_write,
-                                      proc_fn,
-                                      std::bind(&TLS_Server::alert_received, this, _1, _2, _3),
-                                      std::bind(&TLS_Server::handshake_complete, this, _1),
-                                      session_manager,
-                                      creds,
-                                      *policy,
-                                      rng(),
-                                      protocol_chooser,
-                                      !is_tcp);
+            Botan::TLS::Server server(
+               socket_write,
+               proc_fn,
+               std::bind(&TLS_Server::alert_received, this, _1, _2, _3),
+               std::bind(&TLS_Server::handshake_complete, this, _1),
+               session_manager,
+               creds,
+               *policy,
+               rng(),
+               protocol_chooser,
+               !is_tcp);
 
             try
                {

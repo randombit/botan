@@ -42,9 +42,10 @@ namespace Botan_CLI {
 class TLS_Client final : public Command, public Botan::TLS::Callbacks
    {
    public:
-      TLS_Client() : Command("tls_client host --port=443 --print-certs --policy= "
-                                "--tls1.0 --tls1.1 --tls1.2 "
-                                "--session-db= --session-db-pass= --next-protocols= --type=tcp") {}
+      TLS_Client() :
+         Command("tls_client host --port=443 --print-certs --policy= "
+                 "--tls1.0 --tls1.1 --tls1.2 "
+                 "--session-db= --session-db-pass= --next-protocols= --type=tcp") {}
 
       void go() override
          {
@@ -129,14 +130,15 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             hostname = host;
             }
 
-         Botan::TLS::Client client(*this,
-                                   *session_mgr,
-                                   creds,
-                                   *policy,
-                                   rng(),
-                                   Botan::TLS::Server_Information(hostname, port),
-                                   version,
-                                   protocols_to_offer);
+         Botan::TLS::Client client(
+            *this,
+            *session_mgr,
+            creds,
+            *policy,
+            rng(),
+            Botan::TLS::Server_Information(hostname, port),
+            version,
+            protocols_to_offer);
 
          bool first_active = true;
 
@@ -292,15 +294,16 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
 
          auto ocsp_timeout = std::chrono::milliseconds(1000);
 
-         Botan::Path_Validation_Result result =
-            Botan::x509_path_validate(cert_chain,
-                                      restrictions,
-                                      trusted_roots,
-                                      hostname,
-                                      usage,
-                                      std::chrono::system_clock::now(),
-                                      ocsp_timeout,
-                                      ocsp);
+         Botan::Path_Validation_Result result(
+            Botan::x509_path_validate(
+               cert_chain,
+               restrictions,
+               trusted_roots,
+               hostname,
+               usage,
+               std::chrono::system_clock::now(),
+               ocsp_timeout,
+               ocsp));
 
          std::cout << "Certificate validation status: " << result.result_string() << "\n";
          if(result.successful_validation())

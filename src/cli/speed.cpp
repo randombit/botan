@@ -634,10 +634,7 @@ class Speed final : public Command
    private:
 
       template<typename T>
-      using bench_fn = std::function<void (T&,
-                                           std::string,
-                                           std::chrono::milliseconds,
-                                           size_t)>;
+      using bench_fn = std::function<void (T&, std::string, std::chrono::milliseconds, size_t)>;
 
       template<typename T>
       void bench_providers_of(const std::string& algo,

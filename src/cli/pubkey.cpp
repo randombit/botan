@@ -104,9 +104,10 @@ class PK_Sign final : public Command
 
       void go() override
          {
-         std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(get_arg("key"),
-                                                 rng(),
-                                                 get_arg("passphrase")));
+         std::unique_ptr<Botan::Private_Key> key(
+            Botan::PKCS8::load_key(get_arg("key"),
+                                   rng(),
+                                   get_arg("passphrase")));
 
          if(!key)
             {
