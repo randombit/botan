@@ -53,37 +53,29 @@ def chunks(l, n):
 
 
 def get_vc_revision():
+    vc_command = ['git', 'rev-parse', 'HEAD']
+    cmdname = vc_command[0]
 
-    def get_vc_revision_impl(cmdlist):
-        try:
-            cmdname = cmdlist[0]
+    try:
+        vc = subprocess.Popen(
+            vc_command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True)
+        (stdout, stderr) = vc.communicate()
 
-            vc = subprocess.Popen(cmdlist,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE,
-                                  universal_newlines=True)
-
-            (stdout, stderr) = vc.communicate()
-
-            if vc.returncode != 0:
-                logging.debug('Error getting rev from %s - %d (%s)'
-                              % (cmdname, vc.returncode, stderr))
-                return None
-
-            rev = str(stdout).strip()
-            logging.debug('%s reported revision %s' % (cmdname, rev))
-
-            return '%s:%s' % (cmdname, rev)
-        except OSError as e:
-            logging.debug('Error getting rev from %s - %s' % (cmdname, e.strerror))
+        if vc.returncode != 0:
+            logging.debug('Error getting rev from %s - %d (%s)'
+                          % (cmdname, vc.returncode, stderr))
             return None
 
-    vc_command = ['git', 'rev-parse', 'HEAD']
-    rev = get_vc_revision_impl(vc_command)
-    if rev is not None:
-        return rev
-    else:
-        return 'unknown'
+        rev = str(stdout).strip()
+        logging.debug('%s reported revision %s' % (cmdname, rev))
+
+        return '%s:%s' % (cmdname, rev)
+    except OSError as e:
+        logging.debug('Error getting rev from %s - %s' % (cmdname, e.strerror))
+        return None
 
 
 class Version(object):
@@ -107,7 +99,11 @@ class Version(object):
     def vc_rev():
         # Lazy load to ensure get_vc_revision() does not run before logger is set up
         if Version._vc_rev is None:
-            Version._vc_rev = botan_version.release_vc_rev if botan_version.release_vc_rev else get_vc_revision()
+            Version._vc_rev = botan_version.release_vc_rev
+        if Version._vc_rev is None:
+            Version._vc_rev = get_vc_revision()
+        if Version._vc_rev is None:
+            Version._vc_rev = 'unknown'
         return Version._vc_rev
 
 
