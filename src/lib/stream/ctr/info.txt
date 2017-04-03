@@ -1,1 +1,3 @@
-define CTR_BE 20131128
+<defines>
+CTR_BE -> 20131128
+</defines>

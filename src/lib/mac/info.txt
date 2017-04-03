@@ -1,4 +1,6 @@
-define MAC 20150626
+<defines>
+MAC -> 20150626
+</defines>
 
 <header:public>
 mac.h

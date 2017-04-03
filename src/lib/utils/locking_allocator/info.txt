@@ -1,4 +1,6 @@
-define LOCKING_ALLOCATOR 20131128
+<defines>
+LOCKING_ALLOCATOR -> 20131128
+</defines>
 
 <os>
 linux

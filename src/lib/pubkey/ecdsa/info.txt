@@ -1,4 +1,6 @@
-define ECDSA 20131128
+<defines>
+ECDSA -> 20131128
+</defines>
 
 <requires>
 asn1

@@ -1,4 +1,6 @@
-define FFI 20170327
+<defines>
+FFI -> 20170327
+</defines>
 
 <requires>
 aead
@@ -11,4 +13,3 @@ x509
 system_rng
 auto_rng
 </requires>
-

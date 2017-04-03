@@ -1,5 +1,7 @@
-define X509_CERTIFICATES 20151023
-define OCSP 20161118
+<defines>
+X509_CERTIFICATES -> 20151023
+OCSP -> 20161118
+</defines>
 
 <requires>
 asn1

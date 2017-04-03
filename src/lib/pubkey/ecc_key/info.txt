@@ -1,4 +1,6 @@
-define ECC_PUBLIC_KEY_CRYPTO 20131128
+<defines>
+ECC_PUBLIC_KEY_CRYPTO -> 20131128
+</defines>
 
 <requires>
 asn1

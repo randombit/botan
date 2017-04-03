@@ -1,4 +1,6 @@
-define CAST 20131128
+<defines>
+CAST -> 20131128
+</defines>
 
 <header:internal>
 cast_sboxes.h

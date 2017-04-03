@@ -1,4 +1,6 @@
-define AEAD_SIV 20131202
+<defines>
+AEAD_SIV -> 20131202
+</defines>
 
 load_on auto
 

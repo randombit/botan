@@ -1,4 +1,6 @@
-define ENTROPY_SRC_WIN32 20131128
+<defines>
+ENTROPY_SRC_WIN32 -> 20131128
+</defines>
 
 <header:internal>
 es_win32.h

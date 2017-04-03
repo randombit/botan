@@ -1,1 +1,3 @@
-define HKDF 20131128
+<defines>
+HKDF -> 20131128
+</defines>

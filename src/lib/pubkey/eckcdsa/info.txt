@@ -1,4 +1,6 @@
-define ECKCDSA 20160413
+<defines>
+ECKCDSA -> 20160413
+</defines>
 
 <requires>
 asn1

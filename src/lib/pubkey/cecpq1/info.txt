@@ -1,4 +1,6 @@
-define CECPQ1 20161116
+<defines>
+CECPQ1 -> 20161116
+</defines>
 
 <requires>
 newhope

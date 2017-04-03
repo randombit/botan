@@ -1,4 +1,6 @@
-define CODEC_FILTERS 20131128
+<defines>
+CODEC_FILTERS -> 20131128
+</defines>
 
 <requires>
 base64

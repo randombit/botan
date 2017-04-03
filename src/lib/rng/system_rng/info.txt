@@ -1,4 +1,7 @@
-define SYSTEM_RNG 20141202
+<defines>
+SYSTEM_RNG -> 20141202
+</defines>
+
 
 # Any system with /dev/random or CryptGenRandom
 

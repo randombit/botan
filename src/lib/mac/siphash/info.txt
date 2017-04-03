@@ -1,1 +1,3 @@
-define SIPHASH 20150110
+<defines>
+SIPHASH -> 20150110
+</defines>

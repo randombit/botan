@@ -1,4 +1,6 @@
-define TLS_SESSION_MANAGER_SQL_DB 20141219
+<defines>
+TLS_SESSION_MANAGER_SQL_DB -> 20141219
+</defines>
 
 <requires>
 pbkdf2

@@ -1,4 +1,6 @@
-define PKCS5_PBES2 20141119
+<defines>
+PKCS5_PBES2 -> 20141119
+</defines>
 
 <requires>
 asn1

@@ -1,4 +1,6 @@
-define ENTROPY_SRC_RDRAND 20131128
+<defines>
+ENTROPY_SRC_RDRAND -> 20131128
+</defines>
 
 <requires>
 rdrand_rng

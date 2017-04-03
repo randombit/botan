@@ -1,4 +1,6 @@
-define ECGDSA 20160301
+<defines>
+ECGDSA -> 20160301
+</defines>
 
 <requires>
 asn1

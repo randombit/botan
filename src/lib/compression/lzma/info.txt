@@ -1,4 +1,6 @@
-define LZMA 20160412
+<defines>
+LZMA -> 20160412
+</defines>
 
 load_on vendor
 

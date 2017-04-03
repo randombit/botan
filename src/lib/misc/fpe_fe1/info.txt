@@ -1,4 +1,6 @@
-define FPE_FE1 20131128
+<defines>
+FPE_FE1 -> 20131128
+</defines>
 
 <requires>
 bigint

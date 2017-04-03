@@ -1,1 +1,3 @@
-define PARALLEL_HASH 20131128
+<defines>
+PARALLEL_HASH -> 20131128
+</defines>

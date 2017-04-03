@@ -1,1 +1,3 @@
-define COMB4P 20131128
+<defines>
+COMB4P -> 20131128
+</defines>

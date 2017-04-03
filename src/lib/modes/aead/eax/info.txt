@@ -1,4 +1,6 @@
-define AEAD_EAX 20131128
+<defines>
+AEAD_EAX -> 20131128
+</defines>
 
 <requires>
 cmac

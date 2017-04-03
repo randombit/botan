@@ -1,4 +1,6 @@
-define AEAD_GCM 20131128
+<defines>
+AEAD_GCM -> 20131128
+</defines>
 
 <requires>
 ctr

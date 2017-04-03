@@ -4,7 +4,7 @@
 Configuration program for botan
 
 (C) 2009,2010,2011,2012,2013,2014,2015,2016,2017 Jack Lloyd
-(C) 2015,2016 Simon Warta (Kullo GmbH)
+(C) 2015,2016,2017 Simon Warta (Kullo GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
 
@@ -51,17 +51,46 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i+n]
 
-def get_vc_revision():
 
-    def get_vc_revision_impl(cmdlist):
+class Version(object):
+    """
+    Version information are all static members
+    """
+    major = botan_version.release_major
+    minor = botan_version.release_minor
+    patch = botan_version.release_patch
+    so_rev = botan_version.release_so_abi_rev
+    release_type = botan_version.release_type
+    datestamp = botan_version.release_datestamp
+    packed = major * 1000 + minor # Used on Darwin for dylib versioning
+    _vc_rev = None
+
+    @staticmethod
+    def as_string():
+        return '%d.%d.%d' % (Version.major, Version.minor, Version.patch)
+
+    @staticmethod
+    def vc_rev():
+        # Lazy load to ensure _local_repo_vc_revision() does not run before logger is set up
+        if Version._vc_rev is None:
+            Version._vc_rev = botan_version.release_vc_rev
+        if Version._vc_rev is None:
+            Version._vc_rev = Version._local_repo_vc_revision()
+        if Version._vc_rev is None:
+            Version._vc_rev = 'unknown'
+        return Version._vc_rev
+
+    @staticmethod
+    def _local_repo_vc_revision():
+        vc_command = ['git', 'rev-parse', 'HEAD']
+        cmdname = vc_command[0]
+
         try:
-            cmdname = cmdlist[0]
-
-            vc = subprocess.Popen(cmdlist,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE,
-                                  universal_newlines=True)
-
+            vc = subprocess.Popen(
+                vc_command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True)
             (stdout, stderr) = vc.communicate()
 
             if vc.returncode != 0:
@@ -77,64 +106,34 @@ def get_vc_revision():
             logging.debug('Error getting rev from %s - %s' % (cmdname, e.strerror))
             return None
 
-    vc_command = ['git', 'rev-parse', 'HEAD']
-    rev = get_vc_revision_impl(vc_command)
-    if rev is not None:
-        return rev
-    else:
-        return 'unknown'
 
-class BuildConfigurationInformation(object):
-
-    """
-    Version information
-    """
-    version_major = botan_version.release_major
-    version_minor = botan_version.release_minor
-    version_patch = botan_version.release_patch
-    version_so_rev = botan_version.release_so_abi_rev
-
-    version_release_type = botan_version.release_type
-
-    version_datestamp = botan_version.release_datestamp
-
-    version_vc_rev = botan_version.release_vc_rev
-    version_string = '%d.%d.%d' % (version_major, version_minor, version_patch)
-
-    # This is used on Darwin for dylib versioning
-    version_packed = version_major * 1000 + version_minor
-
+class BuildPaths(object): # pylint: disable=too-many-instance-attributes
     """
     Constructor
     """
     def __init__(self, options, modules):
-
-        if self.version_vc_rev is None:
-            self.version_vc_rev = get_vc_revision()
-
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
-        self.obj_dir = os.path.join(self.build_dir, 'obj')
-        self.libobj_dir = os.path.join(self.obj_dir, 'lib')
-        self.cliobj_dir = os.path.join(self.obj_dir, 'cli')
-        self.testobj_dir = os.path.join(self.obj_dir, 'test')
+        self.libobj_dir = os.path.join(self.build_dir, 'obj', 'lib')
+        self.cliobj_dir = os.path.join(self.build_dir, 'obj', 'cli')
+        self.testobj_dir = os.path.join(self.build_dir, 'obj', 'test')
 
         self.doc_output_dir = os.path.join(self.build_dir, 'docs')
+        self.doc_output_dir_manual = os.path.join(self.doc_output_dir, 'manual')
+        self.doc_output_dir_doxygen = os.path.join(self.doc_output_dir, 'doxygen') if options.with_doxygen else None
 
         self.include_dir = os.path.join(self.build_dir, 'include')
         self.botan_include_dir = os.path.join(self.include_dir, 'botan')
         self.internal_include_dir = os.path.join(self.botan_include_dir, 'internal')
         self.external_include_dir = os.path.join(self.include_dir, 'external')
 
-        self.modules = modules
-        self.sources = sorted(flatten([mod.sources() for mod in modules]))
         self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
         self.external_headers = sorted(flatten([m.external_headers() for m in modules]))
 
         if options.amalgamation:
-            self.build_sources = ['botan_all.cpp']
+            self.lib_sources = ['botan_all.cpp']
         else:
-            self.build_sources = self.sources
+            self.lib_sources = sorted(flatten([mod.sources() for mod in modules]))
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
@@ -159,55 +158,49 @@ class BuildConfigurationInformation(object):
 
         self.python_dir = os.path.join(options.src_dir, 'python')
 
-        def build_doc_commands():
-
-            def get_doc_cmd():
-                if options.with_sphinx:
-                    sphinx = 'sphinx-build -c $(SPHINX_CONFIG) $(SPHINX_OPTS) '
-                    if options.quiet:
-                        sphinx += '-q '
-                    sphinx += '%s %s'
-                    return sphinx
-                else:
-                    return '$(COPY) %s' + os.sep + '*.rst %s'
-
-            doc_cmd = get_doc_cmd()
-
-            def cmd_for(src):
-                return doc_cmd % (os.path.join(self.doc_dir, src),
-                                  os.path.join(self.doc_output_dir, src))
-
-            yield cmd_for('manual')
-
-            if options.with_doxygen:
-                yield 'doxygen %s%sbotan.doxy' % (self.build_dir, os.sep)
-
-        self.build_doc_commands = '\n'.join(['\t' + s for s in build_doc_commands()])
-
-        def build_dirs():
-            yield self.libobj_dir
-            yield self.cliobj_dir
-            yield self.testobj_dir
-            yield self.botan_include_dir
-            yield self.internal_include_dir
-            yield self.external_include_dir
-            yield os.path.join(self.doc_output_dir, 'manual')
-
-            if options.with_doxygen:
-                yield os.path.join(self.doc_output_dir, 'doxygen')
-
-        self.build_dirs = list(build_dirs())
+    def build_dirs(self):
+        out = [
+            self.libobj_dir,
+            self.cliobj_dir,
+            self.testobj_dir,
+            self.botan_include_dir,
+            self.internal_include_dir,
+            self.external_include_dir,
+            self.doc_output_dir_manual,
+        ]
+        if self.doc_output_dir_doxygen:
+            out += [self.doc_output_dir_doxygen]
+        return out
 
     def src_info(self, typ):
         if typ == 'lib':
-            return (self.build_sources, self.libobj_dir)
+            return (self.lib_sources, self.libobj_dir)
         elif typ == 'cli':
             return (self.cli_sources, self.cliobj_dir)
         elif typ == 'test':
             return (self.test_sources, self.testobj_dir)
 
-    def pkg_config_file(self):
-        return 'botan-%d.pc' % (self.version_major)
+
+PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major)
+
+
+def make_build_doc_commands(build_paths, options):
+    def build_manual_command(src_dir, dst_dir):
+        if options.with_sphinx:
+            sphinx = 'sphinx-build -c $(SPHINX_CONFIG) $(SPHINX_OPTS) '
+            if options.quiet:
+                sphinx += '-q '
+            sphinx += '%s %s' % (src_dir, dst_dir)
+            return sphinx
+        else:
+            return '$(COPY) %s%s*.rst %s' %  (src_dir, os.sep, dst_dir)
+
+    cmds = [
+        build_manual_command(os.path.join(build_paths.doc_dir, 'manual'), build_paths.doc_output_dir_manual)
+    ]
+    if options.with_doxygen:
+        cmds += ['doxygen %s%sbotan.doxy' % (build_paths.build_dir, os.sep)]
+    return '\n'.join(['\t' + cmd for cmd in cmds])
 
 
 def process_command_line(args): # pylint: disable=too-many-locals
@@ -217,7 +210,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     parser = optparse.OptionParser(
         formatter=optparse.IndentedHelpFormatter(max_help_position=50),
-        version=BuildConfigurationInformation.version_string)
+        version=Version.as_string())
 
     parser.add_option('--verbose', action='store_true', default=False,
                       help='Show debug messages')
@@ -523,6 +516,29 @@ class LexResult(object):
     pass
 
 
+class LexerError(ConfigureError):
+    def __init__(self, msg, lexfile, line):
+        super(LexerError, self).__init__(msg)
+        self.msg = msg
+        self.lexfile = lexfile
+        self.line = line
+
+    def __str__(self):
+        return '%s at %s:%d' % (self.msg, self.lexfile, self.line)
+
+
+def parse_lex_dict(as_list):
+    if len(as_list) % 3 != 0:
+        raise ConfigureError("Lex dictionary has invalid format")
+
+    result = {}
+    for key, sep, value in [as_list[3*i:3*i+3] for i in range(0, len(as_list)//3)]:
+        if sep != '->':
+            raise ConfigureError("Lex dictionary has invalid format")
+        result[key] = value
+    return result
+
+
 def lex_me_harder(infofile, allowed_groups, name_val_pairs):
     """
     Generic lexer function for info.txt and src/build-data files
@@ -533,15 +549,6 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
     def py_var(group):
         return group.replace(':', '_')
 
-    class LexerError(ConfigureError):
-        def __init__(self, msg, line):
-            super(LexerError, self).__init__(msg)
-            self.msg = msg
-            self.line = line
-
-        def __str__(self):
-            return '%s at %s:%d' % (self.msg, infofile, self.line)
-
     lexer = shlex.shlex(open(infofile), infofile, posix=True)
     lexer.wordchars += '|:.<>/,-!+' # handle various funky chars in info.txt
 
@@ -551,10 +558,12 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
         out.__dict__[key] = val
 
     def lexed_tokens(): # Convert to an interator
-        token = lexer.get_token()
-        while token != None:
-            yield token
+        while True:
             token = lexer.get_token()
+            if token != lexer.eof:
+                yield token
+            else:
+                return
 
     for token in lexed_tokens():
         match = re.match('<(.*)>', token)
@@ -565,7 +574,7 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
 
             if group not in allowed_groups:
                 raise LexerError('Unknown group "%s"' % (group),
-                                 lexer.lineno)
+                                 infofile, lexer.lineno)
 
             end_marker = '</' + group + '>'
 
@@ -575,27 +584,19 @@ def lex_me_harder(infofile, allowed_groups, name_val_pairs):
                 token = lexer.get_token()
                 if token is None:
                     raise LexerError('Group "%s" not terminated' % (group),
-                                     lexer.lineno)
+                                     infofile, lexer.lineno)
 
         elif token in name_val_pairs.keys():
             if isinstance(out.__dict__[token], list):
                 out.__dict__[token].append(lexer.get_token())
-
-                # Dirty hack
-                if token == 'define':
-                    nxt = lexer.get_token()
-                    if not nxt:
-                        raise LexerError('No version set for API', lexer.lineno)
-                    if not re.match('^[0-9]{8}$', nxt):
-                        raise LexerError('Bad API rev "%s"' % (nxt), lexer.lineno)
-                    out.__dict__[token].append(nxt)
             else:
                 out.__dict__[token] = lexer.get_token()
 
         else: # No match -> error
-            raise LexerError('Bad token "%s"' % (token), lexer.lineno)
+            raise LexerError('Bad token "%s"' % (token), infofile, lexer.lineno)
 
     return out
+
 
 def force_to_dict(l):
     """
@@ -635,12 +636,11 @@ class ModuleInfo(InfoObject):
         lex = lex_me_harder(
             infofile,
             [
-                'header:internal', 'header:public', 'header:external', 'requires',
+                'defines', 'header:internal', 'header:public', 'header:external', 'requires',
                 'os', 'arch', 'cc', 'libs', 'frameworks', 'comment', 'warning'
             ],
             {
                 'load_on': 'auto',
-                'define': [],
                 'need_isa': ''
             })
 
@@ -692,7 +692,8 @@ class ModuleInfo(InfoObject):
         self.arch = lex.arch
         self.cc = lex.cc
         self.comment = ' '.join(lex.comment) if lex.comment else None
-        self.define = lex.define
+        self._defines = parse_lex_dict(lex.defines)
+        self._validate_defines_content(self._defines)
         self.frameworks = convert_lib_list(lex.frameworks)
         self.libs = convert_lib_list(lex.libs)
         self.load_on = lex.load_on
@@ -733,6 +734,14 @@ class ModuleInfo(InfoObject):
         intersect_check('public', self.header_public, 'external', self.header_external)
         intersect_check('external', self.header_external, 'internal', self.header_internal)
 
+    @staticmethod
+    def _validate_defines_content(defines):
+        for key, value in defines.items():
+            if not re.match('^[0-9A-Za-z_]{3,30}$', key):
+                raise ConfigureError('Module defines key has invalid format: "%s"' % key)
+            if not re.match('^[0-9]{8}$', value):
+                raise ConfigureError('Module defines value has invalid format: "%s"' % value)
+
     def cross_check(self, arch_info, os_info, cc_info):
         for supp_os in self.os:
             if supp_os not in os_info:
@@ -757,7 +766,7 @@ class ModuleInfo(InfoObject):
         return self.header_external
 
     def defines(self):
-        return ['HAS_' + d[0] + ' ' + d[1] for d in chunks(self.define, 2)]
+        return ['HAS_%s %s' % (key, value) for key, value in self._defines.items()]
 
     def compatible_cpu(self, archinfo, options):
         arch_name = archinfo.basename
@@ -1369,7 +1378,7 @@ def gen_bakefile(build_config, options, external_libs):
     # shared library project
     f.write('shared-library botan {\n')
     f.write('\tdefines = "BOTAN_DLL=__declspec(dllexport)";\n')
-    bakefile_sources(f, build_config.sources)
+    bakefile_sources(f, build_config.lib_sources)
     f.write('}\n')
 
     # cli project
@@ -1608,20 +1617,17 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         return opts
 
     variables = {
-        'version_major':  build_config.version_major,
-        'version_minor':  build_config.version_minor,
-        'version_patch':  build_config.version_patch,
-        'version_vc_rev': build_config.version_vc_rev,
-        'so_abi_rev':     build_config.version_so_rev,
-        'version':        build_config.version_string,
-
-        'version_packed': build_config.version_packed,
-
-        'release_type':   build_config.version_release_type,
+        'version_major':  Version.major,
+        'version_minor':  Version.minor,
+        'version_patch':  Version.patch,
+        'version_vc_rev': Version.vc_rev(),
+        'so_abi_rev':     Version.so_rev,
+        'version':        Version.as_string(),
+        'version_packed': Version.packed,
+        'release_type':   Version.release_type,
+        'version_datestamp': Version.datestamp,
 
         'distribution_info': options.distribution_info,
-
-        'version_datestamp': build_config.version_datestamp,
 
         'base_dir': options.base_dir,
         'src_dir': options.src_dir,
@@ -1655,7 +1661,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'doc_output_dir': build_config.doc_output_dir,
 
-        'build_doc_commands': build_config.build_doc_commands,
+        'build_doc_commands': make_build_doc_commands(build_config, options),
 
         'python_dir': build_config.python_dir,
         'sphinx_config_dir': os.path.join(options.build_data, 'sphinx'),
@@ -1711,20 +1717,20 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'static_suffix': osinfo.static_suffix,
 
         'soname_base': osinfo.soname_pattern_base.format(
-            version_major=build_config.version_major,
-            version_minor=build_config.version_minor,
-            version_patch=build_config.version_patch,
-            abi_rev=build_config.version_so_rev),
+            version_major=Version.major,
+            version_minor=Version.minor,
+            version_patch=Version.patch,
+            abi_rev=Version.so_rev),
         'soname_abi': osinfo.soname_pattern_abi.format(
-            version_major=build_config.version_major,
-            version_minor=build_config.version_minor,
-            version_patch=build_config.version_patch,
-            abi_rev=build_config.version_so_rev),
+            version_major=Version.major,
+            version_minor=Version.minor,
+            version_patch=Version.patch,
+            abi_rev=Version.so_rev),
         'soname_patch': osinfo.soname_pattern_patch.format(
-            version_major=build_config.version_major,
-            version_minor=build_config.version_minor,
-            version_patch=build_config.version_patch,
-            abi_rev=build_config.version_so_rev),
+            version_major=Version.major,
+            version_minor=Version.minor,
+            version_patch=Version.patch,
+            abi_rev=Version.so_rev),
 
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
@@ -1753,11 +1759,11 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         else:
             variables['libname'] = 'botan'
     else:
-        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, build_config.pkg_config_file())
+        variables['botan_pkgconfig'] = os.path.join(build_config.build_dir, PKG_CONFIG_FILENAME)
 
         # 'botan' or 'botan-2'. Used in Makefile and install script
         # This can be made consistent over all platforms in the future
-        variables['libname'] = 'botan-%d' % (build_config.version_major)
+        variables['libname'] = 'botan-%d' % (Version.major)
 
     variables["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), variables)
 
@@ -1974,7 +1980,7 @@ def portable_symlink(file_path, target_dir, method):
     else:
         raise ConfigureError('Unknown link method %s' % (method))
 
-def generate_amalgamation(build_config, options):
+def generate_amalgamation(build_config, modules, options):
     """
     Generate the amalgamation
     """
@@ -2071,7 +2077,7 @@ def generate_amalgamation(build_config, options):
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-""" % (build_config.version_string)
+""" % (Version.as_string())
 
     botan_h.write(amalg_header)
 
@@ -2115,7 +2121,7 @@ def generate_amalgamation(build_config, options):
     botan_amalg_files = {}
     headers_written = {}
 
-    for mod in build_config.modules:
+    for mod in modules:
         tgt = ''
 
         if not options.single_amalgamation_file:
@@ -2396,7 +2402,7 @@ def main(argv=None):
 
     using_mods = [modules[m] for m in loaded_mods]
 
-    build_config = BuildConfigurationInformation(options, using_mods)
+    build_config = BuildPaths(options, using_mods)
 
     build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
 
@@ -2441,7 +2447,7 @@ def main(argv=None):
         if e.errno != errno.ENOENT:
             logging.error('Problem while removing build dir: %s' % (e))
 
-    for build_dir in build_config.build_dirs:
+    for build_dir in build_config.build_dirs():
         try:
             robust_makedirs(build_dir)
         except OSError as e:
@@ -2464,7 +2470,7 @@ def main(argv=None):
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
 
     if options.os != 'windows':
-        write_template(in_build_dir(build_config.pkg_config_file()), in_build_data('botan.pc.in'))
+        write_template(in_build_dir(PKG_CONFIG_FILENAME), in_build_data('botan.pc.in'))
 
     if options.os == 'windows':
         write_template(in_build_dir('botan.iss'), in_build_data('innosetup.in'))
@@ -2494,8 +2500,8 @@ def main(argv=None):
         json.dump(template_vars, f, sort_keys=True, indent=2)
 
     if options.amalgamation:
-        amalgamation_cpp_files = generate_amalgamation(build_config, options)
-        build_config.build_sources = amalgamation_cpp_files
+        amalgamation_cpp_files = generate_amalgamation(build_config, using_mods, options)
+        build_config.lib_sources = amalgamation_cpp_files
         gen_makefile_lists(template_vars, build_config, options, using_mods, cc, arch, osinfo)
 
     if options.with_bakefile:
@@ -2509,10 +2515,10 @@ def main(argv=None):
         return 'dated %d' % (datestamp)
 
     logging.info('Botan %s (VC %s) (%s %s) build setup is complete' % (
-        build_config.version_string,
-        build_config.version_vc_rev,
-        build_config.version_release_type,
-        release_date(build_config.version_datestamp)))
+        Version.as_string(),
+        Version.vc_rev(),
+        Version.release_type,
+        release_date(Version.datestamp)))
 
     if options.unsafe_fuzzer_mode:
         logging.warning("The fuzzer mode flag is labeled unsafe for a reason, this version is for testing only")

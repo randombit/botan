@@ -1,4 +1,6 @@
-define BZIP2 20160412
+<defines>
+BZIP2 -> 20160412
+</defines>
 
 load_on vendor
 

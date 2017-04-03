@@ -1,4 +1,6 @@
-define MD4 20131128
+<defines>
+MD4 -> 20131128
+</defines>
 
 <requires>
 mdx_hash

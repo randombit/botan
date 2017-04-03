@@ -1,8 +1,9 @@
-define BCRYPT 20131128
+<defines>
+BCRYPT -> 20131128
+</defines>
 
 <requires>
 blowfish
 rng
 base64
 </requires>
-

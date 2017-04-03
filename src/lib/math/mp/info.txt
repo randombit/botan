@@ -1,4 +1,6 @@
-define BIGINT_MP 20151225
+<defines>
+BIGINT_MP -> 20151225
+</defines>
 
 <header:public>
 mp_types.h

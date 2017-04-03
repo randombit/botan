@@ -1,4 +1,6 @@
-define ZLIB 20160412
+<defines>
+ZLIB -> 20160412
+</defines>
 
 load_on vendor
 

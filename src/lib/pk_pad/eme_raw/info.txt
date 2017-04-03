@@ -1,1 +1,3 @@
-define EME_RAW 20150313
+<defines>
+EME_RAW -> 20150313
+</defines>
