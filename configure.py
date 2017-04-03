@@ -19,6 +19,7 @@ CPython 2.5 and earlier are not supported.
 On Jython target detection does not work (use --os and --cpu).
 """
 
+import collections
 import json
 import sys
 import os
@@ -949,6 +950,10 @@ class ArchInfo(InfoObject):
 
         return macros
 
+
+MachOptFlags = collections.namedtuple('MachOptFlags', ['flags', 'submodel_prefix'])
+
+
 class CompilerInfo(InfoObject):
     def __init__(self, infofile):
         super(CompilerInfo, self).__init__(infofile)
@@ -1009,16 +1014,9 @@ class CompilerInfo(InfoObject):
         self.warning_flags = lex.warning_flags
 
         self.mach_opt_flags = {}
-        while lex.mach_opt:
-            proc = lex.mach_opt.pop(0)
-            if lex.mach_opt.pop(0) != '->':
-                raise ConfigureError('Parsing err in %s mach_opt' % self.basename)
-
-            flags = lex.mach_opt.pop(0)
-            regex = ''
-            if lex.mach_opt and (len(lex.mach_opt) == 1 or lex.mach_opt[1] != '->'):
-                regex = lex.mach_opt.pop(0)
-            self.mach_opt_flags[proc] = (flags, regex)
+        for key, value in parse_lex_dict(lex.mach_opt).items():
+            parts = value.split("|")
+            self.mach_opt_flags[key] = MachOptFlags(parts[0], parts[1] if len(parts) == 2 else '')
 
     def isa_flags_for(self, isa, arch):
         if isa in self.isa_flags:
@@ -1117,8 +1115,9 @@ class CompilerInfo(InfoObject):
                 else:
                     yield self.optimization_flags
 
-            def submodel_fixup(flags, tup):
-                return tup[0].replace('SUBMODEL', flags.replace(tup[1], ''))
+            def submodel_fixup(full_cpu, mach_opt_flags_tupel):
+                submodel_replacement = full_cpu.replace(mach_opt_flags_tupel.submodel_prefix, '')
+                return mach_opt_flags_tupel.flags.replace('SUBMODEL', submodel_replacement)
 
             if options.cpu != options.arch:
                 if options.cpu in self.mach_opt_flags:

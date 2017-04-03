@@ -43,7 +43,7 @@ ultrasparc3 -> "-xchip=ultra3"
 niagra1    -> "-xchip=ultraT1"
 niagra2    -> "-xchip=ultraT2"
 
-sparc32    -> "-xchip=ultra -xarch=SUBMODEL" sparc32-
+sparc32    -> "-xchip=ultra -xarch=SUBMODEL|sparc32-"
 sparc64    -> "-xchip=generic"
 </mach_opt>
 
