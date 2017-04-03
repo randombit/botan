@@ -73,8 +73,7 @@ void* MemoryMapping_Allocator::alloc_block(size_t n)
             * will continue to exist until the mmap is unmapped from
             * our address space upon deallocation (or process exit).
             */
-            if(fd != -1 && ::close(fd) == -1)
-               throw MemoryMapping_Failed("Could not close file");
+            fd != -1 && ::close(fd);
             }
       private:
          int fd;
