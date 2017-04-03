@@ -1470,7 +1470,7 @@ def gen_cmake(build_config, using_mods, cc, options):
                          os.sep + os.path.normpath(source) +
                          ' PROPERTIES COMPILE_FLAGS '+ joinedIsaFlags + ')\n')
 
-    library_target_configuration = create_target_rules(build_config.sources)
+    library_target_configuration = create_target_rules(build_config.lib_sources)
     tests_target_configuration = create_target_rules(build_config.test_sources)
     cli_target_configuration = create_target_rules(build_config.cli_sources)
 
