@@ -387,11 +387,26 @@ class FFI_Unit_Tests : public Test
 
          std::vector<Test::Result> results;
          results.push_back(ffi_test_mp(rng));
+
+#if defined(BOTAN_HAS_RSA)
          results.push_back(ffi_test_rsa(rng));
+#endif
+
+#if defined(BOTAN_HAS_DSA)
          results.push_back(ffi_test_dsa(rng));
+#endif
+
+#if defined(BOTAN_HAS_ECDSA)
          results.push_back(ffi_test_ecdsa(rng));
+#endif
+
+#if defined(BOTAN_HAS_ECDH)
          results.push_back(ffi_test_ecdh(rng));
+#endif
+
+#if defined(BOTAN_HAS_MCELIECE)
          results.push_back(ffi_test_mceliece(rng));
+#endif
 
          TEST_FFI_OK(botan_rng_destroy, (rng));
 
@@ -629,6 +644,7 @@ class FFI_Unit_Tests : public Test
          Test::Result result("FFI RSA");
 
          botan_privkey_t priv;
+
          if(TEST_FFI_OK(botan_privkey_create_rsa, (&priv, rng, 1024)))
             {
             TEST_FFI_OK(botan_privkey_check_key, (priv, rng, 0));
@@ -754,6 +770,7 @@ class FFI_Unit_Tests : public Test
          Test::Result result("FFI DSA");
 
          botan_privkey_t priv;
+
          if(TEST_FFI_OK(botan_privkey_create, (&priv, "DSA", "dsa/jce/1024", rng)))
             {
             TEST_FFI_OK(botan_privkey_check_key, (priv, rng, 0));
@@ -863,7 +880,7 @@ class FFI_Unit_Tests : public Test
          if(TEST_FFI_OK(botan_privkey_create_ecdsa, (&priv, rng, "secp384r1")))
             {
             botan_pubkey_t pub;
-            TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+            REQUIRE_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
 
             ffi_test_pubkey_export(result, pub, priv, rng);
 

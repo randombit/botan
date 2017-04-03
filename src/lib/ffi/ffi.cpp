@@ -980,20 +980,31 @@ int botan_privkey_create(botan_privkey_t* key_obj,
    {
    try
       {
-      if(key_obj == nullptr || rng_obj == nullptr)
-         return -1;
+      if(key_obj == nullptr)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+
+      *key_obj = nullptr;
+      if(rng_obj == nullptr)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+
       if(algo_name == nullptr)
          algo_name = "RSA";
       if(algo_params == nullptr)
          algo_params = "";
 
-      *key_obj = nullptr;
-
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       std::unique_ptr<Botan::Private_Key> key(
          Botan::create_private_key(algo_name, rng, algo_params));
-      *key_obj = new botan_privkey_struct(key.release());
-      return 0;
+
+      if(key)
+         {
+         *key_obj = new botan_privkey_struct(key.release());
+         return 0;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+         }
       }
    catch(std::exception& e)
       {
@@ -1215,6 +1226,10 @@ int botan_privkey_load_dsa(botan_privkey_t* key,
       }
    return -1;
 #else
+   BOTAN_UNUSED(p);
+   BOTAN_UNUSED(q);
+   BOTAN_UNUSED(g);
+   BOTAN_UNUSED(x);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -1238,6 +1253,10 @@ int botan_pubkey_load_dsa(botan_pubkey_t* key,
 
    return -1;
 #else
+   BOTAN_UNUSED(p);
+   BOTAN_UNUSED(q);
+   BOTAN_UNUSED(g);
+   BOTAN_UNUSED(y);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -1365,7 +1384,7 @@ int botan_pubkey_get_field(botan_mp_t output,
                            botan_pubkey_t key,
                            const char* field_name_cstr)
    {
-   if(field_name_cstr == NULL)
+   if(field_name_cstr == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
    const std::string field_name(field_name_cstr);
@@ -1379,7 +1398,7 @@ int botan_privkey_get_field(botan_mp_t output,
                                       botan_privkey_t key,
                                       const char* field_name_cstr)
    {
-   if(field_name_cstr == NULL)
+   if(field_name_cstr == nullptr)
       return BOTAN_FFI_ERROR_NULL_POINTER;
 
    const std::string field_name(field_name_cstr);
