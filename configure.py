@@ -41,8 +41,17 @@ if 'dont_write_bytecode' in sys.__dict__:
 
 import botan_version # pylint: disable=wrong-import-position
 
-class ConfigureError(Exception):
+
+# An error caused by and to be fixed by the user, e.g. invalid command line argument
+class UserError(Exception):
     pass
+
+
+# An error caused by bugs in this script or when reading/parsing build data files
+# Those are not expected to be fixed by the user of this script
+class InternalError(Exception):
+    pass
+
 
 def flatten(l):
     return sum(l, [])
@@ -482,10 +491,10 @@ def process_command_line(args): # pylint: disable=too-many-locals
     (options, args) = parser.parse_args(args)
 
     if args != []:
-        raise ConfigureError('Unhandled option(s): ' + ' '.join(args))
+        raise UserError('Unhandled option(s): ' + ' '.join(args))
     if options.with_endian != None and \
        options.with_endian not in ['little', 'big']:
-        raise ConfigureError('Bad value to --with-endian "%s"' % (
+        raise UserError('Bad value to --with-endian "%s"' % (
             options.with_endian))
 
     if options.debug_mode:
@@ -516,7 +525,7 @@ class LexResult(object):
     pass
 
 
-class LexerError(ConfigureError):
+class LexerError(InternalError):
     def __init__(self, msg, lexfile, line):
         super(LexerError, self).__init__(msg)
         self.msg = msg
@@ -529,12 +538,13 @@ class LexerError(ConfigureError):
 
 def parse_lex_dict(as_list):
     if len(as_list) % 3 != 0:
-        raise ConfigureError("Lex dictionary has invalid format")
+        raise InternalError(
+            "Lex dictionary has invalid format (input not divisible by 3): %s" % as_list)
 
     result = {}
     for key, sep, value in [as_list[3*i:3*i+3] for i in range(0, len(as_list)//3)]:
         if sep != '->':
-            raise ConfigureError("Lex dictionary has invalid format")
+            raise InternalError("Lex dictionary has invalid format")
         result[key] = value
     return result
 
@@ -675,12 +685,12 @@ class ModuleInfo(InfoObject):
         # Coerce to more useful types
         def convert_lib_list(l):
             if len(l) % 3 != 0:
-                raise ConfigureError("Bad <libs> in module %s" % (self.basename))
+                raise InternalError("Bad <libs> in module %s" % (self.basename))
             result = {}
 
             for sep in l[1::3]:
                 if sep != '->':
-                    raise ConfigureError("Bad <libs> in module %s" % (self.basename))
+                    raise InternalError("Bad <libs> in module %s" % (self.basename))
 
             for (targetlist, vallist) in zip(l[::3], l[2::3]):
                 vals = vallist.split(',')
@@ -738,20 +748,20 @@ class ModuleInfo(InfoObject):
     def _validate_defines_content(defines):
         for key, value in defines.items():
             if not re.match('^[0-9A-Za-z_]{3,30}$', key):
-                raise ConfigureError('Module defines key has invalid format: "%s"' % key)
+                raise InternalError('Module defines key has invalid format: "%s"' % key)
             if not re.match('^[0-9]{8}$', value):
-                raise ConfigureError('Module defines value has invalid format: "%s"' % value)
+                raise InternalError('Module defines value has invalid format: "%s"' % value)
 
     def cross_check(self, arch_info, os_info, cc_info):
         for supp_os in self.os:
             if supp_os not in os_info:
-                raise ConfigureError('Module %s mentions unknown OS %s' % (self.infofile, supp_os))
+                raise InternalError('Module %s mentions unknown OS %s' % (self.infofile, supp_os))
         for supp_cc in self.cc:
             if supp_cc not in cc_info:
-                raise ConfigureError('Module %s mentions unknown compiler %s' % (self.infofile, supp_cc))
+                raise InternalError('Module %s mentions unknown compiler %s' % (self.infofile, supp_cc))
         for supp_arch in self.arch:
             if supp_arch not in arch_info:
-                raise ConfigureError('Module %s mentions unknown arch %s' % (self.infofile, supp_arch))
+                raise InternalError('Module %s mentions unknown arch %s' % (self.infofile, supp_arch))
 
     def sources(self):
         return self.source
@@ -1057,22 +1067,22 @@ class CompilerInfo(InfoObject):
 
         if options.with_coverage_info:
             if self.coverage_flags == '':
-                raise ConfigureError('No coverage handling for %s' % (self.basename))
+                raise InternalError('No coverage handling for %s' % (self.basename))
             abi_link.append(self.coverage_flags)
 
         if options.with_sanitizers:
             if self.sanitizer_flags == '':
-                raise ConfigureError('No sanitizer handling for %s' % (self.basename))
+                raise InternalError('No sanitizer handling for %s' % (self.basename))
             abi_link.append(self.sanitizer_flags)
 
         if options.with_openmp:
             if 'openmp' not in self.mach_abi_linking:
-                raise ConfigureError('No support for OpenMP for %s' % (self.basename))
+                raise InternalError('No support for OpenMP for %s' % (self.basename))
             abi_link.append(self.mach_abi_linking['openmp'])
 
         if options.with_cilkplus:
             if 'cilkplus' not in self.mach_abi_linking:
-                raise ConfigureError('No support for Cilk Plus for %s' % (self.basename))
+                raise InternalError('No support for Cilk Plus for %s' % (self.basename))
             abi_link.append(self.mach_abi_linking['cilkplus'])
 
         abi_flags = ' '.join(sorted(abi_link))
@@ -1139,7 +1149,7 @@ class CompilerInfo(InfoObject):
             if s in self.so_link_commands:
                 return self.so_link_commands[s]
 
-        raise ConfigureError(
+        raise InternalError(
             "No shared library link command found for target '%s' in compiler settings '%s'" %
             (osname, self.infofile))
 
@@ -1199,7 +1209,7 @@ class OsInfo(InfoObject):
                 self.soname_pattern_abi = lex.soname_pattern_abi
             else:
                 # base set, only one of patch/abi set
-                raise ConfigureError("Invalid soname_patterns in %s" % (self.infofile))
+                raise InternalError("Invalid soname_patterns in %s" % (self.infofile))
         else:
             if lex.soname_suffix:
                 self.soname_pattern_base = "libbotan-{version_major}.%s" % (lex.soname_suffix)
@@ -1319,7 +1329,7 @@ def guess_processor(archinfo):
             else:
                 logging.debug("Failed to deduce CPU from '%s'" % info_part)
 
-    raise ConfigureError('Could not determine target CPU; set with --cpu')
+    raise UserError('Could not determine target CPU; set with --cpu')
 
 def slurp_file(filename):
     """
@@ -1343,9 +1353,9 @@ def process_template(template_file, variables):
         template = PercentSignTemplate(slurp_file(template_file))
         return template.substitute(variables)
     except KeyError as e:
-        raise ConfigureError('Unbound var %s in template %s' % (e, template_file))
+        raise InternalError('Unbound var %s in template %s' % (e, template_file))
     except Exception as e:
-        raise ConfigureError('Exception %s in template %s' % (e, template_file))
+        raise InternalError('Exception %s in template %s' % (e, template_file))
 
 def makefile_list(items):
     items = list(items) # force evaluation so we can slice it
@@ -1550,7 +1560,7 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
         for isa in isas:
             flag = cc.isa_flags_for(isa, arch.basename)
             if flag is None:
-                raise ConfigureError('Compiler %s does not support %s' % (cc.basename, isa))
+                raise UserError('Compiler %s does not support %s' % (cc.basename, isa))
             flags.append(flag)
         return '' if len(flags) == 0 else (' ' + ' '.join(sorted(list(flags))))
 
@@ -1597,7 +1607,7 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
             elif file.find('botan_all') != -1:
                 parts = []
             else:
-                raise ConfigureError("Unexpected file '%s/%s'" % (directory, file))
+                raise InternalError("Unexpected file '%s/%s'" % (directory, file))
 
             if parts != []:
 
@@ -2100,7 +2110,7 @@ def portable_symlink(file_path, target_dir, method):
     elif method == 'copy':
         shutil.copy(file_path, target_dir)
     else:
-        raise ConfigureError('Unknown link method %s' % (method))
+        raise UserError('Unknown link method %s' % (method))
 
 def generate_amalgamation(build_config, modules, options):
     """
@@ -2118,7 +2128,7 @@ def generate_amalgamation(build_config, modules, options):
             contents = contents[1:]
 
         if len(contents) == 0:
-            raise ConfigureError("No header guard found in " + header_name)
+            raise InternalError("No header guard found in " + header_name)
 
         while contents[0] == '\n':
             contents = contents[1:]
@@ -2351,7 +2361,7 @@ def main(argv=None):
         platform.system(), platform.machine(), platform.processor()))
 
     if options.os == "java":
-        raise ConfigureError("Jython detected: need --os and --cpu to set target")
+        raise UserError("Jython detected: need --os and --cpu to set target")
 
     options.base_dir = os.path.dirname(argv[0])
     options.src_dir = os.path.join(options.base_dir, 'src')
@@ -2452,7 +2462,7 @@ def main(argv=None):
             options.compiler))
 
     if options.compiler not in info_cc:
-        raise ConfigureError('Unknown compiler "%s"; available options: %s' % (
+        raise UserError('Unknown compiler "%s"; available options: %s' % (
             options.compiler, ' '.join(sorted(info_cc.keys()))))
 
     if options.os not in info_os:
@@ -2466,7 +2476,7 @@ def main(argv=None):
         options.os = find_canonical_os_name(options.os)
 
         if options.os not in info_os:
-            raise ConfigureError('Unknown OS "%s"; available options: %s' % (
+            raise UserError('Unknown OS "%s"; available options: %s' % (
                 options.os, ' '.join(sorted(info_os.keys()))))
 
     if options.cpu is None:
@@ -2507,10 +2517,10 @@ def main(argv=None):
             options.with_sphinx = True
 
     if options.gen_amalgamation:
-        raise ConfigureError("--gen-amalgamation was removed. Migrate to --amalgamation.")
+        raise UserError("--gen-amalgamation was removed. Migrate to --amalgamation.")
 
     if options.via_amalgamation:
-        raise ConfigureError("--via-amalgamation was removed. Use --amalgamation instead.")
+        raise UserError("--via-amalgamation was removed. Use --amalgamation instead.")
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
@@ -2607,7 +2617,7 @@ def main(argv=None):
                 portable_symlink(header_file, directory, link_method)
             except OSError as e:
                 if e.errno != errno.EEXIST:
-                    raise ConfigureError('Error linking %s into %s: %s' % (header_file, directory, e))
+                    raise UserError('Error linking %s into %s: %s' % (header_file, directory, e))
 
     link_headers(build_config.public_headers, 'public',
                  build_config.botan_include_dir)
@@ -2651,9 +2661,20 @@ def main(argv=None):
 if __name__ == '__main__':
     try:
         main()
-    except ConfigureError as e:
+    except UserError as e:
         logging.debug(traceback.format_exc())
         logging.error(e)
+    except InternalError as e:
+        # error() will stop script, so wrap all information into one call
+        logging.error("""%s
+An internal error occurred.
+
+Don't panic, this is probably not your fault!
+
+Please report the entire output at https://github.com/randombit/botan or email
+to the mailing list https://lists.randombit.net/mailman/listinfo/botan-devel
+
+You'll meet friendly people happy to help!""" % traceback.format_exc())
     except Exception as e: # pylint: disable=broad-except
         logging.debug(traceback.format_exc())
         logging.error(e)
