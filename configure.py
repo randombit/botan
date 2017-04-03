@@ -96,12 +96,19 @@ class Version(object):
     so_rev = botan_version.release_so_abi_rev
     release_type = botan_version.release_type
     datestamp = botan_version.release_datestamp
-    vc_rev = botan_version.release_vc_rev if botan_version.release_vc_rev else get_vc_revision()
     packed = major * 1000 + minor # Used on Darwin for dylib versioning
+    _vc_rev = None
 
     @staticmethod
     def as_string():
         return '%d.%d.%d' % (Version.major, Version.minor, Version.patch)
+
+    @staticmethod
+    def vc_rev():
+        # Lazy load to ensure get_vc_revision() does not run before logger is set up
+        if Version._vc_rev is None:
+            Version._vc_rev = botan_version.release_vc_rev if botan_version.release_vc_rev else get_vc_revision()
+        return Version._vc_rev
 
 
 class BuildPaths(object): # pylint: disable=too-many-instance-attributes
@@ -1617,7 +1624,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'version_major':  Version.major,
         'version_minor':  Version.minor,
         'version_patch':  Version.patch,
-        'version_vc_rev': Version.vc_rev,
+        'version_vc_rev': Version.vc_rev(),
         'so_abi_rev':     Version.so_rev,
         'version':        Version.as_string(),
         'version_packed': Version.packed,
@@ -2513,7 +2520,7 @@ def main(argv=None):
 
     logging.info('Botan %s (VC %s) (%s %s) build setup is complete' % (
         Version.as_string(),
-        Version.vc_rev,
+        Version.vc_rev(),
         Version.release_type,
         release_date(Version.datestamp)))
 
