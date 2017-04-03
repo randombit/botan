@@ -22,8 +22,8 @@ namespace {
 #if defined(BOTAN_HAS_CERTSTOR_SQLITE3)
 
 Test::Result test_certstor_insert_find_remove_test(
-      const std::vector<std::pair<Botan::X509_Certificate,std::shared_ptr<Botan::Private_Key>>>& certs,
-      Botan::Certificate_Store_In_SQL& store)
+   const std::vector<std::pair<Botan::X509_Certificate,std::shared_ptr<Botan::Private_Key>>>& certs,
+   Botan::Certificate_Store_In_SQL& store)
    {
    Test::Result result("Certificate Store - Insert, Find, Remove");
 
@@ -31,7 +31,7 @@ Test::Result test_certstor_insert_find_remove_test(
       {
       auto cert = cert_key.first;
       auto key = cert_key.second;
-      auto wo_keyid = store.find_cert(cert.subject_dn(),{});
+      auto wo_keyid = store.find_cert(cert.subject_dn(), {});
       auto w_keyid = store.find_cert(cert.subject_dn(),cert.subject_key_id());
 
       if(!wo_keyid || !w_keyid)
@@ -61,10 +61,10 @@ Test::Result test_certstor_insert_find_remove_test(
             }
          else
             {
-               bool found = std::any_of(rev_certs.begin(),rev_certs.end(),[&](std::shared_ptr<const Botan::X509_Certificate> c)
-                     { return c->fingerprint() == cert.fingerprint(); });
+            bool found = std::any_of(rev_certs.begin(),rev_certs.end(),[&](std::shared_ptr<const Botan::X509_Certificate> c)
+               { return c->fingerprint() == cert.fingerprint(); });
 
-               result.test_eq("Got wrong/no certificate",found,true);
+            result.test_eq("Got wrong/no certificate",found,true);
             }
          }
 
@@ -72,7 +72,7 @@ Test::Result test_certstor_insert_find_remove_test(
          {
          result.test_eq("Got wrong certificate",cert.fingerprint(),wo_keyid->fingerprint());
          }
-         
+
       result.test_eq("Can't remove certificate",store.remove_cert(cert),true);
       result.test_eq("Can't remove certificate",!store.find_cert(cert.subject_dn(),cert.subject_key_id()),true);
 
@@ -88,8 +88,8 @@ Test::Result test_certstor_insert_find_remove_test(
    }
 
 Test::Result test_certstor_crl_test(
-      const std::vector<std::pair<Botan::X509_Certificate,std::shared_ptr<Botan::Private_Key>>>& certs,
-      Botan::Certificate_Store_In_SQL& store)
+   const std::vector<std::pair<Botan::X509_Certificate,std::shared_ptr<Botan::Private_Key>>>& certs,
+   Botan::Certificate_Store_In_SQL& store)
    {
    Test::Result result("Certificate Store - CRL");
 
@@ -97,22 +97,22 @@ Test::Result test_certstor_crl_test(
    store.revoke_cert(certs[3].first,Botan::CA_COMPROMISE);
    store.revoke_cert(certs[3].first,Botan::CA_COMPROMISE);
 
-   {
+      {
       auto crls = store.generate_crls();
 
       result.test_eq("Can't revoke certificate",crls.size(),2);
       result.test_eq("Can't revoke certificate",crls[0].is_revoked(certs[0].first) ^ crls[1].is_revoked(certs[0].first),true);
       result.test_eq("Can't revoke certificate",crls[0].is_revoked(certs[3].first) ^ crls[1].is_revoked(certs[3].first),true);
-   }
+      }
 
    store.affirm_cert(certs[3].first);
 
-   {
+      {
       auto crls = store.generate_crls();
 
       result.test_eq("Can't revoke certificate, wrong crl size",crls.size(),1);
       result.test_eq("Can't revoke certificate, cert 0 not revoked",crls[0].is_revoked(certs[0].first),true);
-   }
+      }
 
    auto cert0_crl = store.find_crl_for(certs[0].first);
 
@@ -128,13 +128,13 @@ Test::Result test_certstor_crl_test(
    }
 
 Test::Result test_certstor_all_subjects_test(
-      const std::vector<std::pair<Botan::X509_Certificate,std::shared_ptr<Botan::Private_Key>>>& certs,
-      Botan::Certificate_Store_In_SQL& store)
+   const std::vector<std::pair<Botan::X509_Certificate,std::shared_ptr<Botan::Private_Key>>>& certs,
+   Botan::Certificate_Store_In_SQL& store)
    {
    Test::Result result("Certificate Store - All subjects");
 
    auto subjects = store.all_subjects();
-      
+
    result.test_eq("Check subject list length",subjects.size(),6);
 
    for(auto sub: subjects)
@@ -143,13 +143,13 @@ Test::Result test_certstor_all_subjects_test(
 
       ss << sub;
       result.test_eq("Check subject " + ss.str(),
-            certs[0].first.subject_dn() == sub ||
-            certs[1].first.subject_dn() == sub ||
-            certs[2].first.subject_dn() == sub ||
-            certs[3].first.subject_dn() == sub ||
-            certs[4].first.subject_dn() == sub ||
-            certs[5].first.subject_dn() == sub,true);
-   
+                     certs[0].first.subject_dn() == sub ||
+                     certs[1].first.subject_dn() == sub ||
+                     certs[2].first.subject_dn() == sub ||
+                     certs[3].first.subject_dn() == sub ||
+                     certs[4].first.subject_dn() == sub ||
+                     certs[5].first.subject_dn() == sub,true);
+
       }
    return result;
    }
@@ -157,23 +157,25 @@ Test::Result test_certstor_all_subjects_test(
 class Certstor_Tests : public Test
    {
    public:
-         std::vector<Test::Result> run() override
+      std::vector<Test::Result> run() override
          {
          const std::string test_dir = Test::data_dir() + "/certstor";
-         const std::vector<std::pair<std::string,std::string>> test_data({
+         const std::vector<std::pair<std::string,std::string>> test_data(
+            {
             std::make_pair("cert1.crt","key01.pem"),
             std::make_pair("cert2.crt","key01.pem"),
             std::make_pair("cert3.crt","key03.pem"),
             std::make_pair("cert4.crt","key04.pem"),
             std::make_pair("cert5a.crt","key05.pem"),
             std::make_pair("cert5b.crt","key06.pem")
-         });
+            });
 
          std::vector<Test::Result> results;
          std::vector<std::pair<std::string,std::function<Test::Result(
-               const std::vector<std::pair<Botan::X509_Certificate,std::shared_ptr<Botan::Private_Key>>>&,
-               Botan::Certificate_Store_In_SQL&)>>>
-            fns({
+            const std::vector<std::pair<Botan::X509_Certificate,std::shared_ptr<Botan::Private_Key>>>&,
+            Botan::Certificate_Store_In_SQL&)>>>
+         fns(
+            {
             std::make_pair("Certificate Store - Insert, Find, Remove",test_certstor_insert_find_remove_test),
             std::make_pair("Certificate Store - CRL",test_certstor_crl_test),
             std::make_pair("Certificate Store - All subjects",test_certstor_all_subjects_test)
@@ -229,7 +231,7 @@ class Certstor_Tests : public Test
                   store.insert_cert(cert);
                   store.insert_key(cert,*key);
                   retrieve.push_back(std::make_pair(cert,key));
-                  } 
+                  }
 
                results.push_back(fn.second(retrieve,store));
                }
