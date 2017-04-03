@@ -588,6 +588,11 @@ class FFI_Unit_Tests : public Test
          pubkey.resize(pubkey_len);
          TEST_FFI_OK(botan_pubkey_export, (pub, pubkey.data(), &pubkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
 
+         // reimport exported public key
+         botan_pubkey_t pub_copy;
+         TEST_FFI_OK(botan_pubkey_load, (&pub_copy, pubkey.data(), pubkey_len));
+         TEST_FFI_OK(botan_pubkey_check_key, (pub_copy, rng, 0));
+
          // export private key
          std::vector<uint8_t> privkey;
          size_t privkey_len = 0;
@@ -880,7 +885,7 @@ class FFI_Unit_Tests : public Test
          if(TEST_FFI_OK(botan_privkey_create_ecdsa, (&priv, rng, "secp384r1")))
             {
             botan_pubkey_t pub;
-            REQUIRE_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+            TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
 
             ffi_test_pubkey_export(result, pub, priv, rng);
 

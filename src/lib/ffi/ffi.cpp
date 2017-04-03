@@ -1162,6 +1162,30 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
    return -1;
    }
 
+int botan_pubkey_load(botan_pubkey_t* key,
+                      const uint8_t bits[], size_t bits_len)
+   {
+   *key = nullptr;
+
+   try
+      {
+      Botan::DataSource_Memory src(bits, bits_len);
+      std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(src));
+
+      if(pubkey)
+         {
+         *key = new botan_pubkey_struct(pubkey.release());
+         return 0;
+         }
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+
+   return -1;
+   }
+
 int botan_privkey_load_rsa(botan_privkey_t* key,
                            botan_mp_t p, botan_mp_t q, botan_mp_t d)
    {
