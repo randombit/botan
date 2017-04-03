@@ -489,6 +489,31 @@ class HMAC_DRBG_Unit_Tests : public Test
          return result;
          }
 
+      Test::Result test_security_level()
+         {
+         Test::Result result("HMAC_DRBG Security Level");
+
+         std::vector<std::string> approved_hash_fns { "SHA-160", "SHA-224", "SHA-256", "SHA-512/256", "SHA-384", "SHA-512" };
+         std::vector<uint32_t> security_strengths { 128, 192, 256, 256, 256, 256 };
+
+         for( size_t i = 0; i < approved_hash_fns.size(); ++i )
+            {
+            std::string hash_fn = approved_hash_fns[i];
+            std::string mac_name = "HMAC(" + hash_fn + ")";
+            auto mac = Botan::MessageAuthenticationCode::create(mac_name);
+            if(!mac)
+               {
+               result.note_missing(mac_name);
+               continue;
+               }
+
+            Botan::HMAC_DRBG rng(std::move(mac));
+            result.test_eq(hash_fn + " security level", rng.security_level(), security_strengths[i]);
+            }
+
+         return result;
+         }
+
       Test::Result test_randomize_with_ts_input()
          {
          Test::Result result("HMAC_DRBG Randomize With Timestamp Input");
@@ -538,6 +563,7 @@ class HMAC_DRBG_Unit_Tests : public Test
          results.push_back(test_prediction_resistance());
          results.push_back(test_fork_safety());
          results.push_back(test_randomize_with_ts_input());
+         results.push_back(test_security_level());
          return results;
          }
    };
