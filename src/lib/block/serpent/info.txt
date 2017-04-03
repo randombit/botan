@@ -1,4 +1,6 @@
-define SERPENT 20131128
+<defines>
+SERPENT -> 20131128
+</defines>
 
 <header:public>
 serpent.h

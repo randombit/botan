@@ -1,4 +1,6 @@
-define ENTROPY_SRC_PROC_WALKER 20131128
+<defines>
+ENTROPY_SRC_PROC_WALKER -> 20131128
+</defines>
 
 <header:internal>
 proc_walk.h

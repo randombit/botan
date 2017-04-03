@@ -1,4 +1,6 @@
-define NOEKEON_SIMD 20160903
+<defines>
+NOEKEON_SIMD -> 20160903
+</defines>
 
 <requires>
 noekeon

@@ -1,4 +1,6 @@
-define ENTROPY_SRC_DARWIN_SECRANDOM 20150925
+<defines>
+ENTROPY_SRC_DARWIN_SECRANDOM -> 20150925
+</defines>
 
 <header:internal>
 darwin_secrandom.h

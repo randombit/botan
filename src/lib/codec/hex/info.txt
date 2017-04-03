@@ -1,1 +1,3 @@
-define HEX_CODEC 20131128
+<defines>
+HEX_CODEC -> 20131128
+</defines>

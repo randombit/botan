@@ -1,4 +1,6 @@
-define SKEIN_512 20131128
+<defines>
+SKEIN_512 -> 20131128
+</defines>
 
 <requires>
 threefish

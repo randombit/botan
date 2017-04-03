@@ -1,4 +1,6 @@
-define CASCADE 20131128
+<defines>
+CASCADE -> 20131128
+</defines>
 
 <header:public>
 cascade.h

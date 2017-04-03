@@ -1,1 +1,3 @@
-define SHA3 20161018
+<defines>
+SHA3 -> 20161018
+</defines>

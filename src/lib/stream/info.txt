@@ -1,4 +1,6 @@
-define STREAM_CIPHER 20131128
+<defines>
+STREAM_CIPHER -> 20131128
+</defines>
 
 <header:public>
 stream_cipher.h

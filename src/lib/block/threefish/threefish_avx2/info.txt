@@ -1,4 +1,6 @@
-define THREEFISH_512_AVX2 20160903
+<defines>
+THREEFISH_512_AVX2 -> 20160903
+</defines>
 
 need_isa avx2
 

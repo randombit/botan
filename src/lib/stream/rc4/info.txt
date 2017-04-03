@@ -1,1 +1,3 @@
-define RC4 20131128
+<defines>
+RC4 -> 20131128
+</defines>

@@ -1,4 +1,6 @@
-define RDRAND_RNG 20160619
+<defines>
+RDRAND_RNG -> 20160619
+</defines>
 
 need_isa rdrand
 

@@ -1,4 +1,6 @@
-define ECDH 20131128
+<defines>
+ECDH -> 20131128
+</defines>
 
 <requires>
 asn1

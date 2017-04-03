@@ -1,4 +1,6 @@
-define RIPEMD_160 20131128
+<defines>
+RIPEMD_160 -> 20131128
+</defines>
 
 <requires>
 mdx_hash

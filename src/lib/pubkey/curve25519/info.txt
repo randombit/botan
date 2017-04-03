@@ -1,4 +1,6 @@
-define CURVE_25519 20141227
+<defines>
+CURVE_25519 -> 20141227
+</defines>
 
 <header:public>
 curve25519.h

@@ -1,5 +1,6 @@
-
-define GCM_CLMUL 20131227
+<defines>
+GCM_CLMUL -> 20131227
+</defines>
 
 need_isa aesni
 

@@ -1,4 +1,6 @@
-define ASN1 20161102
+<defines>
+ASN1 -> 20161102
+</defines>
 
 <requires>
 bigint

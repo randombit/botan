@@ -1,1 +1,3 @@
-define BLAKE2B 20130131
+<defines>
+BLAKE2B -> 20130131
+</defines>

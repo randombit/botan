@@ -1,4 +1,6 @@
-define AEAD_CHACHA20_POLY1305 20141228
+<defines>
+AEAD_CHACHA20_POLY1305 -> 20141228
+</defines>
 
 <requires>
 chacha

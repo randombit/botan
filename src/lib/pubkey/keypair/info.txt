@@ -1,4 +1,6 @@
-define KEYPAIR_TESTING 20131128
+<defines>
+KEYPAIR_TESTING -> 20131128
+</defines>
 
 <requires>
 </requires>

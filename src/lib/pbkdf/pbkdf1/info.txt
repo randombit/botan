@@ -1,4 +1,6 @@
-define PBKDF1 20131128
+<defines>
+PBKDF1 -> 20131128
+</defines>
 
 <requires>
 hash

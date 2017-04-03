@@ -1,1 +1,3 @@
-define MISTY1 20131128
+<defines>
+MISTY1 -> 20131128
+</defines>

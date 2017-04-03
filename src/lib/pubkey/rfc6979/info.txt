@@ -1,4 +1,6 @@
-define RFC6979_GENERATOR 20140321
+<defines>
+RFC6979_GENERATOR -> 20140321
+</defines>
 
 <requires>
 bigint

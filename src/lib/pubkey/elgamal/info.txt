@@ -1,4 +1,6 @@
-define ELGAMAL 20131128
+<defines>
+ELGAMAL -> 20131128
+</defines>
 
 <requires>
 dl_algo

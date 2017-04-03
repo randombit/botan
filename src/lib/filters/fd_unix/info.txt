@@ -1,4 +1,6 @@
-define PIPE_UNIXFD_IO 20131128
+<defines>
+PIPE_UNIXFD_IO -> 20131128
+</defines>
 
 load_on auto
 

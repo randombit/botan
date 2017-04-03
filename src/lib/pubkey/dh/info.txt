@@ -1,4 +1,6 @@
-define DIFFIE_HELLMAN 20131128
+<defines>
+DIFFIE_HELLMAN -> 20131128
+</defines>
 
 <header:public>
 dh.h

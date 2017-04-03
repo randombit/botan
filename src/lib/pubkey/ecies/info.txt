@@ -1,4 +1,6 @@
-define ECIES 20160128
+<defines>
+ECIES -> 20160128
+</defines>
 
 <requires>
 kdf

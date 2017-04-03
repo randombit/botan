@@ -1,4 +1,6 @@
-define PBKDF 20150626
+<defines>
+PBKDF -> 20150626
+</defines>
 
 <requires>
 base

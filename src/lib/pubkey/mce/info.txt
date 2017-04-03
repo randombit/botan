@@ -1,4 +1,6 @@
-define MCELIECE 20150922
+<defines>
+MCELIECE -> 20150922
+</defines>
 
 <header:public>
 mceliece.h

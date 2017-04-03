@@ -1,4 +1,6 @@
-define DLIES 20160713
+<defines>
+DLIES -> 20160713
+</defines>
 
 <requires>
 kdf

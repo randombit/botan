@@ -1,4 +1,6 @@
-define UTIL_FUNCTIONS 20161127
+<defines>
+UTIL_FUNCTIONS -> 20161127
+</defines>
 
 load_on always
 

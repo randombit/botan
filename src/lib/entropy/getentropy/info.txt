@@ -1,4 +1,6 @@
-define ENTROPY_SRC_GETENTROPY 20170327
+<defines>
+ENTROPY_SRC_GETENTROPY -> 20170327
+</defines>
 
 <header:internal>
 getentropy.h

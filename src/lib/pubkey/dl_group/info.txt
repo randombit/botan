@@ -1,4 +1,6 @@
-define DL_GROUP 20131128
+<defines>
+DL_GROUP -> 20131128
+</defines>
 
 <requires>
 asn1

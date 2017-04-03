@@ -1,4 +1,6 @@
-define BLOCK_CIPHER 20131128
+<defines>
+BLOCK_CIPHER -> 20131128
+</defines>
 
 <header:public>
 block_cipher.h

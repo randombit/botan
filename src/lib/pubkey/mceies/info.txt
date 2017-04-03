@@ -1,4 +1,6 @@
-define MCEIES 20150706
+<defines>
+MCEIES -> 20150706
+</defines>
 
 <requires>
 aes

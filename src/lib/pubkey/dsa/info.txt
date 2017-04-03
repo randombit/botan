@@ -1,4 +1,6 @@
-define DSA 20131128
+<defines>
+DSA -> 20131128
+</defines>
 
 <requires>
 dl_algo

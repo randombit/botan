@@ -1,4 +1,6 @@
-define COMPRESSION 20141117
+<defines>
+COMPRESSION -> 20141117
+</defines>
 
 <header:internal>
 compress_utils.h

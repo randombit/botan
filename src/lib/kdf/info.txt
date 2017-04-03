@@ -1,4 +1,6 @@
-define KDF_BASE 20131128
+<defines>
+KDF_BASE -> 20131128
+</defines>
 
 <requires>
 base

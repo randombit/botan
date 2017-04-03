@@ -1,1 +1,3 @@
-define BASE64_CODEC 20131128
+<defines>
+BASE64_CODEC -> 20131128
+</defines>

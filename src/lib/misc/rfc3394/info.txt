@@ -1,4 +1,6 @@
-define RFC3394_KEYWRAP 20131128
+<defines>
+RFC3394_KEYWRAP -> 20131128
+</defines>
 
 <requires>
 aes
