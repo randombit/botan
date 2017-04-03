@@ -29,18 +29,13 @@ class BOTAN_DLL SM3 final : public MDx_HashFunction
 
       void clear() override;
 
-      SM3() : MDx_HashFunction(SM3_BLOCK_BYTES, true, true), m_M(16), m_digest(SM3_DIGEST_BYTES)
+      SM3() : MDx_HashFunction(SM3_BLOCK_BYTES, true, true), m_digest(SM3_DIGEST_BYTES)
          { clear(); }
    protected:
       void compress_n(const uint8_t[], size_t blocks) override;
       void copy_out(uint8_t[]) override;
 
    private:
-      /**
-      * The message buffer
-      */
-      secure_vector<uint32_t> m_M;
-
       /**
       * The digest value
       */
