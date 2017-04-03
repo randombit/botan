@@ -210,6 +210,48 @@ Test::Result test_certstor_sqlite3_all_subjects_test(const std::vector<Certifica
 
 #endif
 
+Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey>& certsandkeys)
+   {
+   Test::Result result("Certificate Store - Find by subject hash");
+
+   try
+      {
+      Botan::Certificate_Store_In_Memory store;
+
+      for(const auto& a : certsandkeys)
+         store.add_certificate(a.certificate);
+
+      for(const auto certandkey : certsandkeys)
+         {
+         const auto cert = certandkey.certificate;
+         const auto hash = cert.raw_subject_dn_sha256();
+
+         const auto found = store.find_cert_by_raw_subject_dn_sha256(hash);
+         if(!found)
+            {
+            result.test_failure("Can't retrieve certificate " + cert.fingerprint("SHA1"));
+            return result;
+            }
+
+         result.test_eq("Got wrong certificate", hash, found->raw_subject_dn_sha256());
+         }
+
+      const auto found = store.find_cert_by_raw_subject_dn_sha256(std::vector<uint8_t>(32,0));
+      if(found)
+         {
+         result.test_failure("Certificate found for dummy hash");
+         return result;
+         }
+
+      return result;
+      }
+   catch(std::exception& e)
+      {
+      result.test_failure(e.what());
+      return result;
+      }
+   }
+
 class Certstor_Tests : public Test
    {
    public:
@@ -272,12 +314,12 @@ class Certstor_Tests : public Test
 
          std::vector<Test::Result> results;
 
+         results.push_back(test_certstor_find_hash_subject(certsandkeys));
 #if defined(BOTAN_HAS_CERTSTOR_SQLITE3)
          results.push_back(test_certstor_sqlite3_insert_find_remove_test(certsandkeys));
          results.push_back(test_certstor_sqlite3_crl_test(certsandkeys));
          results.push_back(test_certstor_sqlite3_all_subjects_test(certsandkeys));
 #endif
-
          return results;
          }
    };
