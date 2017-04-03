@@ -1,4 +1,6 @@
-define SM3 20131128
+<defines>
+SM3 -> 20170402
+</defines>
 
 <requires>
 mdx_hash
