@@ -99,21 +99,21 @@ alpha-ev7   -> "-mcpu=ev67"
 sh4         -> "-m4 -mieee"
 
 # Default family options (SUBMODEL is substitued with the actual
-# submodel name). Anything after the quotes is what should be
-# *removed* from the submodel name before it's put into SUBMODEL.
+# submodel name). Anything after the pipe will be removed from the
+# submodel name before it's put into SUBMODEL.
 
-alpha     -> "-mcpu=SUBMODEL" alpha-
+alpha     -> "-mcpu=SUBMODEL|alpha-"
 arm32     -> "-march=SUBMODEL"
 arm64     -> "-march=SUBMODEL"
-superh    -> "-mSUBMODEL" sh
-hppa      -> "-march=SUBMODEL" hppa
+superh    -> "-mSUBMODEL|sh"
+hppa      -> "-march=SUBMODEL|hppa"
 ia64      -> "-mtune=SUBMODEL"
 m68k      -> "-mSUBMODEL"
-mips32    -> "-mips1 -mcpu=SUBMODEL" mips32-
-mips64    -> "-mips3 -mcpu=SUBMODEL" mips64-
-ppc32     -> "-mcpu=SUBMODEL" ppc
-ppc64     -> "-mcpu=SUBMODEL" ppc
-sparc32   -> "-mcpu=SUBMODEL -Wa,-xarch=v8plus" sparc32-
+mips32    -> "-mips1 -mcpu=SUBMODEL|mips32-"
+mips64    -> "-mips3 -mcpu=SUBMODEL|mips64-"
+ppc32     -> "-mcpu=SUBMODEL|ppc"
+ppc64     -> "-mcpu=SUBMODEL|ppc"
+sparc32   -> "-mcpu=SUBMODEL -Wa,-xarch=v8plus|sparc32-"
 sparc64   -> "-mcpu=v9 -mtune=SUBMODEL"
 x86_32    -> "-march=SUBMODEL"
 x86_64    -> "-march=SUBMODEL"

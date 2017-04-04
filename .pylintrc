@@ -123,16 +123,16 @@ argument-rgx=[a-z_][a-z0-9_]{0,30}$
 argument-name-hint=[a-z_][a-z0-9_]{0,30}$
 
 # Regular expression matching correct function names
-function-rgx=[a-z_][a-z0-9_]{2,30}$
+function-rgx=[a-z_][a-z0-9_]{2,45}$
 
 # Naming hint for function names
-function-name-hint=[a-z_][a-z0-9_]{2,30}$
+function-name-hint=[a-z_][a-z0-9_]{2,45}$
 
 # Regular expression matching correct variable names
-variable-rgx=[a-z_][a-z0-9_]{0,30}$
+variable-rgx=[a-z_][a-z0-9_]{0,45}$
 
 # Naming hint for variable names
-variable-name-hint=[a-z_][a-z0-9_]{0,30}$
+variable-name-hint=[a-z_][a-z0-9_]{0,45}$
 
 # Regular expression matching correct attribute names
 attr-rgx=[a-z_][a-z0-9_]{1,30}$
