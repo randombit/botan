@@ -8,6 +8,11 @@ Version 2.1.0, Not Yet Released
   characters were truncated at 56 characters. Found and reported by Solar Designer.
   (CVE-2017-7252) (GH #938)
 
+* Fix a bug in X509 DN string comparisons that could result in out of bound
+  reads. This could result in information leakage, denial of service, or
+  potentially incorrect certificate validation results. Found independently
+  by Cisco Talos team and OSS-Fuzz. (CVE-2017-2801)
+
 * Correct minimum work factor for Bcrypt password hashes. All other
   implementations require the work factor be at least 4. Previously Botan simply
   required it be greater than zero. (GH #938)
@@ -16,12 +21,16 @@ Version 2.1.0, Not Yet Released
   Uses Montgomery ladder with order/2 bits scalar blinding and point randomization
   now by default. (GH #893)
 
+* Add ability to search for certificates using the SHA-256 of the distinguished name.
+  (GH #900)
+
 * Support a 0-length IV in ChaCha stream cipher. Such an IV is treated
   identically to an 8-byte IV of all zeros.
 
 * Add new interfaces to the C API including multiple precision integers, key
-  validity tests, extracting algorithm specific key paramters (eg the modulus
-  and public exponent from RSA public keys). GH #899 #944 #946 #961 #964
+  validity tests, block ciphers, and extracting algorithm specific key paramters
+  (such as the modulus and public exponent from RSA public keys). GH #899 #944
+  #946 #961 #964
 
 * The PKCS11 module did not require any external dependencies, so it
   has been enabled by default. The ``-with-pkcs11`` and ``--without-pkcs11``
