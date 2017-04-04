@@ -1553,45 +1553,55 @@ def gen_cmake(build_paths, using_mods, cc, options):
             '${CONFIGURATION_FILES} ${DOCUMENTATION_FILES} ${INFO_FILES} ${HEADER_FILES})\n')
     f.close()
 
-def gen_makefile_lists(var, build_paths, options, modules, cc, arch, osinfo):
-    def simd_implementation():
+
+class MakefileListsGenerator(object):
+    def __init__(self, build_paths, options, modules, cc, arch, osinfo):
+        self._build_paths = build_paths
+        self._options = options
+        self._modules = modules
+        self._cc = cc
+        self._arch = arch
+        self._osinfo = osinfo
+
+    def _simd_implementation(self):
         for simd32_impl in ['sse2', 'altivec', 'neon']:
-            if simd32_impl in arch.isa_extensions and cc.isa_flags_for(simd32_impl, arch.basename) is not None:
+            if simd32_impl in self._arch.isa_extensions \
+                and self._cc.isa_flags_for(simd32_impl, self._arch.basename) is not None:
                 return simd32_impl
         return None
 
-    def get_isa_specific_flags(isas):
+    def _get_isa_specific_flags(self, isas):
         flags = []
         for isa in isas:
-            flag = cc.isa_flags_for(isa, arch.basename)
+            flag = self._cc.isa_flags_for(isa, self._arch.basename)
             if flag is None:
-                raise UserError('Compiler %s does not support %s' % (cc.basename, isa))
+                raise UserError('Compiler %s does not support %s' % (self._cc.basename, isa))
             flags.append(flag)
         return '' if len(flags) == 0 else (' ' + ' '.join(sorted(list(flags))))
 
-    def isa_specific_flags(src):
-        simd_impl = simd_implementation()
+    def _isa_specific_flags(self, src):
+        simd_impl = self._simd_implementation()
 
         if os.path.basename(src) == 'test_simd.cpp':
             isas = [simd_impl] if simd_impl else []
-            return get_isa_specific_flags(isas)
+            return self._get_isa_specific_flags(isas)
 
-        for mod in modules:
+        for mod in self._modules:
             if src in mod.sources():
                 isas = mod.need_isa
                 if 'simd' in mod.dependencies():
                     if simd_impl:
                         isas.append(simd_impl)
 
-                return get_isa_specific_flags(isas)
+                return self._get_isa_specific_flags(isas)
 
         if src.startswith('botan_all_'):
-            isa = src.replace('botan_all_', '').replace('.cpp', '').split('_')
-            return get_isa_specific_flags(isa)
+            isas = src.replace('botan_all_', '').replace('.cpp', '').split('_')
+            return self._get_isa_specific_flags(isas)
 
         return ''
 
-    def objectfile_list(sources, obj_dir):
+    def _objectfile_list(self, sources, obj_dir):
         for src in sources:
             (directory, file) = os.path.split(os.path.normpath(src))
 
@@ -1630,38 +1640,40 @@ def gen_makefile_lists(var, build_paths, options, modules, cc, arch, osinfo):
                 name = file
 
             for src_suffix in ['.cpp', '.S']:
-                name = name.replace(src_suffix, '.' + osinfo.obj_suffix)
+                name = name.replace(src_suffix, '.' + self._osinfo.obj_suffix)
 
             yield os.path.join(obj_dir, name)
 
-    def build_commands(sources, obj_dir, flags):
+    def _build_commands(self, sources, obj_dir, flags):
         """
         Form snippets of makefile for building each source file
         """
 
-        includes = cc.add_include_dir_option + build_paths.include_dir
-        if build_paths.external_headers:
-            includes += ' ' + cc.add_include_dir_option + build_paths.external_include_dir
-        if options.with_external_includedir:
-            includes += ' ' + cc.add_include_dir_option + options.with_external_includedir
+        includes = self._cc.add_include_dir_option + self._build_paths.include_dir
+        if self._build_paths.external_headers:
+            includes += ' ' + self._cc.add_include_dir_option + self._build_paths.external_include_dir
+        if self._options.with_external_includedir:
+            includes += ' ' + self._cc.add_include_dir_option + self._options.with_external_includedir
 
-        for (obj_file, src) in zip(objectfile_list(sources, obj_dir), sources):
+        for (obj_file, src) in zip(self._objectfile_list(sources, obj_dir), sources):
             yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
-                obj_file, src,
-                isa_specific_flags(src),
+                obj_file,
+                src,
+                self._isa_specific_flags(src),
                 flags,
                 includes,
-                cc.compile_flags,
+                self._cc.compile_flags,
                 src,
-                cc.output_to_option)
+                self._cc.output_to_option)
 
-    for t in ['lib', 'cli', 'test']:
-        obj_key = '%s_objs' % (t)
-        src_list, src_dir = build_paths.src_info(t)
-        src_list.sort()
-        var[obj_key] = makefile_list(objectfile_list(src_list, src_dir))
-        build_key = '%s_build_cmds' % (t)
-        var[build_key] = '\n'.join(build_commands(src_list, src_dir, t.upper()))
+    def generate(self, var):
+        for t in ['lib', 'cli', 'test']:
+            obj_key = '%s_objs' % (t)
+            src_list, src_dir = self._build_paths.src_info(t)
+            src_list.sort()
+            var[obj_key] = makefile_list(self._objectfile_list(src_list, src_dir))
+            build_key = '%s_build_cmds' % (t)
+            var[build_key] = '\n'.join(self._build_commands(src_list, src_dir, t.upper()))
 
 def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     """
@@ -1881,7 +1893,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         variables['cli_post_link_cmd'] = ''
         variables['test_post_link_cmd'] = ''
 
-    gen_makefile_lists(variables, build_config, options, modules, cc, arch, osinfo)
+    MakefileListsGenerator(build_config, options, modules, cc, arch, osinfo).generate(variables)
 
     if options.os == 'windows':
         if options.with_debug_info:
@@ -2632,7 +2644,7 @@ def main(argv=None):
     if options.amalgamation:
         amalgamation_cpp_files = generate_amalgamation(build_config, using_mods, options)
         build_config.lib_sources = amalgamation_cpp_files
-        gen_makefile_lists(template_vars, build_config, options, using_mods, cc, arch, osinfo)
+        MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate(template_vars)
 
     if options.with_bakefile:
         gen_bakefile(build_config, options, template_vars['link_to'])
