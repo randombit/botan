@@ -954,7 +954,7 @@ class ArchInfo(InfoObject):
 MachOptFlags = collections.namedtuple('MachOptFlags', ['flags', 'submodel_prefix'])
 
 
-class CompilerInfo(InfoObject):
+class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
     def __init__(self, infofile):
         super(CompilerInfo, self).__init__(infofile)
         lex = lex_me_harder(
@@ -1171,7 +1171,7 @@ class CompilerInfo(InfoObject):
         return ['BUILD_COMPILER_IS_' + self.macro_name]
 
 
-class OsInfo(InfoObject):
+class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
     def __init__(self, infofile):
         super(OsInfo, self).__init__(infofile)
         lex = lex_me_harder(
