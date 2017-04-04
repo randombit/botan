@@ -217,7 +217,7 @@ class KEM_Decryption_with_KDF : public KEM_Decryption
       raw_kem_decrypt(const uint8_t encap_key[], size_t len) = 0;
 
       explicit KEM_Decryption_with_KDF(const std::string& kdf);
-      ~KEM_Decryption_with_KDF() = default;;
+      ~KEM_Decryption_with_KDF() = default;
    private:
       std::unique_ptr<KDF> m_kdf;
    };
