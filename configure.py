@@ -1716,22 +1716,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'static_suffix': osinfo.static_suffix,
 
-        'soname_base': osinfo.soname_pattern_base.format(
-            version_major=Version.major,
-            version_minor=Version.minor,
-            version_patch=Version.patch,
-            abi_rev=Version.so_rev),
-        'soname_abi': osinfo.soname_pattern_abi.format(
-            version_major=Version.major,
-            version_minor=Version.minor,
-            version_patch=Version.patch,
-            abi_rev=Version.so_rev),
-        'soname_patch': osinfo.soname_pattern_patch.format(
-            version_major=Version.major,
-            version_minor=Version.minor,
-            version_patch=Version.patch,
-            abi_rev=Version.so_rev),
-
         'mod_list': '\n'.join(sorted([m.basename for m in modules])),
 
         'python_version': options.python_version,
@@ -1739,6 +1723,29 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'misc_config': make_cpp_macros(misc_config())
         }
+
+    if options.build_shared_lib:
+
+        if osinfo.soname_pattern_base != None:
+            variables['soname_base'] = osinfo.soname_pattern_base.format(
+                version_major=Version.major,
+                version_minor=Version.minor,
+                version_patch=Version.patch,
+                abi_rev=Version.so_rev)
+
+        if osinfo.soname_pattern_abi != None:
+            variables['soname_abi'] = osinfo.soname_pattern_abi.format(
+                version_major=Version.major,
+                version_minor=Version.minor,
+                version_patch=Version.patch,
+                abi_rev=Version.so_rev)
+
+        if osinfo.soname_pattern_patch != None:
+            variables['soname_patch'] = osinfo.soname_pattern_patch.format(
+                version_major=Version.major,
+                version_minor=Version.minor,
+                version_patch=Version.patch,
+                abi_rev=Version.so_rev)
 
     if options.os == 'darwin' and options.build_shared_lib:
         # In order that these executables work from the build directory,
