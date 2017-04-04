@@ -7,6 +7,16 @@ Release Notes
 Series 1.10
 ----------------------------------------
 
+Version 1.10.16, 2017-04-04
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a bug in X509 DN string comparisons that could result in out of bound
+  reads. This could result in information leakage, denial of service, or
+  potentially incorrect certificate validation results. (CVE-2017-2801)
+
+* Avoid throwing during a destructor since this is undefined in C++11
+  and rarely a good idea. (GH #930)
+
 Version 1.10.15, 2017-01-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
