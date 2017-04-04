@@ -1472,13 +1472,15 @@ class CmakeGenerator(object):
     @staticmethod
     def _generate_target_sources_list(fd, target_name, target):
         fd.write('set(%s\n' % target_name)
-        for source in target['sources']:
+        sorted_sources = sorted(target['sources'].keys())
+        for source in sorted_sources:
             fd.write('    ${CMAKE_CURRENT_LIST_DIR}%s%s\n' % (os.sep, os.path.normpath(source)))
         fd.write(')\n\n')
 
     @staticmethod
     def _generate_target_source_files_isa_properties(fd, target):
-        for source in target['sources']:
+        sorted_sources = sorted(target['sources'].keys())
+        for source in sorted_sources:
             joined_isa_flags = ' '.join(target['sources'][source]['isa_flags'])
             if joined_isa_flags:
                 fd.write('set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}%s%s PROPERTIES COMPILE_FLAGS %s)\n'
