@@ -1553,7 +1553,7 @@ def gen_cmake(build_paths, using_mods, cc, options):
             '${CONFIGURATION_FILES} ${DOCUMENTATION_FILES} ${INFO_FILES} ${HEADER_FILES})\n')
     f.close()
 
-def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
+def gen_makefile_lists(var, build_paths, options, modules, cc, arch, osinfo):
     def get_isa_specific_flags(cc, isas):
         flags = []
         for isa in isas:
@@ -1640,9 +1640,9 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
         Form snippets of makefile for building each source file
         """
 
-        includes = cc.add_include_dir_option + build_config.include_dir
-        if build_config.external_headers:
-            includes += ' ' + cc.add_include_dir_option + build_config.external_include_dir
+        includes = cc.add_include_dir_option + build_paths.include_dir
+        if build_paths.external_headers:
+            includes += ' ' + cc.add_include_dir_option + build_paths.external_include_dir
         if options.with_external_includedir:
             includes += ' ' + cc.add_include_dir_option + options.with_external_includedir
 
@@ -1658,7 +1658,7 @@ def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
 
     for t in ['lib', 'cli', 'test']:
         obj_key = '%s_objs' % (t)
-        src_list, src_dir = build_config.src_info(t)
+        src_list, src_dir = build_paths.src_info(t)
         src_list.sort()
         var[obj_key] = makefile_list(objectfile_list(src_list, src_dir))
         build_key = '%s_build_cmds' % (t)
