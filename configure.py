@@ -1449,11 +1449,11 @@ def gen_cmake(build_paths, using_mods, cc, options):
         libs_or_frameworks_needed = False
         for source_path in target['sources']:
             for mod_source in using_mod.source:
-                if source_path == mod_source :
+                if source_path == mod_source:
                     libs_or_frameworks_needed = True
                     for isa in using_mod.need_isa:
                         target['sources'][source_path]['isa_flags'].add(cc.isa_flags[isa])
-        if libs_or_frameworks_needed == True:
+        if libs_or_frameworks_needed:
             if options.os in using_mod.libs:
                 for lib in using_mod.libs[options.os]:
                     target['libs'].add(lib)
@@ -1512,13 +1512,19 @@ def gen_cmake(build_paths, using_mods, cc, options):
             ' -Wnon-virtual-dtor -Wunused-macros -Wold-style-cast -Wuninitialized)\n')
     f.write('endif()\n\n')
 
-    library_target_libs_and_frameworks = ('%s %s %s' % (' '.join(library_target_configuration['frameworks']),
-                                                        ' '.join(library_target_configuration['libs']),
-                                                         cc.mach_abi_link_flags(options)))
-    tests_target_libs_and_frameworks = ('%s %s' % (' '.join(tests_target_configuration['frameworks']),
-                                                   ' '.join(tests_target_configuration['libs'])))
-    cli_target_libs_and_frameworks = ('%s %s' % (' '.join(cli_target_configuration['frameworks']),
-                                                 ' '.join(cli_target_configuration['libs'])))
+    library_target_libs_and_frameworks = '%s %s %s' % (
+        ' '.join(library_target_configuration['frameworks']),
+        ' '.join(library_target_configuration['libs']),
+        cc.mach_abi_link_flags(options)
+    )
+    tests_target_libs_and_frameworks = '%s %s' % (
+        ' '.join(tests_target_configuration['frameworks']),
+        ' '.join(tests_target_configuration['libs'])
+    )
+    cli_target_libs_and_frameworks = '%s %s' % (
+        ' '.join(cli_target_configuration['frameworks']),
+        ' '.join(cli_target_configuration['libs'])
+    )
 
     f.write('add_library(${PROJECT_NAME} STATIC ${BOTAN_SOURCES})\n')
     f.write('target_link_libraries(${PROJECT_NAME} PUBLIC %s)\n'
