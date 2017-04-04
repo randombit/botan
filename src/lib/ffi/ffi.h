@@ -683,6 +683,16 @@ BOTAN_DLL int botan_pubkey_fingerprint(botan_pubkey_t key, const char* hash,
 
 BOTAN_DLL int botan_pubkey_destroy(botan_pubkey_t key);
 
+/*
+* Get arbitrary named fields from public or privat keys
+*/
+BOTAN_DLL int botan_pubkey_get_field(botan_mp_t output,
+                                     botan_pubkey_t key,
+                                     const char* field_name);
+
+BOTAN_DLL int botan_privkey_get_field(botan_mp_t output,
+                                      botan_privkey_t key,
+                                      const char* field_name);
 
 /*
 * Algorithm specific key operations: RSA
@@ -704,6 +714,28 @@ BOTAN_DLL int botan_pubkey_load_rsa(botan_pubkey_t* key,
 
 BOTAN_DLL int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t rsa_key);
 BOTAN_DLL int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t rsa_key);
+
+/*
+* Algorithm specific key operations: DSA
+*/
+BOTAN_DLL int botan_privkey_load_dsa(botan_privkey_t* key,
+                                     botan_mp_t p,
+                                     botan_mp_t q,
+                                     botan_mp_t g,
+                                     botan_mp_t x);
+
+BOTAN_DLL int botan_pubkey_load_dsa(botan_pubkey_t* key,
+                                    botan_mp_t p,
+                                    botan_mp_t q,
+                                    botan_mp_t g,
+                                    botan_mp_t y);
+
+BOTAN_DLL int botan_privkey_dsa_get_x(botan_mp_t n, botan_privkey_t key);
+
+BOTAN_DLL int botan_pubkey_dsa_get_p(botan_mp_t p, botan_pubkey_t key);
+BOTAN_DLL int botan_pubkey_dsa_get_q(botan_mp_t q, botan_pubkey_t key);
+BOTAN_DLL int botan_pubkey_dsa_get_g(botan_mp_t d, botan_pubkey_t key);
+BOTAN_DLL int botan_pubkey_dsa_get_y(botan_mp_t y, botan_pubkey_t key);
 
 /*
 * Public Key Encryption

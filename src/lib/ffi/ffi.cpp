@@ -32,8 +32,20 @@
   #include <botan/rsa.h>
 #endif
 
+#if defined(BOTAN_HAS_DSA)
+  #include <botan/dsa.h>
+#endif
+
 #if defined(BOTAN_HAS_ECDSA)
   #include <botan/ecdsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+  #include <botan/ecc_key.h>
+#endif
+
+#if defined(BOTAN_HAS_DL_PUBLIC_KEY_FAMILY)
+  #include <botan/dl_algo.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
@@ -1028,20 +1040,31 @@ int botan_privkey_create(botan_privkey_t* key_obj,
    {
    try
       {
-      if(key_obj == nullptr || rng_obj == nullptr)
-         return -1;
+      if(key_obj == nullptr)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+
+      *key_obj = nullptr;
+      if(rng_obj == nullptr)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+
       if(algo_name == nullptr)
          algo_name = "RSA";
       if(algo_params == nullptr)
          algo_params = "";
 
-      *key_obj = nullptr;
-
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       std::unique_ptr<Botan::Private_Key> key(
          Botan::create_private_key(algo_name, rng, algo_params));
-      *key_obj = new botan_privkey_struct(key.release());
-      return 0;
+
+      if(key)
+         {
+         *key_obj = new botan_privkey_struct(key.release());
+         return 0;
+         }
+      else
+         {
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+         }
       }
    catch(std::exception& e)
       {
@@ -1199,6 +1222,30 @@ int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng_obj,
    return -1;
    }
 
+int botan_pubkey_load(botan_pubkey_t* key,
+                      const uint8_t bits[], size_t bits_len)
+   {
+   *key = nullptr;
+
+   try
+      {
+      Botan::DataSource_Memory src(bits, bits_len);
+      std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(src));
+
+      if(pubkey)
+         {
+         *key = new botan_pubkey_struct(pubkey.release());
+         return 0;
+         }
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+
+   return -1;
+   }
+
 int botan_privkey_load_rsa(botan_privkey_t* key,
                            botan_mp_t p, botan_mp_t q, botan_mp_t d)
    {
@@ -1244,117 +1291,264 @@ int botan_pubkey_load_rsa(botan_pubkey_t* key,
 #endif
    }
 
-int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t key)
+int botan_privkey_load_dsa(botan_privkey_t* key,
+                           botan_mp_t p, botan_mp_t q, botan_mp_t g, botan_mp_t x)
    {
-#if defined(BOTAN_HAS_RSA)
-   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
-      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<Botan::RSA_PrivateKey*>(&k))
-         {
-         safe_get(p) = rsa->get_p();
-         }
-      else
-         throw FFI_Error("Passed non-RSA key to botan_privkey_rsa_get_p");
-      });
+   *key = nullptr;
+
+#if defined(BOTAN_HAS_DSA)
+   try
+      {
+      Botan::Null_RNG null_rng;
+      Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
+      *key = new botan_privkey_struct(new Botan::DSA_PrivateKey(null_rng, group, safe_get(x)));
+      return 0;
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+   return -1;
 #else
+   BOTAN_UNUSED(p);
+   BOTAN_UNUSED(q);
+   BOTAN_UNUSED(g);
+   BOTAN_UNUSED(x);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
+   }
+
+int botan_pubkey_load_dsa(botan_pubkey_t* key,
+                          botan_mp_t p, botan_mp_t q, botan_mp_t g, botan_mp_t y)
+   {
+   *key = nullptr;
+
+#if defined(BOTAN_HAS_DSA)
+   try
+      {
+      Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
+      *key = new botan_pubkey_struct(new Botan::DSA_PublicKey(group, safe_get(y)));
+      return 0;
+      }
+   catch(std::exception& exn)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, exn.what());
+      }
+
+   return -1;
+#else
+   BOTAN_UNUSED(p);
+   BOTAN_UNUSED(q);
+   BOTAN_UNUSED(g);
+   BOTAN_UNUSED(y);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+namespace {
+
+Botan::BigInt botan_pubkey_do_get_field(const Botan::Public_Key& key,
+                                        const std::string& field)
+   {
+   // Maybe this should be `return key.get_integer_field(field_name)`?
+
+#if defined(BOTAN_HAS_RSA)
+   if(const Botan::RSA_PublicKey* rsa = dynamic_cast<const Botan::RSA_PublicKey*>(&key))
+      {
+      if(field == "n")
+         return rsa->get_n();
+      else if(field == "e")
+         return rsa->get_e();
+      else
+         throw Botan::Exception("Field not supported");
+      }
+#endif
+
+#if defined(BOTAN_HAS_DL_PUBLIC_KEY_FAMILY)
+   // Handles DSA, ElGamal, etc
+   if(const Botan::DL_Scheme_PublicKey* dl = dynamic_cast<const Botan::DL_Scheme_PublicKey*>(&key))
+      {
+      if(field == "p")
+         return dl->group_p();
+      else if(field == "q")
+         return dl->group_q();
+      else if(field == "g")
+         return dl->group_g();
+      else if(field == "y")
+         return dl->get_y();
+      else
+         throw Botan::Exception("Field not supported");
+      }
+#endif
+
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+   if(const Botan::EC_PublicKey* ecc = dynamic_cast<const Botan::EC_PublicKey*>(&key))
+      {
+      if(field == "public_x")
+         return ecc->public_point().get_affine_x();
+      else if(field == "public_y")
+         return ecc->public_point().get_affine_y();
+      else if(field == "base_x")
+         return ecc->domain().get_base_point().get_affine_x();
+      else if(field == "base_y")
+         return ecc->domain().get_base_point().get_affine_y();
+      else if(field == "p")
+         return ecc->domain().get_curve().get_p();
+      else if(field == "a")
+         return ecc->domain().get_curve().get_a();
+      else if(field == "b")
+         return ecc->domain().get_curve().get_b();
+      else if(field == "cofactor")
+         return ecc->domain().get_cofactor();
+      else if(field == "order")
+         return ecc->domain().get_order();
+      else
+         throw Botan::Exception("Field not supported");
+      }
+#endif
+
+   // Some other algorithm type not supported by this function
+   throw Botan::Exception("Unsupported algorithm type for botan_pubkey_get_field");
+   }
+
+Botan::BigInt botan_privkey_do_get_field(const Botan::Private_Key& key,
+                                         const std::string& field)
+   {
+   //return key.get_integer_field(field);
+
+#if defined(BOTAN_HAS_RSA)
+
+   if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<const Botan::RSA_PrivateKey*>(&key))
+      {
+      if(field == "p")
+         return rsa->get_p();
+      else if(field == "q")
+         return rsa->get_q();
+      else if(field == "d")
+         return rsa->get_d();
+      else if(field == "c")
+         return rsa->get_c();
+      else if(field == "d1")
+         return rsa->get_d1();
+      else if(field == "d2")
+         return rsa->get_d2();
+      else
+         return botan_pubkey_do_get_field(key, field);
+      }
+#endif
+
+#if defined(BOTAN_HAS_DL_PUBLIC_KEY_FAMILY)
+   // Handles DSA, ElGamal, etc
+   if(const Botan::DL_Scheme_PrivateKey* dl = dynamic_cast<const Botan::DL_Scheme_PrivateKey*>(&key))
+      {
+      if(field == "x")
+         return dl->get_x();
+      else
+         return botan_pubkey_do_get_field(key, field);
+      }
+#endif
+
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+   if(const Botan::EC_PrivateKey* ecc = dynamic_cast<const Botan::EC_PrivateKey*>(&key))
+      {
+      if(field == "x")
+         return ecc->private_value();
+      else
+         return botan_pubkey_do_get_field(key, field);
+      }
+#endif
+
+   // Some other algorithm type not supported by this function
+   throw Botan::Exception("Unsupported algorithm type for botan_privkey_get_field");
+   }
+
+}
+
+int botan_pubkey_get_field(botan_mp_t output,
+                           botan_pubkey_t key,
+                           const char* field_name_cstr)
+   {
+   if(field_name_cstr == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   const std::string field_name(field_name_cstr);
+
+   return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
+      safe_get(output) = botan_pubkey_do_get_field(k, field_name);
+      });
+   }
+
+int botan_privkey_get_field(botan_mp_t output,
+                                      botan_privkey_t key,
+                                      const char* field_name_cstr)
+   {
+   if(field_name_cstr == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+
+   const std::string field_name(field_name_cstr);
+
+   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
+      safe_get(output) = botan_privkey_do_get_field(k, field_name);
+      });
+   }
+
+int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t key)
+   {
+   return botan_privkey_get_field(p, key, "p");
    }
 
 int botan_privkey_rsa_get_q(botan_mp_t q, botan_privkey_t key)
    {
-#if defined(BOTAN_HAS_RSA)
-   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
-      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<Botan::RSA_PrivateKey*>(&k))
-         {
-         safe_get(q) = rsa->get_q();
-         }
-      else
-         throw FFI_Error("Passed non-RSA key to botan_privkey_rsa_get_q");
-      });
-#else
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_privkey_get_field(q, key, "q");
    }
 
 int botan_privkey_rsa_get_n(botan_mp_t n, botan_privkey_t key)
    {
-#if defined(BOTAN_HAS_RSA)
-   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
-      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<Botan::RSA_PrivateKey*>(&k))
-         {
-         safe_get(n) = rsa->get_n();
-         }
-      else
-         throw FFI_Error("Passed non-RSA key to botan_privkey_rsa_get_n");
-      });
-#else
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_privkey_get_field(n, key, "n");
    }
 
 int botan_privkey_rsa_get_e(botan_mp_t e, botan_privkey_t key)
    {
-#if defined(BOTAN_HAS_RSA)
-   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
-      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<Botan::RSA_PrivateKey*>(&k))
-         {
-         safe_get(e) = rsa->get_e();
-         }
-      else
-         throw FFI_Error("Passed non-RSA key to botan_privkey_rsa_get_e");
-      });
-#else
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_privkey_get_field(e, key, "e");
    }
 
 int botan_privkey_rsa_get_d(botan_mp_t d, botan_privkey_t key)
    {
-#if defined(BOTAN_HAS_RSA)
-   return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
-      if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<Botan::RSA_PrivateKey*>(&k))
-         {
-         safe_get(d) = rsa->get_e();
-         }
-      else
-         throw FFI_Error("Passed non-RSA key to botan_privkey_rsa_get_d");
-      });
-#else
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_privkey_get_field(d, key, "d");
    }
 
 int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t key)
    {
-#if defined(BOTAN_HAS_RSA)
-   return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
-      if(const Botan::RSA_PublicKey* rsa = dynamic_cast<Botan::RSA_PublicKey*>(&k))
-         {
-         safe_get(e) = rsa->get_e();
-         }
-      else
-         throw FFI_Error("Passed non-RSA key to botan_pubkey_rsa_get_e");
-      });
-#else
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_pubkey_get_field(e, key, "e");
    }
 
 int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t key)
    {
-#if defined(BOTAN_HAS_RSA)
-   return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
-      if(const Botan::RSA_PublicKey* rsa = dynamic_cast<Botan::RSA_PublicKey*>(&k))
-         {
-         safe_get(n) = rsa->get_n();
-         }
-      else
-         throw FFI_Error("Passed non-RSA key to botan_pubkey_rsa_get_n");
-      });
-#else
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_pubkey_get_field(n, key, "n");
    }
+
+int botan_privkey_dsa_get_x(botan_mp_t x, botan_privkey_t key)
+   {
+   return botan_privkey_get_field(x, key, "x");
+   }
+
+int botan_pubkey_dsa_get_p(botan_mp_t p, botan_pubkey_t key)
+   {
+   return botan_pubkey_get_field(p, key, "p");
+   }
+int botan_pubkey_dsa_get_q(botan_mp_t q, botan_pubkey_t key)
+   {
+   return botan_pubkey_get_field(q, key, "q");
+   }
+int botan_pubkey_dsa_get_g(botan_mp_t g, botan_pubkey_t key)
+   {
+   return botan_pubkey_get_field(g, key, "g");
+   }
+int botan_pubkey_dsa_get_y(botan_mp_t y, botan_pubkey_t key)
+   {
+   return botan_pubkey_get_field(y, key, "y");
+   }
+
 
 int botan_privkey_destroy(botan_privkey_t key)
    {

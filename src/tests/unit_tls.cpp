@@ -132,6 +132,8 @@ class Credentials_Manager_Test : public Botan::Credentials_Manager
                   chain.push_back(*m_dsa_ca);
                   break;
                   }
+#else
+               BOTAN_UNUSED(context);
 #endif
                }
             }
