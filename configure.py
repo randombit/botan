@@ -1714,32 +1714,24 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     def external_link_cmd():
         return ' ' + cc.add_lib_dir_option + options.with_external_libdir if options.with_external_libdir else ''
 
-    def link_to():
+    def link_to(module_member_name):
         """
-        Figure out what external libraries are needed based on selected modules
+        Figure out what external libraries/frameworks are needed based on selected modules
         """
+        if not (module_member_name == 'libs' or module_member_name == 'frameworks'):
+            raise InternalError("Invalid argument")
 
-        return do_link_to('libs')
-
-    def link_to_frameworks():
-        """
-        Figure out what external frameworks are needed based on selected modules
-        """
-
-        return do_link_to('frameworks')
-
-    def do_link_to(module_member_name):
         libs = set()
         for module in modules:
-            for (osname, link_to) in getattr(module, module_member_name).items():
+            for (osname, module_link_to) in getattr(module, module_member_name).items():
                 if osname == 'all' or osname == osinfo.basename:
-                    libs |= set(link_to)
+                    libs |= set(module_link_to)
                 else:
                     match = re.match('^all!(.*)', osname)
                     if match is not None:
                         exceptions = match.group(1).split(',')
                         if osinfo.basename not in exceptions:
-                            libs |= set(link_to)
+                            libs |= set(module_link_to)
         return sorted(libs)
 
     def choose_mp_bits():
@@ -1852,8 +1844,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
 
         'link_to': ' '.join(
-            [cc.add_lib_option + lib for lib in link_to()] +
-            [cc.add_framework_option + fw for fw in link_to_frameworks()]
+            [cc.add_lib_option + lib for lib in link_to('libs')] +
+            [cc.add_framework_option + fw for fw in link_to('frameworks')]
         ),
 
         'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
