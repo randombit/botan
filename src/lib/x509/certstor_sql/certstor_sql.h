@@ -44,6 +44,9 @@ class BOTAN_DLL Certificate_Store_In_SQL : public Certificate_Store
       std::shared_ptr<const X509_Certificate>
          find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
 
+      std::shared_ptr<const X509_Certificate>
+         find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const override;
+
       /**
       * Returns all subject DNs known to the store instance.
       */

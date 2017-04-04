@@ -49,7 +49,7 @@ X509_CA::~X509_CA()
 X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                                        RandomNumberGenerator& rng,
                                        const X509_Time& not_before,
-                                       const X509_Time& not_after)
+                                       const X509_Time& not_after) const
    {
    Key_Constraints constraints;
    if(req.is_CA())

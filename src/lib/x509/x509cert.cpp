@@ -439,6 +439,13 @@ std::vector<uint8_t> X509_Certificate::raw_issuer_dn() const
    return m_issuer.get1_memvec("X509.Certificate.dn_bits");
    }
 
+std::vector<uint8_t> X509_Certificate::raw_issuer_dn_sha256() const
+   {
+   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-256"));
+   hash->update(raw_issuer_dn());
+   return hash->final_stdvec();
+   }
+
 X509_DN X509_Certificate::subject_dn() const
    {
    return create_dn(m_subject);
@@ -447,6 +454,13 @@ X509_DN X509_Certificate::subject_dn() const
 std::vector<uint8_t> X509_Certificate::raw_subject_dn() const
    {
    return m_subject.get1_memvec("X509.Certificate.dn_bits");
+   }
+
+std::vector<uint8_t> X509_Certificate::raw_subject_dn_sha256() const
+   {
+   std::unique_ptr<HashFunction> hash(HashFunction::create("SHA-256"));
+   hash->update(raw_subject_dn());
+   return hash->final_stdvec();
    }
 
 std::string X509_Certificate::fingerprint(const std::string& hash_name) const

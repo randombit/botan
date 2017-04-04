@@ -96,14 +96,24 @@ class BOTAN_DLL X509_Certificate : public X509_Object
       std::vector<std::string> issuer_info(const std::string& name) const;
 
       /**
-      * Raw subject DN
+      * Raw issuer DN
       */
       std::vector<uint8_t> raw_issuer_dn() const;
 
       /**
-      * Raw issuer DN
+      * SHA-256 of Raw issuer DN
+      */
+      std::vector<uint8_t> raw_issuer_dn_sha256() const;
+
+      /**
+      * Raw subject DN
       */
       std::vector<uint8_t> raw_subject_dn() const;
+
+      /**
+      * SHA-256 of Raw subject DN
+      */
+      std::vector<uint8_t> raw_subject_dn_sha256() const;
 
       /**
       * Get the notBefore of the certificate.
