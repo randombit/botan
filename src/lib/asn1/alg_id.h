@@ -25,7 +25,7 @@ class BOTAN_DLL AlgorithmIdentifier final : public ASN1_Object
       void encode_into(class DER_Encoder&) const override;
       void decode_from(class BER_Decoder&) override;
 
-      AlgorithmIdentifier() {}
+      AlgorithmIdentifier() = default;
       AlgorithmIdentifier(const OID&, Encoding_Option);
       AlgorithmIdentifier(const std::string&, Encoding_Option);
 

@@ -224,17 +224,12 @@ class Timer
       double milliseconds() const { return value() / 1000000.0; }
 
       double ms_per_event() const { return milliseconds() / events(); }
-      double seconds_per_event() const { return seconds() / events(); }
 
       uint64_t cycles_consumed() const { return m_cpu_cycles_used; }
 
-      uint64_t event_mult() const { return m_event_mult; }
       uint64_t events() const { return m_event_count * m_event_mult; }
       const std::string& get_name() const { return m_name; }
       const std::string& doing() const { return m_doing; }
-
-      uint64_t min_time() const { return m_min_time; }
-      uint64_t max_time() const { return m_max_time; }
 
       static std::string result_string_bps(const Timer& t);
       static std::string result_string_ops(const Timer& t);
@@ -1278,7 +1273,7 @@ class Speed final : public Command
             }
          }
 #endif
-      
+
 #if defined(BOTAN_HAS_ECKCDSA)
       void bench_eckcdsa(const std::string& provider,
                        std::chrono::milliseconds msec)
@@ -1298,7 +1293,7 @@ class Speed final : public Command
             }
          }
 #endif
-      
+
 #if defined(BOTAN_HAS_ECGDSA)
       void bench_ecgdsa(const std::string& provider,
                        std::chrono::milliseconds msec)

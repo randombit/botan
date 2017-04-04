@@ -73,7 +73,10 @@ class BOTAN_DLL ASN1_Object
       */
       virtual void decode_from(BER_Decoder& from) = 0;
 
-      virtual ~ASN1_Object() {}
+      ASN1_Object() = default;
+      ASN1_Object(const ASN1_Object&) = default;
+      ASN1_Object & operator=(const ASN1_Object&) = default;
+      virtual ~ASN1_Object() = default;
    };
 
 /**

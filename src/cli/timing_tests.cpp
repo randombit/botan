@@ -53,8 +53,8 @@ typedef uint64_t ticks;
 class Timing_Test
    {
    public:
-      Timing_Test() {}
-      virtual ~Timing_Test() {}
+      Timing_Test() = default;
+      virtual ~Timing_Test() = default;
 
       std::vector<std::vector<ticks>>
       execute_evaluation(const std::vector<std::string>& inputs,

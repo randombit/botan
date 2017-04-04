@@ -51,7 +51,7 @@ class BOTAN_DLL Filter
       */
       virtual bool attachable() { return true; }
 
-      virtual ~Filter() {}
+      virtual ~Filter() = default;
    protected:
       /**
       * @param in some input for the filter

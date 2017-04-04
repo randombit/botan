@@ -53,7 +53,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
 
       std::string name() const override { return "Fixed_Output_RNG"; }
 
-      void clear() throw() override {}
+      void clear() BOTAN_NOEXCEPT override {}
 
       explicit Fixed_Output_RNG(const std::vector<uint8_t>& in)
          {
@@ -66,7 +66,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator
          m_buf.insert(m_buf.end(), in.begin(), in.end());
          }
 
-      Fixed_Output_RNG() {}
+      Fixed_Output_RNG() = default;
    protected:
       size_t remaining() const { return m_buf.size(); }
 

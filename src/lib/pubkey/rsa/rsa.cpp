@@ -244,7 +244,7 @@ class RSA_Signature_Operation : public PK_Ops::Signature_with_EMSA,
    {
    public:
 
-      size_t max_input_bits() const override { return get_max_input_bits(); };
+      size_t max_input_bits() const override { return get_max_input_bits(); }
 
       RSA_Signature_Operation(const RSA_PrivateKey& rsa, const std::string& emsa, RandomNumberGenerator& rng) :
          PK_Ops::Signature_with_EMSA(emsa),
@@ -268,7 +268,7 @@ class RSA_Decryption_Operation : public PK_Ops::Decryption_with_EME,
    {
    public:
 
-      size_t max_raw_input_bits() const override { return get_max_input_bits(); };
+      size_t max_raw_input_bits() const override { return get_max_input_bits(); }
 
       RSA_Decryption_Operation(const RSA_PrivateKey& rsa, const std::string& eme, RandomNumberGenerator& rng) :
          PK_Ops::Decryption_with_EME(eme),
@@ -346,7 +346,7 @@ class RSA_Encryption_Operation : public PK_Ops::Encryption_with_EME,
          {
          }
 
-      size_t max_raw_input_bits() const override { return get_max_input_bits(); };
+      size_t max_raw_input_bits() const override { return get_max_input_bits(); }
 
       secure_vector<uint8_t> raw_encrypt(const uint8_t msg[], size_t msg_len,
                                       RandomNumberGenerator&) override
@@ -361,7 +361,7 @@ class RSA_Verify_Operation : public PK_Ops::Verification_with_EMSA,
    {
    public:
 
-      size_t max_input_bits() const override { return get_max_input_bits(); };
+      size_t max_input_bits() const override { return get_max_input_bits(); }
 
       RSA_Verify_Operation(const RSA_PublicKey& rsa, const std::string& emsa) :
          PK_Ops::Verification_with_EMSA(emsa),

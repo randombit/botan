@@ -46,7 +46,7 @@ class BOTAN_DLL DSA_PublicKey : public virtual DL_Scheme_PublicKey
          create_verification_op(const std::string& params,
                                 const std::string& provider) const override;
    protected:
-      DSA_PublicKey() {}
+      DSA_PublicKey() = default;
    };
 
 /**

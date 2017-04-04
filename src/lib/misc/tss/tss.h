@@ -41,7 +41,7 @@ class BOTAN_DLL RTSS_Share
       static secure_vector<uint8_t>
         reconstruct(const std::vector<RTSS_Share>& shares);
 
-      RTSS_Share() {}
+      RTSS_Share() = default;
 
       /**
       * @param hex_input the share encoded in hexadecimal

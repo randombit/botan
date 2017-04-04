@@ -151,8 +151,6 @@ std::string type_name(Botan::ASN1_Tag type)
       default:
          return "TAG(" + std::to_string(static_cast<size_t>(type)) + ")";
       }
-
-   return "(UNKNOWN)";
    }
 
 void decode(Botan::BER_Decoder& decoder, size_t level)

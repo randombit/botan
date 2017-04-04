@@ -55,7 +55,7 @@ class BOTAN_DLL EMSA
                           const secure_vector<uint8_t>& raw,
                           size_t key_bits) = 0;
 
-      virtual ~EMSA();
+      virtual ~EMSA() = default;
 
       /**
       * @return a new object representing the same encoding method as *this

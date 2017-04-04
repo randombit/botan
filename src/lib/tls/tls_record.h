@@ -80,7 +80,7 @@ class Record
              Protocol_Version* protocol_version,
              Record_Type* type)
          : m_data(data), m_sequence(sequence), m_protocol_version(protocol_version),
-           m_type(type), m_size(data.size()) {};
+           m_type(type), m_size(data.size()) {}
 
       secure_vector<uint8_t>& get_data() { return m_data; }
 
@@ -104,15 +104,15 @@ class Record_Message
    {
    public:
       Record_Message(const uint8_t* data, size_t size)
-         : m_type(0), m_sequence(0), m_data(data), m_size(size) {};
+         : m_type(0), m_sequence(0), m_data(data), m_size(size) {}
       Record_Message(uint8_t type, uint64_t sequence, const uint8_t* data, size_t size)
          : m_type(type), m_sequence(sequence), m_data(data),
-           m_size(size) {};
+           m_size(size) {}
 
-      uint8_t& get_type() { return m_type; };
-      uint64_t& get_sequence() { return m_sequence; };
-      const uint8_t* get_data() { return m_data; };
-      size_t& get_size() { return m_size; };
+      uint8_t& get_type() { return m_type; }
+      uint64_t& get_sequence() { return m_sequence; }
+      const uint8_t* get_data() { return m_data; }
+      size_t& get_size() { return m_size; }
 
    private:
       uint8_t m_type;
@@ -127,16 +127,16 @@ class Record_Raw_Input
       Record_Raw_Input(const uint8_t* data, size_t size, size_t& consumed,
                        bool is_datagram)
          : m_data(data), m_size(size), m_consumed(consumed),
-           m_is_datagram(is_datagram) {};
+           m_is_datagram(is_datagram) {}
 
-      const uint8_t*& get_data() { return m_data; };
+      const uint8_t*& get_data() { return m_data; }
 
-      size_t& get_size() { return m_size; };
+      size_t& get_size() { return m_size; }
 
-      size_t& get_consumed() { return m_consumed; };
+      size_t& get_consumed() { return m_consumed; }
       void set_consumed(size_t consumed) { m_consumed = consumed; }
 
-      bool is_datagram() { return m_is_datagram; };
+      bool is_datagram() { return m_is_datagram; }
 
    private:
       const uint8_t* m_data;

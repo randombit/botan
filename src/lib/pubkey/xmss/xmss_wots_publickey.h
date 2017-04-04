@@ -35,8 +35,7 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
       class TreeSignature
          {
          public:
-            TreeSignature()
-               : m_ots_sig(), m_auth_path() {}
+            TreeSignature() = default;
 
             TreeSignature(const wots_keysig_t& ots_sig,
                           const wots_keysig_t& auth_path)
@@ -191,7 +190,7 @@ class BOTAN_DLL XMSS_WOTS_PublicKey : virtual public Public_Key
        * Convert the key into the raw key data. The key becomes a length
        * len vector of n-byte elements.
        **/
-      operator const wots_keysig_t& () const { return m_key; };
+      operator const wots_keysig_t& () const { return m_key; }
 
       /**
        * Convert the key into the raw key data. The key becomes a length

@@ -13,8 +13,6 @@
 
 namespace Botan {
 
-TLS::Callbacks::~Callbacks() {}
-
 void TLS::Callbacks::tls_inspect_handshake_msg(const Handshake_Message&)
    {
    // default is no op

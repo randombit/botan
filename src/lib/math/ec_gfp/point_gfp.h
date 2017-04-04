@@ -50,7 +50,7 @@ class BOTAN_DLL PointGFp
       /**
       * Construct an uninitialized PointGFp
       */
-      PointGFp() {}
+      PointGFp() = default;
 
       /**
       * Construct the zero point

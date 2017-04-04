@@ -47,7 +47,7 @@ class BOTAN_DLL PBKDF
       */
       virtual std::string name() const = 0;
 
-      virtual ~PBKDF();
+      virtual ~PBKDF() = default;
 
       /**
       * Derive a key from a passphrase for a number of iterations

@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_DLL Certificate_Store
    {
    public:
-      virtual ~Certificate_Store() {}
+      virtual ~Certificate_Store() = default;
 
       /**
       * Find a certificate by Subject DN and (optionally) key identifier
@@ -79,7 +79,7 @@ class BOTAN_DLL Certificate_Store_In_Memory : public Certificate_Store
       /**
       * Create an empty store.
       */
-      Certificate_Store_In_Memory() {}
+      Certificate_Store_In_Memory() = default;
 
       /**
       * Add a certificate to the store.

@@ -32,7 +32,7 @@ class XMSS_WOTS_Signature_Operation : public virtual PK_Ops::Signature,
       XMSS_WOTS_Signature_Operation(
          const XMSS_WOTS_Addressed_PrivateKey& private_key);
 
-      virtual ~XMSS_WOTS_Signature_Operation() {}
+      virtual ~XMSS_WOTS_Signature_Operation() = default;
 
       /**
        * Creates a XMSS WOTS signature for the message provided through call

@@ -23,13 +23,14 @@ class BOTAN_DLL McEliece_PublicKey : public virtual Public_Key
    public:
       explicit McEliece_PublicKey(const std::vector<uint8_t>& key_bits);
 
-      McEliece_PublicKey(std::vector<uint8_t> const& pub_matrix, uint32_t the_t, uint32_t the_code_length) :
+      McEliece_PublicKey(const std::vector<uint8_t>& pub_matrix, uint32_t the_t, uint32_t the_code_length) :
          m_public_matrix(pub_matrix),
          m_t(the_t),
-         m_code_length(the_code_length)
-            {}
+         m_code_length(the_code_length){}
 
-      McEliece_PublicKey(const McEliece_PublicKey& other);
+      McEliece_PublicKey(const McEliece_PublicKey& other) = default;
+      McEliece_PublicKey& operator=(const McEliece_PublicKey& other) = default;
+      virtual ~McEliece_PublicKey()= default;
 
       secure_vector<uint8_t> random_plaintext_element(RandomNumberGenerator& rng) const;
 

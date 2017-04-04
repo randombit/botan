@@ -245,8 +245,6 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
    reader.assert_done();
    }
 
-Server_Key_Exchange::~Server_Key_Exchange() {}
-
 /**
 * Serialize a Server Key Exchange message
 */

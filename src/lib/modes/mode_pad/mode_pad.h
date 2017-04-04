@@ -59,7 +59,7 @@ class BOTAN_DLL BlockCipherModePaddingMethod
       /**
       * virtual destructor
       */
-      virtual ~BlockCipherModePaddingMethod() {}
+      virtual ~BlockCipherModePaddingMethod() = default;
    };
 
 /**

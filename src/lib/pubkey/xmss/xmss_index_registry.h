@@ -58,8 +58,7 @@ class XMSS_Index_Registry
                                        const secure_vector<uint8_t>& prf);
 
    private:
-      XMSS_Index_Registry()
-         : m_key_ids(), m_leaf_indices(), m_mutex() {}
+      XMSS_Index_Registry() = default;
 
       static const std::string m_index_hash_function;
 

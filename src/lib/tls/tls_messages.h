@@ -20,17 +20,17 @@
 #include <string>
 #include <set>
 
+#if defined(BOTAN_HAS_CECPQ1)
+  #include <botan/cecpq1.h>
+#endif
+
+#if defined(BOTAN_HAS_SRP6)
+  #include <botan/srp6.h>
+#endif
+
 namespace Botan {
 
 class Credentials_Manager;
-
-#if defined(BOTAN_HAS_SRP6)
-class SRP6_Server_Session;
-#endif
-
-#if defined(BOTAN_HAS_CECPQ1)
-class CECPQ1_key;
-#endif
 
 namespace TLS {
 
@@ -75,10 +75,10 @@ class BOTAN_DLL Client_Hello final : public Handshake_Message
                        const std::string& srp_identifier = "")
                   : m_new_session_version(version),
                     m_hostname(hostname),
-                    m_srp_identifier(srp_identifier) {};
+                    m_srp_identifier(srp_identifier) {}
 
-              const Protocol_Version protocol_version() const { return m_new_session_version; };
-              const std::string& hostname() const { return m_hostname; };
+              const Protocol_Version protocol_version() const { return m_new_session_version; }
+              const std::string& hostname() const { return m_hostname; }
               const std::string& srp_identifier() const { return m_srp_identifier; }
 
           private:
@@ -267,11 +267,11 @@ class BOTAN_DLL Server_Hello final : public Handshake_Message
                     m_new_session_version(new_session_version),
                     m_ciphersuite(ciphersuite),
                     m_compression(compression),
-                    m_offer_session_ticket(offer_session_ticket) {};
+                    m_offer_session_ticket(offer_session_ticket) {}
 
-              const std::vector<uint8_t>& session_id() const { return m_new_session_id; };
-              Protocol_Version protocol_version() const { return m_new_session_version; };
-              uint16_t ciphersuite() const { return m_ciphersuite; };
+              const std::vector<uint8_t>& session_id() const { return m_new_session_id; }
+              Protocol_Version protocol_version() const { return m_new_session_version; }
+              uint16_t ciphersuite() const { return m_ciphersuite; }
               uint8_t compression() const { return m_compression; }
               bool offer_session_ticket() const { return m_offer_session_ticket; }
 
@@ -622,7 +622,7 @@ class BOTAN_DLL Server_Key_Exchange final : public Handshake_Message
                           const std::string& sig_alg,
                           Protocol_Version version);
 
-      ~Server_Key_Exchange();
+      ~Server_Key_Exchange() = default;
    private:
       std::vector<uint8_t> serialize() const override;
 

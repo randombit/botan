@@ -71,7 +71,7 @@ class BOTAN_DLL RSA_PublicKey : public virtual Public_Key
                                 const std::string& provider) const override;
 
    protected:
-      RSA_PublicKey() {}
+      RSA_PublicKey() = default;
 
       BigInt m_n, m_e;
    };

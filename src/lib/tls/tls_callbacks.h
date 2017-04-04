@@ -35,7 +35,7 @@ class Policy;
 class BOTAN_DLL Callbacks
    {
    public:
-       virtual ~Callbacks();
+       virtual ~Callbacks() = default;
 
        /**
        * Mandatory callback: output function

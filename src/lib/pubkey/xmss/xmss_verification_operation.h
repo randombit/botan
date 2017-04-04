@@ -33,7 +33,7 @@ namespace Botan {
       XMSS_Verification_Operation(
          const XMSS_PublicKey& public_key);
 
-      virtual ~XMSS_Verification_Operation() {}
+      virtual ~XMSS_Verification_Operation() = default;
 
       virtual bool is_valid_signature(const uint8_t sig[],
                                       size_t sig_len) override;

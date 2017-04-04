@@ -801,7 +801,7 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
 class String_Extension : public Botan::Certificate_Extension
    {
    public:
-      String_Extension() : m_contents() {}
+      String_Extension() = default;
       String_Extension(const std::string& val) : m_contents(val) {}
 
       std::string value() const { return m_contents; }

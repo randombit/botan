@@ -182,8 +182,6 @@ Handshake_State::Handshake_State(Handshake_IO* io, Callbacks& cb) :
    {
    }
 
-Handshake_State::~Handshake_State() {}
-
 void Handshake_State::note_message(const Handshake_Message& msg)
    {
    m_callbacks.tls_inspect_handshake_msg(msg);

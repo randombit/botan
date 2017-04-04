@@ -30,8 +30,7 @@ struct polyn_gf2m
       explicit polyn_gf2m( std::shared_ptr<GF2m_Field> sp_field );
 
       polyn_gf2m()
-         :m_deg(-1)
-         {};
+         :m_deg(-1) {}
 
       polyn_gf2m(const secure_vector<uint8_t>& encoded, std::shared_ptr<GF2m_Field> sp_field );
 
@@ -39,12 +38,12 @@ struct polyn_gf2m
 
       bool operator==(const polyn_gf2m & other) const ;
 
-      bool operator!=(const polyn_gf2m & other) const { return !(*this == other); };
+      bool operator!=(const polyn_gf2m & other) const { return !(*this == other); }
 
       polyn_gf2m(polyn_gf2m&& other)
          {
          this->swap(other);
-         };
+         }
 
       polyn_gf2m & operator=(polyn_gf2m&& other)
          {
@@ -74,9 +73,9 @@ struct polyn_gf2m
       polyn_gf2m(int t, RandomNumberGenerator& rng, std::shared_ptr<GF2m_Field> sp_field);
 
       std::shared_ptr<GF2m_Field> get_sp_field() const
-         { return msp_field; };
+         { return msp_field; }
 
-      gf2m& operator[](size_t i) { return coeff[i]; };
+      gf2m& operator[](size_t i) { return coeff[i]; }
 
       gf2m operator[](size_t i) const { return coeff[i]; }
 
@@ -87,7 +86,7 @@ struct polyn_gf2m
       inline void set_coef(uint32_t i, gf2m v)
          {
          coeff[i] = v;
-         };
+         }
 
       inline void add_to_coef(uint32_t i, gf2m v)
          {

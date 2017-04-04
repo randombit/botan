@@ -658,7 +658,7 @@ namespace {
 class Policy_Information : public ASN1_Object
    {
    public:
-      Policy_Information() {}
+      Policy_Information() = default;
       explicit Policy_Information(const OID& oid) : m_oid(oid) {}
 
       const OID& oid() const { return m_oid; }

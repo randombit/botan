@@ -901,11 +901,8 @@ BOTAN_DLL void set_pin(Slot& slot, const secure_string& so_pin, const secure_str
 class BOTAN_DLL LowLevel
    {
    public:
-
       /// @param ptr the functon list pointer to use. Can be retrieved via `LowLevel::C_GetFunctionList`
       explicit LowLevel(FunctionListPtr ptr);
-
-      ~LowLevel() BOTAN_NOEXCEPT;
 
       /****************************** General purpose functions ******************************/
 

@@ -26,7 +26,7 @@ class XMSS_Common_Ops
    {
    public:
       XMSS_Common_Ops(XMSS_Parameters::xmss_algorithm_t oid)
-         : m_xmss_params(oid), m_hash(m_xmss_params.hash_function_name()) {};
+         : m_xmss_params(oid), m_hash(m_xmss_params.hash_function_name()) {}
 
    protected:
       /**

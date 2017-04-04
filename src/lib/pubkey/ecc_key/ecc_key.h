@@ -45,7 +45,9 @@ class BOTAN_DLL EC_PublicKey : public virtual Public_Key
       EC_PublicKey(const AlgorithmIdentifier& alg_id,
                    const std::vector<uint8_t>& key_bits);
 
+      EC_PublicKey(const EC_PublicKey& other) = default;
       EC_PublicKey& operator=(const EC_PublicKey& other) = default;
+      virtual ~EC_PublicKey() = default;
 
       /**
       * Get the public point of this key.
@@ -135,8 +137,6 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
                     const secure_vector<uint8_t>& key_bits,
                     bool with_modular_inverse=false);
 
-      EC_PrivateKey& operator=(const EC_PrivateKey& other) = default;
-
       secure_vector<uint8_t> private_key_bits() const override;
 
       /**
@@ -144,8 +144,12 @@ class BOTAN_DLL EC_PrivateKey : public virtual EC_PublicKey,
       * @result the private key value of this key object
       */
       const BigInt& private_value() const;
+
+      EC_PrivateKey(const EC_PrivateKey& other) = default;
+      EC_PrivateKey& operator=(const EC_PrivateKey& other) = default;
+      ~EC_PrivateKey() = default;
    protected:
-      EC_PrivateKey() {}
+      EC_PrivateKey() = default;
 
       BigInt m_private_key;
    };

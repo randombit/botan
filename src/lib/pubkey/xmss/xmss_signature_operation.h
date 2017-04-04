@@ -38,7 +38,7 @@ class XMSS_Signature_Operation : public virtual PK_Ops::Signature,
    {
    public:
       XMSS_Signature_Operation(const XMSS_PrivateKey& private_key);
-      virtual ~XMSS_Signature_Operation() {}
+      virtual ~XMSS_Signature_Operation() = default;
 
       /**
        * Creates an XMSS signature for the message provided through call to

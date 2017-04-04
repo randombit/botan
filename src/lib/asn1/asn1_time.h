@@ -38,7 +38,7 @@ class BOTAN_DLL X509_Time final : public ASN1_Object
       int32_t cmp(const X509_Time& other) const;
 
       /// Create an invalid X509_Time
-      X509_Time() {}
+      X509_Time() = default;
 
       /// Create a X509_Time from a time point
       explicit X509_Time(const std::chrono::system_clock::time_point& time);

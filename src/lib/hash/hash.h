@@ -56,7 +56,7 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
       */
       virtual std::string provider() const { return "base"; }
 
-      virtual ~HashFunction() {}
+      virtual ~HashFunction() = default;
 
       /**
       * Reset the state.

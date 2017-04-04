@@ -113,7 +113,7 @@ class BOTAN_DLL Ciphersuite
       bool operator<(const Ciphersuite& o) const { return ciphersuite_code() < o.ciphersuite_code(); }
       bool operator<(const uint16_t c) const { return ciphersuite_code() < c; }
 
-      Ciphersuite() {}
+      Ciphersuite() = default;
 
    private:
 

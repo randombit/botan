@@ -42,7 +42,7 @@ class BOTAN_DLL BigInt
      /**
      * Create empty BigInt
      */
-     BigInt() {}
+     BigInt() = default;
 
      /**
      * Create BigInt from 64 bit integer
