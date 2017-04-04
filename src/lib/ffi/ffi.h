@@ -456,6 +456,51 @@ BOTAN_DLL int botan_bcrypt_generate(uint8_t* out, size_t* out_len,
                                     uint32_t flags);
 
 /*
+* Raw Block Cipher (PRP) interface
+*/
+typedef struct botan_block_cipher_struct* botan_block_cipher_t;
+
+/**
+* Initialize a block cipher object
+*/
+BOTAN_DLL int botan_block_cipher_init(botan_block_cipher_t* bc,
+                                      const char* cipher_name);
+
+/**
+* Destroy a block cipher object
+*/
+BOTAN_DLL int botan_block_cipher_destroy(botan_block_cipher_t bc);
+
+/**
+* Reinitializes the block cipher
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_DLL int botan_block_cipher_clear(botan_block_cipher_t bc);
+
+/**
+* Set the key for a block cipher instance
+*/
+BOTAN_DLL int botan_block_cipher_set_key(botan_block_cipher_t bc,
+                                         const uint8_t key[], size_t len);
+
+/**
+* Return the positive block size of this block cipher, or negative to
+* indicate an error
+*/
+BOTAN_DLL int botan_block_cipher_block_size(botan_block_cipher_t bc);
+
+BOTAN_DLL int botan_block_cipher_encrypt_blocks(botan_block_cipher_t bc,
+                                                const uint8_t in[],
+                                                uint8_t out[],
+                                                size_t blocks);
+
+BOTAN_DLL int botan_block_cipher_decrypt_blocks(botan_block_cipher_t bc,
+                                                const uint8_t in[],
+                                                uint8_t out[],
+                                                size_t blocks);
+
+
+/*
 * Multiple precision integers
 */
 typedef struct botan_mp_struct* botan_mp_t;

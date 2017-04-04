@@ -9,6 +9,7 @@
 #include <botan/exceptn.h>
 #include <botan/auto_rng.h>
 #include <botan/aead.h>
+#include <botan/block_cipher.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <botan/pbkdf.h>
@@ -217,6 +218,7 @@ struct botan_cipher_struct : public botan_struct<Botan::Cipher_Mode, 0xB4A2BF9C>
 
 BOTAN_FFI_DECLARE_STRUCT(botan_rng_struct, Botan::RandomNumberGenerator, 0x4901F9C1);
 BOTAN_FFI_DECLARE_STRUCT(botan_mp_struct, Botan::BigInt, 0xC828B9D2);
+BOTAN_FFI_DECLARE_STRUCT(botan_block_cipher_struct, Botan::BlockCipher, 0x64C29716);
 BOTAN_FFI_DECLARE_STRUCT(botan_hash_struct, Botan::HashFunction, 0x1F0A4F84);
 BOTAN_FFI_DECLARE_STRUCT(botan_mac_struct, Botan::MessageAuthenticationCode, 0xA06E8FC1);
 BOTAN_FFI_DECLARE_STRUCT(botan_pubkey_struct, Botan::Public_Key, 0x2C286519);
@@ -591,6 +593,81 @@ int botan_mp_num_bits(const botan_mp_t mp, size_t* bits)
 int botan_mp_num_bytes(const botan_mp_t mp, size_t* bytes)
    {
    return BOTAN_FFI_DO(Botan::BigInt, mp, n, { *bytes = n.bytes(); });
+   }
+
+int botan_block_cipher_init(botan_block_cipher_t* bc, const char* bc_name)
+   {
+   try
+      {
+      if(bc == nullptr || bc_name == nullptr || *bc_name == 0)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+
+      std::unique_ptr<Botan::BlockCipher> cipher(Botan::BlockCipher::create(bc_name));
+      if(cipher)
+         {
+         *bc = new botan_block_cipher_struct(cipher.release());
+         return 0;
+         }
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+   catch(...)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, "unknown");
+      }
+
+   return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
+
+   }
+
+/**
+* Destroy a block cipher object
+*/
+int botan_block_cipher_destroy(botan_block_cipher_t bc)
+   {
+   delete bc;
+   return 0;
+   }
+
+int botan_block_cipher_clear(botan_block_cipher_t bc)
+   {
+   return BOTAN_FFI_DO(Botan::BlockCipher, bc, b, { b.clear(); });
+   }
+
+/**
+* Set the key for a block cipher instance
+*/
+int botan_block_cipher_set_key(botan_block_cipher_t bc,
+                               const uint8_t key[], size_t len)
+   {
+   return BOTAN_FFI_DO(Botan::BlockCipher, bc, b, { b.set_key(key, len); });
+   }
+
+/**
+* Return the positive block size of this block cipher, or negative to
+* indicate an error
+*/
+int botan_block_cipher_block_size(botan_block_cipher_t bc)
+   {
+   return BOTAN_FFI_DO(Botan::BlockCipher, bc, b, { return b.block_size(); });
+   }
+
+int botan_block_cipher_encrypt_blocks(botan_block_cipher_t bc,
+                                      const uint8_t in[],
+                                      uint8_t out[],
+                                      size_t blocks)
+   {
+   return BOTAN_FFI_DO(Botan::BlockCipher, bc, b, { b.encrypt_n(in, out, blocks); });
+   }
+
+int botan_block_cipher_decrypt_blocks(botan_block_cipher_t bc,
+                                      const uint8_t in[],
+                                      uint8_t out[],
+                                      size_t blocks)
+   {
+   return BOTAN_FFI_DO(Botan::BlockCipher, bc, b, { b.decrypt_n(in, out, blocks); });
    }
 
 int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)

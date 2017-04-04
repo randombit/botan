@@ -387,6 +387,7 @@ class FFI_Unit_Tests : public Test
 
          std::vector<Test::Result> results;
          results.push_back(ffi_test_mp(rng));
+         results.push_back(ffi_test_block_ciphers());
 
 #if defined(BOTAN_HAS_RSA)
          results.push_back(ffi_test_rsa(rng));
@@ -415,6 +416,42 @@ class FFI_Unit_Tests : public Test
          }
 
    private:
+      Test::Result ffi_test_block_ciphers()
+         {
+         Test::Result result("FFI block ciphers");
+
+         botan_block_cipher_t cipher;
+
+         if(TEST_FFI_OK(botan_block_cipher_init, (&cipher, "AES-128")))
+            {
+            const std::vector<uint8_t> zero16(16, 0);
+            std::vector<uint8_t> block(16, 0);
+
+            TEST_FFI_OK(botan_block_cipher_clear, (cipher));
+
+            TEST_FFI_RC(16, botan_block_cipher_block_size, (cipher));
+
+            TEST_FFI_OK(botan_block_cipher_set_key, (cipher, zero16.data(), zero16.size()));
+
+            TEST_FFI_OK(botan_block_cipher_encrypt_blocks, (cipher, block.data(), block.data(), 1));
+            result.test_eq("AES-128 encryption works", block, "66E94BD4EF8A2C3B884CFA59CA342B2E");
+
+            TEST_FFI_OK(botan_block_cipher_encrypt_blocks, (cipher, block.data(), block.data(), 1));
+            result.test_eq("AES-128 encryption works", block, "F795BD4A52E29ED713D313FA20E98DBC");
+
+            TEST_FFI_OK(botan_block_cipher_decrypt_blocks, (cipher, block.data(), block.data(), 1));
+            result.test_eq("AES-128 decryption works", block, "66E94BD4EF8A2C3B884CFA59CA342B2E");
+
+            TEST_FFI_OK(botan_block_cipher_decrypt_blocks, (cipher, block.data(), block.data(), 1));
+            result.test_eq("AES-128 decryption works", block, "00000000000000000000000000000000");
+
+            TEST_FFI_OK(botan_block_cipher_clear, (cipher));
+            botan_block_cipher_destroy(cipher);
+            }
+
+         return result;
+         }
+
       Test::Result ffi_test_mp(botan_rng_t rng)
          {
          Test::Result result("FFI MP");

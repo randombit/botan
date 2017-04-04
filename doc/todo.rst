@@ -108,6 +108,11 @@ New Protocols / Formats
   - Subset #2: Process OpenPGP public keys
   - Subset #3: Verification of OpenPGP signatures
 
+Cleanups
+-----------
+
+* Split ffi.cpp and test_ffi.cpp into multiple files
+
 Compat Headers
 ----------------
 
@@ -119,9 +124,7 @@ Compat Headers
 FFI and Bindings
 ----------------------------------------
 
-* Expose BigInt
 * Expose compression
-* Expose a raw block cipher interface
 * Expose more of X.509 (CRLs, OCSP, cert signing, etc)
 * Expose TLS
 * Write a CLI or HTTPS client in Python
