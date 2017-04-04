@@ -1459,7 +1459,7 @@ def gen_cmake(build_paths, using_mods, cc, options):
                     target['libs'].add(lib)
             if options.os in using_mod.frameworks:
                 for framework in using_mod.frameworks[options.os]:
-                    target['frameworks'].add('"-framework %"' % framework)
+                    target['frameworks'].add('"-framework %s"' % framework)
 
     def generate_target_sources_list(fd, target_name, target):
         fd.write('set(%s\n' % target_name)
