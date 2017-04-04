@@ -239,6 +239,8 @@ bool x500_name_cmp(const std::string& name1, const std::string& name2)
 
          if(p1 == name1.end() && p2 == name2.end())
             return true;
+         if(p1 == name1.end() || p2 == name2.end())
+            return false;
          }
 
       if(!Charset::caseless_cmp(*p1, *p2))

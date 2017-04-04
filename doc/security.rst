@@ -18,7 +18,18 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2017
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* 2017-03-23 (CVE-2016-7252): Incorrect bcrypt computation
+* 2017-04-04 (CVE-2017-2801): Incorrect comparison in X.509 DN strings
+
+  Botan's implementation of X.509 name comparisons had a flaw which
+  could result in an out of bound memory read while processing a
+  specially formed DN. This could potentially be exploited for
+  information disclosure or denial of service, or result in incorrect
+  validation results. Found independently by Aleksandar Nikolic of
+  Cisco Talos, and OSS-Fuzz automated fuzzing infrastructure.
+
+  Bug introduced in 1.6.0 or earlier, fixed in 2.1.0 and 1.10.16
+
+* 2017-03-23 (CVE-2017-7252): Incorrect bcrypt computation
 
   Botan's implementation of bcrypt password hashing scheme truncated long
   passwords at 56 characters, instead of at bcrypt's standard 72 characters
