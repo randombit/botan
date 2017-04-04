@@ -1554,7 +1554,7 @@ def gen_cmake(build_paths, using_mods, cc, options):
     f.close()
 
 def gen_makefile_lists(var, build_paths, options, modules, cc, arch, osinfo):
-    def get_isa_specific_flags(cc, isas):
+    def get_isa_specific_flags(isas):
         flags = []
         for isa in isas:
             flag = cc.isa_flags_for(isa, arch.basename)
@@ -1563,7 +1563,7 @@ def gen_makefile_lists(var, build_paths, options, modules, cc, arch, osinfo):
             flags.append(flag)
         return '' if len(flags) == 0 else (' ' + ' '.join(sorted(list(flags))))
 
-    def isa_specific_flags(cc, src):
+    def isa_specific_flags(src):
 
         def simd_dependencies():
 
@@ -1576,7 +1576,7 @@ def gen_makefile_lists(var, build_paths, options, modules, cc, arch, osinfo):
 
         if os.path.basename(src) == 'test_simd.cpp':
             isas = list(simd_dependencies())
-            return get_isa_specific_flags(cc, isas)
+            return get_isa_specific_flags(isas)
 
         for mod in modules:
             if src in mod.sources():
@@ -1584,11 +1584,11 @@ def gen_makefile_lists(var, build_paths, options, modules, cc, arch, osinfo):
                 if 'simd' in mod.dependencies():
                     isas += list(simd_dependencies())
 
-                return get_isa_specific_flags(cc, isas)
+                return get_isa_specific_flags(isas)
 
         if src.startswith('botan_all_'):
             isa = src.replace('botan_all_', '').replace('.cpp', '').split('_')
-            return get_isa_specific_flags(cc, isa)
+            return get_isa_specific_flags(isa)
 
         return ''
 
@@ -1649,7 +1649,7 @@ def gen_makefile_lists(var, build_paths, options, modules, cc, arch, osinfo):
         for (obj_file, src) in zip(objectfile_list(sources, obj_dir), sources):
             yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
                 obj_file, src,
-                isa_specific_flags(cc, src),
+                isa_specific_flags(src),
                 flags,
                 includes,
                 cc.compile_flags,
