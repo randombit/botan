@@ -22,6 +22,7 @@ parsing.h
 rotate.h
 types.h
 version.h
+stl_compatibility.h
 </header:public>
 
 <header:internal>
