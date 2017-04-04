@@ -1554,6 +1554,12 @@ def gen_cmake(build_paths, using_mods, cc, options):
     f.close()
 
 def gen_makefile_lists(var, build_paths, options, modules, cc, arch, osinfo):
+    def simd_implementation():
+        for simd32_impl in ['sse2', 'altivec', 'neon']:
+            if simd32_impl in arch.isa_extensions and cc.isa_flags_for(simd32_impl, arch.basename) is not None:
+                return simd32_impl
+        return None
+
     def get_isa_specific_flags(isas):
         flags = []
         for isa in isas:
@@ -1564,25 +1570,18 @@ def gen_makefile_lists(var, build_paths, options, modules, cc, arch, osinfo):
         return '' if len(flags) == 0 else (' ' + ' '.join(sorted(list(flags))))
 
     def isa_specific_flags(src):
-
-        def simd_dependencies():
-
-            for simd32_impl in ['sse2', 'altivec', 'neon']:
-                if simd32_impl in arch.isa_extensions and cc.isa_flags_for(simd32_impl, arch.basename) is not None:
-                    return [simd32_impl]
-
-            # default scalar
-            return []
+        simd_impl = simd_implementation()
 
         if os.path.basename(src) == 'test_simd.cpp':
-            isas = list(simd_dependencies())
+            isas = [simd_impl] if simd_impl else []
             return get_isa_specific_flags(isas)
 
         for mod in modules:
             if src in mod.sources():
                 isas = mod.need_isa
                 if 'simd' in mod.dependencies():
-                    isas += list(simd_dependencies())
+                    if simd_impl:
+                        isas.append(simd_impl)
 
                 return get_isa_specific_flags(isas)
 
