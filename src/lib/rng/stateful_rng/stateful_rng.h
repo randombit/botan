@@ -121,14 +121,15 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
       Entropy_Sources* m_entropy_sources = nullptr;
 
       const size_t m_reseed_interval;
+      uint32_t m_last_pid = 0;
 
+   protected:
       /*
-      * Set to 1 after a sucessful seeding, then incremented.  Reset
+      * Set to 1 after a successful seeding, then incremented.  Reset
       * to 0 by clear() or a fork. This logic is used even if
       * automatic reseeding is disabled (via m_reseed_interval = 0)
       */
       size_t m_reseed_counter = 0;
-      uint32_t m_last_pid = 0;
    };
 
 }
