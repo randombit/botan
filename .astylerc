@@ -1,0 +1,15 @@
+--style=whitesmith
+--indent=spaces=3
+--attach-namespaces
+--break-one-line-headers
+--add-braces
+--add-one-line-braces
+--convert-tabs
+--max-code-length=120
+--break-after-logical
+--indent-preproc-block
+--pad-oper
+--pad-comma
+--unpad-paren
+--align-pointer=type
+--align-reference=type

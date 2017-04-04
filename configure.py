@@ -385,6 +385,10 @@ def process_command_line(args): # pylint: disable=too-many-locals
                            default=False,
                            help='Generate bakefile which can be used to create Visual Studio or Xcode project files')
 
+    build_group.add_option('--with-cmake', action='store_true',
+                           default=False,
+                           help='Generate CMakeLists.txt which can be used to create many IDEs project files')
+
     build_group.add_option('--unsafe-fuzzer-mode', action='store_true', default=False,
                            help='disable essential checks for testing')
 
@@ -1427,6 +1431,121 @@ def gen_bakefile(build_config, options, external_libs):
     f.write('vs2013.option.Configuration.WholeProgramOptimization = true;\n')
     f.write('}\n')
 
+    f.close()
+
+def gen_cmake(build_paths, using_mods, cc, options):
+    def create_target_rules(sources):
+        target = {'sources': {}, 'frameworks': set(), 'libs': set()}
+        for source in sources:
+            target['sources'][source] = {'isa_flags': set()}
+        return target
+
+    def add_target_details(target, using_mod):
+        libs_or_frameworks_needed = False
+        for source_path in target['sources']:
+            for mod_source in using_mod.source:
+                if source_path == mod_source :
+                    libs_or_frameworks_needed = True
+                    for isa in using_mod.need_isa:
+                        target['sources'][source_path]['isa_flags'].add(cc.isa_flags[isa])
+        if libs_or_frameworks_needed == True:
+            if options.os in using_mod.libs:
+                for lib in using_mod.libs[options.os]:
+                    target['libs'].add(lib)
+            if options.os in using_mod.frameworks:
+                for framework in using_mod.frameworks[options.os]:
+                    target['frameworks'].add('"-framework %"' % framework)
+
+    def generate_target_sources_list(fd, target_name, target):
+        fd.write('set(%s\n' % target_name)
+        for source in target['sources']:
+            fd.write('    ${CMAKE_CURRENT_LIST_DIR}%s%s\n' % (os.sep, os.path.normpath(source)))
+        fd.write(')\n\n')
+
+    def generate_target_source_files_isa_properties(fd, target):
+        for source in target['sources']:
+            joined_isa_flags = ' '.join(target['sources'][source]['isa_flags'])
+            if joined_isa_flags:
+                fd.write('set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}%s%s PROPERTIES COMPILE_FLAGS %s)\n'
+                         % (os.sep, os.path.normpath(source), joined_isa_flags))
+
+    library_target_configuration = create_target_rules(build_paths.lib_sources)
+    tests_target_configuration = create_target_rules(build_paths.test_sources)
+    cli_target_configuration = create_target_rules(build_paths.cli_sources)
+
+    for module in using_mods:
+        add_target_details(library_target_configuration, module)
+        add_target_details(tests_target_configuration, module)
+        add_target_details(cli_target_configuration, module)
+
+    f = open('CMakeLists.txt', 'w')
+    f.write('cmake_minimum_required(VERSION 2.8.0)\n')
+    f.write('project(botan LANGUAGES CXX)\n\n')
+    f.write('cmake_policy(SET CMP0042 NEW)\n\n')
+
+    generate_target_sources_list(f, 'BOTAN_SOURCES', library_target_configuration)
+    generate_target_sources_list(f, 'BOTAN_CLI', cli_target_configuration)
+    generate_target_sources_list(f, 'BOTAN_TESTS', tests_target_configuration)
+
+    generate_target_source_files_isa_properties(f, library_target_configuration)
+    generate_target_source_files_isa_properties(f, cli_target_configuration)
+    generate_target_source_files_isa_properties(f, tests_target_configuration)
+
+    f.write('\n')
+
+    f.write('option(ENABLED_OPTIONAL_WARINIGS "If enabled more strict warinig policy will be used" OFF)\n')
+    f.write('option(ENABLED_LTO "If enabled link time optimization will be used" OFF)\n\n')
+
+    f.write('set(COMPILER_FEATURES %s %s)\n' % (cc.cc_compile_flags(options), cc.mach_abi_link_flags(options)))
+    f.write('set(COMPILER_WARNINGS %s)\n' % cc.cc_warning_flags(options))
+    f.write('set(COMPILER_INCLUDE_DIRS build/include build/include/external)\n')
+    f.write('if(ENABLED_LTO)\n')
+    f.write('    set(COMPILER_FEATURES ${COMPILER_FEATURES} -lto)\n')
+    f.write('endif()\n')
+    f.write('if(ENABLED_OPTIONAL_WARINIGS)\n')
+    f.write('    set(COMPILER_OPTIONAL_WARNINGS -Wsign-promo -Wctor-dtor-privacy -Wdeprecated -Winit-self' +
+            ' -Wnon-virtual-dtor -Wunused-macros -Wold-style-cast -Wuninitialized)\n')
+    f.write('endif()\n\n')
+
+    library_target_libs_and_frameworks = ('%s %s %s' % (' '.join(library_target_configuration['frameworks']),
+                                                        ' '.join(library_target_configuration['libs']),
+                                                         cc.mach_abi_link_flags(options)))
+    tests_target_libs_and_frameworks = ('%s %s' % (' '.join(tests_target_configuration['frameworks']),
+                                                   ' '.join(tests_target_configuration['libs'])))
+    cli_target_libs_and_frameworks = ('%s %s' % (' '.join(cli_target_configuration['frameworks']),
+                                                 ' '.join(cli_target_configuration['libs'])))
+
+    f.write('add_library(${PROJECT_NAME} STATIC ${BOTAN_SOURCES})\n')
+    f.write('target_link_libraries(${PROJECT_NAME} PUBLIC %s)\n'
+            % library_target_libs_and_frameworks)
+    f.write('target_compile_options(${PROJECT_NAME} PUBLIC ' +
+            '${COMPILER_WARNINGS} ${COMPILER_FEATURES} ${COMPILER_OPTIONAL_WARNINGS})\n')
+    f.write('target_include_directories(${PROJECT_NAME} PUBLIC ${COMPILER_INCLUDE_DIRS})\n\n')
+
+    f.write('add_library(${PROJECT_NAME}_shared SHARED ${BOTAN_SOURCES})\n')
+    f.write('target_link_libraries(${PROJECT_NAME}_shared PUBLIC %s)\n'
+            % library_target_libs_and_frameworks)
+    f.write('target_compile_options(${PROJECT_NAME}_shared PUBLIC ' +
+            '${COMPILER_WARNINGS} ${COMPILER_FEATURES} ${COMPILER_OPTIONAL_WARNINGS})\n')
+    f.write('target_include_directories(${PROJECT_NAME}_shared PUBLIC ${COMPILER_INCLUDE_DIRS})\n')
+    f.write('set_target_properties(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})\n\n')
+
+    f.write('add_executable(${PROJECT_NAME}_cli ${BOTAN_CLI})\n')
+    f.write('target_link_libraries(${PROJECT_NAME}_cli PRIVATE ${PROJECT_NAME}_shared %s)\n'
+            % cli_target_libs_and_frameworks)
+    f.write('set_target_properties(${PROJECT_NAME}_cli PROPERTIES OUTPUT_NAME ${PROJECT_NAME})\n\n')
+
+    f.write('add_executable(${PROJECT_NAME}_tests ${BOTAN_TESTS})\n')
+    f.write('target_link_libraries(${PROJECT_NAME}_tests PRIVATE ${PROJECT_NAME}_shared %s)\n'
+            % tests_target_libs_and_frameworks)
+    f.write('set_target_properties(${PROJECT_NAME}_tests PROPERTIES OUTPUT_NAME botan-test)\n\n')
+
+    f.write('set(CONFIGURATION_FILES configure.py .gitignore .astylerc authors.txt news.rst readme.rst)\n')
+    f.write('file(GLOB_RECURSE DOCUMENTATION_FILES doc%s* )\n' % os.sep)
+    f.write('file(GLOB_RECURSE HEADER_FILES src%s*.h )\n' % os.sep)
+    f.write('file(GLOB_RECURSE INFO_FILES src%slib%s*info.txt )\n' % (os.sep, os.sep))
+    f.write('add_custom_target(CONFIGURATION_DUMMY SOURCES ' +
+            '${CONFIGURATION_FILES} ${DOCUMENTATION_FILES} ${INFO_FILES} ${HEADER_FILES})\n')
     f.close()
 
 def gen_makefile_lists(var, build_config, options, modules, cc, arch, osinfo):
@@ -2513,6 +2632,9 @@ def main(argv=None):
 
     if options.with_bakefile:
         gen_bakefile(build_config, options, template_vars['link_to'])
+
+    if options.with_cmake:
+        gen_cmake(build_config, using_mods, cc, options)
 
     write_template(template_vars['makefile_path'], makefile_template)
 
