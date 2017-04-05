@@ -1,6 +1,11 @@
 Release Notes
 ========================================
 
+Version 2.2.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add the SM3 hash function
+
 Version 2.1.0, 2017-04-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -33,8 +38,9 @@ Version 2.1.0, 2017-04-04
   #946 #961 #964
 
 * The PKCS11 module did not require any external dependencies, so it
-  has been enabled by default. The ``-with-pkcs11`` and ``--without-pkcs11``
-  flags to ``configure.py`` have been removed. (GH #837)
+  has been enabled by default. The ``--with-pkcs11`` and ``--without-pkcs11``
+  flags to ``configure.py`` have been removed. PKCS11 can still be disabled
+  using ``--disable-modules=pkcs11`` (GH #837)
 
 * Add ``OS::run_cpu_instruction_probe`` for runtime probing of ISA extensions.
   Supporting this requires system-specific techniques, currently Windows SEH and
@@ -115,8 +121,6 @@ Version 1.10.16, 2017-04-04
 
 * Avoid throwing during a destructor since this is undefined in C++11
   and rarely a good idea. (GH #930)
-
-* Add the SM3 hash function
 
 Version 1.10.15, 2017-01-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
