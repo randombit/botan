@@ -1952,6 +1952,7 @@ class ModulesChooser(object):
         self._ccinfo = ccinfo
         self._options = options
 
+        self._to_load = set()
         # string to set mapping with reasons as key and modules as value
         self._not_using_because = collections.defaultdict(set)
 
@@ -2018,80 +2019,85 @@ class ModulesChooser(object):
             if modname not in modules:
                 logging.warning("Disabled module not found: %s" % modname)
 
+    def _handle_by_module_policy(self, modname, usable):
+        if self._module_policy is not None:
+            if modname in self._module_policy.required:
+                if not usable:
+                    logging.error('Module policy requires module %s not usable on this platform' % (modname))
+                elif modname in self._options.disabled_modules:
+                    logging.error('Module %s was disabled but is required by policy' % (modname))
+                self._to_load.add(modname)
+                return True
+            elif modname in self._module_policy.if_available:
+                if modname in self._options.disabled_modules:
+                    self._not_using_because['disabled by user'].add(modname)
+                elif usable:
+                    logging.debug('Enabling optional module %s' % (modname))
+                    self._to_load.add(modname)
+                return True
+            elif modname in self._module_policy.prohibited:
+                if modname in self._options.enabled_modules:
+                    logging.error('Module %s was requested but is prohibited by policy' % (modname))
+                self._not_using_because['prohibited by module policy'].add(modname)
+                return True
+
+        return False
+
     def choose(self):
-        to_load = set()
         maybe_dep = []
 
         for (modname, module) in self._modules.items():
             usable = self._check_usable(module, modname)
 
-            if self._module_policy is not None:
-
-                if modname in self._module_policy.required:
-                    if not usable:
-                        logging.error('Module policy requires module %s not usable on this platform' % (modname))
-                    elif modname in self._options.disabled_modules:
-                        logging.error('Module %s was disabled but is required by policy' % (modname))
-                    to_load.add(modname)
-                    continue
-                elif modname in self._module_policy.if_available:
-                    if modname in self._options.disabled_modules:
-                        self._not_using_because['disabled by user'].add(modname)
-                    elif usable:
-                        logging.debug('Enabling optional module %s' % (modname))
-                        to_load.add(modname)
-                    continue
-                elif modname in self._module_policy.prohibited:
-                    if modname in self._options.enabled_modules:
-                        logging.error('Module %s was requested but is prohibited by policy' % (modname))
-                    self._not_using_because['prohibited by module policy'].add(modname)
-                    continue
+            module_handled = self._handle_by_module_policy(modname, usable)
+            if module_handled:
+                continue
 
             if modname in self._options.disabled_modules:
                 self._not_using_because['disabled by user'].add(modname)
             elif usable:
                 if modname in self._options.enabled_modules:
-                    to_load.add(modname) # trust the user
+                    self._to_load.add(modname) # trust the user
                 elif module.load_on == 'never':
                     self._not_using_because['disabled as buggy'].add(modname)
                 elif module.load_on == 'request':
                     if self._options.with_everything:
-                        to_load.add(modname)
+                        self._to_load.add(modname)
                     else:
                         self._not_using_because['by request only'].add(modname)
                 elif module.load_on == 'vendor':
                     if self._options.with_everything:
-                        to_load.add(modname)
+                        self._to_load.add(modname)
                     else:
                         self._not_using_because['requires external dependency'].add(modname)
                 elif module.load_on == 'dep':
                     maybe_dep.append(modname)
 
                 elif module.load_on == 'always':
-                    to_load.add(modname)
+                    self._to_load.add(modname)
 
                 elif module.load_on == 'auto':
                     if self._options.no_autoload or self._module_policy is not None:
                         maybe_dep.append(modname)
                     else:
-                        to_load.add(modname)
+                        self._to_load.add(modname)
                 else:
                     logging.error('Unknown load_on %s in %s' % (
                         module.load_on, modname))
 
-        if 'compression' in to_load:
+        if 'compression' in self._to_load:
             # Confirm that we have at least one compression library enabled
             # Otherwise we leave a lot of useless support code compiled in, plus a
             # make_compressor call that always fails
-            if 'zlib' not in to_load and 'bzip2' not in to_load and 'lzma' not in to_load:
-                to_load.remove('compression')
+            if 'zlib' not in self._to_load and 'bzip2' not in self._to_load and 'lzma' not in self._to_load:
+                self._to_load.remove('compression')
                 self._not_using_because['no enabled compression schemes'].add('compression')
 
         dependency_failure = True
 
         while dependency_failure:
             dependency_failure = False
-            for modname in to_load.copy():
+            for modname in self._to_load.copy():
                 for deplist in [s.split('|') for s in self._modules[modname].dependencies()]:
 
                     dep_met = False
@@ -2099,17 +2105,17 @@ class ModulesChooser(object):
                         if dep_met is True:
                             break
 
-                        if mod in to_load:
+                        if mod in self._to_load:
                             dep_met = True
                         elif mod in maybe_dep:
                             maybe_dep.remove(mod)
-                            to_load.add(mod)
+                            self._to_load.add(mod)
                             dep_met = True
 
                     if not dep_met:
                         dependency_failure = True
-                        if modname in to_load:
-                            to_load.remove(modname)
+                        if modname in self._to_load:
+                            self._to_load.remove(modname)
                         if modname in maybe_dep:
                             maybe_dep.remove(modname)
                         self._not_using_because['dependency failure'].add(modname)
@@ -2117,11 +2123,11 @@ class ModulesChooser(object):
         for not_a_dep in maybe_dep:
             self._not_using_because['not requested'].add(not_a_dep)
 
-        ModulesChooser._validate_state(to_load, self._not_using_because)
+        ModulesChooser._validate_state(self._to_load, self._not_using_because)
         ModulesChooser._display_module_information_unused(self._not_using_because)
-        ModulesChooser._display_module_information_to_load(self._modules, to_load)
+        ModulesChooser._display_module_information_to_load(self._modules, self._to_load)
 
-        return to_load
+        return self._to_load
 
 def choose_link_method(options):
     """
