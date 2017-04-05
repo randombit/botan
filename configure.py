@@ -2342,7 +2342,7 @@ def generate_amalgamation(build_config, modules, options):
     botan_amalg_files = {}
     headers_written = {}
 
-    for mod in modules:
+    for mod in sorted(modules):
         tgt = ''
 
         if not options.single_amalgamation_file:
