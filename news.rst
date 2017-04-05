@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.1.0, Not Yet Released
+Version 2.1.0, 2017-04-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix incorrect truncation in Bcrypt. Passwords in length between 56 and 72
