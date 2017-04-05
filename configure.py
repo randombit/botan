@@ -1952,7 +1952,7 @@ class ModulesChooser(object):
         self._ccinfo = ccinfo
         self._options = options
 
-        self._maybe_dep = []
+        self._maybe_dep = set()
         self._to_load = set()
         # string to set mapping with reasons as key and modules as value
         self._not_using_because = collections.defaultdict(set)
@@ -2044,32 +2044,50 @@ class ModulesChooser(object):
 
         return False
 
-    def _resolve_dependencies(self):
-        dependency_failure = True
-        while dependency_failure:
-            dependency_failure = False
-            for modname in self._to_load.copy():
-                for deplist in [s.split('|') for s in self._modules[modname].dependencies()]:
+    def _resolve_dependencies(self, modname, level=0):
+        indent = "    "*level
+        logging.debug(indent + "Resolving dependencies of %s..." % modname)
 
-                    dep_met = False
-                    for mod in deplist:
-                        if dep_met is True:
-                            break
+        for dependency in self._modules[modname].dependencies():
+            dependency_choices = set(dependency.split('|'))
 
-                        if mod in self._to_load:
-                            dep_met = True
-                        elif mod in self._maybe_dep:
-                            self._maybe_dep.remove(mod)
-                            self._to_load.add(mod)
-                            dep_met = True
+            logging.debug(indent + "Searching for %s..." % dependency)
 
-                    if not dep_met:
-                        dependency_failure = True
-                        if modname in self._to_load:
-                            self._to_load.remove(modname)
-                        if modname in self._maybe_dep:
-                            self._maybe_dep.remove(modname)
-                        self._not_using_because['dependency failure'].add(modname)
+            dependency_met = False
+            new_loaded_mod = None
+
+            # Prefer what we already loaded
+            if not set(dependency_choices).isdisjoint(self._to_load):
+                logging.debug(indent + "Already loaded.")
+                dependency_met = True
+            else:
+                possible_mods = dependency_choices.intersection(self._maybe_dep)
+                if possible_mods:
+                    new_loaded_mod = possible_mods.pop()
+                    logging.debug(indent + "Adding %s..." % new_loaded_mod)
+                    dependency_met = True
+
+            if dependency_met:
+                if new_loaded_mod:
+                    self._maybe_dep.remove(new_loaded_mod)
+                    self._to_load.add(new_loaded_mod)
+                    # Added new_loaded_mod, now resolve its dependencies
+                    self._resolve_dependencies(new_loaded_mod, level+1)
+            else:
+                if modname in self._to_load:
+                    self._to_load.remove(modname)
+                if modname in self._maybe_dep:
+                    self._maybe_dep.remove(modname)
+                self._not_using_because['dependency failure'].add(modname)
+
+                # `modname` is kicked out, no need to check more further dependencies
+                return
+
+    def _resolve_dependencies_for_all_modules(self):
+        for modname in self._to_load.copy():
+            # This will recusively load all dependencies if modname
+            # or mark those with dependency failures as unused
+            self._resolve_dependencies(modname)
 
     def _handle_by_load_on(self, module): # pylint: disable=too-many-branches
         modname = module.basename
@@ -2086,14 +2104,14 @@ class ModulesChooser(object):
             else:
                 self._not_using_because['requires external dependency'].add(modname)
         elif module.load_on == 'dep':
-            self._maybe_dep.append(modname)
+            self._maybe_dep.add(modname)
 
         elif module.load_on == 'always':
             self._to_load.add(modname)
 
         elif module.load_on == 'auto':
             if self._options.no_autoload or self._module_policy is not None:
-                self._maybe_dep.append(modname)
+                self._maybe_dep.add(modname)
             else:
                 self._to_load.add(modname)
         else:
@@ -2124,7 +2142,7 @@ class ModulesChooser(object):
                 self._to_load.remove('compression')
                 self._not_using_because['no enabled compression schemes'].add('compression')
 
-        self._resolve_dependencies()
+        self._resolve_dependencies_for_all_modules()
 
         for not_a_dep in self._maybe_dep:
             self._not_using_because['not requested'].add(not_a_dep)
