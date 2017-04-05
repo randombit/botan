@@ -182,7 +182,7 @@ inline bool verify_prime(const BigInt& n, RandomNumberGenerator& rng)
 * Randomly generate a prime
 * @param rng a random number generator
 * @param bits how large the resulting prime should be in bits
-* @param coprime a positive integer the result should be coprime to
+* @param coprime a positive integer that (prime - 1) should be coprime to
 * @param equiv a non-negative number that the result should be
                equivalent to modulo equiv_mod
 * @param equiv_mod the modulus equiv should be checked against
