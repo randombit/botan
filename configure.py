@@ -2696,7 +2696,7 @@ if __name__ == '__main__':
     except UserError as e:
         logging.debug(traceback.format_exc())
         logging.error(e)
-    except InternalError as e:
+    except Exception as e: # pylint: disable=broad-except
         # error() will stop script, so wrap all information into one call
         logging.error("""%s
 An internal error occurred.
@@ -2707,7 +2707,5 @@ Please report the entire output at https://github.com/randombit/botan or email
 to the mailing list https://lists.randombit.net/mailman/listinfo/botan-devel
 
 You'll meet friendly people happy to help!""" % traceback.format_exc())
-    except Exception as e: # pylint: disable=broad-except
-        logging.debug(traceback.format_exc())
-        logging.error(e)
+
     sys.exit(0)
