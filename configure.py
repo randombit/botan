@@ -2087,6 +2087,8 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                 logging.info('%s: %s' % (mod, modules[mod].comment))
             if modules[mod].warning:
                 logging.warning('%s: %s' % (mod, modules[mod].warning))
+            if modules[mod].load_on == 'vendor':
+                logging.info('Enabling use of external dependency %s' % mod)
 
         logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
 
@@ -2566,10 +2568,6 @@ def main(argv=None):
         options.build_shared_lib = False
 
     loaded_mods = choose_modules_to_use(modules, module_policy, arch, cc, options)
-
-    for m in loaded_mods:
-        if modules[m].load_on == 'vendor':
-            logging.info('Enabling use of external dependency %s' % (m))
 
     using_mods = [modules[m] for m in loaded_mods]
 
