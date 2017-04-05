@@ -2072,8 +2072,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
 
     def display_module_information_unused(skipped_modules):
         for reason in sorted(skipped_modules.keys()):
-            disabled_mods = sorted(set([mod for mod in skipped_modules[reason]]))
-
+            disabled_mods = sorted(skipped_modules[reason])
             if disabled_mods:
                 logging.info('Skipping (%s): %s' % (reason, ' '.join(disabled_mods)))
 
