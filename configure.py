@@ -2071,6 +2071,35 @@ class ModulesChooser(object):
                             self._maybe_dep.remove(modname)
                         self._not_using_because['dependency failure'].add(modname)
 
+    def _handle_by_load_on(self, module): # pylint: disable=too-many-branches
+        modname = module.basename
+        if module.load_on == 'never':
+            self._not_using_because['disabled as buggy'].add(modname)
+        elif module.load_on == 'request':
+            if self._options.with_everything:
+                self._to_load.add(modname)
+            else:
+                self._not_using_because['by request only'].add(modname)
+        elif module.load_on == 'vendor':
+            if self._options.with_everything:
+                self._to_load.add(modname)
+            else:
+                self._not_using_because['requires external dependency'].add(modname)
+        elif module.load_on == 'dep':
+            self._maybe_dep.append(modname)
+
+        elif module.load_on == 'always':
+            self._to_load.add(modname)
+
+        elif module.load_on == 'auto':
+            if self._options.no_autoload or self._module_policy is not None:
+                self._maybe_dep.append(modname)
+            else:
+                self._to_load.add(modname)
+        else:
+            logging.error('Unknown load_on %s in %s' % (
+                module.load_on, modname))
+
     def choose(self):
         for (modname, module) in self._modules.items():
             usable = self._check_usable(module, modname)
@@ -2084,32 +2113,8 @@ class ModulesChooser(object):
             elif usable:
                 if modname in self._options.enabled_modules:
                     self._to_load.add(modname) # trust the user
-                elif module.load_on == 'never':
-                    self._not_using_because['disabled as buggy'].add(modname)
-                elif module.load_on == 'request':
-                    if self._options.with_everything:
-                        self._to_load.add(modname)
-                    else:
-                        self._not_using_because['by request only'].add(modname)
-                elif module.load_on == 'vendor':
-                    if self._options.with_everything:
-                        self._to_load.add(modname)
-                    else:
-                        self._not_using_because['requires external dependency'].add(modname)
-                elif module.load_on == 'dep':
-                    self._maybe_dep.append(modname)
-
-                elif module.load_on == 'always':
-                    self._to_load.add(modname)
-
-                elif module.load_on == 'auto':
-                    if self._options.no_autoload or self._module_policy is not None:
-                        self._maybe_dep.append(modname)
-                    else:
-                        self._to_load.add(modname)
                 else:
-                    logging.error('Unknown load_on %s in %s' % (
-                        module.load_on, modname))
+                    self._handle_by_load_on(module)
 
         if 'compression' in self._to_load:
             # Confirm that we have at least one compression library enabled
