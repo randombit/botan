@@ -2201,11 +2201,63 @@ def portable_symlink(file_path, target_dir, method):
     else:
         raise UserError('Unknown link method %s' % (method))
 
-def generate_amalgamation(build_config, modules, options):
-    """
-    Generate the amalgamation
-    """
 
+class AmalgamationHeader(object):
+    def __init__(self, input_list):
+
+        self.included_already = set()
+        self.all_std_includes = set()
+
+        self.file_contents = {}
+        for f in sorted(input_list):
+            try:
+                contents = AmalgamationGenerator.strip_header_goop(f, open(f).readlines())
+                self.file_contents[os.path.basename(f)] = contents
+            except IOError as e:
+                logging.error('Error processing file %s for amalgamation: %s' % (f, e))
+
+        self.contents = ''
+        for name in sorted(self.file_contents):
+            self.contents += ''.join(list(self.header_contents(name)))
+
+        self.header_includes = ''
+        for std_header in sorted(self.all_std_includes):
+            self.header_includes += '#include <%s>\n' % (std_header)
+        self.header_includes += '\n'
+
+    def header_contents(self, name):
+        name = name.replace('internal/', '')
+
+        if name in self.included_already:
+            return
+
+        self.included_already.add(name)
+
+        if name not in self.file_contents:
+            return
+
+        for line in self.file_contents[name]:
+            match = AmalgamationGenerator.botan_include_matcher.search(line)
+            if match:
+                for c in self.header_contents(match.group(1)):
+                    yield c
+            else:
+                match = AmalgamationGenerator.std_include_matcher.search(line)
+
+                if match:
+                    self.all_std_includes.add(match.group(1))
+                else:
+                    yield line
+
+
+class AmalgamationGenerator(object):
+    # public static fields also used outside
+    botan_include_matcher = re.compile(r'#include <botan/(.*)>$')
+    std_include_matcher = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
+    any_include_matcher = re.compile(r'#include <(.*)>$')
+    filename_prefix = 'botan_all'
+
+    @staticmethod
     def strip_header_goop(header_name, contents):
         header_guard = re.compile('^#define BOTAN_.*_H__$')
 
@@ -2229,70 +2281,14 @@ def generate_amalgamation(build_config, modules, options):
 
         return contents
 
-    botan_include_matcher = re.compile(r'#include <botan/(.*)>$')
-    std_include_matcher = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
-    any_include_matcher = re.compile(r'#include <(.*)>$')
+    def __init__(self, build_paths, modules, options):
+        self._build_paths = build_paths
+        self._modules = modules
+        self._options = options
 
-    class AmalgamationGenerator:
-        def __init__(self, input_list):
-
-            self.included_already = set()
-            self.all_std_includes = set()
-
-            self.file_contents = {}
-            for f in sorted(input_list):
-                try:
-                    contents = strip_header_goop(f, open(f).readlines())
-                    self.file_contents[os.path.basename(f)] = contents
-                except IOError as e:
-                    logging.error('Error processing file %s for amalgamation: %s' % (f, e))
-
-            self.contents = ''
-            for name in sorted(self.file_contents):
-                self.contents += ''.join(list(self.header_contents(name)))
-
-            self.header_includes = ''
-            for std_header in sorted(self.all_std_includes):
-                self.header_includes += '#include <%s>\n' % (std_header)
-            self.header_includes += '\n'
-
-        def header_contents(self, name):
-            name = name.replace('internal/', '')
-
-            if name in self.included_already:
-                return
-
-            self.included_already.add(name)
-
-            if name not in self.file_contents:
-                return
-
-            for line in self.file_contents[name]:
-                match = botan_include_matcher.search(line)
-                if match:
-                    for c in self.header_contents(match.group(1)):
-                        yield c
-                else:
-                    match = std_include_matcher.search(line)
-
-                    if match:
-                        self.all_std_includes.add(match.group(1))
-                    else:
-                        yield line
-
-    amalg_basename = 'botan_all'
-
-    header_name = '%s.h' % (amalg_basename)
-    header_int_name = '%s_internal.h' % (amalg_basename)
-
-    logging.info('Writing amalgamation header to %s' % (header_name))
-
-    botan_h = open(header_name, 'w')
-    botan_int_h = open(header_int_name, 'w')
-
-    pub_header_amalag = AmalgamationGenerator(build_config.public_headers)
-
-    amalg_header = """/*
+    @staticmethod
+    def _banner_content():
+        return """/*
 * Botan %s Amalgamation
 * (C) 1999-2013,2014,2015,2016 Jack Lloyd and others
 *
@@ -2300,93 +2296,106 @@ def generate_amalgamation(build_config, modules, options):
 */
 """ % (Version.as_string())
 
-    botan_h.write(amalg_header)
+    def generate(self):
+        header_name = '%s.h' % (AmalgamationGenerator.filename_prefix)
+        header_int_name = '%s_internal.h' % (AmalgamationGenerator.filename_prefix)
 
-    botan_h.write("""
+        logging.info('Writing amalgamation header to %s' % (header_name))
+
+        botan_h = open(header_name, 'w')
+        botan_int_h = open(header_int_name, 'w')
+
+        pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
+
+        botan_h.write(AmalgamationGenerator._banner_content())
+
+        botan_h.write("""
 #ifndef BOTAN_AMALGAMATION_H__
 #define BOTAN_AMALGAMATION_H__
 
 """)
 
-    botan_h.write(pub_header_amalag.header_includes)
-    botan_h.write(pub_header_amalag.contents)
-    botan_h.write("\n#endif\n")
+        botan_h.write(pub_header_amalag.header_includes)
+        botan_h.write(pub_header_amalag.contents)
+        botan_h.write("\n#endif\n")
 
-    internal_headers = AmalgamationGenerator([s for s in build_config.internal_headers])
+        internal_headers = AmalgamationHeader([s for s in self._build_paths.internal_headers])
 
-    botan_int_h.write("""
+        botan_int_h.write("""
 #ifndef BOTAN_AMALGAMATION_INTERNAL_H__
 #define BOTAN_AMALGAMATION_INTERNAL_H__
 
 """)
-    botan_int_h.write(internal_headers.header_includes)
-    botan_int_h.write(internal_headers.contents)
-    botan_int_h.write("\n#endif\n")
+        botan_int_h.write(internal_headers.header_includes)
+        botan_int_h.write(internal_headers.contents)
+        botan_int_h.write("\n#endif\n")
 
-    headers_written_in_h_files = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
+        headers_written_in_h_files = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
 
-    botan_amalgs_fs = []
+        botan_amalgs_fs = []
 
-    def open_amalg_file(tgt):
-        fsname = '%s%s.cpp' % (amalg_basename, '_' + tgt if tgt else '')
-        botan_amalgs_fs.append(fsname)
-        logging.info('Writing amalgamation source to %s' % (fsname))
-        f = open(fsname, 'w')
-        f.write(amalg_header)
+        def open_amalg_file(tgt):
+            fsname = '%s%s.cpp' % (AmalgamationGenerator.filename_prefix, '_' + tgt if tgt else '')
+            botan_amalgs_fs.append(fsname)
+            logging.info('Writing amalgamation source to %s' % (fsname))
+            f = open(fsname, 'w')
+            f.write(AmalgamationGenerator._banner_content())
 
-        f.write('\n#include "%s"\n' % (header_name))
-        f.write('#include "%s"\n\n' % (header_int_name))
+            f.write('\n#include "%s"\n' % (header_name))
+            f.write('#include "%s"\n\n' % (header_int_name))
 
-        return f
+            return f
 
-    botan_amalg_files = {}
-    headers_written = {}
+        botan_amalg_files = {}
+        headers_written = {}
 
-    for mod in sorted(modules):
-        tgt = ''
+        for mod in sorted(self._modules):
+            tgt = ''
 
-        if not options.single_amalgamation_file:
-            if mod.need_isa != []:
-                tgt = '_'.join(sorted(mod.need_isa))
-                if tgt == 'sse2' and options.arch == 'x86_64':
-                    tgt = '' # SSE2 is always available on x86-64
+            if not self._options.single_amalgamation_file:
+                if mod.need_isa != []:
+                    tgt = '_'.join(sorted(mod.need_isa))
+                    if tgt == 'sse2' and self._options.arch == 'x86_64':
+                        tgt = '' # SSE2 is always available on x86-64
 
-            if options.arch == 'x86_32' and 'simd' in mod.requires:
-                tgt = 'sse2'
+                if self._options.arch == 'x86_32' and 'simd' in mod.requires:
+                    tgt = 'sse2'
 
-        if tgt not in botan_amalg_files:
-            botan_amalg_files[tgt] = open_amalg_file(tgt)
+            if tgt not in botan_amalg_files:
+                botan_amalg_files[tgt] = open_amalg_file(tgt)
 
-            if tgt != '':
-                for isa in mod.need_isa:
-                    if isa == 'aesni':
-                        isa = "aes,ssse3,pclmul"
-                    elif isa == 'rdrand':
-                        isa = 'rdrnd'
+                if tgt != '':
+                    for isa in mod.need_isa:
+                        if isa == 'aesni':
+                            isa = "aes,ssse3,pclmul"
+                        elif isa == 'rdrand':
+                            isa = 'rdrnd'
 
-                    botan_amalg_files[tgt].write('#if defined(__GNUG__)\n#pragma GCC target ("%s")\n#endif\n' % (isa))
+                        botan_amalg_files[tgt].write('#if defined(__GNUG__)\n')
+                        botan_amalg_files[tgt].write('#pragma GCC target ("%s")\n' % (isa))
+                        botan_amalg_files[tgt].write('#endif\n')
 
-        if tgt not in headers_written:
-            headers_written[tgt] = headers_written_in_h_files.copy()
+            if tgt not in headers_written:
+                headers_written[tgt] = headers_written_in_h_files.copy()
 
-        for src in sorted(mod.source):
-            contents = open(src, 'r').readlines()
-            for line in contents:
-                if botan_include_matcher.search(line):
-                    continue
-
-                match = any_include_matcher.search(line)
-                if match:
-                    header = match.group(1)
-                    if header in headers_written[tgt]:
+            for src in sorted(mod.source):
+                contents = open(src, 'r').readlines()
+                for line in contents:
+                    if AmalgamationGenerator.botan_include_matcher.search(line):
                         continue
 
-                    botan_amalg_files[tgt].write(line)
-                    headers_written[tgt].add(header)
-                else:
-                    botan_amalg_files[tgt].write(line)
+                    match = AmalgamationGenerator.any_include_matcher.search(line)
+                    if match:
+                        header = match.group(1)
+                        if header in headers_written[tgt]:
+                            continue
 
-    return botan_amalgs_fs
+                        botan_amalg_files[tgt].write(line)
+                        headers_written[tgt].add(header)
+                    else:
+                        botan_amalg_files[tgt].write(line)
+
+        return botan_amalgs_fs
 
 def have_program(program):
     """
@@ -2717,7 +2726,7 @@ def main(argv=None):
         json.dump(template_vars, f, sort_keys=True, indent=2)
 
     if options.amalgamation:
-        amalgamation_cpp_files = generate_amalgamation(build_config, using_mods, options)
+        amalgamation_cpp_files = AmalgamationGenerator(build_config, using_mods, options).generate()
         build_config.lib_sources = amalgamation_cpp_files
         MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate(template_vars)
 
