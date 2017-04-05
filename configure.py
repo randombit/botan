@@ -2071,28 +2071,33 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
     for not_a_dep in maybe_dep:
         cannot_use_because(not_a_dep, 'not requested')
 
-    for reason in sorted(not_using_because.keys()):
-        disabled_mods = sorted(set([mod for mod in not_using_because[reason]]))
+    def display_module_information_unused(skipped_modules):
+        for reason in sorted(skipped_modules.keys()):
+            disabled_mods = sorted(set([mod for mod in skipped_modules[reason]]))
 
-        if disabled_mods != []:
-            logging.info('Skipping, %s - %s' % (
-                reason, ' '.join(disabled_mods)))
+            if disabled_mods:
+                logging.info('Skipping, %s - %s' % (reason, ' '.join(disabled_mods)))
 
-    for mod in sorted(to_load):
-        if mod.startswith('simd_') and mod != 'simd_engine':
-            logging.info('Using SIMD module ' + mod)
+    def display_module_information_to_load(modules_to_load):
+        sorted_modules_to_load = sorted(modules_to_load)
 
-    for mod in sorted(to_load):
-        if modules[mod].comment:
-            logging.info('%s: %s' % (mod, modules[mod].comment))
-        if modules[mod].warning:
-            logging.warning('%s: %s' % (mod, modules[mod].warning))
+        for mod in sorted_modules_to_load:
+            if mod.startswith('simd_') and mod != 'simd_engine':
+                logging.info('Using SIMD module ' + mod)
+
+        for mod in sorted_modules_to_load:
+            if modules[mod].comment:
+                logging.info('%s: %s' % (mod, modules[mod].comment))
+            if modules[mod].warning:
+                logging.warning('%s: %s' % (mod, modules[mod].warning))
+
+        logging.info('Loading modules %s', ' '.join(to_load))
+
+    display_module_information_unused(not_using_because)
+    display_module_information_to_load(set(to_load))
 
     # force through set to dedup if required
-    to_load = sorted(list(set(to_load)))
-    logging.info('Loading modules %s', ' '.join(to_load))
-
-    return to_load
+    return set(to_load)
 
 def choose_link_method(options):
     """
