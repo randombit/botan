@@ -1956,6 +1956,8 @@ class ModulesChooser(object):
         self._not_using_because = collections.defaultdict(set)
 
         ModulesChooser._validate_dependencies_exist(self._modules)
+        ModulesChooser._validate_user_selection(
+            self._modules, self._options.enabled_modules, self._options.disabled_modules)
 
     def _check_usable(self, module, modname):
         if not module.compatible_os(self._options.os):
@@ -2006,17 +2008,19 @@ class ModulesChooser(object):
         for module in modules.values():
             module.dependencies_exist(modules)
 
+    @staticmethod
+    def _validate_user_selection(modules, enabled_modules, disabled_modules):
+        for modname in enabled_modules:
+            if modname not in modules:
+                logging.error("Module not found: %s" % modname)
+
+        for modname in disabled_modules:
+            if modname not in modules:
+                logging.warning("Disabled module not found: %s" % modname)
+
     def choose(self):
         to_load = set()
         maybe_dep = []
-
-        for modname in self._options.enabled_modules:
-            if modname not in self._modules:
-                logging.error("Module not found: %s" % (modname))
-
-        for modname in self._options.disabled_modules:
-            if modname not in self._modules:
-                logging.warning("Disabled module not found: %s" % (modname))
 
         for (modname, module) in self._modules.items():
             usable = self._check_usable(module, modname)
