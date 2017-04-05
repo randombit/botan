@@ -116,6 +116,8 @@ Version 1.10.16, 2017-04-04
 * Avoid throwing during a destructor since this is undefined in C++11
   and rarely a good idea. (GH #930)
 
+* Add the SM3 hash function
+
 Version 1.10.15, 2017-01-12
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

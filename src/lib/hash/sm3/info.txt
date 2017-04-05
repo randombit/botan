@@ -1,0 +1,7 @@
+<defines>
+SM3 -> 20170402
+</defines>
+
+<requires>
+mdx_hash
+</requires>

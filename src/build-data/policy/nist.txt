@@ -139,6 +139,7 @@ rmd160
 #sha1 // needed for tls
 #sha1_sse2 // needed for tls
 skein
+sm3
 tiger
 whirlpool
 
