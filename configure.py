@@ -2312,21 +2312,21 @@ class AmalgamationGenerator(object):
         pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
         header_name = '%s.h' % (AmalgamationGenerator.filename_prefix)
         logging.info('Writing amalgamation header to %s' % (header_name))
-        botan_h = open(header_name, 'w')
-        botan_h.write(AmalgamationGenerator._banner_content())
-        self._write_start_include_guard(botan_h, "BOTAN_AMALGAMATION_H__")
-        botan_h.write(pub_header_amalag.header_includes)
-        botan_h.write(pub_header_amalag.contents)
-        self._write_end_include_guard(botan_h, "BOTAN_AMALGAMATION_H__")
+        with open(header_name, 'w') as f:
+            f.write(AmalgamationGenerator._banner_content())
+            self._write_start_include_guard(f, "BOTAN_AMALGAMATION_H__")
+            f.write(pub_header_amalag.header_includes)
+            f.write(pub_header_amalag.contents)
+            self._write_end_include_guard(f, "BOTAN_AMALGAMATION_H__")
 
         internal_headers = AmalgamationHeader([s for s in self._build_paths.internal_headers])
         header_int_name = '%s_internal.h' % (AmalgamationGenerator.filename_prefix)
         logging.info('Writing amalgamation header to %s' % (header_int_name))
-        botan_int_h = open(header_int_name, 'w')
-        self._write_start_include_guard(botan_int_h, "BOTAN_AMALGAMATION_INTERNAL_H__")
-        botan_int_h.write(internal_headers.header_includes)
-        botan_int_h.write(internal_headers.contents)
-        self._write_end_include_guard(botan_int_h, "BOTAN_AMALGAMATION_INTERNAL_H__")
+        with open(header_int_name, 'w') as f:
+            self._write_start_include_guard(f, "BOTAN_AMALGAMATION_INTERNAL_H__")
+            f.write(internal_headers.header_includes)
+            f.write(internal_headers.contents)
+            self._write_end_include_guard(f, "BOTAN_AMALGAMATION_INTERNAL_H__")
 
         headers_written_in_h_files = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
 
