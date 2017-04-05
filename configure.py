@@ -2203,18 +2203,20 @@ def portable_symlink(file_path, target_dir, method):
 
 
 class AmalgamationHeader(object):
-    def __init__(self, input_list):
+    def __init__(self, input_filepaths):
 
         self.included_already = set()
         self.all_std_includes = set()
 
         self.file_contents = {}
-        for f in sorted(input_list):
+        for filepath in sorted(input_filepaths):
             try:
-                contents = AmalgamationGenerator.strip_header_goop(f, open(f).readlines())
-                self.file_contents[os.path.basename(f)] = contents
+                with open(filepath) as f:
+                    raw_content = f.readlines()
+                contents = AmalgamationGenerator.strip_header_goop(filepath, raw_content)
+                self.file_contents[os.path.basename(filepath)] = contents
             except IOError as e:
-                logging.error('Error processing file %s for amalgamation: %s' % (f, e))
+                logging.error('Error processing file %s for amalgamation: %s' % (filepath, e))
 
         self.contents = ''
         for name in sorted(self.file_contents):
@@ -2319,7 +2321,7 @@ class AmalgamationGenerator(object):
             f.write(pub_header_amalag.contents)
             self._write_end_include_guard(f, "BOTAN_AMALGAMATION_H__")
 
-        internal_headers = AmalgamationHeader([s for s in self._build_paths.internal_headers])
+        internal_headers = AmalgamationHeader(self._build_paths.internal_headers)
         header_int_name = '%s_internal.h' % (AmalgamationGenerator.filename_prefix)
         logging.info('Writing amalgamation header to %s' % (header_int_name))
         with open(header_int_name, 'w') as f:
