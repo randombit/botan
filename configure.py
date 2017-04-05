@@ -2091,6 +2091,13 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
 
         logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
 
+    def validate_state(used_modules, unused_modules):
+        for _, unused_for_reason in unused_modules.items():
+            if not unused_for_reason.isdisjoint(used_modules):
+                raise InternalError("Disabled modules and modules to load have common elements")
+
+    validate_state(to_load, not_using_because)
+
     display_module_information_unused(not_using_because)
     display_module_information_to_load(to_load)
 
