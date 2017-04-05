@@ -1757,6 +1757,12 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         return opts
 
+    def configure_command_line():
+        # Cut absolute path from main executable (e.g. configure.py or python interpreter)
+        # to get the same result when configuring the same thing on different machines
+        main_executable = os.path.basename(sys.argv[0])
+        return ' '.join([main_executable] + sys.argv[1:])
+
     variables = {
         'version_major':  Version.major,
         'version_minor':  Version.minor,
@@ -1774,7 +1780,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'src_dir': options.src_dir,
         'doc_dir': build_config.doc_dir,
 
-        'command_line': ' '.join(sys.argv),
+        'command_line': configure_command_line(),
         'local_config': slurp_file(options.local_config),
         'makefile_style': options.makefile_style or cc.makefile_style,
 
