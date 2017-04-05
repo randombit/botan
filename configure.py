@@ -1940,170 +1940,178 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
     return variables
 
-def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
+class ModulesChooser(object):
     """
     Determine which modules to load based on options, target, etc
     """
 
-    for mod in modules.values():
-        mod.dependencies_exist(modules)
+    def __init__(self, modules, module_policy, archinfo, ccinfo, options):
+        self._modules = modules
+        self._module_policy = module_policy
+        self._archinfo = archinfo
+        self._ccinfo = ccinfo
+        self._options = options
 
-    to_load = set()
-    maybe_dep = []
+    def choose(self):
+        for mod in self._modules.values():
+            mod.dependencies_exist(self._modules)
 
-    # string to set mapping with reasons as key and modules as value
-    not_using_because = collections.defaultdict(set)
+        to_load = set()
+        maybe_dep = []
 
-    def check_usable(module, modname, options):
-        if not module.compatible_os(options.os):
-            not_using_because['incompatible OS'].add(modname)
-            return False
-        elif not module.compatible_compiler(ccinfo, archinfo.basename):
-            not_using_because['incompatible compiler'].add(modname)
-            return False
-        elif not module.compatible_cpu(archinfo, options):
-            not_using_because['incompatible CPU'].add(modname)
-            return False
-        return True
+        # string to set mapping with reasons as key and modules as value
+        not_using_because = collections.defaultdict(set)
 
-    for modname in options.enabled_modules:
-        if modname not in modules:
-            logging.error("Module not found: %s" % (modname))
+        def check_usable(module, modname):
+            if not module.compatible_os(self._options.os):
+                not_using_because['incompatible OS'].add(modname)
+                return False
+            elif not module.compatible_compiler(self._ccinfo, self._archinfo.basename):
+                not_using_because['incompatible compiler'].add(modname)
+                return False
+            elif not module.compatible_cpu(self._archinfo, self._options):
+                not_using_because['incompatible CPU'].add(modname)
+                return False
+            return True
 
-    for modname in options.disabled_modules:
-        if modname not in modules:
-            logging.warning("Disabled module not found: %s" % (modname))
+        for modname in self._options.enabled_modules:
+            if modname not in self._modules:
+                logging.error("Module not found: %s" % (modname))
 
-    for (modname, module) in modules.items():
-        usable = check_usable(module, modname, options)
+        for modname in self._options.disabled_modules:
+            if modname not in self._modules:
+                logging.warning("Disabled module not found: %s" % (modname))
 
-        if module_policy is not None:
+        for (modname, module) in self._modules.items():
+            usable = check_usable(module, modname)
 
-            if modname in module_policy.required:
-                if not usable:
-                    logging.error('Module policy requires module %s not usable on this platform' % (modname))
-                elif modname in options.disabled_modules:
-                    logging.error('Module %s was disabled but is required by policy' % (modname))
-                to_load.add(modname)
-                continue
-            elif modname in module_policy.if_available:
-                if modname in options.disabled_modules:
-                    not_using_because['disabled by user'].add(modname)
-                elif usable:
-                    logging.debug('Enabling optional module %s' % (modname))
+            if self._module_policy is not None:
+
+                if modname in self._module_policy.required:
+                    if not usable:
+                        logging.error('Module policy requires module %s not usable on this platform' % (modname))
+                    elif modname in self._options.disabled_modules:
+                        logging.error('Module %s was disabled but is required by policy' % (modname))
                     to_load.add(modname)
-                continue
-            elif modname in module_policy.prohibited:
-                if modname in options.enabled_modules:
-                    logging.error('Module %s was requested but is prohibited by policy' % (modname))
-                not_using_because['prohibited by module policy'].add(modname)
-                continue
+                    continue
+                elif modname in self._module_policy.if_available:
+                    if modname in self._options.disabled_modules:
+                        not_using_because['disabled by user'].add(modname)
+                    elif usable:
+                        logging.debug('Enabling optional module %s' % (modname))
+                        to_load.add(modname)
+                    continue
+                elif modname in self._module_policy.prohibited:
+                    if modname in self._options.enabled_modules:
+                        logging.error('Module %s was requested but is prohibited by policy' % (modname))
+                    not_using_because['prohibited by module policy'].add(modname)
+                    continue
 
-        if modname in options.disabled_modules:
-            not_using_because['disabled by user'].add(modname)
-        elif usable:
-            if modname in options.enabled_modules:
-                to_load.add(modname) # trust the user
-            elif module.load_on == 'never':
-                not_using_because['disabled as buggy'].add(modname)
-            elif module.load_on == 'request':
-                if options.with_everything:
-                    to_load.add(modname)
-                else:
-                    not_using_because['by request only'].add(modname)
-            elif module.load_on == 'vendor':
-                if options.with_everything:
-                    to_load.add(modname)
-                else:
-                    not_using_because['requires external dependency'].add(modname)
-            elif module.load_on == 'dep':
-                maybe_dep.append(modname)
-
-            elif module.load_on == 'always':
-                to_load.add(modname)
-
-            elif module.load_on == 'auto':
-                if options.no_autoload or module_policy is not None:
+            if modname in self._options.disabled_modules:
+                not_using_because['disabled by user'].add(modname)
+            elif usable:
+                if modname in self._options.enabled_modules:
+                    to_load.add(modname) # trust the user
+                elif module.load_on == 'never':
+                    not_using_because['disabled as buggy'].add(modname)
+                elif module.load_on == 'request':
+                    if self._options.with_everything:
+                        to_load.add(modname)
+                    else:
+                        not_using_because['by request only'].add(modname)
+                elif module.load_on == 'vendor':
+                    if self._options.with_everything:
+                        to_load.add(modname)
+                    else:
+                        not_using_because['requires external dependency'].add(modname)
+                elif module.load_on == 'dep':
                     maybe_dep.append(modname)
-                else:
+
+                elif module.load_on == 'always':
                     to_load.add(modname)
-            else:
-                logging.error('Unknown load_on %s in %s' % (
-                    module.load_on, modname))
 
-    if 'compression' in to_load:
-        # Confirm that we have at least one compression library enabled
-        # Otherwise we leave a lot of useless support code compiled in, plus a
-        # make_compressor call that always fails
-        if 'zlib' not in to_load and 'bzip2' not in to_load and 'lzma' not in to_load:
-            to_load.remove('compression')
-            not_using_because['no enabled compression schemes'].add('compression')
+                elif module.load_on == 'auto':
+                    if self._options.no_autoload or self._module_policy is not None:
+                        maybe_dep.append(modname)
+                    else:
+                        to_load.add(modname)
+                else:
+                    logging.error('Unknown load_on %s in %s' % (
+                        module.load_on, modname))
 
-    dependency_failure = True
+        if 'compression' in to_load:
+            # Confirm that we have at least one compression library enabled
+            # Otherwise we leave a lot of useless support code compiled in, plus a
+            # make_compressor call that always fails
+            if 'zlib' not in to_load and 'bzip2' not in to_load and 'lzma' not in to_load:
+                to_load.remove('compression')
+                not_using_because['no enabled compression schemes'].add('compression')
 
-    while dependency_failure:
-        dependency_failure = False
-        for modname in to_load.copy():
-            for deplist in [s.split('|') for s in modules[modname].dependencies()]:
+        dependency_failure = True
 
-                dep_met = False
-                for mod in deplist:
-                    if dep_met is True:
-                        break
+        while dependency_failure:
+            dependency_failure = False
+            for modname in to_load.copy():
+                for deplist in [s.split('|') for s in self._modules[modname].dependencies()]:
 
-                    if mod in to_load:
-                        dep_met = True
-                    elif mod in maybe_dep:
-                        maybe_dep.remove(mod)
-                        to_load.add(mod)
-                        dep_met = True
+                    dep_met = False
+                    for mod in deplist:
+                        if dep_met is True:
+                            break
 
-                if not dep_met:
-                    dependency_failure = True
-                    if modname in to_load:
-                        to_load.remove(modname)
-                    if modname in maybe_dep:
-                        maybe_dep.remove(modname)
-                    not_using_because['dependency failure'].add(modname)
+                        if mod in to_load:
+                            dep_met = True
+                        elif mod in maybe_dep:
+                            maybe_dep.remove(mod)
+                            to_load.add(mod)
+                            dep_met = True
 
-    for not_a_dep in maybe_dep:
-        not_using_because['not requested'].add(not_a_dep)
+                    if not dep_met:
+                        dependency_failure = True
+                        if modname in to_load:
+                            to_load.remove(modname)
+                        if modname in maybe_dep:
+                            maybe_dep.remove(modname)
+                        not_using_because['dependency failure'].add(modname)
 
-    def display_module_information_unused(skipped_modules):
-        for reason in sorted(skipped_modules.keys()):
-            disabled_mods = sorted(skipped_modules[reason])
-            if disabled_mods:
-                logging.info('Skipping (%s): %s' % (reason, ' '.join(disabled_mods)))
+        for not_a_dep in maybe_dep:
+            not_using_because['not requested'].add(not_a_dep)
 
-    def display_module_information_to_load(modules_to_load):
-        sorted_modules_to_load = sorted(modules_to_load)
+        def display_module_information_unused(skipped_modules):
+            for reason in sorted(skipped_modules.keys()):
+                disabled_mods = sorted(skipped_modules[reason])
+                if disabled_mods:
+                    logging.info('Skipping (%s): %s' % (reason, ' '.join(disabled_mods)))
 
-        for mod in sorted_modules_to_load:
-            if mod.startswith('simd_') and mod != 'simd_engine':
-                logging.info('Using SIMD module ' + mod)
+        def display_module_information_to_load(modules_to_load):
+            sorted_modules_to_load = sorted(modules_to_load)
 
-        for mod in sorted_modules_to_load:
-            if modules[mod].comment:
-                logging.info('%s: %s' % (mod, modules[mod].comment))
-            if modules[mod].warning:
-                logging.warning('%s: %s' % (mod, modules[mod].warning))
-            if modules[mod].load_on == 'vendor':
-                logging.info('Enabling use of external dependency %s' % mod)
+            for mod in sorted_modules_to_load:
+                if mod.startswith('simd_') and mod != 'simd_engine':
+                    logging.info('Using SIMD module ' + mod)
 
-        logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
+            for mod in sorted_modules_to_load:
+                if self._modules[mod].comment:
+                    logging.info('%s: %s' % (mod, self._modules[mod].comment))
+                if self._modules[mod].warning:
+                    logging.warning('%s: %s' % (mod, self._modules[mod].warning))
+                if self._modules[mod].load_on == 'vendor':
+                    logging.info('Enabling use of external dependency %s' % mod)
 
-    def validate_state(used_modules, unused_modules):
-        for reason, unused_for_reason in unused_modules.items():
-            if not unused_for_reason.isdisjoint(used_modules):
-                raise InternalError(
-                    "Disabled modules (%s) and modules to load have common elements" % reason)
+            logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
 
-    validate_state(to_load, not_using_because)
+        def validate_state(used_modules, unused_modules):
+            for reason, unused_for_reason in unused_modules.items():
+                if not unused_for_reason.isdisjoint(used_modules):
+                    raise InternalError(
+                        "Disabled modules (%s) and modules to load have common elements" % reason)
 
-    display_module_information_unused(not_using_because)
-    display_module_information_to_load(to_load)
+        validate_state(to_load, not_using_because)
 
-    return to_load
+        display_module_information_unused(not_using_because)
+        display_module_information_to_load(to_load)
+
+        return to_load
 
 def choose_link_method(options):
     """
@@ -2567,7 +2575,7 @@ def main(argv=None):
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
         options.build_shared_lib = False
 
-    loaded_module_names = choose_modules_to_use(modules, module_policy, arch, cc, options)
+    loaded_module_names = ModulesChooser(modules, module_policy, arch, cc, options).choose()
 
     using_mods = [modules[modname] for modname in loaded_module_names]
 
