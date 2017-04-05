@@ -2567,9 +2567,9 @@ def main(argv=None):
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
         options.build_shared_lib = False
 
-    loaded_mods = choose_modules_to_use(modules, module_policy, arch, cc, options)
+    loaded_module_names = choose_modules_to_use(modules, module_policy, arch, cc, options)
 
-    using_mods = [modules[m] for m in loaded_mods]
+    using_mods = [modules[modname] for modname in loaded_module_names]
 
     build_config = BuildPaths(options, using_mods)
 
