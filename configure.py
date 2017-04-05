@@ -1967,6 +1967,38 @@ class ModulesChooser(object):
             return False
         return True
 
+    @staticmethod
+    def _display_module_information_unused(skipped_modules):
+        for reason in sorted(skipped_modules.keys()):
+            disabled_mods = sorted(skipped_modules[reason])
+            if disabled_mods:
+                logging.info('Skipping (%s): %s' % (reason, ' '.join(disabled_mods)))
+
+    @staticmethod
+    def _display_module_information_to_load(all_modules, modules_to_load):
+        sorted_modules_to_load = sorted(modules_to_load)
+
+        for mod in sorted_modules_to_load:
+            if mod.startswith('simd_') and mod != 'simd_engine':
+                logging.info('Using SIMD module ' + mod)
+
+        for mod in sorted_modules_to_load:
+            if all_modules[mod].comment:
+                logging.info('%s: %s' % (mod, all_modules[mod].comment))
+            if all_modules[mod].warning:
+                logging.warning('%s: %s' % (mod, all_modules[mod].warning))
+            if all_modules[mod].load_on == 'vendor':
+                logging.info('Enabling use of external dependency %s' % mod)
+
+        logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
+
+    @staticmethod
+    def _validate_state(used_modules, unused_modules):
+        for reason, unused_for_reason in unused_modules.items():
+            if not unused_for_reason.isdisjoint(used_modules):
+                raise InternalError(
+                    "Disabled modules (%s) and modules to load have common elements" % reason)
+
     def choose(self):
         for mod in self._modules.values():
             mod.dependencies_exist(self._modules)
@@ -2077,39 +2109,9 @@ class ModulesChooser(object):
         for not_a_dep in maybe_dep:
             self._not_using_because['not requested'].add(not_a_dep)
 
-        def display_module_information_unused(skipped_modules):
-            for reason in sorted(skipped_modules.keys()):
-                disabled_mods = sorted(skipped_modules[reason])
-                if disabled_mods:
-                    logging.info('Skipping (%s): %s' % (reason, ' '.join(disabled_mods)))
-
-        def display_module_information_to_load(modules_to_load):
-            sorted_modules_to_load = sorted(modules_to_load)
-
-            for mod in sorted_modules_to_load:
-                if mod.startswith('simd_') and mod != 'simd_engine':
-                    logging.info('Using SIMD module ' + mod)
-
-            for mod in sorted_modules_to_load:
-                if self._modules[mod].comment:
-                    logging.info('%s: %s' % (mod, self._modules[mod].comment))
-                if self._modules[mod].warning:
-                    logging.warning('%s: %s' % (mod, self._modules[mod].warning))
-                if self._modules[mod].load_on == 'vendor':
-                    logging.info('Enabling use of external dependency %s' % mod)
-
-            logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
-
-        def validate_state(used_modules, unused_modules):
-            for reason, unused_for_reason in unused_modules.items():
-                if not unused_for_reason.isdisjoint(used_modules):
-                    raise InternalError(
-                        "Disabled modules (%s) and modules to load have common elements" % reason)
-
-        validate_state(to_load, self._not_using_because)
-
-        display_module_information_unused(self._not_using_because)
-        display_module_information_to_load(to_load)
+        ModulesChooser._validate_state(to_load, self._not_using_because)
+        ModulesChooser._display_module_information_unused(self._not_using_because)
+        ModulesChooser._display_module_information_to_load(self._modules, to_load)
 
         return to_load
 
