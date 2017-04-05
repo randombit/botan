@@ -2310,6 +2310,18 @@ class AmalgamationGenerator(object):
     def _write_end_include_guard(fd, title):
         fd.write("\n#endif // %s\n" % (title))
 
+    def _target_for_module(self, mod):
+        target = ''
+        if not self._options.single_amalgamation_file:
+            if mod.need_isa != []:
+                target = '_'.join(sorted(mod.need_isa))
+                if target == 'sse2' and self._options.arch == 'x86_64':
+                    target = '' # SSE2 is always available on x86-64
+
+            if self._options.arch == 'x86_32' and 'simd' in mod.requires:
+                target = 'sse2'
+        return target
+
     def generate(self):
         pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
         header_name = '%s.h' % (AmalgamationGenerator.filename_prefix)
@@ -2351,16 +2363,7 @@ class AmalgamationGenerator(object):
         headers_written = {}
 
         for mod in sorted(self._modules):
-            tgt = ''
-
-            if not self._options.single_amalgamation_file:
-                if mod.need_isa != []:
-                    tgt = '_'.join(sorted(mod.need_isa))
-                    if tgt == 'sse2' and self._options.arch == 'x86_64':
-                        tgt = '' # SSE2 is always available on x86-64
-
-                if self._options.arch == 'x86_32' and 'simd' in mod.requires:
-                    tgt = 'sse2'
+            tgt = self._target_for_module(mod)
 
             if tgt not in botan_amalg_files:
                 botan_amalg_files[tgt] = open_amalg_file(tgt)
