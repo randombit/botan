@@ -2076,7 +2076,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
             disabled_mods = sorted(set([mod for mod in skipped_modules[reason]]))
 
             if disabled_mods:
-                logging.info('Skipping, %s - %s' % (reason, ' '.join(disabled_mods)))
+                logging.info('Skipping (%s): %s' % (reason, ' '.join(disabled_mods)))
 
     def display_module_information_to_load(modules_to_load):
         sorted_modules_to_load = sorted(modules_to_load)
@@ -2091,7 +2091,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
             if modules[mod].warning:
                 logging.warning('%s: %s' % (mod, modules[mod].warning))
 
-        logging.info('Loading modules %s', ' '.join(to_load))
+        logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
 
     display_module_information_unused(not_using_because)
     display_module_information_to_load(set(to_load))
