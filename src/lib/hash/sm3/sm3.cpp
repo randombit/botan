@@ -49,36 +49,6 @@ inline uint32_t GG1(uint32_t X, uint32_t Y, uint32_t Z)
    return (X & Y) | (~X & Z);
    }
 
-#define SM3_CF0(j)                                                                \
-         T[(j)] = SM3_TJ_0_15;                                                    \
-         SS1 = rotate_left(rotate_left(A, 12) + E + rotate_left(T[(j)], (j)), 7); \
-         SS2 = SS1 ^ rotate_left(A, 12);                                          \
-         TT1 = FF0(A, B, C) + D + SS2 + W1[(j)];                                  \
-         TT2 = GG0(E, F, G) + H + SS1 + W[(j)];                                   \
-         D = C;                                                                   \
-         C = rotate_left(B, 9);                                                   \
-         B = A;                                                                   \
-         A = TT1;                                                                 \
-         H = G;                                                                   \
-         G = rotate_left(F, 19);                                                  \
-         F = E;                                                                   \
-         E = P0(TT2);
-
-#define SM3_CF1(j)                                                                \
-         T[(j)] = SM3_TJ_16_63;                                                   \
-         SS1 = rotate_left(rotate_left(A, 12) + E + rotate_left(T[(j)], (j)), 7); \
-         SS2 = SS1 ^ rotate_left(A, 12);                                          \
-         TT1 = FF1(A, B, C) + D + SS2 + W1[(j)];                                  \
-         TT2 = GG1(E, F, G) + H + SS1 + W[(j)];                                   \
-         D = C;                                                                   \
-         C = rotate_left(B, 9);                                                   \
-         B = A;                                                                   \
-         A = TT1;                                                                 \
-         H = G;                                                                   \
-         G = rotate_left(F, 19);                                                  \
-         F = E;                                                                   \
-         E = P0(TT2);
-
 }
 
 /*
@@ -232,71 +202,39 @@ void SM3::compress_n(const uint8_t input[], size_t blocks)
       W1[62] = W[62] ^ W[66];
       W1[63] = W[63] ^ W[67];
 
-      SM3_CF0( 0);
-      SM3_CF0( 1);
-      SM3_CF0( 2);
-      SM3_CF0( 3);
-      SM3_CF0( 4);
-      SM3_CF0( 5);
-      SM3_CF0( 6);
-      SM3_CF0( 7);
-      SM3_CF0( 8);
-      SM3_CF0( 9);
-      SM3_CF0(10);
-      SM3_CF0(11);
-      SM3_CF0(12);
-      SM3_CF0(13);
-      SM3_CF0(14);
-      SM3_CF0(15);
+      for (size_t j = 0; j < 16; j++)
+         {
+         T[j] = SM3_TJ_0_15;
+         SS1 = rotate_left(rotate_left(A, 12) + E + rotate_left(T[j], j), 7);
+         SS2 = SS1 ^ rotate_left(A, 12);
+         TT1 = FF0(A, B, C) + D + SS2 + W1[j];
+         TT2 = GG0(E, F, G) + H + SS1 + W[j];
+         D = C;
+         C = rotate_left(B, 9);
+         B = A;
+         A = TT1;
+         H = G;
+         G = rotate_left(F, 19);
+         F = E;
+         E = P0(TT2);
+         }
 
-      SM3_CF1(16);
-      SM3_CF1(17);
-      SM3_CF1(18);
-      SM3_CF1(19);
-      SM3_CF1(20);
-      SM3_CF1(21);
-      SM3_CF1(22);
-      SM3_CF1(23);
-      SM3_CF1(24);
-      SM3_CF1(25);
-      SM3_CF1(26);
-      SM3_CF1(27);
-      SM3_CF1(28);
-      SM3_CF1(29);
-      SM3_CF1(30);
-      SM3_CF1(31);
-      SM3_CF1(32);
-      SM3_CF1(33);
-      SM3_CF1(34);
-      SM3_CF1(35);
-      SM3_CF1(36);
-      SM3_CF1(37);
-      SM3_CF1(38);
-      SM3_CF1(39);
-      SM3_CF1(40);
-      SM3_CF1(41);
-      SM3_CF1(42);
-      SM3_CF1(43);
-      SM3_CF1(44);
-      SM3_CF1(45);
-      SM3_CF1(46);
-      SM3_CF1(47);
-      SM3_CF1(48);
-      SM3_CF1(49);
-      SM3_CF1(50);
-      SM3_CF1(51);
-      SM3_CF1(52);
-      SM3_CF1(53);
-      SM3_CF1(54);
-      SM3_CF1(55);
-      SM3_CF1(56);
-      SM3_CF1(57);
-      SM3_CF1(58);
-      SM3_CF1(59);
-      SM3_CF1(60);
-      SM3_CF1(61);
-      SM3_CF1(62);
-      SM3_CF1(63);
+      for (size_t j = 16; j < 64; j++)
+         {
+         T[j] = SM3_TJ_16_63;
+         SS1 = rotate_left(rotate_left(A, 12) + E + rotate_left(T[j], j), 7);
+         SS2 = SS1 ^ rotate_left(A, 12);
+         TT1 = FF1(A, B, C) + D + SS2 + W1[j];
+         TT2 = GG1(E, F, G) + H + SS1 + W[j];
+         D = C;
+         C = rotate_left(B, 9);
+         B = A;
+         A = TT1;
+         H = G;
+         G = rotate_left(F, 19);
+         F = E;
+         E = P0(TT2);
+         }
 
       A = (m_digest[0] ^= A);
       B = (m_digest[1] ^= B);
