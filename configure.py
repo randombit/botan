@@ -1952,27 +1952,27 @@ class ModulesChooser(object):
         self._ccinfo = ccinfo
         self._options = options
 
+        # string to set mapping with reasons as key and modules as value
+        self._not_using_because = collections.defaultdict(set)
+
+    def _check_usable(self, module, modname):
+        if not module.compatible_os(self._options.os):
+            self._not_using_because['incompatible OS'].add(modname)
+            return False
+        elif not module.compatible_compiler(self._ccinfo, self._archinfo.basename):
+            self._not_using_because['incompatible compiler'].add(modname)
+            return False
+        elif not module.compatible_cpu(self._archinfo, self._options):
+            self._not_using_because['incompatible CPU'].add(modname)
+            return False
+        return True
+
     def choose(self):
         for mod in self._modules.values():
             mod.dependencies_exist(self._modules)
 
         to_load = set()
         maybe_dep = []
-
-        # string to set mapping with reasons as key and modules as value
-        not_using_because = collections.defaultdict(set)
-
-        def check_usable(module, modname):
-            if not module.compatible_os(self._options.os):
-                not_using_because['incompatible OS'].add(modname)
-                return False
-            elif not module.compatible_compiler(self._ccinfo, self._archinfo.basename):
-                not_using_because['incompatible compiler'].add(modname)
-                return False
-            elif not module.compatible_cpu(self._archinfo, self._options):
-                not_using_because['incompatible CPU'].add(modname)
-                return False
-            return True
 
         for modname in self._options.enabled_modules:
             if modname not in self._modules:
@@ -1983,7 +1983,7 @@ class ModulesChooser(object):
                 logging.warning("Disabled module not found: %s" % (modname))
 
         for (modname, module) in self._modules.items():
-            usable = check_usable(module, modname)
+            usable = self._check_usable(module, modname)
 
             if self._module_policy is not None:
 
@@ -1996,7 +1996,7 @@ class ModulesChooser(object):
                     continue
                 elif modname in self._module_policy.if_available:
                     if modname in self._options.disabled_modules:
-                        not_using_because['disabled by user'].add(modname)
+                        self._not_using_because['disabled by user'].add(modname)
                     elif usable:
                         logging.debug('Enabling optional module %s' % (modname))
                         to_load.add(modname)
@@ -2004,26 +2004,26 @@ class ModulesChooser(object):
                 elif modname in self._module_policy.prohibited:
                     if modname in self._options.enabled_modules:
                         logging.error('Module %s was requested but is prohibited by policy' % (modname))
-                    not_using_because['prohibited by module policy'].add(modname)
+                    self._not_using_because['prohibited by module policy'].add(modname)
                     continue
 
             if modname in self._options.disabled_modules:
-                not_using_because['disabled by user'].add(modname)
+                self._not_using_because['disabled by user'].add(modname)
             elif usable:
                 if modname in self._options.enabled_modules:
                     to_load.add(modname) # trust the user
                 elif module.load_on == 'never':
-                    not_using_because['disabled as buggy'].add(modname)
+                    self._not_using_because['disabled as buggy'].add(modname)
                 elif module.load_on == 'request':
                     if self._options.with_everything:
                         to_load.add(modname)
                     else:
-                        not_using_because['by request only'].add(modname)
+                        self._not_using_because['by request only'].add(modname)
                 elif module.load_on == 'vendor':
                     if self._options.with_everything:
                         to_load.add(modname)
                     else:
-                        not_using_because['requires external dependency'].add(modname)
+                        self._not_using_because['requires external dependency'].add(modname)
                 elif module.load_on == 'dep':
                     maybe_dep.append(modname)
 
@@ -2045,7 +2045,7 @@ class ModulesChooser(object):
             # make_compressor call that always fails
             if 'zlib' not in to_load and 'bzip2' not in to_load and 'lzma' not in to_load:
                 to_load.remove('compression')
-                not_using_because['no enabled compression schemes'].add('compression')
+                self._not_using_because['no enabled compression schemes'].add('compression')
 
         dependency_failure = True
 
@@ -2072,10 +2072,10 @@ class ModulesChooser(object):
                             to_load.remove(modname)
                         if modname in maybe_dep:
                             maybe_dep.remove(modname)
-                        not_using_because['dependency failure'].add(modname)
+                        self._not_using_because['dependency failure'].add(modname)
 
         for not_a_dep in maybe_dep:
-            not_using_because['not requested'].add(not_a_dep)
+            self._not_using_because['not requested'].add(not_a_dep)
 
         def display_module_information_unused(skipped_modules):
             for reason in sorted(skipped_modules.keys()):
@@ -2106,9 +2106,9 @@ class ModulesChooser(object):
                     raise InternalError(
                         "Disabled modules (%s) and modules to load have common elements" % reason)
 
-        validate_state(to_load, not_using_because)
+        validate_state(to_load, self._not_using_because)
 
-        display_module_information_unused(not_using_because)
+        display_module_information_unused(self._not_using_because)
         display_module_information_to_load(to_load)
 
         return to_load
