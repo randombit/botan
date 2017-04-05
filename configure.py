@@ -1948,7 +1948,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
     for mod in modules.values():
         mod.dependencies_exist(modules)
 
-    to_load = []
+    to_load = set()
     maybe_dep = []
 
     # string to set mapping with reasons as key and modules as value
@@ -1984,14 +1984,14 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                     logging.error('Module policy requires module %s not usable on this platform' % (modname))
                 elif modname in options.disabled_modules:
                     logging.error('Module %s was disabled but is required by policy' % (modname))
-                to_load.append(modname)
+                to_load.add(modname)
                 continue
             elif modname in module_policy.if_available:
                 if modname in options.disabled_modules:
                     not_using_because['disabled by user'].add(modname)
                 elif usable:
                     logging.debug('Enabling optional module %s' % (modname))
-                    to_load.append(modname)
+                    to_load.add(modname)
                 continue
             elif modname in module_policy.prohibited:
                 if modname in options.enabled_modules:
@@ -2003,31 +2003,31 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
             not_using_because['disabled by user'].add(modname)
         elif usable:
             if modname in options.enabled_modules:
-                to_load.append(modname) # trust the user
+                to_load.add(modname) # trust the user
 
             if module.load_on == 'never':
                 not_using_because['disabled as buggy'].add(modname)
             elif module.load_on == 'request':
                 if options.with_everything:
-                    to_load.append(modname)
+                    to_load.add(modname)
                 else:
                     not_using_because['by request only'].add(modname)
             elif module.load_on == 'vendor':
                 if options.with_everything:
-                    to_load.append(modname)
+                    to_load.add(modname)
                 else:
                     not_using_because['requires external dependency'].add(modname)
             elif module.load_on == 'dep':
                 maybe_dep.append(modname)
 
             elif module.load_on == 'always':
-                to_load.append(modname)
+                to_load.add(modname)
 
             elif module.load_on == 'auto':
                 if options.no_autoload or module_policy is not None:
                     maybe_dep.append(modname)
                 else:
-                    to_load.append(modname)
+                    to_load.add(modname)
             else:
                 logging.error('Unknown load_on %s in %s' % (
                     module.load_on, modname))
@@ -2044,7 +2044,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
 
     while dependency_failure:
         dependency_failure = False
-        for modname in to_load:
+        for modname in to_load.copy():
             for deplist in [s.split('|') for s in modules[modname].dependencies()]:
 
                 dep_met = False
@@ -2056,7 +2056,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                         dep_met = True
                     elif mod in maybe_dep:
                         maybe_dep.remove(mod)
-                        to_load.append(mod)
+                        to_load.add(mod)
                         dep_met = True
 
                 if not dep_met:
@@ -2092,10 +2092,9 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
         logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
 
     display_module_information_unused(not_using_because)
-    display_module_information_to_load(set(to_load))
+    display_module_information_to_load(to_load)
 
-    # force through set to dedup if required
-    return set(to_load)
+    return to_load
 
 def choose_link_method(options):
     """
