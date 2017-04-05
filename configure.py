@@ -1955,6 +1955,8 @@ class ModulesChooser(object):
         # string to set mapping with reasons as key and modules as value
         self._not_using_because = collections.defaultdict(set)
 
+        ModulesChooser._validate_dependencies_exist(self._modules)
+
     def _check_usable(self, module, modname):
         if not module.compatible_os(self._options.os):
             self._not_using_because['incompatible OS'].add(modname)
@@ -1999,10 +2001,12 @@ class ModulesChooser(object):
                 raise InternalError(
                     "Disabled modules (%s) and modules to load have common elements" % reason)
 
-    def choose(self):
-        for mod in self._modules.values():
-            mod.dependencies_exist(self._modules)
+    @staticmethod
+    def _validate_dependencies_exist(modules):
+        for module in modules.values():
+            module.dependencies_exist(modules)
 
+    def choose(self):
         to_load = set()
         maybe_dep = []
 
