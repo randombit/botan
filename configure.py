@@ -1978,17 +1978,17 @@ class ModulesChooser(object):
     def _display_module_information_to_load(all_modules, modules_to_load):
         sorted_modules_to_load = sorted(modules_to_load)
 
-        for mod in sorted_modules_to_load:
-            if mod.startswith('simd_') and mod != 'simd_engine':
-                logging.info('Using SIMD module ' + mod)
+        for modname in sorted_modules_to_load:
+            if modname.startswith('simd_') and modname != 'simd_engine':
+                logging.info('Using SIMD module ' + modname)
 
-        for mod in sorted_modules_to_load:
-            if all_modules[mod].comment:
-                logging.info('%s: %s' % (mod, all_modules[mod].comment))
-            if all_modules[mod].warning:
-                logging.warning('%s: %s' % (mod, all_modules[mod].warning))
-            if all_modules[mod].load_on == 'vendor':
-                logging.info('Enabling use of external dependency %s' % mod)
+        for modname in sorted_modules_to_load:
+            if all_modules[modname].comment:
+                logging.info('%s: %s' % (modname, all_modules[modname].comment))
+            if all_modules[modname].warning:
+                logging.warning('%s: %s' % (modname, all_modules[modname].warning))
+            if all_modules[modname].load_on == 'vendor':
+                logging.info('Enabling use of external dependency %s' % modname)
 
         logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
 
