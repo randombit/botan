@@ -2004,8 +2004,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
         elif usable:
             if modname in options.enabled_modules:
                 to_load.add(modname) # trust the user
-
-            if module.load_on == 'never':
+            elif module.load_on == 'never':
                 not_using_because['disabled as buggy'].add(modname)
             elif module.load_on == 'request':
                 if options.with_everything:
@@ -2092,9 +2091,10 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
         logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
 
     def validate_state(used_modules, unused_modules):
-        for _, unused_for_reason in unused_modules.items():
+        for reason, unused_for_reason in unused_modules.items():
             if not unused_for_reason.isdisjoint(used_modules):
-                raise InternalError("Disabled modules and modules to load have common elements")
+                raise InternalError(
+                    "Disabled modules (%s) and modules to load have common elements" % reason)
 
     validate_state(to_load, not_using_because)
 
