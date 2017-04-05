@@ -1950,20 +1950,19 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
 
     to_load = []
     maybe_dep = []
-    not_using_because = {}
 
-    def cannot_use_because(mod, reason):
-        not_using_because.setdefault(reason, []).append(mod)
+    # string to set mapping with reasons as key and modules as value
+    not_using_because = collections.defaultdict(set)
 
     def check_usable(module, modname, options):
         if not module.compatible_os(options.os):
-            cannot_use_because(modname, 'incompatible OS')
+            not_using_because['incompatible OS'].add(modname)
             return False
         elif not module.compatible_compiler(ccinfo, archinfo.basename):
-            cannot_use_because(modname, 'incompatible compiler')
+            not_using_because['incompatible compiler'].add(modname)
             return False
         elif not module.compatible_cpu(archinfo, options):
-            cannot_use_because(modname, 'incompatible CPU')
+            not_using_because['incompatible CPU'].add(modname)
             return False
         return True
 
@@ -1989,7 +1988,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                 continue
             elif modname in module_policy.if_available:
                 if modname in options.disabled_modules:
-                    cannot_use_because(modname, 'disabled by user')
+                    not_using_because['disabled by user'].add(modname)
                 elif usable:
                     logging.debug('Enabling optional module %s' % (modname))
                     to_load.append(modname)
@@ -1997,27 +1996,27 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
             elif modname in module_policy.prohibited:
                 if modname in options.enabled_modules:
                     logging.error('Module %s was requested but is prohibited by policy' % (modname))
-                cannot_use_because(modname, 'prohibited by module policy')
+                not_using_because['prohibited by module policy'].add(modname)
                 continue
 
         if modname in options.disabled_modules:
-            cannot_use_because(modname, 'disabled by user')
+            not_using_because['disabled by user'].add(modname)
         elif usable:
             if modname in options.enabled_modules:
                 to_load.append(modname) # trust the user
 
             if module.load_on == 'never':
-                cannot_use_because(modname, 'disabled as buggy')
+                not_using_because['disabled as buggy'].add(modname)
             elif module.load_on == 'request':
                 if options.with_everything:
                     to_load.append(modname)
                 else:
-                    cannot_use_because(modname, 'by request only')
+                    not_using_because['by request only'].add(modname)
             elif module.load_on == 'vendor':
                 if options.with_everything:
                     to_load.append(modname)
                 else:
-                    cannot_use_because(modname, 'requires external dependency')
+                    not_using_because['requires external dependency'].add(modname)
             elif module.load_on == 'dep':
                 maybe_dep.append(modname)
 
@@ -2039,7 +2038,7 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
         # make_compressor call that always fails
         if 'zlib' not in to_load and 'bzip2' not in to_load and 'lzma' not in to_load:
             to_load.remove('compression')
-            cannot_use_because('compression', 'no enabled compression schemes')
+            not_using_because['no enabled compression schemes'].add('compression')
 
     dependency_failure = True
 
@@ -2066,10 +2065,10 @@ def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
                         to_load.remove(modname)
                     if modname in maybe_dep:
                         maybe_dep.remove(modname)
-                    cannot_use_because(modname, 'dependency failure')
+                    not_using_because['dependency failure'].add(modname)
 
     for not_a_dep in maybe_dep:
-        cannot_use_because(not_a_dep, 'not requested')
+        not_using_because['not requested'].add(not_a_dep)
 
     def display_module_information_unused(skipped_modules):
         for reason in sorted(skipped_modules.keys()):
