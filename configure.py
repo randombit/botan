@@ -2251,6 +2251,36 @@ class AmalgamationHeader(object):
                 else:
                     yield line
 
+    @staticmethod
+    def write_banner(fd):
+        fd.write("""/*
+* Botan %s Amalgamation
+* (C) 1999-2013,2014,2015,2016 Jack Lloyd and others
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+""" % (Version.as_string()))
+
+    @staticmethod
+    def _write_start_include_guard(fd, title):
+        fd.write("""
+#ifndef %s
+#define %s
+
+""" % (title, title))
+
+    @staticmethod
+    def _write_end_include_guard(fd, title):
+        fd.write("\n#endif // %s\n" % (title))
+
+    def write_to_file(self, filepath, include_guard):
+        with open(filepath, 'w') as f:
+            self.write_banner(f)
+            self._write_start_include_guard(f, include_guard)
+            f.write(self.header_includes)
+            f.write(self.contents)
+            self._write_end_include_guard(f, include_guard)
+
 
 class AmalgamationGenerator(object):
     # public static fields also used outside
@@ -2288,28 +2318,6 @@ class AmalgamationGenerator(object):
         self._modules = modules
         self._options = options
 
-    @staticmethod
-    def _write_banner(fd):
-        fd.write("""/*
-* Botan %s Amalgamation
-* (C) 1999-2013,2014,2015,2016 Jack Lloyd and others
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-""" % (Version.as_string()))
-
-    @staticmethod
-    def _write_start_include_guard(fd, title):
-        fd.write("""
-#ifndef %s
-#define %s
-
-""" % (title, title))
-
-    @staticmethod
-    def _write_end_include_guard(fd, title):
-        fd.write("\n#endif // %s\n" % (title))
-
     def _target_for_module(self, mod):
         target = ''
         if not self._options.single_amalgamation_file:
@@ -2326,22 +2334,12 @@ class AmalgamationGenerator(object):
         pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
         header_name = '%s.h' % (AmalgamationGenerator.filename_prefix)
         logging.info('Writing amalgamation header to %s' % (header_name))
-        with open(header_name, 'w') as f:
-            self._write_banner(f)
-            self._write_start_include_guard(f, "BOTAN_AMALGAMATION_H__")
-            f.write(pub_header_amalag.header_includes)
-            f.write(pub_header_amalag.contents)
-            self._write_end_include_guard(f, "BOTAN_AMALGAMATION_H__")
+        pub_header_amalag.write_to_file(header_name, "BOTAN_AMALGAMATION_H__")
 
         internal_headers = AmalgamationHeader(self._build_paths.internal_headers)
         header_int_name = '%s_internal.h' % (AmalgamationGenerator.filename_prefix)
         logging.info('Writing amalgamation header to %s' % (header_int_name))
-        with open(header_int_name, 'w') as f:
-            self._write_banner(f)
-            self._write_start_include_guard(f, "BOTAN_AMALGAMATION_INTERNAL_H__")
-            f.write(internal_headers.header_includes)
-            f.write(internal_headers.contents)
-            self._write_end_include_guard(f, "BOTAN_AMALGAMATION_INTERNAL_H__")
+        internal_headers.write_to_file(header_int_name, "BOTAN_AMALGAMATION_INTERNAL_H__")
 
         headers_written_in_h_files = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
 
@@ -2352,7 +2350,7 @@ class AmalgamationGenerator(object):
             botan_amalgs_fs.append(fsname)
             logging.info('Writing amalgamation source to %s' % (fsname))
             f = open(fsname, 'w')
-            self._write_banner(f)
+            AmalgamationHeader.write_banner(f)
 
             f.write('\n#include "%s"\n' % (header_name))
             f.write('#include "%s"\n\n' % (header_int_name))
