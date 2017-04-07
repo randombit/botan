@@ -2202,6 +2202,36 @@ def portable_symlink(file_path, target_dir, method):
         raise UserError('Unknown link method %s' % (method))
 
 
+class AmalgamationHelper(object):
+    _any_include_matcher = re.compile(r'#include <(.*)>$')
+    _botan_include_matcher = re.compile(r'#include <botan/(.*)>$')
+    _std_include_matcher = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
+
+    @staticmethod
+    def is_any_include(cpp_source_line):
+        match = AmalgamationHelper._any_include_matcher.search(cpp_source_line)
+        if match:
+            return match.group(1)
+        else:
+            return None
+
+    @staticmethod
+    def is_botan_include(cpp_source_line):
+        match = AmalgamationHelper._botan_include_matcher.search(cpp_source_line)
+        if match:
+            return match.group(1)
+        else:
+            return None
+
+    @staticmethod
+    def is_std_include(cpp_source_line):
+        match = AmalgamationHelper._std_include_matcher.search(cpp_source_line)
+        if match:
+            return match.group(1)
+        else:
+            return None
+
+
 class AmalgamationHeader(object):
     def __init__(self, input_filepaths):
 
@@ -2239,15 +2269,15 @@ class AmalgamationHeader(object):
             return
 
         for line in self.file_contents[name]:
-            match = AmalgamationGenerator.botan_include_matcher.search(line)
-            if match:
-                for c in self.header_contents(match.group(1)):
+            header = AmalgamationHelper.is_botan_include(line)
+            if header:
+                for c in self.header_contents(header):
                     yield c
             else:
-                match = AmalgamationGenerator.std_include_matcher.search(line)
+                std_header = AmalgamationHelper.is_std_include(line)
 
-                if match:
-                    self.all_std_includes.add(match.group(1))
+                if std_header:
+                    self.all_std_includes.add(std_header)
                 else:
                     yield line
 
@@ -2283,10 +2313,6 @@ class AmalgamationHeader(object):
 
 
 class AmalgamationGenerator(object):
-    # public static fields also used outside
-    botan_include_matcher = re.compile(r'#include <botan/(.*)>$')
-    std_include_matcher = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
-    any_include_matcher = re.compile(r'#include <(.*)>$')
     filename_prefix = 'botan_all'
 
     @staticmethod
@@ -2390,16 +2416,14 @@ class AmalgamationGenerator(object):
 
         for mod in sorted(self._modules):
             tgt = self._target_for_module(mod)
-
             for src in sorted(mod.source):
                 with open(src, 'r') as f:
                     for line in f:
-                        if AmalgamationGenerator.botan_include_matcher.search(line):
+                        if AmalgamationHelper.is_botan_include(line):
                             continue
 
-                        match = AmalgamationGenerator.any_include_matcher.search(line)
-                        if match:
-                            header = match.group(1)
+                        header = AmalgamationHelper.is_any_include(line)
+                        if header:
                             if header in headers_written[tgt]:
                                 continue
 
