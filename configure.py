@@ -2330,6 +2330,21 @@ class AmalgamationGenerator(object):
                 target = 'sse2'
         return target
 
+    def _isas_for_target(self, target):
+        for mod in sorted(self._modules):
+            # Only first module for target is considered. Does this make sense?
+            if self._target_for_module(mod) == target:
+                out = set()
+                for isa in mod.need_isa:
+                    if isa == 'aesni':
+                        isa = "aes,ssse3,pclmul"
+                    elif isa == 'rdrand':
+                        isa = 'rdrnd'
+                    out.add(isa)
+                return out
+        # Return set such that we can also iterate over result in the NA case
+        return set()
+
     def generate(self):
         pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
         header_name = '%s.h' % (AmalgamationGenerator.filename_prefix)
@@ -2341,44 +2356,40 @@ class AmalgamationGenerator(object):
         logging.info('Writing amalgamation header to %s' % (header_int_name))
         internal_headers.write_to_file(header_int_name, "BOTAN_AMALGAMATION_INTERNAL_H__")
 
-        headers_written_in_h_files = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
 
-        botan_amalgs_fs = []
+        # target to filepath map
+        amalgamation_sources = {}
+        for mod in self._modules:
+            target = self._target_for_module(mod)
+            amalgamation_sources[target] = '%s%s.cpp' % (
+                AmalgamationGenerator.filename_prefix,
+                '_' + target if target else '')
 
-        def open_amalg_file(tgt):
-            fsname = '%s%s.cpp' % (AmalgamationGenerator.filename_prefix, '_' + tgt if tgt else '')
-            botan_amalgs_fs.append(fsname)
-            logging.info('Writing amalgamation source to %s' % (fsname))
-            f = open(fsname, 'w')
+        # file descriptors for all `amalgamation_sources`
+        amalgamation_files = {}
+        for target, filepath in amalgamation_sources.items():
+            logging.info('Writing amalgamation source to %s' % (filepath))
+            amalgamation_files[target] = open(filepath, 'w')
+
+        for target, f in amalgamation_files.items():
             AmalgamationHeader.write_banner(f)
+            f.write('\n')
+            f.write('#include "%s"\n' % (header_name))
+            f.write('#include "%s"\n' % (header_int_name))
+            f.write('\n')
 
-            f.write('\n#include "%s"\n' % (header_name))
-            f.write('#include "%s"\n\n' % (header_int_name))
+            for isa in self._isas_for_target(target):
+                f.write('#if defined(__GNUG__)\n')
+                f.write('#pragma GCC target ("%s")\n' % (isa))
+                f.write('#endif\n')
 
-            return f
-
-        botan_amalg_files = {}
+        # target to include header map
         headers_written = {}
+        for target, _ in amalgamation_sources.items():
+            headers_written[target] = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
 
         for mod in sorted(self._modules):
             tgt = self._target_for_module(mod)
-
-            if tgt not in botan_amalg_files:
-                botan_amalg_files[tgt] = open_amalg_file(tgt)
-
-                if tgt != '':
-                    for isa in mod.need_isa:
-                        if isa == 'aesni':
-                            isa = "aes,ssse3,pclmul"
-                        elif isa == 'rdrand':
-                            isa = 'rdrnd'
-
-                        botan_amalg_files[tgt].write('#if defined(__GNUG__)\n')
-                        botan_amalg_files[tgt].write('#pragma GCC target ("%s")\n' % (isa))
-                        botan_amalg_files[tgt].write('#endif\n')
-
-            if tgt not in headers_written:
-                headers_written[tgt] = headers_written_in_h_files.copy()
 
             for src in sorted(mod.source):
                 contents = open(src, 'r').readlines()
@@ -2392,12 +2403,12 @@ class AmalgamationGenerator(object):
                         if header in headers_written[tgt]:
                             continue
 
-                        botan_amalg_files[tgt].write(line)
+                        amalgamation_files[tgt].write(line)
                         headers_written[tgt].add(header)
                     else:
-                        botan_amalg_files[tgt].write(line)
+                        amalgamation_files[tgt].write(line)
 
-        return botan_amalgs_fs
+        return set(amalgamation_sources.values())
 
 def have_program(program):
     """
@@ -2729,7 +2740,7 @@ def main(argv=None):
 
     if options.amalgamation:
         amalgamation_cpp_files = AmalgamationGenerator(build_config, using_mods, options).generate()
-        build_config.lib_sources = amalgamation_cpp_files
+        build_config.lib_sources = sorted(amalgamation_cpp_files)
         MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate(template_vars)
 
     if options.with_bakefile:
