@@ -2386,9 +2386,7 @@ class AmalgamationGenerator(object):
         included_in_headers = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
         return header_files, included_in_headers
 
-    def generate(self):
-        amalgamation_headers, included_in_headers = self._generate_headers()
-
+    def _generate_sources(self, amalgamation_headers, included_in_headers): #pylint: disable=too-many-locals,too-many-branches
         # target to filepath map
         amalgamation_sources = {}
         for mod in self._modules:
@@ -2442,6 +2440,12 @@ class AmalgamationGenerator(object):
             f.close()
 
         return set(amalgamation_sources.values())
+
+    def generate(self):
+        amalgamation_headers, included_in_headers = self._generate_headers()
+        amalgamation_sources = self._generate_sources(amalgamation_headers, included_in_headers)
+        return amalgamation_sources
+
 
 def have_program(program):
     """
