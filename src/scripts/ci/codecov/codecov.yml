@@ -1,0 +1,15 @@
+---
+
+# Documentation
+# https://github.com/codecov/support/wiki/Codecov-Yaml#full-yaml
+#
+# Validate this file
+# curl --data-binary @codecov.yml https://codecov.io/validate
+
+coverage:
+  status:
+    project:
+      default:
+        # Random seeds in tests lead to a +/-0.05% coverage span even for PRs
+        # that do not change source code
+        threshold: 0.05
