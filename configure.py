@@ -2371,7 +2371,7 @@ class AmalgamationGenerator(object):
         # Return set such that we can also iterate over result in the NA case
         return set()
 
-    def generate(self):
+    def _generate_headers(self):
         pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
         header_name = '%s.h' % (AmalgamationGenerator.filename_prefix)
         logging.info('Writing amalgamation header to %s' % (header_name))
@@ -2382,6 +2382,12 @@ class AmalgamationGenerator(object):
         logging.info('Writing amalgamation header to %s' % (header_int_name))
         internal_headers.write_to_file(header_int_name, "BOTAN_AMALGAMATION_INTERNAL_H__")
 
+        header_files = [header_name, header_int_name]
+        included_in_headers = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
+        return header_files, included_in_headers
+
+    def generate(self):
+        amalgamation_headers, included_in_headers = self._generate_headers()
 
         # target to filepath map
         amalgamation_sources = {}
@@ -2400,8 +2406,8 @@ class AmalgamationGenerator(object):
         for target, f in amalgamation_files.items():
             AmalgamationHeader.write_banner(f)
             f.write('\n')
-            f.write('#include "%s"\n' % (header_name))
-            f.write('#include "%s"\n' % (header_int_name))
+            for header in amalgamation_headers:
+                f.write('#include "%s"\n' % (header))
             f.write('\n')
 
             for isa in self._isas_for_target(target):
@@ -2412,7 +2418,7 @@ class AmalgamationGenerator(object):
         # target to include header map
         headers_written = {}
         for target, _ in amalgamation_sources.items():
-            headers_written[target] = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
+            headers_written[target] = included_in_headers.copy()
 
         for mod in sorted(self._modules):
             tgt = self._target_for_module(mod)
