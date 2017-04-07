@@ -2408,6 +2408,9 @@ class AmalgamationGenerator(object):
                     else:
                         amalgamation_files[tgt].write(line)
 
+        for f in amalgamation_files.values():
+            f.close()
+
         return set(amalgamation_sources.values())
 
 def have_program(program):
