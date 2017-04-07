@@ -2392,21 +2392,21 @@ class AmalgamationGenerator(object):
             tgt = self._target_for_module(mod)
 
             for src in sorted(mod.source):
-                contents = open(src, 'r').readlines()
-                for line in contents:
-                    if AmalgamationGenerator.botan_include_matcher.search(line):
-                        continue
-
-                    match = AmalgamationGenerator.any_include_matcher.search(line)
-                    if match:
-                        header = match.group(1)
-                        if header in headers_written[tgt]:
+                with open(src, 'r') as f:
+                    for line in f:
+                        if AmalgamationGenerator.botan_include_matcher.search(line):
                             continue
 
-                        amalgamation_files[tgt].write(line)
-                        headers_written[tgt].add(header)
-                    else:
-                        amalgamation_files[tgt].write(line)
+                        match = AmalgamationGenerator.any_include_matcher.search(line)
+                        if match:
+                            header = match.group(1)
+                            if header in headers_written[tgt]:
+                                continue
+
+                            amalgamation_files[tgt].write(line)
+                            headers_written[tgt].add(header)
+                        else:
+                            amalgamation_files[tgt].write(line)
 
         for f in amalgamation_files.values():
             f.close()
