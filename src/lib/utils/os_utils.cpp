@@ -337,7 +337,7 @@ static ::sigjmp_buf g_sigill_jmp_buf;
 
 void botan_sigill_handler(int)
    {
-   ::siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/1);
+   siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/1);
    }
 
 }
@@ -355,12 +355,12 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
    sigemptyset(&sigaction.sa_mask);
    sigaction.sa_flags = 0;
 
-   int rc = ::sigaction(SIGILL, &sigaction, &old_sigaction);
+   int rc = sigaction(SIGILL, &sigaction, &old_sigaction);
 
    if(rc != 0)
       throw Exception("run_cpu_instruction_probe sigaction failed");
 
-   rc = ::sigsetjmp(g_sigill_jmp_buf, /*save sigs*/1);
+   rc = sigsetjmp(g_sigill_jmp_buf, /*save sigs*/1);
 
    if(rc == 0)
       {
@@ -374,7 +374,7 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
       }
 
    // Restore old SIGILL handler, if any
-   rc = ::sigaction(SIGILL, &old_sigaction, nullptr);
+   rc = sigaction(SIGILL, &old_sigaction, nullptr);
    if(rc != 0)
       throw Exception("run_cpu_instruction_probe sigaction restore failed");
 
