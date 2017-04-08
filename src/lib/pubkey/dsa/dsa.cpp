@@ -111,8 +111,8 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    {
    BigInt i(msg, msg_len);
 
-   while(i >= m_q)
-      i -= m_q;
+   if(i >= m_q)
+      i = (i % m_q);
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    BOTAN_UNUSED(rng);
@@ -172,12 +172,15 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_EMSA
 bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
                                         const uint8_t sig[], size_t sig_len)
    {
-   if(sig_len != 2*m_q.bytes() || msg_len > m_q.bytes())
+   if(sig_len != 2*m_q.bytes())
       return false;
 
    BigInt r(sig, m_q.bytes());
    BigInt s(sig + m_q.bytes(), m_q.bytes());
    BigInt i(msg, msg_len);
+
+   if(i >= m_q)
+      i = i % m_q;
 
    if(r <= 0 || r >= m_q || s <= 0 || s >= m_q)
       return false;
