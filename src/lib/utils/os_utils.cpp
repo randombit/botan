@@ -349,13 +349,13 @@ int OS::run_cpu_instruction_probe(std::function<int ()> probe_fn)
 
 #if defined(BOTAN_TARGET_OS_TYPE_IS_UNIX)
    struct sigaction old_sigaction;
-   struct sigaction sigaction;
+   struct sigaction cur_sigaction;
 
-   sigaction.sa_handler = botan_sigill_handler;
-   sigemptyset(&sigaction.sa_mask);
-   sigaction.sa_flags = 0;
+   cur_sigaction.sa_handler = botan_sigill_handler;
+   sigemptyset(&cur_sigaction.sa_mask);
+   cur_sigaction.sa_flags = 0;
 
-   int rc = sigaction(SIGILL, &sigaction, &old_sigaction);
+   int rc = sigaction(SIGILL, &cur_sigaction, &old_sigaction);
 
    if(rc != 0)
       throw Exception("run_cpu_instruction_probe sigaction failed");
