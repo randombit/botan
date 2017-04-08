@@ -1888,7 +1888,7 @@ int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op)
 
 int botan_pk_op_decrypt(botan_pk_op_decrypt_t op,
                         uint8_t out[], size_t* out_len,
-                        uint8_t ciphertext[], size_t ciphertext_len)
+                        const uint8_t ciphertext[], size_t ciphertext_len)
    {
    return BOTAN_FFI_DO(Botan::PK_Decryptor, op, o, {
       return write_vec_output(out, out_len, o.decrypt(ciphertext, ciphertext_len));

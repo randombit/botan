@@ -529,12 +529,14 @@ BOTAN_DLL int botan_mp_from_bin(const botan_mp_t mp, const uint8_t vec[], size_t
 BOTAN_DLL int botan_mp_to_uint32(const botan_mp_t mp, uint32_t* val);
 
 /**
-* Return true iff mp is greater than 0
+* This function is not well named. Returns 1 iff mp is greater than
+* *or equal to* zero. Use botan_mp_is_negative to detect negative
+* numbers, botan_mp_is_zero to check for zero.
 */
 BOTAN_DLL int botan_mp_is_positive(const botan_mp_t mp);
 
 /**
-* Return true iff mp is less than 0
+* Return 1 iff mp is less than 0
 */
 BOTAN_DLL int botan_mp_is_negative(const botan_mp_t mp);
 
@@ -812,7 +814,7 @@ BOTAN_DLL int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op);
 
 BOTAN_DLL int botan_pk_op_decrypt(botan_pk_op_decrypt_t op,
                                   uint8_t out[], size_t* out_len,
-                                  uint8_t ciphertext[], size_t ciphertext_len);
+                                  const uint8_t ciphertext[], size_t ciphertext_len);
 
 /*
 * Signature Generation
