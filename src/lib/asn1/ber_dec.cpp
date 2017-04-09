@@ -218,20 +218,25 @@ BER_Object BER_Decoder::get_next_object()
       return next;
       }
 
-   decode_tag(m_source, next.type_tag, next.class_tag);
-   if(next.type_tag == NO_OBJECT)
-      return next;
+   for(;;)
+      {
+      decode_tag(m_source, next.type_tag, next.class_tag);
+      if(next.type_tag == NO_OBJECT)
+         return next;
 
-   const size_t length = decode_length(m_source);
-   if(!m_source->check_available(length))
-      throw BER_Decoding_Error("Value truncated");
+      const size_t length = decode_length(m_source);
+      if(!m_source->check_available(length))
+         throw BER_Decoding_Error("Value truncated");
 
-   next.value.resize(length);
-   if(m_source->read(next.value.data(), length) != length)
-      throw BER_Decoding_Error("Value truncated");
+      next.value.resize(length);
+      if(m_source->read(next.value.data(), length) != length)
+         throw BER_Decoding_Error("Value truncated");
 
-   if(next.type_tag == EOC && next.class_tag == UNIVERSAL)
-      return get_next_object();
+      if(next.type_tag == EOC && next.class_tag == UNIVERSAL)
+         continue;
+      else
+         break;
+      }
 
    return next;
    }
