@@ -103,6 +103,11 @@ script:
 after_success:
   - ./src/scripts/ci/travis/after_success.sh
 
+# whitelist branches to avoid testing feature branches twice (as branch and as pull request)
+branches:
+  only:
+    - master
+
 notifications:
   email: botan-commits@lists.randombit.net
 
