@@ -2741,11 +2741,8 @@ def main(argv=None):
                 logging.error('Error while creating "%s": %s' % (build_dir, e))
 
     def write_template(sink, template):
-        try:
-            f = open(sink, 'w')
+        with open(sink, 'w') as f:
             f.write(process_template(template, template_vars))
-        finally:
-            f.close()
 
     def in_build_dir(p):
         return os.path.join(build_config.build_dir, p)
