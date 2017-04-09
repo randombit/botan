@@ -2463,6 +2463,16 @@ def have_program(program):
     logging.debug('Program %s not found' % (program))
     return False
 
+
+class BotanConfigureLogHandler(logging.StreamHandler, object):
+    def emit(self, record):
+        # Do the default stuff first
+        super(BotanConfigureLogHandler, self).emit(record)
+        # Exit script if and ERROR or worse occurred
+        if record.levelno >= logging.ERROR:
+            sys.exit(1)
+
+
 def main(argv=None):
     """
     Main driver
@@ -2470,14 +2480,6 @@ def main(argv=None):
 
     if argv is None:
         argv = sys.argv
-
-    class BotanConfigureLogHandler(logging.StreamHandler, object):
-        def emit(self, record):
-            # Do the default stuff first
-            super(BotanConfigureLogHandler, self).emit(record)
-            # Exit script if and ERROR or worse occurred
-            if record.levelno >= logging.ERROR:
-                sys.exit(1)
 
     lh = BotanConfigureLogHandler(sys.stdout)
     lh.setFormatter(logging.Formatter('%(levelname) 7s: %(message)s'))
