@@ -113,11 +113,34 @@ class Version(object):
             return None
 
 
+class SourcePaths(object):
+    """
+    A collection of paths defined by the project structure and
+    independent of user configurations.
+    All paths are relative to the base_dir, which may be relative as well (e.g. ".")
+    """
+
+    def __init__(self, base_dir):
+        self.base_dir = base_dir
+        self.doc_dir = os.path.join(self.base_dir, 'doc')
+        self.src_dir = os.path.join(self.base_dir, 'src')
+
+        # dirs in src/
+        self.build_data_dir = os.path.join(self.src_dir, 'build-data')
+        self.lib_dir = os.path.join(self.src_dir, 'lib')
+        self.python_dir = os.path.join(self.src_dir, 'python')
+        self.scripts_dir = os.path.join(self.src_dir, 'scripts')
+
+        # dirs in src/build-data/
+        self.sphinx_config_dir = os.path.join(self.build_data_dir, 'sphinx')
+        self.makefile_dir = os.path.join(self.build_data_dir, 'makefile')
+
+
 class BuildPaths(object): # pylint: disable=too-many-instance-attributes
     """
     Constructor
     """
-    def __init__(self, options, modules):
+    def __init__(self, source_paths, options, modules):
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
         self.libobj_dir = os.path.join(self.build_dir, 'obj', 'lib')
@@ -143,9 +166,6 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
-        self.doc_dir = os.path.join(options.base_dir, 'doc')
-        self.src_dir = os.path.join(options.base_dir, 'src')
-
         def find_sources_in(basedir, srcdir):
             for (dirpath, _, filenames) in os.walk(os.path.join(basedir, srcdir)):
                 for filename in filenames:
@@ -158,11 +178,9 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
                     if filename.endswith('.h') and not filename.startswith('.'):
                         yield os.path.join(dirpath, filename)
 
-        self.cli_sources = list(find_sources_in(self.src_dir, 'cli'))
-        self.cli_headers = list(find_headers_in(self.src_dir, 'cli'))
-        self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
-
-        self.python_dir = os.path.join(options.src_dir, 'python')
+        self.cli_sources = list(find_sources_in(source_paths.src_dir, 'cli'))
+        self.cli_headers = list(find_headers_in(source_paths.src_dir, 'cli'))
+        self.test_sources = list(find_sources_in(source_paths.src_dir, 'tests'))
 
     def build_dirs(self):
         out = [
@@ -190,7 +208,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
 PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major)
 
 
-def make_build_doc_commands(build_paths, options):
+def make_build_doc_commands(source_paths, build_paths, options):
     def build_manual_command(src_dir, dst_dir):
         if options.with_sphinx:
             sphinx = 'sphinx-build -c $(SPHINX_CONFIG) $(SPHINX_OPTS) '
@@ -202,7 +220,7 @@ def make_build_doc_commands(build_paths, options):
             return '$(COPY) %s%s*.rst %s' %  (src_dir, os.sep, dst_dir)
 
     cmds = [
-        build_manual_command(os.path.join(build_paths.doc_dir, 'manual'), build_paths.doc_output_dir_manual)
+        build_manual_command(os.path.join(source_paths.doc_dir, 'manual'), build_paths.doc_output_dir_manual)
     ]
     if options.with_doxygen:
         cmds += ['doxygen %s%sbotan.doxy' % (build_paths.build_dir, os.sep)]
@@ -1698,7 +1716,7 @@ class MakefileListsGenerator(object):
             build_key = '%s_build_cmds' % (t)
             var[build_key] = '\n'.join(self._build_commands(src_list, src_dir, t.upper()))
 
-def create_template_vars(build_config, options, modules, cc, arch, osinfo):
+def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
     """
     Create the template variables needed to process the makefile, build.h, etc
     """
@@ -1785,9 +1803,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'distribution_info': options.distribution_info,
 
-        'base_dir': options.base_dir,
-        'src_dir': options.src_dir,
-        'doc_dir': build_config.doc_dir,
+        'base_dir': source_paths.base_dir,
+        'src_dir': source_paths.src_dir,
+        'doc_dir': source_paths.doc_dir,
 
         'command_line': configure_command_line(),
         'local_config': slurp_file(options.local_config),
@@ -1807,7 +1825,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'out_dir': options.with_build_dir or os.path.curdir,
         'build_dir': build_config.build_dir,
 
-        'scripts_dir': os.path.join(build_config.src_dir, 'scripts'),
+        'scripts_dir': source_paths.scripts_dir,
 
         'build_shared_lib': options.build_shared_lib,
 
@@ -1817,10 +1835,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'doc_output_dir': build_config.doc_output_dir,
 
-        'build_doc_commands': make_build_doc_commands(build_config, options),
+        'build_doc_commands': make_build_doc_commands(source_paths, build_config, options),
 
-        'python_dir': build_config.python_dir,
-        'sphinx_config_dir': os.path.join(options.build_data, 'sphinx'),
+        'python_dir': source_paths.python_dir,
+        'sphinx_config_dir': source_paths.sphinx_config_dir,
 
         'os': options.os,
         'arch': options.arch,
@@ -1928,16 +1946,20 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         # This can be made consistent over all platforms in the future
         variables['libname'] = 'botan-%d' % (Version.major)
 
-    variables["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), variables)
+    variables["header_in"] = process_template(os.path.join(source_paths.makefile_dir, 'header.in'), variables)
 
     if variables["makefile_style"] == "gmake":
-        variables["gmake_commands_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_commands.in'),
-                                                          variables)
-        variables["gmake_dso_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), variables) \
-                                    if options.build_shared_lib else ''
-        variables["gmake_coverage_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_coverage.in'),
-                                                          variables) \
-                                         if options.with_coverage_info else ''
+        variables["gmake_commands_in"] = process_template(
+            os.path.join(source_paths.makefile_dir, 'gmake_commands.in'),
+            variables)
+        variables["gmake_dso_in"] = process_template(
+            os.path.join(source_paths.makefile_dir, 'gmake_dso.in'),
+            variables
+            ) if options.build_shared_lib else ''
+        variables["gmake_coverage_in"] = process_template(
+            os.path.join(source_paths.makefile_dir, 'gmake_coverage.in'),
+            variables
+            ) if options.with_coverage_info else ''
 
     return variables
 
@@ -2564,18 +2586,13 @@ def main(argv=None):
     if options.os == "java":
         raise UserError("Jython detected: need --os and --cpu to set target")
 
-    options.base_dir = os.path.dirname(argv[0])
-    options.src_dir = os.path.join(options.base_dir, 'src')
-    options.lib_dir = os.path.join(options.src_dir, 'lib')
+    source_paths = SourcePaths(os.path.dirname(argv[0]))
 
-    options.build_data = os.path.join(options.src_dir, 'build-data')
-    options.makefile_dir = os.path.join(options.build_data, 'makefile')
-
-    modules = load_info_files('Modules', options.lib_dir, "info.txt", ModuleInfo)
+    modules = load_info_files('Modules', source_paths.lib_dir, "info.txt", ModuleInfo)
 
     def load_build_data(descr, subdir, class_t):
         matcher = re.compile(r'[_a-z0-9]+\.txt$')
-        return load_info_files(descr, os.path.join(options.build_data, subdir), matcher, class_t)
+        return load_info_files(descr, os.path.join(source_paths.build_data_dir, subdir), matcher, class_t)
 
     info_arch = load_build_data('CPU info', 'arch', ArchInfo)
     info_os = load_build_data('OS info', 'os', OsInfo)
@@ -2715,13 +2732,13 @@ def main(argv=None):
 
     using_mods = [modules[modname] for modname in loaded_module_names]
 
-    build_config = BuildPaths(options, using_mods)
+    build_config = BuildPaths(source_paths, options, using_mods)
 
     build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
 
-    template_vars = create_template_vars(build_config, options, using_mods, cc, arch, osinfo)
+    template_vars = create_template_vars(source_paths, build_config, options, using_mods, cc, arch, osinfo)
 
-    makefile_template = os.path.join(options.makefile_dir, '%s.in' % (template_vars['makefile_style']))
+    makefile_template = os.path.join(source_paths.makefile_dir, '%s.in' % (template_vars['makefile_style']))
     logging.debug('Using makefile template %s' % (makefile_template))
 
     # Now begin the actual IO to setup the build
@@ -2747,7 +2764,7 @@ def main(argv=None):
     def in_build_dir(p):
         return os.path.join(build_config.build_dir, p)
     def in_build_data(p):
-        return os.path.join(options.build_data, p)
+        return os.path.join(source_paths.build_data_dir, p)
 
     write_template(in_build_dir('build.h'), in_build_data('buildh.in'))
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
