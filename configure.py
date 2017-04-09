@@ -2044,27 +2044,20 @@ class ModulesChooser(object):
 
         return False
 
-    def _resolve_dependencies(self, modname, level=0):
-        indent = "    "*level
-        logging.debug(indent + "Resolving dependencies of %s..." % modname)
-
+    def _resolve_dependencies(self, modname):
         for dependency in self._modules[modname].dependencies():
             dependency_choices = set(dependency.split('|'))
-
-            logging.debug(indent + "Searching for %s..." % dependency)
 
             dependency_met = False
             new_loaded_mod = None
 
             # Prefer what we already loaded
             if not set(dependency_choices).isdisjoint(self._to_load):
-                logging.debug(indent + "Already loaded.")
                 dependency_met = True
             else:
                 possible_mods = dependency_choices.intersection(self._maybe_dep)
                 if possible_mods:
                     new_loaded_mod = possible_mods.pop()
-                    logging.debug(indent + "Adding %s..." % new_loaded_mod)
                     dependency_met = True
 
             if dependency_met:
@@ -2072,7 +2065,7 @@ class ModulesChooser(object):
                     self._maybe_dep.remove(new_loaded_mod)
                     self._to_load.add(new_loaded_mod)
                     # Added new_loaded_mod, now resolve its dependencies
-                    self._resolve_dependencies(new_loaded_mod, level+1)
+                    self._resolve_dependencies(new_loaded_mod)
             else:
                 if modname in self._to_load:
                     self._to_load.remove(modname)
