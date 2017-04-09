@@ -212,6 +212,8 @@ def make_build_doc_commands(build_paths, options):
 def process_command_line(args): # pylint: disable=too-many-locals
     """
     Handle command line options
+    Do not use logging in this method as command line options need to be
+    available before logging is setup.
     """
 
     parser = optparse.OptionParser(
@@ -2473,6 +2475,20 @@ class BotanConfigureLogHandler(logging.StreamHandler, object):
             sys.exit(1)
 
 
+def setup_logging(options):
+    if options.verbose:
+        log_level = logging.DEBUG
+    elif options.quiet:
+        log_level = logging.WARNING
+    else:
+        log_level = logging.INFO
+
+    lh = BotanConfigureLogHandler(sys.stdout)
+    lh.setFormatter(logging.Formatter('%(levelname) 7s: %(message)s'))
+    logging.getLogger().addHandler(lh)
+    logging.getLogger().setLevel(log_level)
+
+
 def main(argv=None):
     """
     Main driver
@@ -2481,20 +2497,9 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    lh = BotanConfigureLogHandler(sys.stdout)
-    lh.setFormatter(logging.Formatter('%(levelname) 7s: %(message)s'))
-    logging.getLogger().addHandler(lh)
-
     options = process_command_line(argv[1:])
 
-    def log_level():
-        if options.verbose:
-            return logging.DEBUG
-        if options.quiet:
-            return logging.WARNING
-        return logging.INFO
-
-    logging.getLogger().setLevel(log_level())
+    setup_logging(options)
 
     logging.info('%s invoked with options "%s"' % (
         argv[0], ' '.join(argv[1:])))
