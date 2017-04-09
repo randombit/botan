@@ -1438,126 +1438,148 @@ def gen_bakefile(build_config, options, external_libs):
 
     f.close()
 
-def gen_cmake(build_paths, using_mods, cc, options):
-    def create_target_rules(sources):
+
+class CmakeGenerator(object):
+    def __init__(self, build_paths, using_mods, cc, options):
+        self._build_paths = build_paths
+        self._using_mods = using_mods
+        self._cc = cc
+        self._options = options
+
+    @staticmethod
+    def _create_target_rules(sources):
         target = {'sources': {}, 'frameworks': set(), 'libs': set()}
         for source in sources:
             target['sources'][source] = {'isa_flags': set()}
         return target
 
-    def add_target_details(target, using_mod):
+    def _add_target_details(self, target, using_mod):
         libs_or_frameworks_needed = False
         for source_path in target['sources']:
             for mod_source in using_mod.source:
                 if source_path == mod_source:
                     libs_or_frameworks_needed = True
                     for isa in using_mod.need_isa:
-                        target['sources'][source_path]['isa_flags'].add(cc.isa_flags[isa])
+                        target['sources'][source_path]['isa_flags'].add(self._cc.isa_flags[isa])
         if libs_or_frameworks_needed:
-            if options.os in using_mod.libs:
-                for lib in using_mod.libs[options.os]:
+            if self._options.os in using_mod.libs:
+                for lib in using_mod.libs[self._options.os]:
                     target['libs'].add(lib)
-            if options.os in using_mod.frameworks:
-                for framework in using_mod.frameworks[options.os]:
+            if self._options.os in using_mod.frameworks:
+                for framework in using_mod.frameworks[self._options.os]:
                     target['frameworks'].add('"-framework %s"' % framework)
 
-    def generate_target_sources_list(fd, target_name, target):
+    @staticmethod
+    def _generate_target_sources_list(fd, target_name, target):
         fd.write('set(%s\n' % target_name)
-        for source in target['sources']:
+        sorted_sources = sorted(target['sources'].keys())
+        for source in sorted_sources:
             fd.write('    ${CMAKE_CURRENT_LIST_DIR}%s%s\n' % (os.sep, os.path.normpath(source)))
         fd.write(')\n\n')
 
-    def generate_target_source_files_isa_properties(fd, target):
-        for source in target['sources']:
+    @staticmethod
+    def _generate_target_source_files_isa_properties(fd, target):
+        sorted_sources = sorted(target['sources'].keys())
+        for source in sorted_sources:
             joined_isa_flags = ' '.join(target['sources'][source]['isa_flags'])
             if joined_isa_flags:
                 fd.write('set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}%s%s PROPERTIES COMPILE_FLAGS %s)\n'
                          % (os.sep, os.path.normpath(source), joined_isa_flags))
 
-    library_target_configuration = create_target_rules(build_paths.lib_sources)
-    tests_target_configuration = create_target_rules(build_paths.test_sources)
-    cli_target_configuration = create_target_rules(build_paths.cli_sources)
+    @staticmethod
+    def _write_header(fd):
+        fd.write('cmake_minimum_required(VERSION 2.8.0)\n')
+        fd.write('project(botan LANGUAGES CXX)\n\n')
+        fd.write('cmake_policy(SET CMP0042 NEW)\n\n')
 
-    for module in using_mods:
-        add_target_details(library_target_configuration, module)
-        add_target_details(tests_target_configuration, module)
-        add_target_details(cli_target_configuration, module)
+    def _write_footer(self, fd, library_link, cli_link, tests_link):
+        fd.write('\n')
 
-    f = open('CMakeLists.txt', 'w')
-    f.write('cmake_minimum_required(VERSION 2.8.0)\n')
-    f.write('project(botan LANGUAGES CXX)\n\n')
-    f.write('cmake_policy(SET CMP0042 NEW)\n\n')
+        fd.write('option(ENABLED_OPTIONAL_WARINIGS "If enabled more strict warinig policy will be used" OFF)\n')
+        fd.write('option(ENABLED_LTO "If enabled link time optimization will be used" OFF)\n\n')
 
-    generate_target_sources_list(f, 'BOTAN_SOURCES', library_target_configuration)
-    generate_target_sources_list(f, 'BOTAN_CLI', cli_target_configuration)
-    generate_target_sources_list(f, 'BOTAN_TESTS', tests_target_configuration)
+        fd.write('set(COMPILER_FEATURES %s %s)\n'
+                 % (self._cc.cc_compile_flags(self._options), self._cc.mach_abi_link_flags(self._options)))
+        fd.write('set(COMPILER_WARNINGS %s)\n' % self._cc.cc_warning_flags(self._options))
+        fd.write('set(COMPILER_INCLUDE_DIRS build/include build/include/external)\n')
+        fd.write('if(ENABLED_LTO)\n')
+        fd.write('    set(COMPILER_FEATURES ${COMPILER_FEATURES} -lto)\n')
+        fd.write('endif()\n')
+        fd.write('if(ENABLED_OPTIONAL_WARINIGS)\n')
+        fd.write('    set(COMPILER_OPTIONAL_WARNINGS -Wsign-promo -Wctor-dtor-privacy -Wdeprecated -Winit-self' +
+                 ' -Wnon-virtual-dtor -Wunused-macros -Wold-style-cast -Wuninitialized)\n')
+        fd.write('endif()\n\n')
 
-    generate_target_source_files_isa_properties(f, library_target_configuration)
-    generate_target_source_files_isa_properties(f, cli_target_configuration)
-    generate_target_source_files_isa_properties(f, tests_target_configuration)
+        fd.write('add_library(${PROJECT_NAME} STATIC ${BOTAN_SOURCES})\n')
+        fd.write('target_link_libraries(${PROJECT_NAME} PUBLIC %s)\n'
+                 % library_link)
+        fd.write('target_compile_options(${PROJECT_NAME} PUBLIC ' +
+                 '${COMPILER_WARNINGS} ${COMPILER_FEATURES} ${COMPILER_OPTIONAL_WARNINGS})\n')
+        fd.write('target_include_directories(${PROJECT_NAME} PUBLIC ${COMPILER_INCLUDE_DIRS})\n\n')
 
-    f.write('\n')
+        fd.write('add_library(${PROJECT_NAME}_shared SHARED ${BOTAN_SOURCES})\n')
+        fd.write('target_link_libraries(${PROJECT_NAME}_shared PUBLIC %s)\n'
+                 % library_link)
+        fd.write('target_compile_options(${PROJECT_NAME}_shared PUBLIC ' +
+                 '${COMPILER_WARNINGS} ${COMPILER_FEATURES} ${COMPILER_OPTIONAL_WARNINGS})\n')
+        fd.write('target_include_directories(${PROJECT_NAME}_shared PUBLIC ${COMPILER_INCLUDE_DIRS})\n')
+        fd.write('set_target_properties(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})\n\n')
 
-    f.write('option(ENABLED_OPTIONAL_WARINIGS "If enabled more strict warinig policy will be used" OFF)\n')
-    f.write('option(ENABLED_LTO "If enabled link time optimization will be used" OFF)\n\n')
+        fd.write('add_executable(${PROJECT_NAME}_cli ${BOTAN_CLI})\n')
+        fd.write('target_link_libraries(${PROJECT_NAME}_cli PRIVATE ${PROJECT_NAME}_shared %s)\n'
+                 % cli_link)
+        fd.write('set_target_properties(${PROJECT_NAME}_cli PROPERTIES OUTPUT_NAME ${PROJECT_NAME})\n\n')
 
-    f.write('set(COMPILER_FEATURES %s %s)\n' % (cc.cc_compile_flags(options), cc.mach_abi_link_flags(options)))
-    f.write('set(COMPILER_WARNINGS %s)\n' % cc.cc_warning_flags(options))
-    f.write('set(COMPILER_INCLUDE_DIRS build/include build/include/external)\n')
-    f.write('if(ENABLED_LTO)\n')
-    f.write('    set(COMPILER_FEATURES ${COMPILER_FEATURES} -lto)\n')
-    f.write('endif()\n')
-    f.write('if(ENABLED_OPTIONAL_WARINIGS)\n')
-    f.write('    set(COMPILER_OPTIONAL_WARNINGS -Wsign-promo -Wctor-dtor-privacy -Wdeprecated -Winit-self' +
-            ' -Wnon-virtual-dtor -Wunused-macros -Wold-style-cast -Wuninitialized)\n')
-    f.write('endif()\n\n')
+        fd.write('add_executable(${PROJECT_NAME}_tests ${BOTAN_TESTS})\n')
+        fd.write('target_link_libraries(${PROJECT_NAME}_tests PRIVATE ${PROJECT_NAME}_shared %s)\n'
+                 % tests_link)
+        fd.write('set_target_properties(${PROJECT_NAME}_tests PROPERTIES OUTPUT_NAME botan-test)\n\n')
 
-    library_target_libs_and_frameworks = '%s %s %s' % (
-        ' '.join(library_target_configuration['frameworks']),
-        ' '.join(library_target_configuration['libs']),
-        cc.mach_abi_link_flags(options)
-    )
-    tests_target_libs_and_frameworks = '%s %s' % (
-        ' '.join(tests_target_configuration['frameworks']),
-        ' '.join(tests_target_configuration['libs'])
-    )
-    cli_target_libs_and_frameworks = '%s %s' % (
-        ' '.join(cli_target_configuration['frameworks']),
-        ' '.join(cli_target_configuration['libs'])
-    )
+        fd.write('set(CONFIGURATION_FILES configure.py .gitignore .astylerc authors.txt news.rst readme.rst)\n')
+        fd.write('file(GLOB_RECURSE DOCUMENTATION_FILES doc%s* )\n' % os.sep)
+        fd.write('file(GLOB_RECURSE HEADER_FILES src%s*.h )\n' % os.sep)
+        fd.write('file(GLOB_RECURSE INFO_FILES src%slib%s*info.txt )\n' % (os.sep, os.sep))
+        fd.write('add_custom_target(CONFIGURATION_DUMMY SOURCES ' +
+                 '${CONFIGURATION_FILES} ${DOCUMENTATION_FILES} ${INFO_FILES} ${HEADER_FILES})\n')
 
-    f.write('add_library(${PROJECT_NAME} STATIC ${BOTAN_SOURCES})\n')
-    f.write('target_link_libraries(${PROJECT_NAME} PUBLIC %s)\n'
-            % library_target_libs_and_frameworks)
-    f.write('target_compile_options(${PROJECT_NAME} PUBLIC ' +
-            '${COMPILER_WARNINGS} ${COMPILER_FEATURES} ${COMPILER_OPTIONAL_WARNINGS})\n')
-    f.write('target_include_directories(${PROJECT_NAME} PUBLIC ${COMPILER_INCLUDE_DIRS})\n\n')
+    def generate(self):
+        library_target_configuration = self._create_target_rules(self._build_paths.lib_sources)
+        tests_target_configuration = self._create_target_rules(self._build_paths.test_sources)
+        cli_target_configuration = self._create_target_rules(self._build_paths.cli_sources)
 
-    f.write('add_library(${PROJECT_NAME}_shared SHARED ${BOTAN_SOURCES})\n')
-    f.write('target_link_libraries(${PROJECT_NAME}_shared PUBLIC %s)\n'
-            % library_target_libs_and_frameworks)
-    f.write('target_compile_options(${PROJECT_NAME}_shared PUBLIC ' +
-            '${COMPILER_WARNINGS} ${COMPILER_FEATURES} ${COMPILER_OPTIONAL_WARNINGS})\n')
-    f.write('target_include_directories(${PROJECT_NAME}_shared PUBLIC ${COMPILER_INCLUDE_DIRS})\n')
-    f.write('set_target_properties(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})\n\n')
+        for module in self._using_mods:
+            self._add_target_details(library_target_configuration, module)
+            self._add_target_details(tests_target_configuration, module)
+            self._add_target_details(cli_target_configuration, module)
 
-    f.write('add_executable(${PROJECT_NAME}_cli ${BOTAN_CLI})\n')
-    f.write('target_link_libraries(${PROJECT_NAME}_cli PRIVATE ${PROJECT_NAME}_shared %s)\n'
-            % cli_target_libs_and_frameworks)
-    f.write('set_target_properties(${PROJECT_NAME}_cli PROPERTIES OUTPUT_NAME ${PROJECT_NAME})\n\n')
+        library_target_libs_and_frameworks = '%s %s %s' % (
+            ' '.join(library_target_configuration['frameworks']),
+            ' '.join(library_target_configuration['libs']),
+            self._cc.mach_abi_link_flags(self._options)
+        )
+        tests_target_libs_and_frameworks = '%s %s' % (
+            ' '.join(tests_target_configuration['frameworks']),
+            ' '.join(tests_target_configuration['libs'])
+        )
+        cli_target_libs_and_frameworks = '%s %s' % (
+            ' '.join(cli_target_configuration['frameworks']),
+            ' '.join(cli_target_configuration['libs'])
+        )
 
-    f.write('add_executable(${PROJECT_NAME}_tests ${BOTAN_TESTS})\n')
-    f.write('target_link_libraries(${PROJECT_NAME}_tests PRIVATE ${PROJECT_NAME}_shared %s)\n'
-            % tests_target_libs_and_frameworks)
-    f.write('set_target_properties(${PROJECT_NAME}_tests PROPERTIES OUTPUT_NAME botan-test)\n\n')
+        with open('CMakeLists.txt', 'w') as f:
+            self._write_header(f)
+            self._generate_target_sources_list(f, 'BOTAN_SOURCES', library_target_configuration)
+            self._generate_target_sources_list(f, 'BOTAN_CLI', cli_target_configuration)
+            self._generate_target_sources_list(f, 'BOTAN_TESTS', tests_target_configuration)
 
-    f.write('set(CONFIGURATION_FILES configure.py .gitignore .astylerc authors.txt news.rst readme.rst)\n')
-    f.write('file(GLOB_RECURSE DOCUMENTATION_FILES doc%s* )\n' % os.sep)
-    f.write('file(GLOB_RECURSE HEADER_FILES src%s*.h )\n' % os.sep)
-    f.write('file(GLOB_RECURSE INFO_FILES src%slib%s*info.txt )\n' % (os.sep, os.sep))
-    f.write('add_custom_target(CONFIGURATION_DUMMY SOURCES ' +
-            '${CONFIGURATION_FILES} ${DOCUMENTATION_FILES} ${INFO_FILES} ${HEADER_FILES})\n')
-    f.close()
+            self._generate_target_source_files_isa_properties(f, library_target_configuration)
+            self._generate_target_source_files_isa_properties(f, cli_target_configuration)
+            self._generate_target_source_files_isa_properties(f, tests_target_configuration)
+
+            self._write_footer(f,
+                               library_target_libs_and_frameworks,
+                               tests_target_libs_and_frameworks,
+                               cli_target_libs_and_frameworks)
 
 
 class MakefileListsGenerator(object):
@@ -1692,32 +1714,24 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
     def external_link_cmd():
         return ' ' + cc.add_lib_dir_option + options.with_external_libdir if options.with_external_libdir else ''
 
-    def link_to():
+    def link_to(module_member_name):
         """
-        Figure out what external libraries are needed based on selected modules
+        Figure out what external libraries/frameworks are needed based on selected modules
         """
+        if not (module_member_name == 'libs' or module_member_name == 'frameworks'):
+            raise InternalError("Invalid argument")
 
-        return do_link_to('libs')
-
-    def link_to_frameworks():
-        """
-        Figure out what external frameworks are needed based on selected modules
-        """
-
-        return do_link_to('frameworks')
-
-    def do_link_to(module_member_name):
         libs = set()
         for module in modules:
-            for (osname, link_to) in getattr(module, module_member_name).items():
+            for (osname, module_link_to) in getattr(module, module_member_name).items():
                 if osname == 'all' or osname == osinfo.basename:
-                    libs |= set(link_to)
+                    libs |= set(module_link_to)
                 else:
                     match = re.match('^all!(.*)', osname)
                     if match is not None:
                         exceptions = match.group(1).split(',')
                         if osinfo.basename not in exceptions:
-                            libs |= set(link_to)
+                            libs |= set(module_link_to)
         return sorted(libs)
 
     def choose_mp_bits():
@@ -1836,8 +1850,8 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
 
         'link_to': ' '.join(
-            [cc.add_lib_option + lib for lib in link_to()] +
-            [cc.add_framework_option + fw for fw in link_to_frameworks()]
+            [cc.add_lib_option + lib for lib in link_to('libs')] +
+            [cc.add_framework_option + fw for fw in link_to('frameworks')]
         ),
 
         'module_defines': make_cpp_macros(sorted(flatten([m.defines() for m in modules]))),
@@ -1932,159 +1946,211 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
     return variables
 
-def choose_modules_to_use(modules, module_policy, archinfo, ccinfo, options):
+class ModulesChooser(object):
     """
     Determine which modules to load based on options, target, etc
     """
 
-    for mod in modules.values():
-        mod.dependencies_exist(modules)
+    def __init__(self, modules, module_policy, archinfo, ccinfo, options):
+        self._modules = modules
+        self._module_policy = module_policy
+        self._archinfo = archinfo
+        self._ccinfo = ccinfo
+        self._options = options
 
-    to_load = []
-    maybe_dep = []
-    not_using_because = {}
+        self._maybe_dep = set()
+        self._to_load = set()
+        # string to set mapping with reasons as key and modules as value
+        self._not_using_because = collections.defaultdict(set)
 
-    def cannot_use_because(mod, reason):
-        not_using_because.setdefault(reason, []).append(mod)
+        ModulesChooser._validate_dependencies_exist(self._modules)
+        ModulesChooser._validate_user_selection(
+            self._modules, self._options.enabled_modules, self._options.disabled_modules)
 
-    def check_usable(module, modname, options):
-        if not module.compatible_os(options.os):
-            cannot_use_because(modname, 'incompatible OS')
+    def _check_usable(self, module, modname):
+        if not module.compatible_os(self._options.os):
+            self._not_using_because['incompatible OS'].add(modname)
             return False
-        elif not module.compatible_compiler(ccinfo, archinfo.basename):
-            cannot_use_because(modname, 'incompatible compiler')
+        elif not module.compatible_compiler(self._ccinfo, self._archinfo.basename):
+            self._not_using_because['incompatible compiler'].add(modname)
             return False
-        elif not module.compatible_cpu(archinfo, options):
-            cannot_use_because(modname, 'incompatible CPU')
+        elif not module.compatible_cpu(self._archinfo, self._options):
+            self._not_using_because['incompatible CPU'].add(modname)
             return False
         return True
 
-    for modname in options.enabled_modules:
-        if modname not in modules:
-            logging.error("Module not found: %s" % (modname))
+    @staticmethod
+    def _display_module_information_unused(skipped_modules):
+        for reason in sorted(skipped_modules.keys()):
+            disabled_mods = sorted(skipped_modules[reason])
+            if disabled_mods:
+                logging.info('Skipping (%s): %s' % (reason, ' '.join(disabled_mods)))
 
-    for modname in options.disabled_modules:
-        if modname not in modules:
-            logging.warning("Disabled module not found: %s" % (modname))
+    @staticmethod
+    def _display_module_information_to_load(all_modules, modules_to_load):
+        sorted_modules_to_load = sorted(modules_to_load)
 
-    for (modname, module) in modules.items():
-        usable = check_usable(module, modname, options)
+        for modname in sorted_modules_to_load:
+            if modname.startswith('simd_') and modname != 'simd_engine':
+                logging.info('Using SIMD module ' + modname)
 
-        if module_policy is not None:
+        for modname in sorted_modules_to_load:
+            if all_modules[modname].comment:
+                logging.info('%s: %s' % (modname, all_modules[modname].comment))
+            if all_modules[modname].warning:
+                logging.warning('%s: %s' % (modname, all_modules[modname].warning))
+            if all_modules[modname].load_on == 'vendor':
+                logging.info('Enabling use of external dependency %s' % modname)
 
-            if modname in module_policy.required:
+        logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
+
+    @staticmethod
+    def _validate_state(used_modules, unused_modules):
+        for reason, unused_for_reason in unused_modules.items():
+            if not unused_for_reason.isdisjoint(used_modules):
+                raise InternalError(
+                    "Disabled modules (%s) and modules to load have common elements" % reason)
+
+    @staticmethod
+    def _validate_dependencies_exist(modules):
+        for module in modules.values():
+            module.dependencies_exist(modules)
+
+    @staticmethod
+    def _validate_user_selection(modules, enabled_modules, disabled_modules):
+        for modname in enabled_modules:
+            if modname not in modules:
+                logging.error("Module not found: %s" % modname)
+
+        for modname in disabled_modules:
+            if modname not in modules:
+                logging.warning("Disabled module not found: %s" % modname)
+
+    def _handle_by_module_policy(self, modname, usable):
+        if self._module_policy is not None:
+            if modname in self._module_policy.required:
                 if not usable:
                     logging.error('Module policy requires module %s not usable on this platform' % (modname))
-                elif modname in options.disabled_modules:
+                elif modname in self._options.disabled_modules:
                     logging.error('Module %s was disabled but is required by policy' % (modname))
-                to_load.append(modname)
-                continue
-            elif modname in module_policy.if_available:
-                if modname in options.disabled_modules:
-                    cannot_use_because(modname, 'disabled by user')
+                self._to_load.add(modname)
+                return True
+            elif modname in self._module_policy.if_available:
+                if modname in self._options.disabled_modules:
+                    self._not_using_because['disabled by user'].add(modname)
                 elif usable:
                     logging.debug('Enabling optional module %s' % (modname))
-                    to_load.append(modname)
-                continue
-            elif modname in module_policy.prohibited:
-                if modname in options.enabled_modules:
+                    self._to_load.add(modname)
+                return True
+            elif modname in self._module_policy.prohibited:
+                if modname in self._options.enabled_modules:
                     logging.error('Module %s was requested but is prohibited by policy' % (modname))
-                cannot_use_because(modname, 'prohibited by module policy')
+                self._not_using_because['prohibited by module policy'].add(modname)
+                return True
+
+        return False
+
+    def _resolve_dependencies(self, modname):
+        for dependency in self._modules[modname].dependencies():
+            dependency_choices = set(dependency.split('|'))
+
+            dependency_met = False
+            new_loaded_mod = None
+
+            # Prefer what we already loaded
+            if not set(dependency_choices).isdisjoint(self._to_load):
+                dependency_met = True
+            else:
+                possible_mods = dependency_choices.intersection(self._maybe_dep)
+                if possible_mods:
+                    new_loaded_mod = possible_mods.pop()
+                    dependency_met = True
+
+            if dependency_met:
+                if new_loaded_mod:
+                    self._maybe_dep.remove(new_loaded_mod)
+                    self._to_load.add(new_loaded_mod)
+                    # Added new_loaded_mod, now resolve its dependencies
+                    self._resolve_dependencies(new_loaded_mod)
+            else:
+                if modname in self._to_load:
+                    self._to_load.remove(modname)
+                if modname in self._maybe_dep:
+                    self._maybe_dep.remove(modname)
+                self._not_using_because['dependency failure'].add(modname)
+
+                # `modname` is kicked out, no need to check more further dependencies
+                return
+
+    def _resolve_dependencies_for_all_modules(self):
+        for modname in self._to_load.copy():
+            # This will recusively load all dependencies if modname
+            # or mark those with dependency failures as unused
+            self._resolve_dependencies(modname)
+
+    def _handle_by_load_on(self, module): # pylint: disable=too-many-branches
+        modname = module.basename
+        if module.load_on == 'never':
+            self._not_using_because['disabled as buggy'].add(modname)
+        elif module.load_on == 'request':
+            if self._options.with_everything:
+                self._to_load.add(modname)
+            else:
+                self._not_using_because['by request only'].add(modname)
+        elif module.load_on == 'vendor':
+            if self._options.with_everything:
+                self._to_load.add(modname)
+            else:
+                self._not_using_because['requires external dependency'].add(modname)
+        elif module.load_on == 'dep':
+            self._maybe_dep.add(modname)
+
+        elif module.load_on == 'always':
+            self._to_load.add(modname)
+
+        elif module.load_on == 'auto':
+            if self._options.no_autoload or self._module_policy is not None:
+                self._maybe_dep.add(modname)
+            else:
+                self._to_load.add(modname)
+        else:
+            logging.error('Unknown load_on %s in %s' % (
+                module.load_on, modname))
+
+    def choose(self):
+        for (modname, module) in self._modules.items():
+            usable = self._check_usable(module, modname)
+
+            module_handled = self._handle_by_module_policy(modname, usable)
+            if module_handled:
                 continue
 
-        if modname in options.disabled_modules:
-            cannot_use_because(modname, 'disabled by user')
-        elif usable:
-            if modname in options.enabled_modules:
-                to_load.append(modname) # trust the user
-
-            if module.load_on == 'never':
-                cannot_use_because(modname, 'disabled as buggy')
-            elif module.load_on == 'request':
-                if options.with_everything:
-                    to_load.append(modname)
+            if modname in self._options.disabled_modules:
+                self._not_using_because['disabled by user'].add(modname)
+            elif usable:
+                if modname in self._options.enabled_modules:
+                    self._to_load.add(modname) # trust the user
                 else:
-                    cannot_use_because(modname, 'by request only')
-            elif module.load_on == 'vendor':
-                if options.with_everything:
-                    to_load.append(modname)
-                else:
-                    cannot_use_because(modname, 'requires external dependency')
-            elif module.load_on == 'dep':
-                maybe_dep.append(modname)
+                    self._handle_by_load_on(module)
 
-            elif module.load_on == 'always':
-                to_load.append(modname)
+        if 'compression' in self._to_load:
+            # Confirm that we have at least one compression library enabled
+            # Otherwise we leave a lot of useless support code compiled in, plus a
+            # make_compressor call that always fails
+            if 'zlib' not in self._to_load and 'bzip2' not in self._to_load and 'lzma' not in self._to_load:
+                self._to_load.remove('compression')
+                self._not_using_because['no enabled compression schemes'].add('compression')
 
-            elif module.load_on == 'auto':
-                if options.no_autoload or module_policy is not None:
-                    maybe_dep.append(modname)
-                else:
-                    to_load.append(modname)
-            else:
-                logging.error('Unknown load_on %s in %s' % (
-                    module.load_on, modname))
+        self._resolve_dependencies_for_all_modules()
 
-    if 'compression' in to_load:
-        # Confirm that we have at least one compression library enabled
-        # Otherwise we leave a lot of useless support code compiled in, plus a
-        # make_compressor call that always fails
-        if 'zlib' not in to_load and 'bzip2' not in to_load and 'lzma' not in to_load:
-            to_load.remove('compression')
-            cannot_use_because('compression', 'no enabled compression schemes')
+        for not_a_dep in self._maybe_dep:
+            self._not_using_because['not requested'].add(not_a_dep)
 
-    dependency_failure = True
+        ModulesChooser._validate_state(self._to_load, self._not_using_because)
+        ModulesChooser._display_module_information_unused(self._not_using_because)
+        ModulesChooser._display_module_information_to_load(self._modules, self._to_load)
 
-    while dependency_failure:
-        dependency_failure = False
-        for modname in to_load:
-            for deplist in [s.split('|') for s in modules[modname].dependencies()]:
-
-                dep_met = False
-                for mod in deplist:
-                    if dep_met is True:
-                        break
-
-                    if mod in to_load:
-                        dep_met = True
-                    elif mod in maybe_dep:
-                        maybe_dep.remove(mod)
-                        to_load.append(mod)
-                        dep_met = True
-
-                if not dep_met:
-                    dependency_failure = True
-                    if modname in to_load:
-                        to_load.remove(modname)
-                    if modname in maybe_dep:
-                        maybe_dep.remove(modname)
-                    cannot_use_because(modname, 'dependency failure')
-
-    for not_a_dep in maybe_dep:
-        cannot_use_because(not_a_dep, 'not requested')
-
-    for reason in sorted(not_using_because.keys()):
-        disabled_mods = sorted(set([mod for mod in not_using_because[reason]]))
-
-        if disabled_mods != []:
-            logging.info('Skipping, %s - %s' % (
-                reason, ' '.join(disabled_mods)))
-
-    for mod in sorted(to_load):
-        if mod.startswith('simd_') and mod != 'simd_engine':
-            logging.info('Using SIMD module ' + mod)
-
-    for mod in sorted(to_load):
-        if modules[mod].comment:
-            logging.info('%s: %s' % (mod, modules[mod].comment))
-        if modules[mod].warning:
-            logging.warning('%s: %s' % (mod, modules[mod].warning))
-
-    # force through set to dedup if required
-    to_load = sorted(list(set(to_load)))
-    logging.info('Loading modules %s', ' '.join(to_load))
-
-    return to_load
+        return self._to_load
 
 def choose_link_method(options):
     """
@@ -2134,11 +2200,121 @@ def portable_symlink(file_path, target_dir, method):
     else:
         raise UserError('Unknown link method %s' % (method))
 
-def generate_amalgamation(build_config, modules, options):
-    """
-    Generate the amalgamation
-    """
 
+class AmalgamationHelper(object):
+    _any_include_matcher = re.compile(r'#include <(.*)>$')
+    _botan_include_matcher = re.compile(r'#include <botan/(.*)>$')
+    _std_include_matcher = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
+
+    @staticmethod
+    def is_any_include(cpp_source_line):
+        match = AmalgamationHelper._any_include_matcher.search(cpp_source_line)
+        if match:
+            return match.group(1)
+        else:
+            return None
+
+    @staticmethod
+    def is_botan_include(cpp_source_line):
+        match = AmalgamationHelper._botan_include_matcher.search(cpp_source_line)
+        if match:
+            return match.group(1)
+        else:
+            return None
+
+    @staticmethod
+    def is_std_include(cpp_source_line):
+        match = AmalgamationHelper._std_include_matcher.search(cpp_source_line)
+        if match:
+            return match.group(1)
+        else:
+            return None
+
+
+class AmalgamationHeader(object):
+    def __init__(self, input_filepaths):
+
+        self.included_already = set()
+        self.all_std_includes = set()
+
+        self.file_contents = {}
+        for filepath in sorted(input_filepaths):
+            try:
+                with open(filepath) as f:
+                    raw_content = f.readlines()
+                contents = AmalgamationGenerator.strip_header_goop(filepath, raw_content)
+                self.file_contents[os.path.basename(filepath)] = contents
+            except IOError as e:
+                logging.error('Error processing file %s for amalgamation: %s' % (filepath, e))
+
+        self.contents = ''
+        for name in sorted(self.file_contents):
+            self.contents += ''.join(list(self.header_contents(name)))
+
+        self.header_includes = ''
+        for std_header in sorted(self.all_std_includes):
+            self.header_includes += '#include <%s>\n' % (std_header)
+        self.header_includes += '\n'
+
+    def header_contents(self, name):
+        name = name.replace('internal/', '')
+
+        if name in self.included_already:
+            return
+
+        self.included_already.add(name)
+
+        if name not in self.file_contents:
+            return
+
+        for line in self.file_contents[name]:
+            header = AmalgamationHelper.is_botan_include(line)
+            if header:
+                for c in self.header_contents(header):
+                    yield c
+            else:
+                std_header = AmalgamationHelper.is_std_include(line)
+
+                if std_header:
+                    self.all_std_includes.add(std_header)
+                else:
+                    yield line
+
+    @staticmethod
+    def write_banner(fd):
+        fd.write("""/*
+* Botan %s Amalgamation
+* (C) 1999-2013,2014,2015,2016 Jack Lloyd and others
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+""" % (Version.as_string()))
+
+    @staticmethod
+    def _write_start_include_guard(fd, title):
+        fd.write("""
+#ifndef %s
+#define %s
+
+""" % (title, title))
+
+    @staticmethod
+    def _write_end_include_guard(fd, title):
+        fd.write("\n#endif // %s\n" % (title))
+
+    def write_to_file(self, filepath, include_guard):
+        with open(filepath, 'w') as f:
+            self.write_banner(f)
+            self._write_start_include_guard(f, include_guard)
+            f.write(self.header_includes)
+            f.write(self.contents)
+            self._write_end_include_guard(f, include_guard)
+
+
+class AmalgamationGenerator(object):
+    filename_prefix = 'botan_all'
+
+    @staticmethod
     def strip_header_goop(header_name, contents):
         header_guard = re.compile('^#define BOTAN_.*_H__$')
 
@@ -2162,164 +2338,113 @@ def generate_amalgamation(build_config, modules, options):
 
         return contents
 
-    botan_include_matcher = re.compile(r'#include <botan/(.*)>$')
-    std_include_matcher = re.compile(r'^#include <([^/\.]+|stddef.h)>$')
-    any_include_matcher = re.compile(r'#include <(.*)>$')
+    def __init__(self, build_paths, modules, options):
+        self._build_paths = build_paths
+        self._modules = modules
+        self._options = options
 
-    class AmalgamationGenerator:
-        def __init__(self, input_list):
-
-            self.included_already = set()
-            self.all_std_includes = set()
-
-            self.file_contents = {}
-            for f in sorted(input_list):
-                try:
-                    contents = strip_header_goop(f, open(f).readlines())
-                    self.file_contents[os.path.basename(f)] = contents
-                except IOError as e:
-                    logging.error('Error processing file %s for amalgamation: %s' % (f, e))
-
-            self.contents = ''
-            for name in sorted(self.file_contents):
-                self.contents += ''.join(list(self.header_contents(name)))
-
-            self.header_includes = ''
-            for std_header in sorted(self.all_std_includes):
-                self.header_includes += '#include <%s>\n' % (std_header)
-            self.header_includes += '\n'
-
-        def header_contents(self, name):
-            name = name.replace('internal/', '')
-
-            if name in self.included_already:
-                return
-
-            self.included_already.add(name)
-
-            if name not in self.file_contents:
-                return
-
-            for line in self.file_contents[name]:
-                match = botan_include_matcher.search(line)
-                if match:
-                    for c in self.header_contents(match.group(1)):
-                        yield c
-                else:
-                    match = std_include_matcher.search(line)
-
-                    if match:
-                        self.all_std_includes.add(match.group(1))
-                    else:
-                        yield line
-
-    amalg_basename = 'botan_all'
-
-    header_name = '%s.h' % (amalg_basename)
-    header_int_name = '%s_internal.h' % (amalg_basename)
-
-    logging.info('Writing amalgamation header to %s' % (header_name))
-
-    botan_h = open(header_name, 'w')
-    botan_int_h = open(header_int_name, 'w')
-
-    pub_header_amalag = AmalgamationGenerator(build_config.public_headers)
-
-    amalg_header = """/*
-* Botan %s Amalgamation
-* (C) 1999-2013,2014,2015,2016 Jack Lloyd and others
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-*/
-""" % (Version.as_string())
-
-    botan_h.write(amalg_header)
-
-    botan_h.write("""
-#ifndef BOTAN_AMALGAMATION_H__
-#define BOTAN_AMALGAMATION_H__
-
-""")
-
-    botan_h.write(pub_header_amalag.header_includes)
-    botan_h.write(pub_header_amalag.contents)
-    botan_h.write("\n#endif\n")
-
-    internal_headers = AmalgamationGenerator([s for s in build_config.internal_headers])
-
-    botan_int_h.write("""
-#ifndef BOTAN_AMALGAMATION_INTERNAL_H__
-#define BOTAN_AMALGAMATION_INTERNAL_H__
-
-""")
-    botan_int_h.write(internal_headers.header_includes)
-    botan_int_h.write(internal_headers.contents)
-    botan_int_h.write("\n#endif\n")
-
-    headers_written_in_h_files = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
-
-    botan_amalgs_fs = []
-
-    def open_amalg_file(tgt):
-        fsname = '%s%s.cpp' % (amalg_basename, '_' + tgt if tgt else '')
-        botan_amalgs_fs.append(fsname)
-        logging.info('Writing amalgamation source to %s' % (fsname))
-        f = open(fsname, 'w')
-        f.write(amalg_header)
-
-        f.write('\n#include "%s"\n' % (header_name))
-        f.write('#include "%s"\n\n' % (header_int_name))
-
-        return f
-
-    botan_amalg_files = {}
-    headers_written = {}
-
-    for mod in modules:
-        tgt = ''
-
-        if not options.single_amalgamation_file:
+    def _target_for_module(self, mod):
+        target = ''
+        if not self._options.single_amalgamation_file:
             if mod.need_isa != []:
-                tgt = '_'.join(sorted(mod.need_isa))
-                if tgt == 'sse2' and options.arch == 'x86_64':
-                    tgt = '' # SSE2 is always available on x86-64
+                target = '_'.join(sorted(mod.need_isa))
+                if target == 'sse2' and self._options.arch == 'x86_64':
+                    target = '' # SSE2 is always available on x86-64
 
-            if options.arch == 'x86_32' and 'simd' in mod.requires:
-                tgt = 'sse2'
+            if self._options.arch == 'x86_32' and 'simd' in mod.requires:
+                target = 'sse2'
+        return target
 
-        if tgt not in botan_amalg_files:
-            botan_amalg_files[tgt] = open_amalg_file(tgt)
-
-            if tgt != '':
+    def _isas_for_target(self, target):
+        for mod in sorted(self._modules):
+            # Only first module for target is considered. Does this make sense?
+            if self._target_for_module(mod) == target:
+                out = set()
                 for isa in mod.need_isa:
                     if isa == 'aesni':
                         isa = "aes,ssse3,pclmul"
                     elif isa == 'rdrand':
                         isa = 'rdrnd'
+                    out.add(isa)
+                return out
+        # Return set such that we can also iterate over result in the NA case
+        return set()
 
-                    botan_amalg_files[tgt].write('#if defined(__GNUG__)\n#pragma GCC target ("%s")\n#endif\n' % (isa))
+    def _generate_headers(self):
+        pub_header_amalag = AmalgamationHeader(self._build_paths.public_headers)
+        header_name = '%s.h' % (AmalgamationGenerator.filename_prefix)
+        logging.info('Writing amalgamation header to %s' % (header_name))
+        pub_header_amalag.write_to_file(header_name, "BOTAN_AMALGAMATION_H__")
 
-        if tgt not in headers_written:
-            headers_written[tgt] = headers_written_in_h_files.copy()
+        internal_headers = AmalgamationHeader(self._build_paths.internal_headers)
+        header_int_name = '%s_internal.h' % (AmalgamationGenerator.filename_prefix)
+        logging.info('Writing amalgamation header to %s' % (header_int_name))
+        internal_headers.write_to_file(header_int_name, "BOTAN_AMALGAMATION_INTERNAL_H__")
 
-        for src in sorted(mod.source):
-            contents = open(src, 'r').readlines()
-            for line in contents:
-                if botan_include_matcher.search(line):
-                    continue
+        header_files = [header_name, header_int_name]
+        included_in_headers = pub_header_amalag.all_std_includes | internal_headers.all_std_includes
+        return header_files, included_in_headers
 
-                match = any_include_matcher.search(line)
-                if match:
-                    header = match.group(1)
-                    if header in headers_written[tgt]:
-                        continue
+    def _generate_sources(self, amalgamation_headers, included_in_headers): #pylint: disable=too-many-locals,too-many-branches
+        # target to filepath map
+        amalgamation_sources = {}
+        for mod in self._modules:
+            target = self._target_for_module(mod)
+            amalgamation_sources[target] = '%s%s.cpp' % (
+                AmalgamationGenerator.filename_prefix,
+                '_' + target if target else '')
 
-                    botan_amalg_files[tgt].write(line)
-                    headers_written[tgt].add(header)
-                else:
-                    botan_amalg_files[tgt].write(line)
+        # file descriptors for all `amalgamation_sources`
+        amalgamation_files = {}
+        for target, filepath in amalgamation_sources.items():
+            logging.info('Writing amalgamation source to %s' % (filepath))
+            amalgamation_files[target] = open(filepath, 'w')
 
-    return botan_amalgs_fs
+        for target, f in amalgamation_files.items():
+            AmalgamationHeader.write_banner(f)
+            f.write('\n')
+            for header in amalgamation_headers:
+                f.write('#include "%s"\n' % (header))
+            f.write('\n')
+
+            for isa in self._isas_for_target(target):
+                f.write('#if defined(__GNUG__)\n')
+                f.write('#pragma GCC target ("%s")\n' % (isa))
+                f.write('#endif\n')
+
+        # target to include header map
+        headers_written = {}
+        for target, _ in amalgamation_sources.items():
+            headers_written[target] = included_in_headers.copy()
+
+        for mod in sorted(self._modules):
+            tgt = self._target_for_module(mod)
+            for src in sorted(mod.source):
+                with open(src, 'r') as f:
+                    for line in f:
+                        if AmalgamationHelper.is_botan_include(line):
+                            continue
+
+                        header = AmalgamationHelper.is_any_include(line)
+                        if header:
+                            if header in headers_written[tgt]:
+                                continue
+
+                            amalgamation_files[tgt].write(line)
+                            headers_written[tgt].add(header)
+                        else:
+                            amalgamation_files[tgt].write(line)
+
+        for f in amalgamation_files.values():
+            f.close()
+
+        return set(amalgamation_sources.values())
+
+    def generate(self):
+        amalgamation_headers, included_in_headers = self._generate_headers()
+        amalgamation_sources = self._generate_sources(amalgamation_headers, included_in_headers)
+        return amalgamation_sources
+
 
 def have_program(program):
     """
@@ -2548,13 +2673,9 @@ def main(argv=None):
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
         options.build_shared_lib = False
 
-    loaded_mods = choose_modules_to_use(modules, module_policy, arch, cc, options)
+    loaded_module_names = ModulesChooser(modules, module_policy, arch, cc, options).choose()
 
-    for m in loaded_mods:
-        if modules[m].load_on == 'vendor':
-            logging.info('Enabling use of external dependency %s' % (m))
-
-    using_mods = [modules[m] for m in loaded_mods]
+    using_mods = [modules[modname] for modname in loaded_module_names]
 
     build_config = BuildPaths(options, using_mods)
 
@@ -2654,15 +2775,15 @@ def main(argv=None):
         json.dump(template_vars, f, sort_keys=True, indent=2)
 
     if options.amalgamation:
-        amalgamation_cpp_files = generate_amalgamation(build_config, using_mods, options)
-        build_config.lib_sources = amalgamation_cpp_files
+        amalgamation_cpp_files = AmalgamationGenerator(build_config, using_mods, options).generate()
+        build_config.lib_sources = sorted(amalgamation_cpp_files)
         MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate(template_vars)
 
     if options.with_bakefile:
         gen_bakefile(build_config, options, template_vars['link_to'])
 
     if options.with_cmake:
-        gen_cmake(build_config, using_mods, cc, options)
+        CmakeGenerator(build_config, using_mods, cc, options).generate()
 
     write_template(template_vars['makefile_path'], makefile_template)
 
@@ -2686,7 +2807,7 @@ if __name__ == '__main__':
     except UserError as e:
         logging.debug(traceback.format_exc())
         logging.error(e)
-    except InternalError as e:
+    except Exception as e: # pylint: disable=broad-except
         # error() will stop script, so wrap all information into one call
         logging.error("""%s
 An internal error occurred.
@@ -2697,7 +2818,5 @@ Please report the entire output at https://github.com/randombit/botan or email
 to the mailing list https://lists.randombit.net/mailman/listinfo/botan-devel
 
 You'll meet friendly people happy to help!""" % traceback.format_exc())
-    except Exception as e: # pylint: disable=broad-except
-        logging.debug(traceback.format_exc())
-        logging.error(e)
+
     sys.exit(0)
