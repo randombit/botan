@@ -2526,14 +2526,14 @@ def main(argv=None):
                     [ModuleInfo(info) for info in
                      find_files_named('info.txt', options.lib_dir)]])
 
-    def load_build_data(descr, subdir, class_t):
+    def load_build_data(descr, search_dir, class_t):
         info = {}
 
-        subdir = os.path.join(options.build_data, subdir)
+        for filename in os.listdir(search_dir):
+            print(os.path.join(search_dir, filename))
+            if filename.endswith('.txt'):
+                info[filename.replace('.txt', '')] = class_t(os.path.join(search_dir, filename))
 
-        for fsname in os.listdir(subdir):
-            if fsname.endswith('.txt'):
-                info[fsname.replace('.txt', '')] = class_t(os.path.join(subdir, fsname))
         if len(info) == 0:
             logging.warning('Failed to load any %s files' % (descr))
         else:
@@ -2542,14 +2542,14 @@ def main(argv=None):
 
         return info
 
-    info_arch = load_build_data('CPU info', 'arch', ArchInfo)
-    info_os = load_build_data('OS info', 'os', OsInfo)
-    info_cc = load_build_data('compiler info', 'cc', CompilerInfo)
+    info_arch = load_build_data('CPU info', os.path.join(options.build_data, 'arch'), ArchInfo)
+    info_os = load_build_data('OS info', os.path.join(options.build_data, 'os'), OsInfo)
+    info_cc = load_build_data('compiler info', os.path.join(options.build_data, 'cc'), CompilerInfo)
 
     for mod in modules.values():
         mod.cross_check(info_arch, info_os, info_cc)
 
-    module_policies = load_build_data('module policy', 'policy', ModulePolicyInfo)
+    module_policies = load_build_data('module policy', os.path.join(options.build_data, 'policy'), ModulePolicyInfo)
 
     for policy in module_policies.values():
         policy.cross_check(modules)
