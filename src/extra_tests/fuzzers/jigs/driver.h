@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
    {
    const size_t max_read = 4096;
 
-   LLVMFuzzerInitialize();
+   LLVMFuzzerInitialize(&argc, &argv);
 
 #if defined(__AFL_LOOP)
    while(__AFL_LOOP(1000))
