@@ -2489,6 +2489,31 @@ def setup_logging(options):
     logging.getLogger().setLevel(log_level)
 
 
+def load_info_files(descr, search_dir, filename_matcher, class_t):
+    info = {}
+
+    def filename_matches(filename):
+        if isinstance(filename_matcher, str):
+            return filename == filename_matcher
+        else:
+            return filename_matcher.match(filename) is not None
+
+    for (dirpath, _, filenames) in os.walk(search_dir):
+        for filename in filenames:
+            filepath = os.path.join(dirpath, filename)
+            if filename_matches(filename):
+                info_obj = class_t(filepath)
+                info[info_obj.basename] = info_obj
+
+    if info:
+        infotxt_basenames = ' '.join(sorted([key for key in info]))
+        logging.debug('Loaded %d %s files: %s' % (len(info), descr, infotxt_basenames))
+    else:
+        logging.warning('Failed to load any %s files' % (descr))
+
+    return info
+
+
 def main(argv=None):
     """
     Main driver
@@ -2517,39 +2542,20 @@ def main(argv=None):
     options.build_data = os.path.join(options.src_dir, 'build-data')
     options.makefile_dir = os.path.join(options.build_data, 'makefile')
 
-    def find_files_named(desired_name, in_path):
-        for (dirpath, _, filenames) in os.walk(in_path):
-            if desired_name in filenames:
-                yield os.path.join(dirpath, desired_name)
+    modules = load_info_files('Modules', options.lib_dir, "info.txt", ModuleInfo)
 
-    modules = dict([(mod.basename, mod) for mod in
-                    [ModuleInfo(info) for info in
-                     find_files_named('info.txt', options.lib_dir)]])
+    def load_build_data(descr, subdir, class_t):
+        matcher = re.compile(r'[_a-z0-9]+\.txt$')
+        return load_info_files(descr, os.path.join(options.build_data, subdir), matcher, class_t)
 
-    def load_build_data(descr, search_dir, class_t):
-        info = {}
-
-        for filename in os.listdir(search_dir):
-            print(os.path.join(search_dir, filename))
-            if filename.endswith('.txt'):
-                info[filename.replace('.txt', '')] = class_t(os.path.join(search_dir, filename))
-
-        if len(info) == 0:
-            logging.warning('Failed to load any %s files' % (descr))
-        else:
-            infotxt_basenames = ' '.join(sorted([key for key in info]))
-            logging.debug('Loaded %d %s files (%s)' % (len(info), descr, infotxt_basenames))
-
-        return info
-
-    info_arch = load_build_data('CPU info', os.path.join(options.build_data, 'arch'), ArchInfo)
-    info_os = load_build_data('OS info', os.path.join(options.build_data, 'os'), OsInfo)
-    info_cc = load_build_data('compiler info', os.path.join(options.build_data, 'cc'), CompilerInfo)
+    info_arch = load_build_data('CPU info', 'arch', ArchInfo)
+    info_os = load_build_data('OS info', 'os', OsInfo)
+    info_cc = load_build_data('compiler info', 'cc', CompilerInfo)
 
     for mod in modules.values():
         mod.cross_check(info_arch, info_os, info_cc)
 
-    module_policies = load_build_data('module policy', os.path.join(options.build_data, 'policy'), ModulePolicyInfo)
+    module_policies = load_build_data('module policy', 'policy', ModulePolicyInfo)
 
     for policy in module_policies.values():
         policy.cross_check(modules)
