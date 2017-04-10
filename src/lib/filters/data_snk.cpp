@@ -2,6 +2,7 @@
 * DataSink
 * (C) 1999-2007 Jack Lloyd
 *     2005 Matthew Gregan
+*     2017 Philippe Lieser
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -24,6 +25,14 @@ void DataSink_Stream::write(const uint8_t out[], size_t length)
    if(!m_sink.good())
       throw Stream_IO_Error("DataSink_Stream: Failure writing to " +
                             m_identifier);
+   }
+
+/*
+* Flush the stream
+*/
+void DataSink_Stream::end_msg()
+   {
+   m_sink.flush();
    }
 
 /*

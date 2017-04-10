@@ -1,6 +1,7 @@
 /*
 * DataSink
 * (C) 1999-2007 Jack Lloyd
+*     2017 Philippe Lieser
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -57,6 +58,8 @@ class BOTAN_DLL DataSink_Stream : public DataSink
       std::string name() const override { return m_identifier; }
 
       void write(const uint8_t[], size_t) override;
+
+      void end_msg() override;
 
       ~DataSink_Stream();
 
