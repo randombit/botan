@@ -17,7 +17,7 @@ namespace Botan {
 */
 //static
 BOTAN_FUNC_ISA("+crypto")
-void SHA_160::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks)
+void SHA_160::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8_t input8[], size_t blocks)
    {
    uint32x4_t C0, C1, C2, C3;
    uint32x4_t ABCD, ABCD_SAVED;
@@ -32,6 +32,9 @@ void SHA_160::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8
    ABCD = vld1q_u32(&digest[0]);
    E0 = digest[4];
 
+   // Intermediate void* cast due to http://llvm.org/bugs/show_bug.cgi?id=20670
+   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(reinterpret_cast<const void*>(input8));
+
    while (blocks)
       {
       uint32x4_t MSG0, MSG1, MSG2, MSG3;
@@ -41,11 +44,10 @@ void SHA_160::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8
       ABCD_SAVED = ABCD;
       E0_SAVED = E0;
 
-      // Intermediate void* cast due to http://llvm.org/bugs/show_bug.cgi?id=20670
-      MSG0 = vld1q_u32((const uint32_t*)(const void*)(input +  0));
-      MSG1 = vld1q_u32((const uint32_t*)(const void*)(input + 16));
-      MSG2 = vld1q_u32((const uint32_t*)(const void*)(input + 32));
-      MSG3 = vld1q_u32((const uint32_t*)(const void*)(input + 48));
+      MSG0 = vld1q_u32(input32 + 0);
+      MSG1 = vld1q_u32(input32 + 4);
+      MSG2 = vld1q_u32(input32 + 8);
+      MSG3 = vld1q_u32(input32 + 12);
 
       MSG0 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG0)));
       MSG1 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG1)));
@@ -191,7 +193,7 @@ void SHA_160::sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8
       E0 += E0_SAVED;
       ABCD = vaddq_u32(ABCD_SAVED, ABCD);
 
-      input += 64;
+      input32 += 64/4;
       blocks--;
       }
 
