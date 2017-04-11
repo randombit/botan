@@ -2669,6 +2669,9 @@ def main(argv=None):
     if options.via_amalgamation:
         raise UserError("--via-amalgamation was removed. Use --amalgamation instead.")
 
+    if options.single_amalgamation_file and not options.amalgamation:
+        raise UserError("--single-amalgamation-file requires --amalgamation.")
+
     if options.build_shared_lib and not osinfo.building_shared_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
         options.build_shared_lib = False
