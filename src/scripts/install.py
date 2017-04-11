@@ -33,7 +33,7 @@ def parse_command_line(args):
     parser.add_option_group(build_group)
 
     install_group = optparse.OptionGroup(parser, 'Installation options')
-    install_group.add_option('--destdir', default='/usr/local',
+    install_group.add_option('--prefix', default='/usr/local',
                              help='Set output directory (default %default)')
     install_group.add_option('--bindir', default='bin', metavar='DIR',
                              help='Set binary subdir (default %default)')
@@ -62,6 +62,19 @@ def parse_command_line(args):
     logging.getLogger().setLevel(log_level())
 
     return (options, args)
+
+def prepend_destdir(path):
+    """
+    Needed because os.path.join() discards the first path if the
+    second one is absolute, which is usually the case here. Still, we
+    want relative paths to work and leverage the os awareness of
+    os.path.join().
+    """
+    try:
+        destdir = os.environ['DESTDIR']
+        return os.path.join(destdir, path.lstrip('/'))
+    except KeyError as e:
+        return path
 
 def makedirs(dirname, exist_ok = True):
     try:
@@ -102,8 +115,8 @@ def main(args = None):
         shutil.copyfile(src, dst)
 
     def copy_executable(src, dst):
-        logging.debug('Copying %s to %s' % (src, dst))
         copy_file(src, dst)
+        logging.debug('Make %s executable' % dst)
         os.chmod(dst, exe_mode)
 
     with open(os.path.join(options.build_dir, 'build_config.json')) as f:
@@ -127,12 +140,12 @@ def main(args = None):
     target_os = cfg['os']
     build_shared_lib = bool(cfg['build_shared_lib'])
 
-    bin_dir = os.path.join(options.destdir, options.bindir)
-    lib_dir = os.path.join(options.destdir, options.libdir)
-    target_doc_dir = os.path.join(options.destdir,
+    bin_dir = os.path.join(options.prefix, options.bindir)
+    lib_dir = os.path.join(options.prefix, options.libdir)
+    target_doc_dir = os.path.join(options.prefix,
                                   options.docdir,
                                   'botan-%d.%d.%d' % (ver_major, ver_minor, ver_patch))
-    target_include_dir = os.path.join(options.destdir,
+    target_include_dir = os.path.join(options.prefix,
                                       options.includedir,
                                       'botan-%d' % (ver_major),
                                       'botan')
@@ -143,8 +156,8 @@ def main(args = None):
     else:
         app_exe = process_template('botan%{program_suffix}')
 
-    for d in [options.destdir, lib_dir, bin_dir, target_doc_dir, target_include_dir]:
-        makedirs(d)
+    for d in [options.prefix, lib_dir, bin_dir, target_doc_dir, target_include_dir]:
+        makedirs(prepend_destdir(d))
 
     build_include_dir = os.path.join(options.build_dir, 'include', 'botan')
 
@@ -152,42 +165,43 @@ def main(args = None):
         if include == 'internal':
             continue
         copy_file(os.path.join(build_include_dir, include),
-                  os.path.join(target_include_dir, include))
+                  prepend_destdir(os.path.join(target_include_dir, include)))
 
     build_external_include_dir = os.path.join(options.build_dir, 'include', 'external')
 
     for include in sorted(os.listdir(build_external_include_dir)):
         copy_file(os.path.join(build_external_include_dir, include),
-                  os.path.join(target_include_dir, include))
+                  prepend_destdir(os.path.join(target_include_dir, include)))
 
     static_lib = process_template('%{lib_prefix}%{libname}.%{static_suffix}')
     copy_file(os.path.join(out_dir, static_lib),
-              os.path.join(lib_dir, os.path.basename(static_lib)))
+              prepend_destdir(os.path.join(lib_dir, os.path.basename(static_lib))))
 
     if build_shared_lib:
         if target_os == "windows":
             libname = process_template('%{libname}')
             soname_base = libname + '.dll'
             copy_executable(os.path.join(out_dir, soname_base),
-                            os.path.join(lib_dir, soname_base))
+                            prepend_destdir(os.path.join(lib_dir, soname_base)))
         else:
             soname_patch = process_template('%{soname_patch}')
             soname_abi   = process_template('%{soname_abi}')
             soname_base  = process_template('%{soname_base}')
 
             copy_executable(os.path.join(out_dir, soname_patch),
-                            os.path.join(lib_dir, soname_patch))
+                            prepend_destdir(os.path.join(lib_dir, soname_patch)))
 
             if target_os != "openbsd":
                 prev_cwd = os.getcwd()
                 try:
-                    os.chdir(lib_dir)
+                    os.chdir(prepend_destdir(lib_dir))
                     force_symlink(soname_patch, soname_abi)
                     force_symlink(soname_patch, soname_base)
                 finally:
                     os.chdir(prev_cwd)
 
-    copy_executable(os.path.join(out_dir, app_exe), os.path.join(bin_dir, app_exe))
+    copy_executable(os.path.join(out_dir, app_exe),
+                    prepend_destdir(os.path.join(bin_dir, app_exe)))
 
     # On Darwin, if we are using shared libraries and we install, we should fix
     # up the library name, otherwise the botan command won't work; ironically
@@ -204,29 +218,32 @@ def main(args = None):
                                os.path.join(bin_dir, app_exe)])
 
     if 'botan_pkgconfig' in cfg:
-        pkgconfig_dir = os.path.join(options.destdir, options.libdir, options.pkgconfigdir)
-        makedirs(pkgconfig_dir)
+        pkgconfig_dir = os.path.join(options.prefix, options.libdir, options.pkgconfigdir)
+        makedirs(prepend_destdir(pkgconfig_dir))
         copy_file(cfg['botan_pkgconfig'],
-                  os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig'])))
+                  prepend_destdir(os.path.join(pkgconfig_dir,
+                                  os.path.basename(cfg['botan_pkgconfig']))))
 
     if 'ffi' in cfg['mod_list'].split('\n'):
         for ver in cfg['python_version'].split(','):
             py_lib_path = os.path.join(lib_dir, 'python%s' % (ver), 'site-packages')
             logging.debug('Installing python module to %s' % (py_lib_path))
-            makedirs(py_lib_path)
+            makedirs(prepend_destdir(py_lib_path))
 
             py_dir = cfg['python_dir']
             for py in os.listdir(py_dir):
-                copy_file(os.path.join(py_dir, py), os.path.join(py_lib_path, py))
+                copy_file(os.path.join(py_dir, py), prepend_destdir(os.path.join(py_lib_path, py)))
 
-    shutil.rmtree(target_doc_dir, True)
-    shutil.copytree(cfg['doc_output_dir'], target_doc_dir)
+    shutil.rmtree(prepend_destdir(target_doc_dir), True)
+    shutil.copytree(cfg['doc_output_dir'], prepend_destdir(target_doc_dir))
 
     for f in [f for f in os.listdir(cfg['doc_dir']) if f.endswith('.txt')]:
-        copy_file(os.path.join(cfg['doc_dir'], f), os.path.join(target_doc_dir, f))
+        copy_file(os.path.join(cfg['doc_dir'], f), prepend_destdir(os.path.join(target_doc_dir, f)))
 
-    copy_file(os.path.join(cfg['base_dir'], 'license.txt'), os.path.join(target_doc_dir, 'license.txt'))
-    copy_file(os.path.join(cfg['base_dir'], 'news.rst'), os.path.join(target_doc_dir, 'news.txt'))
+    copy_file(os.path.join(cfg['base_dir'], 'license.txt'),
+              prepend_destdir(os.path.join(target_doc_dir, 'license.txt')))
+    copy_file(os.path.join(cfg['base_dir'], 'news.rst'),
+              prepend_destdir(os.path.join(target_doc_dir, 'news.txt')))
 
     logging.info('Botan %s installation complete', cfg['version'])
 
