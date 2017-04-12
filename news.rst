@@ -6,6 +6,8 @@ Version 2.2.0, Not Yet Released
 
 * Add the SM3 hash function
 
+* Fix missing flush in DataSink_Stream::end_msg. (GH #972)
+
 Version 2.1.0, 2017-04-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

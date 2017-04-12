@@ -40,3 +40,4 @@ Kai Michaelis (Rohde & Schwarz Cybersecurity)
 Philipp Weber (Rohde & Schwarz Cybersecurity)
 Tobias @neverhub
 Alexander Bluhm (genua GmbH)
+Philippe Lieser (Rohde & Schwarz Cybersecurity)

@@ -2,6 +2,7 @@
 * (C) 2016 Daniel Neus
 *     2016 Jack Lloyd
 *     2017 René Korthaus
+*     2017 Philippe Lieser
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -35,6 +36,7 @@ class Filter_Tests : public Test
 
          results.push_back(test_secqueue());
          results.push_back(test_data_src_sink());
+         results.push_back(test_data_src_sink_flush());
          results.push_back(test_pipe_io());
          results.push_back(test_pipe_errors());
          results.push_back(test_pipe_hash());
@@ -113,6 +115,31 @@ class Filter_Tests : public Test
 #endif
          return result;
          }
+
+      Test::Result test_data_src_sink_flush()
+      {
+          Test::Result result("DataSinkFlush");
+
+#if defined(BOTAN_HAS_CODEC_FILTERS)
+          std::string tmp_name("botan_test_data_src_sink_flush.tmp");
+          std::ofstream outfile(tmp_name);
+
+          Botan::Pipe pipe(new Botan::Hex_Decoder, new Botan::DataSink_Stream(outfile));
+
+          Botan::DataSource_Memory input_mem("65666768");
+          pipe.process_msg(input_mem);
+
+          std::ifstream outfile_read(tmp_name);
+          std::stringstream ss;
+          ss << outfile_read.rdbuf();
+          std::string foo = ss.str();
+
+          result.test_eq("output string", ss.str(), "efgh");
+
+          std::remove(tmp_name.c_str());
+#endif
+          return result;
+      }
 
       Test::Result test_pipe_io()
          {
