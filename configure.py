@@ -828,13 +828,6 @@ class ModuleInfo(InfoObject):
             logging.error("Module '%s', dep of '%s', does not exist" % (
                 missing, self.basename))
 
-    def __cmp__(self, other):
-        if self.basename < other.basename:
-            return -1
-        if self.basename == other.basename:
-            return 0
-        return 1
-
 
 class ModulePolicyInfo(InfoObject):
     def __init__(self, infofile):
@@ -2356,7 +2349,7 @@ class AmalgamationGenerator(object):
         return target
 
     def _isas_for_target(self, target):
-        for mod in sorted(self._modules):
+        for mod in sorted(self._modules, key=lambda module: module.basename):
             # Only first module for target is considered. Does this make sense?
             if self._target_for_module(mod) == target:
                 out = set()
@@ -2417,7 +2410,7 @@ class AmalgamationGenerator(object):
         for target, _ in amalgamation_sources.items():
             headers_written[target] = included_in_headers.copy()
 
-        for mod in sorted(self._modules):
+        for mod in sorted(self._modules, key=lambda module: module.basename):
             tgt = self._target_for_module(mod)
             for src in sorted(mod.source):
                 with open(src, 'r') as f:
