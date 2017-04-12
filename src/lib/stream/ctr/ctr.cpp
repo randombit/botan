@@ -73,27 +73,10 @@ void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);
 
-   const size_t bs = m_cipher->block_size();
-
-   zeroise(m_counter);
    zeroise(m_iv);
    buffer_insert(m_iv, 0, iv, iv_len);
 
-   const size_t n_wide = m_counter.size() / m_cipher->block_size();
-   buffer_insert(m_counter, 0, iv, iv_len);
-
-   // Set m_counter blocks to IV, IV + 1, ... IV + n
-   for(size_t i = 1; i != n_wide; ++i)
-      {
-      buffer_insert(m_counter, i*bs, &m_counter[(i-1)*bs], bs);
-
-      for(size_t j = 0; j != m_ctr_size; ++j)
-         if(++m_counter[i*bs + (bs - 1 - j)])
-            break;
-      }
-
-   m_cipher->encrypt_n(m_counter.data(), m_pad.data(), n_wide);
-   m_pad_pos = 0;
+   seek(0);
    }
 
 /*
