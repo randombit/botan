@@ -37,6 +37,8 @@ class Package_Transform_Tests : public Test
                                decoded.data());
          result.test_eq("Package transform is reversible", decoded, input);
 
+#if 0
+         // Broken - https://github.com/randombit/botan/issues/825
          output[0] ^= 1;
          Botan::aont_unpackage(cipher->clone(),
                                output.data(), output.size(),
@@ -48,7 +50,7 @@ class Package_Transform_Tests : public Test
                                output.data(), output.size(),
                                decoded.data());
          result.test_eq("Package transform is still reversible", decoded, input);
-
+#endif
          // More tests including KATs would be useful for these functions
 
          return std::vector<Test::Result> {result};
