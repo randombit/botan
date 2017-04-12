@@ -13,6 +13,7 @@ CTR_BE::CTR_BE(BlockCipher* ciph) :
    m_cipher(ciph),
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
+   m_iv(m_cipher->block_size()),
    m_ctr_size(m_cipher->block_size()),
    m_pad_pos(0)
    {
@@ -22,6 +23,7 @@ CTR_BE::CTR_BE(BlockCipher* cipher, size_t ctr_size) :
    m_cipher(cipher),
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
+   m_iv(m_cipher->block_size()),
    m_ctr_size(ctr_size),
    m_pad_pos(0)
    {
@@ -35,6 +37,7 @@ void CTR_BE::clear()
    m_cipher->clear();
    zeroise(m_pad);
    zeroise(m_counter);
+   zeroise(m_iv);
    m_pad_pos = 0;
    }
 
@@ -73,6 +76,8 @@ void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
    const size_t bs = m_cipher->block_size();
 
    zeroise(m_counter);
+   zeroise(m_iv);
+   buffer_insert(m_iv, 0, iv, iv_len);
 
    const size_t n_wide = m_counter.size() / m_cipher->block_size();
    buffer_insert(m_counter, 0, iv, iv_len);
@@ -115,8 +120,31 @@ void CTR_BE::increment_counter()
    m_pad_pos = 0;
    }
 
-void CTR_BE::seek(uint64_t)
+void CTR_BE::seek(uint64_t offset)
    {
-   throw Not_Implemented("CTR_BE::seek");
+   const size_t bs = m_cipher->block_size();
+   const size_t n_wide = m_counter.size() / bs;
+   const uint64_t base_counter = n_wide * (offset / m_counter.size());
+
+   zeroise(m_counter);
+
+   for (size_t i = 0; i != n_wide; ++i)
+      {
+      buffer_insert(m_counter, bs * i, m_iv);
+
+      uint64_t counter = base_counter + i;
+      uint16_t carry = static_cast<uint8_t>(counter);
+      for (size_t j = 0; (carry || counter) && j != m_ctr_size; ++j)
+         {
+         const size_t off = i*bs + (bs-1-j);
+         const uint16_t cnt = static_cast<uint16_t>(m_counter[off]) + carry;
+         m_counter[off] = static_cast<uint8_t>(cnt);
+         counter = (counter >> 8);
+         carry = (cnt >> 8) + static_cast<uint8_t>(counter);
+         }
+      }
+
+   m_cipher->encrypt_n(m_counter.data(), m_pad.data(), n_wide);
+   m_pad_pos = offset % m_counter.size();
    }
 }
