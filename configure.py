@@ -1903,9 +1903,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         }
 
     if options.house_curve:
-        variables['misc_config'] = make_cpp_macros(HouseEccCurve(options.house_curve).defines())
+        variables['house_ecc_curve_defines'] = make_cpp_macros(HouseEccCurve(options.house_curve).defines())
     else:
-        variables['misc_config'] = ''
+        variables['house_ecc_curve_defines'] = ''
 
     if options.build_shared_lib:
 

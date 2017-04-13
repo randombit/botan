@@ -51,7 +51,7 @@
 * Local/misc configuration options (if any) follow
 */
 %{local_config}
-%{misc_config}
+%{house_ecc_curve_defines}
 
 /*
 * Things you can edit (but probably shouldn't)
