@@ -15,7 +15,7 @@ used in open source as well as commercial software.
 This repository contains versions of Botan that are approved by the BSI. All changes made
 to Botan during the project were contributed to the original project. Our goal is to keep 
 this fork in sync with the official repository, but we cannot assure this. In case an approved
-version differs from an official Botan version, the changes are listed in the `release notes <news.md>`_.
+version differs from an official Botan version, the changes are listed in the `release notes <news.rst>`_.
 
 Versioning
 ----------------------------------------
@@ -63,7 +63,7 @@ TLS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Botan contains a TLS Policy class `BSI_TR_02102_2 <src/lib/tls/tls_policy.h>`_ that only allows the algorithms recommended in
-technical guideline `02102-2 <https://www.bsi.bund.de/DE/Publikationen/TechnischeRichtlinien/tr02102/index_htm.html>`_.
+BSI technical guideline `02102-2 <https://www.bsi.bund.de/DE/Publikationen/TechnischeRichtlinien/tr02102/index_htm.html>`_.
 This policy can be passed whereever a ``TLS_Policy`` reference is accepted by the API.
 For more information, see the `handbook <https://botan.randombit.net/manual/tls.html>`_.
 
