@@ -262,8 +262,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
                             help='set compiler ABI flags',
                             default='')
 
-    target_group.add_option('--chost', help=optparse.SUPPRESS_HELP)
-
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override byte order guess')
 
@@ -2628,15 +2626,6 @@ def main(argv=None):
         for k in sorted(modules.keys()):
             print(k)
         sys.exit(0)
-
-    if options.chost:
-        chost = options.chost.split('-')
-
-        if options.cpu is None and len(chost) > 0:
-            options.cpu = chost[0]
-
-        if options.os is None and len(chost) > 2:
-            options.os = '-'.join(chost[2:])
 
     if options.os is None:
         options.os = platform.system().lower()
