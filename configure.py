@@ -1723,7 +1723,7 @@ class HouseEccCurve(object):
     def __init__(self, house_curve):
         p = house_curve.split(",")
         if len(p) < 4:
-            raise UserError('Too few parameters to --in-house-curve')
+            raise UserError('Too few parameters to --house-curve')
         # make sure TLS curve id is in reserved for private use range (0xFE00..0xFEFF)
         curve_id = int(p[3], 16)
         if curve_id < 0xfe00 or curve_id > 0xfeff:
