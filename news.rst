@@ -20,8 +20,6 @@ Version 2.2.0, Not Yet Released
   `--single-amalgamation-file` requires `--amalgamation` also be set
   on the command line.
 
-* Avoid a problem generating the amalgamation under Python 3 (GH #992)
-
 Version 2.1.0, 2017-04-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
