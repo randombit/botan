@@ -1721,28 +1721,31 @@ class MakefileListsGenerator(object):
 
 class HouseEccCurve(object):
     def __init__(self, house_curve):
-        self._defines = list()
         p = house_curve.split(",")
         if len(p) < 4:
-            logging.error('Too few parameters to --in-house-curve')
+            raise UserError('Too few parameters to --in-house-curve')
         # make sure TLS curve id is in reserved for private use range (0xFE00..0xFEFF)
         curve_id = int(p[3], 16)
         if curve_id < 0xfe00 or curve_id > 0xfeff:
-            logging.error('TLS curve ID not in reserved range (see RFC 4492)')
-        self._defines.append('HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"')
-        self._defines.append('HOUSE_ECC_CURVE_OID \"' + p[2] + '\"')
-        self._defines.append('HOUSE_ECC_CURVE_PEM ' + self._read_pem(filename=p[0]))
-        self._defines.append('HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id))
+            raise UserError('TLS curve ID not in reserved range (see RFC 4492)')
+
+        self._defines = [
+            'HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"',
+            'HOUSE_ECC_CURVE_OID \"' + p[2] + '\"',
+            'HOUSE_ECC_CURVE_PEM ' + self._read_pem(filename=p[0]),
+            'HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id),
+        ]
 
     def defines(self):
         return self._defines
 
     @staticmethod
     def _read_pem(filename):
-        lines = [line.rstrip() for line in open(filename)]
-        for ndx, _ in enumerate(lines):
-            lines[ndx] = ''.join(('\"', lines[ndx], '\" \\', '\n'))
-        return ''.join(lines)
+        with open(filename) as f:
+            lines = [line.rstrip() for line in f]
+            for ndx, _ in enumerate(lines):
+                lines[ndx] = ''.join(('\"', lines[ndx], '\" \\', '\n'))
+            return ''.join(lines)
 
 
 def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
