@@ -1718,6 +1718,33 @@ class MakefileListsGenerator(object):
             out[build_key] = '\n'.join(self._build_commands(src_list, src_dir, t.upper()))
         return out
 
+
+class HouseEccCurve(object):
+    def __init__(self, house_curve):
+        self._defines = list()
+        p = house_curve.split(",")
+        if len(p) < 4:
+            logging.error('Too few parameters to --in-house-curve')
+        # make sure TLS curve id is in reserved for private use range (0xFE00..0xFEFF)
+        curve_id = int(p[3], 16)
+        if curve_id < 0xfe00 or curve_id > 0xfeff:
+            logging.error('TLS curve ID not in reserved range (see RFC 4492)')
+        self._defines.append('HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"')
+        self._defines.append('HOUSE_ECC_CURVE_OID \"' + p[2] + '\"')
+        self._defines.append('HOUSE_ECC_CURVE_PEM ' + self._read_pem(filename=p[0]))
+        self._defines.append('HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id))
+
+    def defines(self):
+        return self._defines
+
+    @staticmethod
+    def _read_pem(filename):
+        lines = [line.rstrip() for line in open(filename)]
+        for ndx, _ in enumerate(lines):
+            lines[ndx] = ''.join(('\"', lines[ndx], '\" \\', '\n'))
+        return ''.join(lines)
+
+
 def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
     """
     Create the template variables needed to process the makefile, build.h, etc
@@ -1762,29 +1789,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
             else:
                 logging.warning('Unknown arch in innosetup_arch %s' % (arch))
         return None
-
-    def read_pem(filename):
-        lines = [line.rstrip() for line in open(filename)]
-        for ndx, _ in enumerate(lines):
-            lines[ndx] = ''.join(('\"', lines[ndx], '\" \\', '\n'))
-        return ''.join(lines)
-
-    def misc_config():
-        opts = list()
-        if options.house_curve:
-            p = options.house_curve.split(",")
-            if len(p) < 4:
-                logging.error('Too few parameters to --in-house-curve')
-            # make sure TLS curve id is in reserved for private use range (0xFE00..0xFEFF)
-            curve_id = int(p[3], 16)
-            if curve_id < 0xfe00 or curve_id > 0xfeff:
-                logging.error('TLS curve ID not in reserved range (see RFC 4492)')
-            opts.append('HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"')
-            opts.append('HOUSE_ECC_CURVE_OID \"' + p[2] + '\"')
-            opts.append('HOUSE_ECC_CURVE_PEM ' + read_pem(filename=p[0]))
-            opts.append('HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id))
-
-        return opts
 
     def configure_command_line():
         # Cut absolute path from main executable (e.g. configure.py or python interpreter)
@@ -1896,9 +1900,12 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'python_version': options.python_version,
         'with_sphinx': options.with_sphinx,
-
-        'misc_config': make_cpp_macros(misc_config())
         }
+
+    if options.house_curve:
+        variables['misc_config'] = make_cpp_macros(HouseEccCurve(options.house_curve).defines())
+    else:
+        variables['misc_config'] = ''
 
     if options.build_shared_lib:
 
