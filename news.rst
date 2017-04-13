@@ -8,6 +8,8 @@ Version 2.2.0, Not Yet Released
 
 * Fix missing flush in DataSink_Stream::end_msg. (GH #972)
 
+* Allow to seek in the big endian counter mode of operation (GH #999)
+
 Version 2.1.0, 2017-04-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
