@@ -6,7 +6,21 @@ Version 2.2.0, Not Yet Released
 
 * Add the SM3 hash function
 
-* Fix missing flush in DataSink_Stream::end_msg. (GH #972)
+* Avoid recursion in BER_Decoder::get_next_object which could cause
+  stack exhaustion. (GH #989)
+
+* Fix missing flush in DataSink_Stream::end_msg. (GH #972 fixing GH #972)
+
+* Add `hmac` command line util (GH #1001)
+
+* Add `hex_enc` and `hex_dec` command line utils
+
+* It was previously possible to use `--single-amalgamation-file`
+  without `--amalgamation`, though it did not do anything useful. Now
+  `--single-amalgamation-file` requires `--amalgamation` also be set
+  on the command line.
+
+* Avoid a problem generating the amalgamation under Python 3 (GH #992)
 
 Version 2.1.0, 2017-04-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
