@@ -49,6 +49,7 @@ class BOTAN_DLL CTR_BE final : public StreamCipher
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override;
       void increment_counter();
+      void add_counter(const uint64_t counter);
 
       std::unique_ptr<BlockCipher> m_cipher;
       secure_vector<uint8_t> m_counter, m_pad;
