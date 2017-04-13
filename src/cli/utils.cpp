@@ -231,6 +231,43 @@ BOTAN_REGISTER_COMMAND("http_get", HTTP_Get);
 
 #endif // http_util
 
+#if defined(BOTAN_HAS_HEX_CODEC)
+
+class Hex_Encode final : public Command
+   {
+   public:
+      Hex_Encode() : Command("hex_enc file") {}
+
+      void go() override
+         {
+         auto hex_enc_f = [&](const uint8_t b[], size_t l) { output() << Botan::hex_encode(b, l); };
+         this->read_file(get_arg("file"), hex_enc_f, 2);
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("hex_enc", Hex_Encode);
+
+class Hex_Decode final : public Command
+   {
+   public:
+      Hex_Decode() : Command("hex_dec file") {}
+
+      void go() override
+         {
+         auto hex_dec_f = [&](const uint8_t b[], size_t l)
+            {
+            std::vector<uint8_t> bin = Botan::hex_decode(reinterpret_cast<const char*>(b), l);
+            output().write(reinterpret_cast<const char*>(bin.data()), bin.size());
+            };
+
+         this->read_file(get_arg("file"), hex_dec_f, 2);
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("hex_dec", Hex_Decode);
+
+#endif
+
 #if defined(BOTAN_HAS_BASE64_CODEC)
 
 class Base64_Encode final : public Command
