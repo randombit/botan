@@ -1707,14 +1707,16 @@ class MakefileListsGenerator(object):
                 src,
                 self._cc.output_to_option)
 
-    def generate(self, var):
+    def generate(self):
+        out = {}
         for t in ['lib', 'cli', 'test']:
             obj_key = '%s_objs' % (t)
             src_list, src_dir = self._build_paths.src_info(t)
             src_list.sort()
-            var[obj_key] = makefile_list(self._objectfile_list(src_list, src_dir))
+            out[obj_key] = makefile_list(self._objectfile_list(src_list, src_dir))
             build_key = '%s_build_cmds' % (t)
-            var[build_key] = '\n'.join(self._build_commands(src_list, src_dir, t.upper()))
+            out[build_key] = '\n'.join(self._build_commands(src_list, src_dir, t.upper()))
+        return out
 
 def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
     """
@@ -1932,7 +1934,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         variables['cli_post_link_cmd'] = ''
         variables['test_post_link_cmd'] = ''
 
-    MakefileListsGenerator(build_config, options, modules, cc, arch, osinfo).generate(variables)
+    variables.update(MakefileListsGenerator(build_config, options, modules, cc, arch, osinfo).generate())
 
     if options.os == 'windows':
         if options.with_debug_info:
@@ -2802,7 +2804,7 @@ def main(argv=None):
     if options.amalgamation:
         amalgamation_cpp_files = AmalgamationGenerator(build_config, using_mods, options).generate()
         build_config.lib_sources = sorted(amalgamation_cpp_files)
-        MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate(template_vars)
+        template_vars.update(MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate())
 
     if options.with_bakefile:
         gen_bakefile(build_config, options, template_vars['link_to'])
