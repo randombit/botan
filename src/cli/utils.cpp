@@ -1,5 +1,6 @@
 /*
 * (C) 2009,2010,2014,2015 Jack Lloyd
+* (C) 2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -34,6 +35,10 @@
 
 #if defined(BOTAN_HAS_BCRYPT)
   #include <botan/bcrypt.h>
+#endif
+
+#if defined(BOTAN_HAS_HMAC)
+  #include <botan/hmac.h>
 #endif
 
 namespace Botan_CLI {
@@ -308,5 +313,48 @@ class Check_Bcrypt final : public Command
 BOTAN_REGISTER_COMMAND("check_bcrypt", Check_Bcrypt);
 
 #endif // bcrypt
+
+#if defined(BOTAN_HAS_HMAC)
+
+class HMAC final : public Command
+   {
+   public:
+      HMAC() : Command("hmac --hash=SHA-256 --buf-size=4096 key *files") {}
+
+      void go() override
+         {
+         const std::string hash_algo = get_arg("hash");
+         std::unique_ptr<Botan::MessageAuthenticationCode> hmac(Botan::MessageAuthenticationCode::create("HMAC(" + hash_algo + ")"));
+
+         if(!hmac)
+            throw CLI_Error_Unsupported("HMAC", hash_algo);
+
+         hmac->set_key(slurp_file(get_arg("key")));
+
+         const size_t buf_size = get_arg_sz("buf-size");
+
+         std::vector<std::string> files = get_arg_list("files");
+         if(files.empty())
+            files.push_back("-"); // read stdin if no arguments on command line
+
+         for(const std::string& fsname : files)
+            {
+            try
+               {
+               auto update_hmac = [&](const uint8_t b[], size_t l) { hmac->update(b, l); };
+               read_file(fsname, update_hmac, buf_size);
+               output() << Botan::hex_encode(hmac->final()) << " " << fsname << "\n";
+               }
+            catch(CLI_IO_Error& e)
+               {
+               error_output() << e.what() << "\n";
+               }
+            }
+         }
+   };
+
+BOTAN_REGISTER_COMMAND("hmac", HMAC);
+
+#endif // hmac
 
 }

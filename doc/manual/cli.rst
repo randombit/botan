@@ -37,6 +37,11 @@ Password Hash
 ``check_bcrypt password hash``
   Checks if the bcrypt hash of the passed *password* equals the passed *hash* value.
 
+HMAC
+----------------
+``hmac --hash=SHA-256 --buf-size=4096 key files``
+  Compute the HMAC tag with the cryptographic hash function *hash* using the key in file *key* over the data in *files*. *files* defaults to STDIN.
+
 Public Key Cryptography
 -------------------------------------
 ``keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --der-out``
