@@ -409,6 +409,10 @@ class FFI_Unit_Tests : public Test
          results.push_back(ffi_test_mceliece(rng));
 #endif
 
+#if defined(BOTAN_HAS_ELGAMAL)
+         results.push_back(ffi_test_elgamal(rng));
+#endif
+
          TEST_FFI_OK(botan_rng_destroy, (rng));
 
          results.push_back(result);
@@ -1151,6 +1155,78 @@ class FFI_Unit_Tests : public Test
 
          return result;
          }
+
+      Test::Result ffi_test_elgamal(botan_rng_t rng)
+         {
+         Test::Result result("FFI ELGAMAL");
+
+         botan_privkey_t priv;
+
+         if(TEST_FFI_OK(botan_privkey_create, (&priv, "ElGamal", nullptr, rng)))
+            {
+            TEST_FFI_OK(botan_privkey_check_key, (priv, rng, 0));
+
+            botan_pubkey_t pub;
+            TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+            TEST_FFI_OK(botan_pubkey_check_key, (pub, rng, 0));
+
+            ffi_test_pubkey_export(result, pub, priv, rng);
+            botan_mp_t p, g, x, y;
+            botan_mp_init(&p);
+            botan_mp_init(&g);
+            botan_mp_init(&x);
+            botan_mp_init(&y);
+
+            TEST_FFI_OK(botan_pubkey_get_field, (p, pub, "p"));
+            TEST_FFI_OK(botan_pubkey_get_field, (g, pub, "g"));
+            TEST_FFI_OK(botan_pubkey_get_field, (y, pub, "y"));
+            TEST_FFI_OK(botan_privkey_get_field,(x, priv,"x"));
+
+            size_t p_len = 0;
+            TEST_FFI_OK(botan_mp_num_bytes, (p, &p_len));
+
+            botan_privkey_t loaded_privkey;
+            TEST_FFI_OK(botan_privkey_load_elgamal, (&loaded_privkey, p, g, x));
+            TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
+
+            botan_pubkey_t loaded_pubkey;
+            TEST_FFI_OK(botan_pubkey_load_elgamal, (&loaded_pubkey, p, g, y));
+            TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
+
+            botan_mp_destroy(p);
+            botan_mp_destroy(g);
+            botan_mp_destroy(y);
+            botan_mp_destroy(x);
+
+
+            std::vector<uint8_t> plaintext(16, 0xFF);
+            std::vector<uint8_t> ciphertext(p_len*2, 0);
+            std::vector<uint8_t> decryption(16, 0);
+
+            // Test encryption
+            botan_pk_op_encrypt_t op_enc;
+            size_t ct_len = ciphertext.size(); 
+            REQUIRE_FFI_OK(botan_pk_op_encrypt_create, (&op_enc, loaded_pubkey, "Raw", 0));
+            TEST_FFI_OK(botan_pk_op_encrypt, (op_enc, rng, ciphertext.data(), &ct_len, plaintext.data(), plaintext.size()));
+            TEST_FFI_OK(botan_pk_op_encrypt_destroy, (op_enc));
+
+            // Test decryption
+            botan_pk_op_decrypt_t op_dec;
+            size_t pt_len = decryption.size();
+            REQUIRE_FFI_OK(botan_pk_op_decrypt_create, (&op_dec, loaded_privkey, "Raw", 0));
+            TEST_FFI_OK(botan_pk_op_decrypt, (op_dec, decryption.data(), &pt_len, ciphertext.data(), ct_len));
+            TEST_FFI_OK(botan_pk_op_decrypt_destroy, (op_dec));
+
+            TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
+            TEST_FFI_OK(botan_pubkey_destroy, (pub));
+            TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey));
+            TEST_FFI_OK(botan_privkey_destroy, (priv));
+            }
+
+         return result;
+         }
+
+
    };
 
 BOTAN_REGISTER_TEST("ffi", FFI_Unit_Tests);

@@ -175,7 +175,7 @@ typedef struct botan_rng_struct* botan_rng_t;
 *    "system": System_RNG, "user": AutoSeeded_RNG
 * Set rng_type to null or empty string to let the library choose
 *
-* TODO: replace rng_type with simple flags? 
+* TODO: replace rng_type with simple flags?
 */
 BOTAN_DLL int botan_rng_init(botan_rng_t* rng, const char* rng_type);
 
@@ -783,6 +783,45 @@ BOTAN_DLL int botan_pubkey_dsa_get_p(botan_mp_t p, botan_pubkey_t key);
 BOTAN_DLL int botan_pubkey_dsa_get_q(botan_mp_t q, botan_pubkey_t key);
 BOTAN_DLL int botan_pubkey_dsa_get_g(botan_mp_t d, botan_pubkey_t key);
 BOTAN_DLL int botan_pubkey_dsa_get_y(botan_mp_t y, botan_pubkey_t key);
+
+/*
+* Algorithm specific key operations: ElGamal
+*/
+
+/*
+* Loads ElGamal public key
+* @param key variable populated with key material
+* @param p prime order of a Z_p group
+* @param g group generator
+* @param y public key
+*
+* @pre key is NULL on input
+* @post function allocates memory and assigns to `key'
+*
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_DLL int botan_pubkey_load_elgamal(botan_pubkey_t* key,
+                                        botan_mp_t p,
+                                        botan_mp_t g,
+                                        botan_mp_t y);
+
+/*
+* Loads ElGamal private key
+*
+* @param key variable populated with key material
+* @param p prime order of a Z_p group
+* @param g group generator
+* @param x private key
+*
+* @pre key is NULL on input
+* @post function allocates memory and assigns to `key'
+*
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_DLL int botan_privkey_load_elgamal(botan_privkey_t* key,
+                                         botan_mp_t p,
+                                         botan_mp_t g,
+                                         botan_mp_t x);
 
 /*
 * Public Key Encryption
