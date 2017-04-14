@@ -235,10 +235,10 @@ class FFI_Unit_Tests : public Test
             }
 
          // TODO: Cipher test
-         /*
+
          botan_cipher_t cipher_encrypt, cipher_decrypt;
 
-         if(TEST_FFI_OK(botan_cipher_init, (&cipher_encrypt, "AES-128/CBC", BOTAN_CIPHER_INIT_FLAG_ENCRYPT)))
+         if(TEST_FFI_OK(botan_cipher_init, (&cipher_encrypt, "AES-128/CBC/PKCS7", BOTAN_CIPHER_INIT_FLAG_ENCRYPT)))
             {
             size_t min_keylen = 0;
             size_t max_keylen = 0;
@@ -246,15 +246,13 @@ class FFI_Unit_Tests : public Test
             result.test_int_eq(min_keylen, 16, "Min key length");
             result.test_int_eq(max_keylen, 16, "Max key length");
 
-            std::vector<uint8_t> plaintext(256);
-            std::vector<uint8_t> nonce(16);
-            TEST_FFI_OK(botan_rng_get, (rng, plaintext.data(), plaintext.size()));
-            TEST_FFI_OK(botan_rng_get, (rng, nonce.data(), nonce.size()));
+            // from https://github.com/geertj/bluepass/blob/master/tests/vectors/aes-cbc-pkcs7.txt
+            const std::vector<uint8_t> plaintext = Botan::hex_decode("0397f4f6820b1f9386f14403be5ac16e50213bd473b4874b9bcbf5f318ee686b1d");
+            const std::vector<uint8_t> symkey = Botan::hex_decode("898be9cc5004ed0fa6e117c9a3099d31");
+            const std::vector<uint8_t> nonce = Botan::hex_decode("9dea7621945988f96491083849b068df");
+            const std::vector<uint8_t> exp_ciphertext = Botan::hex_decode("e232cd6ef50047801ee681ec30f61d53cfd6b0bca02fd03c1b234baa10ea82ac9dab8b960926433a19ce6dea08677e34");
 
-            std::vector<uint8_t> ciphertext(plaintext.size()); // TODO: no way to know this size from API
-
-            const std::vector<uint8_t> symkey = { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x01,
-                                                  0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09 };
+            std::vector<uint8_t> ciphertext(16 + plaintext.size()); // TODO: no way to know this size from API
 
             size_t output_written = 0;
             size_t input_consumed = 0;
@@ -273,6 +271,8 @@ class FFI_Unit_Tests : public Test
                TEST_FFI_OK(botan_cipher_update, (cipher_encrypt, BOTAN_CIPHER_UPDATE_FLAG_FINAL, ciphertext.data(), ciphertext.size(), &output_written,
                            plaintext.data(), plaintext.size(), &input_consumed));
 
+               ciphertext.resize(output_written);
+
                if(TEST_FFI_OK(botan_cipher_init, (&cipher_decrypt, "AES-128/CBC", BOTAN_CIPHER_INIT_FLAG_DECRYPT)))
                   {
                   std::vector<uint8_t> decrypted(plaintext.size());
@@ -290,7 +290,6 @@ class FFI_Unit_Tests : public Test
 
             TEST_FFI_OK(botan_cipher_destroy, (cipher_encrypt));
             }
-         */
 
          // TODO: AEAD test
          // TODO ONCE MORE WITH AES-GCM
