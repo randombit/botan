@@ -26,12 +26,15 @@
 #include <botan/reducer.h>
 #include <botan/numthry.h>
 #include <botan/divide.h>
-#include <botan/elgamal.h>
 #include <cstring>
 #include <memory>
 
 #if defined(BOTAN_HAS_RSA)
   #include <botan/rsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ELGAMAL)
+  #include <botan/elgamal.h>
 #endif
 
 #if defined(BOTAN_HAS_DSA)
