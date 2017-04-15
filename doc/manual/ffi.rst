@@ -623,6 +623,18 @@ DSA specific functions
 
    Initialize a private DSA key using group parameters p, q, and g and public key y.
 
+ElGamal specific functions
+----------------------------------------
+
+.. cpp:function:: int botan_privkey_load_elgamal(botan_privkey_t* key, \
+                                     botan_mp_t p, botan_mp_t g, botan_mp_t x)
+
+   Initialize a private ElGamal key using group parameters p and g and private key x.
+
+.. cpp:function:: int botan_pubkey_load_elgamal(botan_pubkey_t* key, \
+                                     botan_mp_t p, botan_mp_t g, botan_mp_t y)
+
+   Initialize a private ElGamal key using group parameters p and g and public key y.
 
 Public Key Encryption/Decryption
 ----------------------------------------
