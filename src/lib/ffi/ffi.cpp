@@ -939,6 +939,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
          cipher.update(mbuf);
 
          input_size -= ud;
+         copy_mem(output, mbuf.data(), ud);
          input += ud;
          taken += ud;
 
@@ -950,6 +951,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
       *output_written = written;
       *input_consumed = taken;
 
+      return 0;
       }
    catch(std::exception& e)
       {
