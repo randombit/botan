@@ -1476,7 +1476,7 @@ class CmakeGenerator(object):
         for source in sorted_sources:
             joined_isa_flags = ' '.join(target['sources'][source]['isa_flags'])
             if joined_isa_flags:
-                fd.write('set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}%s%s PROPERTIES COMPILE_FLAGS %s)\n'
+                fd.write('set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}%s%s PROPERTIES COMPILE_FLAGS "%s")\n'
                          % (os.sep, os.path.normpath(source), joined_isa_flags))
 
     @staticmethod
