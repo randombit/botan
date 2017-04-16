@@ -1,5 +1,5 @@
 /*
-* (C) 2015 Simon Warta (Kullo GmbH)
+* (C) 2015,2017 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -132,7 +132,7 @@ class Encryption : public Command
          }
    };
 
-BOTAN_REGISTER_COMMAND(Encryption);
+BOTAN_REGISTER_COMMAND("encryption", Encryption);
 
 }
 
