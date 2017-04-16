@@ -188,9 +188,7 @@ class BOTAN_DLL Callbacks
        */
        virtual void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t val_len)
           {
-          BOTAN_UNUSED(descr);
-          BOTAN_UNUSED(val);
-          BOTAN_UNUSED(val_len);
+          BOTAN_UNUSED(descr, val, val_len);
           }
    };
 
