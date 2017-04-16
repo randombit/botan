@@ -1438,10 +1438,7 @@ int botan_pubkey_load_elgamal(botan_pubkey_t* key,
 
    return -1;
 #else
-   BOTAN_UNUSED(p);
-   BOTAN_UNUSED(q);
-   BOTAN_UNUSED(g);
-   BOTAN_UNUSED(x);
+   BOTAN_UNUSED(key, p, g, y);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -1464,9 +1461,7 @@ int botan_privkey_load_elgamal(botan_privkey_t* key,
       }
    return -1;
 #else
-   BOTAN_UNUSED(p);
-   BOTAN_UNUSED(g);
-   BOTAN_UNUSED(x);
+   BOTAN_UNUSED(key, p, g, x);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
