@@ -6,11 +6,11 @@ import unittest
 import argparse
 import re
 import subprocess
-import vecparser
 import sys
 
+import vecparser
+
 cli_binary = ""
-testdata = {}
 
 SUPPORTED_ALGORITHMS = [
     'AES-128/CFB',
@@ -106,8 +106,8 @@ def get_testdata(document):
                 testcase_number += 1
                 for direction in ['encrypt', 'decrypt']:
                     testname = "{} no {:0>3} ({})".format(
-                            algorithm.lower(), testcase_number, direction)
-                    testname = re.sub("[^a-z0-9\-]", "_", testname)
+                        algorithm.lower(), testcase_number, direction)
+                    testname = re.sub("[^-a-z0-9-]", "_", testname)
                     testname = re.sub("_+", "_", testname)
                     testname = testname.strip("_")
                     out[testname] = {}
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     #        i += 1
     #        print(str(i) + ":", testcase)
 
-    testdata = OrderedDict();
+    testdata = OrderedDict()
     append_ordered(testdata, get_testdata(vecfile_cfb.get_data()))
     append_ordered(testdata, get_testdata(vecfile_gcm.get_data()))
     append_ordered(testdata, get_testdata(vecfile_ocb.get_data()))
@@ -150,7 +150,7 @@ if __name__ == '__main__':
     #    for key in testdata[testname]:
     #        print("    " + key + ": " + testdata[testname][key])
     for testname in testdata:
-        test_method = create_test (testdata[testname])
+        test_method = create_test(testdata[testname])
         test_method.__name__ = 'test_%s' % testname
         setattr(TestSequence, test_method.__name__, test_method)
 
