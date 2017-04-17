@@ -33,8 +33,8 @@ class BOTAN_DLL TLS_Client : public TLS_Connection
       void add_client_cert(const X509_Certificate& cert,
                            Private_Key* cert_key);
 
-      TLS_Client(std::tr1::function<size_t (byte[], size_t)> input_fn,
-                 std::tr1::function<void (const byte[], size_t)> output_fn,
+      TLS_Client(std::tr1::function<size_t (unsigned char[], size_t)> input_fn,
+                 std::tr1::function<void (const unsigned char[], size_t)> output_fn,
                  const TLS_Policy& policy,
                  RandomNumberGenerator& rng);
 
@@ -51,7 +51,7 @@ class BOTAN_DLL TLS_Client : public TLS_Connection
       void read_handshake(byte, const MemoryRegion<byte>&);
       void process_handshake_msg(Handshake_Type, const MemoryRegion<byte>&);
 
-      std::tr1::function<size_t (byte[], size_t)> input_fn;
+      std::tr1::function<size_t (unsigned char[], size_t)> input_fn;
 
       const TLS_Policy& policy;
       RandomNumberGenerator& rng;

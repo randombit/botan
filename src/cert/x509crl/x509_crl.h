@@ -23,10 +23,10 @@ class BOTAN_DLL X509_CRL : public X509_Object
       /**
       * This class represents CRL related errors.
       */
-      struct BOTAN_DLL X509_CRL_Error : public Exception
+      struct BOTAN_DLL X509_CRL_Error : public Botan::Exception
          {
          X509_CRL_Error(const std::string& error) :
-            Exception("X509_CRL: " + error) {}
+            Botan::Exception("X509_CRL: " + error) {}
          };
 
       /**

@@ -22,30 +22,30 @@ typedef std::invalid_argument Invalid_Argument;
 /**
 * Invalid_State Exception
 */
-struct BOTAN_DLL Invalid_State : public Exception
+struct BOTAN_DLL Invalid_State : public Botan::Exception
    {
    Invalid_State(const std::string& err) :
-      Exception(err)
+      Botan::Exception(err)
       {}
    };
 
 /**
 * Lookup_Error Exception
 */
-struct BOTAN_DLL Lookup_Error : public Exception
+struct BOTAN_DLL Lookup_Error : public Botan::Exception
    {
    Lookup_Error(const std::string& err) :
-      Exception(err)
+      Botan::Exception(err)
       {}
    };
 
 /**
 * Internal_Error Exception
 */
-struct BOTAN_DLL Internal_Error : public Exception
+struct BOTAN_DLL Internal_Error : public Botan::Exception
    {
    Internal_Error(const std::string& err) :
-      Exception("Internal error: " + err)
+      Botan::Exception("Internal error: " + err)
       {}
    };
 
@@ -144,10 +144,10 @@ struct BOTAN_DLL Decoding_Error : public Invalid_Argument
 /**
 * Integrity_Failure Exception
 */
-struct BOTAN_DLL Integrity_Failure : public Exception
+struct BOTAN_DLL Integrity_Failure : public Botan::Exception
    {
    Integrity_Failure(const std::string& msg) :
-      Exception("Integrity failure: " + msg) {}
+      Botan::Exception("Integrity failure: " + msg) {}
    };
 
 /**
@@ -162,10 +162,10 @@ struct BOTAN_DLL Invalid_OID : public Decoding_Error
 /**
 * Stream_IO_Error Exception
 */
-struct BOTAN_DLL Stream_IO_Error : public Exception
+struct BOTAN_DLL Stream_IO_Error : public Botan::Exception
    {
    Stream_IO_Error(const std::string& err) :
-      Exception("I/O error: " + err)
+      Botan::Exception("I/O error: " + err)
       {}
    };
 

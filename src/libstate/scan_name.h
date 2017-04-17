@@ -78,13 +78,13 @@ class BOTAN_DLL SCAN_Name
       * @return cipher mode (if any)
       */
       std::string cipher_mode() const
-         { return (mode_info.size() >= 1) ? mode_info[0] : ""; }
+         { return (mode_info.size() >= 1) ? mode_info[0] : std::string(""); }
 
       /**
       * @return cipher mode padding (if any)
       */
       std::string cipher_mode_pad() const
-         { return (mode_info.size() >= 2) ? mode_info[1] : ""; }
+         { return (mode_info.size() >= 2) ? mode_info[1] : std::string(""); }
 
    private:
       std::string orig_algo_spec;

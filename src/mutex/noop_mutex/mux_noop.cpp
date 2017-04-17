@@ -17,11 +17,11 @@ Mutex* Noop_Mutex_Factory::make()
    class Noop_Mutex : public Mutex
       {
       public:
-         class Mutex_State_Error : public Internal_Error
+         class Mutex_State_Error : public Botan::Internal_Error
             {
             public:
                Mutex_State_Error(const std::string& where) :
-                  Internal_Error("Noop_Mutex::" + where + ": " +
+                  Botan::Internal_Error("Noop_Mutex::" + where + ": " +
                                  "Mutex is already " + where + "ed") {}
             };
 
