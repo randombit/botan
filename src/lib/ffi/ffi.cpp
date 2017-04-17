@@ -1332,9 +1332,8 @@ int botan_pubkey_load(botan_pubkey_t* key,
 int botan_privkey_load_rsa(botan_privkey_t* key,
                            botan_mp_t p, botan_mp_t q, botan_mp_t d)
    {
-   *key = nullptr;
-
 #if defined(BOTAN_HAS_RSA)
+   *key = nullptr;
    try
       {
       *key = new botan_privkey_struct(new Botan::RSA_PrivateKey(safe_get(p),
@@ -1348,6 +1347,7 @@ int botan_privkey_load_rsa(botan_privkey_t* key,
       }
    return -1;
 #else
+   BOTAN_UNUSED(key, p, q, d);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -1355,9 +1355,8 @@ int botan_privkey_load_rsa(botan_privkey_t* key,
 int botan_pubkey_load_rsa(botan_pubkey_t* key,
                           botan_mp_t n, botan_mp_t e)
    {
-   *key = nullptr;
-
 #if defined(BOTAN_HAS_RSA)
+   *key = nullptr;
    try
       {
       *key = new botan_pubkey_struct(new Botan::RSA_PublicKey(safe_get(n), safe_get(e)));
@@ -1370,6 +1369,7 @@ int botan_pubkey_load_rsa(botan_pubkey_t* key,
 
    return -1;
 #else
+   BOTAN_UNUSED(key, n, e);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -1377,9 +1377,8 @@ int botan_pubkey_load_rsa(botan_pubkey_t* key,
 int botan_privkey_load_dsa(botan_privkey_t* key,
                            botan_mp_t p, botan_mp_t q, botan_mp_t g, botan_mp_t x)
    {
-   *key = nullptr;
-
 #if defined(BOTAN_HAS_DSA)
+   *key = nullptr;
    try
       {
       Botan::Null_RNG null_rng;
@@ -1393,10 +1392,7 @@ int botan_privkey_load_dsa(botan_privkey_t* key,
       }
    return -1;
 #else
-   BOTAN_UNUSED(p);
-   BOTAN_UNUSED(q);
-   BOTAN_UNUSED(g);
-   BOTAN_UNUSED(x);
+   BOTAN_UNUSED(key, p, q, g, x);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -1404,9 +1400,8 @@ int botan_privkey_load_dsa(botan_privkey_t* key,
 int botan_pubkey_load_dsa(botan_pubkey_t* key,
                           botan_mp_t p, botan_mp_t q, botan_mp_t g, botan_mp_t y)
    {
-   *key = nullptr;
-
 #if defined(BOTAN_HAS_DSA)
+   *key = nullptr;
    try
       {
       Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
@@ -1420,10 +1415,7 @@ int botan_pubkey_load_dsa(botan_pubkey_t* key,
 
    return -1;
 #else
-   BOTAN_UNUSED(p);
-   BOTAN_UNUSED(q);
-   BOTAN_UNUSED(g);
-   BOTAN_UNUSED(y);
+   BOTAN_UNUSED(key, p, q, g, y);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -1446,10 +1438,7 @@ int botan_pubkey_load_elgamal(botan_pubkey_t* key,
 
    return -1;
 #else
-   BOTAN_UNUSED(p);
-   BOTAN_UNUSED(q);
-   BOTAN_UNUSED(g);
-   BOTAN_UNUSED(x);
+   BOTAN_UNUSED(key, p, g, y);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -1472,9 +1461,7 @@ int botan_privkey_load_elgamal(botan_privkey_t* key,
       }
    return -1;
 #else
-   BOTAN_UNUSED(p);
-   BOTAN_UNUSED(g);
-   BOTAN_UNUSED(x);
+   BOTAN_UNUSED(key, p, g, x);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
