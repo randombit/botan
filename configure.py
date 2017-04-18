@@ -1743,8 +1743,8 @@ class HouseEccCurve(object):
             with open(filepath) as f:
                 lines = [line.rstrip() for line in f]
                 for ndx, _ in enumerate(lines):
-                    lines[ndx] = ''.join(('\"', lines[ndx], '\" \\', '\n'))
-                return ''.join(lines)
+                    lines[ndx] = '   \"%s\"' % lines[ndx]
+                return "\\\n" + ' \\\n'.join(lines)
         except IOError:
             raise UserError("Error reading file '%s'" % filepath)
 
