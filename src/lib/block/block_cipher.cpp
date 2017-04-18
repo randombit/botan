@@ -12,6 +12,10 @@
   #include <botan/aes.h>
 #endif
 
+#if defined(BOTAN_HAS_ARIA)
+  #include <botan/aria.h>
+#endif
+
 #if defined(BOTAN_HAS_BLOWFISH)
   #include <botan/blowfish.h>
 #endif
@@ -121,6 +125,23 @@ BlockCipher::create(const std::string& algo,
    if(algo == "AES-256")
       {
       return std::unique_ptr<BlockCipher>(new AES_256);
+      }
+#endif
+
+#if defined(BOTAN_HAS_ARIA)
+   if(algo == "ARIA-128")
+      {
+      return std::unique_ptr<BlockCipher>(new ARIA_128);
+      }
+
+   if(algo == "ARIA-192")
+      {
+      return std::unique_ptr<BlockCipher>(new ARIA_192);
+      }
+
+   if(algo == "ARIA-256")
+      {
+      return std::unique_ptr<BlockCipher>(new ARIA_256);
       }
 #endif
 
