@@ -1720,8 +1720,8 @@ class MakefileListsGenerator(object):
 class HouseEccCurve(object):
     def __init__(self, house_curve):
         p = house_curve.split(",")
-        if len(p) < 4:
-            raise UserError('Too few parameters to --house-curve')
+        if len(p) != 4:
+            raise UserError('--house-curve must have 4 comma separated parameters. See --help')
         # make sure TLS curve id is in reserved for private use range (0xFE00..0xFEFF)
         curve_id = int(p[3], 16)
         if curve_id < 0xfe00 or curve_id > 0xfeff:
@@ -1730,7 +1730,7 @@ class HouseEccCurve(object):
         self._defines = [
             'HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"',
             'HOUSE_ECC_CURVE_OID \"' + p[2] + '\"',
-            'HOUSE_ECC_CURVE_PEM ' + self._read_pem(filename=p[0]),
+            'HOUSE_ECC_CURVE_PEM ' + self._read_pem(filepath=p[0]),
             'HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id),
         ]
 
@@ -1738,12 +1738,15 @@ class HouseEccCurve(object):
         return self._defines
 
     @staticmethod
-    def _read_pem(filename):
-        with open(filename) as f:
-            lines = [line.rstrip() for line in f]
-            for ndx, _ in enumerate(lines):
-                lines[ndx] = ''.join(('\"', lines[ndx], '\" \\', '\n'))
-            return ''.join(lines)
+    def _read_pem(filepath):
+        try:
+            with open(filepath) as f:
+                lines = [line.rstrip() for line in f]
+                for ndx, _ in enumerate(lines):
+                    lines[ndx] = ''.join(('\"', lines[ndx], '\" \\', '\n'))
+                return ''.join(lines)
+        except IOError:
+            raise UserError("Error reading file '%s'" % filepath)
 
 
 def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
