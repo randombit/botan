@@ -36,10 +36,10 @@ auto VALID_MODES = std::map<std::string, std::string>{
 };
 
 bool is_aead(const std::string &cipher)
-    {
-    return cipher.find("/GCM") != std::string::npos
-            || cipher.find("/OCB") != std::string::npos;
-    }
+   {
+   return cipher.find("/GCM") != std::string::npos
+          || cipher.find("/OCB") != std::string::npos;
+   }
 
 secure_vector<byte> do_crypt(const std::string &cipher,
                              const secure_vector<byte> &input,
