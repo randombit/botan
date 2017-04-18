@@ -1742,11 +1742,12 @@ class HouseEccCurve(object):
         try:
             with open(filepath) as f:
                 lines = [line.rstrip() for line in f]
-                for ndx, _ in enumerate(lines):
-                    lines[ndx] = '   \"%s\"' % lines[ndx]
-                return "\\\n" + ' \\\n'.join(lines)
         except IOError:
             raise UserError("Error reading file '%s'" % filepath)
+
+        for ndx, _ in enumerate(lines):
+            lines[ndx] = '   \"%s\"' % lines[ndx]
+        return "\\\n" + ' \\\n'.join(lines)
 
 
 def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
