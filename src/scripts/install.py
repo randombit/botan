@@ -72,10 +72,46 @@ def prepend_destdir(path):
     """
     try:
         destdir = os.environ['DESTDIR']
-        return os.path.join(destdir, path.lstrip('/'))
     except KeyError as e:
-        return path
+        destdir = ""
 
+    if destdir != "":
+        """
+        DESTDIR is non-empty, but we cannot join all prefix paths.
+
+        These will be rejected via an exception:
+          C:/foo
+          C:foo
+          \\foo (Python >3.1 only)
+          \\foo\bar (Python >3.1 only)
+          ../somewhere/else
+
+        These will be normalized to a relative path and joined with DESTDIR:
+          /absolute/dir
+          relative/dir
+          /dir/with/../inside
+          ./relative/to/me
+          ~/botan-install-test
+        """
+
+        # ".." makes no sense, as it would certainly escape the DESTDIR prefix
+        if path.startswith(".."):
+            raise Exception('With DESTDIR set, a prefix starting in ".." would escape the destdir. Aborting.')
+
+        # Will only trigger on Windows, see the splitdrive() doc for details
+        drive, _ = os.path.splitdrive(path)
+        if drive != "":
+            raise Exception('DESTDIR set, but drive or UNC detected in prefix path. Aborting.')
+
+        # resolved ~, ~user
+        path = os.path.expanduser(path)
+        # native slashes, ".." inside (not in front of) pathes normalized
+        path = os.path.normpath(path)
+        # Remove / or \ prefixes if existent to accomodate for os.path.join()
+        path = path.lstrip(os.path.sep)
+        path = os.path.join(destdir, path)
+
+    return path
 def makedirs(dirname, exist_ok = True):
     try:
         logging.debug('Creating directory %s' % (dirname))
