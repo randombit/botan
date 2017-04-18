@@ -180,7 +180,7 @@ else
     time "${TEST_CMD[@]}"
 fi
 
-if [ "$BUILD_MODE" = "static" ] || [ "$BUILD_MODE" = "mini-static" ] || [ "$BUILD_MODE" = "shared" ] || [ "$BUILD_MODE" = "mini-shared" ]
+if [ "$BUILD_MODE" = "static" ] || [ "$BUILD_MODE" = "shared" ]
 then
     echo "Running cli tests ..."
     ./src/scripts/cli_tests.py "$CLI_EXE"
