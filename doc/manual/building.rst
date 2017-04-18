@@ -266,7 +266,7 @@ To generate the amalgamation, run ``configure.py`` with whatever
 options you would ordinarily use, along with the option
 ``--amalgamation``. This will create two (rather large) files,
 ``botan_all.h`` and ``botan_all.cpp``, plus (unless the option
-``--single-amalgmation-file`` is used) also some number of files like
+``--single-amalgamation-file`` is used) also some number of files like
 ``botan_all_aesni.cpp`` and ``botan_all_sse2.cpp`` which need to be
 compiled with the appropriate compiler flags to enable that
 instruction set. The ISA specific files are only generated if there is
