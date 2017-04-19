@@ -207,6 +207,121 @@ inline int write_str_output(char out[], size_t* out_len, const std::vector<uint8
 
 #define BOTAN_FFI_DO(T, obj, param, block) apply_fn(obj, BOTAN_CURRENT_FUNCTION, [=](T& param) -> int { do { block } while(0); return 0; })
 
+Botan::BigInt pubkey_get_field(const Botan::Public_Key& key,
+                               const std::string& field)
+   {
+   // Maybe this should be `return key.get_integer_field(field_name)`?
+
+#if defined(BOTAN_HAS_RSA)
+   if(const Botan::RSA_PublicKey* rsa = dynamic_cast<const Botan::RSA_PublicKey*>(&key))
+      {
+      if(field == "n")
+         return rsa->get_n();
+      else if(field == "e")
+         return rsa->get_e();
+      else
+         throw Botan::Exception("Field not supported");
+      }
+#endif
+
+#if defined(BOTAN_HAS_DL_PUBLIC_KEY_FAMILY)
+   // Handles DSA, ElGamal, etc
+   if(const Botan::DL_Scheme_PublicKey* dl = dynamic_cast<const Botan::DL_Scheme_PublicKey*>(&key))
+      {
+      if(field == "p")
+         return dl->group_p();
+      else if(field == "q")
+         return dl->group_q();
+      else if(field == "g")
+         return dl->group_g();
+      else if(field == "y")
+         return dl->get_y();
+      else
+         throw Botan::Exception("Field not supported");
+      }
+#endif
+
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+   if(const Botan::EC_PublicKey* ecc = dynamic_cast<const Botan::EC_PublicKey*>(&key))
+      {
+      if(field == "public_x")
+         return ecc->public_point().get_affine_x();
+      else if(field == "public_y")
+         return ecc->public_point().get_affine_y();
+      else if(field == "base_x")
+         return ecc->domain().get_base_point().get_affine_x();
+      else if(field == "base_y")
+         return ecc->domain().get_base_point().get_affine_y();
+      else if(field == "p")
+         return ecc->domain().get_curve().get_p();
+      else if(field == "a")
+         return ecc->domain().get_curve().get_a();
+      else if(field == "b")
+         return ecc->domain().get_curve().get_b();
+      else if(field == "cofactor")
+         return ecc->domain().get_cofactor();
+      else if(field == "order")
+         return ecc->domain().get_order();
+      else
+         throw Botan::Exception("Field not supported");
+      }
+#endif
+
+   // Some other algorithm type not supported by this function
+   throw Botan::Exception("Unsupported algorithm type for botan_pubkey_get_field");
+   }
+
+Botan::BigInt privkey_get_field(const Botan::Private_Key& key,
+                                const std::string& field)
+   {
+   //return key.get_integer_field(field);
+
+#if defined(BOTAN_HAS_RSA)
+
+   if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<const Botan::RSA_PrivateKey*>(&key))
+      {
+      if(field == "p")
+         return rsa->get_p();
+      else if(field == "q")
+         return rsa->get_q();
+      else if(field == "d")
+         return rsa->get_d();
+      else if(field == "c")
+         return rsa->get_c();
+      else if(field == "d1")
+         return rsa->get_d1();
+      else if(field == "d2")
+         return rsa->get_d2();
+      else
+         return pubkey_get_field(key, field);
+      }
+#endif
+
+#if defined(BOTAN_HAS_DL_PUBLIC_KEY_FAMILY)
+   // Handles DSA, ElGamal, etc
+   if(const Botan::DL_Scheme_PrivateKey* dl = dynamic_cast<const Botan::DL_Scheme_PrivateKey*>(&key))
+      {
+      if(field == "x")
+         return dl->get_x();
+      else
+         return pubkey_get_field(key, field);
+      }
+#endif
+
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+   if(const Botan::EC_PrivateKey* ecc = dynamic_cast<const Botan::EC_PrivateKey*>(&key))
+      {
+      if(field == "x")
+         return ecc->private_value();
+      else
+         return pubkey_get_field(key, field);
+      }
+#endif
+
+   // Some other algorithm type not supported by this function
+   throw Botan::Exception("Unsupported algorithm type for botan_privkey_get_field");
+   }
+
 }
 
 extern "C" {
@@ -1466,125 +1581,6 @@ int botan_privkey_load_elgamal(botan_privkey_t* key,
 #endif
    }
 
-namespace {
-
-Botan::BigInt botan_pubkey_do_get_field(const Botan::Public_Key& key,
-                                        const std::string& field)
-   {
-   // Maybe this should be `return key.get_integer_field(field_name)`?
-
-#if defined(BOTAN_HAS_RSA)
-   if(const Botan::RSA_PublicKey* rsa = dynamic_cast<const Botan::RSA_PublicKey*>(&key))
-      {
-      if(field == "n")
-         return rsa->get_n();
-      else if(field == "e")
-         return rsa->get_e();
-      else
-         throw Botan::Exception("Field not supported");
-      }
-#endif
-
-#if defined(BOTAN_HAS_DL_PUBLIC_KEY_FAMILY)
-   // Handles DSA, ElGamal, etc
-   if(const Botan::DL_Scheme_PublicKey* dl = dynamic_cast<const Botan::DL_Scheme_PublicKey*>(&key))
-      {
-      if(field == "p")
-         return dl->group_p();
-      else if(field == "q")
-         return dl->group_q();
-      else if(field == "g")
-         return dl->group_g();
-      else if(field == "y")
-         return dl->get_y();
-      else
-         throw Botan::Exception("Field not supported");
-      }
-#endif
-
-#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
-   if(const Botan::EC_PublicKey* ecc = dynamic_cast<const Botan::EC_PublicKey*>(&key))
-      {
-      if(field == "public_x")
-         return ecc->public_point().get_affine_x();
-      else if(field == "public_y")
-         return ecc->public_point().get_affine_y();
-      else if(field == "base_x")
-         return ecc->domain().get_base_point().get_affine_x();
-      else if(field == "base_y")
-         return ecc->domain().get_base_point().get_affine_y();
-      else if(field == "p")
-         return ecc->domain().get_curve().get_p();
-      else if(field == "a")
-         return ecc->domain().get_curve().get_a();
-      else if(field == "b")
-         return ecc->domain().get_curve().get_b();
-      else if(field == "cofactor")
-         return ecc->domain().get_cofactor();
-      else if(field == "order")
-         return ecc->domain().get_order();
-      else
-         throw Botan::Exception("Field not supported");
-      }
-#endif
-
-   // Some other algorithm type not supported by this function
-   throw Botan::Exception("Unsupported algorithm type for botan_pubkey_get_field");
-   }
-
-Botan::BigInt botan_privkey_do_get_field(const Botan::Private_Key& key,
-                                         const std::string& field)
-   {
-   //return key.get_integer_field(field);
-
-#if defined(BOTAN_HAS_RSA)
-
-   if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<const Botan::RSA_PrivateKey*>(&key))
-      {
-      if(field == "p")
-         return rsa->get_p();
-      else if(field == "q")
-         return rsa->get_q();
-      else if(field == "d")
-         return rsa->get_d();
-      else if(field == "c")
-         return rsa->get_c();
-      else if(field == "d1")
-         return rsa->get_d1();
-      else if(field == "d2")
-         return rsa->get_d2();
-      else
-         return botan_pubkey_do_get_field(key, field);
-      }
-#endif
-
-#if defined(BOTAN_HAS_DL_PUBLIC_KEY_FAMILY)
-   // Handles DSA, ElGamal, etc
-   if(const Botan::DL_Scheme_PrivateKey* dl = dynamic_cast<const Botan::DL_Scheme_PrivateKey*>(&key))
-      {
-      if(field == "x")
-         return dl->get_x();
-      else
-         return botan_pubkey_do_get_field(key, field);
-      }
-#endif
-
-#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
-   if(const Botan::EC_PrivateKey* ecc = dynamic_cast<const Botan::EC_PrivateKey*>(&key))
-      {
-      if(field == "x")
-         return ecc->private_value();
-      else
-         return botan_pubkey_do_get_field(key, field);
-      }
-#endif
-
-   // Some other algorithm type not supported by this function
-   throw Botan::Exception("Unsupported algorithm type for botan_privkey_get_field");
-   }
-
-}
-
 int botan_pubkey_get_field(botan_mp_t output,
                            botan_pubkey_t key,
                            const char* field_name_cstr)
@@ -1595,7 +1591,7 @@ int botan_pubkey_get_field(botan_mp_t output,
    const std::string field_name(field_name_cstr);
 
    return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
-      safe_get(output) = botan_pubkey_do_get_field(k, field_name);
+      safe_get(output) = pubkey_get_field(k, field_name);
       });
    }
 
@@ -1609,7 +1605,7 @@ int botan_privkey_get_field(botan_mp_t output,
    const std::string field_name(field_name_cstr);
 
    return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
-      safe_get(output) = botan_privkey_do_get_field(k, field_name);
+      safe_get(output) = privkey_get_field(k, field_name);
       });
    }
 
