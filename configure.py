@@ -113,11 +113,34 @@ class Version(object):
             return None
 
 
+class SourcePaths(object):
+    """
+    A collection of paths defined by the project structure and
+    independent of user configurations.
+    All paths are relative to the base_dir, which may be relative as well (e.g. ".")
+    """
+
+    def __init__(self, base_dir):
+        self.base_dir = base_dir
+        self.doc_dir = os.path.join(self.base_dir, 'doc')
+        self.src_dir = os.path.join(self.base_dir, 'src')
+
+        # dirs in src/
+        self.build_data_dir = os.path.join(self.src_dir, 'build-data')
+        self.lib_dir = os.path.join(self.src_dir, 'lib')
+        self.python_dir = os.path.join(self.src_dir, 'python')
+        self.scripts_dir = os.path.join(self.src_dir, 'scripts')
+
+        # dirs in src/build-data/
+        self.sphinx_config_dir = os.path.join(self.build_data_dir, 'sphinx')
+        self.makefile_dir = os.path.join(self.build_data_dir, 'makefile')
+
+
 class BuildPaths(object): # pylint: disable=too-many-instance-attributes
     """
     Constructor
     """
-    def __init__(self, options, modules):
+    def __init__(self, source_paths, options, modules):
         self.build_dir = os.path.join(options.with_build_dir, 'build')
 
         self.libobj_dir = os.path.join(self.build_dir, 'obj', 'lib')
@@ -143,9 +166,6 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
 
         self.public_headers = sorted(flatten([m.public_headers() for m in modules]))
 
-        self.doc_dir = os.path.join(options.base_dir, 'doc')
-        self.src_dir = os.path.join(options.base_dir, 'src')
-
         def find_sources_in(basedir, srcdir):
             for (dirpath, _, filenames) in os.walk(os.path.join(basedir, srcdir)):
                 for filename in filenames:
@@ -158,11 +178,9 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
                     if filename.endswith('.h') and not filename.startswith('.'):
                         yield os.path.join(dirpath, filename)
 
-        self.cli_sources = list(find_sources_in(self.src_dir, 'cli'))
-        self.cli_headers = list(find_headers_in(self.src_dir, 'cli'))
-        self.test_sources = list(find_sources_in(self.src_dir, 'tests'))
-
-        self.python_dir = os.path.join(options.src_dir, 'python')
+        self.cli_sources = list(find_sources_in(source_paths.src_dir, 'cli'))
+        self.cli_headers = list(find_headers_in(source_paths.src_dir, 'cli'))
+        self.test_sources = list(find_sources_in(source_paths.src_dir, 'tests'))
 
     def build_dirs(self):
         out = [
@@ -190,7 +208,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
 PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major)
 
 
-def make_build_doc_commands(build_paths, options):
+def make_build_doc_commands(source_paths, build_paths, options):
     def build_manual_command(src_dir, dst_dir):
         if options.with_sphinx:
             sphinx = 'sphinx-build -c $(SPHINX_CONFIG) $(SPHINX_OPTS) '
@@ -202,7 +220,7 @@ def make_build_doc_commands(build_paths, options):
             return '$(COPY) %s%s*.rst %s' %  (src_dir, os.sep, dst_dir)
 
     cmds = [
-        build_manual_command(os.path.join(build_paths.doc_dir, 'manual'), build_paths.doc_output_dir_manual)
+        build_manual_command(os.path.join(source_paths.doc_dir, 'manual'), build_paths.doc_output_dir_manual)
     ]
     if options.with_doxygen:
         cmds += ['doxygen %s%sbotan.doxy' % (build_paths.build_dir, os.sep)]
@@ -212,6 +230,8 @@ def make_build_doc_commands(build_paths, options):
 def process_command_line(args): # pylint: disable=too-many-locals
     """
     Handle command line options
+    Do not use logging in this method as command line options need to be
+    available before logging is setup.
     """
 
     parser = optparse.OptionParser(
@@ -241,8 +261,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
     target_group.add_option('--cc-abi-flags', metavar='FLAG',
                             help='set compiler ABI flags',
                             default='')
-
-    target_group.add_option('--chost', help=optparse.SUPPRESS_HELP)
 
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override byte order guess')
@@ -1687,16 +1705,52 @@ class MakefileListsGenerator(object):
                 src,
                 self._cc.output_to_option)
 
-    def generate(self, var):
+    def generate(self):
+        out = {}
         for t in ['lib', 'cli', 'test']:
             obj_key = '%s_objs' % (t)
             src_list, src_dir = self._build_paths.src_info(t)
             src_list.sort()
-            var[obj_key] = makefile_list(self._objectfile_list(src_list, src_dir))
+            out[obj_key] = makefile_list(self._objectfile_list(src_list, src_dir))
             build_key = '%s_build_cmds' % (t)
-            var[build_key] = '\n'.join(self._build_commands(src_list, src_dir, t.upper()))
+            out[build_key] = '\n'.join(self._build_commands(src_list, src_dir, t.upper()))
+        return out
 
-def create_template_vars(build_config, options, modules, cc, arch, osinfo):
+
+class HouseEccCurve(object):
+    def __init__(self, house_curve):
+        p = house_curve.split(",")
+        if len(p) != 4:
+            raise UserError('--house-curve must have 4 comma separated parameters. See --help')
+        # make sure TLS curve id is in reserved for private use range (0xFE00..0xFEFF)
+        curve_id = int(p[3], 16)
+        if curve_id < 0xfe00 or curve_id > 0xfeff:
+            raise UserError('TLS curve ID not in reserved range (see RFC 4492)')
+
+        self._defines = [
+            'HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"',
+            'HOUSE_ECC_CURVE_OID \"' + p[2] + '\"',
+            'HOUSE_ECC_CURVE_PEM ' + self._read_pem(filepath=p[0]),
+            'HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id),
+        ]
+
+    def defines(self):
+        return self._defines
+
+    @staticmethod
+    def _read_pem(filepath):
+        try:
+            with open(filepath) as f:
+                lines = [line.rstrip() for line in f]
+        except IOError:
+            raise UserError("Error reading file '%s'" % filepath)
+
+        for ndx, _ in enumerate(lines):
+            lines[ndx] = '   \"%s\"' % lines[ndx]
+        return "\\\n" + ' \\\n'.join(lines)
+
+
+def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
     """
     Create the template variables needed to process the makefile, build.h, etc
     """
@@ -1741,29 +1795,6 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
                 logging.warning('Unknown arch in innosetup_arch %s' % (arch))
         return None
 
-    def read_pem(filename):
-        lines = [line.rstrip() for line in open(filename)]
-        for ndx, _ in enumerate(lines):
-            lines[ndx] = ''.join(('\"', lines[ndx], '\" \\', '\n'))
-        return ''.join(lines)
-
-    def misc_config():
-        opts = list()
-        if options.house_curve:
-            p = options.house_curve.split(",")
-            if len(p) < 4:
-                logging.error('Too few parameters to --in-house-curve')
-            # make sure TLS curve id is in reserved for private use range (0xFE00..0xFEFF)
-            curve_id = int(p[3], 16)
-            if curve_id < 0xfe00 or curve_id > 0xfeff:
-                logging.error('TLS curve ID not in reserved range (see RFC 4492)')
-            opts.append('HOUSE_ECC_CURVE_NAME \"' + p[1] + '\"')
-            opts.append('HOUSE_ECC_CURVE_OID \"' + p[2] + '\"')
-            opts.append('HOUSE_ECC_CURVE_PEM ' + read_pem(filename=p[0]))
-            opts.append('HOUSE_ECC_CURVE_TLS_ID ' + hex(curve_id))
-
-        return opts
-
     def configure_command_line():
         # Cut absolute path from main executable (e.g. configure.py or python interpreter)
         # to get the same result when configuring the same thing on different machines
@@ -1783,9 +1814,9 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'distribution_info': options.distribution_info,
 
-        'base_dir': options.base_dir,
-        'src_dir': options.src_dir,
-        'doc_dir': build_config.doc_dir,
+        'base_dir': source_paths.base_dir,
+        'src_dir': source_paths.src_dir,
+        'doc_dir': source_paths.doc_dir,
 
         'command_line': configure_command_line(),
         'local_config': slurp_file(options.local_config),
@@ -1805,7 +1836,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         'out_dir': options.with_build_dir or os.path.curdir,
         'build_dir': build_config.build_dir,
 
-        'scripts_dir': os.path.join(build_config.src_dir, 'scripts'),
+        'scripts_dir': source_paths.scripts_dir,
 
         'build_shared_lib': options.build_shared_lib,
 
@@ -1815,10 +1846,10 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'doc_output_dir': build_config.doc_output_dir,
 
-        'build_doc_commands': make_build_doc_commands(build_config, options),
+        'build_doc_commands': make_build_doc_commands(source_paths, build_config, options),
 
-        'python_dir': build_config.python_dir,
-        'sphinx_config_dir': os.path.join(options.build_data, 'sphinx'),
+        'python_dir': source_paths.python_dir,
+        'sphinx_config_dir': source_paths.sphinx_config_dir,
 
         'os': options.os,
         'arch': options.arch,
@@ -1874,9 +1905,12 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
 
         'python_version': options.python_version,
         'with_sphinx': options.with_sphinx,
-
-        'misc_config': make_cpp_macros(misc_config())
         }
+
+    if options.house_curve:
+        variables['house_ecc_curve_defines'] = make_cpp_macros(HouseEccCurve(options.house_curve).defines())
+    else:
+        variables['house_ecc_curve_defines'] = ''
 
     if options.build_shared_lib:
 
@@ -1912,7 +1946,7 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         variables['cli_post_link_cmd'] = ''
         variables['test_post_link_cmd'] = ''
 
-    MakefileListsGenerator(build_config, options, modules, cc, arch, osinfo).generate(variables)
+    variables.update(MakefileListsGenerator(build_config, options, modules, cc, arch, osinfo).generate())
 
     if options.os == 'windows':
         if options.with_debug_info:
@@ -1926,16 +1960,20 @@ def create_template_vars(build_config, options, modules, cc, arch, osinfo):
         # This can be made consistent over all platforms in the future
         variables['libname'] = 'botan-%d' % (Version.major)
 
-    variables["header_in"] = process_template(os.path.join(options.makefile_dir, 'header.in'), variables)
+    variables["header_in"] = process_template(os.path.join(source_paths.makefile_dir, 'header.in'), variables)
 
     if variables["makefile_style"] == "gmake":
-        variables["gmake_commands_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_commands.in'),
-                                                          variables)
-        variables["gmake_dso_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_dso.in'), variables) \
-                                    if options.build_shared_lib else ''
-        variables["gmake_coverage_in"] = process_template(os.path.join(options.makefile_dir, 'gmake_coverage.in'),
-                                                          variables) \
-                                         if options.with_coverage_info else ''
+        variables["gmake_commands_in"] = process_template(
+            os.path.join(source_paths.makefile_dir, 'gmake_commands.in'),
+            variables)
+        variables["gmake_dso_in"] = process_template(
+            os.path.join(source_paths.makefile_dir, 'gmake_dso.in'),
+            variables
+            ) if options.build_shared_lib else ''
+        variables["gmake_coverage_in"] = process_template(
+            os.path.join(source_paths.makefile_dir, 'gmake_coverage.in'),
+            variables
+            ) if options.with_coverage_info else ''
 
     return variables
 
@@ -2463,6 +2501,84 @@ def have_program(program):
     logging.debug('Program %s not found' % (program))
     return False
 
+
+class BotanConfigureLogHandler(logging.StreamHandler, object):
+    def emit(self, record):
+        # Do the default stuff first
+        super(BotanConfigureLogHandler, self).emit(record)
+        # Exit script if and ERROR or worse occurred
+        if record.levelno >= logging.ERROR:
+            sys.exit(1)
+
+
+def setup_logging(options):
+    if options.verbose:
+        log_level = logging.DEBUG
+    elif options.quiet:
+        log_level = logging.WARNING
+    else:
+        log_level = logging.INFO
+
+    lh = BotanConfigureLogHandler(sys.stdout)
+    lh.setFormatter(logging.Formatter('%(levelname) 7s: %(message)s'))
+    logging.getLogger().addHandler(lh)
+    logging.getLogger().setLevel(log_level)
+
+
+def load_info_files(descr, search_dir, filename_matcher, class_t):
+    info = {}
+
+    def filename_matches(filename):
+        if isinstance(filename_matcher, str):
+            return filename == filename_matcher
+        else:
+            return filename_matcher.match(filename) is not None
+
+    for (dirpath, _, filenames) in os.walk(search_dir):
+        for filename in filenames:
+            filepath = os.path.join(dirpath, filename)
+            if filename_matches(filename):
+                info_obj = class_t(filepath)
+                info[info_obj.basename] = info_obj
+
+    if info:
+        infotxt_basenames = ' '.join(sorted([key for key in info]))
+        logging.debug('Loaded %d %s files: %s' % (len(info), descr, infotxt_basenames))
+    else:
+        logging.warning('Failed to load any %s files' % (descr))
+
+    return info
+
+
+# Workaround for Windows systems where antivirus is enabled GH #353
+def robust_rmtree(path, max_retries=5):
+    for _ in range(max_retries):
+        try:
+            shutil.rmtree(path)
+            return
+        except OSError:
+            time.sleep(0.1)
+
+    # Final attempt, pass any exceptions up to caller.
+    shutil.rmtree(path)
+
+
+# Workaround for Windows systems where antivirus is enabled GH #353
+def robust_makedirs(directory, max_retries=5):
+    for _ in range(max_retries):
+        try:
+            os.makedirs(directory)
+            return
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                raise
+            else:
+                time.sleep(0.1)
+
+    # Final attempt, pass any exceptions up to caller.
+    os.makedirs(directory)
+
+
 def main(argv=None):
     """
     Main driver
@@ -2471,28 +2587,9 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    class BotanConfigureLogHandler(logging.StreamHandler, object):
-        def emit(self, record):
-            # Do the default stuff first
-            super(BotanConfigureLogHandler, self).emit(record)
-            # Exit script if and ERROR or worse occurred
-            if record.levelno >= logging.ERROR:
-                sys.exit(1)
-
-    lh = BotanConfigureLogHandler(sys.stdout)
-    lh.setFormatter(logging.Formatter('%(levelname) 7s: %(message)s'))
-    logging.getLogger().addHandler(lh)
-
     options = process_command_line(argv[1:])
 
-    def log_level():
-        if options.verbose:
-            return logging.DEBUG
-        if options.quiet:
-            return logging.WARNING
-        return logging.INFO
-
-    logging.getLogger().setLevel(log_level())
+    setup_logging(options)
 
     logging.info('%s invoked with options "%s"' % (
         argv[0], ' '.join(argv[1:])))
@@ -2503,37 +2600,13 @@ def main(argv=None):
     if options.os == "java":
         raise UserError("Jython detected: need --os and --cpu to set target")
 
-    options.base_dir = os.path.dirname(argv[0])
-    options.src_dir = os.path.join(options.base_dir, 'src')
-    options.lib_dir = os.path.join(options.src_dir, 'lib')
+    source_paths = SourcePaths(os.path.dirname(argv[0]))
 
-    options.build_data = os.path.join(options.src_dir, 'build-data')
-    options.makefile_dir = os.path.join(options.build_data, 'makefile')
-
-    def find_files_named(desired_name, in_path):
-        for (dirpath, _, filenames) in os.walk(in_path):
-            if desired_name in filenames:
-                yield os.path.join(dirpath, desired_name)
-
-    modules = dict([(mod.basename, mod) for mod in
-                    [ModuleInfo(info) for info in
-                     find_files_named('info.txt', options.lib_dir)]])
+    modules = load_info_files('Modules', source_paths.lib_dir, "info.txt", ModuleInfo)
 
     def load_build_data(descr, subdir, class_t):
-        info = {}
-
-        subdir = os.path.join(options.build_data, subdir)
-
-        for fsname in os.listdir(subdir):
-            if fsname.endswith('.txt'):
-                info[fsname.replace('.txt', '')] = class_t(os.path.join(subdir, fsname))
-        if len(info) == 0:
-            logging.warning('Failed to load any %s files' % (descr))
-        else:
-            infotxt_basenames = ' '.join(sorted([key for key in info]))
-            logging.debug('Loaded %d %s files (%s)' % (len(info), descr, infotxt_basenames))
-
-        return info
+        matcher = re.compile(r'[_a-z0-9]+\.txt$')
+        return load_info_files(descr, os.path.join(source_paths.build_data_dir, subdir), matcher, class_t)
 
     info_arch = load_build_data('CPU info', 'arch', ArchInfo)
     info_os = load_build_data('OS info', 'os', OsInfo)
@@ -2557,15 +2630,6 @@ def main(argv=None):
         for k in sorted(modules.keys()):
             print(k)
         sys.exit(0)
-
-    if options.chost:
-        chost = options.chost.split('-')
-
-        if options.cpu is None and len(chost) > 0:
-            options.cpu = chost[0]
-
-        if options.os is None and len(chost) > 2:
-            options.os = '-'.join(chost[2:])
 
     if options.os is None:
         options.os = platform.system().lower()
@@ -2673,43 +2737,16 @@ def main(argv=None):
 
     using_mods = [modules[modname] for modname in loaded_module_names]
 
-    build_config = BuildPaths(options, using_mods)
+    build_config = BuildPaths(source_paths, options, using_mods)
 
     build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
 
-    template_vars = create_template_vars(build_config, options, using_mods, cc, arch, osinfo)
+    template_vars = create_template_vars(source_paths, build_config, options, using_mods, cc, arch, osinfo)
 
-    makefile_template = os.path.join(options.makefile_dir, '%s.in' % (template_vars['makefile_style']))
+    makefile_template = os.path.join(source_paths.makefile_dir, '%s.in' % (template_vars['makefile_style']))
     logging.debug('Using makefile template %s' % (makefile_template))
 
     # Now begin the actual IO to setup the build
-
-    # Workaround for Windows systems where antivirus is enabled GH #353
-    def robust_rmtree(path, max_retries=5):
-        for _ in range(max_retries):
-            try:
-                shutil.rmtree(path)
-                return
-            except OSError:
-                time.sleep(0.1)
-
-        # Final attempt, pass any exceptions up to caller.
-        shutil.rmtree(path)
-
-    # Workaround for Windows systems where antivirus is enabled GH #353
-    def robust_makedirs(directory, max_retries=5):
-        for _ in range(max_retries):
-            try:
-                os.makedirs(directory)
-                return
-            except OSError as e:
-                if e.errno == errno.EEXIST:
-                    raise
-                else:
-                    time.sleep(0.1)
-
-        # Final attempt, pass any exceptions up to caller.
-        os.makedirs(directory)
 
     try:
         if options.clean_build_tree:
@@ -2726,16 +2763,13 @@ def main(argv=None):
                 logging.error('Error while creating "%s": %s' % (build_dir, e))
 
     def write_template(sink, template):
-        try:
-            f = open(sink, 'w')
+        with open(sink, 'w') as f:
             f.write(process_template(template, template_vars))
-        finally:
-            f.close()
 
     def in_build_dir(p):
         return os.path.join(build_config.build_dir, p)
     def in_build_data(p):
-        return os.path.join(options.build_data, p)
+        return os.path.join(source_paths.build_data_dir, p)
 
     write_template(in_build_dir('build.h'), in_build_data('buildh.in'))
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
@@ -2773,7 +2807,7 @@ def main(argv=None):
     if options.amalgamation:
         amalgamation_cpp_files = AmalgamationGenerator(build_config, using_mods, options).generate()
         build_config.lib_sources = sorted(amalgamation_cpp_files)
-        MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate(template_vars)
+        template_vars.update(MakefileListsGenerator(build_config, options, using_mods, cc, arch, osinfo).generate())
 
     if options.with_bakefile:
         gen_bakefile(build_config, options, template_vars['link_to'])
