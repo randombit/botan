@@ -1,6 +1,7 @@
 /*
 * (C) 2015 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
+* (C) 2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,6 +13,7 @@
 #include <botan/calendar.h>
 #include <botan/internal/rounding.h>
 #include <botan/charset.h>
+#include <botan/parsing.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
   #include <botan/base64.h>
@@ -453,6 +455,32 @@ class Charset_Tests : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("charset", Charset_Tests);
+
+class Hostname_Tests : public Text_Based_Test
+   {
+   public:
+      Hostname_Tests() : Text_Based_Test("hostnames.vec", "Issued,Hostname")
+         {}
+
+      Test::Result run_one_test(const std::string& type, const VarMap& vars) override
+         {
+         using namespace Botan;
+
+         Test::Result result("Hostname");
+
+         const std::string issued = get_req_str(vars, "Issued");
+         const std::string hostname = get_req_str(vars, "Hostname");
+         const bool expected = (type == "Invalid") ? false : true;
+
+         const std::string what = hostname + ((expected == true) ?
+               " matches " : " does not match ") + issued;
+         result.test_eq(what, Botan::host_wildcard_match(issued, hostname), expected);
+
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("hostname", Hostname_Tests);
 
 }
 

@@ -1,0 +1,66 @@
+# Test vectors derived from from RFC 6125 and OpenSSL test suite
+# https://github.com/openssl/openssl/blob/master/test/v3nametest.c
+
+Issued = example
+Hostname = example
+
+Issued = example.com
+Hostname = example.com
+
+Issued = a.example.com
+Hostname = a.example.com
+
+Issued = test.www.example.com
+Hostname = test.www.example.com
+
+Issued = *.example.com
+Hostname = foo.example.com
+
+Issued = baz*.example.net
+Hostname = baz1.example.net
+
+Issued = baz*.example.net
+Hostname = baz.example.net
+
+Issued = *baz.example.net
+Hostname = foobaz.example.net
+
+Issued = *baz.example.net
+Hostname = baz.example.net
+
+Issued = b*z.example.net
+Hostname = buzz.example.net
+
+Issued = foo*bar.example.net
+Hostname = foobar.example.net
+
+Issued = *.www.example.com
+Hostname = test.www.example.com
+
+Issued = *www.example.com
+Hostname = www.example.com
+
+[Invalid]
+Issued = example.com
+Hostname = www.example.com
+
+Issued = www.example.com
+Hostname = example.com
+
+Issued = bar.*.example.net
+Hostname = bar.foo.example.net
+
+Issued = *.example.com
+Hostname = bar.foo.example.com
+
+Issued = *.example.com
+Hostname = example.com
+
+Issued = foo*foo.example.com
+Hostname = foo.example.com
+
+Issued = **.example.com
+Hostname = foo.example.com
+
+Issued = *.*.example.com
+Hostname = foo.bar.example.com

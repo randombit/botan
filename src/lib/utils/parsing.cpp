@@ -2,6 +2,7 @@
 * Various string utils and parsing functions
 * (C) 1999-2007,2013,2014,2015 Jack Lloyd
 * (C) 2015 Simon Warta (Kullo GmbH)
+* (C) 2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,6 +13,7 @@
 #include <botan/loadstor.h>
 #include <limits>
 #include <set>
+#include <algorithm>
 
 namespace Botan {
 
@@ -337,22 +339,100 @@ std::string replace_char(const std::string& str, char from_char, char to_char)
 bool host_wildcard_match(const std::string& issued, const std::string& host)
    {
    if(issued == host)
+      {
       return true;
+      }
 
-   if(issued.size() > 2 && issued[0] == '*' && issued[1] == '.')
+   if(std::count(issued.begin(), issued.end(), '*') > 1)
+      {
+      return false;
+      }
+
+   // first try to match the base, then the left-most label
+   // which can contain exactly one wildcard at any position
+   if(issued.size() > 2)
       {
       size_t host_i = host.find('.');
       if(host_i == std::string::npos || host_i == host.size() - 1)
+         {
          return false;
+         }
+
+      size_t issued_i = issued.find('.');
+      if(issued_i == std::string::npos || issued_i == issued.size() - 1)
+         {
+         return false;
+         }
 
       const std::string host_base = host.substr(host_i + 1);
-      const std::string issued_base = issued.substr(2);
+      const std::string issued_base = issued.substr(issued_i + 1);
 
-      if(host_base == issued_base)
+      // if anything but the left-most label doesn't equal,
+      // we are already out here
+      if(host_base != issued_base)
+         {
+         return false;
+         }
+
+      // compare the left-most labels
+      std::string host_prefix = host.substr(0, host_i);
+
+      if(host_prefix.empty())
+         {
+         return false;
+         }
+
+      const std::string issued_prefix = issued.substr(0, issued_i);
+
+      // if split_on would work on strings with less than 2 items,
+      // the if/else block would not be necessary
+      if(issued_prefix == "*")
+         {
          return true;
          }
 
+      std::vector<std::string> p;
+
+      if(issued_prefix[0] == '*')
+         {
+         p = std::vector<std::string>{"", issued_prefix.substr(1, issued_prefix.size())};
+         }
+      else if(issued_prefix[issued_prefix.size()-1] == '*')
+         {
+         p = std::vector<std::string>{issued_prefix.substr(0, issued_prefix.size() - 1), ""};
+         }
+      else
+         {
+         p = split_on(issued_prefix, '*');
+         }
+
+      if(p.size() != 2)
+         {
+         return false;
+         }
+
+      // match anything before and after the wildcard character
+      const std::string first = p[0];
+      const std::string last = p[1];
+
+      if(host_prefix.substr(0, first.size()) == first)
+         {
+         host_prefix.erase(0, first.size());
+         }
+
+      // nothing to match anymore
+      if(last.empty())
+         {
+         return true;
+         }
+
+      if(host_prefix.size() >= last.size() &&
+            host_prefix.substr(host_prefix.size() - last.size(), last.size()) == last)
+         {
+         return true;
+         }
+      }
+
    return false;
    }
-
 }
