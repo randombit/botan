@@ -35,7 +35,7 @@ namespace {
 class Test_Runner : public Botan_CLI::Command
    {
    public:
-      Test_Runner() : Command("test --threads=0 --run-long-tests --run-online-tests --test-runs=1 --drbg-seed= --data-dir= --pkcs11-lib= --log-success *suites") {}
+      Test_Runner() : Command("test --threads=0 --run-long-tests --run-online-tests --test-runs=1 --drbg-seed= --data-dir= --pkcs11-lib= --provider= --log-success *suites") {}
 
       std::string help_text() const override
          {
@@ -79,6 +79,7 @@ class Test_Runner : public Botan_CLI::Command
          const bool run_long_tests = flag_set("run-long-tests");
          const std::string data_dir = get_arg_or("data-dir", "src/tests/data");
          const std::string pkcs11_lib = get_arg("pkcs11-lib");
+         const std::string provider = get_arg("provider");
          const size_t runs = get_arg_sz("test-runs");
 
          std::vector<std::string> req = get_arg_list("suites");
@@ -146,6 +147,13 @@ class Test_Runner : public Botan_CLI::Command
             output() << " pkcs11 library:" << pkcs11_lib;
             }
 
+         Botan_Tests::Provider_Filter pf;
+         if(!provider.empty())
+            {
+            output() << " provider:" << provider;
+            pf.set(provider);
+            }
+
          std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
 #if defined(BOTAN_HAS_HMAC_DRBG) && defined(BOTAN_HAS_SHA2_64)
@@ -186,7 +194,7 @@ class Test_Runner : public Botan_CLI::Command
          output() << "\n";
 
          Botan_Tests::Test::setup_tests(log_success, run_online_tests, run_long_tests,
-                                        data_dir, pkcs11_lib, rng.get());
+                                        data_dir, pkcs11_lib, pf, rng.get());
 
          for(size_t i = 0; i != runs; ++i)
             {

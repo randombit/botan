@@ -417,6 +417,22 @@ std::string Test::Result::result_string(bool verbose) const
    return report.str();
    }
 
+std::vector<std::string> Provider_Filter::filter(const std::vector<std::string> &in) const
+   {
+      if(m_provider.empty())
+         {
+         return in;
+         }
+      for(auto&& provider : in)
+         {
+         if(provider == m_provider)
+            {
+            return std::vector<std::string> { provider };
+            }
+         }
+      return std::vector<std::string> {};
+   }
+
 // static Test:: functions
 //static
 std::map<std::string, std::unique_ptr<Test>>& Test::global_registry()
@@ -488,6 +504,7 @@ bool Test::m_log_success = false;
 bool Test::m_run_online_tests = false;
 bool Test::m_run_long_tests = false;
 std::string Test::m_pkcs11_lib;
+Botan_Tests::Provider_Filter Test::m_provider_filter;
 
 //static
 void Test::setup_tests(bool log_success,
@@ -495,6 +512,7 @@ void Test::setup_tests(bool log_success,
                        bool run_long,
                        const std::string& data_dir,
                        const std::string& pkcs11_lib,
+                       const Botan_Tests::Provider_Filter& pf,
                        Botan::RandomNumberGenerator* rng)
    {
    m_data_dir = data_dir;
@@ -503,6 +521,7 @@ void Test::setup_tests(bool log_success,
    m_run_long_tests = run_long;
    m_test_rng = rng;
    m_pkcs11_lib = pkcs11_lib;
+   m_provider_filter = pf;
    }
 
 //static
@@ -539,6 +558,12 @@ bool Test::run_long_tests()
 std::string Test::pkcs11_lib()
    {
    return m_pkcs11_lib;
+   }
+
+//static
+std::vector<std::string> Test::provider_filter(const std::vector<std::string>& in)
+   {
+   return m_provider_filter.filter(in);
    }
 
 //static
@@ -824,6 +849,11 @@ parse_cpuid_bits(const std::vector<std::string>& tok)
 
 }
 
+std::vector<std::string> Text_Based_Test::possible_providers(const std::string&)
+   {
+   return Test::provider_filter({ "base" });
+   }
+
 bool Text_Based_Test::skip_this_test(const std::string& /*header*/,
                                      const VarMap& /*vars*/)
    {
@@ -895,7 +925,8 @@ std::vector<Test::Result> Text_Based_Test::run()
          {
          try
             {
-            if(skip_this_test(header, vars))
+            if(possible_providers(header).empty() ||
+               skip_this_test(header, vars))
                {
                continue;
                }
@@ -936,6 +967,11 @@ std::vector<Test::Result> Text_Based_Test::run()
             vars.clear();
             }
          }
+      }
+
+   if(results.empty())
+      {
+      return results;
       }
 
    try

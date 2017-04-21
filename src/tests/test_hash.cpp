@@ -17,6 +17,11 @@ class Hash_Function_Tests : public Text_Based_Test
    public:
       Hash_Function_Tests() : Text_Based_Test("hash", "In,Out") {}
 
+      std::vector<std::string> possible_providers(const std::string& algo) override
+         {
+         return provider_filter(Botan::HashFunction::providers(algo));
+         }
+
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
          const std::vector<uint8_t> input    = get_req_bin(vars, "In");
@@ -24,7 +29,7 @@ class Hash_Function_Tests : public Text_Based_Test
 
          Test::Result result(algo);
 
-         const std::vector<std::string> providers = Botan::HashFunction::providers(algo);
+         const std::vector<std::string> providers = possible_providers(algo);
 
          if(providers.empty())
             {

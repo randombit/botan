@@ -32,7 +32,8 @@ class Stream_Cipher_Tests : public Text_Based_Test
 
          Test::Result result(algo);
 
-         const std::vector<std::string> providers = Botan::StreamCipher::providers(algo);
+         const std::vector<std::string> providers =
+            provider_filter(Botan::StreamCipher::providers(algo));
 
          if(providers.empty())
             {

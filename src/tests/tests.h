@@ -46,6 +46,16 @@ class Test_Error : public Botan::Exception
       explicit Test_Error(const std::string& what) : Exception("Test error", what) {}
    };
 
+class Provider_Filter
+   {
+   public:
+      Provider_Filter() {}
+      void set(const std::string& provider) { m_provider = provider; }
+      std::vector<std::string> filter(const std::vector<std::string> &) const;
+   private:
+      std::string m_provider;
+   };
+
 /*
 * A generic test which returns a set of results when run.
 * The tests may not all have the same type (for example test
@@ -370,12 +380,14 @@ class Test
                               bool run_long_tests,
                               const std::string& data_dir,
                               const std::string& pkcs11_lib,
+                              const Botan_Tests::Provider_Filter& pf,
                               Botan::RandomNumberGenerator* rng);
 
       static bool log_success();
       static bool run_online_tests();
       static bool run_long_tests();
       static std::string pkcs11_lib();
+      static std::vector<std::string> provider_filter(const std::vector<std::string>&);
 
       static const std::string& data_dir();
 
@@ -388,6 +400,7 @@ class Test
       static Botan::RandomNumberGenerator* m_test_rng;
       static bool m_log_success, m_run_online_tests, m_run_long_tests;
       static std::string m_pkcs11_lib;
+      static Botan_Tests::Provider_Filter m_provider_filter;
    };
 
 /*
@@ -428,8 +441,8 @@ class Text_Based_Test : public Test
 
       virtual Test::Result run_one_test(const std::string& header,
                                         const VarMap& vars) = 0;
-
       // Called before run_one_test
+      virtual std::vector<std::string> possible_providers(const std::string&);
       virtual bool skip_this_test(const std::string& header,
                                   const VarMap& vars);
 

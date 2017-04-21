@@ -30,6 +30,9 @@ class PK_Test : public Text_Based_Test
 
       std::string algo_name() const { return m_algo; }
 
+   protected:
+      std::vector<std::string> possible_providers(const std::string&) override;
+
    private:
       std::string m_algo;
    };
