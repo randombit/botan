@@ -1,7 +1,7 @@
 Public Key Cryptography
 =================================
 
-Public key cryptography (also called assymmetric cryptography) is a collection
+Public key cryptography (also called asymmetric cryptography) is a collection
 of techniques allowing for encryption, signatures, and key agreement.
 
 Key Objects
