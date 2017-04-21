@@ -463,7 +463,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
     install_group.add_option('--prefix', metavar='DIR',
                              help='set the install prefix')
     install_group.add_option('--destdir', metavar='DIR',
-                             help='set the install directory')
+                             help='set the destination prefix (removed, use DESTDIR environment variable)')
     install_group.add_option('--docdir', metavar='DIR',
                              help='set the doc install dir')
     install_group.add_option('--bindir', metavar='DIR',
@@ -1827,7 +1827,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'program_suffix': options.program_suffix or osinfo.program_suffix,
 
         'prefix': options.prefix or osinfo.install_root,
-        'destdir': options.destdir or options.prefix or osinfo.install_root,
         'bindir': options.bindir or osinfo.bin_dir,
         'libdir': options.libdir or osinfo.lib_dir,
         'includedir': options.includedir or osinfo.header_dir,
@@ -2728,6 +2727,9 @@ def main(argv=None):
 
     if options.single_amalgamation_file and not options.amalgamation:
         raise UserError("--single-amalgamation-file requires --amalgamation.")
+
+    if options.destdir:
+        raise UserError("--destdir was removed. Use the DESTDIR environment variable instead.")
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
