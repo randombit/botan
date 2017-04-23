@@ -377,12 +377,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
     build_group.add_option('--without-sphinx', action='store_false',
                            dest='with_sphinx', help=optparse.SUPPRESS_HELP)
 
-    build_group.add_option('--with-visibility', action='store_true',
-                           default=None, help=optparse.SUPPRESS_HELP)
-
-    build_group.add_option('--without-visibility', action='store_false',
-                           dest='with_visibility', help=optparse.SUPPRESS_HELP)
-
     build_group.add_option('--with-doxygen', action='store_true',
                            default=False, help='Use Doxygen')
 
@@ -1045,13 +1039,12 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         def flag_builder():
             if options.build_shared_lib:
                 yield self.shared_flags
-                if options.with_visibility:
-                    yield self.visibility_build_flags
+                yield self.visibility_build_flags
 
         return ' '.join(list(flag_builder()))
 
     def gen_visibility_attribute(self, options):
-        if options.build_shared_lib and options.with_visibility:
+        if options.build_shared_lib:
             return self.visibility_attribute
         return ''
 
@@ -2713,9 +2706,6 @@ def main(argv=None):
         if options.module_policy not in module_policies:
             logging.error("Unknown module set %s", options.module_policy)
         module_policy = module_policies[options.module_policy]
-
-    if options.with_visibility is None:
-        options.with_visibility = True
 
     if options.with_sphinx is None:
         if have_program('sphinx-build'):
