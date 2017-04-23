@@ -2600,6 +2600,9 @@ def validate_options(options, available_module_policies):
     if options.module_policy and options.module_policy not in available_module_policies:
         raise UserError("Unknown module set %s" % options.module_policy)
 
+    if options.os == 'windows' and options.compiler == 'gcc':
+        logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
+
 
 def main(argv=None):
     """
@@ -2659,9 +2662,6 @@ def main(argv=None):
         if re.match('^cygwin_.*', options.os):
             logging.debug("Converting '%s' to 'cygwin'", options.os)
             options.os = 'cygwin'
-
-        if options.os == 'windows' and options.compiler == 'gcc':
-            logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
 
         logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
 
