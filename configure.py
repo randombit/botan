@@ -2574,6 +2574,20 @@ def robust_makedirs(directory, max_retries=5):
     os.makedirs(directory)
 
 
+# Checks user options for consistency
+# This method DOES NOT change options on behalf of the user but explains
+# why the given configuration does not work.
+def validate_options(options):
+    if options.gen_amalgamation:
+        raise UserError("--gen-amalgamation was removed. Migrate to --amalgamation.")
+
+    if options.via_amalgamation:
+        raise UserError("--via-amalgamation was removed. Use --amalgamation instead.")
+
+    if options.single_amalgamation_file and not options.amalgamation:
+        raise UserError("--single-amalgamation-file requires --amalgamation.")
+
+
 def main(argv=None):
     """
     Main driver
@@ -2712,14 +2726,7 @@ def main(argv=None):
             logging.info('Found sphinx-build (use --without-sphinx to disable)')
             options.with_sphinx = True
 
-    if options.gen_amalgamation:
-        raise UserError("--gen-amalgamation was removed. Migrate to --amalgamation.")
-
-    if options.via_amalgamation:
-        raise UserError("--via-amalgamation was removed. Use --amalgamation instead.")
-
-    if options.single_amalgamation_file and not options.amalgamation:
-        raise UserError("--single-amalgamation-file requires --amalgamation.")
+    validate_options(options)
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
