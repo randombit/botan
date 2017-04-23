@@ -78,6 +78,7 @@ void SHA_160::compress_n(const uint8_t input[], size_t blocks)
       {
       load_be(m_W.data(), input, 16);
 
+#if 0
       for(size_t j = 16; j != 80; j += 8)
          {
          m_W[j  ] = rotate_left((m_W[j-3] ^ m_W[j-8] ^ m_W[j-14] ^ m_W[j-16]), 1);
@@ -89,6 +90,24 @@ void SHA_160::compress_n(const uint8_t input[], size_t blocks)
          m_W[j+6] = rotate_left((m_W[j+3] ^ m_W[j-2] ^ m_W[j- 8] ^ m_W[j-10]), 1);
          m_W[j+7] = rotate_left((m_W[j+4] ^ m_W[j-1] ^ m_W[j- 7] ^ m_W[j- 9]), 1);
          }
+#else
+      for(size_t j = 16; j != 32; j += 8)
+         {
+         W[j  ] = rotate_left((W[j-3] ^ W[j-8] ^ W[j-14] ^ W[j-16]), 1);
+         W[j+1] = rotate_left((W[j-2] ^ W[j-7] ^ W[j-13] ^ W[j-15]), 1);
+         W[j+2] = rotate_left((W[j-1] ^ W[j-6] ^ W[j-12] ^ W[j-14]), 1);
+         W[j+3] = rotate_left((W[j  ] ^ W[j-5] ^ W[j-11] ^ W[j-13]), 1);
+         W[j+4] = rotate_left((W[j+1] ^ W[j-4] ^ W[j-10] ^ W[j-12]), 1);
+         W[j+5] = rotate_left((W[j+2] ^ W[j-3] ^ W[j- 9] ^ W[j-11]), 1);
+         W[j+6] = rotate_left((W[j+3] ^ W[j-2] ^ W[j- 8] ^ W[j-10]), 1);
+         W[j+7] = rotate_left((W[j+4] ^ W[j-1] ^ W[j- 7] ^ W[j- 9]), 1);
+         }
+
+      for(size_t j = 32; j != 80; ++j)
+         {
+         W[j  ] = rotate_left((W[j-6] ^ W[j-16] ^ W[j-28] ^ W[j-32]), 2);
+         }
+#endif
 
       F1(A, B, C, D, E, m_W[ 0]);   F1(E, A, B, C, D, m_W[ 1]);
       F1(D, E, A, B, C, m_W[ 2]);   F1(C, D, E, A, B, m_W[ 3]);
