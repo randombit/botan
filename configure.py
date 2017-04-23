@@ -2587,7 +2587,7 @@ def set_defaults_for_unset_options(options):
 # Checks user options for consistency
 # This method DOES NOT change options on behalf of the user but explains
 # why the given configuration does not work.
-def validate_options(options):
+def validate_options(options, available_module_policies):
     if options.gen_amalgamation:
         raise UserError("--gen-amalgamation was removed. Migrate to --amalgamation.")
 
@@ -2596,6 +2596,9 @@ def validate_options(options):
 
     if options.single_amalgamation_file and not options.amalgamation:
         raise UserError("--single-amalgamation-file requires --amalgamation.")
+
+    if options.module_policy and options.module_policy not in available_module_policies:
+        raise UserError("Unknown module set %s" % options.module_policy)
 
 
 def main(argv=None):
@@ -2721,18 +2724,13 @@ def main(argv=None):
     logging.info('Target is %s-%s-%s-%s' % (
         options.compiler, options.os, options.arch, options.cpu))
 
+    set_defaults_for_unset_options(options)
+    validate_options(options, module_policies)
+
     cc = info_cc[options.compiler]
     arch = info_arch[options.arch]
     osinfo = info_os[options.os]
-    module_policy = None
-
-    if options.module_policy != None:
-        if options.module_policy not in module_policies:
-            logging.error("Unknown module set %s", options.module_policy)
-        module_policy = module_policies[options.module_policy]
-
-    set_defaults_for_unset_options(options)
-    validate_options(options)
+    module_policy = module_policies[options.module_policy] if options.module_policy else None
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
