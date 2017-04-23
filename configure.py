@@ -1341,15 +1341,17 @@ def guess_processor(archinfo):
 
     raise UserError('Could not determine target CPU; set with --cpu')
 
-def slurp_file(filename):
+
+def read_textfile(filepath):
     """
     Read a whole file into memory as a string
     """
-
-    # type: (object) -> object
-    if filename is None:
+    if filepath is None:
         return ''
-    return ''.join(open(filename).readlines())
+
+    with open(filepath) as f:
+        return ''.join(f.readlines())
+
 
 def process_template(template_file, variables):
     """
@@ -1360,7 +1362,7 @@ def process_template(template_file, variables):
         delimiter = '%'
 
     try:
-        template = PercentSignTemplate(slurp_file(template_file))
+        template = PercentSignTemplate(read_textfile(template_file))
         return template.substitute(variables)
     except KeyError as e:
         raise InternalError('Unbound var %s in template %s' % (e, template_file))
@@ -1819,7 +1821,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'doc_dir': source_paths.doc_dir,
 
         'command_line': configure_command_line(),
-        'local_config': slurp_file(options.local_config),
+        'local_config': read_textfile(options.local_config),
         'makefile_style': options.makefile_style or cc.makefile_style,
 
         'makefile_path': os.path.join(build_config.build_dir, '..', 'Makefile'),
