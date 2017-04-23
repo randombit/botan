@@ -2574,6 +2574,16 @@ def robust_makedirs(directory, max_retries=5):
     os.makedirs(directory)
 
 
+# This is for otions that have --with-XYZ and --without-XYZ. If user does not
+# set any of those, we choose a default here.
+# Mutates `options`
+def set_defaults_for_unset_options(options):
+    if options.with_sphinx is None:
+        if have_program('sphinx-build'):
+            logging.info('Found sphinx-build (use --without-sphinx to disable)')
+            options.with_sphinx = True
+
+
 # Checks user options for consistency
 # This method DOES NOT change options on behalf of the user but explains
 # why the given configuration does not work.
@@ -2721,11 +2731,7 @@ def main(argv=None):
             logging.error("Unknown module set %s", options.module_policy)
         module_policy = module_policies[options.module_policy]
 
-    if options.with_sphinx is None:
-        if have_program('sphinx-build'):
-            logging.info('Found sphinx-build (use --without-sphinx to disable)')
-            options.with_sphinx = True
-
+    set_defaults_for_unset_options(options)
     validate_options(options)
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
