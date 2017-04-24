@@ -2674,21 +2674,16 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
 
 
-def main(argv=None):
+def main(argv):
     """
     Main driver
     """
-
-    if argv is None:
-        argv = sys.argv
 
     options = process_command_line(argv[1:])
 
     setup_logging(options)
 
-    logging.info('%s invoked with options "%s"' % (
-        argv[0], ' '.join(argv[1:])))
-
+    logging.info('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
     logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
         platform.system(), platform.machine(), platform.processor()))
 
@@ -2839,7 +2834,7 @@ def main(argv=None):
 
 if __name__ == '__main__':
     try:
-        main()
+        main(argv=sys.argv)
     except UserError as e:
         logging.debug(traceback.format_exc())
         logging.error(e)
