@@ -2694,17 +2694,17 @@ def main(argv):
 
     source_paths = SourcePaths(os.path.dirname(argv[0]))
 
-    modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
+    info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
     info_arch = load_build_data_info_files(source_paths, 'CPU info', 'arch', ArchInfo)
     info_os = load_build_data_info_files(source_paths, 'OS info', 'os', OsInfo)
     info_cc = load_build_data_info_files(source_paths, 'compiler info', 'cc', CompilerInfo)
-    module_policies = load_build_data_info_files(source_paths, 'module policy', 'policy', ModulePolicyInfo)
+    info_module_policies = load_build_data_info_files(source_paths, 'module policy', 'policy', ModulePolicyInfo)
 
-    for mod in modules.values():
+    for mod in info_modules.values():
         mod.cross_check(info_arch, info_os, info_cc)
 
-    for policy in module_policies.values():
-        policy.cross_check(modules)
+    for policy in info_module_policies.values():
+        policy.cross_check(info_modules)
 
     logging.debug('Known CPU names: ' + ' '.join(
         sorted(flatten([[ainfo.basename] + \
@@ -2714,11 +2714,11 @@ def main(argv):
 
     set_defaults_for_unset_options(options, info_arch, info_cc)
     canonicalize_options(options, info_os, info_arch)
-    validate_options(options, info_os, info_cc, module_policies)
+    validate_options(options, info_os, info_cc, info_module_policies)
 
     if options.list_modules:
-        for k in sorted(modules.keys()):
-            print(k)
+        for modname in sorted(info_modules.keys()):
+            print(modname)
         sys.exit(0)
 
     logging.info('Target is %s-%s-%s-%s' % (
@@ -2727,15 +2727,15 @@ def main(argv):
     cc = info_cc[options.compiler]
     arch = info_arch[options.arch]
     osinfo = info_os[options.os]
-    module_policy = module_policies[options.module_policy] if options.module_policy else None
+    module_policy = info_module_policies[options.module_policy] if options.module_policy else None
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
         options.build_shared_lib = False
 
-    loaded_module_names = ModulesChooser(modules, module_policy, arch, cc, options).choose()
+    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, cc, options).choose()
 
-    using_mods = [modules[modname] for modname in loaded_module_names]
+    using_mods = [info_modules[modname] for modname in loaded_module_names]
 
     build_config = BuildPaths(source_paths, options, using_mods)
 
