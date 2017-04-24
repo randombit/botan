@@ -2520,7 +2520,7 @@ def setup_logging(options):
     logging.getLogger().setLevel(log_level)
 
 
-def load_info_files(descr, search_dir, filename_matcher, class_t):
+def load_info_files(search_dir, descr, filename_matcher, class_t):
     info = {}
 
     def filename_matches(filename):
@@ -2543,6 +2543,11 @@ def load_info_files(descr, search_dir, filename_matcher, class_t):
         logging.warning('Failed to load any %s files' % (descr))
 
     return info
+
+
+def load_build_data_info_files(source_paths, descr, subdir, class_t):
+    matcher = re.compile(r'[_a-z0-9]+\.txt$')
+    return load_info_files(os.path.join(source_paths.build_data_dir, subdir), descr, matcher, class_t)
 
 
 # Workaround for Windows systems where antivirus is enabled GH #353
@@ -2689,20 +2694,14 @@ def main(argv):
 
     source_paths = SourcePaths(os.path.dirname(argv[0]))
 
-    modules = load_info_files('Modules', source_paths.lib_dir, "info.txt", ModuleInfo)
-
-    def load_build_data(descr, subdir, class_t):
-        matcher = re.compile(r'[_a-z0-9]+\.txt$')
-        return load_info_files(descr, os.path.join(source_paths.build_data_dir, subdir), matcher, class_t)
-
-    info_arch = load_build_data('CPU info', 'arch', ArchInfo)
-    info_os = load_build_data('OS info', 'os', OsInfo)
-    info_cc = load_build_data('compiler info', 'cc', CompilerInfo)
+    modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
+    info_arch = load_build_data_info_files(source_paths, 'CPU info', 'arch', ArchInfo)
+    info_os = load_build_data_info_files(source_paths, 'OS info', 'os', OsInfo)
+    info_cc = load_build_data_info_files(source_paths, 'compiler info', 'cc', CompilerInfo)
+    module_policies = load_build_data_info_files(source_paths, 'module policy', 'policy', ModulePolicyInfo)
 
     for mod in modules.values():
         mod.cross_check(info_arch, info_os, info_cc)
-
-    module_policies = load_build_data('module policy', 'policy', ModulePolicyInfo)
 
     for policy in module_policies.values():
         policy.cross_check(modules)
