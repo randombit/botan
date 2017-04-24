@@ -2654,6 +2654,9 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.single_amalgamation_file and not options.amalgamation:
         raise UserError("--single-amalgamation-file requires --amalgamation.")
 
+    if options.os == "java":
+        raise UserError("Jython detected: need --os and --cpu to set target")
+
     if options.os not in info_os:
         raise UserError('Unknown OS "%s"; available options: %s' % (
             options.os, ' '.join(sorted(info_os.keys()))))
@@ -2664,6 +2667,8 @@ def validate_options(options, info_os, info_cc, available_module_policies):
 
     if options.module_policy and options.module_policy not in available_module_policies:
         raise UserError("Unknown module set %s" % options.module_policy)
+
+    # Warnings
 
     if options.os == 'windows' and options.compiler == 'gcc':
         logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
@@ -2686,9 +2691,6 @@ def main(argv=None):
 
     logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
         platform.system(), platform.machine(), platform.processor()))
-
-    if options.os == "java":
-        raise UserError("Jython detected: need --os and --cpu to set target")
 
     source_paths = SourcePaths(os.path.dirname(argv[0]))
 
