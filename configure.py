@@ -2587,7 +2587,7 @@ def set_defaults_for_unset_options(options):
 # Checks user options for consistency
 # This method DOES NOT change options on behalf of the user but explains
 # why the given configuration does not work.
-def validate_options(options, available_module_policies):
+def validate_options(options, info_os, info_cc, available_module_policies):
     if options.gen_amalgamation:
         raise UserError("--gen-amalgamation was removed. Migrate to --amalgamation.")
 
@@ -2596,6 +2596,14 @@ def validate_options(options, available_module_policies):
 
     if options.single_amalgamation_file and not options.amalgamation:
         raise UserError("--single-amalgamation-file requires --amalgamation.")
+
+    if options.os not in info_os:
+        raise UserError('Unknown OS "%s"; available options: %s' % (
+            options.os, ' '.join(sorted(info_os.keys()))))
+
+    if options.compiler not in info_cc:
+        raise UserError('Unknown compiler "%s"; available options: %s' % (
+            options.compiler, ' '.join(sorted(info_cc.keys()))))
 
     if options.module_policy and options.module_policy not in available_module_policies:
         raise UserError("Unknown module set %s" % options.module_policy)
@@ -2687,23 +2695,13 @@ def main(argv=None):
         logging.info('Guessing to use compiler %s (use --cc to set)' % (
             options.compiler))
 
-    if options.compiler not in info_cc:
-        raise UserError('Unknown compiler "%s"; available options: %s' % (
-            options.compiler, ' '.join(sorted(info_cc.keys()))))
-
     if options.os not in info_os:
-
         def find_canonical_os_name(os_name_variant):
             for (canonical_os_name, info) in info_os.items():
                 if os_name_variant in info.aliases:
                     return canonical_os_name
             return os_name_variant # not found
-
         options.os = find_canonical_os_name(options.os)
-
-        if options.os not in info_os:
-            raise UserError('Unknown OS "%s"; available options: %s' % (
-                options.os, ' '.join(sorted(info_os.keys()))))
 
     if options.cpu is None:
         (options.arch, options.cpu) = guess_processor(info_arch)
@@ -2721,11 +2719,11 @@ def main(argv=None):
         else:
             logging.error('Unknown or unidentifiable processor "%s"' % (options.cpu))
 
+    set_defaults_for_unset_options(options)
+    validate_options(options, info_os, info_cc, module_policies)
+
     logging.info('Target is %s-%s-%s-%s' % (
         options.compiler, options.os, options.arch, options.cpu))
-
-    set_defaults_for_unset_options(options)
-    validate_options(options, module_policies)
 
     cc = info_cc[options.compiler]
     arch = info_arch[options.arch]
