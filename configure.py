@@ -2577,7 +2577,43 @@ def robust_makedirs(directory, max_retries=5):
 # This is for otions that have --with-XYZ and --without-XYZ. If user does not
 # set any of those, we choose a default here.
 # Mutates `options`
-def set_defaults_for_unset_options(options):
+def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disable=too-many-branches
+    if options.os is None:
+        system_from_python = platform.system().lower()
+        if re.match('^cygwin_.*', system_from_python):
+            logging.debug("Converting '%s' to 'cygwin'", system_from_python)
+            options.os = 'cygwin'
+        else:
+            options.os = system_from_python
+        logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
+
+    if options.compiler is None:
+        if options.os == 'windows':
+            if have_program('g++') and not have_program('cl'):
+                options.compiler = 'gcc'
+            else:
+                options.compiler = 'msvc'
+        elif options.os in ['darwin', 'freebsd', 'ios']:
+            if have_program('clang++'):
+                options.compiler = 'clang'
+        elif options.os == 'openbsd':
+            if have_program('eg++'):
+                info_cc['gcc'].binary_name = 'eg++'
+            else:
+                logging.warning('Default GCC is too old; install a newer one using \'pkg_add gcc\'')
+            # The assembler shipping with OpenBSD 5.9 does not support avx2
+            del info_cc['gcc'].isa_flags['avx2']
+            options.compiler = 'gcc'
+        else:
+            options.compiler = 'gcc'
+        logging.info('Guessing to use compiler %s (use --cc to set)' % (
+            options.compiler))
+
+    if options.cpu is None:
+        (options.arch, options.cpu) = guess_processor(info_arch)
+        logging.info('Guessing target processor is a %s/%s (use --cpu to set)' % (
+            options.arch, options.cpu))
+
     if options.with_sphinx is None:
         if have_program('sphinx-build'):
             logging.info('Found sphinx-build (use --without-sphinx to disable)')
@@ -2685,43 +2721,7 @@ def main(argv=None):
             print(k)
         sys.exit(0)
 
-    if options.os is None:
-        options.os = platform.system().lower()
-
-        if re.match('^cygwin_.*', options.os):
-            logging.debug("Converting '%s' to 'cygwin'", options.os)
-            options.os = 'cygwin'
-
-        logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
-
-    if options.compiler is None:
-        if options.os == 'windows':
-            if have_program('g++') and not have_program('cl'):
-                options.compiler = 'gcc'
-            else:
-                options.compiler = 'msvc'
-        elif options.os in ['darwin', 'freebsd', 'ios']:
-            if have_program('clang++'):
-                options.compiler = 'clang'
-        elif options.os == 'openbsd':
-            if have_program('eg++'):
-                info_cc['gcc'].binary_name = 'eg++'
-            else:
-                logging.warning('Default GCC is too old; install a newer one using \'pkg_add gcc\'')
-            # The assembler shipping with OpenBSD 5.9 does not support avx2
-            del info_cc['gcc'].isa_flags['avx2']
-            options.compiler = 'gcc'
-        else:
-            options.compiler = 'gcc'
-        logging.info('Guessing to use compiler %s (use --cc to set)' % (
-            options.compiler))
-
-    if options.cpu is None:
-        (options.arch, options.cpu) = guess_processor(info_arch)
-        logging.info('Guessing target processor is a %s/%s (use --cpu to set)' % (
-            options.arch, options.cpu))
-
-    set_defaults_for_unset_options(options)
+    set_defaults_for_unset_options(options, info_arch, info_cc)
     canonicalize_options(options, info_os, info_arch)
     validate_options(options, info_os, info_cc, module_policies)
 
