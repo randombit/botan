@@ -2584,6 +2584,27 @@ def set_defaults_for_unset_options(options):
             options.with_sphinx = True
 
 
+# Mutates `options`
+def canonicalize_options(options, info_os, info_arch):
+    if options.os not in info_os:
+        def find_canonical_os_name(os_name_variant):
+            for (canonical_os_name, info) in info_os.items():
+                if os_name_variant in info.aliases:
+                    return canonical_os_name
+            return os_name_variant # not found
+        options.os = find_canonical_os_name(options.os)
+
+    # canonical ARCH/CPU
+    cpu_from_user = options.cpu
+    results = canon_processor(info_arch, options.cpu)
+    if results != None:
+        (options.arch, options.cpu) = results
+        logging.info('Canonicalized CPU target %s to %s/%s' % (
+            cpu_from_user, options.arch, options.cpu))
+    else:
+        raise UserError('Unknown or unidentifiable processor "%s"' % (options.cpu))
+
+
 # Checks user options for consistency
 # This method DOES NOT change options on behalf of the user but explains
 # why the given configuration does not work.
@@ -2695,31 +2716,13 @@ def main(argv=None):
         logging.info('Guessing to use compiler %s (use --cc to set)' % (
             options.compiler))
 
-    if options.os not in info_os:
-        def find_canonical_os_name(os_name_variant):
-            for (canonical_os_name, info) in info_os.items():
-                if os_name_variant in info.aliases:
-                    return canonical_os_name
-            return os_name_variant # not found
-        options.os = find_canonical_os_name(options.os)
-
     if options.cpu is None:
         (options.arch, options.cpu) = guess_processor(info_arch)
         logging.info('Guessing target processor is a %s/%s (use --cpu to set)' % (
             options.arch, options.cpu))
-    else:
-        cpu_from_user = options.cpu
-
-        results = canon_processor(info_arch, options.cpu)
-
-        if results != None:
-            (options.arch, options.cpu) = results
-            logging.info('Canonicalizized CPU target %s to %s/%s' % (
-                cpu_from_user, options.arch, options.cpu))
-        else:
-            logging.error('Unknown or unidentifiable processor "%s"' % (options.cpu))
 
     set_defaults_for_unset_options(options)
+    canonicalize_options(options, info_os, info_arch)
     validate_options(options, info_os, info_cc, module_policies)
 
     logging.info('Target is %s-%s-%s-%s' % (
