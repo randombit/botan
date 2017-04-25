@@ -2685,8 +2685,28 @@ def main_action_list_available_modules(info_modules):
         print(modname)
 
 
-def main_action_configure_build(source_paths, build_config, options, cc, arch, osinfo,
-                                template_vars, using_mods, makefile_template):
+def prepare_configure_build(info_modules, source_paths, options, cc, arch, osinfo, module_policy):
+    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, cc, options).choose()
+    using_mods = [info_modules[modname] for modname in loaded_module_names]
+
+    build_config = BuildPaths(source_paths, options, using_mods)
+    build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
+
+    template_vars = create_template_vars(source_paths, build_config, options, using_mods, cc, arch, osinfo)
+
+    makefile_template = os.path.join(source_paths.makefile_dir, '%s.in' % (template_vars['makefile_style']))
+    logging.debug('Using makefile template %s' % (makefile_template))
+
+    return using_mods, build_config, template_vars, makefile_template
+
+
+def main_action_configure_build(info_modules, source_paths, options, cc, arch, osinfo, module_policy): # pylint: disable=too-many-locals
+
+    using_mods, build_config, template_vars, makefile_template = prepare_configure_build(
+        info_modules, source_paths, options, cc, arch, osinfo, module_policy)
+
+    # Now we start writing to disk
+
     try:
         if options.clean_build_tree:
             robust_rmtree(build_config.build_dir)
@@ -2820,25 +2840,11 @@ def main(argv):
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
         options.build_shared_lib = False
 
-    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, cc, options).choose()
-
-    using_mods = [info_modules[modname] for modname in loaded_module_names]
-
-    build_config = BuildPaths(source_paths, options, using_mods)
-
-    build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
-
-    template_vars = create_template_vars(source_paths, build_config, options, using_mods, cc, arch, osinfo)
-
-    makefile_template = os.path.join(source_paths.makefile_dir, '%s.in' % (template_vars['makefile_style']))
-    logging.debug('Using makefile template %s' % (makefile_template))
-
     if options.list_modules:
         main_action_list_available_modules(info_modules)
         return 0
     else:
-        main_action_configure_build(source_paths, build_config, options, cc, arch, osinfo,
-                                    template_vars, using_mods, makefile_template)
+        main_action_configure_build(info_modules, source_paths, options, cc, arch, osinfo, module_policy)
         return 0
 
 
