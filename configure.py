@@ -1369,24 +1369,24 @@ def makefile_list(items):
 
 def gen_bakefile(build_config, options, external_libs):
 
-    def bakefile_sources(file, sources):
+    def bakefile_sources(fd, sources):
         for src in sources:
             (directory, filename) = os.path.split(os.path.normpath(src))
             directory = directory.replace('\\', '/')
             _, directory = directory.split('src/', 1)
-            file.write('\tsources { src/%s/%s } \n' % (directory, filename))
+            fd.write('\tsources { src/%s/%s } \n' % (directory, filename))
 
-    def bakefile_cli_headers(file, headers):
+    def bakefile_cli_headers(fd, headers):
         for header in headers:
             (directory, filename) = os.path.split(os.path.normpath(header))
             directory = directory.replace('\\', '/')
             _, directory = directory.split('src/', 1)
-            file.write('\theaders { src/%s/%s } \n' % (directory, filename))
+            fd.write('\theaders { src/%s/%s } \n' % (directory, filename))
 
-    def bakefile_test_sources(file, sources):
+    def bakefile_test_sources(fd, sources):
         for src in sources:
             (_, filename) = os.path.split(os.path.normpath(src))
-            file.write('\tsources { src/tests/%s } \n' %filename)
+            fd.write('\tsources { src/tests/%s } \n' %filename)
 
     f = open('botan.bkl', 'w')
     f.write('toolsets = vs2013;\n')
@@ -1640,7 +1640,7 @@ class MakefileListsGenerator(object):
 
     def _objectfile_list(self, sources, obj_dir):
         for src in sources:
-            (directory, file) = os.path.split(os.path.normpath(src))
+            (directory, filename) = os.path.split(os.path.normpath(src))
 
             parts = directory.split(os.sep)
             if 'src' in parts:
@@ -1649,18 +1649,17 @@ class MakefileListsGenerator(object):
                 parts = parts[parts.index('tests')+2:]
             elif 'cli' in parts:
                 parts = parts[parts.index('cli'):]
-            elif file.find('botan_all') != -1:
+            elif filename.find('botan_all') != -1:
                 parts = []
             else:
-                raise InternalError("Unexpected file '%s/%s'" % (directory, file))
+                raise InternalError("Unexpected file '%s/%s'" % (directory, filename))
 
             if parts != []:
-
                 # Handle src/X/X.cpp -> X.o
-                if file == parts[-1] + '.cpp':
+                if filename == parts[-1] + '.cpp':
                     name = '_'.join(parts) + '.cpp'
                 else:
-                    name = '_'.join(parts) + '_' + file
+                    name = '_'.join(parts) + '_' + filename
 
                 def fixup_obj_name(name):
                     def remove_dups(parts):
@@ -1674,7 +1673,7 @@ class MakefileListsGenerator(object):
 
                 name = fixup_obj_name(name)
             else:
-                name = file
+                name = filename
 
             for src_suffix in ['.cpp', '.S']:
                 name = name.replace(src_suffix, '.' + self._osinfo.obj_suffix)
