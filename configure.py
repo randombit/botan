@@ -1900,12 +1900,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'python_version': options.python_version,
         'with_sphinx': options.with_sphinx,
+        'house_ecc_curve_defines': make_cpp_macros(HouseEccCurve(options.house_curve).defines()) \
+                                   if options.house_curve else ''
         }
-
-    if options.house_curve:
-        variables['house_ecc_curve_defines'] = make_cpp_macros(HouseEccCurve(options.house_curve).defines())
-    else:
-        variables['house_ecc_curve_defines'] = ''
 
     if options.build_shared_lib:
 
