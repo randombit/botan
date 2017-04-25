@@ -46,8 +46,6 @@ matrix:
   allow_failures:
     - os: linux
       env: BUILD_MODE="cross-win32"
-    - os: linux
-      env: BUILD_MODE="lint"
 
   exclude:
     # Skip GCC on OS X entirely
