@@ -1605,13 +1605,15 @@ class MakefileListsGenerator(object):
         return None
 
     def _get_isa_specific_flags(self, isas):
-        flags = []
+        flags = set()
         for isa in isas:
-            flag = self._cc.isa_flags_for(isa, self._arch.basename)
-            if flag is None:
+            # a flagset is a string that may contain multiple command
+            # line arguments, e.g. "-maes -mpclmul -mssse3"
+            flagset = self._cc.isa_flags_for(isa, self._arch.basename)
+            if flagset is None:
                 raise UserError('Compiler %s does not support %s' % (self._cc.basename, isa))
-            flags.append(flag)
-        return '' if len(flags) == 0 else (' ' + ' '.join(sorted(list(flags))))
+            flags.add(flagset)
+        return flags
 
     def _isa_specific_flags(self, src):
         simd_impl = self._simd_implementation()
@@ -1633,7 +1635,7 @@ class MakefileListsGenerator(object):
             isas = src.replace('botan_all_', '').replace('.cpp', '').split('_')
             return self._get_isa_specific_flags(isas)
 
-        return ''
+        return set()
 
     def _objectfile_list(self, sources, obj_dir):
         for src in sources:
@@ -1690,10 +1692,11 @@ class MakefileListsGenerator(object):
             includes += ' ' + self._cc.add_include_dir_option + self._options.with_external_includedir
 
         for (obj_file, src) in zip(self._objectfile_list(sources, obj_dir), sources):
+            isa_specific_flags_str = "".join([" %s" % flagset for flagset in sorted(self._isa_specific_flags(src))])
             yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
                 obj_file,
                 src,
-                self._isa_specific_flags(src),
+                isa_specific_flags_str,
                 flags,
                 includes,
                 self._cc.compile_flags,
