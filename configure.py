@@ -20,6 +20,7 @@ On Jython target detection does not work (use --os and --cpu).
 """
 
 import collections
+import copy
 import json
 import sys
 import os
@@ -2340,29 +2341,36 @@ class AmalgamationHeader(object):
 class AmalgamationGenerator(object):
     filename_prefix = 'botan_all'
 
+    _header_guard_pattern = re.compile('^#define BOTAN_.*_H__$')
+
     @staticmethod
-    def strip_header_goop(header_name, contents):
-        header_guard = re.compile('^#define BOTAN_.*_H__$')
+    def strip_header_goop(header_name, header_lines):
+        lines = copy.deepcopy(header_lines) # defensive copy: don't mutate argument
 
-        while len(contents) > 0:
-            if header_guard.match(contents[0]):
-                contents = contents[1:]
+        start_header_guard_index = None
+        for index, line in enumerate(lines):
+            if AmalgamationGenerator._header_guard_pattern.match(line):
+                start_header_guard_index = index
                 break
+        if start_header_guard_index is None:
+            raise InternalError("No header guard start found in " + header_name)
 
-            contents = contents[1:]
+        end_header_guard_index = None
+        for index, line in enumerate(lines):
+            if line == '#endif\n':
+                end_header_guard_index = index # override with last found
+        if end_header_guard_index is None:
+            raise InternalError("No header guard end found in " + header_name)
 
-        if len(contents) == 0:
-            raise InternalError("No header guard found in " + header_name)
+        lines = lines[start_header_guard_index+1 : end_header_guard_index]
 
-        while contents[0] == '\n':
-            contents = contents[1:]
+        # Strip leading and trailing empty lines
+        while lines[0].strip() == "":
+            lines = lines[1:]
+        while lines[-1].strip() == "":
+            lines = lines[0:-1]
 
-        while contents[-1] == '\n':
-            contents = contents[0:-1]
-        if contents[-1] == '#endif\n':
-            contents = contents[0:-1]
-
-        return contents
+        return lines
 
     def __init__(self, build_paths, modules, options):
         self._build_paths = build_paths
