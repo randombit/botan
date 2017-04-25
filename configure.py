@@ -424,7 +424,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
                           help='disable specific modules')
     mods_group.add_option('--list-modules', dest='list_modules',
                           action='store_true',
-                          help='list available modules')
+                          help='list available modules and exit')
     mods_group.add_option('--no-autoload', action='store_true', default=False,
                           help=optparse.SUPPRESS_HELP)
     mods_group.add_option('--minimized-build', action='store_true', dest='no_autoload',
@@ -2718,14 +2718,14 @@ def main(argv=None):
                         [x for (x, _) in ainfo.all_submodels()]
                         for ainfo in info_arch.values()]))))
 
+    set_defaults_for_unset_options(options, info_arch, info_cc)
+    canonicalize_options(options, info_os, info_arch)
+    validate_options(options, info_os, info_cc, module_policies)
+
     if options.list_modules:
         for k in sorted(modules.keys()):
             print(k)
         sys.exit(0)
-
-    set_defaults_for_unset_options(options, info_arch, info_cc)
-    canonicalize_options(options, info_os, info_arch)
-    validate_options(options, info_os, info_cc, module_policies)
 
     logging.info('Target is %s-%s-%s-%s' % (
         options.compiler, options.os, options.arch, options.cpu))
