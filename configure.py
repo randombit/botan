@@ -750,7 +750,7 @@ class ModuleInfo(InfoObject):
         # Check for duplicates
         def intersect_check(type_a, list_a, type_b, list_b):
             intersection = set.intersection(set(list_a), set(list_b))
-            if len(intersection) > 0:
+            if intersection:
                 logging.error('Headers %s marked both %s and %s' % (' '.join(intersection), type_a, type_b))
 
         intersect_check('public', self.header_public, 'internal', self.header_internal)
