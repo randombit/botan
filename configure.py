@@ -2679,75 +2679,14 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
 
 
-def main(argv):
-    """
-    Main driver
-    """
 
-    options = process_command_line(argv[1:])
+def main_action_list_available_modules(info_modules):
+    for modname in sorted(info_modules.keys()):
+        print(modname)
 
-    setup_logging(options)
 
-    logging.info('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
-    logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
-        platform.system(), platform.machine(), platform.processor()))
-
-    source_paths = SourcePaths(os.path.dirname(argv[0]))
-
-    info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
-    info_arch = load_build_data_info_files(source_paths, 'CPU info', 'arch', ArchInfo)
-    info_os = load_build_data_info_files(source_paths, 'OS info', 'os', OsInfo)
-    info_cc = load_build_data_info_files(source_paths, 'compiler info', 'cc', CompilerInfo)
-    info_module_policies = load_build_data_info_files(source_paths, 'module policy', 'policy', ModulePolicyInfo)
-
-    for mod in info_modules.values():
-        mod.cross_check(info_arch, info_os, info_cc)
-
-    for policy in info_module_policies.values():
-        policy.cross_check(info_modules)
-
-    logging.debug('Known CPU names: ' + ' '.join(
-        sorted(flatten([[ainfo.basename] + \
-                        ainfo.aliases + \
-                        [x for (x, _) in ainfo.all_submodels()]
-                        for ainfo in info_arch.values()]))))
-
-    set_defaults_for_unset_options(options, info_arch, info_cc)
-    canonicalize_options(options, info_os, info_arch)
-    validate_options(options, info_os, info_cc, info_module_policies)
-
-    if options.list_modules:
-        for modname in sorted(info_modules.keys()):
-            print(modname)
-        sys.exit(0)
-
-    logging.info('Target is %s-%s-%s-%s' % (
-        options.compiler, options.os, options.arch, options.cpu))
-
-    cc = info_cc[options.compiler]
-    arch = info_arch[options.arch]
-    osinfo = info_os[options.os]
-    module_policy = info_module_policies[options.module_policy] if options.module_policy else None
-
-    if options.build_shared_lib and not osinfo.building_shared_supported:
-        logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
-        options.build_shared_lib = False
-
-    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, cc, options).choose()
-
-    using_mods = [info_modules[modname] for modname in loaded_module_names]
-
-    build_config = BuildPaths(source_paths, options, using_mods)
-
-    build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
-
-    template_vars = create_template_vars(source_paths, build_config, options, using_mods, cc, arch, osinfo)
-
-    makefile_template = os.path.join(source_paths.makefile_dir, '%s.in' % (template_vars['makefile_style']))
-    logging.debug('Using makefile template %s' % (makefile_template))
-
-    # Now begin the actual IO to setup the build
-
+def main_action_configure_build(source_paths, build_config, options, cc, arch, osinfo,
+                                template_vars, using_mods, makefile_template):
     try:
         if options.clean_build_tree:
             robust_rmtree(build_config.build_dir)
@@ -2831,9 +2770,81 @@ def main(argv):
     if options.unsafe_fuzzer_mode:
         logging.warning("The fuzzer mode flag is labeled unsafe for a reason, this version is for testing only")
 
+
+def main(argv):
+    """
+    Main driver
+    """
+
+    options = process_command_line(argv[1:])
+
+    setup_logging(options)
+
+    logging.info('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
+    logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
+        platform.system(), platform.machine(), platform.processor()))
+
+    source_paths = SourcePaths(os.path.dirname(argv[0]))
+
+    info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
+    info_arch = load_build_data_info_files(source_paths, 'CPU info', 'arch', ArchInfo)
+    info_os = load_build_data_info_files(source_paths, 'OS info', 'os', OsInfo)
+    info_cc = load_build_data_info_files(source_paths, 'compiler info', 'cc', CompilerInfo)
+    info_module_policies = load_build_data_info_files(source_paths, 'module policy', 'policy', ModulePolicyInfo)
+
+    for mod in info_modules.values():
+        mod.cross_check(info_arch, info_os, info_cc)
+
+    for policy in info_module_policies.values():
+        policy.cross_check(info_modules)
+
+    logging.debug('Known CPU names: ' + ' '.join(
+        sorted(flatten([[ainfo.basename] + \
+                        ainfo.aliases + \
+                        [x for (x, _) in ainfo.all_submodels()]
+                        for ainfo in info_arch.values()]))))
+
+    set_defaults_for_unset_options(options, info_arch, info_cc)
+    canonicalize_options(options, info_os, info_arch)
+    validate_options(options, info_os, info_cc, info_module_policies)
+
+    logging.info('Target is %s-%s-%s-%s' % (
+        options.compiler, options.os, options.arch, options.cpu))
+
+    cc = info_cc[options.compiler]
+    arch = info_arch[options.arch]
+    osinfo = info_os[options.os]
+    module_policy = info_module_policies[options.module_policy] if options.module_policy else None
+
+    if options.build_shared_lib and not osinfo.building_shared_supported:
+        logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
+        options.build_shared_lib = False
+
+    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, cc, options).choose()
+
+    using_mods = [info_modules[modname] for modname in loaded_module_names]
+
+    build_config = BuildPaths(source_paths, options, using_mods)
+
+    build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
+
+    template_vars = create_template_vars(source_paths, build_config, options, using_mods, cc, arch, osinfo)
+
+    makefile_template = os.path.join(source_paths.makefile_dir, '%s.in' % (template_vars['makefile_style']))
+    logging.debug('Using makefile template %s' % (makefile_template))
+
+    if options.list_modules:
+        main_action_list_available_modules(info_modules)
+        return 0
+    else:
+        main_action_configure_build(source_paths, build_config, options, cc, arch, osinfo,
+                                    template_vars, using_mods, makefile_template)
+        return 0
+
+
 if __name__ == '__main__':
     try:
-        main(argv=sys.argv)
+        sys.exit(main(argv=sys.argv))
     except UserError as e:
         logging.debug(traceback.format_exc())
         logging.error(e)
