@@ -13,6 +13,7 @@ CTR_BE::CTR_BE(BlockCipher* ciph) :
    m_cipher(ciph),
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
+   m_iv(m_cipher->block_size()),
    m_ctr_size(m_cipher->block_size()),
    m_pad_pos(0)
    {
@@ -22,6 +23,7 @@ CTR_BE::CTR_BE(BlockCipher* cipher, size_t ctr_size) :
    m_cipher(cipher),
    m_counter(m_cipher->parallel_bytes()),
    m_pad(m_counter.size()),
+   m_iv(m_cipher->block_size()),
    m_ctr_size(ctr_size),
    m_pad_pos(0)
    {
@@ -35,6 +37,7 @@ void CTR_BE::clear()
    m_cipher->clear();
    zeroise(m_pad);
    zeroise(m_counter);
+   zeroise(m_iv);
    m_pad_pos = 0;
    }
 
@@ -70,12 +73,54 @@ void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
    if(!valid_iv_length(iv_len))
       throw Invalid_IV_Length(name(), iv_len);
 
+   zeroise(m_iv);
+   buffer_insert(m_iv, 0, iv, iv_len);
+
+   seek(0);
+   }
+
+/*
+* Increment the counter and update the buffer
+*/
+void CTR_BE::increment_counter()
+   {
    const size_t bs = m_cipher->block_size();
+   const size_t n_wide = m_counter.size() / bs;
+
+   add_counter(n_wide);
+
+   m_cipher->encrypt_n(m_counter.data(), m_pad.data(), n_wide);
+   m_pad_pos = 0;
+   }
+
+void CTR_BE::add_counter(const uint64_t counter)
+   {
+   const size_t bs = m_cipher->block_size();
+   const size_t n_wide = m_counter.size() / bs;
+
+   for(size_t i = 0; i != n_wide; ++i)
+      {
+      uint64_t local_counter = counter;
+      uint16_t carry = static_cast<uint8_t>(local_counter);
+      for(size_t j = 0; (carry || local_counter) && j != m_ctr_size; ++j)
+         {
+         const size_t off = i*bs + (bs-1-j);
+         const uint16_t cnt = static_cast<uint16_t>(m_counter[off]) + carry;
+         m_counter[off] = static_cast<uint8_t>(cnt);
+         local_counter = (local_counter >> 8);
+         carry = (cnt >> 8) + static_cast<uint8_t>(local_counter);
+         }
+      }
+   }
+
+void CTR_BE::seek(uint64_t offset)
+   {
+   const size_t bs = m_cipher->block_size();
+   const size_t n_wide = m_counter.size() / bs;
+   const uint64_t base_counter = n_wide * (offset / m_counter.size());
 
    zeroise(m_counter);
-
-   const size_t n_wide = m_counter.size() / m_cipher->block_size();
-   buffer_insert(m_counter, 0, iv, iv_len);
+   buffer_insert(m_counter, 0, m_iv);
 
    // Set m_counter blocks to IV, IV + 1, ... IV + n
    for(size_t i = 1; i != n_wide; ++i)
@@ -87,36 +132,10 @@ void CTR_BE::set_iv(const uint8_t iv[], size_t iv_len)
             break;
       }
 
-   m_cipher->encrypt_n(m_counter.data(), m_pad.data(), n_wide);
-   m_pad_pos = 0;
-   }
-
-/*
-* Increment the counter and update the buffer
-*/
-void CTR_BE::increment_counter()
-   {
-   const size_t bs = m_cipher->block_size();
-   const size_t n_wide = m_counter.size() / bs;
-
-   for(size_t i = 0; i != n_wide; ++i)
-      {
-      uint16_t carry = static_cast<uint16_t>(n_wide);
-      for(size_t j = 0; carry && j != m_ctr_size; ++j)
-         {
-         const size_t off = i*bs + (bs-1-j);
-         const uint16_t cnt = static_cast<uint16_t>(m_counter[off]) + carry;
-         m_counter[off] = static_cast<uint8_t>(cnt);
-         carry = (cnt >> 8);
-         }
-      }
+   if (base_counter > 0)
+      add_counter(base_counter);
 
    m_cipher->encrypt_n(m_counter.data(), m_pad.data(), n_wide);
-   m_pad_pos = 0;
-   }
-
-void CTR_BE::seek(uint64_t)
-   {
-   throw Not_Implemented("CTR_BE::seek");
+   m_pad_pos = offset % m_counter.size();
    }
 }
