@@ -20,6 +20,7 @@ On Jython target detection does not work (use --os and --cpu).
 """
 
 import collections
+import copy
 import json
 import sys
 import os
@@ -377,12 +378,6 @@ def process_command_line(args): # pylint: disable=too-many-locals
     build_group.add_option('--without-sphinx', action='store_false',
                            dest='with_sphinx', help=optparse.SUPPRESS_HELP)
 
-    build_group.add_option('--with-visibility', action='store_true',
-                           default=None, help=optparse.SUPPRESS_HELP)
-
-    build_group.add_option('--without-visibility', action='store_false',
-                           dest='with_visibility', help=optparse.SUPPRESS_HELP)
-
     build_group.add_option('--with-doxygen', action='store_true',
                            default=False, help='Use Doxygen')
 
@@ -430,7 +425,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
                           help='disable specific modules')
     mods_group.add_option('--list-modules', dest='list_modules',
                           action='store_true',
-                          help='list available modules')
+                          help='list available modules and exit')
     mods_group.add_option('--no-autoload', action='store_true', default=False,
                           help=optparse.SUPPRESS_HELP)
     mods_group.add_option('--minimized-build', action='store_true', dest='no_autoload',
@@ -756,7 +751,7 @@ class ModuleInfo(InfoObject):
         # Check for duplicates
         def intersect_check(type_a, list_a, type_b, list_b):
             intersection = set.intersection(set(list_a), set(list_b))
-            if len(intersection) > 0:
+            if intersection:
                 logging.error('Headers %s marked both %s and %s' % (' '.join(intersection), type_a, type_b))
 
         intersect_check('public', self.header_public, 'internal', self.header_internal)
@@ -1045,13 +1040,12 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         def flag_builder():
             if options.build_shared_lib:
                 yield self.shared_flags
-                if options.with_visibility:
-                    yield self.visibility_build_flags
+                yield self.visibility_build_flags
 
         return ' '.join(list(flag_builder()))
 
     def gen_visibility_attribute(self, options):
-        if options.build_shared_lib and options.with_visibility:
+        if options.build_shared_lib:
             return self.visibility_attribute
         return ''
 
@@ -1341,15 +1335,17 @@ def guess_processor(archinfo):
 
     raise UserError('Could not determine target CPU; set with --cpu')
 
-def slurp_file(filename):
+
+def read_textfile(filepath):
     """
     Read a whole file into memory as a string
     """
-
-    # type: (object) -> object
-    if filename is None:
+    if filepath is None:
         return ''
-    return ''.join(open(filename).readlines())
+
+    with open(filepath) as f:
+        return ''.join(f.readlines())
+
 
 def process_template(template_file, variables):
     """
@@ -1360,7 +1356,7 @@ def process_template(template_file, variables):
         delimiter = '%'
 
     try:
-        template = PercentSignTemplate(slurp_file(template_file))
+        template = PercentSignTemplate(read_textfile(template_file))
         return template.substitute(variables)
     except KeyError as e:
         raise InternalError('Unbound var %s in template %s' % (e, template_file))
@@ -1373,24 +1369,24 @@ def makefile_list(items):
 
 def gen_bakefile(build_config, options, external_libs):
 
-    def bakefile_sources(file, sources):
+    def bakefile_sources(fd, sources):
         for src in sources:
             (directory, filename) = os.path.split(os.path.normpath(src))
             directory = directory.replace('\\', '/')
             _, directory = directory.split('src/', 1)
-            file.write('\tsources { src/%s/%s } \n' % (directory, filename))
+            fd.write('\tsources { src/%s/%s } \n' % (directory, filename))
 
-    def bakefile_cli_headers(file, headers):
+    def bakefile_cli_headers(fd, headers):
         for header in headers:
             (directory, filename) = os.path.split(os.path.normpath(header))
             directory = directory.replace('\\', '/')
             _, directory = directory.split('src/', 1)
-            file.write('\theaders { src/%s/%s } \n' % (directory, filename))
+            fd.write('\theaders { src/%s/%s } \n' % (directory, filename))
 
-    def bakefile_test_sources(file, sources):
+    def bakefile_test_sources(fd, sources):
         for src in sources:
             (_, filename) = os.path.split(os.path.normpath(src))
-            file.write('\tsources { src/tests/%s } \n' %filename)
+            fd.write('\tsources { src/tests/%s } \n' %filename)
 
     f = open('botan.bkl', 'w')
     f.write('toolsets = vs2013;\n')
@@ -1610,13 +1606,15 @@ class MakefileListsGenerator(object):
         return None
 
     def _get_isa_specific_flags(self, isas):
-        flags = []
+        flags = set()
         for isa in isas:
-            flag = self._cc.isa_flags_for(isa, self._arch.basename)
-            if flag is None:
+            # a flagset is a string that may contain multiple command
+            # line arguments, e.g. "-maes -mpclmul -mssse3"
+            flagset = self._cc.isa_flags_for(isa, self._arch.basename)
+            if flagset is None:
                 raise UserError('Compiler %s does not support %s' % (self._cc.basename, isa))
-            flags.append(flag)
-        return '' if len(flags) == 0 else (' ' + ' '.join(sorted(list(flags))))
+            flags.add(flagset)
+        return flags
 
     def _isa_specific_flags(self, src):
         simd_impl = self._simd_implementation()
@@ -1638,11 +1636,11 @@ class MakefileListsGenerator(object):
             isas = src.replace('botan_all_', '').replace('.cpp', '').split('_')
             return self._get_isa_specific_flags(isas)
 
-        return ''
+        return set()
 
     def _objectfile_list(self, sources, obj_dir):
         for src in sources:
-            (directory, file) = os.path.split(os.path.normpath(src))
+            (directory, filename) = os.path.split(os.path.normpath(src))
 
             parts = directory.split(os.sep)
             if 'src' in parts:
@@ -1651,18 +1649,17 @@ class MakefileListsGenerator(object):
                 parts = parts[parts.index('tests')+2:]
             elif 'cli' in parts:
                 parts = parts[parts.index('cli'):]
-            elif file.find('botan_all') != -1:
+            elif filename.find('botan_all') != -1:
                 parts = []
             else:
-                raise InternalError("Unexpected file '%s/%s'" % (directory, file))
+                raise InternalError("Unexpected file '%s/%s'" % (directory, filename))
 
             if parts != []:
-
                 # Handle src/X/X.cpp -> X.o
-                if file == parts[-1] + '.cpp':
+                if filename == parts[-1] + '.cpp':
                     name = '_'.join(parts) + '.cpp'
                 else:
-                    name = '_'.join(parts) + '_' + file
+                    name = '_'.join(parts) + '_' + filename
 
                 def fixup_obj_name(name):
                     def remove_dups(parts):
@@ -1676,7 +1673,7 @@ class MakefileListsGenerator(object):
 
                 name = fixup_obj_name(name)
             else:
-                name = file
+                name = filename
 
             for src_suffix in ['.cpp', '.S']:
                 name = name.replace(src_suffix, '.' + self._osinfo.obj_suffix)
@@ -1695,10 +1692,11 @@ class MakefileListsGenerator(object):
             includes += ' ' + self._cc.add_include_dir_option + self._options.with_external_includedir
 
         for (obj_file, src) in zip(self._objectfile_list(sources, obj_dir), sources):
+            isa_specific_flags_str = "".join([" %s" % flagset for flagset in sorted(self._isa_specific_flags(src))])
             yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
                 obj_file,
                 src,
-                self._isa_specific_flags(src),
+                isa_specific_flags_str,
                 flags,
                 includes,
                 self._cc.compile_flags,
@@ -1819,7 +1817,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'doc_dir': source_paths.doc_dir,
 
         'command_line': configure_command_line(),
-        'local_config': slurp_file(options.local_config),
+        'local_config': read_textfile(options.local_config),
         'makefile_style': options.makefile_style or cc.makefile_style,
 
         'makefile_path': os.path.join(build_config.build_dir, '..', 'Makefile'),
@@ -1905,12 +1903,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'python_version': options.python_version,
         'with_sphinx': options.with_sphinx,
+        'house_ecc_curve_defines': make_cpp_macros(HouseEccCurve(options.house_curve).defines()) \
+                                   if options.house_curve else ''
         }
-
-    if options.house_curve:
-        variables['house_ecc_curve_defines'] = make_cpp_macros(HouseEccCurve(options.house_curve).defines())
-    else:
-        variables['house_ecc_curve_defines'] = ''
 
     if options.build_shared_lib:
 
@@ -2345,29 +2340,36 @@ class AmalgamationHeader(object):
 class AmalgamationGenerator(object):
     filename_prefix = 'botan_all'
 
+    _header_guard_pattern = re.compile('^#define BOTAN_.*_H__$')
+
     @staticmethod
-    def strip_header_goop(header_name, contents):
-        header_guard = re.compile('^#define BOTAN_.*_H__$')
+    def strip_header_goop(header_name, header_lines):
+        lines = copy.deepcopy(header_lines) # defensive copy: don't mutate argument
 
-        while len(contents) > 0:
-            if header_guard.match(contents[0]):
-                contents = contents[1:]
+        start_header_guard_index = None
+        for index, line in enumerate(lines):
+            if AmalgamationGenerator._header_guard_pattern.match(line):
+                start_header_guard_index = index
                 break
+        if start_header_guard_index is None:
+            raise InternalError("No header guard start found in " + header_name)
 
-            contents = contents[1:]
+        end_header_guard_index = None
+        for index, line in enumerate(lines):
+            if line == '#endif\n':
+                end_header_guard_index = index # override with last found
+        if end_header_guard_index is None:
+            raise InternalError("No header guard end found in " + header_name)
 
-        if len(contents) == 0:
-            raise InternalError("No header guard found in " + header_name)
+        lines = lines[start_header_guard_index+1 : end_header_guard_index]
 
-        while contents[0] == '\n':
-            contents = contents[1:]
+        # Strip leading and trailing empty lines
+        while lines[0].strip() == "":
+            lines = lines[1:]
+        while lines[-1].strip() == "":
+            lines = lines[0:-1]
 
-        while contents[-1] == '\n':
-            contents = contents[0:-1]
-        if contents[-1] == '#endif\n':
-            contents = contents[0:-1]
-
-        return contents
+        return lines
 
     def __init__(self, build_paths, modules, options):
         self._build_paths = build_paths
@@ -2525,7 +2527,7 @@ def setup_logging(options):
     logging.getLogger().setLevel(log_level)
 
 
-def load_info_files(descr, search_dir, filename_matcher, class_t):
+def load_info_files(search_dir, descr, filename_matcher, class_t):
     info = {}
 
     def filename_matches(filename):
@@ -2548,6 +2550,11 @@ def load_info_files(descr, search_dir, filename_matcher, class_t):
         logging.warning('Failed to load any %s files' % (descr))
 
     return info
+
+
+def load_build_data_info_files(source_paths, descr, subdir, class_t):
+    matcher = re.compile(r'[_a-z0-9]+\.txt$')
+    return load_info_files(os.path.join(source_paths.build_data_dir, subdir), descr, matcher, class_t)
 
 
 # Workaround for Windows systems where antivirus is enabled GH #353
@@ -2579,68 +2586,17 @@ def robust_makedirs(directory, max_retries=5):
     os.makedirs(directory)
 
 
-def main(argv=None):
-    """
-    Main driver
-    """
-
-    if argv is None:
-        argv = sys.argv
-
-    options = process_command_line(argv[1:])
-
-    setup_logging(options)
-
-    logging.info('%s invoked with options "%s"' % (
-        argv[0], ' '.join(argv[1:])))
-
-    logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
-        platform.system(), platform.machine(), platform.processor()))
-
-    if options.os == "java":
-        raise UserError("Jython detected: need --os and --cpu to set target")
-
-    source_paths = SourcePaths(os.path.dirname(argv[0]))
-
-    modules = load_info_files('Modules', source_paths.lib_dir, "info.txt", ModuleInfo)
-
-    def load_build_data(descr, subdir, class_t):
-        matcher = re.compile(r'[_a-z0-9]+\.txt$')
-        return load_info_files(descr, os.path.join(source_paths.build_data_dir, subdir), matcher, class_t)
-
-    info_arch = load_build_data('CPU info', 'arch', ArchInfo)
-    info_os = load_build_data('OS info', 'os', OsInfo)
-    info_cc = load_build_data('compiler info', 'cc', CompilerInfo)
-
-    for mod in modules.values():
-        mod.cross_check(info_arch, info_os, info_cc)
-
-    module_policies = load_build_data('module policy', 'policy', ModulePolicyInfo)
-
-    for policy in module_policies.values():
-        policy.cross_check(modules)
-
-    logging.debug('Known CPU names: ' + ' '.join(
-        sorted(flatten([[ainfo.basename] + \
-                        ainfo.aliases + \
-                        [x for (x, _) in ainfo.all_submodels()]
-                        for ainfo in info_arch.values()]))))
-
-    if options.list_modules:
-        for k in sorted(modules.keys()):
-            print(k)
-        sys.exit(0)
-
+# This is for otions that have --with-XYZ and --without-XYZ. If user does not
+# set any of those, we choose a default here.
+# Mutates `options`
+def set_defaults_for_unset_options(options, info_arch, info_cc): # pylint: disable=too-many-branches
     if options.os is None:
-        options.os = platform.system().lower()
-
-        if re.match('^cygwin_.*', options.os):
-            logging.debug("Converting '%s' to 'cygwin'", options.os)
+        system_from_python = platform.system().lower()
+        if re.match('^cygwin_.*', system_from_python):
+            logging.debug("Converting '%s' to 'cygwin'", system_from_python)
             options.os = 'cygwin'
-
-        if options.os == 'windows' and options.compiler == 'gcc':
-            logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
-
+        else:
+            options.os = system_from_python
         logging.info('Guessing target OS is %s (use --os to set)' % (options.os))
 
     if options.compiler is None:
@@ -2665,61 +2621,42 @@ def main(argv=None):
         logging.info('Guessing to use compiler %s (use --cc to set)' % (
             options.compiler))
 
-    if options.compiler not in info_cc:
-        raise UserError('Unknown compiler "%s"; available options: %s' % (
-            options.compiler, ' '.join(sorted(info_cc.keys()))))
-
-    if options.os not in info_os:
-
-        def find_canonical_os_name(os_name_variant):
-            for (canonical_os_name, info) in info_os.items():
-                if os_name_variant in info.aliases:
-                    return canonical_os_name
-            return os_name_variant # not found
-
-        options.os = find_canonical_os_name(options.os)
-
-        if options.os not in info_os:
-            raise UserError('Unknown OS "%s"; available options: %s' % (
-                options.os, ' '.join(sorted(info_os.keys()))))
-
     if options.cpu is None:
         (options.arch, options.cpu) = guess_processor(info_arch)
         logging.info('Guessing target processor is a %s/%s (use --cpu to set)' % (
             options.arch, options.cpu))
-    else:
-        cpu_from_user = options.cpu
-
-        results = canon_processor(info_arch, options.cpu)
-
-        if results != None:
-            (options.arch, options.cpu) = results
-            logging.info('Canonicalizized CPU target %s to %s/%s' % (
-                cpu_from_user, options.arch, options.cpu))
-        else:
-            logging.error('Unknown or unidentifiable processor "%s"' % (options.cpu))
-
-    logging.info('Target is %s-%s-%s-%s' % (
-        options.compiler, options.os, options.arch, options.cpu))
-
-    cc = info_cc[options.compiler]
-    arch = info_arch[options.arch]
-    osinfo = info_os[options.os]
-    module_policy = None
-
-    if options.module_policy != None:
-        if options.module_policy not in module_policies:
-            logging.error("Unknown module set %s", options.module_policy)
-        module_policy = module_policies[options.module_policy]
-
-    if options.with_visibility is None:
-        options.with_visibility = True
 
     if options.with_sphinx is None:
         if have_program('sphinx-build'):
             logging.info('Found sphinx-build (use --without-sphinx to disable)')
             options.with_sphinx = True
 
+
+# Mutates `options`
+def canonicalize_options(options, info_os, info_arch):
+    if options.os not in info_os:
+        def find_canonical_os_name(os_name_variant):
+            for (canonical_os_name, info) in info_os.items():
+                if os_name_variant in info.aliases:
+                    return canonical_os_name
+            return os_name_variant # not found
+        options.os = find_canonical_os_name(options.os)
+
+    # canonical ARCH/CPU
+    cpu_from_user = options.cpu
+    results = canon_processor(info_arch, options.cpu)
+    if results != None:
+        (options.arch, options.cpu) = results
+        logging.info('Canonicalized CPU target %s to %s/%s' % (
+            cpu_from_user, options.arch, options.cpu))
+    else:
+        raise UserError('Unknown or unidentifiable processor "%s"' % (options.cpu))
+
+
+# Checks user options for consistency
+# This method DOES NOT change options on behalf of the user but explains
+# why the given configuration does not work.
+def validate_options(options, info_os, info_cc, available_module_policies):
     if options.gen_amalgamation:
         raise UserError("--gen-amalgamation was removed. Migrate to --amalgamation.")
 
@@ -2729,16 +2666,37 @@ def main(argv=None):
     if options.single_amalgamation_file and not options.amalgamation:
         raise UserError("--single-amalgamation-file requires --amalgamation.")
 
-    if options.build_shared_lib and not osinfo.building_shared_supported:
-        logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
-        options.build_shared_lib = False
+    if options.os == "java":
+        raise UserError("Jython detected: need --os and --cpu to set target")
 
-    loaded_module_names = ModulesChooser(modules, module_policy, arch, cc, options).choose()
+    if options.os not in info_os:
+        raise UserError('Unknown OS "%s"; available options: %s' % (
+            options.os, ' '.join(sorted(info_os.keys()))))
 
-    using_mods = [modules[modname] for modname in loaded_module_names]
+    if options.compiler not in info_cc:
+        raise UserError('Unknown compiler "%s"; available options: %s' % (
+            options.compiler, ' '.join(sorted(info_cc.keys()))))
+
+    if options.module_policy and options.module_policy not in available_module_policies:
+        raise UserError("Unknown module set %s" % options.module_policy)
+
+    # Warnings
+
+    if options.os == 'windows' and options.compiler == 'gcc':
+        logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
+
+
+
+def main_action_list_available_modules(info_modules):
+    for modname in sorted(info_modules.keys()):
+        print(modname)
+
+
+def prepare_configure_build(info_modules, source_paths, options, cc, arch, osinfo, module_policy):
+    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, cc, options).choose()
+    using_mods = [info_modules[modname] for modname in loaded_module_names]
 
     build_config = BuildPaths(source_paths, options, using_mods)
-
     build_config.public_headers.append(os.path.join(build_config.build_dir, 'build.h'))
 
     template_vars = create_template_vars(source_paths, build_config, options, using_mods, cc, arch, osinfo)
@@ -2746,7 +2704,15 @@ def main(argv=None):
     makefile_template = os.path.join(source_paths.makefile_dir, '%s.in' % (template_vars['makefile_style']))
     logging.debug('Using makefile template %s' % (makefile_template))
 
-    # Now begin the actual IO to setup the build
+    return using_mods, build_config, template_vars, makefile_template
+
+
+def main_action_configure_build(info_modules, source_paths, options, cc, arch, osinfo, module_policy): # pylint: disable=too-many-locals
+
+    using_mods, build_config, template_vars, makefile_template = prepare_configure_build(
+        info_modules, source_paths, options, cc, arch, osinfo, module_policy)
+
+    # Now we start writing to disk
 
     try:
         if options.clean_build_tree:
@@ -2831,9 +2797,67 @@ def main(argv=None):
     if options.unsafe_fuzzer_mode:
         logging.warning("The fuzzer mode flag is labeled unsafe for a reason, this version is for testing only")
 
+
+def main(argv):
+    """
+    Main driver
+    """
+
+    options = process_command_line(argv[1:])
+
+    setup_logging(options)
+
+    logging.info('%s invoked with options "%s"' % (argv[0], ' '.join(argv[1:])))
+    logging.info('Platform: OS="%s" machine="%s" proc="%s"' % (
+        platform.system(), platform.machine(), platform.processor()))
+
+    source_paths = SourcePaths(os.path.dirname(argv[0]))
+
+    info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
+    info_arch = load_build_data_info_files(source_paths, 'CPU info', 'arch', ArchInfo)
+    info_os = load_build_data_info_files(source_paths, 'OS info', 'os', OsInfo)
+    info_cc = load_build_data_info_files(source_paths, 'compiler info', 'cc', CompilerInfo)
+    info_module_policies = load_build_data_info_files(source_paths, 'module policy', 'policy', ModulePolicyInfo)
+
+    for mod in info_modules.values():
+        mod.cross_check(info_arch, info_os, info_cc)
+
+    for policy in info_module_policies.values():
+        policy.cross_check(info_modules)
+
+    logging.debug('Known CPU names: ' + ' '.join(
+        sorted(flatten([[ainfo.basename] + \
+                        ainfo.aliases + \
+                        [x for (x, _) in ainfo.all_submodels()]
+                        for ainfo in info_arch.values()]))))
+
+    set_defaults_for_unset_options(options, info_arch, info_cc)
+    canonicalize_options(options, info_os, info_arch)
+    validate_options(options, info_os, info_cc, info_module_policies)
+
+    logging.info('Target is %s-%s-%s-%s' % (
+        options.compiler, options.os, options.arch, options.cpu))
+
+    cc = info_cc[options.compiler]
+    arch = info_arch[options.arch]
+    osinfo = info_os[options.os]
+    module_policy = info_module_policies[options.module_policy] if options.module_policy else None
+
+    if options.build_shared_lib and not osinfo.building_shared_supported:
+        logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
+        options.build_shared_lib = False
+
+    if options.list_modules:
+        main_action_list_available_modules(info_modules)
+        return 0
+    else:
+        main_action_configure_build(info_modules, source_paths, options, cc, arch, osinfo, module_policy)
+        return 0
+
+
 if __name__ == '__main__':
     try:
-        main()
+        sys.exit(main(argv=sys.argv))
     except UserError as e:
         logging.debug(traceback.format_exc())
         logging.error(e)
