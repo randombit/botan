@@ -544,7 +544,7 @@ class BOTAN_DLL Text_Policy : public Policy
       explicit Text_Policy(std::istream& in) : m_kv(read_cfg(in))
          {}
 
-   private:
+   protected:
 
       std::vector<std::string> get_list(const std::string& key,
                                         const std::vector<std::string>& def) const
