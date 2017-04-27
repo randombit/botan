@@ -24,8 +24,10 @@
 namespace Botan {
 
 class BlockCipher;
+class Cipher_Mode;
 class StreamCipher;
 class HashFunction;
+enum Cipher_Dir : int;
 
 class OpenSSL_Error : public Exception
    {
@@ -38,6 +40,11 @@ class OpenSSL_Error : public Exception
 
 std::unique_ptr<BlockCipher>
 make_openssl_block_cipher(const std::string& name);
+
+/* Cipher Modes */
+
+Cipher_Mode*
+make_openssl_cipher_mode(const std::string& name, Cipher_Dir direction);
 
 /* Hash */
 
