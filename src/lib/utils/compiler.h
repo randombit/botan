@@ -117,6 +117,15 @@
 #endif
 
 /*
+* Define BOTAN_ALIGNAS (for MSVC 2013)
+*/
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
+  #define BOTAN_ALIGNAS(n) /**/
+#else
+  #define BOTAN_ALIGNAS(n) alignas(n)
+#endif
+
+/*
 * Define BOTAN_PARALLEL_FOR
 */
 #if !defined(BOTAN_PARALLEL_FOR)
