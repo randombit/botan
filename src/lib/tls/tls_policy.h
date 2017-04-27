@@ -502,6 +502,18 @@ class BOTAN_DLL Text_Policy : public Policy
       size_t minimum_signature_strength() const override
          { return get_len("minimum_signature_strength", Policy::minimum_signature_strength()); }
 
+      size_t dtls_default_mtu() const override
+         { return get_len("dtls_default_mtu", Policy::dtls_default_mtu()); }
+
+      size_t dtls_initial_timeout() const override
+         { return get_len("dtls_initial_timeout", Policy::dtls_initial_timeout()); }
+
+      size_t dtls_maximum_timeout() const override
+         { return get_len("dtls_maximum_timeout", Policy::dtls_maximum_timeout()); }
+
+      bool require_cert_revocation_info() const override
+         { return get_bool("require_cert_revocation_info", Policy::require_cert_revocation_info()); }
+
       bool hide_unknown_users() const override
          { return get_bool("hide_unknown_users", Policy::hide_unknown_users()); }
 
@@ -532,7 +544,7 @@ class BOTAN_DLL Text_Policy : public Policy
       explicit Text_Policy(std::istream& in) : m_kv(read_cfg(in))
          {}
 
-   private:
+   protected:
 
       std::vector<std::string> get_list(const std::string& key,
                                         const std::vector<std::string>& def) const
