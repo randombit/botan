@@ -780,6 +780,9 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
          result.test_eq("botan_mp_mod_mul", std::string(str_buf), "123945920473931248854653259523111998693");
 
+         str_len = 0;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_mp_to_str, (r, 10, str_buf, &str_len));
+
          size_t x_bytes;
          botan_mp_rand_bits(x, rng, 512);
          TEST_FFI_OK(botan_mp_num_bytes, (x, &x_bytes));

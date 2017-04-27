@@ -553,7 +553,7 @@ int botan_mp_to_str(const botan_mp_t mp, uint8_t digit_base, char* out, size_t* 
 
       std::vector<uint8_t> hex = Botan::BigInt::encode(bn, base);
       hex.push_back(0); // null terminator
-      write_str_output(out, out_len, hex);
+      return write_str_output(out, out_len, hex);
       });
    }
 
