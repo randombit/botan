@@ -898,6 +898,7 @@ std::vector<Test::Result> Text_Based_Test::run()
          header = line.substr(1, line.size() - 2);
          header_or_name = header;
          test_cnt = 0;
+         vars.clear();
          continue;
          }
 
