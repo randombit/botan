@@ -30,6 +30,10 @@
   #include <botan/auto_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_OPENSSL)
+  #include <botan/internal/openssl.h>
+#endif
+
 namespace {
 
 class Test_Runner : public Botan_CLI::Command
@@ -153,6 +157,12 @@ class Test_Runner : public Botan_CLI::Command
             output() << " provider:" << provider;
             pf.set(provider);
             }
+#if defined(BOTAN_HAS_OPENSSL)
+         if(provider.empty() || provider == "openssl")
+            {
+            ERR_load_crypto_strings();
+            }
+#endif
 
          std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
