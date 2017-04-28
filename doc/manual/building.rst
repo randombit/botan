@@ -315,6 +315,7 @@ by the user using
 
  - ``--with-openssl`` adds an engine that uses OpenSSL for some public
    key operations and ciphers/hashes. OpenSSL 1.0.1 or later is supported.
+   LibreSSL is API compatible with OpenSSL and can be used instead.
 
 Multiple Builds
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
