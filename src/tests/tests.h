@@ -334,6 +334,7 @@ class Test
 
       virtual std::vector<Test::Result> run() = 0;
       virtual ~Test() = default;
+      virtual std::vector<std::string> possible_providers(const std::string&);
 
       static std::vector<Test::Result> run_test(const std::string& what, bool fail_if_missing);
 
@@ -442,7 +443,6 @@ class Text_Based_Test : public Test
       virtual Test::Result run_one_test(const std::string& header,
                                         const VarMap& vars) = 0;
       // Called before run_one_test
-      virtual std::vector<std::string> possible_providers(const std::string&);
       virtual bool skip_this_test(const std::string& header,
                                   const VarMap& vars);
 

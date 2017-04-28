@@ -161,6 +161,8 @@ class PK_Key_Generation_Test : public Test
       virtual std::vector<std::string> keygen_params() const = 0;
 
       virtual std::string algo_name() const = 0;
+
+      std::vector<std::string> possible_providers(const std::string&) override;
    };
 
 void check_invalid_signatures(Test::Result& result,

@@ -56,6 +56,10 @@
   #include <botan/xmss.h>
 #endif
 
+#if defined(BOTAN_HAS_OPENSSL)
+  #include <botan/internal/openssl.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<Public_Key>
@@ -203,7 +207,8 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 std::unique_ptr<Private_Key>
 create_private_key(const std::string& alg_name,
                    RandomNumberGenerator& rng,
-                   const std::string& params)
+                   const std::string& params,
+                   const std::string& provider)
    {
    /*
    * Default paramaters are chosen for work factor > 2**128 where possible
@@ -218,6 +223,17 @@ create_private_key(const std::string& alg_name,
    if(alg_name == "RSA")
       {
       const size_t rsa_bits = (params.empty() ? 3072 : to_u32bit(params));
+#if defined(BOTAN_HAS_OPENSSL)
+      if(provider.empty() || provider == "openssl")
+         {
+         std::unique_ptr<Botan::Private_Key> pk;
+         if(pk = make_openssl_rsa_private_key(rng, rsa_bits))
+            return pk;
+
+         if(!provider.empty())
+            return nullptr;
+         }
+#endif
       return std::unique_ptr<Private_Key>(new RSA_PrivateKey(rng, rsa_bits));
       }
 #endif
@@ -311,4 +327,22 @@ create_private_key(const std::string& alg_name,
    return std::unique_ptr<Private_Key>();
    }
 
+std::vector<std::string>
+probe_provider_private_key(const std::string& alg_name,
+                           const std::vector<std::string> possible)
+   {
+   std::vector<std::string> providers;
+   for(auto&& prov : possible)
+      {
+      if(prov == "base" ||
+#if defined(BOTAN_HAS_OPENSSL)
+         (prov == "openssl" && alg_name == "RSA") ||
+#endif
+         0)
+         {
+         providers.push_back(prov); // available
+         }
+      }
+   return providers;
+   }
 }

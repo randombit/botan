@@ -349,6 +349,11 @@ bool Test::Result::test_rc(const std::string& func, int expected, int rc)
    return test_success();
    }
 
+std::vector<std::string> Test::possible_providers(const std::string&)
+   {
+   return Test::provider_filter({ "base" });
+   }
+
 //static
 std::string Test::format_time(uint64_t ns)
    {
@@ -848,11 +853,6 @@ parse_cpuid_bits(const std::vector<std::string>& tok)
    }
 
 }
-
-std::vector<std::string> Text_Based_Test::possible_providers(const std::string&)
-   {
-   return Test::provider_filter({ "base" });
-   }
 
 bool Text_Based_Test::skip_this_test(const std::string& /*header*/,
                                      const VarMap& /*vars*/)

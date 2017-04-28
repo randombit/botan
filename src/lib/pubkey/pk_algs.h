@@ -33,7 +33,12 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 BOTAN_DLL std::unique_ptr<Private_Key>
 create_private_key(const std::string& algo_name,
                    RandomNumberGenerator& rng,
-                   const std::string& algo_params = "");
+                   const std::string& algo_params = "",
+                   const std::string& provider = "");
+
+BOTAN_DLL std::vector<std::string>
+probe_provider_private_key(const std::string& algo_name,
+                           const std::vector<std::string> possible);
 
 }
 

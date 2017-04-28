@@ -1,6 +1,7 @@
 /*
 * RSA operations provided by OpenSSL
 * (C) 2015 Jack Lloyd
+* (C) 2017 Alexander Bluhm
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,6 +11,7 @@
 #if defined(BOTAN_HAS_RSA)
 
 #include <botan/rsa.h>
+#include <botan/rng.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/ct_utils.h>
 
@@ -19,6 +21,7 @@
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/err.h>
+#include <openssl/rand.h>
 
 namespace Botan {
 
@@ -247,6 +250,39 @@ make_openssl_rsa_sig_op(const RSA_PrivateKey& key, const std::string& params)
    return std::unique_ptr<PK_Ops::Signature>(new OpenSSL_RSA_Signing_Operation(key, params));
    }
 
+std::unique_ptr<RSA_PrivateKey>
+make_openssl_rsa_private_key(RandomNumberGenerator& rng, size_t rsa_bits)
+   {
+   if (rsa_bits > INT_MAX)
+      throw Internal_Error("rsa_bits overflow");
+
+   secure_vector<uint8_t> seed(BOTAN_SYSTEM_RNG_POLL_REQUEST);
+   rng.randomize(seed.data(), seed.size());
+   RAND_seed(seed.data(), seed.size());
+
+   std::unique_ptr<BIGNUM, std::function<void (BIGNUM*)>> bn(BN_new(), BN_free);
+   if(!bn)
+      throw OpenSSL_Error("BN_new");
+   if(!BN_set_word(bn.get(), RSA_F4))
+      throw OpenSSL_Error("BN_set_word");
+
+   std::unique_ptr<RSA, std::function<void (RSA*)>> rsa(RSA_new(), RSA_free);
+   if(!rsa)
+      throw OpenSSL_Error("RSA_new");
+   if(!RSA_generate_key_ex(rsa.get(), rsa_bits, bn.get(), NULL))
+      throw OpenSSL_Error("RSA_generate_key_ex");
+
+   uint8_t* der = NULL;
+   int bytes = i2d_RSAPrivateKey(rsa.get(), &der);
+   if(bytes < 0)
+      throw OpenSSL_Error("i2d_RSAPrivateKey");
+
+   const secure_vector<uint8_t> keydata(der, der + bytes);
+   memset(der, 0, bytes);
+   free(der);
+   return std::unique_ptr<Botan::RSA_PrivateKey>
+      (new RSA_PrivateKey(AlgorithmIdentifier(), keydata));
+   }
 }
 
 #endif // BOTAN_HAS_RSA
