@@ -1213,8 +1213,7 @@ int botan_bcrypt_is_valid(const char* pass, const char* hash)
    try
       {
 #if defined(BOTAN_HAS_BCRYPT)
-      if(Botan::check_bcrypt(pass, hash))
-         return 0; // success
+      return Botan::check_bcrypt(pass, hash) ? 0 : 1;
 #else
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
