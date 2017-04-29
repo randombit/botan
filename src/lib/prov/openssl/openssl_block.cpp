@@ -37,13 +37,15 @@ class OpenSSL_BlockCipher : public BlockCipher
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
          {
          int out_len = 0;
-         EVP_EncryptUpdate(&m_encrypt, out, &out_len, in, blocks * m_block_sz);
+         if(!EVP_EncryptUpdate(&m_encrypt, out, &out_len, in, blocks * m_block_sz))
+            throw OpenSSL_Error("EVP_EncryptUpdate");
          }
 
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
          {
          int out_len = 0;
-         EVP_DecryptUpdate(&m_decrypt, out, &out_len, in, blocks * m_block_sz);
+         if(!EVP_DecryptUpdate(&m_decrypt, out, &out_len, in, blocks * m_block_sz))
+            throw OpenSSL_Error("EVP_DecryptUpdate");
          }
 
       void key_schedule(const uint8_t key[], size_t key_len) override;
@@ -66,11 +68,15 @@ OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
    EVP_CIPHER_CTX_init(&m_encrypt);
    EVP_CIPHER_CTX_init(&m_decrypt);
 
-   EVP_EncryptInit_ex(&m_encrypt, algo, nullptr, nullptr, nullptr);
-   EVP_DecryptInit_ex(&m_decrypt, algo, nullptr, nullptr, nullptr);
+   if(!EVP_EncryptInit_ex(&m_encrypt, algo, nullptr, nullptr, nullptr))
+      throw OpenSSL_Error("EVP_EncryptInit_ex");
+   if(!EVP_DecryptInit_ex(&m_decrypt, algo, nullptr, nullptr, nullptr))
+      throw OpenSSL_Error("EVP_DecryptInit_ex");
 
-   EVP_CIPHER_CTX_set_padding(&m_encrypt, 0);
-   EVP_CIPHER_CTX_set_padding(&m_decrypt, 0);
+   if(!EVP_CIPHER_CTX_set_padding(&m_encrypt, 0))
+      throw OpenSSL_Error("EVP_CIPHER_CTX_set_padding encrypt");
+   if(!EVP_CIPHER_CTX_set_padding(&m_decrypt, 0))
+      throw OpenSSL_Error("EVP_CIPHER_CTX_set_padding decrypt");
    }
 
 OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
@@ -88,11 +94,15 @@ OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
    EVP_CIPHER_CTX_init(&m_encrypt);
    EVP_CIPHER_CTX_init(&m_decrypt);
 
-   EVP_EncryptInit_ex(&m_encrypt, algo, nullptr, nullptr, nullptr);
-   EVP_DecryptInit_ex(&m_decrypt, algo, nullptr, nullptr, nullptr);
+   if(!EVP_EncryptInit_ex(&m_encrypt, algo, nullptr, nullptr, nullptr))
+      throw OpenSSL_Error("EVP_EncryptInit_ex");
+   if(!EVP_DecryptInit_ex(&m_decrypt, algo, nullptr, nullptr, nullptr))
+      throw OpenSSL_Error("EVP_DecryptInit_ex");
 
-   EVP_CIPHER_CTX_set_padding(&m_encrypt, 0);
-   EVP_CIPHER_CTX_set_padding(&m_decrypt, 0);
+   if(!EVP_CIPHER_CTX_set_padding(&m_encrypt, 0))
+      throw OpenSSL_Error("EVP_CIPHER_CTX_set_padding encrypt");
+   if(!EVP_CIPHER_CTX_set_padding(&m_decrypt, 0))
+      throw OpenSSL_Error("EVP_CIPHER_CTX_set_padding decrypt");
    }
 
 OpenSSL_BlockCipher::~OpenSSL_BlockCipher()
@@ -118,8 +128,10 @@ void OpenSSL_BlockCipher::key_schedule(const uint8_t key[], size_t length)
          throw Invalid_Argument("OpenSSL_BlockCipher: Bad key length for " +
                                 m_cipher_name);
 
-   EVP_EncryptInit_ex(&m_encrypt, nullptr, nullptr, full_key.data(), nullptr);
-   EVP_DecryptInit_ex(&m_decrypt, nullptr, nullptr, full_key.data(), nullptr);
+   if(!EVP_EncryptInit_ex(&m_encrypt, nullptr, nullptr, full_key.data(), nullptr))
+      throw OpenSSL_Error("EVP_EncryptInit_ex");
+   if(!EVP_DecryptInit_ex(&m_decrypt, nullptr, nullptr, full_key.data(), nullptr))
+      throw OpenSSL_Error("EVP_DecryptInit_ex");
    }
 
 /*
@@ -141,14 +153,20 @@ void OpenSSL_BlockCipher::clear()
    {
    const EVP_CIPHER* algo = EVP_CIPHER_CTX_cipher(&m_encrypt);
 
-   EVP_CIPHER_CTX_cleanup(&m_encrypt);
-   EVP_CIPHER_CTX_cleanup(&m_decrypt);
+   if(!EVP_CIPHER_CTX_cleanup(&m_encrypt))
+      throw OpenSSL_Error("EVP_CIPHER_CTX_cleanup encrypt");
+   if(!EVP_CIPHER_CTX_cleanup(&m_decrypt))
+      throw OpenSSL_Error("EVP_CIPHER_CTX_cleanup decrypt");
    EVP_CIPHER_CTX_init(&m_encrypt);
    EVP_CIPHER_CTX_init(&m_decrypt);
-   EVP_EncryptInit_ex(&m_encrypt, algo, nullptr, nullptr, nullptr);
-   EVP_DecryptInit_ex(&m_decrypt, algo, nullptr, nullptr, nullptr);
-   EVP_CIPHER_CTX_set_padding(&m_encrypt, 0);
-   EVP_CIPHER_CTX_set_padding(&m_decrypt, 0);
+   if(!EVP_EncryptInit_ex(&m_encrypt, algo, nullptr, nullptr, nullptr))
+      throw OpenSSL_Error("EVP_EncryptInit_ex");
+   if(!EVP_DecryptInit_ex(&m_decrypt, algo, nullptr, nullptr, nullptr))
+      throw OpenSSL_Error("EVP_DecryptInit_ex");
+   if(!EVP_CIPHER_CTX_set_padding(&m_encrypt, 0))
+      throw OpenSSL_Error("EVP_CIPHER_CTX_set_padding encrypt");
+   if(!EVP_CIPHER_CTX_set_padding(&m_decrypt, 0))
+      throw OpenSSL_Error("EVP_CIPHER_CTX_set_padding decrypt");
    }
 
 }

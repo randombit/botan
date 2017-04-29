@@ -145,6 +145,8 @@ class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
          const std::vector<uint8_t> der = rsa.public_key_bits();
          const uint8_t* der_ptr = der.data();
          m_openssl_rsa.reset(::d2i_RSAPublicKey(nullptr, &der_ptr, der.size()));
+         if(!m_openssl_rsa)
+            throw OpenSSL_Error("d2i_RSAPublicKey");
          }
 
       size_t max_input_bits() const override { return ::BN_num_bits(m_openssl_rsa->n) - 1; }
