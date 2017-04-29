@@ -26,7 +26,6 @@ namespace {
 
 std::pair<int, size_t> get_openssl_enc_pad(const std::string& eme)
    {
-   ERR_load_crypto_strings();
    if(eme == "Raw")
       return std::make_pair(RSA_NO_PADDING, 0);
    else if(eme == "EME-PKCS1-v1_5")
