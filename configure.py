@@ -2033,9 +2033,11 @@ class ModulesChooser(object):
     @staticmethod
     def _validate_state(used_modules, unused_modules):
         for reason, unused_for_reason in unused_modules.items():
-            if not unused_for_reason.isdisjoint(used_modules):
+            intersection = unused_for_reason & used_modules
+            if intersection:
                 raise InternalError(
-                    "Disabled modules (%s) and modules to load have common elements" % reason)
+                    "Disabled modules (%s) and modules to load have common elements: %s"
+                    % (reason, intersection))
 
     @staticmethod
     def _validate_dependencies_exist(modules):
