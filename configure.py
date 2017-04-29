@@ -1364,8 +1364,8 @@ def process_template(template_file, variables):
         raise InternalError('Exception %s in template %s' % (e, template_file))
 
 def makefile_list(items):
-    items = list(items) # force evaluation so we can slice it
-    return (' '*16).join([item + ' \\\n' for item in items[:-1]] + [items[-1]])
+    separator = " \\\n" + 16*" "
+    return separator.join(items)
 
 def gen_bakefile(build_config, options, external_libs):
 
