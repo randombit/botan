@@ -49,7 +49,7 @@ External Providers, Hardware Support
 
 * Access to system certificate stores (Windows, OS X)
 * Extend OpenSSL provider (DH, HMAC, CMAC, GCM)
-* Support using BoringSSL or LibreSSL instead of OpenSSL
+* Support using BoringSSL instead of OpenSSL or LibreSSL
 * /dev/crypto provider (ciphers, hashes)
 * Windows CryptoAPI provider (ciphers, hashes, RSA)
 * Apple CommonCrypto
