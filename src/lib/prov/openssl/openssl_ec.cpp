@@ -121,7 +121,8 @@ class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EM
          if(!grp)
             throw OpenSSL_Error("EC_GROUP_new_by_curve_name");
 
-         ::EC_KEY_set_group(m_ossl_ec.get(), grp.get());
+         if(!::EC_KEY_set_group(m_ossl_ec.get(), grp.get()))
+            throw OpenSSL_Error("EC_KEY_set_group");
 
          const secure_vector<uint8_t> enc = EC2OSP(ecdsa.public_point(), PointGFp::UNCOMPRESSED);
          const uint8_t* enc_ptr = enc.data();
@@ -148,7 +149,11 @@ class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EM
          sig.reset(::ECDSA_SIG_new());
 
          sig->r = BN_bin2bn(sig_bytes              , sig_len / 2, nullptr);
+         if(!sig->r)
+            throw OpenSSL_Error("BN_bin2bn sig r");
          sig->s = BN_bin2bn(sig_bytes + sig_len / 2, sig_len / 2, nullptr);
+         if(!sig->s)
+            throw OpenSSL_Error("BN_bin2bn sig s");
 
          const int res = ECDSA_do_verify(msg, msg_len, sig.get(), m_ossl_ec.get());
          if(res < 0)

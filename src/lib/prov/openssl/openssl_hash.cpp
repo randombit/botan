@@ -20,7 +20,8 @@ class OpenSSL_HashFunction : public HashFunction
       void clear() override
          {
          const EVP_MD* algo = EVP_MD_CTX_md(&m_md);
-         EVP_DigestInit_ex(&m_md, algo, nullptr);
+         if(!EVP_DigestInit_ex(&m_md, algo, nullptr))
+            throw OpenSSL_Error("EVP_DigestInit_ex");
          }
 
       std::string provider() const override { return "openssl"; }
@@ -45,7 +46,8 @@ class OpenSSL_HashFunction : public HashFunction
       OpenSSL_HashFunction(const std::string& name, const EVP_MD* md) : m_name(name)
          {
          EVP_MD_CTX_init(&m_md);
-         EVP_DigestInit_ex(&m_md, md, nullptr);
+         if(!EVP_DigestInit_ex(&m_md, md, nullptr))
+            throw OpenSSL_Error("EVP_DigestInit_ex");
          }
 
       ~OpenSSL_HashFunction()
@@ -56,14 +58,17 @@ class OpenSSL_HashFunction : public HashFunction
    private:
       void add_data(const uint8_t input[], size_t length) override
          {
-         EVP_DigestUpdate(&m_md, input, length);
+         if(!EVP_DigestUpdate(&m_md, input, length))
+            throw OpenSSL_Error("EVP_DigestUpdate");
          }
 
       void final_result(uint8_t output[]) override
          {
-         EVP_DigestFinal_ex(&m_md, output, nullptr);
+         if(!EVP_DigestFinal_ex(&m_md, output, nullptr))
+            throw OpenSSL_Error("EVP_DigestFinal_ex");
          const EVP_MD* algo = EVP_MD_CTX_md(&m_md);
-         EVP_DigestInit_ex(&m_md, algo, nullptr);
+         if(!EVP_DigestInit_ex(&m_md, algo, nullptr))
+            throw OpenSSL_Error("EVP_DigestInit_ex");
          }
 
       std::string m_name;

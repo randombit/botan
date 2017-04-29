@@ -61,9 +61,9 @@ OpenSSL_Cipher_Mode::OpenSSL_Cipher_Mode(const std::string& name,
    EVP_CIPHER_CTX_init(&m_cipher);
    if(!EVP_CipherInit_ex(&m_cipher, algo, nullptr, nullptr, nullptr,
                          m_direction == ENCRYPTION ? 1 : 0))
-      throw Internal_Error("EVP_CipherInit_ex failed");
+      throw OpenSSL_Error("EVP_CipherInit_ex");
    if(!EVP_CIPHER_CTX_set_padding(&m_cipher, 0))
-      throw Internal_Error("EVP_CIPHER_CTX_set_padding failed");
+      throw OpenSSL_Error("EVP_CIPHER_CTX_set_padding");
    }
 
 OpenSSL_Cipher_Mode::~OpenSSL_Cipher_Mode()
@@ -78,7 +78,7 @@ void OpenSSL_Cipher_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(nonce_len)
       {
       if(!EVP_CipherInit_ex(&m_cipher, nullptr, nullptr, nullptr, nonce, -1))
-         throw Internal_Error("EVP_CipherInit_ex nonce failed");
+         throw OpenSSL_Error("EVP_CipherInit_ex nonce");
       }
    }
 
@@ -92,7 +92,7 @@ size_t OpenSSL_Cipher_Mode::process(uint8_t msg[], size_t msg_len)
    secure_vector<uint8_t> out(outl);
 
    if(!EVP_CipherUpdate(&m_cipher, out.data(), &outl, msg, msg_len))
-      throw Internal_Error("EVP_CipherUpdate failed");
+      throw OpenSSL_Error("EVP_CipherUpdate");
    memcpy(msg, out.data(), outl);
    return outl;
    }
@@ -109,7 +109,7 @@ void OpenSSL_Cipher_Mode::finish(secure_vector<uint8_t>& buffer,
    secure_vector<uint8_t> out(outl);
 
    if(!EVP_CipherFinal_ex(&m_cipher, out.data(), &outl))
-      throw Internal_Error("EVP_CipherFinal_ex failed");
+      throw OpenSSL_Error("EVP_CipherFinal_ex");
    memcpy(buf + written, out.data(), outl);
    written += outl;
    buffer.resize(offset + written);
@@ -148,19 +148,19 @@ void OpenSSL_Cipher_Mode::clear()
    const EVP_CIPHER* algo = EVP_CIPHER_CTX_cipher(&m_cipher);
 
    if(!EVP_CIPHER_CTX_cleanup(&m_cipher))
-      throw Internal_Error("EVP_CIPHER_CTX_cleanup failed");
+      throw OpenSSL_Error("EVP_CIPHER_CTX_cleanup");
    EVP_CIPHER_CTX_init(&m_cipher);
    if(!EVP_CipherInit_ex(&m_cipher, algo, nullptr, nullptr, nullptr,
                          m_direction == ENCRYPTION ? 1 : 0))
-      throw Internal_Error("EVP_CipherInit_ex clear failed");
+      throw OpenSSL_Error("EVP_CipherInit_ex clear");
    if(!EVP_CIPHER_CTX_set_padding(&m_cipher, 0))
-      throw Internal_Error("EVP_CIPHER_CTX_set_padding clear failed");
+      throw OpenSSL_Error("EVP_CIPHER_CTX_set_padding clear");
    }
 
 void OpenSSL_Cipher_Mode::reset()
    {
    if(!EVP_CipherInit_ex(&m_cipher, nullptr, nullptr, nullptr, nullptr, -1))
-      throw Internal_Error("EVP_CipherInit_ex clear failed");
+      throw OpenSSL_Error("EVP_CipherInit_ex clear");
    }
 
 Key_Length_Specification OpenSSL_Cipher_Mode::key_spec() const
@@ -171,9 +171,9 @@ Key_Length_Specification OpenSSL_Cipher_Mode::key_spec() const
 void OpenSSL_Cipher_Mode::key_schedule(const uint8_t key[], size_t length)
    {
    if(!EVP_CIPHER_CTX_set_key_length(&m_cipher, length))
-      throw Invalid_Argument("EVP_CIPHER_CTX_set_key_length failed");
+      throw OpenSSL_Error("EVP_CIPHER_CTX_set_key_length");
    if(!EVP_CipherInit_ex(&m_cipher, nullptr, nullptr, key, nullptr, -1))
-      throw Internal_Error("EVP_CipherInit_ex key failed");
+      throw OpenSSL_Error("EVP_CipherInit_ex key");
    }
 
 }
