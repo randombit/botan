@@ -42,6 +42,10 @@
 #include <botan/sp800_108.h>
 #endif
 
+#if defined(BOTAN_HAS_SP800_56A)
+#include <botan/sp800_56a.h>
+#endif
+
 #if defined(BOTAN_HAS_SP800_56C)
 #include <botan/sp800_56c.h>
 #endif
@@ -181,6 +185,16 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
       if(provider.empty() || provider == "base")
          {
          return kdf_create_mac_or_hash<SP800_108_Pipeline>(req.arg(0));
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_SP800_56A)
+   if(req.algo_name() == "SP800-56A" && req.arg_count() == 1)
+      {
+      if(auto hash = HashFunction::create(req.arg(0)))
+         {
+         return std::unique_ptr<KDF>(new SP800_56A(hash.release()));
          }
       }
 #endif

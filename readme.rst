@@ -184,7 +184,7 @@ Other Useful Things
 * PBKDF2 password based key derivation
 * Password hashing function bcrypt and passhash9 (custom PBKDF scheme)
 * SRP-6a password authenticated key exchange
-* Key derivation functions including HKDF, KDF2, SP 800-108, SP 800-56C
+* Key derivation functions including HKDF, KDF2, SP 800-108, SP 800-56A, SP 800-56C
 * Format preserving encryption scheme FE1
 * Threshold secret sharing
 * RFC 3394 AES key wrap
