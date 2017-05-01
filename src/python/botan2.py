@@ -338,17 +338,21 @@ def pbkdf_timed(algo, password, out_len, ms_to_run=300, salt=rng().get(12)):
                                         c_void_p, c_size_t, c_size_t, POINTER(c_size_t)]
     out_buf = create_string_buffer(out_len)
     iterations = c_size_t(0)
-    botan.botan_pbkdf_timed(_ctype_str(algo), out_buf, out_len, _ctype_str(password), salt, len(salt), ms_to_run, byref(iterations))
+    botan.botan_pbkdf_timed(
+        _ctype_str(algo), out_buf, out_len, _ctype_str(password),
+        salt, len(salt), ms_to_run, byref(iterations))
     return (salt, iterations.value, out_buf.raw)
 
 """
 KDF
 """
 def kdf(algo, secret, out_len, salt, label):
-    botan.botan_kdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
+    botan.botan_kdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t,
+                                POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
     out_buf = create_string_buffer(out_len)
     out_sz = c_size_t(out_len)
-    botan.botan_kdf(_ctype_str(algo), out_buf, out_sz, secret, len(secret), salt, len(salt), label, len(label))
+    botan.botan_kdf(_ctype_str(algo), out_buf, out_sz, secret, len(secret),
+                    salt, len(salt), label, len(label))
     return out_buf.raw[0:out_sz.value]
 
 """
@@ -582,7 +586,8 @@ class pk_op_key_agreement(object):
         if not self.op:
             raise Exception("No key agreement for you")
 
-        self.m_public_value = _call_fn_returning_vec(0, lambda b, bl: botan.botan_pk_op_key_agreement_export_public(key.privkey, b, bl))
+        self.m_public_value = _call_fn_returning_vec(
+            0, lambda b, bl: botan.botan_pk_op_key_agreement_export_public(key.privkey, b, bl))
 
     def __del__(self):
         botan.botan_pk_op_key_agreement_destroy.argtypes = [c_void_p]
@@ -623,7 +628,8 @@ class x509_cert(object):
 
     def time_starts(self):
         botan.botan_x509_cert_get_time_starts.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        starts = _call_fn_returning_string(16, lambda b, bl: botan.botan_x509_cert_get_time_starts(self.x509_cert, b, bl))
+        starts = _call_fn_returning_string(
+            16, lambda b, bl: botan.botan_x509_cert_get_time_starts(self.x509_cert, b, bl))
         if len(starts) == 13:
             # UTC time
             struct_time = time.strptime(starts, "%y%m%d%H%M%SZ")
@@ -637,7 +643,8 @@ class x509_cert(object):
 
     def time_expires(self):
         botan.botan_x509_cert_get_time_expires.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        expires = _call_fn_returning_string(16, lambda b, bl: botan.botan_x509_cert_get_time_expires(self.x509_cert, b, bl))
+        expires = _call_fn_returning_string(
+            16, lambda b, bl: botan.botan_x509_cert_get_time_expires(self.x509_cert, b, bl))
         if len(expires) == 13:
             # UTC time
             struct_time = time.strptime(expires, "%y%m%d%H%M%SZ")
@@ -650,30 +657,36 @@ class x509_cert(object):
 
     def to_string(self):
         botan.botan_x509_cert_to_string.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_string(0, lambda b, bl: botan.botan_x509_cert_to_string(self.x509_cert, b, bl))
+        return _call_fn_returning_string(
+            0, lambda b, bl: botan.botan_x509_cert_to_string(self.x509_cert, b, bl))
 
     def fingerprint(self, hash_algo='SHA-256'):
         botan.botan_x509_cert_get_fingerprint.argtypes = [c_void_p, c_char_p,
                                                           POINTER(c_char), POINTER(c_size_t)]
 
         n = hash_function(hash_algo).output_length() * 3
-        return _call_fn_returning_string(n, lambda b, bl: botan.botan_x509_cert_get_fingerprint(self.x509_cert, _ctype_str(hash_algo), b, bl))
+        return _call_fn_returning_string(
+            n, lambda b, bl: botan.botan_x509_cert_get_fingerprint(self.x509_cert, _ctype_str(hash_algo), b, bl))
 
     def serial_number(self):
         botan.botan_x509_cert_get_serial_number.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_vec(0, lambda b, bl: botan.botan_x509_cert_get_serial_number(self.x509_cert, b, bl))
+        return _call_fn_returning_vec(
+            0, lambda b, bl: botan.botan_x509_cert_get_serial_number(self.x509_cert, b, bl))
 
     def authority_key_id(self):
         botan.botan_x509_cert_get_authority_key_id.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_vec(0, lambda b, bl: botan.botan_x509_cert_get_authority_key_id(self.x509_cert, b, bl))
+        return _call_fn_returning_vec(
+            0, lambda b, bl: botan.botan_x509_cert_get_authority_key_id(self.x509_cert, b, bl))
 
     def subject_key_id(self):
         botan.botan_x509_cert_get_subject_key_id.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_vec(0, lambda b, bl: botan.botan_x509_cert_get_subject_key_id(self.x509_cert, b, bl))
+        return _call_fn_returning_vec(
+            0, lambda b, bl: botan.botan_x509_cert_get_subject_key_id(self.x509_cert, b, bl))
 
     def subject_public_key_bits(self):
         botan.botan_x509_cert_get_public_key_bits.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_vec(0, lambda b, bl: botan.botan_x509_cert_get_public_key_bits(self.x509_cert, b, bl))
+        return _call_fn_returning_vec(
+            0, lambda b, bl: botan.botan_x509_cert_get_public_key_bits(self.x509_cert, b, bl))
 
     def subject_public_key(self):
         botan.botan_x509_cert_get_public_key.argtypes = [c_void_p, c_void_p]
@@ -683,8 +696,10 @@ class x509_cert(object):
         return public_key(pub)
 
     def subject_dn(self, key, index):
-        botan.botan_x509_cert_get_subject_dn.argtypes = [c_void_p, c_char_p, c_size_t, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_string(0, lambda b, bl: botan.botan_x509_cert_get_subject_dn(self.x509_cert, _ctype_str(key), index, b, bl))
+        botan.botan_x509_cert_get_subject_dn.argtypes = [
+            c_void_p, c_char_p, c_size_t, POINTER(c_char), POINTER(c_size_t)]
+        return _call_fn_returning_string(
+            0, lambda b, bl: botan.botan_x509_cert_get_subject_dn(self.x509_cert, _ctype_str(key), index, b, bl))
 
 
 """
