@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-"""Python wrapper of the botan crypto library
+"""
+Python wrapper of the botan crypto library
 http://botan.randombit.net
 
 (C) 2015,2017 Jack Lloyd
@@ -21,9 +22,9 @@ from binascii import hexlify, unhexlify, b2a_base64
 from datetime import datetime
 import time
 
-"""
-Module initialization
-"""
+#
+# Module initialization
+#
 if sys.platform == 'darwin':
     botan = CDLL('libbotan-2.dylib')
 else:
@@ -32,7 +33,9 @@ else:
 if botan.botan_ffi_supports_api(20151015) == False:
     raise Exception("The Botan library does not support the FFI API expected by this version of the Python module")
 
+#
 # Internal utilities
+#
 def _call_fn_returning_vec(guess, fn):
 
     buf = create_string_buffer(guess)
@@ -86,9 +89,9 @@ def hex_encode(buf):
 def hex_decode(buf):
     return unhexlify(buf.encode('ascii'))
 
-"""
-Versions
-"""
+#
+# Versions
+#
 def version_major():
     return botan.botan_version_major()
 
@@ -102,9 +105,9 @@ def version_string():
     botan.botan_version_string.restype = c_char_p
     return botan.botan_version_string().decode('ascii')
 
-"""
-RNG
-"""
+#
+# RNG
+#
 class rng(object):
     # Can also use type "system"
     def __init__(self, rng_type='system'):
@@ -132,9 +135,9 @@ class rng(object):
         else:
             return None
 
-"""
-Hash function
-"""
+#
+# Hash function
+#
 class hash_function(object):
     def __init__(self, algo):
         botan.botan_hash_init.argtypes = [c_void_p, c_char_p, c_uint32]
@@ -170,9 +173,9 @@ class hash_function(object):
         botan.botan_hash_final(self.hash, out)
         return _ctype_bufout(out)
 
-"""
-Message authentication codes
-"""
+#
+# Message authentication codes
+#
 class message_authentication_code(object):
     def __init__(self, algo):
         botan.botan_mac_init.argtypes = [c_void_p, c_char_p, c_uint32]
@@ -324,9 +327,9 @@ def check_bcrypt(passwd, bcrypt):
     rc = botan.botan_bcrypt_is_valid(_ctype_str(passwd), bcrypt)
     return rc == 0
 
-"""
-PBKDF
-"""
+#
+# PBKDF
+#
 def pbkdf(algo, password, out_len, iterations=10000, salt=rng().get(12)):
     botan.botan_pbkdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, c_char_p, c_void_p, c_size_t, c_size_t]
     out_buf = create_string_buffer(out_len)
@@ -343,9 +346,9 @@ def pbkdf_timed(algo, password, out_len, ms_to_run=300, salt=rng().get(12)):
         salt, len(salt), ms_to_run, byref(iterations))
     return (salt, iterations.value, out_buf.raw)
 
-"""
-KDF
-"""
+#
+# KDF
+#
 def kdf(algo, secret, out_len, salt, label):
     botan.botan_kdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t,
                                 POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
@@ -355,9 +358,9 @@ def kdf(algo, secret, out_len, salt, label):
                     salt, len(salt), label, len(label))
     return out_buf.raw[0:out_sz.value]
 
-"""
-Public and private keys
-"""
+#
+# Public and private keys
+#
 class public_key(object):
     def __init__(self, obj=c_void_p(0)):
         self.pubkey = obj
@@ -542,10 +545,11 @@ class pk_op_verify(object):
             return True
         return False
 
-"""
-MCEIES encryption
-Must be used with McEliece keys
-"""
+
+#
+# MCEIES encryption
+# Must be used with McEliece keys
+#
 def mceies_encrypt(mce, rng, aead, pt, ad):
     botan.botan_mceies_encrypt.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_char), c_size_t,
                                            POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)]
@@ -604,9 +608,10 @@ class pk_op_key_agreement(object):
                                       botan.botan_pk_op_key_agreement(self.op, b, bl,
                                                                       other, len(other),
                                                                       salt, len(salt)))
-"""
-X.509 certificates
-"""
+
+#
+# X.509 certificates
+#
 class x509_cert(object):
     def __init__(self, filename=None, buf=None):
         if filename is None and buf is None:
@@ -702,9 +707,9 @@ class x509_cert(object):
             0, lambda b, bl: botan.botan_x509_cert_get_subject_dn(self.x509_cert, _ctype_str(key), index, b, bl))
 
 
-"""
-Tests and examples
-"""
+#
+# Tests and examples
+#
 def test():
 
     def test_version():
