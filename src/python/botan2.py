@@ -814,7 +814,7 @@ def test():
 
         mce_decrypt = mceies_decrypt(mce_priv, 'ChaCha20Poly1305', mce_ciphertext, mce_ad)
         print("  mceies plaintext  \'%s\' (%d)" % (mce_plaintext, len(mce_plaintext)))
-        
+
         # Since mceies_decrypt() returns bytes in Python3, the following line
         # needs .decode('utf-8') to convert mce_decrypt from bytes to a
         # text string (Unicode).
