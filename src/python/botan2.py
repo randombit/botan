@@ -30,7 +30,7 @@ if sys.platform == 'darwin':
 else:
     botan = CDLL('libbotan-2.so') # pylint: disable=invalid-name
 
-if botan.botan_ffi_supports_api(20151015) == False:
+if botan.botan_ffi_supports_api(20151015) is False:
     raise Exception("The Botan library does not support the FFI API expected by this version of the Python module")
 
 #
@@ -59,16 +59,18 @@ def _call_fn_returning_string(guess, fn):
     return v.decode('ascii')[:-1]
 
 def _ctype_str(s):
-    assert type(s) == type("")
+    assert isinstance(s, str)
     if sys.version_info[0] < 3:
         return s
     else:
         return s.encode('utf-8')
 
 def _ctype_bits(s):
-    # TODO typecheck for bytes in python3?
     if sys.version_info[0] < 3:
-        return s
+        if isinstance(s, str):
+            return s
+        else:
+            assert False
     else:
         if isinstance(s, bytes):
             return s
@@ -323,8 +325,8 @@ def bcrypt(passwd, rng, work_factor=10):
         b = b[:-1]
     return b
 
-def check_bcrypt(passwd, bcrypt):
-    rc = botan.botan_bcrypt_is_valid(_ctype_str(passwd), bcrypt)
+def check_bcrypt(passwd, passwd_hash):
+    rc = botan.botan_bcrypt_is_valid(_ctype_str(passwd), passwd_hash)
     return rc == 0
 
 #
@@ -581,12 +583,12 @@ def mceies_decrypt(mce, aead, pt, ad):
                                                              b, bl))
 
 class pk_op_key_agreement(object): # pylint: disable=invalid-name
-    def __init__(self, key, kdf):
+    def __init__(self, key, kdf_name):
         botan.botan_pk_op_key_agreement_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         botan.botan_pk_op_key_agreement_export_public.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
         self.op = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
-        botan.botan_pk_op_key_agreement_create(byref(self.op), key.privkey, kdf, flags)
+        botan.botan_pk_op_key_agreement_create(byref(self.op), key.privkey, kdf_name, flags)
         if not self.op:
             raise Exception("No key agreement for you")
 
