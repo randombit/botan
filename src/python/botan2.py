@@ -384,15 +384,15 @@ class public_key(object): # pylint: disable=invalid-name
         flag = 1 if pem else 0
         return _call_fn_returning_vec(0, lambda b, bl: botan.botan_pubkey_export(self.pubkey, b, bl, flag))
 
-    def fingerprint(self, hash='SHA-256'):
+    def fingerprint(self, hash_algorithm='SHA-256'):
         botan.botan_pubkey_fingerprint.argtypes = [c_void_p, c_char_p,
                                                    POINTER(c_char), POINTER(c_size_t)]
 
-        n = hash_function(hash).output_length()
+        n = hash_function(hash_algorithm).output_length()
         buf = create_string_buffer(n)
         buf_len = c_size_t(n)
 
-        botan.botan_pubkey_fingerprint(self.pubkey, _ctype_str(hash), buf, byref(buf_len))
+        botan.botan_pubkey_fingerprint(self.pubkey, _ctype_str(hash_algorithm), buf, byref(buf_len))
         return hex_encode(buf[0:buf_len.value])
 
 class private_key(object): # pylint: disable=invalid-name
