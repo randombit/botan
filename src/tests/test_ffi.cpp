@@ -106,6 +106,11 @@ class FFI_Unit_Tests : public Test
             result.test_eq("hash name", std::string(namebuf), "SHA-256");
             }
             */
+            size_t block_size;
+            if (TEST_FFI_OK(botan_hash_block_size, (hash, &block_size)))
+               {
+                  result.test_eq("hash block size", block_size, 64);
+               }
 
             size_t output_len;
             if(TEST_FFI_OK(botan_hash_output_length, (hash, &output_len)))
