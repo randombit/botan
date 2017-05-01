@@ -7,8 +7,8 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_CRYPTO_BOX)
-  #include <botan/cryptobox.h>
-  #include <botan/hex.h>
+   #include <botan/cryptobox.h>
+   #include <botan/hex.h>
 #endif
 
 namespace Botan_Tests {
@@ -29,8 +29,8 @@ class Cryptobox_Tests : public Test
          const std::string password = "secret";
 
          std::string ciphertext = Botan::CryptoBox::encrypt(msg.data(), msg.size(),
-                                                            password,
-                                                            Test::rng());
+                                  password,
+                                  Test::rng());
 
          try
             {

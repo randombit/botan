@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_TPM)
-  #include <botan/tpm.h>
+   #include <botan/tpm.h>
 #endif
 
 namespace Botan_Tests {
@@ -18,7 +18,7 @@ class TPM_Tests : public Test
    {
    public:
 
-      static std::string pin_cb(const std::string& )
+      static std::string pin_cb(const std::string&)
          {
          return "123456";
          }
@@ -55,12 +55,14 @@ class TPM_Tests : public Test
             std::vector<uint8_t> blob = key.export_blob();
 
             // Has to be at least as large as the key
-            result.test_gte("Blob size is reasonable", blob.size(), 1024/8);
+            result.test_gte("Blob size is reasonable", blob.size(), 1024 / 8);
 
             std::vector<std::string> registered_keys = Botan::TPM_PrivateKey::registered_keys(*ctx);
 
             for(auto url : registered_keys)
+               {
                result.test_note("TPM registered key " + url);
+               }
 
             // TODO export public key
             // TODO generate a signature, verify it

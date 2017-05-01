@@ -68,9 +68,7 @@ class Factor final : public Command
          std::sort(factors.begin(), factors.end());
 
          output() << n << ": ";
-         std::copy(factors.begin(),
-                   factors.end(),
-                   std::ostream_iterator<Botan::BigInt>(output(), " "));
+         std::copy(factors.begin(), factors.end(), std::ostream_iterator<Botan::BigInt>(output(), " "));
          output() << std::endl;
          }
 
@@ -92,11 +90,15 @@ class Factor final : public Command
 
             Botan::BigInt a_factor = 0;
             while(a_factor == 0)
+               {
                a_factor = rho(n, rng);
+               }
 
             std::vector<Botan::BigInt> rho_factored = factorize(a_factor, rng);
             for(size_t j = 0; j != rho_factored.size(); j++)
+               {
                factors.push_back(rho_factored[j]);
+               }
 
             n /= a_factor;
             }
@@ -111,7 +113,7 @@ class Factor final : public Command
       */
       Botan::BigInt rho(const Botan::BigInt& n, Botan::RandomNumberGenerator& rng)
          {
-         Botan::BigInt x = Botan::BigInt::random_integer(rng, 0, n-1);
+         Botan::BigInt x = Botan::BigInt::random_integer(rng, 0, n - 1);
          Botan::BigInt y = x;
          Botan::BigInt d = 0;
 
@@ -123,18 +125,22 @@ class Factor final : public Command
             i++;
 
             if(i == 0) // overflow, bail out
+               {
                break;
+               }
 
             x = mod_n.multiply((x + 1), x);
 
             d = Botan::gcd(y - x, n);
             if(d != 1 && d != n)
+               {
                return d;
+               }
 
             if(i == k)
                {
                y = x;
-               k = 2*k;
+               k = 2 * k;
                }
             }
          return 0;
@@ -155,7 +161,9 @@ class Factor final : public Command
             {
             uint16_t prime = Botan::PRIMES[j];
             if(n < prime)
+               {
                break;
+               }
 
             Botan::BigInt x = Botan::gcd(n, prime);
 

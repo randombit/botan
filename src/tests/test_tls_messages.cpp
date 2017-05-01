@@ -7,48 +7,47 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_TLS)
-  #include <exception>
-  #include <botan/hex.h>
-  #include <botan/mac.h>
-  #include <botan/tls_ciphersuite.h>
-  #include <botan/tls_handshake_msg.h>
-  #include <botan/tls_messages.h>
-  #include <botan/tls_alert.h>
+   #include <exception>
+   #include <botan/hex.h>
+   #include <botan/mac.h>
+   #include <botan/tls_ciphersuite.h>
+   #include <botan/tls_handshake_msg.h>
+   #include <botan/tls_messages.h>
+   #include <botan/tls_alert.h>
 #endif
 
 namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_TLS)    
+#if defined(BOTAN_HAS_TLS)
 Test::Result test_hello_verify_request()
    {
    Test::Result result("hello_verify_request construction");
-   
+
    std::vector<uint8_t> test_data;
    std::vector<uint8_t> key_data(32);
    Botan::SymmetricKey sk(key_data);
-   
+
    // Compute cookie over an empty string with an empty test data
    Botan::TLS::Hello_Verify_Request hfr(test_data, "", sk);
-   
+
    // Compute HMAC
    std::unique_ptr<Botan::MessageAuthenticationCode> hmac(Botan::MessageAuthenticationCode::create("HMAC(SHA-256)"));
    hmac->set_key(sk);
    hmac->update_be(size_t(0));
    hmac->update_be(size_t(0));
    std::vector<uint8_t> test = unlock(hmac->final());
-   
+
    result.test_eq("Cookie comparison", hfr.cookie(), test);
    return result;
    }
-    
+
 class TLS_Message_Parsing_Test : public Text_Based_Test
    {
    public:
-      TLS_Message_Parsing_Test() :
-         Text_Based_Test("tls", "Buffer,Protocol,Ciphersuite,AdditionalData,Name,Exception")
-         {}
+      TLS_Message_Parsing_Test()
+         : Text_Based_Test("tls", "Buffer,Protocol,Ciphersuite,AdditionalData,Name,Exception") {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override
          {
@@ -58,9 +57,9 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
          const std::string exception            = get_req_str(vars, "Exception");
          const std::string expected_name        = get_opt_str(vars, "Name", "");
          const bool is_positive_test            = exception.empty();
-         
+
          Test::Result result(algo + " parsing");
-         
+
          if(is_positive_test)
             {
             try
@@ -118,8 +117,8 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
                   {
                   Botan::secure_vector<uint8_t> sb(buffer.begin(), buffer.end());
                   Botan::TLS::Alert message(sb);
-                  result.test_lt("Alert type vectors result to UNKNOWN_CA or ACCESS_DENIED, which is shorter than 15", 
-                          message.type_string().size(), 15);
+                  result.test_lt("Alert type vectors result to UNKNOWN_CA or ACCESS_DENIED, which is shorter than 15",
+                                 message.type_string().size(), 15);
                   }
                else if(algo == "cert_status")
                   {
@@ -141,7 +140,7 @@ class TLS_Message_Parsing_Test : public Text_Based_Test
                   {
                   throw Test_Error("Unknown message type " + algo + " in TLS parsing tests");
                   }
-               result.test_success("Correct parsing"); 
+               result.test_success("Correct parsing");
                }
             catch(std::exception& e)
                {

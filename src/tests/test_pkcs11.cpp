@@ -7,7 +7,7 @@
 #include "test_pkcs11.h"
 
 namespace Botan_Tests {
-	
+
 #if defined(BOTAN_HAS_PKCS11)
 
 using namespace Botan;

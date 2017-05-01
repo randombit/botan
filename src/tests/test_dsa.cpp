@@ -7,8 +7,8 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_DSA)
-  #include <botan/dsa.h>
-  #include "test_pubkey.h"
+   #include <botan/dsa.h>
+   #include "test_pubkey.h"
 #endif
 
 namespace Botan_Tests {
@@ -21,18 +21,20 @@ class DSA_KAT_Tests : public PK_Signature_Generation_Test
    {
    public:
       DSA_KAT_Tests() : PK_Signature_Generation_Test(
-         "DSA",
+            "DSA",
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-         "pubkey/dsa_rfc6979.vec",
-         "P,Q,G,X,Hash,Msg,Signature",
+            "pubkey/dsa_rfc6979.vec",
+            "P,Q,G,X,Hash,Msg,Signature",
 #else
-         "pubkey/dsa_prob.vec",
-         "P,Q,G,X,Hash,Msg,Nonce,Signature",
+            "pubkey/dsa_prob.vec",
+            "P,Q,G,X,Hash,Msg,Nonce,Signature",
 #endif
-         "")
-         {}
+            "") {}
 
-      bool clear_between_callbacks() const override { return false; }
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
@@ -56,8 +58,14 @@ class DSA_KAT_Tests : public PK_Signature_Generation_Test
 class DSA_Keygen_Tests : public PK_Key_Generation_Test
    {
    public:
-      std::vector<std::string> keygen_params() const override { return { "dsa/jce/1024", "dsa/botan/2048" }; }
-      std::string algo_name() const override { return "DSA"; }
+      std::vector<std::string> keygen_params() const override
+         {
+         return { "dsa/jce/1024", "dsa/botan/2048" };
+         }
+      std::string algo_name() const override
+         {
+         return "DSA";
+         }
    };
 
 BOTAN_REGISTER_TEST("dsa_sign", DSA_KAT_Tests);

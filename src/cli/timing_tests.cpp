@@ -23,27 +23,27 @@
 #include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
+   #include <botan/system_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_AUTO_SEEDED_RNG)
-  #include <botan/auto_rng.h>
+   #include <botan/auto_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_RAW)
-  #include <botan/pubkey.h>
-  #include <botan/rsa.h>
+   #include <botan/pubkey.h>
+   #include <botan/rsa.h>
 #endif
 
 #if defined(BOTAN_HAS_TLS_CBC)
-  #include <botan/internal/tls_cbc.h>
-  #include <botan/tls_exceptn.h>
+   #include <botan/internal/tls_cbc.h>
+   #include <botan/tls_exceptn.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ecdsa.h>
-  #include <botan/reducer.h>
-  #include <botan/numthry.h>
+   #include <botan/ecdsa.h>
+   #include <botan/reducer.h>
+   #include <botan/numthry.h>
 #endif
 
 namespace Botan_CLI {
@@ -56,10 +56,10 @@ class Timing_Test
       Timing_Test() = default;
       virtual ~Timing_Test() = default;
 
-      std::vector<std::vector<ticks>>
-      execute_evaluation(const std::vector<std::string>& inputs,
-                         size_t warmup_runs,
-                         size_t measurement_runs);
+      std::vector<std::vector<ticks>> execute_evaluation(
+                                      const std::vector<std::string>& inputs,
+                                      size_t warmup_runs,
+                                      size_t measurement_runs);
 
       virtual std::vector<uint8_t> prepare_input(std::string input) = 0;
 
@@ -92,13 +92,11 @@ class Timing_Test
 class Bleichenbacker_Timing_Test : public Timing_Test
    {
    public:
-      Bleichenbacker_Timing_Test(size_t keysize) :
-         m_privkey(Timing_Test::timing_test_rng(), keysize),
-         m_pubkey(m_privkey),
-         m_enc(m_pubkey, Timing_Test::timing_test_rng(), "Raw"),
-         m_dec(m_privkey, Timing_Test::timing_test_rng(), "PKCS1v15")
-         {
-         }
+      Bleichenbacker_Timing_Test(size_t keysize)
+         : m_privkey(Timing_Test::timing_test_rng(), keysize)
+         , m_pubkey(m_privkey)
+         , m_enc(m_pubkey, Timing_Test::timing_test_rng(), "Raw")
+         , m_dec(m_privkey, Timing_Test::timing_test_rng(), "PKCS1v15") {}
 
       std::vector<uint8_t> prepare_input(std::string input) override
          {
@@ -138,12 +136,11 @@ class Bleichenbacker_Timing_Test : public Timing_Test
 class Manger_Timing_Test : public Timing_Test
    {
    public:
-      Manger_Timing_Test(size_t keysize) :
-         m_privkey(Timing_Test::timing_test_rng(), keysize),
-         m_pubkey(m_privkey),
-         m_enc(m_pubkey, Timing_Test::timing_test_rng(), m_encrypt_padding),
-         m_dec(m_privkey, Timing_Test::timing_test_rng(), m_decrypt_padding)
-         {}
+      Manger_Timing_Test(size_t keysize)
+         : m_privkey(Timing_Test::timing_test_rng(), keysize)
+         , m_pubkey(m_privkey)
+         , m_enc(m_pubkey, Timing_Test::timing_test_rng(), m_encrypt_padding)
+         , m_dec(m_privkey, Timing_Test::timing_test_rng(), m_decrypt_padding) {}
 
       std::vector<uint8_t> prepare_input(std::string input) override
          {
@@ -159,7 +156,7 @@ class Manger_Timing_Test : public Timing_Test
             {
             m_dec.decrypt(input.data(), m_ctext_length);
             }
-         catch (Botan::Decoding_Error e)
+         catch(Botan::Decoding_Error e)
             {
             }
          ticks end = get_ticks();
@@ -187,12 +184,10 @@ class Manger_Timing_Test : public Timing_Test
 class Lucky13_Timing_Test : public Timing_Test
    {
    public:
-      Lucky13_Timing_Test(const std::string& mac_name,
-                  size_t mac_keylen) :
-         m_mac_algo(mac_name),
-         m_mac_keylen (mac_keylen),
-         m_dec("AES-128", 16, m_mac_algo, m_mac_keylen, true, false)
-         {}
+      Lucky13_Timing_Test(const std::string& mac_name, size_t mac_keylen)
+         : m_mac_algo(mac_name)
+         , m_mac_keylen(mac_keylen)
+         , m_dec("AES-128", 16, m_mac_algo, m_mac_keylen, true, false) {}
 
       std::vector<uint8_t> prepare_input(std::string input) override;
       ticks measure_critical_function(std::vector<uint8_t> input) override;
@@ -261,14 +256,12 @@ class ECDSA_Timing_Test : public Timing_Test
       const Botan::Modular_Reducer m_mod_order;
    };
 
-ECDSA_Timing_Test::ECDSA_Timing_Test(std::string ecgroup) :
-   m_privkey(Timing_Test::timing_test_rng(), Botan::EC_Group(ecgroup)),
-        m_order(m_privkey.domain().get_order()),
-        m_base_point(m_privkey.domain().get_base_point(), m_order),
-        m_x(m_privkey.private_value()),
-        m_mod_order(m_order)
-   {
-   }
+ECDSA_Timing_Test::ECDSA_Timing_Test(std::string ecgroup)
+   : m_privkey(Timing_Test::timing_test_rng(), Botan::EC_Group(ecgroup))
+   , m_order(m_privkey.domain().get_order())
+   , m_base_point(m_privkey.domain().get_base_point(), m_order)
+   , m_x(m_privkey.private_value())
+   , m_mod_order(m_order) {}
 
 std::vector<uint8_t> ECDSA_Timing_Test::prepare_input(std::string input)
    {
@@ -295,20 +288,28 @@ ticks ECDSA_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
 
 #endif
 
-std::vector<std::vector<ticks>> Timing_Test::execute_evaluation(const std::vector<std::string>& raw_inputs, size_t warmup_runs, size_t measurement_runs)
+std::vector<std::vector<ticks>> Timing_Test::execute_evaluation(
+                                const std::vector<std::string>& raw_inputs,
+                                size_t warmup_runs, size_t measurement_runs)
    {
    std::vector<std::vector<ticks>> all_results(raw_inputs.size());
    std::vector<std::vector<uint8_t>> inputs(raw_inputs.size());
 
-   for(size_t i = 0; i != all_results.size(); ++i)
-      all_results[i].reserve(measurement_runs);
+   for(auto& result : all_results)
+      {
+      result.reserve(measurement_runs);
+      }
 
    for(size_t i = 0; i != inputs.size(); ++i)
+      {
       inputs[i] = prepare_input(raw_inputs[i]);
+      }
 
    // arbitrary upper bounds of 1 and 10 million resp
    if(warmup_runs > 1000000 || measurement_runs > 100000000)
+      {
       throw CLI_Error("Requested execution counts too large, rejecting");
+      }
 
    size_t total_runs = 0;
    while(total_runs < (warmup_runs + measurement_runs))
@@ -325,7 +326,9 @@ std::vector<std::vector<ticks>> Timing_Test::execute_evaluation(const std::vecto
       if(total_runs >= warmup_runs)
          {
          for(size_t i = 0; i != results.size(); ++i)
+            {
             all_results[i].push_back(results[i]);
+            }
          }
       }
 
@@ -335,8 +338,9 @@ std::vector<std::vector<ticks>> Timing_Test::execute_evaluation(const std::vecto
 class Timing_Test_Command : public Command
    {
    public:
-      Timing_Test_Command() : Command("timing_test test_type --test-data-file= --test-data-dir=src/tests/data/timing --warmup-runs=1000 --measurement-runs=10000")
-         {}
+      Timing_Test_Command()
+         : Command("timing_test test_type --test-data-file= --test-data-dir=src/tests/data/timing "
+                   "--warmup-runs=1000 --measurement-runs=10000") {}
 
       virtual void go() override
          {
@@ -364,19 +368,20 @@ class Timing_Test_Command : public Command
             {
             std::ifstream infile(filename);
             if(infile.good() == false)
-               throw CLI_Error("Error reading test data from '" + filename + "'");
-            std::string line;
-            while (std::getline(infile, line))
                {
-               if (line.size() > 0 && line.at(0) != '#')
+               throw CLI_Error("Error reading test data from '" + filename + "'");
+               }
+            std::string line;
+            while(std::getline(infile, line))
+               {
+               if(line.size() > 0 && line.at(0) != '#')
                   {
                   lines.push_back(line);
                   }
                }
             }
 
-         std::vector<std::vector<ticks>> results =
-            test->execute_evaluation(lines, warmup_runs, measurement_runs);
+         std::vector<std::vector<ticks>> results = test->execute_evaluation(lines, warmup_runs, measurement_runs);
 
          size_t unique_id = 0;
          std::ostringstream oss;
@@ -406,7 +411,7 @@ class Timing_Test_Command : public Command
                  "lucky13sec4sha1 " +
                  "lucky13sec4sha256 " +
                  "lucky13sec4sha384 "
-            );
+                );
          }
    };
 

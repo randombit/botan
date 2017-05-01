@@ -7,10 +7,10 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_OCSP)
-  #include <botan/ocsp.h>
-  #include <botan/x509path.h>
-  #include <botan/certstor.h>
-  #include <botan/calendar.h>
+   #include <botan/ocsp.h>
+   #include <botan/x509path.h>
+   #include <botan/certstor.h>
+   #include <botan/calendar.h>
 #endif
 
 namespace Botan_Tests {
@@ -25,7 +25,9 @@ class OCSP_Tests : public Test
          const std::string fsname = Test::data_file(path);
          std::ifstream file(fsname.c_str(), std::ios::binary);
          if(!file.good())
+            {
             throw Test_Error("Error reading from " + fsname);
+            }
 
          std::vector<uint8_t> contents;
 
@@ -36,7 +38,9 @@ class OCSP_Tests : public Test
             size_t got = file.gcount();
 
             if(got == 0 && file.eof())
+               {
                break;
+               }
 
             contents.insert(contents.end(), buf.data(), buf.data() + got);
             }
@@ -59,11 +63,12 @@ class OCSP_Tests : public Test
          Test::Result result("OCSP response parsing");
 
          // Simple parsing tests
-         const std::vector<std::string> ocsp_input_paths = {
+         const std::vector<std::string> ocsp_input_paths =
+            {
             "ocsp/resp1.der",
             "ocsp/resp2.der",
             "ocsp/resp3.der"
-         };
+            };
 
          for(std::string ocsp_input_path : ocsp_input_paths)
             {
@@ -99,7 +104,8 @@ class OCSP_Tests : public Test
             }
 
 
-         const std::string expected_request = "ME4wTKADAgEAMEUwQzBBMAkGBSsOAwIaBQAEFPLgavmFih2NcJtJGSN6qbUaKH5kBBRK3QYWG7z2aLV29YG2u2IaulqBLwIIQkg+DF+RYMY=";
+         const std::string expected_request =
+            "ME4wTKADAgEAMEUwQzBBMAkGBSsOAwIaBQAEFPLgavmFih2NcJtJGSN6qbUaKH5kBBRK3QYWG7z2aLV29YG2u2IaulqBLwIIQkg+DF+RYMY=";
 
          const Botan::OCSP::Request req1(issuer, end_entity);
          result.test_eq("Encoded OCSP request",
@@ -130,13 +136,8 @@ class OCSP_Tests : public Test
          certstore.add_certificate(trust_root);
 
          // Some arbitrary time within the validity period of the test certs
-         const auto valid_time = Botan::calendar_point(2016,11,20,8,30,0).to_std_timepoint();
-
-         std::vector<std::set<Botan::Certificate_Status_Code>> ocsp_status = Botan::PKIX::check_ocsp(
-            cert_path,
-            { ocsp },
-            { &certstore },
-            valid_time);
+         const auto valid_time = Botan::calendar_point(2016, 11, 20, 8, 30, 0).to_std_timepoint();
+         const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, { ocsp }, { &certstore }, valid_time);
 
          if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1))
             {
@@ -164,12 +165,9 @@ class OCSP_Tests : public Test
          Botan::Certificate_Store_In_Memory certstore;
          certstore.add_certificate(trust_root);
 
-         std::vector<std::set<Botan::Certificate_Status_Code>> ocsp_status = Botan::PKIX::check_ocsp_online(
-            cert_path,
-            { &certstore },
-            std::chrono::system_clock::now(),
-            std::chrono::milliseconds(3000),
-            true);
+         typedef std::chrono::system_clock Clock;
+         const auto ocspTimeout =  std::chrono::milliseconds(3000);
+         auto ocsp_status = Botan::PKIX::check_ocsp_online(cert_path, { &certstore }, Clock::now(), ocspTimeout, true);
 
          if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 2))
             {
@@ -198,7 +196,9 @@ class OCSP_Tests : public Test
 
 #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
          if(Test::run_online_tests())
+            {
             results.push_back(test_online_request());
+            }
 #endif
 
          return results;

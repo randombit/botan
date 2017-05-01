@@ -26,91 +26,91 @@
 //#define INCLUDE_SIMD_PERF
 
 #if defined(BOTAN_HAS_SIMD_32) && defined(INCLUDE_SIMD_PERF)
-  #include <botan/internal/simd_32.h>
+   #include <botan/internal/simd_32.h>
 #endif
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-  #include <botan/auto_rng.h>
+   #include <botan/auto_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
+   #include <botan/system_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
-  #include <botan/hmac_drbg.h>
+   #include <botan/hmac_drbg.h>
 #endif
 
 #if defined(BOTAN_HAS_HMAC_RNG)
-  #include <botan/hmac_rng.h>
+   #include <botan/hmac_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_RDRAND_RNG)
-  #include <botan/rdrand_rng.h>
+   #include <botan/rdrand_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_FPE_FE1)
-  #include <botan/fpe_fe1.h>
+   #include <botan/fpe_fe1.h>
 #endif
 
 #if defined(BOTAN_HAS_COMPRESSION)
-  #include <botan/compression.h>
+   #include <botan/compression.h>
 #endif
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-  #include <botan/pkcs8.h>
-  #include <botan/pubkey.h>
-  #include <botan/x509_key.h>
-  #include <botan/workfactor.h>
+   #include <botan/pkcs8.h>
+   #include <botan/pubkey.h>
+   #include <botan/x509_key.h>
+   #include <botan/workfactor.h>
 #endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
-  #include <botan/numthry.h>
+   #include <botan/numthry.h>
 #endif
 
 #if defined(BOTAN_HAS_RSA)
-  #include <botan/rsa.h>
+   #include <botan/rsa.h>
 #endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
-  #include <botan/ec_group.h>
+   #include <botan/ec_group.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-  #include <botan/ecdsa.h>
+   #include <botan/ecdsa.h>
 #endif
 
 #if defined(BOTAN_HAS_ECKCDSA)
-  #include <botan/eckcdsa.h>
+   #include <botan/eckcdsa.h>
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)
-  #include <botan/ecgdsa.h>
+   #include <botan/ecgdsa.h>
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-  #include <botan/dh.h>
+   #include <botan/dh.h>
 #endif
 
 #if defined(BOTAN_HAS_CURVE_25519)
-  #include <botan/curve25519.h>
+   #include <botan/curve25519.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
-  #include <botan/ecdh.h>
+   #include <botan/ecdh.h>
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
-  #include <botan/mceliece.h>
+   #include <botan/mceliece.h>
 #endif
 
 #if defined(BOTAN_HAS_XMSS)
-  #include <botan/xmss.h>
+   #include <botan/xmss.h>
 #endif
 
 #if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
-  #include <botan/newhope.h>
-  #include <botan/chacha.h>
+   #include <botan/newhope.h>
+   #include <botan/chacha.h>
 #endif
 
 namespace Botan_CLI {
@@ -123,17 +123,16 @@ class Timer
       Timer(const std::string& name,
             uint64_t event_mult = 1,
             const std::string& doing = "",
-            const std::string& provider = "") :
-         m_name(name + (provider.empty() ? provider : " [" + provider + "]")),
-         m_doing(doing),
-         m_event_mult(event_mult)
-         {}
+            const std::string& provider = "")
+         : m_name(name + (provider.empty() ? provider : " [" + provider + "]"))
+         , m_doing(doing)
+         , m_event_mult(event_mult) {}
 
       Timer(const std::string& name,
             const std::string& provider,
             const std::string& doing,
-            uint64_t event_mult = 1) :
-         Timer(name, event_mult, doing, provider) {}
+            uint64_t event_mult = 1)
+         : Timer(name, event_mult, doing, provider) {}
 
       static uint64_t get_system_timestamp_ns()
          {
@@ -197,8 +196,15 @@ class Timer
       struct Timer_Scope
          {
          public:
-            explicit Timer_Scope(Timer& timer) : m_timer(timer) { m_timer.start(); }
-            ~Timer_Scope() { m_timer.stop(); }
+            explicit Timer_Scope(Timer& timer)
+               : m_timer(timer)
+               {
+               m_timer.start();
+               }
+            ~Timer_Scope()
+               {
+               m_timer.stop();
+               }
          private:
             Timer& m_timer;
          };
@@ -219,17 +225,41 @@ class Timer
             }
          }
 
-      uint64_t value() const { return m_time_used; }
-      double seconds() const { return milliseconds() / 1000.0; }
-      double milliseconds() const { return value() / 1000000.0; }
+      uint64_t value() const
+         {
+         return m_time_used;
+         }
+      double seconds() const
+         {
+         return milliseconds() / 1000.0;
+         }
+      double milliseconds() const
+         {
+         return value() / 1000000.0;
+         }
 
-      double ms_per_event() const { return milliseconds() / events(); }
+      double ms_per_event() const
+         {
+         return milliseconds() / events();
+         }
 
-      uint64_t cycles_consumed() const { return m_cpu_cycles_used; }
+      uint64_t cycles_consumed() const
+         {
+         return m_cpu_cycles_used;
+         }
 
-      uint64_t events() const { return m_event_count * m_event_mult; }
-      const std::string& get_name() const { return m_name; }
-      const std::string& doing() const { return m_doing; }
+      uint64_t events() const
+         {
+         return m_event_count * m_event_mult;
+         }
+      const std::string& get_name() const
+         {
+         return m_name;
+         }
+      const std::string& doing() const
+         {
+         return m_doing;
+         }
 
       static std::string result_string_bps(const Timer& t);
       static std::string result_string_ops(const Timer& t);
@@ -244,7 +274,7 @@ class Timer
 
 std::string Timer::result_string_bps(const Timer& timer)
    {
-   const size_t MiB = 1024*1024;
+   const size_t MiB = 1024 * 1024;
 
    const double MiB_total = static_cast<double>(timer.events()) / MiB;
    const double MiB_per_sec = MiB_total / timer.seconds();
@@ -253,10 +283,11 @@ std::string Timer::result_string_bps(const Timer& timer)
    oss << timer.get_name();
 
    if(!timer.doing().empty())
+      {
       oss << " " << timer.doing();
+      }
 
-   oss << " " << std::fixed << std::setprecision(3)
-       << MiB_per_sec << " MiB/sec";
+   oss << " " << std::fixed << std::setprecision(3) << MiB_per_sec << " MiB/sec";
 
    if(timer.cycles_consumed() != 0)
       {
@@ -309,7 +340,8 @@ std::vector<std::string> default_benchmark_list()
    points of the most interesting or widely used algorithms.
    */
 
-   return {
+   return
+      {
       /* Block ciphers */
       "AES-128",
       "AES-192",
@@ -382,7 +414,8 @@ std::vector<std::string> default_benchmark_list()
 class Speed final : public Command
    {
    public:
-      Speed() : Command("speed --msec=300 --provider= --buf-size=4096 *algos") {}
+      Speed()
+         : Command("speed --msec=300 --provider= --buf-size=4096 *algos") {}
 
       void go() override
          {
@@ -393,7 +426,9 @@ class Speed final : public Command
          std::vector<std::string> algos = get_arg_list("algos");
          const bool using_defaults = (algos.empty());
          if(using_defaults)
+            {
             algos = default_benchmark_list();
+            }
 
          for(auto algo : algos)
             {
@@ -592,7 +627,7 @@ class Speed final : public Command
                               size_t buf_size,
                               bench_fn<T> bench_one)
          {
-         for(auto&& prov : T::providers(algo))
+         for(auto const& prov : T::providers(algo))
             {
             if(provider.empty() || provider == prov)
                {
@@ -618,19 +653,20 @@ class Speed final : public Command
          Timer ks_timer(cipher.name(), provider, "key schedule");
 
          const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
-         ks_timer.run([&] { cipher.set_key(key); });
+         ks_timer.run([&]() { cipher.set_key(key); });
 
-         encrypt_timer.run_until_elapsed(runtime, [&] { cipher.encrypt(buffer); });
+         encrypt_timer.run_until_elapsed(runtime, [&]() { cipher.encrypt(buffer); });
          output() << Timer::result_string_bps(encrypt_timer);
 
-         decrypt_timer.run_until_elapsed(runtime, [&] { cipher.decrypt(buffer); });
+         decrypt_timer.run_until_elapsed(runtime, [&]() { cipher.decrypt(buffer); });
          output() << Timer::result_string_bps(decrypt_timer);
          }
 
-      void bench_stream_cipher(Botan::StreamCipher& cipher,
-                               const std::string& provider,
-                               const std::chrono::milliseconds runtime,
-                               size_t buf_size)
+      void bench_stream_cipher(
+         Botan::StreamCipher& cipher,
+         const std::string& provider,
+         const std::chrono::milliseconds runtime,
+         size_t buf_size)
          {
          Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
@@ -647,28 +683,30 @@ class Speed final : public Command
 
          while(encrypt_timer.under(runtime))
             {
-            encrypt_timer.run([&] { cipher.encipher(buffer); });
+            encrypt_timer.run([&]() { cipher.encipher(buffer); });
             }
 
          output() << Timer::result_string_bps(encrypt_timer);
          }
 
-      void bench_hash(Botan::HashFunction& hash,
-                      const std::string& provider,
-                      const std::chrono::milliseconds runtime,
-                      size_t buf_size)
+      void bench_hash(
+         Botan::HashFunction& hash,
+         const std::string& provider,
+         const std::chrono::milliseconds runtime,
+         size_t buf_size)
          {
          Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
          Timer timer(hash.name(), provider, "hash", buffer.size());
-         timer.run_until_elapsed(runtime, [&] { hash.update(buffer); });
+         timer.run_until_elapsed(runtime, [&]() { hash.update(buffer); });
          output() << Timer::result_string_bps(timer);
          }
 
-      void bench_mac(Botan::MessageAuthenticationCode& mac,
-                     const std::string& provider,
-                     const std::chrono::milliseconds runtime,
-                     size_t buf_size)
+      void bench_mac(
+         Botan::MessageAuthenticationCode& mac,
+         const std::string& provider,
+         const std::chrono::milliseconds runtime,
+         size_t buf_size)
          {
          Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
@@ -676,14 +714,15 @@ class Speed final : public Command
          mac.set_key(key);
 
          Timer timer(mac.name(), provider, "mac", buffer.size());
-         timer.run_until_elapsed(runtime, [&] { mac.update(buffer); });
+         timer.run_until_elapsed(runtime, [&]() { mac.update(buffer); });
          output() << Timer::result_string_bps(timer);
          }
 
-      void bench_cipher_mode(Botan::Cipher_Mode& enc,
-                             Botan::Cipher_Mode& dec,
-                             const std::chrono::milliseconds runtime,
-                             size_t buf_size)
+      void bench_cipher_mode(
+         Botan::Cipher_Mode& enc,
+         Botan::Cipher_Mode& dec,
+         const std::chrono::milliseconds runtime,
+         size_t buf_size)
          {
          Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
@@ -694,22 +733,24 @@ class Speed final : public Command
 
          const Botan::SymmetricKey key(rng(), enc.key_spec().maximum_keylength());
 
-         ks_timer.run([&] { enc.set_key(key); });
-         ks_timer.run([&] { dec.set_key(key); });
+         ks_timer.run([&]() { enc.set_key(key); });
+         ks_timer.run([&]() { dec.set_key(key); });
 
          Botan::secure_vector<uint8_t> iv = rng().random_vec(enc.default_nonce_length());
 
          while(encrypt_timer.under(runtime) && decrypt_timer.under(runtime))
             {
             // Must run in this order, or AEADs will reject the ciphertext
-            iv_timer.run([&] { enc.start(iv); });
-            encrypt_timer.run([&] { enc.finish(buffer); });
+            iv_timer.run([&]() { enc.start(iv); });
+            encrypt_timer.run([&]() { enc.finish(buffer); });
 
-            iv_timer.run([&] { dec.start(iv); });
-            decrypt_timer.run([&] { dec.finish(buffer); });
+            iv_timer.run([&]() { dec.start(iv); });
+            decrypt_timer.run([&]() { dec.finish(buffer); });
 
             if(iv.size() > 0)
+               {
                iv[0] += 1;
+               }
             }
 
          output() << Timer::result_string_ops(ks_timer);
@@ -718,10 +759,11 @@ class Speed final : public Command
          output() << Timer::result_string_bps(decrypt_timer);
          }
 
-      void bench_rng(Botan::RandomNumberGenerator& rng,
-                     const std::string& rng_name,
-                     const std::chrono::milliseconds runtime,
-                     size_t buf_size)
+      void bench_rng(
+         Botan::RandomNumberGenerator& rng,
+         const std::string& rng_name,
+         const std::chrono::milliseconds runtime,
+         size_t buf_size)
          {
          Botan::secure_vector<uint8_t> buffer(buf_size);
 
@@ -730,7 +772,7 @@ class Speed final : public Command
 #endif
 
          Timer timer(rng_name, "", "generate", buffer.size());
-         timer.run_until_elapsed(runtime, [&] { rng.randomize(buffer.data(), buffer.size()); });
+         timer.run_until_elapsed(runtime, [&]() { rng.randomize(buffer.data(), buffer.size()); });
          output() << Timer::result_string_bps(timer);
          }
 
@@ -750,7 +792,7 @@ class Speed final : public Command
          Timer sub_op("SIMD_4x32", SIMD_par, "sub");
          Timer xor_op("SIMD_4x32", SIMD_par, "xor");
          Timer bswap_op("SIMD_4x32", SIMD_par, "bswap");
-         Timer transpose_op("SIMD_4x32", SIMD_par/4, "transpose4");
+         Timer transpose_op("SIMD_4x32", SIMD_par / 4, "transpose4");
 
          std::chrono::milliseconds msec_part = msec / 5;
 
@@ -761,7 +803,8 @@ class Speed final : public Command
             {
             total_time.start();
 
-            load_le_op.run([&] {
+            load_le_op.run([&]()
+               {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
                   // Test that unaligned loads work ok
@@ -769,42 +812,48 @@ class Speed final : public Command
                   }
                });
 
-            load_be_op.run([&] {
+            load_be_op.run([&]()
+               {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
                   simd[i].load_be(rnd + i);
                   }
                });
 
-            add_op.run([&] {
+            add_op.run([&]()
+               {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
-                  simd[i] += simd[(i+8) % SIMD_par];
+                  simd[i] += simd[(i + 8) % SIMD_par];
                   }
                });
 
-            xor_op.run([&] {
+            xor_op.run([&]()
+               {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
-                  simd[i] ^= simd[(i+8) % SIMD_par];
+                  simd[i] ^= simd[(i + 8) % SIMD_par];
                   }
                });
 
-            transpose_op.run([&] {
+            transpose_op.run([&]()
+               {
                for(size_t i = 0; i != SIMD_par; i += 4)
                   {
-                  Botan::SIMD_4x32::transpose(simd[i], simd[i+1], simd[i+2], simd[i+3]);
+                  Botan::SIMD_4x32::transpose(simd[i], simd[i + 1], simd[i + 2], simd[i + 3]);
                   }
                });
 
-            sub_op.run([&] {
+            sub_op.run([&]()
+               {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
-                  simd[i] -= simd[(i+8) % SIMD_par];
+                  simd[i] -= simd[(i + 8) % SIMD_par];
                   }
                });
 
-            bswap_op.run([&] {
+            bswap_op.run([&]()
+               {
                for(size_t i = 0; i != SIMD_par; ++i)
                   {
                   simd[i] = simd[i].bswap();
@@ -834,7 +883,7 @@ class Speed final : public Command
             Botan_Tests::SeedCapturing_RNG rng;
 
             Timer timer(src, "", "bytes");
-            timer.run([&] { entropy_bits = srcs.poll_just(rng, src); });
+            timer.run([&]() { entropy_bits = srcs.poll_just(rng, src); });
 
 #if defined(BOTAN_HAS_COMPRESSION)
             std::unique_ptr<Botan::Compression_Algorithm> comp(Botan::make_compressor("zlib"));
@@ -866,11 +915,12 @@ class Speed final : public Command
 #if defined(BOTAN_HAS_ECC_GROUP)
       void bench_ecc_mult(const std::chrono::milliseconds runtime)
          {
-         const std::vector<std::string> groups = {
+         const std::vector<std::string> groups =
+            {
             "secp256r1", "brainpool256r1",
             "secp384r1", "brainpool384r1",
             "secp521r1", "brainpool512r1"
-         };
+            };
 
          for(std::string group_name : groups)
             {
@@ -888,7 +938,7 @@ class Speed final : public Command
                const Botan::PointGFp r1 = mult_timer.run([&]() { return base_point * scalar; });
 
                const Botan::PointGFp r2 = blinded_mult_timer.run(
-                  [&]() { return scalar_mult.blinded_multiply(scalar, rng()); });
+               [&]() { return scalar_mult.blinded_multiply(scalar, rng()); });
 
                BOTAN_ASSERT_EQUAL(r1, r2, "Same point computed by both methods");
                }
@@ -913,8 +963,8 @@ class Speed final : public Command
             const Botan::secure_vector<uint8_t> os_cmp = Botan::EC2OSP(p, Botan::PointGFp::COMPRESSED);
             const Botan::secure_vector<uint8_t> os_uncmp = Botan::EC2OSP(p, Botan::PointGFp::UNCOMPRESSED);
 
-            uncmp_timer.run([&] { OS2ECP(os_uncmp, curve); });
-            cmp_timer.run([&] { OS2ECP(os_cmp, curve); });
+            uncmp_timer.run([&]() { OS2ECP(os_uncmp, curve); });
+            cmp_timer.run([&]() { OS2ECP(os_cmp, curve); });
             }
 
          output() << Timer::result_string_ops(uncmp_timer);
@@ -978,8 +1028,8 @@ class Speed final : public Command
 
             while(f_timer.under(runtime))
                {
-               e_timer.run([&] { Botan::power_mod(group.get_g(), random_e, group.get_p()); });
-               f_timer.run([&] { Botan::power_mod(group.get_g(), random_f, group.get_p()); });
+               e_timer.run([&]() { Botan::power_mod(group.get_g(), random_e, group.get_p()); });
+               f_timer.run([&]() { Botan::power_mod(group.get_g(), random_f, group.get_p()); });
                }
 
             output() << Timer::result_string_ops(e_timer);
@@ -1006,19 +1056,23 @@ class Speed final : public Command
             {
             const Botan::BigInt x(rng(), p.bits() - 1);
 
-            const Botan::BigInt x_inv1 = invmod_timer.run([&]{
+            const Botan::BigInt x_inv1 = invmod_timer.run([&]
+               {
                return Botan::inverse_mod(x + p, p);
                });
 
-            const Botan::BigInt x_inv2 = monty_timer.run([&]{
+            const Botan::BigInt x_inv2 = monty_timer.run([&]
+               {
                return Botan::normalized_montgomery_inverse(x, p);
                });
 
-            const Botan::BigInt x_inv3 = ct_invmod_timer.run([&]{
+            const Botan::BigInt x_inv3 = ct_invmod_timer.run([&]
+               {
                return Botan::ct_inverse_mod_odd_modulus(x, p);
                });
 
-            const Botan::BigInt x_inv4 = powm_timer.run([&]{
+            const Botan::BigInt x_inv4 = powm_timer.run([&]
+               {
                return powm_p(x);
                });
 
@@ -1044,12 +1098,15 @@ class Speed final : public Command
 
             while(genprime_timer.under(runtime) && is_prime_timer.under(runtime))
                {
-               const Botan::BigInt p = genprime_timer.run([&] {
-                  return Botan::random_prime(rng(), bits, coprime); });
+               const Botan::BigInt p = genprime_timer.run([&]
+                  {
+                  return Botan::random_prime(rng(), bits, coprime);
+                  });
 
-               const bool ok = is_prime_timer.run([&] {
+               const bool ok = is_prime_timer.run([&]
+                  {
                   return Botan::is_prime(p, rng(), 64, true);
-               });
+                  });
 
                if(!ok)
                   {
@@ -1060,7 +1117,7 @@ class Speed final : public Command
                // Now test p+2, p+4, ... which may or may not be prime
                for(size_t i = 2; i != 64; i += 2)
                   {
-                  is_prime_timer.run([&] { Botan::is_prime(p, rng(), 64, true); });
+                  is_prime_timer.run([&]() { Botan::is_prime(p, rng(), 64, true); });
                   }
                }
 
@@ -1071,11 +1128,12 @@ class Speed final : public Command
 #endif
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-      void bench_pk_enc(const Botan::Private_Key& key,
-                        const std::string& nm,
-                        const std::string& provider,
-                        const std::string& padding,
-                        std::chrono::milliseconds msec)
+      void bench_pk_enc(
+         const Botan::Private_Key& key,
+         const std::string& nm,
+         const std::string& provider,
+         const std::string& padding,
+         std::chrono::milliseconds msec)
          {
          std::vector<uint8_t> plaintext, ciphertext;
 
@@ -1091,12 +1149,12 @@ class Speed final : public Command
             if(ciphertext.empty() || enc_timer.under(msec))
                {
                plaintext = unlock(rng().random_vec(enc.maximum_input_size()));
-               ciphertext = enc_timer.run([&] { return enc.encrypt(plaintext, rng()); });
+               ciphertext = enc_timer.run([&]() { return enc.encrypt(plaintext, rng()); });
                }
 
             if(dec_timer.under(msec))
                {
-               auto dec_pt = dec_timer.run([&] { return dec.decrypt(ciphertext); });
+               auto dec_pt = dec_timer.run([&]() { return dec.decrypt(ciphertext); });
 
                if(dec_pt != plaintext) // sanity check
                   {
@@ -1126,8 +1184,8 @@ class Speed final : public Command
 
          while(ka_timer.under(msec))
             {
-            Botan::SymmetricKey symkey1 = ka_timer.run([&] { return ka1.derive_key(32, ka2_pub); });
-            Botan::SymmetricKey symkey2 = ka_timer.run([&] { return ka2.derive_key(32, ka1_pub); });
+            Botan::SymmetricKey symkey1 = ka_timer.run([&]() { return ka1.derive_key(32, ka2_pub); });
+            Botan::SymmetricKey symkey2 = ka_timer.run([&]() { return ka2.derive_key(32, ka1_pub); });
 
             if(symkey1 != symkey1)
                {
@@ -1197,7 +1255,7 @@ class Speed final : public Command
                */
                message = unlock(rng().random_vec(48));
 
-               signature = sig_timer.run([&] { return sig.sign_message(message, rng()); });
+               signature = sig_timer.run([&]() { return sig.sign_message(message, rng()); });
 
                bad_signature = signature;
                bad_signature[rng().next_byte() % bad_signature.size()] ^= rng().next_nonzero_byte();
@@ -1205,16 +1263,20 @@ class Speed final : public Command
 
             if(ver_timer.under(msec))
                {
-               const bool verified = ver_timer.run([&] {
-                  return ver.verify_message(message, signature); });
+               const bool verified = ver_timer.run([&]
+                  {
+                  return ver.verify_message(message, signature);
+                  });
 
                if(!verified)
                   {
                   error_output() << "Correct signature rejected in PK signature bench\n";
                   }
 
-               const bool verified_bad = ver_timer.run([&] {
-                  return ver.verify_message(message, bad_signature); });
+               const bool verified_bad = ver_timer.run([&]
+                  {
+                  return ver.verify_message(message, bad_signature);
+                  });
 
                if(verified_bad)
                   {
@@ -1238,7 +1300,8 @@ class Speed final : public Command
 
             Timer keygen_timer(nm, provider, "keygen");
 
-            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
+               {
                return new Botan::RSA_PrivateKey(rng(), keylen);
                }));
 
@@ -1264,7 +1327,8 @@ class Speed final : public Command
 
             Timer keygen_timer(nm, provider, "keygen");
 
-            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
+               {
                return new Botan::ECDSA_PrivateKey(rng(), Botan::EC_Group(grp));
                }));
 
@@ -1276,7 +1340,7 @@ class Speed final : public Command
 
 #if defined(BOTAN_HAS_ECKCDSA)
       void bench_eckcdsa(const std::string& provider,
-                       std::chrono::milliseconds msec)
+                         std::chrono::milliseconds msec)
          {
          for(std::string grp : { "secp256r1", "secp384r1", "secp521r1" })
             {
@@ -1284,7 +1348,8 @@ class Speed final : public Command
 
             Timer keygen_timer(nm, provider, "keygen");
 
-            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
+               {
                return new Botan::ECKCDSA_PrivateKey(rng(), Botan::EC_Group(grp));
                }));
 
@@ -1296,7 +1361,7 @@ class Speed final : public Command
 
 #if defined(BOTAN_HAS_ECGDSA)
       void bench_ecgdsa(const std::string& provider,
-                       std::chrono::milliseconds msec)
+                        std::chrono::milliseconds msec)
          {
          for(std::string grp : { "secp256r1", "secp384r1", "secp521r1" })
             {
@@ -1304,7 +1369,8 @@ class Speed final : public Command
 
             Timer keygen_timer(nm, provider, "keygen");
 
-            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
+               {
                return new Botan::ECGDSA_PrivateKey(rng(), Botan::EC_Group(grp));
                }));
 
@@ -1325,10 +1391,12 @@ class Speed final : public Command
 
             Timer keygen_timer(nm, provider, "keygen");
 
-            std::unique_ptr<Botan::PK_Key_Agreement_Key> key1(keygen_timer.run([&] {
+            std::unique_ptr<Botan::PK_Key_Agreement_Key> key1(keygen_timer.run([&]
+               {
                return new Botan::DH_PrivateKey(rng(), Botan::DL_Group(grp));
                }));
-            std::unique_ptr<Botan::PK_Key_Agreement_Key> key2(keygen_timer.run([&] {
+            std::unique_ptr<Botan::PK_Key_Agreement_Key> key2(keygen_timer.run([&]
+               {
                return new Botan::DH_PrivateKey(rng(), Botan::DL_Group(grp));
                }));
 
@@ -1348,10 +1416,12 @@ class Speed final : public Command
 
             Timer keygen_timer(nm, provider, "keygen");
 
-            std::unique_ptr<Botan::PK_Key_Agreement_Key> key1(keygen_timer.run([&] {
+            std::unique_ptr<Botan::PK_Key_Agreement_Key> key1(keygen_timer.run([&]
+               {
                return new Botan::ECDH_PrivateKey(rng(), Botan::EC_Group(grp));
                }));
-            std::unique_ptr<Botan::PK_Key_Agreement_Key> key2(keygen_timer.run([&] {
+            std::unique_ptr<Botan::PK_Key_Agreement_Key> key2(keygen_timer.run([&]
+               {
                return new Botan::ECDH_PrivateKey(rng(), Botan::EC_Group(grp));
                }));
 
@@ -1369,10 +1439,12 @@ class Speed final : public Command
 
          Timer keygen_timer(nm, provider, "keygen");
 
-         std::unique_ptr<Botan::PK_Key_Agreement_Key> key1(keygen_timer.run([&] {
+         std::unique_ptr<Botan::PK_Key_Agreement_Key> key1(keygen_timer.run([&]
+            {
             return new Botan::Curve25519_PrivateKey(rng());
             }));
-         std::unique_ptr<Botan::PK_Key_Agreement_Key> key2(keygen_timer.run([&] {
+         std::unique_ptr<Botan::PK_Key_Agreement_Key> key2(keygen_timer.run([&]
+            {
             return new Botan::Curve25519_PrivateKey(rng());
             }));
 
@@ -1394,13 +1466,14 @@ class Speed final : public Command
          SL=256 n=6624 t=115 - 942 KB pubkey 2184 KB privkey
          */
 
-         const std::vector<std::pair<size_t, size_t>> mce_params = {
-            { 2480, 45 },
-            { 2960, 57 },
-            { 3408, 67 },
-            { 4624, 95 },
-            { 6624, 115 }
-         };
+         const std::vector<std::pair<size_t, size_t>> mce_params =
+            {
+               { 2480, 45 },
+               { 2960, 57 },
+               { 3408, 67 },
+               { 4624, 95 },
+               { 6624, 115 }
+            };
 
          for(auto params : mce_params)
             {
@@ -1413,12 +1486,13 @@ class Speed final : public Command
                }
 
             const std::string nm = "McEliece-" + std::to_string(n) + "," + std::to_string(t) +
-               " (WF=" + std::to_string(Botan::mceliece_work_factor(n, t)) + ")";
+                                   " (WF=" + std::to_string(Botan::mceliece_work_factor(n, t)) + ")";
 
             Timer keygen_timer(nm, provider, "keygen");
 
-            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
-                  return new Botan::McEliece_PrivateKey(rng(), n, t);
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
+               {
+               return new Botan::McEliece_PrivateKey(rng(), n, t);
                }));
 
             output() << Timer::result_string_ops(keygen_timer);
@@ -1428,24 +1502,26 @@ class Speed final : public Command
 #endif
 
 #if defined(BOTAN_HAS_XMSS)
-        void bench_xmss(const std::string& provider,
-                        std::chrono::milliseconds msec)
+      void bench_xmss(const std::string& provider,
+                      std::chrono::milliseconds msec)
          {
          // H16 and H20 signatures take an hour or more to generate
-         std::vector<std::string> xmss_params{
+         std::vector<std::string> xmss_params
+            {
             "XMSS_SHA2-256_W16_H10",
             "XMSS_SHA2-512_W16_H10",
             "XMSS_SHAKE128_W16_H10",
             "XMSS_SHAKE256_W16_H10",
-         };
+            };
 
          for(std::string params : xmss_params)
             {
             Timer keygen_timer(params, provider, "keygen");
 
-            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&] {
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
+               {
                return new Botan::XMSS_PrivateKey(Botan::XMSS_Parameters::xmss_id_from_string(params), rng());
-            }));
+               }));
 
             output() << Timer::result_string_ops(keygen_timer);
             bench_pk_sig(*key, params, provider, "", msec);
@@ -1467,8 +1543,14 @@ class Speed final : public Command
          class ChaCha20_RNG : public Botan::RandomNumberGenerator
             {
             public:
-               std::string name() const override { return "ChaCha20_RNG"; }
-               void clear() override { /* ignored */ }
+               std::string name() const override
+                  {
+                  return "ChaCha20_RNG";
+                  }
+               void clear() override
+                  {
+                  /* ignored */
+                  }
 
                void randomize(uint8_t out[], size_t len) override
                   {
@@ -1476,9 +1558,15 @@ class Speed final : public Command
                   m_chacha.cipher1(out, len);
                   }
 
-               bool is_seeded() const override { return true; }
+               bool is_seeded() const override
+                  {
+                  return true;
+                  }
 
-               void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
+               void add_entropy(const uint8_t[], size_t) override
+                  {
+                  /* ignored */
+                  }
 
                ChaCha20_RNG(const Botan::secure_vector<uint8_t>& seed)
                   {

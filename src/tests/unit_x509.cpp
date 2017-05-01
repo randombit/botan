@@ -9,17 +9,17 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
-#include <botan/calendar.h>
-#include <botan/pkcs8.h>
-#include <botan/hash.h>
-#include <botan/pkcs10.h>
-#include <botan/x509self.h>
-#include <botan/x509path.h>
-#include <botan/x509_ca.h>
-#include <botan/pk_algs.h>
-#include <botan/ber_dec.h>
-#include <botan/der_enc.h>
-#include <botan/oids.h>
+   #include <botan/calendar.h>
+   #include <botan/pkcs8.h>
+   #include <botan/hash.h>
+   #include <botan/pkcs10.h>
+   #include <botan/x509self.h>
+   #include <botan/x509path.h>
+   #include <botan/x509_ca.h>
+   #include <botan/pk_algs.h>
+   #include <botan/ber_dec.h>
+   #include <botan/der_enc.h>
+   #include <botan/oids.h>
 
 #endif
 
@@ -87,16 +87,23 @@ Botan::X509_Cert_Options req_opts2()
 
 std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo)
    {
-   const std::string params = [&]{
+   const std::string params = [&]
+      {
       // Here we override defaults as needed
       if(algo == "RSA")
-            return "1024";
+         {
+         return "1024";
+         }
       if(algo == "GOST-34.10")
-            return "gost_256A";
+         {
+         return "gost_256A";
+         }
       if(algo == "ECKCDSA" || algo == "ECGDSA")
-            return "brainpool256r1";
+         {
+         return "brainpool256r1";
+         }
       return ""; // default "" means choose acceptable algo-specific params
-   }();
+      }();
 
    return Botan::create_private_key(algo, Test::rng(), params);
    }
@@ -112,7 +119,8 @@ Test::Result test_cert_status_strings()
                   Botan::to_string(Botan::Certificate_Status_Code::OK),
                   Botan::to_string(Botan::Certificate_Status_Code::VERIFIED));
 
-   const Botan::Certificate_Status_Code codes[]{
+   const Botan::Certificate_Status_Code codes[]
+      {
       Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD,
       Botan::Certificate_Status_Code::OCSP_SIGNATURE_OK,
       Botan::Certificate_Status_Code::VALID_CRL_CHECKED,
@@ -150,7 +158,7 @@ Test::Result test_cert_status_strings()
       Botan::Certificate_Status_Code::CRL_BAD_SIGNATURE,
       Botan::Certificate_Status_Code::SIGNATURE_ERROR,
       Botan::Certificate_Status_Code::CERT_PUBKEY_INVALID,
-   };
+      };
 
    for(const auto code : codes)
       {
@@ -179,16 +187,19 @@ Test::Result test_x509_dates()
    result.test_eq("UTC_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
 
    time = Botan::X509_Time("200305100350Z", Botan::ASN1_Tag::UTC_OR_GENERALIZED_TIME);
-   result.test_eq("UTC_OR_GENERALIZED_TIME from UTC_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
+   result.test_eq("UTC_OR_GENERALIZED_TIME from UTC_TIME readable_string", time.readable_string(),
+                  "2020/03/05 10:03:50 UTC");
 
    time = Botan::X509_Time("20200305100350Z", Botan::ASN1_Tag::UTC_OR_GENERALIZED_TIME);
-   result.test_eq("UTC_OR_GENERALIZED_TIME from GENERALIZED_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
+   result.test_eq("UTC_OR_GENERALIZED_TIME from GENERALIZED_TIME readable_string", time.readable_string(),
+                  "2020/03/05 10:03:50 UTC");
 
    time = Botan::X509_Time("20200305100350Z", Botan::ASN1_Tag::GENERALIZED_TIME);
    result.test_eq("GENERALIZED_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
 
    // Dates that are valid per X.500 but rejected as unsupported
-   const std::string valid_but_unsup[]{
+   const std::string valid_but_unsup[]
+      {
       "0802010000-0000",
       "0802011724+0000",
       "0406142334-0500",
@@ -202,18 +213,20 @@ Test::Result test_x509_dates()
       "990614233444+0500",
       "000614233455-0530",
       "000614233455+0530",
-   };
+      };
 
    // valid length 13
-   const std::string valid_utc[]{
+   const std::string valid_utc[]
+      {
       "080201000000Z",
       "080201172412Z",
       "040614233433Z",
       "990614233444Z",
       "000614233455Z",
-   };
+      };
 
-   const std::string invalid_utc[]{
+   const std::string invalid_utc[]
+      {
       "",
       " ",
       "2008`02-01",
@@ -282,14 +295,16 @@ Test::Result test_x509_dates()
 
       // Swapped type
       "20170217180154Z",
-   };
+      };
 
    // valid length 15
-   const std::string valid_generalized_time[]{
+   const std::string valid_generalized_time[]
+      {
       "20000305100350Z",
-   };
+      };
 
-   const std::string invalid_generalized[]{
+   const std::string invalid_generalized[]
+      {
       // No trailing Z
       "20000305100350",
 
@@ -313,7 +328,7 @@ Test::Result test_x509_dates()
 
       // Swapped type
       "170217180154Z",
-   };
+      };
 
    for(const auto& v : valid_but_unsup)
       {
@@ -335,7 +350,7 @@ Test::Result test_x509_dates()
       result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::UTC_TIME); });
       }
 
-   for (const auto& v : invalid_generalized)
+   for(const auto& v : invalid_generalized)
       {
       result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Tag::GENERALIZED_TIME); });
       }
@@ -358,14 +373,12 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
       }
 
    /* Create the self-signed cert */
-   const Botan::X509_Certificate ca_cert =
-      Botan::X509::create_self_signed_cert(ca_opts(),
-                                           *ca_key,
-                                           hash_fn,
-                                           Test::rng());
+   const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(), *ca_key, hash_fn, Test::rng());
 
-   result.test_eq("ca key usage", (ca_cert.constraints() & Botan::Key_Constraints(Botan::KEY_CERT_SIGN | Botan::CRL_SIGN)) ==
-         Botan::Key_Constraints(Botan::KEY_CERT_SIGN | Botan::CRL_SIGN), true);
+      {
+      const auto constraints = Botan::Key_Constraints(Botan::KEY_CERT_SIGN | Botan::CRL_SIGN);
+      result.test_eq("ca key usage", (ca_cert.constraints() & constraints) == constraints, true);
+      }
 
    /* Create user #1's key and cert request */
    std::unique_ptr<Botan::Private_Key> user1_key(make_a_private_key(sig_algo));
@@ -400,13 +413,12 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
                       from_date(2033, 01, 01));
 
    // user#1 creates a self-signed cert on the side
-   Botan::X509_Certificate user1_ss_cert =
-      Botan::X509::create_self_signed_cert(req_opts1(sig_algo),
-                                           *user1_key,
-                                           hash_fn,
-                                           Test::rng());
+   const auto user1_ss_cert = Botan::X509::create_self_signed_cert(req_opts1(sig_algo), *user1_key, hash_fn, Test::rng());
 
-   result.test_eq("user1 key usage", (user1_cert.constraints() & req_opts1(sig_algo).constraints) == req_opts1(sig_algo).constraints, true);
+      {
+      auto constrains = req_opts1(sig_algo).constraints;
+      result.test_eq("user1 key usage", (user1_cert.constraints() & constrains) == constrains, true);
+      }
 
    /* Copy, assign and compare */
    Botan::X509_Certificate user1_cert_copy(user1_cert);
@@ -523,11 +535,11 @@ Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn 
       }
 
    /* Create the self-signed cert */
-   const Botan::X509_Certificate ca_cert =
-        Botan::X509::create_self_signed_cert(ca_opts(),
-                                           *ca_key,
-                                           hash_fn,
-                                           Test::rng());
+   const Botan::X509_Certificate ca_cert = Botan::X509::create_self_signed_cert(
+         ca_opts(),
+         *ca_key,
+         hash_fn,
+         Test::rng());
 
    /* Create the CA object */
    const Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
@@ -537,55 +549,55 @@ Test::Result test_usage(const std::string& sig_algo, const std::string& hash_fn 
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
    opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
 
-   const Botan::PKCS10_Request user1_req =
-        Botan::X509::create_cert_req(opts,
-                                      *user1_key,
-                                      hash_fn,
-                                      Test::rng());
+   const Botan::PKCS10_Request user1_req = Botan::X509::create_cert_req(
+         opts,
+         *user1_key,
+         hash_fn,
+         Test::rng());
 
-   const Botan::X509_Certificate user1_cert =
-      ca.sign_request(user1_req, Test::rng(),
-                      from_date(2008, 01, 01),
-                      from_date(2033, 01, 01));
+   const Botan::X509_Certificate user1_cert = ca.sign_request(
+            user1_req,
+            Test::rng(),
+            from_date(2008, 01, 01),
+            from_date(2033, 01, 01));
 
    // cert only allows digitalSignature, but we check for both digitalSignature and cRLSign
-   result.test_eq("key usage cRLSign not allowed", user1_cert.allowed_usage(Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE |
-        Key_Constraints::CRL_SIGN)), false);
+   result.test_eq("key usage cRLSign not allowed",
+                  user1_cert.allowed_usage(
+                     Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN)), false);
 
    // cert only allows digitalSignature, so checking for only that should be ok
    result.confirm("key usage digitalSignature allowed", user1_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
 
    opts.constraints = Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN);
 
-   const Botan::PKCS10_Request mult_usage_req =
-        Botan::X509::create_cert_req(opts,
-                                        *user1_key,
-                                        hash_fn,
-                                        Test::rng());
+   const Botan::PKCS10_Request mult_usage_req = Botan::X509::create_cert_req(
+            opts,
+            *user1_key,
+            hash_fn,
+            Test::rng());
 
-   const Botan::X509_Certificate mult_usage_cert =
-         ca.sign_request(mult_usage_req, Test::rng(),
-                         from_date(2008, 01, 01),
-                         from_date(2033, 01, 01));
+   const Botan::X509_Certificate mult_usage_cert = ca.sign_request(
+            mult_usage_req,
+            Test::rng(),
+            from_date(2008, 01, 01),
+            from_date(2033, 01, 01));
 
    // cert allows multiple usages, so each one of them as well as both together should be allowed
-   result.confirm("key usage multiple digitalSignature allowed", mult_usage_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
+   result.confirm("key usage multiple digitalSignature allowed",
+                  mult_usage_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
    result.confirm("key usage multiple cRLSign allowed", mult_usage_cert.allowed_usage(Key_Constraints::CRL_SIGN));
    result.confirm("key usage multiple digitalSignature and cRLSign allowed", mult_usage_cert.allowed_usage(
-         Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN)));
+                     Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::CRL_SIGN)));
 
    opts.constraints = Key_Constraints::NO_CONSTRAINTS;
 
-   const Botan::PKCS10_Request no_usage_req =
-        Botan::X509::create_cert_req(opts,
-                                        *user1_key,
-                                        hash_fn,
-                                        Test::rng());
+   const Botan::PKCS10_Request no_usage_req = Botan::X509::create_cert_req(opts, *user1_key, hash_fn, Test::rng());
 
    const Botan::X509_Certificate no_usage_cert =
-         ca.sign_request(no_usage_req, Test::rng(),
-                         from_date(2008, 01, 01),
-                         from_date(2033, 01, 01));
+      ca.sign_request(no_usage_req, Test::rng(),
+                      from_date(2008, 01, 01),
+                      from_date(2033, 01, 01));
 
    // cert allows every usage
    result.confirm("key usage digitalSignature allowed", no_usage_cert.allowed_usage(Key_Constraints::DIGITAL_SIGNATURE));
@@ -611,11 +623,8 @@ Test::Result test_self_issued(const std::string& sig_algo, const std::string& ha
       }
 
    // create the self-signed cert
-   const Botan::X509_Certificate ca_cert =
-        Botan::X509::create_self_signed_cert(ca_opts(),
-                                           *ca_key,
-                                           hash_fn,
-                                           Test::rng());
+   const Botan::X509_Certificate ca_cert = Botan::X509::create_self_signed_cert(
+         ca_opts(), *ca_key, hash_fn, Test::rng());
 
    /* Create the CA object */
    const Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
@@ -627,26 +636,18 @@ Test::Result test_self_issued(const std::string& sig_algo, const std::string& ha
    Botan::X509_Cert_Options opts = ca_opts();
    opts.constraints = Key_Constraints::DIGITAL_SIGNATURE;
 
-   const Botan::PKCS10_Request self_issued_req =
-        Botan::X509::create_cert_req(opts,
-                                      *user_key,
-                                      hash_fn,
-                                      Test::rng());
+   const Botan::PKCS10_Request self_issued_req = Botan::X509::create_cert_req(opts, *user_key, hash_fn, Test::rng());
 
-   const Botan::X509_Certificate self_issued_cert =
-      ca.sign_request(self_issued_req, Test::rng(),
-                      from_date(2008, 01, 01),
-                      from_date(2033, 01, 01));
+   const Botan::X509_Certificate self_issued_cert = ca.sign_request(
+            self_issued_req, Test::rng(), from_date(2008, 01, 01), from_date(2033, 01, 01));
 
    // check that this chain can can be verified successfully
    const Botan::Certificate_Store_In_Memory trusted(ca.ca_certificate());
 
    const Botan::Path_Validation_Restrictions restrictions(false, 80);
 
-   const Botan::Path_Validation_Result validation_result =
-         Botan::x509_path_validate(self_issued_cert,
-                                   restrictions,
-                                   trusted);
+   const Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
+            self_issued_cert, restrictions, trusted);
 
    result.confirm("chain with self-issued cert validates", validation_result.successful_validation());
 
@@ -663,20 +664,35 @@ struct typical_usage_constraints
    {
    // ALL constraints are not typical at all, but we use them for a negative test
    Key_Constraints all = Key_Constraints(
-                           Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::NON_REPUDIATION | Key_Constraints::KEY_ENCIPHERMENT |
-                           Key_Constraints::DATA_ENCIPHERMENT | Key_Constraints::KEY_AGREEMENT | Key_Constraints::KEY_CERT_SIGN |
-                           Key_Constraints::CRL_SIGN | Key_Constraints::ENCIPHER_ONLY | Key_Constraints::DECIPHER_ONLY);
+                            Key_Constraints::DIGITAL_SIGNATURE |
+                            Key_Constraints::NON_REPUDIATION |
+                            Key_Constraints::KEY_ENCIPHERMENT |
+                            Key_Constraints::DATA_ENCIPHERMENT |
+                            Key_Constraints::KEY_AGREEMENT |
+                            Key_Constraints::KEY_CERT_SIGN |
+                            Key_Constraints::CRL_SIGN |
+                            Key_Constraints::ENCIPHER_ONLY |
+                            Key_Constraints::DECIPHER_ONLY);
 
    Key_Constraints ca = Key_Constraints(Key_Constraints::KEY_CERT_SIGN);
    Key_Constraints sign_data = Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE);
-   Key_Constraints non_repudiation = Key_Constraints(Key_Constraints::NON_REPUDIATION | Key_Constraints::DIGITAL_SIGNATURE);
+   Key_Constraints non_repudiation = Key_Constraints(
+                                        Key_Constraints::NON_REPUDIATION |
+                                        Key_Constraints::DIGITAL_SIGNATURE);
    Key_Constraints key_encipherment = Key_Constraints(Key_Constraints::KEY_ENCIPHERMENT);
    Key_Constraints data_encipherment = Key_Constraints(Key_Constraints::DATA_ENCIPHERMENT);
    Key_Constraints key_agreement = Key_Constraints(Key_Constraints::KEY_AGREEMENT);
-   Key_Constraints key_agreement_encipher_only = Key_Constraints(Key_Constraints::KEY_AGREEMENT | Key_Constraints::ENCIPHER_ONLY);
-   Key_Constraints key_agreement_decipher_only = Key_Constraints(Key_Constraints::KEY_AGREEMENT | Key_Constraints::DECIPHER_ONLY);
-   Key_Constraints crl_sign = Key_Constraints(Key_Constraints::CRL_SIGN);
-   Key_Constraints sign_everything = Key_Constraints(Key_Constraints::DIGITAL_SIGNATURE | Key_Constraints::KEY_CERT_SIGN | Key_Constraints::CRL_SIGN);
+   Key_Constraints key_agreement_encipher_only = Key_Constraints(
+            Key_Constraints::KEY_AGREEMENT |
+            Key_Constraints::ENCIPHER_ONLY);
+   Key_Constraints key_agreement_decipher_only = Key_Constraints(
+            Key_Constraints::KEY_AGREEMENT |
+            Key_Constraints::DECIPHER_ONLY);
+   Key_Constraints crl_sign = Key_Constraints::CRL_SIGN;
+   Key_Constraints sign_everything = Key_Constraints(
+                                        Key_Constraints::DIGITAL_SIGNATURE |
+                                        Key_Constraints::KEY_CERT_SIGN |
+                                        Key_Constraints::CRL_SIGN);
    };
 
 
@@ -702,33 +718,51 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
    if(pk_algo == "DH" || pk_algo == "ECDH")
       {
       // DH and ECDH only for key agreement
-      result.test_throws("all constraints not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.all); });
-      result.test_throws("cert sign not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.ca); });
-      result.test_throws("signature not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.sign_data); });
-      result.test_throws("non repudiation not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.non_repudiation); });
-      result.test_throws("key encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_encipherment); });
-      result.test_throws("data encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.data_encipherment); });
+      result.test_throws("all constraints not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.all);
+         });
+      result.test_throws("cert sign not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.ca);
+         });
+      result.test_throws("signature not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_data);
+         });
+      result.test_throws("non repudiation not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.non_repudiation);
+         });
+      result.test_throws("key encipherment not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_encipherment);
+         });
+      result.test_throws("data encipherment not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.data_encipherment);
+         });
 
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement);
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_encipher_only);
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_decipher_only);
 
-      result.test_throws("crl sign not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.crl_sign); });
-      result.test_throws("sign, cert sign, crl sign not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.sign_everything); });
+      result.test_throws("crl sign not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.crl_sign);
+         });
+      result.test_throws("sign, cert sign, crl sign not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_everything);
+         });
       }
    else if(pk_algo == "RSA")
       {
       // RSA can do everything except key agreement
-      result.test_throws("all constraints not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.all); });
+      result.test_throws("all constraints not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.all);
+         });
 
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.ca);
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_data);
@@ -736,12 +770,18 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_encipherment);
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.data_encipherment);
 
-      result.test_throws("key agreement not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_agreement); });
-      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_agreement_encipher_only); });
-      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_agreement_decipher_only); });
+      result.test_throws("key agreement not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement);
+         });
+      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_encipher_only);
+         });
+      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_decipher_only);
+         });
 
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.crl_sign);
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_everything);
@@ -749,45 +789,72 @@ Test::Result test_valid_constraints(const std::string& pk_algo)
    else if(pk_algo == "ElGamal")
       {
       // only ElGamal encryption is currently implemented
-      result.test_throws("all constraints not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.all); });
-      result.test_throws("cert sign not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.ca); });
+      result.test_throws("all constraints not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.all);
+         });
+      result.test_throws("cert sign not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.ca);
+         });
 
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.data_encipherment);
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_encipherment);
 
-      result.test_throws("key agreement not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_agreement); });
-      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_agreement_encipher_only); });
-      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_agreement_decipher_only); });
-      result.test_throws("crl sign not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.crl_sign); });
-      result.test_throws("sign, cert sign, crl sign not permitted not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.sign_everything); });
+      result.test_throws("key agreement not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement);
+         });
+      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_encipher_only);
+         });
+      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_decipher_only);
+         });
+      result.test_throws("crl sign not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.crl_sign);
+         });
+      result.test_throws("sign, cert sign, crl sign not permitted not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_everything);
+         });
       }
-   else if(pk_algo == "DSA" || pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA" || pk_algo == "GOST-34.10")
+   else if(pk_algo == "DSA" || pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA" ||
+           pk_algo == "GOST-34.10")
       {
       // these are signature algorithms only
-      result.test_throws("all constraints not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.all); });
+      result.test_throws("all constraints not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.all);
+         });
 
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.ca);
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_data);
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.non_repudiation);
 
-      result.test_throws("key encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_encipherment); });
-      result.test_throws("data encipherment not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.data_encipherment); });
-      result.test_throws("key agreement not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_agreement); });
-      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_agreement_encipher_only); });
-      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]() { verify_cert_constraints_valid_for_key_type(*key,
-            typical_usage.key_agreement_decipher_only); });
+      result.test_throws("key encipherment not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_encipherment);
+         });
+      result.test_throws("data encipherment not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.data_encipherment);
+         });
+      result.test_throws("key agreement not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement);
+         });
+      result.test_throws("key agreement, encipher only not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_encipher_only);
+         });
+      result.test_throws("key agreement, decipher only not permitted", [&key, &typical_usage]()
+         {
+         verify_cert_constraints_valid_for_key_type(*key, typical_usage.key_agreement_decipher_only);
+         });
 
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.crl_sign);
       verify_cert_constraints_valid_for_key_type(*key, typical_usage.sign_everything);
@@ -805,26 +872,38 @@ class String_Extension : public Botan::Certificate_Extension
       String_Extension() = default;
       String_Extension(const std::string& val) : m_contents(val) {}
 
-      std::string value() const { return m_contents; }
+      std::string value() const
+         {
+         return m_contents;
+         }
 
-      String_Extension* copy() const override { return new String_Extension(m_contents); }
+      String_Extension* copy() const override
+         {
+         return new String_Extension(m_contents);
+         }
 
-      Botan::OID oid_of() const override { return m_oid; }
-      std::string oid_name() const override { return "String Extension"; }
+      Botan::OID oid_of() const override
+         {
+         return m_oid;
+         }
+      std::string oid_name() const override
+         {
+         return "String Extension";
+         }
 
       void contents_to(Botan::Data_Store&, Botan::Data_Store&) const override {}
 
       std::vector<uint8_t> encode_inner() const override
-      {
+         {
          return Botan::DER_Encoder().encode(Botan::ASN1_String(m_contents, Botan::UTF8_STRING)).get_contents_unlocked();
-      }
+         }
 
       void decode_inner(const std::vector<uint8_t>& in) override
-      {
+         {
          Botan::ASN1_String str;
          Botan::BER_Decoder(in).decode(str, Botan::UTF8_STRING).verify_end();
          m_contents = str.value();
-      }
+         }
 
    private:
       Botan::OID m_oid {"1.2.3.4.5.6.7.8.9.1"};
@@ -848,11 +927,7 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
       }
 
    /* Create the self-signed cert */
-   Botan::X509_Certificate ca_cert =
-        Botan::X509::create_self_signed_cert(ca_opts(),
-                                           *ca_key,
-                                           hash_fn,
-                                           Test::rng());
+   Botan::X509_Certificate ca_cert = Botan::X509::create_self_signed_cert(ca_opts(), *ca_key, hash_fn, Test::rng());
 
    /* Create the CA object */
    Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, Test::rng());
@@ -869,14 +944,15 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
    opts.extensions = req_extensions;
 
    /* Create a self-signed certificate */
-   const Botan::X509_Certificate self_signed_cert = Botan::X509::create_self_signed_cert(opts, *user_key, hash_fn, Test::rng());
+   const Botan::X509_Certificate self_signed_cert = Botan::X509::create_self_signed_cert(
+            opts, *user_key, hash_fn, Test::rng());
 
    // check if known Key_Usage extension is present in self-signed cert
    auto key_usage_ext = self_signed_cert.v3_extensions().get(Botan::OIDS::lookup("X509v3.KeyUsage"));
    if(result.confirm("Key_Usage extension present in self-signed certificate", key_usage_ext != nullptr))
       {
       result.confirm("Key_Usage extension value matches in self-signed certificate",
-            dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == opts.constraints);
+                     dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == opts.constraints);
       }
 
    // check if custom extension is present in self-signed cert
@@ -887,24 +963,18 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
       }
 
 
-   const Botan::PKCS10_Request user_req =
-        Botan::X509::create_cert_req(opts,
-                                      *user_key,
-                                      hash_fn,
-                                      Test::rng());
+   const Botan::PKCS10_Request user_req = Botan::X509::create_cert_req(opts, *user_key, hash_fn, Test::rng());
 
    /* Create a CA-signed certificate */
-   const Botan::X509_Certificate user_cert =
-      ca.sign_request(user_req, Test::rng(),
-                      from_date(2008, 01, 01),
-                      from_date(2033, 01, 01));
+   const Botan::X509_Certificate user_cert = ca.sign_request(
+            user_req, Test::rng(), from_date(2008, 01, 01), from_date(2033, 01, 01));
 
    // check if known Key_Usage extension is present in CA-signed cert
    key_usage_ext = self_signed_cert.v3_extensions().get(Botan::OIDS::lookup("X509v3.KeyUsage"));
    if(result.confirm("Key_Usage extension present in user certificate", key_usage_ext != nullptr))
       {
       result.confirm("Key_Usage extension value matches in user certificate",
-            dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == Botan::DIGITAL_SIGNATURE);
+                     dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == Botan::DIGITAL_SIGNATURE);
       }
 
    // check if custom extension is present in CA-signed cert
@@ -917,59 +987,70 @@ Test::Result test_x509_extensions(const std::string& sig_algo, const std::string
    return result;
    }
 
-Test::Result test_hashes(const std::string &algo, const std::string &hash_fn = "SHA-256")
+Test::Result test_hashes(const std::string& algo, const std::string& hash_fn = "SHA-256")
    {
-	 Test::Result result("X509 Hashes");
+   Test::Result result("X509 Hashes");
 
-       const std::unique_ptr<Botan::Private_Key> key(make_a_private_key(algo));
+   const std::unique_ptr<Botan::Private_Key> key(make_a_private_key(algo));
 
-       struct TestData {
-	       const std::string issuer, subject, issuer_hash, subject_hash;
-	 } const cases[]{
-	     {"",
-	      "",
-	      "E4F60D0AA6D7F3D3B6A6494B1C861B99F649C6F9EC51ABAF201B20F297327C95",
-	      "E4F60D0AA6D7F3D3B6A6494B1C861B99F649C6F9EC51ABAF201B20F297327C95"},
-	     {"a",
-	      "b",
-	      "BC2E013472F39AC579964880E422737C82BA812CB8BC2FD17E013060D71E6E19",
-	      "5E31CFAA3FAFB1A5BA296A0D2BAB9CA44D7936E9BF0BBC54637D0C53DBC4A432"},
-	     {"A",
-	      "B",
-	      "4B3206201C4BC9B6CD6C36532A97687DF9238155D99ADB60C66BF2B2220643D8",
-	      "FFF635A52A16618B4A0E9CD26B5E5A2FA573D343C051E6DE8B0811B1ACC89B86"},
-	     {"Test Issuer/US/Botan Project/Testing",
-	      "Test Subject/US/Botan Project/Testing",
-	      "E2407027922619C0673E0AA59A9CD3673730C36A39F891BCE0806D1DD225A937",
-	      "42A63CB4FCCA81AC6D14D5E209B3156E033B90FF1007216927EA9324BA4EF2DB"},
-	     {"Test Subject/US/Botan Project/Testing",
-	      "Test Issuer/US/Botan Project/Testing",
-	      "42A63CB4FCCA81AC6D14D5E209B3156E033B90FF1007216927EA9324BA4EF2DB",
-	      "E2407027922619C0673E0AA59A9CD3673730C36A39F891BCE0806D1DD225A937"}};
+   struct TestData
+      {
+      const std::string issuer, subject, issuer_hash, subject_hash;
+      } const cases[]
+      {
+         {
+         "",
+         "",
+         "E4F60D0AA6D7F3D3B6A6494B1C861B99F649C6F9EC51ABAF201B20F297327C95",
+         "E4F60D0AA6D7F3D3B6A6494B1C861B99F649C6F9EC51ABAF201B20F297327C95"
+         },
+         {
+         "a",
+         "b",
+         "BC2E013472F39AC579964880E422737C82BA812CB8BC2FD17E013060D71E6E19",
+         "5E31CFAA3FAFB1A5BA296A0D2BAB9CA44D7936E9BF0BBC54637D0C53DBC4A432"
+         },
+         {
+         "A",
+         "B",
+         "4B3206201C4BC9B6CD6C36532A97687DF9238155D99ADB60C66BF2B2220643D8",
+         "FFF635A52A16618B4A0E9CD26B5E5A2FA573D343C051E6DE8B0811B1ACC89B86"
+         },
+         {
+         "Test Issuer/US/Botan Project/Testing",
+         "Test Subject/US/Botan Project/Testing",
+         "E2407027922619C0673E0AA59A9CD3673730C36A39F891BCE0806D1DD225A937",
+         "42A63CB4FCCA81AC6D14D5E209B3156E033B90FF1007216927EA9324BA4EF2DB"
+         },
+         {
+         "Test Subject/US/Botan Project/Testing",
+         "Test Issuer/US/Botan Project/Testing",
+         "42A63CB4FCCA81AC6D14D5E209B3156E033B90FF1007216927EA9324BA4EF2DB",
+         "E2407027922619C0673E0AA59A9CD3673730C36A39F891BCE0806D1DD225A937"
+         }
+      };
 
-	 for (const auto& a : cases)
-	 {
-	       Botan::X509_Cert_Options opts{a.issuer};
-	       opts.CA_key();
+   for(const auto& a : cases)
+      {
+      Botan::X509_Cert_Options opts{a.issuer};
+      opts.CA_key();
 
-	       const Botan::X509_Certificate issuer_cert =
-		   Botan::X509::create_self_signed_cert(opts, *key, hash_fn, Test::rng());
+      const Botan::X509_Certificate issuer_cert =
+         Botan::X509::create_self_signed_cert(opts, *key, hash_fn, Test::rng());
 
-	       result.test_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_issuer_dn_sha256()), a.issuer_hash);
-	       result.test_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_subject_dn_sha256()), a.issuer_hash);
+      result.test_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_issuer_dn_sha256()), a.issuer_hash);
+      result.test_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_subject_dn_sha256()), a.issuer_hash);
 
-	       const Botan::X509_CA ca(issuer_cert, *key, hash_fn, Test::rng());
-	       const Botan::PKCS10_Request req =
-		   Botan::X509::create_cert_req(a.subject, *key, hash_fn, Test::rng());
-	       const Botan::X509_Certificate subject_cert =
-		   ca.sign_request(req, Test::rng(),
-				   from_date(2008, 01, 01),
-				   from_date(2033, 01, 01));
+      const Botan::X509_CA ca(issuer_cert, *key, hash_fn, Test::rng());
+      const Botan::PKCS10_Request req =
+         Botan::X509::create_cert_req(a.subject, *key, hash_fn, Test::rng());
+      const Botan::X509_Certificate subject_cert =
+         ca.sign_request(req, Test::rng(), from_date(2008, 01, 01), from_date(2033, 01, 01));
 
-	       result.test_eq(a.subject, Botan::hex_encode(subject_cert.raw_issuer_dn_sha256()), a.issuer_hash);
-	       result.test_eq(a.subject, Botan::hex_encode(subject_cert.raw_subject_dn_sha256()), a.subject_hash);
-	 }
-	 return result;
+      result.test_eq(a.subject, Botan::hex_encode(subject_cert.raw_issuer_dn_sha256()), a.issuer_hash);
+      result.test_eq(a.subject, Botan::hex_encode(subject_cert.raw_subject_dn_sha256()), a.subject_hash);
+      }
+   return result;
    }
 
 class X509_Cert_Unit_Tests : public Test
@@ -987,33 +1068,37 @@ class X509_Cert_Unit_Tests : public Test
 
          for(const auto& algo : sig_algos)
             {
-            try {
+            try
+               {
                cert_result.merge(test_x509_cert(algo));
-            }
+               }
             catch(std::exception& e)
                {
                cert_result.test_failure("test_x509_cert " + algo, e.what());
                }
 
-            try {
-              usage_result.merge(test_usage(algo));
-            }
+            try
+               {
+               usage_result.merge(test_usage(algo));
+               }
             catch(std::exception& e)
                {
                usage_result.test_failure("test_usage " + algo, e.what());
                }
 
-            try {
-              self_issued_result.merge(test_self_issued(algo));
-            }
+            try
+               {
+               self_issued_result.merge(test_self_issued(algo));
+               }
             catch(std::exception& e)
                {
                self_issued_result.test_failure("test_self_issued " + algo, e.what());
                }
 
-            try {
-              extensions_result.merge(test_x509_extensions(algo));
-            }
+            try
+               {
+               extensions_result.merge(test_x509_extensions(algo));
+               }
             catch(std::exception& e)
                {
                extensions_result.test_failure("test_extensions " + algo, e.what());
@@ -1025,8 +1110,11 @@ class X509_Cert_Unit_Tests : public Test
          results.push_back(self_issued_result);
          results.push_back(extensions_result);
 
-         const std::vector<std::string> pk_algos { "DH", "ECDH", "RSA", "ElGamal", "GOST-34.10",
-                                                   "DSA", "ECDSA", "ECGDSA", "ECKCDSA" };
+         const std::vector<std::string> pk_algos
+            {
+            "DH", "ECDH", "RSA", "ElGamal", "GOST-34.10",
+            "DSA", "ECDSA", "ECGDSA", "ECKCDSA"
+            };
          Test::Result valid_constraints_result("X509 Valid Constraints");
 
          for(const auto& algo : pk_algos)

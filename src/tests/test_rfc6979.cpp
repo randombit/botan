@@ -7,8 +7,8 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-  #include <botan/rfc6979.h>
-  #include <botan/hex.h>
+   #include <botan/rfc6979.h>
+   #include <botan/hex.h>
 #endif
 
 #include <botan/hash.h>
@@ -46,7 +46,7 @@ class RFC6979_KAT_Tests : public Text_Based_Test
          Botan::RFC6979_Nonce_Generator gen(hash, Q, X);
 
          result.test_eq("vector matches", gen.nonce_for(H), K);
-         result.test_ne("different output for H+1", gen.nonce_for(H+1), K);
+         result.test_ne("different output for H+1", gen.nonce_for(H + 1), K);
          result.test_eq("vector matches when run again", gen.nonce_for(H), K);
 
          return result;

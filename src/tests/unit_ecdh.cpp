@@ -10,8 +10,8 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ECDH)
-  #include <botan/pubkey.h>
-  #include <botan/ecdh.h>
+   #include <botan/pubkey.h>
+   #include <botan/ecdh.h>
 #endif
 
 namespace Botan_Tests {
@@ -38,7 +38,7 @@ class ECDH_Unit_Tests : public Test
 
          std::vector<std::string> params = { "secp256r1", "secp384r1", "secp521r1", "brainpool256r1" };
 
-         for(auto&& param : params)
+         for(auto const& param : params)
             {
             try
                {

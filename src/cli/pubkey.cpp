@@ -17,11 +17,11 @@
 #include <botan/pubkey.h>
 
 #if defined(BOTAN_HAS_DL_GROUP)
-  #include <botan/dl_group.h>
+   #include <botan/dl_group.h>
 #endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
-  #include <botan/ec_group.h>
+   #include <botan/ec_group.h>
 #endif
 
 namespace Botan_CLI {
@@ -37,7 +37,7 @@ class PK_Keygen final : public Command
          const std::string params = get_arg("params");
 
          std::unique_ptr<Botan::Private_Key>
-            key(Botan::create_private_key(algo, rng(), params));
+         key(Botan::create_private_key(algo, rng(), params));
 
          if(!key)
             {
@@ -82,11 +82,17 @@ namespace {
 std::string algo_default_emsa(const std::string& key)
    {
    if(key == "RSA")
-      return "EMSA4"; // PSS
+      {
+      return "EMSA4";
+      } // PSS
    else if(key == "ECDSA" || key == "DSA")
+      {
       return "EMSA1";
+      }
    else
+      {
       return "EMSA1";
+      }
    }
 
 }
@@ -98,20 +104,27 @@ class PK_Sign final : public Command
 
       void go() override
          {
-         std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(get_arg("key"),
-                                                                        rng(),
-                                                                        get_arg("passphrase")));
+         std::unique_ptr<Botan::Private_Key> key(
+            Botan::PKCS8::load_key(
+               get_arg("key"),
+               rng(),
+               get_arg("passphrase")));
 
          if(!key)
+            {
             throw CLI_Error("Unable to load private key");
+            }
 
          const std::string sig_padding =
             get_arg_or("emsa", algo_default_emsa(key->algo_name())) + "(" + get_arg("hash") + ")";
 
          Botan::PK_Signer signer(*key, rng(), sig_padding);
 
-         this->read_file(get_arg("file"),
-                         [&signer](const uint8_t b[], size_t l) { signer.update(b, l); });
+         auto onData = [&signer](const uint8_t b[], size_t l)
+            {
+            signer.update(b, l);
+            };
+         this->read_file(get_arg("file"), onData);
 
          output() << Botan::base64_encode(signer.signature(rng())) << "\n";
          }
@@ -128,14 +141,19 @@ class PK_Verify final : public Command
          {
          std::unique_ptr<Botan::Public_Key> key(Botan::X509::load_key(get_arg("pubkey")));
          if(!key)
+            {
             throw CLI_Error("Unable to load public key");
+            }
 
          const std::string sig_padding =
             get_arg_or("emsa", algo_default_emsa(key->algo_name())) + "(" + get_arg("hash") + ")";
 
          Botan::PK_Verifier verifier(*key, sig_padding);
-         this->read_file(get_arg("file"),
-                         [&verifier](const uint8_t b[], size_t l) { verifier.update(b, l); });
+         auto onData = [&verifier](const uint8_t b[], size_t l)
+            {
+            verifier.update(b, l);
+            };
+         this->read_file(get_arg("file"), onData);
 
          const Botan::secure_vector<uint8_t> signature =
             Botan::base64_decode(this->slurp_file_as_str(get_arg("signature")));
@@ -227,7 +245,9 @@ class Gen_DL_Group final : public Command
             output() << grp.PEM_encode(Botan::DL_Group::ANSI_X9_42);
             }
          else
+            {
             throw CLI_Usage_Error("Invalid DL type '" + type + "'");
+            }
          }
    };
 
@@ -243,9 +263,10 @@ class PKCS8_Tool final : public Command
       void go() override
          {
          std::unique_ptr<Botan::Private_Key> key(
-            Botan::PKCS8::load_key(get_arg("key"),
-                                   rng(),
-                                   get_arg("pass-in")));
+            Botan::PKCS8::load_key(
+               get_arg("key"),
+               rng(),
+               get_arg("pass-in")));
 
          const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
          const std::string pbe = get_arg("pbe");

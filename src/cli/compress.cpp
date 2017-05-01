@@ -7,7 +7,7 @@
 #include "cli.h"
 
 #if defined(BOTAN_HAS_COMPRESSION)
-  #include <botan/compression.h>
+   #include <botan/compression.h>
 #endif
 
 namespace Botan_CLI {
@@ -19,15 +19,15 @@ class Compress final : public Command
    public:
       Compress() : Command("compress --type=gzip --level=6 --buf-size=8192 file") {}
 
-      std::string output_filename(const std::string& input_fsname,
-                                  const std::string& comp_type)
+      std::string output_filename(const std::string& input_fsname, const std::string& comp_type)
          {
-         const std::map<std::string, std::string> suffixes = {
-            { "zlib", "zlib" },
-            { "gzip", "gz" },
-            { "bzip2", "bz2" },
-            { "lzma", "xz" },
-         };
+         const std::map<std::string, std::string> suffixes =
+            {
+               { "zlib", "zlib" },
+               { "gzip", "gz" },
+               { "bzip2", "bz2" },
+               { "lzma", "xz" },
+            };
 
          auto suffix_info = suffixes.find(comp_type);
          if(suffixes.count(comp_type) == 0)
@@ -103,10 +103,12 @@ class Decompress final : public Command
          {
          auto last_dot = in_file.find_last_of('.');
          if(last_dot == std::string::npos || last_dot == 0)
+            {
             throw CLI_Error("No extension detected in filename '" + in_file + "'");
+            }
 
          out_file = in_file.substr(0, last_dot);
-         suffix = in_file.substr(last_dot+1, std::string::npos);
+         suffix = in_file.substr(last_dot + 1, std::string::npos);
          }
 
       void go() override
@@ -119,18 +121,24 @@ class Decompress final : public Command
          std::ifstream in(in_file);
 
          if(!in.good())
+            {
             throw CLI_IO_Error("reading", in_file);
+            }
 
          std::unique_ptr<Botan::Decompression_Algorithm> decompress;
 
          decompress.reset(Botan::make_decompressor(suffix));
 
          if(!decompress)
+            {
             throw CLI_Error_Unsupported("Decompression", suffix);
+            }
 
          std::ofstream out(out_file);
          if(!out.good())
+            {
             throw CLI_IO_Error("writing", out_file);
+            }
 
          Botan::secure_vector<uint8_t> buf;
 

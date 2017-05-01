@@ -7,8 +7,8 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ASN1)
-  #include <botan/x509_dn.h>
-  #include <botan/ber_dec.h>
+   #include <botan/x509_dn.h>
+   #include <botan/ber_dec.h>
 #endif
 
 namespace Botan_Tests {
@@ -17,9 +17,7 @@ namespace Botan_Tests {
 class X509_DN_Comparisons_Tests : public Text_Based_Test
    {
    public:
-      X509_DN_Comparisons_Tests() :
-         Text_Based_Test("x509_dn.vec", "DN1,DN2")
-         {}
+      X509_DN_Comparisons_Tests() : Text_Based_Test("x509_dn.vec", "DN1,DN2") {}
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override
          {

@@ -8,7 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_MAC)
-  #include <botan/mac.h>
+   #include <botan/mac.h>
 #endif
 
 namespace Botan_Tests {
@@ -44,7 +44,7 @@ class Message_Auth_Tests : public Text_Based_Test
             return result;
             }
 
-         for(auto&& provider_ask : providers)
+         for(auto const& provider_ask : providers)
             {
             std::unique_ptr<Botan::MessageAuthenticationCode> mac(Botan::MessageAuthenticationCode::create(algo, provider_ask));
 
@@ -67,8 +67,8 @@ class Message_Auth_Tests : public Text_Based_Test
             result.test_eq(provider, "correct mac", mac->final(), expected);
 
             // Test to make sure clear() resets what we need it to
-            mac->set_key( key );
-            mac->update( "some discarded input");
+            mac->set_key(key);
+            mac->update("some discarded input");
             mac->clear();
 
             // do the same to test verify_mac()
@@ -92,7 +92,7 @@ class Message_Auth_Tests : public Text_Based_Test
 
                mac->update(input[0]);
                mac->update(&input[1], input.size() - 2);
-               mac->update(input[input.size()-1]);
+               mac->update(input[input.size() - 1]);
 
                result.test_eq(provider, "split mac", mac->final(), expected);
 

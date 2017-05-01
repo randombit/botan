@@ -28,7 +28,9 @@ uint8_t luhn_checksum(uint64_t cc_number)
          {
          digit *= 2;
          if(digit > 9)
+            {
             digit -= 9;
+            }
          }
 
       sum += digit;
@@ -75,11 +77,15 @@ uint64_t encrypt_cc_number(uint64_t cc_number,
    const Botan::BigInt c = Botan::FPE::fe1_encrypt(n, cc_ranked, key, tweak);
 
    if(c.bits() > 50)
+      {
       throw Botan::Internal_Error("FPE produced a number too large");
+      }
 
    uint64_t enc_cc = 0;
    for(size_t i = 0; i != 7; ++i)
-      enc_cc = (enc_cc << 8) | c.byte_at(6-i);
+      {
+      enc_cc = (enc_cc << 8) | c.byte_at(6 - i);
+      }
    return cc_derank(enc_cc);
    }
 
@@ -94,11 +100,15 @@ uint64_t decrypt_cc_number(uint64_t enc_cc,
    const Botan::BigInt c = Botan::FPE::fe1_decrypt(n, cc_ranked, key, tweak);
 
    if(c.bits() > 50)
+      {
       throw CLI_Error("FPE produced a number too large");
+      }
 
    uint64_t dec_cc = 0;
    for(size_t i = 0; i != 7; ++i)
-      dec_cc = (dec_cc << 8) | c.byte_at(6-i);
+      {
+      dec_cc = (dec_cc << 8) | c.byte_at(6 - i);
+      }
    return cc_derank(dec_cc);
    }
 
@@ -117,12 +127,11 @@ class CC_Encrypt final : public Command
 
          std::unique_ptr<Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
          if(!pbkdf)
+            {
             throw CLI_Error_Unsupported("PBKDF", "PBKDF2(SHA-256)");
+            }
 
-         Botan::secure_vector<uint8_t> key =
-            pbkdf->pbkdf_iterations(32, pass,
-                                    tweak.data(), tweak.size(),
-                                    100000);
+         Botan::secure_vector<uint8_t> key = pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000);
 
          output() << encrypt_cc_number(cc_number, key, tweak) << "\n";
          }
@@ -143,12 +152,11 @@ class CC_Decrypt final : public Command
 
          std::unique_ptr<Botan::PBKDF> pbkdf(Botan::PBKDF::create("PBKDF2(SHA-256)"));
          if(!pbkdf)
+            {
             throw CLI_Error_Unsupported("PBKDF", "PBKDF2(SHA-256)");
+            }
 
-         Botan::secure_vector<uint8_t> key =
-            pbkdf->pbkdf_iterations(32, pass,
-                                    tweak.data(), tweak.size(),
-                                    100000);
+         Botan::secure_vector<uint8_t> key = pbkdf->pbkdf_iterations(32, pass, tweak.data(), tweak.size(), 100000);
 
          output() << decrypt_cc_number(cc_number, key, tweak) << "\n";
          }

@@ -10,9 +10,9 @@
 #include "test_rng.h"
 
 #if defined(BOTAN_HAS_ECDSA)
-  #include "test_pubkey.h"
-  #include <botan/ecdsa.h>
-  #include <botan/oids.h>
+   #include "test_pubkey.h"
+   #include <botan/ecdsa.h>
+   #include <botan/oids.h>
 #endif
 
 namespace Botan_Tests {
@@ -25,17 +25,19 @@ class ECDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
    {
    public:
       ECDSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
-         "ECDSA",
+            "ECDSA",
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-         "pubkey/ecdsa_rfc6979.vec",
-         "Group,X,Hash,Msg,Signature")
+            "pubkey/ecdsa_rfc6979.vec",
+            "Group,X,Hash,Msg,Signature") {}
 #else
-         "pubkey/ecdsa_prob.vec",
-         "Group,X,Hash,Msg,Nonce,Signature")
+            "pubkey/ecdsa_prob.vec",
+            "Group,X,Hash,Msg,Nonce,Signature") {}
 #endif
-         {}
 
-      bool clear_between_callbacks() const override { return false; }
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
@@ -65,8 +67,14 @@ class ECDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
 class ECDSA_Keygen_Tests : public PK_Key_Generation_Test
    {
    public:
-      std::vector<std::string> keygen_params() const override { return { "secp256r1", "secp384r1", "secp521r1", "frp256v1" }; }
-      std::string algo_name() const override { return "ECDSA"; }
+      std::vector<std::string> keygen_params() const override
+         {
+         return { "secp256r1", "secp384r1", "secp521r1", "frp256v1" };
+         }
+      std::string algo_name() const override
+         {
+         return "ECDSA";
+         }
    };
 
 class ECDSA_Invalid_Key_Tests : public Text_Based_Test
@@ -75,7 +83,10 @@ class ECDSA_Invalid_Key_Tests : public Text_Based_Test
       ECDSA_Invalid_Key_Tests() :
          Text_Based_Test("pubkey/ecdsa_invalid.vec", "Group,InvalidKeyX,InvalidKeyY") {}
 
-      bool clear_between_callbacks() const override { return false; }
+      bool clear_between_callbacks() const override
+         {
+         return false;
+         }
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {

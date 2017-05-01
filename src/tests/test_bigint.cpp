@@ -7,10 +7,10 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
-  #include <botan/bigint.h>
-  #include <botan/numthry.h>
-  #include <botan/reducer.h>
-  #include <cmath>
+   #include <botan/bigint.h>
+   #include <botan/numthry.h>
+   #include <botan/reducer.h>
+   #include <cmath>
 #endif
 
 namespace Botan_Tests {
@@ -65,10 +65,11 @@ class BigInt_Unit_Tests : public Test
                   }
                else
                   {
-                  try {
+                  try
+                     {
                      a.to_u32bit();
                      result.test_failure("BigInt::to_u32bit roundtripped out of range value");
-                  }
+                     }
                   catch(std::exception&)
                      {
                      result.test_success("BigInt::to_u32bit rejected out of range");
@@ -86,11 +87,11 @@ class BigInt_Unit_Tests : public Test
          {
          Test::Result result("BigInt prime generation");
 
-         result.test_throws("Invalid arg", []{ Botan::random_prime(Test::rng(), 0); });
-         result.test_throws("Invalid arg", []{ Botan::random_prime(Test::rng(), 1); });
-         result.test_throws("Invalid arg", []{ Botan::random_prime(Test::rng(), 2, 0); });
-         result.test_throws("Invalid arg", []{ Botan::random_prime(Test::rng(), 2, 1, 1, 3); });
-         result.test_throws("Invalid arg", []{ Botan::random_prime(Test::rng(), 2, 1, 0, 2); });
+         result.test_throws("Invalid arg", []() { Botan::random_prime(Test::rng(), 0); });
+         result.test_throws("Invalid arg", []() { Botan::random_prime(Test::rng(), 1); });
+         result.test_throws("Invalid arg", []() { Botan::random_prime(Test::rng(), 2, 0); });
+         result.test_throws("Invalid arg", []() { Botan::random_prime(Test::rng(), 2, 1, 1, 3); });
+         result.test_throws("Invalid arg", []() { Botan::random_prime(Test::rng(), 2, 1, 0, 2); });
 
          BigInt p = Botan::random_prime(Test::rng(), 2);
          result.confirm("Only two 2-bit primes", p == 2 || p == 3);
@@ -122,7 +123,7 @@ class BigInt_Unit_Tests : public Test
          const BigInt safe_prime = Botan::random_safe_prime(Test::rng(), safe_prime_bits);
          result.test_eq("Safe prime size", safe_prime.bits(), safe_prime_bits);
          result.confirm("P is prime", Botan::is_prime(safe_prime, Test::rng()));
-         result.confirm("(P-1)/2 is prime", Botan::is_prime((safe_prime-1)/2, Test::rng()));
+         result.confirm("(P-1)/2 is prime", Botan::is_prime((safe_prime - 1) / 2, Test::rng()));
 
          return result;
          }
@@ -151,7 +152,9 @@ class BigInt_Unit_Tests : public Test
             for(size_t range_max : max_ranges)
                {
                if(range_min >= range_max)
+                  {
                   continue;
+                  }
 
                std::vector<size_t> counts(range_max - range_min);
 
@@ -200,12 +203,12 @@ class BigInt_Unit_Tests : public Test
          Botan::secure_vector<uint8_t> encoded_n1_n2 = BigInt::encode_fixed_length_int_pair(n1, n2, 256);
          result.test_eq("encode_fixed_length_int_pair", encoded_n1_n2, expected);
 
-         for (size_t i = 0; i < 256 - n1.bytes(); ++i)
+         for(size_t i = 0; i < 256 - n1.bytes(); ++i)
             {
-               if ( encoded_n1[i] != 0 )
-                  {
-                  result.test_failure("encode_1363", "no zero byte");
-                  }
+            if(encoded_n1[i] != 0)
+               {
+               result.test_failure("encode_1363", "no zero byte");
+               }
             }
 
          return result;
@@ -215,13 +218,14 @@ class BigInt_Unit_Tests : public Test
          {
          Test::Result result("BigInt IO operators");
 
-         const std::map<std::string, Botan::BigInt> str_to_val = {
-            { "-13", -Botan::BigInt(13) },
-            { "0", Botan::BigInt(0) },
-            { "0x13", Botan::BigInt(0x13) },
-            { "1", Botan::BigInt(1) },
-            { "4294967297", Botan::BigInt(2147483648)*2 + 1 }
-         };
+         const std::map<std::string, Botan::BigInt> str_to_val =
+            {
+               { "-13", -Botan::BigInt(13) },
+               { "0", Botan::BigInt(0) },
+               { "0x13", Botan::BigInt(0x13) },
+               { "1", Botan::BigInt(1) },
+               { "4294967297", Botan::BigInt(2147483648) * 2 + 1 }
+            };
 
          for(auto vec : str_to_val)
             {
@@ -243,8 +247,7 @@ class BigInt_Unit_Tests : public Test
          oss << std::hex << n;
          result.test_eq("output 33 hex", oss.str(), "21");
 
-         result.test_throws("octal output not supported",
-                            [&]{ oss << std::oct << n; });
+         result.test_throws("octal output not supported", [&]() { oss << std::oct << n; });
 
          return result;
          }
@@ -411,7 +414,7 @@ class BigInt_Mod_Test : public Text_Based_Test
          // if b fits into a Botan::word test %= operator for words
          if(b.bytes() <= sizeof(Botan::word))
             {
-            Botan::word b_word = b.word_at( 0 );
+            Botan::word b_word = b.word_at(0);
             e = a;
             e %= b_word;
             result.test_eq("a %= b (as word)", e, c);
@@ -528,7 +531,9 @@ class BigInt_IsPrime_Test : public Text_Based_Test
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override
          {
          if(header != "Prime" && header != "NonPrime")
+            {
             throw Test_Error("Bad header for prime test " + header);
+            }
 
          const BigInt value = get_req_bn(vars, "X");
          const bool is_prime = (header == "Prime");
@@ -560,7 +565,7 @@ class BigInt_Ressol_Test : public Text_Based_Test
 
          if(a_sqrt > 1)
             {
-            const Botan::BigInt a_sqrt2 = (a_sqrt*a_sqrt) % p;
+            const Botan::BigInt a_sqrt2 = (a_sqrt * a_sqrt) % p;
             result.test_eq("square correct", a_sqrt2, a);
             }
 
@@ -628,7 +633,9 @@ class DSA_ParamGen_Test : public Text_Based_Test
          const std::vector<std::string> header_parts = Botan::split_on(header, ',');
 
          if(header_parts.size() != 2)
+            {
             throw Test_Error("Unexpected header '" + header + "' in DSA param gen test");
+            }
 
          const size_t p_bits = Botan::to_u32bit(header_parts[1]);
          const size_t q_bits = Botan::to_u32bit(header_parts[0]);
@@ -637,9 +644,12 @@ class DSA_ParamGen_Test : public Text_Based_Test
 
          // These tests are very slow so skip in normal runs
          if(p_bits > 1024 && Test::run_long_tests() == false)
+            {
             return result;
+            }
 
-         try {
+         try
+            {
             Botan::BigInt gen_P, gen_Q;
             if(Botan::generate_dsa_primes(Test::rng(), gen_P, gen_Q, p_bits, q_bits, seed, offset))
                {
@@ -650,7 +660,7 @@ class DSA_ParamGen_Test : public Text_Based_Test
                {
                result.test_failure("Seed did not generate a DSA parameter");
                }
-         }
+            }
          catch(Botan::Lookup_Error&)
             {
             }

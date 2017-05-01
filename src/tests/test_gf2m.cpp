@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_MCELIECE)
-  #include <botan/gf2m_small_m.h>
+   #include <botan/gf2m_small_m.h>
 #endif
 
 namespace Botan_Tests {

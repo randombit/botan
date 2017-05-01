@@ -7,8 +7,8 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ELGAMAL)
-  #include <botan/elgamal.h>
-  #include "test_pubkey.h"
+   #include <botan/elgamal.h>
+   #include "test_pubkey.h"
 #endif
 
 namespace Botan_Tests {
@@ -20,12 +20,12 @@ namespace {
 class ElGamal_KAT_Tests : public PK_Encryption_Decryption_Test
    {
    public:
-      ElGamal_KAT_Tests() : PK_Encryption_Decryption_Test(
-         "ElGamal",
-         "pubkey/elgamal.vec",
-         "P,G,X,Msg,Nonce,Ciphertext",
-         "Padding")
-         {}
+      ElGamal_KAT_Tests()
+         : PK_Encryption_Decryption_Test(
+              "ElGamal",
+              "pubkey/elgamal.vec",
+              "P,G,X,Msg,Nonce,Ciphertext",
+              "Padding") {}
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
          {
@@ -43,8 +43,14 @@ class ElGamal_KAT_Tests : public PK_Encryption_Decryption_Test
 class ElGamal_Keygen_Tests : public PK_Key_Generation_Test
    {
    public:
-      std::vector<std::string> keygen_params() const override { return { "modp/ietf/1024", "modp/ietf/2048" }; }
-      std::string algo_name() const override { return "ElGamal"; }
+      std::vector<std::string> keygen_params() const override
+         {
+         return { "modp/ietf/1024", "modp/ietf/2048" };
+         }
+      std::string algo_name() const override
+         {
+         return "ElGamal";
+         }
    };
 
 BOTAN_REGISTER_TEST("elgamal_encrypt", ElGamal_KAT_Tests);

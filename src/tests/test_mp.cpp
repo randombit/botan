@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_BIGINT_MP)
-  #include <botan/internal/mp_core.h>
+   #include <botan/internal/mp_core.h>
 #endif
 
 namespace Botan_Tests {
@@ -132,7 +132,7 @@ class MP_Unit_Tests : public Test
 
          for(size_t i = 0; i != 4; ++i)
             {
-            result.test_int_eq(x5[i], 3-i, "Swap x5");
+            result.test_int_eq(x5[i], 3 - i, "Swap x5");
             }
          result.test_int_eq(x5[4], 4, "Not touched");
 

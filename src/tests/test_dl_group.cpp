@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_DL_GROUP)
-  #include <botan/dl_group.h>
+   #include <botan/dl_group.h>
 #endif
 
 namespace Botan_Tests {
@@ -90,9 +90,9 @@ class DL_Group_Tests : public Test
          // From FIPS 186-3 test data
          const std::vector<uint8_t> seed = Botan::hex_decode("1F5DA0AF598EEADEE6E6665BF880E63D8B609BA2");
 
-         result.test_throws("invalid params", [&] { Botan::DL_Group invalid(rng, seed, 1024, 224); });
-         result.test_throws("invalid params", [&] { Botan::DL_Group invalid(rng, seed, 3072, 224); });
-         result.test_throws("invalid params", [&] { Botan::DL_Group invalid(rng, seed, 2048, 256); });
+         result.test_throws("invalid params", [&]() { Botan::DL_Group invalid(rng, seed, 1024, 224); });
+         result.test_throws("invalid params", [&]() { Botan::DL_Group invalid(rng, seed, 3072, 224); });
+         result.test_throws("invalid params", [&]() { Botan::DL_Group invalid(rng, seed, 2048, 256); });
 
          Botan::DL_Group dsa_from_seed(rng, seed, 1024, 160);
 
@@ -112,7 +112,8 @@ class DL_Group_Tests : public Test
 
       Test::Result test_dl_named(Botan::RandomNumberGenerator& rng)
          {
-         const std::vector<std::string> dl_named = {
+         const std::vector<std::string> dl_named =
+            {
             "modp/ietf/1024",
             "modp/ietf/1536",
             "modp/ietf/2048",
@@ -132,7 +133,7 @@ class DL_Group_Tests : public Test
             "dsa/jce/1024",
             "dsa/botan/2048",
             "dsa/botan/3072",
-         };
+            };
 
          Test::Result result("DL_Group named");
          result.start_timer();

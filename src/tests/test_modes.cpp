@@ -8,7 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_MODES)
-  #include <botan/cipher_mode.h>
+   #include <botan/cipher_mode.h>
 #endif
 
 namespace Botan_Tests {
@@ -18,9 +18,8 @@ namespace Botan_Tests {
 class Cipher_Mode_Tests : public Text_Based_Test
    {
    public:
-      Cipher_Mode_Tests() :
-         Text_Based_Test("modes", "Key,Nonce,In,Out")
-         {}
+      Cipher_Mode_Tests()
+         : Text_Based_Test("modes", "Key,Nonce,In,Out") {}
 
       std::vector<std::string> possible_providers(const std::string& algo) override
          {
@@ -47,9 +46,9 @@ class Cipher_Mode_Tests : public Text_Based_Test
          for(auto&& provider_ask : providers)
             {
             std::unique_ptr<Botan::Cipher_Mode> enc(Botan::get_cipher_mode(
-               algo, Botan::ENCRYPTION, provider_ask));
+                  algo, Botan::ENCRYPTION, provider_ask));
             std::unique_ptr<Botan::Cipher_Mode> dec(Botan::get_cipher_mode(
-               algo, Botan::DECRYPTION, provider_ask));
+                  algo, Botan::DECRYPTION, provider_ask));
 
             if(!enc || !dec)
                {

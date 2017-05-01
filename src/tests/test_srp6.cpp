@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_SRP6)
-  #include <botan/srp6.h>
+   #include <botan/srp6.h>
 #endif
 
 namespace Botan_Tests {

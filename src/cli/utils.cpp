@@ -14,31 +14,31 @@
 #include <botan/entropy_src.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
-  #include <botan/base64.h>
+   #include <botan/base64.h>
 #endif
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-  #include <botan/auto_rng.h>
+   #include <botan/auto_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
+   #include <botan/system_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_RDRAND_RNG)
-  #include <botan/rdrand_rng.h>
+   #include <botan/rdrand_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
-  #include <botan/http_util.h>
+   #include <botan/http_util.h>
 #endif
 
 #if defined(BOTAN_HAS_BCRYPT)
-  #include <botan/bcrypt.h>
+   #include <botan/bcrypt.h>
 #endif
 
 #if defined(BOTAN_HAS_HMAC)
-  #include <botan/hmac.h>
+   #include <botan/hmac.h>
 #endif
 
 namespace Botan_CLI {
@@ -133,13 +133,17 @@ class Hash final : public Command
          std::unique_ptr<Botan::HashFunction> hash_fn(Botan::HashFunction::create(hash_algo));
 
          if(!hash_fn)
+            {
             throw CLI_Error_Unsupported("hashing", hash_algo);
+            }
 
          const size_t buf_size = get_arg_sz("buf-size");
 
          std::vector<std::string> files = get_arg_list("files");
          if(files.empty())
-            files.push_back("-"); // read stdin if no arguments on command line
+            {
+            files.push_back("-");
+            } // read stdin if no arguments on command line
 
          for(const std::string& fsname : files)
             {
@@ -277,9 +281,11 @@ class Base64_Encode final : public Command
 
       void go() override
          {
-         this->read_file(get_arg("file"),
-                         [&](const uint8_t b[], size_t l) { output() << Botan::base64_encode(b, l); },
-                         768);
+         auto onData = [&](const uint8_t b[], size_t l)
+            {
+            output() << Botan::base64_encode(b, l);
+            };
+         this->read_file(get_arg("file"), onData, 768);
          }
    };
 
@@ -298,9 +304,7 @@ class Base64_Decode final : public Command
             output().write(reinterpret_cast<const char*>(bin.data()), bin.size());
             };
 
-         this->read_file(get_arg("file"),
-                         write_bin,
-                         1024);
+         this->read_file(get_arg("file"), write_bin, 1024);
          }
    };
 
@@ -361,10 +365,11 @@ class HMAC final : public Command
       void go() override
          {
          const std::string hash_algo = get_arg("hash");
-         std::unique_ptr<Botan::MessageAuthenticationCode> hmac(Botan::MessageAuthenticationCode::create("HMAC(" + hash_algo + ")"));
+         std::unique_ptr<Botan::MessageAuthenticationCode> hmac(Botan::MessageAuthenticationCode::create("HMAC(" + hash_algo +
+               ")"));
 
          if(!hmac)
-            throw CLI_Error_Unsupported("HMAC", hash_algo);
+            { throw CLI_Error_Unsupported("HMAC", hash_algo); }
 
          hmac->set_key(slurp_file(get_arg("key")));
 
@@ -372,7 +377,7 @@ class HMAC final : public Command
 
          std::vector<std::string> files = get_arg_list("files");
          if(files.empty())
-            files.push_back("-"); // read stdin if no arguments on command line
+            { files.push_back("-"); } // read stdin if no arguments on command line
 
          for(const std::string& fsname : files)
             {

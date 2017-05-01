@@ -573,9 +573,9 @@ Test::Result test_c_set_pin()
                        const secure_vector<uint8_t>& new_pin) -> PKCS11_BoundTestFunction
       {
       return std::bind(static_cast< bool (LowLevel::*)(SessionHandle, const secure_vector<uint8_t>&,
-      const secure_vector<uint8_t>&, ReturnValue*) const>
-      (&LowLevel::C_SetPIN<secure_allocator<uint8_t>>), *p11_low_level.get(), session_handle,
-      old_pin, new_pin, std::placeholders::_1);
+                       const secure_vector<uint8_t>&, ReturnValue*) const>
+                       (&LowLevel::C_SetPIN<secure_allocator<uint8_t>>), *p11_low_level.get(), session_handle,
+                       old_pin, new_pin, std::placeholders::_1);
       };
 
    const std::string test_pin("654321");
@@ -799,28 +799,28 @@ class LowLevelTests : public Test
          std::vector<std::function<Test::Result()>> fns =
             {
             test_c_get_function_list
-            ,test_low_level_ctor
-            ,test_initialize_finalize
-            ,test_c_get_info
-            ,test_c_get_slot_list
-            ,test_c_get_slot_info
-            ,test_c_get_token_info
-            ,test_c_wait_for_slot_event
-            ,test_c_get_mechanism_list
-            ,test_c_get_mechanism_info
-            ,test_open_close_session
-            ,test_c_close_all_sessions
-            ,test_c_get_session_info
-            ,test_c_init_token
-            ,test_c_login_logout_security_officier	/* only possible if token is initialized */
-            ,test_c_init_pin
-            ,test_c_login_logout_user	/* only possible if token is initialized and user pin is set */
-            ,test_c_set_pin
-            ,test_c_create_object_c_destroy_object
-            ,test_c_get_object_size
-            ,test_c_get_attribute_value
-            ,test_c_set_attribute_value
-            ,test_c_copy_object
+            , test_low_level_ctor
+            , test_initialize_finalize
+            , test_c_get_info
+            , test_c_get_slot_list
+            , test_c_get_slot_info
+            , test_c_get_token_info
+            , test_c_wait_for_slot_event
+            , test_c_get_mechanism_list
+            , test_c_get_mechanism_info
+            , test_open_close_session
+            , test_c_close_all_sessions
+            , test_c_get_session_info
+            , test_c_init_token
+            , test_c_login_logout_security_officier /* only possible if token is initialized */
+            , test_c_init_pin
+            , test_c_login_logout_user /* only possible if token is initialized and user pin is set */
+            , test_c_set_pin
+            , test_c_create_object_c_destroy_object
+            , test_c_get_object_size
+            , test_c_get_attribute_value
+            , test_c_set_attribute_value
+            , test_c_copy_object
             };
 
          for(size_t i = 0; i != fns.size(); ++i)
