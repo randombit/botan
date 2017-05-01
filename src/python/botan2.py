@@ -108,7 +108,7 @@ def version_string():
 #
 # RNG
 #
-class rng(object):
+class rng(object): # pylint: disable=invalid-name
     # Can also use type "system"
     def __init__(self, rng_type='system'):
         botan.botan_rng_init.argtypes = [c_void_p, c_char_p]
@@ -138,7 +138,7 @@ class rng(object):
 #
 # Hash function
 #
-class hash_function(object):
+class hash_function(object): # pylint: disable=invalid-name
     def __init__(self, algo):
         botan.botan_hash_init.argtypes = [c_void_p, c_char_p, c_uint32]
         flags = c_uint32(0) # always zero in this API version
@@ -176,7 +176,7 @@ class hash_function(object):
 #
 # Message authentication codes
 #
-class message_authentication_code(object):
+class message_authentication_code(object): # pylint: disable=invalid-name
     def __init__(self, algo):
         botan.botan_mac_init.argtypes = [c_void_p, c_char_p, c_uint32]
         flags = c_uint32(0) # always zero in this API version
@@ -215,7 +215,7 @@ class message_authentication_code(object):
         botan.botan_mac_final(self.mac, out)
         return _ctype_bufout(out)
 
-class cipher(object):
+class cipher(object): # pylint: disable=invalid-name
     def __init__(self, algo, encrypt=True):
         botan.botan_cipher_init.argtypes = [c_void_p, c_char_p, c_uint32]
         flags = 0 if encrypt else 1
@@ -361,7 +361,7 @@ def kdf(algo, secret, out_len, salt, label):
 #
 # Public and private keys
 #
-class public_key(object):
+class public_key(object): # pylint: disable=invalid-name
     def __init__(self, obj=c_void_p(0)):
         self.pubkey = obj
 
@@ -395,7 +395,7 @@ class public_key(object):
         botan.botan_pubkey_fingerprint(self.pubkey, _ctype_str(hash), buf, byref(buf_len))
         return hex_encode(buf[0:buf_len.value])
 
-class private_key(object):
+class private_key(object): # pylint: disable=invalid-name
     def __init__(self, alg, param, rng):
         botan.botan_privkey_create_rsa.argtypes = [c_void_p, c_void_p, c_size_t]
         botan.botan_privkey_create_ecdsa.argtypes = [c_void_p, c_void_p, c_char_p]
@@ -442,7 +442,7 @@ class private_key(object):
             botan.botan_privkey_export(self.privkey, buf, byref(buf_len))
         return buf[0:buf_len.value]
 
-class pk_op_encrypt(object):
+class pk_op_encrypt(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
         botan.botan_pk_op_encrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
@@ -473,7 +473,7 @@ class pk_op_encrypt(object):
         return outbuf.raw[0:outbuf_sz.value]
 
 
-class pk_op_decrypt(object):
+class pk_op_decrypt(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
         botan.botan_pk_op_decrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
@@ -497,7 +497,7 @@ class pk_op_decrypt(object):
         botan.botan_pk_op_decrypt(self.op, outbuf, byref(outbuf_sz), _ctype_bits(msg), ll)
         return outbuf.raw[0:outbuf_sz.value]
 
-class pk_op_sign(object):
+class pk_op_sign(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
         botan.botan_pk_op_sign_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
@@ -521,7 +521,7 @@ class pk_op_sign(object):
         botan.botan_pk_op_sign_finish(self.op, rng.rng, outbuf, byref(outbuf_sz))
         return outbuf.raw[0:outbuf_sz.value]
 
-class pk_op_verify(object):
+class pk_op_verify(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
         botan.botan_pk_op_verify_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
@@ -580,7 +580,7 @@ def mceies_decrypt(mce, aead, pt, ad):
                                                              len(ad),
                                                              b, bl))
 
-class pk_op_key_agreement(object):
+class pk_op_key_agreement(object): # pylint: disable=invalid-name
     def __init__(self, key, kdf):
         botan.botan_pk_op_key_agreement_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         botan.botan_pk_op_key_agreement_export_public.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
@@ -612,7 +612,7 @@ class pk_op_key_agreement(object):
 #
 # X.509 certificates
 #
-class x509_cert(object):
+class x509_cert(object): # pylint: disable=invalid-name
     def __init__(self, filename=None, buf=None):
         if filename is None and buf is None:
             raise Exception("No filename or buf given")
