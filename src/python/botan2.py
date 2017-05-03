@@ -806,7 +806,10 @@ def test():
 
             enc.set_key(key)
             enc.start(iv)
-            assert len(enc.update('')) == 0
+
+            update_result = enc.update('')
+            assert not update_result
+
             ct = enc.finish(pt)
             print("  ciphertext %s (%d)" % (hex_encode(ct), len(ct)))
 
