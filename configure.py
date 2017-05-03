@@ -1364,8 +1364,8 @@ def process_template(template_file, variables):
         raise InternalError('Exception %s in template %s' % (e, template_file))
 
 def makefile_list(items):
-    items = list(items) # force evaluation so we can slice it
-    return (' '*16).join([item + ' \\\n' for item in items[:-1]] + [items[-1]])
+    separator = " \\\n" + 16*" "
+    return separator.join(items)
 
 def gen_bakefile(build_config, options, external_libs):
 
@@ -2033,9 +2033,11 @@ class ModulesChooser(object):
     @staticmethod
     def _validate_state(used_modules, unused_modules):
         for reason, unused_for_reason in unused_modules.items():
-            if not unused_for_reason.isdisjoint(used_modules):
+            intersection = unused_for_reason & used_modules
+            if intersection:
                 raise InternalError(
-                    "Disabled modules (%s) and modules to load have common elements" % reason)
+                    "Disabled modules (%s) and modules to load have common elements: %s"
+                    % (reason, intersection))
 
     @staticmethod
     def _validate_dependencies_exist(modules):
@@ -2076,43 +2078,73 @@ class ModulesChooser(object):
 
         return False
 
-    def _resolve_dependencies(self, modname):
-        for dependency in self._modules[modname].dependencies():
+    @staticmethod
+    def resolve_dependencies(available_modules, dependency_table, module, loaded_modules=None):
+        """
+        Parameters
+        - available_modules: modules to choose from. Constant.
+        - dependency_table: module to dependencies map. Constant.
+        - module: name of the module to resolve dependencies. Constant.
+        - loaded_modules: modules already loaded. Defensive copy in order to not change value for caller.
+        """
+        if loaded_modules is None:
+            loaded_modules = set([])
+        else:
+            loaded_modules = copy.deepcopy(loaded_modules)
+
+        if module not in available_modules:
+            return False, None
+
+        loaded_modules.add(module)
+        for dependency in dependency_table[module]:
             dependency_choices = set(dependency.split('|'))
 
             dependency_met = False
-            new_loaded_mod = None
 
-            # Prefer what we already loaded
-            if not set(dependency_choices).isdisjoint(self._to_load):
+            if not set(dependency_choices).isdisjoint(loaded_modules):
                 dependency_met = True
             else:
-                possible_mods = dependency_choices.intersection(self._maybe_dep)
-                if possible_mods:
-                    new_loaded_mod = possible_mods.pop()
-                    dependency_met = True
+                possible_mods = dependency_choices.intersection(available_modules)
 
-            if dependency_met:
-                if new_loaded_mod:
-                    self._maybe_dep.remove(new_loaded_mod)
-                    self._to_load.add(new_loaded_mod)
-                    # Added new_loaded_mod, now resolve its dependencies
-                    self._resolve_dependencies(new_loaded_mod)
-            else:
-                if modname in self._to_load:
-                    self._to_load.remove(modname)
-                if modname in self._maybe_dep:
-                    self._maybe_dep.remove(modname)
-                self._not_using_because['dependency failure'].add(modname)
+                for mod in possible_mods:
+                    ok, dependency_modules = ModulesChooser.resolve_dependencies(
+                        available_modules, dependency_table, mod, loaded_modules)
+                    if ok:
+                        dependency_met = True
+                        loaded_modules.add(mod)
+                        loaded_modules.update(dependency_modules)
+                        break
 
-                # `modname` is kicked out, no need to check more further dependencies
-                return
+            if not dependency_met:
+                return False, None
+
+        return True, loaded_modules
+
+    def _modules_dependency_table(self):
+        out = {}
+        for modname in self._modules:
+            out[modname] = self._modules[modname].dependencies()
+        return out
 
     def _resolve_dependencies_for_all_modules(self):
-        for modname in self._to_load.copy():
-            # This will recusively load all dependencies if modname
-            # or mark those with dependency failures as unused
-            self._resolve_dependencies(modname)
+        available_modules = set(self._to_load) | set(self._maybe_dep)
+        dependency_table = self._modules_dependency_table()
+
+        successfully_loaded = set()
+
+        for modname in self._to_load:
+            # This will try to recusively load all dependencies of modname
+            ok, modules = self.resolve_dependencies(available_modules, dependency_table, modname)
+            if ok:
+                successfully_loaded.add(modname)
+                successfully_loaded.update(modules)
+            else:
+                # Skip this module
+                pass
+
+        self._not_using_because['dependency failure'].update(self._to_load - successfully_loaded)
+        self._to_load = successfully_loaded
+        self._maybe_dep -= successfully_loaded
 
     def _handle_by_load_on(self, module): # pylint: disable=too-many-branches
         modname = module.basename

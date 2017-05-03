@@ -11,6 +11,10 @@ python3 -m pylint configure.py
 python2 -m pylint --disable=superfluous-parens,too-many-locals configure.py
 echo "travis_fold:end:pylint_configure"
 
+echo "travis_fold:start:pylint_python_unittests"
+python3 -m pylint src/scripts/python_uniitests.py
+echo "travis_fold:end:pylint_python_unittests"
+
 echo "travis_fold:start:pylint_botanpy"
 python3 -m pylint src/python/botan2.py || true
 python2 -m pylint --disable=superfluous-parens,too-many-locals src/python/botan2.py || true
