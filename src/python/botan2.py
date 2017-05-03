@@ -83,7 +83,7 @@ def _ctype_bits(s):
         if isinstance(s, bytes):
             return s
         elif isinstance(s, str):
-            return s.encode('utf-8') # FIXME
+            return s.encode('utf-8')
         else:
             assert False
 
