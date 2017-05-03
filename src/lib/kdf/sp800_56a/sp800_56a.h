@@ -1,6 +1,8 @@
 /*
 * KDF defined in NIST SP 800-56a revision 2 (Single-step key-derivation function)
-* (C) 2016 Krzysztof Kwiatkowski
+*
+* (C) 2017 Ribose Inc.
+* Written by Krzysztof Kwiatkowski.
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

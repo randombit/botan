@@ -1,6 +1,8 @@
 /*
 * KDF defined in NIST SP 800-56a (Approved Alternative 1)
-* (C) 2017 Krzysztof Kwiatkowski
+*
+* (C) 2017 Ribose Inc.
+* Written by Krzysztof Kwiatkowski.
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
