@@ -15,7 +15,7 @@
 namespace Botan {
 
 namespace {
-static const size_t MAX_REPS = (2ULL << 32);
+static const uint64_t MAX_REPS = (2ULL << 32);
 
 // Option1: auxiliary function is a hash function
 template<typename T>
