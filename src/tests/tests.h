@@ -15,11 +15,11 @@
 #include <botan/cpuid.h>
 
 #if defined(BOTAN_HAS_BIGINT)
-  #include <botan/bigint.h>
+   #include <botan/bigint.h>
 #endif
 
 #if defined(BOTAN_HAS_EC_CURVE_GFP)
-  #include <botan/point_gfp.h>
+   #include <botan/point_gfp.h>
 #endif
 
 #include <fstream>
@@ -35,7 +35,7 @@
 namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_BIGINT)
-using Botan::BigInt;
+   using Botan::BigInt;
 #endif
 
 using Botan::OctetString;
@@ -51,7 +51,7 @@ class Provider_Filter
    public:
       Provider_Filter() {}
       void set(const std::string& provider) { m_provider = provider; }
-      std::vector<std::string> filter(const std::vector<std::string> &) const;
+      std::vector<std::string> filter(const std::vector<std::string>&) const;
    private:
       std::string m_provider;
    };
@@ -75,12 +75,27 @@ class Test
          public:
             explicit Result(const std::string& who) : m_who(who) {}
 
-            size_t tests_passed() const { return m_tests_passed; }
-            size_t tests_failed() const { return m_fail_log.size(); }
-            size_t tests_run() const { return tests_passed() + tests_failed(); }
-            bool any_results() const { return tests_run() > 0; }
+            size_t tests_passed() const
+               {
+               return m_tests_passed;
+               }
+            size_t tests_failed() const
+               {
+               return m_fail_log.size();
+               }
+            size_t tests_run() const
+               {
+               return tests_passed() + tests_failed();
+               }
+            bool any_results() const
+               {
+               return tests_run() > 0;
+               }
 
-            const std::string& who() const { return m_who; }
+            const std::string& who() const
+               {
+               return m_who;
+               }
             std::string result_string(bool verbose) const;
 
             static Result Failure(const std::string& who,
@@ -310,9 +325,12 @@ class Test
             bool test_throws(const std::string& what, std::function<void ()> fn);
 
             bool test_throws(const std::string& what, const std::string& expected,
-                              std::function<void ()> fn);
+                             std::function<void ()> fn);
 
-            void set_ns_consumed(uint64_t ns) { m_ns_taken = ns; }
+            void set_ns_consumed(uint64_t ns)
+               {
+               m_ns_taken = ns;
+               }
 
             void start_timer();
             void end_timer();
@@ -432,7 +450,10 @@ class Text_Based_Test : public Test
                       const std::string& required_keys,
                       const std::string& optional_keys = "");
 
-      virtual bool clear_between_callbacks() const { return true; }
+      virtual bool clear_between_callbacks() const
+         {
+         return true;
+         }
 
       std::vector<Test::Result> run() override;
    protected:
@@ -446,7 +467,10 @@ class Text_Based_Test : public Test
       virtual bool skip_this_test(const std::string& header,
                                   const VarMap& vars);
 
-      virtual std::vector<Test::Result> run_final_tests() { return std::vector<Test::Result>(); }
+      virtual std::vector<Test::Result> run_final_tests()
+         {
+         return std::vector<Test::Result>();
+         }
 
       bool get_req_bool(const VarMap& vars, const std::string& key) const;
 

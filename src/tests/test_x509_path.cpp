@@ -7,9 +7,9 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-  #include <botan/x509path.h>
-  #include <botan/calendar.h>
-  #include <botan/internal/filesystem.h>
+   #include <botan/x509path.h>
+   #include <botan/calendar.h>
+   #include <botan/internal/filesystem.h>
 #endif
 
 #include <algorithm>
@@ -30,7 +30,9 @@ std::map<std::string, std::string> read_results(const std::string& results_file)
    {
    std::ifstream in(results_file);
    if(!in.good())
+      {
       throw Test_Error("Failed reading " + results_file);
+      }
 
    std::map<std::string, std::string> m;
    std::string line;
@@ -38,14 +40,20 @@ std::map<std::string, std::string> read_results(const std::string& results_file)
       {
       std::getline(in, line);
       if(line == "")
+         {
          continue;
+         }
       if(line[0] == '#')
+         {
          continue;
+         }
 
       std::vector<std::string> parts = Botan::split_on(line, ':');
 
       if(parts.size() != 2)
+         {
          throw Test_Error("Invalid line " + line);
+         }
 
       m[parts[0]] = parts[1];
       }
@@ -72,7 +80,7 @@ class X509test_Path_Validation_Tests : public Test
          Botan::Certificate_Store_In_Memory trusted;
          trusted.add_certificate(root);
 
-         auto validation_time = Botan::calendar_point(2016,10,21,4,20,0).to_std_timepoint();
+         auto validation_time = Botan::calendar_point(2016, 10, 21, 4, 20, 0).to_std_timepoint();
 
          for(auto i = expected.begin(); i != expected.end(); ++i)
             {
@@ -85,15 +93,19 @@ class X509test_Path_Validation_Tests : public Test
                load_cert_file(Test::data_file("x509test/" + filename));
 
             if(certs.empty())
+               {
                throw Test_Error("Failed to read certs from " + filename);
+               }
 
             Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
-               certs, restrictions, trusted,
-               "www.tls.test", Botan::Usage_Type::TLS_SERVER_AUTH,
-               validation_time);
+                     certs, restrictions, trusted,
+                     "www.tls.test", Botan::Usage_Type::TLS_SERVER_AUTH,
+                     validation_time);
 
             if(path_result.successful_validation() && path_result.trust_root() != root)
+               {
                path_result = Botan::Path_Validation_Result(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
+               }
 
             result.test_eq("test " + filename, path_result.result_string(), expected_result);
             result.end_timer();
@@ -112,9 +124,10 @@ class X509test_Path_Validation_Tests : public Test
          std::vector<Botan::X509_Certificate> certs;
          while(!in.end_of_data())
             {
-            try {
-              certs.emplace_back(in);
-            }
+            try
+               {
+               certs.emplace_back(in);
+               }
             catch(Botan::Decoding_Error&) {}
             }
 
@@ -190,7 +203,7 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
       store.add_certificate(root_cert);
       store.add_crl(root_crl);
 
-      for(auto&& file : all_files)
+      for(auto const& file : all_files)
          {
          if(file.find(".crt") != std::string::npos && file != "end.crt")
             {

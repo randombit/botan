@@ -7,8 +7,8 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_AEAD_OCB)
-  #include <botan/ocb.h>
-  #include <botan/loadstor.h>
+   #include <botan/ocb.h>
+   #include <botan/loadstor.h>
 #endif
 
 namespace Botan_Tests {
@@ -20,8 +20,9 @@ namespace {
 class OCB_Long_KAT_Tests : public Text_Based_Test
    {
    public:
-      OCB_Long_KAT_Tests() : Text_Based_Test("ocb_long.vec",
-                                             "Keylen,Taglen,Output") {}
+      OCB_Long_KAT_Tests()
+         : Text_Based_Test("ocb_long.vec",
+                           "Keylen,Taglen,Output") {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
@@ -45,8 +46,8 @@ class OCB_Long_KAT_Tests : public Text_Based_Test
          Botan::OCB_Encryption enc(aes->clone(), taglen / 8);
          Botan::OCB_Decryption dec(aes->clone(), taglen / 8);
 
-         std::vector<uint8_t> key(keylen/8);
-         key[keylen/8-1] = taglen;
+         std::vector<uint8_t> key(keylen / 8);
+         key[keylen / 8 - 1] = taglen;
 
          enc.set_key(key);
          dec.set_key(key);
@@ -59,12 +60,12 @@ class OCB_Long_KAT_Tests : public Text_Based_Test
             {
             const std::vector<uint8_t> S(i);
 
-            Botan::store_be(static_cast<uint32_t>(3*i+1), &N[8]);
+            Botan::store_be(static_cast<uint32_t>(3 * i + 1), &N[8]);
 
             ocb_encrypt(result, C, enc, dec, N, S, S);
-            Botan::store_be(static_cast<uint32_t>(3*i+2), &N[8]);
+            Botan::store_be(static_cast<uint32_t>(3 * i + 2), &N[8]);
             ocb_encrypt(result, C, enc, dec, N, S, empty);
-            Botan::store_be(static_cast<uint32_t>(3*i+3), &N[8]);
+            Botan::store_be(static_cast<uint32_t>(3 * i + 3), &N[8]);
             ocb_encrypt(result, C, enc, dec, N, empty, S);
             }
 
@@ -118,4 +119,3 @@ BOTAN_REGISTER_TEST("ocb_long", OCB_Long_KAT_Tests);
 }
 
 }
-

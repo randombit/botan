@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PBKDF)
-  #include <botan/pbkdf.h>
+   #include <botan/pbkdf.h>
 #endif
 
 namespace Botan_Tests {
@@ -18,9 +18,7 @@ namespace {
 class PBKDF_KAT_Tests : public Text_Based_Test
    {
    public:
-      PBKDF_KAT_Tests() : Text_Based_Test("pbkdf",
-                                          "OutputLen,Iterations,Salt,Passphrase,Output")
-         {}
+      PBKDF_KAT_Tests() : Text_Based_Test("pbkdf", "OutputLen,Iterations,Salt,Passphrase,Output") {}
 
       Test::Result run_one_test(const std::string& pbkdf_name, const VarMap& vars) override
          {

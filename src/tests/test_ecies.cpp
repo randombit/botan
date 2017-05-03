@@ -106,8 +106,7 @@ class ECIES_ISO_Tests : public Text_Based_Test
    public:
       ECIES_ISO_Tests() : Text_Based_Test(
             "pubkey/ecies-18033.vec",
-            "format,p,a,b,mu,nu,gx,gy,hx,hy,x,r,C0,K")
-         {}
+            "format,p,a,b,mu,nu,gx,gy,hx,hy,x,r,C0,K") {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
@@ -141,7 +140,7 @@ class ECIES_ISO_Tests : public Text_Based_Test
          const Botan::ECDH_PrivateKey eph_private_key(Test::rng(), domain, r);
          const Botan::PointGFp eph_public_key_point = eph_private_key.public_point();
          const std::vector<uint8_t> eph_public_key_bin = Botan::unlock(
-            Botan::EC2OSP(eph_public_key_point, compression_type));
+                  Botan::EC2OSP(eph_public_key_point, compression_type));
          result.test_eq("encoded (ephemeral) public key", eph_public_key_bin, c0);
 
          // test secret derivation: ISO 18033 test vectors use KDF1 from ISO 18033
@@ -173,11 +172,14 @@ class ECIES_ISO_Tests : public Text_Based_Test
 
                         if(cofactor_mode + check_mode + old_cofactor_mode > 1)
                            {
-                           result.test_throws("throw on invalid ECIES_Flags", [&]
+                           auto onThrow =  [&]()
                               {
-                              Botan::ECIES_System_Params(eph_private_key.domain(), "KDF2(SHA-1)", "AES-256/CBC",
-                                                         32, "HMAC(SHA-1)", 20, gen_compression_type, flags);
-                              });
+                              Botan::ECIES_System_Params(
+                                 eph_private_key.domain(),
+                                 "KDF2(SHA-1)", "AES-256/CBC", 32, "HMAC(SHA-1)", 20,
+                                 gen_compression_type, flags);
+                              };
+                           result.test_throws("throw on invalid ECIES_Flags", onThrow);
                            continue;
                            }
 
@@ -201,11 +203,11 @@ BOTAN_REGISTER_TEST("ecies_iso", ECIES_ISO_Tests);
 class ECIES_Tests : public Text_Based_Test
    {
    public:
-      ECIES_Tests() : Text_Based_Test(
-         "pubkey/ecies.vec",
-         "Curve,PrivateKey,OtherPrivateKey,Kdf,Dem,DemKeyLen,Iv,Mac,MacKeyLen,Format,"
-         "CofactorMode,OldCofactorMode,CheckMode,SingleHashMode,Label,Plaintext,Ciphertext")
-         {}
+      ECIES_Tests()
+         : Text_Based_Test(
+              "pubkey/ecies.vec",
+              "Curve,PrivateKey,OtherPrivateKey,Kdf,Dem,DemKeyLen,Iv,Mac,MacKeyLen,Format,"
+              "CofactorMode,OldCofactorMode,CheckMode,SingleHashMode,Label,Plaintext,Ciphertext") {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
@@ -373,13 +375,13 @@ Test::Result test_system_params_short_ctor()
 
    // generated with botan
    const std::vector<uint8_t> ciphertext = Botan::hex_decode("0401519EAA0489FF9D51E98E4C22349463E2001CD06F8CE47D81D4007A"
-                                        "79ACF98E92C814686477CEA666EFC277DC84E15FC95E38AFF8E16D478A"
-                                        "44CD5C5F1517F8B1F300000591317F261C3D04A7207F01EAE3EC70F2360"
-                                        "0F82C53CC0B85BE7AC9F6CE79EF2AB416E5934D61BA9D346385D7545C57F"
-                                        "77C7EA7C58E18C70CBFB0A24AE1B9943EC5A8D0657522CCDF30BA95674D81"
-                                        "B397635D215178CD13BD9504AE957A9888F4128FFC0F0D3F1CEC646AEC8CE"
-                                        "3F2463D233B22A7A12B679F4C06501F584D4DEFF6D26592A8D873398BD892"
-                                        "B477B3468813C053DA43C4F3D49009F7A12D6EF7");
+                                           "79ACF98E92C814686477CEA666EFC277DC84E15FC95E38AFF8E16D478A"
+                                           "44CD5C5F1517F8B1F300000591317F261C3D04A7207F01EAE3EC70F2360"
+                                           "0F82C53CC0B85BE7AC9F6CE79EF2AB416E5934D61BA9D346385D7545C57F"
+                                           "77C7EA7C58E18C70CBFB0A24AE1B9943EC5A8D0657522CCDF30BA95674D81"
+                                           "B397635D215178CD13BD9504AE957A9888F4128FFC0F0D3F1CEC646AEC8CE"
+                                           "3F2463D233B22A7A12B679F4C06501F584D4DEFF6D26592A8D873398BD892"
+                                           "B477B3468813C053DA43C4F3D49009F7A12D6EF7");
 
    check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, iv, label, plaintext, ciphertext);
 

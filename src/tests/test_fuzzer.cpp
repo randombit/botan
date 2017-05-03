@@ -9,13 +9,13 @@
 #include <botan/internal/filesystem.h>
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-  #include <botan/x509cert.h>
-  #include <botan/x509_crl.h>
-  #include <botan/base64.h>
+   #include <botan/x509cert.h>
+   #include <botan/x509_crl.h>
+   #include <botan/base64.h>
 #endif
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-  #include <botan/pkcs8.h>
+   #include <botan/pkcs8.h>
 #endif
 
 namespace Botan_Tests {
@@ -57,7 +57,7 @@ class Fuzzer_Input_Tests : public Test
             return result;
             }
 
-         for(auto vec_file: files)
+         for(auto vec_file : files)
             {
             try
                {
@@ -90,7 +90,7 @@ class Fuzzer_Input_Tests : public Test
             return result;
             }
 
-         for(auto vec_file: files)
+         for(auto vec_file : files)
             {
             auto start = std::chrono::steady_clock::now();
 

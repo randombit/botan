@@ -10,18 +10,19 @@
 
 #include "tests.h"
 #include <botan/hex.h>
+#include <numeric>
 
 #if defined(BOTAN_HAS_ECDSA)
-  #include <botan/pubkey.h>
-  #include <botan/ecdsa.h>
-  #include <botan/ec_group.h>
-  #include <botan/oids.h>
-  #include <botan/pkcs8.h>
-  #include <botan/hash.h>
+   #include <botan/pubkey.h>
+   #include <botan/ecdsa.h>
+   #include <botan/ec_group.h>
+   #include <botan/oids.h>
+   #include <botan/pkcs8.h>
+   #include <botan/hash.h>
 #endif
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-  #include <botan/x509cert.h>
+   #include <botan/x509cert.h>
 #endif
 
 namespace Botan_Tests {
@@ -41,14 +42,13 @@ Test::Result test_hash_larger_than_n()
    Test::Result result("ECDSA Unit");
 
    Botan::EC_Group dom_pars("secp160r1");
-   
+
    // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
 
    Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
 
    std::vector<uint8_t> message(20);
-   for(size_t i = 0; i != message.size(); ++i)
-      message[i] = i;
+   std::iota(message.begin(), message.end(), 0);
 
    auto sha1 = Botan::HashFunction::create("SHA-1");
    auto sha224 = Botan::HashFunction::create("SHA-224");
@@ -85,7 +85,8 @@ Test::Result test_decode_ecdsa_X509()
 
    result.test_eq("serial number", cert.serial_number(), Botan::hex_decode("01"));
    result.test_eq("authority key id", cert.authority_key_id(), cert.subject_key_id());
-   result.test_eq("key fingerprint", cert.fingerprint("SHA-1"), "32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9");
+   result.test_eq("key fingerprint", cert.fingerprint("SHA-1"),
+                  "32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9");
 
    std::unique_ptr<Botan::Public_Key> pubkey(cert.subject_public_key());
    result.test_eq("verify self-signed signature", cert.check_signature(*pubkey), true);
@@ -171,9 +172,11 @@ Test::Result test_ec_sign()
 
       // now check with original input, modified signature
 
-      sig[sig.size()/2]++;
+      sig[sig.size() / 2]++;
       for(size_t i = 0; i != 256; ++i)
+         {
          verifier.update(static_cast<uint8_t>(i));
+         }
 
       result.test_eq("invalid ECDSA signature invalid", verifier.check_signature(sig), false);
       }
@@ -227,17 +230,23 @@ Test::Result test_unusual_curve()
    Test::Result result("ECDSA Unit");
 
    //calc a curve which is not in the registry
-   const std::string G_secp_comp = "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
-   const Botan::BigInt bi_p_secp("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
-   const Botan::BigInt bi_a_secp("0x0a377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe");
-   const Botan::BigInt bi_b_secp("0x0a9acf8c8ba617777e248509bcb4717d4db346202bf9e352cd5633731dd92a51b72a4dc3b3d17c823fcc8fbda4da08f25dea89046087342595a7");
+   const std::string G_secp_comp =
+      "04081523d03d4f12cd02879dea4bf6a4f3a7df26ed888f10c5b2235a1274c386a2f218300dee6ed217841164533bcdc903f07a096f9fbf4ee95bac098a111f296f5830fe5c35b3e344d5df3a2256985f64fbe6d0edcc4c61d18bef681dd399df3d0194c5a4315e012e0245ecea56365baa9e8be1f7";
+   const Botan::BigInt
+   bi_p_secp("2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
+   const Botan::BigInt
+   bi_a_secp("0x0a377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe");
+   const Botan::BigInt
+   bi_b_secp("0x0a9acf8c8ba617777e248509bcb4717d4db346202bf9e352cd5633731dd92a51b72a4dc3b3d17c823fcc8fbda4da08f25dea89046087342595a7");
    Botan::BigInt bi_order_g("0x0e1a16196e6000000000bc7f1618d867b15bb86474418f");
    Botan::CurveGFp curve(bi_p_secp, bi_a_secp, bi_b_secp);
    Botan::PointGFp p_G = Botan::OS2ECP(Botan::hex_decode(G_secp_comp), curve);
 
    Botan::EC_Group dom_params(curve, p_G, bi_order_g, Botan::BigInt(1));
    if(!result.confirm("point is on curve", p_G.on_the_curve()))
+      {
       return result;
+      }
 
    Botan::ECDSA_PrivateKey key_odd_curve(Test::rng(), dom_params);
    std::string key_odd_curve_str = Botan::PKCS8::PEM_encode(key_odd_curve);
@@ -258,11 +267,14 @@ Test::Result test_read_pkcs8()
 
    try
       {
-      std::unique_ptr<Botan::Private_Key> loaded_key_nodp(Botan::PKCS8::load_key(Test::data_file("ecc/nodompar_private.pkcs8.pem"), Test::rng()));
+      std::unique_ptr<Botan::Private_Key> loaded_key_nodp(Botan::PKCS8::load_key(
+               Test::data_file("ecc/nodompar_private.pkcs8.pem"), Test::rng()));
       // anew in each test with unregistered domain-parameters
       Botan::ECDSA_PrivateKey* ecdsa_nodp = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key_nodp.get());
       if(!ecdsa_nodp)
+         {
          throw Test_Error("Unable to load valid PKCS8 ECDSA key");
+         }
 
       Botan::PK_Signer signer(*ecdsa_nodp, Test::rng(), "EMSA1(SHA-256)");
       Botan::PK_Verifier verifier(*ecdsa_nodp, "EMSA1(SHA-256)");
@@ -295,7 +307,8 @@ Test::Result test_read_pkcs8()
 
 Test::Result test_curve_registry()
    {
-   const std::vector<std::string> oids = {
+   const std::vector<std::string> oids =
+      {
       "1.3.132.0.8",
       "1.2.840.10045.3.1.1",
       "1.2.840.10045.3.1.2",
@@ -323,7 +336,7 @@ Test::Result test_curve_registry()
 
    Test::Result result("ECDSA Unit");
 
-   for(auto&& oid_str : oids)
+   for(auto const& oid_str : oids)
       {
       try
          {

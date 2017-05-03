@@ -45,7 +45,9 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
       Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
 
       for(const auto& a : certsandkeys)
+         {
          store.insert_key(a.certificate, *a.private_key);
+         }
 
       for(const auto certandkey : certsandkeys)
          {
@@ -124,7 +126,9 @@ Test::Result test_certstor_sqlite3_crl_test(const std::vector<CertificateAndKey>
       Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
 
       for(const auto& a : certsandkeys)
+         {
          store.insert_cert(a.certificate);
+         }
 
       store.revoke_cert(certsandkeys[0].certificate, Botan::CA_COMPROMISE);
       store.revoke_cert(certsandkeys[3].certificate, Botan::CA_COMPROMISE);
@@ -179,7 +183,9 @@ Test::Result test_certstor_sqlite3_all_subjects_test(const std::vector<Certifica
       Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
 
       for(const auto& a : certsandkeys)
+         {
          store.insert_cert(a.certificate);
+         }
 
       const auto subjects = store.all_subjects();
 
@@ -219,7 +225,9 @@ Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey
       Botan::Certificate_Store_In_Memory store;
 
       for(const auto& a : certsandkeys)
+         {
          store.add_certificate(a.certificate);
+         }
 
       for(const auto certandkey : certsandkeys)
          {
@@ -236,7 +244,7 @@ Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey
          result.test_eq("Got wrong certificate", hash, found->raw_subject_dn_sha256());
          }
 
-      const auto found = store.find_cert_by_raw_subject_dn_sha256(std::vector<uint8_t>(32,0));
+      const auto found = store.find_cert_by_raw_subject_dn_sha256(std::vector<uint8_t>(32, 0));
       if(found)
          {
          result.test_failure("Certificate found for dummy hash");

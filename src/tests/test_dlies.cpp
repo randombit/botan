@@ -8,10 +8,10 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_DLIES) && defined(BOTAN_HAS_DIFFIE_HELLMAN)
-  #include "test_pubkey.h"
-  #include <botan/dlies.h>
-  #include <botan/dh.h>
-  #include <botan/pubkey.h>
+   #include "test_pubkey.h"
+   #include <botan/dlies.h>
+   #include <botan/dh.h>
+   #include <botan/pubkey.h>
 #endif
 
 namespace Botan_Tests {
@@ -23,10 +23,10 @@ namespace {
 class DLIES_KAT_Tests : public Text_Based_Test
    {
    public:
-      DLIES_KAT_Tests() : Text_Based_Test(
-         "pubkey/dlies.vec",
-         "Kdf,Mac,MacKeyLen,IV,Group,X1,X2,Msg,Ciphertext")
-         {}
+      DLIES_KAT_Tests()
+         : Text_Based_Test(
+              "pubkey/dlies.vec",
+              "Kdf,Mac,MacKeyLen,IV,Group,X1,X2,Msg,Ciphertext") {}
 
       Test::Result run_one_test(const std::string& cipher_algo, const VarMap& vars) override
          {
@@ -76,8 +76,10 @@ class DLIES_KAT_Tests : public Text_Based_Test
          Botan::DH_PrivateKey from(Test::rng(), domain, x1);
          Botan::DH_PrivateKey to(Test::rng(), domain, x2);
 
-         Botan::DLIES_Encryptor encryptor(from, Test::rng(), kdf->clone(), enc.release(), cipher_key_len, mac->clone(), mac_key_len);
-         Botan::DLIES_Decryptor decryptor(to, Test::rng(), kdf.release(), dec.release(), cipher_key_len, mac.release(), mac_key_len);
+         Botan::DLIES_Encryptor encryptor(from, Test::rng(), kdf->clone(), enc.release(), cipher_key_len, mac->clone(),
+                                          mac_key_len);
+         Botan::DLIES_Decryptor decryptor(to, Test::rng(), kdf.release(), dec.release(), cipher_key_len, mac.release(),
+                                          mac_key_len);
 
          if(!iv.empty())
             {

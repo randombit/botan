@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_KDF_BASE)
-  #include <botan/kdf.h>
+   #include <botan/kdf.h>
 #endif
 
 namespace Botan_Tests {
@@ -18,10 +18,7 @@ namespace {
 class KDF_KAT_Tests : public Text_Based_Test
    {
    public:
-      KDF_KAT_Tests() : Text_Based_Test("kdf",
-                                        "OutputLen,Salt,Secret,Label,Output",
-                                        "IKM,XTS")
-         {}
+      KDF_KAT_Tests() : Text_Based_Test("kdf", "OutputLen,Salt,Secret,Label,Output", "IKM,XTS") {}
 
       Test::Result run_one_test(const std::string& kdf_name, const VarMap& vars) override
          {

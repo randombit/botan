@@ -10,20 +10,20 @@
 
 #if defined(BOTAN_HAS_MCELIECE)
 
-#include <botan/mceliece.h>
-#include <botan/pubkey.h>
-#include <botan/oids.h>
-#include <botan/loadstor.h>
-#include <botan/hash.h>
-#include <botan/hex.h>
+   #include <botan/mceliece.h>
+   #include <botan/pubkey.h>
+   #include <botan/oids.h>
+   #include <botan/loadstor.h>
+   #include <botan/hash.h>
+   #include <botan/hex.h>
 
-#if defined(BOTAN_HAS_HMAC_DRBG)
-  #include <botan/hmac_drbg.h>
-#endif
+   #if defined(BOTAN_HAS_HMAC_DRBG)
+      #include <botan/hmac_drbg.h>
+   #endif
 
-#if defined(BOTAN_HAS_MCEIES)
-  #include <botan/mceies.h>
-#endif
+   #if defined(BOTAN_HAS_MCEIES)
+      #include <botan/mceies.h>
+   #endif
 
 #endif
 
@@ -37,12 +37,11 @@ namespace {
 class McEliece_Keygen_Encrypt_Test : public Text_Based_Test
    {
    public:
-      McEliece_Keygen_Encrypt_Test() :
-         Text_Based_Test("pubkey/mce.vec",
-                         "McElieceSeed,KeyN,KeyT,PublicKeyFingerprint,PrivateKeyFingerprint,"
-                         "EncryptPRNGSeed,SharedKey,Ciphertext",
-                         "")
-         {}
+      McEliece_Keygen_Encrypt_Test()
+         : Text_Based_Test("pubkey/mce.vec",
+                           "McElieceSeed,KeyN,KeyT,PublicKeyFingerprint,PrivateKeyFingerprint,"
+                           "EncryptPRNGSeed,SharedKey,Ciphertext",
+                           "") {}
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override
          {
@@ -127,7 +126,9 @@ class McEliece_Tests : public Test
          {
          std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_algo));
          if(!hash)
+            {
             throw Test_Error("Hash " + hash_algo + " not available");
+            }
 
          hash->update(key.private_key_bits());
          return Botan::hex_encode(hash->final());
@@ -137,7 +138,9 @@ class McEliece_Tests : public Test
          {
          std::unique_ptr<Botan::HashFunction> hash(Botan::HashFunction::create(hash_algo));
          if(!hash)
+            {
             throw Test_Error("Hash " + hash_algo + " not available");
+            }
 
          hash->update(key.public_key_bits());
          return Botan::hex_encode(hash->final());
@@ -147,18 +150,23 @@ class McEliece_Tests : public Test
          {
          struct keygen_params { size_t code_length, t_min, t_max; };
 
-         const keygen_params param_sets[] = { { 256, 5, 15 },
-                                              { 512, 5, 33 },
-                                              { 1024, 15, 35 },
-                                              { 2048, 33, 50 },
-                                              { 6624, 110, 115 } };
+         const keygen_params param_sets[] =
+            {
+               { 256, 5, 15 },
+               { 512, 5, 33 },
+               { 1024, 15, 35 },
+               { 2048, 33, 50 },
+               { 6624, 110, 115 }
+            };
 
          std::vector<Test::Result> results;
 
-         for(size_t i = 0; i < sizeof(param_sets)/sizeof(param_sets[0]); ++i)
+         for(size_t i = 0; i < sizeof(param_sets) / sizeof(param_sets[0]); ++i)
             {
             if(Test::run_long_tests() == false && param_sets[i].code_length >= 2048)
+               {
                continue;
+               }
 
             for(size_t t = param_sets[i].t_min; t <= param_sets[i].t_max; ++t)
                {

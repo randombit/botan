@@ -7,7 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PACKAGE_TRANSFORM)
-  #include <botan/package.h>
+   #include <botan/package.h>
 #endif
 
 namespace Botan_Tests {
@@ -51,7 +51,7 @@ class Package_Transform_Tests : public Test
 
          // More tests including KATs would be useful for these functions
 
-         return std::vector<Test::Result>{result};
+         return std::vector<Test::Result> {result};
          }
    };
 

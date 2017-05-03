@@ -47,7 +47,9 @@ std::string url_encode(const std::vector<uint8_t>& in)
       {
       const int c = in[i];
       if(::isprint(c))
+         {
          out << static_cast<char>(c);
+         }
       else
          {
          out << "%" << std::hex << static_cast<int>(c) << std::dec;
@@ -56,14 +58,16 @@ std::string url_encode(const std::vector<uint8_t>& in)
       }
 
    if(unprintable >= in.size() / 4)
+      {
       return Botan::hex_encode(in);
+      }
 
    return out.str();
    }
 
 void emit(const std::string& type, size_t level, size_t length, const std::string& value = "")
    {
-   const size_t LIMIT = 4*1024;
+   const size_t LIMIT = 4 * 1024;
    const size_t BIN_LIMIT = 1024;
 
    std::ostringstream out;
@@ -72,23 +76,35 @@ void emit(const std::string& type, size_t level, size_t length, const std::strin
        << ", l=" << std::setw(4) << length << ": ";
 
    for(size_t i = INITIAL_LEVEL; i != level; ++i)
+      {
       out << ' ';
+      }
 
    out << type;
 
    bool should_skip = false;
 
    if(value.length() > LIMIT)
+      {
       should_skip = true;
+      }
 
    if((type == "OCTET STRING" || type == "BIT STRING") && value.length() > BIN_LIMIT)
+      {
       should_skip = true;
+      }
 
    if(value != "" && !should_skip)
       {
-      if(out.tellp() % 2 == 0) out << ' ';
+      if(out.tellp() % 2 == 0)
+         {
+         out << ' ';
+         }
 
-      while(out.tellp() < 50) out << ' ';
+      while(out.tellp() < 50)
+         {
+         out << ' ';
+         }
 
       out << value;
       }
@@ -177,12 +193,12 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
          if(type_tag == Botan::SEQUENCE)
             {
             emit("SEQUENCE", level, length);
-            decode(cons_info, level+1);
+            decode(cons_info, level + 1);
             }
          else if(type_tag == Botan::SET)
             {
             emit("SET", level, length);
-            decode(cons_info, level+1);
+            decode(cons_info, level + 1);
             }
          else
             {
@@ -193,15 +209,21 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
                name = "cons [" + std::to_string(type_tag) + "]";
 
                if(class_tag & Botan::APPLICATION)
+                  {
                   name += " appl";
+                  }
                if(class_tag & Botan::CONTEXT_SPECIFIC)
+                  {
                   name += " context";
+                  }
                }
             else
+               {
                name = type_name(type_tag) + " (cons)";
+               }
 
             emit(name, level, length);
-            decode(cons_info, level+1);
+            decode(cons_info, level + 1);
             }
          }
       else if((class_tag & Botan::APPLICATION) || (class_tag & Botan::CONTEXT_SPECIFIC))
@@ -217,12 +239,10 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
             }
          catch(...)
             {
-            emit("[" + std::to_string(type_tag) + "]", level, length,
-                 url_encode(bits));
+            emit("[" + std::to_string(type_tag) + "]", level, length, url_encode(bits));
             }
 #else
-         emit("[" + std::to_string(type_tag) + "]", level, length,
-              url_encode(bits));
+         emit("[" + std::to_string(type_tag) + "]", level, length, url_encode(bits));
 #endif
          }
       else if(type_tag == Botan::OBJECT_ID)
@@ -232,7 +252,9 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
 
          std::string out = Botan::OIDS::lookup(oid);
          if(out != oid.as_string())
+            {
             out += " [" + oid.as_string() + "]";
+            }
 
          emit(type_name(type_tag), level, length, out);
          }
@@ -241,21 +263,31 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
          Botan::BigInt number;
 
          if(type_tag == Botan::INTEGER)
+            {
             data.decode(number);
+            }
          else if(type_tag == Botan::ENUMERATED)
+            {
             data.decode(number, Botan::ENUMERATED, class_tag);
+            }
 
          std::vector<uint8_t> rep;
 
          /* If it's small, it's probably a number, not a hash */
          if(number.bits() <= 20)
+            {
             rep = Botan::BigInt::encode(number, Botan::BigInt::Decimal);
+            }
          else
+            {
             rep = Botan::BigInt::encode(number, Botan::BigInt::Hexadecimal);
+            }
 
          std::string str;
          for(size_t i = 0; i != rep.size(); ++i)
+            {
             str += static_cast<char>(rep[i]);
+            }
 
          emit(type_name(type_tag), level, length, str);
          }
@@ -263,8 +295,7 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
          {
          bool boolean;
          data.decode(boolean);
-         emit(type_name(type_tag),
-              level, length, (boolean ? "true" : "false"));
+         emit(type_name(type_tag), level, length, (boolean ? "true" : "false"));
          }
       else if(type_tag == Botan::NULL_TAG)
          {
@@ -282,8 +313,7 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
             }
          catch(...)
             {
-            emit(type_name(type_tag), level, length,
-                 url_encode(decoded_bits));
+            emit(type_name(type_tag), level, length, url_encode(decoded_bits));
             }
          }
       else if(type_tag == Botan::BIT_STRING)
@@ -294,19 +324,23 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
          std::vector<bool> bit_set;
 
          for(size_t i = 0; i != decoded_bits.size(); ++i)
+            {
             for(size_t j = 0; j != 8; ++j)
                {
-               const bool bit = static_cast<bool>((decoded_bits[decoded_bits.size()-i-1] >> (7-j)) & 1);
+               const bool bit = static_cast<bool>((decoded_bits[decoded_bits.size() - i - 1] >> (7 - j)) & 1);
                bit_set.push_back(bit);
                }
+            }
 
          std::string bit_str;
          for(size_t i = 0; i != bit_set.size(); ++i)
             {
-            bool the_bit = bit_set[bit_set.size()-i-1];
+            bool the_bit = bit_set[bit_set.size() - i - 1];
 
             if(!the_bit && bit_str.size() == 0)
+               {
                continue;
+               }
             bit_str += (the_bit ? "1" : "0");
             }
 

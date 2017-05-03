@@ -25,7 +25,7 @@
 #include <fcntl.h>
 
 #if !defined(MSG_NOSIGNAL)
-  #define MSG_NOSIGNAL 0
+   #define MSG_NOSIGNAL 0
 #endif
 
 namespace Botan_CLI {
@@ -43,7 +43,9 @@ class TLS_Server final : public Command
          const std::string transport = get_arg("type");
 
          if(transport != "tcp" && transport != "udp")
+            {
             throw CLI_Usage_Error("Invalid transport type '" + transport + "' for TLS");
+            }
 
          const bool is_tcp = (transport == "tcp");
 
@@ -70,11 +72,14 @@ class TLS_Server final : public Command
 
          Basic_Credentials_Manager creds(rng(), server_crt, server_key);
 
-         auto protocol_chooser = [](const std::vector<std::string>& protocols) -> std::string {
+         auto protocol_chooser = [](const std::vector<std::string>& protocols) -> std::string
+            {
             for(size_t i = 0; i != protocols.size(); ++i)
+               {
                std::cout << "Client offered protocol " << i << " = " << protocols[i] << std::endl;
+               }
             return "echo/1.0"; // too bad
-         };
+            };
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;
 
@@ -85,62 +90,67 @@ class TLS_Server final : public Command
             int fd;
 
             if(is_tcp)
+               {
                fd = ::accept(server_fd, nullptr, nullptr);
+               }
             else
                {
                struct sockaddr_in from;
                socklen_t from_len = sizeof(sockaddr_in);
 
-               if(::recvfrom(server_fd, nullptr, 0, MSG_PEEK,
-                             reinterpret_cast<struct sockaddr*>(&from), &from_len) != 0)
+               if(::recvfrom(server_fd, nullptr, 0, MSG_PEEK, reinterpret_cast<struct sockaddr*>(&from), &from_len) != 0)
+                  {
                   throw CLI_Error("Could not peek next packet");
+                  }
 
                if(::connect(server_fd, reinterpret_cast<struct sockaddr*>(&from), from_len) != 0)
+                  {
                   throw CLI_Error("Could not connect UDP socket");
-
+                  }
                fd = server_fd;
                }
 
             using namespace std::placeholders;
 
             auto socket_write = is_tcp ? std::bind(&stream_socket_write, fd, _1, _2) :
-               std::bind(&dgram_socket_write, fd, _1, _2);
+                                std::bind(&dgram_socket_write, fd, _1, _2);
 
             std::string s;
             std::list<std::string> pending_output;
 
             auto proc_fn = [&](const uint8_t input[], size_t input_len)
                {
-                  for(size_t i = 0; i != input_len; ++i)
+               for(size_t i = 0; i != input_len; ++i)
+                  {
+                  const char c = static_cast<char>(input[i]);
+                  s += c;
+                  if(c == '\n')
                      {
-                     const char c = static_cast<char>(input[i]);
-                     s += c;
-                     if(c == '\n')
-                        {
-                        pending_output.push_back(s);
-                        s.clear();
-                        }
+                     pending_output.push_back(s);
+                     s.clear();
                      }
+                  }
                };
 
-            Botan::TLS::Server server(socket_write,
-                                      proc_fn,
-                                      std::bind(&TLS_Server::alert_received, this, _1, _2, _3),
-                                      std::bind(&TLS_Server::handshake_complete, this, _1),
-                                      session_manager,
-                                      creds,
-                                      *policy,
-                                      rng(),
-                                      protocol_chooser,
-                                      !is_tcp);
+            Botan::TLS::Server server(
+               socket_write,
+               proc_fn,
+               std::bind(&TLS_Server::alert_received, this, _1, _2, _3),
+               std::bind(&TLS_Server::handshake_complete, this, _1),
+               session_manager,
+               creds,
+               *policy,
+               rng(),
+               protocol_chooser,
+               !is_tcp);
 
             try
                {
                while(!server.is_closed())
                   {
-                  try 
+                  try
                      {
-                     uint8_t buf[4*1024] = { 0 };
+                     uint8_t buf[4 * 1024] = { 0 };
                      ssize_t got = ::read(fd, buf, sizeof(buf));
 
                      if(got == -1)
@@ -164,10 +174,12 @@ class TLS_Server final : public Command
                         server.send(output);
 
                         if(output == "quit\n")
+                           {
                            server.close();
+                           }
                         }
                      }
-                  catch(std::exception& e) 
+                  catch(std::exception& e)
                      {
                      std::cout << "Connection1 problem: " << e.what() << std::endl;
                      if(is_tcp)
@@ -183,7 +195,9 @@ class TLS_Server final : public Command
                }
 
             if(is_tcp)
+               {
                ::close(fd);
+               }
             }
          }
    private:
@@ -193,7 +207,9 @@ class TLS_Server final : public Command
 
          int fd = ::socket(PF_INET, type, 0);
          if(fd == -1)
+            {
             throw CLI_Error("Unable to acquire socket");
+            }
 
          sockaddr_in socket_info;
          ::memset(&socket_info, 0, sizeof(socket_info));
@@ -217,7 +233,6 @@ class TLS_Server final : public Command
                throw CLI_Error("listen failed");
                }
             }
-
          return fd;
          }
 
@@ -227,10 +242,14 @@ class TLS_Server final : public Command
                    << " using " << session.ciphersuite().to_string() << std::endl;
 
          if(!session.session_id().empty())
+            {
             std::cout << "Session ID " << Botan::hex_encode(session.session_id()) << std::endl;
+            }
 
          if(!session.session_ticket().empty())
+            {
             std::cout << "Session ticket " << Botan::hex_encode(session.session_ticket()) << std::endl;
+            }
 
          return true;
          }
@@ -240,9 +259,13 @@ class TLS_Server final : public Command
          ssize_t sent = ::send(sockfd, buf, length, MSG_NOSIGNAL);
 
          if(sent == -1)
+            {
             std::cout << "Error writing to socket - " << strerror(errno) << std::endl;
+            }
          else if(sent != static_cast<ssize_t>(length))
+            {
             std::cout << "Packet of length " << length << " truncated to " << sent << std::endl;
+            }
          }
 
       static void stream_socket_write(int sockfd, const uint8_t buf[], size_t length)
@@ -254,9 +277,13 @@ class TLS_Server final : public Command
             if(sent == -1)
                {
                if(errno == EINTR)
+                  {
                   sent = 0;
+                  }
                else
+                  {
                   throw CLI_Error("Socket write failed");
+                  }
                }
 
             buf += sent;

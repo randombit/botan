@@ -35,7 +35,7 @@ class Block_Cipher_Tests : public Text_Based_Test
             return result;
             }
 
-         for(auto&& provider_ask : providers)
+         for(auto const& provider_ask : providers)
             {
             std::unique_ptr<Botan::BlockCipher> cipher(Botan::BlockCipher::create(algo, provider_ask));
 

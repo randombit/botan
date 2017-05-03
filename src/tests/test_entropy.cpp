@@ -9,7 +9,7 @@
 #include <botan/entropy_src.h>
 
 #if defined(BOTAN_HAS_COMPRESSION)
-  #include <botan/compression.h>
+   #include <botan/compression.h>
 #endif
 
 namespace Botan_Tests {
@@ -27,7 +27,7 @@ class Entropy_Source_Tests : public Test
 
          std::vector<Test::Result> results;
 
-         for(auto&& src_name : src_names)
+         for(auto const& src_name : src_names)
             {
             Test::Result result("Entropy source " + src_name);
 
@@ -104,7 +104,7 @@ class Entropy_Source_Tests : public Test
                            size_t comp_diff = comp2_size - comp1_size;
 
                            result.test_gte(comp_algo + " diff compressed entropy better than advertised",
-                                           comp_diff*8, bits2);
+                                           comp_diff * 8, bits2);
                            }
                         catch(std::exception& e)
                            {
