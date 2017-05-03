@@ -316,7 +316,7 @@ class cipher(object): # pylint: disable=invalid-name
         return self._update(txt, True)
 
 
-def bcrypt(passwd, rng, work_factor=10):
+def bcrypt(passwd, rng_instance, work_factor=10):
     """
     Bcrypt password hashing
     """
@@ -325,7 +325,8 @@ def bcrypt(passwd, rng, work_factor=10):
     out_len = c_size_t(64)
     out = create_string_buffer(out_len.value)
     flags = c_uint32(0)
-    rc = botan.botan_bcrypt_generate(out, byref(out_len), _ctype_str(passwd), rng.rng, c_size_t(work_factor), flags)
+    rc = botan.botan_bcrypt_generate(out, byref(out_len), _ctype_str(passwd),
+                                     rng_instance.rng, c_size_t(work_factor), flags)
     if rc != 0:
         raise BotanException('botan bcrypt failed, error %s' % (rc))
     b = out.raw[0:out_len.value-1]
@@ -406,7 +407,7 @@ class public_key(object): # pylint: disable=invalid-name
         return hex_encode(buf[0:buf_len.value])
 
 class private_key(object): # pylint: disable=invalid-name
-    def __init__(self, alg, param, rng):
+    def __init__(self, alg, param, rng_instance):
         botan.botan_privkey_create_rsa.argtypes = [c_void_p, c_void_p, c_size_t]
         botan.botan_privkey_create_ecdsa.argtypes = [c_void_p, c_void_p, c_char_p]
         botan.botan_privkey_create_ecdh.argtypes = [c_void_p, c_void_p, c_char_p]
@@ -415,13 +416,13 @@ class private_key(object): # pylint: disable=invalid-name
         self.privkey = c_void_p(0)
 
         if alg == 'rsa':
-            botan.botan_privkey_create_rsa(byref(self.privkey), rng.rng, param)
+            botan.botan_privkey_create_rsa(byref(self.privkey), rng_instance.rng, param)
         elif alg == 'ecdsa':
-            botan.botan_privkey_create_ecdsa(byref(self.privkey), rng.rng, _ctype_str(param))
+            botan.botan_privkey_create_ecdsa(byref(self.privkey), rng_instance.rng, _ctype_str(param))
         elif alg == 'ecdh':
-            botan.botan_privkey_create_ecdh(byref(self.privkey), rng.rng, _ctype_str(param))
+            botan.botan_privkey_create_ecdh(byref(self.privkey), rng_instance.rng, _ctype_str(param))
         elif alg in ['mce', 'mceliece']:
-            botan.botan_privkey_create_mceliece(byref(self.privkey), rng.rng, param[0], param[1])
+            botan.botan_privkey_create_mceliece(byref(self.privkey), rng_instance.rng, param[0], param[1])
         else:
             raise BotanException('Unknown public key algo ' + alg)
 
@@ -466,7 +467,7 @@ class pk_op_encrypt(object): # pylint: disable=invalid-name
         botan.botan_pk_op_encrypt_destroy.argtypes = [c_void_p]
         botan.botan_pk_op_encrypt_destroy(self.op)
 
-    def encrypt(self, msg, rng):
+    def encrypt(self, msg, rng_instance):
         botan.botan_pk_op_encrypt.argtypes = [c_void_p, c_void_p,
                                               POINTER(c_char), POINTER(c_size_t),
                                               POINTER(c_char), c_size_t]
@@ -478,7 +479,7 @@ class pk_op_encrypt(object): # pylint: disable=invalid-name
         #if sys.version_info[0] > 2:
         #    msg = cast(msg, c_char_p)
         #    ll = c_size_t(ll)
-        botan.botan_pk_op_encrypt(self.op, rng.rng, outbuf, byref(outbuf_sz), msg, ll)
+        botan.botan_pk_op_encrypt(self.op, rng_instance.rng, outbuf, byref(outbuf_sz), msg, ll)
         #print("encrypt: outbuf_sz.value=%d" % outbuf_sz.value)
         return outbuf.raw[0:outbuf_sz.value]
 
@@ -524,11 +525,11 @@ class pk_op_sign(object): # pylint: disable=invalid-name
         botan.botan_pk_op_sign_update.argtypes = [c_void_p, POINTER(c_char), c_size_t]
         botan.botan_pk_op_sign_update(self.op, _ctype_str(msg), len(msg))
 
-    def finish(self, rng):
+    def finish(self, rng_instance):
         botan.botan_pk_op_sign_finish.argtypes = [c_void_p, c_void_p, POINTER(c_char), POINTER(c_size_t)]
         outbuf_sz = c_size_t(4096) #?!?!
         outbuf = create_string_buffer(outbuf_sz.value)
-        botan.botan_pk_op_sign_finish(self.op, rng.rng, outbuf, byref(outbuf_sz))
+        botan.botan_pk_op_sign_finish(self.op, rng_instance.rng, outbuf, byref(outbuf_sz))
         return outbuf.raw[0:outbuf_sz.value]
 
 class pk_op_verify(object): # pylint: disable=invalid-name
@@ -560,13 +561,13 @@ class pk_op_verify(object): # pylint: disable=invalid-name
 # MCEIES encryption
 # Must be used with McEliece keys
 #
-def mceies_encrypt(mce, rng, aead, pt, ad):
+def mceies_encrypt(mce, rng_instance, aead, pt, ad):
     botan.botan_mceies_encrypt.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_char), c_size_t,
                                            POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)]
 
     return _call_fn_returning_vec(0, lambda b, bl:
                                   botan.botan_mceies_encrypt(mce.pubkey,
-                                                             rng.rng,
+                                                             rng_instance.rng,
                                                              _ctype_str(aead),
                                                              _ctype_bits(pt),
                                                              len(pt),
