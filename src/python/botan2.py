@@ -26,9 +26,9 @@ import time
 # Module initialization
 #
 if sys.platform == 'darwin':
-    botan = CDLL('libbotan-2.dylib')
+    botan = CDLL('libbotan-2.dylib') # pylint: disable=invalid-name
 else:
-    botan = CDLL('libbotan-2.so')
+    botan = CDLL('libbotan-2.so') # pylint: disable=invalid-name
 
 if botan.botan_ffi_supports_api(20151015) == False:
     raise Exception("The Botan library does not support the FFI API expected by this version of the Python module")
