@@ -2028,7 +2028,10 @@ class ModulesChooser(object):
             if all_modules[modname].load_on == 'vendor':
                 logging.info('Enabling use of external dependency %s' % modname)
 
-        logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
+        if sorted_modules_to_load:
+            logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
+        else:
+            logging.error('This configuration disables every submodule and is invalid')
 
     @staticmethod
     def _validate_state(used_modules, unused_modules):
