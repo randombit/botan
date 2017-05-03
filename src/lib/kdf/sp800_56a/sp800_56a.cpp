@@ -1,8 +1,7 @@
 /*
 * KDF defined in NIST SP 800-56a (Approved Alternative 1)
 *
-* (C) 2017 Ribose Inc.
-* Written by Krzysztof Kwiatkowski.
+* (C) 2017 Ribose Inc. Written by Krzysztof Kwiatkowski.
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -15,7 +14,8 @@
 namespace Botan {
 
 namespace {
-static const uint64_t MAX_REPS = (2ULL << 32);
+
+const uint64_t kRepsUpperBound = (1ULL << 32);
 
 // Option1: auxiliary function is a hash function
 template<typename T>
@@ -69,7 +69,7 @@ size_t SP800_56A<AuxiliaryFunction_t>::kdf(
    const size_t digest_len = m_auxfunc->output_length();
 
    size_t reps = key_len / digest_len + !!(key_len % digest_len);
-   if (reps >= MAX_REPS) {
+   if (reps >= kRepsUpperBound) {
       // See SP-800-56A, point 5.8.1
       throw Invalid_Argument(
             "key_len / digest output size "
