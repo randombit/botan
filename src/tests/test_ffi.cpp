@@ -261,8 +261,8 @@ class FFI_Unit_Tests : public Test
             result.test_int_eq(serial[0], 1, "cert serial");
 
             size_t fingerprint_len = 0;
-            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_fingerprint, (cert, "SHA-256", nullptr,
-                        &fingerprint_len));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_fingerprint,
+                        (cert, "SHA-256", nullptr, &fingerprint_len));
 
             std::vector<uint8_t> fingerprint(fingerprint_len);
             TEST_FFI_OK(botan_x509_cert_get_fingerprint, (cert, "SHA-256", fingerprint.data(), &fingerprint_len));
@@ -270,8 +270,8 @@ class FFI_Unit_Tests : public Test
                            "3B:6C:99:1C:D6:5A:51:FC:EB:17:E3:AA:F6:3C:1A:DA:14:1F:82:41:30:6F:64:EE:FF:63:F3:1F:D6:07:14:9F");
 
             size_t key_id_len = 0;
-            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_authority_key_id, (cert, nullptr,
-                        &key_id_len));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_authority_key_id,
+                        (cert, nullptr, &key_id_len));
 
             std::vector<uint8_t> key_id(key_id_len);
             TEST_FFI_OK(botan_x509_cert_get_authority_key_id, (cert, key_id.data(), &key_id_len));
@@ -279,8 +279,8 @@ class FFI_Unit_Tests : public Test
                            "0096452DE588F966C4CCDF161DD1F3F5341B71E7");
 
             key_id_len = 0;
-            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_subject_key_id, (cert, nullptr,
-                        &key_id_len));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_subject_key_id,
+                        (cert, nullptr, &key_id_len));
 
             key_id.resize(key_id_len);
             TEST_FFI_OK(botan_x509_cert_get_subject_key_id, (cert, key_id.data(), &key_id_len));
@@ -288,8 +288,8 @@ class FFI_Unit_Tests : public Test
                            "0096452DE588F966C4CCDF161DD1F3F5341B71E7");
 
             size_t pubkey_len = 0;
-            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_public_key_bits, (cert, nullptr,
-                        &pubkey_len));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_public_key_bits,
+                        (cert, nullptr, &pubkey_len));
 
             std::vector<uint8_t> pubkey(pubkey_len);
             TEST_FFI_OK(botan_x509_cert_get_public_key_bits, (cert, pubkey.data(), &pubkey_len));
@@ -301,23 +301,24 @@ class FFI_Unit_Tests : public Test
                }
 
             size_t dn_len = 0;
-            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_issuer_dn, (cert, "Name", 0, nullptr,
-                        &dn_len));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_issuer_dn,
+                        (cert, "Name", 0, nullptr, &dn_len));
 
             std::vector<uint8_t> dn(dn_len);
             TEST_FFI_OK(botan_x509_cert_get_issuer_dn, (cert, "Name", 0, dn.data(), &dn_len));
             result.test_eq("issuer dn", reinterpret_cast<const char*>(dn.data()), "csca-germany");
 
             dn_len = 0;
-            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_subject_dn, (cert, "Name", 0, nullptr,
-                        &dn_len));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_subject_dn,
+                        (cert, "Name", 0, nullptr, &dn_len));
 
             dn.resize(dn_len);
             TEST_FFI_OK(botan_x509_cert_get_subject_dn, (cert, "Name", 0, dn.data(), &dn_len));
             result.test_eq("subject dn", reinterpret_cast<const char*>(dn.data()), "csca-germany");
 
             size_t printable_len = 0;
-            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_to_string, (cert, nullptr, &printable_len));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_to_string,
+                        (cert, nullptr, &printable_len));
 
             std::string printable(printable_len - 1, '0');
             TEST_FFI_OK(botan_x509_cert_to_string, (cert, &printable[0], &printable_len));
@@ -405,8 +406,8 @@ class FFI_Unit_Tests : public Test
 
                TEST_FFI_OK(botan_cipher_set_key, (cipher_encrypt, symkey.data(), symkey.size()));
                TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, nonce.data(), nonce.size()));
-               TEST_FFI_OK(botan_cipher_update, (cipher_encrypt, BOTAN_CIPHER_UPDATE_FLAG_FINAL, ciphertext.data(), ciphertext.size(),
-                                                 &output_written,
+               TEST_FFI_OK(botan_cipher_update, (cipher_encrypt, BOTAN_CIPHER_UPDATE_FLAG_FINAL,
+                                                 ciphertext.data(), ciphertext.size(), &output_written,
                                                  plaintext.data(), plaintext.size(), &input_consumed));
 
                ciphertext.resize(output_written);
@@ -418,8 +419,8 @@ class FFI_Unit_Tests : public Test
 
                   TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
                   TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
-                  TEST_FFI_OK(botan_cipher_update, (cipher_decrypt, BOTAN_CIPHER_UPDATE_FLAG_FINAL, decrypted.data(), decrypted.size(),
-                                                    &output_written,
+                  TEST_FFI_OK(botan_cipher_update, (cipher_decrypt, BOTAN_CIPHER_UPDATE_FLAG_FINAL,
+                                                    decrypted.data(), decrypted.size(),   &output_written,
                                                     ciphertext.data(), ciphertext.size(), &input_consumed));
 
                   result.test_eq("AES/CBC plaintext", decrypted, plaintext);
@@ -831,8 +832,8 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_pubkey_export, (pub, pubkey.data(), &pubkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_DER));
 
          pubkey_len = 0;
-         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pubkey_export, (pub, nullptr, &pubkey_len,
-                     BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pubkey_export,
+                     (pub, nullptr, &pubkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
 
          pubkey.resize(pubkey_len);
          TEST_FFI_OK(botan_pubkey_export, (pub, pubkey.data(), &pubkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
@@ -847,8 +848,8 @@ class FFI_Unit_Tests : public Test
          size_t privkey_len = 0;
 
          // call with nullptr to query the length
-         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export, (priv, nullptr, &privkey_len,
-                     BOTAN_PRIVKEY_EXPORT_FLAG_DER));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export,
+                     (priv, nullptr, &privkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_DER));
 
          privkey.resize(privkey_len);
          privkey_len = privkey.size(); // set buffer size
@@ -862,8 +863,8 @@ class FFI_Unit_Tests : public Test
          // Now again for PEM
          privkey_len = 0;
 
-         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export, (priv, nullptr, &privkey_len,
-                     BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export,
+                     (priv, nullptr, &privkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
 
          privkey.resize(privkey_len);
          TEST_FFI_OK(botan_privkey_export, (priv, privkey.data(), &privkey_len, BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
@@ -893,8 +894,8 @@ class FFI_Unit_Tests : public Test
          result.test_gte("estimated strength", strength, 1);
 
          size_t fingerprint_len = 0;
-         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pubkey_fingerprint, (pub, "SHA-512", nullptr,
-                     &fingerprint_len));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pubkey_fingerprint,
+                     (pub, "SHA-512", nullptr, &fingerprint_len));
 
          std::vector<uint8_t> fingerprint(fingerprint_len);
          TEST_FFI_OK(botan_pubkey_fingerprint, (pub, "SHA-512", fingerprint.data(), &fingerprint_len));
