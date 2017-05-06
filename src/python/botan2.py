@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-"""Python wrapper of the botan crypto library
+"""
+Python wrapper of the botan crypto library
 http://botan.randombit.net
 
 (C) 2015,2017 Jack Lloyd
@@ -21,18 +22,28 @@ from binascii import hexlify, unhexlify, b2a_base64
 from datetime import datetime
 import time
 
-"""
-Module initialization
-"""
+
+#
+# Base exception for all exceptions raised from this module
+#
+class BotanException(Exception):
+    pass
+
+
+#
+# Module initialization
+#
 if sys.platform == 'darwin':
-    botan = CDLL('libbotan-2.dylib')
+    botan = CDLL('libbotan-2.dylib') # pylint: disable=invalid-name
 else:
-    botan = CDLL('libbotan-2.so')
+    botan = CDLL('libbotan-2.so') # pylint: disable=invalid-name
 
-if botan.botan_ffi_supports_api(20151015) == False:
-    raise Exception("The Botan library does not support the FFI API expected by this version of the Python module")
+if botan.botan_ffi_supports_api(20151015) is False:
+    raise BotanException("The Botan library does not support the FFI API expected by this version of the Python module")
 
+#
 # Internal utilities
+#
 def _call_fn_returning_vec(guess, fn):
 
     buf = create_string_buffer(guess)
@@ -44,7 +55,7 @@ def _call_fn_returning_vec(guess, fn):
             #print("Calling again with %d" % (buf_len.value))
             return _call_fn_returning_vec(buf_len.value, fn)
         else:
-            raise Exception("Call failed: %d" % (rc))
+            raise BotanException("Call failed: %d" % (rc))
 
     assert buf_len.value <= len(buf)
     return buf.raw[0:buf_len.value]
@@ -56,21 +67,23 @@ def _call_fn_returning_string(guess, fn):
     return v.decode('ascii')[:-1]
 
 def _ctype_str(s):
-    assert type(s) == type("")
+    assert isinstance(s, str)
     if sys.version_info[0] < 3:
         return s
     else:
         return s.encode('utf-8')
 
 def _ctype_bits(s):
-    # TODO typecheck for bytes in python3?
     if sys.version_info[0] < 3:
-        return s
+        if isinstance(s, str):
+            return s
+        else:
+            assert False
     else:
         if isinstance(s, bytes):
             return s
         elif isinstance(s, str):
-            return s.encode('utf-8') # FIXME
+            return s.encode('utf-8')
         else:
             assert False
 
@@ -86,9 +99,9 @@ def hex_encode(buf):
 def hex_decode(buf):
     return unhexlify(buf.encode('ascii'))
 
-"""
-Versions
-"""
+#
+# Versions
+#
 def version_major():
     return botan.botan_version_major()
 
@@ -102,17 +115,17 @@ def version_string():
     botan.botan_version_string.restype = c_char_p
     return botan.botan_version_string().decode('ascii')
 
-"""
-RNG
-"""
-class rng(object):
+#
+# RNG
+#
+class rng(object): # pylint: disable=invalid-name
     # Can also use type "system"
     def __init__(self, rng_type='system'):
         botan.botan_rng_init.argtypes = [c_void_p, c_char_p]
         self.rng = c_void_p(0)
         rc = botan.botan_rng_init(byref(self.rng), _ctype_str(rng_type))
         if rc != 0 or self.rng is None:
-            raise Exception("No rng " + rng_type + " available")
+            raise BotanException("No rng " + rng_type + " available")
 
     def __del__(self):
         botan.botan_rng_destroy.argtypes = [c_void_p]
@@ -132,17 +145,17 @@ class rng(object):
         else:
             return None
 
-"""
-Hash function
-"""
-class hash_function(object):
+#
+# Hash function
+#
+class hash_function(object): # pylint: disable=invalid-name
     def __init__(self, algo):
         botan.botan_hash_init.argtypes = [c_void_p, c_char_p, c_uint32]
         flags = c_uint32(0) # always zero in this API version
         self.hash = c_void_p(0)
         rc = botan.botan_hash_init(byref(self.hash), _ctype_str(algo), flags)
         if rc != 0 or self.hash is None:
-            raise Exception("No hash " + algo + " for you!")
+            raise BotanException("No hash " + algo + " for you!")
 
     def __del__(self):
         botan.botan_hash_destroy.argtypes = [c_void_p]
@@ -158,7 +171,7 @@ class hash_function(object):
         rc = botan.botan_hash_output_length(self.hash, byref(l))
         if rc == 0:
             return l.value
-        raise Exception("botan_hash_output_length failed")
+        raise BotanException("botan_hash_output_length failed")
 
     def update(self, x):
         botan.botan_hash_update.argtypes = [c_void_p, POINTER(c_char), c_size_t]
@@ -170,17 +183,17 @@ class hash_function(object):
         botan.botan_hash_final(self.hash, out)
         return _ctype_bufout(out)
 
-"""
-Message authentication codes
-"""
-class message_authentication_code(object):
+#
+# Message authentication codes
+#
+class message_authentication_code(object): # pylint: disable=invalid-name
     def __init__(self, algo):
         botan.botan_mac_init.argtypes = [c_void_p, c_char_p, c_uint32]
         flags = c_uint32(0) # always zero in this API version
         self.mac = c_void_p(0)
         rc = botan.botan_mac_init(byref(self.mac), _ctype_str(algo), flags)
         if rc != 0 or self.mac is None:
-            raise Exception("No mac " + algo + " for you!")
+            raise BotanException("No mac " + algo + " for you!")
 
     def __del__(self):
         botan.botan_mac_destroy.argtypes = [c_void_p]
@@ -196,7 +209,7 @@ class message_authentication_code(object):
         rc = botan.botan_mac_output_length(self.mac, byref(l))
         if rc == 0:
             return l.value
-        raise Exception("botan_mac_output_length failed")
+        raise BotanException("botan_mac_output_length failed")
 
     def set_key(self, key):
         botan.botan_mac_set_key.argtypes = [c_void_p, POINTER(c_char), c_size_t]
@@ -212,14 +225,14 @@ class message_authentication_code(object):
         botan.botan_mac_final(self.mac, out)
         return _ctype_bufout(out)
 
-class cipher(object):
+class cipher(object): # pylint: disable=invalid-name
     def __init__(self, algo, encrypt=True):
         botan.botan_cipher_init.argtypes = [c_void_p, c_char_p, c_uint32]
         flags = 0 if encrypt else 1
         self.cipher = c_void_p(0)
         rc = botan.botan_cipher_init(byref(self.cipher), _ctype_str(algo), flags)
         if rc != 0 or self.cipher is None:
-            raise Exception("No cipher " + algo + " for you!")
+            raise BotanException("No cipher " + algo + " for you!")
 
     def __del__(self):
         botan.botan_cipher_destroy.argtypes = [c_void_p]
@@ -256,7 +269,7 @@ class cipher(object):
         botan.botan_cipher_valid_nonce_length.argtypes = [c_void_p, c_size_t]
         rc = botan.botan_cipher_valid_nonce_length(self.cipher, nonce_len)
         if rc < 0:
-            raise Exception('Error calling valid_nonce_length')
+            raise BotanException('Error calling valid_nonce_length')
         return True if rc == 1 else False
 
     def clear(self):
@@ -303,7 +316,7 @@ class cipher(object):
         return self._update(txt, True)
 
 
-def bcrypt(passwd, rng, work_factor=10):
+def bcrypt(passwd, rng_instance, work_factor=10):
     """
     Bcrypt password hashing
     """
@@ -312,21 +325,22 @@ def bcrypt(passwd, rng, work_factor=10):
     out_len = c_size_t(64)
     out = create_string_buffer(out_len.value)
     flags = c_uint32(0)
-    rc = botan.botan_bcrypt_generate(out, byref(out_len), _ctype_str(passwd), rng.rng, c_size_t(work_factor), flags)
+    rc = botan.botan_bcrypt_generate(out, byref(out_len), _ctype_str(passwd),
+                                     rng_instance.rng, c_size_t(work_factor), flags)
     if rc != 0:
-        raise Exception('botan bcrypt failed, error %s' % (rc))
+        raise BotanException('botan bcrypt failed, error %s' % (rc))
     b = out.raw[0:out_len.value-1]
     if b[-1] == '\x00':
         b = b[:-1]
     return b
 
-def check_bcrypt(passwd, bcrypt):
-    rc = botan.botan_bcrypt_is_valid(_ctype_str(passwd), bcrypt)
+def check_bcrypt(passwd, passwd_hash):
+    rc = botan.botan_bcrypt_is_valid(_ctype_str(passwd), passwd_hash)
     return rc == 0
 
-"""
-PBKDF
-"""
+#
+# PBKDF
+#
 def pbkdf(algo, password, out_len, iterations=10000, salt=rng().get(12)):
     botan.botan_pbkdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, c_char_p, c_void_p, c_size_t, c_size_t]
     out_buf = create_string_buffer(out_len)
@@ -338,23 +352,27 @@ def pbkdf_timed(algo, password, out_len, ms_to_run=300, salt=rng().get(12)):
                                         c_void_p, c_size_t, c_size_t, POINTER(c_size_t)]
     out_buf = create_string_buffer(out_len)
     iterations = c_size_t(0)
-    botan.botan_pbkdf_timed(_ctype_str(algo), out_buf, out_len, _ctype_str(password), salt, len(salt), ms_to_run, byref(iterations))
+    botan.botan_pbkdf_timed(
+        _ctype_str(algo), out_buf, out_len, _ctype_str(password),
+        salt, len(salt), ms_to_run, byref(iterations))
     return (salt, iterations.value, out_buf.raw)
 
-"""
-KDF
-"""
+#
+# KDF
+#
 def kdf(algo, secret, out_len, salt, label):
-    botan.botan_kdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
+    botan.botan_kdf.argtypes = [c_char_p, POINTER(c_char), c_size_t, POINTER(c_char), c_size_t,
+                                POINTER(c_char), c_size_t, POINTER(c_char), c_size_t]
     out_buf = create_string_buffer(out_len)
     out_sz = c_size_t(out_len)
-    botan.botan_kdf(_ctype_str(algo), out_buf, out_sz, secret, len(secret), salt, len(salt), label, len(label))
+    botan.botan_kdf(_ctype_str(algo), out_buf, out_sz, secret, len(secret),
+                    salt, len(salt), label, len(label))
     return out_buf.raw[0:out_sz.value]
 
-"""
-Public and private keys
-"""
-class public_key(object):
+#
+# Public and private keys
+#
+class public_key(object): # pylint: disable=invalid-name
     def __init__(self, obj=c_void_p(0)):
         self.pubkey = obj
 
@@ -377,19 +395,19 @@ class public_key(object):
         flag = 1 if pem else 0
         return _call_fn_returning_vec(0, lambda b, bl: botan.botan_pubkey_export(self.pubkey, b, bl, flag))
 
-    def fingerprint(self, hash='SHA-256'):
+    def fingerprint(self, hash_algorithm='SHA-256'):
         botan.botan_pubkey_fingerprint.argtypes = [c_void_p, c_char_p,
                                                    POINTER(c_char), POINTER(c_size_t)]
 
-        n = hash_function(hash).output_length()
+        n = hash_function(hash_algorithm).output_length()
         buf = create_string_buffer(n)
         buf_len = c_size_t(n)
 
-        botan.botan_pubkey_fingerprint(self.pubkey, _ctype_str(hash), buf, byref(buf_len))
+        botan.botan_pubkey_fingerprint(self.pubkey, _ctype_str(hash_algorithm), buf, byref(buf_len))
         return hex_encode(buf[0:buf_len.value])
 
-class private_key(object):
-    def __init__(self, alg, param, rng):
+class private_key(object): # pylint: disable=invalid-name
+    def __init__(self, alg, param, rng_instance):
         botan.botan_privkey_create_rsa.argtypes = [c_void_p, c_void_p, c_size_t]
         botan.botan_privkey_create_ecdsa.argtypes = [c_void_p, c_void_p, c_char_p]
         botan.botan_privkey_create_ecdh.argtypes = [c_void_p, c_void_p, c_char_p]
@@ -398,18 +416,18 @@ class private_key(object):
         self.privkey = c_void_p(0)
 
         if alg == 'rsa':
-            botan.botan_privkey_create_rsa(byref(self.privkey), rng.rng, param)
+            botan.botan_privkey_create_rsa(byref(self.privkey), rng_instance.rng, param)
         elif alg == 'ecdsa':
-            botan.botan_privkey_create_ecdsa(byref(self.privkey), rng.rng, _ctype_str(param))
+            botan.botan_privkey_create_ecdsa(byref(self.privkey), rng_instance.rng, _ctype_str(param))
         elif alg == 'ecdh':
-            botan.botan_privkey_create_ecdh(byref(self.privkey), rng.rng, _ctype_str(param))
+            botan.botan_privkey_create_ecdh(byref(self.privkey), rng_instance.rng, _ctype_str(param))
         elif alg in ['mce', 'mceliece']:
-            botan.botan_privkey_create_mceliece(byref(self.privkey), rng.rng, param[0], param[1])
+            botan.botan_privkey_create_mceliece(byref(self.privkey), rng_instance.rng, param[0], param[1])
         else:
-            raise Exception('Unknown public key algo ' + alg)
+            raise BotanException('Unknown public key algo ' + alg)
 
         if self.privkey is None:
-            raise Exception('Error creating ' + alg + ' key')
+            raise BotanException('Error creating ' + alg + ' key')
 
     def __del__(self):
         botan.botan_privkey_destroy.argtypes = [c_void_p]
@@ -435,7 +453,7 @@ class private_key(object):
             botan.botan_privkey_export(self.privkey, buf, byref(buf_len))
         return buf[0:buf_len.value]
 
-class pk_op_encrypt(object):
+class pk_op_encrypt(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
         botan.botan_pk_op_encrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
@@ -443,13 +461,13 @@ class pk_op_encrypt(object):
         print("Padding is ", padding)
         botan.botan_pk_op_encrypt_create(byref(self.op), key.pubkey, _ctype_str(padding), flags)
         if not self.op:
-            raise Exception("No pk op for you")
+            raise BotanException("No pk op for you")
 
     def __del__(self):
         botan.botan_pk_op_encrypt_destroy.argtypes = [c_void_p]
         botan.botan_pk_op_encrypt_destroy(self.op)
 
-    def encrypt(self, msg, rng):
+    def encrypt(self, msg, rng_instance):
         botan.botan_pk_op_encrypt.argtypes = [c_void_p, c_void_p,
                                               POINTER(c_char), POINTER(c_size_t),
                                               POINTER(c_char), c_size_t]
@@ -461,19 +479,19 @@ class pk_op_encrypt(object):
         #if sys.version_info[0] > 2:
         #    msg = cast(msg, c_char_p)
         #    ll = c_size_t(ll)
-        botan.botan_pk_op_encrypt(self.op, rng.rng, outbuf, byref(outbuf_sz), msg, ll)
+        botan.botan_pk_op_encrypt(self.op, rng_instance.rng, outbuf, byref(outbuf_sz), msg, ll)
         #print("encrypt: outbuf_sz.value=%d" % outbuf_sz.value)
         return outbuf.raw[0:outbuf_sz.value]
 
 
-class pk_op_decrypt(object):
+class pk_op_decrypt(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
         botan.botan_pk_op_decrypt_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
         botan.botan_pk_op_decrypt_create(byref(self.op), key.privkey, _ctype_str(padding), flags)
         if not self.op:
-            raise Exception("No pk op for you")
+            raise BotanException("No pk op for you")
 
     def __del__(self):
         botan.botan_pk_op_decrypt_destroy.argtypes = [c_void_p]
@@ -490,14 +508,14 @@ class pk_op_decrypt(object):
         botan.botan_pk_op_decrypt(self.op, outbuf, byref(outbuf_sz), _ctype_bits(msg), ll)
         return outbuf.raw[0:outbuf_sz.value]
 
-class pk_op_sign(object):
+class pk_op_sign(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
         botan.botan_pk_op_sign_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
         botan.botan_pk_op_sign_create(byref(self.op), key.privkey, _ctype_str(padding), flags)
         if not self.op:
-            raise Exception("No pk op for you")
+            raise BotanException("No pk op for you")
 
     def __del__(self):
         botan.botan_pk_op_sign_destroy.argtypes = [c_void_p]
@@ -507,21 +525,21 @@ class pk_op_sign(object):
         botan.botan_pk_op_sign_update.argtypes = [c_void_p, POINTER(c_char), c_size_t]
         botan.botan_pk_op_sign_update(self.op, _ctype_str(msg), len(msg))
 
-    def finish(self, rng):
+    def finish(self, rng_instance):
         botan.botan_pk_op_sign_finish.argtypes = [c_void_p, c_void_p, POINTER(c_char), POINTER(c_size_t)]
         outbuf_sz = c_size_t(4096) #?!?!
         outbuf = create_string_buffer(outbuf_sz.value)
-        botan.botan_pk_op_sign_finish(self.op, rng.rng, outbuf, byref(outbuf_sz))
+        botan.botan_pk_op_sign_finish(self.op, rng_instance.rng, outbuf, byref(outbuf_sz))
         return outbuf.raw[0:outbuf_sz.value]
 
-class pk_op_verify(object):
+class pk_op_verify(object): # pylint: disable=invalid-name
     def __init__(self, key, padding):
         botan.botan_pk_op_verify_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         self.op = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
         botan.botan_pk_op_verify_create(byref(self.op), key.pubkey, _ctype_str(padding), flags)
         if not self.op:
-            raise Exception("No pk op for you")
+            raise BotanException("No pk op for you")
 
     def __del__(self):
         botan.botan_pk_op_verify_destroy.argtypes = [c_void_p]
@@ -538,17 +556,18 @@ class pk_op_verify(object):
             return True
         return False
 
-"""
-MCEIES encryption
-Must be used with McEliece keys
-"""
-def mceies_encrypt(mce, rng, aead, pt, ad):
+
+#
+# MCEIES encryption
+# Must be used with McEliece keys
+#
+def mceies_encrypt(mce, rng_instance, aead, pt, ad):
     botan.botan_mceies_encrypt.argtypes = [c_void_p, c_void_p, c_char_p, POINTER(c_char), c_size_t,
                                            POINTER(c_char), c_size_t, POINTER(c_char), POINTER(c_size_t)]
 
     return _call_fn_returning_vec(0, lambda b, bl:
                                   botan.botan_mceies_encrypt(mce.pubkey,
-                                                             rng.rng,
+                                                             rng_instance.rng,
                                                              _ctype_str(aead),
                                                              _ctype_bits(pt),
                                                              len(pt),
@@ -572,17 +591,18 @@ def mceies_decrypt(mce, aead, pt, ad):
                                                              len(ad),
                                                              b, bl))
 
-class pk_op_key_agreement(object):
-    def __init__(self, key, kdf):
+class pk_op_key_agreement(object): # pylint: disable=invalid-name
+    def __init__(self, key, kdf_name):
         botan.botan_pk_op_key_agreement_create.argtypes = [c_void_p, c_void_p, c_char_p, c_uint32]
         botan.botan_pk_op_key_agreement_export_public.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
         self.op = c_void_p(0)
         flags = c_uint32(0) # always zero in this ABI
-        botan.botan_pk_op_key_agreement_create(byref(self.op), key.privkey, kdf, flags)
+        botan.botan_pk_op_key_agreement_create(byref(self.op), key.privkey, kdf_name, flags)
         if not self.op:
-            raise Exception("No key agreement for you")
+            raise BotanException("No key agreement for you")
 
-        self.m_public_value = _call_fn_returning_vec(0, lambda b, bl: botan.botan_pk_op_key_agreement_export_public(key.privkey, b, bl))
+        self.m_public_value = _call_fn_returning_vec(
+            0, lambda b, bl: botan.botan_pk_op_key_agreement_export_public(key.privkey, b, bl))
 
     def __del__(self):
         botan.botan_pk_op_key_agreement_destroy.argtypes = [c_void_p]
@@ -599,15 +619,16 @@ class pk_op_key_agreement(object):
                                       botan.botan_pk_op_key_agreement(self.op, b, bl,
                                                                       other, len(other),
                                                                       salt, len(salt)))
-"""
-X.509 certificates
-"""
-class x509_cert(object):
+
+#
+# X.509 certificates
+#
+class x509_cert(object): # pylint: disable=invalid-name
     def __init__(self, filename=None, buf=None):
         if filename is None and buf is None:
-            raise Exception("No filename or buf given")
+            raise BotanException("No filename or buf given")
         if filename is not None and buf is not None:
-            raise Exception("Both filename and buf given")
+            raise BotanException("Both filename and buf given")
         elif filename is not None:
             botan.botan_x509_cert_load_file.argtypes = [POINTER(c_void_p), c_char_p]
             self.x509_cert = c_void_p(0)
@@ -623,7 +644,8 @@ class x509_cert(object):
 
     def time_starts(self):
         botan.botan_x509_cert_get_time_starts.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        starts = _call_fn_returning_string(16, lambda b, bl: botan.botan_x509_cert_get_time_starts(self.x509_cert, b, bl))
+        starts = _call_fn_returning_string(
+            16, lambda b, bl: botan.botan_x509_cert_get_time_starts(self.x509_cert, b, bl))
         if len(starts) == 13:
             # UTC time
             struct_time = time.strptime(starts, "%y%m%d%H%M%SZ")
@@ -631,13 +653,14 @@ class x509_cert(object):
             # Generalized time
             struct_time = time.strptime(starts, "%Y%m%d%H%M%SZ")
         else:
-            raise Exception("Wrong date/time format")
+            raise BotanException("Wrong date/time format")
 
         return datetime.fromtimestamp(time.mktime(struct_time))
 
     def time_expires(self):
         botan.botan_x509_cert_get_time_expires.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        expires = _call_fn_returning_string(16, lambda b, bl: botan.botan_x509_cert_get_time_expires(self.x509_cert, b, bl))
+        expires = _call_fn_returning_string(
+            16, lambda b, bl: botan.botan_x509_cert_get_time_expires(self.x509_cert, b, bl))
         if len(expires) == 13:
             # UTC time
             struct_time = time.strptime(expires, "%y%m%d%H%M%SZ")
@@ -645,35 +668,41 @@ class x509_cert(object):
             # Generalized time
             struct_time = time.strptime(expires, "%Y%m%d%H%M%SZ")
         else:
-            raise Exception("Wrong date/time format")
+            raise BotanException("Wrong date/time format")
         return datetime.fromtimestamp(time.mktime(struct_time))
 
     def to_string(self):
         botan.botan_x509_cert_to_string.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_string(0, lambda b, bl: botan.botan_x509_cert_to_string(self.x509_cert, b, bl))
+        return _call_fn_returning_string(
+            0, lambda b, bl: botan.botan_x509_cert_to_string(self.x509_cert, b, bl))
 
     def fingerprint(self, hash_algo='SHA-256'):
         botan.botan_x509_cert_get_fingerprint.argtypes = [c_void_p, c_char_p,
                                                           POINTER(c_char), POINTER(c_size_t)]
 
         n = hash_function(hash_algo).output_length() * 3
-        return _call_fn_returning_string(n, lambda b, bl: botan.botan_x509_cert_get_fingerprint(self.x509_cert, _ctype_str(hash_algo), b, bl))
+        return _call_fn_returning_string(
+            n, lambda b, bl: botan.botan_x509_cert_get_fingerprint(self.x509_cert, _ctype_str(hash_algo), b, bl))
 
     def serial_number(self):
         botan.botan_x509_cert_get_serial_number.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_vec(0, lambda b, bl: botan.botan_x509_cert_get_serial_number(self.x509_cert, b, bl))
+        return _call_fn_returning_vec(
+            0, lambda b, bl: botan.botan_x509_cert_get_serial_number(self.x509_cert, b, bl))
 
     def authority_key_id(self):
         botan.botan_x509_cert_get_authority_key_id.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_vec(0, lambda b, bl: botan.botan_x509_cert_get_authority_key_id(self.x509_cert, b, bl))
+        return _call_fn_returning_vec(
+            0, lambda b, bl: botan.botan_x509_cert_get_authority_key_id(self.x509_cert, b, bl))
 
     def subject_key_id(self):
         botan.botan_x509_cert_get_subject_key_id.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_vec(0, lambda b, bl: botan.botan_x509_cert_get_subject_key_id(self.x509_cert, b, bl))
+        return _call_fn_returning_vec(
+            0, lambda b, bl: botan.botan_x509_cert_get_subject_key_id(self.x509_cert, b, bl))
 
     def subject_public_key_bits(self):
         botan.botan_x509_cert_get_public_key_bits.argtypes = [c_void_p, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_vec(0, lambda b, bl: botan.botan_x509_cert_get_public_key_bits(self.x509_cert, b, bl))
+        return _call_fn_returning_vec(
+            0, lambda b, bl: botan.botan_x509_cert_get_public_key_bits(self.x509_cert, b, bl))
 
     def subject_public_key(self):
         botan.botan_x509_cert_get_public_key.argtypes = [c_void_p, c_void_p]
@@ -683,13 +712,15 @@ class x509_cert(object):
         return public_key(pub)
 
     def subject_dn(self, key, index):
-        botan.botan_x509_cert_get_subject_dn.argtypes = [c_void_p, c_char_p, c_size_t, POINTER(c_char), POINTER(c_size_t)]
-        return _call_fn_returning_string(0, lambda b, bl: botan.botan_x509_cert_get_subject_dn(self.x509_cert, _ctype_str(key), index, b, bl))
+        botan.botan_x509_cert_get_subject_dn.argtypes = [
+            c_void_p, c_char_p, c_size_t, POINTER(c_char), POINTER(c_size_t)]
+        return _call_fn_returning_string(
+            0, lambda b, bl: botan.botan_x509_cert_get_subject_dn(self.x509_cert, _ctype_str(key), index, b, bl))
 
 
-"""
-Tests and examples
-"""
+#
+# Tests and examples
+#
 def test():
 
     def test_version():
@@ -775,7 +806,10 @@ def test():
 
             enc.set_key(key)
             enc.start(iv)
-            assert len(enc.update('')) == 0
+
+            update_result = enc.update('')
+            assert not update_result
+
             ct = enc.finish(pt)
             print("  ciphertext %s (%d)" % (hex_encode(ct), len(ct)))
 
@@ -799,7 +833,7 @@ def test():
 
         mce_decrypt = mceies_decrypt(mce_priv, 'ChaCha20Poly1305', mce_ciphertext, mce_ad)
         print("  mceies plaintext  \'%s\' (%d)" % (mce_plaintext, len(mce_plaintext)))
-        
+
         # Since mceies_decrypt() returns bytes in Python3, the following line
         # needs .decode('utf-8') to convert mce_decrypt from bytes to a
         # text string (Unicode).
@@ -905,7 +939,7 @@ def test():
         for field in dn_fields:
             try:
                 print("%s: %s" % (field, cert.subject_dn(field, 0)))
-            except Exception:
+            except BotanException:
                 print("Field: %s not found in certificate" % field)
 
         print(cert.to_string())
