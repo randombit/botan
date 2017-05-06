@@ -193,9 +193,9 @@ std::unique_ptr<KDF> KDF::create(const std::string& algo_spec,
    if(req.algo_name() == "SP800-56A" && req.arg_count() == 1)
       {
       if(auto hash = HashFunction::create(req.arg(0)))
-         return std::unique_ptr<KDF>(new SP800_56A<HashFunction>(hash.release()));
+         return std::unique_ptr<KDF>(new SP800_56A_Hash(hash.release()));
       if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
-         return std::unique_ptr<KDF>(new SP800_56A<MessageAuthenticationCode>(mac.release()));
+         return std::unique_ptr<KDF>(new SP800_56A_HMAC(mac.release()));
       }
 #endif
 
