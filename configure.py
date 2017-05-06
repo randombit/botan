@@ -1455,8 +1455,8 @@ class CmakeGenerator(object):
         self._template_vars = template_vars
 
     @staticmethod
-    def _escape(str):
-        return str.replace('(','\\(').replace(')','\\)').replace('#','\\#').replace('$','\\$')
+    def _escape(input_str):
+        return input_str.replace('(', '\\(').replace(')', '\\)').replace('#', '\\#').replace('$', '\\$')
 
     @staticmethod
     def _create_target_rules(sources):
@@ -1472,7 +1472,8 @@ class CmakeGenerator(object):
                 if source_path == mod_source:
                     libs_or_frameworks_needed = True
                     for isa in using_mod.need_isa:
-                        target['sources'][source_path]['isa_flags'].add(self._cc.isa_flags_for(isa,self._template_vars['arch']))
+                        isa_flag = self._cc.isa_flags_for(isa, self._template_vars['arch'])
+                        target['sources'][source_path]['isa_flags'].add(isa_flag)
         if libs_or_frameworks_needed:
             if self._options.os in using_mod.libs:
                 for lib in using_mod.libs[self._options.os]:
@@ -1486,9 +1487,9 @@ class CmakeGenerator(object):
         fd.write('set(%s\n' % target_name)
         sorted_sources = sorted(target['sources'].keys())
         for source in sorted_sources:
-            fd.write(('    ${CMAKE_CURRENT_LIST_DIR}%s%s\n' % (os.sep, os.path.normpath(source))).replace('\\','\\\\'))
+            fd.write(('    ${CMAKE_CURRENT_LIST_DIR}%s%s\n' % (os.sep, os.path.normpath(source))).replace('\\', '\\\\'))
         fd.write(')\n\n')
-        fd.write('to_cmake_paths("${%s}" %s)\n\n' %(target_name,target_name))
+        fd.write('to_cmake_paths("${%s}" %s)\n\n' %(target_name, target_name))
 
     @staticmethod
     def _generate_target_source_files_isa_properties(fd, target):
@@ -1522,7 +1523,7 @@ class CmakeGenerator(object):
         fd.write('option(ENABLED_OPTIONAL_WARINIGS "If enabled more strict warinig policy will be used" OFF)\n')
         fd.write('option(ENABLED_LTO "If enabled link time optimization will be used" OFF)\n\n')
         original_no_optimizations = self._options.no_optimizations
-        original_with_debug_info  = self._options.with_debug_info
+        original_with_debug_info = self._options.with_debug_info
         self._options.no_optimizations = False
         self._options.with_debug_info = False
         fd.write('set(COMPILER_FEATURES_RELEASE %s %s)\n'
@@ -1533,7 +1534,8 @@ class CmakeGenerator(object):
                  % (self._cc.cc_compile_flags(self._options), self._cc.mach_abi_link_flags(self._options)))
         self._options.no_optimizations = original_no_optimizations
         self._options.with_debug_info = original_with_debug_info
-        fd.write('set(COMPILER_FEATURES $<$<NOT:$<CONFIG:DEBUG>>:${COMPILER_FEATURES_RELEASE}>  $<$<CONFIG:DEBUG>:${COMPILER_FEATURES_DEBUG}>)\n')
+        fd.write('set(COMPILER_FEATURES $<$<NOT:$<CONFIG:DEBUG>>:${COMPILER_FEATURES_RELEASE}>'
+                 +'  $<$<CONFIG:DEBUG>:${COMPILER_FEATURES_DEBUG}>)\n')
 
         fd.write('set(SHARED_FEATURES %s)\n' % self._escape(self._template_vars['shared_flags']))
         fd.write('set(STATIC_FEATURES -DBOTAN_DLL=)\n')
@@ -1551,8 +1553,8 @@ class CmakeGenerator(object):
         fd.write('add_library(${PROJECT_NAME} STATIC ${BOTAN_SOURCES})\n')
         fd.write('target_link_libraries(${PROJECT_NAME} PUBLIC %s)\n'
                  % library_link)
-        fd.write('target_compile_options(${PROJECT_NAME} PUBLIC ' +
-                 '${COMPILER_WARNINGS} ${COMPILER_FEATURES} ${COMPILER_OPTIONAL_WARNINGS} PRIVATE ${STATIC_FEATURES})\n')
+        fd.write('target_compile_options(${PROJECT_NAME} PUBLIC ${COMPILER_WARNINGS} ${COMPILER_FEATURES}' +
+                 ' ${COMPILER_OPTIONAL_WARNINGS} PRIVATE ${STATIC_FEATURES})\n')
 
         fd.write('target_include_directories(${PROJECT_NAME} PUBLIC ${COMPILER_INCLUDE_DIRS})\n\n')
         fd.write('set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME}-static)\n\n')
@@ -1560,8 +1562,8 @@ class CmakeGenerator(object):
         fd.write('add_library(${PROJECT_NAME}_shared SHARED ${BOTAN_SOURCES})\n')
         fd.write('target_link_libraries(${PROJECT_NAME}_shared PUBLIC %s)\n'
                  % library_link)
-        fd.write('target_compile_options(${PROJECT_NAME}_shared PUBLIC ' +
-                 '${COMPILER_WARNINGS} ${COMPILER_FEATURES} ${COMPILER_OPTIONAL_WARNINGS} PRIVATE ${SHARED_FEATURES})\n')
+        fd.write('target_compile_options(${PROJECT_NAME}_shared PUBLIC ${COMPILER_WARNINGS}' +
+                 ' ${COMPILER_FEATURES} ${COMPILER_OPTIONAL_WARNINGS} PRIVATE ${SHARED_FEATURES})\n')
         fd.write('target_include_directories(${PROJECT_NAME}_shared PUBLIC ${COMPILER_INCLUDE_DIRS})\n')
         fd.write('set_target_properties(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})\n\n')
 
