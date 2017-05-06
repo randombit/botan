@@ -1,0 +1,7 @@
+<defines>
+SP800_56A -> 20170501
+</defines>
+
+<requires>
+hmac
+</requires>
