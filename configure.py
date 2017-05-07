@@ -1451,12 +1451,24 @@ class CmakeGenerator(object):
         self._build_paths = build_paths
         self._using_mods = using_mods
         self._cc = cc
-        self._options = options
+
+        self._options_release = copy.deepcopy(options)
+        self._options_release.no_optimizations = False
+        self._options_release.with_debug_info = False
+
+        self._options_debug = copy.deepcopy(options)
+        self._options_debug.no_optimizations = True
+        self._options_debug.with_debug_info = True
+
         self._template_vars = template_vars
 
     @staticmethod
     def _escape(input_str):
         return input_str.replace('(', '\\(').replace(')', '\\)').replace('#', '\\#').replace('$', '\\$')
+
+    @staticmethod
+    def _cmake_normalize(source):
+        return os.path.normpath(source).replace('\\', '/')
 
     @staticmethod
     def _create_target_rules(sources):
@@ -1475,11 +1487,11 @@ class CmakeGenerator(object):
                         isa_flag = self._cc.isa_flags_for(isa, self._template_vars['arch'])
                         target['sources'][source_path]['isa_flags'].add(isa_flag)
         if libs_or_frameworks_needed:
-            if self._options.os in using_mod.libs:
-                for lib in using_mod.libs[self._options.os]:
+            if self._options_release.os in using_mod.libs:
+                for lib in using_mod.libs[self._options_release.os]:
                     target['libs'].add(lib)
-            if self._options.os in using_mod.frameworks:
-                for framework in using_mod.frameworks[self._options.os]:
+            if self._options_release.os in using_mod.frameworks:
+                for framework in using_mod.frameworks[self._options_release.os]:
                     target['frameworks'].add('"-framework %s"' % framework)
 
     @staticmethod
@@ -1487,9 +1499,8 @@ class CmakeGenerator(object):
         fd.write('set(%s\n' % target_name)
         sorted_sources = sorted(target['sources'].keys())
         for source in sorted_sources:
-            fd.write(('    ${CMAKE_CURRENT_LIST_DIR}%s%s\n' % (os.sep, os.path.normpath(source))).replace('\\', '\\\\'))
+            fd.write('    "${CMAKE_CURRENT_LIST_DIR}/%s"\n' % CmakeGenerator._cmake_normalize(source))
         fd.write(')\n\n')
-        fd.write('to_cmake_paths("${%s}" %s)\n\n' %(target_name, target_name))
 
     @staticmethod
     def _generate_target_source_files_isa_properties(fd, target):
@@ -1497,50 +1508,38 @@ class CmakeGenerator(object):
         for source in sorted_sources:
             joined_isa_flags = ' '.join(target['sources'][source]['isa_flags'])
             if joined_isa_flags:
-                fd.write('set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}%s%s PROPERTIES COMPILE_FLAGS "%s")\n'
-                         % (os.sep, os.path.normpath(source), joined_isa_flags))
+                fd.write('set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/%s" PROPERTIES COMPILE_FLAGS "%s")\n'
+                         % (CmakeGenerator._cmake_normalize(source), joined_isa_flags))
 
     @staticmethod
     def _write_header(fd):
         fd.write('cmake_minimum_required(VERSION 2.8.0)\n')
         fd.write('project(botan)\n\n')
-        fd.write('if(POLICY CMP0042)\n\n')
-        fd.write('cmake_policy(SET CMP0042 NEW)\n\n')
-        fd.write('cmake_policy(SET CMP0042 NEW)\n\n')
+        fd.write('if(POLICY CMP0042)\n')
+        fd.write('cmake_policy(SET CMP0042 NEW)\n')
         fd.write('endif()\n\n')
-        fd.write('function(to_cmake_paths paths results)\n')
-        fd.write('    set(_results)\n')
-        fd.write('	foreach(path ${paths})\n')
-        fd.write('		file(TO_CMAKE_PATH ${path} path)\n')
-        fd.write('		set (_results ${_results} ${path})\n')
-        fd.write('	endforeach()\n')
-        fd.write('	set(${results} ${_results} PARENT_SCOPE)\n')
-        fd.write('endfunction()\n\n')
 
     def _write_footer(self, fd, library_link, cli_link, tests_link):
         fd.write('\n')
 
         fd.write('option(ENABLED_OPTIONAL_WARINIGS "If enabled more strict warinig policy will be used" OFF)\n')
         fd.write('option(ENABLED_LTO "If enabled link time optimization will be used" OFF)\n\n')
-        original_no_optimizations = self._options.no_optimizations
-        original_with_debug_info = self._options.with_debug_info
-        self._options.no_optimizations = False
-        self._options.with_debug_info = False
+
         fd.write('set(COMPILER_FEATURES_RELEASE %s %s)\n'
-                 % (self._cc.cc_compile_flags(self._options), self._cc.mach_abi_link_flags(self._options)))
-        self._options.no_optimizations = True
-        self._options.with_debug_info = True
+                 % (self._cc.cc_compile_flags(self._options_release),
+                    self._cc.mach_abi_link_flags(self._options_release)))
+
         fd.write('set(COMPILER_FEATURES_DEBUG %s %s)\n'
-                 % (self._cc.cc_compile_flags(self._options), self._cc.mach_abi_link_flags(self._options)))
-        self._options.no_optimizations = original_no_optimizations
-        self._options.with_debug_info = original_with_debug_info
+                 % (self._cc.cc_compile_flags(self._options_debug),
+                    self._cc.mach_abi_link_flags(self._options_debug)))
+
         fd.write('set(COMPILER_FEATURES $<$<NOT:$<CONFIG:DEBUG>>:${COMPILER_FEATURES_RELEASE}>'
                  +'  $<$<CONFIG:DEBUG>:${COMPILER_FEATURES_DEBUG}>)\n')
 
         fd.write('set(SHARED_FEATURES %s)\n' % self._escape(self._template_vars['shared_flags']))
         fd.write('set(STATIC_FEATURES -DBOTAN_DLL=)\n')
 
-        fd.write('set(COMPILER_WARNINGS %s)\n' % self._cc.cc_warning_flags(self._options))
+        fd.write('set(COMPILER_WARNINGS %s)\n' % self._cc.cc_warning_flags(self._options_release))
         fd.write('set(COMPILER_INCLUDE_DIRS build/include build/include/external)\n')
         fd.write('if(ENABLED_LTO)\n')
         fd.write('    set(COMPILER_FEATURES ${COMPILER_FEATURES} -lto)\n')
@@ -1596,7 +1595,7 @@ class CmakeGenerator(object):
 
         library_target_libs_and_frameworks = '%s %s' % (
             ' '.join(library_target_configuration['frameworks']),
-            ' '.join(library_target_configuration['libs'])
+            ' '.join(library_target_configuration['libs']),
         )
         tests_target_libs_and_frameworks = '%s %s' % (
             ' '.join(tests_target_configuration['frameworks']),
