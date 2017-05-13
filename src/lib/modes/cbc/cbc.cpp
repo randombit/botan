@@ -1,6 +1,6 @@
 /*
 * CBC Mode
-* (C) 1999-2007,2013 Jack Lloyd
+* (C) 1999-2007,2013,2017 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)

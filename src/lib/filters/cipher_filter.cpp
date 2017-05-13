@@ -1,6 +1,6 @@
 /*
 * Filter interface for Cipher_Modes
-* (C) 2013,2014 Jack Lloyd
+* (C) 2013,2014,2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -38,24 +38,9 @@ std::string Cipher_Mode_Filter::name() const
    return m_mode->name();
    }
 
-void Cipher_Mode_Filter::Nonce_State::update(const InitializationVector& iv)
-   {
-   m_nonce = unlock(iv.bits_of());
-   m_fresh_nonce = true;
-   }
-
-std::vector<uint8_t> Cipher_Mode_Filter::Nonce_State::get()
-   {
-   BOTAN_ASSERT(m_fresh_nonce, "The nonce is fresh for this message");
-
-   if(!m_nonce.empty())
-      m_fresh_nonce = false;
-   return m_nonce;
-   }
-
 void Cipher_Mode_Filter::set_iv(const InitializationVector& iv)
    {
-   m_nonce.update(iv);
+   m_nonce = unlock(iv.bits_of());
    }
 
 void Cipher_Mode_Filter::set_key(const SymmetricKey& key)
@@ -85,7 +70,11 @@ void Cipher_Mode_Filter::end_msg()
 
 void Cipher_Mode_Filter::start_msg()
    {
-   m_mode->start(m_nonce.get());
+   if(m_nonce.empty() && !m_mode->valid_nonce_length(0))
+      throw Invalid_State("Cipher " + m_mode->name() + " requires a fresh nonce for each message");
+
+   m_mode->start(m_nonce);
+   m_nonce.clear();
    }
 
 void Cipher_Mode_Filter::buffered_block(const uint8_t input[], size_t input_length)

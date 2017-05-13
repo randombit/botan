@@ -1,5 +1,5 @@
 /*
-* (C) 2014,2015 Jack Lloyd
+* (C) 2014,2015,2017 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -150,6 +150,184 @@ class Cipher_Mode_Tests : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("modes", Cipher_Mode_Tests);
+
+class Cipher_Mode_IV_Carry_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         std::vector<Test::Result> results;
+         results.push_back(test_cbc_iv_carry());
+         results.push_back(test_cfb_iv_carry());
+         results.push_back(test_ctr_iv_carry());
+         return results;
+         }
+
+   private:
+      Test::Result test_cbc_iv_carry()
+         {
+         Test::Result result("CBC IV carry");
+
+#if defined(BOTAN_HAS_MODE_CBC) && defined(BOTAN_HAS_AES)
+         std::unique_ptr<Botan::Cipher_Mode> enc(
+            Botan::get_cipher_mode("AES-128/CBC/PKCS7", Botan::ENCRYPTION));
+         std::unique_ptr<Botan::Cipher_Mode> dec(
+            Botan::get_cipher_mode("AES-128/CBC/PKCS7", Botan::DECRYPTION));
+
+         const std::vector<uint8_t> key(16, 0xAA);
+         const std::vector<uint8_t> iv(16, 0xAA);
+
+         Botan::secure_vector<uint8_t> msg1 =
+            Botan::hex_decode_locked("446F6E27742075736520706C61696E20434243206D6F6465");
+         Botan::secure_vector<uint8_t> msg2 =
+            Botan::hex_decode_locked("49562063617272796F766572");
+         Botan::secure_vector<uint8_t> msg3 =
+            Botan::hex_decode_locked("49562063617272796F76657232");
+
+         enc->set_key(key);
+         dec->set_key(key);
+
+         enc->start(iv);
+         enc->finish(msg1);
+         result.test_eq("First ciphertext", msg1,
+                        "9BDD7300E0CB61CA71FFF957A71605DB6836159C36781246A1ADF50982757F4B");
+
+         enc->start();
+         enc->finish(msg2);
+
+         result.test_eq("Second ciphertext", msg2,
+                        "AA8D682958A4A044735DAC502B274DB2");
+
+         enc->start();
+         enc->finish(msg3);
+
+         result.test_eq("Third ciphertext", msg3,
+                        "1241B9976F73051BCF809525D6E86C25");
+
+         dec->start(iv);
+         dec->finish(msg1);
+
+         dec->start();
+         dec->finish(msg2);
+
+         dec->start();
+         dec->finish(msg3);
+         result.test_eq("Third plaintext", msg3, "49562063617272796F76657232");
+
+#endif
+         return result;
+         }
+
+      Test::Result test_cfb_iv_carry()
+         {
+         Test::Result result("CFB IV carry");
+#if defined(BOTAN_HAS_MODE_CFB) && defined(BOTAN_HAS_AES)
+         std::unique_ptr<Botan::Cipher_Mode> enc(
+            Botan::get_cipher_mode("AES-128/CFB(8)", Botan::ENCRYPTION));
+         std::unique_ptr<Botan::Cipher_Mode> dec(
+            Botan::get_cipher_mode("AES-128/CFB(8)", Botan::DECRYPTION));
+
+         const std::vector<uint8_t> key(16, 0xAA);
+         const std::vector<uint8_t> iv(16, 0xAB);
+
+         Botan::secure_vector<uint8_t> msg1 = Botan::hex_decode_locked("ABCDEF01234567");
+         Botan::secure_vector<uint8_t> msg2 = Botan::hex_decode_locked("0000123456ABCDEF");
+         Botan::secure_vector<uint8_t> msg3 = Botan::hex_decode_locked("012345");
+
+         enc->set_key(key);
+         dec->set_key(key);
+
+         enc->start(iv);
+         enc->finish(msg1);
+         result.test_eq("First ciphertext", msg1, "a51522387c4c9b");
+
+         enc->start();
+         enc->finish(msg2);
+
+         result.test_eq("Second ciphertext", msg2, "105457dc2e0649d4");
+
+         enc->start();
+         enc->finish(msg3);
+
+         result.test_eq("Third ciphertext", msg3, "53bd65");
+
+         dec->start(iv);
+         dec->finish(msg1);
+         result.test_eq("First plaintext", msg1, "ABCDEF01234567");
+
+         dec->start();
+         dec->finish(msg2);
+         result.test_eq("Second plaintext", msg2, "0000123456ABCDEF");
+
+         dec->start();
+         dec->finish(msg3);
+         result.test_eq("Third plaintext", msg3, "012345");
+#endif
+         return result;
+         }
+
+      Test::Result test_ctr_iv_carry()
+         {
+         Test::Result result("CTR IV carry");
+#if defined(BOTAN_HAS_CTR_BE) && defined(BOTAN_HAS_AES)
+
+         std::unique_ptr<Botan::Cipher_Mode> enc(
+            Botan::get_cipher_mode("AES-128/CTR-BE", Botan::ENCRYPTION));
+         std::unique_ptr<Botan::Cipher_Mode> dec(
+            Botan::get_cipher_mode("AES-128/CTR-BE", Botan::DECRYPTION));
+
+         const std::vector<uint8_t> key =
+            Botan::hex_decode("2B7E151628AED2A6ABF7158809CF4F3C");
+         const std::vector<uint8_t> iv =
+            Botan::hex_decode("F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF");
+
+         enc->set_key(key);
+         dec->set_key(key);
+
+         const std::vector<std::string> exp_ciphertext = {
+            "EC",
+            "8CDF",
+            "739860",
+            "7CB0F2D2",
+            "1675EA9EA1",
+            "E4362B7C3C67",
+            "73516318A077D7",
+            "FC5073AE6A2CC378",
+            "7889374FBEB4C81B17",
+            "BA6C44E89C399FF0F198C",
+         };
+
+         for(size_t i = 1; i != 10; ++i)
+            {
+            if(i == 1)
+               {
+               enc->start(iv);
+               dec->start(iv);
+               }
+            else
+               {
+               enc->start();
+               dec->start();
+               }
+
+            Botan::secure_vector<uint8_t> msg(i, 0);
+            enc->finish(msg);
+
+            result.test_eq("Ciphertext", msg, exp_ciphertext[i-1].c_str());
+
+            dec->finish(msg);
+
+            for(size_t i = 0; i != msg.size(); ++i)
+               result.test_eq("Plaintext zeros", static_cast<size_t>(msg[i]), 0);
+
+            }
+#endif
+         return result;
+         }
+   };
+
+
+BOTAN_REGISTER_TEST("iv_carryover", Cipher_Mode_IV_Carry_Tests);
 
 #endif
 
