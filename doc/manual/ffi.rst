@@ -601,9 +601,9 @@ RSA specific functions
    Set ``n`` to the RSA modulus.
 
 .. cpp:function:: int botan_privkey_load_rsa(botan_privkey_t* key, \
-                                     botan_mp_t p, botan_mp_t q, botan_mp_t d)
+                                     botan_mp_t p, botan_mp_t q, botan_mp_t e)
 
-   Initialize a private RSA key using parameters p, q, and d.
+   Initialize a private RSA key using parameters p, q, and e.
 
 .. cpp:function:: int botan_pubkey_load_rsa(botan_pubkey_t* key, \
                                     botan_mp_t n, botan_mp_t e)
