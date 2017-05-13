@@ -995,6 +995,7 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.add_framework_option = lex.add_framework_option
         self.add_include_dir_option = lex.add_include_dir_option
         self.add_lib_option = lex.add_lib_option
+        self.add_lib_dir_option = lex.add_lib_dir_option
         self.ar_command = lex.ar_command
         self.binary_link_commands = force_to_dict(lex.binary_link_commands)
         self.binary_name = lex.binary_name
