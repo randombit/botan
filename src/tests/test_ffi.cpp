@@ -969,7 +969,7 @@ class FFI_Unit_Tests : public Test
             TEST_FFI_RC(-1, botan_privkey_check_key, (loaded_privkey, rng, 0));
             botan_privkey_destroy(loaded_privkey);
 
-            TEST_FFI_OK(botan_privkey_load_rsa, (&loaded_privkey, p, q, d));
+            TEST_FFI_OK(botan_privkey_load_rsa, (&loaded_privkey, p, q, e));
             TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
 
             botan_pubkey_t loaded_pubkey;

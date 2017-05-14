@@ -755,7 +755,7 @@ BOTAN_DLL int botan_privkey_get_field(botan_mp_t output,
 BOTAN_DLL int botan_privkey_load_rsa(botan_privkey_t* key,
                                      botan_mp_t p,
                                      botan_mp_t q,
-                                     botan_mp_t d);
+                                     botan_mp_t e);
 
 BOTAN_DLL int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t rsa_key);
 BOTAN_DLL int botan_privkey_rsa_get_q(botan_mp_t q, botan_privkey_t rsa_key);

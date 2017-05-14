@@ -1449,7 +1449,7 @@ int botan_pubkey_load(botan_pubkey_t* key,
    }
 
 int botan_privkey_load_rsa(botan_privkey_t* key,
-                           botan_mp_t p, botan_mp_t q, botan_mp_t d)
+                           botan_mp_t p, botan_mp_t q, botan_mp_t e)
    {
 #if defined(BOTAN_HAS_RSA)
    *key = nullptr;
@@ -1457,7 +1457,7 @@ int botan_privkey_load_rsa(botan_privkey_t* key,
       {
       *key = new botan_privkey_struct(new Botan::RSA_PrivateKey(safe_get(p),
                                                                 safe_get(q),
-                                                                safe_get(d)));
+                                                                safe_get(e)));
       return 0;
       }
    catch(std::exception& e)
@@ -1466,7 +1466,7 @@ int botan_privkey_load_rsa(botan_privkey_t* key,
       }
    return -1;
 #else
-   BOTAN_UNUSED(key, p, q, d);
+   BOTAN_UNUSED(key, p, q, e);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
