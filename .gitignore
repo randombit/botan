@@ -16,6 +16,9 @@ build.log
 botan
 botan-test
 
+core.*
+vgcore.*
+
 # Text file backups (e.g. gedit, joe)
 *~
 \#*\#
