@@ -50,7 +50,11 @@ EMSA* get_emsa(const std::string& algo_spec)
          req.algo_name() == "EMSA-PKCS1-v1_5" ||
          req.algo_name() == "EMSA3")
       {
-      if(req.arg_count() == 1)
+      if(req.arg_count() == 2 && req.arg(0) == "Raw")
+         {
+         return new EMSA_PKCS1v15_Raw(req.arg(1));
+         }
+      else if(req.arg_count() == 1)
          {
          if(req.arg(0) == "Raw")
             {
