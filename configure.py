@@ -2538,7 +2538,7 @@ class AmalgamationGenerator(object):
         return amalgamation_sources
 
 
-def detect_compiler_version(ccinfo, cc_bin):
+def detect_compiler_version(ccinfo, cc_bin, os_name):
 
     cc_version_flag = {
         'msvc': ([], r'Compiler Version ([0-9]+).[0-9\.]+ for'),
@@ -2554,6 +2554,8 @@ def detect_compiler_version(ccinfo, cc_bin):
     cc_cmd = cc_bin.split(' ') + flags
 
     try:
+        cc_version = None
+
         version = re.compile(version_re_str)
         cc_output = subprocess.Popen(cc_cmd,
                                      stdout=subprocess.PIPE,
@@ -2563,11 +2565,34 @@ def detect_compiler_version(ccinfo, cc_bin):
         cc_output = str(cc_output)
 
         match = version.search(cc_output)
-        if match is None:
+
+        if match:
+            cc_version = match.group(1)
+        elif match is None and ccinfo.basename == 'clang' and os_name in ['darwin', 'ios']:
+            xcode_version_to_clang = {
+                '703': '3.8',
+                '800': '3.9',
+                '802': '4.0'
+            }
+
+            version = re.compile(r'Apple LLVM version [0-9.]+ \(clang-([0-9]{3})\.')
+            match = version.search(cc_output)
+
+            if match:
+                apple_clang_version = match.group(1)
+                if apple_clang_version in xcode_version_to_clang:
+                    cc_version = xcode_version_to_clang[apple_clang_version]
+                    logging.info('Mapping Apple Clang version %s to LLVM version %s' % (
+                        apple_clang_version, cc_version))
+                else:
+                    logging.warning('Unable to determine LLVM Clang version cooresponding to Apple Clang %s' %
+                                    (apple_clang_version))
+                    return '3.8' # safe default
+
+        if cc_version is None:
             logging.error("Ran '%s' to get %s compiler version, but no %s version found in %s" % (
                 ' '.join(cc_cmd), ccinfo.basename, ccinfo.basename, cc_output))
 
-        cc_version = match.group(1)
         logging.info('Detected %s compiler version %s' % (ccinfo.basename, cc_version))
         return cc_version
     except OSError as e:
@@ -2939,7 +2964,7 @@ def main(argv):
     osinfo = info_os[options.os]
     module_policy = info_module_policies[options.module_policy] if options.module_policy else None
 
-    cc_version = detect_compiler_version(cc, options.compiler_binary or cc.binary_name)
+    cc_version = detect_compiler_version(cc, options.compiler_binary or cc.binary_name, osinfo.basename)
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
