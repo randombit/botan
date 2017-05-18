@@ -1449,15 +1449,15 @@ int botan_pubkey_load(botan_pubkey_t* key,
    }
 
 int botan_privkey_load_rsa(botan_privkey_t* key,
-                           botan_mp_t p, botan_mp_t q, botan_mp_t e)
+                           botan_mp_t rsa_p, botan_mp_t rsa_q, botan_mp_t rsa_e)
    {
 #if defined(BOTAN_HAS_RSA)
    *key = nullptr;
    try
       {
-      *key = new botan_privkey_struct(new Botan::RSA_PrivateKey(safe_get(p),
-                                                                safe_get(q),
-                                                                safe_get(e)));
+      *key = new botan_privkey_struct(new Botan::RSA_PrivateKey(safe_get(rsa_p),
+                                                                safe_get(rsa_q),
+                                                                safe_get(rsa_e)));
       return 0;
       }
    catch(std::exception& e)

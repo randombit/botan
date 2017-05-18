@@ -324,6 +324,8 @@ create_private_key(const std::string& alg_name,
       }
 #endif
 
+   BOTAN_UNUSED(alg_name, rng, provider);
+
    return std::unique_ptr<Private_Key>();
    }
 
@@ -343,6 +345,9 @@ probe_provider_private_key(const std::string& alg_name,
          providers.push_back(prov); // available
          }
       }
+
+   BOTAN_UNUSED(alg_name);
+
    return providers;
    }
 }
