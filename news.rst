@@ -11,16 +11,35 @@ Version 2.2.0, Not Yet Released
 
 * Fix missing flush in DataSink_Stream::end_msg. (GH #972 fixing GH #972)
 
+* Allow to seek in the big endian counter mode of operation (GH #999)
+
+* Add SP 800-56A KDF (GH #1040)
+
+* Support loading ElGamal keys through FFI interface (GH #1008)
+
+* Many changes to configure.py and botan2.py to make them pylint clean
+  (GH #1041 #1002 #984)
+
 * Add `hmac` command line util (GH #1001)
 
 * Add `hex_enc` and `hex_dec` command line utils
+
+* Fix return value of FFI botan_bcrypt_is_valid (GH #1033)
+
+* Support generating RSA keys using OpenSSL (GH #1035)
+
+* Add new FFI function botan_hash_block_size (GH #1036)
+
+* Support AES-CBC ciphers via OpenSSL (GH #1022)
+
+* Complete wildcard handling for X.509 certificates (GH #1017)
+
+* Add some missing functions to TLS::Text_Policy (GH #1023)
 
 * It was previously possible to use `--single-amalgamation-file`
   without `--amalgamation`, though it did not do anything useful. Now
   `--single-amalgamation-file` requires `--amalgamation` also be set
   on the command line.
-
-* Allow to seek in the big endian counter mode of operation (GH #999)
 
 Version 2.1.0, 2017-04-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
