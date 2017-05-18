@@ -415,7 +415,7 @@ class Speed final : public Command
    {
    public:
       Speed()
-         : Command("speed --msec=300 --provider= --buf-size=4096 *algos") {}
+         : Command("speed --msec=300 --provider= --buf-size=4096 --clear-cpuid= *algos") {}
 
       void go() override
          {
@@ -424,6 +424,19 @@ class Speed final : public Command
          const std::string provider = get_arg("provider");
 
          std::vector<std::string> algos = get_arg_list("algos");
+
+         Botan::CPUID::initialize();
+
+         for(std::string cpuid_to_clear : Botan::split_on(get_arg("clear-cpuid"), ','))
+            {
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+            if(cpuid_to_clear == "avx2")
+               Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_AVX2_BIT);
+            else if(cpuid_to_clear == "sse2")
+               Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_SSE2_BIT);
+#endif
+            }
+
          const bool using_defaults = (algos.empty());
          if(using_defaults)
             {
