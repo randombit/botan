@@ -911,6 +911,8 @@ BOTAN_DLL int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
                                         const uint8_t other_key[], size_t other_key_len,
                                         const uint8_t salt[], size_t salt_len);
 
+BOTAN_DLL int botan_pkcs_hash_id(const char* hash_name, uint8_t pkcs_id[], size_t* pkcs_id_len);
+
 
 /*
 *

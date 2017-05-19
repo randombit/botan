@@ -62,7 +62,14 @@ class BOTAN_DLL EMSA_PKCS1v15_Raw final : public EMSA
       bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
                   size_t) override;
 
+      /**
+      * @param hash_algo if non-empty, the digest id for that hash is
+      * included in the signature.
+      */
+      EMSA_PKCS1v15_Raw(const std::string& hash_algo = "");
    private:
+      size_t m_hash_output_len = 0;
+      std::vector<uint8_t> m_hash_id;
       secure_vector<uint8_t> m_message;
    };
 

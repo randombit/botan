@@ -73,6 +73,10 @@
   #include <botan/bcrypt.h>
 #endif
 
+#if defined(BOTAN_HAS_HASH_ID)
+  #include <botan/hash_id.h>
+#endif
+
 #if defined(BOTAN_HAS_TLS)
   #include <botan/tls_client.h>
   #include <botan/tls_server.h>
@@ -2247,6 +2251,23 @@ int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage
          return 0;
       return 1;
       });
+   }
+
+int botan_pkcs_hash_id(const char* hash_name, uint8_t pkcs_id[], size_t* pkcs_id_len)
+   {
+#if defined(BOTAN_HAS_HASH_ID)
+   try
+      {
+      const std::vector<uint8_t> hash_id = Botan::pkcs_hash_id(hash_name);
+      return write_output(pkcs_id, pkcs_id_len, hash_id.data(), hash_id.size());
+      }
+   catch(...)
+      {
+      return BOTAN_FFI_ERROR_EXCEPTION_THROWN;
+      }
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_mceies_decrypt(botan_privkey_t mce_key_obj,

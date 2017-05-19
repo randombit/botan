@@ -85,6 +85,20 @@ EMSA_PKCS1v15::EMSA_PKCS1v15(HashFunction* hash) : m_hash(hash)
    m_hash_id = pkcs_hash_id(m_hash->name());
    }
 
+EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw(const std::string& hash_algo)
+   {
+   if(!hash_algo.empty())
+      {
+      m_hash_id = pkcs_hash_id(hash_algo);
+      std::unique_ptr<HashFunction> hash(HashFunction::create(hash_algo));
+      m_hash_output_len = hash->output_length();
+      }
+   else
+      {
+      m_hash_output_len = 0;
+      }
+   }
+
 void EMSA_PKCS1v15_Raw::update(const uint8_t input[], size_t length)
    {
    m_message += std::make_pair(input, length);
@@ -94,6 +108,10 @@ secure_vector<uint8_t> EMSA_PKCS1v15_Raw::raw_data()
    {
    secure_vector<uint8_t> ret;
    std::swap(ret, m_message);
+
+   if(m_hash_output_len > 0 && ret.size() != m_hash_output_len)
+      throw Encoding_Error("EMSA_PKCS1v15_Raw::encoding_of: Bad input length");
+
    return ret;
    }
 
@@ -102,16 +120,19 @@ EMSA_PKCS1v15_Raw::encoding_of(const secure_vector<uint8_t>& msg,
                                size_t output_bits,
                                RandomNumberGenerator&)
    {
-   return emsa3_encoding(msg, output_bits, nullptr, 0);
+   return emsa3_encoding(msg, output_bits, m_hash_id.data(), m_hash_id.size());
    }
 
 bool EMSA_PKCS1v15_Raw::verify(const secure_vector<uint8_t>& coded,
                                const secure_vector<uint8_t>& raw,
                                size_t key_bits)
    {
+   if(m_hash_output_len > 0 && raw.size() != m_hash_output_len)
+      return false;
+
    try
       {
-      return (coded == emsa3_encoding(raw, key_bits, nullptr, 0));
+      return (coded == emsa3_encoding(raw, key_bits, m_hash_id.data(), m_hash_id.size()));
       }
    catch(...)
       {

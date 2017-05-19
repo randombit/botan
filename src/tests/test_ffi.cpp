@@ -341,6 +341,7 @@ class FFI_Unit_Tests : public Test
          results.push_back(ffi_test_ciphers_cbc());
          results.push_back(ffi_test_ciphers_aead());
          results.push_back(ffi_test_stream_ciphers());
+         results.push_back(ffi_test_pkcs_hash_id());
 
 #if defined(BOTAN_HAS_RSA)
          results.push_back(ffi_test_rsa(rng));
@@ -373,6 +374,32 @@ class FFI_Unit_Tests : public Test
          }
 
    private:
+      Test::Result ffi_test_pkcs_hash_id()
+         {
+         Test::Result result("FFI PKCS hash id");
+
+#if defined(BOTAN_HAS_HASH_ID)
+         std::vector<uint8_t> hash_id(64);
+         size_t hash_id_len;
+
+         hash_id_len = 3; // too short
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
+                     botan_pkcs_hash_id, ("SHA-256", hash_id.data(), &hash_id_len));
+
+         result.test_eq("Expected SHA-256 PKCS hash id len", hash_id_len, 19);
+
+         TEST_FFI_OK(botan_pkcs_hash_id, ("SHA-256", hash_id.data(), &hash_id_len));
+
+         result.test_eq("Expected SHA-256 PKCS hash id len", hash_id_len, 19);
+
+         hash_id.resize(hash_id_len);
+         result.test_eq("Expected SHA_256 PKCS hash id",
+                        hash_id, "3031300D060960864801650304020105000420");
+#endif
+
+         return result;
+         }
+
       Test::Result ffi_test_ciphers_cbc()
          {
          Test::Result result("FFI CBC cipher");
