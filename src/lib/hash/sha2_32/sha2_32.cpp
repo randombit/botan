@@ -1,12 +1,13 @@
 /*
 * SHA-{224,256}
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2017 Jack Lloyd
 *     2007 FlexSecure GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/sha2_32.h>
+#include <botan/cpuid.h>
 
 namespace Botan {
 
@@ -51,6 +52,13 @@ inline uint32_t sigma(uint32_t X, uint32_t rot1, uint32_t rot2, uint32_t shift)
 void compress(secure_vector<uint32_t>& digest,
               const uint8_t input[], size_t blocks)
    {
+#if defined(BOTAN_HAS_SHA2_32_X86)
+   if(CPUID::has_intel_sha())
+      {
+      return sha2_compress_x86(digest.data(), input, blocks);
+      }
+#endif
+
    uint32_t A = digest[0], B = digest[1], C = digest[2],
           D = digest[3], E = digest[4], F = digest[5],
           G = digest[6], H = digest[7];

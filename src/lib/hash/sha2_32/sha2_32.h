@@ -48,12 +48,20 @@ class BOTAN_DLL SHA_256 final : public MDx_HashFunction
 
       SHA_256() : MDx_HashFunction(64, true, true), m_digest(8)
          { clear(); }
+
    private:
       void compress_n(const uint8_t[], size_t blocks) override;
       void copy_out(uint8_t[]) override;
 
       secure_vector<uint32_t> m_digest;
    };
+
+#if defined(BOTAN_HAS_SHA2_32_X86)
+/*
+* SHA-256 compression using Goldmont x86 extensions. Not for public consumption.
+*/
+void sha2_compress_x86(uint32_t digest[8], const uint8_t input[], size_t blocks);
+#endif
 
 }
 

@@ -1,4 +1,4 @@
-#test cpuid sse2
+#test cpuid sse2 sha
 
 [SHA-160]
 In = 
