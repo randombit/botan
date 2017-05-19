@@ -27,8 +27,8 @@ size_t choose_update_size(size_t update_granularity)
 Cipher_Mode_Filter::Cipher_Mode_Filter(Cipher_Mode* mode) :
    Buffered_Filter(choose_update_size(mode->update_granularity()),
                    mode->minimum_final_size()),
-   m_nonce(mode->default_nonce_length() == 0),
    m_mode(mode),
+   m_nonce(mode->default_nonce_length() == 0),
    m_buffer(m_mode->update_granularity())
    {
    }

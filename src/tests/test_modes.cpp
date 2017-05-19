@@ -317,8 +317,8 @@ class Cipher_Mode_IV_Carry_Tests : public Test
 
             dec->finish(msg);
 
-            for(size_t i = 0; i != msg.size(); ++i)
-               result.test_eq("Plaintext zeros", static_cast<size_t>(msg[i]), 0);
+            for(size_t j = 0; j != msg.size(); ++j)
+               result.test_eq("Plaintext zeros", static_cast<size_t>(msg[j]), 0);
 
             }
 #endif
