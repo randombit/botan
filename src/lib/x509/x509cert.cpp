@@ -334,7 +334,7 @@ bool X509_Certificate::has_ex_constraint(const std::string& ex_constraint) const
 */
 uint32_t X509_Certificate::path_limit() const
    {
-   return m_subject.get1_uint32("X509v3.BasicConstraints.path_constraint", 0);
+   return m_subject.get1_uint32("X509v3.BasicConstraints.path_constraint", Cert_Extension::NO_CERT_PATH_LIMIT);
    }
 
 /*

@@ -76,12 +76,8 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
          status.insert(Certificate_Status_Code::CERT_HAS_EXPIRED);
 
       // Check issuer constraints
-
       if(!issuer->is_CA_cert() && !self_signed_ee_cert)
          status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER);
-
-      if(issuer->path_limit() < i)
-         status.insert(Certificate_Status_Code::CERT_CHAIN_TOO_LONG);
 
       std::unique_ptr<Public_Key> issuer_key(issuer->subject_public_key());
 
@@ -112,6 +108,39 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
       for(auto& extension : extensions.extensions())
          {
          extension.first->validate(*subject, *issuer, cert_path, cert_status, i);
+         }
+      }
+
+   // path len check
+   size_t max_path_length = cert_path.size();
+   for(size_t i = cert_path.size() - 1; i > 0 ; --i)
+      {
+      std::set<Certificate_Status_Code>& status = cert_status.at(i);
+      const std::shared_ptr<const X509_Certificate>& subject = cert_path[i];
+
+      /*
+      * If the certificate was not self-issued, verify that max_path_length is
+      * greater than zero and decrement max_path_length by 1.
+      */
+      if(subject->subject_dn() != subject->issuer_dn())
+         {
+         if(max_path_length > 0)
+            {
+            --max_path_length;
+            }
+         else
+            {
+            status.insert(Certificate_Status_Code::CERT_CHAIN_TOO_LONG);
+            }
+         }
+
+      /*
+      * If pathLenConstraint is present in the certificate and is less than max_path_length,
+      * set max_path_length to the value of pathLenConstraint.
+      */
+      if(subject->path_limit() != Cert_Extension::NO_CERT_PATH_LIMIT && subject->path_limit() < max_path_length)
+         {
+         max_path_length = subject->path_limit();
          }
       }
 

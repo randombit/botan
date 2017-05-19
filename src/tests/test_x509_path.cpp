@@ -240,6 +240,84 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run()
 
 BOTAN_REGISTER_TEST("x509_path_nist", NIST_Path_Validation_Tests);
 
+class Extended_Path_Validation_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override;
+   };
+
+std::vector<Test::Result> Extended_Path_Validation_Tests::run()
+   {
+   std::vector<Test::Result> results;
+
+   const std::string extended_x509_test_dir = Test::data_dir() + "/extended_x509";
+
+   try
+      {
+      // Do nothing, just test filesystem access
+      Botan::get_files_recursive(extended_x509_test_dir);
+      }
+   catch(Botan::No_Filesystem_Access&)
+      {
+      Test::Result result("Extended x509 path validation");
+      result.test_note("Skipping due to missing filesystem access");
+      results.push_back(result);
+      return results;
+      }
+
+   std::map<std::string, std::string> expected =
+      read_results(Test::data_file("extended_x509/expected.txt"));
+
+   for(auto i = expected.begin(); i != expected.end(); ++i)
+      {
+      const std::string test_name = i->first;
+      const std::string expected_result = i->second;
+
+      const std::string test_dir = extended_x509_test_dir + "/" + test_name;
+
+      Test::Result result("Extended X509 path validation");
+      result.start_timer();
+
+      const std::vector<std::string> all_files = Botan::get_files_recursive(test_dir);
+
+      if(all_files.empty())
+         {
+         result.test_failure("No test files found in " + test_dir);
+         results.push_back(result);
+         continue;
+         }
+
+      Botan::Certificate_Store_In_Memory store;
+
+      for(auto const& file : all_files)
+         {
+         if(file.find(".crt") != std::string::npos && file != "end.crt")
+            {
+            store.add_certificate(Botan::X509_Certificate(file));
+            }
+         }
+
+      Botan::X509_Certificate end_user(test_dir + "/end.crt");
+
+      Botan::Path_Validation_Restrictions restrictions;
+      Botan::Path_Validation_Result validation_result =
+         Botan::x509_path_validate(end_user,
+                                   restrictions,
+                                   store);
+
+      result.test_eq(test_name + " path validation result",
+                     validation_result.result_string(),
+                     expected_result);
+
+      result.end_timer();
+      results.push_back(result);
+      }
+
+   return results;
+   }
+
+BOTAN_REGISTER_TEST("x509_path_extended", Extended_Path_Validation_Tests);
+
 #endif
 
 }
