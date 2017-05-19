@@ -2572,18 +2572,20 @@ class AmalgamationGenerator(object):
 
 
 def detect_compiler_version(ccinfo, cc_bin, os_name):
+    # pylint: disable=too-many-locals
 
     cc_version_flag = {
-        'msvc': ([], r'Compiler Version ([0-9]+).[0-9\.]+ for'),
+        'msvc': ([], r'Compiler Version ([0-9]+).([0-9]+).[0-9\.]+ for'),
         'gcc': (['-v'], r'gcc version ([0-9]+.[0-9])+.[0-9]+'),
         'clang': (['-v'], r'clang version ([0-9]+.[0-9])[ \.]')
     }
 
-    if ccinfo.basename not in cc_version_flag.keys():
-        logging.info("No compiler version detection available for %s" % (ccinfo.basename))
+    cc_name = ccinfo.basename
+    if cc_name not in cc_version_flag.keys():
+        logging.info("No compiler version detection available for %s" % (cc_name))
         return None
 
-    (flags, version_re_str) = cc_version_flag[ccinfo.basename]
+    (flags, version_re_str) = cc_version_flag[cc_name]
     cc_cmd = cc_bin.split(' ') + flags
 
     try:
@@ -2596,12 +2598,24 @@ def detect_compiler_version(ccinfo, cc_bin, os_name):
                                      universal_newlines=True).communicate()
 
         cc_output = str(cc_output)
-
         match = version.search(cc_output)
 
         if match:
-            cc_version = match.group(1)
-        elif match is None and ccinfo.basename == 'clang' and os_name in ['darwin', 'ios']:
+            if cc_name == 'msvc':
+                cl_version_to_msvc_version = {
+                    '18.00': '2013',
+                    '19.00': '2015',
+                    '19.10': '2017'
+                }
+                cl_version = match.group(1) + '.' + match.group(2)
+                if cl_version in cl_version_to_msvc_version:
+                    cc_version = cl_version_to_msvc_version[cl_version]
+                else:
+                    logging.warning('Unable to determine MSVC version from output "%s"' % (cc_output))
+                    return None
+            else:
+                cc_version = match.group(1)
+        elif match is None and cc_name == 'clang' and os_name in ['darwin', 'ios']:
             xcode_version_to_clang = {
                 '703': '3.8',
                 '800': '3.9',
@@ -2624,10 +2638,10 @@ def detect_compiler_version(ccinfo, cc_bin, os_name):
 
         if cc_version is None:
             logging.warning("Ran '%s' to get %s version, but output '%s' does not match expected version format" % (
-                ' '.join(cc_cmd), ccinfo.basename, cc_output))
+                ' '.join(cc_cmd), cc_name, cc_output))
             return None
 
-        logging.info('Detected %s compiler version %s' % (ccinfo.basename, cc_version))
+        logging.info('Detected %s compiler version %s' % (cc_name, cc_version))
         return cc_version
     except OSError as e:
         logging.warning('Could not execute %s for version check: %s' % (cc_cmd, e))

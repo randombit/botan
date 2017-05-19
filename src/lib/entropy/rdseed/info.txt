@@ -17,5 +17,5 @@ x86_64
 gcc:4.8
 clang:3.2
 icc
-msvc:18
+msvc:2013
 </cc>
