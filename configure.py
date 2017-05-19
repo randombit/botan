@@ -2576,7 +2576,7 @@ def detect_compiler_version(ccinfo, cc_bin, os_name):
     cc_version_flag = {
         'msvc': ([], r'Compiler Version ([0-9]+).[0-9\.]+ for'),
         'gcc': (['-v'], r'gcc version ([0-9]+.[0-9])+.[0-9]+'),
-        'clang': (['-v'], r'clang version ([0-9]+.[0-9])+.[0-9]+')
+        'clang': (['-v'], r'clang version ([0-9]+.[0-9])[ \.]')
     }
 
     if ccinfo.basename not in cc_version_flag.keys():
