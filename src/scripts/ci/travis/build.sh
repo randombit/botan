@@ -6,6 +6,7 @@ MAKE_PREFIX=()
 TEST_PREFIX=()
 TEST_EXE=./botan-test
 TEST_FLAGS=()
+CLI_EXE=./botan
 CFG_FLAGS=(--prefix=/tmp/botan-installation --cc=$CC --os=$TRAVIS_OS_NAME)
 
 CC_BIN=$CXX
@@ -177,6 +178,12 @@ else
     TEST_CMD=("${TEST_PREFIX[@]}" $TEST_EXE "${TEST_FLAGS[@]}")
     echo "Running" "${TEST_CMD[@]}"
     time "${TEST_CMD[@]}"
+fi
+
+if [ "$BUILD_MODE" = "static" ] || [ "$BUILD_MODE" = "shared" ]
+then
+    echo "Running cli tests ..."
+    ./src/scripts/cli_tests.py "$CLI_EXE"
 fi
 
 # Run Python tests (need shared libs)
