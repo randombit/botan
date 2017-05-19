@@ -56,7 +56,10 @@ class BOTAN_DLL Stream_Cipher_Mode : public Cipher_Mode
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override
          {
-         m_cipher->set_iv(nonce, nonce_len);
+         if(nonce_len > 0)
+            {
+            m_cipher->set_iv(nonce, nonce_len);
+            }
          }
 
       void key_schedule(const uint8_t key[], size_t length) override

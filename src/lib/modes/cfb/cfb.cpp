@@ -67,7 +67,7 @@ size_t CFB_Mode::default_nonce_length() const
 
 bool CFB_Mode::valid_nonce_length(size_t n) const
    {
-   return (n == cipher().block_size());
+   return (n == 0 || n == cipher().block_size());
    }
 
 void CFB_Mode::key_schedule(const uint8_t key[], size_t length)
@@ -80,7 +80,18 @@ void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
    if(!valid_nonce_length(nonce_len))
       throw Invalid_IV_Length(name(), nonce_len);
 
-   m_shift_register.assign(nonce, nonce + nonce_len);
+   if(nonce_len == 0)
+      {
+      if(m_shift_register.empty())
+         {
+         throw Invalid_State("CFB requires a non-empty initial nonce");
+         }
+      }
+   else
+      {
+      m_shift_register.assign(nonce, nonce + nonce_len);
+      }
+
    m_keystream_buf.resize(m_shift_register.size());
    cipher().encrypt(m_shift_register, m_keystream_buf);
    }

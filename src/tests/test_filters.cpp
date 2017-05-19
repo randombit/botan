@@ -1,6 +1,6 @@
 /*
 * (C) 2016 Daniel Neus
-*     2016 Jack Lloyd
+*     2016,2017 Jack Lloyd
 *     2017 René Korthaus
 *     2017 Philippe Lieser
 *
@@ -42,7 +42,7 @@ class Filter_Tests : public Test
          results.push_back(test_pipe_hash());
          results.push_back(test_pipe_mac());
          results.push_back(test_pipe_stream());
-         results.push_back(test_pipe_cipher());
+         results.push_back(test_pipe_cbc());
          results.push_back(test_pipe_compress());
          results.push_back(test_pipe_codec());
          results.push_back(test_fork());
@@ -274,9 +274,9 @@ class Filter_Tests : public Test
          return result;
          }
 
-      Test::Result test_pipe_cipher()
+      Test::Result test_pipe_cbc()
          {
-         Test::Result result("Pipe");
+         Test::Result result("Pipe CBC");
 
 #if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_MODE_CBC) && defined(BOTAN_HAS_CIPHER_MODE_PADDING)
          Botan::Cipher_Mode_Filter* cipher =
@@ -303,13 +303,24 @@ class Filter_Tests : public Test
          auto ciphertext = pipe.read_all();
          result.test_eq("Bytes read after", pipe.get_bytes_read(), ciphertext.size());
 
-         result.test_eq("Ciphertext", ciphertext, "9BDD7300E0CB61CA71FFF957A71605DB6836159C36781246A1ADF50982757F4B");
+         result.test_eq("Ciphertext", ciphertext, "9BDD7300E0CB61CA71FFF957A71605DB 6836159C36781246A1ADF50982757F4B");
+
+         pipe.process_msg("IV carryover");
+         auto ciphertext2 = pipe.read_all(1);
+         pipe.process_msg("IV carryover2");
+         auto ciphertext3 = pipe.read_all(2);
+
+         // These values tested against PyCrypto
+         result.test_eq("Ciphertext2", ciphertext2, "AA8D682958A4A044735DAC502B274DB2");
+         result.test_eq("Ciphertext3", ciphertext3, "1241B9976F73051BCF809525D6E86C25");
 
          Botan::Cipher_Mode_Filter* dec_cipher =
             new Botan::Cipher_Mode_Filter(Botan::get_cipher_mode("AES-128/CBC/PKCS7", Botan::DECRYPTION));
          pipe.append(dec_cipher);
          dec_cipher->set_key(Botan::SymmetricKey("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"));
          dec_cipher->set_iv(Botan::InitializationVector("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB"));
+
+         // reset the IV on the encryption filter
          cipher->set_iv(Botan::InitializationVector("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB"));
 
          const std::vector<uint8_t> zeros_in(1024);
@@ -318,7 +329,7 @@ class Filter_Tests : public Test
          pipe.write(src);
          pipe.end_msg();
 
-         pipe.set_default_msg(1);
+         pipe.set_default_msg(3);
          result.test_eq("Bytes read", pipe.get_bytes_read(), 0);
          Botan::secure_vector<uint8_t> zeros_out = pipe.read_all();
          result.test_eq("Bytes read", pipe.get_bytes_read(), zeros_out.size());
@@ -440,7 +451,7 @@ class Filter_Tests : public Test
 
       Test::Result test_pipe_stream()
          {
-         Test::Result result("Pipe");
+         Test::Result result("Pipe CTR");
 
 #if defined(BOTAN_HAS_CTR_BE)
          Botan::Keyed_Filter* aes = nullptr;
@@ -456,6 +467,9 @@ class Filter_Tests : public Test
 
          result.test_eq("Message count", pipe.message_count(), 1);
          result.test_eq("Ciphertext", pipe.read_all(), "FDFD6238F7C6");
+
+         pipe.process_msg("ABCDEF");
+         result.test_eq("Ciphertext", pipe.read_all(1), "8E72F1153514");
 #endif
          return result;
          }
