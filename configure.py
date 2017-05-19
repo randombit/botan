@@ -2623,8 +2623,9 @@ def detect_compiler_version(ccinfo, cc_bin, os_name):
                     return '3.8' # safe default
 
         if cc_version is None:
-            logging.error("Ran '%s' to get %s compiler version, but no %s version found in %s" % (
-                ' '.join(cc_cmd), ccinfo.basename, ccinfo.basename, cc_output))
+            logging.warning("Ran '%s' to get %s version, but output '%s' does not match expected version format" % (
+                ' '.join(cc_cmd), ccinfo.basename, cc_output))
+            return None
 
         logging.info('Detected %s compiler version %s' % (ccinfo.basename, cc_version))
         return cc_version
