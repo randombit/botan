@@ -12,7 +12,7 @@
 namespace Botan {
 
 // called from sha2_32.cpp
-void sha2_compress_x86(uint32_t digest[8], const uint8_t input[], size_t blocks)
+void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks)
    {
    __m128i STATE0, STATE1;
    __m128i MSG, TMP, MASK;

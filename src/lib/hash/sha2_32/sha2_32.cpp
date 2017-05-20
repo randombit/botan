@@ -37,7 +37,7 @@ void SHA_256::compress_digest(secure_vector<uint32_t>& digest,
 #if defined(BOTAN_HAS_SHA2_32_X86)
    if(CPUID::has_intel_sha())
       {
-      return sha2_compress_x86(digest.data(), input, blocks);
+      return SHA_256::compress_digest_x86(digest, input, blocks);
       }
 #endif
 
