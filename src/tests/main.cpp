@@ -13,6 +13,7 @@
 #include <deque>
 #include <thread>
 #include <future>
+#include <cstdlib>
 
 #include <botan/version.h>
 #include <botan/loadstor.h>
@@ -206,9 +207,45 @@ class Test_Runner : public Botan_CLI::Command
 #elif defined(BOTAN_HAS_AUTO_SEEDING_RNG)
          output() << " rng:autoseeded";
          rng.reset(new Botan::Serialized_RNG(new Botan::AutoSeeded_RNG));
+#else
+         // last ditch fallback for RNG-less build
+         class Bogus_Fallback_RNG : public Botan::RandomNumberGenerator
+            {
+            public:
+               std::string name() const override
+                  {
+                  return "Bogus_Fallback_RNG";
+                  }
+
+               void clear() override
+                  {
+                  /* ignored */
+                  }
+
+               void randomize(uint8_t out[], size_t len) override
+                  {
+                  for(size_t i = 0; i != len; ++i)
+                     {
+                     out[i] = std::rand();
+                     }
+                  }
+
+               bool is_seeded() const override
+                  {
+                  return true;
+                  }
+
+               void add_entropy(const uint8_t[], size_t) override
+                  {
+                  /* ignored */
+                  }
+            };
+
+         rng.reset(new Bogus_Fallback_RNG);
 #endif
 
 #endif
+
          output() << "\n";
 
          Botan_Tests::Test::setup_tests(log_success, run_online_tests, run_long_tests,
