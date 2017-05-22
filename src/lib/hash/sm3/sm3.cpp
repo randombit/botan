@@ -9,6 +9,11 @@
 
 namespace Botan {
 
+std::unique_ptr<HashFunction> SM3::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new SM3(*this));
+   }
+
 namespace {
 
 const uint32_t SM3_IV[] = {

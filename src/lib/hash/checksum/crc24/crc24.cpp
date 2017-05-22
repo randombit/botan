@@ -10,6 +10,11 @@
 
 namespace Botan {
 
+std::unique_ptr<HashFunction> CRC24::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new CRC24(*this));
+   }
+
 /*
 * Update a CRC24 Checksum
 */

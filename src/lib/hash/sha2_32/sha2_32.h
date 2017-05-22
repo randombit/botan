@@ -22,6 +22,7 @@ class BOTAN_DLL SHA_224 final : public MDx_HashFunction
       std::string name() const override { return "SHA-224"; }
       size_t output_length() const override { return 28; }
       HashFunction* clone() const override { return new SHA_224; }
+      std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
 
@@ -43,6 +44,7 @@ class BOTAN_DLL SHA_256 final : public MDx_HashFunction
       std::string name() const override { return "SHA-256"; }
       size_t output_length() const override { return 32; }
       HashFunction* clone() const override { return new SHA_256; }
+      std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
 

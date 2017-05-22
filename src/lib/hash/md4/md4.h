@@ -21,6 +21,7 @@ class BOTAN_DLL MD4 final : public MDx_HashFunction
       std::string name() const override { return "MD4"; }
       size_t output_length() const override { return 16; }
       HashFunction* clone() const override { return new MD4; }
+      std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
 

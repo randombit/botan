@@ -30,6 +30,11 @@ HashFunction* SHAKE_128::clone() const
    return new SHAKE_128(m_output_bits);
    }
 
+std::unique_ptr<HashFunction> SHAKE_128::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new SHAKE_128(*this));
+   }
+
 void SHAKE_128::clear()
    {
    zeroise(m_S);
@@ -71,6 +76,11 @@ std::string SHAKE_256::name() const
 HashFunction* SHAKE_256::clone() const
    {
    return new SHAKE_256(m_output_bits);
+   }
+
+std::unique_ptr<HashFunction> SHAKE_256::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new SHAKE_256(*this));
    }
 
 void SHAKE_256::clear()

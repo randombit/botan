@@ -21,6 +21,7 @@ class BOTAN_DLL SHA_160 final : public MDx_HashFunction
       std::string name() const override { return "SHA-160"; }
       size_t output_length() const override { return 20; }
       HashFunction* clone() const override { return new SHA_160; }
+      std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
 

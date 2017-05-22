@@ -11,6 +11,16 @@
 
 namespace Botan {
 
+std::unique_ptr<HashFunction> SHA_224::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new SHA_224(*this));
+   }
+
+std::unique_ptr<HashFunction> SHA_256::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new SHA_256(*this));
+   }
+
 namespace {
 
 namespace SHA2_32 {

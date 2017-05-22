@@ -23,6 +23,7 @@ class BOTAN_DLL GOST_34_11 final : public HashFunction
       size_t output_length() const override { return 32; }
       size_t hash_block_size() const override { return 32; }
       HashFunction* clone() const override { return new GOST_34_11; }
+      std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
 

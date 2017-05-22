@@ -38,6 +38,8 @@ class BOTAN_DLL Blake2b final : public HashFunction
       std::string name() const override;
       void clear() override;
 
+      std::unique_ptr<HashFunction> copy_state() const override;
+
    private:
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t out[]) override;

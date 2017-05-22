@@ -12,6 +12,11 @@
 
 namespace Botan {
 
+std::unique_ptr<HashFunction> Keccak_1600::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new Keccak_1600(*this));
+   }
+
 Keccak_1600::Keccak_1600(size_t output_bits) :
    m_output_bits(output_bits),
    m_bitrate(1600 - 2*output_bits),

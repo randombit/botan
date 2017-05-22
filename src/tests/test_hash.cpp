@@ -69,11 +69,19 @@ class Hash_Function_Tests : public Text_Based_Test
             result.test_eq(provider, "hashing after clear", hash->final(), expected);
 
             // TODO: feed in random pieces to fully test buffering
-            if(input.size() > 1)
+            if(input.size() > 5)
                {
                hash->update(input[0]);
+
+               std::unique_ptr<Botan::HashFunction> fork = hash->copy_state();
+               // verify fork copy doesn't affect original computation
+               fork->update(&input[1], input.size() - 2);
+
                hash->update(&input[1], input.size() - 1);
                result.test_eq(provider, "hashing split", hash->final(), expected);
+
+               fork->update(&input[input.size() - 1], 1);
+               result.test_eq(provider, "hashing split", fork->final(), expected);
                }
 
             if(hash->hash_block_size() > 0)
