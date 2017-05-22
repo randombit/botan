@@ -32,6 +32,12 @@ class BOTAN_DLL SHA_160 final : public MDx_HashFunction
    private:
       void compress_n(const uint8_t[], size_t blocks) override;
 
+#if defined(BOTAN_HAS_SHA1_ARMV8)
+      static void sha1_armv8_compress_n(secure_vector<uint32_t>& digest,
+                                        const uint8_t blocks[],
+                                        size_t block_count);
+#endif
+
 #if defined(BOTAN_HAS_SHA1_SSE2)
       static void sse2_compress_n(secure_vector<uint32_t>& digest,
                                   const uint8_t blocks[],

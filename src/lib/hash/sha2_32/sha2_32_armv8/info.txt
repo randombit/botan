@@ -1,0 +1,13 @@
+<defines>
+SHA2_32_ARMV8 -> 20170117
+</defines>
+
+<arch>
+#arm32
+arm64
+</arch>
+
+<cc>
+gcc:4.9
+clang:3.8
+</cc>

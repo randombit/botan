@@ -887,19 +887,26 @@ std::vector<Botan::CPUID::CPUID_bits> map_cpuid_string(const std::string& tok)
       return {Botan::CPUID::CPUID_AVX2_BIT};
    if(tok == "sha")
       return {Botan::CPUID::CPUID_SHA_BIT};
-#endif
 
-#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    if(tok == "altivec" || tok == "simd")
       return {Botan::CPUID::CPUID_ALTIVEC_BIT};
-#endif
 
-#if defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
    if(tok == "neon" || tok == "simd")
       return {Botan::CPUID::CPUID_ARM_NEON_BIT};
-#endif
+   if(tok == "armv8sha1")
+      return {Botan::CPUID::CPUID_ARM_SHA1_BIT};
+   if(tok == "armv8sha2")
+      return {Botan::CPUID::CPUID_ARM_SHA2_BIT};
+   if(tok == "armv8aes")
+      return {Botan::CPUID::CPUID_ARM_AES_BIT};
+   if(tok == "armv8pmull")
+      return {Botan::CPUID::CPUID_ARM_PMULL_BIT};
 
+#else
    BOTAN_UNUSED(tok);
+#endif
 
    return {};
    }
