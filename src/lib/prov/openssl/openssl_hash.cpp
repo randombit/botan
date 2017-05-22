@@ -19,8 +19,8 @@ class OpenSSL_HashFunction : public HashFunction
    public:
       void clear() override
          {
-         const EVP_MD* algo = EVP_MD_CTX_md(&m_md);
-         if(!EVP_DigestInit_ex(&m_md, algo, nullptr))
+         const EVP_MD* algo = EVP_MD_CTX_md(m_md);
+         if(!EVP_DigestInit_ex(m_md, algo, nullptr))
             throw OpenSSL_Error("EVP_DigestInit_ex");
          }
 
@@ -29,50 +29,71 @@ class OpenSSL_HashFunction : public HashFunction
 
       HashFunction* clone() const override
          {
-         const EVP_MD* algo = EVP_MD_CTX_md(&m_md);
+         const EVP_MD* algo = EVP_MD_CTX_md(m_md);
          return new OpenSSL_HashFunction(name(), algo);
+         }
+
+      std::unique_ptr<HashFunction> copy_state() const override
+         {
+         std::unique_ptr<OpenSSL_HashFunction> copy(new OpenSSL_HashFunction(m_name, nullptr));
+         EVP_MD_CTX_copy(copy->m_md, m_md);
+         return std::move(copy);
          }
 
       size_t output_length() const override
          {
-         return EVP_MD_size(EVP_MD_CTX_md(&m_md));
+         return EVP_MD_size(EVP_MD_CTX_md(m_md));
          }
 
       size_t hash_block_size() const override
          {
-         return EVP_MD_block_size(EVP_MD_CTX_md(&m_md));
+         return EVP_MD_block_size(EVP_MD_CTX_md(m_md));
          }
 
       OpenSSL_HashFunction(const std::string& name, const EVP_MD* md) : m_name(name)
          {
-         EVP_MD_CTX_init(&m_md);
-         if(!EVP_DigestInit_ex(&m_md, md, nullptr))
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+         m_md = EVP_MD_CTX_create();
+#else
+         m_md = EVP_MD_CTX_new();
+#endif
+
+         EVP_MD_CTX_init(m_md);
+         if(md && !EVP_DigestInit_ex(m_md, md, nullptr))
             throw OpenSSL_Error("EVP_DigestInit_ex");
+         }
+
+      OpenSSL_HashFunction(EVP_MD_CTX* ctx) : m_md(ctx)
+         {
          }
 
       ~OpenSSL_HashFunction()
          {
-         EVP_MD_CTX_cleanup(&m_md);
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+         EVP_MD_CTX_destroy(m_md);
+#else
+         EVP_MD_CTX_free(m_md);
+#endif
          }
 
    private:
       void add_data(const uint8_t input[], size_t length) override
          {
-         if(!EVP_DigestUpdate(&m_md, input, length))
+         if(!EVP_DigestUpdate(m_md, input, length))
             throw OpenSSL_Error("EVP_DigestUpdate");
          }
 
       void final_result(uint8_t output[]) override
          {
-         if(!EVP_DigestFinal_ex(&m_md, output, nullptr))
+         if(!EVP_DigestFinal_ex(m_md, output, nullptr))
             throw OpenSSL_Error("EVP_DigestFinal_ex");
-         const EVP_MD* algo = EVP_MD_CTX_md(&m_md);
-         if(!EVP_DigestInit_ex(&m_md, algo, nullptr))
+         const EVP_MD* algo = EVP_MD_CTX_md(m_md);
+         if(!EVP_DigestInit_ex(m_md, algo, nullptr))
             throw OpenSSL_Error("EVP_DigestInit_ex");
          }
 
       std::string m_name;
-      EVP_MD_CTX m_md;
+      EVP_MD_CTX* m_md;
    };
 
 }
