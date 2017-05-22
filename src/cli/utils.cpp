@@ -41,6 +41,10 @@
    #include <botan/hmac.h>
 #endif
 
+#if defined(BOTAN_HAS_HOTP)
+   #include <botan/hotp.h>
+#endif
+
 namespace Botan_CLI {
 
 class Config_Info final : public Command

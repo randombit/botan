@@ -1,0 +1,9 @@
+<defines>
+HOTP -> 20170513
+TOTP -> 20170519
+</defines>
+
+<requires>
+hmac
+utils
+</requires>
