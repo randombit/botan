@@ -29,6 +29,9 @@ client, so it should be treated with the same security consideration as would be
 given to any other symmetric key or plaintext password.
 
 .. cpp:class:: HOTP
+
+    Implement counter-based OTP
+
     .. cpp:function:: HOTP(const SymmetricKey& key, const std::string& hash_algo = "SHA-1", size_t digits = 6)
 
        Initialize an HOTP instance with a secret key (specific to each client),

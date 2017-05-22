@@ -35,7 +35,7 @@ class HOTP_KAT_Tests : public Text_Based_Test
 
          const std::vector<uint8_t> key = get_req_bin(vars, "Key");
          const size_t otp = get_req_sz(vars, "OTP");
-         const size_t counter = get_req_sz(vars, "Counter");
+         const uint64_t counter = get_req_sz(vars, "Counter");
          const size_t digits = get_req_sz(vars, "Digits");
 
          Botan::HOTP hotp(key, hash_algo, digits);
@@ -44,28 +44,28 @@ class HOTP_KAT_Tests : public Text_Based_Test
 
          std::pair<bool, uint64_t> otp_res = hotp.verify_hotp(otp, counter, 0);
          result.test_eq("OTP verify result", otp_res.first, true);
-         result.test_eq("OTP verify next counter", otp_res.second, counter + 1);
+         result.confirm("OTP verify next counter", otp_res.second == counter + 1);
 
          // Test invalid OTP
          otp_res = hotp.verify_hotp(otp + 1, counter, 0);
          result.test_eq("OTP verify result", otp_res.first, false);
-         result.test_eq("OTP verify next counter", otp_res.second, counter);
+         result.confirm("OTP verify next counter", otp_res.second == counter);
 
          // Test invalid OTP with long range
          otp_res = hotp.verify_hotp(otp + 1, counter, 100);
          result.test_eq("OTP verify result", otp_res.first, false);
-         result.test_eq("OTP verify next counter", otp_res.second, counter);
+         result.confirm("OTP verify next counter", otp_res.second == counter);
 
          // Test valid OTP with long range
          otp_res = hotp.verify_hotp(otp, counter - 90, 100);
          result.test_eq("OTP verify result", otp_res.first, true);
-         result.test_eq("OTP verify next counter", otp_res.second, counter + 1);
+         result.confirm("OTP verify next counter", otp_res.second == counter + 1);
 
          return result;
          }
    };
 
-BOTAN_REGISTER_TEST("hotp", HOTP_KAT_Tests);
+BOTAN_REGISTER_TEST("otp_hotp", HOTP_KAT_Tests);
 
 #endif
 
@@ -124,7 +124,7 @@ class TOTP_KAT_Tests : public Text_Based_Test
          }
    };
 
-BOTAN_REGISTER_TEST("totp", TOTP_KAT_Tests);
+BOTAN_REGISTER_TEST("otp_totp", TOTP_KAT_Tests);
 #endif
 
 }

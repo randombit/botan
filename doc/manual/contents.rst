@@ -30,6 +30,7 @@ Contents
    compression
    pkcs11
    tpm
+   otp
    ffi
    python
    cli
