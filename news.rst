@@ -4,7 +4,27 @@ Release Notes
 Version 2.2.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add the SM3 hash function
+* Add the SM3 hash function (GH #996)
+
+* Add support for SHA-1 and SHA-2 instructions added in Intel Goldmont
+  (GH #826)
+
+* Add support for SHA-1 and SHA-2 instructions added in ARMv8 (GH #844)
+
+* Add support for HOTP (RFC 4226) and TOTP (RFC 6238)
+  one-time-password algorithms (GH #1054)
+
+* Add HashFunction::copy_state which allows efficiently computing the
+  hash of several messages with a common prefix (GH #1056 #1037)
+
+* The OpenSSL backend now supports the 1.1.0 API (GH #1056)
+
+* Fix a bug in certificate path length checking that could cause valid
+  chains to be rejected. (GH #1053)
+
+* It is possible for CBC, CFB, and stream ciphers to carry over the
+  nonce from the previous message, which is needed by some applications.
+  This worked in 1.10 but broke in 2.0. (GH #1044 fixing GH #864)
 
 * Avoid recursion in BER_Decoder::get_next_object which could cause
   stack exhaustion. (GH #989)
@@ -21,6 +41,8 @@ Version 2.2.0, Not Yet Released
   (GH #1041 #1002 #984)
 
 * Add `hmac` command line util (GH #1001)
+
+* Add `encryption` command line util (GH #359)
 
 * Add `hex_enc` and `hex_dec` command line utils
 
