@@ -10,6 +10,11 @@
 
 namespace Botan {
 
+std::unique_ptr<HashFunction> SHA_160::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new SHA_160(*this));
+   }
+
 namespace SHA1_F {
 
 namespace {

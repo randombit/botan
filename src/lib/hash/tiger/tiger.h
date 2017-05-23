@@ -26,6 +26,8 @@ class BOTAN_DLL Tiger final : public MDx_HashFunction
          return new Tiger(output_length(), m_passes);
          }
 
+      std::unique_ptr<HashFunction> copy_state() const override;
+
       void clear() override;
 
       /**

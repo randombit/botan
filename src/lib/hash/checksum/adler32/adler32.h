@@ -21,6 +21,7 @@ class BOTAN_DLL Adler32 final : public HashFunction
       std::string name() const override { return "Adler32"; }
       size_t output_length() const override { return 4; }
       HashFunction* clone() const override { return new Adler32; }
+      std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override { m_S1 = 1; m_S2 = 0; }
 

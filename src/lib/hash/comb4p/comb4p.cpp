@@ -69,6 +69,14 @@ void Comb4P::clear()
    m_hash2->update(0);
    }
 
+std::unique_ptr<HashFunction> Comb4P::copy_state() const
+   {
+   std::unique_ptr<Comb4P> copy(new Comb4P);
+   copy->m_hash1 = m_hash1->copy_state();
+   copy->m_hash2 = m_hash2->copy_state();
+   return std::move(copy);
+   }
+
 void Comb4P::add_data(const uint8_t input[], size_t length)
    {
    m_hash1->update(input, length);

@@ -21,6 +21,7 @@ class BOTAN_DLL Whirlpool final : public MDx_HashFunction
       std::string name() const override { return "Whirlpool"; }
       size_t output_length() const override { return 64; }
       HashFunction* clone() const override { return new Whirlpool; }
+      std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override;
 

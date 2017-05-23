@@ -148,12 +148,17 @@ class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EM
          std::unique_ptr<ECDSA_SIG, std::function<void (ECDSA_SIG*)>> sig(nullptr, ECDSA_SIG_free);
          sig.reset(::ECDSA_SIG_new());
 
-         sig->r = BN_bin2bn(sig_bytes              , sig_len / 2, nullptr);
-         if(!sig->r)
-            throw OpenSSL_Error("BN_bin2bn sig r");
-         sig->s = BN_bin2bn(sig_bytes + sig_len / 2, sig_len / 2, nullptr);
-         if(!sig->s)
+         BIGNUM* r = BN_bin2bn(sig_bytes              , sig_len / 2, nullptr);
+         BIGNUM* s = BN_bin2bn(sig_bytes + sig_len / 2, sig_len / 2, nullptr);
+         if(r == nullptr || s == nullptr)
             throw OpenSSL_Error("BN_bin2bn sig s");
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+         sig->r = r;
+         sig->s = s;
+#else
+         ECDSA_SIG_set0(sig.get(), r, s);
+#endif
 
          const int res = ECDSA_do_verify(msg, msg_len, sig.get(), m_ossl_ec.get());
          if(res < 0)
@@ -193,11 +198,21 @@ class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
             throw OpenSSL_Error("ECDSA_do_sign");
 
          const size_t order_bytes = (m_order_bits + 7) / 8;
-         const size_t r_bytes = BN_num_bytes(sig->r);
-         const size_t s_bytes = BN_num_bytes(sig->s);
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+         const BIGNUM* r = sig->r;
+         const BIGNUM* s = sig->s;
+#else
+         const BIGNUM* r;
+         const BIGNUM* s;
+         ECDSA_SIG_get0(sig.get(), &r, &s);
+#endif
+
+         const size_t r_bytes = BN_num_bytes(r);
+         const size_t s_bytes = BN_num_bytes(s);
          secure_vector<uint8_t> sigval(2*order_bytes);
-         BN_bn2bin(sig->r, &sigval[order_bytes - r_bytes]);
-         BN_bn2bin(sig->s, &sigval[2*order_bytes - s_bytes]);
+         BN_bn2bin(r, &sigval[order_bytes - r_bytes]);
+         BN_bn2bin(s, &sigval[2*order_bytes - s_bytes]);
          return sigval;
          }
 

@@ -9,6 +9,11 @@
 
 namespace Botan {
 
+std::unique_ptr<HashFunction> RIPEMD_160::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new RIPEMD_160(*this));
+   }
+
 namespace {
 
 /*

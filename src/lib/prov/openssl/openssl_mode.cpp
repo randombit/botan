@@ -44,7 +44,7 @@ class BOTAN_DLL OpenSSL_Cipher_Mode : public Cipher_Mode
       const std::string m_mode_name;
       const Cipher_Dir m_direction;
       size_t m_block_size;
-      EVP_CIPHER_CTX m_cipher;
+      EVP_CIPHER_CTX* m_cipher;
    };
 
 OpenSSL_Cipher_Mode::OpenSSL_Cipher_Mode(const std::string& name,
@@ -58,17 +58,18 @@ OpenSSL_Cipher_Mode::OpenSSL_Cipher_Mode(const std::string& name,
    if(EVP_CIPHER_mode(algo) != EVP_CIPH_CBC_MODE)
       throw Invalid_Argument("OpenSSL_BlockCipher: Non-CBC EVP was passed in");
 
-   EVP_CIPHER_CTX_init(&m_cipher);
-   if(!EVP_CipherInit_ex(&m_cipher, algo, nullptr, nullptr, nullptr,
+   m_cipher = EVP_CIPHER_CTX_new();
+   EVP_CIPHER_CTX_init(m_cipher);
+   if(!EVP_CipherInit_ex(m_cipher, algo, nullptr, nullptr, nullptr,
                          m_direction == ENCRYPTION ? 1 : 0))
       throw OpenSSL_Error("EVP_CipherInit_ex");
-   if(!EVP_CIPHER_CTX_set_padding(&m_cipher, 0))
+   if(!EVP_CIPHER_CTX_set_padding(m_cipher, 0))
       throw OpenSSL_Error("EVP_CIPHER_CTX_set_padding");
    }
 
 OpenSSL_Cipher_Mode::~OpenSSL_Cipher_Mode()
    {
-   EVP_CIPHER_CTX_cleanup(&m_cipher);
+   EVP_CIPHER_CTX_free(m_cipher);
    }
 
 void OpenSSL_Cipher_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
@@ -77,7 +78,7 @@ void OpenSSL_Cipher_Mode::start_msg(const uint8_t nonce[], size_t nonce_len)
       throw Invalid_IV_Length(name(), nonce_len);
    if(nonce_len)
       {
-      if(!EVP_CipherInit_ex(&m_cipher, nullptr, nullptr, nullptr, nonce, -1))
+      if(!EVP_CipherInit_ex(m_cipher, nullptr, nullptr, nullptr, nonce, -1))
          throw OpenSSL_Error("EVP_CipherInit_ex nonce");
       }
    }
@@ -91,7 +92,7 @@ size_t OpenSSL_Cipher_Mode::process(uint8_t msg[], size_t msg_len)
    int outl = msg_len;
    secure_vector<uint8_t> out(outl);
 
-   if(!EVP_CipherUpdate(&m_cipher, out.data(), &outl, msg, msg_len))
+   if(!EVP_CipherUpdate(m_cipher, out.data(), &outl, msg, msg_len))
       throw OpenSSL_Error("EVP_CipherUpdate");
    memcpy(msg, out.data(), outl);
    return outl;
@@ -108,7 +109,7 @@ void OpenSSL_Cipher_Mode::finish(secure_vector<uint8_t>& buffer,
    int outl = buf_size - written;
    secure_vector<uint8_t> out(outl);
 
-   if(!EVP_CipherFinal_ex(&m_cipher, out.data(), &outl))
+   if(!EVP_CipherFinal_ex(m_cipher, out.data(), &outl))
       throw OpenSSL_Error("EVP_CipherFinal_ex");
    memcpy(buf + written, out.data(), outl);
    written += outl;
@@ -145,34 +146,34 @@ size_t OpenSSL_Cipher_Mode::output_length(size_t input_length) const
 
 void OpenSSL_Cipher_Mode::clear()
    {
-   const EVP_CIPHER* algo = EVP_CIPHER_CTX_cipher(&m_cipher);
+   const EVP_CIPHER* algo = EVP_CIPHER_CTX_cipher(m_cipher);
 
-   if(!EVP_CIPHER_CTX_cleanup(&m_cipher))
+   if(!EVP_CIPHER_CTX_cleanup(m_cipher))
       throw OpenSSL_Error("EVP_CIPHER_CTX_cleanup");
-   EVP_CIPHER_CTX_init(&m_cipher);
-   if(!EVP_CipherInit_ex(&m_cipher, algo, nullptr, nullptr, nullptr,
+   EVP_CIPHER_CTX_init(m_cipher);
+   if(!EVP_CipherInit_ex(m_cipher, algo, nullptr, nullptr, nullptr,
                          m_direction == ENCRYPTION ? 1 : 0))
       throw OpenSSL_Error("EVP_CipherInit_ex clear");
-   if(!EVP_CIPHER_CTX_set_padding(&m_cipher, 0))
+   if(!EVP_CIPHER_CTX_set_padding(m_cipher, 0))
       throw OpenSSL_Error("EVP_CIPHER_CTX_set_padding clear");
    }
 
 void OpenSSL_Cipher_Mode::reset()
    {
-   if(!EVP_CipherInit_ex(&m_cipher, nullptr, nullptr, nullptr, nullptr, -1))
+   if(!EVP_CipherInit_ex(m_cipher, nullptr, nullptr, nullptr, nullptr, -1))
       throw OpenSSL_Error("EVP_CipherInit_ex clear");
    }
 
 Key_Length_Specification OpenSSL_Cipher_Mode::key_spec() const
    {
-   return Key_Length_Specification(EVP_CIPHER_CTX_key_length(&m_cipher));
+   return Key_Length_Specification(EVP_CIPHER_CTX_key_length(m_cipher));
    }
 
 void OpenSSL_Cipher_Mode::key_schedule(const uint8_t key[], size_t length)
    {
-   if(!EVP_CIPHER_CTX_set_key_length(&m_cipher, length))
+   if(!EVP_CIPHER_CTX_set_key_length(m_cipher, length))
       throw OpenSSL_Error("EVP_CIPHER_CTX_set_key_length");
-   if(!EVP_CipherInit_ex(&m_cipher, nullptr, nullptr, key, nullptr, -1))
+   if(!EVP_CipherInit_ex(m_cipher, nullptr, nullptr, key, nullptr, -1))
       throw OpenSSL_Error("EVP_CipherInit_ex key");
    }
 

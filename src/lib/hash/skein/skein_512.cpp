@@ -38,6 +38,18 @@ HashFunction* Skein_512::clone() const
    return new Skein_512(m_output_bits, m_personalization);
    }
 
+std::unique_ptr<HashFunction> Skein_512::copy_state() const
+   {
+   std::unique_ptr<Skein_512> copy(new Skein_512(m_output_bits, m_personalization));
+
+   copy->m_threefish->m_K = this->m_threefish->m_K;
+   copy->m_T = this->m_T;
+   copy->m_buffer = this->m_buffer;
+   copy->m_buf_pos = this->m_buf_pos;
+
+   return std::move(copy);
+   }
+
 void Skein_512::clear()
    {
    zeroise(m_buffer);

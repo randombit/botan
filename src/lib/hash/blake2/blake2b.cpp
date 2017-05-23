@@ -208,6 +208,11 @@ HashFunction* Blake2b::clone() const
    return new Blake2b(m_output_bits);
    }
 
+std::unique_ptr<HashFunction> Blake2b::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new Blake2b(*this));
+   }
+
 void Blake2b::clear()
    {
    zeroise(m_H);

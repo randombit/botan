@@ -9,6 +9,11 @@
 
 namespace Botan {
 
+std::unique_ptr<HashFunction> MD4::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new MD4(*this));
+   }
+
 namespace {
 
 /*

@@ -31,6 +31,11 @@ void GOST_34_11::clear()
    m_position = 0;
    }
 
+std::unique_ptr<HashFunction> GOST_34_11::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new GOST_34_11(*this));
+   }
+
 /**
 * Hash additional inputs
 */

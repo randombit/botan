@@ -9,6 +9,11 @@
 
 namespace Botan {
 
+std::unique_ptr<HashFunction> Whirlpool::copy_state() const
+   {
+   return std::unique_ptr<HashFunction>(new Whirlpool(*this));
+   }
+
 /*
 * Whirlpool Compression Function
 */

@@ -21,6 +21,7 @@ class BOTAN_DLL CRC24 final : public HashFunction
       std::string name() const override { return "CRC24"; }
       size_t output_length() const override { return 3; }
       HashFunction* clone() const override { return new CRC24; }
+      std::unique_ptr<HashFunction> copy_state() const override;
 
       void clear() override { m_crc = 0xB704CE; }
 

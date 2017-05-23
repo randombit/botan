@@ -72,6 +72,17 @@ class BOTAN_DLL HashFunction : public Buffered_Computation
       * @return hash block size as defined for this algorithm
       */
       virtual size_t hash_block_size() const { return 0; }
+
+      /**
+      * Return a new hash object with the same state as *this. This
+      * allows computing the hash of several messages with a common
+      * prefix more efficiently than would otherwise be possible.
+      *
+      * This function should be called `clone` but that was already
+      * used for the case of returning an uninitialized object.
+      * @return new hash object
+      */
+      virtual std::unique_ptr<HashFunction> copy_state() const = 0;
    };
 
 }
