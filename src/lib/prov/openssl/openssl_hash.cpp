@@ -52,7 +52,7 @@ class OpenSSL_HashFunction : public HashFunction
 
       OpenSSL_HashFunction(const std::string& name, const EVP_MD* md) : m_name(name)
          {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
          m_md = EVP_MD_CTX_create();
 #else
          m_md = EVP_MD_CTX_new();
@@ -69,7 +69,7 @@ class OpenSSL_HashFunction : public HashFunction
 
       ~OpenSSL_HashFunction()
          {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
          EVP_MD_CTX_destroy(m_md);
 #else
          EVP_MD_CTX_free(m_md);
