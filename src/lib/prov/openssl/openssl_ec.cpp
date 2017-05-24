@@ -153,7 +153,7 @@ class OpenSSL_ECDSA_Verification_Operation : public PK_Ops::Verification_with_EM
          if(r == nullptr || s == nullptr)
             throw OpenSSL_Error("BN_bin2bn sig s");
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
          sig->r = r;
          sig->s = s;
 #else
@@ -199,7 +199,7 @@ class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
 
          const size_t order_bytes = (m_order_bits + 7) / 8;
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
          const BIGNUM* r = sig->r;
          const BIGNUM* s = sig->s;
 #else
