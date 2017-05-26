@@ -131,6 +131,26 @@ class FFI_Unit_Tests : public Test
                   result.test_eq("SHA-256 output", outbuf, "B5D4045C3F466FA91FE2CC6ABE79232A1A57CDF104F7A26E716E0A1E2789DF78");
                   }
 
+               // Test botan_hash_copy_state
+               const char *msg = "message digest";
+               const char *expected = "F7846F55CF23E14EEBEAB5B4E1550CAD5B509E3348FBC4EFA3A1413D393CB650";
+               TEST_FFI_OK(botan_hash_clear, (hash));
+               TEST_FFI_OK(botan_hash_update, (hash, reinterpret_cast<const uint8_t*>(&msg[0]), 1));
+               botan_hash_t fork;
+               if (TEST_FFI_OK(botan_hash_copy_state, (&fork, hash)))
+                  {
+                  TEST_FFI_OK(botan_hash_update, (fork, reinterpret_cast<const uint8_t*>(&msg[1]), std::strlen(msg) - 2));
+
+                  TEST_FFI_OK(botan_hash_update, (hash, reinterpret_cast<const uint8_t*>(&msg[1]), std::strlen(msg) - 1));
+                  TEST_FFI_OK(botan_hash_final, (hash, outbuf.data()));
+                  result.test_eq("hashing split", outbuf, expected);
+
+                  TEST_FFI_OK(botan_hash_update, (fork, reinterpret_cast<const uint8_t*>(&msg[std::strlen(msg)-1]), 1));
+                  TEST_FFI_OK(botan_hash_final, (fork, outbuf.data()));
+                  result.test_eq("hashing split", outbuf, expected);
+
+                  TEST_FFI_OK(botan_hash_destroy, (fork));
+                  }
                }
 
             TEST_FFI_OK(botan_hash_destroy, (hash));

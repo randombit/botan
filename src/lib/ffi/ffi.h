@@ -225,6 +225,14 @@ typedef struct botan_hash_struct* botan_hash_t;
 BOTAN_DLL int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags);
 
 /**
+* Copy the state of a hash function object
+* @param dest destination hash object
+* @param source source hash object
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_DLL int botan_hash_copy_state(botan_hash_t *dest, const botan_hash_t source);
+
+/**
 * Writes the output length of the hash function to *output_length
 * @param hash hash object
 * @param output_length output buffer to hold the hash function output length

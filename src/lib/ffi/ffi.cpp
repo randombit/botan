@@ -852,6 +852,12 @@ int botan_hash_final(botan_hash_t hash, uint8_t out[])
    return BOTAN_FFI_DO(Botan::HashFunction, hash, h, { h.final(out); });
    }
 
+int botan_hash_copy_state(botan_hash_t* dest, const botan_hash_t source)
+   {
+   return BOTAN_FFI_DO(Botan::HashFunction, source, src, {
+      *dest = new botan_hash_struct(src.copy_state().release()); });
+   }
+
 int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags)
    {
    try
