@@ -149,6 +149,10 @@ Hash Functions
 
    Destroy the object created by :cpp:func:`botan_hash_init`.
 
+.. cpp:function:: int botan_hash_copy_state(botan_hash_t* dest, const botan_hash_t source)
+
+   Copies the state of the hash object to a new hash object.
+
 .. cpp:function:: int botan_hash_clear(botan_hash_t hash)
 
    Reset the state of this object back to clean, as if no input has
