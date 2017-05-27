@@ -1,0 +1,7 @@
+<defines>
+PGP_S2K -> 20170527
+</defines>
+
+<requires>
+hash
+</requires>
