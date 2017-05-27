@@ -21,8 +21,11 @@ namespace Botan {
 * If the salt is non-empty and iterations == 1, "salted" S2K is used
 * If the salt is non-empty and iterations > 1, "iterated" S2K is used
 *
-* If iterations == 0 and msec.count() > 0, "iterated" S2K is assumed,
-* and the number of iterations performed is returned.
+* Due to complexities of the PGP S2K algorithm, time-based derivation
+* is not supported. So if iterations == 0 and msec.count() > 0, an
+* exception is thrown. In the future this may be supported, in which
+* case "iterated" S2K will be used and the number of iterations
+* performed is returned.
 *
 * Note that unlike PBKDF2, OpenPGP S2K's "iterations" are defined as
 * the number of bytes hashed.
