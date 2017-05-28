@@ -16,6 +16,10 @@
 #include <botan/pbkdf2.h>
 #endif
 
+#if defined(BOTAN_HAS_PGP_S2K)
+#include <botan/pgp_s2k.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
@@ -47,6 +51,14 @@ std::unique_ptr<PBKDF> PBKDF::create(const std::string& algo_spec,
       if(auto hash = HashFunction::create(req.arg(0)))
          return std::unique_ptr<PBKDF>(new PKCS5_PBKDF1(hash.release()));
 
+      }
+#endif
+
+#if defined(BOTAN_HAS_PGP_S2K)
+   if(req.algo_name() == "OpenPGP-S2K" && req.arg_count() == 1)
+      {
+      if(auto hash = HashFunction::create(req.arg(0)))
+         return std::unique_ptr<PBKDF>(new OpenPGP_S2K(hash.release()));
       }
 #endif
 

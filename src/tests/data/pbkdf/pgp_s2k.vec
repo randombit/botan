@@ -1,0 +1,67 @@
+[OpenPGP-S2K(SHA-160)]
+# Generated using Golang x/crypto/openpgp/s2k
+
+Salt =
+Iterations = 1
+Passphrase = hello
+Output = AAF4C61D
+
+Salt = 01020304
+Iterations = 1
+Passphrase = hello
+Output = 10295AC1
+
+Salt = 01020304
+Iterations = 1
+Passphrase = bar
+Output = BD8AAC6B9EA9CAE04EAE6A91C6133B58B5D9A61C14F355516ED9370456
+
+Salt = 04030201
+Iterations = 31
+Passphrase = bar
+Output = 2AF5A99B54F093789FD657F19BD245AF7604D0F6AE06F66602A46A08AE
+
+Salt = 2AE6E5831A717917
+Iterations = 65536
+Passphrase = ilikepie
+Output = A32F874A4CF95DFAD8359302B395455C
+
+Salt = 0102030405060708
+Iterations = 1
+Passphrase = passphrase
+Output = eec8929a31187dd3a9a7ce5a97d96a67706382bbef70fe3b2a3aeeaf176bce252c117970a51fd8b770a69f8ecb199505395bd7b0c0760d6a38ac82900b23fe3b
+
+Salt = 0102030405060708
+Iterations = 65536
+Passphrase = passphrase
+Output = 24ce08a4a31de2208acdc15347def7a63492d38a0c08f80533a746279d91cb25e1b6b740b09e20a4884ca1944d506eb200753761066e8d4b24957c2593388457
+
+Salt = 0102030405060708
+Iterations = 10000000
+Passphrase = passphrase
+Output = 09efbd3599e2453c6cf1749a7ed169514a12d1a721549468c6d0ef6737fa3e27ab6d100f9839694fc70c484a42b00ef87463d07e2aafb92033843a4bd5f37971
+
+[OpenPGP-S2K(SHA-384)]
+# Generated using Golang x/crypto/openpgp/s2k
+
+Salt = 0102030405060708
+Iterations = 1
+Passphrase = passphrase
+Output = ea024c2de8af9a3edfbac9422f7b17e17c3165147b43f4edd58b55af9a412d07e0631f431a7e0028fbb145d9d5e059a888f1a7526cd338b1b6082a8681b446fa
+
+Salt = 0102030405060708
+Iterations = 18
+Passphrase = passphrase
+Output = ea024c2de8af9a3edfbac9422f7b17e17c3165147b43f4edd58b55af9a412d07e0631f431a7e0028fbb145d9d5e059a888f1a7526cd338b1b6082a8681b446fa
+
+Salt = 0102030405060708
+Iterations = 19
+Passphrase = passphrase
+Output = 491aa377a1a9526d53b118587a03f85f5dc64568f3aabaad66aafc923397fb74d7017a6a4812bff2d9beddcbc6a0dbd3b96a3f9a69b637d68670acd48d4dfa4e
+
+Salt = 0102030405060708
+Iterations = 1000000
+Passphrase = passphrase
+Output = af4986488f4e53ac4f7991a0bb8de15441ba1070481fe63b126ff3de2e1072f568dd3d6c5887d008925d27649494ae6f4860e141d5eeabe4f93745ca9cb8e08c
+
+
