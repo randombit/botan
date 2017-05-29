@@ -51,6 +51,10 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_RC(0, botan_same_mem, (mem1.data(), mem2.data(), mem1.size()));
          TEST_FFI_RC(-1, botan_same_mem, (mem1.data(), mem3.data(), mem1.size()));
 
+         std::vector<uint8_t> to_zero = { 0xFF, 0xA0 };
+         TEST_FFI_OK(botan_scrub_mem, (to_zero.data(), to_zero.size()));
+         result.confirm("scrub_memory zeros", to_zero[0] == 0 && to_zero[1] == 0);
+
          const std::vector<uint8_t> bin = { 0xAA, 0xDE, 0x01 };
          const char* input_str = "ABC";
 

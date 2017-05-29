@@ -393,6 +393,12 @@ int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len)
    return Botan::same_mem(x, y, len) ? 0 : -1;
    }
 
+int botan_scrub_mem(uint8_t* mem, size_t bytes)
+   {
+   Botan::secure_scrub_memory(mem, bytes);
+   return 0;
+   }
+
 int botan_hex_encode(const uint8_t* in, size_t len, char* out, uint32_t flags)
    {
    try
