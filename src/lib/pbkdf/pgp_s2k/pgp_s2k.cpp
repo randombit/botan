@@ -80,6 +80,9 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[], size_t output_len,
    if(iterations == 0 && msec.count() > 0) // FIXME
       throw Not_Implemented("OpenPGP_S2K does not implemented timed KDF");
 
+   if(iterations > 1 && salt_len == 0)
+      throw Invalid_Argument("OpenPGP_S2K requires a salt in iterated mode");
+
    secure_vector<uint8_t> input_buf(salt_len + passphrase.size());
    if(salt_len > 0)
       {
@@ -107,12 +110,15 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[], size_t output_len,
       m_hash->update(zero_padding);
 
       // The input is always fully processed even if iterations is very small
-      size_t left = std::max(iterations, input_buf.size());
-      while(left > 0)
+      if(input_buf.empty() == false)
          {
-         const size_t input_to_take = std::min(left, input_buf.size());
-         m_hash->update(input_buf.data(), input_to_take);
-         left -= input_to_take;
+         size_t left = std::max(iterations, input_buf.size());
+         while(left > 0)
+            {
+            const size_t input_to_take = std::min(left, input_buf.size());
+            m_hash->update(input_buf.data(), input_to_take);
+            left -= input_to_take;
+            }
          }
 
       m_hash->final(hash_buf.data());

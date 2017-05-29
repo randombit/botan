@@ -3,6 +3,11 @@
 
 Salt =
 Iterations = 1
+Passphrase = 
+Output = DA39A3EE5E6B
+
+Salt =
+Iterations = 1
 Passphrase = hello
 Output = AAF4C61D
 
