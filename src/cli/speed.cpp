@@ -415,13 +415,17 @@ class Speed final : public Command
    {
    public:
       Speed()
-         : Command("speed --msec=300 --provider= --buf-size=4096 --clear-cpuid= *algos") {}
+         : Command("speed --msec=300 --provider= --buf-size=4096 --clear-cpuid= --ecc-groups= *algos") {}
 
       void go() override
          {
          std::chrono::milliseconds msec(get_arg_sz("msec"));
          const size_t buf_size = get_arg_sz("buf-size");
          const std::string provider = get_arg("provider");
+         std::vector<std::string> ecc_groups = Botan::split_on(get_arg("ecc-groups"), ',');
+
+         if(ecc_groups.empty())
+            ecc_groups = { "secp256r1", "secp384r1", "secp521r1" };
 
          std::vector<std::string> algos = get_arg_list("algos");
 
@@ -487,19 +491,19 @@ class Speed final : public Command
 #if defined(BOTAN_HAS_ECDSA)
             else if(algo == "ECDSA")
                {
-               bench_ecdsa(provider, msec);
+               bench_ecdsa(ecc_groups, provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_ECKCDSA)
             else if(algo == "ECKCDSA")
                {
-               bench_eckcdsa(provider, msec);
+               bench_eckcdsa(ecc_groups, provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_ECGDSA)
             else if(algo == "ECGDSA")
                {
-               bench_ecgdsa(provider, msec);
+               bench_ecgdsa(ecc_groups, provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
@@ -511,7 +515,7 @@ class Speed final : public Command
 #if defined(BOTAN_HAS_ECDH)
             else if(algo == "ECDH")
                {
-               bench_ecdh(provider, msec);
+               bench_ecdh(ecc_groups, provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_CURVE_25519)
@@ -566,11 +570,11 @@ class Speed final : public Command
 #if defined(BOTAN_HAS_ECC_GROUP)
             else if(algo == "ecc_mult")
                {
-               bench_ecc_mult(msec);
+               bench_ecc_mult(ecc_groups, msec);
                }
             else if(algo == "os2ecp")
                {
-               bench_os2ecp(msec);
+               bench_os2ecp(ecc_groups, msec);
                }
 #endif
             else if(algo == "RNG")
@@ -928,15 +932,8 @@ class Speed final : public Command
          }
 
 #if defined(BOTAN_HAS_ECC_GROUP)
-      void bench_ecc_mult(const std::chrono::milliseconds runtime)
+      void bench_ecc_mult(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime)
          {
-         const std::vector<std::string> groups =
-            {
-            "secp256r1", "brainpool256r1",
-            "secp384r1", "brainpool384r1",
-            "secp521r1", "brainpool512r1"
-            };
-
          for(std::string group_name : groups)
             {
             const Botan::EC_Group group(group_name);
@@ -963,27 +960,30 @@ class Speed final : public Command
             }
          }
 
-      void bench_os2ecp(const std::chrono::milliseconds runtime)
+      void bench_os2ecp(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime)
          {
          Timer uncmp_timer("OS2ECP uncompressed");
          Timer cmp_timer("OS2ECP compressed");
 
-         const Botan::EC_Group group("secp256r1");
-         const Botan::CurveGFp& curve = group.get_curve();
-
-         while(uncmp_timer.under(runtime) && cmp_timer.under(runtime))
+         for(std::string group_name : groups)
             {
-            const Botan::BigInt k(rng(), 256);
-            const Botan::PointGFp p = group.get_base_point() * k;
-            const Botan::secure_vector<uint8_t> os_cmp = Botan::EC2OSP(p, Botan::PointGFp::COMPRESSED);
-            const Botan::secure_vector<uint8_t> os_uncmp = Botan::EC2OSP(p, Botan::PointGFp::UNCOMPRESSED);
+            const Botan::EC_Group group(group_name);
+            const Botan::CurveGFp& curve = group.get_curve();
 
-            uncmp_timer.run([&]() { OS2ECP(os_uncmp, curve); });
-            cmp_timer.run([&]() { OS2ECP(os_cmp, curve); });
+            while(uncmp_timer.under(runtime) && cmp_timer.under(runtime))
+               {
+               const Botan::BigInt k(rng(), 256);
+               const Botan::PointGFp p = group.get_base_point() * k;
+               const Botan::secure_vector<uint8_t> os_cmp = Botan::EC2OSP(p, Botan::PointGFp::COMPRESSED);
+               const Botan::secure_vector<uint8_t> os_uncmp = Botan::EC2OSP(p, Botan::PointGFp::UNCOMPRESSED);
+
+               uncmp_timer.run([&]() { OS2ECP(os_uncmp, curve); });
+               cmp_timer.run([&]() { OS2ECP(os_cmp, curve); });
+               }
+
+            output() << Timer::result_string_ops(uncmp_timer);
+            output() << Timer::result_string_ops(cmp_timer);
             }
-
-         output() << Timer::result_string_ops(uncmp_timer);
-         output() << Timer::result_string_ops(cmp_timer);
          }
 
 #endif
@@ -1333,10 +1333,11 @@ class Speed final : public Command
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-      void bench_ecdsa(const std::string& provider,
+      void bench_ecdsa(const std::vector<std::string>& groups,
+                       const std::string& provider,
                        std::chrono::milliseconds msec)
          {
-         for(std::string grp : { "secp256r1", "secp384r1", "secp521r1" })
+         for(std::string grp : groups)
             {
             const std::string nm = "ECDSA-" + grp;
 
@@ -1354,10 +1355,11 @@ class Speed final : public Command
 #endif
 
 #if defined(BOTAN_HAS_ECKCDSA)
-      void bench_eckcdsa(const std::string& provider,
+      void bench_eckcdsa(const std::vector<std::string>& groups,
+                         const std::string& provider,
                          std::chrono::milliseconds msec)
          {
-         for(std::string grp : { "secp256r1", "secp384r1", "secp521r1" })
+         for(std::string grp : groups)
             {
             const std::string nm = "ECKCDSA-" + grp;
 
@@ -1375,10 +1377,11 @@ class Speed final : public Command
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)
-      void bench_ecgdsa(const std::string& provider,
+      void bench_ecgdsa(const std::vector<std::string>& groups,
+                        const std::string& provider,
                         std::chrono::milliseconds msec)
          {
-         for(std::string grp : { "secp256r1", "secp384r1", "secp521r1" })
+         for(std::string grp : groups)
             {
             const std::string nm = "ECGDSA-" + grp;
 
@@ -1422,10 +1425,11 @@ class Speed final : public Command
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
-      void bench_ecdh(const std::string& provider,
+      void bench_ecdh(const std::vector<std::string>& groups,
+                      const std::string& provider,
                       std::chrono::milliseconds msec)
          {
-         for(std::string grp : { "secp256r1", "secp384r1", "secp521r1" })
+         for(std::string grp : groups)
             {
             const std::string nm = "ECDH-" + grp;
 
