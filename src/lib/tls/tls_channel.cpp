@@ -600,7 +600,7 @@ void Channel::secure_renegotiation_check(const Server_Hello* server_hello)
 
    if(auto active = active_state())
       {
-      const bool active_sr = active->client_hello()->secure_renegotiation();
+      const bool active_sr = active->server_hello()->secure_renegotiation();
 
       if(active_sr != secure_renegotiation)
          throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
