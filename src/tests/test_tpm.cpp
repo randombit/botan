@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_TPM)
    #include <botan/tpm.h>
+   #include <botan/uuid.h>
 #endif
 
 namespace Botan_Tests {
@@ -79,6 +80,34 @@ class TPM_Tests : public Test
    };
 
 BOTAN_REGISTER_TEST("tpm", TPM_Tests);
+
+class UUID_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("UUID");
+
+         const Botan::UUID empty_uuid;
+
+         result.test_eq("Uninitialized UUID not valid", empty_uuid.is_valid(), false);
+
+         const Botan::UUID random_uuid(Test::rng());
+         result.test_eq("Random UUID is valid", empty_uuid.is_valid(), false);
+
+         const Botan::UUID binary_copy(random_uuid.binary_value());
+         result.confirm("UUID copied by binary equals original", random_uuid == binary_copy);
+
+         std::string uuid_str = random_uuid.to_string();
+
+         const Botan::UUID string_copy(random_uuid.to_string());
+         result.confirm("UUID copied by string equals original", random_uuid == string_copy);
+
+         return {result};
+         }
+   };
+
+BOTAN_REGISTER_TEST("tpm_uuid", UUID_Tests);
 
 #endif
 

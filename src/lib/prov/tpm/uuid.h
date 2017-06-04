@@ -86,14 +86,14 @@ class UUID
          return h;
          }
 
-      const std::vector<uint8_t> binary_value() const { return m_uuid; }
+      const std::vector<uint8_t>& binary_value() const { return m_uuid; }
 
-      bool operator==(const UUID& other)
+      bool operator==(const UUID& other) const
          {
          return m_uuid == other.m_uuid;
          }
 
-      bool operator!=(const UUID& other) { return !(*this == other); }
+      bool operator!=(const UUID& other) const { return !(*this == other); }
 
       bool is_valid() const { return m_uuid.size() == 16; }
 
