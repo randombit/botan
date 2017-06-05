@@ -54,7 +54,7 @@ class Compress final : public Command
             }
 
          const std::string in_file = get_arg("file");
-         std::ifstream in(in_file);
+         std::ifstream in(in_file, std::ios::binary);
 
          if(!in.good())
             {
@@ -118,7 +118,7 @@ class Decompress final : public Command
          std::string out_file, suffix;
          parse_extension(in_file, out_file, suffix);
 
-         std::ifstream in(in_file);
+         std::ifstream in(in_file, std::ios::binary);
 
          if(!in.good())
             {
