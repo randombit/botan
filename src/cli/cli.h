@@ -216,12 +216,12 @@ class Command
 
             if(m_user_args.count("output"))
                {
-               m_output_stream.reset(new std::ofstream(get_arg("output")));
+               m_output_stream.reset(new std::ofstream(get_arg("output"), std::ios::binary));
                }
 
             if(m_user_args.count("error_output"))
                {
-               m_error_output_stream.reset(new std::ofstream(get_arg("error_output")));
+               m_error_output_stream.reset(new std::ofstream(get_arg("error_output"), std::ios::binary));
                }
 
             // Now insert any defaults for options not supplied by the user
