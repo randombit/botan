@@ -37,7 +37,7 @@ class Ed25519_Signature_Tests : public PK_Signature_Generation_Test
          if(key->get_public_key() != pubkey)
             throw Test_Error("Invalid Ed25519 key in test data");
 
-         return key;
+         return std::unique_ptr<Botan::Private_Key>(key.release());
          }
 
       std::string default_padding(const VarMap& vars) const override
