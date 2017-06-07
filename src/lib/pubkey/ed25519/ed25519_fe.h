@@ -21,6 +21,8 @@ namespace Botan {
 class FE_25519
    {
    public:
+      ~FE_25519() { secure_scrub_memory(m_fe, sizeof(m_fe)); }
+
       /**
       * Zero element
       */
@@ -55,10 +57,12 @@ class FE_25519
          }
 
       FE_25519(const FE_25519& other) = default;
-      FE_25519(FE_25519&& other) = default;
       FE_25519& operator=(const FE_25519& other) = default;
+
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC_2013)
+      FE_25519(FE_25519&& other) = default;
       FE_25519& operator=(FE_25519&& other) = default;
-      ~FE_25519() { secure_scrub_memory(m_fe, sizeof(m_fe)); }
+#endif
 
       void from_bytes(const uint8_t b[32]);
       void to_bytes(uint8_t b[32]) const;
