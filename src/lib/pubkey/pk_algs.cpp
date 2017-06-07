@@ -32,6 +32,10 @@
   #include <botan/eckcdsa.h>
 #endif
 
+#if defined(BOTAN_HAS_ED25519)
+  #include <botan/ed25519.h>
+#endif
+
 #if defined(BOTAN_HAS_GOST_34_10_2001)
   #include <botan/gost_3410.h>
 #endif
@@ -120,6 +124,11 @@ load_public_key(const AlgorithmIdentifier& alg_id,
       return std::unique_ptr<Public_Key>(new ECKCDSA_PublicKey(alg_id, key_bits));
 #endif
 
+#if defined(BOTAN_HAS_ED25519)
+   if(alg_name == "Ed25519")
+      return std::unique_ptr<Public_Key>(new Ed25519_PublicKey(alg_id, key_bits));
+#endif
+
 #if defined(BOTAN_HAS_GOST_34_10_2001)
    if(alg_name == "GOST-34.10")
       return std::unique_ptr<Public_Key>(new GOST_3410_PublicKey(alg_id, key_bits));
@@ -184,6 +193,11 @@ load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ECKCDSA)
    if(alg_name == "ECKCDSA")
       return std::unique_ptr<Private_Key>(new ECKCDSA_PrivateKey(alg_id, key_bits));
+#endif
+
+#if defined(BOTAN_HAS_ED25519)
+   if(alg_name == "Ed25519")
+      return std::unique_ptr<Private_Key>(new Ed25519_PrivateKey(alg_id, key_bits));
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
@@ -259,6 +273,13 @@ create_private_key(const std::string& alg_name,
       {
       return std::unique_ptr<Private_Key>(
          new XMSS_PrivateKey(XMSS_Parameters(params.empty() ? "XMSS_SHA2-512_W16_H10" : params).oid(), rng));
+      }
+#endif
+
+#if defined(BOTAN_HAS_ED25519)
+   if(alg_name == "Ed25519")
+      {
+      return std::unique_ptr<Private_Key>(new Ed25519_PrivateKey(rng));
       }
 #endif
 

@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-int ed25519_gen_keypair(uint8_t* pk, uint8_t* sk, const uint8_t seed[32])
+void ed25519_gen_keypair(uint8_t* pk, uint8_t* sk, const uint8_t seed[32])
    {
    uint8_t az[64];
 
@@ -30,12 +30,11 @@ int ed25519_gen_keypair(uint8_t* pk, uint8_t* sk, const uint8_t seed[32])
    // todo copy_mem
    memmove(sk, seed, 32);
    memmove(sk + 32, pk, 32);
-   return 0;
    }
 
-int ed25519_sign(uint8_t sig[64],
-                 const uint8_t* m, size_t mlen,
-                 const uint8_t* sk)
+void ed25519_sign(uint8_t sig[64],
+                  const uint8_t* m, size_t mlen,
+                  const uint8_t* sk)
    {
    uint8_t az[64];
    uint8_t nonce[64];
@@ -63,13 +62,11 @@ int ed25519_sign(uint8_t sig[64],
 
    sc_reduce(hram);
    sc_muladd(sig + 32, hram, az, nonce);
-
-   return 0;
    }
 
-int ed25519_verify(const uint8_t* m, size_t mlen,
-                   const uint8_t sig[64],
-                   const uint8_t* pk)
+bool ed25519_verify(const uint8_t* m, size_t mlen,
+                    const uint8_t sig[64],
+                    const uint8_t* pk)
    {
    uint8_t h[64];
    uint8_t rcheck[32];
@@ -78,11 +75,11 @@ int ed25519_verify(const uint8_t* m, size_t mlen,
 
    if(sig[63] & 224)
       {
-      return -1;
+      return false;
       }
    if(ge_frombytes_negate_vartime(&A, pk) != 0)
       {
-      return -1;
+      return false;
       }
 
    sha.update(sig, 32);
@@ -93,8 +90,7 @@ int ed25519_verify(const uint8_t* m, size_t mlen,
 
    ge_double_scalarmult_vartime(rcheck, h, &A, sig + 32);
 
-   // TODO const time compare
-   return (memcmp(rcheck, sig, 32) == 0);
+   return same_mem(rcheck, sig, 32);
    }
 
 }
