@@ -249,7 +249,7 @@ BOTAN_DLL int botan_hash_output_length(botan_hash_t hash, size_t* output_length)
 /**
 * Writes the block size of the hash function to *block_size
 * @param hash hash object
-* @param output_length output buffer to hold the hash function output length
+* @param block_size output buffer to hold the hash function output length
 * @return 0 on success, a negative value on failure
 */
 BOTAN_DLL int botan_hash_block_size(botan_hash_t hash, size_t* block_size);
