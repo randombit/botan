@@ -21,31 +21,6 @@ std::unique_ptr<HashFunction> SHA_256::copy_state() const
    return std::unique_ptr<HashFunction>(new SHA_256(*this));
    }
 
-namespace {
-
-namespace SHA2_32 {
-
-/*
-* SHA-256 Rho Function
-*/
-inline uint32_t rho(uint32_t X, uint32_t rot1, uint32_t rot2, uint32_t rot3)
-   {
-   return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^
-           rotate_right(X, rot3));
-   }
-
-/*
-* SHA-256 Sigma Function
-*/
-inline uint32_t sigma(uint32_t X, uint32_t rot1, uint32_t rot2, uint32_t shift)
-   {
-   return (rotate_right(X, rot1) ^ rotate_right(X, rot2) ^ (X >> shift));
-   }
-
-}
-
-}
-
 /*
 * SHA-256 F1 Function
 *

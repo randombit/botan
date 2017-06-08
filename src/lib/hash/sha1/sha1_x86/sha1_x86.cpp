@@ -29,7 +29,7 @@ void SHA_160::sha1_compress_x86(secure_vector<uint32_t>& digest,
    uint32_t* state = digest.data();
 
    // Load initial values
-   __m128i ABCD = _mm_loadu_si128((__m128i*) state);
+   __m128i ABCD = _mm_loadu_si128(reinterpret_cast<__m128i*>(state));
    __m128i E0 = _mm_set_epi32(state[4], 0, 0, 0);
    ABCD = _mm_shuffle_epi32(ABCD, 0x1B);
 
@@ -208,7 +208,7 @@ void SHA_160::sha1_compress_x86(secure_vector<uint32_t>& digest,
 
    // Save state
    ABCD = _mm_shuffle_epi32(ABCD, 0x1B);
-   _mm_storeu_si128((__m128i*) state, ABCD);
+   _mm_storeu_si128(reinterpret_cast<__m128i*>(state), ABCD);
    state[4] = _mm_extract_epi32(E0, 3);
    }
 #endif
