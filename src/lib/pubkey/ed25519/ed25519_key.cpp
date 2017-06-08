@@ -117,7 +117,7 @@ class Ed25519_Pure_Verify_Operation : public PK_Ops::Verification
          m_msg.insert(m_msg.end(), msg, msg + msg_len);
          }
 
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len)
+      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override
          {
          if(sig_len != 64)
             return false;
@@ -147,7 +147,7 @@ class Ed25519_Hashed_Verify_Operation : public PK_Ops::Verification
          m_hash->update(msg, msg_len);
          }
 
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len)
+      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override
          {
          if(sig_len != 64)
             return false;
