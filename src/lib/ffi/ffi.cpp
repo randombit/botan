@@ -1612,7 +1612,7 @@ int botan_privkey_load_ed25519(botan_privkey_t* key,
    *key = nullptr;
    try
       {
-      const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 64);
+      const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 32);
       *key = new botan_privkey_struct(new Botan::Ed25519_PrivateKey(privkey_vec));
       return 0;
       }
