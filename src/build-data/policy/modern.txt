@@ -48,6 +48,7 @@ ffi
 tls
 prf_tls
 newhope
+ed25519
 
 clmul
 locking_allocator

@@ -1,0 +1,17 @@
+<defines>
+ED25519 -> 20170607
+</defines>
+
+<requires>
+sha2_64
+</requires>
+
+<header:public>
+ed25519.h
+</header:public>
+
+<header:internal>
+ed25519_fe.h
+ed25519_internal.h
+</header:internal>
+

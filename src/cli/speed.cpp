@@ -88,6 +88,10 @@
    #include <botan/ecgdsa.h>
 #endif
 
+#if defined(BOTAN_HAS_ED25519)
+   #include <botan/ed25519.h>
+#endif
+
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    #include <botan/dh.h>
 #endif
@@ -403,6 +407,7 @@ std::vector<std::string> default_benchmark_list()
       "ECDSA",
       "ECKCDSA",
       "ECGDSA",
+      "Ed25519",
       "Curve25519",
       "NEWHOPE",
       "McEliece",
@@ -504,6 +509,12 @@ class Speed final : public Command
             else if(algo == "ECGDSA")
                {
                bench_ecgdsa(ecc_groups, provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_ED25519)
+            else if(algo == "Ed25519")
+               {
+               bench_ed25519(provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
@@ -1395,6 +1406,24 @@ class Speed final : public Command
             output() << Timer::result_string_ops(keygen_timer);
             bench_pk_sig(*key, nm, provider, "EMSA1(SHA-256)", msec);
             }
+         }
+#endif
+
+#if defined(BOTAN_HAS_ED25519)
+      void bench_ed25519(const std::string& provider,
+                         std::chrono::milliseconds msec)
+         {
+         const std::string nm = "Ed25519";
+
+         Timer keygen_timer(nm, provider, "keygen");
+
+         std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
+            {
+            return new Botan::Ed25519_PrivateKey(rng());
+            }));
+
+         output() << Timer::result_string_ops(keygen_timer);
+         bench_pk_sig(*key, nm, provider, "Pure", msec);
          }
 #endif
 

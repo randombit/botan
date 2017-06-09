@@ -846,6 +846,22 @@ BOTAN_DLL int botan_privkey_load_elgamal(botan_privkey_t* key,
                                          botan_mp_t x);
 
 /*
+* Algorithm specific key operations: Ed25519
+*/
+
+BOTAN_DLL int botan_privkey_load_ed25519(botan_privkey_t* key,
+                                         const uint8_t privkey[32]);
+
+BOTAN_DLL int botan_pubkey_load_ed25519(botan_pubkey_t* key,
+                                        const uint8_t pubkey[32]);
+
+BOTAN_DLL int botan_privkey_ed25519_get_privkey(botan_privkey_t key,
+                                                uint8_t output[64]);
+
+BOTAN_DLL int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
+                                              uint8_t pubkey[32]);
+
+/*
 * Public Key Encryption
 */
 typedef struct botan_pk_op_encrypt_struct* botan_pk_op_encrypt_t;

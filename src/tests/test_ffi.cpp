@@ -391,6 +391,10 @@ class FFI_Unit_Tests : public Test
          results.push_back(ffi_test_elgamal(rng));
 #endif
 
+#if defined(BOTAN_HAS_ED25519)
+         results.push_back(ffi_test_ed25519(rng));
+#endif
+
          TEST_FFI_OK(botan_rng_destroy, (rng));
 
          results.push_back(result);
@@ -1377,6 +1381,70 @@ class FFI_Unit_Tests : public Test
          // Not included, test that calling the FFI function work (and returns an error)
          TEST_FFI_RC(BOTAN_FFI_ERROR_NOT_IMPLEMENTED, botan_privkey_create_mceliece, (&priv, rng, 2048, 50));
 #endif
+
+         return result;
+         }
+
+      Test::Result ffi_test_ed25519(botan_rng_t rng)
+         {
+         Test::Result result("FFI Ed25519");
+
+         botan_pubkey_t pub;
+         botan_privkey_t priv;
+
+         // From draft-koch-eddsa-for-openpgp-04
+         const std::vector<uint8_t> seed = Botan::hex_decode(
+            "1a8b1ff05ded48e18bf50166c664ab023ea70003d78d9e41f5758a91d850f8d2");
+         const std::vector<uint8_t> pubkey = Botan::hex_decode(
+            "3f098994bdd916ed4053197934e4a87c80733a1280d62f8010992e43ee3b2406");
+         const std::vector<uint8_t> message = Botan::hex_decode(
+            "4f70656e504750040016080006050255f95f9504ff0000000c");
+         const std::vector<uint8_t> exp_sig = Botan::hex_decode(
+            "56f90cca98e2102637bd983fdb16c131dfd27ed82bf4dde5606e0d756aed3366"
+            "d09c4fa11527f038e0f57f2201d82f2ea2c9033265fa6ceb489e854bae61b404");
+
+         TEST_FFI_OK(botan_privkey_load_ed25519, (&priv, seed.data()));
+
+         uint8_t retr_privkey[64];
+         TEST_FFI_OK(botan_privkey_ed25519_get_privkey, (priv, retr_privkey));
+
+         result.test_eq(nullptr, "Public key matches", retr_privkey + 32, 32,
+                        pubkey.data(), pubkey.size());
+
+         TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+
+         uint8_t retr_pubkey[32];
+         TEST_FFI_OK(botan_pubkey_ed25519_get_pubkey, (pub, retr_pubkey));
+         result.test_eq(nullptr, "Public key matches", retr_pubkey, 32,
+                        pubkey.data(), pubkey.size());
+
+         //TEST_FFI_OK(botan_pubkey_load_ed25519, (&pub, pubkey.data()));
+
+         botan_pk_op_sign_t signer;
+         std::vector<uint8_t> signature;
+
+         if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv, "SHA-256", 0)))
+            {
+            TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
+
+            signature.resize(128);
+            size_t sig_len = signature.size();
+            TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
+            signature.resize(sig_len);
+
+            TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
+            }
+
+         result.test_eq("Expected signature", signature, exp_sig);
+
+         botan_pk_op_verify_t verifier;
+
+         if(TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "SHA-256", 0)))
+            {
+            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+            TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+            }
+
 
          return result;
          }

@@ -54,12 +54,6 @@ Interface to PSK and SRP databases
 
 Adding support for databases storing encrypted PSKs and SRP credentials.
 
-Ed25519 signatures
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Used by many protocols these days including SSH and Tor.
-Probably will be done by importing from SUPERCOP or similar.
-
 TLS 1.3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

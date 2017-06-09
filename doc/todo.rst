@@ -32,8 +32,7 @@ Public Key Crypto, Math
 * Curves for pairings (BN-256 is widely implemented)
 * Identity based encryption
 * SPHINCS-256
-* Ed25519 / EdDSA (GH #283)
-* Ed448-Goldilocks
+* X448 and Ed448
 * FHMQV
 * Support mixed hashes and non-empty param strings in OAEP
 * wNAF ECC point multiply
