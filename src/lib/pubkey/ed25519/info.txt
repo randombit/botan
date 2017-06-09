@@ -2,13 +2,6 @@
 ED25519 -> 20170607
 </defines>
 
-# Fails under Visual C++
-<cc>
-gcc
-clang
-icc
-</cc>
-
 <requires>
 sha2_64
 </requires>

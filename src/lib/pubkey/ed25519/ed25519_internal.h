@@ -27,7 +27,13 @@ inline uint64_t load_3(const uint8_t* in)
 
 inline uint64_t load_4(const uint8_t* in)
    {
-   return load_le<uint32_t>(in, 0);
+   uint64_t result;
+   result = (uint64_t) in[0];
+   result |= ((uint64_t) in[1]) << 8;
+   result |= ((uint64_t) in[2]) << 16;
+   result |= ((uint64_t) in[3]) << 24;
+   return result;
+   //return load_le<uint32_t>(in, 0);
    }
 
 /*

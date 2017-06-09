@@ -391,20 +391,18 @@ void ge_sub(ge_p1p1* r, const ge_p3* p, const ge_cached* q)
 
    }
 
-
 void slide(int8_t* r, const uint8_t* a)
    {
-   int i;
-   int b;
-   int k;
+   for(size_t i = 0; i < 256; ++i)
+      {
+      r[i] = 1 & (a[i >> 3] >> (i & 7));
+      }
 
-   for(i = 0; i < 256; ++i)
-      { r[i] = 1 & (a[i >> 3] >> (i & 7)); }
-
-   for(i = 0; i < 256; ++i)
+   for(size_t i = 0; i < 256; ++i)
+      {
       if(r[i])
          {
-         for(b = 1; b <= 6 && i + b < 256; ++b)
+         for(size_t b = 1; b <= 6 && i + b < 256; ++b)
             {
             if(r[i + b])
                {
@@ -416,7 +414,7 @@ void slide(int8_t* r, const uint8_t* a)
                else if(r[i] - (r[i + b] << b) >= -15)
                   {
                   r[i] -= r[i + b] << b;
-                  for(k = i + b; k < 256; ++k)
+                  for(size_t k = i + b; k < 256; ++k)
                      {
                      if(!r[k])
                         {
@@ -431,7 +429,7 @@ void slide(int8_t* r, const uint8_t* a)
                }
             }
          }
-
+      }
    }
 
 void ge_tobytes(uint8_t* s, const ge_p2* h)
@@ -619,23 +617,23 @@ void ge_double_scalarmult_vartime(
       if(aslide[i] > 0)
          {
          ge_p1p1_to_p3(&u, &t);
-         ge_add(&t, &u, &Ai[aslide[i]/2]);
+         ge_add(&t, &u, &Ai[aslide[i] >> 1]);
          }
       else if(aslide[i] < 0)
          {
          ge_p1p1_to_p3(&u, &t);
-         ge_sub(&t, &u, &Ai[(-aslide[i])/2]);
+         ge_sub(&t, &u, &Ai[(-aslide[i]) >> 1]);
          }
 
       if(bslide[i] > 0)
          {
          ge_p1p1_to_p3(&u, &t);
-         ge_madd(&t, &u, &Bi[bslide[i]/2]);
+         ge_madd(&t, &u, &Bi[bslide[i] >> 1]);
          }
       else if(bslide[i] < 0)
          {
          ge_p1p1_to_p3(&u, &t);
-         ge_msub(&t, &u, &Bi[(-bslide[i])/2]);
+         ge_msub(&t, &u, &Bi[(-bslide[i]) >> 1]);
          }
 
       ge_p1p1_to_p2(&r, &t);
@@ -2013,7 +2011,7 @@ inline int32_t equal32(int8_t b, int8_t c)
 
 inline uint8_t negative(int8_t b)
    {
-   size_t x = b; /* 18446744073709551361..18446744073709551615: yes; 0..255: no */
+   uint64_t x = b; /* 18446744073709551361..18446744073709551615: yes; 0..255: no */
    x >>= 63; /* 1: yes; 0: no */
    return x;
    }
