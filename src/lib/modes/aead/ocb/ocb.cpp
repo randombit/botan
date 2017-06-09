@@ -241,6 +241,8 @@ void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks)
       const size_t proc_blocks = std::min(blocks, par_blocks);
       const size_t proc_bytes = proc_blocks * 16;
 
+      BOTAN_ASSERT(m_L, "A key was set");
+
       const auto& offsets = m_L->compute_offsets(m_offset, m_block_index, proc_blocks);
 
       xor_buf(m_checksum.data(), buffer, proc_bytes);
