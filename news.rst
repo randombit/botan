@@ -4,7 +4,11 @@ Release Notes
 Version 2.2.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add the Ed25519 signature scheme (GH #1066)
+
 * Add the SM3 hash function (GH #996)
+
+* Add the PGP S2K algorithm (GH #1060)
 
 * Add support for SHA-1 and SHA-2 instructions added in Intel Goldmont
   (GH #826)
@@ -40,17 +44,15 @@ Version 2.2.0, Not Yet Released
 * Many changes to configure.py and botan2.py to make them pylint clean
   (GH #1041 #1002 #984)
 
-* Add `hmac` command line util (GH #1001)
-
-* Add `encryption` command line util (GH #359)
-
-* Add `hex_enc` and `hex_dec` command line utils
+* Add command line utils `hmac` (GH #1001), `encryption` (GH #359),
+  `hex_enc`, and `hex_dec`.
 
 * Fix return value of FFI botan_bcrypt_is_valid (GH #1033)
 
 * Support generating RSA keys using OpenSSL (GH #1035)
 
-* Add new FFI function botan_hash_block_size (GH #1036)
+* Add new FFI functions botan_hash_block_size (GH #1036),
+  botan_hash_copy_state (GH #1059), botan_scrub_mem
 
 * Support AES-CBC ciphers via OpenSSL (GH #1022)
 
