@@ -1623,7 +1623,7 @@ int botan_privkey_load_ed25519(botan_privkey_t* key,
 
    return -1;
 #else
-   BOTAN_UNUSED(key, pubkey);
+   BOTAN_UNUSED(key, privkey);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
@@ -1654,6 +1654,7 @@ int botan_pubkey_load_ed25519(botan_pubkey_t* key,
 int botan_privkey_ed25519_get_privkey(botan_privkey_t key,
                                       uint8_t output[64])
    {
+#if defined(BOTAN_HAS_ED25519)
    return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
       if(Botan::Ed25519_PrivateKey* ed = dynamic_cast<Botan::Ed25519_PrivateKey*>(&k))
          {
@@ -1668,11 +1669,16 @@ int botan_privkey_ed25519_get_privkey(botan_privkey_t key,
          return -1;
          }
       });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
                                     uint8_t output[32])
    {
+#if defined(BOTAN_HAS_ED25519)
    return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
       if(Botan::Ed25519_PublicKey* ed = dynamic_cast<Botan::Ed25519_PublicKey*>(&k))
          {
@@ -1687,6 +1693,10 @@ int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
          return -1;
          }
       });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_pubkey_get_field(botan_mp_t output,
