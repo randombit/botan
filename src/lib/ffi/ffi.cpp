@@ -1482,7 +1482,7 @@ int botan_privkey_load_rsa(botan_privkey_t* key,
       }
    return -1;
 #else
-   BOTAN_UNUSED(key, p, q, e);
+   BOTAN_UNUSED(key, rsa_p, rsa_q, rsa_e);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
