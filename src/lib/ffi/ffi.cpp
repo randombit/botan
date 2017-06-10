@@ -1699,9 +1699,14 @@ int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
 #endif
    }
 
-int botan_privkey_load_ec(botan_privkey_t* key,
-                          const botan_mp_t scalar,
-                          const char* curve_name)
+namespace {
+/* Those functions can't be defined in namespace {} that's located higher in this file
+ * as they use botan_privkey_struct/botan_pubkey_struct structs.
+ */
+int privkey_load_ec(botan_privkey_t* key,
+                    const botan_mp_t scalar,
+                    const char* curve_name,
+                    const std::string& algo_name)
    {
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
    *key = nullptr;
@@ -1709,7 +1714,14 @@ int botan_privkey_load_ec(botan_privkey_t* key,
       {
       Botan::Null_RNG null_rng;
       Botan::EC_Group grp(curve_name);
-      *key = new botan_privkey_struct(new Botan::ECDSA_PrivateKey(null_rng, grp, safe_get(scalar)));
+      if (algo_name.compare("ECDSA") == 0) {
+         *key = new botan_privkey_struct(new Botan::ECDSA_PrivateKey(null_rng, grp, safe_get(scalar)));
+      } else if (algo_name.compare("ECDH") == 0) {
+         *key = new botan_privkey_struct(new Botan::ECDH_PrivateKey(null_rng, grp, safe_get(scalar)));
+      } else {
+         return -1;
+      }
+
       return 0;
       }
    catch(std::exception& e)
@@ -1723,19 +1735,29 @@ int botan_privkey_load_ec(botan_privkey_t* key,
 #endif
    }
 
-BOTAN_DLL int botan_pubkey_load_ec(botan_pubkey_t* key,
-                                   const botan_mp_t public_x,
-                                   const botan_mp_t public_y,
-                                   const char* curve_name)
+int pubkey_load_ec(botan_pubkey_t* key,
+                          const botan_mp_t public_x,
+                          const botan_mp_t public_y,
+                          const char* curve_name,
+                          const std::string& algo_name)
    {
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+   if(key == nullptr || curve_name == nullptr)
+      return -1;
    *key = nullptr;
    try
       {
       Botan::Null_RNG null_rng;
       Botan::EC_Group grp(curve_name);
       Botan::PointGFp uncompressed_point(grp.get_curve(), safe_get(public_x), safe_get(public_y));
-      *key = new botan_pubkey_struct(new Botan::ECDSA_PublicKey(grp, uncompressed_point));
+      if (algo_name.compare("ECDSA") == 0) {
+         *key = new botan_pubkey_struct(new Botan::ECDSA_PublicKey(grp, uncompressed_point));
+      } else if (algo_name.compare("ECDH") == 0) {
+         *key = new botan_pubkey_struct(new Botan::ECDH_PublicKey(grp, uncompressed_point));
+      } else {
+         return -1;
+      }
+
       return 0;
       }
    catch(std::exception& e)
@@ -1747,6 +1769,37 @@ BOTAN_DLL int botan_pubkey_load_ec(botan_pubkey_t* key,
    BOTAN_UNUSED(key, public_x, public_y, curve_name);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
+   }
+} // namespace {}
+
+int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
+                                   const botan_mp_t public_x,
+                                   const botan_mp_t public_y,
+                                   const char* curve_name)
+   {
+   return pubkey_load_ec(key, public_x, public_y, curve_name, "ECDSA");
+   }
+
+int botan_pubkey_load_ecdh(botan_pubkey_t* key,
+                                   const botan_mp_t public_x,
+                                   const botan_mp_t public_y,
+                                   const char* curve_name)
+   {
+   return pubkey_load_ec(key, public_x, public_y, curve_name, "ECDH");
+   }
+
+int botan_privkey_load_ecdsa(botan_privkey_t* key,
+                          const botan_mp_t scalar,
+                          const char* curve_name)
+   {
+   return privkey_load_ec(key, scalar, curve_name, "ECDSA");
+   }
+
+int botan_privkey_load_ecdh(botan_privkey_t* key,
+                          const botan_mp_t scalar,
+                          const char* curve_name)
+   {
+   return privkey_load_ec(key, scalar, curve_name, "ECDH");
    }
 
 int botan_pubkey_get_field(botan_mp_t output,

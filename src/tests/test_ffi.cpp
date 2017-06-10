@@ -1215,8 +1215,8 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv, "x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub, "public_x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub, "public_y"));
-         TEST_FFI_OK(botan_privkey_load_ec, (&loaded_privkey, private_scalar, kCurve));
-         TEST_FFI_OK(botan_pubkey_load_ec, (&loaded_pubkey, public_x, public_y, kCurve));
+         TEST_FFI_OK(botan_privkey_load_ecdsa, (&loaded_privkey, private_scalar, kCurve));
+         TEST_FFI_OK(botan_pubkey_load_ecdsa, (&loaded_pubkey, public_x, public_y, kCurve));
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
          TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
 

@@ -864,15 +864,23 @@ BOTAN_DLL int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
 /*
 * Algorithm specific key operations: ECDSA and ECDH
 */
-BOTAN_DLL int botan_privkey_load_ec(botan_privkey_t* key,
+BOTAN_DLL int botan_privkey_load_ecdsa(botan_privkey_t* key,
                                     const botan_mp_t scalar,
                                     const char* curve_name);
 
-
-BOTAN_DLL int botan_pubkey_load_ec(botan_pubkey_t* key,
-                                   const botan_mp_t x,
-                                   const botan_mp_t y,
+BOTAN_DLL int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
+                                   const botan_mp_t public_x,
+                                   const botan_mp_t public_y,
                                    const char* curve_name);
+
+BOTAN_DLL int botan_pubkey_load_ecdh(botan_pubkey_t* key,
+                                   const botan_mp_t public_x,
+                                   const botan_mp_t public_y,
+                                   const char* curve_name);
+
+BOTAN_DLL int botan_privkey_load_ecdh(botan_privkey_t* key,
+                                    const botan_mp_t scalar,
+                                    const char* curve_name);
 
 /*
 * Public Key Encryption
