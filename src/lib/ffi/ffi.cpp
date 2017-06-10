@@ -1699,6 +1699,30 @@ int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
 #endif
    }
 
+int botan_privkey_load_ec(botan_privkey_t* key,
+                          const botan_mp_t scalar,
+                          const char* curve_name)
+   {
+#if defined(BOTAN_HAS_ECDSA)
+   *key = nullptr;
+   try
+      {
+      Botan::Null_RNG null_rng;
+      Botan::EC_Group grp(curve_name);
+      *key = new botan_privkey_struct(new Botan::ECDSA_PrivateKey(null_rng, grp, safe_get(scalar)));
+      return 0;
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+   return -1;
+#else
+   BOTAN_UNUSED(key, scalar, scalar_len, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 int botan_pubkey_get_field(botan_mp_t output,
                            botan_pubkey_t key,
                            const char* field_name_cstr)
