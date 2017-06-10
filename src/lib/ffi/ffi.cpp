@@ -330,7 +330,65 @@ Botan::BigInt privkey_get_field(const Botan::Private_Key& key,
    throw Botan::Exception("Unsupported algorithm type for botan_privkey_get_field");
    }
 
+template<class ECPrivateKey_t>
+int privkey_load_ec(std::unique_ptr<ECPrivateKey_t>& key,
+                    const Botan::BigInt& scalar,
+                    const char* curve_name)
+   {
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+
+   if(curve_name == nullptr)
+      return -1;
+
+   try
+      {
+      Botan::Null_RNG null_rng;
+      Botan::EC_Group grp(curve_name);
+      key.reset(new ECPrivateKey_t(null_rng, grp, scalar));
+      return 0;
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+   return -1;
+#else
+   BOTAN_UNUSED(key, scalar, scalar_len, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
 }
+
+template<class ECPublicKey_t>
+int pubkey_load_ec( std::unique_ptr<ECPublicKey_t>& key,
+                    const Botan::BigInt& public_x,
+                    const Botan::BigInt& public_y,
+                    const char* curve_name)
+   {
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+
+   if(curve_name == nullptr)
+      return -1;
+
+   try
+      {
+      Botan::Null_RNG null_rng;
+      Botan::EC_Group grp(curve_name);
+      Botan::PointGFp uncompressed_point(grp.get_curve(), public_x, public_y);
+      key.reset(new ECPublicKey_t(grp, uncompressed_point));
+      return 0;
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+   return -1;
+#else
+   BOTAN_UNUSED(key, public_x, public_y, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 
 extern "C" {
 
@@ -1699,85 +1757,20 @@ int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
 #endif
    }
 
-namespace {
-/* Those functions can't be defined in namespace {} that's located higher in this file
- * as they use botan_privkey_struct/botan_pubkey_struct structs.
- */
-int privkey_load_ec(botan_privkey_t* key,
-                    const botan_mp_t scalar,
-                    const char* curve_name,
-                    const std::string& algo_name)
-   {
-#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
-   *key = nullptr;
-   try
-      {
-      Botan::Null_RNG null_rng;
-      Botan::EC_Group grp(curve_name);
-      if (algo_name.compare("ECDSA") == 0) {
-         *key = new botan_privkey_struct(new Botan::ECDSA_PrivateKey(null_rng, grp, safe_get(scalar)));
-      } else if (algo_name.compare("ECDH") == 0) {
-         *key = new botan_privkey_struct(new Botan::ECDH_PrivateKey(null_rng, grp, safe_get(scalar)));
-      } else {
-         return -1;
-      }
-
-      return 0;
-      }
-   catch(std::exception& e)
-      {
-      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
-      }
-   return -1;
-#else
-   BOTAN_UNUSED(key, scalar, scalar_len, curve_name);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
-   }
-
-int pubkey_load_ec(botan_pubkey_t* key,
-                          const botan_mp_t public_x,
-                          const botan_mp_t public_y,
-                          const char* curve_name,
-                          const std::string& algo_name)
-   {
-#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
-   if(key == nullptr || curve_name == nullptr)
-      return -1;
-   *key = nullptr;
-   try
-      {
-      Botan::Null_RNG null_rng;
-      Botan::EC_Group grp(curve_name);
-      Botan::PointGFp uncompressed_point(grp.get_curve(), safe_get(public_x), safe_get(public_y));
-      if (algo_name.compare("ECDSA") == 0) {
-         *key = new botan_pubkey_struct(new Botan::ECDSA_PublicKey(grp, uncompressed_point));
-      } else if (algo_name.compare("ECDH") == 0) {
-         *key = new botan_pubkey_struct(new Botan::ECDH_PublicKey(grp, uncompressed_point));
-      } else {
-         return -1;
-      }
-
-      return 0;
-      }
-   catch(std::exception& e)
-      {
-      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
-      }
-   return -1;
-#else
-   BOTAN_UNUSED(key, public_x, public_y, curve_name);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
-   }
-} // namespace {}
-
 int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
                                    const botan_mp_t public_x,
                                    const botan_mp_t public_y,
                                    const char* curve_name)
    {
-   return pubkey_load_ec(key, public_x, public_y, curve_name, "ECDSA");
+
+   std::unique_ptr<Botan::ECDSA_PublicKey> p_key;
+   if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name))
+      {
+      *key = new botan_pubkey_struct(p_key.release());
+      return 0;
+      }
+
+   return -1;
    }
 
 int botan_pubkey_load_ecdh(botan_pubkey_t* key,
@@ -1785,21 +1778,41 @@ int botan_pubkey_load_ecdh(botan_pubkey_t* key,
                                    const botan_mp_t public_y,
                                    const char* curve_name)
    {
-   return pubkey_load_ec(key, public_x, public_y, curve_name, "ECDH");
+   std::unique_ptr<Botan::ECDH_PublicKey> p_key;
+   if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name))
+      {
+      *key = new botan_pubkey_struct(p_key.release());
+      return 0;
+      }
+
+   return -1;
    }
 
 int botan_privkey_load_ecdsa(botan_privkey_t* key,
                           const botan_mp_t scalar,
                           const char* curve_name)
    {
-   return privkey_load_ec(key, scalar, curve_name, "ECDSA");
-   }
+   std::unique_ptr<Botan::ECDSA_PrivateKey> p_key;
+   if(!privkey_load_ec(p_key, safe_get(scalar), curve_name))
+      {
+      *key = new botan_privkey_struct(p_key.release());
+      return 0;
+      }
 
+   return -1;
+   }
 int botan_privkey_load_ecdh(botan_privkey_t* key,
                           const botan_mp_t scalar,
                           const char* curve_name)
    {
-   return privkey_load_ec(key, scalar, curve_name, "ECDH");
+   std::unique_ptr<Botan::ECDH_PrivateKey> p_key;
+   if(!privkey_load_ec(p_key, safe_get(scalar), curve_name))
+      {
+      *key = new botan_privkey_struct(p_key.release());
+      return 0;
+      }
+
+   return -1;
    }
 
 int botan_pubkey_get_field(botan_mp_t output,

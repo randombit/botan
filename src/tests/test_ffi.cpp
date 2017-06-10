@@ -1269,9 +1269,9 @@ class FFI_Unit_Tests : public Test
             TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
             }
 
-         botan_mp_destroy(private_scalar);
-         botan_mp_destroy(public_x);
-         botan_mp_destroy(public_y);
+         TEST_FFI_OK(botan_mp_destroy, (private_scalar));
+         TEST_FFI_OK(botan_mp_destroy, (public_x));
+         TEST_FFI_OK(botan_mp_destroy, (public_y));
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_privkey_destroy, (priv));
          TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey));
@@ -1283,6 +1283,13 @@ class FFI_Unit_Tests : public Test
       Test::Result ffi_test_ecdh(botan_rng_t rng)
          {
          Test::Result result("FFI ECDH");
+
+         botan_mp_t private_scalar, public_x, public_y;
+         botan_privkey_t loaded_privkey1;
+         botan_pubkey_t loaded_pubkey1;
+         botan_mp_init(&private_scalar);
+         botan_mp_init(&public_x);
+         botan_mp_init(&public_y);
 
          botan_privkey_t priv1;
          REQUIRE_FFI_OK(botan_privkey_create_ecdh, (&priv1, rng, "secp256r1"));
@@ -1296,11 +1303,20 @@ class FFI_Unit_Tests : public Test
          botan_pubkey_t pub2;
          REQUIRE_FFI_OK(botan_privkey_export_pubkey, (&pub2, priv2));
 
-         ffi_test_pubkey_export(result, pub1, priv1, rng);
+         /* Reload key-pair1 in order to test functions for key loading */
+         TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv1, "x"));
+         TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub1, "public_x"));
+         TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub1, "public_y"));
+         TEST_FFI_OK(botan_privkey_load_ecdh, (&loaded_privkey1, private_scalar, "secp256r1"));
+         TEST_FFI_OK(botan_pubkey_load_ecdh, (&loaded_pubkey1, public_x, public_y, "secp256r1"));
+         TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey1, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey1, rng, 0));
+
+         ffi_test_pubkey_export(result, loaded_pubkey1, priv1, rng);
          ffi_test_pubkey_export(result, pub2, priv2, rng);
 
          botan_pk_op_ka_t ka1;
-         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, priv1, "KDF2(SHA-256)", 0));
+         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, loaded_privkey1, "KDF2(SHA-256)", 0));
          botan_pk_op_ka_t ka2;
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka2, priv2, "KDF2(SHA-256)", 0));
 
@@ -1333,13 +1349,17 @@ class FFI_Unit_Tests : public Test
 
          result.test_eq("shared ECDH key", key1, key2);
 
+         TEST_FFI_OK(botan_mp_destroy, (private_scalar));
+         TEST_FFI_OK(botan_mp_destroy, (public_x));
+         TEST_FFI_OK(botan_mp_destroy, (public_y));
          TEST_FFI_OK(botan_pk_op_key_agreement_destroy, (ka1));
          TEST_FFI_OK(botan_pk_op_key_agreement_destroy, (ka2));
          TEST_FFI_OK(botan_privkey_destroy, (priv1));
          TEST_FFI_OK(botan_privkey_destroy, (priv2));
          TEST_FFI_OK(botan_pubkey_destroy, (pub1));
          TEST_FFI_OK(botan_pubkey_destroy, (pub2));
-
+         TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey1));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey1));
          return result;
          }
 
