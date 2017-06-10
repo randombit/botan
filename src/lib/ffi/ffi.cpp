@@ -335,7 +335,7 @@ int privkey_load_ec(std::unique_ptr<ECPrivateKey_t>& key,
                     const Botan::BigInt& scalar,
                     const char* curve_name)
    {
-#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+#if defined(BOTAN_HAS_ECDSA) || defined(BOTAN_HAS_ECDH)
 
    if(curve_name == nullptr)
       return -1;
@@ -365,7 +365,7 @@ int pubkey_load_ec( std::unique_ptr<ECPublicKey_t>& key,
                     const Botan::BigInt& public_y,
                     const char* curve_name)
    {
-#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+#if defined(BOTAN_HAS_ECDSA) || defined(BOTAN_HAS_ECDH)
 
    if(curve_name == nullptr)
       return -1;
