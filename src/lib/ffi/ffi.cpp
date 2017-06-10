@@ -1703,7 +1703,7 @@ int botan_privkey_load_ec(botan_privkey_t* key,
                           const botan_mp_t scalar,
                           const char* curve_name)
    {
-#if defined(BOTAN_HAS_ECDSA)
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
    *key = nullptr;
    try
       {
@@ -1719,6 +1719,32 @@ int botan_privkey_load_ec(botan_privkey_t* key,
    return -1;
 #else
    BOTAN_UNUSED(key, scalar, scalar_len, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+BOTAN_DLL int botan_pubkey_load_ec(botan_pubkey_t* key,
+                                   const botan_mp_t public_x,
+                                   const botan_mp_t public_y,
+                                   const char* curve_name)
+   {
+#if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+   *key = nullptr;
+   try
+      {
+      Botan::Null_RNG null_rng;
+      Botan::EC_Group grp(curve_name);
+      Botan::PointGFp uncompressed_point(grp.get_curve(), safe_get(public_x), safe_get(public_y));
+      *key = new botan_pubkey_struct(new Botan::ECDSA_PublicKey(grp, uncompressed_point));
+      return 0;
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+   return -1;
+#else
+   BOTAN_UNUSED(key, public_x, public_y, curve_name);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }

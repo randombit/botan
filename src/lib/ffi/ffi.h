@@ -868,6 +868,12 @@ BOTAN_DLL int botan_privkey_load_ec(botan_privkey_t* key,
                                     const botan_mp_t scalar,
                                     const char* curve_name);
 
+
+BOTAN_DLL int botan_pubkey_load_ec(botan_pubkey_t* key,
+                                   const botan_mp_t x,
+                                   const botan_mp_t y,
+                                   const char* curve_name);
+
 /*
 * Public Key Encryption
 */

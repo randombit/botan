@@ -1198,20 +1198,27 @@ class FFI_Unit_Tests : public Test
          Test::Result result("FFI ECDSA");
          static const char* kCurve = "secp384r1";
          botan_privkey_t priv;
-         botan_privkey_t loaded_privkey;
          botan_pubkey_t pub;
+         botan_privkey_t loaded_privkey;
+         botan_pubkey_t loaded_pubkey;
 
          REQUIRE_FFI_OK(botan_privkey_create_ecdsa, (&priv, rng, kCurve));
          TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
          ffi_test_pubkey_export(result, pub, priv, rng);
 
          // Check key load functions
-         botan_mp_t x;
-         botan_mp_init(&x);
+         botan_mp_t private_scalar, public_x, public_y;
+         botan_mp_init(&private_scalar);
+         botan_mp_init(&public_x);
+         botan_mp_init(&public_y);
 
-         TEST_FFI_OK(botan_privkey_get_field, (x, priv, "x"));
-         TEST_FFI_OK(botan_privkey_load_ec, (&loaded_privkey, x, kCurve));
+         TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv, "x"));
+         TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub, "public_x"));
+         TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub, "public_y"));
+         TEST_FFI_OK(botan_privkey_load_ec, (&loaded_privkey, private_scalar, kCurve));
+         TEST_FFI_OK(botan_pubkey_load_ec, (&loaded_pubkey, public_x, public_y, kCurve));
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
 
          char namebuf[32] = { 0 };
          size_t name_len = sizeof(namebuf);
@@ -1262,10 +1269,13 @@ class FFI_Unit_Tests : public Test
             TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
             }
 
-         botan_mp_destroy(x);
+         botan_mp_destroy(private_scalar);
+         botan_mp_destroy(public_x);
+         botan_mp_destroy(public_y);
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_privkey_destroy, (priv));
          TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
 
          return result;
          }
