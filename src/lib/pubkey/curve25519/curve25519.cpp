@@ -49,21 +49,14 @@ bool Curve25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
 Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier&,
                                            const std::vector<uint8_t>& key_bits)
    {
-   BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
-      .decode(m_public, OCTET_STRING)
-   .end_cons();
+   m_public = key_bits;
 
    size_check(m_public.size(), "public key");
    }
 
 std::vector<uint8_t> Curve25519_PublicKey::public_key_bits() const
    {
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
-        .encode(m_public, OCTET_STRING)
-      .end_cons()
-      .get_contents_unlocked();
+   return m_public;
    }
 
 Curve25519_PrivateKey::Curve25519_PrivateKey(const secure_vector<uint8_t>& secret_key)

@@ -30,10 +30,7 @@ bool Ed25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
 Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier&,
                                            const std::vector<uint8_t>& key_bits)
    {
-   BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
-      .decode(m_public, OCTET_STRING)
-   .end_cons();
+   m_public = key_bits;
 
    if(m_public.size() != 32)
       throw Decoding_Error("Invalid size for Ed25519 public key");
@@ -41,11 +38,7 @@ Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier&,
 
 std::vector<uint8_t> Ed25519_PublicKey::public_key_bits() const
    {
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
-        .encode(m_public, OCTET_STRING)
-      .end_cons()
-      .get_contents_unlocked();
+   return m_public;
    }
 
 Ed25519_PrivateKey::Ed25519_PrivateKey(const secure_vector<uint8_t>& secret_key)
