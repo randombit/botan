@@ -1196,70 +1196,86 @@ class FFI_Unit_Tests : public Test
       Test::Result ffi_test_ecdsa(botan_rng_t rng)
          {
          Test::Result result("FFI ECDSA");
-
+         static const char* kCurve = "secp384r1";
          botan_privkey_t priv;
+         botan_pubkey_t pub;
+         botan_privkey_t loaded_privkey;
+         botan_pubkey_t loaded_pubkey;
 
-         if(TEST_FFI_OK(botan_privkey_create_ecdsa, (&priv, rng, "secp384r1")))
+         REQUIRE_FFI_OK(botan_privkey_create_ecdsa, (&priv, rng, kCurve));
+         TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+         ffi_test_pubkey_export(result, pub, priv, rng);
+
+         // Check key load functions
+         botan_mp_t private_scalar, public_x, public_y;
+         botan_mp_init(&private_scalar);
+         botan_mp_init(&public_x);
+         botan_mp_init(&public_y);
+
+         TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv, "x"));
+         TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub, "public_x"));
+         TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub, "public_y"));
+         TEST_FFI_OK(botan_privkey_load_ecdsa, (&loaded_privkey, private_scalar, kCurve));
+         TEST_FFI_OK(botan_pubkey_load_ecdsa, (&loaded_pubkey, public_x, public_y, kCurve));
+         TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
+
+         char namebuf[32] = { 0 };
+         size_t name_len = sizeof(namebuf);
+
+         TEST_FFI_OK(botan_pubkey_algo_name, (pub, &namebuf[0], &name_len));
+         result.test_eq(namebuf, namebuf, "ECDSA");
+
+         std::vector<uint8_t> message(1280), signature;
+         TEST_FFI_OK(botan_rng_get, (rng, message.data(), message.size()));
+         botan_pk_op_sign_t signer;
+         if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, loaded_privkey, "EMSA1(SHA-384)", 0)))
             {
-            botan_pubkey_t pub;
-            TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+            // TODO: break input into multiple calls to update
+            TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
 
-            ffi_test_pubkey_export(result, pub, priv, rng);
+            signature.resize(96); // TODO: no way to derive this from API
+            size_t sig_len = signature.size();
+            TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
+            signature.resize(sig_len);
 
-            char namebuf[32] = { 0 };
-            size_t name_len = sizeof(namebuf);
-            TEST_FFI_OK(botan_pubkey_algo_name, (pub, &namebuf[0], &name_len));
-
-            result.test_eq(namebuf, namebuf, "ECDSA");
-
-            std::vector<uint8_t> message(1280), signature;
-            TEST_FFI_OK(botan_rng_get, (rng, message.data(), message.size()));
-
-            botan_pk_op_sign_t signer;
-
-            if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv, "EMSA1(SHA-384)", 0)))
-               {
-               // TODO: break input into multiple calls to update
-               TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
-
-               signature.resize(96); // TODO: no way to derive this from API
-               size_t sig_len = signature.size();
-               TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
-               signature.resize(sig_len);
-
-               TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
-               }
-
-            botan_pk_op_verify_t verifier;
-
-            if(TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-384)", 0)))
-               {
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
-
-               // TODO: randomize this
-               signature[0] ^= 1;
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
-
-               message[0] ^= 1;
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
-
-               signature[0] ^= 1;
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
-
-               message[0] ^= 1;
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
-
-               TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
-               }
-
-            TEST_FFI_OK(botan_pubkey_destroy, (pub));
-            TEST_FFI_OK(botan_privkey_destroy, (priv));
+            TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
             }
+
+         botan_pk_op_verify_t verifier;
+
+         if(TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-384)", 0)))
+            {
+            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+            TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+
+            // TODO: randomize this
+            signature[0] ^= 1;
+            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+            TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+
+            message[0] ^= 1;
+            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+            TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+
+            signature[0] ^= 1;
+            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+            TEST_FFI_FAIL("bad signature", botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+
+            message[0] ^= 1;
+            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+            TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+
+            TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
+            }
+
+         TEST_FFI_OK(botan_mp_destroy, (private_scalar));
+         TEST_FFI_OK(botan_mp_destroy, (public_x));
+         TEST_FFI_OK(botan_mp_destroy, (public_y));
+         TEST_FFI_OK(botan_pubkey_destroy, (pub));
+         TEST_FFI_OK(botan_privkey_destroy, (priv));
+         TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
 
          return result;
          }
@@ -1267,6 +1283,13 @@ class FFI_Unit_Tests : public Test
       Test::Result ffi_test_ecdh(botan_rng_t rng)
          {
          Test::Result result("FFI ECDH");
+
+         botan_mp_t private_scalar, public_x, public_y;
+         botan_privkey_t loaded_privkey1;
+         botan_pubkey_t loaded_pubkey1;
+         botan_mp_init(&private_scalar);
+         botan_mp_init(&public_x);
+         botan_mp_init(&public_y);
 
          botan_privkey_t priv1;
          REQUIRE_FFI_OK(botan_privkey_create_ecdh, (&priv1, rng, "secp256r1"));
@@ -1280,11 +1303,20 @@ class FFI_Unit_Tests : public Test
          botan_pubkey_t pub2;
          REQUIRE_FFI_OK(botan_privkey_export_pubkey, (&pub2, priv2));
 
-         ffi_test_pubkey_export(result, pub1, priv1, rng);
+         /* Reload key-pair1 in order to test functions for key loading */
+         TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv1, "x"));
+         TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub1, "public_x"));
+         TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub1, "public_y"));
+         TEST_FFI_OK(botan_privkey_load_ecdh, (&loaded_privkey1, private_scalar, "secp256r1"));
+         TEST_FFI_OK(botan_pubkey_load_ecdh, (&loaded_pubkey1, public_x, public_y, "secp256r1"));
+         TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey1, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey1, rng, 0));
+
+         ffi_test_pubkey_export(result, loaded_pubkey1, priv1, rng);
          ffi_test_pubkey_export(result, pub2, priv2, rng);
 
          botan_pk_op_ka_t ka1;
-         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, priv1, "KDF2(SHA-256)", 0));
+         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, loaded_privkey1, "KDF2(SHA-256)", 0));
          botan_pk_op_ka_t ka2;
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka2, priv2, "KDF2(SHA-256)", 0));
 
@@ -1317,13 +1349,17 @@ class FFI_Unit_Tests : public Test
 
          result.test_eq("shared ECDH key", key1, key2);
 
+         TEST_FFI_OK(botan_mp_destroy, (private_scalar));
+         TEST_FFI_OK(botan_mp_destroy, (public_x));
+         TEST_FFI_OK(botan_mp_destroy, (public_y));
          TEST_FFI_OK(botan_pk_op_key_agreement_destroy, (ka1));
          TEST_FFI_OK(botan_pk_op_key_agreement_destroy, (ka2));
          TEST_FFI_OK(botan_privkey_destroy, (priv1));
          TEST_FFI_OK(botan_privkey_destroy, (priv2));
          TEST_FFI_OK(botan_pubkey_destroy, (pub1));
          TEST_FFI_OK(botan_pubkey_destroy, (pub2));
-
+         TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey1));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey1));
          return result;
          }
 
