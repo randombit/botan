@@ -330,12 +330,12 @@ Botan::BigInt privkey_get_field(const Botan::Private_Key& key,
    throw Botan::Exception("Unsupported algorithm type for botan_privkey_get_field");
    }
 
+#if defined(BOTAN_HAS_ECDSA) || defined(BOTAN_HAS_ECDH)
 template<class ECPrivateKey_t>
 int privkey_load_ec(std::unique_ptr<ECPrivateKey_t>& key,
                     const Botan::BigInt& scalar,
                     const char* curve_name)
    {
-#if defined(BOTAN_HAS_ECDSA) || defined(BOTAN_HAS_ECDH)
 
    if(curve_name == nullptr)
       return -1;
@@ -352,20 +352,16 @@ int privkey_load_ec(std::unique_ptr<ECPrivateKey_t>& key,
       log_exception(BOTAN_CURRENT_FUNCTION, e.what());
       }
    return -1;
-#else
-   BOTAN_UNUSED(key, scalar, scalar_len, curve_name);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
    }
-}
+#endif
 
+#if defined(BOTAN_HAS_ECDSA) || defined(BOTAN_HAS_ECDH)
 template<class ECPublicKey_t>
 int pubkey_load_ec( std::unique_ptr<ECPublicKey_t>& key,
                     const Botan::BigInt& public_x,
                     const Botan::BigInt& public_y,
                     const char* curve_name)
    {
-#if defined(BOTAN_HAS_ECDSA) || defined(BOTAN_HAS_ECDH)
 
    if(curve_name == nullptr)
       return -1;
@@ -383,12 +379,10 @@ int pubkey_load_ec( std::unique_ptr<ECPublicKey_t>& key,
       log_exception(BOTAN_CURRENT_FUNCTION, e.what());
       }
    return -1;
-#else
-   BOTAN_UNUSED(key, public_x, public_y, curve_name);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
    }
+#endif
 
+} // closes anonymous namespace
 
 extern "C" {
 
@@ -1762,15 +1756,25 @@ int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
                                    const botan_mp_t public_y,
                                    const char* curve_name)
    {
-
+#if defined(BOTAN_HAS_ECDSA)
    std::unique_ptr<Botan::ECDSA_PublicKey> p_key;
-   if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name))
+   try
       {
-      *key = new botan_pubkey_struct(p_key.release());
-      return 0;
+      if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name))
+         {
+         *key = new botan_pubkey_struct(p_key.release());
+         return 0;
+         }
       }
-
+   catch(std::exception& exn)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, exn.what());
+      }
    return -1;
+#else
+   BOTAN_UNUSED(key, public_x, public_y, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_pubkey_load_ecdh(botan_pubkey_t* key,
@@ -1778,41 +1782,74 @@ int botan_pubkey_load_ecdh(botan_pubkey_t* key,
                                    const botan_mp_t public_y,
                                    const char* curve_name)
    {
+#if defined(BOTAN_HAS_ECDH)
    std::unique_ptr<Botan::ECDH_PublicKey> p_key;
-   if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name))
+   try
       {
-      *key = new botan_pubkey_struct(p_key.release());
-      return 0;
+      if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name))
+         {
+         *key = new botan_pubkey_struct(p_key.release());
+         return 0;
+         }
       }
-
+   catch(std::exception& exn)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, exn.what());
+      }
    return -1;
+#else
+   BOTAN_UNUSED(key, public_x, public_y, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_privkey_load_ecdsa(botan_privkey_t* key,
                           const botan_mp_t scalar,
                           const char* curve_name)
    {
+#if defined(BOTAN_HAS_ECDSA)
    std::unique_ptr<Botan::ECDSA_PrivateKey> p_key;
-   if(!privkey_load_ec(p_key, safe_get(scalar), curve_name))
+   try
       {
-      *key = new botan_privkey_struct(p_key.release());
-      return 0;
+      if(!privkey_load_ec(p_key, safe_get(scalar), curve_name))
+         {
+         *key = new botan_privkey_struct(p_key.release());
+         return 0;
+         }
       }
-
+   catch(std::exception& exn)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, exn.what());
+      }
    return -1;
+#else
+   BOTAN_UNUSED(key, scalar, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 int botan_privkey_load_ecdh(botan_privkey_t* key,
                           const botan_mp_t scalar,
                           const char* curve_name)
    {
+#if defined(BOTAN_HAS_ECDH)
    std::unique_ptr<Botan::ECDH_PrivateKey> p_key;
-   if(!privkey_load_ec(p_key, safe_get(scalar), curve_name))
+   try
       {
-      *key = new botan_privkey_struct(p_key.release());
-      return 0;
+      if(!privkey_load_ec(p_key, safe_get(scalar), curve_name))
+         {
+         *key = new botan_privkey_struct(p_key.release());
+         return 0;
+         }
       }
-
+   catch(std::exception& exn)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, exn.what());
+      }
    return -1;
+#else
+   BOTAN_UNUSED(key, scalar, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
    }
 
 int botan_pubkey_get_field(botan_mp_t output,
