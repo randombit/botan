@@ -81,24 +81,16 @@ Curve25519_PrivateKey::Curve25519_PrivateKey(RandomNumberGenerator& rng)
 Curve25519_PrivateKey::Curve25519_PrivateKey(const AlgorithmIdentifier&,
                                              const secure_vector<uint8_t>& key_bits)
    {
-   BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
-      .decode(m_public, OCTET_STRING)
-      .decode(m_private, OCTET_STRING)
-   .end_cons();
+   BER_Decoder(key_bits).decode(m_private, OCTET_STRING).discard_remaining();
 
-   size_check(m_public.size(), "public key");
    size_check(m_private.size(), "private key");
+   m_public.resize(32);
+   curve25519_basepoint(m_public.data(), m_private.data());
    }
 
 secure_vector<uint8_t> Curve25519_PrivateKey::private_key_bits() const
    {
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
-        .encode(m_public, OCTET_STRING)
-        .encode(m_private, OCTET_STRING)
-      .end_cons()
-      .get_contents();
+   return DER_Encoder().encode(m_private, OCTET_STRING).get_contents();
    }
 
 bool Curve25519_PrivateKey::check_key(RandomNumberGenerator&, bool) const
