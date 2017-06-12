@@ -20,8 +20,8 @@ class L_computer;
 * OCB Mode (base class for OCB_Encryption and OCB_Decryption). Note
 * that OCB is patented, but is freely licensed in some circumstances.
 *
-* @see "The OCB Authenticated-Encryption Algorithm" internet draft
-        http://tools.ietf.org/html/draft-irtf-cfrg-ocb-03
+* @see "The OCB Authenticated-Encryption Algorithm" RFC 7253
+*      https://tools.ietf.org/html/rfc7253
 * @see Free Licenses http://www.cs.ucdavis.edu/~rogaway/ocb/license.htm
 * @see OCB home page http://www.cs.ucdavis.edu/~rogaway/ocb
 */
