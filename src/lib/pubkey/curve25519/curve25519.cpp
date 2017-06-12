@@ -66,6 +66,18 @@ std::vector<uint8_t> Curve25519_PublicKey::public_key_bits() const
       .get_contents_unlocked();
    }
 
+Curve25519_PrivateKey::Curve25519_PrivateKey(const secure_vector<uint8_t>& secret_key)
+   {
+   if(secret_key.size() == 32)
+      {
+      m_public.resize(32);
+      m_private = secret_key;
+      curve25519_basepoint(m_public.data(), m_private.data());
+      }
+   else
+     throw Decoding_Error("Invalid size for Curve25519 private key");
+   }
+      
 Curve25519_PrivateKey::Curve25519_PrivateKey(RandomNumberGenerator& rng)
    {
    m_private = rng.random_vec(32);
