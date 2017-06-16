@@ -12,7 +12,7 @@ namespace Botan_Tests {
 class Block_Cipher_Tests : public Text_Based_Test
    {
    public:
-      Block_Cipher_Tests() : Text_Based_Test("block", "Key,In,Out") {}
+      Block_Cipher_Tests() : Text_Based_Test("block", "Key,In,Out", "Iterations") {}
 
       std::vector<std::string> possible_providers(const std::string& algo) override
          {
@@ -24,6 +24,7 @@ class Block_Cipher_Tests : public Text_Based_Test
          const std::vector<uint8_t> key      = get_req_bin(vars, "Key");
          const std::vector<uint8_t> input    = get_req_bin(vars, "In");
          const std::vector<uint8_t> expected = get_req_bin(vars, "Out");
+         const size_t iterations             = get_opt_sz(vars, "Iterations", 1);
 
          Test::Result result(algo);
 
@@ -69,13 +70,20 @@ class Block_Cipher_Tests : public Text_Based_Test
             // have called set_key on clone: process input values
             std::vector<uint8_t> buf = input;
 
-            cipher->encrypt(buf);
+            for(size_t i = 0; i != iterations; ++i)
+               {
+               cipher->encrypt(buf);
+               }
 
             result.test_eq(provider, "encrypt", buf, expected);
 
             // always decrypt expected ciphertext vs what we produced above
             buf = expected;
-            cipher->decrypt(buf);
+
+            for(size_t i = 0; i != iterations; ++i)
+               {
+               cipher->decrypt(buf);
+               }
 
             cipher->clear();
 
