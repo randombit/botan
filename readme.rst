@@ -152,7 +152,7 @@ Public Key Cryptography
 
 * RSA signatures and encryption
 * DH and ECDH key agreement
-* Signature schemes ECDSA, DSA, ECGDSA, ECKCDSA, and GOST 34.10-2001
+* Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, and GOST 34.10-2001
 * Post-quantum signature scheme XMSS
 * Post-quantum key agreement schemes McEliece and NewHope
 * ElGamal encryption
@@ -164,11 +164,11 @@ Ciphers, hashes, MACs, and checksums
 * Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, and ChaCha20Poly1305
 * Cipher modes CTR, CBC, XTS, CFB, and OFB
 * Block ciphers AES, Serpent, Blowfish, Twofish, Threefish-512,
-  DES/3DES, Noekeon, IDEA, CAST-128, XTEA, SEED, KASUMI, GOST 28147,
+  DES/3DES, SM4, Noekeon, IDEA, CAST-128, XTEA, SEED, KASUMI, GOST 28147,
   MISTY1, Lion, CAST-256
 * Stream ciphers ChaCha20, Salsa20/XSalsa20, SHAKE-128, and RC4
 * Hash functions SHA-1, SHA-2, SHA-3, RIPEMD-160, Skein-512,
-  BLAKE2b, Tiger, Whirlpool, GOST 34.11, MD5, MD4
+  BLAKE2b, SM3, Tiger, Whirlpool, GOST 34.11, MD5, MD4
 * Hash function combiners Parallel and Comb4P
 * Authentication codes HMAC, CMAC, Poly1305, SipHash, GMAC, CBC-MAC, X9.19 DES-MAC
 * Non-cryptographic checksums Adler32, CRC24, and CRC32
@@ -185,6 +185,7 @@ Other Useful Things
 * Password hashing function bcrypt and passhash9 (custom PBKDF scheme)
 * SRP-6a password authenticated key exchange
 * Key derivation functions including HKDF, KDF2, SP 800-108, SP 800-56A, SP 800-56C
+* HOTP and TOTP algorithms
 * Format preserving encryption scheme FE1
 * Threshold secret sharing
 * RFC 3394 AES key wrap
