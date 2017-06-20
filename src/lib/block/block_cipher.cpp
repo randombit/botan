@@ -66,6 +66,10 @@
   #include <botan/serpent.h>
 #endif
 
+#if defined(BOTAN_HAS_SM4)
+  #include <botan/sm4.h>
+#endif
+
 #if defined(BOTAN_HAS_TWOFISH)
   #include <botan/twofish.h>
 #endif
@@ -230,6 +234,13 @@ BlockCipher::create(const std::string& algo,
    if(algo == "SEED")
       {
       return std::unique_ptr<BlockCipher>(new SEED);
+      }
+#endif
+
+#if defined(BOTAN_HAS_SM4)
+   if(algo == "SM4")
+      {
+      return std::unique_ptr<BlockCipher>(new SM4);
       }
 #endif
 
