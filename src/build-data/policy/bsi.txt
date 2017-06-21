@@ -92,6 +92,7 @@ noekeon_simd
 seed
 serpent
 serpent_simd
+sm4
 threefish
 threefish_avx2
 twofish
@@ -128,6 +129,7 @@ mce
 mceies
 rfc6979
 newhope
+sm2
 
 # pk_pad
 #eme_pkcs1 // needed for tls

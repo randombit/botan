@@ -21,7 +21,9 @@ EC_Group::EC_Group(const OID& domain_oid)
    const std::string pem = PEM_for_named_group(OIDS::lookup(domain_oid));
 
    if(pem == "")
-      throw Lookup_Error("No ECC domain data for " + domain_oid.as_string());
+      {
+      throw Lookup_Error("No ECC domain data for '" + domain_oid.as_string() + "'");
+      }
 
    *this = EC_Group(pem);
    m_oid = domain_oid.as_string();

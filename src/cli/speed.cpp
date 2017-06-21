@@ -112,6 +112,10 @@
    #include <botan/xmss.h>
 #endif
 
+#if defined(BOTAN_HAS_SM2)
+   #include <botan/sm2.h>
+#endif
+
 #if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
    #include <botan/newhope.h>
    #include <botan/chacha.h>
@@ -497,6 +501,12 @@ class Speed final : public Command
             else if(algo == "ECDSA")
                {
                bench_ecdsa(ecc_groups, provider, msec);
+               }
+#endif
+#if defined(BOTAN_HAS_SM2)
+            else if(algo == "SM2")
+               {
+               bench_sm2(ecc_groups, provider, msec);
                }
 #endif
 #if defined(BOTAN_HAS_ECKCDSA)
@@ -1383,6 +1393,28 @@ class Speed final : public Command
 
             output() << Timer::result_string_ops(keygen_timer);
             bench_pk_sig(*key, nm, provider, "EMSA1(SHA-256)", msec);
+            }
+         }
+#endif
+
+#if defined(BOTAN_HAS_SM2)
+      void bench_sm2(const std::vector<std::string>& groups,
+                     const std::string& provider,
+                     std::chrono::milliseconds msec)
+         {
+         for(std::string grp : groups)
+            {
+            const std::string nm = "SM2-" + grp;
+
+            Timer keygen_timer(nm, provider, "keygen");
+
+            std::unique_ptr<Botan::Private_Key> key(keygen_timer.run([&]
+               {
+               return new Botan::SM2_Signature_PrivateKey(rng(), Botan::EC_Group(grp));
+               }));
+
+            output() << Timer::result_string_ops(keygen_timer);
+            bench_pk_sig(*key, nm, provider, "SM3", msec);
             }
          }
 #endif

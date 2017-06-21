@@ -266,6 +266,16 @@ std::string EC_Group::PEM_for_named_group(const std::string& name)
          "8f0XjAs61Y8QEm3ozkJDW1PcZ+FA0r+UH/3UWcbWVeECAQE="
          "-----END EC PARAMETERS-----";
 
+   if(name == "sm2p256v1")
+      return
+         "-----BEGIN EC PARAMETERS-----"
+         "MIHgAgEBMCwGByqGSM49AQECIQD////+/////////////////////wAAAAD/////"
+         "/////zBEBCD////+/////////////////////wAAAAD//////////AQgKOn6np2f"
+         "XjRNWp5Lz2UJp/OXifUVq4+S3by9QU2UDpMEQQQyxK4sHxmBGV+ZBEZqOcmUj+ML"
+         "v/JmC+FxWkWJM0x0x7w3NqL09necWb3O42tpIVPQqYd8xipHQALfMuUhOfCgAiEA"
+         "/////v///////////////3ID32shxgUrU7v0CTnVQSMCAQE="
+         "-----END EC PARAMETERS-----";
+
 #if defined(BOTAN_HOUSE_ECC_CURVE_NAME)
    if(name == BOTAN_HOUSE_ECC_CURVE_NAME)
       return BOTAN_HOUSE_ECC_CURVE_PEM;
