@@ -1,5 +1,5 @@
 <defines>
-CURVE_25519 -> 20141227
+CURVE_25519 -> 20170621
 </defines>
 
 <header:public>
