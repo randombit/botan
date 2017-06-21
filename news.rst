@@ -6,7 +6,12 @@ Version 2.2.0, Not Yet Released
 
 * Add the Ed25519 signature scheme (GH #1066)
 
+* The format of x25519 keys, which previously used a non-standard encoding,
+  has changed to match the upcoming IETF specification. (GH #1076)
+
 * Add the SM3 hash function (GH #996)
+
+* Add the SM4 block cipher (GH #1080)
 
 * Add the PGP S2K algorithm (GH #1060)
 
