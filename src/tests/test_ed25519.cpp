@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_ED25519)
    #include <botan/ed25519.h>
+   #include <botan/pkcs8.h>
    #include "test_pubkey.h"
 #endif
 
@@ -46,7 +47,46 @@ class Ed25519_Signature_Tests : public PK_Signature_Generation_Test
          }
    };
 
+class Ed25519_Curdle_Format_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         // Keys from draft-ietf-curdle-pkix-04.txt
+         const std::string priv_key_str =
+            "-----BEGIN PRIVATE KEY-----\n"
+            "MC4CAQAwBQYDK2VwBCIEINTuctv5E1hK1bbY8fdp+K06/nwoy/HU++CXqI9EdVhC\n"
+            "-----END PRIVATE KEY-----\n";
+
+         const std::string pub_key_str =
+            "-----BEGIN PUBLIC KEY-----\n"
+            "MCowBQYDK2VwAyEAGb9ECWmEzf6FQbrBZ9w7lshQhqowtrbLDFw4rXAxZuE=\n"
+            "-----END PUBLIC KEY-----\n";
+
+         Test::Result result("Ed25519 CURDLE format");
+
+         Botan::DataSource_Memory priv_data(priv_key_str);
+         std::unique_ptr<Botan::Private_Key> priv_key(Botan::PKCS8::load_key(priv_data, Test::rng()));
+         result.confirm("Private key loaded", priv_key != nullptr);
+
+         Botan::DataSource_Memory pub_data(pub_key_str);
+         std::unique_ptr<Botan::Public_Key> pub_key(Botan::X509::load_key(pub_data));
+         result.confirm("Public key loaded", pub_key != nullptr);
+
+         Botan::PK_Signer signer(*priv_key, Test::rng(), "Pure");
+         signer.update("message");
+         std::vector<uint8_t> sig = signer.signature(Test::rng());
+
+         Botan::PK_Verifier verifier(*pub_key, "Pure");
+         verifier.update("message");
+         result.confirm("Signature valid", verifier.check_signature(sig));
+
+         return std::vector<Test::Result>{result};
+         }
+   };
+
 BOTAN_REGISTER_TEST("ed25519_sign", Ed25519_Signature_Tests);
+BOTAN_REGISTER_TEST("ed25519_curdle", Ed25519_Curdle_Format_Tests);
 
 #endif
 
