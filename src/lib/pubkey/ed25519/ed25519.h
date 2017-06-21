@@ -82,7 +82,7 @@ class BOTAN_DLL Ed25519_PrivateKey : public Ed25519_PublicKey,
 
       /**
       * Construct a private key from the specified parameters.
-      * @param secret_key DER encoded private key bits
+      * @param secret_key the private key
       */
       explicit Ed25519_PrivateKey(const secure_vector<uint8_t>& secret_key);
 

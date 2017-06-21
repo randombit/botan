@@ -18,7 +18,10 @@ namespace Botan {
 
 AlgorithmIdentifier Ed25519_PublicKey::algorithm_identifier() const
    {
-   return AlgorithmIdentifier(get_oid(), AlgorithmIdentifier::USE_NULL_PARAM);
+   // AlgorithmIdentifier::USE_NULL_PARAM puts 0x05 0x00 in parameters
+   // We want nothing
+   std::vector<uint8_t> empty;
+   return AlgorithmIdentifier(get_oid(), empty);
    }
 
 bool Ed25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
@@ -30,10 +33,7 @@ bool Ed25519_PublicKey::check_key(RandomNumberGenerator&, bool) const
 Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier&,
                                            const std::vector<uint8_t>& key_bits)
    {
-   BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
-      .decode(m_public, OCTET_STRING)
-   .end_cons();
+   m_public = key_bits;
 
    if(m_public.size() != 32)
       throw Decoding_Error("Invalid size for Ed25519 public key");
@@ -41,11 +41,7 @@ Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier&,
 
 std::vector<uint8_t> Ed25519_PublicKey::public_key_bits() const
    {
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
-        .encode(m_public, OCTET_STRING)
-      .end_cons()
-      .get_contents_unlocked();
+   return m_public;
    }
 
 Ed25519_PrivateKey::Ed25519_PrivateKey(const secure_vector<uint8_t>& secret_key)
@@ -76,23 +72,20 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(RandomNumberGenerator& rng)
 Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier&,
                                        const secure_vector<uint8_t>& key_bits)
    {
-   BER_Decoder(key_bits)
-      .start_cons(SEQUENCE)
-      .decode(m_private, OCTET_STRING)
-   .end_cons();
+   secure_vector<uint8_t> bits;
+   BER_Decoder(key_bits).decode(bits, OCTET_STRING).discard_remaining();
 
-   if(m_private.size() != 64)
+   if(bits.size() != 32)
       throw Decoding_Error("Invalid size for Ed25519 private key");
-   m_public.assign(&m_private[32], &m_private[64]);
+   m_public.resize(32);
+   m_private.resize(64);
+   ed25519_gen_keypair(m_public.data(), m_private.data(), bits.data());
    }
 
 secure_vector<uint8_t> Ed25519_PrivateKey::private_key_bits() const
    {
-   return DER_Encoder()
-      .start_cons(SEQUENCE)
-        .encode(m_private, OCTET_STRING)
-      .end_cons()
-      .get_contents();
+   secure_vector<uint8_t> bits(&m_private[0], &m_private[32]);
+   return DER_Encoder().encode(bits, OCTET_STRING).get_contents();
    }
 
 bool Ed25519_PrivateKey::check_key(RandomNumberGenerator&, bool) const
