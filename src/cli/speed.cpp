@@ -127,16 +127,19 @@ class Timer
       Timer(const std::string& name,
             uint64_t event_mult = 1,
             const std::string& doing = "",
-            const std::string& provider = "")
+            const std::string& provider = "",
+            size_t buf_size = 0)
          : m_name(name + (provider.empty() ? provider : " [" + provider + "]"))
          , m_doing(doing)
-         , m_event_mult(event_mult) {}
+         , m_event_mult(event_mult)
+         , m_buf_size(buf_size) {}
 
       Timer(const std::string& name,
             const std::string& provider,
             const std::string& doing,
-            uint64_t event_mult = 1)
-         : Timer(name, event_mult, doing, provider) {}
+            uint64_t event_mult = 1,
+            size_t buf_size = 0)
+         : Timer(name, event_mult, doing, provider, buf_size) {}
 
       static uint64_t get_system_timestamp_ns()
          {
@@ -264,6 +267,10 @@ class Timer
          {
          return m_doing;
          }
+      size_t buf_size() const
+         {
+         return m_buf_size;
+         }
 
       static std::string result_string_bps(const Timer& t);
       static std::string result_string_ops(const Timer& t);
@@ -271,6 +278,7 @@ class Timer
       std::string m_name, m_doing;
       uint64_t m_time_used = 0, m_timer_start = 0;
       uint64_t m_event_count = 0, m_event_mult = 0;
+      size_t m_buf_size = 0;
 
       uint64_t m_max_time = 0, m_min_time = 0;
       uint64_t m_cpu_cycles_start = 0, m_cpu_cycles_used = 0;
@@ -289,6 +297,11 @@ std::string Timer::result_string_bps(const Timer& timer)
    if(!timer.doing().empty())
       {
       oss << " " << timer.doing();
+      }
+
+   if(timer.buf_size() > 0)
+      {
+      oss << " buffer size " << timer.buf_size();
       }
 
    oss << " " << std::fixed << std::setprecision(3) << MiB_per_sec << " MiB/sec";
@@ -425,7 +438,20 @@ class Speed final : public Command
       void go() override
          {
          std::chrono::milliseconds msec(get_arg_sz("msec"));
-         const size_t buf_size = get_arg_sz("buf-size");
+
+         std::vector<size_t> buf_sizes;
+         for(auto size_str : Botan::split_on(get_arg("buf-size"), ','))
+         {
+            try
+               {
+               buf_sizes.push_back(static_cast<size_t>(std::stoul(size_str)));
+               }
+            catch(std::exception&)
+               {
+               throw CLI_Usage_Error("Invalid integer value '" + size_str + "' for option buf-size");
+               }
+         }
+
          const std::string provider = get_arg("provider");
          std::vector<std::string> ecc_groups = Botan::split_on(get_arg("ecc-groups"), ',');
 
@@ -458,185 +484,188 @@ class Speed final : public Command
             {
             using namespace std::placeholders;
 
-            if(Botan::HashFunction::providers(algo).size() > 0)
+            for(const auto buf_size : buf_sizes)
                {
-               bench_providers_of<Botan::HashFunction>(
-                  algo, provider, msec, buf_size,
-                  std::bind(&Speed::bench_hash, this, _1, _2, _3, _4));
-               }
-            else if(Botan::BlockCipher::providers(algo).size() > 0)
-               {
-               bench_providers_of<Botan::BlockCipher>(
-                  algo, provider, msec, buf_size,
-                  std::bind(&Speed::bench_block_cipher, this, _1, _2, _3, _4));
-               }
-            else if(Botan::StreamCipher::providers(algo).size() > 0)
-               {
-               bench_providers_of<Botan::StreamCipher>(
-                  algo, provider, msec, buf_size,
-                  std::bind(&Speed::bench_stream_cipher, this, _1, _2, _3, _4));
-               }
-            else if(auto enc = Botan::get_cipher_mode(algo, Botan::ENCRYPTION))
-               {
-               auto dec = Botan::get_cipher_mode(algo, Botan::DECRYPTION);
-               bench_cipher_mode(*enc, *dec, msec, buf_size);
-               }
-            else if(Botan::MessageAuthenticationCode::providers(algo).size() > 0)
-               {
-               bench_providers_of<Botan::MessageAuthenticationCode>(
-                  algo, provider, msec, buf_size,
-                  std::bind(&Speed::bench_mac, this, _1, _2, _3, _4));
-               }
+               if(Botan::HashFunction::providers(algo).size() > 0)
+                  {
+                  bench_providers_of<Botan::HashFunction>(
+                     algo, provider, msec, buf_size,
+                     std::bind(&Speed::bench_hash, this, _1, _2, _3, _4));
+                  }
+               else if(Botan::BlockCipher::providers(algo).size() > 0)
+                  {
+                  bench_providers_of<Botan::BlockCipher>(
+                     algo, provider, msec, buf_size,
+                     std::bind(&Speed::bench_block_cipher, this, _1, _2, _3, _4));
+                  }
+               else if(Botan::StreamCipher::providers(algo).size() > 0)
+                  {
+                  bench_providers_of<Botan::StreamCipher>(
+                     algo, provider, msec, buf_size,
+                     std::bind(&Speed::bench_stream_cipher, this, _1, _2, _3, _4));
+                  }
+               else if(auto enc = Botan::get_cipher_mode(algo, Botan::ENCRYPTION))
+                  {
+                  auto dec = Botan::get_cipher_mode(algo, Botan::DECRYPTION);
+                  bench_cipher_mode(*enc, *dec, msec, buf_size);
+                  }
+               else if(Botan::MessageAuthenticationCode::providers(algo).size() > 0)
+                  {
+                  bench_providers_of<Botan::MessageAuthenticationCode>(
+                     algo, provider, msec, buf_size,
+                     std::bind(&Speed::bench_mac, this, _1, _2, _3, _4));
+                  }
 #if defined(BOTAN_HAS_RSA)
-            else if(algo == "RSA")
-               {
-               bench_rsa(provider, msec);
-               }
+               else if(algo == "RSA")
+                  {
+                  bench_rsa(provider, msec);
+                  }
 #endif
 #if defined(BOTAN_HAS_ECDSA)
-            else if(algo == "ECDSA")
-               {
-               bench_ecdsa(ecc_groups, provider, msec);
-               }
+               else if(algo == "ECDSA")
+                  {
+                  bench_ecdsa(ecc_groups, provider, msec);
+                  }
 #endif
 #if defined(BOTAN_HAS_ECKCDSA)
-            else if(algo == "ECKCDSA")
-               {
-               bench_eckcdsa(ecc_groups, provider, msec);
-               }
+               else if(algo == "ECKCDSA")
+                  {
+                  bench_eckcdsa(ecc_groups, provider, msec);
+                  }
 #endif
 #if defined(BOTAN_HAS_ECGDSA)
-            else if(algo == "ECGDSA")
-               {
-               bench_ecgdsa(ecc_groups, provider, msec);
-               }
+               else if(algo == "ECGDSA")
+                  {
+                  bench_ecgdsa(ecc_groups, provider, msec);
+                  }
 #endif
 #if defined(BOTAN_HAS_ED25519)
-            else if(algo == "Ed25519")
-               {
-               bench_ed25519(provider, msec);
-               }
+               else if(algo == "Ed25519")
+                  {
+                  bench_ed25519(provider, msec);
+                  }
 #endif
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-            else if(algo == "DH")
-               {
-               bench_dh(provider, msec);
-               }
+               else if(algo == "DH")
+                  {
+                  bench_dh(provider, msec);
+                  }
 #endif
 #if defined(BOTAN_HAS_ECDH)
-            else if(algo == "ECDH")
-               {
-               bench_ecdh(ecc_groups, provider, msec);
-               }
+               else if(algo == "ECDH")
+                  {
+                  bench_ecdh(ecc_groups, provider, msec);
+                  }
 #endif
 #if defined(BOTAN_HAS_CURVE_25519)
-            else if(algo == "Curve25519")
-               {
-               bench_curve25519(provider, msec);
-               }
+               else if(algo == "Curve25519")
+                  {
+                  bench_curve25519(provider, msec);
+                  }
 #endif
 #if defined(BOTAN_HAS_MCELIECE)
-            else if(algo == "McEliece")
-               {
-               bench_mceliece(provider, msec);
-               }
+               else if(algo == "McEliece")
+                  {
+                  bench_mceliece(provider, msec);
+                  }
 #endif
 #if defined(BOTAN_HAS_XMSS)
-            else if(algo == "XMSS")
-               {
-               bench_xmss(provider, msec);
-               }
+               else if(algo == "XMSS")
+                  {
+                  bench_xmss(provider, msec);
+                  }
 #endif
 #if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
-            else if(algo == "NEWHOPE")
-               {
-               bench_newhope(provider, msec);
-               }
+               else if(algo == "NEWHOPE")
+                  {
+                  bench_newhope(provider, msec);
+                  }
 #endif
 
 #if defined(BOTAN_HAS_DL_GROUP)
-            else if(algo == "modexp")
-               {
-               bench_modexp(msec);
-               }
+               else if(algo == "modexp")
+                  {
+                  bench_modexp(msec);
+                  }
 #endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
-            else if(algo == "random_prime")
-               {
-               bench_random_prime(msec);
-               }
-            else if(algo == "inverse_mod")
-               {
-               bench_inverse_mod(msec);
-               }
+               else if(algo == "random_prime")
+                  {
+                  bench_random_prime(msec);
+                  }
+               else if(algo == "inverse_mod")
+                  {
+                  bench_inverse_mod(msec);
+                  }
 #endif
 
 #if defined(BOTAN_HAS_FPE_FE1)
-            else if(algo == "fpe_fe1")
-               {
-               bench_fpe_fe1(msec);
-               }
+               else if(algo == "fpe_fe1")
+                  {
+                  bench_fpe_fe1(msec);
+                  }
 #endif
 #if defined(BOTAN_HAS_ECC_GROUP)
-            else if(algo == "ecc_mult")
-               {
-               bench_ecc_mult(ecc_groups, msec);
-               }
-            else if(algo == "os2ecp")
-               {
-               bench_os2ecp(ecc_groups, msec);
-               }
+               else if(algo == "ecc_mult")
+                  {
+                  bench_ecc_mult(ecc_groups, msec);
+                  }
+               else if(algo == "os2ecp")
+                  {
+                  bench_os2ecp(ecc_groups, msec);
+                  }
 #endif
-            else if(algo == "RNG")
-               {
+               else if(algo == "RNG")
+                  {
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-               Botan::AutoSeeded_RNG auto_rng;
-               bench_rng(auto_rng, "AutoSeeded_RNG (periodic reseed)", msec, buf_size);
+                  Botan::AutoSeeded_RNG auto_rng;
+                  bench_rng(auto_rng, "AutoSeeded_RNG (periodic reseed)", msec, buf_size);
 #endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-               bench_rng(Botan::system_rng(), "System_RNG", msec, buf_size);
+                  bench_rng(Botan::system_rng(), "System_RNG", msec, buf_size);
 #endif
 
 #if defined(BOTAN_HAS_RDRAND_RNG)
-               if(Botan::CPUID::has_rdrand())
-                  {
-                  Botan::RDRAND_RNG rdrand;
-                  bench_rng(rdrand, "RDRAND", msec, buf_size);
-                  }
+                  if(Botan::CPUID::has_rdrand())
+                     {
+                     Botan::RDRAND_RNG rdrand;
+                     bench_rng(rdrand, "RDRAND", msec, buf_size);
+                     }
 #endif
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
-               for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
+                  for(std::string hash : { "SHA-256", "SHA-384", "SHA-512" })
+                     {
+                     Botan::HMAC_DRBG hmac_drbg(hash);
+                     bench_rng(hmac_drbg, hmac_drbg.name(), msec, buf_size);
+                     }
+#endif
+                  }
+#if defined(BOTAN_HAS_SIMD_32) && defined(INCLUDE_SIMD_PERF)
+               else if(algo == "simd")
                   {
-                  Botan::HMAC_DRBG hmac_drbg(hash);
-                  bench_rng(hmac_drbg, hmac_drbg.name(), msec, buf_size);
+                  if(Botan::CPUID::has_simd_32())
+                     {
+                     bench_simd32(msec);
+                     }
+                  else
+                     {
+                     output() << "Skipping simd perf test, CPUID indicates SIMD not supported";
+                     }
                   }
 #endif
-               }
-#if defined(BOTAN_HAS_SIMD_32) && defined(INCLUDE_SIMD_PERF)
-            else if(algo == "simd")
-               {
-               if(Botan::CPUID::has_simd_32())
+               else if(algo == "entropy")
                   {
-                  bench_simd32(msec);
+                  bench_entropy_sources(msec);
                   }
                else
                   {
-                  output() << "Skipping simd perf test, CPUID indicates SIMD not supported";
-                  }
-               }
-#endif
-            else if(algo == "entropy")
-               {
-               bench_entropy_sources(msec);
-               }
-            else
-               {
-               if(verbose() || !using_defaults)
-                  {
-                  error_output() << "Unknown algorithm '" << algo << "'\n";
+                  if(verbose() || !using_defaults)
+                     {
+                     error_output() << "Unknown algorithm '" << algo << "'\n";
+                     }
                   }
                }
             }
@@ -678,8 +707,8 @@ class Speed final : public Command
          {
          std::vector<uint8_t> buffer(buf_size * cipher.block_size());
 
-         Timer encrypt_timer(cipher.name(), provider, "encrypt", buffer.size());
-         Timer decrypt_timer(cipher.name(), provider, "decrypt", buffer.size());
+         Timer encrypt_timer(cipher.name(), provider, "encrypt", buffer.size(), buf_size);
+         Timer decrypt_timer(cipher.name(), provider, "decrypt", buffer.size(), buf_size);
          Timer ks_timer(cipher.name(), provider, "key schedule");
 
          const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
@@ -700,7 +729,7 @@ class Speed final : public Command
          {
          Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
-         Timer encrypt_timer(cipher.name(), provider, "encrypt", buffer.size());
+         Timer encrypt_timer(cipher.name(), provider, "encrypt", buffer.size(), buf_size);
 
          const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
          cipher.set_key(key);
@@ -727,7 +756,7 @@ class Speed final : public Command
          {
          Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
-         Timer timer(hash.name(), provider, "hash", buffer.size());
+         Timer timer(hash.name(), provider, "hash", buffer.size(), buf_size);
          timer.run_until_elapsed(runtime, [&]() { hash.update(buffer); });
          output() << Timer::result_string_bps(timer);
          }
@@ -743,7 +772,7 @@ class Speed final : public Command
          const Botan::SymmetricKey key(rng(), mac.maximum_keylength());
          mac.set_key(key);
 
-         Timer timer(mac.name(), provider, "mac", buffer.size());
+         Timer timer(mac.name(), provider, "mac", buffer.size(), buf_size);
          timer.run_until_elapsed(runtime, [&]() { mac.update(buffer); });
          output() << Timer::result_string_bps(timer);
          }
@@ -756,8 +785,8 @@ class Speed final : public Command
          {
          Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
-         Timer encrypt_timer(enc.name(), enc.provider(), "encrypt", buffer.size());
-         Timer decrypt_timer(enc.name(), enc.provider(), "decrypt", buffer.size());
+         Timer encrypt_timer(enc.name(), enc.provider(), "encrypt", buffer.size(), buf_size);
+         Timer decrypt_timer(enc.name(), enc.provider(), "decrypt", buffer.size(), buf_size);
          Timer ks_timer(enc.name(), enc.provider(), "key schedule");
          Timer iv_timer(enc.name(), enc.provider(), "iv setup");
 
@@ -801,7 +830,7 @@ class Speed final : public Command
          rng.reseed_from_rng(Botan::system_rng(), 256);
 #endif
 
-         Timer timer(rng_name, "", "generate", buffer.size());
+         Timer timer(rng_name, "", "generate", buffer.size(), buf_size);
          timer.run_until_elapsed(runtime, [&]() { rng.randomize(buffer.data(), buffer.size()); });
          output() << Timer::result_string_bps(timer);
          }
