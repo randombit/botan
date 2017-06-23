@@ -75,14 +75,16 @@ class BOTAN_DLL X509_Certificate : public X509_Object
 
       /**
       * Get a value for a specific subject_info parameter name.
-      * @param name the name of the parameter to look up. Possible names are
+      * @param name the name of the parameter to look up. Possible names include
       * "X509.Certificate.version", "X509.Certificate.serial",
       * "X509.Certificate.start", "X509.Certificate.end",
       * "X509.Certificate.v2.key_id", "X509.Certificate.public_key",
       * "X509v3.BasicConstraints.path_constraint",
       * "X509v3.BasicConstraints.is_ca", "X509v3.NameConstraints",
       * "X509v3.ExtendedKeyUsage", "X509v3.CertificatePolicies",
-      * "X509v3.SubjectKeyIdentifier" or "X509.Certificate.serial".
+      * "X509v3.SubjectKeyIdentifier", "X509.Certificate.serial",
+      * "X520.CommonName", "X520.Organization", "X520.Country",
+      * "RFC822" (Email in SAN) or "PKCS9.EmailAddress" (Email in DN).
       * @return value(s) of the specified parameter
       */
       std::vector<std::string> subject_info(const std::string& name) const;
