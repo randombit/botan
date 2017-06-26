@@ -320,7 +320,7 @@ std::string Timer::result_string_bps(const Timer& timer)
 
    if(timer.buf_size() > 0)
       {
-      oss << " buffer size " << timer.buf_size();
+      oss << " buffer size " << timer.buf_size() << " bytes:";
       }
 
    oss << " " << std::fixed << std::setprecision(3) << MiB_per_sec << " MiB/sec";
@@ -648,13 +648,27 @@ class Speed final : public Command
          {
             try
                {
-               buf_sizes.push_back(static_cast<size_t>(std::stoul(size_str)));
+               auto new_buf_size = static_cast<size_t>(std::stoul(size_str));
+
+               auto it = std::find_if(buf_sizes.begin(), buf_sizes.end(),
+                     [new_buf_size](size_t buf_size)
+                        {
+                        return buf_size == new_buf_size;
+                        }
+                        );
+
+               if(it == buf_sizes.end())
+                  {
+                  buf_sizes.insert(buf_sizes.end(), new_buf_size);
+                  }
                }
             catch(std::exception&)
                {
                throw CLI_Usage_Error("Invalid integer value '" + size_str + "' for option buf-size");
                }
          }
+
+         std::sort(buf_sizes.begin(), buf_sizes.end());
 
          Botan::CPUID::initialize();
 
