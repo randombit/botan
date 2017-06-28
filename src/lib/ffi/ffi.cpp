@@ -523,10 +523,30 @@ int botan_rng_reseed(botan_rng_t rng, size_t bits)
    return BOTAN_FFI_DO(Botan::RandomNumberGenerator, rng, r, { r.reseed_from_rng(Botan::system_rng(), bits); });
    }
 
-int botan_mp_init(botan_mp_t* mp)
+int botan_mp_init(botan_mp_t* mp_out)
    {
-   *mp = new botan_mp_struct(new Botan::BigInt);
-   return 0;
+   try
+      {
+      BOTAN_ASSERT_ARG_NON_NULL(mp_out);
+
+      std::unique_ptr<Botan::BigInt> mp(new Botan::BigInt);
+
+      if(mp)
+         {
+         *mp_out = new botan_mp_struct(mp.release());
+         return 0;
+         }
+      }
+   catch(std::exception& e)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, e.what());
+      }
+   catch(...)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, "unknown");
+      }
+
+   return -1;
    }
 
 int botan_mp_clear(botan_mp_t mp)
