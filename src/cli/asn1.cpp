@@ -360,8 +360,8 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
             {
             emit(type_name(type_tag), level, length,
                  Botan::Charset::transcode(str.iso_8859(),
-                                           Botan::LATIN1_CHARSET,
-                                           Botan::UTF8_CHARSET));
+                                           Botan::UTF8_CHARSET,
+                                           Botan::LATIN1_CHARSET));
             }
          else
             {
