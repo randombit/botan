@@ -1,0 +1,13 @@
+<defines>
+BEARSSL -> 20170628
+</defines>
+
+load_on vendor
+
+<header:internal>
+bearssl.h
+</header:internal>
+
+<libs>
+all!windows -> bearssl
+</libs>
