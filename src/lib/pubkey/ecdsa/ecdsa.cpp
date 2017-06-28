@@ -18,6 +18,10 @@
   #include <botan/rfc6979.h>
 #endif
 
+#if defined(BOTAN_HAS_BEARSSL)
+  #include <botan/internal/bearssl.h>
+#endif
+
 #if defined(BOTAN_HAS_OPENSSL)
   #include <botan/internal/openssl.h>
 #endif
@@ -156,6 +160,21 @@ std::unique_ptr<PK_Ops::Verification>
 ECDSA_PublicKey::create_verification_op(const std::string& params,
                                         const std::string& provider) const
    {
+#if defined(BOTAN_HAS_BEARSSL)
+   if(provider == "bearssl" || provider.empty())
+      {
+      try
+         {
+         return make_bearssl_ecdsa_ver_op(*this, params);
+         }
+      catch(Lookup_Error& e)
+         {
+         if(provider == "bearssl")
+            throw;
+         }
+      }
+#endif
+
 #if defined(BOTAN_HAS_OPENSSL)
    if(provider == "openssl" || provider.empty())
       {
@@ -182,6 +201,21 @@ ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                       const std::string& params,
                                       const std::string& provider) const
    {
+#if defined(BOTAN_HAS_BEARSSL)
+   if(provider == "bearssl" || provider.empty())
+      {
+      try
+         {
+         return make_bearssl_ecdsa_sig_op(*this, params);
+         }
+      catch(Lookup_Error& e)
+         {
+         if(provider == "bearssl")
+            throw;
+         }
+      }
+#endif
+
 #if defined(BOTAN_HAS_OPENSSL)
    if(provider == "openssl" || provider.empty())
       {

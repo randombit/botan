@@ -30,6 +30,20 @@ class BearSSL_Error : public Exception
 std::unique_ptr<HashFunction>
 make_bearssl_hash(const std::string& name);
 
+/* ECDSA */
+
+#if defined(BOTAN_HAS_ECDSA)
+
+class ECDSA_PublicKey;
+class ECDSA_PrivateKey;
+
+std::unique_ptr<PK_Ops::Verification>
+make_bearssl_ecdsa_ver_op(const ECDSA_PublicKey& key, const std::string& params);
+std::unique_ptr<PK_Ops::Signature>
+make_bearssl_ecdsa_sig_op(const ECDSA_PrivateKey& key, const std::string& params);
+
+#endif
+
 }
 
 #endif
