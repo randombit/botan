@@ -20,8 +20,10 @@
   #include <botan/ecdsa.h>
 #endif
 
-#include <bearssl_hash.h>
-#include <bearssl_ec.h>
+extern "C" {
+  #include <bearssl_hash.h>
+  #include <bearssl_ec.h>
+}
 
 namespace Botan {
 

@@ -7,8 +7,11 @@
 
 #include <botan/hash.h>
 #include <botan/internal/bearssl.h>
-#include <bearssl_hash.h>
 #include <unordered_map>
+
+extern "C" {
+  #include <bearssl_hash.h>
+}
 
 namespace Botan {
 
