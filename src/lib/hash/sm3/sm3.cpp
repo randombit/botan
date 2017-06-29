@@ -21,8 +21,20 @@ const uint32_t SM3_IV[] = {
    0xa96f30bcUL, 0x163138aaUL, 0xe38dee4dUL, 0xb0fb0e4eUL
 };
 
-const uint32_t SM3_TJ_0_15 = 0x79cc4519;
-const uint32_t SM3_TJ_16_63 = 0x7a879d8a;
+const uint32_t SM3_TJ[64] = {
+   0x79CC4519, 0xF3988A32, 0xE7311465, 0xCE6228CB, 0x9CC45197,
+   0x3988A32F, 0x7311465E, 0xE6228CBC, 0xCC451979, 0x988A32F3,
+   0x311465E7, 0x6228CBCE, 0xC451979C, 0x88A32F39, 0x11465E73,
+   0x228CBCE6, 0x9D8A7A87, 0x3B14F50F, 0x7629EA1E, 0xEC53D43C,
+   0xD8A7A879, 0xB14F50F3, 0x629EA1E7, 0xC53D43CE, 0x8A7A879D,
+   0x14F50F3B, 0x29EA1E76, 0x53D43CEC, 0xA7A879D8, 0x4F50F3B1,
+   0x9EA1E762, 0x3D43CEC5, 0x7A879D8A, 0xF50F3B14, 0xEA1E7629,
+   0xD43CEC53, 0xA879D8A7, 0x50F3B14F, 0xA1E7629E, 0x43CEC53D,
+   0x879D8A7A, 0x0F3B14F5, 0x1E7629EA, 0x3CEC53D4, 0x79D8A7A8,
+   0xF3B14F50, 0xE7629EA1, 0xCEC53D43, 0x9D8A7A87, 0x3B14F50F,
+   0x7629EA1E, 0xEC53D43C, 0xD8A7A879, 0xB14F50F3, 0x629EA1E7,
+   0xC53D43CE, 0x8A7A879D, 0x14F50F3B, 0x29EA1E76, 0x53D43CEC,
+   0xA7A879D8, 0x4F50F3B1, 0x9EA1E762, 0x3D43CEC5 };
 
 inline uint32_t P0(uint32_t X)
    {
@@ -63,12 +75,10 @@ void SM3::compress_n(const uint8_t input[], size_t blocks)
    {
    uint32_t A = m_digest[0], B = m_digest[1], C = m_digest[2], D = m_digest[3],
             E = m_digest[4], F = m_digest[5], G = m_digest[6], H = m_digest[7];
-   uint32_t W[68], W1[64];
-   uint32_t SS1, SS2, TT1, TT2, T[64];
+   uint32_t W[68];
 
    for(size_t i = 0; i != blocks; ++i)
       {
-
       // Message Extension (a)
       W[ 0] = load_be<uint32_t>(input, 0);
       W[ 1] = load_be<uint32_t>(input, 1);
@@ -141,79 +151,13 @@ void SM3::compress_n(const uint8_t input[], size_t blocks)
       W[66] = P1(W[50] ^ W[57] ^ rotate_left(W[63], 15)) ^ rotate_left(W[53], 7) ^ W[60];
       W[67] = P1(W[51] ^ W[58] ^ rotate_left(W[64], 15)) ^ rotate_left(W[54], 7) ^ W[61];
 
-      // Message Extension (c)
-      W1[ 0] = W[ 0] ^ W[ 4];
-      W1[ 1] = W[ 1] ^ W[ 5];
-      W1[ 2] = W[ 2] ^ W[ 6];
-      W1[ 3] = W[ 3] ^ W[ 7];
-      W1[ 4] = W[ 4] ^ W[ 8];
-      W1[ 5] = W[ 5] ^ W[ 9];
-      W1[ 6] = W[ 6] ^ W[10];
-      W1[ 7] = W[ 7] ^ W[11];
-      W1[ 8] = W[ 8] ^ W[12];
-      W1[ 9] = W[ 9] ^ W[13];
-      W1[10] = W[10] ^ W[14];
-      W1[11] = W[11] ^ W[15];
-      W1[12] = W[12] ^ W[16];
-      W1[13] = W[13] ^ W[17];
-      W1[14] = W[14] ^ W[18];
-      W1[15] = W[15] ^ W[19];
-      W1[16] = W[16] ^ W[20];
-      W1[17] = W[17] ^ W[21];
-      W1[18] = W[18] ^ W[22];
-      W1[19] = W[19] ^ W[23];
-      W1[20] = W[20] ^ W[24];
-      W1[21] = W[21] ^ W[25];
-      W1[22] = W[22] ^ W[26];
-      W1[23] = W[23] ^ W[27];
-      W1[24] = W[24] ^ W[28];
-      W1[25] = W[25] ^ W[29];
-      W1[26] = W[26] ^ W[30];
-      W1[27] = W[27] ^ W[31];
-      W1[28] = W[28] ^ W[32];
-      W1[29] = W[29] ^ W[33];
-      W1[30] = W[30] ^ W[34];
-      W1[31] = W[31] ^ W[35];
-      W1[32] = W[32] ^ W[36];
-      W1[33] = W[33] ^ W[37];
-      W1[34] = W[34] ^ W[38];
-      W1[35] = W[35] ^ W[39];
-      W1[36] = W[36] ^ W[40];
-      W1[37] = W[37] ^ W[41];
-      W1[38] = W[38] ^ W[42];
-      W1[39] = W[39] ^ W[43];
-      W1[40] = W[40] ^ W[44];
-      W1[41] = W[41] ^ W[45];
-      W1[42] = W[42] ^ W[46];
-      W1[43] = W[43] ^ W[47];
-      W1[44] = W[44] ^ W[48];
-      W1[45] = W[45] ^ W[49];
-      W1[46] = W[46] ^ W[50];
-      W1[47] = W[47] ^ W[51];
-      W1[48] = W[48] ^ W[52];
-      W1[49] = W[49] ^ W[53];
-      W1[50] = W[50] ^ W[54];
-      W1[51] = W[51] ^ W[55];
-      W1[52] = W[52] ^ W[56];
-      W1[53] = W[53] ^ W[57];
-      W1[54] = W[54] ^ W[58];
-      W1[55] = W[55] ^ W[59];
-      W1[56] = W[56] ^ W[60];
-      W1[57] = W[57] ^ W[61];
-      W1[58] = W[58] ^ W[62];
-      W1[59] = W[59] ^ W[63];
-      W1[60] = W[60] ^ W[64];
-      W1[61] = W[61] ^ W[65];
-      W1[62] = W[62] ^ W[66];
-      W1[63] = W[63] ^ W[67];
-
       for (size_t j = 0; j < 16; j++)
          {
-         T[j] = SM3_TJ_0_15;
-         SS1 = rotate_left(rotate_left(A, 12) + E + rotate_left(T[j], j), 7);
-         SS2 = SS1 ^ rotate_left(A, 12);
-         TT1 = FF0(A, B, C) + D + SS2 + W1[j];
-         TT2 = GG0(E, F, G) + H + SS1 + W[j];
+         const uint32_t A12 = rotate_left(A, 12);
+         const uint32_t SS1 = rotate_left(A12 + E + SM3_TJ[j], 7);
+         const uint32_t SS2 = SS1 ^ A12;
+         const uint32_t TT1 = FF0(A, B, C) + D + SS2 + (W[j] ^ W[j+4]);
+         const uint32_t TT2 = GG0(E, F, G) + H + SS1 + W[j];
          D = C;
          C = rotate_left(B, 9);
          B = A;
@@ -226,11 +170,11 @@ void SM3::compress_n(const uint8_t input[], size_t blocks)
 
       for (size_t j = 16; j < 64; j++)
          {
-         T[j] = SM3_TJ_16_63;
-         SS1 = rotate_left(rotate_left(A, 12) + E + rotate_left(T[j], j), 7);
-         SS2 = SS1 ^ rotate_left(A, 12);
-         TT1 = FF1(A, B, C) + D + SS2 + W1[j];
-         TT2 = GG1(E, F, G) + H + SS1 + W[j];
+         const uint32_t A12 = rotate_left(A, 12);
+         const uint32_t SS1 = rotate_left(A12 + E + SM3_TJ[j], 7);
+         const uint32_t SS2 = SS1 ^ A12;
+         const uint32_t TT1 = FF1(A, B, C) + D + SS2 + (W[j] ^ W[j+4]);
+         const uint32_t TT2 = GG1(E, F, G) + H + SS1 + W[j];
          D = C;
          C = rotate_left(B, 9);
          B = A;
