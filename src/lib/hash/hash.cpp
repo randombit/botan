@@ -64,6 +64,10 @@
   #include <botan/skein_512.h>
 #endif
 
+#if defined(BOTAN_HAS_STREEBOG)
+  #include <botan/streebog.h>
+#endif
+
 #if defined(BOTAN_HAS_SM3)
   #include <botan/sm3.h>
 #endif
@@ -273,6 +277,17 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
    if(req.algo_name() == "SHAKE-256")
       {
       return std::unique_ptr<HashFunction>(new SHAKE_256(req.arg_as_integer(0, 256)));
+      }
+#endif
+
+#if defined(BOTAN_HAS_STREEBOG)
+   if(algo_spec == "Streebog-256")
+      {
+      return std::unique_ptr<HashFunction>(new Streebog_256);
+      }
+   if(algo_spec == "Streebog-512")
+      {
+      return std::unique_ptr<HashFunction>(new Streebog_512);
       }
 #endif
 

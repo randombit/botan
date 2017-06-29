@@ -151,6 +151,7 @@ rmd160
 shake
 skein
 sm3
+streebog
 tiger
 whirlpool
 keccak
