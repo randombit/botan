@@ -1099,6 +1099,17 @@ BOTAN_DLL int botan_tls_channel_close(botan_tls_channel_t chan);
 
 BOTAN_DLL int botan_tls_channel_destroy(botan_tls_channel_t chan);
 
+/**
+ * Key wrapping as per RFC 3394
+ */
+BOTAN_DLL int botan_key_wrap3394(uint8_t key[], size_t key_len,
+                                 uint8_t kek[], size_t kek_len,
+                                 uint8_t wrapped_key[], size_t *wrapped_key_len);
+
+BOTAN_DLL int botan_key_unwrap3394( uint8_t wrapped_key[], size_t wrapped_key_len,
+                                    uint8_t kek[], size_t kek_len,
+                                    uint8_t key[], size_t *key_len);
+
 #endif
 #ifdef __cplusplus
 }
