@@ -59,6 +59,9 @@ OpenSSL_Cipher_Mode::OpenSSL_Cipher_Mode(const std::string& name,
       throw Invalid_Argument("OpenSSL_BlockCipher: Non-CBC EVP was passed in");
 
    m_cipher = EVP_CIPHER_CTX_new();
+   if (m_cipher == nullptr)
+     throw OpenSSL_Error("Can't allocate new context");
+
    EVP_CIPHER_CTX_init(m_cipher);
    if(!EVP_CipherInit_ex(m_cipher, algo, nullptr, nullptr, nullptr,
                          m_direction == ENCRYPTION ? 1 : 0))

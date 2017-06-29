@@ -67,8 +67,11 @@ OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
       throw Invalid_Argument("OpenSSL_BlockCipher: Non-ECB EVP was passed in");
 
    m_encrypt = EVP_CIPHER_CTX_new();
-   EVP_CIPHER_CTX_init(m_encrypt);
    m_decrypt = EVP_CIPHER_CTX_new();
+   if (m_encrypt == nullptr || m_decrypt == nullptr)
+     throw OpenSSL_Error("Can't allocate new context");
+
+   EVP_CIPHER_CTX_init(m_encrypt);
    EVP_CIPHER_CTX_init(m_decrypt);
 
    if(!EVP_EncryptInit_ex(m_encrypt, algo, nullptr, nullptr, nullptr))
@@ -95,8 +98,11 @@ OpenSSL_BlockCipher::OpenSSL_BlockCipher(const std::string& algo_name,
       throw Invalid_Argument("OpenSSL_BlockCipher: Non-ECB EVP was passed in");
 
    m_encrypt = EVP_CIPHER_CTX_new();
-   EVP_CIPHER_CTX_init(m_encrypt);
    m_decrypt = EVP_CIPHER_CTX_new();
+   if (m_encrypt == nullptr || m_decrypt == nullptr)
+     throw OpenSSL_Error("Can't allocate new context");
+
+   EVP_CIPHER_CTX_init(m_encrypt);
    EVP_CIPHER_CTX_init(m_decrypt);
 
    if(!EVP_EncryptInit_ex(m_encrypt, algo, nullptr, nullptr, nullptr))
