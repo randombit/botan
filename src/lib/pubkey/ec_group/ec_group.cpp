@@ -118,7 +118,13 @@ EC_Group::DER_encode(EC_Group_Encoding form) const
          .get_contents_unlocked();
       }
    else if(form == EC_DOMPAR_ENC_OID)
+      {
+      if(get_oid().empty())
+         {
+         throw Encoding_Error("Cannot encode EC_Group as OID because OID not set");
+         }
       return DER_Encoder().encode(OID(get_oid())).get_contents_unlocked();
+      }
    else if(form == EC_DOMPAR_ENC_IMPLICITCA)
       return DER_Encoder().encode_null().get_contents_unlocked();
    else
