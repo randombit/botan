@@ -1,6 +1,6 @@
 /*
 * SM2
-* (C) Ribose Inc
+* (C) 2017 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,9 +10,6 @@
 #include <botan/keypair.h>
 #include <botan/reducer.h>
 #include <botan/hash.h>
-
-#include <iostream>
-#include <botan/hex.h>
 
 namespace Botan {
 
@@ -71,19 +68,6 @@ std::vector<uint8_t> compute_za(HashFunction& hash,
    std::vector<uint8_t> za(hash.output_length());
    hash.final(za.data());
 
-   #if 0
-   std::cout << "Ent0 " << (int)get_byte(0, uid_len) << "\n";
-   std::cout << "Ent1 " << (int)get_byte(1, uid_len) << "\n";
-   std::cout << "ID " << user_id << "\n";
-   std::cout << "A = " << Botan::hex_encode(BigInt::encode_1363(domain.get_curve().get_a(), p_bytes)) << "\n";
-   std::cout << "B = " << Botan::hex_encode(BigInt::encode_1363(domain.get_curve().get_b(), p_bytes)) << "\n";
-   std::cout << "xG = " << Botan::hex_encode(BigInt::encode_1363(domain.get_base_point().get_affine_x(), p_bytes)) << "\n";
-   std::cout << "yG = " << Botan::hex_encode(BigInt::encode_1363(domain.get_base_point().get_affine_y(), p_bytes)) << "\n";
-   std::cout << "xP = " << Botan::hex_encode(BigInt::encode_1363(pubkey.get_affine_x(), p_bytes)) << "\n";
-   std::cout << "yP = " << Botan::hex_encode(BigInt::encode_1363(pubkey.get_affine_y(), p_bytes)) << "\n";
-   std::cout << "ZA = " << hex_encode(za) << "\n";
-   #endif
-   
    return za;
    }
 
