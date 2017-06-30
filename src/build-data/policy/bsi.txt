@@ -92,6 +92,7 @@ noekeon_simd
 seed
 serpent
 serpent_simd
+sm4
 threefish
 threefish_avx2
 twofish
@@ -118,10 +119,12 @@ hkdf
 kdf1
 kdf2
 prf_x942
+sp800_56a
 
 # pubkey
 cecpq1
 curve25519
+ed25519
 elgamal
 gost_3410
 mce
