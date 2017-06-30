@@ -131,6 +131,7 @@ mce
 mceies
 rfc6979
 newhope
+sm2
 
 # pk_pad
 #eme_pkcs1 // needed for tls

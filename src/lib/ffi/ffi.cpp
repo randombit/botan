@@ -45,6 +45,10 @@
   #include <botan/ecdsa.h>
 #endif
 
+#if defined(BOTAN_HAS_SM2)
+  #include <botan/sm2.h>
+#endif
+
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
   #include <botan/ecc_key.h>
 #endif
@@ -1797,6 +1801,32 @@ int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
 #endif
    }
 
+int botan_pubkey_load_sm2(botan_pubkey_t* key,
+                          const botan_mp_t public_x,
+                          const botan_mp_t public_y,
+                          const char* curve_name)
+   {
+#if defined(BOTAN_HAS_SM2)
+   std::unique_ptr<Botan::SM2_Signature_PublicKey> p_key;
+   try
+      {
+      if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name))
+         {
+         *key = new botan_pubkey_struct(p_key.release());
+         return 0;
+         }
+      }
+   catch(std::exception& exn)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, exn.what());
+      }
+   return -1;
+#else
+   BOTAN_UNUSED(key, public_x, public_y, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 int botan_pubkey_load_ecdh(botan_pubkey_t* key,
                                    const botan_mp_t public_x,
                                    const botan_mp_t public_y,
@@ -1847,6 +1877,32 @@ int botan_privkey_load_ecdsa(botan_privkey_t* key,
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
+
+int botan_privkey_load_sm2(botan_privkey_t* key,
+                           const botan_mp_t scalar,
+                           const char* curve_name)
+   {
+#if defined(BOTAN_HAS_SM2)
+   std::unique_ptr<Botan::SM2_Signature_PrivateKey> p_key;
+   try
+      {
+      if(!privkey_load_ec(p_key, safe_get(scalar), curve_name))
+         {
+         *key = new botan_privkey_struct(p_key.release());
+         return 0;
+         }
+      }
+   catch(std::exception& exn)
+      {
+      log_exception(BOTAN_CURRENT_FUNCTION, exn.what());
+      }
+   return -1;
+#else
+   BOTAN_UNUSED(key, scalar, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
 int botan_privkey_load_ecdh(botan_privkey_t* key,
                           const botan_mp_t scalar,
                           const char* curve_name)
