@@ -20,7 +20,10 @@ gmac
 
 # kdf
 sp800_108
+sp800_56a
 sp800_56c
+
+shake
 
 # pk_pad
 eme_oaep
@@ -46,6 +49,13 @@ rfc3394
 # block
 aes_ni
 aes_ssse3
+
+# hash
+sha1_sse2
+sha1_x86
+sha1_armv8
+sha2_32_x86
+sha2_32_armv8
 
 # modes
 clmul
@@ -85,6 +95,7 @@ noekeon_simd
 seed
 serpent
 serpent_simd
+sm4
 threefish
 threefish_avx2
 twofish
@@ -112,6 +123,7 @@ prf_x942
 
 # pubkey
 curve25519
+ed25519
 ecgdsa
 eckcdsa
 elgamal
@@ -122,6 +134,7 @@ rfc6979
 newhope
 cecpq1
 xmss
+sm2
 
 # pk_pad
 #eme_pkcs1 // needed for tls

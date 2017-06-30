@@ -5,6 +5,7 @@ CRYPTO_BOX -> 20131128
 <requires>
 filters
 ctr
+serpent
 hmac
 rng
 serpent

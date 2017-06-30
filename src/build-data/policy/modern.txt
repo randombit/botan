@@ -28,6 +28,7 @@ bcrypt
 # required for private key encryption
 pbes2
 
+ed25519
 curve25519
 ecdh
 ecdsa
@@ -58,6 +59,12 @@ aes_ssse3
 serpent_simd
 threefish_avx2
 chacha_sse2
+
+sha1_sse2
+sha1_x86
+sha1_armv8
+sha2_32_x86
+sha2_32_armv8
 
 simd
 
