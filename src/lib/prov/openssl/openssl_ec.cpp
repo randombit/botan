@@ -62,35 +62,39 @@ secure_vector<uint8_t> PKCS8_for_openssl(const EC_PrivateKey& ec)
       .get_contents();
    }
 
-int OpenSSL_EC_nid_for(const EC_Group& group)
+int OpenSSL_EC_nid_for(const OID& oid)
    {
+   if(oid.empty())
+      return -1;
 
-   if(group == EC_Group("secp192r1"))
+   const std::string name = OIDS::lookup(oid);
+
+   if(name == "secp192r1")
       return NID_X9_62_prime192v1;
-   if(group == EC_Group("secp224r1"))
+   if(name == "secp224r1")
       return NID_secp224r1;
-   if(group == EC_Group("secp256r1"))
+   if(name == "secp256r1")
       return NID_X9_62_prime256v1;
-   if(group == EC_Group("secp384r1"))
+   if(name == "secp384r1")
       return NID_secp384r1;
-   if(group == EC_Group("secp521r1"))
+   if(name == "secp521r1")
       return NID_secp521r1;
 
    // OpenSSL 1.0.2 added brainpool curves
 #if OPENSSL_VERSION_NUMBER >= 0x1000200fL
-   if(group == EC_Group("brainpool160r1"))
+   if(name == "brainpool160r1")
       return NID_brainpoolP160r1;
-   if(group == EC_Group("brainpool192r1"))
+   if(name == "brainpool192r1")
       return NID_brainpoolP192r1;
-   if(group == EC_Group("brainpool224r1"))
+   if(name == "brainpool224r1")
       return NID_brainpoolP224r1;
-   if(group == EC_Group("brainpool256r1"))
+   if(name == "brainpool256r1")
       return NID_brainpoolP256r1;
-   if(group == EC_Group("brainpool320r1"))
+   if(name == "brainpool320r1")
       return NID_brainpoolP320r1;
-   if(group == EC_Group("brainpool384r1"))
+   if(name == "brainpool384r1")
       return NID_brainpoolP384r1;
-   if(group == EC_Group("brainpool512r1"))
+   if(name == "brainpool512r1")
       return NID_brainpoolP512r1;
 #endif
 
@@ -224,7 +228,7 @@ class OpenSSL_ECDSA_Signing_Operation : public PK_Ops::Signature_with_EMSA
 std::unique_ptr<PK_Ops::Verification>
 make_openssl_ecdsa_ver_op(const ECDSA_PublicKey& key, const std::string& params)
    {
-   const int nid = OpenSSL_EC_nid_for(key.domain());
+   const int nid = OpenSSL_EC_nid_for(key.domain().get_oid());
    if(nid < 0)
       {
       throw Lookup_Error("OpenSSL ECDSA does not support this curve");
@@ -235,7 +239,7 @@ make_openssl_ecdsa_ver_op(const ECDSA_PublicKey& key, const std::string& params)
 std::unique_ptr<PK_Ops::Signature>
 make_openssl_ecdsa_sig_op(const ECDSA_PrivateKey& key, const std::string& params)
    {
-   const int nid = OpenSSL_EC_nid_for(key.domain());
+   const int nid = OpenSSL_EC_nid_for(key.domain().get_oid());
    if(nid < 0)
       {
       throw Lookup_Error("OpenSSL ECDSA does not support this curve");
@@ -306,7 +310,7 @@ class OpenSSL_ECDH_KA_Operation : public PK_Ops::Key_Agreement_with_KDF
 std::unique_ptr<PK_Ops::Key_Agreement>
 make_openssl_ecdh_ka_op(const ECDH_PrivateKey& key, const std::string& params)
    {
-   const int nid = OpenSSL_EC_nid_for(key.domain());
+   const int nid = OpenSSL_EC_nid_for(key.domain().get_oid());
    if(nid < 0)
       {
       throw Lookup_Error("OpenSSL ECDH does not support this curve");
