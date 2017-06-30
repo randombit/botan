@@ -152,7 +152,7 @@ Public Key Cryptography
 
 * RSA signatures and encryption
 * DH and ECDH key agreement
-* Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, and GOST 34.10-2001
+* Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, SM2, and GOST 34.10-2001
 * Post-quantum signature scheme XMSS
 * Post-quantum key agreement schemes McEliece and NewHope
 * ElGamal encryption
