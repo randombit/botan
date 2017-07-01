@@ -16,7 +16,7 @@
 namespace Botan {
 
 /**
-* An element of the field \Z/(2^255-19)
+* An element of the field \\Z/(2^255-19)
 */
 class FE_25519
    {
