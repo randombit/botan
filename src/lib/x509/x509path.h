@@ -179,7 +179,7 @@ class BOTAN_DLL Path_Validation_Result
 
 /**
 * PKIX Path Validation
-* @param end_certs certificate chain to validate
+* @param end_certs certificate chain to validate (with end entity certificate in end_certs[0])
 * @param restrictions path validation restrictions
 * @param trusted_roots list of certificate stores that contain trusted certificates
 * @param hostname if not empty, compared against the DNS name in end_certs[0]
