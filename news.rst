@@ -28,6 +28,10 @@ Version 2.2.0, Not Yet Released
 * Add HashFunction::copy_state which allows efficiently computing the
   hash of several messages with a common prefix (GH #1056 #1037)
 
+* ECC keys now encode their parameters using an OID instead of a literal
+  encoding of the domain parameters. This will lead to smaller public and
+  private keys in most instances. (GH #1093)
+
 * The OpenSSL backend now supports the 1.1.0 API (GH #1056)
 
 * Fix a bug in certificate path length checking that could cause valid
@@ -53,6 +57,9 @@ Version 2.2.0, Not Yet Released
 
 * Add command line utils `hmac` (GH #1001), `encryption` (GH #359),
   `hex_enc`, and `hex_dec`.
+
+* Fix an error in `sign_cert` command line util, which ignored the
+  `--ca-key-pass` option. (GH #1106)
 
 * The `speed` util can now benchmark multiple buffer sizes (GH #1084)
 
