@@ -750,22 +750,22 @@ Code example:
       /************ RSA encrypt *************/
 
       Botan::secure_vector<uint8_t> plaintext = { 0x00, 0x01, 0x02, 0x03 };
-      Botan::PK_Encryptor_EME encryptor( rsa_keypair.first, rng, "Raw", "pkcs11" );
+      Botan::PK_Encryptor_EME encryptor( rsa_keypair.first, rng, "Raw" );
       auto ciphertext = encryptor.encrypt( plaintext, rng );
 
       /************ RSA decrypt *************/
 
-      Botan::PK_Decryptor_EME decryptor( rsa_keypair.second, rng, "Raw", "pkcs11" );
+      Botan::PK_Decryptor_EME decryptor( rsa_keypair.second, rng, "Raw" );
       plaintext = decryptor.decrypt( ciphertext );
 
       /************ RSA sign *************/
 
-      Botan::PK_Signer signer( rsa_keypair.second, rng, "EMSA4(SHA-256)", Botan::IEEE_1363, "pkcs11" );
+      Botan::PK_Signer signer( rsa_keypair.second, rng, "EMSA4(SHA-256)", Botan::IEEE_1363 );
       auto signature = signer.sign_message( plaintext, rng );
 
       /************ RSA verify *************/
 
-      Botan::PK_Verifier verifier( rsa_keypair.first, "EMSA4(SHA-256)", Botan::IEEE_1363, "pkcs11" );
+      Botan::PK_Verifier verifier( rsa_keypair.first, "EMSA4(SHA-256)", Botan::IEEE_1363 );
       auto ok = verifier.verify_message( plaintext, signature );
 
 ECDSA
