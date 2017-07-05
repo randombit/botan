@@ -100,4 +100,4 @@ distclean: clean
 	$(RM) Makefile $(LIB_BASENAME).* $(CLI).*
 
 install: $(CLI) docs
-	$(SCRIPTS_DIR)\install.py --destdir=%{destdir} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
+	$(SCRIPTS_DIR)\install.py --prefix=%{prefix} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}
