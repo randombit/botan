@@ -2592,12 +2592,13 @@ def detect_compiler_version(ccinfo, cc_bin, os_name):
         cc_version = None
 
         version = re.compile(version_re_str)
-        cc_output = subprocess.Popen(cc_cmd,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     universal_newlines=True).communicate()
+        stdout, stderr = subprocess.Popen(
+            cc_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True).communicate()
+        cc_output = stdout + "\n" + stderr
 
-        cc_output = str(cc_output)
         match = version.search(cc_output)
 
         if match:
