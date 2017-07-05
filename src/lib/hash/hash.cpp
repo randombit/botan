@@ -101,10 +101,10 @@ namespace Botan {
 std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
                                                    const std::string& provider)
    {
-#if defined(BOTAN_HAS_BEARSSL)
-   if(provider.empty() || provider == "bearssl")
+#if defined(BOTAN_HAS_OPENSSL)
+   if(provider.empty() || provider == "openssl")
       {
-      if(auto hash = make_bearssl_hash(algo_spec))
+      if(auto hash = make_openssl_hash(algo_spec))
          return hash;
 
       if(!provider.empty())
@@ -112,10 +112,10 @@ std::unique_ptr<HashFunction> HashFunction::create(const std::string& algo_spec,
       }
 #endif
 
-#if defined(BOTAN_HAS_OPENSSL)
-   if(provider.empty() || provider == "openssl")
+#if defined(BOTAN_HAS_BEARSSL)
+   if(provider.empty() || provider == "bearssl")
       {
-      if(auto hash = make_openssl_hash(algo_spec))
+      if(auto hash = make_bearssl_hash(algo_spec))
          return hash;
 
       if(!provider.empty())

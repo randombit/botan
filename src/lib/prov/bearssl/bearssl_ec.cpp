@@ -1,10 +1,12 @@
 /*
 * ECDSA via BearSSL
 * (C) 2015,2016 Jack Lloyd
+* (C) 2017 Patrick Wildt
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/scan_name.h>
 #include <botan/internal/bearssl.h>
@@ -31,13 +33,18 @@ namespace Botan {
 
 namespace {
 
-int BearSSL_EC_curve_for(const EC_Group& group)
+int BearSSL_EC_curve_for(const OID& oid)
    {
-   if(group == EC_Group("secp256r1"))
+   if(oid.empty())
+      return -1;
+
+   const std::string name = OIDS::lookup(oid);
+
+   if(name == "secp256r1")
       return BR_EC_secp256r1;
-   if(group == EC_Group("secp384r1"))
+   if(name == "secp384r1")
       return BR_EC_secp384r1;
-   if(group == EC_Group("secp521r1"))
+   if(name == "secp521r1")
       return BR_EC_secp521r1;
 
    return -1;
@@ -56,13 +63,13 @@ const br_hash_class *BearSSL_hash_class_for(const std::string& emsa)
    if (emsa == "EMSA1(SHA-512)")
       return &br_sha512_vtable;
 
-   return NULL;
+   return nullptr;
    }
 }
 
 #endif
 
-#if defined(BOTAN_HAS_ECDSA) && !defined(OPENSSL_NO_ECDSA)
+#if defined(BOTAN_HAS_ECDSA)
 
 namespace {
 
@@ -72,7 +79,7 @@ class BearSSL_ECDSA_Verification_Operation : public PK_Ops::Verification
       BearSSL_ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const std::string& emsa) :
          m_order_bits(ecdsa.domain().get_order().bits())
          {
-         const int curve = BearSSL_EC_curve_for(ecdsa.domain());
+         const int curve = BearSSL_EC_curve_for(ecdsa.domain().get_oid());
          if (curve < 0)
             throw Lookup_Error("BearSSL ECDSA does not support this curve");
 
@@ -88,7 +95,7 @@ class BearSSL_ECDSA_Verification_Operation : public PK_Ops::Verification
          const secure_vector<uint8_t> enc = EC2OSP(ecdsa.public_point(), PointGFp::UNCOMPRESSED);
          m_key.qlen = enc.size();
          m_key.q = new uint8_t[m_key.qlen];
-         memcpy(m_key.q, (unsigned char *)enc.data(), m_key.qlen);
+         memcpy(m_key.q, enc.data(), m_key.qlen);
          m_key.curve = curve;
          }
 
@@ -113,6 +120,11 @@ class BearSSL_ECDSA_Verification_Operation : public PK_Ops::Verification
 
       size_t max_input_bits() const { return m_order_bits; }
 
+      ~BearSSL_ECDSA_Verification_Operation()
+         {
+         delete m_key.q;
+         }
+
    private:
       br_ec_public_key m_key;
       std::unique_ptr<HashFunction> m_hf;
@@ -126,7 +138,7 @@ class BearSSL_ECDSA_Signing_Operation : public PK_Ops::Signature
       BearSSL_ECDSA_Signing_Operation(const ECDSA_PrivateKey& ecdsa, const std::string& emsa) :
          m_order_bits(ecdsa.domain().get_order().bits())
          {
-         const int curve = BearSSL_EC_curve_for(ecdsa.domain());
+         const int curve = BearSSL_EC_curve_for(ecdsa.domain().get_oid());
          if(curve < 0)
             throw Lookup_Error("BearSSL ECDSA does not support this curve");
 
@@ -145,7 +157,6 @@ class BearSSL_ECDSA_Signing_Operation : public PK_Ops::Signature
          m_key.curve = curve;
          }
 
-
       void update(const uint8_t msg[], size_t msg_len) override
          {
          m_hf->update(msg, msg_len);
@@ -155,10 +166,9 @@ class BearSSL_ECDSA_Signing_Operation : public PK_Ops::Signature
          {
          const size_t order_bytes = (m_order_bits + 7) / 8;
          secure_vector<uint8_t> sigval(2*order_bytes);
-         size_t sign_len;
 
          br_ecdsa_sign engine = br_ecdsa_sign_raw_get_default();
-         sign_len = engine(&br_ec_prime_i31, m_hash, m_hf->final().data(), &m_key, sigval.data());
+         size_t sign_len = engine(&br_ec_prime_i31, m_hash, m_hf->final().data(), &m_key, sigval.data());
          if (sign_len == 0)
             throw BearSSL_Error("br_ecdsa_sign");
 
@@ -167,6 +177,11 @@ class BearSSL_ECDSA_Signing_Operation : public PK_Ops::Signature
          }
 
       size_t max_input_bits() const { return m_order_bits; }
+
+      ~BearSSL_ECDSA_Signing_Operation()
+         {
+         delete m_key.x;
+         }
 
    private:
       br_ec_private_key m_key;
