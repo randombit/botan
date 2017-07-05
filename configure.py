@@ -458,7 +458,8 @@ def process_command_line(args): # pylint: disable=too-many-locals
     install_group.add_option('--prefix', metavar='DIR',
                              help='set the install prefix')
     install_group.add_option('--destdir', metavar='DIR',
-                             help='set the install directory')
+                             help='set the destination prefix (REMOVED, use DESTDIR ' \
+                                  'environment variable when calling \'make install\')')
     install_group.add_option('--docdir', metavar='DIR',
                              help='set the doc install dir')
     install_group.add_option('--bindir', metavar='DIR',
@@ -1893,7 +1894,6 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'program_suffix': options.program_suffix or osinfo.program_suffix,
 
         'prefix': options.prefix or osinfo.install_root,
-        'destdir': options.destdir or options.prefix or osinfo.install_root,
         'bindir': options.bindir or osinfo.bin_dir,
         'libdir': options.libdir or osinfo.lib_dir,
         'includedir': options.includedir or osinfo.header_dir,
@@ -2859,6 +2859,10 @@ def validate_options(options, info_os, info_cc, available_module_policies):
 
     if options.module_policy and options.module_policy not in available_module_policies:
         raise UserError("Unknown module set %s" % options.module_policy)
+
+    if options.destdir:
+        raise UserError("--destdir was removed. Use the DESTDIR environment "
+                        "variable instead when calling 'make install'")
 
     # Warnings
 
