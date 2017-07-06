@@ -70,29 +70,24 @@ def prepend_destdir(path):
     want relative paths to work and leverage the os awareness of
     os.path.join().
     """
-    try:
-        destdir = os.environ['DESTDIR']
-    except KeyError as e:
-        destdir = ""
+    destdir = os.environ.get('DESTDIR', "")
 
+    #DESTDIR is non-empty, but we cannot join all prefix paths.
+
+    #These will be rejected via an exception:
+    #  C:/foo
+    #  C:foo
+    #  \\foo (Python >3.1 only)
+    #  \\foo\bar (Python >3.1 only)
+    #  ../somewhere/else
+
+    #These will be normalized to a relative path and joined with DESTDIR:
+    #  /absolute/dir
+    #  relative/dir
+    #  /dir/with/../inside
+    #  ./relative/to/me
+    #  ~/botan-install-test
     if destdir != "":
-        """
-        DESTDIR is non-empty, but we cannot join all prefix paths.
-
-        These will be rejected via an exception:
-          C:/foo
-          C:foo
-          \\foo (Python >3.1 only)
-          \\foo\bar (Python >3.1 only)
-          ../somewhere/else
-
-        These will be normalized to a relative path and joined with DESTDIR:
-          /absolute/dir
-          relative/dir
-          /dir/with/../inside
-          ./relative/to/me
-          ~/botan-install-test
-        """
 
         # ".." makes no sense, as it would certainly escape the DESTDIR prefix
         if path.startswith(".."):
@@ -112,6 +107,7 @@ def prepend_destdir(path):
         path = os.path.join(destdir, path)
 
     return path
+
 def makedirs(dirname, exist_ok = True):
     try:
         logging.debug('Creating directory %s' % (dirname))

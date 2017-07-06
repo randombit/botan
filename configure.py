@@ -2849,7 +2849,7 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         raise UserError("Unknown module set %s" % options.module_policy)
 
     if options.destdir:
-       raise UserError("--destdir was removed. Use the DESTDIR environment variable instead when calling 'make install'")
+        raise UserError("--destdir was removed. Use the DESTDIR environment variable instead when calling 'make install'")
 
     # Warnings
 
