@@ -72,22 +72,22 @@ def prepend_destdir(path):
     """
     destdir = os.environ.get('DESTDIR', "")
 
-    #DESTDIR is non-empty, but we cannot join all prefix paths.
-
-    #These will be rejected via an exception:
-    #  C:/foo
-    #  C:foo
-    #  \\foo (Python >3.1 only)
-    #  \\foo\bar (Python >3.1 only)
-    #  ../somewhere/else
-
-    #These will be normalized to a relative path and joined with DESTDIR:
-    #  /absolute/dir
-    #  relative/dir
-    #  /dir/with/../inside
-    #  ./relative/to/me
-    #  ~/botan-install-test
     if destdir != "":
+        #DESTDIR is non-empty, but we cannot join all prefix paths.
+
+        #These will be rejected via an exception:
+        #  C:/foo
+        #  C:foo
+        #  \\foo (Python >3.1 only)
+        #  \\foo\bar (Python >3.1 only)
+        #  ../somewhere/else
+
+        #These will be normalized to a relative path and joined with DESTDIR:
+        #  /absolute/dir
+        #  relative/dir
+        #  /dir/with/../inside
+        #  ./relative/to/me
+        #  ~/botan-install-test
 
         # ".." makes no sense, as it would certainly escape the DESTDIR prefix
         if path.startswith(".."):
