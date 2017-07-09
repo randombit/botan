@@ -458,7 +458,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
     install_group.add_option('--prefix', metavar='DIR',
                              help='set the install prefix')
     install_group.add_option('--destdir', metavar='DIR',
-                             help='set the destination prefix (REMOVED, use DESTDIR '
+                             help='set the destination prefix (REMOVED, use DESTDIR ' \
                                   'environment variable when calling \'make install\')')
     install_group.add_option('--docdir', metavar='DIR',
                              help='set the doc install dir')
