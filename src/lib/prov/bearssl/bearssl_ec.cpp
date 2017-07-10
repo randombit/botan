@@ -84,12 +84,12 @@ class BearSSL_ECDSA_Verification_Operation : public PK_Ops::Verification
             throw Lookup_Error("BearSSL ECDSA does not support this curve");
 
          m_hash = BearSSL_hash_class_for(emsa);
-         if (m_hash == NULL)
+         if (m_hash == nullptr)
             throw Lookup_Error("BearSSL ECDSA does not support EMSA " + emsa);
 
          const SCAN_Name req(emsa);
          m_hf = make_bearssl_hash(req.arg(0));
-         if (m_hf == NULL)
+         if (m_hf == nullptr)
             throw Lookup_Error("BearSSL ECDSA does not support hash " + req.arg(0));
 
          const secure_vector<uint8_t> enc = EC2OSP(ecdsa.public_point(), PointGFp::UNCOMPRESSED);
@@ -143,12 +143,12 @@ class BearSSL_ECDSA_Signing_Operation : public PK_Ops::Signature
             throw Lookup_Error("BearSSL ECDSA does not support this curve");
 
          m_hash = BearSSL_hash_class_for(emsa);
-         if (m_hash == NULL)
+         if (m_hash == nullptr)
             throw Lookup_Error("BearSSL ECDSA does not support EMSA " + emsa);
 
          const SCAN_Name req(emsa);
          m_hf = make_bearssl_hash(req.arg(0));
-         if (m_hf == NULL)
+         if (m_hf == nullptr)
             throw Lookup_Error("BearSSL ECDSA does not support hash " + req.arg(0));
 
          m_key.xlen = ecdsa.private_value().bytes();
