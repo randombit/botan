@@ -262,11 +262,17 @@ class PKCS8_Tool final : public Command
 
       void go() override
          {
-         std::unique_ptr<Botan::Private_Key> key(
-            Botan::PKCS8::load_key(
-               get_arg("key"),
-               rng(),
-               get_arg("pass-in")));
+         std::unique_ptr<Botan::Private_Key> key;
+         std::string pass_in = get_arg("pass-in");
+
+         if (pass_in.empty())
+         {
+            key.reset(Botan::PKCS8::load_key(get_arg("key"), rng()));
+         }
+         else
+         {
+            key.reset(Botan::PKCS8::load_key(get_arg("key"), rng(), pass_in));
+         }
 
          const std::chrono::milliseconds pbe_millis(get_arg_sz("pbe-millis"));
          const std::string pbe = get_arg("pbe");
@@ -285,28 +291,28 @@ class PKCS8_Tool final : public Command
             }
          else
             {
-            const std::string pass = get_arg("pass-out");
+            const std::string pass_out = get_arg("pass-out");
 
             if(der_out)
                {
-               if(pass.empty())
+               if(pass_out.empty())
                   {
                   write_output(Botan::PKCS8::BER_encode(*key));
                   }
                else
                   {
-                  write_output(Botan::PKCS8::BER_encode(*key, rng(), pass, pbe_millis, pbe));
+                  write_output(Botan::PKCS8::BER_encode(*key, rng(), pass_out, pbe_millis, pbe));
                   }
                }
             else
                {
-               if(pass.empty())
+               if(pass_out.empty())
                   {
                   output() << Botan::PKCS8::PEM_encode(*key);
                   }
                else
                   {
-                  output() << Botan::PKCS8::PEM_encode(*key, rng(), pass, pbe_millis, pbe);
+                  output() << Botan::PKCS8::PEM_encode(*key, rng(), pass_out, pbe_millis, pbe);
                   }
                }
             }
