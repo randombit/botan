@@ -81,7 +81,7 @@ class secure_allocator
 
       void deallocate(pointer p, size_type n)
          {
-         secure_scrub_memory(p, n);
+         secure_scrub_memory(p, sizeof(T)*n);
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
          if(mlock_allocator::instance().deallocate(p, n, sizeof(T)))

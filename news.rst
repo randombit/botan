@@ -25,6 +25,9 @@ Version 2.2.0, Not Yet Released
 * Add support for HOTP (RFC 4226) and TOTP (RFC 6238)
   one-time-password algorithms (GH #1054)
 
+* Fix a bug that caused secure_allocator to not fully zeroize blocks
+  when sizeof(T) was greater than 1.
+
 * Add HashFunction::copy_state which allows efficiently computing the
   hash of several messages with a common prefix (GH #1056 #1037)
 

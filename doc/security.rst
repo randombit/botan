@@ -18,6 +18,19 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2017
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2017-07-16: Failure to fully zeroize memory before free
+
+  The secure_allocator type attempts to zeroize memory before freeing it. Due to
+  a error sometimes only a portion of the memory would be zeroed, because of a
+  confusion between the number of elements vs the number of bytes that those
+  elements use. So byte vectors would always be fully zeroed (since the two
+  notions result in the same value), but for example with an array of 32-bit
+  integers, only the first 1/4 of the elements would be zeroed before being
+  deallocated. This may result in information leakage, if an attacker can access
+  memory on the heap. Reported by Roman Pozlevich.
+
+  Bug introduced in 1.11.10, fixed in 2.2.0
+
 * 2017-04-04 (CVE-2017-2801): Incorrect comparison in X.509 DN strings
 
   Botan's implementation of X.509 name comparisons had a flaw which
