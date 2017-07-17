@@ -14,8 +14,6 @@ import os
 import sys
 import unittest
 
-import install
-
 sys.path.append("../..") # Botan repo root
 from configure import ModulesChooser # pylint: disable=wrong-import-position
 from install import prepend_destdir # pylint: disable=wrong-import-position
