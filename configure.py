@@ -2864,6 +2864,10 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         raise UserError("--destdir was removed. Use the DESTDIR environment "
                         "variable instead when calling 'make install'")
 
+    if options.prefix and not os.path.isabs(options.prefix):
+        raise UserError("expected an absolute directory name for --prefix: %s" %
+                        options.prefix)
+
     # Warnings
 
     if options.os == 'windows' and options.compiler == 'gcc':
