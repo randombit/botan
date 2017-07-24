@@ -98,7 +98,7 @@ if [ "${BUILD_MODE:0:6}" = "cross-" ]; then
             CC_BIN=powerpc-linux-gnu-g++-4.8
             TEST_PREFIX=(qemu-ppc -L /usr/powerpc-linux-gnu/)
             CFG_FLAGS+=(--cpu=ppc32)
-            # Everything enabled to ensure good big-endian test coverage
+            CFG_FLAGS+=(--module-policy=modern --enable-modules=tls)
         elif [ "$BUILD_MODE" = "cross-ppc64" ]; then
             CC_BIN=powerpc64le-linux-gnu-g++-4.8
             TEST_PREFIX=(qemu-ppc64le -L /usr/powerpc64le-linux-gnu/)
