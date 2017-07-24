@@ -143,6 +143,11 @@ class BOTAN_DLL Response
                                          const X509_Certificate& subject,
                                          std::chrono::system_clock::time_point ref_time = std::chrono::system_clock::now()) const;
 
+      /**
+       * @return the certificate chain, if provided in response
+       */
+      const std::vector<X509_Certificate> &certificates() const { return  m_certs; }
+
    private:
       std::vector<uint8_t> m_response_bits;
       X509_Time m_produced_at;
