@@ -58,6 +58,8 @@ class OpenSSL_HashFunction : public HashFunction
          m_md = EVP_MD_CTX_new();
 #endif
 
+         if(m_md == nullptr)
+            throw OpenSSL_Error("Can't allocate new context");
          EVP_MD_CTX_init(m_md);
          if(md && !EVP_DigestInit_ex(m_md, md, nullptr))
             throw OpenSSL_Error("EVP_DigestInit_ex");
