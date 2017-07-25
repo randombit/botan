@@ -2,6 +2,17 @@
 FFI -> 20170327
 </defines>
 
+<header:internal>
+ffi_mp.h
+ffi_pkey.h
+ffi_rng.h
+ffi_util.h
+</header:internal>
+
+<header:public>
+ffi.h
+</header:public>
+
 <requires>
 aead
 kdf
