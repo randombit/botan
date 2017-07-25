@@ -134,11 +134,19 @@ doesn't exactly work well either!
 * To recover the msg, func, and line
 
 */
+#define BOTAN_FFI_SUCCESS (0)
+
+#define BOTAN_FFI_ERROR_INVALID_INPUT (-1)
+#define BOTAN_FFI_ERROR_BAD_MAC (-2)
+
 #define BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE (-10)
 #define BOTAN_FFI_ERROR_EXCEPTION_THROWN (-20)
 #define BOTAN_FFI_ERROR_BAD_FLAG (-30)
 #define BOTAN_FFI_ERROR_NULL_POINTER (-31)
+#define BOTAN_FFI_ERROR_BAD_PARAMETER (-32)
 #define BOTAN_FFI_ERROR_NOT_IMPLEMENTED (-40)
+
+#define BOTAN_FFI_ERROR_UNKNOWN_ERROR (-100)
 
 //const char* botan_error_description(int err);
 
