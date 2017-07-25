@@ -199,6 +199,10 @@ int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
    return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
    }
 
+#define BOTAN_FFI_DO(T, obj, param, block)                              \
+   apply_fn(obj, BOTAN_CURRENT_FUNCTION,                                \
+            [=](T& param) -> int { do { block } while(0); return BOTAN_FFI_SUCCESS; })
+
 template<typename T, uint32_t M>
 int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name)
    {
@@ -211,6 +215,7 @@ int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name)
          return BOTAN_FFI_ERROR_INVALID_INPUT;
 
       delete obj;
+      return BOTAN_FFI_SUCCESS;
       }
    catch(std::exception& e)
       {
@@ -221,10 +226,6 @@ int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name)
       return ffi_error_exception_thrown(func_name, "unknown exception");
       }
    }
-
-#define BOTAN_FFI_DO(T, obj, param, block)                              \
-   apply_fn(obj, BOTAN_CURRENT_FUNCTION,                                \
-            [=](T& param) -> int { do { block } while(0); return BOTAN_FFI_SUCCESS; })
 
 #define BOTAN_FFI_CHECKED_DELETE(o) ffi_delete_object(o, BOTAN_CURRENT_FUNCTION)
 
