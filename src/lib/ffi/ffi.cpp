@@ -108,9 +108,11 @@ struct botan_struct
       botan_struct(T* obj) : m_magic(MAGIC), m_obj(obj) {}
       ~botan_struct() { m_magic = 0; m_obj.reset(); }
 
+      bool magic_ok() const { return (m_magic == MAGIC); }
+
       T* get() const
          {
-         if(m_magic != MAGIC)
+         if(magic_ok() == false)
             throw FFI_Error("Bad magic " + std::to_string(m_magic) +
                             " in ffi object expected " + std::to_string(MAGIC));
          return m_obj.get();
@@ -197,9 +199,34 @@ int apply_fn(botan_struct<T, M>* o, const char* func_name, F func)
    return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
    }
 
+template<typename T, uint32_t M>
+int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name)
+   {
+   try
+      {
+      if(obj == nullptr)
+         return BOTAN_FFI_SUCCESS; // ignore delete of null objects
+
+      if(obj->magic_ok() == false)
+         return BOTAN_FFI_ERROR_INVALID_INPUT;
+
+      delete obj;
+      }
+   catch(std::exception& e)
+      {
+      return ffi_error_exception_thrown(func_name, e.what());
+      }
+   catch(...)
+      {
+      return ffi_error_exception_thrown(func_name, "unknown exception");
+      }
+   }
+
 #define BOTAN_FFI_DO(T, obj, param, block)                              \
    apply_fn(obj, BOTAN_CURRENT_FUNCTION,                                \
             [=](T& param) -> int { do { block } while(0); return BOTAN_FFI_SUCCESS; })
+
+#define BOTAN_FFI_CHECKED_DELETE(o) ffi_delete_object(o, BOTAN_CURRENT_FUNCTION)
 
 inline int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], size_t buf_len)
    {
@@ -499,8 +526,7 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type)
 
 int botan_rng_destroy(botan_rng_t rng)
    {
-   delete rng;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(rng);
    }
 
 int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len)
@@ -632,8 +658,7 @@ int botan_mp_to_uint32(const botan_mp_t mp, uint32_t* val)
 
 int botan_mp_destroy(botan_mp_t mp)
    {
-   delete mp;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(mp);
    }
 
 int botan_mp_add(botan_mp_t result, const botan_mp_t x, const botan_mp_t y)
@@ -796,8 +821,7 @@ int botan_block_cipher_init(botan_block_cipher_t* bc, const char* bc_name)
 */
 int botan_block_cipher_destroy(botan_block_cipher_t bc)
    {
-   delete bc;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(bc);
    }
 
 int botan_block_cipher_clear(botan_block_cipher_t bc)
@@ -858,8 +882,7 @@ int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags)
 
 int botan_hash_destroy(botan_hash_t hash)
    {
-   delete hash;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(hash);
    }
 
 int botan_hash_output_length(botan_hash_t hash, size_t* out)
@@ -912,8 +935,7 @@ int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags)
 
 int botan_mac_destroy(botan_mac_t mac)
    {
-   delete mac;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(mac);
    }
 
 int botan_mac_set_key(botan_mac_t mac, const uint8_t* key, size_t key_len)
@@ -956,8 +978,7 @@ int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t 
 
 int botan_cipher_destroy(botan_cipher_t cipher)
    {
-   delete cipher;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(cipher);
    }
 
 int botan_cipher_clear(botan_cipher_t cipher)
@@ -1741,17 +1762,14 @@ int botan_pubkey_dsa_get_y(botan_mp_t y, botan_pubkey_t key)
    return botan_pubkey_get_field(y, key, "y");
    }
 
-
 int botan_privkey_destroy(botan_privkey_t key)
    {
-   delete key;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(key);
    }
 
 int botan_pubkey_destroy(botan_pubkey_t key)
    {
-   delete key;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(key);
    }
 
 int botan_privkey_export_pubkey(botan_pubkey_t* pubout, botan_privkey_t key_obj)
@@ -1938,8 +1956,7 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op,
 
 int botan_pk_op_encrypt_destroy(botan_pk_op_encrypt_t op)
    {
-   delete op;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(op);
    }
 
 int botan_pk_op_encrypt(botan_pk_op_encrypt_t op,
@@ -1976,8 +1993,7 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
 
 int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op)
    {
-   delete op;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(op);
    }
 
 int botan_pk_op_decrypt(botan_pk_op_decrypt_t op,
@@ -2013,8 +2029,7 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op,
 
 int botan_pk_op_sign_destroy(botan_pk_op_sign_t op)
    {
-   delete op;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(op);
    }
 
 int botan_pk_op_sign_update(botan_pk_op_sign_t op, const uint8_t in[], size_t in_len)
@@ -2048,8 +2063,7 @@ int botan_pk_op_verify_create(botan_pk_op_verify_t* op,
 
 int botan_pk_op_verify_destroy(botan_pk_op_verify_t op)
    {
-   delete op;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(op);
    }
 
 int botan_pk_op_verify_update(botan_pk_op_verify_t op, const uint8_t in[], size_t in_len)
@@ -2090,8 +2104,7 @@ int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op,
 
 int botan_pk_op_key_agreement_destroy(botan_pk_op_ka_t op)
    {
-   delete op;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(op);
    }
 
 int botan_pk_op_key_agreement_export_public(botan_privkey_t key,
@@ -2147,8 +2160,7 @@ int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[],
 
 int botan_x509_cert_destroy(botan_x509_cert_t cert)
    {
-   delete cert;
-   return 0;
+   return BOTAN_FFI_CHECKED_DELETE(cert);
    }
 
 int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len)
