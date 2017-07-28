@@ -76,7 +76,7 @@ class XMSS_Index_Registry
        * Retrieves the index position of a key within the registry or
        * max(size_t) if key has not been found.
        *
-       * @param unique id of the XMSS private key (see make_key_id()).
+       * @param id unique id of the XMSS private key (see make_key_id()).
        *
        * @return index position of key or max(size_t) if key not found.
        **/

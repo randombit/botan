@@ -20,7 +20,7 @@ ReturnValue* ThrowException = reinterpret_cast< ReturnValue* >(-1);
 
 namespace {
 /// @param function_result Return value of the PKCS11 module function
-/// @param returnValue if (`ThrowException`) is passed the function throws an exception, otherwise if a non-NULL pointer is passed:
+/// @param return_value if (`ThrowException`) is passed the function throws an exception, otherwise if a non-NULL pointer is passed:
 /// return_value receives the return value of the PKCS#11 function and no exception is thrown.
 /// @return true if function call was successful, false otherwise
 bool handle_return_value(const CK_RV function_result, ReturnValue* return_value)

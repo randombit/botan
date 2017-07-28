@@ -62,7 +62,7 @@ class BOTAN_DLL Power_Mod
       * representation. Likely only useful for testing.
       */
       void set_modulus(const BigInt& modulus,
-                       Usage_Hints = NO_HINTS,
+                       Usage_Hints hints = NO_HINTS,
                        bool disable_montgomery_arith = false) const;
 
       /**

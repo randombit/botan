@@ -47,7 +47,7 @@ namespace Botan {
        *
        * @param msg A message.
        * @param sig The XMSS signature for msg.
-       * @param adrs A XMSS tree address.
+       * @param ards A XMSS tree address.
        * @param seed A seed.
        *
        * @return An n-byte string holding the value of the root of a tree
@@ -65,7 +65,7 @@ namespace Botan {
        *
        * @param sig A XMSS signature.
        * @param msg The message signed with sig.
-       * @paeam pub_key
+       * @param pub_key the public key
        *
        * @return true if signature sig is valid for msg, false otherwise.
        **/

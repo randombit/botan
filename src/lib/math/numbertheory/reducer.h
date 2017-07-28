@@ -24,8 +24,8 @@ class BOTAN_DLL Modular_Reducer
 
       /**
       * Multiply mod p
-      * @param x
-      * @param y
+      * @param x the first operand
+      * @param y the second operand
       * @return (x * y) % p
       */
       BigInt multiply(const BigInt& x, const BigInt& y) const
@@ -33,7 +33,7 @@ class BOTAN_DLL Modular_Reducer
 
       /**
       * Square mod p
-      * @param x
+      * @param x the value to square
       * @return (x * x) % p
       */
       BigInt square(const BigInt& x) const
@@ -41,7 +41,7 @@ class BOTAN_DLL Modular_Reducer
 
       /**
       * Cube mod p
-      * @param x
+      * @param x the value to cube
       * @return (x * x * x) % p
       */
       BigInt cube(const BigInt& x) const
