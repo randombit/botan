@@ -36,6 +36,14 @@ class CompilerDetection(unittest.TestCase):
         compiler_out = "clang version 20170406."
         self.assertEqual(detector.version_from_compiler_output(compiler_out), None)
 
+    def test_msvc_invalid(self):
+        detector = CompilerDetector("msvc", "cl.exe", "windows")
+
+        compiler_out = ""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), None)
+        compiler_out = "Compiler Version 1900242131. for x86"
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), None)
+
     def test_gcc_version(self):
         detector = CompilerDetector("gcc", "g++", "linux")
         compiler_out = """Using built-in specs.

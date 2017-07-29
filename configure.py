@@ -2578,9 +2578,9 @@ class CompilerDetector(object):
         'clang': ['-v'],
     }
     _version_patterns = {
-        'msvc': r'Compiler Version ([0-9]+).([0-9]+).[0-9\.]+ for',
-        'gcc': r'gcc version ([0-9]+.[0-9])+.[0-9]+',
-        'clang': r'clang version ([0-9]+.[0-9])[ \.]',
+        'msvc': r'Compiler Version ([0-9]+\.[0-9]+)\.[0-9\.]+ for',
+        'gcc': r'gcc version ([0-9]+\.[0-9]+)\.[0-9]+',
+        'clang': r'clang version ([0-9]+\.[0-9])[ \.]',
     }
 
     def __init__(self, cc_name, cc_bin, os_name):
@@ -2619,12 +2619,10 @@ class CompilerDetector(object):
                     '19.00': '2015',
                     '19.10': '2017'
                 }
-                cl_version = match.group(1) + '.' + match.group(2)
-                if cl_version in cl_version_to_msvc_version:
-                    cc_version = cl_version_to_msvc_version[cl_version]
-                else:
-                    logging.warning('Unable to determine MSVC version from output "%s"' % (cc_output))
-                    return None
+                try:
+                    cc_version = cl_version_to_msvc_version[match.group(1)]
+                except KeyError:
+                    raise InternalError('Unknown MSVC version in output "%s"' % (cc_output))
             else:
                 cc_version = match.group(1)
         elif match is None and self._cc_name == 'clang' and self._os_name in ['darwin', 'ios']:
