@@ -41,7 +41,7 @@ class CompilerDetection(unittest.TestCase):
 
         compiler_out = ""
         self.assertEqual(detector.version_from_compiler_output(compiler_out), None)
-        compiler_out = "Compiler Version 1900242131. for x86"
+        compiler_out = "Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24213.1 for x86"
         self.assertEqual(detector.version_from_compiler_output(compiler_out), None)
 
     def test_gcc_version(self):
@@ -84,19 +84,9 @@ Selected multilib: .;@m64"""
 
     def test_msvc_version(self):
         detector = CompilerDetector("msvc", "cl.exe", "windows")
-        compiler_out = """Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24213.1 for x86
-Copyright (C) Microsoft Corporation.  All rights reserved.
+        compiler_out = """msvc_version.c
 
-usage: cl [ option... ] filename... [ /link linkoption... ]
-"""
-        self.assertEqual(detector.version_from_compiler_output(compiler_out), "2015")
-
-    def test_msvc_version_german(self):
-        detector = CompilerDetector("msvc", "cl.exe", "windows")
-        compiler_out = """Microsoft (R) C/C++-Optimierungscompiler Version 19.00.24213.1 für x86
-Copyright (C) Microsoft Corporation. Alle Rechte vorbehalten.
-
-Syntax: cl [ Option... ] Dateiname... [ /link Linkeroption... ]
+1900
 """
         self.assertEqual(detector.version_from_compiler_output(compiler_out), "2015")
 

@@ -2572,13 +2572,15 @@ class AmalgamationGenerator(object):
 
 
 class CompilerDetector(object):
+    _msvc_version_source = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "src", "build-data", "compiler_detection", "msvc_version.c")
     _version_flags = {
-        'msvc': [],
+        'msvc': ['/nologo', '/EP', _msvc_version_source],
         'gcc': ['-v'],
         'clang': ['-v'],
     }
     _version_patterns = {
-        'msvc': r' ([0-9]+\.[0-9]+)\.[0-9\.]+ ',
+        'msvc': r'^([0-9]{2})([0-9]{2})',
         'gcc': r'gcc version ([0-9]+\.[0-9]+)\.[0-9]+',
         'clang': r'clang version ([0-9]+\.[0-9])[ \.]',
     }
@@ -2611,7 +2613,7 @@ class CompilerDetector(object):
     def version_from_compiler_output(self, cc_output):
         cc_version = None
 
-        match = re.search(CompilerDetector._version_patterns[self._cc_name], cc_output)
+        match = re.search(CompilerDetector._version_patterns[self._cc_name], cc_output, flags=re.MULTILINE)
         if match:
             if self._cc_name == 'msvc':
                 cl_version_to_msvc_version = {
@@ -2620,7 +2622,7 @@ class CompilerDetector(object):
                     '19.10': '2017'
                 }
                 try:
-                    cc_version = cl_version_to_msvc_version[match.group(1)]
+                    cc_version = cl_version_to_msvc_version[match.group(1) + "." + match.group(2)]
                 except KeyError:
                     raise InternalError('Unknown MSVC version in output "%s"' % (cc_output))
             else:
