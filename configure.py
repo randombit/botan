@@ -2571,38 +2571,49 @@ class AmalgamationGenerator(object):
         return amalgamation_sources
 
 
-def detect_compiler_version(ccinfo, cc_bin, os_name):
-    # pylint: disable=too-many-locals
-
-    cc_version_flag = {
-        'msvc': ([], r'Compiler Version ([0-9]+).([0-9]+).[0-9\.]+ for'),
-        'gcc': (['-v'], r'gcc version ([0-9]+.[0-9])+.[0-9]+'),
-        'clang': (['-v'], r'clang version ([0-9]+.[0-9])[ \.]')
+class CompilerDetector(object):
+    _version_flags = {
+        'msvc': [],
+        'gcc': ['-v'],
+        'clang': ['-v'],
+    }
+    _version_patterns = {
+        'msvc': r'Compiler Version ([0-9]+).([0-9]+).[0-9\.]+ for',
+        'gcc': r'gcc version ([0-9]+.[0-9])+.[0-9]+',
+        'clang': r'clang version ([0-9]+.[0-9])[ \.]',
     }
 
-    cc_name = ccinfo.basename
-    if cc_name not in cc_version_flag.keys():
-        logging.info("No compiler version detection available for %s" % (cc_name))
-        return None
+    def __init__(self, cc_name, cc_bin, os_name):
+        self._cc_name = cc_name
+        self._cc_bin = cc_bin
+        self._os_name = os_name
 
-    (flags, version_re_str) = cc_version_flag[cc_name]
-    cc_cmd = cc_bin.split(' ') + flags
+    def get_version(self):
+        try:
+            cmd = self._cc_bin.split(' ') + CompilerDetector._version_flags[self._cc_name]
+        except KeyError:
+            logging.info("No compiler version detection available for %s" % (self._cc_name))
+            return None
 
-    try:
+        try:
+            stdout, stderr = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True).communicate()
+            cc_output = stdout + "\n" + stderr
+        except OSError as e:
+            logging.warning('Could not execute %s for version check: %s' % (cmd, e))
+            return None
+
+        return self.version_from_compiler_output(cc_output)
+
+    def version_from_compiler_output(self, cc_output):
         cc_version = None
 
-        version = re.compile(version_re_str)
-        stdout, stderr = subprocess.Popen(
-            cc_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True).communicate()
-        cc_output = stdout + "\n" + stderr
-
-        match = version.search(cc_output)
-
+        match = re.search(CompilerDetector._version_patterns[self._cc_name], cc_output)
         if match:
-            if cc_name == 'msvc':
+            if self._cc_name == 'msvc':
                 cl_version_to_msvc_version = {
                     '18.00': '2013',
                     '19.00': '2015',
@@ -2616,15 +2627,14 @@ def detect_compiler_version(ccinfo, cc_bin, os_name):
                     return None
             else:
                 cc_version = match.group(1)
-        elif match is None and cc_name == 'clang' and os_name in ['darwin', 'ios']:
+        elif match is None and self._cc_name == 'clang' and self._os_name in ['darwin', 'ios']:
             xcode_version_to_clang = {
                 '703': '3.8',
                 '800': '3.9',
                 '802': '4.0'
             }
 
-            version = re.compile(r'Apple LLVM version [0-9.]+ \(clang-([0-9]{3})\.')
-            match = version.search(cc_output)
+            match = re.search(r'Apple LLVM version [0-9.]+ \(clang-([0-9]{3})\.', cc_output)
 
             if match:
                 apple_clang_version = match.group(1)
@@ -2638,15 +2648,13 @@ def detect_compiler_version(ccinfo, cc_bin, os_name):
                     return '3.8' # safe default
 
         if cc_version is None:
-            logging.warning("Ran '%s' to get %s version, but output '%s' does not match expected version format" % (
-                ' '.join(cc_cmd), cc_name, cc_output))
+            logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (
+                self._cc_name, cc_output))
             return None
 
-        logging.info('Detected %s compiler version %s' % (cc_name, cc_version))
+        logging.info('Detected %s compiler version %s' % (self._cc_name, cc_version))
         return cc_version
-    except OSError as e:
-        logging.warning('Could not execute %s for version check: %s' % (cc_cmd, e))
-        return None
+
 
 def have_program(program):
     """
@@ -3013,7 +3021,11 @@ def main(argv):
     osinfo = info_os[options.os]
     module_policy = info_module_policies[options.module_policy] if options.module_policy else None
 
-    cc_version = detect_compiler_version(cc, options.compiler_binary or cc.binary_name, osinfo.basename)
+    cc_version = CompilerDetector(
+        cc.basename,
+        options.compiler_binary or cc.binary_name,
+        osinfo.basename
+    ).get_version()
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
