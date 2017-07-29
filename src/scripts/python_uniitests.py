@@ -91,6 +91,15 @@ usage: cl [ option... ] filename... [ /link linkoption... ]
 """
         self.assertEqual(detector.version_from_compiler_output(compiler_out), "2015")
 
+    def test_msvc_version_german(self):
+        detector = CompilerDetector("msvc", "cl.exe", "windows")
+        compiler_out = """Microsoft (R) C/C++-Optimierungscompiler Version 19.00.24213.1 für x86
+Copyright (C) Microsoft Corporation. Alle Rechte vorbehalten.
+
+Syntax: cl [ Option... ] Dateiname... [ /link Linkeroption... ]
+"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "2015")
+
 
 class ModulesChooserResolveDependencies(unittest.TestCase):
     def test_base(self):

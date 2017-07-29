@@ -2578,7 +2578,7 @@ class CompilerDetector(object):
         'clang': ['-v'],
     }
     _version_patterns = {
-        'msvc': r'Compiler Version ([0-9]+\.[0-9]+)\.[0-9\.]+ for',
+        'msvc': r' ([0-9]+\.[0-9]+)\.[0-9\.]+ ',
         'gcc': r'gcc version ([0-9]+\.[0-9]+)\.[0-9]+',
         'clang': r'clang version ([0-9]+\.[0-9])[ \.]',
     }
