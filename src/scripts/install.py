@@ -11,7 +11,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 import errno
 import json
 import logging
-import optparse
+import optparse # pylint: disable=deprecated-module
 import os
 import shutil
 import string
@@ -233,7 +233,7 @@ def main(args=None):
 if __name__ == '__main__':
     try:
         sys.exit(main())
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         logging.error('Failure: %s' % (e))
         import traceback
         logging.info(traceback.format_exc())
