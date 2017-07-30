@@ -80,6 +80,15 @@ def force_symlink(target, linkname):
             raise e
     os.symlink(target, linkname)
 
+def calculate_exec_mode(options):
+    out = 0o777
+    if 'umask' in os.__dict__:
+        umask = int(options.umask, 8)
+        logging.debug('Setting umask to %s' % oct(umask))
+        os.umask(int(options.umask, 8))
+        out &= (umask ^ 0o777)
+    return out
+
 def main(args=None):
     if args is None:
         args = sys.argv
@@ -89,13 +98,7 @@ def main(args=None):
 
     (options, args) = parse_command_line(args)
 
-    exe_mode = 0o777
-
-    if 'umask' in os.__dict__:
-        umask = int(options.umask, 8)
-        logging.debug('Setting umask to %s' % oct(umask))
-        os.umask(int(options.umask, 8))
-        exe_mode &= (umask ^ 0o777)
+    exe_mode = calculate_exec_mode(options)
 
     def copy_file(src, dst):
         logging.debug('Copying %s to %s' % (src, dst))
