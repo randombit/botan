@@ -90,6 +90,7 @@ def calculate_exec_mode(options):
     return out
 
 def main(args):
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 
     logging.basicConfig(stream=sys.stdout,
                         format='%(levelname) 7s: %(message)s')
