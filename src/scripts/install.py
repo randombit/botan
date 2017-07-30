@@ -89,9 +89,7 @@ def calculate_exec_mode(options):
         out &= (umask ^ 0o777)
     return out
 
-def main(args=None):
-    if args is None:
-        args = sys.argv
+def main(args):
 
     logging.basicConfig(stream=sys.stdout,
                         format='%(levelname) 7s: %(message)s')
@@ -232,10 +230,11 @@ def main(args=None):
     copy_file(os.path.join(cfg['base_dir'], 'news.rst'), os.path.join(target_doc_dir, 'news.txt'))
 
     logging.info('Botan %s installation complete', cfg['version'])
+    return 0
 
 if __name__ == '__main__':
     try:
-        sys.exit(main())
+        sys.exit(main(sys.argv))
     except Exception as e: # pylint: disable=broad-except
         logging.error('Failure: %s' % (e))
         import traceback
