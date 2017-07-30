@@ -63,7 +63,7 @@ def parse_command_line(args):
 
     return (options, args)
 
-def makedirs(dirname, exist_ok = True):
+def makedirs(dirname, exist_ok=True):
     try:
         logging.debug('Creating directory %s' % (dirname))
         os.makedirs(dirname)
@@ -80,12 +80,12 @@ def force_symlink(target, linkname):
             raise e
     os.symlink(target, linkname)
 
-def main(args = None):
+def main(args=None):
     if args is None:
         args = sys.argv
 
-    logging.basicConfig(stream = sys.stdout,
-                        format = '%(levelname) 7s: %(message)s')
+    logging.basicConfig(stream=sys.stdout,
+                        format='%(levelname) 7s: %(message)s')
 
     (options, args) = parse_command_line(args)
 
@@ -172,8 +172,8 @@ def main(args = None):
                             os.path.join(lib_dir, soname_base))
         else:
             soname_patch = process_template('%{soname_patch}')
-            soname_abi   = process_template('%{soname_abi}')
-            soname_base  = process_template('%{soname_base}')
+            soname_abi = process_template('%{soname_abi}')
+            soname_base = process_template('%{soname_base}')
 
             copy_executable(os.path.join(out_dir, soname_patch),
                             os.path.join(lib_dir, soname_patch))
