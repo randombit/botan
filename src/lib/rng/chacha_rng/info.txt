@@ -1,0 +1,10 @@
+<defines>
+CHACHA_RNG -> 20170728
+</defines>
+
+<requires>
+hmac
+sha2_32
+chacha
+stateful_rng
+</requires>

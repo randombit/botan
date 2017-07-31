@@ -155,6 +155,9 @@ tiger
 whirlpool
 keccak
 
+# rng
+chacha_rng
+
 # mac
 cbc_mac
 poly1305
