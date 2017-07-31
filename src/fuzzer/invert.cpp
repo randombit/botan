@@ -3,16 +3,18 @@
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-#include "driver.h"
+#include "fuzzers.h"
 #include <botan/numthry.h>
 
-BigInt inverse_mod_ref(const BigInt& n, const BigInt& mod)
+namespace {
+
+Botan::BigInt inverse_mod_ref(const Botan::BigInt& n, const Botan::BigInt& mod)
    {
    if(n == 0)
       return 0;
 
-   BigInt u = mod, v = n;
-   BigInt B = 0, D = 1;
+   Botan::BigInt u = mod, v = n;
+   Botan::BigInt B = 0, D = 1;
 
    while(u.is_nonzero())
       {
@@ -48,23 +50,24 @@ BigInt inverse_mod_ref(const BigInt& n, const BigInt& mod)
    return D;
    }
 
+}
 
 void fuzz(const uint8_t in[], size_t len)
    {
    if(len % 2 == 1 || len > 2*4096/8)
       return;
 
-   const BigInt x = BigInt::decode(in, len / 2);
-   BigInt mod = BigInt::decode(in + len / 2, len / 2);
+   const Botan::BigInt x = Botan::BigInt::decode(in, len / 2);
+   Botan::BigInt mod = Botan::BigInt::decode(in + len / 2, len / 2);
 
    mod.set_bit(0);
 
    if(mod < 3 || x >= mod)
       return;
 
-   BigInt ref = inverse_mod_ref(x, mod);
-   BigInt ct = ct_inverse_mod_odd_modulus(x, mod);
-   //BigInt mon = normalized_montgomery_inverse(x, mod);
+   Botan::BigInt ref = inverse_mod_ref(x, mod);
+   Botan::BigInt ct = Botan::ct_inverse_mod_odd_modulus(x, mod);
+   //Botan::BigInt mon = Botan::normalized_montgomery_inverse(x, mod);
 
    if(ref != ct)
       {

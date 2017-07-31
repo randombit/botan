@@ -1,25 +1,30 @@
 /*
-* (C) 2015,2016 Jack Lloyd
+* (C) 2015,2016,2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef FUZZER_DRIVER_H_
-#define FUZZER_DRIVER_H_
+#ifndef BOTAN_FUZZER_DRIVER_H__
+#define BOTAN_FUZZER_DRIVER_H__
 
 #include <stdint.h>
+#include <stdlib.h> // for setenv
 #include <iostream>
 #include <vector>
-#include <stdlib.h> // for setenv
 #include <botan/exceptn.h>
-#include <botan/rng.h>
-#include <botan/chacha.h>
+#include <botan/chacha_rng.h>
 
-using namespace Botan;
+#if defined(BOTAN_FUZZER_IS_AFL) && !defined(__AFL_COMPILER)
+   #error "Build configured for AFL but not being compiled by AFL compiler"
+#endif
+
+static const size_t max_fuzzer_input_size = 8192;
 
 extern void fuzz(const uint8_t in[], size_t len);
+extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv);
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len);
 
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
+extern "C" int LLVMFuzzerInitialize(int *, char ***)
    {
    /*
    * This disables the mlock pool, as overwrites within the pool are
@@ -32,68 +37,18 @@ extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv)
 // Called by main() in libFuzzer or in main for AFL below
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len)
    {
-   fuzz(in, len);
+   if(len <= max_fuzzer_input_size)
+      {
+      fuzz(in, len);
+      }
    return 0;
    }
-
-#if defined(INCLUDE_AFL_MAIN)
-
-// Read stdin for AFL
-
-int main(int argc, char* argv[])
-   {
-   const size_t max_read = 4096;
-
-   LLVMFuzzerInitialize(&argc, &argv);
-
-#if defined(__AFL_LOOP)
-   while(__AFL_LOOP(1000))
-#endif
-      {
-      std::vector<uint8_t> buf(max_read);
-      std::cin.read((char*)buf.data(), buf.size());
-      size_t got = std::cin.gcount();
-
-      buf.resize(got);
-      buf.shrink_to_fit();
-
-      fuzz(buf.data(), got);
-      }
-   }
-
-#endif
 
 // Some helpers for the fuzzer jigs
 
 inline Botan::RandomNumberGenerator& fuzzer_rng()
    {
-   class ChaCha20_RNG : public Botan::RandomNumberGenerator
-      {
-      public:
-         std::string name() const override { return "ChaCha20_RNG"; }
-         void clear() override { /* ignored */ }
-
-         void randomize(uint8_t out[], size_t len) override
-            {
-            Botan::clear_mem(out, len);
-            m_chacha.cipher1(out, len);
-            }
-
-         bool is_seeded() const override { return true; }
-
-         void add_entropy(const uint8_t[], size_t) override { /* ignored */ }
-
-         ChaCha20_RNG()
-            {
-            std::vector<uint8_t> seed(32, 0x82);
-            m_chacha.set_key(seed);
-            }
-
-      private:
-         Botan::ChaCha m_chacha;
-      };
-
-   static ChaCha20_RNG rng;
+   static Botan::ChaCha_RNG rng(Botan::secure_vector<uint8_t>(32));
    return rng;
    }
 
@@ -111,5 +66,30 @@ inline Botan::RandomNumberGenerator& fuzzer_rng()
              << __LINE__ << ":" << __FILE__ << std::endl;               \
    abort();                                                             \
    } } while(0)
+
+#if defined(BOTAN_FUZZER_IS_AFL) || defined(BOTAN_FUZZER_IS_TEST)
+
+/* Stub for AFL */
+
+int main(int argc, char* argv[])
+   {
+   LLVMFuzzerInitialize(&argc, &argv);
+
+#if defined(__AFL_LOOP)
+   while(__AFL_LOOP(1000))
+#endif
+      {
+      std::vector<uint8_t> buf(max_fuzzer_input_size);
+      std::cin.read((char*)buf.data(), buf.size());
+      const size_t got = std::cin.gcount();
+
+      buf.resize(got);
+      buf.shrink_to_fit();
+
+      LLVMFuzzerTestOneInput(buf.data(), got);
+      }
+   }
+
+#endif
 
 #endif

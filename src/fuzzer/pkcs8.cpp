@@ -3,19 +3,17 @@
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-#include "driver.h"
+#include "fuzzers.h"
 
-#include <botan/x509cert.h>
+#include <botan/pkcs8.h>
 
 void fuzz(const uint8_t in[], size_t len)
    {
-   if(len > 8192)
-      return;
-
    try
       {
-      DataSource_Memory input(in, len);
-      X509_Certificate cert(input);
+      Botan::DataSource_Memory input(in, len);
+      Botan::Null_RNG null_rng;
+      std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(input, null_rng));
       }
    catch(Botan::Exception& e) { }
    }

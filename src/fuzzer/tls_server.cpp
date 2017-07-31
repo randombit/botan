@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "driver.h"
+#include "fuzzers.h"
 #include <botan/tls_server.h>
 
 const char* fixed_rsa_key =
@@ -59,13 +59,13 @@ const char* fixed_rsa_cert =
    "Dk02a/1AOJZdZReDbgXhlqaUx5pk/rzo4mDzvu5HSCeXmClz\n"
    "-----END CERTIFICATE-----\n";
 
-class Fuzzer_TLS_Server_Creds : public Credentials_Manager
+class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager
    {
    public:
       Fuzzer_TLS_Server_Creds()
          {
-         DataSource_Memory cert_in(fixed_rsa_cert);
-         DataSource_Memory key_in(fixed_rsa_key);
+         Botan::DataSource_Memory cert_in(fixed_rsa_cert);
+         Botan::DataSource_Memory key_in(fixed_rsa_key);
 
          m_rsa_cert.reset(new Botan::X509_Certificate(cert_in));
          //m_rsa_key.reset(Botan::PKCS8::load_key(key_in, fuzzer_rng());
@@ -73,8 +73,8 @@ class Fuzzer_TLS_Server_Creds : public Credentials_Manager
 
       std::vector<Botan::X509_Certificate> cert_chain(
          const std::vector<std::string>& algos,
-         const std::string& type,
-         const std::string& hostname) override
+         const std::string& /*type*/,
+         const std::string& /*hostname*/) override
          {
          std::vector<Botan::X509_Certificate> v;
 
@@ -90,7 +90,7 @@ class Fuzzer_TLS_Server_Creds : public Credentials_Manager
          return v;
          }
 
-      Botan::Private_Key* private_key_for(const Botan::X509_Certificate& cert,
+      Botan::Private_Key* private_key_for(const Botan::X509_Certificate& /*cert*/,
                                           const std::string& /*type*/,
                                           const std::string& /*context*/) override
          {
@@ -99,9 +99,9 @@ class Fuzzer_TLS_Server_Creds : public Credentials_Manager
 
       std::string psk_identity_hint(const std::string&, const std::string&) override { return "psk_hint"; }
       std::string psk_identity(const std::string&, const std::string&, const std::string&) override { return "psk_id"; }
-      SymmetricKey psk(const std::string&, const std::string&, const std::string&) override
+      Botan::SymmetricKey psk(const std::string&, const std::string&, const std::string&) override
          {
-         return SymmetricKey("AABBCCDDEEFF00112233445566778899");
+         return Botan::SymmetricKey("AABBCCDDEEFF00112233445566778899");
          }
    private:
       std::unique_ptr<Botan::X509_Certificate> m_rsa_cert;
@@ -113,14 +113,14 @@ void fuzz(const uint8_t in[], size_t len)
    if(len == 0)
       return;
 
-   auto dev_null = [](const byte[], size_t) {};
+   auto dev_null = [](const uint8_t[], size_t) {};
 
-   auto ignore_alerts = [](TLS::Alert, const byte[], size_t) {};
-   auto ignore_hs = [](const TLS::Session&) { return true; };
+   auto ignore_alerts = [](Botan::TLS::Alert, const uint8_t[], size_t) {};
+   auto ignore_hs = [](const Botan::TLS::Session&) { return true; };
 
-   TLS::Session_Manager_Noop session_manager;
-   TLS::Policy policy;
-   TLS::Server_Information info("server.name", 443);
+   Botan::TLS::Session_Manager_Noop session_manager;
+   Botan::TLS::Policy policy;
+   Botan::TLS::Server_Information info("server.name", 443);
    Fuzzer_TLS_Server_Creds creds;
 
    auto next_proto_fn = [](const std::vector<std::string>& protos) -> std::string {
@@ -132,7 +132,7 @@ void fuzz(const uint8_t in[], size_t len)
 
    const bool is_datagram = (len % 2 == 0);
 
-   TLS::Server server(dev_null,
+   Botan::TLS::Server server(dev_null,
                       dev_null,
                       ignore_alerts,
                       ignore_hs,

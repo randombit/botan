@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "driver.h"
+#include "fuzzers.h"
 
 #include <botan/bigint.h>
 #include <botan/numthry.h>

@@ -3,37 +3,24 @@
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
+
 #ifndef ECC_HELPERS_H__
 #define ECC_HELPERS_H__
 
-#include "driver.h"
+#include "fuzzers.h"
 #include <botan/curve_gfp.h>
 #include <botan/ec_group.h>
 #include <botan/reducer.h>
 
-void check_redc(std::function<void (BigInt&, secure_vector<word>&)> redc_fn,
-                const Modular_Reducer& redc,
-                const BigInt& prime,
-                const BigInt& x)
-   {
-   const Botan::BigInt v1 = x % prime;
-   const Botan::BigInt v2 = redc.reduce(x);
+namespace {
 
-   Botan::secure_vector<Botan::word> ws;
-   Botan::BigInt v3 = x;
-   redc_fn(v3, ws);
-
-   FUZZER_ASSERT_EQUAL(v1, v2);
-   FUZZER_ASSERT_EQUAL(v2, v3);
-   }
-
-inline std::ostream& operator<<(std::ostream& o, const PointGFp& point)
+inline std::ostream& operator<<(std::ostream& o, const Botan::PointGFp& point)
    {
    o << point.get_affine_x() << "," << point.get_affine_y();
    return o;
    }
 
-void check_ecc_math(const EC_Group& group,
+void check_ecc_math(const Botan::EC_Group& group,
                     const uint8_t in[], size_t len)
    {
    // These depend only on the group, which is also static
@@ -41,8 +28,8 @@ void check_ecc_math(const EC_Group& group,
    static Botan::Blinded_Point_Multiply blind(base_point, group.get_order(), 4);
 
    const size_t hlen = len / 2;
-   const BigInt a = BigInt::decode(in, hlen);
-   const BigInt b = BigInt::decode(in + hlen, len - hlen);
+   const Botan::BigInt a = Botan::BigInt::decode(in, hlen);
+   const Botan::BigInt b = Botan::BigInt::decode(in + hlen, len - hlen);
 
    const Botan::BigInt c = a + b;
 
@@ -65,5 +52,7 @@ void check_ecc_math(const EC_Group& group,
    FUZZER_ASSERT_EQUAL(S1, S2);
    FUZZER_ASSERT_EQUAL(S1, A1);
    }
+
+}
 
 #endif

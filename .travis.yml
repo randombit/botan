@@ -31,6 +31,7 @@ env:
     - BUILD_MODE="static"
     - BUILD_MODE="bsi"
     - BUILD_MODE="nist"
+    - BUILD_MODE="fuzzers"
     - BUILD_MODE="sanitizer"
     - BUILD_MODE="coverage"
     - BUILD_MODE="cross-arm32"
@@ -52,10 +53,11 @@ matrix:
     - os: osx
       compiler: gcc
 
-    # Run docs, lint, bsi, nist, coverage, valgrind, sonarqube, sanitizer,
-    # minimized and non-ARM cross builds on Linux/gcc only. The
-    # sanitizer builds under Clang run the tests very slowly and cause
-    # CI timeouts.
+    # Run docs, lint, bsi, nist, fuzzers, coverage, valgrind, sonarqube, sanitizer,
+    # minimized and non-ARM cross builds on Linux/gcc only.
+
+    # The sanitizer builds under Clang run the tests very slowly and
+    # cause CI timeouts.
 
     - compiler: clang
       env: BUILD_MODE="bsi"
@@ -71,6 +73,8 @@ matrix:
       env: BUILD_MODE="sonarqube"
     - compiler: clang
       env: BUILD_MODE="sanitizer"
+    - compiler: clang
+      env: BUILD_MODE="fuzzers"
     - compiler: clang
       env: BUILD_MODE="valgrind"
     - compiler: clang

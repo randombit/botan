@@ -3,15 +3,16 @@
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-#include "driver.h"
 
-#include <botan/ocsp.h>
+#include "fuzzers.h"
+#include <botan/x509_crl.h>
 
 void fuzz(const uint8_t in[], size_t len)
    {
    try
       {
-      OCSP::Response response(in, len);
+      Botan::DataSource_Memory input(in, len);
+      Botan::X509_CRL crl(input);
       }
-   catch(Botan::Exception& e) { }
+   catch(Botan::Exception& e) {}
    }

@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "driver.h"
-#include "ecc_helper.h"
+#include "fuzzers.h"
+#include "redc_helper.h"
 #include <botan/curve_nistp.h>
 
 void fuzz(const uint8_t in[], size_t len)
@@ -13,8 +13,8 @@ void fuzz(const uint8_t in[], size_t len)
    if(len > 2*384/8)
       return;
 
-   static const BigInt& prime = Botan::prime_p384();
-   static const BigInt prime_2 = prime * prime;
+   static const Botan::BigInt& prime = Botan::prime_p384();
+   static const Botan::BigInt prime_2 = prime * prime;
    static Botan::Modular_Reducer prime_redc(prime);
 
    Botan::BigInt x = Botan::BigInt::decode(in, len);

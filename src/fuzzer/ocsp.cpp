@@ -3,13 +3,15 @@
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-#include "driver.h"
-#include "ecc_helper.h"
+
+#include "fuzzers.h"
+#include <botan/ocsp.h>
 
 void fuzz(const uint8_t in[], size_t len)
    {
-   if(len > 2*384/8)
-      return;
-   static EC_Group p384("secp384r1");
-   return check_ecc_math(p384, in, len);
+   try
+      {
+      Botan::OCSP::Response response(in, len);
+      }
+   catch(Botan::Exception& e) { }
    }

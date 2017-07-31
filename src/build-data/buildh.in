@@ -25,6 +25,7 @@
 /* How many bits per limb in a BigInt */
 #define BOTAN_MP_WORD_BITS %{mp_bits}
 %{unsafe_fuzzer_mode_define}
+%{fuzzer_type}
 
 #define BOTAN_INSTALL_PREFIX R"(%{prefix})"
 #define BOTAN_INSTALL_HEADER_DIR "%{includedir}/botan-%{version_major}"
