@@ -11,7 +11,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 import errno
 import json
 import logging
-import optparse
+import optparse # pylint: disable=deprecated-module
 import os
 import shutil
 import string
@@ -63,7 +63,7 @@ def parse_command_line(args):
 
     return (options, args)
 
-def makedirs(dirname, exist_ok = True):
+def makedirs(dirname, exist_ok=True):
     try:
         logging.debug('Creating directory %s' % (dirname))
         os.makedirs(dirname)
@@ -80,22 +80,24 @@ def force_symlink(target, linkname):
             raise e
     os.symlink(target, linkname)
 
-def main(args = None):
-    if args is None:
-        args = sys.argv
-
-    logging.basicConfig(stream = sys.stdout,
-                        format = '%(levelname) 7s: %(message)s')
-
-    (options, args) = parse_command_line(args)
-
-    exe_mode = 0o777
-
+def calculate_exec_mode(options):
+    out = 0o777
     if 'umask' in os.__dict__:
         umask = int(options.umask, 8)
         logging.debug('Setting umask to %s' % oct(umask))
         os.umask(int(options.umask, 8))
-        exe_mode &= (umask ^ 0o777)
+        out &= (umask ^ 0o777)
+    return out
+
+def main(args):
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+
+    logging.basicConfig(stream=sys.stdout,
+                        format='%(levelname) 7s: %(message)s')
+
+    (options, args) = parse_command_line(args)
+
+    exe_mode = calculate_exec_mode(options)
 
     def copy_file(src, dst):
         logging.debug('Copying %s to %s' % (src, dst))
@@ -172,8 +174,8 @@ def main(args = None):
                             os.path.join(lib_dir, soname_base))
         else:
             soname_patch = process_template('%{soname_patch}')
-            soname_abi   = process_template('%{soname_abi}')
-            soname_base  = process_template('%{soname_base}')
+            soname_abi = process_template('%{soname_abi}')
+            soname_base = process_template('%{soname_base}')
 
             copy_executable(os.path.join(out_dir, soname_patch),
                             os.path.join(lib_dir, soname_patch))
@@ -229,11 +231,12 @@ def main(args = None):
     copy_file(os.path.join(cfg['base_dir'], 'news.rst'), os.path.join(target_doc_dir, 'news.txt'))
 
     logging.info('Botan %s installation complete', cfg['version'])
+    return 0
 
 if __name__ == '__main__':
     try:
-        sys.exit(main())
-    except Exception as e:
+        sys.exit(main(sys.argv))
+    except Exception as e: # pylint: disable=broad-except
         logging.error('Failure: %s' % (e))
         import traceback
         logging.info(traceback.format_exc())
