@@ -73,7 +73,11 @@ Version 2.2.0, Not Yet Released
 * Add new FFI functions botan_hash_block_size (GH #1036),
   botan_hash_copy_state (GH #1059), botan_scrub_mem
 
+* Add support for RFC 3394 keywrap through FFI (GH #1135)
+
 * Support AES-CBC ciphers via OpenSSL (GH #1022)
+
+* Add function to return certificates included in OCSP response (GH #1123)
 
 * Complete wildcard handling for X.509 certificates (GH #1017)
 
