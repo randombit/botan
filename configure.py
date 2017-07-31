@@ -2630,7 +2630,8 @@ class CompilerDetector(object):
             major = int(match.group(1))
             minor = int(match.group(2))
             cc_version = "%d.%d" % (major, minor)
-        elif match is None and self._cc_name == 'clang' and self._os_name in ['darwin', 'ios']:
+
+        if cc_version is None and self._cc_name == 'clang' and self._os_name in ['darwin', 'ios']:
             xcode_version_to_clang = {
                 '703': '3.8',
                 '800': '3.9',
@@ -2638,7 +2639,6 @@ class CompilerDetector(object):
             }
 
             match = re.search(r'Apple LLVM version [0-9.]+ \(clang-([0-9]{3})\.', cc_output)
-
             if match:
                 apple_clang_version = match.group(1)
                 if apple_clang_version in xcode_version_to_clang:
@@ -2648,7 +2648,7 @@ class CompilerDetector(object):
                 else:
                     logging.warning('Unable to determine LLVM Clang version cooresponding to Apple Clang %s' %
                                     (apple_clang_version))
-                    return '3.8' # safe default
+                    cc_version = '3.8' # safe default
 
         if cc_version is None:
             logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (
