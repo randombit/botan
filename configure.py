@@ -2650,12 +2650,12 @@ class CompilerDetector(object):
                                     (apple_clang_version))
                     cc_version = '3.8' # safe default
 
-        if cc_version is None:
+        if cc_version:
+            logging.info('Detected %s compiler version %s' % (self._cc_name, cc_version))
+        else:
             logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (
                 self._cc_name, cc_output))
-            return None
 
-        logging.info('Detected %s compiler version %s' % (self._cc_name, cc_version))
         return cc_version
 
 
