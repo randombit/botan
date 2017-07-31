@@ -14,7 +14,81 @@ import sys
 import unittest
 
 sys.path.append("../..") # Botan repo root
+from configure import CompilerDetector # pylint: disable=wrong-import-position
 from configure import ModulesChooser # pylint: disable=wrong-import-position
+
+
+class CompilerDetection(unittest.TestCase):
+
+    def test_gcc_invalid(self):
+        detector = CompilerDetector("gcc", "g++", "linux")
+
+        compiler_out = ""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), None)
+        compiler_out = "gcc version 20170406 (Ubuntu 6.3.0-12ubuntu2)"
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), None)
+
+    def test_clang_invalid(self):
+        detector = CompilerDetector("clang", "clang++", "linux")
+
+        compiler_out = ""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), None)
+        compiler_out = "clang version 20170406."
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), None)
+
+    def test_msvc_invalid(self):
+        detector = CompilerDetector("msvc", "cl.exe", "windows")
+
+        compiler_out = ""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), None)
+        compiler_out = "Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24213.1 for x86"
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), None)
+
+    def test_gcc_version(self):
+        detector = CompilerDetector("gcc", "g++", "linux")
+        compiler_out = """Using built-in specs.
+COLLECT_GCC=/usr/bin/gcc
+COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/6/lto-wrapper
+Target: x86_64-linux-gnu
+Configured with: ../src/configure -v --with-pkgversion='Ubuntu 6.3.0-12ubuntu2' --with-bugurl=file:///usr/share/doc/gcc-6/README.Bugs --enable-languages=c,ada,c++,java,go,d,fortran,objc,obj-c++ --prefix=/usr --program-suffix=-6 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-gnu-unique-object --disable-vtable-verify --enable-libmpx --enable-plugin --enable-default-pie --with-system-zlib --disable-browser-plugin --enable-java-awt=gtk --enable-gtk-cairo --with-java-home=/usr/lib/jvm/java-1.5.0-gcj-6-amd64/jre --enable-java-home --with-jvm-root-dir=/usr/lib/jvm/java-1.5.0-gcj-6-amd64 --with-jvm-jar-dir=/usr/lib/jvm-exports/java-1.5.0-gcj-6-amd64 --with-arch-directory=amd64 --with-ecj-jar=/usr/share/java/eclipse-ecj.jar --with-target-system-zlib --enable-objc-gc=auto --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
+Thread model: posix
+gcc version 6.3.0 20170406 (Ubuntu 6.3.0-12ubuntu2)"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "6.3")
+
+    def test_clang_version(self):
+        detector = CompilerDetector("clang", "clang++", "linux")
+        compiler_out = """clang version 4.0.0-1ubuntu1 (tags/RELEASE_400/rc1)
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+Found candidate GCC installation: /usr/bin/../lib/gcc/i686-linux-gnu/6
+Found candidate GCC installation: /usr/bin/../lib/gcc/i686-linux-gnu/6.3.0
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/4.9.4
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/5
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/5.4.1
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/6
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/6.3.0
+Found candidate GCC installation: /usr/lib/gcc/i686-linux-gnu/6
+Found candidate GCC installation: /usr/lib/gcc/i686-linux-gnu/6.3.0
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/4.9
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/4.9.4
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/5
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/5.4.1
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/6
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/6.3.0
+Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/6.3.0
+Candidate multilib: .;@m64
+Selected multilib: .;@m64"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "4.0")
+
+    def test_msvc_version(self):
+        detector = CompilerDetector("msvc", "cl.exe", "windows")
+        compiler_out = """msvc_version.c
+
+1900
+"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "2015")
 
 
 class ModulesChooserResolveDependencies(unittest.TestCase):
