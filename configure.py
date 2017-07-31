@@ -2593,8 +2593,8 @@ class CompilerDetector(object):
     }
     _version_patterns = {
         'msvc': r'^([0-9]{2})([0-9]{2})',
-        'gcc': r'gcc version ([0-9]+\.[0-9]+)\.[0-9]+',
-        'clang': r'clang version ([0-9]+\.[0-9])[ \.]',
+        'gcc': r'gcc version ([0-9]+)\.([0-9]+)\.[0-9]+',
+        'clang': r'clang version ([0-9]+)\.([0-9])[ \.]',
     }
 
     def __init__(self, cc_name, cc_bin, os_name):
@@ -2627,12 +2627,9 @@ class CompilerDetector(object):
 
         match = re.search(CompilerDetector._version_patterns[self._cc_name], cc_output, flags=re.MULTILINE)
         if match:
-            if self._cc_name == 'msvc':
-                major = int(match.group(1))
-                minor = int(match.group(2))
-                return "%d.%d" % (major, minor)
-            else:
-                cc_version = match.group(1)
+            major = int(match.group(1))
+            minor = int(match.group(2))
+            cc_version = "%d.%d" % (major, minor)
         elif match is None and self._cc_name == 'clang' and self._os_name in ['darwin', 'ios']:
             xcode_version_to_clang = {
                 '703': '3.8',
