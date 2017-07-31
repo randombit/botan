@@ -836,18 +836,23 @@ class ModuleInfo(InfoObject):
                 return True
 
             # Maybe a versioned compiler dep
-            if cc_version != None:
-                for cc in self.cc:
-                    try:
-                        name, version = cc.split(":")
-                        if name == ccinfo.basename:
+            for cc in self.cc:
+                try:
+                    name, version = cc.split(":")
+                    if name == ccinfo.basename:
+                        if cc_version:
                             min_cc_version = [int(v) for v in version.split('.')]
                             cur_cc_version = [int(v) for v in cc_version.split('.')]
                             # With lists of ints, this does what we want
                             return cur_cc_version >= min_cc_version
-                    except ValueError:
-                        # No version part specified
-                        pass
+                        else:
+                            # Compiler version unknown => module unsupported
+                            return False
+                except ValueError:
+                    # No version part specified
+                    pass
+
+            return False # compiler not listed
 
         return supported_isa_flags(ccinfo, arch) and supported_compiler(ccinfo, cc_version)
 
