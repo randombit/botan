@@ -827,20 +827,27 @@ class ModuleInfo(InfoObject):
 
         # Check if module gives explicit compiler dependencies
         def supported_compiler(ccinfo, cc_version):
+            if self.cc == []:
+                # no compiler restriction
+                return True
 
-            if self.cc == [] or ccinfo.basename in self.cc:
+            if ccinfo.basename in self.cc:
+                # compiler is supported, independent of version
                 return True
 
             # Maybe a versioned compiler dep
             if cc_version != None:
                 for cc in self.cc:
-                    with_version = cc.find(':')
-                    if with_version > 0:
-                        if cc[0:with_version] == ccinfo.basename:
-                            min_cc_version = [int(v) for v in cc[with_version+1:].split('.')]
+                    try:
+                        name, version = cc.split(":")
+                        if name == ccinfo.basename:
+                            min_cc_version = [int(v) for v in version.split('.')]
                             cur_cc_version = [int(v) for v in cc_version.split('.')]
                             # With lists of ints, this does what we want
                             return cur_cc_version >= min_cc_version
+                    except ValueError:
+                        # No version part specified
+                        pass
 
         return supported_isa_flags(ccinfo, arch) and supported_compiler(ccinfo, cc_version)
 
