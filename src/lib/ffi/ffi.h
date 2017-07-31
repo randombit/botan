@@ -1049,6 +1049,17 @@ enum botan_x509_cert_key_constraints {
 
 BOTAN_DLL int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage);
 
+/**
+ * Key wrapping as per RFC 3394
+ */
+BOTAN_DLL int botan_key_wrap3394(uint8_t key[], size_t key_len,
+                                 uint8_t kek[], size_t kek_len,
+                                 uint8_t wrapped_key[], size_t *wrapped_key_len);
+
+BOTAN_DLL int botan_key_unwrap3394( uint8_t wrapped_key[], size_t wrapped_key_len,
+                                    uint8_t kek[], size_t kek_len,
+                                    uint8_t key[], size_t *key_len);
+
 /*
 * TLS (WIP)
 */
