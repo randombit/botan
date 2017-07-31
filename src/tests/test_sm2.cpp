@@ -28,7 +28,7 @@ class SM2_Signature_KAT_Tests : public PK_Signature_Generation_Test
             "P,A,B,xG,yG,Order,Cofactor,Ident,Msg,x,Nonce,Signature",
             "") {}
 
-      virtual std::string default_padding(const VarMap& vars) const
+      virtual std::string default_padding(const VarMap& vars) const override
          {
          return get_req_str(vars, "Ident");
          }

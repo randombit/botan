@@ -571,7 +571,7 @@ class BOTAN_DLL PK_Decryptor_EME final : public PK_Decryptor
       /**
       * Construct an instance.
       * @param key the key to use inside the decryptor
-      * @param padding the message encoding scheme to use (eg "OAEP(SHA-256)")
+      * @param eme the message encoding scheme to use (eg "OAEP(SHA-256)")
       */
       BOTAN_DEPRECATED("Use constructor taking a RNG object")
       PK_Decryptor_EME(const Private_Key& key,

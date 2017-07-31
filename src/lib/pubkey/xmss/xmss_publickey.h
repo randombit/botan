@@ -104,8 +104,6 @@ class BOTAN_DLL XMSS_PublicKey : public virtual Public_Key
 
       /**
        * Sets the chosen XMSS signature method
-       *
-       * @return XMSS signature method identifier.
        **/
       void set_xmss_oid(XMSS_Parameters::xmss_algorithm_t xmss_oid)
          {

@@ -218,8 +218,6 @@ class XMSS_Address
       /**
        * Set the chain address. A call to this method is only valid, if
        * the address type is set to Type::OTS_Hash_Address.
-       *
-       * @return chain address.
        **/
       void set_chain_address(uint32_t value)
          {

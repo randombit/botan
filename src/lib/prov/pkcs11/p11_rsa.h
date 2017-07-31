@@ -190,7 +190,7 @@ class BOTAN_DLL PKCS11_RSA_PrivateKey final : public Private_Key,
 
       /**
       * Generates a PKCS#11 RSA private key
-      * @param session
+      * @param session the session to use
       * @param bits length in bits of modulus n
       * @param priv_key_props the properties of the RSA private key
       * @note no persistent public key object will be created

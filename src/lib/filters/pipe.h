@@ -181,7 +181,7 @@ class BOTAN_DLL Pipe final : public DataSource
       * @param msg the number identifying the message to read from
       * @return string holding the contents of the pipe
       */
-      std::string read_all_as_string(message_id = DEFAULT_MESSAGE) BOTAN_WARN_UNUSED_RESULT;
+      std::string read_all_as_string(message_id msg = DEFAULT_MESSAGE) BOTAN_WARN_UNUSED_RESULT;
 
       /**
       * Read from the default message but do not modify the internal
