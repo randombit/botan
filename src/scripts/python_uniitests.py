@@ -88,7 +88,13 @@ Selected multilib: .;@m64"""
 
 1900
 """
-        self.assertEqual(detector.version_from_compiler_output(compiler_out), "2015")
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "19.0")
+
+        compiler_out = """msvc_version.c
+
+1910
+"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "19.10")
 
 
 class ModulesChooserResolveDependencies(unittest.TestCase):

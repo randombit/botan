@@ -2628,15 +2628,9 @@ class CompilerDetector(object):
         match = re.search(CompilerDetector._version_patterns[self._cc_name], cc_output, flags=re.MULTILINE)
         if match:
             if self._cc_name == 'msvc':
-                cl_version_to_msvc_version = {
-                    '18.00': '2013',
-                    '19.00': '2015',
-                    '19.10': '2017'
-                }
-                try:
-                    cc_version = cl_version_to_msvc_version[match.group(1) + "." + match.group(2)]
-                except KeyError:
-                    raise InternalError('Unknown MSVC version in output "%s"' % (cc_output))
+                major = int(match.group(1))
+                minor = int(match.group(2))
+                return "%d.%d" % (major, minor)
             else:
                 cc_version = match.group(1)
         elif match is None and self._cc_name == 'clang' and self._os_name in ['darwin', 'ios']:
