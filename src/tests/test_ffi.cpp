@@ -367,6 +367,10 @@ class FFI_Unit_Tests : public Test
          results.push_back(ffi_test_stream_ciphers());
          results.push_back(ffi_test_pkcs_hash_id());
 
+#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
+         results.push_back(ffi_test_keywrap());
+#endif
+
 #if defined(BOTAN_HAS_RSA)
          results.push_back(ffi_test_rsa(rng));
 #endif
@@ -963,6 +967,39 @@ class FFI_Unit_Tests : public Test
 
          std::vector<uint8_t> fingerprint(fingerprint_len);
          TEST_FFI_OK(botan_pubkey_fingerprint, (pub, "SHA-512", fingerprint.data(), &fingerprint_len));
+         }
+
+      Test::Result ffi_test_keywrap()
+         {
+         Test::Result result("FFI keywrap");
+
+         const uint8_t key[16] = { 0 };
+         const uint8_t kek[16] = { 0xFF, 0 };
+
+         const uint8_t expected_wrapped_key[16+8] = {
+            0x04, 0x13, 0x37, 0x39, 0x82, 0xCF, 0xFA, 0x31, 0x81, 0xCA, 0x4F, 0x59,
+            0x74, 0x4D, 0xED, 0x29, 0x1F, 0x3F, 0xE5, 0x24, 0x00, 0x1B, 0x93, 0x20
+         };
+
+         uint8_t wrapped[16 + 8] = { 0 };
+         size_t wrapped_keylen = sizeof(wrapped);
+         TEST_FFI_OK(botan_key_wrap3394, (key, sizeof(key),
+                                          kek, sizeof(kek),
+                                          wrapped, &wrapped_keylen));
+
+         result.test_eq("Expected wrapped keylen size", wrapped_keylen, 16 + 8);
+
+         result.test_eq(nullptr, "Wrapped key", wrapped, wrapped_keylen,
+                        expected_wrapped_key, sizeof(expected_wrapped_key));
+
+         uint8_t dec_key[16] = { 0 };
+         size_t dec_keylen = sizeof(dec_key);
+         TEST_FFI_OK(botan_key_unwrap3394, (wrapped, sizeof(wrapped),
+                                            kek, sizeof(kek),
+                                            dec_key, &dec_keylen));
+
+         result.test_eq(nullptr, "Unwrapped key", dec_key, dec_keylen, key, sizeof(key));
+         return result;
          }
 
       Test::Result ffi_test_rsa(botan_rng_t rng)

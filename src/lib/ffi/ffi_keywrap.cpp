@@ -15,8 +15,8 @@ extern "C" {
 
 using namespace Botan_FFI;
 
-int botan_key_wrap3394(uint8_t key[], size_t key_len,
-                       uint8_t kek[], size_t kek_len,
+int botan_key_wrap3394(const uint8_t key[], size_t key_len,
+                       const uint8_t kek[], size_t kek_len,
                        uint8_t wrapped_key[], size_t* wrapped_key_len)
    {
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)
@@ -31,8 +31,8 @@ int botan_key_wrap3394(uint8_t key[], size_t key_len,
 #endif
    }
 
-int botan_key_unwrap3394(uint8_t wrapped_key[], size_t wrapped_key_len,
-                         uint8_t kek[], size_t kek_len,
+int botan_key_unwrap3394(const uint8_t wrapped_key[], size_t wrapped_key_len,
+                         const uint8_t kek[], size_t kek_len,
                          uint8_t key[], size_t* key_len)
    {
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)
