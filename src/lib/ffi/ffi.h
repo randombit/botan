@@ -873,22 +873,22 @@ BOTAN_DLL int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
 * Algorithm specific key operations: ECDSA and ECDH
 */
 BOTAN_DLL int botan_privkey_load_ecdsa(botan_privkey_t* key,
-                                    const botan_mp_t scalar,
-                                    const char* curve_name);
+                                       const botan_mp_t scalar,
+                                       const char* curve_name);
 
 BOTAN_DLL int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
-                                   const botan_mp_t public_x,
-                                   const botan_mp_t public_y,
-                                   const char* curve_name);
+                                      const botan_mp_t public_x,
+                                      const botan_mp_t public_y,
+                                      const char* curve_name);
 
 BOTAN_DLL int botan_pubkey_load_ecdh(botan_pubkey_t* key,
-                                   const botan_mp_t public_x,
-                                   const botan_mp_t public_y,
-                                   const char* curve_name);
+                                     const botan_mp_t public_x,
+                                     const botan_mp_t public_y,
+                                     const char* curve_name);
 
 BOTAN_DLL int botan_privkey_load_ecdh(botan_privkey_t* key,
-                                    const botan_mp_t scalar,
-                                    const char* curve_name);
+                                      const botan_mp_t scalar,
+                                      const char* curve_name);
 
 BOTAN_DLL int botan_pubkey_load_sm2(botan_pubkey_t* key,
                                     const botan_mp_t public_x,
@@ -1022,9 +1022,6 @@ BOTAN_DLL int botan_x509_cert_get_fingerprint(botan_x509_cert_t cert, const char
 BOTAN_DLL int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
 BOTAN_DLL int botan_x509_cert_get_authority_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
 BOTAN_DLL int botan_x509_cert_get_subject_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
-
-BOTAN_DLL int botan_x509_cert_path_verify(botan_x509_cert_t cert,
-                                          const char* ca_dir);
 
 BOTAN_DLL int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert,
                                                   uint8_t out[], size_t* out_len);
