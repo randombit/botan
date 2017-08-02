@@ -827,20 +827,32 @@ class ModuleInfo(InfoObject):
 
         # Check if module gives explicit compiler dependencies
         def supported_compiler(ccinfo, cc_version):
+            if self.cc == []:
+                # no compiler restriction
+                return True
 
-            if self.cc == [] or ccinfo.basename in self.cc:
+            if ccinfo.basename in self.cc:
+                # compiler is supported, independent of version
                 return True
 
             # Maybe a versioned compiler dep
-            if cc_version != None:
-                for cc in self.cc:
-                    with_version = cc.find(':')
-                    if with_version > 0:
-                        if cc[0:with_version] == ccinfo.basename:
-                            min_cc_version = [int(v) for v in cc[with_version+1:].split('.')]
+            for cc in self.cc:
+                try:
+                    name, version = cc.split(":")
+                    if name == ccinfo.basename:
+                        if cc_version:
+                            min_cc_version = [int(v) for v in version.split('.')]
                             cur_cc_version = [int(v) for v in cc_version.split('.')]
                             # With lists of ints, this does what we want
                             return cur_cc_version >= min_cc_version
+                        else:
+                            # Compiler version unknown => module unsupported
+                            return False
+                except ValueError:
+                    # No version part specified
+                    pass
+
+            return False # compiler not listed
 
         return supported_isa_flags(ccinfo, arch) and supported_compiler(ccinfo, cc_version)
 
@@ -2581,8 +2593,8 @@ class CompilerDetector(object):
     }
     _version_patterns = {
         'msvc': r'^([0-9]{2})([0-9]{2})',
-        'gcc': r'gcc version ([0-9]+\.[0-9]+)\.[0-9]+',
-        'clang': r'clang version ([0-9]+\.[0-9])[ \.]',
+        'gcc': r'gcc version ([0-9]+)\.([0-9]+)\.[0-9]+',
+        'clang': r'clang version ([0-9]+)\.([0-9])[ \.]',
     }
 
     def __init__(self, cc_name, cc_bin, os_name):
@@ -2615,19 +2627,11 @@ class CompilerDetector(object):
 
         match = re.search(CompilerDetector._version_patterns[self._cc_name], cc_output, flags=re.MULTILINE)
         if match:
-            if self._cc_name == 'msvc':
-                cl_version_to_msvc_version = {
-                    '18.00': '2013',
-                    '19.00': '2015',
-                    '19.10': '2017'
-                }
-                try:
-                    cc_version = cl_version_to_msvc_version[match.group(1) + "." + match.group(2)]
-                except KeyError:
-                    raise InternalError('Unknown MSVC version in output "%s"' % (cc_output))
-            else:
-                cc_version = match.group(1)
-        elif match is None and self._cc_name == 'clang' and self._os_name in ['darwin', 'ios']:
+            major = int(match.group(1))
+            minor = int(match.group(2))
+            cc_version = "%d.%d" % (major, minor)
+
+        if cc_version is None and self._cc_name == 'clang' and self._os_name in ['darwin', 'ios']:
             xcode_version_to_clang = {
                 '703': '3.8',
                 '800': '3.9',
@@ -2635,7 +2639,6 @@ class CompilerDetector(object):
             }
 
             match = re.search(r'Apple LLVM version [0-9.]+ \(clang-([0-9]{3})\.', cc_output)
-
             if match:
                 apple_clang_version = match.group(1)
                 if apple_clang_version in xcode_version_to_clang:
@@ -2645,14 +2648,14 @@ class CompilerDetector(object):
                 else:
                     logging.warning('Unable to determine LLVM Clang version cooresponding to Apple Clang %s' %
                                     (apple_clang_version))
-                    return '3.8' # safe default
+                    cc_version = '3.8' # safe default
 
-        if cc_version is None:
+        if cc_version:
+            logging.info('Detected %s compiler version %s' % (self._cc_name, cc_version))
+        else:
             logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (
                 self._cc_name, cc_output))
-            return None
 
-        logging.info('Detected %s compiler version %s' % (self._cc_name, cc_version))
         return cc_version
 
 

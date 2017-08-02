@@ -82,13 +82,33 @@ Candidate multilib: .;@m64
 Selected multilib: .;@m64"""
         self.assertEqual(detector.version_from_compiler_output(compiler_out), "4.0")
 
+    def test_clang_version_two_digit(self):
+        # Output from Crystax NDK. Note: there is a trailing whitespace behind the version
+        # number for whatever reason. But let's keep the original output unchanged.
+        # pylint: disable=trailing-whitespace
+        detector = CompilerDetector("clang", "clang++", "android")
+        compiler_out = """clang version 3.7 
+Target: i686-none-linux-android
+Thread model: posix
+Found candidate GCC installation: /foo/crystax-toolchains/x86/bin/../lib/gcc/i686-linux-android/4.9
+Selected GCC installation: /foo/crystax-toolchains/x86/bin/../lib/gcc/i686-linux-android/4.9
+Candidate multilib: .;@m32
+Selected multilib: .;@m32"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "3.7")
+
     def test_msvc_version(self):
         detector = CompilerDetector("msvc", "cl.exe", "windows")
         compiler_out = """msvc_version.c
 
 1900
 """
-        self.assertEqual(detector.version_from_compiler_output(compiler_out), "2015")
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "19.0")
+
+        compiler_out = """msvc_version.c
+
+1910
+"""
+        self.assertEqual(detector.version_from_compiler_output(compiler_out), "19.10")
 
 
 class ModulesChooserResolveDependencies(unittest.TestCase):

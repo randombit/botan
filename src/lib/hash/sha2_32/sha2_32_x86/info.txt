@@ -7,5 +7,5 @@ need_isa sha,sse4.1
 <cc>
 gcc:5.0
 clang:3.9
-msvc:2015
+msvc:19.0 # MSVS 2015
 </cc>

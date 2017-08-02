@@ -14,8 +14,8 @@ x86_64
 </arch>
 
 <cc>
-gcc:4.8
-clang:3.2
+gcc
+clang
 icc
-msvc:2013
+msvc
 </cc>
