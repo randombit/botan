@@ -29,7 +29,7 @@ struct botan_struct
    {
    public:
       botan_struct(T* obj) : m_magic(MAGIC), m_obj(obj) {}
-      ~botan_struct() { m_magic = 0; m_obj.reset(); }
+      virtual ~botan_struct() { m_magic = 0; m_obj.reset(); }
 
       bool magic_ok() const { return (m_magic == MAGIC); }
 
