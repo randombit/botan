@@ -194,6 +194,47 @@ class SeedCapturing_RNG : public Botan::RandomNumberGenerator
       size_t m_samples = 0;
    };
 
+/*
+* RNG that counts the number of requests made to it, for example
+* to verify that a reseed attempt was made at the expected time.
+*/
+class Request_Counting_RNG : public Botan::RandomNumberGenerator
+   {
+   public:
+      Request_Counting_RNG() : m_randomize_count(0) {}
+
+      size_t randomize_count() const
+         {
+         return m_randomize_count;
+         }
+
+      bool is_seeded() const override
+         {
+         return true;
+         }
+
+      void clear() override
+         {
+         m_randomize_count = 0;
+         }
+
+      void randomize(uint8_t out[], size_t out_len) override
+         {
+         std::memset(out, 0x80, out_len);
+         m_randomize_count++;
+         }
+
+      void add_entropy(const uint8_t[], size_t) override {}
+
+      std::string name() const override
+         {
+         return "Request_Counting_RNG";
+         }
+
+   private:
+      size_t m_randomize_count;
+   };
+
 }
 
 #endif
