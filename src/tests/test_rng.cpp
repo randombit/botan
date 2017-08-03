@@ -393,7 +393,7 @@ class Stateful_RNG_Tests : public Test
 class HMAC_DRBG_Unit_Tests : public Stateful_RNG_Tests
    {
    public:
-      std::string rng_name() const { return "HMAC_DRBG"; }
+      std::string rng_name() const override { return "HMAC_DRBG"; }
 
       std::unique_ptr<Botan::Stateful_RNG> create_rng(Botan::RandomNumberGenerator* underlying_rng,
                                                       Botan::Entropy_Sources* underlying_es,

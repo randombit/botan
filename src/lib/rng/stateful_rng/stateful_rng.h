@@ -122,7 +122,11 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
    protected:
       void reseed_check();
 
-      uint32_t last_pid() const { return m_last_pid; }
+      /**
+      * Called by a subclass to notify that a reseed has been
+      * successfully performed.
+      */
+      void reset_reseed_counter() { m_reseed_counter = 1; }
 
    private:
       // A non-owned and possibly null pointer to shared RNG
@@ -134,7 +138,6 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
       const size_t m_reseed_interval;
       uint32_t m_last_pid = 0;
 
-   protected:
       /*
       * Set to 1 after a successful seeding, then incremented.  Reset
       * to 0 by clear() or a fork. This logic is used even if

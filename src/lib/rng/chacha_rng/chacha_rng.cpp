@@ -94,7 +94,7 @@ void ChaCha_RNG::add_entropy(const uint8_t input[], size_t input_len)
 
    if(8*input_len >= security_level())
       {
-      m_reseed_counter = 1;
+      reset_reseed_counter();
       }
    }
 
