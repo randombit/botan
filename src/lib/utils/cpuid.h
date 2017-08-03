@@ -73,20 +73,12 @@ class BOTAN_DLL CPUID
 
       static bool is_little_endian()
          {
-         if(g_processor_features == 0)
-            {
-            initialize();
-            }
-         return g_little_endian;
+         return endian_status() == ENDIAN_LITTLE;
          }
 
       static bool is_big_endian()
          {
-         /*
-         * We do not support PDP endian, so the endian is
-         * always either big or little.
-         */
-         return is_little_endian() == false;
+         return endian_status() == ENDIAN_BIG;
          }
 
       enum CPUID_bits : uint64_t {
@@ -281,9 +273,26 @@ class BOTAN_DLL CPUID
          }
 
    private:
-      static bool g_little_endian;
-      static size_t g_cache_line_size;
+      enum Endian_status : uint32_t {
+         ENDIAN_UNKNOWN = 0x00000000,
+         ENDIAN_BIG     = 0x01234567,
+         ENDIAN_LITTLE  = 0x67452301,
+      };
+
+      static Endian_status runtime_check_endian();
+
+      static Endian_status endian_status()
+         {
+         if(g_endian_status == ENDIAN_UNKNOWN)
+            {
+            g_endian_status = runtime_check_endian();
+            }
+         return g_endian_status;
+         }
+
       static uint64_t g_processor_features;
+      static size_t g_cache_line_size;
+      static Endian_status g_endian_status;
    };
 
 }

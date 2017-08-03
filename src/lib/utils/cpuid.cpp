@@ -58,7 +58,7 @@ namespace Botan {
 
 uint64_t CPUID::g_processor_features = 0;
 size_t CPUID::g_cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
-bool CPUID::g_little_endian = false;
+CPUID::Endian_status CPUID::g_endian_status = ENDIAN_UNKNOWN;
 
 namespace {
 
@@ -410,6 +410,7 @@ void CPUID::print(std::ostream& o)
    o << "CPUID flags: " << CPUID::to_string() << "\n";
    }
 
+//static
 void CPUID::initialize()
    {
    g_processor_features = 0;
@@ -423,18 +424,24 @@ void CPUID::initialize()
 #endif
 
    g_processor_features |= CPUID::CPUID_INITIALIZED_BIT;
+   }
 
+//static
+CPUID::Endian_status CPUID::runtime_check_endian()
+   {
    // Check runtime endian
    const uint32_t endian32 = 0x01234567;
    const uint8_t* e8 = reinterpret_cast<const uint8_t*>(&endian32);
 
+   Endian_status endian = ENDIAN_UNKNOWN;
+
    if(e8[0] == 0x01 && e8[1] == 0x23 && e8[2] == 0x45 && e8[3] == 0x67)
       {
-      g_little_endian = false;
+      endian = ENDIAN_BIG;
       }
    else if(e8[0] == 0x67 && e8[1] == 0x45 && e8[2] == 0x23 && e8[3] == 0x01)
       {
-      g_little_endian = true;
+      endian = ENDIAN_LITTLE;
       }
    else
       {
@@ -443,11 +450,12 @@ void CPUID::initialize()
 
    // If we were compiled with a known endian, verify it matches at runtime
 #if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   BOTAN_ASSERT(g_little_endian == true, "Build and runtime endian match");
+   BOTAN_ASSERT(endian == ENDIAN_LITTLE, "Build and runtime endian match");
 #elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   BOTAN_ASSERT(g_little_endian == false, "Build and runtime endian match");
+   BOTAN_ASSERT(endian == ENDIAN_BIG, "Build and runtime endian match");
 #endif
 
+   return endian;
    }
 
 }
