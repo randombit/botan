@@ -60,6 +60,8 @@ Botan::X509_Cert_Options req_opts1(const std::string& algo)
    opts.not_before("160101200000Z");
    opts.not_after("300101200000Z");
 
+   opts.challenge = "zoom";
+
    if(algo == "RSA")
       {
       opts.constraints = Botan::Key_Constraints(Botan::KEY_ENCIPHERMENT);
@@ -388,6 +390,9 @@ Test::Result test_x509_cert(const std::string& sig_algo, const std::string& hash
                                    *user1_key,
                                    hash_fn,
                                    Test::rng());
+
+   result.test_eq("PKCS10 challenge password parsed",
+                  user1_req.challenge_password(), "zoom");
 
    /* Create user #2's key and cert request */
    std::unique_ptr<Botan::Private_Key> user2_key(make_a_private_key(sig_algo));
