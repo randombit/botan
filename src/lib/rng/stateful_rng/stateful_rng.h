@@ -103,15 +103,30 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
       */
       virtual size_t security_level() const = 0;
 
+      /**
+      * Some DRBGs have a notion of the maximum number of bytes per
+      * request.  Longer requests (to randomize) will be treated as
+      * multiple requests, and may initiate reseeding multiple times,
+      * depending on the values of max_number_of_bytes_per_request and
+      * reseed_interval(). This function returns zero if the RNG in
+      * question does not have such a notion.
+      *
+      * @return max number of bytes per request (or zero)
+      */
+      virtual size_t max_number_of_bytes_per_request() const = 0;
+
+      size_t reseed_interval() const { return m_reseed_interval; }
+
       void clear() override;
 
    protected:
-      /**
-      * Called with lock held
-      */
       void reseed_check();
 
-      uint32_t last_pid() const { return m_last_pid; }
+      /**
+      * Called by a subclass to notify that a reseed has been
+      * successfully performed.
+      */
+      void reset_reseed_counter() { m_reseed_counter = 1; }
 
    private:
       // A non-owned and possibly null pointer to shared RNG
@@ -123,7 +138,6 @@ class BOTAN_DLL Stateful_RNG : public RandomNumberGenerator
       const size_t m_reseed_interval;
       uint32_t m_last_pid = 0;
 
-   protected:
       /*
       * Set to 1 after a successful seeding, then incremented.  Reset
       * to 0 by clear() or a fork. This logic is used even if

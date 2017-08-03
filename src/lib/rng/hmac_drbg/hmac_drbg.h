@@ -143,6 +143,9 @@ class BOTAN_DLL HMAC_DRBG final : public Stateful_RNG
 
       size_t security_level() const override;
 
+      size_t max_number_of_bytes_per_request() const override
+         { return m_max_number_of_bytes_per_request; }
+
    private:
       void update(const uint8_t input[], size_t input_len);
 
