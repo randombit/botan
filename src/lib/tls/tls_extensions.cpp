@@ -644,7 +644,8 @@ std::vector<uint8_t> Certificate_Status_Request::serialize() const
    }
 
 Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,
-                                                       uint16_t extension_size)
+                                                       uint16_t extension_size) :
+   m_server_side(false)
    {
    if(extension_size > 0)
       {
