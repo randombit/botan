@@ -57,6 +57,7 @@ void ChaCha_RNG::clear()
    Stateful_RNG::clear();
 
    m_hmac->set_key(std::vector<uint8_t>(m_hmac->output_length(), 0x00));
+   m_chacha->set_key(m_hmac->final());
    }
 
 void ChaCha_RNG::randomize(uint8_t output[], size_t output_len)
