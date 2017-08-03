@@ -78,6 +78,19 @@ initial seed is generated either by the system PRNG (if available) or
 a default set of entropy sources. These are also used for periodic
 reseeding of the RNG state.
 
+ChaCha_RNG
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is a very fast userspace PRNG based on ChaCha20 and HMAC(SHA-256). The key
+for ChaCha is derived by hashing entropy inputs with HMAC. Then the ChaCha
+keystream generator is run, first to generate the new HMAC key (used for any
+future entropy additions), then the desired RNG outputs.
+
+This RNG composes two primitives thought to be secure (ChaCha and HMAC) in a
+simple and well studied way (the extract-then-expand paradigm), but is still an
+ad-hoc and non-standard construction. It is included because it is roughly 20x
+faster then HMAC_DRBG, and certain applications need access to a very fast RNG.
+
 TPM_RNG
 ^^^^^^^^^^^^^^^^^
 

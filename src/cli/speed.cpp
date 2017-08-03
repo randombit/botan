@@ -44,12 +44,12 @@
    #include <botan/hmac_drbg.h>
 #endif
 
-#if defined(BOTAN_HAS_HMAC_RNG)
-   #include <botan/hmac_rng.h>
-#endif
-
 #if defined(BOTAN_HAS_RDRAND_RNG)
    #include <botan/rdrand_rng.h>
+#endif
+
+#if defined(BOTAN_HAS_CHACHA_RNG)
+   #include <botan/chacha_rng.h>
 #endif
 
 #if defined(BOTAN_HAS_FPE_FE1)
@@ -119,9 +119,8 @@
    #include <botan/sm2.h>
 #endif
 
-#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
+#if defined(BOTAN_HAS_NEWHOPE)
    #include <botan/newhope.h>
-   #include <botan/chacha.h>
 #endif
 
 namespace Botan_CLI {
@@ -793,7 +792,7 @@ class Speed final : public Command
                bench_xmss(provider, msec);
                }
 #endif
-#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
+#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA_RNG)
             else if(algo == "NEWHOPE")
                {
                bench_newhope(provider, msec);
@@ -838,7 +837,7 @@ class Speed final : public Command
                {
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
                Botan::AutoSeeded_RNG auto_rng;
-               bench_rng(auto_rng, "AutoSeeded_RNG (periodic reseed)", msec, buf_sizes);
+               bench_rng(auto_rng, "AutoSeeded_RNG (with reseed)", msec, buf_sizes);
 #endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
@@ -860,6 +859,13 @@ class Speed final : public Command
                   bench_rng(hmac_drbg, hmac_drbg.name(), msec, buf_sizes);
                   }
 #endif
+
+#if defined(BOTAN_HAS_CHACHA_RNG)
+               // Provide a dummy seed
+               Botan::ChaCha_RNG chacha_rng(Botan::secure_vector<uint8_t>(32));
+               bench_rng(chacha_rng, "ChaCha_RNG", msec, buf_sizes);
+#endif
+
                }
 #if defined(BOTAN_HAS_SIMD_32) && defined(INCLUDE_SIMD_PERF)
             else if(algo == "simd")
@@ -1965,7 +1971,7 @@ class Speed final : public Command
 #endif
 
 
-#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA)
+#if defined(BOTAN_HAS_NEWHOPE) && defined(BOTAN_HAS_CHACHA_RNG)
       void bench_newhope(const std::string& /*provider*/,
                          std::chrono::milliseconds msec)
          {
@@ -1975,44 +1981,7 @@ class Speed final : public Command
          Timer shareda_timer(nm, "", "shareda");
          Timer sharedb_timer(nm, "", "sharedb");
 
-         class ChaCha20_RNG : public Botan::RandomNumberGenerator
-            {
-            public:
-               std::string name() const override
-                  {
-                  return "ChaCha20_RNG";
-                  }
-               void clear() override
-                  {
-                  /* ignored */
-                  }
-
-               void randomize(uint8_t out[], size_t len) override
-                  {
-                  Botan::clear_mem(out, len);
-                  m_chacha.cipher1(out, len);
-                  }
-
-               bool is_seeded() const override
-                  {
-                  return true;
-                  }
-
-               void add_entropy(const uint8_t[], size_t) override
-                  {
-                  /* ignored */
-                  }
-
-               ChaCha20_RNG(const Botan::secure_vector<uint8_t>& seed)
-                  {
-                  m_chacha.set_key(seed);
-                  }
-
-            private:
-               Botan::ChaCha m_chacha;
-            };
-
-         ChaCha20_RNG nh_rng(rng().random_vec(32));
+         Botan::ChaCha_RNG nh_rng;
 
          while(sharedb_timer.under(msec))
             {
