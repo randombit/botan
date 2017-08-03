@@ -16,6 +16,15 @@
    #include <botan/auto_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   #include <botan/system_rng.h>
+#endif
+
+#if defined(BOTAN_HAS_RDRAND_RNG)
+   #include <botan/rdrand_rng.h>
+   #include <botan/cpuid.h>
+#endif
+
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
    #include <botan/entropy_src.h>
 #endif
@@ -684,6 +693,95 @@ BOTAN_REGISTER_TEST("auto_rng_unit", AutoSeeded_RNG_Tests);
 
 #endif
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+
+class System_RNG_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("System_RNG");
+
+         Botan::System_RNG rng;
+
+         const std::string name = rng.name();
+
+         result.confirm("Some non-empty name is returned", name.empty() == false);
+
+         result.confirm("System RNG always seeded", rng.is_seeded());
+         rng.clear(); // clear is a noop for system rng
+         result.confirm("System RNG always seeded", rng.is_seeded());
+
+         rng.reseed(Botan::Entropy_Sources::global_sources(),
+                    256,
+                    std::chrono::milliseconds(100));
+
+         for(size_t i = 0; i != 128; ++i)
+            {
+            std::vector<uint8_t> out_buf(i);
+            rng.randomize(out_buf.data(), out_buf.size());
+            }
+
+         return std::vector<Test::Result>{result};
+         }
+   };
+
+BOTAN_REGISTER_TEST("system_rng", System_RNG_Tests);
+
+#endif
+
+#if defined(BOTAN_HAS_RDRAND_RNG)
+
+class RDRAND_RNG_Tests : public Test
+   {
+   public:
+      std::vector<Test::Result> run() override
+         {
+         Test::Result result("RDRAND_RNG");
+
+         if(Botan::CPUID::has_rdrand())
+            {
+            Botan::RDRAND_RNG rng;
+
+            result.test_eq("Expected name", rng.name(), "RDRAND");
+            result.confirm("RDRAND always seeded", rng.is_seeded());
+            rng.clear(); // clear is a noop for rdrand
+            result.confirm("RDRAND always seeded", rng.is_seeded());
+
+            size_t reseed_bits = rng.reseed(Botan::Entropy_Sources::global_sources(),
+                                            256,
+                                            std::chrono::seconds(1));
+            result.test_eq("RDRAND cannot consume inputs", reseed_bits, size_t(0));
+
+            /*
+            RDRAND_RNG ignores add_entropy calls - confirm this by passing
+            an invalid ptr/length field to add_entropy. If it examined its
+            arguments, it would crash...
+            */
+            const uint8_t* invalid_ptr = reinterpret_cast<const uint8_t*>(0xDEADC0DE);
+            const size_t invalid_ptr_len = 64*1024;
+            rng.add_entropy(invalid_ptr, invalid_ptr_len);
+
+            for(size_t i = 0; i != 128; ++i)
+               {
+               std::vector<uint8_t> out_buf(i);
+               rng.randomize(out_buf.data(), out_buf.size());
+               }
+            }
+         else
+            {
+            result.test_throws("RDRAND_RNG throws if instruction not available",
+                               []() { Botan::RDRAND_RNG rng; });
+            }
+
+
+         return std::vector<Test::Result>{result};
+         }
+   };
+
+BOTAN_REGISTER_TEST("rdrand_rng", RDRAND_RNG_Tests);
+
+#endif
 
 }
 

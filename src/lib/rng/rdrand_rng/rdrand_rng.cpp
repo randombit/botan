@@ -24,15 +24,13 @@ RDRAND_RNG::RDRAND_RNG()
 //static
 uint32_t RDRAND_RNG::rdrand()
    {
-   bool ok = false;
-   uint32_t r = rdrand_status(ok);
-
-   while(!ok)
+   for(;;)
       {
-      r = rdrand_status(ok);
+      bool ok = false;
+      uint32_t r = rdrand_status(ok);
+      if(ok)
+         return r;
       }
-
-   return r;
    }
 
 //static
@@ -56,11 +54,11 @@ uint32_t RDRAND_RNG::rdrand_status(bool& ok)
       if(1 == cf)
          {
          ok = true;
-         return r;
+         break;
          }
       }
 
-   return 0;
+   return r;
    }
 
 void RDRAND_RNG::randomize(uint8_t out[], size_t out_len)
