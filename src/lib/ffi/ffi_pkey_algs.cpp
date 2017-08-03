@@ -648,10 +648,10 @@ int botan_privkey_ed25519_get_privkey(botan_privkey_t key,
    return BOTAN_FFI_DO(Botan::Private_Key, key, k, {
       if(Botan::Ed25519_PrivateKey* ed = dynamic_cast<Botan::Ed25519_PrivateKey*>(&k))
          {
-         const Botan::secure_vector<uint8_t>& key = ed->get_private_key();
-         if(key.size() != 64)
+         const Botan::secure_vector<uint8_t>& ed_key = ed->get_private_key();
+         if(ed_key.size() != 64)
             return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
-         Botan::copy_mem(output, key.data(), key.size());
+         Botan::copy_mem(output, ed_key.data(), ed_key.size());
          return BOTAN_FFI_SUCCESS;
          }
       else
@@ -672,10 +672,10 @@ int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
    return BOTAN_FFI_DO(Botan::Public_Key, key, k, {
       if(Botan::Ed25519_PublicKey* ed = dynamic_cast<Botan::Ed25519_PublicKey*>(&k))
          {
-         const std::vector<uint8_t>& key = ed->get_public_key();
-         if(key.size() != 32)
+         const std::vector<uint8_t>& ed_key = ed->get_public_key();
+         if(ed_key.size() != 32)
             return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
-         Botan::copy_mem(output, key.data(), key.size());
+         Botan::copy_mem(output, ed_key.data(), ed_key.size());
          return BOTAN_FFI_SUCCESS;
          }
       else

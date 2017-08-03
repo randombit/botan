@@ -32,7 +32,7 @@ class PK_Test : public Text_Based_Test
          }
 
    protected:
-      std::vector<std::string> possible_providers(const std::string&) override;
+      std::vector<std::string> possible_providers(const std::string& params) override;
 
    private:
       std::string m_algo;
@@ -172,7 +172,7 @@ class PK_Key_Generation_Test : public Test
 
       virtual std::string algo_name() const = 0;
 
-      std::vector<std::string> possible_providers(const std::string&) override;
+      std::vector<std::string> possible_providers(const std::string& params) override;
    };
 
 void check_invalid_signatures(Test::Result& result,

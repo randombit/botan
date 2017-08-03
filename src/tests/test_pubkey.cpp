@@ -82,7 +82,7 @@ void check_invalid_ciphertexts(Test::Result& result,
                     " invalid ciphertexts, rejected " + std::to_string(ciphertext_rejected));
    }
 
-std::vector<std::string> PK_Test::possible_providers(const std::string& params)
+std::vector<std::string> PK_Test::possible_providers(const std::string& /*params*/)
    {
    return Test::provider_filter({ "base", "bearssl", "openssl", "tpm" });
    }
