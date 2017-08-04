@@ -53,7 +53,9 @@ const std::vector<std::string> ec_groups =
    "x962_p192v3",
    "x962_p239v1",
    "x962_p239v2",
-   "x962_p239v3"
+   "x962_p239v3",
+   "sm2p256v1",
+   "frp256v1"
    };
 
 Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, BigInt max)

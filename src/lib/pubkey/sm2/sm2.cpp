@@ -40,12 +40,10 @@ SM2_Signature_PrivateKey::SM2_Signature_PrivateKey(RandomNumberGenerator& rng,
    m_da_inv = inverse_mod(m_private_key + 1, domain.get_order());
    }
 
-namespace {
-
-std::vector<uint8_t> compute_za(HashFunction& hash,
-                                const std::string& user_id,
-                                const EC_Group& domain,
-                                const PointGFp& pubkey)
+std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
+                                    const std::string& user_id,
+                                    const EC_Group& domain,
+                                    const PointGFp& pubkey)
    {
    if(user_id.size() >= 8192)
       throw Invalid_Argument("SM2 user id too long to represent");
@@ -71,6 +69,8 @@ std::vector<uint8_t> compute_za(HashFunction& hash,
    return za;
    }
 
+namespace {
+
 /**
 * SM2 signature operation
 */
@@ -88,7 +88,7 @@ class SM2_Signature_Operation : public PK_Ops::Signature
          m_hash(HashFunction::create_or_throw("SM3"))
          {
          // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
-         m_za = compute_za(*m_hash, ident, sm2.domain(), sm2.public_point());
+         m_za = sm2_compute_za(*m_hash, ident, sm2.domain(), sm2.public_point());
          m_hash->update(m_za);
          }
 
@@ -142,7 +142,7 @@ class SM2_Verification_Operation : public PK_Ops::Verification
          m_hash(HashFunction::create_or_throw("SM3"))
          {
          // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
-         m_za = compute_za(*m_hash, ident, sm2.domain(), sm2.public_point());
+         m_za = sm2_compute_za(*m_hash, ident, sm2.domain(), sm2.public_point());
          m_hash->update(m_za);
          }
 
