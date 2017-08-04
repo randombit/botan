@@ -115,6 +115,8 @@ class BOTAN_DLL ChaCha_RNG final : public Stateful_RNG
 
       size_t security_level() const override;
 
+      size_t max_number_of_bytes_per_request() const override { return 0; }
+
    private:
       void update(const uint8_t input[], size_t input_len);
 

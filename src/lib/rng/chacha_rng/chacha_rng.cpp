@@ -68,28 +68,34 @@ void ChaCha_RNG::randomize(uint8_t output[], size_t output_len)
 void ChaCha_RNG::randomize_with_input(uint8_t output[], size_t output_len,
                                       const uint8_t input[], size_t input_len)
    {
-   add_entropy(input, input_len);
    reseed_check();
+
+   if(input_len > 0)
+      {
+      update(input, input_len);
+      }
 
    clear_mem(output, output_len);
    m_chacha->cipher1(output, output_len);
    }
 
+void ChaCha_RNG::update(const uint8_t input[], size_t input_len)
+   {
+   m_hmac->update(input, input_len);
+   m_chacha->set_key(m_hmac->final());
+
+   secure_vector<uint8_t> mac_key(m_hmac->output_length());
+   m_chacha->cipher1(mac_key.data(), mac_key.size());
+   m_hmac->set_key(mac_key);
+   }
+
 void ChaCha_RNG::add_entropy(const uint8_t input[], size_t input_len)
    {
-   if(input_len > 0)
+   update(input, input_len);
+
+   if(8*input_len >= security_level())
       {
-      m_hmac->update(input, input_len);
-      m_chacha->set_key(m_hmac->final());
-
-      secure_vector<uint8_t> mac_key(m_hmac->output_length());
-      m_chacha->cipher1(mac_key.data(), mac_key.size());
-      m_hmac->set_key(mac_key);
-
-      if(8*input_len >= security_level())
-         {
-         m_reseed_counter = 1;
-         }
+      reset_reseed_counter();
       }
    }
 

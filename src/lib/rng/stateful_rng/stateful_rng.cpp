@@ -32,7 +32,7 @@ void Stateful_RNG::initialize_with(const uint8_t input[], size_t len)
 
    if(8*len >= security_level())
       {
-      m_reseed_counter = 1;
+      reset_reseed_counter();
       }
    }
 
@@ -55,7 +55,7 @@ size_t Stateful_RNG::reseed(Entropy_Sources& srcs,
 
    if(bits_collected >= security_level())
       {
-      m_reseed_counter = 1;
+      reset_reseed_counter();
       }
 
    return bits_collected;
@@ -67,7 +67,7 @@ void Stateful_RNG::reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits)
 
    if(poll_bits >= security_level())
       {
-      m_reseed_counter = 1;
+      reset_reseed_counter();
       }
    }
 
