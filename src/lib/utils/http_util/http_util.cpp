@@ -27,6 +27,8 @@
   #include <winsock2.h>
   #include <WS2tcpip.h>
 
+namespace {
+
 int close(int fd)
    {
    return ::closesocket(fd);
@@ -41,6 +43,8 @@ int write(int s, const char* buf, size_t len)
    {
    return ::send(s, reinterpret_cast<const char*>(buf), static_cast<int>(len), 0);
    }
+
+}
 
 typedef size_t ssize_t;
 #else
