@@ -21,7 +21,7 @@ python3_pylint src/scripts/install.py
 echo "travis_fold:end:pylint_configure"
 
 echo "travis_fold:start:pylint_python_unittests"
-python3_pylint src/scripts/python_uniitests.py
+python3_pylint src/scripts/python_unittests.py
 echo "travis_fold:end:pylint_python_unittests"
 
 echo "travis_fold:start:pylint_python_unittests_unix"
