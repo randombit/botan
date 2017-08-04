@@ -13,7 +13,8 @@
 namespace Botan {
 
 /**
-* Streebog
+* Streebog (GOST R 34.11-2012)
+* RFC 6986
 */
 class BOTAN_DLL Streebog: public HashFunction
    {

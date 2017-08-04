@@ -10,6 +10,9 @@
 
 namespace Botan {
 
+extern const uint64_t STREEBOG_Ax[8][256];
+extern const uint64_t STREEBOG_C[12][8];
+
 std::unique_ptr<HashFunction> Streebog::copy_state() const
    {
    return std::unique_ptr<HashFunction>(new Streebog(*this));
@@ -19,14 +22,14 @@ namespace {
 
 static inline void addm(const uint8_t* m, uint64_t* h)
    {
-   bool carry = false, overflow = false;
+   bool carry = false;
    for(int i = 0; i < 8; i++)
       {
       const uint64_t m64 = load_le<uint64_t>(m, i);
       const uint64_t hi = load_le<uint64_t>(reinterpret_cast<uint8_t*>(h), i);
       uint64_t t = hi + m64;
 
-      overflow = t < hi || t < m64;
+      const bool overflow = t < hi || t < m64;
       store_le(t + carry, reinterpret_cast<uint8_t*>(&h[i]));
       carry = overflow;
       }
@@ -39,27 +42,29 @@ inline void lps(uint64_t* block)
 
    for(int i = 0; i < 8; ++i)
       {
-      block[i] =  STREEBOG_Ax[0][r[i]] ^
-                  STREEBOG_Ax[1][r[i + 8]] ^
-                  STREEBOG_Ax[2][r[i + 16]] ^
-                  STREEBOG_Ax[3][r[i + 24]] ^
-                  STREEBOG_Ax[4][r[i + 32]] ^
-                  STREEBOG_Ax[5][r[i + 40]] ^
-                  STREEBOG_Ax[6][r[i + 48]] ^
-                  STREEBOG_Ax[7][r[i + 56]];
+      block[i] =  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[0][r[i]]), 0) ^
+                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[1][r[i + 8]]), 0) ^
+                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[2][r[i + 16]]), 0) ^
+                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[3][r[i + 24]]), 0) ^
+                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[4][r[i + 32]]), 0) ^
+                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[5][r[i + 40]]), 0) ^
+                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[6][r[i + 48]]), 0) ^
+                  load_le<uint64_t>(reinterpret_cast<const uint8_t*>(&STREEBOG_Ax[7][r[i + 56]]), 0);
       }
    }
 
 inline void e(uint64_t* K, const uint8_t* m)
    {
    uint64_t tmp[8];
+   uint64_t C[8];
 
    std::memcpy(tmp, K, 64);
    xor_buf(K, reinterpret_cast<const uint64_t*>(m), 8);
    for(int i = 0; i < 12; ++i)
       {
       lps(K);
-      xor_buf(tmp, &STREEBOG_C[i][0], 8);
+      load_le(C, reinterpret_cast<const uint8_t*>(&STREEBOG_C[i][0]), 8);
+      xor_buf(tmp, C, 8);
       lps(tmp);
       xor_buf(K, tmp, 8);
       }
@@ -68,6 +73,8 @@ inline void e(uint64_t* K, const uint8_t* m)
 inline void g(uint64_t* h, const uint8_t* m, uint64_t N)
    {
    uint64_t hN[8];
+
+   // force N to little-endian
    store_le(N, reinterpret_cast<uint8_t*>(&N));
 
    std::memcpy(hN, h, 64);
