@@ -899,6 +899,15 @@ BOTAN_DLL int botan_privkey_load_sm2(botan_privkey_t* key,
                                      const botan_mp_t scalar,
                                      const char* curve_name);
 
+BOTAN_DLL int botan_pubkey_load_sm2_enc(botan_pubkey_t* key,
+                                        const botan_mp_t public_x,
+                                        const botan_mp_t public_y,
+                                        const char* curve_name);
+
+BOTAN_DLL int botan_privkey_load_sm2_enc(botan_privkey_t* key,
+                                         const botan_mp_t scalar,
+                                         const char* curve_name);
+
 /*
 * Public Key Encryption
 */
