@@ -8,6 +8,7 @@
 #include <botan/internal/es_capi.h>
 #include <botan/parsing.h>
 #define NOMINMAX 1
+#define _WINSOCKAPI_ // stop windows.h including winsock.h
 #include <windows.h>
 #include <wincrypt.h>
 
