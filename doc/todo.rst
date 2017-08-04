@@ -17,6 +17,7 @@ Ciphers, Hashes, PBKDF
 * Serpent using AVX2 or SSSE3/pshufb
 * ChaCha20 using AVX2, NEON
 * XSalsa20-Poly1305 AEAD compatible with NaCl
+* SHACAL-2
 * ARIA block cipher (RFCs 5794 and 6209)
 * ASCON 1.2 (CAESAR)
 * NORX-64 3.0 (CAESAR)
@@ -52,7 +53,7 @@ External Providers, Hardware Support
 * /dev/crypto provider (ciphers, hashes)
 * Windows CryptoAPI provider (ciphers, hashes, RSA)
 * Apple CommonCrypto
-* ARMv8-A crypto extensions (AES, SHA-2)
+* ARMv8-A crypto extensions (AES, GCM)
 * POWER8 crypto extensions (AES, SHA-2)
 * Better TPM support: NVRAM, PCR measurements, sealing
 * Intel SGX support
@@ -88,8 +89,7 @@ PKIX
 * OCSP responder logic
 * X.509 attribute certificates (RFC 5755)
 * Support generating/verifying XMSS certificates
-* Roughtime client (https://roughtime.googlesource.com/roughtime/),
-  requires Ed25519
+* Roughtime client (https://roughtime.googlesource.com/roughtime/)
 
 New Protocols / Formats
 ----------------------------------------

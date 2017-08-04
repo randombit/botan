@@ -17,6 +17,9 @@ Version 2.2.0, Not Yet Released
 
 * Add the PGP S2K algorithm (GH #1060)
 
+* Add ChaCha_RNG which is a very fast and completely non-standard
+  random bit generator (GH #1137)
+
 * Add support for SHA-1 and SHA-2 instructions added in Intel Goldmont
   (GH #826)
 
@@ -36,6 +39,9 @@ Version 2.2.0, Not Yet Released
   private keys in most instances. (GH #1093)
 
 * The OpenSSL backend now supports the 1.1.0 API (GH #1056)
+
+* Add a preliminary provider using BearSSL, currently EC and hashes supported
+  (GH #1094)
 
 * Fix a bug in certificate path length checking that could cause valid
   chains to be rejected. (GH #1053)
