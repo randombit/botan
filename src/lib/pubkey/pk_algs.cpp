@@ -237,6 +237,22 @@ load_private_key(const AlgorithmIdentifier& alg_id,
    throw Decoding_Error("Unhandled PK algorithm " + alg_name);
    }
 
+namespace {
+
+std::string default_ec_group_for(const std::string& alg_name)
+   {
+   if(alg_name == "SM2_Enc" || alg_name == "SM2_Sig")
+      return "sm2p256v1";
+   if(alg_name == "GOST-34.10")
+      return "gost_256A";
+   if(alg_name == "ECGDSA")
+      return "brainpool256r1";
+   return "secp256r1";
+
+   }
+
+}
+
 std::unique_ptr<Private_Key>
 create_private_key(const std::string& alg_name,
                    RandomNumberGenerator& rng,
@@ -313,7 +329,7 @@ create_private_key(const std::string& alg_name,
       alg_name == "SM2_Enc" ||
       alg_name == "GOST-34.10")
       {
-      const EC_Group ec_group(params.empty() ? "secp256r1" : params);
+      const EC_Group ec_group(params.empty() ? default_ec_group_for(alg_name) : params);
 
 #if defined(BOTAN_HAS_ECDSA)
       if(alg_name == "ECDSA")
