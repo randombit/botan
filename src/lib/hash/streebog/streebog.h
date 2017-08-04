@@ -63,10 +63,6 @@ class BOTAN_DLL Streebog_512 final : public Streebog
       Streebog_512() : Streebog(512) {}
    };
 
-extern const uint64_t STREEBOG_Ax[8][256];
-extern const uint64_t STREEBOG_C[12][8];
-
 }
-
 
 #endif
