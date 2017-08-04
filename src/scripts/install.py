@@ -64,6 +64,14 @@ def parse_command_line(args):
     return (options, args)
 
 
+class PrependDestdirError(Exception):
+    pass
+
+
+def is_subdir(path, subpath):
+    return os.path.relpath(path, start=subpath).startswith("..")
+
+
 def prepend_destdir(path):
     """
     Needed because os.path.join() discards the first path if the
@@ -73,39 +81,21 @@ def prepend_destdir(path):
     """
     destdir = os.environ.get('DESTDIR', "")
 
-    if destdir != "":
-        #DESTDIR is non-empty, but we cannot join all prefix paths.
+    if destdir:
+        # DESTDIR is non-empty, but we only join absolute paths on UNIX-like file systems
+        if os.path.sep != "/":
+            raise PrependDestdirError("Only UNIX-like file systems using forward slash " \
+                                      "separator supported when DESTDIR is set.")
+        if not os.path.isabs(path):
+            raise PrependDestdirError("--prefix must be an absolute path when DESTDIR is set.")
 
-        #These will be rejected via an exception:
-        #  C:/foo
-        #  C:foo
-        #  \\foo (Python >3.1 only)
-        #  \\foo\bar (Python >3.1 only)
-        #  ../somewhere/else
-
-        #These will be normalized to a relative path and joined with DESTDIR:
-        #  /absolute/dir
-        #  relative/dir
-        #  /dir/with/../inside
-        #  ./relative/to/me
-        #  ~/botan-install-test
-
-        # ".." makes no sense, as it would certainly escape the DESTDIR prefix
-        if path.startswith(".."):
-            raise Exception('With DESTDIR set, a prefix starting in ".." would escape the destdir. Aborting.')
-
-        # Will only trigger on Windows, see the splitdrive() doc for details
-        drive, _ = os.path.splitdrive(path)
-        if drive != "":
-            raise Exception('DESTDIR set, but drive or UNC detected in prefix path. Aborting.')
-
-        # resolved ~, ~user
-        path = os.path.expanduser(path)
-        # native slashes, ".." inside (not in front of) pathes normalized
         path = os.path.normpath(path)
         # Remove / or \ prefixes if existent to accomodate for os.path.join()
         path = path.lstrip(os.path.sep)
         path = os.path.join(destdir, path)
+
+        if not is_subdir(destdir, path):
+            raise PrependDestdirError("path escapes DESTDIR (path='%s', destdir='%s')" % (path, destdir))
 
     return path
 
