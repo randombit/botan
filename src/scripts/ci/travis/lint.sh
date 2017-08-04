@@ -24,6 +24,10 @@ echo "travis_fold:start:pylint_python_unittests"
 python3_pylint src/scripts/python_uniitests.py
 echo "travis_fold:end:pylint_python_unittests"
 
+echo "travis_fold:start:pylint_python_unittests_unix"
+python3_pylint src/scripts/python_unittests_unix.py
+echo "travis_fold:end:pylint_python_unittests_unix"
+
 echo "travis_fold:start:pylint_botanpy"
 python2_pylint src/python/botan2.py
 python3_pylint src/python/botan2.py
