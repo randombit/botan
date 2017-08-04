@@ -23,6 +23,7 @@ rtlsecurezeromemory
 stl_filesystem_msvc
 threads
 filesystem
+sockets
 </target_features>
 
 <aliases>
