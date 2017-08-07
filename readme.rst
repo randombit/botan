@@ -106,9 +106,9 @@ Version 2 requires a C++11 compiler; GCC 4.8 and later, Clang 3.5 and
 later, and MSVC 2015 are regularly tested.
 
 The latest 2.x release is
-`2.1.0 <https://botan.randombit.net/releases/Botan-2.1.0.tgz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-2.1.0.tgz.asc>`_
-released on 2017-04-04
+`2.2.0 <https://botan.randombit.net/releases/Botan-2.2.0.tgz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-2.2.0.tgz.asc>`_
+released on 2017-08-07
 
 Old Stable Release
 ----------------------------------------

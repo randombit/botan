@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 2.2.0, Not Yet Released
+Version 2.2.0, 2017-08-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add the Ed25519 signature scheme (GH #1066)
