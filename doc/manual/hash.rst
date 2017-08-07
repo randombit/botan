@@ -60,6 +60,7 @@ Botan implements the following hash algorithms:
     - SHA-3
     - SHAKE (SHAKE-128, SHAKE-256)
     - SM3
+    - Streebog (Streebog-256, Streebog-512)
     - Skein-512
     - Tiger
     - Whirlpool

@@ -1,0 +1,3 @@
+<defines>
+STREEBOG -> 20170623
+</defines>
