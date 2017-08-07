@@ -1,6 +1,7 @@
 /*
 * TLS echo server using BSD sockets
 * (C) 2014 Jack Lloyd
+*     2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -15,6 +16,17 @@
 
 #include <list>
 
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+#include <winsock2.h>
+#include <WS2tcpip.h>
+
+// definitions in tls_client.cpp
+int close(int fd);
+int read(int s, void* buf, size_t len);
+int send(int s, const uint8_t* buf, size_t len, int flags);
+
+typedef size_t ssize_t;
+#else
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -23,6 +35,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#endif
 
 #if !defined(MSG_NOSIGNAL)
    #define MSG_NOSIGNAL 0
@@ -33,7 +46,31 @@ namespace Botan_CLI {
 class TLS_Server final : public Command
    {
    public:
-      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy=") {}
+      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy=")
+         {
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+         WSAData wsa_data;
+         WORD wsa_version = MAKEWORD(2, 2);
+
+         if(::WSAStartup(wsa_version, &wsa_data) != 0)
+            {
+            throw CLI_Error("WSAStartup() failed: " + std::to_string(WSAGetLastError()));
+            }
+
+         if(LOBYTE(wsa_data.wVersion) != 2 || HIBYTE(wsa_data.wVersion) != 2)
+            {
+            ::WSACleanup();
+            throw CLI_Error("Could not find a usable version of Winsock.dll");
+            }
+#endif
+         }
+
+      ~TLS_Server()
+         {
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+         ::WSACleanup();
+#endif
+         }
 
       void go() override
          {

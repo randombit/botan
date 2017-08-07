@@ -1,6 +1,7 @@
 /*
 * Sketchy HTTP client
 * (C) 2013,2016 Jack Lloyd
+*     2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -22,11 +23,37 @@
   #include <boost/asio.hpp>
 
 #elif defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+  #include <winsock2.h>
+  #include <WS2tcpip.h>
+
+namespace {
+
+int close(int fd)
+   {
+   return ::closesocket(fd);
+   }
+
+int read(int s, void* buf, size_t len)
+   {
+   return ::recv(s, reinterpret_cast<char*>(buf), static_cast<int>(len), 0);
+   }
+
+int write(int s, const char* buf, size_t len)
+   {
+   return ::send(s, reinterpret_cast<const char*>(buf), static_cast<int>(len), 0);
+   }
+
+}
+
+typedef size_t ssize_t;
+#else
   #include <sys/types.h>
   #include <sys/socket.h>
   #include <netdb.h>
   #include <unistd.h>
   #include <netinet/in.h>
+#endif
 #else
   //#warning "No network support enabled in http_util"
 #endif
@@ -63,6 +90,22 @@ std::string http_transact(const std::string& hostname,
    return oss.str();
 #elif defined(BOTAN_TARGET_OS_HAS_SOCKETS)
 
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+   WSAData wsa_data;
+   WORD wsa_version = MAKEWORD(2, 2);
+
+   if (::WSAStartup(wsa_version, &wsa_data) != 0)
+      {
+      throw HTTP_Error("WSAStartup() failed: " + std::to_string(WSAGetLastError()));
+      }
+
+   if (LOBYTE(wsa_data.wVersion) != 2 || HIBYTE(wsa_data.wVersion) != 2)
+      {
+      ::WSACleanup();
+      throw HTTP_Error("Could not find a usable version of Winsock.dll");
+      }
+#endif
+
    hostent* host_addr = ::gethostbyname(hostname.c_str());
    uint16_t port = 80;
 
@@ -74,7 +117,13 @@ std::string http_transact(const std::string& hostname,
 
    struct socket_raii {
       socket_raii(int fd) : m_fd(fd) {}
-      ~socket_raii() { ::close(m_fd); }
+      ~socket_raii()
+         {
+         ::close(m_fd);
+#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
+         ::WSACleanup();
+#endif
+         }
       int m_fd;
       };
 
