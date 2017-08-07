@@ -51,7 +51,10 @@ class ECDSA_Signature_KAT_Tests : public PK_Signature_Generation_Test
 
       std::string default_padding(const VarMap& vars) const override
          {
-         return "EMSA1(" + get_req_str(vars, "Hash") + ")";
+         const std::string hash = get_req_str(vars, "Hash");
+         if(hash == "Raw")
+            return hash;
+         return "EMSA1(" + hash + ")";
          }
 
 #if !defined(BOTAN_HAS_RFC6979)
