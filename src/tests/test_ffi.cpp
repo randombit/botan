@@ -389,6 +389,7 @@ class FFI_Unit_Tests : public Test
 
 #if defined(BOTAN_HAS_SM2)
          results.push_back(ffi_test_sm2(rng));
+         results.push_back(ffi_test_sm2_enc(rng));
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
@@ -1323,7 +1324,7 @@ class FFI_Unit_Tests : public Test
 
       Test::Result ffi_test_sm2(botan_rng_t rng)
          {
-         Test::Result result("FFI SM2");
+         Test::Result result("FFI SM2 Sig");
          static const char* kCurve = "sm2p256v1";
          const std::string sm2_ident = "SM2 Ident Field";
          botan_privkey_t priv;
@@ -1397,6 +1398,76 @@ class FFI_Unit_Tests : public Test
 
             TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
             }
+
+         TEST_FFI_OK(botan_mp_destroy, (private_scalar));
+         TEST_FFI_OK(botan_mp_destroy, (public_x));
+         TEST_FFI_OK(botan_mp_destroy, (public_y));
+         TEST_FFI_OK(botan_pubkey_destroy, (pub));
+         TEST_FFI_OK(botan_privkey_destroy, (priv));
+         TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
+
+         return result;
+         }
+
+      Test::Result ffi_test_sm2_enc(botan_rng_t rng)
+         {
+         Test::Result result("FFI SM2 Enc");
+         static const char* kCurve = "sm2p256v1";
+         botan_privkey_t priv;
+         botan_pubkey_t pub;
+         botan_privkey_t loaded_privkey;
+         botan_pubkey_t loaded_pubkey;
+
+         REQUIRE_FFI_OK(botan_privkey_create, (&priv, "SM2_Enc", kCurve, rng));
+         TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+         ffi_test_pubkey_export(result, pub, priv, rng);
+
+         // Check key load functions
+         botan_mp_t private_scalar, public_x, public_y;
+         botan_mp_init(&private_scalar);
+         botan_mp_init(&public_x);
+         botan_mp_init(&public_y);
+
+         TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv, "x"));
+         TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub, "public_x"));
+         TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub, "public_y"));
+         TEST_FFI_OK(botan_privkey_load_sm2_enc, (&loaded_privkey, private_scalar, kCurve));
+         TEST_FFI_OK(botan_pubkey_load_sm2_enc, (&loaded_pubkey, public_x, public_y, kCurve));
+         TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
+
+         char namebuf[32] = { 0 };
+         size_t name_len = sizeof(namebuf);
+
+         TEST_FFI_OK(botan_pubkey_algo_name, (pub, &namebuf[0], &name_len));
+         result.test_eq(namebuf, namebuf, "SM2_Enc");
+
+         std::vector<uint8_t> message(32);
+         // Assumes 256-bit params:
+         std::vector<uint8_t> ciphertext(1 + 32*2 + message.size() + 32);
+         TEST_FFI_OK(botan_rng_get, (rng, message.data(), message.size()));
+
+         botan_pk_op_encrypt_t enc;
+         if(TEST_FFI_OK(botan_pk_op_encrypt_create, (&enc, loaded_pubkey, "", 0)))
+            {
+            size_t ctext_len = ciphertext.size();
+            TEST_FFI_OK(botan_pk_op_encrypt, (enc, rng, ciphertext.data(), &ctext_len,
+                                              message.data(), message.size()));
+
+            botan_pk_op_decrypt_t dec;
+            TEST_FFI_OK(botan_pk_op_decrypt_create, (&dec, loaded_privkey, "", 0));
+
+            std::vector<uint8_t> recovered(ciphertext.size());
+            size_t recovered_len = recovered.size();
+
+            TEST_FFI_OK(botan_pk_op_decrypt,
+                        (dec, recovered.data(), &recovered_len,
+                         ciphertext.data(), ciphertext.size()));
+
+            botan_pk_op_decrypt_destroy(dec);
+            }
+         botan_pk_op_encrypt_destroy(enc);
 
          TEST_FFI_OK(botan_mp_destroy, (private_scalar));
          TEST_FFI_OK(botan_mp_destroy, (public_x));

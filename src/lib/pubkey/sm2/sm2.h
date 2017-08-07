@@ -13,7 +13,7 @@
 namespace Botan {
 
 /**
-* This class represents SM2 Signature Keys
+* This class represents SM2 Signature public keys
 */
 class BOTAN_DLL SM2_Signature_PublicKey : public virtual EC_PublicKey
    {
@@ -56,7 +56,7 @@ class BOTAN_DLL SM2_Signature_PublicKey : public virtual EC_PublicKey
    };
 
 /**
-* This class represents SM2 Private Keys
+* This class represents SM2 Signature private keys
 */
 class BOTAN_DLL SM2_Signature_PrivateKey : public SM2_Signature_PublicKey,
                                            public EC_PrivateKey
@@ -92,6 +92,13 @@ class BOTAN_DLL SM2_Signature_PrivateKey : public SM2_Signature_PublicKey,
    private:
       BigInt m_da_inv;
    };
+
+class HashFunction;
+
+std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
+                                    const std::string& user_id,
+                                    const EC_Group& domain,
+                                    const PointGFp& pubkey);
 
 }
 

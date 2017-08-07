@@ -1,5 +1,6 @@
 /*
 * (C) 2009,2015 Jack Lloyd
+* (C) 2017 Ribose Inc
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -241,7 +242,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
 
    const std::string padding = get_opt_str(vars, "Padding", default_padding(vars));
 
-   Test::Result result(algo_name() + "/" + padding + " decryption");
+   Test::Result result(algo_name() + (padding.empty() ? padding : "/" + padding) + " decryption");
 
    std::unique_ptr<Botan::Private_Key> privkey = load_private_key(vars);
 
@@ -285,7 +286,7 @@ PK_Encryption_Decryption_Test::run_one_test(const std::string&, const VarMap& va
       std::unique_ptr<Botan::RandomNumberGenerator> kat_rng;
       if(vars.count("Nonce"))
          {
-         kat_rng.reset(new Fixed_Output_RNG(get_req_bin(vars, "Nonce")));
+         kat_rng.reset(test_rng(get_req_bin(vars, "Nonce")));
          }
 
       const std::vector<uint8_t> generated_ciphertext =

@@ -121,6 +121,12 @@ class PK_Encryption_Decryption_Test : public PK_Test
          {
          return "Raw";
          }
+
+      virtual Botan::RandomNumberGenerator* test_rng(const std::vector<uint8_t>& nonce) const
+         {
+         return new Fixed_Output_RNG(nonce);
+         }
+
    private:
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override final;
    };

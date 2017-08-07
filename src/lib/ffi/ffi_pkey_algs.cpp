@@ -37,6 +37,7 @@
 
 #if defined(BOTAN_HAS_SM2)
   #include <botan/sm2.h>
+  #include <botan/sm2_enc.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
@@ -595,6 +596,46 @@ int botan_privkey_load_sm2(botan_privkey_t* key,
 #if defined(BOTAN_HAS_SM2)
    return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
       std::unique_ptr<Botan::SM2_Signature_PrivateKey> p_key;
+      int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
+
+      if(rc == BOTAN_FFI_SUCCESS)
+         *key = new botan_privkey_struct(p_key.release());
+      return rc;
+      });
+#else
+   BOTAN_UNUSED(key, scalar, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_load_sm2_enc(botan_pubkey_t* key,
+                              const botan_mp_t public_x,
+                              const botan_mp_t public_y,
+                              const char* curve_name)
+   {
+#if defined(BOTAN_HAS_SM2)
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+      std::unique_ptr<Botan::SM2_Encryption_PublicKey> p_key;
+      if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name))
+         {
+         *key = new botan_pubkey_struct(p_key.release());
+         return BOTAN_FFI_SUCCESS;
+         }
+      return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
+      });
+#else
+   BOTAN_UNUSED(key, public_x, public_y, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_load_sm2_enc(botan_privkey_t* key,
+                               const botan_mp_t scalar,
+                               const char* curve_name)
+   {
+#if defined(BOTAN_HAS_SM2)
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+      std::unique_ptr<Botan::SM2_Encryption_PrivateKey> p_key;
       int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
 
       if(rc == BOTAN_FFI_SUCCESS)

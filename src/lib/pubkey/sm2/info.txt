@@ -1,5 +1,5 @@
 <defines>
-SM2 -> 20170621
+SM2 -> 20170804
 </defines>
 
 <requires>
@@ -10,4 +10,5 @@ keypair
 numbertheory
 rng
 sm3
+kdf2
 </requires>
