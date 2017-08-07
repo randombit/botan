@@ -407,7 +407,9 @@ set of functions in ``x509path.h`` named ``x509_path_validate``:
    current system clock's current time. ``ocsp_timeout`` sets the timeout for
    OCSP requests. The default of 0 disables OCSP checks alltogether.
    ``ocsp_resp`` allows adding additional OCSP responses retrieved from outside
-   of the path validation.
+   of the path validation. Note that OCSP online checks are done only
+   as long as the http_util module was compiled in. Availability of online
+   OCSP checks can be checked using the macro BOTAN_HAS_ONLINE_REVOCATION_CHECKS.
 
    For the different flavours of ``x509_path_validate``, check ``x509path.h``.
 

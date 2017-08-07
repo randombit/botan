@@ -53,6 +53,7 @@ ed25519
 
 clmul
 locking_allocator
+http_util # needed by x509 for OCSP online checks
 
 aes_ni
 aes_ssse3
