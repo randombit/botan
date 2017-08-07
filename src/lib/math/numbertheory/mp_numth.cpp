@@ -34,7 +34,7 @@ BigInt square(const BigInt& x)
 */
 BigInt mul_add(const BigInt& a, const BigInt& b, const BigInt& c)
    {
-   if(c.is_negative() || c.is_zero())
+   if(c.is_negative())
       throw Invalid_Argument("mul_add: Third argument must be > 0");
 
    BigInt::Sign sign = BigInt::Positive;
