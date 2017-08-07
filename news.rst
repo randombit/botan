@@ -11,11 +11,17 @@ Version 2.2.0, Not Yet Released
 
 * Add the SM2 signature scheme (GH #1082)
 
+* Add the SM2 public key encryption scheme (GH #1142)
+
 * Add the SM3 hash function (GH #996)
+
+* Add the Streebog (GOST R 34.11-2012) hash function (GH #1114)
 
 * Add the SM4 block cipher (GH #1080)
 
 * Add the PGP S2K algorithm (GH #1060)
+
+* Add SP 800-56A KDF (GH #1040)
 
 * Add ChaCha_RNG which is a very fast and completely non-standard
   random bit generator (GH #1137)
@@ -57,9 +63,15 @@ Version 2.2.0, Not Yet Released
 
 * Allow to seek in the big endian counter mode of operation (GH #999)
 
-* Add SP 800-56A KDF (GH #1040)
-
 * Support loading ElGamal keys through FFI interface (GH #1008)
+
+* Support Windows sockets in `http_util` (allowing OCSP checks on Windows),
+  as well as in the TLS command line utils (GH #1138).
+
+* The `--destdir` flag to `configure.py` has been removed. Instead use
+  the `DESTDIR` environment variable at install time. This change was
+  done to more closely match how autoconf handles this case.
+  (GH #1139 #1111 #997 #996).
 
 * Many changes to configure.py and botan2.py to make them pylint clean
   (GH #1041 #1002 #984)
