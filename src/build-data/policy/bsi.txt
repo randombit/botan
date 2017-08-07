@@ -70,6 +70,7 @@ rdrand_rng
 system_rng
 
 # utils
+http_util # needed by x509 for OCSP online checks
 locking_allocator
 simd
 </if_available>
