@@ -360,6 +360,7 @@ class FFI_Unit_Tests : public Test
             }
 
          std::vector<Test::Result> results;
+         results.push_back(ffi_test_errors());
          results.push_back(ffi_test_mp(rng));
          results.push_back(ffi_test_block_ciphers());
          results.push_back(ffi_test_ciphers_cbc());
@@ -679,6 +680,23 @@ class FFI_Unit_Tests : public Test
          return result;
          }
 
+      Test::Result ffi_test_errors()
+         {
+         // Test some error handling situations
+         Test::Result result("FFI error handling");
+
+         // delete of null is ok/ignored
+         TEST_FFI_RC(0, botan_hash_destroy, (nullptr));
+
+         // Confirm that botan_x_destroy checks the argument type
+         botan_mp_t mp;
+         botan_mp_init(&mp);
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_INPUT, botan_hash_destroy, (reinterpret_cast<botan_hash_t>(mp)));
+         TEST_FFI_RC(0, botan_mp_destroy, (mp));
+
+         return result;
+         }
+
       Test::Result ffi_test_mp(botan_rng_t rng)
          {
          Test::Result result("FFI MP");
@@ -949,6 +967,10 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_privkey_export_encrypted_pbkdf_iter, (priv, privkey.data(), &privkey_len, rng, "password", pbkdf_iter,
                      "", "", BOTAN_PRIVKEY_EXPORT_FLAG_DER));
 
+         botan_privkey_t copy;
+         botan_privkey_load(&copy, rng, privkey.data(), privkey.size(), "password");
+         botan_privkey_destroy(copy);
+
          privkey_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_privkey_export_encrypted_pbkdf_iter, (priv, nullptr,
                      &privkey_len, rng, "password", pbkdf_iter, "", "", BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
@@ -956,6 +978,22 @@ class FFI_Unit_Tests : public Test
          privkey.resize(privkey_len);
          TEST_FFI_OK(botan_privkey_export_encrypted_pbkdf_iter, (priv, privkey.data(), &privkey_len, rng, "password", pbkdf_iter,
                      "", "", BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
+
+         privkey.resize(privkey_len * 2);
+         privkey_len = privkey.size();
+         const uint32_t pbkdf_msec = 100;
+         size_t pbkdf_iters_out = 0;
+
+         TEST_FFI_OK(botan_privkey_export_encrypted_pbkdf_msec,
+                     (priv, privkey.data(), &privkey_len, rng, "password",
+                      pbkdf_msec, &pbkdf_iters_out, "AES-256/GCM", "SHA-512", 0));
+         // PBKDF2 currently always rounds to multiple of 10,000
+         result.test_gte("Reasonable KDF iters", pbkdf_iters_out, 1000);
+         privkey.resize(privkey_len);
+
+         botan_privkey_load(&copy, rng, privkey.data(), privkey.size(), "password");
+         botan_privkey_destroy(copy);
+
 
          // calculate fingerprint
          size_t strength = 0;
@@ -1654,7 +1692,7 @@ class FFI_Unit_Tests : public Test
          result.test_eq(nullptr, "Public key matches", retr_pubkey, 32,
                         pubkey.data(), pubkey.size());
 
-         //TEST_FFI_OK(botan_pubkey_load_ed25519, (&pub, pubkey.data()));
+         TEST_FFI_OK(botan_pubkey_load_ed25519, (&pub, pubkey.data()));
 
          botan_pk_op_sign_t signer;
          std::vector<uint8_t> signature;
