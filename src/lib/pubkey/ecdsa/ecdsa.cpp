@@ -77,7 +77,8 @@ secure_vector<uint8_t>
 ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
                                     RandomNumberGenerator& rng)
    {
-   const BigInt m(msg, msg_len);
+   const size_t q_len = msg_len>m_order.bytes()?m_order.bytes():msg_len;
+   const BigInt m(&msg[msg_len - q_len], q_len);
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    const BigInt k = generate_rfc6979_nonce(m_x, m_order, m, hash_for_emsa(m_emsa));
