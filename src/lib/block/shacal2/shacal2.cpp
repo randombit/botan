@@ -7,6 +7,7 @@
 
 #include <botan/shacal2.h>
 #include <botan/loadstor.h>
+#include <botan/cpuid.h>
 
 namespace Botan {
 
@@ -43,6 +44,19 @@ inline void SHACAL2_Rev(uint32_t A, uint32_t B, uint32_t C, uint32_t& D,
 */
 void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_SHACAL2_SIMD)
+   if(CPUID::has_simd_32())
+      {
+      while(blocks >= 4)
+         {
+         simd_encrypt_4(in, out);
+         in += 4*BLOCK_SIZE;
+         out += 4*BLOCK_SIZE;
+         blocks -= 4;
+         }
+      }
+#endif
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t A = load_be<uint32_t>(in, 0);
@@ -78,6 +92,19 @@ void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
 */
 void SHACAL2::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_SHACAL2_SIMD)
+   if(CPUID::has_simd_32())
+      {
+      while(blocks >= 4)
+         {
+         simd_decrypt_4(in, out);
+         in += 4*BLOCK_SIZE;
+         out += 4*BLOCK_SIZE;
+         blocks -= 4;
+         }
+      }
+#endif
+
    for(size_t i = 0; i != blocks; ++i)
       {
       uint32_t A = load_be<uint32_t>(in, 0);

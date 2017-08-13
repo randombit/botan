@@ -28,6 +28,11 @@ class BOTAN_DLL SHACAL2 final : public Block_Cipher_Fixed_Params<32, 16, 64, 4>
    private:
       void key_schedule(const uint8_t[], size_t) override;
 
+#if defined(BOTAN_HAS_SHACAL2_SIMD)
+      void simd_encrypt_4(const uint8_t in[], uint8_t out[]) const;
+      void simd_decrypt_4(const uint8_t in[], uint8_t out[]) const;
+#endif
+
       secure_vector<uint32_t> m_RK;
    };
 
