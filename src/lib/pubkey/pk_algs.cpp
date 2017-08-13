@@ -276,7 +276,7 @@ create_private_key(const std::string& alg_name,
       if(provider.empty() || provider == "openssl")
          {
          std::unique_ptr<Botan::Private_Key> pk;
-         if(pk = make_openssl_rsa_private_key(rng, rsa_bits))
+         if((pk = make_openssl_rsa_private_key(rng, rsa_bits)))
             return pk;
 
          if(!provider.empty())
