@@ -265,7 +265,7 @@ class FFI_Unit_Tests : public Test
 
          // x509 cert test
          botan_x509_cert_t cert;
-         if(TEST_FFI_OK(botan_x509_cert_load_file, (&cert, "src/tests/data/ecc/CSCA.CSCA.csca-germany.1.crt")))
+         if(TEST_FFI_OK(botan_x509_cert_load_file, (&cert, Test::data_file("ecc/CSCA.CSCA.csca-germany.1.crt").c_str())))
             {
             size_t date_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_time_starts, (cert, nullptr, &date_len));
