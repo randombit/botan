@@ -22,6 +22,9 @@ class L_computer;
 *
 * @see "The OCB Authenticated-Encryption Algorithm" RFC 7253
 *      https://tools.ietf.org/html/rfc7253
+* @see "OCB For Block Ciphers Without 128-Bit Blocks"
+*      (draft-krovetz-ocb-wide-d3) for the extension of OCB to
+*      block ciphers with larger block sizes.
 * @see Free Licenses http://www.cs.ucdavis.edu/~rogaway/ocb/license.htm
 * @see OCB home page http://www.cs.ucdavis.edu/~rogaway/ocb
 */
@@ -47,7 +50,7 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
       ~OCB_Mode();
    protected:
       /**
-      * @param cipher the 128-bit block cipher to use
+      * @param cipher the block cipher to use
       * @param tag_size is how big the auth tag will be
       */
       OCB_Mode(BlockCipher* cipher, size_t tag_size);
@@ -68,7 +71,7 @@ class BOTAN_DLL OCB_Mode : public AEAD_Mode
 
       secure_vector<uint8_t> update_nonce(const uint8_t nonce[], size_t nonce_len);
 
-      size_t m_tag_size = 0;
+      const size_t m_tag_size = 0;
       secure_vector<uint8_t> m_last_nonce;
       secure_vector<uint8_t> m_stretch;
    };
@@ -77,7 +80,7 @@ class BOTAN_DLL OCB_Encryption final : public OCB_Mode
    {
    public:
       /**
-      * @param cipher the 128-bit block cipher to use
+      * @param cipher the block cipher to use
       * @param tag_size is how big the auth tag will be
       */
       OCB_Encryption(BlockCipher* cipher, size_t tag_size = 16) :
@@ -99,7 +102,7 @@ class BOTAN_DLL OCB_Decryption final : public OCB_Mode
    {
    public:
       /**
-      * @param cipher the 128-bit block cipher to use
+      * @param cipher the block cipher to use
       * @param tag_size is how big the auth tag will be
       */
       OCB_Decryption(BlockCipher* cipher, size_t tag_size = 16) :
