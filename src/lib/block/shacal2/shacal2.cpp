@@ -44,6 +44,13 @@ inline void SHACAL2_Rev(uint32_t A, uint32_t B, uint32_t C, uint32_t& D,
 */
 void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
+#if defined(BOTAN_HAS_SHACAL2_X86)
+   if(CPUID::has_intel_sha())
+      {
+      return x86_encrypt_blocks(in, out, blocks);
+      }
+#endif
+
 #if defined(BOTAN_HAS_SHACAL2_SIMD)
    if(CPUID::has_simd_32())
       {
@@ -181,6 +188,13 @@ void SHACAL2::key_schedule(const uint8_t key[], size_t len)
 
 size_t SHACAL2::parallelism() const
    {
+#if defined(BOTAN_HAS_SHACAL2_X86)
+   if(CPUID::has_intel_sha())
+      {
+      return 4;
+      }
+#endif
+
 #if defined(BOTAN_HAS_SHACAL2_SIMD)
    if(CPUID::has_simd_32())
       {
@@ -193,6 +207,13 @@ size_t SHACAL2::parallelism() const
 
 std::string SHACAL2::provider() const
    {
+#if defined(BOTAN_HAS_SHACAL2_X86)
+   if(CPUID::has_intel_sha())
+      {
+      return "intel_sha";
+      }
+#endif
+
 #if defined(BOTAN_HAS_SHACAL2_SIMD)
    if(CPUID::has_simd_32())
       {
