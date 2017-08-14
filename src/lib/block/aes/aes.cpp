@@ -414,6 +414,18 @@ void aes_key_schedule(const uint8_t key[], size_t length,
    copy_mem(DK.data(), XDK.data(), DK.size());
    }
 
+size_t aes_parallelism()
+   {
+#if defined(BOTAN_HAS_AES_NI)
+   if(CPUID::has_aes_ni())
+      {
+      return 4;
+      }
+#endif
+
+   return 1;
+   }
+
 const char* aes_provider()
    {
 #if defined(BOTAN_HAS_AES_NI)
@@ -438,6 +450,10 @@ const char* aes_provider()
 std::string AES_128::provider() const { return aes_provider(); }
 std::string AES_192::provider() const { return aes_provider(); }
 std::string AES_256::provider() const { return aes_provider(); }
+
+size_t AES_128::parallelism() const { return aes_parallelism(); }
+size_t AES_192::parallelism() const { return aes_parallelism(); }
+size_t AES_256::parallelism() const { return aes_parallelism(); }
 
 void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {

@@ -25,6 +25,8 @@ class BOTAN_DLL Noekeon final : public Block_Cipher_Fixed_Params<16, 16>
       void clear() override;
       std::string name() const override { return "Noekeon"; }
       BlockCipher* clone() const override { return new Noekeon; }
+      size_t parallelism() const override;
+
    private:
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
       void simd_encrypt_4(const uint8_t in[], uint8_t out[]) const;

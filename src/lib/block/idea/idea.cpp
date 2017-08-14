@@ -107,6 +107,18 @@ void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[
 
 }
 
+size_t IDEA::parallelism() const
+   {
+#if defined(BOTAN_HAS_IDEA_SSE2)
+   if(CPUID::has_sse2())
+      {
+      return 8;
+      }
+#endif
+
+   return 1;
+   }
+
 std::string IDEA::provider() const
    {
 #if defined(BOTAN_HAS_IDEA_SSE2)

@@ -179,8 +179,27 @@ void SHACAL2::key_schedule(const uint8_t key[], size_t len)
       }
    }
 
+size_t SHACAL2::parallelism() const
+   {
+#if defined(BOTAN_HAS_SHACAL2_SIMD)
+   if(CPUID::has_simd_32())
+      {
+      return 4;
+      }
+#endif
+
+   return 1;
+   }
+
 std::string SHACAL2::provider() const
    {
+#if defined(BOTAN_HAS_SHACAL2_SIMD)
+   if(CPUID::has_simd_32())
+      {
+      return "simd";
+      }
+#endif
+
    return "base";
    }
 

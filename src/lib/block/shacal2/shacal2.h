@@ -25,6 +25,8 @@ class BOTAN_DLL SHACAL2 final : public Block_Cipher_Fixed_Params<32, 16, 64, 4>
       void clear() override;
       std::string name() const override { return "SHACAL2"; }
       BlockCipher* clone() const override { return new SHACAL2; }
+      size_t parallelism() const override;
+
    private:
       void key_schedule(const uint8_t[], size_t) override;
 

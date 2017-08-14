@@ -98,6 +98,18 @@ void Threefish_512::skein_feedfwd(const secure_vector<uint64_t>& M,
             m_K[4] ^ m_K[5] ^ m_K[6] ^ m_K[7] ^ 0x1BD11BDAA9FC1A22;
    }
 
+size_t Threefish_512::parallelism() const
+   {
+#if defined(BOTAN_HAS_THREEFISH_512_AVX2)
+   if(CPUID::has_avx2())
+      {
+      return 2;
+      }
+#endif
+
+   return 1;
+   }
+
 std::string Threefish_512::provider() const
    {
 #if defined(BOTAN_HAS_THREEFISH_512_AVX2)
