@@ -90,8 +90,11 @@ void GOST_34_11::compress_n(const byte input[], size_t blocks)
 
          // P transformation
          for(size_t k = 0; k != 4; ++k)
+            {
+            const uint64_t UVk = U[k] ^ V[k];
             for(size_t l = 0; l != 8; ++l)
-               key[4*l+k] = get_byte(l, U[k]) ^ get_byte(l, V[k]);
+               key[4*l+k] = get_byte(l, UVk);
+            }
 
          cipher.set_key(key, 32);
          cipher.encrypt(&hash[8*j], S + 8*j);
