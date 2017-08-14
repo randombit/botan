@@ -73,7 +73,7 @@ class SM2_Encryption_KAT_Tests : public PK_Encryption_Decryption_Test
             "P,A,B,xG,yG,Order,Cofactor,Msg,x,Nonce,Ciphertext",
             "") {}
 
-      virtual std::string default_padding(const VarMap& vars) const override
+      virtual std::string default_padding(const VarMap&) const override
          {
          return "";
          }
