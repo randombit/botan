@@ -361,6 +361,7 @@ class FFI_Unit_Tests : public Test
 
          std::vector<Test::Result> results;
          results.push_back(ffi_test_errors());
+         results.push_back(ffi_test_base64());
          results.push_back(ffi_test_mp(rng));
          results.push_back(ffi_test_block_ciphers());
          results.push_back(ffi_test_ciphers_cbc());
@@ -693,6 +694,35 @@ class FFI_Unit_Tests : public Test
          botan_mp_init(&mp);
          TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_INPUT, botan_hash_destroy, (reinterpret_cast<botan_hash_t>(mp)));
          TEST_FFI_RC(0, botan_mp_destroy, (mp));
+
+         return result;
+         }
+
+      Test::Result ffi_test_base64()
+         {
+         Test::Result result("FFI base64");
+
+         const uint8_t bin[9] = { 0x16, 0x8a, 0x1f, 0x06, 0xe9, 0xe7, 0xcb, 0xdd, 0x34 };
+         char out_buf[1024] = { 0 };
+
+         size_t out_len = sizeof(out_buf);
+         TEST_FFI_OK(botan_base64_encode, (bin, sizeof(bin), out_buf, &out_len));
+
+         result.test_eq("encoded string", out_buf, "FoofBunny900");
+
+         out_len -= 1;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
+                     botan_base64_encode,
+                     (bin, sizeof(bin), out_buf, &out_len));
+
+         const char* base64 = "U3VjaCBiYXNlNjQgd293IQ==";
+         uint8_t out_bin[1024] = { 0 };
+         out_len = sizeof(out_bin);
+         TEST_FFI_OK(botan_base64_decode, (base64, strlen(base64), out_bin, &out_len));
+
+         result.test_eq("decoded string",
+                        std::string(reinterpret_cast<const char*>(out_bin), out_len),
+                        "Such base64 wow!");
 
          return result;
          }

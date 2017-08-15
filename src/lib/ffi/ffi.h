@@ -173,9 +173,26 @@ BOTAN_DLL int botan_scrub_mem(uint8_t* mem, size_t bytes);
 */
 BOTAN_DLL int botan_hex_encode(const uint8_t* x, size_t len, char* out, uint32_t flags);
 
-// TODO: botan_hex_decode
-// TODO: botan_base64_encode
-// TODO: botan_base64_decode
+/**
+* Perform hex decoding
+* @param hex_str a string of hex chars (whitespace is ignored)
+* @param in_len the length of hex_str
+* @param out the output buffer should be at least strlen(hex_str)/2 bytes
+* @param out_len the size of out
+*/
+BOTAN_DLL int botan_hex_decode(const char* hex_str, size_t in_len, uint8_t* out, size_t* out_len);
+
+/**
+* Perform base64 encoding
+*/
+BOTAN_DLL int botan_base64_encode(const uint8_t* x, size_t len, char* out, size_t* out_len);
+
+
+/**
+* Perform base64 decoding
+*/
+BOTAN_DLL int botan_base64_decode(const char* base64_str, size_t in_len,
+                                  uint8_t* out, size_t* out_len);
 
 /**
 * RNG type
