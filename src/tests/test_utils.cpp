@@ -12,6 +12,7 @@
 #include <botan/loadstor.h>
 #include <botan/calendar.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/poly_dbl.h>
 #include <botan/charset.h>
 #include <botan/parsing.h>
 
@@ -176,6 +177,27 @@ class Utility_Function_Tests : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("util", Utility_Function_Tests);
+
+class Poly_Double_Tests : public Text_Based_Test
+   {
+   public:
+      Poly_Double_Tests() : Text_Based_Test("poly_dbl.vec", "In,Out") {}
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override
+         {
+         Test::Result result("Polynomial doubling");
+         const std::vector<uint8_t> in  = get_req_bin(vars, "In");
+         const std::vector<uint8_t> out = get_req_bin(vars, "Out");
+
+         std::vector<uint8_t> b = in;
+         Botan::poly_double_n(b.data(), b.size());
+
+         result.test_eq("Expected value", b, out);
+         return result;
+         }
+   };
+
+BOTAN_REGISTER_TEST("poly_dbl", Poly_Double_Tests);
 
 class Date_Format_Tests : public Text_Based_Test
    {

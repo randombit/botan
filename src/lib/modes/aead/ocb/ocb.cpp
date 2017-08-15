@@ -7,7 +7,7 @@
 */
 
 #include <botan/ocb.h>
-#include <botan/cmac.h>
+#include <botan/internal/poly_dbl.h>
 #include <botan/internal/bit_ops.h>
 
 namespace Botan {
@@ -56,7 +56,9 @@ class L_computer
 
       secure_vector<uint8_t> poly_double(const secure_vector<uint8_t>& in) const
          {
-         return CMAC::poly_double(in);
+         secure_vector<uint8_t> out = in;
+         poly_double_n(out.data(), out.size());
+         return out;
          }
 
       secure_vector<uint8_t> m_L_dollar, m_L_star;

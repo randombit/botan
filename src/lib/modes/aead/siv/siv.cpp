@@ -8,6 +8,7 @@
 
 #include <botan/siv.h>
 #include <botan/cmac.h>
+#include <botan/internal/poly_dbl.h>
 #include <botan/ctr.h>
 #include <botan/parsing.h>
 
@@ -106,19 +107,19 @@ secure_vector<uint8_t> SIV_Mode::S2V(const uint8_t* text, size_t text_len)
 
    for(size_t i = 0; i != m_ad_macs.size(); ++i)
       {
-      V = CMAC::poly_double(V);
+      poly_double_n(V.data(), V.size());
       V ^= m_ad_macs[i];
       }
 
    if(m_nonce.size())
       {
-      V = CMAC::poly_double(V);
+      poly_double_n(V.data(), V.size());
       V ^= m_nonce;
       }
 
    if(text_len < 16)
       {
-      V = CMAC::poly_double(V);
+      poly_double_n(V.data(), V.size());
       xor_buf(V.data(), text, text_len);
       V[text_len] ^= 0x80;
       return m_cmac->process(V);
