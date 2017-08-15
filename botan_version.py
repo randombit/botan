@@ -1,6 +1,6 @@
 
 release_major = 2
-release_minor = 2
+release_minor = 3
 release_patch = 0
 release_so_abi_rev = 2
 
