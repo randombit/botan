@@ -73,6 +73,18 @@ inline void gamma(uint32_t& A0, uint32_t& A1, uint32_t& A2, uint32_t& A3)
 
 }
 
+size_t Noekeon::parallelism() const
+   {
+#if defined(BOTAN_HAS_NOEKEON_SIMD)
+   if(CPUID::has_simd_32())
+      {
+      return 4;
+      }
+#endif
+
+   return 1;
+   }
+
 std::string Noekeon::provider() const
    {
 #if defined(BOTAN_HAS_NOEKEON_SIMD)

@@ -17,7 +17,6 @@ Ciphers, Hashes, PBKDF
 * Serpent using AVX2 or SSSE3/pshufb
 * ChaCha20 using AVX2, NEON
 * XSalsa20-Poly1305 AEAD compatible with NaCl
-* SHACAL-2
 * ARIA block cipher (RFCs 5794 and 6209)
 * ASCON 1.2 (CAESAR)
 * NORX-64 3.0 (CAESAR)

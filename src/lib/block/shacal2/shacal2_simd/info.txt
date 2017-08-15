@@ -1,0 +1,8 @@
+<defines>
+SHACAL2_SIMD -> 20170813
+</defines>
+
+<requires>
+shacal2
+simd
+</requires>

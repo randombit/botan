@@ -27,6 +27,8 @@ class BOTAN_DLL Threefish_512 final : public Block_Cipher_Fixed_Params<64, 64>
       std::string provider() const override;
       std::string name() const override { return "Threefish-512"; }
       BlockCipher* clone() const override { return new Threefish_512; }
+      size_t parallelism() const override;
+
    protected:
       const secure_vector<uint64_t>& get_T() const { return m_T; }
       const secure_vector<uint64_t>& get_K() const { return m_K; }

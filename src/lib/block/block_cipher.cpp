@@ -66,6 +66,10 @@
   #include <botan/serpent.h>
 #endif
 
+#if defined(BOTAN_HAS_SHACAL2)
+  #include <botan/shacal2.h>
+#endif
+
 #if defined(BOTAN_HAS_SM4)
   #include <botan/sm4.h>
 #endif
@@ -132,6 +136,13 @@ BlockCipher::create(const std::string& algo,
    if(algo == "Serpent")
       {
       return std::unique_ptr<BlockCipher>(new Serpent);
+      }
+#endif
+
+#if defined(BOTAN_HAS_SHACAL2)
+   if(algo == "SHACAL2")
+      {
+      return std::unique_ptr<BlockCipher>(new SHACAL2);
       }
 #endif
 
