@@ -134,9 +134,18 @@ EMSA* get_emsa(const std::string& algo_spec)
 #endif
 
 #if defined(BOTAN_HAS_EMSA_RAW)
-   if(req.algo_name() == "Raw" && req.arg_count() == 0)
+   if(req.algo_name() == "Raw")
       {
-      return new EMSA_Raw;
+      if(req.arg_count() == 0)
+         {
+         return new EMSA_Raw;
+         }
+      else
+         {
+         auto hash = HashFunction::create(req.arg(0));
+         if(hash)
+            return new EMSA_Raw(hash->output_length());
+         }
       }
 #endif
 
