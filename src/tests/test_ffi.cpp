@@ -402,6 +402,10 @@ class FFI_Unit_Tests : public Test
          results.push_back(ffi_test_elgamal(rng));
 #endif
 
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+         results.push_back(ffi_test_dh(rng));
+#endif
+
 #if defined(BOTAN_HAS_ED25519)
          results.push_back(ffi_test_ed25519(rng));
 #endif
@@ -1588,15 +1592,14 @@ class FFI_Unit_Tests : public Test
          botan_pk_op_ka_t ka2;
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka2, priv2, "KDF2(SHA-256)", 0));
 
-         std::vector<uint8_t> pubkey1(256); // length problem again
-         size_t pubkey1_len = pubkey1.size();
+         size_t pubkey1_len = 0;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pk_op_key_agreement_export_public, (priv1, nullptr, &pubkey1_len));
+         std::vector<uint8_t> pubkey1(pubkey1_len);
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_export_public, (priv1, pubkey1.data(), &pubkey1_len));
-         pubkey1.resize(pubkey1_len);
-
-         std::vector<uint8_t> pubkey2(256); // length problem again
-         size_t pubkey2_len = pubkey2.size();
+         size_t pubkey2_len = 0;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pk_op_key_agreement_export_public, (priv2, nullptr, &pubkey2_len));
+         std::vector<uint8_t> pubkey2(pubkey2_len);
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_export_public, (priv2, pubkey2.data(), &pubkey2_len));
-         pubkey2.resize(pubkey2_len);
 
          std::vector<uint8_t> salt(32);
          TEST_FFI_OK(botan_rng_get, (rng, salt.data(), salt.size()));
@@ -1819,6 +1822,124 @@ class FFI_Unit_Tests : public Test
             TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey));
             TEST_FFI_OK(botan_privkey_destroy, (priv));
             }
+
+         return result;
+         }
+
+
+      Test::Result ffi_test_dh(botan_rng_t rng)
+         {
+         Test::Result result("FFI DH");
+
+            botan_mp_t private_x, public_g, public_p, public_y;
+
+            botan_privkey_t loaded_privkey1;
+            botan_pubkey_t loaded_pubkey1;
+
+            botan_mp_init(&private_x);
+
+            botan_mp_init(&public_g);
+            botan_mp_init(&public_p);
+            botan_mp_init(&public_y);
+
+            botan_privkey_t priv1;
+            REQUIRE_FFI_OK(botan_privkey_create_dh, (&priv1, rng, "modp/ietf/2048"));
+
+            botan_privkey_t priv2;
+            REQUIRE_FFI_OK(botan_privkey_create_dh, (&priv2, rng, "modp/ietf/2048"));
+
+            botan_pubkey_t pub1;
+            REQUIRE_FFI_OK(botan_privkey_export_pubkey, (&pub1, priv1));
+
+            botan_pubkey_t pub2;
+            REQUIRE_FFI_OK(botan_privkey_export_pubkey, (&pub2, priv2));
+
+            // Reload key-pair1 in order to test functions for key loading
+            TEST_FFI_OK(botan_privkey_get_field, (private_x, priv1, "x"));
+            TEST_FFI_OK(botan_pubkey_get_field, (public_g, pub1, "g"));
+            TEST_FFI_OK(botan_pubkey_get_field, (public_p, pub1, "p"));
+            TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub1, "y"));
+
+            TEST_FFI_OK(botan_privkey_load_dh, (&loaded_privkey1, public_p, public_g, private_x));
+
+            TEST_FFI_OK(botan_pubkey_load_dh, (&loaded_pubkey1, public_p, public_g, public_y));
+
+            TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey1, rng, 0));
+            TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey1, rng, 0));
+
+            botan_mp_t loaded_public_g, loaded_public_p, loaded_public_y;
+            botan_mp_init(&loaded_public_g);
+            botan_mp_init(&loaded_public_p);
+            botan_mp_init(&loaded_public_y);
+
+            TEST_FFI_OK(botan_pubkey_get_field, (loaded_public_g, loaded_pubkey1, "g"));
+            TEST_FFI_OK(botan_pubkey_get_field, (loaded_public_p, loaded_pubkey1, "p"));
+            TEST_FFI_OK(botan_pubkey_get_field, (loaded_public_y, loaded_pubkey1, "y"));
+
+            int cmp;
+
+            TEST_FFI_OK(botan_mp_cmp, (&cmp, loaded_public_g, public_g));
+            result.confirm("bigint_mp_cmp(g, g)", cmp == 0);
+
+            TEST_FFI_OK(botan_mp_cmp, (&cmp, loaded_public_p, public_p));
+            result.confirm("bigint_mp_cmp(p, p)", cmp == 0);
+
+            TEST_FFI_OK(botan_mp_cmp, (&cmp, loaded_public_y, public_y));
+            result.confirm("bigint_mp_cmp(y, y)", cmp == 0);
+
+            botan_pk_op_ka_t ka1;
+            REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, loaded_privkey1, "Raw", 0));
+            botan_pk_op_ka_t ka2;
+            REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka2, priv2, "Raw", 0));
+
+            size_t pubkey1_len = 0;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pk_op_key_agreement_export_public, (priv1, nullptr, &pubkey1_len));
+            std::vector<uint8_t> pubkey1(pubkey1_len);
+            REQUIRE_FFI_OK(botan_pk_op_key_agreement_export_public, (priv1, pubkey1.data(), &pubkey1_len));
+            size_t pubkey2_len = 0;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pk_op_key_agreement_export_public, (priv2, nullptr, &pubkey2_len));
+            std::vector<uint8_t> pubkey2(pubkey2_len);
+            REQUIRE_FFI_OK(botan_pk_op_key_agreement_export_public, (priv2, pubkey2.data(), &pubkey2_len));
+
+            std::vector<uint8_t> salt(32);
+
+            TEST_FFI_OK(botan_rng_get, (rng, salt.data(), salt.size()));
+
+            const size_t shared_key_len = 256;
+
+            std::vector<uint8_t> key1(shared_key_len);
+            size_t key1_len = key1.size();
+
+            TEST_FFI_OK(botan_pk_op_key_agreement, (ka1, key1.data(), &key1_len,
+                                                    pubkey2.data(), pubkey2.size(),
+                                                    salt.data(), salt.size()));
+
+            std::vector<uint8_t> key2(shared_key_len);
+            size_t key2_len = key2.size();
+
+            TEST_FFI_OK(botan_pk_op_key_agreement, (ka2, key2.data(), &key2_len,
+                                                    pubkey1.data(), pubkey1.size(),
+                                                    salt.data(), salt.size()));
+
+            result.test_eq("shared DH key", key1, key2);
+
+            TEST_FFI_OK(botan_mp_destroy, (private_x));
+            TEST_FFI_OK(botan_mp_destroy, (public_p));
+            TEST_FFI_OK(botan_mp_destroy, (public_g));
+            TEST_FFI_OK(botan_mp_destroy, (public_y));
+
+            TEST_FFI_OK(botan_mp_destroy, (loaded_public_p));
+            TEST_FFI_OK(botan_mp_destroy, (loaded_public_g));
+            TEST_FFI_OK(botan_mp_destroy, (loaded_public_y));
+
+            TEST_FFI_OK(botan_pk_op_key_agreement_destroy, (ka1));
+            TEST_FFI_OK(botan_pk_op_key_agreement_destroy, (ka2));
+            TEST_FFI_OK(botan_privkey_destroy, (priv1));
+            TEST_FFI_OK(botan_privkey_destroy, (priv2));
+            TEST_FFI_OK(botan_pubkey_destroy, (pub1));
+            TEST_FFI_OK(botan_pubkey_destroy, (pub2));
+            TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey1));
+            TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey1));
 
          return result;
          }

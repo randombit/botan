@@ -492,6 +492,8 @@ Public Key Creation, Import and Export
 
 .. cpp:function:: int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t)
 
+.. cpp:function:: int botan_privkey_create_dh(botan_privkey_t* key, botan_rng_t rng, const char* params)
+
 .. cpp:function:: int botan_privkey_load(botan_privkey_t* key, botan_rng_t rng, \
                                  const uint8_t bits[], size_t len, \
                                  const char* password)
@@ -638,7 +640,20 @@ ElGamal specific functions
 .. cpp:function:: int botan_pubkey_load_elgamal(botan_pubkey_t* key, \
                                      botan_mp_t p, botan_mp_t g, botan_mp_t y)
 
-   Initialize a private ElGamal key using group parameters p and g and public key y.
+   Initialize a public ElGamal key using group parameters p and g and public key y.
+
+Diffie Hellmann specific functions
+----------------------------------------
+
+.. cpp:function:: int botan_privkey_load_dh(botan_privkey_t* key, \
+                                     botan_mp_t p, botan_mp_t g, botan_mp_t x)
+
+   Initialize a private Diffie Hellmann key using group parameters p and g and private key x.
+
+.. cpp:function:: int botan_pubkey_load_dh(botan_pubkey_t* key, \
+                                     botan_mp_t p, botan_mp_t g, botan_mp_t y)
+
+   Initialize a public Diffie Hellmann key using group parameters p and g and public key y.
 
 Public Key Encryption/Decryption
 ----------------------------------------

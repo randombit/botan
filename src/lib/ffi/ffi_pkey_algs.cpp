@@ -60,6 +60,11 @@
   #include <botan/mceies.h>
 #endif
 
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+  #include <botan/dh.h>
+#endif
+
+
 namespace {
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
@@ -492,6 +497,61 @@ int botan_privkey_load_elgamal(botan_privkey_t* key,
       });
 #else
    BOTAN_UNUSED(key, p, g, x);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+/* Diffie Hellman specific operations */
+
+int botan_privkey_create_dh(botan_privkey_t* key_obj, botan_rng_t rng_obj, const char* param_str)
+   {
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+      if(key_obj == nullptr || rng_obj == nullptr || param_str == nullptr || *param_str == 0)
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+
+      *key_obj = nullptr;
+
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+      Botan::DL_Group grp(param_str);
+      *key_obj = new botan_privkey_struct(new Botan::DH_PrivateKey(rng, grp, 0));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key_obj, rng_obj, param_str);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_privkey_load_dh(botan_privkey_t* key,
+                               botan_mp_t p, botan_mp_t g, botan_mp_t x)
+   {
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+   *key = nullptr;
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+      Botan::Null_RNG null_rng;
+      Botan::DL_Group group(safe_get(p), safe_get(g));
+      *key = new botan_privkey_struct(new Botan::DH_PrivateKey(null_rng, group, safe_get(x)));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, p, g, x);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+   }
+
+int botan_pubkey_load_dh(botan_pubkey_t* key,
+                              botan_mp_t p, botan_mp_t g, botan_mp_t y)
+   {
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+   *key = nullptr;
+   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
+      Botan::DL_Group group(safe_get(p), safe_get(g));
+      *key = new botan_pubkey_struct(new Botan::DH_PublicKey(group, safe_get(y)));
+      return BOTAN_FFI_SUCCESS;
+      });
+#else
+   BOTAN_UNUSED(key, p, g, y);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
    }
