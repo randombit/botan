@@ -9,6 +9,9 @@ Version 2.3.0, Not Yet Released
 * Optimized the CMAC polynomial doubling operation, and removed a
   small timing channel due to a conditional operation.
 
+* Add new C89 API functions botan_hex_decode, botan_base64_encode, and
+  botan_base64_decode.
+
 * Workaround a GCC 7 bug that caused miscompilation of
   the GOST-34.11 hash function on x86-32. (GH #882 #1148)
 
