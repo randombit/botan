@@ -20,10 +20,11 @@ void SHACAL2::x86_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t block
    const __m128i MASK1 = _mm_set_epi8(8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7);
    const __m128i MASK2 = _mm_set_epi8(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
 
+   const __m128i* RK_mm = reinterpret_cast<const __m128i*>(m_RK.data());
    const __m128i* in_mm = reinterpret_cast<const __m128i*>(in);
    __m128i* out_mm = reinterpret_cast<__m128i*>(out);
 
-   while(blocks >= 2 && false)
+   while(blocks >= 2)
       {
       __m128i B0_0 = _mm_loadu_si128(in_mm);
       __m128i B0_1 = _mm_loadu_si128(in_mm+1);
@@ -40,10 +41,10 @@ void SHACAL2::x86_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t block
 
       for(size_t i = 0; i != 8; ++i)
          {
-         const __m128i RK0 = _mm_set_epi32(0,0,m_RK[8*i+1],m_RK[8*i+0]);
-         const __m128i RK1 = _mm_set_epi32(0,0,m_RK[8*i+3],m_RK[8*i+2]);
-         const __m128i RK2 = _mm_set_epi32(0,0,m_RK[8*i+5],m_RK[8*i+4]);
-         const __m128i RK3 = _mm_set_epi32(0,0,m_RK[8*i+7],m_RK[8*i+6]);
+         const __m128i RK0 = _mm_loadu_si128(RK_mm + 2*i);
+         const __m128i RK2 = _mm_loadu_si128(RK_mm + 2*i+1);
+         const __m128i RK1 = _mm_srli_si128(RK0, 8);
+         const __m128i RK3 = _mm_srli_si128(RK2, 8);
 
          B0_1 = _mm_sha256rnds2_epu32(B0_1, B0_0, RK0);
          B1_1 = _mm_sha256rnds2_epu32(B1_1, B1_0, RK0);
@@ -88,10 +89,15 @@ void SHACAL2::x86_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t block
 
       for(size_t i = 0; i != 8; ++i)
          {
-         B1 = _mm_sha256rnds2_epu32(B1, B0, _mm_set_epi32(0,0,m_RK[8*i+1],m_RK[8*i+0]));
-         B0 = _mm_sha256rnds2_epu32(B0, B1, _mm_set_epi32(0,0,m_RK[8*i+3],m_RK[8*i+2]));
-         B1 = _mm_sha256rnds2_epu32(B1, B0, _mm_set_epi32(0,0,m_RK[8*i+5],m_RK[8*i+4]));
-         B0 = _mm_sha256rnds2_epu32(B0, B1, _mm_set_epi32(0,0,m_RK[8*i+7],m_RK[8*i+6]));
+         const __m128i RK0 = _mm_loadu_si128(RK_mm + 2*i);
+         const __m128i RK2 = _mm_loadu_si128(RK_mm + 2*i+1);
+         const __m128i RK1 = _mm_srli_si128(RK0, 8);
+         const __m128i RK3 = _mm_srli_si128(RK2, 8);
+
+         B1 = _mm_sha256rnds2_epu32(B1, B0, RK0);
+         B0 = _mm_sha256rnds2_epu32(B0, B1, RK1);
+         B1 = _mm_sha256rnds2_epu32(B1, B0, RK2);
+         B0 = _mm_sha256rnds2_epu32(B0, B1, RK3);
          }
 
       TMP = _mm_shuffle_epi8(_mm_unpackhi_epi64(B0, B1), MASK1);
