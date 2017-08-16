@@ -21,15 +21,21 @@ class BOTAN_DLL EMSA_Raw final : public EMSA
    public:
       EMSA* clone() override { return new EMSA_Raw(); }
 
+      explicit EMSA_Raw(size_t expected_hash_size = 0) :
+         m_expected_size(expected_hash_size) {}
+
    private:
       void update(const uint8_t[], size_t) override;
       secure_vector<uint8_t> raw_data() override;
 
       secure_vector<uint8_t> encoding_of(const secure_vector<uint8_t>&, size_t,
-                                     RandomNumberGenerator&) override;
-      bool verify(const secure_vector<uint8_t>&, const secure_vector<uint8_t>&,
+                                         RandomNumberGenerator&) override;
+
+      bool verify(const secure_vector<uint8_t>&,
+                  const secure_vector<uint8_t>&,
                   size_t) override;
 
+      const size_t m_expected_size;
       secure_vector<uint8_t> m_message;
    };
 
