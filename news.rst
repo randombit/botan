@@ -4,21 +4,33 @@ Release Notes
 Version 2.3.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add the SHACAL2 block cipher (GH #1151)
+* Add the SHACAL2 block cipher, including optimizations using SIMD and SHA-NI
+  instructions. (GH #1151)
 
-* Optimized the CMAC polynomial doubling operation, and removed a
-  small timing channel due to a conditional operation.
+* Optimized the CMAC polynomial doubling operation, and removed a small timing
+  channel due to a conditional operation.
+
+* Extend "Raw" signature padding (which allows signing a hash computed
+  externally) to optionally take a hash function name. In this case, it will be
+  verified that the input matches the expected hash size.  This also will
+  control the hash algorithm used for RFC 6979 deterministic nonces; previously
+  SHA-512 was always used for RFC 6979 nonces with "Raw". (GH #1153)
+
+* The advertised FFI API version has increased. This should have happened
+  already in 2.2 but was neglected. The `botan_ffi_supports_api` call will
+  return true for either the current or older versions of the API version since
+  no backwards incompatible changes have occurred.
 
 * Add new C89 API functions botan_hex_decode, botan_base64_encode, and
   botan_base64_decode.
 
-* Workaround a GCC 7 bug that caused miscompilation of
-  the GOST-34.11 hash function on x86-32. (GH #882 #1148)
+* Workaround a GCC 7 bug that caused miscompilation of the GOST-34.11 hash
+  function on x86-32. (GH #882 #1148)
 
 * Silence a Clang warning in create_private_key (GH #1150)
 
-* Fix a bug in FFI tests that caused the test files not to be found
-  when using `--data-dir` option (GH #1149)
+* Fix a bug in FFI tests that caused the test files not to be found when using
+  `--data-dir` option (GH #1149)
 
 Version 2.2.0, 2017-08-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
