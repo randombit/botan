@@ -68,7 +68,7 @@ int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len)
    return Botan::same_mem(x, y, len) ? 0 : -1;
    }
 
-int botan_scrub_mem(uint8_t* mem, size_t bytes)
+int botan_scrub_mem(void* mem, size_t bytes)
    {
    Botan::secure_scrub_memory(mem, bytes);
    return BOTAN_FFI_SUCCESS;

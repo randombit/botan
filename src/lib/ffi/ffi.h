@@ -159,7 +159,7 @@ BOTAN_DLL int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len);
 * Clear out memory using a system specific approach to bypass elision by the
 * compiler (currently using RtlSecureZeroMemory or tricks with volatile pointers).
 */
-BOTAN_DLL int botan_scrub_mem(uint8_t* mem, size_t bytes);
+BOTAN_DLL int botan_scrub_mem(void* mem, size_t bytes);
 
 #define BOTAN_FFI_HEX_LOWER_CASE 1
 
