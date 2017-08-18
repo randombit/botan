@@ -90,7 +90,22 @@ class Passhash9_Tests : public Text_Based_Test
          Test::Result result("passhash9");
          result.test_eq("correct hash accepted", Botan::check_passhash9(password, passhash), true);
 
-         for(uint8_t alg_id = 0; alg_id <= 4; ++alg_id)
+         std::vector<uint8_t> alg_ids;
+#if defined(BOTAN_HAS_HMAC) && defined(BOTAN_HAS_SHA1)
+         alg_ids.push_back(0);
+#endif
+#if defined(BOTAN_HAS_HMAC) && defined(BOTAN_HAS_SHA2_32)
+         alg_ids.push_back(1);
+#endif
+#if defined(BOTAN_HAS_CMAC) && defined(BOTAN_HAS_BLOWFISH)
+         alg_ids.push_back(2);
+#endif
+#if defined(BOTAN_HAS_HMAC) && defined(BOTAN_HAS_SHA2_64)
+         alg_ids.push_back(3);
+         alg_ids.push_back(4);
+#endif
+
+         for(const auto& alg_id : alg_ids)
             {
             const std::string gen_hash = Botan::generate_passhash9(password, Test::rng(), 2, alg_id);
 
