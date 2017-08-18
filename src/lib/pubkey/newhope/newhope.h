@@ -30,7 +30,8 @@ class newhope_poly
       ~newhope_poly() { secure_scrub_memory(coeffs, sizeof(coeffs)); }
    };
 
-enum Newhope_Params {
+enum Newhope_Params
+   {
    NEWHOPE_SENDABYTES = 1824,
    NEWHOPE_SENDBBYTES = 2048,
 
@@ -38,10 +39,13 @@ enum Newhope_Params {
    NEWHOPE_ACCEPT_BYTES = 2048,
    NEWHOPE_SHARED_KEY_BYTES = 32,
 
+   NEWHOPE_SEED_BYTES = 32,
+   NEWHOPE_POLY_BYTES = 1792,
+
    CECPQ1_OFFER_BYTES   = NEWHOPE_OFFER_BYTES + 32,
    CECPQ1_ACCEPT_BYTES  = NEWHOPE_ACCEPT_BYTES + 32,
    CECPQ1_SHARED_KEY_BYTES = NEWHOPE_SHARED_KEY_BYTES + 32
-};
+   };
 
 /**
 * This chooses the XOF + hash for NewHope
@@ -49,28 +53,29 @@ enum Newhope_Params {
 * SHA-3 and SHAKE-128. BoringSSL instead uses SHA-256 and AES-128 in
 * CTR mode. CECPQ1 (x25519+NewHope) always uses BoringSSL's mode
 */
-enum class Newhope_Mode {
+enum class Newhope_Mode
+   {
    SHA3,
    BoringSSL
-};
+   };
 
 // offer
-void BOTAN_DLL newhope_keygen(uint8_t *send,
-                              newhope_poly *sk,
+void BOTAN_DLL newhope_keygen(uint8_t send[NEWHOPE_SENDABYTES],
+                              newhope_poly* sk,
                               RandomNumberGenerator& rng,
                               Newhope_Mode = Newhope_Mode::SHA3);
 
 // accept
-void BOTAN_DLL newhope_sharedb(uint8_t *sharedkey,
-                               uint8_t *send,
-                               const uint8_t *received,
+void BOTAN_DLL newhope_sharedb(uint8_t sharedkey[NEWHOPE_SHARED_KEY_BYTES],
+                               uint8_t send[],
+                               const uint8_t* received,
                                RandomNumberGenerator& rng,
                                Newhope_Mode mode = Newhope_Mode::SHA3);
 
 // finish
-void BOTAN_DLL newhope_shareda(uint8_t *sharedkey,
-                               const newhope_poly *ska,
-                               const uint8_t *received,
+void BOTAN_DLL newhope_shareda(uint8_t sharedkey[NEWHOPE_SHARED_KEY_BYTES],
+                               const newhope_poly* ska,
+                               const uint8_t* received,
                                Newhope_Mode mode = Newhope_Mode::SHA3);
 
 }

@@ -1981,7 +1981,7 @@ class Speed final : public Command
          Timer shareda_timer(nm, "", "shareda");
          Timer sharedb_timer(nm, "", "sharedb");
 
-         Botan::ChaCha_RNG nh_rng;
+         Botan::ChaCha_RNG nh_rng(Botan::secure_vector<uint8_t>(32));
 
          while(sharedb_timer.under(msec))
             {
