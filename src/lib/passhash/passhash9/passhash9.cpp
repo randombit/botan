@@ -127,4 +127,13 @@ bool check_passhash9(const std::string& pass, const std::string& hash)
                    PASSHASH9_PBKDF_OUTPUT_LEN);
    }
 
+bool is_passhash9_alg_supported(uint8_t alg_id)
+   {
+   if (get_pbkdf_prf(alg_id))
+      {
+      return true;
+      }
+   return false;
+   }
+
 }
