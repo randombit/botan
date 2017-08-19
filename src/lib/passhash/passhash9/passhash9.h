@@ -38,6 +38,12 @@ std::string BOTAN_DLL generate_passhash9(const std::string& password,
 bool BOTAN_DLL check_passhash9(const std::string& password,
                                const std::string& hash);
 
+/**
+* Check if the PRF used with PBKDF2 is supported
+* @param alg_id alg_id used in generate_passhash9()
+*/
+bool BOTAN_DLL is_passhash9_alg_supported(uint8_t alg_id);
+
 }
 
 #endif
