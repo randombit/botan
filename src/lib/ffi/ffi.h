@@ -693,6 +693,7 @@ BOTAN_DLL int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng, si
 BOTAN_DLL int botan_privkey_create_ecdsa(botan_privkey_t* key, botan_rng_t rng, const char* params);
 BOTAN_DLL int botan_privkey_create_ecdh(botan_privkey_t* key, botan_rng_t rng, const char* params);
 BOTAN_DLL int botan_privkey_create_mceliece(botan_privkey_t* key, botan_rng_t rng, size_t n, size_t t);
+BOTAN_DLL int botan_privkey_create_dh(botan_privkey_t* key, botan_rng_t rng, const char* param);
 
 /*
 * Input currently assumed to be PKCS #8 structure;
@@ -830,6 +831,41 @@ BOTAN_DLL int botan_pubkey_dsa_get_p(botan_mp_t p, botan_pubkey_t key);
 BOTAN_DLL int botan_pubkey_dsa_get_q(botan_mp_t q, botan_pubkey_t key);
 BOTAN_DLL int botan_pubkey_dsa_get_g(botan_mp_t d, botan_pubkey_t key);
 BOTAN_DLL int botan_pubkey_dsa_get_y(botan_mp_t y, botan_pubkey_t key);
+
+/*
+* Loads Diffie Hellman private key
+*
+* @param key variable populated with key material
+* @param p prime order of a Z_p group
+* @param g group generator
+* @param x private key
+*
+* @pre key is NULL on input
+* @post function allocates memory and assigns to `key'
+*
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_DLL int botan_privkey_load_dh(botan_privkey_t* key,
+                                         botan_mp_t p,
+                                         botan_mp_t g,
+                                         botan_mp_t x);
+/*
+* Loads Diffie Hellman public key
+*
+* @param key variable populated with key material
+* @param p prime order of a Z_p group
+* @param g group generator
+* @param y public key
+*
+* @pre key is NULL on input
+* @post function allocates memory and assigns to `key'
+*
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_DLL int botan_pubkey_load_dh(botan_pubkey_t* key,
+                                        botan_mp_t p,
+                                        botan_mp_t g,
+                                        botan_mp_t y);
 
 /*
 * Algorithm specific key operations: ElGamal
