@@ -35,6 +35,8 @@ Version 2.3.0, Not Yet Released
 * Workaround a GCC 7 bug that caused miscompilation of the GOST-34.11 hash
   function on x86-32. (GH #882 #1148)
 
+* Fix Altivec runtime detection, which was broken starting in Botan 2.1.0
+
 * Silence a Clang warning in create_private_key (GH #1150)
 
 * Fix a bug in FFI tests that caused the test files not to be found when using
