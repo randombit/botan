@@ -35,10 +35,8 @@ class BOTAN_DLL ARIA_128 final : public Block_Cipher_Fixed_Params<16, 16>
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
-      // Encryption and Decryption round keys. The ref impl allocates 17 subkeys.
-      secure_vector<uint8_t> m_ERK, m_DRK;
-      // Workspace. Key Schedule and Transform use it.
-      mutable secure_vector<uint32_t> m_WS;
+      // Encryption and Decryption round keys.
+      secure_vector<uint32_t> m_ERK, m_DRK;
    };
 
 /**
@@ -56,10 +54,8 @@ class BOTAN_DLL ARIA_192 final : public Block_Cipher_Fixed_Params<16, 24>
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
-      // Encryption and Decryption round keys. The ref impl allocates 17 subkeys.
-      secure_vector<uint8_t> m_ERK, m_DRK;
-      // Workspace. Key Schedule and Transform use it.
-      mutable secure_vector<uint32_t> m_WS;
+      // Encryption and Decryption round keys.
+      secure_vector<uint32_t> m_ERK, m_DRK;
    };
 
 /**
@@ -77,10 +73,8 @@ class BOTAN_DLL ARIA_256 final : public Block_Cipher_Fixed_Params<16, 32>
    private:
       void key_schedule(const uint8_t key[], size_t length) override;
 
-      // Encryption and Decryption round keys. The ref impl allocates 17 subkeys.
-      secure_vector<uint8_t> m_ERK, m_DRK;
-      // Workspace. Key Schedule and Transform use it.
-      mutable secure_vector<uint32_t> m_WS;
+      // Encryption and Decryption round keys.
+      secure_vector<uint32_t> m_ERK, m_DRK;
    };
 
 }

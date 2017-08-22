@@ -1,5 +1,8 @@
 /*
 * ARIA
+* Adapted for Botan by Jeffrey Walton, public domain
+*
+* Further changes
 * (C) 2017 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -17,21 +20,13 @@
 #include <botan/loadstor.h>
 #include <botan/cpuid.h>
 
-#if defined(BOTAN_TARGET_SUPPORTS_NEON)
-# include <arm_neon.h>
-#endif
-
-#if (BOTAN_GCC_VERSION >= 480) || (BOTAN_CLANG_VERSION >= 310) || (_MSC_VER >= 1900)
-# define DATA_ALIGN16 alignas(16)
-#else
-# define DATA_ALIGN16
-#endif
-
 namespace Botan {
 
 namespace {
 
-DATA_ALIGN16
+namespace ARIA_F {
+
+BOTAN_ALIGNAS(16)
 const uint32_t S1[256]={
    0x00636363,0x007c7c7c,0x00777777,0x007b7b7b,0x00f2f2f2,0x006b6b6b,0x006f6f6f,0x00c5c5c5,
    0x00303030,0x00010101,0x00676767,0x002b2b2b,0x00fefefe,0x00d7d7d7,0x00ababab,0x00767676,
@@ -67,7 +62,7 @@ const uint32_t S1[256]={
    0x00414141,0x00999999,0x002d2d2d,0x000f0f0f,0x00b0b0b0,0x00545454,0x00bbbbbb,0x00161616
 };
 
-DATA_ALIGN16
+BOTAN_ALIGNAS(16)
 const uint32_t S2[256]={
    0xe200e2e2,0x4e004e4e,0x54005454,0xfc00fcfc,0x94009494,0xc200c2c2,0x4a004a4a,0xcc00cccc,
    0x62006262,0x0d000d0d,0x6a006a6a,0x46004646,0x3c003c3c,0x4d004d4d,0x8b008b8b,0xd100d1d1,
@@ -103,7 +98,7 @@ const uint32_t S2[256]={
    0x89008989,0xde00dede,0x71007171,0x1a001a1a,0xaf00afaf,0xba00baba,0xb500b5b5,0x81008181
 };
 
-DATA_ALIGN16
+BOTAN_ALIGNAS(16)
 const uint32_t X1[256]={
    0x52520052,0x09090009,0x6a6a006a,0xd5d500d5,0x30300030,0x36360036,0xa5a500a5,0x38380038,
    0xbfbf00bf,0x40400040,0xa3a300a3,0x9e9e009e,0x81810081,0xf3f300f3,0xd7d700d7,0xfbfb00fb,
@@ -139,7 +134,7 @@ const uint32_t X1[256]={
    0xe1e100e1,0x69690069,0x14140014,0x63630063,0x55550055,0x21210021,0x0c0c000c,0x7d7d007d
 };
 
-DATA_ALIGN16
+BOTAN_ALIGNAS(16)
 const uint32_t X2[256]={
    0x30303000,0x68686800,0x99999900,0x1b1b1b00,0x87878700,0xb9b9b900,0x21212100,0x78787800,
    0x50505000,0x39393900,0xdbdbdb00,0xe1e1e100,0x72727200,0x09090900,0x62626200,0x3c3c3c00,
@@ -175,448 +170,331 @@ const uint32_t X2[256]={
    0xf7f7f700,0x4c4c4c00,0x11111100,0x33333300,0x03030300,0xa2a2a200,0xacacac00,0x60606000
 };
 
-DATA_ALIGN16
-const uint32_t KRK[3][4] = {
-   {0x517cc1b7, 0x27220a94, 0xfe13abe8, 0xfa9a6ee0},
-   {0x6db14acc, 0x9e21c820, 0xff28b1d5, 0xef5de2b0},
-   {0xdb92371d, 0x2126e970, 0x03249775, 0x04e8c90e}
-};
-
-namespace ARIA_F {
-
-// Retrieve the i-th byte
-inline uint8_t ARIA_BRF(const uint32_t x, const unsigned int i)
+inline void ARIA_FO(uint32_t& T0, uint32_t& T1, uint32_t& T2, uint32_t& T3)
    {
-    // TODO: use the fastest method provided by the library
-    return static_cast<uint8_t>(x >> (i*8));
+   T0 = S1[get_byte(0,T0)] ^ S2[get_byte(1,T0)] ^ X1[get_byte(2,T0)] ^ X2[get_byte(3,T0)];
+   T1 = S1[get_byte(0,T1)] ^ S2[get_byte(1,T1)] ^ X1[get_byte(2,T1)] ^ X2[get_byte(3,T1)];
+   T2 = S1[get_byte(0,T2)] ^ S2[get_byte(1,T2)] ^ X1[get_byte(2,T2)] ^ X2[get_byte(3,T2)];
+   T3 = S1[get_byte(0,T3)] ^ S2[get_byte(1,T3)] ^ X1[get_byte(2,T3)] ^ X2[get_byte(3,T3)];
+
+   T1 ^= T2;
+   T2 ^= T3; T0 ^= T1;
+   T3 ^= T1; T2 ^= T0;
+   T1 ^= T2;
+
+   T1 = ((T1 << 8) & 0xFF00FF00) | ((T1 >> 8) & 0x00FF00FF);
+   T2 = rotate_right(T2, 16);
+   T3 = reverse_bytes(T3);
+
+   T1 ^= T2;
+   T2 ^= T3; T0 ^= T1;
+   T3 ^= T1; T2 ^= T0;
+   T1 ^= T2;
    }
 
-#define ARIA_KXL { \
-     t[0]^=reinterpret_cast<const uint32_t*>(rk)[0]; t[1]^=reinterpret_cast<const uint32_t*>(rk)[1]; \
-     t[2]^=reinterpret_cast<const uint32_t*>(rk)[2]; t[3]^=reinterpret_cast<const uint32_t*>(rk)[3]; \
-  }
+inline void ARIA_FE(uint32_t& T0, uint32_t& T1, uint32_t& T2, uint32_t& T3)
+   {
+   T0 = X1[get_byte(0,T0)] ^ X2[get_byte(1,T0)] ^ S1[get_byte(2,T0)] ^ S2[get_byte(3,T0)];
+   T1 = X1[get_byte(0,T1)] ^ X2[get_byte(1,T1)] ^ S1[get_byte(2,T1)] ^ S2[get_byte(3,T1)];
+   T2 = X1[get_byte(0,T2)] ^ X2[get_byte(1,T2)] ^ S1[get_byte(2,T2)] ^ S2[get_byte(3,T2)];
+   T3 = X1[get_byte(0,T3)] ^ X2[get_byte(1,T3)] ^ S1[get_byte(2,T3)] ^ S2[get_byte(3,T3)];
 
-// S-Box Layer 1 + M (DFW)
-#define SBL1_M(T0,T1,T2,T3) {  \
-    T0=S1[ARIA_BRF(T0,3)]^S2[ARIA_BRF(T0,2)]^X1[ARIA_BRF(T0,1)]^X2[ARIA_BRF(T0,0)];  \
-    T1=S1[ARIA_BRF(T1,3)]^S2[ARIA_BRF(T1,2)]^X1[ARIA_BRF(T1,1)]^X2[ARIA_BRF(T1,0)];  \
-    T2=S1[ARIA_BRF(T2,3)]^S2[ARIA_BRF(T2,2)]^X1[ARIA_BRF(T2,1)]^X2[ARIA_BRF(T2,0)];  \
-    T3=S1[ARIA_BRF(T3,3)]^S2[ARIA_BRF(T3,2)]^X1[ARIA_BRF(T3,1)]^X2[ARIA_BRF(T3,0)];  \
-  }
+   T1 ^= T2;
+   T2 ^= T3; T0 ^= T1;
+   T3 ^= T1; T2 ^= T0;
+   T1 ^= T2;
 
-// S-Box Layer 2 + M (DFW)
-#define SBL2_M(T0,T1,T2,T3) {  \
-    T0=X1[ARIA_BRF(T0,3)]^X2[ARIA_BRF(T0,2)]^S1[ARIA_BRF(T0,1)]^S2[ARIA_BRF(T0,0)];  \
-    T1=X1[ARIA_BRF(T1,3)]^X2[ARIA_BRF(T1,2)]^S1[ARIA_BRF(T1,1)]^S2[ARIA_BRF(T1,0)];  \
-    T2=X1[ARIA_BRF(T2,3)]^X2[ARIA_BRF(T2,2)]^S1[ARIA_BRF(T2,1)]^S2[ARIA_BRF(T2,0)];  \
-    T3=X1[ARIA_BRF(T3,3)]^X2[ARIA_BRF(T3,2)]^S1[ARIA_BRF(T3,1)]^S2[ARIA_BRF(T3,0)];  \
-  }
+   T3 = ((T3 << 8) & 0xFF00FF00) | ((T3 >> 8) & 0x00FF00FF);
+   T0 = rotate_right(T0, 16);
+   T1 = reverse_bytes(T1);
 
-// (DFW)
-#define ARIA_MM(T0,T1,T2,T3) {           \
-    (T1)^=(T2); (T2)^=(T3); (T0)^=(T1);  \
-    (T3)^=(T1); (T2)^=(T0); (T1)^=(T2);  \
-  }
+   T1 ^= T2;
+   T2 ^= T3; T0 ^= T1;
+   T3 ^= T1; T2 ^= T0;
+   T1 ^= T2;
+   }
 
-// (DFW)
-#define ARIA_P(T0,T1,T2,T3) {                                  \
-    (T1) = (((T1)<< 8)&0xff00ff00) ^ (((T1)>> 8)&0x00ff00ff);  \
-    (T2) = rotate_right((T2),16);                              \
-    (T3) = reverse_bytes((T3));                                \
-  }
+/*
+* ARIA encryption and decryption
+*/
+void transform(const uint8_t in[], uint8_t out[], size_t blocks,
+               const secure_vector<uint32_t>& KS)
+   {
+   if(KS.empty())
+      throw Invalid_State("ARIA key was not set");
 
-#define ARIA_M1(X,Y) {                                          \
-    Y=(X)<<8 ^ (X)>>8 ^ (X)<<16 ^ (X)>>16 ^ (X)<<24 ^ (X)>>24;  \
-  }
+   // Hit every cache line of S1 and S2
+   const size_t cache_line_size = CPUID::cache_line_size();
 
-#define ARIA_FO {SBL1_M(t[0],t[1],t[2],t[3]) ARIA_MM(t[0],t[1],t[2],t[3]) ARIA_P(t[0],t[1],t[2],t[3]) ARIA_MM(t[0],t[1],t[2],t[3])}
-#define ARIA_FE {SBL2_M(t[0],t[1],t[2],t[3]) ARIA_MM(t[0],t[1],t[2],t[3]) ARIA_P(t[2],t[3],t[0],t[1]) ARIA_MM(t[0],t[1],t[2],t[3])}
+   /*
+   * This initializer ensures Z == 0xFFFFFFFF for any cache line size
+   * in {32,64,128,256,512}
+   */
+   volatile uint32_t Z = 0x11101010;
+   for(size_t i = 0; i < 256; i += cache_line_size / sizeof(uint32_t))
+      {
+      Z |= S1[i] | S2[i];
+      }
+
+   const size_t ROUNDS = (KS.size() / 4) - 1;
+
+   for(size_t i = 0; i != blocks; ++i)
+      {
+      uint32_t t0, t1, t2, t3;
+      load_be(in + 16*i, t0, t1, t2, t3);
+
+      t0 &= Z;
+
+      for(size_t r = 0; r < ROUNDS; r += 2)
+         {
+         t0 ^= KS[4*r];
+         t1 ^= KS[4*r+1];
+         t2 ^= KS[4*r+2];
+         t3 ^= KS[4*r+3];
+         ARIA_FO(t0,t1,t2,t3);
+
+         t0 ^= KS[4*r+4];
+         t1 ^= KS[4*r+5];
+         t2 ^= KS[4*r+6];
+         t3 ^= KS[4*r+7];
+
+         if(r != ROUNDS-2)
+            ARIA_FE(t0,t1,t2,t3);
+         }
+
+      out[16*i+ 0] = static_cast<uint8_t>(X1[get_byte(0,t0)]   ) ^ get_byte(0, KS[4*ROUNDS]);
+      out[16*i+ 1] = static_cast<uint8_t>(X2[get_byte(1,t0)]>>8) ^ get_byte(1, KS[4*ROUNDS]);
+      out[16*i+ 2] = static_cast<uint8_t>(S1[get_byte(2,t0)]   ) ^ get_byte(2, KS[4*ROUNDS]);
+      out[16*i+ 3] = static_cast<uint8_t>(S2[get_byte(3,t0)]   ) ^ get_byte(3, KS[4*ROUNDS]);
+      out[16*i+ 4] = static_cast<uint8_t>(X1[get_byte(0,t1)]   ) ^ get_byte(0, KS[4*ROUNDS+1]);
+      out[16*i+ 5] = static_cast<uint8_t>(X2[get_byte(1,t1)]>>8) ^ get_byte(1, KS[4*ROUNDS+1]);
+      out[16*i+ 6] = static_cast<uint8_t>(S1[get_byte(2,t1)]   ) ^ get_byte(2, KS[4*ROUNDS+1]);
+      out[16*i+ 7] = static_cast<uint8_t>(S2[get_byte(3,t1)]   ) ^ get_byte(3, KS[4*ROUNDS+1]);
+      out[16*i+ 8] = static_cast<uint8_t>(X1[get_byte(0,t2)]   ) ^ get_byte(0, KS[4*ROUNDS+2]);
+      out[16*i+ 9] = static_cast<uint8_t>(X2[get_byte(1,t2)]>>8) ^ get_byte(1, KS[4*ROUNDS+2]);
+      out[16*i+10] = static_cast<uint8_t>(S1[get_byte(2,t2)]   ) ^ get_byte(2, KS[4*ROUNDS+2]);
+      out[16*i+11] = static_cast<uint8_t>(S2[get_byte(3,t2)]   ) ^ get_byte(3, KS[4*ROUNDS+2]);
+      out[16*i+12] = static_cast<uint8_t>(X1[get_byte(0,t3)]   ) ^ get_byte(0, KS[4*ROUNDS+3]);
+      out[16*i+13] = static_cast<uint8_t>(X2[get_byte(1,t3)]>>8) ^ get_byte(1, KS[4*ROUNDS+3]);
+      out[16*i+14] = static_cast<uint8_t>(S1[get_byte(2,t3)]   ) ^ get_byte(2, KS[4*ROUNDS+3]);
+      out[16*i+15] = static_cast<uint8_t>(S2[get_byte(3,t3)]   ) ^ get_byte(3, KS[4*ROUNDS+3]);
+      }
+   }
 
 // n-bit right shift of Y XORed to X
 template <unsigned int N>
-inline void ARIA_GSKS(const uint32_t X[4], const uint32_t Y[4], uint8_t KS[16])
+inline void ARIA_ROL128(const uint32_t X[4], const uint32_t Y[4], uint32_t KS[4])
    {
-    // MSVC is not generating a "rotate immediate". Constify to help it along.
-    static const unsigned int Q = 4-(N/32);
-    static const unsigned int R = N % 32;
-    reinterpret_cast<uint32_t*>(KS)[0] = (X[0]) ^ ((Y[(Q  )%4])>>R) ^ ((Y[(Q+3)%4])<<(32-R));
-    reinterpret_cast<uint32_t*>(KS)[1] = (X[1]) ^ ((Y[(Q+1)%4])>>R) ^ ((Y[(Q  )%4])<<(32-R));
-    reinterpret_cast<uint32_t*>(KS)[2] = (X[2]) ^ ((Y[(Q+2)%4])>>R) ^ ((Y[(Q+1)%4])<<(32-R));
-    reinterpret_cast<uint32_t*>(KS)[3] = (X[3]) ^ ((Y[(Q+3)%4])>>R) ^ ((Y[(Q+2)%4])<<(32-R));
-   }
-
-#if defined(BOTAN_TARGET_SUPPORTS_NEON)
-template <unsigned int N>
-inline void ARIA_GSKS_NEON(const uint32x4_t X, const uint32x4_t Y, uint8_t KS[16])
-   {
-    static const unsigned int Q1 = (4-(N/32)) % 4;
-    static const unsigned int Q2 = (3-(N/32)) % 4;
-    static const unsigned int R = N % 32;
-
-    vst1q_u32(reinterpret_cast<uint32_t*>(KS),
-       veorq_u32(X, veorq_u32(
-          vshrq_n_u32(vextq_u32(Y, Y, Q1), R),
-          vshlq_n_u32(vextq_u32(Y, Y, Q2), 32-R))));
-   }
-#endif
-
-/*
-* ARIA Encryption and decryption
-*/
-template <unsigned int ROUNDS>
-void transform(const uint8_t in[], uint8_t out[], size_t blocks,
-             const secure_vector<uint8_t>& KS, secure_vector<uint32_t>& WS)
-   {
-
-   // Hit every cache line of S1
-   const size_t cache_line_size = CPUID::cache_line_size();
-   volatile uint32_t _Z = 0;
-   uint32_t Z = _Z;
-   for(size_t i = 0; i < 256; i += cache_line_size / sizeof(uint32_t))
-      {
-      Z |= S1[i];
-      }
-   WS[0] = Z;
-
-   while(blocks)
-      {
-      const uint8_t* rk = reinterpret_cast<const byte*>(&KS[0]);
-      uint32_t* t = &WS[20];
-
-      t[0] = load_be<uint32_t>(in,0); t[1] = load_be<uint32_t>(in,1);
-      t[2] = load_be<uint32_t>(in,2); t[3] = load_be<uint32_t>(in,3);
-
-      if (ROUNDS > 12) {
-         ARIA_KXL; rk+= 16; ARIA_FO;
-         ARIA_KXL; rk+= 16; ARIA_FE;
-      }
-
-      if (ROUNDS > 14) {
-         ARIA_KXL; rk+= 16; ARIA_FO;
-         ARIA_KXL; rk+= 16; ARIA_FE;
-      }
-
-      ARIA_KXL; rk+= 16; ARIA_FO; ARIA_KXL; rk+= 16; ARIA_FE;
-      ARIA_KXL; rk+= 16; ARIA_FO; ARIA_KXL; rk+= 16; ARIA_FE;
-      ARIA_KXL; rk+= 16; ARIA_FO; ARIA_KXL; rk+= 16; ARIA_FE;
-      ARIA_KXL; rk+= 16; ARIA_FO; ARIA_KXL; rk+= 16; ARIA_FE;
-      ARIA_KXL; rk+= 16; ARIA_FO; ARIA_KXL; rk+= 16; ARIA_FE;
-      ARIA_KXL; rk+= 16; ARIA_FO; ARIA_KXL; rk+= 16;
-
-#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-      out[ 0] = (byte)(X1[ARIA_BRF(t[0],3)]   ) ^ rk[ 3];
-      out[ 1] = (byte)(X2[ARIA_BRF(t[0],2)]>>8) ^ rk[ 2];
-      out[ 2] = (byte)(S1[ARIA_BRF(t[0],1)]   ) ^ rk[ 1];
-      out[ 3] = (byte)(S2[ARIA_BRF(t[0],0)]   ) ^ rk[ 0];
-      out[ 4] = (byte)(X1[ARIA_BRF(t[1],3)]   ) ^ rk[ 7];
-      out[ 5] = (byte)(X2[ARIA_BRF(t[1],2)]>>8) ^ rk[ 6];
-      out[ 6] = (byte)(S1[ARIA_BRF(t[1],1)]   ) ^ rk[ 5];
-      out[ 7] = (byte)(S2[ARIA_BRF(t[1],0)]   ) ^ rk[ 4];
-      out[ 8] = (byte)(X1[ARIA_BRF(t[2],3)]   ) ^ rk[11];
-      out[ 9] = (byte)(X2[ARIA_BRF(t[2],2)]>>8) ^ rk[10];
-      out[10] = (byte)(S1[ARIA_BRF(t[2],1)]   ) ^ rk[ 9];
-      out[11] = (byte)(S2[ARIA_BRF(t[2],0)]   ) ^ rk[ 8];
-      out[12] = (byte)(X1[ARIA_BRF(t[3],3)]   ) ^ rk[15];
-      out[13] = (byte)(X2[ARIA_BRF(t[3],2)]>>8) ^ rk[14];
-      out[14] = (byte)(S1[ARIA_BRF(t[3],1)]   ) ^ rk[13];
-      out[15] = (byte)(S2[ARIA_BRF(t[3],0)]   ) ^ rk[12];
-#else
-      out[ 0] = (byte)(X1[ARIA_BRF(t[0],3)]   );
-      out[ 1] = (byte)(X2[ARIA_BRF(t[0],2)]>>8);
-      out[ 2] = (byte)(S1[ARIA_BRF(t[0],1)]   );
-      out[ 3] = (byte)(S2[ARIA_BRF(t[0],0)]   );
-      out[ 4] = (byte)(X1[ARIA_BRF(t[1],3)]   );
-      out[ 5] = (byte)(X2[ARIA_BRF(t[1],2)]>>8);
-      out[ 6] = (byte)(S1[ARIA_BRF(t[1],1)]   );
-      out[ 7] = (byte)(S2[ARIA_BRF(t[1],0)]   );
-      out[ 8] = (byte)(X1[ARIA_BRF(t[2],3)]   );
-      out[ 9] = (byte)(X2[ARIA_BRF(t[2],2)]>>8);
-      out[10] = (byte)(S1[ARIA_BRF(t[2],1)]   );
-      out[11] = (byte)(S2[ARIA_BRF(t[2],0)]   );
-      out[12] = (byte)(X1[ARIA_BRF(t[3],3)]   );
-      out[13] = (byte)(X2[ARIA_BRF(t[3],2)]>>8);
-      out[14] = (byte)(S1[ARIA_BRF(t[3],1)]   );
-      out[15] = (byte)(S2[ARIA_BRF(t[3],0)]   );
-
-      store_be((load_be<uint32_t>(rk,0) ^ load_be<uint32_t>(out,0)), reinterpret_cast<uint8_t*>(out+0));
-      store_be((load_be<uint32_t>(rk,1) ^ load_be<uint32_t>(out,1)), reinterpret_cast<uint8_t*>(out+4));
-      store_be((load_be<uint32_t>(rk,2) ^ load_be<uint32_t>(out,2)), reinterpret_cast<uint8_t*>(out+8));
-      store_be((load_be<uint32_t>(rk,3) ^ load_be<uint32_t>(out,3)), reinterpret_cast<uint8_t*>(out+12));
-#endif
-
-      in += 16;
-      out += 16;
-      blocks--;
-      }
+   // MSVC is not generating a "rotate immediate". Constify to help it along.
+   static const unsigned int Q = 4 - (N / 32);
+   static const unsigned int R = N % 32;
+   KS[0] = (X[0]) ^ ((Y[(Q  )%4])>>R) ^ ((Y[(Q+3)%4])<<(32-R));
+   KS[1] = (X[1]) ^ ((Y[(Q+1)%4])>>R) ^ ((Y[(Q  )%4])<<(32-R));
+   KS[2] = (X[2]) ^ ((Y[(Q+2)%4])>>R) ^ ((Y[(Q+1)%4])<<(32-R));
+   KS[3] = (X[3]) ^ ((Y[(Q+3)%4])>>R) ^ ((Y[(Q+2)%4])<<(32-R));
    }
 
 /*
-* ARIA Key Schedule (forward direction)
+* ARIA Key Schedule
 */
-void key_schedule_fwd(secure_vector<uint8_t>& KS, secure_vector<uint32_t>& WS, const uint8_t key[], size_t length)
+void key_schedule(secure_vector<uint32_t>& ERK,
+                  secure_vector<uint32_t>& DRK,
+                  const uint8_t key[], size_t length)
    {
+   const uint32_t KRK[3][4] = {
+      {0x517cc1b7, 0x27220a94, 0xfe13abe8, 0xfa9a6ee0},
+      {0x6db14acc, 0x9e21c820, 0xff28b1d5, 0xef5de2b0},
+      {0xdb92371d, 0x2126e970, 0x03249775, 0x04e8c90e}
+   };
 
-    const uint8_t *mk = key;
-    uint8_t *rk = &KS[0];
-    int q, r;
+   const size_t CK0 = (length / 8) - 2;
+   const size_t CK1 = (CK0 + 1) % 3;
+   const size_t CK2 = (CK1 + 1) % 3;
 
-    switch (length)
-    {
-    case 16:
-      r = 12;
-      q = 0;
-      break;
-    case 32:
-      r = 16;
-      q = 2;
-      break;
-    case 24:
-      r = 14;
-      q = 1;
-      break;
-    default:
-      q = r = 0;
-      BOTAN_ASSERT(0, "Invalid key length");
-    }
+   uint32_t w0[4];
+   uint32_t w1[4];
+   uint32_t w2[4];
+   uint32_t w3[4];
 
-    // w0 has room for 32 bytes. w1-w3 each has room for 16 bytes. t and u are 16 byte temp areas.
-    uint32_t *w0 = &WS[0], *w1 = &WS[8], *w2 = &WS[12], *w3 = &WS[16], *t = &WS[20];
+   w0[0] = load_be<uint32_t>(key,0);
+   w0[1] = load_be<uint32_t>(key,1);
+   w0[2] = load_be<uint32_t>(key,2);
+   w0[3] = load_be<uint32_t>(key,3);
 
-    w0[0] = load_be<uint32_t>(mk,0); w0[1] = load_be<uint32_t>(mk,1);
-    w0[2] = load_be<uint32_t>(mk,2); w0[3] = load_be<uint32_t>(mk,3);
+   w1[0] = w0[0] ^ KRK[CK0][0];
+   w1[1] = w0[1] ^ KRK[CK0][1];
+   w1[2] = w0[2] ^ KRK[CK0][2];
+   w1[3] = w0[3] ^ KRK[CK0][3];
 
-    t[0]=w0[0]^KRK[q][0]; t[1]=w0[1]^KRK[q][1];
-    t[2]=w0[2]^KRK[q][2]; t[3]=w0[3]^KRK[q][3];
+   ARIA_FO(w1[0], w1[1], w1[2], w1[3]);
 
-    ARIA_FO;
-
-    if (length == 32)
-    {
-      w1[0] = load_be<uint32_t>(mk,4);
-      w1[1] = load_be<uint32_t>(mk,5);
-      w1[2] = load_be<uint32_t>(mk,6);
-      w1[3] = load_be<uint32_t>(mk,7);
-    }
-    else if (length == 24)
-    {
-      w1[0] = load_be<uint32_t>(mk,4);
-      w1[1] = load_be<uint32_t>(mk,5);
-      w1[2] = w1[3] = 0;
-    }
-    else
-    {
-      w1[0]=w1[1]=w1[2]=w1[3]=0;
-    }
-
-    w1[0]^=t[0]; w1[1]^=t[1]; w1[2]^=t[2]; w1[3]^=t[3];
-    ::memcpy(t, w1, 16);
-
-    q = (q==2) ? 0 : (q+1);
-    t[0]^=KRK[q][0]; t[1]^=KRK[q][1]; t[2]^=KRK[q][2]; t[3]^=KRK[q][3];
-
-    ARIA_FE;
-
-    t[0]^=w0[0]; t[1]^=w0[1]; t[2]^=w0[2]; t[3]^=w0[3];
-    ::memcpy(w2, t, 16);
-
-    q = (q==2) ? 0 : (q+1);
-    t[0]^=KRK[q][0]; t[1]^=KRK[q][1]; t[2]^=KRK[q][2]; t[3]^=KRK[q][3];
-
-    ARIA_FO;
-
-    w3[0]=t[0]^w1[0]; w3[1]=t[1]^w1[1]; w3[2]=t[2]^w1[2]; w3[3]=t[3]^w1[3];
-
-#if defined(BOTAN_TARGET_SUPPORTS_NEON)
-    if (CPUID::has_neon())
-    {
-       const uint32x4_t w0 = vld1q_u32((const uint32_t*)(&WS[0]));
-       const uint32x4_t w1 = vld1q_u32((const uint32_t*)(&WS[8]));
-       const uint32x4_t w2 = vld1q_u32((const uint32_t*)(&WS[12]));
-       const uint32x4_t w3 = vld1q_u32((const uint32_t*)(&WS[16]));
-
-       ARIA_GSKS_NEON<19>(w0, w1, rk +   0);
-       ARIA_GSKS_NEON<19>(w1, w2, rk +  16);
-       ARIA_GSKS_NEON<19>(w2, w3, rk +  32);
-       ARIA_GSKS_NEON<19>(w3, w0, rk +  48);
-       ARIA_GSKS_NEON<31>(w0, w1, rk +  64);
-       ARIA_GSKS_NEON<31>(w1, w2, rk +  80);
-       ARIA_GSKS_NEON<31>(w2, w3, rk +  96);
-       ARIA_GSKS_NEON<31>(w3, w0, rk + 112);
-       ARIA_GSKS_NEON<67>(w0, w1, rk + 128);
-       ARIA_GSKS_NEON<67>(w1, w2, rk + 144);
-       ARIA_GSKS_NEON<67>(w2, w3, rk + 160);
-       ARIA_GSKS_NEON<67>(w3, w0, rk + 176);
-       ARIA_GSKS_NEON<97>(w0, w1, rk + 192);
-
-       if (length > 16)
-       {
-           ARIA_GSKS_NEON<97>(w1, w2, rk + 208);
-           ARIA_GSKS_NEON<97>(w2, w3, rk + 224);
-
-           if (length > 24)
-           {
-              ARIA_GSKS_NEON< 97>(w3, w0, rk + 240);
-              ARIA_GSKS_NEON<109>(w0, w1, rk + 256);
-           }
-       }
-     }
-     else
-#endif  // BOTAN_TARGET_SUPPORTS_NEON
-     {
-        ARIA_GSKS<19>(w0, w1, rk +   0);
-        ARIA_GSKS<19>(w1, w2, rk +  16);
-        ARIA_GSKS<19>(w2, w3, rk +  32);
-        ARIA_GSKS<19>(w3, w0, rk +  48);
-        ARIA_GSKS<31>(w0, w1, rk +  64);
-        ARIA_GSKS<31>(w1, w2, rk +  80);
-        ARIA_GSKS<31>(w2, w3, rk +  96);
-        ARIA_GSKS<31>(w3, w0, rk + 112);
-        ARIA_GSKS<67>(w0, w1, rk + 128);
-        ARIA_GSKS<67>(w1, w2, rk + 144);
-        ARIA_GSKS<67>(w2, w3, rk + 160);
-        ARIA_GSKS<67>(w3, w0, rk + 176);
-        ARIA_GSKS<97>(w0, w1, rk + 192);
-
-        if (length > 16)
-        {
-           ARIA_GSKS<97>(w1, w2, rk + 208);
-           ARIA_GSKS<97>(w2, w3, rk + 224);
-
-           if (length > 24)
-           {
-              ARIA_GSKS< 97>(w3, w0, rk + 240);
-              ARIA_GSKS<109>(w0, w1, rk + 256);
-           }
-        }
-     }
-   }
-
-/*
-* ARIA Key Schedule (reverse direction)
-*/
-void key_schedule_rev(secure_vector<uint8_t>& KS, secure_vector<uint32_t>& WS, const uint8_t key[], size_t length)
-   {
-
-    BOTAN_UNUSED(key);
-    uint8_t *rk = &KS[0];
-    int q, r;
-
-    switch (length)
-    {
-    case 16:
-       r = 12;
-       q = 0;
-       break;
-    case 32:
-       r = 16;
-       q = 2;
-       break;
-    case 24:
-       r = 14;
-       q = 1;
-       break;
-    default:
-       q = r = 0;
-       BOTAN_ASSERT(0, "Invalid key length");
-   }
-
-   uint32_t *a, *z, *s = &WS[24], *t = &WS[20];
-   a=reinterpret_cast<uint32_t*>(rk); z=a+r*4;
-   ::memcpy(t, a, 16); ::memcpy(a, z, 16); ::memcpy(z, t, 16);
-
-   a+=4; z-=4;
-   for (; a<z; a+=4, z-=4)
+   if(length == 24 || length == 32)
       {
-      ARIA_M1(a[0],t[0]); ARIA_M1(a[1],t[1]); ARIA_M1(a[2],t[2]); ARIA_M1(a[3],t[3]);
-      ARIA_MM(t[0],t[1],t[2],t[3]); ARIA_P(t[0],t[1],t[2],t[3]); ARIA_MM(t[0],t[1],t[2],t[3]);
-      ::memcpy(s, t, 16);
-
-      ARIA_M1(z[0],t[0]); ARIA_M1(z[1],t[1]); ARIA_M1(z[2],t[2]); ARIA_M1(z[3],t[3]);
-      ARIA_MM(t[0],t[1],t[2],t[3]); ARIA_P(t[0],t[1],t[2],t[3]); ARIA_MM(t[0],t[1],t[2],t[3]);
-      ::memcpy(a, t, 16); ::memcpy(z, s, 16);
+      w1[0] ^= load_be<uint32_t>(key,4);
+      w1[1] ^= load_be<uint32_t>(key,5);
+      }
+   if(length == 32)
+      {
+      w1[2] ^= load_be<uint32_t>(key,6);
+      w1[3] ^= load_be<uint32_t>(key,7);
       }
 
-      ARIA_M1(a[0],t[0]); ARIA_M1(a[1],t[1]); ARIA_M1(a[2],t[2]); ARIA_M1(a[3],t[3]);
-      ARIA_MM(t[0],t[1],t[2],t[3]); ARIA_P(t[0],t[1],t[2],t[3]); ARIA_MM(t[0],t[1],t[2],t[3]);
-      ::memcpy(z, t, 16);
+   w2[0] = w1[0] ^ KRK[CK1][0];
+   w2[1] = w1[1] ^ KRK[CK1][1];
+   w2[2] = w1[2] ^ KRK[CK1][2];
+   w2[3] = w1[3] ^ KRK[CK1][3];
+
+   ARIA_FE(w2[0], w2[1], w2[2], w2[3]);
+
+   w2[0] ^= w0[0];
+   w2[1] ^= w0[1];
+   w2[2] ^= w0[2];
+   w2[3] ^= w0[3];
+
+   w3[0] = w2[0] ^ KRK[CK2][0];
+   w3[1] = w2[1] ^ KRK[CK2][1];
+   w3[2] = w2[2] ^ KRK[CK2][2];
+   w3[3] = w2[3] ^ KRK[CK2][3];
+
+   ARIA_FO(w3[0], w3[1], w3[2], w3[3]);
+
+   w3[0] ^= w1[0];
+   w3[1] ^= w1[1];
+   w3[2] ^= w1[2];
+   w3[3] ^= w1[3];
+
+   if(length == 16)
+      ERK.resize(4*13);
+   else if(length == 24)
+      ERK.resize(4*15);
+   else if(length == 32)
+      ERK.resize(4*17);
+
+   ARIA_ROL128<19>(w0, w1, &ERK[ 0]);
+   ARIA_ROL128<19>(w1, w2, &ERK[ 4]);
+   ARIA_ROL128<19>(w2, w3, &ERK[ 8]);
+   ARIA_ROL128<19>(w3, w0, &ERK[12]);
+   ARIA_ROL128<31>(w0, w1, &ERK[16]);
+   ARIA_ROL128<31>(w1, w2, &ERK[20]);
+   ARIA_ROL128<31>(w2, w3, &ERK[24]);
+   ARIA_ROL128<31>(w3, w0, &ERK[28]);
+   ARIA_ROL128<67>(w0, w1, &ERK[32]);
+   ARIA_ROL128<67>(w1, w2, &ERK[36]);
+   ARIA_ROL128<67>(w2, w3, &ERK[40]);
+   ARIA_ROL128<67>(w3, w0, &ERK[44]);
+   ARIA_ROL128<97>(w0, w1, &ERK[48]);
+
+   if(length == 24 || length == 32)
+      {
+      ARIA_ROL128<97>(w1, w2, &ERK[52]);
+      ARIA_ROL128<97>(w2, w3, &ERK[56]);
+
+      if(length == 32)
+         {
+         ARIA_ROL128< 97>(w3, w0, &ERK[60]);
+         ARIA_ROL128<109>(w0, w1, &ERK[64]);
+         }
+      }
+
+   // Now create the decryption key schedule
+   DRK.resize(ERK.size());
+
+   for(size_t i = 0; i != DRK.size(); i += 4)
+      {
+      DRK[i  ] = ERK[ERK.size()-4-i];
+      DRK[i+1] = ERK[ERK.size()-3-i];
+      DRK[i+2] = ERK[ERK.size()-2-i];
+      DRK[i+3] = ERK[ERK.size()-1-i];
+      }
+
+   for(size_t i = 4; i != DRK.size() - 4; i += 4)
+      {
+      for(size_t j = 0; j != 4; ++j)
+         {
+         DRK[i+j] = rotate_right(DRK[i+j], 8) ^
+                    rotate_right(DRK[i+j], 16) ^
+                    rotate_right(DRK[i+j], 24);
+         }
+
+      DRK[i+1] ^= DRK[i+2]; DRK[i+2] ^= DRK[i+3];
+      DRK[i+0] ^= DRK[i+1]; DRK[i+3] ^= DRK[i+1];
+      DRK[i+2] ^= DRK[i+0]; DRK[i+1] ^= DRK[i+2];
+
+      DRK[i+1] = ((DRK[i+1] << 8) & 0xFF00FF00) | ((DRK[i+1] >> 8) & 0x00FF00FF);
+      DRK[i+2] = rotate_right(DRK[i+2], 16);
+      DRK[i+3] = reverse_bytes(DRK[i+3]);
+
+      DRK[i+1] ^= DRK[i+2]; DRK[i+2] ^= DRK[i+3];
+      DRK[i+0] ^= DRK[i+1]; DRK[i+3] ^= DRK[i+1];
+      DRK[i+2] ^= DRK[i+0]; DRK[i+1] ^= DRK[i+2];
+      }
    }
 
 }
+
 }
 
 void ARIA_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   ARIA_F::transform<12>(in, out, blocks, m_ERK, m_WS);
+   ARIA_F::transform(in, out, blocks, m_ERK);
    }
 
 void ARIA_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   ARIA_F::transform<14>(in, out, blocks, m_ERK, m_WS);
+   ARIA_F::transform(in, out, blocks, m_ERK);
    }
 
 void ARIA_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   ARIA_F::transform<16>(in, out, blocks, m_ERK, m_WS);
+   ARIA_F::transform(in, out, blocks, m_ERK);
    }
 
 void ARIA_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   ARIA_F::transform<12>(in, out, blocks, m_DRK, m_WS);
+   ARIA_F::transform(in, out, blocks, m_DRK);
    }
 
 void ARIA_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   ARIA_F::transform<14>(in, out, blocks, m_DRK, m_WS);
+   ARIA_F::transform(in, out, blocks, m_DRK);
    }
 
 void ARIA_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    {
-   ARIA_F::transform<16>(in, out, blocks, m_DRK, m_WS);
+   ARIA_F::transform(in, out, blocks, m_DRK);
    }
 
 void ARIA_128::key_schedule(const uint8_t key[], size_t length)
    {
-   m_ERK.resize(16*17); m_DRK.resize(16*17); m_WS.resize(4*7);
-   ARIA_F::key_schedule_fwd(m_ERK, m_WS, key, length);
-   ::memcpy(&m_DRK[0], &m_ERK[0], 16*17);
-   ARIA_F::key_schedule_rev(m_DRK, m_WS, key, length);
+   ARIA_F::key_schedule(m_ERK, m_DRK, key, length);
    }
 
 void ARIA_192::key_schedule(const uint8_t key[], size_t length)
    {
-   m_ERK.resize(16*17); m_DRK.resize(16*17); m_WS.resize(4*7);
-   ARIA_F::key_schedule_fwd(m_ERK, m_WS, key, length);
-   ::memcpy(&m_DRK[0], &m_ERK[0], 16*17);
-   ARIA_F::key_schedule_rev(m_DRK, m_WS, key, length);
+   ARIA_F::key_schedule(m_ERK, m_DRK, key, length);
    }
 
 void ARIA_256::key_schedule(const uint8_t key[], size_t length)
    {
-   m_ERK.resize(16*17); m_DRK.resize(16*17); m_WS.resize(4*7);
-   ARIA_F::key_schedule_fwd(m_ERK, m_WS, key, length);
-   ::memcpy(&m_DRK[0], &m_ERK[0], 16*17);
-   ARIA_F::key_schedule_rev(m_DRK, m_WS, key, length);
+   ARIA_F::key_schedule(m_ERK, m_DRK, key, length);
    }
 
 void ARIA_128::clear()
    {
    zap(m_ERK);
    zap(m_DRK);
-   zap(m_WS);
    }
 
 void ARIA_192::clear()
    {
    zap(m_ERK);
    zap(m_DRK);
-   zap(m_WS);
    }
 
 void ARIA_256::clear()
    {
    zap(m_ERK);
    zap(m_DRK);
-   zap(m_WS);
    }
 
 }
