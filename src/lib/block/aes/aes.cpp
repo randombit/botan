@@ -168,7 +168,7 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[],
       }
    Z &= TE[82]; // this is zero, which hopefully the compiler cannot deduce
 
-   BOTAN_PARALLEL_FOR(size_t i = 0; i < blocks; ++i)
+   for(size_t i = 0; i < blocks; ++i)
       {
       uint32_t T0, T1, T2, T3;
       load_be(in + 16*i, T0, T1, T2, T3);
