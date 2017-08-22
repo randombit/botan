@@ -63,7 +63,7 @@ def to_ciphersuite_info(code, name):
         'CAMELLIA': ('Camellia',None),
         'AES': ('AES',None),
         'SEED': ('SEED',16),
-        'ARIA': ('ARIA',16),
+        'ARIA': ('ARIA',None),
         }
 
     tls_to_botan_names = {
@@ -111,7 +111,7 @@ def to_ciphersuite_info(code, name):
     if cipher_keylen is None:
         cipher_keylen = int(cipher[1]) / 8
 
-    if cipher_algo in ['AES', 'Camellia']:
+    if cipher_algo in ['AES', 'Camellia', 'ARIA']:
         cipher_algo += '-%d' % (cipher_keylen*8)
 
     modestr = ''
