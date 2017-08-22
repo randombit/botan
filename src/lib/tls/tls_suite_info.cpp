@@ -2,8 +2,8 @@
 * TLS cipher suite information
 *
 * This file was automatically generated from the IANA assignments
-* (tls-parameters.txt hash 67a567fcf1ac67cb8cfc4af96c20c3efb05c1fc1)
-* by ./src/scripts/tls_suite_info.py on 2016-12-30
+* (tls-parameters.txt hash ac96406c0080f669ca9442b0f5efcb31549ecb2e)
+* by ./src/scripts/tls_suite_info.py on 2017-08-22
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -171,6 +171,10 @@ const std::vector<Ciphersuite>& Ciphersuite::all_known_ciphersuites()
       Ciphersuite(0xCCAB, "PSK_WITH_CHACHA20_POLY1305_SHA256", "", "PSK", "ChaCha20Poly1305", 32, 12, 0, "AEAD", 0, "SHA-256"),
       Ciphersuite(0xCCAC, "ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256", "", "ECDHE_PSK", "ChaCha20Poly1305", 32, 12, 0, "AEAD", 0, "SHA-256"),
       Ciphersuite(0xCCAD, "DHE_PSK_WITH_CHACHA20_POLY1305_SHA256", "", "DHE_PSK", "ChaCha20Poly1305", 32, 12, 0, "AEAD", 0, "SHA-256"),
+      Ciphersuite(0xD001, "ECDHE_PSK_WITH_AES_128_GCM_SHA256", "", "ECDHE_PSK", "AES-128/GCM", 16, 4, 8, "AEAD", 0, "SHA-256"),
+      Ciphersuite(0xD002, "ECDHE_PSK_WITH_AES_256_GCM_SHA384", "", "ECDHE_PSK", "AES-256/GCM", 32, 4, 8, "AEAD", 0, "SHA-384"),
+      Ciphersuite(0xD003, "ECDHE_PSK_WITH_AES_128_CCM_8_SHA256", "", "ECDHE_PSK", "AES-128/CCM(8)", 16, 4, 8, "AEAD", 0, "SHA-256"),
+      Ciphersuite(0xD005, "ECDHE_PSK_WITH_AES_128_CCM_SHA256", "", "ECDHE_PSK", "AES-128/CCM", 16, 4, 8, "AEAD", 0, "SHA-256"),
       Ciphersuite(0xFFC0, "DHE_RSA_WITH_AES_128_OCB_SHA256", "RSA", "DH", "AES-128/OCB(12)", 16, 12, 0, "AEAD", 0, "SHA-256"),
       Ciphersuite(0xFFC1, "DHE_RSA_WITH_AES_256_OCB_SHA256", "RSA", "DH", "AES-256/OCB(12)", 32, 12, 0, "AEAD", 0, "SHA-256"),
       Ciphersuite(0xFFC2, "ECDHE_RSA_WITH_AES_128_OCB_SHA256", "RSA", "ECDH", "AES-128/OCB(12)", 16, 12, 0, "AEAD", 0, "SHA-256"),

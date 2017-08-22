@@ -10,6 +10,9 @@ Version 2.3.0, Not Yet Released
 * Optimized the CMAC polynomial doubling operation, and removed a small timing
   channel due to a conditional operation.
 
+* Added support for the ECDHE_PSK AEAD TLS ciphersuites from
+  draft-ietf-tls-ecdhe-psk-aead-05.
+
 * Extend "Raw" signature padding (which allows signing a hash computed
   externally) to optionally take a hash function name. In this case, it will be
   verified that the input matches the expected hash size.  This also will

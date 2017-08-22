@@ -3,7 +3,7 @@
 """
 Used to generate lib/tls/tls_suite_info.cpp from IANA params
 
-(C) 2011, 2012, 2013, 2014, 2015, 2016 Jack Lloyd
+(C) 2011, 2012, 2013, 2014, 2015, 2016, 2017 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -42,6 +42,9 @@ def to_ciphersuite_info(code, name):
     cipher = cipher_and_mac[:-1]
 
     if mac_algo == '8' and cipher[-1] == 'CCM':
+        cipher = cipher[:-1]
+        mac_algo = 'CCM_8'
+    elif cipher[-2] == 'CCM' and cipher[-1] == '8':
         cipher = cipher[:-1]
         mac_algo = 'CCM_8'
 
@@ -125,7 +128,7 @@ def to_ciphersuite_info(code, name):
 
     mode = cipher[-1]
     if mode not in ['CBC', 'GCM', 'CCM(8)', 'CCM', 'OCB']:
-        print "#warning Unknown mode %s" % (' '.join(cipher))
+        print "#warning Unknown mode '%s' for ciphersuite %s (0x%d)" % (' '.join(cipher), name, code)
 
     ivlen = 8 if cipher_algo == '3DES' else 16
 
