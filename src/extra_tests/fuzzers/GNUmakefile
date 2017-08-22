@@ -78,11 +78,11 @@ clean_builds: clean
 	rm -rf afl-build llvm-build
 
 libFuzzer:
-	svn co http://llvm.org/svn/llvm-project/llvm/trunk/lib/Fuzzer libFuzzer
+	svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk/lib/fuzzer libFuzzer
 
 libFuzzer.a: libFuzzer
 	cd libFuzzer && clang -c -g -O2 -std=c++11 *.cpp
 	ar cr libFuzzer.a libFuzzer/*.o
 
 update:
-	svn co http://llvm.org/svn/llvm-project/llvm/trunk/lib/Fuzzer libFuzzer
+	svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk/lib/fuzzer libFuzzer
