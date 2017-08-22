@@ -7,6 +7,8 @@ Version 2.3.0, Not Yet Released
 * Add the SHACAL2 block cipher, including optimizations using SIMD and SHA-NI
   instructions. (GH #1151)
 
+* Add the ARIA block cipher (GH #1004 and #1157)
+
 * Optimized the CMAC polynomial doubling operation, and removed a small timing
   channel due to a conditional operation.
 
