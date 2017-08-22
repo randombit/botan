@@ -1579,8 +1579,8 @@ class FFI_Unit_Tests : public Test
          TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv1, "x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub1, "public_x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub1, "public_y"));
-         TEST_FFI_OK(botan_privkey_load_ecdh, (&loaded_privkey1, private_scalar, "secp256r1"));
-         TEST_FFI_OK(botan_pubkey_load_ecdh, (&loaded_pubkey1, public_x, public_y, "secp256r1"));
+         REQUIRE_FFI_OK(botan_privkey_load_ecdh, (&loaded_privkey1, private_scalar, "secp256r1"));
+         REQUIRE_FFI_OK(botan_pubkey_load_ecdh, (&loaded_pubkey1, public_x, public_y, "secp256r1"));
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey1, rng, 0));
          TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey1, rng, 0));
 

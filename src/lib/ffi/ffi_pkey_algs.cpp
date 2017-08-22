@@ -256,23 +256,12 @@ int botan_privkey_get_field(botan_mp_t output,
 
 int botan_privkey_create_rsa(botan_privkey_t* key_obj, botan_rng_t rng_obj, size_t n_bits)
    {
-#if defined(BOTAN_HAS_RSA)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
-      if(key_obj == nullptr || rng_obj == nullptr)
-         return BOTAN_FFI_ERROR_NULL_POINTER;
-      if(n_bits < 1024 || n_bits > 16*1024)
-         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+   if(n_bits < 1024 || n_bits > 16*1024)
+      return BOTAN_FFI_ERROR_BAD_PARAMETER;
 
-      *key_obj = nullptr;
+   std::string n_str = std::to_string(n_bits);
 
-      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-      std::unique_ptr<Botan::Private_Key> key(new Botan::RSA_PrivateKey(rng, n_bits));
-      *key_obj = new botan_privkey_struct(key.release());
-      return BOTAN_FFI_SUCCESS;
-      });
-#else
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_privkey_create(key_obj, "RSA", n_str.c_str(), rng_obj);
    }
 
 int botan_privkey_load_rsa(botan_privkey_t* key,
@@ -407,22 +396,7 @@ int botan_pubkey_dsa_get_y(botan_mp_t y, botan_pubkey_t key)
 
 int botan_privkey_create_ecdsa(botan_privkey_t* key_obj, botan_rng_t rng_obj, const char* param_str)
    {
-#if defined(BOTAN_HAS_ECDSA)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
-      if(key_obj == nullptr || rng_obj == nullptr || param_str == nullptr || *param_str == 0)
-         return BOTAN_FFI_ERROR_NULL_POINTER;
-
-      *key_obj = nullptr;
-
-      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-      Botan::EC_Group grp(param_str);
-      std::unique_ptr<Botan::Private_Key> key(new Botan::ECDSA_PrivateKey(rng, grp));
-      *key_obj = new botan_privkey_struct(key.release());
-      return BOTAN_FFI_SUCCESS;
-      });
-#else
-     return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_privkey_create(key_obj, "ECDSA", param_str, rng_obj);
    }
 
 /* ECDSA specific operations */
@@ -505,26 +479,11 @@ int botan_privkey_load_elgamal(botan_privkey_t* key,
 
 int botan_privkey_create_dh(botan_privkey_t* key_obj, botan_rng_t rng_obj, const char* param_str)
    {
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
-      if(key_obj == nullptr || rng_obj == nullptr || param_str == nullptr || *param_str == 0)
-         return BOTAN_FFI_ERROR_NULL_POINTER;
-
-      *key_obj = nullptr;
-
-      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-      Botan::DL_Group grp(param_str);
-      *key_obj = new botan_privkey_struct(new Botan::DH_PrivateKey(rng, grp, 0));
-      return BOTAN_FFI_SUCCESS;
-      });
-#else
-   BOTAN_UNUSED(key_obj, rng_obj, param_str);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   return botan_privkey_create(key_obj, "DH", param_str, rng_obj);
    }
 
 int botan_privkey_load_dh(botan_privkey_t* key,
-                               botan_mp_t p, botan_mp_t g, botan_mp_t x)
+                          botan_mp_t p, botan_mp_t g, botan_mp_t x)
    {
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    *key = nullptr;
@@ -541,7 +500,7 @@ int botan_privkey_load_dh(botan_privkey_t* key,
    }
 
 int botan_pubkey_load_dh(botan_pubkey_t* key,
-                              botan_mp_t p, botan_mp_t g, botan_mp_t y)
+                         botan_mp_t p, botan_mp_t g, botan_mp_t y)
    {
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    *key = nullptr;
@@ -560,32 +519,15 @@ int botan_pubkey_load_dh(botan_pubkey_t* key,
 
 int botan_privkey_create_ecdh(botan_privkey_t* key_obj, botan_rng_t rng_obj, const char* param_str)
    {
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
-      if(key_obj == nullptr || rng_obj == nullptr || param_str == nullptr || *param_str == 0)
-         return BOTAN_FFI_ERROR_NULL_POINTER;
+   if(param_str == nullptr)
+      return BOTAN_FFI_ERROR_NULL_POINTER;
 
-      *key_obj = nullptr;
+   const std::string params(param_str);
 
-      const std::string params(param_str);
+   if(params == "curve25519")
+      return botan_privkey_create(key_obj, "Curve25519", "", rng_obj);
 
-#if defined(BOTAN_HAS_CURVE_25519)
-      if(params == "curve25519")
-         {
-         std::unique_ptr<Botan::Private_Key> key(new Botan::Curve25519_PrivateKey(safe_get(rng_obj)));
-         *key_obj = new botan_privkey_struct(key.release());
-         return BOTAN_FFI_SUCCESS;
-         }
-#endif
-
-#if defined(BOTAN_HAS_ECDH)
-      Botan::EC_Group grp(params);
-      std::unique_ptr<Botan::Private_Key> key(new Botan::ECDH_PrivateKey(safe_get(rng_obj), grp));
-      *key_obj = new botan_privkey_struct(key.release());
-      return BOTAN_FFI_SUCCESS;
-#endif
-
-      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-      });
+   return botan_privkey_create(key_obj, "ECDH", param_str, rng_obj);
    }
 
 int botan_pubkey_load_ecdh(botan_pubkey_t* key,
@@ -792,21 +734,8 @@ int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key,
 
 int botan_privkey_create_mceliece(botan_privkey_t* key_obj, botan_rng_t rng_obj, size_t n, size_t t)
    {
-#if defined(BOTAN_HAS_MCELIECE)
-   return ffi_guard_thunk(BOTAN_CURRENT_FUNCTION, [=]() {
-      if(key_obj == nullptr || rng_obj == nullptr || n == 0 || t == 0)
-         return BOTAN_FFI_ERROR_NULL_POINTER;
-
-      *key_obj = nullptr;
-
-      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-      std::unique_ptr<Botan::Private_Key> key(new Botan::McEliece_PrivateKey(rng, n, t));
-      *key_obj = new botan_privkey_struct(key.release());
-      return BOTAN_FFI_SUCCESS;
-      });
-#else
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
+   const std::string mce_params = std::to_string(n) + "," + std::to_string(t);
+   return botan_privkey_create(key_obj, "McEliece", mce_params.c_str(), rng_obj);
    }
 
 int botan_mceies_decrypt(botan_privkey_t mce_key_obj,
