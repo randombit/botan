@@ -214,18 +214,12 @@ class SIMD_4x32 final
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
-         __vector unsigned char perm = vec_lvsl(0, static_cast<uint32_t*>(nullptr));
-         if(CPUID::is_big_endian())
-            {
-            perm = vec_xor(perm, vec_splat_u8(3)); // bswap vector
-            }
-
          union {
             __vector unsigned int V;
             uint32_t R[4];
             } vec;
-         vec.V = vec_perm(m_vmx, m_vmx, perm);
-         Botan::store_be(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
+         vec.V = m_vmx;
+         Botan::store_le(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
 
