@@ -176,6 +176,11 @@ def process_command_line(args):
     parser.add_option('--without-ocb', action='store_false', dest='with_ocb',
                       help='disable OCB AEAD suites')
 
+    parser.add_option('--with-aria', action='store_true', default=False,
+                      help='enable ARIA suites')
+    parser.add_option('--without-aria', action='store_false', dest='with_aria',
+                      help='disable ARIA suites')
+
     parser.add_option('--with-cecpq1', action='store_true', default=True,
                       help='enable CECPQ1 suites')
     parser.add_option('--without-cecpq1', action='store_false', dest='with_cecpq1',
@@ -202,10 +207,13 @@ def main(args = None):
     weak_crypto = ['EXPORT', 'RC2', 'IDEA', 'RC4', '_DES_', 'WITH_NULL']
     static_dh = ['ECDH_ECDSA', 'ECDH_RSA', 'DH_DSS', 'DH_RSA'] # not supported
     protocol_goop = ['SCSV', 'KRB5']
-    maybe_someday = ['ARIA', 'RSA_PSK']
+    maybe_someday = ['RSA_PSK']
     not_supported = weak_crypto + static_dh + protocol_goop + maybe_someday
 
     (options, args) = process_command_line(args)
+
+    if options.with_aria == False:
+        not_supported += ['ARIA']
 
     ciphersuite_re = re.compile(' +0x([0-9a-fA-F][0-9a-fA-F]),0x([0-9a-fA-F][0-9a-fA-F]) + TLS_([A-Za-z_0-9]+) ')
 
