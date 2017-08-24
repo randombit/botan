@@ -544,7 +544,9 @@ BER_Decoder& BER_Decoder::decode(secure_vector<uint8_t>& buffer,
          throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
 
       buffer.resize(obj.value.size() - 1);
-      copy_mem(buffer.data(), &obj.value[1], obj.value.size() - 1);
+
+      if(obj.value.size() > 1)
+         copy_mem(buffer.data(), &obj.value[1], obj.value.size() - 1);
       }
    return (*this);
    }
@@ -569,7 +571,9 @@ BER_Decoder& BER_Decoder::decode(std::vector<uint8_t>& buffer,
          throw BER_Decoding_Error("Bad number of unused bits in BIT STRING");
 
       buffer.resize(obj.value.size() - 1);
-      copy_mem(buffer.data(), &obj.value[1], obj.value.size() - 1);
+
+      if(obj.value.size() > 1)
+         copy_mem(buffer.data(), &obj.value[1], obj.value.size() - 1);
       }
    return (*this);
    }
