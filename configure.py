@@ -2367,10 +2367,14 @@ class AmalgamationHeader(object):
         self.included_already = set()
         self.all_std_includes = set()
 
+        encoding_kwords = {}
+        if sys.version_info[0] == 3:
+            encoding_kwords['encoding'] = 'utf8'
+
         self.file_contents = {}
         for filepath in sorted(input_filepaths):
             try:
-                with open(filepath) as f:
+                with open(filepath, **encoding_kwords) as f:
                     raw_content = f.readlines()
                 contents = AmalgamationGenerator.strip_header_goop(filepath, raw_content)
                 self.file_contents[os.path.basename(filepath)] = contents
@@ -2523,6 +2527,10 @@ class AmalgamationGenerator(object):
         return header_files, included_in_headers
 
     def _generate_sources(self, amalgamation_headers, included_in_headers): #pylint: disable=too-many-locals,too-many-branches
+        encoding_kwords = {}
+        if sys.version_info[0] == 3:
+            encoding_kwords['encoding'] = 'utf8'
+
         # target to filepath map
         amalgamation_sources = {}
         for mod in self._modules:
@@ -2535,7 +2543,7 @@ class AmalgamationGenerator(object):
         amalgamation_files = {}
         for target, filepath in amalgamation_sources.items():
             logging.info('Writing amalgamation source to %s' % (filepath))
-            amalgamation_files[target] = open(filepath, 'w')
+            amalgamation_files[target] = open(filepath, 'w', **encoding_kwords)
 
         for target, f in amalgamation_files.items():
             AmalgamationHeader.write_banner(f)
@@ -2557,7 +2565,7 @@ class AmalgamationGenerator(object):
         for mod in sorted(self._modules, key=lambda module: module.basename):
             tgt = self._target_for_module(mod)
             for src in sorted(mod.source):
-                with open(src, 'r') as f:
+                with open(src, 'r', **encoding_kwords) as f:
                     for line in f:
                         if AmalgamationHelper.is_botan_include(line):
                             continue
