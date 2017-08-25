@@ -119,6 +119,7 @@ def main(args=None):
                 stderr_count += 1
 
         print("Tested fuzzer %s with %d test cases, %d crashes" % (f, tests_for_this_fuzzer, crash_count))
+        sys.stdout.flush()
 
     if crash_count > 0 or stderr_count > 0 or stdout_count > 0:
         print("Ran fuzzer tests, %d crashes %d stdout %d stderr" % (crash_count, stdout_count, stderr_count))
