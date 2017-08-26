@@ -7,5 +7,6 @@ PARENT_DIR=$(dirname "$0")
 if [ "$BUILD_MODE" = "lint" ]; then
     "$PARENT_DIR"/lint.sh
 else
-    "$PARENT_DIR"/build.sh
+
+    ./src/scripts/ci_build.py --build-jobs=2 --with-ccache --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX $BUILD_MODE
 fi
