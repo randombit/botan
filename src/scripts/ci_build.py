@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 """
 CI build script
@@ -46,14 +46,10 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
         print('Error unknown OS %s' % (target_os))
         return 1
 
-    if target_cc not in ['gcc', 'clang']:
-        print('Error unknown compiler %s' % (target_cc))
-        return 1
-
     if is_cross_target:
         if target_os == 'osx':
             target_os = 'ios'
-        elif target == 'cross-mingw':
+        elif target == 'cross-win32':
             target_os = 'mingw'
 
     make_prefix = []
@@ -77,6 +73,7 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
 
     if target == 'docs':
         flags += ['--with-doxygen', '--with-sphinx']
+        test_cmd = None
 
     if target == 'coverage':
         flags += ['--with-coverage-info']
@@ -102,7 +99,9 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
     if target == 'sonarqube':
         make_prefix = [os.path.join(root_dir, 'build-wrapper-linux-x86/build-wrapper-linux-x86-64'),
                        '--out-dir', 'bw-outputs']
-        test_cmd = ['sonar-scanner', '-Dsonar.login=%s' % (getenv_or_die('SONAR_TOKEN'))]
+        test_cmd = ['sonar-scanner',
+                    '-Dproject.settings=%s' % (os.path.join(root_dir, 'src', 'build-data', 'sonar-project.properties')),
+                    '-Dsonar.login=%s' % (getenv_or_die('SONAR_TOKEN'))]
 
     if target_os == 'linux' and (target == 'valgrind' or is_cross_target):
         # Minimize the build when doing something that is slow
@@ -122,7 +121,7 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
         elif target == 'cross-win32':
             flags += ['--cpu=x86_32', '--cc-abi-flags=-static']
             cc_bin = 'i686-w64-mingw32-g++'
-            test_cmd = os.path.join(root_dir, 'botan-test.exe')
+            test_cmd = [os.path.join(root_dir, 'botan-test.exe')]
             # No runtime prefix required for Wine
         else:
             if target == 'cross-arm32':
@@ -147,6 +146,14 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
         # Flags specific to native targets
         flags += ['--with-bzip2', '--with-lzma', '--with-sqlite', '--with-zlib']
 
+        if target_os == 'osx':
+            # Test Boost on OS X
+            flags += ['--with-boost']
+        elif target not in ['sanitizer', 'valgrind', 'mini-shared', 'mini-static']:
+            # Avoid OpenSSL when using dynamic checkers, or on OS X where it sporadically
+            # is not installed on the CI image
+            flags += ['--with-openssl']
+
         if target == 'coverage':
             flags += ['--with-tpm']
             test_cmd += ['--run-long-tests', '--run-online-tests']
@@ -154,14 +161,6 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
             softhsm_lib = '/tmp/softhsm/lib/softhsm/libsofthsm2.so'
             if os.access(softhsm_lib, os.R_OK):
                 test_cmd += ['--pkcs11-lib=%s' % (softhsm_lib)]
-
-        if target_os == 'osx':
-            # Test Boost on OS X
-            flags += ['--with-boost']
-        elif target_os == 'linux' and target not in ['sanitizer', 'valgrind']:
-            # Avoid OpenSSL when using dynamic checkers, or on OS X where it sporadically
-            # is not installed on the CI image
-            flags += ['--with-openssl']
 
     flags += ['--cc-bin=%s%s' % ('ccache ' if use_ccache else '', cc_bin)]
 
@@ -181,22 +180,23 @@ def run_cmd(cmd, root_dir):
 
     start = time.time()
 
-    env={'LD_LIBRARY_PATH': root_dir, 'PATH': os.getenv('PATH')}
-    proc = subprocess.Popen(cmd, close_fds=True, env=env)
+    sub_env = os.environ.copy()
+    sub_env['LD_LIBRARY_PATH'] = root_dir
+    proc = subprocess.Popen(cmd, close_fds=True, env=sub_env)
     proc.communicate()
 
-    time_taken = time.time() - start
+    time_taken = int(time.time() - start)
 
     if time_taken > 2:
-        print("Ran for %f seconds" % (time_taken))
+        print("Ran for %d seconds" % (time_taken))
 
     if proc.returncode != 0:
         print("Command failed with error code %d" % (proc.returncode))
         sys.exit(proc.returncode)
 
-def setup_option_parser():
+def parse_args(args):
     """
-    Return an OptionParser instance
+    Parse arguments
     """
     parser = optparse.OptionParser()
 
@@ -204,8 +204,8 @@ def setup_option_parser():
                       help='Set the target os (default %default)')
     parser.add_option('--cc', default='gcc',
                       help='Set the target compiler type (default %default)')
-    parser.add_option('--cc-bin', default='g++',
-                      help='Set path to compiler (default %default)')
+    parser.add_option('--cc-bin', default=None,
+                      help='Set path to compiler')
     parser.add_option('--root-dir', metavar='D', default='.',
                       help='Set directory to execute from (default %default)')
 
@@ -224,7 +224,13 @@ def setup_option_parser():
                       help='Enable using ccache')
     parser.add_option('--without-ccache', dest='use_ccache', action='store_false',
                       help='Disable using ccache')
-    return parser
+
+    parser.add_option('--with-python3', dest='use_python3', action='store_true', default=None,
+                      help='Enable using python3')
+    parser.add_option('--without-python3', dest='use_python3', action='store_false',
+                      help='Disable using python3')
+
+    return parser.parse_args(args)
 
 def have_prog(prog):
     """
@@ -236,22 +242,34 @@ def have_prog(prog):
             return True
 
 def main(args=None):
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-statements
     """
     Parse options, do the things
     """
-    if args is None:
-        args = sys.argv
-
-    parser = setup_option_parser()
-    (options, args) = parser.parse_args(args)
+    (options, args) = parse_args(args or sys.argv)
 
     if len(args) != 2:
         print('Usage: %s [options] target' % (args[0]))
         return 1
 
     if options.use_ccache is None:
-        options.ccache = have_prog('ccache')
+        options.use_ccache = have_prog('ccache')
+
+    use_python2 = have_prog('python2')
+
+    if options.use_python3 is None:
+        use_python3 = have_prog('python3')
+    else:
+        use_python3 = options.use_python3
+
+    if options.cc_bin is None:
+        if options.cc == 'gcc':
+            options.cc_bin = 'g++'
+        elif options.cc == 'clang':
+            options.cc_bin = 'clang++'
+        else:
+            print('Error unknown compiler %s' % (options.cc))
+            return 1
 
     target = args[1]
 
@@ -264,6 +282,9 @@ def main(args=None):
 
     if target == 'lint':
 
+        if not use_python2 and not use_python3:
+            raise Exception('No python interpreters found cannot lint')
+
         py_scripts = [
             'configure.py',
             'src/python/botan2.py',
@@ -275,13 +296,15 @@ def main(args=None):
         for target in py_scripts:
             target_path = os.path.join(root_dir, target)
 
-            # Some disabled rules specific to Python2
-            # superfluous-parens: needed for Python3 compatible print statements
-            # too-many-locals: variable counting differs from pylint3
+            if use_python2:
+                # Some disabled rules specific to Python2
+                # superfluous-parens: needed for Python3 compatible print statements
+                # too-many-locals: variable counting differs from pylint3
+                py2_flags = '--disable=superfluous-parens,too-many-locals'
+                cmds.append(['python2', '-m', 'pylint', py2_flags, target_path])
 
-            py2_flags = '--disable=superfluous-parens,too-many-locals'
-            cmds.append(['python2', '-m', 'pylint', py2_flags, target_path])
-            cmds.append(['python3', '-m', 'pylint', target_path])
+            if use_python3:
+                cmds.append(['python3', '-m', 'pylint', target_path])
 
     else:
         config_flags, run_test_command, make_prefix = determine_flags(
@@ -295,10 +318,11 @@ def main(args=None):
             if options.use_ccache:
                 cmds.append(['ccache', '--show-stats'])
 
-            cmds.append(make_prefix + ['make', '-C', root_dir, '-j', str(options.build_jobs)])
-
+            make_targets = ['libs', 'cli', 'tests']
             if target in ['coverage', 'fuzzers']:
-                cmds.append(make_prefix + ['make', '-C', root_dir, 'fuzzers', 'fuzzer_corpus_zip'])
+                make_targets += ['fuzzers', 'fuzzer_corpus_zip']
+
+            cmds.append(make_prefix + ['make', '-C', root_dir] + make_targets)
 
             if options.use_ccache:
                 cmds.append(['ccache', '--show-stats'])
@@ -316,19 +340,31 @@ def main(args=None):
                          os.path.join(root_dir, 'botan')])
 
         if target in ['shared', 'coverage']:
-            cmds.append(['python2', os.path.join(root_dir, 'src/python/botan2.py')])
-            cmds.append(['python3', os.path.join(root_dir, 'src/python/botan2.py')])
+
+            if use_python2:
+                cmds.append(['python2', os.path.join(root_dir, 'src/python/botan2.py')])
+            if use_python3:
+                cmds.append(['python3', os.path.join(root_dir, 'src/python/botan2.py')])
 
         if target != 'docs':
-            cmds.append(['make', 'install'])
+            cmds.append(['make', '-C', root_dir, 'install'])
 
         if target in ['coverage']:
+
+            if not have_prog('lcov'):
+                print('Error: lcov not found in PATH (%s)' % (os.getenv('PATH')))
+                return 1
+
+            if not have_prog('gcov'):
+                print('Error: gcov not found in PATH (%s)' % (os.getenv('PATH')))
+                return 1
+
             cmds.append(['lcov', '--capture', '--directory', options.root_dir, '--output-file', 'coverage.info.raw'])
             cmds.append(['lcov', '--remove', 'coverage.info.raw', '/usr/*', '--output-file', 'coverage.info'])
             cmds.append(['lcov', '--list', 'coverage.info'])
 
             if have_prog('coverage'):
-                cmds.append(['coverage', 'run', '--branch', os.path.join(root_dir,'src/python/botan2.py')])
+                cmds.append(['coverage', 'run', '--branch', os.path.join(root_dir, 'src/python/botan2.py')])
 
             if have_prog('codecov'):
                 # If codecov exists assume we are on Travis and report to codecov.io

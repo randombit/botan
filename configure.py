@@ -1785,7 +1785,7 @@ class MakefileListsGenerator(object):
         if is_fuzzer:
             for (obj_file, src) in zip(self._objectfile_list(sources, obj_dir), sources):
 
-                yield '%s: %s\n\t$(CXX) %s $(%s_FLAGS) %s -L. -lbotan-2 $(FUZZER_LINKS_TO) %s$@\n' % (
+                yield '%s: %s $(LIBRARIES)\n\t$(CXX) %s $(%s_FLAGS) %s -L. -lbotan-2 $(FUZZER_LINKS_TO) %s$@\n' % (
                     obj_file, src, includes, flags, src, self._cc.output_to_option)
         else:
             for (obj_file, src) in zip(self._objectfile_list(sources, obj_dir), sources):

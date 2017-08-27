@@ -3,18 +3,17 @@ set -ev
 which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if available
 
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-    sudo apt-get -qq update
 
     if [ "$BUILD_MODE" = "valgrind" ]; then
+        sudo apt-get -qq update
         sudo apt-get install valgrind
 
     elif [ "$BUILD_MODE" = "cross-win32" ]; then
-        sudo apt-get install g++-mingw-w64-i686 mingw-w64-i686-dev
-
         # See https://github.com/travis-ci/travis-ci/issues/6460
         sudo dpkg --add-architecture i386
         sudo apt-get -qq update # have to update again due to adding i386 above
         sudo apt-get install wine
+        sudo apt-get install g++-mingw-w64-i686 mingw-w64-i686-dev
 
     elif [ "${BUILD_MODE:0:5}" = "cross" ]; then
          # Need updated qemu
@@ -37,18 +36,21 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         pip3 install --user pylint
 
     elif [ "$BUILD_MODE" = "coverage" ]; then
-        # Need new lcov to handle GCC 4.8
-        wget http://ftp.de.debian.org/debian/pool/main/l/lcov/lcov_1.13.orig.tar.gz
-        tar -xvf lcov_1.13.orig.tar.gz
-        make PREFIX="/tmp" -C lcov-1.13/ install
-        export PATH=/tmp/bin:$PATH
+        sudo apt-get -qq update
+        sudo apt-get install trousers libtspi-dev
 
-        (cd /tmp/bin && ln -s gcov-4.8 gcov)
+        # need updated lcov for gcc 4.8 coverage format
+        wget http://mirrors.kernel.org/ubuntu/pool/universe/l/lcov/lcov_1.12-2_all.deb
+        sudo dpkg -i lcov_1.12-2_all.deb
+
+        # ccache in Trusty doesn't understand --coverage
+        wget http://mirrors.kernel.org/ubuntu/pool/main/c/ccache/ccache_3.2.4-1_amd64.deb
+        sudo dpkg -i ccache_3.2.4-1_amd64.deb
+
+        (cd /home/travis/bin && ln -s gcov-4.8 gcov)
 
         pip install --user coverage
         pip install --user codecov
-
-        sudo apt-get install trousers libtspi-dev
 
         # SoftHSMv1 in 14.04 does not work
         # Installs prebuilt SoftHSMv2 binaries into /tmp
@@ -57,10 +59,11 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         /tmp/softhsm/bin/softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
 
     elif [ "$BUILD_MODE" = "sonarqube" ]; then
-        curl -LsS https://sonarqube.com/static/cpp/build-wrapper-linux-x86.zip > build-wrapper-linux-x86.zip
+        wget https://sonarqube.com/static/cpp/build-wrapper-linux-x86.zip
         unzip build-wrapper-linux-x86.zip
 
     elif [ "$BUILD_MODE" = "docs" ]; then
+        sudo apt-get -qq update
         sudo apt-get install doxygen
 
         # The version of Sphinx in 14.04 is too old (1.2.2) and does not support

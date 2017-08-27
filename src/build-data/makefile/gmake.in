@@ -21,7 +21,7 @@ CLIOBJS       = %{cli_objs}
 TESTOBJS      = %{test_objs}
 
 # First make target. Will be used by default
-all: $(CLI) $(TEST)
+all: libs cli tests
 
 # Build Commands
 %{lib_build_cmds}
@@ -34,6 +34,8 @@ all: $(CLI) $(TEST)
 %{gmake_dso_in}
 
 libs: $(LIBRARIES)
+cli: $(CLI)
+tests: $(TEST)
 
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(CLI_LINK_CMD) $(LDFLAGS) $(CLIOBJS) -L%{out_dir} -l%{libname} $(CLI_LINKS_TO) -o $(CLI)
