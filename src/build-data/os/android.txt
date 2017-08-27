@@ -7,6 +7,8 @@ clock_gettime
 gettimeofday
 posix_mlock
 gmtime_r
+# getauxval is available in Android NDK for min API 18 and in Crystax NDK
+# for all min API levels. Comment out if older API levels must be supported.
 getauxval
 dlopen
 readdir
