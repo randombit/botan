@@ -149,8 +149,11 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
 
         if target == 'coverage':
             flags += ['--with-tpm']
-            test_cmd += ['--run-long-tests', '--run-online-tests',
-                         '--pkcs11-lib=/tmp/softhsm/lib/softhsm/libsofthsm2.so']
+            test_cmd += ['--run-long-tests', '--run-online-tests']
+
+            softhsm_lib = '/tmp/softhsm/lib/softhsm/libsofthsm2.so'
+            if os.access(softhsm_lib, os.R_OK):
+                test_cmd += ['--pkcs11-lib=%s' % (softhsm_lib)]
 
         if target_os == 'osx':
             # Test Boost on OS X
@@ -188,7 +191,8 @@ def run_cmd(cmd, root_dir):
         print("Ran for %f seconds" % (time_taken))
 
     if proc.returncode != 0:
-        raise Exception("Command failed with error code %d" % (proc.returncode))
+        print("Command failed with error code %d" % (proc.returncode))
+        sys.exit(proc.returncode)
 
 def setup_option_parser():
     """
