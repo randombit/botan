@@ -16,7 +16,6 @@ env:
   global:
     - CCACHE_SIZE=50M
     - CCACHE_COMPRESS=1
-    - BUILD_JOBS=2
     # SONAR_TOKEN for accessing the SonarQube server
     - secure: "VezRbHFg6kllV5WG06M3tG3aHJaC3xrMylJ6RCVbL+uz2JeralVCqV7eIk4fVb9cu83Li+weEa0AJj0wkxpIUJ+vUh5F65L6gSWSbgHP7muOSVsmnEc6KvX4n3av/ZGe4geSmsxqh2pd/2xI1h7KioGRhKeqaZIdjVgWgGJW2iQ="
 
@@ -98,10 +97,7 @@ install:
   - ./src/scripts/ci/travis/install.sh
 
 script:
-  - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci/travis/main.sh ; fi
-
-after_success:
-  - ./src/scripts/ci/travis/after_success.sh
+  - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX $BUILD_MODE; fi
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:

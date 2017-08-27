@@ -1,31 +1,53 @@
 #!/usr/bin/python
 
-# CI build script
-# (C) 2017 Jack Lloyd
-# Botan is released under the Simplified BSD License (see license.txt)
+"""
+CI build script
+(C) 2017 Jack Lloyd
+Botan is released under the Simplified BSD License (see license.txt)
+"""
 
-import time
-import subprocess
-import optparse
-import platform
-import sys
 import os
+import platform
+import subprocess
+import sys
+import time
+import optparse # pylint: disable=deprecated-module
+
+def get_concurrency():
+    """
+    Get default concurrency level of build
+    """
+    def_concurrency = 2
+
+    try:
+        import multiprocessing
+        return max(def_concurrency, multiprocessing.cpu_count())
+    except ImportError:
+        return def_concurrency
 
 def getenv_or_die(var):
+    """
+    Like it says...
+    """
     val = os.getenv(var)
     if val is None:
         raise Exception('Required variable %s not set in environment' % (var))
     return val
 
-def determine_flags(target, target_os, cc, cc_bin, use_ccache, root_dir):
+def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
+    # pylint: disable=too-many-branches,too-many-statements,too-many-arguments
+
+    """
+    Return the configure.py flags as well as make/test running prefixes
+    """
     is_cross_target = target.startswith('cross-')
 
     if target_os not in ['linux', 'osx']:
         print('Error unknown OS %s' % (target_os))
         return 1
 
-    if cc not in ['gcc', 'clang']:
-        print('Error unknown compiler %s' % (cc))
+    if target_cc not in ['gcc', 'clang']:
+        print('Error unknown compiler %s' % (target_cc))
         return 1
 
     if is_cross_target:
@@ -38,7 +60,7 @@ def determine_flags(target, target_os, cc, cc_bin, use_ccache, root_dir):
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
 
-    flags = ['--prefix=/tmp/botan-install', '--cc=%s' % (cc), '--os=%s' % (target_os)]
+    flags = ['--prefix=/tmp/botan-install', '--cc=%s' % (target_cc), '--os=%s' % (target_os)]
 
     if target in ['static', 'mini-static', 'fuzzers'] or target_os in ['ios', 'mingw']:
         flags += ['--disable-shared']
@@ -56,14 +78,8 @@ def determine_flags(target, target_os, cc, cc_bin, use_ccache, root_dir):
     if target == 'docs':
         flags += ['--with-doxygen', '--with-sphinx']
 
-    if target == 'parallel':
-        if 'cc' == 'gcc':
-            flags += ['--with-cilkplus']
-        else:
-            flags += ['--with-openmp']
-
     if target == 'coverage':
-        flags += ['--with-coverage']
+        flags += ['--with-coverage-info']
     if target == 'valgrind':
         flags += ['--with-valgrind']
         test_prefix = ['valgrind', '--error-exitcode=9', '-v']
@@ -77,8 +93,15 @@ def determine_flags(target, target_os, cc, cc_bin, use_ccache, root_dir):
     if target in ['valgrind', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
 
+    if target == 'parallel':
+        if 'cc' == 'gcc':
+            flags += ['--with-cilkplus']
+        else:
+            flags += ['--with-openmp']
+
     if target == 'sonarqube':
-        make_prefix = [os.path.join(root_dir, 'build-wrapper-linux-x86/build-wrapper-linux-x86-64'), '--out-dir', 'bw-outputs']
+        make_prefix = [os.path.join(root_dir, 'build-wrapper-linux-x86/build-wrapper-linux-x86-64'),
+                       '--out-dir', 'bw-outputs']
         test_cmd = ['sonar-scanner', '-Dsonar.login=%s' % (getenv_or_die('SONAR_TOKEN'))]
 
     if target_os == 'linux' and (target == 'valgrind' or is_cross_target):
@@ -96,29 +119,28 @@ def determine_flags(target, target_os, cc, cc_bin, use_ccache, root_dir):
                 flags += ['--cpu=armv8-a', '--cc-abi-flags=-arch arm64 -stdlib=libc++']
             else:
                 raise Exception("Unknown cross target '%s' for iOS" % (target))
+        elif target == 'cross-win32':
+            flags += ['--cpu=x86_32', '--cc-abi-flags=-static']
+            cc_bin = 'i686-w64-mingw32-g++'
+            test_cmd = os.path.join(root_dir, 'botan-test.exe')
+            # No runtime prefix required for Wine
         else:
-
             if target == 'cross-arm32':
                 flags += ['--cpu=armv7']
-                cc_bin = 'arm-linux-gnueabihf-g++-4.8'
+                cc_bin = 'arm-linux-gnueabihf-g++'
                 test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
             elif target == 'cross-arm64':
                 flags += ['--cpu=armv8-a']
-                cc_bin = 'aarch64-linux-gnu-g++-4.8'
+                cc_bin = 'aarch64-linux-gnu-g++'
                 test_prefix = ['qemu-aarch64', '-L', '/usr/aarch64-linux-gnu/']
             elif target == 'cross-ppc32':
                 flags += ['--cpu=ppc32']
-                cc_bin = 'powerpc-linux-gnu-g++-4.8'
+                cc_bin = 'powerpc-linux-gnu-g++'
                 test_prefix = ['qemu-ppc', '-L', '/usr/powerpc-linux-gnu/']
             elif target == 'cross-ppc64':
                 flags += ['--cpu=ppc64', '--with-endian=little']
-                cc_bin = 'powerpc64le-linux-gnu-g++-4.8'
+                cc_bin = 'powerpc64le-linux-gnu-g++'
                 test_prefix = ['qemu-ppc64le', '-L', '/usr/powerpc64le-linux-gnu/']
-            elif target == 'cross-win32':
-                flags += ['--cpu=x86_32', '--cc-abi-flags=-static']
-                cc_bin = 'i686-w64-mingw32-g++'
-                test_cmd = os.path.join(root_dir, 'botan-test.exe')
-                # No runtime prefix required for Wine
             else:
                 raise Exception("Unknown cross target '%s' for Linux" % (target))
     else:
@@ -127,7 +149,8 @@ def determine_flags(target, target_os, cc, cc_bin, use_ccache, root_dir):
 
         if target == 'coverage':
             flags += ['--with-tpm']
-            test_cmd += ['--run-long-tests', '--run-online-tests', '--pkcs11-lib=/tmp/softhsm/lib/softhsm/libsofthsm2.so']
+            test_cmd += ['--run-long-tests', '--run-online-tests',
+                         '--pkcs11-lib=/tmp/softhsm/lib/softhsm/libsofthsm2.so']
 
         if target_os == 'osx':
             # Test Boost on OS X
@@ -146,15 +169,17 @@ def determine_flags(target, target_os, cc, cc_bin, use_ccache, root_dir):
 
     return flags, run_test_command, make_prefix
 
-def run_cmd(cmd):
-
+def run_cmd(cmd, root_dir):
+    """
+    Execute a command, die if it failed
+    """
     print("Running '%s':\n" % (' '.join(cmd)))
     sys.stdout.flush()
 
     start = time.time()
 
-    # TODO pass LD_LIBRARY_PATH=.
-    proc = subprocess.Popen(cmd, close_fds=True)
+    env={'LD_LIBRARY_PATH': root_dir, 'PATH': os.getenv('PATH')}
+    proc = subprocess.Popen(cmd, close_fds=True, env=env)
     proc.communicate()
 
     time_taken = time.time() - start
@@ -165,10 +190,10 @@ def run_cmd(cmd):
     if proc.returncode != 0:
         raise Exception("Command failed with error code %d" % (proc.returncode))
 
-def main(args=None):
-    if args is None:
-        args = sys.argv
-
+def setup_option_parser():
+    """
+    Return an OptionParser instance
+    """
     parser = optparse.OptionParser()
 
     parser.add_option('--os', default=platform.system().lower(),
@@ -183,21 +208,46 @@ def main(args=None):
     parser.add_option('--branch', metavar='B', default=None,
                       help='Specify branch being built')
 
+    parser.add_option('--add-travis-folds', action='store_true', default=False,
+                      help='Add fold markers for Travis UI')
+
     parser.add_option('--dry-run', action='store_true', default=False,
                       help='Just show commands to be executed')
-    parser.add_option('--build-jobs', metavar='J', default='2',
+    parser.add_option('--build-jobs', metavar='J', default=get_concurrency(),
                       help='Set number of jobs to run in parallel (default %default)')
-    parser.add_option('--without-ccache', dest='use_ccache', action='store_false', default=True,
-                      help='Disable using ccache')
 
+    parser.add_option('--with-ccache', dest='use_ccache', action='store_true', default=None,
+                      help='Enable using ccache')
+    parser.add_option('--without-ccache', dest='use_ccache', action='store_false',
+                      help='Disable using ccache')
+    return parser
+
+def have_prog(prog):
+    """
+    Check if some named program exists in the path
+    """
+    for path in os.environ['PATH'].split(os.pathsep):
+        exe_file = os.path.join(path, prog)
+        if os.path.exists(exe_file) and os.access(exe_file, os.X_OK):
+            return True
+
+def main(args=None):
+    # pylint: disable=too-many-branches
+    """
+    Parse options, do the things
+    """
+    if args is None:
+        args = sys.argv
+
+    parser = setup_option_parser()
     (options, args) = parser.parse_args(args)
 
     if len(args) != 2:
         print('Usage: %s [options] target' % (args[0]))
         return 1
 
-    if options.use_ccache == None:
-        options.use_ccache = True
+    if options.use_ccache is None:
+        options.ccache = have_prog('ccache')
 
     target = args[1]
 
@@ -206,50 +256,88 @@ def main(args=None):
     if os.access(root_dir, os.R_OK) != True:
         raise Exception('Bad root dir setting, dir %s not readable', root_dir)
 
-    config_flags, run_test_command, make_prefix = determine_flags(
-        target, options.os, options.cc, options.cc_bin, options.use_ccache, root_dir)
-
     cmds = []
 
-    cmds.append([os.path.join(root_dir, 'configure.py')] + config_flags)
+    if target == 'lint':
 
-    if target == 'docs':
-        cmds.append(['make', '-C', root_dir, 'docs'])
+        py_scripts = [
+            'configure.py',
+            'src/python/botan2.py',
+            'src/scripts/ci_build.py',
+            'src/scripts/install.py',
+            'src/scripts/python_unittests.py',
+            'src/scripts/python_unittests_unix.py']
+
+        for target in py_scripts:
+            target_path = os.path.join(root_dir, target)
+
+            # Some disabled rules specific to Python2
+            # superfluous-parens: needed for Python3 compatible print statements
+            # too-many-locals: variable counting differs from pylint3
+
+            py2_flags = '--disable=superfluous-parens,too-many-locals'
+            cmds.append(['python2', '-m', 'pylint', py2_flags, target_path])
+            cmds.append(['python3', '-m', 'pylint', target_path])
+
     else:
-        if options.use_ccache:
-            cmds.append(['ccache', '--show-stats'])
+        config_flags, run_test_command, make_prefix = determine_flags(
+            target, options.os, options.cc, options.cc_bin, options.use_ccache, root_dir)
 
-        cmds.append(make_prefix + ['make', '-C', root_dir, '-j', str(options.build_jobs)])
+        cmds.append([os.path.join(root_dir, 'configure.py')] + config_flags)
+
+        if target == 'docs':
+            cmds.append(['make', '-C', root_dir, 'docs'])
+        else:
+            if options.use_ccache:
+                cmds.append(['ccache', '--show-stats'])
+
+            cmds.append(make_prefix + ['make', '-C', root_dir, '-j', str(options.build_jobs)])
+
+            if target in ['coverage', 'fuzzers']:
+                cmds.append(make_prefix + ['make', '-C', root_dir, 'fuzzers', 'fuzzer_corpus_zip'])
+
+            if options.use_ccache:
+                cmds.append(['ccache', '--show-stats'])
+
+        if run_test_command != None:
+            cmds.append(run_test_command)
 
         if target in ['coverage', 'fuzzers']:
-            cmds.append(make_prefix + ['make', '-C', root_dir, 'fuzzers', 'fuzzer_corpus_zip'])
+            cmds.append([os.path.join(root_dir, 'src/scripts/test_fuzzers.py'),
+                         os.path.join(root_dir, 'fuzzer_corpus'),
+                         os.path.join(root_dir, 'build/fuzzer')])
 
-        if options.use_ccache:
-            cmds.append(['ccache', '--show-stats'])
+        if target in ['static', 'shared']:
+            cmds.append([os.path.join(root_dir, 'src/scripts/cli_tests.py'),
+                         os.path.join(root_dir, 'botan')])
 
-    if run_test_command != None:
-        cmds.append(run_test_command)
+        if target in ['shared', 'coverage']:
+            cmds.append(['python2', os.path.join(root_dir, 'src/python/botan2.py')])
+            cmds.append(['python3', os.path.join(root_dir, 'src/python/botan2.py')])
 
-    if target in ['coverage', 'fuzzers']:
-        cmds.append([os.path.join(root_dir, 'src/scripts/test_fuzzers.py'),
-                     os.path.join(root_dir, 'fuzzer_corpus'),
-                     os.path.join(root_dir, 'build/fuzzer')])
+        if target != 'docs':
+            cmds.append(['make', 'install'])
 
-    if target in ['static', 'shared']:
-        cmds.append([os.path.join(root_dir, 'src/scripts/cli_tests.py'), os.path.join(root_dir, 'botan')])
+        if target in ['coverage']:
+            cmds.append(['lcov', '--capture', '--directory', options.root_dir, '--output-file', 'coverage.info.raw'])
+            cmds.append(['lcov', '--remove', 'coverage.info.raw', '/usr/*', '--output-file', 'coverage.info'])
+            cmds.append(['lcov', '--list', 'coverage.info'])
 
-    if target in ['shared', 'coverage']:
-        cmds.append(['python2', os.path.join(root_dir, 'src/python/botan2.py')])
-        cmds.append(['python3', os.path.join(root_dir, 'src/python/botan2.py')])
+            if have_prog('coverage'):
+                cmds.append(['coverage', 'run', '--branch', os.path.join(root_dir,'src/python/botan2.py')])
 
-    if target != 'docs':
-        cmds.append(['make', 'install'])
+            if have_prog('codecov'):
+                # If codecov exists assume we are on Travis and report to codecov.io
+                cmds.append(['codecov'])
+            else:
+                # Otherwise generate a local HTML report
+                cmds.append(['genhtml', 'coverage.info', '--output-directory', 'lcov-out'])
 
     for cmd in cmds:
         if options.dry_run:
             print('$ ' + ' '.join(cmd))
         else:
-            run_cmd(cmd)
+            run_cmd(cmd, root_dir)
 
     return 0
 
