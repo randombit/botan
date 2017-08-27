@@ -156,7 +156,10 @@ PREDEFINED             = BOTAN_HAS_AES_SSSE3 \
                          BOTAN_HAS_SERPENT_SIMD \
                          BOTAN_HAS_THREEFISH_512_AVX2 \
                          BOTAN_HAS_SHA1_SSE2 \
-                         BOTAN_HAS_CHACHA_SSE2
+                         BOTAN_HAS_CHACHA_SSE2 \
+                         BOTAN_HAS_SHACAL2_SIMD \
+                         BOTAN_HAS_SHACAL2_X86
+
 EXPAND_AS_DEFINED      =
 SKIP_FUNCTION_MACROS   = YES
 
