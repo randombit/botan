@@ -40,8 +40,7 @@ matrix:
         - gcc
     - os: osx
       osx_image: xcode8.2
-      compiler:
-        - clang
+      compiler: clang
 
   # Ignore some problem builds for now
   allow_failures:
