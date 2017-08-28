@@ -19,6 +19,11 @@ class PSK_Tool_Base : public Command
    public:
       PSK_Tool_Base(const std::string& spec) : Command(spec) {}
 
+      std::string group() const override
+         {
+         return "psk";
+         }
+
       void go() override
          {
          const std::string db_filename = get_arg("db");
@@ -39,6 +44,11 @@ class PSK_Tool_Set final : public PSK_Tool_Base
    public:
       PSK_Tool_Set() : PSK_Tool_Base("psk_set db db_key name psk") {}
 
+      std::string description() const override
+         {
+         return "Save a PSK encrypted in the database";
+         }
+
    private:
       void psk_operation(Botan::PSK_Database& db) override
          {
@@ -53,6 +63,11 @@ class PSK_Tool_Get final : public PSK_Tool_Base
    public:
       PSK_Tool_Get() : PSK_Tool_Base("psk_get db db_key name") {}
 
+      std::string description() const override
+         {
+         return "Read a value saved with psk_set";
+         }
+
    private:
       void psk_operation(Botan::PSK_Database& db) override
          {
@@ -66,6 +81,11 @@ class PSK_Tool_List final : public PSK_Tool_Base
    {
    public:
       PSK_Tool_List() : PSK_Tool_Base("psk_list db db_key") {}
+
+      std::string description() const override
+         {
+         return "List all values saved to the database";
+         }
 
    private:
       void psk_operation(Botan::PSK_Database& db) override

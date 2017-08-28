@@ -649,6 +649,16 @@ class Speed final : public Command
             };
          }
 
+      std::string group() const override
+         {
+         return "misc";
+         }
+
+      std::string description() const override
+         {
+         return "Measures the speed of algorithms";
+         }
+
       void go() override
          {
          std::chrono::milliseconds msec(get_arg_sz("msec"));
