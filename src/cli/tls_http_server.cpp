@@ -466,6 +466,16 @@ class TLS_HTTP_Server final : public Command
                                   "--port=443 --policy= --threads=0 "
                                   "--session-db= --session-db-pass=") {}
 
+      std::string group() const override
+         {
+         return "tls";
+         }
+
+      std::string description() const override
+         {
+         return "Provides a simple HTTP server";
+         }
+
       void go() override
          {
          const size_t listen_port = get_arg_sz("port");

@@ -32,6 +32,16 @@ class PK_Fingerprint final : public Command
    public:
       PK_Fingerprint() : Command("fingerprint --algo=SHA-256 *keys") {}
 
+      std::string group() const override
+         {
+         return "pubkey";
+         }
+
+      std::string description() const override
+         {
+         return "Calculate a public key fingerprint";
+         }
+
       void go() override
          {
          const std::string hash_algo = get_arg("algo");
@@ -51,6 +61,16 @@ class PK_Keygen final : public Command
    {
    public:
       PK_Keygen() : Command("keygen --algo=RSA --params= --passphrase= --pbe= --pbe-millis=300 --der-out") {}
+
+      std::string group() const override
+         {
+         return "pubkey";
+         }
+
+      std::string description() const override
+         {
+         return "Generate a PKCS #8 private key";
+         }
 
       void go() override
          {
@@ -123,6 +143,16 @@ class PK_Sign final : public Command
    public:
       PK_Sign() : Command("sign --der-format --passphrase= --hash=SHA-256 --emsa= key file") {}
 
+      std::string group() const override
+         {
+         return "pubkey";
+         }
+
+      std::string description() const override
+         {
+         return "Sign arbitrary data";
+         }
+
       void go() override
          {
          std::unique_ptr<Botan::Private_Key> key(
@@ -160,6 +190,16 @@ class PK_Verify final : public Command
    {
    public:
       PK_Verify() : Command("verify --der-format --hash=SHA-256 --emsa= pubkey file signature") {}
+
+      std::string group() const override
+         {
+         return "pubkey";
+         }
+
+      std::string description() const override
+         {
+         return "Verify the authenticity of the given file with the provided signature";
+         }
 
       void go() override
          {
@@ -200,6 +240,16 @@ class EC_Group_Info final : public Command
    public:
       EC_Group_Info() : Command("ec_group_info --pem name") {}
 
+      std::string group() const override
+         {
+         return "pubkey";
+         }
+
+      std::string description() const override
+         {
+         return "Print raw elliptic curve domain parameters of the standarized curve name";
+         }
+
       void go() override
          {
          Botan::EC_Group group(get_arg("name"));
@@ -231,6 +281,16 @@ class DL_Group_Info final : public Command
    public:
       DL_Group_Info() : Command("dl_group_info --pem name") {}
 
+      std::string group() const override
+         {
+         return "pubkey";
+         }
+
+      std::string description() const override
+         {
+         return "Print raw Diffie-Hellman parameters (p,g) of the standarized DH group name";
+         }
+
       void go() override
          {
          Botan::DL_Group group(get_arg("name"));
@@ -254,6 +314,16 @@ class Gen_DL_Group final : public Command
    {
    public:
       Gen_DL_Group() : Command("gen_dl_group --pbits=1024 --qbits=0 --type=subgroup") {}
+
+      std::string group() const override
+         {
+         return "pubkey";
+         }
+
+      std::string description() const override
+         {
+         return "Generate ANSI X9.42 encoded Diffie-Hellman group parameters";
+         }
 
       void go() override
          {
@@ -286,6 +356,16 @@ class PKCS8_Tool final : public Command
    {
    public:
       PKCS8_Tool() : Command("pkcs8 --pass-in= --pub-out --der-out --pass-out= --pbe= --pbe-millis=300 key") {}
+
+      std::string group() const override
+         {
+         return "pubkey";
+         }
+
+      std::string description() const override
+         {
+         return "Open a PKCS #8 formatted key";
+         }
 
       void go() override
          {

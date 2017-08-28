@@ -31,6 +31,16 @@ class Sign_Cert final : public Command
          : Command("sign_cert --ca-key-pass= --hash=SHA-256 "
                    "--duration=365 --emsa= ca_cert ca_key pkcs10_req") {}
 
+      std::string group() const override
+         {
+         return "x509";
+         }
+
+      std::string description() const override
+         {
+         return "Create a CA-signed X.509 certificate from a PKCS #10 CSR";
+         }
+
       void go() override
          {
          Botan::X509_Certificate ca_cert(get_arg("ca_cert"));
@@ -77,6 +87,16 @@ class Cert_Info final : public Command
    public:
       Cert_Info() : Command("cert_info --fingerprint --ber file") {}
 
+      std::string group() const override
+         {
+         return "x509";
+         }
+
+      std::string description() const override
+         {
+         return "Parse X.509 certificate and display data fields";
+         }
+
       void go() override
          {
          Botan::DataSource_Stream in(get_arg("file"), flag_set("ber"));
@@ -120,6 +140,16 @@ class OCSP_Check final : public Command
    public:
       OCSP_Check() : Command("ocsp_check --timeout=3000 subject issuer") {}
 
+      std::string group() const override
+         {
+         return "x509";
+         }
+
+      std::string description() const override
+         {
+         return "Verify an X.509 certificate against the issuers OCSP responder";
+         }
+
       void go() override
          {
          Botan::X509_Certificate subject(get_arg("subject"));
@@ -151,6 +181,16 @@ class Cert_Verify final : public Command
    {
    public:
       Cert_Verify() : Command("cert_verify subject *ca_certs") {}
+
+      std::string group() const override
+         {
+         return "x509";
+         }
+
+      std::string description() const override
+         {
+         return "Verify if the passed X.509 certificate passes path validation";
+         }
 
       void go() override
          {
@@ -189,6 +229,16 @@ class Gen_Self_Signed final : public Command
          : Command("gen_self_signed key CN --country= --dns= "
                    "--organization= --email= --key-pass= --ca --hash=SHA-256 --emsa=") {}
 
+      std::string group() const override
+         {
+         return "x509";
+         }
+
+      std::string description() const override
+         {
+         return "Generate a self signed X.509 certificate";
+         }
+
       void go() override
          {
          std::unique_ptr<Botan::Private_Key> key(Botan::PKCS8::load_key(get_arg("key"), rng(), get_arg("key-pass")));
@@ -226,6 +276,16 @@ class Generate_PKCS10 final : public Command
       Generate_PKCS10()
          : Command("gen_pkcs10 key CN --country= --organization= "
                    "--email= --key-pass= --hash=SHA-256 --emsa=") {}
+
+      std::string group() const override
+         {
+         return "x509";
+         }
+
+      std::string description() const override
+         {
+         return "Generate a PKCS #10 certificate signing request (CSR)";
+         }
 
       void go() override
          {
