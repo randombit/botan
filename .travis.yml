@@ -95,7 +95,7 @@ matrix:
       env: BUILD_MODE="cross-arm64"
 
 install:
-  - ./src/scripts/ci/travis/install.sh
+  - ./src/scripts/ci/setup_travis.sh
 
 script:
   - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX $BUILD_MODE; fi
