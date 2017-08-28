@@ -1,17 +1,5 @@
 language: cpp
 
-os:
-  - linux
-  - osx
-
-dist: trusty
-sudo: required
-osx_image: xcode8.2
-
-compiler:
-  - clang
-  - gcc
-
 env:
   global:
     - CCACHE_SIZE=50M
@@ -42,6 +30,18 @@ env:
     - BUILD_MODE="sonarqube"
 
 matrix:
+
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler:
+        - clang
+        - gcc
+    - os: osx
+      osx_image: xcode8.2
+      compiler: clang
+
   # Ignore some problem builds for now
   allow_failures:
     - os: linux
