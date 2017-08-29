@@ -137,6 +137,8 @@ Library Infrastructure
 Build/Test
 ----------------------------------------
 
+* Create Docker image for Travis that runs 16.04 and has all
+  the tools we need pre-installed.
 * Code signing for Windows installers
 * Test runner python script that captures backtraces and other
   debug info during CI
