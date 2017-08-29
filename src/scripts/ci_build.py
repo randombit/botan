@@ -81,7 +81,7 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
         flags += ['--with-doxygen', '--with-sphinx']
         test_cmd = None
 
-    if target in ['coverage', 'sonar']:
+    if target == 'coverage':
         flags += ['--with-coverage-info']
     if target == 'valgrind':
         flags += ['--with-valgrind']
