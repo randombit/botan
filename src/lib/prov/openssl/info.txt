@@ -12,3 +12,7 @@ openssl.h
 all!windows -> crypto
 windows -> libeay32.lib
 </libs>
+
+<requires>
+pubkey
+</requires>

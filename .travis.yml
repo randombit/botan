@@ -14,13 +14,11 @@ compiler:
 
 env:
   global:
-    - CCACHE_SIZE=50M
+    - CCACHE_MAXSIZE=100M
+    - CCACHE_MAXFILES=1000
     - CCACHE_COMPRESS=1
-    - BUILD_JOBS=2
     # SONAR_TOKEN for accessing the SonarQube server
     - secure: "VezRbHFg6kllV5WG06M3tG3aHJaC3xrMylJ6RCVbL+uz2JeralVCqV7eIk4fVb9cu83Li+weEa0AJj0wkxpIUJ+vUh5F65L6gSWSbgHP7muOSVsmnEc6KvX4n3av/ZGe4geSmsxqh2pd/2xI1h7KioGRhKeqaZIdjVgWgGJW2iQ="
-    # GITHUB_TOKEN for posting found issues as comments in the PR that's beeing analyzed by SonarQube
-    - secure: "Th0mBSkUCDqu+EA6F7zA6DCSDZBNunfndANyq06BwaFlj71daWWjthwYFsfg3T5N2ZmI+PsULQQpOirCnJt1lbNHhMVJwZPkW0JnjoxbSNpSI2+nHv7+GO9X9WjK0LRFawiQu8WxmLMQDA+0oR0BERSFKc3gmbuav9fDfla0dXg="
 
   matrix:
     - BUILD_MODE="docs"
@@ -97,13 +95,10 @@ matrix:
       env: BUILD_MODE="cross-arm64"
 
 install:
-  - ./src/scripts/ci/travis/install.sh
+  - ./src/scripts/ci/setup_travis.sh
 
 script:
-  - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci/travis/main.sh ; fi
-
-after_success:
-  - ./src/scripts/ci/travis/after_success.sh
+  - if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then ./src/scripts/ci_build.py --os=$TRAVIS_OS_NAME --cc=$CC --cc-bin=$CXX $BUILD_MODE; fi
 
 # whitelist branches to avoid testing feature branches twice (as branch and as pull request)
 branches:
@@ -114,11 +109,6 @@ branches:
 
 notifications:
   email: botan-commits@lists.randombit.net
-
-  webhooks:
-    urls:
-      - https://webhooks.gitter.im/e/9caf8eaa06913b69443f
-    on_start: never
 
 git:
   depth: 5
