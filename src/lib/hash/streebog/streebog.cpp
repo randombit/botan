@@ -22,14 +22,14 @@ namespace {
 
 static inline void addm(const uint8_t* m, uint64_t* h)
    {
-   bool carry = false;
+   uint64_t carry = false;
    for(int i = 0; i < 8; i++)
       {
       const uint64_t m64 = load_le<uint64_t>(m, i);
       const uint64_t hi = load_le<uint64_t>(reinterpret_cast<uint8_t*>(h), i);
-      uint64_t t = hi + m64;
+      const uint64_t t = hi + m64;
 
-      const bool overflow = t < hi || t < m64;
+      const uint64_t overflow = (t < hi) | (t < m64);
       store_le(t + carry, reinterpret_cast<uint8_t*>(&h[i]));
       carry = overflow;
       }
