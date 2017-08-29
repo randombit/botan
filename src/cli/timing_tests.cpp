@@ -156,7 +156,7 @@ class Manger_Timing_Test : public Timing_Test
             {
             m_dec.decrypt(input.data(), m_ctext_length);
             }
-         catch(Botan::Decoding_Error e)
+         catch(Botan::Decoding_Error& e)
             {
             }
          ticks end = get_ticks();
