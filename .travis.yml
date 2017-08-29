@@ -51,12 +51,13 @@ matrix:
     - os: osx
       compiler: gcc
 
-    # Run docs, lint, bsi, nist, fuzzers, coverage, valgrind, sonar, sanitizer,
-    # minimized and non-ARM cross builds on Linux/gcc only.
-
+    # Run static, docs, lint, bsi, nist, fuzzers, coverage, valgrind,
+    # sonar, sanitizer, minimized and non-ARM cross builds only on Linux/gcc.
     # The sanitizer builds under Clang run the tests very slowly and
     # cause CI timeouts.
 
+    - compiler: clang
+      env: BUILD_MODE="static"
     - compiler: clang
       env: BUILD_MODE="bsi"
     - compiler: clang
