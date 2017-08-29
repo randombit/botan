@@ -56,6 +56,12 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
     test_prefix = []
     test_cmd = [os.path.join(root_dir, 'botan-test')]
 
+    fast_tests = ['block', 'aead', 'hash', 'stream', 'mac', 'modes',
+                  'hmac_drbg', 'hmac_drbg_unit',
+                  'tls', 'ffi',
+                  'rsa_sign', 'rsa_verify', 'dh_kat', 'ecdsa_sign', 'curve25519_scalar',
+                  'simd_32', 'os_utils', 'util', 'util_dates']
+
     flags = ['--prefix=/tmp/botan-install', '--cc=%s' % (target_cc), '--os=%s' % (target_os)]
 
     if target in ['static', 'mini-static', 'fuzzers'] or target_os in ['ios', 'mingw']:
@@ -80,6 +86,7 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
     if target == 'valgrind':
         flags += ['--with-valgrind']
         test_prefix = ['valgrind', '--error-exitcode=9', '-v']
+        test_cmd += fast_tests
 
     if target in ['fuzzers', 'coverage', 'valgrind']:
         flags += ['--with-debug-info']
@@ -103,11 +110,6 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
                     '-Dproject.settings=%s' % (os.path.join(root_dir, 'src', 'build-data', 'sonar-project.properties')),
                     '-Dsonar.login=%s' % (getenv_or_die('SONAR_TOKEN'))]
 
-    if target_os == 'linux' and (target == 'valgrind' or is_cross_target):
-        # Minimize the build when doing something that is slow
-        # Note this skips os == 'mingw' since the tests are fast under Wine
-        flags += ['--module-policy=modern', '--enable-modules=tls']
-
     if is_cross_target:
         if target_os == 'ios':
             make_prefix = ['xcrun', '--sdk', 'iphoneos']
@@ -124,6 +126,9 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
             test_cmd = [os.path.join(root_dir, 'botan-test.exe')]
             # No runtime prefix required for Wine
         else:
+            # Build everything but restrict what is run
+            test_cmd += fast_tests
+
             if target == 'cross-arm32':
                 flags += ['--cpu=armv7']
                 cc_bin = 'arm-linux-gnueabihf-g++'
@@ -322,7 +327,9 @@ def main(args=None):
             if target in ['coverage', 'fuzzers']:
                 make_targets += ['fuzzers', 'fuzzer_corpus_zip']
 
-            cmds.append(make_prefix + ['make', '-C', root_dir] + make_targets)
+            cmds.append(make_prefix +
+                        ['make', '-j', str(options.build_jobs), '-C', root_dir] +
+                        make_targets)
 
             if options.use_ccache:
                 cmds.append(['ccache', '--show-stats'])
