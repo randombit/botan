@@ -6,6 +6,21 @@ Release Process and Checklist
    This information is only useful if you are a developer of botan who
    is creating a new release of the library.
 
+Pre Release Testing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Kick off a Coverity scan a day or so before the planned release.
+
+And remember that CI doesn't test everything. In particular, not all
+tests run under valgrind or on the qemu cross builds due to time
+constraints.  So before release, do a complete build/test cycle:
+
+ - Running under valgrind (remember `--with-valgrind` flag)
+ - Using Clang sanitizers (ASan + UbSan)
+ - Native or cross compile for Linux aarch64 and ppc64le
+ - Native compile on FreeBSD x86-64
+ - Native compile on at least one unusual platform (AIX, NetBSD, ...)
+
 Pre Release Checks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -17,7 +32,7 @@ release.
 
 Check in these changes (alone, with no other modifications) with a
 checkin message along the lines of "Update for X.Y.Z release", then
-tag the release with the version in git (eg tag '1.11.8', no prefix).
+tag the release with the version in git (eg tag '2.6.13', no prefix).
 
 Build The Release Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -25,7 +40,7 @@ Build The Release Tarballs
 The release script is ``src/scripts/dist.py`` and must be
 run from a git workspace.
 
- $ src/scripts/dist.py 1.11.18
+ $ src/scripts/dist.py 2.6.13
 
 One useful option is ``--output-dir``, which specifies where the
 output will be placed.
@@ -51,7 +66,7 @@ placed in ``build/botan.iss`` by ``configure.py``. Create the
 installer either via the InnoSetup GUI by opening the ``iss`` file and
 selecting the 'Compile' option, or using the ``iscc`` command line
 tool. If all goes well it will produce an executable with a name like
-``botan-1.11.18-x86_64.exe``. Sign the installers with GPG.
+``botan-2.6.13-x86_64.exe``. Sign the installers with GPG.
 
 Update The Website
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
