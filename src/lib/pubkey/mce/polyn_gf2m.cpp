@@ -128,7 +128,7 @@ polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, std::shared_ptr<GF2
    {
    if(mem_len % sizeof(gf2m))
       {
-      throw new Botan::Decoding_Error("illegal length of memory to decode ");
+      throw Botan::Decoding_Error("illegal length of memory to decode ");
       }
 
    uint32_t size = (mem_len / sizeof(this->coeff[0])) ;
