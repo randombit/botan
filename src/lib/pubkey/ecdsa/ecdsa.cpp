@@ -55,9 +55,11 @@ class ECDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
          m_order(ecdsa.domain().get_order()),
          m_base_point(ecdsa.domain().get_base_point(), m_order),
          m_x(ecdsa.private_value()),
-         m_mod_order(m_order),
-         m_emsa(emsa)
+         m_mod_order(m_order)
          {
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+         m_rfc6979_hash = hash_for_emsa(emsa);
+#endif
          }
 
       size_t max_input_bits() const override { return m_order.bits(); }
@@ -70,7 +72,9 @@ class ECDSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
       Blinded_Point_Multiply m_base_point;
       const BigInt& m_x;
       Modular_Reducer m_mod_order;
-      std::string m_emsa;
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+      std::string m_rfc6979_hash;
+#endif
    };
 
 secure_vector<uint8_t>
@@ -80,7 +84,7 @@ ECDSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    const BigInt m(msg, msg_len);
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-   const BigInt k = generate_rfc6979_nonce(m_x, m_order, m, hash_for_emsa(m_emsa));
+   const BigInt k = generate_rfc6979_nonce(m_x, m_order, m, m_rfc6979_hash);
 #else
    const BigInt k = BigInt::random_integer(rng, 1, m_order);
 #endif

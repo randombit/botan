@@ -83,9 +83,11 @@ class DSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
          m_q(dsa.group_q()),
          m_x(dsa.get_x()),
          m_powermod_g_p(dsa.group_g(), dsa.group_p()),
-         m_mod_q(dsa.group_q()),
-         m_emsa(emsa)
+         m_mod_q(dsa.group_q())
          {
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+         m_rfc6979_hash = hash_for_emsa(emsa);
+#endif
          }
 
       size_t max_input_bits() const override { return m_q.bits(); }
@@ -97,7 +99,9 @@ class DSA_Signature_Operation : public PK_Ops::Signature_with_EMSA
       const BigInt& m_x;
       Fixed_Base_Power_Mod m_powermod_g_p;
       Modular_Reducer m_mod_q;
-      std::string m_emsa;
+#if defined(BOTAN_HAS_RFC6979_GENERATOR)
+      std::string m_rfc6979_hash;
+#endif
    };
 
 secure_vector<uint8_t>
@@ -111,7 +115,7 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    BOTAN_UNUSED(rng);
-   const BigInt k = generate_rfc6979_nonce(m_x, m_q, i, hash_for_emsa(m_emsa));
+   const BigInt k = generate_rfc6979_nonce(m_x, m_q, i, m_rfc6979_hash);
 #else
    const BigInt k = BigInt::random_integer(rng, 1, m_q);
 #endif
