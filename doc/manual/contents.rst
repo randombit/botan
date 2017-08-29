@@ -36,4 +36,5 @@ Contents
    cli
    side_channels
    packaging
+   fuzzing
    support
