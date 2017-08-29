@@ -422,9 +422,9 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
       }
    else
       {
-      CT::poison(record_contents, record_len);
-
       cbc_decrypt_record(record_contents, record_len);
+
+      CT::poison(record_contents, record_len);
 
       // 0 if padding was invalid, otherwise 1 + padding_bytes
       uint16_t pad_size = check_tls_padding(record_contents, record_len);
