@@ -462,7 +462,9 @@ Botan implements the following encryption algorithms and padding schemes:
 1. RSA
     - "PKCS1v15" || "EME-PKCS1-v1_5"
     - "OAEP" || "EME-OAEP" || "EME1" || "EME1(SHA-1)" || "EME1(SHA-256)"
-
+#. DLIES
+#. ECIES
+#. SM2
 
 Code Example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -613,6 +615,8 @@ Botan implements the following signature algorithms:
 #. ECGDSA
 #. ECKDSA
 #. GOST 34.10-2001
+#. Ed25519
+#. SM2
 
 Code Example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -695,11 +699,11 @@ to use.
 
 Botan implements the following key agreement methods:
 
-1. ECDH
-#. DH
-#. DLIES
-#. ECIES
-
+1. ECDH over GF(p) Weierstrass curves
+#. ECDH over x25519
+#. DH over prime fields
+#. McEliece
+#. NewHope
 
 Code Example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
