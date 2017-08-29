@@ -58,10 +58,6 @@ external build systems, see the manual for details.
     :target: https://ci.appveyor.com/project/randombit/botan/branch/master
     :alt: AppVeyor CI status
 
-.. image:: https://circleci.com/gh/randombit/botan.svg?style=shield
-    :target: https://circleci.com/gh/randombit/botan
-    :alt: CircleCI status
-
 .. image:: https://botan-ci.kullo.net/badge
     :target: https://botan-ci.kullo.net/
     :alt: Kullo CI status
