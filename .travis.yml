@@ -14,6 +14,7 @@ compiler:
 
 env:
   global:
+    - USE_CCACHE=1
     - CCACHE_MAXSIZE=100M
     - CCACHE_MAXFILES=1000
     - CCACHE_COMPRESS=1
