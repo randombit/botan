@@ -1,0 +1,18 @@
+
+# Fuzzer build commands
+
+FUZZER_LINK_CMD = %{fuzzer_link_cmd}
+FUZZER_LINKS_TO = $(LIB_LINKS_TO) %{fuzzer_libs}
+FUZZER_FLAGS    = $(CXXFLAGS) $(WARN_FLAGS)
+
+%{fuzzer_build_cmds}
+
+FUZZERS=%{fuzzer_objs}
+
+fuzzers: libs $(FUZZERS)
+
+fuzzer_corpus:
+	git clone --depth=1 https://github.com/randombit/crypto-corpus.git fuzzer_corpus
+
+fuzzer_corpus_zip: fuzzer_corpus
+	./src/scripts/create_corpus_zip.py fuzzer_corpus %{fuzzobj_dir}

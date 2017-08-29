@@ -53,6 +53,8 @@ $(STATIC_LIB): $(LIBOBJS)
 
 %{gmake_coverage_in}
 
+%{gmake_fuzzers_in}
+
 SPHINX_CONFIG = %{sphinx_config_dir}
 SPHINX_OPTS = -b html
 

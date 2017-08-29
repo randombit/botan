@@ -23,6 +23,8 @@ elif [ "$BUILD_MODE" = "nist" ]; then
 elif [ "$BUILD_MODE" = "sonarqube" ]; then
     # No special flags required
     CFG_FLAGS+=()
+elif [ "$BUILD_MODE" = "fuzzers" ]; then
+    CFG_FLAGS+=(--build-fuzzers=test --with-sanitizers --with-debug-info --disable-shared)
 elif [ "$BUILD_MODE" = "parallel" ]; then
 
     if [ "$CC" = "gcc" ]; then
@@ -32,7 +34,7 @@ elif [ "$BUILD_MODE" = "parallel" ]; then
     fi
 
 elif [ "$BUILD_MODE" = "coverage" ]; then
-    CFG_FLAGS+=(--with-coverage --no-optimizations)
+    CFG_FLAGS+=(--with-coverage --build-fuzzers=test --no-optimizations)
 elif [ "$BUILD_MODE" = "sanitizer" ]; then
     export ASAN_OPTIONS=detect_leaks=0
     CFG_FLAGS+=(--with-sanitizers --disable-modules=locking_allocator)
@@ -137,6 +139,11 @@ else
     time "${MAKE_CMD[@]}"
 fi
 
+if [ "$BUILD_MODE" = "fuzzers" ] || [ "$BUILD_MODE" = "coverage" ]; then
+    make fuzzers
+    make fuzzer_corpus_zip
+fi
+
 # post-build ccache stats
 ccache --show-stats
 
@@ -171,13 +178,19 @@ if [ "$BUILD_MODE" = "sonarqube" ]; then
        # When neither on master branch nor on a non-external pull request => nothing to do
     fi
 
-if [ "$BUILD_MODE" = "sonarqube" ] || [ "$BUILD_MODE" = "docs" ] || \
+if [ "$BUILD_MODE" = "sonarqube" ] || [ "$BUILD_MODE" = "docs" ] || 
        ( [ "${BUILD_MODE:0:5}" = "cross" ] && [ "$TRAVIS_OS_NAME" = "osx" ] ); then
     echo "Running tests disabled on this build type"
-else
+
+elif [ "$BUILD_MODE" != "fuzzers" ]; then
     TEST_CMD=("${TEST_PREFIX[@]}" $TEST_EXE "${TEST_FLAGS[@]}")
     echo "Running" "${TEST_CMD[@]}"
     time "${TEST_CMD[@]}"
+fi
+
+if [ "$BUILD_MODE" = "fuzzers" ] || [ "$BUILD_MODE" = "coverage" ]; then
+    # Test each fuzzer against its corpus
+    LD_LIBRARY_PATH=. ./src/scripts/test_fuzzers.py fuzzer_corpus build/fuzzer
 fi
 
 if [ "$BUILD_MODE" = "static" ] || [ "$BUILD_MODE" = "shared" ]

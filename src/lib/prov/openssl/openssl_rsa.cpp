@@ -171,7 +171,9 @@ class OpenSSL_RSA_Verification_Operation : public PK_Ops::Verification_with_EMSA
             throw Invalid_Argument("OpenSSL RSA verify input too large");
 
          secure_vector<uint8_t> inbuf(mod_sz);
-         copy_mem(&inbuf[mod_sz - msg_len], msg, msg_len);
+
+         if(msg_len > 0)
+            copy_mem(&inbuf[mod_sz - msg_len], msg, msg_len);
 
          secure_vector<uint8_t> outbuf(mod_sz);
 

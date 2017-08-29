@@ -183,6 +183,13 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         self.cli_headers = list(find_headers_in(source_paths.src_dir, 'cli'))
         self.test_sources = list(find_sources_in(source_paths.src_dir, 'tests'))
 
+        if options.build_fuzzers:
+            self.fuzzer_sources = list(find_sources_in(source_paths.src_dir, 'fuzzer'))
+            self.fuzzer_output_dir = os.path.join(self.build_dir, 'fuzzer')
+        else:
+            self.fuzzer_sources = None
+            self.fuzzer_output_dir = None
+
     def build_dirs(self):
         out = [
             self.libobj_dir,
@@ -195,6 +202,8 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         ]
         if self.doc_output_dir_doxygen:
             out += [self.doc_output_dir_doxygen]
+        if self.fuzzer_output_dir:
+            out += [self.fuzzer_output_dir]
         return out
 
     def src_info(self, typ):
@@ -204,6 +213,10 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
             return (self.cli_sources, self.cliobj_dir)
         elif typ == 'test':
             return (self.test_sources, self.testobj_dir)
+        elif typ == 'fuzzer':
+            return (self.fuzzer_sources, self.fuzzer_output_dir)
+        else:
+            raise InternalError("Unknown src info type '%s'" % (typ))
 
 
 PKG_CONFIG_FILENAME = 'botan-%d.pc' % (Version.major)
@@ -409,7 +422,14 @@ def process_command_line(args): # pylint: disable=too-many-locals
                            help='Generate CMakeLists.txt which can be used to create many IDEs project files')
 
     build_group.add_option('--unsafe-fuzzer-mode', action='store_true', default=False,
-                           help='disable essential checks for testing')
+                           help='Disable essential checks for testing')
+
+    build_group.add_option('--build-fuzzers=', dest='build_fuzzers',
+                           metavar='TYPE', default=None,
+                           help='Build fuzzers (afl, libfuzzer, test)')
+
+    build_group.add_option('--with-fuzzer-lib=', metavar='LIB', default=None, dest='fuzzer_lib',
+                           help='additionally link in LIB')
 
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
@@ -1711,13 +1731,14 @@ class MakefileListsGenerator(object):
         for src in sources:
             (directory, filename) = os.path.split(os.path.normpath(src))
 
+            obj_suffix = '.' + self._osinfo.obj_suffix
+
             parts = directory.split(os.sep)
+            if 'fuzzer' in parts:
+                obj_suffix = ''
+
             if 'src' in parts:
                 parts = parts[parts.index('src')+2:]
-            elif 'tests' in parts:
-                parts = parts[parts.index('tests')+2:]
-            elif 'cli' in parts:
-                parts = parts[parts.index('cli'):]
             elif filename.find('botan_all') != -1:
                 parts = []
             else:
@@ -1744,8 +1765,7 @@ class MakefileListsGenerator(object):
             else:
                 name = filename
 
-            for src_suffix in ['.cpp', '.S']:
-                name = name.replace(src_suffix, '.' + self._osinfo.obj_suffix)
+            name = name.replace('.cpp', obj_suffix)
 
             yield os.path.join(obj_dir, name)
 
@@ -1760,21 +1780,29 @@ class MakefileListsGenerator(object):
         if self._options.with_external_includedir:
             includes += ' ' + self._cc.add_include_dir_option + self._options.with_external_includedir
 
-        for (obj_file, src) in zip(self._objectfile_list(sources, obj_dir), sources):
-            isa_specific_flags_str = "".join([" %s" % flagset for flagset in sorted(self._isa_specific_flags(src))])
-            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
-                obj_file,
-                src,
-                isa_specific_flags_str,
-                flags,
-                includes,
-                self._cc.compile_flags,
-                src,
-                self._cc.output_to_option)
+        is_fuzzer = obj_dir.find('fuzzer') != -1
+
+        if is_fuzzer:
+            for (obj_file, src) in zip(self._objectfile_list(sources, obj_dir), sources):
+
+                yield '%s: %s\n\t$(CXX) %s $(%s_FLAGS) %s -L. -lbotan-2 $(FUZZER_LINKS_TO) %s$@\n' % (
+                    obj_file, src, includes, flags, src, self._cc.output_to_option)
+        else:
+            for (obj_file, src) in zip(self._objectfile_list(sources, obj_dir), sources):
+                isa_specific_flags_str = "".join([" %s" % flagset for flagset in sorted(self._isa_specific_flags(src))])
+
+                yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
+                    obj_file, src, isa_specific_flags_str, flags,
+                    includes, self._cc.compile_flags, src, self._cc.output_to_option)
 
     def generate(self):
         out = {}
-        for t in ['lib', 'cli', 'test']:
+
+        targets = ['lib', 'cli', 'test']
+        if self._options.build_fuzzers:
+            targets += ['fuzzer']
+
+        for t in targets:
             obj_key = '%s_objs' % (t)
             src_list, src_dir = self._build_paths.src_info(t)
             src_list.sort()
@@ -1817,7 +1845,7 @@ class HouseEccCurve(object):
         return "\\\n" + ' \\\n'.join(lines)
 
 
-def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo):
+def create_template_vars(source_paths, build_config, options, modules, cc, arch, osinfo): #pylint: disable=too-many-locals,too-many-branches
     """
     Create the template variables needed to process the makefile, build.h, etc
     """
@@ -1846,6 +1874,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
                         exceptions = match.group(1).split(',')
                         if osinfo.basename not in exceptions:
                             libs |= set(module_link_to)
+
         return sorted(libs)
 
     def choose_mp_bits():
@@ -1909,6 +1938,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'libobj_dir': build_config.libobj_dir,
         'cliobj_dir': build_config.cliobj_dir,
         'testobj_dir': build_config.testobj_dir,
+        'fuzzobj_dir': build_config.fuzzer_output_dir if build_config.fuzzer_output_dir else '',
 
         'doc_output_dir': build_config.doc_output_dir,
 
@@ -1938,6 +1968,7 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + external_link_cmd(),
         'cli_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
         'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
+        'fuzzer_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
 
         'link_to': ' '.join(
             [cc.add_lib_option + lib for lib in link_to('libs')] +
@@ -1956,7 +1987,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
 
         'include_files': makefile_list(build_config.public_headers),
 
-        'unsafe_fuzzer_mode_define': '' if not options.unsafe_fuzzer_mode else '#define BOTAN_UNSAFE_FUZZER_MODE',
+        'unsafe_fuzzer_mode_define': '#define BOTAN_UNSAFE_FUZZER_MODE' if options.unsafe_fuzzer_mode else '',
+        'fuzzer_type': '#define BOTAN_FUZZER_IS_%s' % (options.build_fuzzers.upper()) if options.build_fuzzers else '',
+        'fuzzer_libs': '' if options.fuzzer_lib is None else '%s%s' % (cc.add_lib_option, options.fuzzer_lib),
 
         'ar_command': cc.ar_command or osinfo.ar_command,
         'ranlib_command': osinfo.ranlib_command(),
@@ -2026,17 +2059,22 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     variables["header_in"] = process_template(os.path.join(source_paths.makefile_dir, 'header.in'), variables)
 
     if variables["makefile_style"] == "gmake":
-        variables["gmake_commands_in"] = process_template(
-            os.path.join(source_paths.makefile_dir, 'gmake_commands.in'),
-            variables)
-        variables["gmake_dso_in"] = process_template(
-            os.path.join(source_paths.makefile_dir, 'gmake_dso.in'),
-            variables
-            ) if options.build_shared_lib else ''
-        variables["gmake_coverage_in"] = process_template(
-            os.path.join(source_paths.makefile_dir, 'gmake_coverage.in'),
-            variables
-            ) if options.with_coverage_info else ''
+        templates = [
+            ('gmake_commands.in', True),
+            ('gmake_dso.in', options.build_shared_lib),
+            ('gmake_coverage.in', options.with_coverage_info),
+            ('gmake_fuzzers.in', options.build_fuzzers)
+            ]
+
+        for (template, build_it) in templates:
+            template_file = os.path.join(source_paths.makefile_dir, template)
+
+            var_name = template.replace('.', '_')
+
+            if build_it:
+                variables[var_name] = process_template(template_file, variables)
+            else:
+                variables[var_name] = ''
 
     return variables
 
@@ -3005,6 +3043,13 @@ def main(argv):
         platform.system(), platform.machine(), platform.processor()))
 
     source_paths = SourcePaths(os.path.dirname(argv[0]))
+
+    if options.build_fuzzers != None:
+        if options.build_fuzzers not in ['libfuzzer', 'afl', 'test']:
+            raise UserError('Bad value to --build-fuzzers')
+
+        if options.build_fuzzers == 'libfuzzer' and options.fuzzer_lib is None:
+            options.fuzzer_lib = 'Fuzzer'
 
     info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
     info_arch = load_build_data_info_files(source_paths, 'CPU info', 'arch', ArchInfo)
