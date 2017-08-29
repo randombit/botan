@@ -4,6 +4,10 @@ which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if avai
 
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
+    # ccache in Trusty is too old, use version from Xenial
+    wget http://mirrors.kernel.org/ubuntu/pool/main/c/ccache/ccache_3.2.4-1_amd64.deb
+    sudo dpkg -i ccache_3.2.4-1_amd64.deb
+
     if [ "$BUILD_MODE" = "valgrind" ]; then
         sudo apt-get -qq update
         sudo apt-get install valgrind
@@ -42,10 +46,6 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         # need updated lcov for gcc 4.8 coverage format
         wget http://mirrors.kernel.org/ubuntu/pool/universe/l/lcov/lcov_1.12-2_all.deb
         sudo dpkg -i lcov_1.12-2_all.deb
-
-        # ccache in Trusty doesn't understand --coverage
-        wget http://mirrors.kernel.org/ubuntu/pool/main/c/ccache/ccache_3.2.4-1_amd64.deb
-        sudo dpkg -i ccache_3.2.4-1_amd64.deb
 
         (cd /home/travis/bin && ln -s gcov-4.8 gcov)
 
