@@ -58,7 +58,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         tar -C / -xvjf softhsm2-trusty-bin.tar.bz2
         /tmp/softhsm/bin/softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
 
-    elif [ "$BUILD_MODE" = "sonarqube" ]; then
+    elif [ "$BUILD_MODE" = "sonar" ]; then
         wget https://sonarqube.com/static/cpp/build-wrapper-linux-x86.zip
         unzip build-wrapper-linux-x86.zip
 

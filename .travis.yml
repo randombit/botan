@@ -17,7 +17,7 @@ env:
     - CCACHE_MAXSIZE=100M
     - CCACHE_MAXFILES=1000
     - CCACHE_COMPRESS=1
-    # SONAR_TOKEN for accessing the SonarQube server
+    # SONAR_TOKEN for accessing the Sonar server
     - secure: "VezRbHFg6kllV5WG06M3tG3aHJaC3xrMylJ6RCVbL+uz2JeralVCqV7eIk4fVb9cu83Li+weEa0AJj0wkxpIUJ+vUh5F65L6gSWSbgHP7muOSVsmnEc6KvX4n3av/ZGe4geSmsxqh2pd/2xI1h7KioGRhKeqaZIdjVgWgGJW2iQ="
 
   matrix:
@@ -38,7 +38,7 @@ env:
     - BUILD_MODE="cross-ppc32"
     - BUILD_MODE="cross-ppc64"
     - BUILD_MODE="valgrind"
-    - BUILD_MODE="sonarqube"
+    - BUILD_MODE="sonar"
 
 matrix:
   # Ignore some problem builds for now
@@ -51,7 +51,7 @@ matrix:
     - os: osx
       compiler: gcc
 
-    # Run docs, lint, bsi, nist, fuzzers, coverage, valgrind, sonarqube, sanitizer,
+    # Run docs, lint, bsi, nist, fuzzers, coverage, valgrind, sonar, sanitizer,
     # minimized and non-ARM cross builds on Linux/gcc only.
 
     # The sanitizer builds under Clang run the tests very slowly and
@@ -68,7 +68,7 @@ matrix:
     - compiler: clang
       env: BUILD_MODE="coverage"
     - compiler: clang
-      env: BUILD_MODE="sonarqube"
+      env: BUILD_MODE="sonar"
     - compiler: clang
       env: BUILD_MODE="sanitizer"
     - compiler: clang
@@ -119,7 +119,7 @@ cache:
     - $HOME/.sonar/cache
 
 addons:
-  sonarqube: true
+  sonarcloud: true
 
   coverity_scan:
     project:

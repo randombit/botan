@@ -96,7 +96,7 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
         else:
             flags += ['--with-openmp']
 
-    if target == 'sonarqube':
+    if target == 'sonar':
         make_prefix = [os.path.join(root_dir, 'build-wrapper-linux-x86/build-wrapper-linux-x86-64'),
                        '--out-dir', 'bw-outputs']
         test_cmd = ['sonar-scanner',
