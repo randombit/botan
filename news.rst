@@ -44,6 +44,11 @@ Version 2.3.0, Not Yet Released
 
 * Silence a Clang warning in create_private_key (GH #1150)
 
+* The fuzzers have been better integrated with the main build. (GH #1158)
+
+* The Travis CI build is now run via a Python script. This makes it
+  easier to replicate the behavior of the CI build locally. (GH #1162)
+
 * Fix a bug in FFI tests that caused the test files not to be found when using
   `--data-dir` option (GH #1149)
 
