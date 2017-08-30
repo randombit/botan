@@ -11,8 +11,8 @@ CLI_LINK_CMD   = %{cli_link_cmd}
 TEST_LINK_CMD  = %{test_link_cmd}
 
 LIB_LINKS_TO   = %{link_to}
-CLI_LINKS_TO   = $(LIB_LINKS_TO)
-TEST_LINKS_TO  = $(LIB_LINKS_TO)
+CLI_LINKS_TO   = %{link_to_botan} $(LIB_LINKS_TO)
+TEST_LINKS_TO  = %{link_to_botan} $(LIB_LINKS_TO)
 
 LIB_FLAGS      = $(SO_OBJ_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
 CLI_FLAGS      = $(CXXFLAGS) $(WARN_FLAGS)

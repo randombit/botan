@@ -1195,10 +1195,10 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
     @staticmethod
     def _so_link_search(osname, debug_info):
+        so_link_typ = [osname, 'default']
         if debug_info:
-            return [osname + '-debug', 'default-debug']
-        else:
-            return [osname, 'default']
+            so_link_typ = [l + '-debug' for l in so_link_typ] + so_link_typ
+        return so_link_typ
 
     def so_link_command_for(self, osname, options):
         """
@@ -2056,6 +2056,14 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         # This can be made consistent over all platforms in the future
         variables['libname'] = 'botan-%d' % (Version.major)
 
+    if options.os == 'llvm':
+        # llvm-link doesn't understand -L or -l flags
+        variables['link_to_botan'] = '%s/lib%s.a' % (variables['out_dir'], variables['libname'])
+    else:
+        variables['link_to_botan'] = '%s%s %s%s' % (
+            cc.add_lib_dir_option, variables['out_dir'],
+            cc.add_lib_option, variables['libname'])
+
     variables["header_in"] = process_template(os.path.join(source_paths.makefile_dir, 'header.in'), variables)
 
     if variables["makefile_style"] == "gmake":
@@ -2910,8 +2918,13 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         raise UserError("--destdir was removed. Use the DESTDIR environment "
                         "variable instead when calling 'make install'")
 
-    # Warnings
+    if options.os == 'llvm' or options.cpu == 'llvm':
+        if options.compiler != 'clang':
+            raise UserError('LLVM target requires using Clang')
+        if options.os != options.cpu:
+            raise UserError('LLVM target requires both CPU and OS be set to llvm')
 
+    # Warnings
     if options.os == 'windows' and options.compiler == 'gcc':
         logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
 

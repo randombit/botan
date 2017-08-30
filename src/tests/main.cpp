@@ -11,8 +11,6 @@
 #include <string>
 #include <set>
 #include <deque>
-#include <thread>
-#include <future>
 #include <cstdlib>
 
 #include <botan/version.h>
@@ -33,6 +31,11 @@
 
 #if defined(BOTAN_HAS_OPENSSL)
    #include <botan/internal/openssl.h>
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   #include <thread>
+   #include <future>
 #endif
 
 namespace {
@@ -192,7 +195,12 @@ class Test_Runner : public Botan_CLI::Command
 
          std::unique_ptr<Botan::HMAC_DRBG> drbg(new Botan::HMAC_DRBG("SHA-384"));
          drbg->initialize_with(seed.data(), seed.size());
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
          rng.reset(new Botan::Serialized_RNG(drbg.release()));
+#else
+         rng = std::move(drbg);
+#endif
 
 #else
 
@@ -323,6 +331,7 @@ class Test_Runner : public Botan_CLI::Command
          else
             {
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
             /*
             We're not doing this in a particularly nice way, and variance in time is
             high so commonly we'll 'run dry' by blocking on the first future. But
@@ -365,6 +374,10 @@ class Test_Runner : public Botan_CLI::Command
                out << report_out(fut_results[0].get(), tests_failed, tests_ran) << std::flush;
                fut_results.pop_front();
                }
+#else
+            out << "Threading support disabled\n";
+            return 1;
+#endif
             }
 
          const uint64_t total_ns = Botan_Tests::Test::timestamp() - start_time;

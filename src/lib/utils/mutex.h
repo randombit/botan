@@ -21,7 +21,7 @@ typedef std::mutex mutex_type;
 
 }
 
-#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIKERNEL)
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIKERNEL) || defined(BOTAN_TARGET_OS_IS_LLVM)
 
 // No threads
 
