@@ -2,12 +2,12 @@
 # Fuzzer build commands
 
 FUZZER_LINK_CMD = %{fuzzer_link_cmd}
-FUZZER_LINKS_TO = $(LIB_LINKS_TO) %{fuzzer_libs}
+FUZZER_LINKS_TO = %{link_to_botan} $(LIB_LINKS_TO) %{fuzzer_libs}
 FUZZER_FLAGS    = $(CXXFLAGS) $(WARN_FLAGS)
 
 %{fuzzer_build_cmds}
 
-FUZZERS=%{fuzzer_objs}
+FUZZERS=%{fuzzer_bin}
 
 fuzzers: libs $(FUZZERS)
 

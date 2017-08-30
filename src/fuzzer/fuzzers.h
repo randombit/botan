@@ -90,6 +90,22 @@ int main(int argc, char* argv[])
       }
    }
 
+#elif defined(BOTAN_FUZZER_IS_KLEE)
+
+#include <klee/klee.h>
+
+int main(int argc, char* argv[])
+   {
+   LLVMFuzzerInitialize(&argc, &argv);
+
+   uint8_t input[max_fuzzer_input_size] = { 0 };
+   klee_make_symbolic(&input, sizeof(input), "input");
+
+   size_t input_len = klee_range(0, sizeof(input), "input_len");
+
+   LLVMFuzzerTestOneInput(input, input_len);
+   }
+
 #endif
 
 #endif
