@@ -202,7 +202,7 @@ namespace {
 
 inline void append_u16_len(secure_vector<uint8_t>& output, size_t len_field)
    {
-   const uint16_t len16 = len_field;
+   const uint16_t len16 = static_cast<uint16_t>(len_field);
    BOTAN_ASSERT_EQUAL(len_field, len16, "No truncation");
    output.push_back(get_byte(0, len16));
    output.push_back(get_byte(1, len16));
@@ -305,7 +305,10 @@ void decrypt_record(secure_vector<uint8_t>& output,
    const size_t ptext_size = aead->output_length(msg_length);
 
    aead->set_associated_data_vec(
-      cs.format_ad(record_sequence, record_type, record_version, static_cast<uint16_t>(ptext_size))
+      cs.format_ad(record_sequence,
+                   static_cast<uint8_t>(record_type),
+                   record_version,
+                   static_cast<uint16_t>(ptext_size))
       );
 
    aead->start(nonce);

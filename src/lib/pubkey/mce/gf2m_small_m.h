@@ -203,7 +203,7 @@ class BOTAN_DLL GF2m_Field
          when 0 <= d < q, we get (d)
          when q <= d < 2q-1, we get (d-q+1)
          */
-         return (((d) & gf_ord()) + ((d) >> get_extension_degree()));
+         return static_cast<gf2m>(((d) & gf_ord()) + ((d) >> get_extension_degree()));
          }
 
       gf2m m_gf_extension_degree, m_gf_multiplicative_order;

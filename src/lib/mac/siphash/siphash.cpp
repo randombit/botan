@@ -39,7 +39,8 @@ void SipRounds(uint64_t M, secure_vector<uint64_t>& V, size_t r)
 
 void SipHash::add_data(const uint8_t input[], size_t length)
    {
-   m_words += length;
+   // SipHash counts the message length mod 256
+   m_words += static_cast<uint8_t>(length);
 
    if(m_mbuf_pos)
       {

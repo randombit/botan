@@ -28,7 +28,7 @@ class TSS_Tests : public Test
 
          Test::Result result("TSS");
          uint8_t id[16];
-         std::iota(id, id + sizeof(id), 0);
+         std::iota(id, id + sizeof(id), static_cast<uint8_t>(0));
 
          const std::vector<uint8_t> S = Botan::hex_decode("7465737400");
 

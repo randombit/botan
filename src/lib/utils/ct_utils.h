@@ -115,7 +115,7 @@ inline T is_zero(T x)
 template<typename T>
 inline T is_equal(T x, T y)
    {
-   return is_zero(x ^ y);
+   return is_zero<T>(x ^ y);
    }
 
 template<typename T>

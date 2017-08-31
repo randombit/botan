@@ -36,7 +36,7 @@ secure_vector<uint8_t> encode_tag(ASN1_Tag type_tag, ASN1_Tag class_tag)
 
       BOTAN_ASSERT(blocks > 0, "Math works");
 
-      encoded_tag.push_back(class_tag | 0x1F);
+      encoded_tag.push_back(static_cast<uint8_t>(class_tag | 0x1F));
       for(size_t i = 0; i != blocks - 1; ++i)
          encoded_tag.push_back(0x80 | ((type_tag >> 7*(blocks-i-1)) & 0x7F));
       encoded_tag.push_back(type_tag & 0x7F);

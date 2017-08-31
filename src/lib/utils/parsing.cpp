@@ -17,37 +17,40 @@
 
 namespace Botan {
 
+uint16_t to_uint16(const std::string& str)
+   {
+   const uint32_t x = to_u32bit(str);
+
+   if(x >> 16)
+      throw Invalid_Argument("Integer value exceeds 16 bit range");
+
+   return static_cast<uint16_t>(x);
+   }
+
 uint32_t to_u32bit(const std::string& str)
    {
-   try
+   // std::stoul is not strict enough. Ensure that str is digit only [0-9]*
+   for(const char chr : str)
       {
-      // std::stoul is not strict enough. Ensure that str is digit only [0-9]*
-      for (const char chr : str)
+      if(chr < '0' || chr > '9')
          {
-         if (chr < '0' || chr > '9')
-            {
-            auto chrAsString = std::string(1, chr);
-            throw Invalid_Argument("String contains non-digit char: " + chrAsString);
-            }
+         std::string chrAsString(1, chr);
+         throw Invalid_Argument("String contains non-digit char: " + chrAsString);
          }
-
-      const auto integerValue = std::stoul(str);
-
-      // integerValue might be uint64
-      if (integerValue > std::numeric_limits<uint32_t>::max())
-         {
-         throw Invalid_Argument("Integer value exceeds 32 bit range: " + std::to_string(integerValue));
-         }
-
-      return integerValue;
       }
-   catch(std::exception& e)
+
+   const unsigned long int x = std::stoul(str);
+
+   if(sizeof(unsigned long int) > 4)
       {
-      auto message = std::string("Could not read '" + str + "' as decimal string");
-      auto exceptionMessage = std::string(e.what());
-      if (!exceptionMessage.empty()) message += ": " + exceptionMessage;
-      throw Exception(message);
+      // x might be uint64
+      if (x > std::numeric_limits<uint32_t>::max())
+         {
+         throw Invalid_Argument("Integer value of " + str + " exceeds 32 bit range");
+         }
       }
+
+   return static_cast<uint32_t>(x);
    }
 
 /*

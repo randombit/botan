@@ -57,13 +57,13 @@ size_t PKCS7_Padding::unpad(const uint8_t block[], size_t size) const
    size_t bad_input = 0;
    const uint8_t last_byte = block[size-1];
 
-   bad_input |= CT::expand_mask(last_byte > size);
+   bad_input |= CT::expand_mask<size_t>(last_byte > size);
 
    size_t pad_pos = size - last_byte;
    size_t i = size - 2;
    while(i)
       {
-      bad_input |= ~CT::is_equal(block[i],last_byte) & CT::expand_mask(i >= pad_pos);
+      bad_input |= (~CT::is_equal(block[i],last_byte)) & CT::expand_mask<uint8_t>(i >= pad_pos);
       --i;
       }
 
@@ -98,13 +98,13 @@ size_t ANSI_X923_Padding::unpad(const uint8_t block[], size_t size) const
    size_t bad_input = 0;
    const size_t last_byte = block[size-1];
 
-   bad_input |= CT::expand_mask(last_byte > size);
+   bad_input |= CT::expand_mask<size_t>(last_byte > size);
 
    size_t pad_pos = size - last_byte;
    size_t i = size - 2;
    while(i)
       {
-      bad_input |= ~CT::is_zero(block[i]) & CT::expand_mask(i >= pad_pos);
+      bad_input |= (~CT::is_zero(block[i])) & CT::expand_mask<uint8_t>(i >= pad_pos);
       --i;
       }
    CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);
@@ -177,13 +177,13 @@ size_t ESP_Padding::unpad(const uint8_t block[], size_t size) const
 
    const size_t last_byte = block[size-1];
    size_t bad_input = 0;
-   bad_input |= CT::expand_mask(last_byte > size);
+   bad_input |= CT::expand_mask<size_t>(last_byte > size);
 
    size_t pad_pos = size - last_byte;
    size_t i = size - 1;
    while(i)
       {
-      bad_input |= ~CT::is_equal<size_t>(size_t(block[i-1]),size_t(block[i])-1) & CT::expand_mask(i > pad_pos);
+      bad_input |= ~CT::is_equal<uint8_t>(size_t(block[i-1]),size_t(block[i])-1) & CT::expand_mask<uint8_t>(i > pad_pos);
       --i;
       }
    CT::conditional_copy_mem(bad_input,&pad_pos,&size,&pad_pos,1);

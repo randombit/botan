@@ -26,7 +26,7 @@ inline uint16_t mul(uint16_t x, uint16_t y)
    const uint32_t P_hi = P >> 16;
    const uint32_t P_lo = P & 0xFFFF;
 
-   const uint16_t r_1 = (P_lo - P_hi) + (P_lo < P_hi);
+   const uint16_t r_1 = static_cast<uint16_t>((P_lo - P_hi) + (P_lo < P_hi));
    const uint16_t r_2 = 1 - x - y;
 
    return CT::select(Z_mask, r_1, r_2);

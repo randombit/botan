@@ -40,8 +40,11 @@ void HMAC::key_schedule(const uint8_t key[], size_t length)
    m_ikey.resize(m_hash->hash_block_size());
    m_okey.resize(m_hash->hash_block_size());
 
-   std::fill(m_ikey.begin(), m_ikey.end(), 0x36);
-   std::fill(m_okey.begin(), m_okey.end(), 0x5C);
+   const uint8_t ipad = 0x36;
+   const uint8_t opad = 0x5C;
+
+   std::fill(m_ikey.begin(), m_ikey.end(), ipad);
+   std::fill(m_okey.begin(), m_okey.end(), opad);
 
    if(length > m_hash->hash_block_size())
       {

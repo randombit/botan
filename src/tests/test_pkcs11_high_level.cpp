@@ -811,7 +811,7 @@ Test::Result test_rsa_encrypt_decrypt()
       };
 
    std::vector<uint8_t> plaintext(256);
-   std::iota(std::begin(plaintext), std::end(plaintext), 0);
+   std::iota(std::begin(plaintext), std::end(plaintext), static_cast<uint8_t>(0));
    encrypt_and_decrypt(plaintext, "Raw");
 
    plaintext = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x00 };
@@ -834,7 +834,7 @@ Test::Result test_rsa_sign_verify()
    PKCS11_RSA_KeyPair keypair = generate_rsa_keypair(test_session);
 
    std::vector<uint8_t> plaintext(256);
-   std::iota(std::begin(plaintext), std::end(plaintext), 0);
+   std::iota(std::begin(plaintext), std::end(plaintext), static_cast<uint8_t>(0));
 
    auto sign_and_verify = [&keypair, &plaintext, &result](std::string const& emsa, bool multipart)
       {

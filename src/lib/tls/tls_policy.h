@@ -526,9 +526,9 @@ class BOTAN_DLL Text_Policy : public Policy
       std::vector<uint16_t> srtp_profiles() const override
          {
          std::vector<uint16_t> r;
-         for(auto&& p : get_list("srtp_profiles", std::vector<std::string>()))
+         for(std::string p : get_list("srtp_profiles", std::vector<std::string>()))
             {
-            r.push_back(to_u32bit(p));
+            r.push_back(to_uint16(p));
             }
          return r;
          }

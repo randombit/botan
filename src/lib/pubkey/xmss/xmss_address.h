@@ -113,7 +113,7 @@ class XMSS_Address
       void set_type(Type type)
          {
          m_data[15] = static_cast<uint8_t>(type);
-         std::fill(m_data.begin() + 16, m_data.end(), 0);
+         std::fill(m_data.begin() + 16, m_data.end(), static_cast<uint8_t>(0));
          }
 
       /**
