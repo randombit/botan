@@ -32,6 +32,7 @@ class Win32_CAPI_EntropySource final : public Entropy_Source
       class CSP_Handle
          {
          public:
+            virtual ~CSP_Handle() {}
             virtual size_t gen_random(uint8_t out[], size_t n) const = 0;
          };
    private:

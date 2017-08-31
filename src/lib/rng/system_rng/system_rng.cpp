@@ -71,7 +71,7 @@ System_RNG_Impl::System_RNG_Impl()
    {
 #if defined(BOTAN_TARGET_OS_HAS_CRYPTGENRANDOM)
 
-   if(!CryptAcquireContext(&m_prov, 0, 0, BOTAN_SYSTEM_RNG_CRYPTOAPI_PROV_TYPE, CRYPT_VERIFYCONTEXT))
+   if(!CryptAcquireContext(&m_prov, nullptr, nullptr, BOTAN_SYSTEM_RNG_CRYPTOAPI_PROV_TYPE, CRYPT_VERIFYCONTEXT))
       throw Exception("System_RNG failed to acquire crypto provider");
 
 #elif defined(BOTAN_TARGET_OS_HAS_ARC4RANDOM)

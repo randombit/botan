@@ -22,8 +22,8 @@ class CSP_Handle_Impl : public Win32_CAPI_EntropySource::CSP_Handle
       explicit CSP_Handle_Impl(uint64_t capi_provider)
          {
          m_valid = ::CryptAcquireContext(&m_handle,
-                                         0,
-                                         0,
+                                         nullptr,
+                                         nullptr,
                                          static_cast<DWORD>(capi_provider),
                                          CRYPT_VERIFYCONTEXT);
          }
