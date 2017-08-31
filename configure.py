@@ -2073,6 +2073,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
     if options.os == 'llvm':
         # llvm-link doesn't understand -L or -l flags
         variables['link_to_botan'] = '%s/lib%s.a' % (variables['out_dir'], variables['libname'])
+    elif options.compiler == 'msvc':
+        # Nmake makefiles do something completely different here...
+        variables['link_to_botan'] = ''
     else:
         variables['link_to_botan'] = '%s%s %s%s' % (
             cc.add_lib_dir_option, variables['out_dir'],
