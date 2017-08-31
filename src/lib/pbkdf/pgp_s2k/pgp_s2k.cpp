@@ -57,9 +57,9 @@ uint8_t OpenPGP_S2K::encode_count(size_t desired_iterations)
    */
    for(size_t c = 0; c < 256; ++c)
       {
-      size_t decoded_iter = OPENPGP_S2K_ITERS[c];
+      const uint32_t decoded_iter = OPENPGP_S2K_ITERS[c];
       if(decoded_iter >= desired_iterations)
-         return c;
+         return static_cast<uint8_t>(c);
       }
 
    return 255;

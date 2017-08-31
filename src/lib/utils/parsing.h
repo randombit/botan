@@ -105,6 +105,13 @@ BOTAN_DLL bool x500_name_cmp(const std::string& name1,
 BOTAN_DLL uint32_t to_u32bit(const std::string& str);
 
 /**
+* Convert a string to a number
+* @param str the string to convert
+* @return number value of the string
+*/
+BOTAN_DLL uint16_t to_uint16(const std::string& str);
+
+/**
 * Convert a time specification to a number
 * @param timespec the time specification
 * @return number of seconds represented by timespec

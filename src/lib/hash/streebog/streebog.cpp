@@ -115,12 +115,10 @@ void Streebog::clear()
    m_count = 0;
    m_position = 0;
    zeroise(m_buffer);
-   if(m_output_bits == 256)
-      { std::fill(m_h.begin(), m_h.end(), 0x0101010101010101ULL); }
-   else
-      { std::fill(m_h.begin(), m_h.end(), 0x0ULL); }
-
    zeroise(m_S);
+
+   const uint64_t fill = (m_output_bits == 512) ? 0 : 0x0101010101010101;
+   std::fill(m_h.begin(), m_h.end(), fill);
    }
 
 /*
@@ -148,7 +146,9 @@ void Streebog::add_data(const uint8_t input[], size_t length)
 void Streebog::final_result(uint8_t output[])
    {
    m_buffer[m_position++] = 0x01;
-   std::fill(m_buffer.begin() + m_position, m_buffer.end(), 0x00);
+
+   if(m_position != m_buffer.size())
+      clear_mem(&m_buffer[m_position], m_buffer.size() - m_position);
 
    compress(m_buffer.data());
    m_count += (m_position - 1) * 8;

@@ -130,7 +130,11 @@ void OID::encode_into(DER_Encoder& der) const
       throw Invalid_Argument("OID::encode_into: OID is invalid");
 
    std::vector<uint8_t> encoding;
-   encoding.push_back(40 * m_id[0] + m_id[1]);
+
+   if(m_id[0] > 2 || m_id[1] >= 40)
+      throw Encoding_Error("Invalid OID prefix, cannot encode");
+
+   encoding.push_back(static_cast<uint8_t>(40 * m_id[0] + m_id[1]));
 
    for(size_t i = 2; i != m_id.size(); ++i)
       {

@@ -39,7 +39,7 @@ secure_vector<uint8_t> rfc3394_keywrap(const secure_vector<uint8_t>& key,
       {
       for(size_t i = 1; i <= n; ++i)
          {
-         const uint32_t t = (n * j) + i;
+         const uint32_t t = static_cast<uint32_t>((n * j) + i);
 
          copy_mem(&A[8], &R[8*i], 8);
 
@@ -84,7 +84,7 @@ secure_vector<uint8_t> rfc3394_keyunwrap(const secure_vector<uint8_t>& key,
       {
       for(size_t i = n; i != 0; --i)
          {
-         const uint32_t t = (5 - j) * n + i;
+         const uint32_t t = static_cast<uint32_t>((5 - j) * n + i);
 
          uint8_t t_buf[4] = { 0 };
          store_be(t, t_buf);

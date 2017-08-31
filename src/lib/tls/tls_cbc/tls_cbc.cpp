@@ -134,8 +134,8 @@ void TLS_CBC_HMAC_AEAD_Encryption::set_associated_data(const uint8_t ad[], size_
    if(use_encrypt_then_mac())
       {
       // AAD hack for EtM
-      size_t pt_size = make_uint16(assoc_data()[11], assoc_data()[12]);
-      size_t enc_size = round_up(iv_size() + pt_size + 1, block_size());
+      const uint16_t pt_size = make_uint16(assoc_data()[11], assoc_data()[12]);
+      const uint16_t enc_size = round_up(iv_size() + pt_size + 1, block_size());
       assoc_data()[11] = get_byte<uint16_t>(0, enc_size);
       assoc_data()[12] = get_byte<uint16_t>(1, enc_size);
       }
@@ -344,11 +344,11 @@ void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, 
       max_bytes_in_first_block = 55;
       }
    // number of maximum MACed bytes
-   const uint16_t L1 = 13 + plen - tag_size();
+   const uint16_t L1 = static_cast<uint16_t>(13 + plen - tag_size());
    // number of current MACed bytes (L1 - padlen)
    // Here the Lucky 13 paper is different because the padlen length in the paper 
    // does not count the last message byte.
-   const uint16_t L2 = 13 + plen - padlen - tag_size();
+   const uint16_t L2 = static_cast<uint16_t>(13 + plen - padlen - tag_size());
    // From the paper, for SHA-256/SHA-1 compute: ceil((L1-55)/64) and ceil((L2-55)/64)
    // ceil((L1-55)/64) = floor((L1+64-1-55)/64)
    // Here we compute number of compressions for SHA-* in general
@@ -416,7 +416,7 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish(secure_vector<uint8_t>& buffer, size_t
          }
 
       const uint8_t* plaintext_block = &record_contents[0];
-      const uint16_t plaintext_length = enc_size - pad_size;
+      const size_t plaintext_length = enc_size - pad_size;
 
       buffer.insert(buffer.end(), plaintext_block, plaintext_block + plaintext_length);
       }

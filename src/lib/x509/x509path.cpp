@@ -183,7 +183,7 @@ PKIX::check_ocsp(const std::vector<std::shared_ptr<const X509_Certificate>>& cer
                status.insert(ocsp_signature_status);
                }
             }
-         catch(Exception& e)
+         catch(Exception&)
             {
             status.insert(Certificate_Status_Code::OCSP_RESPONSE_INVALID);
             }
@@ -412,7 +412,7 @@ PKIX::check_crl_online(const std::vector<std::shared_ptr<const X509_Certificate>
                crls[i] = future_crls[i].get();
                }
             }
-         catch(std::exception& e)
+         catch(std::exception&)
             {
             // crls[i] left null
             }

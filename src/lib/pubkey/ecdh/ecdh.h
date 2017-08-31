@@ -54,7 +54,7 @@ class BOTAN_DLL ECDH_PublicKey : public virtual EC_PublicKey
       * @return public point value
       */
       std::vector<uint8_t> public_value(PointGFp::Compression_Type type) const
-         { return unlock(EC2OSP(public_point(), type)); }
+         { return unlock(EC2OSP(public_point(), static_cast<uint8_t>(type))); }
 
    protected:
       ECDH_PublicKey() = default;

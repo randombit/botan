@@ -50,9 +50,8 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
                {
                cert.certs.push_back(Botan::X509_Certificate(in));
                }
-            catch(std::exception& e)
+            catch(std::exception&)
                {
-
                }
             }
 
@@ -74,9 +73,8 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager
                m_certstores.push_back(cs);
                }
             }
-         catch(std::exception& e)
+         catch(std::exception&)
             {
-            //std::cout << e.what() << "\n";
             }
          }
 

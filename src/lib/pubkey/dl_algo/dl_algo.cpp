@@ -76,7 +76,7 @@ bool DL_Scheme_PublicKey::check_key(RandomNumberGenerator& rng,
       if(power_mod(m_y, q, p) != 1)
          return false;
       }
-   catch(const Invalid_State& e)
+   catch(const Invalid_State&)
       {
       return true;
       }

@@ -117,7 +117,7 @@ bool XMSS_Verification_Operation::is_valid_signature(const uint8_t sig[],
       m_msg_buf.clear();
       return result;
       }
-   catch(Integrity_Failure& e)
+   catch(Integrity_Failure&)
       {
       m_msg_buf.clear();
       return false;

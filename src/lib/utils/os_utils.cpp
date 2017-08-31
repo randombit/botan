@@ -51,12 +51,13 @@ uint64_t OS::get_processor_timestamp()
 #elif defined(BOTAN_USE_GCC_INLINE_ASM)
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-   if(CPUID::has_rdtsc()) // not available on all x86 CPUs
-      {
-      uint32_t rtc_low = 0, rtc_high = 0;
-      asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
-      return (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
-      }
+
+   if(CPUID::has_rdtsc() == false)
+      return 0;
+
+   uint32_t rtc_low = 0, rtc_high = 0;
+   asm volatile("rdtsc" : "=d" (rtc_high), "=a" (rtc_low));
+   return (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
 
 #elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
    uint32_t rtc_low = 0, rtc_high = 0;
@@ -99,11 +100,12 @@ uint64_t OS::get_processor_timestamp()
 
 #else
    //#warning "OS::get_processor_timestamp not implemented"
-#endif
-
-#endif
-
    return 0;
+#endif
+
+#else
+   return 0;
+#endif
    }
 
 uint64_t OS::get_high_resolution_clock()
