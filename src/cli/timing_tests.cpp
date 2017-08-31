@@ -156,7 +156,7 @@ class Manger_Timing_Test : public Timing_Test
             {
             m_dec.decrypt(input.data(), m_ctext_length);
             }
-         catch(Botan::Decoding_Error& e)
+         catch(Botan::Decoding_Error&)
             {
             }
          ticks end = get_ticks();
@@ -229,7 +229,7 @@ ticks Lucky13_Timing_Test::measure_critical_function(std::vector<uint8_t> input)
       {
       m_dec.finish(data);
       }
-   catch(Botan::TLS::TLS_Exception& e)
+   catch(Botan::TLS::TLS_Exception&)
       {
       }
    ticks end = get_ticks();

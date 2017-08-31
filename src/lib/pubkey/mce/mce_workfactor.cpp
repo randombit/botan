@@ -106,7 +106,7 @@ size_t mceliece_work_factor(size_t n, size_t t)
       min = std::min(min, lwf);
       }
 
-   return min;
+   return static_cast<size_t>(min);
    }
 
 }

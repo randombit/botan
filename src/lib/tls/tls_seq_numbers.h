@@ -102,7 +102,7 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers
 
          if(sequence > m_window_highest)
             {
-            const size_t offset = sequence - m_window_highest;
+            const uint64_t offset = sequence - m_window_highest;
             m_window_highest += offset;
 
             if(offset >= window_size)

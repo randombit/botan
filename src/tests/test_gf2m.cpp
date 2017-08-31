@@ -45,7 +45,7 @@ class GF2m_Tests : public Test
 
             for(size_t i = 0; i <= field.gf_ord(); ++i)
                {
-               gf2m a = i;
+               gf2m a = static_cast<gf2m>(i);
 
                result.test_eq("square vs multiply",
                               static_cast<size_t>(field.gf_square(a)),

@@ -125,7 +125,7 @@ pbes2_encrypt(const secure_vector<uint8_t>& key_bits,
               const std::string& digest,
               RandomNumberGenerator& rng)
    {
-   size_t msec_in_iterations_out = msec.count();
+   size_t msec_in_iterations_out = static_cast<size_t>(msec.count());
    return pbes2_encrypt_shared(key_bits, passphrase, &msec_in_iterations_out, 0, cipher, digest, rng);
    // return value msec_in_iterations_out discarded
    }
@@ -139,7 +139,7 @@ pbes2_encrypt_msec(const secure_vector<uint8_t>& key_bits,
                    const std::string& digest,
                    RandomNumberGenerator& rng)
    {
-   size_t msec_in_iterations_out = msec.count();
+   size_t msec_in_iterations_out = static_cast<size_t>(msec.count());
 
    auto ret = pbes2_encrypt_shared(key_bits, passphrase, &msec_in_iterations_out, 0, cipher, digest, rng);
 
