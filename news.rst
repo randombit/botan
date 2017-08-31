@@ -34,6 +34,13 @@ Version 2.3.0, Not Yet Released
 
 * Add is_passhash9_alg_supported (GH #1154)
 
+* Added a new target for LLVM bitcode (GH #1169)
+
+* Add new command line options `--rng-type=drbg` and `--drbg-seed` which
+  allow running commands with a deterministic RNG. (GH #1169)
+
+* Fix a number of warnings seen under Visual C++ (GH #1171)
+
 * Workaround a GCC 7 bug that caused miscompilation of the GOST-34.11 hash
   function on x86-32. (GH #882 #1148)
 
@@ -44,10 +51,12 @@ Version 2.3.0, Not Yet Released
 
 * Silence a Clang warning in create_private_key (GH #1150)
 
-* The fuzzers have been better integrated with the main build. (GH #1158)
+* The fuzzers have been better integrated with the main build. See the
+  handbook for details. (GH #1158)
 
 * The Travis CI build is now run via a Python script. This makes it
-  easier to replicate the behavior of the CI build locally. (GH #1162)
+  easier to replicate the behavior of the CI build locally. Also a number
+  of changes were made to improve the turnaround time of CI builds. (GH #1162)
 
 * Fix a bug in FFI tests that caused the test files not to be found when using
   `--data-dir` option (GH #1149)
