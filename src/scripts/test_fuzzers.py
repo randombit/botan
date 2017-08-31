@@ -102,9 +102,9 @@ def main(args=None):
 
     run_fuzzer_func = run_fuzzer_gdb if options.gdb else run_fuzzer
 
-    for f in sorted(list(fuzzers_with_corpus)):
-        fuzzer_bin = os.path.join(fuzzer_dir, f)
-        corpus_subdir = os.path.join(corpus_dir, f)
+    for fuzzer in sorted(list(fuzzers_with_corpus)):
+        fuzzer_bin = os.path.join(fuzzer_dir, fuzzer)
+        corpus_subdir = os.path.join(corpus_dir, fuzzer)
         corpus_files = [os.path.join(corpus_subdir, l) for l in sorted(list(os.listdir(corpus_subdir)))]
 
         # We have to do this hack because multiprocessing's Pool.map doesn't support
@@ -115,18 +115,18 @@ def main(args=None):
             (corpus_file, retcode, stdout, stderr) = result
 
             if retcode != 0:
-                print("Fuzzer %s crashed with input %s returncode %d" % (f, corpus_file, retcode))
+                print("Fuzzer %s crashed with input %s returncode %d" % (fuzzer, corpus_file, retcode))
                 crash_count += 1
 
             if len(stdout) != 0:
-                print("Fuzzer %s produced stdout on input %s:\n%s" % (f, corpus_file, stdout))
+                print("Fuzzer %s produced stdout on input %s:\n%s" % (fuzzer, corpus_file, stdout))
                 stdout_count += 1
 
             if len(stderr) != 0:
-                print("Fuzzer %s produced stderr on input %s:\n%s" % (f, corpus_file, stderr))
+                print("Fuzzer %s produced stderr on input %s:\n%s" % (fuzzer, corpus_file, stderr))
                 stderr_count += 1
 
-        print("Tested fuzzer %s with %d test cases, %d crashes" % (f, len(corpus_files), crash_count))
+        print("Tested fuzzer %s with %d test cases, %d crashes" % (fuzzer, len(corpus_files), crash_count))
         sys.stdout.flush()
 
     if crash_count > 0 or stderr_count > 0 or stdout_count > 0:
