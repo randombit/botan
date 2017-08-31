@@ -1732,7 +1732,7 @@ class MakefileListsGenerator(object):
 
     def _fuzzer_bin_list(self, fuzzer_objs, bin_dir):
         for obj in fuzzer_objs:
-            (directory, name) = os.path.split(os.path.normpath(obj))
+            (_, name) = os.path.split(os.path.normpath(obj))
             name = name.replace('.' + self._osinfo.obj_suffix, '')
             yield os.path.join(bin_dir, name)
 
@@ -1778,7 +1778,6 @@ class MakefileListsGenerator(object):
         """
         Form snippets of makefile for building each source file
         """
-
         includes = self._cc.add_include_dir_option + self._build_paths.include_dir
         if self._build_paths.external_headers:
             includes += ' ' + self._cc.add_include_dir_option + self._build_paths.external_include_dir
@@ -1787,7 +1786,7 @@ class MakefileListsGenerator(object):
 
         is_fuzzer = obj_dir.find('fuzzer') != -1
 
-        for (obj_file, src) in zip(self._objectfile_list(sources, obj_dir), sources):
+        for (obj_file, src) in zip(objects, sources):
             isa_specific_flags_str = "".join([" %s" % flagset for flagset in sorted(self._isa_specific_flags(src))])
 
             yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
@@ -1809,7 +1808,7 @@ class MakefileListsGenerator(object):
         for t in targets:
             src_list, src_dir = self._build_paths.src_info(t)
             src_list.sort()
-            objects = list(self._objectfile_list(src_list, src_dir))
+            objects = sorted(self._objectfile_list(src_list, src_dir))
 
             obj_key = '%s_objs' % (t)
             out[obj_key] = makefile_list(objects)
