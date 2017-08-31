@@ -75,16 +75,10 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     fi
 
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    # Workaround for https://github.com/Homebrew/homebrew/issues/42553
-    brew update || brew update
-
+    brew update
     brew install ccache
 
     if [ "$BUILD_MODE" != "cross-arm32" ] && [ "$BUILD_MODE" != "cross-arm64" ]; then
-        brew install xz
-        # Python2 is already installed
-        brew install python3
-
         # Boost 1.58 is installed on Travis OS X images
         # brew install boost
     fi

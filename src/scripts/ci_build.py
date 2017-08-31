@@ -70,8 +70,8 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
     if target in ['mini-static', 'mini-shared']:
         flags += ['--minimized-build', '--enable-modules=dev_random,system_rng,sha2_32,sha2_64,aes']
 
-    if target == 'shared':
-        # Arbitrarily test amalgamation on shared obj builds
+    if target == 'static':
+        # Arbitrarily test amalgamation on static lib builds
         flags += ['--amalgamation']
 
     if target in ['bsi', 'nist']:
@@ -149,12 +149,15 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
                 raise Exception("Unknown cross target '%s' for Linux" % (target))
     else:
         # Flags specific to native targets
-        flags += ['--with-bzip2', '--with-lzma', '--with-sqlite', '--with-zlib']
+        flags += ['--with-bzip2', '--with-sqlite', '--with-zlib']
 
         if target_os == 'osx':
             # Test Boost on OS X
             flags += ['--with-boost']
-        elif target not in ['sanitizer', 'valgrind', 'mini-shared', 'mini-static']:
+        elif target_os == 'linux':
+            flags += ['--with-lzma']
+
+        if target_os == 'linux' and (target not in ['sanitizer', 'valgrind', 'mini-shared', 'mini-static']):
             # Avoid OpenSSL when using dynamic checkers, or on OS X where it sporadically
             # is not installed on the CI image
             flags += ['--with-openssl']
