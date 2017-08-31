@@ -93,6 +93,11 @@ bool Policy::allowed_signature_method(const std::string& sig_method) const
    return value_exists(allowed_signature_methods(), sig_method);
    }
 
+bool Policy::allowed_signature_hash(const std::string& sig_hash) const
+   {
+   return value_exists(allowed_signature_hashes(), sig_hash);
+   }
+
 std::vector<std::string> Policy::allowed_ecc_curves() const
    {
    // Default list is ordered by performance

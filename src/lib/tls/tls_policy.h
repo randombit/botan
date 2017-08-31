@@ -74,6 +74,7 @@ class BOTAN_DLL Policy
       virtual bool require_cert_revocation_info() const;
 
       bool allowed_signature_method(const std::string& sig_method) const;
+      bool allowed_signature_hash(const std::string& hash) const;
 
       /**
       * Return list of ECC curves we are willing to use in order of preference
