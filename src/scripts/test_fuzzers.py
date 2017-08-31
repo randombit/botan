@@ -1,35 +1,40 @@
 #!/usr/bin/python
 
+# (C) 2017 Jack Lloyd
+
 import sys
 import os
 import subprocess
 import optparse
 import stat
+import multiprocessing
 
-def run_fuzzer(fuzzer_bin, corpus_file, run_under_gdb):
+def run_fuzzer_gdb(args):
+    (fuzzer_bin, corpus_file) = args
 
-    if run_under_gdb:
-        gdb_proc = subprocess.Popen(['gdb', '--quiet', '--return-child-result', fuzzer_bin],
-                                    stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    close_fds=True)
+    gdb_proc = subprocess.Popen(['gdb', '--quiet', '--return-child-result', fuzzer_bin],
+                                stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                close_fds=True)
 
-        gdb_commands = ('run < %s\nbt\nquit\n' % (corpus_file)).encode('ascii')
+    gdb_commands = ('run < %s\nbt\nquit\n' % (corpus_file)).encode('ascii')
 
-        (stdout, stderr) = gdb_proc.communicate(gdb_commands)
+    (stdout, stderr) = gdb_proc.communicate(gdb_commands)
 
-        if gdb_proc.returncode == 0:
-            return (0, '', '')
+    if gdb_proc.returncode == 0:
+        return (0, '', '')
 
-        return (gdb_proc.returncode, stdout.decode('ascii'), stderr.decode('ascii'))
-    else:
-        corpus_fd = open(corpus_file, 'r')
-        fuzzer_proc = subprocess.Popen([fuzzer_bin], stdin=corpus_fd,
-                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
-        (stdout, stderr) = fuzzer_proc.communicate()
-        corpus_fd.close()
-        return (fuzzer_proc.returncode, stdout.decode('ascii'), stderr.decode('ascii'))
+    return (corpus_file, gdb_proc.returncode, stdout.decode('ascii'), stderr.decode('ascii'))
+
+def run_fuzzer(args):
+    (fuzzer_bin, corpus_file) = args
+    corpus_fd = open(corpus_file, 'r')
+    fuzzer_proc = subprocess.Popen([fuzzer_bin], stdin=corpus_fd,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+    (stdout, stderr) = fuzzer_proc.communicate()
+    corpus_fd.close()
+    return (corpus_file, fuzzer_proc.returncode, stdout.decode('ascii'), stderr.decode('ascii'))
 
 def main(args=None):
     if args is None:
@@ -92,19 +97,22 @@ def main(args=None):
 
     gdb_commands = None
 
+    pool = multiprocessing.Pool(None)
+    chunk_size = 32 # arbitrary
+
+    run_fuzzer_func = run_fuzzer_gdb if options.gdb else run_fuzzer
+
     for f in sorted(list(fuzzers_with_corpus)):
         fuzzer_bin = os.path.join(fuzzer_dir, f)
-        corpus_files = os.path.join(corpus_dir, f)
+        corpus_subdir = os.path.join(corpus_dir, f)
+        corpus_files = [os.path.join(corpus_subdir, l) for l in sorted(list(os.listdir(corpus_subdir)))]
 
-        tests_for_this_fuzzer = 0
+        # We have to do this hack because multiprocessing's Pool.map doesn't support
+        # passing any initial arguments, just the single iteratable
+        map_args = [(fuzzer_bin, f) for f in corpus_files]
 
-        for corpus_file in sorted(list(os.listdir(corpus_files))):
-
-            tests_for_this_fuzzer += 1
-
-            corpus_full_path = os.path.join(corpus_files, corpus_file)
-
-            (retcode, stdout, stderr) = run_fuzzer(fuzzer_bin, corpus_full_path, options.gdb)
+        for result in pool.map(run_fuzzer_func, map_args, chunk_size):
+            (corpus_file, retcode, stdout, stderr) = result
 
             if retcode != 0:
                 print("Fuzzer %s crashed with input %s returncode %d" % (f, corpus_file, retcode))
@@ -118,7 +126,7 @@ def main(args=None):
                 print("Fuzzer %s produced stderr on input %s:\n%s" % (f, corpus_file, stderr))
                 stderr_count += 1
 
-        print("Tested fuzzer %s with %d test cases, %d crashes" % (f, tests_for_this_fuzzer, crash_count))
+        print("Tested fuzzer %s with %d test cases, %d crashes" % (f, len(corpus_files), crash_count))
         sys.stdout.flush()
 
     if crash_count > 0 or stderr_count > 0 or stdout_count > 0:
