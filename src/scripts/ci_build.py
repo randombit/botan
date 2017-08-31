@@ -87,6 +87,8 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
         flags += ['--with-valgrind']
         test_prefix = ['valgrind', '--error-exitcode=9', '-v']
         test_cmd += fast_tests
+    if target == 'fuzzers':
+        flags += ['--unsafe-fuzzer-mode']
 
     if target in ['fuzzers', 'coverage', 'valgrind']:
         flags += ['--with-debug-info']
