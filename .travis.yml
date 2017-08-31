@@ -29,16 +29,16 @@ env:
     - BUILD_MODE="static"
     - BUILD_MODE="bsi"
     - BUILD_MODE="nist"
-    - BUILD_MODE="fuzzers"
     - BUILD_MODE="sanitizer"
-    - BUILD_MODE="coverage"
+    - BUILD_MODE="cross-ppc32"
+    - BUILD_MODE="cross-ppc64"
     - BUILD_MODE="cross-arm32"
     - BUILD_MODE="cross-arm64"
     - BUILD_MODE="cross-win32"
-    - BUILD_MODE="cross-ppc32"
-    - BUILD_MODE="cross-ppc64"
     - BUILD_MODE="valgrind"
     - BUILD_MODE="sonar"
+    - BUILD_MODE="coverage"
+    - BUILD_MODE="fuzzers"
 
 matrix:
   # Ignore some problem builds for now
