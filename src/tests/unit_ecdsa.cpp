@@ -48,7 +48,7 @@ Test::Result test_hash_larger_than_n()
    Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
 
    std::vector<uint8_t> message(20);
-   std::iota(message.begin(), message.end(), 0);
+   std::iota(message.begin(), message.end(), static_cast<uint8_t>(0));
 
    auto sha1 = Botan::HashFunction::create("SHA-1");
    auto sha224 = Botan::HashFunction::create("SHA-224");

@@ -76,7 +76,7 @@ class PGP_S2K_Iter_Test : public Test
 
          for(size_t c = 0; c != 256; ++c)
             {
-            const size_t dec = Botan::OpenPGP_S2K::decode_count(c);
+            const size_t dec = Botan::OpenPGP_S2K::decode_count(static_cast<uint8_t>(c));
             const size_t comp_dec = (16 + (c & 0x0F)) << ((c >> 4) + 6);
             result.test_eq("Decoded value matches PGP formula", dec, comp_dec);
             }
