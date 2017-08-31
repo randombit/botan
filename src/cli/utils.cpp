@@ -102,7 +102,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
                          std::to_string(rng->security_level()/8) +
                          " bytes must be provided");
 
-      return rng;
+      return std::unique_ptr<Botan::RandomNumberGenerator>(rng.release());
       }
 #endif
 
