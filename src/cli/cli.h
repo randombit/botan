@@ -252,7 +252,8 @@ class Command
 
       virtual std::string help_text() const
          {
-         return "Usage: " + m_spec;
+         return "Usage: " + m_spec +
+            "\n\nAll commands support --verbose --help --output= --error-output --rng-type= --drbg-seed=";
          }
 
       const std::string& cmd_spec() const
@@ -328,13 +329,7 @@ class Command
          m_spec_flags.insert("help");
          m_spec_opts.insert(std::make_pair("output", ""));
          m_spec_opts.insert(std::make_pair("error-output", ""));
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-         const std::string availableRng = "system";
-#else
-         const std::string availableRng = "user";
-#endif
-         m_spec_opts.insert(std::make_pair("rng-type", availableRng));
+         m_spec_opts.insert(std::make_pair("rng-type", ""));
          m_spec_opts.insert(std::make_pair("drbg-seed", ""));
          }
 

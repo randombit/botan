@@ -55,7 +55,7 @@ std::unique_ptr<Botan::RandomNumberGenerator>
 cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
    {
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-   if(rng_type == "system")
+   if(rng_type == "system" || rng_type.empty())
       {
       return std::unique_ptr<Botan::RandomNumberGenerator>(new Botan::System_RNG);
       }
@@ -74,7 +74,7 @@ cli_make_rng(const std::string& rng_type, const std::string& hex_drbg_seed)
    const std::vector<uint8_t> drbg_seed = Botan::hex_decode(hex_drbg_seed);
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-   if(rng_type == "auto" || rng_type == "entropy")
+   if(rng_type == "auto" || rng_type == "entropy" || rng_type.empty())
       {
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
@@ -236,14 +236,17 @@ class RNG final : public Command
 
       void go() override
          {
-         std::string type = "auto"; // default
+         std::string type = get_arg("rng-type");
 
-         for(std::string flag : { "system", "rdrand", "auto", "entropy", "drbg" })
+         if(type.empty())
             {
-            if(flag_set(flag))
+            for(std::string flag : { "system", "rdrand", "auto", "entropy", "drbg" })
                {
-               type = flag;
-               break;
+               if(flag_set(flag))
+                  {
+                  type = flag;
+                  break;
+                  }
                }
             }
 
