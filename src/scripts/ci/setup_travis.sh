@@ -77,10 +77,4 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
     brew update
     brew install ccache
-
-    if [ "$BUILD_MODE" != "cross-arm32" ] && [ "$BUILD_MODE" != "cross-arm64" ]; then
-        # Boost 1.58 is installed on Travis OS X images
-        # brew install boost
-    fi
-
 fi
