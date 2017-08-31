@@ -34,7 +34,7 @@ uint32_t OS::get_process_id()
    return ::getpid();
 #elif defined(BOTAN_TARGET_OS_IS_WINDOWS) || defined(BOTAN_TARGET_OS_IS_MINGW)
    return ::GetCurrentProcessId();
-#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIKERNEL)
+#elif defined(BOTAN_TARGET_OS_TYPE_IS_UNIKERNEL) || defined(BOTAN_TARGET_OS_IS_LLVM)
    return 0; // truly no meaningful value
 #else
    #error "Missing get_process_id"

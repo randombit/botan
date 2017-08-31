@@ -1,0 +1,9 @@
+
+obj_suffix bc
+building_shared_supported no
+
+ar_command "llvm-link -o"
+
+<target_features>
+filesystem
+</target_features>

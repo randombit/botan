@@ -186,9 +186,11 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         if options.build_fuzzers:
             self.fuzzer_sources = list(find_sources_in(source_paths.src_dir, 'fuzzer'))
             self.fuzzer_output_dir = os.path.join(self.build_dir, 'fuzzer')
+            self.fuzzobj_dir = os.path.join(self.build_dir, 'obj', 'fuzzer')
         else:
             self.fuzzer_sources = None
             self.fuzzer_output_dir = None
+            self.fuzzobj_dir = None
 
     def build_dirs(self):
         out = [
@@ -203,6 +205,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         if self.doc_output_dir_doxygen:
             out += [self.doc_output_dir_doxygen]
         if self.fuzzer_output_dir:
+            out += [self.fuzzobj_dir]
             out += [self.fuzzer_output_dir]
         return out
 
@@ -214,7 +217,7 @@ class BuildPaths(object): # pylint: disable=too-many-instance-attributes
         elif typ == 'test':
             return (self.test_sources, self.testobj_dir)
         elif typ == 'fuzzer':
-            return (self.fuzzer_sources, self.fuzzer_output_dir)
+            return (self.fuzzer_sources, self.fuzzobj_dir)
         else:
             raise InternalError("Unknown src info type '%s'" % (typ))
 
@@ -426,7 +429,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
 
     build_group.add_option('--build-fuzzers=', dest='build_fuzzers',
                            metavar='TYPE', default=None,
-                           help='Build fuzzers (afl, libfuzzer, test)')
+                           help='Build fuzzers (afl, libfuzzer, klee, test)')
 
     build_group.add_option('--with-fuzzer-lib=', metavar='LIB', default=None, dest='fuzzer_lib',
                            help='additionally link in LIB')
@@ -1195,10 +1198,10 @@ class CompilerInfo(InfoObject): # pylint: disable=too-many-instance-attributes
 
     @staticmethod
     def _so_link_search(osname, debug_info):
+        so_link_typ = [osname, 'default']
         if debug_info:
-            return [osname + '-debug', 'default-debug']
-        else:
-            return [osname, 'default']
+            so_link_typ = [l + '-debug' for l in so_link_typ] + so_link_typ
+        return so_link_typ
 
     def so_link_command_for(self, osname, options):
         """
@@ -1727,15 +1730,18 @@ class MakefileListsGenerator(object):
 
         return set()
 
+    def _fuzzer_bin_list(self, fuzzer_objs, bin_dir):
+        for obj in fuzzer_objs:
+            (_, name) = os.path.split(os.path.normpath(obj))
+            name = name.replace('.' + self._osinfo.obj_suffix, '')
+            yield os.path.join(bin_dir, name)
+
     def _objectfile_list(self, sources, obj_dir):
+        obj_suffix = '.' + self._osinfo.obj_suffix
+
         for src in sources:
             (directory, filename) = os.path.split(os.path.normpath(src))
-
-            obj_suffix = '.' + self._osinfo.obj_suffix
-
             parts = directory.split(os.sep)
-            if 'fuzzer' in parts:
-                obj_suffix = ''
 
             if 'src' in parts:
                 parts = parts[parts.index('src')+2:]
@@ -1766,14 +1772,12 @@ class MakefileListsGenerator(object):
                 name = filename
 
             name = name.replace('.cpp', obj_suffix)
-
             yield os.path.join(obj_dir, name)
 
-    def _build_commands(self, sources, obj_dir, flags):
+    def _build_commands(self, sources, obj_dir, objects, flags):
         """
         Form snippets of makefile for building each source file
         """
-
         includes = self._cc.add_include_dir_option + self._build_paths.include_dir
         if self._build_paths.external_headers:
             includes += ' ' + self._cc.add_include_dir_option + self._build_paths.external_include_dir
@@ -1782,33 +1786,38 @@ class MakefileListsGenerator(object):
 
         is_fuzzer = obj_dir.find('fuzzer') != -1
 
-        if is_fuzzer:
-            for (obj_file, src) in zip(self._objectfile_list(sources, obj_dir), sources):
+        for (obj_file, src) in zip(objects, sources):
+            isa_specific_flags_str = "".join([" %s" % flagset for flagset in sorted(self._isa_specific_flags(src))])
 
-                yield '%s: %s $(LIBRARIES)\n\t$(CXX) %s $(%s_FLAGS) %s -L. -lbotan-2 $(FUZZER_LINKS_TO) %s$@\n' % (
-                    obj_file, src, includes, flags, src, self._cc.output_to_option)
-        else:
-            for (obj_file, src) in zip(self._objectfile_list(sources, obj_dir), sources):
-                isa_specific_flags_str = "".join([" %s" % flagset for flagset in sorted(self._isa_specific_flags(src))])
+            yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
+                obj_file, src, isa_specific_flags_str, flags,
+                includes, self._cc.compile_flags, src, self._cc.output_to_option)
 
-                yield '%s: %s\n\t$(CXX)%s $(%s_FLAGS) %s %s %s %s$@\n' % (
-                    obj_file, src, isa_specific_flags_str, flags,
-                    includes, self._cc.compile_flags, src, self._cc.output_to_option)
+            if is_fuzzer:
+                fuzz_basename = os.path.basename(obj_file).replace('.' + self._osinfo.obj_suffix, '')
+                fuzz_bin = self._build_paths.fuzzer_output_dir
+                yield '%s: %s $(LIBRARIES)\n\t$(FUZZER_LINK_CMD) %s $(FUZZER_LINKS_TO) %s$@\n' % (
+                    os.path.join(fuzz_bin, fuzz_basename), obj_file, obj_file, self._cc.output_to_option)
 
     def generate(self):
         out = {}
 
-        targets = ['lib', 'cli', 'test']
-        if self._options.build_fuzzers:
-            targets += ['fuzzer']
+        targets = ['lib', 'cli', 'test'] + \
+                  (['fuzzer'] if self._options.build_fuzzers else [])
 
         for t in targets:
-            obj_key = '%s_objs' % (t)
             src_list, src_dir = self._build_paths.src_info(t)
             src_list.sort()
-            out[obj_key] = makefile_list(self._objectfile_list(src_list, src_dir))
+            objects = sorted(self._objectfile_list(src_list, src_dir))
+
+            obj_key = '%s_objs' % (t)
+            out[obj_key] = makefile_list(objects)
+
+            if t == 'fuzzer':
+                out['fuzzer_bin'] = makefile_list(self._fuzzer_bin_list(objects, self._build_paths.fuzzer_output_dir))
+
             build_key = '%s_build_cmds' % (t)
-            out[build_key] = '\n'.join(self._build_commands(src_list, src_dir, t.upper()))
+            out[build_key] = '\n'.join(self._build_commands(src_list, src_dir, objects, t.upper()))
         return out
 
 
@@ -1897,6 +1906,8 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         main_executable = os.path.basename(sys.argv[0])
         return ' '.join([main_executable] + sys.argv[1:])
 
+    bin_link_cmd = cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd()
+
     variables = {
         'version_major':  Version.major,
         'version_minor':  Version.minor,
@@ -1938,7 +1949,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'libobj_dir': build_config.libobj_dir,
         'cliobj_dir': build_config.cliobj_dir,
         'testobj_dir': build_config.testobj_dir,
-        'fuzzobj_dir': build_config.fuzzer_output_dir if build_config.fuzzer_output_dir else '',
+        'fuzzobj_dir': build_config.fuzzobj_dir,
+
+        'fuzzer_output_dir': build_config.fuzzer_output_dir if build_config.fuzzer_output_dir else '',
 
         'doc_output_dir': build_config.doc_output_dir,
 
@@ -1966,9 +1979,9 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
         'lib_link_cmd': cc.so_link_command_for(osinfo.basename, options) + external_link_cmd(),
-        'cli_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
-        'test_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
-        'fuzzer_link_cmd': cc.binary_link_command_for(osinfo.basename, options) + external_link_cmd(),
+        'cli_link_cmd': bin_link_cmd,
+        'test_link_cmd': bin_link_cmd,
+        'fuzzer_link_cmd': bin_link_cmd,
 
         'link_to': ' '.join(
             [cc.add_lib_option + lib for lib in link_to('libs')] +
@@ -2055,6 +2068,17 @@ def create_template_vars(source_paths, build_config, options, modules, cc, arch,
         # 'botan' or 'botan-2'. Used in Makefile and install script
         # This can be made consistent over all platforms in the future
         variables['libname'] = 'botan-%d' % (Version.major)
+
+    if options.os == 'llvm':
+        # llvm-link doesn't understand -L or -l flags
+        variables['link_to_botan'] = '%s/lib%s.a' % (variables['out_dir'], variables['libname'])
+    elif options.compiler == 'msvc':
+        # Nmake makefiles do something completely different here...
+        variables['link_to_botan'] = ''
+    else:
+        variables['link_to_botan'] = '%s%s %s%s' % (
+            cc.add_lib_dir_option, variables['out_dir'],
+            cc.add_lib_option, variables['libname'])
 
     variables["header_in"] = process_template(os.path.join(source_paths.makefile_dir, 'header.in'), variables)
 
@@ -2910,8 +2934,13 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         raise UserError("--destdir was removed. Use the DESTDIR environment "
                         "variable instead when calling 'make install'")
 
-    # Warnings
+    if options.os == 'llvm' or options.cpu == 'llvm':
+        if options.compiler != 'clang':
+            raise UserError('LLVM target requires using Clang')
+        if options.os != options.cpu:
+            raise UserError('LLVM target requires both CPU and OS be set to llvm')
 
+    # Warnings
     if options.os == 'windows' and options.compiler == 'gcc':
         logging.warning('Detected GCC on Windows; use --os=cygwin or --os=mingw?')
 
@@ -3045,11 +3074,14 @@ def main(argv):
     source_paths = SourcePaths(os.path.dirname(argv[0]))
 
     if options.build_fuzzers != None:
-        if options.build_fuzzers not in ['libfuzzer', 'afl', 'test']:
+        if options.build_fuzzers not in ['libfuzzer', 'afl', 'klee', 'test']:
             raise UserError('Bad value to --build-fuzzers')
 
         if options.build_fuzzers == 'libfuzzer' and options.fuzzer_lib is None:
             options.fuzzer_lib = 'Fuzzer'
+
+        if options.build_fuzzers == 'klee' and options.os != 'llvm':
+            raise UserError('Building for KLEE requires targetting LLVM')
 
     info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
     info_arch = load_build_data_info_files(source_paths, 'CPU info', 'arch', ArchInfo)
