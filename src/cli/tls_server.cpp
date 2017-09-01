@@ -218,7 +218,7 @@ class TLS_Server final : public Command
                      }
                   catch(std::exception& e)
                      {
-                     std::cout << "Connection1 problem: " << e.what() << std::endl;
+                     std::cout << "Connection problem: " << e.what() << std::endl;
                      if(is_tcp)
                         {
                         ::close(fd);

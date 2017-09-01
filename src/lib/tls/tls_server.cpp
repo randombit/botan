@@ -205,6 +205,40 @@ uint16_t choose_ciphersuite(
             continue;
          }
 
+      if(version.supports_negotiable_signature_algorithms() && suite.sig_algo() != "")
+         {
+         const std::vector<std::pair<std::string, std::string>> client_sig_hash_pairs =
+            client_hello.supported_algos();
+
+         if(client_hello.supported_algos().empty() == false)
+            {
+            bool we_support_some_hash_by_client = false;
+
+            for(auto&& hash_and_sig : client_hello.supported_algos())
+               {
+               if(hash_and_sig.second == suite.sig_algo() &&
+                  policy.allowed_signature_hash(hash_and_sig.first))
+                  {
+                  we_support_some_hash_by_client = true;
+                  break;
+                  }
+               }
+
+            if(we_support_some_hash_by_client == false)
+               {
+               throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                   "Policy does not accept any hash function supported by client");
+               }
+            }
+         else
+            {
+            if(policy.allowed_signature_hash("SHA-1") == false)
+               throw TLS_Exception(Alert::HANDSHAKE_FAILURE,
+                                   "Client did not send signature_algorithms extension "
+                                   "and policy prohibits SHA-1 fallback");
+            }
+         }
+
 #if defined(BOTAN_HAS_SRP6)
       /*
       The client may offer SRP cipher suites in the hello message but
