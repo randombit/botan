@@ -205,7 +205,7 @@ uint16_t choose_ciphersuite(
             continue;
          }
 
-      if(version.supports_negotiable_signature_algorithms())
+      if(version.supports_negotiable_signature_algorithms() && suite.sig_algo() != "")
          {
          const std::vector<std::pair<std::string, std::string>> client_sig_hash_pairs =
             client_hello.supported_algos();
