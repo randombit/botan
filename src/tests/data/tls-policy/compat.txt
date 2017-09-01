@@ -1,0 +1,29 @@
+# There is no cooresponding type for this text policy but it is useful
+# for interop testing and fuzz testing
+
+# It is based on the default policy, but allows 3DES, SHA-1 signatures,
+# static RSA, and reduces the ephemeral key sizes
+
+allow_tls10 = true
+allow_tls11 = true
+allow_tls12 = true
+allow_dtls10 = false
+allow_dtls12 = false
+ciphers = ChaCha20Poly1305 AES-256/GCM AES-128/GCM AES-256 AES-128 3DES
+macs = AEAD SHA-256 SHA-384 SHA-1
+signature_hashes = SHA-512 SHA-384 SHA-256 SHA-1
+signature_methods = ECDSA RSA
+key_exchange_methods = CECPQ1 ECDH DH RSA
+ecc_curves = x25519 secp256r1 secp521r1 secp384r1 brainpool256r1 brainpool384r1 brainpool512r1
+allow_insecure_renegotiation = false
+include_time_in_hello_random = true
+allow_server_initiated_renegotiation = false
+hide_unknown_users = false
+server_uses_own_ciphersuite_preferences = true
+negotiate_encrypt_then_mac = true
+session_ticket_lifetime = 86400
+dh_group = modp/ietf/1024
+minimum_dh_group_size = 1024
+minimum_ecdh_group_size = 255
+minimum_rsa_bits = 1024
+minimum_signature_strength = 80

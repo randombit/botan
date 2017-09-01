@@ -109,13 +109,10 @@ class TLS_Server final : public Command
 
          Basic_Credentials_Manager creds(rng(), server_crt, server_key);
 
-         auto protocol_chooser = [](const std::vector<std::string>& protocols) -> std::string
+         auto protocol_chooser = [](const std::vector<std::string>&) -> std::string
             {
-            for(size_t i = 0; i != protocols.size(); ++i)
-               {
-               std::cout << "Client offered protocol " << i << " = " << protocols[i] << std::endl;
-               }
-            return "echo/1.0"; // too bad
+            // we ignore whatever the client sends here
+            return "echo/1.0";
             };
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;
@@ -149,8 +146,9 @@ class TLS_Server final : public Command
 
             using namespace std::placeholders;
 
-            auto socket_write = is_tcp ? std::bind(&stream_socket_write, fd, _1, _2) :
-                                std::bind(&dgram_socket_write, fd, _1, _2);
+            auto socket_write = is_tcp ?
+               std::bind(&TLS_Server::stream_socket_write, this, fd, _1, _2) :
+               std::bind(&TLS_Server::dgram_socket_write, this, fd, _1, _2);
 
             std::string s;
             std::list<std::string> pending_output;
@@ -192,13 +190,13 @@ class TLS_Server final : public Command
 
                      if(got == -1)
                         {
-                        std::cout << "Error in socket read - " << strerror(errno) << std::endl;
+                        error_output() << "Error in socket read - " << strerror(errno) << std::endl;
                         break;
                         }
 
                      if(got == 0)
                         {
-                        std::cout << "EOF on socket" << std::endl;
+                        error_output() << "EOF on socket" << std::endl;
                         break;
                         }
 
@@ -218,7 +216,7 @@ class TLS_Server final : public Command
                      }
                   catch(std::exception& e)
                      {
-                     std::cout << "Connection problem: " << e.what() << std::endl;
+                     error_output() << "Connection problem: " << e.what() << std::endl;
                      if(is_tcp)
                         {
                         ::close(fd);
@@ -275,37 +273,37 @@ class TLS_Server final : public Command
 
       bool handshake_complete(const Botan::TLS::Session& session)
          {
-         std::cout << "Handshake complete, " << session.version().to_string()
-                   << " using " << session.ciphersuite().to_string() << std::endl;
+         output() << "Handshake complete, " << session.version().to_string()
+                  << " using " << session.ciphersuite().to_string() << std::endl;
 
          if(!session.session_id().empty())
             {
-            std::cout << "Session ID " << Botan::hex_encode(session.session_id()) << std::endl;
+            output() << "Session ID " << Botan::hex_encode(session.session_id()) << std::endl;
             }
 
          if(!session.session_ticket().empty())
             {
-            std::cout << "Session ticket " << Botan::hex_encode(session.session_ticket()) << std::endl;
+            output() << "Session ticket " << Botan::hex_encode(session.session_ticket()) << std::endl;
             }
 
          return true;
          }
 
-      static void dgram_socket_write(int sockfd, const uint8_t buf[], size_t length)
+      void dgram_socket_write(int sockfd, const uint8_t buf[], size_t length)
          {
          ssize_t sent = ::send(sockfd, buf, length, MSG_NOSIGNAL);
 
          if(sent == -1)
             {
-            std::cout << "Error writing to socket - " << strerror(errno) << std::endl;
+            error_output() << "Error writing to socket - " << strerror(errno) << std::endl;
             }
          else if(sent != static_cast<ssize_t>(length))
             {
-            std::cout << "Packet of length " << length << " truncated to " << sent << std::endl;
+            error_output() << "Packet of length " << length << " truncated to " << sent << std::endl;
             }
          }
 
-      static void stream_socket_write(int sockfd, const uint8_t buf[], size_t length)
+      void stream_socket_write(int sockfd, const uint8_t buf[], size_t length)
          {
          while(length)
             {
@@ -330,7 +328,7 @@ class TLS_Server final : public Command
 
       void alert_received(Botan::TLS::Alert alert, const uint8_t[], size_t)
          {
-         std::cout << "Alert: " << alert.type_string() << std::endl;
+         output() << "Alert: " << alert.type_string() << std::endl;
          }
 
    };

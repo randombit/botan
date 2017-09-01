@@ -1,0 +1,17 @@
+<!-- This is a template for a config file for fuzzing with TLS-Attacker -->
+
+<startupCommandsHolder>
+    <serverCommand>$botan_cli </serverCommand>
+    <serverPort>$tls_port</serverPort>
+    <workflowFolder>$workflow_dir</workflowFolder>
+    <modifiedVariableTypes>TLS_CONSTANT,LENGTH,COUNT,PUBLIC_KEY,PADDING,SIGNATURE,PLAIN_PROTOCOL_MESSAGE</modifiedVariableTypes>
+    <outputFolder>/tmp/</outputFolder>
+    <startupCommandsList>
+        <startupCommands>
+            <fuzzerCommand>simple_fuzzer -connect localhost:$PORT</fuzzerCommand>
+            <serverCommandParameters>tls_server $rsa_cert $rsa_key --port=$PORT --policy=$fuzz_policy --output=/tmp/botan_output.log --error-output=/tmp/botan_error_output.log </serverCommandParameters>
+            <shortName>botan-rsa</shortName>
+        </startupCommands>
+        <!-- TODO ECDSA -->
+    </startupCommandsList>
+</startupCommandsHolder>
