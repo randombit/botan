@@ -159,6 +159,8 @@ CLI
 
 * Change `tls_server` to be a tty<->socket app, like `tls_client` is,
   instead of a bogus echo server.
+* Add a basic HTTP server mode to tls_server, as some tools like
+  https://github.com/tomato42/tlsfuzzer require this.
 * `encrypt` / `decrypt` tools providing password and/or public key
   based file encryption
 * Make help output more helpful
