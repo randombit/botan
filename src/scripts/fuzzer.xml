@@ -9,7 +9,7 @@
     <startupCommandsList>
         <startupCommands>
             <fuzzerCommand>simple_fuzzer -connect localhost:$PORT</fuzzerCommand>
-            <serverCommandParameters>tls_server $rsa_cert $rsa_key --port=$PORT --policy=$fuzz_policy --output=/tmp/botan_output.log --error-output=/tmp/botan_error_output.log </serverCommandParameters>
+            <serverCommandParameters>tls_server $rsa_cert $rsa_key --port=$PORT --policy=$fuzz_policy --dump-traces=/tmp/tls/ --output=/tmp/botan_output.log --error-output=/tmp/botan_error_output.log </serverCommandParameters>
             <shortName>botan-rsa</shortName>
         </startupCommands>
         <!-- TODO ECDSA -->

@@ -12,6 +12,7 @@
 
 #include <botan/tls_server.h>
 #include <botan/hex.h>
+#include <botan/internal/os_utils.h>
 #include "credentials.h"
 
 #include <list>
@@ -46,7 +47,7 @@ namespace Botan_CLI {
 class TLS_Server final : public Command
    {
    public:
-      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy=")
+      TLS_Server() : Command("tls_server cert key --port=443 --type=tcp --policy= --dump-traces=")
          {
 #if defined(BOTAN_TARGET_OS_IS_WINDOWS)
          WSAData wsa_data;
@@ -78,6 +79,7 @@ class TLS_Server final : public Command
          const std::string server_key = get_arg("key");
          const int port = get_arg_sz("port");
          const std::string transport = get_arg("type");
+         const std::string dump_traces_to = get_arg("dump-traces");
 
          if(transport != "tcp" && transport != "udp")
             {
@@ -179,6 +181,16 @@ class TLS_Server final : public Command
                protocol_chooser,
                !is_tcp);
 
+            std::unique_ptr<std::ostream> dump_stream;
+
+            if(!dump_traces_to.empty())
+               {
+               uint64_t timestamp = Botan::OS::get_high_resolution_clock();
+               const std::string dump_file =
+                  dump_traces_to + "/tls_" + std::to_string(timestamp) + ".bin";
+               dump_stream.reset(new std::ofstream(dump_file.c_str()));
+               }
+
             try
                {
                while(!server.is_closed())
@@ -187,6 +199,11 @@ class TLS_Server final : public Command
                      {
                      uint8_t buf[4 * 1024] = { 0 };
                      ssize_t got = ::read(fd, buf, sizeof(buf));
+
+                     if(dump_stream)
+                        {
+                        dump_stream->write(reinterpret_cast<const char*>(buf), got);
+                        }
 
                      if(got == -1)
                         {
