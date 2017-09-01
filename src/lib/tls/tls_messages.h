@@ -95,123 +95,49 @@ class BOTAN_DLL Client_Hello final : public Handshake_Message
 
       const std::vector<uint8_t>& session_id() const { return m_session_id; }
 
-      std::vector<uint16_t> ciphersuites() const { return m_suites; }
+      const std::vector<uint16_t>& ciphersuites() const { return m_suites; }
 
-      std::vector<uint8_t> compression_methods() const { return m_comp_methods; }
+      const std::vector<uint8_t>& compression_methods() const { return m_comp_methods; }
 
       bool offered_suite(uint16_t ciphersuite) const;
 
       bool sent_fallback_scsv() const;
 
-      std::vector<std::pair<std::string, std::string>> supported_algos() const
-         {
-         if(Signature_Algorithms* sigs = m_extensions.get<Signature_Algorithms>())
-            return sigs->supported_signature_algorthms();
-         return std::vector<std::pair<std::string, std::string>>();
-         }
+      std::vector<std::pair<std::string, std::string>> supported_algos() const;
 
-      std::set<std::string> supported_sig_algos() const
-         {
-         std::set<std::string> sig;
-         for(auto&& hash_and_sig : supported_algos())
-            sig.insert(hash_and_sig.second);
-         return sig;
-         }
+      std::set<std::string> supported_sig_algos() const;
 
-      std::vector<std::string> supported_ecc_curves() const
-         {
-         if(Supported_Elliptic_Curves* ecc = m_extensions.get<Supported_Elliptic_Curves>())
-            return ecc->curves();
-         return std::vector<std::string>();
-         }
+      std::vector<std::string> supported_ecc_curves() const;
 
-      bool prefers_compressed_ec_points() const
-         {
-         if(Supported_Point_Formats* ecc_formats = m_extensions.get<Supported_Point_Formats>())
-            {
-            return ecc_formats->prefers_compressed();
-            }
-         return false;
-         }
+      bool prefers_compressed_ec_points() const;
 
-      std::string sni_hostname() const
-         {
-         if(Server_Name_Indicator* sni = m_extensions.get<Server_Name_Indicator>())
-            return sni->host_name();
-         return "";
-         }
+      std::string sni_hostname() const;
 
 #if defined(BOTAN_HAS_SRP6)
-      std::string srp_identifier() const
-         {
-         if(SRP_Identifier* srp = m_extensions.get<SRP_Identifier>())
-            return srp->identifier();
-         return "";
-         }
+      std::string srp_identifier() const;
 #endif
 
-      bool secure_renegotiation() const
-         {
-         return m_extensions.has<Renegotiation_Extension>();
-         }
+      bool secure_renegotiation() const;
 
-      std::vector<uint8_t> renegotiation_info() const
-         {
-         if(Renegotiation_Extension* reneg = m_extensions.get<Renegotiation_Extension>())
-            return reneg->renegotiation_info();
-         return std::vector<uint8_t>();
-         }
+      std::vector<uint8_t> renegotiation_info() const;
 
-      bool supports_session_ticket() const
-         {
-         return m_extensions.has<Session_Ticket>();
-         }
+      bool supports_session_ticket() const;
 
-      std::vector<uint8_t> session_ticket() const
-         {
-         if(Session_Ticket* ticket = m_extensions.get<Session_Ticket>())
-            return ticket->contents();
-         return std::vector<uint8_t>();
-         }
+      std::vector<uint8_t> session_ticket() const;
 
-      bool supports_alpn() const
-         {
-         return m_extensions.has<Application_Layer_Protocol_Notification>();
-         }
+      bool supports_alpn() const;
 
-      bool supports_extended_master_secret() const
-         {
-         return m_extensions.has<Extended_Master_Secret>();
-         }
+      bool supports_extended_master_secret() const;
 
-      bool supports_cert_status_message() const
-         {
-         return m_extensions.has<Certificate_Status_Request>();
-         }
+      bool supports_cert_status_message() const;
 
-      bool supports_encrypt_then_mac() const
-         {
-         return m_extensions.has<Encrypt_then_MAC>();
-         }
+      bool supports_encrypt_then_mac() const;
 
-      bool sent_signature_algorithms() const
-         {
-         return m_extensions.has<Signature_Algorithms>();
-         }
+      bool sent_signature_algorithms() const;
 
-      std::vector<std::string> next_protocols() const
-         {
-         if(auto alpn = m_extensions.get<Application_Layer_Protocol_Notification>())
-            return alpn->protocols();
-         return std::vector<std::string>();
-         }
+      std::vector<std::string> next_protocols() const;
 
-      std::vector<uint16_t> srtp_profiles() const
-         {
-         if(SRTP_Protection_Profiles* srtp = m_extensions.get<SRTP_Protection_Profiles>())
-            return srtp->profiles();
-         return std::vector<uint16_t>();
-         }
+      std::vector<uint16_t> srtp_profiles() const;
 
       void update_hello_cookie(const Hello_Verify_Request& hello_verify);
 

@@ -306,6 +306,117 @@ bool Client_Hello::offered_suite(uint16_t ciphersuite) const
    return false;
    }
 
+std::vector<std::pair<std::string, std::string>> Client_Hello::supported_algos() const
+   {
+   if(Signature_Algorithms* sigs = m_extensions.get<Signature_Algorithms>())
+      return sigs->supported_signature_algorthms();
+   return std::vector<std::pair<std::string, std::string>>();
+   }
+
+std::set<std::string> Client_Hello::supported_sig_algos() const
+   {
+   std::set<std::string> sig;
+   for(auto&& hash_and_sig : supported_algos())
+      sig.insert(hash_and_sig.second);
+   return sig;
+   }
+
+std::vector<std::string> Client_Hello::supported_ecc_curves() const
+   {
+   if(Supported_Elliptic_Curves* ecc = m_extensions.get<Supported_Elliptic_Curves>())
+      return ecc->curves();
+   return std::vector<std::string>();
+   }
+
+bool Client_Hello::prefers_compressed_ec_points() const
+   {
+   if(Supported_Point_Formats* ecc_formats = m_extensions.get<Supported_Point_Formats>())
+      {
+      return ecc_formats->prefers_compressed();
+      }
+   return false;
+   }
+
+std::string Client_Hello::sni_hostname() const
+   {
+   if(Server_Name_Indicator* sni = m_extensions.get<Server_Name_Indicator>())
+      return sni->host_name();
+   return "";
+   }
+
+#if defined(BOTAN_HAS_SRP6)
+std::string Client_Hello::srp_identifier() const
+   {
+   if(SRP_Identifier* srp = m_extensions.get<SRP_Identifier>())
+      return srp->identifier();
+   return "";
+   }
+#endif
+
+bool Client_Hello::secure_renegotiation() const
+   {
+   return m_extensions.has<Renegotiation_Extension>();
+   }
+
+std::vector<uint8_t> Client_Hello::renegotiation_info() const
+   {
+   if(Renegotiation_Extension* reneg = m_extensions.get<Renegotiation_Extension>())
+      return reneg->renegotiation_info();
+   return std::vector<uint8_t>();
+   }
+
+bool Client_Hello::supports_session_ticket() const
+   {
+   return m_extensions.has<Session_Ticket>();
+   }
+
+std::vector<uint8_t> Client_Hello::session_ticket() const
+   {
+   if(Session_Ticket* ticket = m_extensions.get<Session_Ticket>())
+      return ticket->contents();
+   return std::vector<uint8_t>();
+   }
+
+bool Client_Hello::supports_alpn() const
+   {
+   return m_extensions.has<Application_Layer_Protocol_Notification>();
+   }
+
+bool Client_Hello::supports_extended_master_secret() const
+   {
+   return m_extensions.has<Extended_Master_Secret>();
+   }
+
+bool Client_Hello::supports_cert_status_message() const
+   {
+   return m_extensions.has<Certificate_Status_Request>();
+   }
+
+bool Client_Hello::supports_encrypt_then_mac() const
+   {
+   return m_extensions.has<Encrypt_then_MAC>();
+   }
+
+bool Client_Hello::sent_signature_algorithms() const
+   {
+   return m_extensions.has<Signature_Algorithms>();
+   }
+
+std::vector<std::string> Client_Hello::next_protocols() const
+   {
+   if(auto alpn = m_extensions.get<Application_Layer_Protocol_Notification>())
+      return alpn->protocols();
+   return std::vector<std::string>();
+   }
+
+std::vector<uint16_t> Client_Hello::srtp_profiles() const
+   {
+   if(SRTP_Protection_Profiles* srtp = m_extensions.get<SRTP_Protection_Profiles>())
+      return srtp->profiles();
+   return std::vector<uint16_t>();
+   }
+
+
 }
 
 }
