@@ -1,6 +1,6 @@
 /*
 * (C) 2015 Jack Lloyd
-* (C) 2016 René Korthaus
+* (C) 2016,2017 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -1265,46 +1265,50 @@ class FFI_Unit_Tests : public Test
             botan_pk_op_sign_t signer;
 
             std::vector<uint8_t> message(6, 6);
-            std::vector<uint8_t> signature(20 * 2);
+            std::vector<uint8_t> signature;
 
-            if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, loaded_privkey, "EMSA1(SHA-256)", 0)))
+            for(const auto& flag : { 0, BOTAN_SIGNATURE_FORMAT_IEEE_1363, BOTAN_SIGNATURE_FORMAT_DER_SEQUENCE } )
                {
-               // TODO: break input into multiple calls to update
-               TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
+               if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, loaded_privkey, "EMSA1(SHA-256)", flag)))
+                  {
+                  // TODO: break input into multiple calls to update
+                  TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
+                  size_t sig_len = 0;
+                  TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pk_op_sign_finish, (signer, rng, nullptr, &sig_len));
+                  signature.resize(sig_len);
 
-               signature.resize(20 * 2); // TODO: no way to derive this from API
-               size_t sig_len = signature.size();
-               TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
-               signature.resize(sig_len);
+                  // have to feed message again
+                  TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
+                  TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
+                  TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
+                  }
 
-               TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
-               }
+               botan_pk_op_verify_t verifier;
 
-            botan_pk_op_verify_t verifier;
+               if(TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-256)", flag)))
+                  {
+                  TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+                  TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
-            if(TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-256)", 0)))
-               {
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+                  // TODO: randomize this
+                  signature[0] ^= 1;
+                  TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+                  TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
-               // TODO: randomize this
-               signature[0] ^= 1;
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+                  message[0] ^= 1;
+                  TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+                  TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
-               message[0] ^= 1;
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+                  signature[0] ^= 1;
+                  TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+                  TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
-               signature[0] ^= 1;
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+                  message[0] ^= 1;
+                  TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+                  TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
-               message[0] ^= 1;
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-               TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
-
-               TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
+                  TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
+                  }
                }
 
             TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
@@ -1351,44 +1355,49 @@ class FFI_Unit_Tests : public Test
          std::vector<uint8_t> message(1280), signature;
          TEST_FFI_OK(botan_rng_get, (rng, message.data(), message.size()));
          botan_pk_op_sign_t signer;
-         if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, loaded_privkey, "EMSA1(SHA-384)", 0)))
+
+         for(const auto& flag : { 0, BOTAN_SIGNATURE_FORMAT_IEEE_1363, BOTAN_SIGNATURE_FORMAT_DER_SEQUENCE } )
             {
-            // TODO: break input into multiple calls to update
-            TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
+            if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, loaded_privkey, "EMSA1(SHA-384)", flag)))
+               {
+               // TODO: break input into multiple calls to update
+               TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
+               size_t sig_len = 0;
+               TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_pk_op_sign_finish, (signer, rng, nullptr, &sig_len));
+               signature.resize(sig_len);
 
-            signature.resize(96); // TODO: no way to derive this from API
-            size_t sig_len = signature.size();
-            TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
-            signature.resize(sig_len);
+               // have to feed message again
+               TEST_FFI_OK(botan_pk_op_sign_update, (signer, message.data(), message.size()));
+               TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
+               TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
+               }
 
-            TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
-            }
+            botan_pk_op_verify_t verifier;
 
-         botan_pk_op_verify_t verifier;
+            if(TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-384)", flag)))
+               {
+               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+               TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
-         if(TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "EMSA1(SHA-384)", 0)))
-            {
-            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-            TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+               // TODO: randomize this
+               signature[0] ^= 1;
+               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+               TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
-            // TODO: randomize this
-            signature[0] ^= 1;
-            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-            TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+               message[0] ^= 1;
+               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+               TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
-            message[0] ^= 1;
-            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-            TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+               signature[0] ^= 1;
+               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+               TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
-            signature[0] ^= 1;
-            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-            TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+               message[0] ^= 1;
+               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
+               TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
 
-            message[0] ^= 1;
-            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message.data(), message.size()));
-            TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
-
-            TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
+               TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
+               }
             }
 
          TEST_FFI_OK(botan_mp_destroy, (private_scalar));

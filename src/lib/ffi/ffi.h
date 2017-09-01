@@ -1015,6 +1015,9 @@ BOTAN_PUBLIC_API(2,0) int botan_pk_op_decrypt(botan_pk_op_decrypt_t op,
                                   uint8_t out[], size_t* out_len,
                                   const uint8_t ciphertext[], size_t ciphertext_len);
 
+#define BOTAN_SIGNATURE_FORMAT_IEEE_1363 0
+#define BOTAN_SIGNATURE_FORMAT_DER_SEQUENCE 1
+
 /*
 * Signature Generation
 */
