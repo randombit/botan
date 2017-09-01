@@ -2,7 +2,7 @@
 
 """
 Python wrapper of the botan crypto library
-http://botan.randombit.net
+https://botan.randombit.net
 
 (C) 2015,2017 Jack Lloyd
 (C) 2015 Uri  Blumenthal (extensions and patches)

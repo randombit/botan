@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 """
-Release script for botan (http://botan.randombit.net/)
+Release script for botan (https://botan.randombit.net/)
 
 (C) 2011, 2012, 2013, 2015, 2016 Jack Lloyd
 

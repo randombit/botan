@@ -40,7 +40,7 @@ Botan::X509_Cert_Options ca_opts()
    {
    Botan::X509_Cert_Options opts("Test CA/US/Botan Project/Testing");
 
-   opts.uri = "http://botan.randombit.net";
+   opts.uri = "https://botan.randombit.net";
    opts.dns = "botan.randombit.net";
    opts.email = "testing@randombit.net";
 
@@ -53,7 +53,7 @@ Botan::X509_Cert_Options req_opts1(const std::string& algo)
    {
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
 
-   opts.uri = "http://botan.randombit.net";
+   opts.uri = "https://botan.randombit.net";
    opts.dns = "botan.randombit.net";
    opts.email = "testing@randombit.net";
 
@@ -78,7 +78,7 @@ Botan::X509_Cert_Options req_opts2()
    {
    Botan::X509_Cert_Options opts("Test User 2/US/Botan Project/Testing");
 
-   opts.uri = "http://botan.randombit.net";
+   opts.uri = "https://botan.randombit.net";
    opts.dns = "botan.randombit.net";
    opts.email = "testing@randombit.net";
 

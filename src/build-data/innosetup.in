@@ -5,7 +5,7 @@ AppName=Botan
 AppVerName=Botan %{version}
 
 AppPublisher=Jack Lloyd
-AppPublisherURL=http://botan.randombit.net/
+AppPublisherURL=https://botan.randombit.net/
 AppVersion=%{version}
 
 VersionInfoCopyright=Copyright (C) 1999-2012 Jack Lloyd and others
