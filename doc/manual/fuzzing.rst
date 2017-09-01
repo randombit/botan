@@ -46,6 +46,24 @@ run under `afl-fuzz`::
 
   $ afl-fuzz -i corpus_path -o output_path ./build/fuzzer/binary
 
+Fuzzing with TLS-Attacker
+--------------------------
+
+TLS-Attacker (https://github.com/RUB-NDS/TLS-Attacker) includes a mode for fuzzing
+TLS servers. A prebuilt copy of TLS-Attacker is available in a git repo::
+
+  $ git clone --depth 1 https://github.com/randombit/botan-ci-tools.git
+
+To run it against Botan's server::
+
+  $ ./configure.py --with-sanitizers
+  $ make botan
+  $ ./src/scripts/run_tls_fuzzer.py ./botan ./botan-ci-tools
+
+Output and logs from the fuzzer are placed into `/tmp`. See the
+TLS-Attacker documentation for more information about how to use this
+tool.
+
 Input Corpus
 -----------------------
 
