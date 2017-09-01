@@ -25,15 +25,6 @@ def get_concurrency():
     except ImportError:
         return def_concurrency
 
-def getenv_or_die(var):
-    """
-    Like it says...
-    """
-    val = os.getenv(var)
-    if val is None:
-        raise Exception('Required variable %s not set in environment' % (var))
-    return val
-
 def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
     # pylint: disable=too-many-branches,too-many-statements,too-many-arguments
 
@@ -110,7 +101,7 @@ def determine_flags(target, target_os, target_cc, cc_bin, use_ccache, root_dir):
                        '--out-dir', 'bw-outputs']
         test_cmd = ['sonar-scanner',
                     '-Dproject.settings=%s' % (os.path.join(root_dir, 'src', 'build-data', 'sonar-project.properties')),
-                    '-Dsonar.login=%s' % (getenv_or_die('SONAR_TOKEN'))]
+                    '-Dsonar.login=%s' % (os.getenv('SONAR_TOKEN'))]
 
     if is_cross_target:
         if target_os == 'ios':
@@ -282,6 +273,10 @@ def main(args=None):
             return 1
 
     target = args[1]
+
+    if target == 'sonar' and os.getenv('SONAR_TOKEN') is None:
+        print('Skipping Sonar scan due to missing SONAR_TOKEN env variable')
+        return 0
 
     root_dir = options.root_dir
 
