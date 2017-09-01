@@ -1,79 +1,56 @@
-# Let's call MSVS 2015 the default compiler, 64 bit the default architecture,
+# Let's call MSVS 2017 the default compiler, 64 bit the default architecture,
 # release the default configuration and --enable-shared the default mode.
 #
 # Build jobs
 #  1. six basic builds: 32/64bit on MSVS2013/2015/2017
-#  2. add static lib and amalgamation
-#  3. add a debug build on MSVS2013/2015
+#  2. add static lib, amalgamation and debug on MSVC2017
 #
 # Note: Avoid the AppVeyor settings `platform` and `configuration` since excluding
 # from the build matrix is not supported (https://github.com/appveyor/ci/issues/386)
+
+clone_depth: 5
 
 environment:
   matrix:
     # 1
     - MSVS: 2013
       PLATFORM: x86
-      CONFIG:
-      MODE:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - MSVS: 2013
       PLATFORM: x86_amd64
-      CONFIG:
-      MODE:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - MSVS: 2015
       PLATFORM: x86
-      CONFIG:
-      MODE:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - MSVS: 2015
       PLATFORM: x86_amd64
-      CONFIG:
-      MODE:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     - MSVS: 2017
       PLATFORM: x86
-      CONFIG:
-      MODE:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     - MSVS: 2017
       PLATFORM: x86_amd64
-      CONFIG:
-      MODE:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
     # 2
-    - MSVS:
-      PLATFORM:
-      CONFIG:
-      MODE: --disable-shared
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    - MSVS:
-      PLATFORM:
-      CONFIG:
-      MODE: --amalgamation
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    - MSVS: 2017
+      PLATFORM: x86_amd64
+      CONFIG: --disable-shared
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    - MSVS: 2017
+      PLATFORM: x86_amd64
+      CONFIG: --amalgamation
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
     # 3
-    - MSVS: 2013
-      PLATFORM:
-      CONFIG: Debug
-      MODE:
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    - MSVS: 2015
-      PLATFORM:
-      CONFIG: Debug
-      MODE:
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    - MSVS: 2017
+      PLATFORM: x86_amd64
+      CONFIG: --with-debug
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
 install:
-  # Set defaults
-  - if [%MSVS%] == [] set MSVS=2015
-  - if [%PLATFORM%] == [] set PLATFORM=x86_amd64
-  - if [%CONFIG%] == [] set CONFIG=Release
-  - if [%MODE%] == [] set MODE=--enable-shared
-
   # Check setup
-  - echo Current build setup MSVS="%MSVS%" PLATFORM="%PLATFORM%" CONFIG="%CONFIG%" MODE="%MODE%"
+  - echo Current build setup MSVS="%MSVS%" PLATFORM="%PLATFORM%" CONFIG="%CONFIG%"
 
   # Choose compiler
   - if %MSVS% == 2013 (
@@ -86,18 +63,12 @@ install:
        call "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %PLATFORM%
     )
   - cl # check compiler version
-  
   - appveyor DownloadFile http://download.qt.io/official_releases/jom/jom.zip -FileName jom.zip
   - 7z e jom.zip
 
 build_script:
-  - if %CONFIG% == Release (
-       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE%
-    )
-  - if %CONFIG% == Debug (
-       python configure.py --cc=msvc --cpu=%PLATFORM% %MODE% --debug-mode
-    )
-  - jom -j2
+  - python configure.py --cc=msvc --cpu=%PLATFORM% %CONFIG%
+  - jom -j3
   - botan-test
   - nmake install
 
@@ -105,3 +76,4 @@ build_script:
 branches:
   only:
     - master
+    - release-2
