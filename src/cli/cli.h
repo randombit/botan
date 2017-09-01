@@ -215,9 +215,9 @@ class Command
                m_output_stream.reset(new std::ofstream(get_arg("output"), std::ios::binary));
                }
 
-            if(m_user_args.count("error_output"))
+            if(m_user_args.count("error-output"))
                {
-               m_error_output_stream.reset(new std::ofstream(get_arg("error_output"), std::ios::binary));
+               m_error_output_stream.reset(new std::ofstream(get_arg("error-output"), std::ios::binary));
                }
 
             // Now insert any defaults for options not supplied by the user
@@ -253,7 +253,7 @@ class Command
       virtual std::string help_text() const
          {
          return "Usage: " + m_spec +
-            "\n\nAll commands support --verbose --help --output= --error-output --rng-type= --drbg-seed=";
+            "\n\nAll commands support --verbose --help --output= --error-output= --rng-type= --drbg-seed=";
          }
 
       const std::string& cmd_spec() const
