@@ -42,4 +42,3 @@ cortex-a9 -> armv7-a
 <isa_extensions>
 neon
 </isa_extensions>
-
