@@ -23,7 +23,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
          # Need updated qemu
          sudo add-apt-repository -y ppa:ubuntu-cloud-archive/kilo-staging
          sudo apt-get -qq update
-         sudo apt-get install qemu-user-static
+         sudo apt-get install qemu-user
 
          if [ "$BUILD_MODE" = "cross-arm32" ]; then
              sudo apt-get install g++-arm-linux-gnueabihf libc6-dev-armhf-cross
