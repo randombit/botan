@@ -6,7 +6,8 @@
 */
 
 #include <botan/pipe.h>
-#include <iostream>
+#include <istream>
+#include <ostream>
 
 namespace Botan {
 

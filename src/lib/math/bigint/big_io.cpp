@@ -6,7 +6,8 @@
 */
 
 #include <botan/bigint.h>
-#include <iostream>
+#include <istream>
+#include <ostream>
 
 namespace Botan {
 
