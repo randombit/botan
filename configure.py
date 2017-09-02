@@ -271,6 +271,12 @@ def process_command_line(args): # pylint: disable=too-many-locals
     target_group.add_option('--cc', dest='compiler',
                             help='set the desired build compiler')
 
+    target_group.add_option('--cc-version', dest='cc_version', default=None,
+                            metavar='MAYOR.MINOR',
+                            help='Set the target build compiler version. ' \
+                                 'This is the minimal compiler version required by the configuration. ' \
+                                 'Use --cc-version=0.0 to support all versions. Default is auto detection.')
+
     target_group.add_option('--cc-bin', dest='compiler_binary',
                             metavar='BINARY',
                             help='set path to compiler binary')
@@ -2720,9 +2726,7 @@ class CompilerDetector(object):
                                     (apple_clang_version))
                     cc_version = '3.8' # safe default
 
-        if cc_version:
-            logging.info('Detected %s compiler version %s' % (self._cc_name, cc_version))
-        else:
+        if not cc_version:
             logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (
                 self._cc_name, cc_output))
 
@@ -2907,6 +2911,8 @@ def canonicalize_options(options, info_os, info_arch):
 # This method DOES NOT change options on behalf of the user but explains
 # why the given configuration does not work.
 def validate_options(options, info_os, info_cc, available_module_policies):
+    # pylint: disable=too-many-branches
+
     if options.gen_amalgamation:
         raise UserError("--gen-amalgamation was removed. Migrate to --amalgamation.")
 
@@ -2926,6 +2932,9 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.compiler not in info_cc:
         raise UserError('Unknown compiler "%s"; available options: %s' % (
             options.compiler, ' '.join(sorted(info_cc.keys()))))
+
+    if options.cc_version is not None and not re.match(r'^[0-9]+\.[0-9]+$', options.cc_version):
+        raise UserError("--cc-version must have the format MAYOR.MINOR")
 
     if options.module_policy and options.module_policy not in available_module_policies:
         raise UserError("Unknown module set %s" % options.module_policy)
@@ -2964,6 +2973,23 @@ def prepare_configure_build(info_modules, source_paths, options,
 
     return using_mods, build_config, template_vars, makefile_template
 
+
+def calculate_cc_version(options, cc, osinfo):
+    if options.cc_version:
+        return options.cc_version
+    else:
+        cc_version = CompilerDetector(
+            cc.basename,
+            options.compiler_binary or cc.binary_name,
+            osinfo.basename
+        ).get_version()
+        if cc_version:
+            logging.info('Auto-detected compiler version %s' % (cc_version))
+            return cc_version
+        else:
+            logging.warning("Auto-detected compiler version failed. " \
+                            "Use --cc-version to set manually. Falling back to version 0.0")
+            return "0.0"
 
 def main_action_configure_build(info_modules, source_paths, options,
                                 cc, cc_version, arch, osinfo, module_policy):
@@ -3105,19 +3131,14 @@ def main(argv):
     canonicalize_options(options, info_os, info_arch)
     validate_options(options, info_os, info_cc, info_module_policies)
 
-    logging.info('Target is %s-%s-%s-%s' % (
-        options.compiler, options.os, options.arch, options.cpu))
-
     cc = info_cc[options.compiler]
     arch = info_arch[options.arch]
     osinfo = info_os[options.os]
     module_policy = info_module_policies[options.module_policy] if options.module_policy else None
+    cc_version = calculate_cc_version(options, cc, osinfo)
 
-    cc_version = CompilerDetector(
-        cc.basename,
-        options.compiler_binary or cc.binary_name,
-        osinfo.basename
-    ).get_version()
+    logging.info('Target is %s:%s-%s-%s-%s' % (
+        options.compiler, cc_version, options.os, options.arch, options.cpu))
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
