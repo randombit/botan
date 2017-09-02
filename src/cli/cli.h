@@ -417,25 +417,42 @@ class Command
       /*
       * Read an entire file into memory and return the contents
       */
-      std::vector<uint8_t> slurp_file(const std::string& input_file) const
+      std::vector<uint8_t> slurp_file(const std::string& input_file,
+                                      size_t buf_size = 0) const
          {
          std::vector<uint8_t> buf;
          auto insert_fn = [&](const uint8_t b[], size_t l)
             {
             buf.insert(buf.end(), b, b + l);
             };
-         this->read_file(input_file, insert_fn);
+         this->read_file(input_file, insert_fn, buf_size);
          return buf;
          }
 
-      std::string slurp_file_as_str(const std::string& input_file)
+      /*
+      * Read an entire file into memory and return the contents
+      */
+      Botan::secure_vector<uint8_t> slurp_file_locked(const std::string& input_file,
+                                                      size_t buf_size = 0) const
+         {
+         Botan::secure_vector<uint8_t> buf;
+         auto insert_fn = [&](const uint8_t b[], size_t l)
+            {
+            buf.insert(buf.end(), b, b + l);
+            };
+         this->read_file(input_file, insert_fn, buf_size);
+         return buf;
+         }
+
+      std::string slurp_file_as_str(const std::string& input_file,
+                                    size_t buf_size = 0) const
          {
          std::string str;
          auto insert_fn = [&](const uint8_t b[], size_t l)
             {
             str.append(reinterpret_cast<const char*>(b), l);
             };
-         this->read_file(input_file, insert_fn);
+         this->read_file(input_file, insert_fn, buf_size);
          return str;
          }
 
@@ -471,7 +488,8 @@ class Command
          while(in.good())
             {
             in.read(reinterpret_cast<char*>(buf.data()), buf.size());
-            consumer_fn(buf.data(), static_cast<size_t>(in.gcount()));
+            const size_t got = static_cast<size_t>(in.gcount());
+            consumer_fn(buf.data(), got);
             }
          }
 

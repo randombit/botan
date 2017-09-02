@@ -11,7 +11,6 @@
 #include <botan/aes.h>
 #include <botan/aead.h>
 
-#include <iostream>
 #include <iterator>
 #include <sstream>
 
@@ -75,29 +74,12 @@ secure_vector<byte> do_crypt(const std::string &cipher,
    return buf;
    }
 
-secure_vector<byte> get_stdin()
-   {
-   secure_vector<byte> out;
-   std::streamsize reserved_size = 1048576; // 1 MiB
-   out.reserve(reserved_size);
-
-   std::istreambuf_iterator<char> iterator(std::cin.rdbuf()); // stdin iterator
-   std::istreambuf_iterator<char> EOS;                    // end-of-range iterator
-   std::copy(iterator, EOS, std::back_inserter(out));
-   return out;
-   }
-
-void to_stdout(const secure_vector<byte> &data)
-   {
-   std::copy(data.begin(), data.end(), std::ostreambuf_iterator<char>(std::cout));
-   }
-
 }
 
 class Encryption : public Command
    {
    public:
-      Encryption() : Command("encryption --decrypt --mode= --key= --iv= --ad=") {}
+      Encryption() : Command("encryption --buf-size=4096 --decrypt --mode= --key= --iv= --ad=") {}
 
       void go() override
          {
@@ -112,14 +94,16 @@ class Encryption : public Command
             throw CLI_Usage_Error(error.str());
             }
 
-         std::string key_hex = get_arg("key");
-         std::string iv_hex  = get_arg("iv");
-         std::string ad_hex  = get_arg_or("ad", "");
+         const std::string key_hex = get_arg("key");
+         const std::string iv_hex  = get_arg("iv");
+         const std::string ad_hex  = get_arg_or("ad", "");
+         const size_t buf_size = get_arg_sz("buf-size");
 
-         auto input = get_stdin();
+         Botan::secure_vector<uint8_t> input = this->slurp_file_locked("-", buf_size);
+
          if (verbose())
             {
-            std::cerr << "Got " << input.size() << " bytes of input data." << std::endl;
+            error_output() << "Got " << input.size() << " bytes of input data.\n";
             }
 
          auto key = SymmetricKey(key_hex);
@@ -127,8 +111,8 @@ class Encryption : public Command
          auto ad = OctetString(ad_hex);
 
          auto direction = flag_set("decrypt") ? Cipher_Dir::DECRYPTION : Cipher_Dir::ENCRYPTION;
-         auto out = do_crypt(VALID_MODES[mode], input, key, iv, ad, direction);
-         to_stdout(out);
+         auto data = do_crypt(VALID_MODES[mode], input, key, iv, ad, direction);
+         std::copy(data.begin(), data.end(), std::ostreambuf_iterator<char>(output()));
          }
    };
 

@@ -10,7 +10,6 @@
 #include <botan/pkcs8.h>
 #include <botan/credentials_manager.h>
 #include <botan/x509self.h>
-#include <iostream>
 #include <fstream>
 #include <memory>
 

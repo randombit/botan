@@ -18,20 +18,12 @@
 #include <botan/pem.h>
 #include <botan/charset.h>
 
-#include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <ctype.h>
 
 // Set this if your terminal understands UTF-8; otherwise output is in Latin-1
 #define UTF8_TERMINAL 1
-
-/*
-   What level the outermost layer of stuff is at. Probably 0 or 1; asn1parse
-   uses 0 as the outermost, while 1 makes more sense to me. 2+ doesn't make
-   much sense at all.
-*/
-#define INITIAL_LEVEL 0
 
 namespace Botan_CLI {
 
@@ -65,17 +57,21 @@ std::string url_encode(const std::vector<uint8_t>& in)
    return out.str();
    }
 
-void emit(const std::string& type, size_t level, size_t length, const std::string& value = "")
+void emit(std::ostream& out,
+          const std::string& type,
+          size_t level, size_t length,
+          const std::string& value = "")
    {
+   // TODO make these configurable
    const size_t LIMIT = 4 * 1024;
    const size_t BIN_LIMIT = 1024;
 
-   std::ostringstream out;
+   std::streampos starting_pos = out.tellp();
 
    out << "  d=" << std::setw(2) << level
        << ", l=" << std::setw(4) << length << ": ";
 
-   for(size_t i = INITIAL_LEVEL; i != level; ++i)
+   for(size_t i = 0; i != level; ++i)
       {
       out << ' ';
       }
@@ -96,12 +92,7 @@ void emit(const std::string& type, size_t level, size_t length, const std::strin
 
    if(value != "" && !should_skip)
       {
-      if(out.tellp() % 2 == 0)
-         {
-         out << ' ';
-         }
-
-      while(out.tellp() < 50)
+      while(out.tellp() - starting_pos < 50)
          {
          out << ' ';
          }
@@ -109,7 +100,7 @@ void emit(const std::string& type, size_t level, size_t length, const std::strin
       out << value;
       }
 
-   std::cout << out.str() << std::endl;
+   out << "\n";
    }
 
 std::string type_name(Botan::ASN1_Tag type)
@@ -169,7 +160,9 @@ std::string type_name(Botan::ASN1_Tag type)
       }
    }
 
-void decode(Botan::BER_Decoder& decoder, size_t level)
+void decode(std::ostream& output,
+            Botan::BER_Decoder& decoder,
+            size_t level)
    {
    Botan::BER_Object obj = decoder.get_next_object();
 
@@ -192,13 +185,13 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
          Botan::BER_Decoder cons_info(obj.value);
          if(type_tag == Botan::SEQUENCE)
             {
-            emit("SEQUENCE", level, length);
-            decode(cons_info, level + 1);
+            emit(output, "SEQUENCE", level, length);
+            decode(output, cons_info, level + 1); // recurse
             }
          else if(type_tag == Botan::SET)
             {
-            emit("SET", level, length);
-            decode(cons_info, level + 1);
+            emit(output, "SET", level, length);
+            decode(output, cons_info, level + 1); // recurse
             }
          else
             {
@@ -222,27 +215,27 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
                name = type_name(type_tag) + " (cons)";
                }
 
-            emit(name, level, length);
-            decode(cons_info, level + 1);
+            emit(output, name, level, length);
+            decode(output, cons_info, level + 1); // recurse
             }
          }
       else if((class_tag & Botan::APPLICATION) || (class_tag & Botan::CONTEXT_SPECIFIC))
          {
 #if 0
          std::vector<uint8_t> bits;
-         data.decode(bits, type_tag);
+         data.decode(out, bits, type_tag);
 
          try
             {
             Botan::BER_Decoder inner(bits);
-            decode(inner, level + 1);
+            decode(output, inner, level + 1); // recurse
             }
          catch(...)
             {
-            emit("[" + std::to_string(type_tag) + "]", level, length, url_encode(bits));
+            emit(output, "[" + std::to_string(type_tag) + "]", level, length, url_encode(bits));
             }
 #else
-         emit("[" + std::to_string(type_tag) + "]", level, length, url_encode(bits));
+         emit(output, "[" + std::to_string(type_tag) + "]", level, length, url_encode(bits));
 #endif
          }
       else if(type_tag == Botan::OBJECT_ID)
@@ -256,7 +249,7 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
             out += " [" + oid.as_string() + "]";
             }
 
-         emit(type_name(type_tag), level, length, out);
+         emit(output, type_name(type_tag), level, length, out);
          }
       else if(type_tag == Botan::INTEGER || type_tag == Botan::ENUMERATED)
          {
@@ -289,17 +282,17 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
             str += static_cast<char>(rep[i]);
             }
 
-         emit(type_name(type_tag), level, length, str);
+         emit(output, type_name(type_tag), level, length, str);
          }
       else if(type_tag == Botan::BOOLEAN)
          {
          bool boolean;
          data.decode(boolean);
-         emit(type_name(type_tag), level, length, (boolean ? "true" : "false"));
+         emit(output, type_name(type_tag), level, length, (boolean ? "true" : "false"));
          }
       else if(type_tag == Botan::NULL_TAG)
          {
-         emit(type_name(type_tag), level, length);
+         emit(output, type_name(type_tag), level, length);
          }
       else if(type_tag == Botan::OCTET_STRING)
          {
@@ -309,11 +302,11 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
          try
             {
             Botan::BER_Decoder inner(decoded_bits);
-            decode(inner, level + 1);
+            decode(output, inner, level + 1);
             }
          catch(...)
             {
-            emit(type_name(type_tag), level, length, url_encode(decoded_bits));
+            emit(output, type_name(type_tag), level, length, url_encode(decoded_bits));
             }
          }
       else if(type_tag == Botan::BIT_STRING)
@@ -344,7 +337,7 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
             bit_str += (the_bit ? "1" : "0");
             }
 
-         emit(type_name(type_tag), level, length, bit_str);
+         emit(output, type_name(type_tag), level, length, bit_str);
          }
       else if(type_tag == Botan::PRINTABLE_STRING ||
               type_tag == Botan::NUMERIC_STRING ||
@@ -358,32 +351,38 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
          data.decode(str);
          if(UTF8_TERMINAL)
             {
-            emit(type_name(type_tag), level, length,
+            emit(output, type_name(type_tag), level, length,
                  Botan::Charset::transcode(str.iso_8859(),
                                            Botan::UTF8_CHARSET,
                                            Botan::LATIN1_CHARSET));
             }
          else
             {
-            emit(type_name(type_tag), level, length, str.iso_8859());
+            emit(output, type_name(type_tag), level, length, str.iso_8859());
             }
          }
       else if(type_tag == Botan::UTC_TIME || type_tag == Botan::GENERALIZED_TIME)
          {
          Botan::X509_Time time;
          data.decode(time);
-         emit(type_name(type_tag), level, length, time.readable_string());
+         emit(output, type_name(type_tag), level, length, time.readable_string());
          }
       else
          {
-         std::cout << "Unknown ASN.1 tag class="
-                   << static_cast<int>(class_tag)
-                   << " type="
-                   << static_cast<int>(type_tag) << std::endl;
+         output << "Unknown ASN.1 tag class=" << static_cast<int>(class_tag)
+                << " type=" << static_cast<int>(type_tag) << "\n";;
          }
 
       obj = decoder.get_next_object();
       }
+   }
+
+std::string format_asn1(const uint8_t in[], size_t len)
+   {
+   std::ostringstream out;
+   Botan::BER_Decoder dec(in, len);
+   decode(out, dec, 0);
+   return out.str();
    }
 
 }
@@ -391,23 +390,25 @@ void decode(Botan::BER_Decoder& decoder, size_t level)
 class ASN1_Printer final : public Command
    {
    public:
-      ASN1_Printer() : Command("asn1print file") {}
+      ASN1_Printer() : Command("asn1print --pem file") {}
 
       void go() override
          {
-         Botan::DataSource_Stream in(get_arg("file"));
+         const std::string input = get_arg("file");
 
-         if(!Botan::PEM_Code::matches(in))
+         std::vector<uint8_t> contents;
+
+         if(flag_set("pem"))
             {
-            Botan::BER_Decoder decoder(in);
-            decode(decoder, INITIAL_LEVEL);
+            std::string pem_label;
+            contents = unlock(Botan::PEM_Code::decode(slurp_file_as_str(input), pem_label));
             }
          else
             {
-            std::string label; // ignored
-            Botan::BER_Decoder decoder(Botan::PEM_Code::decode(in, label));
-            decode(decoder, INITIAL_LEVEL);
+            contents = slurp_file(input);
             }
+
+         output() << format_asn1(contents.data(), contents.size());
          }
    };
 
