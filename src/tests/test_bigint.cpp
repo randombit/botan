@@ -492,6 +492,12 @@ class BigInt_Powmod_Test : public Text_Based_Test
 
          result.test_eq("power_mod", Botan::power_mod(base, exponent, modulus), expected);
 
+         /*
+         * Only the basic power_mod interface supports negative base
+         */
+         if(base.is_negative())
+            return result;
+
          Botan::Power_Mod pow_mod1(modulus);
 
          pow_mod1.set_base(base);
