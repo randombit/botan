@@ -272,7 +272,7 @@ def process_command_line(args): # pylint: disable=too-many-locals
                             help='set the desired build compiler')
 
     target_group.add_option('--cc-min-version', dest='cc_min_version', default=None,
-                            metavar='MAYOR.MINOR',
+                            metavar='MAJOR.MINOR',
                             help='Set the minimal version of the target compiler. ' \
                                  'Use --cc-min-version=0.0 to support all compiler versions. ' \
                                  'Default is auto detection.')
@@ -2930,7 +2930,7 @@ def validate_options(options, info_os, info_cc, available_module_policies):
             options.compiler, ' '.join(sorted(info_cc.keys()))))
 
     if options.cc_min_version is not None and not re.match(r'^[0-9]+\.[0-9]+$', options.cc_min_version):
-        raise UserError("--cc-min-version must have the format MAYOR.MINOR")
+        raise UserError("--cc-min-version must have the format MAJOR.MINOR")
 
     if options.module_policy and options.module_policy not in available_module_policies:
         raise UserError("Unknown module set %s" % options.module_policy)
