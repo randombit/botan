@@ -2,11 +2,12 @@
 set -ev
 which shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if available
 
+git clone --depth 1 https://github.com/randombit/botan-ci-tools
+
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
     # ccache in Trusty is too old, use version from Xenial
-    wget http://mirrors.kernel.org/ubuntu/pool/main/c/ccache/ccache_3.2.4-1_amd64.deb
-    sudo dpkg -i ccache_3.2.4-1_amd64.deb
+    sudo dpkg -i botan-ci-tools/ubuntu/ccache_3.2.4-1_amd64.deb
 
     if [ "$BUILD_MODE" = "valgrind" ]; then
         sudo apt-get -qq update
@@ -15,15 +16,14 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     elif [ "$BUILD_MODE" = "cross-win32" ]; then
         # See https://github.com/travis-ci/travis-ci/issues/6460
         sudo dpkg --add-architecture i386
-        sudo apt-get -qq update # have to update again due to adding i386 above
-        sudo apt-get install wine
-        sudo apt-get install g++-mingw-w64-i686 mingw-w64-i686-dev
+        sudo apt-get -qq update # have to run this after --add-architecture
+        sudo apt-get install wine g++-mingw-w64-i686 mingw-w64-i686-dev
 
     elif [ "${BUILD_MODE:0:5}" = "cross" ]; then
          # Need updated qemu
          sudo add-apt-repository -y ppa:ubuntu-cloud-archive/kilo-staging
          sudo apt-get -qq update
-         sudo apt-get install qemu
+         sudo apt-get install qemu-user
 
          if [ "$BUILD_MODE" = "cross-arm32" ]; then
              sudo apt-get install g++-arm-linux-gnueabihf libc6-dev-armhf-cross
@@ -44,8 +44,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         sudo apt-get install trousers libtspi-dev
 
         # need updated lcov for gcc 4.8 coverage format
-        wget http://mirrors.kernel.org/ubuntu/pool/universe/l/lcov/lcov_1.12-2_all.deb
-        sudo dpkg -i lcov_1.12-2_all.deb
+        sudo dpkg -i botan-ci-tools/ubuntu/lcov_1.12-2_all.deb
 
         (cd /home/travis/bin && ln -s gcov-4.8 gcov)
 
@@ -54,8 +53,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
 
         # SoftHSMv1 in 14.04 does not work
         # Installs prebuilt SoftHSMv2 binaries into /tmp
-        wget https://www.randombit.net/softhsm2-trusty-bin.tar.bz2
-        tar -C / -xvjf softhsm2-trusty-bin.tar.bz2
+        tar -C / -xvjf botan-ci-tools/softhsm2-trusty-bin.tar.bz2
         /tmp/softhsm/bin/softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
 
     elif [ "$BUILD_MODE" = "sonar" ]; then
@@ -75,6 +73,11 @@ if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     fi
 
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    brew update
+    # Avoid running brew update as it is quite slow, and all we need
+    # is any working version of ccache
+
+    # TODO just copy an OS X binary of ccache to botan-ci-tools repo
+
+    #brew update
     brew install ccache
 fi
