@@ -415,7 +415,7 @@ int main(int argc, char* argv[])
 
       if(!cmd)
          {
-         std::cout << "Unable to retrieve testing helper (program bug)\n"; // WTF
+         std::cerr << "Unable to retrieve testing helper (program bug)\n"; // WTF
          return 1;
          }
 
@@ -424,14 +424,14 @@ int main(int argc, char* argv[])
       }
    catch(Botan::Exception& e)
       {
-      std::cout << "Exiting with library exception " << e.what() << std::endl;
+      std::cerr << "Exiting with library exception " << e.what() << std::endl;
       }
    catch(std::exception& e)
       {
-      std::cout << "Exiting with std exception " << e.what() << std::endl;
+      std::cerr << "Exiting with std exception " << e.what() << std::endl;
       }
    catch(...)
       {
-      std::cout << "Exiting with unknown exception\n";
+      std::cerr << "Exiting with unknown exception" << std::endl;
       }
    }
