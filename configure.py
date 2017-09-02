@@ -870,14 +870,10 @@ class ModuleInfo(InfoObject):
                 try:
                     name, version = cc.split(":")
                     if name == ccinfo.basename:
-                        if cc_min_version:
-                            min_cc_version = [int(v) for v in version.split('.')]
-                            cur_cc_version = [int(v) for v in cc_min_version.split('.')]
-                            # With lists of ints, this does what we want
-                            return cur_cc_version >= min_cc_version
-                        else:
-                            # Compiler version unknown => module unsupported
-                            return False
+                        min_cc_version = [int(v) for v in version.split('.')]
+                        cur_cc_version = [int(v) for v in cc_min_version.split('.')]
+                        # With lists of ints, this does what we want
+                        return cur_cc_version >= min_cc_version
                 except ValueError:
                     # No version part specified
                     pass
