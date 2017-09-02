@@ -379,9 +379,22 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod)
    * minimal window. This makes sense given that here we know that any
    * precomputation is wasted.
    */
-   pow_mod.set_base(base);
-   pow_mod.set_exponent(exp);
-   return pow_mod.execute();
+
+   if(base.is_negative())
+      {
+      pow_mod.set_base(-base);
+      pow_mod.set_exponent(exp);
+      if(exp.is_even())
+         return pow_mod.execute();
+      else
+         return (mod - pow_mod.execute());
+      }
+   else
+      {
+      pow_mod.set_base(base);
+      pow_mod.set_exponent(exp);
+      return pow_mod.execute();
+      }
    }
 
 namespace {
