@@ -76,7 +76,6 @@ rdrand_rng
 system_rng
 
 # entropy sources
-cryptoapi_rng
 darwin_secrandom
 dev_random
 proc_walk

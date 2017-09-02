@@ -1,0 +1,26 @@
+os_type windows
+
+# ?
+program_suffix .exe
+obj_suffix obj
+static_suffix lib
+building_shared_supported no
+
+install_root c:\\Botan
+doc_dir docs
+
+install_cmd_data "copy"
+install_cmd_exec "copy"
+
+<target_features>
+crypto_ng
+gmtime_s
+loadlibrary
+mkgmtime
+query_perf_counter
+rtlsecurezeromemory
+#stl_filesystem_msvc
+threads
+filesystem
+sockets
+</target_features>

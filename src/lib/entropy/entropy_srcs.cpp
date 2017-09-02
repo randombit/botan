@@ -8,6 +8,10 @@
 #include <botan/entropy_src.h>
 #include <botan/rng.h>
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+  #include <botan/system_rng.h>
+#endif
+
 #if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
   #include <botan/internal/rdrand.h>
 #endif
@@ -18,10 +22,6 @@
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
   #include <botan/internal/dev_random.h>
-#endif
-
-#if defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
-  #include <botan/internal/es_capi.h>
 #endif
 
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
@@ -42,65 +42,86 @@
 
 namespace Botan {
 
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+
+namespace {
+
+class System_RNG_EntropySource : public Entropy_Source
+   {
+   public:
+      size_t poll(RandomNumberGenerator& rng) override
+         {
+         const size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS;
+         rng.reseed_from_rng(system_rng(), poll_bits);
+         return poll_bits;
+         }
+
+      std::string name() const override { return system_rng().name(); }
+   };
+
+}
+
+#endif
+
 std::unique_ptr<Entropy_Source> Entropy_Source::create(const std::string& name)
    {
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   if(name == "system_rng" || name == "win32_cryptoapi")
+      {
+      return std::unique_ptr<Entropy_Source>(new System_RNG_EntropySource);
+      }
+#endif
+
+#if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
    if(name == "rdrand")
       {
-#if defined(BOTAN_HAS_ENTROPY_SRC_RDRAND)
       return std::unique_ptr<Entropy_Source>(new Intel_Rdrand);
-#endif
       }
+#endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_RDSEED)
    if(name == "rdseed")
       {
-#if defined(BOTAN_HAS_ENTROPY_SRC_RDSEED)
       return std::unique_ptr<Entropy_Source>(new Intel_Rdseed);
-#endif
       }
+#endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
    if(name == "darwin_secrandom")
       {
-#if defined(BOTAN_HAS_ENTROPY_SRC_DARWIN_SECRANDOM)
       return std::unique_ptr<Entropy_Source>(new Darwin_SecRandom);
-#endif
       }
+#endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_GETENTROPY)
    if(name == "getentropy")
       {
-#if defined(BOTAN_HAS_ENTROPY_SRC_GETENTROPY)
       return std::unique_ptr<Entropy_Source>(new Getentropy);
-#endif
       }
+#endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
    if(name == "dev_random")
       {
-#if defined(BOTAN_HAS_ENTROPY_SRC_DEV_RANDOM)
       return std::unique_ptr<Entropy_Source>(new Device_EntropySource(BOTAN_SYSTEM_RNG_POLL_DEVICES));
-#endif
       }
-
-   if(name == "win32_cryptoapi")
-      {
-#if defined(BOTAN_HAS_ENTROPY_SRC_CAPI)
-      return std::unique_ptr<Entropy_Source>(new Win32_CAPI_EntropySource("RSA_FULL"));
 #endif
-      }
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
    if(name == "proc_walk")
       {
-#if defined(BOTAN_HAS_ENTROPY_SRC_PROC_WALKER)
       const std::string root_dir = BOTAN_ENTROPY_PROC_FS_PATH;
       if(!root_dir.empty())
          return std::unique_ptr<Entropy_Source>(new ProcWalking_EntropySource(root_dir));
-#endif
       }
+#endif
 
+#if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
    if(name == "system_stats")
       {
-#if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
       return std::unique_ptr<Entropy_Source>(new Win32_EntropySource);
-#endif
       }
+#endif
 
    return std::unique_ptr<Entropy_Source>();
    }
