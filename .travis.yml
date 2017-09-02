@@ -15,7 +15,7 @@ compiler:
 env:
   global:
     - CCACHE_MAXSIZE=250M
-    - CCACHE_MAXFILES=1500
+    - CCACHE_MAXFILES=2000
     - CCACHE_COMPRESS=1
     # SONAR_TOKEN for accessing the Sonar server
     - secure: "VezRbHFg6kllV5WG06M3tG3aHJaC3xrMylJ6RCVbL+uz2JeralVCqV7eIk4fVb9cu83Li+weEa0AJj0wkxpIUJ+vUh5F65L6gSWSbgHP7muOSVsmnEc6KvX4n3av/ZGe4geSmsxqh2pd/2xI1h7KioGRhKeqaZIdjVgWgGJW2iQ="
