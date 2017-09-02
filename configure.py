@@ -271,6 +271,12 @@ def process_command_line(args): # pylint: disable=too-many-locals
     target_group.add_option('--cc', dest='compiler',
                             help='set the desired build compiler')
 
+    target_group.add_option('--cc-min-version', dest='cc_min_version', default=None,
+                            metavar='MAYOR.MINOR',
+                            help='Set the minimal version of the target compiler. ' \
+                                 'Use --cc-min-version=0.0 to support all compiler versions. ' \
+                                 'Default is auto detection.')
+
     target_group.add_option('--cc-bin', dest='compiler_binary',
                             metavar='BINARY',
                             help='set path to compiler binary')
@@ -841,7 +847,7 @@ class ModuleInfo(InfoObject):
     def compatible_os(self, os_name):
         return self.os == [] or os_name in self.os
 
-    def compatible_compiler(self, ccinfo, cc_version, arch):
+    def compatible_compiler(self, ccinfo, cc_min_version, arch):
         # Check if this compiler supports the flags we need
         def supported_isa_flags(ccinfo, arch):
             for isa in self.need_isa:
@@ -850,7 +856,7 @@ class ModuleInfo(InfoObject):
             return True
 
         # Check if module gives explicit compiler dependencies
-        def supported_compiler(ccinfo, cc_version):
+        def supported_compiler(ccinfo, cc_min_version):
             if self.cc == []:
                 # no compiler restriction
                 return True
@@ -864,21 +870,17 @@ class ModuleInfo(InfoObject):
                 try:
                     name, version = cc.split(":")
                     if name == ccinfo.basename:
-                        if cc_version:
-                            min_cc_version = [int(v) for v in version.split('.')]
-                            cur_cc_version = [int(v) for v in cc_version.split('.')]
-                            # With lists of ints, this does what we want
-                            return cur_cc_version >= min_cc_version
-                        else:
-                            # Compiler version unknown => module unsupported
-                            return False
+                        min_cc_version = [int(v) for v in version.split('.')]
+                        cur_cc_version = [int(v) for v in cc_min_version.split('.')]
+                        # With lists of ints, this does what we want
+                        return cur_cc_version >= min_cc_version
                 except ValueError:
                     # No version part specified
                     pass
 
             return False # compiler not listed
 
-        return supported_isa_flags(ccinfo, arch) and supported_compiler(ccinfo, cc_version)
+        return supported_isa_flags(ccinfo, arch) and supported_compiler(ccinfo, cc_min_version)
 
     def dependencies(self):
         # base is an implicit dep for all submodules
@@ -2107,12 +2109,12 @@ class ModulesChooser(object):
     Determine which modules to load based on options, target, etc
     """
 
-    def __init__(self, modules, module_policy, archinfo, ccinfo, cc_version, options):
+    def __init__(self, modules, module_policy, archinfo, ccinfo, cc_min_version, options):
         self._modules = modules
         self._module_policy = module_policy
         self._archinfo = archinfo
         self._ccinfo = ccinfo
-        self._cc_version = cc_version
+        self._cc_min_version = cc_min_version
         self._options = options
 
         self._maybe_dep = set()
@@ -2128,7 +2130,7 @@ class ModulesChooser(object):
         if not module.compatible_os(self._options.os):
             self._not_using_because['incompatible OS'].add(modname)
             return False
-        elif not module.compatible_compiler(self._ccinfo, self._cc_version, self._archinfo.basename):
+        elif not module.compatible_compiler(self._ccinfo, self._cc_min_version, self._archinfo.basename):
             self._not_using_because['incompatible compiler'].add(modname)
             return False
         elif not module.compatible_cpu(self._archinfo, self._options):
@@ -2720,9 +2722,7 @@ class CompilerDetector(object):
                                     (apple_clang_version))
                     cc_version = '3.8' # safe default
 
-        if cc_version:
-            logging.info('Detected %s compiler version %s' % (self._cc_name, cc_version))
-        else:
+        if not cc_version:
             logging.warning("Tried to get %s version, but output '%s' does not match expected version format" % (
                 self._cc_name, cc_output))
 
@@ -2907,6 +2907,8 @@ def canonicalize_options(options, info_os, info_arch):
 # This method DOES NOT change options on behalf of the user but explains
 # why the given configuration does not work.
 def validate_options(options, info_os, info_cc, available_module_policies):
+    # pylint: disable=too-many-branches
+
     if options.gen_amalgamation:
         raise UserError("--gen-amalgamation was removed. Migrate to --amalgamation.")
 
@@ -2926,6 +2928,9 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.compiler not in info_cc:
         raise UserError('Unknown compiler "%s"; available options: %s' % (
             options.compiler, ' '.join(sorted(info_cc.keys()))))
+
+    if options.cc_min_version is not None and not re.match(r'^[0-9]+\.[0-9]+$', options.cc_min_version):
+        raise UserError("--cc-min-version must have the format MAYOR.MINOR")
 
     if options.module_policy and options.module_policy not in available_module_policies:
         raise UserError("Unknown module set %s" % options.module_policy)
@@ -2950,8 +2955,8 @@ def main_action_list_available_modules(info_modules):
 
 
 def prepare_configure_build(info_modules, source_paths, options,
-                            cc, cc_version, arch, osinfo, module_policy):
-    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, cc, cc_version, options).choose()
+                            cc, cc_min_version, arch, osinfo, module_policy):
+    loaded_module_names = ModulesChooser(info_modules, module_policy, arch, cc, cc_min_version, options).choose()
     using_mods = [info_modules[modname] for modname in loaded_module_names]
 
     build_config = BuildPaths(source_paths, options, using_mods)
@@ -2965,12 +2970,29 @@ def prepare_configure_build(info_modules, source_paths, options,
     return using_mods, build_config, template_vars, makefile_template
 
 
+def calculate_cc_min_version(options, cc, osinfo):
+    if options.cc_min_version:
+        return options.cc_min_version
+    else:
+        cc_version = CompilerDetector(
+            cc.basename,
+            options.compiler_binary or cc.binary_name,
+            osinfo.basename
+        ).get_version()
+        if cc_version:
+            logging.info('Auto-detected compiler version %s' % (cc_version))
+            return cc_version
+        else:
+            logging.warning("Auto-detected compiler version failed. " \
+                            "Use --cc-min-version to set manually. Falling back to version 0.0")
+            return "0.0"
+
 def main_action_configure_build(info_modules, source_paths, options,
-                                cc, cc_version, arch, osinfo, module_policy):
+                                cc, cc_min_version, arch, osinfo, module_policy):
     # pylint: disable=too-many-locals
 
     using_mods, build_config, template_vars, makefile_template = prepare_configure_build(
-        info_modules, source_paths, options, cc, cc_version, arch, osinfo, module_policy)
+        info_modules, source_paths, options, cc, cc_min_version, arch, osinfo, module_policy)
 
     # Now we start writing to disk
 
@@ -3105,19 +3127,14 @@ def main(argv):
     canonicalize_options(options, info_os, info_arch)
     validate_options(options, info_os, info_cc, info_module_policies)
 
-    logging.info('Target is %s-%s-%s-%s' % (
-        options.compiler, options.os, options.arch, options.cpu))
-
     cc = info_cc[options.compiler]
     arch = info_arch[options.arch]
     osinfo = info_os[options.os]
     module_policy = info_module_policies[options.module_policy] if options.module_policy else None
+    cc_min_version = calculate_cc_min_version(options, cc, osinfo)
 
-    cc_version = CompilerDetector(
-        cc.basename,
-        options.compiler_binary or cc.binary_name,
-        osinfo.basename
-    ).get_version()
+    logging.info('Target is %s:%s-%s-%s-%s' % (
+        options.compiler, cc_min_version, options.os, options.arch, options.cpu))
 
     if options.build_shared_lib and not osinfo.building_shared_supported:
         logging.warning('Shared libs not supported on %s, disabling shared lib support' % (osinfo.basename))
@@ -3127,7 +3144,9 @@ def main(argv):
         main_action_list_available_modules(info_modules)
         return 0
     else:
-        main_action_configure_build(info_modules, source_paths, options, cc, cc_version, arch, osinfo, module_policy)
+        main_action_configure_build(
+            info_modules, source_paths, options,
+            cc, cc_min_version, arch, osinfo, module_policy)
         return 0
 
 
