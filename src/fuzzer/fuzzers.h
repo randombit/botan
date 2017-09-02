@@ -14,13 +14,10 @@
 #include <botan/exceptn.h>
 #include <botan/chacha_rng.h>
 
-#if defined(BOTAN_FUZZER_IS_AFL) && !defined(__AFL_COMPILER)
-   #error "Build configured for AFL but not being compiled by AFL compiler"
-#endif
-
 static const size_t max_fuzzer_input_size = 8192;
 
 extern void fuzz(const uint8_t in[], size_t len);
+
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv);
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len);
 
@@ -52,24 +49,28 @@ inline Botan::RandomNumberGenerator& fuzzer_rng()
    return rng;
    }
 
+#define FUZZER_WRITE_AND_CRASH(expr) \
+   do { std::cerr << expr; abort(); } while(0)
+
 #define FUZZER_ASSERT_EQUAL(x, y) do {                                  \
    if(x != y) {                                                         \
-      std::cerr << #x << " = " << x << " !=\n" << #y << " = " << y         \
-                << " at " << __LINE__ << ":" << __FILE__ << std::endl;     \
-      abort();                                                          \
-} } while(0)
+      FUZZER_WRITE_AND_CRASH(#x << " = " << x << " !=\n"                \
+                             << #y << " = " << y << "\n");              \
+   } } while(0)
 
 #define FUZZER_ASSERT_TRUE(e)                                           \
    do {                                                                 \
    if(!(e)) {                                                           \
-   std::cerr << "Expression " << #e << " was false at "                 \
-             << __LINE__ << ":" << __FILE__ << std::endl;               \
-   abort();                                                             \
+      FUZZER_WRITE_AND_CRASH("Expression " << #e << " was false");      \
    } } while(0)
 
 #if defined(BOTAN_FUZZER_IS_AFL) || defined(BOTAN_FUZZER_IS_TEST)
 
 /* Stub for AFL */
+
+#if defined(BOTAN_FUZZER_IS_AFL) && !defined(__AFL_COMPILER)
+   #error "Build configured for AFL but not being compiled by AFL compiler"
+#endif
 
 int main(int argc, char* argv[])
    {

@@ -51,7 +51,7 @@ void fuzz(const uint8_t in[], size_t len)
       else if(valid_mask == 0xFF)
          lib_rejected = false;
       else
-         abort();
+         FUZZER_WRITE_AND_CRASH("Invalid valid_mask from unpad");
       }
    catch(Botan::Decoding_Error&) { lib_rejected = true; }
 
@@ -61,22 +61,15 @@ void fuzz(const uint8_t in[], size_t len)
       }
    catch(Botan::Decoding_Error& e) { ref_rejected = true; }
 
-   if(lib_rejected == ref_rejected)
-      {
-      return; // ok, they agree
-      }
-
-   // otherwise: incorrect result, log info and crash
    if(lib_rejected == true && ref_rejected == false)
       {
-      std::cerr << "Library rejected input accepted by ref\n";
-      std::cerr << "Ref decoded " << Botan::hex_encode(ref_result) << "\n";
+      FUZZER_WRITE_AND_CRASH("Library rejected input accepted by ref "
+                             << Botan::hex_encode(ref_result));
       }
    else if(ref_rejected == true && lib_rejected == false)
       {
-      std::cerr << "Library accepted input reject by ref\n";
-      std::cerr << "Lib decoded " << Botan::hex_encode(lib_result) << "\n";
+      FUZZER_WRITE_AND_CRASH("Library accepted input rejected by ref "
+                             << Botan::hex_encode(lib_result));
       }
-
-   abort();
+   // otherwise the two implementations agree
    }

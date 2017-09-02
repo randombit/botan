@@ -30,11 +30,10 @@ void fuzz(const uint8_t in[], size_t len)
 
          if(z != a_redc)
             {
-            std::cout << "A = " << a << "\n";
-            std::cout << "P = " << p << "\n";
-            std::cout << "R = " << a_sqrt << "\n";
-            std::cout << "Z = " << z << "\n";
-            abort();
+            FUZZER_WRITE_AND_CRASH("A = " << a << "\n"
+                                   << "P = " << p << "\n"
+                                   << "R = " << a_sqrt << "\n"
+                                   << "Z = " << z << "\n");
             }
          }
       }

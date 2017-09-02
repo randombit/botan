@@ -71,17 +71,13 @@ void fuzz(const uint8_t in[], size_t len)
 
    if(ref != ct)
       {
-      std::cout << "X = " << x << "\n";
-      std::cout << "P = " << mod << "\n";
-      std::cout << "GCD = " << gcd(x, mod) << "\n";
-      std::cout << "Ref = " << ref << "\n";
-      std::cout << "CT  = " << ct << "\n";
-      //std::cout << "Mon = " << mon << "\n";
-
-      std::cout << "RefCheck = " << (ref*ref)%mod << "\n";
-      std::cout << "CTCheck  = " << (ct*ct)%mod << "\n";
-      //std::cout << "MonCheck = " << (mon*mon)%mod << "\n";
-      abort();
+      FUZZER_WRITE_AND_CRASH("X = " << x << "\n"
+                             << "P = " << mod << "\n"
+                             << "GCD = " << gcd(x, mod) << "\n"
+                             << "Ref = " << ref << "\n"
+                             << "CT  = " << ct << "\n"
+                             << "RefCheck = " << (ref*ref)%mod << "\n"
+                             << "CTCheck  = " << (ct*ct)%mod << "\n");
       }
    }
 

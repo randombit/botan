@@ -58,12 +58,11 @@ void fuzz(const uint8_t in[], size_t len)
 
       if(ref != z)
          {
-         std::cout << "G = " << g << "\n"
-                   << "X = " << x << "\n"
-                   << "P = " << p << "\n"
-                   << "Z = " << z << "\n"
-                   << "R = " << ref << "\n";
-         abort();
+         FUZZER_WRITE_AND_CRASH("G = " << g << "\n"
+                                << "X = " << x << "\n"
+                                << "P = " << p << "\n"
+                                << "Z = " << z << "\n"
+                                << "R = " << ref << "\n");
          }
       }
    catch(Botan::Exception& e) {}
