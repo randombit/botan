@@ -14,6 +14,9 @@
 #if defined(BOTAN_HAS_GCM_CLMUL)
   #include <botan/internal/clmul.h>
   #include <botan/cpuid.h>
+#elif defined(BOTAN_HAS_GCM_PMULL)
+  #include <botan/internal/pmull.h>
+  #include <botan/cpuid.h>
 #endif
 
 namespace Botan {
@@ -25,6 +28,9 @@ void GHASH::gcm_multiply(secure_vector<uint8_t>& x) const
 #if defined(BOTAN_HAS_GCM_CLMUL)
    if(CPUID::has_clmul())
       return gcm_multiply_clmul(x.data(), m_H.data());
+#elif defined(BOTAN_HAS_GCM_PMULL)
+   if(CPUID::has_arm_pmull())
+      return gcm_multiply_pmull(x.data(), m_H.data());
 #endif
 
    static const uint64_t R = 0xE100000000000000;
