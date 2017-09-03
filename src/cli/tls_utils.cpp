@@ -138,7 +138,7 @@ class TLS_Client_Hello_Reader final : public Command
       TLS_Client_Hello_Reader()
          : Command("tls_client_hello --hex input") {}
 
-      virtual void go()
+      virtual void go() override
          {
          const std::string input_file = get_arg("input");
          std::vector<uint8_t> input;
