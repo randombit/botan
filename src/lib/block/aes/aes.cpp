@@ -412,6 +412,19 @@ void aes_key_schedule(const uint8_t key[], size_t length,
    DK.resize(length + 24);
    copy_mem(EK.data(), XEK.data(), EK.size());
    copy_mem(DK.data(), XDK.data(), DK.size());
+
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
+      {
+      // ARM needs the subkeys to be byte reversed
+
+      for(size_t i = 0; i != EK.size(); ++i)
+         EK[i] = reverse_bytes(EK[i]);
+      for(size_t i = 0; i != DK.size(); ++i)
+         DK[i] = reverse_bytes(DK[i]);
+      }
+#endif
+
    }
 
 size_t aes_parallelism()
@@ -439,6 +452,13 @@ const char* aes_provider()
    if(CPUID::has_ssse3())
       {
       return "ssse3";
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
+      {
+      return "armv8";
       }
 #endif
 
@@ -471,6 +491,13 @@ void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
+      {
+      return armv8_encrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
@@ -487,6 +514,13 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_ssse3())
       {
       return ssse3_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
+      {
+      return armv8_decrypt_n(in, out, blocks);
       }
 #endif
 
@@ -536,6 +570,13 @@ void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
+      {
+      return armv8_encrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
@@ -552,6 +593,13 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_ssse3())
       {
       return ssse3_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
+      {
+      return armv8_decrypt_n(in, out, blocks);
       }
 #endif
 
@@ -601,6 +649,13 @@ void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       }
 #endif
 
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
+      {
+      return armv8_encrypt_n(in, out, blocks);
+      }
+#endif
+
    aes_encrypt_n(in, out, blocks, m_EK, m_ME);
    }
 
@@ -617,6 +672,13 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    if(CPUID::has_ssse3())
       {
       return ssse3_decrypt_n(in, out, blocks);
+      }
+#endif
+
+#if defined(BOTAN_HAS_AES_ARMV8)
+   if(CPUID::has_arm_aes())
+      {
+      return armv8_decrypt_n(in, out, blocks);
       }
 #endif
 
