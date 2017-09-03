@@ -171,7 +171,7 @@ OS::open_socket(const std::string& hostname,
 
          size_t read(uint8_t buf[], size_t len)
             {
-            int got = ::recv(m_socket,,
+            int got = ::recv(m_socket,
                              reinterpret_cast<char*>(buf),
                              static_cast<int>(len), 0);
 
