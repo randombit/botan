@@ -308,12 +308,12 @@ class TLS_Client final : public Command, public Botan::TLS::Callbacks
             break;
             }
 
+         ::freeaddrinfo(res);
+
          if(rp == nullptr) // no address succeeded
             {
             throw CLI_Error("connect failed");
             }
-
-         ::freeaddrinfo(res);
 
          return fd;
          }
