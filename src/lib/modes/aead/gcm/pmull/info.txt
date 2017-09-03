@@ -1,0 +1,16 @@
+<defines>
+GCM_PMULL -> 20170903
+</defines>
+
+<arch>
+arm64
+</arch>
+
+<cc>
+gcc:4.9
+clang:3.8
+</cc>
+
+<header:internal>
+pmull.h
+</header:internal>
