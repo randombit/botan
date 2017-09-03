@@ -8,8 +8,6 @@
 #ifndef BOTAN_XMSS_ADDRESS_H__
 #define BOTAN_XMSS_ADDRESS_H__
 
-#include <cstdint>
-#include <limits>
 #include <botan/xmss_tools.h>
 
 namespace Botan {

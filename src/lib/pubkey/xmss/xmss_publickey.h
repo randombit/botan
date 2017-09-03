@@ -10,7 +10,6 @@
 
 #include <cstddef>
 #include <iterator>
-#include <limits>
 #include <memory>
 #include <string>
 #include <botan/alg_id.h>

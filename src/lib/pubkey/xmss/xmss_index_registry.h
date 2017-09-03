@@ -8,14 +8,7 @@
 #ifndef BOTAN_XMSS_INDEX_REGISTRY_H__
 #define BOTAN_XMSS_INDEX_REGISTRY_H__
 
-#include <stdint.h>
-#include <cstddef>
-#include <limits>
-#include <memory>
-#include <string>
 #include <botan/hash.h>
-#include <botan/secmem.h>
-#include <botan/types.h>
 #include <botan/atomic.h>
 #include <botan/mutex.h>
 

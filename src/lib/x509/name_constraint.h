@@ -10,6 +10,7 @@
 
 #include <botan/asn1_obj.h>
 #include <ostream>
+#include <limits>
 
 namespace Botan {
 

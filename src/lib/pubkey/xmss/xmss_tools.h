@@ -8,12 +8,10 @@
 #ifndef BOTAN_XMSS_TOOLS_H__
 #define BOTAN_XMSS_TOOLS_H__
 
-#include <stdint.h>
+#include <botan/cpuid.h>
+#include <botan/secmem.h>
 #include <iterator>
 #include <type_traits>
-#include <botan/cpuid.h>
-#include <botan/types.h>
-#include <botan/secmem.h>
 
 namespace Botan {
 
