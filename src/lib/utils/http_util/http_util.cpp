@@ -9,54 +9,9 @@
 #include <botan/http_util.h>
 #include <botan/parsing.h>
 #include <botan/hex.h>
+#include <botan/internal/os_utils.h>
 #include <botan/internal/stl_util.h>
 #include <sstream>
-
-#if defined(BOTAN_HAS_BOOST_ASIO)
-
-  /*
-  * We don't need serial port support anyway, and asking for it
-  * causes macro conflicts with Darwin's termios.h when this
-  * file is included in the amalgamation. GH #350
-  */
-  #define BOOST_ASIO_DISABLE_SERIAL_PORT
-  #include <boost/asio.hpp>
-
-#elif defined(BOTAN_TARGET_OS_HAS_SOCKETS)
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
-  #include <winsock2.h>
-  #include <WS2tcpip.h>
-
-namespace {
-
-int close(int fd)
-   {
-   return ::closesocket(fd);
-   }
-
-int read(int s, void* buf, size_t len)
-   {
-   return ::recv(s, reinterpret_cast<char*>(buf), static_cast<int>(len), 0);
-   }
-
-int write(int s, const char* buf, size_t len)
-   {
-   return ::send(s, reinterpret_cast<const char*>(buf), static_cast<int>(len), 0);
-   }
-
-}
-
-typedef size_t ssize_t;
-#else
-  #include <sys/types.h>
-  #include <sys/socket.h>
-  #include <netdb.h>
-  #include <unistd.h>
-  #include <netinet/in.h>
-#endif
-#else
-  //#warning "No network support enabled in http_util"
-#endif
 
 namespace Botan {
 
@@ -71,111 +26,36 @@ namespace {
 std::string http_transact(const std::string& hostname,
                           const std::string& message)
    {
-#if defined(BOTAN_HAS_BOOST_ASIO)
-   using namespace boost::asio::ip;
+   std::unique_ptr<OS::Socket> socket;
 
-   boost::asio::ip::tcp::iostream tcp;
+   try
+      {
+      socket = OS::open_socket(hostname, "http");
+      if(!socket)
+         throw Exception("No socket support enabled in build");
+      }
+   catch(std::exception& e)
+      {
+      throw HTTP_Error("HTTP connection to " + hostname + " failed: " + e.what());
+      }
 
-   tcp.connect(hostname, "http");
-
-   if(!tcp)
-      throw HTTP_Error("HTTP connection to " + hostname + " failed");
-
-   tcp << message;
-   tcp.flush();
+   // Blocks until entire message has been written
+   socket->write(reinterpret_cast<const uint8_t*>(message.data()),
+                 message.size());
 
    std::ostringstream oss;
-   oss << tcp.rdbuf();
-
-   return oss.str();
-#elif defined(BOTAN_TARGET_OS_HAS_SOCKETS)
-
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
-   WSAData wsa_data;
-   WORD wsa_version = MAKEWORD(2, 2);
-
-   if (::WSAStartup(wsa_version, &wsa_data) != 0)
-      {
-      throw HTTP_Error("WSAStartup() failed: " + std::to_string(WSAGetLastError()));
-      }
-
-   if (LOBYTE(wsa_data.wVersion) != 2 || HIBYTE(wsa_data.wVersion) != 2)
-      {
-      ::WSACleanup();
-      throw HTTP_Error("Could not find a usable version of Winsock.dll");
-      }
-#endif
-
-   hostent* host_addr = ::gethostbyname(hostname.c_str());
-   uint16_t port = 80;
-
-   if(!host_addr)
-      throw HTTP_Error("Name resolution failed for " + hostname);
-
-   if(host_addr->h_addrtype != AF_INET) // FIXME
-      throw HTTP_Error("Hostname " + hostname + " resolved to non-IPv4 address");
-
-   struct socket_raii {
-      socket_raii(int fd) : m_fd(fd) {}
-      ~socket_raii()
-         {
-         ::close(m_fd);
-#if defined(BOTAN_TARGET_OS_IS_WINDOWS)
-         ::WSACleanup();
-#endif
-         }
-      int m_fd;
-      };
-
-   int fd = ::socket(PF_INET, SOCK_STREAM, 0);
-   if(fd == -1)
-      throw HTTP_Error("Unable to create TCP socket");
-   socket_raii raii(fd);
-
-   sockaddr_in socket_info;
-   ::memset(&socket_info, 0, sizeof(socket_info));
-   socket_info.sin_family = AF_INET;
-   socket_info.sin_port = htons(port);
-
-   ::memcpy(&socket_info.sin_addr,
-            host_addr->h_addr,
-            host_addr->h_length);
-
-   socket_info.sin_addr = *reinterpret_cast<struct in_addr*>(host_addr->h_addr); // FIXME
-
-   if(::connect(fd, reinterpret_cast<sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0)
-      throw HTTP_Error("HTTP connection to " + hostname + " failed");
-
-   size_t sent_so_far = 0;
-   while(sent_so_far != message.size())
-      {
-      size_t left = message.size() - sent_so_far;
-      ssize_t sent = ::write(fd, &message[sent_so_far], left);
-
-      if(sent < 0)
-         throw HTTP_Error("write to HTTP server failed, error '" + std::string(::strerror(errno)) + "'");
-      else
-         sent_so_far += static_cast<size_t>(sent);
-      }
-
-   std::ostringstream oss;
-   std::vector<char> buf(1024); // arbitrary size
+   std::vector<uint8_t> buf(BOTAN_DEFAULT_BUFFER_SIZE);
    while(true)
       {
-      ssize_t got = ::read(fd, buf.data(), buf.size());
+      const size_t got = socket->read(buf.data(), buf.size());
+      if(got == 0) // EOF
+         break;
 
-      if(got < 0)
-         throw HTTP_Error("read from HTTP server failed, error '" + std::string(::strerror(errno)) + "'");
-      else if(got > 0)
-         oss.write(buf.data(), static_cast<std::streamsize>(got));
-      else
-         break; // EOF
+      oss.write(reinterpret_cast<const char*>(buf.data()),
+                static_cast<std::streamsize>(got));
       }
-   return oss.str();
 
-#else
-   throw HTTP_Error("Cannot connect to " + hostname + ": network code disabled in build");
-#endif
+   return oss.str();
    }
 
 }

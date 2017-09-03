@@ -61,7 +61,6 @@ sha2_32_armv8
 clmul
 
 # entropy sources
-cryptoapi_rng
 darwin_secrandom
 dev_random
 proc_walk

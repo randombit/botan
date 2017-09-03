@@ -117,15 +117,14 @@
 
 /*
 * Specifies (in order) the list of entropy sources that will be used
-* to seed an in-memory RNG. The first in the default list: "rdseed" and "rdrand"
-* do not count as contributing any entropy
-* but are included as they are fast and help protect against a
-* seriously broken system RNG.
+* to seed an in-memory RNG. The first in the default list: "rdseed"
+* and "rdrand" do not count as contributing any entropy but are
+* included as they are fast and help protect against a seriously
+* broken system RNG.
 */
 #define BOTAN_ENTROPY_DEFAULT_SOURCES \
-   { "rdseed", "rdrand", "darwin_secrandom", "getentropy", "dev_random", \
-    "win32_cryptoapi", "proc_walk", "system_stats" }
-
+   { "rdseed", "rdrand", "darwin_secrandom", "getentropy", \
+     "dev_random", "system_rng", "proc_walk", "system_stats" }
 
 /* Multiplier on a block cipher's native parallelism */
 #define BOTAN_BLOCK_CIPHER_PAR_MULT 4

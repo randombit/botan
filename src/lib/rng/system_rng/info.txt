@@ -24,4 +24,12 @@ openbsd
 qnx
 solaris
 windows
+winphone
 </os>
+
+<libs>
+windows -> advapi32.lib
+winphone -> bcrypt.lib
+
+mingw -> advapi32
+</libs>

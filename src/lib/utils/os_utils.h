@@ -23,6 +23,39 @@ namespace OS {
 * this hasn't been tested.
 */
 
+
+/**
+* A wrapper around a simple blocking TCP socket
+*/
+class BOTAN_DLL Socket
+   {
+   public:
+      /**
+      * The socket will be closed upon destruction
+      */
+      virtual ~Socket() {};
+
+      /**
+      * Write to the socket. Blocks until all bytes sent.
+      * Throws on error.
+      */
+      virtual void write(const uint8_t buf[], size_t len) = 0;
+
+      /**
+      * Reads up to len bytes, returns bytes written to buf.
+      * Returns 0 on EOF. Throws on error.
+      */
+      virtual size_t read(uint8_t buf[], size_t len) = 0;
+   };
+
+/**
+* Open up a socket. Will throw on error. Returns null if sockets are
+* not available on this platform.
+*/
+std::unique_ptr<Socket>
+BOTAN_DLL open_socket(const std::string& hostname,
+                      const std::string& service);
+
 /**
 * @return process ID assigned by the operating system.
 * On Unix and Windows systems, this always returns a result
