@@ -165,7 +165,7 @@ bool McEliece_PrivateKey::check_key(RandomNumberGenerator& rng, bool) const
 McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<uint8_t>& key_bits)
    {
    size_t n, t;
-   secure_vector<uint8_t> g_enc;
+   secure_vector<uint8_t> enc_g;
    BER_Decoder dec_base(key_bits);
    BER_Decoder dec = dec_base.start_cons(SEQUENCE)
       .start_cons(SEQUENCE)
@@ -173,7 +173,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<uint8_t>& key_bits)
       .decode(t)
       .end_cons()
       .decode(m_public_matrix, OCTET_STRING)
-      .decode(g_enc, OCTET_STRING);
+      .decode(enc_g, OCTET_STRING);
 
    if(t == 0 || n == 0)
       throw Decoding_Error("invalid McEliece parameters");
@@ -185,7 +185,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(const secure_vector<uint8_t>& key_bits)
    m_dimension = (n - m_codimension);
 
    std::shared_ptr<GF2m_Field> sp_field(new GF2m_Field(ext_deg));
-   m_g = polyn_gf2m(g_enc, sp_field);
+   m_g = polyn_gf2m(enc_g, sp_field);
    if(m_g.get_degree() != static_cast<int>(t))
       {
       throw Decoding_Error("degree of decoded Goppa polynomial is incorrect");
