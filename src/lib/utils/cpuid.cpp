@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/parsing.h>
+#include <botan/internal/os_utils.h>
 #include <ostream>
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
@@ -34,8 +35,6 @@
 */
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
   #include <sys/auxv.h>
-#else
-  #include <botan/internal/os_utils.h>
 #endif
 
 #elif defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
@@ -68,17 +67,19 @@ namespace {
 * PowerPC specific block: check for AltiVec using either
 * sysctl or by reading processor version number register.
 */
-uint64_t powerpc_detect_cpu_featutures()
+uint64_t detect_cpu_features(size_t* cache_line_size)
    {
 #if defined(BOTAN_TARGET_OS_IS_DARWIN) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
    // On Darwin/OS X and OpenBSD, use sysctl
 
+   int sels[2] = {
 #if defined(BOTAN_TARGET_OS_IS_OPENBSD)
-   int sels[2] = { CTL_MACHDEP, CPU_ALTIVEC };
+      CTL_MACHDEP, CPU_ALTIVEC
 #else
-   // From Apple's docs
-   int sels[2] = { CTL_HW, HW_VECTORUNIT };
+      CTL_HW, HW_VECTORUNIT
 #endif
+   };
+
    int vector_type = 0;
    size_t length = sizeof(vector_type);
    int error = sysctl(sels, 2, &vector_type, &length, NULL, 0);
@@ -86,44 +87,46 @@ uint64_t powerpc_detect_cpu_featutures()
    if(error == 0 && vector_type > 0)
       return CPUID::CPUID_ALTIVEC_BIT;
 
-#elif defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_NETBSD)
+#else
+
    /*
    On PowerPC, MSR 287 is PVR, the Processor Version Number
    Normally it is only accessible to ring 0, but Linux and NetBSD
    (others, too, maybe?) will trap and emulate it for us.
-
-   PVR identifiers for various AltiVec enabled CPUs. Taken from
-   PearPC and Linux sources, mostly.
    */
 
-   uint32_t pvr = 0;
+   int pvr = OS::run_cpu_instruction_probe([]() -> int {
+      uint32_t pvr = 0;
+      asm volatile("mfspr %0, 287" : "=r" (pvr));
+      // Top 16 bits suffice to identify the model
+      return static_cast<int>(pvr >> 16);
+      });
 
-   // TODO: we could run inside SIGILL handler block
-   asm volatile("mfspr %0, 287" : "=r" (pvr));
-
-   // Top 16 bit suffice to identify model
-   pvr >>= 16;
-
-   const uint16_t PVR_G4_7400  = 0x000C;
-   const uint16_t PVR_G5_970   = 0x0039;
-   const uint16_t PVR_G5_970FX = 0x003C;
-   const uint16_t PVR_G5_970MP = 0x0044;
-   const uint16_t PVR_G5_970GX = 0x0045;
-   const uint16_t PVR_POWER6   = 0x003E;
-   const uint16_t PVR_POWER7   = 0x003F;
-   const uint16_t PVR_POWER8   = 0x004B;
-   const uint16_t PVR_CELL_PPU = 0x0070;
-
-   if(pvr == PVR_G4_7400 ||
-      pvr == PVR_G5_970 || pvr == PVR_G5_970FX ||
-      pvr == PVR_G5_970MP || pvr == PVR_G5_970GX ||
-      pvr == PVR_POWER6 || pvr == PVR_POWER7 || pvr == PVR_POWER8 ||
-      pvr == PVR_CELL_PPU)
+   if(pvr > 0)
       {
-      return CPUID::CPUID_ALTIVEC_BIT;
+      const uint16_t ALTIVEC_PVR[] = {
+         0x003E, // IBM POWER6,
+         0x003F, // IBM POWER7,
+         0x004B, // IBM POWER8,
+         0x000C, // G4-7400
+         0x0039, // G5 970
+         0x003C, // G5 970FX
+         0x0044, // G5 970MP
+         0x0070, // Cell PPU
+         0, // end
+      };
+
+      for(size_t i = 0; ALTIVEC_PVR[i]; ++i)
+         {
+         if(pvr == ALTIVEC_PVR[i])
+            return CPUID::CPUID_ALTIVEC_BIT;
+         }
+
+      return 0;
       }
-#else
-  #warning "No PowerPC feature detection available for this platform"
+
+   // TODO try direct instruction probing
+
 #endif
 
    return 0;
@@ -131,14 +134,11 @@ uint64_t powerpc_detect_cpu_featutures()
 
 #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
 
-uint64_t arm_detect_cpu_features(size_t* cache_line_size)
+uint64_t detect_cpu_features(size_t* cache_line_size)
    {
    uint64_t detected_features = 0;
-   *cache_line_size = BOTAN_TARGET_CPU_DEFAULT_CACHE_LINE_SIZE;
 
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
-   errno = 0;
-
    /*
    * On systems with getauxval these bits should normally be defined
    * in bits/auxv.h but some buggy? glibc installs seem to miss them.
@@ -207,7 +207,7 @@ uint64_t arm_detect_cpu_features(size_t* cache_line_size)
 
 #elif defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-uint64_t x86_detect_cpu_features(size_t* cache_line_size)
+uint64_t detect_cpu_features(size_t* cache_line_size)
    {
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
   #define X86_CPUID(type, out) do { __cpuid((int*)out, type); } while(0)
@@ -415,12 +415,12 @@ void CPUID::initialize()
    {
    g_processor_features = 0;
 
-#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-   g_processor_features = powerpc_detect_cpu_featutures();
-#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
-   g_processor_features = arm_detect_cpu_features(&g_cache_line_size);
-#elif defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-   g_processor_features = x86_detect_cpu_features(&g_cache_line_size);
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || \
+    defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
+    defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+
+   g_processor_features = detect_cpu_features(&g_cache_line_size);
+
 #endif
 
    g_processor_features |= CPUID::CPUID_INITIALIZED_BIT;
