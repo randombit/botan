@@ -9,6 +9,10 @@ Version 2.3.0, Not Yet Released
 
 * Add the ARIA block cipher (GH #1004 and #1157)
 
+* Add support for the ARMv8 AES instructions (GH #1182 and #1146)
+
+* Add support for the ARMv8 PMULL instruction (GH #1181 and #842)
+
 * Optimized the CMAC polynomial doubling operation, and removed a small timing
   channel due to a conditional operation.
 
@@ -34,12 +38,18 @@ Version 2.3.0, Not Yet Released
 
 * Add is_passhash9_alg_supported (GH #1154)
 
+* The power_mod function now supports negative bases (GH #1179 #1168)
+
+* Add a new command line utility for examining TLS client hellos.
+
 * Added a new target for LLVM bitcode (GH #1169)
+
+* Improve support for Windows Phone (GH #1180 #796 #794)
 
 * Add new command line options `--rng-type=drbg` and `--drbg-seed` which
   allow running commands with a deterministic RNG. (GH #1169)
 
-* Fix a number of warnings seen under Visual C++ (GH #1171)
+* Fix a number of warnings seen under Visual C++ (GH #1171 #795)
 
 * Workaround a GCC 7 bug that caused miscompilation of the GOST-34.11 hash
   function on x86-32. (GH #882 #1148)
